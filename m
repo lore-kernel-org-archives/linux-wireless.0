@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53158C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 07:18:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D25C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 07:18:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346211AbiETHSh (ORCPT
+        id S1346226AbiETHSj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 May 2022 03:18:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44920 "EHLO
+        Fri, 20 May 2022 03:18:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241014AbiETHSc (ORCPT
+        with ESMTP id S1346006AbiETHSe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 May 2022 03:18:32 -0400
+        Fri, 20 May 2022 03:18:34 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 269573ED17
-        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2022 00:18:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F59D3ED28
+        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2022 00:18:03 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24K7HtAV2023730, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24K7HvoZ6023741, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24K7HtAV2023730
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24K7HvoZ6023741
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 20 May 2022 15:17:55 +0800
+        Fri, 20 May 2022 15:17:58 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Fri, 20 May 2022 15:17:55 +0800
+ 15.1.2375.28; Fri, 20 May 2022 15:17:57 +0800
 Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 20 May
- 2022 15:17:54 +0800
+ 2022 15:17:57 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>,
         <kevin_yang@realtek.com>
-Subject: [PATCH 4/6] rtw89: 8852c: rfk: re-calibrate RX DCK once thermal changes a lot
-Date:   Fri, 20 May 2022 15:17:29 +0800
-Message-ID: <20220520071731.38563-5-pkshih@realtek.com>
+Subject: [PATCH 6/6] rtw89: support MULTI_BSSID and correct BSSID mask of H2C
+Date:   Fri, 20 May 2022 15:17:31 +0800
+Message-ID: <20220520071731.38563-7-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220520071731.38563-1-pkshih@realtek.com>
 References: <20220520071731.38563-1-pkshih@realtek.com>
@@ -65,117 +65,76 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RX DCK is receiver DC calibration. To keep good RF performance, do this
-calibration again if the delta of thermal value from the last calibration
-is more than 8.
+The BSSID mask of H2C is used to match BSSID of receiving packets.
+Normally, we set six bits BSSID mask to exactly match BSSID of packets
+sent by target AP. After we support multiple BSSID, it could connect a
+nontransmitted BSSID, so we can only match first five bytes of BSSID.
+That means we could possibly receive other AP's packets if only the last
+byte of BSSID is different from target AP.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h     |  5 ++++
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 27 +++++++++++++++++++
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.h |  1 +
- 4 files changed, 34 insertions(+)
+ drivers/net/wireless/realtek/rtw89/cam.c  | 9 +++++++++
+ drivers/net/wireless/realtek/rtw89/cam.h  | 5 +++++
+ drivers/net/wireless/realtek/rtw89/core.c | 1 +
+ 3 files changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index e8a77225a90ff..35619435ea0a2 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2646,6 +2646,10 @@ struct rtw89_lck_info {
- 	u8 thermal[RF_PATH_MAX];
- };
- 
-+struct rtw89_rx_dck_info {
-+	u8 thermal[RF_PATH_MAX];
-+};
-+
- struct rtw89_iqk_info {
- 	bool lok_cor_fail[RTW89_IQK_CHS_NR][RTW89_IQK_PATH_NR];
- 	bool lok_fin_fail[RTW89_IQK_CHS_NR][RTW89_IQK_PATH_NR];
-@@ -3125,6 +3129,7 @@ struct rtw89_dev {
- 	struct rtw89_dpk_info dpk;
- 	struct rtw89_mcc_info mcc;
- 	struct rtw89_lck_info lck;
-+	struct rtw89_rx_dck_info rx_dck;
- 	bool is_tssi_mode[RF_PATH_MAX];
- 	bool is_bt_iqk_timeout;
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 64840c8d9efe8..b697aef2faf2d 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -1861,6 +1861,7 @@ static void rtw8852c_rfk_track(struct rtw89_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wireless/realtek/rtw89/cam.c
+index 8a26adeb23fb2..b211ed2ea0722 100644
+--- a/drivers/net/wireless/realtek/rtw89/cam.c
++++ b/drivers/net/wireless/realtek/rtw89/cam.c
+@@ -599,14 +599,23 @@ int rtw89_cam_init(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
+ int rtw89_cam_fill_bssid_cam_info(struct rtw89_dev *rtwdev,
+ 				  struct rtw89_vif *rtwvif, u8 *cmd)
  {
- 	rtw8852c_dpk_track(rtwdev);
- 	rtw8852c_lck_track(rtwdev);
-+	rtw8852c_rx_dck_track(rtwdev);
++#define BSSID_MATCH_ALL GENMASK(5, 0)
++#define BSSID_MATCH_5_BYTES GENMASK(4, 0)
+ 	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
+ 	struct rtw89_bssid_cam_entry *bssid_cam = &rtwvif->bssid_cam;
+ 	u8 bss_color = vif->bss_conf.he_bss_color.color;
++	u8 bss_mask;
++
++	if (vif->bss_conf.nontransmitted)
++		bss_mask = BSSID_MATCH_5_BYTES;
++	else
++		bss_mask = BSSID_MATCH_ALL;
+ 
+ 	FWCMD_SET_ADDR_BSSID_IDX(cmd, bssid_cam->bssid_cam_idx);
+ 	FWCMD_SET_ADDR_BSSID_OFFSET(cmd, bssid_cam->offset);
+ 	FWCMD_SET_ADDR_BSSID_LEN(cmd, bssid_cam->len);
+ 	FWCMD_SET_ADDR_BSSID_VALID(cmd, bssid_cam->valid);
++	FWCMD_SET_ADDR_BSSID_MASK(cmd, bss_mask);
+ 	FWCMD_SET_ADDR_BSSID_BB_SEL(cmd, bssid_cam->phy_idx);
+ 	FWCMD_SET_ADDR_BSSID_BSS_COLOR(cmd, bss_color);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/cam.h b/drivers/net/wireless/realtek/rtw89/cam.h
+index a3931d3e40d26..e6a1ce39e7fd0 100644
+--- a/drivers/net/wireless/realtek/rtw89/cam.h
++++ b/drivers/net/wireless/realtek/rtw89/cam.h
+@@ -309,6 +309,11 @@ static inline void FWCMD_SET_ADDR_BSSID_BB_SEL(void *cmd, u32 value)
+ 	le32p_replace_bits((__le32 *)(cmd) + 13, value, BIT(1));
  }
  
- static u32 rtw8852c_bb_cal_txpwr_ref(struct rtw89_dev *rtwdev,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-index dfb9caba9bc41..4186d825d19b7 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-@@ -3864,6 +3864,7 @@ void rtw8852c_iqk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
- 
- void rtw8852c_rx_dck(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy, bool is_afe)
- {
-+	struct rtw89_rx_dck_info *rx_dck = &rtwdev->rx_dck;
- 	u8 path, kpath;
- 	u32 rf_reg5;
- 
-@@ -3883,6 +3884,7 @@ void rtw8852c_rx_dck(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy, bool is_a
- 		rtw89_write_rf(rtwdev, path, RR_RSV1, RR_RSV1_RST, 0x0);
- 		rtw89_write_rf(rtwdev, path, RR_MOD, RR_MOD_MASK, RR_MOD_V_RX);
- 		_set_rx_dck(rtwdev, phy, path, is_afe);
-+		rx_dck->thermal[path] = ewma_thermal_read(&rtwdev->phystat.avg_thermal[path]);
- 		rtw89_write_rf(rtwdev, path, RR_RSV1, RFREG_MASK, rf_reg5);
- 
- 		if (rtwdev->is_tssi_mode[path])
-@@ -3891,6 +3893,31 @@ void rtw8852c_rx_dck(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy, bool is_a
- 	}
- }
- 
-+#define RTW8852C_RX_DCK_TH 8
-+
-+void rtw8852c_rx_dck_track(struct rtw89_dev *rtwdev)
++static inline void FWCMD_SET_ADDR_BSSID_MASK(void *cmd, u32 value)
 +{
-+	struct rtw89_rx_dck_info *rx_dck = &rtwdev->rx_dck;
-+	u8 cur_thermal;
-+	int delta;
-+	int path;
-+
-+	for (path = 0; path < RF_PATH_NUM_8852C; path++) {
-+		cur_thermal =
-+			ewma_thermal_read(&rtwdev->phystat.avg_thermal[path]);
-+		delta = abs((int)cur_thermal - rx_dck->thermal[path]);
-+
-+		rtw89_debug(rtwdev, RTW89_DBG_RFK_TRACK,
-+			    "[RX_DCK] path=%d current thermal=0x%x delta=0x%x\n",
-+			    path, cur_thermal, delta);
-+
-+		if (delta >= RTW8852C_RX_DCK_TH) {
-+			rtw8852c_rx_dck(rtwdev, RTW89_PHY_0, false);
-+			return;
-+		}
-+	}
++	le32p_replace_bits((__le32 *)(cmd) + 13, value, GENMASK(7, 2));
 +}
 +
- void rtw8852c_dpk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
+ static inline void FWCMD_SET_ADDR_BSSID_BSS_COLOR(void *cmd, u32 value)
  {
- 	u32 tx_en;
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-index c32756f0c01a9..5118a49da8d3e 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-@@ -12,6 +12,7 @@ void rtw8852c_rck(struct rtw89_dev *rtwdev);
- void rtw8852c_dack(struct rtw89_dev *rtwdev);
- void rtw8852c_iqk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx);
- void rtw8852c_rx_dck(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx, bool is_afe);
-+void rtw8852c_rx_dck_track(struct rtw89_dev *rtwdev);
- void rtw8852c_dpk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy);
- void rtw8852c_dpk_track(struct rtw89_dev *rtwdev);
- void rtw8852c_tssi(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy);
+ 	le32p_replace_bits((__le32 *)(cmd) + 13, value, GENMASK(13, 8));
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 958fe2787c6a1..4df81f00c2211 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -3011,6 +3011,7 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
+ 	ieee80211_hw_set(hw, SUPPORTS_PS);
+ 	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
+ 	ieee80211_hw_set(hw, SINGLE_SCAN_ON_ALL_BANDS);
++	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
+ 
+ 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				     BIT(NL80211_IFTYPE_AP);
 -- 
 2.25.1
 
