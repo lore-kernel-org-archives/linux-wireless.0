@@ -2,114 +2,266 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7A4C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 03:49:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D5F9C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 05:32:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345223AbiETDtx (ORCPT
+        id S1345592AbiETFcc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 May 2022 23:49:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54844 "EHLO
+        Fri, 20 May 2022 01:32:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239371AbiETDtv (ORCPT
+        with ESMTP id S235577AbiETFcb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 May 2022 23:49:51 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F3EC5A081;
-        Thu, 19 May 2022 20:49:50 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24K3n7v95032211, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24K3n7v95032211
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 20 May 2022 11:49:07 +0800
-Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 20 May 2022 11:49:07 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 20 May 2022 11:49:06 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6]) by
- RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6%5]) with mapi id
- 15.01.2308.021; Fri, 20 May 2022 11:49:06 +0800
-From:   Pkshih <pkshih@realtek.com>
-To:     "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        "neojou@gmail.com" <neojou@gmail.com>,
-        "kvalo@kernel.org" <kvalo@kernel.org>,
-        "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "martin.blumenstingl@googlemail.com" 
-        <martin.blumenstingl@googlemail.com>,
-        "linux@ulli-kroll.de" <linux@ulli-kroll.de>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 02/10] rtw88: Drop rf_lock
-Thread-Topic: [PATCH 02/10] rtw88: Drop rf_lock
-Thread-Index: AQHYapDlgq6QOJi2/ECBVrobkErMtK0mndSA
-Date:   Fri, 20 May 2022 03:49:06 +0000
-Message-ID: <af80039404cb3eb9dd036ab5734ddea95d31cf49.camel@realtek.com>
-References: <20220518082318.3898514-1-s.hauer@pengutronix.de>
-         <20220518082318.3898514-3-s.hauer@pengutronix.de>
-In-Reply-To: <20220518082318.3898514-3-s.hauer@pengutronix.de>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.36.1-2 
-x-originating-ip: [172.16.17.21]
-x-kse-serverinfo: RTEXDAG01.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvMTkg5LiL5Y2IIDEwOjI2OjAw?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <9FF09FC40C091947BB12E5E2F37A7C6C@realtek.com>
-Content-Transfer-Encoding: base64
+        Fri, 20 May 2022 01:32:31 -0400
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B5F6F137D
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2022 22:32:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1653024750; x=1684560750;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=lHbrc7VNeAsy+eDs9RZ8tRISmZ49meZSrww9VNUBqGY=;
+  b=FV8Ty7RvPno1UflhdasN9ZWbncIjFQz3paW97m+pKuNLKM1btqBmqUjZ
+   oT93cs63oPmaj9Rb7Deb9WYmsse71huczaOvAdf97gIlRjoqmIP5F4cTx
+   FSIHfCi+c2JDuxfTz9Vu+h1bDQ4T0Y7UEEkYJKCBCEfySN++YNH+cMKyp
+   U=;
+Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 19 May 2022 22:32:29 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2022 22:32:29 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 19 May 2022 22:31:54 -0700
+Received: from hu-vjakkam-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 19 May 2022 22:31:53 -0700
+From:   Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] cfg80211: Increase akm_suites array size in cfg80211_crypto_settings
+Date:   Fri, 20 May 2022 11:01:42 +0530
+Message-ID: <1653024702-5304-1-git-send-email-quic_vjakkam@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gV2VkLCAyMDIyLTA1LTE4IGF0IDEwOjIzICswMjAwLCBTYXNjaGEgSGF1ZXIgd3JvdGU6DQo+
-IFRoZSBydHdkZXYtPnJmX2xvY2sgc3BpbmxvY2sgcHJvdGVjdHMgdGhlIHJmIHJlZ2lzdGVyIGFj
-Y2Vzc2VzIGluDQo+IHJ0d19yZWFkX3JmKCkgYW5kIHJ0d193cml0ZV9yZigpLiBNb3N0IGNhbGxl
-cnMgb2YgdGhlc2UgZnVuY3Rpb25zIGhvbGQNCj4gcnR3ZGV2LT5tdXRleCBhbHJlYWR5IHdpdGgg
-dGhlIGV4Y2VwdGlvbiBvZiB0aGUgY2FsbHNpdGVzIGluIHRoZSBkZWJ1Z2ZzDQo+IGNvZGUuIFRo
-ZSBkZWJ1Z2ZzIGNvZGUgZG9lc24ndCBqdXN0aWZ5IGFuIGV4dHJhIGxvY2ssIHNvIGFjcXVpcmUg
-dGhlIG11dGV4DQo+IHRoZXJlIGFzIHdlbGwgYmVmb3JlIGNhbGxpbmcgcmYgcmVnaXN0ZXIgYWNj
-ZXNzb3JzIGFuZCBkcm9wIHRoZSBub3cNCj4gdW5uZWNlc3Nhcnkgc3BpbmxvY2suDQo+IA0KPiBT
-aWduZWQtb2ZmLWJ5OiBTYXNjaGEgSGF1ZXIgPHMuaGF1ZXJAcGVuZ3V0cm9uaXguZGU+DQo+IC0t
-LQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9kZWJ1Zy5jIHwgMTEgKysr
-KysrKysrKysNCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvaGNpLmggICB8
-ICA5ICsrKy0tLS0tLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9tYWlu
-LmMgIHwgIDEgLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9tYWluLmgg
-IHwgIDMgLS0tDQo+ICA0IGZpbGVzIGNoYW5nZWQsIDE0IGluc2VydGlvbnMoKyksIDEwIGRlbGV0
-aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
-cnR3ODgvZGVidWcuYw0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvZGVi
-dWcuYw0KPiBpbmRleCAxYTUyZmY1ODVmYmM3Li5iYTViYTg1MmVmYjhjIDEwMDY0NA0KPiAtLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L2RlYnVnLmMNCj4gKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9kZWJ1Zy5jDQo+IA0KDQpbLi4uXQ0KDQo+
-IEBAIC01MjMsNiArNTI3LDggQEAgc3RhdGljIGludCBydHdfZGVidWdfZ2V0X3JmX2R1bXAoc3Ry
-dWN0IHNlcV9maWxlICptLCB2b2lkICp2KQ0KPiAgCXUzMiBhZGRyLCBvZmZzZXQsIGRhdGE7DQo+
-ICAJdTggcGF0aDsNCj4gIA0KPiArCW11dGV4X2xvY2soJnJ0d2Rldi0+bXV0ZXgpOw0KPiArDQo+
-ICAJZm9yIChwYXRoID0gMDsgcGF0aCA8IHJ0d2Rldi0+aGFsLnJmX3BhdGhfbnVtOyBwYXRoKysp
-IHsNCj4gIAkJc2VxX3ByaW50ZihtLCAiUkYgcGF0aDolZFxuIiwgcGF0aCk7DQo+ICAJCWZvciAo
-YWRkciA9IDA7IGFkZHIgPCAweDEwMDsgYWRkciArPSA0KSB7DQo+IEBAIC01MzcsNiArNTQzLDgg
-QEAgc3RhdGljIGludCBydHdfZGVidWdfZ2V0X3JmX2R1bXAoc3RydWN0IHNlcV9maWxlICptLCB2
-b2lkICp2KQ0KPiAgCQlzZXFfcHV0cyhtLCAiXG4iKTsNCj4gIAl9DQo+ICANCj4gKwltdXRleF91
-bmxvY2soJnJ0d2Rldi0+bXV0ZXgpOw0KPiArDQo+ICAJcmV0dXJuIDA7DQo+ICB9DQo+IA0KDQpU
-aGlzIHdpbGwgdGFrZSB0aW1lIHRvIGR1bXAgYWxsIFJGIHJlZ2lzdGVycyBmb3IgZGVidWdnaW5n
-DQpwdXJwb3NlLiBGb3IgUENJIGludGVyZmFjZSwgSSB0aGluayB0aGlzIHdvdWxkIGJlIG9rYXku
-DQpDb3VsZCB5b3UgdHJ5IHRvIGR1bXAgcmVnaXN0ZXJzIHZpYSBkZWJ1ZnMgd2hpbGUgeW91IGFy
-ZQ0KdXNpbmcgYSBVU0IgV2lGaSBkZXZpY2UsIHN1Y2ggYXMgcGxheSBZb3V0dWJlIG9yIGRvd25s
-b2FkIGZpbGVzLi4uDQoNCklmIGl0IGRvZXNuJ3Qgd29yayB2ZXJ5IHdlbGwsIEkgc3VnZ2VzdCB0
-byB1c2UgcmZfbXV0ZXggdG8NCnJlcGxhY2UgcmZfbG9jayBpbnBsYWNlLCBidXQgbm90IGp1c3Qg
-cmVtb3ZlIHJmX2xvY2suDQoNCi0tDQpQaW5nLUtlDQoNCg0K
+Increase akm_suites array size in struct cfg80211_crypto_settings to 10
+and advertise the capability to userspace. This allows userspace to send
+more than two AKMs to driver in netlink commands such as
+NL80211_CMD_CONNECT.
+
+This capability needed for implementing WPA3-Personal transition mode
+correctly with any driver that handles roaming internally. Currently,
+the possible AKMs for multi-AKM connect can include PSK, PSK-SHA-256,
+SAE, FT-PSK and FT-SAE since the count is already 5, Increasing
+the akm_suites array size to 10 should be reasonable for future
+usecases.
+
+Contains a fix for the issue:
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+---
+v3:
+ - Increase akm_suites array size in cfg80211_crypto_settings instead
+   of allocating the array dynamically.
+v2:
+ - Fixed issue reported by kernel test robot.
+---
+ drivers/net/wireless/quantenna/qtnfmac/commands.c | 12 ++++++++----
+ include/net/cfg80211.h                            | 11 ++++++++++-
+ include/uapi/linux/nl80211.h                      | 14 ++++++++++++++
+ net/wireless/core.c                               |  6 ++++++
+ net/wireless/nl80211.c                            | 10 +++++++++-
+ 5 files changed, 47 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+index c68563c..2c84736 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
+@@ -241,6 +241,7 @@ int qtnf_cmd_send_start_ap(struct qtnf_vif *vif,
+ 	struct qlink_auth_encr *aen;
+ 	int ret;
+ 	int i;
++	int n;
+ 
+ 	if (!qtnf_cmd_start_ap_can_fit(vif, s))
+ 		return -E2BIG;
+@@ -280,8 +281,9 @@ int qtnf_cmd_send_start_ap(struct qtnf_vif *vif,
+ 	for (i = 0; i < QLINK_MAX_NR_CIPHER_SUITES; i++)
+ 		aen->ciphers_pairwise[i] =
+ 				cpu_to_le32(s->crypto.ciphers_pairwise[i]);
+-	aen->n_akm_suites = cpu_to_le32(s->crypto.n_akm_suites);
+-	for (i = 0; i < QLINK_MAX_NR_AKM_SUITES; i++)
++	n = min(QLINK_MAX_NR_AKM_SUITES, s->crypto.n_akm_suites);
++	aen->n_akm_suites = cpu_to_le32(n);
++	for (i = 0; i < n; i++)
+ 		aen->akm_suites[i] = cpu_to_le32(s->crypto.akm_suites[i]);
+ 	aen->control_port = s->crypto.control_port;
+ 	aen->control_port_no_encrypt = s->crypto.control_port_no_encrypt;
+@@ -2076,6 +2078,7 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 	struct qlink_auth_encr *aen;
+ 	int ret;
+ 	int i;
++	int n;
+ 	u32 connect_flags = 0;
+ 
+ 	cmd_skb = qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
+@@ -2132,9 +2135,10 @@ int qtnf_cmd_send_connect(struct qtnf_vif *vif,
+ 		aen->ciphers_pairwise[i] =
+ 			cpu_to_le32(sme->crypto.ciphers_pairwise[i]);
+ 
+-	aen->n_akm_suites = cpu_to_le32(sme->crypto.n_akm_suites);
++	n = min(QLINK_MAX_NR_AKM_SUITES, sme->crypto.n_akm_suites);
++	aen->n_akm_suites = cpu_to_le32(n);
+ 
+-	for (i = 0; i < QLINK_MAX_NR_AKM_SUITES; i++)
++	for (i = 0; i < n; i++)
+ 		aen->akm_suites[i] = cpu_to_le32(sme->crypto.akm_suites[i]);
+ 
+ 	aen->control_port = sme->crypto.control_port;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index cc8a988..33919256 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1061,6 +1061,7 @@ struct survey_info {
+ };
+ 
+ #define CFG80211_MAX_WEP_KEYS	4
++#define CFG80211_MAX_NUM_AKM_SUITES	10
+ 
+ /**
+  * struct cfg80211_crypto_settings - Crypto settings
+@@ -1112,7 +1113,7 @@ struct cfg80211_crypto_settings {
+ 	int n_ciphers_pairwise;
+ 	u32 ciphers_pairwise[NL80211_MAX_NR_CIPHER_SUITES];
+ 	int n_akm_suites;
+-	u32 akm_suites[NL80211_MAX_NR_AKM_SUITES];
++	u32 akm_suites[CFG80211_MAX_NUM_AKM_SUITES];
+ 	bool control_port;
+ 	__be16 control_port_ethertype;
+ 	bool control_port_no_encrypt;
+@@ -5134,6 +5135,13 @@ struct wiphy_iftype_akm_suites {
+  * @ema_max_profile_periodicity: maximum profile periodicity supported by
+  *	the driver. Setting this field to a non-zero value indicates that the
+  *	driver supports enhanced multi-BSSID advertisements (EMA AP).
++ * @max_num_akm_suites: maximum number of AKM suites allowed for
++ *	configuration through %NL80211_CMD_CONNECT, %NL80211_CMD_ASSOCIATE and
++ *	%NL80211_CMD_START_AP. Set to NL80211_MAX_NR_AKM_SUITES if not set by
++ *	driver. If set by driver minimum allowed value is
++ *	NL80211_MAX_NR_AKM_SUITES in order to avoid compatibility issues with
++ *	legacy userspace and maximum allowed value is
++ *	CFG80211_MAX_NUM_AKM_SUITES.
+  */
+ struct wiphy {
+ 	struct mutex mtx;
+@@ -5280,6 +5288,7 @@ struct wiphy {
+ 
+ 	u8 mbssid_max_interfaces;
+ 	u8 ema_max_profile_periodicity;
++	u16 max_num_akm_suites;
+ 
+ 	char priv[] __aligned(NETDEV_ALIGN);
+ };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d9490e3..246bd00 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2663,6 +2663,13 @@ enum nl80211_commands {
+  *	association request when used with NL80211_CMD_NEW_STATION). Can be set
+  *	only if %NL80211_STA_FLAG_WME is set.
+  *
++ * @NL80211_ATTR_MAX_NUM_AKM_SUITES: U16 attribute. Indicates maximum number of
++ *	AKM suites allowed for %NL80211_CMD_CONNECT, %NL80211_CMD_ASSOCIATE and
++ *	%NL80211_CMD_START_AP in %NL80211_CMD_GET_WIPHY response. If this
++ *	attribute is not present userspace shall consider maximum number of AKM
++ *	suites allowed as %NL80211_MAX_NR_AKM_SUITES which is the legacy maximum
++ *	number prior to the introduction of this attribute.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3177,6 +3184,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_DISABLE_EHT,
+ 
++	NL80211_ATTR_MAX_NUM_AKM_SUITES,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -3231,6 +3240,11 @@ enum nl80211_attrs {
+ #define NL80211_HE_MIN_CAPABILITY_LEN           16
+ #define NL80211_HE_MAX_CAPABILITY_LEN           54
+ #define NL80211_MAX_NR_CIPHER_SUITES		5
++
++/*
++ * NL80211_MAX_NR_AKM_SUITES is obsolete when %NL80211_ATTR_MAX_NUM_AKM_SUITES
++ * present in %NL80211_CMD_GET_WIPHY response.
++ */
+ #define NL80211_MAX_NR_AKM_SUITES		2
+ #define NL80211_EHT_MIN_CAPABILITY_LEN          13
+ #define NL80211_EHT_MAX_CAPABILITY_LEN          51
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index f08d4b3..8d42fc4 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -913,6 +913,12 @@ int wiphy_register(struct wiphy *wiphy)
+ 		return -EINVAL;
+ #endif
+ 
++	if (!wiphy->max_num_akm_suites)
++		wiphy->max_num_akm_suites = NL80211_MAX_NR_AKM_SUITES;
++	else if (wiphy->max_num_akm_suites < NL80211_MAX_NR_AKM_SUITES ||
++		 wiphy->max_num_akm_suites > CFG80211_MAX_NUM_AKM_SUITES)
++		return -EINVAL;
++
+ 	/* check and set up bitrates */
+ 	ieee80211_set_bitrate_flags(wiphy);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 842f82f..2134430 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -792,6 +792,10 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 				 NL80211_EHT_MIN_CAPABILITY_LEN,
+ 				 NL80211_EHT_MAX_CAPABILITY_LEN),
+ 	[NL80211_ATTR_DISABLE_EHT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_MAX_NUM_AKM_SUITES] =
++		NLA_POLICY_RANGE(NLA_U16,
++				 NL80211_MAX_NR_AKM_SUITES,
++				 CFG80211_MAX_NUM_AKM_SUITES),
+ };
+ 
+ /* policy for the key attributes */
+@@ -2891,6 +2895,10 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		if (nl80211_put_mbssid_support(&rdev->wiphy, msg))
+ 			goto nla_put_failure;
+ 
++		if (nla_put_u16(msg, NL80211_ATTR_MAX_NUM_AKM_SUITES,
++				rdev->wiphy.max_num_akm_suites))
++			goto nla_put_failure;
++
+ 		/* done */
+ 		state->split_start = 0;
+ 		break;
+@@ -10263,7 +10271,7 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
+ 		if (len % sizeof(u32))
+ 			return -EINVAL;
+ 
+-		if (settings->n_akm_suites > NL80211_MAX_NR_AKM_SUITES)
++		if (settings->n_akm_suites > rdev->wiphy.max_num_akm_suites)
+ 			return -EINVAL;
+ 
+ 		memcpy(settings->akm_suites, data, len);
+-- 
+2.7.4
+
