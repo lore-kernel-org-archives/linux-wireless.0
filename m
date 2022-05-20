@@ -2,62 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D970C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 07:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3EEBC433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 07:39:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346236AbiETHSj (ORCPT
+        id S1346559AbiETHjn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 May 2022 03:18:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46330 "EHLO
+        Fri, 20 May 2022 03:39:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345619AbiETHSe (ORCPT
+        with ESMTP id S243737AbiETHjm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 May 2022 03:18:34 -0400
+        Fri, 20 May 2022 03:39:42 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B12E93ED22
-        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2022 00:18:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF40514AF42;
+        Fri, 20 May 2022 00:39:39 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24K7HuQhA023735, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24K7HuQhA023735
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24K7d4mkD030088, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24K7d4mkD030088
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 20 May 2022 15:17:56 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+        Fri, 20 May 2022 15:39:04 +0800
+Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Fri, 20 May 2022 15:17:56 +0800
-Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 20 May
- 2022 15:17:56 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>,
-        <kevin_yang@realtek.com>
-Subject: [PATCH 5/6] rtw89: sar: adjust and support SAR on 6GHz band
-Date:   Fri, 20 May 2022 15:17:30 +0800
-Message-ID: <20220520071731.38563-6-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220520071731.38563-1-pkshih@realtek.com>
-References: <20220520071731.38563-1-pkshih@realtek.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.16.17.21]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 05/20/2022 06:55:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ 15.1.2375.28; Fri, 20 May 2022 15:39:04 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Fri, 20 May 2022 15:39:04 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6]) by
+ RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6%5]) with mapi id
+ 15.01.2308.021; Fri, 20 May 2022 15:39:04 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "kernel@pengutronix.de" <kernel@pengutronix.de>,
+        "neojou@gmail.com" <neojou@gmail.com>,
+        "kvalo@kernel.org" <kvalo@kernel.org>,
+        "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "martin.blumenstingl@googlemail.com" 
+        <martin.blumenstingl@googlemail.com>,
+        "linux@ulli-kroll.de" <linux@ulli-kroll.de>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "neo_jou@realtek.com" <neo_jou@realtek.com>
+Subject: Re: [PATCH 06/10] rtw88: Add common USB chip support
+Thread-Topic: [PATCH 06/10] rtw88: Add common USB chip support
+Thread-Index: AQHYapDiqxMx5uVh8U2fFMFwvLZZx60m3hOA
+Date:   Fri, 20 May 2022 07:39:03 +0000
+Message-ID: <e9ca08c6facb8916fb9e5cbad05447321d3d0f43.camel@realtek.com>
+References: <20220518082318.3898514-1-s.hauer@pengutronix.de>
+         <20220518082318.3898514-7-s.hauer@pengutronix.de>
+In-Reply-To: <20220518082318.3898514-7-s.hauer@pengutronix.de>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.36.1-2 
+x-originating-ip: [172.16.17.21]
+x-kse-serverinfo: RTEXMBS03.realtek.com.tw, 9
+x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
  rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvMjAgpFekyCAwNjowMDowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvMjAg5LiK5Y2IIDA2OjAwOjAw?=
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <06A22960F1579340B62CCC4DAD6854C6@realtek.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -65,258 +79,202 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
-
-Since SAR is more expected to follow U-NII bands to plan subbands,
-division of 6GHz band is quite different from defined enum of subbands
-which is used by PHY in most cases. It's hard and painful if we want to
-keep using the same enum on SAR. So, we introduce another enum for SAR
-subbands and adjust SAR flow to use it.
-
-Besides, since 6GHz SAR subbands won't be divided with edge alignment,
-some cases will span two SAR subbands. For these cases, we describe them
-within an array of rtw89_sar_span and take the smaller one between SAR
-settings of the two subbands.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/core.h  |  19 ++-
- drivers/net/wireless/realtek/rtw89/debug.h |   1 +
- drivers/net/wireless/realtek/rtw89/sar.c   | 140 ++++++++++++++++++---
- 3 files changed, 140 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 35619435ea0a2..6dd341f3fd33e 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2550,9 +2550,24 @@ enum rtw89_sar_sources {
- 	RTW89_SAR_SOURCE_NR,
- };
- 
-+enum rtw89_sar_subband {
-+	RTW89_SAR_2GHZ_SUBBAND,
-+	RTW89_SAR_5GHZ_SUBBAND_1_2, /* U-NII-1 and U-NII-2 */
-+	RTW89_SAR_5GHZ_SUBBAND_2_E, /* U-NII-2-Extended */
-+	RTW89_SAR_5GHZ_SUBBAND_3,   /* U-NII-3 */
-+	RTW89_SAR_6GHZ_SUBBAND_5_L, /* U-NII-5 lower part */
-+	RTW89_SAR_6GHZ_SUBBAND_5_H, /* U-NII-5 higher part */
-+	RTW89_SAR_6GHZ_SUBBAND_6,   /* U-NII-6 */
-+	RTW89_SAR_6GHZ_SUBBAND_7_L, /* U-NII-7 lower part */
-+	RTW89_SAR_6GHZ_SUBBAND_7_H, /* U-NII-7 higher part */
-+	RTW89_SAR_6GHZ_SUBBAND_8,   /* U-NII-8 */
-+
-+	RTW89_SAR_SUBBAND_NR,
-+};
-+
- struct rtw89_sar_cfg_common {
--	bool set[RTW89_SUBBAND_NR];
--	s32 cfg[RTW89_SUBBAND_NR];
-+	bool set[RTW89_SAR_SUBBAND_NR];
-+	s32 cfg[RTW89_SAR_SUBBAND_NR];
- };
- 
- struct rtw89_sar_info {
-diff --git a/drivers/net/wireless/realtek/rtw89/debug.h b/drivers/net/wireless/realtek/rtw89/debug.h
-index de72155ad1fea..561b04faf703d 100644
---- a/drivers/net/wireless/realtek/rtw89/debug.h
-+++ b/drivers/net/wireless/realtek/rtw89/debug.h
-@@ -24,6 +24,7 @@ enum rtw89_debug_mask {
- 	RTW89_DBG_BTC = BIT(13),
- 	RTW89_DBG_BF = BIT(14),
- 	RTW89_DBG_HW_SCAN = BIT(15),
-+	RTW89_DBG_SAR = BIT(16),
- };
- 
- enum rtw89_debug_mac_reg_sel {
-diff --git a/drivers/net/wireless/realtek/rtw89/sar.c b/drivers/net/wireless/realtek/rtw89/sar.c
-index 097c87899ceaa..eb2d3ec28775f 100644
---- a/drivers/net/wireless/realtek/rtw89/sar.c
-+++ b/drivers/net/wireless/realtek/rtw89/sar.c
-@@ -5,15 +5,122 @@
- #include "debug.h"
- #include "sar.h"
- 
-+static enum rtw89_sar_subband rtw89_sar_get_subband(struct rtw89_dev *rtwdev,
-+						    u32 center_freq)
-+{
-+	switch (center_freq) {
-+	default:
-+		rtw89_debug(rtwdev, RTW89_DBG_SAR,
-+			    "center freq: %u to SAR subband is unhandled\n",
-+			    center_freq);
-+		fallthrough;
-+	case 2412 ... 2484:
-+		return RTW89_SAR_2GHZ_SUBBAND;
-+	case 5180 ... 5320:
-+		return RTW89_SAR_5GHZ_SUBBAND_1_2;
-+	case 5500 ... 5720:
-+		return RTW89_SAR_5GHZ_SUBBAND_2_E;
-+	case 5745 ... 5825:
-+		return RTW89_SAR_5GHZ_SUBBAND_3;
-+	case 5955 ... 6155:
-+		return RTW89_SAR_6GHZ_SUBBAND_5_L;
-+	case 6175 ... 6415:
-+		return RTW89_SAR_6GHZ_SUBBAND_5_H;
-+	case 6435 ... 6515:
-+		return RTW89_SAR_6GHZ_SUBBAND_6;
-+	case 6535 ... 6695:
-+		return RTW89_SAR_6GHZ_SUBBAND_7_L;
-+	case 6715 ... 6855:
-+		return RTW89_SAR_6GHZ_SUBBAND_7_H;
-+
-+	/* freq 6875 (ch 185, 20MHz) spans RTW89_SAR_6GHZ_SUBBAND_7_H
-+	 * and RTW89_SAR_6GHZ_SUBBAND_8, so directly describe it with
-+	 * struct rtw89_sar_span in the following.
-+	 */
-+
-+	case 6895 ... 7115:
-+		return RTW89_SAR_6GHZ_SUBBAND_8;
-+	}
-+}
-+
-+struct rtw89_sar_span {
-+	enum rtw89_sar_subband subband_low;
-+	enum rtw89_sar_subband subband_high;
-+};
-+
-+#define RTW89_SAR_SPAN_VALID(span) ((span)->subband_high)
-+
-+#define RTW89_SAR_6GHZ_SPAN_HEAD 6145
-+#define RTW89_SAR_6GHZ_SPAN_IDX(center_freq) \
-+	((((int)(center_freq) - RTW89_SAR_6GHZ_SPAN_HEAD) / 5) / 2)
-+
-+#define RTW89_DECL_SAR_6GHZ_SPAN(center_freq, subband_l, subband_h) \
-+	[RTW89_SAR_6GHZ_SPAN_IDX(center_freq)] = { \
-+		.subband_low = RTW89_SAR_6GHZ_ ## subband_l, \
-+		.subband_high = RTW89_SAR_6GHZ_ ## subband_h, \
-+	}
-+
-+/* Since 6GHz SAR subbands are not edge aligned, some cases span two SAR
-+ * subbands. In the following, we describe each of them with rtw89_sar_span.
-+ */
-+static const struct rtw89_sar_span rtw89_sar_overlapping_6ghz[] = {
-+	RTW89_DECL_SAR_6GHZ_SPAN(6145, SUBBAND_5_L, SUBBAND_5_H),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6165, SUBBAND_5_L, SUBBAND_5_H),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6185, SUBBAND_5_L, SUBBAND_5_H),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6505, SUBBAND_6, SUBBAND_7_L),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6525, SUBBAND_6, SUBBAND_7_L),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6545, SUBBAND_6, SUBBAND_7_L),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6665, SUBBAND_7_L, SUBBAND_7_H),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6705, SUBBAND_7_L, SUBBAND_7_H),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6825, SUBBAND_7_H, SUBBAND_8),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6865, SUBBAND_7_H, SUBBAND_8),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6875, SUBBAND_7_H, SUBBAND_8),
-+	RTW89_DECL_SAR_6GHZ_SPAN(6885, SUBBAND_7_H, SUBBAND_8),
-+};
-+
- static int rtw89_query_sar_config_common(struct rtw89_dev *rtwdev, s32 *cfg)
- {
- 	struct rtw89_sar_cfg_common *rtwsar = &rtwdev->sar.cfg_common;
--	enum rtw89_subband subband = rtwdev->hal.current_subband;
-+	struct rtw89_hal *hal = &rtwdev->hal;
-+	enum rtw89_band band = hal->current_band_type;
-+	u32 center_freq = hal->current_freq;
-+	const struct rtw89_sar_span *span = NULL;
-+	enum rtw89_sar_subband subband_l, subband_h;
-+	int idx;
-+
-+	if (band == RTW89_BAND_6G) {
-+		idx = RTW89_SAR_6GHZ_SPAN_IDX(center_freq);
-+		/* To decrease size of rtw89_sar_overlapping_6ghz[],
-+		 * RTW89_SAR_6GHZ_SPAN_IDX() truncates the leading NULLs
-+		 * to make first span as index 0 of the table. So, if center
-+		 * frequency is less than the first one, it will get netative.
-+		 */
-+		if (idx >= 0 && idx < ARRAY_SIZE(rtw89_sar_overlapping_6ghz))
-+			span = &rtw89_sar_overlapping_6ghz[idx];
-+	}
-+
-+	if (span && RTW89_SAR_SPAN_VALID(span)) {
-+		subband_l = span->subband_low;
-+		subband_h = span->subband_high;
-+	} else {
-+		subband_l = rtw89_sar_get_subband(rtwdev, center_freq);
-+		subband_h = subband_l;
-+	}
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_SAR,
-+		    "for {band %u, center_freq %u}, SAR subband: {%u, %u}\n",
-+		    band, center_freq, subband_l, subband_h);
- 
--	if (!rtwsar->set[subband])
-+	if (!rtwsar->set[subband_l] && !rtwsar->set[subband_h])
- 		return -ENODATA;
- 
--	*cfg = rtwsar->cfg[subband];
-+	if (!rtwsar->set[subband_l])
-+		*cfg = rtwsar->cfg[subband_h];
-+	else if (!rtwsar->set[subband_h])
-+		*cfg = rtwsar->cfg[subband_l];
-+	else
-+		*cfg = min(rtwsar->cfg[subband_l], rtwsar->cfg[subband_h]);
-+
- 	return 0;
- }
- 
-@@ -128,21 +235,20 @@ static int rtw89_apply_sar_common(struct rtw89_dev *rtwdev,
- 	return ret;
- }
- 
--static const u8 rtw89_common_sar_subband_map[] = {
--	RTW89_CH_2G,
--	RTW89_CH_5G_BAND_1,
--	RTW89_CH_5G_BAND_3,
--	RTW89_CH_5G_BAND_4,
--};
--
- static const struct cfg80211_sar_freq_ranges rtw89_common_sar_freq_ranges[] = {
- 	{ .start_freq = 2412, .end_freq = 2484, },
- 	{ .start_freq = 5180, .end_freq = 5320, },
- 	{ .start_freq = 5500, .end_freq = 5720, },
- 	{ .start_freq = 5745, .end_freq = 5825, },
-+	{ .start_freq = 5955, .end_freq = 6155, },
-+	{ .start_freq = 6175, .end_freq = 6415, },
-+	{ .start_freq = 6435, .end_freq = 6515, },
-+	{ .start_freq = 6535, .end_freq = 6695, },
-+	{ .start_freq = 6715, .end_freq = 6875, },
-+	{ .start_freq = 6875, .end_freq = 7115, },
- };
- 
--static_assert(ARRAY_SIZE(rtw89_common_sar_subband_map) ==
-+static_assert(RTW89_SAR_SUBBAND_NR ==
- 	      ARRAY_SIZE(rtw89_common_sar_freq_ranges));
- 
- const struct cfg80211_sar_capa rtw89_sar_capa = {
-@@ -159,7 +265,6 @@ int rtw89_ops_set_sar_specs(struct ieee80211_hw *hw,
- 	u8 fct;
- 	u32 freq_start;
- 	u32 freq_end;
--	u32 band;
- 	s32 power;
- 	u32 i, idx;
- 
-@@ -175,15 +280,14 @@ int rtw89_ops_set_sar_specs(struct ieee80211_hw *hw,
- 
- 		freq_start = rtw89_common_sar_freq_ranges[idx].start_freq;
- 		freq_end = rtw89_common_sar_freq_ranges[idx].end_freq;
--		band = rtw89_common_sar_subband_map[idx];
- 		power = sar->sub_specs[i].power;
- 
--		rtw89_info(rtwdev, "On freq %u to %u, ", freq_start, freq_end);
--		rtw89_info(rtwdev, "set SAR power limit %d (unit: 1/%lu dBm)\n",
--			   power, BIT(fct));
-+		rtw89_debug(rtwdev, RTW89_DBG_SAR,
-+			    "On freq %u to %u, set SAR limit %d (unit: 1/%lu dBm)\n",
-+			    freq_start, freq_end, power, BIT(fct));
- 
--		sar_common.set[band] = true;
--		sar_common.cfg[band] = power;
-+		sar_common.set[idx] = true;
-+		sar_common.cfg[idx] = power;
- 	}
- 
- 	return rtw89_apply_sar_common(rtwdev, &sar_common);
--- 
-2.25.1
-
+T24gV2VkLCAyMDIyLTA1LTE4IGF0IDEwOjIzICswMjAwLCBTYXNjaGEgSGF1ZXIgd3JvdGU6DQo+
+IEFkZCB0aGUgY29tbW9uIGJpdHMgYW5kIHBpZWNlcyB0byBhZGQgVVNCIHN1cHBvcnQgdG8gdGhl
+IFJUVzg4IGRyaXZlci4NCj4gVGhpcyBpcyBiYXNlZCBvbiBodHRwczovL2dpdGh1Yi5jb20vdWxs
+aS1rcm9sbC9ydHc4OC11c2IuZ2l0IHdoaWNoDQo+IGl0c2VsZiBpcyBmaXJzdCB3cml0dGVuIGJ5
+IE5lbyBKb3UuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBuZW9fam91IDxuZW9fam91QHJlYWx0ZWsu
+Y29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBIYW5zIFVsbGkgS3JvbGwgPGxpbnV4QHVsbGkta3JvbGwu
+ZGU+DQo+IFNpZ25lZC1vZmYtYnk6IFNhc2NoYSBIYXVlciA8cy5oYXVlckBwZW5ndXRyb25peC5k
+ZT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L0tjb25maWcg
+IHwgICAgMyArDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L01ha2VmaWxl
+IHwgICAgMiArDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L21hYy5jICAg
+IHwgICAgMyArDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L21haW4uYyAg
+IHwgICAgNSArDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L21haW4uaCAg
+IHwgICAgNCArDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3JlZy5oICAg
+IHwgICAgMSArDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3R4LmggICAg
+IHwgICAzMSArDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3VzYi5jICAg
+IHwgMTA1MSArKysrKysrKysrKysrKysrKysrDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFs
+dGVrL3J0dzg4L3VzYi5oICAgIHwgIDEwOSArKw0KPiAgOSBmaWxlcyBjaGFuZ2VkLCAxMjA5IGlu
+c2VydGlvbnMoKykNCj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL25ldC93aXJlbGVzcy9y
+ZWFsdGVrL3J0dzg4L3VzYi5jDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvcmVhbHRlay9ydHc4OC91c2IuaA0KPiANCg0KWy4uLl0NCg0KPiBkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9yZWcuaCBiL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL3JlYWx0ZWsvcnR3ODgvcmVnLmgNCj4gaW5kZXggODRiYTllYzQ4OWMzNy4uYTkyODg5
+OTAzMDg2MyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4
+OC9yZWcuaA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3JlZy5o
+DQo+IEBAIC0xODQsNiArMTg0LDcgQEANCj4gICNkZWZpbmUgQklUX1RYRE1BX1ZJUV9NQVAoeCkg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcDQoJCQkJ
+Xl5eXl5eXiByZXBsYWNlIDggc3BhY2VzIGJ5IG9uZSB0YWINCg0KPiAgCSgoKHgpICYgQklUX01B
+U0tfVFhETUFfVklRX01BUCkgPDwgQklUX1NISUZUX1RYRE1BX1ZJUV9NQVApDQo+ICAjZGVmaW5l
+IFJFR19UWERNQV9QUV9NQVAJMHgwMTBDDQo+ICsjZGVmaW5lIEJJVF9SWERNQV9BUkJCV19FTglC
+SVQoMCkNCj4gICNkZWZpbmUgQklUX1NISUZUX1RYRE1BX0JFUV9NQVAJOA0KPiAgI2RlZmluZSBC
+SVRfTUFTS19UWERNQV9CRVFfTUFQCTB4Mw0KPiAgI2RlZmluZSBCSVRfVFhETUFfQkVRX01BUCh4
+KSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwNCgkJ
+CQkJXl5eXl4gdXNlIHRhYg0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9y
+ZWFsdGVrL3J0dzg4L3R4LmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3R4
+LmgNCj4gaW5kZXggNTYzNzFlZmY5ZjdmZi4uYzAyZDdhMTU4OTVjNiAxMDA2NDQNCj4gLS0tIGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC90eC5oDQo+ICsrKyBiL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvdHguaA0KPiBAQCAtNjcsNiArNjcsMTQgQEANCj4g
+IAlsZTMycF9yZXBsYWNlX2JpdHMoKF9fbGUzMiAqKSh0eGRlc2MpICsgMHgwMywgdmFsdWUsIEJJ
+VCgxNSkpDQo+ICAjZGVmaW5lIFNFVF9UWF9ERVNDX0JUX05VTEwodHhkZXNjLCB2YWx1ZSkJCQkJ
+ICAgICAgIFwNCj4gIAlsZTMycF9yZXBsYWNlX2JpdHMoKF9fbGUzMiAqKSh0eGRlc2MpICsgMHgw
+MiwgdmFsdWUsIEJJVCgyMykpDQo+ICsjZGVmaW5lIFNFVF9UWF9ERVNDX1RYREVTQ19DSEVDS1NV
+TSh0eGRlc2MsIHZhbHVlKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXA0KPiArCWxlMzJw
+X3JlcGxhY2VfYml0cygoX19sZTMyICopKHR4ZGVzYykgKyAweDA3LCB2YWx1ZSwgR0VOTUFTSygx
+NSwgMCkpDQo+ICsjZGVmaW5lIFNFVF9UWF9ERVNDX0RNQV9UWEFHR19OVU0odHhkZXNjLCB2YWx1
+ZSkgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwNCj4gKwlsZTMycF9yZXBsYWNlX2JpdHMo
+KF9fbGUzMiAqKSh0eGRlc2MpICsgMHgwNywgdmFsdWUsIEdFTk1BU0soMzEsIDI0KSkNCj4gKyNk
+ZWZpbmUgR0VUX1RYX0RFU0NfUEtUX09GRlNFVCh0eGRlc2MpICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIFwNCj4gKwlsZTMyX2dldF9iaXRzKCooKF9fbGUzMiAqKSh0eGRlc2MpICsg
+MHgwMSksIEdFTk1BU0soMjgsIDI0KSkNCj4gKyNkZWZpbmUgR0VUX1RYX0RFU0NfUVNFTCh0eGRl
+c2MpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFwNCgkJCQkJCV5eXl4g
+dXNlIHRhYg0KDQpJIHRoaW5rIHlvdSBjYW4gcnVuIC4vc2NyaXB0L2NoZWNrcGF0Y2gucGwgdG8g
+ZmluZCBvdXQgdGhlc2UgY29kaW5nIHN0eWxlIGlzc3Vlcy4NCg0KPiArCWxlMzJfZ2V0X2JpdHMo
+KigoX19sZTMyICopKHR4ZGVzYykgKyAweDAxKSwgR0VOTUFTSygxMiwgOCkpDQo+ICANCj4gIGVu
+dW0gcnR3X3R4X2Rlc2NfcXVldWVfc2VsZWN0IHsNCj4gIAlUWF9ERVNDX1FTRUxfVElEMAk9IDAs
+DQo+IEBAIC0xMTksNCArMTI3LDI3IEBAIHJ0d190eF93cml0ZV9kYXRhX2gyY19nZXQoc3RydWN0
+IHJ0d19kZXYgKnJ0d2RldiwNCj4gIAkJCSAgc3RydWN0IHJ0d190eF9wa3RfaW5mbyAqcGt0X2lu
+Zm8sDQo+ICAJCQkgIHU4ICpidWYsIHUzMiBzaXplKTsNCj4gIA0KPiANCg0KWy4uLl0NCg0KPiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC91c2IuYyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvdXNiLmMNCj4gbmV3IGZpbGUgbW9kZSAx
+MDA2NDQNCj4gaW5kZXggMDAwMDAwMDAwMDAwMC4uNzY0MWVhNmY2YWQxYQ0KPiAtLS0gL2Rldi9u
+dWxsDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvdXNiLmMNCj4g
+QEAgLTAsMCArMSwxMDUxIEBADQo+ICsvLyBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogR1BMLTIu
+MCBPUiBCU0QtMy1DbGF1c2UNCj4gKy8qIENvcHlyaWdodChjKSAyMDE4LTIwMTkgIFJlYWx0ZWsg
+Q29ycG9yYXRpb24NCj4gKyAqLw0KPiArDQo+ICsjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+DQo+
+ICsjaW5jbHVkZSA8bGludXgvdXNiLmg+DQo+ICsjaW5jbHVkZSA8bGludXgvbXV0ZXguaD4NCj4g
+KyNpbmNsdWRlICJtYWluLmgiDQo+ICsjaW5jbHVkZSAiZGVidWcuaCINCj4gKyNpbmNsdWRlICJy
+ZWcuaCINCj4gKyNpbmNsdWRlICJ0eC5oIg0KPiArI2luY2x1ZGUgInJ4LmgiDQo+ICsjaW5jbHVk
+ZSAiZncuaCINCj4gKyNpbmNsdWRlICJwcy5oIg0KPiArI2luY2x1ZGUgInVzYi5oIg0KPiArDQo+
+ICsjZGVmaW5lIFJUV19VU0JfTUFYX1JYUV9MRU4JMTI4DQo+ICsNCj4gK3N0cnVjdCBydHdfdXNi
+X3R4Y2Igew0KPiArCXN0cnVjdCBydHdfZGV2ICpydHdkZXY7DQo+ICsJc3RydWN0IHNrX2J1ZmZf
+aGVhZCB0eF9hY2tfcXVldWU7DQo+ICt9Ow0KPiArDQo+ICtzdGF0aWMgdm9pZCBydHdfdXNiX2Zp
+bGxfdHhfY2hlY2tzdW0oc3RydWN0IHJ0d191c2IgKnJ0d3VzYiwNCj4gKwkJCQkgICAgIHN0cnVj
+dCBza19idWZmICpza2IsIGludCBhZ2dfbnVtKQ0KPiArew0KPiArCXN0cnVjdCBydHdfZGV2ICpy
+dHdkZXYgPSBydHd1c2ItPnJ0d2RldjsNCj4gKwlzdHJ1Y3QgcnR3X3R4X3BrdF9pbmZvIHBrdF9p
+bmZvOw0KPiArDQo+ICsJU0VUX1RYX0RFU0NfRE1BX1RYQUdHX05VTShza2ItPmRhdGEsIGFnZ19u
+dW0pOw0KPiArCXBrdF9pbmZvLnBrdF9vZmZzZXQgPSBHRVRfVFhfREVTQ19QS1RfT0ZGU0VUKHNr
+Yi0+ZGF0YSk7DQo+ICsJcnR3X3R4X2ZpbGxfdHhkZXNjX2NoZWNrc3VtKHJ0d2RldiwgJnBrdF9p
+bmZvLCBza2ItPmRhdGEpOw0KPiArfQ0KPiArDQo+ICtzdGF0aWMgdm9pZCB1c2JjdHJsX2FzeW5j
+X2NhbGxiYWNrKHN0cnVjdCB1cmIgKnVyYikNCj4gK3sNCj4gKwkvKiBmcmVlIGRyICovDQo+ICsJ
+a2ZyZWUodXJiLT5zZXR1cF9wYWNrZXQpOw0KPiArCS8qIGZyZWUgZGF0YWJ1ZiAqLw0KPiArCWtm
+cmVlKHVyYi0+dHJhbnNmZXJfYnVmZmVyKTsNCj4gK30NCj4gKw0KPiArc3RhdGljIGludCB1c2Jj
+dHJsX3ZlbmRvcnJlcV9hc3luY193cml0ZShzdHJ1Y3QgdXNiX2RldmljZSAqdWRldiwgdTggcmVx
+dWVzdCwNCj4gKwkJCQkJICB1MTYgdmFsdWUsIHUxNiBpbmRleCwgdm9pZCAqcGRhdGEsDQo+ICsJ
+CQkJCSAgdTE2IGxlbikNCj4gK3sNCj4gKwlpbnQgcmM7DQoNCk5vcm1hbGx5LCB3ZSB1c2UgJ3Jl
+dCcgYXMgcmV0dXJuIGNvZGUgaW5zdGVhZC4NCg0KPiArCXVuc2lnbmVkIGludCBwaXBlOw0KPiAr
+CXU4IHJlcXR5cGU7DQo+ICsJc3RydWN0IHVzYl9jdHJscmVxdWVzdCAqZHI7DQo+ICsJc3RydWN0
+IHVyYiAqdXJiOw0KPiArCWNvbnN0IHUxNiBkYXRhYnVmX21heGxlbiA9IFJUV19VU0JfVkVOUVRf
+TUFYX0JVRl9TSVpFOw0KPiArCXU4ICpkYXRhYnVmOw0KDQpkZWNsYXJlIGluIHJldmVyc2UgWCdt
+YXMgdHJlZToNCg0KY29uc3QgdTE2IGRhdGFidWZfbWF4bGVuID0gUlRXX1VTQl9WRU5RVF9NQVhf
+QlVGX1NJWkU7DQpzdHJ1Y3QgdXNiX2N0cmxyZXF1ZXN0ICpkcjsNCnVuc2lnbmVkIGludCBwaXBl
+Ow0Kc3RydWN0IHVyYiAqdXJiOw0KdTggKmRhdGFidWY7DQppbnQgcmV0Ow0KDQoNCj4gKw0KPiAr
+CWlmIChXQVJOX09OX09OQ0UobGVuID4gZGF0YWJ1Zl9tYXhsZW4pKQ0KPiArCQlsZW4gPSBkYXRh
+YnVmX21heGxlbjsNCj4gKw0KPiArCXBpcGUgPSB1c2Jfc25kY3RybHBpcGUodWRldiwgMCk7IC8q
+IHdyaXRlX291dCAqLw0KPiArCXJlcXR5cGUgPSBSVFdfVVNCX0NNRF9XUklURTsNCj4gKw0KPiAr
+CWRyID0ga3phbGxvYyhzaXplb2YoKmRyKSwgR0ZQX0FUT01JQyk7DQo+ICsJaWYgKCFkcikNCj4g
+KwkJcmV0dXJuIC1FTk9NRU07DQo+ICsNCj4gKwlkYXRhYnVmID0ga21lbWR1cChwZGF0YSwgbGVu
+LCBHRlBfQVRPTUlDKTsNCj4gKwlpZiAoIWRhdGFidWYpIHsNCj4gKwkJa2ZyZWUoZHIpOw0KPiAr
+CQlyZXR1cm4gLUVOT01FTTsNCj4gKwl9DQo+ICsNCj4gKwl1cmIgPSB1c2JfYWxsb2NfdXJiKDAs
+IEdGUF9BVE9NSUMpOw0KPiArCWlmICghdXJiKSB7DQo+ICsJCWtmcmVlKGRhdGFidWYpOw0KPiAr
+CQlrZnJlZShkcik7DQo+ICsJCXJldHVybiAtRU5PTUVNOw0KPiArCX0NCj4gKw0KPiArCWRyLT5i
+UmVxdWVzdFR5cGUgPSByZXF0eXBlOw0KPiArCWRyLT5iUmVxdWVzdCA9IHJlcXVlc3Q7DQo+ICsJ
+ZHItPndWYWx1ZSA9IGNwdV90b19sZTE2KHZhbHVlKTsNCj4gKwlkci0+d0luZGV4ID0gY3B1X3Rv
+X2xlMTYoaW5kZXgpOw0KPiArCWRyLT53TGVuZ3RoID0gY3B1X3RvX2xlMTYobGVuKTsNCj4gKw0K
+PiArCXVzYl9maWxsX2NvbnRyb2xfdXJiKHVyYiwgdWRldiwgcGlwZSwNCj4gKwkJCSAgICAgKHVu
+c2lnbmVkIGNoYXIgKilkciwgZGF0YWJ1ZiwgbGVuLA0KPiArCQkJICAgICB1c2JjdHJsX2FzeW5j
+X2NhbGxiYWNrLCBOVUxMKTsNCj4gKwlyYyA9IHVzYl9zdWJtaXRfdXJiKHVyYiwgR0ZQX0FUT01J
+Qyk7DQo+ICsJaWYgKHJjIDwgMCkgew0KPiArCQlrZnJlZShkYXRhYnVmKTsNCj4gKwkJa2ZyZWUo
+ZHIpOw0KPiArCX0NCj4gKw0KPiArCXVzYl9mcmVlX3VyYih1cmIpOw0KPiArDQo+ICsJcmV0dXJu
+IHJjOw0KPiArfQ0KPiArDQo+ICtzdGF0aWMgdTMyIHJ0d191c2JfcmVhZF9zeW5jKHN0cnVjdCBy
+dHdfZGV2ICpydHdkZXYsIHUzMiBhZGRyLCB1MTYgbGVuKQ0KPiArew0KPiArCXN0cnVjdCBydHdf
+dXNiICpydHd1c2IgPSBydHdfZ2V0X3VzYl9wcml2KHJ0d2Rldik7DQo+ICsJc3RydWN0IHVzYl9k
+ZXZpY2UgKnVkZXYgPSBydHd1c2ItPnVkZXY7DQo+ICsJX19sZTMyICpkYXRhOw0KPiArCXVuc2ln
+bmVkIGxvbmcgZmxhZ3M7DQo+ICsJaW50IHJldDsNCj4gKwlzdGF0aWMgaW50IGNvdW50Ow0KPiAr
+DQo+ICsJc3Bpbl9sb2NrX2lycXNhdmUoJnJ0d3VzYi0+dXNiX2xvY2ssIGZsYWdzKTsNCj4gKw0K
+PiArCWlmICgrK3J0d3VzYi0+dXNiX2RhdGFfaW5kZXggPj0gUlRXX1VTQl9NQVhfUlhfQ09VTlQp
+DQo+ICsJCXJ0d3VzYi0+dXNiX2RhdGFfaW5kZXggPSAwOw0KPiArCWRhdGEgPSAmcnR3dXNiLT51
+c2JfZGF0YVtydHd1c2ItPnVzYl9kYXRhX2luZGV4XTsNCj4gKw0KPiArCXNwaW5fdW5sb2NrX2ly
+cXJlc3RvcmUoJnJ0d3VzYi0+dXNiX2xvY2ssIGZsYWdzKTsNCj4gKw0KPiArCXJldCA9IHVzYl9j
+b250cm9sX21zZyh1ZGV2LCB1c2JfcmN2Y3RybHBpcGUodWRldiwgMCksDQo+ICsJCQkJIFJUV19V
+U0JfQ01EX1JFUSwgUlRXX1VTQl9DTURfUkVBRCwgYWRkciwNCgkJCSAgICAgXl5eXiBhbGlnbiBv
+cGVuIHBhcmVudGhlc2lzIChjb2RnaW5nIHN0eWxlKQ0KDQpjaGVja3BhdGNoLnBsIGNhbiBoZWxw
+IHRoaXMuDQoNCg0KPiArCQkJCSBSVFdfVVNCX1ZFTlFUX0NNRF9JRFgsIGRhdGEsIGxlbiwgMTAw
+MCk7DQo+ICsJaWYgKHJldCA8IDAgJiYgcmV0ICE9IC1FTk9ERVYgJiYgY291bnQrKyA8IDQpDQo+
+ICsJCXJ0d19lcnIocnR3ZGV2LCAicmVnIDB4JXgsIHVzYmN0cmxfdmVuZG9ycmVxIGZhaWxlZCB3
+aXRoICVkXG4iLA0KPiArCQkJYWRkciwgcmV0KTsNCj4gKw0KPiArCXJldHVybiBsZTMyX3RvX2Nw
+dSgqZGF0YSk7DQo+ICt9DQo+ICsNCg0KWy4uLl0NCg0KPiArDQo+ICtzdGF0aWMgdm9pZCBydHdf
+dXNiX3J4X3JlZmlsbF93b3JrKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4gK3sNCj4gKwlz
+dHJ1Y3QgcnR3X3VzYiAqcnR3dXNiID0gY29udGFpbmVyX29mKHdvcmssIHN0cnVjdCBydHdfdXNi
+LCByeF9yZWZpbGxfd29yayk7DQo+ICsJc3RydWN0IHJ0d19kZXYgKnJ0d2RldiA9IHJ0d3VzYi0+
+cnR3ZGV2Ow0KPiArCXN0cnVjdCByeF91c2JfY3RybF9ibG9jayAqcnhjYjsNCj4gKwl1bnNpZ25l
+ZCBsb25nIGZsYWdzOw0KPiArCWludCBlcnJvcjsNCj4gKw0KPiArCWRvIHsNCj4gKwkJc3Bpbl9s
+b2NrX2lycXNhdmUoJnJ0d3VzYi0+cnhfZGF0YV9saXN0X2xvY2ssIGZsYWdzKTsNCj4gKw0KPiAr
+CQlyeGNiID0gbGlzdF9maXJzdF9lbnRyeV9vcl9udWxsKCZydHd1c2ItPnJ4X2RhdGFfZnJlZSwN
+Cj4gKwkJCQkJCXN0cnVjdCByeF91c2JfY3RybF9ibG9jaywgbGlzdCk7DQo+ICsNCj4gKwkJc3Bp
+bl91bmxvY2tfaXJxcmVzdG9yZSgmcnR3dXNiLT5yeF9kYXRhX2xpc3RfbG9jaywgZmxhZ3MpOw0K
+PiArCQlpZiAoIXJ4Y2IpDQo+ICsJCQlyZXR1cm47DQo+ICsNCj4gKwkJcnhjYi0+cnhfc2tiID0g
+YWxsb2Nfc2tiKFJUV19VU0JfTUFYX1JFQ1ZCVUZfU1osIEdGUF9LRVJORUwpOw0KPiArCQlpZiAo
+IXJ4Y2ItPnJ4X3NrYikgew0KPiArCQkJcnR3X2VycihydHdkZXYsICJjb3VsZCBub3QgYWxsb2Nh
+dGUgcnggc2tidWZmXG4iKTsNCj4gKwkJCXJldHVybjsNCj4gKwkJfQ0KPiArDQo+ICsJCXVzYl9m
+aWxsX2J1bGtfdXJiKHJ4Y2ItPnJ4X3VyYiwgcnR3dXNiLT51ZGV2LA0KPiArCQkJCSAgdXNiX3Jj
+dmJ1bGtwaXBlKHJ0d3VzYi0+dWRldiwgcnR3dXNiLT5waXBlX2luKSwNCj4gKwkJCQkgIHJ4Y2It
+PnJ4X3NrYi0+ZGF0YSwgUlRXX1VTQl9NQVhfUkVDVkJVRl9TWiwNCj4gKwkJCQkgIHJ0d191c2Jf
+cmVhZF9wb3J0X2NvbXBsZXRlLCByeGNiKTsNCj4gKw0KPiArCQlzcGluX2xvY2tfaXJxc2F2ZSgm
+cnR3dXNiLT5yeF9kYXRhX2xpc3RfbG9jaywgZmxhZ3MpOw0KPiArCQlsaXN0X21vdmUoJnJ4Y2It
+Pmxpc3QsICZydHd1c2ItPnJ4X2RhdGFfdXNlZCk7DQo+ICsJCXNwaW5fdW5sb2NrX2lycXJlc3Rv
+cmUoJnJ0d3VzYi0+cnhfZGF0YV9saXN0X2xvY2ssIGZsYWdzKTsNCj4gKw0KPiArCQllcnJvciA9
+IHVzYl9zdWJtaXRfdXJiKHJ4Y2ItPnJ4X3VyYiwgR0ZQX0tFUk5FTCk7DQo+ICsJCWlmIChlcnJv
+cikgew0KPiArCQkJa2ZyZWVfc2tiKHJ4Y2ItPnJ4X3NrYik7DQo+ICsJCQlpZiAoZXJyb3IgIT0g
+LUVOT0RFVikNCj4gKwkJCQlydHdfZXJyKHJ0d2RldiwgIkVyciBzZW5kaW5nIHJ4IGRhdGEgdXJi
+ICVkXG4iLA0KPiArCQkJCQkgICBlcnJvcik7DQo+ICsJCQlydHdfdXNiX3J4X2RhdGFfcHV0KHJ0
+d3VzYiwgcnhjYik7DQo+ICsNCj4gKwkJCXJldHVybjsNCj4gKwkJfQ0KPiArCX0gd2hpbGUgKHRy
+dWUpOw0KDQpDYW4gd2UgaGF2ZSBhIGxpbWl0IG9mICdmb3IoOzxsaW1pdDspJyBpbnNldGFkIG9m
+ICd3aGlsZSAodHJ1ZSknPw0KDQo+ICt9DQo+ICsNCj4gK3N0YXRpYyB2b2lkIHJ0d191c2JfY2Fu
+Y2VsX3J4X2J1ZnMoc3RydWN0IHJ0d191c2IgKnJ0d3VzYikNCj4gK3sNCj4gKwlzdHJ1Y3Qgcnhf
+dXNiX2N0cmxfYmxvY2sgKnJ4Y2I7DQo+ICsJdW5zaWduZWQgbG9uZyBmbGFnczsNCj4gKw0KPiAr
+CXNwaW5fbG9ja19pcnFzYXZlKCZydHd1c2ItPnJ4X2RhdGFfbGlzdF9sb2NrLCBmbGFncyk7DQo+
+ICsNCj4gKwl3aGlsZSAodHJ1ZSkgew0KPiArCQlyeGNiID0gbGlzdF9maXJzdF9lbnRyeV9vcl9u
+dWxsKCZydHd1c2ItPnJ4X2RhdGFfdXNlZCwNCj4gKwkJCQkJCXN0cnVjdCByeF91c2JfY3RybF9i
+bG9jaywgbGlzdCk7DQo+ICsNCj4gKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcnR3dXNiLT5y
+eF9kYXRhX2xpc3RfbG9jaywgZmxhZ3MpOw0KPiArDQo+ICsJCWlmICghcnhjYikNCj4gKwkJCWJy
+ZWFrOw0KPiArDQo+ICsJCXVzYl9raWxsX3VyYihyeGNiLT5yeF91cmIpOw0KPiArDQo+ICsJCXNw
+aW5fbG9ja19pcnFzYXZlKCZydHd1c2ItPnJ4X2RhdGFfbGlzdF9sb2NrLCBmbGFncyk7DQo+ICsJ
+CWxpc3RfbW92ZSgmcnhjYi0+bGlzdCwgJnJ0d3VzYi0+cnhfZGF0YV9mcmVlKTsNCj4gKwl9DQo+
+ICt9DQoNClRoZSBzcGluX2xvY2sgcGFpcnMgYXJlIG5vdCBpbnR1aXRpdmUuDQpDYW4gd2UgY2hh
+bmdlIHRoaXMgY2h1bmsgdG8NCg0Kd2hpbGUgKHRydWUpIHsNCiAgICAgc3Bpbl9sb2NrKCk7DQog
+ICAgIHJ4Y2IgPSBsaXN0X2ZpcnN0X2VudHJ5X29yX251bGwoKTsNCiAgICAgc3Bpbl91bmxvY2so
+KQ0KDQogICAgIGlmICghcnhjYikNCiAgICAgICAgcmV0dXJuOw0KDQogICAgIHVzYl9mcmVlX3Vy
+YigpOw0KDQogICAgIHNwaW5fbG9jaygpOw0KICAgICBsaXN0X2RlbCgpOw0KICAgICBzcGluX3Vu
+bG9jaygpOw0KfQ0KDQpUaGUgZHJhd2JhY2sgaXMgbG9jay91bmxvY2sgdHdpY2UgaW4gc2luZ2xl
+IGxvb3AuDQoNCnJ0d191c2JfZnJlZV9yeF9idWZzKCkgaGFzIHNpbWlsYXIgY29kaW5nLg0KDQoN
+Cj4gKw0KPiArc3RhdGljIHZvaWQgcnR3X3VzYl9mcmVlX3J4X2J1ZnMoc3RydWN0IHJ0d191c2Ig
+KnJ0d3VzYikNCj4gK3sNCj4gKwlzdHJ1Y3QgcnhfdXNiX2N0cmxfYmxvY2sgKnJ4Y2I7DQo+ICsJ
+dW5zaWduZWQgbG9uZyBmbGFnczsNCj4gKw0KPiArCXJ0d191c2JfY2FuY2VsX3J4X2J1ZnMocnR3
+dXNiKTsNCj4gKw0KPiArCXNwaW5fbG9ja19pcnFzYXZlKCZydHd1c2ItPnJ4X2RhdGFfbGlzdF9s
+b2NrLCBmbGFncyk7DQo+ICsNCj4gKwl3aGlsZSAodHJ1ZSkgew0KPiArCQlyeGNiID0gbGlzdF9m
+aXJzdF9lbnRyeV9vcl9udWxsKCZydHd1c2ItPnJ4X2RhdGFfZnJlZSwgc3RydWN0IHJ4X3VzYl9j
+dHJsX2Jsb2NrLA0KPiBsaXN0KTsNCj4gKw0KPiArCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZy
+dHd1c2ItPnJ4X2RhdGFfbGlzdF9sb2NrLCBmbGFncyk7DQo+ICsNCj4gKwkJaWYgKCFyeGNiKQ0K
+PiArCQkJYnJlYWs7DQo+ICsNCj4gKwkJdXNiX2ZyZWVfdXJiKHJ4Y2ItPnJ4X3VyYik7DQo+ICsN
+Cj4gKwkJc3Bpbl9sb2NrX2lycXNhdmUoJnJ0d3VzYi0+cnhfZGF0YV9saXN0X2xvY2ssIGZsYWdz
+KTsNCj4gKwkJbGlzdF9kZWwoJnJ4Y2ItPmxpc3QpOw0KPiArCX0NCg0KDQo+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3VzYi5oIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvcmVhbHRlay9ydHc4OC91c2IuaA0KPiBuZXcgZmlsZSBtb2RlIDEwMDY0NA0KPiBp
+bmRleCAwMDAwMDAwMDAwMDAwLi40ZDcxNDM3MmYyNjVjDQo+IC0tLSAvZGV2L251bGwNCj4gKysr
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC91c2IuaA0KPiBAQCAtMCwwICsx
+LDEwOSBAQA0KPiArLyogU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjAgT1IgQlNELTMt
+Q2xhdXNlICovDQo+ICsvKiBDb3B5cmlnaHQoYykgMjAxOC0yMDE5ICBSZWFsdGVrIENvcnBvcmF0
+aW9uDQo+ICsgKi8NCj4gKw0KPiArI2lmbmRlZiBfX1JUV19VU0JfSF8NCj4gKyNkZWZpbmUgX19S
+VFdfVVNCX0hfDQo+ICsNCj4gKyNkZWZpbmUgRldfODE5MkNfU1RBUlRfQUREUkVTUwkJMHgxMDAw
+DQo+ICsjZGVmaW5lIEZXXzgxOTJDX0VORF9BRERSRVNTICAgICAgICAgICAgMHg1RkZGDQoJCQkJ
+Xl5eXl5eXl5eXiB1c2UgdGFiDQoNCj4gKw0KPiArI2RlZmluZSBSVFdfVVNCX01BWF9SWF9DT1VO
+VAkJMTAwDQo+ICsjZGVmaW5lIFJUV19VU0JfVkVOUVRfTUFYX0JVRl9TSVpFCTI1NA0KPiArI2Rl
+ZmluZSBNQVhfVVNCQ1RSTF9WRU5ET1JSRVFfVElNRVMJMTANCj4gKw0KPiArI2RlZmluZSBSVFdf
+VVNCX0NNRF9SRUFECQkweGMwDQo+ICsjZGVmaW5lIFJUV19VU0JfQ01EX1dSSVRFCQkweDQwDQo+
+ICsjZGVmaW5lIFJUV19VU0JfQ01EX1JFUQkJCTB4MDUNCj4gKw0KPiArI2RlZmluZQlSVFdfVVNC
+X1ZFTlFUX0NNRF9JRFgJCTB4MDANCiAgICAgICAgICBeXl5eXiB1c2Ugc3BhY2UNCj4gKw0KPiAr
+I2RlZmluZSBSVFdfVVNCX1NVUEVSX1NQRUVEX0JVTEtfU0laRQkxMDI0DQo+ICsjZGVmaW5lIFJU
+V19VU0JfSElHSF9TUEVFRF9CVUxLX1NJWkUJNTEyDQo+ICsjZGVmaW5lIFJUV19VU0JfRlVMTF9T
+UEVFRF9CVUxLX1NJWkUJNjQNCj4gKw0KDQotLQ0KUGluZy1LZQ0KDQoNCg==
