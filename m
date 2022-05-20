@@ -2,88 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EDABC4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 19:43:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE326C433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 19:43:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353297AbiETTne (ORCPT
+        id S1350463AbiETTng (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 May 2022 15:43:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59316 "EHLO
+        Fri, 20 May 2022 15:43:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345377AbiETTn1 (ORCPT
+        with ESMTP id S1353287AbiETTn2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 May 2022 15:43:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C447197F72;
-        Fri, 20 May 2022 12:43:26 -0700 (PDT)
+        Fri, 20 May 2022 15:43:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9B2F199484;
+        Fri, 20 May 2022 12:43:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2285061BCB;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 647B761C1A;
+        Fri, 20 May 2022 19:43:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71D2AC3411A;
         Fri, 20 May 2022 19:43:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46502C3411B;
-        Fri, 20 May 2022 19:43:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653075805;
-        bh=zGEKpWgxn6+HzxRExsmr65/JbhM8cdKYs1r7XpE7LVo=;
+        s=k20201202; t=1653075806;
+        bh=BsskcfHl/eEdw8cldU32XfsJ2GFxBUuduFu3FrECxWc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tAEizluf/Lvw7UjOI6blqS8JaisSYAFnkJU9OakFjV3yMwJnswPbFoC5fPbGBBBLB
-         YBtoSA9zXWVGcF7jxBeV1opoyh+LV5Msiu1sddlEQ6RQeWAzjJuduKJZmwYlxeA+Lh
-         cKu7h72tFdAYZ+qSrjNCSunPrq0NL4Iid95/mwxCUO37IfOGYH241xqakmIYiLzkDB
-         3yuo2LsCDQQ4gyTWzbSax3f2O2CYEo0oJMDeZf02+v5zZmaLHmrOO7Gs/clI7kgphj
-         7lp2QMwvirvdUXaxTCNuSzGci0oacq0N8QLKvWL2IVu9wTBtoTO8UgKl2RTQQWNjHG
-         CxmOMFnRXr12Q==
+        b=PNQ9G5LJ/i8yRpHkY51jcEOw3Igs/cRjgDFCNjzzn98rwS1csT+Go5dTYI9gNuEYd
+         me8pCC6wzl02gh1R96sDPLRpktjpH4QXom1kCibdcHHe2r8SeaXQ0U9dFGrihQVPya
+         EOY8b8rvLUVrkgq7y//OMJ55WeRglxkPe4nNDJ2LzAM2JTW64reIK3u5b36/15dtQA
+         U1ZAOZCkk1ZwUbk93DaQ4d7/DITXIEOWcMXRr8LJj2IrtYb5ByIxBAzLDzwPC2Cr6k
+         1LZSl/GVgznNZoHuKXo8ah+DNuz98HN6TZtoQv8ulYkmj/zU6Qy93fk8fWDu/Ln4eT
+         iJzBqmtdKkLUQ==
 From:   Jakub Kicinski <kuba@kernel.org>
 To:     kvalo@kernel.org, johannes@sipsolutions.net
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>, pkshih@realtek.com,
-        keescook@chromium.org, colin.king@intel.com
-Subject: [PATCH net-next 3/8] wifi: rtlwifi: remove always-true condition pointed out by GCC 12
-Date:   Fri, 20 May 2022 12:43:15 -0700
-Message-Id: <20220520194320.2356236-4-kuba@kernel.org>
+        Jakub Kicinski <kuba@kernel.org>, aspriel@gmail.com,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        ALSI@bang-olufsen.dk, brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com
+Subject: [PATCH net-next 6/8] wifi: brcmfmac: work around a GCC 12 -Warray-bounds warning
+Date:   Fri, 20 May 2022 12:43:18 -0700
+Message-Id: <20220520194320.2356236-7-kuba@kernel.org>
 X-Mailer: git-send-email 2.34.3
 In-Reply-To: <20220520194320.2356236-1-kuba@kernel.org>
 References: <20220520194320.2356236-1-kuba@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The .value is a two-dim array, not a pointer.
+GCC 12 really doesn't like partial struct allocations:
 
-struct iqk_matrix_regs {
-	bool iqk_done;
-        long value[1][IQK_MATRIX_REG_NUM];
-};
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:2202:32: warning: array subscript ‘struct brcmf_ext_join_params_le[0]’ is partly outside array bounds of ‘void[70]’ [-Warray-bounds]
+ 2202 |                 ext_join_params->scan_le.passive_time =
+      |                                ^~
+
+brcmfmac is trying to save 2 bytes at the end by either allocating
+or not allocating a channel member. Let's keep @join_params_size
+the "right" size but kmalloc() the full structure.
 
 Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
-CC: pkshih@realtek.com
+CC: aspriel@gmail.com
+CC: franky.lin@broadcom.com
+CC: hante.meuleman@broadcom.com
 CC: kvalo@kernel.org
-CC: keescook@chromium.org
-CC: colin.king@intel.com
+CC: ALSI@bang-olufsen.dk
 CC: linux-wireless@vger.kernel.org
+CC: brcm80211-dev-list.pdl@broadcom.com
+CC: SHA-cyfmac-dev-list@infineon.com
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index 51fe51bb0504..15e6a6aded31 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -2386,10 +2386,7 @@ void rtl92d_phy_reload_iqk_setting(struct ieee80211_hw *hw, u8 channel)
- 			rtl_dbg(rtlpriv, COMP_SCAN, DBG_LOUD,
- 				"Just Read IQK Matrix reg for channel:%d....\n",
- 				channel);
--			if ((rtlphy->iqk_matrix[indexforchannel].
--			     value[0] != NULL)
--				/*&&(regea4 != 0) */)
--				_rtl92d_phy_patha_fill_iqk_matrix(hw, true,
-+			_rtl92d_phy_patha_fill_iqk_matrix(hw, true,
- 					rtlphy->iqk_matrix[
- 					indexforchannel].value,	0,
- 					(rtlphy->iqk_matrix[
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 360b103fe898..605206abe424 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -2167,7 +2167,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		offsetof(struct brcmf_assoc_params_le, chanspec_list);
+ 	if (cfg->channel)
+ 		join_params_size += sizeof(u16);
+-	ext_join_params = kzalloc(join_params_size, GFP_KERNEL);
++	ext_join_params = kzalloc(sizeof(*ext_join_params), GFP_KERNEL);
+ 	if (ext_join_params == NULL) {
+ 		err = -ENOMEM;
+ 		goto done;
 -- 
 2.34.3
 
