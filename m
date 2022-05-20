@@ -2,129 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10995C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 07:08:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76696C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 07:18:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345521AbiETHII (ORCPT
+        id S240420AbiETHSd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 May 2022 03:08:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56944 "EHLO
+        Fri, 20 May 2022 03:18:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344021AbiETHIG (ORCPT
+        with ESMTP id S234866AbiETHSc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 May 2022 03:08:06 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB03414CDEE
-        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2022 00:08:05 -0700 (PDT)
-Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1nrwjr-0000vr-10; Fri, 20 May 2022 09:07:55 +0200
-Received: from sha by ptx.hi.pengutronix.de with local (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1nrwjp-0008KI-GX; Fri, 20 May 2022 09:07:53 +0200
-Date:   Fri, 20 May 2022 09:07:53 +0200
-From:   "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>
-To:     Pkshih <pkshih@realtek.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        "neojou@gmail.com" <neojou@gmail.com>,
-        "kvalo@kernel.org" <kvalo@kernel.org>,
-        "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "martin.blumenstingl@googlemail.com" 
-        <martin.blumenstingl@googlemail.com>,
-        "linux@ulli-kroll.de" <linux@ulli-kroll.de>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 05/10] rtw88: Do not access registers while atomic
-Message-ID: <20220520070753.GC25578@pengutronix.de>
-References: <20220518082318.3898514-1-s.hauer@pengutronix.de>
- <20220518082318.3898514-6-s.hauer@pengutronix.de>
- <e33aaa2ab60e04d3449273e117ca73acb3895ed3.camel@realtek.com>
+        Fri, 20 May 2022 03:18:32 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E0C3ED0D
+        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2022 00:17:58 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24K7HqddE023712, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24K7HqddE023712
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 20 May 2022 15:17:53 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Fri, 20 May 2022 15:17:52 +0800
+Received: from localhost (172.16.17.21) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 20 May
+ 2022 15:17:52 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>, <phhuang@realtek.com>,
+        <kevin_yang@realtek.com>
+Subject: [PATCH 2/6] rtw89: fix null vif pointer when hw_scan fails
+Date:   Fri, 20 May 2022 15:17:27 +0800
+Message-ID: <20220520071731.38563-3-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220520071731.38563-1-pkshih@realtek.com>
+References: <20220520071731.38563-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e33aaa2ab60e04d3449273e117ca73acb3895ed3.camel@realtek.com>
-X-Sent-From: Pengutronix Hildesheim
-X-URL:  http://www.pengutronix.de/
-X-IRC:  #ptxdist @freenode
-X-Accept-Language: de,en
-X-Accept-Content-Type: text/plain
-X-Uptime: 09:05:18 up 50 days, 19:34, 45 users,  load average: 0.35, 0.29,
- 0.19
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.17.21]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 05/20/2022 06:55:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvMjAgpFekyCAwNjowMDowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, May 20, 2022 at 06:06:05AM +0000, Pkshih wrote:
-> On Wed, 2022-05-18 at 10:23 +0200, Sascha Hauer wrote:
-> > The driver uses ieee80211_iterate_active_interfaces_atomic()
-> > and ieee80211_iterate_stations_atomic() in several places and does
-> > register accesses in the iterators. This doesn't cope with upcoming
->                                            ^^^^^^^ does?
-> > USB support as registers can only be accessed non-atomically.
-> > 
-> > Split these into a two stage process: First use the atomic iterator
-> > functions to collect all active interfaces or stations on a list, then
-> > iterate over the list non-atomically and call the iterator on each
-> > entry.
-> 
-> I think the subject could be "iterate over vif/sta list non-atomically"
+From: Po Hao Huang <phhuang@realtek.com>
 
-Ok.
+Add this check to avoid crash by dereferencing a null pointer. When hwscan
+fails due to no memory or dma failure, the scan flag in ieee80211_local is
+cleared. So mac80211 determine that it's not hw_scan then calls
+sw_scan_complete() with null vif, which is also freed during the fail.
 
-> > +void rtw_iterate_stas(struct rtw_dev *rtwdev,
-> > +		      void (*iterator)(void *data,
-> > +				       struct ieee80211_sta *sta),
-> > +				       void *data)
-> > +{
-> > +	struct rtw_iter_stas_data iter_data;
-> > +	struct rtw_stas_entry *sta_entry, *tmp;
-> 
-> lockdep_assert_held(&rtwdev->mutex);
-> 
-> > +
-> > +	iter_data.rtwdev = rtwdev;
-> > +	INIT_LIST_HEAD(&iter_data.list);
-> > +
-> > +	ieee80211_iterate_stations_atomic(rtwdev->hw, rtw_collect_sta_iter,
-> > +					  &iter_data);
-> > +
-> > +	list_for_each_entry_safe(sta_entry, tmp, &iter_data.list,
-> > +				 list) {
-> > +		list_del_init(&sta_entry->list);
-> > +		iterator(data, sta_entry->sta);
-> > +		kfree(sta_entry);
-> > +	}
-> > +}
-> > +
-> 
-> [...]
-> 
-> > +void rtw_iterate_vifs(struct rtw_dev *rtwdev,
-> > +		      void (*iterator)(void *data, u8 *mac,
-> > +				       struct ieee80211_vif *vif),
-> > +		      void *data)
-> > +{
-> > +	struct rtw_iter_vifs_data iter_data;
-> > +	struct rtw_vifs_entry *vif_entry, *tmp;
-> 
-> lockdep_assert_held(&rtwdev->mutex);
+Signed-off-by: Po Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.c | 5 ++++-
+ drivers/net/wireless/realtek/rtw89/fw.c   | 4 ++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-Ok, will add these. For what it's worth they didn't trigger in a short
-test.
-
-Sascha
-
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index e24e133a94df6..958fe2787c6a1 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -2875,7 +2875,10 @@ void rtw89_core_scan_start(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
+ void rtw89_core_scan_complete(struct rtw89_dev *rtwdev,
+ 			      struct ieee80211_vif *vif, bool hw_scan)
+ {
+-	struct rtw89_vif *rtwvif = (struct rtw89_vif *)vif->drv_priv;
++	struct rtw89_vif *rtwvif = vif ? (struct rtw89_vif *)vif->drv_priv : NULL;
++
++	if (!rtwvif)
++		return;
+ 
+ 	ether_addr_copy(rtwvif->mac_addr, vif->addr);
+ 	rtw89_fw_h2c_cam(rtwdev, rtwvif, NULL, NULL);
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 7fb4509a6c72a..2d9c3157d878c 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -2257,7 +2257,7 @@ static int rtw89_hw_scan_add_chan_list(struct rtw89_dev *rtwdev,
+ 		list_add_tail(&ch_info->list, &chan_list);
+ 		off_chan_time += ch_info->period;
+ 	}
+-	rtw89_fw_h2c_scan_list_offload(rtwdev, list_len, &chan_list);
++	ret = rtw89_fw_h2c_scan_list_offload(rtwdev, list_len, &chan_list);
+ 
+ out:
+ 	list_for_each_entry_safe(ch_info, tmp, &chan_list, list) {
+@@ -2368,7 +2368,7 @@ int rtw89_hw_scan_offload(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif,
+ 		if (ret)
+ 			goto out;
+ 	}
+-	rtw89_fw_h2c_scan_offload(rtwdev, &opt, rtwvif);
++	ret = rtw89_fw_h2c_scan_offload(rtwdev, &opt, rtwvif);
+ out:
+ 	return ret;
+ }
 -- 
-Pengutronix e.K.                           |                             |
-Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
-31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+2.25.1
+
