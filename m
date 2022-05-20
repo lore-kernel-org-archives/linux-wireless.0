@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B99A2C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 19:43:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D067C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 May 2022 19:43:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350453AbiETTnj (ORCPT
+        id S1353310AbiETTnk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 May 2022 15:43:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59490 "EHLO
+        Fri, 20 May 2022 15:43:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350599AbiETTn3 (ORCPT
+        with ESMTP id S1353294AbiETTnb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 May 2022 15:43:29 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE70F19579C;
-        Fri, 20 May 2022 12:43:28 -0700 (PDT)
+        Fri, 20 May 2022 15:43:31 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DD6C19579C;
+        Fri, 20 May 2022 12:43:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A8D85B82DC7;
-        Fri, 20 May 2022 19:43:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 087F1C385A9;
+        by sin.source.kernel.org (Postfix) with ESMTPS id BA002CE2CE0;
+        Fri, 20 May 2022 19:43:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F078DC34118;
         Fri, 20 May 2022 19:43:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653075806;
-        bh=kGj4DK2AiH/Fy8GJN92csFdqlx0nkTXqzwCAsyBJgCQ=;
+        s=k20201202; t=1653075807;
+        bh=4oZB8rFjKLED/jr3XhcfTR1suooV0P6bDjygrUvsKhs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ujl4OyJMJhXcqy94icUbv39kImT4xeeZYppNS3omDd7APZFsYsnU6qWEs0/odVo1y
-         tkYZ5xiY7XkxCkbhwnkkzkctDZcIwa0M3XbUb1Ju+W4nB2TS1JgkcHXD3vPWUGAYcp
-         yi4wWQk1iQjhKegscrs6OKQzog7wf6kJtGAvcyhIRJ7btcLoOIhB2DCfENUUIXzjQD
-         85L1C7q0AJW+U//aORTDKGZ1Z5DybNElM2OIB5mO39yxlHIbba8dwyL2dbNQxZw6Jk
-         zEaKnVwUM0d0wNcrM4tBQKX/CupOACOiJCTjfUXIW8/U8EdVF25EyvfKHKfUT0oq2p
-         qWP7ITzwix7Uw==
+        b=YMV5QsJy+1QT0U+2aMfvDIxlAjp9ezvNgmIslJR4vLTEtTmVhW0ffWxR1p3W2ertC
+         wgVy6cUHE7e5WaY3yigCNU94ZCQLepClZNFoQWkva0T07Xrr471r+URWjOLeFOuy4H
+         FyA1hp44Q1BRJI8luQml2MZVKtTs+jzQ9p2QBE1xrVJTSXodY2/Vgl9BxGkLxNMrym
+         a7VNDMVbffaXYX2SMdPr7sKASO3mZeskRseHaYGrM2eoHpsz1X/39CdBvX9wtEM/LH
+         VbvvovMlipT7X18niNqCC4Kq10e8SW7st5lJZ7w5+p4BJ3ebrK/m628KvplK6MILqz
+         g7Uzr1WispgaQ==
 From:   Jakub Kicinski <kuba@kernel.org>
 To:     kvalo@kernel.org, johannes@sipsolutions.net
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>, gregory.greenman@intel.com,
-        luciano.coelho@intel.com, johannes.berg@intel.com
-Subject: [PATCH net-next 5/8] wifi: iwlwifi: use unsigned to silence a GCC 12 warning
-Date:   Fri, 20 May 2022 12:43:17 -0700
-Message-Id: <20220520194320.2356236-6-kuba@kernel.org>
+        Jakub Kicinski <kuba@kernel.org>,
+        libertas-dev@lists.infradead.org
+Subject: [PATCH net-next 7/8] wifi: libertas: silence a GCC 12 -Warray-bounds warning
+Date:   Fri, 20 May 2022 12:43:19 -0700
+Message-Id: <20220520194320.2356236-8-kuba@kernel.org>
 X-Mailer: git-send-email 2.34.3
 In-Reply-To: <20220520194320.2356236-1-kuba@kernel.org>
 References: <20220520194320.2356236-1-kuba@kernel.org>
@@ -51,38 +51,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-GCC 12 says:
+This driver does a lot of casting of smaller buffers to
+a larger command response struct, GCC 12 does not like that:
 
-drivers/net/wireless/intel/iwlwifi/mvm/sta.c:1076:37: warning: array subscript -1 is below array bounds of ‘struct iwl_mvm_tid_data[9]’ [-Warray-bounds]
- 1076 |                 if (mvmsta->tid_data[tid].state != IWL_AGG_OFF)
-      |                     ~~~~~~~~~~~~~~~~^~~~~
+drivers/net/wireless/marvell/libertas/cfg.c:1198:63: warning: array subscript ‘struct cmd_ds_802_11_associate_response[0]’ is partly outside array bounds of ‘unsigned char[203]’ [-Warray-bounds]
+ 1198 |                       "aid 0x%04x\n", status, le16_to_cpu(resp->statuscode),
+      |                                                               ^~
 
-Whatever, tid is a bit from for_each_set_bit(), it's clearly unsigned.
+Annoyingly it's not clever enough to recognize which fields
+are safe to access, so move this warning to W=1 for now.
 
 Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
-CC: gregory.greenman@intel.com
 CC: kvalo@kernel.org
-CC: luciano.coelho@intel.com
-CC: johannes.berg@intel.com
+CC: libertas-dev@lists.infradead.org
 CC: linux-wireless@vger.kernel.org
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/libertas/Makefile | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 406f0a50a5bf..bbb1522e7280 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1058,7 +1058,7 @@ static bool iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
- 					 unsigned long *unshare_queues,
- 					 unsigned long *changetid_queues)
- {
--	int tid;
-+	unsigned int tid;
+diff --git a/drivers/net/wireless/marvell/libertas/Makefile b/drivers/net/wireless/marvell/libertas/Makefile
+index 41b9b440a542..da4ea5a0812c 100644
+--- a/drivers/net/wireless/marvell/libertas/Makefile
++++ b/drivers/net/wireless/marvell/libertas/Makefile
+@@ -10,6 +10,11 @@ libertas-y += tx.o
+ libertas-y += firmware.o
+ libertas-$(CONFIG_LIBERTAS_MESH) += mesh.o
  
- 	lockdep_assert_held(&mvmsta->lock);
- 	lockdep_assert_held(&mvm->mutex);
++# FIXME: temporarily silence -Warray-bounds on non W=1+ builds
++ifndef KBUILD_EXTRA_WARN
++CFLAGS_cfg.o += -Wno-array-bounds
++endif
++
+ usb8xxx-objs += if_usb.o
+ libertas_cs-objs += if_cs.o
+ libertas_sdio-objs += if_sdio.o
 -- 
 2.34.3
 
