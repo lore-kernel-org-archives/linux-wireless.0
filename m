@@ -2,34 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08067C433F5
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 May 2022 11:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02970C433EF
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 May 2022 11:12:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242877AbiEULMO (ORCPT
+        id S244776AbiEULMQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 May 2022 07:12:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46966 "EHLO
+        Sat, 21 May 2022 07:12:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241400AbiEULMB (ORCPT
+        with ESMTP id S242381AbiEULMD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 May 2022 07:12:01 -0400
+        Sat, 21 May 2022 07:12:03 -0400
 Received: from mail3-relais-sop.national.inria.fr (mail3-relais-sop.national.inria.fr [192.134.164.104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AE192980B;
-        Sat, 21 May 2022 04:11:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78C452AE24;
+        Sat, 21 May 2022 04:12:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=inria.fr; s=dc;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=KmIV/3ghYTyKQheC6tXwJG/ENcBeirNooDVVS2YYG0w=;
-  b=j8Li1hmCObiJw3BDel5bGGfwPhSNO1QRIkQrMyj2x260WI23OfPKcyi4
-   ii3TltmEqulqN2iE7P8EMsgm3LCAZpNLVs6Sm+I/9ywaZp/90Xoz7peEM
-   ciI/euU+mxiSGwz7J6TLQ2yc8uDch0zIC+Y8DJhRrBdQKyApS3LBlXioh
+  bh=9TaEFXjcNLICw/mDteFXy61oA1U1Jw505RhR4LQRyTI=;
+  b=d8yfTArbdsNkMYoGPetsmWowhEvlRXHM6DIL4ceckPEUd37PhGZtFQRJ
+   kZWG7TYrpZYh+yQWyTbkAHxfotigp30vGS3QZ5Da4EEnwrok1gz/Scrdk
+   zYS/e4Gvl4gouWFu7s77UHi9ADbf8QWnuH57qHNI3J/JuaKs8TfeCf6TS
    8=;
 Authentication-Results: mail3-relais-sop.national.inria.fr; dkim=none (message not signed) header.i=none; spf=SoftFail smtp.mailfrom=Julia.Lawall@inria.fr; dmarc=fail (p=none dis=none) d=inria.fr
 X-IronPort-AV: E=Sophos;i="5.91,242,1647298800"; 
-   d="scan'208";a="14727899"
+   d="scan'208";a="14727909"
 Received: from i80.paris.inria.fr (HELO i80.paris.inria.fr.) ([128.93.90.48])
-  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2022 13:11:53 +0200
+  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2022 13:11:54 +0200
 From:   Julia Lawall <Julia.Lawall@inria.fr>
 To:     Kalle Valo <kvalo@kernel.org>
 Cc:     kernel-janitors@vger.kernel.org,
@@ -39,9 +39,9 @@ Cc:     kernel-janitors@vger.kernel.org,
         Paolo Abeni <pabeni@redhat.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH] virt_wifi: fix typo in comment
-Date:   Sat, 21 May 2022 13:10:18 +0200
-Message-Id: <20220521111145.81697-8-Julia.Lawall@inria.fr>
+Subject: [PATCH] ath6kl: fix typo in comment
+Date:   Sat, 21 May 2022 13:10:24 +0200
+Message-Id: <20220521111145.81697-14-Julia.Lawall@inria.fr>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -55,20 +55,20 @@ Detected with the help of Coccinelle.
 Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
 
 ---
- drivers/net/wireless/virt_wifi.c |    2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.h |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virt_wifi.c
-index 514f2c1124b6..ba14d83353a4 100644
---- a/drivers/net/wireless/virt_wifi.c
-+++ b/drivers/net/wireless/virt_wifi.c
-@@ -654,7 +654,7 @@ static int __init virt_wifi_init_module(void)
- {
- 	int err;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 672014973cee..0d99f754b7e7 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1278,7 +1278,7 @@ struct wmi_snr_threshold_params_cmd {
+ 	/* "alpha" */
+ 	u8 weight;
  
--	/* Guaranteed to be locallly-administered and not multicast. */
-+	/* Guaranteed to be locally-administered and not multicast. */
- 	eth_random_addr(fake_router_bssid);
+-	/* lowest of uppper */
++	/* lowest of upper */
+ 	u8 thresh_above1_val;
  
- 	err = register_netdevice_notifier(&virt_wifi_notifier);
+ 	u8 thresh_above2_val;
 
