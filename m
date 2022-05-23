@@ -2,154 +2,261 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84CAEC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D9D8C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:46:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230440AbiEWHqr (ORCPT
+        id S230454AbiEWHqt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 May 2022 03:46:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59440 "EHLO
+        Mon, 23 May 2022 03:46:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231311AbiEWHqg (ORCPT
+        with ESMTP id S231237AbiEWHqk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 May 2022 03:46:36 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEA5F18388
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2022 00:46:35 -0700 (PDT)
+        Mon, 23 May 2022 03:46:40 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E828183B9
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2022 00:46:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1653291995; x=1684827995;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=0DUTQjpzpa7nYC8Uqi/Z3X8keXH8jzfvfBYPWL+TFcQ=;
-  b=ZISjf3T97EAzShNMS2bow9lTlRHNHru21IGXqtQWgqeafaTGHjstvpsk
-   Im5TSq67p8wiE29tATkR2VoZCI1omoqWZh14uI4CHpAZ+ixZPI6ruJ25m
-   QqwZDXCOcmtya7Il1J3grZ8O9W6gdUg6XbhdIPsOKgBf9vOvzqEXJDXJV
-   U=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 22 May 2022 23:49:21 -0700
+  t=1653291998; x=1684827998;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=+q0WXzxSQbtArcEIo1rVm0eVyYhPsRQcHJbnG4aVD2A=;
+  b=HaHKOAGGSLmPmGgPxSp1Vc5VyBytxVfsQ255KTwczKrzNiNbXVO0U4MP
+   2OlNgejqOwTAF23Njl0ep+FzSgjJPUkmbXVqDNqSiHjI7NENTJieiMeoG
+   uP571DPNlrWQZTLr5lC0PeV+UPQyP2LX5KZyTqpwQnxxCfhFTciYdgK5I
+   8=;
+Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
+  by alexa-out.qualcomm.com with ESMTP; 22 May 2022 23:01:28 -0700
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 23:49:20 -0700
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 23:01:28 -0700
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Sun, 22 May 2022 23:49:20 -0700
+ 15.2.986.22; Sun, 22 May 2022 23:01:27 -0700
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Sun, 22 May 2022 23:49:20 -0700
+ 15.2.986.22; Sun, 22 May 2022 23:01:27 -0700
 From:   Aloka Dixit <quic_alokad@quicinc.com>
-To:     <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+        <ath11k@lists.infradead.org>
 CC:     Aloka Dixit <quic_alokad@quicinc.com>,
-        Vikram Kandukuri <quic_vikram@quicinc.com>,
-        Veerendranath Jakkam <quic_vjakkam@quicinc.com>
-Subject: [PATCH v3] nl80211: retrieve EHT related elements in AP mode
-Date:   Sun, 22 May 2022 23:49:04 -0700
-Message-ID: <20220523064904.28523-1-quic_alokad@quicinc.com>
+        John Crispin <john@phrozen.org>
+Subject: [PATCH 5/9] ath11k: create a structure for WMI vdev up parameters
+Date:   Sun, 22 May 2022 23:01:04 -0700
+Message-ID: <20220523060108.23982-6-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220523060108.23982-1-quic_alokad@quicinc.com>
+References: <20220523060108.23982-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support to retrieve EHT capabilities and EHT operation elements
-passed by the userspace in the beacon template and store the pointers
-in struct cfg80211_ap_settings to be used by the drivers.
+Include an instance of the structure instead of individual parameters
+as input to ath11k_wmi_vdev_up().
 
-Co-developed-by: Vikram Kandukuri <quic_vikram@quicinc.com>
-Signed-off-by: Vikram Kandukuri <quic_vikram@quicinc.com>
-Co-developed-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
-Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
 Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+Co-developed-by: John Crispin <john@phrozen.org>
+Signed-off-by: John Crispin <john@phrozen.org>
 ---
-v3: Rolled v2 patch #1 and #2 into a single patch and added
-checks for element lengths. Dropped patch #3 for now.
+ drivers/net/wireless/ath/ath11k/mac.c | 31 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath11k/wmi.c | 15 +++++++------
+ drivers/net/wireless/ath/ath11k/wmi.h | 16 ++++++++++----
+ 3 files changed, 45 insertions(+), 17 deletions(-)
 
-include/net/cfg80211.h |  4 ++++
- net/wireless/nl80211.c | 26 ++++++++++++++++++++++++--
- 2 files changed, 28 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 97a5804ccdcf..a7a68bf26333 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1290,6 +1290,8 @@ struct cfg80211_unsol_bcast_probe_resp {
-  * @ht_cap: HT capabilities (or %NULL if HT isn't enabled)
-  * @vht_cap: VHT capabilities (or %NULL if VHT isn't enabled)
-  * @he_cap: HE capabilities (or %NULL if HE isn't enabled)
-+ * @eht_cap: EHT capabilities (or %NULL if EHT isn't enabled)
-+ * @eht_oper: EHT operation IE (or %NULL if EHT isn't enabled)
-  * @ht_required: stations must support HT
-  * @vht_required: stations must support VHT
-  * @twt_responder: Enable Target Wait Time
-@@ -1326,6 +1328,8 @@ struct cfg80211_ap_settings {
- 	const struct ieee80211_vht_cap *vht_cap;
- 	const struct ieee80211_he_cap_elem *he_cap;
- 	const struct ieee80211_he_operation *he_oper;
-+	const struct ieee80211_eht_cap_elem *eht_cap;
-+	const struct ieee80211_eht_operation *eht_oper;
- 	bool ht_required, vht_required, he_required, sae_h2e_required;
- 	bool twt_responder;
- 	u32 flags;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 740b29481bc6..3c62969107f0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5436,7 +5436,7 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
-  * HT/VHT requirements/capabilities, we parse them out of the IEs for the
-  * benefit of drivers that rebuild IEs in the firmware.
-  */
--static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
-+static int nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
- {
- 	const struct cfg80211_beacon_data *bcn = &params->beacon;
- 	size_t ies_len = bcn->tail_len;
-@@ -5462,6 +5462,26 @@ static void nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
- 	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_OPERATION, ies, ies_len);
- 	if (cap && cap->datalen >= sizeof(*params->he_oper) + 1)
- 		params->he_oper = (void *)(cap->data + 1);
-+	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_CAPABILITY, ies, ies_len);
-+	if (cap) {
-+		if (!cap->datalen)
-+			return -EINVAL;
-+		params->eht_cap = (void *)(cap->data + 1);
-+		if (!ieee80211_eht_capa_size_ok((const u8 *)params->he_cap,
-+						(const u8 *)params->eht_cap,
-+						cap->datalen - 1))
-+			return -EINVAL;
-+	}
-+	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_OPERATION, ies, ies_len);
-+	if (cap) {
-+		if (!cap->datalen)
-+			return -EINVAL;
-+		params->eht_oper = (void *)(cap->data + 1);
-+		if (!ieee80211_eht_oper_size_ok((const u8 *)params->eht_oper,
-+						cap->datalen - 1))
-+			return -EINVAL;
-+	}
-+	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 8f629e54a53d..32ddb80f4cec 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -920,6 +920,7 @@ static int ath11k_mac_monitor_vdev_start(struct ath11k *ar, int vdev_id,
+ 	struct ieee80211_channel *channel;
+ 	struct wmi_vdev_start_req_arg arg = {};
+ 	int ret;
++	struct vdev_up_params params = { 0 };
  
- static bool nl80211_get_ap_channel(struct cfg80211_registered_device *rdev,
-@@ -5770,7 +5790,9 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 			goto out;
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -960,7 +961,9 @@ static int ath11k_mac_monitor_vdev_start(struct ath11k *ar, int vdev_id,
+ 		return ret;
  	}
  
--	nl80211_calculate_ap_params(params);
-+	err = nl80211_calculate_ap_params(params);
-+	if (err)
-+		goto out;
+-	ret = ath11k_wmi_vdev_up(ar, vdev_id, 0, ar->mac_addr);
++	params.vdev_id = vdev_id,
++	params.bssid = ar->mac_addr,
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to put up monitor vdev %i: %d\n",
+ 			    vdev_id, ret);
+@@ -1419,6 +1422,7 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ {
+ 	struct ath11k *ar = arvif->ar;
+ 	int ret = 0;
++	struct vdev_up_params params = { 0 };
  
- 	if (info->attrs[NL80211_ATTR_AP_SETTINGS_FLAGS])
- 		params->flags = nla_get_u32(
-
-base-commit: 9335156ac0e174721921c404bd173526c8509124
+ 	lockdep_assert_held(&arvif->ar->conf_mutex);
+ 
+@@ -1446,8 +1450,10 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 
+ 	ether_addr_copy(arvif->bssid, info->bssid);
+ 
+-	ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-				 arvif->bssid);
++	params.vdev_id = arvif->vdev_id;
++	params.aid = arvif->aid;
++	params.bssid = arvif->bssid;
++	ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to bring up vdev %d: %i\n",
+ 			    arvif->vdev_id, ret);
+@@ -2704,6 +2710,7 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	struct ath11k_peer *peer;
+ 	bool is_auth = false;
+ 	int ret;
++	struct vdev_up_params params = { 0 };
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -2752,7 +2759,10 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	arvif->aid = bss_conf->aid;
+ 	ether_addr_copy(arvif->bssid, bss_conf->bssid);
+ 
+-	ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
++	params.vdev_id = arvif->vdev_id;
++	params.aid = arvif->aid;
++	params.bssid = arvif->bssid;
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to set vdev %d up: %d\n",
+ 			    arvif->vdev_id, ret);
+@@ -6956,6 +6966,8 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 	/* TODO: Update ar->rx_channel */
+ 
+ 	for (i = 0; i < n_vifs; i++) {
++		struct vdev_up_params params = { 0 };
++
+ 		arvif = (void *)vifs[i].vif->drv_priv;
+ 
+ 		if (WARN_ON(!arvif->is_started))
+@@ -6996,8 +7008,10 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 			ath11k_warn(ab, "failed to update bcn tmpl during csa: %d\n",
+ 				    ret);
+ 
+-		ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-					 arvif->bssid);
++		params.vdev_id = arvif->vdev_id;
++		params.aid = arvif->aid;
++		params.bssid = arvif->bssid;
++		ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed to bring vdev up %d: %d\n",
+ 				    arvif->vdev_id, ret);
+@@ -7089,6 +7103,7 @@ static int ath11k_start_vdev_delay(struct ieee80211_hw *hw,
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ath11k_vif *arvif = (void *)vif->drv_priv;
+ 	int ret;
++	struct vdev_up_params params = { 0 };
+ 
+ 	if (WARN_ON(arvif->is_started))
+ 		return -EBUSY;
+@@ -7115,7 +7130,9 @@ static int ath11k_start_vdev_delay(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR) {
+-		ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, 0, ar->mac_addr);
++		params.vdev_id = arvif->vdev_id,
++		params.bssid = ar->mac_addr,
++		ret = ath11k_wmi_vdev_up(ar, &params);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed put monitor up: %d\n", ret);
+ 			return ret;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index d0716f6208b2..fa443a2646b5 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -996,7 +996,7 @@ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 	return ret;
+ }
+ 
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params)
+ {
+ 	struct ath11k_pdev_wmi *wmi = ar->wmi;
+ 	struct wmi_vdev_up_cmd *cmd;
+@@ -1011,10 +1011,13 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 
+ 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_VDEV_UP_CMD) |
+ 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
+-	cmd->vdev_id = vdev_id;
+-	cmd->vdev_assoc_id = aid;
+-
+-	ether_addr_copy(cmd->vdev_bssid.addr, bssid);
++	cmd->vdev_id = params->vdev_id;
++	cmd->vdev_assoc_id = params->aid;
++	ether_addr_copy(cmd->vdev_bssid.addr, params->bssid);
++	cmd->profile_idx = params->profile_idx;
++	cmd->profile_count = params->profile_count;
++	if (params->tx_bssid)
++		ether_addr_copy(cmd->tx_vdev_bssid.addr, params->tx_bssid);
+ 
+ 	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_VDEV_UP_CMDID);
+ 	if (ret) {
+@@ -1024,7 +1027,7 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
+ 		   "WMI mgmt vdev up id 0x%x assoc id %d bssid %pM\n",
+-		   vdev_id, aid, bssid);
++		   params->vdev_id, params->aid, params->bssid);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index c572774b9659..fa46fb6ef1ad 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -2611,14 +2611,23 @@ struct wmi_vdev_delete_cmd {
+ 	u32 vdev_id;
+ } __packed;
+ 
++struct vdev_up_params {
++	u32 vdev_id;
++	u16 aid;
++	const u8 *bssid;
++	u32 profile_idx;
++	u32 profile_count;
++	u8 *tx_bssid;
++};
++
+ struct wmi_vdev_up_cmd {
+ 	u32 tlv_header;
+ 	u32 vdev_id;
+ 	u32 vdev_assoc_id;
+ 	struct wmi_mac_addr vdev_bssid;
+-	struct wmi_mac_addr trans_bssid;
++	struct wmi_mac_addr tx_vdev_bssid;
+ 	u32 profile_idx;
+-	u32 profile_num;
++	u32 profile_count;
+ } __packed;
+ 
+ struct wmi_vdev_stop_cmd {
+@@ -5998,8 +6007,7 @@ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
+ 			struct ieee80211_mutable_offsets *offs,
+ 			struct sk_buff *bcn);
+ int ath11k_wmi_vdev_down(struct ath11k *ar, u8 vdev_id);
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid,
+-		       const u8 *bssid);
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params);
+ int ath11k_wmi_vdev_stop(struct ath11k *ar, u8 vdev_id);
+ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 			  bool restart);
 -- 
 2.31.1
 
