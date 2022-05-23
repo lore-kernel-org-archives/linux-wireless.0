@@ -2,39 +2,39 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01030C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D71C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:46:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231260AbiEWHqf (ORCPT
+        id S230453AbiEWHqi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 May 2022 03:46:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59136 "EHLO
+        Mon, 23 May 2022 03:46:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230408AbiEWHqb (ORCPT
+        with ESMTP id S230527AbiEWHqe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 May 2022 03:46:31 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB9FD18388
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2022 00:46:28 -0700 (PDT)
+        Mon, 23 May 2022 03:46:34 -0400
+Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A67311838D
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2022 00:46:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1653291988; x=1684827988;
+  t=1653291993; x=1684827993;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=E3Ix6skTU/ChiwdneFC08WAQXDRPjr6009fjmvtbd8U=;
-  b=ggeYrQcLlmrL1WTSSZ5SKVv5dnOsM717vocNUICdUzewGqHMN6zkRGsB
-   hLTUxJ4FOjIvYzruFGTWIxqSrlc2Eg9KRBlXjJVZ0nmcmNxFZ8cXek1QT
-   a0DXILzr/8eukOuX/t/35SqTUsgaiHA+p32NYZUKvwJ2eIsgBJY/sxC7s
-   Q=;
-Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
-  by alexa-out.qualcomm.com with ESMTP; 22 May 2022 23:01:27 -0700
+  bh=JCAUOHMQ/PDpE33q21+DGv5BHFFj/450/8Dxcn6nGt8=;
+  b=hLmFUJiepLyaJyuQux24Eo2C1kIB0iC1QMv+EePi1fwLX/OwAxkLe3DT
+   qtKONVkni+/PwMI/aKEO0b1ipB5Cp90aKhjQi0w1HltqzlTXpJv71iPYo
+   7zsVsUqxVEukjAy5Ijjc5XhXWT1LvmfC9NTF3h+A/2ripNnYPljYjYRIc
+   8=;
+Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
+  by alexa-out-sd-02.qualcomm.com with ESMTP; 22 May 2022 23:01:27 -0700
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 23:01:27 -0700
+  by ironmsg03-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 23:01:27 -0700
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Sun, 22 May 2022 23:01:26 -0700
+ 15.2.986.22; Sun, 22 May 2022 23:01:27 -0700
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -44,9 +44,9 @@ To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
         <ath11k@lists.infradead.org>
 CC:     Aloka Dixit <quic_alokad@quicinc.com>,
         John Crispin <john@phrozen.org>
-Subject: [PATCH 2/9] ath11k: add WMI resource config for EMA
-Date:   Sun, 22 May 2022 23:01:01 -0700
-Message-ID: <20220523060108.23982-3-quic_alokad@quicinc.com>
+Subject: [PATCH 4/9] ath11k: MBSSID configuration during vdev create/start
+Date:   Sun, 22 May 2022 23:01:03 -0700
+Message-ID: <20220523060108.23982-5-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220523060108.23982-1-quic_alokad@quicinc.com>
 References: <20220523060108.23982-1-quic_alokad@quicinc.com>
@@ -60,108 +60,220 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add new fields in structures target_resource_config and
-wmi_resource_config to configure maximum vdev count and profile
-periodicity when enhanced multiple BSSID advertisements (EMA) are
-enabled.
+Configure multiple BSSID flags and index of the transmitting interface
+in vdev create/start commands depending on the service bit
+WMI_TLV_SERVICE_MBSS_PARAM_IN_VDEV_START_SUPPORT.
 
 Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
 Co-developed-by: John Crispin <john@phrozen.org>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
-- This patch-set splits the changes from following patch in
-logical separate patches:
-https://patchwork.kernel.org/project/linux-wireless/patch/20210120003221.21984-1-alokad@codeaurora.org/
-And also use the latest API changes in MAC80211 which were different
-at the time of V6.
+ drivers/net/wireless/ath/ath11k/mac.c | 70 +++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath11k/wmi.c |  5 ++
+ drivers/net/wireless/ath/ath11k/wmi.h | 22 +++++++++
+ 3 files changed, 93 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/ath/ath11k/hw.c  |  3 +++
- drivers/net/wireless/ath/ath11k/hw.h  |  1 +
- drivers/net/wireless/ath/ath11k/wmi.c |  3 +++
- drivers/net/wireless/ath/ath11k/wmi.h | 16 ++++++++++++++++
- 4 files changed, 23 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
-index 96db85c55585..5672def09e32 100644
---- a/drivers/net/wireless/ath/ath11k/hw.c
-+++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -201,6 +201,9 @@ static void ath11k_init_wmi_config_ipq8074(struct ath11k_base *ab,
- 	config->twt_ap_pdev_count = ab->num_radios;
- 	config->twt_ap_sta_count = 1000;
- 	config->flag1 |= WMI_RSRC_CFG_FLAG1_BSS_CHANNEL_INFO_64;
-+	config->ema_max_vap_cnt = ab->num_radios;
-+	config->ema_max_profile_period = TARGET_EMA_MAX_PROFILE_PERIOD;
-+	config->beacon_tx_offload_max_vdev += config->ema_max_vap_cnt;
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 075a307797d8..8f629e54a53d 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -5938,17 +5938,62 @@ static void ath11k_mac_op_stop(struct ieee80211_hw *hw)
+ 	atomic_set(&ar->num_pending_mgmt_tx, 0);
  }
  
- static int ath11k_hw_mac_id_to_pdev_id_ipq8074(struct ath11k_hw_params *hw,
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
-index 77dc5c851c9b..a9e8d325a059 100644
---- a/drivers/net/wireless/ath/ath11k/hw.h
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -64,6 +64,7 @@
- #define TARGET_NUM_WDS_ENTRIES		32
- #define TARGET_DMA_BURST_SIZE		1
- #define TARGET_RX_BATCHMODE		1
-+#define TARGET_EMA_MAX_PROFILE_PERIOD	8
+-static void
+-ath11k_mac_setup_vdev_create_params(struct ath11k_vif *arvif,
+-				    struct vdev_create_params *params)
++static int ath11k_mac_setup_vdev_params_mbssid(struct ath11k_vif *arvif,
++					       u32 *flags, u32 *tx_vdev_id)
++{
++	struct ath11k *ar = arvif->ar;
++	struct ath11k_vif *tx_arvif;
++	struct ieee80211_vif *tx_vif;
++
++	*tx_vdev_id = 0;
++	tx_vif = arvif->vif->mbssid_tx_vif;
++	if (!tx_vif) {
++		*flags = WMI_HOST_VDEV_FLAGS_NON_MBSSID_AP;
++		return 0;
++	}
++
++	tx_arvif = (void *)tx_vif->drv_priv;
++
++	if (arvif->vif->bss_conf.nontransmitted) {
++		if (ar->hw->wiphy != ieee80211_vif_to_wdev(tx_vif)->wiphy)
++			return -EINVAL;
++
++		*flags = WMI_HOST_VDEV_FLAGS_NON_TRANSMIT_AP;
++		*tx_vdev_id = ath11k_vif_to_arvif(tx_vif)->vdev_id;
++	} else if (tx_arvif == arvif) {
++		*flags = WMI_HOST_VDEV_FLAGS_TRANSMIT_AP;
++	} else {
++		return -EINVAL;
++	}
++
++	if (arvif->vif->bss_conf.ema_ap)
++		*flags |= WMI_HOST_VDEV_FLAGS_EMA_MODE;
++
++	return 0;
++}
++
++static int ath11k_mac_setup_vdev_create_params(struct ath11k_vif *arvif,
++					       struct vdev_create_params *params)
+ {
+ 	struct ath11k *ar = arvif->ar;
+ 	struct ath11k_pdev *pdev = ar->pdev;
++	int ret;
  
- #define ATH11K_HW_MAX_QUEUES		4
- #define ATH11K_QUEUE_LEN		4096
+ 	params->if_id = arvif->vdev_id;
+ 	params->type = arvif->vdev_type;
+ 	params->subtype = arvif->vdev_subtype;
+ 	params->pdev_id = pdev->pdev_id;
++	params->mbssid_flags = 0;
++	params->mbssid_tx_vdev_id = 0;
++
++	if (!test_bit(WMI_TLV_SERVICE_MBSS_PARAM_IN_VDEV_START_SUPPORT,
++		      ar->ab->wmi_ab.svc_map)) {
++		ret = ath11k_mac_setup_vdev_params_mbssid(arvif,
++							  &params->mbssid_flags,
++							  &params->mbssid_tx_vdev_id);
++		if (ret)
++			return ret;
++	}
+ 
+ 	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) {
+ 		params->chains[NL80211_BAND_2GHZ].tx = ar->num_tx_chains;
+@@ -5963,6 +6008,7 @@ ath11k_mac_setup_vdev_create_params(struct ath11k_vif *arvif,
+ 		params->chains[NL80211_BAND_6GHZ].tx = ar->num_tx_chains;
+ 		params->chains[NL80211_BAND_6GHZ].rx = ar->num_rx_chains;
+ 	}
++	return 0;
+ }
+ 
+ static u32
+@@ -6279,7 +6325,12 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
+ 	for (i = 0; i < ARRAY_SIZE(vif->hw_queue); i++)
+ 		vif->hw_queue[i] = i % (ATH11K_HW_MAX_QUEUES - 1);
+ 
+-	ath11k_mac_setup_vdev_create_params(arvif, &vdev_param);
++	ret = ath11k_mac_setup_vdev_create_params(arvif, &vdev_param);
++	if (ret) {
++		ath11k_warn(ab, "failed to create vdev parameters %d: %d\n",
++			    arvif->vdev_id, ret);
++		goto err;
++	}
+ 
+ 	ret = ath11k_wmi_vdev_create(ar, vif->addr, &vdev_param);
+ 	if (ret) {
+@@ -6705,6 +6756,17 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
+ 	arg.pref_tx_streams = ar->num_tx_chains;
+ 	arg.pref_rx_streams = ar->num_rx_chains;
+ 
++	arg.mbssid_flags = 0;
++	arg.mbssid_tx_vdev_id = 0;
++	if (test_bit(WMI_TLV_SERVICE_MBSS_PARAM_IN_VDEV_START_SUPPORT,
++		     ar->ab->wmi_ab.svc_map)) {
++		ret = ath11k_mac_setup_vdev_params_mbssid(arvif,
++							  &arg.mbssid_flags,
++							  &arg.mbssid_tx_vdev_id);
++		if (ret)
++			return ret;
++	}
++
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+ 		arg.ssid = arvif->u.ap.ssid;
+ 		arg.ssid_len = arvif->u.ap.ssid_len;
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 84d1c7054013..b71f68d675f1 100644
+index b71f68d675f1..d0716f6208b2 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -3934,6 +3934,9 @@ ath11k_wmi_copy_resource_config(struct wmi_resource_config *wmi_cfg,
- 	wmi_cfg->sched_params = tg_cfg->sched_params;
- 	wmi_cfg->twt_ap_pdev_count = tg_cfg->twt_ap_pdev_count;
- 	wmi_cfg->twt_ap_sta_count = tg_cfg->twt_ap_sta_count;
-+	wmi_cfg->flags2 = WMI_RSRC_CFG_FLAG2_CALC_NEXT_DTIM_COUNT_SET;
-+	wmi_cfg->ema_max_vap_cnt = tg_cfg->ema_max_vap_cnt;
-+	wmi_cfg->ema_max_profile_period = tg_cfg->ema_max_profile_period;
- }
+@@ -720,6 +720,9 @@ int ath11k_wmi_vdev_create(struct ath11k *ar, u8 *macaddr,
+ 	cmd->vdev_subtype = param->subtype;
+ 	cmd->num_cfg_txrx_streams = WMI_NUM_SUPPORTED_BAND_MAX;
+ 	cmd->pdev_id = param->pdev_id;
++	cmd->mbssid_flags = param->mbssid_flags;
++	cmd->mbssid_tx_vdev_id = param->mbssid_tx_vdev_id;
++
+ 	ether_addr_copy(cmd->vdev_macaddr.addr, macaddr);
  
- static int ath11k_init_cmd_send(struct ath11k_pdev_wmi *wmi,
+ 	ptr = skb->data + sizeof(*cmd);
+@@ -936,6 +939,8 @@ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 	cmd->cac_duration_ms = arg->cac_duration_ms;
+ 	cmd->regdomain = arg->regdomain;
+ 	cmd->he_ops = arg->he_ops;
++	cmd->mbssid_flags = arg->mbssid_flags;
++	cmd->mbssid_tx_vdev_id = arg->mbssid_tx_vdev_id;
+ 
+ 	if (!restart) {
+ 		if (arg->ssid) {
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index b1fad4707dc6..842c074c7efa 100644
+index 842c074c7efa..c572774b9659 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -2308,6 +2308,7 @@ struct wmi_init_cmd {
- } __packed;
- 
- #define WMI_RSRC_CFG_FLAG1_BSS_CHANNEL_INFO_64 BIT(5)
-+#define WMI_RSRC_CFG_FLAG2_CALC_NEXT_DTIM_COUNT_SET BIT(9)
- 
- struct wmi_resource_config {
- 	u32 tlv_header;
-@@ -2368,6 +2369,18 @@ struct wmi_resource_config {
- 	u32 sched_params;
- 	u32 twt_ap_pdev_count;
- 	u32 twt_ap_sta_count;
-+	u32 max_nlo_ssids;
-+	u32 num_pkt_filters;
-+	u32 num_max_sta_vdevs;
-+	u32 max_bssid_indicator;
-+	u32 ul_resp_config;
-+	u32 msdu_flow_override_config0;
-+	u32 msdu_flow_override_config1;
-+	u32 flags2;
-+	u32 host_service_flags;
-+	u32 max_rnr_neighbours;
-+	u32 ema_max_vap_cnt;
-+	u32 ema_max_profile_period;
- } __packed;
- 
- struct wmi_service_ready_event {
-@@ -5326,6 +5339,9 @@ struct target_resource_config {
- 	u32 sched_params;
- 	u32 twt_ap_pdev_count;
- 	u32 twt_ap_sta_count;
-+	bool is_reg_cc_ext_event_supported;
-+	u32 ema_max_vap_cnt;
-+	u32 ema_max_profile_period;
+@@ -137,6 +137,14 @@ enum {
+ 	WMI_AUTORATE_3200NS_GI = BIT(11),
  };
  
- enum wmi_sys_cap_info_flags {
++enum {
++	WMI_HOST_VDEV_FLAGS_NON_MBSSID_AP       = 0x00000001,
++	WMI_HOST_VDEV_FLAGS_TRANSMIT_AP         = 0x00000002,
++	WMI_HOST_VDEV_FLAGS_NON_TRANSMIT_AP     = 0x00000004,
++	WMI_HOST_VDEV_FLAGS_EMA_MODE            = 0x00000008,
++	WMI_HOST_VDEV_FLAGS_SCAN_MODE_VAP       = 0x00000010,
++};
++
+ /*
+  * wmi command groups.
+  */
+@@ -2091,6 +2099,10 @@ enum wmi_tlv_service {
+ 	WMI_TLV_SERVICE_FREQINFO_IN_METADATA = 219,
+ 	WMI_TLV_SERVICE_EXT2_MSG = 220,
+ 	WMI_TLV_SERVICE_SRG_SRP_SPATIAL_REUSE_SUPPORT = 249,
++	WMI_TLV_REQUEST_CTRL_PATH_STATS_REQUEST = 250,
++	WMI_TLV_SERVICE_TPC_STATS_EVENT = 251,
++	WMI_TLV_SERVICE_NO_INTERBAND_MCC_SUPPORT = 252,
++	WMI_TLV_SERVICE_MBSS_PARAM_IN_VDEV_START_SUPPORT = 253,
+ 
+ 	/* The second 128 bits */
+ 	WMI_MAX_EXT_SERVICE = 256,
+@@ -2571,6 +2583,8 @@ struct vdev_create_params {
+ 		u8 rx;
+ 	} chains[NUM_NL80211_BANDS];
+ 	u32 pdev_id;
++	u32 mbssid_flags;
++	u32 mbssid_tx_vdev_id;
+ };
+ 
+ struct wmi_vdev_create_cmd {
+@@ -2581,6 +2595,8 @@ struct wmi_vdev_create_cmd {
+ 	struct wmi_mac_addr vdev_macaddr;
+ 	u32 num_cfg_txrx_streams;
+ 	u32 pdev_id;
++	u32 mbssid_flags;
++	u32 mbssid_tx_vdev_id;
+ } __packed;
+ 
+ struct wmi_vdev_txrx_streams {
+@@ -2644,6 +2660,9 @@ struct wmi_vdev_start_request_cmd {
+ 	u32 he_ops;
+ 	u32 cac_duration_ms;
+ 	u32 regdomain;
++	u32 min_data_rate;
++	u32 mbssid_flags;
++	u32 mbssid_tx_vdev_id;
+ } __packed;
+ 
+ #define MGMT_TX_DL_FRM_LEN		     64
+@@ -2813,6 +2832,9 @@ struct wmi_vdev_start_req_arg {
+ 	u32 pref_rx_streams;
+ 	u32 pref_tx_streams;
+ 	u32 num_noa_descriptors;
++	u32 min_data_rate;
++	u32 mbssid_flags;
++	u32 mbssid_tx_vdev_id;
+ };
+ 
+ struct peer_create_params {
 -- 
 2.31.1
 
