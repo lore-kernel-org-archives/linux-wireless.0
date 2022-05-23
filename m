@@ -2,118 +2,117 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46FD4C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5F78C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:46:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229708AbiEWHEB (ORCPT
+        id S231254AbiEWHqe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 May 2022 03:04:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59782 "EHLO
+        Mon, 23 May 2022 03:46:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229612AbiEWHEA (ORCPT
+        with ESMTP id S230281AbiEWHqb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 May 2022 03:04:00 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 748EF19C39
-        for <linux-wireless@vger.kernel.org>; Sun, 22 May 2022 23:56:34 -0700 (PDT)
-Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1nt1wt-0007Lr-4Z; Mon, 23 May 2022 08:53:51 +0200
-Received: from sha by ptx.hi.pengutronix.de with local (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1nt1wq-0001DV-Gs; Mon, 23 May 2022 08:53:48 +0200
-Date:   Mon, 23 May 2022 08:53:48 +0200
-From:   Sascha Hauer <s.hauer@pengutronix.de>
-To:     Hans Ulli Kroll <linux@ulli-kroll.de>
-Cc:     linux-wireless@vger.kernel.org, Neo Jou <neojou@gmail.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        kernel@pengutronix.de, Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 00/10] RTW88: Add support for USB variants
-Message-ID: <20220523065348.GK25578@pengutronix.de>
-References: <20220518082318.3898514-1-s.hauer@pengutronix.de>
- <55f569899e4e894970b826548cd5439f5def2183.camel@ulli-kroll.de>
+        Mon, 23 May 2022 03:46:31 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3284618365
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2022 00:46:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1653291990; x=1684827990;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=e1kLWLSUVFdxvFvWDCxq9Din9yErolP4oSReUQ0Ke0A=;
+  b=qxd7t2ZC40wZ7wyaRmdU/t1sKs7/Xd2YyGDHWavv5EzbMGeOviSh1Dwt
+   jyofemRpV9zASu6AcBeNMrmAEI74+ODKAXCuCs9WV5XS/Oo40TyCFeVHt
+   vyX7LeMx7LHIuwhwQrwzRl1k7wORbn4GMLBmbSdBnXjCjnMg1M0+18JWS
+   I=;
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 22 May 2022 23:01:27 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 23:01:27 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Sun, 22 May 2022 23:01:27 -0700
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Sun, 22 May 2022 23:01:26 -0700
+From:   Aloka Dixit <quic_alokad@quicinc.com>
+To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+        <ath11k@lists.infradead.org>
+CC:     Aloka Dixit <quic_alokad@quicinc.com>,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH 3/9] ath11k: set MBSSID and EMA driver capabilities
+Date:   Sun, 22 May 2022 23:01:02 -0700
+Message-ID: <20220523060108.23982-4-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20220523060108.23982-1-quic_alokad@quicinc.com>
+References: <20220523060108.23982-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <55f569899e4e894970b826548cd5439f5def2183.camel@ulli-kroll.de>
-X-Sent-From: Pengutronix Hildesheim
-X-URL:  http://www.pengutronix.de/
-X-IRC:  #ptxdist @freenode
-X-Accept-Language: de,en
-X-Accept-Content-Type: text/plain
-X-Uptime: 08:45:07 up 53 days, 19:14, 61 users,  load average: 0.03, 0.24,
- 0.25
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Hans Ulli,
+Set extended capability bits in ath11k_if_types_ext_capa,
+ath11k_if_types_ext_capa_sta and ath11k_if_types_ext_capa_ap structures
+to indicate the driver support for MBSSID and EMA.
 
-On Mon, May 23, 2022 at 06:07:16AM +0200, Hans Ulli Kroll wrote:
-> On Wed, 2022-05-18 at 10:23 +0200, Sascha Hauer wrote:
-> > This series adds support for the USB chip variants to the RTW88 driver.
-> > 
-> 
-> Hi Sascha
-> 
-> glad you found some *working* devices for rtw88 !
+Configure mbssid_max_interfaces and ema_max_profile_periodicity
+fields in structure wiphy which are used to advertise maximum number
+of interfaces and profile periodicity supported by the driver.
 
-Well, not fully. I had to add [3] = RTW_DEF_RFE(8822c, 0, 0), to the
-rtw8822c_rfe_defs array.
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+Co-developed-by: John Crispin <john@phrozen.org>
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-> 
-> I spend some of the weekend testing your driver submission.
-> 
-> for rtl8821cu devices I get following output
-> 
-> some Logilink device
-> 
-> [ 1686.605567] usb 1-5.1.2: New USB device found, idVendor=0bda, idProduct=c811, bcdDevice=
-> 2.00
-> [ 1686.614186] usb 1-5.1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> [ 1686.621721] usb 1-5.1.2: Product: 802.11ac NIC
-> [ 1686.626227] usb 1-5.1.2: Manufacturer: Realtek
-> [ 1686.630695] usb 1-5.1.2: SerialNumber: 123456
-> [ 1686.640480] rtw_8821cu 1-5.1.2:1.0: Firmware version 24.5.0, H2C version 12
-> [ 1686.932828] rtw_8821cu 1-5.1.2:1.0: failed to download firmware
-> [ 1686.945206] rtw_8821cu 1-5.1.2:1.0: failed to setup chip efuse info
-> [ 1686.951538] rtw_8821cu 1-5.1.2:1.0: failed to setup chip information
-> [ 1686.958402] rtw_8821cu: probe of 1-5.1.2:1.0 failed with error -22
-> 
-> above is same with some from Comfast
-> 
-> The worst in the list is one from EDUP
-> 
-> [ 1817.855704] rtw_8821cu 1-5.1.2:1.2: Firmware version 24.5.0, H2C version 12
-> [ 1818.153918] rtw_8821cu 1-5.1.2:1.2: rfe 255 isn't supported
-> [ 1818.165176] rtw_8821cu 1-5.1.2:1.2: failed to setup chip efuse info
-> [ 1818.171505] rtw_8821cu 1-5.1.2:1.2: failed to setup chip information
-
-Do these chips work with your out of tree variant of this driver?
-
-Is the efuse info completely 0xff or only the field indicating the rfe
-option?
-
-> 
-> rtl8822bu devices are working fine ...
-
-Nice. Did you test a rtw8723du device as well?
-
-Sascha
-
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index ee1590b16eff..075a307797d8 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -8705,19 +8705,23 @@ static int ath11k_mac_setup_iface_combinations(struct ath11k *ar)
+ 
+ static const u8 ath11k_if_types_ext_capa[] = {
+ 	[0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
++	[2] = WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT,
+ 	[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
+ };
+ 
+ static const u8 ath11k_if_types_ext_capa_sta[] = {
+ 	[0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
++	[2] = WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT,
+ 	[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
+ 	[9] = WLAN_EXT_CAPA10_TWT_REQUESTER_SUPPORT,
+ };
+ 
+ static const u8 ath11k_if_types_ext_capa_ap[] = {
+ 	[0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
++	[2] = WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT,
+ 	[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
+ 	[9] = WLAN_EXT_CAPA10_TWT_RESPONDER_SUPPORT,
++	[10] = WLAN_EXT_CAPA11_EMA_SUPPORT,
+ };
+ 
+ static const struct wiphy_iftype_ext_capab ath11k_iftypes_ext_capa[] = {
+@@ -8938,6 +8942,9 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 				      NL80211_EXT_FEATURE_UNSOL_BCAST_PROBE_RESP);
+ 	}
+ 
++	ar->hw->wiphy->mbssid_max_interfaces = TARGET_NUM_VDEVS(ab);
++	ar->hw->wiphy->ema_max_profile_periodicity = TARGET_EMA_MAX_PROFILE_PERIOD;
++
+ 	ath11k_reg_init(ar);
+ 
+ 	if (!test_bit(ATH11K_FLAG_RAW_MODE, &ab->dev_flags)) {
 -- 
-Pengutronix e.K.                           |                             |
-Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
-31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+2.31.1
+
