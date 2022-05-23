@@ -2,75 +2,65 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B195C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 14:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF5CCC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 15:58:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237376AbiEWOsw (ORCPT
+        id S238264AbiEWP6C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 May 2022 10:48:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46658 "EHLO
+        Mon, 23 May 2022 11:58:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237361AbiEWOsv (ORCPT
+        with ESMTP id S238367AbiEWP5F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 May 2022 10:48:51 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63D125535C;
-        Mon, 23 May 2022 07:48:50 -0700 (PDT)
+        Mon, 23 May 2022 11:57:05 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADC7D58381;
+        Mon, 23 May 2022 08:57:04 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 16360B81142;
-        Mon, 23 May 2022 14:48:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B379EC385AA;
-        Mon, 23 May 2022 14:48:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 25F026135B;
+        Mon, 23 May 2022 15:57:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B4B5C385A9;
+        Mon, 23 May 2022 15:57:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653317327;
-        bh=JJUowl47ptnLiKQVZlPgElSH7N0NgsCjov8dxq9v10Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fnp8uE3xRSrq1EFCEfPYIoPnop6vaKngaXYjQT0GxqMofZ80GTaY+w1NWy6s6EG5E
-         MFFdsdZtgGFbTy8/CpHirFEs0cE4CseNwRvx26I31rOaPSw6a5XMAof0+u+iLOgIWw
-         uq0CgYlfgeMukSFYf6Tew/f+31f8hdDIzuvdjFp5oMkroBGBF7aZaWCT4zuh+6Dfsn
-         qd4PDUV4O/Ntqz7THtjrEQWe3YrAnGWP0K/+K1Y0Q6eG9U0feVI2/e0wOgT517/nYH
-         Mdu0TAhnGC5n+4b/046SYxHp5IplQlJpcgBIaAWhi1NrX+Mn9pja+YrbmlSxqrrdrw
-         MqPNr/FlloZHA==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1nt9MS-0006hx-2D; Mon, 23 May 2022 16:48:44 +0200
-Date:   Mon, 23 May 2022 16:48:44 +0200
-From:   Johan Hovold <johan@kernel.org>
-To:     Johan Hovold <johan+linaro@kernel.org>
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC] ath11k: fix netdev open race
-Message-ID: <YouezMIwm3PYxOKY@hovoldconsulting.com>
-References: <20220517103436.15867-1-johan+linaro@kernel.org>
+        s=k20201202; t=1653321423;
+        bh=ujayOaH3fjlY8iDthmcKzv6/JmxtEhUomVjdt+Jmwgg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=tgvNPMWMR0DgzsbPzEbFoxMDB6bdBKwsJmcScuoqzOwqN+32MpayMUKnszr1vvDNH
+         l1dNRJ9hbfmHRFzD7jtjyds1SkEHNlimzj9CStprKh0i+R/oDYFJmlGy9a9TgxoCWw
+         dLxgF12dvdatwSZ80zFFuMAl87xArpCNvUe41bOJNcy5uZxC566UrFd3dPN1DjM08g
+         rtN/sRNCqfsvUYYrltioDX8YXqbmOZJUulbNryeZ1gkTeXg9Myw+BEKoWo0r1JqEQt
+         86PYjA6OY3tcKv7rMypvwqRShwXKW3lUXvscf711eUT4gmfSKjNQKhfWWs492B4W5D
+         C8inFW3952WjQ==
+Date:   Mon, 23 May 2022 08:57:01 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     "kvalo@kernel.org" <kvalo@kernel.org>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "keescook@chromium.org" <keescook@chromium.org>,
+        "colin.king@intel.com" <colin.king@intel.com>
+Subject: Re: [PATCH net-next 3/8] wifi: rtlwifi: remove always-true
+ condition pointed out by GCC 12
+Message-ID: <20220523085701.3d7550ff@kernel.org>
+In-Reply-To: <8fb9d491692a4a2dabe783ffefc76ded@realtek.com>
+References: <20220520194320.2356236-1-kuba@kernel.org>
+        <20220520194320.2356236-4-kuba@kernel.org>
+        <8fb9d491692a4a2dabe783ffefc76ded@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220517103436.15867-1-johan+linaro@kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, May 17, 2022 at 12:34:36PM +0200, Johan Hovold wrote:
-> Make sure to allocate resources needed before registering the device.
+On Mon, 23 May 2022 02:35:32 +0000 Ping-Ke Shih wrote:
+> This is a typo since initial commit. Correct it by
+> -			     value[0] != NULL)
+> +			     value[0][0] != 0)
 > 
-> This specifically avoids having a racing open() trigger a BUG_ON() in
-> mod_timer() when ath11k_mac_op_start() is called before the
-> mon_reap_timer as been set up.
-> 
-> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-> Fixes: 840c36fa727a ("ath11k: dp: stop rx pktlog before suspend")
-> Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> ---
+> So, NACK this patch.
 
-For completeness:
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
-
-Johan
+Too, late, the patches were already applied, sorry. Please post a fixup.
