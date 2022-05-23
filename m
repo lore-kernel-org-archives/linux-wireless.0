@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D9D8C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:46:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F925C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 May 2022 07:46:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230454AbiEWHqt (ORCPT
+        id S231183AbiEWHqw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 May 2022 03:46:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59628 "EHLO
+        Mon, 23 May 2022 03:46:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231237AbiEWHqk (ORCPT
+        with ESMTP id S231295AbiEWHqm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 May 2022 03:46:40 -0400
+        Mon, 23 May 2022 03:46:42 -0400
 Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E828183B9
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2022 00:46:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ADB118B03
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2022 00:46:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1653291998; x=1684827998;
+  t=1653292000; x=1684828000;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+q0WXzxSQbtArcEIo1rVm0eVyYhPsRQcHJbnG4aVD2A=;
-  b=HaHKOAGGSLmPmGgPxSp1Vc5VyBytxVfsQ255KTwczKrzNiNbXVO0U4MP
-   2OlNgejqOwTAF23Njl0ep+FzSgjJPUkmbXVqDNqSiHjI7NENTJieiMeoG
-   uP571DPNlrWQZTLr5lC0PeV+UPQyP2LX5KZyTqpwQnxxCfhFTciYdgK5I
-   8=;
+  bh=lRFtBepfYOuqz0OgRXKPpKI89Q15dBcl7oeg3f9e/w0=;
+  b=m9amPMjqKruBNmE2ifc9dhwCoxXAAFqyQLuew9f5x3WVMnFNzNMXXKv/
+   Xs2j6QqmbQ1r5JfpRzj9ByEquDuG55LBv81/zUDrEL5Es4+aK4Ueffm2/
+   wH9nZ+9epDCe0Ae9+KlWl3M7WCRopwWgvrw15qVbyQL1MRjvnnjy9GwDA
+   Y=;
 Received: from ironmsg09-lv.qualcomm.com ([10.47.202.153])
-  by alexa-out.qualcomm.com with ESMTP; 22 May 2022 23:01:28 -0700
+  by alexa-out.qualcomm.com with ESMTP; 22 May 2022 23:01:29 -0700
 X-QCInternal: smtphost
 Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 23:01:28 -0700
+  by ironmsg09-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2022 23:01:29 -0700
 Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
  nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Sun, 22 May 2022 23:01:27 -0700
+ 15.2.986.22; Sun, 22 May 2022 23:01:28 -0700
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Sun, 22 May 2022 23:01:27 -0700
+ 15.2.986.22; Sun, 22 May 2022 23:01:28 -0700
 From:   Aloka Dixit <quic_alokad@quicinc.com>
 To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
         <ath11k@lists.infradead.org>
 CC:     Aloka Dixit <quic_alokad@quicinc.com>,
         John Crispin <john@phrozen.org>
-Subject: [PATCH 5/9] ath11k: create a structure for WMI vdev up parameters
-Date:   Sun, 22 May 2022 23:01:04 -0700
-Message-ID: <20220523060108.23982-6-quic_alokad@quicinc.com>
+Subject: [PATCH 8/9] ath11k: EMA beacon support
+Date:   Sun, 22 May 2022 23:01:07 -0700
+Message-ID: <20220523060108.23982-9-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220523060108.23982-1-quic_alokad@quicinc.com>
 References: <20220523060108.23982-1-quic_alokad@quicinc.com>
@@ -60,203 +60,211 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Include an instance of the structure instead of individual parameters
-as input to ath11k_wmi_vdev_up().
+Add new function ath11k_mac_setup_bcn_tmpl_ema() which invokes the new
+API provided by MAC80211 to retrieve EMA beacons. For non EMA APs,
+ath11k_mac_setup_bcn_tmpl_legacy() is added which maintains the current
+functionality.
 
 Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
 Co-developed-by: John Crispin <john@phrozen.org>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 31 +++++++++++++++++++++------
- drivers/net/wireless/ath/ath11k/wmi.c | 15 +++++++------
- drivers/net/wireless/ath/ath11k/wmi.h | 16 ++++++++++----
- 3 files changed, 45 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath11k/mac.c | 103 ++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath11k/wmi.c |   4 +-
+ drivers/net/wireless/ath/ath11k/wmi.h |  12 ++-
+ 3 files changed, 104 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 8f629e54a53d..32ddb80f4cec 100644
+index ff50341f1574..4ead94554724 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -920,6 +920,7 @@ static int ath11k_mac_monitor_vdev_start(struct ath11k *ar, int vdev_id,
- 	struct ieee80211_channel *channel;
- 	struct wmi_vdev_start_req_arg arg = {};
- 	int ret;
-+	struct vdev_up_params params = { 0 };
+@@ -1373,37 +1373,114 @@ static void ath11k_mac_setup_bcn_tmpl_vif_params(struct ath11k_vif *arvif,
+ 		arvif->wpaie_present = false;
+ }
  
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -960,7 +961,9 @@ static int ath11k_mac_monitor_vdev_start(struct ath11k *ar, int vdev_id,
- 		return ret;
- 	}
- 
--	ret = ath11k_wmi_vdev_up(ar, vdev_id, 0, ar->mac_addr);
-+	params.vdev_id = vdev_id,
-+	params.bssid = ar->mac_addr,
-+	ret = ath11k_wmi_vdev_up(ar, &params);
- 	if (ret) {
- 		ath11k_warn(ar->ab, "failed to put up monitor vdev %i: %d\n",
- 			    vdev_id, ret);
-@@ -1419,6 +1422,7 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+-static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
++static int __ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif,
++				       struct sk_buff *bcn,
++				       struct ieee80211_mutable_offsets offs,
++				       int ema_idx, int ema_cnt)
  {
  	struct ath11k *ar = arvif->ar;
- 	int ret = 0;
-+	struct vdev_up_params params = { 0 };
- 
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
-@@ -1446,8 +1450,10 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
- 
- 	ether_addr_copy(arvif->bssid, info->bssid);
- 
--	ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
--				 arvif->bssid);
-+	params.vdev_id = arvif->vdev_id;
-+	params.aid = arvif->aid;
-+	params.bssid = arvif->bssid;
-+	ret = ath11k_wmi_vdev_up(arvif->ar, &params);
- 	if (ret) {
- 		ath11k_warn(ar->ab, "failed to bring up vdev %d: %i\n",
- 			    arvif->vdev_id, ret);
-@@ -2704,6 +2710,7 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
- 	struct ath11k_peer *peer;
- 	bool is_auth = false;
- 	int ret;
-+	struct vdev_up_params params = { 0 };
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -2752,7 +2759,10 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
- 	arvif->aid = bss_conf->aid;
- 	ether_addr_copy(arvif->bssid, bss_conf->bssid);
- 
--	ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
-+	params.vdev_id = arvif->vdev_id;
-+	params.aid = arvif->aid;
-+	params.bssid = arvif->bssid;
-+	ret = ath11k_wmi_vdev_up(ar, &params);
- 	if (ret) {
- 		ath11k_warn(ar->ab, "failed to set vdev %d up: %d\n",
- 			    arvif->vdev_id, ret);
-@@ -6956,6 +6966,8 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
- 	/* TODO: Update ar->rx_channel */
- 
- 	for (i = 0; i < n_vifs; i++) {
-+		struct vdev_up_params params = { 0 };
+-	struct ath11k_base *ab = ar->ab;
+-	struct ieee80211_hw *hw = ar->hw;
+-	struct ieee80211_vif *vif = arvif->vif;
++	u32 ema_param = 0;
 +
- 		arvif = (void *)vifs[i].vif->drv_priv;
- 
- 		if (WARN_ON(!arvif->is_started))
-@@ -6996,8 +7008,10 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
- 			ath11k_warn(ab, "failed to update bcn tmpl during csa: %d\n",
- 				    ret);
- 
--		ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
--					 arvif->bssid);
-+		params.vdev_id = arvif->vdev_id;
-+		params.aid = arvif->aid;
-+		params.bssid = arvif->bssid;
-+		ret = ath11k_wmi_vdev_up(arvif->ar, &params);
- 		if (ret) {
- 			ath11k_warn(ab, "failed to bring vdev up %d: %d\n",
- 				    arvif->vdev_id, ret);
-@@ -7089,6 +7103,7 @@ static int ath11k_start_vdev_delay(struct ieee80211_hw *hw,
- 	struct ath11k_base *ab = ar->ab;
- 	struct ath11k_vif *arvif = (void *)vif->drv_priv;
++	if (ema_cnt) {
++		ema_param = (ema_cnt << WMI_BEACON_EMA_PARAM_PERIODICITY_SHIFT);
++		ema_param |= (ema_idx << WMI_BEACON_EMA_PARAM_TMPL_IDX_SHIFT);
++		ema_param |= ((!ema_idx ? 1 : 0) <<
++			      WMI_BEACON_EMA_PARAM_FIRST_TMPL_SHIFT);
++		ema_param |= ((ema_idx + 1 == ema_cnt ? 1 : 0) <<
++			      WMI_BEACON_EMA_PARAM_LAST_TMPL_SHIFT);
++	}
++
++	return ath11k_wmi_bcn_tmpl(ar, arvif->vdev_id, &offs, bcn, ema_param);
++}
++
++static int ath11k_mac_setup_bcn_tmpl_ema(struct ath11k_vif *arvif)
++{
++	struct ath11k_vif *tx_arvif;
++	struct ieee80211_ema_beacons *beacons;
++	u8 i = 0;
++	int ret = 0;
++
++	if (!arvif->vif->mbssid_tx_vif)
++		return -1;
++
++	tx_arvif = (void *)arvif->vif->mbssid_tx_vif->drv_priv;
++	beacons = ieee80211_beacon_get_template_ema_list(tx_arvif->ar->hw,
++							 tx_arvif->vif);
++	if (!beacons || !beacons->cnt) {
++		ath11k_warn(arvif->ar->ab,
++			    "failed to get ema beacon templates from mac80211\n");
++		return -EPERM;
++	}
++
++	if (tx_arvif == arvif)
++		ath11k_mac_setup_bcn_tmpl_vif_params(tx_arvif,
++						     beacons->bcn[0].skb);
++
++	for (i = 0; i < beacons->cnt; i++) {
++		ret = __ath11k_mac_setup_bcn_tmpl(tx_arvif, beacons->bcn[i].skb,
++						  beacons->bcn[i].offs,
++						  i, beacons->cnt);
++		if (ret) {
++			ath11k_warn(arvif->ar->ab,
++				    "failed to set ema beacon template id %i error %d\n",
++				    i, ret);
++			break;
++		}
++	}
++
++	ieee80211_beacon_free_ema_list(beacons);
++	return ret;
++}
++
++static int ath11k_mac_setup_bcn_tmpl_non_ema(struct ath11k_vif *arvif)
++{
++	struct ath11k_vif *tx_arvif = arvif;
+ 	struct ieee80211_mutable_offsets offs = {};
+ 	struct sk_buff *bcn;
  	int ret;
-+	struct vdev_up_params params = { 0 };
  
- 	if (WARN_ON(arvif->is_started))
- 		return -EBUSY;
-@@ -7115,7 +7130,9 @@ static int ath11k_start_vdev_delay(struct ieee80211_hw *hw,
+-	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
+-		return 0;
++	if (arvif->vif->mbssid_tx_vif)
++		tx_arvif = (void *)arvif->vif->mbssid_tx_vif->drv_priv;
+ 
+-	bcn = ieee80211_beacon_get_template(hw, vif, &offs);
++	bcn = ieee80211_beacon_get_template(tx_arvif->ar->hw, tx_arvif->vif,
++					    &offs);
+ 	if (!bcn) {
+-		ath11k_warn(ab, "failed to get beacon template from mac80211\n");
++		ath11k_warn(arvif->ar->ab,
++			    "failed to get beacon template from mac80211\n");
+ 		return -EPERM;
  	}
  
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR) {
--		ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, 0, ar->mac_addr);
-+		params.vdev_id = arvif->vdev_id,
-+		params.bssid = ar->mac_addr,
-+		ret = ath11k_wmi_vdev_up(ar, &params);
- 		if (ret) {
- 			ath11k_warn(ab, "failed put monitor up: %d\n", ret);
- 			return ret;
+-	ath11k_mac_setup_bcn_tmpl_vif_params(arvif, bcn);
+-	ret = ath11k_wmi_bcn_tmpl(ar, arvif->vdev_id, &offs, bcn);
+-
+-	kfree_skb(bcn);
++	if (tx_arvif == arvif)
++		ath11k_mac_setup_bcn_tmpl_vif_params(tx_arvif, bcn);
+ 
++	ret = __ath11k_mac_setup_bcn_tmpl(tx_arvif, bcn, offs, 0, 0);
+ 	if (ret)
+-		ath11k_warn(ab, "failed to submit beacon template command: %d\n",
++		ath11k_warn(arvif->ar->ab,
++			    "failed to submit beacon template command: %d\n",
+ 			    ret);
+ 
++	kfree_skb(bcn);
+ 	return ret;
+ }
+ 
++static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
++{
++	struct ieee80211_vif *vif = arvif->vif;
++
++	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
++		return 0;
++
++	if (vif->mbssid_tx_vif &&
++	    arvif != (void *)vif->mbssid_tx_vif->drv_priv &&
++	    arvif->is_up)
++		return 0;
++
++	if (vif->bss_conf.ema_ap)
++		return ath11k_mac_setup_bcn_tmpl_ema(arvif);
++	else
++		return ath11k_mac_setup_bcn_tmpl_non_ema(arvif);
++}
++
+ void ath11k_mac_bcn_tx_event(struct ath11k_vif *arvif)
+ {
+ 	struct ieee80211_vif *vif = arvif->vif;
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index d0716f6208b2..fa443a2646b5 100644
+index fa443a2646b5..362c516db07f 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -996,7 +996,7 @@ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
- 	return ret;
- }
+@@ -1676,7 +1676,7 @@ int ath11k_wmi_send_bcn_offload_control_cmd(struct ath11k *ar,
  
--int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
-+int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params)
+ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
+ 			struct ieee80211_mutable_offsets *offs,
+-			struct sk_buff *bcn)
++			struct sk_buff *bcn, u32 ema_params)
  {
  	struct ath11k_pdev_wmi *wmi = ar->wmi;
- 	struct wmi_vdev_up_cmd *cmd;
-@@ -1011,10 +1011,13 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 	struct wmi_bcn_tmpl_cmd *cmd;
+@@ -1714,6 +1714,8 @@ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
+ 	}
  
- 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_VDEV_UP_CMD) |
- 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
--	cmd->vdev_id = vdev_id;
--	cmd->vdev_assoc_id = aid;
--
--	ether_addr_copy(cmd->vdev_bssid.addr, bssid);
-+	cmd->vdev_id = params->vdev_id;
-+	cmd->vdev_assoc_id = params->aid;
-+	ether_addr_copy(cmd->vdev_bssid.addr, params->bssid);
-+	cmd->profile_idx = params->profile_idx;
-+	cmd->profile_count = params->profile_count;
-+	if (params->tx_bssid)
-+		ether_addr_copy(cmd->tx_vdev_bssid.addr, params->tx_bssid);
+ 	cmd->buf_len = bcn->len;
++	cmd->mbssid_ie_offset = offs->mbssid_off;
++	cmd->ema_params = ema_params;
  
- 	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_VDEV_UP_CMDID);
- 	if (ret) {
-@@ -1024,7 +1027,7 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 	ptr = skb->data + sizeof(*cmd);
  
- 	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
- 		   "WMI mgmt vdev up id 0x%x assoc id %d bssid %pM\n",
--		   vdev_id, aid, bssid);
-+		   params->vdev_id, params->aid, params->bssid);
- 
- 	return ret;
- }
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index c572774b9659..fa46fb6ef1ad 100644
+index fa46fb6ef1ad..f66131d915c8 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -2611,14 +2611,23 @@ struct wmi_vdev_delete_cmd {
- 	u32 vdev_id;
- } __packed;
+@@ -3554,6 +3554,11 @@ struct wmi_get_pdev_temperature_cmd {
  
-+struct vdev_up_params {
-+	u32 vdev_id;
-+	u16 aid;
-+	const u8 *bssid;
-+	u32 profile_idx;
-+	u32 profile_count;
-+	u8 *tx_bssid;
-+};
+ #define WMI_BEACON_TX_BUFFER_SIZE	512
+ 
++#define WMI_BEACON_EMA_PARAM_PERIODICITY_SHIFT         0
++#define WMI_BEACON_EMA_PARAM_TMPL_IDX_SHIFT            8
++#define WMI_BEACON_EMA_PARAM_FIRST_TMPL_SHIFT          16
++#define WMI_BEACON_EMA_PARAM_LAST_TMPL_SHIFT           24
 +
- struct wmi_vdev_up_cmd {
+ struct wmi_bcn_tmpl_cmd {
  	u32 tlv_header;
  	u32 vdev_id;
- 	u32 vdev_assoc_id;
- 	struct wmi_mac_addr vdev_bssid;
--	struct wmi_mac_addr trans_bssid;
-+	struct wmi_mac_addr tx_vdev_bssid;
- 	u32 profile_idx;
--	u32 profile_num;
-+	u32 profile_count;
+@@ -3564,6 +3569,11 @@ struct wmi_bcn_tmpl_cmd {
+ 	u32 csa_event_bitmap;
+ 	u32 mbssid_ie_offset;
+ 	u32 esp_ie_offset;
++	u32 csc_switch_count_offset;
++	u32 csc_event_bitmap;
++	u32 mu_edca_ie_offset;
++	u32 feature_enable_bitmap;
++	u32 ema_params;
  } __packed;
  
- struct wmi_vdev_stop_cmd {
-@@ -5998,8 +6007,7 @@ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
+ struct wmi_key_seq_counter {
+@@ -6005,7 +6015,7 @@ int ath11k_wmi_mgmt_send(struct ath11k *ar, u32 vdev_id, u32 buf_id,
+ 			 struct sk_buff *frame);
+ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
  			struct ieee80211_mutable_offsets *offs,
- 			struct sk_buff *bcn);
+-			struct sk_buff *bcn);
++			struct sk_buff *bcn, u32 ema_param);
  int ath11k_wmi_vdev_down(struct ath11k *ar, u8 vdev_id);
--int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid,
--		       const u8 *bssid);
-+int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params);
+ int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params);
  int ath11k_wmi_vdev_stop(struct ath11k *ar, u8 vdev_id);
- int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
- 			  bool restart);
 -- 
 2.31.1
 
