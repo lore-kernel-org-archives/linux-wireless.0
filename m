@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 794F2C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:41:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1444C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:41:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235369AbiEXLlr (ORCPT
+        id S236969AbiEXLlu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:41:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46178 "EHLO
+        Tue, 24 May 2022 07:41:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237001AbiEXLlk (ORCPT
+        with ESMTP id S236955AbiEXLls (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:41:40 -0400
-Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2071.outbound.protection.outlook.com [40.107.20.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1D56BFB
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:41:06 -0700 (PDT)
+        Tue, 24 May 2022 07:41:48 -0400
+Received: from EUR02-AM5-obe.outbound.protection.outlook.com (mail-eopbgr00041.outbound.protection.outlook.com [40.107.0.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C038B219E
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:41:12 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=KdGhyxI7oDxVtIRTddic9qgcFcmAcy3DuCsiLKBdw/X1mUe9Ruz1Z1JFnL1wrzwoQYwfsGtqFr98b5QQsTIXqX42QoxrxC1aCk7bzPmEMOjCYoxLQ2y/h4XUbrnYV2mwNBbdovjIuix72RLl/HNDFGtSnq9+ZsJ8TkX1v83BFAQEeh05BkXmOOVrZgf1K/9PUjSYBf9JmTDFMCSDFv3cpe6kMXidxg6lF2q5DBjRV+An6Z2d9n3/FJ6yCdjnRSXo3/QgbLytWPeKsRSqceyMpMtrwq4DonbCyvDCihUgK/V7q0iYOXba8LzoI8WX2nhVb4at636MOZLk42FqdNg/sQ==
+ b=NZvnQY60o5dNTN3BZSHnwjwsHKaM/51dekGohu1WrKdr7y9zSlXrpyhPFGENkZBV9JiSkbQfi3RMNzXbVhw/VJT/8z69f5CSLDyLnOdyoZLW/S/md8EIXtqawtQjqWTuHCRdIBM8kVBtx0Bp8NYDK5IAPAKuyPDGexlVnaN9dE/AmKvi7UCVZu9dpxcPWWSoAyV0HRx66l6YZiCMkia2+QnCOa7/Xtc//85aKB7NDc9+ivXaLcK7UQHYLZZkCWG8V8Hz4pdJnqjYHNBBbzA+LZs8lcaCKcMKqNP9IAFGF/AWdtN1wI9X2Fqm9eDBbC4ltAFNCM1F9WrVfJ0dJTQ8DQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VgD513CnW7Cnv2NkpNG6OpPUMuAKEBnc0sjA00HpdEw=;
- b=CdrUmUIpPr/Voo8yrhJ/LNEL0coPngxr1E24sRCa4DGkuKsMIL2w+YNcApatteJzqvL+8Y5RDZrJL99E+jQXK52ArfCe1raIToU/0XKwHaoueY9m2h+yy1F3PZGREzNh1jvjdUNWcELQ6ZLZmLSK8Eqp9cHy7g51dEh18Nyvglw3aup/cGleLr7UYjZ+gQnfnOefifiPAEhPkDhcQmcyxn1sJTFOlNyZj5NRCmWZTSkqW5qtEJ8tDIuJbs4N43JZyL3qPqz9Tf0Iw48ITahJ97oWhr4hnE1js6uaG0tjQrhjDi61RVOi3rvcrvkWPPSQzWD1VWoms0WT7xFqLfmTiw==
+ bh=p29A1K8b151fDW3Y4UfHqvIbDkZNU1nwQmdlhtvtRPk=;
+ b=EMx4MYLS5v32fbsMcYFCYFHWEoZK48wyFy8NmmfDT4kw8vfl+QFQJz+4Gx9k/5rL2E3MW8M+WCibehDLRKxnP72X5yyZ2xCaOXTz+tPx36rtLYxwbBt2Au1h7S72nUxsm+0FswkLB8YWxjr7w5wMtJp/Y2R2o8/mP3VScH8PFsgSOPF8sGwhWdsBd6BHmQp5D8EIBzWYrJ/Xzn5EH4q7byWMj7/n9V2FC9+TPcdtWnWGImX0JQnwa4Okswy7kwjvlaMpe98EkQDJFi08nkJj1ESaLX4/LPJEsoMgOZ9zh8HikPW91zRwwaWp7xj+Qo30ZSFr08oG32d1ki7YCiUDwA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VgD513CnW7Cnv2NkpNG6OpPUMuAKEBnc0sjA00HpdEw=;
- b=fy3bAzlYM6QAUq3dgkTcTD3nc7+rgoz2a3OTht3vqq0z7mhN5h24vtPizGnvwIUYoGeVsCWKPKxP1BuznlghGXWU8lv8SBzqcA074lKIl5jTpclzwTpVLtUvSrVOqpyIYJHrleZ6ldLjW9fWidLUc4SvJFsF9doWj0XKYJAdRV0=
+ bh=p29A1K8b151fDW3Y4UfHqvIbDkZNU1nwQmdlhtvtRPk=;
+ b=yRN/QKv0S2ylzekigYtyvO9PSuOc7pcjdDFSQ7oqzUwd64k6sNPoIOiYYusEDgpy1mhXBleeOuOkFRZQs5L4noVkYH90knG5B32vB5yWfrCjcXuGRbb3xsoLHDvCGHhcCeEadHhxtNyVHQO/p1qNcm/ihry81v+17QU2hLKWh98=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by VE1P192MB0669.EURP192.PROD.OUTLOOK.COM (2603:10a6:800:16f::15) with
+ by DBAP192MB1033.EURP192.PROD.OUTLOOK.COM (2603:10a6:10:1b4::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.14; Tue, 24 May
- 2022 11:39:31 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.13; Tue, 24 May
+ 2022 11:40:06 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:39:31 +0000
+ 11:40:06 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 84/96] cl8k: add tx.c
-Date:   Tue, 24 May 2022 14:34:50 +0300
-Message-Id: <20220524113502.1094459-85-viktor.barna@celeno.com>
+Subject: [RFC v2 94/96] cl8k: add wrs.c
+Date:   Tue, 24 May 2022 14:35:00 +0300
+Message-Id: <20220524113502.1094459-95-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c2204166-cb8c-47a7-6c7a-08da3d79fcc9
-X-MS-TrafficTypeDiagnostic: VE1P192MB0669:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1fb7b295-35a3-48c9-1503-08da3d7a0185
+X-MS-TrafficTypeDiagnostic: DBAP192MB1033:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <VE1P192MB0669375B524EFC9F035BAACDF6D79@VE1P192MB0669.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <DBAP192MB1033F66DE8D3F9A006EDBF76F6D79@DBAP192MB1033.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: KikxTzTUIEOlSG4+HUdeNzSdrO9PmHT/nh5cDkEDhPFdnCGqdl8s+o6ONvKkvTpayqN7A3+Qm9TlewPemsFUPzYyiuXqncFmp7uP8d2l0R1CmB5f51/YlJwW8wNqcNaEwgYfYIF2pg4DzXkGgliDOWsiUsUHeP4o5AQQ0W9tZOZ582qtdTj8C0eEqAtlI7bN7SUboj8t1YMLQYdNJmS7Z+pQPba3sIgOxFB4y4rXKLGBCfpdUnithNT/Ez9bYbiEZxMRkJQp/Z67f568Vev6qljbvPslA/Or3KKXqWcB+mV2I4m4q+v/sO+Fe63J/ZL8zYxO+EjjKi9YlshEpQKmh40wzynCVL3MKUCyeYJD+xa6ZTLE4WKvX/zgqEZpHfELEQJatJafxcxF8zBuF42cTmc5uXnjFbXD/GaUpPXYd8NUKFGWfJmiJQUdRswVOJCFeI4wXMwm+i/BXN8MwNh2/2p0SC2RBxC/1RdouFwUmBWRzULoMgZmN3fPKrpXgwoG7yvpQpViPc8pZHTr/fJcFw8HsBl+Cl/7VFXXHoxlhSx/fRCz71j5bLrX9XlslRb7aw/pJpWJs5DJb1MCi0wVMsWwM4zoo3r2UWFAhPEPVNUO9L0aJkNr/2XN+GJl0HZXmPcVHP8STdGgRcRR8iN10lhlZD2lu3EgYwDBL+yXUhS1nZu7kza+VtPdUdpbEhXjSJqAoeBAkp7MxsYgDA1wHwHVl8DQAgzC9UN+AJL5Po2BpoyxPawnLoKDrFIHQbT9
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(396003)(376002)(136003)(366004)(346002)(39850400004)(8676002)(9686003)(26005)(36756003)(66946007)(66556008)(66476007)(4326008)(107886003)(83380400001)(6512007)(5660300002)(38350700002)(38100700002)(1076003)(2616005)(316002)(6916009)(6506007)(6486002)(54906003)(86362001)(8936002)(508600001)(41300700001)(6666004)(2906002)(186003)(52116002)(30864003)(32563001)(579004)(559001)(309714004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Z224LvELBOdftG6bXEIJwAxXe+5sYOdWPdJSRaRLxbx9n7VjX0To0e93DzEWNhcyIiVMYyV2mXy5gEbe5CXixV0Mwn5hca3gnh/u4KgmtjdRtFgjgKq9aYKahQxUVpAzISjhSmkgdTb10iysG/IjW+ncZiHrQdPVxuVGkGsLdONpFAlOWLC+hT/jQCqv8UJoUwTjvg/urfTKd8ZlVaBjCt7ur7HUlvciLmCd59UaMgmanthF4Fh9hL9hXvyCmqPwifTxurcPFGD7g+R46AZEJCaB12Xn+2pYQ+tNeOBN7T2ICxN16lNY97YhBmq36OoXovApoZ0Ul8KFC4aFUpE18kj2jlEWmgWbabjOX2sKhiuYA25ex3uVnQBfNLqn+PPp1befkQSgiLrVURS8d38le5jq0ZBcjdEpVGXgTDJYIQTVwttSDJ3hdce0NeLU+u5YEQErBQ+/abxDGwgdKKm3j+jGC771dmUvTsyeJ9ELvo5W2cctKCwjX6/7ranGvVaOF+gGPMJJnX8GM0pbBcHVIa3H5eOIvDU2fwIHy9NLK1wfyOp+9IZwNz/j3yCrDl0fHyslPAh2IcNeuRLvh8tbKr9+rlQCaGTi6IlaromgeodPnUMn3nQdrG+YxcIw7o5OtesszXjbkhjzytUyJHkwp5eV/uPkzK3fRlaDdAICizHom/pG4oh2SqyeooB3wB70l84xXqiwJzkkN3Mxl17Bj5AbBZckFl85pVADaQTSs/9lPHzF2+Wf2sNSocHeqQ6p
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(346002)(376002)(366004)(136003)(396003)(39850400004)(2906002)(4326008)(6916009)(38350700002)(8676002)(86362001)(316002)(54906003)(38100700002)(66476007)(66556008)(26005)(2616005)(52116002)(9686003)(36756003)(6486002)(66946007)(6512007)(6506007)(30864003)(107886003)(5660300002)(508600001)(83380400001)(8936002)(186003)(1076003)(41300700001)(6666004)(32563001)(579004)(559001)(309714004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YTsN+dIaVG+GQy+SwvtwT7U4cuhMMv8t+i11uY0tZl2eZMx/p3dvo07ZC2vO?=
- =?us-ascii?Q?gnXR9ixf4uwT/pEJqmY7qKIyoXoG7G8L7gDdilhxniDhqTe7lv7uFQ0CapUa?=
- =?us-ascii?Q?5a8k4hheQGLs/rtF2ulG6oSG6Z1B/4Ew3eOJb/vExZIxEFHhNOQ0eCEff6HW?=
- =?us-ascii?Q?2GH3QI735UV8dpY1NRQgbm+RrPqCqvxRCjzQwR1WMSF758zGcolwY8xiHUhh?=
- =?us-ascii?Q?n2u8dfus9Kgfi6XYWw5QlgcQaWXcZy4qpcfu30TK3jt0RrFGSYVe5RO4ndCC?=
- =?us-ascii?Q?d6xPxU4uw/tct8WdmS3KaphGqzggAY7deZ1d3Z45fw5CVrHpJYbgDrv/aO/R?=
- =?us-ascii?Q?gSUljmfbZfkoVTHvdFSXxXJMQG2qDW3HbpdmDFnsOMhsn1//bGTQ36KwnmMc?=
- =?us-ascii?Q?PpfBO0TnoA/1IUweznzPgC6+uPslE109HKIouRyde5RToFFGJEfwph8rMrUv?=
- =?us-ascii?Q?N+fRdIGZx+aAwwWOdf18W+bHvb/1LHWpD0ZyJvB48LaY14UPydYkYpaV63c0?=
- =?us-ascii?Q?+OmQNl/ORAvcjsL7+8Mzo6rcrZlk5Tu3TQXXdzsmvuNABmtIvLz8ZEE0kOQn?=
- =?us-ascii?Q?wJwp4XFGGyPHO66Lle0cIxI8mt8bZR9S+A4rSjWG87VAwsOEt8WdfVKtZdk3?=
- =?us-ascii?Q?5fl4qlJQj5Kw+5AWqpZgbJayPWbwgwEr6YwQdgMAqEmCYGVasB9pgG0SZZc3?=
- =?us-ascii?Q?ErFn4+9r7s3WIs8ICiWVRsS+droopwihJkh+H4fhq+pTVOlSO93kk+rRbbBy?=
- =?us-ascii?Q?+/YzlnnA5rBzuoWRQslVW4zC/17IR37xHmclqJQoLwZN8buLp5LjgrIsTlDU?=
- =?us-ascii?Q?dNS7EnlAkB1CSMIcN1DXT0OsxWbyjHxTZzIFrhZR7wJMnh9tJrYGC9J7Ufhp?=
- =?us-ascii?Q?m+Qs5q89Q9SWe4suPwOPtxLUMIXzpMJtBfeiJFWzpCGk/5y2oosM4oh21VI1?=
- =?us-ascii?Q?SMDf4t9Cj+7MyEUSfhQ3lv05zrUP1d9PNjZQEmJgnA8Wy8g7Z0BgEmmqFKzi?=
- =?us-ascii?Q?LqfZOPZUZp2DquDQrU9nXZYND7c3hJsCv6YPcCK8ldCCw0QvzpmUAmporvBX?=
- =?us-ascii?Q?wJg9ZNKHIdo7UXhw4KhOI+Sf9Qu0C8GLP6xcqudkbleL0dREzAtzZokQhvUD?=
- =?us-ascii?Q?jBRrJjAG1Z88FzCWbFRF4rT781n0VHzLrBd9bjIEiHnsEMDna37ZRQBGSaME?=
- =?us-ascii?Q?T5cN+JBuDHfgvbiVd+CWQNoVtGjwx8pF6oQ1xWw+67AX1LPZKhUE7ipVeeTB?=
- =?us-ascii?Q?wwYO2oEysMucZj7EHBGaPsDKwuBDUPz/E7yKEkGkurIpMAZ5lQFKff9yFlIh?=
- =?us-ascii?Q?uZAC2wAhOsWhsvm7444Xjv0esX7mTwt5aBmoTAOykM9C5uFzAfStVlXX4KeD?=
- =?us-ascii?Q?r3Z321UKORDyrZwwaRExZJVAo/REiEFKTqXqQC1cK9+7OjnBwcghmLgyQuPH?=
- =?us-ascii?Q?Rr8wFCENxZCPfB8wRLQekEHglBJRsBYBrdkFg9I/NgIvoEl9vn1zSzprpUbz?=
- =?us-ascii?Q?EpE/X+dWZi0xEz2z6aP/d6xB8rF3GkxgbpgzEorQ8hVUVSd1sp4ngeQqyVJH?=
- =?us-ascii?Q?Czzzc22R9KgcchTyP6mAqyI0bxr0vV1a1U3rxPWgH8hl+KQdS0HUatzV1lwZ?=
- =?us-ascii?Q?Rnt38uA36pKiFj/IolzOxIRZSg/SxX/lEEbpmyoZnCO+mNMR68J6n9OpJzZc?=
- =?us-ascii?Q?x0s4FqAjmPSc+3nGcLlo2fNkK8ofZZL4q2yrjoR1HP41Ccja5xFE4itmlDCc?=
- =?us-ascii?Q?LOSyJAngUCxKf68wBUxLZOcRAw1h9fE=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?e/RUopYF8I0V8ytm/MXXNwiqfq2rhTV4J1b4pI/Hpp4Jx7Bt/pNDetTNeQcP?=
+ =?us-ascii?Q?qzctivOjUkrMvzYf7XB7FjTOY4GzIvkiFHYHd9FDnrqHB25BnVK17JMPkoYH?=
+ =?us-ascii?Q?NNLXjXeegFnst8tiD4FuSWQfXvn6RjvakJJ5QMFFaCpd2uIyQRI0RhsefzKM?=
+ =?us-ascii?Q?KAjbvnhkJYULFaW+ahBAfi07Yl4RekVsDKw5E8znsZYh2XCpTY3EF8cpR85h?=
+ =?us-ascii?Q?ZL0m0hVxakilft/rYd0HGBujU7sPidTsVsrWxD/hdXh5OnYBP1iqVqgwHAo/?=
+ =?us-ascii?Q?oy2w8MVoTXO2TI1O4w1T28hARkgY3m6Xk8kMKNvtR3Xevz7FehJlmfrm0T9i?=
+ =?us-ascii?Q?AxC75U/KHeMRyDEEQ1Gzx8koRH61lqGXbRVuaVbfiv4hmq3gnGRoB512taPd?=
+ =?us-ascii?Q?4Ai/sK7LptHErpomElneKwEkKQ3q2WnEEPQA+E0o017M12l2kfbDySIDtTHl?=
+ =?us-ascii?Q?gWpjTrTGICY2YsIPh1MNmBU+K44RZt9Z2bs1nxewaRKB6BIben1vDNn9KRlp?=
+ =?us-ascii?Q?7Zz7W0j5cWn2G6CD+0cWKJt+J3pALEmp6WJIB5T3WylJ/YjyW0JzVWvOhDw0?=
+ =?us-ascii?Q?HJs92LxuNo8dCZa7xVLsjRBO19sT72AR4PouqoxHqczZIoDW/VAnpsV1hwNV?=
+ =?us-ascii?Q?rhGkkgFJt76TMKiLl8ztryjLAt6tb9GvA/KDrmLolyyccMF25yVma8CtPgCv?=
+ =?us-ascii?Q?t06aMS/5n7CnvTL9VF7XivTEWiMe4YAo3CLc+B55A9WCoDxtvC2sZIO6kd2e?=
+ =?us-ascii?Q?Ta/I/tFFdGlpYqEg21ZJv4WtZ5L85twJ6ICU565hknjwx4kgs0Z49eaNXCyU?=
+ =?us-ascii?Q?gnDGPfxeliigmmXiROYl5OC+SmAdrAW8oRJFHXw4vfxoXgHNXv72cxLQGHHx?=
+ =?us-ascii?Q?Jz0i/R2lWlMrf83jNRaMK+RSI4Yj8MnP2rEglUhjd7T9+LWichv/yrXI4Wj2?=
+ =?us-ascii?Q?/XVK937HU7SXQ2IoEA0Dqu1tndoVdHOO3p6EnC3Sds2iMC/TqtW5ivy7MnEF?=
+ =?us-ascii?Q?lQdS7oSPqcQyoU75x9GVk9B22DneWYRa6rnRCYj+drWslP8EoWdpA5vSuFMi?=
+ =?us-ascii?Q?Qg/hpKE4/aLSZs7mLVKL2hMWZ3TvnskaLjxeYybYWwI8xcDfljlicwZopsJ6?=
+ =?us-ascii?Q?tYLqUFRR9Z6/q5VwJCstakyYMRQDGNiycVFWxTaogWWNSQhO9ba1sRltiBQc?=
+ =?us-ascii?Q?qPl541MeCpmhaereHzwmAmdroOmLB9TrOfeBntAhs9U9ROd07Ja9sWSo1klp?=
+ =?us-ascii?Q?ceEf5Pc7SLqDFIOi2yDHCdXll+1Z3GlQRKQmMhg9I87svjInZy+HAuQ5AYpM?=
+ =?us-ascii?Q?JinWt+AknhVQlSOoJYnDTkUtTVYsqUWW94vMEQSbXGFKDXwYaBW9beSC/MTe?=
+ =?us-ascii?Q?O5zey0wGZ63DlkvN4Iqhmt5yd4QCeICwHBmAhYa9G3/dq+8pMP3ynJ7ixxsB?=
+ =?us-ascii?Q?xs++bnM8xS4rxZTAKei+BKzwIKAaJvFDlJiMAHPPzR1PDBMwHt+TI2FUaXzh?=
+ =?us-ascii?Q?Qidod4NKRlBVIfaHk/Shn+TKQ1XeBNyspf3rmPCP/cqMyeQEsyNI1HFzfv91?=
+ =?us-ascii?Q?jZ9jnJ+aawqlw2xrNgVhDYoPwR24M0K3G0qXlxJu1fybOfUlZhVMGm7f656G?=
+ =?us-ascii?Q?kzVk7Suz0oJiBhzY+jwg/me7qcNhUaxcfq3HY8h3iJTn+ccb8gWDk8pR7/cA?=
+ =?us-ascii?Q?27Krad04d7P3u1Xz/RP8cIsOs7BrUiZByZFfDiuWlM38GFdQQxXqjWiDg3lo?=
+ =?us-ascii?Q?0UTnQq5h43ytRZpeVrELbAfSt1jFvAE=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c2204166-cb8c-47a7-6c7a-08da3d79fcc9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1fb7b295-35a3-48c9-1503-08da3d7a0185
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:57.2911
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:39:05.0118
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: a/hHB7pdupO8ZzwP0fICReXcWAzMBn0IislwnIOWXwsV66VF/X9+0V+IgyRe9eN0KmqnRXPwFxLpKR7T8ZYUrA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1P192MB0669
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6vmlRxamBhtHhnSDlZDGt7w8jckffmpl9SpguUZkJVg98F/wAWRn6QYmYI7g89qs2JUWJtnfLqtFzS4/A065Uw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAP192MB1033
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,1425 +128,1117 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/tx.c | 3397 +++++++++++++++++++++++++
- 1 file changed, 3397 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/tx.c
+ drivers/net/wireless/celeno/cl8k/wrs.c | 3323 ++++++++++++++++++++++++
+ 1 file changed, 3323 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/wrs.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/tx.c b/drivers/net/wireless/celeno/cl8k/tx.c
+diff --git a/drivers/net/wireless/celeno/cl8k/wrs.c b/drivers/net/wireless/celeno/cl8k/wrs.c
 new file mode 100644
-index 000000000000..52a8d558f3f2
+index 000000000000..9f6b0d8154da
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/tx.c
-@@ -0,0 +1,3397 @@
++++ b/drivers/net/wireless/celeno/cl8k/wrs.c
+@@ -0,0 +1,3323 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#include "mac_addr.h"
-+#include "sta.h"
-+#include "hw.h"
-+#include "utils.h"
-+#include "fw.h"
-+#include "key.h"
-+#include "dfs.h"
-+#include "radio.h"
-+#include "enhanced_tim.h"
++#include <linux/kernel.h>
++
 +#include "rates.h"
-+#include "stats.h"
++#include "chip.h"
++#include "utils.h"
++#include "hw.h"
++#include "reg/reg_defs.h"
 +#include "debug.h"
-+#include "tx.h"
++#include "radio.h"
++#include "wrs.h"
 +
-+/* Expected Acknowledgment */
-+#define EXPECTED_NO_ACK 0
-+#define EXPECTED_ACK    1
++#define wrs_pr(wrs_db, level, ...) \
++	do { \
++		if ((level) <= (wrs_db)->debug_level) \
++			pr_debug("[WRS]" __VA_ARGS__); \
++	} while (0)
 +
-+void cl_tx_update_hist_tstamp(struct cl_tx_queue *tx_queue, struct sk_buff *skb,
-+			      u32 tstamp_hist[], bool update_skb_ktime)
++#define wrs_pr_verbose(wrs_db, ...) wrs_pr(wrs_db, DBG_LVL_VERBOSE, ##__VA_ARGS__)
++#define wrs_pr_err(wrs_db, ...)     wrs_pr(wrs_db, DBG_LVL_ERROR, ##__VA_ARGS__)
++#define wrs_pr_warn(wrs_db, ...)    wrs_pr(wrs_db, DBG_LVL_WARNING, ##__VA_ARGS__)
++#define wrs_pr_trace(wrs_db, ...)   wrs_pr(wrs_db, DBG_LVL_TRACE, ##__VA_ARGS__)
++#define wrs_pr_info(wrs_db, ...)    wrs_pr(wrs_db, DBG_LVL_INFO, ##__VA_ARGS__)
++
++#define WRS_LOGGER wrs_params->logger[wrs_params->logger_idx]
++
++static void cl_wrs_reset_params_cntrs(struct cl_wrs_params *wrs_params)
 +{
-+	s64 diff_ms;
-+	ktime_t ktime = ktime_get();
-+
-+	diff_ms = ktime_ms_delta(ktime, skb->tstamp);
-+
-+	if (diff_ms >= DELAY_HIST_SIZE)
-+		diff_ms = DELAY_HIST_SIZE - 1;
-+
-+	tstamp_hist[diff_ms]++;
-+
-+	if (update_skb_ktime)
-+		skb->tstamp = ktime;
++	wrs_params->frames_total = 0;
++	wrs_params->fail_total = 0;
++	wrs_params->ba_not_rcv_total = 0;
++	wrs_params->epr_acc = 0;
++	wrs_params->up_same_time_cnt = 0;
++	wrs_params->down_time_cnt = 0;
 +}
 +
-+static void cl_tx_cpu_single(struct cl_hw *cl_hw)
++static bool cl_wrs_down_epr_check(struct cl_wrs_db *wrs_db, struct cl_wrs_sta *wrs_sta,
++				  struct cl_wrs_params *wrs_params, u8 drop_factor,
++				  enum cl_wrs_decision decision)
 +{
-+	u32 processor_id = smp_processor_id();
++	u16 curr_rate_idx = wrs_params->rate_idx;
++	struct cl_wrs_table *curr_rate = &wrs_params->table[curr_rate_idx];
++	u64 curr_epr_acc = curr_rate->epr_acc;
++	u32 curr_total = curr_rate->frames_total;
++	u16 down_rate_idx = curr_rate->rate_down.rate_idx;
++	struct cl_wrs_table *down_rate = &wrs_params->table[down_rate_idx];
++	u64 down_epr_acc = down_rate->epr_acc;
++	u32 down_total = down_rate->frames_total;
++	u16 down_data_rate = 0;
++	u64 condition1 = 0, condition2 = 0;
++	bool down_decision = false, allow_penalty = true;
 +
-+	if (processor_id < CPU_MAX_NUM)
-+		cl_hw->cpu_cntr.tx_single[processor_id]++;
-+}
-+
-+static void cl_tx_cpu_agg(struct cl_hw *cl_hw)
-+{
-+	u32 processor_id = smp_processor_id();
-+
-+	if (processor_id < CPU_MAX_NUM)
-+		cl_hw->cpu_cntr.tx_agg[processor_id]++;
-+}
-+
-+static char cl_tx_ctrl_single_frame_type(__le16 fc)
-+{
-+	if (ieee80211_is_data_qos(fc))
-+		return CL_TX_SINGLE_FRAME_TYPE_QOS_DATA;
-+	else if (ieee80211_is_qos_nullfunc(fc))
-+		return CL_TX_SINGLE_FRAME_TYPE_QOS_NULL;
-+	else if (ieee80211_is_mgmt(fc))
-+		return CL_TX_SINGLE_FRAME_TYPE_MANAGEMENT;
-+	else
-+		return CL_TX_SINGLE_FRAME_TYPE_OTHER;
-+}
-+
-+static void cl_tx_single_prep(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr,
-+			      u16 frame_len, u8 hdr_pads, bool is_vns)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
-+	struct ieee80211_key_conf *key_conf = tx_info->control.hw_key;
-+	struct txdesc *txdesc = &sw_txhdr->txdesc;
-+	struct tx_host_info *host_info = &txdesc->host_info;
-+	struct cl_vif *cl_vif = NULL;
-+
-+	/* Reset txdesc */
-+	memset(txdesc, 0, sizeof(struct txdesc));
-+
-+	/* Vif_index must be filled in even without header conversion */
-+	cl_vif = (struct cl_vif *)tx_info->control.vif->drv_priv;
-+	host_info->vif_index = cl_vif->vif_index;
-+
-+	if (hdr_pads)
-+		host_info->host_padding |= BIT(0);
-+
-+	host_info->is_bcn = sw_txhdr->is_bcn;
-+	host_info->expected_ack = (tx_info->flags & IEEE80211_TX_CTL_NO_ACK) ?
-+		EXPECTED_NO_ACK : EXPECTED_ACK;
-+
-+	/* Beware when prot and sta is unknown */
-+	if (key_conf) {
-+		frame_len += key_conf->icv_len;
-+		host_info->is_protected = true;
-+		host_info->hw_key_idx = key_conf->hw_key_idx;
++	if (wrs_params->calc_ba_not_rcv) {
++		curr_total += curr_rate->ba_not_rcv_total;
++		down_total += down_rate->ba_not_rcv_total;
 +	}
-+
-+	host_info->packet_cnt = 1;
-+
-+	txdesc->umacdesc.packet_len[0] = cpu_to_le16(frame_len);
-+	txdesc->e2w_txhdr_param.frame_ctrl = sw_txhdr->fc;
-+	txdesc->e2w_result.bcmc = (sw_txhdr->sta_idx == STA_IDX_INVALID);
-+	txdesc->e2w_result.tid = sw_txhdr->tid;
-+	txdesc->e2w_result.is_vns = is_vns;
-+	txdesc->e2w_result.is_txinject = false;
-+	txdesc->e2w_result.single_type = cl_tx_ctrl_single_frame_type(sw_txhdr->fc);
-+	txdesc->e2w_result.single_valid_sta__agg_e2w_tx_done = !!sw_txhdr->cl_sta;
-+	txdesc->e2w_natt_param.sta_index = sw_txhdr->sta_idx;
-+
-+	/* Set rate control */
-+	cl_rate_ctrl_update_desc_single(cl_hw, host_info, sw_txhdr);
-+}
-+
-+static void cl_tx_sub_frame_set(struct cl_sta *cl_sta, u8 tid)
-+{
-+	struct cl_tx_queue *tx_queue = cl_sta->agg_tx_queues[tid];
-+
-+	if (tx_queue)
-+		tx_queue->total_packets++;
-+}
-+
-+static void cl_tx_send(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr,
-+		       struct cl_amsdu_ctrl *amsdu_anchor)
-+{
-+	struct cl_tx_queue *tx_queue = sw_txhdr->tx_queue;
-+	struct cl_sta *cl_sta = sw_txhdr->cl_sta;
-+
-+	tx_queue->total_packets++;
-+
-+	if (cl_txq_is_fw_full(tx_queue) || (cl_sta && cl_sta->pause_tx)) {
-+		/* If firmware is full push the packet to the queue */
-+		cl_txq_push(cl_hw, sw_txhdr);
-+	} else if (amsdu_anchor && amsdu_anchor->is_sw_amsdu) {
-+		cl_txq_push(cl_hw, sw_txhdr);
-+		tasklet_schedule(&cl_hw->tx_task);
-+	} else if (!list_empty(&tx_queue->hdrs) || cl_hw->tx_db.force_amsdu) {
-+		/*
-+		 * If queue in driver is not empty push the packet to the queue,
-+		 * and call cl_txq_sched() to transfer packets from the queue to firmware
-+		 */
-+		cl_txq_push(cl_hw, sw_txhdr);
-+		cl_txq_sched(cl_hw, tx_queue);
-+	} else {
-+		/* Push the packet directly to firmware */
-+		cl_tx_push(cl_hw, sw_txhdr, tx_queue);
-+	}
-+}
-+
-+void cl_tx_push(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr, struct cl_tx_queue *tx_queue)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
-+	struct ieee80211_key_conf *keyconf = tx_info->control.hw_key;
-+	struct cl_sta *cl_sta = sw_txhdr->cl_sta;
-+	struct cl_vif *cl_vif = sw_txhdr->cl_vif;
-+	u8 tid = sw_txhdr->tid;
-+	struct txdesc *txdesc = &sw_txhdr->txdesc;
-+	struct tx_host_info *host_info = &txdesc->host_info;
-+	struct cl_e2w_txhdr_param *e2w_txhdr_param = &txdesc->e2w_txhdr_param;
-+	struct ieee80211_hdr *hdr80211 = sw_txhdr->hdr80211;
-+	u8 queue_type = tx_queue->type;
-+	bool is_mgmt = ieee80211_is_mgmt(sw_txhdr->fc);
-+
-+	if (cl_key_is_cipher_ccmp_gcmp(keyconf)) {
-+		/*
-+		 * In case of CCMP or GCMP encryption we need to inc pn.
-+		 * In case of amsdu/header_conversion we need to pass it to firmware as well
-+		 */
-+		u64 pn = atomic64_inc_return(&keyconf->tx_pn);
-+
-+		if (txdesc->e2w_natt_param.hdr_conv_enable) {
-+			memcpy(&e2w_txhdr_param->encrypt_pn, &pn, CL_CCMP_GCMP_PN_SIZE);
-+		} else {
-+			u8 hdrlen = ieee80211_hdrlen(sw_txhdr->fc);
-+
-+			cl_key_ccmp_gcmp_pn_to_hdr((u8 *)hdr80211 + hdrlen, pn, keyconf->keyidx);
-+		}
-+	}
-+
-+	if (queue_type == QUEUE_TYPE_AGG) {
-+		struct cl_baw *baw = &cl_sta->baws[tid];
-+		bool is_amsdu = cl_tx_ctrl_is_amsdu(tx_info);
-+
-+		if (is_amsdu) {
-+			struct cl_amsdu_ctrl *amsdu_anchor = &cl_sta->amsdu_anchor[tid];
-+
-+			if (sw_txhdr->is_sw_amsdu) {
-+				u8 pkt_cnt = sw_txhdr->sw_amsdu_packet_cnt;
-+
-+				if (pkt_cnt == 1)
-+					cl_tx_amsdu_unset(sw_txhdr); /* Clear AMSDU bit. */
-+
-+				if (hdr80211)
-+					hdr80211->seq_ctrl = cpu_to_le16(baw->tid_seq);
-+
-+				tx_queue->stats_sw_amsdu_cnt[pkt_cnt - 1]++;
-+			} else {
-+				u8 pkt_cnt = host_info->packet_cnt;
-+
-+				if (pkt_cnt == 1)
-+					cl_tx_amsdu_unset(sw_txhdr); /* Clear AMSDU bit. */
-+
-+				tx_queue->stats_hw_amsdu_cnt[pkt_cnt - 1]++;
-+			}
-+
-+			/* Reset anchor if needed */
-+			if (amsdu_anchor->sw_txhdr == sw_txhdr)
-+				cl_tx_amsdu_anchor_init(amsdu_anchor);
-+		}
-+
-+		if (hdr80211)
-+			hdr80211->seq_ctrl = cpu_to_le16(baw->tid_seq);
-+
-+		/* Update sequence number and increase it */
-+		e2w_txhdr_param->seq_ctrl = cpu_to_le16(baw->tid_seq);
-+		baw->tid_seq = INC_SN(baw->tid_seq);
-+
-+	} else {
-+		/*
-+		 * Update sequence number and increase it
-+		 * Management sequence number is set by firmware.
-+		 */
-+		if (!is_mgmt) {
-+			hdr80211->seq_ctrl |= cpu_to_le16(cl_vif->sequence_number);
-+			cl_vif->sequence_number = INC_SN(cl_vif->sequence_number);
-+		} else {
-+			if (ieee80211_vif_is_mesh(cl_vif->vif)) {
-+				struct ieee80211_mgmt *mgmt = (void *)sw_txhdr->skb->data;
-+				u16 capab;
-+
-+				if (mgmt->u.action.u.addba_req.action_code ==
-+				    WLAN_ACTION_ADDBA_RESP) {
-+					capab = le16_to_cpu(mgmt->u.action.u.addba_resp.capab);
-+					capab &= ~IEEE80211_ADDBA_PARAM_AMSDU_MASK;
-+					mgmt->u.action.u.addba_resp.capab = cpu_to_le16(capab);
-+				}
-+			}
-+		}
-+	}
-+
-+	cl_drv_ops_pkt_fw_send(cl_hw, sw_txhdr, tx_queue);
-+}
-+
-+void cl_tx_single_free_skb(struct cl_hw *cl_hw, struct sk_buff *skb)
-+{
-+	if (IEEE80211_SKB_CB(skb)->ack_frame_id)
-+		ieee80211_tx_status(cl_hw->hw, skb);
-+	else
-+		dev_kfree_skb_any(skb);
-+}
-+
-+void cl_tx_single(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+		  struct sk_buff *skb, bool is_vns, bool lock)
-+{
-+	struct cl_tx_queue *tx_queue;
-+	struct cl_sw_txhdr *sw_txhdr;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct cl_vif *cl_vif = TX_INFO_TO_CL_VIF(cl_hw, tx_info);
-+	struct ieee80211_hdr *hdr80211 = (struct ieee80211_hdr *)skb->data;
-+	u8 hdr_pads = CL_SKB_DATA_ALIGN_PADS(hdr80211);
-+	__le16 fc = hdr80211->frame_control;
-+	u16 frame_len = (u16)skb->len;
-+	u8 tid = ieee80211_is_data_qos(fc) ? ieee80211_get_tid(hdr80211) : 0;
-+	u8 ac = tid_to_ac[tid];
-+	bool is_beacon = ieee80211_is_beacon(fc);
-+
-+	cl_tx_cpu_single(cl_hw);
-+
-+	if (unlikely(!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) ||
-+		     test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))) {
-+		cl_tx_single_free_skb(cl_hw, skb);
-+		cl_hw->tx_packet_cntr.drop.dev_flags++;
-+		cl_vif->trfc_cntrs[ac].tx_dropped++;
-+		return;
-+	}
-+
-+	if (unlikely(!cl_vif->tx_en || cl_hw->tx_disable_flags)) {
-+		cl_tx_single_free_skb(cl_hw, skb);
-+		cl_hw->tx_packet_cntr.drop.tx_disable++;
-+		cl_vif->trfc_cntrs[ac].tx_dropped++;
-+		return;
-+	}
-+
-+	/* Check if packet length exceeds max size */
-+	if (unlikely(frame_len > CL_TX_MAX_FRAME_LEN_SINGLE)) {
-+		cl_tx_single_free_skb(cl_hw, skb);
-+		cl_dbg_err(cl_hw, "frame_len (%u) exceeds max size\n", frame_len);
-+		cl_hw->tx_packet_cntr.drop.length_limit++;
-+		cl_vif->trfc_cntrs[ac].tx_errors++;
-+		return;
-+	}
-+
-+	if (cl_sta && cl_sta->key_disable) {
-+		cl_tx_single_free_skb(cl_hw, skb);
-+		cl_hw->tx_packet_cntr.drop.key_disable++;
-+		cl_vif->trfc_cntrs[ac].tx_dropped++;
-+		return;
-+	}
-+
-+	/* Allocate sw_txhdr */
-+	sw_txhdr = cl_sw_txhdr_alloc(cl_hw);
-+
-+	if (unlikely(!sw_txhdr)) {
-+		cl_tx_single_free_skb(cl_hw, skb);
-+		cl_dbg_verbose(cl_hw, "sw_txhdr alloc failed\n");
-+		cl_hw->tx_packet_cntr.drop.txhdr_alloc_fail++;
-+		cl_vif->trfc_cntrs[ac].tx_errors++;
-+		return;
-+	}
-+
-+	/* Prepare sw_txhdr */
-+	sw_txhdr->hdr80211 = hdr80211;
-+	sw_txhdr->hw_queue = tx_info->hw_queue;
-+	sw_txhdr->is_bcn = is_beacon;
-+	sw_txhdr->skb = skb;
-+	sw_txhdr->map_len = frame_len + hdr_pads;
-+	sw_txhdr->fc = fc;
-+	sw_txhdr->cl_vif = cl_vif;
-+	sw_txhdr->tid = tid;
-+	sw_txhdr->ac = ac;
-+
-+	if (cl_sta) {
-+		sw_txhdr->cl_sta = cl_sta;
-+		sw_txhdr->sta_idx = cl_sta->sta_idx;
-+	} else {
-+		sw_txhdr->cl_sta = NULL;
-+		sw_txhdr->sta_idx = STA_IDX_INVALID;
-+	}
-+
-+	/* Prepare txdesc */
-+	cl_tx_single_prep(cl_hw, sw_txhdr, frame_len, hdr_pads, is_vns);
 +
 +	/*
-+	 * Fetch the driver queue.
-+	 * IEEE80211_TX_CTL_AMPDU is not set in tx_info->flags, otherwise cl_tx_agg()
-+	 * would have been called and not cl_tx_single().
-+	 * Therefore there is no need to check if tx_queue is NULL or if queue type
-+	 * is QUEUE_TYPE_AGG.
++	 * In the EPR of down candidate is better than or equal to current EPR => return true
++	 *
++	 * (1) curr_epr <= down_epr * factor(%)
++	 *
++	 *       curr_epr_acc     down_epr_acc     factor
++	 * (2)  -------------- <= -------------- * --------
++	 *        curr_total       down_total       100
++	 *
++	 * (3) curr_epr_acc * down_total * 100 <= down_epr_acc * curr_total * factor
++	 *
++	 * (4) conditation1 <= conditation2
++	 *                                                         down_epr_acc
++	 * If (down_total == 0) we use down_data_rate instead of: --------------
++	 *                                                          down_total
 +	 */
-+	tx_queue = cl_txq_get(cl_hw, sw_txhdr);
-+	if (!tx_queue) {
-+		cl_tx_single_free_skb(cl_hw, skb);
-+		cl_dbg_verbose(cl_hw, "tx_queue is NULL\n");
-+		cl_vif->trfc_cntrs[ac].tx_errors++;
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+		return;
-+	}
-+
-+	sw_txhdr->tx_queue = tx_queue;
-+
-+	if (lock) {
-+		if (tx_queue->type == QUEUE_TYPE_BCMC) {
-+			/*
-+			 * All other broadcast/multicast packets are buffered in
-+			 * ieee80211_tx_h_multicast_ps_buf() and will follow the beacon.
-+			 */
-+			spin_lock_bh(&cl_hw->tx_lock_bcmc);
-+			cl_tx_send(cl_hw, sw_txhdr, NULL);
-+			spin_unlock_bh(&cl_hw->tx_lock_bcmc);
-+		} else {
-+			spin_lock_bh(&cl_hw->tx_lock_single);
-+			cl_tx_send(cl_hw, sw_txhdr, NULL);
-+			spin_unlock_bh(&cl_hw->tx_lock_single);
-+		}
++	if (down_total) {
++		condition1 = curr_epr_acc * down_total * 100;
++		condition2 = down_epr_acc * curr_total * drop_factor;
 +	} else {
-+		cl_tx_send(cl_hw, sw_txhdr, NULL);
-+	}
-+}
++		down_data_rate = cl_data_rates_get_x10(wrs_params->rate_params.mode,
++						       down_rate->rate.bw,
++						       down_rate->rate.nss,
++						       down_rate->rate.mcs,
++						       down_rate->rate.gi);
 +
-+void cl_tx_fast_single(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+		       struct sk_buff *skb, bool lock)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-+
-+	/* hw_key must be set before calling cl_tx_8023_to_wlan() */
-+	tx_info->control.hw_key = cl_key_get(cl_sta);
-+
-+	/* Convert 802.3 to 802.11 header */
-+	if (cl_tx_8023_to_wlan(cl_hw, skb, cl_sta, tid) == 0) {
-+		bool is_vns = cl_vns_is_very_near(cl_hw, cl_sta, skb);
-+		u8 ac = tid_to_ac[tid];
-+
-+		tx_info->hw_queue = ac;
-+		tx_info->control.vif = cl_sta->cl_vif->vif;
-+
-+		cl_hw->tx_packet_cntr.forward.drv_fast_single++;
-+
-+		cl_tx_single(cl_hw, cl_sta, skb, is_vns, lock);
-+	}
-+}
-+
-+void cl_tx_agg_prep(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr,
-+		    u16 frame_len, u8 hdr_pads, bool hdr_conv)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
-+	struct ieee80211_key_conf *key_conf = tx_info->control.hw_key;
-+	struct txdesc *txdesc = &sw_txhdr->txdesc;
-+	struct lmacapi *umacdesc = &txdesc->umacdesc;
-+	struct tx_host_info *host_info = &txdesc->host_info;
-+	u16 qos_ctrl = sw_txhdr->tid;
-+
-+	/* Reset txdesc */
-+	memset(txdesc, 0, sizeof(struct txdesc));
-+
-+	txdesc->e2w_result.tid = sw_txhdr->tid;
-+	txdesc->e2w_result.is_txinject = false;
-+	txdesc->e2w_natt_param.sta_index = sw_txhdr->sta_idx;
-+	txdesc->e2w_natt_param.ampdu = true;
-+	txdesc->e2w_natt_param.hdr_conv_enable = hdr_conv;
-+
-+	if (hdr_conv) {
-+		if (cl_tx_ctrl_is_amsdu(tx_info))
-+			qos_ctrl |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+
-+		txdesc->e2w_txhdr_param.frame_ctrl = sw_txhdr->fc;
-+		txdesc->e2w_txhdr_param.qos_ctrl = cpu_to_le16(qos_ctrl);
++		condition1 = curr_epr_acc * 100;
++		condition2 = (u64)down_data_rate * curr_total * drop_factor;
++		allow_penalty = false;
 +	}
 +
-+	if (hdr_pads)
-+		host_info->host_padding |= BIT(0);
++	wrs_params->penalty_decision_dn = wrs_db->step_down;
 +
-+	/* Vif_index must be filled in even without header conversion */
-+	host_info->vif_index = sw_txhdr->cl_sta->cl_vif->vif_index;
++	if (condition2 && condition1 <= condition2) {
++		down_decision = true;
 +
-+	/* Set the expected_ack flag */
-+	host_info->expected_ack = (tx_info->flags & IEEE80211_TX_CTL_NO_ACK) ?
-+		EXPECTED_NO_ACK : EXPECTED_ACK;
-+
-+	if (key_conf) {
-+		host_info->is_protected = true;
-+		host_info->hw_key_idx = key_conf->hw_key_idx;
-+
-+		if (!hdr_conv)
-+			frame_len += key_conf->icv_len;
-+	}
-+
-+	host_info->packet_cnt = 1;
-+	umacdesc->packet_len[0] = cpu_to_le16(frame_len);
-+
-+	/* Set rate control */
-+	cl_rate_ctrl_update_desc_agg(cl_hw, host_info);
-+}
-+
-+static __le16 cl_tx_agg_frame_control(struct cl_vif *cl_vif,
-+				      struct ieee80211_key_conf *key_conf,
-+				      u8 *hdrlen)
-+{
-+	struct ieee80211_vif *vif = cl_vif->vif;
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	enum nl80211_iftype type = vif->type;
-+	__le16 fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_DATA);
-+
-+	if (type == NL80211_IFTYPE_AP) {
-+		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
-+		*hdrlen = 26;
-+	} else if (type == NL80211_IFTYPE_STATION) {
-+		fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
-+
-+		if (sdata->u.mgd.use_4addr) {
-+			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
-+			*hdrlen = 32;
-+		} else {
-+			*hdrlen = 26;
-+		}
-+	}
-+
-+	if (key_conf)
-+		fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
-+
-+	return fc;
-+}
-+
-+static void _cl_tx_agg(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+		       struct sk_buff *skb, bool hdr_conv)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_key_conf *key_conf = tx_info->control.hw_key;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+	struct cl_tx_queue *tx_queue = NULL;
-+	struct cl_vif *cl_vif = cl_sta->cl_vif;
-+	u16 frame_len = (u16)skb->len;
-+	u16 total_frame_len = 0;
-+	u8 hdr_pads = CL_SKB_DATA_ALIGN_PADS(skb->data);
-+	u8 is_amsdu = cl_tx_ctrl_is_amsdu(tx_info);
-+	u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-+	u8 ac = tid_to_ac[tid];
-+	u8 hdrlen = 0;
-+
-+	cl_tx_cpu_agg(cl_hw);
-+
-+	if (unlikely(!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) ||
-+		     test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))) {
-+		kfree_skb(skb);
-+		cl_hw->tx_packet_cntr.drop.dev_flags++;
-+		cl_vif->trfc_cntrs[ac].tx_dropped++;
-+		return;
-+	}
-+
-+	if (unlikely(!cl_vif->tx_en || cl_hw->tx_disable_flags)) {
-+		kfree_skb(skb);
-+		cl_hw->tx_packet_cntr.drop.tx_disable++;
-+		cl_vif->trfc_cntrs[ac].tx_dropped++;
-+		return;
-+	}
-+
-+	/* Check if packet length exceeds max size */
-+	if (unlikely(frame_len > CL_TX_MAX_FRAME_LEN_AGG)) {
-+		kfree_skb(skb);
-+		cl_dbg_err(cl_hw, "frame_len exceeds max size %d\n", frame_len);
-+		cl_hw->tx_packet_cntr.drop.length_limit++;
-+		cl_vif->trfc_cntrs[ac].tx_errors++;
-+		return;
-+	}
-+
-+	if (cl_sta->key_disable) {
-+		kfree_skb(skb);
-+		cl_hw->tx_packet_cntr.drop.key_disable++;
-+		cl_vif->trfc_cntrs[ac].tx_dropped++;
-+		return;
-+	}
-+
-+	/* Check if amsdu is enable for current skb */
-+	if (is_amsdu) {
-+		enum cl_amsdu_result amsdu_res = cl_tx_amsdu_set(cl_hw, cl_sta, skb, tid);
-+
-+		switch (amsdu_res) {
-+		case CL_AMSDU_SKIP:
-+			is_amsdu = false;
-+			tx_info->control.flags &= ~IEEE80211_TX_CTRL_AMSDU;
-+		case CL_AMSDU_ANCHOR_SET:
++		if (allow_penalty) {
 +			/*
-+			 * If new anchor was set, or AMSDU is
-+			 * skipped continue building sw_txhdr
++			 * The penalty is calculated as follow:
++			 *
++			 * penalty = MAX_STEP * penalty_factor
++			 *                                      epr_curr
++			 * penalty = MAX_STEP * (100% - 100% * ----------)
++			 *                                      epr_down
++			 *
++			 *                                    conditation1
++			 * penalty = MAX_STEP * (100% - 100% --------------)
++			 *                                    conditation2
 +			 */
++
++			u64 penalty_factor = 100 - div64_u64(condition1 * 100, condition2);
++			u16 max_step = wrs_db->time_th_max_up - wrs_db->step_down;
++
++			wrs_params->penalty_decision_dn +=
++				div64_u64(max_step * penalty_factor, 100);
++		}
++
++		if (decision != WRS_DECISION_SAME)
++			wrs_pr_info(wrs_db,
++				    "[%s] EPR check: sta = %u, pkt_curr = %u, "
++				    "pkt_down = %u, epr_curr = %llu, epr_down * %u%% = %llu, "
++				    "penalty = %u\n",
++				    WRS_TYPE_STR(wrs_params->type),
++				    wrs_sta->sta_idx,
++				    curr_total,
++				    down_total,
++				    div64_u64(curr_epr_acc, curr_total * 10),
++				    drop_factor,
++				    down_total ?
++				    div64_u64(down_epr_acc * drop_factor, down_total * 1000) :
++				    (down_data_rate / 10),
++				    wrs_params->penalty_decision_dn);
++	}
++
++	if (wrs_params->is_logger_en && down_decision) {
++		WRS_LOGGER.curr_epr = (u16)div64_u64(curr_epr_acc, 10 * curr_total);
++		WRS_LOGGER.down_epr = down_total ?
++			(u16)div64_u64(down_epr_acc, down_total * 10) : (down_data_rate / 10),
++		WRS_LOGGER.down_epr_factorized = WRS_LOGGER.down_epr * drop_factor / 100;
++		WRS_LOGGER.penalty = wrs_params->penalty_decision_dn;
++	}
++
++	return down_decision;
++}
++
++static void cl_wrs_time_thr_max_handler(struct cl_wrs_db *wrs_db,
++					struct cl_wrs_table *table, u8 up_idx)
++{
++	/*
++	 * Check if there are at least two UP rates,
++	 * and all UP rates reached max time threshold
++	 */
++	u8 i = 0;
++	u8 time_th_max = 0;
++
++	for (i = 0; i < WRS_TABLE_NODE_UP_MAX; i++) {
++		if (table->rate_up[i].rate_idx == WRS_INVALID_RATE)
++			continue;
++
++		if (table->rate_up[i].time_th != wrs_db->time_th_max_up)
++			return;
++
++		time_th_max++;
++	}
++
++	if (time_th_max < 2)
++		return;
++
++	/* Find the next max rate, and decrease its time threshold by 1 */
++	i = 0;
++	while (i < WRS_TABLE_NODE_UP_MAX) {
++		up_idx++;
++		if (up_idx == WRS_TABLE_NODE_UP_MAX)
++			up_idx = WRS_TABLE_NODE_UP_MCS;
++
++		if (table->rate_up[up_idx].rate_idx != WRS_INVALID_RATE) {
++			/*
++			 * If all up rates reached max time threshold,the first up
++			 * rate will always be selected.
++			 * To overcome it, we decrease the time threshold of the next
++			 * up rate by 1 (so it will be samller and selected next time)
++			 */
++			table->rate_up[up_idx].time_th--;
 +			break;
-+		case CL_AMSDU_SUB_FRAME_SET:
-+			cl_tx_sub_frame_set(cl_sta, tid);
-+			fallthrough;
-+		case CL_AMSDU_FAILED:
-+		default:
-+			return;
 +		}
-+	} else {
++
++		i++;
++	}
++}
++
++static bool cl_wrs_find_up_candidate(struct cl_wrs_db *wrs_db, struct cl_wrs_params *wrs_params,
++				     u16 *up_rate_idx, u32 *up_time_th)
++{
++	bool up_rate_valid = false;
++	u8 up_idx = 0;
++	u8 up_candidate = 0;
++	u16 rate_idx = 0;
++	struct cl_wrs_table *table = &wrs_params->table[wrs_params->rate_idx];
++
++	*up_rate_idx = WRS_INVALID_RATE;
++	*up_time_th = U32_MAX;
++
++	for (up_idx = 0; up_idx < WRS_TABLE_NODE_UP_MAX; up_idx++) {
++		rate_idx = table->rate_up[up_idx].rate_idx;
++
++		if (rate_idx == WRS_INVALID_RATE)
++			continue;
++
++		if (wrs_db->quick_up_en && table->rate_up[up_idx].quick_up_check) {
++			*up_rate_idx = rate_idx;
++			*up_time_th = wrs_db->quick_up_interval;
++			up_rate_valid = true;
++			up_candidate = up_idx;
++			break;
++		} else if (table->rate_up[up_idx].time_th < *up_time_th) {
++			*up_rate_idx = rate_idx;
++			*up_time_th = table->rate_up[up_idx].time_th;
++			up_rate_valid = true;
++			up_candidate = up_idx;
++		}
++	}
++
++	if (wrs_db->time_th_max_up == *up_time_th)
++		cl_wrs_time_thr_max_handler(wrs_db, table, up_candidate);
++
++	return up_rate_valid;
++}
++
++static bool cl_wrs_epr_immeidate_down(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++				      struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params,
++				      u16 down_rate_idx)
++{
++	if (cl_wrs_down_epr_check(wrs_db, wrs_sta, wrs_params,
++				  wrs_db->immediate_drop_epr_factor,
++				  WRS_DECISION_DOWN_IMMEDIATE)) {
 +		/*
-+		 * If not amsdu & anchor exist. reset current anchor
-+		 * in order to avoid reordring packets.
++		 * If there are several immediate drops in a row ignore them,
++		 * because it is probably not realted to bad TX rate
 +		 */
-+		if (cl_sta->amsdu_anchor[tid].sw_txhdr)
-+			cl_tx_amsdu_anchor_init(&cl_sta->amsdu_anchor[tid]);
++		wrs_params->immediate_drop_cntr++;
++
++		if (wrs_params->immediate_drop_cntr > wrs_db->immediate_drop_max_in_row) {
++			wrs_params->immediate_drop_ignore++;
++
++			cl_wrs_tables_reset(wrs_db, wrs_sta, wrs_params);
++			cl_wrs_reset_params_cntrs(wrs_params);
++
++			wrs_pr_info(wrs_db,
++				    "[%s] sta %u - ignore immediate down decision (cntr=%u)\n",
++				    WRS_TYPE_STR(wrs_params->type), wrs_sta->sta_idx,
++				    wrs_params->immediate_drop_cntr);
++			return true;
++		}
++
++		cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params,
++				     WRS_DECISION_DOWN_IMMEDIATE, down_rate_idx);
++		return true;
 +	}
 +
-+	/* Allocate sw_txhdr */
-+	sw_txhdr = cl_sw_txhdr_alloc(cl_hw);
-+	if (unlikely(!sw_txhdr)) {
-+		kfree_skb(skb);
-+		cl_dbg_err(cl_hw, "sw_txhdr alloc failed\n");
-+		cl_hw->tx_packet_cntr.drop.txhdr_alloc_fail++;
-+		cl_vif->trfc_cntrs[ac].tx_errors++;
++	return false;
++}
++
++static void cl_wrs_decision_up(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			       struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params,
++			       u16 up_rate_idx, u32 up_th)
++{
++	enum cl_wrs_decision up_decision = (up_th == wrs_db->quick_up_interval) ?
++		WRS_DECISION_UP_QUICK : WRS_DECISION_UP;
++
++	if (wrs_params->is_logger_en)
++		WRS_LOGGER.up_time = wrs_params->up_same_time_cnt;
++
++	cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params, up_decision, up_rate_idx);
++}
++
++static void cl_wrs_decision_same(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++				 struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params,
++				 u16 rate_idx)
++{
++	cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params, WRS_DECISION_SAME, rate_idx);
++}
++
++static void cl_wrs_epr_decision(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++				struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params)
++{
++	u16 curr_rate_idx = wrs_params->rate_idx;
++	struct cl_wrs_table *table = &wrs_params->table[curr_rate_idx];
++	u16 down_rate_idx = table->rate_down.rate_idx;
++	u16 up_rate_idx = 0;
++	u16 down_th = table->rate_down.time_th;
++	u32 up_th = 0;
++	bool up_rate_valid = false;
++
++	/* Check if we transmitted enough frames for taking decision */
++	if ((wrs_params->frames_total + wrs_params->ba_not_rcv_total) <
++	    wrs_db->min_frames_for_decision)
 +		return;
++
++	if (wrs_params->is_logger_en) {
++		WRS_LOGGER.timestamp = jiffies_to_msecs(jiffies);
++		WRS_LOGGER.rate_idx = wrs_params->rate_idx;
++		WRS_LOGGER.success = wrs_params->frames_total - wrs_params->fail_total;
++		WRS_LOGGER.fail = wrs_params->fail_total;
++		WRS_LOGGER.ba_not_rcv = wrs_params->ba_not_rcv_total;
 +	}
 +
-+	if (cl_vif->vif->type == NL80211_IFTYPE_MESH_POINT)
-+		tx_info->hw_queue = ac;
++	up_rate_valid = cl_wrs_find_up_candidate(wrs_db, wrs_params, &up_rate_idx, &up_th);
 +
-+	/* Fill sw_txhdr */
-+	sw_txhdr->tid = tid;
-+	sw_txhdr->ac = ac;
-+	sw_txhdr->hw_queue = tx_info->hw_queue;
-+	sw_txhdr->cl_sta = cl_sta;
-+	sw_txhdr->sta_idx = cl_sta->sta_idx;
-+	sw_txhdr->is_bcn = 0;
-+	sw_txhdr->skb = skb;
-+	sw_txhdr->map_len = frame_len + hdr_pads;
-+	sw_txhdr->cl_vif = cl_vif;
++	/* RSSI protect */
++	if (!WRS_TYPE_IS_TX_MU_MIMO(wrs_params) && wrs_db->rssi_protect_en)
++		if (cl_wrs_rssi_prot_decision(cl_hw, wrs_db, wrs_sta, wrs_params,
++					      up_rate_valid, up_rate_idx, down_rate_idx))
++			return;
 +
-+	if (cl_sta->amsdu_anchor[tid].is_sw_amsdu) {
-+		sw_txhdr->is_sw_amsdu = true;
-+		sw_txhdr->sw_amsdu_packet_cnt = 1;
-+	} else {
-+		sw_txhdr->is_sw_amsdu = false;
-+	}
++	if (down_rate_idx != curr_rate_idx) {
++		/* Down immediate */
++		if (wrs_db->immediate_drop_en)
++			if (cl_wrs_epr_immeidate_down(cl_hw, wrs_db, wrs_sta,
++						      wrs_params, down_rate_idx))
++				return;
 +
-+	if (hdr_conv) {
-+		sw_txhdr->hdr80211 = NULL;
-+		sw_txhdr->fc = cl_tx_agg_frame_control(cl_vif, key_conf, &hdrlen);
-+	} else {
-+		struct ieee80211_hdr *hdr80211 = (struct ieee80211_hdr *)skb->data;
-+		__le16 fc = hdr80211->frame_control;
-+
-+		sw_txhdr->hdr80211 = hdr80211;
-+		sw_txhdr->fc = fc;
-+		hdrlen = ieee80211_hdrlen(fc);
-+	}
-+
-+	/* Fetch the relevant agg queue */
-+	tx_queue = cl_sta->agg_tx_queues[tid];
-+
-+	if (unlikely(!tx_queue)) {
-+		kfree_skb(skb);
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+		cl_dbg_err(cl_hw, "tx_queue is NULL [sta_idx = %u] [tid = %u]\n",
-+			   cl_sta->sta_idx, tid);
-+		cl_hw->tx_packet_cntr.drop.queue_null++;
-+		cl_vif->trfc_cntrs[ac].tx_dropped++;
-+		return;
-+	}
-+
-+	sw_txhdr->tx_queue = tx_queue;
-+
-+	total_frame_len = frame_len + hdrlen - sizeof(struct ethhdr);
-+
-+	if (key_conf)
-+		total_frame_len += key_conf->icv_len;
-+
-+	/* Prepare txdesc */
-+	cl_tx_agg_prep(cl_hw, sw_txhdr, frame_len, hdr_pads, hdr_conv);
-+
-+	/*
-+	 * AMSDU - first sub frame
-+	 * !!! Must be done after calling cl_tx_agg_prep() !!!
-+	 */
-+	if (is_amsdu)
-+		cl_tx_amsdu_first_sub_frame(sw_txhdr, cl_sta, skb, tid);
-+
-+	cl_tx_send(cl_hw, sw_txhdr, &cl_sta->amsdu_anchor[tid]);
-+}
-+
-+void cl_tx_agg(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+	       struct sk_buff *skb, bool hdr_conv, bool lock)
-+{
-+	if (lock) {
-+		spin_lock_bh(&cl_hw->tx_lock_agg);
-+		_cl_tx_agg(cl_hw, cl_sta, skb, hdr_conv);
-+		spin_unlock_bh(&cl_hw->tx_lock_agg);
-+	} else {
-+		_cl_tx_agg(cl_hw, cl_sta, skb, hdr_conv);
-+	}
-+}
-+
-+static void cl_tx_reset_session_timer(struct ieee80211_sta *sta, u8 tid)
-+{
-+	struct tid_ampdu_tx *tid_tx = NULL;
-+	struct sta_info *stainfo = IEEE80211_STA_TO_STAINFO(sta);
-+
-+	tid_tx = rcu_dereference(stainfo->ampdu_mlme.tid_tx[tid]);
-+
-+	if (tid_tx && tid_tx->timeout)
-+		tid_tx->last_tx = jiffies;
-+}
-+
-+void cl_tx_fast_agg(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+		    struct sk_buff *skb, bool lock)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_vif *vif = cl_sta->cl_vif->vif;
-+	u16 ac = skb_get_queue_mapping(skb);
-+	u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-+
-+	tx_info->control.vif = vif;
-+	tx_info->control.hw_key = cl_key_get(cl_sta);
-+	tx_info->hw_queue = vif->hw_queue[ac];
-+	tx_info->flags |= IEEE80211_TX_CTL_AMPDU;
-+
-+	if (cl_sta->baws[tid].amsdu &&
-+	    (cl_wrs_api_get_tx_sta_data_rate(cl_sta) > cl_hw->conf->ci_tx_amsdu_min_data_rate))
-+		tx_info->control.flags |= IEEE80211_TX_CTRL_AMSDU;
-+
-+	cl_tx_agg(cl_hw, cl_sta, skb, true, lock);
-+	cl_tx_reset_session_timer(cl_sta->sta, tid);
-+	cl_hw->tx_packet_cntr.forward.drv_fast_agg++;
-+}
-+
-+void cl_tx_wlan_to_8023(struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ethhdr tmp_eth;
-+	struct ethhdr *ehdr;
-+	struct {
-+		u8 hdr[ETH_ALEN]__aligned(2);
-+		__be16 proto;
-+	} payload;
-+	u16 hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	u8 enc_len = cl_key_get_cipher_len(skb);
-+
-+	cl_mac_addr_copy(tmp_eth.h_dest, ieee80211_get_DA(hdr));
-+	cl_mac_addr_copy(tmp_eth.h_source, ieee80211_get_SA(hdr));
-+	skb_copy_bits(skb, hdrlen, &payload, sizeof(payload));
-+	tmp_eth.h_proto = payload.proto;
-+
-+	if (enc_len) {
-+		memcpy(skb->data + hdrlen,
-+		       skb->data + hdrlen + enc_len,
-+		       skb->len - hdrlen - enc_len);
-+		skb_trim(skb, skb->len - enc_len);
-+	}
-+
-+	if (likely((ether_addr_equal(payload.hdr, rfc1042_header) &&
-+		    tmp_eth.h_proto != htons(ETH_P_AARP) &&
-+		    tmp_eth.h_proto != htons(ETH_P_IPX)) ||
-+		   ether_addr_equal(payload.hdr, bridge_tunnel_header)))
-+		/* Remove RFC1042 or Bridge-Tunnel encapsulation and replace ether_type */
-+		hdrlen += ETH_ALEN + 2;
-+	else
-+		tmp_eth.h_proto = htons(skb->len - hdrlen);
-+
-+	skb_pull(skb, hdrlen);
-+	ehdr = skb_push(skb, sizeof(struct ethhdr));
-+	memcpy(ehdr, &tmp_eth, sizeof(tmp_eth));
-+}
-+
-+u16 cl_tx_prepare_wlan_hdr(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+			   struct sk_buff *skb, struct ieee80211_hdr *hdr)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	u16 hdrlen = 0;
-+	__le16 fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_DATA);
-+	struct ieee80211_vif *vif = cl_sta->cl_vif->vif;
-+
-+	if (tx_info->control.hw_key)
-+		fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
-+
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_AP:
-+		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
-+		/* DA BSSID SA */
-+		memcpy(hdr->addr1, skb->data, ETH_ALEN);
-+		memcpy(hdr->addr2, vif->addr, ETH_ALEN);
-+		memcpy(hdr->addr3, skb->data + ETH_ALEN, ETH_ALEN);
-+		hdrlen = 24;
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		{
-+			struct wireless_dev *wdev = skb->dev->ieee80211_ptr;
-+
-+			if (wdev && wdev->use_4addr) {
-+				fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS |
-+						IEEE80211_FCTL_TODS);
-+				/* RA TA DA SA */
-+				memcpy(hdr->addr1, vif->bss_conf.bssid, ETH_ALEN);
-+				memcpy(hdr->addr2, vif->addr, ETH_ALEN);
-+				memcpy(hdr->addr3, skb->data, ETH_ALEN);
-+				memcpy(hdr->addr4, skb->data + ETH_ALEN, ETH_ALEN);
-+				hdrlen = 30;
-+			} else {
-+				fc |= cpu_to_le16(IEEE80211_FCTL_TODS);
-+				/* BSSID SA DA */
-+				memcpy(hdr->addr1, vif->bss_conf.bssid, ETH_ALEN);
-+				memcpy(hdr->addr2, skb->data + ETH_ALEN, ETH_ALEN);
-+				memcpy(hdr->addr3, skb->data, ETH_ALEN);
-+				hdrlen = 24;
++		/* Down */
++		if (wrs_params->down_time_cnt >= down_th) {
++			if (cl_wrs_down_epr_check(wrs_db, wrs_sta, wrs_params,
++						  wrs_db->epr_factor, WRS_DECISION_DOWN)) {
++				cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params,
++						     WRS_DECISION_DOWN, down_rate_idx);
++				return;
 +			}
-+		}
-+		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		cl_dbg_trace(cl_hw, "vif type mesh_point, invalid tx path\n");
-+		return 0;
-+	default:
-+		cl_dbg_err(cl_hw, "Unknown vif type %d !!!\n", vif->type);
-+		return 0;
-+	}
 +
-+	if (cl_sta->sta->wme) {
-+		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
-+		hdrlen += 2;
-+	}
-+
-+	hdr->frame_control = fc;
-+	hdr->duration_id = 0;
-+	hdr->seq_ctrl = 0;
-+
-+	return hdrlen;
-+}
-+
-+int cl_tx_8023_to_wlan(struct cl_hw *cl_hw, struct sk_buff *skb, struct cl_sta *cl_sta, u8 tid)
-+{
-+	struct ieee80211_hdr hdr;
-+	int head_need, ret = 0;
-+	u16 ethertype, hdrlen;
-+	const u8 *encaps_data = NULL;
-+	int encaps_len = 0, skip_header_bytes = ETH_HLEN;
-+	u8 enc_len = cl_key_get_cipher_len(skb);
-+
-+	/* Convert Ethernet header to proper 802.11 header */
-+	ethertype = (skb->data[12] << 8) | skb->data[13];
-+
-+	hdrlen = cl_tx_prepare_wlan_hdr(cl_hw, cl_sta, skb, &hdr);
-+	if (!hdrlen) {
-+		ret = -EINVAL;
-+		goto free;
-+	}
-+
-+	if (ethertype >= ETH_P_802_3_MIN) {
-+		encaps_data = rfc1042_header;
-+		encaps_len = sizeof(rfc1042_header);
-+		skip_header_bytes -= 2;
-+	}
-+
-+	skb_pull(skb, skip_header_bytes);
-+	head_need = hdrlen + enc_len + encaps_len - skb_headroom(skb);
-+
-+	if (head_need > 0) {
-+		head_need = ((head_need + 3) & ~3);
-+		if (pskb_expand_head(skb, head_need, 0, GFP_ATOMIC)) {
-+			ret = -ENOMEM;
-+			goto free;
++			wrs_params->down_time_cnt = 0;
 +		}
 +	}
 +
-+	if (encaps_data)
-+		memcpy(skb_push(skb, encaps_len), encaps_data, encaps_len);
-+
-+	skb_push(skb, hdrlen + enc_len);
-+
-+	if (cl_sta->sta->wme) {
-+		u16 qos_ctrl = tid;
-+
-+		memcpy(skb->data, &hdr, hdrlen - 2);
-+		memcpy(skb->data + hdrlen - 2, &qos_ctrl, 2);
-+	} else {
-+		memcpy(skb->data, &hdr, hdrlen);
-+	}
-+
-+	skb_reset_mac_header(skb);
-+
-+	return ret;
-+free:
-+	cl_hw->tx_packet_cntr.drop.build_hdr_fail++;
-+	cl_sta->cl_vif->trfc_cntrs[tid_to_ac[tid]].tx_errors++;
-+	kfree_skb(skb);
-+	skb = NULL;
-+
-+	return ret;
-+}
-+
-+void cl_tx_check_start_ba_session(struct cl_hw *cl_hw,
-+				  struct ieee80211_sta *sta,
-+				  struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct sta_info *stainfo = IEEE80211_STA_TO_STAINFO(sta);
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	u8 tid;
-+
-+	/* TODO: What about HE? */
-+	if (!sta->ht_cap.ht_supported &&
-+	    !sta->vht_cap.vht_supported &&
-+	    !cl_band_is_6g(cl_hw))
-+		return;
-+
-+	if (test_sta_flag(stainfo, WLAN_STA_PS_STA))
-+		return;
-+
-+	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
-+	    !(tx_info->flags & IEEE80211_TX_STAT_AMPDU))
-+		return;
-+
-+	if (cl_tx_ctrl_is_eapol(tx_info))
-+		return;
-+
-+	if (unlikely(!ieee80211_is_data_qos(hdr->frame_control)))
-+		return;
-+
-+	if (unlikely(skb->protocol == cpu_to_be16(ETH_P_PAE)))
-+		return;
-+
-+	tid = ieee80211_get_tid(hdr);
-+
-+	if (likely(stainfo->ampdu_mlme.tid_tx[tid]))
-+		return;
-+
-+	ieee80211_start_tx_ba_session(sta, tid, cl_hw->conf->ce_tx_ba_session_timeout);
-+}
-+
-+static void cl_tx_handle_beacon_tim(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	struct cl_hw *cl_hw = (struct cl_hw *)hw->priv;
-+	struct cl_sta *cl_sta = NULL;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
-+	const u8 *tim_ie = cfg80211_find_ie(WLAN_EID_TIM, mgmt->u.beacon.variable, skb->len);
-+	struct ieee80211_tim_ie *tim = NULL;
-+
-+	/* Offset of the element */
-+	tim = (void *)(tim_ie + BCN_IE_TIM_BIT_OFFSET);
-+
-+	cl_sta_lock(cl_hw);
-+
-+	/* Loop through all STA's */
-+	list_for_each_entry(cl_sta, &cl_hw->cl_sta_db.head, list) {
-+		if (cl_traffic_is_sta_tx_exist(cl_hw, cl_sta)) {
-+			u8 sta_aid = cl_sta->sta->aid;
-+			u8 map_index = sta_aid / BITS_PER_BYTE;
-+
-+			/* Update STA's AID in TIM bit */
-+			tim->virtual_map[map_index] |= BIT(sta_aid % BITS_PER_BYTE);
-+		}
-+	}
-+
-+	cl_sta_unlock(cl_hw);
-+}
-+
-+static struct sk_buff *cl_tx_beacon_get(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif)
-+{
-+	struct sk_buff *skb = NULL;
-+
-+	skb = ieee80211_beacon_get(hw, vif);
-+
-+	/* Handle beacon TIM bitmap */
-+	if (skb)
-+		cl_tx_handle_beacon_tim(hw, skb);
-+
-+	return skb;
-+}
-+
-+static void cl_tx_mc(struct cl_vif *cl_vif, int *mc_fw_free)
-+{
-+	struct cl_hw *cl_hw = cl_vif->cl_hw;
-+	struct ieee80211_vif *vif = cl_vif->vif;
-+	struct sk_buff *skb = NULL;
-+	struct ieee80211_tx_info *tx_info;
-+
-+	if (unlikely(!vif))
-+		return;
-+
-+	while (((*mc_fw_free) > 0) &&
-+	       (skb = ieee80211_get_buffered_bc(cl_hw->hw, vif))) {
-+		/* Route this MCBC frame to the BCN ipc queue */
-+		tx_info = IEEE80211_SKB_CB(skb);
-+		tx_info->hw_queue = CL_HWQ_BCN;
-+
-+		(*mc_fw_free)--;
-+
-+		/* Clear more data bit if this is the last frame in this SP */
-+		if (*mc_fw_free == 0) {
-+			struct ieee80211_hdr *hdr =
-+					(struct ieee80211_hdr *)skb->data;
-+			hdr->frame_control &=
-+					cpu_to_le16(~IEEE80211_FCTL_MOREDATA);
-+		}
-+
-+		cl_tx_single(cl_hw, NULL, skb, false, true);
-+	}
-+}
-+
-+void cl_tx_bcn_mesh_task(unsigned long data)
-+{
-+	struct cl_vif *cl_vif = NULL;
-+	struct cl_hw *cl_hw = NULL;
-+	struct ieee80211_tx_info *tx_info;
-+	struct sk_buff *skb;
-+	int mc_fw_free;
-+
-+	cl_vif = (struct cl_vif *)data;
-+	if (!cl_vif)
-+		return;
-+
-+	cl_hw = cl_vif->cl_hw;
-+
-+	if (!cl_hw || !cl_vif->vif || cl_vif->vif->type != NL80211_IFTYPE_MESH_POINT ||
-+	    cl_radio_is_off(cl_hw) ||
-+	    cl_recovery_in_progress(cl_hw) ||
-+	    !test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) ||
-+	    test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags) ||
-+	    cl_hw->tx_disable_flags)
-+		return;
-+
-+	skb = cl_tx_beacon_get(cl_hw->hw, cl_vif->vif);
-+	if (!skb)
-+		return;
-+
-+	/* Route this BCN to the BCN ipc queue */
-+	tx_info = IEEE80211_SKB_CB(skb);
-+	tx_info->hw_queue = CL_HWQ_BCN;
-+
-+	cl_tx_single(cl_hw, NULL, skb, false, true);
-+
-+	mc_fw_free = cl_hw->tx_queues->bcmc.fw_free_space;
-+	cl_tx_mc(cl_vif, &mc_fw_free);
-+}
-+
-+static void cl_tx_bcn(struct cl_vif *cl_vif)
-+{
-+	struct cl_hw *cl_hw = cl_vif->cl_hw;
-+	struct ieee80211_vif *vif = cl_vif->vif;
-+	struct ieee80211_tx_info *tx_info;
-+	struct sk_buff *skb;
-+
-+	if (!vif || vif->type != NL80211_IFTYPE_AP)
-+		return;
-+
-+	/*
-+	 * If we are in the middle of the CAC, we allow regular channel switch
-+	 * and retrigger the CAC (If needed).
-+	 * Or - if radar is detected, we wait for all CSAs to be transmitted,
-+	 * before allowing channel switch
-+	 */
-+	if (cl_dfs_is_in_cac(cl_hw) && vif->csa_active) {
-+		ieee80211_csa_finish(vif);
-+		return;
-+	}
-+
-+	skb = cl_tx_beacon_get(cl_hw->hw, vif);
-+	if (!skb)
-+		return;
-+
-+	/* Route this BCN to the BCN ipc queue */
-+	tx_info = IEEE80211_SKB_CB(skb);
-+	tx_info->hw_queue = CL_HWQ_BCN;
-+
-+	cl_tx_single(cl_hw, NULL, skb, false, true);
-+}
-+
-+bool cl_is_tx_allowed(struct cl_hw *cl_hw)
-+{
-+	return !(cl_radio_is_off(cl_hw) ||
-+		 cl_hw->vif_db.num_iface_bcn == 0 ||
-+		 cl_recovery_in_progress(cl_hw) ||
-+		 cl_hw->tx_db.block_bcn ||
-+		 cl_hw->tx_disable_flags ||
-+		 !test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) ||
-+		 test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags));
-+}
-+
-+/* cl_tx_bcns_tasklet - generate BCNs and TX buffered MC frames each BCN DTIM interval
-+ *
-+ * Beacons are sent first followed by cyclic MC for fairness between VIF's
-+ * the FW buffer is restricted to "IPC_TXDESC_CNT_BCMC" buffer size.
-+ */
-+void cl_tx_bcns_tasklet(unsigned long data)
-+{
-+	struct cl_hw *cl_hw = (struct cl_hw *)data;
-+	struct cl_vif *cl_vif = NULL;
-+	int mc_fw_free = 0;
-+
-+	read_lock(&cl_hw->vif_db.lock);
-+
-+	if (!cl_is_tx_allowed(cl_hw))
-+		goto out;
-+	list_for_each_entry(cl_vif, &cl_hw->vif_db.head, list)
-+		cl_tx_bcn(cl_vif);
-+
-+	cl_vif = cl_hw->mc_vif;
-+	mc_fw_free = cl_hw->tx_queues->bcmc.fw_free_space;
-+
-+	do {
-+		cl_tx_mc(cl_vif, &mc_fw_free);
-+		/* Cl_vif_get_next() is cyclic */
-+		cl_vif = cl_vif_get_next(cl_hw, cl_vif);
-+	} while ((cl_vif != cl_hw->mc_vif) && mc_fw_free);
-+
-+	cl_hw->mc_vif = cl_vif_get_next(cl_hw, cl_hw->mc_vif);
-+
-+out:
-+	read_unlock(&cl_hw->vif_db.lock);
-+}
-+
-+void cl_tx_en(struct cl_hw *cl_hw, u8 reason, bool enable)
-+{
-+	unsigned long tx_disable_flags_prev = cl_hw->tx_disable_flags;
-+
-+	if (enable) {
-+		clear_bit(reason, &cl_hw->tx_disable_flags);
-+
-+		if (tx_disable_flags_prev != 0 && cl_hw->tx_disable_flags == 0)
-+			if (cl_hw->conf->ci_backup_bcn_en)
-+				cl_msg_tx_backup_bcn_en(cl_hw, true);
-+	} else {
-+		set_bit(reason, &cl_hw->tx_disable_flags);
-+
-+		if (tx_disable_flags_prev == 0)
-+			if (cl_hw->conf->ci_backup_bcn_en)
-+				cl_msg_tx_backup_bcn_en(cl_hw, false);
-+	}
-+}
-+
-+static void cl_tx_flush(struct cl_hw *cl_hw)
-+{
-+	/* Flush bcmc */
-+	spin_lock_bh(&cl_hw->tx_lock_bcmc);
-+	cl_bcmc_cfm_flush_queue(cl_hw, NULL);
-+	spin_unlock_bh(&cl_hw->tx_lock_bcmc);
-+
-+	/* Flush single */
-+	spin_lock_bh(&cl_hw->tx_lock_single);
-+	cl_txq_flush_all_single(cl_hw);
-+	cl_single_cfm_flush_all(cl_hw);
-+	spin_unlock_bh(&cl_hw->tx_lock_single);
-+
-+	/* Flush agg */
-+	spin_lock_bh(&cl_hw->tx_lock_agg);
-+	cl_txq_flush_all_agg(cl_hw);
-+	cl_agg_cfm_flush_all(cl_hw);
-+	spin_unlock_bh(&cl_hw->tx_lock_agg);
-+}
-+
-+void cl_tx_off(struct cl_hw *cl_hw)
-+{
-+	cl_txq_stop(cl_hw);
-+	cl_tx_flush(cl_hw);
-+}
-+
-+void cl_tx_drop_skb(struct sk_buff *skb)
-+{
-+	skb->dev->stats.rx_dropped++;
-+	kfree_skb(skb);
-+}
-+
-+#define AGG_POLL_TIMEOUT 50
-+
-+/*
-+ * cl_hw->agg_cfm_queues:
-+ * These queues are used to keep pointers to skb's sent
-+ * as aggregation and waiting for confirmation.
-+ */
-+
-+void cl_agg_cfm_init(struct cl_hw *cl_hw)
-+{
-+	int i = 0;
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++)
-+		INIT_LIST_HEAD(&cl_hw->agg_cfm_queues[i].head);
-+}
-+
-+void cl_agg_cfm_add(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr, u8 agg_idx)
-+{
-+	spin_lock(&cl_hw->tx_lock_cfm_agg);
-+	list_add_tail(&sw_txhdr->cfm_list, &cl_hw->agg_cfm_queues[agg_idx].head);
-+	spin_unlock(&cl_hw->tx_lock_cfm_agg);
-+}
-+
-+static void cl_agg_cfm_amsdu_free(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	struct cl_amsdu_txhdr *amsdu_txhdr = NULL;
-+	struct cl_amsdu_txhdr *tmp = NULL;
-+	struct sk_buff *sub_skb = NULL;
-+	struct ieee80211_tx_info *tx_info_sub_skb = NULL;
-+
-+	list_for_each_entry_safe(amsdu_txhdr, tmp, &sw_txhdr->amsdu_txhdr.list, list) {
-+		sub_skb = amsdu_txhdr->skb;
-+		tx_info_sub_skb = IEEE80211_SKB_CB(sub_skb);
-+
-+		list_del(&amsdu_txhdr->list);
-+		dma_unmap_single(cl_hw->chip->dev, amsdu_txhdr->dma_addr,
-+				 (size_t)sub_skb->len, DMA_TO_DEVICE);
-+		kfree_skb(sub_skb);
-+		cl_tx_amsdu_txhdr_free(cl_hw, amsdu_txhdr);
-+	}
-+}
-+
-+void cl_agg_cfm_free_head_skb(struct cl_hw *cl_hw,
-+			      struct cl_agg_cfm_queue *cfm_queue,
-+			      u8 ba_queue_idx)
-+{
-+	struct cl_sw_txhdr *sw_txhdr = list_first_entry(&cfm_queue->head,
-+							struct cl_sw_txhdr,
-+							cfm_list);
-+	struct sk_buff *skb = sw_txhdr->skb;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	dma_addr_t dma_addr = le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_addr[0]);
-+
-+	if (cl_hw->conf->ci_tx_delay_tstamp_en)
-+		cl_tx_update_hist_tstamp(cfm_queue->tx_queue, skb,
-+					 cfm_queue->tx_queue->hist_push_to_cfm, false);
-+
-+	dma_unmap_single(cl_hw->chip->dev, dma_addr, sw_txhdr->map_len, DMA_TO_DEVICE);
-+
-+	/* If amsdu list not empty free sub MSDU frames first, including amsdu_txhdr */
-+	if (cl_tx_ctrl_is_amsdu(tx_info))
-+		if (!list_empty(&sw_txhdr->amsdu_txhdr.list))
-+			cl_agg_cfm_amsdu_free(cl_hw, sw_txhdr);
-+
-+	consume_skb(skb);
-+	list_del(&sw_txhdr->cfm_list);
-+	cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+}
-+
-+static void cl_agg_cfm_flush_queue(struct cl_hw *cl_hw, u8 agg_idx)
-+{
-+	struct cl_agg_cfm_queue *cfm_queue = &cl_hw->agg_cfm_queues[agg_idx];
-+	struct cl_tx_queue *tx_queue = cfm_queue->tx_queue;
-+	struct sk_buff *skb = NULL;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+	dma_addr_t dma_addr = 0;
-+	struct ieee80211_tx_info *tx_info;
-+
-+	if (!tx_queue)
-+		return;
-+
-+	if (list_empty(&cfm_queue->head))
-+		return;
-+
-+	do {
-+		sw_txhdr = list_first_entry(&cfm_queue->head, struct cl_sw_txhdr, cfm_list);
-+		skb = sw_txhdr->skb;
-+
-+		dma_addr = le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_addr[0]);
-+		dma_unmap_single(cl_hw->chip->dev, dma_addr, sw_txhdr->map_len, DMA_TO_DEVICE);
-+
-+		tx_info = IEEE80211_SKB_CB(skb);
-+
-+		/* If amsdu list not empty free sub MSDU frames first, including amsdu_txhdr */
-+		if (cl_tx_ctrl_is_amsdu(tx_info))
-+			if (!list_empty(&sw_txhdr->amsdu_txhdr.list))
-+				cl_agg_cfm_amsdu_free(cl_hw, sw_txhdr);
-+
-+		tx_queue->total_fw_cfm++;
-+
-+		kfree_skb(skb);
-+		list_del(&sw_txhdr->cfm_list);
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+	} while (!list_empty(&cfm_queue->head));
-+
-+	/*
-+	 * Set fw_free_space back to maximum after flushing the queue
-+	 * and clear the enhanced TIM.
-+	 */
-+	tx_queue->fw_free_space = tx_queue->fw_max_size;
-+	cl_enhanced_tim_clear_tx_agg(cl_hw, agg_idx, tx_queue->hw_index,
-+				     tx_queue->cl_sta, tx_queue->tid);
-+
-+	cfm_queue->tx_queue = NULL;
-+}
-+
-+void cl_agg_cfm_flush_all(struct cl_hw *cl_hw)
-+{
-+	int i = 0;
-+
-+	/* Don't use BH lock, because cl_agg_cfm_flush_all() is called with BH disabled */
-+	spin_lock(&cl_hw->tx_lock_cfm_agg);
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++)
-+		cl_agg_cfm_flush_queue(cl_hw, i);
-+
-+	spin_unlock(&cl_hw->tx_lock_cfm_agg);
-+}
-+
-+static void cl_agg_cfm_poll_timeout(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue,
-+				    u8 agg_idx, bool flush)
-+{
-+	/*
-+	 * When polling failed clear the enhanced TIM so that firmware will
-+	 * not try to transmit these packets.
-+	 * If flush is set cl_enhanced_tim_clear_tx_agg() is called inside
-+	 * cl_agg_cfm_flush_queue().
-+	 */
-+	cl_dbg_err(cl_hw, "Polling timeout (queue_idx = %u)\n", agg_idx);
-+
-+	spin_lock_bh(&cl_hw->tx_lock_cfm_agg);
-+
-+	if (flush)
-+		cl_agg_cfm_flush_queue(cl_hw, agg_idx);
-+	else
-+		cl_enhanced_tim_clear_tx_agg(cl_hw, agg_idx, tx_queue->hw_index,
-+					     tx_queue->cl_sta, tx_queue->tid);
-+
-+	spin_unlock_bh(&cl_hw->tx_lock_cfm_agg);
-+}
-+
-+void cl_agg_cfm_poll_empty(struct cl_hw *cl_hw, u8 agg_idx, bool flush)
-+{
-+	struct cl_agg_cfm_queue *cfm_queue = &cl_hw->agg_cfm_queues[agg_idx];
-+	bool empty = false;
-+	int i = 0;
-+
-+	if (test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))
-+		return;
-+
-+	while (true) {
-+		spin_lock_bh(&cl_hw->tx_lock_cfm_agg);
-+		empty = list_empty(&cfm_queue->head);
-+		spin_unlock_bh(&cl_hw->tx_lock_cfm_agg);
-+
-+		if (empty)
-+			return;
-+
-+		if (++i == AGG_POLL_TIMEOUT) {
-+			cl_agg_cfm_poll_timeout(cl_hw, cfm_queue->tx_queue, agg_idx, flush);
-+			return;
-+		}
-+
-+		msleep(20);
-+	}
-+}
-+
-+void cl_agg_cfm_poll_empty_sta(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	int i = 0;
-+	struct cl_tx_queue *tx_queue = NULL;
-+
-+	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+		tx_queue = cl_sta->agg_tx_queues[i];
-+
-+		if (tx_queue)
-+			cl_agg_cfm_poll_empty(cl_hw, tx_queue->index, false);
-+	}
-+}
-+
-+void cl_agg_cfm_clear_tim_bit_sta(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	int i = 0;
-+	struct cl_tx_queue *tx_queue = NULL;
-+
-+	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+		tx_queue = cl_sta->agg_tx_queues[i];
-+
-+		if (tx_queue) {
-+			spin_lock_bh(&cl_hw->tx_lock_agg);
-+			cl_enhanced_tim_clear_tx_agg(cl_hw, tx_queue->index, tx_queue->hw_index,
-+						     tx_queue->cl_sta, tx_queue->tid);
-+			spin_unlock_bh(&cl_hw->tx_lock_agg);
-+		}
-+	}
-+}
-+
-+void cl_agg_cfm_set_ssn(struct cl_hw *cl_hw, u16 ssn, u8 idx)
-+{
-+	spin_lock_bh(&cl_hw->tx_lock_cfm_agg);
-+	cl_hw->agg_cfm_queues[idx].ssn = ssn;
-+	spin_unlock_bh(&cl_hw->tx_lock_cfm_agg);
-+}
-+
-+void cl_agg_cfm_set_tx_queue(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue, u8 idx)
-+{
-+	spin_lock_bh(&cl_hw->tx_lock_cfm_agg);
-+	cl_hw->agg_cfm_queues[idx].tx_queue = tx_queue;
-+	spin_unlock_bh(&cl_hw->tx_lock_cfm_agg);
-+}
-+
-+static bool cl_is_same_rate(struct cl_agg_tx_report *agg_report,
-+			    struct cl_wrs_rate_params *rate_params)
-+{
-+	union cl_rate_ctrl_info rate_ctrl_info = {
-+		.word = le32_to_cpu(agg_report->rate_cntrl_info)};
-+	u8 mcs = U8_MAX, nss = U8_MAX;
-+
-+	if (agg_report->bw_requested != rate_params->bw)
-+		return false;
-+
-+	cl_rate_ctrl_parse(&rate_ctrl_info, &nss, &mcs);
-+
-+	return ((mcs == rate_params->mcs) && (nss == rate_params->nss));
-+}
-+
-+static void cl_sync_tx_rate(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+			    struct cl_agg_tx_report *agg_report,
-+			    struct cl_wrs_info *wrs_info, struct cl_wrs_params *wrs_params)
-+{
-+	if (!agg_report->is_fallback && cl_is_same_rate(agg_report, &wrs_params->rate_params)) {
-+		cl_wrs_api_rate_sync(cl_hw, cl_sta, wrs_params);
-+
-+		wrs_info->synced = true;
-+		wrs_info->quick_rate_check = true;
-+		wrs_info->quick_rate_agg_cntr = 0;
-+		wrs_info->quick_rate_pkt_cntr = 0;
-+	} else {
-+		wrs_info->sync_attempts++;
-+	}
-+}
-+
-+static void cl_ba_not_received_handler(struct cl_hw *cl_hw, struct cl_wrs_info *wrs_info,
-+				       struct cl_agg_tx_report *agg_report)
-+{
-+	/* Ignore 'BA not received' if station is in power-save or if RTS limit was reached */
-+	if (agg_report->is_sta_ps || agg_report->is_rts_retry_limit_reached)
-+		return;
-+
-+	/* Count number of consecutive 'BA not received' */
-+	wrs_info->ba_not_rcv_consecutive++;
-+
-+	/* Save longest sequence of consecutive 'BA not received' */
-+	if (wrs_info->ba_not_rcv_consecutive > wrs_info->ba_not_rcv_consecutive_max)
-+		wrs_info->ba_not_rcv_consecutive_max = wrs_info->ba_not_rcv_consecutive;
-+
-+	if (cl_hw->wrs_db.ba_not_rcv_collision_filter) {
-+		/*
-+		 * First 'BA not received' - might just be a collision.
-+		 * Don't add fail to ba_not_rcv but keep aside.
-+		 * Second consecutive 'BA not received' - not likely to be a collisions.
-+		 * Add fail to ba_not_rcv including previous fail that was kept aside.
-+		 * More than two consecutive 'BA not received' - very unlikely to be a collisions.
-+		 * Add fail to ba_not_rcv.
-+		 */
-+		if (wrs_info->ba_not_rcv_consecutive == 1)
-+			wrs_info->fail_prev = agg_report->fail;
-+		else if (wrs_info->ba_not_rcv_consecutive == 2)
-+			wrs_info->ba_not_rcv += (agg_report->fail + wrs_info->fail_prev);
++	/* Up-same */
++	if (wrs_params->up_same_time_cnt >= up_th) {
++		if (up_rate_valid)
++			cl_wrs_decision_up(cl_hw, wrs_db, wrs_sta, wrs_params, up_rate_idx, up_th);
 +		else
-+			wrs_info->ba_not_rcv += agg_report->fail;
-+	} else {
-+		wrs_info->ba_not_rcv += agg_report->fail;
++			cl_wrs_decision_same(cl_hw, wrs_db, wrs_sta, wrs_params, curr_rate_idx);
++
++		return;
++	}
++
++	/*
++	 * If there is no valid UP rate and the EPR is more
++	 * than EPR down threshold => make a same decision
++	 */
++	if (!up_rate_valid &&
++	    !cl_wrs_down_epr_check(wrs_db, wrs_sta, wrs_params,
++				   wrs_db->epr_factor, WRS_DECISION_SAME))
++		cl_wrs_decision_same(cl_hw, wrs_db, wrs_sta, wrs_params, curr_rate_idx);
++}
++
++static void cl_wrs_divide_weights_by_two(struct cl_wrs_table *table_node)
++{
++	u8 up_idx = 0;
++	struct cl_wrs_table_node *rate_up;
++
++	/*
++	 * Converge weights - divide all weights by 2
++	 * (make sure they do not go below their init value)
++	 */
++	if (table_node->rate_down.rate_idx != WRS_INVALID_RATE)
++		table_node->rate_down.time_th = max(table_node->rate_down.time_th >> 1,
++						    WRS_INIT_MSEC_WEIGHT_DOWN);
++
++	for (up_idx = 0; up_idx < WRS_TABLE_NODE_UP_MAX; up_idx++) {
++		rate_up = &table_node->rate_up[up_idx];
++
++		if (rate_up->rate_idx != WRS_INVALID_RATE)
++			rate_up->time_th = max(rate_up->time_th >> 1, WRS_INIT_MSEC_WEIGHT_UP);
++
++		if (rate_up->time_th == WRS_INIT_MSEC_WEIGHT_UP)
++			rate_up->quick_up_check = false;
 +	}
 +}
 +
-+void cl_agg_tx_report_handler(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+			      struct cl_agg_tx_report *agg_report)
++static void cl_wrs_converge_weights(struct cl_wrs_params *wrs_params)
 +{
-+	struct cl_wrs_info *wrs_info = NULL;
-+	struct cl_wrs_params *wrs_params = NULL;
-+	u8 group_id;
-+	bool skip_epr_update = false;
-+	union cl_rate_ctrl_info rate_ctrl_info = {
-+		.word = le32_to_cpu(agg_report->rate_cntrl_info)};
++	/*
++	 * Converge weights - divide the weights by 2 (except for the current rate),
++	 * and reset PER counters (except for current rate, down rate, and down-down rate).
++	 */
++	u16 i;
++	u16 curr_idx = wrs_params->rate_idx;
++	u16 down_idx = wrs_params->table[curr_idx].rate_down.rate_idx;
++	u16 down2_idx = wrs_params->table[down_idx].rate_down.rate_idx;
 +
-+	wrs_params = &cl_sta->wrs_sta.tx_su_params;
-+	wrs_info = &cl_sta->wrs_info_tx_su;
-+	group_id = 0;
++	for (i = 0; i < wrs_params->table_size; i++) {
++		if (i == curr_idx)
++			continue;
 +
-+	/* Retry_count for cl_wlan */
-+	cl_sta->retry_count += agg_report->success_after_retry;
++		cl_wrs_divide_weights_by_two(&wrs_params->table[i]);
 +
++		if (i != down_idx && i != down2_idx) {
++			wrs_params->table[i].frames_total = 0;
++			wrs_params->table[i].ba_not_rcv_total = 0;
++			wrs_params->table[i].epr_acc = 0;
++		}
++	}
++}
++
++static void cl_wrs_converge_weights_idle_decision(struct cl_hw *cl_hw,
++						  struct cl_wrs_db *wrs_db,
++						  struct cl_wrs_sta *wrs_sta,
++						  struct cl_wrs_params *wrs_params)
++{
++	/*
++	 * Continue normal converge (just like during traffic).
++	 * After 6 seconds reset table, and select rate based on RSSI.
++	 */
++	if (!wrs_db->converge_idle_en)
++		return;
++
++	wrs_params->converge_time_idle += wrs_db->interval;
++
++	if (wrs_params->converge_mode == WRS_CONVERGE_MODE_RESET) {
++		if (wrs_params->converge_time_idle < wrs_db->converge_idle_interval_reset) {
++			cl_wrs_converge_weights(wrs_params);
++		} else {
++			wrs_params->converge_mode = WRS_CONVERGE_MODE_RSSI;
++			wrs_params->converge_time_idle = 0;
++
++			wrs_pr_info(wrs_db, "[%s] Converge weights: sta %u - RSSI\n",
++				    WRS_TYPE_STR(wrs_params->type), wrs_sta->sta_idx);
++
++			/* Reset table and choose new rate based on RSSI */
++			cl_wrs_tables_reset(wrs_db, wrs_sta, wrs_params);
++
++			if (!WRS_TYPE_IS_TX_MU_MIMO(wrs_params))
++				cl_wrs_set_rate_idle(cl_hw, wrs_db, wrs_sta, wrs_params);
++		}
++	} else {
++		if (wrs_params->converge_time_idle < wrs_db->converge_idle_interval_rssi)
++			return;
++
++		/* Choose new rate */
++		if (!WRS_TYPE_IS_TX_MU_MIMO(wrs_params)) {
++			wrs_params->converge_time_idle = 0;
++			cl_wrs_set_rate_idle(cl_hw, wrs_db, wrs_sta, wrs_params);
++		}
++	}
++}
++
++static void cl_wrs_converge_weights_idle_reset(struct cl_wrs_db *wrs_db,
++					       struct cl_wrs_sta *wrs_sta,
++					       struct cl_wrs_params *wrs_params)
++{
++	/* There was traffic in last maintenance interval - reset converge parameteres */
++	wrs_params->converge_time_idle = 0;
++
++	if (wrs_params->converge_mode != WRS_CONVERGE_MODE_RESET) {
++		wrs_params->converge_mode = WRS_CONVERGE_MODE_RESET;
++		wrs_pr_info(wrs_db, "[%s] Converge weights: sta %u - RESET\n",
++			    WRS_TYPE_STR(wrs_params->type), wrs_sta->sta_idx);
++	}
++}
++
++static void cl_wrs_converge_weights_trfc_decision(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++						  struct cl_wrs_db *wrs_db,
++						  struct cl_wrs_params *wrs_params)
++{
++	u32 converge_interval = 0;
++
++	if (!wrs_db->converge_trfc_en)
++		return;
++
++	converge_interval = wrs_db->converge_trfc_interval_static;
++
++	if (!cl_motion_sense_is_static(cl_hw, cl_sta))
++		converge_interval = wrs_db->converge_trfc_interval_motion;
++
++	wrs_params->converge_time_trfc += wrs_db->interval;
++
++	if (wrs_params->converge_time_trfc >= converge_interval) {
++		wrs_params->converge_time_trfc = 0;
++		cl_wrs_converge_weights(wrs_params);
++	}
++}
++
++static u32 cl_wrs_get_sync_attempts(struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params)
++{
++	struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++	struct cl_wrs_info *wrs_info = cl_wrs_info_get(cl_sta, wrs_params->type);
++
++	return wrs_info->sync_attempts;
++}
++
++static void cl_wrs_sta_no_sync_handler(struct cl_hw *cl_hw,
++				       struct cl_wrs_db *wrs_db,
++				       struct cl_wrs_sta *wrs_sta,
++				       struct cl_wrs_params *wrs_params)
++{
++	unsigned long time_delta = jiffies_to_msecs(jiffies - wrs_params->no_sync_timestamp);
++
++	if (time_delta < wrs_db->sync_timeout)
++		return;
++
++	if (cl_wrs_get_sync_attempts(wrs_sta, wrs_params) < wrs_db->sync_min_attempts) {
++		/*
++		 * Rate not synced but there is also hardly no traffic -
++		 * change mode to synced!
++		 */
++		wrs_params->sync = true;
++		wrs_params->sync_timestamp = jiffies;
++	} else {
++		struct cl_wrs_table *wrs_table = &wrs_params->table[wrs_params->rate_idx];
++		struct cl_wrs_rate *curr_rate = &wrs_table->rate;
++
++		if (IS_REAL_PHY(cl_hw->chip))
++			wrs_pr_warn(wrs_db,
++				    "[%s] NO SYNC - sta = %u, bw = %u, nss = %u, mcs = %u, gi = %u\n",
++				    WRS_TYPE_STR(wrs_params->type), wrs_sta->sta_idx, curr_rate->bw,
++				    curr_rate->nss, curr_rate->mcs, curr_rate->gi);
++
++		if (WRS_IS_DECISION_UP(wrs_params->last_decision)) {
++			cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params,
++					     WRS_DECISION_DOWN_NO_SYNC,
++					     wrs_table->rate_down.rate_idx);
++		} else {
++			/* If the last decision was DOWN - change state to SYNCED. */
++			wrs_params->sync = true;
++			wrs_params->sync_timestamp = jiffies;
++		}
++	}
++}
++
++static void cl_wrs_update_ba_not_rcv(struct cl_wrs_db *wrs_db, struct cl_wrs_params *wrs_params)
++{
++	unsigned long time_since_sync = jiffies_to_msecs(jiffies - wrs_params->sync_timestamp);
++
++	wrs_params->calc_ba_not_rcv = (wrs_db->ba_not_rcv_force ||
++				       (time_since_sync < wrs_db->ba_not_rcv_time_since_sync));
++}
++
++static void _cl_wrs_cntrs_reset(struct cl_wrs_info *wrs_info)
++{
++	wrs_info->epr_acc = 0;
++	wrs_info->success = 0;
++	wrs_info->fail = 0;
++	wrs_info->ba_not_rcv = 0;
++	wrs_info->ba_not_rcv_consecutive_max = 0;
++}
++
++static void cl_wrs_cntrs_read(struct cl_wrs_sta *wrs_sta,
++			      struct cl_wrs_cntrs *cntrs,
++			      u8 type)
++{
++	struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++	struct cl_wrs_info *wrs_info = cl_wrs_info_get(cl_sta, type);
++
++	cntrs->epr_acc = wrs_info->epr_acc;
++	cntrs->total = wrs_info->success + wrs_info->fail;
++	cntrs->fail = wrs_info->fail;
++	cntrs->ba_not_rcv = wrs_info->ba_not_rcv;
++	cntrs->ba_not_rcv_consecutive = wrs_info->ba_not_rcv_consecutive_max;
++
++	_cl_wrs_cntrs_reset(wrs_info);
++}
++
++static void _cl_wrs_sta_maintenance(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++				    struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	struct cl_wrs_cntrs cntrs = {0};
++
++	if (wrs_params->is_logger_en)
++		memset(&WRS_LOGGER, 0, sizeof(struct cl_wrs_logger));
++
++	if (!wrs_params->sync) {
++		cl_wrs_sta_no_sync_handler(cl_hw, wrs_db, wrs_sta, wrs_params);
++		goto end_logger;
++	}
++
++	if (!WRS_TYPE_IS_RX(wrs_params))
++		cl_wrs_update_ba_not_rcv(wrs_db, wrs_params);
++
++	cl_wrs_cntrs_read(wrs_sta, &cntrs, wrs_params->type);
++
++	if (wrs_params->is_fixed_rate) {
++		cl_wrs_stats_per_update(wrs_db, wrs_sta, wrs_params, &cntrs);
++		goto end_logger;
++	}
++
++	wrs_params->down_time_cnt += wrs_db->interval;
++	wrs_params->up_same_time_cnt += wrs_db->interval;
++
++	if ((cntrs.total + cntrs.ba_not_rcv) < wrs_db->converge_idle_packet_th) {
++		/*
++		 * Very few frames were sent in last maintenance interval
++		 * Check if weights should be converged
++		 */
++		cl_wrs_converge_weights_idle_decision(cl_hw, wrs_db, wrs_sta, wrs_params);
++
++		cl_wrs_stats_per_update(wrs_db, wrs_sta, wrs_params, &cntrs);
++
++		goto end_logger;
++	} else {
++		/* There was traffic in last maintenance interval - reset converge parameteres */
++		cl_wrs_converge_weights_idle_reset(wrs_db, wrs_sta, wrs_params);
++	}
++
++	cl_wrs_stats_per_update(wrs_db, wrs_sta, wrs_params, &cntrs);
++
++	wrs_params->quick_up_check =
++		(cntrs.ba_not_rcv_consecutive >= wrs_db->quick_up_ba_thr);
++	cl_wrs_epr_decision(cl_hw, wrs_db, wrs_sta, wrs_params);
++
++	cl_wrs_converge_weights_trfc_decision(cl_hw, cl_sta, wrs_db, wrs_params);
++
++end_logger:
++	if (wrs_params->is_logger_en && WRS_LOGGER.decision != WRS_DECISION_NONE)
++		wrs_params->logger_idx = WRS_INC_POW2(wrs_params->logger_idx,
++						      wrs_params->logger_size);
++}
++
++static void cl_wrs_sta_maintenance(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	_cl_wrs_sta_maintenance(cl_hw, cl_sta, &cl_sta->wrs_sta.tx_su_params);
++
++	if (cl_sta->wrs_sta.rx_params)
++		_cl_wrs_sta_maintenance(cl_hw, cl_sta, cl_sta->wrs_sta.rx_params);
++}
++
++static void cl_wrs_cca_calc(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db, u8 max_bw)
++{
++	u32 cca_primary_new = mac_hw_edca_cca_busy_get(cl_hw);
++	u32 cca_sec80_new = (max_bw > CHNL_BW_80) ? mac_hw_add_cca_busy_sec_80_get(cl_hw) : 0;
++	u32 cca_sec40_new = (max_bw > CHNL_BW_40) ? mac_hw_add_cca_busy_sec_40_get(cl_hw) : 0;
++	u32 cca_sec20_new = mac_hw_add_cca_busy_sec_20_get(cl_hw);
++
++	u32 cca_primary_diff = cca_primary_new - wrs_db->cca_primary;
++	u32 cca_sec80_diff = cca_sec80_new - wrs_db->cca_sec80;
++	u32 cca_sec40_diff = cca_sec40_new - wrs_db->cca_sec40;
++	u32 cca_sec20_diff = cca_sec20_new - wrs_db->cca_sec20;
++
++	wrs_db->cca_primary = cca_primary_new;
++	wrs_db->cca_sec80 = cca_sec80_new;
++	wrs_db->cca_sec40 = cca_sec40_new;
++	wrs_db->cca_sec20 = cca_sec20_new;
++	wrs_db->cca_timestamp = jiffies;
++
++	/* Increase by 25% */
++	cca_primary_diff = cca_primary_diff * WRS_CCA_PRIMARY_FACTOR >> WRS_CCA_PRIMARY_SHIFT;
++
++	/* Adjacent interference - if secondary is higher than primary by 25%. */
++	wrs_db->adjacent_interference80 = (cca_sec80_diff > cca_primary_diff);
++	wrs_db->adjacent_interference40 = (cca_sec40_diff > cca_primary_diff);
++	wrs_db->adjacent_interference20 = (cca_sec20_diff > cca_primary_diff);
++}
++
++static void cl_wrs_cca_maintenance(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db)
++{
++	u8 max_bw = wrs_db->max_cap.bw;
++
++	if (max_bw == CHNL_BW_20)
++		return;
++
++	if (jiffies_to_msecs(jiffies - wrs_db->cca_timestamp) > WRS_CCA_PERIOD_MS)
++		cl_wrs_cca_calc(cl_hw, wrs_db, max_bw);
++}
++
++static void cl_wrs_maintenance(struct timer_list *t)
++{
++	struct cl_wrs_db *wrs_db = from_timer(wrs_db, t, timer_maintenance);
++	struct cl_hw *cl_hw = container_of(wrs_db, struct cl_hw, wrs_db);
++
++	cl_wrs_cca_maintenance(cl_hw, wrs_db);
++
++	cl_wrs_lock(wrs_db);
++	cl_sta_loop(cl_hw, cl_wrs_sta_maintenance);
++	cl_wrs_unlock(wrs_db);
++
++	mod_timer(&wrs_db->timer_maintenance, jiffies + msecs_to_jiffies(wrs_db->interval));
++}
++
++static void cl_wrs_down_decision_weights_update(struct cl_wrs_db *wrs_db,
++						struct cl_wrs_sta *wrs_sta,
++						u16 new_rate_idx,
++						struct cl_wrs_params *wrs_params)
++{
++	u16 old_rate_idx = wrs_params->rate_idx;
++	u8 up_idx = 0;
++	u16 down_th_min = wrs_db->time_th_min;
++	u16 step = wrs_db->step_down;
++	u16 *th_down = &wrs_params->table[old_rate_idx].rate_down.time_th;
++	u16 *th_up = NULL;
++	struct cl_wrs_table *table_node = &wrs_params->table[new_rate_idx];
++
++	/* Decrease the weight from old rate to new rate */
++	if (*th_down > (down_th_min + step))
++		*th_down -= step;
++	else
++		*th_down = down_th_min;
++
++	/* Increase the weight from new rate to old rate */
++	for (up_idx = 0; up_idx < WRS_TABLE_NODE_UP_MAX; up_idx++) {
++		if (old_rate_idx == table_node->rate_up[up_idx].rate_idx) {
++			th_up = &table_node->rate_up[up_idx].time_th;
++			table_node->rate_up[up_idx].quick_up_check = !!wrs_params->quick_up_check;
++			step = wrs_params->penalty_decision_dn;
++			*th_up = min_t(u16, *th_up + step, wrs_db->time_th_max_up);
++			break;
++		}
++	}
++
++	wrs_pr_info(wrs_db,
++		    "[%s] Down update - sta = %u, "
++		    "down weight [%u-->%u] = %u, up weight [%u-->%u] = %u\n",
++		    WRS_TYPE_STR(wrs_params->type), wrs_sta->sta_idx, old_rate_idx, new_rate_idx,
++		    *th_down, new_rate_idx, old_rate_idx, th_up ? *th_up : 0);
++}
++
++static void cl_wrs_up_same_decision_weights_update(struct cl_wrs_db *wrs_db,
++						   struct cl_wrs_sta *wrs_sta,
++						   struct cl_wrs_params *wrs_params)
++{
++	u16 curr_rate_idx = wrs_params->rate_idx;
++	u16 down_rate_idx = wrs_params->table[curr_rate_idx].rate_down.rate_idx;
++	u8 up_idx = 0;
++	u16 up_th_min = wrs_db->time_th_min;
++	u16 step = wrs_db->step_up_same;
++	u16 *th_down = &wrs_params->table[curr_rate_idx].rate_down.time_th;
++	u16 *th_up = NULL;
++	u16 th_down_orig = *th_down;
++	u16 th_up_orig = 0;
++	struct cl_wrs_table *table_node = &wrs_params->table[down_rate_idx];
++
++	/* Increase the weight from current rate to down rate */
++	*th_down = min_t(u16, *th_down + step, wrs_db->time_th_max_down);
++
++	/* Decrease the weight from down rate to current rate */
++	for (up_idx = 0; up_idx < WRS_TABLE_NODE_UP_MAX; up_idx++) {
++		if (curr_rate_idx == table_node->rate_up[up_idx].rate_idx) {
++			th_up = &table_node->rate_up[up_idx].time_th;
++			table_node->rate_up[up_idx].quick_up_check = false;
++
++			th_up_orig = *th_up;
++
++			if (*th_up > (up_th_min + step))
++				*th_up -= step;
++			else
++				*th_up = up_th_min;
++			break;
++		}
++	}
++
++	if (th_up && (th_up_orig != *th_up || th_down_orig != *th_down))
++		wrs_pr_info(wrs_db,
++			    "[%s] Up/same update - sta = %u, "
++			    "down weight [%u-->%u] = %u, up weight [%u-->%u] = %u\n",
++			    WRS_TYPE_STR(wrs_params->type), wrs_sta->sta_idx, curr_rate_idx,
++			    down_rate_idx, *th_down, down_rate_idx, curr_rate_idx, *th_up);
++}
++
++static bool cl_wrs_is_rate_params_valid(struct cl_wrs_rate *rate_params)
++{
++	return (*(u16 *)rate_params != U16_MAX);
++}
++
++void cl_wrs_init(struct cl_hw *cl_hw)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	/* Default configuration */
++	wrs_db->debug_level = DBG_LVL_ERROR;
++	wrs_db->rssi_protect_en = true;
++	wrs_db->rssi_protect_mode = WRS_RSSI_PROT_MODE_RSSI;
++	wrs_db->rssi_protect_up_thr = WRS_RSSI_PROTECT_UP_THR;
++	wrs_db->rssi_protect_dn_thr = WRS_RSSI_PROTECT_DN_THR;
++	wrs_db->min_frames_for_decision = WRS_MIN_FRAMES_FOR_DECISION;
++	wrs_db->epr_factor = WRS_EPR_FACTOR;
++	wrs_db->converge_idle_en = true;
++	wrs_db->converge_idle_interval_reset = WRS_CONVERGE_IDLE_INTERVAL_RESET;
++	wrs_db->converge_idle_interval_rssi = WRS_CONVERGE_IDLE_INTERVAL_RSSI;
++	wrs_db->converge_idle_packet_th = WRS_CONVERGE_IDLE_PACKET_TH;
++	wrs_db->converge_trfc_en = true;
++	wrs_db->converge_trfc_interval_static = WRS_CONVERGE_TRFC_INTERVAL_STATIC;
++	wrs_db->converge_trfc_interval_motion = WRS_CONVERGE_TRFC_INTERVAL_MOTION;
++	wrs_db->immediate_drop_en = true;
++	wrs_db->immediate_drop_epr_factor = WRS_IMMEDIATE_DROP_EPR_FACTOR;
++	wrs_db->immediate_drop_max_in_row = WRS_IMMEDIATE_DROP_MAX_IN_ROW;
++	wrs_db->time_th_min = WRS_MSEC_WEIGHT_MIN;
++	wrs_db->time_th_max_up = WRS_MSEC_WEIGHT_MAX_UP;
++	wrs_db->time_th_max_down = WRS_MSEC_WEIGHT_MAX_DOWN;
++	wrs_db->step_down = WRS_MSEC_STEP_DOWN;
++	wrs_db->step_up_same = WRS_MSEC_STEP_UP_SAME;
++	wrs_db->interval = msecs_round(WRS_MAINTENANCE_PERIOD_MS);
++	wrs_db->conservative_mcs_noisy_env = false;
++	wrs_db->conservative_nss_noisy_env = false;
++	wrs_db->quick_up_en = true;
++	wrs_db->quick_up_ba_thr = WRS_QUICK_UP_BA_THR;
++	wrs_db->quick_up_interval = msecs_round(WRS_QUICK_UP_INTERVAL_MS);
++	wrs_db->quick_down_en = true;
++	wrs_db->quick_down_epr_factor = WRS_QUICK_DOWN_EPR_FACTOR;
++	wrs_db->quick_down_agg_thr = WRS_QUICK_DOWN_AGG_THR;
++	wrs_db->quick_down_pkt_thr = WRS_QUICK_DOWN_PKT_THR;
++	wrs_db->ba_not_rcv_collision_filter = true;
++	/* Environment of 2.4 is much more noisy, so 'BA not received' are ignored. */
++	wrs_db->ba_not_rcv_force = cl_band_is_24g(cl_hw) ? false : true;
++	wrs_db->ba_not_rcv_time_since_sync = WRS_BA_NOT_RCV_TIME_SINCE_SYNC;
++	wrs_db->sync_timeout = WRS_SYNC_TIMEOUT;
++	wrs_db->sync_min_attempts = WRS_SYNC_MIN_ATTEMPTS;
++
++	/* Init WRS periodic timer */
++	timer_setup(&wrs_db->timer_maintenance, cl_wrs_maintenance, 0);
++
++	if (!cl_hw->chip->conf->ce_production_mode) {
++		wrs_db->cca_timestamp = jiffies;
++		mod_timer(&wrs_db->timer_maintenance,
++			  jiffies + msecs_to_jiffies(wrs_db->interval));
++	}
++
++	spin_lock_init(&wrs_db->lock);
++
++	if ((cl_hw->conf->ci_wrs_fixed_rate[WRS_FIXED_PARAM_MODE] != -1) &&
++	    (cl_hw->conf->ci_wrs_fixed_rate[WRS_FIXED_PARAM_BW] != -1) &&
++	    (cl_hw->conf->ci_wrs_fixed_rate[WRS_FIXED_PARAM_NSS] != -1) &&
++	    (cl_hw->conf->ci_wrs_fixed_rate[WRS_FIXED_PARAM_MCS] != -1) &&
++	    (cl_hw->conf->ci_wrs_fixed_rate[WRS_FIXED_PARAM_GI] != -1))
++		wrs_db->is_fixed_rate = WRS_FIXED_FALLBACK_DIS;
++}
++
++inline void cl_wrs_lock_bh(struct cl_wrs_db *wrs_db)
++{
++	spin_lock_bh(&wrs_db->lock);
++}
++
++inline void cl_wrs_unlock_bh(struct cl_wrs_db *wrs_db)
++{
++	spin_unlock_bh(&wrs_db->lock);
++}
++
++inline void cl_wrs_lock(struct cl_wrs_db *wrs_db)
++{
++	spin_lock(&wrs_db->lock);
++}
++
++inline void cl_wrs_unlock(struct cl_wrs_db *wrs_db)
++{
++	spin_unlock(&wrs_db->lock);
++}
++
++void cl_wrs_rate_param_sync(struct cl_wrs_db *wrs_db, struct cl_wrs_sta *wrs_sta,
++			    struct cl_wrs_params *wrs_params)
++{
++	if (wrs_params->sync)
++		return;
++
++	cl_wrs_cntrs_reset(wrs_sta, wrs_params);
++
++	/* Reset counters */
++	cl_wrs_reset_params_cntrs(wrs_params);
++
++	/* Change state to SYNCED */
++	wrs_params->sync = true;
++	wrs_params->sync_timestamp = jiffies;
++
++	wrs_pr_trace(wrs_db, "[%s] Sync - timestamp = %u, sta = %u, rate_idx = %u\n",
++		     WRS_TYPE_STR(wrs_params->type),
++		     jiffies_to_msecs(jiffies),
++		     wrs_sta->sta_idx,
++		     wrs_params->rate_idx);
++}
++
++void cl_wrs_rate_params_update(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			       struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params,
++			       u16 new_rate_idx, bool is_sync_required, bool mu_valid)
++{
++	struct cl_wrs_rate_params *rate_params = &wrs_params->rate_params;
++	struct cl_wrs_rate *rate = &wrs_params->table[new_rate_idx].rate;
++	u16 fallback_rate_idx = wrs_params->table[new_rate_idx].rate_down.rate_idx;
++	struct cl_wrs_rate *rate_fallback = &wrs_params->table[fallback_rate_idx].rate;
++#ifdef CONFIG_CL8K_DYN_BCAST_RATE
++
++	if (!WRS_TYPE_IS_RX(wrs_params)) {
++		struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++
++		cl_dyn_bcast_rate_change(cl_hw, cl_sta, rate_params->mcs, rate->mcs);
++	}
++#endif /* CONFIG_CL8K_DYN_BCAST_RATE */
++
++	rate_params->bw = rate->bw;
++	rate_params->nss = rate->nss;
++	rate_params->mcs = rate->mcs;
++	rate_params->gi = rate->gi;
++	rate_params->mode = wrs_sta->mode;
++	rate_params->fallback_en = (wrs_params->is_fixed_rate != WRS_FIXED_FALLBACK_DIS);
++
++	wrs_pr_trace(wrs_db,
++		     "[%s] Rate params update - "
++		     "sta = %u, rate_idx = %u, bw = %u, nss = %u, mcs = %u, gi = %u\n",
++		     WRS_TYPE_STR(wrs_params->type), wrs_sta->sta_idx,
++		     new_rate_idx, rate_params->bw, rate_params->nss,
++		     rate_params->mcs, rate_params->gi);
++
++	wrs_params->rate_idx = new_rate_idx;
++
++	/* Converge - restart the time for converging weights of all old rates */
++	wrs_params->converge_time_trfc = 0;
++
++	cl_wrs_rate_param_set(cl_hw, wrs_sta, wrs_params, rate_params,
++			      rate_fallback, mu_valid, true);
++
++	if (is_sync_required) {
++		wrs_params->sync = false;
++		wrs_params->no_sync_timestamp = jiffies;
++	} else {
++		wrs_params->sync = true;
++	}
++
++	/* Reset Counters */
++	cl_wrs_reset_params_cntrs(wrs_params);
++}
++
++void cl_wrs_decision_make(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			  struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params,
++			  enum cl_wrs_decision decision, u16 new_rate_idx)
++{
++	if (WRS_IS_DECISION_DOWN(decision)) {
++		cl_wrs_down_decision_weights_update(wrs_db, wrs_sta, new_rate_idx, wrs_params);
++	} else if (WRS_IS_DECISION_UP(decision)) {
++		cl_wrs_up_same_decision_weights_update(wrs_db, wrs_sta, wrs_params);
++
++		if (wrs_params->rate_idx != wrs_params->table[new_rate_idx].rate_down.rate_idx) {
++			/*
++			 * In case the down rate is different from the previous rate,
++			 * update down rate index and reset the thresholds
++			 */
++			struct cl_wrs_table_node *rate_down =
++				&wrs_params->table[new_rate_idx].rate_down;
++
++			rate_down->rate_idx = wrs_params->rate_idx;
++			rate_down->time_th = WRS_INIT_MSEC_WEIGHT_DOWN;
++		}
++	} else if (decision == WRS_DECISION_SAME) {
++		cl_wrs_up_same_decision_weights_update(wrs_db, wrs_sta, wrs_params);
++
++		/* Reset counters besides down_time_cnt */
++		wrs_params->frames_total = 0;
++		wrs_params->fail_total = 0;
++		wrs_params->ba_not_rcv_total = 0;
++		wrs_params->epr_acc = 0;
++		wrs_params->up_same_time_cnt = 0;
++	}
++
++	cl_wrs_decision_update(wrs_db, wrs_sta, wrs_params, decision, new_rate_idx);
++
++	if (WRS_IS_DECISION_DOWN(decision) || WRS_IS_DECISION_UP(decision))
++		cl_wrs_rate_params_update(cl_hw, wrs_db, wrs_sta, wrs_params,
++					  new_rate_idx, true, wrs_params->is_mu_valid);
++}
++
++void cl_wrs_decision_update(struct cl_wrs_db *wrs_db, struct cl_wrs_sta *wrs_sta,
++			    struct cl_wrs_params *wrs_params, enum cl_wrs_decision decision,
++			    u16 new_rate_idx)
++{
++	wrs_params->last_decision = decision;
++	wrs_params->decision_cnt[decision]++;
++
++	if (decision != WRS_DECISION_DOWN_IMMEDIATE)
++		wrs_params->immediate_drop_cntr = 0;
++
++	if (wrs_params->is_logger_en) {
++		WRS_LOGGER.decision = decision;
++		WRS_LOGGER.new_rate_idx = new_rate_idx;
++	}
++
++	if (decision == WRS_DECISION_SAME)
++		return;
++
++	wrs_pr_trace(wrs_db,
++		     "[%s] Decision update - timestamp [%u] sta [%u] decision [%s]\n",
++		     WRS_TYPE_STR(wrs_params->type),
++		     jiffies_to_msecs(jiffies),
++		     wrs_sta->sta_idx,
++		     WRS_DECISION_STR(decision));
++}
++
++void cl_wrs_fixed_rate_set(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			   struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params,
++			   u8 is_fixed_rate, u8 mode, u8 bw, u8 nss, u8 mcs, u8 gi, bool mu_valid)
++{
++	u16 rate_idx = 0;
++	u8 type = wrs_params->type;
++
++	if (!is_fixed_rate) {
++		wrs_params->is_fixed_rate = WRS_AUTO_RATE;
++		wrs_pr_verbose(wrs_db, "[%s] Station %u was set to auto rate!\n",
++			       WRS_TYPE_STR(type), wrs_sta->sta_idx);
++		cl_wrs_set_rate_idle(cl_hw, wrs_db, wrs_sta, wrs_params);
++		return;
++	}
++
++	if (mode != wrs_sta->mode) {
++		/* Set fixed rate with a different format-mode */
++		struct cl_wrs_rate_params *rate_params = &wrs_params->rate_params;
++
++		if (cl_band_is_6g(cl_hw) && mode != WRS_MODE_HE) {
++			wrs_pr_verbose(wrs_db, "[%s] Invalid format mode [%u] for 6GHz band\n",
++				       WRS_TYPE_STR(type), mode);
++			return;
++		}
++#ifdef CONFIG_CL8K_DYN_BCAST_RATE
++
++		if (!WRS_TYPE_IS_RX(wrs_params)) {
++			struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++
++			cl_dyn_bcast_rate_change(cl_hw, cl_sta, rate_params->mcs, mcs);
++		}
++#endif /* CONFIG_CL8K_DYN_BCAST_RATE */
++
++		rate_params->bw = bw;
++		rate_params->nss = nss;
++		rate_params->mcs = mcs;
++		rate_params->gi = gi;
++		rate_params->mode = mode;
++		rate_params->fallback_en = (wrs_params->is_fixed_rate != WRS_FIXED_FALLBACK_DIS);
++
++		wrs_params->is_fixed_rate = is_fixed_rate;
++
++		cl_wrs_rate_param_set(cl_hw, wrs_sta, wrs_params, rate_params,
++				      NULL, mu_valid, true);
++		wrs_pr_verbose(wrs_db,
++			       "[%s] Station %u set to %s - "
++			       "mode=%u, bw=%u, nss=%u, mcs=%u, gi=%u\n",
++			       WRS_TYPE_STR(type), wrs_sta->sta_idx, FIXED_RATE_STR(is_fixed_rate),
++			       mode, bw, nss, mcs, gi);
++		return;
++	}
++
++	rate_idx = cl_wrs_tables_find_rate_idx(wrs_params, bw, nss, mcs, gi);
++
++	if (rate_idx == WRS_INVALID_RATE) {
++		wrs_pr_err(wrs_db,
++			   "[%s] Invalid fixed rate - mode=%u, bw=%u, nss=%u, mcs=%u, gi=%u\n",
++			   WRS_TYPE_STR(type), mode, bw, nss, mcs, gi);
++		return;
++	}
++
++	wrs_params->is_fixed_rate = is_fixed_rate;
++	cl_wrs_rate_params_update(cl_hw, wrs_db, wrs_sta, wrs_params, rate_idx, false, false);
++	wrs_pr_verbose(wrs_db,
++		       "[%s] Station %u set to %s - mode=%u, bw=%u, nss=%u, mcs=%u, gi=%u\n",
++			WRS_TYPE_STR(type), wrs_sta->sta_idx, FIXED_RATE_STR(is_fixed_rate),
++			mode, bw, nss, mcs, gi);
++}
++
++void cl_wrs_quick_down_check(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			     struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_cntrs cntrs = {0};
++	struct cl_wrs_table *table = NULL;
++	u16 curr_rate_idx = 0;
++	u16 down_rate_idx = 0;
++	u8 type = wrs_params->type;
++
++	if (!wrs_params->sync ||
++	    wrs_params->is_fixed_rate ||
++	    !WRS_IS_DECISION_UP(wrs_params->last_decision))
++		return;
++
++	if (!WRS_TYPE_IS_RX(wrs_params))
++		cl_wrs_update_ba_not_rcv(wrs_db, wrs_params);
++
++	cl_wrs_cntrs_read(wrs_sta, &cntrs, type);
++	cl_wrs_stats_per_update(wrs_db, wrs_sta, wrs_params, &cntrs);
++
++	curr_rate_idx = wrs_params->rate_idx;
++	table = &wrs_params->table[curr_rate_idx];
++	down_rate_idx = table->rate_down.rate_idx;
++
++	/* Check if we transmitted enough frames for taking decision */
++	if (wrs_params->frames_total < wrs_db->min_frames_for_decision)
++		return;
++
++	if (wrs_params->is_logger_en) {
++		memset(&WRS_LOGGER, 0, sizeof(struct cl_wrs_logger));
++		WRS_LOGGER.timestamp = jiffies_to_msecs(jiffies);
++		WRS_LOGGER.rate_idx = curr_rate_idx;
++		WRS_LOGGER.success = wrs_params->frames_total - wrs_params->fail_total;
++		WRS_LOGGER.fail = wrs_params->fail_total;
++		WRS_LOGGER.ba_not_rcv = wrs_params->ba_not_rcv_total;
++	}
++
++	/* Down decision check */
++	if (down_rate_idx != curr_rate_idx &&
++	    cl_wrs_down_epr_check(wrs_db, wrs_sta, wrs_params,
++				  wrs_db->quick_down_epr_factor, WRS_DECISION_DOWN_QUICK))
++		cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params,
++				     WRS_DECISION_DOWN_QUICK, down_rate_idx);
++
++	if (wrs_params->is_logger_en && WRS_LOGGER.decision != WRS_DECISION_NONE)
++		wrs_params->logger_idx = WRS_INC_POW2(wrs_params->logger_idx,
++						      wrs_params->logger_size);
++}
++
++bool cl_wrs_up_mcs1(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++		    struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params)
++{
 +	/*
 +	 * In case of big packets (4300 in VHT and 5400 in HE) and low
 +	 * rate (BW 20, NSS 1, MCS 0), firmware will increase rate to MCS 1,
@@ -1554,1985 +1246,2219 @@ index 000000000000..52a8d558f3f2
 +	 * WRS should also move to MCS 1, and give the maximum time
 +	 * penalty time from MCS 0 toMCS 1.
 +	 */
-+	if (agg_report->rate_fix_mcs1 &&
-+	    !agg_report->is_fallback &&
-+	    cl_wrs_api_up_mcs1(cl_hw, cl_sta, wrs_params))
-+		return;
++	u16 curr_rate_idx = wrs_params->rate_idx;
++	u16 up_rate_idx = 0;
++	struct cl_wrs_table *table = &wrs_params->table[curr_rate_idx];
 +
-+	/* WRS sync mechanism */
-+	if (!wrs_info->synced)
-+		cl_sync_tx_rate(cl_hw, cl_sta, agg_report, wrs_info, wrs_params);
++	if (!table || wrs_params->is_fixed_rate)
++		return false;
 +
-+	if (agg_report->bf && cl_sta->bf_db.is_on && !cl_sta->bf_db.synced) {
-+		cl_sta->bf_db.synced = true;
-+		/* Resetting the WRS UP weights */
-+		cl_wrs_api_beamforming_sync(cl_hw, cl_sta);
++	if (table->rate.bw != CHNL_BW_20 ||
++	    table->rate.nss != WRS_SS_1 ||
++	    table->rate.mcs != WRS_MCS_0)
++		return false;
++
++	up_rate_idx = cl_wrs_tables_find_rate_idx(wrs_params,
++						  CHNL_BW_20, WRS_SS_1, WRS_MCS_1, table->rate.gi);
++
++	if (up_rate_idx == WRS_INVALID_RATE)
++		return false;
++
++	if (wrs_params->is_logger_en) {
++		memset(&WRS_LOGGER, 0, sizeof(struct cl_wrs_logger));
++		WRS_LOGGER.timestamp = jiffies_to_msecs(jiffies);
++		WRS_LOGGER.rate_idx = curr_rate_idx;
 +	}
 +
-+	if (agg_report->ba_not_received) {
-+		cl_ba_not_received_handler(cl_hw, wrs_info, agg_report);
-+	} else {
-+		if (!skip_epr_update)
-+			wrs_info->fail += agg_report->fail;
++	wrs_params->table[up_rate_idx].rate_down.time_th = wrs_db->time_th_max_up;
 +
-+		wrs_info->ba_not_rcv_consecutive = 0;
-+	}
++	cl_wrs_cntrs_reset(wrs_sta, wrs_params);
++	cl_wrs_decision_update(wrs_db, wrs_sta, wrs_params, WRS_DECISION_UP_MCS1, up_rate_idx);
++	cl_wrs_rate_params_update(cl_hw, wrs_db, wrs_sta, wrs_params,
++				  up_rate_idx, true, wrs_params->is_mu_valid);
 +
-+	if (!skip_epr_update) {
-+		u8 mcs = 0, nss = 0, bw = 0;
-+		u16 data_rate = 0;
-+
-+		switch (agg_report->bw_requested) {
-+		case CHNL_BW_160:
-+			bw = (cl_hw->wrs_db.adjacent_interference20 ||
-+			      cl_hw->wrs_db.adjacent_interference40 ||
-+			      cl_hw->wrs_db.adjacent_interference80) ?
-+				rate_ctrl_info.field.bw : agg_report->bw_requested;
-+			break;
-+		case CHNL_BW_80:
-+			bw = (cl_hw->wrs_db.adjacent_interference20 ||
-+			      cl_hw->wrs_db.adjacent_interference40) ?
-+				rate_ctrl_info.field.bw : agg_report->bw_requested;
-+			break;
-+		case CHNL_BW_40:
-+			bw = cl_hw->wrs_db.adjacent_interference20 ?
-+				rate_ctrl_info.field.bw : agg_report->bw_requested;
-+			break;
-+		case CHNL_BW_20:
-+			bw = agg_report->bw_requested;
-+			break;
-+		}
-+
-+		cl_rate_ctrl_parse(&rate_ctrl_info, &nss, &mcs);
-+
-+		data_rate = cl_data_rates_get_x10(rate_ctrl_info.field.format_mod,
-+						  bw,
-+						  nss,
-+						  mcs,
-+						  rate_ctrl_info.field.gi);
-+
-+		wrs_info->epr_acc += ((u64)agg_report->success * data_rate);
-+		wrs_info->success += agg_report->success;
-+	}
-+
-+	if (cl_hw->wrs_db.quick_down_en &&
-+	    wrs_info->quick_rate_check &&
-+	    cl_is_same_rate(agg_report, &wrs_params->rate_params)) {
-+		wrs_info->quick_rate_agg_cntr++;
-+		wrs_info->quick_rate_pkt_cntr += (agg_report->success + agg_report->fail);
-+
-+		if (wrs_info->quick_rate_agg_cntr >= cl_hw->wrs_db.quick_down_agg_thr &&
-+		    wrs_info->quick_rate_pkt_cntr > cl_hw->wrs_db.quick_down_pkt_thr) {
-+			wrs_info->quick_rate_check = false;
-+			cl_wrs_api_quick_down_check(cl_hw, cl_sta, wrs_params);
-+		}
-+	}
-+}
-+
-+void cl_agg_tx_report_simulate_for_single(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+					  struct cl_hw_tx_status *status)
-+{
-+	/* Assign statistics struct */
-+	struct cl_agg_tx_report agg_report;
-+	union cl_rate_ctrl_info rate_ctrl_info;
-+
-+	memset(&agg_report, 0, sizeof(struct cl_agg_tx_report));
-+
-+	agg_report.bf = status->bf;
-+	agg_report.success = status->frm_successful;
-+	agg_report.fail = status->num_mpdu_retries + (status->frm_successful ? 0 : 1);
-+	agg_report.success_after_retry =
-+		(status->frm_successful && status->num_mpdu_retries);
-+	agg_report.retry_limit_reached = !status->frm_successful;
-+	agg_report.success_more_one_retry =
-+		(status->frm_successful && (status->num_mpdu_retries > 1));
-+	agg_report.sta_idx = cl_sta->sta_idx;
-+	agg_report.bw_requested = status->bw_requested;
-+
-+	rate_ctrl_info.field.bw = status->bw_transmitted;
-+	rate_ctrl_info.field.gi = status->gi;
-+	rate_ctrl_info.field.format_mod = status->format_mod;
-+	rate_ctrl_info.field.mcs_index = status->mcs_index;
-+
-+	cl_rate_ctrl_convert(&rate_ctrl_info);
-+
-+	agg_report.rate_cntrl_info = cpu_to_le32(rate_ctrl_info.word);
-+	cl_agg_tx_report_handler(cl_hw, cl_sta, &agg_report);
-+	cl_stats_update_tx_single(cl_hw, cl_sta, &agg_report);
-+}
-+
-+void cl_baw_init(struct cl_sta *cl_sta)
-+{
-+	u8 tid;
-+
-+	for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++)
-+		__skb_queue_head_init(&cl_sta->baws[tid].pending);
-+}
-+
-+void cl_baw_start(struct cl_baw *baw, u16 ssn)
-+{
-+	baw->ssn = ssn;
-+	baw->action_start = true;
-+}
-+
-+void cl_baw_operational(struct cl_hw *cl_hw, struct cl_baw *baw,
-+			u8 fw_agg_idx, bool amsdu_supported)
-+{
-+	baw->fw_agg_idx = fw_agg_idx;
-+	baw->tid_seq = IEEE80211_SN_TO_SEQ(baw->ssn);
-+	baw->action_start = false;
-+	baw->amsdu = (cl_hw->txamsdu_en && amsdu_supported);
-+}
-+
-+void cl_baw_stop(struct cl_baw *baw)
-+{
-+	baw->action_start = false;
-+}
-+
-+void cl_baw_pending_to_agg(struct cl_hw *cl_hw,
-+			   struct cl_sta *cl_sta,
-+			   u8 tid)
-+{
-+	struct cl_baw *baw = &cl_sta->baws[tid];
-+	struct sk_buff *skb;
-+
-+	while (!skb_queue_empty(&baw->pending)) {
-+		skb = __skb_dequeue(&baw->pending);
-+		cl_tx_fast_agg(cl_hw, cl_sta, skb, false);
-+	}
-+}
-+
-+void cl_baw_pending_to_single(struct cl_hw *cl_hw,
-+			      struct cl_sta *cl_sta,
-+			      struct cl_baw *baw)
-+{
-+	struct sk_buff *skb;
-+
-+	while (!skb_queue_empty(&baw->pending)) {
-+		skb = __skb_dequeue(&baw->pending);
-+		cl_tx_fast_single(cl_hw, cl_sta, skb, false);
-+	}
-+}
-+
-+void cl_baw_pending_purge(struct cl_baw *baw)
-+{
-+	if (!skb_queue_empty(&baw->pending))
-+		__skb_queue_purge(&baw->pending);
-+}
-+
-+/*
-+ * cl_hw->bcmc_cfm_queue:
-+ * This queue is used to keep pointers to already sent
-+ * beacon skb's that are waiting for confirmation.
-+ */
-+
-+static void cl_bcmc_free_sw_txhdr(struct cl_hw *cl_hw,
-+				  struct cl_sw_txhdr *sw_txhdr)
-+{
-+	dma_addr_t dma_addr;
-+	struct sk_buff *skb = NULL;
-+
-+	dma_addr = le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_addr[0]);
-+	skb = sw_txhdr->skb;
-+
-+	dma_unmap_single(cl_hw->chip->dev, dma_addr, sw_txhdr->map_len, DMA_TO_DEVICE);
-+	dev_kfree_skb_irq(skb);
-+	list_del(&sw_txhdr->cfm_list);
-+	cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+}
-+
-+static bool cl_bcmc_is_list_empty_per_vif(struct cl_hw *cl_hw,
-+					  struct cl_vif *cl_vif)
-+{
-+	struct cl_single_cfm_queue *cfm_queue = &cl_hw->bcmc_cfm_queue;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+
-+	list_for_each_entry(sw_txhdr, &cfm_queue->head, cfm_list)
-+		if (sw_txhdr->cl_vif == cl_vif)
-+			return false;
++	if (wrs_params->is_logger_en)
++		wrs_params->logger_idx = WRS_INC_POW2(wrs_params->logger_idx,
++						      wrs_params->logger_size);
 +
 +	return true;
 +}
 +
-+void cl_bcmc_cfm_init(struct cl_hw *cl_hw)
++void cl_wrs_rate_param_set(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++			   struct cl_wrs_params *wrs_params,
++			   struct cl_wrs_rate_params *rate_params,
++			   struct cl_wrs_rate *rate_fallback,
++			   bool mu_mimo_valid, bool set_su)
 +{
-+	INIT_LIST_HEAD(&cl_hw->bcmc_cfm_queue.head);
-+}
++	struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++	struct cl_wrs_info *wrs_info = NULL;
++	u8 op_mode = 0;
++	u8 ltf = 0;
++	u8 ltf_fallback = 0;
++	u8 sta_idx = cl_sta->sta_idx;
++	union cl_rate_ctrl_info rate_ctrl;
++	union cl_rate_ctrl_info rate_ctrl_fallback;
++	union cl_rate_ctrl_info_he rate_ctrl_he;
 +
-+void cl_bcmc_cfm_add(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	list_add_tail(&sw_txhdr->cfm_list, &cl_hw->bcmc_cfm_queue.head);
-+}
++	rate_ctrl_he.word = 0;
++	wrs_info = cl_wrs_info_get(cl_sta, wrs_params->type);
 +
-+struct cl_sw_txhdr *cl_bcmc_cfm_find(struct cl_hw *cl_hw, dma_addr_t dma_addr, bool keep_in_list)
-+{
-+	struct cl_single_cfm_queue *cfm_queue = &cl_hw->bcmc_cfm_queue;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+	struct cl_sw_txhdr *tmp = NULL;
++	wrs_params->data_rate = cl_data_rates_get(rate_params->mode,
++						  rate_params->bw,
++						  rate_params->nss,
++						  rate_params->mcs,
++						  rate_params->gi);
 +
-+	list_for_each_entry_safe(sw_txhdr, tmp, &cfm_queue->head, cfm_list) {
-+		if (le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_addr[0]) == dma_addr) {
-+			if (!keep_in_list)
-+				list_del(&sw_txhdr->cfm_list);
++	/*
++	 * Trying to transmit MU-MIMO in bw < bw of sounding (which is STA's max bw) will fail,
++	 * So we prevent it from being transmitted with MU.
++	 */
++	if (rate_params->bw != cl_sta->sta->bandwidth)
++		mu_mimo_valid = false;
 +
-+			return sw_txhdr;
++	rate_ctrl.word = cl_rate_ctrl_generate(cl_hw, cl_sta, rate_params->mode,
++					       rate_params->bw, rate_params->nss,
++					       rate_params->mcs, rate_params->gi,
++					       rate_params->fallback_en, mu_mimo_valid);
++
++	/* For fallback rate use same mode (if it is NULL use same rate). */
++	if (rate_fallback) {
++		rate_ctrl_fallback.word = cl_rate_ctrl_generate(cl_hw,
++								cl_sta,
++								rate_params->mode,
++								rate_fallback->bw,
++								rate_fallback->nss,
++								rate_fallback->mcs,
++								rate_fallback->gi,
++								rate_params->fallback_en,
++								mu_mimo_valid);
++		ltf_fallback = cl_map_gi_to_ltf(rate_params->mode, rate_fallback->gi);
++	} else {
++		rate_ctrl_fallback.word = rate_ctrl.word;
++	}
++
++	/* Save current BF state and SS for the fallback rate */
++	if (WRS_TYPE_IS_TX_SU(wrs_params)) {
++		struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
++
++		bf_db->is_on = rate_ctrl.field.tx_bf;
++		bf_db->is_on_fallback = rate_ctrl_fallback.field.tx_bf;
++		bf_db->num_ss = rate_params->nss;
++		bf_db->num_ss_fallback = rate_fallback ? rate_fallback->nss : rate_params->nss;
++	}
++
++	/* Reset counters */
++	wrs_info->success = 0;
++	wrs_info->fail = 0;
++
++	/* Mark rate as unsynced */
++	wrs_info->synced = false;
++	wrs_info->quick_rate_check = false;
++	wrs_info->sync_attempts = 0;
++	ltf = cl_map_gi_to_ltf(rate_params->mode, rate_params->gi);
++
++	if (rate_params->mode == WRS_MODE_HE)
++		rate_ctrl_he.field.spatial_conf = RATE_CNTRL_HE_SPATIAL_CONF_DEF;
++
++	/* Send new rate to firmware */
++	if (set_su) {
++		if (WRS_TYPE_IS_TX_SU(wrs_params)) {
++			op_mode = RATE_OP_MODE_STA_SU;
++			cl_msg_tx_update_rate_dl(cl_hw, sta_idx, rate_ctrl.word,
++						 rate_ctrl_fallback.word, rate_params->bw,
++						 op_mode, wrs_params->group_id, mu_mimo_valid,
++						 ltf, ltf_fallback, rate_ctrl_he.word);
++		} else if (WRS_TYPE_IS_RX(wrs_params)) {
++			u8 ul_gi_ltf = CL_TF_GI_TO_GI_LTF(rate_params->gi);
++
++			cl_msg_tx_update_rate_ul(cl_hw, sta_idx, rate_params->bw,
++						 rate_params->nss, rate_params->mcs, ul_gi_ltf);
 +		}
 +	}
++}
++
++s8 cl_wrs_rssi_eq_calc(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++		       bool read_clear, s8 *sorted_rssi)
++{
++	struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++	struct cl_wrs_rssi *wrs_rssi = &cl_sta->wrs_rssi;
++	int i;
++
++	if (wrs_rssi->cnt == 0) {
++		memcpy(sorted_rssi, cl_sta->last_rssi, cl_hw->num_antennas);
++		goto sort;
++	}
++
++	for (i = 0; i < cl_hw->num_antennas; i++)
++		sorted_rssi[i] = (s8)(wrs_rssi->sum[i] / wrs_rssi->cnt);
++
++	if (read_clear)
++		memset(wrs_rssi, 0, sizeof(struct cl_wrs_rssi));
++
++sort:
++	/* Sort RSSI values in descending order */
++	cl_rssi_sort_descending(sorted_rssi, cl_hw->num_antennas);
++
++	/* Calc equivalent RSSI */
++	return cl_rssi_calc_equivalent(cl_hw, sorted_rssi);
++}
++
++void cl_wrs_cntrs_reset(struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params)
++{
++	struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++	struct cl_wrs_info *wrs_info = cl_wrs_info_get(cl_sta, wrs_params->type);
++
++	_cl_wrs_cntrs_reset(wrs_info);
++}
++
++struct cl_wrs_info *cl_wrs_info_get(struct cl_sta *cl_sta, u8 type)
++{
++	if (type == WRS_TYPE_TX_SU)
++		return &cl_sta->wrs_info_tx_su;
++	else if (type == WRS_TYPE_RX)
++		return &cl_sta->wrs_info_rx;
 +
 +	return NULL;
 +}
 +
-+void cl_bcmc_cfm_flush_queue(struct cl_hw *cl_hw,
-+			     struct cl_vif *cl_vif)
++struct cl_wrs_params *cl_wrs_params_get(struct cl_wrs_sta *wrs_sta, u8 type)
 +{
-+	struct cl_single_cfm_queue *cfm_queue = &cl_hw->bcmc_cfm_queue;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+	struct cl_sw_txhdr *tmp = NULL;
++	if (type == WRS_TYPE_TX_SU)
++		return &wrs_sta->tx_su_params;
++	else if (type == WRS_TYPE_RX)
++		return wrs_sta->rx_params;
 +
-+	/* Only flush the specific cl_vif related confirmations */
-+	if (cl_vif) {
-+		list_for_each_entry_safe(sw_txhdr, tmp, &cfm_queue->head, cfm_list) {
-+			if (sw_txhdr->cl_vif == cl_vif) {
-+				cl_bcmc_free_sw_txhdr(cl_hw, sw_txhdr);
-+				cl_hw->tx_queues->bcmc.fw_free_space++;
++	return NULL;
++}
++
++void cl_wrs_update_rx_rate(struct cl_hw *cl_hw, struct cl_sta *cl_sta, struct hw_rxhdr *rxhdr)
++{
++	struct cl_wrs_rate *rate_params = NULL;
++
++	if (!cl_sta ||
++	    !cl_sta->wrs_sta.rx_params ||
++	    rxhdr->format_mod == FORMATMOD_HE_TRIG)
++		return;
++
++	rate_params = &cl_sta->wrs_sta.rx_params->rx_rate_idle;
++
++	rate_params->bw = rxhdr->ch_bw;
++	rate_params->nss = rxhdr->n_sts;
++	rate_params->mcs = rxhdr->mcs;
++	rate_params->gi = rxhdr->gi_type;
++}
++
++bool cl_wrs_set_rate_idle(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			  struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_rate *rx_rate_idle = &wrs_params->rx_rate_idle;
++	s8 rssi_sort[MAX_ANTENNAS] = {0};
++	u16 new_rate_idx = 0;
++	u8 decision;
++
++	if (WRS_TYPE_IS_RX(wrs_params) &&
++	    cl_wrs_is_rate_params_valid(rx_rate_idle)) {
++		decision = WRS_DECISION_RX_RATE;
++		if (wrs_params->initial_rate_idx != WRS_INVALID_RATE)
++			new_rate_idx = wrs_params->initial_rate_idx;
++		else
++			/* Get rate from last data packet */
++			new_rate_idx = cl_wrs_tables_find_rate_idx(wrs_params,
++								   rx_rate_idle->bw,
++								   rx_rate_idle->nss,
++								   rx_rate_idle->mcs,
++								   rx_rate_idle->gi);
++
++		cl_wrs_rx_rate_idle_reset(wrs_params);
++	} else {
++		/* Get rate from rssi */
++		cl_wrs_rssi_eq_calc(cl_hw, wrs_sta, true, rssi_sort);
++		new_rate_idx = cl_wrs_rssi_find_rate(cl_hw, wrs_db, wrs_sta, wrs_params, rssi_sort);
++		decision = WRS_DECISION_RSSI_MGMT;
++	}
++
++	if (new_rate_idx != wrs_params->rate_idx) {
++		if (wrs_params->is_logger_en) {
++			memset(&WRS_LOGGER, 0, sizeof(struct cl_wrs_logger));
++			WRS_LOGGER.timestamp = jiffies_to_msecs(jiffies);
++			WRS_LOGGER.rate_idx = wrs_params->rate_idx;
++		}
++
++		cl_wrs_decision_update(wrs_db, wrs_sta, wrs_params, decision, new_rate_idx);
++		cl_wrs_rate_params_update(cl_hw, wrs_db, wrs_sta, wrs_params,
++					  new_rate_idx, false, false);
++	} else {
++		wrs_params->sync = true;
++	}
++
++	return true;
++}
++
++struct cl_wrs_rate_params *cl_wrs_rx_rate_get(struct cl_sta *cl_sta)
++{
++	struct cl_wrs_params *rx_params = cl_sta->wrs_sta.rx_params;
++
++	if (rx_params)
++		return &rx_params->rate_params;
++
++	return NULL;
++}
++
++void cl_wrs_rx_rate_idle_reset(struct cl_wrs_params *rx_params)
++{
++	struct cl_wrs_rate *rate_idle = &rx_params->rx_rate_idle;
++
++	*(u16 *)rate_idle = U16_MAX;
++}
++
++static void cl_wrs_ap_set_bitmap(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db)
++{
++	u8 mcs, bw, nss, rate_idx;
++
++	memset(wrs_db->ap_supported_rates, 0, sizeof(wrs_db->ap_supported_rates));
++
++	for (bw = cl_hw->conf->ci_wrs_min_bw; bw <= wrs_db->max_cap.bw; bw++)
++		for (nss = 0; nss <= wrs_db->max_cap.nss; nss++)
++			for (mcs = 0; mcs <= wrs_db->max_cap.mcs; mcs++) {
++				rate_idx = mcs + (nss * WRS_MCS_MAX);
++				wrs_db->ap_supported_rates[bw] |= BIT(rate_idx);
++			}
++}
++
++void cl_wrs_ap_capab_set(struct cl_hw *cl_hw,
++			 u8 bw,
++			 u8 use_sgi)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_wrs_rate *max_cap = &wrs_db->max_cap;
++	u8 conf_nss = cl_hw->conf->ce_tx_nss - 1;
++
++	switch (cl_hw->wireless_mode) {
++	case WIRELESS_MODE_HE:
++	case WIRELESS_MODE_HT_VHT_HE:
++		wrs_db->mode = WRS_MODE_HE;
++		max_cap->bw = bw;
++		max_cap->nss = conf_nss;
++		max_cap->mcs = WRS_MCS_11;
++		max_cap->gi = use_sgi ? WRS_GI_VSHORT : 0;
++		break;
++	case WIRELESS_MODE_HT_VHT:
++		wrs_db->mode = WRS_MODE_VHT;
++		max_cap->bw = bw;
++		max_cap->nss = conf_nss;
++		max_cap->mcs = WRS_MCS_9;
++		max_cap->gi = use_sgi ? WRS_GI_SHORT : 0;
++		break;
++	case WIRELESS_MODE_HT:
++		wrs_db->mode = WRS_MODE_HT;
++		max_cap->bw = min_t(u8, bw, CHNL_BW_80);
++		max_cap->nss = conf_nss;
++		max_cap->mcs = WRS_MCS_7;
++		max_cap->gi = use_sgi ? WRS_GI_SHORT : 0;
++		break;
++	case WIRELESS_MODE_LEGACY:
++	default:
++		if (cl_hw->hw_mode == HW_MODE_B) {
++			wrs_db->mode = WRS_MODE_CCK;
++			max_cap->mcs = WRS_MCS_3;
++		} else {
++			wrs_db->mode = WRS_MODE_OFDM;
++			max_cap->mcs = WRS_MCS_7;
++		}
++
++		max_cap->bw = CHNL_BW_20;
++		max_cap->nss = 0;
++		max_cap->gi = 0;
++		break;
++	}
++
++	if (cl_hw->conf->ci_wrs_max_bw < max_cap->bw) {
++		max_cap->bw = cl_hw->conf->ci_wrs_max_bw;
++		wrs_pr_warn(wrs_db, "Max BW limited to %uMHz\n", BW_TO_MHZ(max_cap->bw));
++	}
++
++	wrs_db->coex_bw = max_t(u8, max_cap->bw, CHNL_BW_40);
++
++	cl_wrs_ap_set_bitmap(cl_hw, wrs_db);
++}
++
++void cl_wrs_ap_capab_modify_bw(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db, u8 max_bw)
++{
++	wrs_db->max_cap.bw = max_bw;
++
++	cl_wrs_ap_set_bitmap(cl_hw, wrs_db);
++}
++
++void cl_wrs_ap_capab_modify_gi(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db, u8 use_sgi)
++{
++	switch (cl_hw->wireless_mode) {
++	case WIRELESS_MODE_HE:
++	case WIRELESS_MODE_HT_VHT_HE:
++		wrs_db->max_cap.gi = use_sgi ? WRS_GI_VSHORT : 0;
++		break;
++	case WIRELESS_MODE_HT:
++	case WIRELESS_MODE_HT_VHT:
++		wrs_db->max_cap.gi = use_sgi ? WRS_GI_SHORT : 0;
++		break;
++	default:
++		wrs_db->max_cap.gi = 0;
++	}
++
++	cl_wrs_ap_set_bitmap(cl_hw, wrs_db);
++}
++
++void cl_wrs_api_init(struct cl_hw *cl_hw)
++{
++	cl_wrs_init(cl_hw);
++	cl_wrs_ap_capab_set(cl_hw, cl_hw->conf->ci_cap_bandwidth,
++			    cl_hw->conf->ci_short_guard_interval);
++}
++
++void cl_wrs_api_close(struct cl_hw *cl_hw)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	del_timer_sync(&wrs_db->timer_maintenance);
++}
++
++void cl_wrs_api_sta_add(struct cl_hw *cl_hw, struct ieee80211_sta *sta)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	cl_wrs_lock_bh(wrs_db);
++	cl_wrs_sta_add(cl_hw, sta);
++
++	if (sta->he_cap.has_he && cl_hw->conf->ce_wrs_rx_en)
++		cl_wrs_sta_add_rx(cl_hw, sta);
++
++	cl_wrs_unlock_bh(wrs_db);
++}
++
++void cl_wrs_api_sta_remove(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	cl_wrs_lock_bh(wrs_db);
++	cl_wrs_sta_remove(cl_hw, wrs_db, cl_sta);
++	cl_wrs_unlock_bh(wrs_db);
++}
++
++void cl_wrs_api_bss_set_bw(struct cl_hw *cl_hw, u8 bw)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	cl_wrs_lock_bh(wrs_db);
++	cl_wrs_ap_capab_modify_bw(cl_hw, wrs_db, bw);
++	cl_wrs_unlock_bh(wrs_db);
++}
++
++void cl_wrs_api_bss_set_sgi(struct cl_hw *cl_hw, u8 use_sgi)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	cl_wrs_lock_bh(wrs_db);
++	cl_wrs_ap_capab_modify_gi(cl_hw, wrs_db, use_sgi);
++	cl_wrs_unlock_bh(wrs_db);
++}
++
++bool cl_wrs_api_bss_is_sgi_en(struct cl_hw *cl_hw)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	bool ret = false;
++
++	cl_wrs_lock_bh(wrs_db);
++	ret = wrs_db->max_cap.gi != 0;
++	cl_wrs_unlock_bh(wrs_db);
++
++	return ret;
++}
++
++void cl_wrs_api_bss_capab_update(struct cl_hw *cl_hw, u8 bw, u8 use_sgi)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	cl_wrs_lock_bh(wrs_db);
++	cl_wrs_ap_capab_set(cl_hw, bw, use_sgi);
++	cl_wrs_unlock_bh(wrs_db);
++}
++
++void cl_wrs_api_nss_or_bw_changed(struct cl_hw *cl_hw, struct ieee80211_sta *sta, u8 nss, u8 bw)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++
++	cl_wrs_lock_bh(wrs_db);
++
++	wrs_sta->max_rate_cap.nss = nss;
++	wrs_sta->max_rate_cap.bw = bw;
++	cl_wrs_sta_capabilities_set(wrs_db, sta);
++	cl_wrs_tables_build(cl_hw, wrs_sta, &wrs_sta->tx_su_params);
++
++	cl_wrs_unlock_bh(wrs_db);
++}
++
++void cl_wrs_api_he_minrate_changed(struct cl_sta *cl_sta, u8 he_minrate)
++{
++	struct cl_hw *cl_hw = cl_sta->cl_vif->cl_hw;
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	u8 mcs = 0, nss = 0, bw = 0;
++	u16 data_rate_x10 = 0;
++
++	cl_wrs_lock_bh(wrs_db);
++
++	wrs_sta->he_minrate = he_minrate;
++	cl_wrs_tables_build(cl_hw, wrs_sta, &wrs_sta->tx_su_params);
++
++	cl_wrs_unlock_bh(wrs_db);
++
++	for (bw = 0; bw < wrs_sta->max_rate_cap.bw; bw++) {
++		for (nss = 0; nss < wrs_sta->max_rate_cap.nss; nss++) {
++			for (mcs = 0; mcs < wrs_sta->max_rate_cap.mcs; mcs++) {
++				data_rate_x10 = cl_data_rates_get_x10(WRS_MODE_HE, bw,
++								      nss, mcs,
++								      WRS_GI_LONG);
++				if (data_rate_x10 >= (he_minrate * 10)) {
++					cl_rate_ctrl_set_default_per_he_minrate(cl_hw, bw,
++										nss, mcs,
++										WRS_GI_LONG);
++					return;
++				}
 +			}
 +		}
-+
-+		return;
 +	}
-+
-+	while (!list_empty(&cfm_queue->head)) {
-+		sw_txhdr = list_first_entry(&cfm_queue->head, struct cl_sw_txhdr, cfm_list);
-+		cl_bcmc_free_sw_txhdr(cl_hw, sw_txhdr);
-+	}
-+
-+	/* Set fw_free_space back to maximum after flushing the queue */
-+	cl_hw->tx_queues->bcmc.fw_free_space = cl_hw->tx_queues->bcmc.fw_max_size;
 +}
 +
-+void cl_bcmc_cfm_poll_empty_per_vif(struct cl_hw *cl_hw,
-+				    struct cl_vif *cl_vif)
++static void _cl_wrs_api_recovery(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++				 struct cl_wrs_params *wrs_params)
 +{
-+	bool empty = false;
-+	int i = 0;
++	u16 fallback_rate_idx = wrs_params->table[wrs_params->rate_idx].rate_down.rate_idx;
++	struct cl_wrs_rate *rate_fallback = &wrs_params->table[fallback_rate_idx].rate;
++	struct cl_wrs_rate_params *rate_params = &wrs_params->rate_params;
++	bool is_mu_valid = wrs_params->is_mu_valid;
 +
-+	if (test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))
-+		return;
++	cl_wrs_rate_param_set(cl_hw, wrs_sta, wrs_params, rate_params,
++			      rate_fallback, is_mu_valid, true);
++}
 +
-+	while (i++ < BCMC_POLL_TIMEOUT) {
-+		spin_lock_bh(&cl_hw->tx_lock_bcmc);
-+		empty = cl_bcmc_is_list_empty_per_vif(cl_hw, cl_vif);
-+		spin_unlock_bh(&cl_hw->tx_lock_bcmc);
++void cl_wrs_api_recovery(struct cl_hw *cl_hw)
++{
++	struct cl_sta *cl_sta = NULL;
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_wrs_sta *wrs_sta = NULL;
 +
-+		if (empty)
-+			return;
++	cl_wrs_lock_bh(wrs_db);
++	cl_sta_lock(cl_hw);
 +
-+		msleep(20);
++	list_for_each_entry(cl_sta, &cl_hw->cl_sta_db.head, list) {
++		wrs_sta = &cl_sta->wrs_sta;
++
++		_cl_wrs_api_recovery(cl_hw, wrs_sta, &wrs_sta->tx_su_params);
++
++		if (wrs_sta->rx_params)
++			_cl_wrs_api_recovery(cl_hw, wrs_sta, wrs_sta->rx_params);
 +	}
 +
-+	cl_dbg_err(cl_hw, "Polling timeout vif_index %d\n", cl_vif->vif_index);
++	cl_sta_unlock(cl_hw);
++	cl_wrs_unlock_bh(wrs_db);
++}
 +
-+	spin_lock_bh(&cl_hw->tx_lock_bcmc);
-+	cl_bcmc_cfm_flush_queue(cl_hw, cl_vif);
-+	spin_unlock_bh(&cl_hw->tx_lock_bcmc);
++void cl_wrs_api_beamforming_sync(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_wrs_params *wrs_params = &cl_sta->wrs_sta.tx_su_params;
++	u8 up_idx = 0;
++	u16 rate_idx = wrs_params->rate_idx;
++
++	cl_wrs_lock(wrs_db);
++
++	for (up_idx = 0; up_idx < WRS_TABLE_NODE_UP_MAX; up_idx++)
++		wrs_params->table[rate_idx].rate_up[up_idx].time_th = WRS_INIT_MSEC_WEIGHT_UP;
++
++	cl_wrs_unlock(wrs_db);
++
++	wrs_pr_info(wrs_db, "[%s] sta %u - beamforming sync\n",
++		    WRS_TYPE_STR(wrs_params->type), cl_sta->sta_idx);
++}
++
++void cl_wrs_api_quick_down_check(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++				 struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	cl_wrs_lock(wrs_db);
++	cl_wrs_quick_down_check(cl_hw, wrs_db, &cl_sta->wrs_sta, wrs_params);
++	cl_wrs_unlock(wrs_db);
++}
++
++void cl_wrs_api_rate_sync(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			  struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	cl_wrs_lock(wrs_db);
++	cl_wrs_rate_param_sync(wrs_db, &cl_sta->wrs_sta, wrs_params);
++	cl_wrs_unlock(wrs_db);
++}
++
++bool cl_wrs_api_up_mcs1(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	bool result = false;
++
++	cl_wrs_lock(wrs_db);
++	result = cl_wrs_up_mcs1(cl_hw, wrs_db, &cl_sta->wrs_sta, wrs_params);
++	cl_wrs_unlock(wrs_db);
++
++	return result;
++}
++
++void cl_wrs_api_set_smps_mode(struct cl_hw *cl_hw, struct ieee80211_sta *sta, const u8 bw)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	u8 min_bw;
++
++	if (sta->smps_mode == IEEE80211_SMPS_STATIC ||
++	    sta->smps_mode == IEEE80211_SMPS_DYNAMIC) {
++		/* If RTS is enabled, there is no need to go down to 1ss */
++		if (cl_prot_mode_get(cl_hw) == TXL_PROT_RTS_FW)
++			return;
++
++		wrs_sta->smps_enable = true;
++	} else if (sta->smps_mode == IEEE80211_SMPS_OFF && wrs_sta->smps_enable) {
++		wrs_sta->smps_enable = false;
++	}
++
++	cl_wrs_lock_bh(wrs_db);
++	min_bw = min_t(u8, bw, wrs_db->max_cap.bw);
++
++	if (wrs_sta->max_rate_cap.bw != min_bw) {
++		wrs_sta->max_rate_cap.bw = min_bw;
++		wrs_pr_trace(wrs_db, "[TX_SU] SMPS mode: sta %u, bw %u\n",
++			     wrs_sta->sta_idx, min_bw);
++		cl_wrs_tables_build(cl_hw, wrs_sta, &wrs_sta->tx_su_params);
++	}
++
++	cl_wrs_unlock_bh(wrs_db);
++}
++
++u16 cl_wrs_api_get_tx_sta_data_rate(struct cl_sta *cl_sta)
++{
++		return cl_sta->wrs_sta.tx_su_params.data_rate;
++}
++
++static enum rate_info_bw cl_wrs_mode_to_nl80211_rateinfo_bw(u8 bw)
++{
++	switch (bw) {
++	case CHNL_BW_20:
++		return RATE_INFO_BW_20;
++	case CHNL_BW_40:
++		return RATE_INFO_BW_40;
++	case CHNL_BW_80:
++		return RATE_INFO_BW_80;
++	case CHNL_BW_160:
++		return RATE_INFO_BW_160;
++	default:
++		return RATE_INFO_BW_20;
++	}
++}
++
++void cl_wrs_fill_sinfo_rates(struct rate_info *rate_info,
++			     const struct cl_wrs_params *wrs_params,
++			     const struct cl_sta *sta)
++{
++	rate_info->bw = cl_wrs_mode_to_nl80211_rateinfo_bw(wrs_params->rate_params.bw);
++	rate_info->mcs = wrs_params->rate_params.mcs;
++	rate_info->nss = wrs_params->rate_params.nss + 1;
++	rate_info->he_gi = wrs_params->rate_params.gi;
++
++	rate_info->flags = 0;
++	/* GI = 0.4 us */
++	if (wrs_params->rate_params.mode < WRS_MODE_HE && wrs_params->rate_params.gi == 1)
++		rate_info->flags |= RATE_INFO_FLAGS_SHORT_GI;
++
++	if (wrs_params->rate_params.mode == WRS_MODE_HT)
++		rate_info->flags |= RATE_INFO_FLAGS_MCS;
++
++	if (wrs_params->rate_params.mode == WRS_MODE_VHT)
++		rate_info->flags |= RATE_INFO_FLAGS_VHT_MCS;
++
++	if (wrs_params->rate_params.mode == WRS_MODE_HE) {
++		enum cl_mu_ofdma_ru_type ru_type = sta->rate_ctrl_he.field.ru_type;
++
++		rate_info->flags |= RATE_INFO_FLAGS_HE_MCS;
++		if (ru_type) {
++			rate_info->he_ru_alloc = cl_ru_type_to_nl80211_he_ru_alloc(ru_type);
++			rate_info->bw = RATE_INFO_BW_HE_RU;
++		}
++	}
 +}
 +
 +/*
-+ * cl_hw->single_cfm_queues:
-+ * These queues are used to keep pointers to skb's sent
-+ * as singles and waiting for confirmation.
++ * Section #1:
++ * rate based on rssi.
 + */
++static s8 rssi_threshold_he[WRS_MCS_MAX_HE] = {
++	-35, -40, -45, -50, -55, -60, -65, -70, -75, -80, -85, -90
++};
 +
-+#define SINGLE_POLL_TIMEOUT 50
++static s8 rssi_threshold_vht[WRS_MCS_MAX_VHT] = {
++	-36, -42, -48, -54, -60, -66, -72, -78, -84, -90
++};
 +
-+void cl_single_cfm_init(struct cl_hw *cl_hw)
++static s8 rssi_threshold_ht[WRS_MCS_MAX_HT] = {
++	-34, -42, -50, -58, -66, -74, -82, -90
++};
++
++static s8 rssi_threshold_ofdm[WRS_MCS_MAX_OFDM] = {
++	-34, -42, -50, -58, -66, -74, -82, -90
++};
++
++static s8 rssi_threshold_cck[WRS_MCS_MAX_CCK] = {
++	-45, -60, -75, -90
++};
++
++static u16 cl_wrs_rssi_find_rate_ht_vht_he(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++					   struct cl_wrs_sta *wrs_sta,
++					   struct cl_wrs_params *wrs_params,
++					   s8 *rssi_sort,
++					   s8 *thresholds)
 +{
-+	int i = 0;
++	s8 max_ss = (s8)wrs_sta->max_rate_cap.nss;
++	s8 nss = 0;
++	u8 max_bw = wrs_sta->max_rate_cap.bw;
++	u8 bw = 0;
++	u8 max_mcs = wrs_sta->max_rate_cap.mcs;
++	u8 mcs = 0;
++	u8 gi = WRS_GI_LONG;
++	u8 selected_mcs = 0;
++	u8 selected_nss = 0;
++	u8 selected_bw = 0;
++	u8 i = 0;
++	u16 rate_idx = 0;
++	u16 data_rate = 0;
++	u16 max_data_rate = 0;
 +
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++)
-+		INIT_LIST_HEAD(&cl_hw->single_cfm_queues[i].head);
-+}
++	if (max_bw > cl_hw->conf->ci_wrs_max_bw)
++		max_bw = cl_hw->conf->ci_wrs_max_bw;
 +
-+void cl_single_cfm_add(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr, u32 queue_idx)
-+{
-+	list_add_tail(&sw_txhdr->cfm_list, &cl_hw->single_cfm_queues[queue_idx].head);
-+}
++	for (i = 0; i <= max_mcs; i++) {
++		mcs = max_mcs - i;
 +
-+struct cl_sw_txhdr *cl_single_cfm_find(struct cl_hw *cl_hw, u32 queue_idx,
-+				       dma_addr_t dma_addr)
-+{
-+	struct cl_single_cfm_queue *cfm_queue = NULL;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+	struct cl_sw_txhdr *tmp = NULL;
++		for (nss = max_ss; nss >= 0; nss--) {
++			if (rssi_sort[nss] <= thresholds[i])
++				continue;
 +
-+	if (queue_idx >= MAX_SINGLE_QUEUES)
-+		return NULL;
++			/* In last level decrease BW */
++			bw = ((i == max_mcs) && (max_bw > CHNL_BW_20)) ? (max_bw - 1) : max_bw;
 +
-+	cfm_queue = &cl_hw->single_cfm_queues[queue_idx];
++			if (wrs_sta->mode == WRS_MODE_HE) {
++				data_rate = data_rate_he_x10[nss][bw][mcs][WRS_GI_LONG];
++			} else {
++				if (wrs_sta->mode == WRS_MODE_VHT) {
++					/* 160MHz in VHT is valid only for 1/2 SS */
++					if (nss >= WRS_SS_3 && bw == CHNL_BW_160)
++						bw = CHNL_BW_80;
 +
-+	list_for_each_entry_safe(sw_txhdr, tmp, &cfm_queue->head, cfm_list)
-+		if (le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_addr[0]) == dma_addr) {
-+			list_del(&sw_txhdr->cfm_list);
++					/* BW 80, 3 SS MCS 6 is invalid in VHT */
++					if (bw == CHNL_BW_80 &&
++					    nss == WRS_SS_3 &&
++					    mcs == WRS_MCS_6)
++						continue;
++				}
 +
-+			return sw_txhdr;
++				data_rate = data_rate_ht_vht_x10[bw][nss][mcs][gi];
++			}
++
++			if (data_rate > max_data_rate) {
++				selected_mcs = mcs;
++				selected_nss = nss;
++				selected_bw = bw;
++				max_data_rate = data_rate;
++				rate_idx = cl_wrs_tables_find_rate_idx(wrs_params,
++								       bw, nss, mcs, gi);
++			}
++
++			break;
 +		}
-+
-+	return NULL;
-+}
-+
-+static void cl_single_cfm_flush_queue(struct cl_hw *cl_hw, u32 queue_idx)
-+{
-+	struct cl_single_cfm_queue *cfm_queue = &cl_hw->single_cfm_queues[queue_idx];
-+	struct cl_tx_queue *tx_queue = NULL;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+	struct sk_buff *skb = NULL;
-+	struct ieee80211_tx_info *tx_info = NULL;
-+	dma_addr_t dma_addr;
-+
-+	if (list_empty(&cfm_queue->head))
-+		return;
-+
-+	do {
-+		sw_txhdr = list_first_entry(&cfm_queue->head, struct cl_sw_txhdr, cfm_list);
-+		dma_addr = le32_to_cpu(sw_txhdr->txdesc.umacdesc.packet_addr[0]);
-+		skb = sw_txhdr->skb;
-+		tx_info = IEEE80211_SKB_CB(skb);
-+
-+		dma_unmap_single(cl_hw->chip->dev, dma_addr, sw_txhdr->map_len, DMA_TO_DEVICE);
-+
-+		cl_tx_single_free_skb(cl_hw, skb);
-+		list_del(&sw_txhdr->cfm_list);
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+	} while (!list_empty(&cfm_queue->head));
-+
-+	/*
-+	 * Set fw_free_space back to maximum after flushing the queue
-+	 * and clear the enhanced TIM.
-+	 */
-+	tx_queue = &cl_hw->tx_queues->single[queue_idx];
-+	tx_queue->fw_free_space = tx_queue->fw_max_size;
-+	cl_enhanced_tim_clear_tx_single(cl_hw, queue_idx, tx_queue->hw_index,
-+					false, tx_queue->cl_sta, tx_queue->tid);
-+}
-+
-+void cl_single_cfm_flush_all(struct cl_hw *cl_hw)
-+{
-+	u32 i = 0;
-+
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++)
-+		cl_single_cfm_flush_queue(cl_hw, i);
-+}
-+
-+void cl_single_cfm_flush_sta(struct cl_hw *cl_hw, u8 sta_idx)
-+{
-+	/* Flush all single confirmation queues of this sta, and reset write index */
-+	u8 ac;
-+	u16 queue_idx;
-+
-+	spin_lock_bh(&cl_hw->tx_lock_single);
-+
-+	for (ac = 0; ac < AC_MAX; ac++) {
-+		queue_idx = QUEUE_IDX(sta_idx, ac);
-+		cl_single_cfm_flush_queue(cl_hw, queue_idx);
-+
-+		cl_hw->ipc_env->ring_indices_elem->indices->txdesc_write_idx.single[queue_idx] = 0;
 +	}
 +
-+	spin_unlock_bh(&cl_hw->tx_lock_single);
++	return rate_idx;
 +}
 +
-+static void cl_single_cfm_poll_timeout(struct cl_hw *cl_hw, u32 queue_idx)
++static u16 cl_wrs_rssi_find_rate_cck_ofdm(struct cl_wrs_sta *wrs_sta,
++					  s8 *rssi_sort, s8 *thresholds)
 +{
-+	/*
-+	 * When polling failed clear the enhanced TIM so that firmware will
-+	 * not try to transmit these packets.
-+	 */
-+	struct cl_tx_queue *tx_queue = &cl_hw->tx_queues->single[queue_idx];
++	struct cl_wrs_params *wrs_params = &wrs_sta->tx_su_params;
++	u8 max_mcs = wrs_sta->max_rate_cap.mcs;
++	u8 mcs = 0;
++	u8 i = 0;
 +
-+	cl_dbg_err(cl_hw, "Polling timeout (queue_idx = %u)\n", queue_idx);
++	for (i = 0; i <= max_mcs; i++) {
++		mcs = max_mcs - i;
 +
-+	spin_lock_bh(&cl_hw->tx_lock_single);
-+	cl_enhanced_tim_clear_tx_single(cl_hw, queue_idx, tx_queue->hw_index,
-+					false, tx_queue->cl_sta, tx_queue->tid);
-+	spin_unlock_bh(&cl_hw->tx_lock_single);
-+}
-+
-+void cl_single_cfm_poll_empty(struct cl_hw *cl_hw, u32 queue_idx)
-+{
-+	struct cl_single_cfm_queue *cfm_queue = &cl_hw->single_cfm_queues[queue_idx];
-+	bool empty = false;
-+	int i = 0;
-+
-+	if (test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))
-+		return;
-+
-+	while (true) {
-+		spin_lock_bh(&cl_hw->tx_lock_single);
-+		empty = list_empty(&cfm_queue->head);
-+		spin_unlock_bh(&cl_hw->tx_lock_single);
-+
-+		if (empty)
-+			return;
-+
-+		if (++i == SINGLE_POLL_TIMEOUT) {
-+			cl_single_cfm_poll_timeout(cl_hw, queue_idx);
-+			return;
-+		}
-+
-+		msleep(20);
-+	}
-+}
-+
-+static bool cl_list_hp_empty_sta(struct cl_hw *cl_hw, u8 sta_idx)
-+{
-+	struct cl_single_cfm_queue *hp_cfm_queue = &cl_hw->single_cfm_queues[HIGH_PRIORITY_QUEUE];
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+
-+	list_for_each_entry(sw_txhdr, &hp_cfm_queue->head, cfm_list)
-+		if (sw_txhdr->sta_idx == sta_idx)
-+			return false;
-+
-+	return true;
-+}
-+
-+static void cl_single_cfm_poll_empty_hp(struct cl_hw *cl_hw, u8 sta_idx)
-+{
-+	bool empty = false;
-+	int i = 0;
-+
-+	if (test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags))
-+		return;
-+
-+	while (true) {
-+		spin_lock_bh(&cl_hw->tx_lock_single);
-+		empty = cl_list_hp_empty_sta(cl_hw, sta_idx);
-+		spin_unlock_bh(&cl_hw->tx_lock_single);
-+
-+		if (empty)
-+			return;
-+
-+		if (++i == SINGLE_POLL_TIMEOUT) {
-+			cl_single_cfm_poll_timeout(cl_hw, HIGH_PRIORITY_QUEUE);
-+			return;
-+		}
-+
-+		msleep(20);
-+	}
-+}
-+
-+void cl_single_cfm_poll_empty_sta(struct cl_hw *cl_hw, u8 sta_idx)
-+{
-+	/*
-+	 * Poll all single queues belonging to this station, and poll all
-+	 * packets belonging to this station in the high priority queue.
-+	 */
-+	u8 ac;
-+	u16 queue_idx;
-+
-+	for (ac = 0; ac < AC_MAX; ac++) {
-+		queue_idx = QUEUE_IDX(sta_idx, ac);
-+		cl_single_cfm_poll_empty(cl_hw, queue_idx);
-+	}
-+
-+	cl_single_cfm_poll_empty_hp(cl_hw, sta_idx);
-+}
-+
-+void cl_single_cfm_clear_tim_bit_sta(struct cl_hw *cl_hw, u8 sta_idx)
-+{
-+	u8 ac;
-+	u16 queue_idx;
-+	struct cl_tx_queue *tx_queue = NULL;
-+
-+	for (ac = 0; ac < AC_MAX; ac++) {
-+		queue_idx = QUEUE_IDX(sta_idx, ac);
-+		tx_queue = &cl_hw->tx_queues->single[queue_idx];
-+
-+		spin_lock_bh(&cl_hw->tx_lock_single);
-+		cl_enhanced_tim_clear_tx_single(cl_hw, queue_idx, tx_queue->hw_index,
-+						false, tx_queue->cl_sta, tx_queue->tid);
-+		spin_unlock_bh(&cl_hw->tx_lock_single);
-+	}
-+
-+	tx_queue = &cl_hw->tx_queues->single[HIGH_PRIORITY_QUEUE];
-+
-+	spin_lock_bh(&cl_hw->tx_lock_single);
-+	cl_enhanced_tim_clear_tx_single(cl_hw, HIGH_PRIORITY_QUEUE, tx_queue->hw_index,
-+					false, tx_queue->cl_sta, tx_queue->tid);
-+	spin_unlock_bh(&cl_hw->tx_lock_single);
-+}
-+
-+static int cl_sw_txhdr_init_pool(struct cl_hw *cl_hw, u16 sw_txhdr_pool)
-+{
-+	u16 i = 0;
-+	u32 sw_txhdr_pool_size = sw_txhdr_pool * sizeof(struct cl_sw_txhdr);
-+	struct cl_sw_txhdr *sw_txhdr;
-+
-+	INIT_LIST_HEAD(&cl_hw->head_sw_txhdr_pool);
-+	spin_lock_init(&cl_hw->lock_sw_txhdr_pool);
-+
-+	for (i = 0; i < sw_txhdr_pool; i++) {
-+		sw_txhdr = kzalloc(sizeof(*sw_txhdr), GFP_ATOMIC);
-+
-+		if (unlikely(!sw_txhdr)) {
-+			cl_dbg_verbose(cl_hw, "sw_txhdr NULL\n");
-+			return -1;
-+		}
-+
-+		list_add(&sw_txhdr->list_pool, &cl_hw->head_sw_txhdr_pool);
-+	}
-+
-+	cl_dbg_verbose(cl_hw, " - pool %u, size %u\n", sw_txhdr_pool, sw_txhdr_pool_size);
-+
-+	return 0;
-+}
-+
-+static int cl_sw_txhdr_init_cache(struct cl_hw *cl_hw)
-+{
-+	char sw_txhdr_cache_name[MODULE_NAME_LEN + 32] = {0};
-+
-+	snprintf(sw_txhdr_cache_name, sizeof(sw_txhdr_cache_name),
-+		 "%s_sw_txhdr_cache", THIS_MODULE->name);
-+
-+	cl_hw->sw_txhdr_cache = kmem_cache_create(sw_txhdr_cache_name,
-+						  sizeof(struct cl_sw_txhdr),
-+						  0,
-+						  (SLAB_HWCACHE_ALIGN | SLAB_PANIC),
-+						  NULL);
-+
-+	if (!cl_hw->sw_txhdr_cache) {
-+		cl_dbg_verbose(cl_hw, "sw_txhdr_cache NULL\n");
-+		return -1;
++		if (rssi_sort[WRS_SS_1] > thresholds[i])
++			return cl_wrs_tables_find_rate_idx(wrs_params,
++							   CHNL_BW_20, WRS_SS_1, mcs, WRS_GI_LONG);
 +	}
 +
 +	return 0;
 +}
 +
-+int cl_sw_txhdr_init(struct cl_hw *cl_hw)
++u16 cl_wrs_rssi_find_rate(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			  struct cl_wrs_sta *wrs_sta,
++			  struct cl_wrs_params *wrs_params,
++			  s8 *rssi_sort)
 +{
-+	u16 sw_txhdr_pool = cl_hw->conf->ci_sw_txhdr_pool;
-+
-+	if (sw_txhdr_pool)
-+		return cl_sw_txhdr_init_pool(cl_hw, sw_txhdr_pool);
-+	else
-+		return cl_sw_txhdr_init_cache(cl_hw);
-+}
-+
-+static void cl_sw_txhdr_deinit_pool(struct cl_hw *cl_hw)
-+{
-+	struct cl_sw_txhdr *sw_txhdr, *tmp;
-+
-+	list_for_each_entry_safe(sw_txhdr, tmp, &cl_hw->head_sw_txhdr_pool, list_pool) {
-+		list_del(&sw_txhdr->list_pool);
-+		kfree(sw_txhdr);
-+	}
-+}
-+
-+static void cl_sw_txhdr_deinit_cache(struct cl_hw *cl_hw)
-+{
-+	kmem_cache_destroy(cl_hw->sw_txhdr_cache);
-+}
-+
-+void cl_sw_txhdr_deinit(struct cl_hw *cl_hw)
-+{
-+	if (cl_hw->conf->ci_sw_txhdr_pool)
-+		cl_sw_txhdr_deinit_pool(cl_hw);
-+	else
-+		cl_sw_txhdr_deinit_cache(cl_hw);
-+}
-+
-+static inline struct cl_sw_txhdr *cl_sw_txhdr_alloc_pool(struct cl_hw *cl_hw)
-+{
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+
-+	spin_lock_bh(&cl_hw->lock_sw_txhdr_pool);
-+	sw_txhdr = list_first_entry_or_null(&cl_hw->head_sw_txhdr_pool,
-+					    struct cl_sw_txhdr, list_pool);
-+
-+	if (sw_txhdr) {
-+		list_del(&sw_txhdr->list_pool);
-+		spin_unlock_bh(&cl_hw->lock_sw_txhdr_pool);
-+		return sw_txhdr;
-+	}
-+
-+	spin_unlock_bh(&cl_hw->lock_sw_txhdr_pool);
-+	return NULL;
-+}
-+
-+static inline struct cl_sw_txhdr *cl_sw_txhdr_alloc_cache(struct cl_hw *cl_hw)
-+{
-+	return kmem_cache_alloc(cl_hw->sw_txhdr_cache, GFP_ATOMIC);
-+}
-+
-+struct cl_sw_txhdr *cl_sw_txhdr_alloc(struct cl_hw *cl_hw)
-+{
-+	if (cl_hw->conf->ci_sw_txhdr_pool)
-+		return cl_sw_txhdr_alloc_pool(cl_hw);
-+	else
-+		return cl_sw_txhdr_alloc_cache(cl_hw);
-+}
-+
-+static inline void cl_sw_txhdr_free_pool(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	spin_lock_bh(&cl_hw->lock_sw_txhdr_pool);
-+	list_add_tail(&sw_txhdr->list_pool, &cl_hw->head_sw_txhdr_pool);
-+	spin_unlock_bh(&cl_hw->lock_sw_txhdr_pool);
-+}
-+
-+static inline void cl_sw_txhdr_free_cache(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	kmem_cache_free(cl_hw->sw_txhdr_cache, sw_txhdr);
-+}
-+
-+void cl_sw_txhdr_free(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	if (cl_hw->conf->ci_sw_txhdr_pool)
-+		cl_sw_txhdr_free_pool(cl_hw, sw_txhdr);
-+	else
-+		cl_sw_txhdr_free_cache(cl_hw, sw_txhdr);
-+}
-+
-+#define CL_AMSDU_HDR_LEN 14
-+
-+static bool cl_tx_amsdu_is_sw(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+			      struct sk_buff *skb, u16 pkt_len)
-+{
-+	bool syn_rst_push = false;
-+	bool tcp_ack = false;
-+
-+	if (cl_hw->conf->ci_tx_sw_amsdu_max_packets <= 1)
-+		return false;
-+
-+	tcp_ack = cl_is_tcp_ack(skb, &syn_rst_push);
-+
-+	if (!tcp_ack || syn_rst_push)
-+		return false;
-+
-+	if ((cl_wrs_api_get_tx_sta_data_rate(cl_sta) * cl_sta->ampdu_min_spacing) <=
-+	    (pkt_len << 3))
-+		return false;
-+
-+	return true;
-+}
-+
-+static int cl_tx_amsdu_anchor_set(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+				  struct sk_buff *skb, u8 tid)
-+{
-+	/*
-+	 * Packet length calculation in HW -
-+	 * Add 802.11 header (maximum possible size) instead if 802.3
-+	 * Add AMSDU header
-+	 * Add RFC1042 header (according to ether-type)
-+	 * Add IV and ICV (if there is encryption)
-+	 */
-+	struct cl_amsdu_ctrl *amsdu_anchor = &cl_sta->amsdu_anchor[tid];
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_key_conf *key_conf = tx_info->control.hw_key;
-+	u16 ethertype = (skb->data[12] << 8) | skb->data[13];
-+	u16 pkt_len = skb->len + CL_WLAN_HEADER_MAX_SIZE;
-+
-+	if (key_conf)
-+		pkt_len += (key_conf->iv_len + key_conf->icv_len);
-+
-+	if (ethertype >= ETH_P_802_3_MIN)
-+		pkt_len += sizeof(rfc1042_header);
-+
-+	amsdu_anchor->rem_len = amsdu_anchor->max_len - pkt_len;
-+	amsdu_anchor->packet_cnt = 1;
-+	amsdu_anchor->is_sw_amsdu = cl_tx_amsdu_is_sw(cl_hw, cl_sta, skb, pkt_len);
-+
-+	return CL_AMSDU_ANCHOR_SET;
-+}
-+
-+static void cl_tx_amsdu_anchor_umacdesc_update(struct txdesc *txdesc, u8 idx,
-+					       u16 len, dma_addr_t dma_addr,
-+					       bool is_padding)
-+{
-+	struct lmacapi *umacdesc = &txdesc->umacdesc;
-+
-+	umacdesc->packet_len[idx] = cpu_to_le16(len);
-+	umacdesc->packet_addr[idx] = cpu_to_le32(dma_addr);
-+	txdesc->host_info.packet_cnt++;
-+
-+	/* Update padding bit of current msdu sub-frame */
-+	if (is_padding)
-+		txdesc->host_info.host_padding |= BIT(idx);
-+}
-+
-+static struct cl_amsdu_txhdr *cl_tx_amsdu_txhdr_alloc(struct cl_hw *cl_hw)
-+{
-+	if (cl_hw->conf->ci_amsdu_txhdr_pool) {
-+		struct cl_amsdu_txhdr *amsdu_txhdr =
-+			list_first_entry_or_null(&cl_hw->head_amsdu_txhdr_pool,
-+						 struct cl_amsdu_txhdr,
-+						 list_pool);
-+
-+		if (amsdu_txhdr) {
-+			list_del(&amsdu_txhdr->list_pool);
-+			return amsdu_txhdr;
-+		}
-+
-+		return NULL;
-+	} else {
-+		return kmem_cache_alloc(cl_hw->amsdu_txhdr_cache, GFP_ATOMIC);
-+	}
-+}
-+
-+static void _cl_tx_amsdu_transfer_single(struct cl_hw *cl_hw,
-+					 struct sk_buff *skb,
-+					 struct cl_sta *cl_sta,
-+					 u8 tid)
-+{
-+	struct ieee80211_tx_info *tx_info;
-+
-+	tx_info = IEEE80211_SKB_CB(skb);
-+	tx_info->flags &= ~IEEE80211_TX_CTL_AMPDU;
-+	tx_info->control.flags &= ~IEEE80211_TX_CTRL_AMSDU;
-+
-+	if (cl_tx_8023_to_wlan(cl_hw, skb, cl_sta, tid) == 0) {
-+		cl_hw->tx_packet_cntr.transfer.agg_to_single++;
-+		cl_tx_single(cl_hw, cl_sta, skb, false, false);
-+	}
-+}
-+
-+static void cl_tx_amsdu_set_sw_sub_amsdu_hdr(struct sk_buff *skb)
-+{
-+	u16 ethertype = (skb->data[12] << 8) | skb->data[13];
-+	int rfc1042_len = 0;
-+	void *data;
-+	struct ethhdr *amsdu_hdr;
-+
-+	if (ethertype >= ETH_P_802_3_MIN)
-+		rfc1042_len = sizeof(rfc1042_header);
-+
-+	data = skb_push(skb, rfc1042_len + 2);
-+	memmove(data, data + rfc1042_len + 2, 2 * ETH_ALEN);
-+
-+	amsdu_hdr = (struct ethhdr *)data;
-+	amsdu_hdr->h_proto = cpu_to_be16(skb->len - ETH_HLEN);
-+
-+	memcpy(data + ETH_HLEN, rfc1042_header, rfc1042_len);
-+}
-+
-+static int cl_tx_amsdu_add_sw_amsdu_hdr(struct cl_hw *cl_hw,
-+					struct cl_amsdu_ctrl *amsdu_anchor)
-+{
-+	struct cl_sw_txhdr *anchor_sw_txhdr = amsdu_anchor->sw_txhdr;
-+	struct sk_buff *skb = anchor_sw_txhdr->skb;
-+	struct cl_sta *cl_sta = anchor_sw_txhdr->cl_sta;
-+	struct ieee80211_hdr hdr;
-+	u16 ethertype = (skb->data[12] << 8) | skb->data[13];
-+	u16 hdrlen = cl_tx_prepare_wlan_hdr(cl_hw, cl_sta, skb, &hdr);
-+	int rfc1042_len = 0;
-+	int head_need = 0;
-+	u8 enc_len = cl_key_get_cipher_len(skb);
-+	u16 qos_ctrl = anchor_sw_txhdr->tid | IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+
-+	if (!hdrlen)
-+		return -EINVAL;
-+
-+	if (ethertype >= ETH_P_802_3_MIN)
-+		rfc1042_len = sizeof(rfc1042_header);
-+
-+	amsdu_anchor->hdrlen = hdrlen;
-+	head_need = hdrlen + enc_len + rfc1042_len - skb_headroom(skb);
-+	if (head_need > 0) {
-+		head_need = ((head_need + 3) & ~3);
-+		if (pskb_expand_head(skb, head_need, 0, GFP_ATOMIC))
-+			return -ENOMEM;
-+	}
-+
-+	cl_tx_amsdu_set_sw_sub_amsdu_hdr(skb);
-+
-+	skb_push(skb, hdrlen + enc_len);
-+	memcpy(skb->data, &hdr, hdrlen - 2);
-+	memcpy(skb->data + hdrlen - 2, &qos_ctrl, 2);
-+	skb_reset_mac_header(skb);
-+	anchor_sw_txhdr->txdesc.e2w_natt_param.hdr_conv_enable = false;
-+	anchor_sw_txhdr->hdr80211 = (struct ieee80211_hdr *)skb->data;
-+
-+	return 0;
-+}
-+
-+static int cl_tx_amsdu_sw_aggregate(struct cl_hw *cl_hw,
-+				    struct cl_amsdu_ctrl *amsdu_anchor,
-+				    struct sk_buff *skb)
-+{
-+	struct cl_sw_txhdr *anchor_sw_txhdr = amsdu_anchor->sw_txhdr;
-+	struct sk_buff *anchor_skb = anchor_sw_txhdr->skb;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(anchor_skb);
-+	struct ieee80211_key_conf *key_conf = tx_info->control.hw_key;
-+	u16 total_frame_len = 0;
-+	struct cl_tx_queue *tx_queue = anchor_sw_txhdr->tx_queue;
-+	int head_pad = 0;
-+	int sub_pad = 0;
-+	bool syn_rst_push = false;
-+	bool tcp_ack = cl_is_tcp_ack(skb, &syn_rst_push);
-+
-+	/* Worst case: rfc1042(6) + ET(2) + pad(2) = 10 */
-+	if (!tcp_ack ||
-+	    (skb_tailroom(anchor_skb) < (skb->len + 10))) {
-+		if (tx_queue->num_packets == 1)
-+			cl_txq_sched(cl_hw, tx_queue);
-+		cl_tx_amsdu_anchor_init(amsdu_anchor);
-+		return cl_tx_amsdu_anchor_set(cl_hw, anchor_sw_txhdr->cl_sta,
-+					      skb, anchor_sw_txhdr->tid);
-+	}
-+
-+	if (amsdu_anchor->packet_cnt == 1 &&
-+	    cl_tx_amsdu_add_sw_amsdu_hdr(cl_hw, amsdu_anchor))
-+		return CL_AMSDU_FAILED;
-+
-+	cl_tx_amsdu_set_sw_sub_amsdu_hdr(skb);
-+	sub_pad = CL_SKB_DATA_ALIGN_PADS(anchor_skb->len -
-+					 amsdu_anchor->hdrlen);
-+	memset(skb_push(skb, sub_pad), 0, sub_pad);
-+	memcpy(skb_put(anchor_skb, skb->len), skb->data, skb->len);
-+
-+	kfree_skb(skb);
-+	amsdu_anchor->packet_cnt++;
-+	anchor_sw_txhdr->sw_amsdu_packet_cnt++;
-+	head_pad = CL_SKB_DATA_ALIGN_PADS(anchor_skb->data);
-+
-+	if (head_pad) {
-+		anchor_sw_txhdr->map_len = anchor_skb->len + head_pad;
-+		anchor_sw_txhdr->txdesc.host_info.host_padding |= BIT(0);
-+	} else {
-+		anchor_sw_txhdr->map_len = anchor_skb->len;
-+		anchor_sw_txhdr->txdesc.host_info.host_padding = 0;
-+	}
-+
-+	total_frame_len = anchor_skb->len;
-+	if (key_conf)
-+		total_frame_len += key_conf->icv_len;
-+
-+	anchor_sw_txhdr->txdesc.umacdesc.packet_len[0] = cpu_to_le16(total_frame_len);
-+
-+	if (amsdu_anchor->packet_cnt == cl_hw->conf->ci_tx_sw_amsdu_max_packets ||
-+	    syn_rst_push) {
-+		if (tx_queue->num_packets == 1)
-+			cl_txq_sched(cl_hw, tx_queue);
-+		cl_tx_amsdu_anchor_init(amsdu_anchor);
-+	}
-+
-+	return CL_AMSDU_SUB_FRAME_SET;
-+}
-+
-+void cl_tx_amsdu_anchor_init(struct cl_amsdu_ctrl *amsdu_anchor)
-+{
-+	amsdu_anchor->rem_len = amsdu_anchor->max_len;
-+	amsdu_anchor->sw_txhdr = NULL;
-+	amsdu_anchor->packet_cnt = 0;
-+	amsdu_anchor->is_sw_amsdu = false;
-+}
-+
-+void cl_tx_amsdu_anchor_reset(struct cl_amsdu_ctrl *amsdu_anchor)
-+{
-+	amsdu_anchor->sw_txhdr = NULL;
-+	amsdu_anchor->rem_len = 0;
-+	amsdu_anchor->max_len = 0;
-+	amsdu_anchor->packet_cnt = 0;
-+	amsdu_anchor->is_sw_amsdu = false;
-+}
-+
-+void cl_tx_amsdu_set_max_len(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u8 tid)
-+{
-+	struct ieee80211_sta_vht_cap *vht_cap = &cl_sta->sta->vht_cap;
-+	struct cl_amsdu_ctrl *amsdu_anchor = &cl_sta->amsdu_anchor[tid];
-+	u32 length = U32_MAX;
-+
-+	amsdu_anchor->max_len = 3839;
-+
-+	if (cl_band_is_6g(cl_hw)) {
-+		u16 capa = le16_to_cpu(cl_sta->sta->he_6ghz_capa.capa);
-+
-+		length = (capa & IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LEN) >>
-+			HE_6GHZ_CAP_MAX_MPDU_LEN_OFFSET;
-+	} else if (vht_cap->vht_supported) {
-+		length = vht_cap->cap & IEEE80211_VHT_CAP_MAX_MPDU_MASK;
-+	}
-+
-+	switch (length) {
-+	case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895:
-+		amsdu_anchor->max_len = 3895;
++	u16 rate_idx = 0;
++
++	if (wrs_params->initial_rate_idx != WRS_INVALID_RATE)
++		return wrs_params->initial_rate_idx;
++
++	switch (wrs_sta->mode) {
++	case WRS_MODE_HE:
++		rate_idx = cl_wrs_rssi_find_rate_ht_vht_he(cl_hw, wrs_db, wrs_sta, wrs_params,
++							   rssi_sort, rssi_threshold_he);
 +		break;
-+	case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991:
-+		amsdu_anchor->max_len = 7991;
++	case WRS_MODE_VHT:
++		rate_idx = cl_wrs_rssi_find_rate_ht_vht_he(cl_hw, wrs_db, wrs_sta, wrs_params,
++							   rssi_sort, rssi_threshold_vht);
 +		break;
-+	case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454:
-+		amsdu_anchor->max_len = 11454;
++	case WRS_MODE_HT:
++		rate_idx = cl_wrs_rssi_find_rate_ht_vht_he(cl_hw, wrs_db, wrs_sta, wrs_params,
++							   rssi_sort, rssi_threshold_ht);
++		break;
++	case WRS_MODE_OFDM:
++		rate_idx = cl_wrs_rssi_find_rate_cck_ofdm(wrs_sta, rssi_sort,
++							  rssi_threshold_ofdm);
++		break;
++	case WRS_MODE_CCK:
++		rate_idx = cl_wrs_rssi_find_rate_cck_ofdm(wrs_sta, rssi_sort,
++							  rssi_threshold_cck);
 +		break;
 +	default:
 +		break;
 +	}
 +
-+	amsdu_anchor->rem_len = amsdu_anchor->max_len;
++	if (rate_idx == WRS_INVALID_RATE)
++		rate_idx = 0;
 +
-+	cl_dbg_trace(cl_hw, "AMSDU supported - sta_idx=%u, max_len=%d\n",
-+		     cl_sta->sta_idx, amsdu_anchor->max_len);
-+}
++	wrs_pr_trace(wrs_db,
++		     "[%s] Select rate based rssi - sta=%u, rssi [%d,%d,%d,%d], "
++		     "rate_idx=%u, bw=%u, nss=%u, mcs=%u\n",
++		     WRS_TYPE_STR(wrs_params->type),
++		     wrs_sta->sta_idx,
++		     rssi_sort[0],
++		     rssi_sort[1],
++		     rssi_sort[2],
++		     rssi_sort[3],
++		     rate_idx,
++		     wrs_params->table[rate_idx].rate.bw,
++		     wrs_params->table[rate_idx].rate.nss,
++		     wrs_params->table[rate_idx].rate.mcs);
 +
-+void cl_tx_amsdu_first_sub_frame(struct cl_sw_txhdr *sw_txhdr, struct cl_sta *cl_sta,
-+				 struct sk_buff *skb, u8 tid)
-+{
-+	/* Set the anchor sw_txhdr */
-+	cl_sta->amsdu_anchor[tid].sw_txhdr = sw_txhdr;
-+
-+	INIT_LIST_HEAD(&sw_txhdr->amsdu_txhdr.list);
-+	sw_txhdr->amsdu_txhdr.skb = skb;
-+}
-+
-+void cl_tx_amsdu_flush_sub_frames(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	struct cl_amsdu_txhdr *amsdu_txhdr = NULL, *tmp = NULL;
-+	struct sk_buff *sub_skb = NULL;
-+
-+	/* Free mid & last AMSDU sub frames */
-+	list_for_each_entry_safe(amsdu_txhdr, tmp, &sw_txhdr->amsdu_txhdr.list, list) {
-+		sub_skb = amsdu_txhdr->skb;
-+		list_del(&amsdu_txhdr->list);
-+
-+		dma_unmap_single(cl_hw->chip->dev, amsdu_txhdr->dma_addr,
-+				 (size_t)sub_skb->len, DMA_TO_DEVICE);
-+		kfree_skb(sub_skb);
-+		cl_tx_amsdu_txhdr_free(cl_hw, amsdu_txhdr);
-+		cl_hw->tx_packet_cntr.drop.queue_flush++;
-+		sw_txhdr->cl_vif->trfc_cntrs[sw_txhdr->ac].tx_dropped++;
-+	}
-+
-+	/* Free first AMSDU sub frame */
-+	kfree_skb(sw_txhdr->skb);
-+	cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+}
-+
-+void cl_tx_amsdu_transfer_single(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	/*
-+	 * Transfer all skbs in sw_txhdr to a temporary list, free sw_txhdr,
-+	 * and then push the temporary list to the single path.
-+	 */
-+	struct cl_amsdu_txhdr *amsdu_txhdr, *tmp;
-+	struct sk_buff *skb;
-+	struct cl_sta *cl_sta = sw_txhdr->cl_sta;
-+	u8 tid = sw_txhdr->tid;
-+
-+	/* Transfer first AMSDU sub frame */
-+	_cl_tx_amsdu_transfer_single(cl_hw, sw_txhdr->skb, cl_sta, tid);
-+
-+	/* Transfer mid & last AMSDU sub frames */
-+	list_for_each_entry_safe(amsdu_txhdr, tmp, &sw_txhdr->amsdu_txhdr.list, list) {
-+		skb = amsdu_txhdr->skb;
-+
-+		list_del(&amsdu_txhdr->list);
-+		dma_unmap_single(cl_hw->chip->dev, amsdu_txhdr->dma_addr,
-+				 (size_t)skb->len, DMA_TO_DEVICE);
-+		cl_tx_amsdu_txhdr_free(cl_hw, amsdu_txhdr);
-+
-+		_cl_tx_amsdu_transfer_single(cl_hw, skb, cl_sta, tid);
-+	}
-+}
-+
-+int cl_tx_amsdu_set(struct cl_hw *cl_hw, struct cl_sta *cl_sta, struct sk_buff *skb, u8 tid)
-+{
-+	struct cl_amsdu_ctrl *amsdu_anchor = &cl_sta->amsdu_anchor[tid];
-+	struct cl_sw_txhdr *anchor_sw_txhdr = amsdu_anchor->sw_txhdr;
-+	u16 packet_len = skb->len;
-+	u8 packet_cnt;
-+	bool is_mesh = ieee80211_vif_is_mesh(cl_sta->cl_vif->vif);
-+	u8 packet_cnt_max = cl_hw->txamsdu_en;
-+
-+	/* Check if anchor exist */
-+	if (!anchor_sw_txhdr) {
-+		/* Sanity check - skb len < amsdu_max_len */
-+		if (unlikely(packet_len > amsdu_anchor->max_len) || is_mesh)
-+			return CL_AMSDU_SKIP;
-+		else
-+			return cl_tx_amsdu_anchor_set(cl_hw, cl_sta, skb, tid);
-+	}
-+
-+	if (amsdu_anchor->is_sw_amsdu)
-+		return cl_tx_amsdu_sw_aggregate(cl_hw, amsdu_anchor, skb);
-+
-+	/*
-+	 * 1. Check if there is enough space in AMSDU
-+	 * 2. Check if A-MSDU packet count is less than maximum.
-+	 */
-+	packet_cnt = amsdu_anchor->packet_cnt;
-+
-+	if (amsdu_anchor->rem_len > packet_len &&
-+	    packet_cnt < packet_cnt_max &&
-+	    !is_mesh) {
-+		struct cl_amsdu_txhdr *amsdu_txhdr = NULL;
-+		u8 hdr_pads = CL_SKB_DATA_ALIGN_PADS(skb->data);
-+		u16 ethertype = (skb->data[12] << 8) | skb->data[13];
-+		u16 total_packet_len = packet_len + hdr_pads;
-+		u16 curr_amsdu_len = amsdu_anchor->max_len - amsdu_anchor->rem_len;
-+		dma_addr_t dma_addr;
-+
-+		if (ethertype >= ETH_P_802_3_MIN)
-+			total_packet_len += sizeof(rfc1042_header);
-+
-+		/*
-+		 * High number of MSDUs in AMSDU can cause underrun in the
-+		 * E2W module.
-+		 * Therefore, host is required to set Num MSDU in AMSDU using
-+		 * the following rules
-+		 *
-+		 * AMSDU Length      AMSDU agg size
-+		 * len  < 4*256      3 or less
-+		 * len >= 4*256      4 or less
-+		 * len >= 5*256      5 or less
-+		 * len >= 6*256      6 or less
-+		 * len >= 7*256      7 or less
-+		 * len >= 8*256      8 or less
-+		 */
-+		if (packet_cnt >= CL_AMSDU_MIN_AGG_SIZE) {
-+			u16 new_amsdu_len = curr_amsdu_len + packet_len;
-+
-+			if (new_amsdu_len < ((packet_cnt + 1) * CL_AMSDU_CONST_LEN))
-+				return cl_tx_amsdu_anchor_set(cl_hw, cl_sta, skb, tid);
-+		}
-+
-+		amsdu_txhdr = cl_tx_amsdu_txhdr_alloc(cl_hw);
-+		if (unlikely(!amsdu_txhdr)) {
-+			kfree_skb(skb);
-+			cl_dbg_err(cl_hw, "AMSDU FAILED to alloc amsdu txhdr\n");
-+			cl_hw->tx_packet_cntr.drop.amsdu_alloc_fail++;
-+			cl_sta->cl_vif->trfc_cntrs[anchor_sw_txhdr->ac].tx_errors++;
-+			return CL_AMSDU_FAILED;
-+		}
-+
-+		amsdu_txhdr->skb = skb;
-+		list_add_tail(&amsdu_txhdr->list, &anchor_sw_txhdr->amsdu_txhdr.list);
-+
-+		/* Update anchor fields */
-+		amsdu_anchor->rem_len -= total_packet_len;
-+		amsdu_anchor->packet_cnt++;
-+
-+		/* Get DMA address for skb */
-+		dma_addr = dma_map_single(cl_hw->chip->dev, (u8 *)skb->data - hdr_pads,
-+					  packet_len + hdr_pads, DMA_TO_DEVICE);
-+		if (WARN_ON(dma_mapping_error(cl_hw->chip->dev, dma_addr))) {
-+			kfree_skb(skb);
-+			cl_tx_amsdu_txhdr_free(cl_hw, amsdu_txhdr);
-+			cl_dbg_err(cl_hw, "dma_mapping_error\n");
-+			cl_hw->tx_packet_cntr.drop.amsdu_dma_map_err++;
-+			cl_sta->cl_vif->trfc_cntrs[anchor_sw_txhdr->ac].tx_errors++;
-+			return CL_AMSDU_FAILED;
-+		}
-+
-+		/* Add AMSDU HDR len of the first packet */
-+		if (amsdu_anchor->packet_cnt == 2)
-+			total_packet_len += CL_AMSDU_HDR_LEN;
-+
-+		amsdu_txhdr->dma_addr = dma_addr;
-+
-+		/* Update sw_txhdr packet_len, packet_addr, packet_cnt fields */
-+		cl_tx_amsdu_anchor_umacdesc_update(&anchor_sw_txhdr->txdesc, packet_cnt,
-+						   packet_len, dma_addr, hdr_pads);
-+
-+		/* If we reached max AMSDU payload count, mark anchor as NULL */
-+		if (amsdu_anchor->packet_cnt >= packet_cnt_max)
-+			cl_tx_amsdu_anchor_init(amsdu_anchor);
-+
-+		return CL_AMSDU_SUB_FRAME_SET;
-+	}
-+	/* Not enough space remain, set new anchor length is ok */
-+	if (unlikely(packet_len > amsdu_anchor->max_len) || is_mesh) {
-+		cl_tx_amsdu_anchor_init(amsdu_anchor);
-+		return CL_AMSDU_SKIP;
-+	} else {
-+		return cl_tx_amsdu_anchor_set(cl_hw, cl_sta, skb, tid);
-+	}
-+}
-+
-+void cl_tx_amsdu_unset(struct cl_sw_txhdr *sw_txhdr)
-+{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
-+
-+	tx_info->control.flags &= ~IEEE80211_TX_CTRL_AMSDU;
-+
-+	sw_txhdr->txdesc.e2w_txhdr_param.qos_ctrl &=
-+				~cpu_to_le16(IEEE80211_QOS_CTL_A_MSDU_PRESENT);
++	return rate_idx;
 +}
 +
 +/*
-+ * Two options for allocating cl_amsdu_txhdr:
-+ * 1) pool
-+ * 2) cache
++ * Section #2:
++ * rssi protect.
 + */
-+
-+static int cl_tx_amsdu_txhdr_init_pool(struct cl_hw *cl_hw)
++static void cl_wrs_rssi_prot_set_avg(struct cl_wrs_sta *wrs_sta, s8 avg)
 +{
-+	u16 amsdu_txhdr_pool = cl_hw->conf->ci_amsdu_txhdr_pool;
-+	u32 i = 0;
-+	u32 amsdu_txhdr_pool_size = amsdu_txhdr_pool * sizeof(struct cl_amsdu_txhdr);
-+	struct cl_amsdu_txhdr *amsdu_txhdr;
++	struct cl_wrs_rssi_prot_db *rssi_prot_db = &wrs_sta->rssi_prot_db;
 +
-+	INIT_LIST_HEAD(&cl_hw->head_amsdu_txhdr_pool);
++	memset(rssi_prot_db->samples_old, avg, WRS_RSSI_PROTECT_BUF_SZ_OLD);
++	memset(rssi_prot_db->samples_new, avg, WRS_RSSI_PROTECT_BUF_SZ_NEW);
++	rssi_prot_db->sum = avg << WRS_RSSI_PROTECT_SHIFT;
++}
 +
-+	for (i = 0; i < amsdu_txhdr_pool; i++) {
-+		amsdu_txhdr = kzalloc(sizeof(*amsdu_txhdr), GFP_ATOMIC);
++static s8 cl_wrs_rssi_prot_add_smpl(struct cl_wrs_sta *wrs_sta, s8 rssi_eq)
++{
++	struct cl_wrs_rssi_prot_db *rssi_prot_db = &wrs_sta->rssi_prot_db;
++	u8 curr_idx_old = rssi_prot_db->curr_idx_old;
++	u8 curr_idx_new = rssi_prot_db->curr_idx_new;
 +
-+		if (unlikely(!amsdu_txhdr)) {
-+			cl_dbg_err(cl_hw, "amsdu_txhdr NULL\n");
-+			return -1;
-+		}
++	rssi_prot_db->sum +=
++		rssi_prot_db->samples_new[curr_idx_new] - rssi_prot_db->samples_old[curr_idx_old];
++	rssi_prot_db->samples_old[curr_idx_old] = rssi_prot_db->samples_new[curr_idx_new];
++	rssi_prot_db->samples_new[curr_idx_new] = rssi_eq;
 +
-+		list_add(&amsdu_txhdr->list_pool, &cl_hw->head_amsdu_txhdr_pool);
++	rssi_prot_db->curr_idx_old =
++		WRS_INC_POW2(rssi_prot_db->curr_idx_old, WRS_RSSI_PROTECT_BUF_SZ_OLD);
++	WRS_INC(rssi_prot_db->curr_idx_new, WRS_RSSI_PROTECT_BUF_SZ_NEW);
++
++	return (s8)(wrs_sta->rssi_prot_db.sum >> WRS_RSSI_PROTECT_SHIFT);
++}
++
++static bool cl_wrs_rssi_prot_decision_up(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++					 struct cl_wrs_sta *wrs_sta,
++					 struct cl_wrs_params *wrs_params,
++					 s8 rssi_avg, s8 rssi_eq,
++					 s8 *rssi_sort, u8 up_rate_idx)
++{
++	/* Decide UP only if all new samples are greater than old average */
++	s8 *samples_new = wrs_sta->rssi_prot_db.samples_new;
++	s8 up_thr = rssi_avg + wrs_db->rssi_protect_up_thr;
++	u8 i = 0;
++
++	for (i = 0; i < WRS_RSSI_PROTECT_BUF_SZ_NEW; i++)
++		if (samples_new[i] <= up_thr)
++			return false;
++
++	if (wrs_db->rssi_protect_mode == WRS_RSSI_PROT_MODE_RSSI) {
++		u16 rate_idx_old = wrs_params->rate_idx;
++		u16 rate_idx_new = cl_wrs_rssi_find_rate(cl_hw, wrs_db, wrs_sta,
++							 wrs_params, rssi_sort);
++		struct cl_wrs_rate *rate_old = &wrs_params->table[rate_idx_old].rate;
++		struct cl_wrs_rate *rate_new = &wrs_params->table[rate_idx_new].rate;
++		u16 data_rate_old = cl_data_rates_get_x10(wrs_sta->mode, rate_old->bw,
++							  rate_old->nss, rate_old->mcs,
++							  rate_old->gi);
++		u16 data_rate_new = cl_data_rates_get_x10(wrs_sta->mode, rate_new->bw,
++							  rate_new->nss, rate_new->mcs,
++							  rate_new->gi);
++
++		if (rate_idx_old == rate_idx_new || data_rate_old >= data_rate_new)
++			rate_idx_new = up_rate_idx;
++
++		wrs_pr_info(wrs_db, "[%s] Increase rate based on RSSI - old [%u], new [%u]\n",
++			    WRS_TYPE_STR(wrs_params->type), rate_idx_old, rate_idx_new);
++		cl_wrs_decision_update(wrs_db, wrs_sta, wrs_params,
++				       WRS_DECISION_UP_RSSI, rate_idx_new);
++		cl_wrs_rate_params_update(cl_hw, wrs_db, wrs_sta,
++					  wrs_params, rate_idx_new, true, false);
++	} else {
++		cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params,
++				     WRS_DECISION_UP_RSSI, up_rate_idx);
 +	}
 +
-+	cl_dbg_verbose(cl_hw, " - pool %u, size %u\n",
-+		       amsdu_txhdr_pool, amsdu_txhdr_pool_size);
++	cl_wrs_tables_reset(wrs_db, wrs_sta, wrs_params);
++	cl_wrs_rssi_prot_set_avg(wrs_sta, rssi_eq);
++
++	return true;
++}
++
++static bool cl_wrs_rssi_prot_decision_down(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++					   struct cl_wrs_sta *wrs_sta,
++					   struct cl_wrs_params *wrs_params,
++					   s8 rssi_avg, s8 rssi_eq,
++					   s8 *rssi_sort, u8 down_rate_idx)
++{
++	/* Decide DOWN only if all new samples are smaller than old average */
++	s8 *samples_new = wrs_sta->rssi_prot_db.samples_new;
++	s8 dn_thr = rssi_avg - wrs_db->rssi_protect_dn_thr;
++	u8 i = 0;
++
++	if (wrs_params->rate_idx == 0)
++		return false;
++
++	for (i = 0; i < WRS_RSSI_PROTECT_BUF_SZ_NEW; i++)
++		if (samples_new[i] >= dn_thr)
++			return false;
++
++	if (wrs_db->rssi_protect_mode == WRS_RSSI_PROT_MODE_RSSI) {
++		u16 rate_idx_old = wrs_params->rate_idx;
++		u16 rate_idx_new = cl_wrs_rssi_find_rate(cl_hw, wrs_db, wrs_sta,
++							 wrs_params, rssi_sort);
++		struct cl_wrs_rate *rate_old = &wrs_params->table[rate_idx_old].rate;
++		struct cl_wrs_rate *rate_new = &wrs_params->table[rate_idx_new].rate;
++		u16 data_rate_old = cl_data_rates_get_x10(wrs_sta->mode, rate_old->bw,
++							  rate_old->nss, rate_old->mcs,
++							  rate_old->gi);
++		u16 data_rate_new = cl_data_rates_get_x10(wrs_sta->mode, rate_new->bw,
++							  rate_new->nss, rate_new->mcs,
++							  rate_new->gi);
++
++		if (rate_idx_old == rate_idx_new || data_rate_old <= data_rate_new)
++			rate_idx_new = down_rate_idx;
++
++		wrs_pr_info(wrs_db, "[%s] Decrease rate based on RSSI - old [%u], new [%u]\n",
++			    WRS_TYPE_STR(wrs_params->type), rate_idx_old, rate_idx_new);
++		cl_wrs_decision_update(wrs_db, wrs_sta, wrs_params,
++				       WRS_DECISION_DOWN_RSSI, rate_idx_new);
++		cl_wrs_rate_params_update(cl_hw, wrs_db, wrs_sta, wrs_params,
++					  rate_idx_new, true, false);
++	} else {
++		cl_wrs_decision_make(cl_hw, wrs_db, wrs_sta, wrs_params,
++				     WRS_DECISION_DOWN_RSSI, down_rate_idx);
++	}
++
++	cl_wrs_tables_reset(wrs_db, wrs_sta, wrs_params);
++	cl_wrs_rssi_prot_set_avg(wrs_sta, rssi_eq);
++
++	return true;
++}
++
++void cl_wrs_rssi_prot_start(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	s8 rssi_sort[MAX_ANTENNAS] = {0};
++	s8 rssi_eq = 0;
++
++	if (!cl_hw->wrs_db.rssi_protect_en)
++		return;
++
++	rssi_eq = cl_wrs_rssi_eq_calc(cl_hw, wrs_sta, false, rssi_sort);
++	cl_wrs_rssi_prot_set_avg(wrs_sta, rssi_eq);
++}
++
++bool cl_wrs_rssi_prot_decision(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++			       struct cl_wrs_sta *wrs_sta,
++			       struct cl_wrs_params *wrs_params,
++			       bool up_rate_valid,
++			       u8 up_rate_idx, u8 down_rate_idx)
++{
++	s8 rssi_avg = 0;
++	s8 rssi_eq = 0;
++	s8 rssi_sort[MAX_ANTENNAS] = {0};
++
++	rssi_eq = cl_wrs_rssi_eq_calc(cl_hw, wrs_sta, true, rssi_sort);
++	rssi_avg = cl_wrs_rssi_prot_add_smpl(wrs_sta, rssi_eq);
++
++	if (up_rate_valid)
++		if (cl_wrs_rssi_prot_decision_up(cl_hw, wrs_db, wrs_sta, wrs_params, rssi_avg,
++						 rssi_eq, rssi_sort, up_rate_idx))
++			return true;
++
++	return cl_wrs_rssi_prot_decision_down(cl_hw, wrs_db, wrs_sta, wrs_params, rssi_avg,
++					      rssi_eq, rssi_sort, down_rate_idx);
++}
++
++static void cl_wrs_sta_info_set_he(struct cl_wrs_sta *wrs_sta)
++{
++	wrs_sta->mode = WRS_MODE_HE;
++
++	wrs_sta->gi_cap[CHNL_BW_20] = WRS_GI_VSHORT;
++	wrs_sta->gi_cap[CHNL_BW_40] = WRS_GI_VSHORT;
++	wrs_sta->gi_cap[CHNL_BW_80] = WRS_GI_VSHORT;
++	wrs_sta->gi_cap[CHNL_BW_160] = WRS_GI_VSHORT;
++}
++
++static void cl_wrs_sta_info_set_vht(struct cl_wrs_sta *wrs_sta,
++				    struct ieee80211_sta_vht_cap *vht_cap,
++				    struct ieee80211_sta_ht_cap *ht_cap)
++{
++	wrs_sta->mode = WRS_MODE_VHT;
++
++	wrs_sta->gi_cap[CHNL_BW_20] =
++		(ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ? WRS_GI_SHORT : WRS_GI_LONG;
++	wrs_sta->gi_cap[CHNL_BW_40] =
++		(ht_cap->cap & IEEE80211_HT_CAP_SGI_40) ? WRS_GI_SHORT : WRS_GI_LONG;
++	wrs_sta->gi_cap[CHNL_BW_80] =
++		(vht_cap->cap & IEEE80211_VHT_CAP_SHORT_GI_80) ? WRS_GI_SHORT : WRS_GI_LONG;
++	wrs_sta->gi_cap[CHNL_BW_160] =
++		(vht_cap->cap & IEEE80211_VHT_CAP_SHORT_GI_160) ? WRS_GI_SHORT : WRS_GI_LONG;
++}
++
++static void cl_wrs_sta_info_set_ht(struct cl_wrs_sta *wrs_sta,
++				   struct ieee80211_sta_ht_cap *ht_cap)
++{
++	wrs_sta->mode = WRS_MODE_HT;
++
++	wrs_sta->gi_cap[CHNL_BW_20] =
++		(ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ? WRS_GI_SHORT : WRS_GI_LONG;
++	wrs_sta->gi_cap[CHNL_BW_40] =
++		(ht_cap->cap & IEEE80211_HT_CAP_SGI_40) ? WRS_GI_SHORT : WRS_GI_LONG;
++}
++
++static void cl_wrs_sta_info_set_legacy(struct cl_wrs_sta *wrs_sta,
++				       struct ieee80211_sta *sta)
++{
++	if (sta->supp_rates[NL80211_BAND_5GHZ] ||
++	    (sta->supp_rates[NL80211_BAND_2GHZ] & 0xFF0))
++		wrs_sta->mode = WRS_MODE_OFDM;
++	else
++		wrs_sta->mode = WRS_MODE_CCK;
++}
++
++static void cl_wrs_sta_info_set(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++				struct ieee80211_sta *sta)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
++	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
++	struct ieee80211_sta_he_cap *he_cap = &sta->he_cap;
++	u8 bw = min_t(u8, sta->bandwidth, wrs_db->max_cap.bw);
++
++	if (he_cap->has_he)
++		cl_wrs_sta_info_set_he(wrs_sta);
++	else if (vht_cap->vht_supported && ht_cap->ht_supported)
++		cl_wrs_sta_info_set_vht(wrs_sta, vht_cap, ht_cap);
++	else if (ht_cap->ht_supported)
++		cl_wrs_sta_info_set_ht(wrs_sta, ht_cap);
++	else
++		cl_wrs_sta_info_set_legacy(wrs_sta, sta);
++
++	wrs_sta->max_rate_cap.nss = min_t(u8, sta->rx_nss, WRS_SS_MAX) - 1;
++
++	if (cl_band_is_24g(cl_hw))
++		wrs_sta->max_rate_cap.bw = min(bw, wrs_db->coex_bw);
++	else
++		wrs_sta->max_rate_cap.bw = bw;
++
++	wrs_sta->assoc_bw = bw;
++}
++
++#define TWO_BITS_MASK 0x3
++
++static u8 cl_wrs_calc_max_nss(u16 rx_mcs, u8 max_nss)
++{
++	u8 i, nss = 0;
++
++	for (i = 0; i <= max_nss; i++) {
++		if (((rx_mcs >> (2 * i)) & TWO_BITS_MASK) != IEEE80211_HE_MCS_NOT_SUPPORTED)
++			nss++;
++		else
++			break;
++	}
++
++	return nss;
++}
++
++static void cl_supported_rates_he_cap(struct cl_wrs_db *wrs_db, struct ieee80211_sta *sta)
++{
++	struct cl_sta *cl_sta = (struct cl_sta *)sta->drv_priv;
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	struct ieee80211_he_mcs_nss_supp *mcs_nss = &sta->he_cap.he_mcs_nss_supp;
++	int mcs = 0;
++	int supported_mcs = 0;
++	u16 rx_mcs = 0;
++	u8 max_nss = wrs_sta->max_rate_cap.nss;
++	u8 nss = 0, bw = 0;
++	u8 max_nss_80, max_nss_160;
++
++	for (bw = 0; bw <= wrs_sta->max_rate_cap.bw; bw++) {
++		if (bw < CHNL_BW_160) {
++			rx_mcs = le16_to_cpu(mcs_nss->rx_mcs_80);
++		} else if (bw == CHNL_BW_160) {
++			max_nss_80 = cl_wrs_calc_max_nss(le16_to_cpu(mcs_nss->rx_mcs_80),
++							 max_nss) + 1;
++			rx_mcs = le16_to_cpu(mcs_nss->rx_mcs_160);
++			max_nss_160 = cl_wrs_calc_max_nss(rx_mcs, max_nss) + 1;
++			max_nss = max_nss * max_nss_160 / max_nss_80;
++		} else {
++			wrs_pr_err(wrs_db, "bw %u is not supported\n", bw);
++		}
++
++		for (nss = 0; nss <= max_nss; nss++) {
++			switch ((rx_mcs >> (2 * nss)) & TWO_BITS_MASK) {
++			case IEEE80211_HE_MCS_SUPPORT_0_7:
++				supported_mcs = WRS_MCS_7;
++				break;
++			case IEEE80211_HE_MCS_SUPPORT_0_9:
++				supported_mcs = WRS_MCS_9;
++				break;
++			case IEEE80211_HE_MCS_SUPPORT_0_11:
++				supported_mcs = WRS_MCS_11;
++				break;
++			case IEEE80211_HE_MCS_NOT_SUPPORTED:
++				supported_mcs = -1;
++				break;
++			}
++
++			for (mcs = 0; mcs <= supported_mcs; mcs++)
++				cl_wrs_sta_set_supported_rate(wrs_sta, bw, nss, mcs);
++		}
++	}
++}
++
++static void cl_supported_rates_vht_cap(struct ieee80211_sta *sta)
++{
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	u16 mcs_map = le16_to_cpu(sta->vht_cap.vht_mcs.rx_mcs_map);
++	u8 bw = 0;
++	u8 nss = 0;
++	int mcs = 0;
++	int supported_mcs = 0;
++
++	for (bw = 0; bw <= wrs_sta->max_rate_cap.bw; bw++) {
++		for (nss = 0; nss <= wrs_sta->max_rate_cap.nss; nss++) {
++			switch ((mcs_map >> (2 * nss)) & TWO_BITS_MASK) {
++			case 0:
++				supported_mcs = WRS_MCS_7;
++				break;
++			case 1:
++				supported_mcs = WRS_MCS_8;
++				break;
++			case 2:
++				supported_mcs = WRS_MCS_9;
++				break;
++			case 3:
++				supported_mcs = -1;
++				break;
++			}
++
++			for (mcs = 0; mcs <= supported_mcs; mcs++)
++				cl_wrs_sta_set_supported_rate(wrs_sta, bw, nss, mcs);
++		}
++	}
++}
++
++static void cl_supported_rates_ht_cap(struct ieee80211_sta *sta)
++{
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	u8 bw = 0;
++	u8 nss = 0;
++	u8 mcs = 0;
++
++	for (mcs = 0; mcs <= WRS_MCS_7; mcs++) {
++		for (nss = 0; nss <= wrs_sta->max_rate_cap.nss; nss++) {
++			if ((ht_cap->mcs.rx_mask[nss] & (1 << mcs)) == 0)
++				continue;
++
++			for (bw = 0; bw <= wrs_sta->max_rate_cap.bw; bw++)
++				cl_wrs_sta_set_supported_rate(wrs_sta, bw, nss, mcs);
++		}
++	}
++}
++
++static void cl_supported_rates_legacy_cap(struct cl_hw *cl_hw,
++					  struct ieee80211_sta *sta,
++					  u8 max_mcs)
++{
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	u8 mcs = 0;
++
++	for (mcs = 0; mcs < max_mcs; mcs++)
++		if (rate_supported(sta, cl_hw->nl_band, mcs))
++			cl_wrs_sta_set_supported_rate(wrs_sta, CHNL_BW_20, WRS_SS_1, mcs);
++}
++
++void cl_wrs_sta_add(struct cl_hw *cl_hw, struct ieee80211_sta *sta)
++{
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	struct cl_wrs_params *wrs_params = &wrs_sta->tx_su_params;
++
++	wrs_params->type = WRS_TYPE_TX_SU;
++	wrs_params->is_mu_valid = false;
++	wrs_params->rate_idx = WRS_INVALID_RATE;
++	wrs_params->initial_rate_idx = WRS_INVALID_RATE;
++
++	wrs_sta->sta_idx = cl_sta->sta_idx;
++	cl_wrs_rssi_prot_start(cl_hw, cl_sta);
++	cl_wrs_stats_per_init(wrs_params);
++	cl_wrs_sta_info_set(cl_hw, wrs_sta, sta);
++	cl_wrs_sta_capabilities_set(wrs_db, sta);
++	cl_wrs_tables_build(cl_hw, wrs_sta, wrs_params);
++	cl_wrs_sta_select_first_rate(cl_hw, wrs_db, wrs_sta, wrs_params);
++
++	wrs_pr_trace(wrs_db, "[%s] Add station %pM to database (sta_idx %u)\n",
++		     WRS_TYPE_STR(wrs_params->type), cl_sta->addr, cl_sta->sta_idx);
++}
++
++void cl_wrs_sta_add_rx(struct cl_hw *cl_hw, struct ieee80211_sta *sta)
++{
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	struct cl_wrs_params *wrs_params;
++
++	if (wrs_sta->rx_params) {
++		wrs_pr_warn(wrs_db, "[RX] Params already allocated (sta_idx %u)\n",
++			    wrs_sta->sta_idx);
++		return;
++	}
++
++	wrs_params = kzalloc(sizeof(*wrs_params), GFP_ATOMIC);
++
++	if (!wrs_params)
++		return;
++
++	wrs_sta->rx_params = wrs_params;
++	wrs_params->type = WRS_TYPE_RX;
++	wrs_params->is_mu_valid = false;
++	wrs_params->rate_idx = WRS_INVALID_RATE;
++	wrs_params->initial_rate_idx = WRS_INVALID_RATE;
++
++	wrs_sta->sta_idx = cl_sta->sta_idx;
++
++	cl_wrs_rssi_prot_start(cl_hw, cl_sta);
++	cl_wrs_stats_per_init(wrs_params);
++	cl_wrs_sta_info_set(cl_hw, wrs_sta, sta);
++	cl_wrs_sta_capabilities_set(wrs_db, sta);
++	cl_wrs_tables_build(cl_hw, wrs_sta, wrs_params);
++	cl_wrs_sta_select_first_rate(cl_hw, wrs_db, wrs_sta, wrs_params);
++	cl_wrs_rx_rate_idle_reset(wrs_params);
++
++	wrs_pr_trace(wrs_db, "[%s] Add station %pM to database (sta_idx %u)\n",
++		     WRS_TYPE_STR(wrs_params->type), cl_sta->addr, cl_sta->sta_idx);
++}
++
++static void _cl_wrs_sta_remove(struct cl_wrs_params *wrs_params)
++{
++	if (wrs_params->is_logger_en) {
++		kfree(wrs_params->logger);
++		wrs_params->logger = NULL;
++	}
++
++	kfree(wrs_params->table);
++	wrs_params->table = NULL;
++
++	cl_wrs_stats_per_remove(wrs_params);
++}
++
++static void cl_wrs_sta_remove_rx(struct cl_wrs_db *wrs_db, struct cl_wrs_sta *wrs_sta)
++{
++	struct cl_wrs_params *wrs_params = wrs_sta->rx_params;
++
++	if (!wrs_params) {
++		wrs_pr_warn(wrs_db, "[RX] Params already removed (sta_idx %u)\n",
++			    wrs_sta->sta_idx);
++		return;
++	}
++
++	_cl_wrs_sta_remove(wrs_params);
++
++	kfree(wrs_params);
++	wrs_sta->rx_params = NULL;
++
++	wrs_pr_err(wrs_db, "[RX] Remove params (sta_idx %u)\n", wrs_sta->sta_idx);
++}
++
++void cl_wrs_sta_remove(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db, struct cl_sta *cl_sta)
++{
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++
++	_cl_wrs_sta_remove(&wrs_sta->tx_su_params);
++
++	if (wrs_sta->rx_params)
++		cl_wrs_sta_remove_rx(wrs_db, wrs_sta);
++	wrs_pr_trace(wrs_db, "Remove station %pM from database (sta_idx %u)\n",
++		     cl_sta->addr, cl_sta->sta_idx);
++}
++
++struct cl_wrs_sta *cl_wrs_sta_get(struct cl_hw *cl_hw, u8 sta_idx)
++{
++	struct cl_sta *cl_sta = cl_sta_get(cl_hw, sta_idx);
++
++	return cl_sta ? &cl_sta->wrs_sta : NULL;
++}
++
++void cl_wrs_sta_select_first_rate(struct cl_hw *cl_hw, struct cl_wrs_db *wrs_db,
++				  struct cl_wrs_sta *wrs_sta, struct cl_wrs_params *wrs_params)
++{
++	if (wrs_db->is_fixed_rate) {
++		s8 *fixed_rate = cl_hw->conf->ci_wrs_fixed_rate;
++
++		cl_wrs_fixed_rate_set(cl_hw, wrs_db, wrs_sta, wrs_params, wrs_db->is_fixed_rate,
++				      fixed_rate[WRS_FIXED_PARAM_MODE],
++				      fixed_rate[WRS_FIXED_PARAM_BW],
++				      fixed_rate[WRS_FIXED_PARAM_NSS],
++				      fixed_rate[WRS_FIXED_PARAM_MCS],
++				      fixed_rate[WRS_FIXED_PARAM_GI], 0);
++	} else {
++		struct cl_sta *cl_sta = container_of(wrs_sta, struct cl_sta, wrs_sta);
++		struct cl_wrs_rate_params *vif_fixed_params = &cl_sta->cl_vif->fixed_params;
++
++		if (vif_fixed_params->is_fixed)
++			cl_wrs_fixed_rate_set(cl_hw, wrs_db, wrs_sta, wrs_params,
++					      WRS_FIXED_FALLBACK_DIS,
++					      vif_fixed_params->mode,
++					      vif_fixed_params->bw,
++					      vif_fixed_params->nss,
++					      vif_fixed_params->mcs,
++					      vif_fixed_params->gi, 0);
++	}
++
++	if (!wrs_params->is_fixed_rate) {
++		bool result = cl_wrs_set_rate_idle(cl_hw, wrs_db, wrs_sta, wrs_params);
++
++		/*
++		 * If new rate wasn't selected according to
++		 * rssi (no samples) or data packets set rate to lowest possible
++		 */
++		if (!result)
++			cl_wrs_rate_params_update(cl_hw, wrs_db, wrs_sta,
++						  wrs_params, 0, false, false);
++	}
++}
++
++void cl_wrs_sta_capabilities_set(struct cl_wrs_db *wrs_db, struct ieee80211_sta *sta)
++{
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	enum cl_wrs_mode mode = cl_sta->wrs_sta.mode;
++
++	if (mode == WRS_MODE_HE) {
++		cl_supported_rates_he_cap(wrs_db, sta);
++	} else if (mode == WRS_MODE_VHT) {
++		cl_supported_rates_vht_cap(sta);
++	} else if (mode == WRS_MODE_HT) {
++		cl_supported_rates_ht_cap(sta);
++	} else {
++		struct cl_hw *cl_hw = cl_sta->cl_vif->cl_hw;
++		u8 max_mcs = (mode == WRS_MODE_OFDM) ? WRS_MCS_MAX_OFDM : WRS_MCS_MAX_CCK;
++
++		cl_supported_rates_legacy_cap(cl_hw, sta, max_mcs);
++	}
++}
++
++void cl_wrs_sta_set_supported_rate(struct cl_wrs_sta *wrs_sta, u8 bw, u8 nss, u8 mcs)
++{
++	u8 rate_idx = mcs + (nss * WRS_MCS_MAX);
++
++	wrs_sta->supported_rates[bw] |= BIT(rate_idx);
++}
++
++static struct cl_wrs_per_stats *cl_wrs_stats_per_entry(struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_per_stats *per_stats = NULL, *per_stats_new = NULL;
++	struct cl_wrs_rate_params *rate_params = &wrs_params->rate_params;
++	struct list_head *list_rates = &wrs_params->list_rates;
++	u8 bw = rate_params->bw;
++	u8 nss = rate_params->nss;
++	u8 mcs = rate_params->mcs;
++	u8 gi = rate_params->gi;
++
++	list_for_each_entry(per_stats, list_rates, list) {
++		if (per_stats->bw != bw ||
++		    per_stats->nss != nss ||
++		    per_stats->mcs != mcs ||
++		    per_stats->gi != gi)
++			continue;
++
++		/*
++		 * Move the entry to the beginning of the list, so that it
++		 * will be faster to find next time.
++		 */
++		if (per_stats != list_entry(list_rates->next, struct cl_wrs_per_stats, list)) {
++			list_del(&per_stats->list);
++			list_add(&per_stats->list, list_rates);
++		}
++
++		return per_stats;
++	}
++
++	/* Entry not found - allocate new entry and add to list */
++	per_stats_new = kzalloc(sizeof(*per_stats_new), GFP_ATOMIC);
++
++	if (!per_stats_new)
++		return NULL;
++
++	per_stats_new->bw = bw;
++	per_stats_new->nss = nss;
++	per_stats_new->mcs = mcs;
++	per_stats_new->gi = gi;
++
++	list_add(&per_stats_new->list, &wrs_params->list_rates);
++
++	return per_stats_new;
++}
++
++void cl_wrs_stats_per_update(struct cl_wrs_db *wrs_db,
++			     struct cl_wrs_sta *wrs_sta,
++			     struct cl_wrs_params *wrs_params,
++			     struct cl_wrs_cntrs *cntrs)
++{
++	u16 curr_rate_idx = wrs_params->rate_idx;
++	struct cl_wrs_table *table_node = &wrs_params->table[curr_rate_idx];
++	struct cl_wrs_per_stats *per_stats = cl_wrs_stats_per_entry(wrs_params);
++
++	if (!per_stats)
++		return;
++
++	wrs_params->frames_total += cntrs->total;
++	wrs_params->fail_total += cntrs->fail;
++	wrs_params->ba_not_rcv_total += cntrs->ba_not_rcv;
++	wrs_params->epr_acc += cntrs->epr_acc;
++
++	per_stats->frames_total += cntrs->total;
++	per_stats->frames_failed += cntrs->fail;
++	per_stats->epr_acc += cntrs->epr_acc;
++
++	if (wrs_params->calc_ba_not_rcv) {
++		per_stats->frames_total += cntrs->ba_not_rcv;
++		per_stats->frames_failed += cntrs->ba_not_rcv;
++	}
++
++	table_node->frames_total = wrs_params->frames_total;
++	table_node->ba_not_rcv_total = wrs_params->ba_not_rcv_total;
++	table_node->epr_acc = wrs_params->epr_acc;
++}
++
++void cl_wrs_stats_per_init(struct cl_wrs_params *wrs_params)
++{
++	INIT_LIST_HEAD(&wrs_params->list_rates);
++}
++
++void cl_wrs_stats_per_remove(struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_per_stats *per_stats = NULL, *per_stats_next = NULL;
++
++	list_for_each_entry_safe(per_stats, per_stats_next, &wrs_params->list_rates, list) {
++		list_del(&per_stats->list);
++		kfree(per_stats);
++	}
++}
++
++static struct cl_wrs_table
++	ap_rate_table_he[CHNL_BW_MAX][WRS_SS_MAX][WRS_MCS_MAX_HE][WRS_GI_MAX_HE];
++static struct cl_wrs_table
++	ap_rate_table_ht_vht[CHNL_BW_MAX][WRS_SS_MAX][WRS_MCS_MAX_VHT][WRS_GI_MAX_VHT];
++
++/* Rate indexes sorted by data rate */
++static u16 rate_idx_sorted_by_data_rate_he[WRS_HE_RATE_TABLE_SIZE] = {0};
++static u16 rate_idx_sorted_by_data_rate_ht_vht[WRS_HT_VHT_RATE_TABLE_SIZE] = {0};
++
++static void cl_wrs_extract_rate_idx_vht(u16 idx, u8 *bw, u8 *nss, u8 *mcs, u8 *gi)
++{
++	*gi = idx % WRS_GI_MAX_VHT;
++	idx = (idx - *gi) / WRS_GI_MAX_VHT;
++	*mcs = idx % WRS_MCS_MAX_VHT;
++	idx = (idx - *mcs) / WRS_MCS_MAX_VHT;
++	*nss = idx % WRS_SS_MAX;
++	*bw = (idx - *nss) / CHNL_BW_MAX;
++}
++
++static void cl_wrs_extract_rate_idx_he(u16 idx, u8 *bw, u8 *nss, u8 *mcs, u8 *gi)
++{
++	*gi = idx % WRS_GI_MAX_HE;
++	idx = (idx - *gi) / WRS_GI_MAX_HE;
++	*mcs = idx % WRS_MCS_MAX_HE;
++	idx = (idx - *mcs) / WRS_MCS_MAX_HE;
++	*nss = idx % WRS_SS_MAX;
++	*bw = (idx - *nss) / CHNL_BW_MAX;
++}
++
++static void cl_wrs_tables_build_sorted_ht_vht(void)
++{
++	/* Sort according to HT/VHT data rate */
++	u16 i, j;
++	u8 bw1, nss1, mcs1, gi1, bw2, nss2, mcs2, gi2;
++
++	for (i = 0; i < WRS_HT_VHT_RATE_TABLE_SIZE; i++)
++		rate_idx_sorted_by_data_rate_ht_vht[i] = i;
++
++	for (i = 0; i < WRS_HT_VHT_RATE_TABLE_SIZE - 1; i++) {
++		for (j = 0; j < WRS_HT_VHT_RATE_TABLE_SIZE - i - 1; j++) {
++			cl_wrs_extract_rate_idx_vht(rate_idx_sorted_by_data_rate_ht_vht[j],
++						    &bw1, &nss1, &mcs1, &gi1);
++			cl_wrs_extract_rate_idx_vht(rate_idx_sorted_by_data_rate_ht_vht[j + 1],
++						    &bw2, &nss2, &mcs2, &gi2);
++
++			if (data_rate_ht_vht_x10[bw1][nss1][mcs1][gi1] >
++			    data_rate_ht_vht_x10[bw2][nss2][mcs2][gi2])
++				swap(rate_idx_sorted_by_data_rate_ht_vht[j],
++				     rate_idx_sorted_by_data_rate_ht_vht[j + 1]);
++		}
++	}
++}
++
++static void cl_wrs_tables_build_sorted_he(void)
++{
++	/* Sort according to HE data rate */
++	u16 i, j;
++	u8 bw1, nss1, mcs1, gi1, bw2, nss2, mcs2, gi2;
++
++	for (i = 0; i < WRS_HE_RATE_TABLE_SIZE; i++)
++		rate_idx_sorted_by_data_rate_he[i] = i;
++
++	for (i = 0; i < WRS_HE_RATE_TABLE_SIZE - 1; i++) {
++		for (j = 0; j < WRS_HE_RATE_TABLE_SIZE - i - 1; j++) {
++			cl_wrs_extract_rate_idx_he(rate_idx_sorted_by_data_rate_he[j],
++						   &bw1, &nss1, &mcs1, &gi1);
++			cl_wrs_extract_rate_idx_he(rate_idx_sorted_by_data_rate_he[j + 1],
++						   &bw2, &nss2, &mcs2, &gi2);
++
++			if (data_rate_he_x10[nss1][bw1][mcs1][gi1] >
++			    data_rate_he_x10[nss2][bw2][mcs2][gi2])
++				swap(rate_idx_sorted_by_data_rate_he[j],
++				     rate_idx_sorted_by_data_rate_he[j + 1]);
++		}
++	}
++}
++
++static u16 idx_to_offt_ht_vht(u32 bw, u32 nss, u32 mcs, u32 gi)
++{
++	if (bw < CHNL_BW_MAX &&
++	    nss < WRS_SS_MAX &&
++	    mcs < WRS_MCS_MAX_VHT &&
++	    gi < WRS_GI_MAX_VHT)
++		return (gi + WRS_GI_MAX_VHT * (mcs + WRS_MCS_MAX_VHT * (nss + bw * WRS_SS_MAX)));
++	else
++		return -1;
++}
++
++static u16 idx_to_offt_he(u32 bw, u32 nss, u32 mcs, u32 gi)
++{
++	if (bw < CHNL_BW_MAX &&
++	    nss < WRS_SS_MAX &&
++	    mcs < WRS_MCS_MAX_HE &&
++	    gi < WRS_GI_MAX_HE)
++		return (gi + WRS_GI_MAX_HE * (mcs + WRS_MCS_MAX_HE * (nss + bw * WRS_SS_MAX)));
++	else
++		return -1;
++}
++
++static u16 find_down_rate_idx(u32 bw, u32 nss, u32 mcs, u32 gi, u16 *data_rates,
++			      u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi))
++{
++	u16 idx;
++
++	if (mcs > 0) {
++		idx = idx_to_offt(bw, nss, mcs - 1, gi);
++		if (data_rates[idx])
++			return idx;
++		if (mcs > 1)
++			return idx_to_offt(bw, nss, mcs - 2, gi);
++	}
++
++	if (bw > 0) {
++		idx = idx_to_offt(bw - 1, nss, mcs, gi);
++		if (data_rates[idx])
++			return idx;
++		if (bw > 1)
++			return idx_to_offt(bw - 2, nss, mcs, gi);
++	}
++
++	if (nss > 0) {
++		idx = idx_to_offt(bw, nss - 1, mcs, gi);
++		if (data_rates[idx])
++			return idx;
++		if (nss > 1) {
++			idx = idx_to_offt(bw, nss - 2, mcs, gi);
++			if (data_rates[idx])
++				return idx;
++		}
++	}
++
++	if (gi > 0)
++		return idx_to_offt(bw, nss, mcs, gi - 1);
 +
 +	return 0;
 +}
 +
-+static int cl_tx_amsdu_txhdr_init_cache(struct cl_hw *cl_hw)
++static u16 find_up_mcs_rate_idx(u32 bw, u32 nss, u32 mcs, u32 gi, u16 *data_rates,
++				u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi))
 +{
-+	char amsdu_txhdr_cache_name[MODULE_NAME_LEN + 32] = {0};
++	s16 idx = idx_to_offt(bw, nss, mcs + 1, gi);
 +
-+	snprintf(amsdu_txhdr_cache_name, sizeof(amsdu_txhdr_cache_name),
-+		 "%s_amsdu_txhdr_cache", THIS_MODULE->name);
++	if (idx < 0 || !data_rates[idx])
++		idx = idx_to_offt(bw, nss, mcs + 2, gi);
 +
-+	cl_hw->amsdu_txhdr_cache = kmem_cache_create(amsdu_txhdr_cache_name,
-+						     sizeof(struct cl_amsdu_txhdr),
-+						     0,
-+						     (SLAB_HWCACHE_ALIGN | SLAB_PANIC),
-+						     NULL);
++	return (idx < 0) ? WRS_INVALID_RATE : idx;
++}
 +
-+	if (!cl_hw->amsdu_txhdr_cache) {
-+		cl_dbg_err(cl_hw, "amsdu_txhdr_cache NULL\n");
++static u16 find_up_bw_rate_idx(u32 bw, u32 nss, u32 mcs, u32 gi,
++			       u16 *data_rates,
++			       u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi))
++{
++	s16 cur_data_rate = data_rates[idx_to_offt(bw, nss, mcs, gi)];
++	s16 min_idx = WRS_INVALID_RATE;
++	s16 idx;
++	s32 min_rate_diff = S32_MAX;
++	s32 rate_diff;
++
++	for (idx = idx_to_offt(++bw, nss, mcs, gi); !(idx < 0);
++	     idx = idx_to_offt(bw, nss, --mcs, gi)) {
++		/*
++		 * If data_rates[idx] == 0, the difference will be negative,
++		 * so the condition below will not hold.
++		 * Therefore, no need to check this possiblity specifically.
++		 */
++		rate_diff = data_rates[idx] - cur_data_rate;
++		if (rate_diff > 0 &&
++		    rate_diff < min_rate_diff &&
++		    (data_rates[idx] * 100) > (cur_data_rate * WRS_EPR_FACTOR)) {
++			min_rate_diff = rate_diff;
++			min_idx = idx;
++		}
++	}
++
++	return min_idx;
++}
++
++static u16 find_up_nss_rate_idx(u32 bw, u32 nss, u32 mcs, u32 gi,
++				u16 *data_rates,
++				u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi))
++{
++	s16 cur_data_rate = data_rates[idx_to_offt(bw, nss, mcs, gi)];
++	s16 min_idx = WRS_INVALID_RATE;
++	s16 idx;
++	s32 min_rate_diff = S32_MAX;
++	s32 rate_diff;
++
++	for (idx = idx_to_offt(bw, ++nss, mcs, gi); !(idx < 0);
++	     idx = idx_to_offt(bw, nss, --mcs, gi)) {
++		/*
++		 * If data_rates[idx] == 0, the difference will be negative,
++		 * so the condition below will not hold.
++		 * Therefore, no need to check this possiblity specifically.
++		 */
++		rate_diff = data_rates[idx] - cur_data_rate;
++		if (rate_diff > 0 &&
++		    rate_diff < min_rate_diff &&
++		    (data_rates[idx] * 100) > (cur_data_rate * WRS_EPR_FACTOR)) {
++			min_rate_diff = rate_diff;
++			min_idx = idx;
++		}
++	}
++
++	return min_idx;
++}
++
++static u16 find_up_bf_rate_idx(u32 bw, u32 nss, u32 mcs, u32 gi,
++			       u16 *data_rates,
++			       u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi))
++{
++	s16 cur_data_rate = data_rates[idx_to_offt(bw, nss, mcs, gi)];
++	s16 min_idx = WRS_INVALID_RATE;
++	s16 idx;
++	s32 min_rate_diff = S32_MAX;
++	s16 rate_diff;
++
++	for (idx = idx_to_offt(bw, --nss, mcs, gi); !(idx < 0);
++	     idx = idx_to_offt(bw, nss, ++mcs, gi)) {
++		/*
++		 * If data_rates[idx] == 0, the difference will be negative,
++		 * so the condition below will not hold.
++		 * Therefore, no need to check this possiblity specifically.
++		 */
++		rate_diff = data_rates[idx] - cur_data_rate;
++		if (rate_diff > 0 &&
++		    rate_diff < min_rate_diff &&
++		    (data_rates[idx] * 100) > (cur_data_rate * WRS_EPR_FACTOR)) {
++			min_rate_diff = rate_diff;
++			min_idx = idx;
++		}
++	}
++
++	return min_idx;
++}
++
++static u16 find_up_gi_rate_idx(u32 bw, u32 nss, u32 mcs, u32 gi,
++			       u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi))
++{
++	s16 idx = idx_to_offt(bw, nss, mcs, gi + 1);
++
++	return (idx < 0) ? WRS_INVALID_RATE : idx;
++}
++
++static void _cl_wrs_tables_init(struct cl_wrs_table *ap_rate_table,
++				u16 *data_rates,
++				u32 bw, u32 nss, u32 mcs, u32 gi,
++				u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi))
++{
++	struct cl_wrs_table *cur_entry = NULL;
++	int i = 0;
++	u16 offt = idx_to_offt(bw, nss, mcs, gi);
++
++	cur_entry = &ap_rate_table[offt];
++	cur_entry->rate.bw = bw;
++	cur_entry->rate.nss = nss;
++	cur_entry->rate.mcs = mcs;
++	cur_entry->rate.gi = gi;
++
++	/* If current rate is invalid, mark it as such and skip it. */
++	if (!data_rates[offt]) {
++		cur_entry->rate_down.rate_idx = WRS_INVALID_RATE;
++		cur_entry->rate_down.time_th = WRS_MSEC_WEIGHT_MAX_DOWN;
++
++		for (i = 0; i < WRS_TABLE_NODE_UP_MAX; i++) {
++			cur_entry->rate_up[i].rate_idx = WRS_INVALID_RATE;
++			cur_entry->rate_up[i].time_th = WRS_MSEC_WEIGHT_MAX_UP;
++		}
++
++		return;
++	}
++
++	cur_entry->rate_down.rate_idx =
++		find_down_rate_idx(bw, nss, mcs, gi, data_rates, idx_to_offt);
++	cur_entry->rate_up[WRS_TABLE_NODE_UP_MCS].rate_idx =
++		find_up_mcs_rate_idx(bw, nss, mcs, gi, data_rates, idx_to_offt);
++	cur_entry->rate_up[WRS_TABLE_NODE_UP_BW].rate_idx =
++		find_up_bw_rate_idx(bw, nss, mcs, gi, data_rates, idx_to_offt);
++	cur_entry->rate_up[WRS_TABLE_NODE_UP_NSS].rate_idx =
++		find_up_nss_rate_idx(bw, nss, mcs, gi, data_rates, idx_to_offt);
++	cur_entry->rate_up[WRS_TABLE_NODE_UP_BF].rate_idx =
++		find_up_bf_rate_idx(bw, nss, mcs, gi, data_rates, idx_to_offt);
++	cur_entry->rate_up[WRS_TABLE_NODE_UP_GI].rate_idx =
++		find_up_gi_rate_idx(bw, nss, mcs, gi, idx_to_offt);
++
++	cur_entry->rate_down.time_th = WRS_INIT_MSEC_WEIGHT_DOWN;
++
++	for (i = 0; i < WRS_TABLE_NODE_UP_MAX; i++)
++		cur_entry->rate_up[i].time_th =
++			(cur_entry->rate_up[i].rate_idx == WRS_INVALID_RATE) ?
++			WRS_MSEC_WEIGHT_MAX_UP : WRS_INIT_MSEC_WEIGHT_UP;
++}
++
++static void cl_wrs_tables_init(u8 mode)
++{
++	u32 bw, nss, mcs, gi;
++	u32 max_bw, max_nss, max_mcs, max_gi;
++	u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi);
++	struct cl_wrs_table *ap_rate_table = NULL;
++	u16 *data_rates = NULL;
++
++	if (mode == WRS_MODE_HE) {
++		idx_to_offt = idx_to_offt_he;
++		max_bw = CHNL_BW_MAX;
++		max_nss = WRS_SS_MAX;
++		max_mcs = WRS_MCS_MAX_HE;
++		max_gi = WRS_GI_MAX_HE;
++		ap_rate_table = (struct cl_wrs_table *)ap_rate_table_he;
++		data_rates = (u16 *)data_rate_he_x10;
++	} else if (mode == WRS_MODE_VHT) {
++		idx_to_offt = idx_to_offt_ht_vht;
++		max_bw = CHNL_BW_MAX;
++		max_nss = WRS_SS_MAX;
++		max_mcs = WRS_MCS_MAX_VHT;
++		max_gi = WRS_GI_MAX_VHT;
++		ap_rate_table = (struct cl_wrs_table *)ap_rate_table_ht_vht;
++		data_rates = (u16 *)data_rate_ht_vht_x10;
++	} else {
++		return;
++	}
++
++	for (bw = 0; bw < max_bw; bw++)
++		for (nss = 0; nss < max_nss; nss++)
++			for (mcs = 0; mcs < max_mcs; mcs++)
++				for (gi = 0; gi < max_gi; gi++)
++					_cl_wrs_tables_init(ap_rate_table,
++							    data_rates,
++							    bw,
++							    nss,
++							    mcs,
++							    gi,
++							    idx_to_offt);
++}
++
++void cl_wrs_tables_global_build(void)
++{
++	cl_wrs_tables_init(WRS_MODE_HE);
++	cl_wrs_tables_init(WRS_MODE_VHT);
++	cl_wrs_tables_build_sorted_he();
++	cl_wrs_tables_build_sorted_ht_vht();
++}
++
++void cl_wrs_tables_reset(struct cl_wrs_db *wrs_db, struct cl_wrs_sta *wrs_sta,
++			 struct cl_wrs_params *wrs_params)
++{
++	struct cl_wrs_table_node *rate_up;
++	u16 rate_idx = 0;
++	u8 up_idx = 0;
++
++	for (rate_idx = 0; rate_idx < wrs_params->table_size; rate_idx++) {
++		if (wrs_params->table[rate_idx].rate_down.rate_idx != WRS_INVALID_RATE)
++			wrs_params->table[rate_idx].rate_down.time_th = WRS_INIT_MSEC_WEIGHT_DOWN;
++		else
++			wrs_params->table[rate_idx].rate_down.time_th = wrs_db->time_th_max_down;
++
++		wrs_params->table[rate_idx].rate_down.quick_up_check = false;
++
++		for (up_idx = 0; up_idx < WRS_TABLE_NODE_UP_MAX; up_idx++) {
++			rate_up = &wrs_params->table[rate_idx].rate_up[up_idx];
++
++			if (rate_up->rate_idx != WRS_INVALID_RATE)
++				rate_up->time_th = WRS_INIT_MSEC_WEIGHT_UP;
++			else
++				rate_up->time_th = wrs_db->time_th_max_up;
++
++			rate_up->quick_up_check = false;
++		}
++
++		wrs_params->table[rate_idx].frames_total = 0;
++		wrs_params->table[rate_idx].ba_not_rcv_total = 0;
++		wrs_params->table[rate_idx].epr_acc = 0;
++	}
++}
++
++static bool cl_wrs_is_rate_valid_he(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++				    struct cl_wrs_params *wrs_params, u8 bw,
++				    u8 nss, u8 mcs, u8 gi)
++{
++	/* Disable rates according to ce_he_mcs_nss_supp_tx */
++	if ((cl_hw->conf->ce_he_mcs_nss_supp_tx[nss] + 1) <= mcs)
++		return false;
++
++	/* TB flow doesn't support 0.8us GI */
++	if (WRS_TYPE_IS_RX(wrs_params) && gi == WRS_GI_VSHORT)
++		return false;
++
++	if (data_rate_he_x10[nss][bw][mcs][gi] < (10 * wrs_sta->he_minrate))
++		return false;
++
++	return true;
++}
++
++static bool cl_wrs_is_rate_valid_vht(struct cl_hw *cl_hw, u8 bw, u8 nss, u8 mcs)
++{
++	/* Disable BW160 */
++	if (bw == CHNL_BW_160)
++		return false;
++
++	/* Disable VHT invalid rates (MCS9 20M 1SS, MCS9 20M 2SS, MCS6 80M 3SS, MCS9 20M 4SS) */
++	if (bw == CHNL_BW_20 && mcs == WRS_MCS_9)
++		if (nss == WRS_SS_1 || nss == WRS_SS_2 || nss == WRS_SS_4)
++			return false;
++
++	if (bw == CHNL_BW_80 && mcs == WRS_MCS_6 && nss == WRS_SS_3)
++		return false;
++
++	/* Disable rates according to ce_vht_mcs_nss_supp_tx */
++	if ((cl_hw->conf->ce_vht_mcs_nss_supp_tx[nss] + 1) <= mcs)
++		return false;
++
++	return true;
++}
++
++static bool cl_wrs_is_rate_valid(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++				 struct cl_wrs_params *wrs_params,
++				 u8 mode, u8 bw, u8 nss, u8 mcs, u8 gi)
++{
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++	if (gi > wrs_db->max_cap.gi || gi > wrs_sta->gi_cap[bw])
++		return false;
++
++	if (mode == WRS_MODE_HE)
++		return cl_wrs_is_rate_valid_he(cl_hw, wrs_sta, wrs_params, bw, nss, mcs, gi);
++
++	if (mode == WRS_MODE_VHT)
++		return cl_wrs_is_rate_valid_vht(cl_hw, bw, nss, mcs);
++
++	return true;
++}
++
++static bool cl_wrs_is_rate_supported(u64 *rate_bitmap, u8 bw, u8 nss, u8 mcs)
++{
++	u8 rate_idx = mcs + (nss * WRS_MCS_MAX);
++	u64 mask = BIT(rate_idx);
++
++	return rate_bitmap[bw] & mask;
++}
++
++static bool cl_wrs_tables_is_up_invalid(struct cl_wrs_table *table)
++{
++	/*
++	 * The UP_GI is not part of this if condition, because we would
++	 * like to set the same up candidate for LGI & SGI (except the
++	 * up from LGI to SGI).
++	 */
++	return ((table->rate_up[WRS_TABLE_NODE_UP_MCS].rate_idx == WRS_INVALID_RATE) &&
++		(table->rate_up[WRS_TABLE_NODE_UP_BW].rate_idx == WRS_INVALID_RATE) &&
++		(table->rate_up[WRS_TABLE_NODE_UP_NSS].rate_idx == WRS_INVALID_RATE) &&
++		(table->rate_up[WRS_TABLE_NODE_UP_BF].rate_idx == WRS_INVALID_RATE) &&
++		(table->rate_up[WRS_TABLE_NODE_UP_GI].rate_idx == WRS_INVALID_RATE));
++}
++
++static int cl_wrs_tables_max(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++			     u8 *max_bw, u8 *max_nss, u8 *max_mcs, u8 *max_gi)
++{
++	*max_bw = wrs_sta->max_rate_cap.bw;
++	*max_nss = wrs_sta->smps_enable ? WRS_SS_1 : wrs_sta->max_rate_cap.nss;
++
++	switch (wrs_sta->mode) {
++	case WRS_MODE_CCK:
++		*max_mcs = WRS_MCS_3;
++		*max_gi = WRS_GI_LONG;
++		break;
++	case WRS_MODE_OFDM:
++		*max_mcs = WRS_MCS_7;
++		*max_gi = WRS_GI_LONG;
++		break;
++	case WRS_MODE_HT:
++		*max_mcs = WRS_MCS_7;
++		*max_gi = WRS_GI_SHORT;
++		break;
++	case WRS_MODE_VHT:
++		*max_mcs = WRS_MCS_9;
++		*max_gi = WRS_GI_SHORT;
++		break;
++	case WRS_MODE_HE:
++		*max_mcs = WRS_MCS_11;
++		*max_gi = WRS_GI_VSHORT;
++
++		if (!cl_hw->conf->ce_txldpc_en) {
++			struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++
++			wrs_pr_verbose(wrs_db,
++				       "TX LDPC disabled: limit BW to 20MHz and MCS to 9\n");
++			*max_mcs = WRS_MCS_9;
++			*max_bw = CHNL_BW_20;
++		}
++		break;
++	default:
 +		return -1;
 +	}
 +
 +	return 0;
 +}
 +
-+int cl_tx_amsdu_txhdr_init(struct cl_hw *cl_hw)
++void cl_wrs_tables_build(struct cl_hw *cl_hw, struct cl_wrs_sta *wrs_sta,
++			 struct cl_wrs_params *wrs_params)
 +{
-+	if (cl_hw->conf->ci_amsdu_txhdr_pool)
-+		return cl_tx_amsdu_txhdr_init_pool(cl_hw);
-+	else
-+		return cl_tx_amsdu_txhdr_init_cache(cl_hw);
-+}
++	struct cl_wrs_db *wrs_db = &cl_hw->wrs_db;
++	u8 bw = 0;
++	u8 nss = 0;
++	u8 mcs = 0;
++	u8 gi = 0;
++	u8 max_bw = 0;
++	u8 max_nss = 0;
++	u8 max_mcs = 0;
++	u8 max_gi = 0;
++	u8 up_idx = 0;
++	u8 type = wrs_params->type;
++	u16 rate_idx = 0;
++	u16 new_rate_idx = 0;
++	u16 tmp_rate_idx = 0;
++	u16 max_table_size = 0;
++	u16 new_table_size = 0;
++	u16 (*idx_to_offt)(u32 bw, u32 nss, u32 mcs, u32 gi);
++	u16 *rate_idx_sorted_by_data_rate;
++	struct cl_wrs_table *ap_rate_table;
++	struct cl_wrs_table *new_table = NULL;
++	struct cl_wrs_table_validity *valid_rates = NULL;
 +
-+static void cl_tx_amsdu_txhdr_deinit_pool(struct cl_hw *cl_hw)
-+{
-+	struct cl_amsdu_txhdr *amsdu_txhdr, *tmp;
-+
-+	list_for_each_entry_safe(amsdu_txhdr, tmp, &cl_hw->head_amsdu_txhdr_pool, list_pool) {
-+		list_del(&amsdu_txhdr->list_pool);
-+		kfree(amsdu_txhdr);
-+	}
-+}
-+
-+static void cl_tx_amsdu_txhdr_deinit_cache(struct cl_hw *cl_hw)
-+{
-+	kmem_cache_destroy(cl_hw->amsdu_txhdr_cache);
-+}
-+
-+void cl_tx_amsdu_txhdr_deinit(struct cl_hw *cl_hw)
-+{
-+	if (cl_hw->conf->ci_amsdu_txhdr_pool)
-+		cl_tx_amsdu_txhdr_deinit_pool(cl_hw);
-+	else
-+		cl_tx_amsdu_txhdr_deinit_cache(cl_hw);
-+}
-+
-+void cl_tx_amsdu_txhdr_free(struct cl_hw *cl_hw, struct cl_amsdu_txhdr *amsdu_txhdr)
-+{
-+	if (cl_hw->conf->ci_amsdu_txhdr_pool)
-+		list_add_tail(&amsdu_txhdr->list_pool, &cl_hw->head_amsdu_txhdr_pool);
-+	else
-+		kmem_cache_free(cl_hw->amsdu_txhdr_cache, amsdu_txhdr);
-+}
-+
-+static const u8 cl_tid2hwq[IEEE80211_NUM_TIDS] = {
-+	CL_HWQ_BE,
-+	CL_HWQ_BK,
-+	CL_HWQ_BK,
-+	CL_HWQ_BE,
-+	CL_HWQ_VI,
-+	CL_HWQ_VI,
-+	CL_HWQ_VO,
-+	CL_HWQ_VO,
-+	/* At the moment, all others TID are mapped to BE */
-+	CL_HWQ_BE,
-+	CL_HWQ_BE,
-+	CL_HWQ_BE,
-+	CL_HWQ_BE,
-+	CL_HWQ_BE,
-+	CL_HWQ_BE,
-+	CL_HWQ_BE,
-+	CL_HWQ_BE,
-+};
-+
-+static void cl_txq_sched_list_add(struct cl_tx_queue *tx_queue, struct cl_hw *cl_hw)
-+{
-+	/* Add to schedule queue */
-+	if (tx_queue->sched)
++	if (cl_wrs_tables_max(cl_hw, wrs_sta, &max_bw, &max_nss, &max_mcs, &max_gi))
 +		return;
 +
-+	tx_queue->sched = true;
-+	if (tx_queue->type == QUEUE_TYPE_AGG)
-+		list_add_tail(&tx_queue->sched_list, &cl_hw->list_sched_q_agg);
-+	else
-+		list_add_tail(&tx_queue->sched_list, &cl_hw->list_sched_q_single);
-+}
-+
-+static void cl_txq_sched_list_remove(struct cl_tx_queue *tx_queue)
-+{
-+	/* Remove from schedule queue */
-+	if (tx_queue->sched) {
-+		tx_queue->sched = false;
-+		list_del(&tx_queue->sched_list);
++	if (wrs_sta->mode == WRS_MODE_HE) {
++		max_table_size = WRS_HE_RATE_TABLE_SIZE;
++		idx_to_offt = idx_to_offt_he;
++		ap_rate_table = (struct cl_wrs_table *)ap_rate_table_he;
++		rate_idx_sorted_by_data_rate = rate_idx_sorted_by_data_rate_he;
++	} else {
++		max_table_size = WRS_HT_VHT_RATE_TABLE_SIZE;
++		idx_to_offt = idx_to_offt_ht_vht;
++		ap_rate_table = (struct cl_wrs_table *)ap_rate_table_ht_vht;
++		rate_idx_sorted_by_data_rate = rate_idx_sorted_by_data_rate_ht_vht;
 +	}
-+}
 +
-+static void cl_txq_sched_list_remove_if_empty(struct cl_tx_queue *tx_queue)
-+{
-+	/* If queue is empty remove it from schedule list */
-+	if (list_empty(&tx_queue->hdrs))
-+		cl_txq_sched_list_remove(tx_queue);
-+}
-+
-+static void cl_txq_transfer_single_to_agg(struct cl_hw *cl_hw,
-+					  struct cl_tx_queue *single_queue,
-+					  struct cl_tx_queue *agg_queue, u8 tid)
-+{
-+	struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
-+	struct ieee80211_tx_info *tx_info;
-+	struct sk_buff *skb;
-+	u8 hdr_pads;
-+
-+	spin_lock_bh(&cl_hw->tx_lock_single);
-+
-+	if (single_queue->num_packets == 0)
++	valid_rates = kzalloc(max_table_size * sizeof(struct cl_wrs_table_validity), GFP_ATOMIC);
++	if (!valid_rates)
 +		goto out;
 +
-+	list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &single_queue->hdrs, tx_queue_list) {
-+		if (sw_txhdr->tid != tid)
-+			continue;
++	wrs_sta->max_rate_cap.mcs = WRS_MCS_0;
++	wrs_sta->max_rate_cap.gi = WRS_GI_LONG;
 +
-+		if (!ieee80211_is_data_qos(sw_txhdr->fc))
-+			continue;
++	for (bw = 0; bw <= max_bw; bw++) {
++		for (nss = 0; nss <= max_nss; nss++) {
++			for (mcs = 0; mcs <= max_mcs; mcs++) {
++				for (gi = 0; gi <= max_gi; gi++) {
++					rate_idx = idx_to_offt(bw, nss, mcs, gi);
++					valid_rates[rate_idx].is_valid =
++						cl_wrs_is_rate_supported(wrs_sta->supported_rates,
++									 bw, nss, mcs) &&
++						cl_wrs_is_rate_supported(wrs_db->ap_supported_rates,
++									 bw, nss, mcs) &&
++						cl_wrs_is_rate_valid(cl_hw, wrs_sta, wrs_params,
++								     wrs_sta->mode,
++								     bw, nss, mcs, gi);
 +
-+		cl_hw->tx_packet_cntr.transfer.single_to_agg++;
++					if (!valid_rates[rate_idx].is_valid)
++						continue;
 +
-+		/* Remove from single queue */
-+		list_del(&sw_txhdr->tx_queue_list);
++					valid_rates[rate_idx].new_rate_idx = new_table_size;
++					new_table_size++;
 +
-+		/* Update single queue counters */
-+		single_queue->num_packets--;
-+		single_queue->total_packets--;
++					if (WRS_TYPE_IS_TX_MU_MIMO(wrs_params))
++						continue;
 +
-+		/* Turn on AMPDU flag */
-+		skb = sw_txhdr->skb;
-+		tx_info = IEEE80211_SKB_CB(skb);
-+		tx_info->flags |= IEEE80211_TX_CTL_AMPDU;
++					if (mcs > wrs_sta->max_rate_cap.mcs)
++						wrs_sta->max_rate_cap.mcs = mcs;
 +
-+		/* Convert header back and Push skb to agg queue */
-+		cl_tx_wlan_to_8023(skb);
-+		hdr_pads = CL_SKB_DATA_ALIGN_PADS(skb->data);
-+		cl_tx_agg_prep(cl_hw, sw_txhdr, skb->len, hdr_pads, true);
-+		agg_queue->total_packets++;
-+		sw_txhdr->hdr80211 = NULL;
-+		sw_txhdr->tx_queue = agg_queue;
-+		cl_txq_push(cl_hw, sw_txhdr);
-+
-+		/* Schedule tasklet to try and empty the queue */
-+		tasklet_schedule(&cl_hw->tx_task);
++					if (gi > wrs_sta->max_rate_cap.gi)
++						wrs_sta->max_rate_cap.gi = gi;
++				}
++			}
++		}
 +	}
 +
-+	/* If single queue is empty remove it from schedule list */
-+	cl_txq_sched_list_remove_if_empty(single_queue);
++	if (new_table_size == 0) {
++		/* Error - size of table is 0, add single rate (mcs 0, 1 SS, bw 20 Mhz) */
++		wrs_pr_err(wrs_db, "[%s] Table build error - Size of table is 0\n",
++			   WRS_TYPE_STR(type));
++		cl_wrs_sta_set_supported_rate(wrs_sta, CHNL_BW_20, WRS_SS_1, WRS_MCS_0);
++		valid_rates[0].new_rate_idx = 0;
++		valid_rates[0].is_valid = 1;
++		new_table_size = 1;
++	}
++
++	new_table = kzalloc(new_table_size * sizeof(struct cl_wrs_table), GFP_ATOMIC);
++
++	if (!new_table)
++		goto out;
++
++	for (rate_idx = 0; rate_idx < max_table_size; rate_idx++) {
++		if (!valid_rates[rate_idx].is_valid)
++			continue;
++
++		memcpy(new_table + new_rate_idx,
++		       ap_rate_table + rate_idx,
++		       sizeof(struct cl_wrs_table));
++
++		/* Set down rate */
++		tmp_rate_idx = ap_rate_table[rate_idx].rate_down.rate_idx;
++
++		while ((!valid_rates[tmp_rate_idx].is_valid) &&
++		       (ap_rate_table[tmp_rate_idx].rate_down.rate_idx != tmp_rate_idx))
++			tmp_rate_idx = ap_rate_table[tmp_rate_idx].rate_down.rate_idx;
++
++		if (valid_rates[tmp_rate_idx].is_valid) {
++			new_table[new_rate_idx].rate_down.rate_idx =
++				valid_rates[tmp_rate_idx].new_rate_idx;
++		} else {
++			u16 i = 0;
++			u16 down_idx = 0;
++			u16 down_rate_idx = new_rate_idx;
++
++			while (new_table[new_rate_idx].rate_down.rate_idx !=
++			       rate_idx_sorted_by_data_rate[i]) {
++				down_idx = rate_idx_sorted_by_data_rate[i];
++
++				if (valid_rates[down_idx].is_valid)
++					down_rate_idx = valid_rates[down_idx].new_rate_idx;
++				i++;
++			}
++
++			new_table[new_rate_idx].rate_down.rate_idx = down_rate_idx;
++		}
++
++		/* Set up rates */
++		for (up_idx = 0; up_idx < WRS_TABLE_NODE_UP_MAX; up_idx++) {
++			tmp_rate_idx = new_table[new_rate_idx].rate_up[up_idx].rate_idx;
++
++			if (tmp_rate_idx != WRS_INVALID_RATE &&
++			    valid_rates[tmp_rate_idx].is_valid)
++				new_table[new_rate_idx].rate_up[up_idx].rate_idx =
++					valid_rates[tmp_rate_idx].new_rate_idx;
++			else
++				new_table[new_rate_idx].rate_up[up_idx].rate_idx = WRS_INVALID_RATE;
++		}
++
++		/*
++		 * In case all the UP rates are invalid, find one available UP
++		 * rate based on PHY rate
++		 */
++		if (cl_wrs_tables_is_up_invalid(&new_table[new_rate_idx])) {
++			u16 i = 0;
++
++			for (i = 0; i < max_table_size; i++)
++				if (rate_idx == rate_idx_sorted_by_data_rate[i])
++					break;
++
++			i++;
++
++			while (i < max_table_size) {
++				tmp_rate_idx = rate_idx_sorted_by_data_rate[i];
++				if (!valid_rates[tmp_rate_idx].is_valid) {
++					i++;
++					continue;
++				}
++
++				new_table[new_rate_idx].rate_up[WRS_TABLE_NODE_UP_MCS].rate_idx =
++					valid_rates[tmp_rate_idx].new_rate_idx;
++				break;
++			}
++		}
++
++		new_rate_idx++;
++	}
++
++	if (wrs_params->table) {
++		/*
++		 * Copy epr_acc, frames_total and ba_not_rcv_total
++		 * from the old table to the new table.
++		 * Also, if initial_rate_idx is set, find the new
++		 * value in the new table.
++		 */
++		u16 old_rate_idx = 0;
++		struct cl_wrs_rate *initial_old_rate = NULL;
++
++		if (wrs_params->initial_rate_idx != WRS_INVALID_RATE) {
++			initial_old_rate = &wrs_params->table[wrs_params->initial_rate_idx].rate;
++			wrs_params->initial_rate_idx = WRS_INVALID_RATE;
++		}
++
++		for (rate_idx = 0; rate_idx < new_table_size; rate_idx++) {
++			old_rate_idx = cl_wrs_tables_find_rate_idx(wrs_params,
++								   new_table[rate_idx].rate.bw,
++								   new_table[rate_idx].rate.nss,
++								   new_table[rate_idx].rate.mcs,
++								   new_table[rate_idx].rate.gi);
++
++			if (initial_old_rate &&
++			    new_table[rate_idx].rate.bw == initial_old_rate->bw &&
++			    new_table[rate_idx].rate.nss == initial_old_rate->nss &&
++			    new_table[rate_idx].rate.mcs == initial_old_rate->mcs &&
++			    new_table[rate_idx].rate.gi == initial_old_rate->gi) {
++				wrs_params->initial_rate_idx = rate_idx;
++				initial_old_rate = NULL;
++			}
++
++			if (old_rate_idx == WRS_INVALID_RATE)
++				continue;
++
++			new_table[rate_idx].epr_acc =
++				wrs_params->table[old_rate_idx].epr_acc;
++			new_table[rate_idx].frames_total =
++				wrs_params->table[old_rate_idx].frames_total;
++			new_table[rate_idx].ba_not_rcv_total =
++				wrs_params->table[old_rate_idx].ba_not_rcv_total;
++		}
++
++		kfree(wrs_params->table);
++	}
++
++	wrs_params->table = new_table;
++	wrs_params->table_size = new_table_size;
++
++	if (wrs_params->rate_idx != WRS_INVALID_RATE) {
++		/*
++		 * Check if current rate is included in the new table.
++		 * If not select a rate from the new table accroding to rssi.
++		 */
++		struct cl_wrs_rate_params *rate_params = &wrs_params->rate_params;
++
++		rate_idx = cl_wrs_tables_find_rate_idx(wrs_params,
++						       rate_params->bw, rate_params->nss,
++						       rate_params->mcs, rate_params->gi);
++
++		if (rate_idx != WRS_INVALID_RATE) {
++			wrs_params->rate_idx = rate_idx;
++		} else {
++			if (wrs_params->is_fixed_rate) {
++				wrs_params->is_fixed_rate = false;
++				wrs_pr_verbose(wrs_db,
++					       "[%s] Disable fixed rate for station %u\n",
++					       WRS_TYPE_STR(type), wrs_sta->sta_idx);
++			}
++
++			cl_wrs_sta_select_first_rate(cl_hw, wrs_db, wrs_sta, wrs_params);
++			cl_wrs_cntrs_reset(wrs_sta, wrs_params);
++		}
++	}
 +
 +out:
-+	spin_unlock_bh(&cl_hw->tx_lock_single);
++	kfree(valid_rates);
 +}
 +
-+static void cl_txq_delete_packets(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue, u8 sta_idx)
++u16 cl_wrs_tables_find_rate_idx(struct cl_wrs_params *wrs_params,
++				u8 bw, u8 nss, u8 mcs, u8 gi)
 +{
-+	struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
-+
-+	list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &tx_queue->hdrs, tx_queue_list) {
-+		/*
-+		 * Brodcast frames do not have cl_sta and should not be
-+		 * deleted at station remove sequence.
-+		 */
-+		if (!sw_txhdr->cl_sta)
-+			continue;
-+
-+		if (sw_txhdr->sta_idx != sta_idx)
-+			continue;
-+
-+		list_del(&sw_txhdr->tx_queue_list);
-+		tx_queue->num_packets--;
-+
-+		cl_tx_single_free_skb(cl_hw, sw_txhdr->skb);
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+	}
-+
-+	/* If queue is empty remove it from schedule list */
-+	cl_txq_sched_list_remove_if_empty(tx_queue);
-+}
-+
-+static void cl_txq_reset_counters(struct cl_tx_queue *tx_queue)
-+{
-+	tx_queue->total_fw_push_desc = 0;
-+	tx_queue->total_fw_push_skb = 0;
-+	tx_queue->total_fw_cfm = 0;
-+	tx_queue->total_packets = 0;
-+	tx_queue->dump_queue_full = 0;
-+	tx_queue->dump_dma_map_fail = 0;
-+
-+	memset(tx_queue->stats_hw_amsdu_cnt, 0,
-+	       sizeof(tx_queue->stats_hw_amsdu_cnt));
-+
-+	memset(tx_queue->stats_sw_amsdu_cnt, 0,
-+	       sizeof(tx_queue->stats_sw_amsdu_cnt));
-+}
-+
-+static void cl_txq_flush(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue)
-+{
-+	struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
-+	struct ieee80211_tx_info *tx_info;
-+
-+	if (tx_queue->num_packets == 0)
-+		return;
-+
-+	list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &tx_queue->hdrs, tx_queue_list) {
-+		list_del(&sw_txhdr->tx_queue_list);
-+		tx_queue->num_packets--;
-+
-+		/* Can not send AMSDU frames as singles */
-+		tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
-+
-+		/* Free mid & last AMSDU sub frames */
-+		if (cl_tx_ctrl_is_amsdu(tx_info)) {
-+			cl_tx_amsdu_flush_sub_frames(cl_hw, sw_txhdr);
-+		} else {
-+			if (tx_queue->type == QUEUE_TYPE_SINGLE)
-+				cl_tx_single_free_skb(cl_hw, sw_txhdr->skb);
-+			else
-+				kfree_skb(sw_txhdr->skb);
-+
-+			cl_hw->tx_packet_cntr.drop.queue_flush++;
-+			sw_txhdr->cl_vif->trfc_cntrs[sw_txhdr->ac].tx_dropped++;
-+			cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+		}
-+	}
-+
-+	/* Remove from schedule queue */
-+	cl_txq_sched_list_remove(tx_queue);
-+
-+	/* Sanity check that queue is empty */
-+	WARN_ON(tx_queue->num_packets > 0);
-+}
-+
-+static void cl_txq_agg_size_set(struct cl_hw *cl_hw)
-+{
-+	struct cl_tx_queue *tx_queue = NULL;
-+	u16 new_size = 0;
-+	u16 drv_max_size = 0;
-+	int i = 0;
-+	int j = 0;
-+
-+	if (!cl_hw->used_agg_queues || !cl_hw->conf->ci_tx_packet_limit)
-+		return;
-+
-+	new_size = cl_hw->conf->ci_tx_packet_limit / cl_hw->used_agg_queues;
-+	drv_max_size = max(new_size, cl_hw->conf->ci_tx_queue_size_agg);
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++) {
-+		tx_queue = &cl_hw->tx_queues->agg[i];
-+
-+		if (!tx_queue->cl_sta)
-+			continue;
-+
-+		tx_queue->max_packets = drv_max_size;
-+
-+		j++;
-+		if (j == cl_hw->used_agg_queues)
-+			break;
-+	}
-+
-+	cl_dbg_trace(cl_hw, "drv_max_size = %u\n", drv_max_size);
-+}
-+
-+static int cl_txq_request_find(struct cl_hw *cl_hw, u8 sta_idx, u8 tid)
-+{
-+	int i = 0;
-+	struct cl_req_agg_db *req_agg_db = NULL;
-+	u8 req_agg_queues = 0;
-+
-+	for (i = 0; (i < IPC_MAX_BA_SESSIONS) && (req_agg_queues < cl_hw->req_agg_queues); i++) {
-+		req_agg_db = &cl_hw->req_agg_db[i];
-+
-+		if (!req_agg_db->is_used)
-+			continue;
-+
-+		req_agg_queues++;
-+
-+		if (sta_idx == req_agg_db->sta_idx && tid == req_agg_db->tid)
-+			return i;
-+	}
-+
-+	return -1;
-+}
-+
-+static void cl_txq_push_cntrs_update(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue,
-+				     u32 orig_drv_cnt, u32 orig_fw_cnt)
-+{
-+	u32 total_pushed;
-+	u32 idx;
-+
-+	if (!cl_hw->conf->ci_tx_push_cntrs_stat_en)
-+		return;
-+
-+	total_pushed = orig_drv_cnt - tx_queue->num_packets;
-+	idx = tx_queue->push_cntrs_db.tx_push_logger_idx % TX_PUSH_LOGGER_SIZE;
-+	tx_queue->push_cntrs_db.tx_push_cntr_hist[total_pushed]++;
-+	tx_queue->push_cntrs_db.tx_push_logger[idx][TX_PUSH_LOGGER_DRV_CNT] = orig_drv_cnt;
-+	tx_queue->push_cntrs_db.tx_push_logger[idx][TX_PUSH_LOGGER_FW_CNT] = orig_fw_cnt;
-+	tx_queue->push_cntrs_db.tx_push_logger[idx][TX_PUSH_LOGGER_PKT_PUSHED] = total_pushed;
-+	++tx_queue->push_cntrs_db.tx_push_logger_idx;
-+}
-+
-+static void cl_txq_task_single(struct cl_hw *cl_hw)
-+{
-+	/* Schedule single queues */
-+	struct cl_tx_queue *tx_queue, *tx_queue_tmp;
-+
-+	spin_lock(&cl_hw->tx_lock_single);
-+
-+	list_for_each_entry_safe(tx_queue, tx_queue_tmp, &cl_hw->list_sched_q_single, sched_list)
-+		cl_txq_sched(cl_hw, tx_queue);
-+
-+	/* Rotate the queue so next schedule will start with a different queue */
-+	list_rotate_left(&cl_hw->list_sched_q_single);
-+
-+	spin_unlock(&cl_hw->tx_lock_single);
-+}
-+
-+static void cl_txq_task_agg(struct cl_hw *cl_hw)
-+{
-+	/* Schedule agg queueus */
-+	struct cl_tx_queue *tx_queue, *tx_queue_tmp;
-+
-+	spin_lock(&cl_hw->tx_lock_agg);
-+
-+	list_for_each_entry_safe(tx_queue, tx_queue_tmp, &cl_hw->list_sched_q_agg, sched_list)
-+		cl_txq_sched(cl_hw, tx_queue);
-+
-+	/* Rotate the queue so next schedule will start with a different queue */
-+	list_rotate_left(&cl_hw->list_sched_q_agg);
-+
-+	spin_unlock(&cl_hw->tx_lock_agg);
-+}
-+
-+static void cl_txq_task(unsigned long data)
-+{
-+	struct cl_hw *cl_hw = (struct cl_hw *)data;
-+
-+	cl_txq_task_single(cl_hw);
-+	cl_txq_task_agg(cl_hw);
-+}
-+
-+static void cl_txq_agg_inc_usage_cntr(struct cl_hw *cl_hw)
-+{
-+	/* Should be called in cl_hw->tx_lock_agg context */
-+	cl_hw->used_agg_queues++;
-+	cl_txq_agg_size_set(cl_hw);
-+}
-+
-+static void cl_txq_agg_dec_usage_cntr(struct cl_hw *cl_hw)
-+{
-+	/* Should be called in cl_hw->tx_lock_agg context */
-+	WARN_ON_ONCE(cl_hw->used_agg_queues == 0);
-+
-+	cl_hw->used_agg_queues--;
-+	cl_txq_agg_size_set(cl_hw);
-+}
-+
-+static void cl_txq_init_single(struct cl_hw *cl_hw)
-+{
-+	struct cl_tx_queue *tx_queue;
-+	u32 i;
-+
-+	spin_lock_bh(&cl_hw->tx_lock_single);
-+
-+	INIT_LIST_HEAD(&cl_hw->list_sched_q_single);
-+
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++) {
-+		tx_queue = &cl_hw->tx_queues->single[i];
-+		memset(tx_queue, 0, sizeof(struct cl_tx_queue));
-+		INIT_LIST_HEAD(&tx_queue->hdrs);
-+		tx_queue->hw_index = i / FW_MAX_NUM_STA;
-+		tx_queue->fw_max_size = IPC_TXDESC_CNT_SINGLE;
-+		tx_queue->fw_free_space = IPC_TXDESC_CNT_SINGLE;
-+		tx_queue->index = i;
-+		tx_queue->max_packets = cl_hw->conf->ci_tx_queue_size_single;
-+		tx_queue->type = QUEUE_TYPE_SINGLE;
-+	}
-+
-+	spin_unlock_bh(&cl_hw->tx_lock_single);
-+}
-+
-+static void cl_txq_init_bcmc(struct cl_hw *cl_hw)
-+{
-+	struct cl_tx_queue *tx_queue;
-+
-+	spin_lock_bh(&cl_hw->tx_lock_bcmc);
-+
-+	tx_queue = &cl_hw->tx_queues->bcmc;
-+	memset(tx_queue, 0, sizeof(struct cl_tx_queue));
-+	INIT_LIST_HEAD(&tx_queue->hdrs);
-+	tx_queue->hw_index = CL_HWQ_BCN;
-+	tx_queue->fw_max_size = IPC_TXDESC_CNT_BCMC;
-+	tx_queue->fw_free_space = IPC_TXDESC_CNT_BCMC;
-+	tx_queue->index = 0;
-+	tx_queue->max_packets = 0;
-+	tx_queue->type = QUEUE_TYPE_BCMC;
-+
-+	spin_unlock_bh(&cl_hw->tx_lock_bcmc);
-+}
-+
-+static void cl_txq_init_agg(struct cl_hw *cl_hw)
-+{
-+	spin_lock_bh(&cl_hw->tx_lock_agg);
-+	INIT_LIST_HEAD(&cl_hw->list_sched_q_agg);
-+	spin_unlock_bh(&cl_hw->tx_lock_agg);
-+}
-+
-+static void cl_txq_agg_request_reset(struct cl_hw *cl_hw)
-+{
-+	cl_hw->req_agg_queues = 0;
-+	memset(cl_hw->req_agg_db, 0, sizeof(cl_hw->req_agg_db));
-+}
-+
-+void cl_txq_init(struct cl_hw *cl_hw)
-+{
-+	tasklet_init(&cl_hw->tx_task, cl_txq_task, (unsigned long)cl_hw);
-+
-+	cl_txq_agg_request_reset(cl_hw);
-+	cl_txq_init_single(cl_hw);
-+	cl_txq_init_bcmc(cl_hw);
-+	cl_txq_init_agg(cl_hw);
-+}
-+
-+void cl_txq_stop(struct cl_hw *cl_hw)
-+{
-+	tasklet_kill(&cl_hw->tx_task);
-+}
-+
-+struct cl_tx_queue *cl_txq_get(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	struct cl_sta *cl_sta = sw_txhdr->cl_sta;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
-+	u8 hw_queue = sw_txhdr->hw_queue;
-+
-+	if (!cl_sta &&
-+	    hw_queue == CL_HWQ_VO &&
-+	    is_multicast_ether_addr(sw_txhdr->hdr80211->addr1)) {
-+		/*
-+		 * If HW queue is VO and packet is multicast, it was not buffered
-+		 * by mac80211, and it should be pushed to the high-priority queue
-+		 * and not to the bcmc queue.
-+		 */
-+		return &cl_hw->tx_queues->single[HIGH_PRIORITY_QUEUE];
-+	} else if (!cl_sta &&
-+		   (hw_queue != CL_HWQ_BCN) &&
-+		   !(tx_info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)) {
-+		/*
-+		 * If station is NULL, but HW queue is not BCN,
-+		 * it most go to the high-priority queue.
-+		 */
-+		tx_info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
-+		sw_txhdr->hw_queue = CL_HWQ_VO;
-+		return &cl_hw->tx_queues->single[HIGH_PRIORITY_QUEUE];
-+	} else if (cl_sta && (tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
-+		/* Agg packet */
-+		return cl_sta->agg_tx_queues[sw_txhdr->tid];
-+	} else if (hw_queue == CL_HWQ_BCN) {
-+		return &cl_hw->tx_queues->bcmc;
-+	} else if (tx_info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER) {
-+		/*
-+		 * Only frames that are power save response or non-bufferable MMPDU
-+		 * will have this flag set our driver will push those frame to the
-+		 * highiest priority queue.
-+		 */
-+		return &cl_hw->tx_queues->single[HIGH_PRIORITY_QUEUE];
-+	}
-+
-+	return &cl_hw->tx_queues->single[QUEUE_IDX(sw_txhdr->sta_idx, hw_queue)];
-+}
-+
-+void cl_txq_push(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr)
-+{
-+	struct cl_tx_queue *tx_queue = sw_txhdr->tx_queue;
-+
-+	if (tx_queue->num_packets < tx_queue->max_packets) {
-+		tx_queue->num_packets++;
-+
-+		/*
-+		 * This prioritization of action frames helps Samsung Galaxy Note 8 to
-+		 * open BA session more easily, when phy dev is PHY_DEV_OLYMPUS
-+		 * and helps open BA on all system emulators
-+		 */
-+		if (ieee80211_is_action(sw_txhdr->fc) && !IS_REAL_PHY(cl_hw->chip))
-+			list_add(&sw_txhdr->tx_queue_list, &tx_queue->hdrs);
-+		else
-+			list_add_tail(&sw_txhdr->tx_queue_list, &tx_queue->hdrs);
-+
-+		/* If it is the first packet in the queue, add the queue to the sched list */
-+		cl_txq_sched_list_add(tx_queue, cl_hw);
-+	} else {
-+		struct cl_sta *cl_sta = sw_txhdr->cl_sta;
-+		u8 tid = sw_txhdr->tid;
-+
-+		/* If the SW queue full, release the packet */
-+		tx_queue->dump_queue_full++;
-+
-+		if (cl_sta && cl_sta->amsdu_anchor[tid].sw_txhdr) {
-+			if (cl_sta->amsdu_anchor[tid].sw_txhdr == sw_txhdr) {
-+				cl_sta->amsdu_anchor[tid].sw_txhdr = NULL;
-+				cl_sta->amsdu_anchor[tid].packet_cnt = 0;
-+			}
-+		}
-+
-+		dev_kfree_skb_any(sw_txhdr->skb);
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+
-+		/* Schedule tasklet to try and empty the queue */
-+		tasklet_schedule(&cl_hw->tx_task);
-+	}
-+}
-+
-+void cl_txq_sched(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue)
-+{
-+	struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
-+	u32 orig_drv_cnt = tx_queue->num_packets;
-+	u32 orig_fw_cnt = cl_txq_desc_in_fw(tx_queue);
-+	struct cl_sta *cl_sta = tx_queue->cl_sta;
-+
-+	if (!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) ||
-+	    cl_hw->tx_disable_flags ||
-+	    cl_txq_is_fw_full(tx_queue) ||
-+	    (cl_sta && cl_sta->pause_tx))
-+		return;
-+
-+	/* Go over all descriptors in queue */
-+	list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &tx_queue->hdrs, tx_queue_list) {
-+		list_del(&sw_txhdr->tx_queue_list);
-+		tx_queue->num_packets--;
-+
-+		if (cl_hw->tx_db.force_amsdu &&
-+		    sw_txhdr->txdesc.host_info.packet_cnt < cl_hw->txamsdu_en)
-+			break;
-+
-+		cl_tx_push(cl_hw, sw_txhdr, tx_queue);
-+
-+		if (cl_txq_is_fw_full(tx_queue))
-+			break;
-+	}
-+
-+	cl_txq_push_cntrs_update(cl_hw, tx_queue, orig_drv_cnt, orig_fw_cnt);
-+
-+	/* If queue is empty remove it from schedule list */
-+	cl_txq_sched_list_remove_if_empty(tx_queue);
-+}
-+
-+void cl_txq_agg_alloc(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+		      struct mm_ba_add_cfm *ba_add_cfm, u16 buf_size)
-+{
-+	u8 tid = ba_add_cfm->tid;
-+	u8 fw_agg_idx = ba_add_cfm->agg_idx;
-+	u8 sta_idx = cl_sta->sta_idx;
-+	u8 ac = cl_tid2hwq[tid];
-+	u16 single_queue_idx = QUEUE_IDX(sta_idx, ac);
-+	struct cl_tx_queue *tx_queue = &cl_hw->tx_queues->agg[fw_agg_idx];
-+
-+	spin_lock_bh(&cl_hw->tx_lock_agg);
-+
-+	/* Init aggregated queue struct */
-+	memset(tx_queue, 0, sizeof(struct cl_tx_queue));
-+	INIT_LIST_HEAD(&tx_queue->hdrs);
-+
-+	/*
-+	 * Firmware agg queues size is static and set to 512, so that for the worst
-+	 * case of HE stations,that support AMPDU of 256, it has room for two full
-+	 * aggregation.
-+	 * To keep this logic, of room for two aggregations, for non-HE stations, or
-+	 * for HE stations that do not support AMPDU of 256, we initialize fw_max_size
-+	 to twice the buffer size supported by the station.
-+	 */
-+	tx_queue->fw_max_size = min_t(u16, TXDESC_AGG_Q_SIZE_MAX, buf_size * 2);
-+	tx_queue->fw_free_space = tx_queue->fw_max_size;
-+
-+	tx_queue->max_packets = cl_hw->conf->ci_tx_queue_size_agg;
-+	tx_queue->hw_index = ac;
-+	tx_queue->cl_sta = cl_sta;
-+	tx_queue->type = QUEUE_TYPE_AGG;
-+	tx_queue->tid = tid;
-+	tx_queue->index = fw_agg_idx;
-+
-+	/* Reset the synchronization counters between the fw and the IPC layer */
-+	cl_hw->ipc_env->ring_indices_elem->indices->txdesc_write_idx.agg[fw_agg_idx] = 0;
-+
-+	/* Attach the cl_hw chosen queue to the station and agg queues DB */
-+	cl_sta->agg_tx_queues[tid] = tx_queue;
-+	cl_agg_cfm_set_tx_queue(cl_hw, tx_queue, fw_agg_idx);
-+
-+	/* Notify upper mac80211 layer of queues resources status */
-+	cl_txq_agg_inc_usage_cntr(cl_hw);
-+	cl_txq_agg_request_del(cl_hw, sta_idx, tid);
-+
-+	/*
-+	 * Move the qos descriptors to the new allocated aggregated queues,
-+	 * otherwise we might reorder packets)
-+	 */
-+	cl_txq_transfer_single_to_agg(cl_hw, &cl_hw->tx_queues->single[single_queue_idx],
-+				      tx_queue, tid);
-+	/* Move the BA window pending packets to agg path */
-+	cl_baw_pending_to_agg(cl_hw, cl_sta, tid);
-+
-+	spin_unlock_bh(&cl_hw->tx_lock_agg);
-+
-+	cl_dbg_trace(cl_hw, "Allocate queue [%u] to station [%u] tid [%u]\n",
-+		     fw_agg_idx, sta_idx, tid);
-+}
-+
-+void cl_txq_agg_free(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue,
-+		     struct cl_sta *cl_sta, u8 tid)
-+{
-+	spin_lock_bh(&cl_hw->tx_lock_agg);
-+
-+	cl_dbg_trace(cl_hw, "Free queue [%u] of station [%u] tid [%u]\n",
-+		     tx_queue->index, cl_sta->sta_idx, tid);
-+
-+	memset(tx_queue, 0, sizeof(struct cl_tx_queue));
-+
-+	cl_txq_agg_dec_usage_cntr(cl_hw);
-+
-+	spin_unlock_bh(&cl_hw->tx_lock_agg);
-+}
-+
-+void cl_txq_agg_stop(struct cl_sta *cl_sta, u8 tid)
-+{
-+	cl_sta->agg_tx_queues[tid] = NULL;
-+}
-+
-+void cl_txq_sta_add(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	/* Set cl_sta field for all single queues of this station */
-+	u8 ac;
-+	u16 queue_idx;
-+
-+	for (ac = 0; ac < AC_MAX; ac++) {
-+		queue_idx = QUEUE_IDX(cl_sta->sta_idx, ac);
-+		cl_hw->tx_queues->single[queue_idx].cl_sta = cl_sta;
-+	}
-+
-+	/* Reset pointers to TX agg queues */
-+	memset(cl_sta->agg_tx_queues, 0, sizeof(cl_sta->agg_tx_queues));
-+}
-+
-+void cl_txq_sta_remove(struct cl_hw *cl_hw, u8 sta_idx)
-+{
-+	/* Clear cl_sta field for all single queues of this station */
-+	u8 ac;
-+	u16 queue_idx;
-+
-+	for (ac = 0; ac < AC_MAX; ac++) {
-+		queue_idx = QUEUE_IDX(sta_idx, ac);
-+		cl_hw->tx_queues->single[queue_idx].cl_sta = NULL;
-+	}
-+}
-+
-+void cl_txq_transfer_agg_to_single(struct cl_hw *cl_hw, struct cl_tx_queue *agg_queue)
-+{
-+	/*
-+	 * 1) Remove from aggregation queue
-+	 * 2) Free sw_txhdr
-+	 * 3) Push to single queue
-+	 */
-+	struct cl_sw_txhdr *sw_txhdr, *sw_txhdr_tmp;
-+	struct sk_buff *skb;
-+	struct ieee80211_tx_info *tx_info;
-+	struct cl_tx_queue *single_queue;
-+	struct cl_sta *cl_sta = agg_queue->cl_sta;
-+	u16 single_queue_idx = 0;
-+
-+	if (agg_queue->num_packets == 0)
-+		return;
-+
-+	single_queue_idx = QUEUE_IDX(cl_sta->sta_idx, agg_queue->hw_index);
-+	single_queue = &cl_hw->tx_queues->single[single_queue_idx];
-+
-+	list_for_each_entry_safe(sw_txhdr, sw_txhdr_tmp, &agg_queue->hdrs, tx_queue_list) {
-+		list_del(&sw_txhdr->tx_queue_list);
-+		agg_queue->num_packets--;
-+
-+		skb = sw_txhdr->skb;
-+		tx_info = IEEE80211_SKB_CB(skb);
-+
-+		if (cl_tx_ctrl_is_amsdu(tx_info)) {
-+			cl_tx_amsdu_transfer_single(cl_hw, sw_txhdr);
-+		} else {
-+			tx_info->flags &= ~IEEE80211_TX_CTL_AMPDU;
-+
-+			if (cl_tx_8023_to_wlan(cl_hw, skb, cl_sta, sw_txhdr->tid) == 0) {
-+				cl_hw->tx_packet_cntr.transfer.agg_to_single++;
-+				cl_tx_single(cl_hw, cl_sta, skb, false, false);
-+			}
-+		}
-+
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+	}
-+
-+	/* If queue is empty remove it from schedule list */
-+	cl_txq_sched_list_remove_if_empty(agg_queue);
-+}
-+
-+void cl_txq_flush_agg(struct cl_hw *cl_hw, struct cl_tx_queue *tx_queue, bool lock)
-+{
-+	if (lock) {
-+		spin_lock_bh(&cl_hw->tx_lock_agg);
-+		cl_txq_flush(cl_hw, tx_queue);
-+		spin_unlock_bh(&cl_hw->tx_lock_agg);
-+	} else {
-+		cl_txq_flush(cl_hw, tx_queue);
-+	}
-+}
-+
-+void cl_txq_flush_all_agg(struct cl_hw *cl_hw)
-+{
-+	int i = 0;
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++)
-+		cl_txq_flush(cl_hw, &cl_hw->tx_queues->agg[i]);
-+}
-+
-+void cl_txq_flush_all_single(struct cl_hw *cl_hw)
-+{
-+	int i = 0;
-+
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++)
-+		cl_txq_flush(cl_hw, &cl_hw->tx_queues->single[i]);
-+}
-+
-+void cl_txq_flush_sta(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	int i = 0;
-+	u8 sta_idx = cl_sta->sta_idx;
-+	u32 queue_idx = 0;
-+	struct cl_tx_queue *tx_queue = NULL;
-+
-+	spin_lock_bh(&cl_hw->tx_lock_agg);
-+
-+	/* Flush all aggregation queues for this station */
-+	for (i = 0; i < IEEE80211_NUM_TIDS; i++)
-+		if (cl_sta->agg_tx_queues[i])
-+			cl_txq_flush(cl_hw, cl_sta->agg_tx_queues[i]);
-+
-+	spin_unlock_bh(&cl_hw->tx_lock_agg);
-+
-+	spin_lock_bh(&cl_hw->tx_lock_single);
-+
-+	/* Flush all single queues for this station */
-+	for (i = 0; i < AC_MAX; i++) {
-+		queue_idx = QUEUE_IDX(sta_idx, i);
-+		tx_queue = &cl_hw->tx_queues->single[queue_idx];
-+		cl_txq_flush(cl_hw, tx_queue);
-+		cl_txq_reset_counters(tx_queue);
-+	}
-+
-+	/* Go over high prioirty queue and delete packets belonging to this station */
-+	cl_txq_delete_packets(cl_hw, &cl_hw->tx_queues->single[HIGH_PRIORITY_QUEUE], sta_idx);
-+
-+	spin_unlock_bh(&cl_hw->tx_lock_single);
-+}
-+
-+void cl_txq_agg_request_add(struct cl_hw *cl_hw, u8 sta_idx, u8 tid)
-+{
-+	int i = cl_txq_request_find(cl_hw, sta_idx, tid);
-+	struct cl_req_agg_db *req_agg_db = NULL;
-+
-+	if (i != -1) {
-+		cl_dbg_trace(cl_hw, "ALREADY_ADDED - entry = %d, sta_idx = %u, tid = %u\n",
-+			     i, sta_idx, tid);
-+		return;
-+	}
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++) {
-+		req_agg_db = &cl_hw->req_agg_db[i];
-+
-+		if (!req_agg_db->is_used) {
-+			cl_dbg_trace(cl_hw, "ADD - entry = %d, sta_idx = %u, tid = %u\n",
-+				     i, sta_idx, tid);
-+			req_agg_db->is_used = true;
-+			req_agg_db->sta_idx = sta_idx;
-+			req_agg_db->tid = tid;
-+			cl_hw->req_agg_queues++;
-+			return;
-+		}
-+	}
-+}
-+
-+void cl_txq_agg_request_del(struct cl_hw *cl_hw, u8 sta_idx, u8 tid)
-+{
-+	int i = cl_txq_request_find(cl_hw, sta_idx, tid);
-+
-+	if (i != -1) {
-+		cl_dbg_trace(cl_hw, "DEL - entry = %d, sta_idx = %u, tid = %u\n",
-+			     i, sta_idx, tid);
-+		cl_hw->req_agg_db[i].is_used = false;
-+		cl_hw->req_agg_queues--;
-+	}
-+}
-+
-+bool cl_txq_is_agg_available(struct cl_hw *cl_hw)
-+{
-+	u8 total_agg_queues = cl_hw->used_agg_queues + cl_hw->req_agg_queues;
-+
-+	return (total_agg_queues < IPC_MAX_BA_SESSIONS);
-+}
-+
-+bool cl_txq_is_fw_empty(struct cl_tx_queue *tx_queue)
-+{
-+	return (tx_queue->fw_free_space == tx_queue->fw_max_size);
-+}
-+
-+bool cl_txq_is_fw_full(struct cl_tx_queue *tx_queue)
-+{
-+	return (tx_queue->fw_free_space == 0);
-+}
-+
-+u16 cl_txq_desc_in_fw(struct cl_tx_queue *tx_queue)
-+{
-+	return (tx_queue->fw_max_size - tx_queue->fw_free_space);
-+}
-+
-+bool cl_txq_frames_pending(struct cl_hw *cl_hw)
-+{
-+	int i = 0;
-+
-+	/* Check if we have multicast/bradcast frame in FW queues */
-+	if (!cl_txq_is_fw_empty(&cl_hw->tx_queues->bcmc))
-+		return true;
-+
-+	/* Check if we have singles frame in FW queues */
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++)
-+		if (!cl_txq_is_fw_empty(&cl_hw->tx_queues->single[i]))
-+			return true;
-+
-+	/* Check if we have aggregation frame in FW queues */
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++)
-+		if (!cl_txq_is_fw_empty(&cl_hw->tx_queues->agg[i]))
-+			return true;
-+
-+	return false;
++	struct cl_wrs_table *table = wrs_params->table;
++	u16 rate_idx = 0;
++
++	for (rate_idx = 0; rate_idx < wrs_params->table_size; rate_idx++)
++		if (bw == table[rate_idx].rate.bw &&
++		    nss == table[rate_idx].rate.nss &&
++		    mcs == table[rate_idx].rate.mcs &&
++		    gi == table[rate_idx].rate.gi)
++			return rate_idx;
++
++	return WRS_INVALID_RATE;
 +}
 +
 -- 
