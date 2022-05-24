@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A017C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8456C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236845AbiEXLjZ (ORCPT
+        id S236849AbiEXLj0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:39:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41744 "EHLO
+        Tue, 24 May 2022 07:39:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236843AbiEXLjX (ORCPT
+        with ESMTP id S235357AbiEXLjY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:39:23 -0400
-Received: from EUR03-DBA-obe.outbound.protection.outlook.com (mail-dbaeur03on2086.outbound.protection.outlook.com [40.107.104.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EC808D6B7
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:08 -0700 (PDT)
+        Tue, 24 May 2022 07:39:24 -0400
+Received: from EUR04-DB3-obe.outbound.protection.outlook.com (mail-eopbgr60047.outbound.protection.outlook.com [40.107.6.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 461428DDC1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:09 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZzzaWOSJ3HdcP0u2o4pJFa6k4qaNUDUl8/IZm78z+BFH6G0rImiS6/xLjEoiKSoIVdKfTC9ytahEbtNfG4ldaSL8iBci9qENEYlzhLnbXm4vFf/3gyeZFQOwacAzthkQ9S8SDVkg+bXTx8xnIEEJk9ZNOcx11qBIr8RL1hNDN4gqfF+aBwQrVf120QcF9SCzv1ZwVyF4eXe/UuNHdSDuMforq6DmZjcIOfwe0YEyOxo6VHV5PJdxqg3GO0RLcTAh7DZSWf4hSFI8fHHyR0lfDemLtcEtCJBjz29xXv1+Afu3ktzIGFRtS51grlSolHG2Aa2YlbPBm1cp+wXbWae5lQ==
+ b=dEIuaI9wJ9G4PkHzGhMiRyKdLQnXG4YqL7l8VjVzgbzPPWyvBFjR8US/zRV4r9E5FCbSFEq+/tYeUk+qgKgJGD+cI9yiFuhIc69+3F4UOsSsNWv/H2tHjZILsgOBH76fff5KkV/k+QAAQDsujVsjOFIQOtFtjZCH4DFVb2ve1XiOMmXV+FMJ/ncNPmVpOygJPWXR0PbJxyLDFJyqsdZLIt0aohoB/F392Fh3o9ZzRb7AX9dwAhTzB0awAoIhDei0xRPVgVWRtpD+N3Ciiyu6chAmF9LPi2bhPF/9OBIRaShyeGtgLw43Thga/HFKb14oB5iMgnMILfD48XYQDvRaEA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Y6JZoNFmGNSqyK+7OiN9STKegkIvcAT/apf77LQ7+to=;
- b=P9gJxFPwdgt0E6UGfrOCnWTGRoEWgj7Se2EkLE7wu91aUFQ1E1749uvkQguPZWJXIEJksUKdrYfNkMZssEBcf4OvXy9RQWoj06s1Zp3jJKqSJJTI/SyRk2znU52sFjRYKIzb7S4K7kqJSG8DxyRr2x+DunsjelM6Hj3s4KYyrDD+oozaMoem9pezmk9Y8ddCLjRqghFV3L9FQJ5UyJ7v57nD3N7XrML36yEBz1n1HPbIkPTKM9wsWBKglRRGAmtj/7pyL4883YH8PN2DU6DQuk+ElNMfF0B/hhmiW/tQLANUiWdXASzdsAeij1MZzsBVtcjpRLTdn5E1csGODBiFKQ==
+ bh=xcDpzWGMW77bGjdY+GT2edSgQ8KR6rmN61X/5EOoDp4=;
+ b=LLRBbnkkaRGhxjRW/AkUzbh69/iCt6N1XsfQI1gb8+k5K1uEtzljufFN1AY+H9um49XDTTTV4OGnvUnWeoPRq3BHCVNV29XU/jU1UrxiDEm8zKC1WwsDS9P0dcWa1dCJIPZStEurk61GFeKrL1/v41UvWukKXKs7mNcasnzFJX4IzPHmnr+fApBKvAPwHGE0BvEqHWR4dHn4RHMRaV6fzCzML7vTxXy7ySDikbMfcBt7jVRj7VQWMS2GDpD/j8tpPHr4ETfXPp+MWO7fTeBHugZXUZymqU0fJgOyVJaqCA32cM+kl5MWovDK7ziwLXlkFbprx7WarFIlyYrDY8c+zA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Y6JZoNFmGNSqyK+7OiN9STKegkIvcAT/apf77LQ7+to=;
- b=Q8tNWzdtALG+ifpbX/5ZFgJ3q1o1p14Z3gp3eDIJJqOiXnp8o1W6T35MP7ZGDXlzGNJ2RpQmMJYwjzeQuDlzDI2u8jg6Uj7LPVmt1nMwJ++iqyCOcCk3WZclLdFFW8vCHB7h6GKbwUDrOMT/3mF9hr/1Zx+R0gRw9XxpqUGSHIs=
+ bh=xcDpzWGMW77bGjdY+GT2edSgQ8KR6rmN61X/5EOoDp4=;
+ b=I8UzIBvkyjXqswDrsvjU1MIkT4WjSwNkwIvTjOLVTtZ5L/JokvaRQ+bJyKM+Rk7zLVKsCfenUhdK+A4iSgAPXkNousA4RNivhm7cUdGTtk6swNnLdYUuXwsGTPjAy/OXsCwqLBA9ljB6VJCwthndNwYJX/o5zqSxPrJi9pN3EqA=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by VI1P192MB0384.EURP192.PROD.OUTLOOK.COM (2603:10a6:803:34::30) with
+ by AM8P192MB0915.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1ed::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.13; Tue, 24 May
- 2022 11:38:41 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Tue, 24 May
+ 2022 11:38:53 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:38:41 +0000
+ 11:38:53 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 39/96] cl8k: add mac80211.h
-Date:   Tue, 24 May 2022 14:34:05 +0300
-Message-Id: <20220524113502.1094459-40-viktor.barna@celeno.com>
+Subject: [RFC v2 60/96] cl8k: add recovery.c
+Date:   Tue, 24 May 2022 14:34:26 +0300
+Message-Id: <20220524113502.1094459-61-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 06082275-11e4-4fb3-c8f3-08da3d79e2f6
-X-MS-TrafficTypeDiagnostic: VI1P192MB0384:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0352b016-a06e-4dc5-3016-08da3d79f116
+X-MS-TrafficTypeDiagnostic: AM8P192MB0915:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <VI1P192MB0384372169B416905D30BCA8F6D79@VI1P192MB0384.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <AM8P192MB0915C9EF6584F6A2EE49C77BF6D79@AM8P192MB0915.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 1db7U7nVw5vZV6/kd5r7DK7Ss2PnG6BcXzpr9v/Yc7FKoYL8PYR1ROk0Q1jxB2r7u2GMfOVuWJTsm0r1e3J/8QPZ26s3tlFdUFgkEeX73E8sod7G9k+FmOR4K8oj+7ewCKgR2ak2BuezAbGnLa2yR+hFDynHvKJzJPANVEzfOCstM4DTLX3CAeEfQ8ih6MTglLlROaT2hmMhvOwhCagfPnzrLgrJlpWhYBao8SOkUtozIISbiQDofBEq1Y6LMbgsObyXMz38BenORPseGHk43aPtaspL8KA8hLjLiyl7XO1fdEs88JSdU4ogEnhq79Jm4OsC9leWSQvKmyCqxPUast2hDqS25HFtLyMqwVUVhuy6v6WXyI+LHLxFve9kqR3wwpe3e7N61GFZCmeDfzmjUeBzRdGLQoczW8vp22++7hpiae6Eir16f9jPj+++4XycvYreed8SjHytQ2iiNgRjVKEFGSPSPnXUMOw/VRKgsa9shFGtvkhHuEkHdOGgL5VnJPEGjeAaeRDf8hFfS1WqLQs5O1QP7X8Amg0ovaeevh7mwtzap90LTMIXktnjeXRg0kkiJRga5I7G4sF5w4VQMfnYgpMCpVwf71/Iq/EqGg5SJPKkn/l61gbwKpBwpwu3Bjh9gyinlCMnSveJs4zsIsvvP50tj8iEZ2Sh+ucrxjITkjxwRDHzbMQkUpAiDwa3KhMnwtnQGf+B+Fhhi1jx60B3c2djb+8VZyNvjJCO2Eg=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(396003)(346002)(39850400004)(376002)(41300700001)(36756003)(6666004)(8936002)(508600001)(186003)(83380400001)(6486002)(6506007)(38100700002)(2906002)(38350700002)(6512007)(107886003)(5660300002)(2616005)(1076003)(66946007)(4326008)(8676002)(26005)(52116002)(316002)(6916009)(9686003)(66556008)(66476007)(86362001)(54906003)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: Jm69/zNlrjcT3cqhd6u1jbUPdZ3xUTjVOyK/SFwpCR3hJTH0LKN6bL4MOEb3Et0ETRsjFachylxbF467cjnMyyWZ1xhJCAPr82sGa2E/HxIlv5eFxEOqu0uVqzrWM81gIczZPr3eZpLynfTaZndZz27sTu2jVu/xIo0S4tjd0jC8AGsvgioPmVjm/DLyjTrzc9G5mgOW0DGtOydRkA35iAxx6WcrY9UIxdCdemUOvx+J/eneQPQSd+6GlGBqkedOvSPHqKFtSRaQ4I/O+31ZlzPgCXLZiFEI4o5GEhuCjJeBoF3A3NIXrICdNeXwhWXucr6nmPBmO8sixYyvADu9hjTh8suWjlyOCgYvueBgJQd23ilkE9yr6hTKvkvXA0jakz9FEs4MzH3bwYVq7msJkyot8eYNg4In4gwgreefkBNjuk+VSothHCEp+ePwY0lvvir5v1vWIhZOEA5B7l9K/yuRGjR9hIeXLqe99HAeyUQksZ6SEi4+QtADjqTIK6ya8ui4gyCiyiDRWWnMFJPhVmBGg9DtmtNVRpwSOU/KmkZVyxdqfBk2i2Knv5FvuzQ347uSpnGPAVu7VpQxrqrkA+Hi0pir7oc9/hg/xPzzNPBpArvvUF7f9Fm5PDbdHACil9IgiKHGlvRx9U+qNu94qPOLj1qIoW0HbYEqFEmwq49rl0J8dYvVlsto5EkjH2MfPdNDPQP92Eosn1DL435AfdA+5YLc2FjC/DnD00t8BJ8=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(396003)(376002)(346002)(39850400004)(83380400001)(54906003)(186003)(36756003)(107886003)(2906002)(2616005)(1076003)(6916009)(41300700001)(66946007)(8936002)(6666004)(9686003)(66476007)(26005)(86362001)(66556008)(5660300002)(6512007)(4326008)(38350700002)(316002)(6506007)(52116002)(8676002)(6486002)(38100700002)(508600001)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?OCvo8EtcIyZWXrGHdtRNjd6UYfbDTCimwpjP+MiHdYnefCSYNeDlrTifLj5n?=
- =?us-ascii?Q?FWNKaod70haX+l9caXavxTB6S+Onhwqr0ih7T7HB2k5vPi4r3eCB3ioSavHC?=
- =?us-ascii?Q?zRvhD7HRqesnshSxAZEbvFX+xVHplS/G8//9Rf3VmcgUB51ba3yPq0AQftUi?=
- =?us-ascii?Q?5niUSOCncwkDY9T3XlcUtYMaDGABJnHHgHeFZMo3HcUcVZQU6jWa+TJy4N0o?=
- =?us-ascii?Q?1yU1RU+ItJHDoo8J49F7QtxkoK3UbCgqmkO51R8smIg03iAH+ImpRc57lwc/?=
- =?us-ascii?Q?R+gLvBpBRtIcJ9iUP7uUS/WeHCSI5RllxhmQyMYcvVkQ6WV37FHbCSRM0Dkz?=
- =?us-ascii?Q?igrY+psSkEjvKzxBB+eLRuzh93VOmtqiGXxBDXETrMqXUnBzCo4kWUHreIE5?=
- =?us-ascii?Q?Vu7CgQiQiBidm+XCb0cydPv4c5QDu2QZbYMA8wWIto0K52NTU6PWONA5W91H?=
- =?us-ascii?Q?kvVFW4NwI8QL5zW55ID8PJ4Vb8l3zIbMF146dbwBYWcB5NiN47nfK4jGs0pI?=
- =?us-ascii?Q?HduTRbSH66JyTmfVj9Iga5PRpHX6UBQRb8/2NFQsDFQbsRuPb8p4XL7DSIHu?=
- =?us-ascii?Q?DnQopIwY3PiWJD3aVqnKN/lX2ArQ53vTstoJhFpsPU8fe8nhrQzepvCOI3OB?=
- =?us-ascii?Q?+q7Jvosn1YTosc/Wasx2/ROQrrb1qOspvnijm79JaRtlMPO3a6D0LNz4nviF?=
- =?us-ascii?Q?8rYaj1vUfhDkGI+CxA53fhNwaBDMUyi0juKUzU53imRxPftTAP7XV7j/LnUo?=
- =?us-ascii?Q?PM3x8Ho14Gm6TSzZwz+FAfBjuFgoAMGJwPIRfYgUive2gRIFSbsQRT8YCD6P?=
- =?us-ascii?Q?zNkSbX2fKOQZHyZ6Dc7RYYSCxsl6WYkTMRJDzsHUo5zPEA58U+g6fxwjeOKj?=
- =?us-ascii?Q?BnW7SD6EqtT5Pi2tfj/2GyVF0a206xn9H2Q7HnCvGsbaUF/2h/i0D1+26EXD?=
- =?us-ascii?Q?xOgjq4d5/4dU5aXrfNxcmb1zEXt93K9u3pkevk/itpnYeEVy/sWlNsu96ubl?=
- =?us-ascii?Q?HqcppDy7JybXgrwSSgpd/QnLuHa1SXJATop04ncQkLWd5xluBaMHpFNzUhyv?=
- =?us-ascii?Q?1rHqVwdsXv0tqwsqzC+M470rswpXLrWO440w6jJZ2iQSsjJAMoG0f7LVlSiN?=
- =?us-ascii?Q?IAi0LYfvZIyMa8FQB3HTf993y61h6spx5nRaaEjflPGyP/IwB58V4KQBiG0N?=
- =?us-ascii?Q?WqjAidkgiE5GY6kcg7fONTjIkA1xs+sI79BbscyoeuH/1cv6kHHCiSmdKsTb?=
- =?us-ascii?Q?mRZbz0DJOi/MAVXfl+Mpr9QcyqX64+a0jZ8a3oYiJCB0XRjlsXjKamj0pK0k?=
- =?us-ascii?Q?gcwwHqKl5baAN6/7yaG94xFDe3QQ3/ZNVvM1Ql+dq8f+utIFvY+fDa/KDSwf?=
- =?us-ascii?Q?5eLV2VRDRlRlRhvkaxBEO5ZJuFFL6w6bcKVQaFNFxiPZ8Wmh5xq1Ni8fwU2n?=
- =?us-ascii?Q?t5slT3MGnZjCmHOQjDFbir6Az9uhvsayLNHiaHHT/3w2e6eMcF8nbCbblSpT?=
- =?us-ascii?Q?5dGEGY0aWcYlQGsimY6tsYzdLImUvadqLuCXt6/nYV5ZaPYQxmuE2g1TatPS?=
- =?us-ascii?Q?lhlZcGCkoMgI1/GkIvNWMs565PkNI9OO6gkGZvc2k008TIeGiE3PnmH/0euh?=
- =?us-ascii?Q?gCZC2kGuXTrjR+UUpTtugsmee+jqKE5GCwQEVGv5uuWJmwqzxG5nhfOp7dSV?=
- =?us-ascii?Q?jBQQFAQLdrtiJMxZV074wxRCInCygEsjYKib5x3ChFRaJRVRBlYs0LOHWkKU?=
- =?us-ascii?Q?GrxC6q8r01jfu5W7OZBb53NYrTZHxBk=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Sk0WbPkZVGmBKz2AAOgdvA9fp+qw33jDJvu6xXPUJb1+9JkCUb9OYgKQMydC?=
+ =?us-ascii?Q?fQLlywvN+a4OrBHS3q3wfRkx3f6+17OMfJx6RQD6hGOHfYp9WxJpWgc4hKHo?=
+ =?us-ascii?Q?FlnIfYHRtMeN1RD2+5Uu8CRddZoiASPoAvYRNFdaPC3EYsfrhNESnaFHpqwL?=
+ =?us-ascii?Q?h/4KAY6JYs4jIUff9pZJFlq5nfh29Ydwg4pCNs+mDUcCLFEIYDeSG74Ah/7l?=
+ =?us-ascii?Q?3aoIQTLp8fazecR5rrOZ2gwwd+9XITLic8Tgi1n/JJjmuDwazzMb60Jw4zx2?=
+ =?us-ascii?Q?3pJ+6Nide1bLORO9fLs3wB+mnlT18qd+3Vag1eMFsU5zsM92fIJBWeBrxdNI?=
+ =?us-ascii?Q?yZ6pG71h3RebqBAhf2kYX24B783I8taNoWEvtktjrfnRI3XTotRzgirVUjqS?=
+ =?us-ascii?Q?ZL2vKN2WLRs7PyD8zRzeRkh9gPJ/8RPg/2E38vMquzpS6QCbBhLPgbiKpYLx?=
+ =?us-ascii?Q?DflgakbDduHOEErzFjSBbWzNIZYdo3+DN+GyfAIktEVZvgo9hW7r40aCPq2I?=
+ =?us-ascii?Q?was2kGxd7gl+Zj1H3oVgLdOdPo0D9N05VbkNfGXENK0xa2zBjU9WI9wFdwap?=
+ =?us-ascii?Q?7xlAvEvwOM8u7+cS29Z8TVjmdGjr1VE+Ix0sqokyBXpsoZ/TTvbiamVHisIH?=
+ =?us-ascii?Q?MijiuSpOEDYiUjZJOZd2+HEEgwtwN3py4R0Ts1BqtpEYAdo0fNEG5z1x1qRx?=
+ =?us-ascii?Q?rPp5S8tfUyDl7+uDHblZgR7LwCneHujfnx2Ds3ydVnZLIOK+TGcsE+Cv12VQ?=
+ =?us-ascii?Q?83f4hOYfwBRapYSORyRP9PafmsWcfkK5exgofD9eTfHA1Dn9kC/Fw8AZvihu?=
+ =?us-ascii?Q?MTx60vzn2AmNqCz2DC0VZ1Sr1WIjw2RT+QfHy+L4LxEhP+PjH6czM1GWLz5M?=
+ =?us-ascii?Q?y29KAlzbunc5NJzWL1BCLVG8JWT4+c9ZQ1NyChp3Aq18aWLLx8vYXWpt9MZw?=
+ =?us-ascii?Q?zBUUblcQ3Fbwk7GgK1094UK1XMeTpTvpMPQcVbl6srb+rWle2QeYHxs/sol9?=
+ =?us-ascii?Q?xQB3+z+sIAs6/KjpR3kh2ycg8JXc64FOlUSH8FCk30Q03F+a5c9DM0t41lKr?=
+ =?us-ascii?Q?Cexjb+e6aVwP5qfoxwbIBlERwOekggbmIG1Z8oFrEPeIx8Qa0HZ/YRSFqJgv?=
+ =?us-ascii?Q?hSG20WSuxcDgEaiqQSRqxT5uRAI+EQTjzcvSoJh8D6IzGlPM+3/OKdk/wiUD?=
+ =?us-ascii?Q?27PQeR02E7P8PE9fwk9w45bQXzTIOrsUGFx4nLpPljqDU1S3axgnjgmszxIa?=
+ =?us-ascii?Q?2paE4Ly/Ot9c0bKN16HKPiA5McM0dTY0NxCo9zFCX8CELAqZNASXev5KMtd4?=
+ =?us-ascii?Q?MMoV6Z6kjKvUpsAyWluzOmrK3gkJlnBRldCvLr9EaRr1HmH5Jq+vT5rRv3EU?=
+ =?us-ascii?Q?zSMP3Fyw0SnFo0nv/NOwJF4c8AIyfoe03F1dxYEzfDGUVrWL63Z+iLOoWwao?=
+ =?us-ascii?Q?MehOOxyLnODRMAqlmif6wO74N4YS0xGZSsrXwVUsZTFjy2MEoZWuNcybr90h?=
+ =?us-ascii?Q?9LlaIm0Qfg8fnbYP7fA/N33DFAzxW5gsf4oeRigWq9QbNNyNZkrRI3bPiwja?=
+ =?us-ascii?Q?wAGsd+q/ExrfH4jr5q8Y+1nu/DHtEP7t9KjTKFhgXIQXvr02l4skat9TJi7l?=
+ =?us-ascii?Q?jKBrvnmVXGmV0om6g7NGWgXzWNvSxIXSMcudFB1k/DdFZxlGjpbH/tOjxZHY?=
+ =?us-ascii?Q?HzRW2wm3grcg3LWz8P7bvOAGHoiAK4Bnth0QxFd71FUukFct9r/wnGNP3iH8?=
+ =?us-ascii?Q?rFqSJeK1m4medco2MxLhijw7jZzmSjo=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 06082275-11e4-4fb3-c8f3-08da3d79e2f6
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0352b016-a06e-4dc5-3016-08da3d79f116
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:13.7163
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:37.3009
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2aa4LQWwaXfppPhB2jW8r3JPgyCdlHTmh7Sy6sI0snJIGxSBuQXcARfZFksjQX8ztR2IUujsA18UYMz1iFWO3Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1P192MB0384
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4ftDW0wkeHF8pe2qjzQKz2AoBNDULqBMCch5okmn30I/9zHaYGhk+jO4DRArT7SkNBUVj+B9+j5l7ot3DSJpVA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB0915
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,213 +128,296 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/mac80211.h | 197 ++++++++++++++++++++
- 1 file changed, 197 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/mac80211.h
+ drivers/net/wireless/celeno/cl8k/recovery.c | 280 ++++++++++++++++++++
+ 1 file changed, 280 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/recovery.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/mac80211.h b/drivers/net/wireless/celeno/cl8k/mac80211.h
+diff --git a/drivers/net/wireless/celeno/cl8k/recovery.c b/drivers/net/wireless/celeno/cl8k/recovery.c
 new file mode 100644
-index 000000000000..f76c1a0ad820
+index 000000000000..dc0c33be9200
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/mac80211.h
-@@ -0,0 +1,197 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
++++ b/drivers/net/wireless/celeno/cl8k/recovery.c
+@@ -0,0 +1,280 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#ifndef CL_MAC80211_H
-+#define CL_MAC80211_H
++#include "hw.h"
++#include "main.h"
++#include "phy.h"
++#include "vif.h"
++#include "dfs.h"
++#include "maintenance.h"
++#include "vns.h"
++#include "config.h"
++#include "ela.h"
++#include "radio.h"
++#include "recovery.h"
 +
-+#include <linux/types.h>
-+#include <linux/if_ether.h>
-+#include <net/mac80211.h>
++struct cl_recovery_work {
++	struct work_struct ws;
++	struct cl_hw *cl_hw;
++	int reason;
++};
 +
-+#define PPE_0US 0
-+#define PPE_8US 1
-+#define PPE_16US 2
++#define RECOVERY_POLL_TIMEOUT 6
 +
-+/*
-+ * Extended Channel Switching capability to be set in the 1st byte of
-+ * the @WLAN_EID_EXT_CAPABILITY information element
-+ */
-+#define WLAN_EXT_CAPA1_2040_BSS_COEX_MGMT_ENABLED BIT(0)
++static void cl_recovery_poll_completion(struct cl_hw *cl_hw)
++{
++	u8 cntr = 0;
 +
-+/* WLAN_EID_BSS_COEX_2040 = 72 */
-+/* 802.11n 7.3.2.61 */
-+struct ieee80211_bss_coex_20_40_ie {
-+	u8 element_id;
-+	u8 len;
-+	u8 info_req : 1;
-+	/* Inter-BSS set 1 when prohibits a receiving BSS from operating as a 20/40 Mhz BSS */
-+	u8 intolerant40 : 1;
-+	/* Intra-BSS set 1 when prohibits a receiving AP from operating its BSS as a 20/40MHz BSS */
-+	u8 bss20_width_req : 1;
-+	u8 obss_scan_exemp_req : 1;
-+	u8 obss_scan_exemp_grant : 1;
-+	u8 rsv : 3;
-+} __packed;
++	while (test_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags)) {
++		msleep(1000);
 +
-+/* WLAN_EID_BSS_INTOLERANT_CHL_REPORT = 73 */
-+/*802.11n 7.3.2.59 */
-+struct ieee80211_bss_intolerant_chl_report_ie {
-+	u8 element_id;
-+	u8 len;
-+	u8 regulatory_class;
-+	u8 ch_list[0];
-+} __packed;
++		if (++cntr == RECOVERY_POLL_TIMEOUT) {
++			cl_dbg_verbose(cl_hw, "\n");
++			cl_dbg_err(cl_hw, "Driver handgup was detected!...");
++			break;
++		}
++	}
++}
 +
-+/* Union options that are not included in 'struct ieee80211_mgmt' */
-+struct cl_ieee80211_mgmt {
-+	__le16 frame_control;
-+	__le16 duration;
-+	u8 da[ETH_ALEN];
-+	u8 sa[ETH_ALEN];
-+	u8 bssid[ETH_ALEN];
-+	__le16 seq_ctrl;
-+	union {
-+		struct {
-+			__le16 auth_alg;
-+			__le16 auth_transaction;
-+			__le16 status_code;
-+			/* Possibly followed by Challenge text */
-+			u8 variable[0];
-+		} __packed auth;
-+		struct {
-+			__le16 reason_code;
-+		} __packed deauth;
-+		struct {
-+			__le16 capab_info;
-+			__le16 listen_interval;
-+			/* Followed by SSID and Supported rates */
-+			u8 variable[0];
-+		} __packed assoc_req;
-+		struct {
-+			__le16 capab_info;
-+			__le16 status_code;
-+			__le16 aid;
-+			/* Followed by Supported rates */
-+			u8 variable[0];
-+		} __packed assoc_resp, reassoc_resp;
-+		struct {
-+			__le16 capab_info;
-+			__le16 listen_interval;
-+			u8 current_ap[ETH_ALEN];
-+			/* Followed by SSID and Supported rates */
-+			u8 variable[0];
-+		} __packed reassoc_req;
-+		struct {
-+			__le16 reason_code;
-+		} __packed disassoc;
-+		struct {
-+			__le64 timestamp;
-+			__le16 beacon_int;
-+			__le16 capab_info;
-+			/*
-+			 * Followed by some of SSID, Supported rates,
-+			 * FH Params, DS Params, CF Params, IBSS Params, TIM
-+			 */
-+			u8 variable[0];
-+		} __packed beacon;
-+		struct {
-+			/* Only variable items: SSID, Supported rates */
-+			u8 variable[0];
-+		} __packed probe_req;
-+		struct {
-+			__le64 timestamp;
-+			__le16 beacon_int;
-+			__le16 capab_info;
-+			/*
-+			 * Followed by some of SSID, Supported rates,
-+			 * FH Params, DS Params, CF Params, IBSS Params
-+			 */
-+			u8 variable[0];
-+		} __packed probe_resp;
-+		struct {
-+			u8 category;
-+			union {
-+				struct {
-+					u8 action_code;
-+					struct ieee80211_bss_coex_20_40_ie bss_coex_20_40_ie;
-+					/*
-+					 * This IE May appear zero or more times,
-+					 * that situation wasn't handled here.
-+					 */
-+					struct ieee80211_bss_intolerant_chl_report_ie
-+						bss_intolerant_chl_report_ie;
-+				} __packed coex_2040_mgmt;
-+			} u;
-+		} __packed action;
-+	} u;
-+} __packed __aligned(2);
++static void cl_recovery_start_hw(struct cl_hw *cl_hw)
++{
++	clear_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags);
 +
-+void cl_cap_dyn_params(struct cl_hw *cl_hw);
-+void cl_cap_ppe_duration(struct cl_hw *cl_hw, struct ieee80211_sta *sta,
-+			 u8 pe_dur[CHNL_BW_MAX][WRS_MCS_MAX_HE]);
-+u16 cl_cap_set_mesh_basic_rates(struct cl_hw *cl_hw);
-+void cl_ops_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control, struct sk_buff *skb);
-+void cl_ops_rx_finish(struct ieee80211_hw *hw, struct sk_buff *skb, struct ieee80211_sta *sta);
-+int cl_ops_start(struct ieee80211_hw *hw);
-+void cl_ops_stop(struct ieee80211_hw *hw);
-+int cl_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+void cl_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+int cl_ops_config(struct ieee80211_hw *hw, u32 changed);
-+void cl_ops_bss_info_changed(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_bss_conf *info,
-+			     u32 changed);
-+int cl_ops_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+void cl_ops_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+u64 cl_ops_prepare_multicast(struct ieee80211_hw *hw, struct netdev_hw_addr_list *mc_list);
-+void cl_ops_configure_filter(struct ieee80211_hw *hw, u32 changed_flags,
-+			     u32 *total_flags, u64 multicast);
-+int cl_ops_set_key(struct ieee80211_hw *hw,
-+		   enum set_key_cmd cmd,
-+		   struct ieee80211_vif *vif,
-+		   struct ieee80211_sta *sta,
-+		   struct ieee80211_key_conf *key);
-+void cl_ops_sw_scan_start(struct ieee80211_hw *hw,
-+			  struct ieee80211_vif *vif,
-+			  const u8 *mac_addr);
-+void cl_ops_sw_scan_complete(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+int cl_ops_sta_state(struct ieee80211_hw *hw, struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-+		     enum ieee80211_sta_state old_state, enum ieee80211_sta_state new_state);
-+void cl_ops_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		       enum sta_notify_cmd cmd, struct ieee80211_sta *sta);
-+int cl_ops_conf_tx(struct ieee80211_hw *hw,
-+		   struct ieee80211_vif *vif,
-+		   u16 ac_queue,
-+		   const struct ieee80211_tx_queue_params *params);
-+void cl_ops_sta_rc_update(struct ieee80211_hw *hw,
-+			  struct ieee80211_vif *vif,
-+			  struct ieee80211_sta *sta,
-+			  u32 changed);
-+int cl_ops_ampdu_action(struct ieee80211_hw *hw,
-+			struct ieee80211_vif *vif,
-+			struct ieee80211_ampdu_params *params);
-+int cl_ops_post_channel_switch(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif);
-+void cl_ops_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u32 queues, bool drop);
-+bool cl_ops_tx_frames_pending(struct ieee80211_hw *hw);
-+void cl_ops_reconfig_complete(struct ieee80211_hw *hw,
-+			      enum ieee80211_reconfig_type reconfig_type);
-+int cl_ops_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif, int *dbm);
-+int cl_ops_set_rts_threshold(struct ieee80211_hw *hw, u32 value);
-+void cl_ops_event_callback(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   const struct ieee80211_event *event);
-+int cl_ops_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta, bool set);
-+int cl_ops_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
-+u32 cl_ops_get_expected_throughput(struct ieee80211_hw *hw, struct ieee80211_sta *sta);
-+void cl_ops_sta_statistics(struct ieee80211_hw *hw,
-+			   struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta,
-+			   struct station_info *sinfo);
-+int cl_ops_set_bitrate_mask(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			    const struct cfg80211_bitrate_mask *mask);
-+int cl_ops_get_survey(struct ieee80211_hw *hw, int idx, struct survey_info *survey);
-+int cl_ops_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		   struct ieee80211_scan_request *hw_req);
-+void cl_ops_cancel_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
++	/* Restart MAC firmware... */
++	if (cl_main_on(cl_hw)) {
++		cl_dbg_err(cl_hw, "Couldn't turn platform on .. aborting\n");
++		return;
++	}
 +
-+#endif /* CL_MAC80211_H */
++	if (cl_msg_tx_reset(cl_hw)) {
++		cl_dbg_err(cl_hw, "Failed to send firmware reset .. aborting\n");
++		return;
++	}
++
++	set_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags);
++	clear_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags);
++
++	/* Hand over to mac80211 from here */
++	ieee80211_restart_hw(cl_hw->hw);
++	/* Start firmware */
++	if (cl_msg_tx_start(cl_hw)) {
++		cl_dbg_err(cl_hw, "Failed to send firmware start .. aborting\n");
++		return;
++	}
++
++	cl_recovery_poll_completion(cl_hw);
++}
++
++static void cl_recovery_stop_hw(struct cl_hw *cl_hw)
++{
++	/* Start recovery process */
++	ieee80211_stop_queues(cl_hw->hw);
++	cl_hw->recovery_db.in_recovery = true;
++
++	clear_bit(CL_DEV_STARTED, &cl_hw->drv_flags);
++	set_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags);
++	set_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags);
++	/* Disable interrupts */
++	cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.all);
++	cl_maintenance_stop(cl_hw);
++
++	mutex_lock(&cl_hw->dbginfo.mutex);
++
++	cl_main_off(cl_hw);
++
++	cl_hw->fw_active = false;
++	cl_hw->fw_send_start = false;
++
++	mutex_unlock(&cl_hw->dbginfo.mutex);
++
++	/* Reset it so MM_SET_FILTER_REQ will be called during the recovery */
++	cl_hw->rx_filter = 0;
++
++	/*
++	 * Reset channel/frequency parameters so that cl_msg_tx_set_channel()
++	 * will not be skipped in cl_ops_config()
++	 */
++	cl_hw->channel = 0;
++	cl_hw->primary_freq = 0;
++	cl_hw->center_freq = 0;
++}
++
++static void cl_recovery_process(struct cl_hw *cl_hw)
++{
++	int ret;
++	struct cl_chip *chip = cl_hw->chip;
++
++	mutex_lock(&chip->recovery_mutex);
++
++	cl_dbg_verbose(cl_hw, "Start\n");
++
++	cl_recovery_stop_hw(cl_hw);
++
++	if (chip->conf->ci_phy_dev != PHY_DEV_DUMMY) {
++		cl_phy_reset(cl_hw);
++
++		ret = cl_phy_load_recovery(cl_hw);
++		if (ret) {
++			cl_dbg_err(cl_hw, "cl_phy_load_recovery failed %d\n", ret);
++			goto out;
++		}
++	}
++
++	cl_recovery_start_hw(cl_hw);
++
++out:
++	mutex_unlock(&chip->recovery_mutex);
++}
++
++static void cl_recovery_handler(struct cl_hw *cl_hw, int reason)
++{
++	unsigned long recovery_diff = jiffies_to_msecs(jiffies - cl_hw->recovery_db.last_restart);
++
++	cl_hw->recovery_db.restart_cnt++;
++
++	if (recovery_diff > cl_hw->conf->ce_fw_watchdog_limit_time) {
++		cl_hw->recovery_db.restart_cnt = 1;
++	} else if (cl_hw->recovery_db.restart_cnt > cl_hw->conf->ce_fw_watchdog_limit_count) {
++		cl_dbg_verbose(cl_hw, "Too many failures... aborting\n");
++		cl_hw->conf->ce_fw_watchdog_mode = FW_WD_DISABLE;
++		return;
++	}
++
++	cl_hw->recovery_db.last_restart = jiffies;
++
++	/* Count recovery attempts for statistics */
++	cl_hw->fw_recovery_cntr++;
++	cl_dbg_trace(cl_hw, "Recovering from firmware failure, attempt #%i\n",
++		     cl_hw->fw_recovery_cntr);
++
++	cl_recovery_process(cl_hw);
++}
++
++static void cl_recovery_work_do(struct work_struct *ws)
++{
++	/* Worker for restarting hw. */
++	struct cl_recovery_work *recovery_work = container_of(ws, struct cl_recovery_work, ws);
++
++	recovery_work->cl_hw->assert_info.restart_sched = false;
++	cl_recovery_handler(recovery_work->cl_hw, recovery_work->reason);
++	kfree(recovery_work);
++}
++
++static void cl_recovery_work_sched(struct cl_hw *cl_hw, int reason)
++{
++	/*
++	 * Schedule work to restart device and firmware
++	 * This is scheduled when driver detects hw assert storm.
++	 */
++	struct cl_recovery_work *recovery_work;
++
++	if (!cl_hw->ipc_env || cl_hw->is_stop_context) {
++		cl_dbg_warn(cl_hw, "Skip recovery - Running down!\n");
++		return;
++	}
++
++	/* If restart is already scheduled - exit */
++	if (cl_hw->assert_info.restart_sched)
++		return;
++
++	cl_hw->assert_info.restart_sched = true;
++
++	/* Recovery_work will be freed by cl_recovery_work_do */
++	recovery_work = kzalloc(sizeof(*recovery_work), GFP_ATOMIC);
++
++	if (!recovery_work)
++		return;
++
++	INIT_WORK(&recovery_work->ws, cl_recovery_work_do);
++	recovery_work->cl_hw = cl_hw;
++	recovery_work->reason = reason;
++
++	queue_work(cl_hw->drv_workqueue, &recovery_work->ws);
++}
++
++bool cl_recovery_in_progress(struct cl_hw *cl_hw)
++{
++	return cl_hw->recovery_db.in_recovery;
++}
++
++void cl_recovery_reconfig_complete(struct cl_hw *cl_hw)
++{
++	clear_bit(CL_DEV_SW_RESTART, &cl_hw->drv_flags);
++
++	if (cl_ela_is_on(cl_hw->chip)) {
++		cl_ela_lcu_reset(cl_hw->chip);
++		cl_ela_lcu_apply_config(cl_hw->chip);
++	}
++
++#ifdef CONFIG_CL8K_DYN_MCAST_RATE
++	cl_dyn_mcast_rate_recovery(cl_hw);
++
++#endif /* CONFIG_CL8K_DYN_MCAST_RATE */
++#ifdef CONFIG_CL8K_DYN_BCAST_RATE
++	cl_dyn_bcast_rate_recovery(cl_hw);
++
++#endif /* CONFIG_CL8K_DYN_BCAST_RATE */
++	/* DFS recovery */
++	cl_dfs_recovery(cl_hw);
++
++	/* VNS recovery */
++	cl_vns_recovery(cl_hw);
++
++	/* Restore EDCA configuration */
++	cl_edca_recovery(cl_hw);
++
++	/* Temperature  recovery */
++	cl_temperature_recovery(cl_hw);
++
++	/* Sounding recovery */
++	cl_sounding_recovery(cl_hw);
++
++	/*
++	 * Update Tx params for all connected stations to sync firmware after the
++	 * recovery process. Should be called after cl_mu_ofdma_grp_recovery to let
++	 * MU-OFDMA rates in FW be updated successfully
++	 */
++	cl_wrs_api_recovery(cl_hw);
++
++	/* Enable maintenance timers back */
++	cl_maintenance_start(cl_hw);
++	if (cl_radio_is_on(cl_hw)) {
++		/*
++		 * Rearm last_tbtt_ind so that error message will
++		 * not be printed in cl_irq_status_tbtt()
++		 */
++		cl_hw->last_tbtt_irq = jiffies;
++
++		cl_msg_tx_set_idle(cl_hw, MAC_ACTIVE, true);
++	}
++
++	cl_hw->recovery_db.in_recovery = false;
++
++	pr_debug("cl_recovery: complete\n");
++
++	cl_rx_post_recovery(cl_hw);
++}
++
++void cl_recovery_start(struct cl_hw *cl_hw, int reason)
++{
++	/* Prevent new messages to be sent until firmware has recovered */
++	set_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags);
++
++	switch (cl_hw->conf->ce_fw_watchdog_mode) {
++	case FW_WD_DISABLE:
++		cl_dbg_info(cl_hw, "Skip recovery - Watchdog is off!\n");
++		break;
++
++	case FW_WD_INTERNAL_RECOVERY:
++		cl_recovery_work_sched(cl_hw, reason);
++		break;
++
++	case FW_WD_DRV_RELOAD:
++		/* TODO: Implement netlink hint to the userspace */
++		cl_dbg_info(cl_hw, "RELOAD handler is absent, doing nothing");
++		break;
++
++	default:
++		break;
++	}
++}
 -- 
 2.36.1
 
