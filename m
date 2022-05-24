@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF8C5C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11133C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236851AbiEXLj3 (ORCPT
+        id S236854AbiEXLjc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:39:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41808 "EHLO
+        Tue, 24 May 2022 07:39:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236852AbiEXLj0 (ORCPT
+        with ESMTP id S236855AbiEXLja (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:39:26 -0400
-Received: from EUR03-VE1-obe.outbound.protection.outlook.com (mail-eopbgr50064.outbound.protection.outlook.com [40.107.5.64])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7BA98DDC7
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:09 -0700 (PDT)
+        Tue, 24 May 2022 07:39:30 -0400
+Received: from EUR03-DBA-obe.outbound.protection.outlook.com (mail-dbaeur03on2041.outbound.protection.outlook.com [40.107.104.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F0654AE15
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:12 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kBOGImi9UM2vRNZz9Nqw4SUBzW8wtNtmjrGGhPjY2WlfQGK7DL4s+sK6zlA+5vzbsGNeUu+6sf8Ic1dWtN70l7D9ddpI/EnwUssWK8V6vR82QoGVpIlqUcNrtfVmKRHOH2we+62GpKFxD9dP/niv3GkPQ9gmZGsO0DQGLfYUoXBTfKSq2v6cIscXn1xPu0UzzWdcUVcw3hcnSHL1/fcbLYDTDhO3Sptshr1Od4OZJ21pCayrdDOWvLDDaCCyxdSm6FQynrXdLG9cCMDLRQGQ9ZIvxgmvAIQP4WZG3+SwsKFLh0ULfd6bPUFXTLlm81chvLy1YA3AUiZ7XS4q91TcfQ==
+ b=bUKIV3Icd4ypfqNKSctQN27PgrBhVPKD9CGRGnfKUDIJTOaG+JZW9rDaipwWg8H0QsbYdSWuLJhPlJlFWeRCdC3xwcqtDZds6zAWFIJi8wxTrgyC57CH6yGeO2z4w762gQ+I4WzAVqV+y8da4vizdtyHvfiKr6qI/dA5DzyFxEzUBz/QPAaKv7CRFQF8WGWPgP3qoPwnKav+xWN2Ae8yY31Y3TE+FJkaC+QyrR8r/XIjQ/BdY7fhlnCaQbtqzmedM2AZUF6QfLg19wPQRKbu5Op2jssVdaE2fPdw9RsWzlGRkZMoxQD12o4S3lfaVIAvkvkIQPlzfhrgj0JteVOYNA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zhK8McDfVqVGnvitP3Yvl4/xJgXhlC7tw2eQuJnKCAI=;
- b=XzS7kZ7+7ehK1ngM/qsFR6Vj+gPOnnFFvQ+psgzhvlVuDoVhRabUrFy5PKG+xbQBCIlCu86EBkCkTpo/jkczpd8h+fAeoi6OTD9MmJ28H10ItWBvtb9tCvlAGDnIhRPlQVAIZQuSZU49Cbn35Sg5MkzD6oiTGqOspdplaftSpfWL1GW2tQXdeAcE6KtqmrcWzWHc1ZEF8nWk33vwtJEjpOrzshDe9eD5ivCB2EITLNma5CFKLj1/abwjB0VAcSMX9S//oG5I8hoeOoVCYv3knQKaAsYC9c/p3gJyPS9sGL4i5bY9pIQmpi+IajC/fglZehBkTju69jx4mqerOM8Vaw==
+ bh=fIEiirRArSQNK6MsWdZlaogtGlvImxIuKIviQB4lFEQ=;
+ b=UDupZYWCjNr75CpOnMHQ2Iat83dKq3feKmOBIgfgYs7oDR2ZtRe80Rgv1gtkSCQ1+hDqDch3LudMQY/TL5Vqp1i8WckZR+qjoDfr/MIt1YJIGxcLFJWaj5M4Uuiq/YvtFXZ4qJnipKTUl0mlaJy4aSCCkgVita0HxPLzatNW2yMhCHgtrnSGUpbyvhzRrXeD9OuMI1Z/+O23nmm7wA0sU5ueJLM/s3A7rnvUdcLnQtL0cAKteJZZ2+N91uypW3cpiEIYpMoOSvj66VnGqGOy0Knsb1kGlaU6d4xT4Ep+3XCosKFXRI+TTqkwS1gXDOMdMcHncin4rPU3D9ZtsAlDXA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zhK8McDfVqVGnvitP3Yvl4/xJgXhlC7tw2eQuJnKCAI=;
- b=TcTT9PkD6lyz282M3X28kli2Rthmvv+EolpvFnmEvoNPb6JKnH+mNMYYzX+D+zICO26RuNTHlrg+KqFXmpKCXsyjjNsTdO/zzI9qPwIWhYiypzmpFBeU+ioqC0PiP5CL8OIKnecb+PqJbmnFBp68CoOh0YpiHwzfKQCiqZBqfYI=
+ bh=fIEiirRArSQNK6MsWdZlaogtGlvImxIuKIviQB4lFEQ=;
+ b=gp7B0ei+DriB3dOW4Q6mvVHnK0IpQB3bD6ez+DGUpUmmsImElXitaF77IdE1yK6aiS6Ih34krvRIeNNc6bQmpO6kNXfHohAzTeC++c2ICbgVC6AFb5hicGEXXL/WJgstEl8REfPcbssjh4j9u/wJV2JN4nv8YQOecZAb+7hGgyA=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by DU0P192MB1571.EURP192.PROD.OUTLOOK.COM (2603:10a6:10:34c::18) with
+ by VI1P192MB0384.EURP192.PROD.OUTLOOK.COM (2603:10a6:803:34::30) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Tue, 24 May
- 2022 11:38:46 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.13; Tue, 24 May
+ 2022 11:38:41 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:38:46 +0000
+ 11:38:41 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 48/96] cl8k: add pci.c
-Date:   Tue, 24 May 2022 14:34:14 +0300
-Message-Id: <20220524113502.1094459-49-viktor.barna@celeno.com>
+Subject: [RFC v2 38/96] cl8k: add mac80211.c
+Date:   Tue, 24 May 2022 14:34:04 +0300
+Message-Id: <20220524113502.1094459-39-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1e6c3c16-9c69-4be0-7c3f-08da3d79ea90
-X-MS-TrafficTypeDiagnostic: DU0P192MB1571:EE_
+X-MS-Office365-Filtering-Correlation-Id: ba3571b7-be4f-49c2-6866-08da3d79e222
+X-MS-TrafficTypeDiagnostic: VI1P192MB0384:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <DU0P192MB1571126AD0F5449E1E18EAB6F6D79@DU0P192MB1571.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <VI1P192MB03842EBF47C216202816DE7CF6D79@VI1P192MB0384.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 2q4Hd0kFuuBBAEyvUE2Za44EDfVpQz3DvOTMs+1a5Ww6k+LDrr4Apv9W4JH4h9ScevlRSBuzXkfpewP2pzytNnPWuIpsA9ve/uL1bSXvAzRWbjubT6SQIIbvEw2e0ftpwv1BH8/2KGcH8MhIX9Nku/D7tPUxbX6f3YRZZxg95PD6cYHsmHnSY/UvmVQhFiayZTlyxWlwQ6YTrgj+0bRaYUt4D7gi+st2TBZMZXbEVdSvuTPdA4wED9Loqx/WGW73HNIC11c+023blIZIwnsHVf9WESypLPTaJ1n/xZ/67NbR65CvzgaOfU7By+Ach9JDbfF8ODAbzflf5UEHJqdQNTZB3oL1tvVENhMHHAH5LRsYgBEw39ElDuozhkuR2X2Rj82zW5P8ylETuXT/AFg+PPChf+BvGRDpRP4bngPCnE+qa2OEaziPVMOIKgsbAvONnyfVeVS/ALXp3GYx2Ijk6XZluy1PUmDktPpAlOH5vsNCbwuxiYuauh9bGXUqubbE2AVVZonwXMDWQs1RJ/ZrBjrJX098uMa6qZg8N8vldr9ig3nyvqHujXMxOwlSxbu7XmA0KUrm2gDjZCYaLkAITS2kk+zpqhmaTT+yXClLyQOwtAM4X4W6UmOoGDKJPVNsTl/yIvok+4mtgcJaLBseVCjcUIi5hu81XTR7yyToRvZcfq7voLZg0n9gt87PvacRKdffmJP9bD7lJgkiV5cLcs5vqSObksYA14YIB89dUS0=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(39850400004)(346002)(396003)(376002)(6512007)(186003)(6916009)(9686003)(38350700002)(38100700002)(41300700001)(36756003)(316002)(54906003)(2616005)(1076003)(86362001)(107886003)(8676002)(66476007)(4326008)(66556008)(66946007)(52116002)(8936002)(6666004)(6506007)(2906002)(83380400001)(508600001)(30864003)(5660300002)(6486002)(26005)(32563001)(559001)(579004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 3L1SN/PmmjRB/N8OiPioPExEewqdmbfgOaTr2Vel7X5WP0YdTYiXGZjVeEOUmFYOj9CNTq9ZTuTidFfqDySPQp90AqJ8acS1Yr259bYFz7JaaRniBnCeGpl9mAx/JhoaTG5hWb2GZ0sJlVlJleQiRiHtqYzM9VoH5vvtMkhtoZuc5YDt2cdR0Pt329PGbVgJaZHLofFFaK2UgnHKlSqjgtp8fo+aXu7vE3/LXJ9ntw6hWXwTlmWpOyVnD6iK3PAyf7LqmXrcyYPiGKg2mda8IWNXaC/Dbph5mF+KZMgLdNLVEj23i2foant7kGQrBcmc9ge2Ljf1pirM/mGKMOKojhWhhcX19qdHM+SvnxTiaVv3todRMwC8R+ZiF86YJZlXkva/ElB9vnwQPnq901TBYyUdy60VlxwFKeM202iTxj2KsURvtAye/2h2LOQ6bQDMDGwdo6u2x8IhYNvzWjLOi3rO49VeNITrhc6TN7Riea0zadtXmHhCN/U88OceECZILYZvyeHfdAqECuiQo78nFZImfgrnMbhe4+vDr5OcNo4q9CO+2GucSgySLCbQPU+UhC+skbpCDZvLGLwyLtKZkGM3O0WfV4xB7UU7lfLy7qU/vmqyds5+GrTC1qatm+EVxG6AOs5KR2/IbZmykbaFuH5tivTG7csvtaa/ysAL8gGymc4JgPCOi2SGPgXvyLsHN6X9l+sAdB/hAmG4GrZfLw7CgqpSBmKHNy4bAfUXMI6KQOUOpGNRrtsrjPxgYqjd
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(396003)(346002)(39850400004)(376002)(41300700001)(36756003)(6666004)(30864003)(8936002)(508600001)(186003)(83380400001)(6486002)(6506007)(38100700002)(2906002)(38350700002)(6512007)(107886003)(45080400002)(5660300002)(2616005)(1076003)(66946007)(4326008)(8676002)(26005)(52116002)(316002)(6916009)(9686003)(66556008)(66476007)(86362001)(54906003)(32563001)(579004)(559001)(309714004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?+74waqGjs1SQfZEasvVJrSnC+2PSI2t3zxAA1YDHZRltGDEhfW6VxyxQr1mo?=
- =?us-ascii?Q?MWtAzeFjYpC6ctBnEQVFKGlCHXjjXkvW/NJoP7moCCmdphnV8Oq42zuKVipV?=
- =?us-ascii?Q?hum0qMLCF81bW971gMtxdBjGsz9Eb4+fM4LlewZ7Ockmy9Dvwo0REwiOlVqT?=
- =?us-ascii?Q?Bj04fzr91JDbrVrhfY/C+VNvta9QTU7BpOUX6eeAfKRKdbTuSLnlzY7PMFNl?=
- =?us-ascii?Q?PBriLH5zx4tcX4u1C6P8GnTRfl7klesty6Fjqt1Mm72zGKTUj74x3JVMAzbO?=
- =?us-ascii?Q?4lTeVSobqImbeajmR68AcDX9qeloWT0nJE08vcRQl9xiyEt5/ozHYfIPNSUX?=
- =?us-ascii?Q?ZwEMWDZWjqWt4J4PuBBw8gD9o9uYVB+j8pdtTKLcLJBN/DdMd/Nn4x7Jly+O?=
- =?us-ascii?Q?0M4fWyM9A/mzV9u4pClrb6a0ls831Lz4HUuESl21UA9TX4wBI3PjyqaTZsz/?=
- =?us-ascii?Q?rXJwelaW1+3rSnHJZQ3ssBi6WpsV9mX0nYZCF8tpqkMqYUwZFEmCraFUq2ss?=
- =?us-ascii?Q?GNbdrgdi9f1ejjsfqewUchETMVkVZiuc0owiU9aN7ryt4ebrdKL0vb4YHbkW?=
- =?us-ascii?Q?cSeQ0LnWZFzuZHOY9HTx0SDUV/ihVFq/SNTmYEy75/LWVXBAv1fdxKSS4fKe?=
- =?us-ascii?Q?glZ9kQirso5Iy9+PoAydAjtmJp+Rrh8oGKeVaOuj4ufE7yYjZCLo5Sq4Zm69?=
- =?us-ascii?Q?2UJApuo8iIJiVjDHuSmA7m/ueQUJEYG4JMNb23ftqegnBmmeu8vPPOgiKACv?=
- =?us-ascii?Q?Tcxr8koXFpKwoGCSThFB664rhxafJdTRUkfoVCTXq3IrIsLoFlC3ozax51MI?=
- =?us-ascii?Q?VPSpdMvx4t4jFkKI2C405itiHpMJfliZyzGswD3V08SZP4mbBztSK5kLTQDV?=
- =?us-ascii?Q?FfRkAXesmw5XvkA2AE0lZgsyqKT6rJSP1SWAHY2nXSPi9NgUCMthclQ/SG78?=
- =?us-ascii?Q?JvRlKCj6XDhqYFh2AMIVjZYIEasC2xRs3fpgY9jBPMJk4ZajScEatmtgr3hS?=
- =?us-ascii?Q?ms2xTqvOwgYQ1HDZxkl0tVcGgwpcGt2AWQ8YYPrIOzL8OrHWeTxab5v9molf?=
- =?us-ascii?Q?+Xstu2WY2gQMcph9Bl3zMfAdALbYypw6rboA4vzoqbWr/4gYQh6hrhBkLnty?=
- =?us-ascii?Q?h1KkthtXdhkbdXvPszIHTZXX92YBcXj3t1Bd1D5SEe1D1Yumnercv+9PgIxo?=
- =?us-ascii?Q?wlsC7gRV+wiEO3tK3o37eo0VnUDZzHgeLeOshj19sP+RGCJoKCxpEMkLX492?=
- =?us-ascii?Q?2y2wb/5qQ1rdB8PUUyHVOz3+ci2FRgjtxFmIqmkN92EGmh96+YzDDqBz2MaZ?=
- =?us-ascii?Q?gcl2B70k/Q0LFIVENUhe+yG0xNi1NbuRiLX6JfmPVrNUfBU43LB5ZC/rjs0a?=
- =?us-ascii?Q?h3/ZVQr5vr7ufzDW949qbrcHji4/n1UDtaDv2MM6VoIMQBrW3aRW7KiwU9va?=
- =?us-ascii?Q?udNVRbdwdp/waEhVBS0TsE+D5Hqx3FB9kcXYrxXrh6mGKQSutOdDDcmTnQe5?=
- =?us-ascii?Q?QeLI8gS1Jv+lwqikYEaFqBd/S4cp5K/eLHTgxYvJKZ0VYGRMVg113OtlNcjb?=
- =?us-ascii?Q?KXMm60c9s7pe1FSlpQZsT52WC0XGyh+Pi/XRGh8hreUF4PY1uEkh1jMxrMQa?=
- =?us-ascii?Q?jPd2xwT37f2Tr1wxTcqxDBjKxAWfrz0jEYYEcNCsZLUCdOQhbGe9RzldZxTn?=
- =?us-ascii?Q?2voaFpfmsDNoDpa41YcIyZ/FUaWpHgxIvPKsuQcVw/fr7QQq3VsVXH46BB6H?=
- =?us-ascii?Q?DGBancZ37mv0ngBPzNWVTs+pDhJKYXQ=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ZHCHRX4UgBYm9KGPK2oa+PcyJJS2Ez/Lq3I2jq/W5gaMp5CGYdgjFSkyaJfc?=
+ =?us-ascii?Q?56YJAP2w11Mccpiw83MG7GnHqPetZdtsfsIP7INNxek9DnaS3Hby2QwV/2P6?=
+ =?us-ascii?Q?AMvD0eFrTJ4wsPzt+ICFgtHBkPsLwtMqnXps7vR3sf7MBOG9+wc2i6uVvdbB?=
+ =?us-ascii?Q?Vtp+hBinwthz1V0AflCAQbTsz5ytolD7nt2VimR0XWbrybl4XPBvtuyx34CM?=
+ =?us-ascii?Q?M/dZpnWtRYDSAuHPR8PVZOKulqm2Jy6ebRliDKbRLAPMLCzVfcy0KY8EIVY2?=
+ =?us-ascii?Q?L0c2Wt033liceKcWf++rBpz0A5io1isicb+6nhQ/tgelSwNVrzEzQ0vqyDkI?=
+ =?us-ascii?Q?M7T9GtmBwYbSbpO8EBOCgkgdYcwFiqFNasFCBwah85yg5II3wFty0cWmT9DI?=
+ =?us-ascii?Q?eELSvdOpAwRCLxnViIgMMVJzclupdKqhu4mlpd25yqQKO+q8kqyuzKPp628J?=
+ =?us-ascii?Q?2T9OR3WCnDqPdbkp3c+ZZJlWn4OwqfOm8BOemcqvZn1naCTTLjaJ2Oh+71vz?=
+ =?us-ascii?Q?FrWWstzymRsVHiZPR0PRGzH4uLJBpV4J4F3Zkp+X0w+7lKNz5bsdj05lD4X6?=
+ =?us-ascii?Q?KqxGHLJCEgk+Ui64ATfEIVHyfv7ZUYsdsNmyI1g3CXoPZvtSIXSTk88UoomP?=
+ =?us-ascii?Q?CM22kObePeaw6utHRJfoNFACKfvvTNsgR7P57y2J64YdKyvCE5W936syrgwZ?=
+ =?us-ascii?Q?l9QZDHM/CgCWr+uNqJFupIoMQsGsNDY2ln50bNKJSdRvzy0BGzmsn0VUpzf+?=
+ =?us-ascii?Q?Gga0bkJiSLES9RYzTmniGP31toOZ8CxkM2CUfPnWuavKlnrM4kMfzYAAFfyZ?=
+ =?us-ascii?Q?gxAco79Frd/jTD7OGHlMYbqs5VIwmQ5waC22ljua2ILwcZL90dmqrjNyOS27?=
+ =?us-ascii?Q?qcajA2x75gxbbqQSUVjbiKs8+47H/M1sumOIfA+nS7K8yy7if5c6elVM0wLD?=
+ =?us-ascii?Q?K5s8tRsezzTcmfUhByOSazmYXIUSN3C3a8gzGIu0AtVwTbj9dRLp2uUJu2zi?=
+ =?us-ascii?Q?sD5MHX8TVQEdsfrGfcXePm3Dw/udya/2nJsvyLRvtSuSAfFpPXcWwQFm4miS?=
+ =?us-ascii?Q?CDfGxB1LuBD5eTsXqh4GbvCU06C5C89eWbe1jZCvgN7dqoUpE3VFDl3j/iWz?=
+ =?us-ascii?Q?LI29O/cSAaC+mDSa5+Pas7aaxuvgfF052cCjnS1q8hbSxVzTub5xYu9FoFBw?=
+ =?us-ascii?Q?a7TMlzoVjLJUXvwzf4N9UoFgZoFpbmlYxoaS1F4rgNbIUDLLh3Ym2p387Jjd?=
+ =?us-ascii?Q?5G3gSXAWQRM+9hpZnNgnEzAsjPvh4ERvl8hPgrSjv5/An4Ru63W10P2wBMqi?=
+ =?us-ascii?Q?RffAVGblF+7VDQirlj0K3+0T+aHeEFMbZdKnaNi+1vEDPxuvYcVptCkurleL?=
+ =?us-ascii?Q?adtHcvhkiGdHHJyeUCZQEQv+RNyOHbJv3DenxdSsh5dv7k0kRuu1tsHisHSc?=
+ =?us-ascii?Q?z7vID6KTtCnHKWZGBYT4nadDpsUygLp2oFdQXTchM9JWlKeFRvZ8Z+t+m0OI?=
+ =?us-ascii?Q?ydj9qznN8cxZfMSs4u81iGuFeN6QNhfGiU+zamslr1vOAlSZoxgVScj1IWYx?=
+ =?us-ascii?Q?ZZVRMVUMMxmWGpAAU7twjHjylGBx+ncqG5s5myQzWjA9FCqnPHEhled0jSJD?=
+ =?us-ascii?Q?gc5XmxxpozKaGdoUkF2jRq0bvz+DAIFOtCC52vVndKcc6/bdaBQTtM8qK3HX?=
+ =?us-ascii?Q?/TeAhPNPYOp6dA8WkWplAAPCxu3opUTLy22mX6JbwqSUw1M0dbxveMh8Keh0?=
+ =?us-ascii?Q?ovrDFlnI7aDao1oTG7boIBybXkY7N/E=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1e6c3c16-9c69-4be0-7c3f-08da3d79ea90
+X-MS-Exchange-CrossTenant-Network-Message-Id: ba3571b7-be4f-49c2-6866-08da3d79e222
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:26.7644
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:12.4026
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2cIn/xZYcf7Z4qs9/okrP9UMgoFJtv+omTM44DqnZUeojexSCGO3dPDxERo8aCQGIbQy+LKZvNEyPmkLI7TYoA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0P192MB1571
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6kOv6oWgUlHIqXgI25U5eIFMex1lMNyh2XSC8P2lqnhF2NxLTdQSIx/Y+ptBc78lB7zbXCFUOJQ7aVcnm6BEVg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1P192MB0384
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,2484 +128,2408 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/pci.c | 2468 ++++++++++++++++++++++++
- 1 file changed, 2468 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/pci.c
+ drivers/net/wireless/celeno/cl8k/mac80211.c | 2392 +++++++++++++++++++
+ 1 file changed, 2392 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/mac80211.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/pci.c b/drivers/net/wireless/celeno/cl8k/pci.c
+diff --git a/drivers/net/wireless/celeno/cl8k/mac80211.c b/drivers/net/wireless/celeno/cl8k/mac80211.c
 new file mode 100644
-index 000000000000..dffbcc9478ee
+index 000000000000..13989327ccdb
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/pci.c
-@@ -0,0 +1,2468 @@
++++ b/drivers/net/wireless/celeno/cl8k/mac80211.c
+@@ -0,0 +1,2392 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#include <linux/irq.h>
++#include <linux/log2.h>
++#include <net/mac80211.h>
 +
-+#include "chip.h"
-+#include "hw.h"
-+#include "main.h"
-+#include "ela.h"
 +#include "debug.h"
-+#include "reg/reg_defs.h"
-+#include "enhanced_tim.h"
-+#include "pci.h"
++#include "utils.h"
++#include "sta.h"
++#include "dfs.h"
++#include "regdom.h"
++#include "hw.h"
++#include "mac80211.h"
++#include "ampdu.h"
++#include "tx.h"
++#include "radio.h"
++#include "recovery.h"
++#include "rates.h"
++#include "temperature.h"
++#include "vns.h"
++#include "key.h"
++#include "version.h"
++#include "power.h"
++#include "stats.h"
++#include "scan.h"
++#include "mac_addr.h"
++#include "chip.h"
 +
-+#define DMA_CFM_QUEUE_SIZE 1024
-+#define DMA_CFM_TOTAL_SIZE (8 * sizeof(struct cl_ipc_cfm_msg) * DMA_CFM_QUEUE_SIZE)
++#define RATE_1_MBPS   10
++#define RATE_2_MBPS   20
++#define RATE_5_5_MBPS 55
++#define RATE_11_MBPS  110
++#define RATE_6_MBPS   60
++#define RATE_9_MBPS   90
++#define RATE_12_MBPS  120
++#define RATE_18_MBPS  180
++#define RATE_24_MBPS  240
++#define RATE_36_MBPS  360
++#define RATE_48_MBPS  480
++#define RATE_54_MBPS  540
 +
-+static void cl_ipc_env_free(struct cl_hw *cl_hw)
-+{
-+	kfree(cl_hw->ipc_env);
-+	cl_hw->ipc_env = NULL;
++#define CL_HT_CAPABILITIES                                              \
++{                                                                       \
++	.ht_supported = true,                                           \
++	.cap = IEEE80211_HT_CAP_DSSSCCK40 | IEEE80211_HT_CAP_MAX_AMSDU, \
++	.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K,                     \
++	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_1,                   \
++	.mcs = {                                                        \
++		.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0 },         \
++		.tx_params = IEEE80211_HT_MCS_TX_DEFINED,               \
++	},                                                              \
 +}
 +
-+static void cl_ipc_ring_indices_dealloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	if (!ipc_env->ring_indices_elem)
-+		return;
-+
-+	memset(ipc_env->ring_indices_elem->indices, 0, sizeof(struct cl_ipc_ring_indices));
-+	ipc_env->ring_indices_elem->indices = NULL;
-+	kfree(ipc_env->ring_indices_elem);
-+	ipc_env->ring_indices_elem = NULL;
++#define CL_VHT_CAPABILITIES                                             \
++{                                                                       \
++	.vht_supported = false,                                         \
++	.cap = 0,                                                       \
++	.vht_mcs = {                                                    \
++		.rx_mcs_map = cpu_to_le16(                              \
++				IEEE80211_VHT_MCS_SUPPORT_0_7   << 0  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 2  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 4  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 6  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 8  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 14), \
++		.tx_mcs_map = cpu_to_le16(                              \
++				IEEE80211_VHT_MCS_SUPPORT_0_7   << 0  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 2  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 4  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 6  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 8  | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 | \
++				IEEE80211_VHT_MCS_NOT_SUPPORTED << 14), \
++	}                                                               \
 +}
 +
-+static void _cl_ipc_txdesc_dealloc(struct cl_hw *cl_hw,
-+				   struct txdesc *txdesc,
-+				   __le32 dma_addr,
-+				   u32 desc_num)
-+{
-+	dma_addr_t phys_dma_addr = le32_to_cpu(dma_addr);
-+	u32 size = (desc_num * sizeof(struct txdesc));
-+
-+	if (size < PAGE_SIZE)
-+		dma_pool_free(cl_hw->txdesc_pool, txdesc, phys_dma_addr);
-+	else
-+		dma_free_coherent(cl_hw->chip->dev, size, txdesc, phys_dma_addr);
++#define CL_HE_CAP_ELEM_STATION                                                       \
++{                                                                                    \
++	.mac_cap_info[0] = IEEE80211_HE_MAC_CAP0_HTC_HE,                             \
++	.mac_cap_info[1] = 0,                                                        \
++	.mac_cap_info[2] = 0,                                                        \
++	.mac_cap_info[3] = IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_2,            \
++	.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_BQR,                                \
++	.mac_cap_info[5] = IEEE80211_HE_MAC_CAP5_HT_VHT_TRIG_FRAME_RX,               \
++	.phy_cap_info[0] = IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_RU_MAPPING_IN_2G, \
++	.phy_cap_info[1] = IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A,                     \
++	.phy_cap_info[2] = 0,                                                        \
++	.phy_cap_info[3] = 0,                                                        \
++	.phy_cap_info[4] = 0,                                                        \
++	.phy_cap_info[5] = 0,                                                        \
++	.phy_cap_info[6] = 0,                                                        \
++	.phy_cap_info[7] = 0,                                                        \
++	.phy_cap_info[8] = IEEE80211_HE_PHY_CAP8_20MHZ_IN_40MHZ_HE_PPDU_IN_2G,       \
++	.phy_cap_info[9] = IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_16US,           \
++	.phy_cap_info[10] = 0,                                                       \
 +}
 +
-+static void cl_ipc_txdesc_dealloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_tx_queues *tx_queues = &cl_hw->ipc_env->tx_queues;
-+	struct tx_queues_dma_addr *queues_dma_addr = tx_queues->queues_dma_addr;
-+	u32 i;
++#define CL_HE_CAP_ELEM_AP                                                       \
++{                                                                               \
++	.mac_cap_info[0] = IEEE80211_HE_MAC_CAP0_HTC_HE,                        \
++	.mac_cap_info[1] = 0,                                                   \
++	.mac_cap_info[2] = 0,                                                   \
++	.mac_cap_info[3] = IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_2,       \
++	.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_BQR,                           \
++	.mac_cap_info[5] = 0,                                                   \
++	.phy_cap_info[0] = 0,                                                   \
++	.phy_cap_info[1] = IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A,                \
++	.phy_cap_info[2] = 0,                                                   \
++	.phy_cap_info[3] = 0,                                                   \
++	.phy_cap_info[4] = 0,                                                   \
++	.phy_cap_info[5] = 0,                                                   \
++	.phy_cap_info[6] = 0,                                                   \
++	.phy_cap_info[7] = 0,                                                   \
++	.phy_cap_info[8] = 0,                                                   \
++	.phy_cap_info[9] = IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_16US,      \
++	.phy_cap_info[10] = 0,                                                  \
++}
 +
-+	if (queues_dma_addr->bcmc) {
-+		_cl_ipc_txdesc_dealloc(cl_hw, tx_queues->ipc_txdesc_bcmc,
-+				       queues_dma_addr->bcmc, IPC_TXDESC_CNT_BCMC);
-+		queues_dma_addr->bcmc = 0;
++#define CL_HE_CAP_ELEM_MESH_POINT                                               \
++{                                                                               \
++	.mac_cap_info[0] = IEEE80211_HE_MAC_CAP0_HTC_HE,                        \
++	.mac_cap_info[1] = 0,                                                   \
++	.mac_cap_info[2] = 0,                                                   \
++	.mac_cap_info[3] = IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_2,       \
++	.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_BQR,                           \
++	.mac_cap_info[5] = 0,                                                   \
++	.phy_cap_info[0] = 0,                                                   \
++	.phy_cap_info[1] = IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A,                \
++	.phy_cap_info[2] = 0,                                                   \
++	.phy_cap_info[3] = 0,                                                   \
++	.phy_cap_info[4] = 0,                                                   \
++	.phy_cap_info[5] = 0,                                                   \
++	.phy_cap_info[6] = 0,                                                   \
++	.phy_cap_info[7] = 0,                                                   \
++	.phy_cap_info[8] = 0,                                                   \
++	.phy_cap_info[9] = IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_16US,      \
++	.phy_cap_info[10] = 0,                                                  \
++}
++
++#define CL_HE_MCS_NSS_SUPP                   \
++{                                            \
++	.rx_mcs_80 = cpu_to_le16(0xff00),    \
++	.tx_mcs_80 = cpu_to_le16(0xff00),    \
++	.rx_mcs_160 = cpu_to_le16(0xff00),   \
++	.tx_mcs_160 = cpu_to_le16(0xff00),   \
++	.rx_mcs_80p80 = cpu_to_le16(0xffff), \
++	.tx_mcs_80p80 = cpu_to_le16(0xffff), \
++}
++
++#define RATE(_bitrate, _hw_rate, _flags) { \
++	.bitrate = (_bitrate),             \
++	.flags = (_flags),                 \
++	.hw_value = (_hw_rate),            \
++}
++
++#define CHAN(_freq, _idx) {     \
++	.center_freq = (_freq), \
++	.hw_value = (_idx),     \
++	.max_power = 18,        \
++}
++
++static struct ieee80211_sband_iftype_data cl_he_data[] = {
++	{
++		.types_mask = BIT(NL80211_IFTYPE_STATION),
++		.he_cap = {
++			.has_he = true,
++			.he_cap_elem = CL_HE_CAP_ELEM_STATION,
++			.he_mcs_nss_supp = CL_HE_MCS_NSS_SUPP,
++		},
++	},
++	{
++		.types_mask = BIT(NL80211_IFTYPE_AP),
++		.he_cap = {
++			.has_he = true,
++			.he_cap_elem = CL_HE_CAP_ELEM_AP,
++			.he_mcs_nss_supp = CL_HE_MCS_NSS_SUPP,
++		},
++	},
++	{
++		.types_mask = BIT(NL80211_IFTYPE_MESH_POINT),
++		.he_cap = {
++			.has_he = true,
++			.he_cap_elem = CL_HE_CAP_ELEM_MESH_POINT,
++			.he_mcs_nss_supp = CL_HE_MCS_NSS_SUPP,
++		},
++	},
++};
++
++static struct ieee80211_rate cl_ratetable[] = {
++	RATE(10,  0x00, 0),
++	RATE(20,  0x01, IEEE80211_RATE_SHORT_PREAMBLE),
++	RATE(55,  0x02, IEEE80211_RATE_SHORT_PREAMBLE),
++	RATE(110, 0x03, IEEE80211_RATE_SHORT_PREAMBLE),
++	RATE(60,  0x04, 0),
++	RATE(90,  0x05, 0),
++	RATE(120, 0x06, 0),
++	RATE(180, 0x07, 0),
++	RATE(240, 0x08, 0),
++	RATE(360, 0x09, 0),
++	RATE(480, 0x0A, 0),
++	RATE(540, 0x0B, 0),
++};
++
++/* The channels indexes here are not used anymore */
++static struct ieee80211_channel cl_2ghz_channels[] = {
++	CHAN(2412, 0),
++	CHAN(2417, 1),
++	CHAN(2422, 2),
++	CHAN(2427, 3),
++	CHAN(2432, 4),
++	CHAN(2437, 5),
++	CHAN(2442, 6),
++	CHAN(2447, 7),
++	CHAN(2452, 8),
++	CHAN(2457, 9),
++	CHAN(2462, 10),
++	CHAN(2467, 11),
++	CHAN(2472, 12),
++	CHAN(2484, 13),
++};
++
++static struct ieee80211_channel cl_5ghz_channels[] = {
++	CHAN(5180, 0),  /* 36 -  20MHz */
++	CHAN(5200, 1),  /* 40 -  20MHz */
++	CHAN(5220, 2),  /* 44 -  20MHz */
++	CHAN(5240, 3),  /* 48 -  20MHz */
++	CHAN(5260, 4),  /* 52 -  20MHz */
++	CHAN(5280, 5),  /* 56 -  20MHz */
++	CHAN(5300, 6),  /* 60 -  20MHz */
++	CHAN(5320, 7),  /* 64 -  20MHz */
++	CHAN(5500, 8),  /* 100 - 20MHz */
++	CHAN(5520, 9),  /* 104 - 20MHz */
++	CHAN(5540, 10), /* 108 - 20MHz */
++	CHAN(5560, 11), /* 112 - 20MHz */
++	CHAN(5580, 12), /* 116 - 20MHz */
++	CHAN(5600, 13), /* 120 - 20MHz */
++	CHAN(5620, 14), /* 124 - 20MHz */
++	CHAN(5640, 15), /* 128 - 20MHz */
++	CHAN(5660, 16), /* 132 - 20MHz */
++	CHAN(5680, 17), /* 136 - 20MHz */
++	CHAN(5700, 18), /* 140 - 20MHz */
++	CHAN(5720, 19), /* 144 - 20MHz */
++	CHAN(5745, 20), /* 149 - 20MHz */
++	CHAN(5765, 21), /* 153 - 20MHz */
++	CHAN(5785, 22), /* 157 - 20MHz */
++	CHAN(5805, 23), /* 161 - 20MHz */
++	CHAN(5825, 24), /* 165 - 20MHz */
++};
++
++static struct ieee80211_channel cl_6ghz_channels[] = {
++	CHAN(5955, 1),  /* 1 - 20MHz */
++	CHAN(5935, 2),  /* 2 - 20MHz */
++	CHAN(5975, 5),  /* 5 - 20MHz */
++	CHAN(5995, 9),  /* 9 - 20MHz */
++	CHAN(6015, 13),  /* 13 - 20MHz */
++	CHAN(6035, 17),  /* 17 - 20MHz */
++	CHAN(6055, 21),  /* 21 - 20MHz */
++	CHAN(6075, 25),  /* 25 - 20MHz */
++	CHAN(6095, 29),  /* 29 - 20MHz */
++	CHAN(6115, 33),  /* 33 - 20MHz */
++	CHAN(6135, 37),  /* 37 - 20MHz */
++	CHAN(6155, 41),  /* 41 - 20MHz */
++	CHAN(6175, 45),  /* 45 - 20MHz */
++	CHAN(6195, 49),  /* 49 - 20MHz */
++	CHAN(6215, 53),  /* 53 - 20MHz */
++	CHAN(6235, 57),  /* 57 - 20MHz */
++	CHAN(6255, 61),  /* 61 - 20MHz */
++	CHAN(6275, 65),  /* 65 - 20MHz */
++	CHAN(6295, 69),  /* 69 - 20MHz */
++	CHAN(6315, 73),  /* 73 - 20MHz */
++	CHAN(6335, 77),  /* 77 - 20MHz */
++	CHAN(6355, 81),  /* 81 - 20MHz */
++	CHAN(6375, 85),  /* 85 - 20MHz */
++	CHAN(6395, 89),  /* 89 - 20MHz */
++	CHAN(6415, 93),  /* 93 - 20MHz */
++	CHAN(6435, 97),  /* 97 - 20MHz */
++	CHAN(6455, 101),  /* 101 - 20MHz */
++	CHAN(6475, 105),  /* 105 - 20MHz */
++	CHAN(6495, 109),  /* 109 - 20MHz */
++	CHAN(6515, 113),  /* 113 - 20MHz */
++	CHAN(6535, 117),  /* 117 - 20MHz */
++	CHAN(6555, 121),  /* 121 - 20MHz */
++	CHAN(6575, 125),  /* 125 - 20MHz */
++	CHAN(6595, 129),  /* 129 - 20MHz */
++	CHAN(6615, 133),  /* 133 - 20MHz */
++	CHAN(6635, 137),  /* 137 - 20MHz */
++	CHAN(6655, 141),  /* 141 - 20MHz */
++	CHAN(6675, 145),  /* 145 - 20MHz */
++	CHAN(6695, 149),  /* 149 - 20MHz */
++	CHAN(6715, 153),  /* 153 - 20MHz */
++	CHAN(6735, 157),  /* 157 - 20MHz */
++	CHAN(6755, 161),  /* 161 - 20MHz */
++	CHAN(6775, 165),  /* 165 - 20MHz */
++	CHAN(6795, 169),  /* 169 - 20MHz */
++	CHAN(6815, 173),  /* 173 - 20MHz */
++	CHAN(6835, 177),  /* 177 - 20MHz */
++	CHAN(6855, 181),  /* 181 - 20MHz */
++	CHAN(6875, 188),  /* 185 - 20MHz */
++	CHAN(6895, 189),  /* 189 - 20MHz */
++	CHAN(6915, 193),  /* 193 - 20MHz */
++	CHAN(6935, 197),  /* 197 - 20MHz */
++	CHAN(6955, 201),  /* 201 - 20MHz */
++	CHAN(6975, 205),  /* 205 - 20MHz */
++	CHAN(6995, 209),  /* 209 - 20MHz */
++	CHAN(7015, 213),  /* 213 - 20MHz */
++	CHAN(7035, 217),  /* 217 - 20MHz */
++	CHAN(7055, 221),  /* 221 - 20MHz */
++	CHAN(7075, 225),  /* 225 - 20MHz */
++	CHAN(7095, 229),  /* 229 - 20MHz */
++	CHAN(7115, 233),  /* 233 - 20MHz */
++};
++
++static struct ieee80211_supported_band cl_band_2ghz = {
++	.channels   = cl_2ghz_channels,
++	.n_channels = ARRAY_SIZE(cl_2ghz_channels),
++	.bitrates   = cl_ratetable,
++	.n_bitrates = ARRAY_SIZE(cl_ratetable),
++	.ht_cap     = CL_HT_CAPABILITIES,
++	.vht_cap    = CL_VHT_CAPABILITIES,
++};
++
++static struct ieee80211_supported_band cl_band_5ghz = {
++	.channels   = cl_5ghz_channels,
++	.n_channels = ARRAY_SIZE(cl_5ghz_channels),
++	.bitrates   = &cl_ratetable[4],
++	.n_bitrates = ARRAY_SIZE(cl_ratetable) - 4,
++	.ht_cap     = CL_HT_CAPABILITIES,
++	.vht_cap    = CL_VHT_CAPABILITIES,
++};
++
++static struct ieee80211_supported_band cl_band_6ghz = {
++	.channels   = cl_6ghz_channels,
++	.n_channels = ARRAY_SIZE(cl_6ghz_channels),
++	.bitrates   = &cl_ratetable[4],
++	.n_bitrates = ARRAY_SIZE(cl_ratetable) - 4,
++};
++
++static const struct ieee80211_iface_limit cl_limits[] = {
++	{
++		.max   = ARRAY_SIZE(((struct cl_hw *)0)->addresses),
++		.types = BIT(NL80211_IFTYPE_AP) |
++			 BIT(NL80211_IFTYPE_STATION) |
++			 BIT(NL80211_IFTYPE_MESH_POINT),
++	},
++};
++
++#define WLAN_EXT_CAPA1_2040_BSS_COEX_MGMT_ENABLED BIT(0)
++
++static u8 cl_if_types_ext_capa_ap_24g[] = {
++	[0]  = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
++	[7]  = WLAN_EXT_CAPA8_OPMODE_NOTIF,
++};
++
++static const struct wiphy_iftype_ext_capab cl_iftypes_ext_capa_24g[] = {
++	{
++		.iftype = NL80211_IFTYPE_AP,
++		.extended_capabilities = cl_if_types_ext_capa_ap_24g,
++		.extended_capabilities_mask = cl_if_types_ext_capa_ap_24g,
++		.extended_capabilities_len = sizeof(cl_if_types_ext_capa_ap_24g),
++	},
++};
++
++static u8 cl_if_types_ext_capa_ap_5g[] = {
++	[0]  = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
++	[7]  = WLAN_EXT_CAPA8_OPMODE_NOTIF,
++};
++
++static const struct wiphy_iftype_ext_capab cl_iftypes_ext_capa_5g[] = {
++	{
++		.iftype = NL80211_IFTYPE_AP,
++		.extended_capabilities = cl_if_types_ext_capa_ap_5g,
++		.extended_capabilities_mask = cl_if_types_ext_capa_ap_5g,
++		.extended_capabilities_len = sizeof(cl_if_types_ext_capa_ap_5g),
++	},
++};
++
++static u8 cl_if_types_ext_capa_ap_6g[] = {
++	[0]  = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
++	[7]  = WLAN_EXT_CAPA8_OPMODE_NOTIF,
++};
++
++static const struct wiphy_iftype_ext_capab cl_iftypes_ext_capa_6g[] = {
++	{
++		.iftype = NL80211_IFTYPE_AP,
++		.extended_capabilities = cl_if_types_ext_capa_ap_6g,
++		.extended_capabilities_mask = cl_if_types_ext_capa_ap_6g,
++		.extended_capabilities_len = sizeof(cl_if_types_ext_capa_ap_6g),
++	},
++};
++
++static struct ieee80211_iface_combination cl_combinations[] = {
++	{
++		.limits = cl_limits,
++		.n_limits = ARRAY_SIZE(cl_limits),
++		.num_different_channels = 1,
++		.max_interfaces = ARRAY_SIZE(((struct cl_hw *)0)->addresses),
++		.beacon_int_min_gcd = 100,
++		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20) |
++				       BIT(NL80211_CHAN_WIDTH_40) |
++				       BIT(NL80211_CHAN_WIDTH_80) |
++				       BIT(NL80211_CHAN_WIDTH_160),
++	}
++};
++
++static const int cl_ac2hwq[AC_MAX] = {
++	[NL80211_TXQ_Q_VO] = CL_HWQ_VO,
++	[NL80211_TXQ_Q_VI] = CL_HWQ_VI,
++	[NL80211_TXQ_Q_BE] = CL_HWQ_BE,
++	[NL80211_TXQ_Q_BK] = CL_HWQ_BK
++};
++
++static const int cl_ac2edca[AC_MAX] = {
++	[NL80211_TXQ_Q_VO] = EDCA_AC_VO,
++	[NL80211_TXQ_Q_VI] = EDCA_AC_VI,
++	[NL80211_TXQ_Q_BE] = EDCA_AC_BE,
++	[NL80211_TXQ_Q_BK] = EDCA_AC_BK
++};
++
++static u8 cl_he_mcs_supp_tx(struct cl_hw *cl_hw, u8 nss)
++{
++	u8 mcs = cl_hw->conf->ce_he_mcs_nss_supp_tx[nss];
++
++	switch (mcs) {
++	case WRS_MCS_7:
++		return IEEE80211_HE_MCS_SUPPORT_0_7;
++	case WRS_MCS_9:
++		return IEEE80211_HE_MCS_SUPPORT_0_9;
++	case WRS_MCS_11:
++		return IEEE80211_HE_MCS_SUPPORT_0_11;
 +	}
 +
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++)
-+		if (queues_dma_addr->single[i]) {
-+			_cl_ipc_txdesc_dealloc(cl_hw, tx_queues->ipc_txdesc_single[i],
-+					       queues_dma_addr->single[i],
-+					       IPC_TXDESC_CNT_SINGLE);
-+			queues_dma_addr->single[i] = 0;
-+		}
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++)
-+		if (queues_dma_addr->agg[i]) {
-+			_cl_ipc_txdesc_dealloc(cl_hw, tx_queues->ipc_txdesc_agg[i],
-+					       queues_dma_addr->agg[i],
-+					       TXDESC_AGG_Q_SIZE_MAX);
-+			queues_dma_addr->agg[i] = 0;
-+		}
-+
-+	dma_pool_destroy(cl_hw->txdesc_pool);
-+	cl_hw->txdesc_pool = NULL;
++	cl_dbg_err(cl_hw, "Invalid mcs %u for nss %u. Must be 7, 9 or 11!\n", mcs, nss);
++	return IEEE80211_HE_MCS_NOT_SUPPORTED;
 +}
 +
-+static void cl_ipc_tx_queues_dealloc(struct cl_hw *cl_hw)
++static u8 cl_he_mcs_supp_rx(struct cl_hw *cl_hw, u8 nss)
 +{
-+	u32 len = sizeof(struct tx_queues_dma_addr);
-+	dma_addr_t phys_dma_addr = cl_hw->ipc_env->tx_queues.dma_addr;
++	u8 mcs = cl_hw->conf->ce_he_mcs_nss_supp_rx[nss];
 +
-+	if (!cl_hw->ipc_env->tx_queues.queues_dma_addr)
-+		return;
-+
-+	dma_free_coherent(cl_hw->chip->dev, len,
-+			  (void *)cl_hw->ipc_env->tx_queues.queues_dma_addr,
-+			  phys_dma_addr);
-+	cl_hw->ipc_env->tx_queues.queues_dma_addr = NULL;
-+}
-+
-+static void cl_ipc_rx_dealloc_skb(struct cl_hw *cl_hw, struct cl_rx_elem *rx_elem,
-+				  u16 len)
-+{
-+	dma_unmap_single(cl_hw->chip->dev, rx_elem->dma_addr, len,
-+			 DMA_FROM_DEVICE);
-+	kfree_skb(rx_elem->skb);
-+	rx_elem->skb = NULL;
-+}
-+
-+static void _cl_ipc_rx_dealloc_buff(struct cl_hw *cl_hw,
-+				    u32 *rxbuf,
-+				    __le32 dma_addr,
-+				    u32 desc_num)
-+{
-+	dma_addr_t phys_dma_addr = le32_to_cpu(dma_addr);
-+	u32 size = (desc_num * sizeof(u32));
-+
-+	dma_free_coherent(cl_hw->chip->dev, size, rxbuf, phys_dma_addr);
-+}
-+
-+static void cl_ipc_rx_dealloc_buff(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_host_rxbuf *rxbuf_rxm = &ipc_env->rx_hostbuf_array[CL_RX_BUF_RXM];
-+	struct cl_ipc_host_rxbuf *rxbuf_fw = &ipc_env->rx_hostbuf_array[CL_RX_BUF_FW];
-+
-+	if (rxbuf_rxm->dma_payload_base_addr)
-+		_cl_ipc_rx_dealloc_buff(cl_hw,
-+					rxbuf_rxm->dma_payload_addr,
-+					rxbuf_rxm->dma_payload_base_addr,
-+					IPC_RXBUF_CNT_RXM);
-+
-+	if (rxbuf_fw->dma_payload_base_addr)
-+		_cl_ipc_rx_dealloc_buff(cl_hw,
-+					rxbuf_fw->dma_payload_addr,
-+					rxbuf_fw->dma_payload_base_addr,
-+					IPC_RXBUF_CNT_FW);
-+}
-+
-+static void cl_ipc_rx_dealloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_rx_elem *rx_elem = cl_hw->rx_elems;
-+	u16 rxbuf_size_rxm = cl_hw->conf->ci_ipc_rxbuf_size[CL_RX_BUF_RXM];
-+	u16 rxbuf_size_fw = cl_hw->conf->ci_ipc_rxbuf_size[CL_RX_BUF_FW];
-+	int i;
-+
-+	if (!cl_hw->rx_elems)
-+		return;
-+
-+	for (i = 0; i < IPC_RXBUF_CNT_RXM; i++, rx_elem++)
-+		if (rx_elem->skb && !rx_elem->passed)
-+			cl_ipc_rx_dealloc_skb(cl_hw, rx_elem, rxbuf_size_rxm);
-+
-+	for (i = 0; i < IPC_RXBUF_CNT_FW; i++, rx_elem++)
-+		if (rx_elem->skb && !rx_elem->passed)
-+			cl_ipc_rx_dealloc_skb(cl_hw, rx_elem, rxbuf_size_fw);
-+
-+	kfree(cl_hw->rx_elems);
-+	cl_hw->rx_elems = NULL;
-+
-+	cl_ipc_rx_dealloc_buff(cl_hw);
-+}
-+
-+static void cl_ipc_msg_dealloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_e2a_msg_elem *msg_elem;
-+	int i;
-+
-+	if (!cl_hw->e2a_msg_elems || !cl_hw->e2a_msg_pool)
-+		return;
-+
-+	for (i = 0, msg_elem = cl_hw->e2a_msg_elems;
-+	     i < IPC_E2A_MSG_BUF_CNT; i++, msg_elem++) {
-+		if (msg_elem->msgbuf_ptr) {
-+			dma_pool_free(cl_hw->e2a_msg_pool, msg_elem->msgbuf_ptr,
-+				      msg_elem->dma_addr);
-+			msg_elem->msgbuf_ptr = NULL;
-+		}
++	switch (mcs) {
++	case WRS_MCS_7:
++		return IEEE80211_HE_MCS_SUPPORT_0_7;
++	case WRS_MCS_9:
++		return IEEE80211_HE_MCS_SUPPORT_0_9;
++	case WRS_MCS_11:
++		return IEEE80211_HE_MCS_SUPPORT_0_11;
 +	}
 +
-+	dma_pool_destroy(cl_hw->e2a_msg_pool);
-+	cl_hw->e2a_msg_pool = NULL;
-+
-+	kfree(cl_hw->e2a_msg_elems);
-+	cl_hw->e2a_msg_elems = NULL;
++	cl_dbg_err(cl_hw, "Invalid mcs %u for nss %u. Must be 7, 9 or 11!\n", mcs, nss);
++	return IEEE80211_HE_MCS_NOT_SUPPORTED;
 +}
 +
-+static void cl_ipc_radar_dealloc(struct cl_hw *cl_hw)
++static u8 cl_vht_mcs_supp_tx(struct cl_hw *cl_hw, u8 nss)
 +{
-+	struct cl_radar_elem *radar_elem;
-+	int i;
++	u8 mcs = cl_hw->conf->ce_vht_mcs_nss_supp_tx[nss];
 +
-+	if (!cl_hw->radar_pool || !cl_hw->radar_elems)
-+		return;
-+
-+	for (i = 0, radar_elem = cl_hw->radar_elems;
-+	     i < IPC_RADAR_BUF_CNT; i++, radar_elem++) {
-+		if (radar_elem->radarbuf_ptr) {
-+			dma_pool_free(cl_hw->radar_pool, radar_elem->radarbuf_ptr,
-+				      radar_elem->dma_addr);
-+			radar_elem->radarbuf_ptr = NULL;
-+		}
++	switch (mcs) {
++	case WRS_MCS_7:
++		return IEEE80211_VHT_MCS_SUPPORT_0_7;
++	case WRS_MCS_8:
++		return IEEE80211_VHT_MCS_SUPPORT_0_8;
++	case WRS_MCS_9:
++		return IEEE80211_VHT_MCS_SUPPORT_0_9;
 +	}
 +
-+	dma_pool_destroy(cl_hw->radar_pool);
-+	cl_hw->radar_pool = NULL;
-+
-+	kfree(cl_hw->radar_elems);
-+	cl_hw->radar_elems = NULL;
++	cl_dbg_err(cl_hw, "Invalid mcs %u for nss %u. Must be 7-9!\n", mcs, nss);
++	return IEEE80211_VHT_MCS_NOT_SUPPORTED;
 +}
 +
-+static void cl_ipc_dbg_dealloc(struct cl_hw *cl_hw)
++static u8 cl_vht_mcs_supp_rx(struct cl_hw *cl_hw, u8 nss)
 +{
-+	struct cl_dbg_elem *dbg_elem;
-+	int i;
++	u8 mcs = cl_hw->conf->ce_vht_mcs_nss_supp_rx[nss];
 +
-+	if (!cl_hw->dbg_pool || !cl_hw->dbg_elems)
-+		return;
-+
-+	for (i = 0, dbg_elem = cl_hw->dbg_elems;
-+	     i < IPC_DBG_BUF_CNT; i++, dbg_elem++) {
-+		if (dbg_elem->dbgbuf_ptr) {
-+			dma_pool_free(cl_hw->dbg_pool, dbg_elem->dbgbuf_ptr,
-+				      dbg_elem->dma_addr);
-+			dbg_elem->dbgbuf_ptr = NULL;
-+		}
++	switch (mcs) {
++	case WRS_MCS_7:
++		return IEEE80211_VHT_MCS_SUPPORT_0_7;
++	case WRS_MCS_8:
++		return IEEE80211_VHT_MCS_SUPPORT_0_8;
++	case WRS_MCS_9:
++		return IEEE80211_VHT_MCS_SUPPORT_0_9;
 +	}
 +
-+	dma_pool_destroy(cl_hw->dbg_pool);
-+	cl_hw->dbg_pool = NULL;
-+
-+	kfree(cl_hw->dbg_elems);
-+	cl_hw->dbg_elems = NULL;
++	cl_dbg_err(cl_hw, "Invalid mcs %u for nss %u. Must be 7-9!\n", mcs, nss);
++	return IEEE80211_VHT_MCS_NOT_SUPPORTED;
 +}
 +
-+static void cl_ipc_cfm_dealloc(struct cl_hw *cl_hw)
++static void cl_set_he_6ghz_capab(struct cl_hw *cl_hw)
 +{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
++	struct ieee80211_he_6ghz_capa *he_6ghz_cap0 = &cl_hw->iftype_data[0].he_6ghz_capa;
++	struct ieee80211_he_6ghz_capa *he_6ghz_cap1 = &cl_hw->iftype_data[1].he_6ghz_capa;
++	struct ieee80211_he_6ghz_capa *he_6ghz_cap2 = &cl_hw->iftype_data[2].he_6ghz_capa;
 +
-+	dma_free_coherent(cl_hw->chip->dev,
-+			  DMA_CFM_TOTAL_SIZE,
-+			  ipc_env->cfm_virt_base_addr,
-+			  ipc_env->cfm_dma_base_addr);
++	he_6ghz_cap0->capa = cpu_to_le16(IEEE80211_HT_MPDU_DENSITY_1);
 +
-+	ipc_env->cfm_dma_base_addr = 0;
-+	ipc_env->cfm_virt_base_addr = NULL;
++	he_6ghz_cap0->capa |=
++		cpu_to_le16(cl_hw->conf->ci_max_mpdu_len << HE_6GHZ_CAP_MAX_MPDU_LEN_OFFSET);
++	he_6ghz_cap0->capa |=
++		cpu_to_le16(IEEE80211_VHT_MAX_AMPDU_1024K << HE_6GHZ_CAP_MAX_AMPDU_LEN_EXP_OFFSET);
++
++	he_6ghz_cap0->capa |= cpu_to_le16(IEEE80211_HE_6GHZ_CAP_RX_ANTPAT_CONS |
++					  IEEE80211_HE_6GHZ_CAP_TX_ANTPAT_CONS);
++
++	he_6ghz_cap1->capa = he_6ghz_cap0->capa;
++	he_6ghz_cap2->capa = he_6ghz_cap0->capa;
 +}
 +
-+static void cl_ipc_dbg_info_dealloc(struct cl_hw *cl_hw)
++static void _cl_set_he_capab(struct cl_hw *cl_hw, u8 idx)
 +{
-+	if (!cl_hw->dbginfo.buf)
-+		return;
-+
-+	dma_free_coherent(cl_hw->chip->dev,
-+			  cl_hw->dbginfo.bufsz,
-+			  cl_hw->dbginfo.buf,
-+			  cl_hw->dbginfo.dma_addr);
-+
-+	cl_hw->dbginfo.buf = NULL;
-+}
-+
-+static void cl_ipc_elems_dealloc(struct cl_hw *cl_hw)
-+{
-+	cl_ipc_ring_indices_dealloc(cl_hw);
-+	cl_ipc_txdesc_dealloc(cl_hw);
-+	cl_ipc_tx_queues_dealloc(cl_hw);
-+	cl_ipc_rx_dealloc(cl_hw);
-+	cl_ipc_msg_dealloc(cl_hw);
-+	cl_ipc_radar_dealloc(cl_hw);
-+	cl_ipc_dbg_dealloc(cl_hw);
-+	cl_ipc_cfm_dealloc(cl_hw);
-+	cl_ipc_dbg_info_dealloc(cl_hw);
-+}
-+
-+static int cl_ipc_ring_indices_alloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_chip *chip = cl_hw->chip;
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	ipc_env->ring_indices_elem = kzalloc(sizeof(*ipc_env->ring_indices_elem), GFP_KERNEL);
-+
-+	if (!ipc_env->ring_indices_elem)
-+		return -ENOMEM;
-+
-+	if (cl_hw_is_tcv0(cl_hw)) {
-+		ipc_env->ring_indices_elem->indices = chip->ring_indices.params;
-+		ipc_env->ring_indices_elem->dma_addr = chip->ring_indices.dma_addr;
-+	} else {
-+		ipc_env->ring_indices_elem->indices = chip->ring_indices.params + 1;
-+		ipc_env->ring_indices_elem->dma_addr =
-+			(u32)chip->ring_indices.dma_addr + sizeof(struct cl_ipc_ring_indices);
-+	}
-+
-+	memset(ipc_env->ring_indices_elem->indices, 0, sizeof(struct cl_ipc_ring_indices));
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_tx_queues_alloc(struct cl_hw *cl_hw)
-+{
-+	struct tx_queues_dma_addr *buf = NULL;
-+	u32 size = sizeof(struct tx_queues_dma_addr);
-+	dma_addr_t phys_dma_addr;
-+
-+	buf = dma_alloc_coherent(cl_hw->chip->dev, size, &phys_dma_addr, GFP_KERNEL);
-+
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	cl_hw->ipc_env->tx_queues.queues_dma_addr = buf;
-+	cl_hw->ipc_env->tx_queues.dma_addr = phys_dma_addr;
-+
-+	return 0;
-+}
-+
-+static int __cl_ipc_txdesc_alloc(struct cl_hw *cl_hw,
-+				 struct txdesc **txdesc,
-+				 __le32 *dma_addr,
-+				 u32 desc_num)
-+{
-+	dma_addr_t phys_dma_addr;
-+	u32 size = (desc_num * sizeof(struct txdesc));
-+
-+	if (size < PAGE_SIZE) {
-+		*txdesc = dma_pool_alloc(cl_hw->txdesc_pool, GFP_KERNEL, &phys_dma_addr);
-+
-+		if (!(*txdesc)) {
-+			cl_dbg_err(cl_hw, "dma_pool_alloc failed size=%d\n", size);
-+			return -ENOMEM;
-+		}
-+	} else {
-+		*txdesc = dma_alloc_coherent(cl_hw->chip->dev, size, &phys_dma_addr, GFP_KERNEL);
-+
-+		if (!(*txdesc)) {
-+			cl_dbg_err(cl_hw, "dma_alloc_coherent failed size=%d\n", size);
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	*dma_addr = cpu_to_le32(phys_dma_addr);
-+	memset(*txdesc, 0, size);
-+
-+	return 0;
-+}
-+
-+static int _cl_ipc_txdesc_alloc(struct cl_hw *cl_hw)
-+{
-+	/*
-+	 * Allocate ipc txdesc for each queue, map the base
-+	 * address to the DMA and set the queues size
-+	 */
-+	struct cl_ipc_tx_queues *tx_queues = &cl_hw->ipc_env->tx_queues;
-+	struct tx_queues_dma_addr *queues_dma_addr = tx_queues->queues_dma_addr;
-+	u32 i;
-+	int ret = 0;
-+
-+	ret = __cl_ipc_txdesc_alloc(cl_hw, &tx_queues->ipc_txdesc_bcmc,
-+				    &queues_dma_addr->bcmc, IPC_TXDESC_CNT_BCMC);
-+	if (ret)
-+		return ret;
-+
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++) {
-+		ret = __cl_ipc_txdesc_alloc(cl_hw, &tx_queues->ipc_txdesc_single[i],
-+					    &queues_dma_addr->single[i],
-+					    IPC_TXDESC_CNT_SINGLE);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++) {
-+		ret = __cl_ipc_txdesc_alloc(cl_hw, &tx_queues->ipc_txdesc_agg[i],
-+					    &queues_dma_addr->agg[i],
-+					    TXDESC_AGG_Q_SIZE_MAX);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_txdesc_alloc(struct cl_hw *cl_hw)
-+{
-+	u32 pool_size = IPC_TXDESC_CNT_SINGLE * sizeof(struct txdesc);
-+
-+	cl_hw->txdesc_pool = dma_pool_create("cl_txdesc_pool", cl_hw->chip->dev,
-+					     pool_size, cache_line_size(), 0);
-+
-+	if (!cl_hw->txdesc_pool) {
-+		cl_dbg_verbose(cl_hw, "dma_pool_create failed !!!\n");
-+		return -ENOMEM;
-+	}
-+
-+	return _cl_ipc_txdesc_alloc(cl_hw);
-+}
-+
-+static int cl_ipc_rx_skb_alloc(struct cl_hw *cl_hw)
-+{
-+	/*
-+	 * This function allocates Rx elements for DMA
-+	 * transfers and pushes the DMA address to FW.
-+	 */
-+	struct cl_rx_elem *rx_elem = cl_hw->rx_elems;
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	int i = 0;
-+	u16 rxbuf_size_rxm = cl_hw->conf->ci_ipc_rxbuf_size[CL_RX_BUF_RXM];
-+	u16 rxbuf_size_fw = cl_hw->conf->ci_ipc_rxbuf_size[CL_RX_BUF_FW];
-+
-+	/* Allocate and push RXM buffers */
-+	for (i = 0; i < IPC_RXBUF_CNT_RXM; rx_elem++, i++) {
-+		if (cl_ipc_rx_elem_alloc(cl_hw, rx_elem, rxbuf_size_rxm)) {
-+			cl_dbg_verbose(cl_hw, "RXM rx_elem allocation failed !!!\n");
-+			return -ENOMEM;
-+		}
-+		cl_ipc_rxbuf_push(ipc_env, rx_elem, i, i, CL_RX_BUF_RXM);
-+	}
-+
-+	/* Allocate and push FW buffers */
-+	for (i = 0; i < IPC_RXBUF_CNT_FW; rx_elem++, i++) {
-+		if (cl_ipc_rx_elem_alloc(cl_hw, rx_elem, rxbuf_size_fw)) {
-+			cl_dbg_verbose(cl_hw, "FW rx_elem allocation failed !!!\n");
-+			return -ENOMEM;
-+		}
-+		cl_ipc_rxbuf_push(ipc_env, rx_elem, i, i, CL_RX_BUF_FW);
-+	}
-+
-+	return 0;
-+}
-+
-+static int _cl_ipc_rx_buf_alloc(struct cl_hw *cl_hw, u32 **rxbuf, __le32 *dma_addr, u32 desc_num)
-+{
-+	dma_addr_t phys_dma_addr;
-+	u32 size = (desc_num * sizeof(u32));
-+
-+	*rxbuf = dma_alloc_coherent(cl_hw->chip->dev,
-+				    size,
-+				    &phys_dma_addr,
-+				    GFP_KERNEL);
-+
-+	if (!(*rxbuf))
-+		return -ENOMEM;
-+
-+	*dma_addr = cpu_to_le32(phys_dma_addr);
-+	memset(*rxbuf, 0, size);
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_rx_buf_alloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_host_rxbuf *rxbuf_rxm = &ipc_env->rx_hostbuf_array[CL_RX_BUF_RXM];
-+	struct cl_ipc_host_rxbuf *rxbuf_fw = &ipc_env->rx_hostbuf_array[CL_RX_BUF_FW];
-+	int ret = 0;
-+
-+	rxbuf_rxm->ipc_host_rxdesc_ptr = ipc_env->ipc_host_rxdesc_rxm;
-+	rxbuf_fw->ipc_host_rxdesc_ptr = ipc_env->ipc_host_rxdesc_fw;
-+
-+	/* Allocate RXM RX write/read indexes */
-+	ret = _cl_ipc_rx_buf_alloc(cl_hw,
-+				   (u32 **)&rxbuf_rxm->dma_payload_addr,
-+				   &rxbuf_rxm->dma_payload_base_addr,
-+				   IPC_RXBUF_CNT_RXM);
-+	if (ret)
-+		return ret;
-+
-+	/* Allocate FW RX write/read indexes */
-+	ret = _cl_ipc_rx_buf_alloc(cl_hw,
-+				   (u32 **)&rxbuf_fw->dma_payload_addr,
-+				   &rxbuf_fw->dma_payload_base_addr,
-+				   IPC_RXBUF_CNT_FW);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_rx_alloc(struct cl_hw *cl_hw)
-+{
-+	u32 total_rx_elems = IPC_RXBUF_CNT_RXM + IPC_RXBUF_CNT_FW;
-+	u32 alloc_size = total_rx_elems * sizeof(struct cl_rx_elem);
-+	int ret = cl_ipc_rx_buf_alloc(cl_hw);
-+
-+	if (ret)
-+		return ret;
-+
-+	cl_hw->rx_elems = kzalloc(alloc_size, GFP_KERNEL);
-+
-+	if (!cl_hw->rx_elems)
-+		return -ENOMEM;
-+
-+	return cl_ipc_rx_skb_alloc(cl_hw);
-+}
-+
-+static int _cl_ipc_msg_alloc(struct cl_hw *cl_hw, struct cl_e2a_msg_elem *msg_elem)
-+{
-+	dma_addr_t dma_addr;
-+	struct cl_ipc_e2a_msg *msg;
-+
-+	/* Initialize the message pattern to NULL */
-+	msg = dma_pool_alloc(cl_hw->e2a_msg_pool, GFP_KERNEL, &dma_addr);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	msg->pattern = 0;
-+
-+	/* Save the msg pointer (for deallocation) and the dma_addr */
-+	msg_elem->msgbuf_ptr = msg;
-+	msg_elem->dma_addr = dma_addr;
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_msg_alloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_e2a_msg_elem *msg_elem;
-+	u32 alloc_size = IPC_E2A_MSG_BUF_CNT * sizeof(struct cl_e2a_msg_elem);
-+	u32 i;
-+
-+	cl_hw->e2a_msg_elems = kzalloc(alloc_size, GFP_KERNEL);
-+
-+	if (!cl_hw->e2a_msg_elems)
-+		return -ENOMEM;
-+
-+	cl_hw->e2a_msg_pool = dma_pool_create("dma_pool_msg",
-+					      cl_hw->chip->dev,
-+					      sizeof(struct cl_ipc_e2a_msg),
-+					      cache_line_size(),
-+					      0);
-+
-+	if (!cl_hw->e2a_msg_pool) {
-+		cl_dbg_verbose(cl_hw, "dma_pool_create failed !!!\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* Initialize the msg buffers in the global IPC array. */
-+	for (i = 0, msg_elem = cl_hw->e2a_msg_elems;
-+	     i < IPC_E2A_MSG_BUF_CNT; msg_elem++, i++) {
-+		if (_cl_ipc_msg_alloc(cl_hw, msg_elem)) {
-+			cl_dbg_verbose(cl_hw, "msg allocation failed !!!\n");
-+			return -ENOMEM;
-+		}
-+
-+		cl_ipc_msgbuf_push(ipc_env, (ptrdiff_t)msg_elem, msg_elem->dma_addr);
-+	}
-+
-+	return 0;
-+}
-+
-+static int _cl_ipc_radar_alloc(struct cl_hw *cl_hw, struct cl_radar_elem *radar_elem)
-+{
-+	dma_addr_t dma_addr;
-+	struct cl_radar_pulse_array *radar;
-+
-+	/* Initialize the message pattern to NULL */
-+	radar = dma_pool_alloc(cl_hw->radar_pool, GFP_KERNEL, &dma_addr);
-+	if (!radar)
-+		return -ENOMEM;
-+
-+	radar->cnt = 0;
-+
-+	/* Save the msg pointer (for deallocation) and the dma_addr */
-+	radar_elem->radarbuf_ptr = radar;
-+	radar_elem->dma_addr = dma_addr;
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_radar_alloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_radar_elem *radar_elem;
-+	u32 alloc_size = IPC_RADAR_BUF_CNT * sizeof(struct cl_radar_elem);
-+	u32 i;
-+
-+	cl_hw->radar_elems = kzalloc(alloc_size, GFP_KERNEL);
-+
-+	if (!cl_hw->radar_elems)
-+		return -ENOMEM;
-+
-+	cl_hw->radar_pool = dma_pool_create("dma_pool_radar",
-+					    cl_hw->chip->dev,
-+					    sizeof(struct cl_radar_pulse_array),
-+					    cache_line_size(),
-+					    0);
-+
-+	if (!cl_hw->radar_pool) {
-+		cl_dbg_verbose(cl_hw, "dma_pool_create failed !!!\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* Initialize the radar buffers in the global IPC array. */
-+	for (i = 0, radar_elem = cl_hw->radar_elems;
-+	     i < IPC_RADAR_BUF_CNT; radar_elem++, i++) {
-+		if (_cl_ipc_radar_alloc(cl_hw, radar_elem)) {
-+			cl_dbg_verbose(cl_hw, "radar allocation failed !!!\n");
-+			return -ENOMEM;
-+		}
-+
-+		cl_ipc_radarbuf_push(ipc_env, (ptrdiff_t)radar_elem, radar_elem->dma_addr);
-+	}
-+
-+	return 0;
-+}
-+
-+static int _cl_ipc_dbg_alloc(struct cl_hw *cl_hw, struct cl_dbg_elem *dbg_elem)
-+{
-+	dma_addr_t dma_addr;
-+	struct cl_ipc_dbg_msg *dbg_msg;
-+
-+	dbg_msg = dma_pool_alloc(cl_hw->dbg_pool, GFP_KERNEL, &dma_addr);
-+	if (!dbg_msg)
-+		return -ENOMEM;
-+
-+	dbg_msg->pattern = 0;
-+
-+	/* Save the Debug msg pointer (for deallocation) and the dma_addr */
-+	dbg_elem->dbgbuf_ptr = dbg_msg;
-+	dbg_elem->dma_addr = dma_addr;
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_dbg_alloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_dbg_elem *dbg_elem;
-+	u32 alloc_size = IPC_DBG_BUF_CNT * sizeof(struct cl_dbg_elem);
-+	u32 i;
-+
-+	cl_hw->dbg_elems = kzalloc(alloc_size, GFP_KERNEL);
-+
-+	if (!cl_hw->dbg_elems)
-+		return -ENOMEM;
-+
-+	cl_hw->dbg_pool = dma_pool_create("dma_pool_dbg",
-+					  cl_hw->chip->dev,
-+					  sizeof(struct cl_ipc_dbg_msg),
-+					  cache_line_size(),
-+					  0);
-+
-+	if (!cl_hw->dbg_pool) {
-+		cl_dbg_verbose(cl_hw, "dma_pool_create failed !!!\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* Initialize the dbg buffers in the global IPC array. */
-+	for (i = 0, dbg_elem = cl_hw->dbg_elems;
-+	     i < IPC_DBG_BUF_CNT; dbg_elem++, i++) {
-+		if (_cl_ipc_dbg_alloc(cl_hw, dbg_elem)) {
-+			cl_dbg_verbose(cl_hw, "dbgelem allocation failed !!!\n");
-+			return -ENOMEM;
-+		}
-+
-+		cl_ipc_dbgbuf_push(ipc_env, (ptrdiff_t)dbg_elem, dbg_elem->dma_addr);
-+	}
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_cfm_alloc(struct cl_hw *cl_hw)
-+{
-+	dma_addr_t dma_addr;
-+	u8 *host_virt_addr;
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	host_virt_addr = dma_alloc_coherent(cl_hw->chip->dev,
-+					    DMA_CFM_TOTAL_SIZE,
-+					    &dma_addr,
-+					    GFP_KERNEL);
-+
-+	if (!host_virt_addr)
-+		return -ENOMEM;
-+
-+	memset(host_virt_addr, 0, DMA_CFM_TOTAL_SIZE);
-+	ipc_env->cfm_dma_base_addr = dma_addr;
-+	ipc_env->cfm_virt_base_addr = host_virt_addr;
-+
-+	memset(ipc_env->cfm_virt_base_addr, 0, IPC_CFM_SIZE);
-+
-+	return 0;
-+}
-+
-+static int _cl_ipc_dbg_info_alloc(struct cl_hw *cl_hw)
-+{
-+	struct cl_chip *chip = cl_hw->chip;
-+	struct dbg_info *buf;
-+	dma_addr_t dma_addr;
-+	u32 len = sizeof(struct dbg_info);
-+
-+	if (!chip->conf->ci_la_mirror_en)
-+		len -= sizeof_field(struct dbg_dump_info, la_mem);
-+
-+	buf = dma_alloc_coherent(chip->dev, len, &dma_addr, GFP_KERNEL);
-+
-+	if (!buf) {
-+		cl_dbg_verbose(cl_hw, "buffer alloc of size %u failed\n", len);
-+		return -ENOMEM;
-+	}
-+
-+	memset(buf, 0, len);
-+	buf->u.type = DBG_INFO_UNSET;
-+
-+	cl_hw->dbginfo.buf = buf;
-+	cl_hw->dbginfo.dma_addr = dma_addr;
-+	cl_hw->dbginfo.bufsz = len;
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_dbg_info_alloc(struct cl_hw *cl_hw)
-+{
-+	/* Initialize the debug information buffer */
-+	if (_cl_ipc_dbg_info_alloc(cl_hw)) {
-+		cl_dbg_verbose(cl_hw, "dbginfo allocation failed !!!\n");
-+		return -ENOMEM;
-+	}
-+
-+	cl_ipc_dbginfobuf_push(cl_hw->ipc_env, cl_hw->dbginfo.dma_addr);
-+
-+	return 0;
-+}
-+
-+static int cl_ipc_elems_alloc(struct cl_hw *cl_hw)
-+{
-+	/* Allocate all the elements required for communications with firmware */
-+	if (cl_ipc_ring_indices_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_tx_queues_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_txdesc_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_rx_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_msg_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_radar_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_dbg_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_cfm_alloc(cl_hw))
-+		goto out_err;
-+
-+	if (cl_ipc_dbg_info_alloc(cl_hw))
-+		goto out_err;
-+
-+	return 0;
-+
-+out_err:
-+	cl_ipc_elems_dealloc(cl_hw);
-+	return -ENOMEM;
-+}
-+
-+static u8 cl_ipc_dbgfile_handler(struct cl_hw *cl_hw, ptrdiff_t hostid)
-+{
-+	struct cl_dbg_elem *dbg_elem = (struct cl_dbg_elem *)hostid;
-+	struct cl_ipc_dbg_msg *dbg_msg;
-+	u8 ret = 0;
-+
-+	/* Retrieve the message structure */
-+	dbg_msg = (struct cl_ipc_dbg_msg *)dbg_elem->dbgbuf_ptr;
-+
-+	if (!dbg_msg) {
-+		ret = -1;
-+		cl_dbg_err(cl_hw, "dbgbuf_ptr is NULL!!!!\n");
-+		goto dbg_push;
-+	}
-+
-+	/* Look for pattern which means that this hostbuf has been used for a MSG */
-+	if (le32_to_cpu(dbg_msg->pattern) != IPC_DBG_VALID_PATTERN) {
-+		ret = -1;
-+		goto dbg_no_push;
-+	}
-+
-+	/* Reset the msg element and re-use it */
-+	dbg_msg->pattern = 0;
-+
-+	/* Display the firmware string */
-+	cl_dbgfile_print_fw_str(cl_hw, dbg_msg->string, IPC_DBG_PARAM_SIZE);
-+
-+dbg_push:
-+	/* make sure memory is written before push to HW */
-+	wmb();
-+
-+	/* Push back the buffer to the firmware */
-+	cl_ipc_dbgbuf_push(cl_hw->ipc_env, (ptrdiff_t)dbg_elem, dbg_elem->dma_addr);
-+
-+dbg_no_push:
-+	return ret;
-+}
-+
-+static void cl_ipc_dbgfile_tasklet(unsigned long data)
-+{
-+	struct cl_hw *cl_hw = (struct cl_hw *)data;
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_hostbuf *dbg_array = ipc_env->dbg_hostbuf_array;
-+	int dbg_handled = 0;
-+
-+	while (!cl_ipc_dbgfile_handler(cl_hw, dbg_array[ipc_env->dbg_host_idx].hostid))
-+		dbg_handled++;
-+
-+	/* Enable the DBG interrupt */
-+	if (!test_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags))
-+		cl_irq_enable(cl_hw, cl_hw->ipc_e2a_irq.dbg);
-+}
-+
-+static void cl_ipc_tasklet_init(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	tasklet_init(&ipc_env->rxdesc_tasklet,
-+		     cl_rx_pci_desc_tasklet,
-+		     (unsigned long)cl_hw);
-+	tasklet_init(&ipc_env->tx_single_cfm_tasklet,
-+		     cl_tx_pci_single_cfm_tasklet,
-+		     (unsigned long)cl_hw);
-+	tasklet_init(&ipc_env->tx_agg_cfm_tasklet,
-+		     cl_tx_pci_agg_cfm_tasklet,
-+		     (unsigned long)cl_hw);
-+	tasklet_init(&ipc_env->msg_tasklet,
-+		     cl_msg_rx_tasklet,
-+		     (unsigned long)cl_hw);
-+	tasklet_init(&ipc_env->dbg_tasklet,
-+		     cl_ipc_dbgfile_tasklet,
-+		     (unsigned long)cl_hw);
-+	tasklet_init(&ipc_env->bcn_tasklet,
-+		     cl_tx_bcns_tasklet,
-+		     (unsigned long)cl_hw);
-+}
-+
-+static int cl_ipc_env_init(struct cl_hw *cl_hw)
-+{
-+	u32 *dst;
-+	u32 i;
-+
-+	BUILD_BUG_ON_NOT_POWER_OF_2(IPC_RXBUF_CNT_RXM);
-+	BUILD_BUG_ON_NOT_POWER_OF_2(IPC_RXBUF_CNT_FW);
-+
-+	/* Allocate the IPC environment */
-+	cl_hw->ipc_env = kzalloc(sizeof(*cl_hw->ipc_env), GFP_KERNEL);
-+
-+	if (!cl_hw->ipc_env)
-+		return -ENOMEM;
-+
-+	dst = (u32 *)(cl_hw->ipc_env);
-+
-+	/*
-+	 * Reset the IPC Host environment.
-+	 * Perform the reset word per word because memset() does
-+	 * not correctly reset all (due to misaligned accesses)
-+	 */
-+	for (i = 0; i < sizeof(struct cl_ipc_host_env); i += sizeof(u32))
-+		*dst++ = 0;
-+
-+	return 0;
-+}
-+
-+static bool cl_pci_is_la_enabled(struct cl_chip *chip)
-+{
-+	s8 *ela_mode = chip->conf->ce_ela_mode;
-+
-+	return (!strcmp(ela_mode, "default") ||
-+		!strncmp(ela_mode, "lcu_mac", 7) ||
-+		!strncmp(ela_mode, "lcu_phy", 7));
-+}
-+
-+static void cl_ipc_shared_env_init(struct cl_hw *cl_hw)
-+{
-+	struct cl_chip *chip = cl_hw->chip;
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_shared_env __iomem *shared_env =
-+		(struct cl_ipc_shared_env __iomem *)(chip->pci_bar0_virt_addr +
-+					     SHARED_RAM_START_ADDR);
-+	u32 i;
-+	u16 max_retry = cl_hw_is_prod_or_listener(cl_hw) ?
-+			0 : cl_hw->conf->ce_max_retry;
-+	bool first_tcv = cl_hw_is_first_tcv(cl_hw) &&
-+			 !cl_recovery_in_progress(cl_hw);
-+	void __iomem *dst;
-+
-+	/* The shared environment of TCV1 is located after the shared environment of TCV0. */
-+	if (cl_hw_is_tcv1(cl_hw))
-+		shared_env++;
-+
-+	dst = (void __iomem *)(shared_env);
-+
-+	/* Reset the shared environment */
-+	for (i = 0; i < sizeof(struct cl_ipc_shared_env); i += sizeof(u32),
-+	     dst += sizeof(u32))
-+		iowrite32(0, dst);
-+
-+	iowrite8(cl_pci_is_la_enabled(chip), (void __iomem *)&shared_env->la_enable);
-+	iowrite16(max_retry, (void __iomem *)&shared_env->max_retry);
-+	iowrite16(CL_TX_LIFETIME_MS, (void __iomem *)&shared_env->lft_limit_ms);
-+	iowrite16(chip->conf->ci_phy_dev, (void __iomem *)&shared_env->phy_dev);
-+	iowrite8(first_tcv, (void __iomem *)&shared_env->first_tcv);
-+	iowrite8(chip->conf->ci_la_mirror_en,
-+		 (void __iomem *)&shared_env->la_mirror_enable);
-+
-+	/* Initialize the shared environment pointer */
-+	ipc_env->shared = shared_env;
-+}
-+
-+static void cl_ipc_e2a_irq_init(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_e2a_irq *ipc_e2a_irq = &cl_hw->ipc_e2a_irq;
-+
-+	if (cl_hw_is_tcv0(cl_hw)) {
-+		ipc_e2a_irq->dbg = IPC_IRQ_L2H_DBG;
-+		ipc_e2a_irq->msg = IPC_IRQ_L2H_MSG;
-+		ipc_e2a_irq->rxdesc = IPC_IRQ_L2H_RXDESC;
-+		ipc_e2a_irq->txcfm = IPC_IRQ_L2H_TXCFM;
-+		ipc_e2a_irq->radar = IPC_IRQ_L2H_RADAR;
-+		ipc_e2a_irq->txdesc_ind = IPC_IRQ_L2H_TXDESC_IND;
-+		ipc_e2a_irq->tbtt = IPC_IRQ_L2H_TBTT;
-+		ipc_e2a_irq->sync = IPC_IRQ_L2H_SYNC;
-+		ipc_e2a_irq->all = IPC_IRQ_L2H_ALL;
-+	} else {
-+		ipc_e2a_irq->dbg = IPC_IRQ_S2H_DBG;
-+		ipc_e2a_irq->msg = IPC_IRQ_S2H_MSG;
-+		ipc_e2a_irq->rxdesc = IPC_IRQ_S2H_RXDESC;
-+		ipc_e2a_irq->txcfm = IPC_IRQ_S2H_TXCFM;
-+		ipc_e2a_irq->radar = IPC_IRQ_S2H_RADAR;
-+		ipc_e2a_irq->txdesc_ind = IPC_IRQ_S2H_TXDESC_IND;
-+		ipc_e2a_irq->tbtt = IPC_IRQ_S2H_TBTT;
-+		ipc_e2a_irq->sync = IPC_IRQ_S2H_SYNC;
-+		ipc_e2a_irq->all = IPC_IRQ_S2H_ALL;
-+	}
-+}
-+
-+int cl_ipc_init(struct cl_hw *cl_hw)
-+{
-+	/*
-+	 * This function initializes IPC interface by registering callbacks, setting
-+	 * shared memory area and calling IPC Init function.
-+	 * This function should be called only once during driver's lifetime.
-+	 */
-+	int ret = cl_ipc_env_init(cl_hw);
-+
-+	if (ret)
-+		return ret;
-+
-+	cl_ipc_e2a_irq_init(cl_hw);
-+	if (cl_hw_is_tcv0(cl_hw))
-+		cl_hw->ipc_host2xmac_trigger_set = ipc_host_2_lmac_trigger_set;
-+	else
-+		cl_hw->ipc_host2xmac_trigger_set = ipc_host_2_smac_trigger_set;
-+
-+	cl_ipc_shared_env_init(cl_hw);
-+
-+	ret = cl_ipc_elems_alloc(cl_hw);
-+	if (ret) {
-+		cl_ipc_env_free(cl_hw);
-+		return ret;
-+	}
-+
-+	cl_ipc_tasklet_init(cl_hw);
-+
-+	return ret;
-+}
-+
-+static void cl_ipc_ring_indices_reset(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	memset(ipc_env->ring_indices_elem->indices, 0, sizeof(struct cl_ipc_ring_indices));
-+
-+	/* Reset host desc read idx follower */
-+	ipc_env->host_rxdesc_read_idx[CL_RX_BUF_RXM] = 0;
-+	ipc_env->host_rxdesc_read_idx[CL_RX_BUF_FW] = 0;
-+}
-+
-+static void _cl_ipc_txdesc_reset(struct txdesc **txdesc, u32 desc_num)
-+{
-+	u32 size = (desc_num * sizeof(struct txdesc));
-+
-+	memset(*txdesc, 0, size);
-+}
-+
-+static void cl_ipc_txdesc_reset(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_tx_queues *tx_queues = &cl_hw->ipc_env->tx_queues;
-+	u32 i;
-+
-+	_cl_ipc_txdesc_reset(&tx_queues->ipc_txdesc_bcmc, IPC_TXDESC_CNT_BCMC);
-+
-+	for (i = 0; i < MAX_SINGLE_QUEUES; i++)
-+		_cl_ipc_txdesc_reset(&tx_queues->ipc_txdesc_single[i], IPC_TXDESC_CNT_SINGLE);
-+
-+	for (i = 0; i < IPC_MAX_BA_SESSIONS; i++)
-+		_cl_ipc_txdesc_reset(&tx_queues->ipc_txdesc_agg[i], TXDESC_AGG_Q_SIZE_MAX);
-+}
-+
-+static void cl_ipc_rx_skb_reset(struct cl_hw *cl_hw)
-+{
-+	/*
-+	 * This function allocates Rx elements for DMA
-+	 * transfers and pushes the DMA address to FW.
-+	 */
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_rx_elem *rx_elem = cl_hw->rx_elems;
++	struct ieee80211_sta_he_cap *he_cap = &cl_hw->iftype_data[idx].he_cap;
++	struct ieee80211_he_mcs_nss_supp *he_mcs_nss_supp = &he_cap->he_mcs_nss_supp;
++	struct ieee80211_he_cap_elem *he_cap_elem = &he_cap->he_cap_elem;
++	u8 rx_nss = cl_hw->conf->ce_rx_nss;
++	u8 tx_nss = cl_hw->conf->ce_tx_nss;
 +	int i = 0;
 +
-+	/* Push RXM buffers */
-+	for (i = 0; i < IPC_RXBUF_CNT_RXM; rx_elem++, i++)
-+		cl_ipc_rxbuf_push(ipc_env, rx_elem, i, i, CL_RX_BUF_RXM);
++	if (BAND_IS_5G_6G(cl_hw)) {
++		he_cap_elem->phy_cap_info[0] |=
++			IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G;
 +
-+	/* Push FW buffers */
-+	for (i = 0; i < IPC_RXBUF_CNT_FW; rx_elem++, i++)
-+		cl_ipc_rxbuf_push(ipc_env, rx_elem, i, i, CL_RX_BUF_FW);
-+}
++		for (i = 0; i < rx_nss; i++)
++			he_mcs_nss_supp->rx_mcs_160 |=
++				cpu_to_le16(cl_he_mcs_supp_rx(cl_hw, i) << (i * 2));
 +
-+static void _cl_ipc_rx_buf_reset(u32 **rxbuf, u32 desc_num)
-+{
-+	u32 size = (desc_num * sizeof(u32));
++		for (i = 0; i < tx_nss; i++)
++			he_mcs_nss_supp->tx_mcs_160 |=
++				cpu_to_le16(cl_he_mcs_supp_tx(cl_hw, i) << (i * 2));
 +
-+	memset(*rxbuf, 0, size);
-+}
++		he_cap_elem->phy_cap_info[0] |=
++			IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G;
 +
-+static void cl_ipc_rx_buf_reset(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_host_rxbuf *rxbuf_rxm = &ipc_env->rx_hostbuf_array[CL_RX_BUF_RXM];
-+	struct cl_ipc_host_rxbuf *rxbuf_fw = &ipc_env->rx_hostbuf_array[CL_RX_BUF_FW];
++		for (i = 0; i < rx_nss; i++)
++			he_mcs_nss_supp->rx_mcs_80 |=
++				cpu_to_le16(cl_he_mcs_supp_rx(cl_hw, i) << (i * 2));
 +
-+	/* Reset RXM RX buffer */
-+	_cl_ipc_rx_buf_reset((u32 **)&rxbuf_rxm->dma_payload_addr,
-+			     IPC_RXBUF_CNT_RXM);
++		for (i = 0; i < tx_nss; i++)
++			he_mcs_nss_supp->tx_mcs_80 |=
++				cpu_to_le16(cl_he_mcs_supp_tx(cl_hw, i) << (i * 2));
++	} else {
++		he_cap_elem->phy_cap_info[0] |=
++			IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G;
 +
-+	/* Reset FW RX buffer */
-+	_cl_ipc_rx_buf_reset((u32 **)&rxbuf_fw->dma_payload_addr,
-+			     IPC_RXBUF_CNT_FW);
-+}
++		for (i = 0; i < rx_nss; i++)
++			he_mcs_nss_supp->rx_mcs_80 |=
++				cpu_to_le16(cl_he_mcs_supp_rx(cl_hw, i) << (i * 2));
 +
-+static void cl_ipc_rx_reset(struct cl_hw *cl_hw)
-+{
-+	cl_ipc_rx_buf_reset(cl_hw);
-+	cl_ipc_rx_skb_reset(cl_hw);
-+}
++		for (i = 0; i < tx_nss; i++)
++			he_mcs_nss_supp->tx_mcs_80 |=
++				cpu_to_le16(cl_he_mcs_supp_tx(cl_hw, i) << (i * 2));
++	}
 +
-+static void cl_ipc_msg_reset(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_e2a_msg_elem *msg_elem;
-+	u32 i;
++	for (i = rx_nss; i < 8; i++) {
++		he_mcs_nss_supp->rx_mcs_80 |=
++			cpu_to_le16(IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
++		he_mcs_nss_supp->rx_mcs_160 |=
++			cpu_to_le16(IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
++	}
 +
-+	ipc_env->e2a_msg_host_idx = 0;
++	for (i = tx_nss; i < 8; i++) {
++		he_mcs_nss_supp->tx_mcs_80 |=
++			cpu_to_le16(IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
++		he_mcs_nss_supp->tx_mcs_160 |=
++			cpu_to_le16(IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2));
++	}
 +
-+	/* Initialize the msg buffers in the global IPC array. */
-+	for (i = 0, msg_elem = cl_hw->e2a_msg_elems;
-+	     i < IPC_E2A_MSG_BUF_CNT; msg_elem++, i++) {
-+		msg_elem->msgbuf_ptr->pattern = 0;
-+		cl_ipc_msgbuf_push(ipc_env, (ptrdiff_t)msg_elem, msg_elem->dma_addr);
++	if (cl_hw->conf->ci_he_rxldpc_en)
++		he_cap_elem->phy_cap_info[1] |=
++			IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD;
++
++	if (cl_hw->conf->ci_rx_he_mu_ppdu)
++		he_cap_elem->phy_cap_info[3] |=
++			IEEE80211_HE_PHY_CAP3_RX_PARTIAL_BW_SU_IN_20MHZ_MU;
++
++	if (cl_hw->conf->ci_bf_en) {
++		he_cap_elem->phy_cap_info[3] |=
++			IEEE80211_HE_PHY_CAP3_SU_BEAMFORMER;
++		he_cap_elem->phy_cap_info[5] |=
++			IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_4;
 +	}
 +}
 +
-+static void cl_ipc_radar_reset(struct cl_hw *cl_hw)
++static void cl_set_he_capab(struct cl_hw *cl_hw)
 +{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_radar_elem *radar_elem;
-+	u32 i;
++	struct ieee80211_sta_he_cap *he_cap0 = &cl_hw->iftype_data[0].he_cap;
++	struct ieee80211_he_cap_elem *he_cap_elem = &he_cap0->he_cap_elem;
++	struct cl_tcv_conf *conf = cl_hw->conf;
++	u8 tf_mac_pad_dur = conf->ci_tf_mac_pad_dur;
 +
-+	ipc_env->radar_host_idx = 0;
++	memcpy(&cl_hw->iftype_data, cl_he_data, sizeof(cl_hw->iftype_data));
 +
-+	/* Initialize the radar buffers in the global IPC array. */
-+	for (i = 0, radar_elem = cl_hw->radar_elems;
-+	     i < IPC_RADAR_BUF_CNT; radar_elem++, i++) {
-+		radar_elem->radarbuf_ptr->cnt = 0;
-+		cl_ipc_radarbuf_push(ipc_env, (ptrdiff_t)radar_elem, radar_elem->dma_addr);
-+	}
++	if (tf_mac_pad_dur == 1)
++		he_cap_elem->mac_cap_info[1] |= IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_8US;
++	else if (tf_mac_pad_dur == 2)
++		he_cap_elem->mac_cap_info[1] |= IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US;
++
++	_cl_set_he_capab(cl_hw, 0);
++	_cl_set_he_capab(cl_hw, 1);
++	_cl_set_he_capab(cl_hw, 2);
++
++	if (cl_band_is_6g(cl_hw))
++		cl_set_he_6ghz_capab(cl_hw);
++
++	cl_hw->sband.n_iftype_data = ARRAY_SIZE(cl_he_data);
++	cl_hw->sband.iftype_data = cl_hw->iftype_data;
 +}
 +
-+static void cl_ipc_dbg_reset(struct cl_hw *cl_hw)
++#define RATE_1_MBPS   10
++#define RATE_2_MBPS   20
++#define RATE_5_5_MBPS 55
++#define RATE_11_MBPS  110
++#define RATE_6_MBPS   60
++#define RATE_9_MBPS   90
++#define RATE_12_MBPS  120
++#define RATE_18_MBPS  180
++#define RATE_24_MBPS  240
++#define RATE_36_MBPS  360
++#define RATE_48_MBPS  480
++#define RATE_54_MBPS  540
++
++static u16 cl_cap_convert_rate_to_bitmap(u16 rate)
 +{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_dbg_elem *dbg_elem;
-+	u32 i;
-+
-+	ipc_env->dbg_host_idx = 0;
-+
-+	/* Initialize the dbg buffers in the global IPC array. */
-+	for (i = 0, dbg_elem = cl_hw->dbg_elems;
-+	     i < IPC_DBG_BUF_CNT; dbg_elem++, i++) {
-+		dbg_elem->dbgbuf_ptr->pattern = 0;
-+		cl_ipc_dbgbuf_push(ipc_env, (ptrdiff_t)dbg_elem, dbg_elem->dma_addr);
-+	}
-+}
-+
-+static void cl_ipc_cfm_reset(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	ipc_env->cfm_used_idx = 0;
-+	memset(ipc_env->cfm_virt_base_addr, 0, IPC_CFM_SIZE);
-+}
-+
-+static void cl_ipc_dbg_info_reset(struct cl_hw *cl_hw)
-+{
-+	struct dbg_info *buf = cl_hw->dbginfo.buf;
-+	struct cl_chip *chip = cl_hw->chip;
-+	u32 len = sizeof(struct dbg_info);
-+
-+	if (!chip->conf->ci_la_mirror_en)
-+		len -= sizeof_field(struct dbg_dump_info, la_mem);
-+
-+	memset(buf, 0, len);
-+	buf->u.type = DBG_INFO_UNSET;
-+
-+	cl_ipc_dbginfobuf_push(cl_hw->ipc_env, cl_hw->dbginfo.dma_addr);
-+}
-+
-+static void cl_ipc_elems_reset(struct cl_hw *cl_hw)
-+{
-+	cl_ipc_ring_indices_reset(cl_hw);
-+	cl_ipc_txdesc_reset(cl_hw);
-+	cl_ipc_rx_reset(cl_hw);
-+	cl_ipc_msg_reset(cl_hw);
-+	cl_ipc_radar_reset(cl_hw);
-+	cl_ipc_dbg_reset(cl_hw);
-+	cl_ipc_cfm_reset(cl_hw);
-+	cl_ipc_dbg_info_reset(cl_hw);
-+	cl_enhanced_tim_reset(cl_hw);
-+}
-+
-+void cl_ipc_recovery(struct cl_hw *cl_hw)
-+{
-+	cl_ipc_shared_env_init(cl_hw);
-+	cl_ipc_elems_reset(cl_hw);
-+}
-+
-+void cl_ipc_deinit(struct cl_hw *cl_hw)
-+{
-+	cl_ipc_elems_dealloc(cl_hw);
-+	cl_ipc_env_free(cl_hw);
-+}
-+
-+void cl_ipc_stop(struct cl_hw *cl_hw)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	tasklet_kill(&ipc_env->bcn_tasklet);
-+	tasklet_kill(&ipc_env->rxdesc_tasklet);
-+	tasklet_kill(&ipc_env->tx_single_cfm_tasklet);
-+	tasklet_kill(&ipc_env->tx_agg_cfm_tasklet);
-+	tasklet_kill(&ipc_env->msg_tasklet);
-+	tasklet_kill(&ipc_env->dbg_tasklet);
-+}
-+
-+int cl_ipc_rx_elem_alloc(struct cl_hw *cl_hw, struct cl_rx_elem *rx_elem, u32 size)
-+{
-+	struct sk_buff *skb;
-+	dma_addr_t dma_addr;
-+	struct hw_rxhdr *rxhdr;
-+
-+	rx_elem->passed = 0;
-+
-+	skb = dev_alloc_skb(size);
-+
-+	if (unlikely(!skb)) {
-+		cl_dbg_verbose(cl_hw, "skb alloc failed (size %u)\n", size);
-+		rx_elem->dma_addr = (dma_addr_t)0;
-+		return -ENOMEM;
-+	}
-+
-+	rxhdr = (struct hw_rxhdr *)skb->data;
-+	rxhdr->pattern = 0;
-+
-+	dma_addr = dma_map_single(cl_hw->chip->dev, skb->data, size, DMA_FROM_DEVICE);
-+
-+	if (unlikely(dma_mapping_error(cl_hw->chip->dev, dma_addr))) {
-+		cl_dbg_verbose(cl_hw, "dma_mapping_error\n");
-+		kfree_skb(skb);
-+		return -1;
-+	}
-+
-+	rx_elem->skb = skb;
-+	rx_elem->dma_addr = dma_addr;
-+
-+	cl_rx_skb_alloc_handler(skb);
-+
-+	return 0;
-+}
-+
-+void cl_ipc_msgbuf_push(struct cl_ipc_host_env *ipc_env, ptrdiff_t hostid, dma_addr_t hostbuf)
-+{
-+	/*
-+	 * Push a pre-allocated buffer descriptor for MSGs
-+	 * This function is only called at Init time since the MSGs will be handled directly
-+	 * and buffer can be re-used as soon as the message is handled, no need to re-allocate
-+	 * new buffers in the meantime.
-+	 */
-+	struct cl_ipc_shared_env __iomem *shared_env = ipc_env->shared;
-+	u8 e2a_msg_host_idx = ipc_env->e2a_msg_host_idx;
-+
-+	/* Save the hostid and the hostbuf in global array */
-+	ipc_env->e2a_msg_hostbuf_array[e2a_msg_host_idx].hostid = hostid;
-+	ipc_env->e2a_msg_hostbuf_array[e2a_msg_host_idx].dma_addr = hostbuf;
-+
-+	/* Copy the hostbuf (DMA address) in the ipc shared memory */
-+	iowrite32(hostbuf, (void __iomem *)&shared_env->e2a_msg_hostbuf_addr[e2a_msg_host_idx]);
-+
-+	/* Increment the array index */
-+	ipc_env->e2a_msg_host_idx = (e2a_msg_host_idx + 1) % IPC_E2A_MSG_BUF_CNT;
-+}
-+
-+void cl_ipc_rxbuf_push(struct cl_ipc_host_env *ipc_env, struct cl_rx_elem *rx_elem,
-+		       u32 rxdesc_read_idx, u32 host_read_idx, enum rx_buf_type type)
-+{
-+	/*
-+	 * Push a pre-allocated buffer descriptor for Rx packet.
-+	 * This function is called to supply the firmware with new empty buffer.
-+	 */
-+	struct cl_ipc_ring_indices *indices = ipc_env->ring_indices_elem->indices;
-+	struct cl_ipc_host_rxbuf *host_rxbuf = &ipc_env->rx_hostbuf_array[type];
-+
-+	/* Save the hostid and the hostbuf in global array */
-+	host_rxbuf->ipc_host_rxdesc_ptr[host_read_idx] = (ptrdiff_t *)rx_elem;
-+	host_rxbuf->dma_payload_addr[host_read_idx] = rx_elem->dma_addr;
-+
-+	/* Update rxbuff metadata */
-+	indices->rxdesc_read_idx[type] = cpu_to_le32(rxdesc_read_idx + 1);
-+}
-+
-+void cl_ipc_radarbuf_push(struct cl_ipc_host_env *ipc_env, ptrdiff_t hostid, dma_addr_t hostbuf)
-+{
-+	/*
-+	 * Push a pre-allocated radar event buffer descriptor.
-+	 * This function should be called by the host IRQ handler to supply the embedded
-+	 * side with new empty buffer.
-+	 */
-+	struct cl_ipc_shared_env __iomem *shared_env = ipc_env->shared;
-+	u8 radar_host_idx = ipc_env->radar_host_idx;
-+
-+	/* Save the hostid and the hostbuf in global array */
-+	ipc_env->radar_hostbuf_array[radar_host_idx].hostid = hostid;
-+	ipc_env->radar_hostbuf_array[radar_host_idx].dma_addr = hostbuf;
-+
-+	/* Copy the hostbuf (DMA address) in the ipc shared memory */
-+	iowrite32(hostbuf, (void __iomem *)&shared_env->radarbuf_hostbuf[radar_host_idx]);
-+
-+	/* Increment the array index */
-+	ipc_env->radar_host_idx = (radar_host_idx + 1) % IPC_RADAR_BUF_CNT;
-+}
-+
-+void cl_ipc_dbgbuf_push(struct cl_ipc_host_env *ipc_env, ptrdiff_t hostid, dma_addr_t hostbuf)
-+{
-+	/*
-+	 * Push a pre-allocated buffer descriptor for Debug messages.
-+	 * This function is only called at Init time since the Debug messages will be
-+	 * handled directly and buffer can be re-used as soon as the message is handled,
-+	 * no need to re-allocate new buffers in the meantime.
-+	 */
-+	struct cl_ipc_shared_env __iomem *shared_env = ipc_env->shared;
-+	u8 dbg_host_idx = ipc_env->dbg_host_idx;
-+
-+	/* Save the hostid and the hostbuf in global array */
-+	ipc_env->dbg_hostbuf_array[dbg_host_idx].hostid = hostid;
-+	ipc_env->dbg_hostbuf_array[dbg_host_idx].dma_addr = hostbuf;
-+
-+	/* Copy the hostbuf (DMA address) in the ipc shared memory */
-+	iowrite32(hostbuf, (void __iomem *)&shared_env->dbg_hostbuf_addr[dbg_host_idx]);
-+
-+	/* Increment the array index */
-+	ipc_env->dbg_host_idx = (dbg_host_idx + 1) % IPC_DBG_BUF_CNT;
-+}
-+
-+void cl_ipc_dbginfobuf_push(struct cl_ipc_host_env *ipc_env, dma_addr_t infobuf)
-+{
-+	/*Push the pre-allocated logic analyzer and debug information buffer */
-+	struct cl_ipc_shared_env __iomem *shared_env = ipc_env->shared;
-+
-+	/* Copy the hostbuf (DMA address) in the ipc shared memory */
-+	iowrite32(infobuf, (void __iomem *)&shared_env->dbginfo_addr);
-+	/* Copy the hostbuf size in the ipc shared memory */
-+	iowrite32(DBG_DUMP_BUFFER_SIZE, (void __iomem *)&shared_env->dbginfo_size);
-+}
-+
-+static void cl_irq_status_rxdesc(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	/*
-+	 * Handle the reception of a Rx Descriptor.
-+	 *
-+	 * Disable the RX interrupt until rxelement/skb handled
-+	 * this would avoid redundant context switch + redundant tasklet scheduling
-+	 */
-+	cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.rxdesc);
-+
-+	/* Acknowledge the interrupt BEFORE handling the packet */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.rxdesc);
-+
-+	/*
-+	 * If more than 50% of buffer are populated handle them in the interrupt,
-+	 * otherwise schedule a tasklet to handle the buffers.
-+	 */
-+	if (cl_rx_process_in_irq(cl_hw))
-+		cl_rx_pci_desc_handler(cl_hw);
-+	else
-+		tasklet_schedule(&ipc_env->rxdesc_tasklet);
-+}
-+
-+static void cl_irq_status_txcfm(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	/*
-+	 * Disable the TXCFM interrupt bit - will be enabled
-+	 * at the end of cl_tx_pci_single_cfm_tasklet()
-+	 */
-+	cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.txcfm);
-+
-+	/* Acknowledge the TXCFM interrupt */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.txcfm);
-+
-+	/* Schedule tasklet to handle the TXCFM */
-+	tasklet_schedule(&ipc_env->tx_single_cfm_tasklet);
-+}
-+
-+static void cl_irq_status_tbtt(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	unsigned long tbtt_diff_msec = jiffies_to_msecs(jiffies - cl_hw->last_tbtt_irq);
-+
-+	/* Acknowledge the interrupt BEFORE handling the request */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.tbtt);
-+
-+	cl_hw->last_tbtt_irq = jiffies;
-+	cl_hw->tbtt_cnt++;
-+
-+	/*
-+	 * Send beacon only if radio is on, there is at least one AP interface
-+	 * up, we aren't in the middle of recovery, and user didn't disable them.
-+	 */
-+	if (unlikely(!cl_is_tx_allowed(cl_hw)))
-+		return;
-+
-+	if (cl_hw_get_iface_conf(cl_hw) == CL_IFCONF_MESH_ONLY) {
-+		tasklet_hi_schedule(&cl_hw->tx_mesh_bcn_task);
-+		return;
-+	} else if (cl_hw_get_iface_conf(cl_hw) == CL_IFCONF_MESH_AP && cl_hw->mesh_tbtt_div >= 1 &&
-+		   ((cl_hw->tbtt_cnt % cl_hw->mesh_tbtt_div) == 0)) {
-+		tasklet_hi_schedule(&cl_hw->tx_mesh_bcn_task);
-+	} else if (IS_REAL_PHY(cl_hw->chip) && cl_hw->smallest_beacon_int > 0) {
-+		/*
-+		 * More than 2 times the beacon interval passed between beacons - WARNING
-+		 * More than 3 times the beacon interval passed between beacons - ERROR
-+		 */
-+		if (tbtt_diff_msec > (cl_hw->smallest_beacon_int * 3))
-+			cl_dbg_err(cl_hw, "last_tbtt_irq=%lu, curr_time=%lu, diff=%lu\n",
-+				   cl_hw->last_tbtt_irq, jiffies, tbtt_diff_msec);
-+		else if (tbtt_diff_msec > (cl_hw->smallest_beacon_int * 2))
-+			cl_dbg_warn(cl_hw, "last_tbtt_irq=%lu, curr_time=%lu, diff=%lu\n",
-+				    cl_hw->last_tbtt_irq, jiffies, tbtt_diff_msec);
-+	}
-+
-+	tasklet_hi_schedule(&ipc_env->bcn_tasklet);
-+}
-+
-+static void cl_irq_status_msg(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	/* Acknowledge the interrupt BEFORE handling the request */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.msg);
-+
-+	/* Schedule tasklet to handle the messages */
-+	tasklet_schedule(&ipc_env->msg_tasklet);
-+}
-+
-+static u8 cl_radar_handler(struct cl_hw *cl_hw, ptrdiff_t hostid)
-+{
-+	struct cl_radar_elem *radar_elem = (struct cl_radar_elem *)hostid;
-+	u8 ret = 0;
-+	struct cl_radar_pulse_array *pulses;
-+
-+	/* Retrieve the radar pulses structure */
-+	pulses = (struct cl_radar_pulse_array *)radar_elem->radarbuf_ptr;
-+
-+	/* Look for pulse count meaning that this hostbuf contains RADAR pulses */
-+	if (pulses->cnt == 0) {
-+		ret = -1;
-+		goto radar_no_push;
-+	}
-+
-+	/* Push pulse information to queue and schedule a tasklet to handle it */
-+	cl_radar_push(cl_hw, radar_elem);
-+
-+	/* Reset the radar element and re-use it */
-+	pulses->cnt = 0;
-+
-+	/* Make sure memory is written before push to HW */
-+	wmb();
-+
-+	/* Push back the buffer to the firmware */
-+	cl_ipc_radarbuf_push(cl_hw->ipc_env, (ptrdiff_t)radar_elem, radar_elem->dma_addr);
-+
-+radar_no_push:
-+	return ret;
-+}
-+
-+static void cl_irq_status_radar(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	/*
-+	 * Firmware has triggered an IT saying that a radar event has been sent to upper layer.
-+	 * Then we first need to check the validity of the current msg buf, and the validity
-+	 * of the next buffers too, because it is likely that several buffers have been
-+	 * filled within the time needed for this irq handling
-+	 */
-+
-+	/* Disable the RADAR interrupt bit - will be enabled at the end of cl_radar_tasklet() */
-+	cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.radar);
-+
-+	/* Acknowledge the RADAR interrupt */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.radar);
-+
-+	/* Push all new radar pulses to queue */
-+	while (cl_radar_handler(cl_hw,
-+				ipc_env->radar_hostbuf_array[ipc_env->radar_host_idx].hostid) == 0)
-+		;
-+
-+	/* Schedule tasklet to handle the radar pulses */
-+	cl_radar_tasklet_schedule(cl_hw);
-+}
-+
-+static void cl_irq_status_dbg(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	/* Disable the DBG interrupt bit - will be enabled at the end of cl_dbgfile_tasklet() */
-+	cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.dbg);
-+
-+	/* Acknowledge the DBG interrupt */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.dbg);
-+
-+	/* Schedule tasklet to handle the debug */
-+	tasklet_schedule(&ipc_env->dbg_tasklet);
-+}
-+
-+static void cl_irq_status_txdesc_ind(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	/*
-+	 * Disable the TXDESC_IND interrupt bit -
-+	 * will be enabled at the end of cl_tx_pci_agg_cfm_tasklet()
-+	 */
-+	cl_irq_disable(cl_hw, cl_hw->ipc_e2a_irq.txdesc_ind);
-+
-+	/* Acknowledge the TXDESC_IND interrupt */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.txdesc_ind);
-+
-+	tasklet_schedule(&ipc_env->tx_agg_cfm_tasklet);
-+	tasklet_schedule(&cl_hw->tx_task);
-+}
-+
-+static void cl_irq_status_sync(struct cl_hw *cl_hw, struct cl_ipc_host_env *ipc_env)
-+{
-+	/* Acknowledge the interrupt BEFORE handling the request */
-+	ipc_xmac_2_host_ack_set(cl_hw->chip, cl_hw->ipc_e2a_irq.sync);
-+
-+	set_bit(CL_DEV_FW_SYNC, &cl_hw->drv_flags);
-+	wake_up_interruptible(&cl_hw->fw_sync_wq);
-+}
-+
-+void cl_irq_status(struct cl_hw *cl_hw, u32 status)
-+{
-+	/* Handle all IPC interrupts on the host side */
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+
-+	if (status & cl_hw->ipc_e2a_irq.rxdesc)
-+		cl_irq_status_rxdesc(cl_hw, ipc_env);
-+
-+	if (status & cl_hw->ipc_e2a_irq.txcfm)
-+		cl_irq_status_txcfm(cl_hw, ipc_env);
-+
-+	if (status & cl_hw->ipc_e2a_irq.tbtt)
-+		cl_irq_status_tbtt(cl_hw, ipc_env);
-+
-+	if (status & cl_hw->ipc_e2a_irq.msg)
-+		cl_irq_status_msg(cl_hw, ipc_env);
-+
-+	if (status & cl_hw->ipc_e2a_irq.radar)
-+		cl_irq_status_radar(cl_hw, ipc_env);
-+
-+	if (status & cl_hw->ipc_e2a_irq.dbg)
-+		cl_irq_status_dbg(cl_hw, ipc_env);
-+
-+	if (status & cl_hw->ipc_e2a_irq.txdesc_ind)
-+		cl_irq_status_txdesc_ind(cl_hw, ipc_env);
-+
-+	if (status & cl_hw->ipc_e2a_irq.sync)
-+		cl_irq_status_sync(cl_hw, ipc_env);
-+}
-+
-+static void cl_irq_handler(struct cl_chip *chip)
-+{
-+	/* Interrupt handler */
-+	u32 status, statuses = 0;
-+	unsigned long now = jiffies;
-+	struct cl_irq_stats *irq_stats = &chip->irq_stats;
-+
-+	while ((status = ipc_xmac_2_host_status_get(chip))) {
-+		statuses |= status;
-+
-+		if (status & IPC_IRQ_L2H_ALL)
-+			cl_irq_status(chip->cl_hw_tcv0, status);
-+
-+		if (status & IPC_IRQ_S2H_ALL)
-+			cl_irq_status(chip->cl_hw_tcv1, status);
-+	}
-+
-+	if (statuses & (IPC_IRQ_L2H_RXDESC | IPC_IRQ_S2H_RXDESC))
-+		irq_stats->last_rx = now;
-+
-+	if (statuses & (IPC_IRQ_L2H_TXCFM | IPC_IRQ_S2H_TXCFM))
-+		irq_stats->last_tx = now;
-+
-+	irq_stats->last_isr = now;
-+	irq_stats->last_isr_statuses = statuses;
-+}
-+
-+static irqreturn_t cl_irq_request_handler(int irq, void *dev_id)
-+{
-+	struct cl_chip *chip = (struct cl_chip *)dev_id;
-+
-+	cl_irq_handler(chip);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+#ifdef CONFIG_SMP
-+static void cl_irq_set_affinity(struct cl_chip *chip, struct pci_dev *pci_dev)
-+{
-+	s32 irq_smp_affinity = chip->conf->ce_irq_smp_affinity;
-+
-+	if (irq_smp_affinity != -1) {
-+		struct irq_data *data = irq_get_irq_data(pci_dev->irq);
-+
-+		if (data) {
-+			static struct cpumask mask;
-+
-+			cpumask_clear(&mask);
-+			cpumask_set_cpu(irq_smp_affinity, &mask);
-+
-+			if (data->chip->irq_set_affinity) {
-+				data->chip->irq_set_affinity(data, &mask, false);
-+				pr_debug("irq=%d, affinity=%d\n", pci_dev->irq, irq_smp_affinity);
-+			}
-+		}
-+	}
-+}
-+#endif /* CONFIG_SMP */
-+
-+int cl_irq_request(struct cl_chip *chip)
-+{
-+	/*
-+	 * Allocate host irq line.
-+	 * Enable PCIe device interrupts
-+	 */
-+	int ret;
-+	unsigned long flags = IRQF_SHARED;
-+	struct pci_dev *pci_dev = chip->pci_dev;
-+
-+	ret = request_irq(pci_dev->irq, cl_irq_request_handler, flags, "cl", chip);
-+
-+	if (ret) {
-+		pr_err("ERROR: could not assign interrupt %d, err=%d\n", pci_dev->irq, ret);
-+		return ret;
-+	}
-+
-+#ifdef CONFIG_SMP
-+	cl_irq_set_affinity(chip, pci_dev);
-+#endif /* CONFIG_SMP */
-+
-+	return ret;
-+}
-+
-+void cl_irq_free(struct cl_chip *chip)
-+{
-+	struct pci_dev *pci_dev = chip->pci_dev;
-+	/* Disable PCI device interrupt and release irq line */
-+	free_irq(pci_dev->irq, chip);
-+}
-+
-+void cl_irq_enable(struct cl_hw *cl_hw, u32 value)
-+{
-+	/* Enable IPC interrupts */
-+	ipc_xmac_2_host_enable_set_set(cl_hw->chip, value);
-+}
-+
-+void cl_irq_disable(struct cl_hw *cl_hw, u32 value)
-+{
-+	/* Disable IPC interrupts */
-+	ipc_xmac_2_host_enable_clear_set(cl_hw->chip, value);
-+}
-+
-+static void cl_msg_pci_fw_push(struct cl_hw *cl_hw, void *msg_buf, u16 len)
-+{
-+	/* Send a message to the embedded side */
-+	int i;
-+	u32 *src;
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	void __iomem *dst = (void __iomem *)&ipc_env->shared->a2e_msg_buf;
-+
-+	/* Copy the message into the IPC MSG buffer */
-+	src = (u32 *)msg_buf;
-+
-+	/*
-+	 * Move the destination pointer forward by one word
-+	 * (due to the format of the firmware kernel messages)
-+	 */
-+	dst += sizeof(u32);
-+
-+	/* Align length of message to 4 */
-+	len = ALIGN(len, sizeof(u32));
-+
-+	/* Copy the message in the IPC queue */
-+	for (i = 0; i < len; i += sizeof(u32), dst += sizeof(u32))
-+		iowrite32(*src++, dst);
-+
-+	/* Trigger the irq to send the message to EMB */
-+	cl_hw->ipc_host2xmac_trigger_set(cl_hw->chip, IPC_IRQ_A2E_MSG);
-+}
-+
-+int cl_msg_pci_msg_fw_send(struct cl_hw *cl_hw, const void *msg_params,
-+			   bool background)
-+{
-+	struct cl_fw_msg *msg = container_of((void *)msg_params, struct cl_fw_msg, param);
-+	u16 req_id = le16_to_cpu(msg->msg_id);
-+	u16 cfm_bit = cl_msg_cfm_set_bit(req_id);
-+	int length = sizeof(struct cl_fw_msg) + le16_to_cpu(msg->param_len);
-+	int error = 0;
-+
-+	if (!cl_hw->fw_active) {
-+		cl_dbg_verbose(cl_hw, "Bypass %s (firmware not loaded)\n", MSG_ID_STR(req_id));
-+		/* Free the message */
-+		kfree(msg);
-+		return -EBUSY;
-+	}
-+
-+	if (test_bit(CL_DEV_FW_ERROR, &cl_hw->drv_flags)) {
-+		cl_dbg_verbose(cl_hw, "Bypass %s (CL_DEV_FW_ERROR is set)\n", MSG_ID_STR(req_id));
-+		/* Free the message */
-+		kfree(msg);
-+		return -EBUSY;
-+	}
-+
-+	if (!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags) &&
-+	    req_id != MM_RESET_REQ &&
-+	    req_id != MM_START_REQ) {
-+		cl_dbg_verbose(cl_hw, "Bypass %s (CL_DEV_STARTED not set)\n", MSG_ID_STR(req_id));
-+		/* Free the message */
-+		kfree(msg);
-+		return -EBUSY;
-+	}
-+
-+	/* Lock msg tx of the correct msg buffer. */
-+	error = mutex_lock_interruptible(&cl_hw->msg_tx_mutex);
-+	if (error != 0) {
-+		cl_dbg_verbose(cl_hw, "Bypass %s (mutex error %d)\n", MSG_ID_STR(req_id), error);
-+		/* Free the message */
-+		kfree(msg);
-+		return error;
-+	}
-+
-+	cl_hw->msg_background = background;
-+
-+	CFM_SET_BIT(cfm_bit, &cl_hw->cfm_flags);
-+
-+	cl_dbg_trace(cl_hw, "%s\n", MSG_ID_STR(req_id));
-+
-+	/* Push the message in the IPC */
-+	cl_msg_pci_fw_push(cl_hw, msg, length);
-+
-+	/* Free the message */
-+	kfree(msg);
-+
-+	return cl_msg_cfm_wait(cl_hw, cfm_bit, req_id);
-+}
-+
-+static DEFINE_PER_CPU(struct tasklet_struct, rx_remote_tasklet_drv[TCV_TOTAL]);
-+
-+static void cl_rx_pci_stats_rxm(struct cl_hw *cl_hw, u16 bucket_idx)
-+{
-+	if (bucket_idx < IPC_RXBUF_NUM_BUCKETS_RXM)
-+		cl_hw->rx_info.pkt_handle_bucket_rxm[bucket_idx]++;
-+	else
-+		cl_hw->rx_info.pkt_handle_bucket_rxm[IPC_RXBUF_NUM_BUCKETS_RXM - 1]++;
-+}
-+
-+static void cl_rx_pci_stats_fw(struct cl_hw *cl_hw, u16 bucket_idx)
-+{
-+	if (bucket_idx < IPC_RXBUF_NUM_BUCKETS_FW)
-+		cl_hw->rx_info.pkt_handle_bucket_fw[bucket_idx]++;
-+	else
-+		cl_hw->rx_info.pkt_handle_bucket_fw[IPC_RXBUF_NUM_BUCKETS_FW - 1]++;
-+}
-+
-+static void cl_rx_pci_stats(struct cl_hw *cl_hw, u16 pkt_cnt, enum rx_buf_type type)
-+{
-+	/* Collect stats - fill the bucket stats */
-+	if (pkt_cnt) {
-+		u16 bucket_idx = pkt_cnt >> IPC_RXBUF_BUCKET_POW_SIZE;
-+
-+		if (type == CL_RX_BUF_RXM)
-+			cl_rx_pci_stats_rxm(cl_hw, bucket_idx);
-+		else
-+			cl_rx_pci_stats_fw(cl_hw, bucket_idx);
-+	}
-+}
-+
-+static int _cl_rx_pci_start(struct cl_hw *cl_hw, u32 rxdesc_read_idx, u32 host_read_idx,
-+			    enum rx_buf_type type)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_host_rxbuf *rx_hostbuf = &ipc_env->rx_hostbuf_array[type];
-+	struct cl_rx_elem *rxelem =
-+		(struct cl_rx_elem *)rx_hostbuf->ipc_host_rxdesc_ptr[host_read_idx];
-+	struct sk_buff *skb;
-+	int ret = 0;
-+	dma_addr_t dma_addr;
-+	u32 size = cl_hw->conf->ci_ipc_rxbuf_size[type];
-+
-+	cl_hw->rx_info.rx_desc[type]++;
-+
-+	/* Copy the current skb buffer & dma_addr. */
-+	skb = rxelem->skb;
-+	dma_addr = rxelem->dma_addr;
-+
-+	/* Try to populate the rxelem with new skb */
-+	if (cl_ipc_rx_elem_alloc(cl_hw, rxelem, size)) {
-+		cl_hw->rx_info.elem_alloc_fail++;
-+		/* Restore skb and dma_addr value */
-+		rxelem->skb = skb;
-+		rxelem->dma_addr = dma_addr;
-+		ret = -ENOMEM;
-+		goto handle_done;
-+	}
-+
-+	/* Release dma virtual memory early */
-+	dma_unmap_single(cl_hw->chip->dev, dma_addr, size, DMA_FROM_DEVICE);
-+
-+	if (!skb) {
-+		cl_hw->rx_info.skb_null++;
-+		cl_rx_skb_error(cl_hw);
-+		cl_dbg_verbose(cl_hw, "skb is NULL\n");
-+		goto handle_done;
-+	}
-+
-+	cl_ipc_rxbuf_push(ipc_env, rxelem, rxdesc_read_idx, host_read_idx, type);
-+
-+	cl_rx_push_queue(cl_hw, skb);
-+
-+handle_done:
-+	return ret;
-+}
-+
-+static void cl_rx_pci_start(struct cl_hw *cl_hw, enum rx_buf_type type, u16 rx_buf_cnt)
-+{
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_ring_indices *indices = ipc_env->ring_indices_elem->indices;
-+	u16 buf_cnt_mask = rx_buf_cnt - 1;
-+	u16 pkt_cnt = 0;
-+	u32 rxdesc_read_idx = le32_to_cpu(indices->rxdesc_read_idx[type]);
-+	u32 host_read_idx = 0;
-+	u32 rxdesc_write_idx = le32_to_cpu(indices->rxdesc_write_idx[type]);
-+	u32 host_write_idx = 0;
-+
-+	/*
-+	 * Firmware has triggered an interrupt saying that a reception has occurred.
-+	 * Iterate over all valid rxdesc pushed by embedded.
-+	 * The read index is incremented once the callback function finishes meaning
-+	 * a new allocated skb pushed the rxbuff.
-+	 * The write index is incremented in direct write by the embedded layer,
-+	 * indicating that allocated skb was populated with packet data.
-+	 */
-+
-+	do {
-+		host_write_idx = rxdesc_write_idx;
-+
-+		while (ipc_env->host_rxdesc_read_idx[type] != host_write_idx) {
-+			host_read_idx = rxdesc_read_idx & buf_cnt_mask;
-+
-+			if (_cl_rx_pci_start(cl_hw, rxdesc_read_idx, host_read_idx, type) == 0) {
-+				/* Local application follower of embedded read idx */
-+				ipc_env->host_rxdesc_read_idx[type]++;
-+				rxdesc_read_idx++;
-+				pkt_cnt++;
-+			} else {
-+				/*
-+				 * Replacing old skb with new allocated skb failed
-+				 * (should not happen). Postpone the handle of the
-+				 * old skb until this function is reschduled again.
-+				 */
-+				if (!test_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags))
-+					tasklet_schedule(&ipc_env->rxdesc_tasklet);
-+				goto out;
-+			}
-+		}
-+
-+		/* Check if firmware pushed new descriptors */
-+		rxdesc_write_idx = le32_to_cpu(indices->rxdesc_write_idx[type]);
-+	} while (host_write_idx != rxdesc_write_idx);
-+
-+out:
-+	cl_rx_pci_stats(cl_hw, pkt_cnt, type);
-+}
-+
-+static void cl_rx_pci_remote_tasklet_handler(unsigned long data)
-+{
-+	struct cl_hw *cl_hw = (struct cl_hw *)data;
-+
-+	cl_rx_remote_cpu_info(cl_hw);
-+	cl_rx_pci_desc_handler(cl_hw);
-+}
-+
-+static call_single_data_t csd_rx_pci_remote_cpu_sched[TCV_TOTAL];
-+static void cl_rx_pci_remote_cpu_sched(struct cl_hw *cl_hw)
-+{
-+	int cpu = cl_hw->conf->ci_rx_remote_cpu_drv;
-+	struct tasklet_struct *t = csd_rx_pci_remote_cpu_sched[cl_hw->idx].info;
-+
-+	if (!test_bit(TASKLET_STATE_SCHED, &t->state))
-+		smp_call_function_single_async(cpu, &csd_rx_pci_remote_cpu_sched[cl_hw->idx]);
-+}
-+
-+void cl_rx_pci_init(struct cl_hw *cl_hw)
-+{
-+	s8 cpu = cl_hw->conf->ci_rx_remote_cpu_drv;
-+
-+	if (cpu >= 0) {
-+		struct tasklet_struct *t = &per_cpu(rx_remote_tasklet_drv[cl_hw->idx], cpu);
-+
-+		tasklet_init(t,
-+			     cl_rx_pci_remote_tasklet_handler,
-+			     (unsigned long)cl_hw);
-+
-+		csd_rx_pci_remote_cpu_sched[cl_hw->idx].func = cl_rx_remote_tasklet_sched;
-+		csd_rx_pci_remote_cpu_sched[cl_hw->idx].info = t;
-+	}
-+}
-+
-+void cl_rx_pci_deinit(struct cl_hw *cl_hw)
-+{
-+	s8 cpu = cl_hw->conf->ci_rx_remote_cpu_drv;
-+
-+	if (cpu >= 0)
-+		tasklet_kill(&per_cpu(rx_remote_tasklet_drv[cl_hw->idx], cpu));
-+}
-+
-+void cl_rx_pci_desc_handler(struct cl_hw *cl_hw)
-+{
-+	/* Handle all RXM rx elements */
-+	cl_rx_pci_start(cl_hw, CL_RX_BUF_RXM, IPC_RXBUF_CNT_RXM);
-+	/* Handle all FW rx elements */
-+	cl_rx_pci_start(cl_hw, CL_RX_BUF_FW, IPC_RXBUF_CNT_FW);
-+
-+	/* Initiate interrupt to embbeded when all rx elements were handled */
-+	if (!test_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags))
-+		cl_hw->ipc_host2xmac_trigger_set(cl_hw->chip, IPC_IRQ_A2E_RXBUF_BACK);
-+
-+	/*
-+	 * Finished handle all valid rx elements, restore the RX interrupt
-+	 * to enable handling new populated rx elements
-+	 */
-+	if (!test_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags))
-+		cl_irq_enable(cl_hw, cl_hw->ipc_e2a_irq.rxdesc);
-+}
-+
-+void cl_rx_pci_desc_tasklet(unsigned long data)
-+{
-+	struct cl_hw *cl_hw = (struct cl_hw *)data;
-+
-+	if (cl_hw->conf->ci_rx_remote_cpu_drv == -1)
-+		cl_rx_pci_desc_handler(cl_hw);
-+	else
-+		cl_rx_pci_remote_cpu_sched(cl_hw);
-+}
-+
-+static void cl_tx_ipc_txdesc_populate(struct cl_hw *cl_hw, struct txdesc *txdesc,
-+				      u8 queue_type, u32 ipc_queue_idx)
-+{
-+	/*
-+	 * 1) Request allocation of txdesc associated with queue type and index from the ipc layer.
-+	 * 2) Populate ipc-txdesc with the received txdesc.
-+	 * 3) Increase write index - (must be last action since FW fetch WR idx first).
-+	 */
-+	__le32 *write_idx_ptr = NULL;
-+	struct txdesc *ipc_txdesc = NULL;
-+	struct cl_ipc_ring_indices *indices = cl_hw->ipc_env->ring_indices_elem->indices;
-+	struct cl_ipc_txdesc_write_idx *txdesc_write_idx =
-+		(struct cl_ipc_txdesc_write_idx *)&indices->txdesc_write_idx;
-+	u32 write_idx = 0;
-+	u32 masked_write_idx = 0;
-+
-+	switch (queue_type) {
-+	case QUEUE_TYPE_AGG:
-+		ipc_txdesc = cl_hw->ipc_env->tx_queues.ipc_txdesc_agg[ipc_queue_idx];
-+		write_idx = le32_to_cpu(txdesc_write_idx->agg[ipc_queue_idx]);
-+		write_idx_ptr = &txdesc_write_idx->agg[ipc_queue_idx];
-+		masked_write_idx = write_idx & (TXDESC_AGG_Q_SIZE_MAX - 1);
-+		break;
-+	case QUEUE_TYPE_SINGLE:
-+		ipc_txdesc = cl_hw->ipc_env->tx_queues.ipc_txdesc_single[ipc_queue_idx];
-+		write_idx = le32_to_cpu(txdesc_write_idx->single[ipc_queue_idx]);
-+		write_idx_ptr = &txdesc_write_idx->single[ipc_queue_idx];
-+		masked_write_idx = write_idx & (IPC_TXDESC_CNT_SINGLE - 1);
-+		break;
-+	case QUEUE_TYPE_BCMC:
-+		ipc_txdesc = cl_hw->ipc_env->tx_queues.ipc_txdesc_bcmc;
-+		write_idx = le32_to_cpu(txdesc_write_idx->bcmc);
-+		write_idx_ptr = &txdesc_write_idx->bcmc;
-+		masked_write_idx = write_idx & (IPC_TXDESC_CNT_BCMC - 1);
-+		break;
++	switch (rate) {
++	case RATE_1_MBPS:
++		return BIT(0);
++	case RATE_2_MBPS:
++		return BIT(1);
++	case RATE_5_5_MBPS:
++		return BIT(2);
++	case RATE_11_MBPS:
++		return BIT(3);
++	case RATE_6_MBPS:
++		return BIT(4);
++	case RATE_9_MBPS:
++		return BIT(5);
++	case RATE_12_MBPS:
++		return BIT(6);
++	case RATE_18_MBPS:
++		return BIT(7);
++	case RATE_24_MBPS:
++		return BIT(8);
++	case RATE_36_MBPS:
++		return BIT(9);
++	case RATE_48_MBPS:
++		return BIT(10);
++	case RATE_54_MBPS:
++		return BIT(11);
 +	default:
-+		cl_dbg_verbose(cl_hw, "undefined queue type %u\n", queue_type);
-+		WARN_ON(true);
++		return 0;
 +	}
-+
-+	ipc_txdesc += masked_write_idx;
-+
-+	memcpy(ipc_txdesc, txdesc, sizeof(struct txdesc));
-+
-+	/*
-+	 * Update write pointer only after new txdesc copy is done since FW
-+	 * fetch WR pointer first, if not, FW might read and old txdesc since
-+	 * WR index indicate txdesc is valid.
-+	 */
-+	*write_idx_ptr = cpu_to_le32(write_idx + 1);
 +}
 +
-+int cl_tx_release_skbs_from_cfm(struct cl_hw *cl_hw, u8 queue_idx, u16 new_ssn)
++u16 cl_cap_set_mesh_basic_rates(struct cl_hw *cl_hw)
 +{
-+	struct cl_agg_cfm_queue *cfm_queue = NULL;
-+	struct cl_tx_queue *tx_queue = NULL;
-+	int free_space_add = 0;
-+	u16 prev_ssn = 0;
++	int i;
++	struct cl_tcv_conf *conf = cl_hw->conf;
++	u16 basic_rates = 0;
 +
-+	if (new_ssn == CE_INVALID_SN)
-+		return free_space_add;
++	for (i = 0; i < MESH_BASIC_RATE_MAX; i++)
++		basic_rates |= cl_cap_convert_rate_to_bitmap(conf->ci_mesh_basic_rates[i]);
 +
-+	cfm_queue = &cl_hw->agg_cfm_queues[queue_idx];
-+	tx_queue = cfm_queue->tx_queue;
-+
-+	/*
-+	 * Continue to free skb's until:
-+	 * 1. list is empty.
-+	 * 2. agg ssn is equal to new ssn received from ssn.
-+	 */
-+
-+	spin_lock(&cl_hw->tx_lock_cfm_agg);
-+	prev_ssn = cfm_queue->ssn;
-+	while (!list_empty(&cfm_queue->head) && (cfm_queue->ssn != new_ssn)) {
-+		cl_agg_cfm_free_head_skb(cl_hw, cfm_queue, queue_idx);
-+		free_space_add++;
-+		cfm_queue->ssn = ((cfm_queue->ssn + 1) & 0xFFF);
-+	}
-+
-+	/* Sanity check. test if all skb's marked to be free. */
-+	if (unlikely(cfm_queue->ssn != new_ssn))
-+		cl_dbg_err(cl_hw, "ssn diff - queue idx=%u, new ssn=%u, prev ssn=%u, cfm ssn=%u\n",
-+			   queue_idx, new_ssn, prev_ssn, cfm_queue->ssn);
-+
-+	spin_unlock(&cl_hw->tx_lock_cfm_agg);
-+
-+	if (free_space_add > 0) {
-+		if (tx_queue) {
-+			spin_lock(&cl_hw->tx_lock_agg);
-+			tx_queue->fw_free_space += free_space_add;
-+			tx_queue->total_fw_cfm += free_space_add;
-+
-+			/*
-+			 * If FW used all packets that driver pushed to him,
-+			 * clear the enhanced TIM bit.
-+			 */
-+			if (cl_txq_is_fw_empty(tx_queue))
-+				cl_enhanced_tim_clear_tx_agg(cl_hw, queue_idx,
-+							     tx_queue->hw_index, tx_queue->cl_sta,
-+							     tx_queue->tid);
-+			spin_unlock(&cl_hw->tx_lock_agg);
-+		}
-+	}
-+
-+	return free_space_add;
++	return basic_rates;
 +}
 +
-+static int cl_tx_pci_agg_cfm_handler(struct cl_hw *cl_hw)
++void cl_cap_dyn_params(struct cl_hw *cl_hw)
 +{
-+	struct cl_ipc_ring_indices *indices = cl_hw->ipc_env->ring_indices_elem->indices;
-+	int total_cfm_handled = 0;
-+	u16 new_ssn;
-+	u8 used_cntr = 0;
-+	u8 ba_queue_idx;
++	struct ieee80211_hw *hw = cl_hw->hw;
++	struct wiphy *wiphy = hw->wiphy;
++	struct cl_tcv_conf *conf = cl_hw->conf;
++	u8 rx_nss = conf->ce_rx_nss;
++	u8 tx_nss = conf->ce_tx_nss;
++	u8 guard_interval = conf->ci_short_guard_interval;
++	u8 i;
++	u8 bw = cl_hw->conf->ci_cap_bandwidth;
++	struct ieee80211_supported_band *sband = &cl_hw->sband;
++	struct ieee80211_sta_ht_cap *sband_ht_cap = &sband->ht_cap;
++	struct ieee80211_sta_vht_cap *sband_vht_cap = &sband->vht_cap;
 +
-+	for (ba_queue_idx = 0; ba_queue_idx < IPC_MAX_BA_SESSIONS; ba_queue_idx++) {
-+		new_ssn = (u16)le32_to_cpu(indices->new_ssn_idx[ba_queue_idx]);
-+		total_cfm_handled += cl_tx_release_skbs_from_cfm(cl_hw, ba_queue_idx, new_ssn);
-+
-+		/* Optimization - avoid running the for loop IPC_MAX_BA_SESSIONS times */
-+		used_cntr++;
-+		if (used_cntr == cl_hw->used_agg_queues)
-+			break;
-+	}
-+
-+	return total_cfm_handled;
-+}
-+
-+void cl_tx_pci_agg_cfm_tasklet(unsigned long data)
-+{
-+	struct cl_hw *cl_hw = (struct cl_hw *)data;
-+
-+	cl_tx_pci_agg_cfm_handler(cl_hw);
-+
-+	if (!test_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags))
-+		cl_irq_enable(cl_hw, cl_hw->ipc_e2a_irq.txdesc_ind);
-+}
-+
-+static void cl_tx_pci_single_cfm_handler(struct cl_hw *cl_hw, u32 cfm_status,
-+					 u32 dma_addr, u32 single_queue_idx)
-+{
-+	struct sk_buff *skb = NULL;
-+	struct ieee80211_tx_info *tx_info = NULL;
-+	struct cl_hw_tx_status *status = (struct cl_hw_tx_status *)&cfm_status;
-+	struct cl_sw_txhdr *sw_txhdr = NULL;
-+	struct cl_tx_queue *tx_queue = NULL;
-+	struct cl_sta *cl_sta = NULL;
-+	u8 hw_queue;
-+	bool is_bcn;
-+
-+	if (status->is_bcmc) {
-+		spin_lock_bh(&cl_hw->tx_lock_bcmc);
-+		sw_txhdr = cl_bcmc_cfm_find(cl_hw, dma_addr, status->keep_skb);
-+		tx_queue = &cl_hw->tx_queues->bcmc;
++	if (cl_band_is_6g(cl_hw)) {
++		memcpy(sband, &cl_band_6ghz, sizeof(struct ieee80211_supported_band));
++	} else if (cl_band_is_5g(cl_hw)) {
++		memcpy(sband, &cl_band_5ghz, sizeof(struct ieee80211_supported_band));
 +	} else {
-+		spin_lock_bh(&cl_hw->tx_lock_single);
-+		sw_txhdr = cl_single_cfm_find(cl_hw, single_queue_idx, dma_addr);
-+		tx_queue = &cl_hw->tx_queues->single[single_queue_idx];
++		memcpy(sband, &cl_band_2ghz, sizeof(struct ieee80211_supported_band));
++
++		if (!conf->ci_vht_cap_24g)
++			memset(&sband->vht_cap, 0, sizeof(struct ieee80211_sta_vht_cap));
 +	}
 +
-+	if (!sw_txhdr) {
-+		cl_dbg_trace(cl_hw, "Failed to find CFM for single_queue_idx %u status 0x%x\n",
-+			     single_queue_idx, cfm_status);
-+		goto out;
-+	}
++	/* 6GHz doesn't support HT/VHT */
++	if (!cl_band_is_6g(cl_hw)) {
++		if (bw > CHNL_BW_20)
++			sband_ht_cap->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
 +
-+	skb = sw_txhdr->skb;
-+	tx_info = IEEE80211_SKB_CB(skb);
-+	hw_queue = sw_txhdr->hw_queue;
-+	is_bcn = sw_txhdr->is_bcn;
++		/* Guard_interval */
++		if (guard_interval) {
++			sband_ht_cap->cap |= IEEE80211_HT_CAP_SGI_20;
 +
-+	/*
-+	 * Used for beacon frames only !!
-+	 * if skb was already confirmed we do not need to inc FwFreeSpace counter
-+	 */
-+	if (likely(!status->freespace_inc_skip)) {
-+		tx_queue->total_fw_cfm++;
-+		tx_queue->fw_free_space++;
++			if (bw >= CHNL_BW_40)
++				sband_ht_cap->cap |= IEEE80211_HT_CAP_SGI_40;
 +
-+		/* Clear the TIM element if assoicated IPC queue is empty */
-+		if (!is_bcn && cl_txq_is_fw_empty(tx_queue)) {
-+			bool no_ps_buffer =
-+				(tx_info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER);
++			if (bw >= CHNL_BW_80)
++				sband_vht_cap->cap |= IEEE80211_VHT_CAP_SHORT_GI_80;
 +
-+			cl_sta_lock(cl_hw);
-+			cl_sta = cl_sta_get(cl_hw, sw_txhdr->sta_idx);
-+			cl_enhanced_tim_clear_tx_single(cl_hw, single_queue_idx, hw_queue,
-+							no_ps_buffer, cl_sta, sw_txhdr->tid);
-+			cl_sta_unlock(cl_hw);
++			if (bw == CHNL_BW_160)
++				sband_vht_cap->cap |= IEEE80211_VHT_CAP_SHORT_GI_160;
 +		}
-+	} else  if (!is_bcn) {
-+		cl_dbg_verbose(cl_hw, "should no be here - is_bcn=%d hw_queue=%d\n",
-+			       is_bcn, hw_queue);
 +	}
 +
-+	/*
-+	 * Used for beacon frames only !!
-+	 * if this flag is set, it means FW still need this beacon skb, therefore
-+	 * we do not free this skb.
-+	 */
-+	if (unlikely(status->keep_skb)) {
-+		if (!is_bcn)
-+			cl_dbg_verbose(cl_hw, "should not be here - is_bcn=%d hw_queue=%d\n",
-+				       is_bcn, hw_queue);
-+		goto out;
++	/* Amsdu */
++	cl_rx_amsdu_hw_en(hw, conf->ce_rxamsdu_en);
++	cl_hw->txamsdu_en = conf->ce_txamsdu_en;
++
++	/* Hw flags */
++	ieee80211_hw_set(hw, HOST_BROADCAST_PS_BUFFERING);
++	ieee80211_hw_set(hw, SIGNAL_DBM);
++	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
++	ieee80211_hw_set(hw, QUEUE_CONTROL);
++	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
++	ieee80211_hw_set(hw, SPECTRUM_MGMT);
++	ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
++	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
++	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
++	ieee80211_hw_set(hw, NO_AUTO_VIF);
++	ieee80211_hw_set(hw, MFP_CAPABLE);
++	ieee80211_hw_set(hw, SUPPORTS_PER_STA_GTK);
++	ieee80211_hw_set(hw, SUPPORTS_TX_ENCAP_OFFLOAD);
++
++	wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE;
++	wiphy->features |= NL80211_FEATURE_AP_SCAN;
++	wiphy->available_antennas_tx = ANT_MASK(cl_hw->max_antennas);
++	wiphy->available_antennas_rx = ANT_MASK(cl_hw->max_antennas);
++
++	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_SET_SCAN_DWELL);
++
++	if (conf->ci_fast_rx_en) {
++		ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
++		ieee80211_hw_set(hw, AP_LINK_PS);
 +	}
 +
-+	dma_unmap_single(cl_hw->chip->dev, dma_addr, sw_txhdr->map_len, DMA_TO_DEVICE);
++	if (cl_band_is_6g(cl_hw)) {
++		hw->wiphy->iftype_ext_capab = cl_iftypes_ext_capa_6g;
++		hw->wiphy->num_iftype_ext_capab = ARRAY_SIZE(cl_iftypes_ext_capa_6g);
++	} else if (cl_band_is_5g(cl_hw)) {
++		hw->wiphy->iftype_ext_capab = cl_iftypes_ext_capa_5g;
++		hw->wiphy->num_iftype_ext_capab = ARRAY_SIZE(cl_iftypes_ext_capa_5g);
++	} else if (cl_band_is_24g(cl_hw)) {
++		/* Turn on "20/40 Coex Mgmt Support" bit (24g only) */
++		if (conf->ce_acs_coex_en) {
++			u8 *ext_cap = (u8 *)cl_iftypes_ext_capa_24g[0].extended_capabilities;
 +
-+	/*
-+	 * If queue is not empty call cl_txq_sched() to
-+	 * transfer packets from the queue to firmware
-+	 */
-+	if (!list_empty(&tx_queue->hdrs))
-+		cl_txq_sched(cl_hw, tx_queue);
-+
-+	if (status->is_bcmc)
-+		spin_unlock_bh(&cl_hw->tx_lock_bcmc);
-+	else
-+		spin_unlock_bh(&cl_hw->tx_lock_single);
-+
-+	if (is_bcn) {
-+		struct ieee80211_vif *vif = sw_txhdr->cl_vif->vif;
-+
-+		if (vif) {
-+			if (vif->csa_active &&
-+			    ieee80211_beacon_cntdwn_is_complete(vif))
-+				ieee80211_csa_finish(vif);
++			ext_cap[0] |= WLAN_EXT_CAPA1_2040_BSS_COEX_MGMT_ENABLED;
 +		}
 +
-+		consume_skb(skb);
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
++		hw->wiphy->iftype_ext_capab = cl_iftypes_ext_capa_24g;
++		hw->wiphy->num_iftype_ext_capab = ARRAY_SIZE(cl_iftypes_ext_capa_24g);
++	}
++
++	/*
++	 * To disable the dynamic PS we say to the stack that we support it in
++	 * HW. This will force mac80211 rely on us to handle this.
++	 */
++	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
++
++	if (conf->ci_agg_tx)
++		ieee80211_hw_set(hw, AMPDU_AGGREGATION);
++
++	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_AP) |
++				 BIT(NL80211_IFTYPE_MESH_POINT);
++
++	wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
++			WIPHY_FLAG_HAS_CHANNEL_SWITCH |
++			WIPHY_FLAG_IBSS_RSN;
++
++	if (conf->ci_uapsd_en)
++		wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
++
++	/* Modify MAX BSS num according to the desired config value */
++	for (i = 0; i < ARRAY_SIZE(cl_combinations); i++)
++		cl_combinations[i].max_interfaces = conf->ci_max_bss_num;
++	wiphy->iface_combinations = cl_combinations;
++	wiphy->n_iface_combinations = ARRAY_SIZE(cl_combinations);
++
++	/*
++	 * hw_scan ops may ask driver to forge active scan request. So the
++	 * scan capabs are filled in (the are same as inside mac80211).
++	 * However, they are not representing real hw_scan logic, since it will
++	 * fallback to the sw_scan for active scan request.
++	 **/
++	wiphy->max_scan_ssids = 4;
++	wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
++
++	hw->max_rates = IEEE80211_TX_MAX_RATES;
++	hw->max_report_rates = IEEE80211_TX_MAX_RATES;
++	hw->max_rate_tries = 1;
++
++	hw->max_tx_aggregation_subframes = conf->ce_max_agg_size_tx;
++	hw->max_rx_aggregation_subframes = conf->ce_max_agg_size_rx;
++
++	hw->vif_data_size = sizeof(struct cl_vif);
++	hw->sta_data_size = sizeof(struct cl_sta);
++
++	hw->extra_tx_headroom = 0;
++	hw->queues = IEEE80211_MAX_QUEUES;
++	hw->offchannel_tx_hw_queue = CL_HWQ_VO;
++
++	if (!cl_band_is_6g(cl_hw)) {
++		if (conf->ci_ht_rxldpc_en)
++			sband_ht_cap->cap |= IEEE80211_HT_CAP_LDPC_CODING;
++
++		sband_ht_cap->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
++
++		sband_vht_cap->cap |= cl_hw->conf->ci_max_mpdu_len;
++		if (conf->ci_bf_en) {
++			sband_vht_cap->cap |=
++				IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
++				IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
++				(3 << IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT) |
++				(3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT);
++		}
++	}
++
++	if (cl_band_is_5g(cl_hw) || (cl_band_is_24g(cl_hw) && conf->ci_vht_cap_24g)) {
++		if (bw == CHNL_BW_160)
++			sband_vht_cap->cap |= IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
++
++		sband_vht_cap->cap |= (conf->ci_max_ampdu_len_exp <<
++				       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT);
++
++		if (conf->ci_vht_rxldpc_en)
++			sband_vht_cap->cap |= IEEE80211_VHT_CAP_RXLDPC;
++
++		sband_vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN;
++		sband_vht_cap->cap |= IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
++
++		sband_vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(0);
++		sband_vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(0);
++
++		for (i = 0; i < rx_nss; i++)
++			sband_vht_cap->vht_mcs.rx_mcs_map |=
++				cpu_to_le16(cl_vht_mcs_supp_rx(cl_hw, i) << (i * 2));
++
++		for (; i < 8; i++)
++			sband_vht_cap->vht_mcs.rx_mcs_map |=
++				cpu_to_le16(IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2));
++
++		for (i = 0; i < tx_nss; i++)
++			sband_vht_cap->vht_mcs.tx_mcs_map |=
++				cpu_to_le16(cl_vht_mcs_supp_tx(cl_hw, i) << (i * 2));
++
++		for (; i < 8; i++)
++			sband_vht_cap->vht_mcs.tx_mcs_map |=
++				cpu_to_le16(IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2));
++
++		sband_vht_cap->vht_supported = true;
++	}
++
++	/* 6GHz band supports HE only */
++	if (!cl_band_is_6g(cl_hw))
++		for (i = 0; i < rx_nss; i++)
++			sband_ht_cap->mcs.rx_mask[i] = U8_MAX;
++
++	cl_set_he_capab(cl_hw);
++
++	/* Get channels and power limitations information from ChannelInfo file */
++	cl_chan_info_init(cl_hw);
++
++	if (cl_band_is_6g(cl_hw)) {
++		wiphy->bands[NL80211_BAND_2GHZ] = NULL;
++		wiphy->bands[NL80211_BAND_5GHZ] = NULL;
++		wiphy->bands[NL80211_BAND_6GHZ] = sband;
++	} else if (cl_band_is_5g(cl_hw)) {
++		wiphy->bands[NL80211_BAND_2GHZ] = NULL;
++		wiphy->bands[NL80211_BAND_5GHZ] = sband;
++		wiphy->bands[NL80211_BAND_6GHZ] = NULL;
++	} else {
++		wiphy->bands[NL80211_BAND_2GHZ] = sband;
++		wiphy->bands[NL80211_BAND_5GHZ] = NULL;
++		wiphy->bands[NL80211_BAND_6GHZ] = NULL;
++	}
++}
++
++enum he_pkt_ext_constellations {
++	HE_PKT_EXT_BPSK = 0,
++	HE_PKT_EXT_QPSK,
++	HE_PKT_EXT_16QAM,
++	HE_PKT_EXT_64QAM,
++	HE_PKT_EXT_256QAM,
++	HE_PKT_EXT_1024QAM,
++	HE_PKT_EXT_RESERVED,
++	HE_PKT_EXT_NONE,
++};
++
++static u8 mcs_to_constellation[WRS_MCS_MAX_HE] = {
++	HE_PKT_EXT_BPSK,
++	HE_PKT_EXT_QPSK,
++	HE_PKT_EXT_QPSK,
++	HE_PKT_EXT_16QAM,
++	HE_PKT_EXT_16QAM,
++	HE_PKT_EXT_64QAM,
++	HE_PKT_EXT_64QAM,
++	HE_PKT_EXT_64QAM,
++	HE_PKT_EXT_256QAM,
++	HE_PKT_EXT_256QAM,
++	HE_PKT_EXT_1024QAM,
++	HE_PKT_EXT_1024QAM
++};
++
++#define QAM_THR_1 0
++#define QAM_THR_2 1
++#define QAM_THR_MAX 2
++
++static u8 cl_get_ppe_val(u8 *ppe, u8 ppe_pos_bit)
++{
++	u8 byte_num = ppe_pos_bit / 8;
++	u8 bit_num = ppe_pos_bit % 8;
++	u8 residue_bits;
++	u8 res;
++
++	if (bit_num <= 5)
++		return (ppe[byte_num] >> bit_num) &
++		       (BIT(IEEE80211_PPE_THRES_INFO_PPET_SIZE) - 1);
++
++	/*
++	 * If bit_num > 5, we have to combine bits with next byte.
++	 * Calculate how many bits we need to take from current byte (called
++	 * here "residue_bits"), and add them to bits from next byte.
++	 */
++	residue_bits = 8 - bit_num;
++
++	res = (ppe[byte_num + 1] &
++	       (BIT(IEEE80211_PPE_THRES_INFO_PPET_SIZE - residue_bits) - 1)) <<
++	      residue_bits;
++	res += (ppe[byte_num] >> bit_num) & (BIT(residue_bits) - 1);
++
++	return res;
++}
++
++static void cl_set_fixed_ppe_val(u8 pe_dur[CHNL_BW_MAX][WRS_MCS_MAX_HE], u8 dur)
++{
++	u8 val = ((dur << 6) | (dur << 4) | (dur << 2) | dur);
++
++	memset(pe_dur, val, CHNL_BW_MAX * WRS_MCS_MAX_HE);
++}
++
++void cl_cap_ppe_duration(struct cl_hw *cl_hw, struct ieee80211_sta *sta,
++			 u8 pe_dur[CHNL_BW_MAX][WRS_MCS_MAX_HE])
++{
++	/* Force NVRAM parameter */
++	if (cl_hw->conf->ci_pe_duration <= PPE_16US) {
++		cl_set_fixed_ppe_val(pe_dur, cl_hw->conf->ci_pe_duration);
 +		return;
 +	}
 +
-+	if (status->frm_successful && !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK))
-+		tx_info->flags |= IEEE80211_TX_STAT_ACK;
++	/*
++	 * If STA sets the PPE Threshold Present subfield to 0,
++	 * the value should be set according to the Nominal Packet Padding subfield
++	 */
++	if ((sta->he_cap.he_cap_elem.phy_cap_info[6] &
++	     IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT) == 0) {
++		switch (sta->he_cap.he_cap_elem.phy_cap_info[9] &
++			IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_MASK) {
++		case IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_0US:
++			cl_set_fixed_ppe_val(pe_dur, PPE_0US);
++			break;
++		case IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_8US:
++			cl_set_fixed_ppe_val(pe_dur, PPE_8US);
++			break;
++		case IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_16US:
++		default:
++			cl_set_fixed_ppe_val(pe_dur, PPE_16US);
++			break;
++		}
 +
-+	cl_sta_lock(cl_hw);
-+	cl_sta = cl_sta_get(cl_hw, sw_txhdr->sta_idx);
-+
-+	if (cl_sta) {
-+		if (tx_queue->type != QUEUE_TYPE_BCMC &&
-+		    ieee80211_is_data(sw_txhdr->fc) &&
-+		    !cl_tx_ctrl_is_eapol(tx_info))
-+			cl_agg_tx_report_simulate_for_single(cl_hw, cl_sta, status);
-+
-+		cl_tx_check_start_ba_session(cl_hw, cl_sta->sta, skb);
++		return;
 +	}
 +
-+	cl_sta_unlock(cl_hw);
++	/*
++	 * struct iwl_he_pkt_ext - QAM thresholds
++	 * The required PPE is set via HE Capabilities IE, per Nss x BW x MCS
++	 * The IE is organized in the following way:
++	 * Support for Nss x BW (or RU) matrix:
++	 *	(0=SISO, 1=MIMO2) x (0-20MHz, 1-40MHz, 2-80MHz, 3-160MHz)
++	 * Each entry contains 2 QAM thresholds for 8us and 16us:
++	 *	0=BPSK, 1=QPSK, 2=16QAM, 3=64QAM, 4=256QAM, 5=1024QAM, 6=RES, 7=NONE
++	 * i.e. QAM_th1 < QAM_th2 such if TX uses QAM_tx:
++	 *	QAM_tx < QAM_th1            --> PPE=0us
++	 *	QAM_th1 <= QAM_tx < QAM_th2 --> PPE=8us
++	 *	QAM_th2 <= QAM_tx           --> PPE=16us
++	 * @pkt_ext_qam_th: QAM thresholds
++	 *	For each Nss/Bw define 2 QAM thrsholds (0..5)
++	 *	For rates below the low_th, no need for PPE
++	 *	For rates between low_th and high_th, need 8us PPE
++	 *	For rates equal or higher then the high_th, need 16us PPE
++	 *	Nss (0-siso, 1-mimo2) x BW (0-20MHz, 1-40MHz, 2-80MHz, 3-160MHz) x
++	 *		(0-low_th, 1-high_th)
++	 */
++	u8 pkt_ext_qam_th[WRS_SS_MAX][CHNL_BW_MAX][QAM_THR_MAX];
 +
-+	if (tx_info->ack_frame_id)
-+		ieee80211_tx_status(cl_hw->hw, skb);
++	/* If PPE Thresholds exist, parse them into a FW-familiar format. */
++	u8 nss = (sta->he_cap.ppe_thres[0] & IEEE80211_PPE_THRES_NSS_MASK) + 1;
++	u8 ru_index_bitmap = u32_get_bits(sta->he_cap.ppe_thres[0],
++					  IEEE80211_PPE_THRES_RU_INDEX_BITMASK_MASK);
++	u8 *ppe = &sta->he_cap.ppe_thres[0];
++	u8 ppe_pos_bit = 7; /* Starting after PPE header */
++	u8 bw, ss, mcs, constellation;
++
++	if (nss > WRS_SS_MAX)
++		nss = WRS_SS_MAX;
++
++	for (ss = 0; ss < nss; ss++) {
++		u8 ru_index_tmp = ru_index_bitmap << 1;
++
++		for (bw = 0; bw <= cl_hw->bw; bw++) {
++			ru_index_tmp >>= 1;
++			if (!(ru_index_tmp & 1))
++				continue;
++
++			pkt_ext_qam_th[ss][bw][QAM_THR_2] = cl_get_ppe_val(ppe, ppe_pos_bit);
++			ppe_pos_bit += IEEE80211_PPE_THRES_INFO_PPET_SIZE;
++			pkt_ext_qam_th[ss][bw][QAM_THR_1] = cl_get_ppe_val(ppe, ppe_pos_bit);
++			ppe_pos_bit += IEEE80211_PPE_THRES_INFO_PPET_SIZE;
++		}
++	}
++
++	/* Reset PE duration before filling it */
++	memset(pe_dur, 0, CHNL_BW_MAX * WRS_MCS_MAX_HE);
++
++	for (ss = 0; ss < nss; ss++) {
++		for (bw = 0; bw <= cl_hw->bw; bw++) {
++			for (mcs = 0; mcs < WRS_MCS_MAX_HE; mcs++) {
++				constellation = mcs_to_constellation[mcs];
++
++				if (constellation < pkt_ext_qam_th[ss][bw][QAM_THR_1])
++					pe_dur[bw][mcs] |= (PPE_0US << (ss * 2));
++				else if (constellation < pkt_ext_qam_th[ss][bw][QAM_THR_2])
++					pe_dur[bw][mcs] |= (PPE_8US << (ss * 2));
++				else
++					pe_dur[bw][mcs] |= (PPE_16US << (ss * 2));
++			}
++		}
++	}
++}
++
++static void cl_ops_tx_agg(struct cl_hw *cl_hw,
++			  struct sk_buff *skb,
++			  struct ieee80211_tx_info *tx_info,
++			  struct cl_sta *cl_sta)
++{
++	cl_hw->tx_packet_cntr.forward.from_mac_agg++;
++
++	if (!cl_sta) {
++		struct cl_vif *cl_vif =
++			(struct cl_vif *)tx_info->control.vif->drv_priv;
++		u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++		u8 ac = tid_to_ac[tid];
++
++		kfree_skb(skb);
++		cl_dbg_err(cl_hw, "cl_sta null in agg packet\n");
++		cl_hw->tx_packet_cntr.drop.sta_null_in_agg++;
++		cl_vif->trfc_cntrs[ac].tx_errors++;
++		return;
++	}
++
++	/* AMSDU in HW can work only with header conversion. */
++	tx_info->control.flags &= ~IEEE80211_TX_CTRL_AMSDU;
++	cl_tx_agg(cl_hw, cl_sta, skb, false, true);
++}
++
++static void cl_ops_tx_single(struct cl_hw *cl_hw,
++			     struct sk_buff *skb,
++			     struct ieee80211_tx_info *tx_info,
++			     struct cl_sta *cl_sta,
++			     struct ieee80211_sta *sta)
++{
++	bool is_vns = cl_vns_is_very_near(cl_hw, cl_sta, skb);
++
++	cl_hw->tx_packet_cntr.forward.from_mac_single++;
++	if (cl_hw->tx_db.block_prob_resp) {
++		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++
++		if (ieee80211_is_probe_resp(hdr->frame_control)) {
++			struct cl_vif *cl_vif = NETDEV_TO_CL_VIF(skb->dev);
++			u8 ac = cl_vif->vif->hw_queue[skb_get_queue_mapping(skb)];
++
++			cl_tx_single_free_skb(cl_hw, skb);
++			cl_hw->tx_packet_cntr.drop.probe_response++;
++			cl_vif->trfc_cntrs[ac].tx_dropped++;
++			return;
++		}
++	}
++
++	if (sta) {
++		u32 sta_vht_cap = sta->vht_cap.cap;
++		struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
++
++		if (!(sta_vht_cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK))
++			goto out_tx;
++
++		if (ieee80211_is_assoc_resp(mgmt->frame_control)) {
++			int len = skb->len - (mgmt->u.assoc_resp.variable - skb->data);
++			const u8 *vht_cap_addr = cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY,
++								 mgmt->u.assoc_resp.variable,
++								 len);
++
++			if (vht_cap_addr) {
++				struct ieee80211_vht_cap *vht_cap =
++					(struct ieee80211_vht_cap *)(2 + vht_cap_addr);
++
++				vht_cap->vht_cap_info &=
++					~(cpu_to_le32(IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK |
++						      IEEE80211_VHT_CAP_SHORT_GI_160));
++			}
++		}
++	}
++
++out_tx:
++	cl_tx_single(cl_hw, cl_sta, skb, is_vns, true);
++}
++
++static u16 cl_ops_recalc_smallest_tbtt(struct cl_hw *cl_hw)
++{
++	struct wiphy *wiphy = cl_hw->hw->wiphy;
++	u8 cmb_idx = wiphy->n_iface_combinations - 1;
++	struct cl_vif *cl_vif = NULL;
++	u16 ret = 0;
++	u8 topology = cl_hw_get_iface_conf(cl_hw);
++
++	read_lock_bh(&cl_hw->vif_db.lock);
++	list_for_each_entry(cl_vif, &cl_hw->vif_db.head, list) {
++		if (cl_vif->vif->type == NL80211_IFTYPE_STATION)
++			continue;
++		else if (ret == 0)
++			ret = cl_vif->vif->bss_conf.beacon_int;
++		else if (cl_vif->vif->bss_conf.beacon_int)
++			ret = min(ret, cl_vif->vif->bss_conf.beacon_int);
++	}
++	read_unlock_bh(&cl_hw->vif_db.lock);
++
++	if (ret == 0) {
++		WARN_ONCE(topology != CL_IFCONF_STA && topology != CL_IFCONF_MESH_ONLY,
++			  "invalid smallest beacon interval");
++		return wiphy->iface_combinations[cmb_idx].beacon_int_min_gcd;
++	}
++	return ret;
++}
++
++static void cl_ops_set_mesh_tbtt(struct cl_hw *cl_hw, u16 this_beacon_int,
++				 u16 smallest_beacon_int)
++{
++	u16 div = this_beacon_int / smallest_beacon_int;
++
++	cl_hw->mesh_tbtt_div = (div > 0) ? div : 1;
++}
++
++void cl_ops_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control, struct sk_buff *skb)
++{
++	/*
++	 * Almost all traffic passing here is singles.
++	 * Only when opening a BA session some packets with
++	 * IEEE80211_TX_CTL_AMPDU set can pass here.
++	 * All skbs passing here did header conversion.
++	 */
++	struct cl_hw *cl_hw = (struct cl_hw *)hw->priv;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_sta *sta = control->sta;
++	struct cl_sta *cl_sta = NULL;
++
++	if (sta) {
++		cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++
++		/*
++		 * Prior to STA connection sta can be set but we don't
++		 * want cl_sta to be used since it's not initialized yet
++		 */
++		if (cl_sta->sta_idx == STA_IDX_INVALID)
++			cl_sta = NULL;
++	}
++
++	if (cl_recovery_in_progress(cl_hw)) {
++		cl_hw->tx_packet_cntr.drop.in_recovery++;
++
++		if (cl_sta) {
++			struct cl_vif *cl_vif = cl_sta->cl_vif;
++
++			if (cl_vif) {
++				struct ieee80211_vif *vif = cl_vif->vif;
++				u8 hw_queue;
++
++				if (vif) {
++					hw_queue = vif->hw_queue[skb_get_queue_mapping(skb)];
++					cl_vif->trfc_cntrs[hw_queue].tx_dropped++;
++				}
++			}
++		}
++
++		cl_tx_drop_skb(skb);
++		return;
++	}
++
++	if (cl_sta && (tx_info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP))
++		goto fast_tx;
++
++	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
++		cl_ops_tx_agg(cl_hw, skb, tx_info, cl_sta);
 +	else
-+		consume_skb(skb);
++		cl_ops_tx_single(cl_hw, skb, tx_info, cl_sta, sta);
 +
-+	cl_sw_txhdr_free(cl_hw, sw_txhdr);
 +	return;
 +
-+out:
-+	if (status->is_bcmc)
-+		spin_unlock_bh(&cl_hw->tx_lock_bcmc);
++fast_tx:
++	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
++		cl_tx_fast_agg(cl_hw, cl_sta, skb, true);
 +	else
-+		spin_unlock_bh(&cl_hw->tx_lock_single);
++		cl_tx_fast_single(cl_hw, cl_sta, skb, true);
 +}
 +
-+void cl_tx_pci_single_cfm_tasklet(unsigned long data)
++int cl_ops_start(struct ieee80211_hw *hw)
 +{
-+	struct cl_hw *cl_hw = (struct cl_hw *)data;
-+	struct cl_ipc_host_env *ipc_env = cl_hw->ipc_env;
-+	struct cl_ipc_cfm_msg *msg = NULL;
++	/*
++	 * Called before the first netdevice attached to the hardware
++	 * is enabled. This should turn on the hardware and must turn on
++	 * frame reception (for possibly enabled monitor interfaces.)
++	 * Returns negative error codes, these may be seen in userspace,
++	 * or zero.
++	 * When the device is started it should not have a MAC address
++	 * to avoid acknowledging frames before a non-monitor device
++	 * is added.
++	 * Must be implemented and can sleep.
++	 * It does not return until the firmware is up and running.
++	 */
++	int error = 0;
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_tcv_conf *conf = cl_hw->conf;
++	struct cl_hw *cl_hw_other = cl_hw_other_tcv(cl_hw);
 +
-+	msg = (struct cl_ipc_cfm_msg *)(ipc_env->cfm_virt_base_addr) +
-+		(ipc_env->cfm_used_idx % IPC_CFM_CNT);
-+
-+	while (msg && msg->dma_addr) {
-+		u32 cfm_used_idx = ipc_env->cfm_used_idx++;
-+
-+		cl_tx_pci_single_cfm_handler(cl_hw,
-+					     le32_to_cpu(msg->status),
-+					     le32_to_cpu(msg->dma_addr),
-+					     le32_to_cpu(msg->single_queue_idx));
-+		msg->dma_addr = 0;
-+		iowrite32(cfm_used_idx, (void __iomem *)&ipc_env->shared->cfm_read_pointer);
-+		msg = (struct cl_ipc_cfm_msg *)(ipc_env->cfm_virt_base_addr) +
-+			(ipc_env->cfm_used_idx % IPC_CFM_CNT);
++	if (!cl_hw->ipc_env) {
++		CL_DBG_ERROR(cl_hw, "ipc_env is NULL!\n");
++		return -ENODEV;
 +	}
 +
-+	/* Enable the Tx CFM interrupt bit */
-+	if (!test_bit(CL_DEV_STOP_HW, &cl_hw->drv_flags))
-+		cl_irq_enable(cl_hw, cl_hw->ipc_e2a_irq.txcfm);
++	/* Exits if device is already started */
++	if (WARN_ON(test_bit(CL_DEV_STARTED, &cl_hw->drv_flags)))
++		return -EBUSY;
++
++	/* Device is now started.
++	 * Set CL_DEV_STARTED bit before the calls to other messages sent to
++	 * firmware, to prevent them from being blocked*
++	 */
++
++	set_bit(CL_DEV_STARTED, &cl_hw->drv_flags);
++
++	if (!cl_recovery_in_progress(cl_hw)) {
++		/* Read version */
++		error = cl_version_update(cl_hw);
++		if (error)
++			return error;
++
++		error = cl_temperature_diff_e2p_read(cl_hw);
++		if (error)
++			return error;
++	}
++
++	/* Set firmware debug module filter */
++	error = cl_msg_tx_dbg_set_ce_mod_filter(cl_hw, conf->ci_fw_dbg_module);
++	if (error)
++		return error;
++
++	/* Set firmware debug severity level */
++	error = cl_msg_tx_dbg_set_sev_filter(cl_hw, conf->ci_fw_dbg_severity);
++	if (error)
++		return error;
++
++	/* Set firmware rate fallbacks */
++	error = cl_msg_tx_set_rate_fallback(cl_hw);
++	if (error)
++		return error;
++
++	error = cl_msg_tx_ndp_tx_control(cl_hw,
++					 conf->ci_sensing_ndp_tx_chain_mask,
++					 conf->ci_sensing_ndp_tx_bw,
++					 conf->ci_sensing_ndp_tx_format,
++					 conf->ci_sensing_ndp_tx_num_ltf);
++	if (error)
++		return error;
++
++	/* Set default, multicast, broadcast rate */
++	cl_rate_ctrl_set_default(cl_hw);
++#ifdef CONFIG_CL8K_DYN_MCAST_RATE
++	cl_dyn_mcast_rate_set(cl_hw);
++#endif /* CONFIG_CL8K_DYN_MCAST_RATE */
++#ifdef CONFIG_CL8K_DYN_BCAST_RATE
++	cl_dyn_bcast_rate_set(cl_hw, 0);
++#endif /* CONFIG_CL8K_DYN_BCAST_RATE */
++
++	ieee80211_wake_queues(hw);
++
++	clear_bit(CL_DEV_INIT, &cl_hw->drv_flags);
++
++	cl_edca_hw_conf(cl_hw);
++
++	if (!cl_hw->chip->conf->ce_calib_runtime_en) {
++		cl_calib_dcoc_init_calibration(cl_hw);
++
++		if (cl_hw->chip->conf->ce_production_mode)
++			cl_calib_iq_init_production(cl_hw);
++		else if (!cl_hw_other || test_bit(CL_DEV_STARTED, &cl_hw_other->drv_flags))
++			cl_calib_iq_init_calibration(cl_hw);
++	}
++
++	return error;
 +}
 +
-+void cl_tx_pci_pkt_fw_send(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr,
-+			   struct cl_tx_queue *tx_queue)
++void cl_ops_stop(struct ieee80211_hw *hw)
 +{
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
-+	struct txdesc *txdesc = &sw_txhdr->txdesc;
-+	struct tx_host_info *host_info = &txdesc->host_info;
-+	struct cl_sta *cl_sta = sw_txhdr->cl_sta;
-+	struct cl_vif *cl_vif = sw_txhdr->cl_vif;
-+	u8 hw_queue = sw_txhdr->hw_queue;
-+	u16 a2e_trigger_bit_pos;
-+	u8 tid = sw_txhdr->tid;
-+	u8 queue_type = tx_queue->type;
-+	bool no_ps_buffer = !!(tx_info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER);
-+	u16 ipc_queue_idx = tx_queue->index;
-+	bool is_mgmt = ieee80211_is_mgmt(sw_txhdr->fc);
-+	u8 i = 0;
-+	u8 *cpu_addr = (u8 *)sw_txhdr->skb->data -
-+		       ((host_info->host_padding & 1) * 2);
-+	dma_addr_t dma_addr = dma_map_single(cl_hw->chip->dev, cpu_addr,
-+					     sw_txhdr->map_len, DMA_TO_DEVICE);
++	/*
++	 * Called after last netdevice attached to the hardware
++	 * is disabled. This should turn off the hardware (at least
++	 * it must turn off frame reception.)
++	 * May be called right after add_interface if that rejects
++	 * an interface. If you added any work onto the mac80211 workqueue
++	 * you should ensure to cancel it on this callback.
++	 * Must be implemented and can sleep.
++	 */
++	struct cl_hw *cl_hw = hw->priv;
 +
-+	if (WARN_ON(dma_mapping_error(cl_hw->chip->dev, dma_addr))) {
-+		tx_queue->dump_dma_map_fail++;
++	/* Stop mac80211 queues */
++	ieee80211_stop_queues(hw);
 +
-+		if (queue_type == QUEUE_TYPE_SINGLE) {
-+			if (!is_mgmt)
-+				cl_vif->sequence_number = DEC_SN(cl_vif->sequence_number);
++	/* Go to idle */
++	cl_msg_tx_set_idle(cl_hw, MAC_IDLE_SYNC, true);
 +
-+			cl_tx_single_free_skb(cl_hw, sw_txhdr->skb);
-+		} else {
-+			if (queue_type == QUEUE_TYPE_AGG) {
-+				struct cl_baw *baw = &cl_sta->baws[tid];
++	/*
++	 * Clear CL_DEV_STARTED to prevent message to be sent (besides reset and start).
++	 * It also blocks transmission of new packets
++	 */
++	clear_bit(CL_DEV_STARTED, &cl_hw->drv_flags);
 +
-+				baw->tid_seq = DEC_SN(baw->tid_seq);
++	cl_hw->num_ap_started = 0;
++	cl_hw->channel = 0;
++	cl_hw->radio_status = RADIO_STATUS_OFF;
++}
++
++static int cl_add_interface_to_firmware(struct cl_hw *cl_hw,
++					struct ieee80211_vif *vif, u8 vif_index)
++{
++	struct mm_add_if_cfm *add_if_cfm;
++	int ret = 0;
++
++	/* Forward the information to the firmware */
++	ret = cl_msg_tx_add_if(cl_hw, vif, vif_index);
++	if (ret)
++		return ret;
++
++	add_if_cfm = (struct mm_add_if_cfm *)(cl_hw->msg_cfm_params[MM_ADD_IF_CFM]);
++	if (!add_if_cfm)
++		return -ENOMSG;
++
++	if (add_if_cfm->status != 0) {
++		cl_dbg_verbose(cl_hw, "Status Error (%u)\n", add_if_cfm->status);
++		ret = -EIO;
++	}
++
++	cl_msg_tx_free_cfm_params(cl_hw, MM_ADD_IF_CFM);
++
++	return ret;
++}
++
++static enum cl_iface_conf cl_recalc_hw_iface(struct cl_hw *cl_hw)
++{
++	struct cl_vif *cl_vif = NULL;
++	u8 num_ap = 0, num_sta = 0, num_mp = 0;
++
++	read_lock_bh(&cl_hw->vif_db.lock);
++	list_for_each_entry(cl_vif, &cl_hw->vif_db.head, list) {
++		switch (cl_vif->vif->type) {
++		case NL80211_IFTYPE_AP:
++			num_ap++;
++			break;
++		case NL80211_IFTYPE_STATION:
++			num_sta++;
++			break;
++		case NL80211_IFTYPE_MESH_POINT:
++			num_mp++;
++			break;
++		default:
++			read_unlock_bh(&cl_hw->vif_db.lock);
++			return CL_IFCONF_MAX;
++		}
++	}
++	read_unlock_bh(&cl_hw->vif_db.lock);
++
++	if (num_ap > 0 && num_sta == 0 && num_mp == 0)
++		return CL_IFCONF_AP;
++	if (num_ap == 0 && num_sta == 1 && num_mp == 0)
++		return CL_IFCONF_STA;
++	if (num_ap == 1 && num_sta == 1 && num_mp == 0)
++		return CL_IFCONF_REPEATER;
++	if (num_ap > 0 && num_sta == 0 && num_mp == 1)
++		return CL_IFCONF_MESH_AP;
++	if (num_ap == 0 && num_sta == 0 && num_mp == 1)
++		return CL_IFCONF_MESH_ONLY;
++
++	return CL_IFCONF_MAX;
++}
++
++int cl_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	/*
++	 * Called when a netdevice attached to the hardware is
++	 * enabled. Because it is not called for monitor mode devices, start
++	 * and stop must be implemented.
++	 * The driver should perform any initialization it needs before
++	 * the device can be enabled. The initial configuration for the
++	 * interface is given in the conf parameter.
++	 * The callback may refuse to add an interface by returning a
++	 * negative error code (which will be seen in userspace.)
++	 * Must be implemented and can sleep.
++	 */
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_chip *chip = cl_hw->chip;
++	struct cl_vif *cl_vif = (struct cl_vif *)vif->drv_priv;
++	struct wireless_dev *wdev = ieee80211_vif_to_wdev(vif);
++	struct net_device *dev = NULL;
++	u8 ac;
++
++	if (!wdev)
++		return -ENODEV;
++
++	dev = wdev->netdev;
++	if (!dev)
++		return -ENODEV;
++
++	/*
++	 * In recovery just send the message to firmware and exit
++	 * (also make sure cl_vif already exists).
++	 */
++	if (cl_recovery_in_progress(cl_hw) && cl_vif_get_by_dev(cl_hw, dev))
++		return cl_add_interface_to_firmware(cl_hw, vif, cl_vif->vif_index);
++
++	cl_vif->cl_hw = cl_hw;
++	cl_vif->vif = vif;
++	cl_vif->dev = dev;
++	cl_vif->vif_index = cl_mac_addr_find_idx(cl_hw, vif->addr);
++
++	/* MAC address not found - invalid address */
++	if (cl_vif->vif_index == BSS_INVALID_IDX) {
++		cl_dbg_err(cl_hw, "Error: Invalid MAC address %pM for vif %s\n",
++			   vif->addr, dev->name);
++
++		return -EINVAL;
++	}
++
++	if (chip->conf->ce_production_mode || vif->type == NL80211_IFTYPE_STATION)
++		cl_vif->tx_en = true;
++
++	cl_vif_key_init(cl_vif);
++
++	if (cl_add_interface_to_firmware(cl_hw, vif, cl_vif->vif_index))
++		return -EINVAL;
++
++	cl_vif->conn_data = kzalloc(sizeof(*cl_vif->conn_data), GFP_KERNEL);
++	if (!cl_vif->conn_data) {
++		cl_dbg_verbose(cl_hw, "Memory allocation for conn_data failed !!!\n");
++		return -ENOMEM;
++	}
++
++	if (vif->type != NL80211_IFTYPE_STATION)
++		vif->cab_queue = CL_HWQ_VO;
++
++	cl_vif_add(cl_hw, cl_vif);
++	cl_hw_set_iface_conf(cl_hw, cl_recalc_hw_iface(cl_hw));
++
++	for (ac = 0; ac < AC_MAX; ac++)
++		vif->hw_queue[ac] = cl_ac2hwq[ac];
++
++	if (cl_radio_is_on(cl_hw) && vif->type == NL80211_IFTYPE_AP)
++		cl_vif->tx_en = true;
++
++	/* Set active state in station mode after ifconfig down and up */
++	if (cl_hw->conf->ce_listener_en)
++		cl_radio_on(cl_hw);
++	else if (cl_radio_is_on(cl_hw) && vif->type == NL80211_IFTYPE_STATION)
++		cl_msg_tx_set_idle(cl_hw, MAC_ACTIVE, true);
++
++	if (vif->type == NL80211_IFTYPE_MESH_POINT) {
++		tasklet_init(&cl_hw->tx_mesh_bcn_task, cl_tx_bcn_mesh_task,
++			     (unsigned long)cl_vif);
++		cl_radio_on(cl_hw);
++		cl_vif->tx_en = true;
++		cl_vif->mesh_basic_rates = cl_cap_set_mesh_basic_rates(cl_hw);
++	}
++
++	return 0;
++}
++
++void cl_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	/*
++	 * Notifies a driver that an interface is going down.
++	 * The stop callback is called after this if it is the last interface
++	 * and no monitor interfaces are present.
++	 * When all interfaces are removed, the MAC address in the hardware
++	 * must be cleared so the device no longer acknowledges packets,
++	 * the mac_addr member of the conf structure is, however, set to the
++	 * MAC address of the device going away.
++	 * Hence, this callback must be implemented. It can sleep.
++	 */
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_vif *cl_vif = (struct cl_vif *)vif->drv_priv;
++
++	if (vif->type == NL80211_IFTYPE_MESH_POINT)
++		tasklet_kill(&cl_hw->tx_mesh_bcn_task);
++
++	if (!cl_recovery_in_progress(cl_hw)) {
++		kfree(cl_vif->conn_data);
++		cl_vif_remove(cl_hw, cl_vif);
++		cl_msg_tx_remove_if(cl_hw, cl_vif->vif_index);
++	} else {
++		cl_vif_remove(cl_hw, cl_vif);
++	}
++	cl_hw_set_iface_conf(cl_hw, cl_recalc_hw_iface(cl_hw));
++
++	cl_vif_key_deinit(cl_vif);
++
++	cl_vif->cl_hw = NULL;
++	cl_vif->vif = NULL;
++	cl_vif->dev = NULL;
++}
++
++static int cl_ops_conf_change_channel(struct ieee80211_hw *hw)
++{
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_chip *chip = cl_hw->chip;
++	struct cfg80211_chan_def *chandef = &hw->conf.chandef;
++	enum nl80211_chan_width width = chandef->width;
++	u32 primary = chandef->chan->center_freq;
++	u32 center = chandef->center_freq1;
++	u32 channel = ieee80211_frequency_to_channel(primary);
++	u8 bw = cl_width_to_bw(width);
++	int ret = 0;
++
++	if (!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags))
++		return 0;
++
++	/* WA: for the first set-channel in production mode use the nvram values */
++	if (cl_hw_is_prod_or_listener(cl_hw) || !IS_REAL_PHY(chip)) {
++		ret = cl_chandef_get_default(cl_hw, &channel, &bw,
++					     &width, &primary, &center);
++
++		if (ret != 0)
++			return ret;
++	}
++
++	cl_dbg_trace(cl_hw,
++		     "channel(%u), primary(%u), center(%u), width(%u), bw(%u)\n",
++		     channel, primary, center, width, bw);
++
++	if (cl_hw->channel == channel &&
++	    cl_hw->bw == bw &&
++	    cl_hw->primary_freq == primary &&
++	    cl_hw->center_freq == center)
++		goto dfs_cac;
++
++	/*
++	 * Flush the pending data to ensure that we will finish the pending
++	 * transmissions before changing the channel
++	 */
++	if (IS_REAL_PHY(chip))
++		cl_ops_flush(hw, NULL, -1, false);
++
++	if (cl_hw->chip->conf->ce_calib_runtime_en)
++		ret = cl_calib_runtime_and_switch_channel(cl_hw, channel, bw, primary, center);
++	else
++		ret = cl_msg_tx_set_channel(cl_hw, channel, bw, primary, center,
++					    CL_CALIB_PARAMS_DEFAULT_STRUCT);
++	if (ret)
++		return -EIO;
++
++	/**
++	 * Set preffered channel type to HT+/- based on current hapd
++	 * configuration.
++	 */
++	if (cl_band_is_24g(cl_hw)) {
++		u8 ct = cfg80211_get_chandef_type(&hw->conf.chandef);
++
++		switch (ct) {
++		case NL80211_CHAN_HT40PLUS:
++		case NL80211_CHAN_HT40MINUS:
++			if (ct != cl_hw->ht40_preffered_ch_type) {
++				cl_dbg_info(cl_hw, "HT40 preffered channel type=%s\n",
++					    ct == NL80211_CHAN_HT40PLUS ? "HT+" : "HT-");
++				cl_hw->ht40_preffered_ch_type = ct;
++			}
++		}
++	}
++
++	cl_wrs_api_bss_set_bw(cl_hw, bw);
++
++dfs_cac:
++	/*
++	 * TODO: This callback is being spawned even in STA mode, moreover,
++	 * "start_ap" comes later - it is unclear whether we are an AP at this
++	 * stage. Likely, may be solved by moving "force_cac_*" states to beginning
++	 * of "start_ap", but the request should stay in current callback
++	 */
++	if (!cl_band_is_5g(cl_hw))
++		return 0;
++
++	/*
++	 * Radar listening may occur at DFS channels during in-service mode,
++	 * so CAC may clear the channels, but radar listening should be
++	 * still active, and should start it as soon as we can.
++	 */
++	if (hw->conf.radar_enabled) {
++		/* If channel policy demans to be in CAC - need to request it */
++		if (!cl_dfs_is_in_cac(cl_hw) &&
++		    chandef->chan->dfs_state == NL80211_DFS_USABLE)
++			cl_dfs_request_cac(cl_hw, true);
++
++		if (!cl_dfs_radar_listening(cl_hw))
++			cl_dfs_radar_listen_start(cl_hw);
++	} else {
++		/*
++		 * No sense to continue be in silent mode if the channel was
++		 * cleared
++		 */
++
++		if (cl_dfs_is_in_cac(cl_hw) &&
++		    chandef->chan->dfs_state == NL80211_DFS_AVAILABLE)
++			cl_dfs_request_cac(cl_hw, false);
++
++		if (cl_dfs_radar_listening(cl_hw))
++			cl_dfs_radar_listen_end(cl_hw);
++	}
++	/*
++	 * We have just finished channel switch.
++	 * Now, check what to do with CAC.
++	 */
++	if (cl_dfs_requested_cac(cl_hw))
++		cl_dfs_force_cac_start(cl_hw);
++	else if (cl_dfs_is_in_cac(cl_hw))
++		cl_dfs_force_cac_end(cl_hw);
++
++	return 0;
++}
++
++int cl_ops_config(struct ieee80211_hw *hw, u32 changed)
++{
++	/*
++	 * Handler for configuration requests. IEEE 802.11 code calls this
++	 * function to change hardware configuration, e.g., channel.
++	 * This function should never fail but returns a negative error code
++	 * if it does. The callback can sleep
++	 */
++	int error = 0;
++
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
++		error = cl_ops_conf_change_channel(hw);
++
++	return error;
++}
++
++/*
++ * @bss_info_changed: Handler for configuration requests related to BSS
++ *  parameters that may vary during BSS's lifespan, and may affect low
++ *  level driver (e.g. assoc/disassoc status, erp parameters).
++ *  This function should not be used if no BSS has been set, unless
++ *  for association indication. The @changed parameter indicates which
++ *  of the bss parameters has changed when a call is made. The callback
++ *  can sleep.
++ */
++void cl_ops_bss_info_changed(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif,
++			     struct ieee80211_bss_conf *info,
++			     u32 changed)
++{
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_vif *cl_vif = (struct cl_vif *)vif->drv_priv;
++
++	if (changed & BSS_CHANGED_ASSOC) {
++		if (cl_msg_tx_set_associated(cl_hw, info))
++			return;
++	}
++
++	if (changed & BSS_CHANGED_BSSID) {
++		if (cl_msg_tx_set_bssid(cl_hw, info->bssid, cl_vif->vif_index))
++			return;
++	}
++
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		u16 smallest_int = cl_ops_recalc_smallest_tbtt(cl_hw);
++
++		cl_hw->smallest_beacon_int = smallest_int;
++
++		if (vif->type == NL80211_IFTYPE_AP ||
++		    cl_hw_get_iface_conf(cl_hw) == CL_IFCONF_MESH_ONLY) {
++			if (cl_msg_tx_set_beacon_int(cl_hw, info->beacon_int,
++						     cl_vif->vif_index))
++				return;
++			if (cl_msg_tx_dtim(cl_hw, info->dtim_period))
++				return;
++		}
++
++		if (vif->type == NL80211_IFTYPE_MESH_POINT &&
++		    cl_hw_get_iface_conf(cl_hw) == CL_IFCONF_MESH_AP) {
++			cl_ops_set_mesh_tbtt(cl_hw, info->beacon_int, smallest_int);
++		}
++	}
++
++	if (changed & BSS_CHANGED_BASIC_RATES) {
++		int shift = hw->wiphy->bands[hw->conf.chandef.chan->band]->bitrates[0].hw_value;
++
++		if (vif->type == NL80211_IFTYPE_MESH_POINT)
++			if (cl_vif->mesh_basic_rates)
++				info->basic_rates = cl_vif->mesh_basic_rates;
++
++		if (cl_msg_tx_set_basic_rates(cl_hw, info->basic_rates << shift))
++			return;
++		/* TODO: check if cl_msg_tx_set_mode() should be called */
++	}
++
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		/*
++		 * We must be in 11g mode here
++		 * TODO: we can add a check on the mode
++		 */
++		if (cl_msg_tx_set_slottime(cl_hw, info->use_short_slot))
++			return;
++	}
++
++	if (changed & BSS_CHANGED_BANDWIDTH)
++		cl_wrs_api_bss_set_bw(cl_hw, cl_width_to_bw(info->chandef.width));
++
++	if (changed & BSS_CHANGED_TXPOWER) {
++		if (info->txpower_type == NL80211_TX_POWER_FIXED) {
++			cl_hw->new_tx_power = info->txpower;
++			cl_power_tables_update(cl_hw, &cl_hw->phy_data_info.data->pwr_tables);
++			cl_msg_tx_refresh_power(cl_hw);
++		}
++	}
++
++	if (changed & BSS_CHANGED_BEACON) {
++		struct beacon_data *beacon = NULL;
++		struct ieee80211_sub_if_data *sdata =
++			container_of(vif, struct ieee80211_sub_if_data, vif);
++		struct ieee80211_ht_cap *ht_cap = NULL;
++		struct ieee80211_vht_cap *vht_cap = NULL;
++		struct ieee80211_he_cap_elem *he_cap = NULL;
++		bool sgi_en = false;
++		u8 hw_mode = cl_hw->hw_mode;
++		enum cl_wireless_mode wireless_mode = cl_hw->wireless_mode;
++
++		rcu_read_lock();
++
++		if (sdata->vif.type == NL80211_IFTYPE_AP)
++			beacon = rcu_dereference(sdata->u.ap.beacon);
++		else if (ieee80211_vif_is_mesh(&sdata->vif))
++			beacon = rcu_dereference(sdata->u.mesh.beacon);
++
++		if (beacon) {
++			size_t ies_len = beacon->tail_len;
++			const u8 *ies = beacon->tail;
++			const u8 *cap =  NULL;
++			int var_offset = offsetof(struct ieee80211_mgmt, u.beacon.variable);
++			int len = beacon->head_len - var_offset;
++			const u8 *var_pos = beacon->head + var_offset;
++			const u8 *rate_ie = NULL;
++
++			cl_vif->wmm_enabled = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++								      WLAN_OUI_TYPE_MICROSOFT_WMM,
++								      ies,
++								      ies_len);
++			cl_dbg_info(cl_hw, "vif=%d wmm_enabled=%d\n",
++				    cl_vif->vif_index,
++				    cl_vif->wmm_enabled);
++
++			cap = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies, ies_len);
++			if (cap && cap[1] >= sizeof(*ht_cap)) {
++				ht_cap = (void *)(cap + 2);
++				sgi_en |= (le16_to_cpu(ht_cap->cap_info) &
++					   IEEE80211_HT_CAP_SGI_20) ||
++					  (le16_to_cpu(ht_cap->cap_info) &
++					   IEEE80211_HT_CAP_SGI_40);
 +			}
 +
-+			dev_kfree_skb_any(sw_txhdr->skb);
++			cap = cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY, ies, ies_len);
++			if (cap && cap[1] >= sizeof(*vht_cap)) {
++				vht_cap = (void *)(cap + 2);
++				sgi_en |= (le32_to_cpu(vht_cap->vht_cap_info) &
++					   IEEE80211_VHT_CAP_SHORT_GI_80) ||
++					  (le32_to_cpu(vht_cap->vht_cap_info) &
++					   IEEE80211_VHT_CAP_SHORT_GI_160);
++			}
++
++			cap = cfg80211_find_ext_ie(WLAN_EID_EXT_HE_CAPABILITY, ies, ies_len);
++			if (cap && cap[1] >= sizeof(*he_cap) + 1)
++				he_cap = (void *)(cap + 3);
++
++			rate_ie = cfg80211_find_ie(WLAN_EID_SUPP_RATES, var_pos, len);
++			if (rate_ie) {
++				if (cl_band_is_24g(cl_hw))
++					if (cl_is_valid_g_rates(rate_ie))
++						hw_mode = cl_hw->conf->ci_cck_in_hw_mode ?
++							     HW_MODE_BG : HW_MODE_G;
++					else
++						hw_mode = HW_MODE_B;
++				else
++					hw_mode = HW_MODE_A;
++			}
++		} else {
++			cl_dbg_warn(cl_hw, "beacon_data not set!\n");
 +		}
 +
-+		cl_sw_txhdr_free(cl_hw, sw_txhdr);
-+		return;
-+	}
++		rcu_read_unlock();
 +
-+	txdesc->umacdesc.packet_addr[0] = cpu_to_le32(dma_addr);
++		/*
++		 * FIXME: 1. WRS has no VIF-specific capabs settings.
++		 *        2. WRS has no BW-specific SGI configuration support.
++		 **/
 +
-+	cl_tx_ipc_txdesc_populate(cl_hw, txdesc, queue_type, ipc_queue_idx);
++		/* If found any capabs info and state is different - update sgi */
++		if ((ht_cap || vht_cap) && (cl_wrs_api_bss_is_sgi_en(cl_hw) != sgi_en))
++			cl_wrs_api_bss_set_sgi(cl_hw, sgi_en);
 +
-+	/* make sure memory is written before push to HW */
-+	wmb();
++		if (hw_mode != cl_hw->hw_mode) {
++			cl_hw->hw_mode = hw_mode;
++			sgi_en =
++				(ht_cap || vht_cap) ? sgi_en : cl_hw->conf->ci_short_guard_interval;
++#ifdef CONFIG_CL8K_DYN_BCAST_RATE
++			cl_dyn_bcast_update(cl_hw);
++#endif /* CONFIG_CL8K_DYN_BCAST_RATE */
++#ifdef CONFIG_CL8K_DYN_MCAST_RATE
++			cl_dyn_mcast_update(cl_hw);
++#endif /* CONFIG_CL8K_DYN_MCAST_RATE */
++			cl_wrs_api_bss_capab_update(cl_hw, cl_hw->bw, sgi_en);
++		}
 +
-+	/*
-+	 * 1) Notify firmware on new buffered traffic by updating the enhanced tim.
-+	 * 2) Push sw_txhdr to confirmation list
-+	 */
-+	if (queue_type == QUEUE_TYPE_AGG) {
-+		a2e_trigger_bit_pos = IPC_IRQ_A2E_TXDESC_AGG_MAP(hw_queue);
-+		cl_agg_cfm_add(cl_hw, sw_txhdr, ipc_queue_idx);
-+		cl_enhanced_tim_set_tx_agg(cl_hw, ipc_queue_idx, hw_queue,
-+					   no_ps_buffer, cl_sta, tid);
-+	} else if (queue_type == QUEUE_TYPE_SINGLE) {
-+		a2e_trigger_bit_pos = IPC_IRQ_A2E_TXDESC_SINGLE_MAP(hw_queue);
-+		cl_single_cfm_add(cl_hw, sw_txhdr, ipc_queue_idx);
-+		cl_enhanced_tim_set_tx_single(cl_hw, ipc_queue_idx, hw_queue,
-+					      no_ps_buffer, cl_sta, tid);
-+	} else {
-+		a2e_trigger_bit_pos = IPC_IRQ_A2E_TXDESC_SINGLE_MAP(hw_queue);
-+		cl_bcmc_cfm_add(cl_hw, sw_txhdr);
-+	}
-+
-+	if (cl_hw->conf->ci_tx_delay_tstamp_en)
-+		cl_tx_update_hist_tstamp(tx_queue, sw_txhdr->skb, tx_queue->hist_xmit_to_push,
-+					 true);
-+
-+	/* Tx_queue counters */
-+	tx_queue->fw_free_space--;
-+	tx_queue->total_fw_push_desc++;
-+	tx_queue->total_fw_push_skb += host_info->packet_cnt;
-+
-+	/* VIF statistics */
-+	cl_vif->trfc_cntrs[sw_txhdr->ac].tx_packets += host_info->packet_cnt;
-+
-+	for (i = 0; i < host_info->packet_cnt; i++)
-+		cl_vif->trfc_cntrs[sw_txhdr->ac].tx_bytes +=
-+			le16_to_cpu(txdesc->umacdesc.packet_len[i]);
-+
-+	/* Trigger interrupt to firmware so that it will know that a new descriptor is ready */
-+	cl_hw->ipc_host2xmac_trigger_set(cl_hw->chip, BIT(a2e_trigger_bit_pos));
-+}
-+
-+struct cl_pci_db {
-+	u8 device_cntr;
-+	struct pci_dev *dev[CHIP_MAX];
-+};
-+
-+static struct cl_pci_db pci_db;
-+
-+static void cl_pci_get_celeno_device(void)
-+{
-+	/*
-+	 * Search the PCI for all Celeno devices.
-+	 * If there are two devices sort them in ascending order.
-+	 */
-+	struct pci_dev *dev = NULL;
-+
-+	while ((dev = pci_get_device(CL_VENDOR_ID, PCI_ANY_ID, dev))) {
-+		pci_db.dev[pci_db.device_cntr] = dev;
-+		pci_db.device_cntr++;
-+
-+		if (pci_db.device_cntr == CHIP_MAX) {
-+			if (pci_db.dev[CHIP0]->device > pci_db.dev[CHIP1]->device)
-+				swap(pci_db.dev[CHIP0], pci_db.dev[CHIP1]);
-+
-+			break;
++		wireless_mode = cl_recalc_wireless_mode(cl_hw, !!ht_cap, !!vht_cap, !!he_cap);
++		if (wireless_mode != cl_hw->wireless_mode) {
++			sgi_en =
++				(ht_cap || vht_cap) ? sgi_en : cl_hw->conf->ci_short_guard_interval;
++			cl_hw->wireless_mode = wireless_mode;
++#ifdef CONFIG_CL8K_DYN_MCAST_RATE
++			cl_dyn_mcast_update(cl_hw);
++#endif /* CONFIG_CL8K_DYN_MCAST_RATE */
++			cl_wrs_api_bss_capab_update(cl_hw, cl_hw->bw, sgi_en);
 +		}
 +	}
 +}
 +
-+static u8 cl_pci_chip_idx(struct pci_dev *pci_dev)
++int cl_ops_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
 +{
-+	if (pci_db.device_cntr == 0)
-+		cl_pci_get_celeno_device();
++	struct cl_hw *cl_hw = hw->priv;
 +
-+	if (pci_db.device_cntr == 1)
-+		return CHIP0;
++	set_bit(CL_DEV_AP_STARTED, &cl_hw->drv_flags);
 +
-+	return (pci_db.dev[CHIP0] == pci_dev) ? CHIP0 : CHIP1;
-+}
++	cl_hw->num_ap_started++;
++	if (cl_hw->conf->ce_radio_on) {
++		if (cl_radio_is_off(cl_hw))
++			cl_radio_on(cl_hw);
 +
-+static const struct cl_driver_ops drv_ops = {
-+	.msg_fw_send = cl_msg_pci_msg_fw_send,
-+	.pkt_fw_send = cl_tx_pci_pkt_fw_send,
-+};
-+
-+static int cl_pci_probe(struct pci_dev *pci_dev,
-+			const struct pci_device_id *pci_id)
-+{
-+	u16 pci_cmd;
-+	int ret;
-+	u8 step_id;
-+	u8 chip_idx = cl_pci_chip_idx(pci_dev);
-+	struct cl_chip *chip = cl_chip_alloc(chip_idx);
-+
-+	if (!chip) {
-+		pr_err("Chip [%u] alloc failed\n", chip_idx);
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	chip->pci_dev = pci_dev;
-+	chip->dev = &pci_dev->dev;
-+	chip->bus_type = CL_BUS_TYPE_PCI;
-+
-+	ret = cl_chip_config_read(chip);
-+	if (ret) {
-+		cl_chip_dealloc(chip);
 +		return 0;
 +	}
 +
-+	pci_set_drvdata(pci_dev, chip);
-+
-+	/* Hotplug fixups */
-+	pci_read_config_word(pci_dev, PCI_COMMAND, &pci_cmd);
-+	pci_cmd |= PCI_COMMAND_PARITY | PCI_COMMAND_SERR;
-+	pci_write_config_word(pci_dev, PCI_COMMAND, pci_cmd);
-+	pci_write_config_byte(pci_dev, PCI_CACHE_LINE_SIZE, L1_CACHE_BYTES >> 2);
-+
-+	ret = pci_enable_device(pci_dev);
-+	if (ret) {
-+		cl_dbg_chip_err(chip, "pci_enable_device failed\n");
-+		goto out;
-+	}
-+
-+	if (!dma_set_mask_and_coherent(&pci_dev->dev, DMA_BIT_MASK(32))) {
-+		cl_dbg_chip_verbose(chip, "Using 32bit DMA\n");
-+	} else {
-+		cl_dbg_chip_verbose(chip, "No suitable DMA available\n");
-+		goto out_disable_device;
-+	}
-+
-+	pci_set_master(pci_dev);
-+
-+	ret = pci_request_regions(pci_dev, chip->pci_drv.name);
-+	if (ret) {
-+		cl_dbg_chip_verbose(chip, "pci_request_regions failed\n");
-+		goto out_disable_device;
-+	}
-+
-+	chip->pci_bar0_virt_addr = pci_ioremap_bar(pci_dev, 0);
-+	if (!chip->pci_bar0_virt_addr) {
-+		cl_dbg_chip_verbose(chip, "pci_ioremap_bar 0 failed\n");
-+		ret = -ENOMEM;
-+		goto out_release_regions;
-+	}
-+
-+#ifdef CONFIG_PCI_MSI
-+	if (chip->conf->ci_pci_msi_enable) {
-+		ret = pci_enable_msi(pci_dev);
-+		if (ret)
-+			cl_dbg_chip_err(chip, "pci_enable_msi failed (%d)\n", ret);
-+	}
-+#endif
-+
-+	step_id = macsys_gcu_chip_version_step_id_getf(chip);
-+	if (step_id != 0xB) {
-+		cl_dbg_chip_err(chip, "Invalid Step ID: 0x%X\n", step_id);
-+		ret = -EOPNOTSUPP;
-+		goto out_release_regions;
-+	}
-+
-+	ret = cl_chip_init(chip);
-+	if (ret)
-+		goto out_chip_deinit;
-+
-+	ret = cl_main_init(chip, &drv_ops);
-+	if (ret)
-+		goto out_chip_deinit;
-+
-+	if (cl_ela_init(chip))
-+		cl_dbg_chip_info(chip, "Non-critical: cl_ela_init failed\n");
++	/*
++	 * Set active state when cl_ops_start_ap() is called not during first driver start
++	 * but rather after removing all interfaces and then doing up again to one interface.
++	 */
++	if (cl_radio_is_on(cl_hw) && !cl_recovery_in_progress(cl_hw))
++		cl_msg_tx_set_idle(cl_hw, MAC_ACTIVE, true);
 +
 +	return 0;
-+
-+out_chip_deinit:
-+	cl_chip_deinit(chip);
-+#ifdef CONFIG_PCI_MSI
-+	if (chip->conf->ci_pci_msi_enable)
-+		pci_disable_msi(pci_dev);
-+#endif
-+	iounmap(chip->pci_bar0_virt_addr);
-+out_release_regions:
-+	pci_release_regions(pci_dev);
-+out_disable_device:
-+	pci_disable_device(pci_dev);
-+out:
-+
-+	return ret;
 +}
 +
-+static void cl_pci_remove(struct pci_dev *pci_dev)
++void cl_ops_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
 +{
-+	struct cl_chip *chip = pci_get_drvdata(pci_dev);
++	struct cl_hw *cl_hw = hw->priv;
 +
-+	if (!chip) {
-+		pr_err("%s: failed to find chip\n", __func__);
++	/*
++	 * Unset CL_DEV_AP_STARTED in order to avoid
++	 * calling cl_ops_conf_change_channel after unloading the driver
++	 */
++	clear_bit(CL_DEV_AP_STARTED, &cl_hw->drv_flags);
++
++	cl_hw->num_ap_started--;
++
++	if (!cl_hw->num_ap_started)
++		cl_hw->channel = 0;
++}
++
++u64 cl_ops_prepare_multicast(struct ieee80211_hw *hw, struct netdev_hw_addr_list *mc_list)
++{
++	return netdev_hw_addr_list_count(mc_list);
++}
++
++void cl_ops_configure_filter(struct ieee80211_hw *hw, u32 changed_flags,
++			     u32 *total_flags, u64 multicast)
++{
++	/*
++	 * configure_filter: Configure the device's RX filter.
++	 * See the section "Frame filtering" for more information.
++	 * This callback must be implemented and can sleep.
++	 */
++	struct cl_hw *cl_hw = hw->priv;
++
++	cl_dbg_trace(cl_hw, "total_flags = 0x%08x\n", *total_flags);
++
++	/*
++	 * Reset our filter flags since our start/stop ops reset
++	 * the programmed settings
++	 */
++	if (!test_bit(CL_DEV_STARTED, &cl_hw->drv_flags)) {
++		*total_flags = 0;
 +		return;
 +	}
 +
-+	cl_ela_deinit(chip);
++	if (multicast)
++		*total_flags |= FIF_ALLMULTI;
++	else
++		*total_flags &= ~FIF_ALLMULTI;
 +
-+	cl_main_deinit(chip);
++	/* TODO: optimize with changed_flags vs multicast */
++	cl_msg_tx_set_filter(cl_hw, *total_flags, false);
 +
-+	cl_chip_deinit(chip);
-+
-+#ifdef CONFIG_PCI_MSI
-+	if (chip->conf->ci_pci_msi_enable) {
-+		pci_disable_msi(pci_dev);
-+		pr_debug("pci_disable_msi\n");
-+	}
-+#endif
-+
-+	iounmap(chip->pci_bar0_virt_addr);
-+	cl_chip_dealloc(chip);
-+	pci_release_regions(pci_dev);
-+	pci_disable_device(pci_dev);
++	*total_flags &= ~(1 << 31);
 +}
 +
-+static const struct pci_device_id cl_pci_id_table[] = {
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8000) },
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8001) },
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8040) },
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8060) },
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8080) },
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8046) },
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8066) },
-+	{ PCI_DEVICE(CL_VENDOR_ID, 0x8086) },
-+	{ },
-+};
-+
-+static struct pci_driver cl_pci_driver = {
-+	.name = "cl_pci",
-+	.id_table = cl_pci_id_table,
-+	.probe = cl_pci_probe,
-+	.remove = cl_pci_remove,
-+};
-+
-+static int cl_pci_init(void)
++int cl_ops_set_key(struct ieee80211_hw *hw,
++		   enum set_key_cmd cmd,
++		   struct ieee80211_vif *vif,
++		   struct ieee80211_sta *sta,
++		   struct ieee80211_key_conf *key)
 +{
-+	int ret;
++	struct cl_hw *cl_hw = hw->priv;
 +
-+	ret = pci_register_driver(&cl_pci_driver);
-+	if (ret)
-+		pr_err("failed to register cl pci driver: %d\n", ret);
++	return cl_key_set(cl_hw, cmd, vif, sta, key);
++}
++
++void cl_ops_sw_scan_start(struct ieee80211_hw *hw,
++			  struct ieee80211_vif *vif,
++			  const u8 *mac_addr)
++{
++	struct cl_hw *cl_hw = hw->priv;
++
++	cl_hw->sw_scan_in_progress = 1;
++
++	if (cl_hw->conf->ce_radio_on &&
++	    cl_radio_is_off(cl_hw) &&
++	    vif->type == NL80211_IFTYPE_STATION)
++		cl_radio_on(cl_hw);
++
++	if (cl_dfs_is_in_cac(cl_hw))
++		cl_dfs_force_cac_end(cl_hw);
++}
++
++void cl_ops_sw_scan_complete(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	struct cl_hw *cl_hw = hw->priv;
++
++	cl_hw->sw_scan_in_progress = 0;
++}
++
++int cl_ops_sta_state(struct ieee80211_hw *hw, struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++		     enum ieee80211_sta_state old_state, enum ieee80211_sta_state new_state)
++{
++	struct cl_hw *cl_hw = hw->priv;
++	int error = 0;
++
++	if (old_state == new_state)
++		return 0;
++
++	if (old_state == IEEE80211_STA_NOTEXIST &&
++	    new_state == IEEE80211_STA_NONE) {
++		cl_sta_init_sta(cl_hw, sta);
++	} else if (old_state == IEEE80211_STA_AUTH &&
++		   new_state == IEEE80211_STA_ASSOC) {
++		error = cl_sta_add(cl_hw, vif, sta);
++	} else if (old_state == IEEE80211_STA_ASSOC &&
++		   new_state == IEEE80211_STA_AUTH) {
++		cl_sta_remove(cl_hw, vif, sta);
++	}
++
++	return error;
++}
++
++void cl_ops_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		       enum sta_notify_cmd cmd, struct ieee80211_sta *sta)
++{
++	struct cl_hw *cl_hw = (struct cl_hw *)hw->priv;
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	bool is_ps = (bool)!cmd;
++
++	cl_sta_ps_notify(cl_hw, cl_sta, is_ps);
++}
++
++int cl_ops_conf_tx(struct ieee80211_hw *hw,
++		   struct ieee80211_vif *vif,
++		   u16 ac_queue,
++		   const struct ieee80211_tx_queue_params *params)
++{
++	/*
++	 * Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
++	 * bursting) for a hardware TX queue.
++	 * Returns a negative error code on failure.
++	 * The callback can sleep.
++	 */
++
++	/* We only handle STA edca here */
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		struct cl_hw *cl_hw = hw->priv;
++		struct ieee80211_he_mu_edca_param_ac_rec mu_edca = {0};
++		struct edca_params edca_params = {
++			.aifsn = (u8)(params->aifs),
++			.cw_min = (u8)(ilog2(params->cw_min + 1)),
++			.cw_max = (u8)(ilog2(params->cw_max + 1)),
++			.txop = (u8)(params->txop)
++		};
++
++		if (cl_hw->wireless_mode > WIRELESS_MODE_HT_VHT)
++			memcpy(&mu_edca, &params->mu_edca_param_rec, sizeof(mu_edca));
++
++		cl_edca_set(cl_hw, cl_ac2edca[ac_queue], &edca_params, &mu_edca);
++	}
++	return 0;
++}
++
++void cl_ops_sta_rc_update(struct ieee80211_hw *hw,
++			  struct ieee80211_vif *vif,
++			  struct ieee80211_sta *sta,
++			  u32 changed)
++{
++	struct cl_hw *cl_hw = (struct cl_hw *)hw->priv;
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++	struct cl_wrs_sta *wrs_sta = &cl_sta->wrs_sta;
++	u8 bw = wrs_sta->max_rate_cap.bw;
++	u8 nss = wrs_sta->max_rate_cap.nss;
++
++	if (changed & IEEE80211_RC_SMPS_CHANGED)
++		cl_wrs_api_set_smps_mode(cl_hw, sta, sta->bandwidth);
++
++	WARN_ON(sta->rx_nss == 0);
++	if (changed & IEEE80211_RC_NSS_CHANGED)
++		nss = min_t(u8, sta->rx_nss, WRS_SS_MAX) - 1;
++
++	if (changed & IEEE80211_RC_BW_CHANGED)
++		bw = sta->bandwidth;
++
++	if ((changed & IEEE80211_RC_NSS_CHANGED) || (changed & IEEE80211_RC_BW_CHANGED))
++		cl_wrs_api_nss_or_bw_changed(cl_hw, sta, nss, bw);
++}
++
++int cl_ops_ampdu_action(struct ieee80211_hw *hw,
++			struct ieee80211_vif *vif,
++			struct ieee80211_ampdu_params *params)
++{
++	struct cl_hw *cl_hw = (struct cl_hw *)hw->priv;
++	struct cl_sta *cl_sta = IEEE80211_STA_TO_CL_STA(params->sta);
++	int ret = 0;
++
++	switch (params->action) {
++	case IEEE80211_AMPDU_RX_START:
++		ret = cl_ampdu_rx_start(cl_hw, cl_sta, params->tid,
++					params->ssn, params->buf_size);
++		break;
++	case IEEE80211_AMPDU_RX_STOP:
++		cl_ampdu_rx_stop(cl_hw, cl_sta, params->tid);
++		break;
++	case IEEE80211_AMPDU_TX_START:
++		ret = cl_ampdu_tx_start(cl_hw, vif, cl_sta, params->tid,
++					params->ssn);
++		break;
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		ret = cl_ampdu_tx_operational(cl_hw, cl_sta, params->tid,
++					      params->buf_size, params->amsdu);
++		break;
++	case IEEE80211_AMPDU_TX_STOP_CONT:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH:
++	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
++		ret = cl_ampdu_tx_stop(cl_hw, vif, params->action, cl_sta,
++				       params->tid);
++		break;
++	default:
++		pr_warn("Error: Unknown AMPDU action (%d)\n", params->action);
++	}
 +
 +	return ret;
 +}
-+module_init(cl_pci_init);
 +
-+static void cl_pci_exit(void)
++int cl_ops_post_channel_switch(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif)
 +{
-+	pci_unregister_driver(&cl_pci_driver);
++	/* TODO: Need to handle post switch */
++	return 0;
 +}
-+module_exit(cl_pci_exit);
++
++void cl_ops_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u32 queues, bool drop)
++{
++	struct cl_hw *cl_hw = hw->priv;
++	int flush_duration;
++
++	if (test_bit(CL_DEV_HW_RESTART, &cl_hw->drv_flags)) {
++		cl_dbg_verbose(cl_hw, ": bypassing (CL_DEV_HW_RESTART set)\n");
++		return;
++	}
++
++	/* Wait for a maximum time of 200ms until all pending frames are flushed */
++	for (flush_duration = 0; flush_duration < 200; flush_duration++) {
++		if (!cl_txq_frames_pending(cl_hw))
++			return;
++
++		/* Lets sleep and hope for the best */
++		usleep_range(1000, 2000);
++	}
++}
++
++bool cl_ops_tx_frames_pending(struct ieee80211_hw *hw)
++{
++	struct cl_hw *cl_hw = hw->priv;
++
++	return cl_txq_frames_pending(cl_hw);
++}
++
++void cl_ops_reconfig_complete(struct ieee80211_hw *hw,
++			      enum ieee80211_reconfig_type reconfig_type)
++{
++	struct cl_hw *cl_hw = hw->priv;
++
++	cl_recovery_reconfig_complete(cl_hw);
++}
++
++int cl_ops_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif, int *dbm)
++{
++	struct cl_hw *cl_hw = hw->priv;
++
++	if (cl_hw->phy_data_info.data)
++		*dbm = cl_power_get_max(cl_hw);
++	else
++		*dbm = 0;
++
++	return 0;
++}
++
++int cl_ops_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
++{
++	/* TODO: Fix this call */
++	return 0;
++}
++
++static void cl_ops_mgd_assoc(struct cl_hw *cl_hw, struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = container_of(vif, struct ieee80211_sub_if_data, vif);
++	struct cl_vif *cl_vif = (struct cl_vif *)vif->drv_priv;
++	struct ieee80211_sta *sta = ieee80211_find_sta(vif, sdata->u.mgd.bssid);
++
++	if (!sta) {
++		/* Should never happen */
++		cl_dbg_verbose(cl_hw, "sta is NULL !!!\n");
++		return;
++	}
++
++	cl_sta_mgd_add(cl_hw, cl_vif, sta);
++
++	if (cl_hw_get_iface_conf(cl_hw) == CL_IFCONF_REPEATER) {
++		cl_vif_ap_tx_enable(cl_hw, true);
++		set_bit(CL_DEV_REPEATER, &cl_hw->drv_flags);
++	}
++}
++
++static void cl_ops_mgd_disassoc(struct cl_hw *cl_hw)
++{
++	if (cl_hw_get_iface_conf(cl_hw) == CL_IFCONF_REPEATER) {
++		cl_vif_ap_tx_enable(cl_hw, false);
++		clear_bit(CL_DEV_REPEATER, &cl_hw->drv_flags);
++	}
++}
++
++void cl_ops_event_callback(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   const struct ieee80211_event *event)
++{
++	struct cl_hw *cl_hw = hw->priv;
++
++	if (event->type == MLME_EVENT) {
++		if (event->u.mlme.data == ASSOC_EVENT &&
++		    event->u.mlme.status == MLME_SUCCESS)
++			cl_ops_mgd_assoc(cl_hw, vif);
++		else if (event->u.mlme.data == DEAUTH_TX_EVENT ||
++			 event->u.mlme.data == DEAUTH_RX_EVENT)
++			cl_ops_mgd_disassoc(cl_hw);
++	}
++}
++
++/* This function is required for PS flow - do not remove */
++int cl_ops_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta, bool set)
++{
++	return 0;
++}
++
++int cl_ops_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
++{
++	struct cl_hw *cl_hw = hw->priv;
++
++	*rx_ant = cl_hw->mask_num_antennas;
++	*tx_ant = cl_hw->mask_num_antennas;
++
++	return 0;
++}
++
++u32 cl_ops_get_expected_throughput(struct ieee80211_hw *hw,
++				   struct ieee80211_sta *sta)
++{
++	struct cl_sta *cl_sta = (struct cl_sta *)sta->drv_priv;
++
++	return cl_sta->wrs_sta.tx_su_params.data_rate;
++}
++
++void cl_ops_sta_statistics(struct ieee80211_hw *hw,
++			   struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct station_info *sinfo)
++{
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_sta *cl_sta = NULL;
++	u64 total_tx_success = 0, total_tx_fail = 0;
++	struct cl_wrs_params *wrs_params = NULL;
++
++	if (!sta)
++		return;
++
++	cl_sta = IEEE80211_STA_TO_CL_STA(sta);
++
++	/*
++	 * Since cl8k implements rate control algorithm (sets IEEE80211_HW_HAS_RATE_CONTROL)
++	 * it is needed to initialize both rx/tx bitrates manually
++	 */
++	cl_wrs_lock_bh(&cl_hw->wrs_db);
++	wrs_params = &cl_sta->wrs_sta.tx_su_params;
++	cl_wrs_fill_sinfo_rates(&sinfo->txrate, wrs_params, cl_sta);
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
++	cl_wrs_unlock_bh(&cl_hw->wrs_db);
++
++	/* mac80211 will fill sinfo stats if driver not set sinfo->filled flag */
++	if (!cl_hw->conf->ci_stats_en)
++		return;
++
++	cl_stats_get_tx(cl_hw, cl_sta, &total_tx_success, &total_tx_fail);
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_PACKETS);
++	sinfo->tx_packets = total_tx_success;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
++	sinfo->tx_failed = total_tx_fail;
++
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_PACKETS);
++	sinfo->rx_packets = cl_stats_get_rx(cl_hw, cl_sta);
++
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BYTES64);
++	sinfo->tx_bytes = cl_sta->tx_bytes;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BYTES64);
++	sinfo->rx_bytes = cl_sta->rx_bytes;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
++	sinfo->tx_retries = cl_sta->retry_count;
++
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
++	sinfo->signal_avg = cl_stats_get_rssi(cl_hw, cl_sta);
++}
++
++int cl_ops_get_survey(struct ieee80211_hw *hw, int idx, struct survey_info *survey)
++{
++	struct ieee80211_conf *conf = &hw->conf;
++	struct cl_hw *cl_hw = hw->priv;
++	struct ieee80211_supported_band *sband = hw->wiphy->bands[conf->chandef.chan->band];
++	struct cl_chan_scanner *scanner = cl_hw->scanner;
++	struct cl_channel_stats *scanned_channel = NULL;
++	int chan_num;
++	u8 i;
++
++	if (idx >= sband->n_channels)
++		return -ENOENT;
++
++	survey->channel = &sband->channels[idx];
++	chan_num = ieee80211_frequency_to_channel(sband->channels[idx].center_freq);
++
++	for (i = 0; i < scanner->channels_num; i++) {
++		if (scanner->channels[i].channel == chan_num) {
++			scanned_channel = &scanner->channels[i];
++			break;
++		}
++	}
++
++	if (!scanned_channel) {
++		survey->filled = 0;
++		return 0;
++	}
++
++	survey->filled = SURVEY_INFO_TIME | SURVEY_INFO_TIME_SCAN |
++			 SURVEY_INFO_NOISE_DBM | SURVEY_INFO_TIME_TX |
++			 SURVEY_INFO_TIME_RX | SURVEY_INFO_TIME_BUSY |
++			 SURVEY_INFO_TIME_EXT_BUSY;
++
++	survey->noise = scanned_channel->ch_noise;
++
++	survey->time = scanned_channel->scan_time_ms;
++	survey->time_scan = survey->time;
++
++	survey->time_rx = div64_u64(scanned_channel->util_time_rx, USEC_PER_MSEC);
++	survey->time_tx = div64_u64(scanned_channel->util_time_tx, USEC_PER_MSEC);
++
++	survey->time_busy = div64_u64(scanned_channel->util_time_busy, USEC_PER_MSEC);
++	survey->time_ext_busy = survey->time_busy;
++
++	return 0;
++}
++
++static void cl_scan_completion_cb(struct cl_hw *cl_hw, void *arg)
++{
++	struct cl_chan_scanner *scanner = cl_hw->scanner;
++	struct cfg80211_scan_info info = {
++		.aborted = scanner->scan_aborted,
++	};
++
++	cl_dbg_trace(cl_hw, "Completed scan request, aborted: %u\n", info.aborted);
++
++	cl_scan_channel_switch(cl_hw, scanner->prescan_channel, scanner->prescan_bw, true);
++	ieee80211_scan_completed(cl_hw->hw, &info);
++}
++
++int cl_ops_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		   struct ieee80211_scan_request *hw_req)
++{
++	struct cfg80211_scan_request *req = &hw_req->req;
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_chan_scanner *scanner = cl_hw->scanner;
++	u8 scan_channels[MAX_CHANNELS] = {0};
++	u8 i;
++	int ret = 0;
++
++	cl_dbg_trace(cl_hw, "Hardware scan request: n_channels:%u, n_ssids:%d\n",
++		     req->n_channels, req->n_ssids);
++
++	if (cl_hw->conf->ce_radio_on && cl_radio_is_off(cl_hw))
++		cl_radio_on(cl_hw);
++
++	ret = mutex_lock_interruptible(&scanner->cl_hw->set_channel_mutex);
++	if (ret != 0)
++		return ret;
++	scanner->prescan_bw = cl_hw->bw;
++	scanner->prescan_channel = cl_hw->channel;
++	mutex_unlock(&scanner->cl_hw->set_channel_mutex);
++
++	if (req->n_ssids > 0) {
++		/*
++		 * This is active scan request. We do not support it yet, so we
++		 * need to force the mac80211 to fallback to the sw_scan.
++		 */
++		cl_dbg_trace(cl_hw, "activating fall-back strategy - sw_scan\n");
++		return 1;
++	}
++
++	if (req->n_channels > ARRAY_SIZE(scan_channels)) {
++		cl_dbg_warn(cl_hw, "invalid number of channels to scan: %u\n",
++			    req->n_channels);
++		return -ERANGE;
++	}
++
++	for (i = 0; i < req->n_channels; ++i) {
++		if (req->channels[i]->band != cl_hw->nl_band) {
++			cl_dbg_warn(cl_hw, "band %u is invalid\n", req->channels[i]->band);
++			return -EINVAL;
++		}
++		scan_channels[i] = ieee80211_frequency_to_channel(req->channels[i]->center_freq);
++	}
++
++	ret = cl_trigger_off_channel_scan(scanner, req->duration, 0,
++					  scan_channels, CHNL_BW_20, req->n_channels,
++					  cl_scan_completion_cb, NULL);
++	return ret;
++}
++
++void cl_ops_cancel_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	struct cl_hw *cl_hw = hw->priv;
++	struct cl_chan_scanner *scanner = cl_hw->scanner;
++
++	if (!cl_is_scan_in_progress(scanner))
++		return;
++
++	cl_abort_scan(scanner);
++	wait_event_interruptible_timeout(scanner->wq,
++					 !cl_is_scan_in_progress(scanner),
++					 msecs_to_jiffies(MSEC_PER_SEC));
++}
 -- 
 2.36.1
 
