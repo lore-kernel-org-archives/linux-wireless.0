@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA900C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB050C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:37:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236772AbiEXLhu (ORCPT
+        id S236775AbiEXLhu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 24 May 2022 07:37:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39930 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236771AbiEXLhr (ORCPT
+        with ESMTP id S236765AbiEXLht (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:37:47 -0400
+        Tue, 24 May 2022 07:37:49 -0400
 Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05on2084.outbound.protection.outlook.com [40.107.21.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D90D43382
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:37:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0647640A01
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:37:48 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iiKDUIbf59c46mJZzKILqt6qk4BLi7mg2+O4bRNd65IXB9RD7rAabO75rFfw2N2WQqUFKCZK7rO2hH25Xe90m9CbOAswIIilDKH8WV8LMn24/B7gGMTyg71aflwtoYIo9HRT91LRvxs2WWxCNK7OPEwJNpTS3TwLB3gENzyKsLxtNVhnLdeLTl7tV1D3E2PV90Cilo8DwtMCGh11LUoOCGndnS8WLBxMRKJQglexuJhzDWKYez90Gl+FhrK6Wu+JbMrsAwGZQXpKsMd9ff83BspMx2vQeQZBJeqeWB+GXGBXkJ9WhBthPxZh5+RE7fUrBEg4KZRc320f6B4dbX12dw==
+ b=i7jcpENGP9ZHize1ms1y+fU/rjgS5RX6Aa80S0SQ2jTujVbSQVGyEjhX4DWafTbZxHA6BLJHK2ytEYOfwe5U9Lw/NUG6BbQZgbvL+h2gAIh3f9ZWxcBYM1H8VZNwjDGlTNp6S3uh/RvTWpPb8rBdsyWcnnFXLlM1+Q8LfhZdfqZwI2Z5K0ISSfBgX6ZEuzbgpn9AUSA6EErZt0vI4CqGrKIf4btwLkmnoyckKIgi1EDxyo5r5hgyb6iCRa9gQxLd4oiLx71b1lJrMHx2cCGwiku67GIX3s3va2aeCLwnr9b74k2NR6kxhhsb0QUBkF9f8SMIRblEEZICOpOrGeQ49w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aeb3FHhx+tyxQtFSK2dzU3Egjt5EmUVBktfGqECSgX8=;
- b=Jsa+un4khak5yMXFfDK+To/0F/NmOfL8tUMSDUJvXxpbfMvz+jhaUpXVRfMhjadxKuJg7kIXNvQNOj14UtJ8nyyt3zaAQNl9DMzLpny/nahxe61rDZQ5HallIwMLmNqIbmrqRvH8smf6RW5jX+T4KM2TUcA/guHA+ZMTwRpYAFVVEtzT2KYK5LmI/ZNbNSAkZWKubn2lWKk0RgLX8ZtkUOE2H+iIF0b06bV+zkvC0FW/WDWcOy6uq2Laztn0SuQLvtaAa0kCfDAksIPlHNVaDf3uBGq4Sh1bQPvXKuNeoxxZtMsSJoWJfLNywuSFCEpinnoixcg1fyoUipr2kRBTJg==
+ bh=6pb9OdR9RorX0vFEVOIWgvic/lEeuE/yg3byo4XZRIY=;
+ b=QcqM4JqbtM2UfQB2/D0LF/dgrWcsTgnL3KoJsRRYnrN2/dyfLadvWJTssvZ9XsuOcXU5J71UAYZ5k+1D+kF1pijoUpYhaSwAt2EO6Pyjgl9v6U/AP66uvxuQjTXwXu7m4lvLQUijlijjnLo1xFZBXHoBt/DnKOe17To/cQsK0VXmp0TYsT3Y0JldjWmhj/5TneIDKij15vdu0ZMM7n/uxM4gtFbNks+PUpWFbGRCEbyv07LQ6k19MK5fN47ar0evCsh27U9gEOag1DzySwoK5/TNbr+ROCiUNl7D4suAQRMdrv3vT4m6NOCD8xUNDr4pmiVqXd3qvNdPUeM2SHTnIQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aeb3FHhx+tyxQtFSK2dzU3Egjt5EmUVBktfGqECSgX8=;
- b=KAMo0CQk3RBs69jcYzaHNsKEG1TXs8E0oBKrrL+4XOqiifuXxx4Dh98RkYJKs5avHbz8INXD3J5p+SK99Jo5ebvsBh1oh1c5muK8mSgG0MgdWk93LZMBCeSuCQQYO9i5E7204wyvB/T4AK3SGH6PFYF6sguOeWZNztESIZQx7kI=
+ bh=6pb9OdR9RorX0vFEVOIWgvic/lEeuE/yg3byo4XZRIY=;
+ b=x2XW4JB6m2vS3EPfEznb9nbJvYSXV9r6e2Im8BZbXB1+P68gVrPL0I26BYaLqkgcN31JTpvMUztQ4+cnFukPxYM/FLBQJr9Iro0mnL4PbD76SSPJ//J0Z4BjruWpFrffFyaGqMhb4Gt+B6WV8KlrUp1oswV57wrDwZltC/SsUYc=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
  by AM0P192MB0305.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:4e::33) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.15; Tue, 24 May
- 2022 11:37:40 +0000
+ 2022 11:37:44 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:37:40 +0000
+ 11:37:44 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 07/96] cl8k: add bf.c
-Date:   Tue, 24 May 2022 14:33:33 +0300
-Message-Id: <20220524113502.1094459-8-viktor.barna@celeno.com>
+Subject: [RFC v2 10/96] cl8k: add calib.h
+Date:   Tue, 24 May 2022 14:33:36 +0300
+Message-Id: <20220524113502.1094459-11-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,56 +66,56 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 46645a11-422f-49d0-5c42-08da3d79cf52
+X-MS-Office365-Filtering-Correlation-Id: 75fa00fb-7431-4332-5b0a-08da3d79d0b1
 X-MS-TrafficTypeDiagnostic: AM0P192MB0305:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <AM0P192MB0305A0AF0E8FE2D1E1FF95EAF6D79@AM0P192MB0305.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <AM0P192MB03051AEF13F9CFFFE22E80CDF6D79@AM0P192MB0305.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: HsDqmtLPpNk+/YVlkwL21WeFoely674JNYelMmB0AmkDz5B7WVUGBgnfRFFNESrQpAZmXbYqU3dzXjeQwkcMIzisTmx3OTQvb9/Qb5I0epAwUVauhP76TdAeGALJMnOL1y7rqKY+KNAAy0q/ms9CbOW1VSKaunbsYze4gV2h8PNnnKAD+zaJ7HELsvTsZ+QbhKapC3gragGAnMcNFu+Zo45f03jiRAaoten6AcDITYvEyKTX/5ROEEOKwq0bf66oqeOiCMuVKYlkpEl9tF/D78rGk0cVaoy5YsnqGgL+gHPPUZ3QCGDjiMWn0jXca0rhnWq9CEv1j3ZBLldmJwF3nnQ3woAmyTns9BM8GeoA80l6rDJZKv5LBBF4K6JPGuxpJMSl/jPdwr+uJLWGBr/wXd/flmkiJqGhOmRTd8V2l2D/jpvmyKyYSYWuw3qpcPTIjDn/8eu9T6TCG+1+L2i0py71155DSF6SVR/OSdBDobCZHouInzHqjTH4gOW1mtElzeT/7EsGhKYN1nD3OmVKbS46fQ1MkJsUBHnbUCJ8nEuRpN7yQkvL/EwslV0dYbMRDILpFn6O+jAoXogIiY6u7FXTq64qarRAMgKAX787zFdPNllWfWxPsA1qLNFt27vc2IAGpl2ONwKJVtukq2V5+aaSJvh/7hPPLviqBJLNYlo2c+ZbmJPn7KBQJheCzX5/+scgY3UdH8l/8Le5OZSFAic4gh/APh2qjky/u198rWw=
+X-Microsoft-Antispam-Message-Info: 7UfmOCJwMSF5pCYb3Ecqq2INHkFfJAmbxtdxH6oDVVk2mPCiNH0y7gZn4Ph5wUbbkGhAbP7a2IE7zt/WSuZYrvwncoJXTiuWhUDlkspeRVaJFWqLB2fMa1rtiQVU9exjYskZUzuaGPII3D1SmvrKeiq4B4ks/N2q9cqqa+FzgmCTdMNjXuom43Tb5fU+ZIOd9LyB3HhT7QT7RDDbImKXzox1wLXOPIa/KPcCBmUEvQE0Oy6MC7DABBLfa1OIgQM31S4/eBgpBGoym9tzprFo8h2LTiQkzRmccqqs3m2NYBDYWsNJRwtx0XjgS5F36XOev3JekNUcTcfW14Z2Ls6D98V7Pk1P+/ofyg8tyuMJwxz1LnJ652Byz/eHmWqSh/tdMXHY7yaqZmAQ7TlZWhWAOZ4QV5LOot+VeuuH2S+dKcUyG2W0kBF1sxbyWffXkjUXVPpMCDZ6k/6lLrq0tmu5a7bHoOK3VqO0EF9t5Z9EVGMdVJr4/PoQj9J+0eGlo6dvVh9n9jjPG6kdfMF8DeNvByoSclVeJq7qjitcs+VuUO2n4UAgxvle3sTP3cdlI+eM0crltIkCGnscfgfmSgR8XaxO3qayZ+F2+Aibyur/HxIIbNgpP+Tz7BUZXF7TKpMx6wTjk9KwXgbSW2k/zcDuS5jeH6ecKTS9FgL3okhEuQdHD4kNUe3YOQQ/6JhOMweAmbzAEBl8MajksxwC4UaJmFzVK/ubS3kkKtBbE/lPcXA=
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(346002)(396003)(366004)(39850400004)(376002)(136003)(6486002)(6916009)(508600001)(38350700002)(38100700002)(52116002)(6666004)(2906002)(8936002)(54906003)(6512007)(6506007)(26005)(9686003)(30864003)(8676002)(36756003)(5660300002)(316002)(66476007)(4326008)(66556008)(107886003)(66946007)(1076003)(41300700001)(186003)(2616005)(83380400001)(86362001)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VOYkJz3hVsm1XgEb1LTENF6LlnHCe98lW4iRH0+9tQDHIOkC/0Tw5EskWWk1?=
- =?us-ascii?Q?6P5tkh3h3beOBWI1xuIrFnaP1e9GYcdWfiAFcOsEKTiCYXm500AbiWG1Xpvq?=
- =?us-ascii?Q?LpHFFP8EIjlpSyOBkfgUxZVCnYF8RKYgPMmKC9dDbHxxIm3kFVGoozQCXifJ?=
- =?us-ascii?Q?AyzP2iG02NC7PD9eQ6yRDWlirilgfZdQOYSSWkL7CgnzqxOnHzRRNxDMX9cu?=
- =?us-ascii?Q?q+HuNrMMg6Qfi0TKF6Px+b9hhNXWjvBnoaQ1gD77b0nRgWfhUAKrACeCa1Lg?=
- =?us-ascii?Q?ZfJJlsIoiMxfGZdVZXJifV4Q+Fd91kpLaQULd7ldFtHjddKH7L8v2VZP1KgY?=
- =?us-ascii?Q?02xt7atAkVQnqWQKunyWaTxnB1UNz3mjo+Z3MCyaxkCvg8hA1FwQqQzDHs81?=
- =?us-ascii?Q?iHeY8bJhHGuO+a4+xsX2dFokfdyyGbeDWd7ME+wZqbotl9kL3hQ3YnIXfXI3?=
- =?us-ascii?Q?eBo/Y9mYcGO+CSyGC2Ja10AuFzo9gZBHUEaxt4ywTznDOVM9tg+ew0qfxk29?=
- =?us-ascii?Q?zmkm0b39OTAgPy4tqaOrRjSYbeSr1j3kl0tPZ/WxikPjyGdNofprCPsHD59f?=
- =?us-ascii?Q?TlTfuCV9/s8GnCv2awhrvEeAic7CH7oKLkE4sEZXrS8s+rp7vEbB6ASN0kD2?=
- =?us-ascii?Q?/gdAadxgN166KUrEDBxgd119Ogh0QbrXGCntlwYvEIc9O9xIbFCCCWyfsOUW?=
- =?us-ascii?Q?0YhF/7urYbcEs2q7C4x7wBi6iOSMK/5BFfC9XsXzMX117iUkQQURTqUojv05?=
- =?us-ascii?Q?AQpTUcOwePZcWrteN7AMgBKWJqRcD6koecr0PbSv0dal+z300qbI6ZiqyHnW?=
- =?us-ascii?Q?CjD9IN8bC3wky3Qt86o7HCNqhHGwIYHoUKcdN1VFkjA1CBNm4HVUg0UbJ8H4?=
- =?us-ascii?Q?QDeXshRNzfYWO5xQPBDJHmv5Zfnx4Li8TNSmWlD82lLO7BEQDJph1kesSTxN?=
- =?us-ascii?Q?objPU6wg5TG1zqpwSf6TjAtJkkqVuG+0bGNByNN8iWPDLNC1ox3yInc0P/YH?=
- =?us-ascii?Q?JKBbdpM6uoZIYDdAriFPzhCRj+r7oe4e42DGtx/JKzmb70JJjrkfloYVwkFN?=
- =?us-ascii?Q?hjrNDVKG3GYg5JJxqhtYvKqsNlPioI/Zom4pm1ZZVmFQr847Po4Gr0vVVBRi?=
- =?us-ascii?Q?JDnZ2/Vve0eLGAd68nd/gBSsyLujgMHLIp4SilMiw961NADhcEshKMmK8vo9?=
- =?us-ascii?Q?IzaUGdRHat+0iehGA/mjo5IKT6Kpef42JcHxYCAGzFl4SzD/nVV932qYUibS?=
- =?us-ascii?Q?BLvIrPqZaGvq3ziK1RXXTMwP98j+nbaf0RkcRv6MqQ6ZiXH7bl/144fF14+O?=
- =?us-ascii?Q?YkDBcBeFxII0BSF5e1fRjlxJPaPjMkioAiE5/RCjJ3Q90x4zhV3pFTDLa9hN?=
- =?us-ascii?Q?rR6yrCHRGs+28ynmY7NFwQ9Im1IjZ2+lhzIYN1PQ3FceygtoKho78NL+du1w?=
- =?us-ascii?Q?bk3mIbxt5YKg3+aEjl9Zcw3SkCsjjlIERMxxkXnLjNvATn0p5t3mIMDix+nc?=
- =?us-ascii?Q?kOJG8gAmndamDZ0URhPRNq83Es/DhjruGa5Fp6k4ScGr7Lfd3VcfmxERxgcb?=
- =?us-ascii?Q?Cy3DlbqORCocx4Jr8X+/dykwGdTfYbVe8gO8ipY3TgyReDZmIyZM2KokBN0c?=
- =?us-ascii?Q?CyxwBnpsxWMkTgD+o7guYULagndbswxSCGLU8+xGdfwHBDKujeID1Smc0C4j?=
- =?us-ascii?Q?yeSwVLjHtdRygoisXB+Bpj33TH2pPm5xz61IlTfyvPPC8yaI7rpxQ0qy8qmb?=
- =?us-ascii?Q?fxXc9ngdDmbPI4LcM/8gxW1tNp/PkPs=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?aggxSA0jRrujROP65F/qGjpJTkrnMe7nxLl8zcuwzoIncp51ZGiYQwBXaER4?=
+ =?us-ascii?Q?LP/rdXoXLJxaqk+jlorJZVNfTLTvrGuJv0j5qJuItPBjZJNsQERp+uPeFmCz?=
+ =?us-ascii?Q?p+5DlBgOFPWerp7TDi7MsR+ASZNpxMe8SuuEkMfotZVv+LvP9mdPRcmhbSQm?=
+ =?us-ascii?Q?qXDjv7uYzWQMi0S1zax9DWYIYW4xo+Wgah7Pih7rQEFXBzCz0tmP3Tk5gtOi?=
+ =?us-ascii?Q?oiebqfhpx+e0+WWm4mZFwRM05+/DAEd/d9WwDVnpX4zmARtHhf1qm3Z5L24r?=
+ =?us-ascii?Q?4IQKp8sgVrHVFrSxlGHF6usmU5aeE7jaB1Zz3sWDZ3TOdbLv26W1Dj3WOw7U?=
+ =?us-ascii?Q?/eoxADOUmL4FriDVWiBn6BsUhAzw/0iYHqAu9CD47nKDw8ABTBluRYNZ7FIq?=
+ =?us-ascii?Q?TRAI4ICFK6q765BdzoUdli93piyBy8O5TfmDoZkxXbjto9ThurFgHNHvvYuq?=
+ =?us-ascii?Q?1LzkoMZQn0bzQYkSFiVvo+/uAyCYFun6W+7dQqGriVJYxeqhLpHJIWP0e6DC?=
+ =?us-ascii?Q?uuHYW/XPpVjEFSz4YlZGD/GNZqnA+PzAmwMCeE8UYSdWDayo/KRkqiu97aho?=
+ =?us-ascii?Q?eqWXDFc++3/vy7QR9OJ8g8o6xdEtcrOOMqITyY+gkTJBosQaAnnGEIZS3eWw?=
+ =?us-ascii?Q?dIAvhwTWLgiBciN1kE7YSyadnW2XlNKemYv0EgLlNCJ1uxzKMDr4Bc4eDew0?=
+ =?us-ascii?Q?JnYNvbdulO6Wy726zXArTXvGEfFru+mjXfTUR1OwiBXSGOsI7/xx5qH5fFyL?=
+ =?us-ascii?Q?4P1wuXaXtBHPKfw6cdIVk30w5zCddpEFrTkjKrQP8cP50pURWYnOlpu6mqBz?=
+ =?us-ascii?Q?IK46IRqtNl+51mo7q5XWtdxp8QTI8cw1mQYkikpTwJnN99NygVai+YsRY3y7?=
+ =?us-ascii?Q?VHvB0GTYDvXTEGmbDjZuz6pDFhrRHMjK/ttiNgAmXi5vn/jfv1s8iZJNyou8?=
+ =?us-ascii?Q?EYWdTxq6T8fogQH0Mv7fydvPhWTjVonNtx5Y/XQ0iAvC4q08AMbvWexOlNE9?=
+ =?us-ascii?Q?zN15ntUwp18+hOsAWLIzM1Y+vf6RG+CKQPisDUyTP49E0mbcIMSfZTKIGU3U?=
+ =?us-ascii?Q?C8gHIfKEOBLum5dfel5Q4PjDse2Xu5Duu3jVQWidgQRJKFrCzwpXz2SaGSnI?=
+ =?us-ascii?Q?Yxt46qB5VFIUTSCjKoZI/UhzZGMVpg9N1NhkpakFj41cCo+VkJwd7UMbYjYD?=
+ =?us-ascii?Q?XWzCWkS1pi2MOaDRNOgoGjQ6j1ZBCtTPFVUJUL2I4tTld2N/q1VYnBKwlpjj?=
+ =?us-ascii?Q?EpMEFDExrz48d50jh3vW6e/RfRVOvcIZm3z7ZQJNr0d4J/qzoncbNf3M3Dcd?=
+ =?us-ascii?Q?1xDF4PSfOnwnjKNbzsIHRJ1S8imdDDZ2W4+93IyRFNFo1tWEvpJLC86PFvrx?=
+ =?us-ascii?Q?yzQ4Hd9YrgZsj9THwyhMzvF5RhkH4mLsyPti8fduuSLo0OfrqTS5SndH0ju8?=
+ =?us-ascii?Q?u07Jh/3iZpfsi7vUjnC2KShXUnQAeE9NSOtqXyD3IlZefefXu+T/F8XdNR6G?=
+ =?us-ascii?Q?7fvtvy2y2RjsYJ0cCT8gs56KgHDkhrQIjBoJsOUWKP5VPzq8dEl8WmgcbW2V?=
+ =?us-ascii?Q?8bJJ51d/2Cl0xx6xSNaqK0psqg4cC1FkBwEw0a002LRE8/ZtjX1q/Wya5G9C?=
+ =?us-ascii?Q?ARivbWzABJXdO+CHujafHJ8EbgkQ681YqCiGGwy2pl6bns1gTlcIX+u6Py/j?=
+ =?us-ascii?Q?QRrEC4Xpv398pC6NOetMsUiBF8bISqoqWRS47x9HqNABHSQlNdCApY2jlL6O?=
+ =?us-ascii?Q?dDCoPqWhw8S1mSmGyUqD+p+KoxCPUTM=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 46645a11-422f-49d0-5c42-08da3d79cf52
+X-MS-Exchange-CrossTenant-Network-Message-Id: 75fa00fb-7431-4332-5b0a-08da3d79d0b1
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:37:40.6862
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:37:42.9387
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: RNUOF8/gscT/mJhU0CzIR3cStl/ves9dhIB9ej82Mv4/tuEQBKHeLfMVm0PeDwQ98Z27BhpiDDaioaJWuiF5Bg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: TFAAefCeV1xjxG1ituUNi6wun4QPP7KY6L3bHh5+2ZvfLUbYUmDYkL5CDaRC23/UrtUq3mxi8G2PG8Rc+jjRsQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0305
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -128,362 +128,406 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/bf.c | 346 ++++++++++++++++++++++++++
- 1 file changed, 346 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/bf.c
+ drivers/net/wireless/celeno/cl8k/calib.h | 390 +++++++++++++++++++++++
+ 1 file changed, 390 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/calib.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/bf.c b/drivers/net/wireless/celeno/cl8k/bf.c
+diff --git a/drivers/net/wireless/celeno/cl8k/calib.h b/drivers/net/wireless/celeno/cl8k/calib.h
 new file mode 100644
-index 000000000000..49d16e13e6e4
+index 000000000000..6eb286392dd6
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/bf.c
-@@ -0,0 +1,346 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
++++ b/drivers/net/wireless/celeno/cl8k/calib.h
+@@ -0,0 +1,390 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#include "hw.h"
-+#include "traffic.h"
-+#include "sta.h"
-+#include "sounding.h"
-+#include "debug.h"
-+#include "bf.h"
-+
-+#define CL_BF_MIN_SOUNDING_NR 3
-+
-+#define bf_pr(cl_hw, level, ...) \
-+	do { \
-+		if ((level) <= (cl_hw)->bf_db.dbg_level) \
-+			pr_debug("[BF]" __VA_ARGS__); \
-+	} while (0)
-+
-+#define bf_pr_verbose(cl_hw, ...) bf_pr((cl_hw), DBG_LVL_VERBOSE, ##__VA_ARGS__)
-+#define bf_pr_err(cl_hw, ...)     bf_pr((cl_hw), DBG_LVL_ERROR, ##__VA_ARGS__)
-+#define bf_pr_warn(cl_hw, ...)    bf_pr((cl_hw), DBG_LVL_WARNING, ##__VA_ARGS__)
-+#define bf_pr_trace(cl_hw, ...)   bf_pr((cl_hw), DBG_LVL_TRACE, ##__VA_ARGS__)
-+#define bf_pr_info(cl_hw, ...)    bf_pr((cl_hw), DBG_LVL_INFO, ##__VA_ARGS__)
-+
-+static bool cl_bf_is_beamformee_capable_he(struct ieee80211_sta *sta, bool mu_cap)
-+{
-+	u8 phy_cap_info4 = sta->he_cap.he_cap_elem.phy_cap_info[4];
-+
-+	if (mu_cap)
-+		return (phy_cap_info4 & IEEE80211_HE_PHY_CAP4_MU_BEAMFORMER);
-+	else
-+		return (phy_cap_info4 & IEEE80211_HE_PHY_CAP4_SU_BEAMFORMEE);
-+}
-+
-+static bool cl_bf_is_beamformee_capable_vht(struct ieee80211_sta *sta, bool mu_cap)
-+{
-+	u32 vht_cap = sta->vht_cap.cap;
-+
-+	if (mu_cap)
-+		return (vht_cap & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE);
-+	else
-+		return (vht_cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE);
-+}
-+
-+static bool cl_bf_is_beamformee_capable(struct cl_sta *cl_sta, bool mu_cap)
-+{
-+	struct ieee80211_sta *sta = cl_sta->sta;
-+
-+	if (sta->he_cap.has_he)
-+		return cl_bf_is_beamformee_capable_he(sta, mu_cap);
-+
-+	if (sta->vht_cap.vht_supported)
-+		return cl_bf_is_beamformee_capable_vht(sta, mu_cap);
-+
-+	return false;
-+}
-+
-+void cl_bf_enable(struct cl_hw *cl_hw, bool enable, bool trigger_decision)
-+{
-+	struct cl_tcv_conf *conf = cl_hw->conf;
-+
-+	if (cl_hw->bf_db.enable == enable)
-+		return;
-+
-+	if (!conf->ci_bf_en && enable) {
-+		bf_pr_err(cl_hw, "Unable to enable - BF is globally disabled\n");
-+		return;
-+	}
-+
-+	cl_hw->bf_db.enable = enable;
-+	bf_pr_verbose(cl_hw, "%s\n", enable ? "Enable" : "Disable");
-+
-+	if (trigger_decision)
-+		cl_sta_loop_bh(cl_hw, cl_bf_sounding_decision);
-+}
-+
-+static void cl_bf_timer_callback(struct timer_list *t)
-+{
-+	/*
-+	 * If timer expired it means that we started sounding but didn't get any
-+	 * indication for (10 * sounding_interval).
-+	 * So we disable sounding for this station (even when in starts again traffic).
-+	 */
-+	struct cl_bf_sta_db *bf_db = from_timer(bf_db, t, timer);
-+	struct cl_sta *cl_sta = container_of(bf_db, struct cl_sta, bf_db);
-+	struct cl_hw *cl_hw = cl_sta->cl_vif->cl_hw;
-+
-+	bf_pr_trace(cl_hw, "Failed to get reply (%u)\n", cl_sta->sta_idx);
-+	bf_db->indication_timeout = true;
-+	cl_bf_sounding_decision(cl_hw, cl_sta);
-+}
-+
-+static void cl_bf_reset_sounding_info(struct cl_sta *cl_sta)
-+{
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	bf_db->synced = false;
-+	bf_db->sounding_start = false;
-+	bf_db->sounding_indications = 0;
-+}
-+
-+void cl_bf_sounding_start(struct cl_hw *cl_hw, enum sounding_type type, struct cl_sta **cl_sta_arr,
-+			  u8 sta_num, struct cl_sounding_info *recovery_elem)
-+{
-+#define STA_INDICES_STR_SIZE 64
-+
-+	/* Send request to start sounding */
-+	u8 i, bw = CHNL_BW_MAX;
-+	char sta_indices_str[STA_INDICES_STR_SIZE] = {0};
-+	u8 str_len = 0;
-+
-+	for (i = 0; i < sta_num; i++) {
-+		struct cl_sta *cl_sta = cl_sta_arr[i];
-+		struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+		bw = cl_sta->wrs_sta.assoc_bw;
-+		bf_db->synced = false;
-+		bf_db->sounding_start = true;
-+		bf_db->sounding_indications = 0;
-+
-+		str_len += snprintf(sta_indices_str, STA_INDICES_STR_SIZE - str_len, "%u%s",
-+				    cl_sta->sta_idx, (i == sta_num - 1 ? ", " : ""));
-+	}
-+
-+	bf_pr_trace(cl_hw, "Start sounding: Sta = %s\n", sta_indices_str);
-+	cl_sounding_send_request(cl_hw, cl_sta_arr, sta_num, SOUNDING_ENABLE, type, bw, NULL, 0,
-+				 recovery_elem);
-+
-+#undef STA_INDICES_STR_SIZE
-+}
-+
-+void cl_bf_sounding_stop(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	if (bf_db->sounding_start) {
-+		/* Send request to stop sounding */
-+		cl_bf_reset_sounding_info(cl_sta);
-+		bf_pr_trace(cl_hw, "Sta = %u, Stop sounding\n", cl_sta->sta_idx);
-+		cl_sounding_send_request(cl_hw, &cl_sta, 1, SOUNDING_DISABLE, SOUNDING_TYPE_HE_SU,
-+					 0, NULL, 0, NULL);
-+		bf_pr_trace(cl_hw, "Sta: %u, Beamforming disabled\n", cl_sta->sta_idx);
-+	}
-+}
-+
-+void cl_bf_sounding_decision(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	if (cl_bf_is_enabled(cl_hw) &&
-+	    cl_bf_is_beamformee_capable(cl_sta, false) &&
-+	    !bf_db->indication_timeout &&
-+	    ((bf_db->beamformee_sts + 1) >= CL_BF_MIN_SOUNDING_NR) &&
-+	    (bf_db->traffic_active || cl_hw->bf_db.force)) {
-+		if (!bf_db->sounding_start) {
-+			if (cl_sta->su_sid == INVALID_SID)
-+				cl_bf_sounding_start(cl_hw, SOUNDING_TYPE_HE_SU, &cl_sta, 1, NULL);
-+			else
-+				bf_pr_verbose(cl_hw, "[%s]: STA %u already belongs to sid %u\n",
-+					      __func__, cl_sta->sta_idx, cl_sta->su_sid);
-+		}
-+	} else {
-+		del_timer(&bf_db->timer);
-+		cl_bf_sounding_stop(cl_hw, cl_sta);
-+	}
-+}
-+
-+static u8 cl_bf_get_sts_he(struct ieee80211_sta *sta)
-+{
-+	u8 *phy_cap_info = sta->he_cap.he_cap_elem.phy_cap_info;
-+
-+	if (phy_cap_info[0] & IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G ||
-+	    phy_cap_info[0] & IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G)
-+		return u8_get_bits(phy_cap_info[4],
-+				   IEEE80211_HE_PHY_CAP4_BEAMFORMEE_MAX_STS_ABOVE_80MHZ_MASK);
-+	else
-+		return u8_get_bits(phy_cap_info[4],
-+				   IEEE80211_HE_PHY_CAP4_BEAMFORMEE_MAX_STS_UNDER_80MHZ_MASK);
-+}
-+
-+static u8 cl_bf_get_sts_vht(struct ieee80211_sta *sta)
-+{
-+	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+
-+	return u32_get_bits(vht_cap->cap, IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK);
-+}
-+
-+static u8 cl_bf_get_sts(struct ieee80211_sta *sta)
-+{
-+	if (sta->he_cap.has_he)
-+		return cl_bf_get_sts_he(sta);
-+
-+	return cl_bf_get_sts_vht(sta);
-+}
-+
-+void cl_bf_update_rate(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	/* Old & new BF state for main rate */
-+	bool bf_on_old = bf_db->is_on;
-+	bool bf_on_new = cl_bf_is_on(cl_hw, cl_sta, bf_db->num_ss);
-+
-+	/* Old & new BF state for fallback rate */
-+	bool bf_on_old_fbk = bf_db->is_on_fallback;
-+	bool bf_on_new_fbk = cl_bf_is_on(cl_hw, cl_sta, bf_db->num_ss_fallback);
-+
-+	if (bf_on_old != bf_on_new || bf_on_old_fbk != bf_on_new_fbk) {
-+		/* BF state for main rate or fallback rate changed */
-+
-+		/* Save the new state */
-+		bf_db->is_on = bf_on_new;
-+		bf_db->is_on_fallback = bf_on_new_fbk;
-+
-+		/* Update the firmware */
-+		if (cl_msg_tx_set_tx_bf(cl_hw, cl_sta->sta_idx, bf_on_new, bf_on_new_fbk))
-+			pr_err("%s: failed to set TX-BF\n", __func__);
-+	}
-+}
-+
-+void cl_bf_sta_add(struct cl_hw *cl_hw, struct cl_sta *cl_sta, struct ieee80211_sta *sta)
-+{
-+	/* Beamformee capabilities */
-+	bool su_beamformee_capable = cl_bf_is_beamformee_capable(cl_sta, false);
-+	bool mu_beamformee_capable = cl_bf_is_beamformee_capable(cl_sta, true);
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	WARN_ON_ONCE(sta->rx_nss == 0);
-+	bf_db->beamformee_sts = cl_bf_get_sts(sta);
-+	bf_db->nc = min_t(u8, sta->rx_nss, WRS_SS_MAX) - 1;
-+	cl_sta->su_sid = INVALID_SID;
-+
-+	bf_pr_trace(cl_hw,
-+		    "sta_idx: %u, su_beamformee_capable: %u, mu_beamformee_capable: %u, "
-+		    "beamformee_sts: %u, nc = %u\n",
-+		    cl_sta->sta_idx, su_beamformee_capable, mu_beamformee_capable,
-+		    bf_db->beamformee_sts, bf_db->nc);
-+
-+	if (bf_db->beamformee_sts == 0)
-+		bf_db->beamformee_sts = 3;
-+
-+	/*
-+	 * Init the BF timer
-+	 * Period is set to 0. It will be updated before enabling it.
-+	 */
-+	timer_setup(&bf_db->timer, cl_bf_timer_callback, 0);
-+}
-+
-+void cl_bf_sta_remove(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	/* Disable timer before removing the station */
-+	del_timer_sync(&bf_db->timer);
-+
-+	/*
-+	 * Remove the sounding sequence associated with the STA and possibly start another sequence
-+	 * for other stations that participate in the same sounding sequence with the STA
-+	 */
-+	if (cl_sta->su_sid != INVALID_SID) {
-+		bf_db->sounding_remove_required = true;
-+		cl_sounding_stop_by_sid(cl_hw, cl_sta->su_sid, true);
-+	}
-+}
-+
-+void cl_bf_sta_active(struct cl_hw *cl_hw, struct cl_sta *cl_sta, bool active)
-+{
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	if (bf_db->traffic_active != active) {
-+		bf_pr_trace(cl_hw, "Sta: %u, Active: %s\n",
-+			    cl_sta->sta_idx, active ? "True" : " False");
-+
-+		bf_db->traffic_active = active;
-+		cl_bf_sounding_decision(cl_hw, cl_sta);
-+	}
-+}
-+
-+void cl_bf_reset_sounding_ind(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	cl_sta->bf_db.sounding_indications = 0;
-+}
-+
-+bool cl_bf_is_enabled(struct cl_hw *cl_hw)
-+{
-+	return cl_hw->bf_db.enable;
-+}
-+
-+bool cl_bf_is_on(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u8 nss)
-+{
-+	struct cl_bf_sta_db *bf_db = &cl_sta->bf_db;
-+
-+	return (cl_bf_is_enabled(cl_hw) &&
-+		bf_db->sounding_start &&
-+		bf_db->sounding_indications &&
-+		(nss <= min(cl_hw->conf->ci_bf_max_nss, bf_db->nc)));
-+}
-+
-+void cl_bf_sounding_req_success(struct cl_hw *cl_hw, struct cl_sounding_info *new_elem)
-+{
-+	/*
-+	 * Start a timer to check that we are receiving indications from the station.
-+	 * The period of the timer is set to 10 times the sounding-interval.
-+	 */
-+	u8 i;
-+	struct cl_sta *cl_sta;
-+	struct cl_bf_sta_db *bf_db;
-+	unsigned long period = CL_SOUNDING_FACTOR * cl_sounding_get_interval(cl_hw);
-+
-+	for (i = 0; i < new_elem->sta_num; i++) {
-+		cl_sta = new_elem->su_cl_sta_arr[i];
-+		bf_db = &cl_sta->bf_db;
-+
-+		if (cl_sta) {
-+			cl_sta->bf_db.sounding_start = true;
-+			cl_sta->su_sid = new_elem->sounding_id;
-+
-+			/* Don't enable BF timer in case of force mode */
-+			if (!cl_hw->bf_db.force)
-+				mod_timer(&bf_db->timer, jiffies + msecs_to_jiffies(period));
-+		}
-+	}
-+}
-+
-+void cl_bf_sounding_req_failure(struct cl_hw *cl_hw, struct cl_sounding_info *new_elem)
-+{
-+	u8 i;
-+	struct cl_sta *cl_sta;
-+	struct cl_bf_sta_db *bf_db;
-+
-+	for (i = 0; i < new_elem->sta_num; i++) {
-+		cl_sta = new_elem->su_cl_sta_arr[i];
-+
-+		if (cl_sta) {
-+			bf_db = &cl_sta->bf_db;
-+			bf_db->sounding_start = false;
-+			bf_db->sounding_indications = 0;
-+		}
-+	}
-+}
-+
-+void cl_bf_init(struct cl_hw *cl_hw)
-+{
-+	cl_bf_enable(cl_hw, cl_hw->conf->ci_bf_en, false);
-+}
-+
++#ifndef CL_CALIB_H
++#define CL_CALIB_H
++
++#include <linux/workqueue.h>
++#include <net/cfg80211.h>
++
++#include "def.h"
++
++#define DCOC_LNA_GAIN_NUM     8
++#define MAX_SX                2
++#define IQ_NUM_TONES_REQ      8
++#define IQ_NUM_TONES_CFM      (2 * IQ_NUM_TONES_REQ)
++#define SINGLETONS_MAX_NUM    1
++#define LOOPS_MAX_NUM         (2 + SINGLETONS_MAX_NUM) /* 1: pre,2-11:singletone,12:post */
++#define SX_FREQ_OFFSET_Q2     5
++
++enum calib_cfm_id_type {
++	CALIB_CFM_DCOC,
++	CALIB_CFM_IQ,
++	CALIB_CFM_MAX
++};
++
++enum calib_channel_idx_24g {
++	CALIB_CHAN_24G_1,
++	CALIB_CHAN_24G_6,
++	CALIB_CHAN_24G_11,
++	CALIB_CHAN_24G_MAX,
++};
++
++enum calib_channel_idx_5g {
++	CALIB_CHAN_5G_36,
++	CALIB_CHAN_5G_40,
++	CALIB_CHAN_5G_44,
++	CALIB_CHAN_5G_48,
++	CALIB_CHAN_5G_52,
++	CALIB_CHAN_5G_56,
++	CALIB_CHAN_5G_60,
++	CALIB_CHAN_5G_64,
++	CALIB_CHAN_5G_100,
++	CALIB_CHAN_5G_104,
++	CALIB_CHAN_5G_108,
++	CALIB_CHAN_5G_112,
++	CALIB_CHAN_5G_116,
++	CALIB_CHAN_5G_120,
++	CALIB_CHAN_5G_124,
++	CALIB_CHAN_5G_128,
++	CALIB_CHAN_5G_132,
++	CALIB_CHAN_5G_136,
++	CALIB_CHAN_5G_140,
++	CALIB_CHAN_5G_144,
++	CALIB_CHAN_5G_149,
++	CALIB_CHAN_5G_153,
++	CALIB_CHAN_5G_157,
++	CALIB_CHAN_5G_161,
++	CALIB_CHAN_5G_165,
++	CALIB_CHAN_5G_MAX
++};
++
++enum calib_channel_idx_6g {
++	CALIB_CHAN_6G_1,
++	CALIB_CHAN_6G_5,
++	CALIB_CHAN_6G_9,
++	CALIB_CHAN_6G_13,
++	CALIB_CHAN_6G_17,
++	CALIB_CHAN_6G_21,
++	CALIB_CHAN_6G_25,
++	CALIB_CHAN_6G_29,
++	CALIB_CHAN_6G_33,
++	CALIB_CHAN_6G_37,
++	CALIB_CHAN_6G_41,
++	CALIB_CHAN_6G_45,
++	CALIB_CHAN_6G_49,
++	CALIB_CHAN_6G_53,
++	CALIB_CHAN_6G_57,
++	CALIB_CHAN_6G_61,
++	CALIB_CHAN_6G_65,
++	CALIB_CHAN_6G_69,
++	CALIB_CHAN_6G_73,
++	CALIB_CHAN_6G_77,
++	CALIB_CHAN_6G_81,
++	CALIB_CHAN_6G_85,
++	CALIB_CHAN_6G_89,
++	CALIB_CHAN_6G_93,
++	CALIB_CHAN_6G_97,
++	CALIB_CHAN_6G_101,
++	CALIB_CHAN_6G_105,
++	CALIB_CHAN_6G_109,
++	CALIB_CHAN_6G_113,
++	CALIB_CHAN_6G_117,
++	CALIB_CHAN_6G_121,
++	CALIB_CHAN_6G_125,
++	CALIB_CHAN_6G_129,
++	CALIB_CHAN_6G_133,
++	CALIB_CHAN_6G_137,
++	CALIB_CHAN_6G_141,
++	CALIB_CHAN_6G_145,
++	CALIB_CHAN_6G_149,
++	CALIB_CHAN_6G_153,
++	CALIB_CHAN_6G_157,
++	CALIB_CHAN_6G_161,
++	CALIB_CHAN_6G_165,
++	CALIB_CHAN_6G_169,
++	CALIB_CHAN_6G_173,
++	CALIB_CHAN_6G_177,
++	CALIB_CHAN_6G_181,
++	CALIB_CHAN_6G_185,
++	CALIB_CHAN_6G_189,
++	CALIB_CHAN_6G_193,
++	CALIB_CHAN_6G_197,
++	CALIB_CHAN_6G_201,
++	CALIB_CHAN_6G_205,
++	CALIB_CHAN_6G_209,
++	CALIB_CHAN_6G_213,
++	CALIB_CHAN_6G_217,
++	CALIB_CHAN_6G_221,
++	CALIB_CHAN_6G_225,
++	CALIB_CHAN_6G_229,
++	CALIB_CHAN_6G_233,
++	CALIB_CHAN_6G_MAX,
++};
++
++/* MAX(CALIB_CHAN_24G_MAX, CALIB_CHAN_5G_MAX, CALIB_CHAN_6G_MAX) */
++#define CALIB_CHAN_MAX CALIB_CHAN_6G_MAX
++
++struct cl_dcoc_calib {
++	s8 i;
++	s8 q;
++};
++
++struct cl_dcoc_report {
++	__le16 i_dc;
++	__le16 i_iterations;
++	__le16 q_dc;
++	__le16 q_iterations;
++};
++
++struct cl_iq_report {
++	u8 status;
++	__le16 amplitude_mismatch[IQ_NUM_TONES_CFM];
++	__le16 phase_mismatch[IQ_NUM_TONES_CFM];
++	s8 ir_db[LOOPS_MAX_NUM][IQ_NUM_TONES_CFM];
++	s8 ir_db_avg_post;
++};
++
++struct cl_iq_calib {
++	__le32 coef0;
++	__le32 coef1;
++	__le32 coef2;
++	__le32 gain;
++};
++
++struct cl_lolc_report {
++	u8 status;
++	u8 n_iter;
++	__le16 lolc_qual;
++};
++
++struct cl_gain_report {
++	u8 status;
++	u8 rx_gain;
++	u8 tx_gain;
++	u8 gain_quality;
++	__le16 final_p2p;
++	__le16 initial_p2p;
++};
++
++struct cl_iq_dcoc_conf {
++	bool dcoc_calib_needed[TCV_MAX];
++	u8 dcoc_file_num_ant[TCV_MAX];
++	bool iq_calib_needed;
++	u8 iq_file_num_ant[TCV_MAX];
++	bool force_calib;
++};
++
++struct cl_iq_dcoc_info {
++	struct cl_dcoc_calib dcoc[DCOC_LNA_GAIN_NUM][MAX_ANTENNAS];
++	struct cl_iq_calib iq_tx[MAX_ANTENNAS];
++	__le32 iq_tx_lolc[MAX_ANTENNAS];
++	struct cl_iq_calib iq_rx[MAX_ANTENNAS];
++};
++
++struct cl_iq_dcoc_report {
++	struct cl_dcoc_report dcoc[DCOC_LNA_GAIN_NUM][MAX_ANTENNAS];
++	struct cl_gain_report gain_tx[MAX_ANTENNAS];
++	struct cl_gain_report gain_rx[MAX_ANTENNAS];
++	struct cl_lolc_report lolc_report[MAX_ANTENNAS];
++	struct cl_iq_report iq_tx[MAX_ANTENNAS];
++	struct cl_iq_report iq_rx[MAX_ANTENNAS];
++};
++
++struct calib_cfm {
++	u8 status;
++	__le16 raw_bits_data_0;
++	__le16 raw_bits_data_1;
++};
++
++struct cl_iq_dcoc_data {
++	struct cl_iq_dcoc_info iq_dcoc_db;
++	struct cl_iq_dcoc_report report;
++	struct calib_cfm dcoc_iq_cfm[CALIB_CFM_MAX];
++};
++
++struct cl_iq_dcoc_data_info {
++	struct cl_iq_dcoc_data *iq_dcoc_data;
++	u32 dma_addr;
++};
++
++struct cl_calib_params {
++	u8 mode;
++	bool first_channel;
++	s8 sx_freq_offset_mhz;
++	u32 plan_bitmap;
++};
++
++struct cl_calib_work {
++	struct work_struct ws;
++	struct cl_hw *cl_hw;
++};
++
++struct cl_calib_chain {
++	u8 pair;
++	u8 initial_tx_gain;
++	u8 initial_rx_gain;
++};
++
++enum cl_calib_flags {
++	CALIB_FLAG_CREATE = 1 << 0,
++	CALIB_FLAG_VERSION = 1 << 1,
++	CALIB_FLAG_TITLE = 1 << 2,
++	CALIB_FLAG_HEADER_TCV0 = 1 << 3,
++	CALIB_FLAG_HEADER_TCV1 = 1 << 4,
++
++	CALIB_FLAG_HEADER_TCV01 = (CALIB_FLAG_HEADER_TCV0 |
++				   CALIB_FLAG_HEADER_TCV1),
++	CALIB_FLAG_ALL_REPORT = (CALIB_FLAG_CREATE |
++				 CALIB_FLAG_VERSION |
++				 CALIB_FLAG_TITLE),
++	CALIB_FLAG_ALL = (CALIB_FLAG_CREATE |
++			  CALIB_FLAG_VERSION |
++			  CALIB_FLAG_TITLE |
++			  CALIB_FLAG_HEADER_TCV0 |
++			  CALIB_FLAG_HEADER_TCV1)
++};
++
++struct cl_calib_file_flags {
++	u8 dcoc;
++	u8 dcoc_report;
++	u8 lolc;
++	u8 lolc_report;
++	u8 iq_tx;
++	u8 iq_tx_report;
++	u8 iq_rx;
++	u8 iq_rx_report;
++	u8 rx_gain_report;
++	bool iq_plan;
++};
++
++struct cl_calib_errors {
++	u16 dcoc;
++	u16 lolc;
++	u16 iq_tx;
++	u16 iq_rx;
++};
++
++struct cl_calib_db {
++	struct cl_dcoc_calib
++		dcoc[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_SX][MAX_ANTENNAS][DCOC_LNA_GAIN_NUM];
++	u32 iq_tx_lolc[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_SX][MAX_ANTENNAS];
++	struct cl_iq_calib iq_tx[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_SX][MAX_ANTENNAS];
++	struct cl_iq_calib iq_rx[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX][MAX_SX][MAX_ANTENNAS];
++	struct cl_calib_file_flags file_flags;
++	struct cl_calib_errors errors[TCV_MAX];
++	struct list_head plan[TCV_MAX][CALIB_CHAN_MAX][CHNL_BW_MAX];
++	bool is_plan_initialized;
++};
++
++#define SET_PHY_DATA_FLAGS_DCOC       0x1 /* Set DCOC calibration data.*/
++#define SET_PHY_DATA_FLAGS_IQ_TX      0x2 /* Set IQ Tx calibration data.*/
++#define SET_PHY_DATA_FLAGS_IQ_RX      0x4 /* Set IQ Rx calibration data.*/
++#define SET_PHY_DATA_FLAGS_IQ_TX_LOLC 0x8 /* Set IQ Tx LOLC calibration data.*/
++#define SET_PHY_DATA_FLAGS_ALL ( \
++	SET_PHY_DATA_FLAGS_DCOC | \
++	SET_PHY_DATA_FLAGS_IQ_TX | \
++	SET_PHY_DATA_FLAGS_IQ_RX | \
++	SET_PHY_DATA_FLAGS_IQ_TX_LOLC)
++#define SET_PHY_DATA_FLAGS_LISTENER ( \
++	SET_PHY_DATA_FLAGS_DCOC | \
++	SET_PHY_DATA_FLAGS_IQ_RX)
++
++#define CL_CALIB_PARAMS_DEFAULT_STRUCT \
++	((struct cl_calib_params){SET_CHANNEL_MODE_OPERETIONAL, false, 0, 0})
++
++#define CALIB_CHAN_5G_PLAN 6
++#define CALIB_CHAN_6G_PLAN 15
++
++struct cl_chip;
++
++void cl_calib_dcoc_init_calibration(struct cl_hw *cl_hw);
++u8 cl_calib_dcoc_channel_bw_to_idx(struct cl_hw *cl_hw, u8 channel, u8 bw);
++void cl_calib_dcoc_fill_data(struct cl_hw *cl_hw, struct cl_iq_dcoc_info *iq_dcoc_db);
++u8 cl_calib_dcoc_tcv_channel_to_idx(struct cl_chip *chip, u8 tcv_idx, u8 channel, u8 bw);
++void cl_calib_dcoc_handle_set_channel_cfm(struct cl_hw *cl_hw, bool first_channel);
++void cl_calib_common_start_work(struct cl_hw *cl_hw);
++void cl_calib_common_fill_phy_data(struct cl_hw *cl_hw, struct cl_iq_dcoc_info *iq_dcoc_db,
++				   u8 flags);
++int cl_calib_common_tables_alloc(struct cl_hw *cl_hw);
++void cl_calib_common_tables_free(struct cl_hw *cl_hw);
++int cl_calib_common_handle_set_channel_cfm(struct cl_hw *cl_hw,
++					   struct cl_calib_params calib_params);
++int cl_calib_common_check_errors(struct cl_hw *cl_hw);
++s16 cl_calib_common_get_temperature(struct cl_hw *cl_hw, u8 cfm_type);
++
++/* Calibration constants */
++#define CALIB_TX_GAIN_DEFAULT        (0x75)
++#define GAIN_SLEEVE_TRSHLD_DEFAULT   (2)
++#define CALIB_NCO_AMP_DEFAULT        (-10)
++#define CALIB_NCO_FREQ_DEFAULT       (16)       /* 5M/312.5K for LO & RGC */
++#define LO_P_THRESH                  (1000000)
++#define N_SAMPLES_EXP_LOLC           (13)
++#define N_SAMPLES_EXP_IQC            (13)
++#define N_BIT_FIR_SCALE              (11)
++#define N_BIT_AMP_SCALE              (10)
++#define N_BIT_PHASE_SCALE            (10)
++#define GP_RAD_TRSHLD_DEFAULT        (1144) /* Represents 1 degree in Q(16,16): 1*(pi/180) */
++#define GA_LIN_UPPER_TRSHLD_DEFAULT  (66295) /* Represents 0.1 db in Q(16,16): 10^( 0.1/20)*2^16 */
++#define GA_LIN_LOWER_TRSHLD_DEFAULT  (64786) /* Represents -0.1 db in Q(16,16): 10^(-0.1/20)*2^16 */
++#define COMP_FILTER_LEN_DEFAULT      (9)
++#define SINGLETONS_NUM_DEFAULT       (10) /* Set to SINGLETONS_MAX_NUM for now */
++#define IQ_POST_IDX                  (LOOPS_MAX_NUM - 1)
++#define RAMPUP_TIME                  (50)
++#define LO_COARSE_STEP               (20)
++#define LO_FINE_STEP                 (1)
++
++#define DCOC_MAX_VGA                      0x14
++#define CALIB_RX_GAIN_DEFAULT             0x83
++#define CALIB_RX_GAIN_UPPER_LIMIT         0x14
++#define CALIB_RX_GAIN_LOWER_LIMIT         0x0
++#define DCOC_MAX_VGA_ATHOS                0x1E
++#define CALIB_RX_GAIN_DEFAULT_ATHOS       0x8D
++#define CALIB_RX_GAIN_UPPER_LIMIT_ATHOS   0x1E
++#define CALIB_RX_GAIN_LOWER_LIMIT_ATHOS   0x0A
++#define DCOC_MAX_VGA_ATHOS_B              0x14
++#define CALIB_RX_GAIN_DEFAULT_ATHOS_B     0x81
++#define CALIB_RX_GAIN_UPPER_LIMIT_ATHOS_B 0x14
++#define CALIB_RX_GAIN_LOWER_LIMIT_ATHOS_B 0x0
++
++struct cl_calib_iq_restore {
++	u8 bw;
++	u32 primary;
++	u32 center;
++	u8 channel;
++};
++
++bool cl_calib_iq_calibration_needed(struct cl_hw *cl_hw);
++void cl_calib_iq_file_flags_clear(struct cl_chip *chip);
++void cl_calib_iq_file_flags_set(struct cl_chip *chip);
++int cl_calib_iq_post_read_actions(struct cl_chip *chip, char *buf);
++void cl_calib_iq_init_calibration(struct cl_hw *cl_hw);
++void cl_calib_iq_fill_data(struct cl_hw *cl_hw, struct cl_iq_calib *iq_data,
++			   struct cl_iq_calib *iq_chip_data);
++void cl_calib_iq_lolc_fill_data(struct cl_hw *cl_hw, __le32 *iq_lolc);
++void cl_calib_iq_handle_set_channel_cfm(struct cl_hw *cl_hw, u8 plan_bitmap);
++void cl_calib_iq_lolc_handle_set_channel_cfm(struct cl_hw *cl_hw, u8 plan_bitmap);
++int cl_calib_iq_lolc_write_version(struct cl_hw *cl_hw);
++int cl_calib_iq_lolc_report_write_version(struct cl_hw *cl_hw);
++int cl_calib_iq_lolc_write_file(struct cl_hw *cl_hw, s32 *params);
++int cl_calib_iq_lolc_report_write_file(struct cl_hw *cl_hw, s32 *params);
++void cl_calib_iq_get_tone_vector(struct cl_hw *cl_hw, __le16 *tone_vector);
++void cl_calib_iq_init_production(struct cl_hw *cl_hw);
++int cl_calib_iq_set_idle(struct cl_hw *cl_hw, bool idle);
++void cl_calib_restore_channel(struct cl_hw *cl_hw, struct cl_calib_iq_restore *iq_restore);
++void cl_calib_save_channel(struct cl_hw *cl_hw, struct cl_calib_iq_restore *iq_restore);
++
++#define UNCALIBRATED_POWER        15
++#define UNCALIBRATED_POWER_OFFSET 0
++#define UNCALIBRATED_TEMPERATURE  35
++
++struct point;
++void cl_calib_power_read(struct cl_hw *cl_hw);
++void cl_calib_power_offset_fill(struct cl_hw *cl_hw, u8 channel,
++				u8 bw, u8 offset[MAX_ANTENNAS]);
++int cl_calib_runtime_and_switch_channel(struct cl_hw *cl_hw, u32 channel, u8 bw, u32 primary,
++					u32 center);
++void cl_calib_runtime_work(struct cl_hw *cl_hw, u32 channel, u8 bw, u16 primary, u16 center);
++bool cl_calib_runtime_is_allowed(struct cl_hw *cl_hw);
++
++#endif /* CL_CALIB_H */
 -- 
 2.36.1
 
