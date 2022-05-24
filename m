@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8B23C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0012DC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236866AbiEXLjm (ORCPT
+        id S236858AbiEXLjo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:39:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42052 "EHLO
+        Tue, 24 May 2022 07:39:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236855AbiEXLjk (ORCPT
+        with ESMTP id S236865AbiEXLjm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:39:40 -0400
-Received: from EUR03-VE1-obe.outbound.protection.outlook.com (mail-eopbgr50045.outbound.protection.outlook.com [40.107.5.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 788A38CCC5
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:21 -0700 (PDT)
+        Tue, 24 May 2022 07:39:42 -0400
+Received: from EUR03-DBA-obe.outbound.protection.outlook.com (mail-dbaeur03on2086.outbound.protection.outlook.com [40.107.104.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CCCA8D6A6
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:24 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=djUfPvq+9xlbgCsk1RP47SdOARhe7ll3yHVCjKmbY0Mxfh1pt6QeJ/sU112jT1FtD6rlmWVBiXLrCDBpVATYAKgheuzKVLhpNVB4LKDt0tJqsHz0fdh9IiVPi5XEoVwg8mgeRUKzUSnnc6zVNcvRk5deL3Pq274FGHLJwJOKCBuGW5JfBsimDrGdbESThe7rVT+ll/mPuEn6bL3lOJ+4UGEeZ286mEHbfHVRyscr6paoAFN8/ZRhDMqGUigzIjI41RNI3AimLb/1AGDNx8gSLkXCg+ROi78uFu9PCS0wVDNgaZ0bEYvHIvHCphYnxu9BAc2CmiFE/RvFlRt0AOZpXA==
+ b=cM/gDrFOkcCnrQWdb8RJHU24WJFG4R5mO9j2n0RahXi2IGjndMRqY74vk7pC0qTs6b7Y49wCOlFnvmrqLXVRLOt6SxX8LPZuk/KGg+XagSaqkwg7JYowVkPEr3mzv2BIfbzI/fEUKl74n723NIhmGHNXvBl3RJqzCoxtJScC3vd1oM4J7RUxRPrmgB0bOTZPSAl4lE0+iBeO15+l8EQhxezj5EKa4iJSvyJybVu8ZnWm2kOFiBLVzht98hP1EpgMZNpgPo5IUDnKD8Lf+HJzDAh8P5pCTaDmMf4RtNNYgAMpPstAn8bzUjURnNvkvbIRIM1XFP7g1OVIpB2ymO3QKA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dbFwNoLDetNRL9pSM2yqP7f+QPSmXwL9C0yQrYD8EuI=;
- b=e2UzBbgJpbq3lDXBvr1O4HWa7dqSnRdHlVI06UjLzS6ckl4AZ0UQ4ULT0/6aV2rAZBG6k9QmSkTnuTLQjDapK/Dh6pDQP4QVKS4jUp266MtaM4thdpQOp3waS+Pom9VI2w25wil/vzNIIWVwdh8t+vSnoLbBhlNgYYjWKAmKx/XrjWyjdl2NJpF2tx7QdFOJYUodjXbyCwMWGMq5gZoOJmcccki4cur15bKhsfL0AGx2LsNXmcTGWnzIacQQcFyA2npd0nePppSnqo5XU2j1df0YvYR4Ua/6SONpdxFEidtSGOQKbvagPFkwCeOgon5RnP4DD+i6peYN3HKJ+xnfpg==
+ bh=hnf0lzHhXiJjUj1mEj2y01uHUt7I+1E59uqvq5alXWk=;
+ b=ljMa/EO4OY6JwLR/6zOiGPcb+WfbOyNOQFE5nwEc/cA7FgP2U/TfazYFN8/RsKsmcf0UyiGWsTuDCcL/m7sYsaaz5lavcMguOmns3zHSTEqLaJo4A6yIMhHxD8IVHTDCwknyYbeD/zGsXQrNJldUIwXQkd58tiXRgr8BTpWbfe2oynUb8YXx9gqRClPL/TSczefGPWPZGjfnXRxDXb0aS6jMZwWpjYUT2WiYP28guYliJi23AIosRAMF5/fTAFJCnJjYzhqRVcX8rcbKukaNdu5zR+Jxx2LpVa+SoAOI5LXqRR+REw4BQRFa+uISFbWApPOLYxaUgvUXYDDi9I6D7w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dbFwNoLDetNRL9pSM2yqP7f+QPSmXwL9C0yQrYD8EuI=;
- b=d9ynHD4z3Ht7MIVZC7cwcyoOiPRnROIzjdAPPf6fbOc/lj1FT0juP7tiuCDrfW9PSAYbDotml4jiMRvS8PjppaASGllTWe0jUrZ9AB8woMWUwivbTZpgj4pWl1EGFNgSK07dEFjV/V6Fh1c5883Cfg/BHNY3VjOHxDfN10UUS2g=
+ bh=hnf0lzHhXiJjUj1mEj2y01uHUt7I+1E59uqvq5alXWk=;
+ b=lc8csV5g0nPVlRu7FRXS5Glm9zP822/jKCBTh2x8rn6Hb1KQZ8RqXhkTUsFQBHrDAbHxPDUQmAZcKnV/PTC5PQw9kr/6vW7bEBJ0IhBwUqMF80vERExUCEG0XM31lA8co8DoGqSQ42KCyn4se+MUgTbFASL0cDa+Tdl5XbZrxtQ=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by DU0P192MB1571.EURP192.PROD.OUTLOOK.COM (2603:10a6:10:34c::18) with
+ by VI1P192MB0384.EURP192.PROD.OUTLOOK.COM (2603:10a6:803:34::30) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Tue, 24 May
- 2022 11:38:50 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.13; Tue, 24 May
+ 2022 11:38:43 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:38:48 +0000
+ 11:38:43 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 53/96] cl8k: add platform.h
-Date:   Tue, 24 May 2022 14:34:19 +0300
-Message-Id: <20220524113502.1094459-54-viktor.barna@celeno.com>
+Subject: [RFC v2 41/96] cl8k: add mac_addr.h
+Date:   Tue, 24 May 2022 14:34:07 +0300
+Message-Id: <20220524113502.1094459-42-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ba8ce742-5e9e-4497-b2c4-08da3d79eded
-X-MS-TrafficTypeDiagnostic: DU0P192MB1571:EE_
+X-MS-Office365-Filtering-Correlation-Id: dd35cfe9-dbf1-46c8-630f-08da3d79e439
+X-MS-TrafficTypeDiagnostic: VI1P192MB0384:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <DU0P192MB1571471C716F3D0F2EE7F1FBF6D79@DU0P192MB1571.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <VI1P192MB038408D53627EC5D0DA62E3DF6D79@VI1P192MB0384.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fi9sZ2qbVUA7AL6wqIK7YAKaf09HyIhrRu6mcSBjIooigMhv4WuWJ9dAaeBD/RNFmfZaRkl4L6US+9U8rMiw46YVZD0Yr7VS5kOySYf4Eacy1QDnCXOK9/AYpJ+I1wsDXfpbif7Uhag6zjTiUsuGACpNsU5/w5suDYMBJctDfTaIYnuEIYSgqnGpXMM3Qzqf3LqHcR7gzvD6+TibNMm3RsggCYM6v7uuLC5vdMC2XNcu2LhBLohc23IFkpisvc/cILQjeHURbae/0aYLzTW0XCEeddJk7potFP0umnfOBPpHciLNRLZjpQsYx97TtSA23fGuSRl0XGN/zCRqG98xFpzk3UYLrOrBCPX8rggf/LEJ1BtQvBOaYDws4tu6wtK69AEOzc21xBM/Xbvu7SmfcUwTIn3WpFJQcOyowdpjb0QjVKhPKBS8e4Zl1z3PWi9fhffWY2uE/A6Y2nf7838gOkAYcWt2XgS8a5++M7EQPTFL1T1Nucz0JSQCNiKKDDIwt67rP+939iPRTLtGYc5MROCpAk5iV0CiM0rfL/wS/4UFM6z2x6rrAkyV0wKlgrUUfrYDnkkgE8ZCREKDW4nTjoVfRo0EdsDtxozW/l40IYQ2zKUhImqycrYZ5/EqkpsdabMQMtUAywskDRV0KN7/TzRLCxY7knH6jCCIOzQdmsZDcbEYmK2A8SZdQMpyDL8W2XhcKqvwY/qWbUhdxOvMs9P3f0vY+a37HMwXW78Rkl8=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(39850400004)(346002)(396003)(376002)(6512007)(186003)(6916009)(9686003)(38350700002)(38100700002)(41300700001)(36756003)(316002)(54906003)(2616005)(1076003)(86362001)(107886003)(8676002)(66476007)(4326008)(66556008)(66946007)(52116002)(8936002)(6666004)(6506007)(2906002)(508600001)(5660300002)(6486002)(26005)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 2jBSUMEayaFCDgl1Dd+tVjeIvhCzRSIm51cOvZQfkj4l635sQehCDbeETGgBIytOKj/CtmeSosQeOWbvwXySltXFizVGfw3Jo0xfmBMfaQZFnz3zQwa7roQ+iel/xsj50IzSqOdIHS0R7/V4v9f1CEykeqZlq9fLObLgUJqbcWF6dU4+89yH3K1UZq8U9kl4KEELZMNHziQsYEqye6ekS7KqyzhbJAQjBtG26pBKCQ8fF4obmTWSBkSNygNscRFXUBDjftwyn0XN9JrDhBLHDdqhkhffZLDp9SJ6ppYEh97R7+4mtTCX0bydYAbF6FsO/l3kM1/TGDp8sMp6Y2qpzFArFeeQ94iXL/re3J4trUIUz90Xwl4AQ9D2Xdjli33fGNHYH//OmHwBW7cRy9ydYMWh1inyUC32V68WR1HkGXm4bok9nyhg3hBrCSImOnU2LpKk/iLhh4sSh+T7W8CxjnAqXJV3kPaPtUVFPDDGMl04qICpez99CeV+6E7Bj8/qFTn0BWNsUGiwF5axugJPeB7ykfKctF2prWNKHkQnDQEc3zeDY+bdSFRhAeiRdbKpXF6XA0SPZUerw48Bt6A97tBaG2pVLk6x7RYvcV6E/9Flzwe0CWVvIBw7f89HoHYf/L2CECnF22jcTXXtNNYc7BBuwvbNPqVcjyr96uDhhx+Sf1kazKsRlf2OB6p0WPjcmWrToTYJSABPotKCZLw7iOXb9FJQ8yrK8DXfUN8raSg=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(396003)(346002)(39850400004)(376002)(41300700001)(36756003)(6666004)(8936002)(508600001)(186003)(6486002)(6506007)(38100700002)(2906002)(38350700002)(6512007)(107886003)(5660300002)(2616005)(1076003)(66946007)(4326008)(8676002)(26005)(52116002)(316002)(6916009)(9686003)(66556008)(66476007)(86362001)(54906003)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?qYt3caMzyyfFOMjHyq1394htLyyZ2Lj+tdsToZMVzYtplMyO4dBrqSMGOlnz?=
- =?us-ascii?Q?rgMIrePNQbdXM64Rzz4TGSRtjzGIUcNAp0CsYVioY955joduJRljyPqVEc9j?=
- =?us-ascii?Q?pH8TBQFhqH159OnJsptHJQB1Ds1GiNRVkApvr6B2Hr6QWsIWBkelIMZMg7JA?=
- =?us-ascii?Q?xd9enq2ngiHMX2r9PdZ+B2br+unrHiI6yoGAjlji8kU2QksK9Uuf6+Z5vzKK?=
- =?us-ascii?Q?aSf48mMwQoE11luXu37gmc3Q8e1Qe/Iue8sOttPZ2uN8jgaNJJibVpcpULkD?=
- =?us-ascii?Q?1pfx30fr87Ro4s7Zutbmcp1x3Q9mBcw834xbDomZRqsdxGlXl40cr6ooscNh?=
- =?us-ascii?Q?PPmmH5FAFi04uejYhQdAXapknu8swtfaqQWM8m9za4Fvv5OWhDbsCX1VppV1?=
- =?us-ascii?Q?lAbwHWxPbg3A7t/25jEcAvOr+Lmb1NHL841H8tVxX4k/j1RHxO03mnDMhkDs?=
- =?us-ascii?Q?GROfcv6tHfEWZ2oELDU/xuio8tHoloVqrNKSgsqohAuOucEV5gxwm+mQNqE5?=
- =?us-ascii?Q?KaFA1sIsfKJ6a6aNLcILKM1ZrBU7EpnhpQEVUMJYWWnlywrqYp5ddtA6wTKh?=
- =?us-ascii?Q?RuxH5PXXsyEqfR2IlxPqE8BCHWoiLLV6Vv5RjhEsrLkTh3tOBVfzWcTDHnr8?=
- =?us-ascii?Q?pFUpVynPtFrR5EBfYar2QQUZOn18x96+3EVRsELupcN9g5i9djowimlTm1xW?=
- =?us-ascii?Q?hvtOSBXGD41UoeSsShUJJ2N/x7hu5rFxiKotlHaQz68WkwiJtUosUvC0p/sl?=
- =?us-ascii?Q?WO+/DbvqhunDZP83nI6WH/y6wzpau0/cpUdBKaC0L2lxVwqLPyLWjIHiShtq?=
- =?us-ascii?Q?1P1E4nBKDYMmKaenxIvLj009tIWpXW8WaotqI0qaH6oD/iVYdx6P5XO00uIR?=
- =?us-ascii?Q?98rQsT/mfMIxPaOh+quefspAnX/1AdkotiYONgZT2fzTw05k1TOJPThJlFHI?=
- =?us-ascii?Q?f8X3InkLMj5XKGTk6CRYC8pN8odcVEvW8rOcal0BbEiM/sHTGUbilZCr9f8I?=
- =?us-ascii?Q?eSTNbNXolmHq0+Kb2b3zcLgkvXP6yp9K+hV5M3iRF2gUgSgT5rcZi2IWoKZ5?=
- =?us-ascii?Q?dE86YBBQd33KNjAttIyfnya0OiMFI+ayr+Az92kFXyDD0R4lkPLG6hkjx+aY?=
- =?us-ascii?Q?vvbSZWLHhI7RstAI5AMv93zh5sG5CCwvo5R7bqKOx2bkw3wQaj40q79YkWl/?=
- =?us-ascii?Q?56hm4hlut7vt5ZbxPYEdZiUMoGQnB0oFWvQz92wHcG1TW+yS5Jar/T51Vdtj?=
- =?us-ascii?Q?0RksH3XAka8qFvOTyzHVAwBYz73Vn3mkWUHxRAxktofW7vadSSzS4Ir6UNm0?=
- =?us-ascii?Q?TxRo2qFFVK9dQyq1da+QG3rQv07KZGvfilkhr7LHWLwUxsi/t1KXRhMVUeZu?=
- =?us-ascii?Q?qjKUVP2D6bmsn7/lhMQYE7iRrH1/7y2h36/uA9sDrRRRwbSfesK2BTa9Ijlv?=
- =?us-ascii?Q?YsRtkGwSADZ30Qm5gG6SGjTeLASIFvSe05eceh0gH5UVc50rOh4EN0L0Hke3?=
- =?us-ascii?Q?8JRKVNyi+LDHH2NLMwxyfKfzsitjZN7TbEQw9COrTAN+d6Vxb1Pc0qAOeQ11?=
- =?us-ascii?Q?ztnTt0aa6pjmYTh7v4o1pp55JBCVvXlvxxx9kYbfYg6SikR84hFMP8pVEgx2?=
- =?us-ascii?Q?WeFgWLuKHYVxZM5nw+1OUw3qJUj289cbIyENpHedIduyVODD72ChViB3CaG4?=
- =?us-ascii?Q?Flp2Ax1nEadA4E2B/bn4eXbguIHB1Rva/e+47WTN0VQ6yfqiAunXpce3QgEq?=
- =?us-ascii?Q?ZZobkyIPGMBjGrTne4LStMc8+2P/oeA=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/fcuxp7QqnREZYphLyxIiMu8uAy0Da55ZDrdOnri2wxdYHOEZZYMXHfz63lR?=
+ =?us-ascii?Q?KypKDWhrRhT8zyD2O9Sh80cU5rTuy4kasBZoOLdHaY5zlcR0zucUn5zUUhDi?=
+ =?us-ascii?Q?foBPBe+bmINCK8YbIrRQLIad3N+m+dcY+PYCmkW26OQhINLhgP9OOA33O2P7?=
+ =?us-ascii?Q?7vq2n2GOVFZV0vRLamyVwmk6uU3oHt4lWi0ZNbqTxijfG8zR/Wj9kBlTuGSL?=
+ =?us-ascii?Q?esEj71S6f4TY9LtZXE2UepDeJkSfpthqIg35/MRw1/IIvGmX7yKu2COLuElJ?=
+ =?us-ascii?Q?KG0zYLG/v3OStn7BsQIIw7JGDZF1+bdVkfbRawdU6zIfPjeznzwSl2uI1XIp?=
+ =?us-ascii?Q?L539ybB5+EyWUQTbNjTPh7KTDWf+VxPLyJQRsgd0KZ5A/P4Aut5h+7T4TQNu?=
+ =?us-ascii?Q?r0yB9ZwMkWbvUTbLm9un0p8hAqB8takJwEbboAAayUkr+hj1nj8UIZjXkW/e?=
+ =?us-ascii?Q?T4H+iTUlMzaChpKzxJUsnWB3TcCzz11DDo6KlxQOwZuRt/7wcyN8FXnQKi3W?=
+ =?us-ascii?Q?scYGZRTurJFacKEFIcHr7QZVfIoHi7yOr3SUqOuhPcGhyU/wdNd2mr4QGPL/?=
+ =?us-ascii?Q?+D76Hh2GCcjhqF7E7ZAI8mMxKKaZm9f/qmxwXyxYJpSIJ3Be/gJlfcJfTIXZ?=
+ =?us-ascii?Q?ROSFOnlyxaRz7wa7y1e1Lj0U6nfQEjvvqaONNeTs5ixzgGi+mliSn7P6B3kq?=
+ =?us-ascii?Q?UDZVP5C35ladR3jm+UU2WAVZ8kTHQysGFpjY5hzUi54UYBb+FAodrQe97QX/?=
+ =?us-ascii?Q?zRmpWbfVosVa2f6HVadGoBO55AOIlCVhABWRt36HYR7UJizx8xKsRfExk+tj?=
+ =?us-ascii?Q?102tAPuuO4+KsD5VmDQp/bc3sJFKuOLV14jjWny+/FAQOUO/VtrE3Ssj6Atw?=
+ =?us-ascii?Q?WUVdCJx1LpI4xlEzfRjOiG9qVhhHRuyZCdYD/T3CU4F8r2/RvvkD6oZSzd6/?=
+ =?us-ascii?Q?s1L+yX/oQNSxpLG4mpd5vVuTbiw1sGVAr+JbjqpVgvAQ3qDtVkB/nOuuFoyt?=
+ =?us-ascii?Q?QzAZ/0fSr0xSZwblMr41ZgCqhorJcmQ14DRhgdSkQjiSqrYonsc+TBkOYglA?=
+ =?us-ascii?Q?3fMn9xxGD6EZjpMk1YnF2r7DajbSFfFciXZPOWwR6Mj5xSA2ITxuPhy+4PnF?=
+ =?us-ascii?Q?lUnHV4FI6+dhhd8eVI7hOIh5DiTPbOZ9pyHqfqg6eWgZQ4Om99OdbWZG09gL?=
+ =?us-ascii?Q?fn/FF0OkbKEahZJ3jK8bPjhAAQROJz/aDuOwuj9ws7cH6szvKjbQo7j25j0Z?=
+ =?us-ascii?Q?A5NrgED5cDKpuwewXC4Mex0H0R8w1qxDO4MFZXMfJo1ICENPoZS0PlxoHwpJ?=
+ =?us-ascii?Q?uXAC+/LBXoi4E2RVJzbyrfS7+ygWPugeqT8TG1gegXJPoxLu3OJWM3MDAh0Z?=
+ =?us-ascii?Q?jB5omKnw9RIa2IVToBgcPbkTrPj5jQAQn9vlOUUtOAmGc+vlUrETQRrRA1pT?=
+ =?us-ascii?Q?1DK7Qm7wKco7Lr7LNpGUf1ckykeK19OJjjWfEo+cgtpq+Y2YMF4eurjxMASr?=
+ =?us-ascii?Q?x8zhvpEGiib35/yqm9a4nr9BVF2hEZCXB/7/A7k4/mkpI+kCQARakjQC7oLx?=
+ =?us-ascii?Q?zr5I7N8mTFJFC6sS4t4DJLcGuBCdj9zeJdcUW//ypIglfi4iFE7c6zS/HATO?=
+ =?us-ascii?Q?KuYdQ6njyhpVefGjwqY16mOQSMeRbtH0dKPQEmwNSpeuhSEa0uPUEse0/HvA?=
+ =?us-ascii?Q?qt4PLF/qfAqDFnZWNR2gTb0yLikM4RXfujzOhdxXFXQIdf+JVIbseJnrgNWI?=
+ =?us-ascii?Q?ZTLfcicPGQMyEJRABxThzGa7wXYYA0k=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ba8ce742-5e9e-4497-b2c4-08da3d79eded
+X-MS-Exchange-CrossTenant-Network-Message-Id: dd35cfe9-dbf1-46c8-630f-08da3d79e439
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:32.0023
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:15.8617
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3sV9OiNumvEIuZf8sjyaX0QnQT6mO/VyAfvnKoovKEUrp0Gsodj0Xz4DxPmk01jJgn1Bj8Lk+o52xin7GTnhqg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0P192MB1571
+X-MS-Exchange-CrossTenant-UserPrincipalName: 15nYMeIYFXuxk7pU8fWzuGa4v5yC7X/oE3/E5xBr2HJPi96jLzwNohAdsW8eUat/b5s9XcnuY9uRKcI6Uj5e7Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1P192MB0384
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,212 +128,77 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/platform.h | 196 ++++++++++++++++++++
- 1 file changed, 196 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/platform.h
+ drivers/net/wireless/celeno/cl8k/mac_addr.h | 61 +++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/mac_addr.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/platform.h b/drivers/net/wireless/celeno/cl8k/platform.h
+diff --git a/drivers/net/wireless/celeno/cl8k/mac_addr.h b/drivers/net/wireless/celeno/cl8k/mac_addr.h
 new file mode 100644
-index 000000000000..d0268eded0c3
+index 000000000000..3f916f2b7f7b
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/platform.h
-@@ -0,0 +1,196 @@
++++ b/drivers/net/wireless/celeno/cl8k/mac_addr.h
+@@ -0,0 +1,61 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#ifndef CL_PLATFORM_H
-+#define CL_PLATFORM_H
++#ifndef CL_MAC_ADDR_H
++#define CL_MAC_ADDR_H
 +
-+#define PLATFORM_DESCRIPTION_LENGTH 100
-+#define PLATFORM_CUSTOMER_MASK   0xffff0000
-+#define PLATFORM_BOARD_MASK      0x0000ff00
-+#define PLATFORM_CHIP_MASK       0x000000f0
++#include "hw.h"
 +
-+#define PLATFORM_CUSTOMER(platform) \
-+	u32_get_bits(platform, PLATFORM_CUSTOMER_MASK)
-+#define PLATFORM_BOARD(platform) \
-+	u32_get_bits(platform, PLATFORM_BOARD_MASK)
-+#define PLATFORM_CHIP(platform) \
-+	u32_get_bits(platform, PLATFORM_CHIP_MASK)
++int cl_mac_addr_set(struct cl_hw *cl_hw);
 +
-+#define PLATFORM_PACK_VERSION_V1  1
-+#define PLATFORM_PACK_MAGIC_V1    "CL8K-AGC-PPCK"
-+#define PLATFORM_PACK_FILENAME_V1 "agcppk.bin"
-+#define PLATFORM_PACK_MAGIC_LEN   16
++static inline void cl_mac_addr_copy(u8 *dest_addr, const u8 *src_addr)
++{
++	memcpy(dest_addr, src_addr, ETH_ALEN);
++}
 +
-+struct cl_platform_table {
-+	u32 platform_id;
-+	u8 platform_description[PLATFORM_DESCRIPTION_LENGTH];
-+	struct cl_agc_profile_per_bw *agc_profile[TCV_MAX];
-+	struct cl_agc_profile_per_bw *agc_profile_elastic[TCV_MAX];
-+	struct cl_agc_profile_per_bw *agc_profile_sensing;
-+	const u8 *power_conv_table_2;
-+	const u8 *power_conv_table_5;
-+	const u8 *power_conv_table_6;
-+};
++static inline bool cl_mac_addr_compare(const u8 *addr1, const u8 *addr2)
++{
++	return !memcmp(addr1, addr2, ETH_ALEN);
++}
 +
-+enum cl_agc_pack_type {
-+	CL_AGC_PACK_UNDEFINED,
-+	CL_AGC_PACK_PLATFORM_BINDING,
-+	CL_AGC_PACK_PROFILE,
-+	CL_AGC_PACK_POWER_TABLE,
-+	CL_AGC_PACK_EOF,
++static inline bool cl_mac_addr_is_zero(const u8 *addr)
++{
++	const u8 addr_zero[ETH_ALEN] = {0};
 +
-+	CL_AGC_PACK_MAX
-+};
++	return !memcmp(addr, addr_zero, ETH_ALEN);
++}
 +
-+enum cl_agc_profile_type {
-+	CL_AGC_PROFILE_UNDEFINED,
-+	CL_AGC_PROFILE_FIRST,
-+	CL_AGC_PROFILE_2_1_9 = CL_AGC_PROFILE_FIRST,
-+	CL_AGC_PROFILE_5_1_9,
-+	CL_AGC_PROFILE_6_1_3,
-+	CL_AGC_PROFILE_50_0_1,
-+	CL_AGC_PROFILE_60_1_3,
++static inline bool cl_mac_addr_is_broadcast(const u8 *addr)
++{
++	const u8 addr_bcast[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 +
-+	CL_AGC_PROFILE_MAX
-+};
++	return !memcmp(addr, addr_bcast, ETH_ALEN);
++}
 +
-+enum cl_power_table_type {
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_UNDEFINED,
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_FIRST,
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_COMMON_ID_0 = CL_POWER_TO_POWERWORD_CONV_TABLE_FIRST,
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_COMMON_ID_1,
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_COMMON_ID_2,
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_ATHOS_B_ID_0,
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_ATHOS_B_ID_1,
-+
-+	CL_POWER_TO_POWERWORD_CONV_TABLE_MAX
-+};
-+
-+struct cl_agc_platform_pack {
-+	char magic[PLATFORM_PACK_MAGIC_LEN];
-+	__le32 version;
-+	u8 reserved[249];
-+	u8 data[];
-+} __packed;
-+
-+struct cl_agc_tilv {
-+	u8 t;
++static inline void cl_mac_addr_array_to_nxmac(u8 *array, u32 *low, u32 *high)
++{
++	/* Convert mac address (in a form of array) to a C nxmac form.
++	 * Input: array - MAC address
++	 * Output: low - array[0..3], high - array[4..5]
++	 */
 +	u8 i;
-+	u32 l;
-+	u8 v[];
-+} __packed;
 +
-+struct cl_platform_binding {
-+	u32 platform_id;
-+	u8 platform_description[PLATFORM_DESCRIPTION_LENGTH];
-+	u8 agc_profile[TCV_MAX];
-+	u8 agc_profile_elastic[TCV_MAX];
-+	u8 agc_profile_sensing;
-+	u8 power_conv_table_2;
-+	u8 power_conv_table_5;
-+	u8 power_conv_table_6;
-+} __packed;
++	for (i = 0; i < 4; i++)
++		*low |= (u32)(((u32)array[i]) << (i * 8));
 +
-+struct cl_platform {
-+	struct cl_agc_platform_pack *app;
-+	ssize_t app_size;
-+	struct cl_platform_table table;
-+	u8 idx;
-+};
++	for (i = 0; i < 2; i++)
++		*high |= (u32)(((u32)array[i + 4]) << (i * 8));
++}
 +
-+struct cl_platform_table *cl_platform_get_active_table(struct cl_chip *chip,
-+						       u8 idx);
-+int cl_platform_get_tables_cnt(struct cl_chip *chip);
-+int cl_platform_unpack_v1(struct cl_platform_table *table,
-+			  struct cl_agc_platform_pack *app,
-+			  ssize_t buf_len, u8 platform_idx);
-+int cl_platform_alloc(struct cl_chip *chip);
-+void cl_platform_dealloc(struct cl_chip *chip);
++static inline u8 cl_mac_addr_find_idx(struct cl_hw *cl_hw, u8 *addr)
++{
++	u8 i;
 +
-+/**
-+ * AGC (=Automatic Gain Control)
-+ */
++	for (i = 0; i < cl_hw->n_addresses; i++)
++		if (cl_mac_addr_compare(cl_hw->addresses[i].addr, addr))
++			return i;
 +
-+struct cl_agc_reg {
-+	u32 val;
-+	u32 mask;
-+};
++	return BSS_INVALID_IDX;
++}
 +
-+struct cl_agc_regs {
-+	struct cl_agc_reg fsm_preset_p2;      /* 0x244 */
-+	struct cl_agc_reg lna_thr_set0_ref2;  /* 0x25C */
-+	struct cl_agc_reg lna_thr_set0_ref3;  /* 0x260 */
-+	struct cl_agc_reg lna_thr_set1_ref2;  /* 0x264 */
-+	struct cl_agc_reg lna_thr_set1_ref3;  /* 0x268 */
-+	struct cl_agc_reg lna_thr_set2_ref2;  /* 0x26C */
-+	struct cl_agc_reg lna_thr_set2_ref3;  /* 0x270 */
-+	struct cl_agc_reg lna_gain_set0_ref2; /* 0x274 */
-+	struct cl_agc_reg lna_gain_set0_ref3; /* 0x278 */
-+	struct cl_agc_reg lna_nf_set0_ref2;   /* 0x27C */
-+	struct cl_agc_reg lna_nf_set0_ref3;   /* 0x280 */
-+	struct cl_agc_reg lna_icp1_set0_ref2; /* 0x284 */
-+	struct cl_agc_reg lna_icp1_set0_ref3; /* 0x288 */
-+	struct cl_agc_reg fsm_preset_p10;     /* 0x2A8 */
-+	struct cl_agc_reg fsm_preset_p11;     /* 0x2AC */
-+	struct cl_agc_reg fsm_preset_p12;     /* 0x2B0 */
-+	struct cl_agc_reg ant_loss;           /* 0x300 */
-+	struct cl_agc_reg gain_range;         /* 0x304 */
-+	struct cl_agc_reg vga_ref0;           /* 0x308 */
-+	struct cl_agc_reg lna_gain_set0_ref0; /* 0x30C */
-+	struct cl_agc_reg lna_gain_set0_ref1; /* 0x310 */
-+	struct cl_agc_reg lna_thr_set0_ref0;  /* 0x314 */
-+	struct cl_agc_reg lna_thr_set0_ref1;  /* 0x318 */
-+	struct cl_agc_reg lna_thr_set1_ref0;  /* 0x31C */
-+	struct cl_agc_reg lna_thr_set1_ref1;  /* 0x320 */
-+	struct cl_agc_reg lna_thr_set2_ref0;  /* 0x324 */
-+	struct cl_agc_reg lna_thr_set2_ref1;  /* 0x328 */
-+	struct cl_agc_reg lna_nf_set0_ref0;   /* 0x32C */
-+	struct cl_agc_reg lna_nf_set0_ref1;   /* 0x330 */
-+	struct cl_agc_reg lna_icp1_set0_ref0; /* 0x334 */
-+	struct cl_agc_reg lna_icp1_set0_ref1; /* 0x338 */
-+	struct cl_agc_reg saturation;         /* 0x364 */
-+	struct cl_agc_reg ramp;               /* 0x36C */
-+	struct cl_agc_reg dsp0;               /* 0x394 */
-+	struct cl_agc_reg dsp1;               /* 0x398 */
-+	struct cl_agc_reg dsp2;               /* 0x39C */
-+	struct cl_agc_reg dsp3;               /* 0x3A0 */
-+	struct cl_agc_reg lna_gain_set1_ref0; /* 0x590 */
-+	struct cl_agc_reg lna_gain_set1_ref1; /* 0x594 */
-+	struct cl_agc_reg lna_gain_set1_ref2; /* 0x598 */
-+	struct cl_agc_reg lna_gain_set1_ref3; /* 0x59c */
-+	struct cl_agc_reg lna_nf_set1_ref0;   /* 0x5A0 */
-+	struct cl_agc_reg lna_nf_set1_ref1;   /* 0x5A4 */
-+	struct cl_agc_reg lna_nf_set1_ref2;   /* 0x5A8 */
-+	struct cl_agc_reg lna_nf_set1_ref3 ;  /* 0x5AC */
-+	struct cl_agc_reg lna_icp1_set1_ref0; /* 0x5B0 */
-+	struct cl_agc_reg lna_icp1_set1_ref1; /* 0x5B4 */
-+	struct cl_agc_reg lna_icp1_set1_ref2; /* 0x5B8 */
-+	struct cl_agc_reg lna_icp1_set1_ref3 ;/* 0x5BC */
-+};
-+
-+struct cl_agc_profile_per_bw {
-+	u32 id;
-+	struct cl_agc_regs regs[CHNL_BW_MAX];
-+};
-+
-+struct cl_agc_profile {
-+	u32 id;
-+	struct cl_agc_regs regs;
-+};
-+
-+struct cl_agc_params {
-+	u8 num_profiles;
-+	u8 ant_mask1;
-+	u8 ant_mask2;
-+	struct cl_agc_profile profile1;
-+	struct cl_agc_profile profile2;
-+};
-+
-+struct cl_chip;
-+
-+int cl_agc_params_read_platform_id(struct cl_chip *chip);
-+int cl_agc_params_fill(struct cl_hw *cl_hw, struct cl_agc_params *agc_params);
-+void cl_agc_params_dump_profile_id(char *buf, ssize_t buf_size, ssize_t *len,
-+				   u32 id, const char *str);
-+
-+#endif /* CL_PLATFORM_H */
++#endif /* CL_MAC_ADDR_H */
 -- 
 2.36.1
 
