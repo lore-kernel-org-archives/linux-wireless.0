@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11531C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:38:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F7ACC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236801AbiEXLi1 (ORCPT
+        id S236815AbiEXLib (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:38:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40646 "EHLO
+        Tue, 24 May 2022 07:38:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236797AbiEXLiY (ORCPT
+        with ESMTP id S236804AbiEXLiY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 24 May 2022 07:38:24 -0400
-Received: from EUR04-VI1-obe.outbound.protection.outlook.com (mail-eopbgr80083.outbound.protection.outlook.com [40.107.8.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B57A28CCDC
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:38:14 -0700 (PDT)
+Received: from EUR04-HE1-obe.outbound.protection.outlook.com (mail-eopbgr70041.outbound.protection.outlook.com [40.107.7.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56D0943382
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:38:15 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JVJz9aE1jVdaVVnVmUxBZ/0WbYVuGS0Z2Grw61kiPhgZT2dvONMfGYusPJdKpHsbx3hMKNMO1ydDgb+CofeEQ2UKuvkOpvdmIY0MHAkmfUM4GfXI3UVZDUsIkhd0i7O3IKaawoeSaZxyq0QouSGNaakH/OBbfSoPDBtYw0vepKOik9hmmwft+YM5hkCHnwY70ck9Iwe8GcHbcmV6pJFDQ9UZT5JEwStbXc/QetIsqLTQ+jZ0ST9AxCq2qTGtn/qN2ktnOnh/Bjc0ufPXCmB5KMgry2KDAxrjBxt7V9yNqYaOtkC+QObVOdb96qylnPU6Gilmk2TsLvRiOiNQeYLlyg==
+ b=XlhZbCQidTg2Gv9SlfndBBW6UoGqQMVlfjitFtevR1O4bmb6yZMKN2OYt9oUG4kxByMlVjTjbnKmT88MsFhnEgJB2q8QZI1H0kDsj1dzOPXfRRQa3iG3RbUU9jShkHuM9tmuDqxj8rIAXDzW8TTz802Vl9rMkrvA0imy7HVANdtaazmkXaXRlCaHJ2/c684lXQEDiacMxjbRcqawAFa7SHGrrHF8ang8fjJ1XEhpksv+OoKFj8OpTdXeYCN5w3w3O5mNBzxY5r5rK84izsvZmGIBTpl9sCMOJXRI4K4Djuct+lkLbePAyWsVK5FboasJR4LqUO06CVBvNCbSIYNLAg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dSg25pXC+Zj926KTkdUB9cGJkUb3sgwBOqZ8Ehe/WuY=;
- b=HhM4K0MuPU9uHhA3BJ+rasd9/H72Fl1K5wDz8Ws98qIvKy+Rkav9j9rgLJM2l0F1Z9UlRaDoNMuRc1JgI9JGKv+/HWSMZKVlZ2MJZFPvTAK8UqBQvVGeRVP6FRHoraeDnQlO+7gmnxBwuvaKN3IYCYlEdtzB4JZmLGEgAe7ij6CkCt7nhicAxKzWTl1EUN8i1tra60/EqSw4QY+FwSHvGvZBD81dYzGJCOhg3R9xtDvneUgjtYAbtCit5o/20DnfVjJG0jdvw8iuDNaWRGkaZ2qVTdn3qqxvtPA1JLp846WU4+w5q1g64BTi4NiqhfCavyMoKOdLPosrxWIhwMvEew==
+ bh=c3gmp2I8EFIRQV6cQXkdIAEWEsx6BvYYfAHOsMuDkDM=;
+ b=LVjRBdWj/OrS/UjOH3jYKMu2uyEYe+wdMiRXrygqHZrgzV2oed5GVhrSRGUjSD9rm0byLQ55fGoXh0brSMGsa7mucr5LY04PdG1W26PyjvG3BoULNkAWdeby35RwEmqqN59oRgG9h53K/DR4uwqV2mOSYfVU7gFmx58Ib1VKTRD+LMTElpcqBkOOpSJeApnApEh2cOORPXyfT+L4jSk6zE9H91uqXyTFaTaI5PFRjXzXoW7bstYF0pWQ0DkSza4+W0sVJKTK7En530l4Ti0cWYl8Td0NQ456v7LPlxcmrd+nBcTKcC3CW0lPMKVxIaYn9S91XJVw/HsZ6m9BS7kFwQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dSg25pXC+Zj926KTkdUB9cGJkUb3sgwBOqZ8Ehe/WuY=;
- b=1UgpYEENKUiJw8UYQxwE8V/lJNyz+vdhH/AzxX77K007fjdmMFaCL4yLhHG8rcWHMpA7mmfTD7wn/x5ChF2c5SQQMysOcQ1q98Ka7S2PHdtoaT8vTnATejLBBrIMd8sy6hxMuNMDAsSY3ljU1Wsk2VlnnrMDDvJ5/9d383HK0f4=
+ bh=c3gmp2I8EFIRQV6cQXkdIAEWEsx6BvYYfAHOsMuDkDM=;
+ b=sAcNIFLFfy4638abCIHd/i4G0hJsG33wZceYT9P9WXKusarMVxbLCOkDsknynGtpcCphV9b6SliaQlnMICZqqBrxxEuRTLBXzW1g9ZvQZqnOd0218MSVzGXELnUsZ6aHSZhwUatCtM0SYi/lgSCfD7uygZzoJsXXeCNZmEhXEzo=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM0P192MB0305.EURP192.PROD.OUTLOOK.COM (2603:10a6:208:4e::33) with
+ by AM6P192MB0469.EURP192.PROD.OUTLOOK.COM (2603:10a6:209:32::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.15; Tue, 24 May
- 2022 11:38:04 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.14; Tue, 24 May
+ 2022 11:37:58 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:38:04 +0000
+ 11:37:58 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 29/96] cl8k: add enhanced_tim.c
-Date:   Tue, 24 May 2022 14:33:55 +0300
-Message-Id: <20220524113502.1094459-30-viktor.barna@celeno.com>
+Subject: [RFC v2 21/96] cl8k: add dfs.h
+Date:   Tue, 24 May 2022 14:33:47 +0300
+Message-Id: <20220524113502.1094459-22-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: c5e7a7e3-e1f7-4b87-adee-08da3d79ddbf
-X-MS-TrafficTypeDiagnostic: AM0P192MB0305:EE_
+X-MS-Office365-Filtering-Correlation-Id: d6d5ea6e-b5fd-43aa-f066-08da3d79da18
+X-MS-TrafficTypeDiagnostic: AM6P192MB0469:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <AM0P192MB03057AAC86E9050541AD2073F6D79@AM0P192MB0305.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <AM6P192MB0469CA0128C507CD66701120F6D79@AM6P192MB0469.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ebl34/+lRHhjsQFKfsIiTlCh3syyPJGtoqMY7ehdxfL1ic9yUREAJVZQ5Z8Io5kc0LPGNP0BgmeE5OppxK2ZaP6du/1FA2g//F8ajIUnqt6RVVcUM8ZUa8L2zUyH/TXTlxMLuO+g1Q3y1o7j6BEjZ2/O2rXvjNHsapbso3n/s0pWbAie90upBg7ky9avmfhzBO5oHxFV/INOwFh6zP5dbFjCwL0+YPqiIfLVwh73PMOOgkJUW96SU6Z/6IZLdANm0raoSkmIXG9cU43WrlfALidjZu01RXGysBvM+53IPbix0Mgb1cIlSlRUNsFEdSbw1xuuMAChMiMu4YBhGTfwpSw4SVmnBXAifdwOSFBAQF2FAB9qFKa6b5FQ8m02M9kj3WqvLKXOm/RZNGs2hmgOFgKSH4dTzw8HaW221OqfSQoZNwXcKAXdWjpmMViW0eoxvhWDgyZDIehAK9cQzUeMa5PV8MIkxik/FnLzjOvR8YX8DOdrK3Navs/SqO3T6B8OYO7QEEqsnDJHjUO+hO9jy2EHOqEk8FDZgtXSV/FgZMBt0bbYPVzIIsF4ZJaQNPxaGKSSjXt44/s5q6BxaJaH1Jbz/mUsarfMyEUSMosIi5WLTsPF7Hue5ue891sLgP0Ua5+Hs0LTjnoaPU7iEKM+0CraWrSUWVAMNS4DIbv6ZFEr/fDuVAb8px2KnC9bmyGiIP4nPf8/jQMQBXxcifpL1RL3GfHh/+nSNuKQdzJj/1E=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(346002)(396003)(366004)(39850400004)(376002)(136003)(6486002)(6916009)(508600001)(38350700002)(38100700002)(52116002)(6666004)(2906002)(8936002)(54906003)(6512007)(6506007)(26005)(9686003)(8676002)(36756003)(5660300002)(316002)(66476007)(4326008)(66556008)(107886003)(66946007)(1076003)(41300700001)(186003)(2616005)(83380400001)(86362001)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: S+5jgv8TJtncifOpmdgvLXj6fLeXU1wPD7O1zb1cR4Ka8tLX5zUyso6RyPmv/Q/4eHjJTz3vKMWrYtffAFct8Try1nEtAy2YABYyfnbcm0TtcfnpD0lbyKa1qgKpayXZ986T34iNFLlI601wce749ISMK4bAdnorHf6zD+//0qvaHK95KAKnU4FxaD11wsO/ENf/ywFsH3D9S7DWpAA6wbRyukm9IK7t6HzQ6qpiaKStAD2GMyliS5GUsynJDxCUupbdlL1azZ8IlH3dHngrgVfcLaXAOgE03IznUOSFzl7Nsi09RBzqK8ZjZP8OPRqNfuWKzCCjdi9hkeHb2eJVTiFBDpPeHTN0hEtMGOOhqK40BPpZh0FeXs/3GRPnM6IuLCr2pYyTqqy2p3OpnBT9PD6+vYx/NBQzrhSXUNTTMHzYmWTsIe0soCjRcttF60Lny1vQTzTjrcz2hJHPUoX0RLesc2dpeHRI/3q6mUlALgBkZ3F4/NsmmHmvv13hTwagEsbQ8ecrtzFxagpeJ7GgsIjzC6JUTGZTDVI9rTumHO6H3aS1ba39tpHjUh5C1PDVvpuBtc+ClPXp/LKrpKXek6bx69FqsaQV0rsRd5zKRjUPFdZ3Dx6iVnHAXLVoEf3TpxNWuoqFLvPfdZyGvq/19yap+8oPpWqQnrYynrUMLQ2chvUgFs/G8K8MZbm8QuJWR02VvkLHRKRyHxyzr2xHPHpdp6oLJKUevqs6E7Ob3UU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(396003)(346002)(376002)(136003)(366004)(39850400004)(6486002)(6916009)(508600001)(8936002)(86362001)(2906002)(5660300002)(4326008)(1076003)(83380400001)(36756003)(38100700002)(41300700001)(52116002)(186003)(66556008)(2616005)(6506007)(6512007)(26005)(316002)(54906003)(107886003)(8676002)(9686003)(66476007)(38350700002)(66946007)(6666004)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?vNKHSGGNoLLT/PYzbVWwplTr8nPxzVJIE6ekJXNXvZxrwSgktp41OVg9Y3N+?=
- =?us-ascii?Q?t1nVPOaYagh2G80ANaeUYhI6pdg4ZeiG672h4hTG69UO6gq4XnsETt/xbF8B?=
- =?us-ascii?Q?qtgweTNAVZ7kSXgX729UWM2Ys6NzDxqVIzhH7nYoRVGfpDKHjWRnJYq9tpm8?=
- =?us-ascii?Q?X/6BPvSuE95Rx6M8QnK2sHu9IkWXZ5/kSK5+N/Uv4yszVP5qQNJKw7xt39Hp?=
- =?us-ascii?Q?myrA7CAQsfsVMRnJua2JCZZQV9SViIu9X5fTk18o4PMiZP6AEosZGrQYFK6y?=
- =?us-ascii?Q?M16xSSTgsPglT0+WgF+5eTjLEbO1VtpraXhXUJ0juS9GhJvX1MQdh45mEvfG?=
- =?us-ascii?Q?buyY5uToL1QFT1F7lHrz7jK4LdwEklhKtWZqp7C/lO76XiLSC1KA8b5zT2EP?=
- =?us-ascii?Q?vCe+46HOHdehEFU9FgjOQN1AZRvcm88vSLJW6fm3WYfKJXj14547qCsoHYT2?=
- =?us-ascii?Q?xWXp8aMuS+L4GOEtioNCrPyAGt5v9oBC6bnLYgGk6GtHrrZQrx+2w8DzuXdE?=
- =?us-ascii?Q?Byk9J/YNPduN/9cUHmRTXikQdV/V4aCo4v8HHb+1SnMvrHJ2kmfrfA7zbl3t?=
- =?us-ascii?Q?F2UyDxedKzeds8YiH5J+Qu/ClQAbilfaN/eu+i2jJGqNGrB5NejTuoGoUUOH?=
- =?us-ascii?Q?dCePrNVG/3hGtoNrHJ6tHnVxipG5BpwVZ6U91kG3tFQWzjgjR0e/6glPYJeq?=
- =?us-ascii?Q?HNaJHWCwWqlKxm9j9Bz5P+wGhB0tpFgFfBj2f4xM3QSBj99YSgH5/sYeQiph?=
- =?us-ascii?Q?P35MUKFREwwblu4aIfa+Gnth0xLkszvni85D6KFcWkUD1ufQvq9zh5ojk+4F?=
- =?us-ascii?Q?8rsWStcRPdE2hCcu7eSWwbs+a7lpcs2xdOhMeBRi/KSUE7R6Z5ItefkzX0Aj?=
- =?us-ascii?Q?0CUg2U4AgByvWGCfDnsmrlXXfQMuMMWx7h79Gc58DYEf1PZUCv8UKD+Z6K9D?=
- =?us-ascii?Q?aNusIP1m+ssv14f1TpI3n48Kv60fo8ZLw6zdP814VqH3cH0wthJC99EPYU29?=
- =?us-ascii?Q?gG98zuLmR9VSSWbRnaxoATqMbqHsOUJv/iqGxokz+35hlO40ftFBtWRJjDM7?=
- =?us-ascii?Q?EKoLne/D22MOQBX7HZphkIgd2nl8GyFZLOwHaH20W9DKget+iGKcBUJV9gN7?=
- =?us-ascii?Q?p/v7yelStoX/eTTD93acQQc6b+MQzIGe747Tbw+x2FCFr9l34SS2zOhypWZD?=
- =?us-ascii?Q?QHQnLEtaOoBF+ydgM35rIBMbgwHmSKj9fxUDcf6ouuWbhbekQTW7wcRkrKhI?=
- =?us-ascii?Q?TSc5U4HgsAsPELdMztcT3WFzDWFFXQFViLJoy6RNcI14tJI4thfucdosdqqs?=
- =?us-ascii?Q?LlXw6xgEFAF5ozeOKwuBewS0sTxcHyAs6wU7xbuvHwn2XiduqkqSrtfOf9ZI?=
- =?us-ascii?Q?DTRFvQn5gkxLhFSqzYri4izZQn0d/Q1tU1XVZm8YRKeTMW7kZxG8sDkaCNsx?=
- =?us-ascii?Q?/ht4Ri5kclet7qkyTZ+KAwXdw+B3yuIFQAPfGBdJAd71t1MGjcnplHrVmR7p?=
- =?us-ascii?Q?qrWtDmBNzqFnWlMP9PrLk93XzR5Fv15D1RnEDVe4GzUJTvhsddqd2D3arIFQ?=
- =?us-ascii?Q?jAFVOuTgVlh4OTyfd7pJrLhOhN1yLQtCOz3io8+ploMYuEZiU5u0ZD5l6oms?=
- =?us-ascii?Q?OUGS63TPaRU1zkx/40HlNuI/jImJbxSQ5lNLrnjKJTxQUvHCkjo6ZCzzRdFQ?=
- =?us-ascii?Q?vDR3lUNi3oqaSEXSUQcxpucURE2nEis56rRySqhG2SdQ7KdvBXX78YMYM84p?=
- =?us-ascii?Q?SGHWw+lTphOLmRr1L2MbUPIIzKmAGjA=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?wQCckivdpmDdbIrul31FQxd2ofRngLy1UB+13v23K6NCVb3gVyVPH49oo/My?=
+ =?us-ascii?Q?zfAKvQ8ry/VU4TMNhlVnMw2IuF1pYqxng+1bFC/QqpWNEWAcv7wfHDFrs7dI?=
+ =?us-ascii?Q?m4YMWZ5MhuSBZIUa7/Jmwtq5J6FdidgaUA2WhOR6TI6PxhzCYMgLeChyZVZ3?=
+ =?us-ascii?Q?QmKmGeRl7Got3B0z/Ing74XrBaM18ytcHMVSkhCz8/GZkBr35FXIbFSQvR0d?=
+ =?us-ascii?Q?3+4okO1DBdEZNzu+e2NYcoy31yXsgkrH+R2qQ345bu27i169G2jeC4Ujy7ZN?=
+ =?us-ascii?Q?SOh+7AyuGwGSuTsS5n8NJrK2GDueTnO6OAvRPSWP9fy2WbMTy1P0UYCV0Lz/?=
+ =?us-ascii?Q?Vr/XoT6pHXqmw55PoZpe6MZArOyMfpPNmNvvOpP1memTrjyc21j6Vf8ew0fW?=
+ =?us-ascii?Q?om1ems1fRC6LmuiwJQ2h2OKcQ3cWgpmZX7y3tAFgW5E040LjVOuNVrhIqy8g?=
+ =?us-ascii?Q?ARAVH0eYh6q+k57hIHSV1RNQxmuvvQ784ZP/yICzuBfdN75ugZfXC72v2Lzv?=
+ =?us-ascii?Q?rapuBNFqJzUh+HMvffPc1BEAdxjYU6UIG1aWsBwd8/HJTturW1PBSAgPaqGB?=
+ =?us-ascii?Q?tKFrYDVaDM4QsZQQqMmsWEToDkKYEJq9eDPXID5KMKnvqUHQyPS+tAIyzS/6?=
+ =?us-ascii?Q?edl9hx/VsmWSpYTQAzcW/1vczPxMEdQgDkeDkFL2CgrwXsPWk2sfKR+8DxHX?=
+ =?us-ascii?Q?EFXifrlXthpQKo3L/NloUBYdi7vqaua+tCUqgoivoL2Lnkrxk/zb8k/nvkd7?=
+ =?us-ascii?Q?sSLjwGFH1Mua2o3YHsjsRCdulQXNNu4LR6jU1AKA1hoH1xlIdyy5UUejBLtf?=
+ =?us-ascii?Q?EPNuHnFnyof3z0ojEi0E7vXOVWgis4wpA5ZoeI0VkOYEKOV9Xc/9SB3DdCOD?=
+ =?us-ascii?Q?jDM9e86EgvmcYhjPMN9lMFCMLMPzTnU8P090qdx3SE9USXrErCnApbJ9AvNy?=
+ =?us-ascii?Q?3HFjwrZAAQUipEkBQM5TyobWXEgeoip0vbNZZEIrUzmap8W2vMIK1EthY1M8?=
+ =?us-ascii?Q?MKqvJ6S+MeXnWYkMLEAVHQParUJsaqvoJ16bF4goYojJfkPM9UlqaEfgOXSu?=
+ =?us-ascii?Q?e68HIbYpS0rW/q8BFs1JP0iTw3WY49PbB1O2KTYmxArGUZKG+G9AXzpLQMoS?=
+ =?us-ascii?Q?GhOS65ctnDRSkmVhfZxOA+JpJeGw4EJquzJQcJ+7dzYpojKlZM9XmHJ7PSbT?=
+ =?us-ascii?Q?Rt2zMT4ItybpdN64H8bhi9H54lIBP58FUIu/PQHWY/AV3gaeefvBq41ShLkL?=
+ =?us-ascii?Q?o8b8+qVFP2FefSyEj9UQpv1/pgGMbKO85lBrwXqP1YC4fGPioVumVFgI2q59?=
+ =?us-ascii?Q?fa8KwyWpOdBaQMWi/+7FBAokYRtQn769aMNLAORQ5qtYVraM3JJRo4Gqe9bh?=
+ =?us-ascii?Q?hnkADU9XYH6wZb5p56Gi6wsbFTA/NQs73ItUDYII4LqjDhSED1HLvuzwejq4?=
+ =?us-ascii?Q?VEc9qpHorXyGjUYQblr7qTqVoolUaORIUAHgYiRGQXTi2SI6hNMiy3LlnojO?=
+ =?us-ascii?Q?jFcTHKJXtMQuy2BD/7WFb2nfJVfSGCH5Y0KNztbBwI8CvA/NB6FVqZmg0cPb?=
+ =?us-ascii?Q?RjGW26eZ+ey5FNAdhkRppqVQ8rBinxqkpQmGRwapHbhjToy2izT3esviKFkF?=
+ =?us-ascii?Q?dL174B4fx72Y7b8zDJoPk2pn8RdLrrDRQt9QDvfphw3OGWmFSS/RVUhxRjb0?=
+ =?us-ascii?Q?MGm8TZt9Za/xTxB5f/rWLgNrjmguLqgcDCFTVYTGbca13iqbwCYIZaHV4KNA?=
+ =?us-ascii?Q?Iq0mLDNnzY0tHnPZAjyjJaEId6WF1Uk=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c5e7a7e3-e1f7-4b87-adee-08da3d79ddbf
+X-MS-Exchange-CrossTenant-Network-Message-Id: d6d5ea6e-b5fd-43aa-f066-08da3d79da18
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:04.8572
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:37:58.7157
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: owlFOmJVNj+fsg1rGOPESv31Nw58w8rr05318KjV+aJRoqfO7Ne9f8EtemdLcwDpONXFsl2eWIrgiB/urjWTYQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0P192MB0305
+X-MS-Exchange-CrossTenant-UserPrincipalName: QyTi2fZVZ9NHhjQvg+I5zQnr5RONMe1XLXLqGcnFy4mmqrguvs3+YwItycA5AsLvur3D7+PeC17BXZLL4YvYbw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6P192MB0469
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,189 +128,162 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/enhanced_tim.c   | 173 ++++++++++++++++++
- 1 file changed, 173 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/enhanced_tim.c
+ drivers/net/wireless/celeno/cl8k/dfs.h | 146 +++++++++++++++++++++++++
+ 1 file changed, 146 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/dfs.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/enhanced_tim.c b/drivers/net/wireless/celeno/cl8k/enhanced_tim.c
+diff --git a/drivers/net/wireless/celeno/cl8k/dfs.h b/drivers/net/wireless/celeno/cl8k/dfs.h
 new file mode 100644
-index 000000000000..893bddb2b25b
+index 000000000000..a252844f854b
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/enhanced_tim.c
-@@ -0,0 +1,173 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
++++ b/drivers/net/wireless/celeno/cl8k/dfs.h
+@@ -0,0 +1,146 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#include "def.h"
-+#include "hw.h"
-+#include "sta.h"
-+#include "enhanced_tim.h"
++#ifndef CL_DFS_H
++#define CL_DFS_H
++
++#include <linux/types.h>
++#include <linux/spinlock.h>
++
++#include "debug.h"
++
++#define CL_DFS_MAX_TBL_LINE       11    /* Radar Table Max Line */
++#define CL_DFS_PULSE_BUF_SIZE     64    /* Radar Pulse buffer size */
++#define CL_DFS_PULSE_BUF_MASK     0x03F /* Radar Pulse buffer cyclic mask */
++#define CL_DFS_PULSE_WINDOW       100   /* Radar Pulse search window [ms] */
++#define CL_DFS_MIN_PULSE_TRIG     1     /* Minimum Pulse trigger num */
++#define CL_DFS_LONG_MIN_WIDTH     20    /* Min Long Pulse Width */
++#define CL_DFS_LONG_FALSE_WIDTH   10    /* Low width signals indicates of false detections */
++#define CL_DFS_LONG_FALSE_IND     6     /* False indication while searching for long sequence */
++#define CL_DFS_STAGGERED_CHEC_LEN 4     /* Staggered check length */
++#define CL_DFS_CONCEAL_CNT        10    /* Maximum concealed pulses search */
++#define CL_DFS_MIN_FREQ           5250  /* Min DFS frequency */
++#define CL_DFS_MAX_FREQ           5725  /* Max DFS frequency */
++
++enum cl_radar_waveform {
++	RADAR_WAVEFORM_SHORT,
++	RADAR_WAVEFORM_LONG,
++	RADAR_WAVEFORM_STAGGERED,
++	RADAR_WAVEFORM_SEVERE
++};
++
++struct cl_radar_type {
++	u8 id;
++	s32 min_width;
++	s32 max_width;
++	s32 tol_width;
++	s32 min_pri;
++	s32 max_pri;
++	s32 tol_pri;
++	s32 tol_freq;
++	u8 min_burst;
++	u8 ppb;
++	u8 trig_count;
++	enum cl_radar_waveform waveform;
++};
++
++/* Number of pulses in a radar event structure */
++#define RADAR_PULSE_MAX 4
 +
 +/*
-+ * The kernel's test_and_set_bit() gets unsigned long * as an argument, but we actually
-+ * pass a pointer to u32, what cause to alignment fault in 64bit platforms.
-+ * This function gets a pointer to u32 to prevent this alignment fault.
-+ * Notice that the kernel's function sets the bit as an atomic operation,
-+ * and our function doesn't. Vut it's not an issue since we set the bit from one context only.
++ * Structure used to store information regarding
++ * E2A radar events in the driver
 + */
-+static int cl_test_and_set_bit(unsigned long nr, u32 *addr)
-+{
-+	u32 *new_addr, mask, old;
++struct cl_radar_elem {
++	struct cl_radar_pulse_array *radarbuf_ptr;
++	dma_addr_t dma_addr;
++};
 +
-+	new_addr = ((u32 *)addr) + (nr >> 5);
-+	mask = 1 << (nr & 31);
-+	old = *new_addr & mask;
-+	*new_addr |= mask;
++/* Bit mapping inside a radar pulse element */
++struct cl_radar_pulse {
++	u64 freq        : 8;
++	u64 fom         : 8;
++	u64 len         : 8;  /* Pulse length timer */
++	u64 measure_cnt : 2;  /* Measure count */
++	u64 rsv1        : 6;  /* Reserve1 */
++	u64 rep         : 16; /* PRI */
++	u64 rsv2        : 16; /* Reserve2 */
++};
 +
-+	return (old != 0);
-+}
++/* Definition of an array of radar pulses */
++struct cl_radar_pulse_array {
++	/* Buffer containing the radar pulses */
++	u64 pulse[RADAR_PULSE_MAX];
++	/* Number of valid pulses in the buffer */
++	u32 cnt;
++};
 +
-+static int cfm_test_and_clear_bit(unsigned long nr, u32 *addr)
-+{
-+	u32 *new_addr, mask, old;
++struct cl_radar_queue_elem {
++	struct list_head list;
++	struct cl_hw *cl_hw;
++	struct cl_radar_elem radar_elem;
++	unsigned long time;
++};
 +
-+	new_addr = ((u32 *)addr) + (nr >> 5);
-+	mask = 1 << (nr & 31);
-+	old = *new_addr & mask;
-+	*new_addr &= ~mask;
++struct cl_radar_queue {
++	struct list_head head;
++	spinlock_t lock;
++};
 +
-+	return (old != 0);
-+}
++struct cl_dfs_pulse {
++	s32 freq  : 8;      /* Radar Frequency offset [units of 4MHz] */
++	u32 fom   : 8;      /* Figure of Merit */
++	u32 width : 8;      /* Pulse Width [units of 2 micro sec] */
++	u32 occ   : 1;      /* OCC indication for Primary/Secondary channel */
++	u32 res1  : 7;      /* Reserve */
++	u32 pri   : 16;     /* Pulse Repetition Frequency */
++	u32 res2  : 16;
++	unsigned long time; /* Pulse Receive Time */
++};
 +
-+void cl_enhanced_tim_reset(struct cl_hw *cl_hw)
-+{
-+	/*
-+	 * There is no need to reset cl_hw->ipc_env->shared->enhanced_tim.
-+	 * It is done as part of ipc_shared_env_init()
-+	 */
-+	memset(&cl_hw->ipc_env->enhanced_tim, 0, sizeof(struct cl_ipc_enhanced_tim));
-+}
++struct cl_dfs_db {
++	bool en;
++	enum cl_dbg_level dbg_lvl;
++	enum nl80211_dfs_regions dfs_standard;
++	struct {
++		bool started;
++		bool requested;
++	} cac;
++	u8 long_pulse_count;
++	u32 last_long_pulse_ts;
++	u8 short_pulse_count;
++	u8 long_pri_match_count;
++	u8 min_pulse_eeq;
++	u8 buf_idx;
++	u8 radar_type_cnt;
++	u16 search_window;
++	u16 max_interrupt_diff;
++	u16 remain_cac_time;
++	u32 pulse_cnt;
++	struct cl_radar_type *radar_type;
++	struct cl_dfs_pulse dfs_pulse[CL_DFS_PULSE_BUF_SIZE];
++	struct cl_dfs_pulse pulse_buffer[CL_DFS_PULSE_BUF_SIZE];
++};
 +
-+/*
-+ * NOTE: the UMAC DRAM starts with the enhanced TIM elements stractures.
-+ * This is hard coded in the FW, this memory allocation should be changed in
-+ * the driver module .ELF file.
-+ */
++void cl_dfs_init(struct cl_hw *cl_hw);
++void cl_dfs_reinit(struct cl_hw *cl_hw);
++void cl_dfs_start(struct cl_hw *cl_hw);
++void cl_dfs_recovery(struct cl_hw *cl_hw);
++bool cl_dfs_pulse_process(struct cl_hw *cl_hw, struct cl_radar_pulse *pulse, u8 pulse_cnt,
++			  unsigned long time);
++bool __must_check cl_dfs_is_in_cac(struct cl_hw *cl_hw);
++bool __must_check cl_dfs_requested_cac(struct cl_hw *cl_hw);
++bool __must_check cl_dfs_radar_listening(struct cl_hw *cl_hw);
++void cl_dfs_request_cac(struct cl_hw *cl_hw, bool should_do);
++void cl_dfs_force_cac_start(struct cl_hw *cl_hw);
++void cl_dfs_force_cac_end(struct cl_hw *cl_hw);
++void cl_dfs_radar_listen_start(struct cl_hw *cl_hw);
++void cl_dfs_radar_listen_end(struct cl_hw *cl_hw);
 +
-+void cl_enhanced_tim_clear_tx_agg(struct cl_hw *cl_hw, u32 ipc_queue_idx,
-+				  u8 ac, struct cl_sta *cl_sta, u8 tid)
-+{
-+	/* Pointer to HOST enhanced TIM */
-+	u32 *source = cl_hw->ipc_env->enhanced_tim.tx_rx_agg[ac];
-+	u32 ipc_queue_idx_common = IPC_TX_QUEUE_IDX_TO_COMMON_QUEUE_IDX(ipc_queue_idx);
-+	/*
-+	 * Does the UMAC enhanced TIM need update?
-+	 * If the TIM element is set then clear it and update the UMAC TIM element
-+	 */
-+	if (cfm_test_and_clear_bit(ipc_queue_idx_common, source)) {
-+		/* Pointer to UMAC enhanced TIM */
-+		u32 __iomem *target =
-+			(u32 __iomem *)cl_hw->ipc_env->shared->enhanced_tim.tx_rx_agg[ac];
-+		/* Offset to UMAC encahned TIM array position */
-+		u32 agg_offset = ipc_queue_idx_common / (BITS_PER_BYTE * sizeof(u32));
++void cl_radar_init(struct cl_hw *cl_hw);
++void cl_radar_push(struct cl_hw *cl_hw, struct cl_radar_elem *radar_elem);
++void cl_radar_tasklet_schedule(struct cl_hw *cl_hw);
++void cl_radar_flush(struct cl_hw *cl_hw);
++void cl_radar_close(struct cl_hw *cl_hw);
 +
-+		/* Update tim element */
-+		if (cl_sta) {
-+			struct sta_info *stainfo = IEEE80211_STA_TO_STAINFO(cl_sta->sta);
-+
-+			if (test_sta_flag(stainfo, WLAN_STA_PS_STA))
-+				ieee80211_sta_set_buffered(cl_sta->sta, tid, false);
-+		}
-+
-+		iowrite32(source[agg_offset], (void __iomem *)&target[agg_offset]);
-+	}
-+}
-+
-+void cl_enhanced_tim_clear_tx_single(struct cl_hw *cl_hw, u32 ipc_queue_idx, u8 ac,
-+				     bool no_ps_buffer, struct cl_sta *cl_sta, u8 tid)
-+{
-+	/* Pointer to HOST enhanced TIM */
-+	u32 *source = cl_hw->ipc_env->enhanced_tim.tx_single[ac];
-+	/* Staton index: 0 - 128 (do not use cl_sta->sta_idx which is 0 -127) */
-+	u32 sta_idx = ipc_queue_idx % FW_MAX_NUM_STA;
-+
-+	/*
-+	 * Does the UMAC enhanced TIM need update?
-+	 * If the TIM element is set then clear it and update the UMAC TIM element
-+	 */
-+	if (cfm_test_and_clear_bit(sta_idx, source)) {
-+		/* Pointer to UMAC enhanced TIM for singles or aggregation */
-+		u32 __iomem *target =
-+			(u32 __iomem *)cl_hw->ipc_env->shared->enhanced_tim.tx_single[ac];
-+		/* Offset to UMAC encahned TIM array position */
-+		u32 sta_offset = sta_idx / (BITS_PER_BYTE * sizeof(u32));
-+
-+		/* Update tim element */
-+		if (!no_ps_buffer && cl_sta) {
-+			struct sta_info *stainfo = IEEE80211_STA_TO_STAINFO(cl_sta->sta);
-+
-+			if (test_sta_flag(stainfo, WLAN_STA_PS_STA))
-+				ieee80211_sta_set_buffered(cl_sta->sta, tid, false);
-+		}
-+
-+		iowrite32(source[sta_offset], (void __iomem *)&target[sta_offset]);
-+	}
-+}
-+
-+void cl_enhanced_tim_set_tx_agg(struct cl_hw *cl_hw, u32 ipc_queue_idx, u8 ac,
-+				bool no_ps_buffer, struct cl_sta *cl_sta, u8 tid)
-+{
-+	/* Pointer to HOST enhanced TIM */
-+	u32 *source = cl_hw->ipc_env->enhanced_tim.tx_rx_agg[ac];
-+	u32 ipc_queue_idx_common = IPC_TX_QUEUE_IDX_TO_COMMON_QUEUE_IDX(ipc_queue_idx);
-+	/*
-+	 * Does the UMAC enhanced TIM need update?
-+	 * If the TIM element is cleared then set it and update the UMAC TIM element
-+	 */
-+	if (!cl_test_and_set_bit(ipc_queue_idx_common, source)) {
-+		/* Pointer to UMAC enhanced TIM */
-+		u32 __iomem *target =
-+			(u32 __iomem *)cl_hw->ipc_env->shared->enhanced_tim.tx_rx_agg[ac];
-+		/* Offset to UMAC encahned TIM array position */
-+		u32 agg_offset = ipc_queue_idx_common / (BITS_PER_BYTE * sizeof(u32));
-+
-+		/* Update tim element */
-+		if (!no_ps_buffer && cl_sta) {
-+			struct sta_info *stainfo = IEEE80211_STA_TO_STAINFO(cl_sta->sta);
-+
-+			if (test_sta_flag(stainfo, WLAN_STA_PS_STA))
-+				ieee80211_sta_set_buffered(cl_sta->sta, tid, true);
-+		}
-+
-+		iowrite32(source[agg_offset], (void __iomem *)&target[agg_offset]);
-+	}
-+}
-+
-+void cl_enhanced_tim_set_tx_single(struct cl_hw *cl_hw, u32 ipc_queue_idx, u8 ac,
-+				   bool no_ps_buffer, struct cl_sta *cl_sta, u8 tid)
-+{
-+	/* Pointer to HOST enhanced TIM */
-+	u32 *source = cl_hw->ipc_env->enhanced_tim.tx_single[ac];
-+	/* Staton index: 0 - 128 (do not use cl_sta->sta_idx which is 0 -127) */
-+	u32 sta_idx = ipc_queue_idx % FW_MAX_NUM_STA;
-+
-+	/*
-+	 * Does the UMAC enhanced TIM need update?
-+	 * If the TIM element is cleared then set it and update the UMAC TIM element
-+	 */
-+	if (!cl_test_and_set_bit(sta_idx, source)) {
-+		/* Pointer to UMAC enhanced TIM */
-+		u32 __iomem *target =
-+			(u32 __iomem *)cl_hw->ipc_env->shared->enhanced_tim.tx_single[ac];
-+		/* Offset to UMAC encahned TIM array position */
-+		u32 sta_offset = sta_idx / (BITS_PER_BYTE * sizeof(u32));
-+
-+		/* Update tim element */
-+		if (!no_ps_buffer && cl_sta) {
-+			struct sta_info *stainfo = IEEE80211_STA_TO_STAINFO(cl_sta->sta);
-+
-+			if (test_sta_flag(stainfo, WLAN_STA_PS_STA))
-+				ieee80211_sta_set_buffered(cl_sta->sta, tid, true);
-+		}
-+
-+		iowrite32(source[sta_offset], (void __iomem *)&target[sta_offset]);
-+	}
-+}
++#endif /* CL_DFS_H */
 -- 
 2.36.1
 
