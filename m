@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C80F7C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 974E2C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236949AbiEXLkp (ORCPT
+        id S236901AbiEXLkr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:40:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43134 "EHLO
+        Tue, 24 May 2022 07:40:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236105AbiEXLkl (ORCPT
+        with ESMTP id S236944AbiEXLkm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:40:41 -0400
-Received: from EUR04-DB3-obe.outbound.protection.outlook.com (mail-eopbgr60044.outbound.protection.outlook.com [40.107.6.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C56652E53
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:58 -0700 (PDT)
+        Tue, 24 May 2022 07:40:42 -0400
+Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2050.outbound.protection.outlook.com [40.107.20.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A2008CB3D
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:40:05 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eo0EvKniGP4CGTQHW2wtoRhO0Jnk93X7d85BlomoAPXOs16Fq4lu547w+naWjUm1QHRb9wcRINxYXbnIGsbjv0cBSelyz2jVxf7asrVecjg4Vt0tFznDpcGuiMkR8mQIIYWJgEiZPxlXgXjU5tUGWb5F2CxTaZ6s8kswrs2uAenrZVD1knbBS39sJom5w5u/vYYost4CGP0YJUkBvDTUP6KVHid0e1EKNg+weENDV6uTax3R4IUlw+JBRc1MTtSZmO3Aj42Er0t6oKY3jFHEk0SOhrrBlnfRVOv0MNHe4YLMb0sJuIFbksW2nOLfF3tWnLoHqykYivjXE42wJX024g==
+ b=AKemsCIoxL8TQYhTXToEPxKIkm3j+Fa5XGWvq8opBKVL26ye1DBx7G6nNBW9A0y2wYZCp3HzX+zBWQa4q4if64BsrZ5YOxLgTf1FrBFUZDsiaI9DGa952vLPhZoMHqtJM7RgJmV6HsLYvLc2q1unS4pTnNpeSS625XbrIYg65uNPvajBCTr/irxMZMRLgwYaGaE5xJBdSbzxsttstorxX+UN2EBKJNy7H8Sddw5W71PRoFas7hTt1tWl6iexKOVzREB6L6K0Og69p23IAp+IcBBbVd8Pm7WCPzHNtlInk9x9rDf0ZscTWGNvlZlMZkouo1xATlY8326TwLiTTFDfNA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1NKkNFUnzF4NBOR/kll86ViWsMGlbf5FYlK9A+AVYl0=;
- b=GyqMQuge2uTtmNV6gLBD90F9AvrnyVdWvGRqyGPv4+oBjaRMa1iyT6n2tMHU3RqMTXiO3ZZq2In88bN2n44DowN5T74RdkwxVrevaZVhRLcHJUnG01pmjq67ABpeVt5HmNRDIc2P3c5kWfV28okxYOK23iC+jrv79n3rYQ82xlEM0VFP0sSHI6QmU249vML0LEH0jK854Gfbnf2L6APdwctWonXuoCCUkli9O9iMeKm2+YnNgcfWwOE2rI4SeuI70qNIESTlvctl5P9hK38//BRu5K0Hquo0vJK8DG9TJudUD23l2S2AuY0zD3l9+0Cp2ORDTEwB/BkoaT5Uir+VMg==
+ bh=D2U4qluKHCl0d8fU+sfaEKKogD0PPdx32kBb6Om9l5A=;
+ b=KZ8FHL1zyv331G4ltV8bEn6oUrl3H28QQiCXjY6XFPPngKBPyQG3rnaSM9uu1r0bMFpzC0lyYyoZYzI31guOwT00D8qGCifG+NOi0If9TGmbP1aaDnBa0RkgeDT8cA9U7TXzpJeGAvdt/6jcm+I2lljqxNCSGar+qzgHclYCaxcyzpO3IfUcbz2zyZrLuKuLQxOvMgrhT7ipl/JbtGRin99JRtg3JHkgBkpDmKnzCROKuYvQugeBbS2emLbfHyswC5LQ5zx+0kvas7emuplaWUUEbZlvhRzcPXUfpN4QFU5onVvW+9SjddSIPm46vPNVwQASyF4vaaihNHWBf3el4Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1NKkNFUnzF4NBOR/kll86ViWsMGlbf5FYlK9A+AVYl0=;
- b=AneTBnVw4DBov0k78wMCWJ8cJ0iSzxkth19wexQs6MplMJeGFAT+2nRV73HS0837kyV6uJlUoF6E5hW8zEycPextGGRr+G+VCUwa0Q5FDV0hxz9ZlcuViDGA2YLYDKe9f01jbnzbwKX61NP1ajGFC+C5as13/124cQhD3CaVt1s=
+ bh=D2U4qluKHCl0d8fU+sfaEKKogD0PPdx32kBb6Om9l5A=;
+ b=bbVH+UljaXPEkquV+uLkxGdTE071sDoDhC3w6q/+SIAMqBf8P+6g9ExVtd5ZFm7Bvcvcml7MMWqWwR/7eOQvzYqW2D1jbsACR/YlFttHUYaPdXE64TJkgGb2HHlhym30uPq4/SJNeyOvyDJmZmEbaBrUn6E20DcvWuQC3rFo1Zo=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB0915.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1ed::22) with
+ by VE1P192MB0669.EURP192.PROD.OUTLOOK.COM (2603:10a6:800:16f::15) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Tue, 24 May
- 2022 11:39:26 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.14; Tue, 24 May
+ 2022 11:39:31 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:39:26 +0000
+ 11:39:30 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 70/96] cl8k: add scan.c
-Date:   Tue, 24 May 2022 14:34:36 +0300
-Message-Id: <20220524113502.1094459-71-viktor.barna@celeno.com>
+Subject: [RFC v2 82/96] cl8k: add traffic.c
+Date:   Tue, 24 May 2022 14:34:48 +0300
+Message-Id: <20220524113502.1094459-83-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 553d6de1-df54-4ee7-b1f3-08da3d79f654
-X-MS-TrafficTypeDiagnostic: AM8P192MB0915:EE_
+X-MS-Office365-Filtering-Correlation-Id: c50ac4d9-d24a-4aae-486a-08da3d79fbd6
+X-MS-TrafficTypeDiagnostic: VE1P192MB0669:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <AM8P192MB0915FFFB4D10F12660A7EBE9F6D79@AM8P192MB0915.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <VE1P192MB0669C9186F0A415DF7525466F6D79@VE1P192MB0669.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: QOxkJSLcbLocB9PEZcQ4R4l9y6jjtKIONRIiWp7dejMKKsz2ayh7kLaskpNjrkZKkzTIbF98htNvI2x0gyYiFDwZvla2NGdkRg8UaRqYMX4GOrcSzJYyWQjixdmc3TwR9oe4vktUL0hg+fxEABsEYhLUgrmQQ8RRHpt7TcCnI9hLErLWc7B+TBNLCPOnck7eyAZC7FUvhiYNES4GI4LI7e7KoFeQ4Kkd+OeyCclgZHua8yzUIEQu4WjuCxGUiFx305Qxo/A8NVGActDoCKwxUV6FTAlbCbv0Hqjd8yc/1MXOQIdj1lWHZ8yo5rxEa1LU/iwauz2tMjaRZpDuDZFxn+/ubNbZ4RQbc6PPh25IEROSO0qQ/0GHcIjk9eEj+QEwpdO/hUklhCYpD1TzAzWRAyfmrd4Vot6VIBdaESI8pVaSP3Kgqgfzlu3EjGdHRapsbh3CulWc2y0v8zoQlBd0uxqyK7xiUnBfVpMGumfVtK8heJXEX8542J7pyTSA4dysWXgpz0A8JahhmTKHd77E6l1kjw4QXuMB9Nu+8O6NcHDCtCjVcna2R3yQBNGI/aaeN56a1xGfoCFHYX3lE/SzXBZOT8GUfCn541KmuBOL65itb5uvs+Wqu3Zv7kvAiS8xUYp4T7X54zRnVoSy7g2BCYBPnbFjpNtHJkR8ERfFA1BDAbPxbb+QT68MiJUzCcJdKh9RY2bv9nzf1uB9q98Xl9xhabX1OdUlU54IJUvvnXQ=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(396003)(376002)(346002)(39850400004)(83380400001)(54906003)(186003)(36756003)(107886003)(2906002)(2616005)(30864003)(1076003)(6916009)(41300700001)(66946007)(8936002)(6666004)(9686003)(66476007)(26005)(86362001)(66556008)(5660300002)(6512007)(4326008)(38350700002)(316002)(6506007)(52116002)(8676002)(45080400002)(6486002)(38100700002)(508600001)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: AfxbRTIZdhrLb6oREwPeJBPcGhxDGN5xDf87JRqDa96ncgijlxcXMSM2eXUG5zaorwiX1/SvttJ+6hoSYLrIjppwwgiDWYNiMABVm2nyMuYPCJ4Ofn8Sc7XuCfYZCq230TYu1H5NGZ7lyi1xRxBOBIDgXnhrx3+4LPbKcQABiEjBlXA+QSOnmzEp4WhjAalwHY/WRWs7v/wJmUA4rrg8WhNp7KIQCQWkONpwFhyFuOanYTQ9umIdeAgBP9A9H1QGNbf6NyBiYrZHz2lLpDP8ZI/AIu5MGROz3Yyz8tI6pB45IVqmhMtgKShExRCmAw//3u6tI1FSUXJhxr3EETwulLH4dD+jd6IBTsNAYt5/pR9PUiXEMOtdOX6Zzc7uRrU62fkZLWtw2h49rWZa+0WaCMtk2KEICTSFR6X1lLY1Hnv93xBcjlNLTPFpDTqVtBivGYTd76jnfgiQOaEp6+ooHLDvQILKC2MVzJn3BXuhq0Dn232JoNZenMwTCbOLhNX/AiDLYMFXVOIU3wFL5NtRKsza6oFwgknrrGlWRGCtAIUBKygmwL496mcuNdtGRXuxhp3IEn5D0ubQcv88PbU5sfUG5HHFscHnyKK+eSwbxnmWA4n6BTp6IyDATY4AcKoHl0IpRCwAq3R7t6kJGudGtsCNK9wiS+gYjz/yh9ttzI6WSL1ee64AobFGb8C3ODONSdJTHbos5S1Bh9KQ10rzkV+EZLFrNKbJF7krBwAEAdU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(396003)(376002)(136003)(366004)(346002)(39850400004)(8676002)(9686003)(26005)(36756003)(66946007)(66556008)(66476007)(4326008)(107886003)(83380400001)(6512007)(5660300002)(38350700002)(38100700002)(1076003)(2616005)(316002)(6916009)(6506007)(6486002)(54906003)(86362001)(8936002)(508600001)(41300700001)(6666004)(2906002)(186003)(52116002)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hYMa5CzzcReSszsFsUuiCELcjttVbRGPrVEywnSya/ajoeyYA37WefJ2lP/g?=
- =?us-ascii?Q?RuUTBfPCY3xAxG/cCPbQikrGSbZWIc8j12F7T9p5LjyFuFOxVZnhZ5ITVD1C?=
- =?us-ascii?Q?Rhdzqqs5V/GGK9Fn/T7HnSnXF/F/UO52EGOOWm8wB17LxipjDwTwG1V9IRsB?=
- =?us-ascii?Q?oE0FNaf1pLN2NaU5g+1s/hlZwa4SK6LgAJujsHhVARKQPyPRkoSOdjreJ22I?=
- =?us-ascii?Q?xC0o2m9EU/xDyto/eHd7RTUp2cQhezExD9PQUc3L8u66Hn5/qAaO7MF4fFtE?=
- =?us-ascii?Q?QI2Q40pnSmAC0yJxWIFSkt83xpRjgLT7gF6HxQwNKqT1uuuOKscPmmTNmbLf?=
- =?us-ascii?Q?B/QnDVczJz/CHvQkjPkSeOrapFNotXx1wXiU0cqXeS0OQ5m1I+vvkJbiBj0m?=
- =?us-ascii?Q?AwkTe0UU5fMT8gI9GHsqk/DIanYCUUHECFWIqW1eO4fbiGpdco6h5gSSn2oT?=
- =?us-ascii?Q?aogaoBTd2yncJ2Ng0jFTh7Cg5/ApxPsuWoIzPgMrmBOz35jHDwOZ1No70G0h?=
- =?us-ascii?Q?k/DF7zq4rquJ4QF43PLDHfavd8IyOyBsVqj6hCgZXNwJXRK2dGPFeuoTeHmv?=
- =?us-ascii?Q?nqr3zQ2+mXL9oHMG4HPEEmZYyP6aKoCdk1oHLc9Znd6oyi4981yFbnF16ZOP?=
- =?us-ascii?Q?INr3kPCVn06eYhGhH6KMKtK6RnvC8Hv9meT1NcIxxeco6x435aBtCOTf04Jc?=
- =?us-ascii?Q?wHbT3XULIDnEj0XoFAx6chUHXz2TPjtIBarP9E5/tDKVYDlAvTRJkvIBReW4?=
- =?us-ascii?Q?AP3StPV8zZKU7TVws9x1eCFJ6Ts/VY0vpmPFcFO59ET6bqYL8WhUVC/G1x4g?=
- =?us-ascii?Q?PDJurI5P56+To/Ivm1Rf+P/yovJE3+HjycVOqgSJnRyi8hfI7rhCscbNH35W?=
- =?us-ascii?Q?oc4I0OLCfpkrOGTujbcVNU6fed2TfcfrptfXNuii7lc8h0ZxVCqAXHa66NfY?=
- =?us-ascii?Q?dNERhMMQMxuLSFYJPzJm30d8gM36WtWMATXF4rrTMyII68kFgPKtK9tycJM8?=
- =?us-ascii?Q?2bnh+bf9SBH38ZSTMT3sogUicOkXUiULyKXwKoyNRvBQ/FT0SCxqvIMDh9Tm?=
- =?us-ascii?Q?mYTNa+lNx9c+rwBtZvQPom+1QNX2oVdXj8HZ2PGEm0eDSOC1x/H6BNFIdXie?=
- =?us-ascii?Q?gDZci1wvLrpYuWPlXtzkrAT5OlJAvPopTNUAWkIjn58aDHfL+jJx4BP4apbe?=
- =?us-ascii?Q?/6j67z6KYmZN/pQF98WT+DkKMflNOlXD3A4co5TGBEDTglieWIYQ4TSY0yqT?=
- =?us-ascii?Q?ryRclJ8cQ1kAd9atEhLO3PfDlgGkFWkWmynC8bPnI1FBRvEYov52poH5bvnx?=
- =?us-ascii?Q?ZQJZVQ8e1BcDetw8Zs5x9d5kdsAR3C2Sc0sRN1B44GodJ+mEaNO9H2MNKZuQ?=
- =?us-ascii?Q?gnVQD5sKf7FKHc6S43fiyL6j+GHBC60Zky3ENkDwArJAO9um/3vFQPEO97SN?=
- =?us-ascii?Q?c+z8IpGm8rOIK+lYcr/cpryAdFBjn0Wu8vDcjJ41KibjWgjQ9/0hoInWWrl7?=
- =?us-ascii?Q?kdnLKzMpGyPs4KcIk+Wlv9p//bFYz/YjlZsMcnpXBtqmPxSR1B/km3A1OiVY?=
- =?us-ascii?Q?Vcvlwl8vliKy6xJliLeHf9ePPVUxyvXNAAFY70/dELrLeJcg1ezBQQv7aoUL?=
- =?us-ascii?Q?KTiUIXdxuB03kaTF3vJi+XkYznIpq4xRCW8owZsL/54JSQa42mIiai+cWPel?=
- =?us-ascii?Q?z1tw7K+dVWaLLozu/pKXYN5UQ76CFx0jxcg0sh/sWqOdNNYyZrRRktmkdRn1?=
- =?us-ascii?Q?MHHrx817heoqx+WjSGuYwIpOVYwkdG4=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?kY7ZonhisMMBdklCfVZOFaT2sLmPFvh9utUasL1zWTrT/DS3xPzMDYX3jEh6?=
+ =?us-ascii?Q?vfDMLItqKt9d4RzFrTR3kE0j5Z75HvUx7T3P+OdDzHIn1R/NHW/Vswso0MEM?=
+ =?us-ascii?Q?mhNcdBwWRPu30QS/jkTnxFcg8TH7E63skkzhfWypEyz2hEaaQZSCzkXg0gav?=
+ =?us-ascii?Q?PPfajMYAo/tE4n0mV2ypkDYvK8d3J63PIuhkg2z6M6UuOaUVtp+EtgZrg6Fy?=
+ =?us-ascii?Q?/NipzvDPBOPuILOO5TDZvLzsq+T2+kBKoKnqSuhehEa2g7vfkn0Wj8MtpiKa?=
+ =?us-ascii?Q?KpvYbWxmgwxxSlKoYyGk28VDahMEcCufNzohFKUy5ZZ9gNdJa1uGB7c6MA/2?=
+ =?us-ascii?Q?/G7a1l6i8uc9USvcOhWwluhylInLir9l6jQFL5XNvl+PMkC5jmnl7kunfQKN?=
+ =?us-ascii?Q?hqm0ZrjdgT7yvvjU+z0W4XlWYZMzFjz4I0vIyL6TYkWBdAH0wbGaG+Fwh494?=
+ =?us-ascii?Q?V1DygnLSUb6v8bSNW7cf8PRJvnI2uKFFX9E2Vpzk3Y8Yuj80X7ot4kAO+SHR?=
+ =?us-ascii?Q?9A4AjGgVl9KG+ycA20sdRIq5ueHnN9A7FS8FiNpZPKme1MOFTemzYAn6slBv?=
+ =?us-ascii?Q?ixUvgyxKJBzLMkFQG3mOJmgwRurBjP+cfoM+I3ohGA3jce4puyZMQN93g9pJ?=
+ =?us-ascii?Q?FTZxe0V58ecj87YULWcHs4p0GXnrOK03UShG8isRnhWfQs9maqsryFFgC4fC?=
+ =?us-ascii?Q?SUdmOs3dMldhsl6c9GrhxeIDMjcUaGFARYT7KA6vmrVSLWKiXpZ78b59cqi7?=
+ =?us-ascii?Q?CHf7Tpa44I8jVCQVC3BLI7vDyardonUTi8znsJ0RZDchoHkPtzYLaYpPdm+9?=
+ =?us-ascii?Q?qSzyVCzkLcZ0VDs3v9iirPqlxvH4GG2Fow0FctNk1xAimeNiu9YDUYy4yAj6?=
+ =?us-ascii?Q?vqgE5blscSD3CGofh/tS6QgedcIjZ4ImIUD5uNnMtNUwHq4rXW9+VT634VdW?=
+ =?us-ascii?Q?jMR/5lD9gdDDMi8c4Tb6tM6UxSFv558DFjVlCR8nWl3JisuNu895Q2mAgZ4v?=
+ =?us-ascii?Q?c9muT3EAlb2Vq+32GEDdXe2JUuUy1phyOdAsXO4+k//rOXWUKWZjnLegRVjd?=
+ =?us-ascii?Q?zEXOyKx03/zq9R3pOeIWHpoN/sgPKDG8QkjKazeperLrwCuBTuqWE7jKFbNw?=
+ =?us-ascii?Q?keu922y9nriZwH6UWD3OxKclStzfoBIZ4u4kystd9SJj1Ub1bjBNh/V8Lxlx?=
+ =?us-ascii?Q?b+gVdWM4fn5+AFBR/x6Fdy78IGDPhgBcsiq8tJDmdS5H13x4ocE1DBpHrZWl?=
+ =?us-ascii?Q?aXl4oRDo6vp3zWNLnDpdvPrduOV+h3XReIe/iQuuVGcUvIs0XaA7pOWqn1pT?=
+ =?us-ascii?Q?IUZxcWs4DSN9daSFXash+gCwBIWlfzLi9a5KFX3HY2vceSDpIvZOOVZrPG0q?=
+ =?us-ascii?Q?EofwnLziJTTnWlz+atluuA7rObUyWfG6iHcsM7BmxSqwCsmNE2rQ8Kopjw1E?=
+ =?us-ascii?Q?1rLOxIIWP0mttYh5ZZffDVv0v591e+26C943oF2LFt03dV6TW84o0SBBxSPl?=
+ =?us-ascii?Q?lnjaG8yiZwmkNxNDhX8JittHp9QcS6aPIO6DCH/QGz6WtWnCgHA3FLMxyoN3?=
+ =?us-ascii?Q?VGuPjbCs6XFKTCTgMM8yl206hPw370MRL/cfOIAf7y7hP0N/EZfNJyniVfu/?=
+ =?us-ascii?Q?o7l1b4kbDZ289iJ+mwpbKVQ2yTKXU1AMTltT/Pt0+2p4fYfnA372xl5EyENx?=
+ =?us-ascii?Q?klGz8V+jjZpZ47QhvzpH408KD30Jf50lsbuPSMNRdJ1qcuo2mKHHGs3IvekV?=
+ =?us-ascii?Q?BneaoGY8aFtAvSl6i68MDXvvKpgIkn4=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 553d6de1-df54-4ee7-b1f3-08da3d79f654
+X-MS-Exchange-CrossTenant-Network-Message-Id: c50ac4d9-d24a-4aae-486a-08da3d79fbd6
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:46.0679
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:55.3682
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: oleXYSTvYSojiks2TgKTFZfmxhjnzzsh/d7kImlzd9El5k7xkszFNhkbVp/CzD9PjeCCAOJWbSf1pix6hSxPWA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB0915
+X-MS-Exchange-CrossTenant-UserPrincipalName: g7OW3UiAtuFEQyPaulxUUicuEnTG0XVPkQ0vnMPWRxAcn6nYYqTUrJ4aATbihgnC/Jyd74juDWoXH3vvWa7cgg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1P192MB0669
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,407 +128,269 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/scan.c | 392 ++++++++++++++++++++++++
- 1 file changed, 392 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/scan.c
+ drivers/net/wireless/celeno/cl8k/traffic.c | 254 +++++++++++++++++++++
+ 1 file changed, 254 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/traffic.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/scan.c b/drivers/net/wireless/celeno/cl8k/scan.c
+diff --git a/drivers/net/wireless/celeno/cl8k/traffic.c b/drivers/net/wireless/celeno/cl8k/traffic.c
 new file mode 100644
-index 000000000000..10076d93620e
+index 000000000000..788fd02e28a8
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/scan.c
-@@ -0,0 +1,392 @@
++++ b/drivers/net/wireless/celeno/cl8k/traffic.c
+@@ -0,0 +1,254 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#include <linux/err.h>
-+#include <linux/mutex.h>
-+#include <linux/delay.h>
-+#include <linux/slab.h>
++#include <linux/ip.h>
++#include <linux/ipv6.h>
 +
-+#include "channel.h"
-+#include "chip.h"
-+#include "calib.h"
++#include "bf.h"
++#include "tx.h"
++#include "radio.h"
++#include "utils.h"
 +#include "debug.h"
-+#include "rates.h"
-+#include "vif.h"
 +#include "hw.h"
-+#include "scan.h"
++#include "traffic.h"
 +
-+#define CL_MIN_SCAN_TIME_MS 50
-+#define CL_MIN_WAIT_TIME_MS 20
++#define TRAFFIC_CNTR_ACTIVE_THR     3       /* 3 * 100ms = 300ms */
++#define TRAFFIC_CNTR_IDLE_THR       20      /* 20 * 100ms = 2sec */
 +
-+static const char SCANNER_KTHREAD_NAME[] = "cl_scanner_kthread";
++/* Threshold in bytes */
++#define TRAFFIC_ACTIVE_THR_DRV      1920    /* = 150Kbit/sec (150 * 1024 / 8 / 10) */
++#define TRAFFIC_ACTIVE_THR_BF       26214   /* = 2mbit/sec (2 * 1024 * 1024 / 8 / 10) */
++#define TRAFFIC_ACTIVE_THR_MU       131070  /* = 10mbit/sec (10 * 1024 * 1024 / 8 / 10) */
++#define TRAFFIC_ACTIVE_THR_EDCA_6G  2621440 /* = 200mbit/sec (200 * 1024 * 1024 / 8 / 10) */
++#define TRAFFIC_ACTIVE_THR_EDCA_5G  2621440 /* = 200mbit/sec (200 * 1024 * 1024 / 8 / 10) */
++#define TRAFFIC_ACTIVE_THR_EDCA_24G 655360  /* = 50mbit/sec (50 * 1024 * 1024 / 8 / 10) */
++#define TRAFFIC_ACTIVE_THR_DFS      13107   /* = 1mbit/sec (1 * 1024 * 1024 / 8 / 10) */
 +
-+int cl_scan_channel_switch(struct cl_hw *cl_hw, u8 channel, u8 bw,
-+			   bool allow_recalib)
++static void cl_traffic_mon_ipv4(struct sk_buff *skb, struct cl_sta *cl_sta,
++				enum cl_traffic_mon_direction direction)
 +{
-+	struct cl_vif *cl_vif = cl_vif_get_first(cl_hw);
-+	struct cfg80211_chan_def *chandef = NULL;
-+	struct cfg80211_chan_def local_chandef;
-+	struct ieee80211_channel *chan = NULL;
-+	u16 freq = ieee80211_channel_to_frequency(channel, cl_hw->nl_band);
-+	int ret = 0;
++	struct iphdr *iphdr = ip_hdr(skb);
 +
-+	if (!cl_vif) {
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	chandef = &cl_vif->vif->bss_conf.chandef;
-+	local_chandef = *chandef;
-+
-+	chan = ieee80211_get_channel(cl_hw->hw->wiphy, freq);
-+	if (!chan) {
-+		cl_dbg_err(cl_hw, "Channel %u wasn't found!\n", channel);
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	local_chandef.chan = chan;
-+	if (cl_chandef_calc(cl_hw, channel, bw,
-+			    &local_chandef.width,
-+			    &local_chandef.chan->center_freq,
-+			    &local_chandef.center_freq1)) {
-+		cl_dbg_err(cl_hw, "Failed to extract chandef data for ch:%d\n",
-+			   channel);
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	*chandef = local_chandef;
-+	cl_hw->hw->conf.chandef = local_chandef;
-+
-+	if (cl_hw->chip->conf->ce_calib_runtime_en && allow_recalib)
-+		ret = cl_calib_runtime_and_switch_channel(cl_hw, channel, bw,
-+							  freq,
-+							  chandef->center_freq1);
-+	else
-+		ret = cl_msg_tx_set_channel(cl_hw, channel, bw, freq,
-+					    chandef->center_freq1,
-+					    CL_CALIB_PARAMS_DEFAULT_STRUCT);
-+exit:
-+	return ret;
++	if (iphdr->protocol == IPPROTO_UDP)
++		cl_sta->traffic_mon[CL_TRFC_MON_PROT_UDP][direction].bytes +=
++			ntohs(iphdr->tot_len) - IPV4_HDR_LEN(iphdr->ihl) - sizeof(struct udphdr);
++	else if (iphdr->protocol == IPPROTO_TCP)
++		cl_sta->traffic_mon[CL_TRFC_MON_PROT_TCP][direction].bytes +=
++			ntohs(iphdr->tot_len) - IPV4_HDR_LEN(iphdr->ihl) - sizeof(struct tcphdr);
 +}
 +
-+static int cl_scan_channel(struct cl_chan_scanner *scanner, u8 ch_idx)
++static void cl_traffic_mon_ipv6(struct sk_buff *skb, struct cl_sta *cl_sta,
++				enum cl_traffic_mon_direction direction)
 +{
-+	u8 main_channel;
-+	enum cl_channel_bw main_bw;
-+	s32 res = 0;
-+	bool is_off_channel;
-+	u64 scan_time_jiffies;
++	struct ipv6hdr *ipv6hdr = ipv6_hdr(skb);
 +
-+	/*
-+	 * 1. Save current channel
-+	 * 2. Disable tx
-+	 * 3. jump to new channel
-+	 * 4. Enable promiscious
-+	 * 5. Enable BSS collection
-+	 * 6. Reset stats counters
-+	 * 7. Sleep for scan_time
-+	 * 8. Calculate stats
-+	 * 9. Disable promiscious
-+	 * 10. Disable BSS collection
-+	 * 11. Switch to current channel
-+	 * 12. Enable tx
-+	 **/
++	if (ipv6hdr->nexthdr == IPPROTO_UDP)
++		cl_sta->traffic_mon[CL_TRFC_MON_PROT_UDP][direction].bytes +=
++			ntohs(ipv6hdr->payload_len) - sizeof(struct udphdr);
++	else if (ipv6hdr->nexthdr == IPPROTO_TCP)
++		cl_sta->traffic_mon[CL_TRFC_MON_PROT_TCP][direction].bytes +=
++			ntohs(ipv6hdr->payload_len) - sizeof(struct tcphdr);
++}
 +
-+	cl_dbg_trace(scanner->cl_hw, "Starting scan on channel %u, scan time %u(ms)\n",
-+		     scanner->channels[ch_idx].channel, scanner->scan_time);
++static void cl_traffic_mon_calc(struct sk_buff *skb, struct cl_sta *cl_sta,
++				enum cl_traffic_mon_direction direction)
++{
++	if (cl_set_network_header_if_proto(skb, ETH_P_IP))
++		cl_traffic_mon_ipv4(skb, cl_sta, direction);
++	else if (cl_set_network_header_if_proto(skb, ETH_P_IPV6))
++		cl_traffic_mon_ipv6(skb, cl_sta, direction);
++}
 +
-+	/* Save current channel */
-+	res = mutex_lock_interruptible(&scanner->cl_hw->set_channel_mutex);
-+	if (res != 0)
-+		return res;
-+	main_channel = scanner->cl_hw->channel;
-+	main_bw = scanner->cl_hw->bw;
-+	mutex_unlock(&scanner->cl_hw->set_channel_mutex);
++void cl_traffic_mon_tx(struct cl_sta *cl_sta, struct sk_buff *skb)
++{
++	struct cl_hw *cl_hw = cl_sta->cl_vif->cl_hw;
 +
-+	cl_dbg_trace(scanner->cl_hw, "Main channel is %u with bw %u\n",
-+		     main_channel, main_bw);
++	if (cl_hw->conf->ci_traffic_mon_en)
++		cl_traffic_mon_calc(skb, cl_sta, CL_TRFC_MON_DIR_DL);
++}
 +
-+	is_off_channel = (scanner->channels[ch_idx].channel != main_channel) ||
-+			 (scanner->channels[ch_idx].scan_bw != main_bw);
++void cl_traffic_mon_rx(struct cl_sta *cl_sta, struct sk_buff *skb)
++{
++	struct cl_hw *cl_hw = cl_sta->cl_vif->cl_hw;
 +
-+	/* Jump to new channel */
-+	if (is_off_channel) {
-+		/* Disable tx */
-+		cl_tx_en(scanner->cl_hw, CL_TX_EN_SCAN, false);
++	if (cl_hw->conf->ci_traffic_mon_en)
++		cl_traffic_mon_calc(skb, cl_sta, CL_TRFC_MON_DIR_UL);
++}
 +
-+		res = cl_scan_channel_switch(scanner->cl_hw,
-+					     scanner->channels[ch_idx].channel,
-+					     scanner->channels[ch_idx].scan_bw,
-+					     false);
-+		if (res) {
-+			cl_dbg_err(scanner->cl_hw,
-+				   "Channel switch failed: ch - %u, bw - %u, err - %d\n",
-+				   scanner->channels[ch_idx].channel,
-+				   scanner->channels[ch_idx].scan_bw, res);
-+			goto enable_tx;
++void cl_traffic_mon_sta_maintenance(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	u8 i, j;
++
++	for (i = 0; i < CL_TRFC_MON_PROT_MAX; i++)
++		for (j = 0; j < CL_TRFC_MON_DIR_MAX; j++) {
++			cl_sta->traffic_mon[i][j].bytes_per_sec = cl_sta->traffic_mon[i][j].bytes;
++			cl_sta->traffic_mon[i][j].bytes = 0;
++		}
++}
++
++static void cl_traffic_sta_start(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++				 enum cl_traffic_level level, enum cl_traffic_direction direction)
++{
++	cl_hw->traffic_db.num_active_sta_dir[direction][level]++;
++
++	/* If other direction is not active increase num_active_sta */
++	if (!cl_sta->traffic_db[1 - direction].activity_db[level].is_active)
++		cl_hw->traffic_db.num_active_sta[level]++;
++
++	if (level == TRAFFIC_LEVEL_DRV)	{
++		/*
++		 * Dynamic CTS:
++		 * If protection mode is disabled, environment is clean,
++		 * and station threshold was reached switch to CTS.
++		 */
++		if (cl_hw->traffic_db.num_active_sta[TRAFFIC_LEVEL_DRV] ==
++		     cl_hw->conf->ci_dyn_cts_sta_thr) {
++			if (cl_prot_mode_get(cl_hw) == TXL_NO_PROT) {
++				cl_hw->traffic_db.dynamic_cts = true;
++				cl_prot_mode_set(cl_hw, TXL_PROT_CTS);
++			}
++		}
++	} else if (level == TRAFFIC_LEVEL_BF) {
++		if (direction == TRAFFIC_DIRECTION_TX)
++			cl_bf_sta_active(cl_hw, cl_sta, true);
++	}
++}
++
++static void cl_traffic_sta_stop(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++				enum cl_traffic_level level, enum cl_traffic_direction direction)
++{
++	cl_hw->traffic_db.num_active_sta_dir[direction][level]--;
++
++	/* If other direction is not active decrease num_active_sta */
++	if (!cl_sta->traffic_db[1 - direction].activity_db[level].is_active)
++		cl_hw->traffic_db.num_active_sta[level]--;
++
++	if (level == TRAFFIC_LEVEL_DRV) {
++		/* Dynamic CTS:
++		 * If it was turned on and active station count became lower than
++		 * threshold --> return to no protection
++		 */
++		if (cl_hw->traffic_db.dynamic_cts) {
++			if (cl_hw->traffic_db.num_active_sta[TRAFFIC_LEVEL_DRV] ==
++			    (cl_hw->conf->ci_dyn_cts_sta_thr - 1)) {
++				cl_hw->traffic_db.dynamic_cts = false;
++				cl_prot_mode_set(cl_hw, TXL_NO_PROT);
++			}
++		}
++	} else if (level == TRAFFIC_LEVEL_BF) {
++		if (direction == TRAFFIC_DIRECTION_TX)
++			cl_bf_sta_active(cl_hw, cl_sta, false);
++	}
++}
++
++static void cl_traffic_check_activity(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++				      enum cl_traffic_level level,
++				      enum cl_traffic_direction direction)
++{
++	struct cl_traffic_activity *activity_db =
++		&cl_sta->traffic_db[direction].activity_db[level];
++	u32 num_bytes = cl_sta->traffic_db[direction].num_bytes;
++
++	if (num_bytes > cl_hw->traffic_db.active_bytes_thr[level]) {
++		activity_db->cntr_active++;
++		activity_db->cntr_idle = 0;
++
++		/* If traffic is above threshold for X consective times change state to active */
++		if (!activity_db->is_active &&
++		    activity_db->cntr_active >= TRAFFIC_CNTR_ACTIVE_THR) {
++			activity_db->is_active = true;
++			cl_traffic_sta_start(cl_hw, cl_sta, level, direction);
 +		}
 +	} else {
-+		cl_dbg_trace(scanner->cl_hw, "Scan on main channel %u\n", main_channel);
-+	}
++		activity_db->cntr_active = 0;
++		activity_db->cntr_idle++;
 +
-+	/* Enable promiscious mode */
-+	cl_rx_filter_set_promiscuous(scanner->cl_hw);
-+
-+	/* Reset channel stats */
-+	cl_get_initial_channel_stats(scanner->cl_hw, &scanner->channels[ch_idx]);
-+
-+	/* Sleep for scan time */
-+	scan_time_jiffies = msecs_to_jiffies(scanner->scan_time);
-+	res = wait_for_completion_interruptible_timeout(&scanner->abort_completion,
-+							scan_time_jiffies);
-+	if (res > 0) {
-+		cl_dbg_err(scanner->cl_hw, "Scan on channel %u, bw %u, idx %u was aborted\n",
-+			   scanner->channels[ch_idx].channel,
-+			   scanner->channels[ch_idx].scan_bw, ch_idx);
-+		res = 0;
-+	}
-+
-+	/* Calculate stats */
-+	cl_get_final_channel_stats(scanner->cl_hw, &scanner->channels[ch_idx]);
-+
-+	/* Disable promiscious */
-+	cl_rx_filter_restore_flags(scanner->cl_hw);
-+
-+	if (is_off_channel) {
-+		res = cl_scan_channel_switch(scanner->cl_hw, main_channel, main_bw, false);
-+		if (res)
-+			cl_dbg_err(scanner->cl_hw,
-+				   "Switching to main ch %u, bw %u failed, err - %d\n",
-+				   main_channel, main_bw, res);
-+enable_tx:
-+		/* Enable tx */
-+		cl_tx_en(scanner->cl_hw, CL_TX_EN_SCAN, true);
-+	}
-+
-+	cl_dbg_trace(scanner->cl_hw, "Scan on channel %u finished, actual scan_time is %u ms\n",
-+		     scanner->channels[ch_idx].channel, scanner->channels[ch_idx].scan_time_ms);
-+
-+	return res;
-+}
-+
-+static s32 cl_run_off_channel_scan(struct cl_chan_scanner *scanner)
-+{
-+	u8 i = 0, scanned_channels = 0;
-+	s32 ret = 0;
-+
-+	for (i = 0; i < scanner->channels_num && !scanner->scan_aborted; ++i) {
-+		if (!scanner->channels[i].scan_enabled)
-+			continue;
-+
-+		scanner->curr_ch_idx = i;
-+		ret = cl_scan_channel(scanner, i);
-+		if (ret)
-+			cl_dbg_err(scanner->cl_hw, "scan failed, err - %d, channel - %u\n",
-+				   ret, scanner->channels[i].channel);
-+
-+		if (scanner->scan_aborted)
-+			break;
-+
-+		cl_dbg_trace(scanner->cl_hw, "Scan on chan %u finished, waiting for time %u\n",
-+			     scanner->channels[i].channel, scanner->wait_time);
-+
-+		++scanned_channels;
-+		if (scanned_channels != scanner->scan_channels_num) {
-+			u64 wait_time_jiffies;
-+
-+			wait_time_jiffies = msecs_to_jiffies(scanner->wait_time);
-+			ret = wait_for_completion_interruptible_timeout(&scanner->abort_completion,
-+									wait_time_jiffies);
-+			if (ret > 0) {
-+				cl_dbg_err(scanner->cl_hw, "Off-channel scan was aborted\n");
-+				ret = 0;
-+			}
++		/* If traffic is below threshold for Y consective times change state to idle */
++		if (activity_db->is_active && activity_db->cntr_idle >= TRAFFIC_CNTR_IDLE_THR) {
++			activity_db->is_active = false;
++			cl_traffic_sta_stop(cl_hw, cl_sta, level, direction);
 +		}
 +	}
-+
-+	if (scanner->completion_cb)
-+		scanner->completion_cb(scanner->cl_hw, scanner->completion_arg);
-+
-+	cl_dbg_info(scanner->cl_hw, "Off-channel scan on %u channels finished\n",
-+		    scanner->scan_channels_num);
-+
-+	return ret;
 +}
 +
-+static s32 cl_off_channel_scan_thread_fn(void *args)
++static void cl_traffic_monitor_sta_traffic(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
 +{
-+	struct cl_chan_scanner *scanner = args;
++	enum cl_traffic_level level = 0;
 +
-+	while (!kthread_should_stop()) {
-+		if (atomic_read(&scanner->scan_thread_busy)) {
-+			cl_run_off_channel_scan(scanner);
-+			atomic_set(&scanner->scan_thread_busy, 0);
-+			wake_up_interruptible(&scanner->wq);
++	/* Check Tx & Rx activity in all levels */
++	for (level = 0; level < TRAFFIC_LEVEL_MAX; level++) {
++		cl_traffic_check_activity(cl_hw, cl_sta, level, TRAFFIC_DIRECTION_TX);
++		cl_traffic_check_activity(cl_hw, cl_sta, level, TRAFFIC_DIRECTION_RX);
++	}
++
++	/* Save previous Tx num bytes */
++	cl_sta->traffic_db[TRAFFIC_DIRECTION_TX].num_bytes_prev =
++		cl_sta->traffic_db[TRAFFIC_DIRECTION_TX].num_bytes;
++
++	/* Reset num_bytes */
++	cl_sta->traffic_db[TRAFFIC_DIRECTION_TX].num_bytes = 0;
++	cl_sta->traffic_db[TRAFFIC_DIRECTION_RX].num_bytes = 0;
++}
++
++void cl_traffic_init(struct cl_hw *cl_hw)
++{
++	struct cl_traffic_main *traffic_db = &cl_hw->traffic_db;
++
++	traffic_db->active_bytes_thr[TRAFFIC_LEVEL_DRV] = TRAFFIC_ACTIVE_THR_DRV;
++	traffic_db->active_bytes_thr[TRAFFIC_LEVEL_BF] = TRAFFIC_ACTIVE_THR_BF;
++	traffic_db->active_bytes_thr[TRAFFIC_LEVEL_MU] = TRAFFIC_ACTIVE_THR_MU;
++
++	if (cl_band_is_6g(cl_hw))
++		traffic_db->active_bytes_thr[TRAFFIC_LEVEL_EDCA] = TRAFFIC_ACTIVE_THR_EDCA_6G;
++	else if (cl_band_is_5g(cl_hw))
++		traffic_db->active_bytes_thr[TRAFFIC_LEVEL_EDCA] = TRAFFIC_ACTIVE_THR_EDCA_5G;
++	else
++		traffic_db->active_bytes_thr[TRAFFIC_LEVEL_EDCA] = TRAFFIC_ACTIVE_THR_EDCA_24G;
++
++	traffic_db->active_bytes_thr[TRAFFIC_LEVEL_DFS] = TRAFFIC_ACTIVE_THR_DFS;
++}
++
++void cl_traffic_tx_handler(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u32 num_bytes)
++{
++	cl_sta->traffic_db[TRAFFIC_DIRECTION_TX].num_bytes += num_bytes;
++	cl_sta->tx_bytes += num_bytes;
++}
++
++void cl_traffic_rx_handler(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u32 num_bytes)
++{
++	cl_sta->traffic_db[TRAFFIC_DIRECTION_RX].num_bytes += num_bytes;
++	cl_sta->rx_bytes += num_bytes;
++}
++
++void cl_traffic_maintenance(struct cl_hw *cl_hw)
++{
++	cl_sta_loop(cl_hw, cl_traffic_monitor_sta_traffic);
++}
++
++void cl_traffic_sta_remove(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	/* Check if station disconnected during traffic */
++	enum cl_traffic_level level = 0;
++	enum cl_traffic_direction direction = 0;
++
++	for (direction = 0; direction < TRAFFIC_DIRECTION_MAX; direction++) {
++		for (level = 0; level < TRAFFIC_LEVEL_MAX; level++) {
++			if (cl_sta->traffic_db[direction].activity_db[level].is_active)
++				cl_traffic_sta_stop(cl_hw, cl_sta, level, direction);
 +		}
 +
-+		set_current_state(TASK_INTERRUPTIBLE);
-+		schedule();
++		memset(&cl_sta->traffic_db, 0, sizeof(cl_sta->traffic_db));
 +	}
-+
-+	return 0;
 +}
 +
-+static bool cl_is_scan_available(struct cl_chan_scanner *scanner)
++bool cl_traffic_is_sta_active(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
 +{
-+	if (atomic_cmpxchg(&scanner->scan_thread_busy, 0, 1) == 1) {
-+		cl_dbg_warn(scanner->cl_hw, "Off-channel scan is already in progress\n");
-+		return false;
-+	}
-+
-+	return true;
++	return (cl_sta->traffic_db[TRAFFIC_DIRECTION_TX].activity_db[TRAFFIC_LEVEL_DRV].is_active ||
++		cl_sta->traffic_db[TRAFFIC_DIRECTION_RX].activity_db[TRAFFIC_LEVEL_DRV].is_active);
 +}
 +
-+static enum cl_channel_bw cl_scanner_fix_input_bw(struct cl_chan_scanner *scanner, u8 bw)
++bool cl_traffic_is_sta_tx_exist(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
 +{
-+	return (bw >= CHNL_BW_MAX) ? scanner->cl_hw->bw : bw;
-+}
-+
-+static void cl_scanner_disable_everywhere(struct cl_chan_scanner *scanner)
-+{
-+	u8 j;
-+
-+	for (j = 0; j < scanner->channels_num; ++j)
-+		scanner->channels[j].scan_enabled = false;
-+}
-+
-+s32 cl_trigger_off_channel_scan(struct cl_chan_scanner *scanner, u32 scan_time, u32 wait_time,
-+				const u8 *channels, enum cl_channel_bw scan_bw, u8 channels_num,
-+				void (*completion_cb)(struct cl_hw *cl_hw, void *arg),
-+				void *completion_arg)
-+{
-+	u8 i, j;
-+
-+	if (!channels || scan_bw > CHNL_BW_MAX)
-+		return -EINVAL;
-+
-+	if (!scanner->scans_enabled)
-+		return 0;
-+
-+	if (channels_num > scanner->channels_num) {
-+		cl_dbg_err(scanner->cl_hw, "channels num %u is invalid, max is %u\n",
-+			   channels_num, scanner->channels_num);
-+		return -ERANGE;
-+	}
-+
-+	if (!cl_is_scan_available(scanner))
-+		return -EBUSY;
-+
-+	scanner->completion_arg = completion_arg;
-+	scanner->completion_cb = completion_cb;
-+	scanner->scan_time = max_t(u32, scan_time, CL_MIN_SCAN_TIME_MS);
-+	scanner->wait_time = max_t(u32, wait_time, CL_MIN_WAIT_TIME_MS);
-+	scanner->scan_bw = cl_scanner_fix_input_bw(scanner, scan_bw);
-+	scanner->scan_aborted = false;
-+
-+	cl_scanner_disable_everywhere(scanner);
-+
-+	scanner->scan_channels_num = 0;
-+	for (j = 0; j < scanner->channels_num; ++j) {
-+		for (i = 0; i < channels_num; ++i) {
-+			if (channels[i] != scanner->channels[j].channel)
-+				continue;
-+
-+			if (!cl_chan_info_get(scanner->cl_hw, scanner->channels[j].channel,
-+					      scanner->scan_bw)) {
-+				cl_dbg_warn(scanner->cl_hw, "channel %u with bw %u is disabled\n",
-+					    scanner->channels[j].channel, scanner->scan_bw);
-+				continue;
-+			}
-+
-+			scanner->channels[j].scan_enabled = true;
-+			++scanner->scan_channels_num;
-+		}
-+	}
-+
-+	reinit_completion(&scanner->abort_completion);
-+
-+	wake_up_process(scanner->scan_thread);
-+
-+	return 0;
-+}
-+
-+void cl_abort_scan(struct cl_chan_scanner *scanner)
-+{
-+	scanner->scan_aborted = true;
-+	complete(&scanner->abort_completion);
-+	cl_dbg_info(scanner->cl_hw, "Off-channel scan was aborted\n");
-+}
-+
-+bool cl_is_scan_in_progress(const struct cl_chan_scanner *scanner)
-+{
-+	return atomic_read(&scanner->scan_thread_busy);
-+}
-+
-+int cl_scanner_init(struct cl_hw *cl_hw)
-+{
-+	u8 i, j;
-+	s32 ret = 0;
-+	u32 channels_num;
-+	struct cl_chan_scanner *scanner;
-+
-+	cl_hw->scanner = vzalloc(sizeof(*cl_hw->scanner));
-+	if (!cl_hw->scanner)
-+		return -ENOMEM;
-+
-+	scanner = cl_hw->scanner;
-+	init_completion(&scanner->abort_completion);
-+
-+	scanner->cl_hw = cl_hw;
-+	scanner->scans_enabled = true;
-+
-+	channels_num = cl_channel_num(scanner->cl_hw);
-+	for (i = 0, j = 0; i < channels_num; ++i) {
-+		u32 freq;
-+
-+		freq = cl_channel_idx_to_freq(cl_hw, i);
-+		if (!ieee80211_get_channel(cl_hw->hw->wiphy, freq))
-+			continue;
-+
-+		ret = cl_init_channel_stats(scanner->cl_hw, &scanner->channels[j], freq);
-+		if (ret)
-+			return ret;
-+
-+		cl_dbg_trace(scanner->cl_hw, "Stats for channel %u at index %u initialized\n",
-+			     scanner->channels[j].channel, j);
-+		++j;
-+	}
-+
-+	scanner->channels_num = j;
-+
-+	atomic_set(&scanner->scan_thread_busy, 0);
-+	init_waitqueue_head(&scanner->wq);
-+
-+	scanner->scan_thread = kthread_run(cl_off_channel_scan_thread_fn,
-+					   scanner, SCANNER_KTHREAD_NAME);
-+	if (IS_ERR(scanner->scan_thread)) {
-+		cl_dbg_err(scanner->cl_hw, "unable to create kthread %s, err - %ld\n",
-+			   SCANNER_KTHREAD_NAME, PTR_ERR(scanner->scan_thread));
-+		return PTR_ERR(scanner->scan_thread);
-+	}
-+	cl_dbg_trace(scanner->cl_hw, "%s kthread was created, pid - %u\n",
-+		     SCANNER_KTHREAD_NAME, scanner->scan_thread->pid);
-+
-+	return ret;
-+}
-+
-+void cl_scanner_deinit(struct cl_hw *cl_hw)
-+{
-+	struct cl_chan_scanner *scanner = cl_hw->scanner;
-+
-+	if (!scanner->scans_enabled)
-+		goto out;
-+
-+	if (scanner->scan_thread)
-+		kthread_stop(scanner->scan_thread);
-+
-+ out:
-+	vfree(cl_hw->scanner);
-+	cl_hw->scanner = NULL;
++	return ((cl_sta->traffic_db[TRAFFIC_DIRECTION_TX].num_bytes != 0) ||
++		(cl_sta->traffic_db[TRAFFIC_DIRECTION_TX].num_bytes_prev != 0));
 +}
 -- 
 2.36.1
