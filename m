@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F38C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F83C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236934AbiEXLks (ORCPT
+        id S236060AbiEXLkq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:40:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43136 "EHLO
+        Tue, 24 May 2022 07:40:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236947AbiEXLkm (ORCPT
+        with ESMTP id S236941AbiEXLkm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 24 May 2022 07:40:42 -0400
-Received: from EUR02-AM5-obe.outbound.protection.outlook.com (mail-eopbgr00041.outbound.protection.outlook.com [40.107.0.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 489AF8CCF2
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:40:08 -0700 (PDT)
+Received: from EUR03-VE1-obe.outbound.protection.outlook.com (mail-eopbgr50088.outbound.protection.outlook.com [40.107.5.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78AFB53E2D
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:40:00 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y10+JGXUeOkSl02b/vo7aelSFUkr4A50JcWoSDczOlXzF/e8TJEZvciCS6vFdb8ubb6ZCWzWZSeargbISPnwg25BgC7at6o0y5s+mLkVfAPLHaAOMiI1XZ19kBC0FJQZk9P9/THNoBUd2ceFo/4wDtANMfSRZz7KbZRTEJyFANdlQ+BiEsRsyFrUzZEDonlCuSN+dZU70VblGIrhqtz18oan6Pwp2iWa3sBghE5oczBvqf39aeiCmC4c2MAXDqFfaORJIpTKwbyjsryuNE7gkG3b/77ylIJsr3E6X1spc6GKlWltxumJKXd0YuWR3v0luMsQc3WIcjL+826+oWGRvA==
+ b=KWxQbNGLEpPvYjBAbPozztwqyoZhhuyjTSnBcp04u3nYaQdBEBOcfjxvSgT+sysoqy9qA7OWOD6Te6iNOhUaNFp0cVcC0abU4i8+wPQGLcQMst6YibeOEsuLhbLH02bi5Wu636g9Fkvy9Vvv9x9LOx2BIqb6gHIJzWXOWwp33kPO2kvLriz2iQYa2ZGcVEQqKN/JPIHo5EChUgCd+Eg1G3xUiIWYXEBTa6VJ9/uN0edq7H9/QEcAkoyQN54J9GscScdS69zT62b7i2vxBw9WeUkz+KDlDbvwUe0XDprJYWrb628dE06cnRVbaBACOYfhbCFEI2nE1CErLPMRbBpICQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jq9xtePaeQ03sbSbP+zGe1BtdAMepLr/4o+DOmD1hJk=;
- b=XK5U8HomLkiN16k2u0LjPXnH6i0E9o/m/g+WEeX/nU5P092Y6zfiJ25PGLciJP0qoOzeu6afzwkGOGDXlyTBZkvUYLqE9NvbCxIPkRq8fPlR7wTVoXK/qNZ5y8nipdDfjjQWZ/ZSkWudhahtGX9eTrjpZU8tPABH20IfwXSFRUio73N9oC0/jRmwuKwwBvK7otRd50C5zqqPG4uUPVOe+G858VFT/NHD2qxIYZ1hWr7MXPXBAC5KyDgFA8cQEZFoucBKAp3X9BX3zv7OrHeTNH8LK+NntVoThG0cUdKogQIGVtpApmGTKG7nptT6Qk9yYAQ8jrduecL2dmXC0P7kXg==
+ bh=WWrbZ5S+z5RiqKUpeoLStNT8JsQ8SMq6AS9e/O+xZXI=;
+ b=K1RHzkPOdUkiOB+NKiWSwlQIiTeA8b0lII6wYqjbXxwhIddxoUmhlmCX4u+SfaJswxVc/zhGJB69iPHAxUE3FonE0/7WcCWqfQ3giDLKbFwQVUq8fc8WvSHlXeWJd7Y0EbK+wvq8502KOER2a9REhH1BYAhrUvcOVoPa5/nv6Xe38762n766DnbTgiihbipOoHAh0EoyxjIBU4+VtSN3nqSOwh7bol2sPb4lQrjtXSis2G301tASt1CidH6/zNkD8B0Mvzxt1up52YhM7YLciz3JoYQdrW/P9AYe3Tmx8XIojzMT3p44tOP20of22K/EbgTk9x1g3/Mr/wNOfwKLFw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jq9xtePaeQ03sbSbP+zGe1BtdAMepLr/4o+DOmD1hJk=;
- b=SHd73JnIbP8qX2MU5TApWBIK5P2QPhXuD1UUdC2i96OC+2YUmhno/wlvCNRiWSpvuh4CH2XkKWY/LW6r3IdJJVzFgnh5WrXt1A2p9CTtYcqNUvfFlt7mW3VzTpOhzsKpxBhGO2Bp7yyQY+rKPs2iAlLV4LQmtSwlXLi+twrbk/0=
+ bh=WWrbZ5S+z5RiqKUpeoLStNT8JsQ8SMq6AS9e/O+xZXI=;
+ b=nHniJs5Eue6A60UVaLTwgl9fdjnnTgdtQ6VCf0mqFSA1eysCjuIFmaFCI+M3qoKVlJrE1Ptf479IWmHaFawwzPx5ORh8MaSyS6NzBgPH4LPg+ndNBzKaLpKwKc1bfoNCEVVk1VuyFjGyeonSfsxArg3Mb9B3MJnyNg2rWtoLXXc=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by DBAP192MB1033.EURP192.PROD.OUTLOOK.COM (2603:10a6:10:1b4::12) with
+ by DU0P192MB1571.EURP192.PROD.OUTLOOK.COM (2603:10a6:10:34c::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.13; Tue, 24 May
- 2022 11:40:05 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Tue, 24 May
+ 2022 11:38:52 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:40:05 +0000
+ 11:38:52 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 91/96] cl8k: add vif.h
-Date:   Tue, 24 May 2022 14:34:57 +0300
-Message-Id: <20220524113502.1094459-92-viktor.barna@celeno.com>
+Subject: [RFC v2 58/96] cl8k: add rates.c
+Date:   Tue, 24 May 2022 14:34:24 +0300
+Message-Id: <20220524113502.1094459-59-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7b63ce08-379f-46e5-6dae-08da3d7a002b
-X-MS-TrafficTypeDiagnostic: DBAP192MB1033:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2c749784-4668-4dfd-8b77-08da3d79f033
+X-MS-TrafficTypeDiagnostic: DU0P192MB1571:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <DBAP192MB10335280D97A1AE68B6901EFF6D79@DBAP192MB1033.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <DU0P192MB15711CEB14ABC2B855501FA8F6D79@DU0P192MB1571.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: yW4GqbLTfM+5OsnXMhGys4yrKW0XKuzSmI44q2zbc+RBpESpcnDElV/ulmZULNwZ8pMgEBjBClCxw72SFk8nJsLWGdKhF9AEDUYe4OvrHofU/L1+Jk7m4YDRVr3mYF21sNt9bGrkF3TpBR+s4bmihZs1MmjR7v2Uw+LResV+e7UbBiFPdAr4kq2BdkCEDFQzBgLkB6niQDyvDqhJgXyHrD/BGaOY5O8M+JmpVoNaVp/s4u2OR8HWbAwAv1agETQpXwqn9yCHETx6FdP+a2ZcoBfTGvLeaMDHT0KLHuUJhxyGLTyJyDNSzSi9wzNGNojfTuqTaSwNgmyULKIdxI3rD7KEdrlul6Q54Muxk5n3e6IV0ye2Bq0IUA+y9ll+cVZmLQY7gsCOp4WQhDypBC9cIdF/aXg2XU/IWFTTK3KuGqfiSZ9Nm0uwOJ6BdazryLlknfY6fziFn0zTG4SLzsmUWpIZ7bLa42Hd4at92Wo9H9kZ23xH1femYqGsbtvxFzJ0dPKsb9nEbFmKwksKhqvBa2xTkxdnbO4AKMFW56BtzIihY2tlpDvyLzO3c3j0T4NHOD4uh4t35b2Rf5SaS6shcKswiLBuNMGf+mjwu36pjwEG/eAvyPJww0516BbhuiHrcMvEbh6jWxgukiA4Z3E4F7Mr2JKBCGEVuqv2ucOIE0AfowdKvGSVzdjSLJkydvrRoVP17oxZ1aP1oIiBrLQFC3iBfoYVZ+LAlvMyj0RXEcA=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(346002)(376002)(366004)(136003)(396003)(39850400004)(2906002)(4326008)(6916009)(38350700002)(8676002)(86362001)(316002)(54906003)(38100700002)(66476007)(66556008)(26005)(2616005)(52116002)(9686003)(36756003)(6486002)(66946007)(6512007)(6506007)(107886003)(5660300002)(508600001)(83380400001)(8936002)(186003)(1076003)(41300700001)(6666004)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: RaWQ0KgPhK3q1SowEE7PD4aBUyxC2ZATJPNX4gMIxq+VgzN9Bh5oT8h008vqM+sYC0HX3uoPg7aA280Jjpw+HSbXN5FWMBmLMYtJuj1PQQEJ7Yar0OHFOY9uP/8BJtRQ/8U6td3BtXWG090KnU+0Gnfa8GtOg0LxAbtW6jswSyaI49joWUoOzv8y4a9evt8+xDcAFht4K/jT15gRCrmPYJHcPOfgglxkzzGGcKnM2lGcrZbdfhAvo/PTiSGzN0TNX51W4kcBd20yI3p6YBZWMf+9S/n01XvaGLh9OsSXCLPrD9nNII362PY6gKxsNNzDloNuXKZdvYCqXV3LTERJ5I/y53Se/Kllmi0E7DmUHGL4EZ8omJKrDrTdutthJssw8eRaCal2I8IqgcOXg7Jc7UZxZgDd3DSxV6RaA4S1Ygw3b26wKYQdnCjfc2hXTEON2dhpPbMUpcI5bMRSwi7R1Lmfh6FvMzydmjlVI3bLQ1W83B1cTV8BG5rMvUL+oSGuj4R91NxvpTMKaxF7pqV0u0jwL8GZZj42bYwKmFAsbG3za3rJsjo3HW9qSf5Xky7cU1Mwj3060ANP07SvDOCVPTbznM8lnhybaaN75+HPvB9pKSL7VbDHeJmXEQUkyL+6lT0JiY+ovGkQKlPKEZeZwQoYB9mI3HqEGGSXDlM7rFjr0hK3v0C6zlqUp4SCbEMPK4OAOR8R2pyP+qcp6p9jRWO0IvDjct8zPzwuheptrpY=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(39850400004)(346002)(396003)(376002)(6512007)(186003)(6916009)(9686003)(38350700002)(38100700002)(41300700001)(36756003)(316002)(54906003)(2616005)(1076003)(86362001)(107886003)(8676002)(66476007)(4326008)(66556008)(66946007)(52116002)(8936002)(6666004)(6506007)(2906002)(83380400001)(508600001)(30864003)(5660300002)(6486002)(26005)(32563001)(559001)(579004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?FvFVUSydHtTTI0rVSsuwT53zFHX+fahEr2hVD7uMyPBuIlwnRoChzAn+FIJO?=
- =?us-ascii?Q?XnkU1gE0MnZ/otQ4pXOVfgJaoNJbRDoosQy2GrCjqHTejBMCHJH8u3ULXN3u?=
- =?us-ascii?Q?WwtDNwPb2CjPyQ6o5qChGL2JuiBlrvMQGhtUj0KnK/lz3/N/cy8vFupGXUN4?=
- =?us-ascii?Q?h+pvp//XBEr/tqnpcAhwMROn4gPuVPRGoHdI3HJcUFpT0pqDP61C2OHJuC83?=
- =?us-ascii?Q?xFT4C4zLiJFeEiKSvu3OdG2wpZooLT7/S0KTq+z/BBoXteW3jjxteXnbQCcX?=
- =?us-ascii?Q?8E+faz/y6EXLvB6P1FHNWNGqHVs3/P6wEbO/UZs7SAEcuPqilRUGzxPo7nnK?=
- =?us-ascii?Q?zmVB8Bx3kX4iLdrOMbYHPXrX05Gm9cyEaGkKiXNw/pJfGNcanKATL2bouSID?=
- =?us-ascii?Q?l4x41+XIljHPHfg1dOIgjl9pajUgIc+8mlneKEZmYx7DG171r3hQeTcSzH5p?=
- =?us-ascii?Q?Wl+E+QmPfOPEOH7ouu1SckNS3UU/oL16ACP7V+uoASiSNRV0ZrDDIwq5vZrV?=
- =?us-ascii?Q?PfFSFAkIO7Tf4ITL9gXnCoRtw0L0bwU6sHUdEpyL7o8hc/xv4WegyAJlNLmF?=
- =?us-ascii?Q?u5N+9f9Vz1OpnNKy2LsE8/mcMOkNYhslPfKa+DbhtKQHlEpwPJq9gg2UyGlg?=
- =?us-ascii?Q?s6YZjmCH/rdYKqWnwpdFnanJCBSNMFW1H7T8fck4kgivs0NWBDOuLxFnhyFd?=
- =?us-ascii?Q?Ngsn8Md+05NSO5MicEzXprMOJXktgedy8PfFxU4uxUE+hg6WHyGsf4DKT+2Q?=
- =?us-ascii?Q?YtZHSCzGxqJNZKFfviUS4T3+uzRPoM1oOMjdDvxdJuk9ZMHYfmkw3e+8FcqG?=
- =?us-ascii?Q?l/TlufU+YM6adnSyboC2WXf9P77iK/itSg8wNDZRlr4bSH0JQrrTuKVtyjnb?=
- =?us-ascii?Q?6lYTpmjws9S35DUuHud+NIDikUjpONK8k2AT8FcoDvMDm2UCKPqSIPgODOSn?=
- =?us-ascii?Q?dwhGfK4cnjOqhQ3EQjqOrs4pHSa7e+Il6AZJVe0zUvQEgOKI692MSI1zqHhQ?=
- =?us-ascii?Q?/WNkUTs3VN7NbUxLFvbxyUEmlZXV0qk8f+rPW0Q0E5LdM6LACTyJJMMbMMuc?=
- =?us-ascii?Q?/uFUOu9GYpT7hIqaflIpSAQ0aCWXDKlf0Q1a5Ftir7acyxlB/7fl/qjbrYKi?=
- =?us-ascii?Q?M5lXxHAnpdm60DtGELeFCyK0BDEzSCWGpuDCQ/zAp5NVce/jS0O+mklBfXg8?=
- =?us-ascii?Q?+SsHo38KC0FuGQIWY12n8HcgwmpOSIqRo8kP1VXPlT4yEKwmI8IQOd/7C5PQ?=
- =?us-ascii?Q?wlVWGL9rp3xHWKh5Rldwc6J/0CO5FLakVhRwOftHkl9NpMybtRsW0cUIsQS3?=
- =?us-ascii?Q?c6XLhI242X8bC8l84oACLBHhX5nTDMLsKr21x3tZJbvt21kaY55WZvd39lrX?=
- =?us-ascii?Q?tQHuM2Li1t1QOxeRJpyiVEaYwaoHSB+Gd5lpIGMmtU1VlH8GiLrs04QXwaFh?=
- =?us-ascii?Q?kJUi/lieeGgiLSO/wr+OsFudfCZ7h19B54VCRcNIQN3IvLVHLPWnJOQOXbBg?=
- =?us-ascii?Q?mVzdrP8DVxAue9YYMeuyXk1g/XeJFaKd0rMkJyaiqFAerVX9PflECotGHMmA?=
- =?us-ascii?Q?tPMHKD+1mOqVGadreqvi9RCPtzm8YxOsS1IXcVkQkNGDWmICrkm7kW6A0RSo?=
- =?us-ascii?Q?cKh+r3uel6B1EBLcsAo7ISgdYbB8aS43cICOI6iLD7gIl6SuapVNmw01mjxo?=
- =?us-ascii?Q?JWWGWIj+OyzObL9bD+EMLPGE7A7pU6uaUPInDkN99Rr4iPr0Mkh6J6fEd2i2?=
- =?us-ascii?Q?jMK3jYOugDgz4CTTc4718SVNsXzSwcY=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?nF59FMPeZaDLSKbTFAs0P4zIwSSWlH1akFKFjYJ62p04ogPoMNr5wE6Afmhw?=
+ =?us-ascii?Q?vjCRPFEHLlCMjfqKn95J7WH1BakoZ4Nb0eDonJJcVsjCYq7g+cTR820hPzcn?=
+ =?us-ascii?Q?H7HcmyJgEFNAOhHLgi94xPRTGwAlAsogWblSwZf5vH3c7rCXUhfOdEsVG84w?=
+ =?us-ascii?Q?icrkNpBmxVEe/9OoA+7CFVTCJUBIaBA2zuVoSp+iV75amr4J06pabG+Kw4p2?=
+ =?us-ascii?Q?sMwY8G2BFGZRYa+zRG4SUuoYrbrFYNwEuaf+qxkEWAj6Wsap9REzsLXPSB5Z?=
+ =?us-ascii?Q?Mlpd/+3dE6v56OuwLbwnbIsbgYICxuRPac5yw+n44GJjFlIOC6oIikT7NzF1?=
+ =?us-ascii?Q?Z+fm+d3qvORz20P6DORtwrL1SSMr9yYE1v4Yz6ce2vOCWA6IigXucf18a0Kl?=
+ =?us-ascii?Q?DWX1uOBLcpyfzP4GhFCH7bMb/Dr7JzpJ1cVImuN9KiNrjqgReTBtCJV10Fd4?=
+ =?us-ascii?Q?JlrvNGEe4NK9abIlLIDxDcI0ylvwJmIoE/G7dM7AtgJanqEZu1QqYUhTi7FS?=
+ =?us-ascii?Q?2HnnpQAGxgByfZXp86KbY5hgapbib/nJBTiSF+YF+5an8YH2ReSt+U3mpkEB?=
+ =?us-ascii?Q?Fd6AJropIDEp08T3y7UAlIbtfS3vrvzE3lCbgqktn5zwaIR0DYPPnQtVVUdu?=
+ =?us-ascii?Q?KTIK6xTfryLBhdjtWrNE26j5l2uw3O5ASgUNahytt+0Cz8X6D2n5hfrdz1cj?=
+ =?us-ascii?Q?SAkSRJQt0IVpcyNakq+WrGEaghqUuEiOjRoOnZqyEfDGfQWA5pdyCZFgOwRx?=
+ =?us-ascii?Q?NvsQwBH9ic2yeJ/wTu1izRYiU5Ce4Zr08jpoE9SLs6QvAztlfTRCTDc39Mcx?=
+ =?us-ascii?Q?kJfdTIWFKIAL356XOKTEbAqAbn8yiapMs+hrEhGJhpM+rayPH2FsWhTaacES?=
+ =?us-ascii?Q?6CS+JYW/E2Z3drHY8YSX+6lf8wbAGXTHUgh6/aDufTFNRbf/LCMLIb2Dfs2l?=
+ =?us-ascii?Q?ZIQKjYYfJa9CxkN0B2J9mTD8J1gMkWsRLuHLOKOX2QY+BKqOefk8T9jeN7PA?=
+ =?us-ascii?Q?S1VHUzWITQHXYH2DiSPImvQ9S1A9BwwuC+7klSxCZWUOJYXxGPtMi1f8GGS6?=
+ =?us-ascii?Q?FPa2JFOEBEqhAKRTE/VfHG/4jhSv1WcsRSXwjL4IIczo5rvJ1dE7f7g46F5N?=
+ =?us-ascii?Q?8EBCmPqEFo0nBtRycQXdHjhniEnt+VyFUfasSxWt+ZvmsV1hySesTZ7I1dIG?=
+ =?us-ascii?Q?BuZKAwKwTRkMU6xVEpeNMqar2M/PXjdkmQz4p2ts1edq5HGZTjo/7FT6zvrz?=
+ =?us-ascii?Q?RNq9+zsWW8FM6kSGcrZnJB9I4Cn31tBFDGLLj7rqJUKtjQ1F3UmzLRgOe/w0?=
+ =?us-ascii?Q?0w6+j3EYSPLK7EbNM/rVd4WgeMYoUOnhLrHqig8OFW+K3fD0SY/+AZQmjQCZ?=
+ =?us-ascii?Q?qVDvuKv0BLO0p+xpRuhOFiIlIRgACANZM9dJci2sisZqP0pCdNd2kC9Uk3Nx?=
+ =?us-ascii?Q?xy7NC9oE1unFSxFNRGu50cnF2DvyJ0myf8PhK+A5M8B82H+stT1zUvgdwugq?=
+ =?us-ascii?Q?XA7Z6enWX5BfMDMSg8UI55L1Y2s7a44fCU6FBKtgH6OQNnwOP7q/9xQ65sVO?=
+ =?us-ascii?Q?0PPhcPJGXTMkpK8dCSgr1oKID94zK6WEXmkFJ/i1uVzjotEGyQbSu5k6ls0s?=
+ =?us-ascii?Q?ioPS5wVhBweZBYxr9e6tU3hzdD6lnjOAu+6EN5CAqGMfEgztywb9axVLtC3/?=
+ =?us-ascii?Q?b8tcNSxd3cRknUR66PFffkNFHZuOdDy4mXUU4OJKWxnTBBuxnlEix7IhhvEx?=
+ =?us-ascii?Q?6dWlJt3uN24TOytZX6jaHc5/Y0k5DZs=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7b63ce08-379f-46e5-6dae-08da3d7a002b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2c749784-4668-4dfd-8b77-08da3d79f033
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:39:02.6215
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:35.8780
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: VDw6Em73yh4hCsrWSVWE043IJn/ll0Vx5z3XbqCEojFYK/MtpSaIsiRAZe0GcVDN12mzgTQV+tBqf5GqFX3a9Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAP192MB1033
+X-MS-Exchange-CrossTenant-UserPrincipalName: ICc1694ChMJK1u9SScy/BDTXg4aVbfVd0rgS31qvkWFL72PWLOMFR5rSrLaoEfzhPCPVD8AN2APi1U2ZrC9yAQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0P192MB1571
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,97 +128,1586 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/vif.h | 81 ++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/vif.h
+ drivers/net/wireless/celeno/cl8k/rates.c | 1570 ++++++++++++++++++++++
+ 1 file changed, 1570 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rates.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/vif.h b/drivers/net/wireless/celeno/cl8k/vif.h
+diff --git a/drivers/net/wireless/celeno/cl8k/rates.c b/drivers/net/wireless/celeno/cl8k/rates.c
 new file mode 100644
-index 000000000000..2563c6c3222d
+index 000000000000..8f21f3d6ff84
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/vif.h
-@@ -0,0 +1,81 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
++++ b/drivers/net/wireless/celeno/cl8k/rates.c
+@@ -0,0 +1,1570 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#ifndef CL_VIF_H
-+#define CL_VIF_H
++#include "tx.h"
++#include "bf.h"
++#include "utils.h"
++#include "hw.h"
++#include "rates.h"
 +
-+#include <linux/netdevice.h>
-+
-+#include "wrs.h"
-+
-+struct cl_connection_data {
-+	u32 max_client;            /* MAX Clients of the SSID */
-+	u32 max_client_timestamp;  /* MAX Clients Timestamp of the SSID */
-+	u32 watermark_threshold;   /* Number of clients threshold for watermark */
-+	u32 watermark_reached_cnt; /* Number of times the watermark threshold was reached */
-+};
-+
-+struct cl_traffic_counters {
-+	u64 tx_packets;
-+	u64 tx_bytes;
-+	u64 rx_packets;
-+	u64 rx_bytes;
-+	u32 tx_errors;
-+	u32 rx_errors;
-+	u32 tx_dropped;
-+	u32 rx_dropped;
++/*
++ * This table of rates was taken from IEEE 802.11ax Draft v3.3, 28.5. Parameters
++ * for HE-HE_MCSs. The units are 1/10 Mbs. Note that we don't support DCM, so it is
++ * not taken into account in this table.
++ */
++const u16 data_rate_he_x10[CHNL_BW_MAX][WRS_SS_MAX][WRS_MCS_MAX_HE][WRS_GI_MAX_HE] = {
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]     = 73,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT]    = 81,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_0][WRS_GI_VSHORT]   = 86,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]     = 146,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT]    = 163,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_1][WRS_GI_VSHORT]   = 172,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]     = 219,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT]    = 244,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_2][WRS_GI_VSHORT]   = 258,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]     = 293,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT]    = 325,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_3][WRS_GI_VSHORT]   = 344,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]     = 439,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT]    = 488,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_4][WRS_GI_VSHORT]   = 516,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]     = 585,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT]    = 650,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_5][WRS_GI_VSHORT]   = 688,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]     = 658,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT]    = 731,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_6][WRS_GI_VSHORT]   = 774,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]     = 731,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT]    = 813,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_7][WRS_GI_VSHORT]   = 860,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]     = 878,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT]    = 975,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_8][WRS_GI_VSHORT]   = 1032,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]     = 975,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT]    = 1083,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_9][WRS_GI_VSHORT]   = 1147,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_10][WRS_GI_LONG]    = 1097,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_10][WRS_GI_SHORT]   = 1219,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_10][WRS_GI_VSHORT]  = 1290,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_11][WRS_GI_LONG]    = 1219,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_11][WRS_GI_SHORT]   = 1354,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_11][WRS_GI_VSHORT]  = 1434,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]     = 146,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT]    = 163,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_0][WRS_GI_VSHORT]   = 172,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]     = 293,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT]    = 325,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_1][WRS_GI_VSHORT]   = 344,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]     = 439,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT]    = 488,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_2][WRS_GI_VSHORT]   = 516,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]     = 585,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT]    = 650,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_3][WRS_GI_VSHORT]   = 688,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]     = 878,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT]    = 975,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_4][WRS_GI_VSHORT]   = 1032,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]     = 1170,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT]    = 1300,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_5][WRS_GI_VSHORT]   = 1376,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]     = 1316,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT]    = 1463,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_6][WRS_GI_VSHORT]   = 1549,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]     = 1463,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT]    = 1625,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_7][WRS_GI_VSHORT]   = 1721,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]     = 1755,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT]    = 1950,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_8][WRS_GI_VSHORT]   = 2065,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]     = 1950,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT]    = 2167,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_9][WRS_GI_VSHORT]   = 2294,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_10][WRS_GI_LONG]    = 2194,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_10][WRS_GI_SHORT]   = 2438,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_10][WRS_GI_VSHORT]  = 2581,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_11][WRS_GI_LONG]    = 2438,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_11][WRS_GI_SHORT]   = 2708,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_11][WRS_GI_VSHORT]  = 2868,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]     = 219,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT]    = 244,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_0][WRS_GI_VSHORT]   = 258,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]     = 439,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT]    = 488,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_1][WRS_GI_VSHORT]   = 516,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]     = 658,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT]    = 731,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_2][WRS_GI_VSHORT]   = 774,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]     = 878,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT]    = 975,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_3][WRS_GI_VSHORT]   = 1032,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]     = 1316,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT]    = 1463,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_4][WRS_GI_VSHORT]   = 1549,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]     = 1755,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT]    = 1950,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_5][WRS_GI_VSHORT]   = 2065,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]     = 1974,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT]    = 2194,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_6][WRS_GI_VSHORT]   = 2323,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]     = 2194,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT]    = 2438,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_7][WRS_GI_VSHORT]   = 2581,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]     = 2633,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT]    = 2925,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_8][WRS_GI_VSHORT]   = 3097,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]     = 2925,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT]    = 3250,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_9][WRS_GI_VSHORT]   = 3441,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_10][WRS_GI_LONG]    = 3291,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_10][WRS_GI_SHORT]   = 3656,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_10][WRS_GI_VSHORT]  = 3871,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_11][WRS_GI_LONG]    = 3656,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_11][WRS_GI_SHORT]   = 4063,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_11][WRS_GI_VSHORT]  = 4301,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]     = 293,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT]    = 325,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_0][WRS_GI_VSHORT]   = 344,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]     = 585,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT]    = 650,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_1][WRS_GI_VSHORT]   = 688,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]     = 878,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT]    = 975,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_2][WRS_GI_VSHORT]   = 1032,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]     = 1170,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT]    = 1300,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_3][WRS_GI_VSHORT]   = 1376,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]     = 1755,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT]    = 1950,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_4][WRS_GI_VSHORT]   = 2065,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]     = 2340,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT]    = 2600,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_5][WRS_GI_VSHORT]   = 2753,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]     = 2633,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT]    = 2925,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_6][WRS_GI_VSHORT]   = 3097,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]     = 2925,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT]    = 3250,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_7][WRS_GI_VSHORT]   = 3441,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]     = 3510,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT]    = 3900,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_8][WRS_GI_VSHORT]   = 4129,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]     = 3900,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT]    = 4333,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_9][WRS_GI_VSHORT]   = 4588,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_10][WRS_GI_LONG]    = 4388,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_10][WRS_GI_SHORT]   = 4875,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_10][WRS_GI_VSHORT]  = 5162,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_11][WRS_GI_LONG]    = 4875,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_11][WRS_GI_SHORT]   = 5417,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_11][WRS_GI_VSHORT]  = 5735,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]     = 146,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT]    = 163,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_0][WRS_GI_VSHORT]   = 172,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]     = 293,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT]    = 325,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_1][WRS_GI_VSHORT]   = 344,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]     = 439,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT]    = 488,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_2][WRS_GI_VSHORT]   = 516,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]     = 585,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT]    = 650,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_3][WRS_GI_VSHORT]   = 688,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]     = 878,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT]    = 975,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_4][WRS_GI_VSHORT]   = 1032,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]     = 1170,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT]    = 1300,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_5][WRS_GI_VSHORT]   = 1376,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]     = 1316,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT]    = 1463,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_6][WRS_GI_VSHORT]   = 1549,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]     = 1463,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT]    = 1625,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_7][WRS_GI_VSHORT]   = 1721,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]     = 1755,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT]    = 1950,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_8][WRS_GI_VSHORT]   = 2065,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]     = 1950,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT]    = 2167,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_9][WRS_GI_VSHORT]   = 2294,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_10][WRS_GI_LONG]    = 2194,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_10][WRS_GI_SHORT]   = 2438,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_10][WRS_GI_VSHORT]  = 2581,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_11][WRS_GI_LONG]    = 2438,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_11][WRS_GI_SHORT]   = 2708,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_11][WRS_GI_VSHORT]  = 2868,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]     = 293,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT]    = 325,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_0][WRS_GI_VSHORT]   = 344,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]     = 585,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT]    = 650,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_1][WRS_GI_VSHORT]   = 688,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]     = 878,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT]    = 975,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_2][WRS_GI_VSHORT]   = 1032,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]     = 1170,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT]    = 1300,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_3][WRS_GI_VSHORT]   = 1376,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]     = 1755,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT]    = 1950,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_4][WRS_GI_VSHORT]   = 2065,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]     = 2340,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT]    = 2600,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_5][WRS_GI_VSHORT]   = 2753,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]     = 2633,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT]    = 2925,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_6][WRS_GI_VSHORT]   = 3097,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]     = 2925,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT]    = 3250,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_7][WRS_GI_VSHORT]   = 3441,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]     = 3510,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT]    = 3900,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_8][WRS_GI_VSHORT]   = 4129,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]     = 3900,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT]    = 4333,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_9][WRS_GI_VSHORT]   = 4588,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_10][WRS_GI_LONG]    = 4388,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_10][WRS_GI_SHORT]   = 4875,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_10][WRS_GI_VSHORT]  = 5162,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_11][WRS_GI_LONG]    = 4875,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_11][WRS_GI_SHORT]   = 5417,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_11][WRS_GI_VSHORT]  = 5735,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]     = 439,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT]    = 488,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_0][WRS_GI_VSHORT]   = 516,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]     = 878,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT]    = 975,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_1][WRS_GI_VSHORT]   = 1032,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]     = 1316,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT]    = 1463,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_2][WRS_GI_VSHORT]   = 1549,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]     = 1755,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT]    = 1950,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_3][WRS_GI_VSHORT]   = 2065,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]     = 2633,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT]    = 2925,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_4][WRS_GI_VSHORT]   = 3097,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]     = 3510,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT]    = 3900,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_5][WRS_GI_VSHORT]   = 4129,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]     = 3949,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT]    = 4388,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_6][WRS_GI_VSHORT]   = 4646,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]     = 4388,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT]    = 4875,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_7][WRS_GI_VSHORT]   = 5162,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]     = 5265,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT]    = 5850,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_8][WRS_GI_VSHORT]   = 6194,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]     = 5850,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT]    = 6500,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_9][WRS_GI_VSHORT]   = 6882,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_10][WRS_GI_LONG]    = 6581,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_10][WRS_GI_SHORT]   = 7313,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_10][WRS_GI_VSHORT]  = 7743,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_11][WRS_GI_LONG]    = 7313,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_11][WRS_GI_SHORT]   = 8125,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_11][WRS_GI_VSHORT]  = 8603,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]     = 585,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT]    = 650,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_0][WRS_GI_VSHORT]   = 688,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]     = 1170,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT]    = 1300,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_1][WRS_GI_VSHORT]   = 1376,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]     = 1755,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT]    = 1950,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_2][WRS_GI_VSHORT]   = 2065,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]     = 2340,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT]    = 2600,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_3][WRS_GI_VSHORT]   = 2753,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]     = 3510,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT]    = 3900,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_4][WRS_GI_VSHORT]   = 4129,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]     = 4680,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT]    = 5200,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_5][WRS_GI_VSHORT]   = 5506,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]     = 5265,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT]    = 5850,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_6][WRS_GI_VSHORT]   = 6194,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]     = 5850,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT]    = 6500,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_7][WRS_GI_VSHORT]   = 6882,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]     = 7020,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT]    = 7800,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_8][WRS_GI_VSHORT]   = 8259,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]     = 7800,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT]    = 8667,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_9][WRS_GI_VSHORT]   = 9176,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_10][WRS_GI_LONG]    = 8775,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_10][WRS_GI_SHORT]   = 9750,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_10][WRS_GI_VSHORT]  = 10324,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_11][WRS_GI_LONG]    = 9750,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_11][WRS_GI_SHORT]   = 10833,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_11][WRS_GI_VSHORT]  = 11471,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]     = 306,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT]    = 340,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_0][WRS_GI_VSHORT]   = 360,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]     = 613,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT]    = 681,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_1][WRS_GI_VSHORT]   = 721,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]     = 919,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT]    = 1021,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_2][WRS_GI_VSHORT]   = 1081,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]     = 1225,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT]    = 1361,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_3][WRS_GI_VSHORT]   = 1441,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]     = 1838,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT]    = 2042,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_4][WRS_GI_VSHORT]   = 2162,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]     = 2450,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT]    = 2722,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_5][WRS_GI_VSHORT]   = 2882,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]     = 2756,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT]    = 3063,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_6][WRS_GI_VSHORT]   = 3243,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]     = 3063,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT]    = 3403,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_7][WRS_GI_VSHORT]   = 3603,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]     = 3675,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT]    = 4083,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_8][WRS_GI_VSHORT]   = 4324,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]     = 4083,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT]    = 4537,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_9][WRS_GI_VSHORT]   = 4804,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_10][WRS_GI_LONG]    = 4594,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_10][WRS_GI_SHORT]   = 5104,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_10][WRS_GI_VSHORT]  = 5404,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_11][WRS_GI_LONG]    = 5104,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_11][WRS_GI_SHORT]   = 5671,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_11][WRS_GI_VSHORT]  = 6004,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]     = 613,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT]    = 681,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_0][WRS_GI_VSHORT]   = 721,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]     = 1225,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT]    = 1361,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_1][WRS_GI_VSHORT]   = 1441,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]     = 1838,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT]    = 2042,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_2][WRS_GI_VSHORT]   = 2162,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]     = 2450,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT]    = 2722,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_3][WRS_GI_VSHORT]   = 2882,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]     = 3675,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT]    = 4083,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_4][WRS_GI_VSHORT]   = 4324,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]     = 4900,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT]    = 5444,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_5][WRS_GI_VSHORT]   = 5765,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]     = 5513,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT]    = 6125,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_6][WRS_GI_VSHORT]   = 6485,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]     = 6125,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT]    = 6806,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_7][WRS_GI_VSHORT]   = 7206,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]     = 7350,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT]    = 8167,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_8][WRS_GI_VSHORT]   = 8647,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]     = 8166,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT]    = 9074,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_9][WRS_GI_VSHORT]   = 9607,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_10][WRS_GI_LONG]    = 9188,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_10][WRS_GI_SHORT]   = 10208,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_10][WRS_GI_VSHORT]  = 10809,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_11][WRS_GI_LONG]    = 10208,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_11][WRS_GI_SHORT]   = 11343,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_11][WRS_GI_VSHORT]  = 12010,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]     = 919,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT]    = 1021,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_0][WRS_GI_VSHORT]   = 1081,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]     = 1838,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT]    = 2042,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_1][WRS_GI_VSHORT]   = 2162,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]     = 2756,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT]    = 3063,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_2][WRS_GI_VSHORT]   = 3243,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]     = 3675,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT]    = 4083,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_3][WRS_GI_VSHORT]   = 4324,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]     = 5513,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT]    = 6125,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_4][WRS_GI_VSHORT]   = 6485,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]     = 7350,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT]    = 8167,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_5][WRS_GI_VSHORT]   = 8647,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]     = 8269,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT]    = 9188,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_6][WRS_GI_VSHORT]   = 9728,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]     = 9188,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT]    = 10208,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_7][WRS_GI_VSHORT]   = 10809,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]     = 11025,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT]    = 12250,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_8][WRS_GI_VSHORT]   = 12971,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]     = 12250,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT]    = 13611,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_9][WRS_GI_VSHORT]   = 14412,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_10][WRS_GI_LONG]    = 13781,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_10][WRS_GI_SHORT]   = 15313,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_10][WRS_GI_VSHORT]  = 16213,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_11][WRS_GI_LONG]    = 15313,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_11][WRS_GI_SHORT]   = 17014,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_11][WRS_GI_VSHORT]  = 18015,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]     = 1225,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT]    = 1361,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_0][WRS_GI_VSHORT]   = 1441,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]     = 2450,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT]    = 2722,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_1][WRS_GI_VSHORT]   = 2882,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]     = 3675,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT]    = 4083,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_2][WRS_GI_VSHORT]   = 4324,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]     = 4900,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT]    = 5444,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_3][WRS_GI_VSHORT]   = 5765,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]     = 7350,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT]    = 8167,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_4][WRS_GI_VSHORT]   = 8647,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]     = 9800,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT]    = 10889,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_5][WRS_GI_VSHORT]   = 11529,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]     = 11025,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT]    = 12250,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_6][WRS_GI_VSHORT]   = 12971,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]     = 12250,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT]    = 13611,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_7][WRS_GI_VSHORT]   = 14412,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]     = 14700,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT]    = 16333,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_8][WRS_GI_VSHORT]   = 17294,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]     = 16333,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT]    = 18148,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_9][WRS_GI_VSHORT]   = 19215,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_10][WRS_GI_LONG]    = 18375,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_10][WRS_GI_SHORT]   = 20417,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_10][WRS_GI_VSHORT]  = 21618,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_11][WRS_GI_LONG]    = 20416,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_11][WRS_GI_SHORT]   = 22685,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_11][WRS_GI_VSHORT]  = 24019,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]    = 613,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT]   = 681,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_0][WRS_GI_VSHORT]  = 721,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]    = 1225,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT]   = 1361,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_1][WRS_GI_VSHORT]  = 1441,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]    = 1838,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT]   = 2042,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_2][WRS_GI_VSHORT]  = 2162,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]    = 2450,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT]   = 2722,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_3][WRS_GI_VSHORT]  = 2882,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]    = 3675,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT]   = 4083,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_4][WRS_GI_VSHORT]  = 4324,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]    = 4900,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT]   = 5444,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_5][WRS_GI_VSHORT]  = 5765,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]    = 5513,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT]   = 6125,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_6][WRS_GI_VSHORT]  = 6485,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]    = 6125,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT]   = 6806,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_7][WRS_GI_VSHORT]  = 7206,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]    = 7350,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT]   = 8167,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_8][WRS_GI_VSHORT]  = 8647,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]    = 8166,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT]   = 9074,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_9][WRS_GI_VSHORT]  = 9607,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_10][WRS_GI_LONG]   = 9188,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_10][WRS_GI_SHORT]  = 10208,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_10][WRS_GI_VSHORT] = 10809,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_11][WRS_GI_LONG]   = 10208,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_11][WRS_GI_SHORT]  = 11342,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_11][WRS_GI_VSHORT] = 12010,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]    = 1225,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT]   = 1361,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_0][WRS_GI_VSHORT]  = 1441,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]    = 2450,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT]   = 2722,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_1][WRS_GI_VSHORT]  = 2882,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]    = 3675,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT]   = 4083,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_2][WRS_GI_VSHORT]  = 4324,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]    = 4900,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT]   = 5444,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_3][WRS_GI_VSHORT]  = 5765,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]    = 7350,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT]   = 8167,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_4][WRS_GI_VSHORT]  = 8647,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]    = 9800,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT]   = 10889,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_5][WRS_GI_VSHORT]  = 11529,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]    = 11025,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT]   = 12250,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_6][WRS_GI_VSHORT]  = 12971,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]    = 12250,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT]   = 13611,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_7][WRS_GI_VSHORT]  = 14412,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]    = 14700,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT]   = 16333,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_8][WRS_GI_VSHORT]  = 17294,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]    = 16333,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT]   = 18148,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_9][WRS_GI_VSHORT]  = 19215,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_10][WRS_GI_LONG]   = 18375,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_10][WRS_GI_SHORT]  = 20417,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_10][WRS_GI_VSHORT] = 21618,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_11][WRS_GI_LONG]   = 20416,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_11][WRS_GI_SHORT]  = 22685,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_11][WRS_GI_VSHORT] = 24019,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]    = 1838,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT]   = 2042,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_0][WRS_GI_VSHORT]  = 2162,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]    = 3675,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT]   = 4083,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_1][WRS_GI_VSHORT]  = 4324,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]    = 5513,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT]   = 6125,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_2][WRS_GI_VSHORT]  = 6485,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]    = 7350,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT]   = 8167,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_3][WRS_GI_VSHORT]  = 8647,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]    = 11025,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT]   = 12250,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_4][WRS_GI_VSHORT]  = 12971,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]    = 14700,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT]   = 16333,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_5][WRS_GI_VSHORT]  = 17294,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]    = 16538,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT]   = 18375,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_6][WRS_GI_VSHORT]  = 19456,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]    = 18375,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT]   = 20417,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_7][WRS_GI_VSHORT]  = 21618,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]    = 22050,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT]   = 24500,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_8][WRS_GI_VSHORT]  = 25941,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]    = 24500,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT]   = 27222,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_9][WRS_GI_VSHORT]  = 28824,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_10][WRS_GI_LONG]   = 27563,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_10][WRS_GI_SHORT]  = 30625,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_10][WRS_GI_VSHORT] = 32426,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_11][WRS_GI_LONG]   = 30625,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_11][WRS_GI_SHORT]  = 34028,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_11][WRS_GI_VSHORT] = 36029,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]    = 2450,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT]   = 2722,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_0][WRS_GI_VSHORT]  = 2882,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]    = 4900,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT]   = 5444,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_1][WRS_GI_VSHORT]  = 5765,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]    = 7350,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT]   = 8167,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_2][WRS_GI_VSHORT]  = 8647,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]    = 9800,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT]   = 10889,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_3][WRS_GI_VSHORT]  = 11529,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]    = 14700,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT]   = 16333,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_4][WRS_GI_VSHORT]  = 17294,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]    = 19600,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT]   = 21778,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_5][WRS_GI_VSHORT]  = 23059,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]    = 22050,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT]   = 24500,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_6][WRS_GI_VSHORT]  = 25941,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]    = 24500,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT]   = 27222,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_7][WRS_GI_VSHORT]  = 28824,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]    = 29400,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT]   = 32667,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_8][WRS_GI_VSHORT]  = 34588,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]    = 32666,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT]   = 36296,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_9][WRS_GI_VSHORT]  = 38431,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_10][WRS_GI_LONG]   = 36750,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_10][WRS_GI_SHORT]  = 40833,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_10][WRS_GI_VSHORT] = 43235,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_11][WRS_GI_LONG]   = 40833,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_11][WRS_GI_SHORT]  = 45370,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_11][WRS_GI_VSHORT] = 48039,
 +};
 +
 +/*
-+ * Structure used to save information relative to the managed interfaces.
-+ * Will be used as the 'drv_priv' field of the "struct ieee80211_vif" structure.
-+ * This is also linked within the cl_hw vifs list.
++ * This table of rates was taken from IEEE Std 802.11TM-2016, 21.5 Parameters
++ * for VHT-MCSs. The units are 1/10 Mbs. Invalid combinations are with 0's. Note
++ * that HT data rates are a subset of VHT data rates, so we can use a single
++ * table for both.
 + */
-+struct cl_vif {
-+	struct list_head list;
-+	struct cl_hw *cl_hw;
-+	struct ieee80211_vif *vif;
-+	struct net_device *dev;
-+	struct list_head key_list_head;
-+	struct cl_key_conf *key;
-+	int key_idx_default;
-+	u32 unicast_tx;
-+	u32 unicast_rx;
-+	u32 multicast_tx;
-+	u32 multicast_rx;
-+	u32 broadcast_tx;
-+	u32 broadcast_rx;
-+	u16 sequence_number;
-+	u8 num_sta; /* Number of station connected per SSID */
-+	struct cl_connection_data *conn_data;
-+	u8 vif_index;
-+	bool tx_en;
-+	/* Holds info for channel utilization stats */
-+	u32 chan_util_last_tx_bytes;
-+	u32 chan_util;
-+	struct mcast_table *mcast_table;
-+	struct cl_wrs_rate_params fixed_params;
-+	struct cl_traffic_counters trfc_cntrs[AC_MAX];
-+	bool wmm_enabled;
-+	u16 mesh_basic_rates;
++const u16 data_rate_ht_vht_x10[CHNL_BW_MAX][WRS_SS_MAX][WRS_MCS_MAX_VHT][WRS_GI_MAX_VHT] = {
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]   = 65,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT]  = 72,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]   = 130,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT]  = 144,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]   = 195,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT]  = 217,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]   = 260,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT]  = 289,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]   = 390,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT]  = 433,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]   = 520,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT]  = 578,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]   = 585,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT]  = 650,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]   = 650,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT]  = 722,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]   = 780,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT]  = 867,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]   = 0,
++	[CHNL_BW_20][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT]  = 0,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]   = 130,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT]  = 144,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]   = 260,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT]  = 289,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]   = 390,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT]  = 433,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]   = 520,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT]  = 578,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]   = 780,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT]  = 867,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]   = 1040,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT]  = 1156,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]   = 1170,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT]  = 1303,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]   = 1300,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT]  = 1444,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]   = 1560,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT]  = 1733,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]   = 0,
++	[CHNL_BW_20][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT]  = 0,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]   = 195,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT]  = 217,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]   = 390,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT]  = 433,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]   = 585,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT]  = 650,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]   = 780,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT]  = 867,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]   = 1170,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT]  = 1300,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]   = 1560,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT]  = 1733,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]   = 1755,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT]  = 1950,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]   = 1950,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT]  = 2167,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]   = 2340,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT]  = 2600,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]   = 2600,
++	[CHNL_BW_20][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT]  = 2889,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]   = 260,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT]  = 288,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]   = 520,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT]  = 576,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]   = 780,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT]  = 868,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]   = 1040,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT]  = 1156,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]   = 1560,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT]  = 1732,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]   = 2080,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT]  = 2312,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]   = 2340,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT]  = 2600,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]   = 2600,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT]  = 2888,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]   = 3120,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT]  = 3468,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]   = 0,
++	[CHNL_BW_20][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT]  = 0,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]   = 135,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT]  = 150,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]   = 270,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT]  = 300,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]   = 405,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT]  = 450,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]   = 540,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT]  = 600,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]   = 810,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT]  = 900,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]   = 1080,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT]  = 1200,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]   = 1215,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT]  = 1350,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]   = 1350,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT]  = 1500,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]   = 1620,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT]  = 1800,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]   = 1800,
++	[CHNL_BW_40][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT]  = 2000,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]   = 270,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT]  = 300,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]   = 540,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT]  = 600,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]   = 810,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT]  = 900,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]   = 1080,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT]  = 1200,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]   = 1620,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT]  = 1800,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]   = 2160,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT]  = 2400,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]   = 2430,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT]  = 2700,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]   = 2700,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT]  = 3000,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]   = 3240,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT]  = 3600,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]   = 3600,
++	[CHNL_BW_40][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT]  = 4000,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]   = 405,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT]  = 450,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]   = 810,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT]  = 900,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]   = 1215,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT]  = 1350,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]   = 1620,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT]  = 1800,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]   = 2430,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT]  = 2700,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]   = 3240,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT]  = 3600,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]   = 3645,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT]  = 4050,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]   = 4050,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT]  = 4500,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]   = 4860,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT]  = 5400,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]   = 5400,
++	[CHNL_BW_40][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT]  = 6000,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]   = 540,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT]  = 600,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]   = 1080,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT]  = 1200,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]   = 1620,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT]  = 1800,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]   = 2160,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT]  = 2400,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]   = 3240,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT]  = 3600,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]   = 4320,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT]  = 4800,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]   = 4860,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT]  = 5400,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]   = 5400,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT]  = 6000,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]   = 6480,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT]  = 7200,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]   = 7200,
++	[CHNL_BW_40][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT]  = 8000,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]   = 293,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT]  = 325,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]   = 585,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT]  = 650,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]   = 878,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT]  = 975,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]   = 1170,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT]  = 1300,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]   = 1755,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT]  = 1950,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]   = 2340,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT]  = 2600,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]   = 2633,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT]  = 2925,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]   = 2925,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT]  = 3250,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]   = 3510,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT]  = 3900,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]   = 3900,
++	[CHNL_BW_80][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT]  = 4333,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]   = 585,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT]  = 650,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]   = 1170,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT]  = 1300,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]   = 1755,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT]  = 1950,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]   = 2340,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT]  = 2600,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]   = 3510,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT]  = 3900,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]   = 4680,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT]  = 5200,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]   = 5265,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT]  = 5850,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]   = 5850,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT]  = 6500,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]   = 7020,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT]  = 7800,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]   = 7800,
++	[CHNL_BW_80][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT]  = 8667,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]   = 878,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT]  = 975,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]   = 1755,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT]  = 1950,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]   = 2633,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT]  = 2925,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]   = 3510,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT]  = 3900,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]   = 5265,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT]  = 5850,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]   = 7020,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT]  = 7800,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]   = 0,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT]  = 0,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]   = 8775,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT]  = 9750,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]   = 10530,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT]  = 11700,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]   = 11700,
++	[CHNL_BW_80][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT]  = 13000,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]   = 1172,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT]  = 1300,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]   = 2340,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT]  = 2600,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]   = 3512,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT]  = 3900,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]   = 4680,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT]  = 5200,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]   = 7020,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT]  = 7800,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]   = 9360,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT]  = 10400,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]   = 10532,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT]  = 11700,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]   = 11700,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT]  = 13000,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]   = 14040,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT]  = 15600,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]   = 15600,
++	[CHNL_BW_80][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT]  = 17332,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_0][WRS_GI_LONG]  = 585,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_0][WRS_GI_SHORT] = 650,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_1][WRS_GI_LONG]  = 1170,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_1][WRS_GI_SHORT] = 1300,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_2][WRS_GI_LONG]  = 1755,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_2][WRS_GI_SHORT] = 1950,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_3][WRS_GI_LONG]  = 2340,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_3][WRS_GI_SHORT] = 2600,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_4][WRS_GI_LONG]  = 3510,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_4][WRS_GI_SHORT] = 3900,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_5][WRS_GI_LONG]  = 4680,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_5][WRS_GI_SHORT] = 5200,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_6][WRS_GI_LONG]  = 5265,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_6][WRS_GI_SHORT] = 5850,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_7][WRS_GI_LONG]  = 5850,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_7][WRS_GI_SHORT] = 6500,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_8][WRS_GI_LONG]  = 7020,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_8][WRS_GI_SHORT] = 7800,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_9][WRS_GI_LONG]  = 7800,
++	[CHNL_BW_160][WRS_SS_1][WRS_MCS_9][WRS_GI_SHORT] = 8667,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_0][WRS_GI_LONG]  = 1170,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_0][WRS_GI_SHORT] = 1300,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_1][WRS_GI_LONG]  = 2340,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_1][WRS_GI_SHORT] = 2600,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_2][WRS_GI_LONG]  = 3510,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_2][WRS_GI_SHORT] = 3900,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_3][WRS_GI_LONG]  = 4680,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_3][WRS_GI_SHORT] = 5200,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_4][WRS_GI_LONG]  = 7020,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_4][WRS_GI_SHORT] = 7800,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_5][WRS_GI_LONG]  = 9360,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_5][WRS_GI_SHORT] = 10400,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_6][WRS_GI_LONG]  = 10530,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_6][WRS_GI_SHORT] = 11700,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_7][WRS_GI_LONG]  = 11700,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_7][WRS_GI_SHORT] = 13000,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_8][WRS_GI_LONG]  = 14040,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_8][WRS_GI_SHORT] = 15600,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_9][WRS_GI_LONG]  = 15600,
++	[CHNL_BW_160][WRS_SS_2][WRS_MCS_9][WRS_GI_SHORT] = 17333,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_0][WRS_GI_LONG]  = 1755,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_0][WRS_GI_SHORT] = 1950,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_1][WRS_GI_LONG]  = 3510,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_1][WRS_GI_SHORT] = 3900,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_2][WRS_GI_LONG]  = 5265,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_2][WRS_GI_SHORT] = 5850,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_3][WRS_GI_LONG]  = 7020,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_3][WRS_GI_SHORT] = 7800,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_4][WRS_GI_LONG]  = 10530,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_4][WRS_GI_SHORT] = 11700,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_5][WRS_GI_LONG]  = 14040,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_5][WRS_GI_SHORT] = 15600,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_6][WRS_GI_LONG]  = 15795,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_6][WRS_GI_SHORT] = 17550,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_7][WRS_GI_LONG]  = 17550,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_7][WRS_GI_SHORT] = 19500,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_8][WRS_GI_LONG]  = 21060,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_8][WRS_GI_SHORT] = 23400,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_9][WRS_GI_LONG]  = 0,
++	[CHNL_BW_160][WRS_SS_3][WRS_MCS_9][WRS_GI_SHORT] = 0,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_0][WRS_GI_LONG]  = 2340,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_0][WRS_GI_SHORT] = 2600,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_1][WRS_GI_LONG]  = 4680,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_1][WRS_GI_SHORT] = 5200,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_2][WRS_GI_LONG]  = 7020,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_2][WRS_GI_SHORT] = 7800,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_3][WRS_GI_LONG]  = 9360,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_3][WRS_GI_SHORT] = 10400,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_4][WRS_GI_LONG]  = 10400,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_4][WRS_GI_SHORT] = 15600,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_5][WRS_GI_LONG]  = 18720,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_5][WRS_GI_SHORT] = 20800,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_6][WRS_GI_LONG]  = 21060,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_6][WRS_GI_SHORT] = 23400,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_7][WRS_GI_LONG]  = 23400,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_7][WRS_GI_SHORT] = 26000,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_8][WRS_GI_LONG]  = 28080,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_8][WRS_GI_SHORT] = 31200,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_9][WRS_GI_LONG]  = 31200,
++	[CHNL_BW_160][WRS_SS_4][WRS_MCS_9][WRS_GI_SHORT] = 34667,
 +};
 +
-+struct cl_vif_db {
-+	struct list_head head;
-+	rwlock_t lock;
-+	u8 num_iface_bcn;
++/* OFDM Data Rates - (multiplied by 10) */
++const u16 data_rate_ofdm_x10[] = {
++	60,
++	90,
++	120,
++	180,
++	240,
++	360,
++	480,
++	540,
 +};
 +
-+void cl_vif_init(struct cl_hw *cl_hw);
-+void cl_vif_add(struct cl_hw *cl_hw, struct cl_vif *cl_vif);
-+void cl_vif_remove(struct cl_hw *cl_hw, struct cl_vif *cl_vif);
-+struct cl_vif *cl_vif_get_next(struct cl_hw *cl_hw, struct cl_vif *cl_vif);
-+struct cl_vif *cl_vif_get_by_dev(struct cl_hw *cl_hw, struct net_device *dev);
-+struct cl_vif *cl_vif_get_by_mac(struct cl_hw *cl_hw, u8 *mac_addr);
-+struct cl_vif *cl_vif_get_first(struct cl_hw *cl_hw);
-+struct cl_vif *cl_vif_get_first_ap(struct cl_hw *cl_hw);
-+struct net_device *cl_vif_get_first_net_device(struct cl_hw *cl_hw);
-+struct net_device *cl_vif_get_dev_by_index(struct cl_hw *cl_hw, u8 index);
-+void cl_vif_ap_tx_enable(struct cl_hw *cl_hw, bool enable);
++/* CCK Data Rates - (multiplied by 10) */
++const u16 data_rate_cck_x10[] = {
++	10,
++	20,
++	55,
++	110,
++};
 +
-+#endif /* CL_VIF_H */
++struct cl_inverse_data_rate inverse_data_rate;
++
++static u16 cl_data_rates_inverse_he(u8 bw, u8 nss, u8 mcs, u8 gi)
++{
++	return (80 << DATA_RATE_INVERSE_Q) / data_rate_he_x10[bw][nss][mcs][gi];
++}
++
++static u16 cl_data_rates_inverse_vht(u8 bw, u8 nss, u8 mcs, u8 gi)
++{
++	u16 data_rate = data_rate_ht_vht_x10[bw][nss][mcs][gi];
++
++	if (data_rate)
++		return (80 << DATA_RATE_INVERSE_Q) / data_rate;
++
++	return 0;
++}
++
++static u16 cl_data_rates_inverse_ofdm(u8 mcs)
++{
++	return (80 << DATA_RATE_INVERSE_Q) / data_rate_ofdm_x10[mcs];
++}
++
++static u16 cl_data_rates_inverse_cck(u8 mcs)
++{
++	return (80 << DATA_RATE_INVERSE_Q) / data_rate_cck_x10[mcs];
++}
++
++void cl_data_rates_inverse_build(void)
++{
++	/*
++	 * The calculation is: round((2^15[Q] * 8[bits] * 10)/rate[Mbps]) - unit (us * 2^15)
++	 * multiply by 10 because data rates in the above tables are also multiplied by 10
++	 */
++	u8 bw, nss, mcs, gi;
++
++	for (bw = 0; bw < CHNL_BW_MAX; bw++)
++		for (nss = 0; nss < WRS_SS_MAX; nss++) {
++			/* HE */
++			for (mcs = 0; mcs < WRS_MCS_MAX_HE; mcs++)
++				for (gi = 0; gi < WRS_GI_MAX_HE; gi++)
++					inverse_data_rate.he[bw][nss][mcs][gi] =
++						cl_data_rates_inverse_he(bw, nss, mcs, gi);
++
++			/* VHT */
++			for (mcs = 0; mcs < WRS_MCS_MAX_VHT; mcs++)
++				for (gi = 0; gi < WRS_GI_MAX_VHT; gi++)
++					inverse_data_rate.ht_vht[bw][nss][mcs][gi] =
++						cl_data_rates_inverse_vht(bw, nss, mcs, gi);
++		}
++
++	/* OFDM */
++	for (mcs = 0; mcs < WRS_MCS_MAX_OFDM; mcs++)
++		inverse_data_rate.ofdm[mcs] = cl_data_rates_inverse_ofdm(mcs);
++
++	/* CCK */
++	for (mcs = 0; mcs < WRS_MCS_MAX_CCK; mcs++)
++		inverse_data_rate.cck[mcs] = cl_data_rates_inverse_cck(mcs);
++}
++
++u16 cl_data_rates_get(u8 mode, u8 bw, u8 nss, u8 mcs, u8 gi)
++{
++	return cl_data_rates_get_x10(mode, bw, nss, mcs, gi) / 10;
++}
++
++u16 cl_data_rates_get_x10(u8 mode, u8 bw, u8 nss, u8 mcs, u8 gi)
++{
++	switch (mode) {
++	case WRS_MODE_HE:
++		return data_rate_he_x10[bw][nss][mcs][gi];
++	case WRS_MODE_VHT:
++	case WRS_MODE_HT:
++		return data_rate_ht_vht_x10[bw][nss][mcs][gi];
++	case WRS_MODE_OFDM:
++		return data_rate_ofdm_x10[mcs];
++	case WRS_MODE_CCK:
++		return data_rate_cck_x10[mcs];
++	default:
++		return 0;
++	}
++}
++
++u32 cl_rate_ctrl_generate(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			  u8 mode, u8 bw, u8 nss, u8 mcs, u8 gi,
++			  bool fallback_en, bool mu_valid)
++{
++	union cl_rate_ctrl_info rate_ctrl_info;
++
++	rate_ctrl_info.word = 0;
++
++	/* Format_mod + mcs_index */
++	if (mode == WRS_MODE_HE) {
++		rate_ctrl_info.field.mcs_index = (nss << 4) | mcs;
++		rate_ctrl_info.field.format_mod = FORMATMOD_HE_SU;
++	} else if (mode == WRS_MODE_VHT) {
++		rate_ctrl_info.field.mcs_index = (nss << 4) | mcs;
++		rate_ctrl_info.field.format_mod = FORMATMOD_VHT;
++	} else if (mode == WRS_MODE_HT) {
++		rate_ctrl_info.field.mcs_index = (nss << 3) | mcs;
++		rate_ctrl_info.field.format_mod = FORMATMOD_HT_MF;
++	} else if (mode == WRS_MODE_OFDM) {
++		rate_ctrl_info.field.mcs_index = mcs + RATE_CTRL_OFFSET_OFDM;
++		rate_ctrl_info.field.format_mod =
++			(bw == CHNL_BW_20) ? FORMATMOD_NON_HT : FORMATMOD_NON_HT_DUP_OFDM;
++	} else { /* WRS_MODE_CCK */
++		rate_ctrl_info.field.mcs_index = mcs;
++		rate_ctrl_info.field.format_mod = FORMATMOD_NON_HT;
++	}
++
++	/* Gi */
++	rate_ctrl_info.field.gi = cl_convert_gi_format_wrs_to_fw(mode, gi);
++
++	/* Bw */
++	rate_ctrl_info.field.bw = bw;
++
++	/* Fallback */
++	rate_ctrl_info.field.fallback = fallback_en;
++
++	/* Tx_bf */
++	if (!mu_valid && cl_sta && cl_bf_is_on(cl_hw, cl_sta, nss))
++		rate_ctrl_info.field.tx_bf = true;
++
++	/* Pre_type/stbc */
++	if (rate_ctrl_info.field.format_mod == FORMATMOD_NON_HT)
++		rate_ctrl_info.field.pre_type_or_stbc = 1;
++
++	return rate_ctrl_info.word;
++}
++
++void cl_rate_ctrl_convert(union cl_rate_ctrl_info *rate_ctrl_info)
++{
++	u32 format_mod = rate_ctrl_info->field.format_mod;
++
++	/*
++	 * Convert gi from firmware format to driver format
++	 * !!! Must be done before converting the format mode !!!
++	 */
++	rate_ctrl_info->field.gi = cl_convert_gi_format_fw_to_wrs(format_mod,
++								  rate_ctrl_info->field.gi);
++
++	/* Convert format_mod from firmware format to WRS format */
++	if (format_mod >= FORMATMOD_HE_SU) {
++		rate_ctrl_info->field.format_mod = WRS_MODE_HE;
++	} else if (format_mod == FORMATMOD_VHT) {
++		rate_ctrl_info->field.format_mod = WRS_MODE_VHT;
++	} else if (format_mod >= FORMATMOD_HT_MF) {
++		rate_ctrl_info->field.format_mod = WRS_MODE_HT;
++	} else if (format_mod == FORMATMOD_NON_HT_DUP_OFDM) {
++		rate_ctrl_info->field.format_mod = WRS_MODE_OFDM;
++	} else {
++		if (rate_ctrl_info->field.mcs_index >= RATE_CTRL_OFFSET_OFDM)
++			rate_ctrl_info->field.format_mod = WRS_MODE_OFDM;
++		else
++			rate_ctrl_info->field.format_mod = WRS_MODE_CCK;
++	}
++}
++
++void cl_rate_ctrl_parse(union cl_rate_ctrl_info *rate_ctrl_info, u8 *nss, u8 *mcs)
++{
++	switch (rate_ctrl_info->field.format_mod) {
++	case WRS_MODE_HE:
++	case WRS_MODE_VHT:
++		*nss = (rate_ctrl_info->field.mcs_index >> 4);
++		*mcs = (rate_ctrl_info->field.mcs_index & 0xF);
++		break;
++	case WRS_MODE_HT:
++		*nss = (rate_ctrl_info->field.mcs_index >> 3);
++		*mcs = (rate_ctrl_info->field.mcs_index & 0x7);
++		break;
++	case WRS_MODE_OFDM:
++		*nss = 0;
++		*mcs = rate_ctrl_info->field.mcs_index - RATE_CTRL_OFFSET_OFDM;
++		break;
++	case WRS_MODE_CCK:
++		*nss = 0;
++		*mcs = rate_ctrl_info->field.mcs_index;
++		break;
++	default:
++		*nss = *mcs = 0;
++	}
++}
++
++void cl_rate_ctrl_set_default(struct cl_hw *cl_hw)
++{
++	u32 rate_ctrl = 0;
++	union cl_rate_ctrl_info_he rate_ctrl_he;
++
++	/* HE default */
++	rate_ctrl_he.word = 0;
++	rate_ctrl_he.field.spatial_conf = RATE_CNTRL_HE_SPATIAL_CONF_DEF;
++	rate_ctrl = cl_rate_ctrl_generate(cl_hw, NULL, WRS_MODE_HE,
++					  0, 0, 0, 0, false, false);
++
++	cl_msg_tx_update_rate_dl(cl_hw, 0xff, rate_ctrl, 0, 0,
++				 RATE_OP_MODE_DEFAULT_HE, 0, 0, LTF_X4, 0, rate_ctrl_he.word);
++
++	/* OFDM default */
++	rate_ctrl = cl_rate_ctrl_generate(cl_hw, NULL, WRS_MODE_OFDM, 0, 0,
++					  cl_hw->conf->ce_default_mcs_ofdm, 0, false, false);
++
++	cl_msg_tx_update_rate_dl(cl_hw, 0xff, rate_ctrl, 0, 0,
++				 RATE_OP_MODE_DEFAULT_OFDM, 0, 0, 0, 0, 0);
++
++	/* CCK default */
++	if (cl_band_is_24g(cl_hw)) {
++		rate_ctrl = cl_rate_ctrl_generate(cl_hw, NULL, WRS_MODE_CCK, 0, 0,
++						  cl_hw->conf->ce_default_mcs_cck, 0, false, false);
++
++		cl_msg_tx_update_rate_dl(cl_hw, 0xff, rate_ctrl, 0, 0,
++					 RATE_OP_MODE_DEFAULT_CCK, 0, 0, 0, 0, 0);
++	}
++}
++
++void cl_rate_ctrl_set_default_per_he_minrate(struct cl_hw *cl_hw, u8 bw,
++					     u8 nss, u8 mcs, u8 gi)
++{
++	union cl_rate_ctrl_info_he rate_ctrl_he;
++	u32 rate_ctrl = 0;
++	u8 ltf = cl_map_gi_to_ltf(WRS_MODE_HE, gi);
++
++	rate_ctrl_he.word = 0;
++	rate_ctrl_he.field.spatial_conf = RATE_CNTRL_HE_SPATIAL_CONF_DEF;
++	rate_ctrl = cl_rate_ctrl_generate(cl_hw, NULL, WRS_MODE_HE, bw,
++					  nss, mcs, gi, false, false);
++
++	cl_msg_tx_update_rate_dl(cl_hw, 0xff, rate_ctrl, 0, 0,
++				 RATE_OP_MODE_DEFAULT_HE, 0, 0, ltf,
++				 0, rate_ctrl_he.word);
++
++	cl_msg_tx_update_rate_dl(cl_hw, 0xff, rate_ctrl, 0, 0,
++				 RATE_OP_MODE_MCAST, 0, 0, ltf, 0, 0);
++
++	cl_msg_tx_update_rate_dl(cl_hw, 0xff, rate_ctrl, 0, 0,
++				 RATE_OP_MODE_BCAST, 0, 0, ltf, 0, 0);
++}
++
++bool cl_rate_ctrl_set_mcast(struct cl_hw *cl_hw, u8 mode, u8 mcs)
++{
++	u32 rate_ctrl_mcast = cl_rate_ctrl_generate(cl_hw, NULL, mode, 0, 0, mcs,
++						    WRS_GI_LONG, false, false);
++	u8 ltf = cl_map_gi_to_ltf(mode, WRS_GI_LONG);
++
++	if (cl_msg_tx_update_rate_dl(cl_hw, 0xff, rate_ctrl_mcast, 0, 0,
++				     RATE_OP_MODE_MCAST, 0, 0, ltf, 0, 0))
++		return false;
++
++	return true;
++}
++
++static u8 cl_rate_ctrl_get_min(struct cl_hw *cl_hw)
++{
++	if (cl_hw->conf->ci_min_he_en &&
++	    cl_hw->wireless_mode == WIRELESS_MODE_HE)
++		return RATE_CTRL_ENTRY_MIN_HE;
++
++	if (cl_hw_mode_is_b_or_bg(cl_hw))
++		return RATE_CTRL_ENTRY_MIN_CCK;
++
++	return RATE_CTRL_ENTRY_MIN_OFDM;
++}
++
++void cl_rate_ctrl_update_desc_single(struct cl_hw *cl_hw, struct tx_host_info *info,
++				     struct cl_sw_txhdr *sw_txhdr)
++{
++	struct ieee80211_hdr *mac_hdr = sw_txhdr->hdr80211;
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(sw_txhdr->skb);
++	bool is_data = ieee80211_is_data(sw_txhdr->fc);
++
++	if (sw_txhdr->cl_sta && is_data) {
++		if (cl_tx_ctrl_is_eapol(tx_info)) {
++			info->rate_ctrl_entry = cl_rate_ctrl_get_min(cl_hw);
++		} else {
++			if (cl_hw->entry_fixed_rate)
++				info->rate_ctrl_entry = RATE_CTRL_ENTRY_FIXED_RATE;
++			else
++				info->rate_ctrl_entry = RATE_CTRL_ENTRY_STA;
++		}
++	} else {
++		if (sw_txhdr->is_bcn) {
++			info->rate_ctrl_entry = cl_rate_ctrl_get_min(cl_hw);
++		} else if (is_multicast_ether_addr(mac_hdr->addr1) &&
++			   !is_broadcast_ether_addr(mac_hdr->addr1)) {
++			info->rate_ctrl_entry = RATE_CTRL_ENTRY_MCAST;
++		} else if (is_broadcast_ether_addr(mac_hdr->addr1) &&
++			   !cl_hw->entry_fixed_rate) {
++			info->rate_ctrl_entry = RATE_CTRL_ENTRY_BCAST;
++		} else {
++			if (cl_hw->entry_fixed_rate && is_data)
++				info->rate_ctrl_entry = RATE_CTRL_ENTRY_FIXED_RATE;
++			else
++				info->rate_ctrl_entry = cl_rate_ctrl_get_min(cl_hw);
++		}
++	}
++}
++
++void cl_rate_ctrl_update_desc_agg(struct cl_hw *cl_hw, struct tx_host_info *info)
++{
++	/* For aggregation there are only two options - STA and FIXED_RATE */
++	if (cl_hw->entry_fixed_rate)
++		info->rate_ctrl_entry = RATE_CTRL_ENTRY_FIXED_RATE;
++	else
++		info->rate_ctrl_entry = RATE_CTRL_ENTRY_STA;
++}
++
++#ifdef CONFIG_CL8K_DYN_BCAST_RATE
++
++/*
++ * MIN_MCS | BCAST_MCS
++ * -------------------
++ * 0 - 1   | 0
++ * 2 - 3   | 1
++ * 4 - 5   | 2
++ * 6 - 7   | 3
++ * 8 - 9   | 4
++ * 10 - 11 | 5
++ */
++
++static u8 conv_min_mcs_to_bcast_mcs[WRS_MCS_MAX] = {
++	0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5
++};
++
++static void cl_dyn_bcast_rate_update(struct cl_hw *cl_hw, u8 min_mcs)
++{
++	struct cl_dyn_bcast_rate *dyn_bcast_rate = &cl_hw->dyn_bcast_rate;
++	u8 bcast_mcs = conv_min_mcs_to_bcast_mcs[min_mcs];
++
++	dyn_bcast_rate->sta_min_mcs = min_mcs;
++
++	if (bcast_mcs != dyn_bcast_rate->bcast_mcs)
++		cl_dyn_bcast_rate_set(cl_hw, bcast_mcs);
++}
++
++static struct cl_dyn_bcast_rate cl_dyn_bcast_rate_prepare(struct cl_hw *cl_hw)
++{
++	struct cl_dyn_bcast_rate dyn_bcast_rate;
++
++	memset(&dyn_bcast_rate, 0, sizeof(struct cl_dyn_bcast_rate));
++	dyn_bcast_rate.sta_min_mcs = 0;
++	dyn_bcast_rate.bcast_mcs = conv_min_mcs_to_bcast_mcs[0];
++
++	if (cl_band_is_6g(cl_hw)) {
++		dyn_bcast_rate.wrs_mode = cl_hw->conf->ci_min_he_en ?
++			WRS_MODE_HE : WRS_MODE_OFDM;
++		dyn_bcast_rate.ltf = LTF_X4;
++	} else if (cl_band_is_24g(cl_hw) && cl_hw_mode_is_b_or_bg(cl_hw)) {
++		dyn_bcast_rate.wrs_mode = WRS_MODE_CCK;
++		dyn_bcast_rate.ltf = 0;
++	} else {
++		dyn_bcast_rate.wrs_mode = WRS_MODE_OFDM;
++		dyn_bcast_rate.ltf = 0;
++	}
++
++	return dyn_bcast_rate;
++}
++
++void cl_dyn_bcast_rate_init(struct cl_hw *cl_hw)
++{
++	struct cl_dyn_bcast_rate dyn_bcast_rate;
++
++	dyn_bcast_rate = cl_dyn_bcast_rate_prepare(cl_hw);
++	memcpy(&cl_hw->dyn_bcast_rate, &dyn_bcast_rate, sizeof(struct cl_dyn_bcast_rate));
++}
++
++void cl_dyn_bcast_rate_set(struct cl_hw *cl_hw, u8 bcast_mcs)
++{
++	struct cl_dyn_bcast_rate *dyn_bcast_rate = &cl_hw->dyn_bcast_rate;
++	u8 wrs_mode = dyn_bcast_rate->wrs_mode;
++	u8 ltf = dyn_bcast_rate->ltf;
++	u32 rate_ctrl;
++
++	cl_hw->dyn_bcast_rate.bcast_mcs = bcast_mcs;
++
++	rate_ctrl = cl_rate_ctrl_generate(cl_hw, NULL, wrs_mode, 0, 0, bcast_mcs,
++					  0, false, false);
++	cl_msg_tx_update_rate_dl(cl_hw, U8_MAX, rate_ctrl, 0, 0,
++				 RATE_OP_MODE_BCAST, 0, 0, ltf, 0, 0);
++
++	cl_dbg_info(cl_hw, "Broadcast MCS set to %u\n", bcast_mcs);
++}
++
++void cl_dyn_bcast_update(struct cl_hw *cl_hw)
++{
++	struct cl_dyn_bcast_rate dyn_bcast_rate;
++
++	dyn_bcast_rate = cl_dyn_bcast_rate_prepare(cl_hw);
++	if (cl_hw->dyn_bcast_rate.wrs_mode == dyn_bcast_rate.wrs_mode)
++		return;
++
++	memcpy(&cl_hw->dyn_bcast_rate, &dyn_bcast_rate, sizeof(struct cl_dyn_bcast_rate));
++	cl_dyn_bcast_rate_set(cl_hw, cl_hw->dyn_bcast_rate.bcast_mcs);
++}
++
++void cl_dyn_bcast_rate_recovery(struct cl_hw *cl_hw)
++{
++	cl_dyn_bcast_rate_set(cl_hw, cl_hw->dyn_bcast_rate.bcast_mcs);
++}
++
++void cl_dyn_bcast_rate_change(struct cl_hw *cl_hw, struct cl_sta *cl_sta_change,
++			      u8 old_mcs, u8 new_mcs)
++{
++	struct cl_dyn_bcast_rate *dyn_bcast_rate = &cl_hw->dyn_bcast_rate;
++	struct cl_sta *cl_sta = NULL;
++	u8 min_mcs = WRS_MCS_MAX - 1;
++	u8 sta_mcs = 0;
++
++	if (!cl_hw->conf->ce_dyn_bcast_rate_en)
++		return;
++
++	if (!cl_sta_change->add_complete)
++		return;
++
++	/* Single station */
++	if (cl_sta_num_bh(cl_hw) == 1) {
++		cl_dyn_bcast_rate_update(cl_hw, new_mcs);
++		return;
++	}
++
++	/*
++	 * If this station did not have the minimum mcs,
++	 * and the new rate is now below the minimum mcs there is nothing to do
++	 */
++	if (old_mcs > dyn_bcast_rate->sta_min_mcs &&
++	    new_mcs > dyn_bcast_rate->sta_min_mcs)
++		return;
++
++	/* Multi station - find new minimum MCS of all stations */
++	cl_sta_lock_bh(cl_hw);
++
++	list_for_each_entry(cl_sta, &cl_hw->cl_sta_db.head, list) {
++		sta_mcs = (cl_sta->sta_idx == cl_sta_change->sta_idx) ?
++			new_mcs : cl_sta->wrs_sta.tx_su_params.rate_params.mcs;
++
++		if (sta_mcs < min_mcs) {
++			min_mcs = sta_mcs;
++
++			if (min_mcs == 0)
++				break;
++		}
++	}
++
++	cl_sta_unlock_bh(cl_hw);
++
++	cl_dyn_bcast_rate_update(cl_hw, min_mcs);
++}
++
++void cl_dyn_bcast_rate_update_upon_assoc(struct cl_hw *cl_hw, u8 mcs, u8 num_sta)
++{
++	struct cl_dyn_bcast_rate *dyn_bcast_rate = &cl_hw->dyn_bcast_rate;
++
++	if (!cl_hw->conf->ce_dyn_bcast_rate_en)
++		return;
++
++	if (num_sta == 1 || mcs < dyn_bcast_rate->sta_min_mcs)
++		cl_dyn_bcast_rate_update(cl_hw, mcs);
++}
++
++void cl_dyn_bcast_rate_update_upon_disassoc(struct cl_hw *cl_hw, u8 mcs, u8 num_sta)
++{
++	struct cl_dyn_bcast_rate *dyn_bcast_rate = &cl_hw->dyn_bcast_rate;
++	struct cl_sta *cl_sta = NULL;
++	u8 min_mcs = WRS_MCS_MAX - 1;
++
++	if (!cl_hw->conf->ce_dyn_bcast_rate_en)
++		return;
++
++	/* When the last station disconnects - set bcast back to 0 */
++	if (num_sta == 0) {
++		cl_dyn_bcast_rate_update(cl_hw, 0);
++		return;
++	}
++
++	/* If this station did not have the minimum rate there is nothing to do */
++	if (mcs > dyn_bcast_rate->sta_min_mcs)
++		return;
++
++	/*
++	 * Find new minimum MCS of all station (the disassociating
++	 * station is not in list at this stage)
++	 */
++	cl_sta_lock_bh(cl_hw);
++
++	list_for_each_entry(cl_sta, &cl_hw->cl_sta_db.head, list) {
++		if (cl_sta->wrs_sta.tx_su_params.rate_params.mcs < min_mcs) {
++			min_mcs = cl_sta->wrs_sta.tx_su_params.rate_params.mcs;
++
++			if (min_mcs == 0)
++				break;
++		}
++	}
++
++	cl_sta_unlock_bh(cl_hw);
++
++	cl_dyn_bcast_rate_update(cl_hw, min_mcs);
++}
++#endif /* CONFIG_CL8K_DYN_BCAST_RATE */
++#ifdef CONFIG_CL8K_DYN_MCAST_RATE
++
++static void _cl_dyn_mcast_rate_send(struct cl_hw *cl_hw, u8 wrs_mode_new)
++{
++	struct cl_dyn_mcast_rate *dyn_mcast_rate = &cl_hw->dyn_mcast_rate;
++
++	if (dyn_mcast_rate->wrs_mode_curr == wrs_mode_new)
++		return;
++
++	if (!cl_rate_ctrl_set_mcast(cl_hw, wrs_mode_new, cl_hw->conf->ce_mcast_rate))
++		return;
++
++	dyn_mcast_rate->wrs_mode_curr = wrs_mode_new;
++	cl_dbg_trace(cl_hw, "New multicast mode = %u\n", wrs_mode_new);
++}
++
++static struct cl_dyn_mcast_rate cl_dyn_mcast_rate_prepare(struct cl_hw *cl_hw)
++{
++	struct cl_dyn_mcast_rate dyn_mcast_rate;
++
++	memset(&dyn_mcast_rate, 0, sizeof(struct cl_dyn_mcast_rate));
++	if (cl_hw->conf->ci_min_he_en &&
++	    cl_hw->wireless_mode == WIRELESS_MODE_HE)
++		dyn_mcast_rate.wrs_mode_default = WRS_MODE_HE;
++	else if (cl_band_is_24g(cl_hw) && cl_hw_mode_is_b_or_bg(cl_hw))
++		dyn_mcast_rate.wrs_mode_default = WRS_MODE_CCK;
++	else
++		dyn_mcast_rate.wrs_mode_default = WRS_MODE_OFDM;
++
++	return dyn_mcast_rate;
++}
++
++void cl_dyn_mcast_rate_init(struct cl_hw *cl_hw)
++{
++	struct cl_dyn_mcast_rate dyn_mcast_rate;
++
++	dyn_mcast_rate = cl_dyn_mcast_rate_prepare(cl_hw);
++	cl_hw->dyn_mcast_rate.wrs_mode_default = dyn_mcast_rate.wrs_mode_default;
++
++	cl_dbg_trace(cl_hw, "mode = %u, mcs = %u\n",
++		     dyn_mcast_rate.wrs_mode_default, cl_hw->conf->ce_mcast_rate);
++}
++
++void cl_dyn_mcast_rate_set(struct cl_hw *cl_hw)
++{
++	/*
++	 * Set wrs_mode_curr to 0xff so that the message will be sent to
++	 * firmware when this function is called from cl_ops_start()
++	 */
++	struct cl_dyn_mcast_rate *dyn_mcast_rate = &cl_hw->dyn_mcast_rate;
++
++	dyn_mcast_rate->wrs_mode_curr = U8_MAX;
++
++	_cl_dyn_mcast_rate_send(cl_hw, dyn_mcast_rate->wrs_mode_default);
++}
++
++void cl_dyn_mcast_update(struct cl_hw *cl_hw)
++{
++	struct cl_dyn_mcast_rate dyn_mcast_rate;
++
++	dyn_mcast_rate = cl_dyn_mcast_rate_prepare(cl_hw);
++	if (cl_hw->dyn_mcast_rate.wrs_mode_default == dyn_mcast_rate.wrs_mode_default)
++		return;
++
++	cl_hw->dyn_mcast_rate.wrs_mode_default = dyn_mcast_rate.wrs_mode_default;
++	cl_dyn_mcast_rate_set(cl_hw);
++}
++
++void cl_dyn_mcast_rate_recovery(struct cl_hw *cl_hw)
++{
++	/*
++	 * cl_dyn_mcast_rate_recovery() is called during recovery process().
++	 * Reset wrs_mode_curr so that message will be sent.
++	 */
++	struct cl_dyn_mcast_rate *dyn_mcast_rate = &cl_hw->dyn_mcast_rate;
++	u8 wrs_mode_curr = dyn_mcast_rate->wrs_mode_curr;
++
++	dyn_mcast_rate->wrs_mode_curr = U8_MAX;
++
++	_cl_dyn_mcast_rate_send(cl_hw, wrs_mode_curr);
++}
++
++void cl_dyn_mcast_rate_update_upon_assoc(struct cl_hw *cl_hw, u8 wrs_mode, u8 num_sta)
++{
++	struct cl_dyn_mcast_rate *dyn_mcast_rate = &cl_hw->dyn_mcast_rate;
++
++	if (!cl_hw->conf->ce_dyn_mcast_rate_en)
++		return;
++
++	/*
++	 * If the wrs_mode of the new station is lower than the current multicast
++	 * wrs_mode, or if this is the first station to connect - update multicast mode
++	 */
++	if (wrs_mode < dyn_mcast_rate->wrs_mode_curr || num_sta == 1)
++		_cl_dyn_mcast_rate_send(cl_hw, wrs_mode);
++}
++
++void cl_dyn_mcast_rate_update_upon_disassoc(struct cl_hw *cl_hw, u8 wrs_mode, u8 num_sta)
++{
++	struct cl_dyn_mcast_rate *dyn_mcast_rate = &cl_hw->dyn_mcast_rate;
++	struct cl_sta *cl_sta = NULL;
++	u8 wrs_mode_min = WRS_MODE_HE;
++
++	if (!cl_hw->conf->ce_dyn_mcast_rate_en)
++		return;
++
++	/* When the last station disconnects - set default mcast rate */
++	if (num_sta == 0) {
++		_cl_dyn_mcast_rate_send(cl_hw, dyn_mcast_rate->wrs_mode_default);
++		return;
++	}
++
++	/*
++	 * If wrs_mode of the disassociating station is bigger
++	 * than the current mode then there is nothing to update.
++	 */
++	if (wrs_mode > dyn_mcast_rate->wrs_mode_curr)
++		return;
++
++	/*
++	 * Find minimal wrs_mode among the connected stations (the
++	 * disassociating station is not in list at this stage).
++	 */
++	cl_sta_lock_bh(cl_hw);
++
++	list_for_each_entry(cl_sta, &cl_hw->cl_sta_db.head, list)
++		if (cl_sta->wrs_sta.mode < wrs_mode_min)
++			wrs_mode_min = cl_sta->wrs_sta.mode;
++
++	cl_sta_unlock_bh(cl_hw);
++
++	_cl_dyn_mcast_rate_send(cl_hw, wrs_mode_min);
++}
++#endif /* CONFIG_CL8K_DYN_MCAST_RATE */
 -- 
 2.36.1
 
