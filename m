@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F3EDC433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E37B5C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235061AbiEXLkH (ORCPT
+        id S236660AbiEXLkK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:40:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42458 "EHLO
+        Tue, 24 May 2022 07:40:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236660AbiEXLkD (ORCPT
+        with ESMTP id S236891AbiEXLkI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:40:03 -0400
-Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2059.outbound.protection.outlook.com [40.107.20.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 689F092D1D
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:38 -0700 (PDT)
+        Tue, 24 May 2022 07:40:08 -0400
+Received: from EUR03-VE1-obe.outbound.protection.outlook.com (mail-eopbgr50045.outbound.protection.outlook.com [40.107.5.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 661738CCFF
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:41 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Gdl3UvNq2Asyk/2nKA2s2JUKhDjrMs5PE3u2ZDJtUIaHJu3738jzz4QjQ0ePYF6TbocMT7TgHHBBhIF4/T37OnT/iSzHedBmvE+g7V1beU6y3R636iOxPVvStrlIM13UbrcDWeFHaiHwM2kvltqIhkf5PxVjw/qM8xD5qyGEB7wQPT8Vrnmm6mhd9YxqDTVD+yEizyGnPWXVbX4jNYpZ5mH1fzVwO9/g4Wt7Tmm7YSAabLyhGxPGBQnKDB3G4JtkIViWAwTLuljIEalmWWIO2aOvnympCjssMPzSRi3LoAj1BSUyxhP5+0g8w6KbaiXhLKwG/Q+I6er8YPa0UdHC2Q==
+ b=Y9jk1fJVpgxh1yYdUQsG6MrM+gMtVF1C9sJQZyjgV4b5x1jzfh0PL+c2GyDiTmkQqdqfCWGe14QPRVe/98nhuMOO86ohNciG7i5deW3INswAzPY8dHRqrm2q2Q8Awh4rn6ZUEBv4dNHdag3prDiboF72CNPKA0b9yE/QHsQnc9vEmG4zpCgUGzqiBl3ya1+dsVAKeUCK+m0iMZJwgis7MvM+zJKZVu1bRTyoWtebInWvS2IHH/dYNOahCmv93ijWSsjz+e0IybfmBiU6CpLo5j4v98VWLAj4fUd/IGQ4Xh77UQnZ5ZfHKh/iqtqAA+4JEI+BRnjwCy13XAbr97sVQA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9328ff3sTPhLBWkOiYeDjCXOhOes3Yr2nLyBjnHesnI=;
- b=F2XY+1q0YQA5/PmjzdtwZ7eysf0JrmPFluK4ai7zjrm/wykee5yBat/BvVBlEp9sN6qb2un0YYVxRDHdSsHx/DoTP6wva3hBqKhalTKD2Nogmmu05WahL9AsO1nJYiSYYPlOkYk51+zrI8QjeQxmcRnEF5L3AoHqymWkUtctMj/NGEg8k7r+AxVpt6HmjrThgVuAsDhKf3KtMRVwgiQEF53rncnrw6SPetGPT49OQxX6twQO3Djy4kegbcMSR/YOxyW4ttIhnQiOfoy5Ht8fVfW5uiAMsxidojXA0QBiKKDcRh6NgL6BqFGpfGm4IrzqoNlxLfZ4uTl89hY2dHFFAQ==
+ bh=KN5/acjSrvju7EIG0eZqJXiXf6PPmxLqwR4iqqJGsXo=;
+ b=Ke/rkm5B2aMGPG5g8IJvwSfyUsv7NEUALvmfHdDq3Ds8NXds0z2RqUVeJNFjjqk0tFfvLENRXZFkIRYFH6r7VouVBncVRAN34iWEf39L8INHKHkGNkHNOc1/Cqnv71X//mOr/9Chu8rmkwMPeIn3SQbJxyV02ANyNhfgekvazDosZrSlqxAZNTWn1UwzFVFkZY5GG2azVziVeiTBE/IrtN8/qfFswBLKedSN5bRJcWwZTdv2bbbkj890En9PT5KtVT69GupeXj/xpdR9gLlzExr3X3/dxJvlg+1FhZIKvkmE+VTsBArkj97/Ltl+Ox1uq4Ixdvb93zXMCmdjE9mugw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9328ff3sTPhLBWkOiYeDjCXOhOes3Yr2nLyBjnHesnI=;
- b=CCa+5hUiyEV8uPWFJqAUHm3jQhF1qLJk6JU5AZ+E1xTxXiz/ah6jNPI3+WGoI32kB982vnATItLvNVRVKqsTg7/m218auua7CYnrwoOCecYl3KtXFFQ/CdE38BD4MIHqrUWZSaL6z5nCTxpEBU2ZmdjGGX1JipQXUtfbyXd+pUg=
+ bh=KN5/acjSrvju7EIG0eZqJXiXf6PPmxLqwR4iqqJGsXo=;
+ b=Kf8ZyvhnfHEjiGLoeYtZK2JQxg9AkCLLuQJ85GzVBGzHTYFW3+0tElrF8nYrC4lLQvlr+ieIOdAW2LqAi26sKbJNQ52g6WqRSNTamTWkkQW0NxVPoCniZYIqE8B/lzG9VgKUNN/rtqoMLbU+I74A7RAiLKgTvEgBgIKP+cO4tek=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by VE1P192MB0669.EURP192.PROD.OUTLOOK.COM (2603:10a6:800:16f::15) with
+ by DU0P192MB1571.EURP192.PROD.OUTLOOK.COM (2603:10a6:10:34c::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.14; Tue, 24 May
- 2022 11:39:29 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Tue, 24 May
+ 2022 11:38:52 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:39:29 +0000
+ 11:38:52 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 79/96] cl8k: add tcv.h
-Date:   Tue, 24 May 2022 14:34:45 +0300
-Message-Id: <20220524113502.1094459-80-viktor.barna@celeno.com>
+Subject: [RFC v2 57/96] cl8k: add radio.h
+Date:   Tue, 24 May 2022 14:34:23 +0300
+Message-Id: <20220524113502.1094459-58-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 03743f81-66c1-4fd8-1e01-08da3d79fa6e
-X-MS-TrafficTypeDiagnostic: VE1P192MB0669:EE_
+X-MS-Office365-Filtering-Correlation-Id: 12ba11b1-fb28-4320-7b11-08da3d79efca
+X-MS-TrafficTypeDiagnostic: DU0P192MB1571:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <VE1P192MB06694D2E9B351B46364AAE22F6D79@VE1P192MB0669.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <DU0P192MB1571C0820F4666B61C7F4DDCF6D79@DU0P192MB1571.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: TUfrqMs9VH9RPLePEqKDeCj9+SRD8EL/8vFuHvs8osKKa9QGsPhhwTdzmvCFusTJ8TrTd2A5/tzjFN76/8EFVIxR28LGfBIoApuhISXQVW5bMr2UJ/i/Gm1qdaVjw4UP3bgWT8a4OeBMabBbuZvvHm+WttLqfnvMlsjJYIkSRbG9+yvhfJmG2jU01RqEh3K4GrnY0rPQZMKMlCQ0w7EV/VFMgXq6pE3NGGtvm7AiP5PF3OzjtHUgOW8HMHBOsT9zqUNcPJJiQQc5Z822RF7/7jJP6lvM33wYJqK5JMZDx9l+5Vui9jRbZqhmmdycx7ebthQ3Bi/A3iqIX8ApyhwgQeTtyXNvTjWP/bSDSZxM5HBuxdf3ZDNGTzwvB7i8OkbnJ59nAquWnYodyCg2QaRlfQ6Zm/DjItKj65D9J3Sj55ongzJJKDlpxTeiz9tmdcNAzx4AEf4vNrKjHBhZnqnjvym4umoRJhyabfvLSnkF70lQH0x5ABteobTAISHFqNFOg5YRhOJsE0ZCmlbn3bDZNu7ZDOnezv23FBEOqKP7Y+VHFBLI03/bD8eFwK1XAcUS7c3y67I80s6Kr8qZUCK2HoPDh1bB+PUn/nVIwNuFjjsBMag6p+WKRgR9+RGZhol420FZRz1RRRsxaANKVyVe0gIylw4vKnPH4+79Dkbcbh0GpDALAirldxhwjhAQ0cMfJJ+xlfmMkzFr/5g5VL5s1D++N+ZX4UlcfLz+DsM1O24=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(396003)(376002)(136003)(366004)(346002)(39850400004)(8676002)(9686003)(26005)(36756003)(66946007)(66556008)(66476007)(4326008)(107886003)(83380400001)(6512007)(5660300002)(38350700002)(38100700002)(1076003)(2616005)(316002)(6916009)(6506007)(6486002)(54906003)(86362001)(8936002)(508600001)(41300700001)(6666004)(2906002)(186003)(52116002)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: J7XlE43Pq3iU9hJreqcCkE8AF4pVSfS+pkUCsNwZSEG4+Uvk9LKt3u+IeOqTxLo2NsZyjhgD1ZxCZBCZiZsaDsam9QauSkQrcEaO6qdXNrrleuE8uSr31/4TfBm2EqbgZZNeGNHkeZyp7ZUf78ReXqk+25kjLXk6M4npuoiacM2X1N6DSHHWiADIPGJOBzrJq8Vfo3ZBfWv9mquVTkjITupVSh9+rWXsXs3eIWlPNQ+yhTUMAGnoxXtGhjlSNI/yJigJR6PiV+AHXri7rzTO7kBbmf5guiJYjxQnaUJaZB4d9UYEjQrWA0jt7ShVMcKLRmvSzcaQGzAOorbgdlXliF3iauGrSpDoDujBT1TzCTj5oEL++yqIhAlVWzbEkzyv6zsTChn34e7V00t3qzhmZJwINbwfhFAQTz9k0DXtFa3LBkOkL2lCO+BtNBhPrbrOjLRHBakKDtBglkW2TSm4orYwJhHS1TxBIFcV3d2WOALzJtE8x+9lYi+b/jZY0O+9BW26KcAVojNV1BZLECnLl2F4TW/XG16496DH38UjuMJ3oXMvZ1Mjcd5zWvb6pBYnJSU9Ty7LN98pB5Qz9ZHbswlER92tfZs4EqHgsMqzW9otVmpJtiF7AGGVp6PLWI4EXfEMUz9jKVxQ8EzTlJ0Eo9kyVNDGwOPpT75bEntK80faaUu2OPuAnIlzwYK+MXUSLy4/2fbYlpwOuzGfOic1Rvw2fAuVT8Y8ZjZvS9A9T6A=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(39850400004)(346002)(396003)(376002)(6512007)(186003)(6916009)(9686003)(38350700002)(38100700002)(41300700001)(36756003)(316002)(54906003)(2616005)(1076003)(86362001)(107886003)(8676002)(66476007)(4326008)(66556008)(66946007)(52116002)(8936002)(6666004)(6506007)(2906002)(83380400001)(508600001)(5660300002)(6486002)(26005)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?E47eIdm9mHSz4xrzKB6ArshjEFDLS736Nk0jbAc0gMYwF6wNF5JthmXt0Doh?=
- =?us-ascii?Q?wlhyjsL+EjodTjaPiy33Qruz4RhLcDj/w2DkFUDu4zZknNyXfu6oAwG+3n7s?=
- =?us-ascii?Q?aObSOvrDK3saqdh8yHA4Y7+oGjI3dNgdh/IGRHjzCw9D6JTlIWhRt98guQ/k?=
- =?us-ascii?Q?YlDshzZsHY5+uaFH6eN5vAdI5toIlwqBzpgb6uBD+kg3HJj93Fv8zOg2f0cM?=
- =?us-ascii?Q?aqg0/IZlDhI7osycfm+Z2F/TpiyvXSxy1a2HU3PiJ/qv1PoIa27HPk+g3JH6?=
- =?us-ascii?Q?wTQQt9fJqULyEZpovMH/30HvaZJokRYJmG9ywrD/TWaJL9S+UjXGXls+Uc6a?=
- =?us-ascii?Q?ElIf0S0G/h9lRfejTE9IkkXgWj+gUkg+nnFzcgDZvX2BcJUURb5ZV5/lt29A?=
- =?us-ascii?Q?+2slSzbQbqcSfGhG+Rk50AOd9kLNELucXIr6cRK6peNk0es7o4uvDpGnrOAJ?=
- =?us-ascii?Q?0j0iguENBJkA+P61NLk/6GTlcskTpGjQOQPMzowEkTCMckbeAM+2poHQSESc?=
- =?us-ascii?Q?PGUP5zYuXVNv0uCC3nVY8maV1qp8ibhcKPzq0pyYJOTS7djmpLD5r5W+VmMV?=
- =?us-ascii?Q?IqP8yChv5ksRpwPJPGSH5YQ5fQNyQ9Df/1TXc1ootFIH7qptff4Uh/cPZWLH?=
- =?us-ascii?Q?IvmBVPWpfN+7wPCKcRHhePeL703wchNsfFy2ukv0GAbPF6Qi4xzV4Vaof/Lp?=
- =?us-ascii?Q?GtucvjAS9b3F9st1lgX9BQxVWMkrRiX7YTMPpmjnYyab2lpIzD3VhVb7JWHA?=
- =?us-ascii?Q?gtzPMkxxQM60ED5Y0GiEnaFi+CcQrIlC+cWIt7zQV7StF4EryhUN5fgHCPYI?=
- =?us-ascii?Q?Hl/WFJSv+8xS1W8FFsxlSmuztKOp2qpG0NLTWqR/z+oZukZF55TWHi5EFfEb?=
- =?us-ascii?Q?/JRH26N7Ca+h3RuxTR/gpwZ+F7Pg9puk3b18TAWrzXwfEEGRHR3iGTzunugX?=
- =?us-ascii?Q?j9Kq681s8Hy+/cKHve03T6XYYjD9VLPTK8pq8E7SgbHqNOOcw3IxbO4TghmE?=
- =?us-ascii?Q?Ctdn8PMdUGYs9X2RoyP/rPdwBvOjiclTPWzDw2MQBegGXWh427hSyey175EH?=
- =?us-ascii?Q?qI/RM7A1tcOLViqt8JL/Ii3jD1C1l5PzhblrPvtY9ZFk8mi/WPPRVKLoyijS?=
- =?us-ascii?Q?2F/ljCAgbjRU15S4dJW+R4MhfGQ1qcNmCfTulsAiJJUsdeN71My7eCAAykMw?=
- =?us-ascii?Q?UAlbYMBOqCH1toL7TB1DDfUQENLwlzkRiGnsvPTUjnNHaS9gfhzowMo7pcWZ?=
- =?us-ascii?Q?IBu53ALx1401Lltq8lil3VLH65F/5PDx4iB2+lEaJcpRvJiZoVUT5ZYqV4VZ?=
- =?us-ascii?Q?va+N+b211D14I2g9QbmartMvnNeNKiE1EQRrqjZGxRN9dm+YkRV6PioWIxVf?=
- =?us-ascii?Q?3T4mwLA+0TT+ixuj4XEUNEK+z1C9AsaMetHdGJymQmsZCmccLw2cY5QLGpXA?=
- =?us-ascii?Q?tjc3gcN8xT+ICiq4AMi02fWQsbDaMAqNrmM0K438vyDpcI2LOXUxDKkEa+7o?=
- =?us-ascii?Q?JtP5TCdwgkqYhZTjh4ky/1rkImQhVri6ymD+Q+UZk/aAvoQLagxAJFlW1dZ0?=
- =?us-ascii?Q?ijg+JMM25Q50E8PGy+l/X9+0IkwGNR6CdC9nI35Svo8YfqlpwXT8QcNh4i/U?=
- =?us-ascii?Q?g+YAUHBEHk/1ss8PIEvQqeu4HbkQZQyj/9Qf/26emJWxH1/OUpP+mGVsf6Vx?=
- =?us-ascii?Q?BLsyO/hEVxD6gv5EUmNQvupOcy76gAwGg0UBhv00ZW5ZD+5vSxlxyH+Lt1Gb?=
- =?us-ascii?Q?kWGUZatOaGd1DVizlsT6Tltjvr9bdBs=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/+fjcLxVwSrTTpnNQUdsZK8EkJpCEbBKw7yxdnkibOdaG/l+Lu+41V9963IV?=
+ =?us-ascii?Q?lotJ2iXoBbb1da33+QlM17WveeUAl1zMzF2eWe+UO2fHHKtdGYAN0auVob4q?=
+ =?us-ascii?Q?lbkLKphNf9+spCf0uNo0g13lABS3EJi0FIEpfcINbeuddtybyynK9JXAX5Ev?=
+ =?us-ascii?Q?WwpVeQKuWNBTmGcpqOWkIHcdF77mrxynVIZJHEEBf0Pe6lAfwU8Tliq35dt9?=
+ =?us-ascii?Q?aMD1KApnHXZTMUrlvQRnonTFR6JBQLGiBfKt3G+UwYIRtkR3O+BDVsb2bHzH?=
+ =?us-ascii?Q?1d8RLaAnDuHdvrWI+CQWhwhIWWHM3Wf+g8IZi3vEggopsCHj1jCG+ok2JfYp?=
+ =?us-ascii?Q?nOb3Dl9iwv4kC3So/UG/iM3LPH7whCG9iwHieTOQBNC6hBmnj+WpP1Q+58yr?=
+ =?us-ascii?Q?MzzSq7bFJHAZ5A7UI3EgZ7HquHG2Ljqkxfv5xY8JFGhOaj8o2gxq1D7YetoY?=
+ =?us-ascii?Q?ZlwU/lU+h+5lRw9B0TFKD4ghP6winxeTulkrs61Eh+RI8Tzp7dJngu02sOQ7?=
+ =?us-ascii?Q?5HHvFG543sHyG/PenlkY6vBn7v0ntjlc4TXeI9feE5e88O+7mF2rfoJgEXVZ?=
+ =?us-ascii?Q?SeyTxNv8QaKfqYD5eRFxHjJyvzDOHNFRZ+dV8vC9xnhJS30rGxSQxOHtuEEK?=
+ =?us-ascii?Q?+bINo2Nw6MreGWNlwa0+hTyKWWjJNeGS+PJDgEDn965gYXsNhVel3jmtcPKc?=
+ =?us-ascii?Q?PVlvk9aGslpyUEV8VF3xcPGMob8h6v7iosklO1a4U71SMmfR6XgTvmEPLc6k?=
+ =?us-ascii?Q?RxlMSDvs6IZW9yjKSeL2ENwHYk562xASDum8OrRexVnd3Co7aiCON8gbC8UU?=
+ =?us-ascii?Q?6MH0GjOS/yj+Abzgl4IddCH0K28ZHmdhXA69x98wOKeHQyNNJRo3/NKbhbOO?=
+ =?us-ascii?Q?rPnQ74hC7p4tU66WAt7T8vxHo7XoJqnZzt8RZg2GkNC3DNjYYqcizT2cRwdS?=
+ =?us-ascii?Q?c39KAhzQLQj5ePC0HKkVn7t0oAvUZx9KtbtrywImott/nXHMsN1idezf0har?=
+ =?us-ascii?Q?1+HIDrAicCLtHC3DCA/dkaMnzP+3dquS1NSwdyPQcSNYOO+0ai43ZhCNeZYe?=
+ =?us-ascii?Q?zTpQOn5G1rAnovyQ80XTqHSHQTm56YdvYdgBJBW2F00f1EaHfbVRYHW1n7wz?=
+ =?us-ascii?Q?Ph9zeE6GeMKZnJKKvJxPL6uol4RltYX5KWQ7n+X8NLEumbkjGzTC8UOz4464?=
+ =?us-ascii?Q?Q9KhG8NrXtiotKUF2y6YY2hkhQdilRYaDKewzTK/IHfTQagPa1GHvgzsQtJX?=
+ =?us-ascii?Q?b/HRxof9m5lj3dirTUD0ZGjUBR/a9llq2J3XA3+AVRl1eZ25CN3uIQBfE486?=
+ =?us-ascii?Q?0flvrmbq4oBBpMmm34MmhKViKsg5TX24IXx0gmZhYyvEYLFXc5unzDN45/Hs?=
+ =?us-ascii?Q?IwHO+O4is4rB0YvK+jRvrYb9zHxQf8oQy/GWDbV/EAGAnH1ScJsTNAjtGQdN?=
+ =?us-ascii?Q?zcXRqqpPy8qMIVEkzWnJDj5UZRhCv5E7uv9dNereGaCY9iZfewF8juS/OZwq?=
+ =?us-ascii?Q?0QQijp63FElu7iuz6H2TZRWObhUp2CBg1m4KS8T38qFQe1w2ypVj6p2gEUQy?=
+ =?us-ascii?Q?Ct+IzJsWjeOoiKOaz2BvCuOWDZwcRtR5K7Qj1ZcJxGO50BgyCexn+souxSNg?=
+ =?us-ascii?Q?PDHAiPk9NCB+rWosC+YOwlT5I3qahFA92u+er2RTLz0XmnQYPayYIomHOsSy?=
+ =?us-ascii?Q?O4vcGEld+/a/SGUai9m2zEO3J3/Mxg+L/EOUIsCrN+W6U6VdKtFbrK0JWfrs?=
+ =?us-ascii?Q?SVV5VjSwURO7nReei8YF1mlhEkWX80E=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 03743f81-66c1-4fd8-1e01-08da3d79fa6e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 12ba11b1-fb28-4320-7b11-08da3d79efca
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:52.9610
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:35.0970
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: J87myJsEOHKR7Ne/3Prh4mHj7H73iob9JPWiE4rhlHxnCKbQE8/R67g9dF3sMazvK1UwoZ/AJ1flexYIn7hdwQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1P192MB0669
+X-MS-Exchange-CrossTenant-UserPrincipalName: jCpYLw2sCQHXtc+cIi0lryS4G39qjWRkwOU2px2erXhqTBNHnIho4KmTlWsIkKbgN78URtkPp+UGkDzQQMxmdA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0P192MB1571
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,299 +128,146 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- drivers/net/wireless/celeno/cl8k/tcv.h | 283 +++++++++++++++++++++++++
- 1 file changed, 283 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/tcv.h
+ drivers/net/wireless/celeno/cl8k/radio.h | 130 +++++++++++++++++++++++
+ 1 file changed, 130 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/radio.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/tcv.h b/drivers/net/wireless/celeno/cl8k/tcv.h
+diff --git a/drivers/net/wireless/celeno/cl8k/radio.h b/drivers/net/wireless/celeno/cl8k/radio.h
 new file mode 100644
-index 000000000000..99cf0938c5c4
+index 000000000000..b51dec5b7b1e
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/tcv.h
-@@ -0,0 +1,283 @@
++++ b/drivers/net/wireless/celeno/cl8k/radio.h
+@@ -0,0 +1,130 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#ifndef CL_TCV_CONFIG_H
-+#define CL_TCV_CONFIG_H
++#ifndef CL_RADIO_H
++#define CL_RADIO_H
 +
-+#include "def.h"
-+#include "ipc_shared.h"
-+#include "radio.h"
-+#include "sounding.h"
-+#include "eeprom.h"
++#define RADIO_STATUS_OFF        0
++#define RADIO_STATUS_ON         1
++#define RADIO_STATUS_GOING_DOWN 2
++
++int cl_radio_on(struct cl_hw *cl_hw);
++void cl_radio_off_chip(struct cl_chip *chip);
++void cl_radio_on_chip(struct cl_chip *chip);
++bool cl_radio_is_off(struct cl_hw *cl_hw);
++bool cl_radio_is_on(struct cl_hw *cl_hw);
++bool cl_radio_is_going_down(struct cl_hw *cl_hw);
++void cl_radio_on_start(struct cl_hw *cl_hw);
++int cl_radio_boot(struct cl_chip *chip);
++int cl_radio_boot_recovery(struct cl_hw *cl_hw);
++/* Wakes up cl_radio_off_kthread after all the stations have disconnected. */
++void cl_radio_off_wake_up(struct cl_hw *cl_hw);
++
++struct cl_noise_reg {
++	struct list_head list;
++	u32 np_prim20_per_ant;
++	u32 np_prim20_per_ant2;
++	u32 nasp_prim20_per_ant;
++	u32 nasp_prim20_per_ant2;
++	u32 np_sub20_per_chn;
++	u32 np_sub20_per_chn2;
++	u32 nasp_sub20_per_chn;
++	u32 nasp_sub20_per_chn2;
++	u32 np_sec20_dens_per_ant;
++	u32 nasp_sec20_dens_per_ant;
++};
++
++struct cl_noise_db {
++	struct list_head reg_list;
++	bool hist_record;
++	u8 active_ant;
++	u8 sample_cnt;
++};
++
++void cl_noise_init(struct cl_hw *cl_hw);
++void cl_noise_close(struct cl_hw *cl_hw);
++void cl_noise_maintenance(struct cl_hw *cl_hw);
++
++#define RX_HDR_RSSI(rxhdr) \
++	{(rxhdr)->rssi1, (rxhdr)->rssi2, (rxhdr)->rssi3, \
++	 (rxhdr)->rssi4, (rxhdr)->rssi5, (rxhdr)->rssi6}
++
++struct cl_assoc_queue {
++	struct list_head list;
++	spinlock_t lock;
++};
++
++void cl_rssi_assoc_init(struct cl_hw *cl_hw);
++void cl_rssi_assoc_exit(struct cl_hw *cl_hw);
++void cl_rssi_assoc_handle(struct cl_hw *cl_hw, u8 *mac_addr, struct hw_rxhdr *rxhdr);
++void cl_rssi_assoc_find(struct cl_hw *cl_hw, struct cl_sta *cl_sta, u8 num_sta);
++void cl_rssi_sort_descending(s8 rssi[MAX_ANTENNAS], u8 num_ant);
++s8 cl_rssi_calc_equivalent(struct cl_hw *cl_hw, s8 rssi[MAX_ANTENNAS]);
++s8 cl_rssi_get_strongest(struct cl_hw *cl_hw, s8 rssi[MAX_ANTENNAS]);
++void cl_rssi_block_ack_handler(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			       struct cl_agg_tx_report *agg_report);
++void cl_rssi_rx_handler(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			struct hw_rxhdr *rxhdr, s8 equivalent_rssi);
++void cl_rssi_bw_adjust(struct cl_hw *cl_hw, struct hw_rxhdr *rxhdr, s8 bw_factor);
++void cl_rssi_simulate(struct cl_hw *cl_hw, struct hw_rxhdr *rxhdr);
 +
 +/**
-+ * TCV (=Tranceiver) configuration, is related to the specific band on top
-+ * of specific chipset.
++ * CCA (=Clear Channel Assessment)
 + */
-+#define CL_DEFAULT_HAL_IDLE_TIMEOUT 16000  /* Idle request - 16ms */
-+#define CL_TX_DEFAULT_AC0_TIMEOUT   500000 /* Background - 500ms */
-+#define CL_TX_DEFAULT_AC1_TIMEOUT   300000 /* Best effort - 300ms */
-+#define CL_TX_DEFAULT_AC2_TIMEOUT   200000 /* Video - 200ms */
-+#define CL_TX_DEFAULT_AC3_TIMEOUT   200000 /* Voice - 200ms */
-+#define CL_TX_DEFAULT_BCN_TIMEOUT   150000 /* Beacon - 150ms */
 +
-+/* Minimal MPDU spacing we support in TX - correspond to FW NX_TX_MPDU_SPACING */
-+#define CL_TX_MPDU_SPACING_INVALID 0xFF
-+
-+enum {
-+	CL_RATE_FALLBACK_COUNT_SU,
-+	CL_RATE_FALLBACK_COUNT_MU,
-+	CL_RATE_FALLBACK_RETRY_COUNT_THR,
-+	CL_RATE_FALLBACK_BA_PER_THR,
-+	CL_RATE_FALLBACK_BA_NOT_RECEIVED_THR,
-+	CL_RATE_FALLBACK_DISABLE_MCS,
-+
-+	CL_RATE_FALLBACK_MAX,
++struct cl_cca_db {
++	unsigned long time;
 +};
 +
-+struct cl_tcv_conf {
-+	s8 ce_debug_level;
-+	bool ce_radio_on;
-+	bool ce_ps_ctrl_enabled;
-+	bool ci_ieee80211h;
-+	u8 ci_max_bss_num;
-+	u8 ci_short_guard_interval;
-+	u8 ci_max_mpdu_len;
-+	u8 ci_max_ampdu_len_exp;
-+	s8 ce_dsp_code[STR_LEN_32B];
-+	s8 ce_dsp_data[STR_LEN_32B];
-+	s8 ce_dsp_external_data[STR_LEN_32B];
-+	bool ci_uapsd_en;
-+	bool ce_eirp_regulatory_op_en;
-+	bool ce_eirp_regulatory_prod_en;
-+	bool ci_agg_tx;
-+	bool ci_agg_rx;
-+	bool ce_txldpc_en;
-+	bool ci_ht_rxldpc_en;
-+	bool ci_vht_rxldpc_en;
-+	bool ci_he_rxldpc_en;
-+	bool ci_cs_required;
-+	s8 ci_rx_sensitivity_prod[MAX_ANTENNAS];
-+	s8 ci_rx_sensitivity_op[MAX_ANTENNAS];
-+	bool ci_min_he_en;
-+	u8 ce_cck_tx_ant_mask;
-+	u8 ce_cck_rx_ant_mask;
-+	u8 ce_rx_nss;
-+	u8 ce_tx_nss;
-+	u8 ce_num_antennas;
-+	u16 ce_max_agg_size_tx;
-+	u16 ce_max_agg_size_rx;
-+	bool ce_rxamsdu_en;
-+	u8 ce_txamsdu_en;
-+	u16 ci_tx_amsdu_min_data_rate;
-+	u8 ci_tx_sw_amsdu_max_packets;
-+	u16 ci_tx_packet_limit;
-+	u16 ci_sw_txhdr_pool;
-+	u16 ci_amsdu_txhdr_pool;
-+	u16 ci_tx_queue_size_agg;
-+	u16 ci_tx_queue_size_single;
-+	bool ci_tx_push_cntrs_stat_en;
-+	bool ci_traffic_mon_en;
-+	u16 ci_ipc_rxbuf_size[CL_RX_BUF_MAX];
-+	u16 ce_max_retry;
-+	u8 ce_short_retry_limit;
-+	u8 ce_long_retry_limit;
-+	u8 ci_assoc_auth_retry_limit;
-+	u8 ci_cap_bandwidth;
-+	u32 ci_chandef_channel;
-+	u8 ci_chandef_bandwidth;
-+	bool ci_cck_in_hw_mode;
-+	s8 ce_temp_comp_slope;
-+	u32 ci_fw_dbg_severity;
-+	u32 ci_fw_dbg_module;
-+	u8 ci_lcu_dbg_cfg_inx;
-+	u8 ci_dsp_lcu_mode;
-+	u32 ci_hal_idle_to;
-+	u32 ci_tx_ac0_to;
-+	u32 ci_tx_ac1_to;
-+	u32 ci_tx_ac2_to;
-+	u32 ci_tx_ac3_to;
-+	u32 ci_tx_bcn_to;
-+	s8 ce_hardware_power_table[STR_LEN_256B];
-+	s8 ce_arr_gain[STR_LEN_32B];
-+	s8 ce_bf_gain_2_ant[STR_LEN_32B];
-+	s8 ce_bf_gain_3_ant[STR_LEN_32B];
-+	s8 ce_bf_gain_4_ant[STR_LEN_32B];
-+	s8 ce_bf_gain_5_ant[STR_LEN_32B];
-+	s8 ce_bf_gain_6_ant[STR_LEN_32B];
-+	s8 ce_ant_gain[STR_LEN_32B];
-+	s8 ce_ant_gain_36_64[STR_LEN_32B];
-+	s8 ce_ant_gain_100_140[STR_LEN_32B];
-+	s8 ce_ant_gain_149_165[STR_LEN_32B];
-+	s8 ci_min_ant_pwr[STR_LEN_32B];
-+	s8 ci_bw_factor[STR_LEN_32B];
-+	u8 ce_mcast_rate;
-+	bool ce_dyn_mcast_rate_en;
-+	bool ce_dyn_bcast_rate_en;
-+	u8 ce_default_mcs_ofdm;
-+	u8 ce_default_mcs_cck;
-+	bool ce_prot_log_nav_en;
-+	u8 ce_prot_mode;
-+	u8 ce_prot_rate_format;
-+	u8 ce_prot_rate_mcs;
-+	u8 ce_prot_rate_pre_type;
-+	u8 ce_bw_signaling_mode;
-+	u8 ci_dyn_cts_sta_thr;
-+	s8 ci_vns_pwr_limit;
-+	u8 ci_vns_pwr_mode;
-+	s8 ci_vns_rssi_auto_resp_thr;
-+	s8 ci_vns_rssi_thr;
-+	s8 ci_vns_rssi_hys;
-+	u16 ci_vns_maintenance_time;
-+	u16 ce_bcn_tx_path_min_time;
-+	bool ci_backup_bcn_en;
-+	bool ce_tx_txop_cut_en;
-+	u8 ci_bcns_flushed_cnt_thr;
-+	bool ci_phy_err_prevents_phy_dump;
-+	u8 ci_tx_rx_delay;
-+	u8 ci_fw_assert_time_diff_sec;
-+	u8 ci_fw_assert_storm_detect_thd;
-+	u32 ce_hw_assert_time_max;
-+	u8 ce_bg_assert_print;
-+	u8 ce_fw_watchdog_mode;
-+	u8 ce_fw_watchdog_limit_count;
-+	u32 ce_fw_watchdog_limit_time;
-+	s8 ci_rx_remote_cpu_drv;
-+	s8 ci_rx_remote_cpu_mac;
-+	u16 ci_pending_queue_size;
-+	u8 ce_tx_power_control;
-+	bool ce_acs_coex_en;
-+	u8 ci_dfs_initial_gain;
-+	u8 ci_dfs_agc_cd_th;
-+	u16 ci_dfs_long_pulse_min;
-+	u16 ci_dfs_long_pulse_max;
-+	s8 ce_dfs_tbl_overwrite[STR_LEN_64B];
-+	/* Power Per MCS values - 6g */
-+	s8 ce_ppmcs_offset_he_6g[WRS_MCS_MAX_HE];
-+	/* Power Per MCS values - 5g */
-+	s8 ce_ppmcs_offset_he_36_64[WRS_MCS_MAX_HE];
-+	s8 ce_ppmcs_offset_he_100_140[WRS_MCS_MAX_HE];
-+	s8 ce_ppmcs_offset_he_149_165[WRS_MCS_MAX_HE];
-+	s8 ce_ppmcs_offset_ht_vht_36_64[WRS_MCS_MAX_VHT];
-+	s8 ce_ppmcs_offset_ht_vht_100_140[WRS_MCS_MAX_VHT];
-+	s8 ce_ppmcs_offset_ht_vht_149_165[WRS_MCS_MAX_VHT];
-+	s8 ce_ppmcs_offset_ofdm_36_64[WRS_MCS_MAX_OFDM];
-+	s8 ce_ppmcs_offset_ofdm_100_140[WRS_MCS_MAX_OFDM];
-+	s8 ce_ppmcs_offset_ofdm_149_165[WRS_MCS_MAX_OFDM];
-+	/* Power Per MCS values - 24g */
-+	s8 ce_ppmcs_offset_he[WRS_MCS_MAX_HE];
-+	s8 ce_ppmcs_offset_ht[WRS_MCS_MAX_HT];
-+	s8 ce_ppmcs_offset_ofdm[WRS_MCS_MAX_OFDM];
-+	s8 ce_ppmcs_offset_cck[WRS_MCS_MAX_CCK];
-+	/* Power Per BW values - all bands */
-+	s8 ce_ppbw_offset[CHNL_BW_MAX];
-+	bool ce_power_offset_prod_en;
-+	bool ci_bf_en;
-+	u8 ci_bf_max_nss;
-+	u16 ce_sounding_interval_coefs[SOUNDING_INTERVAL_COEF_MAX];
-+	u8 ci_rate_fallback[CL_RATE_FALLBACK_MAX];
-+	u16 ce_rx_pkts_budget;
-+	u8 ci_band_num;
-+	bool ci_mult_ampdu_in_txop_en;
-+	u8 ce_wmm_aifsn[AC_MAX];
-+	u8 ce_wmm_cwmin[AC_MAX];
-+	u8 ce_wmm_cwmax[AC_MAX];
-+	u16 ce_wmm_txop[AC_MAX];
-+	u8 ci_su_force_min_spacing;
-+	u8 ci_mu_force_min_spacing;
-+	u8 ci_tf_mac_pad_dur;
-+	u32 ci_cca_timeout;
-+	u16 ce_tx_ba_session_timeout;
-+	bool ci_motion_sense_en;
-+	s8 ci_motion_sense_rssi_thr;
-+	u8 ci_wrs_max_bw;
-+	u8 ci_wrs_min_bw;
-+	s8 ci_wrs_fixed_rate[WRS_FIXED_PARAM_MAX];
-+	u8 ce_he_mcs_nss_supp_tx[WRS_SS_MAX];
-+	u8 ce_he_mcs_nss_supp_rx[WRS_SS_MAX];
-+	u8 ce_vht_mcs_nss_supp_tx[WRS_SS_MAX];
-+	u8 ce_vht_mcs_nss_supp_rx[WRS_SS_MAX];
-+	u8 ci_pe_duration;
-+	u8 ci_pe_duration_bcast;
-+	u8 ci_gain_update_enable;
-+	u8 ci_mcs_sig_b;
-+	u8 ci_spp_ksr_value;
-+	bool ci_rx_padding_en;
-+	bool ci_stats_en;
-+	bool ci_bar_disable;
-+	bool ci_ofdm_only;
-+	bool ci_hw_bsr;
-+	bool ci_drop_to_lower_bw;
-+	bool ci_force_icmp_single;
-+	bool ce_wrs_rx_en;
-+	u8 ci_hr_factor[CHNL_BW_MAX];
-+	bool ci_csd_en;
-+	bool ci_signal_extension_en;
-+	bool ci_vht_cap_24g;
-+	u32 ci_tx_digital_gain;
-+	u32 ci_tx_digital_gain_cck;
-+	s8 ci_ofdm_cck_power_offset;
-+	bool ci_mac_clk_gating_en;
-+	bool ci_phy_clk_gating_en;
-+	bool ci_imaging_blocker;
-+	u8 ci_sensing_ndp_tx_chain_mask;
-+	u8 ci_sensing_ndp_tx_bw;
-+	u8 ci_sensing_ndp_tx_format;
-+	u8 ci_sensing_ndp_tx_num_ltf;
-+	u8 ci_calib_ant_tx[MAX_ANTENNAS];
-+	u8 ci_calib_ant_rx[MAX_ANTENNAS];
-+	s8 ci_cca_ed_rise_thr_dbm;
-+	s8 ci_cca_ed_fall_thr_dbm;
-+	u8 ci_cca_cs_en;
-+	u8 ci_cca_modem_en;
-+	u8 ci_cca_main_ant;
-+	u8 ci_cca_second_ant;
-+	u8 ci_cca_flag0_ctrl;
-+	u8 ci_cca_flag1_ctrl;
-+	u8 ci_cca_flag2_ctrl;
-+	u8 ci_cca_flag3_ctrl;
-+	s8 ci_cca_gi_rise_thr_dbm;
-+	s8 ci_cca_gi_fall_thr_dbm;
-+	s8 ci_cca_gi_pow_lim_dbm;
-+	u16 ci_cca_ed_en;
-+	u8 ci_cca_gi_en;
-+	bool ci_rx_he_mu_ppdu;
-+	bool ci_fast_rx_en;
-+	u8 ci_distance_auto_resp_all;
-+	u8 ci_distance_auto_resp_msta;
-+	bool ci_fw_disable_recovery;
-+	bool ce_listener_en;
-+	bool ci_tx_delay_tstamp_en;
-+	u8 ci_calib_tx_init_tx_gain[MAX_ANTENNAS];
-+	u8 ci_calib_tx_init_rx_gain[MAX_ANTENNAS];
-+	u8 ci_calib_rx_init_tx_gain[MAX_ANTENNAS];
-+	u8 ci_calib_rx_init_rx_gain[MAX_ANTENNAS];
-+	u8 ci_calib_conf_rx_gain_upper_limit;
-+	u8 ci_calib_conf_rx_gain_lower_limit;
-+	u8 ci_calib_conf_tone_vector_20bw[IQ_NUM_TONES_REQ];
-+	u8 ci_calib_conf_tone_vector_40bw[IQ_NUM_TONES_REQ];
-+	u8 ci_calib_conf_tone_vector_80bw[IQ_NUM_TONES_REQ];
-+	u8 ci_calib_conf_tone_vector_160bw[IQ_NUM_TONES_REQ];
-+	u32 ci_calib_conf_gp_rad_trshld;
-+	u32 ci_calib_conf_ga_lin_upper_trshld;
-+	u32 ci_calib_conf_ga_lin_lower_trshld;
-+	u8 ci_calib_conf_singletons_num;
-+	u16 ci_calib_conf_rampup_time;
-+	u16 ci_calib_conf_lo_coarse_step;
-+	u16 ci_calib_conf_lo_fine_step;
-+#ifdef CONFIG_CL8K_EEPROM_STM24256
-+	u16 ci_calib_eeprom_channels_20mhz[EEPROM_CALIB_DATA_ELEM_NUM_20MHZ_TCV0];
-+	u16 ci_calib_eeprom_channels_40mhz[EEPROM_CALIB_DATA_ELEM_NUM_40MHZ_TCV0];
-+	u16 ci_calib_eeprom_channels_80mhz[EEPROM_CALIB_DATA_ELEM_NUM_80MHZ_TCV0];
-+	u16 ci_calib_eeprom_channels_160mhz[EEPROM_CALIB_DATA_ELEM_NUM_160MHZ_TCV0];
-+#endif
-+	u16 ci_mesh_basic_rates[MESH_BASIC_RATE_MAX];
++void cl_cca_maintenance(struct cl_hw *cl_hw);
++void cl_cca_init(struct cl_hw *cl_hw);
++
++/**
++ * Protection mode (RTS/CTS) control
++ */
++enum cl_txl_prot_mode {
++	TXL_NO_PROT,
++	TXL_PROT_RTS,
++	TXL_PROT_CTS,
++	TXL_PROT_RTS_FW,
++	TXL_PROT_CTS_FW,
++
++	TXL_PROT_MAX,
 +};
 +
-+int cl_tcv_config_read(struct cl_hw *cl_hw);
-+u8 cl_tcv_config_get_num_ap(struct cl_hw *cl_hw);
-+int cl_tcv_config_alloc(struct cl_hw *cl_hw);
-+void cl_tcv_config_free(struct cl_hw *cl_hw);
-+void cl_tcv_config_validate_calib_params(struct cl_hw *cl_hw);
++struct cl_prot_mode {
++	u8 current_val;
++	u8 default_val;
++	u8 dynamic_val;
++};
 +
-+#endif /* CL_TCV_CONFIG_H */
++void cl_prot_mode_init(struct cl_hw *cl_hw);
++void cl_prot_mode_set(struct cl_hw *cl_hw, u8 prot_mode_new);
++u8 cl_prot_mode_get(struct cl_hw *cl_hw);
++
++enum edca_ac {
++	EDCA_AC_BE,
++	EDCA_AC_BK,
++	EDCA_AC_VI,
++	EDCA_AC_VO,
++
++	EDCA_AC_MAX
++};
++
++struct edca_params {
++	u16 txop;
++	u8 cw_max;
++	u8 cw_min;
++	u8 aifsn;
++};
++
++struct cl_edca_db {
++	struct edca_params hw_params[AC_MAX];
++};
++
++void cl_edca_hw_conf(struct cl_hw *cl_hw);
++void cl_edca_set(struct cl_hw *cl_hw, u8 ac, struct edca_params *params,
++		 struct ieee80211_he_mu_edca_param_ac_rec *mu_edca);
++void cl_edca_recovery(struct cl_hw *cl_hw);
++
++#endif /* CL_RADIO_H */
 -- 
 2.36.1
 
