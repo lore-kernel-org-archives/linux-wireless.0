@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE308C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B20A4C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:39:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236841AbiEXLjT (ORCPT
+        id S236842AbiEXLjW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:39:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41632 "EHLO
+        Tue, 24 May 2022 07:39:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236843AbiEXLjR (ORCPT
+        with ESMTP id S236484AbiEXLjV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:39:17 -0400
-Received: from EUR03-VE1-obe.outbound.protection.outlook.com (mail-eopbgr50088.outbound.protection.outlook.com [40.107.5.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E3B58D680
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:02 -0700 (PDT)
+        Tue, 24 May 2022 07:39:21 -0400
+Received: from EUR03-VE1-obe.outbound.protection.outlook.com (mail-eopbgr50045.outbound.protection.outlook.com [40.107.5.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81D758D6AA
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:06 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ikFNIDc7AG6/kDiN3FSu3RQYUl2AWWIAZTTvIZ49Bc57+9SXNLusCVcB5ivMjtmvsb0sfuIZk52WCPyn2JXvexCBgCPYFSjoF358MuhvJbHzdLwf/oppLFbDj2zl+gTZtd71jfbr7DKQa41DgNWNdFOl1C0OXGinCd5g76czj4T5nJhrg/7dt6xFw9v4MCob7uAntkCSHEsqdWSkB5I3rQYem+iGsPVi21DXighrHFMWLyQtyV6x6jdKVsln3WI9yEox3cwOFD8yL+4amNzDbPuK1zCj1H+Gd/cNr0Z9b9e+E6CstqqIg6VE9WThSt1hAr9uGHM3BnG3KfvPQHNuGg==
+ b=IldXWNZLxYKBUWCD7Iht9R4/YAAAyk8bTsrGGMd+fv1w66uDD6hz4IItEFCZTr/wmBQNQYUYGqwyNQWcyDZdrB7F3Ui1yzWDFt1DAA/ROrDUoSLolEuxTtCoDVcYLfq1437A7TvPH2MIlZzMdgUf2hznWrcP0NHPYfuvRKJZjMSy4OgCTvhoFTsrUgR01HzuKfnPWq/z0fIDlslm60ix8gYkvgb52iQIS6ETL/1Cox1XdY1cxyx6eTaqwb9mohXzncXBmTvlqk2oVZDxU9sKKmRPctJZ+opK8MvuHGCuhJpCQavqbkUjlQ6TF41aWXF3o/dGhrlLYdINe8CA9Hq41g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VgfD6rYdhGban4wtkPkLuL+pvxsH4gSyKEI47Rt1HZc=;
- b=nrJkqRi19knXgmGOh1dRmxerF6PMpKlI4iJPGUef1ck2zZ3P5XvPNWwuPtY7F5MxBOAsQhsH5N29ALqvU0U57NR5lRn9DAVM/afI5RgO5DrcThA+MG0XixdXJF6mm4B8YNjAPGC8QVqgwgNAUR36vdYAt0VTB32z+NsL7dxOQoTMh3UCO5x76JR0h4pRfVWzRLkhi1MmC5OTzaHvZHOEopu1P4OTZiTLb54J1UK60JRbgPLs+q/Dpx5XOmY+MjkpKAv6Ucm6ETgkgYiWJEVdYdOGmo4KGh+PeZeDyMPLJiTmjSFfsSvjDmY7T+LeuJbCinUmfs/9OeflwPNqv+pwAg==
+ bh=TUNOsgahF0ygfpFr46DzooupHPF69b3OG2NWm7Y0k/M=;
+ b=gB3s9lgmuhHJc1wxRs5PN2DFj4cZeH/KCullyP/5KDUP8tA+nrkk3iLgL06epvhV+Zfcq8NbtjSv/S73nzgGPa/fgxjomPZ+BgDoYI9ozO/Pr+6SNqsmPznC2InTNQhCKpJ39QsF5HEcicfEwKqzUQJetOZKlm4lIQt52Mep+e32nz8u+JybBRDPWbgO5u6RVGEQ9gquRs24u7HS3fpyRUgB3zcsMN7k3soCzbvp73QIPHasaHhQPHcz70LcBMgm/8FNQqQDlqcfOeC7ocRDaCX0M60N/EsP9nky8lHFmmM3JsQhEA9DQ05t2m8KPGJpOy51GDDa1hGzATjfjyr1yw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VgfD6rYdhGban4wtkPkLuL+pvxsH4gSyKEI47Rt1HZc=;
- b=lz1p7GbHpCuctGjdJ9pfFd4CEv9KrUjWfVGgg/0OF64eweg+e+Sleo2WUAH2MNroeAvMWPvtQuvq3yjAnd5yIyXjvyTjeHAmSNkGWz55UT4ODfmKXESqPUElrBMI5v4GvuYgLj8DXVz3exZMUM1I1OJ+MzDwH33HvmfdC1tqP2I=
+ bh=TUNOsgahF0ygfpFr46DzooupHPF69b3OG2NWm7Y0k/M=;
+ b=nU8OHuoFCiXIUtmzWcyAqveFhQYbUwux7sqCx3P+T8+srpL/tytVzqgxqQPHucEMCYH71NqMV5M/A6FDxV3HA1au7xEHWkZciAcCP3l6+Cevt4RD6XictwobrvOUNljApsxcZLbJVbPJX5uxj/Ljb2teFlxBbji+VRrK9BSDqXM=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
  by DU0P192MB1571.EURP192.PROD.OUTLOOK.COM (2603:10a6:10:34c::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.23; Tue, 24 May
- 2022 11:38:45 +0000
+ 2022 11:38:47 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:38:45 +0000
+ 11:38:47 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 46/96] cl8k: add motion_sense.c
-Date:   Tue, 24 May 2022 14:34:12 +0300
-Message-Id: <20220524113502.1094459-47-viktor.barna@celeno.com>
+Subject: [RFC v2 49/96] cl8k: add pci.h
+Date:   Tue, 24 May 2022 14:34:15 +0300
+Message-Id: <20220524113502.1094459-50-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,56 +66,56 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 25a5d643-7ead-49b4-ede8-08da3d79e9a1
+X-MS-Office365-Filtering-Correlation-Id: 013455a5-ee21-4fdd-2191-08da3d79eb54
 X-MS-TrafficTypeDiagnostic: DU0P192MB1571:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <DU0P192MB157134A897F8F57B5CB92C81F6D79@DU0P192MB1571.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <DU0P192MB1571E6207447B2E23E020F1EF6D79@DU0P192MB1571.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: sNoxbOm0gAJ8DG3aGeix3675Q4YJ4Vhp87zUsvPq/D0+HtWbne06kwwkBClDo3visSESoeuzb3gQ/NMZMMW4Bk+7oQqQ/oH8fD+XJ7M00qCLJnVF+oYhwI8bNsrOmmBmaDHsMRt5X5RzCoF8nNT/uONMgQZYucdaNISww64xNS0SMKCxZVXfhrHYjjJgX/PWGa5ZXyMAQVaLCQw639pzUDy03gAHqkL2sufoBrfJzpAFZl88OU/98bPRxmJRYJQD6sSwxPaEmyuYicdYYjGO9TivC/TdOubAbU+Qpv/5szetl7yNah4DBji9CQvAnxGH7rLKkEdWe2S4sanJxCujifRdxAXZRWfxqKnpe6Ffu3QDpCGMeBfQ+L5Na4qdd4iF1JTQf2jy+3f6nN8dSoEcBOLKPFwYLJ3gV493Br/CWpDeIKs+gazLYdaG6HfA23yGfFQ8dGc1qPx0957CJolJw6vqN4xjw8VDyoXISuye3Q+prnSHes7G7MQx0IXTs+dwIv1ACAxmTBLRpP9U7SnCu4MbXLkkorRIU3BeZXfXVDFLENmRa43AZPFfzBVDdtwpzozbvGPcUfQuYvMaVlZ7AawyvxgiYyxk6b1Fa/C6ybCjuuAElcRXNw1EgEmgZXj4Bb1U4TnhFxr/Cx+X8C0VLrsv9i3DHgtBayPqXOOgwERQdA1m8IMg+tK1ddHsWMwt90irMlKrvBtnBmb/GCvXyFlZmI+Y/veKg3TQtGPTd/Y=
+X-Microsoft-Antispam-Message-Info: nq2IcfymgyNE+vZ4JDj/iWGok4iBX7LFC8RyxmspRpSjOCEV2D3VoXPYrvzZW+8JhntyJ9hTkkXHLxqtwkoYmYzn00iRg/AUsBkg/Hx0qIFuW6kNq24bB48OuH6AX9AdhkQzyrXyi49Fmr+00W3N2nby/hWLRpMa+/ci78SfkV7uZtFlcsnXX/rvxShiiicaWxCJRFHkU6VngQgBol3xhTivrwiZSy3rF03RU2Bjw7IUAOVTibIeDwd1aslOAUaAadMacC0kKVq6KZ7FodIGoqvcE30WoMWdcrbiC+8HPVd0z78O3Mck9zdznfh0bq/mAnzGA+YEg1YLs9dqgDnZ2Gz3X7Fx/EVY4C8eCrzy46uxEoFk9+95omdRBd1sqgb+fhWGF/cBxc4gLz7NhpvM5riYz+oDZBZ3Ses5E2zpLCU/fpdaaz5WcMPRaM8cwHqhdYAEYp9nrSX1M7+FmwKCuag+RVWl+2DoGAbn5PMUQHfURrc9yFCKe+pudLziRYT3cMuhPjyx94l+hGXEv1M8gWB0e8eMKo6mHeuIKfvrMwI7ZKxMiUKy01zNGfBxqzMALuqo0WyMi7pASMMxzghlPRiwez99O8Iz+wXKW3N8f62VHoH3WPnC0E8CSTa4ksDajAGkjNdy26GEI1/xzbFsftXpuzcivv7To3QY3CB1zcv8z3yv7KbY40jEiPvWAxeeNaIcLzLKruy6s0Gl5jyQETlUItpP2w/SaYQnHkj3e/w=
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(39850400004)(346002)(396003)(376002)(6512007)(186003)(6916009)(9686003)(38350700002)(38100700002)(41300700001)(36756003)(316002)(54906003)(2616005)(1076003)(86362001)(107886003)(8676002)(66476007)(4326008)(66556008)(66946007)(52116002)(8936002)(6666004)(6506007)(2906002)(83380400001)(508600001)(5660300002)(6486002)(26005)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?MjJCMR+hRsUjVAb6p2IINNJ5lRKBqNTjX96o6ZvrwWMtr8O5kxDAaAWzxC7B?=
- =?us-ascii?Q?cgj0S/SuWcfG6ZasKfbFuYRdLM8Vat8Ru0vsL7tsZb7bUkS+rHO8FnIeGPa3?=
- =?us-ascii?Q?9cOhTc3qM/S+SmyKCk7qM46tCrguDLGofzQnFu73axpjhH7k/nKZKZF2uh1M?=
- =?us-ascii?Q?O9yxeDXlqtncFixt/Q1jLW+3IsJjDxiLXRJfc05nk4twSDbbSgZsvgviwEyk?=
- =?us-ascii?Q?ARwuNJYCZNVHEeAL7utPo0z5l9FZ0syTeAnZOGXZznqdFR0vYBY+f1X3XFKl?=
- =?us-ascii?Q?0tUmhf/FZCLVe3Gf9gCPTTuWM3e2LgUHaDAeDHUb+IlVSK9xZX1h9qk8akmr?=
- =?us-ascii?Q?HTjoU5gj3h+ww0Dw6FwfHHcNhH2TuyQvRJfqexA3+zw60C34xSfvlDiwEwG6?=
- =?us-ascii?Q?YLVXoFfYLQzhxAgzezaKE0UeSoITR4+VBgwNsVxyEcRbDW52WavJ7gAYHWaR?=
- =?us-ascii?Q?WZBvpS7NFCtA7pwqiFvzPiUBaqHOmVV976UV5wVDj3uNC+oJUgyp7G8Z40Dl?=
- =?us-ascii?Q?/C+DCuwXuZSaieKR032NHWkeyTqEGkTPzRlqb97iRrkBeBnH4Fih3fYCYpAb?=
- =?us-ascii?Q?N43DwnVsjuUCUsfjXASOOGeF+H5Kn5+KTTtaDZlRzg8va+BTSJlKD/7GU3O/?=
- =?us-ascii?Q?nxlWSCUZChbXM8YpfxXVaSWiYMmiZ9rNEOqq8cEg7seJkiRfG0zomaeUSbm5?=
- =?us-ascii?Q?XtbdlBMZVYQaKFMkjTNve4BDRgjOs7tnzzTrIxq2VF5EGTqu7LBth5P5SwEt?=
- =?us-ascii?Q?glYqq2g+LLiLUSooHWCxi/GBwR5WxiHDvKXnKpEU29Wg+qmIU1trDiH/7jQB?=
- =?us-ascii?Q?uOGQ8ktD/3AC2aXDmOPFwiAdfmKiobR74H4Wxis4kpq4Lx/wp7kM+Zs2yaLd?=
- =?us-ascii?Q?aOze5FsfZDxjSwG5p+pesy/+tEifeloFyE1cYlWECOOwe1tR0JOL4NcCnh3R?=
- =?us-ascii?Q?AorqPBO9cMxOdFlXWc2h7FDkCFK9AVWWe+/p6nicUhci0I0LlEHqLV17lv/b?=
- =?us-ascii?Q?XU5+SZGG+taFDUBB+fhj/58AOgHEGvuDZ2igVlLPyFh/fuT0jW2xXPBlMWJy?=
- =?us-ascii?Q?4mHdKgGX83ET2B2ARISxa8WBaFK0u3AJ60IhJhyPLzLlBZevJ3NtJvyOT+4l?=
- =?us-ascii?Q?8ThEKDeGPysJPL4m7LTNcKpL1Vm2ShdpUJD6yrX+bL37L0gpWVOGzSSKY7Fa?=
- =?us-ascii?Q?eyU8JoINZUsu61IUB9FSJigQazxFITEQMaiHFX2Sn73+Iq4yqjAxpLL+kzP+?=
- =?us-ascii?Q?j5YcoUTIwrevkzdWsGP+wbg0/Z1eyPUsqSCgzd+v8+rKgtLxVi/gmhRDQR1c?=
- =?us-ascii?Q?fKZLdo1EzL0FDW0635veWK4rFs2NtAsln8qvFYM6fV3J1JVYJWhO2BiY4JsK?=
- =?us-ascii?Q?bZriPlU5X3OG70OOW1i5BIKZPf9tZ/bhKlmz4eB9KB89+T5Q71ea8Q2a6TzI?=
- =?us-ascii?Q?+NwEVdPQRJ+t9Gkx0Zw5phSd/lZYh9mpHBl5yMOBsjEuJI1JCGMGK5ZaMHOn?=
- =?us-ascii?Q?kPsGD4Sr4MvWidSYyfquUtYORh+XUjrhVMM17NedX9yF5eqGhUWbz4y4jODD?=
- =?us-ascii?Q?uTQukHLTs45pQ5V50iAc4fT5opU3HjizGUv1XM/ObBtkuNJ0KVUM72QpGQWj?=
- =?us-ascii?Q?qAcWDTFS0muxjsuBrgbTpgxNPrg8oi+ulRn9xw64rY67fVHtdlUgIeYY7IVS?=
- =?us-ascii?Q?CKvxTa2jhEgtv3NvqeiBn8ydYKp/AluNJl/B+q1ccN+YWliI/TO34Uxr5A/z?=
- =?us-ascii?Q?5xLh5eHGEZdmZkP0pG4Bxb2Q5LwRNYU=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?IDWPJ0XE5HMwnCuenIxG3e6v6533suDzokySeds8LhmMAHZDlXc6TKmd2ufc?=
+ =?us-ascii?Q?nTmUKWVSbt8NfTZB4JG2uowiBR0ydNfdtJN+kYa4PomD5rKyBVhKIdWJMD9X?=
+ =?us-ascii?Q?5c+r+MatyOjCwXAt2+GeqDMyoEivBX36g2SOIXmrwKmMrsQX44xRNb8l5xC6?=
+ =?us-ascii?Q?ty32FYlf6VxLwAOPyQGsKQrcYSHP72etOD49/ccruODrXIXakkKH39+XMBOg?=
+ =?us-ascii?Q?SoJS7bVSktuT1o1NuDToX3QLbuoDlocN3Zl0KsbA7LpMez0zn7oAOwlx2xD+?=
+ =?us-ascii?Q?6h6YQURy7t7ysjSk8LjtzkyU8fhn/76TXKnweh2rrvovdhee1oogxLox0Z/V?=
+ =?us-ascii?Q?F5ariIvKqKJNyLHoWV74T8Rwx2kc2jIUKGqc4E512mtU4i6vO6jK9FQfXIEI?=
+ =?us-ascii?Q?/YBFPiJw3UrT9241Pig2hymJpArRL6KZ3gBWf/gU19ciYJJbf/hw960nJ5G2?=
+ =?us-ascii?Q?ONEzF5J7MoffOjvvPbaSQ1IWgl+IcrhaPhAcZefGYMgb7OVsx/zXE+xDS9je?=
+ =?us-ascii?Q?1nxusjDXbCJyWol7v09afyeq9u96Ac2g8pL+KrY+St0zn7TxVbb/SZbgtytt?=
+ =?us-ascii?Q?+lrOFGAuL5iTgppYOpXWhFTfWB4clT7LqkFyp6oA2DD8/no0Peerr9RQ68Wh?=
+ =?us-ascii?Q?T6hnsXEQOZCnoUv2xWTjRvSC4SDIjvjGy3vStSYK5pgB8Va98epI7y/5j5Bq?=
+ =?us-ascii?Q?mlpLBUlr5kiNsOB0/6iFp9RLCyTq0WTVo6HtSLybW376rWBHp53QP/ZRdwJ5?=
+ =?us-ascii?Q?zwNTR+9iFjgxGV1/EgFRqrS6tdyaTyvwDpjRfNUJyiOHlKUQyt3ycb8svb9s?=
+ =?us-ascii?Q?ohmPjpUkvHEk+fQVjt8Q/50/QXdbmGUeNzKHp31aRmDLcGtmeAaprc8mVa6Z?=
+ =?us-ascii?Q?SSe00uLuXXsV02VH6zergN7imf9YpCQwP2D008Bbnni5KsNecvTvkyACkn0+?=
+ =?us-ascii?Q?JT+369F62KDOhA4Ni+t8SBdusIq0YyfmxD9wVvOmUyZGNeHLKYOWXtOefItO?=
+ =?us-ascii?Q?RyDuFbeO9p6s6lJC+F90nZvrU5AmnIw5FUNaIN7yKEumW12/nv1yWNJwcEGJ?=
+ =?us-ascii?Q?QaG27Hx0PvzaHOS55T2N+nVNkPS1+rcz+gYD742xD+wkos+g5oUqbp/eLTNM?=
+ =?us-ascii?Q?tqY9Sn6NTa4j0eXbDVKBQdPVv1XT0vlOgOilNOoXLW6fdpirrAo8AJJvxdHl?=
+ =?us-ascii?Q?Lny9lrhs0gcZcV71xLoJC1vwBiH1tZP+9sv1d1lQ8vylvKTZcSL5BsV9m6Eg?=
+ =?us-ascii?Q?CDK2ma3b/wg0AfIdLdnYqI+z13mfKluejG/Wu415nZW8TPP3lzvTQ+ZH5JJS?=
+ =?us-ascii?Q?dgEp1mAoEVz+UT5IggOZH5Xv43Jzle6dYJ3uJmhGiLC7zvjv9IUklSlYhi+9?=
+ =?us-ascii?Q?qK8bw+s/EgV+CngPoBvnnpQXwygmt1vteVhiEJr6z13t8z9jFkUtzNB8barO?=
+ =?us-ascii?Q?cInnudKiPT5pYuWFbIiAR190rytLGX1+U5+N1cdRDIXCe+NdMJEc3g7pGFS4?=
+ =?us-ascii?Q?74Osc02tSNQoFgkzoIGQcCRdHtbolHK3tKzJWW5KdRw26vf425Oe8sdLqsGc?=
+ =?us-ascii?Q?kqu8AnYrhgFW466NiLKl72FMFKUZSyDt/RudLqUQBlhTa7H4E2nTgWm71YjD?=
+ =?us-ascii?Q?PwmtzaOBjgKl3ApUH3wFwsErVo0U0w/HAXfWaql5uScUI1xF83FJ4NaY7kqt?=
+ =?us-ascii?Q?DD7CJqoOTpHh9qkUPo0vpQ2Cr2gbnreLal+hs46pw6kD5ckjPtmzHA3S6jMu?=
+ =?us-ascii?Q?oVxoSWRKDgbcs1OVH+04XEYNgGhUDjk=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 25a5d643-7ead-49b4-ede8-08da3d79e9a1
+X-MS-Exchange-CrossTenant-Network-Message-Id: 013455a5-ee21-4fdd-2191-08da3d79eb54
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:24.8730
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:27.6249
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2419UE0Go/DQ9aCicU3yZKQtB14/cCxceabYXMiP2IKGJyCVUtSnXGaxMgcHwb12twPu7ACNAo3Ozzlql5baKA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: 0QJe7EmaVozbCke14cycxubnYMy2LmBBJfD2pEd+HbFoCJq5KcpDtgk5skYl5KPr9Qe6WJkcvujalIcDMa5MTQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0P192MB1571
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -128,260 +128,210 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/motion_sense.c   | 244 ++++++++++++++++++
- 1 file changed, 244 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/motion_sense.c
+ drivers/net/wireless/celeno/cl8k/pci.h | 194 +++++++++++++++++++++++++
+ 1 file changed, 194 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/pci.h
 
-diff --git a/drivers/net/wireless/celeno/cl8k/motion_sense.c b/drivers/net/wireless/celeno/cl8k/motion_sense.c
+diff --git a/drivers/net/wireless/celeno/cl8k/pci.h b/drivers/net/wireless/celeno/cl8k/pci.h
 new file mode 100644
-index 000000000000..2e4c05564900
+index 000000000000..ec6801c7c71b
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/motion_sense.c
-@@ -0,0 +1,244 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
++++ b/drivers/net/wireless/celeno/cl8k/pci.h
+@@ -0,0 +1,194 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#include "chip.h"
-+#include "hw.h"
-+#include "debug.h"
-+#include "motion_sense.h"
++#ifndef CL_PCI_H
++#define CL_PCI_H
 +
-+#define motion_pr(...) \
-+	do { \
-+		if (cl_hw->motion_sense_dbg) \
-+			pr_debug("[MOTION SENSE]" __VA_ARGS__); \
-+	} while (0)
++#include "tx.h"
 +
-+/* Minimum time (+1) for taking a decison */
-+#define MOTION_SENSE_MIN_DECISION_MGMT_CTL 4
-+#define MOTION_SENSE_MIN_DECISION_DATA     9
-+#define MOTION_SENSE_MIN_DECISION_BA       9
++#define CE_INVALID_SN 0xFFFF
 +
-+static void _cl_motion_sense_sta_add(struct cl_motion_rssi *motion_rssi)
-+{
-+	motion_rssi->max = S8_MIN;
-+	motion_rssi->min = S8_MAX;
-+}
++struct cl_chip;
 +
-+void cl_motion_sense_sta_add(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	_cl_motion_sense_sta_add(&cl_sta->motion_sense.rssi_mgmt_ctl);
-+	_cl_motion_sense_sta_add(&cl_sta->motion_sense.rssi_data);
-+	_cl_motion_sense_sta_add(&cl_sta->motion_sense.rssi_ba);
-+}
++enum cl_bus_type {
++	CL_BUS_TYPE_PCI,
++};
 +
-+static void cl_motion_sense_rssi_handler(struct cl_hw *cl_hw,
-+					 struct cl_motion_rssi *motion_rssi,
-+					 s8 rssi[MAX_ANTENNAS])
-+{
-+	u8 i;
++struct cl_driver_ops {
++	int (*msg_fw_send)(struct cl_hw *cl_hw, const void *msg_params, bool background);
++	void (*pkt_fw_send)(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr,
++			    struct cl_tx_queue *tx_queue);
++};
 +
-+	motion_rssi->cnt++;
++/* Struct used to store information about host buffers (DMA Address and local pointer) */
++struct cl_ipc_hostbuf {
++	ptrdiff_t hostid; /* Ptr to hostbuf client (ipc_host client) structure */
++	dma_addr_t dma_addr; /* Ptr to real hostbuf dma address */
++};
 +
-+	for (i = 0; i < cl_hw->num_antennas; i++)
-+		motion_rssi->sum[i] += rssi[i];
-+}
++/*
++ * Index in txdesc - updated by host on every push, used by firmware side
++ * Keep this structure aligned to 4-byte
++ */
++struct cl_ipc_txdesc_write_idx {
++	__le32 agg[IPC_MAX_BA_SESSIONS];
++	__le32 single[MAX_SINGLE_QUEUES];
++	__le32 bcmc;
++};
 +
-+void cl_motion_sense_rssi_mgmt_ctl(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+				   struct hw_rxhdr *rxhdr)
-+{
-+	/* RSSI of mgmt and ctl packets */
-+	if (cl_hw->conf->ci_motion_sense_en) {
-+		s8 rssi[MAX_ANTENNAS] = RX_HDR_RSSI(rxhdr);
-+		u8 i;
-+
-+		if (!IS_REAL_PHY(cl_hw->chip))
-+			for (i = 0; i < cl_hw->num_antennas; i++)
-+				if (rssi[i] == 0)
-+					return;
-+
-+		cl_motion_sense_rssi_handler(cl_hw, &cl_sta->motion_sense.rssi_mgmt_ctl, rssi);
-+	}
-+}
-+
-+void cl_motion_sense_rssi_data(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+			       struct hw_rxhdr *rxhdr)
-+{
-+	/* RSSI of data packets */
-+	s8 rssi[MAX_ANTENNAS] = RX_HDR_RSSI(rxhdr);
-+
-+	if (!cl_hw->conf->ci_motion_sense_en)
-+		return;
-+
-+	if (!IS_REAL_PHY(cl_hw->chip) && rssi[0] == 0)
-+		return;
-+
-+	cl_motion_sense_rssi_handler(cl_hw, &cl_sta->motion_sense.rssi_data, rssi);
-+}
-+
-+void cl_motion_sense_rssi_ba(struct cl_hw *cl_hw, struct cl_sta *cl_sta, s8 rssi[MAX_ANTENNAS])
-+{
-+	/* RSSI of block-acks */
-+	if (cl_hw->conf->ci_motion_sense_en)
-+		cl_motion_sense_rssi_handler(cl_hw, &cl_sta->motion_sense.rssi_ba, rssi);
-+}
-+
-+static s8 cl_motion_sense_calc_new_rssi(struct cl_hw *cl_hw, struct cl_motion_rssi *motion_rssi)
-+{
-+	u8 i = 0;
-+	s8 rssi_avg[MAX_ANTENNAS] = {0};
-+
-+	/* Calculate average rssi */
-+	for (i = 0; i < cl_hw->num_antennas; i++)
-+		rssi_avg[i] = (s8)(motion_rssi->sum[i] / motion_rssi->cnt);
-+
-+	/* Reset rssi sum for next maintenance cycle */
-+	memset(motion_rssi->sum, 0, sizeof(motion_rssi->sum));
-+	motion_rssi->cnt = 0;
-+
-+	return cl_rssi_calc_equivalent(cl_hw, rssi_avg);
-+}
-+
-+static void cl_motion_sense_state(struct cl_hw *cl_hw, struct cl_motion_rssi *motion_rssi,
-+				  u8 sta_idx, u8 min_history, const s8 *type)
-+{
-+	u8 i = 0;
-+	s8 rssi_new = 0, rssi_old = 0;
-+
-+	if (motion_rssi->cnt == 0)
-+		return;
-+
-+	/* Get new and old rssi */
-+	rssi_new = cl_motion_sense_calc_new_rssi(cl_hw, motion_rssi);
-+	rssi_old = motion_rssi->history[motion_rssi->idx];
-+
-+	/* Add new rssi to history and increase history index */
-+	motion_rssi->history[motion_rssi->idx] = rssi_new;
-+
-+	motion_rssi->idx++;
-+	if (motion_rssi->idx == MOTION_SENSE_SIZE)
-+		motion_rssi->idx = 0;
-+
-+	/* Check if new rssi is max or min */
-+	if (rssi_new > motion_rssi->max) {
-+		motion_rssi->max = rssi_new;
-+		goto out;
-+	} else if (rssi_new < motion_rssi->min) {
-+		motion_rssi->min = rssi_new;
-+		goto out;
-+	}
-+
++struct cl_ipc_ring_indices {
++	/* Last copy of ipc txdesc write desc right after DMA push operation */
++	volatile struct cl_ipc_txdesc_write_idx txdesc_write_idx;
 +	/*
-+	 * Check if old rssi was max or min.
-+	 * If so, go over history and find new max/min
++	 * new start sn - equal to last acknowledged sequence number + 1.
++	 * Updated by firmware and used by host.
 +	 */
-+	if (rssi_old == motion_rssi->max) {
-+		motion_rssi->max = S8_MIN;
++	volatile __le32 new_ssn_idx[IPC_MAX_BA_SESSIONS];
++	volatile __le32 dtim_count[MAX_BSS_NUM];
++	/* Index in rxdesc array, updated by firmware on every payload push, used by host */
++	volatile __le32 rxdesc_write_idx[CL_RX_BUF_MAX];
++	/* Index in rxdesc array, updated by host on rxdesc copy completion, used by firmware */
++	volatile __le32 rxdesc_read_idx[CL_RX_BUF_MAX];
++	/* BSR data counters */
++	volatile __le32 bsr_data_ctrs[TID_MAX];
++};
 +
-+		for (i = 0; i < MOTION_SENSE_SIZE; i++) {
-+			if (motion_rssi->history[i] == 0)
-+				break;
++/* Structure used to store Shared Txring indices */
++struct cl_ipc_ring_indices_elem {
++	struct cl_ipc_ring_indices *indices;
++	dma_addr_t dma_addr;
++};
 +
-+			if (motion_rssi->history[i] > motion_rssi->max)
-+				motion_rssi->max = motion_rssi->history[i];
-+		}
-+	} else if (rssi_old == motion_rssi->min) {
-+		motion_rssi->min = S8_MAX;
++struct cl_ipc_host_rxbuf {
++	/* Array of drv desc which holds the skb and additional data */
++	ptrdiff_t **ipc_host_rxdesc_ptr;
++	/* Address of payload for embedded push operation (part of rxdesc data) */
++	u32 *dma_payload_addr;
++	/* Dma pointer to array of DMA payload addresses */
++	__le32 dma_payload_base_addr;
++};
 +
-+		for (i = 0; i < MOTION_SENSE_SIZE; i++) {
-+			if (motion_rssi->history[i] == 0)
-+				break;
++/*
++ * struct tx_queues_dma_addr - ipc layer queues addresses casted to DMA addresses
++ *
++ * The ipc layer points to array of txdesc, there are:
++ * 'IPC_MAX_BA_SESSIONS' arrays for aggregation queues
++ * 'MAX_SINGLE_QUEUES' arrayes for singletons queues
++ * '1' arrays for broadcast/unicast queue
++ *
++ * Each one of this arrays should be copied compeletly to the FW, therefore we should
++ * cast all of the arrays to dma addresses.
++ */
++struct tx_queues_dma_addr {
++	__le32 agg[IPC_MAX_BA_SESSIONS];
++	__le32 single[MAX_SINGLE_QUEUES];
++	__le32 bcmc;
++};
 +
-+			if (motion_rssi->history[i] < motion_rssi->min)
-+				motion_rssi->min = motion_rssi->history[i];
-+		}
-+	}
++/* struct cl_ipc_tx_queues - ipc layer tx queues */
++struct cl_ipc_tx_queues {
++	struct txdesc *ipc_txdesc_agg[IPC_MAX_BA_SESSIONS];
++	struct txdesc *ipc_txdesc_single[MAX_SINGLE_QUEUES];
++	struct txdesc *ipc_txdesc_bcmc;
++	/* Mapping of the TXQ's addresses to DMA addresses */
++	struct tx_queues_dma_addr *queues_dma_addr;
++	/* DMA address of tx_queues_dma_addr */
++	u32 dma_addr;
++};
 +
-+out:
-+	/* Wait X second after connection, before making first decision */
-+	if (motion_rssi->history[min_history] == 0)
-+		return;
++struct cl_ipc_host_env {
++	/* Pointer to the shared environment */
++	struct cl_ipc_shared_env __iomem *shared;
++	/* TX ring indices (RD, WR idx & new_ssn) */
++	struct cl_ipc_ring_indices_elem *ring_indices_elem;
++	/* RX buffers (rxdesc & dma_addr) */
++	ptrdiff_t *ipc_host_rxdesc_rxm[IPC_RXBUF_CNT_RXM];
++	ptrdiff_t *ipc_host_rxdesc_fw[IPC_RXBUF_CNT_FW];
++	struct cl_ipc_host_rxbuf rx_hostbuf_array[CL_RX_BUF_MAX];
++	/* Host last read idx */
++	u32 host_rxdesc_read_idx[CL_RX_BUF_MAX];
++	/* Fields for Radar events handling */
++	struct cl_ipc_hostbuf radar_hostbuf_array[IPC_RADAR_BUF_CNT];
++	u8 radar_host_idx;
++	/* Fields for Emb->App MSGs handling */
++	struct cl_ipc_hostbuf e2a_msg_hostbuf_array[IPC_E2A_MSG_BUF_CNT];
++	u8 e2a_msg_host_idx;
++	/* Fields for Debug MSGs handling */
++	struct cl_ipc_hostbuf dbg_hostbuf_array[IPC_DBG_BUF_CNT];
++	u8 dbg_host_idx;
++	/* IPC queues */
++	struct cl_ipc_tx_queues tx_queues;
++	struct cl_ipc_enhanced_tim enhanced_tim;
++	/* Fields for single confirmation handling */
++	u8 *cfm_virt_base_addr;
++	dma_addr_t cfm_dma_base_addr;
++	/* Index used that points to the first used CFM */
++	u32 cfm_used_idx;
++	/* Tasklets */
++	struct tasklet_struct rxdesc_tasklet;
++	struct tasklet_struct tx_single_cfm_tasklet;
++	struct tasklet_struct tx_agg_cfm_tasklet;
++	struct tasklet_struct msg_tasklet;
++	struct tasklet_struct dbg_tasklet;
++	struct tasklet_struct bcn_tasklet;
++};
 +
-+	/* According to delta decide if station is STATIC or in MOTION */
-+	if ((motion_rssi->max - motion_rssi->min) < cl_hw->conf->ci_motion_sense_rssi_thr) {
-+		if (motion_rssi->state == STATE_STATIC)
-+			return;
++/* Structure used to store information regarding Debug msg buffers in the driver */
++struct cl_dbg_elem {
++	struct cl_ipc_dbg_msg *dbgbuf_ptr;
++	dma_addr_t dma_addr;
++};
 +
-+		motion_rssi->state = STATE_STATIC;
++struct cl_debug_info {
++	struct mutex mutex;
++	struct dbg_info *buf;
++	dma_addr_t dma_addr;
++	int bufsz;
++	struct timespec64 trigger_tstamp;
++};
 +
-+		motion_pr("%s - sta_idx=%u, min=%d, max=%d, state=STATIC\n",
-+			  type, sta_idx, motion_rssi->min, motion_rssi->max);
-+	} else {
-+		if (motion_rssi->state == STATE_MOVING)
-+			return;
++struct cl_rx_elem {
++	int passed;
++	struct sk_buff *skb;
++	dma_addr_t dma_addr;
++};
 +
-+		motion_rssi->state = STATE_MOVING;
++int cl_ipc_init(struct cl_hw *cl_hw);
++void cl_ipc_recovery(struct cl_hw *cl_hw);
++void cl_ipc_deinit(struct cl_hw *cl_hw);
++void cl_ipc_stop(struct cl_hw *cl_hw);
++int cl_ipc_rx_elem_alloc(struct cl_hw *cl_hw, struct cl_rx_elem *rx_elem, u32 size);
++void cl_ipc_msgbuf_push(struct cl_ipc_host_env *ipc_env, ptrdiff_t hostid, dma_addr_t hostbuf);
++void cl_ipc_rxbuf_push(struct cl_ipc_host_env *ipc_env, struct cl_rx_elem *rx_elem,
++		       u32 rxdesc_read_idx, u32 host_read_idx, enum rx_buf_type type);
++void cl_ipc_radarbuf_push(struct cl_ipc_host_env *ipc_env, ptrdiff_t hostid, dma_addr_t hostbuf);
++void cl_ipc_dbgbuf_push(struct cl_ipc_host_env *ipc_env, ptrdiff_t hostid, dma_addr_t hostbuf);
++void cl_ipc_dbginfobuf_push(struct cl_ipc_host_env *ipc_env, dma_addr_t infobuf);
 +
-+		motion_pr("%s - sta_idx=%u, min=%d, max=%d, state=MOVING\n",
-+			  type, sta_idx, motion_rssi->min, motion_rssi->max);
-+	}
-+}
++struct cl_irq_stats {
++	unsigned long last_rx;
++	unsigned long last_tx;
++	unsigned long last_isr;
++	u32 last_isr_statuses;
++	u32 count_irq;
++	u32 ipc_success;
++};
 +
-+static void cl_motion_sense_moving(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+				   struct cl_motion_sense *motion_sense)
-+{
-+	if (motion_sense->combined_state != STATE_MOVING) {
-+		motion_sense->combined_state = STATE_MOVING;
-+		motion_pr("sta_idx = %u, combined_state = MOVING\n",
-+			  cl_sta->sta_idx);
-+	}
-+}
++int cl_irq_request(struct cl_chip *chip);
++void cl_irq_free(struct cl_chip *chip);
++void cl_irq_status(struct cl_hw *cl_hw, u32 status);
++void cl_irq_enable(struct cl_hw *cl_hw, u32 value);
++void cl_irq_disable(struct cl_hw *cl_hw, u32 value);
++int cl_msg_pci_msg_fw_send(struct cl_hw *cl_hw, const void *msg_params,
++			   bool background);
++void cl_rx_pci_init(struct cl_hw *cl_hw);
++void cl_rx_pci_deinit(struct cl_hw *cl_hw);
++void cl_rx_pci_desc_handler(struct cl_hw *cl_hw);
++void cl_rx_pci_desc_tasklet(unsigned long data);
++int cl_tx_release_skbs_from_cfm(struct cl_hw *cl_hw, u8 queue_idx, u16 new_ssn);
++void cl_tx_pci_single_cfm_tasklet(unsigned long data);
++void cl_tx_pci_agg_cfm_tasklet(unsigned long data);
++void cl_tx_pci_pkt_fw_send(struct cl_hw *cl_hw, struct cl_sw_txhdr *sw_txhdr,
++			   struct cl_tx_queue *tx_queue);
 +
-+static void cl_motion_sense_static(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
-+				   struct cl_motion_sense *motion_sense)
-+{
-+	if (motion_sense->combined_state != STATE_STATIC) {
-+		motion_sense->combined_state = STATE_STATIC;
-+		motion_pr("sta_idx = %u, combined_state = STATIC\n",
-+			  cl_sta->sta_idx);
-+	}
-+}
-+
-+static void cl_motion_sense_combined_state(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	struct cl_motion_sense *motion_sense = &cl_sta->motion_sense;
-+
-+	if (motion_sense->rssi_mgmt_ctl.history[MOTION_SENSE_MIN_DECISION_MGMT_CTL] == 0 &&
-+	    motion_sense->rssi_data.history[MOTION_SENSE_MIN_DECISION_DATA] == 0 &&
-+	    motion_sense->rssi_ba.history[MOTION_SENSE_MIN_DECISION_BA] == 0)
-+		return;
-+
-+	if (motion_sense->rssi_mgmt_ctl.state == STATE_MOVING ||
-+	    motion_sense->rssi_data.state == STATE_MOVING ||
-+	    motion_sense->rssi_ba.state == STATE_MOVING)
-+		cl_motion_sense_moving(cl_hw, cl_sta, motion_sense);
-+	else
-+		cl_motion_sense_static(cl_hw, cl_sta, motion_sense);
-+}
-+
-+static void cl_motion_sense_maintenance_sta(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	u8 sta_idx = cl_sta->sta_idx;
-+	struct cl_motion_sense *motion_sense = &cl_sta->motion_sense;
-+
-+	cl_motion_sense_state(cl_hw, &motion_sense->rssi_mgmt_ctl, sta_idx,
-+			      MOTION_SENSE_MIN_DECISION_MGMT_CTL, "mgmt/ctl");
-+	cl_motion_sense_state(cl_hw, &motion_sense->rssi_data, sta_idx,
-+			      MOTION_SENSE_MIN_DECISION_DATA, "data");
-+	cl_motion_sense_state(cl_hw, &motion_sense->rssi_ba, sta_idx,
-+			      MOTION_SENSE_MIN_DECISION_BA, "ba");
-+
-+	if (motion_sense->forced_state != STATE_NULL)
-+		return;
-+
-+	cl_motion_sense_combined_state(cl_hw, cl_sta);
-+}
-+
-+void cl_motion_sense_maintenance(struct cl_hw *cl_hw)
-+{
-+	cl_sta_loop(cl_hw, cl_motion_sense_maintenance_sta);
-+}
-+
-+bool cl_motion_sense_is_static(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
-+{
-+	return (cl_sta->motion_sense.combined_state == STATE_STATIC);
-+}
-+
++#endif /* CL_PCI_H */
 -- 
 2.36.1
 
