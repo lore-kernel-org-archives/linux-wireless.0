@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CFD2C433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBEF9C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:40:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236878AbiEXLkA (ORCPT
+        id S236865AbiEXLkB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 07:40:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42290 "EHLO
+        Tue, 24 May 2022 07:40:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236864AbiEXLjx (ORCPT
+        with ESMTP id S236875AbiEXLj5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 07:39:53 -0400
-Received: from EUR04-DB3-obe.outbound.protection.outlook.com (mail-eopbgr60067.outbound.protection.outlook.com [40.107.6.67])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C3750440
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:30 -0700 (PDT)
+        Tue, 24 May 2022 07:39:57 -0400
+Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2071.outbound.protection.outlook.com [40.107.20.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42D7791550
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:39:33 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Cea0pbHX91opWFBxEPtDcLISIu7fYaix9TENfi4sVHSSwBp4ydyEAPUXTFkMVGsx1MmK62paPFJm1m8TvSHuyYhdLJIngPCbl/n92pL/DS+0QRxFbg7X7a7qv9MCD2UT8l/c69QDrp/ZkduFNz1PtoHcNQbMrWrCYrDMO7qUIjPPtmn0rc3QaibGaFp/L6BNXXbTVJCISgufwLJN1TByW4R34LXh9BlmwZB9RGBYNn9DpkSgr00rKaPJHf33cNJEFD97UTX3FG9fzu9tyo2A8lxlQzrpCoCRr1SBLBVv7vLJiL7nYKp8FKumPLH5Y7+jAuDn/0KEGKWqDvvydplakg==
+ b=IVT0B+CQqEzKsIfpsxf4PYEWy49ZtTNEzAMGGId0cZfnM+Pc0ulACtpFHPPBaWmIN7WrhwJSJtiM1Yt+fon+c19/ZeWdB+PxEB9Qti3lEhfsxIUC2DelRb+yir/ZuvPNCs5boPpYXkk6b+dDAqXSC1iduXoLaCMm2oaGTri+6wcPaoF1xQfx8+FE2CDJf/H3KbCMGnM9Vd6FXOgm6lsuEx8Y/EbE2wzb4+Hx3E3OgDctCYDeOhi5vbyxIoSns/vP5N3wPC8nfD++N8jQgNlNY81x/iKNHZiGnfWpH3nVyRNb7GtaNZShX6RheVemWvaP8KshQGbbqzRNf6PKX1MDaw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7q7JCX6RqfDahvqWt6iGrau9gXDxsxbj0qFlt0nzXWE=;
- b=kgbPdbeMAQij7eC/r8nHo4kZnTj/pH4FB59EjYLi0VupAvlt55sDdiB7NpGbAAXJYHS+1nsUG9UPb7TMpzC9P0thHDfQ5suBhieymGECzsXsqxV6cvUWDhgS0HkYg9mb6txSWAAP/YBSfVunp5/fW57lGEVrfGG23P1ICTjzmbp+HqzxK78PBIMQ2gRR4m7uFIzxEFLyKmPkNT4xFjGKlvi8c+sJkftuXYmKYf8KAXR0tXSkC8Qb8N+YP6w3Q8Gi9rs9Gvvm1W65eyTYQYvtyCgz6b113yYKgMskfYj9VGo69TtFT81yFKl3yoFTJ4MsmHhNyz7yqxjRLIWxzkTO+A==
+ bh=ucTvL73BxGU3jwDbQm7KMzdaWcUR66LqkJX67jbRs6E=;
+ b=IvEg2vnj4DRzQGLIgEMyQmmF0jkBRRb20LF2T0RIlwaNF5MvhCNROa5eonqVB9Ha7+w7pNlCQXc3mJXT/rTWYuQ/kDwdwvjynr+0F9hyDH41p5K/rKWKgSp2UQM4ENeDPndnCQq4LKS6u2Wm7CCBkkgt7B2+gtApbRE7Ej+WGeBiEtvc+/i38sPdpXH7lRhUyygsea5vZybK3cjdLj3jxbBvc3KRuNGlcdc7Ng8h/gnJ0ps8j98+Lg4FEY7w64CQRlqM8/6u8+C5B1/rDW6Y5dJcP5HLh8zqC1ya5HHgcxH+c1SfBgKNFX5p4PAapnXIEM8O6RYi3R4AVYHCZRz/+g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
  dkim=pass header.d=celeno.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7q7JCX6RqfDahvqWt6iGrau9gXDxsxbj0qFlt0nzXWE=;
- b=ZYX5H8wZl7tZEB6b00r+EDie7F5m1M1hxbx8DYKmRhUgvFAgAzaHAlDmyQOloWMvPwvyILTQFA7B+bVnDlv4NhL2LRDGgdY/ifJEFyJPC6xGNMYvJbxEepTAD+vzTg/v9OKWJBTNWnCf94v9DtHqVJkHFJqHitTDLrDyaCuEuUM=
+ bh=ucTvL73BxGU3jwDbQm7KMzdaWcUR66LqkJX67jbRs6E=;
+ b=RkaNVLV+rFQvOK/127rZ01gexe5vGasNBmt5lFtCRxYPggvhim0KQiu+v5qUdNUbB2qkWkWELFgjb0ngDFp9WoNiX8ZzcJZKYGx587e2sa6AV60nup9OIDryr0mith9x59EgQowuP7xTPU+AFkE49jXqbwZI9pxNaCInk3YProU=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=celeno.com;
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
- by AM8P192MB0915.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:1ed::22) with
+ by VE1P192MB0669.EURP192.PROD.OUTLOOK.COM (2603:10a6:800:16f::15) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5293.13; Tue, 24 May
- 2022 11:39:24 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.14; Tue, 24 May
+ 2022 11:39:27 +0000
 Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
  ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
- 11:39:24 +0000
+ 11:39:27 +0000
 From:   viktor.barna@celeno.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -53,9 +53,9 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
         Shay Bar <shay.bar@celeno.com>,
         Viktor Barna <viktor.barna@celeno.com>
-Subject: [RFC v2 64/96] cl8k: add reg/reg_access.h
-Date:   Tue, 24 May 2022 14:34:30 +0300
-Message-Id: <20220524113502.1094459-65-viktor.barna@celeno.com>
+Subject: [RFC v2 76/96] cl8k: add stats.c
+Date:   Tue, 24 May 2022 14:34:42 +0300
+Message-Id: <20220524113502.1094459-77-viktor.barna@celeno.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220524113502.1094459-1-viktor.barna@celeno.com>
 References: <20220524113502.1094459-1-viktor.barna@celeno.com>
@@ -66,57 +66,57 @@ X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
  (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 921d2494-d491-4037-9050-08da3d79f2f0
-X-MS-TrafficTypeDiagnostic: AM8P192MB0915:EE_
+X-MS-Office365-Filtering-Correlation-Id: b6b1bf08-8085-4f3b-6153-08da3d79f903
+X-MS-TrafficTypeDiagnostic: VE1P192MB0669:EE_
 X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
-X-Microsoft-Antispam-PRVS: <AM8P192MB091528B6B2B81D7E5E2EF592F6D79@AM8P192MB0915.EURP192.PROD.OUTLOOK.COM>
+X-Microsoft-Antispam-PRVS: <VE1P192MB066919C41FFEF79B7A78AAB8F6D79@VE1P192MB0669.EURP192.PROD.OUTLOOK.COM>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: RDkXVEsrinw4+ZJnxW6g36nJgACdyPiLWHlnKHhuRWyUxaWpgg03WYYdD0LtU8KIDkxArYJM8Bhj21I52wbWvdQ/H8pXTP1gptM/yl9OCARqBbDW08p43JH4szGH58JER4UnU25VbpCyf9KYZbBoQtctAXESQmgj7T8V952f1X8MH8CCN35rD5s0ep2YqzzfZK01c6z/9vtqvOm+46vNq8x8cJnYjNMVwGMIUrmMOCVx2TIyYsUWy4uVMoMDOHKrFCWET78J1NBQy0KtBF4ePkr9FB51jo5EWNNVyiOmJqXCjsyCcwBYbmZiPSjR+HIpoQsSFUsoMVWr9o2hDTIUglCuZ0KmHXbYfuwEdjfvolkGt6zsMrkhqO/EoQfZNgW2c9wHBJAdb7azgyU/2p7Ro2uEBcfGJbr08lBKrL9WHYhaILjLyKiesHmre7hKgcgypFOGXEm7LGK5sCw6XP3J9wJ2X6fKwgu0D+ZNzPf//D6yhAU/07I8ZiiY8lGMbqpN3/RKRSOxbZ8dn+4AsvIQtDN1mSMfmDcYg2kLreUCCiHo9y4lCT9i21zrVuGWkyUL0CRlmQahiJ4iPLfDER48izwZdgHt4luoYYkqQ+5EKsc4xX2TKrZ2tYPTselaW1ETGgEUBr4G+G0kqJGYbE2ZJX2nqnC8sHOX/66CCyj20y9lR8Udsrrb4PZ9F7r9doziFFk3x7czUlZKQG9aHwamc3/uKoRoqVj4p/Nqvtqs2w8=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(136003)(366004)(396003)(376002)(346002)(39850400004)(83380400001)(54906003)(186003)(36756003)(107886003)(2906002)(2616005)(1076003)(6916009)(41300700001)(66946007)(8936002)(6666004)(9686003)(66476007)(26005)(86362001)(66556008)(5660300002)(6512007)(4326008)(38350700002)(316002)(6506007)(52116002)(8676002)(6486002)(38100700002)(508600001)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: cXIB0EY0g5AI1ykespUgkVJEg5q/yPjXBIQYPoQrpYMnXl0l9nS8KvdKbMIc0fMSIE2i1loCJjHo7nMEZ1ZTsn9DloQVOpnY29KIkJfdtqYVaqNzkgrx9/H9YLPBpZcdshju3mUciKHmZre1egk9USFTL8nRDcEd8IXhoSNEGlwhwFTdpL1JubLiI/MWVFlSCFElUYslRYKy5ZsErSzwd5V14TFVu6K0Yf5eHBwhuaMgBTuljlw9ZgsGw8be4GtgAzAYzFKLsK3NlqoXzLlWOByvISV+ScoHhOFnXVu+SW3bh0WUGqiynbLvsCwiF+Xk0YrCMCA66r6Gp/bL+sadrxDHi9To0+7ARUoJOq2QZuUFtLx+ygfFadbBgUAmViXf30QCXrOzOG/wdalvQ2yuFnXINBu+v/KcLKQuQruxgZ4JOsN+LT3dxONKX8wi0h8yjG96orLMF+PpSAwUGBVB23FBF9/HYb4LFz6PvuRYVyK0RIVu+a9nqLslV5ZpDG+NmwXFd+j6QwUmRE0QRYaFSqbGrbjKp/kL6VvVUhQcmgP4lBd2h+9s+trm0DL+bIu3bgzX7LMay1+hBB+tfTW7g1UmEDJqJNG6/i80fS5Fy7cILo/D0ET7BLS3NHNi5ESgCB7oGoQdNZR1pvYPywMpO87uQYZ2VzXBQMGZRoWglXrjFRayWOjI/DF/0JGwNrjR4hYWK51RjaQ5S1Ibq1BgGreLns9S9pknrsNEnITChpU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(396003)(376002)(136003)(366004)(346002)(39850400004)(8676002)(9686003)(26005)(36756003)(66946007)(66556008)(66476007)(4326008)(107886003)(83380400001)(6512007)(5660300002)(38350700002)(38100700002)(1076003)(2616005)(316002)(6916009)(6506007)(6486002)(54906003)(86362001)(8936002)(508600001)(41300700001)(6666004)(2906002)(186003)(52116002)(30864003)(32563001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?1KTfuCkzapNDPJq+tNlOmW4LwhkFS5pEjzKoXksX+PtqMq68ATN5pwajPHEJ?=
- =?us-ascii?Q?COo340d/lZL6f3+UDnPZY7Gyqv4Wn7Gtt70u/Ea7QyIJuf0W72Ly4qjZGthi?=
- =?us-ascii?Q?6TtxODpmcYO55RWZtx4S8Wx4+LP/J+4/FcVz0dU2dHxxPKFPTI0KTV6MnICa?=
- =?us-ascii?Q?OpRCZbPeZxYjP9BQphEUFdZ1EZH1pykrHJwMJhhfCwo8tu3lUF78Sn5RycxU?=
- =?us-ascii?Q?tH5z8wxbueIuklPyu0hAGUuUccRlZkiZHEN+z1ZL7smzyVg5zzrPtHK90q5R?=
- =?us-ascii?Q?saEbpwzvXZ0Sd/rsXQIt1BJZRmefEjRAwQSuWfON7h7Mipl1G/7Wp59r7cEq?=
- =?us-ascii?Q?iOWver6d/GKXuViXiQP+SJhZvg6zGEWK2dkomD//8VyeNsKnpcxnXJ43VGhM?=
- =?us-ascii?Q?ZkCsNfJJsx50AD3lSHKv5tlm41a3VdAbTCLRqS/4O5RVqQ/ogUqPzoSFDkB5?=
- =?us-ascii?Q?PyUIEWINvIIHcGKVxcnCzMYbXhpFvRwptMkwNVw27EQiETeGhR6AdAuBrnhH?=
- =?us-ascii?Q?jYDzCEtTHz3R4PeMhgwGcf0iZri9iYwTwGnt47a2xhgpx5EGiGcqKLfU5nYx?=
- =?us-ascii?Q?aXzRsRJ10yUyaiY/XpSqb73ZaXSqTrwtA1E10GICqOm7qKinQcQVdUrQl2fJ?=
- =?us-ascii?Q?aMiorDnT4TrLu9MLz2Z8S1EGHSRmByswu27jRdX8WbUEoWdx/4mhEC++cc7L?=
- =?us-ascii?Q?y3yvUHHQsfBFhitBqA8ZUQOiPgeRxIjjRAHxPPBPmOq6OSwyA/S2pgkNZWs8?=
- =?us-ascii?Q?8M6QPKUIbPY+ea4VtkdJs28j6atbnday2SWtsagqbmLbTEhxEU9bddv5qmYY?=
- =?us-ascii?Q?BXKv2G7Hb1RM/omqCCMYzpvQg8sTJqZBCLAoDwpcA+y9hr0M79e4GwK9BlaX?=
- =?us-ascii?Q?4X43ZAaH4BRioUJXAlPQYuLA34TZ5NjiAv4AtBzRHle/tKxYp+/2OtlawMOI?=
- =?us-ascii?Q?Slx3sQ24SSLnO1pqIXTuJEUjwccHlbWqA9TNfar7XkzaIZpASYcYqi5ennLK?=
- =?us-ascii?Q?pvI3R+Bc6K0fgGdX8vwy+hOeO0N1+e60jrOQvDOcoEIKh0oy0yEJ3U/296U2?=
- =?us-ascii?Q?Q1S4f2sdTUVUqfmU926INw2SskQUjjf6fHmYsJCsJRXYPTbOmzePPbwIRUCK?=
- =?us-ascii?Q?IaYK8QYk6kB5DfIqk2fyT/HBKm0CTsxG8r41x35jGhtrbRMAbpeakXsP+Z/A?=
- =?us-ascii?Q?IgBGgMn7C+4VdWfb6IMh8+zoQM9G8sm3VB431OrFLJpXdczTNouj6H2AMGR9?=
- =?us-ascii?Q?v8XuEqsPvmKiiazVIjwWi4voqCE6Cjh7HYU0CK4V2hC0gcDNnMtqj6oadUW2?=
- =?us-ascii?Q?RbtOqexHlnZyTqw0Zvp8DFxZzRnehLQrLoe15zTkDlGwvFKgUBPhb7MQfZnr?=
- =?us-ascii?Q?uuGn9QsXaSRDPDjeRSABpEZ+oSnAqTconMahQ1TfwXVjrIjYWQYBfkKHjJT2?=
- =?us-ascii?Q?QE7iu1tLLy+4rw/X75jP3hBL1bRfbdOaHSZYnYBAFvl4R1cDXm3dxdpvu7Rw?=
- =?us-ascii?Q?K85h7WjK0u5JLGEA9BPhPvsw9g/VLpDsuAXZHD2ignJvXVnQ8ME2gFMl3XMF?=
- =?us-ascii?Q?zMX0kVd6B9j12ncpo7n3z9UGkOIfAcNgZHdetp7PhgQv20wmwK8QVda5bIRL?=
- =?us-ascii?Q?Eqw+CSJDNuZVZSw5cNnD2xlbxEAIutCgW/SxD8a6p84rytLT37Xl8wjCg4Ev?=
- =?us-ascii?Q?zrulccSuxENNCmFPqQ6F1r1+3we1gCkU15l17AZA2epQ5fu8kqyQmVRQl8ap?=
- =?us-ascii?Q?krlr4aFseIjTHsJiKXwfqgB8EdxkGGM=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YW8FiAqDtU1Z/zojI1k/8wf01HAEEmrGWlEU7Ab5iZoLqK/VPU/qhMsmvAc+?=
+ =?us-ascii?Q?WUOMxqb6EapBrj1026q+XE9tRL/BlphkF3b+VEdnq1e5slj7dFLzY7vmoT2J?=
+ =?us-ascii?Q?+qt0LZhiiP2UdYDeF5UM+B75jbehHnEnGf1z4vhFzk2mLtlq3wVUxSgp834F?=
+ =?us-ascii?Q?KZykkrVRmqHDHOwK2nHDvLX/zAGs6Hv4qIKpxd1OR5frLPYeXPmHvf41pRA+?=
+ =?us-ascii?Q?Fjc7DUkMWOsxRvb02wKIZhA5E/1dAK0zZFGfdM9qLxCXgKGOiQKrgLBqiReg?=
+ =?us-ascii?Q?yMaHeIrsAX++ia0+kr8z9TKJc0R1UWRodhhx+onDCO17mFMzmil86i6/50TI?=
+ =?us-ascii?Q?eduC1DVReazJkrwSBCmykMGQkIKDVDX/CznQykRGdXzFJNMYxLpR7nIU2Qc3?=
+ =?us-ascii?Q?bYYrrm0g1Wj3kizKfaNEw3t+L38BBmQpB344wcWG6MoKdR3LQZYEte/4fqxy?=
+ =?us-ascii?Q?zx0HSIxQadOjrQKhh374++xofI12+4uRrTbadhJGGyZWaOFjmbjWg7Jc6EPK?=
+ =?us-ascii?Q?2JLdOpvR7NjAH0ur9e14fGMeDn8Ra4DtC9ROdOyMzJ38IZ+ryDnR0xSL6pYA?=
+ =?us-ascii?Q?UKhJ86YRMnqZtASxpqNz0b3cH3/y6fBTSduWLB7YKNIAHtwRlC2CnjtvFXtz?=
+ =?us-ascii?Q?OMi2oMiCBHG74baa96bosNdTU57rT11pHGueonbaC+hbV/zL8LRAT7kw6CT/?=
+ =?us-ascii?Q?unI5R1Rab2wo9N8u8wqs3td4n2z2JPJO8XiRe5e+Ulwd04NEnkhzCOLfmISn?=
+ =?us-ascii?Q?bW11Mthr3u8leXbdS1ZDWl+Rm4dQcNhINmBd+/dljxXPSm5rYr5SiTCP4Lf4?=
+ =?us-ascii?Q?4Q6dnK/B3oPtQhzXu8RLjhPkGs55+zwiP7JMyasmupLBmTyw7+9TVptYjwTv?=
+ =?us-ascii?Q?lYn9fKwwNsvdlcKjewTr1m6IP2siOl6ZKFVUGTD5J8+WjDMjFmR+oT2yU5VG?=
+ =?us-ascii?Q?ugKc3IBaVMa6yLfY4UsV+RMUWU4Lgkw7layWsOun1iLuCGLiOz2pkat3xiP4?=
+ =?us-ascii?Q?7/FlYNEKlzeflv7VgDDUdiGtce/HQNcFBjwqk9i7zv5AYPHzS2Q2PGfKcHIY?=
+ =?us-ascii?Q?ALyBJ9t1D53CnfXL8hDWG3Qo18d05+gc/R5c7OBm9RERWaSL0sbgO+fm+9ps?=
+ =?us-ascii?Q?lIczuQD1b5nNHt0HBRdWZXEVqMR1V/fuJkot7h505AjvuCf8vgsbGxVfBi+6?=
+ =?us-ascii?Q?O7BRO01ZhUr98rbbo37/ag7eQ/YC0oPRT7adGj3DWn5VphRPDVa8V1oTAEJT?=
+ =?us-ascii?Q?PC/2zLvudwrXkfpXVFQiFwZoz6pO8I/rATzPKR9zs4RkBiXDrelKfH0lntEV?=
+ =?us-ascii?Q?ol1iNL6Tl+RO6ywtVnj8tNIcpdOXbnbqgxwZa1eOusViHG3qzI3daqzDmdxu?=
+ =?us-ascii?Q?5plZ/0pLrXJAbBynSgEEeJkJX0OFfesmqc7pQfNpU/rDaNvT4hqS1S0064r+?=
+ =?us-ascii?Q?wmlscMUOueaeRI0AN6JDnk0JbPj0BDC9nR+OG0oHpcT/NFieRowcb9vzI2ja?=
+ =?us-ascii?Q?Of4GhM5kXrxD35SNBU8gMPovEz5oqz1XGmpe2f0R6sQTraoVcxjS1Yn1l7JS?=
+ =?us-ascii?Q?jX+IVIfBiwyzKFQH81/aq/G/V4rrSFUC/y8dkk+mx2dhzl4pHzRgzun4mBQQ?=
+ =?us-ascii?Q?fYpkMXx4B5s8TxqkGXZRuxh4qB70GqDY6PRDSFnNdsTRNh4yLWy1iEnEfAg3?=
+ =?us-ascii?Q?M0cw2ed5cgkZ/4kct+LXUOkPe2402rGfeW3k3ZEgLZkkKnZhhCN5sk05uglU?=
+ =?us-ascii?Q?D+wzKpzOKVdYOlqlZ15CrZVctVb3/3c=3D?=
 X-OriginatorOrg: celeno.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 921d2494-d491-4037-9050-08da3d79f2f0
+X-MS-Exchange-CrossTenant-Network-Message-Id: b6b1bf08-8085-4f3b-6153-08da3d79f903
 X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:40.4097
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:38:50.5852
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Dp2uMt65eg8rpIkeSK/jidCbV+V3P5v/Nyaf8fL+l2j4xL/ZcL7kBoepKloFjMgrWTkRrEStHRJV+ZoVO9YXRw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8P192MB0915
+X-MS-Exchange-CrossTenant-UserPrincipalName: Qqp7MWf63nb6WDPMSosjxVqwl2e4mlVu/4S1klqBTW6Cdo6o5oy0z3Re9ZQNf1rJZWDoAMwJjRgC+39VR9aryw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VE1P192MB0669
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -128,215 +128,454 @@ details).
 
 Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
 ---
- .../net/wireless/celeno/cl8k/reg/reg_access.h | 199 ++++++++++++++++++
- 1 file changed, 199 insertions(+)
- create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_access.h
+ drivers/net/wireless/celeno/cl8k/stats.c | 438 +++++++++++++++++++++++
+ 1 file changed, 438 insertions(+)
+ create mode 100644 drivers/net/wireless/celeno/cl8k/stats.c
 
-diff --git a/drivers/net/wireless/celeno/cl8k/reg/reg_access.h b/drivers/net/wireless/celeno/cl8k/reg/reg_access.h
+diff --git a/drivers/net/wireless/celeno/cl8k/stats.c b/drivers/net/wireless/celeno/cl8k/stats.c
 new file mode 100644
-index 000000000000..c9d00f7553ea
+index 000000000000..c526199513f4
 --- /dev/null
-+++ b/drivers/net/wireless/celeno/cl8k/reg/reg_access.h
-@@ -0,0 +1,199 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause */
++++ b/drivers/net/wireless/celeno/cl8k/stats.c
+@@ -0,0 +1,438 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
 +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
 +
-+#ifndef CL_REG_ACCESS_H
-+#define CL_REG_ACCESS_H
++#include <linux/string.h>
 +
-+#include "hw.h"
-+#include "chip.h"
++#include "reg/reg_access.h"
++#include "sta.h"
++#include "utils.h"
++#include "reg/reg_defs.h"
++#include "rates.h"
++#include "debug.h"
++#include "tx.h"
++#include "vif.h"
++#include "stats.h"
 +
-+#define hwreg_pr(...) \
-+	do { \
-+		if (cl_hw->reg_dbg) \
-+			cl_dbg_verbose(__VA_ARGS__); \
-+	} while (0)
-+
-+#define chipreg_pr(...) \
-+	do { \
-+		if (chip->reg_dbg) \
-+			cl_dbg_chip_verbose(__VA_ARGS__); \
-+	} while (0)
-+
-+#define XTENSA_PIF_BASE_ADDR     0x60000000
-+
-+/*
-+ * SHARED_RAM Address.
-+ * Actually the PCI BAR4 window will be configured such as SHARED RAM
-+ * is accessed with offset 0 (within the AHB Bridge main window)
-+ */
-+#define SHARED_RAM_START_ADDR    0x00000000
-+#define REG_MAC_HW_SMAC_OFFSET   0x80000
-+#define REG_PHY_LMAC_OFFSET      0x000000
-+#define REG_PHY_SMAC_OFFSET      0x100000
-+#define REG_MACDSP_API_BASE_ADDR 0x00400000
-+#define REG_MAC_HW_BASE_ADDR     0x00600000
-+#define REG_RIU_BASE_ADDR        0x00486000
-+#define REG_RICU_BASE_ADDR       0x004B4000
-+#define APB_REGS_BASE_ADDR       0x007C0000
-+#define I2C_REG_BASE_ADDR        (APB_REGS_BASE_ADDR + 0x3000)
-+
-+/* MACSYS_GCU_XT_CONTROL fields */
-+#define SMAC_DEBUG_ENABLE      BIT(21)
-+#define SMAC_BREAKPOINT        BIT(20)
-+#define SMAC_OCD_HALT_ON_RESET BIT(19)
-+#define SMAC_RUN_STALL         BIT(18)
-+#define SMAC_DRESET            BIT(17)
-+#define SMAC_BRESET            BIT(16)
-+#define UMAC_DEBUG_ENABLE      BIT(13)
-+#define UMAC_BREAKPOINT        BIT(11)
-+#define UMAC_OCD_HALT_ON_RESET BIT(11)
-+#define UMAC_RUN_STALL         BIT(10)
-+#define UMAC_DRESET            BIT(9)
-+#define UMAC_BRESET            BIT(8)
-+#define LMAC_DEBUG_ENABLE      BIT(5)
-+#define LMAC_BREAKPOINT        BIT(4)
-+#define LMAC_OCD_HALT_ON_RESET BIT(3)
-+#define LMAC_RUN_STALL         BIT(2)
-+#define LMAC_DRESET            BIT(1)
-+#define LMAC_BRESET            BIT(0)
-+
-+#define XMAC_BRESET \
-+	(LMAC_BRESET | SMAC_BRESET | UMAC_BRESET)
-+#define XMAC_DRESET \
-+	(LMAC_DRESET | SMAC_DRESET | UMAC_DRESET)
-+#define XMAC_RUN_STALL \
-+	(LMAC_RUN_STALL | SMAC_RUN_STALL | UMAC_RUN_STALL)
-+#define XMAC_OCD_HALT_ON_RESET \
-+	(LMAC_OCD_HALT_ON_RESET | SMAC_OCD_HALT_ON_RESET | UMAC_OCD_HALT_ON_RESET)
-+#define XMAC_DEBUG_ENABLE \
-+	(LMAC_DEBUG_ENABLE | SMAC_DEBUG_ENABLE | UMAC_DEBUG_ENABLE)
-+
-+static inline u32 get_actual_reg(struct cl_hw *cl_hw, u32 reg)
++static void cll_stats_config_ps(struct cl_sta *cl_sta)
 +{
-+	if (!cl_hw)
-+		return -1;
++	struct sta_info *stainfo = IEEE80211_STA_TO_STAINFO(cl_sta->sta);
 +
-+	if ((reg & 0x00ff0000) == REG_MAC_HW_BASE_ADDR)
-+		return cl_hw->mac_hw_regs_offset + reg;
++	cl_sta->stats->ps.timestamp_sleep = jiffies;
++	cl_sta->stats->ps.is_ps = test_sta_flag(stainfo, WLAN_STA_PS_STA);
++}
 +
-+	if ((reg & 0x00f00000) == REG_MACDSP_API_BASE_ADDR) {
-+		if (cl_hw->chip->conf->ci_phy_dev == PHY_DEV_DUMMY)
-+			return -1;
-+		return cl_hw->phy_regs_offset + reg;
++static void cl_stats_free(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	kfree(cl_sta->stats);
++	cl_sta->stats = NULL;
++}
++
++static void cl_stats_disable(struct cl_hw *cl_hw)
++{
++	pr_debug("Statistics disabled\n");
++	cl_hw->conf->ci_stats_en = false;
++	cl_sta_loop(cl_hw, cl_stats_free);
++
++	if (cl_hw_is_prod_or_listener(cl_hw)) {
++		kfree(cl_hw->rx_stats);
++		cl_hw->rx_stats = NULL;
++	}
++}
++
++static void _cl_stats_update_tx(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++				struct cl_agg_tx_report *agg_report)
++{
++	struct cl_stats *stats = cl_sta->stats;
++	struct cl_tx_cntrs *cntrs;
++	union cl_rate_ctrl_info rate_ctrl_info = {
++		.word = le32_to_cpu(agg_report->rate_cntrl_info)};
++	u8 bw, nss, mcs, gi, bf;
++
++	switch (rate_ctrl_info.field.format_mod) {
++	case WRS_MODE_HE:
++		nss = (rate_ctrl_info.field.mcs_index >> 4);
++		mcs = (rate_ctrl_info.field.mcs_index & 0xF);
++		gi = rate_ctrl_info.field.gi;
++
++		{
++			bw = rate_ctrl_info.field.bw;
++			bf = agg_report->bf;
++
++				cntrs = &stats->tx.he[bw][nss][mcs][gi][bf];
++		}
++		break;
++	case WRS_MODE_VHT:
++		bw = rate_ctrl_info.field.bw;
++		nss = (rate_ctrl_info.field.mcs_index >> 4);
++		mcs = (rate_ctrl_info.field.mcs_index & 0xF);
++		gi = rate_ctrl_info.field.gi;
++		bf = agg_report->bf;
++
++			cntrs = &stats->tx.vht[bw][nss][mcs][gi][bf];
++		break;
++	case WRS_MODE_HT:
++		bw = rate_ctrl_info.field.bw;
++		nss = (rate_ctrl_info.field.mcs_index >> 3);
++		mcs = (rate_ctrl_info.field.mcs_index & 0x7);
++		gi = rate_ctrl_info.field.gi;
++		cntrs = &stats->tx.ht[bw][nss][mcs][gi];
++		break;
++	case WRS_MODE_OFDM:
++		mcs = rate_ctrl_info.field.mcs_index - RATE_CTRL_OFFSET_OFDM;
++		cntrs = &stats->tx.ofdm[mcs];
++		break;
++	case WRS_MODE_CCK:
++		mcs = rate_ctrl_info.field.mcs_index;
++		cntrs = &stats->tx.cck[mcs];
++		break;
++	default:
++		return;
 +	}
 +
-+	return reg;
++	cntrs->success += agg_report->success;
++	cntrs->fail += agg_report->fail;
++	stats->tx.packet_success += agg_report->success;
++	stats->tx.packet_fail += agg_report->fail;
 +}
 +
-+static inline bool cl_reg_is_phy_tcvX(u32 phy_reg, u32 reg_offset)
++static void _cl_stats_update_rx_rate(struct cl_hw *cl_hw, struct cl_rx_stats *rx_stats,
++				     struct hw_rxhdr *rxhdr)
 +{
-+	return (phy_reg & 0xf00000) == (REG_MACDSP_API_BASE_ADDR + reg_offset);
++	u8 bw, nss, mcs, gi;
++
++	switch (rxhdr->format_mod) {
++	case FORMATMOD_HE_TRIG:
++		nss = rxhdr->n_sts & 0x3;
++		mcs = min_t(u8, rxhdr->mcs, WRS_MCS_MAX_HE);
++		gi = min_t(u8, rxhdr->gi_type, WRS_GI_MAX_HE);
++		rx_stats->he_trig[rxhdr->ch_bw][nss][mcs][gi] += rxhdr->frm_successful_rx;
++		rx_stats->flag |= RX_STATS_HE_TRIG;
++		break;
++	case FORMATMOD_HE_EXT:
++		nss = rxhdr->n_sts & 0x3;
++		mcs = min_t(u8, rxhdr->mcs, WRS_MCS_MAX_HE);
++		gi = min_t(u8, rxhdr->gi_type, WRS_GI_MAX_HE);
++		rx_stats->he_ext[rxhdr->ch_bw][nss][mcs][gi] += rxhdr->frm_successful_rx;
++		rx_stats->flag |= RX_STATS_HE_EXT;
++		break;
++	case FORMATMOD_HE_MU:
++		nss = rxhdr->n_sts & 0x3;
++		mcs = min_t(u8, rxhdr->mcs, WRS_MCS_MAX_HE);
++		gi = min_t(u8, rxhdr->gi_type, WRS_GI_MAX_HE);
++		rx_stats->he_mu[rxhdr->ch_bw][nss][mcs][gi] += rxhdr->frm_successful_rx;
++		rx_stats->flag |= RX_STATS_HE_MU;
++		break;
++	case FORMATMOD_HE_SU:
++		nss = rxhdr->n_sts & 0x3;
++		mcs = min_t(u8, rxhdr->mcs, WRS_MCS_MAX_HE);
++		gi = min_t(u8, rxhdr->gi_type, WRS_GI_MAX_HE);
++		rx_stats->he_su[rxhdr->ch_bw][nss][mcs][gi] += rxhdr->frm_successful_rx;
++		rx_stats->flag |= RX_STATS_HE_SU;
++		break;
++	case FORMATMOD_VHT:
++		nss = rxhdr->n_sts & 0x3;
++		mcs = min_t(u8, rxhdr->mcs, WRS_MCS_MAX_VHT);
++		gi = rxhdr->gi_type & 0x1;
++		rx_stats->vht[rxhdr->ch_bw][nss][mcs][gi] += rxhdr->frm_successful_rx;
++		rx_stats->flag |= RX_STATS_VHT;
++		break;
++	case FORMATMOD_HT_MF:
++	case FORMATMOD_HT_GF:
++		bw = rxhdr->ch_bw & 0x1;
++		nss = (rxhdr->mcs >> 3) & 0x3;
++		mcs = rxhdr->mcs & 0x7;
++		gi = rxhdr->gi_type & 0x1;
++		rx_stats->ht[bw][nss][mcs][gi] += rxhdr->frm_successful_rx;
++		rx_stats->flag |= RX_STATS_HT;
++		break;
++	case FORMATMOD_NON_HT:
++		if (rxhdr->mcs >= RATE_CTRL_OFFSET_OFDM) {
++			mcs = (rxhdr->mcs - RATE_CTRL_OFFSET_OFDM) & 0x7;
++			rx_stats->ofdm[mcs] += rxhdr->frm_successful_rx;
++			rx_stats->flag |= RX_STATS_OFDM;
++		} else if (cl_band_is_24g(cl_hw)) {
++			mcs = rxhdr->mcs & 0x3;
++			rx_stats->cck[mcs] += rxhdr->frm_successful_rx;
++			rx_stats->flag |= RX_STATS_CCK;
++		}
++		break;
++	}
++
++	rx_stats->packet_success += rxhdr->frm_successful_rx;
 +}
 +
-+static inline bool cl_reg_is_phy_tcv0(u32 phy_reg)
++void cl_stats_init(struct cl_hw *cl_hw)
 +{
-+	return cl_reg_is_phy_tcvX(phy_reg, REG_PHY_LMAC_OFFSET);
++	spin_lock_init(&cl_hw->lock_stats);
++
++	if (cl_hw->conf->ci_stats_en && cl_hw_is_prod_or_listener(cl_hw)) {
++		cl_hw->rx_stats = kzalloc(sizeof(*cl_hw->rx_stats), GFP_ATOMIC);
++
++		if (!cl_hw->rx_stats)
++			cl_hw->conf->ci_stats_en = false;
++	}
 +}
 +
-+static inline bool cl_reg_is_phy_tcv1(u32 phy_reg)
++void cl_stats_deinit(struct cl_hw *cl_hw)
 +{
-+	return cl_reg_is_phy_tcvX(phy_reg, REG_PHY_SMAC_OFFSET);
++	spin_lock_bh(&cl_hw->lock_stats);
++
++	if (cl_hw->conf->ci_stats_en && (cl_hw_is_prod_or_listener(cl_hw))) {
++		cl_hw->conf->ci_stats_en = false;
++
++		kfree(cl_hw->rx_stats);
++		cl_hw->rx_stats = NULL;
++	}
++
++	spin_unlock_bh(&cl_hw->lock_stats);
 +}
 +
-+static inline u32 cl_reg_read(struct cl_hw *cl_hw, u32 reg)
-+{
-+	u32 actual_reg = get_actual_reg(cl_hw, reg);
-+	u32 val = 0;
-+
-+	if (actual_reg == (u32)(-1))
-+		return 0xff;
-+
-+	val = ioread32(cl_hw->chip->pci_bar0_virt_addr + actual_reg);
-+	hwreg_pr(cl_hw, "reg=0x%x, val=0x%x\n", actual_reg, val);
-+	return val;
-+}
-+
-+static inline void cl_reg_write_direct(struct cl_hw *cl_hw, u32 reg, u32 val)
-+{
-+	u32 actual_reg = get_actual_reg(cl_hw, reg);
-+
-+	if (actual_reg == (u32)(-1))
-+		return;
-+
-+	hwreg_pr(cl_hw, "reg=0x%x, val=0x%x\n", actual_reg, val);
-+	iowrite32(val, cl_hw->chip->pci_bar0_virt_addr + actual_reg);
-+}
-+
-+#define BASE_ADDR(reg) ((ptrdiff_t)(reg) & 0x00fff000)
-+
-+static inline bool should_send_msg(struct cl_hw *cl_hw, u32 reg)
++void cl_stats_sta_add(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
 +{
 +	/*
-+	 * Check in what cases we should send a message to the firmware,
-+	 * and in what cases we should write directly.
++	 * If allocation failed disable ci_stats_en
++	 * and free the memory of all other stations
 +	 */
-+	if (!cl_hw->fw_active)
-+		return false;
++	bool disable = false;
 +
-+	return ((BASE_ADDR(reg) == REG_RIU_BASE_ADDR) ||
-+		(BASE_ADDR(reg) == REG_MAC_HW_BASE_ADDR));
-+}
++	if (cl_hw->conf->ci_stats_en) {
++		/*
++		 * Take regular lock and not BH,
++		 * because cl_sta_add_to_lut() already disables BH
++		 */
++		spin_lock(&cl_hw->lock_stats);
 +
-+static inline int cl_reg_write(struct cl_hw *cl_hw, u32 reg, u32 val)
-+{
-+	u32 actual_reg = get_actual_reg(cl_hw, reg);
-+	int ret = 0;
++		cl_sta->stats = kzalloc(sizeof(*cl_sta->stats), GFP_ATOMIC);
 +
-+	if (actual_reg == (u32)(-1))
-+		return -1;
++		if (cl_sta->stats)
++			cll_stats_config_ps(cl_sta);
++		else
++			disable = true;
 +
-+	if (should_send_msg(cl_hw, reg)) {
-+		hwreg_pr(cl_hw, "calling cl_msg_tx_reg_write: reg=0x%x, val=0x%x\n",
-+			 actual_reg, val);
-+		cl_msg_tx_reg_write(cl_hw, (XTENSA_PIF_BASE_ADDR + actual_reg), val, U32_MAX);
-+	} else {
-+		hwreg_pr(cl_hw, "reg=0x%x, val=0x%x\n", actual_reg, val);
-+		iowrite32(val, cl_hw->chip->pci_bar0_virt_addr + actual_reg);
++		spin_unlock(&cl_hw->lock_stats);
 +	}
 +
-+	return ret;
++	if (disable && cl_hw->conf->ci_stats_en) {
++		spin_lock_bh(&cl_hw->lock_stats);
++		cl_stats_disable(cl_hw);
++		spin_unlock_bh(&cl_hw->lock_stats);
++	}
 +}
 +
-+static inline int cl_reg_write_mask(struct cl_hw *cl_hw, u32 reg, u32 val, u32 mask)
++void cl_stats_sta_remove(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
 +{
-+	u32 actual_reg = get_actual_reg(cl_hw, reg);
-+	int ret = 0;
++	if (!cl_hw->conf->ci_stats_en)
++		return;
 +
-+	if (actual_reg == (u32)(-1))
-+		return -1;
++	spin_lock_bh(&cl_hw->lock_stats);
 +
-+	if (should_send_msg(cl_hw, reg)) {
-+		hwreg_pr(cl_hw, "calling cl_msg_tx_reg_write: reg=0x%x, val=0x%x, mask=0x%x\n",
-+			 actual_reg, val, mask);
-+		cl_msg_tx_reg_write(cl_hw, (XTENSA_PIF_BASE_ADDR + actual_reg), val, mask);
-+	} else {
-+		u32 reg_rd = ioread32(cl_hw->chip->pci_bar0_virt_addr + actual_reg);
-+		u32 val_write = ((reg_rd & ~mask) | (val & mask));
++	cl_stats_free(cl_hw, cl_sta);
 +
-+		hwreg_pr(cl_hw, "reg=0x%x, mask=0x%x, val=0x%x\n", actual_reg, mask, val_write);
-+		iowrite32(val_write, cl_hw->chip->pci_bar0_virt_addr + actual_reg);
++	spin_unlock_bh(&cl_hw->lock_stats);
++}
++
++void cl_stats_update_tx_agg(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			    struct cl_agg_tx_report *agg_report)
++{
++	struct cl_stats *stats = cl_sta->stats;
++
++	if (!cl_hw->conf->ci_stats_en)
++		return;
++
++	spin_lock(&cl_hw->lock_stats);
++
++	stats->tx.agg_cntr++;
++	stats->tx.fail_cntr += agg_report->fail;
++	_cl_stats_update_tx(cl_hw, cl_sta, agg_report);
++
++	spin_unlock(&cl_hw->lock_stats);
++}
++
++void cl_stats_update_tx_single(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			       struct cl_agg_tx_report *agg_report)
++{
++	if (!cl_hw->conf->ci_stats_en)
++		return;
++
++	spin_lock(&cl_hw->lock_stats);
++
++	cl_sta->stats->tx.fail_cntr += agg_report->fail;
++	_cl_stats_update_tx(cl_hw, cl_sta, agg_report);
++
++	spin_unlock(&cl_hw->lock_stats);
++}
++
++void cl_stats_update_rx_rssi(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++			     s8 rssi[MAX_ANTENNAS])
++{
++	int i;
++	s8 rx_rssi;
++
++	if (!cl_hw->conf->ci_stats_en)
++		return;
++
++	spin_lock_bh(&cl_hw->lock_stats);
++
++	for (i = 0; i < cl_hw->num_antennas; i++) {
++		rx_rssi = rssi[i] * -1;
++
++		if (rx_rssi >= 0 && rx_rssi < RSSI_ARR_SIZE)
++			cl_sta->stats->rssi[rx_rssi][i]++;
 +	}
 +
-+	return ret;
++	spin_unlock_bh(&cl_hw->lock_stats);
 +}
 +
-+static inline void cl_reg_write_chip(struct cl_chip *chip, u32 reg, u32 val)
++void cl_stats_update_rx_rate(struct cl_hw *cl_hw, struct cl_sta *cl_sta, struct hw_rxhdr *rxhdr)
 +{
-+	chipreg_pr(chip, "reg=0x%x, val=0x%x\n", reg, val);
-+	iowrite32(val, chip->pci_bar0_virt_addr + reg);
++	if (!cl_hw->conf->ci_stats_en)
++		return;
++
++	spin_lock(&cl_hw->lock_stats);
++
++	_cl_stats_update_rx_rate(cl_hw, &cl_sta->stats->rx, rxhdr);
++	cl_sta->stats->fec_coding[rxhdr->fec_coding]++;
++
++	spin_unlock(&cl_hw->lock_stats);
 +}
 +
-+static inline u32 cl_reg_read_chip(struct cl_chip *chip, u32 reg)
++void cl_stats_update_rx_rate_production(struct cl_hw *cl_hw, struct hw_rxhdr *rxhdr)
 +{
-+	u32 val = ioread32(chip->pci_bar0_virt_addr + reg);
++	if (!cl_hw->conf->ci_stats_en)
++		return;
 +
-+	chipreg_pr(chip, "reg=0x%x, val=0x%x\n", reg, val);
-+	return val;
++	spin_lock(&cl_hw->lock_stats);
++
++	_cl_stats_update_rx_rate(cl_hw, cl_hw->rx_stats, rxhdr);
++
++	spin_unlock(&cl_hw->lock_stats);
 +}
 +
-+#endif /* CL_REG_ACCESS_H */
++void cl_stats_update_ps(struct cl_hw *cl_hw, struct cl_sta *cl_sta, bool is_ps)
++{
++	struct cl_ps_stats *ps;
++
++	if (!cl_hw->conf->ci_stats_en)
++		return;
++
++	spin_lock_bh(&cl_hw->lock_stats);
++
++	ps = &cl_sta->stats->ps;
++
++	if (ps->is_ps == is_ps)
++		goto out;
++
++	ps->is_ps = is_ps;
++
++	if (is_ps) {
++		ps->timestamp_sleep = jiffies;
++	} else {
++		unsigned long sleep_time = jiffies_to_msecs(jiffies - ps->timestamp_sleep);
++
++		if (sleep_time <= 50)
++			ps->period[PS_PERIOD_50MS]++;
++		else if (sleep_time <= 100)
++			ps->period[PS_PERIOD_100MS]++;
++		else if (sleep_time <= 250)
++			ps->period[PS_PERIOD_250MS]++;
++		else if (sleep_time <= 500)
++			ps->period[PS_PERIOD_500MS]++;
++		else if (sleep_time <= 750)
++			ps->period[PS_PERIOD_750MS]++;
++		else if (sleep_time <= 1000)
++			ps->period[PS_PERIOD_1000MS]++;
++		else if (sleep_time <= 2000)
++			ps->period[PS_PERIOD_2000MS]++;
++		else if (sleep_time <= 5000)
++			ps->period[PS_PERIOD_5000MS]++;
++		else if (sleep_time <= 10000)
++			ps->period[PS_PERIOD_10000MS]++;
++		else
++			ps->period[PS_PERIOD_ABOVE]++;
++	}
++
++out:
++	spin_unlock_bh(&cl_hw->lock_stats);
++}
++
++int cl_stats_get_rssi(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	struct cl_stats *stats = NULL;
++	u32 i = 0, j = 0;
++	u64 total_rssi = 0;
++	s8 avg_signal = 0;
++
++	if (!cl_hw->conf->ci_stats_en)
++		return 0;
++
++	u64 avg_rssi[MAX_ANTENNAS] = {0};
++	u64 sum_rssi[MAX_ANTENNAS] = {0};
++
++	spin_lock_bh(&cl_hw->lock_stats);
++
++	stats = cl_sta->stats;
++
++	if (!stats)
++		goto out;
++
++	for (i = 0; i < RSSI_ARR_SIZE; i++) {
++		total_rssi = 0;
++
++		for (j = 0; j < cl_hw->num_antennas; j++) {
++			sum_rssi[j] += stats->rssi[i][j];
++			avg_rssi[j] += i * stats->rssi[i][j];
++		}
++	}
++
++	for (j = 0; j < cl_hw->num_antennas; j++)
++		if (sum_rssi[j])
++			avg_rssi[j] = div64_u64(avg_rssi[j], sum_rssi[j]);
++
++	for (j = 0; j < cl_hw->num_antennas; j++)
++		total_rssi += avg_rssi[j];
++
++	avg_signal = -div64_u64(total_rssi, cl_hw->num_antennas);
++out:
++	spin_unlock_bh(&cl_hw->lock_stats);
++
++	return avg_signal;
++}
++
++void cl_stats_get_tx(struct cl_hw *cl_hw, struct cl_sta *cl_sta,
++		     u64 *total_tx_success, u64 *total_tx_fail)
++{
++	if (!cl_hw->conf->ci_stats_en)
++		return;
++
++	spin_lock_bh(&cl_hw->lock_stats);
++
++	if (!cl_sta->stats)
++		goto out;
++
++	*total_tx_success = cl_sta->stats->tx.packet_success;
++	*total_tx_fail = cl_sta->stats->tx.packet_fail;
++
++out:
++	spin_unlock_bh(&cl_hw->lock_stats);
++}
++
++u64 cl_stats_get_rx(struct cl_hw *cl_hw, struct cl_sta *cl_sta)
++{
++	u64 total_rx_packets = 0;
++
++	if (!cl_hw->conf->ci_stats_en)
++		return 0;
++
++	spin_lock_bh(&cl_hw->lock_stats);
++
++	if (!cl_sta->stats)
++		goto out;
++
++	total_rx_packets = cl_sta->stats->rx.packet_success;
++
++out:
++	spin_unlock_bh(&cl_hw->lock_stats);
++
++	return total_rx_packets;
++}
++
 -- 
 2.36.1
 
