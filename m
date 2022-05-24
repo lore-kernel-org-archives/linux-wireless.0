@@ -2,180 +2,464 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71B03C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 08:09:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD397C433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 May 2022 11:37:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231382AbiEXIJp (ORCPT
+        id S236737AbiEXLh1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 04:09:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37690 "EHLO
+        Tue, 24 May 2022 07:37:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231334AbiEXIJg (ORCPT
+        with ESMTP id S236775AbiEXLhZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 04:09:36 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AAB577F05
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 01:09:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1653379771; x=1684915771;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=Cto81FLF3S2D41EJP2s0HscV2G2sKkp70TghYs9HD+Q=;
-  b=hE4F1jiwdXTjlrjsYcqnMKLPp2PttOt4Xwj2jHHlxz0sUeIJSZ6z4XW/
-   FXyIGQFoR879k9V96+pmPkrfzEcA1vVyl7Kcy6s3i2S2u/MYxUP4fuG1f
-   sgNb4GDjoQH2Gv5y2xpRKWdLqWV1auHIkX8NbQH/PX8LebeAeKJSLw85E
-   Mstt8/LiX7qvsFLb9r+ch8kfXo9QqmnDEQqJMj3+GVDuFhDAblqGTtNVn
-   +RXDy0n52xXo6MX36nCyWqUc/WeWncNkAtoiisgywXwv2xpia5LxOCd2a
-   nx7/mw+ZgpMGEUnSAYcTvdh6Wt5n8v+rgNw0H9rjWtFbKOxwOW1aV5BPw
-   g==;
-X-IronPort-AV: E=Sophos;i="5.91,248,1647327600"; 
-   d="scan'208";a="160348774"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 24 May 2022 01:09:30 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17; Tue, 24 May 2022 01:09:30 -0700
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.17 via Frontend Transport; Tue, 24 May 2022 01:09:30 -0700
+        Tue, 24 May 2022 07:37:25 -0400
+Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2071.outbound.protection.outlook.com [40.107.20.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 440F28CCD1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 04:37:20 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cTRR3UV0HR0mAKdWIPEBtc2nboiipnHqQskfUav4LvxQAbSQ/ZtxJYqRsK+9KmPUTHjNW57je8mkMurwKN3U9cTJgBDWt4z8RT5IYG+8aE1+KhkSxw/T48jenMncfn1bpWqMhOKRnHDxWyjOEEkDTVgHOgmyTKEWyOsFYdRzLC89nb84tvHZWCSPAleXTFBDFsFEZrVsdFBo7arqovRzf/fQ9xI3v5u4lhhonT8QERqF9tsUDPi3mgHyC9u+cP3bBG61pnrQTUqMmZGxX8UNrQ6k69WH5RvYK6vGmURWVKVAIhhN3Wreo33nYbOz3V6rtxinSEiBS+3DMZrozXCK6g==
+ b=dbUxYeCWSnTt0pyzlDHYqCI8kKK/YB0u0TInmn51P8vtGsQ0MCi08lEYswmO2me9rsrX8mUuTSBl4CfCdfrWjM4jacot+In1k5ItHodFTSvcUV/mf/zfQOs4mkz3KZlL8oIvZ+UM00FbPtDQ/Lmx+EqIaYIOpf+uARhWxccyr3w1hmKYct9kgVtwikD6n+0I33D2TO0QAd+uokqCPaFDLOrVshQP8JwfgPkucwSBkezYYsvnfSI1Wvpy8MrMwVGQcsxZUp64dFKOeKy7SO54/7KWw1p9rcmqudJ6dCLP6dLMgDBdYMIBop2Bu/B83kPY+ZDv0GDAt4r5qIHRyrgzlQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Cto81FLF3S2D41EJP2s0HscV2G2sKkp70TghYs9HD+Q=;
- b=ibfU1tZ36Zh2xIEcv+02kHMadnvv/2RaXbgHB+kqa48QnlwKTVdu8TphGk6apJNymYL4Rid7R8czvnUFYA0dS59rnGBLQpXa1hQzBq8IxYnUsqUR8rrJZoHBLFQu19NhmWkPgyaDELxyuXUuBk04V5aLpdhcWJzVQpo+ud6jB6Jll/SI/1JhRKJsQA7MzaonwyPYXW3o5G5dXhkAC8JuBluSmoSNt8y/g2XD+VGc5TvV/WVU2hwkKaU1NEWNMD7kdlqdqdwpPp9RI3jpb5HDf+rZYNNOg/TiFnJxUam0V8gBLEbwF4CvU3hUzcTXSLzc/3CZD47wH22HiqsMLYIUhw==
+ bh=BjlMsvoYqrF8iI2C6Th+1QHgUI5fwYhcRgfn2VJai9Y=;
+ b=kSqxwgQLvVd4mQ8c9zNPc63mJxN8AGJ1FFIOuiejv8q9thZOptGs5zhfCPC6DwrAUI36sT3hy6cWtk3YHXDcYliOuumd4IZUpdp2bDWHxMhTkXRcx085N8KaCIFjkNvsjz0ert4sQme6ZfFcBQcLk00ZYrI+cSoLbheGLV9jmiVtlI9NiELBY7GJMLmuSicOFfSWNUvjBjik/TaUXvqb+3UTlHg3s3tG26ccizL5XM/VBm0LJRycJDiruD7xpmkSyQ1UG3nRKEdiKtlzbYcXmzcTaozA3Zly1g7mkLSmko/bhTnRTyCEPb1zNbfUSHKbKBtqMEzAT9IlvuK+Xqj2gQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
+ smtp.mailfrom=celeno.com; dmarc=pass action=none header.from=celeno.com;
+ dkim=pass header.d=celeno.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=celeno.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Cto81FLF3S2D41EJP2s0HscV2G2sKkp70TghYs9HD+Q=;
- b=N17GR33w6uqCrKeewqMZBmLlnB8LRH7D/j841ikAgTJ5wuxlqJgGGBASe5ywhVYNUwUGFWSaY8jJmRZ/W0OwbXLMehtshfFThLdn7Sb4Eu2FqLv8FhU+/zhfnLKWBLV5cVUxCvgK98JiOgZ/GR3IhCJN/614ss4LiB6OHoF0/Nk=
-Received: from BN6PR11MB1953.namprd11.prod.outlook.com (2603:10b6:404:105::14)
- by CY4PR11MB1511.namprd11.prod.outlook.com (2603:10b6:910:b::16) with
+ bh=BjlMsvoYqrF8iI2C6Th+1QHgUI5fwYhcRgfn2VJai9Y=;
+ b=ou9GPR9vqsLoaNN/HuLcDFmm9bjMhnFQ2WyYUGeiEUBmq4dpwCL1dJiqMs/JqhDlqMNgHTY8YHZY556bD+13vKvikliymJV7DUw28/rd8vOV3UVrAnXUAoEgIlNyb7ld9uNcH9p6spl9p+XlzXqWdbBtPjPmesemfZzp0ileVDg=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=celeno.com;
+Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM (2603:10a6:20b:38b::16)
+ by AM6P192MB0501.EURP192.PROD.OUTLOOK.COM (2603:10a6:209:3c::23) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.19; Tue, 24 May
- 2022 08:09:15 +0000
-Received: from BN6PR11MB1953.namprd11.prod.outlook.com
- ([fe80::816a:10bd:7c5e:355b]) by BN6PR11MB1953.namprd11.prod.outlook.com
- ([fe80::816a:10bd:7c5e:355b%8]) with mapi id 15.20.5273.023; Tue, 24 May 2022
- 08:09:14 +0000
-From:   <Claudiu.Beznea@microchip.com>
-To:     <Ajay.Kathat@microchip.com>, <linux-wireless@vger.kernel.org>
-CC:     <Sripad.Balwadgi@microchip.com>
-Subject: Re: [PATCH v2 1/4] wilc1000: use correct sequence of RESET for chip
- Power-UP/Down
-Thread-Topic: [PATCH v2 1/4] wilc1000: use correct sequence of RESET for chip
- Power-UP/Down
-Thread-Index: AQHYb0WOeWRidm2HykuU7dQlJGrLrQ==
-Date:   Tue, 24 May 2022 08:09:14 +0000
-Message-ID: <23630392-50ac-5588-8fdb-5e8950acb357@microchip.com>
-References: <20220523140812.164028-1-ajay.kathat@microchip.com>
-In-Reply-To: <20220523140812.164028-1-ajay.kathat@microchip.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microchip.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: a23073e1-14c5-40d0-8db3-08da3d5cb129
-x-ms-traffictypediagnostic: CY4PR11MB1511:EE_
-x-microsoft-antispam-prvs: <CY4PR11MB15110D3F89D6DFE9C3F0121187D79@CY4PR11MB1511.namprd11.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: I+WjoBeDYqtyxgrh6wlFuVM6CsLgzOqlDAR31XjnaTW7AXZW1humkeSwOnqrqIEgKfYw4M3ixPVKUSFq7aDvyeWiMMQz+zKUkxnTmWmZ6Z+gxPurjnC6cEy4ExGEbwu5zHP3dtqpwlOuC/v1S3KNHoYoKvrK8dHtzwMz59TnAp3POJkhvcASIkqOwK+Y1fRdwlqZ+YoNSDgi58BUPQGT3NOhpG7OUfVp7AZbBr+o2eqDsCv5aTuJk1nw8l/kbe2ls9lSJ3l5gCbi+kQhLlGZ78/l4VzPNBxi+ODtzyXUbwbbPsQNUUQAe6djcD87xMe3x70uuF01SgvaCDBfH7hUSulEiHKhnCktz3Ja0dRiOgGa+xaji3nZ4ZtFlrQNNMh1s6FSlqyzYwUE4RCeYQJZ9MaUv+fVgQS8hYbzSt7/qkmhkcvav5GHIHwzJ6qyde0hFYwa/ZdHNPWj7RGpPdChLBO7wsMyzZKmGktdSATznilJtyEZo0T51E6BSdAc3wjvbpUyBuuFtR35KNDzxnxfYyNZn064RNcNcuo9AYcLu5iijsRvwQOsKXKVihdbE+81WLSLakTmWuwt2biTLKF55oINLGOILC7x+m+732JvKezvyjwN+9Mh5HJ8L4sgVaRAZ9Yo8YsLxhh6SXZVIkFb4mWsOAnYYdFVCVp1MH9G0unyugEwmoeUzbsfbw6GLVj3DZffafU+CbMAh5IpofyWyaxYja1cKzLgKcEKg92VgtcJQfv3egCEwaW9WLqulo5ckbYrgKqLjsHN6v0GV9ggTw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN6PR11MB1953.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(366004)(91956017)(316002)(2906002)(6486002)(71200400001)(64756008)(66446008)(53546011)(66946007)(508600001)(110136005)(26005)(5660300002)(36756003)(31686004)(66556008)(76116006)(31696002)(8936002)(6512007)(107886003)(2616005)(4326008)(8676002)(86362001)(66476007)(186003)(83380400001)(38100700002)(6506007)(38070700005)(122000001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?YlR2cVR6MU5mMVErZEN6RkIwNitYMkVFdzlZL09Rd3A0L3c5dXpUb1pBclc4?=
- =?utf-8?B?SENXR0EybzdMTVNwZDQxaHl4OVFLbzRZbkoxMllkRXMwRWRQRGNNSE5qV3ZP?=
- =?utf-8?B?VEZhbVVLdFFWSUJyK0VFSXg5MkkwV2NNS1dTcWFRb1ZmZG1zRUVMWkx0Zkkv?=
- =?utf-8?B?MVN5WURWN3NTSGxoeE9CdjdqYld2aG5PR0poZlkyeU9ETi9PbVpFU2g5RFlL?=
- =?utf-8?B?SkxjM0ZNNWNHVTBRRDhwM1ExMEZIUTRzZWVJK3hsaURBYlRuWXI1RWF3S1N3?=
- =?utf-8?B?MlVjT1RmaG4yOG80K2dYSFlDMHlnNXR1QnhHZWU4QUhqSnZZazBYOFFrY1B5?=
- =?utf-8?B?OFJ4ZmEzWGRQZzVMaW5LRDd1eDNnTGIwd3ptVnlTV1VWQk5yUU5FTjlveTdK?=
- =?utf-8?B?RnlpRWhRTlE0U01NcVRxZkRNaUNWSTJsWUZ2TEt6N05rUm10dTFLSVBTL1R6?=
- =?utf-8?B?Tkorc2Q5RHdaaEQ5ZUlpblU4WS9xUkJZQjJLTjVDQzhSeERXTnlLaHdiSGJV?=
- =?utf-8?B?Mlc0R0NTdExxczN5czBUNEp2N1hIcXFGZU4wb2pOSjBqUFRubUtRa0o4cSt4?=
- =?utf-8?B?cnUvcWp0cXhXS3F2K2tSaXdYVjhtU3dWdTgzaVZnbmcvT3YxNE5pbUZKVis3?=
- =?utf-8?B?MTlWeWRUNjJZSmtuaTZ5VlFjcjdqT3JJU013WDB4ZmptaEt2MktZL09MckFU?=
- =?utf-8?B?OUdyVlFSdFoxQUE2VDRyVTRtbUcrSFVYQ2lxZnpoblp1NUNyY3JFT1dpY0cw?=
- =?utf-8?B?Umg2L2pwb0xHT0lpZWwrbmVQZDQ4ZGlwaEV3K0E3dEVsT0tBTGZhV1RlU29v?=
- =?utf-8?B?K1NsQkJERGVtZld1RklWUDhaQTNESTJCOTRZTzhPaUptYWlsSU54R3ZDVWI1?=
- =?utf-8?B?UUxST1hJcUlRQWJtZm95OUlwZjJ1WUhrb3MwbWdBTVJ1N0twWWVrQUYrWFQz?=
- =?utf-8?B?VFJYZVk0WUpVTEdRVXBGVU9hejV6RkQ5V25ranVPc2lwd0dMVGVsc2FtdzVU?=
- =?utf-8?B?Q3dMeksxWEErVCs1dEwvSHYxSzI3QkJWczdpcktudU5sL253eVVvcjhlL1o2?=
- =?utf-8?B?YWpXellCM2I0dUpwL0Y3a2pOb0hoN2huZ2VYNVJoV2tpc0taUktnblAzWXdm?=
- =?utf-8?B?STRNdjFNSmE4RlJwTjNpVlZHZ0t2QWdBOHoxTzVSSDZpQUg3djJ2WkZwWE92?=
- =?utf-8?B?REZHVzBmbG9Zd1FQbmE0aHkvSmZTTUJlemlDM1JoSjZXZFFLZk5JQXQyeEJn?=
- =?utf-8?B?RkRBdHhoL3UxYnRDdHpqQ2NyRlhWZFNGNmhZakJnZktBVE5la0hTY09yR0Nv?=
- =?utf-8?B?Sk5OVGpxNzY4RkI3Ykp5TTFDejMwYk9WNGhPckJJMFgxNGlVT0pKM0Q2K0kz?=
- =?utf-8?B?TmVUNjhYOFMzNFQ1ZS9YTkJOTERva1gyMmoyNHdKQTIwOUtBeTIzenVvZ0Nm?=
- =?utf-8?B?am1iZWJVc1h3QnRqclZpVHFzSVVyRmRkSWQ4ZnZjRGZGNmhjdXFUTGpMNTlX?=
- =?utf-8?B?cG84VEt2aTNTdUlsS0ZodFJDK1M2Y0kyQlY5cHAvaS84aGNHdmZId2ZaQkdw?=
- =?utf-8?B?S1ZCeWNmR25DQ3JZZVA4bVVCVmRWV05MVjdoOUxiSUVSMjNJbVgyWnQxTERG?=
- =?utf-8?B?bWVicWpsUEZRS095cWV6YTNZeUJtbTA1R3VBMk1KV1JpSDF6TEJQY1dNaVJJ?=
- =?utf-8?B?MXQ2K2tjNzhTTXZuUUF6N1VpZnRqR1lVZVYwNk9kUWdsWm53WXpmTnVLZDc0?=
- =?utf-8?B?SEc3dXBOWGVoTGVDdFRQeWQxQU9ZOXk1S1NyL0VJQjl0Y3RVLy9pWC9PdGJo?=
- =?utf-8?B?M2ZXKzVkVGZiQkNxek44aUVEbEd4T3MwVzU5ZXZJdExvTUlLVVBnZi95SW9Y?=
- =?utf-8?B?VlBZQW5UaGZMb08wSStBeHcra0JYZmo4SEdpK1ZXMkRYNUszRHBKYlM2VEJt?=
- =?utf-8?B?L2hIeUhqK254aGRvWFN1ZUhvZmlCNm1FeVZLWDJUdTBJVVR5M0hFRW8yZSt1?=
- =?utf-8?B?WjBSSjdEYzBTdnFOaTJRMm42ZG1qaDBsSWpyN1k1TEdTdUtvaFd6L0xDdDRi?=
- =?utf-8?B?U1pNU09XV3h6R0xEeTFNSFg2TXZ0bkMzL3U2Smp5eFFMZ0d4QStqWmtXazln?=
- =?utf-8?B?elMyRS9FNERmS1hRbmxOUVZ1RnlrWnlSa01KRUc1L1RDbExyVjBsNjhZNDhF?=
- =?utf-8?B?K2IvWnc4bG55a3ZabW9QTUN5bFRXT0tKdFMxMlFlSWFIWEZ4SmtYWklkNW9P?=
- =?utf-8?B?MDc5Sm9WLy9oMXBURDhveDhqamoxaThRVzdvbEU1MnQwWEVldGZWZHNBVFhq?=
- =?utf-8?B?bVlGdzBZUks2a0pxTDZia2VJazk0WkQ2REJYbFpTOWdKV2Z4VGY1NHpiZEZh?=
- =?utf-8?Q?Mz6h3SlWViz9LRKc=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <AC12E7A4B50B594286623CC7C7683D40@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.14; Tue, 24 May
+ 2022 11:37:17 +0000
+Received: from AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
+ ([fe80::6c57:2d13:9162:cbbb]) by AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
+ ([fe80::6c57:2d13:9162:cbbb%8]) with mapi id 15.20.5293.013; Tue, 24 May 2022
+ 11:37:17 +0000
+From:   viktor.barna@celeno.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Aviad Brikman <aviad.brikman@celeno.com>,
+        Eliav Farber <eliav.farber@gmail.com>,
+        Maksym Kokhan <maksym.kokhan@celeno.com>,
+        Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
+        Shay Bar <shay.bar@celeno.com>,
+        Viktor Barna <viktor.barna@celeno.com>
+Subject: [RFC v2 00/96] wireless: cl8k driver for Celeno IEEE 802.11ax devices
+Date:   Tue, 24 May 2022 14:33:26 +0300
+Message-Id: <20220524113502.1094459-1-viktor.barna@celeno.com>
+X-Mailer: git-send-email 2.36.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: AM6PR10CA0092.EURPRD10.PROD.OUTLOOK.COM
+ (2603:10a6:209:8c::33) To AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
+ (2603:10a6:20b:38b::16)
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 9a0fa428-2ef3-4eb6-cbae-08da3d79c197
+X-MS-TrafficTypeDiagnostic: AM6P192MB0501:EE_
+X-LD-Processed: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8,ExtFwd
+X-Microsoft-Antispam-PRVS: <AM6P192MB05011725005D37DCB60BC7BFF6D79@AM6P192MB0501.EURP192.PROD.OUTLOOK.COM>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: aH5cgiN7VkMQqOmlNZRMArS/miF0eNKMwzYGRyg15Oc10vCWdpIqxmyXzEgtWwKCHZbMUgnXcZcqyaxA+Xt3DZ8H9H6Gy6ProQvCITcSj3fn+QIC3bONGkLQvvkO5hIw4B9E9q5LRTEUXDbfi0ZOde4PCVTrrntJz87zFu5QPedpxUXlmf9pZ7hwtWyACeFEURTmhxytrTkmGIYD0s+jFLl6f9/B+pEBQ/RHyWEHi7LVxw+Mj98dAGhKbz9rpakzOhxVTlaZrAZ5zyLHymZ9hBGWnfx0etAXO4/iyKF19/nrmTznhSNAq/6vtJNiVDn/yj+91x48cC2Kt4ufYyba6Uat3S2HKK49B6NTmP8+nM5WhVMZguV9q6imOZFV2mvVexMC3qKZsfADQ6MhlmuVYJXouq7zWm23zmRvwvYIl7xhFvRc6S8MRF51LsNpGS9KNvWqBViByXoRsFAETq+LX155KTfWkExmTk9e68mPSYFxFq+NVXdYRqLmq7fbZAKbbtHFM3+OnmXN8gPeaAE+zobLGkWZugwkiNVCnxKTBIxxNFzvyc2eXFKHmvgE6rmclY8KoY9lS//xUP4nTbWUcdtQnk+Mhz5MBMduf3uyYTw8xzqOfhma1zQaIVdRCOB87UDj40HppnKBi7EO5y4EWUFquvoTnseHY1MHmewIt42EXUoE9mnpX87K5pMjOV1t9sZ5L/UUaAi1fEjwDJGT7/OdfZdFhLVXPlvfPl52v/UkoQM+AtoAmIhnvAlItfxxxCLogG64LUg53ftF8UW5duRskDZZbiPmkAQK9whuP2bkXVL+w+SQsAQZp0J7yK2G
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9P192MB1412.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230001)(376002)(136003)(39850400004)(366004)(346002)(396003)(6512007)(186003)(38100700002)(2616005)(1076003)(9686003)(86362001)(6666004)(6506007)(107886003)(38350700002)(52116002)(6916009)(66946007)(83380400001)(54906003)(6486002)(966005)(30864003)(4326008)(316002)(8676002)(5660300002)(41300700001)(66476007)(36756003)(66556008)(8936002)(508600001)(2906002)(26005)(32563001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?L6cXfGYdD62cZ+QDovm2XcJcKXr0X0IuMcOnCq8pZkAaUTd7nMIuEZBlR8Dw?=
+ =?us-ascii?Q?QRmnWtYGkr/M6gno+o1DA+kFGLrONKvVK+MvZhc3exBKyPv58asL1OpuVFvi?=
+ =?us-ascii?Q?cHvvPTWF+Ca4EaalTrmTjvJPKYJfz5Z1CZ0hyps+gBJ7h8NHc1lncpl/k1WR?=
+ =?us-ascii?Q?pft97NyQAybFlLIUPTc8wCdv8Eugko+zoaak+grcBcvZDdYQmHQy8hQVWEo0?=
+ =?us-ascii?Q?VyXea9b8+39THz/RvL9lIjusxqwzEAnCKxrQdRV9Z2hkJUTE1zvYpve6iUVt?=
+ =?us-ascii?Q?9S3RMhyAaONzZmWUdGh6qiHnZxdhGxR24J3tShaJVOzCLtmRy+AzngBoTNLR?=
+ =?us-ascii?Q?RdFkUvkhBRNI1ILTW4aM/EyyJj9EzV5l/NLDmBtzAqpmy5oFnHGg6FDGeQRY?=
+ =?us-ascii?Q?Lbo7BlG4Y/pdSECYEOmTqA1Ka15XOq944EDwBQNfqvavcGCJpzgH+CIM/LI+?=
+ =?us-ascii?Q?5ZCneOUX6vv1auSzF0554gLn7VA8reh26cChLPXsSgMFsHj15B8zXICfb/aO?=
+ =?us-ascii?Q?TY7xGrR+QkROBytof1s5ZgKTiIze9biFF8gcO/41wK/g7ZNc4qrzumSAE1S6?=
+ =?us-ascii?Q?7vltRswK9dn0/KV9pggbY0fPUCqSBKM9OT5OkvSz+S1gBfWK4svblEZ8Olhm?=
+ =?us-ascii?Q?ewraQ3k4KwoqPoIhMZQfQWXCYXez4YIM64fpBXuogLRt/PLA9FZBDX9mzfXz?=
+ =?us-ascii?Q?dh1ud1xhVKYDgoPLdbB77UhXTAtmo9ZCarUQC68wFRLaBGBdEm9kEYrtE2Nd?=
+ =?us-ascii?Q?4DkDgpqPqaqZGB+QVbLdBaOc27WZwk8WBg3ZVTl62tE3LQd22MFI8ETO7g6T?=
+ =?us-ascii?Q?kgKAvapAyyVRpCnNcKx2jHI7NDupAiM/5adgfyTsev9DJzPM2LZDN2I9mKbn?=
+ =?us-ascii?Q?BaYzw7z7jCTRY88LKvt3xWE3V2/n/NNNAbDC5ryFnNM74M60sy5VCsKY3ubN?=
+ =?us-ascii?Q?e3Qld9xOrCXP3xE8xioIQwVLnDDpzEF85gOkmeqy6cT9IyYu4CG8TxT11gju?=
+ =?us-ascii?Q?tjU6L6plR0NE9Wy0B0q0LTZeFVgikTVvaDK/DfD8YywVBk6bFz46VQNgSODZ?=
+ =?us-ascii?Q?oR3QvIKUE1YOjn++62G4mEUx4ibeHZewvoG9/egJZB4B7VFVZ7zWlDDlaOBU?=
+ =?us-ascii?Q?otdQsXiXgsGxJqT63Lf0MY9GF892YJcqRQP+L4IwrLfk0a5khbP9PT7Id95S?=
+ =?us-ascii?Q?iwEwzYs8Im65SH2fCc+DrggWFvMA6g+9gqcHqnjn7Fae6WDaOR6RUGEmYL7X?=
+ =?us-ascii?Q?I0WtlFUlJyUMpEECvteCygu5idh9SMIiqoBcFpnfeaXe833tRTAVsXU9Efpm?=
+ =?us-ascii?Q?ibRWLjUFRcy5B0+Vxc7d/rFplZAXYhiLTniPt6yHK59N5mPiZWBnBuvHV0AI?=
+ =?us-ascii?Q?W+N3OQb/1hfUGEfBB5rOTq4271NSiJl/Hwecb9d6XVutkHUv4Y+dtlhMrnc/?=
+ =?us-ascii?Q?hT1rkDuHcaJFtZMiCEXJ7MunB86GiphicmFAAexP64I17886uqjTGvxCtnDW?=
+ =?us-ascii?Q?XGRw8snp0gmM2Db1BDXLBSLZZj7Gnxe6vV8p+uJpx2Y4FZglyFr95G23GNxq?=
+ =?us-ascii?Q?bnRPcwJdy39YVf23Zt4K4XvKXXZ8vYAjioWB+7NAHuRYK9H662KBtO8+cPO1?=
+ =?us-ascii?Q?1kLAL3wUdoRqoXbziilbmeP9kv/+EOLK8DVdJfOGn9l/py8iYDst6k0dAcPt?=
+ =?us-ascii?Q?qtXMJ1+v7zY1nS5OJdfluaiLhEPzxIOFZMoBWwXMSXNnzjI83gx6rxAKPPia?=
+ =?us-ascii?Q?Tu/mN8KaKlVuoWG8dh9nslXtYMVYI+Y=3D?=
+X-OriginatorOrg: celeno.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9a0fa428-2ef3-4eb6-cbae-08da3d79c197
+X-MS-Exchange-CrossTenant-AuthSource: AM9P192MB1412.EURP192.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BN6PR11MB1953.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a23073e1-14c5-40d0-8db3-08da3d5cb129
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 May 2022 08:09:14.4766
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 11:37:17.6352
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: VK1QerKxPlnGzV+14lBjKRX5Lc5fbDjsl1+niP8so+yZii8WABAZKYPVclpaHNczyA6DSEnRvOJ0eI9xBqfEyluly0yDXH8Cw/JCPTmxung=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR11MB1511
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f313103b-4c9f-4fd3-b5cf-b97f91c4afa8
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8dAlGwjtUA+NTiLuH4oetDz0YNHh8wHKq4JtJILl5SZTpgXhy21yJGkSYPKe52crjMIroNBjVqWGKAhY4nl/HA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6P192MB0501
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGksIEFqYXksDQoNCk9uIDIzLjA1LjIwMjIgMTc6MDksIEFqYXkgS2F0aGF0IC0gSTE1NDgxIHdy
-b3RlOg0KPiBGcm9tOiBBamF5IFNpbmdoIDxhamF5LmthdGhhdEBtaWNyb2NoaXAuY29tPg0KPiAN
-Cj4gRm9yIHBvd2VyLXVwIHNlcXVlbmNlLCBXSUxDIGV4cGVjdHMgUkVTRVQgc2V0IHRvIGhpZ2gg
-NW1zIGFmdGVyIG1ha2luZw0KPiBjaGlwX2VuKGVuYWJsZSkgc28gY29ycmVjdGVkIGNoaXAgcG93
-ZXItdXAgc2VxdWVuY2UgYnkgbWFraW5nIFJFU0VUIGhpZ2guDQo+IEZvciBQb3dlci1Eb3duIHNl
-cXVlbmNlLCB0aGUgY29ycmVjdCBzZXF1ZW5jZSBtYWtlIFJFU0VUIGFuZCBDSElQX0VOIGxvdw0K
-PiB3aXRob3V0IGFueSBleHRyYSBkZWxheS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEFqYXkgU2lu
-Z2ggPGFqYXkua2F0aGF0QG1pY3JvY2hpcC5jb20+DQoNCkRvZXMgdGhpcyBuZWVkIGEgZml4ZXMg
-dGFnPw0KDQo+IC0tLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWljcm9jaGlwL3dpbGMxMDAw
-L3NwaS5jIHwgNiArKystLS0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDMg
-ZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWlj
-cm9jaGlwL3dpbGMxMDAwL3NwaS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWljcm9jaGlwL3dp
-bGMxMDAwL3NwaS5jDQo+IGluZGV4IDE4NDIwZTk1NDQwMi4uMmFlOGRkMzQxMWFjIDEwMDY0NA0K
-PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9taWNyb2NoaXAvd2lsYzEwMDAvc3BpLmMNCj4g
-KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWljcm9jaGlwL3dpbGMxMDAwL3NwaS5jDQo+IEBA
-IC0xOTEsMTEgKzE5MSwxMSBAQCBzdGF0aWMgdm9pZCB3aWxjX3dsYW5fcG93ZXIoc3RydWN0IHdp
-bGMgKndpbGMsIGJvb2wgb24pDQo+ICAJCS8qIGFzc2VydCBFTkFCTEU6ICovDQo+ICAJCWdwaW9k
-X3NldF92YWx1ZShncGlvcy0+ZW5hYmxlLCAxKTsNCj4gIAkJbWRlbGF5KDUpOw0KPiAtCQkvKiBk
-ZWFzc2VydCBSRVNFVDogKi8NCj4gLQkJZ3Bpb2Rfc2V0X3ZhbHVlKGdwaW9zLT5yZXNldCwgMCk7
-DQo+IC0JfSBlbHNlIHsNCj4gIAkJLyogYXNzZXJ0IFJFU0VUOiAqLw0KPiAgCQlncGlvZF9zZXRf
-dmFsdWUoZ3Bpb3MtPnJlc2V0LCAxKTsNCj4gKwl9IGVsc2Ugew0KPiArCQkvKiBkZWFzc2VydCBS
-RVNFVDogKi8NCj4gKwkJZ3Bpb2Rfc2V0X3ZhbHVlKGdwaW9zLT5yZXNldCwgMCk7DQo+ICAJCS8q
-IGRlYXNzZXJ0IEVOQUJMRTogKi8NCj4gIAkJZ3Bpb2Rfc2V0X3ZhbHVlKGdwaW9zLT5lbmFibGUs
-IDApOw0KPiAgCX0NCg0K
+From: Viktor Barna <viktor.barna@celeno.com>
+
+Celeno Communications publishes to the opensource new wireless driver
+for an own 802.11 chipset family - 80xx. The main chip supports multiple
+simultaneous bands functioning (2.4G/5.2G or 5.2G/6G) over PCIe 3.0
+dual-lane interface. Basically, the chip is dual-band concurrent up to
+8x8 in total, and up to 6x6 per band, including 802.11ax 160MHz support
+and functioning of AP/STA/MESH modes. The driver architecture is strong
+SoftMAC.
+
+The current patchset is the second one and is considered to be published 
+in form of RFC (Request for Comments, version 2). If there are any
+suggestions/propositions - we will be glad to fix them and
+eventually share the driver with the community in form of an official patch
+(including the firmware binaries).
+
+The RFC is divided into separate patches on a per-file basis to simplify
+the review process.
+
+Known issues:
+- driver may be configured via config files, that is discouraged by
+  upstream and may be changed in the future.
+
+Signed-off-by: Aviad Brikman <aviad.brikman@celeno.com>
+Signed-off-by: Eliav Farber <eliav.farber@gmail.com>
+Signed-off-by: Maksym Kokhan <maksym.kokhan@celeno.com>
+Signed-off-by: Oleksandr Savchenko <oleksandr.savchenko@celeno.com>
+Signed-off-by: Shay Bar <shay.bar@celeno.com>
+Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
+---
+v2: 
+- Reduce files amount from 256 to 98 (including 43 source files).
+- Fix Kconfig vs code inconsistencies.
+- Remove Celeno-specific wrappers like cl_snprintf, cl_timer, string
+  processors.
+- Namespace more functions (with cl_<something>).
+- Remove DEV_COREDUMP support (temporary. to minimize size of the RFC).
+- Remove CLI handling in the driver (forever, reimplement some of the features
+  in the debugfs). 
+- Remove netlink vendor-specific commands.
+- Remove debugfs code.
+- Fix sparse warnings.
+- Fix more checkpatch errors/warnings/checks.
+- Update codebase to the most recent internal codebase (as of 20.05.22).
+- Adjust patch to support Kernel 5.18-rc7.
+ 
+v1: 
+- https://lore.kernel.org/linux-wireless/20210617160223.160998-1-viktor.barna@celeno.com/
+
+Viktor Barna (96):
+  celeno: add Kconfig
+  celeno: add Makefile
+  cl8k: add Kconfig
+  cl8k: add Makefile
+  cl8k: add ampdu.c
+  cl8k: add ampdu.h
+  cl8k: add bf.c
+  cl8k: add bf.h
+  cl8k: add calib.c
+  cl8k: add calib.h
+  cl8k: add channel.c
+  cl8k: add channel.h
+  cl8k: add chip.c
+  cl8k: add chip.h
+  cl8k: add config.c
+  cl8k: add config.h
+  cl8k: add debug.c
+  cl8k: add debug.h
+  cl8k: add def.h
+  cl8k: add dfs.c
+  cl8k: add dfs.h
+  cl8k: add dsp.c
+  cl8k: add dsp.h
+  cl8k: add e2p.c
+  cl8k: add e2p.h
+  cl8k: add eeprom.h
+  cl8k: add ela.c
+  cl8k: add ela.h
+  cl8k: add enhanced_tim.c
+  cl8k: add enhanced_tim.h
+  cl8k: add fw.c
+  cl8k: add fw.h
+  cl8k: add hw.c
+  cl8k: add hw.h
+  cl8k: add ipc_shared.h
+  cl8k: add key.c
+  cl8k: add key.h
+  cl8k: add mac80211.c
+  cl8k: add mac80211.h
+  cl8k: add mac_addr.c
+  cl8k: add mac_addr.h
+  cl8k: add main.c
+  cl8k: add main.h
+  cl8k: add maintenance.c
+  cl8k: add maintenance.h
+  cl8k: add motion_sense.c
+  cl8k: add motion_sense.h
+  cl8k: add pci.c
+  cl8k: add pci.h
+  cl8k: add phy.c
+  cl8k: add phy.h
+  cl8k: add platform.c
+  cl8k: add platform.h
+  cl8k: add power.c
+  cl8k: add power.h
+  cl8k: add radio.c
+  cl8k: add radio.h
+  cl8k: add rates.c
+  cl8k: add rates.h
+  cl8k: add recovery.c
+  cl8k: add recovery.h
+  cl8k: add regdom.c
+  cl8k: add regdom.h
+  cl8k: add reg/reg_access.h
+  cl8k: add reg/reg_defs.h
+  cl8k: add rfic.c
+  cl8k: add rfic.h
+  cl8k: add rx.c
+  cl8k: add rx.h
+  cl8k: add scan.c
+  cl8k: add scan.h
+  cl8k: add sounding.c
+  cl8k: add sounding.h
+  cl8k: add sta.c
+  cl8k: add sta.h
+  cl8k: add stats.c
+  cl8k: add stats.h
+  cl8k: add tcv.c
+  cl8k: add tcv.h
+  cl8k: add temperature.c
+  cl8k: add temperature.h
+  cl8k: add traffic.c
+  cl8k: add traffic.h
+  cl8k: add tx.c
+  cl8k: add tx.h
+  cl8k: add utils.c
+  cl8k: add utils.h
+  cl8k: add version.c
+  cl8k: add version.h
+  cl8k: add vif.c
+  cl8k: add vif.h
+  cl8k: add vns.c
+  cl8k: add vns.h
+  cl8k: add wrs.c
+  cl8k: add wrs.h
+  wireless: add Celeno vendor
+
+ drivers/net/wireless/Kconfig                  |    1 +
+ drivers/net/wireless/Makefile                 |    1 +
+ drivers/net/wireless/celeno/Kconfig           |   17 +
+ drivers/net/wireless/celeno/Makefile          |    2 +
+ drivers/net/wireless/celeno/cl8k/Kconfig      |   41 +
+ drivers/net/wireless/celeno/cl8k/Makefile     |   66 +
+ drivers/net/wireless/celeno/cl8k/ampdu.c      |  331 +
+ drivers/net/wireless/celeno/cl8k/ampdu.h      |   39 +
+ drivers/net/wireless/celeno/cl8k/bf.c         |  346 +
+ drivers/net/wireless/celeno/cl8k/bf.h         |   52 +
+ drivers/net/wireless/celeno/cl8k/calib.c      | 2266 ++++
+ drivers/net/wireless/celeno/cl8k/calib.h      |  390 +
+ drivers/net/wireless/celeno/cl8k/channel.c    | 1656 +++
+ drivers/net/wireless/celeno/cl8k/channel.h    |  401 +
+ drivers/net/wireless/celeno/cl8k/chip.c       |  580 +
+ drivers/net/wireless/celeno/cl8k/chip.h       |  182 +
+ drivers/net/wireless/celeno/cl8k/config.c     |   46 +
+ drivers/net/wireless/celeno/cl8k/config.h     |  405 +
+ drivers/net/wireless/celeno/cl8k/debug.c      |  442 +
+ drivers/net/wireless/celeno/cl8k/debug.h      |  160 +
+ drivers/net/wireless/celeno/cl8k/def.h        |  235 +
+ drivers/net/wireless/celeno/cl8k/dfs.c        |  768 ++
+ drivers/net/wireless/celeno/cl8k/dfs.h        |  146 +
+ drivers/net/wireless/celeno/cl8k/dsp.c        |  627 ++
+ drivers/net/wireless/celeno/cl8k/dsp.h        |   27 +
+ drivers/net/wireless/celeno/cl8k/e2p.c        |  771 ++
+ drivers/net/wireless/celeno/cl8k/e2p.h        |   25 +
+ drivers/net/wireless/celeno/cl8k/eeprom.h     |  283 +
+ drivers/net/wireless/celeno/cl8k/ela.c        |  230 +
+ drivers/net/wireless/celeno/cl8k/ela.h        |   48 +
+ .../net/wireless/celeno/cl8k/enhanced_tim.c   |  173 +
+ .../net/wireless/celeno/cl8k/enhanced_tim.h   |   19 +
+ drivers/net/wireless/celeno/cl8k/fw.c         | 3167 ++++++
+ drivers/net/wireless/celeno/cl8k/fw.h         | 1462 +++
+ drivers/net/wireless/celeno/cl8k/hw.c         |  432 +
+ drivers/net/wireless/celeno/cl8k/hw.h         |  280 +
+ drivers/net/wireless/celeno/cl8k/ipc_shared.h | 1386 +++
+ drivers/net/wireless/celeno/cl8k/key.c        |  382 +
+ drivers/net/wireless/celeno/cl8k/key.h        |   37 +
+ drivers/net/wireless/celeno/cl8k/mac80211.c   | 2392 ++++
+ drivers/net/wireless/celeno/cl8k/mac80211.h   |  197 +
+ drivers/net/wireless/celeno/cl8k/mac_addr.c   |  418 +
+ drivers/net/wireless/celeno/cl8k/mac_addr.h   |   61 +
+ drivers/net/wireless/celeno/cl8k/main.c       |  603 ++
+ drivers/net/wireless/celeno/cl8k/main.h       |   16 +
+ .../net/wireless/celeno/cl8k/maintenance.c    |   81 +
+ .../net/wireless/celeno/cl8k/maintenance.h    |   17 +
+ .../net/wireless/celeno/cl8k/motion_sense.c   |  244 +
+ .../net/wireless/celeno/cl8k/motion_sense.h   |   46 +
+ drivers/net/wireless/celeno/cl8k/pci.c        | 2468 +++++
+ drivers/net/wireless/celeno/cl8k/pci.h        |  194 +
+ drivers/net/wireless/celeno/cl8k/phy.c        | 9648 +++++++++++++++++
+ drivers/net/wireless/celeno/cl8k/phy.h        | 3680 +++++++
+ drivers/net/wireless/celeno/cl8k/platform.c   |  392 +
+ drivers/net/wireless/celeno/cl8k/platform.h   |  196 +
+ drivers/net/wireless/celeno/cl8k/power.c      | 1123 ++
+ drivers/net/wireless/celeno/cl8k/power.h      |   90 +
+ drivers/net/wireless/celeno/cl8k/radio.c      | 1113 ++
+ drivers/net/wireless/celeno/cl8k/radio.h      |  130 +
+ drivers/net/wireless/celeno/cl8k/rates.c      | 1570 +++
+ drivers/net/wireless/celeno/cl8k/rates.h      |  154 +
+ drivers/net/wireless/celeno/cl8k/recovery.c   |  280 +
+ drivers/net/wireless/celeno/cl8k/recovery.h   |   39 +
+ .../net/wireless/celeno/cl8k/reg/reg_access.h |  199 +
+ .../net/wireless/celeno/cl8k/reg/reg_defs.h   | 5494 ++++++++++
+ drivers/net/wireless/celeno/cl8k/regdom.c     |  301 +
+ drivers/net/wireless/celeno/cl8k/regdom.h     |   11 +
+ drivers/net/wireless/celeno/cl8k/rfic.c       |  232 +
+ drivers/net/wireless/celeno/cl8k/rfic.h       |   29 +
+ drivers/net/wireless/celeno/cl8k/rx.c         | 1845 ++++
+ drivers/net/wireless/celeno/cl8k/rx.h         |  505 +
+ drivers/net/wireless/celeno/cl8k/scan.c       |  392 +
+ drivers/net/wireless/celeno/cl8k/scan.h       |   53 +
+ drivers/net/wireless/celeno/cl8k/sounding.c   | 1121 ++
+ drivers/net/wireless/celeno/cl8k/sounding.h   |  151 +
+ drivers/net/wireless/celeno/cl8k/sta.c        |  507 +
+ drivers/net/wireless/celeno/cl8k/sta.h        |   99 +
+ drivers/net/wireless/celeno/cl8k/stats.c      |  438 +
+ drivers/net/wireless/celeno/cl8k/stats.h      |  108 +
+ drivers/net/wireless/celeno/cl8k/tcv.c        | 1259 +++
+ drivers/net/wireless/celeno/cl8k/tcv.h        |  283 +
+ .../net/wireless/celeno/cl8k/temperature.c    |  634 ++
+ .../net/wireless/celeno/cl8k/temperature.h    |   71 +
+ drivers/net/wireless/celeno/cl8k/traffic.c    |  254 +
+ drivers/net/wireless/celeno/cl8k/traffic.h    |   77 +
+ drivers/net/wireless/celeno/cl8k/tx.c         | 3397 ++++++
+ drivers/net/wireless/celeno/cl8k/tx.h         |  467 +
+ drivers/net/wireless/celeno/cl8k/utils.c      |  642 ++
+ drivers/net/wireless/celeno/cl8k/utils.h      |  185 +
+ drivers/net/wireless/celeno/cl8k/version.c    |  147 +
+ drivers/net/wireless/celeno/cl8k/version.h    |   23 +
+ drivers/net/wireless/celeno/cl8k/vif.c        |  162 +
+ drivers/net/wireless/celeno/cl8k/vif.h        |   81 +
+ drivers/net/wireless/celeno/cl8k/vns.c        |  354 +
+ drivers/net/wireless/celeno/cl8k/vns.h        |   65 +
+ drivers/net/wireless/celeno/cl8k/wrs.c        | 3323 ++++++
+ drivers/net/wireless/celeno/cl8k/wrs.h        |  565 +
+ 97 files changed, 66548 insertions(+)
+ create mode 100755 drivers/net/wireless/celeno/Kconfig
+ create mode 100755 drivers/net/wireless/celeno/Makefile
+ create mode 100644 drivers/net/wireless/celeno/cl8k/Kconfig
+ create mode 100644 drivers/net/wireless/celeno/cl8k/Makefile
+ create mode 100644 drivers/net/wireless/celeno/cl8k/ampdu.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/ampdu.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/bf.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/bf.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/calib.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/calib.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/channel.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/channel.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/chip.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/chip.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/config.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/config.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/debug.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/debug.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/def.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/dfs.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/dfs.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/dsp.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/dsp.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/e2p.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/e2p.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/eeprom.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/ela.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/ela.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/enhanced_tim.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/enhanced_tim.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/fw.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/fw.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/hw.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/hw.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/ipc_shared.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/key.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/key.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/mac80211.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/mac80211.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/mac_addr.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/mac_addr.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/main.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/main.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/maintenance.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/maintenance.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/motion_sense.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/motion_sense.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/pci.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/pci.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/phy.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/phy.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/platform.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/platform.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/power.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/power.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/radio.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/radio.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rates.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rates.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/recovery.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/recovery.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_access.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/reg/reg_defs.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/regdom.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/regdom.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rfic.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rfic.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rx.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/rx.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/scan.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/scan.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/sounding.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/sounding.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/sta.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/sta.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/stats.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/stats.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tcv.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tcv.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/temperature.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/temperature.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/traffic.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/traffic.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tx.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/tx.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/utils.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/utils.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/version.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/version.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/vif.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/vif.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/vns.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/vns.h
+ create mode 100644 drivers/net/wireless/celeno/cl8k/wrs.c
+ create mode 100644 drivers/net/wireless/celeno/cl8k/wrs.h
+
+-- 
+2.36.1
+
