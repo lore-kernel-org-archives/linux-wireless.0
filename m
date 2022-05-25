@@ -2,90 +2,166 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65559C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 May 2022 00:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75216C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 May 2022 05:09:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242891AbiEYASg convert rfc822-to-8bit (ORCPT
+        id S241747AbiEYFJy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 May 2022 20:18:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51336 "EHLO
+        Wed, 25 May 2022 01:09:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236535AbiEYASc (ORCPT
+        with ESMTP id S229653AbiEYFJt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 May 2022 20:18:32 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF7A970901
-        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 17:18:29 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 24P0I8Lh8011341, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 24P0I8Lh8011341
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 25 May 2022 08:18:08 +0800
-Received: from RTEXMBS02.realtek.com.tw (172.21.6.95) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Wed, 25 May 2022 08:18:08 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS02.realtek.com.tw (172.21.6.95) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Wed, 25 May 2022 08:18:07 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6]) by
- RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6%5]) with mapi id
- 15.01.2308.021; Wed, 25 May 2022 08:18:07 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@kernel.org>
-CC:     Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v3 0/4] rtw88: Fix some Sparse Warnings
-Thread-Topic: [PATCH v3 0/4] rtw88: Fix some Sparse Warnings
-Thread-Index: AQHYb4QULME5rGflWkCKqtZfeI3TwK0uun2A
-Date:   Wed, 25 May 2022 00:18:07 +0000
-Message-ID: <206309821b8148bbb194c7d08a00d708@realtek.com>
-References: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
-In-Reply-To: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS02.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/5/24_=3F=3F_10:18:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Wed, 25 May 2022 01:09:49 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60A176F49A
+        for <linux-wireless@vger.kernel.org>; Tue, 24 May 2022 22:09:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653455385; x=1684991385;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=RMlGdw59GFH2ZOKEt7jEoNgW5H8HE4ukmm67Vh+ORDc=;
+  b=kgBupWnVc4uvt2Iyx8loVfzhGV+loStugE+zrFWRJEOSxUlzacOpaQA0
+   4cIqEdT0ZHyVe+K7WoEENRo5hYwoEkVgode0u3zC5SMGF8YhH48DNRZyD
+   1vh4/RPmwjlVmcQgx6KLs6sHgn1U683clHlm6r681sqLxT4PtjvCQh2AX
+   2S4WBwObKVXa6TftwkNXgFo5nJTw0D5fMrIT5vruB3hMy7ja3tVr2YjKF
+   PG2tyssqF5Sq2JWZcDP1EoteQ0ePvPnNrlUbrbVWz8zTl4APPA6JmLR7Z
+   w4beK6BkX8IAVdeQrOi3sIVij8TS8hovGwLxAQ/jH5Z32HBeArhh3ycN8
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10357"; a="360109316"
+X-IronPort-AV: E=Sophos;i="5.91,250,1647327600"; 
+   d="scan'208";a="360109316"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2022 22:09:44 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,250,1647327600"; 
+   d="scan'208";a="703752744"
+Received: from lkp-server01.sh.intel.com (HELO db63a1be7222) ([10.239.97.150])
+  by orsmga004.jf.intel.com with ESMTP; 24 May 2022 22:09:42 -0700
+Received: from kbuild by db63a1be7222 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1ntjHB-0002kH-KO;
+        Wed, 25 May 2022 05:09:41 +0000
+Date:   Wed, 25 May 2022 13:08:59 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Johannes Berg <johannes.berg@intel.com>
+Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>
+Subject: [wireless-next:mld] BUILD SUCCESS
+ 302538d7a1e2dc47cb2af7a12585af48e535f541
+Message-ID: <628db9eb.YK0uaWNHKOL/91lN%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git mld
+branch HEAD: 302538d7a1e2dc47cb2af7a12585af48e535f541  mac80211: split bss_info_changed method
 
-> -----Original Message-----
-> From: Larry Finger <Larry.Finger@lwfinger.net>
-> Sent: Tuesday, May 24, 2022 11:36 PM
-> To: Kalle Valo <kvalo@kernel.org>
-> Cc: Johannes Berg <johannes@sipsolutions.net>; linux-wireless@vger.kernel.org; Larry Finger
-> <Larry.Finger@lwfinger.net>; Ping-Ke Shih <pkshih@realtek.com>
-> Subject: [PATCH v3 0/4] rtw88: Fix some Sparse Warnings
-> 
-> Sparse shows warnings for symbols that can be static. In these cases.
-> the wrong solution is suggested - again reinforcing the concept
-> that all tools may suggest the wrong answer, and must be checked.
-> 
-> Constify all *_hw_spec variables
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+elapsed time: 720m
 
-This patchset looks good to me. Thanks!
+configs tested: 89
+configs skipped: 3
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+gcc tested configs:
+arm64                               defconfig
+arm64                            allyesconfig
+arm                              allmodconfig
+arm                                 defconfig
+arm                              allyesconfig
+sh                              ul2_defconfig
+arc                 nsimosci_hs_smp_defconfig
+m68k                            mac_defconfig
+arm                       multi_v4t_defconfig
+xtensa                          iss_defconfig
+ia64                                defconfig
+ia64                             allmodconfig
+ia64                             allyesconfig
+m68k                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+nios2                               defconfig
+arc                              allyesconfig
+csky                                defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+sh                               allmodconfig
+arc                                 defconfig
+h8300                            allyesconfig
+xtensa                           allyesconfig
+s390                                defconfig
+s390                             allmodconfig
+parisc                              defconfig
+parisc64                            defconfig
+parisc                           allyesconfig
+s390                             allyesconfig
+sparc                            allyesconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+i386                                defconfig
+i386                             allyesconfig
+sparc                               defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                           allnoconfig
+powerpc                          allmodconfig
+powerpc                          allyesconfig
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+x86_64                        randconfig-a006
+i386                          randconfig-a001
+i386                          randconfig-a003
+i386                          randconfig-a005
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+x86_64                        randconfig-a015
+i386                          randconfig-a014
+i386                          randconfig-a012
+i386                          randconfig-a016
+arc                  randconfig-r043-20220524
+s390                 randconfig-r044-20220524
+riscv                randconfig-r042-20220524
+riscv                               defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+riscv                             allnoconfig
+riscv                            allmodconfig
+riscv                            allyesconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+x86_64                                  kexec
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                           rhel-8.3-syz
+x86_64                    rhel-8.3-kselftests
+x86_64                         rhel-8.3-kunit
 
+clang tested configs:
+x86_64                        randconfig-a005
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a013
+i386                          randconfig-a011
+i386                          randconfig-a015
+hexagon              randconfig-r045-20220524
+hexagon              randconfig-r041-20220524
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
