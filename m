@@ -2,110 +2,72 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7738C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 May 2022 13:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EA1C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 May 2022 17:54:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244508AbiEYNp2 (ORCPT
+        id S239655AbiEYRyd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 May 2022 09:45:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43978 "EHLO
+        Wed, 25 May 2022 13:54:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235253AbiEYNpZ (ORCPT
+        with ESMTP id S232408AbiEYRyb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 May 2022 09:45:25 -0400
-X-Greylist: delayed 548 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 25 May 2022 06:45:22 PDT
-Received: from mail.tintel.eu (mail.tintel.eu [IPv6:2001:41d0:a:6e77:0:ff:fe5c:6a54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7ED060D86
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2022 06:45:22 -0700 (PDT)
-Received: from localhost (localhost [IPv6:::1])
-        by mail.tintel.eu (Postfix) with ESMTP id 386914541E35;
-        Wed, 25 May 2022 15:36:11 +0200 (CEST)
-Received: from mail.tintel.eu ([IPv6:::1])
-        by localhost (mail.tintel.eu [IPv6:::1]) (amavisd-new, port 10032)
-        with ESMTP id HyB9O654vDmE; Wed, 25 May 2022 15:36:10 +0200 (CEST)
-Received: from localhost (localhost [IPv6:::1])
-        by mail.tintel.eu (Postfix) with ESMTP id A6DC64541E34;
-        Wed, 25 May 2022 15:36:10 +0200 (CEST)
-DKIM-Filter: OpenDKIM Filter v2.10.3 mail.tintel.eu A6DC64541E34
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux-ipv6.be;
-        s=502B7754-045F-11E5-BBC5-64595FD46BE8; t=1653485770;
-        bh=h45dum25SYcDiIOd9Ov43qD2SBgSfhB7rTLuBrPU0GU=;
-        h=From:To:Date:Message-Id:MIME-Version;
-        b=rICKj1208hKZ99EaJ/CAjWnmTJOE4heTuSNEUHfX3+PApYf2jYPVVREm0kB8l2CGR
-         S26d3WFCADezCOZgWoa/mLMPJBiw9cC25K3VuyAYZMCVcp0xN47jNy32OLbYqGh5+c
-         QiLcdDwL2RK9zqjlZcpk9xdFhXielRuD2ZQNN2e4=
-X-Virus-Scanned: amavisd-new at mail.tintel.eu
-Received: from mail.tintel.eu ([IPv6:::1])
-        by localhost (mail.tintel.eu [IPv6:::1]) (amavisd-new, port 10026)
-        with ESMTP id 3hIdCskuyHuq; Wed, 25 May 2022 15:36:10 +0200 (CEST)
-Received: from taz.sof.bg.adlevio.net (unknown [IPv6:2001:67c:21bc:20::10])
-        by mail.tintel.eu (Postfix) with ESMTPS id 6641E4541E30;
-        Wed, 25 May 2022 15:36:10 +0200 (CEST)
-From:   Stijn Tintel <stijn@linux-ipv6.be>
-To:     sforshee@kernel.org
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Petko Bordjukov <bordjukov@gmail.com>
-Subject: [PATCH] wireless-regdb: update regulatory rules for Bulgaria (BG) on 6GHz
-Date:   Wed, 25 May 2022 16:36:09 +0300
-Message-Id: <20220525133609.1740457-1-stijn@linux-ipv6.be>
-X-Mailer: git-send-email 2.35.1
+        Wed, 25 May 2022 13:54:31 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A862DE91;
+        Wed, 25 May 2022 10:54:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+        References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=BEtX22N4nmBUvhPs2dpMmIQif4Ym/qoHwx4bgdAzRGE=; b=nuxS1TC0TNX+Ii9C8/PoUC6ICY
+        Ojvw8ZoRBI+SVXviS1qtEMR8w/BEntIGqZe8vM9vjSfuIvUqMHO+9UZUkdnwdywPDjbI2Ab1Mg1aX
+        zFp5EEHQlZlO8kP2Ozyo84g7wBSzep6nmqc2hcwEi9I6IgS3eO3L4jImBme7RmukxE8U=;
+Received: from p200300daa70ef2005cc39ce6374ff633.dip0.t-ipconnect.de ([2003:da:a70e:f200:5cc3:9ce6:374f:f633] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1ntvDC-0002o2-DA; Wed, 25 May 2022 19:54:22 +0200
+Message-ID: <592e2b28-2463-dece-8315-180089aadfee@nbd.name>
+Date:   Wed, 25 May 2022 19:54:20 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Rspamd-Pre-Result: action=no action;
-        module=multimap;
-        Matched map: IP_WHITELIST
-X-Rspamd-Queue-Id: 6641E4541E30
-X-Rspamd-Pre-Result: action=no action;
-        module=multimap;
-        Matched map: IP_WHITELIST
-X-Spamd-Result: default: False [0.00 / 15.00];
-        IP_WHITELIST(0.00)[2001:67c:21bc:20::10];
-        ASN(0.00)[asn:200533, ipnet:2001:67c:21bc::/48, country:BG]
-X-Rspamd-Server: skulls
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.9.0
+Subject: Re: [RFC PATCH 1/1] mac80211: use AQL airtime for expected
+ throughput.
+Content-Language: en-US
+To:     Baligh GASMI <gasmibal@gmail.com>
+Cc:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        "open list:MAC80211" <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20220525103512.3666956-1-gasmibal@gmail.com>
+ <87r14hoox8.fsf@toke.dk>
+ <CALxDnQa8d8CGXz2Mxvsz5csLj3KuTDW=z65DSzHk5x1Vg+y-rw@mail.gmail.com>
+ <92ca6224-9232-2648-0123-7096aafa17fb@nbd.name>
+ <CALxDnQYHoZuv7hxLfagJRGRxw=UOFNmuBVHS8YghDwtfkLPAvg@mail.gmail.com>
+From:   Felix Fietkau <nbd@nbd.name>
+In-Reply-To: <CALxDnQYHoZuv7hxLfagJRGRxw=UOFNmuBVHS8YghDwtfkLPAvg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Reviewed-by: Petko Bordjukov <bordjukov@gmail.com>
-Signed-off-by: Stijn Tintel <stijn@linux-ipv6.be>
----
- db.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index fcdc74a..0d24e96 100644
---- a/db.txt
-+++ b/db.txt
-@@ -219,6 +219,10 @@ country BF: DFS-FCC
- # Harmonized CEPT countries (July 2019): https://www.ecodocdb.dk/downloa=
-d/25c41779-cd6e/Rec7003e.pdf
- # BG: https://crc.bg/files/_en/Electronic_Communications_Revised_EN1.pdf
- # BG: acceptance of 2006/771/EC https://crc.bg/files/Pravila_06_12_2018.=
-pdf
-+#
-+# Amendment of the rules for free use of radio frequency spectrum
-+# (=D0=98=D0=B7=D0=BC=D0=B5=D0=BD=D0=B5=D0=BD=D0=B8=D0=B5 =D0=B8 =D0=B4=D0=
-=BE=D0=BF=D1=8A=D0=BB=D0=BD=D0=B5=D0=BD=D0=B8=D0=B5 =D0=BD=D0=B0 =D0=9F=D1=
-=80=D0=B0=D0=B2=D0=B8=D0=BB=D0=B0=D1=82=D0=B0 =D0=B7=D0=B0 =D1=81=D0=B2=D0=
-=BE=D0=B1=D0=BE=D0=B4=D0=BD=D0=BE =D0=B8=D0=B7=D0=BF=D0=BE=D0=BB=D0=B7=D0=
-=B2=D0=B0=D0=BD=D0=B5 =D0=BD=D0=B0 =D1=80=D0=B0=D0=B4=D0=B8=D0=BE=D1=87=D0=
-=B5=D1=81=D1=82=D0=BE=D1=82=D0=BD=D0=B8=D1=8F =D1=81=D0=BF=D0=B5=D0=BA=D1=
-=82=D1=8A=D1=80)
-+# https://dv.parliament.bg/DVWeb/showMaterialDV.jsp?idMat=3D168250
- country BG: DFS-ETSI
- 	# Wideband data transmission systems (WDTS) in the 2.4GHz ISM band, ref=
-:
- 	# I.22 of the List, BDS EN 300 328
-@@ -232,6 +236,8 @@ country BG: DFS-ETSI
- 	# short range devices (ETSI EN 300 440-1)
- 	# I.43 of the List, BDS EN 300 440-2, BDS EN 300 440-1
- 	(5725 - 5875 @ 80), (25 mW)
-+	# WiFi 6E
-+	(5945 - 6425 @ 160), (200 mW), NO-OUTDOOR, wmmrule=3DETSI
- 	# 60 GHz band channels 1-4 (ETSI EN 302 567)
- 	# II.H03 of the List, BDS EN 302 567-2
- 	(57000 - 66000 @ 2160), (40)
---=20
-2.35.1
+On 25.05.22 15:37, Baligh GASMI wrote:
+> Indeed it's less expensive.
+> 
+> I'll try to make something in this direction to see what it looks like.
+Thanks. Please also make sure that all of this extra work is not 
+performed for drivers that don't need it, because they either implement 
+.get_expected_throughput, or use minstrel, which also implements it in a 
+better way.
 
+- Felix
