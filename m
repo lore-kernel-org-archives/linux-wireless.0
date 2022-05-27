@@ -2,91 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 732D5C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 May 2022 07:32:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 699C2C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 May 2022 07:42:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347099AbiE0Hck (ORCPT
+        id S1347714AbiE0Hmq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 May 2022 03:32:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46606 "EHLO
+        Fri, 27 May 2022 03:42:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234922AbiE0Hci (ORCPT
+        with ESMTP id S232238AbiE0Hmp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 May 2022 03:32:38 -0400
-Received: from smtp.smtpout.orange.fr (smtp08.smtpout.orange.fr [80.12.242.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E63ED780
-        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2022 00:32:34 -0700 (PDT)
-Received: from [192.168.1.18] ([90.11.191.102])
-        by smtp.orange.fr with ESMTPA
-        id uUSUn7gyWN260uUSUnhRNX; Fri, 27 May 2022 09:32:32 +0200
-X-ME-Helo: [192.168.1.18]
-X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
-X-ME-Date: Fri, 27 May 2022 09:32:32 +0200
-X-ME-IP: 90.11.191.102
-Message-ID: <a3e0df04-fb94-ef38-c2dc-1c41e6c721d9@wanadoo.fr>
-Date:   Fri, 27 May 2022 09:32:30 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH] mac80211: Directly use ida_alloc()/free()
-Content-Language: en-AU
-To:     liuke94@huawei.com
-References: <20220527074132.2474867-1-liuke94@huawei.com>
-Cc:     davem@davemloft.net, edumazet@google.com,
-        johannes@sipsolutions.net, kuba@kernel.org, kvalo@kernel.org,
+        Fri, 27 May 2022 03:42:45 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40032580C2;
+        Fri, 27 May 2022 00:42:43 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F2DE4B82379;
+        Fri, 27 May 2022 07:42:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B984C385A9;
+        Fri, 27 May 2022 07:42:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653637360;
+        bh=kvLjAhJUZwOT1jSXRhS7yxJi0KEXNe4QNcBlgYBEkCk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=bfrpP6Z208UuGf0ZWRZOLe8jn9Had31vzTrUGj94sXAnL2AmRM8geJK1tNSzBe1S5
+         /AohfMD6pJpkPRB9mGJqyIc6K12BTyqh1BViohz8l6zJNuKmb5i8b8uEp6bVbmqGx4
+         s12M6Qc/TnI3fIfv/+KO0bcP1fBXIQoUEvUAo+FwHvXOFZqN0jSNopIZevDQ7MsbNc
+         2cjm48JvpCvkVJUU3lRTqplybMnSMEuhBF00HjFx+rlimvOPRIoCTzgaI2ZTzLrJHe
+         wEXNlN1P6+H+/ZXTlKHrSFLl/6c21I2XQE1xskvta1EF8eeXJgbxz2axvPx/aSgoux
+         8SjkU2pG/FULw==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     liuke94@huawei.com, davem@davemloft.net, edumazet@google.com,
+        johannes@sipsolutions.net, kuba@kernel.org,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, pabeni@redhat.com
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <20220527074132.2474867-1-liuke94@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] mac80211: Directly use ida_alloc()/free()
+References: <20220527074132.2474867-1-liuke94@huawei.com>
+        <a3e0df04-fb94-ef38-c2dc-1c41e6c721d9@wanadoo.fr>
+Date:   Fri, 27 May 2022 10:42:33 +0300
+In-Reply-To: <a3e0df04-fb94-ef38-c2dc-1c41e6c721d9@wanadoo.fr> (Christophe
+        JAILLET's message of "Fri, 27 May 2022 09:32:30 +0200")
+Message-ID: <87czfzxvyu.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Christophe JAILLET <christophe.jaillet@wanadoo.fr> writes:
 
-Le 27/05/2022 à 09:41, keliu a écrit :
-> Use ida_alloc()/ida_free() instead of deprecated
-> ida_simple_get()/ida_simple_remove() .
-> 
-> Signed-off-by: keliu <liuke94-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->   drivers/net/wireless/mac80211_hwsim.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> index e9ec63e0e395..6ad884d9e9a4 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -290,8 +290,8 @@ static inline int hwsim_net_set_netgroup(struct net *net)
->   {
->   	struct hwsim_net *hwsim_net = net_generic(net, hwsim_net_id);
->   
-> -	hwsim_net->netgroup = ida_simple_get(&hwsim_netgroup_ida,
-> -					     0, 0, GFP_KERNEL);
-> +	hwsim_net->netgroup = ida_alloc(&hwsim_netgroup_ida,
-> +					     GFP_KERNEL);
-Nitpick: GFP_KERNEL should be on the same line if there is enough space 
-or aligned with &hwsim_netgroup_ida
+> Le 27/05/2022 =C3=A0 09:41, keliu a =C3=A9crit=C2=A0:
+>> Use ida_alloc()/ida_free() instead of deprecated
+>> ida_simple_get()/ida_simple_remove() .
+>>
+>> Signed-off-by: keliu <liuke94-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
+Heh, this email address got me confused :) I guess you (Christophe) use
+gmane and it's just some obfuscation done by gmane?
 
-Out of curiosity, how do you generate these patches?
-(coccinelle should be the perfect tool for it, but I thought it would 
-already deal with alignment)
+--=20
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-CJ
-
->   	return hwsim_net->netgroup >= 0 ? 0 : -ENOMEM;
->   }
->   
-> @@ -4733,7 +4733,7 @@ static void __net_exit hwsim_exit_net(struct net *net)
->   					 NULL);
->   	}
->   
-> -	ida_simple_remove(&hwsim_netgroup_ida, hwsim_net_get_netgroup(net));
-> +	ida_free(&hwsim_netgroup_ida, hwsim_net_get_netgroup(net));
->   }
->   
->   static struct pernet_operations hwsim_net_ops = {
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
