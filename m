@@ -2,73 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A29C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 May 2022 06:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87FDBC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 May 2022 07:20:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344311AbiE0GxH (ORCPT
+        id S243510AbiE0HUX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 May 2022 02:53:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36496 "EHLO
+        Fri, 27 May 2022 03:20:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232124AbiE0GxF (ORCPT
+        with ESMTP id S1345866AbiE0HUJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 May 2022 02:53:05 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5C346385
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2022 23:53:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 97AAFB8229D
-        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2022 06:53:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3841C385A9;
-        Fri, 27 May 2022 06:53:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653634382;
-        bh=KACWrvizCLaIbaDheYnOMIrrlolTDX4555BFL6JdWec=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=OJ2RwjFx3wLBdVMCIvkM5f8/Nqz7JShXD6A5qz3kWxaTpiZJERPqPlTvMllmKeRqp
-         krosoOQc0/fUP4xjzJwYmMhkp89MtBSYeBwQVQM10wEXVoxNXXi3Ff1DKpcUyqtMJk
-         360k7GY4lfqj/CfCtuYqsqT3aREGeycTbkhR4r6LnBWi5tAPX6B1EkFJfkFoXU5FF+
-         K0j9+p0SF4kIQmt0Vm0qkXBvSr4bcsVy0taHCWTpM/oqiJ33Rlvg12NKHDHFz/xKYg
-         fG95Epi5s0izUcD/xQ6LAmH1VwIeM46iwyHVGkTgRUst4WLuuNh6WTtWrRGi4GCmpf
-         Uc1Q0jJJoGKOQ==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     "tony0620emma\@gmail.com" <tony0620emma@gmail.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "megi\@xff.cz" <megi@xff.cz>, Bernie Huang <phhuang@realtek.com>
-Subject: Re: [PATCH] rtw88: add a work to correct atomic scheduling warning of ::set_tim
-References: <20220526051251.281905-1-pkshih@realtek.com>
-        <871qwfwksm.fsf@kernel.org>
-        <1a53b146ee034a058fad0f0d87a24e16@realtek.com>
-Date:   Fri, 27 May 2022 09:52:57 +0300
-In-Reply-To: <1a53b146ee034a058fad0f0d87a24e16@realtek.com> (Ping-Ke Shih's
-        message of "Fri, 27 May 2022 06:35:33 +0000")
-Message-ID: <87o7zjxy9i.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Fri, 27 May 2022 03:20:09 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EABAF68A2;
+        Fri, 27 May 2022 00:20:06 -0700 (PDT)
+Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.57])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4L8bmG6NVPzDqMG;
+        Fri, 27 May 2022 15:19:58 +0800 (CST)
+Received: from dggpemm500018.china.huawei.com (7.185.36.111) by
+ dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 27 May 2022 15:20:04 +0800
+Received: from localhost.localdomain (10.175.112.125) by
+ dggpemm500018.china.huawei.com (7.185.36.111) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Fri, 27 May 2022 15:20:03 +0800
+From:   keliu <liuke94@huawei.com>
+To:     <johannes@sipsolutions.net>, <kvalo@kernel.org>,
+        <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
+        <pabeni@redhat.com>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     keliu <liuke94@huawei.com>
+Subject: [PATCH] mac80211: Directly use ida_alloc()/free()
+Date:   Fri, 27 May 2022 07:41:32 +0000
+Message-ID: <20220527074132.2474867-1-liuke94@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.112.125]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemm500018.china.huawei.com (7.185.36.111)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> writes:
+Use ida_alloc()/ida_free() instead of deprecated
+ida_simple_get()/ida_simple_remove() .
 
->> > Fixes: f2217968ffda ("rtw88: Add update beacon flow for AP mode")
->> > Reported-by: Ond=C5=99ej Jirman <megi@xff.cz>
->> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
->>=20
->> Should I queue this to v5.19 (ie. take to wireles tree)?
->>=20
->
-> Yes, please. I think it would be good to have this fix.
+Signed-off-by: keliu <liuke94@huawei.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Ok, will do that.
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index e9ec63e0e395..6ad884d9e9a4 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -290,8 +290,8 @@ static inline int hwsim_net_set_netgroup(struct net *net)
+ {
+ 	struct hwsim_net *hwsim_net = net_generic(net, hwsim_net_id);
+ 
+-	hwsim_net->netgroup = ida_simple_get(&hwsim_netgroup_ida,
+-					     0, 0, GFP_KERNEL);
++	hwsim_net->netgroup = ida_alloc(&hwsim_netgroup_ida,
++					     GFP_KERNEL);
+ 	return hwsim_net->netgroup >= 0 ? 0 : -ENOMEM;
+ }
+ 
+@@ -4733,7 +4733,7 @@ static void __net_exit hwsim_exit_net(struct net *net)
+ 					 NULL);
+ 	}
+ 
+-	ida_simple_remove(&hwsim_netgroup_ida, hwsim_net_get_netgroup(net));
++	ida_free(&hwsim_netgroup_ida, hwsim_net_get_netgroup(net));
+ }
+ 
+ static struct pernet_operations hwsim_net_ops = {
+-- 
+2.25.1
 
---=20
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
