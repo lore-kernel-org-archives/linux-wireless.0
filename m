@@ -2,55 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A01C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B292C43219
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240322AbiE3O3K (ORCPT
+        id S240459AbiE3O3P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:29:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40188 "EHLO
+        Mon, 30 May 2022 10:29:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241201AbiE3ORV (ORCPT
+        with ESMTP id S241439AbiE3O0M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:17:21 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FF77118014;
-        Mon, 30 May 2022 06:44:52 -0700 (PDT)
+        Mon, 30 May 2022 10:26:12 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34E78AE270;
+        Mon, 30 May 2022 06:51:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8C222B80DB8;
-        Mon, 30 May 2022 13:44:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7FEAC3411C;
-        Mon, 30 May 2022 13:44:49 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B290EB80D86;
+        Mon, 30 May 2022 13:51:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EB61C3411E;
+        Mon, 30 May 2022 13:51:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918291;
-        bh=6GPI7gYf07+zFN1Ol/tp6iH7PZSLrK3qLnRFMdReihY=;
+        s=k20201202; t=1653918667;
+        bh=hxKkS62U9ALvBp+JqKwQV60CfqU/ls8qBQP0BkI0t/s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N6OrMFIYb6mRkiU6uhxkACdJ8bWfDrylL0UtX5OFtrcMXMm8F4ZnVX8vwNKyHiFpc
-         k2y8czltPfRVCfpWLI1BGvVjfqeM9ziu6tyGxhFhqOod5seie/r6fR3rBIRGCE1/Xk
-         bcCMwwY/9fz0hT9I5k37N0z+dw0vrhZO4a4deP1vZh3Hr8rwrylRcXQAeSZUB/Hxdl
-         H7PeRx/9SxHbi3eEtzVE1n6vaTnd1ES+mP2J9VHMM7UVLImaDDvOst0PsonhyEtL0Y
-         WgsxSkCxf5ZMmnUVrHrwRvQM5vV/StGAbVcvulJQOjia5PgjfEnz+Yx0P5HJNwZHLE
-         wHxTKJLIDhfWA==
+        b=gr2+eF2vcC/innIOB1CbkkW7DPBLoQs6bQXqgfyi8AhUEbCWuPBWd4/cc+K0QHhh2
+         Z+QzPmIw5lM6yYUwr2p7YqY3NfEk4YyKYoQOOdpzs2vg7lq06fTd48Q3AULmX9EOPa
+         J1Y9+hR7mE5j7XeIKukxfnKqSqe7eh2SUp1F+98pla2PdP9AVm00hnnk8Y23PQVl3A
+         nY+FRA8vjVBl4+B1FzSMMN1mx6FvWupxbgJY2S3xUYj6ncOjva0jFNd0R79bjpjUK5
+         7FYiYAF9KzOYmhzQQYIutsAMXfQhTPwfzYGZ7it4IqAVNSre0Gof50Cl5Hn1GYA4x8
+         F4MVTUifQIOUA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Thibaut=20VAR=C3=88NE?= <hacks+kernel@slashdirt.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 20/76] ath9k: fix QCA9561 PA bias level
-Date:   Mon, 30 May 2022 09:43:10 -0400
-Message-Id: <20220530134406.1934928-20-sashal@kernel.org>
+Cc:     Haowen Bai <baihaowen@meizu.com>, Kalle Valo <kvalo@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        thunder.leizhen@huawei.com, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 04/29] b43: Fix assigning negative value to unsigned variable
+Date:   Mon, 30 May 2022 09:50:31 -0400
+Message-Id: <20220530135057.1937286-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530134406.1934928-1-sashal@kernel.org>
-References: <20220530134406.1934928-1-sashal@kernel.org>
+In-Reply-To: <20220530135057.1937286-1-sashal@kernel.org>
+References: <20220530135057.1937286-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -58,49 +54,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
+From: Haowen Bai <baihaowen@meizu.com>
 
-[ Upstream commit e999a5da28a0e0f7de242d841ef7d5e48f4646ae ]
+[ Upstream commit 11800d893b38e0e12d636c170c1abc19c43c730c ]
 
-This patch fixes an invalid TX PA DC bias level on QCA9561, which
-results in a very low output power and very low throughput as devices
-are further away from the AP (compared to other 2.4GHz APs).
+fix warning reported by smatch:
+drivers/net/wireless/broadcom/b43/phy_n.c:585 b43_nphy_adjust_lna_gain_table()
+warn: assigning (-2) to unsigned variable '*(lna_gain[0])'
 
-This patch was suggested by Felix Fietkau, who noted[1]:
-"The value written to that register is wrong, because while the mask
-definition AR_CH0_TOP2_XPABIASLVL uses a different value for 9561, the
-shift definition AR_CH0_TOP2_XPABIASLVL_S is hardcoded to 12, which is
-wrong for 9561."
-
-In real life testing, without this patch the 2.4GHz throughput on
-Yuncore XD3200 is around 10Mbps sitting next to the AP, and closer to
-practical maximum with the patch applied.
-
-[1] https://lore.kernel.org/all/91c58969-c60e-2f41-00ac-737786d435ae@nbd.name
-
-Signed-off-by: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
-Acked-by: Felix Fietkau <nbd@nbd.name>
-Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20220417145145.1847-1-hacks+kernel@slashdirt.org
+Signed-off-by: Haowen Bai <baihaowen@meizu.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/1648203315-28093-1-git-send-email-baihaowen@meizu.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h | 2 +-
+ drivers/net/wireless/broadcom/b43/phy_n.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index a171dbb29fbb..ad949eb02f3d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -720,7 +720,7 @@
- #define AR_CH0_TOP2		(AR_SREV_9300(ah) ? 0x1628c : \
- 					(AR_SREV_9462(ah) ? 0x16290 : 0x16284))
- #define AR_CH0_TOP2_XPABIASLVL		(AR_SREV_9561(ah) ? 0x1e00 : 0xf000)
--#define AR_CH0_TOP2_XPABIASLVL_S	12
-+#define AR_CH0_TOP2_XPABIASLVL_S	(AR_SREV_9561(ah) ? 9 : 12)
+diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+index d1afa74aa144..9cbc17c2751c 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_n.c
++++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+@@ -594,7 +594,7 @@ static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
+ 	u16 data[4];
+ 	s16 gain[2];
+ 	u16 minmax[2];
+-	static const u16 lna_gain[4] = { -2, 10, 19, 25 };
++	static const s16 lna_gain[4] = { -2, 10, 19, 25 };
  
- #define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : \
- 				 ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16298 : \
+ 	if (nphy->hang_avoid)
+ 		b43_nphy_stay_in_carrier_search(dev, 1);
 -- 
 2.35.1
 
