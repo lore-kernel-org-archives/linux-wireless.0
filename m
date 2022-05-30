@@ -2,107 +2,75 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87366C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 15:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 848D1C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 16:17:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240091AbiE3PdY (ORCPT
+        id S240979AbiE3QRj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 11:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39454 "EHLO
+        Mon, 30 May 2022 12:17:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239492AbiE3PdQ (ORCPT
+        with ESMTP id S236528AbiE3QRi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 11:33:16 -0400
-X-Greylist: delayed 601 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 30 May 2022 07:36:19 PDT
-Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81DF7139AD4;
-        Mon, 30 May 2022 07:36:18 -0700 (PDT)
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-        by ns.iliad.fr (Postfix) with ESMTP id 440C42008F;
-        Mon, 30 May 2022 16:19:06 +0200 (CEST)
-Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
-        by ns.iliad.fr (Postfix) with ESMTP id 3B13620054;
-        Mon, 30 May 2022 16:19:06 +0200 (CEST)
-Message-ID: <c1c3472427080716c69ad99ebe5d1954db44f03f.camel@freebox.fr>
+        Mon, 30 May 2022 12:17:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6EF532E5;
+        Mon, 30 May 2022 09:17:38 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 648E06117C;
+        Mon, 30 May 2022 16:17:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 303EFC385B8;
+        Mon, 30 May 2022 16:17:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653927456;
+        bh=qHHh0cjImlR4BLowWXz8QANf5zqTuTKqGuIFNYJaDQk=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=EkRjYI4wx3Xwo1F4EnuMiAy57LbGC/ZW71t6byocramqJRn7QK0edBSh/Of0yPh6q
+         X3rvwY/n/s0XfK6vfRQi9bdReq0il8JNiD29vkk9kPffzVy5dUxS3Wi1Q0vQfBzT+e
+         grEWXh60c1egVeCRjUPHVqLNuisxGGferLGuNmyjn250hijZzp0FbtPzjqRkbw2wWF
+         xSu8FbdP/fjkrjsxxFHHiwphisa0C4vBNb30PM+t3jkuxIPv1PXTBNxtu3zh+w5IHn
+         EBMrtG3DD2mIttVDh7IYvIrpLp7sd30hZ5hw2UQxywjb0/i9qNoO+JJn3HYqGyMp6L
+         gNmPOEkV1q8+Q==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Maxime Bizon <mbizon@freebox.fr>
+Cc:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org, robh@kernel.org, mka@chromium.org
 Subject: Re: [PATCH v7 4/9] ath11k: Add register access logic for WCN6750
-From:   Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
-        ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        robh@kernel.org, mka@chromium.org
-Date:   Mon, 30 May 2022 16:19:06 +0200
-In-Reply-To: <c57e8791-b6ce-0752-52ca-a1cb938187d7@quicinc.com>
 References: <20220429170502.20080-1-quic_mpubbise@quicinc.com>
-         <20220429170502.20080-5-quic_mpubbise@quicinc.com>
-         <bd6d97a4cc6665d0ee632444f75e3480160387ec.camel@freebox.fr>
-         <c57e8791-b6ce-0752-52ca-a1cb938187d7@quicinc.com>
-Organization: Freebox
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Mon May 30 16:19:06 2022 +0200 (CEST)
+        <20220429170502.20080-5-quic_mpubbise@quicinc.com>
+        <bd6d97a4cc6665d0ee632444f75e3480160387ec.camel@freebox.fr>
+        <c57e8791-b6ce-0752-52ca-a1cb938187d7@quicinc.com>
+        <c1c3472427080716c69ad99ebe5d1954db44f03f.camel@freebox.fr>
+Date:   Mon, 30 May 2022 19:17:29 +0300
+In-Reply-To: <c1c3472427080716c69ad99ebe5d1954db44f03f.camel@freebox.fr>
+        (Maxime Bizon's message of "Mon, 30 May 2022 16:19:06 +0200")
+Message-ID: <871qwbouzq.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Maxime Bizon <mbizon@freebox.fr> writes:
 
-On Thu, 2022-05-26 at 09:12 +0530, Manikanta Pubbisetty wrote:
+> On Thu, 2022-05-26 at 09:12 +0530, Manikanta Pubbisetty wrote:
+>
+>> 
+>> Thanks for letting me know about this, IIRC I don't remember 
+>> encountering this problem in my testing. Just for my understanding,
+>> have you reverted this change and confirmed that these errors go away
+>> ?
+>
+> I first confirmed the register location was indeed incorrect, then I
+> fixed it like this:
 
-> 
-> Thanks for letting me know about this, IIRC I don't remember 
-> encountering this problem in my testing. Just for my understanding,
-> have you reverted this change and confirmed that these errors go away
-> ?
-
-I first confirmed the register location was indeed incorrect, then I
-fixed it like this:
-
---- a/drivers/net/wireless/ath/ath11k/pcic.c
-+++ b/drivers/net/wireless/ath/ath11k/pcic.c
-@@ -143,7 +143,7 @@ EXPORT_SYMBOL(ath11k_pcic_init_msi_config);
- static inline u32 ath11k_pcic_get_window_start(struct ath11k_base *ab,
- 					       u32 offset)
- {
--	u32 window_start = 0;
-+	u32 window_start = ATH11K_PCI_WINDOW_START;
- 
- 	if ((offset ^ HAL_SEQ_WCSS_UMAC_OFFSET) < ATH11K_PCI_WINDOW_RANGE_MASK)
- 		window_start = ab->hw_params.dp_window_idx * ATH11K_PCI_WINDOW_START;
-@@ -170,8 +170,12 @@ void ath11k_pcic_write32(struct ath11k_base *ab, u32 offset, u32 value)
- 		iowrite32(value, ab->mem  + offset);
- 	} else if (ab->hw_params.static_window_map) {
- 		window_start = ath11k_pcic_get_window_start(ab, offset);
--		iowrite32(value, ab->mem + window_start +
--			  (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
-+		if (window_start == ATH11K_PCI_WINDOW_START &&
-+                    ab->pci.ops->window_write32)
-+			ab->pci.ops->window_write32(ab, offset, value);
-+		else
-+			iowrite32(value, ab->mem + window_start +
-+				  (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
- 	} else if (ab->pci.ops->window_write32) {
- 		ab->pci.ops->window_write32(ab, offset, value);
- 	}
-@@ -200,8 +204,12 @@ u32 ath11k_pcic_read32(struct ath11k_base *ab, u32 offset)
- 		val = ioread32(ab->mem + offset);
- 	} else if (ab->hw_params.static_window_map) {
- 		window_start = ath11k_pcic_get_window_start(ab, offset);
--		val = ioread32(ab->mem + window_start +
--			       (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
-+		if (window_start == ATH11K_PCI_WINDOW_START &&
-+		    ab->pci.ops->window_read32)
-+			val = ab->pci.ops->window_read32(ab, offset);
-+		else
-+			val = ioread32(ab->mem + window_start +
-+				       (offset & ATH11K_PCI_WINDOW_RANGE_MASK));
- 	} else if (ab->pci.ops->window_read32) {
- 		val = ab->pci.ops->window_read32(ab, offset);
- 	}
+Looks good to me. Can you submit that as a proper patch?
 
 -- 
-Maxime
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
