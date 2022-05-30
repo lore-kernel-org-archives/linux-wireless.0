@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB330C4321E
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:24:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 458CEC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:25:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236537AbiE3NYl (ORCPT
+        id S236625AbiE3NZD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 09:24:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57216 "EHLO
+        Mon, 30 May 2022 09:25:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236539AbiE3NYk (ORCPT
+        with ESMTP id S236630AbiE3NY4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 09:24:40 -0400
+        Mon, 30 May 2022 09:24:56 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02F7F62F6;
-        Mon, 30 May 2022 06:24:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89DC68215A;
+        Mon, 30 May 2022 06:24:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8F45A60EE6;
-        Mon, 30 May 2022 13:24:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9ED55C3411F;
-        Mon, 30 May 2022 13:24:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1BB3F60E8E;
+        Mon, 30 May 2022 13:24:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AFCFC3411F;
+        Mon, 30 May 2022 13:24:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917078;
-        bh=bGvWXSsVYE8QDR2oEurh5TCb6bubWjqxrbK4wgMkhpQ=;
+        s=k20201202; t=1653917089;
+        bh=+WgOzsWRKetzAfOsz+S4/Q/45z6GGe4m0xrIXOZM+yA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Axnl1UMfJiFoY/5gMlKFTab/rk12IDCxAb96M56MpOBhvbnqyrMwZNG4qLqfcCFL2
-         qqnq9z52HMFEOyFEnSzvK/LoVFtrjxiblxtowkoEobpr9RXfgVei4JVtageApITrVf
-         2mWNTLjzod5J3JJ2aF2a429aEUqxCXAFKLfHskdoLC5Ios6EsH2ZQxS3PPVOXL8TWu
-         kvZ65Yt0Ad926QXhMM0se0eklRdX4jBwi6CCg1lFuD/t7mUBvGBKaZmVMUix03U1FB
-         KHtH2kJqlAkIfKotIIl6+WL/BuJ/0AVqliVXfPTxXGGMrQaopmvGgbR4iUOaFzawu+
-         x8VXxyS9pI0fg==
+        b=Vef2bsG5vKClxBkZEGJB30WM2c9eKD0rQLnBtHd8Ze0zBVpbmhYx1WvSPPd1gndDh
+         X7xIx1DK21xv4Wh4UQIyXrH0cuuOYxfA5bCxA3jJAlSiQWDjjCZKFvqF2r/oZfQlJb
+         Qx7lceUzTHwK6Dt/a6rDkCftEjPMD/NFiMHPZq397Wj+Bbpq2ygIOe6bRkf+ib22xt
+         /qQi/cPsacr77Xo2Gn0Xj7L69TRBLWo3rnA8TJowUfnYFYN3uJUioA9KF2q1LkPtKF
+         PipbcluxBGxG+S+ByTqZENNhwvxP4R6fhnDJg2PORnaArN/pUwqPBoBKpvzBdasBTt
+         gXU3G6Jk1JuxA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <quic_wgong@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 004/159] ath11k: fix the warning of dev_wake in mhi_pm_disable_transition()
-Date:   Mon, 30 May 2022 09:21:49 -0400
-Message-Id: <20220530132425.1929512-4-sashal@kernel.org>
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 010/159] rtw89: ser: fix CAM leaks occurring in L2 reset
+Date:   Mon, 30 May 2022 09:21:55 -0400
+Message-Id: <20220530132425.1929512-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530132425.1929512-1-sashal@kernel.org>
 References: <20220530132425.1929512-1-sashal@kernel.org>
@@ -55,131 +55,121 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <quic_wgong@quicinc.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-[ Upstream commit 0d7a8a6204ea9271f1d0a8c66a9fd2f54d2e3cbc ]
+[ Upstream commit b169f877f001a474fb89939842c390518160bcc5 ]
 
-When test device recovery with below command, it has warning in message
-as below.
-echo assert > /sys/kernel/debug/ath11k/wcn6855\ hw2.0/simulate_fw_crash
-echo assert > /sys/kernel/debug/ath11k/qca6390\ hw2.0/simulate_fw_crash
+The CAM, meaning address CAM and bssid CAM here, will get leaks during
+SER (system error recover) L2 reset process and ieee80211_restart_hw()
+which is called by L2 reset process eventually.
 
-warning message:
-[ 1965.642121] ath11k_pci 0000:06:00.0: simulating firmware assert crash
-[ 1968.471364] ieee80211 phy0: Hardware restart was requested
-[ 1968.511305] ------------[ cut here ]------------
-[ 1968.511368] WARNING: CPU: 3 PID: 1546 at drivers/bus/mhi/core/pm.c:505 mhi_pm_disable_transition+0xb37/0xda0 [mhi]
-[ 1968.511443] Modules linked in: ath11k_pci ath11k mac80211 libarc4 cfg80211 qmi_helpers qrtr_mhi mhi qrtr nvme nvme_core
-[ 1968.511563] CPU: 3 PID: 1546 Comm: kworker/u17:0 Kdump: loaded Tainted: G        W         5.17.0-rc3-wt-ath+ #579
-[ 1968.511629] Hardware name: Intel(R) Client Systems NUC8i7HVK/NUC8i7HVB, BIOS HNKBLi70.86A.0067.2021.0528.1339 05/28/2021
-[ 1968.511704] Workqueue: mhi_hiprio_wq mhi_pm_st_worker [mhi]
-[ 1968.511787] RIP: 0010:mhi_pm_disable_transition+0xb37/0xda0 [mhi]
-[ 1968.511870] Code: a9 fe ff ff 4c 89 ff 44 89 04 24 e8 03 46 f6 e5 44 8b 04 24 41 83 f8 01 0f 84 21 fe ff ff e9 4c fd ff ff 0f 0b e9 af f8 ff ff <0f> 0b e9 5c f8 ff ff 48 89 df e8 da 9e ee e3 e9 12 fd ff ff 4c 89
-[ 1968.511923] RSP: 0018:ffffc900024efbf0 EFLAGS: 00010286
-[ 1968.511969] RAX: 00000000ffffffff RBX: ffff88811d241250 RCX: ffffffffc0176922
-[ 1968.512014] RDX: 0000000000000000 RSI: 0000000000000004 RDI: ffff888118a90a24
-[ 1968.512059] RBP: ffff888118a90800 R08: 0000000000000000 R09: ffff888118a90a27
-[ 1968.512102] R10: ffffed1023152144 R11: 0000000000000001 R12: ffff888118a908ac
-[ 1968.512229] R13: ffff888118a90928 R14: dffffc0000000000 R15: ffff888118a90a24
-[ 1968.512310] FS:  0000000000000000(0000) GS:ffff888234200000(0000) knlGS:0000000000000000
-[ 1968.512405] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1968.512493] CR2: 00007f5538f443a8 CR3: 000000016dc28001 CR4: 00000000003706e0
-[ 1968.512587] Call Trace:
-[ 1968.512672]  <TASK>
-[ 1968.512751]  ? _raw_spin_unlock_irq+0x1f/0x40
-[ 1968.512859]  mhi_pm_st_worker+0x3ac/0x790 [mhi]
-[ 1968.512959]  ? mhi_pm_mission_mode_transition.isra.0+0x7d0/0x7d0 [mhi]
-[ 1968.513063]  process_one_work+0x86a/0x1400
-[ 1968.513184]  ? pwq_dec_nr_in_flight+0x230/0x230
-[ 1968.513312]  ? move_linked_works+0x125/0x290
-[ 1968.513416]  worker_thread+0x6db/0xf60
-[ 1968.513536]  ? process_one_work+0x1400/0x1400
-[ 1968.513627]  kthread+0x241/0x2d0
-[ 1968.513733]  ? kthread_complete_and_exit+0x20/0x20
-[ 1968.513821]  ret_from_fork+0x22/0x30
-[ 1968.513924]  </TASK>
+The normal flow would be like
+-> add interface (acquire 1)
+-> enter ips (release 1)
+-> leave ips (acquire 1)
+-> connection (occupy 1) <(A) 1 leak after L2 reset if non-sec connection>
 
-Reason is mhi_deassert_dev_wake() from mhi_device_put() is called
-but mhi_assert_dev_wake() from __mhi_device_get_sync() is not called
-in progress of recovery. Commit 8e0559921f9a ("bus: mhi: core:
-Skip device wake in error or shutdown state") add check for the
-pm_state of mhi in __mhi_device_get_sync(), and the pm_state is not
-the normal state untill recovery is completed, so it leads the
-dev_wake is not 0 and above warning print in mhi_pm_disable_transition()
-while checking mhi_cntrl->dev_wake.
+The ieee80211_restart_hw() flow (under connection)
+-> ieee80211 reconfig
+-> add interface (acquire 1)
+-> leave ips (acquire 1)
+-> connection (occupy (A) + 2) <(B) 1 more leak>
 
-Add check in ath11k_pci_write32()/ath11k_pci_read32() to skip call
-mhi_device_put() if mhi_device_get_sync() does not really do wake,
-then the warning gone.
+Originally, CAM is released before HW restart only if connection is under
+security. Now, release CAM whatever connection it is to fix leak in (A).
+OTOH, check if CAM is already valid to avoid acquiring multiple times to
+fix (B).
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03003-QCAHSPSWPL_V1_V2_SILICONZ_LITE-2
+Besides, if AP mode, release address CAM of all stations before HW restart.
 
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20220228064606.8981-5-quic_wgong@quicinc.com
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20220314071250.40292-2-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/pci.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/cam.c | 14 ++++++++++++--
+ drivers/net/wireless/realtek/rtw89/ser.c | 21 +++++++++++++++++++++
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 903758751c99..8a3ff12057e8 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -191,6 +191,7 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
+diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wireless/realtek/rtw89/cam.c
+index 305dbbebff6b..26bef9fdd205 100644
+--- a/drivers/net/wireless/realtek/rtw89/cam.c
++++ b/drivers/net/wireless/realtek/rtw89/cam.c
+@@ -421,10 +421,8 @@ static void rtw89_cam_reset_key_iter(struct ieee80211_hw *hw,
+ 				     void *data)
  {
- 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
- 	u32 window_start;
-+	int ret = 0;
+ 	struct rtw89_dev *rtwdev = (struct rtw89_dev *)data;
+-	struct rtw89_vif *rtwvif = (struct rtw89_vif *)vif->drv_priv;
  
- 	/* for offset beyond BAR + 4K - 32, may
- 	 * need to wakeup MHI to access.
-@@ -198,7 +199,7 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
- 	    offset >= ACCESS_ALWAYS_OFF)
--		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
-+		ret = mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
- 
- 	if (offset < WINDOW_START) {
- 		iowrite32(value, ab->mem  + offset);
-@@ -222,7 +223,8 @@ void ath11k_pci_write32(struct ath11k_base *ab, u32 offset, u32 value)
- 
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
--	    offset >= ACCESS_ALWAYS_OFF)
-+	    offset >= ACCESS_ALWAYS_OFF &&
-+	    !ret)
- 		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
+ 	rtw89_cam_sec_key_del(rtwdev, vif, sta, key, false);
+-	rtw89_cam_deinit(rtwdev, rtwvif);
  }
  
-@@ -230,6 +232,7 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
+ void rtw89_cam_deinit_addr_cam(struct rtw89_dev *rtwdev,
+@@ -480,6 +478,12 @@ int rtw89_cam_init_addr_cam(struct rtw89_dev *rtwdev,
+ 	int i;
+ 	int ret;
+ 
++	if (unlikely(addr_cam->valid)) {
++		rtw89_debug(rtwdev, RTW89_DBG_FW,
++			    "addr cam is already valid; skip init\n");
++		return 0;
++	}
++
+ 	ret = rtw89_cam_get_avail_addr_cam(rtwdev, &addr_cam_idx);
+ 	if (ret) {
+ 		rtw89_err(rtwdev, "failed to get available addr cam\n");
+@@ -531,6 +535,12 @@ static int rtw89_cam_init_bssid_cam(struct rtw89_dev *rtwdev,
+ 	u8 bssid_cam_idx;
+ 	int ret;
+ 
++	if (unlikely(bssid_cam->valid)) {
++		rtw89_debug(rtwdev, RTW89_DBG_FW,
++			    "bssid cam is already valid; skip init\n");
++		return 0;
++	}
++
+ 	ret = rtw89_cam_get_avail_bssid_cam(rtwdev, &bssid_cam_idx);
+ 	if (ret) {
+ 		rtw89_err(rtwdev, "failed to get available bssid cam\n");
+diff --git a/drivers/net/wireless/realtek/rtw89/ser.c b/drivers/net/wireless/realtek/rtw89/ser.c
+index 837cdc366a61..e86f3d89ef1b 100644
+--- a/drivers/net/wireless/realtek/rtw89/ser.c
++++ b/drivers/net/wireless/realtek/rtw89/ser.c
+@@ -220,11 +220,32 @@ static void ser_reset_vif(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
+ 	rtwvif->trigger = false;
+ }
+ 
++static void ser_sta_deinit_addr_cam_iter(void *data, struct ieee80211_sta *sta)
++{
++	struct rtw89_dev *rtwdev = (struct rtw89_dev *)data;
++	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
++
++	rtw89_cam_deinit_addr_cam(rtwdev, &rtwsta->addr_cam);
++}
++
++static void ser_deinit_cam(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
++{
++	if (rtwvif->net_type == RTW89_NET_TYPE_AP_MODE)
++		ieee80211_iterate_stations_atomic(rtwdev->hw,
++						  ser_sta_deinit_addr_cam_iter,
++						  rtwdev);
++
++	rtw89_cam_deinit(rtwdev, rtwvif);
++}
++
+ static void ser_reset_mac_binding(struct rtw89_dev *rtwdev)
  {
- 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
- 	u32 val, window_start;
-+	int ret = 0;
+ 	struct rtw89_vif *rtwvif;
  
- 	/* for offset beyond BAR + 4K - 32, may
- 	 * need to wakeup MHI to access.
-@@ -237,7 +240,7 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
- 	    offset >= ACCESS_ALWAYS_OFF)
--		mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
-+		ret = mhi_device_get_sync(ab_pci->mhi_ctrl->mhi_dev);
- 
- 	if (offset < WINDOW_START) {
- 		val = ioread32(ab->mem + offset);
-@@ -261,7 +264,8 @@ u32 ath11k_pci_read32(struct ath11k_base *ab, u32 offset)
- 
- 	if (ab->hw_params.wakeup_mhi &&
- 	    test_bit(ATH11K_PCI_FLAG_INIT_DONE, &ab_pci->flags) &&
--	    offset >= ACCESS_ALWAYS_OFF)
-+	    offset >= ACCESS_ALWAYS_OFF &&
-+	    !ret)
- 		mhi_device_put(ab_pci->mhi_ctrl->mhi_dev);
- 
- 	return val;
+ 	rtw89_cam_reset_keys(rtwdev);
++	rtw89_for_each_rtwvif(rtwdev, rtwvif)
++		ser_deinit_cam(rtwdev, rtwvif);
++
+ 	rtw89_core_release_all_bits_map(rtwdev->mac_id_map, RTW89_MAX_MAC_ID_NUM);
+ 	rtw89_for_each_rtwvif(rtwdev, rtwvif)
+ 		ser_reset_vif(rtwdev, rtwvif);
 -- 
 2.35.1
 
