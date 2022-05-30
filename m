@@ -2,50 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FCF3C43219
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6665CC4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240590AbiE3O3d (ORCPT
+        id S240544AbiE3O3X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:29:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42384 "EHLO
+        Mon, 30 May 2022 10:29:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241456AbiE3O0M (ORCPT
+        with ESMTP id S241507AbiE3OXQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:26:12 -0400
+        Mon, 30 May 2022 10:23:16 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEA1363FF;
-        Mon, 30 May 2022 06:51:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5524129ED2;
+        Mon, 30 May 2022 06:50:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9BA3B60FD4;
-        Mon, 30 May 2022 13:51:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDE62C3411F;
-        Mon, 30 May 2022 13:51:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 38C5061026;
+        Mon, 30 May 2022 13:50:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4ADC6C3411C;
+        Mon, 30 May 2022 13:50:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918669;
-        bh=oPb496vJ6O8l9Viexv5dOp3zu04IOVFFRg10fGCG5Ig=;
+        s=k20201202; t=1653918631;
+        bh=umaa8jCu5E8/u6FLaiQrSe6BnyGZgLVOs7bGDzT3q7o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=C54/yxhC9cTgwWM8AzQIssmeNp0XUtqleHWlzKl5FHo465Ou4LKDrGJnSXMtO2Rnp
-         qNqJnWw21BhrwRSjyJrfPUBpKXHuz24tgppdS5YOxY4kkR4VBjcQccEk7x/Wl+mI8G
-         CPsD9UBDs2VGRV67AVerfxaQEw3w5ofbWnYyngT3uIiVToAhLAeQIZb9NyPmbTzZwV
-         szr/wae4pcTq5EbR6UUsUIYtbMOa0919jzZub6IaI3c96ke0T+RxLBOHFsC8/OVYd1
-         gzvwMTx8jaNPXUYMpEm/QY12pIiRUK7oe9/FwjB5XtLnk5Avljm2kmD+qbCU6Z9lAo
-         /VAfp+qFZVSQw==
+        b=M29PSQ+cZN8wLizfgfbiaENoad3/Vtimg1VwDQOawl3BwvnggGgH0nErGFiEG6ma+
+         ehUEKapYeBvScw6QzsHkrgH8LcynM6aFuWHIHSR2Pi8w8+F1Szsc5647QC4Do1Icm1
+         Mn5FuyY/dE0DSYBq+q2kgvEVnqDssATBcve7OrlVzVVI8pXwlp/xGzwEGQD9XUT8Ec
+         BdqwzsXygTdciuB499pJHlQBJehPmy9KXwexfkKfHlVNt+MxvGS7GwAIp4VZNWy1tN
+         dFVZTQgiWEUnJRFKKBjr3MjvdpJVS+gCYUvvUyoHfrk98RldCqvTVNHJaQohSngtry
+         x74ZuF4bF2biA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Haowen Bai <baihaowen@meizu.com>, Kalle Valo <kvalo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, stas.yakovlev@gmail.com,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+Cc:     Dongliang Mu <mudongliangabcd@gmail.com>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        pkshih@realtek.com, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 05/29] ipw2x00: Fix potential NULL dereference in libipw_xmit()
-Date:   Mon, 30 May 2022 09:50:32 -0400
-Message-Id: <20220530135057.1937286-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 28/38] rtlwifi: Use pr_warn instead of WARN_ONCE
+Date:   Mon, 30 May 2022 09:49:14 -0400
+Message-Id: <20220530134924.1936816-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530135057.1937286-1-sashal@kernel.org>
-References: <20220530135057.1937286-1-sashal@kernel.org>
+In-Reply-To: <20220530134924.1936816-1-sashal@kernel.org>
+References: <20220530134924.1936816-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,34 +55,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haowen Bai <baihaowen@meizu.com>
+From: Dongliang Mu <mudongliangabcd@gmail.com>
 
-[ Upstream commit e8366bbabe1d207cf7c5b11ae50e223ae6fc278b ]
+[ Upstream commit ad732da434a2936128769216eddaece3b1af4588 ]
 
-crypt and crypt->ops could be null, so we need to checking null
-before dereference
+This memory allocation failure can be triggered by fault injection or
+high pressure testing, resulting a WARN.
 
-Signed-off-by: Haowen Bai <baihaowen@meizu.com>
+Fix this by replacing WARN with pr_warn.
+
+Reported-by: syzkaller <syzkaller@googlegroups.com>
+Signed-off-by: Dongliang Mu <mudongliangabcd@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/1648797055-25730-1-git-send-email-baihaowen@meizu.com
+Link: https://lore.kernel.org/r/20220511014453.1621366-1-dzm91@hust.edu.cn
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/ipw2x00/libipw_tx.c | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
-index 84205aa508df..daa4f9eb08ff 100644
---- a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
-+++ b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
-@@ -397,7 +397,7 @@ netdev_tx_t libipw_xmit(struct sk_buff *skb, struct net_device *dev)
- 
- 		/* Each fragment may need to have room for encryption
- 		 * pre/postfix */
--		if (host_encrypt)
-+		if (host_encrypt && crypt && crypt->ops)
- 			bytes_per_frag -= crypt->ops->extra_mpdu_prefix_len +
- 			    crypt->ops->extra_mpdu_postfix_len;
- 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 3d6c0d8c71d7..395671383ca9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1042,7 +1042,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
+ 				sizeof(struct rtl_usb_priv), &rtl_ops);
+ 	if (!hw) {
+-		WARN_ONCE(true, "rtl_usb: ieee80211 alloc failed\n");
++		pr_warn("rtl_usb: ieee80211 alloc failed\n");
+ 		return -ENOMEM;
+ 	}
+ 	rtlpriv = hw->priv;
 -- 
 2.35.1
 
