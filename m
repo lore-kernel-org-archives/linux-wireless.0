@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E209C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E91A1C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241213AbiE3Ooa (ORCPT
+        id S241171AbiE3Ooe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:44:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35122 "EHLO
+        Mon, 30 May 2022 10:44:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242533AbiE3OmU (ORCPT
+        with ESMTP id S242462AbiE3OmU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 30 May 2022 10:42:20 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39B5C14AC8B
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 817FE14AC97
         for <linux-wireless@vger.kernel.org>; Mon, 30 May 2022 06:55:14 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1nvfrO-0007UL-PS; Mon, 30 May 2022 15:55:06 +0200
+        id 1nvfrO-0007Ub-PZ; Mon, 30 May 2022 15:55:06 +0200
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1nvfrO-005Sm3-1K; Mon, 30 May 2022 15:55:04 +0200
+        id 1nvfrO-005SmI-LG; Mon, 30 May 2022 15:55:05 +0200
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1nvfrL-004dIf-KB; Mon, 30 May 2022 15:55:03 +0200
+        id 1nvfrL-004dIZ-Hf; Mon, 30 May 2022 15:55:03 +0200
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -38,9 +38,9 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
         kernel@pengutronix.de, Johannes Berg <johannes@sipsolutions.net>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v2 07/10] rtw88: Add rtw8821cu chipset support
-Date:   Mon, 30 May 2022 15:54:54 +0200
-Message-Id: <20220530135457.1104091-8-s.hauer@pengutronix.de>
+Subject: [PATCH v2 05/10] rtw88: iterate over vif/sta list non-atomically
+Date:   Mon, 30 May 2022 15:54:52 +0200
+Message-Id: <20220530135457.1104091-6-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220530135457.1104091-1-s.hauer@pengutronix.de>
 References: <20220530135457.1104091-1-s.hauer@pengutronix.de>
@@ -54,230 +54,219 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for the rtw8821cu chipset based on
-https://github.com/ulli-kroll/rtw88-usb.git
+The driver uses ieee80211_iterate_active_interfaces_atomic()
+and ieee80211_iterate_stations_atomic() in several places and does
+register accesses in the iterators. This doesn't cope with upcoming
+USB support as registers can only be accessed non-atomically.
+
+Split these into a two stage process: First use the atomic iterator
+functions to collect all active interfaces or stations on a list, then
+iterate over the list non-atomically and call the iterator on each
+entry.
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Suggested-by: Pkshih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/Kconfig    | 11 ++++
- drivers/net/wireless/realtek/rtw88/Makefile   |  3 ++
- drivers/net/wireless/realtek/rtw88/rtw8821c.c | 23 +++++++++
- drivers/net/wireless/realtek/rtw88/rtw8821c.h | 21 ++++++++
- .../net/wireless/realtek/rtw88/rtw8821cu.c    | 50 +++++++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8821cu.h    | 10 ++++
- 6 files changed, 118 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
-index 1624c5db69bac..2b500dbefbc2d 100644
---- a/drivers/net/wireless/realtek/rtw88/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw88/Kconfig
-@@ -75,6 +75,17 @@ config RTW88_8821CE
+Notes:
+    Changes since v1:
+    - Change subject
+    - Add some lockdep_assert_held(&rtwdev->mutex);
+    - make locally used functions static
+    - Add comment how &rtwdev->mutex protects us from stations/interfaces
+      being deleted between collecting them and iterating over them.
+
+ drivers/net/wireless/realtek/rtw88/phy.c  |   6 +-
+ drivers/net/wireless/realtek/rtw88/ps.c   |   2 +-
+ drivers/net/wireless/realtek/rtw88/util.c | 103 ++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/util.h |  12 ++-
+ 4 files changed, 116 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index e505d17f107e4..5521a7c2c1afe 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -300,7 +300,7 @@ static void rtw_phy_stat_rssi(struct rtw_dev *rtwdev)
  
- 	  802.11ac PCIe wireless network adapter
+ 	data.rtwdev = rtwdev;
+ 	data.min_rssi = U8_MAX;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_stat_rssi_iter, &data);
++	rtw_iterate_stas(rtwdev, rtw_phy_stat_rssi_iter, &data);
  
-+config RTW88_8821CU
-+	tristate "Realtek 8821CU USB wireless network adapter"
-+	depends on USB
-+	select RTW88_CORE
-+	select RTW88_USB
-+	select RTW88_8821C
-+	help
-+	  Select this option will enable support for 8821CU chipset
-+
-+	  802.11ac USB wireless network adapter
-+
- config RTW88_DEBUG
- 	bool "Realtek rtw88 debug support"
- 	depends on RTW88_CORE
-diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
-index 9e095f8181483..3c1f08f12e44e 100644
---- a/drivers/net/wireless/realtek/rtw88/Makefile
-+++ b/drivers/net/wireless/realtek/rtw88/Makefile
-@@ -44,6 +44,9 @@ rtw88_8821c-objs		:= rtw8821c.o rtw8821c_table.o
- obj-$(CONFIG_RTW88_8821CE)	+= rtw88_8821ce.o
- rtw88_8821ce-objs		:= rtw8821ce.o
+ 	dm_info->pre_min_rssi = dm_info->min_rssi;
+ 	dm_info->min_rssi = data.min_rssi;
+@@ -544,7 +544,7 @@ static void rtw_phy_ra_info_update(struct rtw_dev *rtwdev)
+ 	if (rtwdev->watch_dog_cnt & 0x3)
+ 		return;
  
-+obj-$(CONFIG_RTW88_8821CU)	+= rtw88_8821cu.o
-+rtw88_8821cu-objs		:= rtw8821cu.o
-+
- obj-$(CONFIG_RTW88_PCI)		+= rtw88_pci.o
- obj-$(CONFIG_RTW88_USB)		+= rtw88_usb.o
- rtw88_pci-objs			:= pci.o
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-index 99eee128ae945..82e78559d8264 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-@@ -26,6 +26,12 @@ static void rtw8821ce_efuse_parsing(struct rtw_efuse *efuse,
- 	ether_addr_copy(efuse->addr, map->e.mac_addr);
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
  }
  
-+static void rtw8821cu_efuse_parsing(struct rtw_efuse *efuse,
-+				    struct rtw8821c_efuse *map)
-+{
-+	ether_addr_copy(efuse->addr, map->u.mac_addr);
-+}
-+
- enum rtw8821ce_rf_set {
- 	SWITCH_TO_BTG,
- 	SWITCH_TO_WLG,
-@@ -68,6 +74,9 @@ static int rtw8821c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- 	case RTW_HCI_TYPE_PCIE:
- 		rtw8821ce_efuse_parsing(efuse, map);
- 		break;
-+	case RTW_HCI_TYPE_USB:
-+		rtw8821cu_efuse_parsing(efuse, map);
-+		break;
- 	default:
- 		/* unsupported now */
- 		return -ENOTSUPP;
-@@ -1142,6 +1151,18 @@ static void rtw8821c_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
- 			 dm_info->cck_pd_default + new_lvl * 2);
+ static u32 rtw_phy_get_rrsr_mask(struct rtw_dev *rtwdev, u8 rate_idx)
+@@ -597,7 +597,7 @@ static void rtw_phy_rrsr_update(struct rtw_dev *rtwdev)
+ 	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 
+ 	dm_info->rrsr_mask_min = RRSR_RATE_ORDER_MAX;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_rrsr_mask_min_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_phy_rrsr_mask_min_iter, rtwdev);
+ 	rtw_write32(rtwdev, REG_RRSR, dm_info->rrsr_val_init & dm_info->rrsr_mask_min);
  }
  
-+static void rtw8821c_fill_txdesc_checksum(struct rtw_dev *rtwdev,
-+					  struct rtw_tx_pkt_info *pkt_info,
-+					  u8 *txdesc)
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
+index bfa64c038f5f0..a7213ff2c2244 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.c
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -58,7 +58,7 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
+ 		return ret;
+ 	}
+ 
+-	rtw_iterate_vifs_atomic(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
++	rtw_iterate_vifs(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
+ 
+ 	rtw_coex_ips_notify(rtwdev, COEX_IPS_LEAVE);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/util.c b/drivers/net/wireless/realtek/rtw88/util.c
+index 2c515af214e76..ed61c962fa27f 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.c
++++ b/drivers/net/wireless/realtek/rtw88/util.c
+@@ -105,3 +105,106 @@ void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
+ 		*mcs = rate - DESC_RATEMCS0;
+ 	}
+ }
++
++struct rtw_stas_entry {
++	struct list_head list;
++	struct ieee80211_sta *sta;
++};
++
++struct rtw_iter_stas_data {
++	struct rtw_dev *rtwdev;
++	struct list_head list;
++};
++
++static void rtw_collect_sta_iter(void *data, struct ieee80211_sta *sta)
 +{
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	size_t words;
++	struct rtw_iter_stas_data *iter_stas = data;
++	struct rtw_stas_entry *stas_entry;
 +
-+	words = (pkt_info->pkt_offset * 8 + chip->tx_pkt_desc_sz) / 2;
++	stas_entry = kmalloc(sizeof(*stas_entry), GFP_ATOMIC);
++	if (!stas_entry)
++		return;
 +
-+	fill_txdesc_checksum_common(txdesc, words);
++	stas_entry->sta = sta;
++	list_add_tail(&stas_entry->list, &iter_stas->list);
 +}
 +
- static struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8821c[] = {
- 	{0x0086,
- 	 RTW_PWR_CUT_ALL_MSK,
-@@ -1515,6 +1536,7 @@ static const struct rtw_rfe_def rtw8821c_rfe_defs[] = {
- 	[2] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
- 	[4] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
- 	[6] = RTW_DEF_RFE(8821c, 0, 0),
-+	[34] = RTW_DEF_RFE(8821c, 0, 0),
- };
- 
- static struct rtw_hw_reg rtw8821c_dig[] = {
-@@ -1589,6 +1611,7 @@ static struct rtw_chip_ops rtw8821c_ops = {
- 	.config_bfee		= rtw8821c_bf_config_bfee,
- 	.set_gid_table		= rtw_bf_set_gid_table,
- 	.cfg_csi_rate		= rtw_bf_cfg_csi_rate,
-+	.fill_txdesc_checksum	= rtw8821c_fill_txdesc_checksum,
- 
- 	.coex_set_init		= rtw8821c_coex_cfg_init,
- 	.coex_set_ant_switch	= rtw8821c_coex_cfg_ant_switch,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-index d9fbddd7b0f35..e2e17a822e48d 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
-@@ -9,6 +9,26 @@
- 
- #define RCR_VHT_ACK		BIT(26)
- 
-+struct rtw8821cu_efuse {
-+	u8 res4[4];			/* 0xd0 */
-+	u8 usb_optional_function;
-+	u8 res5[0x1e];
-+	u8 res6[2];
-+	u8 serial[0x0b];		/* 0xf5 */
-+	u8 vid;				/* 0x100 */
-+	u8 res7;
-+	u8 pid;
-+	u8 res8[4];
-+	u8 mac_addr[ETH_ALEN];		/* 0x107 */
-+	u8 res9[2];
-+	u8 vendor_name[0x07];
-+	u8 res10[2];
-+	u8 device_name[0x14];
-+	u8 res11[0xcf];
-+	u8 package_type;		/* 0x1fb */
-+	u8 res12[0x4];
-+};
-+
- struct rtw8821ce_efuse {
- 	u8 mac_addr[ETH_ALEN];		/* 0xd0 */
- 	u8 vender_id[2];
-@@ -73,6 +93,7 @@ struct rtw8821c_efuse {
- 	u8 res[3];
- 	union {
- 		struct rtw8821ce_efuse e;
-+		struct rtw8821cu_efuse u;
- 	};
- };
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821cu.c b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
-new file mode 100644
-index 0000000000000..f43e200515f5b
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
-@@ -0,0 +1,50 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/* Copyright(c) 2018-2019  Realtek Corporation
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/usb.h>
-+#include "main.h"
-+#include "rtw8821cu.h"
-+#include "usb.h"
-+
-+static const struct usb_device_id rtw_8821cu_id_table[] = {
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xb82b, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xb820, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc821, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc820, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc82a, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc82b, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc811, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8811CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0x8811, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8811CU */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0x2006, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* TOTOLINK A650UA v3 */
-+	{},
-+};
-+MODULE_DEVICE_TABLE(usb, rtw_8821cu_id_table);
-+
-+static int rtw_8821cu_probe(struct usb_interface *intf,
-+			    const struct usb_device_id *id)
++void rtw_iterate_stas(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data,
++				       struct ieee80211_sta *sta),
++		      void *data)
 +{
-+	return rtw_usb_probe(intf, id);
++	struct rtw_iter_stas_data iter_data;
++	struct rtw_stas_entry *sta_entry, *tmp;
++
++	/* &rtwdev->mutex makes sure no stations can be removed between
++	 * collecting the stations and iterating over them.
++	 */
++	lockdep_assert_held(&rtwdev->mutex);
++
++	iter_data.rtwdev = rtwdev;
++	INIT_LIST_HEAD(&iter_data.list);
++
++	ieee80211_iterate_stations_atomic(rtwdev->hw, rtw_collect_sta_iter,
++					  &iter_data);
++
++	list_for_each_entry_safe(sta_entry, tmp, &iter_data.list,
++				 list) {
++		list_del_init(&sta_entry->list);
++		iterator(data, sta_entry->sta);
++		kfree(sta_entry);
++	}
 +}
 +
-+static struct usb_driver rtw_8821cu_driver = {
-+	.name = "rtw_8821cu",
-+	.id_table = rtw_8821cu_id_table,
-+	.probe = rtw_8821cu_probe,
-+	.disconnect = rtw_usb_disconnect,
++struct rtw_vifs_entry {
++	struct list_head list;
++	struct ieee80211_vif *vif;
++	u8 mac[ETH_ALEN];
 +};
-+module_usb_driver(rtw_8821cu_driver);
 +
-+MODULE_AUTHOR("Hans Ulli Kroll <linux@ulli-kroll.de>");
-+MODULE_DESCRIPTION("Realtek 802.11ac wireless 8821cu driver");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821cu.h b/drivers/net/wireless/realtek/rtw88/rtw8821cu.h
-new file mode 100644
-index 0000000000000..c896792240011
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821cu.h
-@@ -0,0 +1,10 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
-+/* Copyright(c) 2018-2019  Realtek Corporation
-+ */
++struct rtw_iter_vifs_data {
++	struct rtw_dev *rtwdev;
++	struct list_head list;
++};
 +
-+#ifndef __RTW_8821CU_H_
-+#define __RTW_8821CU_H_
++void rtw_collect_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++{
++	struct rtw_iter_vifs_data *iter_stas = data;
++	struct rtw_vifs_entry *vifs_entry;
 +
-+extern struct rtw_chip_info rtw8821c_hw_spec;
++	vifs_entry = kmalloc(sizeof(*vifs_entry), GFP_ATOMIC);
++	if (!vifs_entry)
++		return;
 +
-+#endif
++	vifs_entry->vif = vif;
++	ether_addr_copy(vifs_entry->mac, mac);
++	list_add_tail(&vifs_entry->list, &iter_stas->list);
++}
++
++void rtw_iterate_vifs(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data, u8 *mac,
++				       struct ieee80211_vif *vif),
++		      void *data)
++{
++	struct rtw_iter_vifs_data iter_data;
++	struct rtw_vifs_entry *vif_entry, *tmp;
++
++	/* &rtwdev->mutex makes sure no interfaces can be removed between
++	 * collecting the interfaces and iterating over them.
++	 */
++	lockdep_assert_held(&rtwdev->mutex);
++
++	iter_data.rtwdev = rtwdev;
++	INIT_LIST_HEAD(&iter_data.list);
++
++	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   rtw_collect_vif_iter, &iter_data);
++
++	list_for_each_entry_safe(vif_entry, tmp, &iter_data.list,
++				 list) {
++		list_del_init(&vif_entry->list);
++		iterator(data, vif_entry->mac, vif_entry->vif);
++		kfree(vif_entry);
++	}
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
+index 0c23b5069be0b..dc89655254002 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.h
++++ b/drivers/net/wireless/realtek/rtw88/util.h
+@@ -7,9 +7,6 @@
+ 
+ struct rtw_dev;
+ 
+-#define rtw_iterate_vifs(rtwdev, iterator, data)                               \
+-	ieee80211_iterate_active_interfaces(rtwdev->hw,                        \
+-			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
+ #define rtw_iterate_vifs_atomic(rtwdev, iterator, data)                        \
+ 	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,                 \
+ 			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
+@@ -20,6 +17,15 @@ struct rtw_dev;
+ #define rtw_iterate_keys_rcu(rtwdev, vif, iterator, data)		       \
+ 	ieee80211_iter_keys_rcu((rtwdev)->hw, vif, iterator, data)
+ 
++void rtw_iterate_vifs(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data, u8 *mac,
++				       struct ieee80211_vif *vif),
++		      void *data);
++void rtw_iterate_stas(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data,
++				       struct ieee80211_sta *sta),
++				       void *data);
++
+ static inline u8 *get_hdr_bssid(struct ieee80211_hdr *hdr)
+ {
+ 	__le16 fc = hdr->frame_control;
 -- 
 2.30.2
 
