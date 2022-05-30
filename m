@@ -2,54 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0029AC43217
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D18C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:09:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239136AbiE3OJ0 (ORCPT
+        id S239318AbiE3OJ3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:09:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56004 "EHLO
+        Mon, 30 May 2022 10:09:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239832AbiE3OI3 (ORCPT
+        with ESMTP id S236885AbiE3OD4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:08:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F1B779827;
-        Mon, 30 May 2022 06:42:26 -0700 (PDT)
+        Mon, 30 May 2022 10:03:56 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5274598590;
+        Mon, 30 May 2022 06:40:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 576D760FCC;
-        Mon, 30 May 2022 13:42:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22962C3411E;
-        Mon, 30 May 2022 13:42:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 11711B80DA9;
+        Mon, 30 May 2022 13:40:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F35EC3411E;
+        Mon, 30 May 2022 13:40:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918141;
-        bh=z0nAyk/VU0ksVU4YbjsvPBgUNPDMbbrVaHL11Of9pZI=;
+        s=k20201202; t=1653918011;
+        bh=6GPI7gYf07+zFN1Ol/tp6iH7PZSLrK3qLnRFMdReihY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tcXUM9Mt00yqROSr4JfU7kluOvUjdAknUI2SlVrSKG3DEbo6oBNNqurQYE5X8MSXg
-         gQxUx9jP8QhM43z1uz6cfOQUhN/KzDzt2k3rnsvsWuaG0uwYPvfkg2K6TUqVIbXifo
-         VQznQaLbo3RLRYCQ3ghfP4w/UMwAIwKW34fsTyCvrsCXmvKUroeEVQurnNnl5TJkVq
-         FvbomnConRUsXi3coHcXUWikpQT3QHLQz8rgwxwq0DjfiKdxJQrAsbxV7DalEo/8j1
-         IXEb44q5+DLBbcuGv2kUX6ryAald9QmtkF+pTpBG+/kRUvl/ESW7pNbmDi62BAtXu8
-         cOjDI3Q0pzQuA==
+        b=LitFFkhZCO3wVKbDNdI7dk9on9mC5zFp+9ge9WcfS1s61G1qGx0ZJmZaDYVo1WVpZ
+         caytGENi0T2hehBuQtQmWXOELFL7aLV+jlN8wSK/G6AXvf39N9QuuVGthBi5e5HrNS
+         yizMre+2z+ljIDb35OZiCHQK3fYUyEvZKXWoKa8fd/Q2oHwUaRTe4q5RVj1+D6CA2U
+         58+jMXkaHG+PNFPCC2gSMhU6tOav6TNN8xbTPMk6UItKVHY3gY1WiFg5zVWWNkFMH0
+         yXBZZVWn1hbsJgfftq38b5zHE11AyrsatRO1YOBuISSJJ8ua6Cip/D8WwfJlX5hNdl
+         X5id3rfpkP4sA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?q?Thibaut=20VAR=C3=88NE?= <hacks+kernel@slashdirt.org>,
-        Sasha Levin <sashal@kernel.org>, lorenzo@kernel.org,
-        ryder.lee@mediatek.com, kvalo@kernel.org, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        matthias.bgg@gmail.com, Bo.Jiao@mediatek.com,
-        sujuan.chen@mediatek.com, shayne.chen@mediatek.com,
-        greearb@candelatech.com, sean.wang@mediatek.com,
-        deren.wu@mediatek.com, xing.song@mediatek.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.15 075/109] mt76: fix encap offload ethernet type check
-Date:   Mon, 30 May 2022 09:37:51 -0400
-Message-Id: <20220530133825.1933431-75-sashal@kernel.org>
+Cc:     =?UTF-8?q?Thibaut=20VAR=C3=88NE?= <hacks+kernel@slashdirt.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 031/109] ath9k: fix QCA9561 PA bias level
+Date:   Mon, 30 May 2022 09:37:07 -0400
+Message-Id: <20220530133825.1933431-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133825.1933431-1-sashal@kernel.org>
 References: <20220530133825.1933431-1-sashal@kernel.org>
@@ -62,67 +58,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
 
-[ Upstream commit bc98e7fdd80d215b4b55eea001023231eb8ce12e ]
+[ Upstream commit e999a5da28a0e0f7de242d841ef7d5e48f4646ae ]
 
-The driver needs to check if the format is 802.2 vs 802.3 in order to set
-a tx descriptor flag. skb->protocol can't be used, since it may not be properly
-initialized for packets coming in from a packet socket.
-Fix misdetection by checking the ethertype from the skb data instead
+This patch fixes an invalid TX PA DC bias level on QCA9561, which
+results in a very low output power and very low throughput as devices
+are further away from the AP (compared to other 2.4GHz APs).
 
-Reported-by: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+This patch was suggested by Felix Fietkau, who noted[1]:
+"The value written to that register is wrong, because while the mask
+definition AR_CH0_TOP2_XPABIASLVL uses a different value for 9561, the
+shift definition AR_CH0_TOP2_XPABIASLVL_S is hardcoded to 12, which is
+wrong for 9561."
+
+In real life testing, without this patch the 2.4GHz throughput on
+Yuncore XD3200 is around 10Mbps sitting next to the AP, and closer to
+practical maximum with the patch applied.
+
+[1] https://lore.kernel.org/all/91c58969-c60e-2f41-00ac-737786d435ae@nbd.name
+
+Signed-off-by: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
+Acked-by: Felix Fietkau <nbd@nbd.name>
+Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20220417145145.1847-1-hacks+kernel@slashdirt.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 4 +++-
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 7691292526e0..a8a0e6af51f8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -799,6 +799,7 @@ mt7915_mac_write_txwi_8023(struct mt7915_dev *dev, __le32 *txwi,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index a171dbb29fbb..ad949eb02f3d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -720,7 +720,7 @@
+ #define AR_CH0_TOP2		(AR_SREV_9300(ah) ? 0x1628c : \
+ 					(AR_SREV_9462(ah) ? 0x16290 : 0x16284))
+ #define AR_CH0_TOP2_XPABIASLVL		(AR_SREV_9561(ah) ? 0x1e00 : 0xf000)
+-#define AR_CH0_TOP2_XPABIASLVL_S	12
++#define AR_CH0_TOP2_XPABIASLVL_S	(AR_SREV_9561(ah) ? 9 : 12)
  
- 	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
- 	u8 fc_type, fc_stype;
-+	u16 ethertype;
- 	bool wmm = false;
- 	u32 val;
- 
-@@ -812,7 +813,8 @@ mt7915_mac_write_txwi_8023(struct mt7915_dev *dev, __le32 *txwi,
- 	val = FIELD_PREP(MT_TXD1_HDR_FORMAT, MT_HDR_FORMAT_802_3) |
- 	      FIELD_PREP(MT_TXD1_TID, tid);
- 
--	if (be16_to_cpu(skb->protocol) >= ETH_P_802_3_MIN)
-+	ethertype = get_unaligned_be16(&skb->data[12]);
-+	if (ethertype >= ETH_P_802_3_MIN)
- 		val |= MT_TXD1_ETH_802_3;
- 
- 	txwi[1] |= cpu_to_le32(val);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 5024ddf07cbc..bef8d4a76ed9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -681,6 +681,7 @@ mt7921_mac_write_txwi_8023(struct mt7921_dev *dev, __le32 *txwi,
- {
- 	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
- 	u8 fc_type, fc_stype;
-+	u16 ethertype;
- 	bool wmm = false;
- 	u32 val;
- 
-@@ -694,7 +695,8 @@ mt7921_mac_write_txwi_8023(struct mt7921_dev *dev, __le32 *txwi,
- 	val = FIELD_PREP(MT_TXD1_HDR_FORMAT, MT_HDR_FORMAT_802_3) |
- 	      FIELD_PREP(MT_TXD1_TID, tid);
- 
--	if (be16_to_cpu(skb->protocol) >= ETH_P_802_3_MIN)
-+	ethertype = get_unaligned_be16(&skb->data[12]);
-+	if (ethertype >= ETH_P_802_3_MIN)
- 		val |= MT_TXD1_ETH_802_3;
- 
- 	txwi[1] |= cpu_to_le32(val);
+ #define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : \
+ 				 ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16298 : \
 -- 
 2.35.1
 
