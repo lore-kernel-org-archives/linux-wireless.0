@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F022C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:26:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A25FC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:27:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236755AbiE3N0M (ORCPT
+        id S236874AbiE3N1j (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 09:26:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58170 "EHLO
+        Mon, 30 May 2022 09:27:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236691AbiE3NZf (ORCPT
+        with ESMTP id S236869AbiE3N1D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 09:25:35 -0400
+        Mon, 30 May 2022 09:27:03 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F64982157;
-        Mon, 30 May 2022 06:25:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11FCB87A32;
+        Mon, 30 May 2022 06:25:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 79EA9B80D84;
-        Mon, 30 May 2022 13:25:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09FDAC341C0;
-        Mon, 30 May 2022 13:25:13 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 11AFFB80C9C;
+        Mon, 30 May 2022 13:25:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 714D9C36AE5;
+        Mon, 30 May 2022 13:25:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917115;
-        bh=C9X33pXWCcfrKODJ1R5etG2iGEZfHfyCD+gmXXOfpYc=;
+        s=k20201202; t=1653917138;
+        bh=R5pzKpdEPHGtsz9epenICLHLl0Q4w/B8PhegQPUoeNw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bu4rxuFX1nR7SOveLWHZO3OyzxMqTgmyJMidCIuZQpgik96MTdMjDaPpUxOr3wowr
-         u91TIXoF/cdcdb2UMBgdpE5eMazTyBzwVFXiFzqMH575SaOtr2KksPPKPO3d1IAD7t
-         i83ebJD/r1Zfe87Z94X0MyhSZAFnPDO1t8EXUYhvmLWrhKAbRP+cbudv/SEM9bQiLE
-         FaodA0wzi6z7Z6eSZsjZShrQ9pTAOKHW+T/7PNESUydb+febfRzli3w0WQNvm81Vce
-         M5j8EmpzTKSNOIieKIYh5v0wDQybchzHXRLkbWX9/FBb8wbWyMTywl1BhNnGQjkNT3
-         dWbk5kWMNLlIw==
+        b=TNq3mV0x2A6Nfh1mf6d0LzxHbKN7FXLNvbsF6VGdAzE6KFKHsUey57Y3eXF7AjWyx
+         JmbI1UE9nSWWo0N9Uw+0/5CdQzJ8hVO1qqGzNF5JKY9fXDa9sFamGHFw2G/Ykw91iP
+         yXOjj6oXNjrfH9Vih4IlRfWscCrSOBj5x/oLwUnHxa0MXt2eDW242Y2TOZ0Vk6I9h0
+         8MfmLuds36xIf4tPvQh0vHfj+qwJ8oMgJ3FzWLS9IAZnweqnbN4QRTTafzrJ7qqdpi
+         em661TuMTmI47oZysh6ZSkaZ9XoBgys3qKV+mIBZm8Sl80loPKKd2AwxwN33pX+QEj
+         cFT4JRfeOeIlg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Peter Seiderer <ps.report@gmx.net>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+Cc:     Po-Hao Huang <phhuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        tony0620emma@gmail.com, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 021/159] mac80211: minstrel_ht: fix where rate stats are stored (fixes debugfs output)
-Date:   Mon, 30 May 2022 09:22:06 -0400
-Message-Id: <20220530132425.1929512-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 030/159] rtw88: 8821c: fix debugfs rssi value
+Date:   Mon, 30 May 2022 09:22:15 -0400
+Message-Id: <20220530132425.1929512-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530132425.1929512-1-sashal@kernel.org>
 References: <20220530132425.1929512-1-sashal@kernel.org>
@@ -55,73 +55,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peter Seiderer <ps.report@gmx.net>
+From: Po-Hao Huang <phhuang@realtek.com>
 
-[ Upstream commit 5c6dd7bd569b54c0d2904125d7366aa93f077f67 ]
+[ Upstream commit ece31c93d4d68f7eb8eea4431b052aacdb678de2 ]
 
-Using an ath9k card the debugfs output of minstrel_ht looks like the following
-(note the zero values for the first four rates sum-of success/attempts):
+RSSI value per frame is reported to mac80211 but not maintained in
+our own statistics, add it back to help us debug.
 
-             best    ____________rate__________    ____statistics___    _____last____    ______sum-of________
-mode guard #  rate   [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]
-OFDM       1    DP     6.0M  272    1640     5.2       3.1      53.8       3     0 0             0   0
-OFDM       1   C       9.0M  273    1104     7.7       4.6      53.8       4     0 0             0   0
-OFDM       1  B       12.0M  274     836    10.0       6.0      53.8       4     0 0             0   0
-OFDM       1 A    S   18.0M  275     568    14.3       8.5      53.8       5     0 0             0   0
-OFDM       1      S   24.0M  276     436    18.1       0.0       0.0       5     0 1            80   1778
-OFDM       1          36.0M  277     300    24.9       0.0       0.0       0     0 1             0   107
-OFDM       1      S   48.0M  278     236    30.4       0.0       0.0       0     0 0             0   75
-OFDM       1          54.0M  279     212    33.0       0.0       0.0       0     0 0             0   72
-
-Total packet count::    ideal 16582      lookaround 885
-Average # of aggregated frames per A-MPDU: 1.0
-
-Debugging showed that the rate statistics for the first four rates where
-stored in the MINSTREL_CCK_GROUP instead of the MINSTREL_OFDM_GROUP because
-in minstrel_ht_get_stats() the supported check was not honoured as done in
-various other places, e.g net/mac80211/rc80211_minstrel_ht_debugfs.c:
-
- 74                 if (!(mi->supported[i] & BIT(j)))
- 75                         continue;
-
-With the patch applied the output looks good:
-
-              best    ____________rate__________    ____statistics___    _____last____    ______sum-of________
-mode guard #  rate   [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]
-OFDM       1    D      6.0M  272    1640     5.2       5.2     100.0       3     0 0             1   1
-OFDM       1   C       9.0M  273    1104     7.7       7.7     100.0       4     0 0            38   38
-OFDM       1  B       12.0M  274     836    10.0       9.9      89.5       4     2 2           372   395
-OFDM       1 A   P    18.0M  275     568    14.3      14.3      97.2       5    52 53         6956   7181
-OFDM       1      S   24.0M  276     436    18.1       0.0       0.0       0     0 1             6   163
-OFDM       1          36.0M  277     300    24.9       0.0       0.0       0     0 1             0   35
-OFDM       1      S   48.0M  278     236    30.4       0.0       0.0       0     0 0             0   38
-OFDM       1      S   54.0M  279     212    33.0       0.0       0.0       0     0 0             0   38
-
-Total packet count::    ideal 7097      lookaround 287
-Average # of aggregated frames per A-MPDU: 1.0
-
-Signed-off-by: Peter Seiderer <ps.report@gmx.net>
-Link: https://lore.kernel.org/r/20220404165414.1036-1-ps.report@gmx.net
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20220407095858.46807-7-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 9c6ace858107..5a6bf46a4248 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -362,6 +362,9 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 99eee128ae94..ec38a7c84951 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -512,6 +512,7 @@ static s8 get_cck_rx_pwr(struct rtw_dev *rtwdev, u8 lna_idx, u8 vga_idx)
+ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
+ 				   struct rtw_rx_pkt_stat *pkt_stat)
+ {
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	s8 rx_power;
+ 	u8 lna_idx = 0;
+ 	u8 vga_idx = 0;
+@@ -523,6 +524,7 @@ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
  
- 	group = MINSTREL_CCK_GROUP;
- 	for (idx = 0; idx < ARRAY_SIZE(mp->cck_rates); idx++) {
-+		if (!(mi->supported[group] & BIT(idx)))
-+			continue;
-+
- 		if (rate->idx != mp->cck_rates[idx])
- 			continue;
+ 	pkt_stat->rx_power[RF_PATH_A] = rx_power;
+ 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
+ 	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
+ 	pkt_stat->signal_power = rx_power;
+ }
+@@ -530,6 +532,7 @@ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
+ static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
+ 				   struct rtw_rx_pkt_stat *pkt_stat)
+ {
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	u8 rxsc, bw;
+ 	s8 min_rx_power = -120;
  
+@@ -549,6 +552,7 @@ static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
+ 
+ 	pkt_stat->rx_power[RF_PATH_A] = GET_PHY_STAT_P1_PWDB_A(phy_status) - 110;
+ 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
+ 	pkt_stat->bw = bw;
+ 	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
+ 				     min_rx_power);
 -- 
 2.35.1
 
