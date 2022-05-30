@@ -2,48 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06C21C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:48:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B386EC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:52:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233255AbiE3NsD (ORCPT
+        id S236606AbiE3NwR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 09:48:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49232 "EHLO
+        Mon, 30 May 2022 09:52:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238094AbiE3No0 (ORCPT
+        with ESMTP id S238499AbiE3NuR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 09:44:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D76769B1B5;
-        Mon, 30 May 2022 06:32:20 -0700 (PDT)
+        Mon, 30 May 2022 09:50:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D018791577;
+        Mon, 30 May 2022 06:34:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CA8060F27;
-        Mon, 30 May 2022 13:32:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 753FCC3411F;
-        Mon, 30 May 2022 13:32:18 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id ABD60B80DB6;
+        Mon, 30 May 2022 13:34:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8B63C3411E;
+        Mon, 30 May 2022 13:34:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917539;
-        bh=XIqhTsg1qO/7k2cKdd5hBUUYJE1jfjy8SEsUHanP4ek=;
+        s=k20201202; t=1653917660;
+        bh=0SOjUx1vP3pC5to7NMBxAemGEoK1IKRZDN4I6BH/TuI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Q/DsUsR/k/54ASj2SB+dfZ2RK8i1iD1L4SVD670k7zljo83BquS2sDfYqHgzWl5zz
-         9WdfXs+Wz5U9ZiL2QgpKhVauH+kXNvUZchyy27lMavAHQYGLO2rL01E9b3Yu5md01W
-         SMuARTMUQyhTS0te6avCYffQydsHniBqpqpuUW+7ibapn4Ga+3GygJi/3pl9xSlBLQ
-         qR7W/6yKptp8vZwYE17sxFu3m+herfRQZ8FTvYiQFCk722MXCDy82B3gGm8QL1rqRr
-         yknPGAWXjgvkTQjhGWEIdCGJL+jag/SSWDdgV3sm61Bbz8qm9q47FeUuSk8kTZbK0c
-         4inrtPL3cbrBg==
+        b=L+DW5yBQmZVjxeaeVTPIwYP7wDC6D2VrXb1kWwCFkLgphYgNGeJXKvsrqnGaTC1M+
+         EFkyi5clLZaUZkkLFX6ll1gmMWgy0oXEC3i3mqEyG7iSmLYb8fgl3dDHVm65ZrK51J
+         C3QGCrWo41DGU1UPHk5xUTPQyAnFBnMx8XDrwcfx98etFv004jGXTYWvwbR7vDBqcS
+         wamkdZ+i9ZqGr9FR7G1dPyuHDsgJA0vuYiipui0QCiBMtZS1iXDgMYCD5+moZnq+Kt
+         kOppmu/6tiWw1m21ofRdisLPcAYpYJCdjcQHuGUdHA7k3lK9AenL7xliGK4OrtUz66
+         oC6UVIATMDl5w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Peter Seiderer <ps.report@gmx.net>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+Cc:     Abhishek Kumar <kuabhs@chromium.org>,
+        Wen Gong <quic_wgong@quicinc.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 017/135] mac80211: minstrel_ht: fix where rate stats are stored (fixes debugfs output)
-Date:   Mon, 30 May 2022 09:29:35 -0400
-Message-Id: <20220530133133.1931716-17-sashal@kernel.org>
+        pabeni@redhat.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 056/135] ath10k: skip ath10k_halt during suspend for driver state RESTARTING
+Date:   Mon, 30 May 2022 09:30:14 -0400
+Message-Id: <20220530133133.1931716-56-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133133.1931716-1-sashal@kernel.org>
 References: <20220530133133.1931716-1-sashal@kernel.org>
@@ -55,73 +57,112 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peter Seiderer <ps.report@gmx.net>
+From: Abhishek Kumar <kuabhs@chromium.org>
 
-[ Upstream commit 5c6dd7bd569b54c0d2904125d7366aa93f077f67 ]
+[ Upstream commit b72a4aff947ba807177bdabb43debaf2c66bee05 ]
 
-Using an ath9k card the debugfs output of minstrel_ht looks like the following
-(note the zero values for the first four rates sum-of success/attempts):
+Double free crash is observed when FW recovery(caused by wmi
+timeout/crash) is followed by immediate suspend event. The FW recovery
+is triggered by ath10k_core_restart() which calls driver clean up via
+ath10k_halt(). When the suspend event occurs between the FW recovery,
+the restart worker thread is put into frozen state until suspend completes.
+The suspend event triggers ath10k_stop() which again triggers ath10k_halt()
+The double invocation of ath10k_halt() causes ath10k_htt_rx_free() to be
+called twice(Note: ath10k_htt_rx_alloc was not called by restart worker
+thread because of its frozen state), causing the crash.
 
-             best    ____________rate__________    ____statistics___    _____last____    ______sum-of________
-mode guard #  rate   [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]
-OFDM       1    DP     6.0M  272    1640     5.2       3.1      53.8       3     0 0             0   0
-OFDM       1   C       9.0M  273    1104     7.7       4.6      53.8       4     0 0             0   0
-OFDM       1  B       12.0M  274     836    10.0       6.0      53.8       4     0 0             0   0
-OFDM       1 A    S   18.0M  275     568    14.3       8.5      53.8       5     0 0             0   0
-OFDM       1      S   24.0M  276     436    18.1       0.0       0.0       5     0 1            80   1778
-OFDM       1          36.0M  277     300    24.9       0.0       0.0       0     0 1             0   107
-OFDM       1      S   48.0M  278     236    30.4       0.0       0.0       0     0 0             0   75
-OFDM       1          54.0M  279     212    33.0       0.0       0.0       0     0 0             0   72
+To fix this, during the suspend flow, skip call to ath10k_halt() in
+ath10k_stop() when the current driver state is ATH10K_STATE_RESTARTING.
+Also, for driver state ATH10K_STATE_RESTARTING, call
+ath10k_wait_for_suspend() in ath10k_stop(). This is because call to
+ath10k_wait_for_suspend() is skipped later in
+[ath10k_halt() > ath10k_core_stop()] for the driver state
+ATH10K_STATE_RESTARTING.
 
-Total packet count::    ideal 16582      lookaround 885
-Average # of aggregated frames per A-MPDU: 1.0
+The frozen restart worker thread will be cancelled during resume when the
+device comes out of suspend.
 
-Debugging showed that the rate statistics for the first four rates where
-stored in the MINSTREL_CCK_GROUP instead of the MINSTREL_OFDM_GROUP because
-in minstrel_ht_get_stats() the supported check was not honoured as done in
-various other places, e.g net/mac80211/rc80211_minstrel_ht_debugfs.c:
+Below is the crash stack for reference:
 
- 74                 if (!(mi->supported[i] & BIT(j)))
- 75                         continue;
+[  428.469167] ------------[ cut here ]------------
+[  428.469180] kernel BUG at mm/slub.c:4150!
+[  428.469193] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+[  428.469219] Workqueue: events_unbound async_run_entry_fn
+[  428.469230] RIP: 0010:kfree+0x319/0x31b
+[  428.469241] RSP: 0018:ffffa1fac015fc30 EFLAGS: 00010246
+[  428.469247] RAX: ffffedb10419d108 RBX: ffff8c05262b0000
+[  428.469252] RDX: ffff8c04a8c07000 RSI: 0000000000000000
+[  428.469256] RBP: ffffa1fac015fc78 R08: 0000000000000000
+[  428.469276] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  428.469285] Call Trace:
+[  428.469295]  ? dma_free_attrs+0x5f/0x7d
+[  428.469320]  ath10k_core_stop+0x5b/0x6f
+[  428.469336]  ath10k_halt+0x126/0x177
+[  428.469352]  ath10k_stop+0x41/0x7e
+[  428.469387]  drv_stop+0x88/0x10e
+[  428.469410]  __ieee80211_suspend+0x297/0x411
+[  428.469441]  rdev_suspend+0x6e/0xd0
+[  428.469462]  wiphy_suspend+0xb1/0x105
+[  428.469483]  ? name_show+0x2d/0x2d
+[  428.469490]  dpm_run_callback+0x8c/0x126
+[  428.469511]  ? name_show+0x2d/0x2d
+[  428.469517]  __device_suspend+0x2e7/0x41b
+[  428.469523]  async_suspend+0x1f/0x93
+[  428.469529]  async_run_entry_fn+0x3d/0xd1
+[  428.469535]  process_one_work+0x1b1/0x329
+[  428.469541]  worker_thread+0x213/0x372
+[  428.469547]  kthread+0x150/0x15f
+[  428.469552]  ? pr_cont_work+0x58/0x58
+[  428.469558]  ? kthread_blkcg+0x31/0x31
 
-With the patch applied the output looks good:
-
-              best    ____________rate__________    ____statistics___    _____last____    ______sum-of________
-mode guard #  rate   [name   idx airtime  max_tp]  [avg(tp) avg(prob)]  [retry|suc|att]  [#success | #attempts]
-OFDM       1    D      6.0M  272    1640     5.2       5.2     100.0       3     0 0             1   1
-OFDM       1   C       9.0M  273    1104     7.7       7.7     100.0       4     0 0            38   38
-OFDM       1  B       12.0M  274     836    10.0       9.9      89.5       4     2 2           372   395
-OFDM       1 A   P    18.0M  275     568    14.3      14.3      97.2       5    52 53         6956   7181
-OFDM       1      S   24.0M  276     436    18.1       0.0       0.0       0     0 1             6   163
-OFDM       1          36.0M  277     300    24.9       0.0       0.0       0     0 1             0   35
-OFDM       1      S   48.0M  278     236    30.4       0.0       0.0       0     0 0             0   38
-OFDM       1      S   54.0M  279     212    33.0       0.0       0.0       0     0 0             0   38
-
-Total packet count::    ideal 7097      lookaround 287
-Average # of aggregated frames per A-MPDU: 1.0
-
-Signed-off-by: Peter Seiderer <ps.report@gmx.net>
-Link: https://lore.kernel.org/r/20220404165414.1036-1-ps.report@gmx.net
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00288-QCARMSWPZ-1
+Co-developed-by: Wen Gong <quic_wgong@quicinc.com>
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Signed-off-by: Abhishek Kumar <kuabhs@chromium.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20220426221859.v2.1.I650b809482e1af8d0156ed88b5dc2677a0711d46@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 9c3b7fc377c1..50cce990784f 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -362,6 +362,9 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b11aaee8b8c0..a11b31191d5a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5339,13 +5339,29 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ static void ath10k_stop(struct ieee80211_hw *hw)
+ {
+ 	struct ath10k *ar = hw->priv;
++	u32 opt;
  
- 	group = MINSTREL_CCK_GROUP;
- 	for (idx = 0; idx < ARRAY_SIZE(mp->cck_rates); idx++) {
-+		if (!(mi->supported[group] & BIT(idx)))
-+			continue;
-+
- 		if (rate->idx != mp->cck_rates[idx])
- 			continue;
+ 	ath10k_drain_tx(ar);
  
+ 	mutex_lock(&ar->conf_mutex);
+ 	if (ar->state != ATH10K_STATE_OFF) {
+-		if (!ar->hw_rfkill_on)
+-			ath10k_halt(ar);
++		if (!ar->hw_rfkill_on) {
++			/* If the current driver state is RESTARTING but not yet
++			 * fully RESTARTED because of incoming suspend event,
++			 * then ath10k_halt() is already called via
++			 * ath10k_core_restart() and should not be called here.
++			 */
++			if (ar->state != ATH10K_STATE_RESTARTING) {
++				ath10k_halt(ar);
++			} else {
++				/* Suspending here, because when in RESTARTING
++				 * state, ath10k_core_stop() skips
++				 * ath10k_wait_for_suspend().
++				 */
++				opt = WMI_PDEV_SUSPEND_AND_DISABLE_INTR;
++				ath10k_wait_for_suspend(ar, opt);
++			}
++		}
+ 		ar->state = ATH10K_STATE_OFF;
+ 	}
+ 	mutex_unlock(&ar->conf_mutex);
 -- 
 2.35.1
 
