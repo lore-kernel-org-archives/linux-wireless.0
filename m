@@ -2,55 +2,54 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D63AC38A06
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:21:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C14BAC38A2C
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:22:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237512AbiE3OVt (ORCPT
+        id S234162AbiE3OV5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:21:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44868 "EHLO
+        Mon, 30 May 2022 10:21:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239668AbiE3OSy (ORCPT
+        with ESMTP id S241434AbiE3ORf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:18:54 -0400
+        Mon, 30 May 2022 10:17:35 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30C8E122B7A;
-        Mon, 30 May 2022 06:49:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD09A50008;
+        Mon, 30 May 2022 06:47:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E0B2261013;
-        Mon, 30 May 2022 13:49:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0B0AC3411F;
-        Mon, 30 May 2022 13:49:53 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 68E9360EC3;
+        Mon, 30 May 2022 13:47:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17995C3411C;
+        Mon, 30 May 2022 13:47:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918595;
-        bh=6GPI7gYf07+zFN1Ol/tp6iH7PZSLrK3qLnRFMdReihY=;
+        s=k20201202; t=1653918426;
+        bh=+hGjQKfDNGnTsMzTo9PMesAjDFTq1kh+tT1+3aPgf3c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PEl7ajDelcP/heH6+IbIHd0nPhCCRsnGxvv4jkaQFTT9++nB5ALiQF8OuXrBERtup
-         8Ffn0CcZiD5neOwQ1eIiyDwZey3ORnMkADkV7OGFC8e0s3BVAbKsqfGhI7mazdbR2x
-         HELluNHZnspeWUo/FfGboPP5Sq/+EnRzWApvSdIcgIE6TV1Xea2kYXfuOqt8g/RnbG
-         kAydEBFQadtfGwz46POdtVl360EHwBZ37OIAoeApQ2Q1ILYZp2zkqXAb81GS1tW1IU
-         04i2yuB4uGzYWgiPVwH+uV3Rj5FyMz7uopMeJ+Yj4LDWpC0PazIQ0pm3rbexjJllmU
-         fC5M5lHJPDagQ==
+        b=axk87PkP5bGhgRXvraDgQAwwAECGpBA+iEb4P1RU8yQ9G/BJCGR+5rl1a7ZKYQ61w
+         Ha4vj/PKnTkuaddyC/UwLpBeuDj7uJPLrApxdsOpdMG28nMLCdLdl/xiUsUMm06A+v
+         xrjrmCcvC7uq046m0mrbPCPl6n/FFhuzwS05x0fRrakrTLWIOqXwaHJq4sxIGCBsP4
+         zgkTYf/tbyPx9s3c+IrS3iLzuoiVuU1OtjGLvV8S6/sMXif1OaTG3SXkfaIKFCMIoR
+         /u/3m9idbTr+H2evF5eNa49xeLvpeRe01Py+xMKrI5b7i68CmrE66bgJLYWz/1CQKo
+         Mi23Eimt4K3UQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Thibaut=20VAR=C3=88NE?= <hacks+kernel@slashdirt.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+Cc:     Niels Dossche <dossche.niels@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        amitkarwar@gmail.com, ganapathi017@gmail.com,
+        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 11/38] ath9k: fix QCA9561 PA bias level
-Date:   Mon, 30 May 2022 09:48:57 -0400
-Message-Id: <20220530134924.1936816-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 02/55] mwifiex: add mutex lock for call in mwifiex_dfs_chan_sw_work_queue
+Date:   Mon, 30 May 2022 09:46:08 -0400
+Message-Id: <20220530134701.1935933-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530134924.1936816-1-sashal@kernel.org>
-References: <20220530134924.1936816-1-sashal@kernel.org>
+In-Reply-To: <20220530134701.1935933-1-sashal@kernel.org>
+References: <20220530134701.1935933-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -58,49 +57,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
+From: Niels Dossche <dossche.niels@gmail.com>
 
-[ Upstream commit e999a5da28a0e0f7de242d841ef7d5e48f4646ae ]
+[ Upstream commit 3e12968f6d12a34b540c39cbd696a760cc4616f0 ]
 
-This patch fixes an invalid TX PA DC bias level on QCA9561, which
-results in a very low output power and very low throughput as devices
-are further away from the AP (compared to other 2.4GHz APs).
+cfg80211_ch_switch_notify uses ASSERT_WDEV_LOCK to assert that
+net_device->ieee80211_ptr->mtx (which is the same as priv->wdev.mtx)
+is held during the function's execution.
+mwifiex_dfs_chan_sw_work_queue is one of its callers, which does not
+hold that lock, therefore violating the assertion.
+Add a lock around the call.
 
-This patch was suggested by Felix Fietkau, who noted[1]:
-"The value written to that register is wrong, because while the mask
-definition AR_CH0_TOP2_XPABIASLVL uses a different value for 9561, the
-shift definition AR_CH0_TOP2_XPABIASLVL_S is hardcoded to 12, which is
-wrong for 9561."
+Disclaimer:
+I am currently working on a static analyser to detect missing locks.
+This was a reported case. I manually verified the report by looking
+at the code, so that I do not send wrong information or patches.
+After concluding that this seems to be a true positive, I created
+this patch.
+However, as I do not in fact have this particular hardware,
+I was unable to test it.
 
-In real life testing, without this patch the 2.4GHz throughput on
-Yuncore XD3200 is around 10Mbps sitting next to the AP, and closer to
-practical maximum with the patch applied.
-
-[1] https://lore.kernel.org/all/91c58969-c60e-2f41-00ac-737786d435ae@nbd.name
-
-Signed-off-by: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
-Acked-by: Felix Fietkau <nbd@nbd.name>
-Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20220417145145.1847-1-hacks+kernel@slashdirt.org
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Niels Dossche <dossche.niels@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20220321225515.32113-1-dossche.niels@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/11h.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index a171dbb29fbb..ad949eb02f3d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -720,7 +720,7 @@
- #define AR_CH0_TOP2		(AR_SREV_9300(ah) ? 0x1628c : \
- 					(AR_SREV_9462(ah) ? 0x16290 : 0x16284))
- #define AR_CH0_TOP2_XPABIASLVL		(AR_SREV_9561(ah) ? 0x1e00 : 0xf000)
--#define AR_CH0_TOP2_XPABIASLVL_S	12
-+#define AR_CH0_TOP2_XPABIASLVL_S	(AR_SREV_9561(ah) ? 9 : 12)
+diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
+index 238accfe4f41..c4176e357b22 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11h.c
++++ b/drivers/net/wireless/marvell/mwifiex/11h.c
+@@ -303,5 +303,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
  
- #define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : \
- 				 ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16298 : \
+ 	mwifiex_dbg(priv->adapter, MSG,
+ 		    "indicating channel switch completion to kernel\n");
++	mutex_lock(&priv->wdev.mtx);
+ 	cfg80211_ch_switch_notify(priv->netdev, &priv->dfs_chandef);
++	mutex_unlock(&priv->wdev.mtx);
+ }
 -- 
 2.35.1
 
