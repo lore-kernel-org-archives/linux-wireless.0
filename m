@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B63C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A01C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238497AbiE3O3F (ORCPT
+        id S240322AbiE3O3K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:29:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44690 "EHLO
+        Mon, 30 May 2022 10:29:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241877AbiE3O1L (ORCPT
+        with ESMTP id S241201AbiE3ORV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:27:11 -0400
+        Mon, 30 May 2022 10:17:21 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65BB7B0406;
-        Mon, 30 May 2022 06:51:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FF77118014;
+        Mon, 30 May 2022 06:44:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 08453B80DE4;
-        Mon, 30 May 2022 13:51:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 558F3C341C0;
-        Mon, 30 May 2022 13:51:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8C222B80DB8;
+        Mon, 30 May 2022 13:44:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7FEAC3411C;
+        Mon, 30 May 2022 13:44:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918680;
+        s=k20201202; t=1653918291;
         bh=6GPI7gYf07+zFN1Ol/tp6iH7PZSLrK3qLnRFMdReihY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=k4LjLC0YeUMe6aGl6ztPMNQn4Uy02E89gatUSdzF7z4aHt+LMFrJ3/fw9ZfLghabj
-         zDK6bY4qrkIP9fwXqHuGawsfrt82wUqwS+icknVMJLfZawxYl6mQZxFLBh9OQJTZVP
-         V8OjHQ75Etiy4orHStL4Yx9Z08R0Px7O+SEC5Sgbf9fspaQamUVi4yuO0km5k63uoW
-         V/GpXxaPoEo2o8my0wDDdMkGircIFdkfeWxiY8ApXM3Op/SKvmC6xjhjdkeQmHv5Up
-         V2legZnfc906Tm5YfrnFYROF0Jx6AgRtiblQN87W94enKL89xdf0T4MWbKCH/pTTXM
-         DmvA0vYGezX7g==
+        b=N6OrMFIYb6mRkiU6uhxkACdJ8bWfDrylL0UtX5OFtrcMXMm8F4ZnVX8vwNKyHiFpc
+         k2y8czltPfRVCfpWLI1BGvVjfqeM9ziu6tyGxhFhqOod5seie/r6fR3rBIRGCE1/Xk
+         bcCMwwY/9fz0hT9I5k37N0z+dw0vrhZO4a4deP1vZh3Hr8rwrylRcXQAeSZUB/Hxdl
+         H7PeRx/9SxHbi3eEtzVE1n6vaTnd1ES+mP2J9VHMM7UVLImaDDvOst0PsonhyEtL0Y
+         WgsxSkCxf5ZMmnUVrHrwRvQM5vV/StGAbVcvulJQOjia5PgjfEnz+Yx0P5HJNwZHLE
+         wHxTKJLIDhfWA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     =?UTF-8?q?Thibaut=20VAR=C3=88NE?= <hacks+kernel@slashdirt.org>,
@@ -43,12 +43,12 @@ Cc:     =?UTF-8?q?Thibaut=20VAR=C3=88NE?= <hacks+kernel@slashdirt.org>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 09/29] ath9k: fix QCA9561 PA bias level
-Date:   Mon, 30 May 2022 09:50:36 -0400
-Message-Id: <20220530135057.1937286-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 20/76] ath9k: fix QCA9561 PA bias level
+Date:   Mon, 30 May 2022 09:43:10 -0400
+Message-Id: <20220530134406.1934928-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530135057.1937286-1-sashal@kernel.org>
-References: <20220530135057.1937286-1-sashal@kernel.org>
+In-Reply-To: <20220530134406.1934928-1-sashal@kernel.org>
+References: <20220530134406.1934928-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
