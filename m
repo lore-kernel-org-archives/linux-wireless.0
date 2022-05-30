@@ -2,90 +2,169 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89FEFC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11891C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:44:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240441AbiE3OeO (ORCPT
+        id S240881AbiE3OoA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:34:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50934 "EHLO
+        Mon, 30 May 2022 10:44:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241126AbiE3OaR (ORCPT
+        with ESMTP id S242408AbiE3OmU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:30:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3E0258E64;
-        Mon, 30 May 2022 06:51:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 20D89B80DC0;
-        Mon, 30 May 2022 13:51:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95BAAC36AE7;
-        Mon, 30 May 2022 13:51:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918709;
-        bh=TsnccSUjaIJsssqB3PsBicURUVYF0tCQj+AKgET2PTs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JzArhrqYOY3exU8ZQEerITInhEmVJ5ZcmaQyF/vAiLKsYEDSdN13U0eEm3Q5yBm2H
-         HZmMDoj2BEoLxVhh1W/kSS7Nj0nMnZTl8KPC/QmEq9wSsZycJTXxbE/bDevr34r5FP
-         YcZle2jt5ejsmpAxFWg93ev4UUyeIo11Ca19+81Xa63fWjSrGfRnAVb1GOSMOdlNBK
-         Fl2ExO4itKdgAAJoDlZA9WgHfa5Ni3yVSuNq3OHMlZ5W5WPo670Ooi5R9dmJ60FVin
-         WHSxMbdDeJYRfP020FbLtMqdXgqkX4niSa8Rhfop05W//mp/sTkyyGlaWDEgQgI2/h
-         sv8cRpg2+Hv0g==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dongliang Mu <mudongliangabcd@gmail.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        pkshih@realtek.com, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 21/29] rtlwifi: Use pr_warn instead of WARN_ONCE
-Date:   Mon, 30 May 2022 09:50:48 -0400
-Message-Id: <20220530135057.1937286-21-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530135057.1937286-1-sashal@kernel.org>
-References: <20220530135057.1937286-1-sashal@kernel.org>
+        Mon, 30 May 2022 10:42:20 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8169514AC8E
+        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2022 06:55:14 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <sha@pengutronix.de>)
+        id 1nvfrO-0007Ui-PS; Mon, 30 May 2022 15:55:06 +0200
+Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
+        (envelope-from <sha@pengutronix.de>)
+        id 1nvfrO-005SmL-P9; Mon, 30 May 2022 15:55:05 +0200
+Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <sha@pengutronix.de>)
+        id 1nvfrL-004dIT-GN; Mon, 30 May 2022 15:55:03 +0200
+From:   Sascha Hauer <s.hauer@pengutronix.de>
+To:     linux-wireless@vger.kernel.org
+Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        Kalle Valo <kvalo@kernel.org>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        kernel@pengutronix.de, Johannes Berg <johannes@sipsolutions.net>,
+        Sascha Hauer <s.hauer@pengutronix.de>
+Subject: [PATCH v2 03/10] rtw88: Drop h2c.lock
+Date:   Mon, 30 May 2022 15:54:50 +0200
+Message-Id: <20220530135457.1104091-4-s.hauer@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20220530135457.1104091-1-s.hauer@pengutronix.de>
+References: <20220530135457.1104091-1-s.hauer@pengutronix.de>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: sha@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dongliang Mu <mudongliangabcd@gmail.com>
+The h2c.lock spinlock is used in rtw_fw_send_h2c_command() and
+rtw_fw_send_h2c_packet().  Most callers call this with rtwdev->mutex
+held, except from one callsite in the debugfs code. The debugfs code
+alone doesn't justify the extra lock, so acquire rtwdev->mutex in
+debugfs and drop the now unnecessary spinlock.
 
-[ Upstream commit ad732da434a2936128769216eddaece3b1af4588 ]
-
-This memory allocation failure can be triggered by fault injection or
-high pressure testing, resulting a WARN.
-
-Fix this by replacing WARN with pr_warn.
-
-Reported-by: syzkaller <syzkaller@googlegroups.com>
-Signed-off-by: Dongliang Mu <mudongliangabcd@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220511014453.1621366-1-dzm91@hust.edu.cn
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 ---
- drivers/net/wireless/realtek/rtlwifi/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/debug.c |  2 ++
+ drivers/net/wireless/realtek/rtw88/fw.c    | 13 ++++---------
+ drivers/net/wireless/realtek/rtw88/main.c  |  1 -
+ drivers/net/wireless/realtek/rtw88/main.h  |  2 --
+ 4 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 4fa4d877f913..c29beb00203c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1060,7 +1060,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
- 				sizeof(struct rtl_usb_priv), &rtl_ops);
- 	if (!hw) {
--		WARN_ONCE(true, "rtl_usb: ieee80211 alloc failed\n");
-+		pr_warn("rtl_usb: ieee80211 alloc failed\n");
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index ba5ba852efb8c..79939aa6b752c 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -396,7 +396,9 @@ static ssize_t rtw_debugfs_set_h2c(struct file *filp,
+ 		return -EINVAL;
  	}
- 	rtlpriv = hw->priv;
+ 
++	mutex_lock(&rtwdev->mutex);
+ 	rtw_fw_h2c_cmd_dbg(rtwdev, param);
++	mutex_unlock(&rtwdev->mutex);
+ 
+ 	return count;
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index aa2aeb5fb2ccd..c3ad2a1b47212 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -320,7 +320,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
+ 		h2c[3], h2c[2], h2c[1], h2c[0],
+ 		h2c[7], h2c[6], h2c[5], h2c[4]);
+ 
+-	spin_lock(&rtwdev->h2c.lock);
++	lockdep_assert_held(&rtwdev->mutex);
+ 
+ 	box = rtwdev->h2c.last_box_num;
+ 	switch (box) {
+@@ -342,7 +342,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
+ 		break;
+ 	default:
+ 		WARN(1, "invalid h2c mail box number\n");
+-		goto out;
++		return;
+ 	}
+ 
+ 	ret = read_poll_timeout_atomic(rtw_read8, box_state,
+@@ -351,7 +351,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
+ 
+ 	if (ret) {
+ 		rtw_err(rtwdev, "failed to send h2c command\n");
+-		goto out;
++		return;
+ 	}
+ 
+ 	for (idx = 0; idx < 4; idx++)
+@@ -361,9 +361,6 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
+ 
+ 	if (++rtwdev->h2c.last_box_num >= 4)
+ 		rtwdev->h2c.last_box_num = 0;
+-
+-out:
+-	spin_unlock(&rtwdev->h2c.lock);
+ }
+ 
+ void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
+@@ -375,15 +372,13 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
+ {
+ 	int ret;
+ 
+-	spin_lock(&rtwdev->h2c.lock);
++	lockdep_assert_held(&rtwdev->mutex);
+ 
+ 	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
+ 	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
+ 	if (ret)
+ 		rtw_err(rtwdev, "failed to send h2c packet\n");
+ 	rtwdev->h2c.seq++;
+-
+-	spin_unlock(&rtwdev->h2c.lock);
+ }
+ 
+ void
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index f9864840ffd9c..baf4d29fde678 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1994,7 +1994,6 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+ 	skb_queue_head_init(&rtwdev->coex.queue);
+ 	skb_queue_head_init(&rtwdev->tx_report.queue);
+ 
+-	spin_lock_init(&rtwdev->h2c.lock);
+ 	spin_lock_init(&rtwdev->txq_lock);
+ 	spin_lock_init(&rtwdev->tx_report.q_lock);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index df6c6032bbd3b..619ee6e8d2807 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -2018,8 +2018,6 @@ struct rtw_dev {
+ 	struct {
+ 		/* incicate the mail box to use with fw */
+ 		u8 last_box_num;
+-		/* protect to send h2c to fw */
+-		spinlock_t lock;
+ 		u32 seq;
+ 	} h2c;
+ 
 -- 
-2.35.1
+2.30.2
 
