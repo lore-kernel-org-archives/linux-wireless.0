@@ -2,52 +2,59 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD00C43217
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0029AC43217
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:09:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238807AbiE3OJW (ORCPT
+        id S239136AbiE3OJ0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:09:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53898 "EHLO
+        Mon, 30 May 2022 10:09:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240251AbiE3OGk (ORCPT
+        with ESMTP id S239832AbiE3OI3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:06:40 -0400
+        Mon, 30 May 2022 10:08:29 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BF4241637;
-        Mon, 30 May 2022 06:42:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F1B779827;
+        Mon, 30 May 2022 06:42:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8DE3260FA6;
-        Mon, 30 May 2022 13:42:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85FDFC385B8;
-        Mon, 30 May 2022 13:42:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 576D760FCC;
+        Mon, 30 May 2022 13:42:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22962C3411E;
+        Mon, 30 May 2022 13:42:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918128;
-        bh=KcMfdVrPS5sBaTos33sAmjiggMA4Goon5JHj92fmjP8=;
+        s=k20201202; t=1653918141;
+        bh=z0nAyk/VU0ksVU4YbjsvPBgUNPDMbbrVaHL11Of9pZI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MhF/wII8ZorQ2fH5yFVI6S3UqkIXIyM/6iubenrRVQWYjj6gGdVfMj1FxeaAHnukJ
-         iw3JRTQ+DhJXh3m/NmvWpMPwW8f3CGARx0Fne/8hW8K6UVsJtHWxudrDHJ/uiI52yz
-         1Xww7uHnqSoJSY9RRMGPt/ZFYgHz9FEEg21Cyca1IA0+bLDF3sDQjip/gcXPsXRSd8
-         6quDpAOJcTsaTR5j+JOymxfv5yBZ84lboDl3YKf+CjNvqpa6xlYBayDgFBO35x2D+E
-         gaZXdYhK03toEH7f4Hk2pzdvcp7LfUDniXasDpmpij3EumtwgxlkM6J/AgE+YVDjdc
-         ZHa942i5B+5MQ==
+        b=tcXUM9Mt00yqROSr4JfU7kluOvUjdAknUI2SlVrSKG3DEbo6oBNNqurQYE5X8MSXg
+         gQxUx9jP8QhM43z1uz6cfOQUhN/KzDzt2k3rnsvsWuaG0uwYPvfkg2K6TUqVIbXifo
+         VQznQaLbo3RLRYCQ3ghfP4w/UMwAIwKW34fsTyCvrsCXmvKUroeEVQurnNnl5TJkVq
+         FvbomnConRUsXi3coHcXUWikpQT3QHLQz8rgwxwq0DjfiKdxJQrAsbxV7DalEo/8j1
+         IXEb44q5+DLBbcuGv2kUX6ryAald9QmtkF+pTpBG+/kRUvl/ESW7pNbmDi62BAtXu8
+         cOjDI3Q0pzQuA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dongliang Mu <mudongliangabcd@gmail.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        pkshih@realtek.com, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 073/109] rtlwifi: Use pr_warn instead of WARN_ONCE
-Date:   Mon, 30 May 2022 09:37:49 -0400
-Message-Id: <20220530133825.1933431-73-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        =?UTF-8?q?Thibaut=20VAR=C3=88NE?= <hacks+kernel@slashdirt.org>,
+        Sasha Levin <sashal@kernel.org>, lorenzo@kernel.org,
+        ryder.lee@mediatek.com, kvalo@kernel.org, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        matthias.bgg@gmail.com, Bo.Jiao@mediatek.com,
+        sujuan.chen@mediatek.com, shayne.chen@mediatek.com,
+        greearb@candelatech.com, sean.wang@mediatek.com,
+        deren.wu@mediatek.com, xing.song@mediatek.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.15 075/109] mt76: fix encap offload ethernet type check
+Date:   Mon, 30 May 2022 09:37:51 -0400
+Message-Id: <20220530133825.1933431-75-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133825.1933431-1-sashal@kernel.org>
 References: <20220530133825.1933431-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -55,37 +62,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dongliang Mu <mudongliangabcd@gmail.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit ad732da434a2936128769216eddaece3b1af4588 ]
+[ Upstream commit bc98e7fdd80d215b4b55eea001023231eb8ce12e ]
 
-This memory allocation failure can be triggered by fault injection or
-high pressure testing, resulting a WARN.
+The driver needs to check if the format is 802.2 vs 802.3 in order to set
+a tx descriptor flag. skb->protocol can't be used, since it may not be properly
+initialized for packets coming in from a packet socket.
+Fix misdetection by checking the ethertype from the skb data instead
 
-Fix this by replacing WARN with pr_warn.
-
-Reported-by: syzkaller <syzkaller@googlegroups.com>
-Signed-off-by: Dongliang Mu <mudongliangabcd@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220511014453.1621366-1-dzm91@hust.edu.cn
+Reported-by: Thibaut VARÈNE <hacks+kernel@slashdirt.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 4 +++-
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 86a236873254..a8eebafb9a7e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1014,7 +1014,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
- 				sizeof(struct rtl_usb_priv), &rtl_ops);
- 	if (!hw) {
--		WARN_ONCE(true, "rtl_usb: ieee80211 alloc failed\n");
-+		pr_warn("rtl_usb: ieee80211 alloc failed\n");
- 		return -ENOMEM;
- 	}
- 	rtlpriv = hw->priv;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index 7691292526e0..a8a0e6af51f8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -799,6 +799,7 @@ mt7915_mac_write_txwi_8023(struct mt7915_dev *dev, __le32 *txwi,
+ 
+ 	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+ 	u8 fc_type, fc_stype;
++	u16 ethertype;
+ 	bool wmm = false;
+ 	u32 val;
+ 
+@@ -812,7 +813,8 @@ mt7915_mac_write_txwi_8023(struct mt7915_dev *dev, __le32 *txwi,
+ 	val = FIELD_PREP(MT_TXD1_HDR_FORMAT, MT_HDR_FORMAT_802_3) |
+ 	      FIELD_PREP(MT_TXD1_TID, tid);
+ 
+-	if (be16_to_cpu(skb->protocol) >= ETH_P_802_3_MIN)
++	ethertype = get_unaligned_be16(&skb->data[12]);
++	if (ethertype >= ETH_P_802_3_MIN)
+ 		val |= MT_TXD1_ETH_802_3;
+ 
+ 	txwi[1] |= cpu_to_le32(val);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 5024ddf07cbc..bef8d4a76ed9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -681,6 +681,7 @@ mt7921_mac_write_txwi_8023(struct mt7921_dev *dev, __le32 *txwi,
+ {
+ 	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+ 	u8 fc_type, fc_stype;
++	u16 ethertype;
+ 	bool wmm = false;
+ 	u32 val;
+ 
+@@ -694,7 +695,8 @@ mt7921_mac_write_txwi_8023(struct mt7921_dev *dev, __le32 *txwi,
+ 	val = FIELD_PREP(MT_TXD1_HDR_FORMAT, MT_HDR_FORMAT_802_3) |
+ 	      FIELD_PREP(MT_TXD1_TID, tid);
+ 
+-	if (be16_to_cpu(skb->protocol) >= ETH_P_802_3_MIN)
++	ethertype = get_unaligned_be16(&skb->data[12]);
++	if (ethertype >= ETH_P_802_3_MIN)
+ 		val |= MT_TXD1_ETH_802_3;
+ 
+ 	txwi[1] |= cpu_to_le32(val);
 -- 
 2.35.1
 
