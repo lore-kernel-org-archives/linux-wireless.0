@@ -2,50 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D64BC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FCF3C43219
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240519AbiE3O3W (ORCPT
+        id S240590AbiE3O3d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:29:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44718 "EHLO
+        Mon, 30 May 2022 10:29:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241885AbiE3O1M (ORCPT
+        with ESMTP id S241456AbiE3O0M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:27:12 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53934B0420;
-        Mon, 30 May 2022 06:51:23 -0700 (PDT)
+        Mon, 30 May 2022 10:26:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEA1363FF;
+        Mon, 30 May 2022 06:51:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0B6EAB80ABD;
-        Mon, 30 May 2022 13:51:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46187C3411A;
-        Mon, 30 May 2022 13:51:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9BA3B60FD4;
+        Mon, 30 May 2022 13:51:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDE62C3411F;
+        Mon, 30 May 2022 13:51:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918661;
-        bh=+hGjQKfDNGnTsMzTo9PMesAjDFTq1kh+tT1+3aPgf3c=;
+        s=k20201202; t=1653918669;
+        bh=oPb496vJ6O8l9Viexv5dOp3zu04IOVFFRg10fGCG5Ig=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DFS7L8v0/F8+xBodNehOCY+BWezV6VHTxYdw8wtJlNi3hTU56xEz4HnQz+3l9aA34
-         kHOBXHAHOrm1Rvr2EARvFWfsQakowVU0rkzuP7k4h0RFx4vGii79PI8JpVobb7cNeC
-         IrLZtUgIEMubLv8XcRiQhyswgwqlagckBZ1sdAnrRqof9BZioUCevX/9G2YjY+GRXc
-         SYJLATb8SV6FLLpw9U90FVkV4GldP0HxtlfNk7G73DDeF2YBX5NcYrBN/ba5cAD9mb
-         q3u4RYa4Y5q2fenLXCvVFzmsxkw2IoeMt0+GDh/CP/pTfd8tmOIiS44FUVEV5GbZ92
-         QHSq58+Ca7glQ==
+        b=C54/yxhC9cTgwWM8AzQIssmeNp0XUtqleHWlzKl5FHo465Ou4LKDrGJnSXMtO2Rnp
+         qNqJnWw21BhrwRSjyJrfPUBpKXHuz24tgppdS5YOxY4kkR4VBjcQccEk7x/Wl+mI8G
+         CPsD9UBDs2VGRV67AVerfxaQEw3w5ofbWnYyngT3uIiVToAhLAeQIZb9NyPmbTzZwV
+         szr/wae4pcTq5EbR6UUsUIYtbMOa0919jzZub6IaI3c96ke0T+RxLBOHFsC8/OVYd1
+         gzvwMTx8jaNPXUYMpEm/QY12pIiRUK7oe9/FwjB5XtLnk5Avljm2kmD+qbCU6Z9lAo
+         /VAfp+qFZVSQw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Niels Dossche <dossche.niels@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        amitkarwar@gmail.com, ganapathi017@gmail.com,
-        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
+Cc:     Haowen Bai <baihaowen@meizu.com>, Kalle Valo <kvalo@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, stas.yakovlev@gmail.com,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 02/29] mwifiex: add mutex lock for call in mwifiex_dfs_chan_sw_work_queue
-Date:   Mon, 30 May 2022 09:50:29 -0400
-Message-Id: <20220530135057.1937286-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 05/29] ipw2x00: Fix potential NULL dereference in libipw_xmit()
+Date:   Mon, 30 May 2022 09:50:32 -0400
+Message-Id: <20220530135057.1937286-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530135057.1937286-1-sashal@kernel.org>
 References: <20220530135057.1937286-1-sashal@kernel.org>
@@ -57,47 +54,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Niels Dossche <dossche.niels@gmail.com>
+From: Haowen Bai <baihaowen@meizu.com>
 
-[ Upstream commit 3e12968f6d12a34b540c39cbd696a760cc4616f0 ]
+[ Upstream commit e8366bbabe1d207cf7c5b11ae50e223ae6fc278b ]
 
-cfg80211_ch_switch_notify uses ASSERT_WDEV_LOCK to assert that
-net_device->ieee80211_ptr->mtx (which is the same as priv->wdev.mtx)
-is held during the function's execution.
-mwifiex_dfs_chan_sw_work_queue is one of its callers, which does not
-hold that lock, therefore violating the assertion.
-Add a lock around the call.
+crypt and crypt->ops could be null, so we need to checking null
+before dereference
 
-Disclaimer:
-I am currently working on a static analyser to detect missing locks.
-This was a reported case. I manually verified the report by looking
-at the code, so that I do not send wrong information or patches.
-After concluding that this seems to be a true positive, I created
-this patch.
-However, as I do not in fact have this particular hardware,
-I was unable to test it.
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Niels Dossche <dossche.niels@gmail.com>
+Signed-off-by: Haowen Bai <baihaowen@meizu.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220321225515.32113-1-dossche.niels@gmail.com
+Link: https://lore.kernel.org/r/1648797055-25730-1-git-send-email-baihaowen@meizu.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/11h.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/ipw2x00/libipw_tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
-index 238accfe4f41..c4176e357b22 100644
---- a/drivers/net/wireless/marvell/mwifiex/11h.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11h.c
-@@ -303,5 +303,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+index 84205aa508df..daa4f9eb08ff 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+@@ -397,7 +397,7 @@ netdev_tx_t libipw_xmit(struct sk_buff *skb, struct net_device *dev)
  
- 	mwifiex_dbg(priv->adapter, MSG,
- 		    "indicating channel switch completion to kernel\n");
-+	mutex_lock(&priv->wdev.mtx);
- 	cfg80211_ch_switch_notify(priv->netdev, &priv->dfs_chandef);
-+	mutex_unlock(&priv->wdev.mtx);
- }
+ 		/* Each fragment may need to have room for encryption
+ 		 * pre/postfix */
+-		if (host_encrypt)
++		if (host_encrypt && crypt && crypt->ops)
+ 			bytes_per_frag -= crypt->ops->extra_mpdu_prefix_len +
+ 			    crypt->ops->extra_mpdu_postfix_len;
+ 
 -- 
 2.35.1
 
