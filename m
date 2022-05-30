@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B166BC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:58:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0825EC43219
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:59:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238905AbiE3N6p (ORCPT
+        id S236491AbiE3N72 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 09:58:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60574 "EHLO
+        Mon, 30 May 2022 09:59:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239543AbiE3N4s (ORCPT
+        with ESMTP id S233350AbiE3N5h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 09:56:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A7D18AE71;
-        Mon, 30 May 2022 06:38:43 -0700 (PDT)
+        Mon, 30 May 2022 09:57:37 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41A6E8AE5B;
+        Mon, 30 May 2022 06:38:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EB39560F98;
-        Mon, 30 May 2022 13:38:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DABF6C3411E;
-        Mon, 30 May 2022 13:38:40 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EC3C7B80DA9;
+        Mon, 30 May 2022 13:38:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 735D5C36AF9;
+        Mon, 30 May 2022 13:38:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917922;
-        bh=nQbb+Dvg94Bd3lpBOt9d1emxz4LV6Rz434ipGpczzEo=;
+        s=k20201202; t=1653917928;
+        bh=gam7VJRU5tQrQ47mhnmERO7Bdx+TDXwHG5e3vtQwqLQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oHgVF72mwloWya50H2DxdVEE91utUjIOP6IxBRoCtR/Z1x+7gU82XJgnYb9N/fx51
-         oXwB8Z0SeqkFzAomkpkIimHcCo8ovrCRlwC2bPHjS9NUDZJ2E5jhpXuhLiVS78jFeh
-         q1CEtgbX9fhEj3pGGpHYF4X/ZJ/wC2uj1RI8NDZitDp6BeY/C3SthEPwJeunhFgGHw
-         4Uf+jJCCexgNYRYhWf7Re3q0jAflCXtIBYlCs8dpQcDPg/ZSX5vZYUddSfo/5C2tJl
-         aamOUKHANn1BlUCOoZyvHzyshAm3IGffG6m0gRwWIeM8M1wcLy1FWk7QrrPoy+ebNk
-         WmMsPxciJka6g==
+        b=SMRFq6ottsxCatfpGK/guUfTDWzh/PupJpzPrrEtUf9HiNN8kxyVGm8k4eUWOo3cT
+         1cMM+CoqfVG+We4xNy+b5Exe07vgO+IeFse1NM3s8sKb+oVae+vRnA3cnA30bY8iu9
+         1pfPFCaBXBsgOIQces+jqlXM7wDoqlaSpoPo+QrG8KndWTz7XGyWvXbD9bH0brypi5
+         cTyQrVwYB/mD2dPrKVsQk5ioBvu5/AFyGnkSbuumiTUk4anRNoemfaO+hniFcbFs3Q
+         ITuS7vLPtceL+xWjwkTRReKf0Bibe1ctE1Mmn9uvOCvq9rtWnYSio4bmPfADQlygUb
+         XOcqabg/zLJDg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Haowen Bai <baihaowen@meizu.com>, Kalle Valo <kvalo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, Larry.Finger@lwfinger.net,
+        Sasha Levin <sashal@kernel.org>, stas.yakovlev@gmail.com,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 007/109] b43legacy: Fix assigning negative value to unsigned variable
-Date:   Mon, 30 May 2022 09:36:43 -0400
-Message-Id: <20220530133825.1933431-7-sashal@kernel.org>
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 009/109] ipw2x00: Fix potential NULL dereference in libipw_xmit()
+Date:   Mon, 30 May 2022 09:36:45 -0400
+Message-Id: <20220530133825.1933431-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133825.1933431-1-sashal@kernel.org>
 References: <20220530133825.1933431-1-sashal@kernel.org>
@@ -56,32 +56,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Haowen Bai <baihaowen@meizu.com>
 
-[ Upstream commit 3f6b867559b3d43a7ce1b4799b755e812fc0d503 ]
+[ Upstream commit e8366bbabe1d207cf7c5b11ae50e223ae6fc278b ]
 
-fix warning reported by smatch:
-drivers/net/wireless/broadcom/b43legacy/phy.c:1181 b43legacy_phy_lo_b_measure()
-warn: assigning (-772) to unsigned variable 'fval'
+crypt and crypt->ops could be null, so we need to checking null
+before dereference
 
 Signed-off-by: Haowen Bai <baihaowen@meizu.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/1648203433-8736-1-git-send-email-baihaowen@meizu.com
+Link: https://lore.kernel.org/r/1648797055-25730-1-git-send-email-baihaowen@meizu.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/b43legacy/phy.c | 2 +-
+ drivers/net/wireless/intel/ipw2x00/libipw_tx.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43legacy/phy.c b/drivers/net/wireless/broadcom/b43legacy/phy.c
-index 05404fbd1e70..c1395e622759 100644
---- a/drivers/net/wireless/broadcom/b43legacy/phy.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/phy.c
-@@ -1123,7 +1123,7 @@ void b43legacy_phy_lo_b_measure(struct b43legacy_wldev *dev)
- 	struct b43legacy_phy *phy = &dev->phy;
- 	u16 regstack[12] = { 0 };
- 	u16 mls;
--	u16 fval;
-+	s16 fval;
- 	int i;
- 	int j;
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+index 36d1e6b2568d..4aec1fce1ae2 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+@@ -383,7 +383,7 @@ netdev_tx_t libipw_xmit(struct sk_buff *skb, struct net_device *dev)
+ 
+ 		/* Each fragment may need to have room for encryption
+ 		 * pre/postfix */
+-		if (host_encrypt)
++		if (host_encrypt && crypt && crypt->ops)
+ 			bytes_per_frag -= crypt->ops->extra_mpdu_prefix_len +
+ 			    crypt->ops->extra_mpdu_postfix_len;
  
 -- 
 2.35.1
