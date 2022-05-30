@@ -2,47 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A15EDC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 13:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFFB7C433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:03:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236766AbiE3N7a (ORCPT
+        id S231470AbiE3ODb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 09:59:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49062 "EHLO
+        Mon, 30 May 2022 10:03:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232837AbiE3N5c (ORCPT
+        with ESMTP id S239600AbiE3OBn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 09:57:32 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A69639809D;
-        Mon, 30 May 2022 06:38:49 -0700 (PDT)
+        Mon, 30 May 2022 10:01:43 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 773AFC5D98;
+        Mon, 30 May 2022 06:39:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4D957B80DB3;
-        Mon, 30 May 2022 13:38:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84C87C36AE3;
-        Mon, 30 May 2022 13:38:45 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D8042B80DB3;
+        Mon, 30 May 2022 13:39:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25965C3411C;
+        Mon, 30 May 2022 13:39:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917926;
-        bh=NCZ8ENLCATeP2GIJLaAP/xz+MzB5wHdRUTpcdOOL+I4=;
+        s=k20201202; t=1653917969;
+        bh=6SQtvCCi7KG7ZERvGOkFPImwwLGdIpID+YyAH/hlYBs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h29XhXmHYMWqE/kYQ/Eh5ymAYabE6XuyBcdRNdJbX/VsYPi+IYYgBObMu1LCaIArT
-         gsE8ljDtKTogm7mSl0s1xe9hU95p5oUq1utDKIXDxH/JC4z8JufGJJocKiaR8r4I2i
-         LRgb+QGSuX1wrBzX3+xaJrDZDBwI4lZVAZ/ytJhwQQeyB8o3Sz5PTskF1uIPlAACCA
-         izf9TR314ixM6Szbeq1PM1/O5zbmnXliMc+kPPkNFYWLHkb2aQmlhSQ/mGypzi+ZYZ
-         ZGyFuggv1YmhOCP/kK4p9UxGdPeXgSMCGk6ZCVHygb1qVP9W7w2ZbMweiS82FcDk68
-         ceU6l/0hKKfFg==
+        b=jovwoMEhgiIXWiziuiuZ5jP4+cD1GidA1Z+zgq/LmEF1AqyIhx9pYVC8wBfkSGhHF
+         vjIVsKO3irX4IWm9pUCP3BPIuAbj3ZBb0fKoI2WbRgXl/FTnnUFGHk6aOaUms805ti
+         YLaryWDwxrzsVhy7DAC75G2v8Hd7LoK666tRVslOpakusjZTvuXtkU6m2k6MUkPcVq
+         QmNLeBp4YUdR4SwkDslvXM36/350VkLcnLNo2Ze9paqOXwC7eRflRnjhpBdeRHXSCK
+         VKegZaLbUgAM9O87qpwDEwLM1cZ3fUlQnloMGuc3gBb2NbP2CnkkJGs8x8p/QjlSV5
+         YmKJdTb7/0tGg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Haowen Bai <baihaowen@meizu.com>, Kalle Valo <kvalo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        thunder.leizhen@huawei.com, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 008/109] b43: Fix assigning negative value to unsigned variable
-Date:   Mon, 30 May 2022 09:36:44 -0400
-Message-Id: <20220530133825.1933431-8-sashal@kernel.org>
+Cc:     Po-Hao Huang <phhuang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        tony0620emma@gmail.com, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 021/109] rtw88: 8821c: fix debugfs rssi value
+Date:   Mon, 30 May 2022 09:36:57 -0400
+Message-Id: <20220530133825.1933431-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220530133825.1933431-1-sashal@kernel.org>
 References: <20220530133825.1933431-1-sashal@kernel.org>
@@ -54,35 +55,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haowen Bai <baihaowen@meizu.com>
+From: Po-Hao Huang <phhuang@realtek.com>
 
-[ Upstream commit 11800d893b38e0e12d636c170c1abc19c43c730c ]
+[ Upstream commit ece31c93d4d68f7eb8eea4431b052aacdb678de2 ]
 
-fix warning reported by smatch:
-drivers/net/wireless/broadcom/b43/phy_n.c:585 b43_nphy_adjust_lna_gain_table()
-warn: assigning (-2) to unsigned variable '*(lna_gain[0])'
+RSSI value per frame is reported to mac80211 but not maintained in
+our own statistics, add it back to help us debug.
 
-Signed-off-by: Haowen Bai <baihaowen@meizu.com>
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/1648203315-28093-1-git-send-email-baihaowen@meizu.com
+Link: https://lore.kernel.org/r/20220407095858.46807-7-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/b43/phy_n.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-index cf3ccf4ddfe7..aa5c99465674 100644
---- a/drivers/net/wireless/broadcom/b43/phy_n.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-@@ -582,7 +582,7 @@ static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
- 	u16 data[4];
- 	s16 gain[2];
- 	u16 minmax[2];
--	static const u16 lna_gain[4] = { -2, 10, 19, 25 };
-+	static const s16 lna_gain[4] = { -2, 10, 19, 25 };
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 785b8181513f..f405f42d1c1b 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -506,6 +506,7 @@ static s8 get_cck_rx_pwr(struct rtw_dev *rtwdev, u8 lna_idx, u8 vga_idx)
+ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
+ 				   struct rtw_rx_pkt_stat *pkt_stat)
+ {
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	s8 rx_power;
+ 	u8 lna_idx = 0;
+ 	u8 vga_idx = 0;
+@@ -517,6 +518,7 @@ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
  
- 	if (nphy->hang_avoid)
- 		b43_nphy_stay_in_carrier_search(dev, 1);
+ 	pkt_stat->rx_power[RF_PATH_A] = rx_power;
+ 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
+ 	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
+ 	pkt_stat->signal_power = rx_power;
+ }
+@@ -524,6 +526,7 @@ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
+ static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
+ 				   struct rtw_rx_pkt_stat *pkt_stat)
+ {
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	u8 rxsc, bw;
+ 	s8 min_rx_power = -120;
+ 
+@@ -543,6 +546,7 @@ static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
+ 
+ 	pkt_stat->rx_power[RF_PATH_A] = GET_PHY_STAT_P1_PWDB_A(phy_status) - 110;
+ 	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
+ 	pkt_stat->bw = bw;
+ 	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
+ 				     min_rx_power);
 -- 
 2.35.1
 
