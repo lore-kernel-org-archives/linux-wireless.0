@@ -2,50 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C485C433F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC1DC433F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 May 2022 14:24:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237810AbiE3OWP (ORCPT
+        id S237510AbiE3OYK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 May 2022 10:22:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40120 "EHLO
+        Mon, 30 May 2022 10:24:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240948AbiE3OQj (ORCPT
+        with ESMTP id S242239AbiE3OSn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 May 2022 10:16:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C2A910EA49;
-        Mon, 30 May 2022 06:44:23 -0700 (PDT)
+        Mon, 30 May 2022 10:18:43 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C23F11E1E4;
+        Mon, 30 May 2022 06:49:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4E22660FD6;
-        Mon, 30 May 2022 13:44:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AD43C385B8;
-        Mon, 30 May 2022 13:44:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 43068B80DB3;
+        Mon, 30 May 2022 13:49:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48ABBC3411A;
+        Mon, 30 May 2022 13:49:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653918261;
-        bh=Bkd23sX7Gv/V+UyqdUT5JU9g3D19EXhrLTVzmu+pFg8=;
+        s=k20201202; t=1653918570;
+        bh=+hGjQKfDNGnTsMzTo9PMesAjDFTq1kh+tT1+3aPgf3c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ny9dOUZhzWWbWqsiwY4buRX/4viG4SEskbutNgaGfrltRbr/hombcTr3ygGYwN2Tl
-         LYkkSfcJBk0zic1saUDRW6AoKNqOeelnQsR7IsZ7sZXP7Z7eVUFZiQ6aGFD/Nc5yU8
-         VLT3Twmr0wp9hbFfiqqvVUIuNBtpJZ1Cr7ebe4a1nkt1jf/vgMpg8nH0zfVY2pWvWs
-         QYwRnUJ3IyzidJiqg7djrrEpFTEZQ/IpxCUrDGVW8TLLsKL5MYG/5r9aoxnFCpj0O9
-         Jtn1mT5mR4M/SwGD/JR8jqp7KnyBn4o2t91ihS0Fiu0aqKsSuWCqIMYee4oBROl1k6
-         rVs7BAj9JWutg==
+        b=i0Zqa7AHJs0ltPu/4nGxGI09QyNLML30FHOWmz+23LEljNKFqcR9AYhpFb/oI/saz
+         vPNxPW7ycR70is5h3kbXj01DroQJuTqVHVHvTtaWbsTMub5KwxN7OnDbqsnwyWbOoH
+         R9Gq+sRa8QSoKnd1z9sMkm29wfZH2+1cwjayzDhbBn5Cg0dOzMOz9m0md/LfABb1Ho
+         b2ZEHkyF7O71a01pn681ebProYzG0I9E0r5jTxKr0l5TmqfS6zuj3+P/DzXUmHf/wX
+         B9EDV6rNCqn0a1iFGnQBWyR99ytP+SuZpVaC8sbhldhZsO1aaVJjvtBQgKr3y6tJ+i
+         QKYv8CuzzJBrg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Haowen Bai <baihaowen@meizu.com>, Kalle Valo <kvalo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        thunder.leizhen@huawei.com, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 06/76] b43: Fix assigning negative value to unsigned variable
-Date:   Mon, 30 May 2022 09:42:56 -0400
-Message-Id: <20220530134406.1934928-6-sashal@kernel.org>
+Cc:     Niels Dossche <dossche.niels@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        amitkarwar@gmail.com, ganapathi017@gmail.com,
+        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 02/38] mwifiex: add mutex lock for call in mwifiex_dfs_chan_sw_work_queue
+Date:   Mon, 30 May 2022 09:48:48 -0400
+Message-Id: <20220530134924.1936816-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220530134406.1934928-1-sashal@kernel.org>
-References: <20220530134406.1934928-1-sashal@kernel.org>
+In-Reply-To: <20220530134924.1936816-1-sashal@kernel.org>
+References: <20220530134924.1936816-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -54,35 +57,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haowen Bai <baihaowen@meizu.com>
+From: Niels Dossche <dossche.niels@gmail.com>
 
-[ Upstream commit 11800d893b38e0e12d636c170c1abc19c43c730c ]
+[ Upstream commit 3e12968f6d12a34b540c39cbd696a760cc4616f0 ]
 
-fix warning reported by smatch:
-drivers/net/wireless/broadcom/b43/phy_n.c:585 b43_nphy_adjust_lna_gain_table()
-warn: assigning (-2) to unsigned variable '*(lna_gain[0])'
+cfg80211_ch_switch_notify uses ASSERT_WDEV_LOCK to assert that
+net_device->ieee80211_ptr->mtx (which is the same as priv->wdev.mtx)
+is held during the function's execution.
+mwifiex_dfs_chan_sw_work_queue is one of its callers, which does not
+hold that lock, therefore violating the assertion.
+Add a lock around the call.
 
-Signed-off-by: Haowen Bai <baihaowen@meizu.com>
+Disclaimer:
+I am currently working on a static analyser to detect missing locks.
+This was a reported case. I manually verified the report by looking
+at the code, so that I do not send wrong information or patches.
+After concluding that this seems to be a true positive, I created
+this patch.
+However, as I do not in fact have this particular hardware,
+I was unable to test it.
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Niels Dossche <dossche.niels@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/1648203315-28093-1-git-send-email-baihaowen@meizu.com
+Link: https://lore.kernel.org/r/20220321225515.32113-1-dossche.niels@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/b43/phy_n.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/11h.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-index 665b737fbb0d..39975b7d1a16 100644
---- a/drivers/net/wireless/broadcom/b43/phy_n.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-@@ -582,7 +582,7 @@ static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
- 	u16 data[4];
- 	s16 gain[2];
- 	u16 minmax[2];
--	static const u16 lna_gain[4] = { -2, 10, 19, 25 };
-+	static const s16 lna_gain[4] = { -2, 10, 19, 25 };
+diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
+index 238accfe4f41..c4176e357b22 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11h.c
++++ b/drivers/net/wireless/marvell/mwifiex/11h.c
+@@ -303,5 +303,7 @@ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
  
- 	if (nphy->hang_avoid)
- 		b43_nphy_stay_in_carrier_search(dev, 1);
+ 	mwifiex_dbg(priv->adapter, MSG,
+ 		    "indicating channel switch completion to kernel\n");
++	mutex_lock(&priv->wdev.mtx);
+ 	cfg80211_ch_switch_notify(priv->netdev, &priv->dfs_chandef);
++	mutex_unlock(&priv->wdev.mtx);
+ }
 -- 
 2.35.1
 
