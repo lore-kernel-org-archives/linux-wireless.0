@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E237C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 07:40:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 198CBC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 07:40:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350315AbiFAHkI (ORCPT
+        id S1350272AbiFAHkK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Jun 2022 03:40:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33610 "EHLO
+        Wed, 1 Jun 2022 03:40:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344265AbiFAHkF (ORCPT
+        with ESMTP id S241208AbiFAHkG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Jun 2022 03:40:05 -0400
+        Wed, 1 Jun 2022 03:40:06 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE79B941A8
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2022 00:40:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E8D7980B0
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2022 00:40:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=hk43RedASXEo/UF5VvUsPRNg+1WdduTV3aJ3+1y/694=;
-        t=1654069204; x=1655278804; b=crd5/WWXGku8MqHPW/1Rqqv/pvU8xfZ+r9kvIP5UsoTWbTP
-        qHX+1UzG3uo6RXdRBc5xReAYU/iSunn4/1JIOqGDR9RZf4jig8R5ksBeEX9KetVVc5/HizfZwgIRz
-        55GdgdSVRKrA+TxhpMFuE0MLGTVeEk9aBbc4vVllm8BgSHGDNwqQuHGTNcfwLQ8fZPJfiyaMvqVUK
-        7IKlw5HTrnC5mvorsBczekPmT72oORbwER/EscojItX6CxycO6Vbm9TvLL9YxwpM2T4a63VIViG8C
-        hpAqYLJpPxEn53Pboy3kXMptdk3xDemTDIRm4uSp6vMQC6FmnmdLdj/tYoX1N08A==;
+        Resent-Cc:Resent-Message-ID; bh=xhdesWb3xU1jVHvzhdmWuWQI2b5u4IA6OwxzPdrqLcA=;
+        t=1654069205; x=1655278805; b=uzSUKePthxz7s5DYkrBZ+B/CyiMfmz8z2PgYhMjSyTpa38L
+        04jsKXndWMFnx+CVgrmTUDChlq2K9OG7GqnPq2sDRHOK8QWP94UJi9VwQcreI5R5gecVPIw0XMulq
+        A4+C2DyROzl1fbUlTsylA20ESDxG+20H0JRye+CsWK+lU/+eVH6Ixq2M6SQDoCoD0xtaZQSNQmnM1
+        Eq3SCfheOAqWu1Gn9HuU/Onvs9cH88K7XWCvXFYxOpOUNkBLOkTMEq1i2naoyjLOww76/Fsi7PMUw
+        TQ5CEaqH/0dtHKzXGeOVAD8BddSGY0wE8UAC5qqehhi2CnEWm34zQEnvrHucnUDQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nwIxV-00AJPK-V0;
-        Wed, 01 Jun 2022 09:40:02 +0200
+        id 1nwIxX-00AJPK-6r;
+        Wed, 01 Jun 2022 09:40:03 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/15] mac80211: pass link ID where already present
-Date:   Wed,  1 Jun 2022 09:39:46 +0200
-Message-Id: <20220601093922.0b5932ea2115.Ie1343ee1963ca51cf4e8905522fd1c44278c7617@changeid>
+Subject: [PATCH 07/15] mac80211: use IEEE80211_MLD_MAX_NUM_LINKS
+Date:   Wed,  1 Jun 2022 09:39:50 +0200
+Message-Id: <20220601093922.583c5774aaae.I8ee15fc715cd84eb4dd0d11f9d86949adb09ec5f@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220601073958.8345-1-johannes@sipsolutions.net>
 References: <20220601073958.8345-1-johannes@sipsolutions.net>
@@ -48,46 +48,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-In a few cases we already have the link ID in the APIs,
-pass it already even if it cannot be non-zero yet.
+Remove MAX_STA_LINKS and use IEEE80211_MLD_MAX_NUM_LINKS
+instead to unify between the station and other data structures.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ include/net/mac80211.h  | 4 +---
+ net/mac80211/sta_info.h | 2 +-
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ffd26db89f33..b9a03548c89a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1338,7 +1338,7 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 		err |= BSS_CHANGED_HE_BSS_COLOR;
- 	}
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4b3d19d88954..66a18dc4462f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2061,8 +2061,6 @@ struct ieee80211_sta_txpwr {
+ 	enum nl80211_tx_power_setting type;
+ };
  
--	ieee80211_link_info_change_notify(sdata, 0, err);
-+	ieee80211_link_info_change_notify(sdata, params->link_id, err);
- 	return 0;
- }
+-#define MAX_STA_LINKS			15
+-
+ /**
+  * struct ieee80211_link_sta - station Link specific info
+  * All link specific info for a STA link for a non MLD STA(single)
+@@ -2190,7 +2188,7 @@ struct ieee80211_sta {
  
-@@ -1419,7 +1419,8 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 	sdata->beacon_rate_set = false;
- 	sdata->vif.cfg.ssid_len = 0;
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
--	ieee80211_link_info_change_notify(sdata, 0, BSS_CHANGED_BEACON_ENABLED);
-+	ieee80211_link_info_change_notify(sdata, link_id,
-+					  BSS_CHANGED_BEACON_ENABLED);
+ 	bool multi_link_sta;
+ 	struct ieee80211_link_sta deflink;
+-	struct ieee80211_link_sta *link[MAX_STA_LINKS];
++	struct ieee80211_link_sta *link[IEEE80211_MLD_MAX_NUM_LINKS];
  
- 	if (sdata->wdev.cac_started) {
- 		chandef = sdata->vif.bss_conf.chandef;
-@@ -3985,7 +3986,7 @@ static int ieee80211_set_ap_chanwidth(struct wiphy *wiphy,
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 134a7dad0ac4..2ff3d5fd0cbf 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -710,7 +710,7 @@ struct sta_info {
  
- 	ret = ieee80211_vif_change_bandwidth(sdata, chandef, &changed);
- 	if (ret == 0)
--		ieee80211_link_info_change_notify(sdata, 0, changed);
-+		ieee80211_link_info_change_notify(sdata, link_id, changed);
+ 	bool multi_link_sta;
+ 	struct link_sta_info deflink;
+-	struct link_sta_info *link[MAX_STA_LINKS];
++	struct link_sta_info *link[IEEE80211_MLD_MAX_NUM_LINKS];
  
- 	return ret;
- }
+ 	/* keep last! */
+ 	struct ieee80211_sta sta;
 -- 
 2.36.1
 
