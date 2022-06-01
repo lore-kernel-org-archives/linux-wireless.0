@@ -2,149 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40272C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 16:55:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 842BAC43334
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 19:43:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353972AbiFAQzw (ORCPT
+        id S229594AbiFATni (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Jun 2022 12:55:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51356 "EHLO
+        Wed, 1 Jun 2022 15:43:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345508AbiFAQzt (ORCPT
+        with ESMTP id S229580AbiFATnh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Jun 2022 12:55:49 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EA969E9DF;
-        Wed,  1 Jun 2022 09:55:41 -0700 (PDT)
-X-UUID: 170dd9d948264c66b172e68656e21f4b-20220602
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.5,REQID:6fa3c549-2e88-441f-bdf7-7aeed1eadcdb,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:0
-X-CID-META: VersionHash:2a19b09,CLOUDID:82baf014-b515-4766-a72d-4514488fe823,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:0,BEC:nil
-X-UUID: 170dd9d948264c66b172e68656e21f4b-20220602
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
-        (envelope-from <deren.wu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 713503531; Thu, 02 Jun 2022 00:55:39 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Thu, 2 Jun 2022 00:55:38 +0800
-Received: from mtksdccf07 (172.21.84.99) by mtkmbs11n1.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.792.3 via Frontend
- Transport; Thu, 2 Jun 2022 00:55:38 +0800
-Message-ID: <da79fa2a94c435a308ea763efc557fc352d0245c.camel@mediatek.com>
-Subject: Re: [PATCH] Revert "mt76: mt7921: enable aspm by default"
-From:   Deren Wu <deren.wu@mediatek.com>
-To:     Kalle Valo <kvalo@kernel.org>, Philippe Schenker <dev@pschenker.ch>
-CC:     <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@nbd.name>,
-        <linux@leemhuis.info>, "David S. Miller" <davem@davemloft.net>,
-        "Jakub Kicinski" <kuba@kernel.org>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        "Sean Wang" <sean.wang@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        "YN Chen" <YN.Chen@mediatek.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <regressions@lists.linux.dev>
-Date:   Thu, 2 Jun 2022 00:55:38 +0800
-In-Reply-To: <87mtewoj4e.fsf@kernel.org>
-References: <20220412090415.17541-1-dev@pschenker.ch>
-         <87y20aod5d.fsf@kernel.org>
-         <668f1310cc78b17c24ce7be10f5f907d5578e280.camel@mediatek.com>
-         <e93aef5c9f8a97efe23cfb5892f78f919ce328e7.camel@pschenker.ch>
-         <87mtewoj4e.fsf@kernel.org>
+        Wed, 1 Jun 2022 15:43:37 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E773F1C7EE2
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2022 12:41:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=JAVDRJSSdtTN6NFBbruaw741kxUI3kUtROUWIudDn/E=;
+        t=1654112508; x=1655322108; b=tdzfxUNgs9u/xX9UJ6GiUS1Ej5pIF8/T3n16yJCIboaanLK
+        KU9xuKxMXwR+CXfajXdOVubyFs5k0JoVAfSEBOR89PsoJLRhi7ehG+PRKlL1+XGVS99sw1TktbkK1
+        lGGV/PjxClf0Gt3j2VO2oJIPXQs3q97ZimP2oh5KdP2lJLWV5RJEvSAGsNjNRQeTl20athjw5L9z0
+        a+3kUgAMXjMCv3FDj/6HIDGCPoOMg/14KXCm+GeaiRzOIOyqJv/0UsBCEL+adQuKAq77oOVBpXfti
+        aRQmPasyao0dV/2jNFl/NtF3t4i15TPqoKXhZWeeK6P5xKIJWALQfWPtkuTHhmXg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.95)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1nwUC1-00AX0p-WE;
+        Wed, 01 Jun 2022 21:39:46 +0200
+Message-ID: <5f5502b05106dea7fae829c22a8e4fad0a1f6da5.camel@sipsolutions.net>
+Subject: Re: [PATCH 01/15] mac80211: split bss_info_changed method
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jeff Johnson <quic_jjohnson@quicinc.com>,
+        linux-wireless@vger.kernel.org
+Date:   Wed, 01 Jun 2022 21:39:45 +0200
+In-Reply-To: <4a74852a-0a19-7fe5-95e6-09317bfe0eb3@quicinc.com>
+References: <20220601073958.8345-1-johannes@sipsolutions.net>
+         <20220601093922.347d47c279fe.I15937cfe8405999084f164ddf57390f8b8d2bc61@changeid>
+         <4a74852a-0a19-7fe5-95e6-09317bfe0eb3@quicinc.com>
 Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.1 (3.44.1-1.fc36) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-MTK:  N
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2022-06-01 at 11:58 +0300, Kalle Valo wrote:
-> Philippe Schenker <dev@pschenker.ch> writes:
-> 
-> > On Tue, 2022-04-12 at 19:06 +0800, Deren Wu wrote:
-> > > On Tue, 2022-04-12 at 12:37 +0300, Kalle Valo wrote:
-> > > > Philippe Schenker <dev@pschenker.ch> writes:
-> > > > 
-> > > > > This reverts commit bf3747ae2e25dda6a9e6c464a717c66118c588c8.
-> > > > > 
-> > > > > This commit introduces a regression on some systems where the
-> > > > > kernel is
-> > > > > crashing in different locations after a reboot was issued.
-> > > > > 
-> > > > > This issue was bisected on a Thinkpad P14s Gen2 (AMD) with
-> > > > > latest
-> > > > > firmware.
-> > > > > 
-> > > > > Link: 
-> > > > > 
-https://urldefense.com/v3/__https://lore.kernel.org/linux-wireless/5077a953487275837e81bdf1808ded00b9676f9f.camel@pschenker.ch/__;!!CTRNKA9wMg0ARbw!09tjyaQlMci3fVI3yiNiDJKUW_qwNA_CbVhoAraeIX96B99Q14J4iDycWA9cq36Y$
-> > > > >  
-> > > > > Signed-off-by: Philippe Schenker <dev@pschenker.ch>
-> > > > 
-> > > > Can I take this to wireless tree? Felix, ack?
-> > > > 
-> > > > I'll also add:
-> > > > 
-> > > > Fixes: bf3747ae2e25 ("mt76: mt7921: enable aspm by default")
-> > > > 
-> > > 
-> > > Hi Kalle,
-> > > 
-> > > We have a patch for a similar problem. Can you wait for the
-> > > verification by Philippe?
-> > > Commit 602cc0c9618a81 ("mt76: mt7921e: fix possible probe failure
-> > > after
-> > > reboot")
-> > > Link: 
-> > > 
-https://urldefense.com/v3/__https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/mediatek/mt76?id=602cc0c9618a819ab00ea3c9400742a0ca318380__;!!CTRNKA9wMg0ARbw!zCYyDcufJ-OLqQV6leCegA5SkNOOVjAIo-jzTHTk6HUWT9Gjt-bvSz8lr81Zv95u$
-> > >  
-> > > 
-> > > I can reproduce the problem in my v5.16-rc5 desktop. And the
-> > > issue can
-> > > be fixed when the patch applied.
-> > > 
-> > > 
-> > > Hi Philippe,
-> > > 
-> > > Can you please help to check the patch in your platform?
-> > 
-> > Hi Kalle and Deren,
-> > 
-> > I just noticed on my system and mainline v5.18 reboots do now work
-> > however Bluetooth is no longer accessible after a reboot.
-> > 
-> > Reverting commit bf3747ae2e25dda6a9e6c464a717c66118c588c8 on top of
-> > v5.18 solves this problem for me.
-> > 
-> > @Deren are you aware of this bug?
-> > @Kalle Is there a bugtracker somewhere I can submit this?
-> 
-> For regressions the best is to submit it to the regressions list,
-> CCed
-> it now.
-> 
-Hi Philippe,
+On Wed, 2022-06-01 at 12:31 -0700, Jeff Johnson wrote:
+> On 6/1/2022 12:39 AM, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >=20
+> > Split the bss_info_changed method to vif_cfg_changed and
+> > link_info_changed, with the latter getting a link ID.
+> > Also change the 'changed' parameter to u64 already, we
+> > know we need that.
+>=20
+> [snip]
+>=20
+> > -	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%=
+08x\n",
+> > -		    vif, changed);
+> > +	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac bss info changed vif %p changed 0x%=
+llx\n",
+> > +		    vif, (unsigned long long)changed);
+>=20
+> just curious about the typecasting.
+>=20
+> https://www.kernel.org/doc/html/latest/core-api/printk-formats.html=20
+> indicates we should always be able to use %lld or %llx for u64 hence no=
+=20
+> typecasting should be needed
+>=20
 
-Tried your test with v5.18.0 on my desktop and both wifi/bt are still
-avaible after reboot. The only problem is I need to insert btusb module
-by command "modprobe btusb" to make BT workable.
+Hm. I think you're probably right - I used powerpc 20 years ago and it
+had 'unsigned long' for u64, but I guess that changed a LONG time ago...
+Yep, commit fe333321e2a71 (Jan 2009). Sorry, old habits die hard. :(
 
-I will check the issue on different platforms. If there are any
-finding, I will let you know.
-
-Regards,
-Deren
-
+johannes
