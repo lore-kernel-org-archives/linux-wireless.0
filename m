@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E238C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 07:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB01FC4332F
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 07:40:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350322AbiFAHkP (ORCPT
+        id S1346505AbiFAHkP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 1 Jun 2022 03:40:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33668 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347765AbiFAHkH (ORCPT
+        with ESMTP id S1346671AbiFAHkH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 1 Jun 2022 03:40:07 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69AC995A0F
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2022 00:40:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDA29986FC
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2022 00:40:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=yu984Nx+p1tOxjZoDfYkMQpqrmtsUeOgvEVlPrjwWos=;
-        t=1654069206; x=1655278806; b=u8KvsygJIH5asbDRXOJJgQaS8+MbNhXV03PJFounrDobY8y
-        MptoARpGwE0ME4cWiZKEFCZN8l0AdAHQAFghJ/sfRicKW4dChBkr73MyuTmeRnx1e6fbFyZ9GgbEo
-        FJQGWhc6RdxdV/sDolnqcE+jWAOL4ad2HJcPvwV8k8lPZJs2LL7j3s604RGl/lAPGBHv+/5PWg0O/
-        FdIDyH8HvMGnzLgoMdj/Q+RxtJBwJ2dneEY3t53mQYKeZuxeapjJ5hYfsAOhuv6/q+LsGKqP6N59b
-        LGQNAvQejczCgcFD2AiaLPnt9hiN1xSeztE0lqbcL2zg9Vr1AgJjnG2RJ/Hm697A==;
+        Resent-Cc:Resent-Message-ID; bh=E6FxAdZRwnU0x/21mdftxr8Qq1+/Updvrs2CtRpUQ/0=;
+        t=1654069206; x=1655278806; b=t6R2g+aDtFF+AfyT5nCv4stwi0ozl96tjY2J7HJJ6pswqum
+        4/tBJFNlmZNmmQpiNxTupCLVwbDmfEhH0ukQGVTWsTyLsigNevvvjIQhHuvgKoU08BXLk7RpJ3vq7
+        APxiha6DibDdDOE7svD3ziidxlyywcSOD/jZrHphI7AbFzIDVSl4G+CA8WP/8UVusYbk7mOkuKmJ9
+        HnjPYhwq1v9g4kNuB70tgTWLG2m/OSQTyJv1u4t4g+0By6ehgmmLfPOJyY+WqiLU9Ao3DTI/2yxxD
+        ISDlrpArHrzUzQy8Sn8i9q/VeWjb5mHIC/3lKc/L9TjdlpUnOJVPHC5eY/rj2csQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nwIxY-00AJPK-9c;
-        Wed, 01 Jun 2022 09:40:04 +0200
+        id 1nwIxX-00AJPK-Mo;
+        Wed, 01 Jun 2022 09:40:03 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 11/15] mac80211: add link_id to eht.c code for MLO
-Date:   Wed,  1 Jun 2022 09:39:54 +0200
-Message-Id: <20220601093922.df8b484509f6.I7f6db8cc8f7e7bfb8cad4926a962cd5630fae330@changeid>
+Subject: [PATCH 09/15] mac80211: refactor some link setup code
+Date:   Wed,  1 Jun 2022 09:39:52 +0200
+Message-Id: <20220601093922.b3ae44127aae.If9fc716c4b91c31f74eb549757405a7f4b0f4236@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220601073958.8345-1-johannes@sipsolutions.net>
 References: <20220601073958.8345-1-johannes@sipsolutions.net>
@@ -48,84 +48,80 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Update the code in eht.c and add the link_id parameter where
-necessary.
+We don't need to setup lists and work structs every time
+we switch the interface type, factor that out into a new
+ieee80211_link_init() function and use it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c         |  2 +-
- net/mac80211/eht.c         | 12 ++++++++----
- net/mac80211/ieee80211_i.h |  3 ++-
- net/mac80211/mlme.c        |  2 +-
- 4 files changed, 12 insertions(+), 7 deletions(-)
+ net/mac80211/iface.c | 33 ++++++++++++++++++++++-----------
+ 1 file changed, 22 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 27eb281f53b6..0afff3b0aeee 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1782,7 +1782,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 						    params->he_capa_len,
- 						    params->eht_capa,
- 						    params->eht_capa_len,
--						    sta);
-+						    sta, 0);
- 
- 	if (params->opmode_notif_used) {
- 		/* returned value is only needed for rc update, but the
-diff --git a/net/mac80211/eht.c b/net/mac80211/eht.c
-index 2d9c6e845ce4..de762a803c38 100644
---- a/net/mac80211/eht.c
-+++ b/net/mac80211/eht.c
-@@ -12,9 +12,11 @@ ieee80211_eht_cap_ie_to_sta_eht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_supported_band *sband,
- 				    const u8 *he_cap_ie, u8 he_cap_len,
- 				    const struct ieee80211_eht_cap_elem *eht_cap_ie_elem,
--				    u8 eht_cap_len, struct sta_info *sta)
-+				    u8 eht_cap_len, struct sta_info *sta,
-+				    unsigned int link_id)
- {
--	struct ieee80211_sta_eht_cap *eht_cap = &sta->sta.deflink.eht_cap;
-+	struct ieee80211_sta_eht_cap *eht_cap =
-+		&sta->sta.link[link_id]->eht_cap;
- 	struct ieee80211_he_cap_elem *he_cap_ie_elem = (void *)he_cap_ie;
- 	u8 eht_ppe_size = 0;
- 	u8 mcs_nss_size;
-@@ -71,6 +73,8 @@ ieee80211_eht_cap_ie_to_sta_eht_cap(struct ieee80211_sub_if_data *sdata,
- 
- 	eht_cap->has_eht = true;
- 
--	sta->deflink.cur_max_bandwidth = ieee80211_sta_cap_rx_bw(sta, 0);
--	sta->sta.deflink.bandwidth = ieee80211_sta_cur_vht_bw(sta, 0);
-+	sta->link[link_id]->cur_max_bandwidth =
-+		ieee80211_sta_cap_rx_bw(sta, link_id);
-+	sta->sta.link[link_id]->bandwidth =
-+		ieee80211_sta_cur_vht_bw(sta, link_id);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 1764068a18d1..fa684d76a169 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1012,6 +1012,27 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
  }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5be96b0bbd96..c59dc8f6126b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2577,5 +2577,6 @@ ieee80211_eht_cap_ie_to_sta_eht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_supported_band *sband,
- 				    const u8 *he_cap_ie, u8 he_cap_len,
- 				    const struct ieee80211_eht_cap_elem *eht_cap_ie_elem,
--				    u8 eht_cap_len, struct sta_info *sta);
-+				    u8 eht_cap_len, struct sta_info *sta,
-+				    unsigned int link_id);
- #endif /* IEEE80211_I_H */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 643ef0ae786e..459780169e23 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3599,7 +3599,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 							    elems->he_cap_len,
- 							    elems->eht_cap,
- 							    elems->eht_cap_len,
--							    sta);
-+							    sta, 0);
  
- 			bss_conf->eht_support = sta->sta.deflink.eht_cap.has_eht;
- 		} else {
++static void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
++				unsigned int link_id,
++				struct ieee80211_link_data *link,
++				struct ieee80211_bss_conf *link_conf)
++{
++	sdata->vif.link_conf[link_id] = link_conf;
++	sdata->link[link_id] = link;
++
++	link->sdata = sdata;
++	link->link_id = link_id;
++
++	INIT_WORK(&link->csa_finalize_work,
++		  ieee80211_csa_finalize_work);
++	INIT_WORK(&link->color_change_finalize_work,
++		  ieee80211_color_change_finalize_work);
++	INIT_LIST_HEAD(&link->assigned_chanctx_list);
++	INIT_LIST_HEAD(&link->reserved_chanctx_list);
++	INIT_DELAYED_WORK(&link->dfs_cac_timer_work,
++			  ieee80211_dfs_cac_timer_work);
++}
++
+ static void ieee80211_sdata_init(struct ieee80211_local *local,
+ 				 struct ieee80211_sub_if_data *sdata)
+ {
+@@ -1025,9 +1046,7 @@ static void ieee80211_sdata_init(struct ieee80211_local *local,
+ 	 * Note that we never change this, so if link ID 0 isn't used in an
+ 	 * MLD connection, we get a separate allocation for it.
+ 	 */
+-	sdata->vif.link_conf[0] = &sdata->vif.bss_conf;
+-	sdata->link[0] = &sdata->deflink;
+-	sdata->deflink.sdata = sdata;
++	ieee80211_link_init(sdata, 0, &sdata->deflink, &sdata->vif.bss_conf);
+ }
+ 
+ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+@@ -1678,12 +1697,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	skb_queue_head_init(&sdata->status_queue);
+ 	INIT_WORK(&sdata->work, ieee80211_iface_work);
+ 	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
+-	INIT_WORK(&sdata->deflink.csa_finalize_work,
+-		  ieee80211_csa_finalize_work);
+-	INIT_WORK(&sdata->deflink.color_change_finalize_work,
+-		  ieee80211_color_change_finalize_work);
+-	INIT_LIST_HEAD(&sdata->deflink.assigned_chanctx_list);
+-	INIT_LIST_HEAD(&sdata->deflink.reserved_chanctx_list);
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_P2P_GO:
+@@ -2100,8 +2113,6 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 
+ 	INIT_LIST_HEAD(&sdata->key_list);
+ 
+-	INIT_DELAYED_WORK(&sdata->deflink.dfs_cac_timer_work,
+-			  ieee80211_dfs_cac_timer_work);
+ 	INIT_DELAYED_WORK(&sdata->dec_tailroom_needed_wk,
+ 			  ieee80211_delayed_tailroom_dec);
+ 
 -- 
 2.36.1
 
