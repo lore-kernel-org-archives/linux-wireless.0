@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E54B2C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 07:40:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FB2CC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 07:40:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350329AbiFAHkO (ORCPT
+        id S1345110AbiFAHkO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 1 Jun 2022 03:40:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33642 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345381AbiFAHkG (ORCPT
+        with ESMTP id S1346505AbiFAHkH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Jun 2022 03:40:06 -0400
+        Wed, 1 Jun 2022 03:40:07 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74899986E4
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECAF4986EB
         for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2022 00:40:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=x7ZQcFvXpMeB75paJmKGva+u4ftpNNQ94kdXj2XJjo8=;
-        t=1654069205; x=1655278805; b=HU1UWkPV/oe1peFu8FTNCeOYlFhh1CVZlVngqecAu+31Qql
-        3KJz/aJV4+szE1/m9GPrWcDpbqdbSOUCJnqwucdCnyqiV9EzOhzdOxPqV1/fDZFyWvudt76EAeAzU
-        /LLuPi9Zu/s3hObj/oPK8hirlIxHApKJLyLpwMwDLj06wov1yW07+z7AFSd+D0nhWRJPSslVb0ouQ
-        1nIVULSlQhkgBEZaEJJp4pzu8z6fD7ipf4cMK9X0A7liVIsks57sYbu27/o1WM5/k056eASD7Ep3R
-        fJpXv6t2oJpDa2VxawwANeSESHEAgQuxgTqTIDK/RCnSY0tNDh+gOSBjB6l3fIgA==;
+        Resent-Cc:Resent-Message-ID; bh=lojIq1zlQlZ7/qjd0G6TeOJ4z9KxMnwBQCbUjyie160=;
+        t=1654069206; x=1655278806; b=iKGwARluRLpXnHkfHwibaebNUdZ47mwYOAGCfT2DvrhLh8g
+        mg4YpTDoDayHs+ub6yDdEAydcZuAe/JSw7ecurcgi5hff4mKYNEAw/jEkwGrn3siapHZkZjyVRM9Q
+        3dJ1jbYcLQKxChRi/KieCLSXjzGZukRdmXUZosja+JJWBxusbqpgKGQT1czoah+AeBxF0kXM6jlqF
+        Ug+uXukEChDIJFphO+tj2W7X3UJIxNmzZ2VNGIxB05nY6fDU5+Lf+0Cvu+ZK08oZU0tlFdjla76n2
+        /bixwFuBnilTGLUK0ioMQ3FkJIlAoIIcQUlJkpkkLH9LlnyWrBVhWeb3N0UYcejA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1nwIxW-00AJPK-Lu;
-        Wed, 01 Jun 2022 09:40:02 +0200
+        id 1nwIxX-00AJPK-ET;
+        Wed, 01 Jun 2022 09:40:03 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 05/15] mac80211: remove sta_info_tx_streams()
-Date:   Wed,  1 Jun 2022 09:39:48 +0200
-Message-Id: <20220601093922.d4aa77956a2a.I204d488e980cbba5353fca23fed38d8205dbd4f7@changeid>
+Subject: [PATCH 08/15] mac80211: validate some driver features for MLO
+Date:   Wed,  1 Jun 2022 09:39:51 +0200
+Message-Id: <20220601093922.ae4718d24726.I81112aa6318e50bebba53117f8b39f255b41b28e@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220601073958.8345-1-johannes@sipsolutions.net>
 References: <20220601073958.8345-1-johannes@sipsolutions.net>
@@ -48,73 +48,68 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The function is unused since commit 52b4810bed83 ("mac80211: Remove
-support for changing AP SMPS mode") so we can just remove it.
+If MLO is enabled by the driver then validate a set of
+capabilities that mac80211 will initially not support
+in MLO. This might change if features are implemented.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/sta_info.c | 35 -----------------------------------
- net/mac80211/sta_info.h |  1 -
- 2 files changed, 36 deletions(-)
+ net/mac80211/main.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 9a70d846d0dd..6f6d83def8b8 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2093,41 +2093,6 @@ int sta_info_move_state(struct sta_info *sta,
- 	return 0;
- }
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 6165b90bf0e2..c5553d68d779 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -951,6 +951,48 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		    (!local->ops->start_nan || !local->ops->stop_nan)))
+ 		return -EINVAL;
  
--u8 sta_info_tx_streams(struct sta_info *sta)
--{
--	struct ieee80211_sta_ht_cap *ht_cap = &sta->sta.deflink.ht_cap;
--	u8 rx_streams;
--
--	if (!sta->sta.deflink.ht_cap.ht_supported)
--		return 1;
--
--	if (sta->sta.deflink.vht_cap.vht_supported) {
--		int i;
--		u16 tx_mcs_map =
--			le16_to_cpu(sta->sta.deflink.vht_cap.vht_mcs.tx_mcs_map);
--
--		for (i = 7; i >= 0; i--)
--			if ((tx_mcs_map & (0x3 << (i * 2))) !=
--			    IEEE80211_VHT_MCS_NOT_SUPPORTED)
--				return i + 1;
--	}
--
--	if (ht_cap->mcs.rx_mask[3])
--		rx_streams = 4;
--	else if (ht_cap->mcs.rx_mask[2])
--		rx_streams = 3;
--	else if (ht_cap->mcs.rx_mask[1])
--		rx_streams = 2;
--	else
--		rx_streams = 1;
--
--	if (!(ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_RX_DIFF))
--		return rx_streams;
--
--	return ((ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK)
--			>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT) + 1;
--}
--
- static struct ieee80211_sta_rx_stats *
- sta_get_last_rx_stats(struct sta_info *sta)
- {
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index aa6950aa49a9..134a7dad0ac4 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -891,7 +891,6 @@ u32 sta_get_expected_throughput(struct sta_info *sta);
- 
- void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 			  unsigned long exp_time);
--u8 sta_info_tx_streams(struct sta_info *sta);
- 
- void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta);
- void ieee80211_sta_ps_deliver_poll_response(struct sta_info *sta);
++	if (hw->wiphy->flags & WIPHY_FLAG_SUPPORTS_MLO) {
++		/*
++		 * For drivers capable of doing MLO, assume modern driver
++		 * or firmware facilities, so software doesn't have to do
++		 * as much, e.g. monitoring beacons would be hard if we
++		 * might not even know which link is active at which time.
++		 */
++		if (WARN_ON(!local->use_chanctx))
++			return -EINVAL;
++
++		if (WARN_ON(!local->ops->link_info_changed))
++			return -EINVAL;
++
++		if (WARN_ON(!ieee80211_hw_check(hw, HAS_RATE_CONTROL)))
++			return -EINVAL;
++
++		if (WARN_ON(!ieee80211_hw_check(hw, AMPDU_AGGREGATION)))
++			return -EINVAL;
++
++		if (WARN_ON(ieee80211_hw_check(hw, HOST_BROADCAST_PS_BUFFERING)))
++			return -EINVAL;
++
++		if (WARN_ON(ieee80211_hw_check(hw, SUPPORTS_PS) &&
++			    !ieee80211_hw_check(hw, SUPPORTS_DYNAMIC_PS)))
++			return -EINVAL;
++
++		if (WARN_ON(!ieee80211_hw_check(hw, MFP_CAPABLE)))
++			return -EINVAL;
++
++		if (WARN_ON(!ieee80211_hw_check(hw, CONNECTION_MONITOR)))
++			return -EINVAL;
++
++		if (WARN_ON(ieee80211_hw_check(hw, NEED_DTIM_BEFORE_ASSOC)))
++			return -EINVAL;
++
++		if (WARN_ON(ieee80211_hw_check(hw, TIMING_BEACON_ONLY)))
++			return -EINVAL;
++
++		if (WARN_ON(!ieee80211_hw_check(hw, AP_LINK_PS)))
++			return -EINVAL;
++	}
++
+ #ifdef CONFIG_PM
+ 	if (hw->wiphy->wowlan && (!local->ops->suspend || !local->ops->resume))
+ 		return -EINVAL;
 -- 
 2.36.1
 
