@@ -2,104 +2,143 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 925ECC433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 00:27:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB1F8C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Jun 2022 01:40:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346797AbiFAA1o (ORCPT
+        id S1348987AbiFABkA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 31 May 2022 20:27:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42494 "EHLO
+        Tue, 31 May 2022 21:40:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235844AbiFAA1m (ORCPT
+        with ESMTP id S231584AbiFABkA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 May 2022 20:27:42 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7534451307
-        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2022 17:27:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1654043261; x=1685579261;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=MzVto5JifBCcRpXWLop2l1aIQWQ2PohzEiDsbqbZdrs=;
-  b=gCH18Qa5uTRPe69+95CTWvDQ2bfR9JaowAAZLg5bYjSFgJkDkRsDMtOX
-   EaKZh6IhJomdgGgjLNW1LTnuyylXzO6KLIsYBHZsSQQg+eYEHTFd5AXh1
-   U3BvBdyYsnPf1/jvNtMYn3lLnkr3NcrEkvKMHhDg4fDIbQWsO42T6BEam
-   o=;
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 31 May 2022 17:27:39 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg04-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 17:27:39 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 31 May 2022 17:27:39 -0700
-Received: from [10.110.67.112] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Tue, 31 May
- 2022 17:27:37 -0700
-Message-ID: <51843710-a1ec-b1f6-8d1a-972ca5b40af4@quicinc.com>
-Date:   Tue, 31 May 2022 17:27:36 -0700
+        Tue, 31 May 2022 21:40:00 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A200B72209
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2022 18:39:58 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2511ddolF005992, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2511ddolF005992
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Wed, 1 Jun 2022 09:39:40 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Wed, 1 Jun 2022 09:39:39 +0800
+Received: from localhost (172.16.20.31) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 1 Jun
+ 2022 09:39:39 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>, <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>, <echuang@realtek.com>,
+        <phhuang@realtek.com>
+Subject: [PATCH 1/3] ieee80211: add trigger frame definition
+Date:   Wed, 1 Jun 2022 09:39:15 +0800
+Message-ID: <20220601013917.18814-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220601013917.18814-1-pkshih@realtek.com>
+References: <20220601013917.18814-1-pkshih@realtek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [RFC v2 50/96] cl8k: add phy.c
-Content-Language: en-US
-To:     <viktor.barna@celeno.com>, <linux-wireless@vger.kernel.org>
-CC:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Aviad Brikman <aviad.brikman@celeno.com>,
-        Eliav Farber <eliav.farber@gmail.com>,
-        "Maksym Kokhan" <maksym.kokhan@celeno.com>,
-        Oleksandr Savchenko <oleksandr.savchenko@celeno.com>,
-        Shay Bar <shay.bar@celeno.com>
-References: <20220524113502.1094459-1-viktor.barna@celeno.com>
- <20220524113502.1094459-51-viktor.barna@celeno.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20220524113502.1094459-51-viktor.barna@celeno.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.20.31]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/01/2022 01:18:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzUvMzEgpFWkyCAxMDoxMjowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 5/24/2022 4:34 AM, viktor.barna@celeno.com wrote:
-> From: Viktor Barna <viktor.barna@celeno.com>
-> 
-> (Part of the split. Please, take a look at the cover letter for more
-> details).
-> 
-> Signed-off-by: Viktor Barna <viktor.barna@celeno.com>
-> ---
->   drivers/net/wireless/celeno/cl8k/phy.c | 9648 ++++++++++++++++++++++++
->   1 file changed, 9648 insertions(+)
->   create mode 100644 drivers/net/wireless/celeno/cl8k/phy.c
-> 
-> diff --git a/drivers/net/wireless/celeno/cl8k/phy.c b/drivers/net/wireless/celeno/cl8k/phy.c
-> new file mode 100644
-> index 000000000000..dfc7f5a95d3d
-> --- /dev/null
-> +++ b/drivers/net/wireless/celeno/cl8k/phy.c
-> @@ -0,0 +1,9648 @@
-> +// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
-> +/* Copyright(c) 2019-2022, Celeno Communications Ltd. */
-> +
-> +#include "tx.h"
-> +#include "reg/reg_defs.h"
-> +#include "radio.h"
-> +#include "dsp.h"
-> +#include "rfic.h"
-> +#include "e2p.h"
-> +#include "phy.h"
-> +
-> +#define FEM_LUT_EMPTY 0x0
-> +
-> +const struct common_lut_line athos_lut_6g_40_mhz[ATHOS_LUT_CHAN_6G_MAX] = {
+From: Po Hao Huang <phhuang@realtek.com>
 
-in this file and in power.c you have multiple lookup tables that look 
-like they could/should be static to limit their scope to the current file
+Define trigger stype of control frame, and its checking function, struct
+and trigger type within common_info of trigger.
+
+Signed-off-by: Po Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ include/linux/ieee80211.h | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 75d40acb60c1c..f3b2d5b56d643 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -76,6 +76,7 @@
+ #define IEEE80211_STYPE_ACTION		0x00D0
+ 
+ /* control */
++#define IEEE80211_STYPE_TRIGGER		0x0020
+ #define IEEE80211_STYPE_CTL_EXT		0x0060
+ #define IEEE80211_STYPE_BACK_REQ	0x0080
+ #define IEEE80211_STYPE_BACK		0x0090
+@@ -295,6 +296,17 @@ static inline u16 ieee80211_sn_sub(u16 sn1, u16 sn2)
+ 
+ #define IEEE80211_HT_CTL_LEN		4
+ 
++/* trigger type within common_info of trigger frame */
++#define IEEE80211_TRIGGER_TYPE_MASK		0xfULL
++#define IEEE80211_TRIGGER_TYPE_BASIC		0x0
++#define IEEE80211_TRIGGER_TYPE_BFRP		0x1
++#define IEEE80211_TRIGGER_TYPE_MU_BAR		0x2
++#define IEEE80211_TRIGGER_TYPE_MU_RTS		0x3
++#define IEEE80211_TRIGGER_TYPE_BSRP		0x4
++#define IEEE80211_TRIGGER_TYPE_GCR_MU_BAR	0x5
++#define IEEE80211_TRIGGER_TYPE_BQRP		0x6
++#define IEEE80211_TRIGGER_TYPE_NFRP		0x7
++
+ struct ieee80211_hdr {
+ 	__le16 frame_control;
+ 	__le16 duration_id;
+@@ -324,6 +336,15 @@ struct ieee80211_qos_hdr {
+ 	__le16 qos_ctrl;
+ } __packed __aligned(2);
+ 
++struct ieee80211_trigger {
++	__le16 frame_control;
++	__le16 duration;
++	u8 ra[ETH_ALEN];
++	u8 ta[ETH_ALEN];
++	__le64 common_info;
++	u8 variable[];
++} __packed __aligned(2);
++
+ /**
+  * ieee80211_has_tods - check if IEEE80211_FCTL_TODS is set
+  * @fc: frame control bytes in little-endian byteorder
+@@ -729,6 +750,16 @@ static inline bool ieee80211_is_qos_nullfunc(__le16 fc)
+ 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
+ }
+ 
++/**
++ * ieee80211_is_trigger - check if frame is trigger frame
++ * @fc: frame control field in little-endian byteorder
++ */
++static inline bool ieee80211_is_trigger(__le16 fc)
++{
++	return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
++	       cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_TRIGGER);
++}
++
+ /**
+  * ieee80211_is_any_nullfunc - check if frame is regular or QoS nullfunc frame
+  * @fc: frame control bytes in little-endian byteorder
+-- 
+2.25.1
+
