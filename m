@@ -2,507 +2,166 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7248FC43334
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jun 2022 05:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B9FC43334
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jun 2022 08:44:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230006AbiFBFOu (ORCPT
+        id S232496AbiFBIoV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Jun 2022 01:14:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38750 "EHLO
+        Thu, 2 Jun 2022 04:44:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230003AbiFBFOs (ORCPT
+        with ESMTP id S232276AbiFBIoT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Jun 2022 01:14:48 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A35EF6894
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Jun 2022 22:14:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1654146887; x=1685682887;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=nr3RF0XF1PqTu8uvFW/v9e85v0NVOSy1GQFAjBuqiq0=;
-  b=eBoVuCHDYQWO4BR52fZXkOdXpu5903hHqWeE/2loPQmNBMn6bN4c4UJR
-   s26sG8q77g7baGPKqaLlQd1wUkj0sj9HSKZvbr1rBABT1jFqN4S0UaTkD
-   erAsTcagzr3yl9VWvmI2OHNOI4kS5NWcpUKCQybsABE5ZAzwayjVx2XJx
-   g=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 01 Jun 2022 22:14:46 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jun 2022 22:14:46 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 1 Jun 2022 22:14:45 -0700
-Received: from adisi-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 1 Jun 2022 22:14:43 -0700
-From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Aditya Kumar Singh <quic_adisi@quicinc.com>
-Subject: [PATCH 1/2] ath11k: move firmware stats out of debugfs
-Date:   Thu, 2 Jun 2022 10:44:24 +0530
-Message-ID: <20220602051425.9265-2-quic_adisi@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220602051425.9265-1-quic_adisi@quicinc.com>
-References: <20220602051425.9265-1-quic_adisi@quicinc.com>
+        Thu, 2 Jun 2022 04:44:19 -0400
+X-Greylist: delayed 86831 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 02 Jun 2022 01:44:18 PDT
+Received: from smtp-8faa.mail.infomaniak.ch (smtp-8faa.mail.infomaniak.ch [83.166.143.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48F32EBA94
+        for <linux-wireless@vger.kernel.org>; Thu,  2 Jun 2022 01:44:17 -0700 (PDT)
+Received: from smtp-2-0001.mail.infomaniak.ch (unknown [10.5.36.108])
+        by smtp-3-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4LDKLl046yzMprjq;
+        Thu,  2 Jun 2022 10:44:15 +0200 (CEST)
+Received: from [10.0.0.141] (unknown [31.10.206.125])
+        by smtp-2-0001.mail.infomaniak.ch (Postfix) with ESMTPA id 4LDKLk1DMszlk1FD;
+        Thu,  2 Jun 2022 10:44:13 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=pschenker.ch;
+        s=20220412; t=1654159454;
+        bh=mV7mkCUjOl6hMSevGR59+xlFQCqBQ4WwdymyF0opzUY=;
+        h=Subject:From:Reply-To:To:Cc:Date:In-Reply-To:References:From;
+        b=TVJFhJK9EsLdiqX+KhfpvkfTgssVCX73VGWmPkbBNWLdNRINdU7AzH0KLslewDaPE
+         0/OcSegpEggQ+NuLItKAQexi9dmhEjTtYaqWsf2yWmCCCWHigsxq3jh0KmXREU+xJC
+         BCkuo08R2hje4EXErOkpDVna9rJTAIVc9SsHLJrw=
+Message-ID: <2c5a6bb34c67c9c15c393346e89bdb14ae6f3c44.camel@pschenker.ch>
+Subject: Re: [PATCH] Revert "mt76: mt7921: enable aspm by default"
+From:   Philippe Schenker <dev@pschenker.ch>
+Reply-To: dev@pschenker.ch
+To:     sean.wang@mediatek.com
+Cc:     deren.wu@mediatek.com, kvalo@kernel.org,
+        linux-wireless@vger.kernel.org, nbd@nbd.name, linux@leemhuis.info,
+        davem@davemloft.net, kuba@kernel.org, lorenzo.bianconi83@gmail.com,
+        matthias.bgg@gmail.com, pabeni@redhat.com, ryder.lee@mediatek.com,
+        shayne.chen@mediatek.com, yn.chen@mediatek.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, netdev@vger.kernel.org
+Date:   Thu, 02 Jun 2022 10:44:13 +0200
+In-Reply-To: <1654122203-26090-1-git-send-email-sean.wang@mediatek.com>
+References: <e93aef5c9f8a97efe23cfb5892f78f919ce328e7.camel@pschenker.ch--annotate>
+         <1654122203-26090-1-git-send-email-sean.wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.1 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, firmware stats, comprising pdev, vdev and beacon stats are
-part of debugfs. In firmware pdev stats, firmware reports the final
-Tx power used to transmit each packet. If driver wants to know the
-final Tx power being used at firmware level, it can leverage from
-firmware pdev stats.
+On Thu, 2022-06-02 at 06:23 +0800, sean.wang@mediatek.com wrote:
+> From: Sean Wang <sean.wang@mediatek.com>
+>=20
+> > On Tue, 2022-04-12 at 19:06 +0800, Deren Wu wrote:
+> > > On Tue, 2022-04-12 at 12:37 +0300, Kalle Valo wrote:
+> > > > Philippe Schenker <dev@pschenker.ch> writes:
+> > > >=20
+> > > > > This reverts commit bf3747ae2e25dda6a9e6c464a717c66118c588c8.
+> > > > >=20
+> > > > > This commit introduces a regression on some systems where the
+> > > > > kernel is crashing in different locations after a reboot was
+> > > > > issued.
+> > > > >=20
+> > > > > This issue was bisected on a Thinkpad P14s Gen2 (AMD) with
+> > > > > latest
+> > > > > firmware.
+> > > > >=20
+> > > > > Link:
+> > > > > https://urldefense.com/v3/__https://lore.kernel.org/linux-wireles=
+s
+> > > > > /5077a953487275837e81bdf1808ded00b9676f9f.camel@pschenker.ch/_
+> > > > > _;!!
+> > > > > CTRNKA9wMg0ARbw!09tjyaQlMci3fVI3yiNiDJKUW_qwNA_CbVhoAraeIX96B9
+> > > > > 9Q14
+> > > > > J4iDycWA9cq36Y$
+> > > > >=20
+> > > > > Signed-off-by: Philippe Schenker <dev@pschenker.ch>
+> > > >=20
+> > > > Can I take this to wireless tree? Felix, ack?
+> > > >=20
+> > > > I'll also add:
+> > > >=20
+> > > > Fixes: bf3747ae2e25 ("mt76: mt7921: enable aspm by default")
+> > > >=20
+> > >=20
+> > > Hi Kalle,
+> > >=20
+> > > We have a patch for a similar problem. Can you wait for the
+> > > verification by Philippe?
+> > > Commit 602cc0c9618a81 ("mt76: mt7921e: fix possible probe failure
+> > > after
+> > > reboot")
+> > > Link:
+> > > https://urldefense.com/v3/__https://git.kernel.org/pub/scm/linux/kern=
+e
+> > > l/git/torvalds/linux.git/commit/drivers/net/wireless/mediatek/mt76
+> > > ?id=3D
+> > > 602cc0c9618a819ab00ea3c9400742a0ca318380__;!!CTRNKA9wMg0ARbw!3N9I3
+> > > iKwS
+> > > 3XCNAb4LuhbFqt_el1yiOaJzSdUjaJsTaxRCHiWhXnEgbk3bOqYTy6T$
+> > >=20
+> > > I can reproduce the problem in my v5.16-rc5 desktop. And the issue
+> > > can
+> > > be fixed when the patch applied.
+> > >=20
+> > >=20
+> > > Hi Philippe,
+> > >=20
+> > > Can you please help to check the patch in your platform?
+> >=20
+> > Hi Kalle and Deren,
+> >=20
+> > I just noticed on my system and mainline v5.18 reboots do now work
+> > however Bluetooth is no longer accessible after a reboot.
+> >=20
+> > Reverting commit bf3747ae2e25dda6a9e6c464a717c66118c588c8 on top of
+> > v5.18 solves this problem for me.
+> >=20
+> > @Deren are you aware of this bug?
+> > @Kalle Is there a bugtracker somewhere I can submit this?
+>=20
+> Hi Philippe,
+>=20
+> Could you try the latest firmware to see if it can help with the issue
+> you reported here ?
+>=20
+> Please check out
+> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.g=
+it/tree/mediatek
+> and replace the following three files in /lib/firmware/mediatek on
+> your target and reboot
+> 1) BT_RAM_CODE_MT7961_1_2_hdr.bin
+> 2) WIFI_MT7961_patch_mcu_1_2_hdr.bin
+> 3) WIFI_RAM_CODE_MT7961_1.bin
+>=20
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Sean
 
-Move firmware stats out of debugfs context in order to leverage
-the final Tx power reported in it even when debugfs is disabled.
+Hi Sean,
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
+Thanks for your suggestion. I downloaded the firmwares from the link you
+indicated and downloaded the three firmwares from main branch. I checked
+and the sha256sums of the most recent firmwares match with the one
+installed by my distribution. So I already had latest versions on my
+tests.
 
-Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/core.c    |  46 ++++++++
- drivers/net/wireless/ath/ath11k/core.h    |  12 +-
- drivers/net/wireless/ath/ath11k/debugfs.c | 131 +++++-----------------
- drivers/net/wireless/ath/ath11k/debugfs.h |   6 +-
- drivers/net/wireless/ath/ath11k/wmi.c     |  48 +++++++-
- 5 files changed, 136 insertions(+), 107 deletions(-)
+Philippe
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index ca6fadd64b43..07a299a2e213 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -570,6 +570,52 @@ static inline struct ath11k_pdev *ath11k_core_get_single_pdev(struct ath11k_base
- 	return &ab->pdevs[0];
- }
- 
-+void ath11k_fw_stats_pdevs_free(struct list_head *head)
-+{
-+	struct ath11k_fw_stats_pdev *i, *tmp;
-+
-+	list_for_each_entry_safe(i, tmp, head, list) {
-+		list_del(&i->list);
-+		kfree(i);
-+	}
-+}
-+
-+void ath11k_fw_stats_vdevs_free(struct list_head *head)
-+{
-+	struct ath11k_fw_stats_vdev *i, *tmp;
-+
-+	list_for_each_entry_safe(i, tmp, head, list) {
-+		list_del(&i->list);
-+		kfree(i);
-+	}
-+}
-+
-+void ath11k_fw_stats_bcn_free(struct list_head *head)
-+{
-+	struct ath11k_fw_stats_bcn *i, *tmp;
-+
-+	list_for_each_entry_safe(i, tmp, head, list) {
-+		list_del(&i->list);
-+		kfree(i);
-+	}
-+}
-+
-+void ath11k_fw_stats_init(struct ath11k *ar)
-+{
-+	INIT_LIST_HEAD(&ar->fw_stats.pdevs);
-+	INIT_LIST_HEAD(&ar->fw_stats.vdevs);
-+	INIT_LIST_HEAD(&ar->fw_stats.bcn);
-+
-+	init_completion(&ar->fw_stats_complete);
-+}
-+
-+void ath11k_fw_stats_free(struct ath11k_fw_stats *stats)
-+{
-+	ath11k_fw_stats_pdevs_free(&stats->pdevs);
-+	ath11k_fw_stats_vdevs_free(&stats->vdevs);
-+	ath11k_fw_stats_bcn_free(&stats->bcn);
-+}
-+
- int ath11k_core_suspend(struct ath11k_base *ab)
- {
- 	int ret;
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 65d54e9c15d9..672701f40a6b 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -545,9 +545,6 @@ struct ath11k_debug {
- 	struct dentry *debugfs_pdev;
- 	struct ath11k_dbg_htt_stats htt_stats;
- 	u32 extd_tx_stats;
--	struct ath11k_fw_stats fw_stats;
--	struct completion fw_stats_complete;
--	bool fw_stats_done;
- 	u32 extd_rx_stats;
- 	u32 pktlog_filter;
- 	u32 pktlog_mode;
-@@ -712,6 +709,9 @@ struct ath11k {
- 	u8 twt_enabled;
- 	bool nlo_enabled;
- 	u8 alpha2[REG_ALPHA2_LEN + 1];
-+	struct ath11k_fw_stats fw_stats;
-+	struct completion fw_stats_complete;
-+	bool fw_stats_done;
- };
- 
- struct ath11k_band_cap {
-@@ -1117,6 +1117,12 @@ struct ath11k_fw_stats_bcn {
- 	u32 tx_bcn_outage_cnt;
- };
- 
-+void ath11k_fw_stats_init(struct ath11k *ar);
-+void ath11k_fw_stats_pdevs_free(struct list_head *head);
-+void ath11k_fw_stats_vdevs_free(struct list_head *head);
-+void ath11k_fw_stats_bcn_free(struct list_head *head);
-+void ath11k_fw_stats_free(struct ath11k_fw_stats *stats);
-+
- extern const struct ce_pipe_config ath11k_target_ce_config_wlan_ipq8074[];
- extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq8074[];
- extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq6018[];
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
-index 0d4843ef9dd1..e4a2fd3da481 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs.c
-@@ -93,91 +93,36 @@ void ath11k_debugfs_add_dbring_entry(struct ath11k *ar,
- 	spin_unlock_bh(&dbr_data->lock);
- }
- 
--static void ath11k_fw_stats_pdevs_free(struct list_head *head)
--{
--	struct ath11k_fw_stats_pdev *i, *tmp;
--
--	list_for_each_entry_safe(i, tmp, head, list) {
--		list_del(&i->list);
--		kfree(i);
--	}
--}
--
--static void ath11k_fw_stats_vdevs_free(struct list_head *head)
--{
--	struct ath11k_fw_stats_vdev *i, *tmp;
--
--	list_for_each_entry_safe(i, tmp, head, list) {
--		list_del(&i->list);
--		kfree(i);
--	}
--}
--
--static void ath11k_fw_stats_bcn_free(struct list_head *head)
--{
--	struct ath11k_fw_stats_bcn *i, *tmp;
--
--	list_for_each_entry_safe(i, tmp, head, list) {
--		list_del(&i->list);
--		kfree(i);
--	}
--}
- 
- static void ath11k_debugfs_fw_stats_reset(struct ath11k *ar)
- {
- 	spin_lock_bh(&ar->data_lock);
--	ar->debug.fw_stats_done = false;
--	ath11k_fw_stats_pdevs_free(&ar->debug.fw_stats.pdevs);
--	ath11k_fw_stats_vdevs_free(&ar->debug.fw_stats.vdevs);
-+	ar->fw_stats_done = false;
-+	ath11k_fw_stats_pdevs_free(&ar->fw_stats.pdevs);
-+	ath11k_fw_stats_vdevs_free(&ar->fw_stats.vdevs);
- 	spin_unlock_bh(&ar->data_lock);
- }
- 
--void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab, struct sk_buff *skb)
-+void ath11k_debugfs_fw_stats_process(struct ath11k *ar, struct ath11k_fw_stats *stats)
- {
--	struct ath11k_fw_stats stats = {};
--	struct ath11k *ar;
-+	struct ath11k_base *ab = ar->ab;
- 	struct ath11k_pdev *pdev;
- 	bool is_end;
- 	static unsigned int num_vdev, num_bcn;
- 	size_t total_vdevs_started = 0;
--	int i, ret;
--
--	INIT_LIST_HEAD(&stats.pdevs);
--	INIT_LIST_HEAD(&stats.vdevs);
--	INIT_LIST_HEAD(&stats.bcn);
--
--	ret = ath11k_wmi_pull_fw_stats(ab, skb, &stats);
--	if (ret) {
--		ath11k_warn(ab, "failed to pull fw stats: %d\n", ret);
--		goto free;
--	}
--
--	rcu_read_lock();
--	ar = ath11k_mac_get_ar_by_pdev_id(ab, stats.pdev_id);
--	if (!ar) {
--		rcu_read_unlock();
--		ath11k_warn(ab, "failed to get ar for pdev_id %d: %d\n",
--			    stats.pdev_id, ret);
--		goto free;
--	}
--
--	spin_lock_bh(&ar->data_lock);
-+	int i;
- 
--	if (stats.stats_id == WMI_REQUEST_PDEV_STAT) {
--		list_splice_tail_init(&stats.pdevs, &ar->debug.fw_stats.pdevs);
--		ar->debug.fw_stats_done = true;
--		goto complete;
--	}
-+	/* WMI_REQUEST_PDEV_STAT request has been already processed */
- 
--	if (stats.stats_id == WMI_REQUEST_RSSI_PER_CHAIN_STAT) {
--		ar->debug.fw_stats_done = true;
--		goto complete;
-+	if (stats->stats_id == WMI_REQUEST_RSSI_PER_CHAIN_STAT) {
-+		ar->fw_stats_done = true;
-+		return;
- 	}
- 
--	if (stats.stats_id == WMI_REQUEST_VDEV_STAT) {
--		if (list_empty(&stats.vdevs)) {
-+	if (stats->stats_id == WMI_REQUEST_VDEV_STAT) {
-+		if (list_empty(&stats->vdevs)) {
- 			ath11k_warn(ab, "empty vdev stats");
--			goto complete;
-+			return;
- 		}
- 		/* FW sends all the active VDEV stats irrespective of PDEV,
- 		 * hence limit until the count of all VDEVs started
-@@ -190,43 +135,34 @@ void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab, struct sk_buff *skb
- 
- 		is_end = ((++num_vdev) == total_vdevs_started);
- 
--		list_splice_tail_init(&stats.vdevs,
--				      &ar->debug.fw_stats.vdevs);
-+		list_splice_tail_init(&stats->vdevs,
-+				      &ar->fw_stats.vdevs);
- 
- 		if (is_end) {
--			ar->debug.fw_stats_done = true;
-+			ar->fw_stats_done = true;
- 			num_vdev = 0;
- 		}
--		goto complete;
-+		return;
- 	}
- 
--	if (stats.stats_id == WMI_REQUEST_BCN_STAT) {
--		if (list_empty(&stats.bcn)) {
-+	if (stats->stats_id == WMI_REQUEST_BCN_STAT) {
-+		if (list_empty(&stats->bcn)) {
- 			ath11k_warn(ab, "empty bcn stats");
--			goto complete;
-+			return;
- 		}
- 		/* Mark end until we reached the count of all started VDEVs
- 		 * within the PDEV
- 		 */
- 		is_end = ((++num_bcn) == ar->num_started_vdevs);
- 
--		list_splice_tail_init(&stats.bcn,
--				      &ar->debug.fw_stats.bcn);
-+		list_splice_tail_init(&stats->bcn,
-+				      &ar->fw_stats.bcn);
- 
- 		if (is_end) {
--			ar->debug.fw_stats_done = true;
-+			ar->fw_stats_done = true;
- 			num_bcn = 0;
- 		}
- 	}
--complete:
--	complete(&ar->debug.fw_stats_complete);
--	rcu_read_unlock();
--	spin_unlock_bh(&ar->data_lock);
--
--free:
--	ath11k_fw_stats_pdevs_free(&stats.pdevs);
--	ath11k_fw_stats_vdevs_free(&stats.vdevs);
--	ath11k_fw_stats_bcn_free(&stats.bcn);
- }
- 
- static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
-@@ -247,7 +183,7 @@ static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
- 
- 	ath11k_debugfs_fw_stats_reset(ar);
- 
--	reinit_completion(&ar->debug.fw_stats_complete);
-+	reinit_completion(&ar->fw_stats_complete);
- 
- 	ret = ath11k_wmi_send_stats_request_cmd(ar, req_param);
- 
-@@ -258,7 +194,7 @@ static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
- 	}
- 
- 	time_left =
--	wait_for_completion_timeout(&ar->debug.fw_stats_complete,
-+	wait_for_completion_timeout(&ar->fw_stats_complete,
- 				    1 * HZ);
- 	if (!time_left)
- 		return -ETIMEDOUT;
-@@ -268,7 +204,7 @@ static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
- 			break;
- 
- 		spin_lock_bh(&ar->data_lock);
--		if (ar->debug.fw_stats_done) {
-+		if (ar->fw_stats_done) {
- 			spin_unlock_bh(&ar->data_lock);
- 			break;
- 		}
-@@ -340,7 +276,7 @@ static int ath11k_open_pdev_stats(struct inode *inode, struct file *file)
- 		goto err_free;
- 	}
- 
--	ath11k_wmi_fw_stats_fill(ar, &ar->debug.fw_stats, req_param.stats_id,
-+	ath11k_wmi_fw_stats_fill(ar, &ar->fw_stats, req_param.stats_id,
- 				 buf);
- 
- 	file->private_data = buf;
-@@ -412,7 +348,7 @@ static int ath11k_open_vdev_stats(struct inode *inode, struct file *file)
- 		goto err_free;
- 	}
- 
--	ath11k_wmi_fw_stats_fill(ar, &ar->debug.fw_stats, req_param.stats_id,
-+	ath11k_wmi_fw_stats_fill(ar, &ar->fw_stats, req_param.stats_id,
- 				 buf);
- 
- 	file->private_data = buf;
-@@ -490,14 +426,14 @@ static int ath11k_open_bcn_stats(struct inode *inode, struct file *file)
- 		}
- 	}
- 
--	ath11k_wmi_fw_stats_fill(ar, &ar->debug.fw_stats, req_param.stats_id,
-+	ath11k_wmi_fw_stats_fill(ar, &ar->fw_stats, req_param.stats_id,
- 				 buf);
- 
- 	/* since beacon stats request is looped for all active VDEVs, saved fw
- 	 * stats is not freed for each request until done for all active VDEVs
- 	 */
- 	spin_lock_bh(&ar->data_lock);
--	ath11k_fw_stats_bcn_free(&ar->debug.fw_stats.bcn);
-+	ath11k_fw_stats_bcn_free(&ar->fw_stats.bcn);
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	file->private_data = buf;
-@@ -1055,7 +991,7 @@ void ath11k_debugfs_fw_stats_init(struct ath11k *ar)
- 	struct dentry *fwstats_dir = debugfs_create_dir("fw_stats",
- 							ar->debug.debugfs_pdev);
- 
--	ar->debug.fw_stats.debugfs_fwstats = fwstats_dir;
-+	ar->fw_stats.debugfs_fwstats = fwstats_dir;
- 
- 	/* all stats debugfs files created are under "fw_stats" directory
- 	 * created per PDEV
-@@ -1067,11 +1003,6 @@ void ath11k_debugfs_fw_stats_init(struct ath11k *ar)
- 	debugfs_create_file("beacon_stats", 0600, fwstats_dir, ar,
- 			    &fops_bcn_stats);
- 
--	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
--	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
--	INIT_LIST_HEAD(&ar->debug.fw_stats.bcn);
--
--	init_completion(&ar->debug.fw_stats_complete);
- }
- 
- static ssize_t ath11k_write_pktlog_filter(struct file *file,
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs.h b/drivers/net/wireless/ath/ath11k/debugfs.h
-index 8fc125a71943..e45dc874ff23 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs.h
-+++ b/drivers/net/wireless/ath/ath11k/debugfs.h
-@@ -271,7 +271,7 @@ int ath11k_debugfs_pdev_create(struct ath11k_base *ab);
- void ath11k_debugfs_pdev_destroy(struct ath11k_base *ab);
- int ath11k_debugfs_register(struct ath11k *ar);
- void ath11k_debugfs_unregister(struct ath11k *ar);
--void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab, struct sk_buff *skb);
-+void ath11k_debugfs_fw_stats_process(struct ath11k *ar, struct ath11k_fw_stats *stats);
- 
- void ath11k_debugfs_fw_stats_init(struct ath11k *ar);
- int ath11k_debugfs_get_fw_stats(struct ath11k *ar, u32 pdev_id,
-@@ -352,8 +352,8 @@ static inline void ath11k_debugfs_unregister(struct ath11k *ar)
- {
- }
- 
--static inline void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab,
--						   struct sk_buff *skb)
-+static inline void ath11k_debugfs_fw_stats_process(struct ath11k *ar,
-+						   struct ath11k_fw_stats *stats)
- {
- }
- 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 84d1c7054013..9c7a0a438b12 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -7412,7 +7412,53 @@ static void ath11k_peer_assoc_conf_event(struct ath11k_base *ab, struct sk_buff
- 
- static void ath11k_update_stats_event(struct ath11k_base *ab, struct sk_buff *skb)
- {
--	ath11k_debugfs_fw_stats_process(ab, skb);
-+	struct ath11k_fw_stats stats = {};
-+	struct ath11k *ar;
-+	int ret;
-+
-+	INIT_LIST_HEAD(&stats.pdevs);
-+	INIT_LIST_HEAD(&stats.vdevs);
-+	INIT_LIST_HEAD(&stats.bcn);
-+
-+	ret = ath11k_wmi_pull_fw_stats(ab, skb, &stats);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to pull fw stats: %d\n", ret);
-+		goto free;
-+	}
-+
-+	rcu_read_lock();
-+	ar = ath11k_mac_get_ar_by_pdev_id(ab, stats.pdev_id);
-+	if (!ar) {
-+		rcu_read_unlock();
-+		ath11k_warn(ab, "failed to get ar for pdev_id %d: %d\n",
-+			    stats.pdev_id, ret);
-+		goto free;
-+	}
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	/* WMI_REQUEST_PDEV_STAT can be requested via .get_txpower mac ops or via
-+	 * debugfs fw stats. Therefore, processing it separately.
-+	 */
-+	if (stats.stats_id == WMI_REQUEST_PDEV_STAT) {
-+		list_splice_tail_init(&stats.pdevs, &ar->fw_stats.pdevs);
-+		ar->fw_stats_done = true;
-+		goto complete;
-+	}
-+
-+	/* WMI_REQUEST_VDEV_STAT, WMI_REQUEST_BCN_STAT and WMI_REQUEST_RSSI_PER_CHAIN_STAT
-+	 * are currently requested only via debugfs fw stats. Hence, processing these
-+	 * in debugfs context
-+	 */
-+	ath11k_debugfs_fw_stats_process(ar, &stats);
-+
-+complete:
-+	complete(&ar->fw_stats_complete);
-+	rcu_read_unlock();
-+	spin_unlock_bh(&ar->data_lock);
-+
-+free:
-+	ath11k_fw_stats_free(&stats);
- }
- 
- /* PDEV_CTL_FAILSAFE_CHECK_EVENT is received from FW when the frequency scanned
--- 
-2.17.1
+>=20
+> >=20
+> > Thanks,
+> > Philippe
+> >=20
+> > >=20
+> > >=20
+> > > Regards,
+> > > Deren
+> > >=20
+> >=20
+> >=20
+> >=20
 
