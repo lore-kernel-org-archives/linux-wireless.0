@@ -2,88 +2,525 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33505C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jun 2022 13:35:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55CABC43334
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jun 2022 14:33:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235395AbiFBNfO (ORCPT
+        id S235968AbiFBOdM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Jun 2022 09:35:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48078 "EHLO
+        Thu, 2 Jun 2022 10:33:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235383AbiFBNfN (ORCPT
+        with ESMTP id S232600AbiFBOdL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Jun 2022 09:35:13 -0400
-Received: from azure-sdnproxy-1.icoremail.net (azure-sdnproxy.icoremail.net [52.237.72.81])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 37DDD4C790;
-        Thu,  2 Jun 2022 06:35:11 -0700 (PDT)
-Received: from ubuntu.localdomain (unknown [106.117.80.109])
-        by mail-app3 (Coremail) with SMTP id cC_KCgCXn08uvJhiAyNhAQ--.19784S2;
-        Thu, 02 Jun 2022 21:33:45 +0800 (CST)
-From:   Duoming Zhou <duoming@zju.edu.cn>
-To:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     amitkarwar@gmail.com, ganapathi017@gmail.com,
-        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
-        kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, netdev@vger.kernel.org,
-        gregkh@linuxfoundation.org, johannes@sipsolutions.net,
-        rafael@kernel.org, Duoming Zhou <duoming@zju.edu.cn>
-Subject: [PATCH v4 0/2] Remove extra param of dev_coredumpv and fix bugs
-Date:   Thu,  2 Jun 2022 21:33:32 +0800
-Message-Id: <cover.1654175941.git.duoming@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cC_KCgCXn08uvJhiAyNhAQ--.19784S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZFW8JFyDtw13CF1kuF1fXrb_yoW8XF1fpF
-        48Gas3ZryfKr4DCay8Ja1xCa45J3WfWF9F9rZ3Z34rW3WfAF1rJr1Y9FyFkrn0vFW8ta4Y
-        qF13tr13GF9agFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-        Y2ka0xkIwI1lc2xSY4AK67AK6ry8MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-        b7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
-        vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
-        cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
-        nxnUUI43ZEXa7VUjHGQDUUUUU==
-X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAgkJAVZdtaAX3gBis2
+        Thu, 2 Jun 2022 10:33:11 -0400
+Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6215828184B
+        for <linux-wireless@vger.kernel.org>; Thu,  2 Jun 2022 07:33:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1654180389; x=1685716389;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=ysqUxYETeKg4oHPm85NiHnAkah2nJ7PmqlEwliHjPh8=;
+  b=jcX2x0KqD6wr9UcJRhTXdj8wOadVSUi8NIirx1+pfRM/4x7tEpWW6zha
+   2pEDC1nYGrXpFOhcGKYhZNdO9C+VFtwOBjPLnOLctXDuWPfCdVBri610S
+   Ho4mBb3MFM3vorscgOR4XA4JsVkVNN3jU4jGe6t6+dt2SA78V1sTOFi+A
+   A=;
+Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
+  by alexa-out-sd-01.qualcomm.com with ESMTP; 02 Jun 2022 07:33:09 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2022 07:33:09 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Thu, 2 Jun 2022 07:33:08 -0700
+Received: from [10.110.9.238] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Thu, 2 Jun 2022
+ 07:33:07 -0700
+Message-ID: <07248432-bf0f-e2d5-6ada-61c66337f295@quicinc.com>
+Date:   Thu, 2 Jun 2022 07:33:07 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH 1/2] ath11k: move firmware stats out of debugfs
+Content-Language: en-US
+To:     Aditya Kumar Singh <quic_adisi@quicinc.com>,
+        <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>
+References: <20220602051425.9265-1-quic_adisi@quicinc.com>
+ <20220602051425.9265-2-quic_adisi@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20220602051425.9265-2-quic_adisi@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The first patch removes the extra gfp_t param of dev_coredumpv.
-The second patch fix sleep in atomic context bugs of mwifiex
-caused by dev_coredumpv.
+On 6/1/2022 10:14 PM, Aditya Kumar Singh wrote:
+> Currently, firmware stats, comprising pdev, vdev and beacon stats are
+> part of debugfs. In firmware pdev stats, firmware reports the final
+> Tx power used to transmit each packet. If driver wants to know the
+> final Tx power being used at firmware level, it can leverage from
+> firmware pdev stats.
+> 
+> Move firmware stats out of debugfs context in order to leverage
+> the final Tx power reported in it even when debugfs is disabled.
+> 
+> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
+> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01100-QCAHKSWPL_SILICONZ-1
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
+> 
+> Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+> ---
+>   drivers/net/wireless/ath/ath11k/core.c    |  46 ++++++++
+>   drivers/net/wireless/ath/ath11k/core.h    |  12 +-
+>   drivers/net/wireless/ath/ath11k/debugfs.c | 131 +++++-----------------
+>   drivers/net/wireless/ath/ath11k/debugfs.h |   6 +-
+>   drivers/net/wireless/ath/ath11k/wmi.c     |  48 +++++++-
+>   5 files changed, 136 insertions(+), 107 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+> index ca6fadd64b43..07a299a2e213 100644
+> --- a/drivers/net/wireless/ath/ath11k/core.c
+> +++ b/drivers/net/wireless/ath/ath11k/core.c
+> @@ -570,6 +570,52 @@ static inline struct ath11k_pdev *ath11k_core_get_single_pdev(struct ath11k_base
+>   	return &ab->pdevs[0];
+>   }
+>   
+> +void ath11k_fw_stats_pdevs_free(struct list_head *head)
+> +{
+> +	struct ath11k_fw_stats_pdev *i, *tmp;
+> +
+> +	list_for_each_entry_safe(i, tmp, head, list) {
+> +		list_del(&i->list);
+> +		kfree(i);
+> +	}
+> +}
+> +
+> +void ath11k_fw_stats_vdevs_free(struct list_head *head)
+> +{
+> +	struct ath11k_fw_stats_vdev *i, *tmp;
+> +
+> +	list_for_each_entry_safe(i, tmp, head, list) {
+> +		list_del(&i->list);
+> +		kfree(i);
+> +	}
+> +}
+> +
+> +void ath11k_fw_stats_bcn_free(struct list_head *head)
+> +{
+> +	struct ath11k_fw_stats_bcn *i, *tmp;
+> +
+> +	list_for_each_entry_safe(i, tmp, head, list) {
+> +		list_del(&i->list);
+> +		kfree(i);
+> +	}
+> +}
+> +
+> +void ath11k_fw_stats_init(struct ath11k *ar)
+> +{
+> +	INIT_LIST_HEAD(&ar->fw_stats.pdevs);
+> +	INIT_LIST_HEAD(&ar->fw_stats.vdevs);
+> +	INIT_LIST_HEAD(&ar->fw_stats.bcn);
+> +
+> +	init_completion(&ar->fw_stats_complete);
+> +}
+> +
+> +void ath11k_fw_stats_free(struct ath11k_fw_stats *stats)
+> +{
+> +	ath11k_fw_stats_pdevs_free(&stats->pdevs);
+> +	ath11k_fw_stats_vdevs_free(&stats->vdevs);
+> +	ath11k_fw_stats_bcn_free(&stats->bcn);
+> +}
+> +
+>   int ath11k_core_suspend(struct ath11k_base *ab)
+>   {
+>   	int ret;
+> diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+> index 65d54e9c15d9..672701f40a6b 100644
+> --- a/drivers/net/wireless/ath/ath11k/core.h
+> +++ b/drivers/net/wireless/ath/ath11k/core.h
+> @@ -545,9 +545,6 @@ struct ath11k_debug {
+>   	struct dentry *debugfs_pdev;
+>   	struct ath11k_dbg_htt_stats htt_stats;
+>   	u32 extd_tx_stats;
+> -	struct ath11k_fw_stats fw_stats;
+> -	struct completion fw_stats_complete;
+> -	bool fw_stats_done;
+>   	u32 extd_rx_stats;
+>   	u32 pktlog_filter;
+>   	u32 pktlog_mode;
+> @@ -712,6 +709,9 @@ struct ath11k {
+>   	u8 twt_enabled;
+>   	bool nlo_enabled;
+>   	u8 alpha2[REG_ALPHA2_LEN + 1];
+> +	struct ath11k_fw_stats fw_stats;
+> +	struct completion fw_stats_complete;
+> +	bool fw_stats_done;
+>   };
+>   
+>   struct ath11k_band_cap {
+> @@ -1117,6 +1117,12 @@ struct ath11k_fw_stats_bcn {
+>   	u32 tx_bcn_outage_cnt;
+>   };
+>   
+> +void ath11k_fw_stats_init(struct ath11k *ar);
+> +void ath11k_fw_stats_pdevs_free(struct list_head *head);
+> +void ath11k_fw_stats_vdevs_free(struct list_head *head);
+> +void ath11k_fw_stats_bcn_free(struct list_head *head);
+> +void ath11k_fw_stats_free(struct ath11k_fw_stats *stats);
+> +
+>   extern const struct ce_pipe_config ath11k_target_ce_config_wlan_ipq8074[];
+>   extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq8074[];
+>   extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq6018[];
+> diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
+> index 0d4843ef9dd1..e4a2fd3da481 100644
+> --- a/drivers/net/wireless/ath/ath11k/debugfs.c
+> +++ b/drivers/net/wireless/ath/ath11k/debugfs.c
+> @@ -93,91 +93,36 @@ void ath11k_debugfs_add_dbring_entry(struct ath11k *ar,
+>   	spin_unlock_bh(&dbr_data->lock);
+>   }
+>   
+> -static void ath11k_fw_stats_pdevs_free(struct list_head *head)
+> -{
+> -	struct ath11k_fw_stats_pdev *i, *tmp;
+> -
+> -	list_for_each_entry_safe(i, tmp, head, list) {
+> -		list_del(&i->list);
+> -		kfree(i);
+> -	}
+> -}
+> -
+> -static void ath11k_fw_stats_vdevs_free(struct list_head *head)
+> -{
+> -	struct ath11k_fw_stats_vdev *i, *tmp;
+> -
+> -	list_for_each_entry_safe(i, tmp, head, list) {
+> -		list_del(&i->list);
+> -		kfree(i);
+> -	}
+> -}
+> -
+> -static void ath11k_fw_stats_bcn_free(struct list_head *head)
+> -{
+> -	struct ath11k_fw_stats_bcn *i, *tmp;
+> -
+> -	list_for_each_entry_safe(i, tmp, head, list) {
+> -		list_del(&i->list);
+> -		kfree(i);
+> -	}
+> -}
+>   
+>   static void ath11k_debugfs_fw_stats_reset(struct ath11k *ar)
+>   {
+>   	spin_lock_bh(&ar->data_lock);
+> -	ar->debug.fw_stats_done = false;
+> -	ath11k_fw_stats_pdevs_free(&ar->debug.fw_stats.pdevs);
+> -	ath11k_fw_stats_vdevs_free(&ar->debug.fw_stats.vdevs);
+> +	ar->fw_stats_done = false;
+> +	ath11k_fw_stats_pdevs_free(&ar->fw_stats.pdevs);
+> +	ath11k_fw_stats_vdevs_free(&ar->fw_stats.vdevs);
+>   	spin_unlock_bh(&ar->data_lock);
+>   }
+>   
+> -void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab, struct sk_buff *skb)
+> +void ath11k_debugfs_fw_stats_process(struct ath11k *ar, struct ath11k_fw_stats *stats)
+>   {
+> -	struct ath11k_fw_stats stats = {};
+> -	struct ath11k *ar;
+> +	struct ath11k_base *ab = ar->ab;
+>   	struct ath11k_pdev *pdev;
+>   	bool is_end;
+>   	static unsigned int num_vdev, num_bcn;
+>   	size_t total_vdevs_started = 0;
+> -	int i, ret;
+> -
+> -	INIT_LIST_HEAD(&stats.pdevs);
+> -	INIT_LIST_HEAD(&stats.vdevs);
+> -	INIT_LIST_HEAD(&stats.bcn);
+> -
+> -	ret = ath11k_wmi_pull_fw_stats(ab, skb, &stats);
+> -	if (ret) {
+> -		ath11k_warn(ab, "failed to pull fw stats: %d\n", ret);
+> -		goto free;
+> -	}
+> -
+> -	rcu_read_lock();
+> -	ar = ath11k_mac_get_ar_by_pdev_id(ab, stats.pdev_id);
+> -	if (!ar) {
+> -		rcu_read_unlock();
+> -		ath11k_warn(ab, "failed to get ar for pdev_id %d: %d\n",
+> -			    stats.pdev_id, ret);
+> -		goto free;
+> -	}
+> -
+> -	spin_lock_bh(&ar->data_lock);
+> +	int i;
+>   
+> -	if (stats.stats_id == WMI_REQUEST_PDEV_STAT) {
+> -		list_splice_tail_init(&stats.pdevs, &ar->debug.fw_stats.pdevs);
+> -		ar->debug.fw_stats_done = true;
+> -		goto complete;
+> -	}
+> +	/* WMI_REQUEST_PDEV_STAT request has been already processed */
+>   
+> -	if (stats.stats_id == WMI_REQUEST_RSSI_PER_CHAIN_STAT) {
+> -		ar->debug.fw_stats_done = true;
+> -		goto complete;
+> +	if (stats->stats_id == WMI_REQUEST_RSSI_PER_CHAIN_STAT) {
+> +		ar->fw_stats_done = true;
+> +		return;
+>   	}
+>   
+> -	if (stats.stats_id == WMI_REQUEST_VDEV_STAT) {
+> -		if (list_empty(&stats.vdevs)) {
+> +	if (stats->stats_id == WMI_REQUEST_VDEV_STAT) {
+> +		if (list_empty(&stats->vdevs)) {
+>   			ath11k_warn(ab, "empty vdev stats");
+> -			goto complete;
+> +			return;
+>   		}
+>   		/* FW sends all the active VDEV stats irrespective of PDEV,
+>   		 * hence limit until the count of all VDEVs started
+> @@ -190,43 +135,34 @@ void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab, struct sk_buff *skb
+>   
+>   		is_end = ((++num_vdev) == total_vdevs_started);
+>   
+> -		list_splice_tail_init(&stats.vdevs,
+> -				      &ar->debug.fw_stats.vdevs);
+> +		list_splice_tail_init(&stats->vdevs,
+> +				      &ar->fw_stats.vdevs);
+>   
+>   		if (is_end) {
+> -			ar->debug.fw_stats_done = true;
+> +			ar->fw_stats_done = true;
+>   			num_vdev = 0;
+>   		}
+> -		goto complete;
+> +		return;
+>   	}
+>   
+> -	if (stats.stats_id == WMI_REQUEST_BCN_STAT) {
+> -		if (list_empty(&stats.bcn)) {
+> +	if (stats->stats_id == WMI_REQUEST_BCN_STAT) {
+> +		if (list_empty(&stats->bcn)) {
+>   			ath11k_warn(ab, "empty bcn stats");
+> -			goto complete;
+> +			return;
+>   		}
+>   		/* Mark end until we reached the count of all started VDEVs
+>   		 * within the PDEV
+>   		 */
+>   		is_end = ((++num_bcn) == ar->num_started_vdevs);
+>   
+> -		list_splice_tail_init(&stats.bcn,
+> -				      &ar->debug.fw_stats.bcn);
+> +		list_splice_tail_init(&stats->bcn,
+> +				      &ar->fw_stats.bcn);
+>   
+>   		if (is_end) {
+> -			ar->debug.fw_stats_done = true;
+> +			ar->fw_stats_done = true;
+>   			num_bcn = 0;
+>   		}
+>   	}
+> -complete:
+> -	complete(&ar->debug.fw_stats_complete);
+> -	rcu_read_unlock();
+> -	spin_unlock_bh(&ar->data_lock);
+> -
+> -free:
+> -	ath11k_fw_stats_pdevs_free(&stats.pdevs);
+> -	ath11k_fw_stats_vdevs_free(&stats.vdevs);
+> -	ath11k_fw_stats_bcn_free(&stats.bcn);
+>   }
+>   
+>   static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
+> @@ -247,7 +183,7 @@ static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
+>   
+>   	ath11k_debugfs_fw_stats_reset(ar);
+>   
+> -	reinit_completion(&ar->debug.fw_stats_complete);
+> +	reinit_completion(&ar->fw_stats_complete);
+>   
+>   	ret = ath11k_wmi_send_stats_request_cmd(ar, req_param);
+>   
+> @@ -258,7 +194,7 @@ static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
+>   	}
+>   
+>   	time_left =
+> -	wait_for_completion_timeout(&ar->debug.fw_stats_complete,
+> +	wait_for_completion_timeout(&ar->fw_stats_complete,
 
-Duoming Zhou (2):
-  devcoredump: remove the useless gfp_t parameter in dev_coredumpv
-  mwifiex: fix sleep in atomic context bugs caused by dev_coredumpv
+this is a case where imo the existing code was not compliant with the 
+coding standard (descendant was not indented from the parent) so I'd 
+definitely want to either indent this or combine it with the prior line
 
- drivers/base/devcoredump.c                             |  6 ++----
- drivers/bluetooth/btmrvl_sdio.c                        |  2 +-
- drivers/bluetooth/hci_qca.c                            |  2 +-
- drivers/gpu/drm/etnaviv/etnaviv_dump.c                 |  2 +-
- drivers/media/platform/qcom/venus/core.c               |  2 +-
- drivers/net/can/spi/mcp251xfd/mcp251xfd-dump.c         |  2 +-
- drivers/net/wireless/ath/ath10k/coredump.c             |  2 +-
- drivers/net/wireless/ath/wil6210/wil_crash_dump.c      |  2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/debug.c   |  2 +-
- drivers/net/wireless/marvell/mwifiex/init.c            | 10 ++++++----
- drivers/net/wireless/marvell/mwifiex/main.c            |  3 +--
- drivers/net/wireless/marvell/mwifiex/main.h            |  2 +-
- drivers/net/wireless/marvell/mwifiex/sta_event.c       |  6 +++---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c        |  3 +--
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c        |  3 +--
- drivers/net/wireless/realtek/rtw88/main.c              |  2 +-
- drivers/net/wireless/realtek/rtw89/ser.c               |  2 +-
- drivers/remoteproc/qcom_q6v5_mss.c                     |  2 +-
- drivers/remoteproc/remoteproc_coredump.c               |  4 ++--
- include/linux/devcoredump.h                            |  5 ++---
- sound/soc/intel/catpt/dsp.c                            |  2 +-
- 21 files changed, 31 insertions(+), 35 deletions(-)
+>   				    1 * HZ);
+>   	if (!time_left)
+>   		return -ETIMEDOUT;
+> @@ -268,7 +204,7 @@ static int ath11k_debugfs_fw_stats_request(struct ath11k *ar,
+>   			break;
+>   
+>   		spin_lock_bh(&ar->data_lock);
+> -		if (ar->debug.fw_stats_done) {
+> +		if (ar->fw_stats_done) {
+>   			spin_unlock_bh(&ar->data_lock);
+>   			break;
+>   		}
+> @@ -340,7 +276,7 @@ static int ath11k_open_pdev_stats(struct inode *inode, struct file *file)
+>   		goto err_free;
+>   	}
+>   
+> -	ath11k_wmi_fw_stats_fill(ar, &ar->debug.fw_stats, req_param.stats_id,
+> +	ath11k_wmi_fw_stats_fill(ar, &ar->fw_stats, req_param.stats_id,
+>   				 buf);
 
--- 
-2.17.1
+there are multiple places in this patch where, due to the fact you are 
+removing 6 characters from an existing line, a descendant may now fit on 
+the prior line without exceeding 80 columns. consider removing the line 
+break in those cases.
+
+i wasn't going to mention these bikeshed comments but I see something in 
+the 2nd patch that imo should be addressed, so you'll probably want to 
+upload a v2 and this would be a good cleanup to apply as well
+
+>   
+>   	file->private_data = buf;
+> @@ -412,7 +348,7 @@ static int ath11k_open_vdev_stats(struct inode *inode, struct file *file)
+>   		goto err_free;
+>   	}
+>   
+> -	ath11k_wmi_fw_stats_fill(ar, &ar->debug.fw_stats, req_param.stats_id,
+> +	ath11k_wmi_fw_stats_fill(ar, &ar->fw_stats, req_param.stats_id,
+>   				 buf);
+>   
+>   	file->private_data = buf;
+> @@ -490,14 +426,14 @@ static int ath11k_open_bcn_stats(struct inode *inode, struct file *file)
+>   		}
+>   	}
+>   
+> -	ath11k_wmi_fw_stats_fill(ar, &ar->debug.fw_stats, req_param.stats_id,
+> +	ath11k_wmi_fw_stats_fill(ar, &ar->fw_stats, req_param.stats_id,
+>   				 buf);
+>   
+>   	/* since beacon stats request is looped for all active VDEVs, saved fw
+>   	 * stats is not freed for each request until done for all active VDEVs
+>   	 */
+>   	spin_lock_bh(&ar->data_lock);
+> -	ath11k_fw_stats_bcn_free(&ar->debug.fw_stats.bcn);
+> +	ath11k_fw_stats_bcn_free(&ar->fw_stats.bcn);
+>   	spin_unlock_bh(&ar->data_lock);
+>   
+>   	file->private_data = buf;
+> @@ -1055,7 +991,7 @@ void ath11k_debugfs_fw_stats_init(struct ath11k *ar)
+>   	struct dentry *fwstats_dir = debugfs_create_dir("fw_stats",
+>   							ar->debug.debugfs_pdev);
+>   
+> -	ar->debug.fw_stats.debugfs_fwstats = fwstats_dir;
+> +	ar->fw_stats.debugfs_fwstats = fwstats_dir;
+>   
+>   	/* all stats debugfs files created are under "fw_stats" directory
+>   	 * created per PDEV
+> @@ -1067,11 +1003,6 @@ void ath11k_debugfs_fw_stats_init(struct ath11k *ar)
+>   	debugfs_create_file("beacon_stats", 0600, fwstats_dir, ar,
+>   			    &fops_bcn_stats);
+>   
+> -	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
+> -	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
+> -	INIT_LIST_HEAD(&ar->debug.fw_stats.bcn);
+> -
+> -	init_completion(&ar->debug.fw_stats_complete);
+>   }
+>   
+>   static ssize_t ath11k_write_pktlog_filter(struct file *file,
+> diff --git a/drivers/net/wireless/ath/ath11k/debugfs.h b/drivers/net/wireless/ath/ath11k/debugfs.h
+> index 8fc125a71943..e45dc874ff23 100644
+> --- a/drivers/net/wireless/ath/ath11k/debugfs.h
+> +++ b/drivers/net/wireless/ath/ath11k/debugfs.h
+> @@ -271,7 +271,7 @@ int ath11k_debugfs_pdev_create(struct ath11k_base *ab);
+>   void ath11k_debugfs_pdev_destroy(struct ath11k_base *ab);
+>   int ath11k_debugfs_register(struct ath11k *ar);
+>   void ath11k_debugfs_unregister(struct ath11k *ar);
+> -void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab, struct sk_buff *skb);
+> +void ath11k_debugfs_fw_stats_process(struct ath11k *ar, struct ath11k_fw_stats *stats);
+>   
+>   void ath11k_debugfs_fw_stats_init(struct ath11k *ar);
+>   int ath11k_debugfs_get_fw_stats(struct ath11k *ar, u32 pdev_id,
+> @@ -352,8 +352,8 @@ static inline void ath11k_debugfs_unregister(struct ath11k *ar)
+>   {
+>   }
+>   
+> -static inline void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab,
+> -						   struct sk_buff *skb)
+> +static inline void ath11k_debugfs_fw_stats_process(struct ath11k *ar,
+> +						   struct ath11k_fw_stats *stats)
+>   {
+>   }
+>   
+> diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+> index 84d1c7054013..9c7a0a438b12 100644
+> --- a/drivers/net/wireless/ath/ath11k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/wmi.c
+> @@ -7412,7 +7412,53 @@ static void ath11k_peer_assoc_conf_event(struct ath11k_base *ab, struct sk_buff
+>   
+>   static void ath11k_update_stats_event(struct ath11k_base *ab, struct sk_buff *skb)
+>   {
+> -	ath11k_debugfs_fw_stats_process(ab, skb);
+> +	struct ath11k_fw_stats stats = {};
+> +	struct ath11k *ar;
+> +	int ret;
+> +
+> +	INIT_LIST_HEAD(&stats.pdevs);
+> +	INIT_LIST_HEAD(&stats.vdevs);
+> +	INIT_LIST_HEAD(&stats.bcn);
+> +
+> +	ret = ath11k_wmi_pull_fw_stats(ab, skb, &stats);
+> +	if (ret) {
+> +		ath11k_warn(ab, "failed to pull fw stats: %d\n", ret);
+> +		goto free;
+> +	}
+> +
+> +	rcu_read_lock();
+> +	ar = ath11k_mac_get_ar_by_pdev_id(ab, stats.pdev_id);
+> +	if (!ar) {
+> +		rcu_read_unlock();
+> +		ath11k_warn(ab, "failed to get ar for pdev_id %d: %d\n",
+> +			    stats.pdev_id, ret);
+> +		goto free;
+> +	}
+> +
+> +	spin_lock_bh(&ar->data_lock);
+> +
+> +	/* WMI_REQUEST_PDEV_STAT can be requested via .get_txpower mac ops or via
+> +	 * debugfs fw stats. Therefore, processing it separately.
+> +	 */
+> +	if (stats.stats_id == WMI_REQUEST_PDEV_STAT) {
+> +		list_splice_tail_init(&stats.pdevs, &ar->fw_stats.pdevs);
+> +		ar->fw_stats_done = true;
+> +		goto complete;
+> +	}
+> +
+> +	/* WMI_REQUEST_VDEV_STAT, WMI_REQUEST_BCN_STAT and WMI_REQUEST_RSSI_PER_CHAIN_STAT
+> +	 * are currently requested only via debugfs fw stats. Hence, processing these
+> +	 * in debugfs context
+> +	 */
+> +	ath11k_debugfs_fw_stats_process(ar, &stats);
+> +
+> +complete:
+> +	complete(&ar->fw_stats_complete);
+> +	rcu_read_unlock();
+> +	spin_unlock_bh(&ar->data_lock);
+> +
+> +free:
+> +	ath11k_fw_stats_free(&stats);
+>   }
+>   
+>   /* PDEV_CTL_FAILSAFE_CHECK_EVENT is received from FW when the frequency scanned
 
