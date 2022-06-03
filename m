@@ -2,68 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 180CBC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jun 2022 10:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99514C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jun 2022 12:56:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243814AbiFCKiF (ORCPT
+        id S244446AbiFCM4y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jun 2022 06:38:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35788 "EHLO
+        Fri, 3 Jun 2022 08:56:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243812AbiFCKiC (ORCPT
+        with ESMTP id S233094AbiFCM4w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jun 2022 06:38:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCBCE3BBF6
-        for <linux-wireless@vger.kernel.org>; Fri,  3 Jun 2022 03:38:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B35A060AB3
-        for <linux-wireless@vger.kernel.org>; Fri,  3 Jun 2022 10:37:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F512C34114;
-        Fri,  3 Jun 2022 10:37:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654252679;
-        bh=/k8PznFyRZuvrNCDkSbEbNKLfcYHfATv3sZBKBsR0Ng=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=W2u1DWZtJu8uHYJaAqHcqrTsYfjaa4Vd85cMWi6aDUFc443zWU3vp0kllWa5ZlECE
-         KLYo4bDWTXpDkilr76yzDPAn4ADpJCCvyQ8mkuds2xqSzhJpfcmk/sNiyV64fd8P/4
-         1BFzMJPdVshCFuhRCX6ggZN2JBscn50hHPG2bx9HHpXGPLz6kcq2IsJsnWKYMFOUed
-         tNhz/JBDCP0e82zcdV5okHF+PBpqv/OG2lrTx+xk5nG0zPbTXgiTYuz2WvI4I0TIEj
-         FMrlsJn4TOZorM3B/wy23bhaYaR+8e9SYBCfwLcGVkwEItEMgJfBciS81euDyEzf7A
-         Jf9ubsWtif6EQ==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     "Aditya Kumar Singh \(QUIC\)" <quic_adisi@quicinc.com>
-Cc:     "Jeff Johnson \(QUIC\)" <quic_jjohnson@quicinc.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath11k\@lists.infradead.org" <ath11k@lists.infradead.org>
-Subject: Re: [PATCH 1/2] ath11k: move firmware stats out of debugfs
-References: <20220602051425.9265-1-quic_adisi@quicinc.com>
-        <20220602051425.9265-2-quic_adisi@quicinc.com>
-        <07248432-bf0f-e2d5-6ada-61c66337f295@quicinc.com>
-        <DM5PR0201MB3589A92F02DBAA0A26B8BF8684A19@DM5PR0201MB3589.namprd02.prod.outlook.com>
-Date:   Fri, 03 Jun 2022 13:37:54 +0300
-In-Reply-To: <DM5PR0201MB3589A92F02DBAA0A26B8BF8684A19@DM5PR0201MB3589.namprd02.prod.outlook.com>
-        (Aditya Kumar Singh's message of "Fri, 3 Jun 2022 04:23:04 +0000")
-Message-ID: <87r146m3r1.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Fri, 3 Jun 2022 08:56:52 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA059DD8;
+        Fri,  3 Jun 2022 05:56:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654261010; x=1685797010;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=iHvWelEz+kZnPb6N3D7Tq7OPEoo6lTW/H9Qskkfqi1g=;
+  b=VL2vQMAfSs2i+9+NG6/KcoE+jW9CneLRuZrLqj8Ixw9gezwQLRVJz3lW
+   tfgbeC/7ROh3kS2EeipjrqA/7ZxlY3FTeNIjZLZw4+Aut6Sk8lCHn0Vfq
+   7KGTbcCTEVRyawQB4c7jGvxBQccTeYSNh3kGHC5MateCsG0648ropdvO3
+   x6hmv6R1Oz5t8iTXw5fvpjyMfiNMfMe4WZyc30ZHwDSquBgijQ/kaB8EU
+   hA1TtnTteCQd52/suuvapIzpIHf5TTSczUNqw7bxQ4/8lcMZlf6vOOXSa
+   mk/iPd321jysEENZyTJhO6mXgqBPhxd9Hj1N+fu2kUjMAjk4e6ezmsip5
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10366"; a="256720822"
+X-IronPort-AV: E=Sophos;i="5.91,274,1647327600"; 
+   d="scan'208";a="256720822"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2022 05:56:50 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,274,1647327600"; 
+   d="scan'208";a="905446738"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga005.fm.intel.com with ESMTP; 03 Jun 2022 05:56:47 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 4B5DEF8; Fri,  3 Jun 2022 15:56:50 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/1] rtw88: use %*ph to print small buffer
+Date:   Fri,  3 Jun 2022 15:56:48 +0300
+Message-Id: <20220603125648.46873-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"Aditya Kumar Singh (QUIC)" <quic_adisi@quicinc.com> writes:
+Use %*ph format to print small buffer as hex string.
 
-> Sure, will address in v2. Thanks for pointing out.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/net/wireless/realtek/rtw88/debug.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Please edit your quotes. You had over 500 lines of quotes in your one
-line reply, this makes it horrible to use patchwork:
-
-https://patchwork.kernel.org/project/linux-wireless/patch/20220602051425.9265-2-quic_adisi@quicinc.com/
-
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index 1a52ff585fbc..7cde6bcf253b 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -269,11 +269,7 @@ static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
+ 	for (i = 0 ; i < buf_size ; i += 8) {
+ 		if (i % page_size == 0)
+ 			seq_printf(m, "PAGE %d\n", (i + offset) / page_size);
+-		seq_printf(m, "%2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n",
+-			   *(buf + i), *(buf + i + 1),
+-			   *(buf + i + 2), *(buf + i + 3),
+-			   *(buf + i + 4), *(buf + i + 5),
+-			   *(buf + i + 6), *(buf + i + 7));
++		seq_printf(m, "%8ph\n", buf + i);
+ 	}
+ 	vfree(buf);
+ 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.35.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
