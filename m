@@ -2,65 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C17A8C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jun 2022 09:37:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF0FC43334
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jun 2022 09:37:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243098AbiFCJhK (ORCPT
+        id S243112AbiFCJhW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jun 2022 05:37:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47204 "EHLO
+        Fri, 3 Jun 2022 05:37:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243089AbiFCJhJ (ORCPT
+        with ESMTP id S241016AbiFCJhV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jun 2022 05:37:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 452F4DF54
-        for <linux-wireless@vger.kernel.org>; Fri,  3 Jun 2022 02:37:06 -0700 (PDT)
+        Fri, 3 Jun 2022 05:37:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B80D91115A
+        for <linux-wireless@vger.kernel.org>; Fri,  3 Jun 2022 02:37:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B61F8619A2
-        for <linux-wireless@vger.kernel.org>; Fri,  3 Jun 2022 09:37:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA30DC385A9;
-        Fri,  3 Jun 2022 09:37:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 02D5F619B5
+        for <linux-wireless@vger.kernel.org>; Fri,  3 Jun 2022 09:37:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3349CC385A9;
+        Fri,  3 Jun 2022 09:37:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654249025;
-        bh=uGtzFjt+v4uOCLRZI3h81OqZxftOX5C27ZOUwk4GJP0=;
-        h=From:To:Cc:Subject:Date:From;
-        b=IBBWe35CwPvksbdwHI00s0FHTVp48sxsZh8oIZT85QAI+dYweuaX3vNwlS/cyUWwd
-         hoJO9qHCzXMj8ClblgQmcm7/X0GBDaj5lQu9GViIDnzvaMubQ2dp4vF45lL4I2ilKB
-         edV06cqLT7ec4QnBCmrjAPnPBTPZSdcMxOCJJq55v98SVHig9jEOEoAoEr/QwKnAJ0
-         KjiWhumBc9FaHNDMa6jl9WqB+8eWPZCgW1wLN7kEeHuaIiibeR4K1tT5fkt7calGEt
-         W4VB7KHrBiB8L1+tB38hUw7ZUllddiUp7X2PkcRxy8+3YJOOZGCOmciy/zW6ZROB1W
-         CSmRRf0Z8ajzw==
+        s=k20201202; t=1654249028;
+        bh=3mJdSExtj2HVPSGN5VmTJ62q01/n+owBiA6wt40zW/M=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KhbOLkPQqXqRTch02axBEBjUQVwDTfn/aXXFZip1aZYDFbqyZYMGV0FuiznsPHoca
+         DMkzDvbXZokigesO4rYxx6xh1GEX2Ef3ks+E+n9ztwv3XRDBsq80MdOULPVHjkUqKN
+         pKtTC3e6FcKT/gNw2va+WoW1VSVYABTnddrkfNA8cZZYhg4B2kckaMZoCkuruInOBB
+         HAM5AtU1ahInBqeqUu/Hz8wj1onnfA2PexJOj0rGfwi/+Q+bN+kD+8kSDKJh4B0SNo
+         dOWCu4LjPvIVHgCE6QbSkAQMrp/DaNjJiC9C1kMs4SYH8ulg4cfIeC0RnhlHJt1+5B
+         OPfzFUrIIGpHQ==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         ryder.lee@mediatek.com, sean.wang@mediatek.com
-Subject: [PATCH 0/5] mt76: connac: move shared connac2 fw loading in connac module
-Date:   Fri,  3 Jun 2022 11:36:41 +0200
-Message-Id: <cover.1654248715.git.lorenzo@kernel.org>
+Subject: [PATCH 2/5] mt76: mt7921: move fw toggle in mt7921_load_firmware
+Date:   Fri,  3 Jun 2022 11:36:43 +0200
+Message-Id: <8d3f5d937138d5bb1694235cf71aeef7a28f7cd1.1654248715.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <cover.1654248715.git.lorenzo@kernel.org>
+References: <cover.1654248715.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi (5):
-  mt76: connac: move shared fw structures in connac module
-  mt76: mt7921: move fw toggle in mt7921_load_firmware
-  mt76: connac: move mt76_connac2_load_ram in connac module
-  mt76: connac: move mt76_connac2_load_patch in connac module
-  mt76: mt7663: rely on mt76_connac2_fw_trailer
+Move drv_own/fw_own toggle in mt7921_load_firmware. This change allow to
+reuse connac code to load patch for mt7921 driver.
 
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  18 +-
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 224 ++++++++++++++
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  66 ++++
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 259 +---------------
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 288 +-----------------
- 5 files changed, 304 insertions(+), 551 deletions(-)
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 1f1c270a4d81..bf1648b02ab5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -537,13 +537,6 @@ static int mt7921_load_patch(struct mt7921_dev *dev)
+ 		break;
+ 	}
+ 
+-	if (!ret && mt76_is_sdio(&dev->mt76)) {
+-		/* activate again */
+-		ret = __mt7921_mcu_fw_pmctrl(dev);
+-		if (!ret)
+-			ret = __mt7921_mcu_drv_pmctrl(dev);
+-	}
+-
+ 	release_firmware(fw);
+ 
+ 	return ret;
+@@ -662,6 +655,13 @@ static int mt7921_load_firmware(struct mt7921_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
++	if (mt76_is_sdio(&dev->mt76)) {
++		/* activate again */
++		ret = __mt7921_mcu_fw_pmctrl(dev);
++		if (!ret)
++			ret = __mt7921_mcu_drv_pmctrl(dev);
++	}
++
+ 	ret = mt7921_load_ram(dev);
+ 	if (ret)
+ 		return ret;
 -- 
 2.35.3
 
