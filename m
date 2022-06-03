@@ -2,258 +2,547 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25070C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jun 2022 04:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A34FC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jun 2022 05:11:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230312AbiFCEmI (ORCPT
+        id S239903AbiFCFK7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jun 2022 00:42:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36522 "EHLO
+        Fri, 3 Jun 2022 01:10:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229665AbiFCEmH (ORCPT
+        with ESMTP id S233341AbiFCFK5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jun 2022 00:42:07 -0400
-Received: from esa.hc3962-90.iphmx.com (esa.hc3962-90.iphmx.com [216.71.140.77])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6FCEB859
-        for <linux-wireless@vger.kernel.org>; Thu,  2 Jun 2022 21:42:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qccesdkim1;
-  t=1654231322; x=1654836122;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=M4zux9ZvFaAZpWMGMMoMHhZpL1h728T+/JRGajhFfKc=;
-  b=uBGxXsGVMD3LzthqQmNMj9N3eEnLzxg+yXWnk7/Wnpb3pLrql06no4LT
-   LJJDTccFeGYyt5AN7FIrSXEU2ItbhaJRHO92YDTDYjY4pN3TDUrOj/aIp
-   G2Q6uSjBfnYf0ka6pZDcJn5CXMwdeZiCK5m+wA/qMd6ZUQUGmx3pd5y11
-   U=;
-Received: from mail-mw2nam12lp2041.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.41])
-  by ob1.hc3962-90.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2022 04:42:01 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aHF/7ga/XVGWRpshu64qdVQcsiUhdQk1TZGJuCLfvpxI9LuNRyCNdTAN3zP7buwesOdB6GQgU8FpTexbaI2jTk/geRjLuvnij3JQtb2bQ9LISypoqn1KHtEfEFWGXZo0lNyFDgaZOkx6yWrec0TdTR4FY7SC9FJUTJvZhvJk1U7xk727oEwBMDLNCG/9ZEfqQZPXN70vBEGwxx14K4pH1RuXSPG6/6SfKYaQ8Woysy9Ykc8CsXsLA8kgd938aZTSya2DAleCVUeFvbYHXYYQlmrU34+er6qpPsHtYHHgFkZ6sITvLoPUXwglrSEOtfTTaOR3zGgnq0SghPaD75L7rA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=M4zux9ZvFaAZpWMGMMoMHhZpL1h728T+/JRGajhFfKc=;
- b=exbIBCH+JLV3+mU/mgzqRJH0nYylg0z8vA0ArwD+wTo29nS9ZlhzwyzXRWHmS4bqDVgwhh0DFaK4ygwXL4TJzHqhbK85aKJsKi9urpuK2JNWypnWIoDEtnLoq2lR5lC3EVjg3pvXpW+XD3+0bYURy/sQ6Ak6EzvPqB7KNyC032PZHPi7fmL/TWB1bS9aQoSAM2x4dCMGs8jTOquWLz2tc3E6jLhmBhDh5bwuZe/8fylT6oVLJwKG/heIJEdrAR1rj3RQ8uDE4oXxq6HHnq0IpH811ycxT3mMWemPa3w8s7hOExcMmtR6+COOKiysneCtOD2W//ZBNULghmCx+/uvbw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=quicinc.com; dmarc=pass action=none header.from=quicinc.com;
- dkim=pass header.d=quicinc.com; arc=none
-Received: from DM5PR0201MB3589.namprd02.prod.outlook.com (2603:10b6:4:80::19)
- by BL3PR02MB8298.namprd02.prod.outlook.com (2603:10b6:208:345::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5314.13; Fri, 3 Jun
- 2022 04:41:59 +0000
-Received: from DM5PR0201MB3589.namprd02.prod.outlook.com
- ([fe80::f5b9:2296:c8d4:764e]) by DM5PR0201MB3589.namprd02.prod.outlook.com
- ([fe80::f5b9:2296:c8d4:764e%7]) with mapi id 15.20.5293.019; Fri, 3 Jun 2022
- 04:41:58 +0000
-From:   "Aditya Kumar Singh (QUIC)" <quic_adisi@quicinc.com>
-To:     "Jeff Johnson (QUIC)" <quic_jjohnson@quicinc.com>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Aditya Kumar Singh (QUIC)" <quic_adisi@quicinc.com>,
-        "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
-Subject: RE: [PATCH 2/2] ath11k: add get_txpower mac ops
-Thread-Topic: [PATCH 2/2] ath11k: add get_txpower mac ops
-Thread-Index: AQHYdj+vfCpLU/o/7UGp6gldxUlyUa08M+oAgADoGUA=
-Date:   Fri, 3 Jun 2022 04:41:58 +0000
-Message-ID: <DM5PR0201MB3589D62629069D1FA3FB11BE84A19@DM5PR0201MB3589.namprd02.prod.outlook.com>
-References: <20220602051425.9265-1-quic_adisi@quicinc.com>
- <20220602051425.9265-3-quic_adisi@quicinc.com>
- <f6414575-6a9c-2e8a-dbb9-68680aca8822@quicinc.com>
-In-Reply-To: <f6414575-6a9c-2e8a-dbb9-68680aca8822@quicinc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=quicinc.com;
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: aff5079d-22a7-4baf-5b69-08da451b6513
-x-ms-traffictypediagnostic: BL3PR02MB8298:EE_
-x-ld-processed: 98e9ba89-e1a1-4e38-9007-8bdabc25de1d,ExtAddr
-x-microsoft-antispam-prvs: <BL3PR02MB82989E47D580C935AAC824B3F8A19@BL3PR02MB8298.namprd02.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 3mqNnWQOi5eOaB2mM+5H68ZpHkwdndLIqE8Y5NQ1ByCNLCOKIsGiYF0cOP+UO224FYvkfO8eig4kMCsmiFTFKdjY3AgQzzOfLlgh2bpgiwdXA9UTpZxpTQ/w/2EVHI5RMPuqyGPurX5MYUdjxt5FEjNz23n6QLZglq2/EObMLsid3sI/XcrGRqWSXj2vnn8MkuqJ12FGlJwWzA21AJkdTE9FRoEJ7psHae6qTlDWRK21KYRVsuH6zgzJ4OXaIiYp9pK12f7KCuVWBy4KC7PLI6vf6RmsL6yyLE/to6z8nWI+lgqnL3hbQIeRJHtJEEX25kDjliqvy2edhW3Oz2Mx1omo/bRzcDMSHvFvQggi+8jF/LOTA9MeqXq6E2s8LaQLrxW7cnELBwhU2af58zYmcyUl8jJTskqYa5JxpJc4yBnnu3wmQqG+dpEwxk7GTzteQFjwAMVhepGh0vofKxRVwn5EtwdGMCj2G4xBDcRJFdfDs/uogRra3oz7XM38Uyybz/ttjAPGUubj932HHEVa2iO7lMNjTZan9PxkwDIeajpEzpt7rZFrt+7D/eeiA7mkS/bHl7dfIoE20ZVDAxlCoY+iV71IKpv+20z3GlasiEq2+CZh8Ei9lI74n/bBMA4fW5pK6u6qVBMzvit7G10gZNj/gh6EUAo8mf0fIn6fiahqExXDT3ivdWzNRLay6KY0ARF1yCmaIMWxAEoo3vruyA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR0201MB3589.namprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(38070700005)(38100700002)(6862004)(186003)(2906002)(64756008)(66476007)(66446008)(6636002)(66556008)(66946007)(54906003)(76116006)(4326008)(8676002)(83380400001)(316002)(52536014)(6506007)(53546011)(7696005)(33656002)(71200400001)(5660300002)(508600001)(55016003)(122000001)(9686003)(26005)(86362001)(8936002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?ekJSSDVkZm5ncDZjMjZralR1T2dLdGsyWFVpcGgzOXZ0dGJweUVGMmRUTDFD?=
- =?utf-8?B?c3l5Y1RhcWpYN2FSNnV1Y05LN1BXL2N6SW1DZ0lGV21SVWNDVFpYZjVXSGNI?=
- =?utf-8?B?RUF1VDFydS9lNEJGZm9PZXRrb2dyQ2NjOFVBdFBiaklRUzN1dnVma1BrR3Br?=
- =?utf-8?B?WFhIT1VtK0JLRzd2VG91dXdwRHpJVUJuSngzRXZVZmdjV0VscTBGajFuaW1l?=
- =?utf-8?B?eGFmYUFYSkZBSndheXZ2N3lnUkJVWEVodmZUVmNiV3M2MkViYXdmU3NRY0Zy?=
- =?utf-8?B?UDh0ZFVud1EyNnlTSFIzWG9OUHBnSGg3RXBJdnFGOWR4Sy9YRzVQZGl3eHRI?=
- =?utf-8?B?V3laUzBFUVh1V2kzSWM0U0s3cFc4bEtNb2RQTkUyMnNBNWxXczZBSTdKR290?=
- =?utf-8?B?SFY2WTZHdU1OcDJmZkRFbXZtQjcwc24rVTE1aGJMcUJzVTNBSEorSnBrMlNR?=
- =?utf-8?B?VWtkWEVydUs0aVZ6SUR0ZktyRUlud2ZqdHhsSDBnMXJYU242REFWaks1eUl5?=
- =?utf-8?B?dDJGU2l0VDF5SmtjTnBpcy9BYUx0KzdWU1V1RHovWVREWFBlNTh6ME96WWJ4?=
- =?utf-8?B?aVVYRzNQMTRzbVBWTmdSc1J3MGxMTlVzdHJjKzRCdTdkV29kNWxPMlpWNjcr?=
- =?utf-8?B?TkJPbnQ4RlZPeUkxTjQ3Q3BYb05zTU85YU1kaGZ2ZU5TWkZ1bDNiTjhSU1NN?=
- =?utf-8?B?bDhlRWNIQUNmcmRmNzlEaHBUV2c5c09ZZDlFTVlWWUtZU3dHVHJSUzRWUFkx?=
- =?utf-8?B?RnlNQnpYMHJqYUEwSzhVRmFtb2xnNkRvYTRlNzZPTUttcmNUdzkzM2RJTmhj?=
- =?utf-8?B?S2FaS0hKNzNSdlhlOGlVeVV6bG5EWU5tZ09wbkZUUVBYK3Z5NVZySzRVRVkv?=
- =?utf-8?B?WEl5ajN2N242VlVBcjhMMFBySDJYcTVHWUROQlRWSEpKRTUzUnd0ZmkrbFNC?=
- =?utf-8?B?SGt3VzBPWlNKSDY5Q3NDNEtEQ3FlNXRQTTd1RG5IZjZuQ3M0U0Z5QlpMaGJH?=
- =?utf-8?B?TlJaM2tGRkI5WEs1a0orUlZaYUt4bkh4UnNSWVNzeFNaN2N2Z2xXa1FEekJE?=
- =?utf-8?B?MlIwZDNpQkYzdWRPamFIOHpVa0Q3cWRkaXFrUGNMN2czajUvdUovSStqcG1S?=
- =?utf-8?B?b1RHT3ZsRVQ5aERwZi93eVltSFlKNE81QnFCYlBLdGpLTjU4Y3JUMmFHOGNk?=
- =?utf-8?B?eFcvQWpWdDR3UzNkR0o4bmdGZU1Mam45RDFBVXdrQ2xyMktVS0lQUGZGaktJ?=
- =?utf-8?B?RUhscmFPUGhyMVZrS0FKUFhSdzNpZzRMQzJCZHRYZmNZSkwzbW1kalozMW9C?=
- =?utf-8?B?dzkzUUZqK2lvWi9WNUlSd3FzcHRvaFplTDBjV21INmd1aTYxWVV4OWFxeGdN?=
- =?utf-8?B?U2NXd2pMRHZtb3NHNWpPL2owajc2MzJKSk5ZV3lUYUZGZWpCcEFhdkRnR2lS?=
- =?utf-8?B?Y2pwNG9YN0xVUWlRSE1qN2JGYmw4WXlVS0tKZjhndC9uVmMwRkxGQ0JycmVZ?=
- =?utf-8?B?NkQ0ZnlrUlpvc2JpNWdyQXl1QWk2STFUY1ZKYWpKL04wNytjZUVuNE5LOGJU?=
- =?utf-8?B?bVJ0UE5rQU5abThEa1B2dmsyTVlPUXdPREFnRlYrVXd4RkVwc3lKWVl5Q0gx?=
- =?utf-8?B?RjIwMUNYcnJPbm8vL1Z6TUNJcEU2dXY5TG1od05VcHVWL0VuM24vOWJRYU54?=
- =?utf-8?B?enFqTWx4UkJITWtUQ1p6ZnhNYzd5SEJZMkduN0swaTQxZFJmQ0xEc05GdlJy?=
- =?utf-8?B?clJOUFJlNWxmSVd0d1AvdWtIYlB4eHJCMzJFWk80SUw2WVJoNGhiV3JCZ0oz?=
- =?utf-8?B?WFBXeFROY2ZuSWxkaVdPVDRvNkcxdlU5OGtwOG8zQVdVYnlSazlvbGNiMHgv?=
- =?utf-8?B?YXkxS0ZGVmo0b0dkSFRXbXRTb2pERUJEOGpVMDhiQVhscUNSN0dROFU5dVo2?=
- =?utf-8?B?OVE1YzZkVjltL3B4THZueEJQeXI4VmZFa2phSjdacFRxNDZLeFhmeENRb0x1?=
- =?utf-8?B?aFowS05venh0OUxUK3NOSHdYcVJKbVVBczZ3Zk1BSzhIK2dQMXFSN3JSYWZu?=
- =?utf-8?B?SzdVR012emtMYWNrVE5TdWFDQkpwaytmMFBZYytwaHhJb1Q5NWYwNDdlMHly?=
- =?utf-8?B?NGQvRzhORHQzMzE1VFphQ09jNnJCNlh6dm9yZ2dwWGVHYmUwSmpESkFSK2JM?=
- =?utf-8?B?Y2puYzM5SFhmVUQvMUpGTENkWWpBYXh2UktmRnRCdTlnTEZOemh0ZGxoQnZo?=
- =?utf-8?B?dWR1eFhkdHViQ2M4S2dSYXBleCtSZmhrUzZZQ2E2OWdYeTZMTHBqNUQzZ3ZJ?=
- =?utf-8?B?bGF1Zmo3NnhINGdZNmpuR3VvMDYxRGpYSyt6L2NBakNYS2l3RXdnUT09?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: quicinc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM5PR0201MB3589.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: aff5079d-22a7-4baf-5b69-08da451b6513
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Jun 2022 04:41:58.8234
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 98e9ba89-e1a1-4e38-9007-8bdabc25de1d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: v8ibVRm9PxOA35BN69BxW6WQpr3BohaYIPMUb/uUnkm5bCH/pa366YwcH8DGIXSEOhkiNZS2W4SvMDSnkP8dvg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR02MB8298
+        Fri, 3 Jun 2022 01:10:57 -0400
+Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 865D432048;
+        Thu,  2 Jun 2022 22:10:53 -0700 (PDT)
+Received: from ubuntu.localdomain (unknown [106.117.80.109])
+        by mail-app4 (Coremail) with SMTP id cS_KCgCnieKRl5li3pgyAQ--.52150S3;
+        Fri, 03 Jun 2022 13:09:53 +0800 (CST)
+From:   Duoming Zhou <duoming@zju.edu.cn>
+To:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     amitkarwar@gmail.com, ganapathi017@gmail.com,
+        sharvari.harisangam@nxp.com, huxinming820@gmail.com,
+        kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, netdev@vger.kernel.org,
+        johannes@sipsolutions.net, gregkh@linuxfoundation.org,
+        rafael@kernel.org, Duoming Zhou <duoming@zju.edu.cn>
+Subject: [PATCH v5 1/2] devcoredump: remove the useless gfp_t parameter in dev_coredumpv and dev_coredumpm
+Date:   Fri,  3 Jun 2022 13:09:34 +0800
+Message-Id: <df72af3b1862bac7d8e793d1f3931857d3779dfd.1654229964.git.duoming@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <cover.1654229964.git.duoming@zju.edu.cn>
+References: <cover.1654229964.git.duoming@zju.edu.cn>
+In-Reply-To: <cover.1654229964.git.duoming@zju.edu.cn>
+References: <cover.1654229964.git.duoming@zju.edu.cn>
+X-CM-TRANSID: cS_KCgCnieKRl5li3pgyAQ--.52150S3
+X-Coremail-Antispam: 1UD129KBjvAXoWfZr13XFy8GFy5Ar4rtw4DXFb_yoW8ur1xAo
+        WftrsxCay5Ar40yr93Gr1xCFy3XFsrGrsxAr45AFZ8WFZF9F1q9F1rX3W3Z3ZYq345Kw4f
+        A342q3WDCr4Yk34fn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
+        AaLaJ3UjIYCTnIWjp_UUUOr7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20EY4v20xva
+        j40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r18M28IrcIa0x
+        kI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84AC
+        jcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr
+        1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1l
+        e2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI
+        8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwAC
+        jcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0x
+        kIwI1lc2xSY4AK67AK6r4rMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4U
+        MI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67
+        AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0
+        cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z2
+        80aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI
+        43ZEXa7VUUMq2tUUUUU==
+X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAggKAVZdtaBKlgAYsb
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKZWZmIEpvaG5zb24gKFFVSUMp
-IDxxdWljX2pqb2huc29uQHF1aWNpbmMuY29tPg0KPiBTZW50OiBUaHVyc2RheSwgSnVuZSAyLCAy
-MDIyIDIwOjIxDQo+IFRvOiBBZGl0eWEgS3VtYXIgU2luZ2ggKFFVSUMpIDxxdWljX2FkaXNpQHF1
-aWNpbmMuY29tPjsNCj4gYXRoMTFrQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gQ2M6IGxpbnV4LXdp
-cmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDIvMl0gYXRoMTFr
-OiBhZGQgZ2V0X3R4cG93ZXIgbWFjIG9wcw0KPiANCj4gT24gNi8xLzIwMjIgMTA6MTQgUE0sIEFk
-aXR5YSBLdW1hciBTaW5naCB3cm90ZToNCj4gPiBEcml2ZXIgZG9lcyBub3Qgc3VwcG9ydCBnZXRf
-dHhwb3dlciBtYWMgb3BzIGJlY2F1c2Ugb2Ygd2hpY2gNCj4gPiBjZmc4MDIxMSByZXR1cm5zIHZp
-Zi0+YnNzX2NvbmYudHhwb3dlciB0byB1c2VyIHNwYWNlLiBic3NfY29uZi50eHBvd2VyDQo+ID4g
-Z2V0cyBpdHMgdmFsdWUgZnJvbSBpZWVlODAyMTFfY2hhbm5lbC0+bWF4X3JlZ19wb3dlci4gSG93
-ZXZlciwgdGhlDQo+ID4gZmluYWwgdHhwb3dlciBpcyBkZXBlbmRlbnQgb24gZmV3IG90aGVyIHBh
-cmFtZXRlcnMgYXBhcnQgZnJvbSBtYXgNCj4gPiByZWd1bGF0b3J5IHN1cHBvcnRlZCBwb3dlci4g
-SXQgaXMgdGhlIGZpcm13YXJlIHdoaWNoIGtub3dzIGFib3V0IGFsbA0KPiA+IHRoZXNlIHBhcmFt
-ZXRlcnMgYW5kIGNvbnNpZGVycyB0aGUgbWluaW11bSBmb3IgZWFjaCBwYWNrZXQNCj4gdHJhbnNt
-aXNzaW9uLg0KPiA+DQo+ID4gQWxsIGF0aDExayBmaXJtd2FyZSByZXBvcnRzIHRoZSBmaW5hbCB0
-eCBwb3dlciBpbiBmaXJtd2FyZSBwZGV2IHN0YXRzDQo+ID4gd2hpY2ggZmFsbHMgdW5kZXIgZndf
-c3RhdHMuDQo+ID4NCj4gPiBBZGQgZ2V0X3R4cG93ZXIgbWFjIG9wcyB0byBnZXQgdGhlIHR4IHBv
-d2VyIGZyb20gZmlybXdhcmUgbGV2ZXJhZ2luZw0KPiA+IGZ3X3N0YXRzIGFuZCByZXR1cm4gaXQg
-YWNjb3JkaW5nbHkuDQo+ID4NCj4gPiBUZXN0ZWQtb246IElQUTgwNzQgaHcyLjAgQUhCDQo+ID4g
-V0xBTi5ISy4yLjUuMC4xLTAxMTAwLVFDQUhLU1dQTF9TSUxJQ09OWi0xDQo+ID4gVGVzdGVkLW9u
-OiBRQ045MDc0IGh3MS4wIFBDSQ0KPiA+IFdMQU4uSEsuMi41LjAuMS0wMTEwMC1RQ0FIS1NXUExf
-U0lMSUNPTlotMQ0KPiA+IFRlc3RlZC1vbjogV0NONjg1NSBodzIuMCBQQ0kNCj4gPiBXTEFOLkhT
-UC4xLjEtMDMxMjUtUUNBSFNQU1dQTF9WMV9WMl9TSUxJQ09OWl9MSVRFLTMNCj4gPg0KPiA+IFNp
-Z25lZC1vZmYtYnk6IEFkaXR5YSBLdW1hciBTaW5naCA8cXVpY19hZGlzaUBxdWljaW5jLmNvbT4N
-Cj4gPiAtLS0NCj4gPiAgIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMWsvbWFjLmMgfCA5
-MQ0KPiArKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgIDEgZmlsZSBjaGFuZ2VkLCA5
-MSBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvYXRoL2F0aDExay9tYWMuYw0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEx
-ay9tYWMuYw0KPiA+IGluZGV4IGYxMTk1NjE2MzgyMi4uZjI1MDJjZTdkZWFjIDEwMDY0NA0KPiA+
-IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMWsvbWFjLmMNCj4gPiArKysgYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTFrL21hYy5jDQo+ID4gQEAgLTg0NzEsNiArODQ3
-MSw5NCBAQCBzdGF0aWMgaW50DQo+IGF0aDExa19tYWNfb3BfcmVtYWluX29uX2NoYW5uZWwoc3Ry
-dWN0IGllZWU4MDIxMV9odyAqaHcsDQo+ID4gICAJcmV0dXJuIHJldDsNCj4gPiAgIH0NCj4gPg0K
-PiA+ICtzdGF0aWMgaW50IGF0aDExa19md19zdGF0c19yZXF1ZXN0KHN0cnVjdCBhdGgxMWsgKmFy
-LA0KPiA+ICsJCQkJICAgc3RydWN0IHN0YXRzX3JlcXVlc3RfcGFyYW1zICpyZXFfcGFyYW0pIHsN
-Cj4gPiArCXN0cnVjdCBhdGgxMWtfYmFzZSAqYWIgPSBhci0+YWI7DQo+ID4gKwl1bnNpZ25lZCBs
-b25nIHRpbWVfbGVmdDsNCj4gPiArCWludCByZXQ7DQo+ID4gKw0KPiA+ICsJbG9ja2RlcF9hc3Nl
-cnRfaGVsZCgmYXItPmNvbmZfbXV0ZXgpOw0KPiA+ICsNCj4gPiArCXNwaW5fbG9ja19iaCgmYXIt
-PmRhdGFfbG9jayk7DQo+ID4gKwlhci0+Zndfc3RhdHNfZG9uZSA9IGZhbHNlOw0KPiA+ICsJYXRo
-MTFrX2Z3X3N0YXRzX3BkZXZzX2ZyZWUoJmFyLT5md19zdGF0cy5wZGV2cyk7DQo+ID4gKwlzcGlu
-X3VubG9ja19iaCgmYXItPmRhdGFfbG9jayk7DQo+ID4gKw0KPiA+ICsJcmVpbml0X2NvbXBsZXRp
-b24oJmFyLT5md19zdGF0c19jb21wbGV0ZSk7DQo+ID4gKw0KPiA+ICsJcmV0ID0gYXRoMTFrX3dt
-aV9zZW5kX3N0YXRzX3JlcXVlc3RfY21kKGFyLCByZXFfcGFyYW0pOw0KPiA+ICsJaWYgKHJldCkg
-ew0KPiA+ICsJCWF0aDExa193YXJuKGFiLCAiY291bGQgbm90IHJlcXVlc3QgZncgc3RhdHMgKCVk
-KVxuIiwNCj4gPiArCQkJICAgIHJldCk7DQo+ID4gKwkJcmV0dXJuIHJldDsNCj4gPiArCX0NCj4g
-PiArDQo+ID4gKwl0aW1lX2xlZnQgPSB3YWl0X2Zvcl9jb21wbGV0aW9uX3RpbWVvdXQoJmFyLT5m
-d19zdGF0c19jb21wbGV0ZSwNCj4gPiArCQkJCQkJMSAqIEhaKTsNCj4gPiArDQo+ID4gKwlpZiAo
-IXRpbWVfbGVmdCkNCj4gPiArCQlyZXR1cm4gLUVUSU1FRE9VVDsNCj4gPiArDQo+ID4gKwlyZXR1
-cm4gMDsNCj4gPiArfQ0KPiA+ICsNCj4gPiArc3RhdGljIGludCBhdGgxMWtfbWFjX29wX2dldF90
-eHBvd2VyKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LA0KPiA+ICsJCQkJICAgICBzdHJ1Y3QgaWVl
-ZTgwMjExX3ZpZiAqdmlmLA0KPiA+ICsJCQkJICAgICBpbnQgKmRibSkNCj4gPiArew0KPiA+ICsJ
-c3RydWN0IGF0aDExayAqYXIgPSBody0+cHJpdjsNCj4gPiArCXN0cnVjdCBhdGgxMWtfYmFzZSAq
-YWIgPSBhci0+YWI7DQo+ID4gKwlzdHJ1Y3Qgc3RhdHNfcmVxdWVzdF9wYXJhbXMgcmVxX3BhcmFt
-Ow0KPiANCj4gc3VnZ2VzdCB5b3UgdXNlIGFuID0ge30gaW5pdGlhbGl6ZXIgaGVyZS4NCk9rYXku
-IA0KDQo+IA0KPiA+ICsJc3RydWN0IGF0aDExa19md19zdGF0c19wZGV2ICpwZGV2Ow0KPiA+ICsJ
-aW50IHJldDsNCj4gPiArDQo+ID4gKwkvKiBGaW5hbCBUeCBwb3dlciBpcyBtaW5pbXVtIG9mIFRh
-cmdldCBQb3dlciwgQ1RMIHBvd2VyLA0KPiBSZWd1bGF0b3J5DQo+ID4gKwkgKiBQb3dlciwgUFNE
-IEVJUlAgUG93ZXIuIFdlIGp1c3Qga25vdyB0aGUgUmVndWxhdG9yeSBwb3dlciBmcm9tDQo+IHRo
-ZQ0KPiA+ICsJICogcmVndWxhdG9yeSBydWxlcyBvYnRhaW5lZC4gRlcga25vd3MgYWxsIHRoZXNl
-IHBvd2VyIGFuZCBzZXRzIHRoZQ0KPiBtaW4NCj4gPiArCSAqIG9mIHRoZXNlLiBIZW5jZSwgd2Ug
-cmVxdWVzdCB0aGUgRlcgcGRldiBzdGF0cyBpbiB3aGljaCBGVw0KPiByZXBvcnRzDQo+ID4gKwkg
-KiB0aGUgbWluaW11bSBvZiBhbGwgdmRldidzIGNoYW5uZWwgVHggcG93ZXIuDQo+ID4gKwkgKi8N
-Cj4gPiArCW11dGV4X2xvY2soJmFyLT5jb25mX211dGV4KTsNCj4gPiArDQo+ID4gKwlpZiAoYXIt
-PnN0YXRlICE9IEFUSDExS19TVEFURV9PTikNCj4gPiArCQlnb3RvIGVycl9mYWxsYmFjazsNCj4g
-PiArDQo+ID4gKwlyZXFfcGFyYW0ucGRldl9pZCA9IGFyLT5wZGV2LT5wZGV2X2lkOw0KPiA+ICsJ
-cmVxX3BhcmFtLnZkZXZfaWQgPSAwOw0KPiANCj4gYW5kIHJlbW92ZSB0aGlzIGV4cGxpY2l0IHNl
-dHRpbmcgb2YgYW4gdW51c2VkIHBhcmFtIHRvIDAgc2luY2UgaXQgd2lsbCBub3QgYmUNCj4gbmVl
-ZGVkIGlmIHRoZSBlbnRpcmUgc3RydWN0IGlzIHplcm9lZC4gdGhlIHJlYXNvbiBmb3IgdGhpcyBh
-cHByb2FjaCBpcyB0aGF0IGlmLCBpbg0KPiB0aGUgZnV0dXJlLCBhbnkgYWRkaXRpb25hbCBmaWVs
-ZHMgYXJlIGFkZGVkIHRvIHRoZSBzdHJ1Y3QsIHlvdSBkb24ndCB3YW50IHRvDQo+IGhhdmUgYSBz
-aXR1YXRpb24gd2hlcmUgeW91IGZvcmdldCB0byBhZGQgY29kZSB0byBjbGVhciB0aGUgbmV3IGZp
-ZWxkcywgYW5kIGFzDQo+IGEgcmVzdWx0IHlvdSBwb3RlbnRpYWxseSBsZWFrIHN0YWNrIG1lbW9y
-eSBjb250ZW50cyB0byBmaXJtd2FyZSwgd2hpY2ggaXMgYQ0KPiBzZWN1cml0eSBob2xlLg0KPiAN
-ClN1cmUsIHdpbGwgYWRkcmVzcyBpbiB2Mi4gVGhhbmtzIGZvciBwb2ludGluZyBvdXQuDQoNCg0K
-PiA+ICsJcmVxX3BhcmFtLnN0YXRzX2lkID0gV01JX1JFUVVFU1RfUERFVl9TVEFUOw0KPiA+ICsN
-Cj4gPiArCXJldCA9IGF0aDExa19md19zdGF0c19yZXF1ZXN0KGFyLCAmcmVxX3BhcmFtKTsNCj4g
-PiArCWlmIChyZXQpIHsNCj4gPiArCQlhdGgxMWtfd2FybihhYiwgImZhaWxlZCB0byByZXF1ZXN0
-IGZ3IHBkZXYgc3RhdHM6ICVkXG4iLA0KPiByZXQpOw0KPiA+ICsJCWdvdG8gZXJyX2ZhbGxiYWNr
-Ow0KPiA+ICsJfQ0KPiA+ICsNCj4gPiArCXNwaW5fbG9ja19iaCgmYXItPmRhdGFfbG9jayk7DQo+
-ID4gKwlwZGV2ID0gbGlzdF9maXJzdF9lbnRyeV9vcl9udWxsKCZhci0+Zndfc3RhdHMucGRldnMs
-DQo+ID4gKwkJCQkJc3RydWN0IGF0aDExa19md19zdGF0c19wZGV2LCBsaXN0KTsNCj4gPiArCWlm
-ICghcGRldikgew0KPiA+ICsJCXNwaW5fdW5sb2NrX2JoKCZhci0+ZGF0YV9sb2NrKTsNCj4gPiAr
-CQlnb3RvIGVycl9mYWxsYmFjazsNCj4gPiArCX0NCj4gPiArDQo+ID4gKwkvKiB0eCBwb3dlciBp
-cyBzZXQgYXMgMiB1bml0cyBwZXIgZEJtIGluIEZXLiAqLw0KPiA+ICsJKmRibSA9IHBkZXYtPmNo
-YW5fdHhfcG93ZXIgLyAyOw0KPiA+ICsNCj4gPiArCXNwaW5fdW5sb2NrX2JoKCZhci0+ZGF0YV9s
-b2NrKTsNCj4gPiArCW11dGV4X3VubG9jaygmYXItPmNvbmZfbXV0ZXgpOw0KPiA+ICsNCj4gPiAr
-CWF0aDExa19kYmcoYXItPmFiLCBBVEgxMUtfREJHX01BQywgIiVzOiB0eHBvd2VyOiAlZCBmcm9t
-DQo+IGZ3XG4iLA0KPiA+ICtfX2Z1bmNfXywgKmRibSk7DQo+IA0KPiBJTU8gdGhpcyBpcyBtaXNs
-ZWFkaW5nLiB0ZWNobmljYWxseSBwZGV2LT5jaGFuX3R4X3Bvd2VyIGlzIHRoZSB0eHBvd2VyDQo+
-IGZyb20gZmlybXdhcmUsICpkYm0gaXMgdGhlIGRlcml2ZWQgcG93ZXIgYWZ0ZXIgY29udmVydGlu
-ZyB1bml0cy4gbWF5YmUNCj4gdGhhdCBpcyBzcGxpdHRpbmcgaGFpcnMsIGJ1dCB3aGVuIGRlYnVn
-Z2luZyBpc3N1ZXMgeW91IHVzdWFsbHkgd2FudCB0byBiZSB2ZXJ5DQo+IGNsZWFyIGFib3V0IHdo
-YXQgaXMgdGhlIHJhdyBkYXRhIGFuZCB3aGF0IGlzIHRoZSBjYWxjdWxhdGVkIGRhdGENCj4gDQpZ
-ZXMsIEkgc2VlIHlvdXIgcG9pbnQuIFdpbGwgcmVjdGlmeSB0aGlzIGFuZCBiZSBjbGVhciBpbiBk
-ZWJ1ZyBwcmludHMgYXMNCnlvdSBoYXZlIHN1Z2dlc3RlZCBiZWxvdy4NCg0KPiBBbHNvIGZvbGxv
-dyBhdGgxMWsgY29kaW5nIHN0eWxlIGZvciBkZWJ1ZyBtZXNzYWdlcyAod2hpY2ggZm9sbG93cw0K
-PiBhdGgxMGspIHdoaWNoIGRvZXMgbm90IGFsbG93IGNvbG9ucw0KPiANCj4gc28gSSdkIHN1Z2dl
-c3QgInR4cG93ZXIgZnJvbSBmaXJtd2FyZSAlZCByZXBvcnRlZCAlZCINCj4gDQpTdXJlLCB3aWxs
-IGFkZHJlc3MuDQoNCj4gPiArCXJldHVybiAwOw0KPiA+ICsNCj4gPiArZXJyX2ZhbGxiYWNrOg0K
-PiA+ICsJbXV0ZXhfdW5sb2NrKCZhci0+Y29uZl9tdXRleCk7DQo+ID4gKwkvKiBXZSBkaWRuJ3Qg
-Z2V0IHR4cG93ZXIgZnJvbSBGVy4gSGVuY2UsIHJlbHlpbmcgb24gdmlmLQ0KPiA+YnNzX2NvbmYu
-dHhwb3dlciAqLw0KPiA+ICsJKmRibSA9IHZpZi0+YnNzX2NvbmYudHhwb3dlcjsNCj4gPiArCWF0
-aDExa19kYmcoYXItPmFiLCBBVEgxMUtfREJHX01BQywgIiVzOiB0eHBvd2VyIGZyb20NCj4gYnNz
-X2NvbmZcbiIsDQo+ID4gK19fZnVuY19fKTsNCj4gDQo+IEknZCBsb2cgKmRibSBoZXJlIGFzIHdl
-bGwNCj4gDQpNdWNoIGJldHRlci4gV2lsbCByZWN0aWZ5IGluIHYyLg0KDQo+ID4gKwlyZXR1cm4g
-MDsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgIHN0YXRpYyBjb25zdCBzdHJ1Y3QgaWVlZTgwMjExX29w
-cyBhdGgxMWtfb3BzID0gew0KPiA+ICAgCS50eAkJCQk9IGF0aDExa19tYWNfb3BfdHgsDQo+ID4g
-ICAJLnN0YXJ0ICAgICAgICAgICAgICAgICAgICAgICAgICA9IGF0aDExa19tYWNfb3Bfc3RhcnQs
-DQo+ID4gQEAgLTg1MjEsNiArODYwOSw3IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgaWVlZTgwMjEx
-X29wcyBhdGgxMWtfb3BzID0gew0KPiA+ICAgI2lmIElTX0VOQUJMRUQoQ09ORklHX0lQVjYpDQo+
-ID4gICAJLmlwdjZfYWRkcl9jaGFuZ2UgPSBhdGgxMWtfbWFjX29wX2lwdjZfY2hhbmdlZCwNCj4g
-PiAgICNlbmRpZg0KPiA+ICsJLmdldF90eHBvd2VyICAgICAgICAgICAgICAgICAgICA9IGF0aDEx
-a19tYWNfb3BfZ2V0X3R4cG93ZXIsDQo+ID4NCj4gPiAgIAkuc2V0X3Nhcl9zcGVjcwkJCT0NCj4g
-YXRoMTFrX21hY19vcF9zZXRfYmlvc19zYXJfc3BlY3MsDQo+ID4gICAJLnJlbWFpbl9vbl9jaGFu
-bmVsCQk9DQo+IGF0aDExa19tYWNfb3BfcmVtYWluX29uX2NoYW5uZWwsDQo+ID4gQEAgLTkxMjks
-NiArOTIxOCw4IEBAIGludCBhdGgxMWtfbWFjX2FsbG9jYXRlKHN0cnVjdCBhdGgxMWtfYmFzZSAq
-YWIpDQo+ID4gICAJCWNsZWFyX2JpdChBVEgxMUtfRkxBR19NT05JVE9SX1ZERVZfQ1JFQVRFRCwg
-JmFyLQ0KPiA+bW9uaXRvcl9mbGFncyk7DQo+ID4gICAJCWFyLT52ZGV2X2lkXzExZF9zY2FuID0g
-QVRIMTFLXzExRF9JTlZBTElEX1ZERVZfSUQ7DQo+ID4gICAJCWluaXRfY29tcGxldGlvbigmYXIt
-PmNvbXBsZXRlZF8xMWRfc2Nhbik7DQo+ID4gKw0KPiA+ICsJCWF0aDExa19md19zdGF0c19pbml0
-KGFyKTsNCj4gPiAgIAl9DQo+ID4NCj4gPiAgIAlyZXR1cm4gMDsNCg0K
+The dev_coredumpv() and dev_coredumpm() could not be used in atomic
+context, because they call kvasprintf_const() and kstrdup() with
+GFP_KERNEL parameter. The process is shown below:
+
+dev_coredumpv(.., gfp_t gfp)
+  dev_coredumpm(.., gfp_t gfp)
+    dev_set_name
+      kobject_set_name_vargs
+        kvasprintf_const(GFP_KERNEL, ...); //may sleep
+          kstrdup(s, GFP_KERNEL); //may sleep
+
+This patch removes gfp_t parameter of dev_coredumpv() and dev_coredumpm()
+and changes the gfp_t parameter of kzalloc() in dev_coredumpm() to
+GFP_KERNEL in order to show they could not be used in atomic context.
+
+Fixes: 833c95456a70 ("device coredump: add new device coredump class")
+Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
+---
+Changes in v5:
+  - Drop gfp_t parameter of dev_coredumpv() and dev_coredumpm().
+
+ drivers/base/devcoredump.c                       | 16 ++++++----------
+ drivers/bluetooth/btmrvl_sdio.c                  |  2 +-
+ drivers/bluetooth/hci_qca.c                      |  2 +-
+ drivers/gpu/drm/etnaviv/etnaviv_dump.c           |  2 +-
+ drivers/gpu/drm/msm/disp/msm_disp_snapshot.c     |  4 ++--
+ drivers/gpu/drm/msm/msm_gpu.c                    |  4 ++--
+ drivers/media/platform/qcom/venus/core.c         |  2 +-
+ drivers/net/can/spi/mcp251xfd/mcp251xfd-dump.c   |  2 +-
+ drivers/net/wireless/ath/ath10k/coredump.c       |  2 +-
+ .../net/wireless/ath/wil6210/wil_crash_dump.c    |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c      |  6 ++----
+ drivers/net/wireless/marvell/mwifiex/main.c      |  3 +--
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c  |  3 +--
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c  |  3 +--
+ drivers/net/wireless/realtek/rtw88/main.c        |  2 +-
+ drivers/net/wireless/realtek/rtw89/ser.c         |  2 +-
+ drivers/remoteproc/qcom_q6v5_mss.c               |  2 +-
+ drivers/remoteproc/remoteproc_coredump.c         |  8 ++++----
+ include/drm/drm_print.h                          |  2 +-
+ include/linux/devcoredump.h                      | 13 ++++++-------
+ sound/soc/intel/avs/apl.c                        |  2 +-
+ sound/soc/intel/avs/skl.c                        |  2 +-
+ sound/soc/intel/catpt/dsp.c                      |  2 +-
+ 24 files changed, 40 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/base/devcoredump.c b/drivers/base/devcoredump.c
+index f4d794d6bb8..8535f0bd5df 100644
+--- a/drivers/base/devcoredump.c
++++ b/drivers/base/devcoredump.c
+@@ -173,15 +173,13 @@ static void devcd_freev(void *data)
+  * @dev: the struct device for the crashed device
+  * @data: vmalloc data containing the device coredump
+  * @datalen: length of the data
+- * @gfp: allocation flags
+  *
+  * This function takes ownership of the vmalloc'ed data and will free
+  * it when it is no longer used. See dev_coredumpm() for more information.
+  */
+-void dev_coredumpv(struct device *dev, void *data, size_t datalen,
+-		   gfp_t gfp)
++void dev_coredumpv(struct device *dev, void *data, size_t datalen)
+ {
+-	dev_coredumpm(dev, NULL, data, datalen, gfp, devcd_readv, devcd_freev);
++	dev_coredumpm(dev, NULL, data, datalen, devcd_readv, devcd_freev);
+ }
+ EXPORT_SYMBOL_GPL(dev_coredumpv);
+ 
+@@ -236,7 +234,6 @@ static ssize_t devcd_read_from_sgtable(char *buffer, loff_t offset,
+  * @owner: the module that contains the read/free functions, use %THIS_MODULE
+  * @data: data cookie for the @read/@free functions
+  * @datalen: length of the data
+- * @gfp: allocation flags
+  * @read: function to read from the given buffer
+  * @free: function to free the given buffer
+  *
+@@ -246,7 +243,7 @@ static ssize_t devcd_read_from_sgtable(char *buffer, loff_t offset,
+  * function will be called to free the data.
+  */
+ void dev_coredumpm(struct device *dev, struct module *owner,
+-		   void *data, size_t datalen, gfp_t gfp,
++		   void *data, size_t datalen,
+ 		   ssize_t (*read)(char *buffer, loff_t offset, size_t count,
+ 				   void *data, size_t datalen),
+ 		   void (*free)(void *data))
+@@ -268,7 +265,7 @@ void dev_coredumpm(struct device *dev, struct module *owner,
+ 	if (!try_module_get(owner))
+ 		goto free;
+ 
+-	devcd = kzalloc(sizeof(*devcd), gfp);
++	devcd = kzalloc(sizeof(*devcd), GFP_KERNEL);
+ 	if (!devcd)
+ 		goto put_module;
+ 
+@@ -318,7 +315,6 @@ EXPORT_SYMBOL_GPL(dev_coredumpm);
+  * @dev: the struct device for the crashed device
+  * @table: the dump data
+  * @datalen: length of the data
+- * @gfp: allocation flags
+  *
+  * Creates a new device coredump for the given device. If a previous one hasn't
+  * been read yet, the new coredump is discarded. The data lifetime is determined
+@@ -326,9 +322,9 @@ EXPORT_SYMBOL_GPL(dev_coredumpm);
+  * it will free the data.
+  */
+ void dev_coredumpsg(struct device *dev, struct scatterlist *table,
+-		    size_t datalen, gfp_t gfp)
++		    size_t datalen)
+ {
+-	dev_coredumpm(dev, NULL, table, datalen, gfp, devcd_read_from_sgtable,
++	dev_coredumpm(dev, NULL, table, datalen, devcd_read_from_sgtable,
+ 		      devcd_free_sgtable);
+ }
+ EXPORT_SYMBOL_GPL(dev_coredumpsg);
+diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
+index b8ef66f89fc..9b9728719db 100644
+--- a/drivers/bluetooth/btmrvl_sdio.c
++++ b/drivers/bluetooth/btmrvl_sdio.c
+@@ -1515,7 +1515,7 @@ static void btmrvl_sdio_coredump(struct device *dev)
+ 	/* fw_dump_data will be free in device coredump release function
+ 	 * after 5 min
+ 	 */
+-	dev_coredumpv(&card->func->dev, fw_dump_data, fw_dump_len, GFP_KERNEL);
++	dev_coredumpv(&card->func->dev, fw_dump_data, fw_dump_len);
+ 	BT_INFO("== btmrvl firmware dump to /sys/class/devcoredump end");
+ }
+ 
+diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+index eab34e24d94..2e4074211ae 100644
+--- a/drivers/bluetooth/hci_qca.c
++++ b/drivers/bluetooth/hci_qca.c
+@@ -1120,7 +1120,7 @@ static void qca_controller_memdump(struct work_struct *work)
+ 				    qca_memdump->ram_dump_size);
+ 			memdump_buf = qca_memdump->memdump_buf_head;
+ 			dev_coredumpv(&hu->serdev->dev, memdump_buf,
+-				      qca_memdump->received_dump, GFP_KERNEL);
++				      qca_memdump->received_dump);
+ 			cancel_delayed_work(&qca->ctrl_memdump_timeout);
+ 			kfree(qca->qca_memdump);
+ 			qca->qca_memdump = NULL;
+diff --git a/drivers/gpu/drm/etnaviv/etnaviv_dump.c b/drivers/gpu/drm/etnaviv/etnaviv_dump.c
+index f418e0b7577..519fcb234b3 100644
+--- a/drivers/gpu/drm/etnaviv/etnaviv_dump.c
++++ b/drivers/gpu/drm/etnaviv/etnaviv_dump.c
+@@ -225,5 +225,5 @@ void etnaviv_core_dump(struct etnaviv_gem_submit *submit)
+ 
+ 	etnaviv_core_dump_header(&iter, ETDUMP_BUF_END, iter.data);
+ 
+-	dev_coredumpv(gpu->dev, iter.start, iter.data - iter.start, GFP_KERNEL);
++	dev_coredumpv(gpu->dev, iter.start, iter.data - iter.start);
+ }
+diff --git a/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c b/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c
+index e75b97127c0..f057d294c30 100644
+--- a/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c
++++ b/drivers/gpu/drm/msm/disp/msm_disp_snapshot.c
+@@ -74,8 +74,8 @@ static void _msm_disp_snapshot_work(struct kthread_work *work)
+ 	 * If there is a codedump pending for the device, the dev_coredumpm()
+ 	 * will also free new coredump state.
+ 	 */
+-	dev_coredumpm(disp_state->dev, THIS_MODULE, disp_state, 0, GFP_KERNEL,
+-			disp_devcoredump_read, msm_disp_state_free);
++	dev_coredumpm(disp_state->dev, THIS_MODULE, disp_state, 0,
++		      disp_devcoredump_read, msm_disp_state_free);
+ }
+ 
+ void msm_disp_snapshot_state(struct drm_device *drm_dev)
+diff --git a/drivers/gpu/drm/msm/msm_gpu.c b/drivers/gpu/drm/msm/msm_gpu.c
+index eb8a6663f30..30576ced0a0 100644
+--- a/drivers/gpu/drm/msm/msm_gpu.c
++++ b/drivers/gpu/drm/msm/msm_gpu.c
+@@ -317,8 +317,8 @@ static void msm_gpu_crashstate_capture(struct msm_gpu *gpu,
+ 	gpu->crashstate = state;
+ 
+ 	/* FIXME: Release the crashstate if this errors out? */
+-	dev_coredumpm(gpu->dev->dev, THIS_MODULE, gpu, 0, GFP_KERNEL,
+-		msm_gpu_devcoredump_read, msm_gpu_devcoredump_free);
++	dev_coredumpm(gpu->dev->dev, THIS_MODULE, gpu, 0,
++		      msm_gpu_devcoredump_read, msm_gpu_devcoredump_free);
+ }
+ #else
+ static void msm_gpu_crashstate_capture(struct msm_gpu *gpu,
+diff --git a/drivers/media/platform/qcom/venus/core.c b/drivers/media/platform/qcom/venus/core.c
+index 877eca12580..db84dfb3fb1 100644
+--- a/drivers/media/platform/qcom/venus/core.c
++++ b/drivers/media/platform/qcom/venus/core.c
+@@ -49,7 +49,7 @@ static void venus_coredump(struct venus_core *core)
+ 
+ 	memcpy(data, mem_va, mem_size);
+ 	memunmap(mem_va);
+-	dev_coredumpv(dev, data, mem_size, GFP_KERNEL);
++	dev_coredumpv(dev, data, mem_size);
+ }
+ 
+ static void venus_event_notify(struct venus_core *core, u32 event)
+diff --git a/drivers/net/can/spi/mcp251xfd/mcp251xfd-dump.c b/drivers/net/can/spi/mcp251xfd/mcp251xfd-dump.c
+index c991b30bc9f..fa520ab7c96 100644
+--- a/drivers/net/can/spi/mcp251xfd/mcp251xfd-dump.c
++++ b/drivers/net/can/spi/mcp251xfd/mcp251xfd-dump.c
+@@ -281,5 +281,5 @@ void mcp251xfd_dump(const struct mcp251xfd_priv *priv)
+ 	mcp251xfd_dump_end(priv, &iter);
+ 
+ 	dev_coredumpv(&priv->spi->dev, iter.start,
+-		      iter.data - iter.start, GFP_KERNEL);
++		      iter.data - iter.start);
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
+index fe6b6f97a91..dc923706992 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.c
++++ b/drivers/net/wireless/ath/ath10k/coredump.c
+@@ -1607,7 +1607,7 @@ int ath10k_coredump_submit(struct ath10k *ar)
+ 		return -ENODATA;
+ 	}
+ 
+-	dev_coredumpv(ar->dev, dump, le32_to_cpu(dump->len), GFP_KERNEL);
++	dev_coredumpv(ar->dev, dump, le32_to_cpu(dump->len));
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+index 89c12cb2aaa..79299609dd6 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
++++ b/drivers/net/wireless/ath/wil6210/wil_crash_dump.c
+@@ -117,6 +117,6 @@ void wil_fw_core_dump(struct wil6210_priv *wil)
+ 	/* fw_dump_data will be free in device coredump release function
+ 	 * after 5 min
+ 	 */
+-	dev_coredumpv(wil_to_dev(wil), fw_dump_data, fw_dump_size, GFP_KERNEL);
++	dev_coredumpv(wil_to_dev(wil), fw_dump_data, fw_dump_size);
+ 	wil_info(wil, "fw core dumped, size %d bytes\n", fw_dump_size);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+index eecf8a38d94..87f3652ef3b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+@@ -37,7 +37,7 @@ int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+ 		return err;
+ 	}
+ 
+-	dev_coredumpv(bus->dev, dump, len + ramsize, GFP_KERNEL);
++	dev_coredumpv(bus->dev, dump, len + ramsize);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index abf49022edb..f2f7cf494a8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2601,8 +2601,7 @@ static void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt,
+ 					     fw_error_dump.trans_ptr->data,
+ 					     fw_error_dump.trans_ptr->len,
+ 					     fw_error_dump.fwrt_len);
+-		dev_coredumpsg(fwrt->trans->dev, sg_dump_data, file_len,
+-			       GFP_KERNEL);
++		dev_coredumpsg(fwrt->trans->dev, sg_dump_data, file_len);
+ 	}
+ 	vfree(fw_error_dump.fwrt_ptr);
+ 	vfree(fw_error_dump.trans_ptr);
+@@ -2647,8 +2646,7 @@ static void iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt,
+ 					     entry->data, entry->size, offs);
+ 			offs += entry->size;
+ 		}
+-		dev_coredumpsg(fwrt->trans->dev, sg_dump_data, file_len,
+-			       GFP_KERNEL);
++		dev_coredumpsg(fwrt->trans->dev, sg_dump_data, file_len);
+ 	}
+ 	iwl_dump_ini_list_free(&dump_list);
+ }
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index ace7371c477..26fef0ab1b0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1115,8 +1115,7 @@ void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter)
+ 	 */
+ 	mwifiex_dbg(adapter, MSG,
+ 		    "== mwifiex dump information to /sys/class/devcoredump start\n");
+-	dev_coredumpv(adapter->dev, adapter->devdump_data, adapter->devdump_len,
+-		      GFP_KERNEL);
++	dev_coredumpv(adapter->dev, adapter->devdump_data, adapter->devdump_len);
+ 	mwifiex_dbg(adapter, MSG,
+ 		    "== mwifiex dump information to /sys/class/devcoredump end\n");
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index bd687f7de62..5336fe8c668 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -2421,6 +2421,5 @@ void mt7615_coredump_work(struct work_struct *work)
+ 
+ 		dev_kfree_skb(skb);
+ 	}
+-	dev_coredumpv(dev->mt76.dev, dump, MT76_CONNAC_COREDUMP_SZ,
+-		      GFP_KERNEL);
++	dev_coredumpv(dev->mt76.dev, dump, MT76_CONNAC_COREDUMP_SZ);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index a630ddbf19e..cac284f95ce 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -1630,8 +1630,7 @@ void mt7921_coredump_work(struct work_struct *work)
+ 	}
+ 
+ 	if (dump)
+-		dev_coredumpv(dev->mt76.dev, dump, MT76_CONNAC_COREDUMP_SZ,
+-			      GFP_KERNEL);
++		dev_coredumpv(dev->mt76.dev, dump, MT76_CONNAC_COREDUMP_SZ);
+ 
+ 	mt7921_reset(&dev->mt76);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index efabd5b1bf5..a276544cecd 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -414,7 +414,7 @@ static void rtw_fwcd_dump(struct rtw_dev *rtwdev)
+ 	 * framework. Note that a new dump will be discarded if a previous one
+ 	 * hasn't been released yet.
+ 	 */
+-	dev_coredumpv(rtwdev->dev, desc->data, desc->size, GFP_KERNEL);
++	dev_coredumpv(rtwdev->dev, desc->data, desc->size);
+ }
+ 
+ static void rtw_fwcd_free(struct rtw_dev *rtwdev, bool free_self)
+diff --git a/drivers/net/wireless/realtek/rtw89/ser.c b/drivers/net/wireless/realtek/rtw89/ser.c
+index 9e95ed97271..d28fe01ad72 100644
+--- a/drivers/net/wireless/realtek/rtw89/ser.c
++++ b/drivers/net/wireless/realtek/rtw89/ser.c
+@@ -127,7 +127,7 @@ static void rtw89_ser_cd_send(struct rtw89_dev *rtwdev,
+ 	 * will be discarded if a previous one hasn't been released by
+ 	 * framework yet.
+ 	 */
+-	dev_coredumpv(rtwdev->dev, buf, sizeof(*buf), GFP_KERNEL);
++	dev_coredumpv(rtwdev->dev, buf, sizeof(*buf));
+ }
+ 
+ static void rtw89_ser_cd_free(struct rtw89_dev *rtwdev,
+diff --git a/drivers/remoteproc/qcom_q6v5_mss.c b/drivers/remoteproc/qcom_q6v5_mss.c
+index af217de75e4..813d87faef6 100644
+--- a/drivers/remoteproc/qcom_q6v5_mss.c
++++ b/drivers/remoteproc/qcom_q6v5_mss.c
+@@ -597,7 +597,7 @@ static void q6v5_dump_mba_logs(struct q6v5 *qproc)
+ 	data = vmalloc(MBA_LOG_SIZE);
+ 	if (data) {
+ 		memcpy(data, mba_region, MBA_LOG_SIZE);
+-		dev_coredumpv(&rproc->dev, data, MBA_LOG_SIZE, GFP_KERNEL);
++		dev_coredumpv(&rproc->dev, data, MBA_LOG_SIZE);
+ 	}
+ 	memunmap(mba_region);
+ }
+diff --git a/drivers/remoteproc/remoteproc_coredump.c b/drivers/remoteproc/remoteproc_coredump.c
+index 4b093420d98..cd55c2abd22 100644
+--- a/drivers/remoteproc/remoteproc_coredump.c
++++ b/drivers/remoteproc/remoteproc_coredump.c
+@@ -309,7 +309,7 @@ void rproc_coredump(struct rproc *rproc)
+ 		phdr += elf_size_of_phdr(class);
+ 	}
+ 	if (dump_conf == RPROC_COREDUMP_ENABLED) {
+-		dev_coredumpv(&rproc->dev, data, data_size, GFP_KERNEL);
++		dev_coredumpv(&rproc->dev, data, data_size);
+ 		return;
+ 	}
+ 
+@@ -318,7 +318,7 @@ void rproc_coredump(struct rproc *rproc)
+ 	dump_state.header = data;
+ 	init_completion(&dump_state.dump_done);
+ 
+-	dev_coredumpm(&rproc->dev, NULL, &dump_state, data_size, GFP_KERNEL,
++	dev_coredumpm(&rproc->dev, NULL, &dump_state, data_size,
+ 		      rproc_coredump_read, rproc_coredump_free);
+ 
+ 	/*
+@@ -449,7 +449,7 @@ void rproc_coredump_using_sections(struct rproc *rproc)
+ 	}
+ 
+ 	if (dump_conf == RPROC_COREDUMP_ENABLED) {
+-		dev_coredumpv(&rproc->dev, data, data_size, GFP_KERNEL);
++		dev_coredumpv(&rproc->dev, data, data_size);
+ 		return;
+ 	}
+ 
+@@ -458,7 +458,7 @@ void rproc_coredump_using_sections(struct rproc *rproc)
+ 	dump_state.header = data;
+ 	init_completion(&dump_state.dump_done);
+ 
+-	dev_coredumpm(&rproc->dev, NULL, &dump_state, data_size, GFP_KERNEL,
++	dev_coredumpm(&rproc->dev, NULL, &dump_state, data_size,
+ 		      rproc_coredump_read, rproc_coredump_free);
+ 
+ 	/* Wait until the dump is read and free is called. Data is freed
+diff --git a/include/drm/drm_print.h b/include/drm/drm_print.h
+index 22fabdeed29..b41850366bc 100644
+--- a/include/drm/drm_print.h
++++ b/include/drm/drm_print.h
+@@ -162,7 +162,7 @@ struct drm_print_iterator {
+  *	void makecoredump(...)
+  *	{
+  *		...
+- *		dev_coredumpm(dev, THIS_MODULE, data, 0, GFP_KERNEL,
++ *		dev_coredumpm(dev, THIS_MODULE, data, 0,
+  *			coredump_read, ...)
+  *	}
+  *
+diff --git a/include/linux/devcoredump.h b/include/linux/devcoredump.h
+index c008169ed2c..c7d840d824c 100644
+--- a/include/linux/devcoredump.h
++++ b/include/linux/devcoredump.h
+@@ -52,27 +52,26 @@ static inline void _devcd_free_sgtable(struct scatterlist *table)
+ 
+ 
+ #ifdef CONFIG_DEV_COREDUMP
+-void dev_coredumpv(struct device *dev, void *data, size_t datalen,
+-		   gfp_t gfp);
++void dev_coredumpv(struct device *dev, void *data, size_t datalen);
+ 
+ void dev_coredumpm(struct device *dev, struct module *owner,
+-		   void *data, size_t datalen, gfp_t gfp,
++		   void *data, size_t datalen,
+ 		   ssize_t (*read)(char *buffer, loff_t offset, size_t count,
+ 				   void *data, size_t datalen),
+ 		   void (*free)(void *data));
+ 
+ void dev_coredumpsg(struct device *dev, struct scatterlist *table,
+-		    size_t datalen, gfp_t gfp);
++		    size_t datalen);
+ #else
+ static inline void dev_coredumpv(struct device *dev, void *data,
+-				 size_t datalen, gfp_t gfp)
++				 size_t datalen)
+ {
+ 	vfree(data);
+ }
+ 
+ static inline void
+ dev_coredumpm(struct device *dev, struct module *owner,
+-	      void *data, size_t datalen, gfp_t gfp,
++	      void *data, size_t datalen,
+ 	      ssize_t (*read)(char *buffer, loff_t offset, size_t count,
+ 			      void *data, size_t datalen),
+ 	      void (*free)(void *data))
+@@ -81,7 +80,7 @@ dev_coredumpm(struct device *dev, struct module *owner,
+ }
+ 
+ static inline void dev_coredumpsg(struct device *dev, struct scatterlist *table,
+-				  size_t datalen, gfp_t gfp)
++				  size_t datalen)
+ {
+ 	_devcd_free_sgtable(table);
+ }
+diff --git a/sound/soc/intel/avs/apl.c b/sound/soc/intel/avs/apl.c
+index b8e2b23c9f6..1ff57f1a483 100644
+--- a/sound/soc/intel/avs/apl.c
++++ b/sound/soc/intel/avs/apl.c
+@@ -164,7 +164,7 @@ static int apl_coredump(struct avs_dev *adev, union avs_notify_msg *msg)
+ 	} while (offset < msg->ext.coredump.stack_dump_size);
+ 
+ exit:
+-	dev_coredumpv(adev->dev, dump, dump_size, GFP_KERNEL);
++	dev_coredumpv(adev->dev, dump, dump_size);
+ 
+ 	return 0;
+ }
+diff --git a/sound/soc/intel/avs/skl.c b/sound/soc/intel/avs/skl.c
+index bda5ec7510f..3413162768d 100644
+--- a/sound/soc/intel/avs/skl.c
++++ b/sound/soc/intel/avs/skl.c
+@@ -88,7 +88,7 @@ static int skl_coredump(struct avs_dev *adev, union avs_notify_msg *msg)
+ 		return -ENOMEM;
+ 
+ 	memcpy_fromio(dump, avs_sram_addr(adev, AVS_FW_REGS_WINDOW), AVS_FW_REGS_SIZE);
+-	dev_coredumpv(adev->dev, dump, AVS_FW_REGS_SIZE, GFP_KERNEL);
++	dev_coredumpv(adev->dev, dump, AVS_FW_REGS_SIZE);
+ 
+ 	return 0;
+ }
+diff --git a/sound/soc/intel/catpt/dsp.c b/sound/soc/intel/catpt/dsp.c
+index 346bec00030..d2afe9ff1e3 100644
+--- a/sound/soc/intel/catpt/dsp.c
++++ b/sound/soc/intel/catpt/dsp.c
+@@ -539,7 +539,7 @@ int catpt_coredump(struct catpt_dev *cdev)
+ 		pos += CATPT_DMA_REGS_SIZE;
+ 	}
+ 
+-	dev_coredumpv(cdev->dev, dump, dump_size, GFP_KERNEL);
++	dev_coredumpv(cdev->dev, dump, dump_size);
+ 
+ 	return 0;
+ }
+-- 
+2.17.1
+
