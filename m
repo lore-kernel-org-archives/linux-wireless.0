@@ -2,246 +2,143 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E748C43334
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jun 2022 22:58:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B143C43334
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jun 2022 09:49:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349484AbiFCW6Z (ORCPT
+        id S234288AbiFDJtp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jun 2022 18:58:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34322 "EHLO
+        Sat, 4 Jun 2022 05:49:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231585AbiFCW6Z (ORCPT
+        with ESMTP id S234142AbiFDJto (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jun 2022 18:58:25 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE43F326F8
-        for <linux-wireless@vger.kernel.org>; Fri,  3 Jun 2022 15:58:22 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id o6so2700627plg.2
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2022 15:58:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc:message-id:references
-         :to;
-        bh=ZBPSTCKeQbCc/bN5E41ihH4roNGUrxfAOnmKm+s532w=;
-        b=C9E6rEjoeUVYR6Y3cZWBg7WCHarZAYcatVuu1IJsC7HvQ8rb3P22QpIR2dt5+cGw8G
-         +3EFFLSMDuAW+0WMyOr+K68dQ/nZ8jfsETulN6mxBsnT791INBUyEak8tbflJTxzhdzt
-         kDxrY7uSHFreImTVITrXc0fjHpxXL4aI+lcXw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :message-id:references:to;
-        bh=ZBPSTCKeQbCc/bN5E41ihH4roNGUrxfAOnmKm+s532w=;
-        b=EGbyhVlDruNC5HdpJPYXgzamdrtYeETq7I4FeGQ7GjeGPl8Hk9k1DsbT//R7Jp3Q1+
-         hihwBx69jOoWgVxKC5tn/gQqzqDiHfodeAKDbESUvAGL9PAVmcgq1dowVA1FUE3IWmtj
-         zQPbh3DPmREOMcR0U/Qi4OFQX1EPqrID/7WNb8Mc+CJbYKHkAhNlA7iD9MttYwV7qjcm
-         9ZpdSt45y+fcbjER9OMfm2SSFuRdcsv+tTzutiybZauCdhzrPEDiAVC3zsvQb6vq5Aec
-         pckTsGbOEn/QPNfhBSl7oQqxc98F+nob9ZsraOtTaPe+dXYGdx2EK+XOFqnx8p06uD5Q
-         0w3Q==
-X-Gm-Message-State: AOAM532596UDUbJnrtnb9Q91qi48G5n51o8wn4S6W+QLD4lC5hjLWLq5
-        kpNgSvqhjNKXM66MlBXXDdyNMudZFFkWzGXYZ4P26BK0eUDW2KpBEoUj5ERz96CHxLGzsLv6e8s
-        EI0iL73+ZeVNa7lUgEw==
-X-Google-Smtp-Source: ABdhPJwvXyX5ry3uqFlWDc4DPTarlM+PzFQu2xDDtGdcavf0VOH9l/yjdTPLARNrk1jpo0OWBAajFA==
-X-Received: by 2002:a17:902:e0c2:b0:167:6128:e63d with SMTP id e2-20020a170902e0c200b001676128e63dmr265274pla.16.1654297102199;
-        Fri, 03 Jun 2022 15:58:22 -0700 (PDT)
-Received: from smtpclient.apple ([192.19.222.250])
-        by smtp.gmail.com with ESMTPSA id u2-20020a170902714200b001621cd83e49sm5938277plm.92.2022.06.03.15.58.20
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 03 Jun 2022 15:58:20 -0700 (PDT)
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.80.82.1.1\))
-Subject: Re: [PATCH] work-in-progress: double-free after hardware reset due to
- firmware-crash
-From:   Franky Lin <franky.lin@broadcom.com>
-In-Reply-To: <Y_XMhLmW7kj2Ls3X8pCfFd2RdWzXd9UWdv3ksFrVi7xh79wY7l6K52N3ODhI3_UK_IqG1uJcIEv0PxT-wQG9tdYu9krraq7gxsprUu-RtjQ=@dannyvanheumen.nl>
-Date:   Fri, 3 Jun 2022 15:58:19 -0700
-Cc:     Arend van Spriel <aspriel@gmail.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "SHA-cyfmac-dev-list@infineon.com" <SHA-cyfmac-dev-list@infineon.com>
-Message-Id: <51CC1C7B-400C-4A7A-A5D3-EB457DC6862F@broadcom.com>
-References: <UXibAXk2GByhvw88A6LIDXHSlkP79-ML7FrtyfnHuiC34qUd-zx03BAJAtzluyEvfwPBR0tac4hC72zKI1qT3CtgmvvVohr1v8a49TqYVSw=@dannyvanheumen.nl>
- <Uba0mwWYafMZd4JdEJVxMd-Uh8M6T4dHoTse71YdCikdJLYLxunwtrxxbasffgMuXtPVi_JmJrtAnqviM6x-99_SyysHZm-Yvz933mPXr74=@dannyvanheumen.nl>
- <Y_XMhLmW7kj2Ls3X8pCfFd2RdWzXd9UWdv3ksFrVi7xh79wY7l6K52N3ODhI3_UK_IqG1uJcIEv0PxT-wQG9tdYu9krraq7gxsprUu-RtjQ=@dannyvanheumen.nl>
-To:     Danny van Heumen <danny@dannyvanheumen.nl>
-X-Mailer: Apple Mail (2.3696.80.82.1.1)
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000026e63d05e0930ff0"
+        Sat, 4 Jun 2022 05:49:44 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79CEA1208F
+        for <linux-wireless@vger.kernel.org>; Sat,  4 Jun 2022 02:49:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654336183; x=1685872183;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=V8AhQRyZO8uEH3sL7tBEK3WDhOVfolgh+pAOZ7lV4xY=;
+  b=nJNtv/l7hk6JVrmPZppYfvypMe0Cr/7SCCEoNw3ZERuTIErVU6QNjSOU
+   WcrlL5sjG/RFAf0OABixtG1FsCwoQ/VumUQ75tbaIubq9KqwIlEpPsT21
+   ypiPlwh7RgNIHWy1Jynq8SdG6uvnXcAigDyaqbnrxjqEOXZxccaQ+SLHT
+   2B8TEfRYkYqJwuO2oEJ3fdjT1myhQQTxEu3B90hV6p1yGk+3ol5SLdhlO
+   DSeihPbWCY+lKXpwKBUH0M6dfHSrHkC/cLfDSIkMi6G2ytgRYQZx7QA0E
+   YBNl3SaQq/10r1/5KQP+tFhkzjZQUyJZVlaIN5lGJKAF6S85fmYLErEwI
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10367"; a="264094978"
+X-IronPort-AV: E=Sophos;i="5.91,277,1647327600"; 
+   d="scan'208";a="264094978"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2022 02:49:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,277,1647327600"; 
+   d="scan'208";a="708381288"
+Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
+  by orsmga004.jf.intel.com with ESMTP; 04 Jun 2022 02:49:29 -0700
+Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
+        (envelope-from <lkp@intel.com>)
+        id 1nxQPQ-000Ac5-Gf;
+        Sat, 04 Jun 2022 09:49:28 +0000
+Date:   Sat, 4 Jun 2022 17:49:19 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     quic_haric@quicinc.com, johannes@sipsolutions.net
+Cc:     kbuild-all@lists.01.org, linux-wireless@vger.kernel.org,
+        Hari Chandrakanthan <quic_haric@quicinc.com>
+Subject: Re: [PATCH] mac80211 : Add support to track mesh peer beacon miss
+ event
+Message-ID: <202206041752.4zr7FmwF-lkp@intel.com>
+References: <1653893292-11092-1-git-send-email-quic_haric@quicinc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1653893292-11092-1-git-send-email-quic_haric@quicinc.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---00000000000026e63d05e0930ff0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-Hi Danny,
+Thank you for the patch! Perhaps something to improve:
 
->>=20
->> ------- Original Message -------
->> On Tuesday, May 24th, 2022 at 18:51, Danny van Heumen danny@dannyvanheum=
-en.nl wrote:
->>>=20
->>> I investigated a crash that IIUC occurs with hardened memory allocation=
- enabled and a firmware-crash followed by an early failure during hardware =
-reinitialization/probing. The hardened allocator detects double-free issue.
->>>=20
->>> I have created the patch (see attachment) against linux-5.18. Though, p=
-lease check carefully, because I have not been able to confirm that it actu=
-ally works. I am hoping someone familiar with the code-base can either test=
- this easily, or confirm from review/analysis.
->>>=20
->>> The commit message describes it in more detail. In summary:
->>> 'brcmf_sdio_bus_reset' cleans up and reinitializes the hardware. It fre=
-es memory used by (struct brcmf_sdio_dev)->freezer (struct brcmf_sdiod_free=
-zer). However, it then goes to probe the hardware, and an early failure to =
-probe results in the same freeing, both called through function 'brcmf_sdio=
-d_freezer_detach' called inside 'brcmf_sdiod_remove'. Which results in doub=
-le freeing.
->>>=20
+[auto build test WARNING on v5.18]
+[cannot apply to wireless-next/main wireless/main next-20220603]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-Thanks for reporting and sending out a patch to fix this.
+url:    https://github.com/intel-lab-lkp/linux/commits/quic_haric-quicinc-com/mac80211-Add-support-to-track-mesh-peer-beacon-miss-event/20220530-145016
+base:    4b0986a3613c92f4ec1bdc7f60ec66fea135991f
+config: h8300-randconfig-s031-20220603 (https://download.01.org/0day-ci/archive/20220604/202206041752.4zr7FmwF-lkp@intel.com/config)
+compiler: h8300-linux-gcc (GCC) 11.3.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # apt-get install sparse
+        # sparse version: v0.6.4-18-g56afb504-dirty
+        # https://github.com/intel-lab-lkp/linux/commit/e7cd136811bad4e11720ee71054c97d225848dd4
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review quic_haric-quicinc-com/mac80211-Add-support-to-track-mesh-peer-beacon-miss-event/20220530-145016
+        git checkout e7cd136811bad4e11720ee71054c97d225848dd4
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=h8300 SHELL=/bin/bash net/mac80211/
 
-If the problem is double freeing the freezer buffer, it should be addressed=
- from the root by setting pointer to NULL. Same thing might need to be done=
- for sg table as well. Sorry I don=E2=80=99t have any sdio module to reprod=
-uce and test. Please see if the below change fixes the problem.
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/dr=
-ivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index ac02244a6fdf..e9bad7197ba9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -802,6 +802,7 @@ static void brcmf_sdiod_freezer_detach(struct brcmf_sdi=
-o_dev *sdiodev)
- 	if (sdiodev->freezer) {
- 		WARN_ON(atomic_read(&sdiodev->freezer->freezing));
- 		kfree(sdiodev->freezer);
-+		sdiodev->freezer =3D NULL;
- 	}
- }
-=20
-@@ -885,7 +886,11 @@ int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
- 	sdio_disable_func(sdiodev->func1);
- 	sdio_release_host(sdiodev->func1);
-=20
--	sg_free_table(&sdiodev->sgtable);
-+	if (sdiodev->sgtable) {
-+		sg_free_table(&sdiodev->sgtable);
-+		sdiodev->sgtable =3D NULL;
-+	}
-+
- 	sdiodev->sbwad =3D 0;
-=20
- 	pm_runtime_allow(sdiodev->func1->card->host->parent);
-
-As for submitting patch to linux-wireless, please follow the guideline. [1]
-
-Thanks,
-- Franky
-
-[1] https://wireless.wiki.kernel.org/en/developers/documentation/submitting=
-patches
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
 
+sparse warnings: (new ones prefixed by >>)
+>> net/mac80211/mesh_plink.c:626:31: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned int [usertype] beacon_int @@     got restricted __le16 [usertype] beacon_int @@
+   net/mac80211/mesh_plink.c:626:31: sparse:     expected unsigned int [usertype] beacon_int
+   net/mac80211/mesh_plink.c:626:31: sparse:     got restricted __le16 [usertype] beacon_int
 
---=20
-This electronic communication and the information and any files transmitted=
-=20
-with it, or attached to it, are confidential and are intended solely for=20
-the use of the individual or entity to whom it is addressed and may contain=
-=20
-information that is confidential, legally privileged, protected by privacy=
-=20
-laws, or otherwise restricted from disclosure to anyone else. If you are=20
-not the intended recipient or the person responsible for delivering the=20
-e-mail to the intended recipient, you are hereby notified that any use,=20
-copying, distributing, dissemination, forwarding, printing, or copying of=
-=20
-this e-mail is strictly prohibited. If you received this e-mail in error,=
-=20
-please return the e-mail to the sender, delete it from your computer, and=
-=20
-destroy any printed copy of it.
+vim +626 net/mac80211/mesh_plink.c
 
---00000000000026e63d05e0930ff0
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+   595	
+   596	/*
+   597	 * mesh_bmiss_update - update beacon miss parameters such as
+   598	 * beacon count, beacon interval and timeout of beacon miss
+   599	 * timer
+   600	 *
+   601	 * @sdata: local meshif
+   602	 * @mgmt: mgmt frame info
+   603	 * @elems: IEs from beacon or mesh peering frame.
+   604	 * @rx_status: rx status for the frame for signal reporting
+   605	 *
+   606	 */
+   607	
+   608	void mesh_bmiss_update(struct ieee80211_sub_if_data *sdata,
+   609			       struct ieee80211_mgmt *mgmt,
+   610			       struct ieee802_11_elems *elems,
+   611			       struct ieee80211_rx_status *rx_status)
+   612	{
+   613		struct sta_info *sta;
+   614		u32 timeout;
+   615	
+   616		/* mesh_sta_info_get api returns with rcu_read_lock */
+   617		sta = mesh_sta_info_get(sdata, mgmt->sa, elems, rx_status);
+   618		if (!sta)
+   619			goto unlock_rcu;
+   620	
+   621		if (!(sta->local->hw.dbg_mask & IEEE80211_HW_DBG_BMISS_LOG) ||
+   622		    !sta->sdata->vif.bmiss_threshold)
+   623			goto unlock_rcu;
+   624	
+   625		sta->mesh->bmiss_count = 0;
+ > 626		sta->mesh->beacon_int = mgmt->u.beacon.beacon_int;
+   627		timeout = sta->mesh->beacon_int * sta->sdata->vif.bmiss_threshold;
+   628	
+   629		mod_timer(&sta->mesh->bmiss_timer, (jiffies + msecs_to_jiffies(timeout)));
+   630	
+   631	unlock_rcu:
+   632		rcu_read_unlock();
+   633	}
+   634	
 
-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
-kjY1BnpEEF8LCZw5w2Xi0x6RQM2QSte4iTxLzeLvVFJLJj1KtNi1VWvXYCzMuTbhLMikZHLqMxkf
-4oNJJGHKt8xzvUC1Tu5vjMbOCEgQD5Ikz2gOLwIDAQABo4IB2DCCAdQwDgYDVR0PAQH/BAQDAgWg
-MIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9iYWxzaWdu
-LmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUFBzABhjVo
-dHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMDBNBgNV
-HSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xvYmFsc2ln
-bi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRwOi8vY3Js
-Lmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAiBgNVHREEGzAZ
-gRdmcmFua3kubGluQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAW
-gBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUEKPgvCN0J2rCGluIqTKO+62QXKgwDQYJ
-KoZIhvcNAQELBQADggEBAIlQsf/NPacuX/yG96v+J49ix14aQ6BYdmSvmuabgx/vWk/pjLsQkPBD
-lW4mwEblmXeGUDOZBE494ybTSYo7XWTuFdWd1FuCipxnzMJ+WAtf7NiXW8Ayrfttq6i+4+AAjwHu
-gs5HcDKeBuQEC3XVssC/06M32EuxlkCxKrQXNqYzkMJ5fdLLVPpFjjsK2fH/X2X8muS8KT4GXbUs
-HGETPmDhjFb5DzuWn33x2GmWziWNQExeyehcQPFhE0rJMX6lLa2IOMLRi8FNPyb3Fa28AOyh4XOh
-sQ+3AGeTN+7hJgf8DM9I47l561iQfieaicKnM/WPpmbIMuqLHbCOvgK2PFExggJtMIICaQIBATBr
-MFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9i
-YWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgw/qDnpsvwdlpxf7x0wDQYJYIZI
-AWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIMkPC0VyAjS0CjTFBoT9YiuYOYp7okP6hzDrp/zT
-+LtFMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIyMDYwMzIyNTgy
-MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQB
-AjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkq
-hkiG9w0BAQEFAASCAQAuD4t38BFHDQ9ZG4C8aYmdR6FQfMYJ72n1/91kQt/HYpxLG6EmtoIG+Zpd
-mm6b2WO5q7+y+B8AsfhmD50q7JdCkRyCtqTMPEjQSTpoY4G5NiQfgX/RopHgBq48bWYSeclpo/fV
-BzLaYSLv9CQkDjzRmvVMV/To1EKZce/mdAXFoCgGMeIB1qtrfcCXTkLFwKSMMRqgmVmfkLWjmhS+
-p/tozz3nDVq5dFF2vEcpvIxk0eU8J2TKBt7/AVZ2+w14sGOrrDGb7EmG3FypyyzkRpez+g8VnNHE
-RxeLQVOkAcEJuqwDGb+sgPaVl80EWMtqYcRJMS0tDcolw5BKpQZcChHV
---00000000000026e63d05e0930ff0--
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
