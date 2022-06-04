@@ -2,143 +2,168 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B143C43334
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jun 2022 09:49:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC14EC433EF
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jun 2022 15:00:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234288AbiFDJtp (ORCPT
+        id S237102AbiFDPAV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 4 Jun 2022 05:49:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48352 "EHLO
+        Sat, 4 Jun 2022 11:00:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234142AbiFDJto (ORCPT
+        with ESMTP id S237689AbiFDPAI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Jun 2022 05:49:44 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79CEA1208F
-        for <linux-wireless@vger.kernel.org>; Sat,  4 Jun 2022 02:49:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654336183; x=1685872183;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=V8AhQRyZO8uEH3sL7tBEK3WDhOVfolgh+pAOZ7lV4xY=;
-  b=nJNtv/l7hk6JVrmPZppYfvypMe0Cr/7SCCEoNw3ZERuTIErVU6QNjSOU
-   WcrlL5sjG/RFAf0OABixtG1FsCwoQ/VumUQ75tbaIubq9KqwIlEpPsT21
-   ypiPlwh7RgNIHWy1Jynq8SdG6uvnXcAigDyaqbnrxjqEOXZxccaQ+SLHT
-   2B8TEfRYkYqJwuO2oEJ3fdjT1myhQQTxEu3B90hV6p1yGk+3ol5SLdhlO
-   DSeihPbWCY+lKXpwKBUH0M6dfHSrHkC/cLfDSIkMi6G2ytgRYQZx7QA0E
-   YBNl3SaQq/10r1/5KQP+tFhkzjZQUyJZVlaIN5lGJKAF6S85fmYLErEwI
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10367"; a="264094978"
-X-IronPort-AV: E=Sophos;i="5.91,277,1647327600"; 
-   d="scan'208";a="264094978"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jun 2022 02:49:30 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,277,1647327600"; 
-   d="scan'208";a="708381288"
-Received: from lkp-server01.sh.intel.com (HELO 60dabacc1df6) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 04 Jun 2022 02:49:29 -0700
-Received: from kbuild by 60dabacc1df6 with local (Exim 4.95)
-        (envelope-from <lkp@intel.com>)
-        id 1nxQPQ-000Ac5-Gf;
-        Sat, 04 Jun 2022 09:49:28 +0000
-Date:   Sat, 4 Jun 2022 17:49:19 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     quic_haric@quicinc.com, johannes@sipsolutions.net
-Cc:     kbuild-all@lists.01.org, linux-wireless@vger.kernel.org,
-        Hari Chandrakanthan <quic_haric@quicinc.com>
-Subject: Re: [PATCH] mac80211 : Add support to track mesh peer beacon miss
- event
-Message-ID: <202206041752.4zr7FmwF-lkp@intel.com>
-References: <1653893292-11092-1-git-send-email-quic_haric@quicinc.com>
+        Sat, 4 Jun 2022 11:00:08 -0400
+Received: from mail-0201.mail-europe.com (mail-0201.mail-europe.com [51.77.79.158])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B26B52EA13
+        for <linux-wireless@vger.kernel.org>; Sat,  4 Jun 2022 08:00:06 -0700 (PDT)
+Date:   Sat, 04 Jun 2022 14:59:52 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dannyvanheumen.nl;
+        s=protonmail2; t=1654354801; x=1654614001;
+        bh=CaIKHW9IpR3uwvvAJ5S/+qjR5x5LFqm3na/+pKJ115E=;
+        h=Date:To:From:Cc:Reply-To:Subject:Message-ID:In-Reply-To:
+         References:Feedback-ID:From:To:Cc:Date:Subject:Reply-To:
+         Feedback-ID:Message-ID;
+        b=aTyyeJcKu1oPqdvCPOnJomyr3SHlfPHmDrVcMijMhjcCG1aJtOkAl6pvQ/IZt+c6q
+         Iz9UgiDlXhLYGcaWdH1IpNCHV+deSFbfXHNiijYmZ6uFTpkSBzx6whhzcoVXvD+jo2
+         genab3WIeRQm0aNp1vzMuNjXz0VHDYRl78wQo6DUYfBGuwfhx6r1QZjyZsjnFZtBNC
+         uGYTLaK9OHrxNa3SB8RJcbJl6RRPhWfSmCC5sJmPUzCZxPDY0W8JizAwSlvNeTfU+a
+         8NI1zRkYuAbhLrlOq0XHkgkw/ZDXewvc5YuWMT4RggNCxKtD2pHLTTtka/2RTdAcbF
+         LjiM/Kwihn3kw==
+To:     Franky Lin <franky.lin@broadcom.com>
+From:   Danny van Heumen <danny@dannyvanheumen.nl>
+Cc:     Arend van Spriel <aspriel@gmail.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "SHA-cyfmac-dev-list@infineon.com" <SHA-cyfmac-dev-list@infineon.com>
+Reply-To: Danny van Heumen <danny@dannyvanheumen.nl>
+Subject: Re: [PATCH] work-in-progress: double-free after hardware reset due to firmware-crash
+Message-ID: <jJuvC2YezD_e1G6VFXwJjFFUAir0HFcDnBaZGRvKtnaY69v8aI3KkCouzzyOjrb9bZOnSzinETjNNxHvlmYCwNijdmts_5bEXZSV7dMNi0s=@dannyvanheumen.nl>
+In-Reply-To: <51CC1C7B-400C-4A7A-A5D3-EB457DC6862F@broadcom.com>
+References: <UXibAXk2GByhvw88A6LIDXHSlkP79-ML7FrtyfnHuiC34qUd-zx03BAJAtzluyEvfwPBR0tac4hC72zKI1qT3CtgmvvVohr1v8a49TqYVSw=@dannyvanheumen.nl> <Uba0mwWYafMZd4JdEJVxMd-Uh8M6T4dHoTse71YdCikdJLYLxunwtrxxbasffgMuXtPVi_JmJrtAnqviM6x-99_SyysHZm-Yvz933mPXr74=@dannyvanheumen.nl> <Y_XMhLmW7kj2Ls3X8pCfFd2RdWzXd9UWdv3ksFrVi7xh79wY7l6K52N3ODhI3_UK_IqG1uJcIEv0PxT-wQG9tdYu9krraq7gxsprUu-RtjQ=@dannyvanheumen.nl> <51CC1C7B-400C-4A7A-A5D3-EB457DC6862F@broadcom.com>
+Feedback-ID: 15073070:user:proton
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1653893292-11092-1-git-send-email-quic_haric@quicinc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Hi Franky,
 
-Thank you for the patch! Perhaps something to improve:
+------- Original Message -------
+On Saturday, June 4th, 2022 at 00:58, Franky Lin <franky.lin@broadcom.com> =
+wrote:
 
-[auto build test WARNING on v5.18]
-[cannot apply to wireless-next/main wireless/main next-20220603]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+> Hi Danny,
+>
+> [..]
+>
+> Thanks for reporting and sending out a patch to fix this.
+>
+> If the problem is double freeing the freezer buffer, it should be address=
+ed from the root by setting pointer to NULL. Same thing might need to be do=
+ne for sg table as well. Sorry I don=E2=80=99t have any sdio module to repr=
+oduce and test. Please see if the below change fixes the problem.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/quic_haric-quicinc-com/mac80211-Add-support-to-track-mesh-peer-beacon-miss-event/20220530-145016
-base:    4b0986a3613c92f4ec1bdc7f60ec66fea135991f
-config: h8300-randconfig-s031-20220603 (https://download.01.org/0day-ci/archive/20220604/202206041752.4zr7FmwF-lkp@intel.com/config)
-compiler: h8300-linux-gcc (GCC) 11.3.0
-reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # apt-get install sparse
-        # sparse version: v0.6.4-18-g56afb504-dirty
-        # https://github.com/intel-lab-lkp/linux/commit/e7cd136811bad4e11720ee71054c97d225848dd4
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review quic_haric-quicinc-com/mac80211-Add-support-to-track-mesh-peer-beacon-miss-event/20220530-145016
-        git checkout e7cd136811bad4e11720ee71054c97d225848dd4
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=h8300 SHELL=/bin/bash net/mac80211/
+Your suggestion to set the freeze buffer address to zero was also my first =
+proposal. I have since
+revised, because there are a few things I considered, although I am not sur=
+e:
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+- does zero-ing the address prevent future detection of double-frees with t=
+he hardened memory
+  allocator? (If so, I would prefer to avoid doing this.)
+- IIUC correctly, 'sdio_set_block_size' does not do any meaningful "activat=
+ion" or "allocation".
+  Therefore would not need to be *undone*. (repeated probes would override =
+previous calls)
+- Starting with the call 'sdio_enable_func', I guess/suspect more elaborate=
+ "cleanup" is necessary
+  therefore, leaving the 'goto out' from that point on. I would assume (for=
+ lack of evidence to the
+  contrary) that the logic at 'goto out' provides proper clean-up.
 
+So, returning immediately with the errorcode seemed more appropriate. Regar=
+dless, I have only
+incidental knowledge from checking the code just for this particular proble=
+m. In the end my goal
+is to have the issues addressed so that I am not forced to reboot my system=
+ to get it back in
+working order.
 
-sparse warnings: (new ones prefixed by >>)
->> net/mac80211/mesh_plink.c:626:31: sparse: sparse: incorrect type in assignment (different base types) @@     expected unsigned int [usertype] beacon_int @@     got restricted __le16 [usertype] beacon_int @@
-   net/mac80211/mesh_plink.c:626:31: sparse:     expected unsigned int [usertype] beacon_int
-   net/mac80211/mesh_plink.c:626:31: sparse:     got restricted __le16 [usertype] beacon_int
+As for your remark about sg-table: I had not considered that, but if my not=
+es above check out,
+maybe this does not need to be treated conditionally at all.
 
-vim +626 net/mac80211/mesh_plink.c
+Kind regards,
+Danny
 
-   595	
-   596	/*
-   597	 * mesh_bmiss_update - update beacon miss parameters such as
-   598	 * beacon count, beacon interval and timeout of beacon miss
-   599	 * timer
-   600	 *
-   601	 * @sdata: local meshif
-   602	 * @mgmt: mgmt frame info
-   603	 * @elems: IEs from beacon or mesh peering frame.
-   604	 * @rx_status: rx status for the frame for signal reporting
-   605	 *
-   606	 */
-   607	
-   608	void mesh_bmiss_update(struct ieee80211_sub_if_data *sdata,
-   609			       struct ieee80211_mgmt *mgmt,
-   610			       struct ieee802_11_elems *elems,
-   611			       struct ieee80211_rx_status *rx_status)
-   612	{
-   613		struct sta_info *sta;
-   614		u32 timeout;
-   615	
-   616		/* mesh_sta_info_get api returns with rcu_read_lock */
-   617		sta = mesh_sta_info_get(sdata, mgmt->sa, elems, rx_status);
-   618		if (!sta)
-   619			goto unlock_rcu;
-   620	
-   621		if (!(sta->local->hw.dbg_mask & IEEE80211_HW_DBG_BMISS_LOG) ||
-   622		    !sta->sdata->vif.bmiss_threshold)
-   623			goto unlock_rcu;
-   624	
-   625		sta->mesh->bmiss_count = 0;
- > 626		sta->mesh->beacon_int = mgmt->u.beacon.beacon_int;
-   627		timeout = sta->mesh->beacon_int * sta->sdata->vif.bmiss_threshold;
-   628	
-   629		mod_timer(&sta->mesh->bmiss_timer, (jiffies + msecs_to_jiffies(timeout)));
-   630	
-   631	unlock_rcu:
-   632		rcu_read_unlock();
-   633	}
-   634	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/=
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> index ac02244a6fdf..e9bad7197ba9 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -802,6 +802,7 @@ static void brcmf_sdiod_freezer_detach(struct brcmf_s=
+dio_dev *sdiodev)
+> if (sdiodev->freezer) {
+>
+> WARN_ON(atomic_read(&sdiodev->freezer->freezing));
+>
+> kfree(sdiodev->freezer);
+>
+> + sdiodev->freezer =3D NULL;
+>
+> }
+> }
+>
+> @@ -885,7 +886,11 @@ int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiode=
+v)
+> sdio_disable_func(sdiodev->func1);
+>
+> sdio_release_host(sdiodev->func1);
+>
+>
+> - sg_free_table(&sdiodev->sgtable);
+>
+> + if (sdiodev->sgtable) {
+>
+> + sg_free_table(&sdiodev->sgtable);
+>
+> + sdiodev->sgtable =3D NULL;
+>
+> + }
+> +
+> sdiodev->sbwad =3D 0;
+>
+>
+> pm_runtime_allow(sdiodev->func1->card->host->parent);
+>
+>
+> As for submitting patch to linux-wireless, please follow the guideline. [=
+1]
+>
+> Thanks,
+> - Franky
+>
+> [1] https://wireless.wiki.kernel.org/en/developers/documentation/submitti=
+ngpatches
+>
+>
+>
+> --
+> This electronic communication and the information and any files transmitt=
+ed
+> with it, or attached to it, are confidential and are intended solely for
+> the use of the individual or entity to whom it is addressed and may conta=
+in
+> information that is confidential, legally privileged, protected by privac=
+y
+> laws, or otherwise restricted from disclosure to anyone else. If you are
+> not the intended recipient or the person responsible for delivering the
+> e-mail to the intended recipient, you are hereby notified that any use,
+> copying, distributing, dissemination, forwarding, printing, or copying of
+> this e-mail is strictly prohibited. If you received this e-mail in error,
+> please return the e-mail to the sender, delete it from your computer, and
+> destroy any printed copy of it.
