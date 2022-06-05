@@ -2,73 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB5F9C433EF
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jun 2022 17:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55B75C43334
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jun 2022 17:25:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236585AbiFERSm (ORCPT
+        id S1346383AbiFERZa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 5 Jun 2022 13:18:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55514 "EHLO
+        Sun, 5 Jun 2022 13:25:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232266AbiFERSl (ORCPT
+        with ESMTP id S232266AbiFERZ2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Jun 2022 13:18:41 -0400
+        Sun, 5 Jun 2022 13:25:28 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BA4265B7
-        for <linux-wireless@vger.kernel.org>; Sun,  5 Jun 2022 10:18:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68D4518344
+        for <linux-wireless@vger.kernel.org>; Sun,  5 Jun 2022 10:25:28 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AB4FC6115D
-        for <linux-wireless@vger.kernel.org>; Sun,  5 Jun 2022 17:18:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F97AC385A5;
-        Sun,  5 Jun 2022 17:18:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 020DB6114D
+        for <linux-wireless@vger.kernel.org>; Sun,  5 Jun 2022 17:25:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BBEFC385A5;
+        Sun,  5 Jun 2022 17:25:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654449520;
-        bh=xeWUEBrUs8G3WXbFqgDaVyYlnjDmkLc2Nd9fY2d77Ts=;
+        s=k20201202; t=1654449927;
+        bh=kA1rE6coALLPyy9Pp2w6PONiCb6kJCX0DuutN6amvxU=;
         h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=Kamgo85WVfXeJRk4v4ETi43oGuzy8JjShF6RRlSOmLIFagam06Kkxcd17g8Rcl/zd
-         h4o0pXARHL+A8XCSbBlVSjzQp04eH/NSTwqIBd/cL4DxZYbSMmLTqZWZ+OVned0OP5
-         ivFunIKozyxK22yY5OP9kzYX5A/KBmzEIINXkdcjMNQy0JWrq+hK8sdk9eK1cfptS5
-         04t3Vf2ueu9nlWLfKp3BSiweyBG92fk/z12g7KDLb/AhqY+LkLyXiJ6cn913qSzXGQ
-         S7rx6pQzsgRpzIer2bdppqu9hHP/+a9sGyoFoxSJKGos5U3vsBnsdaM8Ss0K02MtnY
-         Ds55HCvtfCH7w==
+        b=knL7dzbC2lKmFSVvKivkCTWvrtliUavnOD5Hc+D6/gMkH/bWiOwuFhu8MPqaiBAH6
+         NDEUq4XCGWib2Q3wqrVrjoOdz6r9ymlKzyL+FugdLzTyVjXezBKTizHMv0pSQlGyDQ
+         eNLXmIpJKoUEogK+1KnclbCAwUT05OZNwGbMssTpqLpHy5tzchDxhgtBf1zgplAaxQ
+         d7xBtPrANAm45BWN6uwEkSRHWXqNf/kf/4gC/1mFtKtNBOn56fmQXBQD1LOGsI7mRY
+         8j/jGX6kX1b+9eI0ituo+ygcX6XBK5Z/We3Y6rTXLCsSKgwooK8z3sA0ir9mFBZhg3
+         DBfZ/2IZZkZcg==
 Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id E7E4140551D; Sun,  5 Jun 2022 19:18:14 +0200 (CEST)
+        id 6C129405523; Sun,  5 Jun 2022 19:23:37 +0200 (CEST)
 From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@kernel.org>
 To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: Re: [PATCH 1/2] mac80211: fix overflow issues in airtime fairness code
-In-Reply-To: <20220603164307.92189-1-nbd@nbd.name>
-References: <20220603164307.92189-1-nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: do not wake queues on a vif that is being
+ stopped
+In-Reply-To: <20220531190824.60019-1-nbd@nbd.name>
+References: <20220531190824.60019-1-nbd@nbd.name>
 X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Sun, 05 Jun 2022 19:18:14 +0200
-Message-ID: <87bkv7owq1.fsf@toke.dk>
+Date:   Sun, 05 Jun 2022 19:23:37 +0200
+Message-ID: <874k0zowh2.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Felix Fietkau <nbd@nbd.name> writes:
 
-> The airtime weight calculation overflows with a default weight value of 256
-> whenever more than 8ms worth of airtime is reported.
-> Bigger weight values impose even smaller limits on maximum airtime values.
-> This can mess up airtime based calculations for drivers that don't report
-> per-PPDU airtime values, but batch up values instead.
->
-> Fix this by reordering multiplications/shifts and by reducing unnecessary
-> intermediate precision (which was lost in a later stage anyway).
->
-> The new shift value limits the maximum weight to 4096, which should be more
-> than enough. Any values bigger than that will be clamped to the upper limit.
+> When a vif is being removed and sdata->bss is cleared, __ieee80211_wake_t=
+xqs
+> can still be called on it, which crashes as soon as sdata->bss is being
+> dereferenced.
+> To fix this properly, check for SDATA_STATE_RUNNING before waking queues,
+> and take the fq lock when setting it (to ensure that __ieee80211_wake_txqs
+> observes the change when running on a different CPU
 >
 > Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-The weights are UAPI, so I guess we could run into applications that
-expect to be able to set a weight higher than 4096? I don't think this
-is too likely, but maybe it is better to reject such attempts instead of
-silently clamping the value, to flush out any breakage if it does occur?
+I think it's a little ugly to expand usage of fq.lock across more and
+more places, I don't really have a good alternative, so:
 
--Toke
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@kernel.org>
