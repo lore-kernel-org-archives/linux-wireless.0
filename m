@@ -2,117 +2,70 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6726CCA47E
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jun 2022 06:46:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A51F5CCA473
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jun 2022 13:56:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230053AbiFFGqX convert rfc822-to-8bit (ORCPT
+        id S239382AbiFFN4D (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Jun 2022 02:46:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51152 "EHLO
+        Mon, 6 Jun 2022 09:56:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229989AbiFFGqX (ORCPT
+        with ESMTP id S239368AbiFFN4B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Jun 2022 02:46:23 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A6102AE14;
-        Sun,  5 Jun 2022 23:46:21 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2566jevbF024779, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2566jevbF024779
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 6 Jun 2022 14:45:41 +0800
-Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Mon, 6 Jun 2022 14:45:40 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Mon, 6 Jun 2022 14:45:40 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6]) by
- RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6%5]) with mapi id
- 15.01.2308.021; Mon, 6 Jun 2022 14:45:40 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Mon, 6 Jun 2022 09:56:01 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4317113D38;
+        Mon,  6 Jun 2022 06:56:00 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id 9458B1E80D76;
+        Mon,  6 Jun 2022 21:55:48 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id r0ZZjdADiD8D; Mon,  6 Jun 2022 21:55:46 +0800 (CST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+        (Authenticated sender: liqiong@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id 5A8F81E80D27;
+        Mon,  6 Jun 2022 21:55:45 +0800 (CST)
+From:   Li Qiong <liqiong@nfschina.com>
+To:     Lennert Buytenhek <buytenh@wantstofly.org>,
         Kalle Valo <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>,
+        "David S . Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Subject: RE: [PATCH v1 1/1] rtw88: use %*ph to print small buffer
-Thread-Topic: [PATCH v1 1/1] rtw88: use %*ph to print small buffer
-Thread-Index: AQHYd0loB302XcSN/EKwwVKyV1mFxK1B81/w
-Date:   Mon, 6 Jun 2022 06:45:40 +0000
-Message-ID: <62e1b53ebdc844acb504698433ed8baa@realtek.com>
-References: <20220603125648.46873-1-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <20220603125648.46873-1-andriy.shevchenko@linux.intel.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS05.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/6/6_=3F=3F_02:55:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+        Paolo Abeni <pabeni@redhat.com>,
+        Li Qiong <liqiong@nfschina.com>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yuzhe@nfschina.com,
+        renyu@nfschina.com
+Subject: [PATCH 2/2] mwl8k: use time_after to replace "jiffies > a"
+Date:   Mon,  6 Jun 2022 21:54:49 +0800
+Message-Id: <20220606135449.23256-1-liqiong@nfschina.com>
+X-Mailer: git-send-email 2.11.0
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+time_after deals with timer wrapping correctly.
 
-> -----Original Message-----
-> From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Sent: Friday, June 3, 2022 8:57 PM
-> To: Ping-Ke Shih <pkshih@realtek.com>; Kalle Valo <kvalo@kernel.org>; linux-wireless@vger.kernel.org;
-> netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-> Cc: Yan-Hsuan Chuang <tony0620emma@gmail.com>; David S. Miller <davem@davemloft.net>; Eric Dumazet
-> <edumazet@google.com>; Jakub Kicinski <kuba@kernel.org>; Paolo Abeni <pabeni@redhat.com>; Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com>
-> Subject: [PATCH v1 1/1] rtw88: use %*ph to print small buffer
-> 
-> Use %*ph format to print small buffer as hex string.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Li Qiong <liqiong@nfschina.com>
+---
+ drivers/net/wireless/marvell/mwl8k.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
-
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-
-> ---
->  drivers/net/wireless/realtek/rtw88/debug.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-> index 1a52ff585fbc..7cde6bcf253b 100644
-> --- a/drivers/net/wireless/realtek/rtw88/debug.c
-> +++ b/drivers/net/wireless/realtek/rtw88/debug.c
-> @@ -269,11 +269,7 @@ static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
->  	for (i = 0 ; i < buf_size ; i += 8) {
->  		if (i % page_size == 0)
->  			seq_printf(m, "PAGE %d\n", (i + offset) / page_size);
-> -		seq_printf(m, "%2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x %2.2x\n",
-> -			   *(buf + i), *(buf + i + 1),
-> -			   *(buf + i + 2), *(buf + i + 3),
-> -			   *(buf + i + 4), *(buf + i + 5),
-> -			   *(buf + i + 6), *(buf + i + 7));
-> +		seq_printf(m, "%8ph\n", buf + i);
->  	}
->  	vfree(buf);
-> 
-> --
-> 2.35.1
+diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
+index 864a2ba9efee..2dfb8c10bb57 100644
+--- a/drivers/net/wireless/marvell/mwl8k.c
++++ b/drivers/net/wireless/marvell/mwl8k.c
+@@ -1880,7 +1880,7 @@ static inline void mwl8k_tx_count_packet(struct ieee80211_sta *sta, u8 tid)
+ 	 * packets ever exceeds the ampdu_min_traffic threshold, we will allow
+ 	 * an ampdu stream to be started.
+ 	 */
+-	if (jiffies - tx_stats->start_time > HZ) {
++	if (time_after(jiffies, (unsigned long)tx_stats->start_time + HZ)) {
+ 		tx_stats->pkts = 0;
+ 		tx_stats->start_time = 0;
+ 	} else
+-- 
+2.25.1
 
