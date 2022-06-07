@@ -2,63 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1A8C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jun 2022 08:24:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D62CCA47C
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jun 2022 09:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238091AbiFGIYY (ORCPT
+        id S239668AbiFGJ3n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Jun 2022 04:24:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57056 "EHLO
+        Tue, 7 Jun 2022 05:29:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232122AbiFGIYX (ORCPT
+        with ESMTP id S239688AbiFGJ3e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Jun 2022 04:24:23 -0400
-X-Greylist: delayed 918 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 07 Jun 2022 01:24:21 PDT
-Received: from mail.forindustry.pl (mail.forindustry.pl [37.187.225.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8EAF10FF4
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 01:24:20 -0700 (PDT)
-Received: by mail.forindustry.pl (Postfix, from userid 1002)
-        id CF01BA3E93; Tue,  7 Jun 2022 08:05:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=forindustry.pl;
-        s=mail; t=1654589181;
-        bh=Vw5jk5D1DE7WK/GNf/MxRQNyAyPYcC0rMJLibxKTj58=;
-        h=Date:From:To:Subject:From;
-        b=z2PnSCKheM17w5raisu2wxk7VYmf4Fq2ch/O8sLbirQrsKFVpdpJx2/AVbDSKU6eP
-         VmyRnxv3rSNgZnZiGi+psJWDEjkAu2pAtSEAT3yngccbwYxlurdMMh7y1lU3PBDKzn
-         taMcST/6DAo0HjVg4vHTQhFM/W8s5KiCNVaUY/FBzCOza/pigvV7twY/vmkVHG4xMO
-         k4NofelLcMWjjVlcVXlHacZKR1EQtvmHzeSzVVSEweQzTBK8M8p84d63pdUPOn3zOi
-         +oBCJs7IrrfSh2/HJfx/qmtKNd16e5KLX95TGrSjVV3QGK+99wLt4Xze6HOIU01QDl
-         87nwrxBcmkcDw==
-Received: by mail.forindustry.pl for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 08:05:52 GMT
-Message-ID: <20220607064500-0.1.3o.od2r.0.iuojnmd55k@forindustry.pl>
-Date:   Tue,  7 Jun 2022 08:05:52 GMT
-From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
-        <arkadiusz.sokolowski@forindustry.pl>
-To:     <linux-wireless@vger.kernel.org>
-Subject: Koszty instalacji fotowoltaicznej
-X-Mailer: mail.forindustry.pl
+        Tue, 7 Jun 2022 05:29:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23FF48A05F
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 02:28:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BD72360C93
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 09:28:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4ECFC34119;
+        Tue,  7 Jun 2022 09:28:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654594134;
+        bh=EkbpqkyORa0DmyjNAP00MPTuJ8sJ/auTt/F5bHY5KSo=;
+        h=From:To:Cc:Subject:Date:From;
+        b=hT+iXLJfmZT48gulURYC8Q877tdf5XYt/hVMdF/Dm89dCIPP0s/gB3DPxKL4EktIh
+         tjSbXFAgwF1Npp0jWvTvtzMW2aD4++bXV9cZ5AoLNZ2d73/itk1GOIIk5e/NIOitvH
+         wzaozNuhkHGIS6CFJEhjc/OkzGKp+BkndcgN4gmfK1eYxSmXOncqs4Ju+s/7fm8uJ/
+         c3IkxLqOfc3P7c/Qg8V4mlPSMB/xHAmsIz02oYvvM4sBJd276WRRro6gtD8ggAmEal
+         Beyu9PcKNnsYMmpkLBvER5E1yrnKdmJQTo8ClmCD9V256A3/n9sYPR20H0+Joy7MBM
+         iHPJAKM3ImxsA==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        ryder.lee@mediatek.com, sean.wang@mediatek.com
+Subject: [PATCH 0/5] move connac2 shared txwi code in connac module
+Date:   Tue,  7 Jun 2022 11:28:36 +0200
+Message-Id: <cover.1654593918.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dzie=C5=84 dobry,
+This series allow reusing connac2 txwi code in mt7921 and mt7915 driver.
 
-stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
- obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99.
+Lorenzo Bianconi (5):
+  mt76: mt7921: rely on mt76_dev in mt7921_mac_write_txwi signature
+  mt76: mt7915: rely on mt76_dev in mt7915_mac_write_txwi signature
+  mt76: connac: move mac connac2 defs in mt76_connac2_mac.h
+  mt76: connac: move connac2_mac_write_txwi in mt76_connac module
+  mt76: connac: move mt76_connac2_mac_add_txs_skb in connac module
 
-Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
-acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
-ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |   9 +
+ .../wireless/mediatek/mt76/mt76_connac2_mac.h | 167 +++++++
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  | 406 ++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 386 +----------------
+ .../net/wireless/mediatek/mt76/mt7915/mac.h   | 142 +-----
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   |   6 +-
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  17 +-
+ .../net/wireless/mediatek/mt76/mt7921/mac.c   | 335 +--------------
+ .../net/wireless/mediatek/mt76/mt7921/mac.h   | 123 +-----
+ .../net/wireless/mediatek/mt76/mt7921/main.c  |   2 +-
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   |   4 +-
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  15 -
+ .../wireless/mediatek/mt76/mt7921/pci_mac.c   |   4 +-
+ 13 files changed, 607 insertions(+), 1009 deletions(-)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
 
-Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
-=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
-=2E
+-- 
+2.35.3
 
-Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
-temacie?
-
-Pozdrawiam,
-Arkadiusz Soko=C5=82owski
