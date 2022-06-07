@@ -2,139 +2,63 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C997C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jun 2022 05:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1A8C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jun 2022 08:24:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236729AbiFGFBP (ORCPT
+        id S238091AbiFGIYY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Jun 2022 01:01:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47052 "EHLO
+        Tue, 7 Jun 2022 04:24:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236700AbiFGFBN (ORCPT
+        with ESMTP id S232122AbiFGIYX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Jun 2022 01:01:13 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABD5D69B45
-        for <linux-wireless@vger.kernel.org>; Mon,  6 Jun 2022 22:01:04 -0700 (PDT)
-X-UUID: ec3a79f12ebb4b08b5b908937017877b-20220607
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.5,REQID:591d7370-95e3-483e-815c-41977039bd4b,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACT
-        ION:release,TS:-5
-X-CID-META: VersionHash:2a19b09,CLOUDID:4f576c7e-c8dc-403a-96e8-6237210dceee,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
-        ,QS:0,BEC:nil
-X-UUID: ec3a79f12ebb4b08b5b908937017877b-20220607
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <deren.wu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 994929843; Tue, 07 Jun 2022 13:00:57 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 7 Jun 2022 13:00:56 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Tue, 7 Jun 2022 13:00:56 +0800
-From:   Deren Wu <Deren.Wu@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
-CC:     Sean Wang <sean.wang@mediatek.com>,
-        Soul Huang <Soul.Huang@mediatek.com>,
-        YN Chen <YN.Chen@mediatek.com>,
-        Leon Yen <Leon.Yen@mediatek.com>,
-        "Eric-SY Chang" <Eric-SY.Chang@mediatek.com>,
-        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
-        Robin Chiu <robin.chiu@mediatek.com>,
-        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
-        Eric Liang <Eric.Liang@mediatek.com>,
-        Stella Chang <Stella.Chang@mediatek.com>,
-        "Evelyn Tsai" <evelyn.tsai@mediatek.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        "Shayne Chen" <shayne.chen@mediatek.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Deren Wu <deren.wu@mediatek.com>,
-        "Ming Yen Hsieh" <mingyen.hsieh@mediatek.com>
-Subject: [PATCH] mt76: enable the VHT extended NSS BW feature
-Date:   Tue, 7 Jun 2022 13:00:46 +0800
-Message-ID: <c67b0bd143835dcb97aa1e642bdcdb2f78660c6c.1654576533.git.deren.wu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Tue, 7 Jun 2022 04:24:23 -0400
+X-Greylist: delayed 918 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 07 Jun 2022 01:24:21 PDT
+Received: from mail.forindustry.pl (mail.forindustry.pl [37.187.225.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8EAF10FF4
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 01:24:20 -0700 (PDT)
+Received: by mail.forindustry.pl (Postfix, from userid 1002)
+        id CF01BA3E93; Tue,  7 Jun 2022 08:05:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=forindustry.pl;
+        s=mail; t=1654589181;
+        bh=Vw5jk5D1DE7WK/GNf/MxRQNyAyPYcC0rMJLibxKTj58=;
+        h=Date:From:To:Subject:From;
+        b=z2PnSCKheM17w5raisu2wxk7VYmf4Fq2ch/O8sLbirQrsKFVpdpJx2/AVbDSKU6eP
+         VmyRnxv3rSNgZnZiGi+psJWDEjkAu2pAtSEAT3yngccbwYxlurdMMh7y1lU3PBDKzn
+         taMcST/6DAo0HjVg4vHTQhFM/W8s5KiCNVaUY/FBzCOza/pigvV7twY/vmkVHG4xMO
+         k4NofelLcMWjjVlcVXlHacZKR1EQtvmHzeSzVVSEweQzTBK8M8p84d63pdUPOn3zOi
+         +oBCJs7IrrfSh2/HJfx/qmtKNd16e5KLX95TGrSjVV3QGK+99wLt4Xze6HOIU01QDl
+         87nwrxBcmkcDw==
+Received: by mail.forindustry.pl for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 08:05:52 GMT
+Message-ID: <20220607064500-0.1.3o.od2r.0.iuojnmd55k@forindustry.pl>
+Date:   Tue,  7 Jun 2022 08:05:52 GMT
+From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
+        <arkadiusz.sokolowski@forindustry.pl>
+To:     <linux-wireless@vger.kernel.org>
+Subject: Koszty instalacji fotowoltaicznej
+X-Mailer: mail.forindustry.pl
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Deren Wu <deren.wu@mediatek.com>
+Dzie=C5=84 dobry,
 
-According IEEE Std 802.11-2020, its definition is:
-Indicates whether the STA is capable of interpreting the Extended NSS BW
-Support subfield of the VHT Capabilities Information field.
+stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
+ obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99.
 
-Some APs, such as Xiaomi AX6000, would check this one for BW settings.
-mt76 driver can get max BW capability only if the this field is confgured
-properly.
+Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
+acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
+ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
 
-Reviewed-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
-Signed-off-by: Deren Wu <deren.wu@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 2 ++
- drivers/net/wireless/mediatek/mt76/mt7615/init.c | 1 +
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 1 +
- drivers/net/wireless/mediatek/mt76/mt7921/init.c | 1 +
- 4 files changed, 5 insertions(+)
+Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
+=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
+=2E
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 5515e1698b27..57e91565488c 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -266,6 +266,8 @@ static void mt76_init_stream_cap(struct mt76_phy *phy,
- 	}
- 	vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
- 	vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
-+	vht_cap->vht_mcs.tx_highest |=
-+				cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
- }
- 
- void mt76_set_stream_caps(struct mt76_phy *phy, bool vht)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index a06dcbb8c673..3e076092714e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -401,6 +401,7 @@ mt7615_init_wiphy(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, TX_STATUS_NO_AMPDU_LEN);
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
- 	ieee80211_hw_set(hw, SUPPORTS_RX_DECAP_OFFLOAD);
-+	ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
- 
- 	if (is_mt7615(&phy->dev->mt76))
- 		hw->max_tx_fragments = MT_TXP_MAX_BUF_NUM;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 01169853355e..2764c22179fb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -365,6 +365,7 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, SUPPORTS_RX_DECAP_OFFLOAD);
- 	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
-+	ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
- 
- 	hw->max_tx_fragments = 4;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index 48a10aaecc62..920fb3a42740 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -96,6 +96,7 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
- 	ieee80211_hw_set(hw, SUPPORTS_PS);
- 	ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
-+	ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
- 
- 	if (dev->pm.enable)
- 		ieee80211_hw_set(hw, CONNECTION_MONITOR);
--- 
-2.18.0
+Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
+temacie?
 
+Pozdrawiam,
+Arkadiusz Soko=C5=82owski
