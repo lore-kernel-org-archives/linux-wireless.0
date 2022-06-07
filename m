@@ -2,58 +2,72 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F5CCCA47C
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jun 2022 09:52:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A35DC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jun 2022 12:20:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240400AbiFGJwJ (ORCPT
+        id S242583AbiFGMU0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Jun 2022 05:52:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39210 "EHLO
+        Tue, 7 Jun 2022 08:20:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240291AbiFGJv6 (ORCPT
+        with ESMTP id S243784AbiFGMUF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Jun 2022 05:51:58 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56FA8ED704
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 02:50:04 -0700 (PDT)
-X-UUID: b60edb2a1d7742878ced10a201261caa-20220607
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.5,REQID:9616e106-317b-445f-b3bb-b1736113d0b3,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:57,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACT
-        ION:release,TS:57
-X-CID-META: VersionHash:2a19b09,CLOUDID:5777eee4-2ba2-4dc1-b6c5-11feb6c769e0,C
-        OID:IGNORED,Recheck:0,SF:801,TC:nil,Content:3,EDM:-3,IP:nil,URL:0,File:nil
-        ,QS:0,BEC:nil
-X-UUID: b60edb2a1d7742878ced10a201261caa-20220607
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
-        (envelope-from <deren.wu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 2105198642; Tue, 07 Jun 2022 17:49:46 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 7 Jun 2022 17:49:45 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Tue, 7 Jun 2022 17:49:45 +0800
-From:   Deren Wu <deren.wu@mediatek.com>
-To:     <lorenzo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <lorenzo.bianconi@redhat.com>,
-        <nbd@nbd.name>, <ryder.lee@mediatek.com>, <sean.wang@mediatek.com>,
-        Deren Wu <deren.wu@mediatek.com>
-Subject: Re: [PATCH 2/5] mt76: mt7921: move fw toggle in mt7921_load_firmware
-Date:   Tue, 7 Jun 2022 17:49:24 +0800
-Message-ID: <20220607094924.2110-1-deren.wu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <8d3f5d937138d5bb1694235cf71aeef7a28f7cd1.1654248715.git.lorenzo@kernel.org>
-References: <8d3f5d937138d5bb1694235cf71aeef7a28f7cd1.1654248715.git.lorenzo@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+        Tue, 7 Jun 2022 08:20:05 -0400
+X-Greylist: delayed 768 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 07 Jun 2022 05:18:45 PDT
+Received: from m42-5.mailgun.net (m42-5.mailgun.net [69.72.42.5])
+        by lindbergh.monkeyblade.net (Postfix) with UTF8SMTPS id 50E16F6889
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 05:18:45 -0700 (PDT)
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.flux-g.com; q=dns/txt;
+ s=pic; t=1654604325; h=Content-Type: Content-Transfer-Encoding:
+ Message-Id: Reply-To: To: To: From: From: Subject: Subject:
+ Mime-Version: Date: Sender: Sender;
+ bh=5G3kOtDNDF9wbnCGMN1NEVX1xKZRPByQuJBMO3GOnC0=; b=OWXhHAd1xouU6K1x+ptz84P4kUbsMtvNkYRg6hXaQ2C68x1Yj5x5qbpC6j8KhvJhJpgDUZGW
+ frMXLn8MGnRmORMiebJCU3h417ZnBMuNsOVT7IIaSZAalhpAFf2mRGj7Ldk7ugwTFJDDy52O
+ oz6OIFzuvloOOEa3HL9EY3yDrkR5CmqiPGGCOamJflWhYsMcfds1HBuGOf+AjR2aiOLRBGL2
+ QAqlZhx/F5kysEmZ+VJ4vyc9WR1/az9e7/fnK4HLKnLomJ8uqnMzFFKeMx7ZtHPPok9FDW+U
+ YZUD/+6QoAuelEBJEulEV+H0HR8vbtKqFwq+Or/RWWnYVeVYGiWHMA==
+X-Mailgun-Sending-Ip: 69.72.42.5
+X-Mailgun-Sid: WyJlYzZmZCIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiNzljZmI4YyJd
+Received: from <unknown> (<unknown> []) by
+ api-n01.prod.us-east-1.postgun.com with HTTP id 629f3f23f5a2eeb0345c31e8;
+ Tue, 07 Jun 2022 12:05:55 GMT
+Sender: noreply=flux-g.com@mg.flux-g.com
+Date:   Tue, 07 Jun 2022 12:05:55 +0000
+Mime-Version: 1.0
+Subject: =?UTF-8?b?5qCq5byP5Lya56S+RkxVWCDjgYrllY/jgYTlkIjjgo/jgZvjgpLmib/jgoo=?=
+ =?UTF-8?b?44G+44GX44Gf?=
+From:   =?utf-8?b?5qCq5byP5Lya56S+RkxVWA==?= <noreply@flux-g.com>
+To:     linux-wireless@vger.kernel.org
+Reply-To: r.washida@flux-g.com
+X-Mailer: WPMailSMTP/Mailer/mailgun 2.9.0
+Message-Id: <20220607120555.478b7c97755d12d6@mg.flux-g.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Thie series work fine in mt7921[e/u/s]
+=E3=81=8A=E5=95=8F=E3=81=84=E5=90=88=E3=82=8F=E3=81=9B=E7=A8=AE=E5=88=A5=20
+=E3=81=9D=E3=81=AE=E4=BB=96
 
-Tested-by: Deren Wu <deren.wu@mediatek.com>
+=E4=BC=9A=E7=A4=BE=E5=90=8D
+=F0=9F=92=9C You have pending messages (5) from Nancy! Reply Now: https://d=
+reamgirl22.page.link/H3Ed?276j6 =F0=9F=92=9C
+
+=E3=81=8A=E5=90=8D=E5=89=8D
+mecx6d
+
+=E9=9B=BB=E8=A9=B1=E7=95=AA=E5=8F=B7=20
+368551179029
+
+=E3=83=A1=E3=83=BC=E3=83=AB=E3=82=A2=E3=83=89=E3=83=AC=E3=82=B9
+linux-wireless@vger.kernel.org
+
+=E3=81=8A=E5=95=8F=E3=81=84=E5=90=88=E3=82=8F=E3=81=9B=E5=86=85=E5=AE=B9
+35mnb6
+
+--=20
+=E3=81=93=E3=81=AE=E3=83=A1=E3=83=BC=E3=83=AB=E3=81=AF =E6=A0=AA=E5=BC=8F=
+=E4=BC=9A=E7=A4=BEFLUX (https://flux-g.com) =E3=81=AE=E3=81=8A=E5=95=8F=E3=
+=81=84=E5=90=88=E3=82=8F=E3=81=9B=E3=83=95=E3=82=A9=E3=83=BC=E3=83=A0=E3=81=
+=8B=E3=82=89=E9=80=81=E4=BF=A1=E3=81=95=E3=82=8C=E3=81=BE=E3=81=97=E3=81=9F
