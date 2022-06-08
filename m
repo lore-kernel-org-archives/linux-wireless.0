@@ -2,88 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47223C43334
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jun 2022 11:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3947BC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jun 2022 12:53:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238110AbiFHLdQ (ORCPT
+        id S238169AbiFHMx6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Jun 2022 07:33:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41076 "EHLO
+        Wed, 8 Jun 2022 08:53:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238084AbiFHLdM (ORCPT
+        with ESMTP id S230261AbiFHMx5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Jun 2022 07:33:12 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1660812DBE0
-        for <linux-wireless@vger.kernel.org>; Wed,  8 Jun 2022 04:33:07 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 258BWp8L2008908, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 258BWp8L2008908
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 8 Jun 2022 19:32:51 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Wed, 8 Jun 2022 19:32:51 +0800
-Received: from localhost (172.16.16.197) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 8 Jun
- 2022 19:32:51 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>, <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>, <echuang@realtek.com>,
-        <phhuang@realtek.com>
-Subject: [PATCH v2 0/3] rtw89: use count of trigger frames as a clue to accelerate CFO tracking
-Date:   Wed, 8 Jun 2022 19:32:21 +0800
-Message-ID: <20220608113224.11193-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+        Wed, 8 Jun 2022 08:53:57 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4FBE184845
+        for <linux-wireless@vger.kernel.org>; Wed,  8 Jun 2022 05:53:54 -0700 (PDT)
+X-UUID: 6234f834df1a4ab7aaa3a76a1e058c87-20220608
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.5,REQID:481c9f07-978e-49ab-b31c-e33af576400d,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
+        ON:release,TS:5
+X-CID-META: VersionHash:2a19b09,CLOUDID:2dbaa77e-c8dc-403a-96e8-6237210dceee,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
+        ,QS:0,BEC:nil
+X-UUID: 6234f834df1a4ab7aaa3a76a1e058c87-20220608
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1592995163; Wed, 08 Jun 2022 20:53:49 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Wed, 8 Jun 2022 20:53:47 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.3 via Frontend Transport; Wed, 8 Jun 2022 20:53:47 +0800
+From:   Deren Wu <Deren.Wu@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
+CC:     Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Eric Liang <Eric.Liang@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Deren Wu <deren.wu@mediatek.com>
+Subject: [PATCH 1/2] mt76: mt7921: not support beacon offload disable command
+Date:   Wed, 8 Jun 2022 20:53:25 +0800
+Message-ID: <9a167f91fc8ea846583a49fa35c5ddb70e5afae4.1654691030.git.deren.wu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <cover.1654691030.git.deren.wu@mediatek.com>
+References: <cover.1654691030.git.deren.wu@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.16.16.197]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/08/2022 11:15:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvOCCkV6TIIDA5OjMxOjAw?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The CFO (central frequency offset) is very important to yeild good UL-OFDMA
-performance. To track CFO accurately, adjust CFO in shorter period of time.
-Since this is only needed by UL-OFDMA, we use trigger frames as a clue.
+From: Deren Wu <deren.wu@mediatek.com>
 
-v2: remove ULL suffix from MASK definition
+Beacon disable flow would be handled in bss stop handler automatically.
+Force return -EOPNOTSUPP in disable case.
 
-Eric Huang (1):
-  rtw89: add new state to CFO state machine for UL-OFDMA
+Fixes: 116c69603b01 ("mt76: mt7921: Add AP mode support")
+Reviewed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Po Hao Huang (2):
-  ieee80211: add trigger frame definition
-  rtw89: 8852c: add trigger frame counter
-
- drivers/net/wireless/realtek/rtw89/core.c  | 48 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/core.h  | 21 ++++++++++
- drivers/net/wireless/realtek/rtw89/debug.c |  3 +-
- drivers/net/wireless/realtek/rtw89/phy.c   | 24 +++++++++--
- drivers/net/wireless/realtek/rtw89/phy.h   |  1 +
- include/linux/ieee80211.h                  | 31 ++++++++++++++
- 6 files changed, 124 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 12bab18c4171..de096f090da3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -1255,8 +1255,11 @@ mt7921_mcu_uni_add_beacon_offload(struct mt7921_dev *dev,
+ 	};
+ 	struct sk_buff *skb;
+ 
++	/* support enable/update process only
++	 * disable flow would be handled in bss stop handler automatically
++	 */
+ 	if (!enable)
+-		goto out;
++		return -EOPNOTSUPP;
+ 
+ 	skb = ieee80211_beacon_get_template(mt76_hw(dev), vif, &offs);
+ 	if (!skb)
+@@ -1282,7 +1285,6 @@ mt7921_mcu_uni_add_beacon_offload(struct mt7921_dev *dev,
+ 	}
+ 	dev_kfree_skb(skb);
+ 
+-out:
+ 	return mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD(BSS_INFO_UPDATE),
+ 				 &req, sizeof(req), true);
+ }
 -- 
-2.25.1
+2.18.0
 
