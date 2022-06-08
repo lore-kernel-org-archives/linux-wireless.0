@@ -2,278 +2,117 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1103CCA48A
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jun 2022 01:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1FE7C43334
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jun 2022 02:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242850AbiFHBDn (ORCPT
+        id S235895AbiFHCzZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Jun 2022 21:03:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42630 "EHLO
+        Tue, 7 Jun 2022 22:55:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1843878AbiFHALi (ORCPT
+        with ESMTP id S1442550AbiFHCwf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Jun 2022 20:11:38 -0400
-Received: from mail-4022.proton.ch (mail-4022.proton.ch [185.70.40.22])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F3E82C4FA2
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 12:45:29 -0700 (PDT)
-Date:   Tue, 07 Jun 2022 19:45:23 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dannyvanheumen.nl;
-        s=protonmail2; t=1654631127; x=1654890327;
-        bh=C5DdC7B29tiGJTCh69OOxYeHGXyGpJ5tKKVknz0wD2s=;
-        h=Date:To:From:Cc:Reply-To:Subject:Message-ID:In-Reply-To:
-         References:Feedback-ID:From:To:Cc:Date:Subject:Reply-To:
-         Feedback-ID:Message-ID;
-        b=V23rVERaRd1TFX+WDZh39PAR82eE1lIqdWMMYgeWgYYxFOcCziapA9WpmpXpGys8V
-         RNmapwON4pd50qjqqEKx5sxykR6yX8BiRqG+uhd9yy0E52FrKajHidlFjHpLEanhnA
-         AFg2vMvjbdyoq9Gzyt1+efcc9ukl3cb91WHjA1wx1oakTYyG/w6hHu27z41rYdvHHF
-         ovfwuK9Nu9YDFpIr5pvEmYZ6RDr5Q4mNVECYzzdsRL1L1Hth/woXHa48ch7emcU+0P
-         CjIlhfCkJIfxDWceCC8PdMVXial0RHGgZsy033mejmIjTN60Uw0LGNPiCZ/yMDdVJ5
-         +xsR3tJzmprsA==
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>
-From:   Danny van Heumen <danny@dannyvanheumen.nl>
-Cc:     Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "brcm80211-dev-list.pdl@broadcom.com" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "SHA-cyfmac-dev-list@infineon.com" <SHA-cyfmac-dev-list@infineon.com>
-Reply-To: Danny van Heumen <danny@dannyvanheumen.nl>
-Subject: Re: [PATCH] work-in-progress: double-free after hardware reset due to firmware-crash
-Message-ID: <kB9OdQYlBnucF05VoKxTvsT8eUrPGJc_we9irAdR-2gmXsEl4NvkhMzDcTahLm3HLA2zKVXnhEOstESbIEcHGKYHvMOyIcr4vh80f0eJCJ0=@dannyvanheumen.nl>
-In-Reply-To: <1a116224-66ff-17b1-bb8b-9c0918dd47e4@broadcom.com>
-References: <UXibAXk2GByhvw88A6LIDXHSlkP79-ML7FrtyfnHuiC34qUd-zx03BAJAtzluyEvfwPBR0tac4hC72zKI1qT3CtgmvvVohr1v8a49TqYVSw=@dannyvanheumen.nl> <Uba0mwWYafMZd4JdEJVxMd-Uh8M6T4dHoTse71YdCikdJLYLxunwtrxxbasffgMuXtPVi_JmJrtAnqviM6x-99_SyysHZm-Yvz933mPXr74=@dannyvanheumen.nl> <Y_XMhLmW7kj2Ls3X8pCfFd2RdWzXd9UWdv3ksFrVi7xh79wY7l6K52N3ODhI3_UK_IqG1uJcIEv0PxT-wQG9tdYu9krraq7gxsprUu-RtjQ=@dannyvanheumen.nl> <51CC1C7B-400C-4A7A-A5D3-EB457DC6862F@broadcom.com> <jJuvC2YezD_e1G6VFXwJjFFUAir0HFcDnBaZGRvKtnaY69v8aI3KkCouzzyOjrb9bZOnSzinETjNNxHvlmYCwNijdmts_5bEXZSV7dMNi0s=@dannyvanheumen.nl> <B08447EB-F222-49B5-A411-0DB6848A80ED@broadcom.com> <EbyrCYK_mR6ppJYbSc5JfGGG_QZEZb2Zp8Htx9f-orZ_wX0Dpz1pXhDjQ9P1nGuyTH041zvsScaRIPllClzLpLgwVuff4ZTTAiVOXe5-Mwg=@dannyvanheumen.nl> <1a116224-66ff-17b1-bb8b-9c0918dd47e4@broadcom.com>
-Feedback-ID: 15073070:user:proton
+        Tue, 7 Jun 2022 22:52:35 -0400
+Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 053761A43C3
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Jun 2022 17:24:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1654647900; x=1686183900;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=hlSiFHR4ZysHbi7t0JzTMdVqRHsFwkY40C5oQWFVqEY=;
+  b=e5/tb617CColUDvK64itAt5e2c+h3gCiMjmQ+pu+mU/XhLwz0aQJmkE9
+   90O3uFk8pbUs3uOAzSlWtsPD4UrTnhHuXBo7X/6TDKxwg8AN+xOYThHMl
+   47eBrg+/qopdnOAA2n6zptSj4rH+DcTY2vGFH6cKXMB1mOHM5GLahW5Fn
+   0=;
+Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
+  by alexa-out.qualcomm.com with ESMTP; 07 Jun 2022 17:24:20 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2022 17:24:20 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Tue, 7 Jun 2022 17:24:19 -0700
+Received: from [10.110.12.119] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Tue, 7 Jun 2022
+ 17:24:18 -0700
+Message-ID: <25ed0281-0880-1e8f-154c-53ee056e8879@quicinc.com>
+Date:   Tue, 7 Jun 2022 17:24:17 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [RFC v2] cfg80211: Indicate MLO connection info in connect and
+ roam callbacks
+Content-Language: en-US
+To:     Veerendranath Jakkam <quic_vjakkam@quicinc.com>,
+        <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>
+References: <1654536690-12588-1-git-send-email-quic_vjakkam@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <1654536690-12588-1-git-send-email-quic_vjakkam@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Arend,
+On 6/6/2022 10:31 AM, Veerendranath Jakkam wrote:
+> The MLO links used for connection with an MLD AP are decided by the
+> driver in case of SME offloaded to driver.
+> 
+> Add support for the drivers to indicate the information of links used
+> for MLO connection in connect and roam callbacks, update the connected
+> links information in wdev from connect/roam result sent by driver.
+> Also, send the connected links information to userspace.
+> 
+> Add a netlink flag attribute to indicate that userspace supports
+> handling of MLO connection. Drivers must not do MLO connection when this
+> flag is not set. This is to maintain backwards compatibility with older
+> supplicant versions which doesn't have support for MLO connection.
+> 
+> Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+> ---
+[snip]
+I had one bikeshed observation...
 
-------- Original Message -------
-On Tuesday, June 7th, 2022 at 21:00, Arend van Spriel <arend.vanspriel@broa=
-dcom.com> wrote:
+> @@ -17176,6 +17199,38 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
+>   	       nla_put(msg, NL80211_ATTR_PMKID, WLAN_PMKID_LEN, cr->fils.pmkid)))))
+>   		goto nla_put_failure;
+>   
+> +	if (cr->valid_links) {
+> +		int i = 0;
 
-> [..]
->
-> > > While directly return without invoking clean up process makes
-> > > perfect sense for the issue described here, it doesn=E2=80=99t addres=
-s the
-> > > broader issue that sdiodev might hold on to couple stale pointers tha=
-t
-> > > might subsequently be used in somewhere down the path because sdiodev=
- is
-> > > not freed. Setting these pointer to NULL after freeing them could hel=
-p
-> > > us to catch such issue which is more catastrophic than a double-free.
-> > > The perfect solution of course is to rework the code to free sdiodev
-> > > whenever brcmf_sdiod_remove() is invoked but that can not be done in
-> > > short-term unfortunately.
->
-> > - True.
-> > - If the two early returns are appropriate -- I think they are -- so
-> > we can leave those in. (Again, I'm unfamiliar with the code-base.)
-> > - Setting the pointer to NULL at least has the benefit that behavior
-> > (even if bugged) is the same irrespective of memory allocation behavior=
-.
-> > - I checked your suggestion for 'sdiodev->sgtable': it is not a
->
-> pointer, so setting to NULL will not help. If I read this correctly,
-> 'sg_free_table(..)' is already resistant to multiple freeing attempts
-> with a test of '.sgl'.
->
-> > .. as for the control flow. Sure, rework would be nice, but -- to me
-> > at least -- it is not clear if it is really necessary. Maybe I'm
-> > mistaken, but there seem to be few entry-points to take into account.
-> > The "hardware-reset after firmware-crash"-logic was added later IIUC, s=
-o
-> > maybe it was an oversight? Regardless, I have updated the patch.
->
-> The reset-after-fw-crash was indeed added later. I am wondering is we
-> can leave the remove-reprobe dance to the mmc core. Maybe mmc_hw_reset()
-> could do the trick, ie. simply call mmc_hw_reset() in
-> brcmf_sdio_bus_reset() and be done with it. Maybe opening a can of worms
-> here, but I always felt uncertain about calling .remove and .probe
-> callbacks directly from the driver itself as it may cause issue like
-> this double-free, but also the bus is unaware and I don't know that is a
-> bad thing or not.
+perhaps = 1? see below
 
-I am pretty sure you found a can of worms indeed :-)
+> +		struct nlattr *nested;
+> +
+> +		nested = nla_nest_start(msg, NL80211_ATTR_MLO_LINKS);
+> +		if (!nested)
+> +			goto nla_put_failure;
+> +
+> +		for_each_valid_link(cr, link) {
+> +			struct nlattr *nested_mlo_links;
+> +			const u8 *bssid = cr->links[link].bss ?
+> +					  cr->links[link].bss->bssid :
+> +					  cr->links[link].bssid;
+> +
+> +			nested_mlo_links = nla_nest_start(msg, i + 1);
 
-So, a few things to note:
+why i+1?
+if you don't want to use 0 for the first entry (why not?) then init i to 1
 
-- do you have a reliable way to test this behavior?
-- from my PoV: I have encountered various compositions of firmware and uCod=
-e
-  for the BCM4345/9 (43456-sdio). Earlier versions may occasionally
-  exhibit the crashing-behavior, but not reliably.
-- do you want to tackle this as a separate effort, given that there is alre=
-ady
-  benefit in merging the earlier patch proposal?
+alternately since this is the only place i is used, use ++i or i++ as 
+you see fit and remove the i++ later
 
-Let me try to give my impression of the code, that I get from my cursory sc=
-ans
-through the brcmfmac code: it seems that the device as a whole (the "root")
-gets activated. From what I remember, there seems to be a callback that
-triggers subsequent initialization. So, it makes somewhat sense to me if a
-hardware-reset could flow (back) into the existing initialization flow.
-(Again, don't trust info below, as I have very limited knowledge in this do=
-main.
-I'm trying to check the extent to which I can make sense of it.)
+ultimately we should only need to calculate i+1 once
 
-Kind regards,
-Danny
+these comments apply to nl80211_send_roamed() as well
 
-
-
-> Regards,
-> Arend
->
-> > > Also I forgot that our IT attached a legal footer to all emails sent
->
-> to an external party. I am sorry about that to anyone reading my mail
-> but there is nothing I can do at the moment.
->
-> > > Thanks,
->
-> > > - Franky
->
-> > I have attached the updated patch. As mentioned before, I will be
->
-> running the changes myself.
->
-> > Regards,
->
-> > Danny
->
-> > > > So, returning immediately with the errorcode seemed more
->
-> appropriate. Regardless, I have only
->
-> > > > incidental knowledge from checking the code just for this
->
-> particular problem. In the end my goal
->
-> > > > is to have the issues addressed so that I am not forced to reboot
->
-> my system to get it back in
->
-> > > > working order.
->
-> > > > As for your remark about sg-table: I had not considered that, but
->
-> if my notes above check out,
->
-> > > > maybe this does not need to be treated conditionally at all.
->
-> > > > Kind regards,
->
-> > > > Danny
->
-> > > > > diff --git
->
-> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
->
-> > > > > index ac02244a6fdf..e9bad7197ba9 100644
->
-> > > > > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
->
-> > > > > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
->
-> > > > > @@ -802,6 +802,7 @@ static void brcmf_sdiod_freezer_detach(struct
->
-> brcmf_sdio_dev *sdiodev)
->
-> > > > > if (sdiodev->freezer) {
->
-> > > > > WARN_ON(atomic_read(&sdiodev->freezer->freezing));
->
-> > > > > kfree(sdiodev->freezer);
->
-> > > > > + sdiodev->freezer =3D NULL;
->
-> > > > > }
->
-> > > > > }
->
-> > > > > @@ -885,7 +886,11 @@ int brcmf_sdiod_remove(struct brcmf_sdio_dev
->
-> *sdiodev)
->
-> > > > > sdio_disable_func(sdiodev->func1);
->
-> > > > > sdio_release_host(sdiodev->func1);
->
-> > > > > - sg_free_table(&sdiodev->sgtable);
->
-> > > > > + if (sdiodev->sgtable) {
->
-> > > > > + sg_free_table(&sdiodev->sgtable);
->
-> > > > > + sdiodev->sgtable =3D NULL;
->
-> > > > > + }
->
-> > > > > +
->
-> > > > > sdiodev->sbwad =3D 0;
->
-> > > > > pm_runtime_allow(sdiodev->func1->card->host->parent);
->
-> > > > > As for submitting patch to linux-wireless, please follow the
->
-> guideline. [1]
->
-> > > > > Thanks,
->
-> > > > > - Franky
->
-> > > > > [1]
->
-> https://www.google.com/url?q=3Dhttps://wireless.wiki.kernel.org/en/develo=
-pers/documentation/submittingpatches&source=3Dgmail-imap&ust=3D165495960400=
-0000&usg=3DAOvVaw1Q6aXVZjiKkrq9qmyYVVDa
->
-> > > --
->
-> > > This electronic communication and the information and any files
->
-> transmitted
->
-> > > with it, or attached to it, are confidential and are intended solely =
-for
->
-> > > the use of the individual or entity to whom it is addressed and may
->
-> contain
->
-> > > information that is confidential, legally privileged, protected by
->
-> privacy
->
-> > > laws, or otherwise restricted from disclosure to anyone else. If you =
-are
->
-> > > not the intended recipient or the person responsible for delivering t=
-he
->
-> > > e-mail to the intended recipient, you are hereby notified that any us=
-e,
->
-> > > copying, distributing, dissemination, forwarding, printing, or
->
-> copying of
->
-> > > this e-mail is strictly prohibited. If you received this e-mail in
->
-> error,
->
-> > > please return the e-mail to the sender, delete it from your
->
-> computer, and
->
-> > > destroy any printed copy of it.
+(BTW I do see this pattern in some of the existing code, but I also see 
+0 being used for the first record)
