@@ -2,153 +2,127 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB9A1C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jun 2022 13:37:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E60CC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jun 2022 15:36:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240438AbiFHNhM (ORCPT
+        id S244050AbiFHPgP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Jun 2022 09:37:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52664 "EHLO
+        Wed, 8 Jun 2022 11:36:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240435AbiFHNhL (ORCPT
+        with ESMTP id S244387AbiFHPgN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Jun 2022 09:37:11 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74B05FF5B8
-        for <linux-wireless@vger.kernel.org>; Wed,  8 Jun 2022 06:37:10 -0700 (PDT)
-Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1nyvrp-0000O2-Dv; Wed, 08 Jun 2022 15:37:01 +0200
-Received: from sha by ptx.hi.pengutronix.de with local (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1nyvro-0000LI-95; Wed, 08 Jun 2022 15:37:00 +0200
-Date:   Wed, 8 Jun 2022 15:37:00 +0200
-From:   "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     "martin.blumenstingl@googlemail.com" 
-        <martin.blumenstingl@googlemail.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        "neojou@gmail.com" <neojou@gmail.com>,
-        "kvalo@kernel.org" <kvalo@kernel.org>,
-        "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux@ulli-kroll.de" <linux@ulli-kroll.de>
-Subject: Re: [PATCH v2 05/10] rtw88: iterate over vif/sta list non-atomically
-Message-ID: <20220608133700.GW1615@pengutronix.de>
-References: <20220530135457.1104091-1-s.hauer@pengutronix.de>
- <20220530135457.1104091-6-s.hauer@pengutronix.de>
- <CAFBinCDgErZzFs5NiDT0JAOhziz5WLiy0+yxF9Z-kXPxD1j8Dw@mail.gmail.com>
- <e0aa1ba4336ab130712e1fcb425e6fd0adca4145.camel@realtek.com>
+        Wed, 8 Jun 2022 11:36:13 -0400
+Received: from mail-oi1-x22e.google.com (mail-oi1-x22e.google.com [IPv6:2607:f8b0:4864:20::22e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E182A344C8
+        for <linux-wireless@vger.kernel.org>; Wed,  8 Jun 2022 08:35:59 -0700 (PDT)
+Received: by mail-oi1-x22e.google.com with SMTP id i66so28476705oia.11
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2022 08:35:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=mUKKS3cJ8iOHXwd2YPNnCnAj+pZPoyTyV0wh010O0fQ=;
+        b=LSe7kGcIxQijJtWyI2Kvx6gaNWlLlgcmdIK9vzglRIaQheaPCPuQUwxkfB6IPUxSv0
+         Zip44mg36Ta1DBEPWu8aiKJbidquJBkGySF5/U2wVhUKN5iITtR682TX4jiFQT/acX/+
+         tDukq1pdzBQPil65LeU9z8UxqtHS6aopWM6B8RolyiXfVGqT/0CHo/DsQ5eOvkdSzgKN
+         PO4MrHjWBTKsy7f5Pc0uUFCz+6oRE74fCmnkSzbHSMdKDSRe1dvoflme0wxY9Uy1AjDl
+         jh/tG4UaRlZSte4+PuS7j6WUVGwoCva1ZrGR33NghpS2RZTQaVfTQ4ZO/YzUrlaaogDg
+         sUNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:sender:message-id:date:mime-version:user-agent
+         :subject:content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=mUKKS3cJ8iOHXwd2YPNnCnAj+pZPoyTyV0wh010O0fQ=;
+        b=J0Qmc4JB17FCnD1eZY/AK8EVXqxXWycw2jPeIjFpZRPhMksRryJPsG8qdY0jX7tKne
+         T/hDWj9GSWO0Wh+fz4ylolCMVcVJ1nFHrYulJ5FZ9N3shS0WsMoolamGsYkXKjpsgQYg
+         XK2zub4+cIBB1VIl8JDEbf8sB0+IYfU0n3wLt2/0+y5iXqbMZyXCy1fcPM7g2K9oP0TO
+         bpMwNPYLS4IhUKGpLqIk8hkFV1bjlkq7AYqDC7sl8+SjjLgiidxnrAKpihjvo3D+dRIf
+         ooc2igzWAdbaa02UB9BPfrLHKQM/EvYOx4kSPQSGLv+eVEKGAbOUEUFmXRsmoO8zNo+z
+         76MA==
+X-Gm-Message-State: AOAM531pg2FykONQ33ng2KOFanK7qAZaRwEoFAHfPEBffYdw+HLMas0k
+        7AwzNDqCLo7YcoaGQ0Olq8g=
+X-Google-Smtp-Source: ABdhPJyQZh9RBvJ00oc0oCXPX0WqIrN//ZaQqgyBq6DV23jWNr2vFGwMfRZNi0bgeW/70/IXRNncRQ==
+X-Received: by 2002:a05:6808:2382:b0:32e:bf4e:fa93 with SMTP id bp2-20020a056808238200b0032ebf4efa93mr2633135oib.33.1654702558994;
+        Wed, 08 Jun 2022 08:35:58 -0700 (PDT)
+Received: from ?IPV6:2603:8090:2005:39b3::100e? (2603-8090-2005-39b3-0000-0000-0000-100e.res6.spectrum.com. [2603:8090:2005:39b3::100e])
+        by smtp.gmail.com with ESMTPSA id hc12-20020a056870788c00b000f33804cea9sm9428315oab.36.2022.06.08.08.35.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 08 Jun 2022 08:35:58 -0700 (PDT)
+Sender: Larry Finger <larry.finger@gmail.com>
+Message-ID: <d705a771-90a6-98c7-b1dc-32fba1136678@lwfinger.net>
+Date:   Wed, 8 Jun 2022 10:35:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e0aa1ba4336ab130712e1fcb425e6fd0adca4145.camel@realtek.com>
-X-Sent-From: Pengutronix Hildesheim
-X-URL:  http://www.pengutronix.de/
-X-Accept-Language: de,en
-X-Accept-Content-Type: text/plain
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH] rtw88: 8821c: fix access const table of channel
+ parameters
+Content-Language: en-US
+To:     Nathan Chancellor <nathan@kernel.org>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Cc:     tony0620emma@gmail.com, kvalo@kernel.org,
+        linux-wireless@vger.kernel.org
+References: <20220608020312.9663-1-pkshih@realtek.com>
+ <YqAQTJqOTB2+242p@dev-arch.thelio-3990X>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <YqAQTJqOTB2+242p@dev-arch.thelio-3990X>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jun 08, 2022 at 01:25:34PM +0000, Ping-Ke Shih wrote:
-> Hi Martin and Sascha,
+On 6/7/22 21:58, Nathan Chancellor wrote:
+> On Wed, Jun 08, 2022 at 10:03:12AM +0800, Ping-Ke Shih wrote:
+>> We would like to make chip_info table const, but 8821c uses one field as
+>> a variable, and causes core dump. To fix this, move the field to another
+>> struct that can be read and written.
+>>
+>> BUG: unable to handle page fault for address: ffffffffc09f52f4
+>> PGD 5b5215067 P4D 5b5215067 PUD 5b5217067 PMD 111f61067 PTE 8000000111e07161
+>> Oops: 0003 [#1] PREEMPT SMP NOPTI
+>> CPU: 6 PID: 436 Comm: NetworkManager Not tainted 5.18.0-rc7-debug-01822-g89d8f53ff6e7 #1 5cac31ca93432e53341863abfb3332fd98b144da
+>> Hardware name: HP HP Desktop M01-F1xxx/87D6, BIOS F.12 12/17/2020
+>> RIP: 0010:rtw8821c_phy_set_param+0x262/0x380 [rtw88_8821c]
+>> Code: e8 53 f3 c0 d6 48 8b 43 10 4c 8b 63 38 be 24 0a 00 00 48 89 df 48
+>>   8b 40 68 e8 3a f3 c0 d6 89 e9 be 28 0a 00 00 48 89 df d3 e8 <41> 89 84
+>>   24 54 01 00 00 48 8b 43 10 4c 8b 63 38 48 8b 40 68 e8 15
+>> RSP: 0018:ffffb08c417cb6f0 EFLAGS: 00010286
+>> RAX: 0000000064b80c1c RBX: ffff93d15a0120e0 RCX: 0000000000000000
+>> RDX: 0000000034028211 RSI: 0000000000000a28 RDI: ffff93d15a0120e0
+>> RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+>> R10: 0000000000000001 R11: 0000000000000006 R12: ffffffffc09f51a0
+>> R13: ffff93d15a0156d0 R14: 0000000000000000 R15: 0000000000000001
+>> FS:  00007f4e9b73d1c0(0000) GS:ffff93d83ab80000(0000) knlGS:0000000000000000
+>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> CR2: ffffffffc09f52f4 CR3: 0000000103b9e000 CR4: 0000000000350ee0
+>> Call Trace:
+>>   <TASK>
+>>   rtw_core_start+0xbd/0x190 [rtw88_core de79d6bdfd083d102030858972032e5706726279]
+>>   rtw_ops_start+0x26/0x40 [rtw88_core de79d6bdfd083d102030858972032e5706726279]
+>>   drv_start+0x42/0x100 [mac80211 21e803d0ad10691f64c6c81ecc24c0c6c36e5d58]
+>>   ieee80211_do_open+0x2fb/0x900 [mac80211 21e803d0ad10691f64c6c81ecc24c0c6c36e5d58]
+>>   ieee80211_open+0x67/0x80 [mac80211 21e803d0ad10691f64c6c81ecc24c0c6c36e5d58]
+>>   __dev_open+0xdd/0x180
+>>   [...]
+>>
+>> Fixes: 89d8f53ff6e7 ("wifi: rtw88: Fix Sparse warning for rtw8821c_hw_spec")
+>> Reported-by: Nathan Chancellor <nathan@kernel.org>
+>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> Thank you both.
+> I don't actually use wireless on this machine but my boot finishes and I
+> don't see any crash:
 > 
-> On Wed, 2022-06-08 at 00:06 +0200, Martin Blumenstingl wrote:
-> > Hi Sascha,
-> > 
-> > thanks for this patch!
-> > 
-> > On Mon, May 30, 2022 at 3:55 PM Sascha Hauer <s.hauer@pengutronix.de> wrote:
-> > [...]
-> > >  drivers/net/wireless/realtek/rtw88/phy.c  |   6 +-
-> > >  drivers/net/wireless/realtek/rtw88/ps.c   |   2 +-
-> > >  drivers/net/wireless/realtek/rtw88/util.c | 103 ++++++++++++++++++++++
-> > >  drivers/net/wireless/realtek/rtw88/util.h |  12 ++-
-> > >  4 files changed, 116 insertions(+), 7 deletions(-)
-> > I compared the changes from this patch with my earlier work. I would
-> > like to highlight a few functions to understand if they were left out
-> > on purpose or by accident.
-> > 
-> > __fw_recovery_work() in main.c (unfortunately I am not sure how to
-> > trigger/test this "firmware recovery" logic):
-> 
-> This can be triggered by 'echo 1 > /sys/kernel/debug/ieee80211/rtw88/fw_crash',
-> but only the latest firmware of 8822c can support this.
-> 
-> > - this is already called with &rtwdev->mutex held
-> > - it uses rtw_iterate_keys_rcu() (which internally uses rtw_write32
-> > from rtw_sec_clear_cam). feel free to either add [0] to your series or
-> > even squash it into an existing patch
-> 
-> ieee80211_iter_keys() check lockdep_assert_wiphy(hw->wiphy), but we don't
-> hold the lock in this work; it also do mutex_lock(&local->key_mtx) that 
-> I'm afraid it could cause deadlock.
->  
-> So, I think we can use _rcu version to collect key list like sta and vif.
-> 
-> > - it uses rtw_iterate_stas_atomic() (which internally uses
-> > rtw_fw_send_h2c_command from rtw_fw_media_status_report)
-> > - it uses rtw_iterate_vifs_atomic() (which internally can read/write
-> > registers from rtw_chip_config_bfee)
-> > - in my previous series I simply replaced the
-> > rtw_iterate_stas_atomic() and rtw_iterate_vifs_atomic() calls with the
-> > non-atomic variants (for the rtw_iterate_keys_rcu() call I did some
-> > extra cleanup, see [0])
-> > 
-> > rtw_wow_fw_media_status() in wow.c (unfortunately I am also not sure
-> > how to test WoWLAN):
-> > - I am not sure if &rtwdev->mutex is held when this function is called
-> > - it uses rtw_iterate_stas_atomic() (which internally uses
-> > rtw_fw_send_h2c_command from rtw_fw_media_status_report)
-> > - in my previous series I simply replaced rtw_iterate_stas_atomic()
-> > with it's non-atomic variant
-> > 
-> > Additionally I rebased my SDIO work on top of your USB series.
-> > This makes SDIO support a lot easier - so thank you for your work!
-> > I found that three of my previous patches (in addition to [0] which I
-> > already mentioned earlier) are still needed to get rid of some
-> > warnings when using the SDIO interface (the same warnings may or may
-> > not be there with the USB interface - it just depends on whether your
-> > AP makes rtw88 hit that specific code-path):
-> > - [1]: rtw88: Configure the registers from rtw_bf_assoc() outside the RCU lock
-> 
-> I think we need this.
-> 
-> > - [2]: rtw88: Move rtw_chip_cfg_csi_rate() out of rtw_vif_watch_dog_iter()
-> 
-> I think we don't need this, but just use rtw_iterate_vifs() to
-> iterate rtw_vif_watch_dog_iter.
-> 
-> > - [3]: rtw88: Move rtw_update_sta_info() out of rtw_ra_mask_info_update_iter()
-> 
-> Need partial -- hold rtwdev->mutex before entering rtw_ra_mask_info_update().
-> 
-> Then, use rtw_iterate_stas() to iterate rtw_ra_mask_info_update_iter. 
-> No need others.
-> 
-> 
-> Sascha, could you squash Martin's patches into your patchset?
-> And, then I can do more tests on PCI cards.
+> Tested-by: Nathan Chancellor <nathan@kernel.org>
 
-Yes, will do and send a v3 with it.
+Nathan,
 
-Sascha
+Thanks for testing. As you have likely seen, Ping-Ke came up with a better fix, 
+thus mine will not be needed.
 
--- 
-Pengutronix e.K.                           |                             |
-Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
-31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+Larry
+
+
