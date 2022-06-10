@@ -2,111 +2,75 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD47C43334
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jun 2022 07:27:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E729C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jun 2022 07:39:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346504AbiFJH1a (ORCPT
+        id S1346826AbiFJHjZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Jun 2022 03:27:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56896 "EHLO
+        Fri, 10 Jun 2022 03:39:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343879AbiFJH1D (ORCPT
+        with ESMTP id S242965AbiFJHjY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Jun 2022 03:27:03 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C8211455AF
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2022 00:27:00 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25A7QufrE010184, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25A7QufrE010184
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 10 Jun 2022 15:26:56 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Fri, 10 Jun 2022 15:26:55 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Fri, 10 Jun
- 2022 15:26:55 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>, <damon.chen@realtek.com>,
-        <phhuang@realtek.com>
-Subject: [PATCH 10/11] rtw89: pci: fix PCI doesn't reclaim TX BD properly
-Date:   Fri, 10 Jun 2022 15:26:09 +0800
-Message-ID: <20220610072610.27095-11-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220610072610.27095-1-pkshih@realtek.com>
-References: <20220610072610.27095-1-pkshih@realtek.com>
+        Fri, 10 Jun 2022 03:39:24 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBFF3132766;
+        Fri, 10 Jun 2022 00:39:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A5A78B831CF;
+        Fri, 10 Jun 2022 07:39:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0E8AC3411B;
+        Fri, 10 Jun 2022 07:39:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654846761;
+        bh=hCht15CTX44Sxk0pUcKGojtW+Cz5f/KZ5jdF4JOrrho=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=D4uf040VQO4M09A8PXRpNKasuCp1C/MOzTMav9sOMCmqRbhu/MiZdTLL3FfuXszpj
+         Fnw8puVMUizdbPAyVg9zTNgvz7TA0NwUA1QKurIYTCkBQ+rDpu30xr4XA+8X+Wl6hU
+         fNpdtGPsY86G0L9fMqKJQvkWcWxrlcih/5rJBsuf3MIsI7qvT3SWEeeRpDyfE2t8we
+         KEsZ+Bi3pJcNyaO9RWLbiPWg1P5zqMFYzoFiSV9xLp3DRRpD8IM8UxUBSKkIlfckcs
+         rSAKClt9RaW8tUz0+MwQ78FTyTlVqoHXxRHLEgx9U+FQdT2GHkLf0Thop4dItQ50Ng
+         ulpIq0spROH7g==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/10/2022 07:06:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMTAgpFekyCAwNjowMDowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 8bit
+Subject: Re: wifi: wfx: Remove redundant NULL check before release_firmware()
+ call
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20220606014237.290466-1-chi.minghao@zte.com.cn>
+References: <20220606014237.290466-1-chi.minghao@zte.com.cn>
+To:     cgel.zte@gmail.com
+Cc:     jerome.pouiller@silabs.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <165484674004.24214.13068275820248967076.kvalo@kernel.org>
+Date:   Fri, 10 Jun 2022 07:39:18 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-TX BD (TX ring index) and TX WD (WiFi descriptor buffer) are freed
-asynchronously. With burst packets, we free TX WD, but the corresponding
-TX BD couldn't be freed yet. Then, TX can possibly get stuck due to no
-more TX BD.
+cgel.zte@gmail.com wrote:
 
-To avoid this, ignore reclaiming TX BD only if TX WD is no free space,
-because at this moment TX BD must have some spaces. Otherwise, we reclaim
-TX BD to resolve TX stuck issue.
+> From: Minghao Chi <chi.minghao@zte.com.cn>
+> 
+> release_firmware() checks for NULL pointers internally so checking
+> before calling it is redundant.
+> 
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
+> Acked-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/pci.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Patch applied to wireless-next.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index fd5d9bde01085..73b3b7e9fe6f5 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -952,9 +952,10 @@ static u32 __rtw89_pci_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev,
- 
- 	if (wd_cnt == 0 || bd_cnt == 0) {
- 		cnt = rtw89_pci_rxbd_recalc(rtwdev, rx_ring);
--		if (!cnt)
-+		if (cnt)
-+			rtw89_pci_release_tx(rtwdev, rx_ring, cnt);
-+		else if (wd_cnt == 0)
- 			goto out_unlock;
--		rtw89_pci_release_tx(rtwdev, rx_ring, cnt);
- 
- 		bd_cnt = rtw89_pci_get_avail_txbd_num(tx_ring);
- 		if (bd_cnt == 0)
-@@ -965,7 +966,9 @@ static u32 __rtw89_pci_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev,
- 	wd_cnt = wd_ring->curr_num;
- 	min_cnt = min(bd_cnt, wd_cnt);
- 	if (min_cnt == 0)
--		rtw89_warn(rtwdev, "still no tx resource after reclaim\n");
-+		rtw89_debug(rtwdev, rtwpci->low_power ? RTW89_DBG_TXRX : RTW89_DBG_UNEXP,
-+			    "still no tx resource after reclaim: wd_cnt=%d bd_cnt=%d\n",
-+			    wd_cnt, bd_cnt);
- 
- out_unlock:
- 	spin_unlock_bh(&rtwpci->trx_lock);
+05a2eebfa650 wifi: wfx: Remove redundant NULL check before release_firmware() call
+
 -- 
-2.25.1
+https://patchwork.kernel.org/project/linux-wireless/patch/20220606014237.290466-1-chi.minghao@zte.com.cn/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
