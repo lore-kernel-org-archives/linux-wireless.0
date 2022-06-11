@@ -2,197 +2,144 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECBFC433EF
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Jun 2022 20:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC8CC433EF
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Jun 2022 20:01:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231484AbiFKUBQ (ORCPT
+        id S231494AbiFKUBS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Jun 2022 16:01:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57018 "EHLO
+        Sat, 11 Jun 2022 16:01:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229518AbiFKUBP (ORCPT
+        with ESMTP id S229445AbiFKUBP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 11 Jun 2022 16:01:15 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 343F65047B
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 341BA5047A
         for <linux-wireless@vger.kernel.org>; Sat, 11 Jun 2022 13:01:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=d6sTUbUivEtpfmRsj7vKeQSr/6AJc12qoqS7/p3P1AU=; b=kh2lnaVh39B1iZMU6TCQi1NSSG
-        TFVC5Z3jruBeVSkpBUMzfNVF1sAOWMU5+mKLjlkJky80j/5PMtDQsdtnEpntcnduN8lrG+9HM6Kdb
-        PSj2qqzZMI3ndt70BrXUAMu5A5RJioCNwL1x+limo1++rjcjFQ4WUCM4bN3P4KTM/2b8=;
+        bh=M/fMUxMVKjwCK2B4V6jFaSZCK0amiplNIXCxzgZDsnw=; b=YuFZR5xBCwMUvpA6dr+b39IqIr
+        uJ3Ii3KHaNRwcYcZnZ1SG+wGOBv8TouT2EUmqUTIgn3Q7phTib4TvPliyoyleFNnLObCVKhrBugSR
+        Sy0n4KSqlEJkUTh/H+L6h90Uu9SOUqRslifvcoeUQjDTU1JZ3oTGsekuvFeCTwa8qDqM=;
 Received: from p57a6f441.dip0.t-ipconnect.de ([87.166.244.65] helo=localhost.localdomain)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1o07IC-0006oU-MV; Sat, 11 Jun 2022 22:01:08 +0200
+        id 1o07ID-0006oU-Cv; Sat, 11 Jun 2022 22:01:09 +0200
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, toke@kernel.org
-Subject: [PATCH v2 1/4] mac80211: fix overflow issues in airtime fairness code
-Date:   Sat, 11 Jun 2022 22:01:03 +0200
-Message-Id: <20220611200106.34319-1-nbd@nbd.name>
+Subject: [PATCH v2 3/4] mac80211: fix ieee80211_txq_may_transmit regression
+Date:   Sat, 11 Jun 2022 22:01:05 +0200
+Message-Id: <20220611200106.34319-3-nbd@nbd.name>
 X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220611200106.34319-1-nbd@nbd.name>
+References: <20220611200106.34319-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The airtime weight calculation overflows with a default weight value of 256
-whenever more than 8ms worth of airtime is reported.
-Bigger weight values impose even smaller limits on maximum airtime values.
-This can mess up airtime based calculations for drivers that don't report
-per-PPDU airtime values, but batch up values instead.
+After switching to the virtual time based airtime scheduler, there were reports
+that ath10k with tx queueing in push-pull mode was experiencing significant
+latency for some stations.
+The reason for it is the fact that queues from which the ath10k firmware wants
+to pull are getting starved by airtime fairness constraints.
+Theoretically the same issue should have been there before the switch to virtual
+time, however it seems that in the old round-robin implementation it was simply
+looping until the requested txq was considered eligible, which led to it pretty
+much ignoring fairness constraints anyway.
 
-Fix this by reordering multiplications/shifts and by reducing unnecessary
-intermediate precision (which was lost in a later stage anyway).
+In order to fix the immediate regression, let's make bypassing airtime fairness
+explicit for now.
+Also update the documentation for ieee80211_txq_may_transmit, which was still
+referring to implementation details of the old round-robin scheduler
 
-The new shift value limits the maximum weight to 4096, which should be more
-than enough. Any values bigger than that will be rejected
-
+Fixes: 2433647bc8d9 ("mac80211: Switch to a virtual time-based airtime scheduler")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-v2: reject weight values >4096
- net/mac80211/cfg.c         |  3 +++
- net/mac80211/ieee80211_i.h | 41 +++++++++++---------------------------
- net/mac80211/sta_info.c    | 20 +++++++------------
- 3 files changed, 22 insertions(+), 42 deletions(-)
+ include/net/mac80211.h | 21 +++++----------------
+ net/mac80211/tx.c      | 17 +----------------
+ 2 files changed, 6 insertions(+), 32 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f7896f257e1b..fc0e1543bfc8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1619,6 +1619,9 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 	mask = params->sta_flags_mask;
- 	set = params->sta_flags_set;
- 
-+	if (params->airtime_weight > BIT(IEEE80211_RECIPROCAL_SHIFT_STA))
-+		return -EINVAL;
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		/*
- 		 * In mesh mode, ASSOCIATED isn't part of the nl80211
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 86ef0a46a68c..3bfe0d3e3439 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1677,50 +1677,33 @@ static inline struct airtime_info *to_airtime_info(struct ieee80211_txq *txq)
- /* To avoid divisions in the fast path, we keep pre-computed reciprocals for
-  * airtime weight calculations. There are two different weights to keep track
-  * of: The per-station weight and the sum of weights per phy.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d8c4d49bcc49..cb65abab8f36 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -6821,22 +6821,11 @@ void ieee80211_return_txq(struct ieee80211_hw *hw, struct ieee80211_txq *txq,
+ /**
+  * ieee80211_txq_may_transmit - check whether TXQ is allowed to transmit
+  *
+- * This function is used to check whether given txq is allowed to transmit by
+- * the airtime scheduler, and can be used by drivers to access the airtime
+- * fairness accounting without going using the scheduling order enfored by
+- * next_txq().
 - *
-- * For the per-station weights (kept in airtime_info below), we use 32-bit
-- * reciprocals with a devisor of 2^19. This lets us keep the multiplications and
-- * divisions for the station weights as 32-bit operations at the cost of a bit
-- * of rounding error for high weights; but the choice of divisor keeps rounding
-- * errors <10% for weights <2^15, assuming no more than 8ms of airtime is
-- * reported at a time.
+- * Returns %true if the airtime scheduler thinks the TXQ should be allowed to
+- * transmit, and %false if it should be throttled. This function can also have
+- * the side effect of rotating the TXQ in the scheduler rotation, which will
+- * eventually bring the deficit to positive and allow the station to transmit
+- * again.
 - *
-- * For the per-phy sum of weights the values can get higher, so we use 64-bit
-- * operations for those with a 32-bit divisor, which should avoid any
-- * significant rounding errors.
-+ * The per-sta shift value supports weight values of 1-4096
-  */
--#define IEEE80211_RECIPROCAL_DIVISOR_64 0x100000000ULL
--#define IEEE80211_RECIPROCAL_SHIFT_64 32
--#define IEEE80211_RECIPROCAL_DIVISOR_32 0x80000U
--#define IEEE80211_RECIPROCAL_SHIFT_32 19
-+#define IEEE80211_RECIPROCAL_SHIFT_SUM	24
-+#define IEEE80211_RECIPROCAL_SHIFT_STA	12
-+#define IEEE80211_WEIGHT_SHIFT		8
- 
--static inline void airtime_weight_set(struct airtime_info *air_info, u16 weight)
-+static inline void airtime_weight_set(struct airtime_info *air_info, u32 weight)
+- * The API ieee80211_txq_may_transmit() also ensures that TXQ list will be
+- * aligned against driver's own round-robin scheduler list. i.e it rotates
+- * the TXQ list till it makes the requested node becomes the first entry
+- * in TXQ list. Thus both the TXQ list and driver's list are in sync. If this
+- * function returns %true, the driver is expected to schedule packets
++ * Returns %true if there is remaining AQL budget for the tx queue and %false
++ * if it should be throttled. It will also mark the queue as active for the
++ * airtime scheduler.
++ *
++ * If this function returns %true, the driver is expected to schedule packets
+  * for transmission, and then return the TXQ through ieee80211_return_txq().
+  *
+  * @hw: pointer as obtained from ieee80211_alloc_hw()
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ecb3975680bc..f844e9ed4c14 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4099,15 +4099,13 @@ EXPORT_SYMBOL(ieee80211_txq_airtime_check);
+ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+ 				struct ieee80211_txq *txq)
  {
- 	if (air_info->weight == weight)
- 		return;
- 
- 	air_info->weight = weight;
--	if (weight) {
--		air_info->weight_reciprocal =
--			IEEE80211_RECIPROCAL_DIVISOR_32 / weight;
--	} else {
--		air_info->weight_reciprocal = 0;
--	}
-+	if (weight)
-+		weight = BIT(IEEE80211_RECIPROCAL_SHIFT_STA) / weight;
-+	air_info->weight_reciprocal = weight;
- }
- 
- static inline void airtime_weight_sum_set(struct airtime_sched_info *air_sched,
--					  int weight_sum)
-+					  u32 weight_sum)
- {
- 	if (air_sched->weight_sum == weight_sum)
- 		return;
- 
- 	air_sched->weight_sum = weight_sum;
--	if (air_sched->weight_sum) {
--		air_sched->weight_sum_reciprocal = IEEE80211_RECIPROCAL_DIVISOR_64;
--		do_div(air_sched->weight_sum_reciprocal, air_sched->weight_sum);
--	} else {
--		air_sched->weight_sum_reciprocal = 0;
--	}
-+	if (weight_sum)
-+		weight_sum = BIT(IEEE80211_RECIPROCAL_SHIFT_SUM) / weight_sum;
-+	air_sched->weight_sum_reciprocal = weight_sum;
- }
- 
- /* A problem when trying to enforce airtime fairness is that we want to divide
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index e04a0905e941..2f1cf9d4e68d 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1906,9 +1906,9 @@ void ieee80211_register_airtime(struct ieee80211_txq *txq,
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->vif);
- 	struct ieee80211_local *local = sdata->local;
--	u64 weight_sum, weight_sum_reciprocal;
+-	struct txq_info *first_txqi = NULL, *txqi = to_txq_info(txq);
+ 	struct ieee80211_local *local = hw_to_local(hw);
++	struct txq_info *txqi = to_txq_info(txq);
  	struct airtime_sched_info *air_sched;
  	struct airtime_info *air_info;
-+	u64 weight_sum_reciprocal;
- 	u32 airtime = 0;
+-	struct rb_node *node = NULL;
+ 	bool ret = false;
+ 	u64 now;
  
- 	air_sched = &local->airtime[txq->ac];
-@@ -1919,27 +1919,21 @@ void ieee80211_register_airtime(struct ieee80211_txq *txq,
- 	if (local->airtime_flags & AIRTIME_USE_RX)
- 		airtime += rx_airtime;
- 
--	/* Weights scale so the unit weight is 256 */
--	airtime <<= 8;
 -
- 	spin_lock_bh(&air_sched->lock);
+ 	if (!ieee80211_txq_airtime_check(hw, txq))
+ 		return false;
  
- 	air_info->tx_airtime += tx_airtime;
- 	air_info->rx_airtime += rx_airtime;
+@@ -4119,19 +4117,6 @@ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
  
--	if (air_sched->weight_sum) {
--		weight_sum = air_sched->weight_sum;
-+	if (air_sched->weight_sum)
- 		weight_sum_reciprocal = air_sched->weight_sum_reciprocal;
--	} else {
--		weight_sum = air_info->weight;
-+	else
- 		weight_sum_reciprocal = air_info->weight_reciprocal;
+ 	now = ktime_get_coarse_boottime_ns();
+ 
+-	/* Like in ieee80211_next_txq(), make sure the first station in the
+-	 * scheduling order is eligible for transmission to avoid starvation.
+-	 */
+-	node = rb_first_cached(&air_sched->active_txqs);
+-	if (node) {
+-		first_txqi = container_of(node, struct txq_info,
+-					  schedule_order);
+-		air_info = to_airtime_info(&first_txqi->txq);
+-
+-		if (air_sched->v_t < air_info->v_t)
+-			airtime_catchup_v_t(air_sched, air_info->v_t, now);
 -	}
- 
- 	/* Round the calculation of global vt */
--	air_sched->v_t += (u64)((airtime + (weight_sum >> 1)) *
--				weight_sum_reciprocal) >> IEEE80211_RECIPROCAL_SHIFT_64;
--	air_info->v_t += (u32)((airtime + (air_info->weight >> 1)) *
--			       air_info->weight_reciprocal) >> IEEE80211_RECIPROCAL_SHIFT_32;
-+	air_sched->v_t += ((u64)airtime * weight_sum_reciprocal) >>
-+			  (IEEE80211_RECIPROCAL_SHIFT_SUM - IEEE80211_WEIGHT_SHIFT);
-+	air_info->v_t += (airtime * air_info->weight_reciprocal) >>
-+			 (IEEE80211_RECIPROCAL_SHIFT_STA - IEEE80211_WEIGHT_SHIFT);
- 	ieee80211_resort_txq(&local->hw, txq);
- 
- 	spin_unlock_bh(&air_sched->lock);
+-
+ 	air_info = to_airtime_info(&txqi->txq);
+ 	if (air_info->v_t <= air_sched->v_t) {
+ 		air_sched->last_schedule_activity = now;
 -- 
 2.36.1
 
