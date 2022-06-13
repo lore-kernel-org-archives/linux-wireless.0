@@ -2,60 +2,60 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5D79C43334
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jun 2022 09:19:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5409BCCA47B
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jun 2022 09:19:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240716AbiFMJTi (ORCPT
+        id S239158AbiFMJTj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jun 2022 05:19:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60142 "EHLO
+        Mon, 13 Jun 2022 05:19:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240698AbiFMJTb (ORCPT
+        with ESMTP id S240680AbiFMJTb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 13 Jun 2022 05:19:31 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD92418E09
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2022 02:19:29 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id g25so9906651ejh.9
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2022 02:19:29 -0700 (PDT)
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD21F14D14
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2022 02:19:30 -0700 (PDT)
+Received: by mail-ed1-x52e.google.com with SMTP id d14so6208215eda.12
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2022 02:19:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:from:in-reply-to:references:date:message-id:subject:to
          :cc;
-        bh=DMDAVT8+jSFRKW4nLUODpSb57j4Ye9kohAIn+1/vORY=;
-        b=Rdeca3GpJHuL9E6SeY1SsscXBPbmfdFEE0zHgjWvolWdH8jvQyXZ6bibiaIEu9ET3L
-         8dixfWXrkndQLvYOXkq3o4J2BqvMK58UjaX1PrZxHMFVaqGlyhmlI6mE9kTFmEkvr6ER
-         oZzvwTBO1uzzm10A9UmHJD23pYi031Ex0lh8XmbBMFezp9goB989EjmHdDZtxLPXCi9f
-         EumNq1HqE+p5+TYLSw4pkvOh2kI6isUIevROMQvPl0NCfY4j4EY0swWxlx4PUZQpvG3p
-         BolklddVoieWHt0aXhK9JOHhkz+gX3eWQtnG+nrjCwuSmKNJhGVcuN8wOedVufcFEOIQ
-         V86A==
+        bh=OHBXs0DbY77ATKoHUGkTyqnhfdtuttsxGgPkMN1OQUc=;
+        b=SOpniUvrIwzr3EsUmruKb70w1NZ0wsgcN7oliL4cEsnv3MbBrSzVH724MpxdpLdFw3
+         9GZbrLFxEnFQ6pXRkdS4VNo06PN3MKwfAyZ0QOEMb4GkY8wvc+W91+wD4pUAZqEfW5IB
+         zsXZeJ5A34ALvS4ehJPUR8PEYMScXG7hjUOzEIdWGQR3VxzL7TVh1NksxM2ZLGD4Henn
+         9hegXMo1GOlDVvJ0+2is7eUzurudkA3+ZpYW5+TuB0PV+84+iXVj4Ri5mb4u+nHmILPu
+         BqADSvwtIObfDkE+T6RLeqPd34m3KfZCSw282bw3i2W47XW9w6h34iOI9TPs0tWaiLR0
+         1KNw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:from:in-reply-to:references:date
          :message-id:subject:to:cc;
-        bh=DMDAVT8+jSFRKW4nLUODpSb57j4Ye9kohAIn+1/vORY=;
-        b=SgUUmfBN2DXcD9k4qEE54aztr+C2SJDiexLKfsClsZUnN1EfNlZrdo5GQeidfazVxh
-         uN2+hwYd7gzU+6HejRrq0aJCU02di7IraYc+waX4RT2sO3uLGK1JLKYAnL/fMjEFiBd9
-         d/Fw+5QfIsHN4jlOp/ILtfnj7/0hNRHThf/brmpvxaHH12E9/aZcjIW0VgqMSVrQ9Hnk
-         WXSUKlQ4rsr+zAN3fwfKdRYDQ0pW3i1nybMqUQOmvmk/I5M928teKcvoMi7tnIgTfLZu
-         4t0USAURjX+JHxE515K+6v4AtTu2VkHJB9l35KqLecLaONgpCegD4Z8sWlrhk59xfLfb
-         IRAQ==
-X-Gm-Message-State: AOAM533ZIHKmgEUNfKGOkWpMtTUMOcvzjdBInWJl0a2j7gIheh2G+7VT
-        jWYvrbIXyM3zgrRVWtuwlo6rclF/mwoo36iSEYo=
-X-Google-Smtp-Source: ABdhPJxQx8fYGgnH78GRRoTaLEVs5OXnY3od6EJgAiLp2ElzXiR4PWfqr4qAuYsimHH8nJC9J//WsKg05LGBpVtwIGE=
+        bh=OHBXs0DbY77ATKoHUGkTyqnhfdtuttsxGgPkMN1OQUc=;
+        b=msGFhqP+NpsEuazGCfJxZlxIJ2mVlnVmpLoK2Le/pK78K7TTTuzmuqDJba4a60JXLc
+         ZOftU8eIGAdAsf8LUTaZzWU5251Vq6bRbskHklbiWr4m1MjzqkF3HSEcPYz+idlNuY0l
+         OBiSBqZ7Fxx6PyDMjWfiWkejmLVxaVSVMwySC8g6S6c+pSERJJyIeUErosjBl1hoJVYr
+         LTCPTUkC89oyZoFUnYYt6EVMQD4XCLlKTUhj/aOBuPtukfqw6s2qi3EOj6vJkUgoeS/N
+         hfDWGcbrrdO4zcoYy7tPuRxShqD9T8bf+fyU7VzCOOWoWHhiJxw+YNAzZqYNUXXqZnXw
+         0BWQ==
+X-Gm-Message-State: AOAM532+0n+rtxqpBsspgKw1LBrYu1HUFgmOjojb8b7tb8ILqKf622Aq
+        EAvv+ltZfCzBdelE6TppEmDdUk+yIfO6Oj34F0w=
+X-Google-Smtp-Source: ABdhPJx4xn566r0x4dkv4J/CjL0s+WbrGpg3vsHyoCzJ0+w/7ZHtuTqzWa+CaT3jqynibVoAP0DJ85FEWir3IWEOEC0=
 MIME-Version: 1.0
-X-Received: by 2002:a17:907:9704:b0:711:f441:dbe6 with SMTP id
- jg4-20020a170907970400b00711f441dbe6mr23579370ejc.26.1655111968495; Mon, 13
- Jun 2022 02:19:28 -0700 (PDT)
+X-Received: by 2002:a05:6402:1d51:b0:41f:cf6c:35a5 with SMTP id
+ dz17-20020a0564021d5100b0041fcf6c35a5mr64939661edb.25.1655111970315; Mon, 13
+ Jun 2022 02:19:30 -0700 (PDT)
 Received: from 35650733073 named unknown by gmailapi.google.com with HTTPREST;
- Mon, 13 Jun 2022 05:19:28 -0400
+ Mon, 13 Jun 2022 05:19:29 -0400
 From:   aspriel@gmail.com
 X-Mailer: git-send-email 2.12.2
 In-Reply-To: <20220613091915.18884-1-arend.vanspriel@broadcom.com>
 References: <20220613091915.18884-1-arend.vanspriel@broadcom.com>
-Date:   Mon, 13 Jun 2022 05:19:28 -0400
-Message-ID: <CAJ65rDwC3U1KSCR0G4s=11bkRAxp0b2Y8p0AFKP9BpgjQECEag@mail.gmail.com>
-Subject: [PATCH 5/7] brcmfmac: add support Broadcom BCA firmware api
+Date:   Mon, 13 Jun 2022 05:19:29 -0400
+Message-ID: <CAJ65rDwMzF8hhuykrikSdsPMgy4GhLkTUfqTfn-cbHwCL5OE2Q@mail.gmail.com>
+Subject: [PATCH 7/7] brcmfmac: introduce BRCMFMAC exported symbols namespace
 To:     Kalle Valo <kvalo@kernel.org>, arend.vanspriel@broadcom.com
 Cc:     linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
@@ -63,282 +63,103 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Broadcom BCA division develops its own firmware api and as such will
-likely diverge over time. Add support for handling this.
+Instead of using EXPORT_SYMBOL() use namespace variant and only if
+build vendor-specific code as separate module.
 
 Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
 Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
 Reviewed-by: Franky Lin <franky.lin@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../broadcom/brcm80211/brcmfmac/Kconfig       |  7 +++
- .../broadcom/brcm80211/brcmfmac/Makefile      |  2 +
- .../broadcom/brcm80211/brcmfmac/bca/Makefile  | 12 +++++
- .../broadcom/brcm80211/brcmfmac/bca/core.c    | 27 ++++++++++
- .../broadcom/brcm80211/brcmfmac/bca/module.c  | 26 ++++++++++
- .../broadcom/brcm80211/brcmfmac/bca/vops.h    | 15 ++++++
- .../broadcom/brcm80211/brcmfmac/bus.h         |  1 +
- .../broadcom/brcm80211/brcmfmac/fwvid.c       |  2 +
- .../broadcom/brcm80211/brcmfmac/pcie.c        | 52 +++++++++----------
- 9 files changed, 118 insertions(+), 26 deletions(-)
- create mode 100644
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/Makefile
- create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c
- create mode 100644
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/module.c
- create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/vops.h
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bca/module.c   | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h     | 6 ++++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cyw/module.c   | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.c    | 4 ++--
+ .../net/wireless/broadcom/brcm80211/brcmfmac/wcc/module.c   | 1 +
+ 5 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Kconfig
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Kconfig
-index 60b6e218306b..19c7d88766bb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Kconfig
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Kconfig
-@@ -31,6 +31,13 @@ config BRCMFMAC_VENDOR_CYW
-           This option will allow the driver to communicate with devices
-           shipped by Cypress.
-
-+config BRCMFMAC_VENDOR_BCA
-+	bool "Broadcom BCA"
-+	depends on BRCMFMAC
-+	help
-+	  This option will allow the driver to communicate with devices
-+	  shipped by Broadcom BCA division.
-+
- config BRCMFMAC_PROTO_BCDC
- 	bool
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-index 1c481477c28a..a403c5cde618 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-@@ -52,7 +52,9 @@ brcmfmac-$(CONFIG_DMI) += \
- ifeq ($(CONFIG_BRCMFMAC_VENDOR_MODULES),)
- brcmfmac-$(CONFIG_BRCMFMAC_VENDOR_WCC) += wcc/core.o
- brcmfmac-$(CONFIG_BRCMFMAC_VENDOR_CYW) += cyw/core.o
-+brcmfmac-$(CONFIG_BRCMFMAC_VENDOR_BCA) += bca/core.o
- else
- obj-$(CONFIG_BRCMFMAC_VENDOR_WCC) += wcc/
- obj-$(CONFIG_BRCMFMAC_VENDOR_CYW) += cyw/
-+obj-$(CONFIG_BRCMFMAC_VENDOR_BCA) += bca/
- endif
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/Makefile
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/Makefile
-new file mode 100644
-index 000000000000..46098705e236
---- /dev/null
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/Makefile
-@@ -0,0 +1,12 @@
-+# SPDX-License-Identifier: ISC
-+#
-+# Copyright (c) 2022 Broadcom Corporation
-+
-+ccflags-y += \
-+	-I $(srctree)/$(src) \
-+	-I $(srctree)/$(src)/.. \
-+	-I $(srctree)/$(src)/../../include
-+
-+obj-m += brcmfmac-bca.o
-+brcmfmac-bca-objs += \
-+		core.o module.o
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c
-new file mode 100644
-index 000000000000..ac3a36fa3640
---- /dev/null
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c
-@@ -0,0 +1,27 @@
-+// SPDX-License-Identifier: ISC
-+/*
-+ * Copyright (c) 2022 Broadcom Corporation
-+ */
-+#include <linux/errno.h>
-+#include <linux/types.h>
-+#include <core.h>
-+#include <bus.h>
-+#include <fwvid.h>
-+
-+#include "vops.h"
-+
-+static int brcmf_bca_attach(struct brcmf_pub *drvr)
-+{
-+	pr_err("%s: executing\n", __func__);
-+	return 0;
-+}
-+
-+static void brcmf_bca_detach(struct brcmf_pub *drvr)
-+{
-+	pr_err("%s: executing\n", __func__);
-+}
-+
-+const struct brcmf_fwvid_ops brcmf_bca_ops = {
-+	.attach = brcmf_bca_attach,
-+	.detach = brcmf_bca_detach,
-+};
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/module.c
 b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/module.c
-new file mode 100644
-index 000000000000..790116a735c7
---- /dev/null
+index 790116a735c7..d55f3271d619 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/module.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/module.c
-@@ -0,0 +1,26 @@
-+// SPDX-License-Identifier: ISC
-+/*
-+ * Copyright (c) 2022 Broadcom Corporation
-+ */
-+#include <linux/module.h>
-+#include <bus.h>
-+#include <core.h>
-+#include <fwvid.h>
-+
-+#include "vops.h"
-+
-+static int __init brcmf_bca_init(void)
-+{
-+	return brcmf_fwvid_register_vendor(BRCMF_FWVENDOR_BCA, THIS_MODULE,
-+					   &brcmf_bca_ops);
-+}
-+
-+static void __exit brcmf_bca_exit(void)
-+{
-+	brcmf_fwvid_unregister_vendor(BRCMF_FWVENDOR_BCA, THIS_MODULE);
-+}
-+
-+MODULE_LICENSE("Dual BSD/GPL");
-+
-+module_init(brcmf_bca_init);
-+module_exit(brcmf_bca_exit);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/vops.h
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/vops.h
-new file mode 100644
-index 000000000000..1df4c5f9b4f6
---- /dev/null
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/vops.h
-@@ -0,0 +1,15 @@
-+// SPDX-License-Identifier: ISC
-+/*
-+ * Copyright (c) 2022 Broadcom Corporation
-+ */
-+#ifndef _BRCMFMAC_BCA_VOPS_H
-+#define _BRCMFMAC_BCA_VOPS_H
-+
-+#ifdef CONFIG_BRCMFMAC_VENDOR_BCA
-+extern const struct brcmf_fwvid_ops brcmf_bca_ops;
-+#define BCA_VOPS	(&brcmf_bca_ops)
+@@ -21,6 +21,7 @@ static void __exit brcmf_bca_exit(void)
+ }
+
+ MODULE_LICENSE("Dual BSD/GPL");
++MODULE_IMPORT_NS(BRCMFMAC);
+
+ module_init(brcmf_bca_init);
+ module_exit(brcmf_bca_exit);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 5d627b8dbb50..8cafe59c089d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -13,6 +13,12 @@
+ #include <net/cfg80211.h>
+ #include "fweh.h"
+
++#if IS_ENABLED(CONFIG_BRCMFMAC_VENDOR_MODULES)
++#define BRCMF_EXPORT_SYMBOL_GPL(__sym)	EXPORT_SYMBOL_NS_GPL(__sym, BRCMFMAC)
 +#else
-+#define BCA_VOPS	(NULL)
-+#endif /* CONFIG_BRCMFMAC_VENDOR_BCA */
++#define BRCMF_EXPORT_SYMBOL(__sym)
++#endif
 +
-+#endif /* _BRCMFMAC_BCA_VOPS_H */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index e114c65a75d7..c4a6dd2ec617 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -26,6 +26,7 @@
- enum brcmf_fwvendor {
- 	BRCMF_FWVENDOR_WCC,
- 	BRCMF_FWVENDOR_CYW,
-+	BRCMF_FWVENDOR_BCA,
- 	/* keep last */
- 	BRCMF_FWVENDOR_NUM,
- 	BRCMF_FWVENDOR_INVALID
+ #define TOE_TX_CSUM_OL		0x00000001
+ #define TOE_RX_CSUM_OL		0x00000002
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/module.c
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/module.c
+index 34294724a1f8..f82fbbe3ecef 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/module.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/module.c
+@@ -21,6 +21,7 @@ static void __exit brcmf_cyw_exit(void)
+ }
+
+ MODULE_LICENSE("Dual BSD/GPL");
++MODULE_IMPORT_NS(BRCMFMAC);
+
+ module_init(brcmf_cyw_init);
+ module_exit(brcmf_cyw_exit);
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.c
 b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.c
-index e6b8bbb99c88..919c60172e08 100644
+index d0ba2aba093b..be72203f4e0b 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwvid.c
-@@ -20,6 +20,7 @@
+@@ -112,7 +112,7 @@ int brcmf_fwvid_register_vendor(enum
+brcmf_fwvendor fwvid, struct module *vmod,
 
- #include "wcc/vops.h"
- #include "cyw/vops.h"
-+#include "bca/vops.h"
+ 	return 0;
+ }
+-EXPORT_SYMBOL(brcmf_fwvid_register_vendor);
++BRCMF_EXPORT_SYMBOL_GPL(brcmf_fwvid_register_vendor);
 
- struct brcmf_fwvid_entry {
- 	bool enabled;
-@@ -55,6 +56,7 @@ static DEFINE_MUTEX(fwvid_list_lock);
- static struct brcmf_fwvid_entry fwvid_list[BRCMF_FWVENDOR_NUM] = {
- 	FWVID_ENTRY_INIT(WCC, wcc),
- 	FWVID_ENTRY_INIT(CYW, cyw),
-+	FWVID_ENTRY_INIT(BCA, bca),
- };
+ int brcmf_fwvid_unregister_vendor(enum brcmf_fwvendor fwvid, struct
+module *mod)
+ {
+@@ -145,7 +145,7 @@ int brcmf_fwvid_unregister_vendor(enum
+brcmf_fwvendor fwvid, struct module *mod)
 
- #ifdef CONFIG_BRCMFMAC_VENDOR_MODULES
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 0599dad96018..68fd191aaae1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -2077,44 +2077,44 @@ static const struct dev_pm_ops brcmf_pciedrvr_pm = {
- #endif /* CONFIG_PM */
+ 	return 0;
+ }
+-EXPORT_SYMBOL(brcmf_fwvid_unregister_vendor);
++BRCMF_EXPORT_SYMBOL_GPL(brcmf_fwvid_unregister_vendor);
+ #else
+ static inline int brcmf_fwvid_request_module(enum brcmf_fwvendor fwvid)
+ {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/wcc/module.c
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/wcc/module.c
+index 23e3a4557880..02918d434556 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/wcc/module.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/wcc/module.c
+@@ -21,6 +21,7 @@ static void __exit brcmf_wcc_exit(void)
+ }
 
+ MODULE_LICENSE("Dual BSD/GPL");
++MODULE_IMPORT_NS(BRCMFMAC);
 
--#define BRCMF_PCIE_DEVICE(dev_id) \
-+#define BRCMF_PCIE_DEVICE(dev_id, fw_vend) \
- 	{ \
- 		BRCM_PCIE_VENDOR_ID_BROADCOM, (dev_id), \
- 		PCI_ANY_ID, PCI_ANY_ID, \
- 		PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, \
--		BRCMF_FWVENDOR_WCC \
-+		BRCMF_FWVENDOR_ ## fw_vend \
- 	}
--#define BRCMF_PCIE_DEVICE_SUB(dev_id, subvend, subdev) \
-+#define BRCMF_PCIE_DEVICE_SUB(dev_id, subvend, subdev, fw_vend) \
- 	{ \
- 		BRCM_PCIE_VENDOR_ID_BROADCOM, (dev_id), \
- 		(subvend), (subdev), \
- 		PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, \
--		BRCMF_FWVENDOR_WCC \
-+		BRCMF_FWVENDOR_ ## fw_vend \
- 	}
-
- static const struct pci_device_id brcmf_pcie_devid_table[] = {
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID),
--	BRCMF_PCIE_DEVICE_SUB(0x4355, BRCM_PCIE_VENDOR_ID_BROADCOM, 0x4355),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4354_RAW_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_RAW_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4358_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4359_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_2G_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_5G_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_RAW_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4364_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_2G_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_5G_DEVICE_ID),
--	BRCMF_PCIE_DEVICE_SUB(0x4365, BRCM_PCIE_VENDOR_ID_BROADCOM, 0x4365),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_2G_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_5G_DEVICE_ID),
--	BRCMF_PCIE_DEVICE(BRCM_PCIE_4371_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4350_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE_SUB(0x4355, BRCM_PCIE_VENDOR_ID_BROADCOM, 0x4355, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4354_RAW_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_RAW_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4358_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4359_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_2G_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_5G_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_RAW_DEVICE_ID, WCC),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4364_DEVICE_ID, BCA),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_DEVICE_ID, BCA),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_2G_DEVICE_ID, BCA),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4365_5G_DEVICE_ID, BCA),
-+	BRCMF_PCIE_DEVICE_SUB(0x4365, BRCM_PCIE_VENDOR_ID_BROADCOM, 0x4365, BCA),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_DEVICE_ID, BCA),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_2G_DEVICE_ID, BCA),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4366_5G_DEVICE_ID, BCA),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4371_DEVICE_ID, WCC),
- 	{ /* end: all zeroes */ }
- };
-
+ module_init(brcmf_wcc_init);
+ module_exit(brcmf_wcc_exit);
 -- 
 2.32.0
