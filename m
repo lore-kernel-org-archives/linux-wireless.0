@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7946EC433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jun 2022 02:15:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6A5CCA47B
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jun 2022 02:19:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353239AbiFNCPW (ORCPT
+        id S1352760AbiFNCTp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Jun 2022 22:15:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55864 "EHLO
+        Mon, 13 Jun 2022 22:19:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353597AbiFNCN4 (ORCPT
+        with ESMTP id S1353126AbiFNCQz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Jun 2022 22:13:56 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C45F3A1B9;
-        Mon, 13 Jun 2022 19:08:03 -0700 (PDT)
+        Mon, 13 Jun 2022 22:16:55 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 630F93E5EE;
+        Mon, 13 Jun 2022 19:09:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AEF960F2C;
-        Tue, 14 Jun 2022 02:07:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D33FC34114;
-        Tue, 14 Jun 2022 02:07:55 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B2666B816B9;
+        Tue, 14 Jun 2022 02:09:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31599C3411B;
+        Tue, 14 Jun 2022 02:09:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655172476;
-        bh=WVB2cZoIsM8ti2+D/PLRAPxWV297NPg1wTNvLUzUnTo=;
+        s=k20201202; t=1655172575;
+        bh=2aLdP/aNbtKqn9jTpTpT0xifj7OJXFEgTqbU/YlfGfc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NfUv1zLjONHOFD235F0DKloWVGVeX8JAGnD/gSIaV61DKxcnpErDleqTdRplZzq+z
-         pwPCPQ/Pc4WKLHsQd63PSGrrZ/JNuL0O7nGpUW/kduVLfJQ7sQDfNoCEmWGciKupVH
-         QiELKLQWrHVCJmP4b/H7G7/G9u1vz2TPzT7r/9CNtwVxtHGDj6H9VeJH9Vv0zuHnns
-         gnwnjjt7cLPMGYcmchTtvQGZkufAGhQueONReqPWep5167L33b1TirUEi2OqKHWPBT
-         ff5fpu02WIsUbmvntR1wifc6gccACOq4qO7jPNqwX6g1ZohImdmXFe5pKqAsILrujI
-         cL5k8RL0rbD4Q==
+        b=cHlEc0zCDYaZllJejuNQLDjcXrb0FMbZzXNtwmHsKzvWVjZY4bJMAFASsBIUDIPXE
+         2mgOwacYsOYNJMYyt8UeoTMVBAbotvPmGFmbs4hAhbV3saBMOA/d48QF6ZY2/0SSGn
+         VU6xhrZHhxbzkn7QQP48/YD+Y13oVItiBTrB28bq8YKT0aPrWQPpCsZfspgLjUrQZX
+         59wBfLw+oaSr2PsJkkHla7L8k1PHiph5CRW8UCVlHmNoHOG9AhEh77JDn8wduhEqxa
+         TfRTTBRSt2ZDklBAk2S5DTCyqA4CWagNUP/diaX3O6gyR9s1mFo6+UduyEFdcjOkbM
+         YNHKsgTOJ2vzw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Xiaohui Zhang <xiaohuizhang@ruc.edu.cn>,
@@ -41,12 +41,12 @@ Cc:     Xiaohui Zhang <xiaohuizhang@ruc.edu.cn>,
         Sasha Levin <sashal@kernel.org>, lauro.venancio@openbossa.org,
         aloisio.almeida@openbossa.org, sameo@linux.intel.com,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 29/41] nfc: nfcmrvl: Fix memory leak in nfcmrvl_play_deferred
-Date:   Mon, 13 Jun 2022 22:06:54 -0400
-Message-Id: <20220614020707.1099487-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 20/23] nfc: nfcmrvl: Fix memory leak in nfcmrvl_play_deferred
+Date:   Mon, 13 Jun 2022 22:08:56 -0400
+Message-Id: <20220614020900.1100401-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220614020707.1099487-1-sashal@kernel.org>
-References: <20220614020707.1099487-1-sashal@kernel.org>
+In-Reply-To: <20220614020900.1100401-1-sashal@kernel.org>
+References: <20220614020900.1100401-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -82,10 +82,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/nfc/nfcmrvl/usb.c b/drivers/nfc/nfcmrvl/usb.c
-index a99aedff795d..ea7309453096 100644
+index 888e298f610b..f26986eb53f1 100644
 --- a/drivers/nfc/nfcmrvl/usb.c
 +++ b/drivers/nfc/nfcmrvl/usb.c
-@@ -388,13 +388,25 @@ static void nfcmrvl_play_deferred(struct nfcmrvl_usb_drv_data *drv_data)
+@@ -401,13 +401,25 @@ static void nfcmrvl_play_deferred(struct nfcmrvl_usb_drv_data *drv_data)
  	int err;
  
  	while ((urb = usb_get_from_anchor(&drv_data->deferred))) {
