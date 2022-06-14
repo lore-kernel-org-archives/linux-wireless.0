@@ -2,65 +2,105 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19C4FCCA481
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jun 2022 10:59:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9BFC433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jun 2022 17:33:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242072AbiFNK7P (ORCPT
+        id S237974AbiFNRd6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Jun 2022 06:59:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51446 "EHLO
+        Tue, 14 Jun 2022 13:33:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234633AbiFNK64 (ORCPT
+        with ESMTP id S237389AbiFNRd5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Jun 2022 06:58:56 -0400
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46421286C1;
-        Tue, 14 Jun 2022 03:58:55 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1655204333; bh=3J3mVf8fkTb1aWQ9iHVwbsZZInuzpCUmrtDUqRR2EY4=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=gw0X/ikrjQzYjbApomAYSEz95DpMIHqaWENnafSB7pvMqyjIfcvaxBADDEnJ3awHn
-         qWPfr+QmNnV2xnPl8Z+MdBji4YMIWBp0MfERPWuEwRtNVPwoHKtflRnW5/Jas71YzJ
-         6Q1feIeHHJYMd9LeppeZoVrIhCXlCcKZfDRGyNqxtreBiVOCelaNM/tz6fv/IVT/7p
-         jPSO0L10RIAi0W4FXc2jMzqPX/zEBDI4sRmEQd/hBAZ7DqMQwxiDTpm5nDkv4o3VJF
-         OFFT8j4PdNF3TLTsAG0yIs0uOMhAvQRatyeinVFrEvPi4woIdu0d0fwwuYQrQCoetv
-         egjgHPtv86wTg==
-To:     Pavel Skripkin <paskripkin@gmail.com>, kvalo@kernel.org,
-        davem@davemloft.net, kuba@kernel.org
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Pavel Skripkin <paskripkin@gmail.com>,
-        Jeff Johnson <quic_jjohnson@quicinc.com>
-Subject: Re: [PATCH v6 2/2] ath9k: htc: clean up statistics macros
-In-Reply-To: <ebb2306d06a496cd1b032155ae52fdc5fa8cc2c5.1655145743.git.paskripkin@gmail.com>
-References: <d57bbedc857950659bfacac0ab48790c1eda00c8.1655145743.git.paskripkin@gmail.com>
- <ebb2306d06a496cd1b032155ae52fdc5fa8cc2c5.1655145743.git.paskripkin@gmail.com>
-Date:   Tue, 14 Jun 2022 12:58:53 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87letzzf2q.fsf@toke.dk>
+        Tue, 14 Jun 2022 13:33:57 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7481237C9
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2022 10:33:56 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id q12-20020a17090a304c00b001e2d4fb0eb4so12420386pjl.4
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2022 10:33:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:subject:message-id:mime-version:content-disposition;
+        bh=Fx7y7b5NG3L1DrwnfoPrqy653Ut41bmGlxWqY9ODEI0=;
+        b=jjiX2M85C4oZsHl2iw7FA+cFr3O+d5SgLOVedx3nFZlnuimQspuG52J1OwJYMorzEC
+         t4RziT41LNr+z4f8pI1XdHNHb6KwOquaBLh3QreB6q8mCc1IZanW7n6ljSsVBg0nKZMC
+         cp9i3wkff/bIjmETrG3c0E3XP7iMGB5mGhe9JVoNoH/Gp1GzBVhSTjqCEnFqIuvRlcp2
+         fsQknH032SJ4FgRMJ07/NfHP0TKSLzpayhGy8p3l4BcL+XeGF4QNjMFqgUi2MD2Lcwdk
+         q4YGJKLK+Y4JcddWTSNjzF7VYasp+JUqqiwJ/TyLd4+eZRSx+Drw8Av2NuUw7S0tpdMo
+         CFrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:subject:message-id:mime-version
+         :content-disposition;
+        bh=Fx7y7b5NG3L1DrwnfoPrqy653Ut41bmGlxWqY9ODEI0=;
+        b=xL+aXtq6BxtUDjG9TBxAaxwQlqA4JizjwZS+AfGqOpmM8gkZomR9wu8wIA0dPBtTRr
+         AxhcX7HVI3mPNL47lNyc8aLauoaQ+pPs1b2uZgqlZZQeDvkEG/nTZm/YyqNm4q4ag63N
+         khBb3GE1Ne8HMi6rV5PrvKxu02VlWbkOOOF+bQjjQU1Lxsd6jT18M59XwMuUYf+dHJsV
+         4dFTKkWrZvTK6QpyWS1SuHi3dyY4FJEH+Uak/CeOO0tb+ePzyvb1ZqgDaTWwTj8JAIJG
+         3k+M0w+Xo0ZzlWy6zGMARztmQdj4mMLwBy4PAF3492pE4tvNMU4C7AjT789ClBT4xUMV
+         EojQ==
+X-Gm-Message-State: AJIora/96cVbsLR0mrSlQPg7nL3NmjH/9EVN1FVs/i1PGAVlvVQlduBD
+        yOp3lwfaosNmm3YNivCm+YZoln5SOAKukw==
+X-Google-Smtp-Source: AGRyM1tkjbUAPUK8zTu8hTfFKRpYF2IsR5ekTx9DtS+Ew8+251fcdK6L9yHBG2vhVAPyRKpbwUyhVw==
+X-Received: by 2002:a17:90b:240e:b0:1e0:775b:f8fc with SMTP id nr14-20020a17090b240e00b001e0775bf8fcmr5712731pjb.132.1655228036244;
+        Tue, 14 Jun 2022 10:33:56 -0700 (PDT)
+Received: from ubuntu ([175.124.254.119])
+        by smtp.gmail.com with ESMTPSA id ja21-20020a170902efd500b0016632179ecfsm7468049plb.264.2022.06.14.10.33.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Jun 2022 10:33:55 -0700 (PDT)
+Date:   Tue, 14 Jun 2022 10:33:52 -0700
+From:   Hyunwoo Kim <imv4bel@gmail.com>
+To:     gregory.greenman@intel.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlwifi: pcie: Fixed integer overflow in
+ iwl_write_to_user_buf
+Message-ID: <20220614173352.GA588327@ubuntu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Pavel Skripkin <paskripkin@gmail.com> writes:
+An integer overflow occurs in the iwl_write_to_user_buf() function,
+   which is called by the iwl_dbgfs_monitor_data_read() function.
 
-> I've changed *STAT_* macros a bit in previous patch and I seems like
-> they become really unreadable. Align these macros definitions to make
-> code cleaner and fix folllowing checkpatch warning
->
-> ERROR: Macros with complex values should be enclosed in parentheses
->
-> Also, statistics macros now accept an hif_dev as argument, since
-> macros that depend on having a local variable with a magic name
-> don't abide by the coding style.
->
-> No functional change
->
-> Suggested-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-> Signed-off-by: Pavel Skripkin <paskripkin@gmail.com>
+static bool iwl_write_to_user_buf(char __user *user_buf, ssize_t count,
+				  void *buf, ssize_t *size,
+				  ssize_t *bytes_copied)
+{
+	int buf_size_left = count - *bytes_copied;
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+	buf_size_left = buf_size_left - (buf_size_left % sizeof(u32));
+	if (*size > buf_size_left)
+		*size = buf_size_left;
+
+If the user passes a SIZE_MAX value to the "ssize_t count" parameter,
+   the ssize_t count parameter is assigned to "int buf_size_left".
+Then compare "*size" with "buf_size_left" . Here, "buf_size_left" is a
+negative number, so "*size" is assigned "buf_size_left" and goes into
+the third argument of the copy_to_user function, causing a heap overflow.
+
+This is not a security vulnerability because iwl_dbgfs_monitor_data_read()
+is a debugfs operation with 0400 privileges.
+
+Signed-off-by: Hyunwoo Kim <imv4bel@gmail.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index bd50f52a1aad..fded5d305b11 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2854,7 +2854,7 @@ static bool iwl_write_to_user_buf(char __user *user_buf, ssize_t count,
+ 				  void *buf, ssize_t *size,
+ 				  ssize_t *bytes_copied)
+ {
+-	int buf_size_left = count - *bytes_copied;
++	ssize_t buf_size_left = count - *bytes_copied;
+ 
+ 	buf_size_left = buf_size_left - (buf_size_left % sizeof(u32));
+ 	if (*size > buf_size_left)
+-- 
+2.25.1
+
