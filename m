@@ -2,102 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F11C43334
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jun 2022 06:39:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C583C43334
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jun 2022 08:40:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379788AbiFQGjG (ORCPT
+        id S1380672AbiFQIkU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Jun 2022 02:39:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50612 "EHLO
+        Fri, 17 Jun 2022 04:40:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237248AbiFQGjE (ORCPT
+        with ESMTP id S1381174AbiFQIkL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Jun 2022 02:39:04 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C8C656F9E
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2022 23:39:03 -0700 (PDT)
-Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1o25d9-0005uy-Rs; Fri, 17 Jun 2022 08:38:55 +0200
-Message-ID: <28d2123f-65ce-f69c-12e1-f672b26225f4@leemhuis.info>
-Date:   Fri, 17 Jun 2022 08:38:55 +0200
+        Fri, 17 Jun 2022 04:40:11 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70C4369B5B
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2022 01:39:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+        References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=0Akty9E+4cwobC/kYyekXkzh/9JPXGz5SU1JwQ8OtfU=; b=nU3KQEiw7kM/xNShDAc8aV1N8q
+        i7Ait6136VZG9uLOfQsrrkYpMrmEJu3SuNho2GalR6AwRVxF2iWCsKeM7eCcvYwmFtPVp0VwuwpNh
+        0deOXzmvaTPElPbQr3BstPzQpQehD9aRjXfe3Ndo9c04e8q5U2kyX8TtOd/wKNu/tzpE=;
+Received: from p54ae95bf.dip0.t-ipconnect.de ([84.174.149.191] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1o27Vt-0004hM-WB; Fri, 17 Jun 2022 10:39:34 +0200
+Message-ID: <b7e3006a-03a9-fad6-3f57-10aed678f211@nbd.name>
+Date:   Fri, 17 Jun 2022 10:39:33 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: Bug 215635 - iwlwifi: Firmware crash with firmware 36.ca7b901d.0
- (8265-36.ucode)
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.10.0
+Subject: Re: [PATCH] mt76: mt7921: fix aggregation subframes setting to HE max
 Content-Language: en-US
-To:     Jakub Kicinski <kuba@kernel.org>, golan.ben.ami@intel.com,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Cc:     Udo Steinberg <udo@hypervisor.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-References: <915d6d66-4e42-8cbf-76bc-0f2f72d5e7d6@leemhuis.info>
- <20220616115808.141dec76@kernel.org>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <20220616115808.141dec76@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To:     Deren Wu <Deren.Wu@mediatek.com>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+        KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Eric Liang <Eric.Liang@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>
+References: <7f5145276d732cb4aebcbffd6fc4a5eb852dd3be.1655393246.git.deren.wu@mediatek.com>
+From:   Felix Fietkau <nbd@nbd.name>
+In-Reply-To: <7f5145276d732cb4aebcbffd6fc4a5eb852dd3be.1655393246.git.deren.wu@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1655447943;843236fb;
-X-HE-SMSGID: 1o25d9-0005uy-Rs
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-CCing Gregory, which became iwlwifi maintainer inbetween.
-
-On 16.06.22 20:58, Jakub Kicinski wrote:
-> On Mon, 14 Mar 2022 12:51:38 +0100 Thorsten Leemhuis wrote:
->> Hi, this is your Linux kernel regression tracker.
->>
->> I noticed a regression report in bugzilla.kernel.org that afaics isn't
->> properly handled, that's why I decided to forward it to the lists and a
->> few relevant people to the CC. To quote from
->> https://bugzilla.kernel.org/show_bug.cgi?id=215635 :
-
-BTW, Udo recently confirmed there that the issue still happens on 5.18.
-
->>> Seeing the following firmware crash frequently with
->>> firmware-version: 36.ca7b901d.0 8265-36.ucode
->>>
->>> [...]
->>>
->>> Afterwards iwlwifi is entirely unusable, i.e. the hardware does not recover.  
->>
->>> I have not been able to observe the problem with 5.15.x so far.
->>>
->>> The problem manifests either by Wi-Fi becoming entirely unresponsive (not even ping to gateway works anymore) or by producing a firmware crash.
->>>
->>> In response to #3, the problem was most recently observed as a firmware crash on Linux 5.16.13. HW is Intel Corporation Wireless 8265 / 8275 (rev 78) (Windstorm Peak) and firmware version 36.ca7b901d.0 8265-36.ucode.
->>>
->>> I'm attaching the dmesg output from 5.16.13 (with the TWT patch mentioned above applied) which includes a firmware crash.  
->>
->> Could somebody take a look into this? Or was this discussed somewhere
->> else already? Or even fixed?
+On 16.06.22 17:57, Deren Wu wrote:
+> From: Deren Wu <deren.wu@mediatek.com>
 > 
-> Any progress / outputs on this one? Folks are reporting it's still
-> happening on Fedora 36 w/ 5.17.13.
+> mt7921/mt7922 support HE max aggregation subframes 256 for both tx/rx.
+> Get better throughput then before.
+> 
+> Fixes: 94bb18b03d43 ("mt76: mt7921: fix max aggregation subframes setting")
+> Tested-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+> Reviewed-by: Sean Wang <sean.wang@mediatek.com>
+> Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+When I made the change that you're reverting here, I used the values 
+from the reference SDK that I got, and the change actually seemed to 
+improve performance in my tests.
+Did something change in the firmware, or is there a related chipset 
+difference between 7921 and 7922?
 
-Jakub, thx for bringing this up, I had "look  into this again" on my
-todo list for some time already. Out of interest: where where those reports?
-
-Besides the one the quoted mail is about
-(https://bugzilla.kernel.org/show_bug.cgi?id=215635 ) I'm aware of two
-other reports that look similar and might or might not be related (hard
-to tell without domain knowledge, I guess it might be just similar
-symptoms):
-
-https://bugzilla.kernel.org/show_bug.cgi?id=215697
-https://bugzilla.kernel.org/show_bug.cgi?id=215789
-
-Gregory, are you aware of these regressions? Is anyone working on them?
-Or is this faulty hw or something like that?
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
+- Felix
