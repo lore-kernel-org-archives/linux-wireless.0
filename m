@@ -2,42 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2849DC43334
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jun 2022 13:34:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EE78C43334
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jun 2022 13:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbiFUNeg (ORCPT
+        id S1350446AbiFUNei (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jun 2022 09:34:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55580 "EHLO
+        Tue, 21 Jun 2022 09:34:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351861AbiFUNdC (ORCPT
+        with ESMTP id S1351878AbiFUNdH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jun 2022 09:33:02 -0400
+        Tue, 21 Jun 2022 09:33:07 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99E4425C4C
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2022 06:29:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B85D25E9B
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2022 06:29:32 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25LDTEXD0005656, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (smtpsrv.realtek.com[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25LDTEXD0005656
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25LDTJHH0005916, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25LDTJHH0005916
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 21 Jun 2022 21:29:14 +0800
+        Tue, 21 Jun 2022 21:29:19 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 21 Jun 2022 21:29:14 +0800
+ 15.1.2375.28; Tue, 21 Jun 2022 21:29:19 +0800
 Received: from localhost (172.16.16.223) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Tue, 21 Jun
- 2022 21:29:11 +0800
+ 2022 21:29:18 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
 CC:     <gary.chang@realtek.com>, <phhuang@realtek.com>,
         <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 0/4] rtw88: use const pointer of chip_info and fix hw_scan misbehavior
-Date:   Tue, 21 Jun 2022 21:28:26 +0800
-Message-ID: <20220621132830.8913-1-pkshih@realtek.com>
+Subject: [PATCH v2 4/4] rtw88: phy: fix warning of possible buffer overflow
+Date:   Tue, 21 Jun 2022 21:28:30 +0800
+Message-ID: <20220621132830.8913-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220621132830.8913-1-pkshih@realtek.com>
+References: <20220621132830.8913-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -55,7 +57,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMjEgpFekyCAxMDozOTowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -63,35 +65,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Patch 1~3 is to fix hw_scan misbehavior, and the final patch is fix smatch
-warning.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-v2: shink patchset from 5 to 4 patches, because the first patch is based on
-    another patch that get merged into wireless.git. So, the patch is
-    postponed.
+reported by smatch
 
-Chih-Kang Chang (2):
-  rtw88: fix stopping queues in wrong timing when HW scan
-  rtw88: fix store OP channel info timing when HW scan
+phy.c:854 rtw_phy_linear_2_db() error: buffer overflow 'db_invert_table[i]'
+8 <= 8 (assuming for loop doesn't break)
 
-Po-Hao Huang (1):
-  rtw88: 8822c: extend supported probe request size
+However, it seems to be a false alarm because we prevent it originally via
+       if (linear >= db_invert_table[11][7])
+               return 96; /* maximum 96 dB */
 
-Zong-Zhe Yang (1):
-  rtw88: phy: fix warning of possible buffer overflow
+Still, we adjust the code to be more readable and avoid smatch warning.
 
- drivers/net/wireless/realtek/rtw88/fw.c       | 36 +++++++++++++++----
- drivers/net/wireless/realtek/rtw88/fw.h       | 19 +++++++++-
- drivers/net/wireless/realtek/rtw88/mac80211.c |  5 ++-
- drivers/net/wireless/realtek/rtw88/main.c     | 21 ++++++++++-
- drivers/net/wireless/realtek/rtw88/main.h     |  4 ++-
- drivers/net/wireless/realtek/rtw88/phy.c      | 21 +++++------
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  3 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  3 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  3 +-
- 10 files changed, 90 insertions(+), 28 deletions(-)
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/phy.c | 21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 8982e0c98dac9..da1efec0aa85c 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -816,23 +816,18 @@ static u8 rtw_phy_linear_2_db(u64 linear)
+ 	u8 j;
+ 	u32 dB;
+ 
+-	if (linear >= db_invert_table[11][7])
+-		return 96; /* maximum 96 dB */
+-
+ 	for (i = 0; i < 12; i++) {
+-		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][7])
+-			break;
+-		else if (i > 2 && linear <= db_invert_table[i][7])
+-			break;
++		for (j = 0; j < 8; j++) {
++			if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
++				goto cnt;
++			else if (i > 2 && linear <= db_invert_table[i][j])
++				goto cnt;
++		}
+ 	}
+ 
+-	for (j = 0; j < 8; j++) {
+-		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
+-			break;
+-		else if (i > 2 && linear <= db_invert_table[i][j])
+-			break;
+-	}
++	return 96; /* maximum 96 dB */
+ 
++cnt:
+ 	if (j == 0 && i == 0)
+ 		goto end;
+ 
 -- 
 2.25.1
 
