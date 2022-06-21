@@ -2,44 +2,42 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A799CCA473
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jun 2022 13:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2849DC43334
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jun 2022 13:34:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232138AbiFUNef (ORCPT
+        id S229498AbiFUNeg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jun 2022 09:34:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55606 "EHLO
+        Tue, 21 Jun 2022 09:34:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351873AbiFUNdH (ORCPT
+        with ESMTP id S1351861AbiFUNdC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jun 2022 09:33:07 -0400
+        Tue, 21 Jun 2022 09:33:02 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3183125C60
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2022 06:29:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99E4425C4C
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2022 06:29:28 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25LDTHvdC005787, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (mapi.realtek.com[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25LDTHvdC005787
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25LDTEXD0005656, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (smtpsrv.realtek.com[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25LDTEXD0005656
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 21 Jun 2022 21:29:17 +0800
+        Tue, 21 Jun 2022 21:29:14 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 21 Jun 2022 21:29:16 +0800
+ 15.1.2375.7; Tue, 21 Jun 2022 21:29:14 +0800
 Received: from localhost (172.16.16.223) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Tue, 21 Jun
- 2022 21:29:15 +0800
+ 2022 21:29:11 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
 CC:     <gary.chang@realtek.com>, <phhuang@realtek.com>,
         <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/4] rtw88: fix stopping queues in wrong timing when HW scan
-Date:   Tue, 21 Jun 2022 21:28:28 +0800
-Message-ID: <20220621132830.8913-3-pkshih@realtek.com>
+Subject: [PATCH v2 0/4] rtw88: use const pointer of chip_info and fix hw_scan misbehavior
+Date:   Tue, 21 Jun 2022 21:28:26 +0800
+Message-ID: <20220621132830.8913-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220621132830.8913-1-pkshih@realtek.com>
-References: <20220621132830.8913-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -65,38 +63,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chih-Kang Chang <gary.chang@realtek.com>
+Patch 1~3 is to fix hw_scan misbehavior, and the final patch is fix smatch
+warning.
 
-HW scan need to start queues after switch to OP channel, and stop queues
-before leaving op channel. However, in original code, driver will start
-queues after switch to OP channel, but stop queues until switch to OP
-channel next time, that will cause packets transmitted in wrong channel.
-So we fix the stop queues timing.
+v2: shink patchset from 5 to 4 patches, because the first patch is based on
+    another patch that get merged into wireless.git. So, the patch is
+    postponed.
 
-Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/fw.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+Chih-Kang Chang (2):
+  rtw88: fix stopping queues in wrong timing when HW scan
+  rtw88: fix store OP channel info timing when HW scan
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index efa51b2f53025..a644e2b617a14 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -2227,7 +2227,12 @@ void rtw_hw_scan_chan_switch(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 				chan_type = COEX_SWITCH_TO_24G_NOFORSCAN;
- 			rtw_coex_switchband_notify(rtwdev, chan_type);
- 		}
--		if (rtw_is_op_chan(rtwdev, chan))
-+		/* The channel of C2H RTW_SCAN_NOTIFY_ID_PRESWITCH is next
-+		 * channel that hardware will switch. We need to stop queue
-+		 * if next channel is non-op channel.
-+		 */
-+		if (!rtw_is_op_chan(rtwdev, chan) &&
-+		    rtw_is_op_chan(rtwdev, hal->current_channel))
- 			ieee80211_stop_queues(rtwdev->hw);
- 	}
- 
+Po-Hao Huang (1):
+  rtw88: 8822c: extend supported probe request size
+
+Zong-Zhe Yang (1):
+  rtw88: phy: fix warning of possible buffer overflow
+
+ drivers/net/wireless/realtek/rtw88/fw.c       | 36 +++++++++++++++----
+ drivers/net/wireless/realtek/rtw88/fw.h       | 19 +++++++++-
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  5 ++-
+ drivers/net/wireless/realtek/rtw88/main.c     | 21 ++++++++++-
+ drivers/net/wireless/realtek/rtw88/main.h     |  4 ++-
+ drivers/net/wireless/realtek/rtw88/phy.c      | 21 +++++------
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c |  3 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c |  3 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c |  3 +-
+ 10 files changed, 90 insertions(+), 28 deletions(-)
+
 -- 
 2.25.1
 
