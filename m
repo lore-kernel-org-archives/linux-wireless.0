@@ -2,81 +2,165 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1D48C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jun 2022 13:20:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9859BCCA473
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jun 2022 13:34:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351687AbiFUNT6 (ORCPT
+        id S232412AbiFUNe3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jun 2022 09:19:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43940 "EHLO
+        Tue, 21 Jun 2022 09:34:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351571AbiFUNTg (ORCPT
+        with ESMTP id S1351872AbiFUNdH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jun 2022 09:19:36 -0400
-Received: from mail-4323.proton.ch (mail-4323.proton.ch [185.70.43.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D77BA275DC
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2022 06:18:49 -0700 (PDT)
-Date:   Tue, 21 Jun 2022 13:18:33 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dannyvanheumen.nl;
-        s=protonmail2; t=1655817527; x=1656076727;
-        bh=+/i0606VmOQY03C5NCSYudMHML0SszctPgEJ4XpmawQ=;
-        h=Date:To:From:Cc:Reply-To:Subject:Message-ID:In-Reply-To:
-         References:Feedback-ID:From:To:Cc:Date:Subject:Reply-To:
-         Feedback-ID:Message-ID;
-        b=dmqSQa2UBpGV88Yg7/RwZr7vV2nFb0JM5kFAiA2EIi9+QeHF23DFewgL4fEM+I0cM
-         6sarq04Su/WcR61Sc06Z4W1JBm6lbikjKr+YDPQ4xWpCAwCbseckpnEQsk497yMiFI
-         2tAi8Cu6rx2PQm1h0R20P++W3dCKCxP6q2SAdR1+5ZtZ26TMQ2/uFtkuI+4CR1wZTk
-         rn4jNBI0B+/iRMHXQqZnYYQU+Hgi5EC/bJ1qc+/MzeU/oHMZeYDtXNdHtqADD9KThz
-         vGQnldVGpj+MhxAkVrlb4SL+uO9YCVbvTt8Zmwy3Q3SBozIO7zusyK37Hji4FVuOtD
-         Kb2g//cAtihPg==
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>
-From:   Danny van Heumen <danny@dannyvanheumen.nl>
-Cc:     Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-Reply-To: Danny van Heumen <danny@dannyvanheumen.nl>
-Subject: Re: [PATCH] work-in-progress: double-free after hardware reset due to firmware-crash
-Message-ID: <VJRRELjxfxQK1fFLbnYr2IZVHdPU-0YotbBIG2-ycUA2OCppqr4TrzsbXHC_wpS0ZA7HNLJxZNA6-Bzy0BOAuV16DR6wqT9TPDLjQwYcp7w=@dannyvanheumen.nl>
-In-Reply-To: <45d90d65-cd0e-e65f-edcf-d55802a4a6bd@broadcom.com>
-References: =?us-ascii?Q?<UXibAXk2GByhvw88A6LIDXHSlkP79-ML7FrtyfnHuiC34qUd-zx03BAJAtzluyEvfwPBR0tac4hC72zKI1qT3CtgmvvVohr1v8a49TqYVSw=3D@dannyvanheumen.nl>_<B08447EB-F222-49B5-A411-0DB6848A80ED@broadcom.com>_<EbyrCYK=5FmR6ppJYbSc5JfGGG=5FQZEZb2Zp8Htx9f-orZ=5FwX0Dpz1pXhDjQ9P1nGuyTH041zvsScaRIPllClzLpLgwVuff4ZTTAiVOXe5-Mwg=3D@dannyvanheumen.nl>_<1a116224-66ff-17b1-bb8b-9c0918dd47e4@broadcom.com>_<kB9OdQYlBnucF05VoKxTvsT8eUrPGJc=5Fwe9irAdR-2gmXsEl4NvkhMzDcTahLm3HLA2zKVXnhEOstESbIEcHGKYHvMOyIcr4vh80f0eJCJ0=3D@dannyvanheumen.nl>_<MV9-h4Mgj6FKxRJY93AQMhYFsz2yz0CoDQ70V8JWe742HUdLdl6Q1LbFTxGa-NCzodUmI3dbSoRGXebbE5rWPKKehHdixSTjW4TKZt10AJk=3D@dannyvanheumen.nl>_<1815e2011e8.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>_<PDYrcmiOE8drECietqr7SILEQI8DpX6gL8pbVCR6IbqNrKjyXTLYPhgsWfHL-s9FuElU5v84HUUWaFntR5RZJG5EBABE2XilCP=5F2O9ZipMk=3D@dannyvanheumen.nl>_<Ct5-sN=5FCGLyGf5qHNiakimNNG33Yb=5F7toxutmv8ELxgBqGZQXM6DkaIJg2cctTqSFyawKx8XeU3ySO2Ce6idBXv-ZWrT6Wy5=5Fa9nFr4svy4=3D@dannyvanheumen.nl>_<45d90d65-c?=
- =?us-ascii?Q?d0e-e65f-edcf-d55802a4a6bd@broadcom.com>?=
-Feedback-ID: 15073070:user:proton
+        Tue, 21 Jun 2022 09:33:07 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDE0E25C64
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2022 06:29:30 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25LDTIvgC005787, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (mapi.realtek.com[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25LDTIvgC005787
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Tue, 21 Jun 2022 21:29:18 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Tue, 21 Jun 2022 21:29:18 +0800
+Received: from localhost (172.16.16.223) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Tue, 21 Jun
+ 2022 21:29:17 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
+CC:     <gary.chang@realtek.com>, <phhuang@realtek.com>,
+        <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/4] rtw88: fix store OP channel info timing when HW scan
+Date:   Tue, 21 Jun 2022 21:28:29 +0800
+Message-ID: <20220621132830.8913-4-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220621132830.8913-1-pkshih@realtek.com>
+References: <20220621132830.8913-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.16.223]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/21/2022 13:06:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMjEgpFekyCAxMDozOTowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Arend,
+From: Chih-Kang Chang <gary.chang@realtek.com>
 
-------- Original Message -------
-On Tuesday, June 21st, 2022 at 09:41, Arend van Spriel <arend.vanspriel@bro=
-adcom.com> wrote:
+The original timing that store OP channel info is after associated.
+However, HW scan might happen before associated without backing to
+OP channel, that will cause authentication or association fail.
+Therefore, we modify the timing of storing OP channel info.
 
-> [..]
->
-> Maybe overlooked, but I have not seen a patch from you on the
-> linux-wireless list. Do you have reference, ie. URL or Message-ID?
+Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/fw.c       | 14 ++++++++++++--
+ drivers/net/wireless/realtek/rtw88/fw.h       |  1 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  5 ++++-
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
-I'm not sure what's most convenient here, but here's an archive link:
-https://marc.info/?l=3Dlinux-wireless&m=3D165547582612979
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index a644e2b617a14..5ad94022437ba 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -2087,7 +2087,7 @@ void rtw_hw_scan_complete(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 	rtw_core_scan_complete(rtwdev, vif, true);
+ 
+ 	rtwvif = (struct rtw_vif *)vif->drv_priv;
+-	if (rtwvif->net_type == RTW_NET_MGD_LINKED) {
++	if (chan) {
+ 		hal->current_channel = chan;
+ 		hal->current_band_type = chan > 14 ? RTW_BAND_5G : RTW_BAND_2G;
+ 	}
+@@ -2131,6 +2131,7 @@ int rtw_hw_scan_offload(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 			bool enable)
+ {
+ 	struct rtw_vif *rtwvif = vif ? (struct rtw_vif *)vif->drv_priv : NULL;
++	struct rtw_hw_scan_info *scan_info = &rtwdev->scan_info;
+ 	struct rtw_ch_switch_option cs_option = {0};
+ 	struct rtw_chan_list chan_list = {0};
+ 	int ret = 0;
+@@ -2139,7 +2140,7 @@ int rtw_hw_scan_offload(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		return -EINVAL;
+ 
+ 	cs_option.switch_en = enable;
+-	cs_option.back_op_en = rtwvif->net_type == RTW_NET_MGD_LINKED;
++	cs_option.back_op_en = scan_info->op_chan != 0;
+ 	if (enable) {
+ 		ret = rtw_hw_scan_prehandle(rtwdev, rtwvif, &chan_list);
+ 		if (ret)
+@@ -2188,6 +2189,15 @@ void rtw_store_op_chan(struct rtw_dev *rtwdev)
+ 	scan_info->op_pri_ch_idx = hal->current_primary_channel_index;
+ }
+ 
++void rtw_clear_op_chan(struct rtw_dev *rtwdev)
++{
++	struct rtw_hw_scan_info *scan_info = &rtwdev->scan_info;
++
++	scan_info->op_chan = 0;
++	scan_info->op_bw = 0;
++	scan_info->op_pri_ch_idx = 0;
++}
++
+ static bool rtw_is_op_chan(struct rtw_dev *rtwdev, u8 channel)
+ {
+ 	struct rtw_hw_scan_info *scan_info = &rtwdev->scan_info;
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
+index bd3b9318b2438..20c56e0312c1e 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.h
++++ b/drivers/net/wireless/realtek/rtw88/fw.h
+@@ -848,6 +848,7 @@ int rtw_fw_dump_fifo(struct rtw_dev *rtwdev, u8 fifo_sel, u32 addr, u32 size,
+ void rtw_fw_scan_notify(struct rtw_dev *rtwdev, bool start);
+ void rtw_fw_adaptivity(struct rtw_dev *rtwdev);
+ void rtw_store_op_chan(struct rtw_dev *rtwdev);
++void rtw_clear_op_chan(struct rtw_dev *rtwdev);
+ void rtw_hw_scan_start(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		       struct ieee80211_scan_request *req);
+ void rtw_hw_scan_complete(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index ba60ca7ecdbfc..e0fdb34217000 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -377,7 +377,6 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 			rtw_coex_media_status_notify(rtwdev, vif->cfg.assoc);
+ 			if (rtw_bf_support)
+ 				rtw_bf_assoc(rtwdev, vif, conf);
+-			rtw_store_op_chan(rtwdev);
+ 		} else {
+ 			rtw_leave_lps(rtwdev);
+ 			rtw_bf_disassoc(rtwdev, vif, conf);
+@@ -395,6 +394,10 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BSSID) {
+ 		ether_addr_copy(rtwvif->bssid, conf->bssid);
+ 		config |= PORT_SET_BSSID;
++		if (is_zero_ether_addr(rtwvif->bssid))
++			rtw_clear_op_chan(rtwdev);
++		else
++			rtw_store_op_chan(rtwdev);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BEACON_INT) {
+-- 
+2.25.1
 
-Message-ID: ThT2jwvySn9tFQm9FxrlPNMQkiGUnx_87cOhmmeexoVOFZqOkpjmAntCWG-
-kIBMj2830LHZaOULlJxQKiRXkVtGYrrT8rBaB7R65qjIinYo=3D () dannyvanheumen ! nl
-
-You haven't commented yet on my question regarding definition macro for the=
- clm_blob.
-I intend to send a patch for it, because I believe _at the very least_ some=
- parts of distribution
-processes rely on these firmware entries. It would be good if you can confi=
-rm.
-
-> Regards,
-> Arend
-
-Regards,
-Danny
