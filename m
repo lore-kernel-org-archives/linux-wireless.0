@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A82FCC43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Jun 2022 19:47:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8494ACCA47E
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Jun 2022 19:47:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376786AbiFVTrn (ORCPT
+        id S1376794AbiFVTro (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Jun 2022 15:47:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56536 "EHLO
+        Wed, 22 Jun 2022 15:47:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376741AbiFVTrb (ORCPT
+        with ESMTP id S1357349AbiFVTre (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Jun 2022 15:47:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 211F93FD96
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 12:47:30 -0700 (PDT)
+        Wed, 22 Jun 2022 15:47:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F152403E3
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 12:47:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AD00F612E6
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 19:47:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6A81C34114;
-        Wed, 22 Jun 2022 19:47:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 853D961756
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 19:47:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BB03C34114;
+        Wed, 22 Jun 2022 19:47:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655927249;
-        bh=ppVPYEWkycQxWB7pQSUyIzkCV+7utOIuXEiEZODCMuM=;
+        s=k20201202; t=1655927252;
+        bh=e3+xy0eM+FxbViBfuoQSh0QLB2bDBgPLckC53MobN7w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HDl1FJYH5W7aB0+gnSr0LTEYevhygANNqCmZ49La18oK+gdtMnEUDKULSHpPIdH6U
-         LgNE1DO5+RSOFFdMyDYEnZ1sOlnuJT6NRDwMKvk9dHE2GeA72OO9KJkpBpqKb2hFS8
-         lq1UxiJnSmEyT+teb3w6VSFkZoWd8ADj2myNpJrdh9DZ2LtNjnOmAnlxrs8kbiw3jC
-         zTEj6Z/abeOU5UHgmIKCnBvocBY/LPDshouRdxX2Nvk0E6qQOnom9zprbmeBouR6D2
-         2E9A5ZBiDYqIyaDDjhT8FthUxeCHV2lWwBAJCZdepSUpnox1X1bSLh5KwJ2PQCkhNA
-         v5toKioKuSIYA==
+        b=biGjt2yApGwdOkaw1NPSIDD3qT0E6xvpRPsZfl9aKV32m1jppYerzx9LBz9zvGOoB
+         bZh+FUx5+T3F/sIGLQ5hO+u8HMrj+HtsMslBvPXeaQQQt9VpKVN2jqKYiIoGnoR6In
+         hEtOPYxU9u3jlegN79g/IAaCY/KG6SY+wnrxS2htwAwIiHTNPwYN243Wo+y5nJx9yl
+         jYJjvOiaKe/wdz8IQuZLsBTMTNUQa2p3QDViB6nRodko0u7VUiOeRkj4S/Kc3H4Ih/
+         fH0T2sRNmFHridYx1WwA5uFDpOtjD4ItMkwauRmO7hRkX4QotIQ7nq9Kg/aydS4SQ7
+         xDUKcihnw40AA==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         sean.wang@mediatek.com, deren.wu@mediatek.com,
         ryder.lee@mediatek.com
-Subject: [PATCH v2 3/6] mt76: connac: move mt76_connac_tx_free in shared code
-Date:   Wed, 22 Jun 2022 21:46:53 +0200
-Message-Id: <57ce64c0fe5c006d8bcc84a6078cc14780aa7078.1655926989.git.lorenzo@kernel.org>
+Subject: [PATCH v2 5/6] mt76: connac: move mt76_connac_write_hw_txp in shared code
+Date:   Wed, 22 Jun 2022 21:46:55 +0200
+Message-Id: <74bed626f480df40f90758f83ba8130721a975a7.1655926989.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <cover.1655926989.git.lorenzo@kernel.org>
 References: <cover.1655926989.git.lorenzo@kernel.org>
@@ -50,134 +50,237 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mt76_connac_tx_free structure in mt76_connac module since it is
-shared by mt7615 and mt7921 drivers.
+Now we can move mt76_connac_write_hw_txp routine in mt76-connac module
+and reuse it in mt7921e and mt7615e driver.
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c     | 7 ++++---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.h     | 8 --------
- drivers/net/wireless/mediatek/mt76/mt76_connac.h    | 7 +++++++
- drivers/net/wireless/mediatek/mt76/mt7921/mac.h     | 8 --------
- drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c | 7 ++++---
- 5 files changed, 15 insertions(+), 22 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7615/mac.h   |  6 ---
+ .../wireless/mediatek/mt76/mt7615/pci_mac.c   | 40 +------------------
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |  8 ++++
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  | 39 ++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7921/mac.h   |  5 ---
+ .../wireless/mediatek/mt76/mt7921/pci_mac.c   | 33 +--------------
+ 6 files changed, 49 insertions(+), 82 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index de809cbf0733..06d17e07034d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1638,7 +1638,8 @@ mt7615_mac_tx_free_token(struct mt7615_dev *dev, u16 token)
- 
- static void mt7615_mac_tx_free(struct mt7615_dev *dev, void *data, int len)
- {
--	struct mt7615_tx_free *free = (struct mt7615_tx_free *)data;
-+	struct mt76_connac_tx_free *free = data;
-+	void *tx_token = data + sizeof(*free);
- 	void *end = data + len;
- 	u8 i, count;
- 
-@@ -1652,7 +1653,7 @@ static void mt7615_mac_tx_free(struct mt7615_dev *dev, void *data, int len)
- 
- 	count = le16_get_bits(free->ctrl, MT_TX_FREE_MSDU_ID_CNT);
- 	if (is_mt7615(&dev->mt76)) {
--		__le16 *token = &free->token[0];
-+		__le16 *token = tx_token;
- 
- 		if (WARN_ON_ONCE((void *)&token[count] > end))
- 			return;
-@@ -1660,7 +1661,7 @@ static void mt7615_mac_tx_free(struct mt7615_dev *dev, void *data, int len)
- 		for (i = 0; i < count; i++)
- 			mt7615_mac_tx_free_token(dev, le16_to_cpu(token[i]));
- 	} else {
--		__le32 *token = (__le32 *)&free->token[0];
-+		__le32 *token = tx_token;
- 
- 		if (WARN_ON_ONCE((void *)&token[count] > end))
- 			return;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.h b/drivers/net/wireless/mediatek/mt76/mt7615/mac.h
-index 310c187a1a29..6af15f2e0f5a 100644
+index 4cc805f0fea9..880c9f74a7f1 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.h
-@@ -252,14 +252,6 @@ enum tx_phy_bandwidth {
- /* mt7663 */
- #define MT_TXD_LEN_LAST			BIT(15)
+@@ -244,12 +244,6 @@ enum tx_phy_bandwidth {
+ #define MT_TX_RATE_MODE			GENMASK(8, 6)
+ #define MT_TX_RATE_IDX			GENMASK(5, 0)
  
--struct mt7615_tx_free {
--	__le16 rx_byte_cnt;
--	__le16 ctrl;
--	u8 txd_cnt;
--	u8 rsv[3];
--	__le16 token[];
--} __packed __aligned(4);
+-#define MT_TXD_LEN_MASK			GENMASK(11, 0)
+-#define MT_TXD_LEN_MSDU_LAST		BIT(14)
+-#define MT_TXD_LEN_AMSDU_LAST		BIT(15)
+-/* mt7663 */
+-#define MT_TXD_LEN_LAST			BIT(15)
 -
  #define MT_TX_FREE_MSDU_ID_CNT		GENMASK(6, 0)
  
  #define MT_TXS0_PID			GENMASK(31, 24)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
+index 9117012b9b1a..05b6669466ba 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
+@@ -14,44 +14,6 @@
+ #include "../dma.h"
+ #include "mac.h"
+ 
+-static void
+-mt7615_write_hw_txp(struct mt7615_dev *dev, struct mt76_tx_info *tx_info,
+-		    void *txp_ptr, u32 id)
+-{
+-	struct mt76_connac_hw_txp *txp = txp_ptr;
+-	struct mt76_connac_txp_ptr *ptr = &txp->ptr[0];
+-	int i, nbuf = tx_info->nbuf - 1;
+-	u32 last_mask;
+-
+-	tx_info->buf[0].len = MT_TXD_SIZE + sizeof(*txp);
+-	tx_info->nbuf = 1;
+-
+-	txp->msdu_id[0] = cpu_to_le16(id | MT_MSDU_ID_VALID);
+-
+-	if (is_mt7663(&dev->mt76))
+-		last_mask = MT_TXD_LEN_LAST;
+-	else
+-		last_mask = MT_TXD_LEN_AMSDU_LAST |
+-			    MT_TXD_LEN_MSDU_LAST;
+-
+-	for (i = 0; i < nbuf; i++) {
+-		u16 len = tx_info->buf[i + 1].len & MT_TXD_LEN_MASK;
+-		u32 addr = tx_info->buf[i + 1].addr;
+-
+-		if (i == nbuf - 1)
+-			len |= last_mask;
+-
+-		if (i & 1) {
+-			ptr->buf1 = cpu_to_le32(addr);
+-			ptr->len1 = cpu_to_le16(len);
+-			ptr++;
+-		} else {
+-			ptr->buf0 = cpu_to_le32(addr);
+-			ptr->len0 = cpu_to_le16(len);
+-		}
+-	}
+-}
+-
+ static void
+ mt7615_write_fw_txp(struct mt7615_dev *dev, struct mt76_tx_info *tx_info,
+ 		    void *txp_ptr, u32 id)
+@@ -141,7 +103,7 @@ int mt7615_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 	if (is_mt7615(&dev->mt76))
+ 		mt7615_write_fw_txp(dev, tx_info, txp, id);
+ 	else
+-		mt7615_write_hw_txp(dev, tx_info, txp, id);
++		mt76_connac_write_hw_txp(mdev, tx_info, txp, id);
+ 
+ 	tx_info->skb = DMA_DUMMY_DATA;
+ 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-index 4357fea1d79b..0ef10895fbf8 100644
+index da41ad6c87fe..9f4323de3a8b 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-@@ -136,6 +136,13 @@ struct mt76_connac_txp_common {
- 	};
- };
+@@ -29,6 +29,11 @@
  
-+struct mt76_connac_tx_free {
-+	__le16 rx_byte_cnt;
-+	__le16 ctrl;
-+	u8 txd_cnt;
-+	u8 rsv[3];
-+} __packed __aligned(4);
+ #define MT_MSDU_ID_VALID		BIT(15)
+ 
++#define MT_TXD_LEN_LAST			BIT(15)
++#define MT_TXD_LEN_MASK			GENMASK(11, 0)
++#define MT_TXD_LEN_MSDU_LAST		BIT(14)
++#define MT_TXD_LEN_AMSDU_LAST		BIT(15)
 +
- extern const struct wiphy_wowlan_support mt76_connac_wowlan_support;
+ enum {
+ 	CMD_CBW_20MHZ = IEEE80211_STA_RX_BW_20,
+ 	CMD_CBW_40MHZ = IEEE80211_STA_RX_BW_40,
+@@ -319,6 +324,9 @@ mt76_connac_mutex_release(struct mt76_dev *dev, struct mt76_connac_pm *pm)
+ 	mutex_unlock(&dev->mutex);
+ }
  
- static inline bool is_mt7922(struct mt76_dev *dev)
++void mt76_connac_write_hw_txp(struct mt76_dev *dev,
++			      struct mt76_tx_info *tx_info,
++			      void *txp_ptr, u32 id);
+ void mt76_connac_tx_complete_skb(struct mt76_dev *mdev,
+ 				 struct mt76_queue_entry *e);
+ void mt76_connac_pm_queue_skb(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+index 134daa9103a2..9bba5dcbe0c6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+@@ -152,6 +152,45 @@ void mt76_connac_tx_complete_skb(struct mt76_dev *mdev,
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_tx_complete_skb);
+ 
++void mt76_connac_write_hw_txp(struct mt76_dev *dev,
++			      struct mt76_tx_info *tx_info,
++			      void *txp_ptr, u32 id)
++{
++	struct mt76_connac_hw_txp *txp = txp_ptr;
++	struct mt76_connac_txp_ptr *ptr = &txp->ptr[0];
++	int i, nbuf = tx_info->nbuf - 1;
++	u32 last_mask;
++
++	tx_info->buf[0].len = MT_TXD_SIZE + sizeof(*txp);
++	tx_info->nbuf = 1;
++
++	txp->msdu_id[0] = cpu_to_le16(id | MT_MSDU_ID_VALID);
++
++	if (is_mt7663(dev) || is_mt7921(dev))
++		last_mask = MT_TXD_LEN_LAST;
++	else
++		last_mask = MT_TXD_LEN_AMSDU_LAST |
++			    MT_TXD_LEN_MSDU_LAST;
++
++	for (i = 0; i < nbuf; i++) {
++		u16 len = tx_info->buf[i + 1].len & MT_TXD_LEN_MASK;
++		u32 addr = tx_info->buf[i + 1].addr;
++
++		if (i == nbuf - 1)
++			len |= last_mask;
++
++		if (i & 1) {
++			ptr->buf1 = cpu_to_le32(addr);
++			ptr->len1 = cpu_to_le16(len);
++			ptr++;
++		} else {
++			ptr->buf0 = cpu_to_le32(addr);
++			ptr->len0 = cpu_to_le16(len);
++		}
++	}
++}
++EXPORT_SYMBOL_GPL(mt76_connac_write_hw_txp);
++
+ static u16
+ mt76_connac2_mac_tx_rate_val(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 			     bool beacon, bool mcast)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-index dc98d2c82988..26b1ec35cc2b 100644
+index a2e9e1bae859..b8cabeb796b9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.h
-@@ -42,14 +42,6 @@ enum tx_mcu_port_q_idx {
- 	MT_TX_MCU_PORT_RX_FWDL = 0x3e
- };
+@@ -52,11 +52,6 @@ enum tx_mcu_port_q_idx {
+ /* will support this field in further revision */
+ #define MT_TX_FREE_RATE			GENMASK(13, 0)
  
--struct mt7921_tx_free {
--	__le16 rx_byte_cnt;
--	__le16 ctrl;
--	u8 txd_cnt;
--	u8 rsv[3];
--	__le32 info[];
--} __packed __aligned(4);
+-#define MT_TXD_LEN_MASK			GENMASK(11, 0)
+-#define MT_TXD_LEN_MSDU_LAST		BIT(14)
+-#define MT_TXD_LEN_AMSDU_LAST		BIT(15)
+-#define MT_TXD_LEN_LAST			BIT(15)
 -
- #define MT_TX_FREE_MSDU_CNT		GENMASK(9, 0)
- #define MT_TX_FREE_WLAN_ID		GENMASK(23, 14)
- #define MT_TX_FREE_LATENCY		GENMASK(12, 0)
+ #define MT_WTBL_TXRX_CAP_RATE_OFFSET	7
+ #define MT_WTBL_TXRX_RATE_G2_HE		24
+ #define MT_WTBL_TXRX_RATE_G2		12
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
-index bf58dcf1b980..333390cb791b 100644
+index 75e5dc4e6f84..368f114dc60c 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
-@@ -150,7 +150,8 @@ mt7921_txwi_free(struct mt7921_dev *dev, struct mt76_txwi_cache *t,
- static void
- mt7921e_mac_tx_free(struct mt7921_dev *dev, void *data, int len)
- {
--	struct mt7921_tx_free *free = (struct mt7921_tx_free *)data;
-+	struct mt76_connac_tx_free *free = data;
-+	__le32 *tx_info = (__le32 *)(data + sizeof(*free));
- 	struct mt76_dev *mdev = &dev->mt76;
- 	struct mt76_txwi_cache *txwi;
- 	struct ieee80211_sta *sta = NULL;
-@@ -165,11 +166,11 @@ mt7921e_mac_tx_free(struct mt7921_dev *dev, void *data, int len)
- 	mt76_queue_tx_cleanup(dev, dev->mphy.q_tx[MT_TXQ_BE], false);
+@@ -5,37 +5,6 @@
+ #include "../dma.h"
+ #include "mac.h"
  
- 	count = le16_get_bits(free->ctrl, MT_TX_FREE_MSDU_CNT);
--	if (WARN_ON_ONCE((void *)&free->info[count] > end))
-+	if (WARN_ON_ONCE((void *)&tx_info[count] > end))
- 		return;
+-static void
+-mt7921_write_hw_txp(struct mt7921_dev *dev, struct mt76_tx_info *tx_info,
+-		    void *txp_ptr, u32 id)
+-{
+-	struct mt76_connac_hw_txp *txp = txp_ptr;
+-	struct mt76_connac_txp_ptr *ptr = &txp->ptr[0];
+-	int i, nbuf = tx_info->nbuf - 1;
+-
+-	tx_info->buf[0].len = MT_TXD_SIZE + sizeof(*txp);
+-	tx_info->nbuf = 1;
+-
+-	txp->msdu_id[0] = cpu_to_le16(id | MT_MSDU_ID_VALID);
+-
+-	for (i = 0; i < nbuf; i++) {
+-		u16 len = tx_info->buf[i + 1].len & MT_TXD_LEN_MASK;
+-		u32 addr = tx_info->buf[i + 1].addr;
+-
+-		if (i == nbuf - 1)
+-			len |= MT_TXD_LEN_LAST;
+-
+-		if (i & 1) {
+-			ptr->buf1 = cpu_to_le32(addr);
+-			ptr->len1 = cpu_to_le16(len);
+-			ptr++;
+-		} else {
+-			ptr->buf0 = cpu_to_le32(addr);
+-			ptr->len0 = cpu_to_le16(len);
+-		}
+-	}
+-}
+-
+ int mt7921e_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 			   enum mt76_txq_id qid, struct mt76_wcid *wcid,
+ 			   struct ieee80211_sta *sta,
+@@ -77,7 +46,7 @@ int mt7921e_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
  
- 	for (i = 0; i < count; i++) {
--		u32 msdu, info = le32_to_cpu(free->info[i]);
-+		u32 msdu, info = le32_to_cpu(tx_info[i]);
- 		u8 stat;
+ 	txp = (struct mt76_connac_hw_txp *)(txwi + MT_TXD_SIZE);
+ 	memset(txp, 0, sizeof(struct mt76_connac_hw_txp));
+-	mt7921_write_hw_txp(dev, tx_info, txp, id);
++	mt76_connac_write_hw_txp(mdev, tx_info, txp, id);
  
- 		/* 1'b1: new wcid pair.
+ 	tx_info->skb = DMA_DUMMY_DATA;
+ 
 -- 
 2.36.1
 
