@@ -2,239 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB5CC433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 04:46:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDCE5C433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 05:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232727AbiFWEqV (ORCPT
+        id S229479AbiFWFMk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jun 2022 00:46:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45162 "EHLO
+        Thu, 23 Jun 2022 01:12:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243098AbiFWDri (ORCPT
+        with ESMTP id S229449AbiFWFMa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Jun 2022 23:47:38 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDF4C38D89
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 20:47:36 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25N3lUt85019184, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25N3lUt85019184
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 23 Jun 2022 11:47:30 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Thu, 23 Jun 2022 11:47:30 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Thu, 23 Jun
- 2022 11:47:29 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 08/13] rtw89: concentrate chandef setting to stack callback
-Date:   Thu, 23 Jun 2022 11:46:30 +0800
-Message-ID: <20220623034635.20964-9-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220623034635.20964-1-pkshih@realtek.com>
-References: <20220623034635.20964-1-pkshih@realtek.com>
+        Thu, 23 Jun 2022 01:12:30 -0400
+Received: from mail-yw1-x112d.google.com (mail-yw1-x112d.google.com [IPv6:2607:f8b0:4864:20::112d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7685738DB2;
+        Wed, 22 Jun 2022 22:08:26 -0700 (PDT)
+Received: by mail-yw1-x112d.google.com with SMTP id 00721157ae682-3177f4ce3e2so159537397b3.5;
+        Wed, 22 Jun 2022 22:08:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=KFYc2tDDZqXCL0SmmnI4Mn6DVjcGYX42TW6sDOVI8A8=;
+        b=Zvt2UAWJgToWveyx3vT8KnAc/j2vA1n8szAEn338MiQZbdq9wWljGQoVOfrk7b5QqV
+         FhAvZ4rK1o3ZOKMnaTuz+uvS6S/DRTrNcESIKhcrfFpduKY8VjurkP8yoUKvwSuFSq8W
+         eSK3iiRZxh7RZP2BsA6kgRFPCcV8OLRSkc2gqZWnTSpWoF6rOEzlt/TjZNtnqR4msJ5X
+         hEPBfI3tQbxkUdyo4+/r19Rd/8NEW6Ov/6QCcmfHp26EJYTcaOMSb7A4elZBQkTiT9+D
+         SCXV+SaXkFvdPQznRC4uFrSiDmRsVXf5tx4UQfKw4NaNr4YbqCIfEyoItXIRNh8lEL8c
+         6m+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=KFYc2tDDZqXCL0SmmnI4Mn6DVjcGYX42TW6sDOVI8A8=;
+        b=HpVF7p9jNe9khrCOrE064W1tr52tqf7n4AWFe40fCTcjuHkAay3ZdKtpieKPe3bArc
+         T0av1fliVYhYIetF2UuPdxQ1iDllc8seuTujlPfTSbrEAJ0A8ktdAtpN9h46QAOMRv6M
+         v5yWE8U0ZEQnrRMpX8HFDnpd33yD3DSFf0uxpt8Y3P4gfRKJBB1D286uskJV/2pzbklY
+         KB/uAATM1wkYrs0E4a0eUP93ap3y+qbcQkRj2Zy7ckd268CKo1pu+gFp2boz4tUNbYo3
+         XC2GTyIQg7+6Du4tm+3Qu2Jo6hqiXSWvMGDPNY2ChyG3cTbBXsq5CRFVO04roUbFCuwC
+         bwDA==
+X-Gm-Message-State: AJIora9Zefc4OzLI36pLXba3o07FWuif39kkIF0uWa1V7XemUsNNX+Qm
+        hyw4aGMeVb/HHnuofiaMaXgBDiUYfwxw7Wx6yG4=
+X-Google-Smtp-Source: AGRyM1tnTyMJxxHX8irg1vsAdnAx4HRqRtKlssmlqTB/j89jD8fwpq320OPIhN3Jmh9elyZ0DnujDXG6vj1HgbBA8Ck=
+X-Received: by 2002:a81:12d6:0:b0:314:6097:b272 with SMTP id
+ 205-20020a8112d6000000b003146097b272mr8637708yws.159.1655960905672; Wed, 22
+ Jun 2022 22:08:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 06/23/2022 03:30:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMjMgpFekyCAxMjo1MTowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+From:   Gregory Erwin <gregerwin256@gmail.com>
+Date:   Wed, 22 Jun 2022 22:08:15 -0700
+Message-ID: <CAO+Okf6ZJC5-nTE_EJUGQtd8JiCkiEHytGgDsFGTEjs0c00giw@mail.gmail.com>
+Subject: ath9k: hwrng blocks for several minutes when phy is un-associated
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Miaoqing Pan <miaoqing@codeaurora.org>,
+        Rui Salvaterra <rsalvaterra@gmail.com>
+Cc:     ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+Hello,
 
-Originally, we didn't support mac80211 chanctx, so it's expected that
-ieee80211_hw::conf::chandef would be filled by mac80211. And then, we
-could just query it whenever we need the current chandef.
+I bisected down to commit [fcd09c90c3c5] "ath9k: use hw_random API instead of
+directly dumping into random.c'' while investigating a long delay when entering
+suspend on kernels v5.18 onward. There are other reports of hangs or
+unresponsiveness at https://bugs.archlinux.org/task/75138 with some more info.
 
-However, we are planing to support mac80211 chanctx. After that, the
-above assumption would be broken. So, we adjust a bit ahead to reduce
-future works about mac80211 chanctx.
+AFAIKT, the issue is triggered by the ath9k hwrng when the interface is up,
+but not associated with any AP. In this state, 'dd if=/dev/hwrng' will block
+for up to 231 seconds before finally returning an input/output error. Similarly,
+I get a kernel log message "hwrng: no data available" every 231 seconds.
 
-After this, we don't query ieee80211_hw::conf::chandef directly, and
-we add a map, entity_map, to HAL to indicate which chandef came from
-stack. And it will later be used to recalcate entity mode.
+The hwrng will unblock when attempting to connect to an SSID that doesn't exist,
+but not when performing a scan, so I'm guessing AR_PHY_TST_ADC only produces new
+data when the phy is transmitting.
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/chan.c     | 20 +++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/chan.h     |  3 +++
- drivers/net/wireless/realtek/rtw89/core.c     | 14 +++++++------
- drivers/net/wireless/realtek/rtw89/core.h     | 12 +++++++++++
- drivers/net/wireless/realtek/rtw89/mac80211.c |  6 +++++-
- 5 files changed, 48 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
-index 0bf27a344d2b4..a9f0133f8089d 100644
---- a/drivers/net/wireless/realtek/rtw89/chan.c
-+++ b/drivers/net/wireless/realtek/rtw89/chan.c
-@@ -118,3 +118,23 @@ bool rtw89_assign_entity_chan(struct rtw89_dev *rtwdev,
- 	*chan = *new;
- 	return band_changed;
- }
-+
-+static void __rtw89_config_entity_chandef(struct rtw89_dev *rtwdev,
-+					  enum rtw89_sub_entity_idx idx,
-+					  const struct cfg80211_chan_def *chandef,
-+					  bool from_stack)
-+{
-+	struct rtw89_hal *hal = &rtwdev->hal;
-+
-+	hal->chandef[idx] = *chandef;
-+
-+	if (from_stack)
-+		set_bit(idx, hal->entity_map);
-+}
-+
-+void rtw89_config_entity_chandef(struct rtw89_dev *rtwdev,
-+				 enum rtw89_sub_entity_idx idx,
-+				 const struct cfg80211_chan_def *chandef)
-+{
-+	__rtw89_config_entity_chandef(rtwdev, idx, chandef, true);
-+}
-diff --git a/drivers/net/wireless/realtek/rtw89/chan.h b/drivers/net/wireless/realtek/rtw89/chan.h
-index d39311a3d5baf..b2022bb0afc6a 100644
---- a/drivers/net/wireless/realtek/rtw89/chan.h
-+++ b/drivers/net/wireless/realtek/rtw89/chan.h
-@@ -26,5 +26,8 @@ void rtw89_chan_create(struct rtw89_chan *chan, u8 center_chan, u8 primary_chan,
- bool rtw89_assign_entity_chan(struct rtw89_dev *rtwdev,
- 			      enum rtw89_sub_entity_idx idx,
- 			      const struct rtw89_chan *new);
-+void rtw89_config_entity_chandef(struct rtw89_dev *rtwdev,
-+				 enum rtw89_sub_entity_idx idx,
-+				 const struct cfg80211_chan_def *chandef);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index fb3943c6ee9e2..4c25fef476e01 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -225,7 +225,7 @@ static void rtw89_traffic_stats_accu(struct rtw89_dev *rtwdev,
- 	}
- }
- 
--static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
-+static void rtw89_get_channel_params(const struct cfg80211_chan_def *chandef,
- 				     struct rtw89_chan *chan)
- {
- 	struct ieee80211_channel *channel = chandef->chan;
-@@ -302,7 +302,8 @@ void rtw89_core_set_chip_txpwr(struct rtw89_dev *rtwdev)
- 
- void rtw89_set_channel(struct rtw89_dev *rtwdev)
- {
--	struct ieee80211_hw *hw = rtwdev->hw;
-+	const struct cfg80211_chan_def *chandef =
-+		rtw89_chandef_get(rtwdev, RTW89_SUB_ENTITY_0);
- 	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_chan chan;
- 	struct rtw89_channel_help_params bak;
-@@ -311,7 +312,7 @@ void rtw89_set_channel(struct rtw89_dev *rtwdev)
- 
- 	entity_active = rtw89_get_entity_state(rtwdev);
- 
--	rtw89_get_channel_params(&hw->conf.chandef, &chan);
-+	rtw89_get_channel_params(chandef, &chan);
- 	if (WARN(chan.channel == 0, "Invalid channel\n"))
- 		return;
- 
-@@ -1607,14 +1608,15 @@ static void rtw89_core_update_rx_status(struct rtw89_dev *rtwdev,
- 					struct rtw89_rx_desc_info *desc_info,
- 					struct ieee80211_rx_status *rx_status)
- {
--	struct ieee80211_hw *hw = rtwdev->hw;
-+	const struct cfg80211_chan_def *chandef =
-+		rtw89_chandef_get(rtwdev, RTW89_SUB_ENTITY_0);
- 	const struct rtw89_chan *cur = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
- 	u16 data_rate;
- 	u8 data_rate_mode;
- 
- 	/* currently using single PHY */
--	rx_status->freq = hw->conf.chandef.chan->center_freq;
--	rx_status->band = hw->conf.chandef.chan->band;
-+	rx_status->freq = chandef->chan->center_freq;
-+	rx_status->band = chandef->chan->band;
- 
- 	if (rtwdev->scanning &&
- 	    RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD, &rtwdev->fw)) {
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 7de9e228c6187..f8027b9a36a0c 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2634,6 +2634,9 @@ struct rtw89_hal {
- 	bool support_cckpd;
- 	bool support_igi;
- 
-+	DECLARE_BITMAP(entity_map, NUM_OF_RTW89_SUB_ENTITY);
-+	struct cfg80211_chan_def chandef[NUM_OF_RTW89_SUB_ENTITY];
-+
- 	bool entity_active;
- 
- 	struct rtw89_chan chan[NUM_OF_RTW89_SUB_ENTITY];
-@@ -3629,6 +3632,15 @@ void rtw89_chip_set_channel_done(struct rtw89_dev *rtwdev,
- 					    mac_idx, phy_idx);
- }
- 
-+static inline
-+const struct cfg80211_chan_def *rtw89_chandef_get(struct rtw89_dev *rtwdev,
-+						  enum rtw89_sub_entity_idx idx)
-+{
-+	struct rtw89_hal *hal = &rtwdev->hal;
-+
-+	return &hal->chandef[idx];
-+}
-+
- static inline
- const struct rtw89_chan *rtw89_chan_get(struct rtw89_dev *rtwdev,
- 					enum rtw89_sub_entity_idx idx)
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index 95ff4bafe5424..2bfd570d7bd2e 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -3,6 +3,7 @@
-  */
- 
- #include "cam.h"
-+#include "chan.h"
- #include "coex.h"
- #include "debug.h"
- #include "fw.h"
-@@ -85,8 +86,11 @@ static int rtw89_ops_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
-+	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+		rtw89_config_entity_chandef(rtwdev, RTW89_SUB_ENTITY_0,
-+					    &hw->conf.chandef);
- 		rtw89_set_channel(rtwdev);
-+	}
- 
- 	if ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
- 	    (hw->conf.flags & IEEE80211_CONF_IDLE))
--- 
-2.25.1
-
+Admittedly, I don't actually know if this blocking behavior is
+expected or not, but it certainly seems undesirable.
