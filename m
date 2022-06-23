@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97044CCA47C
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 04:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B30C43334
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 04:45:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232515AbiFWEpe (ORCPT
+        id S232525AbiFWEpg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jun 2022 00:45:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45156 "EHLO
+        Thu, 23 Jun 2022 00:45:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239236AbiFWDrh (ORCPT
+        with ESMTP id S243128AbiFWDrl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Jun 2022 23:47:37 -0400
+        Wed, 22 Jun 2022 23:47:41 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85DB538DB0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 20:47:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 744CB38D8A
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 20:47:40 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25N3lR2d9019134, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25N3lR2d9019134
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25N3lYPo9019224, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25N3lYPo9019224
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 23 Jun 2022 11:47:27 +0800
+        Thu, 23 Jun 2022 11:47:34 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Thu, 23 Jun 2022 11:47:27 +0800
+ 15.1.2375.7; Thu, 23 Jun 2022 11:47:34 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Thu, 23 Jun
- 2022 11:47:27 +0800
+ 2022 11:47:33 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 06/13] rtw89: rfk: concentrate parameter control while set_channel()
-Date:   Thu, 23 Jun 2022 11:46:28 +0800
-Message-ID: <20220623034635.20964-7-pkshih@realtek.com>
+Subject: [PATCH v2 11/13] rtw89: add skeleton of mac80211 chanctx ops support
+Date:   Thu, 23 Jun 2022 11:46:33 +0800
+Message-ID: <20220623034635.20964-12-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220623034635.20964-1-pkshih@realtek.com>
 References: <20220623034635.20964-1-pkshih@realtek.com>
@@ -56,7 +56,7 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMjMgpFekyCAxMjo1MTowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -66,97 +66,223 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-For future support on multiple channels, there will be settings of
-multiple sub-entities that we need to control. We don't want such
-settings to be scattered all over the place. So, we centrally manage
-controls of rtw89_phy_idx for RFK in set_channel().
+Support mac80211 chanctx series ops. Still, currently support
+single channel. Based on this premise, things should be similar
+to before. So, we haven't dealt with relationship between vif
+and chanctx in depth. Instead, we leave both ::assign_vif()
+and ::unassign_vif() as noops for now.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c     | 2 +-
- drivers/net/wireless/realtek/rtw89/core.h     | 8 +++++---
- drivers/net/wireless/realtek/rtw89/rtw8852a.c | 5 +++--
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 5 +++--
- 4 files changed, 12 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtw89/chan.c     | 55 +++++++++++++++
+ drivers/net/wireless/realtek/rtw89/chan.h     | 15 ++++
+ drivers/net/wireless/realtek/rtw89/core.c     |  1 +
+ drivers/net/wireless/realtek/rtw89/core.h     |  4 ++
+ drivers/net/wireless/realtek/rtw89/mac80211.c | 68 +++++++++++++++++++
+ 5 files changed, 143 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
+index 02d31f751d3e7..156a846363056 100644
+--- a/drivers/net/wireless/realtek/rtw89/chan.c
++++ b/drivers/net/wireless/realtek/rtw89/chan.c
+@@ -179,3 +179,58 @@ enum rtw89_entity_mode rtw89_entity_recalc(struct rtw89_dev *rtwdev)
+ 	rtw89_set_entity_mode(rtwdev, mode);
+ 	return mode;
+ }
++
++int rtw89_chanctx_ops_add(struct rtw89_dev *rtwdev,
++			  struct ieee80211_chanctx_conf *ctx)
++{
++	struct rtw89_hal *hal = &rtwdev->hal;
++	struct rtw89_chanctx_cfg *cfg = (struct rtw89_chanctx_cfg *)ctx->drv_priv;
++	u8 idx;
++
++	idx = find_first_zero_bit(hal->entity_map, NUM_OF_RTW89_SUB_ENTITY);
++	if (idx > RTW89_SUB_ENTITY_0)
++		return -ENOENT;
++
++	rtw89_config_entity_chandef(rtwdev, idx, &ctx->def);
++	rtw89_set_channel(rtwdev);
++	cfg->idx = idx;
++	return 0;
++}
++
++void rtw89_chanctx_ops_remove(struct rtw89_dev *rtwdev,
++			      struct ieee80211_chanctx_conf *ctx)
++{
++	struct rtw89_hal *hal = &rtwdev->hal;
++	struct rtw89_chanctx_cfg *cfg = (struct rtw89_chanctx_cfg *)ctx->drv_priv;
++
++	clear_bit(cfg->idx, hal->entity_map);
++	rtw89_set_channel(rtwdev);
++}
++
++void rtw89_chanctx_ops_change(struct rtw89_dev *rtwdev,
++			      struct ieee80211_chanctx_conf *ctx,
++			      u32 changed)
++{
++	struct rtw89_chanctx_cfg *cfg = (struct rtw89_chanctx_cfg *)ctx->drv_priv;
++	u8 idx = cfg->idx;
++
++	if (changed & IEEE80211_CHANCTX_CHANGE_WIDTH) {
++		rtw89_config_entity_chandef(rtwdev, idx, &ctx->def);
++		rtw89_set_channel(rtwdev);
++	}
++}
++
++int rtw89_chanctx_ops_assign_vif(struct rtw89_dev *rtwdev,
++				 struct rtw89_vif *rtwvif,
++				 unsigned int link_id,
++				 struct ieee80211_chanctx_conf *ctx)
++{
++	return 0;
++}
++
++void rtw89_chanctx_ops_unassign_vif(struct rtw89_dev *rtwdev,
++				    struct rtw89_vif *rtwvif,
++				    unsigned int link_id,
++				    struct ieee80211_chanctx_conf *ctx)
++{
++}
+diff --git a/drivers/net/wireless/realtek/rtw89/chan.h b/drivers/net/wireless/realtek/rtw89/chan.h
+index 6b2b5cc0d798b..d284009fdbcb2 100644
+--- a/drivers/net/wireless/realtek/rtw89/chan.h
++++ b/drivers/net/wireless/realtek/rtw89/chan.h
+@@ -47,5 +47,20 @@ void rtw89_config_entity_chandef(struct rtw89_dev *rtwdev,
+ 				 const struct cfg80211_chan_def *chandef);
+ void rtw89_entity_init(struct rtw89_dev *rtwdev);
+ enum rtw89_entity_mode rtw89_entity_recalc(struct rtw89_dev *rtwdev);
++int rtw89_chanctx_ops_add(struct rtw89_dev *rtwdev,
++			  struct ieee80211_chanctx_conf *ctx);
++void rtw89_chanctx_ops_remove(struct rtw89_dev *rtwdev,
++			      struct ieee80211_chanctx_conf *ctx);
++void rtw89_chanctx_ops_change(struct rtw89_dev *rtwdev,
++			      struct ieee80211_chanctx_conf *ctx,
++			      u32 changed);
++int rtw89_chanctx_ops_assign_vif(struct rtw89_dev *rtwdev,
++				 struct rtw89_vif *rtwvif,
++				 unsigned int link_id,
++				 struct ieee80211_chanctx_conf *ctx);
++void rtw89_chanctx_ops_unassign_vif(struct rtw89_dev *rtwdev,
++				    struct rtw89_vif *rtwvif,
++				    unsigned int link_id,
++				    struct ieee80211_chanctx_conf *ctx);
+ 
+ #endif
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index ebe1980b0aa08..05ec34d84a5e0 100644
+index dea4280039e6a..885ef1525868a 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -329,7 +329,7 @@ void rtw89_set_channel(struct rtw89_dev *rtwdev)
+@@ -3114,6 +3114,7 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
+ 	hw->vif_data_size = sizeof(struct rtw89_vif);
+ 	hw->sta_data_size = sizeof(struct rtw89_sta);
+ 	hw->txq_data_size = sizeof(struct rtw89_txq);
++	hw->chanctx_data_size = sizeof(struct rtw89_chanctx_cfg);
  
- 	if (!entity_active || band_changed) {
- 		rtw89_btc_ntfy_switch_band(rtwdev, RTW89_PHY_0, chan.band_type);
--		rtw89_chip_rfk_band_changed(rtwdev);
-+		rtw89_chip_rfk_band_changed(rtwdev, RTW89_PHY_0);
- 	}
- }
+ 	SET_IEEE80211_PERM_ADDR(hw, efuse->addr);
  
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 526a595882168..34efccd18b1f0 100644
+index 96af628d8d46e..26f1fc9561e04 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2123,7 +2123,8 @@ struct rtw89_chip_ops {
- 	void (*fem_setup)(struct rtw89_dev *rtwdev);
- 	void (*rfk_init)(struct rtw89_dev *rtwdev);
- 	void (*rfk_channel)(struct rtw89_dev *rtwdev);
--	void (*rfk_band_changed)(struct rtw89_dev *rtwdev);
-+	void (*rfk_band_changed)(struct rtw89_dev *rtwdev,
-+				 enum rtw89_phy_idx phy_idx);
- 	void (*rfk_scan)(struct rtw89_dev *rtwdev, bool start);
- 	void (*rfk_track)(struct rtw89_dev *rtwdev);
- 	void (*power_trim)(struct rtw89_dev *rtwdev);
-@@ -3665,12 +3666,13 @@ static inline void rtw89_chip_rfk_channel(struct rtw89_dev *rtwdev)
- 		chip->ops->rfk_channel(rtwdev);
+@@ -2623,6 +2623,10 @@ struct rtw89_sar_info {
+ 	};
+ };
+ 
++struct rtw89_chanctx_cfg {
++	enum rtw89_sub_entity_idx idx;
++};
++
+ enum rtw89_entity_mode {
+ 	RTW89_ENTITY_MODE_SCC,
+ };
+diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
+index 2bfd570d7bd2e..074c8c5400afc 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
+@@ -775,6 +775,69 @@ static void rtw89_ops_sta_rc_update(struct ieee80211_hw *hw,
+ 	rtw89_phy_ra_updata_sta(rtwdev, sta, changed);
  }
  
--static inline void rtw89_chip_rfk_band_changed(struct rtw89_dev *rtwdev)
-+static inline void rtw89_chip_rfk_band_changed(struct rtw89_dev *rtwdev,
-+					       enum rtw89_phy_idx phy_idx)
- {
- 	const struct rtw89_chip_info *chip = rtwdev->chip;
- 
- 	if (chip->ops->rfk_band_changed)
--		chip->ops->rfk_band_changed(rtwdev);
-+		chip->ops->rfk_band_changed(rtwdev, phy_idx);
- }
- 
- static inline void rtw89_chip_rfk_scan(struct rtw89_dev *rtwdev, bool start)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 06e2c8205eeda..3630c1801dcc4 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -1278,9 +1278,10 @@ static void rtw8852a_rfk_channel(struct rtw89_dev *rtwdev)
- 	rtw8852a_dpk(rtwdev, phy_idx);
- }
- 
--static void rtw8852a_rfk_band_changed(struct rtw89_dev *rtwdev)
-+static void rtw8852a_rfk_band_changed(struct rtw89_dev *rtwdev,
-+				      enum rtw89_phy_idx phy_idx)
- {
--	rtw8852a_tssi_scan(rtwdev, RTW89_PHY_0);
-+	rtw8852a_tssi_scan(rtwdev, phy_idx);
- }
- 
- static void rtw8852a_rfk_scan(struct rtw89_dev *rtwdev, bool start)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 1625089d83408..ab7eb6c0408e1 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -1851,9 +1851,10 @@ static void rtw8852c_rfk_channel(struct rtw89_dev *rtwdev)
- 	rtw89_fw_h2c_rf_ntfy_mcc(rtwdev);
- }
- 
--static void rtw8852c_rfk_band_changed(struct rtw89_dev *rtwdev)
-+static void rtw8852c_rfk_band_changed(struct rtw89_dev *rtwdev,
-+				      enum rtw89_phy_idx phy_idx)
- {
--	rtw8852c_tssi_scan(rtwdev, RTW89_PHY_0);
-+	rtw8852c_tssi_scan(rtwdev, phy_idx);
- }
- 
- static void rtw8852c_rfk_scan(struct rtw89_dev *rtwdev, bool start)
++static int rtw89_ops_add_chanctx(struct ieee80211_hw *hw,
++				 struct ieee80211_chanctx_conf *ctx)
++{
++	struct rtw89_dev *rtwdev = hw->priv;
++	int ret;
++
++	mutex_lock(&rtwdev->mutex);
++	ret = rtw89_chanctx_ops_add(rtwdev, ctx);
++	mutex_unlock(&rtwdev->mutex);
++
++	return ret;
++}
++
++static void rtw89_ops_remove_chanctx(struct ieee80211_hw *hw,
++				     struct ieee80211_chanctx_conf *ctx)
++{
++	struct rtw89_dev *rtwdev = hw->priv;
++
++	mutex_lock(&rtwdev->mutex);
++	rtw89_chanctx_ops_remove(rtwdev, ctx);
++	mutex_unlock(&rtwdev->mutex);
++}
++
++static void rtw89_ops_change_chanctx(struct ieee80211_hw *hw,
++				     struct ieee80211_chanctx_conf *ctx,
++				     u32 changed)
++{
++	struct rtw89_dev *rtwdev = hw->priv;
++
++	mutex_lock(&rtwdev->mutex);
++	rtw89_chanctx_ops_change(rtwdev, ctx, changed);
++	mutex_unlock(&rtwdev->mutex);
++}
++
++static int rtw89_ops_assign_vif_chanctx(struct ieee80211_hw *hw,
++					struct ieee80211_vif *vif,
++					unsigned int link_id,
++					struct ieee80211_chanctx_conf *ctx)
++{
++	struct rtw89_dev *rtwdev = hw->priv;
++	struct rtw89_vif *rtwvif = (struct rtw89_vif *)vif->drv_priv;
++	int ret;
++
++	mutex_lock(&rtwdev->mutex);
++	ret = rtw89_chanctx_ops_assign_vif(rtwdev, rtwvif, link_id, ctx);
++	mutex_unlock(&rtwdev->mutex);
++
++	return ret;
++}
++
++static void rtw89_ops_unassign_vif_chanctx(struct ieee80211_hw *hw,
++					   struct ieee80211_vif *vif,
++					   unsigned int link_id,
++					   struct ieee80211_chanctx_conf *ctx)
++{
++	struct rtw89_dev *rtwdev = hw->priv;
++	struct rtw89_vif *rtwvif = (struct rtw89_vif *)vif->drv_priv;
++
++	mutex_lock(&rtwdev->mutex);
++	rtw89_chanctx_ops_unassign_vif(rtwdev, rtwvif, link_id, ctx);
++	mutex_unlock(&rtwdev->mutex);
++}
++
+ const struct ieee80211_ops rtw89_ops = {
+ 	.tx			= rtw89_ops_tx,
+ 	.wake_tx_queue		= rtw89_ops_wake_tx_queue,
+@@ -803,6 +866,11 @@ const struct ieee80211_ops rtw89_ops = {
+ 	.reconfig_complete	= rtw89_ops_reconfig_complete,
+ 	.hw_scan		= rtw89_ops_hw_scan,
+ 	.cancel_hw_scan		= rtw89_ops_cancel_hw_scan,
++	.add_chanctx		= rtw89_ops_add_chanctx,
++	.remove_chanctx		= rtw89_ops_remove_chanctx,
++	.change_chanctx		= rtw89_ops_change_chanctx,
++	.assign_vif_chanctx	= rtw89_ops_assign_vif_chanctx,
++	.unassign_vif_chanctx	= rtw89_ops_unassign_vif_chanctx,
+ 	.set_sar_specs		= rtw89_ops_set_sar_specs,
+ 	.sta_rc_update		= rtw89_ops_sta_rc_update,
+ };
 -- 
 2.25.1
 
