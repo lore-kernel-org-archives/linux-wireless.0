@@ -2,111 +2,297 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAFE4C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 00:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E01AEC433EF
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 04:45:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1359771AbiFWAfj (ORCPT
+        id S232471AbiFWEp3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Jun 2022 20:35:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50786 "EHLO
+        Thu, 23 Jun 2022 00:45:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1359642AbiFWAfi (ORCPT
+        with ESMTP id S243117AbiFWDrk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Jun 2022 20:35:38 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29E4539829
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 17:35:38 -0700 (PDT)
-X-UUID: 18901446cc514ee0b7f521dbdc258dd5-20220623
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.6,REQID:0ce1e10d-28d3-4c8e-b1d3-d028a049946e,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:5
-X-CID-META: VersionHash:b14ad71,CLOUDID:5aa13638-5e4b-44d7-80b2-bb618cb09d29,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 18901446cc514ee0b7f521dbdc258dd5-20220623
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1499927563; Thu, 23 Jun 2022 08:35:31 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Thu, 23 Jun 2022 08:35:30 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 23 Jun 2022 08:35:29 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
-        <km.lin@mediatek.com>, <jenhao.yang@mediatek.com>,
-        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <ted.huang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
-        <jsiuda@google.com>, <frankgor@google.com>, <kuabhs@google.com>,
-        <druth@google.com>, <abhishekpandit@google.com>,
-        <shawnku@google.com>, <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 2/2] mt76: mt7921: reduce the mutex lock scope during reset
-Date:   Thu, 23 Jun 2022 08:35:27 +0800
-Message-ID: <b10be44b0f968475268895b99864973d18a3b86e.1655944385.git.objelf@gmail.com>
-X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <753f19393f169ad4a5fc127f68e16074f1617306.1655944385.git.objelf@gmail.com>
-References: <753f19393f169ad4a5fc127f68e16074f1617306.1655944385.git.objelf@gmail.com>
+        Wed, 22 Jun 2022 23:47:40 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C918038BEA
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 20:47:38 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25N3lT561019160, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25N3lT561019160
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 23 Jun 2022 11:47:29 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Thu, 23 Jun 2022 11:47:29 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Thu, 23 Jun
+ 2022 11:47:28 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 07/13] rtw89: concentrate parameter control for setting channel callback
+Date:   Thu, 23 Jun 2022 11:46:29 +0800
+Message-ID: <20220623034635.20964-8-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220623034635.20964-1-pkshih@realtek.com>
+References: <20220623034635.20964-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/23/2022 03:30:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMjMgpFekyCAxMjo1MTowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Reduce the mutex lock scope for reset to get rid of possible task hung
-e.g wpa_supplicant and to allow the user-space process to keep running
-during we need more retries to complete the reset.
+For future support on multiple channels by multiple sub-entities,
+we need to manage parameters of each channel instance like rtw89_chan,
+rtw89_mac_idx, rtw89_phy_idx. So, we adjust related channel callback
+functions and centrally conrtol these parameters in set_channel().
 
-Suggested-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c     |  8 ++--
+ drivers/net/wireless/realtek/rtw89/core.h     | 25 +++++++++---
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c | 28 +++++++------
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 40 ++++++++++---------
+ 4 files changed, 61 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 2ce3a833176e..c7bca83e7686 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -738,7 +738,7 @@ void mt7921_mac_reset_work(struct work_struct *work)
- 					      reset_work);
- 	struct ieee80211_hw *hw = mt76_hw(dev);
- 	struct mt76_connac_pm *pm = &dev->pm;
--	int i;
-+	int i, ret;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 05ec34d84a5e0..fb3943c6ee9e2 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -319,13 +319,15 @@ void rtw89_set_channel(struct rtw89_dev *rtwdev)
  
- 	dev_info(dev->mt76.dev, "chip reset\n");
- 	dev->hw_full_reset = true;
-@@ -748,11 +748,14 @@ void mt7921_mac_reset_work(struct work_struct *work)
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_work_sync(&pm->wake_work);
+ 	rtw89_set_entity_state(rtwdev, true);
  
--	mutex_lock(&dev->mt76.mutex);
--	for (i = 0; i < 10; i++)
--		if (!mt7921_dev_reset(dev))
-+	for (i = 0; i < 10; i++) {
-+		mutex_lock(&dev->mt76.mutex);
-+		ret = mt7921_dev_reset(dev);
-+		mutex_unlock(&dev->mt76.mutex);
-+
-+		if (!ret)
- 			break;
--	mutex_unlock(&dev->mt76.mutex);
-+	}
+-	rtw89_chip_set_channel_prepare(rtwdev, &bak);
++	rtw89_chip_set_channel_prepare(rtwdev, &bak, &chan,
++				       RTW89_MAC_0, RTW89_PHY_0);
  
- 	if (i == 10)
- 		dev_err(dev->mt76.dev, "chip reset failed\n");
+-	chip->ops->set_channel(rtwdev, &chan);
++	chip->ops->set_channel(rtwdev, &chan, RTW89_MAC_0, RTW89_PHY_0);
+ 
+ 	rtw89_core_set_chip_txpwr(rtwdev);
+ 
+-	rtw89_chip_set_channel_done(rtwdev, &bak);
++	rtw89_chip_set_channel_done(rtwdev, &bak, &chan,
++				    RTW89_MAC_0, RTW89_PHY_0);
+ 
+ 	if (!entity_active || band_changed) {
+ 		rtw89_btc_ntfy_switch_band(rtwdev, RTW89_PHY_0, chan.band_type);
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 34efccd18b1f0..7de9e228c6187 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2115,9 +2115,14 @@ struct rtw89_chip_ops {
+ 	bool (*write_rf)(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ 			 u32 addr, u32 mask, u32 data);
+ 	void (*set_channel)(struct rtw89_dev *rtwdev,
+-			    const struct rtw89_chan *chan);
++			    const struct rtw89_chan *chan,
++			    enum rtw89_mac_idx mac_idx,
++			    enum rtw89_phy_idx phy_idx);
+ 	void (*set_channel_help)(struct rtw89_dev *rtwdev, bool enter,
+-				 struct rtw89_channel_help_params *p);
++				 struct rtw89_channel_help_params *p,
++				 const struct rtw89_chan *chan,
++				 enum rtw89_mac_idx mac_idx,
++				 enum rtw89_phy_idx phy_idx);
+ 	int (*read_efuse)(struct rtw89_dev *rtwdev, u8 *log_map);
+ 	int (*read_phycap)(struct rtw89_dev *rtwdev, u8 *phycap_map);
+ 	void (*fem_setup)(struct rtw89_dev *rtwdev);
+@@ -3604,16 +3609,24 @@ struct rtw89_bssid_cam_entry *rtw89_get_bssid_cam_of(struct rtw89_vif *rtwvif,
+ 
+ static inline
+ void rtw89_chip_set_channel_prepare(struct rtw89_dev *rtwdev,
+-				    struct rtw89_channel_help_params *p)
++				    struct rtw89_channel_help_params *p,
++				    const struct rtw89_chan *chan,
++				    enum rtw89_mac_idx mac_idx,
++				    enum rtw89_phy_idx phy_idx)
+ {
+-	rtwdev->chip->ops->set_channel_help(rtwdev, true, p);
++	rtwdev->chip->ops->set_channel_help(rtwdev, true, p, chan,
++					    mac_idx, phy_idx);
+ }
+ 
+ static inline
+ void rtw89_chip_set_channel_done(struct rtw89_dev *rtwdev,
+-				 struct rtw89_channel_help_params *p)
++				 struct rtw89_channel_help_params *p,
++				 const struct rtw89_chan *chan,
++				 enum rtw89_mac_idx mac_idx,
++				 enum rtw89_phy_idx phy_idx)
+ {
+-	rtwdev->chip->ops->set_channel_help(rtwdev, false, p);
++	rtwdev->chip->ops->set_channel_help(rtwdev, false, p, chan,
++					    mac_idx, phy_idx);
+ }
+ 
+ static inline
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index 3630c1801dcc4..2cf72dd322ba2 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -1156,10 +1156,12 @@ static void rtw8852a_set_channel_bb(struct rtw89_dev *rtwdev,
+ }
+ 
+ static void rtw8852a_set_channel(struct rtw89_dev *rtwdev,
+-				 const struct rtw89_chan *chan)
++				 const struct rtw89_chan *chan,
++				 enum rtw89_mac_idx mac_idx,
++				 enum rtw89_phy_idx phy_idx)
+ {
+-	rtw8852a_set_channel_mac(rtwdev, chan, RTW89_MAC_0);
+-	rtw8852a_set_channel_bb(rtwdev, chan, RTW89_PHY_0);
++	rtw8852a_set_channel_mac(rtwdev, chan, mac_idx);
++	rtw8852a_set_channel_bb(rtwdev, chan, phy_idx);
+ }
+ 
+ static void rtw8852a_dfs_en(struct rtw89_dev *rtwdev, bool en)
+@@ -1210,25 +1212,27 @@ static void rtw8852a_adc_en(struct rtw89_dev *rtwdev, bool en)
+ }
+ 
+ static void rtw8852a_set_channel_help(struct rtw89_dev *rtwdev, bool enter,
+-				      struct rtw89_channel_help_params *p)
++				      struct rtw89_channel_help_params *p,
++				      const struct rtw89_chan *chan,
++				      enum rtw89_mac_idx mac_idx,
++				      enum rtw89_phy_idx phy_idx)
+ {
+-	u8 phy_idx = RTW89_PHY_0;
+-
+ 	if (enter) {
+-		rtw89_chip_stop_sch_tx(rtwdev, RTW89_MAC_0, &p->tx_en, RTW89_SCH_TX_SEL_ALL);
+-		rtw89_mac_cfg_ppdu_status(rtwdev, RTW89_MAC_0, false);
++		rtw89_chip_stop_sch_tx(rtwdev, mac_idx, &p->tx_en,
++				       RTW89_SCH_TX_SEL_ALL);
++		rtw89_mac_cfg_ppdu_status(rtwdev, mac_idx, false);
+ 		rtw8852a_dfs_en(rtwdev, false);
+-		rtw8852a_tssi_cont_en_phyidx(rtwdev, false, RTW89_PHY_0);
++		rtw8852a_tssi_cont_en_phyidx(rtwdev, false, phy_idx);
+ 		rtw8852a_adc_en(rtwdev, false);
+ 		fsleep(40);
+ 		rtw8852a_bb_reset_en(rtwdev, phy_idx, false);
+ 	} else {
+-		rtw89_mac_cfg_ppdu_status(rtwdev, RTW89_MAC_0, true);
++		rtw89_mac_cfg_ppdu_status(rtwdev, mac_idx, true);
+ 		rtw8852a_adc_en(rtwdev, true);
+ 		rtw8852a_dfs_en(rtwdev, true);
+-		rtw8852a_tssi_cont_en_phyidx(rtwdev, true, RTW89_PHY_0);
++		rtw8852a_tssi_cont_en_phyidx(rtwdev, true, phy_idx);
+ 		rtw8852a_bb_reset_en(rtwdev, phy_idx, true);
+-		rtw89_chip_resume_sch_tx(rtwdev, RTW89_MAC_0, p->tx_en);
++		rtw89_chip_resume_sch_tx(rtwdev, mac_idx, p->tx_en);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index ab7eb6c0408e1..7a2822f3bdf04 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -1529,11 +1529,9 @@ static void rtw8852c_bb_reset_all(struct rtw89_dev *rtwdev,
+ 			      phy_idx);
+ }
+ 
+-static void rtw8852c_bb_reset_en(struct rtw89_dev *rtwdev,
++static void rtw8852c_bb_reset_en(struct rtw89_dev *rtwdev, enum rtw89_band band,
+ 				 enum rtw89_phy_idx phy_idx, bool en)
+ {
+-	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
+-
+ 	if (en) {
+ 		rtw89_phy_write32_idx(rtwdev, R_S0_HW_SI_DIS,
+ 				      B_S0_HW_SI_DIS_W_R_TRIG, 0x0, phy_idx);
+@@ -1541,7 +1539,7 @@ static void rtw8852c_bb_reset_en(struct rtw89_dev *rtwdev,
+ 				      B_S1_HW_SI_DIS_W_R_TRIG, 0x0, phy_idx);
+ 		rtw89_phy_write32_idx(rtwdev, R_RSTB_ASYNC, B_RSTB_ASYNC_ALL, 1,
+ 				      phy_idx);
+-		if (chan->band_type == RTW89_BAND_2G)
++		if (band == RTW89_BAND_2G)
+ 			rtw89_phy_write32_mask(rtwdev, R_RXCCA_V1, B_RXCCA_DIS_V1, 0x0);
+ 		rtw89_phy_write32_mask(rtwdev, R_PD_CTRL, B_PD_HIT_DIS, 0x0);
+ 	} else {
+@@ -1777,11 +1775,13 @@ static void rtw8852c_set_channel_bb(struct rtw89_dev *rtwdev,
+ }
+ 
+ static void rtw8852c_set_channel(struct rtw89_dev *rtwdev,
+-				 const struct rtw89_chan *chan)
++				 const struct rtw89_chan *chan,
++				 enum rtw89_mac_idx mac_idx,
++				 enum rtw89_phy_idx phy_idx)
+ {
+-	rtw8852c_set_channel_mac(rtwdev, chan, RTW89_MAC_0);
+-	rtw8852c_set_channel_bb(rtwdev, chan, RTW89_PHY_0);
+-	rtw8852c_set_channel_rf(rtwdev, chan, RTW89_PHY_0);
++	rtw8852c_set_channel_mac(rtwdev, chan, mac_idx);
++	rtw8852c_set_channel_bb(rtwdev, chan, phy_idx);
++	rtw8852c_set_channel_rf(rtwdev, chan, phy_idx);
+ }
+ 
+ static void rtw8852c_dfs_en(struct rtw89_dev *rtwdev, bool en)
+@@ -1803,25 +1803,27 @@ static void rtw8852c_adc_en(struct rtw89_dev *rtwdev, bool en)
+ }
+ 
+ static void rtw8852c_set_channel_help(struct rtw89_dev *rtwdev, bool enter,
+-				      struct rtw89_channel_help_params *p)
++				      struct rtw89_channel_help_params *p,
++				      const struct rtw89_chan *chan,
++				      enum rtw89_mac_idx mac_idx,
++				      enum rtw89_phy_idx phy_idx)
+ {
+-	u8 phy_idx = RTW89_PHY_0;
+-
+ 	if (enter) {
+-		rtw89_chip_stop_sch_tx(rtwdev, RTW89_MAC_0, &p->tx_en, RTW89_SCH_TX_SEL_ALL);
+-		rtw89_mac_cfg_ppdu_status(rtwdev, RTW89_MAC_0, false);
++		rtw89_chip_stop_sch_tx(rtwdev, mac_idx, &p->tx_en,
++				       RTW89_SCH_TX_SEL_ALL);
++		rtw89_mac_cfg_ppdu_status(rtwdev, mac_idx, false);
+ 		rtw8852c_dfs_en(rtwdev, false);
+-		rtw8852c_tssi_cont_en_phyidx(rtwdev, false, RTW89_PHY_0);
++		rtw8852c_tssi_cont_en_phyidx(rtwdev, false, phy_idx);
+ 		rtw8852c_adc_en(rtwdev, false);
+ 		fsleep(40);
+-		rtw8852c_bb_reset_en(rtwdev, phy_idx, false);
++		rtw8852c_bb_reset_en(rtwdev, chan->band_type, phy_idx, false);
+ 	} else {
+-		rtw89_mac_cfg_ppdu_status(rtwdev, RTW89_MAC_0, true);
++		rtw89_mac_cfg_ppdu_status(rtwdev, mac_idx, true);
+ 		rtw8852c_adc_en(rtwdev, true);
+ 		rtw8852c_dfs_en(rtwdev, true);
+-		rtw8852c_tssi_cont_en_phyidx(rtwdev, true, RTW89_PHY_0);
+-		rtw8852c_bb_reset_en(rtwdev, phy_idx, true);
+-		rtw89_chip_resume_sch_tx(rtwdev, RTW89_MAC_0, p->tx_en);
++		rtw8852c_tssi_cont_en_phyidx(rtwdev, true, phy_idx);
++		rtw8852c_bb_reset_en(rtwdev, chan->band_type, phy_idx, true);
++		rtw89_chip_resume_sch_tx(rtwdev, mac_idx, p->tx_en);
+ 	}
+ }
+ 
 -- 
 2.25.1
 
