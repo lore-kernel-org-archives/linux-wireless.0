@@ -2,68 +2,61 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85885C43334
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 04:46:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C248DC43334
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jun 2022 04:46:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232651AbiFWEqI (ORCPT
+        id S232710AbiFWEqR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jun 2022 00:46:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46946 "EHLO
+        Thu, 23 Jun 2022 00:46:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243745AbiFWDvQ (ORCPT
+        with ESMTP id S243105AbiFWDri (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Jun 2022 23:51:16 -0400
+        Wed, 22 Jun 2022 23:47:38 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D09DD3DA6B
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 20:51:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70C6438D8A
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2022 20:47:36 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25N3p8aM5023855, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25N3p8aM5023855
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 25N3lOreD019081, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 25N3lOreD019081
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 23 Jun 2022 11:51:09 +0800
+        Thu, 23 Jun 2022 11:47:24 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Thu, 23 Jun 2022 11:51:08 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Thu, 23 Jun 2022 11:51:08 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6]) by
- RTEXMBS04.realtek.com.tw ([fe80::34e7:ab63:3da4:27c6%5]) with mapi id
- 15.01.2308.027; Thu, 23 Jun 2022 11:51:08 +0800
+ 15.1.2375.7; Thu, 23 Jun 2022 11:47:24 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Thu, 23 Jun
+ 2022 11:47:23 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     "kvalo@kernel.org" <kvalo@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Kevin Yang" <kevin_yang@realtek.com>
-Subject: Re: [PATCH 13/13] rtw89: prohibit mac80211 chanctx ops without HW scan
-Thread-Topic: [PATCH 13/13] rtw89: prohibit mac80211 chanctx ops without HW
- scan
-Thread-Index: AQHYgiebmxK+fsrv0UewRp82PNlbwa1YF2M6//+ftYCABCdHAA==
-Date:   Thu, 23 Jun 2022 03:51:07 +0000
-Message-ID: <6f6682f8d8c7aec02d113330c87484cbcab14ff3.camel@realtek.com>
-References: <20220617084954.61261-1-pkshih@realtek.com>
-         <20220617084954.61261-14-pkshih@realtek.com> <877d5bprxn.fsf@kernel.org>
-         <027f1de5f6ed0da21754c17154cc09411f2c5aa5.camel@realtek.com>
-In-Reply-To: <027f1de5f6ed0da21754c17154cc09411f2c5aa5.camel@realtek.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.36.1-2 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS04.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMjMg5LiK5Y2IIDEyOjUxOjAw?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <DB2CEA8F3412B546B395AC087A34A719@realtek.com>
-Content-Transfer-Encoding: base64
+To:     <kvalo@kernel.org>
+CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 04/13] rtw89: create rtw89_chan centrally to avoid breakage
+Date:   Thu, 23 Jun 2022 11:46:26 +0800
+Message-ID: <20220623034635.20964-5-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220623034635.20964-1-pkshih@realtek.com>
+References: <20220623034635.20964-1-pkshih@realtek.com>
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 06/23/2022 03:30:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzYvMjMgpFekyCAxMjo1MTowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
 X-KSE-Attachment-Filter-Triggered-Rules: Clean
 X-KSE-Attachment-Filter-Triggered-Filters: Clean
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
@@ -71,54 +64,329 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gTW9uLCAyMDIyLTA2LTIwIGF0IDEyOjM0ICswMDAwLCBQaW5nLUtlIFNoaWggd3JvdGU6DQo+
-IE9uIE1vbiwgMjAyMi0wNi0yMCBhdCAxMzowOSArMDMwMCwgS2FsbGUgVmFsbyB3cm90ZToNCj4g
-PiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4gd3JpdGVzOg0KPiA+IA0KPiA+ID4g
-RnJvbTogWm9uZy1aaGUgWWFuZyA8a2V2aW5feWFuZ0ByZWFsdGVrLmNvbT4NCj4gPiA+IA0KPiA+
-ID4gSWYgYSBjaGlwIGlzIGNvbmZpZ3VyZWQgdG8gc3VwcG9ydCBtYWM4MDIxMSBjaGFuY3R4IG9w
-cywgd2UgYXZvaWQNCj4gPiA+IHVzaW5nIG9sZGVyIEZXIHRoYXQgZG9lcyBub3Qgc3VwcG9ydCBI
-VyBzY2FuIHRvIG1ha2UgbWFjODAyMTEgc3RhY2sNCj4gPiA+IGhhbmRsZSBzY2FubmluZyBhcyBl
-eHBlY3RlZC4NCj4gPiA+IA0KPiA+ID4gU2lnbmVkLW9mZi1ieTogWm9uZy1aaGUgWWFuZyA8a2V2
-aW5feWFuZ0ByZWFsdGVrLmNvbT4NCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8
-cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+ID4gLS0tDQo+ID4gPiAgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvcmVhbHRlay9ydHc4OS9mdy5jIHwgOCArKysrKysrKw0KPiA+ID4gIDEgZmlsZSBjaGFuZ2Vk
-LCA4IGluc2VydGlvbnMoKykNCj4gPiA+IA0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvZncuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0
-ZWsvcnR3ODkvZncuYw0KPiA+ID4gaW5kZXggMGUxMjYyOWY3ODljMy4uYTQ3NDUxZGM5ZDgxZCAx
-MDA2NDQNCj4gPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvZncu
-Yw0KPiA+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OS9mdy5jDQo+
-ID4gPiBAQCAtMjUwLDYgKzI1MCw3IEBAIHN0YXRpYyB2b2lkIHJ0dzg5X2Z3X3JlY29nbml6ZV9m
-ZWF0dXJlcyhzdHJ1Y3QgcnR3ODlfZGV2ICpydHdkZXYpDQo+ID4gPiAgDQo+ID4gPiAgaW50IHJ0
-dzg5X2Z3X3JlY29nbml6ZShzdHJ1Y3QgcnR3ODlfZGV2ICpydHdkZXYpDQo+ID4gPiAgew0KPiA+
-ID4gKwljb25zdCBzdHJ1Y3QgcnR3ODlfY2hpcF9pbmZvICpjaGlwID0gcnR3ZGV2LT5jaGlwOw0K
-PiA+ID4gIAlpbnQgcmV0Ow0KPiA+ID4gIA0KPiA+ID4gIAlyZXQgPSBfX3J0dzg5X2Z3X3JlY29n
-bml6ZShydHdkZXYsIFJUVzg5X0ZXX05PUk1BTCk7DQo+ID4gPiBAQCAtMjYxLDYgKzI2MiwxMyBA
-QCBpbnQgcnR3ODlfZndfcmVjb2duaXplKHN0cnVjdCBydHc4OV9kZXYgKnJ0d2RldikNCj4gPiA+
-ICANCj4gPiA+ICAJcnR3ODlfZndfcmVjb2duaXplX2ZlYXR1cmVzKHJ0d2Rldik7DQo+ID4gPiAg
-DQo+ID4gPiArCWlmIChjaGlwLT5zdXBwb3J0X2NoYW5jdHhfbnVtICE9IDAgJiYNCj4gPiA+ICsJ
-ICAgICFSVFc4OV9DSEtfRldfRkVBVFVSRShTQ0FOX09GRkxPQUQsICZydHdkZXYtPmZ3KSkgew0K
-PiA+ID4gKwkJcnR3ODlfZXJyKHJ0d2RldiwNCj4gPiA+ICsJCQkgICJyZXF1aXJlIG5ld2VyIEZX
-IHRvIHN1cHBvcnQgSFcgc2NhbiBmb3IgY2hhbmN0eFxuIik7DQo+ID4gPiArCQlyZXR1cm4gLUVO
-T0VOVDsNCj4gPiA+ICsJfQ0KPiA+IA0KPiA+IFNvIGlmIHRoZSB1c2VyIGhhcyBub3QgdXBkYXRl
-IHRoZSBmaXJtd2FyZSBhIGtlcm5lbCB1cGdyYWRlIHdpbGwgYnJlYWsNCj4gPiB0aGVpciBpbnRl
-cm5ldD8gVGhhdCdzIG5vdCBnb29kLCB3ZSBzaG91bGQgbm90IGJyZWFrIGV4aXN0aW5nIHNldHVw
-cy4gU28NCj4gPiB3aGF0IGZpcm13YXJlIHZlcnNpb24gaXMgcmVxdWlyZWQ/DQo+ID4gDQo+IA0K
-PiBGaXJtd2FyZSB2ZXJzaW9uIDAuMTMuMzUuMCBpcyByZXF1aXJlZC4gVGhlIGZpcm13YXJlIGhh
-cyBiZWVuIGluDQo+IGxpbnV4LWZpcm13YXJlIHJlcG9zaXRvcnkgb24gMjAyMi0wMi0xOC4gSSB0
-aGluayBwZW9wbGUgYmVpbmcgYWJsZQ0KPiB0byB1cGRhdGUga2VybmVsIGNhbiB1cGRhdGUgZmly
-bXdhcmUgYXMgd2VsbC4NCj4gDQo+IFRoZSBhbHRlcm5hdGl2ZSB3YXlzIGNvdWxkIGJlDQo+IDEu
-IGFkZCBhIG1vZHVsZSBwYXJhbWV0ZXIsIGxpa2Ugbm9fY2hhbm5lbF9jb250ZXh0LiBXZSBjYW4g
-YWRkIGENCj4gICAgcHJvbXB0IHRvIG5vdGUgcGVvcGxlIGNhbiBzZXQgaXQgdG8gMSBmb3Igb2xk
-IGZpcm13YXJlLg0KPiANCj4gMi4gd2FpdCB2ZXJzaW9uIG9mIHJlcXVlc3RfZmlybXdhcmUoKSBh
-cyBmaXJzdCBzdGVwIG9mIHBjaSBwcm9iZS4NCj4gICAgVGhlIHByb2JlIGNvdWxkIGNvc3QgbG9u
-Z2VyIHRpbWUsIGJlY2F1c2UgY3VycmVudGx5IHdlIHVzZQ0KPiAgICByZXF1ZXN0X2Zpcm13YXJl
-X25vd2FpdCgpIGFuZCBjb250aW51ZSB0byBpbml0aWFsaXplIGluIHBhcmFsbGVsLg0KPiAgICBN
-b3JlLCBody0+cHJpdiBpc24ndCBhbGxvY2F0ZWQgYXQgdGhhdCBtb21lbnQsIHNvIGl0IGNvdWxk
-IGJlIG5vdA0KPiAgICBzbyBzdHJhaWdodGZvcndhcmQuDQo+IA0KDQpUbyBwcmV2ZW50IGJyZWFr
-IHVzZXJzJyBleGlzdGluZyBzZXR1cHMsIG1vZGlmaWVkIGFwcHJvYWNoIDEgaXMgYWRvcHRlZA0K
-YnkgcGF0Y2hzZXQgdjIuIFdlIGFkZCBhIG1vZHVsZSBwYXJhbWV0ZXIgcnR3ODlfdXNlX2NoYW5j
-dHgsIGFuZCBkaXNhYmxlDQppdCBieSBkZWZhdWx0LiBTbywgdXNlcnMnIHNldHVwcyB3aXRoIG9s
-ZCBmaXJtd2FyZSBjYW4gc3RpbGwgd29yay4NCg0KSWYgYSB1c2VyIHdhbnRzIGNoYW5uZWwgY29u
-dGV4dCB0byBzdXBwb3J0IGNvbmN1cnJlbmN5LCBoZSBjYW4gc2V0DQpydHc4OV91c2VfY2hhbmN0
-eD0xIGFuZCB1cGdyYWRlIGZpcm13YXJlLiANCg0KSSB0aGluayB0aGlzIGNvdWxkIGJlIGEgYmV0
-dGVyIHVzZXIgZXhwZXJpZW5jZSBvZiBrZXJuZWwuDQoNClBpbmctS2UNCg0K
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
+
+Sometimes we need to write current rtw89_chan outside set_channel(),
+e.g. during HW scan, we adjust it to align FW process through C2H.
+However, we don't have full parameters to fill entire rtw89_chan.
+And it will breakage if we update only part of current rtw89_chan.
+That is what we don't want to see because most flows throughout
+driver treat rtw89_chan as a whole.
+
+So, we divide struct rtw89_chan to basic part and derived part. The
+basic part contains the parameters which we are always able to know.
+And the derived part will be calculated by the basic part. Then, a
+central function, rtw89_chan_create(), is added to deal with this.
+
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/chan.c | 98 +++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/chan.h |  2 +
+ drivers/net/wireless/realtek/rtw89/core.c | 70 +---------------
+ drivers/net/wireless/realtek/rtw89/core.h |  6 +-
+ drivers/net/wireless/realtek/rtw89/fw.c   |  7 +-
+ drivers/net/wireless/realtek/rtw89/mac.c  |  7 +-
+ 6 files changed, 109 insertions(+), 81 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
+index a5d1bf573ea62..0bf27a344d2b4 100644
+--- a/drivers/net/wireless/realtek/rtw89/chan.c
++++ b/drivers/net/wireless/realtek/rtw89/chan.c
+@@ -4,6 +4,104 @@
+ 
+ #include "chan.h"
+ 
++static enum rtw89_subband rtw89_get_subband_type(enum rtw89_band band,
++						 u8 center_chan)
++{
++	switch (band) {
++	default:
++	case RTW89_BAND_2G:
++		switch (center_chan) {
++		default:
++		case 1 ... 14:
++			return RTW89_CH_2G;
++		}
++	case RTW89_BAND_5G:
++		switch (center_chan) {
++		default:
++		case 36 ... 64:
++			return RTW89_CH_5G_BAND_1;
++		case 100 ... 144:
++			return RTW89_CH_5G_BAND_3;
++		case 149 ... 177:
++			return RTW89_CH_5G_BAND_4;
++		}
++	case RTW89_BAND_6G:
++		switch (center_chan) {
++		default:
++		case 1 ... 29:
++			return RTW89_CH_6G_BAND_IDX0;
++		case 33 ... 61:
++			return RTW89_CH_6G_BAND_IDX1;
++		case 65 ... 93:
++			return RTW89_CH_6G_BAND_IDX2;
++		case 97 ... 125:
++			return RTW89_CH_6G_BAND_IDX3;
++		case 129 ... 157:
++			return RTW89_CH_6G_BAND_IDX4;
++		case 161 ... 189:
++			return RTW89_CH_6G_BAND_IDX5;
++		case 193 ... 221:
++			return RTW89_CH_6G_BAND_IDX6;
++		case 225 ... 253:
++			return RTW89_CH_6G_BAND_IDX7;
++		}
++	}
++}
++
++static enum rtw89_sc_offset rtw89_get_primary_chan_idx(enum rtw89_bandwidth bw,
++						       u32 center_freq,
++						       u32 primary_freq)
++{
++	u8 primary_chan_idx;
++	u32 offset;
++
++	switch (bw) {
++	default:
++	case RTW89_CHANNEL_WIDTH_20:
++		primary_chan_idx = RTW89_SC_DONT_CARE;
++		break;
++	case RTW89_CHANNEL_WIDTH_40:
++		if (primary_freq > center_freq)
++			primary_chan_idx = RTW89_SC_20_UPPER;
++		else
++			primary_chan_idx = RTW89_SC_20_LOWER;
++		break;
++	case RTW89_CHANNEL_WIDTH_80:
++	case RTW89_CHANNEL_WIDTH_160:
++		if (primary_freq > center_freq) {
++			offset = (primary_freq - center_freq - 10) / 20;
++			primary_chan_idx = RTW89_SC_20_UPPER + offset * 2;
++		} else {
++			offset = (center_freq - primary_freq - 10) / 20;
++			primary_chan_idx = RTW89_SC_20_LOWER + offset * 2;
++		}
++		break;
++	}
++
++	return primary_chan_idx;
++}
++
++void rtw89_chan_create(struct rtw89_chan *chan, u8 center_chan, u8 primary_chan,
++		       enum rtw89_band band, enum rtw89_bandwidth bandwidth)
++{
++	enum nl80211_band nl_band = rtw89_hw_to_nl80211_band(band);
++	u32 center_freq, primary_freq;
++
++	memset(chan, 0, sizeof(*chan));
++	chan->channel = center_chan;
++	chan->primary_channel = primary_chan;
++	chan->band_type = band;
++	chan->band_width = bandwidth;
++
++	center_freq = ieee80211_channel_to_frequency(center_chan, nl_band);
++	primary_freq = ieee80211_channel_to_frequency(primary_chan, nl_band);
++
++	chan->freq = center_freq;
++	chan->subband_type = rtw89_get_subband_type(band, center_chan);
++	chan->pri_ch_idx = rtw89_get_primary_chan_idx(bandwidth, center_freq,
++						      primary_freq);
++}
++
+ bool rtw89_assign_entity_chan(struct rtw89_dev *rtwdev,
+ 			      enum rtw89_sub_entity_idx idx,
+ 			      const struct rtw89_chan *new)
+diff --git a/drivers/net/wireless/realtek/rtw89/chan.h b/drivers/net/wireless/realtek/rtw89/chan.h
+index ac5cc356b8182..d39311a3d5baf 100644
+--- a/drivers/net/wireless/realtek/rtw89/chan.h
++++ b/drivers/net/wireless/realtek/rtw89/chan.h
+@@ -21,6 +21,8 @@ static inline void rtw89_set_entity_state(struct rtw89_dev *rtwdev, bool active)
+ 	WRITE_ONCE(hal->entity_active, active);
+ }
+ 
++void rtw89_chan_create(struct rtw89_chan *chan, u8 center_chan, u8 primary_chan,
++		       enum rtw89_band band, enum rtw89_bandwidth bandwidth);
+ bool rtw89_assign_entity_chan(struct rtw89_dev *rtwdev,
+ 			      enum rtw89_sub_entity_idx idx,
+ 			      const struct rtw89_chan *new);
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 78d9e6a7a0981..6ffad5da9161e 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -233,10 +233,8 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 	u32 primary_freq, center_freq;
+ 	u8 center_chan;
+ 	u8 bandwidth = RTW89_CHANNEL_WIDTH_20;
+-	u8 primary_chan_idx = 0;
+ 	u32 offset;
+ 	u8 band;
+-	u8 subband;
+ 
+ 	center_chan = channel->hw_value;
+ 	primary_freq = channel->center_freq;
+@@ -246,15 +244,12 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+ 		bandwidth = RTW89_CHANNEL_WIDTH_20;
+-		primary_chan_idx = RTW89_SC_DONT_CARE;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_40:
+ 		bandwidth = RTW89_CHANNEL_WIDTH_40;
+ 		if (primary_freq > center_freq) {
+-			primary_chan_idx = RTW89_SC_20_UPPER;
+ 			center_chan -= 2;
+ 		} else {
+-			primary_chan_idx = RTW89_SC_20_LOWER;
+ 			center_chan += 2;
+ 		}
+ 		break;
+@@ -263,11 +258,9 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 		bandwidth = nl_to_rtw89_bandwidth(width);
+ 		if (primary_freq > center_freq) {
+ 			offset = (primary_freq - center_freq - 10) / 20;
+-			primary_chan_idx = RTW89_SC_20_UPPER + offset * 2;
+ 			center_chan -= 2 + offset * 4;
+ 		} else {
+ 			offset = (center_freq - primary_freq - 10) / 20;
+-			primary_chan_idx = RTW89_SC_20_LOWER + offset * 2;
+ 			center_chan += 2 + offset * 4;
+ 		}
+ 		break;
+@@ -289,68 +282,7 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 		break;
+ 	}
+ 
+-	switch (band) {
+-	default:
+-	case RTW89_BAND_2G:
+-		switch (center_chan) {
+-		default:
+-		case 1 ... 14:
+-			subband = RTW89_CH_2G;
+-			break;
+-		}
+-		break;
+-	case RTW89_BAND_5G:
+-		switch (center_chan) {
+-		default:
+-		case 36 ... 64:
+-			subband = RTW89_CH_5G_BAND_1;
+-			break;
+-		case 100 ... 144:
+-			subband = RTW89_CH_5G_BAND_3;
+-			break;
+-		case 149 ... 177:
+-			subband = RTW89_CH_5G_BAND_4;
+-			break;
+-		}
+-		break;
+-	case RTW89_BAND_6G:
+-		switch (center_chan) {
+-		default:
+-		case 1 ... 29:
+-			subband = RTW89_CH_6G_BAND_IDX0;
+-			break;
+-		case 33 ... 61:
+-			subband = RTW89_CH_6G_BAND_IDX1;
+-			break;
+-		case 65 ... 93:
+-			subband = RTW89_CH_6G_BAND_IDX2;
+-			break;
+-		case 97 ... 125:
+-			subband = RTW89_CH_6G_BAND_IDX3;
+-			break;
+-		case 129 ... 157:
+-			subband = RTW89_CH_6G_BAND_IDX4;
+-			break;
+-		case 161 ... 189:
+-			subband = RTW89_CH_6G_BAND_IDX5;
+-			break;
+-		case 193 ... 221:
+-			subband = RTW89_CH_6G_BAND_IDX6;
+-			break;
+-		case 225 ... 253:
+-			subband = RTW89_CH_6G_BAND_IDX7;
+-			break;
+-		}
+-		break;
+-	}
+-
+-	chan->channel = center_chan;
+-	chan->freq = center_freq;
+-	chan->primary_channel = channel->hw_value;
+-	chan->band_type = band;
+-	chan->band_width = bandwidth;
+-	chan->subband_type = subband;
+-	chan->pri_ch_idx = primary_chan_idx;
++	rtw89_chan_create(chan, center_chan, channel->hw_value, band, bandwidth);
+ }
+ 
+ void rtw89_core_set_chip_txpwr(struct rtw89_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 86e7341198c6f..cc61043fb5da6 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -632,10 +632,14 @@ enum rtw89_sc_offset {
+ 
+ struct rtw89_chan {
+ 	u8 channel;
+-	u32 freq;
+ 	u8 primary_channel;
+ 	enum rtw89_band band_type;
+ 	enum rtw89_bandwidth band_width;
++
++	/* The follow-up are derived from the above. We must ensure that it
++	 * is assigned correctly in rtw89_chan_create() if new one is added.
++	 */
++	u32 freq;
+ 	enum rtw89_subband subband_type;
+ 	enum rtw89_sc_offset pri_ch_idx;
+ };
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 8dcd02d90f457..cee9815b6df6f 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -2388,11 +2388,8 @@ void rtw89_store_op_chan(struct rtw89_dev *rtwdev, bool backup)
+ 		scan_info->op_bw = cur->band_width;
+ 		scan_info->op_band = cur->band_type;
+ 	} else {
+-		new = *cur;
+-		new.primary_channel = scan_info->op_pri_ch;
+-		new.channel = scan_info->op_chan;
+-		new.band_width = scan_info->op_bw;
+-		new.band_type = scan_info->op_band;
++		rtw89_chan_create(&new, scan_info->op_chan, scan_info->op_pri_ch,
++				  scan_info->op_band, scan_info->op_bw);
+ 		rtw89_assign_entity_chan(rtwdev, RTW89_SUB_ENTITY_0, &new);
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index b9fb983b6ce24..b90ab56b1c771 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -3655,7 +3655,6 @@ rtw89_mac_c2h_scanofld_rsp(struct rtw89_dev *rtwdev, struct sk_buff *c2h,
+ 			   u32 len)
+ {
+ 	struct ieee80211_vif *vif = rtwdev->scan_info.scanning_vif;
+-	const struct rtw89_chan *cur = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
+ 	struct rtw89_chan new;
+ 	u8 reason, status, tx_fail, band;
+ 	u16 chan;
+@@ -3682,11 +3681,7 @@ rtw89_mac_c2h_scanofld_rsp(struct rtw89_dev *rtwdev, struct sk_buff *c2h,
+ 		rtw89_hw_scan_complete(rtwdev, vif, false);
+ 		break;
+ 	case RTW89_SCAN_ENTER_CH_NOTIFY:
+-		new = *cur;
+-		new.channel = chan;
+-		new.primary_channel = chan;
+-		new.band_type = band;
+-		new.band_width = RTW89_CHANNEL_WIDTH_20;
++		rtw89_chan_create(&new, chan, chan, band, RTW89_CHANNEL_WIDTH_20);
+ 		rtw89_assign_entity_chan(rtwdev, RTW89_SUB_ENTITY_0, &new);
+ 		if (rtw89_is_op_chan(rtwdev, band, chan)) {
+ 			rtw89_store_op_chan(rtwdev, false);
+-- 
+2.25.1
+
