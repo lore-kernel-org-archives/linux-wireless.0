@@ -2,128 +2,159 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B416C43334
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jun 2022 19:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5FAC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jun 2022 20:44:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231268AbiFXTNm (ORCPT
+        id S230421AbiFXUov (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jun 2022 15:13:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43152 "EHLO
+        Fri, 24 Jun 2022 16:44:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232107AbiFXTNH (ORCPT
+        with ESMTP id S229441AbiFXUou (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jun 2022 15:13:07 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EF7DB4B1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2022 12:13:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=Ci4rribwEHxyUcm1miVtwoazSs6ChpHM66/8j+Vi/jM=; b=OJEzeSe7h8WP71MphydWBwkKzT
-        +mcYssrc5KuCakaTqceSbn4jk1yyvfHwuAWr6U9eWAKLUSuqkfKCg5ICrmB3A54tjjTVqCmf/hiik
-        eHroevOPGSFUqfh4AakFqESd+5lA9JS17WGt7o9ekdMmeKm6hntkbnj6Ly2AwkQrcZ4w=;
-Received: from p200300daa71a4800391046fbc91acf5a.dip0.t-ipconnect.de ([2003:da:a71a:4800:3910:46fb:c91a:cf5a] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1o4ojm-0002r8-Tv
-        for linux-wireless@vger.kernel.org; Fri, 24 Jun 2022 21:13:02 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mt76: allow receiving frames with invalid CCMP PN via monitor interfaces
-Date:   Fri, 24 Jun 2022 21:12:59 +0200
-Message-Id: <20220624191300.52766-3-nbd@nbd.name>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220624191300.52766-1-nbd@nbd.name>
-References: <20220624191300.52766-1-nbd@nbd.name>
+        Fri, 24 Jun 2022 16:44:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4CCA4DF57;
+        Fri, 24 Jun 2022 13:44:49 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4F0BE6231C;
+        Fri, 24 Jun 2022 20:44:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CBE6C34114;
+        Fri, 24 Jun 2022 20:44:47 +0000 (UTC)
+Authentication-Results: smtp.kernel.org;
+        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="h3Et6jJ1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
+        t=1656103485;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DyE3XRKNY/LXaKfwAinhWk9HKfQb7/UzeJju5lrYwSQ=;
+        b=h3Et6jJ11suSJoxCKZXMYYx2ylOCtTjWcFnlxqjIUKnr20+rfa6Yu0JT8LkJRRKdeQBjsi
+        GrRIxeM3/fpfkM13XKfCPUzZ3s5tt3V4pi9tvKrhSxTfWPGadw28W0Czf8VLifhaWAMVbl
+        rDuRxuBD20MOFa2rh6XjCxRuZHGTTZU=
+Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 647248f1 (TLSv1.3:AEAD-AES256-GCM-SHA384:256:NO);
+        Fri, 24 Jun 2022 20:44:45 +0000 (UTC)
+From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
+To:     Gregory Erwin <gregerwin256@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Rui Salvaterra <rsalvaterra@gmail.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        stable@vger.kernel.org
+Subject: [PATCH v2] ath9k: sleep for less time when unregistering hwrng
+Date:   Fri, 24 Jun 2022 22:44:33 +0200
+Message-Id: <20220624204433.2371980-1-Jason@zx2c4.com>
+In-Reply-To: <YrYMqqqoK7HBAXgJ@zx2c4.com>
+References: <YrYMqqqoK7HBAXgJ@zx2c4.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This can be useful for debugging
+Even though hwrng provides a `wait` parameter, it doesn't work very well
+when waiting for a long time. There are numerous deadlocks that emerge
+related to shutdown. Work around this API limitation by waiting for a
+shorter amount of time and erroring more frequently. This commit also
+prevents hwrng from splatting messages to dmesg when there's a timeout
+and prevents calling msleep_interruptible() for tons of time when a
+thread is supposed to be shutting down, since msleep_interruptible()
+isn't actually interrupted by kthread_stop().
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Reported-by: Gregory Erwin <gregerwin256@gmail.com>
+Cc: Toke Høiland-Jørgensen <toke@redhat.com>
+Cc: Kalle Valo <kvalo@kernel.org>
+Cc: Rui Salvaterra <rsalvaterra@gmail.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: stable@vger.kernel.org
+Fixes: fcd09c90c3c5 ("ath9k: use hw_random API instead of directly dumping into random.c")
+Link: https://lore.kernel.org/all/CAO+Okf6ZJC5-nTE_EJUGQtd8JiCkiEHytGgDsFGTEjs0c00giw@mail.gmail.com/
+Link: https://lore.kernel.org/lkml/CAO+Okf5k+C+SE6pMVfPf-d8MfVPVq4PO7EY8Hys_DVXtent3HA@mail.gmail.com/
+Link: https://bugs.archlinux.org/task/75138
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 24 ++++++++-----------
- 1 file changed, 10 insertions(+), 14 deletions(-)
+I do not have an ath9k and therefore I can't test this myself. The
+analysis above was done completely statically, with no dynamic tracing
+and just a bug report of symptoms from Gregory. So it might be totally
+wrong. Thus, this patch very much requires Gregory's testing. Please
+don't apply it until we have his `Tested-by` line.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index ecf5bd9605db..cb41f54bdd1c 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -1018,7 +1018,7 @@ mt76_rx_convert(struct mt76_dev *dev, struct sk_buff *skb,
- 	*hw = mt76_phy_hw(dev, mstat.ext_phy);
+ drivers/char/hw_random/core.c        | 10 ++++++++--
+ drivers/net/wireless/ath/ath9k/rng.c | 19 ++-----------------
+ 2 files changed, 10 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/char/hw_random/core.c b/drivers/char/hw_random/core.c
+index 16f227b995e8..af1c1905bb7e 100644
+--- a/drivers/char/hw_random/core.c
++++ b/drivers/char/hw_random/core.c
+@@ -513,8 +513,13 @@ static int hwrng_fillfn(void *unused)
+ 			break;
+ 
+ 		if (rc <= 0) {
+-			pr_warn("hwrng: no data available\n");
+-			msleep_interruptible(10000);
++			int i;
++
++			for (i = 0; i < 100; ++i) {
++				if (kthread_should_stop() ||
++				    msleep_interruptible(10000 / 100))
++					goto out;
++			}
+ 			continue;
+ 		}
+ 
+@@ -529,6 +534,7 @@ static int hwrng_fillfn(void *unused)
+ 		add_hwgenerator_randomness((void *)rng_fillbuf, rc,
+ 					   entropy >> 10);
+ 	}
++out:
+ 	hwrng_fill = NULL;
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
+index cb5414265a9b..883110c66e5e 100644
+--- a/drivers/net/wireless/ath/ath9k/rng.c
++++ b/drivers/net/wireless/ath/ath9k/rng.c
+@@ -52,20 +52,6 @@ static int ath9k_rng_data_read(struct ath_softc *sc, u32 *buf, u32 buf_size)
+ 	return j << 2;
  }
  
--static int
-+static void
- mt76_check_ccmp_pn(struct sk_buff *skb)
+-static u32 ath9k_rng_delay_get(u32 fail_stats)
+-{
+-	u32 delay;
+-
+-	if (fail_stats < 100)
+-		delay = 10;
+-	else if (fail_stats < 105)
+-		delay = 1000;
+-	else
+-		delay = 10000;
+-
+-	return delay;
+-}
+-
+ static int ath9k_rng_read(struct hwrng *rng, void *buf, size_t max, bool wait)
  {
- 	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
-@@ -1028,13 +1028,13 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
- 	int ret;
- 
- 	if (!(status->flag & RX_FLAG_DECRYPTED))
--		return 0;
-+		return;
- 
- 	if (status->flag & RX_FLAG_ONLY_MONITOR)
--		return 0;
-+		return;
- 
- 	if (!wcid || !wcid->rx_check_pn)
--		return 0;
-+		return;
- 
- 	security_idx = status->qos_ctl & IEEE80211_QOS_CTL_TID_MASK;
- 	if (status->flag & RX_FLAG_8023)
-@@ -1048,7 +1048,7 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
- 		 */
- 		if (ieee80211_is_frag(hdr) &&
- 		    !ieee80211_is_first_frag(hdr->frame_control))
--			return 0;
-+			return;
+ 	struct ath_softc *sc = container_of(rng, struct ath_softc, rng_ops);
+@@ -80,10 +66,9 @@ static int ath9k_rng_read(struct hwrng *rng, void *buf, size_t max, bool wait)
+ 			bytes_read += max & 3UL;
+ 			memzero_explicit(&word, sizeof(word));
+ 		}
+-		if (!wait || !max || likely(bytes_read) || fail_stats > 110)
++		if (!wait || !max || likely(bytes_read) ||
++		    ++fail_stats >= 100 || msleep_interruptible(5))
+ 			break;
+-
+-		msleep_interruptible(ath9k_rng_delay_get(++fail_stats));
  	}
  
- 	/* IEEE 802.11-2020, 12.5.3.4.4 "PN and replay detection" c):
-@@ -1065,15 +1065,15 @@ mt76_check_ccmp_pn(struct sk_buff *skb)
- 	BUILD_BUG_ON(sizeof(status->iv) != sizeof(wcid->rx_key_pn[0]));
- 	ret = memcmp(status->iv, wcid->rx_key_pn[security_idx],
- 		     sizeof(status->iv));
--	if (ret <= 0)
--		return -EINVAL; /* replay */
-+	if (ret <= 0) {
-+		status->flag |= RX_FLAG_ONLY_MONITOR;
-+		return;
-+	}
- 
- 	memcpy(wcid->rx_key_pn[security_idx], status->iv, sizeof(status->iv));
- 
- 	if (status->flag & RX_FLAG_IV_STRIPPED)
- 		status->flag |= RX_FLAG_PN_VALIDATED;
--
--	return 0;
- }
- 
- static void
-@@ -1246,11 +1246,7 @@ void mt76_rx_complete(struct mt76_dev *dev, struct sk_buff_head *frames,
- 	while ((skb = __skb_dequeue(frames)) != NULL) {
- 		struct sk_buff *nskb = skb_shinfo(skb)->frag_list;
- 
--		if (mt76_check_ccmp_pn(skb)) {
--			dev_kfree_skb(skb);
--			continue;
--		}
--
-+		mt76_check_ccmp_pn(skb);
- 		skb_shinfo(skb)->frag_list = NULL;
- 		mt76_rx_convert(dev, skb, &hw, &sta);
- 		ieee80211_rx_list(hw, sta, skb, &list);
+ 	if (wait && !bytes_read && max)
 -- 
-2.36.1
+2.35.1
 
