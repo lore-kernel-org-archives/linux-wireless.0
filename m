@@ -2,39 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83055C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jun 2022 15:02:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5E48C43334
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jun 2022 15:02:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237419AbiF0PCS (ORCPT
+        id S237689AbiF0PCz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Jun 2022 11:02:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41838 "EHLO
+        Mon, 27 Jun 2022 11:02:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231131AbiF0PCQ (ORCPT
+        with ESMTP id S237520AbiF0PCb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Jun 2022 11:02:16 -0400
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 059DF1834D
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2022 08:02:14 -0700 (PDT)
+        Mon, 27 Jun 2022 11:02:31 -0400
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85A4E1834D
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2022 08:02:30 -0700 (PDT)
 From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1656342133; bh=q0zFaa23yf3ciG+/3V/M99AzR9YG7OjEQu7K6ssGsYY=;
+        t=1656342149; bh=NE4ZyUkOQMAvxOzcaBhAjdl/y/HIpZm4Sj77rOr2Jps=;
         h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=on5eNecv200Q/L1CNm4uR/1UxrpTDpy+cnmzoZXT8CcZP13daGPq/2cH+W+3acDRh
-         39kfSXgsgurMLf1rDMX5D722hF9TJZxe3ROOGCSVCQj7Ya5Cj1pyLx1Mu+fqGO/flh
-         Zybpl6e+6MxACiSjdal1K2vkaZid9SQsIRHu2c5Hy+ca3DVk92TrgUDhVbipCOIc9j
-         itxbuAQWTD91nVgqxUbycsS8tj/Y4QFysqvSn1P5B3BdZyGX40cYO4hMjWxeuneiMR
-         bloYHX65qyE6sY7CbbnlqGm9NbpkoGYvYSONLpMPJsehmRQdobjff+PSuHyBCXelVw
-         9OY7H9mHCSb6A==
+        b=t/qjodyMTJwDS0KrFjU02gA72LXzqWymrtcIXgbh0hnlRb2gKBZtlB7VWMu2Y25UE
+         OSYgDqX45ILLECB0YVLjLMCG/ARVDk5hP0ewQ9+M50g0RYPeHAargMMaB7upjeiMHI
+         Q5Dc7aMREf/lYIJsqfG+VaugJp2Mln6McOusoG5CSlA3/dMX80uLE9yIl9F1IRfrXg
+         GXTuVGXIEk4djaBoafjQEmqjmEuO2vaw6Kxkex35VmOg2LDf2Tjgivw9oYwcxBB/yj
+         2JO0jxkI0MCAy3llx3JikIOACe+1zWDbaXsVnWcTmOq95Re+5AHDymNJbgw9qYr5Ec
+         0uy4wCB4GunlA==
 To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: Re: [PATCH 1/7] mac80211: switch airtime fairness back to deficit
- round-robin scheduling
-In-Reply-To: <20220625212411.36675-1-nbd@nbd.name>
+Subject: Re: [PATCH 2/7] mac80211: make sta airtime deficit field s32
+ instead of s64
+In-Reply-To: <20220625212411.36675-2-nbd@nbd.name>
 References: <20220625212411.36675-1-nbd@nbd.name>
-Date:   Mon, 27 Jun 2022 17:02:12 +0200
+ <20220625212411.36675-2-nbd@nbd.name>
+Date:   Mon, 27 Jun 2022 17:02:29 +0200
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87o7yeb157.fsf@toke.dk>
+Message-ID: <87letib14q.fsf@toke.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
@@ -44,23 +45,7 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Felix Fietkau <nbd@nbd.name> writes:
 
-> This reverts commits 6a789ba679d652587532cec2a0e0274fda172f3b and
-> 2433647bc8d983a543e7d31b41ca2de1c7e2c198.
->
-> The virtual time scheduler code has a number of issues:
-> - queues slowed down by hardware/firmware powersave handling were not pro=
-perly
->   handled.
-> - on ath10k in push-pull mode, tx queues that the driver tries to pull fr=
-om
->   were starved, causing excessive latency
-> - delay between tx enqueue and reported airtime use were causing excessiv=
-ely
->   bursty tx behavior
->
-> The bursty behavior may also be present on the round-robin scheduler, but=
- there
-> it is much easier to fix without introducing additional regressions
+> 32 bit is more than enough range for the airtime deficit
 >
 > Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
