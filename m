@@ -2,69 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B52C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jun 2022 09:45:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E82C6CCA480
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jun 2022 09:46:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245679AbiF1Jpw (ORCPT
+        id S1344283AbiF1Jqe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Jun 2022 05:45:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38586 "EHLO
+        Tue, 28 Jun 2022 05:46:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241493AbiF1Jpr (ORCPT
+        with ESMTP id S1344151AbiF1Jqc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Jun 2022 05:45:47 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57D6B25C40;
-        Tue, 28 Jun 2022 02:45:45 -0700 (PDT)
-Received: from kwepemi500012.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4LXKR36CH6z1L8hM;
-        Tue, 28 Jun 2022 17:43:27 +0800 (CST)
-Received: from huawei.com (10.175.112.208) by kwepemi500012.china.huawei.com
- (7.221.188.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 28 Jun
- 2022 17:45:41 +0800
-From:   Xu Qiang <xuqiang36@huawei.com>
-To:     <srini.raju@purelifi.com>, <kvalo@kernel.org>,
-        <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
-        <pabeni@redhat.com>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <xuqiang36@huawei.com>,
-        <rui.xiang@huawei.com>
-Subject: [PATCH -next] wifi: plfxlc: Use eth_zero_addr() to assign zero address
-Date:   Tue, 28 Jun 2022 09:39:39 +0000
-Message-ID: <20220628093939.27063-1-xuqiang36@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        Tue, 28 Jun 2022 05:46:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4791F25C69;
+        Tue, 28 Jun 2022 02:46:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CB414617B3;
+        Tue, 28 Jun 2022 09:46:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21F00C341CB;
+        Tue, 28 Jun 2022 09:46:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656409590;
+        bh=aNsBjoam9FomQGP0KLpmbiHeL/xAsgah34KubXmo/7Q=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=cV5jmYDejNl2eM22Og0AgzjAq1KUDXy9YVpy90dvsGq8t/J9oBSRJNZghpgru6e0Y
+         JYBCsSth17DmDu3kVrH+RNB93KNImGfVfHSmW47GIW8Tl05c5Ut4hDUtDobfYxEsRf
+         mxqamINcbsAdtUplbsQvMHKxMsq09w28pP/gwXI2t8siWGQUBxxVOdqcTP4Fpynqkb
+         wVdayItZkl0b80YceJnP0ZniXQPtKvQF4PtE0Z0sHF9sBORrn/D/XUIuNOWybdTeSO
+         be7YmggGzSrSKeLWWtotW1sUshOjPdtnsByqEJLAEeoCznotST7ObjBOVgcbiecHwB
+         kwDMrHjS7TACg==
+Received: from mchehab by mail.kernel.org with local (Exim 4.95)
+        (envelope-from <mchehab@kernel.org>)
+        id 1o67nf-005HEs-Lu;
+        Tue, 28 Jun 2022 10:46:27 +0100
+From:   Mauro Carvalho Chehab <mchehab@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "Jonathan Corbet" <corbet@lwn.net>,
+        "Mauro Carvalho Chehab" <mchehab+huawei@kernel.org>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Paolo Abeni <pabeni@redhat.com>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 03/22] net: mac80211: sta_info: fix a missing kernel-doc struct element
+Date:   Tue, 28 Jun 2022 10:46:07 +0100
+Message-Id: <37d898634bb30776442a33833c48cbb21c90ecc6.1656409369.git.mchehab@kernel.org>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <cover.1656409369.git.mchehab@kernel.org>
+References: <cover.1656409369.git.mchehab@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.112.208]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500012.china.huawei.com (7.221.188.12)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Using eth_zero_addr() to assign zero address insetad of memset().
+struct link_sta_info has now a cur_max_bandwidth data:
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Xu Qiang <xuqiang36@huawei.com>
+	net/mac80211/sta_info.h:569: warning: Function parameter or member 'cur_max_bandwidth' not described in 'link_sta_info'
+
+Copy the meaning from struct sta_info, documenting it.
+
+Signed-off-by: Mauro Carvalho Chehab <mchehab@kernel.org>
 ---
- drivers/net/wireless/purelifi/plfxlc/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/purelifi/plfxlc/usb.c b/drivers/net/wireless/purelifi/plfxlc/usb.c
-index 8519cf0adfff..39e54b3787d6 100644
---- a/drivers/net/wireless/purelifi/plfxlc/usb.c
-+++ b/drivers/net/wireless/purelifi/plfxlc/usb.c
-@@ -562,7 +562,7 @@ static void sta_queue_cleanup_timer_callb(struct timer_list *t)
- 		if (tx->station[sidx].flag & STATION_HEARTBEAT_FLAG) {
- 			tx->station[sidx].flag ^= STATION_HEARTBEAT_FLAG;
- 		} else {
--			memset(tx->station[sidx].mac, 0, ETH_ALEN);
-+			eth_zero_addr(tx->station[sidx].mac);
- 			tx->station[sidx].flag = 0;
- 		}
- 	}
+To avoid mailbombing on a large number of people, only mailing lists were C/C on the cover.
+See [PATCH 00/22] at: https://lore.kernel.org/all/cover.1656409369.git.mchehab@kernel.org/
+
+ net/mac80211/sta_info.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 218430790660..4e0b969891de 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -517,6 +517,8 @@ struct ieee80211_fragment_cache {
+  * @status_stats.last_ack_signal: last ACK signal
+  * @status_stats.ack_signal_filled: last ACK signal validity
+  * @status_stats.avg_ack_signal: average ACK signal
++ * @cur_max_bandwidth: maximum bandwidth to use for TX to the station,
++ *	taken from HT/VHT capabilities or VHT operating mode notification
+  * @pub: public (driver visible) link STA data
+  * TODO Move other link params from sta_info as required for MLD operation
+  */
 -- 
-2.17.1
+2.36.1
 
