@@ -2,68 +2,76 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A89CCA479
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jun 2022 10:52:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3423BC43334
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jun 2022 10:52:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245122AbiF1KwK (ORCPT
+        id S1344993AbiF1KwL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Jun 2022 06:52:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50640 "EHLO
+        Tue, 28 Jun 2022 06:52:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235054AbiF1KwJ (ORCPT
+        with ESMTP id S243923AbiF1KwK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Jun 2022 06:52:09 -0400
-Received: from fornost.hmeau.com (helcar.hmeau.com [216.24.177.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3186524F39;
+        Tue, 28 Jun 2022 06:52:10 -0400
+X-Greylist: delayed 417 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 28 Jun 2022 03:52:09 PDT
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0289724F3D;
         Tue, 28 Jun 2022 03:52:08 -0700 (PDT)
-Received: from gwarestrin.arnor.me.apana.org.au ([192.168.103.7])
-        by fornost.hmeau.com with smtp (Exim 4.94.2 #2 (Debian))
-        id 1o68p3-00C8tL-Fx; Tue, 28 Jun 2022 20:51:59 +1000
-Received: by gwarestrin.arnor.me.apana.org.au (sSMTP sendmail emulation); Tue, 28 Jun 2022 18:51:57 +0800
-Date:   Tue, 28 Jun 2022 18:51:57 +0800
-From:   Herbert Xu <herbert@gondor.apana.org.au>
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1656413110; bh=mAaCfPe3fw1fuDEGDpxnsjtKUtYee9b2yyQePpQWJZI=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=EckpsRugV1CYexE0vYH50nYaVQ7NY+FDxUfC5lx/gpbY4bebtiJylu+szLfvIn1js
+         Xo7UEIlt4oCkyhqvR4LH0Ve1sv37XeOmxlcvLGHG8Vvm//NeWlI13mil3IDktthOlY
+         6aqr6JtXCsVruTMhMug635wwGQD2hnsdkc8y5/CxRFIo6pvhjMEx0R3RF/ury2F8SN
+         Eh10oU9s1ZkbLeMLAObgkkziUtaHKytxNey8e4Ogx7CTS1gT4g4MTzyJRMwf1XtBwx
+         bwAF5wdfy7fhZrK9yf+OkFxwo4QZINUNYuSpBlcnC2GSK0bG9v8/ETTl2a4NotDbt5
+         ifk5iV9mdSJVA==
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Gregory Erwin <gregerwin256@gmail.com>,
-        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
         Kalle Valo <kvalo@kernel.org>,
         Rui Salvaterra <rsalvaterra@gmail.com>,
-        stable <stable@vger.kernel.org>
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        stable@vger.kernel.org
 Subject: Re: [PATCH v6] ath9k: sleep for less time when unregistering hwrng
-Message-ID: <YrrdTcRCKBt15HLz@gondor.apana.org.au>
+In-Reply-To: <20220627120735.611821-1-Jason@zx2c4.com>
 References: <20220627113749.564132-1-Jason@zx2c4.com>
  <20220627120735.611821-1-Jason@zx2c4.com>
- <87y1xib8pv.fsf@toke.dk>
- <CAO+Okf5r-rVVqwYiCHXEt_jh0StmVoUikqYfSn7y3QpGZMR3Vg@mail.gmail.com>
- <CAHmME9o4m5MNvDtQUc3OiYLVzNgk3u2i0EF4NhNV4uifZZLJ3g@mail.gmail.com>
- <CAHmME9prgW60P+CO1JSdf5o1hBh8JtciBxcYm25ZO6oTCkwkxg@mail.gmail.com>
+Date:   Tue, 28 Jun 2022 12:45:10 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87y1xh9idl.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHmME9prgW60P+CO1JSdf5o1hBh8JtciBxcYm25ZO6oTCkwkxg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 12:48:50PM +0200, Jason A. Donenfeld wrote:
+"Jason A. Donenfeld" <Jason@zx2c4.com> writes:
+
+> Even though hwrng provides a `wait` parameter, it doesn't work very well
+> when waiting for a long time. There are numerous deadlocks that emerge
+> related to shutdown. Work around this API limitation by waiting for a
+> shorter amount of time and erroring more frequently. This commit also
+> prevents hwrng from splatting messages to dmesg when there's a timeout
+> and switches to using schedule_timeout_interruptible(), so that the
+> kthread can be stopped.
 >
-> $ curl https://lore.kernel.org/lkml/20220627104955.534013-1-Jason@zx2c4.com/raw
-> | git am
-> 
-> That one, if you want to give it a spin and see if that 5-6s is back
-> to ~1s or less.
+> Reported-by: Gregory Erwin <gregerwin256@gmail.com>
+> Tested-by: Gregory Erwin <gregerwin256@gmail.com>
+> Cc: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: Rui Salvaterra <rsalvaterra@gmail.com>
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Cc: stable@vger.kernel.org
+> Fixes: fcd09c90c3c5 ("ath9k: use hw_random API instead of directly dumpin=
+g into random.c")
+> Link: https://lore.kernel.org/all/CAO+Okf6ZJC5-nTE_EJUGQtd8JiCkiEHytGgDsF=
+GTEjs0c00giw@mail.gmail.com/
+> Link: https://lore.kernel.org/lkml/CAO+Okf5k+C+SE6pMVfPf-d8MfVPVq4PO7EY8H=
+ys_DVXtent3HA@mail.gmail.com/
+> Link: https://bugs.archlinux.org/task/75138
+> Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
 
-Whatever caused kthread_should_stop to return true should have
-woken the thread and caused schedule_timeout to return.
-
-If it's not waking the thread up then we should find out why.
-
-Oh wait you're checking kthread_should_stop before the schedule
-call instead of afterwards, that would do it.
-
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
