@@ -2,131 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D2D0C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jun 2022 06:09:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B52C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jun 2022 09:45:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245373AbiF1GJy (ORCPT
+        id S245679AbiF1Jpw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Jun 2022 02:09:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46626 "EHLO
+        Tue, 28 Jun 2022 05:45:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245378AbiF1GJu (ORCPT
+        with ESMTP id S241493AbiF1Jpr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Jun 2022 02:09:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D7E92610A;
-        Mon, 27 Jun 2022 23:09:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1976761874;
-        Tue, 28 Jun 2022 06:09:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8F93C341C6;
-        Tue, 28 Jun 2022 06:09:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1656396576;
-        bh=TnPnSztZaMrJo3SBp024+cQ77bnVWMMq6znbAKHu1xI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mvMtZYJF9WFCY8+lH/0s1P9xyrfjb3ljM5CwNj5NpBh2WoNTfgjRLyKYL6AMz/bfv
-         iPkewmoS7+wqdU+uAIVMrcZEZhXrL3sjUGSXUAclO7BYeK8UzQf2LpeCMpYBtwfGT1
-         pFEQ6QvZRIkZDsV21PbxFlZrnojEeTb3hp/cGD/I=
-Date:   Tue, 28 Jun 2022 08:09:33 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Duoming Zhou <duoming@zju.edu.cn>
-Cc:     linux-wireless@vger.kernel.org, amitkarwar@gmail.com,
-        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
-        huxinming820@gmail.com, kvalo@kernel.org, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH V6 RESEND] mwifiex: fix sleep in atomic context bugs
- caused by dev_coredumpv
-Message-ID: <YrqbHWWKjoyBwMae@kroah.com>
-References: <20220628014110.9183-1-duoming@zju.edu.cn>
+        Tue, 28 Jun 2022 05:45:47 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57D6B25C40;
+        Tue, 28 Jun 2022 02:45:45 -0700 (PDT)
+Received: from kwepemi500012.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4LXKR36CH6z1L8hM;
+        Tue, 28 Jun 2022 17:43:27 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by kwepemi500012.china.huawei.com
+ (7.221.188.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 28 Jun
+ 2022 17:45:41 +0800
+From:   Xu Qiang <xuqiang36@huawei.com>
+To:     <srini.raju@purelifi.com>, <kvalo@kernel.org>,
+        <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
+        <pabeni@redhat.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <xuqiang36@huawei.com>,
+        <rui.xiang@huawei.com>
+Subject: [PATCH -next] wifi: plfxlc: Use eth_zero_addr() to assign zero address
+Date:   Tue, 28 Jun 2022 09:39:39 +0000
+Message-ID: <20220628093939.27063-1-xuqiang36@huawei.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220628014110.9183-1-duoming@zju.edu.cn>
+Content-Type: text/plain
+X-Originating-IP: [10.175.112.208]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500012.china.huawei.com (7.221.188.12)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Jun 28, 2022 at 09:41:09AM +0800, Duoming Zhou wrote:
-> There are sleep in atomic context bugs when uploading device dump
-> data in mwifiex. The root cause is that dev_coredumpv could not
-> be used in atomic contexts, because it calls dev_set_name which
-> include operations that may sleep. The call tree shows execution
-> paths that could lead to bugs:
-> 
->    (Interrupt context)
-> fw_dump_timer_fn
->   mwifiex_upload_device_dump
->     dev_coredumpv(..., GFP_KERNEL)
->       dev_coredumpm()
->         kzalloc(sizeof(*devcd), gfp); //may sleep
->         dev_set_name
->           kobject_set_name_vargs
->             kvasprintf_const(GFP_KERNEL, ...); //may sleep
->             kstrdup(s, GFP_KERNEL); //may sleep
-> 
-> The corresponding fail log is shown below:
-> 
-> [  135.275938] usb 1-1: == mwifiex dump information to /sys/class/devcoredump start
-> [  135.281029] BUG: sleeping function called from invalid context at include/linux/sched/mm.h:265
-> ...
-> [  135.293613] Call Trace:
-> [  135.293613]  <IRQ>
-> [  135.293613]  dump_stack_lvl+0x57/0x7d
-> [  135.293613]  __might_resched.cold+0x138/0x173
-> [  135.293613]  ? dev_coredumpm+0xca/0x2e0
-> [  135.293613]  kmem_cache_alloc_trace+0x189/0x1f0
-> [  135.293613]  ? devcd_match_failing+0x30/0x30
-> [  135.293613]  dev_coredumpm+0xca/0x2e0
-> [  135.293613]  ? devcd_freev+0x10/0x10
-> [  135.293613]  dev_coredumpv+0x1c/0x20
-> [  135.293613]  ? devcd_match_failing+0x30/0x30
-> [  135.293613]  mwifiex_upload_device_dump+0x65/0xb0
-> [  135.293613]  ? mwifiex_dnld_fw+0x1b0/0x1b0
-> [  135.293613]  call_timer_fn+0x122/0x3d0
-> [  135.293613]  ? msleep_interruptible+0xb0/0xb0
-> [  135.293613]  ? lock_downgrade+0x3c0/0x3c0
-> [  135.293613]  ? __next_timer_interrupt+0x13c/0x160
-> [  135.293613]  ? lockdep_hardirqs_on_prepare+0xe/0x220
-> [  135.293613]  ? mwifiex_dnld_fw+0x1b0/0x1b0
-> [  135.293613]  __run_timers.part.0+0x3f8/0x540
-> [  135.293613]  ? call_timer_fn+0x3d0/0x3d0
-> [  135.293613]  ? arch_restore_msi_irqs+0x10/0x10
-> [  135.293613]  ? lapic_next_event+0x31/0x40
-> [  135.293613]  run_timer_softirq+0x4f/0xb0
-> [  135.293613]  __do_softirq+0x1c2/0x651
-> ...
-> [  135.293613] RIP: 0010:default_idle+0xb/0x10
-> [  135.293613] RSP: 0018:ffff888006317e68 EFLAGS: 00000246
-> [  135.293613] RAX: ffffffff82ad8d10 RBX: ffff888006301cc0 RCX: ffffffff82ac90e1
-> [  135.293613] RDX: ffffed100d9ff1b4 RSI: ffffffff831ad140 RDI: ffffffff82ad8f20
-> [  135.293613] RBP: 0000000000000003 R08: 0000000000000000 R09: ffff88806cff8d9b
-> [  135.293613] R10: ffffed100d9ff1b3 R11: 0000000000000001 R12: ffffffff84593410
-> [  135.293613] R13: 0000000000000000 R14: 0000000000000000 R15: 1ffff11000c62fd2
-> ...
-> [  135.389205] usb 1-1: == mwifiex dump information to /sys/class/devcoredump end
-> 
-> This patch uses delayed work to replace timer and moves the operations
-> that may sleep into a delayed work in order to mitigate bugs, it was
-> tested on Marvell 88W8801 chip whose port is usb and the firmware is
-> usb8801_uapsta.bin. The following is the result after using delayed
-> work to replace timer.
-> 
-> [  134.936453] usb 1-1: == mwifiex dump information to /sys/class/devcoredump start
-> [  135.043344] usb 1-1: == mwifiex dump information to /sys/class/devcoredump end
-> 
-> As we can see, there is no bug now.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: f5ecd02a8b20 ("mwifiex: device dump support for usb interface")
-> Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> ---
-> Changes in v6:
->   - Use clang-format to adjust the format of code.
+Using eth_zero_addr() to assign zero address insetad of memset().
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Xu Qiang <xuqiang36@huawei.com>
+---
+ drivers/net/wireless/purelifi/plfxlc/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/purelifi/plfxlc/usb.c b/drivers/net/wireless/purelifi/plfxlc/usb.c
+index 8519cf0adfff..39e54b3787d6 100644
+--- a/drivers/net/wireless/purelifi/plfxlc/usb.c
++++ b/drivers/net/wireless/purelifi/plfxlc/usb.c
+@@ -562,7 +562,7 @@ static void sta_queue_cleanup_timer_callb(struct timer_list *t)
+ 		if (tx->station[sidx].flag & STATION_HEARTBEAT_FLAG) {
+ 			tx->station[sidx].flag ^= STATION_HEARTBEAT_FLAG;
+ 		} else {
+-			memset(tx->station[sidx].mac, 0, ETH_ALEN);
++			eth_zero_addr(tx->station[sidx].mac);
+ 			tx->station[sidx].flag = 0;
+ 		}
+ 	}
+-- 
+2.17.1
+
