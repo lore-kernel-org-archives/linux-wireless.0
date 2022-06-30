@@ -2,86 +2,132 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A0F0C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jun 2022 10:12:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75209C43334
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jun 2022 12:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234892AbiF3KMx (ORCPT
+        id S235061AbiF3Mzd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Jun 2022 06:12:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49996 "EHLO
+        Thu, 30 Jun 2022 08:55:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234937AbiF3KMo (ORCPT
+        with ESMTP id S235145AbiF3Mzc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Jun 2022 06:12:44 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0B8A4477F
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2022 03:12:42 -0700 (PDT)
-X-UUID: 0c28740b543241a8806eda8a5988db6c-20220630
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.7,REQID:75479113-00d0-4fb1-b997-bbc6810a1d49,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:100,FILE:0,RULE:Release_Ham,A
-        CTION:release,TS:95
-X-CID-INFO: VERSION:1.1.7,REQID:75479113-00d0-4fb1-b997-bbc6810a1d49,OB:0,LOB:
-        0,IP:0,URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:100,FILE:0,RULE:Spam_GS981B3D,A
-        CTION:quarantine,TS:95
-X-CID-META: VersionHash:87442a2,CLOUDID:6a533186-57f0-47ca-ba27-fe8c57fbf305,C
-        OID:a4a569f0bb19,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 0c28740b543241a8806eda8a5988db6c-20220630
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
-        (envelope-from <chui-hao.chiu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 81920562; Thu, 30 Jun 2022 18:12:38 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Thu, 30 Jun 2022 18:12:37 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Thu, 30 Jun 2022 18:12:37 +0800
-From:   Peter Chiu <chui-hao.chiu@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.Lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Peter Chiu <chui-hao.chiu@mediatek.com>
-Subject: [PATCH v2] mt76: mt7915: update mpdu density in 6g capability
-Date:   Thu, 30 Jun 2022 18:12:33 +0800
-Message-ID: <20220630101233.8415-1-chui-hao.chiu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Thu, 30 Jun 2022 08:55:32 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5625642A35
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2022 05:55:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 097D0B82A7D
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2022 12:55:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A5A8C34115;
+        Thu, 30 Jun 2022 12:55:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656593727;
+        bh=sPb+aKZxcQB0DTQQMxp20Z9m97RURlz/tRrPqbGNYcA=;
+        h=From:To:Cc:Subject:Date:From;
+        b=U/qrqbrdd+koLjVRTzBhnRrCXKxqsTqa+YXlmIqMkFxeI2KRKnhlCBCmfgw6diH6G
+         HnL+4CSlZQTDm92O2JYn2XiU7P/2BJfa0ogSSsqPeg6YuAodVDNUXFJSnrvsdkKB6Q
+         S3ENH1azYs5C49ytamO5N3RztHZtaguBW3T7avid5WvA+g6WCHcjz55IKy8zvq56Yt
+         pYQwmqUF+gCdP+K0TBrcDINny3hP4CcSg+7e1IGVB6flwSX+R2Rpuoka1Tt2SUlAjM
+         hNuEAf6Y0/OWFJkBAAcJPNWsfrqRYdmXdpLtU8UijFGFpGdUCbEBLq3av29iE88KXP
+         KHKh/5Og4oI5w==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: add len parameter to __mt76_mcu_msg_alloc signature
+Date:   Thu, 30 Jun 2022 14:55:18 +0200
+Message-Id: <04f03d8f8951de1c2e7069992e5b4baf7f85cea1.1656593620.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Set mpdu density to 2 usec in 6g capability to meet hardware
-capability and also enhance throughput.
+Introduce len to __mt76_mcu_msg_alloc signature in order to add the
+capability to specify two different value for allocation and copy length.
 
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
-v2: update commit message.
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mcu.c         | 10 ++++++----
+ drivers/net/wireless/mediatek/mt76/mt76.h        |  4 ++--
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c | 11 +++++------
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 6bdbc59bea..c0f4f20537 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -980,7 +980,7 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
- 			u16 cap = IEEE80211_HE_6GHZ_CAP_TX_ANTPAT_CONS |
- 				  IEEE80211_HE_6GHZ_CAP_RX_ANTPAT_CONS;
+diff --git a/drivers/net/wireless/mediatek/mt76/mcu.c b/drivers/net/wireless/mediatek/mt76/mcu.c
+index 914ee278e6e2..a8cafa39a56d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mcu.c
+@@ -7,17 +7,19 @@
  
--			cap |= u16_encode_bits(IEEE80211_HT_MPDU_DENSITY_8,
-+			cap |= u16_encode_bits(IEEE80211_HT_MPDU_DENSITY_2,
- 					       IEEE80211_HE_6GHZ_CAP_MIN_MPDU_START) |
- 			       u16_encode_bits(IEEE80211_VHT_MAX_AMPDU_1024K,
- 					       IEEE80211_HE_6GHZ_CAP_MAX_AMPDU_LEN_EXP) |
+ struct sk_buff *
+ __mt76_mcu_msg_alloc(struct mt76_dev *dev, const void *data,
+-		     int data_len, gfp_t gfp)
++		     int len, int data_len, gfp_t gfp)
+ {
+ 	const struct mt76_mcu_ops *ops = dev->mcu_ops;
+-	int length = ops->headroom + data_len + ops->tailroom;
+ 	struct sk_buff *skb;
+ 
+-	skb = alloc_skb(length, gfp);
++	len = max_t(int, len, data_len);
++	len = ops->headroom + len + ops->tailroom;
++
++	skb = alloc_skb(len, gfp);
+ 	if (!skb)
+ 		return NULL;
+ 
+-	memset(skb->head, 0, length);
++	memset(skb->head, 0, len);
+ 	skb_reserve(skb, ops->headroom);
+ 
+ 	if (data && data_len)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 4e8997c45c1b..bae1ec34e721 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1346,12 +1346,12 @@ int mt76s_rd_rp(struct mt76_dev *dev, u32 base,
+ 
+ struct sk_buff *
+ __mt76_mcu_msg_alloc(struct mt76_dev *dev, const void *data,
+-		     int data_len, gfp_t gfp);
++		     int len, int data_len, gfp_t gfp);
+ static inline struct sk_buff *
+ mt76_mcu_msg_alloc(struct mt76_dev *dev, const void *data,
+ 		   int data_len)
+ {
+-	return __mt76_mcu_msg_alloc(dev, data, data_len, GFP_KERNEL);
++	return __mt76_mcu_msg_alloc(dev, data, data_len, data_len, GFP_KERNEL);
+ }
+ 
+ void mt76_mcu_rx_event(struct mt76_dev *dev, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index f2f29eca5d49..9bd0b4d56de1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -1441,15 +1441,14 @@ static void mt7921_ipv6_addr_change(struct ieee80211_hw *hw,
+ 	if (!idx)
+ 		return;
+ 
+-	skb = __mt76_mcu_msg_alloc(&dev->mt76, NULL, sizeof(req_hdr) +
+-				   idx * sizeof(struct in6_addr), GFP_ATOMIC);
+-	if (!skb)
+-		return;
+-
+ 	req_hdr.arpns.ips_num = idx;
+ 	req_hdr.arpns.len = cpu_to_le16(sizeof(struct mt76_connac_arpns_tlv)
+ 					+ idx * sizeof(struct in6_addr));
+-	skb_put_data(skb, &req_hdr, sizeof(req_hdr));
++	skb = __mt76_mcu_msg_alloc(&dev->mt76, &req_hdr,
++			sizeof(req_hdr) + idx * sizeof(struct in6_addr),
++			sizeof(req_hdr), GFP_ATOMIC);
++	if (!skb)
++		return;
+ 
+ 	for (i = 0; i < idx; i++)
+ 		skb_put_data(skb, &ns_addrs[i].in6_u, sizeof(struct in6_addr));
 -- 
-2.18.0
+2.36.1
 
