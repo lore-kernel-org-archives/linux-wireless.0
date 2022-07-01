@@ -2,73 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD41C43334
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Jul 2022 10:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 975BAC43334
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Jul 2022 13:06:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234433AbiGAKAW (ORCPT
+        id S236635AbiGANGB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Jul 2022 06:00:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52776 "EHLO
+        Fri, 1 Jul 2022 09:06:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234056AbiGAKAV (ORCPT
+        with ESMTP id S234328AbiGANGA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Jul 2022 06:00:21 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 617817392E
-        for <linux-wireless@vger.kernel.org>; Fri,  1 Jul 2022 03:00:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=1H/SKq42ufaqJw4esn9+wGh5rFQ0cje5lBEt5DNGY5k=;
-        t=1656669620; x=1657879220; b=iigPt5a1TK8inh7texcxd87aiNvpM77HJC2p16ovgDGncVs
-        lG23PY2KLzel/uEUBgez1G/UV73QSZ47gHhoW1Nol4oiVjiJ+W718VPhUc8VSoYh3uQwLClBd48Fd
-        pKYG6EWuN+pbRAzu1Rh7//K5SOz2xrpNpgaM5JUM/uV1pWcImOrw7Xp9ylWvMMEG5rTj/rll9pkqc
-        PW4t/lP4a2Gf1LeFkBqYani/2OwF7UunXjwXaA/tVFOtG0r2L3dpV0Kato05V4m1t10tWGDn2XaPI
-        JYC2jRk7pYvX6ebwo7cxRELENYBGEAXBR1/8L4cerh6y9+/tGL5zsj+35TEqnWZA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1o7DRi-003R2z-32;
-        Fri, 01 Jul 2022 12:00:18 +0200
-Message-ID: <19477e0584f7031b37fcdfcc5ef10e7b00842f07.camel@sipsolutions.net>
-Subject: Re: [PATCH 0/3] Mesh Fast xmit support
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     "Sriram R (QUIC)" <quic_srirrama@quicinc.com>,
-        "nbd@nbd.name" <nbd@nbd.name>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Fri, 01 Jul 2022 12:00:17 +0200
-In-Reply-To: <940aa2fe0f2497e9fab9a5118001034b5de18d64.camel@sipsolutions.net>
-References: <1654857639-12346-1-git-send-email-quic_srirrama@quicinc.com>
-         <98e3a2743ab770fbd3f14dca14b62105c8457bf6.camel@sipsolutions.net>
-         <SN6PR02MB4334670B5FD85EB6940A64F8F7BD9@SN6PR02MB4334.namprd02.prod.outlook.com>
-         <9bce16843dcc698740d90d8963a1a55516fb1d39.camel@sipsolutions.net>
-         <SN6PR02MB4334F77368A1AC3F1202117CF7BD9@SN6PR02MB4334.namprd02.prod.outlook.com>
-         <940aa2fe0f2497e9fab9a5118001034b5de18d64.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.2 (3.44.2-1.fc36) 
+        Fri, 1 Jul 2022 09:06:00 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EB132E083
+        for <linux-wireless@vger.kernel.org>; Fri,  1 Jul 2022 06:05:59 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.50.13])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 91B1CA0073;
+        Fri,  1 Jul 2022 13:05:57 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 54965440066;
+        Fri,  1 Jul 2022 13:05:57 +0000 (UTC)
+Received: from [192.168.1.115] (unknown [98.97.36.234])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 4A8C513C2B0;
+        Fri,  1 Jul 2022 06:05:56 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 4A8C513C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1656680756;
+        bh=XmTv5gDGy9MDp9Ny5xAtYI/QmrLqutwQ+eKFUryHNFc=;
+        h=Subject:To:References:From:Date:In-Reply-To:From;
+        b=NJ1BUb7J0G3JtSQEDWC4TklYf7lXYafdiJXMcPui2KQhLpNxOszrmUqPQDu8hygbx
+         5AQi7bgor7yjJ7aIgODwaYWzOtEzAa2EAqUyJbhDwjFh7+n18TczPIZbH9zH1CVTrr
+         scCxxpJPQTQP2YQXEWell5QtkLNgkYy6aWSvizlA=
+Subject: Re: [PATCH] mac80211: report per-chain signal values through ethtool.
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20220329210228.8137-1-greearb@candelatech.com>
+ <8542c3eac729563fef1bc78d28c740453fba88bd.camel@sipsolutions.net>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <c7ee84a4-2be5-4176-2701-8c2e691a85fe@candelatech.com>
+Date:   Fri, 1 Jul 2022 06:05:55 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+In-Reply-To: <8542c3eac729563fef1bc78d28c740453fba88bd.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
+Content-Transfer-Encoding: 7bit
+X-MDID: 1656680758-BUtElSCjh43a
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2022-07-01 at 11:59 +0200, Johannes Berg wrote:
->=20
-> >   So was skeptical on having a higher cache size(like 250 or 500 max).
-> > Hence had a value of 50 and left the configuration part for devices
-> > which needed higher
-> > cache.=20
-> > But as you mentioned, this is only runtime max memory and not default.
-> > =C2=A0So we should be fine to set some high limit, If above is not a
-> > concern could we stick to
-> > an upper limit of ~150-200 ?
->=20
-> Right, I'm fine with that. I was just throwing out 500 as a random
-> number to show that it's not really a huge memory requirement.
->=20
+On 7/1/22 2:55 AM, Johannes Berg wrote:
+> On Tue, 2022-03-29 at 14:02 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> Combine them into a u64, each byte is one chain.
+> 
+> This only works up to 4 chains, but the specs at least support 8. I
+> don't think we have any drivers for that, but ...
 
-But maybe Felix wants to comment? Felix?
+u64 gives 8 bytes, so the ethtool part can support 8 chains.
+The mac80211 part only supports up to 4 chains currently though.
 
-johannes
+> 
+> And it's also rather ugly, IMHO.
+> 
+> We're reporting these through nl80211 anyway though, no? Why should we
+> prefer ethtool, which fundamentally limits to a single value for the AP
+> rather than giving the full per-station view.
+
+I already gather ethtool stats for STA vdevs, so adding another stat is
+basically free as far as performance is concerned.  That is important
+to me.  I do not currently program much against netlink API (just scrape
+existing tools output).
+
+I understand if you don't want it upstream though.
+
+> 
+>> Re-work the way that APs averaged stats to be more
+>> efficient.
+> 
+> Isn't that completely unrelated?
+
+At least somewhat unrelated.
+
+Thanks,
+Ben
+
+> 
+> johannes
+> 
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
