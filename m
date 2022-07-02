@@ -2,108 +2,97 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B157C433EF
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Jul 2022 11:08:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EED18C43334
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Jul 2022 14:30:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232364AbiGBLIC (ORCPT
+        id S231920AbiGBOal (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Jul 2022 07:08:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37530 "EHLO
+        Sat, 2 Jul 2022 10:30:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232083AbiGBLHw (ORCPT
+        with ESMTP id S231795AbiGBOak (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Jul 2022 07:07:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9029615A39;
-        Sat,  2 Jul 2022 04:07:50 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 23BA760DF2;
-        Sat,  2 Jul 2022 11:07:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E09AC341D9;
-        Sat,  2 Jul 2022 11:07:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656760068;
-        bh=GXTCFNGJ/qi6q84KgPXHTPGckjOATtaMykjkvdiZ8ns=;
-        h=From:To:Cc:Subject:Date:From;
-        b=DrrTnbY+g/95s2OoeUYPgsUS7r9KhEaNN9bCC94hZDu/RhdENgPzZoSE1bFGIeu8f
-         A7Y7GS2fdeuCvgSTgrN/C3Xk/UA4AOOR8PKrhHb1bqaCJDPjmbmDyW0ool3TYK7/Hd
-         CxINUJxSqKohLK3IuucJQULpCltifiDOZOyZyfbIOGyhrjN6eL4nHdwjPVWdsBmNQr
-         m10KGXrSflXIA+909EoSQweUfDbpYP0KDii/iawMcZOW08nSgdAA6iekKm5+xmvGOt
-         qZOWRpYYA6Df/o1E/Rs8oS6M9Sd+dj4RU3q++vdjNLnLFq1bzTTJ2BD2bq9KC1xlYu
-         xlTWaJKAO8emw==
-Received: from mchehab by mail.kernel.org with local (Exim 4.95)
-        (envelope-from <mchehab@kernel.org>)
-        id 1o7ayX-007gro-J8;
-        Sat, 02 Jul 2022 12:07:45 +0100
-From:   Mauro Carvalho Chehab <mchehab@kernel.org>
-To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        "Theodore Ts'o" <tytso@mit.edu>, Alasdair Kergon <agk@redhat.com>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Brendan Higgins <brendanhiggins@google.com>,
-        Dipen Patel <dipenp@nvidia.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Takashi Iwai <tiwai@suse.com>,
-        alsa-devel@alsa-project.org, dm-devel@redhat.com,
-        kunit-dev@googlegroups.com, kvm@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 00/12] Fix several documentation build warnings with Sphinx 2.4.4
-Date:   Sat,  2 Jul 2022 12:07:32 +0100
-Message-Id: <cover.1656759988.git.mchehab@kernel.org>
-X-Mailer: git-send-email 2.36.1
+        Sat, 2 Jul 2022 10:30:40 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 978CAEE12
+        for <linux-wireless@vger.kernel.org>; Sat,  2 Jul 2022 07:30:34 -0700 (PDT)
+X-UUID: e9b7289f7876430eb8cb35bc687af447-20220702
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.7,REQID:ba845107-e158-44bc-be3c-a849ea61bfab,OB:0,LO
+        B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,RULE:Release_Ham,ACT
+        ION:release,TS:45
+X-CID-INFO: VERSION:1.1.7,REQID:ba845107-e158-44bc-be3c-a849ea61bfab,OB:0,LOB:
+        0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,RULE:Release_Ham,ACTIO
+        N:release,TS:45
+X-CID-META: VersionHash:87442a2,CLOUDID:8baf5d86-57f0-47ca-ba27-fe8c57fbf305,C
+        OID:ce46dbe8f406,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,QS:nil,BEC:nil,COL:0
+X-UUID: e9b7289f7876430eb8cb35bc687af447-20220702
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1495510867; Sat, 02 Jul 2022 22:30:26 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Sat, 2 Jul 2022 22:30:25 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 2 Jul 2022 22:30:25 +0800
+Message-ID: <4b135d37fc8b9a9ee3a8674126c76c1c45b02054.camel@mediatek.com>
+Subject: Re: [PATCH 0/5] mt76: add the capability to support more than two
+ phys
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>, <nbd@nbd.name>
+CC:     <lorenzo.bianconi@redhat.com>, <linux-wireless@vger.kernel.org>,
+        <evelyn.tsai@mediatek.com>, <sean.wang@mediatek.com>,
+        Bo Jiao <bo.jiao@mediatek.com>
+Date:   Sat, 2 Jul 2022 22:30:25 +0800
+In-Reply-To: <cover.1656624320.git.lorenzo@kernel.org>
+References: <cover.1656624320.git.lorenzo@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series is against next-20220701. It fixes several warnings
-that are currently produced while building html docs.
+On Thu, 2022-06-30 at 23:41 +0200, Lorenzo Bianconi wrote:
+> Introduce the capability to support more than two mt76_phys.
+> This is a preliminary series to add mt7990 support.
+> 
+> Lorenzo Bianconi (5):
+>   mt76: add phy_idx in mt76_rx_status
+>   mt76: introduce phys array in mt76_dev structure
+>   mt76: add phy_idx to mt76_wcid
+>   mt76: convert MT_TX_HW_QUEUE_EXT_PHY to MT_TX_HW_QUEUE_PHY
+>   mt76: get rid of mt76_wcid_hw routine
+> 
+>  drivers/net/wireless/mediatek/mt76/dma.c      |  9 ++-
+>  drivers/net/wireless/mediatek/mt76/mac80211.c | 27 ++++----
+>  drivers/net/wireless/mediatek/mt76/mt76.h     | 67 ++++++++++-------
+> --
+>  .../net/wireless/mediatek/mt76/mt7615/init.c  |  4 +-
+>  .../net/wireless/mediatek/mt76/mt7615/mac.c   | 44 ++++++------
+>  .../net/wireless/mediatek/mt76/mt7615/main.c  |  4 +-
+>  .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 32 +++++----
+>  .../wireless/mediatek/mt76/mt7615/mt7615.h    |  2 +-
+>  .../wireless/mediatek/mt76/mt7615/pci_mac.c   | 15 +++--
+>  .../wireless/mediatek/mt76/mt76_connac_mac.c  | 12 ++--
+>  .../net/wireless/mediatek/mt76/mt7915/init.c  |  4 +-
+>  .../net/wireless/mediatek/mt76/mt7915/mac.c   | 23 ++++---
+>  .../net/wireless/mediatek/mt76/mt7915/main.c  |  4 +-
+>  .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 25 +++----
+>  .../wireless/mediatek/mt76/mt7915/mt7915.h    |  2 +-
+>  .../net/wireless/mediatek/mt76/mt7921/main.c  |  4 +-
+>  drivers/net/wireless/mediatek/mt76/testmode.c |  5 +-
+>  drivers/net/wireless/mediatek/mt76/tx.c       | 48 +++++++------
+>  18 files changed, 174 insertions(+), 157 deletions(-)
 
-Each patch in this series is independent from the others, as
-each one touches a different file.
+I think this series should add Bo's SOB as he finished the initial
+work.
 
-Mauro Carvalho Chehab (12):
-  docs: ext4: blockmap.rst: fix a broken table
-  docs: tegra194-hte.rst: don't include gpiolib.c twice
-  docs: device-mapper: add a blank line at writecache.rst
-  docs: PCI: pci-vntb-function.rst: Properly include ascii artwork
-  docs: PCI: pci-vntb-howto.rst: fix a title markup
-  docs: virt: kvm: fix a title markup at api.rst
-  docs: ABI: sysfs-bus-nvdimm
-  kunit: test.h: fix a kernel-doc markup
-  net: mac80211: fix a kernel-doc markup
-  docs: alsa: alsa-driver-api.rst: remove a kernel-doc file
-  docs: arm: index.rst: add google/chromebook-boot-flow
-  docs: leds: index.rst: add leds-qcom-lpg to it
-
- Documentation/ABI/testing/sysfs-bus-nvdimm             | 2 ++
- Documentation/PCI/endpoint/pci-vntb-function.rst       | 2 +-
- Documentation/PCI/endpoint/pci-vntb-howto.rst          | 2 +-
- Documentation/admin-guide/device-mapper/writecache.rst | 1 +
- Documentation/arm/index.rst                            | 2 ++
- Documentation/driver-api/hte/tegra194-hte.rst          | 3 +--
- Documentation/filesystems/ext4/blockmap.rst            | 2 +-
- Documentation/leds/index.rst                           | 1 +
- Documentation/sound/kernel-api/alsa-driver-api.rst     | 1 -
- Documentation/virt/kvm/api.rst                         | 6 +++---
- include/kunit/test.h                                   | 2 +-
- include/net/mac80211.h                                 | 2 +-
- 12 files changed, 15 insertions(+), 11 deletions(-)
-
--- 
-2.36.1
-
+Ryder
 
