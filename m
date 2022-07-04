@@ -2,90 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7903C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 02:36:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA6D3CCA473
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 03:00:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232348AbiGDCgL (ORCPT
+        id S231181AbiGDDAO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 3 Jul 2022 22:36:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58464 "EHLO
+        Sun, 3 Jul 2022 23:00:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232204AbiGDCgJ (ORCPT
+        with ESMTP id S229521AbiGDDAM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Jul 2022 22:36:09 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B80976561
-        for <linux-wireless@vger.kernel.org>; Sun,  3 Jul 2022 19:36:08 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2642ZmqS6011305, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2642ZmqS6011305
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 4 Jul 2022 10:35:49 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Mon, 4 Jul 2022 10:35:48 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Mon, 4 Jul
- 2022 10:35:48 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <leo.li@realtek.com>, <phhuang@realtek.com>,
-        <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/6] rtw89: declare support HE HTC always
-Date:   Mon, 4 Jul 2022 10:34:50 +0800
-Message-ID: <20220704023453.19935-4-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220704023453.19935-1-pkshih@realtek.com>
-References: <20220704023453.19935-1-pkshih@realtek.com>
+        Sun, 3 Jul 2022 23:00:12 -0400
+Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E4CCA3888;
+        Sun,  3 Jul 2022 20:00:10 -0700 (PDT)
+Received: from localhost (unknown [127.0.0.1])
+        by mail.nfschina.com (Postfix) with ESMTP id 313B71E80CD1;
+        Mon,  4 Jul 2022 10:58:17 +0800 (CST)
+X-Virus-Scanned: amavisd-new at test.com
+Received: from mail.nfschina.com ([127.0.0.1])
+        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id gsuYchCKhMV0; Mon,  4 Jul 2022 10:58:14 +0800 (CST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+        (Authenticated sender: jiaming@nfschina.com)
+        by mail.nfschina.com (Postfix) with ESMTPA id D42631E80CCF;
+        Mon,  4 Jul 2022 10:58:13 +0800 (CST)
+From:   Zhang Jiaming <jiaming@nfschina.com>
+To:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        liqiong@nfschina.com, renyu@nfschina.com,
+        Zhang Jiaming <jiaming@nfschina.com>
+Subject: [PATCH] ath11k: Fix typo in comments
+Date:   Mon,  4 Jul 2022 11:00:04 +0800
+Message-Id: <20220704030004.16484-1-jiaming@nfschina.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 07/04/2022 02:15:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzcvMyCkVaTIIDEwOjAwOjAw?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Correct ability of HE HTC that both STA and AP mode can support.
+There is a typo(isn't') in comments.
+It maybe 'isn't' instead of 'isn't''.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Zhang Jiaming <jiaming@nfschina.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/hal.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index a5880a54812e7..ec6e6b4543ceb 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -2669,8 +2669,7 @@ static void rtw89_init_he_cap(struct rtw89_dev *rtwdev,
- 		phy_cap_info = he_cap->he_cap_elem.phy_cap_info;
+diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
+index 1dba7b9e0bda..bda71ab5a1f2 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.c
++++ b/drivers/net/wireless/ath/ath11k/hal.c
+@@ -1165,7 +1165,7 @@ void ath11k_hal_srng_shadow_update_hp_tp(struct ath11k_base *ab,
+ 	lockdep_assert_held(&srng->lock);
  
- 		he_cap->has_he = true;
--		if (i == NL80211_IFTYPE_AP)
--			mac_cap_info[0] = IEEE80211_HE_MAC_CAP0_HTC_HE;
-+		mac_cap_info[0] = IEEE80211_HE_MAC_CAP0_HTC_HE;
- 		if (i == NL80211_IFTYPE_STATION)
- 			mac_cap_info[1] = IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US;
- 		mac_cap_info[2] = IEEE80211_HE_MAC_CAP2_ALL_ACK |
+ 	/* check whether the ring is emptry. Update the shadow
+-	 * HP only when then ring isn't' empty.
++	 * HP only when then ring isn't empty.
+ 	 */
+ 	if (srng->ring_dir == HAL_SRNG_DIR_SRC &&
+ 	    *srng->u.src_ring.tp_addr != srng->u.src_ring.hp)
 -- 
-2.25.1
+2.34.1
 
