@@ -2,147 +2,87 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C607BC43334
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 10:26:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11EEBCCA47C
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 13:03:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233456AbiGDK0D (ORCPT
+        id S234642AbiGDNDD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Jul 2022 06:26:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49678 "EHLO
+        Mon, 4 Jul 2022 09:03:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234450AbiGDKZm (ORCPT
+        with ESMTP id S231475AbiGDNDD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jul 2022 06:25:42 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7926211440
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Jul 2022 03:24:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1656930258; x=1688466258;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=MvdYv+YJGN2ILOx1k1ef7ciZKV3uX6IdJ7SV9yLTtkA=;
-  b=v0YoVWrtPt36Vf/T61YlHK3YAxye67906+eBDIQDlVn2wJA3Xwvc7YXc
-   f7XWKhgydVoygIzmKbpKYmggaOucqg+eXoaxvgYgCmSQqd0qHA4UbJ3yw
-   Um44OdTwrtpojnF6ZzrkJgmE+lXqKIXZUoUHer7fHPcU22+jyCP/m8Gsn
-   o=;
-Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 04 Jul 2022 03:24:18 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-SD-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2022 03:24:18 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 4 Jul 2022 03:24:17 -0700
-Received: from adisi-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 4 Jul 2022 03:24:16 -0700
-From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <johannes@sipsolutions.net>,
-        Aditya Kumar Singh <quic_adisi@quicinc.com>
-Subject: [PATCH 7/7] cfg80211: save 6 GHz power mode of the regulatory rules
-Date:   Mon, 4 Jul 2022 15:53:41 +0530
-Message-ID: <20220704102341.5692-8-quic_adisi@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220704102341.5692-1-quic_adisi@quicinc.com>
-References: <20220704102341.5692-1-quic_adisi@quicinc.com>
+        Mon, 4 Jul 2022 09:03:03 -0400
+Received: from smtp.smtpout.orange.fr (smtp07.smtpout.orange.fr [80.12.242.129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 877B5B7CB
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Jul 2022 06:03:00 -0700 (PDT)
+Received: from pop-os.home ([90.11.190.129])
+        by smtp.orange.fr with ESMTPA
+        id 8Lj7okCqDJcJL8Lj7oTUN6; Mon, 04 Jul 2022 15:02:58 +0200
+X-ME-Helo: pop-os.home
+X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
+X-ME-Date: Mon, 04 Jul 2022 15:02:58 +0200
+X-ME-IP: 90.11.190.129
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] p54: Use the bitmap API to allocate bitmaps
+Date:   Mon,  4 Jul 2022 15:02:55 +0200
+Message-Id: <2755b8b7d85a2db0663d39ea6df823f94f3401b3.1656939750.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently when user space demands the reg rules via NL80211_CMD_GET_REG
-command, along with Power Spectral Denity (PSD) values, power mode
-needs to be advertised since in 6 GHz AP beacon, Tx power envelope
-should have PSD info as well which can be opted based on the power
-mode. Similarly, via NL80211_CMD_SET_REG command, user space can try
-to set regulatory rules and cfg80211 needs to store the incoming power
-mode for the rule.
+Use bitmap_zalloc()/bitmap_free() instead of hand-writing them.
 
-Add support for 6 GHz power mode advertisement in
-NL80211_CMD_GET_REG command and saving 6 GHz power mode for reg rules
-via NL80211_CMD_SET_REG command.
+It is less verbose and it improves the semantic.
 
-Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- include/uapi/linux/nl80211.h |  4 ++++
- net/wireless/nl80211.c       | 20 ++++++++++++++++++++
- 2 files changed, 24 insertions(+)
+ drivers/net/wireless/intersil/p54/fwio.c | 6 ++----
+ drivers/net/wireless/intersil/p54/main.c | 2 +-
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e62838887802..f2a32023a3f4 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4258,6 +4258,8 @@ enum nl80211_reg_type {
-  *	If not present or 0 default CAC time will be used.
-  * @NL80211_ATTR_POWER_RULE_PSD: power spectral density (in dBm).
-  *	This could be negative.
-+ * @NL80211_ATTR_REG_POWER_MODE: the regulatory power mode for 6 GHz rules.
-+ *	Referenced from &enum nl80211_regulatory_power_modes
-  * @NL80211_REG_RULE_ATTR_MAX: highest regulatory rule attribute number
-  *	currently defined
-  * @__NL80211_REG_RULE_ATTR_AFTER_LAST: internal use
-@@ -4277,6 +4279,8 @@ enum nl80211_reg_rule_attr {
+diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
+index bece14e4ff0d..b52cce38115d 100644
+--- a/drivers/net/wireless/intersil/p54/fwio.c
++++ b/drivers/net/wireless/intersil/p54/fwio.c
+@@ -173,10 +173,8 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
+ 		 * keeping a extra list for uploaded keys.
+ 		 */
  
- 	NL80211_ATTR_POWER_RULE_PSD,
- 
-+	NL80211_ATTR_REG_POWER_MODE,
-+
- 	/* keep last */
- 	__NL80211_REG_RULE_ATTR_AFTER_LAST,
- 	NL80211_REG_RULE_ATTR_MAX = __NL80211_REG_RULE_ATTR_AFTER_LAST - 1
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 915516bd4d93..5c0ac12c26b7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8200,6 +8200,13 @@ static int nl80211_put_regdom(const struct ieee80211_regdomain *regdom,
- 				reg_rule->dfs_cac_ms))
- 			goto nla_put_failure;
- 
-+		/* Put power mode as well if its a 6 GHz reg rule */
-+		if (freq_range->start_freq_khz >= MHZ_TO_KHZ(5925) &&
-+		    freq_range->end_freq_khz <= MHZ_TO_KHZ(7125) &&
-+		    nla_put_u8(msg, NL80211_ATTR_REG_POWER_MODE,
-+			       reg_rule->power_mode))
-+			goto nla_put_failure;
-+
- 		if ((reg_rule->flags & NL80211_RRF_PSD) &&
- 		    nla_put_s8(msg, NL80211_ATTR_POWER_RULE_PSD,
- 			       reg_rule->psd))
-@@ -8379,6 +8386,10 @@ static const struct nla_policy reg_rule_policy[NL80211_REG_RULE_ATTR_MAX + 1] =
- 	[NL80211_ATTR_POWER_RULE_MAX_EIRP]	= { .type = NLA_U32 },
- 	[NL80211_ATTR_DFS_CAC_TIME]		= { .type = NLA_U32 },
- 	[NL80211_ATTR_POWER_RULE_PSD]		= { .type = NLA_S8 },
-+	[NL80211_ATTR_REG_POWER_MODE]		=
-+			  NLA_POLICY_RANGE(NLA_U8,
-+					   NL80211_REG_AP_LPI,
-+					   NL80211_REG_MAX_POWER_MODES),
- };
- 
- static int parse_reg_rule(struct nlattr *tb[],
-@@ -8426,6 +8437,15 @@ static int parse_reg_rule(struct nlattr *tb[],
- 		reg_rule->dfs_cac_ms =
- 			nla_get_u32(tb[NL80211_ATTR_DFS_CAC_TIME]);
- 
-+	if (freq_range->start_freq_khz >= MHZ_TO_KHZ(5925) &&
-+	    freq_range->end_freq_khz <= MHZ_TO_KHZ(7125)) {
-+		if (!tb[NL80211_ATTR_REG_POWER_MODE])
-+			return -EINVAL;
-+
-+		reg_rule->power_mode =
-+			nla_get_u8(tb[NL80211_ATTR_REG_POWER_MODE]);
-+	}
-+
- 	return 0;
- }
- 
+-		priv->used_rxkeys = kcalloc(BITS_TO_LONGS(priv->rx_keycache_size),
+-					    sizeof(long),
+-					    GFP_KERNEL);
+-
++		priv->used_rxkeys = bitmap_zalloc(priv->rx_keycache_size,
++						  GFP_KERNEL);
+ 		if (!priv->used_rxkeys)
+ 			return -ENOMEM;
+ 	}
+diff --git a/drivers/net/wireless/intersil/p54/main.c b/drivers/net/wireless/intersil/p54/main.c
+index 115be1f3f33d..c1e1711382a7 100644
+--- a/drivers/net/wireless/intersil/p54/main.c
++++ b/drivers/net/wireless/intersil/p54/main.c
+@@ -830,7 +830,7 @@ void p54_free_common(struct ieee80211_hw *dev)
+ 	kfree(priv->output_limit);
+ 	kfree(priv->curve_data);
+ 	kfree(priv->rssi_db);
+-	kfree(priv->used_rxkeys);
++	bitmap_free(priv->used_rxkeys);
+ 	kfree(priv->survey);
+ 	priv->iq_autocal = NULL;
+ 	priv->output_limit = NULL;
 -- 
-2.17.1
+2.34.1
 
