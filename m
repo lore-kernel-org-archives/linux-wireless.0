@@ -2,42 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21F8CCCA473
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 02:36:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB74DC43334
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 02:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232196AbiGDCgH (ORCPT
+        id S232313AbiGDCgL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 3 Jul 2022 22:36:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58416 "EHLO
+        Sun, 3 Jul 2022 22:36:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230095AbiGDCgG (ORCPT
+        with ESMTP id S230095AbiGDCgI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 3 Jul 2022 22:36:06 -0400
+        Sun, 3 Jul 2022 22:36:08 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C9DD64D8
-        for <linux-wireless@vger.kernel.org>; Sun,  3 Jul 2022 19:36:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4FBC6560
+        for <linux-wireless@vger.kernel.org>; Sun,  3 Jul 2022 19:36:07 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2642ZjhG6010803, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.73 with qID 2642ZoxW6011874, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2642ZjhG6010803
+        by rtits2.realtek.com.tw (8.15.2/2.71/5.88) with ESMTPS id 2642ZoxW6011874
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 4 Jul 2022 10:35:45 +0800
+        Mon, 4 Jul 2022 10:35:50 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Mon, 4 Jul 2022 10:35:45 +0800
+ 15.1.2375.7; Mon, 4 Jul 2022 10:35:49 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Mon, 4 Jul
- 2022 10:35:44 +0800
+ 2022 10:35:49 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <leo.li@realtek.com>, <phhuang@realtek.com>,
         <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/6] rtw89: correct settings of register and capability
-Date:   Mon, 4 Jul 2022 10:34:47 +0800
-Message-ID: <20220704023453.19935-1-pkshih@realtek.com>
+Subject: [PATCH 4/6] rtw89: ser: leave lps with mutex
+Date:   Mon, 4 Jul 2022 10:34:51 +0800
+Message-ID: <20220704023453.19935-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220704023453.19935-1-pkshih@realtek.com>
+References: <20220704023453.19935-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -63,30 +65,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Old settings could cause unexpected behavior in field, so fix them.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Chia-Yuan Li (2):
-  rtw89: 8852c: modify PCIE prebkf time
-  rtw89: 8852c: adjust mactxen delay of mac/phy interface
+Calling rtw89_leave_lps() should hold rtwdev::mutex.
+So, fix it.
 
-Ping-Ke Shih (1):
-  rtw89: declare support HE HTC always
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/ser.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Po-Hao Huang (1):
-  rtw89: 8852c: disable dma during mac init
-
-Zong-Zhe Yang (2):
-  rtw89: 8852a: update HW setting on BB
-  rtw89: ser: leave lps with mutex
-
- drivers/net/wireless/realtek/rtw89/core.c     |  3 +--
- drivers/net/wireless/realtek/rtw89/mac.c      | 19 +++++++++++++++++--
- drivers/net/wireless/realtek/rtw89/pci.c      |  2 ++
- drivers/net/wireless/realtek/rtw89/reg.h      |  4 +++-
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  3 ++-
- drivers/net/wireless/realtek/rtw89/ser.c      |  3 +++
- 6 files changed, 28 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/ser.c b/drivers/net/wireless/realtek/rtw89/ser.c
+index 726223f25dc69..7240364e8f7df 100644
+--- a/drivers/net/wireless/realtek/rtw89/ser.c
++++ b/drivers/net/wireless/realtek/rtw89/ser.c
+@@ -152,7 +152,10 @@ static void ser_state_run(struct rtw89_ser *ser, u8 evt)
+ 	rtw89_debug(rtwdev, RTW89_DBG_SER, "ser: %s receive %s\n",
+ 		    ser_st_name(ser), ser_ev_name(ser, evt));
+ 
++	mutex_lock(&rtwdev->mutex);
+ 	rtw89_leave_lps(rtwdev);
++	mutex_unlock(&rtwdev->mutex);
++
+ 	ser->st_tbl[ser->state].st_func(ser, evt);
+ }
+ 
 -- 
 2.25.1
 
