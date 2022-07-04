@@ -2,79 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 602A8CCA479
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 08:35:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE4C3C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Jul 2022 08:36:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233337AbiGDIfh (ORCPT
+        id S233105AbiGDIgz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Jul 2022 04:35:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42314 "EHLO
+        Mon, 4 Jul 2022 04:36:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230233AbiGDIfg (ORCPT
+        with ESMTP id S230233AbiGDIgy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Jul 2022 04:35:36 -0400
-Received: from mail-m963.mail.126.com (mail-m963.mail.126.com [123.126.96.3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EA838B484
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Jul 2022 01:35:34 -0700 (PDT)
+        Mon, 4 Jul 2022 04:36:54 -0400
+Received: from m15111.mail.126.com (m15111.mail.126.com [220.181.15.111])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C9F8A44B
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Jul 2022 01:36:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=l1t1B
-        jKcaNds6H6upcvrVgJe3EiI8pwcuA8sdN9vvyg=; b=Tm+7ACJ1gbLTGc88970MZ
-        CQWYVyg0336/jCku5DrIeuf0F8fm6iOc+83i15f2YquFtBTe7gASuTa0giz4kiv7
-        NhPuRRmEVxm/9Q9CusiylzdEYCDE1TF70Wigqan0ikCQqFWdrvcLX53Xhg9qX2pa
-        kJsKV+0ICC8U+DlfwEp3rM=
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=iPysx
+        cqXD4MktxFv2jTlSRSS0lgtVcXHhc6wMprLs+Y=; b=lv3XfKQVqmMuLIrvyUcyW
+        Ev/0PD+jk+dcWi1Z8mrnVTSBM1pvGz+CjtJewQ6VMqIAbqqoBa4HxBrnzKxCuaiR
+        f3H7fLJbH964a+oUtNLZ8QW/xOev2k+4gQ8l4v3Q9i/bkh0wjDOfJytbUlqSFSwD
+        QvBJi8bBdYlKvbMHc1ct5I=
 Received: from localhost.localdomain (unknown [124.16.139.61])
-        by smtp8 (Coremail) with SMTP id NORpCgAHZZkSpsJidprJHA--.17231S3;
-        Mon, 04 Jul 2022 16:34:28 +0800 (CST)
+        by smtp1 (Coremail) with SMTP id C8mowAAHDyuIpsJidbThFw--.49737S2;
+        Mon, 04 Jul 2022 16:36:24 +0800 (CST)
 From:   Liang He <windhl@126.com>
 To:     nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com,
         shayne.chen@mediatek.com, sean.wang@mediatek.com,
-        linux-wireless@vger.kernel.org, windhl@126.com
-Subject: [PATCH 2/2] mediatek: mt76: eeprom: fix missing of_node_put() in mt76_find_power_limits_node()
-Date:   Mon,  4 Jul 2022 16:34:21 +0800
-Message-Id: <20220704083421.276727-2-windhl@126.com>
+        linux-wireless@vger.kernel.org, windhl@126.com, linmq006@gmail.com
+Subject: [PATCH] mediatek: mt7915: fix missing of_node_put() in mt7986_wmac_coninfra_setup
+Date:   Mon,  4 Jul 2022 16:35:56 +0800
+Message-Id: <20220704083556.276827-1-windhl@126.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220704083421.276727-1-windhl@126.com>
-References: <20220704083421.276727-1-windhl@126.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: NORpCgAHZZkSpsJidprJHA--.17231S3
-X-Coremail-Antispam: 1Uf129KBjvdXoWruw17XrWkGw48tw4kAr15XFb_yoWDJrX_ur
-        s7WrnxJF1xKr10gr4jyFW3ZayIkaykJr1xuFWIqrySg3yayrW8WFn0vr9rJr9ruFsavr15
-        Jw1qqFy5Aa9a9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRLF4iUUUUUU==
+X-CM-TRANSID: C8mowAAHDyuIpsJidbThFw--.49737S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrKrW7Kry8WFyrtr4UGry7trb_yoWfWrb_ur
+        Z2gFnxWF1kCr1vkr42kw43Ca4Yya95Za18uFZIqrWFqrWjvFWUGr1YvF17JrZrurn7Zr98
+        Gr1DAFyFqa98ZjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRiUDG3UUUUU==
 X-Originating-IP: [124.16.139.61]
-X-CM-SenderInfo: hzlqvxbo6rjloofrz/1tbizhQ0F18RPbX8JQAAsm
+X-CM-SenderInfo: hzlqvxbo6rjloofrz/1tbiuAg0F2JVkLx0MAAAsM
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 We should use of_node_put() for the reference 'np' returned by
-of_get_child_by_name() which will increase the refcount.
+of_parse_phandle() which will increase the refcount.
 
-Fixes: 22b980badc0f ("mt76: add functions for parsing rate power limits from DT")
+Fixes: 99ad32a4ca3a ("mt76: mt7915: add support for MT7986")
+Co-authored-by: Miaoqian Lin <linmq006@gmail.com>
 Signed-off-by: Liang He <windhl@126.com>
 ---
- drivers/net/wireless/mediatek/mt76/eeprom.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/soc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
-index a499861918fa..9bc8758573fc 100644
---- a/drivers/net/wireless/mediatek/mt76/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
-@@ -162,10 +162,13 @@ mt76_find_power_limits_node(struct mt76_dev *dev)
- 		}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+index c74afa746251..ee7ddda4288b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+@@ -278,6 +278,7 @@ static int mt7986_wmac_coninfra_setup(struct mt7915_dev *dev)
+ 		return -EINVAL;
  
- 		if (mt76_string_prop_find(country, dev->alpha2) ||
--		    mt76_string_prop_find(regd, region_name))
-+		    mt76_string_prop_find(regd, region_name)) {
-+			of_node_put(np);
- 			return cur;
-+		}
- 	}
- 
+ 	rmem = of_reserved_mem_lookup(np);
 +	of_node_put(np);
- 	return fallback;
- }
+ 	if (!rmem)
+ 		return -EINVAL;
  
 -- 
 2.25.1
