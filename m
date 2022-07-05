@@ -2,126 +2,90 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEA77C43334
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jul 2022 22:03:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B66C43334
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Jul 2022 22:48:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231638AbiGEWDY (ORCPT
+        id S233050AbiGEWsW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Jul 2022 18:03:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48928 "EHLO
+        Tue, 5 Jul 2022 18:48:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229973AbiGEWDX (ORCPT
+        with ESMTP id S232893AbiGEWsK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Jul 2022 18:03:23 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A84F619286
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Jul 2022 15:03:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1657058597; x=1688594597;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=ckN48TyX+UBV2midPfaY/01bSG1LflQnf5t3aaZCCZk=;
-  b=dtTZXKBoxP0kx8IjwUtbcT/kH+B1CCKMFby8ndMngHsPiVSUBVOrgMFf
-   7T6xFwBXGW5xVkyJC6PyHZ9ASP1eNj8AFxluU3NU3RWlaEjlELrJ724J4
-   MdNgf8PH/xaj1NhqkU89TtlstPjLf52gn5nEJxKG8XbGLsrmCdcijM7xf
-   c=;
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 05 Jul 2022 15:03:17 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 15:03:17 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 5 Jul 2022 15:03:16 -0700
-Received: from msinada-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 5 Jul 2022 15:03:16 -0700
-From:   Muna Sinada <quic_msinada@quicinc.com>
-To:     <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>,
-        Muna Sinada <quic_msinada@quicinc.com>
-Subject: [PATCH v2 2/2] mac80211: Add HE MU-MIMO related flags in ieee80211_bss_conf
-Date:   Tue, 5 Jul 2022 15:03:06 -0700
-Message-ID: <1657058586-4621-2-git-send-email-quic_msinada@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1657058586-4621-1-git-send-email-quic_msinada@quicinc.com>
-References: <1657058586-4621-1-git-send-email-quic_msinada@quicinc.com>
+        Tue, 5 Jul 2022 18:48:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A35A1BE93;
+        Tue,  5 Jul 2022 15:47:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D5F8661D4D;
+        Tue,  5 Jul 2022 22:47:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54D29C341EE;
+        Tue,  5 Jul 2022 22:47:52 +0000 (UTC)
+Received: from rostedt by gandalf.local.home with local (Exim 4.95)
+        (envelope-from <rostedt@goodmis.org>)
+        id 1o8rKh-001yNk-EC;
+        Tue, 05 Jul 2022 18:47:51 -0400
+Message-ID: <20220705224751.271015450@goodmis.org>
+User-Agent: quilt/0.66
+Date:   Tue, 05 Jul 2022 18:45:06 -0400
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Ingo Molnar <mingo@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 13/13] mac80211: tracing: Use the new __vstring() helper
+References: <20220705224453.120955146@goodmis.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Adding flags for SU Beamformer, SU Beamformee, MU Beamformer and Full
-Bandwidth UL MU-MIMO for HE. This is utilized to pass MU-MIMO
-configurations from user space to driver.
+From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
 
-Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
+Instead of open coding a __dynamic_array() with a fixed length (which
+defeats the purpose of the dynamic array in the first place). Use the new
+__vstring() helper that will use a va_list and only write enough of the
+string into the ring buffer that is needed.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
 ---
- include/net/mac80211.h | 10 ++++++++++
- net/mac80211/cfg.c     | 15 +++++++++++++++
- 2 files changed, 25 insertions(+)
+ net/mac80211/trace_msg.h | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ef4133091d41..615fc64c8060 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -640,6 +640,12 @@ struct ieee80211_fils_discovery {
-  * @vht_su_beamformee: does this BSS support operation as an VHT SU beamformee
-  * @vht_mu_beamformer: does this BSS support operation as an VHT MU beamformer
-  * @vht_mu_beamformee: does this BSS support operation as an VHT MU beamformee
-+ * @he_su_beamformer: does this BSS support operation as an HE SU beamformer
-+ * @he_su_beamformee: does this BSS support operation as an HE SU beamformee
-+ * @he_mu_beamformer: does this BSS support operation as an HE MU beamformer
-+ * @he_full_ul_mumimo: does this BSS support the reception (AP) or transmission
-+ *	(non-AP STA) of an HE TB PPDU on an RU that spans the entire PPDU
-+ *	bandwidth
-  */
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
-@@ -719,6 +725,10 @@ struct ieee80211_bss_conf {
- 	bool vht_su_beamformee;
- 	bool vht_mu_beamformer;
- 	bool vht_mu_beamformee;
-+	bool he_su_beamformer;
-+	bool he_su_beamformee;
-+	bool he_mu_beamformer;
-+	bool he_full_ul_mumimo;
- };
+diff --git a/net/mac80211/trace_msg.h b/net/mac80211/trace_msg.h
+index 40141df09f25..c9dbe9aab7bd 100644
+--- a/net/mac80211/trace_msg.h
++++ b/net/mac80211/trace_msg.h
+@@ -24,13 +24,11 @@ DECLARE_EVENT_CLASS(mac80211_msg_event,
+ 	TP_ARGS(vaf),
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 76418bb360fa..bb6faab4e94a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1193,6 +1193,21 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			changed |= BSS_CHANGED_HE_BSS_COLOR;
- 	}
+ 	TP_STRUCT__entry(
+-		__dynamic_array(char, msg, MAX_MSG_LEN)
++		__vstring(msg, vaf->fmt, vaf->va)
+ 	),
  
-+	if (params->he_cap) {
-+		sdata->vif.bss_conf.he_su_beamformer =
-+					!!(params->he_cap->phy_cap_info[3] &
-+					   IEEE80211_HE_PHY_CAP3_SU_BEAMFORMER);
-+		sdata->vif.bss_conf.he_su_beamformee =
-+					!!(params->he_cap->phy_cap_info[4] &
-+					   IEEE80211_HE_PHY_CAP4_SU_BEAMFORMEE);
-+		sdata->vif.bss_conf.he_mu_beamformer =
-+					!!(params->he_cap->phy_cap_info[4] &
-+					   IEEE80211_HE_PHY_CAP4_MU_BEAMFORMER);
-+		sdata->vif.bss_conf.he_full_ul_mumimo =
-+				   !!(params->he_cap->phy_cap_info[2] &
-+				      IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO);
-+	}
-+
- 	if (sdata->vif.type == NL80211_IFTYPE_AP &&
- 	    params->mbssid_config.tx_wdev) {
- 		err = ieee80211_set_ap_mbssid_options(sdata,
+ 	TP_fast_assign(
+-		WARN_ON_ONCE(vsnprintf(__get_dynamic_array(msg),
+-				       MAX_MSG_LEN, vaf->fmt,
+-				       *vaf->va) >= MAX_MSG_LEN);
++		__assign_vstr(msg, vaf->fmt, vaf->va);
+ 	),
+ 
+ 	TP_printk("%s", __get_str(msg))
 -- 
-2.7.4
-
+2.35.1
