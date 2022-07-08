@@ -2,79 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6849AC433EF
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Jul 2022 17:01:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1771CCA47B
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Jul 2022 18:23:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238369AbiGHRBG (ORCPT
+        id S239406AbiGHSXN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Jul 2022 13:01:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45050 "EHLO
+        Fri, 8 Jul 2022 14:23:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238121AbiGHRBF (ORCPT
+        with ESMTP id S239211AbiGHSWJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Jul 2022 13:01:05 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27FF6E7C
-        for <linux-wireless@vger.kernel.org>; Fri,  8 Jul 2022 10:01:01 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CC63EB828B5
-        for <linux-wireless@vger.kernel.org>; Fri,  8 Jul 2022 17:00:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E800BC341C8;
-        Fri,  8 Jul 2022 17:00:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657299658;
-        bh=+V60161RGtW5N2RGODtn5HtAyykE0KHHtN0onZutMI8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=cEC/oG7yFRU0/FRvOfo7C7WzZc2GgLRYJD/O4TmiOxLmfPGmHCtDV5pDadYB6OElR
-         o2CeoIIcC2MPMrFpVMlXaVat5ZAHehqcBA6BvBqdoh5OYNsS3f19Dr07CXLaMkYDFE
-         Sb1RqbOFy0cLPSEHL61TSApUnJrpa2R2uDP1Ig9LFSS83Q0EZhS6zFMP5itwNjalvC
-         s9D9KgezNa9XQN869q5Zaw1W9voc2BKMBb1hcGFTucGvRTU7cf+dSLXIlvQa1erIcQ
-         fGQwFvx/iLH+IPRfgTd5Yxv0KpDvuv37PXS4tLHGv9sN5yfQZDc8cYbW1z0fHTUzLb
-         zr7epB7jllrBw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH] ath11k: mac: fix long line
-Date:   Fri,  8 Jul 2022 20:00:52 +0300
-Message-Id: <20220708170052.28615-1-kvalo@kernel.org>
-X-Mailer: git-send-email 2.30.2
+        Fri, 8 Jul 2022 14:22:09 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D432E84EDB
+        for <linux-wireless@vger.kernel.org>; Fri,  8 Jul 2022 11:22:05 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id 5so11114553plk.9
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2022 11:22:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:date:user-agent:mime-version
+         :content-transfer-encoding;
+        bh=M6suOAdRJLxu3fPSSE3NSOk2doSz21o50xSAm6DBmvY=;
+        b=NE0/TN/jxLRSF+Rm9/GZ0avM85KU4kcZMgX/9k5GgpsBkYAmLT2rPit0NlcZ34R4+G
+         2aAKaL2MW6jU/QgzCThQx8bo0/DV2+j+9SwR9BHV1kbkOJNfqjRdjuPX6WCSKTmlDYC1
+         7zbSldM9GLXqTJvQP9p1NMQ25EZxPAhj0sOtun03QRtyN/NeFyNwhicWBtg+kGFL68Xf
+         VRJYKrmo0XqxWyr/Ld/LQMGnOfhQRUF8IWoRX+OxIkwOCOlhRSZDSKjnGlkVFvT5L7Hj
+         qljhMLM2y6MI1fEewNY4mPZOiaqjYAU4KctreigAFiGRsh8oHavZf6eOHeLB+OSLgZ3q
+         V9Og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:date:user-agent
+         :mime-version:content-transfer-encoding;
+        bh=M6suOAdRJLxu3fPSSE3NSOk2doSz21o50xSAm6DBmvY=;
+        b=zBIAEE1LYlp6leOyap3x2eBxojpWqinN6sCd+cdK5mQKiRWnctvsrYscXfP8dne4qA
+         k6we2VzfdukIfJhgBxinT8MQUWEApceDChgftuOtrHUoF0H2P5DFRdmjSthb7xSRx0IK
+         Qm2n5kK/s2z0d0UDP7V3l36X1ypfqbFIPwknq336e250bxb/4//HIHewk6HmO502h4BQ
+         6qtKULxBjbsrMphIkCH0V30Y3cDAiqe9EJN5rj7pvxeCdbakxEX9DTGNbweN/w8etNCx
+         /8r6YKNqhdTjl/cD40Zw45pbDCR2wsBJRhi8YZjRwGcCl9zpgXDnJ3b4Jzy0vU1Ks/cY
+         5OTw==
+X-Gm-Message-State: AJIora86ffL1gIMWF47rkVhH5NwH8joycwfMtza8B+x6scO1lvuvh1ud
+        3o2Z+DIoqECee6Ke4KbmH7iUBrS9sYc=
+X-Google-Smtp-Source: AGRyM1tT+IAxmzoqKoLFRCNHcOXdAyhuM2mGTKKnA5/o+edb4nDXb1FYYhQsl3XnksH71c1pEvLXiA==
+X-Received: by 2002:a17:902:7c06:b0:16a:755f:86dd with SMTP id x6-20020a1709027c0600b0016a755f86ddmr4916749pll.82.1657304525106;
+        Fri, 08 Jul 2022 11:22:05 -0700 (PDT)
+Received: from [192.168.254.55] ([50.45.187.22])
+        by smtp.gmail.com with ESMTPSA id c17-20020a170902d49100b0015e8d4eb1dbsm14415689plg.37.2022.07.08.11.22.04
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Jul 2022 11:22:04 -0700 (PDT)
+Message-ID: <1c1a0a2c454dafcfaa19995974448ee5836fd9f7.camel@gmail.com>
+Subject: Expected behavior with co-located 6GHz APs?
+From:   James Prestwood <prestwoj@gmail.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date:   Fri, 08 Jul 2022 11:22:04 -0700
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.4 (3.40.4-3.fc34) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <quic_kvalo@quicinc.com>
+Hi,
 
-Recent mac80211 API changes introduced a long line warning in ath11k:
+I am playing around with a 6ghz AP and noticed some behavior I didn't
+expect.
 
-drivers/net/wireless/ath/ath11k/mac.c:1404: line length of 92 exceeds 90 columns
+The first issue I ran into was the regulatory domain. I'm in the US so
+6GHz should be enabled but "iw reg get" initially doesn't show any 6GHz
+frequencies. Its my understanding these frequencies get enabled by
+received beacons, and indeed if I do a full passive scan the regulatory
+domain gets updated, e.g.
 
-Compile tested only.
+iw wlan0 scan passive
 
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/mac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+After this, I can active scan and see my 6GHz AP. Which I'm assuming
+was based on the RNR element since active scanning on 6GHz is
+disallowed.
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 17dbc7d9cf29..7f3e9c30cfb0 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1401,7 +1401,8 @@ void ath11k_mac_bcn_tx_event(struct ath11k_vif *arvif)
- 	if (!vif->bss_conf.color_change_active && !arvif->bcca_zero_sent)
- 		return;
- 
--	if (vif->bss_conf.color_change_active && ieee80211_beacon_cntdwn_is_complete(vif)) {
-+	if (vif->bss_conf.color_change_active &&
-+	    ieee80211_beacon_cntdwn_is_complete(vif)) {
- 		arvif->bcca_zero_sent = true;
- 		ieee80211_color_change_finish(vif);
- 		return;
+BUT, if the interface goes down, the regdom reverts back to country 00
+requiring a full passive scan again to unlock 6GHz. This basically
+prevents a supplicant from using 6GHz without doing a time intensive
+passive scan.
 
-base-commit: f6bb3df74ceb88929dd7e09170ec156ac2e5d809
--- 
-2.30.2
+I would make more sense that the regdom should be updated based on
+finding an RNR element in addition to the beacon itself right?
+
+Thanks,
+James
 
