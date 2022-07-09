@@ -2,84 +2,88 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE59C43334
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Jul 2022 13:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3035CCA47C
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Jul 2022 14:30:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229642AbiGINx4 (ORCPT
+        id S229509AbiGIOat (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Jul 2022 09:53:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33690 "EHLO
+        Sat, 9 Jul 2022 10:30:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbiGINxx (ORCPT
+        with ESMTP id S229458AbiGIOas (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Jul 2022 09:53:53 -0400
-Received: from smtpbg.qq.com (unknown [43.155.67.158])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33F031120;
-        Sat,  9 Jul 2022 06:53:45 -0700 (PDT)
-X-QQ-mid: bizesmtp88t1657374806tsc63ebp
+        Sat, 9 Jul 2022 10:30:48 -0400
+Received: from smtpbg.qq.com (biz-43-154-54-12.mail.qq.com [43.154.54.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167652A958;
+        Sat,  9 Jul 2022 07:30:42 -0700 (PDT)
+X-QQ-Spam: true
+X-QQ-mid: bizesmtp70t1657375989tfudpi47
 Received: from localhost.localdomain ( [182.148.15.109])
         by bizesmtp.qq.com (ESMTP) with 
-        id ; Sat, 09 Jul 2022 21:53:22 +0800 (CST)
+        id ; Sat, 09 Jul 2022 22:13:06 +0800 (CST)
 X-QQ-SSF: 01000000002000B0C000C00A0000000
-X-QQ-FEAT: rl11S5XfjROmodCS3QjJDmHwffQNuDJ6HOK8x0NH5FW6lTuC5ig1Ym3b4yQrx
-        nElxIau1yJDjh+A4vmQVH17OPlXcRmErNPbjUNTzkeu7zFusCqGQfVE8Aku752c0u0KIv/7
-        z8DWKw3Ox6rNjx1ncw1bgUQg8lYI00BFZqh9VrFUXnrQ+RG/6+cAvCdhdkCsd1WwXECeFDu
-        qsLVrp/aHcV1P63wOD3iCtaBH7p8c3uulq2yTLM+3r3UAMzNtNssLXsdJ3c09HRgO5xgbqW
-        H9sy0h6+SH6ang/dG/0WzOyatALL2aW25fcEVmwbZfsgtXwZXUJ50w6MUp1q86/kG6rMhLQ
-        UyOYjJv6U+S+nx9P9ohTGQrafoQ7tSVv7OsJEZ7pBoEyfKTjqiaIwJ6TRLsHw==
-X-QQ-GoodBg: 0
 From:   Jilin Yuan <yuanjilin@cdjrlc.com>
-To:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, stf_xl@wp.pl
+To:     gregory.greenman@intel.com, kvalo@kernel.org, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        quic_srirrama@quicinc.com, yuanjilin@cdjrlc.com
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jilin Yuan <yuanjilin@cdjrlc.com>
-Subject: [PATCH] wifi: iwlegacy: fix repeated words in comments
-Date:   Sat,  9 Jul 2022 21:53:16 +0800
-Message-Id: <20220709135316.41425-1-yuanjilin@cdjrlc.com>
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: mvm: fix repeated words in comments
+Date:   Sat,  9 Jul 2022 22:12:59 +0800
+Message-Id: <20220709141259.60127-1-yuanjilin@cdjrlc.com>
 X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr4
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr5
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
  Delete the redundant word 'to'.
- Delete the redundant word 'if'.
+ Delete the redundant word 'the'.
 
 Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 ---
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
- drivers/net/wireless/intel/iwlegacy/common.c   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c       | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index d93900e62e3d..943de47170c7 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -6690,7 +6690,7 @@ il4965_pci_remove(struct pci_dev *pdev)
- 	sysfs_remove_group(&pdev->dev.kobj, &il_attribute_group);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 61f9136a333d..a3ffecad1f53 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -251,7 +251,7 @@ static void iwl_mvm_wowlan_get_rsc_tsc_data(struct ieee80211_hw *hw,
  
- 	/* ieee80211_unregister_hw call wil cause il_mac_stop to
--	 * to be called and il4965_down since we are removing the device
-+	 * be called and il4965_down since we are removing the device
- 	 * we need to set S_EXIT_PENDING bit.
- 	 */
- 	set_bit(S_EXIT_PENDING, &il->status);
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index 8299d89e7505..e40c4c41de10 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4816,7 +4816,7 @@ il_check_stuck_queue(struct il_priv *il, int cnt)
- #define IL_WD_TICK(timeout) ((timeout) / 4)
+ 		/*
+ 		 * For non-QoS this relies on the fact that both the uCode and
+-		 * mac80211 use TID 0 (as they need to to avoid replay attacks)
++		 * mac80211 use TID 0 (as they need to avoid replay attacks)
+ 		 * for checking the IV in the frames.
+ 		 */
+ 		for (i = 0; i < IWL_NUM_RSC; i++) {
+@@ -387,7 +387,7 @@ static void iwl_mvm_wowlan_get_rsc_v5_data(struct ieee80211_hw *hw,
+ 
+ 		/*
+ 		 * For non-QoS this relies on the fact that both the uCode and
+-		 * mac80211 use TID 0 (as they need to to avoid replay attacks)
++		 * mac80211 use TID 0 (as they need to avoid replay attacks)
+ 		 * for checking the IV in the frames.
+ 		 */
+ 		for (i = 0; i < IWL_MAX_TID_COUNT; i++) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
+index a3cefbc43e80..abf8585bf3bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
+@@ -29,7 +29,7 @@ u8 iwl_mvm_get_channel_width(struct cfg80211_chan_def *chandef)
  
  /*
-- * Watchdog timer callback, we check each tx queue for stuck, if if hung
-+ * Watchdog timer callback, we check each tx queue for stuck, if hung
-  * we reset the firmware. If everything is fine just rearm the timer.
+  * Maps the driver specific control channel position (relative to the center
+- * freq) definitions to the the fw values
++ * freq) definitions to the fw values
   */
- void
+ u8 iwl_mvm_get_ctrl_pos(struct cfg80211_chan_def *chandef)
+ {
 -- 
 2.36.1
 
