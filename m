@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15D55CCA483
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17085C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235181AbiGMJqE (ORCPT
+        id S236049AbiGMJqF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:46:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36272 "EHLO
+        Wed, 13 Jul 2022 05:46:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236212AbiGMJpX (ORCPT
+        with ESMTP id S236215AbiGMJpX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:23 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AF50C04F4
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6303CF511B
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=TG9oBaJziNF8wnrAAMKjLv2aa3BbfHZygjIgor+8uOU=;
-        t=1657705520; x=1658915120; b=Zz8LWEG+S8BKRMBHMLtrjOFQIQgo/5q8TABsU3R2FzpyjA4
-        SvBzA1/e/6DBxkQpUjKAgqzULbZ2iSNCY/86ofXLodMCUFLPjGq/CMq+ubG5FYTe0xz2O2HrTXZjR
-        uesVoFY6zU4K6NJ50WZfSjx0wNV6G8+9K9ffwzgLrZ69sTUdkM+JDo+agt+Q2bxKedQ1VqM6QWOdw
-        rz76yThlMoHBiDRvp+fynZAwGowtFvMiqGxwkjMc5Ii0uHxqvrnXsvOstMrDkQrrfLLG3zIJIBQoN
-        Jth/oeKFfnlGcpC3amyw8zrUZ17ktTi0uW0SSroivWgpoBm+t4VPFHMoI+0UPZ7A==;
+        Resent-Cc:Resent-Message-ID; bh=RLyTVqi3wvcE/lYDQKMSjcKYAywTka8zZF+v+5Q2LDQ=;
+        t=1657705521; x=1658915121; b=VwyDFRR8jSfTaA4a83xMHR1+CEDujuNk6pPKBU+3vzM0K+H
+        MMKGKdE/doe41RrPdBrN8vmC4Rw/NggM8zJW5EWmLG4CS18Wry42D+DQjr8Ntg/HVpPFexkUV+fGA
+        UaGUs9YjNscb231izpMjZ7LPf001wEEIfJFR2QbHYnecwx/cZfbe31Uib0RWkl+62FIROrGyB4qet
+        X+F6BIuz8AxToRUfdzCN8FzUvi9mlZTxJ0ImP37UUF+N2tOqCN2nvKkslXY/bKc8fYpICNQTis4Vo
+        w13f/lVSTeyXpI19mI+NT/xKvHhrGnVgcf2MHKM5QvBI1uU8PIB3FcEGKXKLBNow==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvk-00EgvB-D4;
-        Wed, 13 Jul 2022 11:45:16 +0200
+        id 1oBYvm-00EgvB-6N;
+        Wed, 13 Jul 2022 11:45:18 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 38/76] wifi: cfg80211: remove BSS pointer from cfg80211_disassoc_request
-Date:   Wed, 13 Jul 2022 11:44:24 +0200
-Message-Id: <20220713114425.d91527f387df.Ie3f9ceefd2ecf78d55bb09b2e434da9b2a992dcc@changeid>
+Subject: [PATCH 44/76] wifi: mac80211: refactor elements parsing with parameter struct
+Date:   Wed, 13 Jul 2022 11:44:30 +0200
+Message-Id: <20220713114425.5729d43a982c.Ibb04bf878234e2650afac6e54ecfff669ea55308@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,142 +48,214 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The race described by the comment in mac80211 hasn't existed
-since the locking rework to use the same lock and for MLO we
-need to pass the AP MLD address, so just pass the BSSID or
-AP MLD address instead of the BSS struct pointer, and adjust
-all the code accordingly.
+Refactor the element parsing into a version that has
+a parameter struct so we can add more parameters more
+easily in the future.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h |  6 +++---
- net/mac80211/mlme.c    | 14 +++++---------
- net/wireless/core.h    |  2 +-
- net/wireless/mlme.c    |  8 +++-----
- net/wireless/trace.h   |  5 +----
- 5 files changed, 13 insertions(+), 22 deletions(-)
+ net/mac80211/ieee80211_i.h | 50 ++++++++++++++++++++++++++++----
+ net/mac80211/util.c        | 58 +++++++++++++++++++-------------------
+ 2 files changed, 74 insertions(+), 34 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e50b93160319..cc20f0036e75 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2886,7 +2886,7 @@ struct cfg80211_assoc_request {
-  * This structure provides information needed to complete IEEE 802.11
-  * deauthentication.
-  *
-- * @bssid: the BSSID of the BSS to deauthenticate from
-+ * @bssid: the BSSID or AP MLD address to deauthenticate from
-  * @ie: Extra IEs to add to Deauthentication frame or %NULL
-  * @ie_len: Length of ie buffer in octets
-  * @reason_code: The reason code for the deauthentication
-@@ -2907,7 +2907,7 @@ struct cfg80211_deauth_request {
-  * This structure provides information needed to complete IEEE 802.11
-  * disassociation.
-  *
-- * @bss: the BSS to disassociate from
-+ * @ap_addr: the BSSID or AP MLD address to disassociate from
-  * @ie: Extra IEs to add to Disassociation frame or %NULL
-  * @ie_len: Length of ie buffer in octets
-  * @reason_code: The reason code for the disassociation
-@@ -2915,7 +2915,7 @@ struct cfg80211_deauth_request {
-  *	Disassociation frame is to be transmitted.
-  */
- struct cfg80211_disassoc_request {
--	struct cfg80211_bss *bss;
-+	const u8 *ap_addr;
- 	const u8 *ie;
- 	size_t ie_len;
- 	u16 reason_code;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7870e3e23e26..0c432e3abd90 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -6425,18 +6425,14 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- {
- 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
- 
--	/*
--	 * cfg80211 should catch this ... but it's racy since
--	 * we can receive a disassoc frame, process it, hand it
--	 * to cfg80211 while that's in a locked section already
--	 * trying to tell us that the user wants to disconnect.
--	 */
--	if (sdata->deflink.u.mgd.bss != req->bss)
--		return -ENOLINK;
-+	if (!sdata->u.mgd.associated ||
-+	    memcmp(sdata->vif.cfg.ap_addr, req->ap_addr, ETH_ALEN))
-+		return -ENOTCONN;
- 
- 	sdata_info(sdata,
- 		   "disassociating from %pM by local choice (Reason: %u=%s)\n",
--		   req->bss->bssid, req->reason_code, ieee80211_get_reason_code_string(req->reason_code));
-+		   req->ap_addr, req->reason_code,
-+		   ieee80211_get_reason_code_string(req->reason_code));
- 
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
- 			       req->reason_code, !req->local_state_change,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index fd723fa5e2d7..e72ca6eefafb 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -372,7 +372,7 @@ int cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
- 			 const u8 *ie, int ie_len, u16 reason,
- 			 bool local_state_change);
- int cfg80211_mlme_disassoc(struct cfg80211_registered_device *rdev,
--			   struct net_device *dev, const u8 *bssid,
-+			   struct net_device *dev, const u8 *ap_addr,
- 			   const u8 *ie, int ie_len, u16 reason,
- 			   bool local_state_change);
- void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 935537c64ed8..4a35b3559daa 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -370,7 +370,7 @@ int cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a0743c78d171..2cf13ea4c9f7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2138,11 +2138,51 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb_tid(sdata, skb, 7);
  }
  
- int cfg80211_mlme_disassoc(struct cfg80211_registered_device *rdev,
--			   struct net_device *dev, const u8 *bssid,
-+			   struct net_device *dev, const u8 *ap_addr,
- 			   const u8 *ie, int ie_len, u16 reason,
- 			   bool local_state_change)
+-struct ieee802_11_elems *ieee802_11_parse_elems_crc(const u8 *start, size_t len,
+-						    bool action,
+-						    u64 filter, u32 crc,
+-						    const u8 *transmitter_bssid,
+-						    const u8 *bss_bssid);
++/**
++ * struct ieee80211_elems_parse_params - element parsing parameters
++ * @start: pointer to the elements
++ * @len: length of the elements
++ * @action: %true if the elements came from an action frame
++ * @filter: bitmap of element IDs to filter out while calculating
++ *	the element CRC
++ * @crc: CRC starting value
++ * @transmitter_bssid: transmitter BSSID to parse the multi-BSSID
++ *	element
++ * @bss_bssid: BSSID of the BSS we want to obtain elements for
++ *	when parsing the multi-BSSID element
++ */
++struct ieee80211_elems_parse_params {
++	const u8 *start;
++	size_t len;
++	bool action;
++	u64 filter;
++	u32 crc;
++	const u8 *transmitter_bssid;
++	const u8 *bss_bssid;
++};
++
++struct ieee802_11_elems *
++ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params);
++
++static inline struct ieee802_11_elems *
++ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
++			   u64 filter, u32 crc,
++			   const u8 *transmitter_bssid,
++			   const u8 *bss_bssid)
++{
++	struct ieee80211_elems_parse_params params = {
++		.start = start,
++		.len = len,
++		.action = action,
++		.filter = filter,
++		.crc = crc,
++		.transmitter_bssid = transmitter_bssid,
++		.bss_bssid = bss_bssid,
++	};
++
++	return ieee802_11_parse_elems_full(&params);
++}
++
+ static inline struct ieee802_11_elems *
+ ieee802_11_parse_elems(const u8 *start, size_t len, bool action,
+ 		       const u8 *transmitter_bssid,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 85d08cbe0b51..78fb0c3aa4ad 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1023,19 +1023,19 @@ static void ieee80211_parse_extension_element(u32 *crc,
+ }
+ 
+ static u32
+-_ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+-			    struct ieee802_11_elems *elems,
+-			    u64 filter, u32 crc,
+-			    const struct element *check_inherit)
++_ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params,
++			     struct ieee802_11_elems *elems,
++			     const struct element *check_inherit)
  {
-@@ -380,6 +380,7 @@ int cfg80211_mlme_disassoc(struct cfg80211_registered_device *rdev,
- 		.local_state_change = local_state_change,
- 		.ie = ie,
- 		.ie_len = ie_len,
-+		.ap_addr = ap_addr,
- 	};
- 	int err;
+ 	const struct element *elem;
+-	bool calc_crc = filter != 0;
++	bool calc_crc = params->filter != 0;
+ 	DECLARE_BITMAP(seen_elems, 256);
++	u32 crc = params->crc;
+ 	const u8 *ie;
  
-@@ -388,10 +389,7 @@ int cfg80211_mlme_disassoc(struct cfg80211_registered_device *rdev,
- 	if (!wdev->connected)
- 		return -ENOTCONN;
+ 	bitmap_zero(seen_elems, 256);
  
--	if (ether_addr_equal(wdev->links[0].client.current_bss->pub.bssid,
--			     bssid))
--		req.bss = &wdev->links[0].client.current_bss->pub;
--	else
-+	if (memcmp(wdev->u.client.connected_addr, ap_addr, ETH_ALEN))
- 		return -ENOTCONN;
+-	for_each_element(elem, start, len) {
++	for_each_element(elem, params->start, params->len) {
+ 		bool elem_parse_failed;
+ 		u8 id = elem->id;
+ 		u8 elen = elem->datalen;
+@@ -1098,7 +1098,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			break;
+ 		}
  
- 	err = rdev_disassoc(rdev, dev, &req);
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index c50e8a04199e..4316d3dc31ea 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1318,10 +1318,7 @@ TRACE_EVENT(rdev_disassoc,
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		NETDEV_ASSIGN;
--		if (req->bss)
--			MAC_ASSIGN(bssid, req->bss->bssid);
--		else
--			eth_zero_addr(__entry->bssid);
-+		MAC_ASSIGN(bssid, req->ap_addr);
- 		__entry->reason_code = req->reason_code;
- 		__entry->local_state_change = req->local_state_change;
- 	),
+-		if (calc_crc && id < 64 && (filter & (1ULL << id)))
++		if (calc_crc && id < 64 && (params->filter & (1ULL << id)))
+ 			crc = crc32_be(crc, pos - 2, elen + 2);
+ 
+ 		elem_parse_failed = false;
+@@ -1279,7 +1279,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			elems->mesh_chansw_params_ie = (void *)pos;
+ 			break;
+ 		case WLAN_EID_WIDE_BW_CHANNEL_SWITCH:
+-			if (!action ||
++			if (!params->action ||
+ 			    elen < sizeof(*elems->wide_bw_chansw_ie)) {
+ 				elem_parse_failed = true;
+ 				break;
+@@ -1287,7 +1287,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			elems->wide_bw_chansw_ie = (void *)pos;
+ 			break;
+ 		case WLAN_EID_CHANNEL_SWITCH_WRAPPER:
+-			if (action) {
++			if (params->action) {
+ 				elem_parse_failed = true;
+ 				break;
+ 			}
+@@ -1414,7 +1414,7 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
+ 			__set_bit(id, seen_elems);
+ 	}
+ 
+-	if (!for_each_element_completed(elem, start, len))
++	if (!for_each_element_completed(elem, params->start, params->len))
+ 		elems->parse_error = true;
+ 
+ 	return crc;
+@@ -1488,11 +1488,8 @@ static size_t ieee802_11_find_bssid_profile(const u8 *start, size_t len,
+ 	return found ? profile_len : 0;
+ }
+ 
+-struct ieee802_11_elems *ieee802_11_parse_elems_crc(const u8 *start, size_t len,
+-						    bool action, u64 filter,
+-						    u32 crc,
+-						    const u8 *transmitter_bssid,
+-						    const u8 *bss_bssid)
++struct ieee802_11_elems *
++ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
+ {
+ 	struct ieee802_11_elems *elems;
+ 	const struct element *non_inherit = NULL;
+@@ -1502,15 +1499,16 @@ struct ieee802_11_elems *ieee802_11_parse_elems_crc(const u8 *start, size_t len,
+ 	elems = kzalloc(sizeof(*elems), GFP_ATOMIC);
+ 	if (!elems)
+ 		return NULL;
+-	elems->ie_start = start;
+-	elems->total_len = len;
++	elems->ie_start = params->start;
++	elems->total_len = params->len;
+ 
+-	nontransmitted_profile = kmalloc(len, GFP_ATOMIC);
++	nontransmitted_profile = kmalloc(params->len, GFP_ATOMIC);
+ 	if (nontransmitted_profile) {
+ 		nontransmitted_profile_len =
+-			ieee802_11_find_bssid_profile(start, len, elems,
+-						      transmitter_bssid,
+-						      bss_bssid,
++			ieee802_11_find_bssid_profile(params->start, params->len,
++						      elems,
++						      params->transmitter_bssid,
++						      params->bss_bssid,
+ 						      nontransmitted_profile);
+ 		non_inherit =
+ 			cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
+@@ -1518,14 +1516,18 @@ struct ieee802_11_elems *ieee802_11_parse_elems_crc(const u8 *start, size_t len,
+ 					       nontransmitted_profile_len);
+ 	}
+ 
+-	crc = _ieee802_11_parse_elems_crc(start, len, action, elems, filter,
+-					  crc, non_inherit);
++	elems->crc = _ieee802_11_parse_elems_full(params, elems, non_inherit);
+ 
+ 	/* Override with nontransmitted profile, if found */
+-	if (nontransmitted_profile_len)
+-		_ieee802_11_parse_elems_crc(nontransmitted_profile,
+-					    nontransmitted_profile_len,
+-					    action, elems, 0, 0, NULL);
++	if (nontransmitted_profile_len) {
++		struct ieee80211_elems_parse_params sub = {
++			.start = nontransmitted_profile,
++			.len = nontransmitted_profile_len,
++			.action = params->action,
++		};
++
++		_ieee802_11_parse_elems_full(&sub, elems, NULL);
++	}
+ 
+ 	if (elems->tim && !elems->parse_error) {
+ 		const struct ieee80211_tim_ie *tim_ie = elems->tim;
+@@ -1547,8 +1549,6 @@ struct ieee802_11_elems *ieee802_11_parse_elems_crc(const u8 *start, size_t len,
+ 
+ 	kfree(nontransmitted_profile);
+ 
+-	elems->crc = crc;
+-
+ 	return elems;
+ }
+ 
 -- 
 2.36.1
 
