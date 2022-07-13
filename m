@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C428C43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6168FC43334
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230261AbiGMJqV (ORCPT
+        id S230295AbiGMJqY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:46:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36392 "EHLO
+        Wed, 13 Jul 2022 05:46:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236020AbiGMJpa (ORCPT
+        with ESMTP id S236209AbiGMJpa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:30 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F0ABF5D65
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A05BC04F4
         for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=v30K36dvB1cMkilEXJvy3bfwmtm7u7//VTtwAkAlJIE=;
-        t=1657705524; x=1658915124; b=pvAdG83UQKpQMYbzXj7KlVlatgl2SKMElP96lrUk8nEu3C/
-        EuTV2GJr1l9pJrT+o815jBommZlyveJ2eWv/FZfYZrkI6w7OpgMbkvdlSbHcYRal5W1qkZ7DwmDTC
-        hUhcST492ebHbzXjnWBV0gpxJYgPSHkcyeWQteCNi1Auv2gK2X4U3c8++PtWyDaRttGFZzOH6LWru
-        LRg/ao/s6ysva6XjUDhYZ2bNiRL53Kl58VHPSt1jz0r+mAqOZBUB2J8RCN5hjEm2REUswV6z/WvcD
-        wPlTBdIg8TK0qdefEFKLi6A+NgzhUqYb8SLe/jWaUwtCRFIejxOaQAP8l+21I/Zw==;
+        Resent-Cc:Resent-Message-ID; bh=4EP6jGLBQKZKgdD/VOKX7mPjEE6XduW9Buc5D9UEsd4=;
+        t=1657705524; x=1658915124; b=Fe5B6P17DwSupV1cdVrv5rZTrzWbAq2yjWdOXnnUq7ZqjXe
+        hJjGPJoVk6zLCYbM+kKY3cpjzzhrcBdfB1ghrs4InxdoR06tFfrtqJ7vhg6qteGHlKRnNxKtIxOet
+        AUSMPbWA/li3AVa6jYYecNGNUV5D4CCtARm7iJIAh2bzcT9DssE9L65014CINHYvIxdxOWvlc62Jf
+        0SIctHxH46DGxjyCwsVU1BNVBsq6DzOYA9dOt9QU+PB93sGWvAgBAnGHLyC97Wh8/6rFQ8qT+i09u
+        fdqd7bptsG/5DxRbmbDabP8Mbb7zxOI1r0T3PNcNA+Q7ggFniGOGuMiWfb0Oxm4w==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvq-00EgvB-QY;
+        id 1oBYvq-00EgvB-Dw;
         Wed, 13 Jul 2022 11:45:22 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 51/76] wifi: cfg80211: add ieee80211_chanwidth_rate_flags()
-Date:   Wed, 13 Jul 2022 11:44:37 +0200
-Message-Id: <20220713114425.6b47d6067d5d.I02832f1c1d4aea1dca2c98bf61978b11ddd11467@changeid>
+Subject: [PATCH 50/76] wifi: mac80211: remove redundant condition
+Date:   Wed, 13 Jul 2022 11:44:36 +0200
+Message-Id: <20220713114425.9ce50552c12a.I76913759932eba1c2c5ec770923b10450c991323@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,64 +48,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-To simplify things when we don't have a full chandef,
-add ieee80211_chanwidth_rate_flags().
+Here, ext_capa is checked and can only be non-NULL if
+assoc_data->ie_len was set before, so the check here
+is redundant.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 25 +++++++++++++++++++------
- 1 file changed, 19 insertions(+), 6 deletions(-)
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 09f2e2f031b6..ca26e3b7341a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -939,19 +939,18 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
- 				  enum nl80211_iftype iftype);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d4a54375b9d2..fd8d7545a896 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -981,7 +981,7 @@ static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
  
- /**
-- * ieee80211_chandef_rate_flags - returns rate flags for a channel
-+ * ieee80211_chanwidth_rate_flags - return rate flags for channel width
-+ * @width: the channel width of the channel
-  *
-  * In some channel types, not all rates may be used - for example CCK
-  * rates may not be used in 5/10 MHz channels.
-  *
-- * @chandef: channel definition for the channel
-- *
-- * Returns: rate flags which apply for this channel
-+ * Returns: rate flags which apply for this channel width
-  */
- static inline enum ieee80211_rate_flags
--ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
-+ieee80211_chanwidth_rate_flags(enum nl80211_chan_width width)
- {
--	switch (chandef->width) {
-+	switch (width) {
- 	case NL80211_CHAN_WIDTH_5:
- 		return IEEE80211_RATE_SUPPORTS_5MHZ;
- 	case NL80211_CHAN_WIDTH_10:
-@@ -962,6 +961,20 @@ ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
- 	return 0;
- }
+ 	/* Set MBSSID support for HE AP if needed */
+ 	if (ieee80211_hw_check(&local->hw, SUPPORTS_ONLY_HE_MULTI_BSSID) &&
+-	    !(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_HE) && assoc_data->ie_len &&
++	    !(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_HE) &&
+ 	    ext_capa && ext_capa->datalen >= 3)
+ 		ext_capa->data[2] |= WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT;
  
-+/**
-+ * ieee80211_chandef_rate_flags - returns rate flags for a channel
-+ * @chandef: channel definition for the channel
-+ *
-+ * See ieee80211_chanwidth_rate_flags().
-+ *
-+ * Returns: rate flags which apply for this channel
-+ */
-+static inline enum ieee80211_rate_flags
-+ieee80211_chandef_rate_flags(struct cfg80211_chan_def *chandef)
-+{
-+	return ieee80211_chanwidth_rate_flags(chandef->width);
-+}
-+
- /**
-  * ieee80211_chandef_max_power - maximum transmission power for the chandef
-  *
 -- 
 2.36.1
 
