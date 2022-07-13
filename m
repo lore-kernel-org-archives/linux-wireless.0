@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E4EC43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7453FC433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235260AbiGMJpV (ORCPT
+        id S236194AbiGMJpY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:45:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35804 "EHLO
+        Wed, 13 Jul 2022 05:45:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235411AbiGMJpL (ORCPT
+        with ESMTP id S235659AbiGMJpL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:11 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA82EEEAB6
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26FC0F32E5
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=0Hnlfk7h3sjjJxbe/5bc5EHK9aI6rOQ2u8skrMeKwsM=;
-        t=1657705509; x=1658915109; b=NU0duGtKUEbjO3yORuZ6APrYLbDQUhUnoF8xVgBUOawh+0P
-        3LBzPvSCRad+62mRDAl2mlHNB0TCMKXIUDJj+VUJkpBbu/DBCbF/0QLAh0v14Sw6b3KwqK8sx6iSF
-        aq0vHdKJyKhfjmpzyjxmV9l3thrWdkLLp8srU9oP+JpiWWAFSq/txeIpTqQhoFXCcpPLx7lvS4KQ2
-        utyGpSIwH94vO/iQQavIWz7I3v1N3jqinp5z7w05S6KVth4hf5bJxRXIDLeXGsMXNoANpJbEtyavt
-        AeocIWz+qWx7enVXZcZ8rWq79zY8oBP1GF1XYQRSOfYwap1/MnJmnSd7E8DzAqGg==;
+        Resent-Cc:Resent-Message-ID; bh=pNN1w0OOrG995doc8bTXDjpoZL/0FPotk5lpUbHOeug=;
+        t=1657705510; x=1658915110; b=RNJQC1akU2jjx+QTmJR7J6fAJiyWBsrEAgZ0r0Qa+TdCNsc
+        zBJzEccu2oA4gIKJ8lIbyyiEydJX6DL/jskEb13N/CWGXugCyfj/fQBiKxjvDZo0504gmOVitrGCN
+        LAESNpPQT198dgo6izZWqvpxVM781baQ/lZ7ReKqd9Fw9ZbLKWpxf8kmiJ3SmGRbIGNCbK2mvU+xl
+        U3HL5KjGejxJHuCuar/6myn5rKa4KCwxSVa1Xtfht20khtIEKVP5BBObeN5kZ2++OSALB2yzZbPx6
+        79kB2Q0TjsUMM3K7123Bsi9SNIHxdqFb3Pdb6YpBEWVWbWICC6bn4WJTSvuOZctg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvb-00EgvB-Kv;
-        Wed, 13 Jul 2022 11:45:07 +0200
+        id 1oBYvc-00EgvB-4r;
+        Wed, 13 Jul 2022 11:45:08 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 11/76] wifi: nl80211: hold wdev mutex in add/mod/del link station
-Date:   Wed, 13 Jul 2022 11:43:57 +0200
-Message-Id: <20220713114425.6ae3d87939e9.I5ae7161064d870033ef792be09efaca652af31ca@changeid>
+Subject: [PATCH 13/76] wifi: nl80211: hold wdev mutex for station APIs
+Date:   Wed, 13 Jul 2022 11:43:59 +0200
+Message-Id: <20220713114425.f1104f6daaf7.Ief517e652cfa298ad3c71f0f5cedaeac8bdec27b@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,56 +48,59 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since we deal with links, and that requires looking at wdev links,
-we should hold the wdev mutex for driver convenience.
+Since this will need to refer - at least in part - to the link
+stations of an MLD, hold the wdev mutex for driver convenience.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ net/wireless/nl80211.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5f6cbc2d73b4..26d277c14fd4 100644
+index 59ea1157969e..9eee853efd57 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -15781,9 +15781,14 @@ nl80211_add_mod_link_station(struct sk_buff *skb, struct genl_info *info,
- 	if (err)
- 		return err;
+@@ -6976,7 +6976,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	/* driver will call cfg80211_check_station_change() */
++	wdev_lock(dev->ieee80211_ptr);
+ 	err = rdev_change_station(rdev, dev, mac_addr, &params);
++	wdev_unlock(dev->ieee80211_ptr);
+ 
+  out_put_vlan:
+ 	dev_put(params.vlan);
+@@ -7232,7 +7234,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	/* be aware of params.vlan when changing code here */
  
 +	wdev_lock(dev->ieee80211_ptr);
- 	if (add)
--		return rdev_add_link_station(rdev, dev, &params);
--	return rdev_mod_link_station(rdev, dev, &params);
-+		err = rdev_add_link_station(rdev, dev, &params);
-+	else
-+		err = rdev_mod_link_station(rdev, dev, &params);
+ 	err = rdev_add_station(rdev, dev, mac_addr, &params);
 +	wdev_unlock(dev->ieee80211_ptr);
-+
-+	return err;
- }
  
- static int
-@@ -15804,6 +15809,7 @@ nl80211_remove_link_station(struct sk_buff *skb, struct genl_info *info)
- 	struct link_station_del_parameters params = {};
+ 	dev_put(params.vlan);
+ 	return err;
+@@ -7243,6 +7247,7 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
  	struct cfg80211_registered_device *rdev = info->user_ptr[0];
  	struct net_device *dev = info->user_ptr[1];
+ 	struct station_del_parameters params;
 +	int ret;
  
- 	if (!rdev->ops->del_link_station)
- 		return -EOPNOTSUPP;
-@@ -15815,7 +15821,11 @@ nl80211_remove_link_station(struct sk_buff *skb, struct genl_info *info)
- 	params.mld_mac = nla_data(info->attrs[NL80211_ATTR_MLD_ADDR]);
- 	params.link_id = nla_get_u8(info->attrs[NL80211_ATTR_MLO_LINK_ID]);
+ 	memset(&params, 0, sizeof(params));
  
--	return rdev_del_link_station(rdev, dev, &params);
+@@ -7290,7 +7295,11 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.reason_code = WLAN_REASON_PREV_AUTH_NOT_VALID;
+ 	}
+ 
+-	return rdev_del_station(rdev, dev, &params);
 +	wdev_lock(dev->ieee80211_ptr);
-+	ret = rdev_del_link_station(rdev, dev, &params);
++	ret = rdev_del_station(rdev, dev, &params);
 +	wdev_unlock(dev->ieee80211_ptr);
 +
 +	return ret;
  }
  
- #define NL80211_FLAG_NEED_WIPHY		0x01
+ static int nl80211_send_mpath(struct sk_buff *msg, u32 portid, u32 seq,
 -- 
 2.36.1
 
