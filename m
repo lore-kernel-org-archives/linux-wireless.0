@@ -2,42 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71A5FC43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0174CCA479
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236229AbiGMJpd (ORCPT
+        id S236237AbiGMJpe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:45:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35782 "EHLO
+        Wed, 13 Jul 2022 05:45:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234656AbiGMJpN (ORCPT
+        with ESMTP id S235251AbiGMJpN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:13 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10A2BDA5A9
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 109A4C04F4
         for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=fqMlh2jGOL4mhs4t02ru9uQcEw0qFUtigf4mC9qlb2Y=;
-        t=1657705512; x=1658915112; b=s/goospiXSkteVglSnjVwNwdV2jNgJEo/qXqwFbLx0PlUDT
-        xWLFTDJ7UtNdRetrsVuESGNavP/oY8kJFPfJUE3MQj/86uN0cIUyqAXKdo7/NH2nZOy24gbODyhvE
-        bVE7CwNOR6w+zab8ntadsJ4rd3TMjxIdfAC1Q+ULX3bNkCmWd2vylyvlCG1Mi4TEKMF1iif2cALJz
-        rL4Op4od1zoyGJsSPmmBkaUGyd2w/Ni1u/BApDWC19uGKNM/SmdiOfHXC2jQvkjlNqnDboRlFQXmL
-        zXj4ZxyowdeFZVbsV59NH5p1R6Og1SasFCBtmn4RDSaQXqnfosZQZG/pGsFsWXnQ==;
+        Resent-Cc:Resent-Message-ID; bh=0QXAjhtNKCNLBGSjrnu/gHm8SdohvgsRG4xI36+PkdY=;
+        t=1657705512; x=1658915112; b=U0fggS+qGDMvXtrCjaZ9RK8/VULB7SMoEs8zetX4iukTsxZ
+        W8tVJpn8W2nkmOMI3kKAftlJ7i+kIcmQfsxFT5BIwQt6jhBDDP/pZsUXpb1yYZ83hydTxEKrEuwo+
+        ZdtHzoAIVcbdzixp5i2Z1EnVceXKB2/hDKzegxdeddTH8xddyVPGgc+d7U6ZbOo8sducOUmQzyN+E
+        VIeddQRF38ArYbJjhdqKuz/VJJIm6EYmH0+IoiPTSS70H4VgEGILWEVPCbqzyy6hYoRv3/jqUaO9f
+        kZuZ4rrqXq+jI0bQxcvwzm7GtLLt/8I6amoFw/DAOR1b0VsplB5toGcebM5SkWyg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvd-00EgvB-Nx;
-        Wed, 13 Jul 2022 11:45:09 +0200
+        id 1oBYve-00EgvB-8h;
+        Wed, 13 Jul 2022 11:45:10 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 17/76] wifi: cfg80211: drop BSS elements from assoc trace for now
-Date:   Wed, 13 Jul 2022 11:44:03 +0200
-Message-Id: <20220713114425.88ebb146cb9d.Ie54f10bb04d9ab3c5861e9702d9c5fee788dce1f@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 19/76] wifi: mac80211: debug: omit link if non-MLO connection
+Date:   Wed, 13 Jul 2022 11:44:05 +0200
+Message-Id: <20220713114425.b7500d0c97ea.Ie2d8ee2b81cdc3929768633b0e23b9de63fc43cb@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -49,82 +48,60 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-For multi-link operation, this cannot work as the req->bss pointer
-will be NULL, and we'll need to do more work on this to really add
-tracing for the MLO case here. Drop the BSS elements for now as
-they're not the most useful thing, and it's hard to size things
-correctly for the MLO case (without adding a lot of code that's
-also executed when tracing isn't enabled.)
+If we don't really have multiple links, omit the link ID from
+link debug prints, otherwise we change the format for all of
+the existing drivers (most of which might never support MLO),
+and also have extra noise in the logs.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/rdev-ops.h | 11 +----------
- net/wireless/trace.h    | 13 ++-----------
- 2 files changed, 3 insertions(+), 21 deletions(-)
+ net/mac80211/debug.h | 31 +++++++++++++++++++++++++------
+ 1 file changed, 25 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 6221a996c19f..53f5a0126dfd 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -469,18 +469,9 @@ static inline int rdev_assoc(struct cfg80211_registered_device *rdev,
- 			     struct net_device *dev,
- 			     struct cfg80211_assoc_request *req)
- {
--	const struct cfg80211_bss_ies *bss_ies;
- 	int ret;
+diff --git a/net/mac80211/debug.h b/net/mac80211/debug.h
+index 3302e8da0314..b4c20f5e778e 100644
+--- a/net/mac80211/debug.h
++++ b/net/mac80211/debug.h
+@@ -135,14 +135,33 @@ do {									\
+ 	_sdata_dbg(1, sdata, fmt, ##__VA_ARGS__)
  
--	/*
--	 * Note: we might trace not exactly the data that's processed,
--	 * due to races and the driver/mac80211 getting a newer copy.
--	 */
--	rcu_read_lock();
--	bss_ies = rcu_dereference(req->bss->ies);
--	trace_rdev_assoc(&rdev->wiphy, dev, req, bss_ies);
--	rcu_read_unlock();
--
-+	trace_rdev_assoc(&rdev->wiphy, dev, req);
- 	ret = rdev->ops->assoc(&rdev->wiphy, dev, req);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index e78bffbc6f95..c50e8a04199e 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1232,9 +1232,8 @@ TRACE_EVENT(rdev_auth,
+ #define link_info(link, fmt, ...)					\
+-	_sdata_info((link)->sdata, "[link %d] " fmt, (link)->link_id,	\
+-		    ##__VA_ARGS__)
++	do {								\
++		if ((link)->sdata->vif.valid_links)			\
++			_sdata_info((link)->sdata, "[link %d] " fmt,	\
++				    (link)->link_id,			\
++				    ##__VA_ARGS__);			\
++		else							\
++			_sdata_info((link)->sdata, fmt, ##__VA_ARGS__);	\
++	} while (0)
+ #define link_err(link, fmt, ...)					\
+-	_sdata_err((link)->sdata, "[link %d] " fmt, (link)->link_id,	\
+-		   ##__VA_ARGS__)
++	do {								\
++		if ((link)->sdata->vif.valid_links)			\
++			_sdata_err((link)->sdata, "[link %d] " fmt,	\
++				   (link)->link_id,			\
++				   ##__VA_ARGS__);			\
++		else							\
++			_sdata_err((link)->sdata, fmt, ##__VA_ARGS__);	\
++	} while (0)
+ #define link_dbg(link, fmt, ...)					\
+-	_sdata_dbg(1, (link)->sdata, "[link %d] " fmt, (link)->link_id,	\
+-		   ##__VA_ARGS__)
++	do {								\
++		if ((link)->sdata->vif.valid_links)			\
++			_sdata_dbg(1, (link)->sdata, "[link %d] " fmt,	\
++				   (link)->link_id,			\
++				   ##__VA_ARGS__);			\
++		else							\
++			_sdata_dbg(1, (link)->sdata, fmt,		\
++				   ##__VA_ARGS__);			\
++	} while (0)
  
- TRACE_EVENT(rdev_assoc,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
--		 struct cfg80211_assoc_request *req,
--		 const struct cfg80211_bss_ies *bss_ies),
--	TP_ARGS(wiphy, netdev, req, bss_ies),
-+		 struct cfg80211_assoc_request *req),
-+	TP_ARGS(wiphy, netdev, req),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		NETDEV_ENTRY
-@@ -1242,9 +1241,6 @@ TRACE_EVENT(rdev_assoc,
- 		MAC_ENTRY(prev_bssid)
- 		__field(bool, use_mfp)
- 		__field(u32, flags)
--		__dynamic_array(u8, bss_elements, bss_ies->len)
--		__field(bool, bss_elements_bcon)
--		__field(u64, bss_elements_tsf)
- 		__dynamic_array(u8, elements, req->ie_len)
- 		__array(u8, ht_capa, sizeof(struct ieee80211_ht_cap))
- 		__array(u8, ht_capa_mask, sizeof(struct ieee80211_ht_cap))
-@@ -1264,11 +1260,6 @@ TRACE_EVENT(rdev_assoc,
- 		MAC_ASSIGN(prev_bssid, req->prev_bssid);
- 		__entry->use_mfp = req->use_mfp;
- 		__entry->flags = req->flags;
--		if (bss_ies->len)
--			memcpy(__get_dynamic_array(bss_elements),
--			       bss_ies->data, bss_ies->len);
--		__entry->bss_elements_bcon = bss_ies->from_beacon;
--		__entry->bss_elements_tsf = bss_ies->tsf;
- 		if (req->ie)
- 			memcpy(__get_dynamic_array(elements),
- 			       req->ie, req->ie_len);
+ #define ht_dbg(sdata, fmt, ...)						\
+ 	_sdata_dbg(MAC80211_HT_DEBUG,					\
 -- 
 2.36.1
 
