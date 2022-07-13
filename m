@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 704C3C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 866F9C43334
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235115AbiGMJqr (ORCPT
+        id S234912AbiGMJqs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:46:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36750 "EHLO
+        Wed, 13 Jul 2022 05:46:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236256AbiGMJpi (ORCPT
+        with ESMTP id S236227AbiGMJpi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:38 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B066F789E
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB97BF78A6
         for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=2ktBs/Wn+htEtZJFsSRL5e+GbbwsEbP19iE4iM70VO0=;
-        t=1657705528; x=1658915128; b=Z2DdMNEt9U5X/GrXa24YNar2wpL4qLO7fBFptrvTMc4/i6C
-        CUbA/k2rAWQaJVVcqlzvrlWWP0Jt9EWTlzDlvBER5+mAqzRPs4WcVxFziuR9kKkYzha0fuHrBGZ7T
-        Jwwm4oePK+ombuMGvC+yzM/kvgxm8vHSdNgg7GyBh2ZrOTTapej++rmaCC5WMhdEXHM5D09vKgQ3i
-        iudxnLyQH8gil4q3Yj1LDDR7/9H0497VMKyKgVeK5UHAI55NnCR0WeeWFrS7y33ueFd4whPko4gca
-        0W/0mozuTs3m+erg19rVubK55pQWIwUl0LllwGeXAh7RgGn6EghiCTJxEk+rG2Ug==;
+        Resent-Cc:Resent-Message-ID; bh=ncV9gzq2EgtStUiFGkdmLUV8CiMOh3rqv0GcKjryYIo=;
+        t=1657705529; x=1658915129; b=Yu/vXS8eFpVb73K5mwJ0bAbtY3lXhUHi5lqYkqICdRuD/Rv
+        DJJnTss1NaGjfCIw8FmyFh3GwNatGi1+DP46pkRY6jzCbYejKNOo7sZ9IAv3DJ/aYduXhfvQbr58y
+        ATFT9HSGXLCvhMMYzT8oR+grhU1j4zZ32GamRVs2nNh7wkGTsxFXBS7qrZYCaBZr5JrH59VpADORZ
+        9Bm8ffNQl5+njlATrl5kz2UJpmeh2vD+kaHGlffllMTwCB9cRtJIRTHyhq07Jg8sYlNGyEy5iyboO
+        na+RdmH/3xFXCg3PudjdsvUVFSnhhkaoCvCKndRSOzDgx6GM17w5S94VdjeN1BPQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvu-00EgvB-EI;
-        Wed, 13 Jul 2022 11:45:26 +0200
+        id 1oBYvu-00EgvB-Vq;
+        Wed, 13 Jul 2022 11:45:27 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 62/76] wifi: nl80211: set BSS to NULL if IS_ERR()
-Date:   Wed, 13 Jul 2022 11:44:48 +0200
-Message-Id: <20220713114426.b5c378d6ddb8.I7462f3a786637ec8ccf5cca040e7e8debe52f4e3@changeid>
+Subject: [PATCH 64/76] wifi: mac80211: add a helper to fragment an element
+Date:   Wed, 13 Jul 2022 11:44:50 +0200
+Message-Id: <20220713114426.30970ab0d08a.Ia4ea941696b9861b58d961dcdca5807a248df75d@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,27 +48,66 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If the BSS lookup returned an error, set it to NULL so we
-don't try to free it.
+The way this works is that you add all the element data,
+keeping a pointer to the length field of the element.
+Then call this helper function, which will fragment the
+element if there was more than 255 bytes in the element,
+memmove()ing the data back if needed.
 
-Fixes: d648c23024bd ("wifi: nl80211: support MLO in auth/assoc")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/util.c        | 28 ++++++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 35fb2b0517d9..b75398f0d5b4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10767,6 +10767,7 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 						  &bssid);
- 			if (IS_ERR(req.links[link_id].bss)) {
- 				err = PTR_ERR(req.links[link_id].bss);
-+				req.links[link_id].bss = NULL;
- 				goto free;
- 			}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 74d5fc5889bb..d17d73e8d19f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2193,6 +2193,7 @@ ieee802_11_parse_elems(const u8 *start, size_t len, bool action,
+ 	return ieee802_11_parse_elems_crc(start, len, action, 0, 0, bss);
+ }
  
++void ieee80211_fragment_element(struct sk_buff *skb, u8 *len_pos);
+ 
+ extern const int ieee802_1d_to_ac[8];
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 86b6ee7e8156..4b11cf57f4fe 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -4777,3 +4777,31 @@ u8 *ieee80211_ie_build_eht_cap(u8 *pos,
+ 
+ 	return pos;
+ }
++
++void ieee80211_fragment_element(struct sk_buff *skb, u8 *len_pos)
++{
++	unsigned int elem_len;
++
++	if (!len_pos)
++		return;
++
++	elem_len = skb->data + skb->len - len_pos - 1;
++
++	while (elem_len > 255) {
++		/* this one is 255 */
++		*len_pos = 255;
++		/* remaining data gets smaller */
++		elem_len -= 255;
++		/* make space for the fragment ID/len in SKB */
++		skb_put(skb, 2);
++		/* shift back the remaining data to place fragment ID/len */
++		memmove(len_pos + 255 + 3, len_pos + 255 + 1, elem_len);
++		/* place the fragment ID */
++		len_pos += 255 + 1;
++		*len_pos = WLAN_EID_FRAGMENT;
++		/* and point to fragment length to update later */
++		len_pos++;
++	}
++
++	*len_pos = elem_len;
++}
 -- 
 2.36.1
 
