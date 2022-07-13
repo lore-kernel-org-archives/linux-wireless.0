@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7453FC433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB36CCA479
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236194AbiGMJpY (ORCPT
+        id S236201AbiGMJpX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:45:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35814 "EHLO
+        Wed, 13 Jul 2022 05:45:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235659AbiGMJpL (ORCPT
+        with ESMTP id S235360AbiGMJpL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:11 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26FC0F32E5
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A75D8DA7BF
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=pNN1w0OOrG995doc8bTXDjpoZL/0FPotk5lpUbHOeug=;
-        t=1657705510; x=1658915110; b=RNJQC1akU2jjx+QTmJR7J6fAJiyWBsrEAgZ0r0Qa+TdCNsc
-        zBJzEccu2oA4gIKJ8lIbyyiEydJX6DL/jskEb13N/CWGXugCyfj/fQBiKxjvDZo0504gmOVitrGCN
-        LAESNpPQT198dgo6izZWqvpxVM781baQ/lZ7ReKqd9Fw9ZbLKWpxf8kmiJ3SmGRbIGNCbK2mvU+xl
-        U3HL5KjGejxJHuCuar/6myn5rKa4KCwxSVa1Xtfht20khtIEKVP5BBObeN5kZ2++OSALB2yzZbPx6
-        79kB2Q0TjsUMM3K7123Bsi9SNIHxdqFb3Pdb6YpBEWVWbWICC6bn4WJTSvuOZctg==;
+        Resent-Cc:Resent-Message-ID; bh=UG6998tzPB4vfQA31sFw5jrnLWxWrkubrLmFM1LV+xQ=;
+        t=1657705508; x=1658915108; b=E9usE1ZvDgTyau2VRsQI/ArFEWM6y1DnDg7/5LlNB/8Kmak
+        vd7yZDkxqGec0wittiGOiQo4o7+uZWM2Jo05ZBvwZiGaf7GS24oFYaBK5OJU5NR3frkM6Pjr+2bpR
+        nCjyAs4HWZrw23bJVu0oS46TL6MkEuyaEboZdB/i5lyPeOxMZVHqsdCBUThLxRYv0Ek4oxI+42CL2
+        NjcxxIMEzV/PXE4Sn6h3Fi36lHiMTCw6e6F+1xpbgS4G7YR1pbXjxk9d5Ai3uPI8ul+MIQkim0WzN
+        V8XnJ1IT8k39FnfWVT7apJJoHAyyZlnWcxAsxpECnPx6CSn18uYrfXQifhzJS5pA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvc-00EgvB-4r;
-        Wed, 13 Jul 2022 11:45:08 +0200
+        id 1oBYvZ-00EgvB-JK;
+        Wed, 13 Jul 2022 11:45:05 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 13/76] wifi: nl80211: hold wdev mutex for station APIs
-Date:   Wed, 13 Jul 2022 11:43:59 +0200
-Message-Id: <20220713114425.f1104f6daaf7.Ief517e652cfa298ad3c71f0f5cedaeac8bdec27b@changeid>
+Subject: [PATCH 03/76] wifi: mac80211: rx: accept link-addressed frames
+Date:   Wed, 13 Jul 2022 11:43:49 +0200
+Message-Id: <20220713114425.bf1302a63e1c.Idcd337705a4d1737a89bf9247ba73f82a0fc8b61@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,59 +48,429 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since this will need to refer - at least in part - to the link
-stations of an MLD, hold the wdev mutex for driver convenience.
+When checking whether or not to accept a frame in RX,
+take into account the configured link addresses. Also
+look up the link station correctly.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ include/linux/ieee80211.h  | 52 ++++++++++++++++-------
+ net/mac80211/ieee80211_i.h |  6 +++
+ net/mac80211/mlme.c        | 32 ++++++++++++++
+ net/mac80211/rx.c          | 63 ++++++++++++++++++++++++---
+ net/mac80211/util.c        | 87 ++++++++++++++++++++++++--------------
+ 5 files changed, 187 insertions(+), 53 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 59ea1157969e..9eee853efd57 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6976,7 +6976,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 	}
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index f386f9ed41f3..e75c73ca11ec 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2046,25 +2046,38 @@ struct ieee80211_eht_cap_elem {
+ 	u8 optional[];
+ } __packed;
  
- 	/* driver will call cfg80211_check_station_change() */
-+	wdev_lock(dev->ieee80211_ptr);
- 	err = rdev_change_station(rdev, dev, mac_addr, &params);
-+	wdev_unlock(dev->ieee80211_ptr);
- 
-  out_put_vlan:
- 	dev_put(params.vlan);
-@@ -7232,7 +7234,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 
- 	/* be aware of params.vlan when changing code here */
- 
-+	wdev_lock(dev->ieee80211_ptr);
- 	err = rdev_add_station(rdev, dev, mac_addr, &params);
-+	wdev_unlock(dev->ieee80211_ptr);
- 
- 	dev_put(params.vlan);
- 	return err;
-@@ -7243,6 +7247,7 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net_device *dev = info->user_ptr[1];
- 	struct station_del_parameters params;
-+	int ret;
- 
- 	memset(&params, 0, sizeof(params));
- 
-@@ -7290,7 +7295,11 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
- 		params.reason_code = WLAN_REASON_PREV_AUTH_NOT_VALID;
- 	}
- 
--	return rdev_del_station(rdev, dev, &params);
-+	wdev_lock(dev->ieee80211_ptr);
-+	ret = rdev_del_station(rdev, dev, &params);
-+	wdev_unlock(dev->ieee80211_ptr);
++#define IEEE80211_EHT_OPER_INFO_PRESENT	                        0x1
++#define IEEE80211_EHT_OPER_DISABLED_SUBCHANNEL_BITMAP_PRESENT	0x2
 +
-+	return ret;
+ /**
+  * struct ieee80211_eht_operation - eht operation element
+  *
+  * This structure is the "EHT Operation Element" fields as
+- * described in P802.11be_D1.4 section 9.4.2.311
++ * described in P802.11be_D1.5 section 9.4.2.311
+  *
+- * FIXME: The spec is unclear how big the fields are, and doesn't
+- *	  indicate the "Disabled Subchannel Bitmap Present" in the
+- *	  structure (Figure 9-1002a) at all ...
++ * @params: EHT operation element parameters. See &IEEE80211_EHT_OPER_*
++ * @optional: optional parts
+  */
+ struct ieee80211_eht_operation {
+-	u8 chan_width;
+-	u8 ccfs;
+-	u8 present_bm;
+-
+-	u8 disable_subchannel_bitmap[];
++	u8 params;
++	u8 optional[];
+ } __packed;
+ 
+-#define IEEE80211_EHT_OPER_DISABLED_SUBCHANNEL_BITMAP_PRESENT	0x1
++/**
++ * struct ieee80211_eht_operation_info - eht operation information
++ *
++ * @control: EHT operation information control.
++ * @ccfs0: defines a channel center frequency for a 20, 40, 80, 160, or 320 MHz
++ *     EHT BSS.
++ * @ccfs1: defines a channel center frequency for a 160 or 320 MHz EHT BSS.
++ * @optional: optional parts
++ */
++struct ieee80211_eht_operation_info {
++	u8 control;
++	u8 ccfs0;
++	u8 ccfs1;
++	u8 optional[];
++} __packed;
+ 
+ /* 802.11ac VHT Capabilities */
+ #define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895			0x00000000
+@@ -2773,10 +2786,12 @@ ieee80211_he_spr_size(const u8 *he_spr_ie)
+ #define IEEE80211_EHT_MAC_CAP0_TRIG_TXOP_SHARING_MODE2		0x08
+ #define IEEE80211_EHT_MAC_CAP0_RESTRICTED_TWT			0x10
+ #define IEEE80211_EHT_MAC_CAP0_SCS_TRAFFIC_DESC			0x20
+-#define IEEE80211_EHT_MAC_CAP0_MAX_AMPDU_LEN_MASK		0xc0
+-#define		IEEE80211_EHT_MAC_CAP0_MAX_AMPDU_LEN_3895	0
+-#define		IEEE80211_EHT_MAC_CAP0_MAX_AMPDU_LEN_7991	1
+-#define		IEEE80211_EHT_MAC_CAP0_MAX_AMPDU_LEN_11454	2
++#define IEEE80211_EHT_MAC_CAP0_MAX_MPDU_LEN_MASK		0xc0
++#define	IEEE80211_EHT_MAC_CAP0_MAX_MPDU_LEN_3895	        0
++#define	IEEE80211_EHT_MAC_CAP0_MAX_MPDU_LEN_7991	        1
++#define	IEEE80211_EHT_MAC_CAP0_MAX_MPDU_LEN_11454	        2
++
++#define IEEE80211_EHT_MAC_CAP1_MAX_AMPDU_LEN_MASK		0x01
+ 
+ /* EHT PHY capabilities as defined in P802.11be_D1.4 section 9.4.2.313.3 */
+ #define IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ			0x02
+@@ -2949,8 +2964,13 @@ ieee80211_eht_oper_size_ok(const u8 *data, u8 len)
+ 	if (len < needed)
+ 		return false;
+ 
+-	if (elem->present_bm & IEEE80211_EHT_OPER_DISABLED_SUBCHANNEL_BITMAP_PRESENT)
+-		needed += 2;
++	if (elem->params & IEEE80211_EHT_OPER_INFO_PRESENT) {
++		needed += 3;
++
++		if (elem->params &
++		    IEEE80211_EHT_OPER_DISABLED_SUBCHANNEL_BITMAP_PRESENT)
++			needed += 2;
++	}
+ 
+ 	return len >= needed;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f08060a36ef2..46413b6a8de3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -231,6 +231,8 @@ struct ieee80211_rx_data {
+ 	 */
+ 	int security_idx;
+ 
++	int link_id;
++
+ 	union {
+ 		struct {
+ 			u32 iv32;
+@@ -2302,6 +2304,10 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw, u32 vht_cap_info,
+ 				const struct ieee80211_vht_operation *oper,
+ 				const struct ieee80211_ht_operation *htop,
+ 				struct cfg80211_chan_def *chandef);
++void ieee80211_chandef_eht_oper(struct ieee80211_sub_if_data *sdata,
++				const struct ieee80211_eht_operation *eht_oper,
++				bool support_160, bool support_320,
++				struct cfg80211_chan_def *chandef);
+ bool ieee80211_chandef_he_6ghz_oper(struct ieee80211_sub_if_data *sdata,
+ 				    const struct ieee80211_he_operation *he_oper,
+ 				    const struct ieee80211_eht_operation *eht_oper,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 01a72d1fcfcc..8980dfef1ff1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -303,6 +303,38 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 
+ 	*chandef = vht_chandef;
+ 
++	/*
++	 * handle the case that the EHT operation indicates that it holds EHT
++	 * operation information (in case that the channel width differs from
++	 * the channel width reported in HT/VHT/HE).
++	 */
++	if (eht_oper && (eht_oper->params & IEEE80211_EHT_OPER_INFO_PRESENT)) {
++		struct cfg80211_chan_def eht_chandef = *chandef;
++
++		ieee80211_chandef_eht_oper(sdata, eht_oper,
++					   eht_chandef.width ==
++					   NL80211_CHAN_WIDTH_160,
++					   false, &eht_chandef);
++
++		if (!cfg80211_chandef_valid(&eht_chandef)) {
++			if (!(ifmgd->flags & IEEE80211_STA_DISABLE_EHT))
++				sdata_info(sdata,
++					   "AP EHT information is invalid, disabling EHT\n");
++			ret = IEEE80211_STA_DISABLE_EHT;
++			goto out;
++		}
++
++		if (!cfg80211_chandef_compatible(chandef, &eht_chandef)) {
++			if (!(ifmgd->flags & IEEE80211_STA_DISABLE_EHT))
++				sdata_info(sdata,
++					   "AP EHT information is incompatible, disabling EHT\n");
++			ret = IEEE80211_STA_DISABLE_EHT;
++			goto out;
++		}
++
++		*chandef = eht_chandef;
++	}
++
+ 	ret = 0;
+ 
+ out:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 834d2171f344..2aa593294a29 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4028,6 +4028,7 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ 		/* This is OK -- must be QoS data frame */
+ 		.security_idx = tid,
+ 		.seqno_idx = tid,
++		.link_id = -1,
+ 	};
+ 	struct tid_ampdu_rx *tid_agg_rx;
+ 
+@@ -4064,6 +4065,7 @@ void ieee80211_mark_rx_ba_filtered_frames(struct ieee80211_sta *pubsta, u8 tid,
+ 		/* This is OK -- must be QoS data frame */
+ 		.security_idx = tid,
+ 		.seqno_idx = tid,
++		.link_id = -1,
+ 	};
+ 	int i, diff;
+ 
+@@ -4140,6 +4142,31 @@ static inline int ieee80211_bssid_match(const u8 *raddr, const u8 *addr)
+ 	       is_broadcast_ether_addr(raddr);
  }
  
- static int nl80211_send_mpath(struct sk_buff *msg, u32 portid, u32 seq,
++static bool ieee80211_is_our_addr(struct ieee80211_sub_if_data *sdata,
++				  const u8 *addr, int *out_link_id)
++{
++	unsigned int link_id;
++
++	/* non-MLO, or MLD address replaced by hardware */
++	if (ether_addr_equal(sdata->vif.addr, addr))
++		return true;
++
++	if (!sdata->vif.valid_links)
++		return false;
++
++	for (link_id = 0; link_id < ARRAY_SIZE(sdata->vif.link_conf); link_id++) {
++		if (!sdata->vif.link_conf[link_id])
++			continue;
++		if (ether_addr_equal(sdata->vif.link_conf[link_id]->addr, addr)) {
++			if (out_link_id)
++				*out_link_id = link_id;
++			return true;
++		}
++	}
++
++	return false;
++}
++
+ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
+@@ -4158,7 +4185,7 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 			return false;
+ 		if (multicast)
+ 			return true;
+-		return ether_addr_equal(sdata->vif.addr, hdr->addr1);
++		return ieee80211_is_our_addr(sdata, hdr->addr1, &rx->link_id);
+ 	case NL80211_IFTYPE_ADHOC:
+ 		if (!bssid)
+ 			return false;
+@@ -4212,9 +4239,11 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_AP:
+ 		if (!bssid)
+-			return ether_addr_equal(sdata->vif.addr, hdr->addr1);
++			return ieee80211_is_our_addr(sdata, hdr->addr1,
++						     &rx->link_id);
+ 
+-		if (!ieee80211_bssid_match(bssid, sdata->vif.addr)) {
++		if (!is_broadcast_ether_addr(bssid) &&
++		    !ieee80211_is_our_addr(sdata, bssid, NULL)) {
+ 			/*
+ 			 * Accept public action frames even when the
+ 			 * BSSID doesn't match, this is used for P2P
+@@ -4222,7 +4251,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 			 * itself never looks at these frames.
+ 			 */
+ 			if (!multicast &&
+-			    !ether_addr_equal(sdata->vif.addr, hdr->addr1))
++			    !ieee80211_is_our_addr(sdata, hdr->addr1,
++						   &rx->link_id))
+ 				return false;
+ 			if (ieee80211_is_public_action(hdr, skb->len))
+ 				return true;
+@@ -4740,6 +4770,7 @@ static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
+ 	rx.skb = skb;
+ 	rx.local = local;
+ 	rx.list = list;
++	rx.link_id = -1;
+ 
+ 	I802_DEBUG_INC(local->dot11ReceivedFragmentCount);
+ 
+@@ -4779,6 +4810,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	__le16 fc;
+ 	struct ieee80211_rx_data rx;
+ 	struct ieee80211_sub_if_data *prev;
++	struct link_sta_info *link_sta;
+ 	struct rhlist_head *tmp;
+ 	int err = 0;
+ 
+@@ -4787,6 +4819,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	rx.skb = skb;
+ 	rx.local = local;
+ 	rx.list = list;
++	rx.link_id = -1;
+ 
+ 	if (ieee80211_is_data(fc) || ieee80211_is_mgmt(fc))
+ 		I802_DEBUG_INC(local->dot11ReceivedFragmentCount);
+@@ -4872,7 +4905,19 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 			continue;
+ 		}
+ 
+-		rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		/*
++		 * Look up link station first, in case there's a
++		 * chance that they might have a link address that
++		 * is identical to the MLD address, that way we'll
++		 * have the link information if needed.
++		 */
++		link_sta = link_sta_info_get_bss(prev, hdr->addr2);
++		if (link_sta) {
++			rx.sta = link_sta->sta;
++			rx.link_id = link_sta->link_id;
++		} else {
++			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		}
+ 		rx.sdata = prev;
+ 		ieee80211_prepare_and_rx_handle(&rx, skb, false);
+ 
+@@ -4880,7 +4925,13 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (prev) {
+-		rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		link_sta = link_sta_info_get_bss(prev, hdr->addr2);
++		if (link_sta) {
++			rx.sta = link_sta->sta;
++			rx.link_id = link_sta->link_id;
++		} else {
++			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		}
+ 		rx.sdata = prev;
+ 
+ 		if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index bcb4aa7d7599..7b39e464fb1e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3448,6 +3448,58 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw, u32 vht_cap_info,
+ 	return true;
+ }
+ 
++void ieee80211_chandef_eht_oper(struct ieee80211_sub_if_data *sdata,
++				const struct ieee80211_eht_operation *eht_oper,
++				bool support_160, bool support_320,
++				struct cfg80211_chan_def *chandef)
++{
++	struct ieee80211_eht_operation_info *info = (void *)eht_oper->optional;
++
++	chandef->center_freq1 =
++		ieee80211_channel_to_frequency(info->ccfs0,
++					       chandef->chan->band);
++
++	switch (u8_get_bits(info->control,
++			    IEEE80211_EHT_OPER_CHAN_WIDTH)) {
++	case IEEE80211_EHT_OPER_CHAN_WIDTH_20MHZ:
++		chandef->width = NL80211_CHAN_WIDTH_20;
++		break;
++	case IEEE80211_EHT_OPER_CHAN_WIDTH_40MHZ:
++		chandef->width = NL80211_CHAN_WIDTH_40;
++		break;
++	case IEEE80211_EHT_OPER_CHAN_WIDTH_80MHZ:
++		chandef->width = NL80211_CHAN_WIDTH_80;
++		break;
++	case IEEE80211_EHT_OPER_CHAN_WIDTH_160MHZ:
++		if (support_160) {
++			chandef->width = NL80211_CHAN_WIDTH_160;
++			chandef->center_freq1 =
++				ieee80211_channel_to_frequency(info->ccfs1,
++							       chandef->chan->band);
++		} else {
++			chandef->width = NL80211_CHAN_WIDTH_80;
++		}
++		break;
++	case IEEE80211_EHT_OPER_CHAN_WIDTH_320MHZ:
++		if (support_320) {
++			chandef->width = NL80211_CHAN_WIDTH_320;
++			chandef->center_freq1 =
++				ieee80211_channel_to_frequency(info->ccfs1,
++							       chandef->chan->band);
++		} else if (support_160) {
++			chandef->width = NL80211_CHAN_WIDTH_160;
++		} else {
++			chandef->width = NL80211_CHAN_WIDTH_80;
++
++			if (chandef->center_freq1 > chandef->chan->center_freq)
++				chandef->center_freq1 -= 40;
++			else
++				chandef->center_freq1 += 40;
++		}
++		break;
++	}
++}
++
+ bool ieee80211_chandef_he_6ghz_oper(struct ieee80211_sub_if_data *sdata,
+ 				    const struct ieee80211_he_operation *he_oper,
+ 				    const struct ieee80211_eht_operation *eht_oper,
+@@ -3528,7 +3580,8 @@ bool ieee80211_chandef_he_6ghz_oper(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	}
+ 
+-	if (!eht_oper) {
++	if (!eht_oper ||
++	    !(eht_oper->params & IEEE80211_EHT_OPER_INFO_PRESENT)) {
+ 		switch (u8_get_bits(he_6ghz_oper->control,
+ 				    IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH)) {
+ 		case IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_20MHZ:
+@@ -3572,36 +3625,8 @@ bool ieee80211_chandef_he_6ghz_oper(struct ieee80211_sub_if_data *sdata,
+ 		support_320 =
+ 			eht_phy_cap & IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ;
+ 
+-		switch (u8_get_bits(eht_oper->chan_width,
+-				    IEEE80211_EHT_OPER_CHAN_WIDTH)) {
+-		case IEEE80211_EHT_OPER_CHAN_WIDTH_20MHZ:
+-			he_chandef.width = NL80211_CHAN_WIDTH_20;
+-			break;
+-		case IEEE80211_EHT_OPER_CHAN_WIDTH_40MHZ:
+-			he_chandef.width = NL80211_CHAN_WIDTH_40;
+-			break;
+-		case IEEE80211_EHT_OPER_CHAN_WIDTH_80MHZ:
+-			he_chandef.width = NL80211_CHAN_WIDTH_80;
+-			break;
+-		case IEEE80211_EHT_OPER_CHAN_WIDTH_160MHZ:
+-			if (support_160)
+-				he_chandef.width = NL80211_CHAN_WIDTH_160;
+-			else
+-				he_chandef.width = NL80211_CHAN_WIDTH_80;
+-			break;
+-		case IEEE80211_EHT_OPER_CHAN_WIDTH_320MHZ:
+-			if (support_320)
+-				he_chandef.width = NL80211_CHAN_WIDTH_320;
+-			else if (support_160)
+-				he_chandef.width = NL80211_CHAN_WIDTH_160;
+-			else
+-				he_chandef.width = NL80211_CHAN_WIDTH_80;
+-			break;
+-		}
+-
+-		he_chandef.center_freq1 =
+-			ieee80211_channel_to_frequency(eht_oper->ccfs,
+-						       NL80211_BAND_6GHZ);
++		ieee80211_chandef_eht_oper(sdata, eht_oper, support_160,
++					   support_320, &he_chandef);
+ 	}
+ 
+ 	if (!cfg80211_chandef_valid(&he_chandef)) {
 -- 
 2.36.1
 
