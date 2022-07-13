@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D61C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF4ECCCA479
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234041AbiGMJqk (ORCPT
+        id S234717AbiGMJql (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:46:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36686 "EHLO
+        Wed, 13 Jul 2022 05:46:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236057AbiGMJpg (ORCPT
+        with ESMTP id S236029AbiGMJph (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jul 2022 05:45:36 -0400
+        Wed, 13 Jul 2022 05:45:37 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16A58EEAB6
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71EE7F788A
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=Kmk/LW5lYWNCmipN+RRXp/n/gworMvqmnXQuejXydHA=;
-        t=1657705527; x=1658915127; b=Yx/dgCYM/UOwj+UV+O+ytAptaZKpEmmcyp5NBgCJYMdIYvK
-        /m0/08M0RwwGXSARoN7B4eIhI19WKRZlQCVFtrffaAWLK8KeRDrdBQuXAJ1AuXEhCwn6EPwjdtFK+
-        /igI1lXIAl4qf3Z629bhTBkzSrme6F7TEb6kMPXK0k2wQE+RWk74Yy9Lmffxz0sa/FP1IapcQTo4U
-        h7WFwzTRNnuzrkdMFk5wWn95mzMESP/MBV+jAPdZfHIJwKpJ3OsAWK5yoYJeoP7uVOauWUrmWqkVR
-        SKEFyKOr+IMoPPP5x/M+VqQcm9Ft49II+ITtIpMyH6vsKrsguZifx0LGchhvFJ2g==;
+        Resent-Cc:Resent-Message-ID; bh=gXqTGi2IeP86rpocotb869fVQKLe3fgrQDvRIYonHxs=;
+        t=1657705527; x=1658915127; b=uLEAZGUtmX/H2MB1cGstKFQQ0NXb80G9qXj4IvV+cdpkXwc
+        hRhRmnwKYUdhqnJlfzlkZ4Lg6nQ6AjfwC3ndZ9Wp3GfiWy3PlGrlh3pSYQI39P66IgucGn+julytC
+        qgk6W3axIY5KnGN5S/FRXBHe5DxK1tGFv4VuHqtkDEmGTYPy6wfZpCmdk/E/Lvl7fG6j2wCxPwESa
+        18FbFeapt5jICFp2EWVc81fqDSCk0APudGtBQKBtHXA3psVQZy+Wea1stZ3F8IebK6W8lImz6rL+p
+        xnXb52ptlRSG4QImTlndM6G1MbBxrJcUb6xge51lf/VapiTbeS3F2mvWq8dAFh8Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvs-00EgvB-SI;
+        id 1oBYvt-00EgvB-Cz;
         Wed, 13 Jul 2022 11:45:25 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 57/76] wifi: cfg80211: clean up links appropriately
-Date:   Wed, 13 Jul 2022 11:44:43 +0200
-Message-Id: <20220713114425.f9bea0264306.Iac8f8265454b023660801822fee547803dab3796@changeid>
+Subject: [PATCH 59/76] wifi: mac80211: fix link manipulation
+Date:   Wed, 13 Jul 2022 11:44:45 +0200
+Message-Id: <20220713114426.d26055298480.Id13d50b4dd1ea6298282e4414611822996bba284@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,143 +48,97 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This was missing earlier, we need to remove links when
-interfaces are being destroyed, and we also need to
-stop (AP) operations when a link is being destroyed.
-Address these issues to remove many warnings that will
-otherwise appear in mac80211.
+When we add non-deflink pointers, we need to remove the
+link[0] pointer to deflink in case link[0] is not valid
+afterwards. Also, we need to add that back when there
+are no more valid links. Reorg the code to fix that.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/core.c    |  3 ++-
- net/wireless/core.h    |  5 +++++
- net/wireless/nl80211.c | 11 ++---------
- net/wireless/util.c    | 43 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 52 insertions(+), 10 deletions(-)
+ net/mac80211/iface.c | 44 ++++++++++++++++++++++++++------------------
+ 1 file changed, 26 insertions(+), 18 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 6b5321bb1176..eefd6d8ff465 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -342,7 +342,7 @@ void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev)
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index fc5869f40279..271fc81a5ea4 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -463,6 +463,10 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 	if (old_links == new_links)
+ 		return 0;
  
- 			wiphy_lock(&rdev->wiphy);
- 			cfg80211_leave(rdev, wdev);
--			rdev_del_virtual_intf(rdev, wdev);
-+			cfg80211_remove_virtual_intf(rdev, wdev);
- 			wiphy_unlock(&rdev->wiphy);
- 		}
- 	}
-@@ -1437,6 +1437,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 	case NETDEV_GOING_DOWN:
- 		wiphy_lock(&rdev->wiphy);
- 		cfg80211_leave(rdev, wdev);
-+		cfg80211_remove_links(wdev);
- 		wiphy_unlock(&rdev->wiphy);
- 		break;
- 	case NETDEV_DOWN:
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index e72ca6eefafb..775e16cb99ed 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -562,4 +562,9 @@ void cfg80211_release_pmsr(struct wireless_dev *wdev, u32 portid);
- void cfg80211_pmsr_wdev_down(struct wireless_dev *wdev);
- void cfg80211_pmsr_free_wk(struct work_struct *work);
- 
-+void cfg80211_remove_link(struct wireless_dev *wdev, unsigned int link_id);
-+void cfg80211_remove_links(struct wireless_dev *wdev);
-+int cfg80211_remove_virtual_intf(struct cfg80211_registered_device *rdev,
-+				 struct wireless_dev *wdev);
++	/* if there were no old links, need to clear the pointers to deflink */
++	if (!old_links)
++		rem |= BIT(0);
 +
- #endif /* __NET_WIRELESS_CORE_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 11cad2d46d0e..d774e9a95492 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4279,7 +4279,7 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ 	/* allocate new link structures first */
+ 	for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
+ 		link = kzalloc(sizeof(*link), GFP_KERNEL);
+@@ -480,6 +484,22 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 	BUILD_BUG_ON(sizeof(old_data) != sizeof(sdata->link));
+ 	memcpy(old_data, sdata->link, sizeof(old_data));
  
- 	mutex_lock(&rdev->wiphy.mtx);
- 
--	return rdev_del_virtual_intf(rdev, wdev);
-+	return cfg80211_remove_virtual_intf(rdev, wdev);
- }
- 
- static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
-@@ -15707,7 +15707,6 @@ static int nl80211_add_link(struct sk_buff *skb, struct genl_info *info)
- 
- static int nl80211_remove_link(struct sk_buff *skb, struct genl_info *info)
- {
--	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	unsigned int link_id = nl80211_link_id(info->attrs);
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-@@ -15723,14 +15722,8 @@ static int nl80211_remove_link(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 	}
- 
--	/* FIXME: stop the link operations first */
--
- 	wdev_lock(wdev);
--	wdev->valid_links &= ~BIT(link_id);
--
--	rdev_del_intf_link(rdev, wdev, link_id);
--
--	eth_zero_addr(wdev->links[link_id].addr);
-+	cfg80211_remove_link(wdev, link_id);
- 	wdev_unlock(wdev);
- 
- 	return 0;
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b7257862e0fe..fe7956c8c6da 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -2447,3 +2447,46 @@ bool cfg80211_iftype_allowed(struct wiphy *wiphy, enum nl80211_iftype iftype,
- 	return false;
- }
- EXPORT_SYMBOL(cfg80211_iftype_allowed);
++	/* grab old links to free later */
++	for_each_set_bit(link_id, &rem, IEEE80211_MLD_MAX_NUM_LINKS) {
++		RCU_INIT_POINTER(sdata->link[link_id], NULL);
++		RCU_INIT_POINTER(sdata->vif.link_conf[link_id], NULL);
 +
-+void cfg80211_remove_link(struct wireless_dev *wdev, unsigned int link_id)
-+{
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-+
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+		__cfg80211_stop_ap(rdev, wdev->netdev, link_id, true);
-+		break;
-+	default:
-+		/* per-link not relevant */
-+		break;
++		if (rcu_access_pointer(sdata->link[link_id]) == &sdata->deflink)
++			continue;
++		/*
++		 * we must have allocated the data through this path so
++		 * we know we can free both at the same time
++		 */
++		to_free[link_id] = container_of(rcu_access_pointer(sdata->link[link_id]),
++						typeof(*links[link_id]),
++						data);
 +	}
 +
-+	wdev->valid_links &= ~BIT(link_id);
-+
-+	rdev_del_intf_link(rdev, wdev, link_id);
-+
-+	eth_zero_addr(wdev->links[link_id].addr);
-+}
-+
-+void cfg80211_remove_links(struct wireless_dev *wdev)
-+{
-+	unsigned int link_id;
-+
-+	wdev_lock(wdev);
-+	if (wdev->valid_links) {
-+		for_each_valid_link(wdev, link_id)
-+			cfg80211_remove_link(wdev, link_id);
-+	}
-+	wdev_unlock(wdev);
-+}
-+
-+int cfg80211_remove_virtual_intf(struct cfg80211_registered_device *rdev,
-+				 struct wireless_dev *wdev)
-+{
-+	cfg80211_remove_links(wdev);
-+
-+	return rdev_del_virtual_intf(rdev, wdev);
-+}
+ 	/* link them into data structures */
+ 	for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
+ 		WARN_ON(!use_deflink &&
+@@ -490,10 +510,9 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_link_setup(&link->data);
+ 	}
+ 
+-	for_each_set_bit(link_id, &rem, IEEE80211_MLD_MAX_NUM_LINKS) {
+-		RCU_INIT_POINTER(sdata->link[link_id], NULL);
+-		RCU_INIT_POINTER(sdata->vif.link_conf[link_id], NULL);
+-	}
++	if (new_links == 0)
++		ieee80211_link_init(sdata, -1, &sdata->deflink,
++				    &sdata->vif.bss_conf);
+ 
+ 	sdata->vif.valid_links = new_links;
+ 
+@@ -506,25 +525,14 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(sdata->link, old_data, sizeof(old_data));
+ 		memcpy(sdata->vif.link_conf, old, sizeof(old));
+ 		sdata->vif.valid_links = old_links;
+-		/* and free the newly allocated links */
+-		goto deinit;
++		/* and free (only) the newly allocated links */
++		memset(to_free, 0, sizeof(links));
++		goto free;
+ 	}
+ 
+ 	/* use deflink/bss_conf again if and only if there are no more links */
+ 	use_deflink = new_links == 0;
+ 
+-	for_each_set_bit(link_id, &rem, IEEE80211_MLD_MAX_NUM_LINKS) {
+-		if (rcu_access_pointer(sdata->link[link_id]) == &sdata->deflink)
+-			continue;
+-		/*
+-		 * we must have allocated the data through this path so
+-		 * we know we can free both at the same time
+-		 */
+-		to_free[link_id] = container_of(rcu_access_pointer(sdata->link[link_id]),
+-						typeof(*links[link_id]),
+-						data);
+-	}
+-
+ 	goto deinit;
+ free:
+ 	/* if we failed during allocation, only free all */
 -- 
 2.36.1
 
