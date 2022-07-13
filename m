@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 260C9C43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D0CCCA479
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235174AbiGMJpL (ORCPT
+        id S235736AbiGMJpM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:45:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35724 "EHLO
+        Wed, 13 Jul 2022 05:45:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234372AbiGMJpJ (ORCPT
+        with ESMTP id S234609AbiGMJpK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jul 2022 05:45:09 -0400
+        Wed, 13 Jul 2022 05:45:10 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7337DA5A9
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B836BFAEB
         for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=GY1Y1arMzfUGmVRJjkVBiNfLpGerwep6HqLXdceADSY=;
-        t=1657705508; x=1658915108; b=UHUqigrYsCKdEOqO1+8jDt8KYz6mXgNEe9doREXnmIHUdNy
-        g8RHWvFGC0M31iqd/19ZnH78yPBPptgVQvIBTdHkcEVxPkgIbSP3imlNXYLbOFVCvunnwJjRZ0S5y
-        lCzK3z9HEy+RVRYKIU3x/Dnu0LZV6W8bAQeOkNjF1D5/pPuvkWcgOHWgKT1L3eHfxQ2i7u+L+wa7B
-        fFNZYRr3UkjMNngYc4hY1DAng+n8KIOPaeNb7kfB1gNM7S/jnwJLrRn8nLuz3b0XqrKBlHPUS50f2
-        rLbDhfqoH4kR1kCe+tZNH9A9afACYjq58cd+/uPCBebkgzf93veOwMCHUfd62MMw==;
+        Resent-Cc:Resent-Message-ID; bh=n7wFBEEAuNQGGsR1pxmwrMMRlVj3BpAiqSqQllf4lKg=;
+        t=1657705508; x=1658915108; b=NdNptq9QaEYb5hcGAeLWUoeDf8hVCLkInoSNm76JDViBwNR
+        exNLEVOCdhXNXPNKYFYcyUS0ZtGhrXt/NGFyNZ1nFMkgxk4LEUPnkhw2K3ih2oxLBTnGrsJt2XjiT
+        Uoat64PKkV/dUUi/MQPbIlygcJ50HDKi9nTM8Dy001xKynBPenLFsICPrjMDDVniE70RiM+PLXaWX
+        2AKRLmqow3TRUcXAJMCE+SWqBcodbumAQoz6xMKNRm1iuQKmCBDRaghtx2YcXMTyeSk9D+TL9AsUD
+        maq5Pee0PWM5PrunJCWvEbWFfnTkL3Q7uNuRWdfThlBgKUFYKlgUQJ0ximlXADwg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYva-00EgvB-3g;
-        Wed, 13 Jul 2022 11:45:06 +0200
+        id 1oBYvZ-00EgvB-RX;
+        Wed, 13 Jul 2022 11:45:05 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [PATCH 05/76] wifi: cfg80211: Allow MLO TX with link source address
-Date:   Wed, 13 Jul 2022 11:43:51 +0200
-Message-Id: <20220713114425.9097a949e4a3.I8f699d52688c38c6fc1e3434c02e4c8d3161fffc@changeid>
+Subject: [PATCH 04/76] wifi: mac80211: Consider MLO links in offchannel logic
+Date:   Wed, 13 Jul 2022 11:43:50 +0200
+Message-Id: <20220713114425.640af05da5be.I968979e66d80dbf8b9352075a6dcc7a366c1ba85@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,47 +48,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Management frames are transmitted from link address and not device
-address. Allow that.
+Check all the MLO links to decide whether offchannel TX is needed.
 
 Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/mlme.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ net/mac80211/offchannel.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 14584488de67..935537c64ed8 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -637,6 +637,18 @@ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
- 	cfg80211_mgmt_registrations_update(wdev);
- }
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 2ed4e2325914..aff5d3c39902 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -842,10 +842,24 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
  
-+static bool cfg80211_allowed_address(struct wireless_dev *wdev, const u8 *addr)
-+{
-+	int i;
-+
-+	for_each_valid_link(wdev, i) {
-+		if (ether_addr_equal(addr, wdev->links[i].addr))
-+			return true;
-+	}
-+
-+	return ether_addr_equal(addr, wdev_address(wdev));
-+}
-+
- int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			  struct wireless_dev *wdev,
- 			  struct cfg80211_mgmt_tx_params *params, u64 *cookie)
-@@ -735,7 +747,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			return err;
- 	}
+ 	/* Check if the operating channel is the requested channel */
+ 	if (!need_offchan) {
+-		struct ieee80211_chanctx_conf *chanctx_conf;
++		struct ieee80211_chanctx_conf *chanctx_conf = NULL;
++		int i;
  
--	if (!ether_addr_equal(mgmt->sa, wdev_address(wdev))) {
-+	if (!cfg80211_allowed_address(wdev, mgmt->sa)) {
- 		/* Allow random TA to be used with Public Action frames if the
- 		 * driver has indicated support for this. Otherwise, only allow
- 		 * the local address to be used.
+ 		rcu_read_lock();
+-		chanctx_conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
++		/* Check all the links first */
++		for (i = 0; i < ARRAY_SIZE(sdata->vif.link_conf); i++) {
++			if (!sdata->vif.link_conf[i])
++				continue;
++
++			chanctx_conf = rcu_dereference(sdata->vif.link_conf[i]->chanctx_conf);
++			if (!chanctx_conf)
++				continue;
++
++			if (ether_addr_equal(sdata->vif.link_conf[i]->addr, mgmt->sa))
++				break;
++
++			chanctx_conf = NULL;
++		}
+ 
+ 		if (chanctx_conf) {
+ 			need_offchan = params->chan &&
 -- 
 2.36.1
 
