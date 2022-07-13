@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B371C43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 15:34:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF2DCCA483
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 15:34:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236978AbiGMPez (ORCPT
+        id S236976AbiGMPe4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 11:34:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40576 "EHLO
+        Wed, 13 Jul 2022 11:34:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236950AbiGMPeo (ORCPT
+        with ESMTP id S236953AbiGMPeo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 11:34:44 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAF764C638
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 08:34:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167C74D141
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 08:34:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=NDVuU4hUY8s4cKu/LRQDiVWaVDRW97RVN78U/lr/wIk=;
-        t=1657726483; x=1658936083; b=JC5VNMHHDqnweiI+rMDohxK3iTP0Zsm1cqMbygU4+PMpKu+
-        w3Z5eeMJI+gSrYB1NmxPdgPshFeRqKZ1JSBjWgVNHZ0twGIchS8xC5GBnILkiYIWwfrOUYG6zvxym
-        xsQvfPDuHQgDC1wGPXuCJ9a+CKU7BoonG+WE9YMrEsfKP0XAyAdOEJiUwfkT0TULELwwKXuVYyqY6
-        c5LLHoCU4cnbQcPztEcmUaBMpdvWyuB3kuuQyb+tjnLIHsKVgfH6oAXekAzqVmUNz5L4tdwIKv15n
-        JmmHY/+Ryc1v2cNCFUgzErAG5H7xZDNlsBT1ELiSN6w8utmwr5T7KBLVGP4HFzJA==;
+        Resent-Cc:Resent-Message-ID; bh=C2Wce6sXZ+PzZgeWx+oU5YujEGCViiUVKyqEEqUlbGY=;
+        t=1657726483; x=1658936083; b=sfrhd1iURG/1dypIazDSfV892RxuiduLfYHHb64A2l7Pjl7
+        Y99Lc3EwD0hv/Ty6ur6sV30h4nPYqY1jCw6gk/5pNzxEqECuTX0Ga5ErWejCvn53aotGDDkToPDjE
+        LrcQUSzoNj71auj6XWXf5Zt6MsfuG1mCgk6M7MYfJUBWcqp1dSsAgpU9d0DqkisG0P+PxkzaqcEof
+        g85DcKvWOK7CNRuAb58XaL8YMHu66NKKfkIPNbiH5/PtlzP269g2uyG0eIDJuEI6fACR+/k4SuvBq
+        Gj3gfzpnWtB2WNasex+YnKPuZOqP5Zvm4X6QObTHNll/8H4iqJlSSALJW7wORw6w==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBeNs-00EnaA-GF;
-        Wed, 13 Jul 2022 17:34:40 +0200
+        id 1oBeNt-00EnaA-25;
+        Wed, 13 Jul 2022 17:34:41 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 13/21] wifi: mac80211: mlme: switch some things back to deflink
-Date:   Wed, 13 Jul 2022 17:34:25 +0200
-Message-Id: <20220713173301.2941d7b03f50.I1da3e7cbc88305d2c2c89bd3e345d7f6b73a1ea7@changeid>
+Subject: [PATCH 15/21] wifi: mac80211: mlme: refactor ieee80211_prep_channel() a bit
+Date:   Wed, 13 Jul 2022 17:34:27 +0200
+Message-Id: <20220713173301.d1c18ba15a6e.I84e9c2a7bee6a956a20bd5ceaa87fdf53add9203@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713153433.279227-1-johannes@sipsolutions.net>
 References: <20220713153433.279227-1-johannes@sipsolutions.net>
@@ -48,178 +48,217 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-With MLO, when we'll disconnect from an AP MLD, we'll just
-destroy all the links. Therefore, the only thing we (may)
-need to reset is the deflink data, so switch back to that
-and adjust the comments accordingly.
+Refactor ieee80211_prep_channel() to make the link argument
+optional and add a conn_flags pointer argument instead, so
+that we can later use this for links that don't exist yet
+to build the right information for MLO.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 71 +++++++++++++++++++++++++--------------------
- 1 file changed, 39 insertions(+), 32 deletions(-)
+ net/mac80211/mlme.c | 81 ++++++++++++++++++++++++---------------------
+ 1 file changed, 44 insertions(+), 37 deletions(-)
 
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 03f6da885ce4..999eead2129e 100644
+index 26c354e1b042..308b4ede10b9 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -2437,7 +2437,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+@@ -3887,7 +3887,8 @@ ieee80211_verify_sta_he_mcs_support(struct ieee80211_sub_if_data *sdata,
+ 
+ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 				  struct ieee80211_link_data *link,
+-				  struct cfg80211_bss *cbss)
++				  struct cfg80211_bss *cbss,
++				  ieee80211_conn_flags_t *conn_flags)
  {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
  	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
- 	struct ieee80211_link_data *link = &sdata->deflink;
- 	u32 changed = 0;
- 	struct ieee80211_prep_tx_info info = {
-@@ -2455,7 +2454,10 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_stop_poll(sdata);
+ 	const struct ieee80211_ht_cap *ht_cap = NULL;
+@@ -3918,73 +3919,73 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
  
- 	ifmgd->associated = false;
--	link->u.mgd.bss = NULL;
-+
-+	/* other links will be destroyed */
-+	sdata->deflink.u.mgd.bss = NULL;
-+
- 	netif_carrier_off(sdata->dev);
+ 	sband = local->hw.wiphy->bands[cbss->channel->band];
  
- 	/*
-@@ -2493,7 +2495,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		 * driver requested so.
- 		 */
- 		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP) &&
--		    !link->u.mgd.have_beacon) {
-+		    !sdata->deflink.u.mgd.have_beacon) {
- 			drv_mgd_prepare_tx(sdata->local, sdata, &info);
+-	link->u.mgd.conn_flags &= ~(IEEE80211_CONN_DISABLE_40MHZ |
+-					     IEEE80211_CONN_DISABLE_80P80MHZ |
+-					     IEEE80211_CONN_DISABLE_160MHZ);
++	*conn_flags &= ~(IEEE80211_CONN_DISABLE_40MHZ |
++			 IEEE80211_CONN_DISABLE_80P80MHZ |
++			 IEEE80211_CONN_DISABLE_160MHZ);
+ 
+ 	/* disable HT/VHT/HE if we don't support them */
+ 	if (!sband->ht_cap.ht_supported && !is_6ghz) {
+ 		mlme_dbg(sdata, "HT not supported, disabling HT/VHT/HE/EHT\n");
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HT;
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_VHT;
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HE;
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_EHT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_HT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_VHT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_HE;
++		*conn_flags |= IEEE80211_CONN_DISABLE_EHT;
+ 	}
+ 
+ 	if (!sband->vht_cap.vht_supported && is_5ghz) {
+ 		mlme_dbg(sdata, "VHT not supported, disabling VHT/HE/EHT\n");
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_VHT;
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HE;
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_EHT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_VHT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_HE;
++		*conn_flags |= IEEE80211_CONN_DISABLE_EHT;
+ 	}
+ 
+ 	if (!ieee80211_get_he_iftype_cap(sband,
+ 					 ieee80211_vif_type_p2p(&sdata->vif))) {
+ 		mlme_dbg(sdata, "HE not supported, disabling HE and EHT\n");
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HE;
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_EHT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_HE;
++		*conn_flags |= IEEE80211_CONN_DISABLE_EHT;
+ 	}
+ 
+ 	if (!ieee80211_get_eht_iftype_cap(sband,
+ 					  ieee80211_vif_type_p2p(&sdata->vif))) {
+ 		mlme_dbg(sdata, "EHT not supported, disabling EHT\n");
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_EHT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_EHT;
+ 	}
+ 
+-	if (!(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_HT) && !is_6ghz) {
++	if (!(*conn_flags & IEEE80211_CONN_DISABLE_HT) && !is_6ghz) {
+ 		ht_oper = elems->ht_operation;
+ 		ht_cap = elems->ht_cap_elem;
+ 
+ 		if (!ht_cap) {
+-			link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HT;
++			*conn_flags |= IEEE80211_CONN_DISABLE_HT;
+ 			ht_oper = NULL;
+ 		}
+ 	}
+ 
+-	if (!(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_VHT) && !is_6ghz) {
++	if (!(*conn_flags & IEEE80211_CONN_DISABLE_VHT) && !is_6ghz) {
+ 		vht_oper = elems->vht_operation;
+ 		if (vht_oper && !ht_oper) {
+ 			vht_oper = NULL;
+ 			sdata_info(sdata,
+ 				   "AP advertised VHT without HT, disabling HT/VHT/HE\n");
+-			link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HT;
+-			link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_VHT;
+-			link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HE;
+-			link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_EHT;
++			*conn_flags |= IEEE80211_CONN_DISABLE_HT;
++			*conn_flags |= IEEE80211_CONN_DISABLE_VHT;
++			*conn_flags |= IEEE80211_CONN_DISABLE_HE;
++			*conn_flags |= IEEE80211_CONN_DISABLE_EHT;
  		}
  
-@@ -2524,9 +2526,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	changed |= BSS_CHANGED_ASSOC;
- 	sdata->vif.cfg.assoc = false;
- 
--	link->u.mgd.p2p_noa_index = -1;
--	memset(&link->conf->p2p_noa_attr, 0,
--	       sizeof(link->conf->p2p_noa_attr));
-+	sdata->deflink.u.mgd.p2p_noa_index = -1;
-+	memset(&sdata->vif.bss_conf.p2p_noa_attr, 0,
-+	       sizeof(sdata->vif.bss_conf.p2p_noa_attr));
- 
- 	/* on the next assoc, re-program HT/VHT parameters */
- 	memset(&ifmgd->ht_capa, 0, sizeof(ifmgd->ht_capa));
-@@ -2534,15 +2536,19 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	memset(&ifmgd->vht_capa, 0, sizeof(ifmgd->vht_capa));
- 	memset(&ifmgd->vht_capa_mask, 0, sizeof(ifmgd->vht_capa_mask));
- 
--	/* reset MU-MIMO ownership and group data */
--	memset(link->conf->mu_group.membership, 0,
--	       sizeof(link->conf->mu_group.membership));
--	memset(link->conf->mu_group.position, 0,
--	       sizeof(link->conf->mu_group.position));
--	changed |= BSS_CHANGED_MU_GROUPS;
--	link->conf->mu_mimo_owner = false;
-+	/*
-+	 * reset MU-MIMO ownership and group data in default link,
-+	 * if used, other links are destroyed
-+	 */
-+	memset(sdata->vif.bss_conf.mu_group.membership, 0,
-+	       sizeof(sdata->vif.bss_conf.mu_group.membership));
-+	memset(sdata->vif.bss_conf.mu_group.position, 0,
-+	       sizeof(sdata->vif.bss_conf.mu_group.position));
-+	if (!sdata->vif.valid_links)
-+		changed |= BSS_CHANGED_MU_GROUPS;
-+	sdata->vif.bss_conf.mu_mimo_owner = false;
- 
--	link->ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
-+	sdata->deflink.ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
- 
- 	del_timer_sync(&local->dynamic_ps_timer);
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
-@@ -2551,7 +2557,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	if (sdata->vif.cfg.arp_addr_cnt)
- 		changed |= BSS_CHANGED_ARP_FILTER;
- 
--	link->conf->qos = false;
-+	sdata->vif.bss_conf.qos = false;
- 	changed |= BSS_CHANGED_QOS;
- 
- 	/* The BSSID (not really interesting) and HT changed */
-@@ -2564,27 +2570,27 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.timer);
--	del_timer_sync(&link->u.mgd.chswitch_timer);
-+	del_timer_sync(&sdata->deflink.u.mgd.chswitch_timer);
- 
--	link->conf->dtim_period = 0;
--	link->conf->beacon_rate = NULL;
-+	sdata->vif.bss_conf.dtim_period = 0;
-+	sdata->vif.bss_conf.beacon_rate = NULL;
- 
--	link->u.mgd.have_beacon = false;
--	link->u.mgd.tracking_signal_avg = false;
--	link->u.mgd.disable_wmm_tracking = false;
-+	sdata->deflink.u.mgd.have_beacon = false;
-+	sdata->deflink.u.mgd.tracking_signal_avg = false;
-+	sdata->deflink.u.mgd.disable_wmm_tracking = false;
- 
- 	ifmgd->flags = 0;
--	link->u.mgd.conn_flags = 0;
-+	sdata->deflink.u.mgd.conn_flags = 0;
- 	mutex_lock(&local->mtx);
- 	ieee80211_link_release_channel(link);
- 
--	link->conf->csa_active = false;
--	link->u.mgd.csa_waiting_bcn = false;
--	link->u.mgd.csa_ignored_same_chan = false;
--	if (link->csa_block_tx) {
-+	sdata->vif.bss_conf.csa_active = false;
-+	sdata->deflink.u.mgd.csa_waiting_bcn = false;
-+	sdata->deflink.u.mgd.csa_ignored_same_chan = false;
-+	if (sdata->deflink.csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
--		link->csa_block_tx = false;
-+		sdata->deflink.csa_block_tx = false;
+ 		if (!elems->vht_cap_elem) {
+ 			sdata_info(sdata,
+ 				   "bad VHT capabilities, disabling VHT\n");
+-			link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_VHT;
++			*conn_flags |= IEEE80211_CONN_DISABLE_VHT;
+ 			vht_oper = NULL;
+ 		}
  	}
- 	mutex_unlock(&local->mtx);
  
-@@ -2592,9 +2598,10 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	memset(ifmgd->tx_tspec, 0, sizeof(ifmgd->tx_tspec));
- 	cancel_delayed_work_sync(&ifmgd->tx_tspec_wk);
+-	if (!(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_HE)) {
++	if (!(*conn_flags & IEEE80211_CONN_DISABLE_HE)) {
+ 		he_oper = elems->he_operation;
  
--	bss_conf->pwr_reduction = 0;
--	bss_conf->tx_pwr_env_num = 0;
--	memset(bss_conf->tx_pwr_env, 0, sizeof(bss_conf->tx_pwr_env));
-+	sdata->vif.bss_conf.pwr_reduction = 0;
-+	sdata->vif.bss_conf.tx_pwr_env_num = 0;
-+	memset(sdata->vif.bss_conf.tx_pwr_env, 0,
-+	       sizeof(sdata->vif.bss_conf.tx_pwr_env));
- }
+-		if (is_6ghz) {
++		if (link && is_6ghz) {
+ 			struct ieee80211_bss_conf *bss_conf;
+ 			u8 j = 0;
  
- static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
-@@ -2911,6 +2918,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 					WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
- 			       tx, frame_buf);
- 	mutex_lock(&local->mtx);
-+	/* the other links will be destroyed */
- 	sdata->vif.bss_conf.csa_active = false;
- 	sdata->deflink.u.mgd.csa_waiting_bcn = false;
- 	if (sdata->deflink.csa_block_tx) {
-@@ -3057,7 +3065,6 @@ static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
- 		del_timer_sync(&sdata->u.mgd.timer);
- 		sta_info_destroy_addr(sdata, assoc_data->bss->bssid);
+@@ -4010,8 +4011,8 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
  
--		/* FIXME: other links are destroyed? */
- 		sdata->deflink.u.mgd.conn_flags = 0;
- 		eth_zero_addr(sdata->deflink.u.mgd.bssid);
- 		ieee80211_link_info_change_notify(sdata, &sdata->deflink,
-@@ -6407,7 +6414,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		if (!ieee80211_verify_peer_he_mcs_support(sdata, ies, he_oper) ||
+ 		    !ieee80211_verify_sta_he_mcs_support(sdata, sband, he_oper))
+-			link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HE |
+-						  IEEE80211_CONN_DISABLE_EHT;
++			*conn_flags |= IEEE80211_CONN_DISABLE_HE |
++				       IEEE80211_CONN_DISABLE_EHT;
+ 	}
  
- 	return 0;
-  err_clear:
--	eth_zero_addr(link->u.mgd.bssid);
-+	eth_zero_addr(sdata->deflink.u.mgd.bssid);
- 	ieee80211_link_info_change_notify(sdata, &sdata->deflink,
- 					  BSS_CHANGED_BSSID);
- 	ifmgd->assoc_data = NULL;
+ 	/*
+@@ -4020,7 +4021,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 	 * both the 6 GHz operation information (from the HE operation IE) and
+ 	 * EHT operation.
+ 	 */
+-	if (!(link->u.mgd.conn_flags &
++	if (!(*conn_flags &
+ 			(IEEE80211_CONN_DISABLE_HE |
+ 			 IEEE80211_CONN_DISABLE_EHT)) &&
+ 	    he_oper) {
+@@ -4050,7 +4051,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (!have_80mhz) {
+ 		sdata_info(sdata, "80 MHz not supported, disabling VHT\n");
+-		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_VHT;
++		*conn_flags |= IEEE80211_CONN_DISABLE_VHT;
+ 	}
+ 
+ 	if (sband->band == NL80211_BAND_S1GHZ) {
+@@ -4060,29 +4061,34 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 				   "AP missing S1G operation element?\n");
+ 	}
+ 
+-	link->u.mgd.conn_flags |=
+-		ieee80211_determine_chantype(sdata, link,
+-					     link->u.mgd.conn_flags,
+-					     sband, cbss->channel,
++	*conn_flags |=
++		ieee80211_determine_chantype(sdata, link, *conn_flags,
++					     sband,
++					     cbss->channel,
+ 					     bss->vht_cap_info,
+ 					     ht_oper, vht_oper,
+ 					     he_oper, eht_oper,
+ 					     s1g_oper,
+ 					     &chandef, false);
+ 
+-	link->needed_rx_chains =
+-		min(ieee80211_max_rx_chains(link, cbss), local->rx_chains);
++	if (link)
++		link->needed_rx_chains =
++			min(ieee80211_max_rx_chains(link, cbss),
++			    local->rx_chains);
+ 
+ 	rcu_read_unlock();
+ 	/* the element data was RCU protected so no longer valid anyway */
+ 	kfree(elems);
+ 	elems = NULL;
+ 
+-	if (link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_HE && is_6ghz) {
++	if (*conn_flags & IEEE80211_CONN_DISABLE_HE && is_6ghz) {
+ 		sdata_info(sdata, "Rejecting non-HE 6/7 GHz connection");
+ 		return -EINVAL;
+ 	}
+ 
++	if (!link)
++		return 0;
++
+ 	/* will change later if needed */
+ 	link->smps_mode = IEEE80211_SMPS_OFF;
+ 
+@@ -4101,7 +4107,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 		goto out;
+ 
+ 	while (ret && chandef.width != NL80211_CHAN_WIDTH_20_NOHT) {
+-		link->u.mgd.conn_flags |=
++		*conn_flags |=
+ 			ieee80211_chandef_downgrade(&chandef);
+ 		ret = ieee80211_link_use_channel(link, &chandef,
+ 						 IEEE80211_CHANCTX_SHARED);
+@@ -5929,7 +5935,8 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (new_sta || override) {
+-		err = ieee80211_prep_channel(sdata, link, cbss);
++		err = ieee80211_prep_channel(sdata, link, cbss,
++					     &link->u.mgd.conn_flags);
+ 		if (err) {
+ 			if (new_sta)
+ 				sta_info_free(local, new_sta);
 -- 
 2.36.1
 
