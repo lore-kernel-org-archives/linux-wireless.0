@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 613F5CCA481
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE28CCA483
 	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 15:34:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236958AbiGMPes (ORCPT
+        id S236971AbiGMPes (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 13 Jul 2022 11:34:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40502 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236875AbiGMPem (ORCPT
+        with ESMTP id S236784AbiGMPem (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 11:34:42 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786C52FFE0
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1562341D3A
         for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 08:34:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=5lXq3+gwn+yp3ypbdM7NnRAzFBA6eb94pXrPSZX9Wso=;
-        t=1657726481; x=1658936081; b=cr8upjGLmDPNBaTNTooKVz56G2Ea8jA6+Ll+/8gJrw8poZq
-        kMEJ73rSIYxcU/5g7wPdo9qxz+M4GZS1bmBo+w/tL4GaChSIKNckRiI80dk3QaK2jSKOQIPWBTwSi
-        urHb2hQxuyQtZK3ZJoMhtzQasURbgQhhbYZJKTR7jU56gUklFvkYe7KkzxmjoLeygFGM0UEBHfE1I
-        PCA2wZy5ZFCyai8SE0FovMKjVhqydVNv2h2Lo7dHLzcLLX8ly3+WwEaaGd5yUFQCDmMAUxhdJS2jW
-        D4gV+bB5UxGIAwv+GMyH7CkRlok59VMsxEhD23BcmLBe1/qZKDipzYnlBDoVesgQ==;
+        Resent-Cc:Resent-Message-ID; bh=bM5w5nfF6EkhHYX8Sz4nGkzE5bziwujdNy+U/ulO2cY=;
+        t=1657726481; x=1658936081; b=oWjTSLWUQZ7AOPXeIdBty5OR4uMcH2Q9AJEo9PVxMqQFDSp
+        mKZ5Vi8epy3OSfgEEMRbxVoyQpXMqbyC3iVgxNG3GGXRF/sWkTMneYUYU1swweD/byEJJUutWN5Jx
+        bohxjFnUDLIZuXbrpoL78JMu5gD58ZJOuK7CwjitQrNLR2Siv1bW7DcZxMLjvRN31kQA65TtrsFlp
+        psx8gB8CR0qHYX5wdrGRRc6RciVgJEb+xy0LT2RjsOhXsttwuVcn/dT4mgMkFxGJoPn6xpkhA3fIU
+        M5C3a0wJgEO5MuHFwBuAqLQb3paRtudx9vj45EwF9mSVAc/Shnknd3rfqz1s0ZXA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBeNp-00EnaA-QC;
-        Wed, 13 Jul 2022 17:34:37 +0200
+        id 1oBeNq-00EnaA-Ve;
+        Wed, 13 Jul 2022 17:34:39 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 02/21] wifi: nl80211: reject fragmented and non-inheritance elements
-Date:   Wed, 13 Jul 2022 17:34:14 +0200
-Message-Id: <20220713173301.b71b1a24e37c.Iae35742381f6a5495768fca57e01b4a1fab918d6@changeid>
+Subject: [PATCH 07/21] wifi: mac80211: add multi-link element to AUTH frames
+Date:   Wed, 13 Jul 2022 17:34:19 +0200
+Message-Id: <20220713173301.8ce1b3fb7c9d.I8b2ece0e92aa8454f106730cac9d31a86495f540@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713153433.279227-1-johannes@sipsolutions.net>
 References: <20220713153433.279227-1-johannes@sipsolutions.net>
@@ -48,67 +48,58 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The underlying mac80211 code cannot deal with fragmented
-elements for purposes of sorting the elements into the
-association frame, so reject those inside the link. We
-might want to reject them inside the assoc frame, but
-they're used today for FILS, so cannot do that.
-
-The non-inheritance element inside the links similarly
-cannot be handled by mac80211, and outside the links it
-makes no sense.
-
-Reject both since using them could lead to an incorrect
-implementation.
+When sending an authentication frame from an MLD, include
+the multi-link element with the MLD address and use the
+link address for transmission.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ net/mac80211/util.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index be969f64b5c3..e2d1efe0174e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10661,6 +10661,13 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 	if (info->attrs[NL80211_ATTR_IE]) {
- 		req.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
- 		req.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
-+
-+		if (cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
-+					   req.ie, req.ie_len)) {
-+			GENL_SET_ERR_MSG(info,
-+					 "non-inheritance makes no sense");
-+			return -EINVAL;
-+		}
- 	}
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 994a49b892a6..b6ddcbbb22e8 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1711,11 +1711,28 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
++	bool multi_link = sdata->vif.valid_links;
++	struct {
++		u8 id;
++		u8 len;
++		u8 ext_id;
++		struct ieee80211_multi_link_elem ml;
++		struct ieee80211_mle_basic_common_info basic;
++	} __packed mle = {
++		.id = WLAN_EID_EXTENSION,
++		.len = sizeof(mle) - 2,
++		.ext_id = WLAN_EID_EXT_EHT_MULTI_LINK,
++		.ml.control = cpu_to_le16(IEEE80211_ML_CONTROL_TYPE_BASIC),
++		.basic.len = sizeof(mle.basic),
++	};
+ 	int err;
  
- 	if (info->attrs[NL80211_ATTR_USE_MFP]) {
-@@ -10805,6 +10812,24 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 					nla_data(attrs[NL80211_ATTR_IE]);
- 				req.links[link_id].elems_len =
- 					nla_len(attrs[NL80211_ATTR_IE]);
++	memcpy(mle.basic.mld_mac_addr, sdata->vif.addr, ETH_ALEN);
 +
-+				if (cfg80211_find_elem(WLAN_EID_FRAGMENT,
-+						       req.links[link_id].elems,
-+						       req.links[link_id].elems_len)) {
-+					GENL_SET_ERR_MSG(info,
-+							 "cannot deal with fragmentation");
-+					err = -EINVAL;
-+					goto free;
-+				}
-+
-+				if (cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
-+							   req.links[link_id].elems,
-+							   req.links[link_id].elems_len)) {
-+					GENL_SET_ERR_MSG(info,
-+							 "cannot deal with non-inheritance");
-+					err = -EINVAL;
-+					goto free;
-+				}
- 			}
- 		}
+ 	/* 24 + 6 = header + auth_algo + auth_transaction + status_code */
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + IEEE80211_WEP_IV_LEN +
+-			    24 + 6 + extra_len + IEEE80211_WEP_ICV_LEN);
++			    24 + 6 + extra_len + IEEE80211_WEP_ICV_LEN +
++			    multi_link * sizeof(mle));
+ 	if (!skb)
+ 		return;
  
+@@ -1732,6 +1749,8 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 	mgmt->u.auth.status_code = cpu_to_le16(status);
+ 	if (extra)
+ 		skb_put_data(skb, extra, extra_len);
++	if (multi_link)
++		skb_put_data(skb, &mle, sizeof(mle));
+ 
+ 	if (auth_alg == WLAN_AUTH_SHARED_KEY && transaction == 3) {
+ 		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
 -- 
 2.36.1
 
