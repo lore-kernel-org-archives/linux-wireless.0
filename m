@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE84C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D79E6C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:46:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235991AbiGMJqc (ORCPT
+        id S235659AbiGMJqe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:46:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36624 "EHLO
+        Wed, 13 Jul 2022 05:46:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236234AbiGMJpd (ORCPT
+        with ESMTP id S236239AbiGMJpf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jul 2022 05:45:33 -0400
+        Wed, 13 Jul 2022 05:45:35 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8A09F6830
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD584F6BBF
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=jdhcQglGBX/kKsb3TZgWVbsR9yCMB8Mf1eGS4DXYiZM=;
-        t=1657705525; x=1658915125; b=H38exBtPdqQJeyKT5vKmwjeqZiFZjOpCIyZL9aYIAfOtFol
-        v6UAf9JWAZ3EtavOs4tWQwZCFzkDzRVOxpGeolpT5vfn0kfuVttADPcx92os8J11ceIgZUg9ohgoz
-        +x1jBKNS7WucDyCSAUxeuB2kXsyB3ntJcLufgmE61Wc6n0g8P9WqKIuzBRSMtjqzvDCDSdwf/eRjL
-        ipP3EhNdlyniSpVuESSRC0TOVsB1vMWxc33jjRejCBEpaqGpBuCS+mpYNaxhfxK63JtlcTpneidyX
-        XJ584DbEKU1l29z9tie8bqJT6MOfSYIm5woOL20d9a6o/2z7o9C5qxjh+gb+w4cw==;
+        Resent-Cc:Resent-Message-ID; bh=yrMzir8MmVZ2ZjX5Ztuo97Rbxl1FyQu+7LN86zcsNAo=;
+        t=1657705526; x=1658915126; b=K/2/1yoDlJokM3Z5njr8ME5jKS+x+UDjsluzQUyDyZsguZc
+        BAp9Od57u2E6CWe0wV4sRkOffkMOOl4cv6pu0zqqNjbjg2HgSnaFgxaE+A7MSvUJhxXnMdBy8RAgj
+        aADxlFlCMyfmhDt5JGCV/HL3/IqOnM9Um8walZO2TMfzaciK0P2wiJHojaKwsxFGrVJqJ/AnyEgyA
+        o+ohT82ozRnMKAb2KmwSoaejowTnexv3ELsnVH3REeQAM/vYz573Ny3Xfpx7m93kn52CPgtRqdSeB
+        bET1UMg2KYDp80ldsOhIg7G9tYdvDHrxsvf1C+vNDkaKAP8788eJWtfz+hF5V6Yg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvr-00EgvB-T2;
-        Wed, 13 Jul 2022 11:45:24 +0200
+        id 1oBYvt-00EgvB-5U;
+        Wed, 13 Jul 2022 11:45:25 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 54/76] wifi: mac80211: refactor adding custom elements
-Date:   Wed, 13 Jul 2022 11:44:40 +0200
-Message-Id: <20220713114425.a5f550da0b0a.Icbed923cede8717295b8c651af8a524ebc48dbb6@changeid>
+Subject: [PATCH 58/76] wifi: mac80211: tighten locking check
+Date:   Wed, 13 Jul 2022 11:44:44 +0200
+Message-Id: <20220713114426.44559c362531.I6872bd8db06d1b95c654a5e197c554e6151488a8@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,263 +48,33 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Rework the sorting of custom elements into the association
-request by moving the elements before HT/VHT/HE to each
-their own function. While at it, fix the placement of the
-ones that should be between VHT and HE.
-
-This doesn't fix the placement of elements that should be
-between HE and EHT yet, a similar change might be needed
-in the future.
+When we remove a link that doesn't have a channel context,
+we don't really need the local->mtx locking. Tighten the
+check here.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 212 ++++++++++++++++++++++++++------------------
- 1 file changed, 125 insertions(+), 87 deletions(-)
+ net/mac80211/chan.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a442de3670b9..36cce750528a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -839,6 +839,120 @@ static void ieee80211_assoc_add_rates(struct sk_buff *skb,
- 	}
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 92fe40539091..5ab210706123 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1991,10 +1991,11 @@ void ieee80211_link_release_channel(struct ieee80211_link_data *link)
+ 
+ 	WARN_ON(sdata->dev && netif_carrier_ok(sdata->dev));
+ 
+-	lockdep_assert_held(&sdata->local->mtx);
+-
+ 	mutex_lock(&sdata->local->chanctx_mtx);
+-	__ieee80211_link_release_channel(link);
++	if (rcu_access_pointer(link->conf->chanctx_conf)) {
++		lockdep_assert_held(&sdata->local->mtx);
++		__ieee80211_link_release_channel(link);
++	}
+ 	mutex_unlock(&sdata->local->chanctx_mtx);
  }
- 
-+static size_t ieee80211_add_before_ht_elems(struct sk_buff *skb,
-+					    const u8 *elems,
-+					    size_t elems_len,
-+					    size_t offset)
-+{
-+	size_t noffset;
-+
-+	static const u8 before_ht[] = {
-+		WLAN_EID_SSID,
-+		WLAN_EID_SUPP_RATES,
-+		WLAN_EID_EXT_SUPP_RATES,
-+		WLAN_EID_PWR_CAPABILITY,
-+		WLAN_EID_SUPPORTED_CHANNELS,
-+		WLAN_EID_RSN,
-+		WLAN_EID_QOS_CAPA,
-+		WLAN_EID_RRM_ENABLED_CAPABILITIES,
-+		WLAN_EID_MOBILITY_DOMAIN,
-+		WLAN_EID_FAST_BSS_TRANSITION,	/* reassoc only */
-+		WLAN_EID_RIC_DATA,		/* reassoc only */
-+		WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
-+	};
-+	static const u8 after_ric[] = {
-+		WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
-+		WLAN_EID_HT_CAPABILITY,
-+		WLAN_EID_BSS_COEX_2040,
-+		/* luckily this is almost always there */
-+		WLAN_EID_EXT_CAPABILITY,
-+		WLAN_EID_QOS_TRAFFIC_CAPA,
-+		WLAN_EID_TIM_BCAST_REQ,
-+		WLAN_EID_INTERWORKING,
-+		/* 60 GHz (Multi-band, DMG, MMS) can't happen */
-+		WLAN_EID_VHT_CAPABILITY,
-+		WLAN_EID_OPMODE_NOTIF,
-+	};
-+
-+	if (!elems_len)
-+		return offset;
-+
-+	noffset = ieee80211_ie_split_ric(elems, elems_len,
-+					 before_ht,
-+					 ARRAY_SIZE(before_ht),
-+					 after_ric,
-+					 ARRAY_SIZE(after_ric),
-+					 offset);
-+	skb_put_data(skb, elems + offset, noffset - offset);
-+
-+	return noffset;
-+}
-+
-+static size_t ieee80211_add_before_vht_elems(struct sk_buff *skb,
-+					     const u8 *elems,
-+					     size_t elems_len,
-+					     size_t offset)
-+{
-+	static const u8 before_vht[] = {
-+		/*
-+		 * no need to list the ones split off before HT
-+		 * or generated here
-+		 */
-+		WLAN_EID_BSS_COEX_2040,
-+		WLAN_EID_EXT_CAPABILITY,
-+		WLAN_EID_QOS_TRAFFIC_CAPA,
-+		WLAN_EID_TIM_BCAST_REQ,
-+		WLAN_EID_INTERWORKING,
-+		/* 60 GHz (Multi-band, DMG, MMS) can't happen */
-+	};
-+	size_t noffset;
-+
-+	if (!elems_len)
-+		return offset;
-+
-+	/* RIC already taken care of in ieee80211_add_before_ht_elems() */
-+	noffset = ieee80211_ie_split(elems, elems_len,
-+				     before_vht, ARRAY_SIZE(before_vht),
-+				     offset);
-+	skb_put_data(skb, elems + offset, noffset - offset);
-+
-+	return noffset;
-+}
-+
-+static size_t ieee80211_add_before_he_elems(struct sk_buff *skb,
-+					    const u8 *elems,
-+					    size_t elems_len,
-+					    size_t offset)
-+{
-+	static const u8 before_he[] = {
-+		/*
-+		 * no need to list the ones split off before VHT
-+		 * or generated here
-+		 */
-+		WLAN_EID_OPMODE_NOTIF,
-+		WLAN_EID_EXTENSION, WLAN_EID_EXT_FUTURE_CHAN_GUIDANCE,
-+		/* 11ai elements */
-+		WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_SESSION,
-+		WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_PUBLIC_KEY,
-+		WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_KEY_CONFIRM,
-+		WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_HLP_CONTAINER,
-+		WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_IP_ADDR_ASSIGN,
-+		/* TODO: add 11ah/11aj/11ak elements */
-+	};
-+	size_t noffset;
-+
-+	if (!elems_len)
-+		return offset;
-+
-+	/* RIC already taken care of in ieee80211_add_before_ht_elems() */
-+	noffset = ieee80211_ie_split(elems, elems_len,
-+				     before_he, ARRAY_SIZE(before_he),
-+				     offset);
-+	skb_put_data(skb, elems + offset, noffset - offset);
-+
-+	return noffset;
-+}
-+
- static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -994,45 +1108,9 @@ static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		ext_capa->data[2] |= WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT;
- 
- 	/* if present, add any custom IEs that go before HT */
--	if (assoc_data->ie_len) {
--		static const u8 before_ht[] = {
--			WLAN_EID_SSID,
--			WLAN_EID_SUPP_RATES,
--			WLAN_EID_EXT_SUPP_RATES,
--			WLAN_EID_PWR_CAPABILITY,
--			WLAN_EID_SUPPORTED_CHANNELS,
--			WLAN_EID_RSN,
--			WLAN_EID_QOS_CAPA,
--			WLAN_EID_RRM_ENABLED_CAPABILITIES,
--			WLAN_EID_MOBILITY_DOMAIN,
--			WLAN_EID_FAST_BSS_TRANSITION,	/* reassoc only */
--			WLAN_EID_RIC_DATA,		/* reassoc only */
--			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
--		};
--		static const u8 after_ric[] = {
--			WLAN_EID_SUPPORTED_REGULATORY_CLASSES,
--			WLAN_EID_HT_CAPABILITY,
--			WLAN_EID_BSS_COEX_2040,
--			/* luckily this is almost always there */
--			WLAN_EID_EXT_CAPABILITY,
--			WLAN_EID_QOS_TRAFFIC_CAPA,
--			WLAN_EID_TIM_BCAST_REQ,
--			WLAN_EID_INTERWORKING,
--			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
--			WLAN_EID_VHT_CAPABILITY,
--			WLAN_EID_OPMODE_NOTIF,
--		};
--
--		noffset = ieee80211_ie_split_ric(assoc_data->ie,
--						 assoc_data->ie_len,
--						 before_ht,
--						 ARRAY_SIZE(before_ht),
--						 after_ric,
--						 ARRAY_SIZE(after_ric),
--						 offset);
--		skb_put_data(skb, assoc_data->ie + offset, noffset - offset);
--		offset = noffset;
--	}
-+	offset = ieee80211_add_before_ht_elems(skb, assoc_data->ie,
-+					       assoc_data->ie_len,
-+					       offset);
- 
- 	if (WARN_ON_ONCE((link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_HT) &&
- 			 !(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_VHT)))
-@@ -1044,54 +1122,9 @@ static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 				    sband, chan, link->smps_mode);
- 
- 	/* if present, add any custom IEs that go before VHT */
--	if (assoc_data->ie_len) {
--		static const u8 before_vht[] = {
--			/*
--			 * no need to list the ones split off before HT
--			 * or generated here
--			 */
--			WLAN_EID_BSS_COEX_2040,
--			WLAN_EID_EXT_CAPABILITY,
--			WLAN_EID_QOS_TRAFFIC_CAPA,
--			WLAN_EID_TIM_BCAST_REQ,
--			WLAN_EID_INTERWORKING,
--			/* 60 GHz (Multi-band, DMG, MMS) can't happen */
--		};
--
--		/* RIC already taken above, so no need to handle here anymore */
--		noffset = ieee80211_ie_split(assoc_data->ie, assoc_data->ie_len,
--					     before_vht, ARRAY_SIZE(before_vht),
--					     offset);
--		skb_put_data(skb, assoc_data->ie + offset, noffset - offset);
--		offset = noffset;
--	}
--
--	/* if present, add any custom IEs that go before HE */
--	if (assoc_data->ie_len) {
--		static const u8 before_he[] = {
--			/*
--			 * no need to list the ones split off before VHT
--			 * or generated here
--			 */
--			WLAN_EID_OPMODE_NOTIF,
--			WLAN_EID_EXTENSION, WLAN_EID_EXT_FUTURE_CHAN_GUIDANCE,
--			/* 11ai elements */
--			WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_SESSION,
--			WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_PUBLIC_KEY,
--			WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_KEY_CONFIRM,
--			WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_HLP_CONTAINER,
--			WLAN_EID_EXTENSION, WLAN_EID_EXT_FILS_IP_ADDR_ASSIGN,
--			/* TODO: add 11ah/11aj/11ak elements */
--		};
--
--		/* RIC already taken above, so no need to handle here anymore */
--		noffset = ieee80211_ie_split(assoc_data->ie, assoc_data->ie_len,
--					     before_he, ARRAY_SIZE(before_he),
--					     offset);
--		pos = skb_put(skb, noffset - offset);
--		memcpy(pos, assoc_data->ie + offset, noffset - offset);
--		offset = noffset;
--	}
-+	offset = ieee80211_add_before_vht_elems(skb, assoc_data->ie,
-+						assoc_data->ie_len,
-+						offset);
- 
- 	if (sband->band != NL80211_BAND_6GHZ &&
- 	    !(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_VHT))
-@@ -1108,6 +1141,11 @@ static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		link->u.mgd.conn_flags |= IEEE80211_CONN_DISABLE_HE |
- 						   IEEE80211_CONN_DISABLE_EHT;
- 
-+	/* if present, add any custom IEs that go before HE */
-+	offset = ieee80211_add_before_he_elems(skb, assoc_data->ie,
-+					       assoc_data->ie_len,
-+					       offset);
-+
- 	if (!(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_HE)) {
- 		ieee80211_add_he_ie(link, skb, sband);
  
 -- 
 2.36.1
