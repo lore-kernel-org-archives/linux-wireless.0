@@ -2,77 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E90C43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 08:34:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD146C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 08:48:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235187AbiGMIez (ORCPT
+        id S235795AbiGMIsd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 04:34:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44492 "EHLO
+        Wed, 13 Jul 2022 04:48:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234807AbiGMIet (ORCPT
+        with ESMTP id S235772AbiGMIs0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Jul 2022 04:34:49 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E56CA58DF
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 01:34:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=U5nOCw1FF1E1jHoqtqtfndc6T1DM0LVamn49kxUCuAI=; b=lOWmebSTvrZmWCQoWVew7j7uJg
-        0r++lTPdp1W3yfp7TyThRh82jP6tlGkQiKCjAj1+VB6p9sxsEvoxus/J3yDCGw/+sIIAeVOBguS7G
-        LmIQR2fZnCpxrbX0PWwVjKzGUTQbrPBqMVV7Gou3kl4NwNW7bIH9MgIm/yClQttZ92A4=;
-Received: from p200300daa70a0200316cabb8b2c8ca0c.dip0.t-ipconnect.de ([2003:da:a70a:200:316c:abb8:b2c8:ca0c] helo=localhost.localdomain)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1oBXpV-000205-UF; Wed, 13 Jul 2022 10:34:46 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH] mac80211: exclude multicast packets from AQL pending airtime
-Date:   Wed, 13 Jul 2022 10:34:44 +0200
-Message-Id: <20220713083444.86129-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.36.1
+        Wed, 13 Jul 2022 04:48:26 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 91753ECB8C
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 01:48:24 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26D8mEYZ1018981, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26D8mEYZ1018981
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Wed, 13 Jul 2022 16:48:14 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Wed, 13 Jul 2022 16:48:16 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Wed, 13 Jul
+ 2022 16:48:16 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <gary.chang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/7] wifi: rtw88: add mutex when set SAR
+Date:   Wed, 13 Jul 2022 16:47:52 +0800
+Message-ID: <20220713084758.41654-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220713084758.41654-1-pkshih@realtek.com>
+References: <20220713084758.41654-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 07/13/2022 08:26:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzcvMTMgpFekyCAwNjo1NDowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In AP mode, multicast traffic is handled very differently from normal traffic,
-especially if at least one client is in powersave mode.
-This means that multicast packets can be buffered a lot longer than normal
-unicast packets, and can eat up the AQL budget very quickly because of the low
-data rate.
-Along with the recent change to maintain a global PHY AQL limit, this can lead
-to significant latency spikes for unicast traffic.
+From: Chih-Kang Chang <gary.chang@realtek.com>
 
-Since queueing multicast to hardware is currently not constrained by AQL limits
-anyway, let's just exclude it from the AQL pending airtime calculation entirely.
+Applying SAR will access hal data, it should hold rtwdev::mutex
+to avoid hal data changed during setting flow.
 
-Fixes: 8e4bac067105 ("wifi: mac80211: add a per-PHY AQL limit to improve fairness")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- net/mac80211/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 8e7340b5fd8b..cc187bc898aa 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3775,7 +3775,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- encap_out:
- 	IEEE80211_SKB_CB(skb)->control.vif = vif;
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index e0fdb34217000..2fa94c3024417 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -873,7 +873,9 @@ static int rtw_ops_set_sar_specs(struct ieee80211_hw *hw,
+ {
+ 	struct rtw_dev *rtwdev = hw->priv;
  
--	if (vif &&
-+	if (tx.sta &&
- 	    wiphy_ext_feature_isset(local->hw.wiphy, NL80211_EXT_FEATURE_AQL)) {
- 		bool ampdu = txq->ac != IEEE80211_AC_VO;
- 		u32 airtime;
++	mutex_lock(&rtwdev->mutex);
+ 	rtw_set_sar_specs(rtwdev, sar);
++	mutex_unlock(&rtwdev->mutex);
+ 
+ 	return 0;
+ }
 -- 
-2.36.1
+2.25.1
 
