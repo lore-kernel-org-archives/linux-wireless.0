@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D0CCCA479
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39865C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235736AbiGMJpM (ORCPT
+        id S235352AbiGMJpN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:45:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35758 "EHLO
+        Wed, 13 Jul 2022 05:45:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234609AbiGMJpK (ORCPT
+        with ESMTP id S234554AbiGMJpK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:10 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B836BFAEB
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B43D1E0279
         for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=n7wFBEEAuNQGGsR1pxmwrMMRlVj3BpAiqSqQllf4lKg=;
-        t=1657705508; x=1658915108; b=NdNptq9QaEYb5hcGAeLWUoeDf8hVCLkInoSNm76JDViBwNR
-        exNLEVOCdhXNXPNKYFYcyUS0ZtGhrXt/NGFyNZ1nFMkgxk4LEUPnkhw2K3ih2oxLBTnGrsJt2XjiT
-        Uoat64PKkV/dUUi/MQPbIlygcJ50HDKi9nTM8Dy001xKynBPenLFsICPrjMDDVniE70RiM+PLXaWX
-        2AKRLmqow3TRUcXAJMCE+SWqBcodbumAQoz6xMKNRm1iuQKmCBDRaghtx2YcXMTyeSk9D+TL9AsUD
-        maq5Pee0PWM5PrunJCWvEbWFfnTkL3Q7uNuRWdfThlBgKUFYKlgUQJ0ximlXADwg==;
+        Resent-Cc:Resent-Message-ID; bh=iMXRL1IqDkOptLlFdMeThVCZYDALiu33p00E5x+o1Eg=;
+        t=1657705508; x=1658915108; b=IjW8ScZnxORvBkdX3QL/PggDtZUC3hILr3JU9zgcpS7AKkn
+        2owQlr4SF5nc4/TYrOrc4PJKtS0HiDbuWDmpv2vt9QjuiljsFZRCxdPIIglWAWdsRI2LndLKlWBWD
+        ZP+wj/ZimJJ51qk3ebGmQ/bLrsecRaLeWjFZZMA6QLFAWdffDZ5fe8ltKpKZ32bx+YC4OmlnJ96Vg
+        5UjxwZ7ycY8Og0V5GHeDC8Ao7NGnGlUW03cOlXG3TdCe/OwOg+Ux5ATZSEMjQTz+vQ5PEVJ8JAXXJ
+        l04eJzMIZF0Ulm60lICgIt/2WPBrQc03P23+PVF2aJUDIaLfFqb3NtXDCSMh2MYA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYvZ-00EgvB-RX;
-        Wed, 13 Jul 2022 11:45:05 +0200
+        id 1oBYva-00EgvB-IC;
+        Wed, 13 Jul 2022 11:45:06 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [PATCH 04/76] wifi: mac80211: Consider MLO links in offchannel logic
-Date:   Wed, 13 Jul 2022 11:43:50 +0200
-Message-Id: <20220713114425.640af05da5be.I968979e66d80dbf8b9352075a6dcc7a366c1ba85@changeid>
+Cc:     Shaul Triebitz <shaul.triebitz@intel.com>
+Subject: [PATCH 07/76] wifi: mac80211: add an ieee80211_get_link_sband
+Date:   Wed, 13 Jul 2022 11:43:53 +0200
+Message-Id: <20220713114425.643de96a8383.I7e6296e1c8b4d4fe9909056621940c5e02e76eea@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -46,47 +46,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Check all the MLO links to decide whether offchannel TX is needed.
+Similar to ieee80211_get_sband but get the sband of the link_conf.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/offchannel.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ net/mac80211/ieee80211_i.h | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 2ed4e2325914..aff5d3c39902 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -842,10 +842,24 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 18bab27eda4f..a0023ad7ca1c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1543,6 +1543,28 @@ ieee80211_get_sband(struct ieee80211_sub_if_data *sdata)
+ 	return local->hw.wiphy->bands[band];
+ }
  
- 	/* Check if the operating channel is the requested channel */
- 	if (!need_offchan) {
--		struct ieee80211_chanctx_conf *chanctx_conf;
-+		struct ieee80211_chanctx_conf *chanctx_conf = NULL;
-+		int i;
- 
- 		rcu_read_lock();
--		chanctx_conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
-+		/* Check all the links first */
-+		for (i = 0; i < ARRAY_SIZE(sdata->vif.link_conf); i++) {
-+			if (!sdata->vif.link_conf[i])
-+				continue;
++static inline struct ieee80211_supported_band *
++ieee80211_get_link_sband(struct ieee80211_sub_if_data *sdata, u32 link_id)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	enum nl80211_band band;
 +
-+			chanctx_conf = rcu_dereference(sdata->vif.link_conf[i]->chanctx_conf);
-+			if (!chanctx_conf)
-+				continue;
++	rcu_read_lock();
++	chanctx_conf =
++		rcu_dereference(sdata->vif.link_conf[link_id]->chanctx_conf);
 +
-+			if (ether_addr_equal(sdata->vif.link_conf[i]->addr, mgmt->sa))
-+				break;
++	if (!chanctx_conf) {
++		rcu_read_unlock();
++		return NULL;
++	}
 +
-+			chanctx_conf = NULL;
-+		}
- 
- 		if (chanctx_conf) {
- 			need_offchan = params->chan &&
++	band = chanctx_conf->def.chan->band;
++	rcu_read_unlock();
++
++	return local->hw.wiphy->bands[band];
++}
++
+ /* this struct holds the value parsing from channel switch IE  */
+ struct ieee80211_csa_ie {
+ 	struct cfg80211_chan_def chandef;
 -- 
 2.36.1
 
