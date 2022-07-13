@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C049C43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3439CCCA479
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Jul 2022 09:45:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236087AbiGMJpP (ORCPT
+        id S236183AbiGMJpQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:45:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35780 "EHLO
+        Wed, 13 Jul 2022 05:45:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235104AbiGMJpK (ORCPT
+        with ESMTP id S235133AbiGMJpK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Jul 2022 05:45:10 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B7EDBFACF
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0A3AC04F4
         for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2022 02:45:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=3E1IjrZTgAObBmKv7uM9WAkvcFoBmkRrl4X/Sky8YFA=;
-        t=1657705508; x=1658915108; b=gfRoPrtsZXZjXwY7v/KdOt3mUFYCPf0qzrKk/44Aea/tdbK
-        I/Ab9bv4diQPKw8Q3ZrHemuzZigAMKgXISEdgvDHCC/EkBWlGWMIxdmYo8K9ELAIcTQ2TeLT79YJg
-        LcTI63mFH2+mHgE6c95Cr3CiYgzMU4hV//zM6u/HE0b86LOU5FEOKZf0k6RPhtLy96KhZAYyi9lfm
-        ogUC/KhSgFV+EldknC13ycV7hpkGTgZAu3gsoWbCT3H8L254ikvjW11hqIarO2JpwHrcRmRznrsrY
-        m8ahX4e6G5cDLrmVx7L682oA/Ic14L7JSmliYgRwSxz71CvrkGKV+6FXv4eSHEHg==;
+        Resent-Cc:Resent-Message-ID; bh=ZRKPXVbu75DosdF67c6fgpxhMdiabqN4YKqhyJejv+Y=;
+        t=1657705508; x=1658915108; b=ZHtIrU3yMxHPSWkj8uAiwEXsdRAxdFodSgDqu2OHzzATWWp
+        VM06dN8t7jZtpTZz/JML3S8eus2KmKxn+uz5iaWCuKf/KdhYIVHoKOaO5bJQujoE1++m+pW3e2Gc1
+        7wZ3xm3iShw7nUARnL7PZKfTaG3hDenaGOw9bVJyzVB5MlvC9Cag9YfIHxX4sG9m110jLu8s9SseK
+        BGhTjnhGvK8pbWuCqz1VNn5ti6x0lRq7I7iyxImT++0w96F30NuRNEDF70GsJvVI9VsW35oM4oj8N
+        reKadUlR2EtwnWRthQO4/2Oa8TMFfwZJBsJzXqb21ST+NN6xI03+xgpBnhNqgBhw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.95)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oBYva-00EgvB-BA;
-        Wed, 13 Jul 2022 11:45:06 +0200
+        id 1oBYvZ-00EgvB-3J;
+        Wed, 13 Jul 2022 11:45:05 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [PATCH 06/76] wifi: mac80211: Remove AP SMPS leftovers
-Date:   Wed, 13 Jul 2022 11:43:52 +0200
-Message-Id: <20220713114425.e8b1ab17944a.I8056f66854f340649f20327620dda5bd3888d999@changeid>
+Subject: [PATCH 01/76] wifi: mac80211_hwsim: Support link channel matching on rx
+Date:   Wed, 13 Jul 2022 11:43:47 +0200
+Message-Id: <20220713114425.6c3f78efc6fe.I60f9df15439ef2374761bd5ae042c102a7d85178@changeid>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220713094502.163926-1-johannes@sipsolutions.net>
 References: <20220713094502.163926-1-johannes@sipsolutions.net>
@@ -48,106 +48,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-AP SMPS was removed and not needed anymore. Remove the leftovers.
+Accept frames from all the links' channels.
 
 Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h |  1 -
- net/mac80211/sta_info.c    | 30 ------------------------------
- net/mac80211/sta_info.h    |  4 ----
- net/mac80211/status.c      |  3 ---
- 4 files changed, 38 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 46413b6a8de3..18bab27eda4f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1921,7 +1921,6 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
- int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
- 			       enum ieee80211_smps_mode smps, const u8 *da,
- 			       const u8 *bssid);
--void ieee80211_request_smps_ap_work(struct work_struct *work);
- void ieee80211_request_smps_mgd_work(struct work_struct *work);
- bool ieee80211_smps_is_restrictive(enum ieee80211_smps_mode smps_mode_old,
- 				   enum ieee80211_smps_mode smps_mode_new);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index c9852f71e8e1..d738534a709e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -616,36 +616,6 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	}
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 91440b0dc0cc..7be846d4d63e 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1474,15 +1474,25 @@ static void mac80211_hwsim_tx_iter(void *_data, u8 *addr,
+ 				   struct ieee80211_vif *vif)
+ {
+ 	struct tx_iter_data *data = _data;
++	int i;
  
- 	sta->sta.smps_mode = IEEE80211_SMPS_OFF;
--	if (sdata->vif.type == NL80211_IFTYPE_AP ||
--	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
--		struct ieee80211_supported_band *sband;
--		u8 smps;
--
--		sband = ieee80211_get_sband(sdata);
--		if (!sband)
--			goto free_txq;
--
--		smps = (sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >>
--			IEEE80211_HT_CAP_SM_PS_SHIFT;
--		/*
--		 * Assume that hostapd advertises our caps in the beacon and
--		 * this is the known_smps_mode for a station that just assciated
--		 */
--		switch (smps) {
--		case WLAN_HT_SMPS_CONTROL_DISABLED:
--			sta->known_smps_mode = IEEE80211_SMPS_OFF;
--			break;
--		case WLAN_HT_SMPS_CONTROL_STATIC:
--			sta->known_smps_mode = IEEE80211_SMPS_STATIC;
--			break;
--		case WLAN_HT_SMPS_CONTROL_DYNAMIC:
--			sta->known_smps_mode = IEEE80211_SMPS_DYNAMIC;
--			break;
--		default:
--			WARN_ON(1);
--		}
--	}
--
- 	sta->sta.max_rc_amsdu_len = IEEE80211_MAX_MPDU_LEN_HT_BA;
+-	if (!vif->bss_conf.chanctx_conf)
+-		return;
++	for (i = 0; i < ARRAY_SIZE(vif->link_conf); i++) {
++		struct ieee80211_bss_conf *conf = vif->link_conf[i];
++		struct ieee80211_chanctx_conf *chanctx;
  
- 	sta->cparams.ce_threshold = CODEL_DISABLED_THRESHOLD;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 70ee55ec5518..a1724e366a35 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -615,8 +615,6 @@ struct link_sta_info {
-  * @rcu_head: RCU head used for freeing this station struct
-  * @cur_max_bandwidth: maximum bandwidth to use for TX to the station,
-  *	taken from HT/VHT capabilities or VHT operating mode notification
-- * @known_smps_mode: the smps_mode the client thinks we are in. Relevant for
-- *	AP only.
-  * @cparams: CoDel parameters for this station.
-  * @reserved_tid: reserved TID (if any, otherwise IEEE80211_TID_UNRESERVED)
-  * @fast_tx: TX fastpath information
-@@ -699,8 +697,6 @@ struct sta_info {
- 	struct dentry *debugfs_dir;
- #endif
+-	if (!hwsim_chans_compat(data->channel,
+-				rcu_dereference(vif->bss_conf.chanctx_conf)->def.chan))
+-		return;
++		if (!conf)
++			continue;
++
++		chanctx = rcu_dereference(conf->chanctx_conf);
++		if (!chanctx)
++			continue;
++
++		if (!hwsim_chans_compat(data->channel, chanctx->def.chan))
++			continue;
  
--	enum ieee80211_smps_mode known_smps_mode;
--
- 	struct codel_params cparams;
- 
- 	u8 reserved_tid;
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 9bd4d336d444..fad457f99711 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -225,9 +225,6 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
- 			 */
- 			sdata->deflink.smps_mode = smps_mode;
- 			ieee80211_queue_work(&local->hw, &sdata->recalc_smps);
--		} else if (sdata->vif.type == NL80211_IFTYPE_AP ||
--			   sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
--			sta->known_smps_mode = smps_mode;
- 		}
- 	}
+-	data->receive = true;
++		data->receive = true;
++		return;
++	}
  }
+ 
+ static void mac80211_hwsim_add_vendor_rtap(struct sk_buff *skb)
 -- 
 2.36.1
 
