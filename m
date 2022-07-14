@@ -2,70 +2,160 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26575C433EF
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jul 2022 08:30:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F408C43334
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Jul 2022 08:38:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235195AbiGNIab (ORCPT
+        id S236864AbiGNIiv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Jul 2022 04:30:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54816 "EHLO
+        Thu, 14 Jul 2022 04:38:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235162AbiGNIa3 (ORCPT
+        with ESMTP id S237484AbiGNIiT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Jul 2022 04:30:29 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0602F3D58B;
-        Thu, 14 Jul 2022 01:30:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=IshCjafs3BxP3VlmCy62POvK6iARkBDn8iSIA1YuRQ8=;
-        t=1657787424; x=1658997024; b=hpPlSn6gTtUxDag7y8R5dZJk01G79Y92eFDrDBEfjEvCUqO
-        VuZq9fyCQgZzDvLogqRNAcqxQKIPZ4QDiKh4Yco44pJsChoHDkLYUVtwGuhkKCJu8W81wdCrKNMuJ
-        2xKbEJKNAaHCnYEYnMc/Xfz86QQ9j5ZNiJUp7nN5sUzaQo8Xvg4vbmNBPaUn3gMFaUCcoozAZhpYT
-        G7O6wRIivYb29RI7yJ5k09Z9wI6YT+eFv28PgwEdj6IdLq61WG/mczMRERrfJJoQXQd08+me+0ocA
-        SW2/wBW+K/ePBl/RDM8cUKvyZeNosxGOi0vHPtMRAtDs1hInYubjw++CW4g7FvNg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.95)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1oBuEm-00FYZ3-N1;
-        Thu, 14 Jul 2022 10:30:20 +0200
-Message-ID: <3ac3c91120a128f66ca3806294f6a783e0f1131f.camel@sipsolutions.net>
-Subject: Re: [PATCH 00/76] wifi: more MLO work
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Arend Van Spriel <aspriel@gmail.com>,
-        linux-wireless@vger.kernel.org, kvalo@kernel.org,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     netdev@vger.kernel.org
-Date:   Thu, 14 Jul 2022 10:30:19 +0200
-In-Reply-To: <e9ecb9c8-cb5b-d727-38d6-ef5a0bf81cef@gmail.com>
-References: <20220713094502.163926-1-johannes@sipsolutions.net>
-         <e9ecb9c8-cb5b-d727-38d6-ef5a0bf81cef@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.3 (3.44.3-1.fc36) 
+        Thu, 14 Jul 2022 04:38:19 -0400
+Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DA83402C2
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2022 01:38:00 -0700 (PDT)
+Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-31c89653790so9626837b3.13
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2022 01:38:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=OijWc6/zN7+oJw44OKbMxP70Rr2Fy33fyFndj1YTp2w=;
+        b=eAVrmrs4YJUffyfHBU4akJYJp//HiI6yxd7W+aBm4OkaBxQbZPO3Y4GdKPe//6MSrP
+         iM/l9jAkioiiNkThmgO2ubJ7kZZR09wFG4F9b5wS0UA/b3Ljam02GqAnlFK5JNDyXMed
+         /7XHPP9QjlNyfCpuSXVV8j9RHaed78VG5nNev1JJK+nZk4WXoRVdENKz6anLwI9DJ0p6
+         ZipbvZfMt9zERy8ljTtY6vZJF9qVp1QzgHTmVjD8rFHRrCihsZMdAj5Nry0gGWTKaCG5
+         ntoDQeYKA+ihPIdZXaXafgoB0xTpMs6h6rnOje8FzIAr7TvqCacuO4nMIl9oaGf7ZwgJ
+         /DdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=OijWc6/zN7+oJw44OKbMxP70Rr2Fy33fyFndj1YTp2w=;
+        b=wzT++0pvpRDxhDrGP8bcY4U1X6zYr1w2LRu26fHQEFg7xCdxUmlaz5vK8wCwfaGB8P
+         p+xZCSRWbzWRZWmZJ9FgwSsyznbFQU9P34TtrRatDw85TogIjemlnHwhrlBkRxR9oHxD
+         gq8qVaRoWr0qk8/AbA5MTh7Bfh0VTmHxI1NmJp61PbQAcBTpeZAsxy3Gm7W36wTYxGIT
+         zMZo95aj149ptRwFECLI8j9RPtUnRdBpPafIsE7bYJRa0px+kQl0XbYkBJN5+KSUhoO1
+         kUayiEPCB7Z1yJwFGPD8FGMvmA0e+KI9luLF2ojhV4E5A70UDnWXzfzRhgM9dy0bPwGy
+         I0Og==
+X-Gm-Message-State: AJIora83dPzz4ryv818MdxMt0JCmo4Dpczs01xaGXDRGcpBCg1Sxxu+H
+        Ftx+Gufopj68oX5SXN+o85h7qIcjJdeT9jNvsXAIYA==
+X-Google-Smtp-Source: AGRyM1sd2jEWh+VjyUEuIyeyBE2cFo3QVD7rPln4nwnP0s0LxVlNjBhuQ3ZR1urywd+ATP3o33bc2OHkkuxdZsDvU5A=
+X-Received: by 2002:a0d:dbc3:0:b0:31d:f1e:7e8e with SMTP id
+ d186-20020a0ddbc3000000b0031d0f1e7e8emr8530544ywe.180.1657787879527; Thu, 14
+ Jul 2022 01:37:59 -0700 (PDT)
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+References: <20220704084354.3556326-1-jeongik@google.com>
+In-Reply-To: <20220704084354.3556326-1-jeongik@google.com>
+From:   Jeongik Cha <jeongik@google.com>
+Date:   Thu, 14 Jul 2022 17:37:48 +0900
+Message-ID: <CAE7E4g=BGzup31AD5zAuZpoR2gMswJhuo67B7cV8=wHOY=Y+qA@mail.gmail.com>
+Subject: Re: [PATCH v1] wifi: mac80211_hwsim: fix race condition in pending packet
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     adelva@google.com, kernel-team@android.com, jaeman@google.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2022-07-14 at 10:26 +0200, Arend Van Spriel wrote:
->=20
-> Just for my own patch submit process. What is the reason I am seeing the=
-=20
-> "wifi:" prefix being used with patches on linux-wireless list? Is there=
-=20
-> other wireless tech used, eg. "bt:" or so?
->=20
+On Mon, Jul 4, 2022 at 5:44 PM Jeongik Cha <jeongik@google.com> wrote:
+>
+> A pending packet uses a cookie as an unique key, but it can be duplicated
+> because it didn't use atomic operators.
+>
+> And also, a pending packet can be null in hwsim_tx_info_frame_received_nl
+> due to race condition with mac80211_hwsim_stop.
+>
+> For this,
+>  * Use an atomic type and operator for a cookie
+>  * Add a lock around the loop for pending packets
+>
+> Signed-off-by: Jeongik Cha <jeongik@google.com>
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c | 14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index c5bb97b381cf..ea006248ffcd 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -687,7 +687,7 @@ struct mac80211_hwsim_data {
+>         bool ps_poll_pending;
+>         struct dentry *debugfs;
+>
+> -       uintptr_t pending_cookie;
+> +       atomic64_t pending_cookie;
+>         struct sk_buff_head pending;    /* packets pending */
+>         /*
+>          * Only radios in the same group can communicate together (the
+> @@ -1358,7 +1358,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+>         int i;
+>         struct hwsim_tx_rate tx_attempts[IEEE80211_TX_MAX_RATES];
+>         struct hwsim_tx_rate_flag tx_attempts_flags[IEEE80211_TX_MAX_RATES];
+> -       uintptr_t cookie;
+> +       u64 cookie;
+>
+>         if (data->ps != PS_DISABLED)
+>                 hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+> @@ -1427,8 +1427,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+>                 goto nla_put_failure;
+>
+>         /* We create a cookie to identify this skb */
+> -       data->pending_cookie++;
+> -       cookie = data->pending_cookie;
+> +       cookie = (u64)atomic64_inc_return(&data->pending_cookie);
+>         info->rate_driver_data[0] = (void *)cookie;
+>         if (nla_put_u64_64bit(skb, HWSIM_ATTR_COOKIE, cookie, HWSIM_ATTR_PAD))
+>                 goto nla_put_failure;
+> @@ -4178,6 +4177,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+>         const u8 *src;
+>         unsigned int hwsim_flags;
+>         int i;
+> +       unsigned long flags;
+>         bool found = false;
+>
+>         if (!info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
+> @@ -4205,18 +4205,20 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+>         }
+>
+>         /* look for the skb matching the cookie passed back from user */
+> +       spin_lock_irqsave(&data2->pending.lock, flags);
+>         skb_queue_walk_safe(&data2->pending, skb, tmp) {
+>                 u64 skb_cookie;
+>
+>                 txi = IEEE80211_SKB_CB(skb);
+> -               skb_cookie = (u64)(uintptr_t)txi->rate_driver_data[0];
+> +               skb_cookie = (u64)txi->rate_driver_data[0];
+>
+>                 if (skb_cookie == ret_skb_cookie) {
+> -                       skb_unlink(skb, &data2->pending);
+> +                       __skb_unlink(skb, &data2->pending);
+>                         found = true;
+>                         break;
+>                 }
+>         }
+> +       spin_unlock_irqrestore(&data2->pending.lock, flags);
+>
+>         /* not found */
+>         if (!found)
+> --
+> 2.37.0.rc0.161.g10f37bed90-goog
+>
 
-Well, we had a discussion with Jakub, and he kind of indicated that he'd
-like to see a bit more generic prefixes to clarify things.
+Hello Johannes!
 
-We've kind of been early adopters to try it out and see what it looks
-like, he hasn't pushed it and wanted to have a discussion (e.g. at LPC
-or netdevconf) about it first, but it kind of makes sense since not
-everyone can know all the different drivers and components.
+It fixes kernel panics during a long test which uses mac80211_hwsim
+driver. So I think it would be beneficial if we could merge this into
+LTS branches. Could you share your opinion?
 
-johannes
+Thanks
+Jeongik
