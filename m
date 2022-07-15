@@ -2,68 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50F55C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 12:12:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9FFDC43334
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 13:02:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234880AbiGRMM0 (ORCPT
+        id S234348AbiGRNCv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Jul 2022 08:12:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60286 "EHLO
+        Mon, 18 Jul 2022 09:02:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234886AbiGRMMW (ORCPT
+        with ESMTP id S230394AbiGRNCu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jul 2022 08:12:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6769F24955;
-        Mon, 18 Jul 2022 05:12:17 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F3AA261477;
-        Mon, 18 Jul 2022 12:12:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63089C341D5;
-        Mon, 18 Jul 2022 12:12:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658146336;
-        bh=KU5XG89/tyFz/Oo7SvzDbI2yUM/Xgd+xaHy715tmcZ0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=DWUG4Y6uQvGk746GZMk+lGC9BgD6G/iN0LkDOLjoAagJWBlq/hFgsgLacl2AGtHLH
-         hw3DTcFeXwjUWFGV8wCixktHj2+JUSVBuGwi9acsR+FzXky0H+X9MJraLxNjesq06E
-         z54WAXrmGIzint8OtZUOrN6aYuf8NxnimA2ilZYDAZb/GIiSwvD+rKu/rpl73lm9Mz
-         loeVNDWuVP17bUCu4+WtkX1LTqvEirPE7XEyOPFbxRY8ogIkBC2RNAMJWKtn4/wPtX
-         7Ix4MJH7G7yTwkj1TS0/pAiAhjeJdPii+Pl8iEhLzxOpd7kgll35IxZRcMXJ9dMjHE
-         UMH3QogDWvRHA==
-Content-Type: text/plain; charset="utf-8"
+        Mon, 18 Jul 2022 09:02:50 -0400
+Received: from smtpbg.qq.com (biz-43-154-54-12.mail.qq.com [43.154.54.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86D8E7651;
+        Mon, 18 Jul 2022 06:02:45 -0700 (PDT)
+X-QQ-mid: bizesmtp65t1658149342tf1ppvus
+Received: from localhost.localdomain ( [171.223.96.21])
+        by bizesmtp.qq.com (ESMTP) with 
+        id ; Mon, 18 Jul 2022 21:02:20 +0800 (CST)
+X-QQ-SSF: 01000000002000E0U000C00A0000020
+X-QQ-FEAT: lp8jUtqYSiDoO+QpwGkaUbeYv7jk2c0USJBu0RONduT+RmdoJZTKcvfPP8aSV
+        r8ckczkkKAv7rPwWQzC/SeYx6pk772LNvF3NkViHVnVodYGKWNEqt1AfaqKVznwo9WHhizb
+        wAN2AJ8pok8WApRmBnLPRTC1DoQlF6xZQVuTyvM1hbs/hRqaoivvi9GI0RxUZwWdIsT4AH1
+        iIRsMqtNQ9Gf+sbuRgs038MkV8XpmsjZcTAMQhs7Zae/nCY4o3dIRvFUEzohFq+KPOtLC58
+        9m5CsWIbtIh5bmx4RN5bDBKO+IBWKWZb49W0bzHy84l3YZY87gfSm+nCpWAe8BRdNyNU5QK
+        ICDVcBTfK5rZa2RPBTsdjXcyOmS+ys4pAruaLBEBoTFBqyREU6Li7dds7oE9kA7U6mFkRpC
+        8H6YZwtgTV0m/GY044SxsA==
+X-QQ-GoodBg: 0
+From:   Jason Wang <wangborong@cdjrlc.com>
+To:     siva8118@gmail.com
+Cc:     amitkarwar@gmail.com, kvalo@kernel.org, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jason Wang <wangborong@cdjrlc.com>
+Subject: [PATCH] rsi: Fix comment typo
+Date:   Fri, 15 Jul 2022 13:00:16 +0800
+Message-Id: <20220715050016.24164-1-wangborong@cdjrlc.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: wl1251: fix repeated words in comments
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220710043405.38304-1-yuanjilin@cdjrlc.com>
-References: <20220710043405.38304-1-yuanjilin@cdjrlc.com>
-To:     Jilin Yuan <yuanjilin@cdjrlc.com>
-Cc:     davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jilin Yuan <yuanjilin@cdjrlc.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <165814633252.32602.10124173678960288207.kvalo@kernel.org>
-Date:   Mon, 18 Jul 2022 12:12:14 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr6
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jilin Yuan <yuanjilin@cdjrlc.com> wrote:
+The double `the' is duplicated in line 799, remove one.
 
-> Delete the redundant word 'the'.
-> 
-> Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
+Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Patch applied to wireless-next.git, thanks.
-
-f1cee996f185 wifi: wl1251: fix repeated words in comments
-
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 9f16128e4ffa..d09998796ac0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -796,7 +796,7 @@ static int rsi_sdio_host_intf_write_pkt(struct rsi_hw *adapter,
+  * rsi_sdio_host_intf_read_pkt() - This function reads the packet
+  *				   from the device.
+  * @adapter: Pointer to the adapter data structure.
+- * @pkt: Pointer to the packet data to be read from the the device.
++ * @pkt: Pointer to the packet data to be read from the device.
+  * @length: Length of the data to be read from the device.
+  *
+  * Return: 0 on success, -1 on failure.
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220710043405.38304-1-yuanjilin@cdjrlc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.35.1
 
