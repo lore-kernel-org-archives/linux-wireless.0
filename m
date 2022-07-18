@@ -2,72 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 703A5C43334
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 13:03:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96FAFC433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 17:18:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234962AbiGRNDS (ORCPT
+        id S233100AbiGRRSI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Jul 2022 09:03:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53176 "EHLO
+        Mon, 18 Jul 2022 13:18:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229774AbiGRNDQ (ORCPT
+        with ESMTP id S230263AbiGRRSI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jul 2022 09:03:16 -0400
-Received: from smtpbg.qq.com (biz-43-154-54-12.mail.qq.com [43.154.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68156BF53;
-        Mon, 18 Jul 2022 06:03:11 -0700 (PDT)
-X-QQ-mid: bizesmtp68t1658149373tewd1ljf
-Received: from localhost.localdomain ( [171.223.96.21])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Mon, 18 Jul 2022 21:02:50 +0800 (CST)
-X-QQ-SSF: 01000000002000E0U000C00A0000000
-X-QQ-FEAT: MbRi8nWEoaZu3SJ8oD7aDH5D4190Q3e+iCesuFvAspGXqe/14tFEbxCAUGyN6
-        LBqqJdZkl3XiGuWP+qip5Wg8JaamUv/zn5NWIkvBlmU+On9A6c1gjED4mprB+sNWbL7Ei+d
-        8HLUqzLAfYbZ6y1ADftEBykpze43svum1QubwSXCGIOJAHU1xe/UgNDkyMrE5NNeMA/un2g
-        WuyhOELLBZOH+8nrLYc9/bliCaB5dP2qdZlmrXnxjmxl3Xxov3LGKRkmjV/oXBzgQEUWiDE
-        xgRBAyXy/hwSTBZKWcy7sRDIuCg6MRyzZNZTVsdzqNpmkqk7lWphNbwky4ax5SN6BzA/4W7
-        NGFsQNAEC9bsxFcmOarCh9XV2NvdGG6sI+TO9+6N2g+yTahwdn0ROSaeN6bwABQ+3gd5Oca
-        AVjcGGIzBAQ=
-X-QQ-GoodBg: 0
-From:   Jason Wang <wangborong@cdjrlc.com>
-To:     ganapathi017@gmail.com
-Cc:     amitkarwar@gmail.com, sharvari.harisangam@nxp.com,
-        huxinming820@gmail.com, kvalo@kernel.org, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jason Wang <wangborong@cdjrlc.com>
-Subject: [PATCH] mwifiex: Fix comment typo
-Date:   Fri, 15 Jul 2022 13:00:53 +0800
-Message-Id: <20220715050053.24382-1-wangborong@cdjrlc.com>
-X-Mailer: git-send-email 2.35.1
+        Mon, 18 Jul 2022 13:18:08 -0400
+Received: from mail-4022.proton.ch (mail-4022.proton.ch [185.70.40.22])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EA6B2C135
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2022 10:18:06 -0700 (PDT)
+Date:   Mon, 18 Jul 2022 17:17:52 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dannyvanheumen.nl;
+        s=protonmail3; t=1658164684; x=1658423884;
+        bh=jirZHvt4u1Kp6psm5UkIeThesuuC9ZjPIZfQ3IjOwbM=;
+        h=Date:To:From:Cc:Reply-To:Subject:Message-ID:In-Reply-To:
+         References:Feedback-ID:From:To:Cc:Date:Subject:Reply-To:
+         Feedback-ID:Message-ID;
+        b=d4HEFVsPaL0SP+Czkm059MR65JsnZCGCw5UOlGDFhl8dNaDvVipUow0s3Y9ciVlXV
+         Pxz8cDO/DubDyOVvCrx0p67/EHoR4dUfA+DgbQ1mWTU7upSK5BfPB3C62m6A1ZA6n9
+         SFOj7/zBWE0vD6+FlJzLNyxAOwxP/9zBog6a41qFdCxQ5vhrE/Pe2wHtJc8A240ybk
+         SeJvcyMcy182mg5XKoB4O+/Rh7G6jS/YKk91apORJhuAuHuglVTDoGg0GulshkhsNL
+         A6yxHjB8xGZD6hI+eH8eu+CJ1JlNvR6gcolLrUJnYef4LMWOpZyWhXjE/b0ROvcV0u
+         3GSt9tV+2Je/g==
+To:     Ulf Hansson <ulf.hansson@linaro.org>
+From:   Danny van Heumen <danny@dannyvanheumen.nl>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>
+Reply-To: Danny van Heumen <danny@dannyvanheumen.nl>
+Subject: Re: [PATCH v5] brcmfmac: prevent double-free on hardware-reset
+Message-ID: <Jf288fBmG7i8omrWIg5n1dG3Ei2z8Cc-sPjQGVhBHbeHxN8OZYfMhPNX4kop3CpXz4dh7FBKtw-t29PO0MhIthA_030s1GhpnMlKjnAeies=@dannyvanheumen.nl>
+In-Reply-To: <CAPDyKFpa6Z0Uhb0OnhMJ-KTQg5CQW93KMz1j1cQJS-Ho8FVhmQ@mail.gmail.com>
+References: <id1HN6qCMAirApBzTA6fT7ZFWBBGCJhULpflxQ7NT6cgCboVnn3RHpiOFjA9SbRqzBRFLk9ES0C4FNvO6fUQsNg7pqF6ZSNAYUo99nHy8PY=@dannyvanheumen.nl> <CAPDyKFpa6Z0Uhb0OnhMJ-KTQg5CQW93KMz1j1cQJS-Ho8FVhmQ@mail.gmail.com>
+Feedback-ID: 15073070:user:proton
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr6
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The double `the' is duplicated in line 1540, remove one.
+------- Original Message -------
+On Thursday, July 14th, 2022 at 12:04, Ulf Hansson <ulf.hansson@linaro.org>=
+ wrote:
 
-Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> [..]
+>
+> That said, I think the $subject patch looks reasonable to me. So feel
+> free to add:
+>
+> Reviewed-by: Ulf Hansson ulf.hansson@linaro.org
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 1a886978ed5d..b8dc3b5c9ad9 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1537,7 +1537,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- /*
-  * This function decode sdio aggreation pkt.
-  *
-- * Based on the the data block size and pkt_len,
-+ * Based on the data block size and pkt_len,
-  * skb data will be decoded to few packets.
-  */
- static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
--- 
-2.35.1
+I am a first-time contributor. Is this your way of saying that I should sub=
+mit
+the patch somewhere other than 'linux-wireless@...'? I suppose this fix is =
+not
+urgent enough for 'stable@...', or is it?
+
+I would appreciate information on who will and/or how to follow-up.
+
+Regards,
+Danny
 
