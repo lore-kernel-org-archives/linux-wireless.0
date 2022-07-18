@@ -2,82 +2,68 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7523FC433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 12:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F1EC43334
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 12:07:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234506AbiGRMB1 (ORCPT
+        id S234618AbiGRMHO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Jul 2022 08:01:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48430 "EHLO
+        Mon, 18 Jul 2022 08:07:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229535AbiGRMBZ (ORCPT
+        with ESMTP id S234593AbiGRMHO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jul 2022 08:01:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A75422BC2;
-        Mon, 18 Jul 2022 05:01:24 -0700 (PDT)
+        Mon, 18 Jul 2022 08:07:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A04F23BF5;
+        Mon, 18 Jul 2022 05:07:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 00563613FB;
-        Mon, 18 Jul 2022 12:01:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECD77C341C0;
-        Mon, 18 Jul 2022 12:01:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C90146145C;
+        Mon, 18 Jul 2022 12:07:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E20D2C341C0;
+        Mon, 18 Jul 2022 12:07:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658145683;
-        bh=59TfTKomQWQEdpvtlqBGTvgXy++6OxNy3oyk20gvWp8=;
+        s=k20201202; t=1658146032;
+        bh=MkDHkSlfkcJ91+BNoi+8C0lZD/bC53v6Sb4q992ApH4=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=D0Ez+R15G12c78ymc1Dd+Mjh+PXxhQGk8EXYIST6x0n+ltfTXd7xXtgqMKevzTxiS
-         G5UpCoqfdYSTSPNpfnK+ILjDjkr2QTKjNjFGbNueNeLUC2eeoyBC3SoUJZa2B9+xwM
-         P4RQSmvZ2p9Ai038pWXJfBbB++xm7nTVSKVMLVkVmMSAO5+duTu2FJCcJhdk88COqB
-         uRB7FflZBjFt+EkXnRpfVpJ2GXq/O5dqnaSJRfgN3nomymw9icNgGc3JJDx+u51VgQ
-         unLvcKyBC+KyuYddLhQsj96tdx4krQnjz25CpT7gStwpPrCxXpcHlWofO/ziRt40G0
-         SVIRuxvyH9MoQ==
+        b=jjxCjQljo/o4SHf2QRQBjXLPhVt6m+LzROqmARhhtq7CXSYr0qdKfrOhh+k4Y9msR
+         s3qzhmZ2StICjhuWTpcXWCrqtWgPjz1E94tRb2LGGZnRKRBHUZ86VdaquEKIk3bJH7
+         41/7mPCBd6OJITbdmiJ4FahgZ15sjS5iF5cNqcjdmHlEu30UGrbnwlYatWil9F0TR2
+         EmXABJEGmSNRVjJIg+7dbB7foqzB3TLsUXEAMPmhVlFfpOGu2EtOqNx1w9oVfLP+zj
+         Dh0TMDDHHAeHgMeNwXehuSizU/6AIjcnlVOr3dqobSyqsZ4LeTCo8qxOsjULwJraTo
+         +Rj/C7DhzorPQ==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v2] wifi: mac80211: do not abuse fq.lock in
- ieee80211_do_stop()
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] wifi: atmel: fix repeated words in comments
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <9cc9b81d-75a3-3925-b612-9d0ad3cab82b@I-love.SAKURA.ne.jp>
-References: <9cc9b81d-75a3-3925-b612-9d0ad3cab82b@I-love.SAKURA.ne.jp>
-To:     Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        =?utf-8?q?Toke_H=C3=B8iland-J?= =?utf-8?q?=C3=B8rgensen?= 
-        <toke@kernel.org>, Felix Fietkau <nbd@nbd.name>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20220709132637.16717-1-yuanjilin@cdjrlc.com>
+References: <20220709132637.16717-1-yuanjilin@cdjrlc.com>
+To:     Jilin Yuan <yuanjilin@cdjrlc.com>
+Cc:     simon@thekelleys.org.uk, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jilin Yuan <yuanjilin@cdjrlc.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <165814567948.32602.9899358496438464723.kvalo@kernel.org>
-Date:   Mon, 18 Jul 2022 12:01:21 +0000 (UTC)
+Message-ID: <165814602466.32602.18190706420188832956.kvalo@kernel.org>
+Date:   Mon, 18 Jul 2022 12:07:09 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp> wrote:
+Jilin Yuan <yuanjilin@cdjrlc.com> wrote:
 
-> lockdep complains use of uninitialized spinlock at ieee80211_do_stop() [1],
-> for commit f856373e2f31ffd3 ("wifi: mac80211: do not wake queues on a vif
-> that is being stopped") guards clear_bit() using fq.lock even before
-> fq_init() from ieee80211_txq_setup_flows() initializes this spinlock.
+> Delete the redundant word 'long'.
 > 
-> According to discussion [2], Toke was not happy with expanding usage of
-> fq.lock. Since __ieee80211_wake_txqs() is called under RCU read lock, we
-> can instead use synchronize_rcu() for flushing ieee80211_wake_txqs().
-> 
-> Link: https://syzkaller.appspot.com/bug?extid=eceab52db7c4b961e9d6 [1]
-> Link: https://lkml.kernel.org/r/874k0zowh2.fsf@toke.dk [2]
-> Reported-by: syzbot <syzbot+eceab52db7c4b961e9d6@syzkaller.appspotmail.com>
-> Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Fixes: f856373e2f31ffd3 ("wifi: mac80211: do not wake queues on a vif that is being stopped")
-> Tested-by: syzbot <syzbot+eceab52db7c4b961e9d6@syzkaller.appspotmail.com>
-> Acked-by: Toke Høiland-Jørgensen <toke@kernel.org>
+> Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 
 Patch applied to wireless-next.git, thanks.
 
-3598cb6e1862 wifi: mac80211: do not abuse fq.lock in ieee80211_do_stop()
+15978ea38d79 wifi: atmel: fix repeated words in comments
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/9cc9b81d-75a3-3925-b612-9d0ad3cab82b@I-love.SAKURA.ne.jp/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220709132637.16717-1-yuanjilin@cdjrlc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
