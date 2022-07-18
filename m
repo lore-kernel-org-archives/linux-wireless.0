@@ -2,40 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13E19CCA479
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 20:51:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0418C43334
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 20:52:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234728AbiGRUvr (ORCPT
+        id S235027AbiGRUwZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Jul 2022 16:51:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52504 "EHLO
+        Mon, 18 Jul 2022 16:52:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234311AbiGRUvq (ORCPT
+        with ESMTP id S234420AbiGRUwY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jul 2022 16:51:46 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 494A7326D6
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2022 13:51:38 -0700 (PDT)
-X-UUID: 0fcb69af21a54ffdb449b692c5246cb4-20220719
+        Mon, 18 Jul 2022 16:52:24 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8329332464
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2022 13:52:23 -0700 (PDT)
+X-UUID: b48e52d6634d430280ab902ebb583a6a-20220719
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:73c66cd9-7724-43b6-a8b9-7eba31b2b7f2,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:5
-X-CID-META: VersionHash:0f94e32,CLOUDID:f79ed0d7-5d6d-4eaf-a635-828a3ee48b7c,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 0fcb69af21a54ffdb449b692c5246cb4-20220719
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+X-CID-O-INFO: VERSION:1.1.8,REQID:eca0b0fc-93b8-47f6-b1e8-10f157814425,OB:0,LO
+        B:10,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,AC
+        TION:release,TS:100
+X-CID-INFO: VERSION:1.1.8,REQID:eca0b0fc-93b8-47f6-b1e8-10f157814425,OB:0,LOB:
+        10,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,AC
+        TION:quarantine,TS:100
+X-CID-META: VersionHash:0f94e32,CLOUDID:5ba0d0d7-5d6d-4eaf-a635-828a3ee48b7c,C
+        OID:d19e1bde2466,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:1,File:nil,QS:nil,BEC:nil,COL:0
+X-UUID: b48e52d6634d430280ab902ebb583a6a-20220719
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
         (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 591921104; Tue, 19 Jul 2022 04:51:31 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 621673868; Tue, 19 Jul 2022 04:52:19 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 19 Jul 2022 04:51:30 +0800
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Tue, 19 Jul 2022 04:52:17 +0800
 Received: from mtkswgap22.mediatek.inc (172.21.77.33) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Tue, 19 Jul 2022 04:51:30 +0800
+ 15.2.792.3 via Frontend Transport; Tue, 19 Jul 2022 04:52:17 +0800
 From:   <sean.wang@mediatek.com>
 To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
 CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
@@ -50,10 +53,12 @@ CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
         <druth@google.com>, <abhishekpandit@google.com>,
         <shawnku@google.com>, <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 1/4] mt76: mt7921e: fix race issue between reset and suspend/resume
-Date:   Tue, 19 Jul 2022 04:51:23 +0800
-Message-ID: <a1437e413116364ac9f3b777c7922ca0728ddc0d.1658176701.git.sean.wang@kernel.org>
+Subject: [PATCH 2/3] mt76: sdio: poll sta stat when device transmits data
+Date:   Tue, 19 Jul 2022 04:52:14 +0800
+Message-ID: <1655553ca765a8c18abd6f9bb7e861e9eb590b24.1658176763.git.sean.wang@kernel.org>
 X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <aa7d7ed8f3a817525ab8c7b736f1ce52490a835e.1658176763.git.sean.wang@kernel.org>
+References: <aa7d7ed8f3a817525ab8c7b736f1ce52490a835e.1658176763.git.sean.wang@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -63,98 +68,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sean Wang <sean.wang@mediatek.com>
 
-It is unexpected that the reset work is running simultaneously with
-the suspend or resume context and it is possible that reset work is still
-running even after mt7921 is suspended if we don't fix the race issue.
+It is not meaningful to poll sta stat when there is no the data traffic.
+So polling sta stat when device have transmitted data instead to save
+CPU power.
 
-Thus, the suspend procedure should be waiting until the reset is completed
-at the beginning and ignore the subsequent the reset requests.
+That implies that it is unallowed the stat_work to work while MCU is
+being initialized in the really early stage. That is a required patch
+for ("mt76: mt7663s: fix the deadlock caused by sdio->stat_work")
+because mt7615_mcu_set_drv_ctrl pointer isn't set done until MCU is
+ready.
 
-In case there is an error that happens during either suspend or resume
-handler, we will schedule a reset task to recover the error before
-returning the error code to ensure we can immediately fix the error there.
-
-Fixes: 0c1ce9884607 ("mt76: mt7921: add wifi reset support")
-Co-developed-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: YN Chen <YN.Chen@mediatek.com>
+Fixes: d39b52e31aa6 ("mt76: introduce mt76_sdio module")
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c |  5 +++++
- drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 13 +++++++++----
- 2 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 47f0aa81ab02..6bd9fc9228a2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -780,6 +780,7 @@ void mt7921_mac_reset_work(struct work_struct *work)
- void mt7921_reset(struct mt76_dev *mdev)
- {
- 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
-+	struct mt76_connac_pm *pm = &dev->pm;
+diff --git a/drivers/net/wireless/mediatek/mt76/sdio.c b/drivers/net/wireless/mediatek/mt76/sdio.c
+index aba2a9865821..3b9bb7cd08ad 100644
+--- a/drivers/net/wireless/mediatek/mt76/sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/sdio.c
+@@ -478,7 +478,7 @@ static void mt76s_status_worker(struct mt76_worker *w)
+ 		if (ndata_frames > 0)
+ 			resched = true;
  
- 	if (!dev->hw_init_done)
- 		return;
-@@ -787,8 +788,12 @@ void mt7921_reset(struct mt76_dev *mdev)
- 	if (dev->hw_full_reset)
- 		return;
- 
-+	if (pm->suspended)
-+		return;
-+
- 	queue_work(dev->mt76.wq, &dev->reset_work);
- }
-+EXPORT_SYMBOL_GPL(mt7921_reset);
- 
- void mt7921_mac_update_mib_stats(struct mt7921_phy *phy)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 9d1ba838e54f..07573ea55389 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -363,6 +363,7 @@ static int mt7921_pci_suspend(struct device *device)
- 	int i, err;
- 
- 	pm->suspended = true;
-+	cancel_work_sync(&dev->reset_work);
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_work_sync(&pm->wake_work);
- 
-@@ -424,6 +425,9 @@ static int mt7921_pci_suspend(struct device *device)
- restore_suspend:
- 	pm->suspended = false;
- 
-+	if (err < 0)
-+		mt7921_reset(&dev->mt76);
-+
- 	return err;
- }
- 
-@@ -437,7 +441,7 @@ static int mt7921_pci_resume(struct device *device)
- 
- 	err = mt7921_mcu_drv_pmctrl(dev);
- 	if (err < 0)
--		return err;
-+		goto failed;
- 
- 	mt7921_wpdma_reinit_cond(dev);
- 
-@@ -467,11 +471,12 @@ static int mt7921_pci_resume(struct device *device)
- 		mt76_connac_mcu_set_deep_sleep(&dev->mt76, false);
- 
- 	err = mt76_connac_mcu_set_hif_suspend(mdev, false);
--	if (err)
--		return err;
--
-+failed:
- 	pm->suspended = false;
- 
-+	if (err < 0)
-+		mt7921_reset(&dev->mt76);
-+
- 	return err;
- }
- 
+-		if (dev->drv->tx_status_data &&
++		if (dev->drv->tx_status_data && ndata_frames > 0 &&
+ 		    !test_and_set_bit(MT76_READING_STATS, &dev->phy.state) &&
+ 		    !test_bit(MT76_STATE_SUSPEND, &dev->phy.state))
+ 			queue_work(dev->wq, &dev->sdio.stat_work);
 -- 
 2.25.1
 
