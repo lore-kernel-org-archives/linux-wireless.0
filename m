@@ -2,120 +2,136 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A7D5CCA479
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 20:52:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17DB4C43334
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Jul 2022 20:58:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235141AbiGRUw1 (ORCPT
+        id S233955AbiGRU61 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Jul 2022 16:52:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52888 "EHLO
+        Mon, 18 Jul 2022 16:58:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235067AbiGRUwZ (ORCPT
+        with ESMTP id S236188AbiGRU6T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Jul 2022 16:52:25 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70850326DB
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2022 13:52:24 -0700 (PDT)
-X-UUID: 622ecece87204d259fac9b3424429de0-20220719
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.8,REQID:a382244a-9818-4005-8a2d-01634ffa64b0,OB:0,LO
-        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:5
-X-CID-META: VersionHash:0f94e32,CLOUDID:e94d9e64-0b3f-4b2c-b3a6-ed5c044366a0,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:1,File:nil
-        ,QS:nil,BEC:nil,COL:0
-X-UUID: 622ecece87204d259fac9b3424429de0-20220719
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
-        (envelope-from <sean.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1145465249; Tue, 19 Jul 2022 04:52:19 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Tue, 19 Jul 2022 04:52:17 +0800
-Received: from mtkswgap22.mediatek.inc (172.21.77.33) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.3 via Frontend Transport; Tue, 19 Jul 2022 04:52:17 +0800
-From:   <sean.wang@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
-CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
-        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
-        <km.lin@mediatek.com>, <jenhao.yang@mediatek.com>,
-        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
-        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
-        <ted.huang@mediatek.com>, <Stella.Chang@mediatek.com>,
-        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
-        <jsiuda@google.com>, <frankgor@google.com>, <kuabhs@google.com>,
-        <druth@google.com>, <abhishekpandit@google.com>,
-        <shawnku@google.com>, <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 1/3] mt76: mt7921s: fix the deadlock caused by sdio->stat_work
-Date:   Tue, 19 Jul 2022 04:52:13 +0800
-Message-ID: <aa7d7ed8f3a817525ab8c7b736f1ce52490a835e.1658176763.git.sean.wang@kernel.org>
-X-Mailer: git-send-email 1.7.9.5
+        Mon, 18 Jul 2022 16:58:19 -0400
+Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A53AD32B8B
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2022 13:58:18 -0700 (PDT)
+Received: by mail-lj1-x22a.google.com with SMTP id u15so15090614lji.10
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2022 13:58:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=MiQ+xQxx8hd0dlOeoQTIZgHydZebknID1GX7TXEZwqY=;
+        b=UXe8Cf2JLOSGbf9v+WHy5ow7tsX4GzUvDFhUAw4qsj86k+3sd8z+PTBhrJqCT64GOB
+         vlJP5xyX+3SnkFvEPX7q2tjxrYwW7oPoKSwe03WAxTwyuxLVNewsJlodCViVgrkVGIrc
+         JojBGrNyo4qc9W7bJODpPBqt7bX1uijY5sD7E4OlMYo5Eru8cRZCO3uUzLA2vZX+cxPh
+         ZSFbBi3GMNWelh4qZ2/ECU2pSwTqhujohHLiYwDwCRsOe7X1nUNXpG1khIP/h/ohwRX8
+         6jNSahP4U8pUBsP26GpgD2lf36mMTjkvdcVz4X0bZW4CArL1q37WzWw4+POFiTs5g+Hc
+         Ou2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=MiQ+xQxx8hd0dlOeoQTIZgHydZebknID1GX7TXEZwqY=;
+        b=iQq/Q/KksZHZuy+IvM6lzRZ1/Ykv+PQS5tr6UUDdBC+X7f1kaTqEfXk1/beg7XSR6A
+         oi697RitTFQA/NtLF0UYBA6VZr8gnA+67HKn8/p+YY4NNmZWHOCtXcKfTQaxjQmoI5or
+         XbcrIxUrl8SI/+lTAje0CAII4Wqr4cggxc56Wnk+BeasrFqnwDJ/HOG05Ox1CwzkAsw2
+         kdJo3vV+v8vRX40NCtQSNMyLhKO8ABMGWOkBGJR26xVR9PAMAmgOkXEbmj5XBJDfba/E
+         ZejdMnuY5YHdzG22JyqdllNRCUTuBYrmmMkdC/HC/mFtgbEm4IN/hiJSRgNe+BTt8twd
+         TjQA==
+X-Gm-Message-State: AJIora8Rr1R1sxTh3Ncz7ibBx2uCPJORTXROHmyjYLSJeLNo6swrYUED
+        dgUy6edku4LeuNxvi4DG7WCGhCPUPFOKLAxYq9PK4g==
+X-Google-Smtp-Source: AGRyM1t51RWTLgYvPAUANqa/emkL/JY9rxxZTykAFTNHaWCbZ02W5NqJ5SzgkzMSkS2CC69AQN7HvjqAYJHsNPJ++QA=
+X-Received: by 2002:a2e:a5cb:0:b0:25d:7a70:2891 with SMTP id
+ n11-20020a2ea5cb000000b0025d7a702891mr13859068ljp.295.1658177896827; Mon, 18
+ Jul 2022 13:58:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+References: <20220711222919.2043613-1-justinstitt@google.com>
+In-Reply-To: <20220711222919.2043613-1-justinstitt@google.com>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Mon, 18 Jul 2022 13:58:05 -0700
+Message-ID: <CAKwvOd=P7Wv0Z5YuxkwiqGfXGav9nZsBiC3mxdy0UfyF8D_c8A@mail.gmail.com>
+Subject: Re: [PATCH] iwlwifi: mvm: fix clang -Wformat warnings
+To:     Justin Stitt <justinstitt@google.com>
+Cc:     Gregory Greenman <gregory.greenman@intel.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Tom Rix <trix@redhat.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Avraham Stern <avraham.stern@intel.com>,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+On Mon, Jul 11, 2022 at 3:29 PM Justin Stitt <justinstitt@google.com> wrote:
+>
+> When building with Clang we encounter these warnings:
+> | drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c:1108:47: error:
+> | format specifies type 'unsigned char' but the argument has type 's16'
+> | (aka 'short') [-Werror,-Wformat] IWL_DEBUG_INFO(mvm, "\tburst index:
+> | %hhu\n", res->ftm.burst_index);
+> -
+> | drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c:1111:47: error:
+> | format specifies type 'unsigned char' but the argument has type 's32'
+> | (aka 'int') [-Werror,-Wformat] IWL_DEBUG_INFO(mvm, "\trssi spread:
+> | %hhu\n", res->ftm.rssi_spread);
+>
+> The previous format specifier `%hhu` describes a u8 but our arguments
+> are wider than this which means bits are potentially being lost.
+>
+> Variadic functions (printf-like) undergo default argument promotion.
+> Documentation/core-api/printk-formats.rst specifically recommends using
+> the promoted-to-type's format flag.
+>
+> As per C11 6.3.1.1:
+> (https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf) `If an int
+> can represent all values of the original type ..., the value is
+> converted to an int; otherwise, it is converted to an unsigned int.
+> These are called the integer promotions.` Thus it makes sense to change
+> `%hhu` to `%d` for both instances of the warning.
+>
+> Link: https://github.com/ClangBuiltLinux/linux/issues/378
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
 
-Because wake_work and sdio->stat_work share the same workqueue mt76->wq,
-if sdio->stat_work cannot acquire the mutex lock such as that was possibly
-held up by mt7921_mutex_acquire, we should exit immediately and schedule
-another stat_work to avoid blocking the mt7921_mutex_acquire.
+Thanks for the patch!
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-Also, if mt7921_mutex_acquire was called by sdio->stat_work self, the wake
-would be blocked by itself, so we have to changing into an unblocking wake
-(directly wakeup via mt7921_mcu_drv_pmctrl, not via the wake_work) in the
-context.
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+> index 430044bc4755..e8702184c950 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+> @@ -1105,10 +1105,10 @@ static void iwl_mvm_debug_range_resp(struct iwl_mvm *mvm, u8 index,
+>         IWL_DEBUG_INFO(mvm, "\tstatus: %d\n", res->status);
+>         IWL_DEBUG_INFO(mvm, "\tBSSID: %pM\n", res->addr);
+>         IWL_DEBUG_INFO(mvm, "\thost time: %llu\n", res->host_time);
+> -       IWL_DEBUG_INFO(mvm, "\tburst index: %hhu\n", res->ftm.burst_index);
+> +       IWL_DEBUG_INFO(mvm, "\tburst index: %d\n", res->ftm.burst_index);
+>         IWL_DEBUG_INFO(mvm, "\tsuccess num: %u\n", res->ftm.num_ftmr_successes);
+>         IWL_DEBUG_INFO(mvm, "\trssi: %d\n", res->ftm.rssi_avg);
+> -       IWL_DEBUG_INFO(mvm, "\trssi spread: %hhu\n", res->ftm.rssi_spread);
+> +       IWL_DEBUG_INFO(mvm, "\trssi spread: %d\n", res->ftm.rssi_spread);
+>         IWL_DEBUG_INFO(mvm, "\trtt: %lld\n", res->ftm.rtt_avg);
+>         IWL_DEBUG_INFO(mvm, "\trtt var: %llu\n", res->ftm.rtt_variance);
+>         IWL_DEBUG_INFO(mvm, "\trtt spread: %llu\n", res->ftm.rtt_spread);
+> --
+> 2.37.0.144.g8ac04bfd2-goog
+>
 
-Fixes: 48fab5bbef40 ("mt76: mt7921: introduce mt7921s support")
-Co-developed-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
----
- .../net/wireless/mediatek/mt76/mt7921/mac.c   | 22 +++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 6bd9fc9228a2..75e719175e92 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -1080,10 +1080,28 @@ bool mt7921_usb_sdio_tx_status_data(struct mt76_dev *mdev, u8 *update)
- {
- 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
- 
--	mt7921_mutex_acquire(dev);
-+	if (!mutex_trylock(&mdev->mutex)) {
-+		/* Because wake_work and stat_work share the same workqueue
-+		 * mt76->wq, if sdio->stat_work cannot acquire the mutex lock,
-+		 * we should exit immediately and schedule another stat_work
-+		 * to avoid blocking the wake_work.
-+		 */
-+		struct work_struct *stat_work;
-+
-+		stat_work = mt76_is_sdio(mdev) ? &mdev->sdio.stat_work :
-+			    &mdev->usb.stat_work;
-+		queue_work(dev->mt76.wq, stat_work);
-+
-+		goto out;
-+	}
-+
-+	mt7921_mcu_drv_pmctrl(dev);
- 	mt7921_mac_sta_poll(dev);
--	mt7921_mutex_release(dev);
-+	mt76_connac_power_save_sched(&mdev->phy, &dev->pm);
- 
-+	mutex_unlock(&mdev->mutex);
-+
-+out:
- 	return false;
- }
- EXPORT_SYMBOL_GPL(mt7921_usb_sdio_tx_status_data);
 -- 
-2.25.1
-
+Thanks,
+~Nick Desaulniers
