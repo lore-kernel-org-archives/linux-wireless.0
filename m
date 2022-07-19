@@ -2,62 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDAC2C433EF
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jul 2022 14:38:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD057C43334
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jul 2022 14:38:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239359AbiGSOiZ (ORCPT
+        id S239294AbiGSOi1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Jul 2022 10:38:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58734 "EHLO
+        Tue, 19 Jul 2022 10:38:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239136AbiGSOiF (ORCPT
+        with ESMTP id S237614AbiGSOiH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jul 2022 10:38:05 -0400
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FE7D1148
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2022 07:33:08 -0700 (PDT)
-Received: by mail-wr1-x435.google.com with SMTP id b26so21903526wrc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2022 07:33:08 -0700 (PDT)
+        Tue, 19 Jul 2022 10:38:07 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3B6D2E683
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2022 07:33:10 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id u14-20020a05600c00ce00b003a323062569so1086736wmm.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2022 07:33:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Bc2l7EXm9CohmPqFMrp+QrnDMQVxo4kH+cDeaAaNMb8=;
-        b=IQYS9ve3RX+MiAqyQlRyYCeLP3T4y8IqE9UNlanrMEditVUbc5OSXBgu9K4fmlXK5r
-         nktw/SETQddBS4GUO8sQV/Gx8Y7HtLaKHlFyKaMEdmrC4mPbpw841RHjp1SuY1UrQLNj
-         0N4lY1a0GL8tPB9pNOiW4dZeu9Qhd+1d0xg2t0SmrUZKACWEa4r9wBVDzlFQxcMWh2PM
-         1sDzcDTZem7NL+fjAzF7gwLeL+ommk3Yz3M4KYGrgryQB+qW4qdA/vwuxEMMZFgeVwRd
-         2jiaaYldW6fx31fJO1PqjwDGMmL43tZg9GPpJYhynVpPNd1+wsZLT0Y3fRaojp+y0s2h
-         l9fA==
+        bh=1A3RZDz93CJsUVu1ZGCAc3vc85qUDp5cTEvniEHIFDU=;
+        b=jQ8wwS67AZC0aPGPY8PtQuc2BqAASJQpUhW/K6fech4c+AVZwp66x+6Z44uIf9LULB
+         nhfdbRw0X0rnv0dVxDNAEXkdUJLvTE+R/lXP+m4Bc3PW3RAzubD4k9tsrHVgC2lshbhX
+         Y2T/A5tIayW+O9MNMT/W9LENM2/XkociCwxoGiangLxgdCn/CFQX9fGPvDB/nB1gLIH+
+         D+HCLD6E9Omu4ypFYTC1+ci5QZYmNEV5rUQJ6GwkHcxLlgdb3KLy9zwQJGV8UNLVxvHA
+         ceeTu4o4rUKYhrYTpEDt1QJZ8os47jAM7U+lZK6BU4w2KbL3RiXePBk4jVWWLmJhwnwJ
+         OdkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Bc2l7EXm9CohmPqFMrp+QrnDMQVxo4kH+cDeaAaNMb8=;
-        b=MN2gEb3B03p3mJ1BMVoGvpNNE0fOlIPXNwF11KELmOcmpzIzNUm+kjhi/ZcJzqdiGB
-         0MS7mNkkd19xSGb5c2YWgeM/K7NfcH7ybR5fnh1WrXKcFi5Y/Wn503KvNTavSqyDMqYP
-         HJdeLFgSWyfP1ICJn5anK9nioD9p4bXxp0dt0RlOnUSFnG50JpG2CfTYJFfNBVLHPgTk
-         0Ihf6Fk9IQi8pWaaTQiQfMag7NzS19SIr6Y+8VvfKX+m7AMdi4zDZPr8qZcyzYbl+dT/
-         obeazfnXwMzkHDAFAQe1hC4MrYBIwYjpe90iYsPDJXKXqikrfc5JwrkEx4Kw8MM+8XN4
-         KNkQ==
-X-Gm-Message-State: AJIora/kD4VMepNUK6XA4YFhgcHMevyQ/WLg75A16cHv743YVp50pFCL
-        QzTpfRgTy+Ciy3p9y/GvOjg0qQ==
-X-Google-Smtp-Source: AGRyM1tM0jQ+RQzQDrgxF9hRdxpiBY05/rvvDCmiYQqgUXEgE6ZyXCAlpCKCgwR44Xw53GwpTMEduw==
-X-Received: by 2002:a5d:4f0b:0:b0:21d:705c:caf with SMTP id c11-20020a5d4f0b000000b0021d705c0cafmr27634828wru.55.1658241186940;
-        Tue, 19 Jul 2022 07:33:06 -0700 (PDT)
+        bh=1A3RZDz93CJsUVu1ZGCAc3vc85qUDp5cTEvniEHIFDU=;
+        b=Z6inURhP1Sug6HCtmVhT9ODtJR8DoDVffg0qm9VzthyB2MLU/g4RChbk3SeRiz5T/e
+         tjXJJVD+VNmr6khPO6H6QeJDKZePJV1+yUokgGuUomVjxQeryhnFpIWgmgz7lz16tjEI
+         KwcU3FNHmlD4bX7/Tfps4sBPxsTX4G5igex/DQqU4CiUV0ObUmZarPS9seHm2Mey3b12
+         3fCWisemag/KAC2vw1jypLvMUFP6a+FK/8HW/McnWAsWFsWPdoSs41fWskrgGeBWntHt
+         W0/QgMFmfgxt0QlFdXVoZILTYswud45mF9Dqr/pVFSG801pWN1sTkG7L5s/QEEptRs5e
+         QUUw==
+X-Gm-Message-State: AJIora9SXIFF6876Nn+o2eL9c9alOZqZnlCPDCVCpmqJtfa7aNI/XJ4A
+        9TEso2mdxhLMS/O+18zxflscvA==
+X-Google-Smtp-Source: AGRyM1vWu67gzk72zMk4h+O6x4e3mmM0paqu8OTlTC4v8U6LhUBXFI0Oir0UzV1Kc79+RienOUfk0g==
+X-Received: by 2002:a05:600c:34c6:b0:3a3:2549:1905 with SMTP id d6-20020a05600c34c600b003a325491905mr2295740wmq.204.1658241189152;
+        Tue, 19 Jul 2022 07:33:09 -0700 (PDT)
 Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id d15-20020adffbcf000000b0020fff0ea0a3sm13634378wrs.116.2022.07.19.07.33.06
+        by smtp.gmail.com with ESMTPSA id d15-20020adffbcf000000b0020fff0ea0a3sm13634378wrs.116.2022.07.19.07.33.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Jul 2022 07:33:06 -0700 (PDT)
+        Tue, 19 Jul 2022 07:33:08 -0700 (PDT)
 From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 To:     kvalo@kernel.org, loic.poulain@linaro.org
 Cc:     davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, wcn36xx@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         bryan.odonoghue@linaro.org
-Subject: [PATCH v2 2/4] wcn36xx: Move firmware feature bit storage to dedicated firmware.c file
-Date:   Tue, 19 Jul 2022 15:33:00 +0100
-Message-Id: <20220719143302.2071223-3-bryan.odonoghue@linaro.org>
+Subject: [PATCH v2 4/4] wcn36xx: Add debugfs entry to read firmware feature strings
+Date:   Tue, 19 Jul 2022 15:33:02 +0100
+Message-Id: <20220719143302.2071223-5-bryan.odonoghue@linaro.org>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <20220719143302.2071223-1-bryan.odonoghue@linaro.org>
 References: <20220719143302.2071223-1-bryan.odonoghue@linaro.org>
@@ -67,417 +67,132 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The naming of the get/set/clear firmware feature capability bits doesn't
-really follow the established namespace pattern of
-wcn36xx_logicalblock_do_something();
+Add in the ability to easily find the firmware feature bits reported in the
+get feature exchange without having to compile-in debug prints.
 
-The feature bits are accessed by smd.c and main.c. It would be nice to
-display the found feature bits in debugfs. To do so though we should tidy
-up the namespace a bit.
-
-Move the firmware feature exchange API to its own file - firmware.c giving
-us the opportunity to functionally decompose other firmware related
-accessors as appropriate in future.
+root@linaro-alip:~# cat /sys/kernel/debug/ieee80211/phy0/wcn36xx/firmware_feat_caps
+MCC
+P2P
+DOT11AC
+SLM_SESSIONIZATION
+DOT11AC_OPMODE
+SAP32STA
+TDLS
+P2P_GO_NOA_DECOUPLE_INIT_SCAN
+WLANACTIVE_OFFLOAD
+BEACON_OFFLOAD
+SCAN_OFFLOAD
+BCN_MISS_OFFLOAD
+STA_POWERSAVE
+STA_ADVANCED_PWRSAVE
+BCN_FILTER
+RTT
+RATECTRL
+WOW
+WLAN_ROAM_SCAN_OFFLOAD
+SPECULATIVE_PS_POLL
+IBSS_HEARTBEAT_OFFLOAD
+WLAN_SCAN_OFFLOAD
+WLAN_PERIODIC_TX_PTRN
+ADVANCE_TDLS
+BATCH_SCAN
+FW_IN_TX_PATH
+EXTENDED_NSOFFLOAD_SLOT
+CH_SWITCH_V1
+HT40_OBSS_SCAN
+UPDATE_CHANNEL_LIST
+WLAN_MCADDR_FLT
+WLAN_CH144
+TDLS_SCAN_COEXISTENCE
+LINK_LAYER_STATS_MEAS
+MU_MIMO
+EXTENDED_SCAN
+DYNAMIC_WMM_PS
+MAC_SPOOFED_SCAN
+FW_STATS
+WPS_PRBRSP_TMPL
+BCN_IE_FLT_DELTA
 
 Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
 ---
- drivers/net/wireless/ath/wcn36xx/Makefile   |  3 +-
- drivers/net/wireless/ath/wcn36xx/firmware.c | 50 +++++++++++++
- drivers/net/wireless/ath/wcn36xx/firmware.h | 82 +++++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/hal.h      | 68 -----------------
- drivers/net/wireless/ath/wcn36xx/main.c     |  7 +-
- drivers/net/wireless/ath/wcn36xx/smd.c      | 57 ++------------
- drivers/net/wireless/ath/wcn36xx/smd.h      |  3 -
- 7 files changed, 146 insertions(+), 124 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/firmware.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/firmware.h
+ drivers/net/wireless/ath/wcn36xx/debug.c | 37 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/debug.h |  1 +
+ 2 files changed, 38 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Makefile b/drivers/net/wireless/ath/wcn36xx/Makefile
-index 27413703ad69..26bec795b372 100644
---- a/drivers/net/wireless/ath/wcn36xx/Makefile
-+++ b/drivers/net/wireless/ath/wcn36xx/Makefile
-@@ -5,6 +5,7 @@ wcn36xx-y +=   main.o \
-                txrx.o \
-                smd.o \
-                pmc.o \
--               debug.o
-+               debug.o \
-+               firmware.o
- 
- wcn36xx-$(CONFIG_NL80211_TESTMODE) += testmode.o
-diff --git a/drivers/net/wireless/ath/wcn36xx/firmware.c b/drivers/net/wireless/ath/wcn36xx/firmware.c
-new file mode 100644
-index 000000000000..03b93d2bdcf9
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/firmware.c
-@@ -0,0 +1,50 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+
-+#include "wcn36xx.h"
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
+index 6af306ae41ad..220f338045bd 100644
+--- a/drivers/net/wireless/ath/wcn36xx/debug.c
++++ b/drivers/net/wireless/ath/wcn36xx/debug.c
+@@ -21,6 +21,7 @@
+ #include "wcn36xx.h"
+ #include "debug.h"
+ #include "pmc.h"
 +#include "firmware.h"
-+
-+void wcn36xx_firmware_set_feat_caps(u32 *bitmap,
-+				    enum wcn36xx_firmware_feat_caps cap)
+ 
+ #ifdef CONFIG_WCN36XX_DEBUGFS
+ 
+@@ -136,6 +137,40 @@ static const struct file_operations fops_wcn36xx_dump = {
+ 	.write =       write_file_dump,
+ };
+ 
++static ssize_t read_file_firmware_feature_caps(struct file *file,
++					       char __user *user_buf,
++					       size_t count, loff_t *ppos)
 +{
-+	int arr_idx, bit_idx;
++	struct wcn36xx *wcn = file->private_data;
++	unsigned long page = get_zeroed_page(GFP_KERNEL);
++	char *p = (char *)page;
++	int i;
++	int ret;
 +
-+	if (cap < 0 || cap > 127) {
-+		wcn36xx_warn("error cap idx %d\n", cap);
-+		return;
++	if (!p)
++		return -ENOMEM;
++
++	mutex_lock(&wcn->hal_mutex);
++	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
++		if (wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, i)) {
++			p += sprintf(p, "%s\n",
++				     wcn36xx_firmware_get_cap_name(i));
++		}
 +	}
++	mutex_unlock(&wcn->hal_mutex);
 +
-+	arr_idx = cap / 32;
-+	bit_idx = cap % 32;
-+	bitmap[arr_idx] |= (1 << bit_idx);
++	ret = simple_read_from_buffer(user_buf, count, ppos, (char *)page,
++				      (unsigned long)p - page);
++
++	free_page(page);
++	return ret;
 +}
 +
-+int wcn36xx_firmware_get_feat_caps(u32 *bitmap,
-+				   enum wcn36xx_firmware_feat_caps cap)
-+{
-+	int arr_idx, bit_idx;
-+
-+	if (cap < 0 || cap > 127) {
-+		wcn36xx_warn("error cap idx %d\n", cap);
-+		return -EINVAL;
-+	}
-+
-+	arr_idx = cap / 32;
-+	bit_idx = cap % 32;
-+
-+	return (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
-+}
-+
-+void wcn36xx_firmware_clear_feat_caps(u32 *bitmap,
-+				      enum wcn36xx_firmware_feat_caps cap)
-+{
-+	int arr_idx, bit_idx;
-+
-+	if (cap < 0 || cap > 127) {
-+		wcn36xx_warn("error cap idx %d\n", cap);
-+		return;
-+	}
-+
-+	arr_idx = cap / 32;
-+	bit_idx = cap % 32;
-+	bitmap[arr_idx] &= ~(1 << bit_idx);
-+}
-diff --git a/drivers/net/wireless/ath/wcn36xx/firmware.h b/drivers/net/wireless/ath/wcn36xx/firmware.h
-new file mode 100644
-index 000000000000..552c0e9325e1
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/firmware.h
-@@ -0,0 +1,82 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+
-+#ifndef _FIRMWARE_H_
-+#define _FIRMWARE_H_
-+
-+/* Capability bitmap exchange definitions and macros starts */
-+
-+enum wcn36xx_firmware_feat_caps {
-+	MCC = 0,
-+	P2P = 1,
-+	DOT11AC = 2,
-+	SLM_SESSIONIZATION = 3,
-+	DOT11AC_OPMODE = 4,
-+	SAP32STA = 5,
-+	TDLS = 6,
-+	P2P_GO_NOA_DECOUPLE_INIT_SCAN = 7,
-+	WLANACTIVE_OFFLOAD = 8,
-+	BEACON_OFFLOAD = 9,
-+	SCAN_OFFLOAD = 10,
-+	ROAM_OFFLOAD = 11,
-+	BCN_MISS_OFFLOAD = 12,
-+	STA_POWERSAVE = 13,
-+	STA_ADVANCED_PWRSAVE = 14,
-+	AP_UAPSD = 15,
-+	AP_DFS = 16,
-+	BLOCKACK = 17,
-+	PHY_ERR = 18,
-+	BCN_FILTER = 19,
-+	RTT = 20,
-+	RATECTRL = 21,
-+	WOW = 22,
-+	WLAN_ROAM_SCAN_OFFLOAD = 23,
-+	SPECULATIVE_PS_POLL = 24,
-+	SCAN_SCH = 25,
-+	IBSS_HEARTBEAT_OFFLOAD = 26,
-+	WLAN_SCAN_OFFLOAD = 27,
-+	WLAN_PERIODIC_TX_PTRN = 28,
-+	ADVANCE_TDLS = 29,
-+	BATCH_SCAN = 30,
-+	FW_IN_TX_PATH = 31,
-+	EXTENDED_NSOFFLOAD_SLOT = 32,
-+	CH_SWITCH_V1 = 33,
-+	HT40_OBSS_SCAN = 34,
-+	UPDATE_CHANNEL_LIST = 35,
-+	WLAN_MCADDR_FLT = 36,
-+	WLAN_CH144 = 37,
-+	NAN = 38,
-+	TDLS_SCAN_COEXISTENCE = 39,
-+	LINK_LAYER_STATS_MEAS = 40,
-+	MU_MIMO = 41,
-+	EXTENDED_SCAN = 42,
-+	DYNAMIC_WMM_PS = 43,
-+	MAC_SPOOFED_SCAN = 44,
-+	BMU_ERROR_GENERIC_RECOVERY = 45,
-+	DISA = 46,
-+	FW_STATS = 47,
-+	WPS_PRBRSP_TMPL = 48,
-+	BCN_IE_FLT_DELTA = 49,
-+	TDLS_OFF_CHANNEL = 51,
-+	RTT3 = 52,
-+	MGMT_FRAME_LOGGING = 53,
-+	ENHANCED_TXBD_COMPLETION = 54,
-+	LOGGING_ENHANCEMENT = 55,
-+	EXT_SCAN_ENHANCED = 56,
-+	MEMORY_DUMP_SUPPORTED = 57,
-+	PER_PKT_STATS_SUPPORTED = 58,
-+	EXT_LL_STAT = 60,
-+	WIFI_CONFIG = 61,
-+	ANTENNA_DIVERSITY_SELECTION = 62,
-+
-+	MAX_FEATURE_SUPPORTED = 128,
++static const struct file_operations fops_wcn36xx_firmware_feat_caps = {
++	.open = simple_open,
++	.read = read_file_firmware_feature_caps,
 +};
 +
-+void wcn36xx_firmware_set_feat_caps(u32 *bitmap,
-+				    enum wcn36xx_firmware_feat_caps cap);
-+int wcn36xx_firmware_get_feat_caps(u32 *bitmap,
-+				   enum wcn36xx_firmware_feat_caps cap);
-+void wcn36xx_firmware_clear_feat_caps(u32 *bitmap,
-+				      enum wcn36xx_firmware_feat_caps cap);
-+
-+#endif /* _FIRMWARE_H_ */
-+
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 5e48c97682c2..5c45b23c7880 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -4758,74 +4758,6 @@ struct wcn36xx_hal_set_power_params_resp {
- 	u32 status;
- } __packed;
+ #define ADD_FILE(name, mode, fop, priv_data)		\
+ 	do {							\
+ 		struct dentry *d;				\
+@@ -163,6 +198,8 @@ void wcn36xx_debugfs_init(struct wcn36xx *wcn)
  
--/* Capability bitmap exchange definitions and macros starts */
--
--enum wcn36xx_firmware_feat_caps {
--	MCC = 0,
--	P2P = 1,
--	DOT11AC = 2,
--	SLM_SESSIONIZATION = 3,
--	DOT11AC_OPMODE = 4,
--	SAP32STA = 5,
--	TDLS = 6,
--	P2P_GO_NOA_DECOUPLE_INIT_SCAN = 7,
--	WLANACTIVE_OFFLOAD = 8,
--	BEACON_OFFLOAD = 9,
--	SCAN_OFFLOAD = 10,
--	ROAM_OFFLOAD = 11,
--	BCN_MISS_OFFLOAD = 12,
--	STA_POWERSAVE = 13,
--	STA_ADVANCED_PWRSAVE = 14,
--	AP_UAPSD = 15,
--	AP_DFS = 16,
--	BLOCKACK = 17,
--	PHY_ERR = 18,
--	BCN_FILTER = 19,
--	RTT = 20,
--	RATECTRL = 21,
--	WOW = 22,
--	WLAN_ROAM_SCAN_OFFLOAD = 23,
--	SPECULATIVE_PS_POLL = 24,
--	SCAN_SCH = 25,
--	IBSS_HEARTBEAT_OFFLOAD = 26,
--	WLAN_SCAN_OFFLOAD = 27,
--	WLAN_PERIODIC_TX_PTRN = 28,
--	ADVANCE_TDLS = 29,
--	BATCH_SCAN = 30,
--	FW_IN_TX_PATH = 31,
--	EXTENDED_NSOFFLOAD_SLOT = 32,
--	CH_SWITCH_V1 = 33,
--	HT40_OBSS_SCAN = 34,
--	UPDATE_CHANNEL_LIST = 35,
--	WLAN_MCADDR_FLT = 36,
--	WLAN_CH144 = 37,
--	NAN = 38,
--	TDLS_SCAN_COEXISTENCE = 39,
--	LINK_LAYER_STATS_MEAS = 40,
--	MU_MIMO = 41,
--	EXTENDED_SCAN = 42,
--	DYNAMIC_WMM_PS = 43,
--	MAC_SPOOFED_SCAN = 44,
--	BMU_ERROR_GENERIC_RECOVERY = 45,
--	DISA = 46,
--	FW_STATS = 47,
--	WPS_PRBRSP_TMPL = 48,
--	BCN_IE_FLT_DELTA = 49,
--	TDLS_OFF_CHANNEL = 51,
--	RTT3 = 52,
--	MGMT_FRAME_LOGGING = 53,
--	ENHANCED_TXBD_COMPLETION = 54,
--	LOGGING_ENHANCEMENT = 55,
--	EXT_SCAN_ENHANCED = 56,
--	MEMORY_DUMP_SUPPORTED = 57,
--	PER_PKT_STATS_SUPPORTED = 58,
--	EXT_LL_STAT = 60,
--	WIFI_CONFIG = 61,
--	ANTENNA_DIVERSITY_SELECTION = 62,
--
--	MAX_FEATURE_SUPPORTED = 128,
--};
--
- #define WCN36XX_HAL_CAPS_SIZE 4
- 
- struct wcn36xx_hal_feat_caps_msg {
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index efd776b20e60..af62911a4659 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -28,6 +28,7 @@
- #include <net/ipv6.h>
- #include "wcn36xx.h"
- #include "testmode.h"
-+#include "firmware.h"
- 
- unsigned int wcn36xx_dbg_mask;
- module_param_named(debug_mask, wcn36xx_dbg_mask, uint, 0644);
-@@ -272,7 +273,7 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
- 	int i;
- 
- 	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
--		if (get_feat_caps(wcn->fw_feat_caps, i))
-+		if (wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, i))
- 			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
- 	}
- }
-@@ -705,7 +706,7 @@ static int wcn36xx_hw_scan(struct ieee80211_hw *hw,
- {
- 	struct wcn36xx *wcn = hw->priv;
- 
--	if (!get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
-+	if (!wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
- 		/* fallback to mac80211 software scan */
- 		return 1;
- 	}
-@@ -743,7 +744,7 @@ static void wcn36xx_cancel_hw_scan(struct ieee80211_hw *hw,
- 	wcn->scan_aborted = true;
- 	mutex_unlock(&wcn->scan_lock);
- 
--	if (get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
-+	if (wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, SCAN_OFFLOAD)) {
- 		/* ieee80211_scan_completed will be called on FW scan
- 		 * indication */
- 		wcn36xx_smd_stop_hw_scan(wcn);
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 88ee92be8562..d2a994fee812 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -22,6 +22,7 @@
- #include <linux/bitops.h>
- #include <linux/rpmsg.h>
- #include "smd.h"
-+#include "firmware.h"
- 
- struct wcn36xx_cfg_val {
- 	u32 cfg_id;
-@@ -295,7 +296,7 @@ static void wcn36xx_smd_set_sta_vht_params(struct wcn36xx *wcn,
- 		sta_params->vht_capable = sta->deflink.vht_cap.vht_supported;
- 		sta_params->vht_ldpc_enabled =
- 			is_cap_supported(caps, IEEE80211_VHT_CAP_RXLDPC);
--		if (get_feat_caps(wcn->fw_feat_caps, MU_MIMO)) {
-+		if (wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, MU_MIMO)) {
- 			sta_params->vht_tx_mu_beamformee_capable =
- 				is_cap_supported(caps, IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE);
- 			if (sta_params->vht_tx_mu_beamformee_capable)
-@@ -2431,49 +2432,6 @@ int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
- 	return ret;
+ 	ADD_FILE(bmps_switcher, 0600, &fops_wcn36xx_bmps, wcn);
+ 	ADD_FILE(dump, 0200, &fops_wcn36xx_dump, wcn);
++	ADD_FILE(firmware_feat_caps, 0200,
++		 &fops_wcn36xx_firmware_feat_caps, wcn);
  }
  
--void set_feat_caps(u32 *bitmap, enum wcn36xx_firmware_feat_caps cap)
--{
--	int arr_idx, bit_idx;
--
--	if (cap < 0 || cap > 127) {
--		wcn36xx_warn("error cap idx %d\n", cap);
--		return;
--	}
--
--	arr_idx = cap / 32;
--	bit_idx = cap % 32;
--	bitmap[arr_idx] |= (1 << bit_idx);
--}
--
--int get_feat_caps(u32 *bitmap, enum wcn36xx_firmware_feat_caps cap)
--{
--	int arr_idx, bit_idx;
--
--	if (cap < 0 || cap > 127) {
--		wcn36xx_warn("error cap idx %d\n", cap);
--		return -EINVAL;
--	}
--
--	arr_idx = cap / 32;
--	bit_idx = cap % 32;
--
--	return (bitmap[arr_idx] & (1 << bit_idx)) ? 1 : 0;
--}
--
--void clear_feat_caps(u32 *bitmap, enum wcn36xx_firmware_feat_caps cap)
--{
--	int arr_idx, bit_idx;
--
--	if (cap < 0 || cap > 127) {
--		wcn36xx_warn("error cap idx %d\n", cap);
--		return;
--	}
--
--	arr_idx = cap / 32;
--	bit_idx = cap % 32;
--	bitmap[arr_idx] &= ~(1 << bit_idx);
--}
--
- int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
- {
- 	struct wcn36xx_hal_feat_caps_msg msg_body, *rsp;
-@@ -2482,11 +2440,12 @@ int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn)
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_FEATURE_CAPS_EXCHANGE_REQ);
+ void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.h b/drivers/net/wireless/ath/wcn36xx/debug.h
+index 46307aa562d3..7116d96e0543 100644
+--- a/drivers/net/wireless/ath/wcn36xx/debug.h
++++ b/drivers/net/wireless/ath/wcn36xx/debug.h
+@@ -31,6 +31,7 @@ struct wcn36xx_dfs_entry {
+ 	struct dentry *rootdir;
+ 	struct wcn36xx_dfs_file file_bmps_switcher;
+ 	struct wcn36xx_dfs_file file_dump;
++	struct wcn36xx_dfs_file file_firmware_feat_caps;
+ };
  
--	set_feat_caps(msg_body.feat_caps, STA_POWERSAVE);
-+	wcn36xx_firmware_set_feat_caps(msg_body.feat_caps, STA_POWERSAVE);
- 	if (wcn->rf_id == RF_IRIS_WCN3680) {
--		set_feat_caps(msg_body.feat_caps, DOT11AC);
--		set_feat_caps(msg_body.feat_caps, WLAN_CH144);
--		set_feat_caps(msg_body.feat_caps, ANTENNA_DIVERSITY_SELECTION);
-+		wcn36xx_firmware_set_feat_caps(msg_body.feat_caps, DOT11AC);
-+		wcn36xx_firmware_set_feat_caps(msg_body.feat_caps, WLAN_CH144);
-+		wcn36xx_firmware_set_feat_caps(msg_body.feat_caps,
-+					       ANTENNA_DIVERSITY_SELECTION);
- 	}
- 
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
-@@ -3300,7 +3259,7 @@ int wcn36xx_smd_add_beacon_filter(struct wcn36xx *wcn,
- 	size_t payload_size;
- 	int ret;
- 
--	if (!get_feat_caps(wcn->fw_feat_caps, BCN_FILTER))
-+	if (!wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, BCN_FILTER))
- 		return -EOPNOTSUPP;
- 
- 	mutex_lock(&wcn->hal_mutex);
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 186dad4fe80e..cf15cde2a364 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -125,9 +125,6 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
- int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
- 			     u32 arg3, u32 arg4, u32 arg5);
- int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
--void set_feat_caps(u32 *bitmap, enum wcn36xx_firmware_feat_caps cap);
--int get_feat_caps(u32 *bitmap, enum wcn36xx_firmware_feat_caps cap);
--void clear_feat_caps(u32 *bitmap, enum wcn36xx_firmware_feat_caps cap);
- 
- int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
- 		struct ieee80211_sta *sta,
+ void wcn36xx_debugfs_init(struct wcn36xx *wcn);
 -- 
 2.36.1
 
