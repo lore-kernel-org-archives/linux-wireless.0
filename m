@@ -2,276 +2,107 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8980ACCA47F
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jul 2022 14:38:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 023F4CCA47F
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Jul 2022 14:50:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237732AbiGSOia (ORCPT
+        id S239405AbiGSOuG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Jul 2022 10:38:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59460 "EHLO
+        Tue, 19 Jul 2022 10:50:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239278AbiGSOiG (ORCPT
+        with ESMTP id S238614AbiGSOtt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jul 2022 10:38:06 -0400
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90D031F60F
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2022 07:33:09 -0700 (PDT)
-Received: by mail-wm1-x333.google.com with SMTP id c187-20020a1c35c4000000b003a30d88fe8eso7957886wma.2
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2022 07:33:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=1htt3sRateXvcU1ylDQghkW6+6TpG01zPBq1kp3I6v0=;
-        b=LbQVY51kfE/SQ+CwYhf5/FWArpIQGjFICcvHyEzP/D4t6PXWjgwWVmocCbIVaCyjVm
-         3m7qpwFbq+y+2AFoYWRpvbEmT8lEaKnCIET1ssOTxArw2FShO5DZg47fsHhQJf4GKU9Q
-         PBMqgp+2ZiRQ991wbnW/qZOQQbgV1rDW0Zhfs5lfNolOCrjSkQon+xxrIYSMsvgMUph2
-         ctpfECPfZcDEdnUFIStieFgvP5iM8Gt1T8x9qRBpUvCmdTdCswLNPUjxQbfeQ7AlGl8k
-         BdTpLxBssM8VNxq7fL9Z5QRY2ObIuMXP1qUtMe5qLncwfyBam4Q9C5Frm2xjRXDxDlpV
-         sdcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1htt3sRateXvcU1ylDQghkW6+6TpG01zPBq1kp3I6v0=;
-        b=kIM0+8LQfoDvNmxPlX5SXGtu1G5Hyfhl22TA6pAmgJvwx3/NxC7//HYwIZJ97QmXsh
-         0IxBNY3FgC56Tt4HzA/uCjHGeTrO2xWRCletKtS+4xhlDqlkz8CyRf/hsYGIsOk4vCVC
-         l3ViyY1uX6LF982yn2kqENHyPTj5xKAj6qD0vm99SYd+YQfrSvaDJSK3ESxifJIlNn8K
-         sIk/Em4vvMQ/uVn73R65mjWwvdIlPigEAp/dQe9R3NobsY24HLnIesOiaP+FXUl05kHb
-         av1efEex8GIkgjTqId/8owySocb7kHVGnUowLQOy8nAr9YD8Vr+27HXRw5j0Yl9dgNWc
-         kPUA==
-X-Gm-Message-State: AJIora/S7LQE1IQQc4JBH5UKgJ1mpYnqTQJqTPK6Rycknt8GSbjUVTSX
-        SaGlejklSD0C8LMxK/1g8Arglw==
-X-Google-Smtp-Source: AGRyM1sGVVyYwP5J3x0H+bHJQlWuwNacg749YsuCWsctAoB9pitduyg7nMpRZOq2QijHmwliJ/Ch4Q==
-X-Received: by 2002:a05:600c:3844:b0:3a3:d71:c4ce with SMTP id s4-20020a05600c384400b003a30d71c4cemr19751175wmr.23.1658241188171;
-        Tue, 19 Jul 2022 07:33:08 -0700 (PDT)
-Received: from sagittarius-a.chello.ie (188-141-3-169.dynamic.upc.ie. [188.141.3.169])
-        by smtp.gmail.com with ESMTPSA id d15-20020adffbcf000000b0020fff0ea0a3sm13634378wrs.116.2022.07.19.07.33.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Jul 2022 07:33:07 -0700 (PDT)
-From:   Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-To:     kvalo@kernel.org, loic.poulain@linaro.org
-Cc:     davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        bryan.odonoghue@linaro.org
-Subject: [PATCH v2 3/4] wcn36xx: Move capability bitmap to string translation function to firmware.c
-Date:   Tue, 19 Jul 2022 15:33:01 +0100
-Message-Id: <20220719143302.2071223-4-bryan.odonoghue@linaro.org>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220719143302.2071223-1-bryan.odonoghue@linaro.org>
-References: <20220719143302.2071223-1-bryan.odonoghue@linaro.org>
+        Tue, 19 Jul 2022 10:49:49 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BF12DF65;
+        Tue, 19 Jul 2022 07:49:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658242187; x=1689778187;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=hHKtJ6+Dxw4RZU20X6JIbyKBSqc3/xUJvDskXuGrQIc=;
+  b=Lc+qJn4qMJQJDWWaDlCmrIPKgBmUkq9tjBUc/+ESu/N20pEntfpo0bYM
+   YE74x8lRrex7wrg06u9oznax2BsPv6TzIeTmQIUyxQakaJLxvfGgm4NGE
+   xFWdgwSaNawk9D5xZzeBcXROccqbodpYY9FmQbjL0Tb96K3LBXPwV9Uoe
+   VVXoasAwcv9qKVDZFTwF4t+CYwzTJMnLnTbBDa99h8XpWh0adH0vPdG4a
+   vvSP4afxeEmexsC3BwxeFFyBi4cCXRDiubiKnIIYOAiapVIfzqAJA324y
+   5AMO6SlZvniyEJrpLy/0RkYXa8THxuNjbDYeKCTteKGXXKaSvFgEdb3oF
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10413"; a="287661303"
+X-IronPort-AV: E=Sophos;i="5.92,284,1650956400"; 
+   d="scan'208";a="287661303"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jul 2022 07:49:47 -0700
+X-IronPort-AV: E=Sophos;i="5.92,284,1650956400"; 
+   d="scan'208";a="594852649"
+Received: from kckollur-mobl1.amr.corp.intel.com (HELO [10.212.118.182]) ([10.212.118.182])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jul 2022 07:49:45 -0700
+Message-ID: <95fc3b8f-7556-371d-2817-7e0d811de24a@linux.intel.com>
+Date:   Tue, 19 Jul 2022 09:49:44 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.11.0
+Subject: Re: [PATCH] docs: driver-api: firmware: add driver firmware
+ guidelines.
+Content-Language: en-US
+To:     Dave Airlie <airlied@gmail.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>
+Cc:     alsa-devel@alsa-project.org,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-block@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Network Development <netdev@vger.kernel.org>,
+        "dri-devel@lists.sf.net" <dri-devel@lists.sf.net>,
+        Dave Airlie <airlied@redhat.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>
+References: <20220718072144.2699487-1-airlied@gmail.com>
+ <YtWeUOJewho7p/vM@intel.com>
+ <CAPM=9tyhOfOz1tn7uNsg_0EzvrBHcSoY+8bignNb2zfgZr6iRw@mail.gmail.com>
+From:   Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
+In-Reply-To: <CAPM=9tyhOfOz1tn7uNsg_0EzvrBHcSoY+8bignNb2zfgZr6iRw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move wcn36xx_get_cap_name() function in main.c into firmware.c as
-wcn36xx_firmware_get_cap_name().
 
-Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/firmware.c | 75 +++++++++++++++++++
- drivers/net/wireless/ath/wcn36xx/firmware.h |  2 +
- drivers/net/wireless/ath/wcn36xx/main.c     | 81 +--------------------
- 3 files changed, 81 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/firmware.c b/drivers/net/wireless/ath/wcn36xx/firmware.c
-index 03b93d2bdcf9..4b7f439e4db5 100644
---- a/drivers/net/wireless/ath/wcn36xx/firmware.c
-+++ b/drivers/net/wireless/ath/wcn36xx/firmware.c
-@@ -3,6 +3,81 @@
- #include "wcn36xx.h"
- #include "firmware.h"
- 
-+#define DEFINE(s)[s] = #s
-+
-+static const char * const wcn36xx_firmware_caps_names[] = {
-+	DEFINE(MCC),
-+	DEFINE(P2P),
-+	DEFINE(DOT11AC),
-+	DEFINE(SLM_SESSIONIZATION),
-+	DEFINE(DOT11AC_OPMODE),
-+	DEFINE(SAP32STA),
-+	DEFINE(TDLS),
-+	DEFINE(P2P_GO_NOA_DECOUPLE_INIT_SCAN),
-+	DEFINE(WLANACTIVE_OFFLOAD),
-+	DEFINE(BEACON_OFFLOAD),
-+	DEFINE(SCAN_OFFLOAD),
-+	DEFINE(ROAM_OFFLOAD),
-+	DEFINE(BCN_MISS_OFFLOAD),
-+	DEFINE(STA_POWERSAVE),
-+	DEFINE(STA_ADVANCED_PWRSAVE),
-+	DEFINE(AP_UAPSD),
-+	DEFINE(AP_DFS),
-+	DEFINE(BLOCKACK),
-+	DEFINE(PHY_ERR),
-+	DEFINE(BCN_FILTER),
-+	DEFINE(RTT),
-+	DEFINE(RATECTRL),
-+	DEFINE(WOW),
-+	DEFINE(WLAN_ROAM_SCAN_OFFLOAD),
-+	DEFINE(SPECULATIVE_PS_POLL),
-+	DEFINE(SCAN_SCH),
-+	DEFINE(IBSS_HEARTBEAT_OFFLOAD),
-+	DEFINE(WLAN_SCAN_OFFLOAD),
-+	DEFINE(WLAN_PERIODIC_TX_PTRN),
-+	DEFINE(ADVANCE_TDLS),
-+	DEFINE(BATCH_SCAN),
-+	DEFINE(FW_IN_TX_PATH),
-+	DEFINE(EXTENDED_NSOFFLOAD_SLOT),
-+	DEFINE(CH_SWITCH_V1),
-+	DEFINE(HT40_OBSS_SCAN),
-+	DEFINE(UPDATE_CHANNEL_LIST),
-+	DEFINE(WLAN_MCADDR_FLT),
-+	DEFINE(WLAN_CH144),
-+	DEFINE(NAN),
-+	DEFINE(TDLS_SCAN_COEXISTENCE),
-+	DEFINE(LINK_LAYER_STATS_MEAS),
-+	DEFINE(MU_MIMO),
-+	DEFINE(EXTENDED_SCAN),
-+	DEFINE(DYNAMIC_WMM_PS),
-+	DEFINE(MAC_SPOOFED_SCAN),
-+	DEFINE(BMU_ERROR_GENERIC_RECOVERY),
-+	DEFINE(DISA),
-+	DEFINE(FW_STATS),
-+	DEFINE(WPS_PRBRSP_TMPL),
-+	DEFINE(BCN_IE_FLT_DELTA),
-+	DEFINE(TDLS_OFF_CHANNEL),
-+	DEFINE(RTT3),
-+	DEFINE(MGMT_FRAME_LOGGING),
-+	DEFINE(ENHANCED_TXBD_COMPLETION),
-+	DEFINE(LOGGING_ENHANCEMENT),
-+	DEFINE(EXT_SCAN_ENHANCED),
-+	DEFINE(MEMORY_DUMP_SUPPORTED),
-+	DEFINE(PER_PKT_STATS_SUPPORTED),
-+	DEFINE(EXT_LL_STAT),
-+	DEFINE(WIFI_CONFIG),
-+	DEFINE(ANTENNA_DIVERSITY_SELECTION),
-+};
-+
-+#undef DEFINE
-+
-+const char *wcn36xx_firmware_get_cap_name(enum wcn36xx_firmware_feat_caps x)
-+{
-+	if (x >= ARRAY_SIZE(wcn36xx_firmware_caps_names))
-+		return "UNKNOWN";
-+	return wcn36xx_firmware_caps_names[x];
-+}
-+
- void wcn36xx_firmware_set_feat_caps(u32 *bitmap,
- 				    enum wcn36xx_firmware_feat_caps cap)
- {
-diff --git a/drivers/net/wireless/ath/wcn36xx/firmware.h b/drivers/net/wireless/ath/wcn36xx/firmware.h
-index 552c0e9325e1..f991cf959f82 100644
---- a/drivers/net/wireless/ath/wcn36xx/firmware.h
-+++ b/drivers/net/wireless/ath/wcn36xx/firmware.h
-@@ -78,5 +78,7 @@ int wcn36xx_firmware_get_feat_caps(u32 *bitmap,
- void wcn36xx_firmware_clear_feat_caps(u32 *bitmap,
- 				      enum wcn36xx_firmware_feat_caps cap);
- 
-+const char *wcn36xx_firmware_get_cap_name(enum wcn36xx_firmware_feat_caps x);
-+
- #endif /* _FIRMWARE_H_ */
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index af62911a4659..fec85e89a02f 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -193,88 +193,15 @@ static inline u8 get_sta_index(struct ieee80211_vif *vif,
- 	       sta_priv->sta_index;
- }
- 
--#define DEFINE(s) [s] = #s
--
--static const char * const wcn36xx_caps_names[] = {
--	DEFINE(MCC),
--	DEFINE(P2P),
--	DEFINE(DOT11AC),
--	DEFINE(SLM_SESSIONIZATION),
--	DEFINE(DOT11AC_OPMODE),
--	DEFINE(SAP32STA),
--	DEFINE(TDLS),
--	DEFINE(P2P_GO_NOA_DECOUPLE_INIT_SCAN),
--	DEFINE(WLANACTIVE_OFFLOAD),
--	DEFINE(BEACON_OFFLOAD),
--	DEFINE(SCAN_OFFLOAD),
--	DEFINE(ROAM_OFFLOAD),
--	DEFINE(BCN_MISS_OFFLOAD),
--	DEFINE(STA_POWERSAVE),
--	DEFINE(STA_ADVANCED_PWRSAVE),
--	DEFINE(AP_UAPSD),
--	DEFINE(AP_DFS),
--	DEFINE(BLOCKACK),
--	DEFINE(PHY_ERR),
--	DEFINE(BCN_FILTER),
--	DEFINE(RTT),
--	DEFINE(RATECTRL),
--	DEFINE(WOW),
--	DEFINE(WLAN_ROAM_SCAN_OFFLOAD),
--	DEFINE(SPECULATIVE_PS_POLL),
--	DEFINE(SCAN_SCH),
--	DEFINE(IBSS_HEARTBEAT_OFFLOAD),
--	DEFINE(WLAN_SCAN_OFFLOAD),
--	DEFINE(WLAN_PERIODIC_TX_PTRN),
--	DEFINE(ADVANCE_TDLS),
--	DEFINE(BATCH_SCAN),
--	DEFINE(FW_IN_TX_PATH),
--	DEFINE(EXTENDED_NSOFFLOAD_SLOT),
--	DEFINE(CH_SWITCH_V1),
--	DEFINE(HT40_OBSS_SCAN),
--	DEFINE(UPDATE_CHANNEL_LIST),
--	DEFINE(WLAN_MCADDR_FLT),
--	DEFINE(WLAN_CH144),
--	DEFINE(NAN),
--	DEFINE(TDLS_SCAN_COEXISTENCE),
--	DEFINE(LINK_LAYER_STATS_MEAS),
--	DEFINE(MU_MIMO),
--	DEFINE(EXTENDED_SCAN),
--	DEFINE(DYNAMIC_WMM_PS),
--	DEFINE(MAC_SPOOFED_SCAN),
--	DEFINE(BMU_ERROR_GENERIC_RECOVERY),
--	DEFINE(DISA),
--	DEFINE(FW_STATS),
--	DEFINE(WPS_PRBRSP_TMPL),
--	DEFINE(BCN_IE_FLT_DELTA),
--	DEFINE(TDLS_OFF_CHANNEL),
--	DEFINE(RTT3),
--	DEFINE(MGMT_FRAME_LOGGING),
--	DEFINE(ENHANCED_TXBD_COMPLETION),
--	DEFINE(LOGGING_ENHANCEMENT),
--	DEFINE(EXT_SCAN_ENHANCED),
--	DEFINE(MEMORY_DUMP_SUPPORTED),
--	DEFINE(PER_PKT_STATS_SUPPORTED),
--	DEFINE(EXT_LL_STAT),
--	DEFINE(WIFI_CONFIG),
--	DEFINE(ANTENNA_DIVERSITY_SELECTION),
--};
--
--#undef DEFINE
--
--static const char *wcn36xx_get_cap_name(enum wcn36xx_firmware_feat_caps x)
--{
--	if (x >= ARRAY_SIZE(wcn36xx_caps_names))
--		return "UNKNOWN";
--	return wcn36xx_caps_names[x];
--}
--
- static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
- {
- 	int i;
- 
- 	for (i = 0; i < MAX_FEATURE_SUPPORTED; i++) {
--		if (wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, i))
--			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n", wcn36xx_get_cap_name(i));
-+		if (wcn36xx_firmware_get_feat_caps(wcn->fw_feat_caps, i)) {
-+			wcn36xx_dbg(WCN36XX_DBG_MAC, "FW Cap %s\n",
-+				    wcn36xx_firmware_get_cap_name(i));
-+		}
- 	}
- }
- 
--- 
-2.36.1
+On 7/18/22 19:29, Dave Airlie wrote:
+>>> +* Firmware should be versioned with at least a major/minor version. It
+>>> +  is suggested that the firmware files in linux-firmware be named with
+>>> +  some device specific name, and just the major version. The
+>>> +  major/minor/patch versions should be stored in a header in the
+>>> +  firmware file for the driver to detect any non-ABI fixes/issues. The
+>>> +  firmware files in linux-firmware should be overwritten with the newest
+>>> +  compatible major version. Newer major version firmware should remain
+>>> +  compatible with all kernels that load that major number.
+>>
+>> would symbolic links be acceptable in the linux-firmware.git where
+>> the <fmw>_<major>.bin is a sym link to <fwm>_<major>.<minor>.bin
+>>
+>> or having the <fwm>_<major>.bin really to be the overwritten every minor
+>> update?
+> 
+> I don't think providing multiple minor versions of fw in
+> linux-firmware is that interesting.
+> Like if the major is the same, surely you always want the newer ones.
+> As long as the
+> ABI doesn't break. Otherwise we are just wasting disk space with fws
+> nobody will be using.
+
+It was my understanding that once a firmware file is in linux-firmware
+it's there forever. There are tons of existing symlinks to point to the
+latest version, but the previous versions are not removed/overwritten.
+
+see random examples:
+ls -lR /lib/firmware  | grep t4fw
+ls -lR /lib/firmware  | grep fw_release
+
 
