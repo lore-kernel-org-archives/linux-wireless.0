@@ -2,222 +2,167 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26614C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 13:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D500C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 16:03:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240629AbiGTNwO (ORCPT
+        id S230225AbiGTQDP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Jul 2022 09:52:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45710 "EHLO
+        Wed, 20 Jul 2022 12:03:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240624AbiGTNwN (ORCPT
+        with ESMTP id S229700AbiGTQDN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jul 2022 09:52:13 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CE0B31935
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2022 06:52:12 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26KCx2JP008669;
-        Wed, 20 Jul 2022 13:52:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=qOOxBFQUbJD5CfYghys+G8PGAtbBAD71SQQUTuHEQB0=;
- b=hJPBo1N8P8nEz3PkYlovL9A/qKsazQ6JsDLpklrANflX/v/92Qv0wHD+4KxVxkdR9cis
- qKqKOakvo8X0/qHEBzwZl84RzVo4j4r63snNYeX8HBpmGd2ouHKJvi5r8zomZpHsgN6z
- Ks+5HEtC9KhOjzuSHOmWrvh2RIXnY6cdGbDLC+FAj8ayZ/Q6u5eUnXMEy5hU2pU3fJL/
- INP99JOZBCD+ORgE7w+OT0amhQHS7QRj3Z+Yy0XU7QBkh3T9gSbeDg4tZosA3EzaECTT
- it0xyGdqOhqGZDPKJSLSp9vtJuYPHpugbhnUcpLGnB+Mdu+sg8yidSS0U0a3NctUC0gp uw== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hej60g4kv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Jul 2022 13:52:10 +0000
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.47.97.222])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26KDq9Q0017896
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Jul 2022 13:52:09 GMT
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 20 Jul 2022 06:52:09 -0700
-Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 20 Jul 2022 06:52:07 -0700
-From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH 2/2] ath11k: Fix hardware restart failure due to twt debugfs failure
-Date:   Wed, 20 Jul 2022 19:21:50 +0530
-Message-ID: <20220720135150.22193-3-quic_mpubbise@quicinc.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220720135150.22193-1-quic_mpubbise@quicinc.com>
-References: <20220720135150.22193-1-quic_mpubbise@quicinc.com>
+        Wed, 20 Jul 2022 12:03:13 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4A0D53D34
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2022 09:03:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1658332988; x=1689868988;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=cT6DPl2Q5qJX6hK8ZD0i8MBYsoD/JuCZXpqlfcnhZlo=;
+  b=jfIit/DO1cGjj0rIWMS6hogN0W/bn3wfsE5LJoL9+sH9IeJ8Exx/oDnI
+   8njIKa2RFNA3mE5+jzm0HEkBaSgKtzhFPgIcEghPtI+Y6MEQmSS/RCR3B
+   ljrlBpzH79CXBT9ZjqiOYJ2kydOmBHYjksLy+x/wt2QnjQvCEWTC9QQdc
+   iM8qHhfq/aQ3Bya4iYwN75Rjr/mIAKGAf2AJtFdo0/2SsP+EmOMYOiJKn
+   YGtjJnyTxX3oozmzdOthyfGXrkx0hXSlqEqsfFjhP1nEMFoeeHyx8BP7N
+   FNBYVKLlo8NmkQKHOcYWLtquk+Oc3Q2WOKcHyIrobF3E4kLUTT5/tbpVA
+   A==;
+X-IronPort-AV: E=Sophos;i="5.92,286,1650956400"; 
+   d="scan'208";a="183021447"
+Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 20 Jul 2022 09:03:08 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17; Wed, 20 Jul 2022 09:03:08 -0700
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.87.152) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.17 via Frontend Transport; Wed, 20 Jul 2022 09:03:08 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=js04f6g4fkAdz3GtVurPH+acAKFsxquzsXk2LcK++p7gybYulITVz3JhOw2mf/pLUczk8cH/RY6hB62aGyt4nelNq7YXnlbSNcJalg4/3+/z38TtF66cnaGUR6TPQ4qD+4jdUiB7v0wJc6j7MzzCqhERMp1vAXEpA2UwPDqkHvM37CQusLiAOXvR0zrt3d4auh71281siRpP7fZCjEsCeGPMx/4N7hcnwhJDldn2E/O8gSQjIQq7hQmK83qE81rWvf9Be5bC55WWUUcAVOoavC5+GazzN2gK5n0TwHsEb1JumaB8pJbyAnUFK74mUs1kiO5HBGC5SDDA8lh+Ume3bA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=d/kZ4jKZghk/+2mlGr3b/S4D4RjPQe8PI2c601yaI6U=;
+ b=QMfhYLD06jZhyrT7+/gxdRLIU6iflzgX76SXyAvSt26GkmPDOWdeWq1/o+lmdwL6KeGAeWTS8bhFq14yc0adw5j2qi5IBSs3LeNQcNgeAoUds/Zmz9hWUXcr4XUJnwfPHwjsFQ2uOugJEh9ANl1K+I7Trm4NrFLqE6KW3UQx0xF2HDlbcLkxSC3HnHYy0HB9pf3NqqmgEwYJViQYgx8jN0xi6mTZEdn6D3dKjN9hDR1w8QTA9sokHQj0lYnsP4d6rl2PzjdGoUMaliQATNXxyhNWw3xkjFsiOmqyaBM8FWWl5yytvmI17/EfFO7f9xlLTJ3Zk90JuMjMSlrs5bOuEQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector2-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=d/kZ4jKZghk/+2mlGr3b/S4D4RjPQe8PI2c601yaI6U=;
+ b=vXw20Hj//1YIsbS/IN5M2NfdJJWuyHqeK3154brX8ny/1CDRqS05jfxvB1bDrViQW8TarCu+Go7KwGWGPe5Glnw4FdaYmoKuCWPnH1TORpxTbswNgYI6entB/tJWo6M4F+XaTJxig7wUTZyexm0ceN+waeP9OTqp5BoMb3cPqq0=
+Received: from PH0PR11MB5176.namprd11.prod.outlook.com (2603:10b6:510:3f::5)
+ by MN2PR11MB4174.namprd11.prod.outlook.com (2603:10b6:208:154::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5438.12; Wed, 20 Jul
+ 2022 16:03:03 +0000
+Received: from PH0PR11MB5176.namprd11.prod.outlook.com
+ ([fe80::812f:fd29:44fe:6cb0]) by PH0PR11MB5176.namprd11.prod.outlook.com
+ ([fe80::812f:fd29:44fe:6cb0%5]) with mapi id 15.20.5438.023; Wed, 20 Jul 2022
+ 16:03:03 +0000
+From:   <Ajay.Kathat@microchip.com>
+To:     <linux-wireless@vger.kernel.org>
+CC:     <Claudiu.Beznea@microchip.com>, <Sripad.Balwadgi@microchip.com>,
+        <Ajay.Kathat@microchip.com>
+Subject: [PATCH 2/8] wifi: wilc1000: add WID_TX_POWER WID in g_cfg_byte array
+Thread-Topic: [PATCH 2/8] wifi: wilc1000: add WID_TX_POWER WID in g_cfg_byte
+ array
+Thread-Index: AQHYnFIxewSe1xi6H0yRIqDwxfQI2A==
+Date:   Wed, 20 Jul 2022 16:03:03 +0000
+Message-ID: <20220720160302.231516-2-ajay.kathat@microchip.com>
+References: <20220720160302.231516-1-ajay.kathat@microchip.com>
+In-Reply-To: <20220720160302.231516-1-ajay.kathat@microchip.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: git-send-email 2.34.1
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microchip.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: be8cf7db-a2c9-44f9-a95e-08da6a6953be
+x-ms-traffictypediagnostic: MN2PR11MB4174:EE_
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 67q+1J6g4CiilwzZU+wVI3FR4qFHDm8unCbEkR1pnKj7Q+pKJh2GJe1zduIiTnsA/nDBRvpVDsfDo502hfu9TBqvNASgx6ANNPGiiuZrqbJTMA3GxNQQncH2cPyAZMrdlHlt5hE5Cs0EwwkyNUWIUnMrJCPHc03OoHrhww7AdurW9c9iHPfJQch5JpyS3TUcDDn1VxK+99rHdp2Ex0U0YwnhZdqFTAkstzalLKm2YvYz/huBNbeNF+stehDdee0L4aK3/MF/nFZcacHmUDFr9Yj9m2xKNRofr0a2E0PkWlGys7wuUv4X23awBhDr4t/7n0Zvwyogka7dN20vHV3+z6ALr3uaRHPb7s7ckonus7DIdf9ln4BoeQaRIB/zyL7HhTF7TmYNvjhp44iGTA/CXLJgYFUHRtiwgaYQZUaNCc7DP+vsLDLLfcyZMcaBt4R2EPrwUHQ8xO8nUho9lpqLJu9AgNiyisUpXcHOQ7ila9OMFQQBwpwdeuuEkqFMA1E7KF7DjKI34P5PUiGDJ4qqcljC0t+fVf0Fvm7UvrFnubnV8b21TnXw7ZHIDDKlnTnruDv5Ar8fxaglBZ8hKEAn/aZrezjqHMs3Sv/2XdNsdZ0Mw6ny0rMIWhwoQTMuacpO/qFdc7h/kLX4myyANfovuFQ1WkL9P1D4aTnTBJoxK7lu3fTlxZzsoi1oKlleVivFXsqMh2EflNkSv10krtqXuB21K+i8bVFppu1Fw7U/F61u4kiBMQFlxbzCpXUP4vb43DnR90+1EKSLskdCgNeGHabPci+xt4n4W4nctVrFYS1Dh2/37hspqtBiKjnKiJq+
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB5176.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(39860400002)(346002)(396003)(136003)(366004)(376002)(2616005)(64756008)(86362001)(6486002)(122000001)(8936002)(1076003)(2906002)(107886003)(5660300002)(41300700001)(26005)(38070700005)(478600001)(6506007)(4326008)(186003)(6512007)(71200400001)(4744005)(76116006)(6916009)(54906003)(36756003)(66446008)(316002)(66476007)(66556008)(8676002)(91956017)(66946007)(38100700002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?/UmpujSMYW1C86aZrbhHt2a76Jxg3hxZrdgBs5J8XjlumPRn4BDdutGyF4?=
+ =?iso-8859-1?Q?H1EJcB1iyzt6IEtRrgELtfVVD6ZW2GiQwUNhcrd+bpqtrSO9/CkvFkqyON?=
+ =?iso-8859-1?Q?ljZ81JSlY11O9XMyybM2v0Y/YLgmUqDlIBAhMjgl+AklRGXIf2ClqfAgNw?=
+ =?iso-8859-1?Q?XQi0naaELmGKCvIpvYOz/N3b0sxFU2qAkwFK8iIGqfP+B/bvctrs97eKQ9?=
+ =?iso-8859-1?Q?MzxsfpJOVA/cWN7599pQZNXNcJRmC71M6uhSSHUP1Cll/PHjvDFQh7AGW5?=
+ =?iso-8859-1?Q?6v5rkPjulixj9pwLcC8exmMdfQwZNdiQU/LFFdzmFETwZILHtvHHt6+HuK?=
+ =?iso-8859-1?Q?KWL/Bq+tPJp+JtcGSbTi6XGkNju+JHhNNbagOEyVE9qohZQ0ip3P9Zdba5?=
+ =?iso-8859-1?Q?bUpgqfeOdn8aa4MoQoJ8UWHxOc3VI8qXcfw5+PGLP1l2uQjU9D0xVNBVtt?=
+ =?iso-8859-1?Q?8tLef5ylO5zQFRioi1/isAdFSczNjh/tOJwgh7+wSJhBYyr7K3tOu3SqOZ?=
+ =?iso-8859-1?Q?8ZOmfKFoJ6I5aPGIYTzfohRPl5x1cJCWP9hbrbN2JIcQXEAJ4C1vBLVD1l?=
+ =?iso-8859-1?Q?MVvNI6+qhMIbGNEozqtQ7Xw/Y/e+z+g6mseIAdQEkx0/XosyZZYQsVVsWa?=
+ =?iso-8859-1?Q?4THYtVCZp5OAQYDWfFJKEWZhiwUXz2MGfVv0x05QqjvTxwnnlbWLahwL6U?=
+ =?iso-8859-1?Q?apM75uoNYzOIpL80LXzBd9+Cn3dEAMhR3/G43YvgGlOtLew6JpcxfXCcCe?=
+ =?iso-8859-1?Q?yfeYR/No7GylO13ypxTtqiCoqvDbKmSNf0WG+nRuOgRmXyF/MtlPXkWf87?=
+ =?iso-8859-1?Q?JlS6Q2kFKA/rHrQ4RjAlpBsizIZBCueJCExiBJyRPSfnhCAbP9EmQyRXGU?=
+ =?iso-8859-1?Q?XGyztJyFZCur1tofdK2LwhPvwBgvM+HSXQb4m7Htu9mNNsL+WFeJQYraA+?=
+ =?iso-8859-1?Q?z9YdE9PMi0hSDKYFof3r5y4OWA3dhrnANS+oB0C5gPPBk9sjapqVUuWAJB?=
+ =?iso-8859-1?Q?BNkviIV2mmNzDt+ITTkZvNZodJGr/NLIUlJofQPAZuEfb9DU5wXEnLtoya?=
+ =?iso-8859-1?Q?NCunITYJBEmcaxJIayP1wVnRtv2eDxe8ITnaiMioSQBKRSw4Uhfxk9Lsw1?=
+ =?iso-8859-1?Q?OyVUdIhD3CHmVu9KCn/zZ77MjjH2vZ5D1u/nRUhuHHRpQreHgx8adOjzIp?=
+ =?iso-8859-1?Q?wggJH2170x3pCMGNVBQBlUQPGRMoBKZ0ScoqqPNFVnfzHgVJJjcle7j6Aq?=
+ =?iso-8859-1?Q?guwldyiLpO10bBeUabATR+QfdGwOvMEp6tUHS75NRby1xehYNAKHGx6a8s?=
+ =?iso-8859-1?Q?UWQK+dvOkVA/bpaNmU8adJkZmWZcl/fxetmzTUG8p+dPcj31w+DVw8U07b?=
+ =?iso-8859-1?Q?/iOD53Y/2PUoZwVzYlb4x9eeGq6jozMBGMvyweA2Gn328UqlLF3Aj0h1IY?=
+ =?iso-8859-1?Q?YLLyi2LvQ6PGglsiHJmQst+D4z3PD9UxAjhEX5l8SSFA8+m9PBoe0Q6J20?=
+ =?iso-8859-1?Q?2Hzefknk3Q0HivyizGD50bp+8Nz6JFuK+fkILYob1YBX/C1tEoxd9RFUJk?=
+ =?iso-8859-1?Q?Uj76oDiWdDTA2F9ExMeR4UM0LzPwVGJ1zrRnDSUavl4wiaWwOUJQfFO7gD?=
+ =?iso-8859-1?Q?ExeuR4Wx3xDJSt3p3wAGsIrHaPWxzNu7F0ls8V7wG1fq/STVWV+O1ZbNfc?=
+ =?iso-8859-1?Q?yncESoAkcQTOnv+U9yg=3D?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: AdRdubyBQLXDmejr7HBvIYUiFN6_Ogi_
-X-Proofpoint-ORIG-GUID: AdRdubyBQLXDmejr7HBvIYUiFN6_Ogi_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-20_08,2022-07-20_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 malwarescore=0
- suspectscore=0 impostorscore=0 adultscore=0 mlxlogscore=944 mlxscore=0
- bulkscore=0 phishscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
- definitions=main-2207200057
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB5176.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: be8cf7db-a2c9-44f9-a95e-08da6a6953be
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jul 2022 16:03:03.1698
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: uvHBOKEr1YWdD5fNewRGFNMTEa7A5GXULWsiHVDOOAu393cCsYneMuxtBqEr1JyQ6c6mY27ZwsFMj7BQiTPcS6dbpqSvICd94vnMQ48MpkI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB4174
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, creation of debugfs entries for TWT is failing during
-hardware restart because of the residual TWT files which were
-created during add_interface(). Since, struct arvif{} is memset
-to zero upon add_interface() invocation, when the hardware restart
-is triggered, arvif is memset to 0 and TWT files are attempted to
-create again which will fail because of the residual TWT files
-already in place, this leads to hardware restart failure.
+From: Ajay Singh <ajay.kathat@microchip.com>
 
-Also, it is not a good idea to return error from add_interface()
-because of debugfs file creation failures. Moreover, debugfs
-framework can very well handle the errors in it's create file &
-remove file APIs and the errors returned by these APIs are not
-checked in most usecases.
+WID_TX_POWER WID value is fetched from the firmware so it should be
+added in'g_cfg_byte' array to store the data which is received from
+firmware.
 
-Fix the HW restart failure by ignoring the errors returned from
-the debugfs APIs.
-
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
-
-Fixes: fe98a6137d03 ("ath11k: add debugfs for TWT debug calls")
-Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath11k/debugfs.c | 37 +++++++++--------------
- drivers/net/wireless/ath/ath11k/debugfs.h |  5 ++-
- drivers/net/wireless/ath/ath11k/mac.c     | 11 +++++--
- 3 files changed, 25 insertions(+), 28 deletions(-)
+ drivers/net/wireless/microchip/wilc1000/wlan_cfg.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
-index 3861616b48c8..8dcc5f7baf5f 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs.c
-@@ -1673,42 +1673,35 @@ static const struct file_operations ath11k_fops_twt_resume_dialog = {
- 	.open = simple_open
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan_cfg.c b/drivers/n=
+et/wireless/microchip/wilc1000/wlan_cfg.c
+index dba301378b7f..60eaf62fd164 100644
+--- a/drivers/net/wireless/microchip/wilc1000/wlan_cfg.c
++++ b/drivers/net/wireless/microchip/wilc1000/wlan_cfg.c
+@@ -22,6 +22,7 @@ static const struct wilc_cfg_byte g_cfg_byte[] =3D {
+ 	{WID_STATUS, 0},
+ 	{WID_RSSI, 0},
+ 	{WID_LINKSPEED, 0},
++	{WID_TX_POWER, 0},
+ 	{WID_WOWLAN_TRIGGER, 0},
+ 	{WID_NIL, 0}
  };
- 
--int ath11k_debugfs_add_interface(struct ath11k_vif *arvif)
-+void ath11k_debugfs_add_interface(struct ath11k_vif *arvif)
- {
- 	struct ath11k_base *ab = arvif->ar->ab;
- 
- 	if (arvif->vif->type != NL80211_IFTYPE_AP &&
- 	    !(arvif->vif->type == NL80211_IFTYPE_STATION &&
- 	      test_bit(WMI_TLV_SERVICE_STA_TWT, ab->wmi_ab.svc_map)))
--		return 0;
--
--	if (!arvif->debugfs_twt) {
--		arvif->debugfs_twt = debugfs_create_dir("twt",
--							arvif->vif->debugfs_dir);
--		if (!arvif->debugfs_twt || IS_ERR(arvif->debugfs_twt)) {
--			ath11k_warn(ab, "failed to create directory %p\n",
--				    arvif->debugfs_twt);
--			arvif->debugfs_twt = NULL;
--			return -1;
--		}
-+		return;
- 
--		debugfs_create_file("add_dialog", 0200, arvif->debugfs_twt,
--				    arvif, &ath11k_fops_twt_add_dialog);
-+	arvif->debugfs_twt = debugfs_create_dir("twt",
-+						arvif->vif->debugfs_dir);
-+	debugfs_create_file("add_dialog", 0200, arvif->debugfs_twt,
-+			    arvif, &ath11k_fops_twt_add_dialog);
- 
--		debugfs_create_file("del_dialog", 0200, arvif->debugfs_twt,
--				    arvif, &ath11k_fops_twt_del_dialog);
-+	debugfs_create_file("del_dialog", 0200, arvif->debugfs_twt,
-+			    arvif, &ath11k_fops_twt_del_dialog);
- 
--		debugfs_create_file("pause_dialog", 0200, arvif->debugfs_twt,
--				    arvif, &ath11k_fops_twt_pause_dialog);
-+	debugfs_create_file("pause_dialog", 0200, arvif->debugfs_twt,
-+			    arvif, &ath11k_fops_twt_pause_dialog);
- 
--		debugfs_create_file("resume_dialog", 0200, arvif->debugfs_twt,
--				    arvif, &ath11k_fops_twt_resume_dialog);
--	}
--	return 0;
-+	debugfs_create_file("resume_dialog", 0200, arvif->debugfs_twt,
-+			    arvif, &ath11k_fops_twt_resume_dialog);
- }
- 
- void ath11k_debugfs_remove_interface(struct ath11k_vif *arvif)
- {
-+	if (!arvif->debugfs_twt)
-+		return;
-+
- 	debugfs_remove_recursive(arvif->debugfs_twt);
- 	arvif->debugfs_twt = NULL;
- }
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs.h b/drivers/net/wireless/ath/ath11k/debugfs.h
-index 30c00cb28311..15edca8e0aec 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs.h
-+++ b/drivers/net/wireless/ath/ath11k/debugfs.h
-@@ -306,7 +306,7 @@ static inline int ath11k_debugfs_rx_filter(struct ath11k *ar)
- 	return ar->debug.rx_filter;
- }
- 
--int ath11k_debugfs_add_interface(struct ath11k_vif *arvif);
-+void ath11k_debugfs_add_interface(struct ath11k_vif *arvif);
- void ath11k_debugfs_remove_interface(struct ath11k_vif *arvif);
- void ath11k_debugfs_add_dbring_entry(struct ath11k *ar,
- 				     enum wmi_direct_buffer_module id,
-@@ -386,9 +386,8 @@ static inline int ath11k_debugfs_get_fw_stats(struct ath11k *ar,
- 	return 0;
- }
- 
--static inline int ath11k_debugfs_add_interface(struct ath11k_vif *arvif)
-+static inline void ath11k_debugfs_add_interface(struct ath11k_vif *arvif)
- {
--	return 0;
- }
- 
- static inline void ath11k_debugfs_remove_interface(struct ath11k_vif *arvif)
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 3746c839efe0..cc98c0c9b7e0 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6236,6 +6236,13 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
- 		goto err;
- 	}
- 
-+	/* In the case of hardware recovery, debugfs files are
-+	 * not deleted since ieee80211_ops.remove_interface() is
-+	 * not invoked. In such cases, try to delete the files.
-+	 * These will be re-created later.
-+	 */
-+	ath11k_debugfs_remove_interface(arvif);
-+
- 	memset(arvif, 0, sizeof(*arvif));
- 
- 	arvif->ar = ar;
-@@ -6417,9 +6424,7 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	ret = ath11k_debugfs_add_interface(arvif);
--	if (ret)
--		goto err_peer_del;
-+	ath11k_debugfs_add_interface(arvif);
- 
- 	mutex_unlock(&ar->conf_mutex);
- 
--- 
-2.35.1
-
+--=20
+2.34.1
