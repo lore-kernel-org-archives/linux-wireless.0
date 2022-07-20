@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4FAFC43334
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 01:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB56FCCA47F
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 01:26:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230073AbiGTBZH (ORCPT
+        id S242010AbiGTBZ7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:25:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58448 "EHLO
+        Tue, 19 Jul 2022 21:25:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241748AbiGTBXH (ORCPT
+        with ESMTP id S242354AbiGTBZB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jul 2022 21:23:07 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 807D271BE9;
-        Tue, 19 Jul 2022 18:17:01 -0700 (PDT)
+        Tue, 19 Jul 2022 21:25:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E44C2743EC;
+        Tue, 19 Jul 2022 18:17:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 911486176A;
-        Wed, 20 Jul 2022 01:17:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE603C341CA;
-        Wed, 20 Jul 2022 01:16:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7B263616F6;
+        Wed, 20 Jul 2022 01:17:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94BF0C341C6;
+        Wed, 20 Jul 2022 01:17:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279821;
-        bh=J/PiNpsF7Xkk+5ElXBELyIIZaTdZvDM9iTNCl5mZQv8=;
+        s=k20201202; t=1658279872;
+        bh=csDc6vGOsv3hNnFMLo10fyPonQpYIkuELcqoUiBKk3Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F9mJWAVsyBGGjSyRBBMcoC2L2e2E4ud6ZZKuIm9cSNqGu44AnBstYCqMXKIzgMU/s
-         5MeGOis6Llda674NafLYi84YlwaHAqcCjHXbwPYJh59y85dL1VIK2y0/dRP9J8kcBM
-         g60bIxIu74YVOm5aDQhKEV9w5PXWDv1Ku5QQjvKNf6S87F5aUlKRTDxKKTuTVquhv6
-         PsC7PLWfhuBr2Xn4AE+G1J9siowTSHqw13T2KlgvR1OHSKQzZUMMEOjR9BWqbJBZ0Z
-         Aeyt+8dWIz3gKRYomy5CAyzGWP5PM8g/xc7Fw4H+57V0dbZgs0YexXWbYX7sIInLXO
-         wWNBOIe0ocQCg==
+        b=iq9HW4xgxFaRe0UNTLjJj86ZSL2H4jKAU92wIA0+arbwOt4FjIRypuuYSdPkfyOas
+         2zO7rTQgN9E/uNndpavU3Okk2CtmYw0p2rUoqTkalOENFNf0+atCKylw9GcJ0ete7i
+         tNYaxDXazGyLgaPCxgzS9GWgxBduqwLNGoa57VLd09JI4jePyF3QJfZJU1qvu6vDBt
+         iOmPcUN0Hu3QsrQ5GqAW1bbwfqvdlYUmJnlaDUOq8NC/eUhXQoQBGZz7nlBrkZKhqy
+         Ewwck6lFGomm4Z5f1JkXCjqg3UDaqnSFeT7mzCIW5QPm0PzKx4JhMuBXF2D1Q7V6Lv
+         u+aapAfJcWhFw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>,
@@ -42,12 +42,12 @@ Cc:     Felix Fietkau <nbd@nbd.name>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 11/25] wifi: mac80211: do not wake queues on a vif that is being stopped
-Date:   Tue, 19 Jul 2022 21:16:02 -0400
-Message-Id: <20220720011616.1024753-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 06/16] wifi: mac80211: do not wake queues on a vif that is being stopped
+Date:   Tue, 19 Jul 2022 21:17:20 -0400
+Message-Id: <20220720011730.1025099-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220720011616.1024753-1-sashal@kernel.org>
-References: <20220720011616.1024753-1-sashal@kernel.org>
+In-Reply-To: <20220720011730.1025099-1-sashal@kernel.org>
+References: <20220720011730.1025099-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 5 insertions(+)
 
 diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 3a15ef8dd322..334f58826d19 100644
+index ddc001ad9055..48bda8aaa90a 100644
 --- a/net/mac80211/iface.c
 +++ b/net/mac80211/iface.c
-@@ -377,7 +377,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+@@ -803,7 +803,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
  	bool cancel_scan;
  	struct cfg80211_nan_func *func;
  
@@ -93,10 +93,10 @@ index 3a15ef8dd322..334f58826d19 100644
  	cancel_scan = rcu_access_pointer(local->scan_sdata) == sdata;
  	if (cancel_scan)
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a1f129292ad8..471f7fd511c9 100644
+index c1c117fdf318..8ae0186091b6 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -301,6 +301,9 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+@@ -250,6 +250,9 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
  	local_bh_disable();
  	spin_lock(&fq->lock);
  
