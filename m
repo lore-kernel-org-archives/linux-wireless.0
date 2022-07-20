@@ -2,160 +2,140 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E6B2C433EF
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 21:36:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9691C433EF
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 22:25:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231156AbiGTVgF (ORCPT
+        id S230385AbiGTWZ5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Jul 2022 17:36:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58848 "EHLO
+        Wed, 20 Jul 2022 18:25:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbiGTVgE (ORCPT
+        with ESMTP id S229449AbiGTWZ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Jul 2022 17:36:04 -0400
-Received: from mail-4318.protonmail.ch (mail-4318.protonmail.ch [185.70.43.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 068E11F2C5
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2022 14:36:02 -0700 (PDT)
-Date:   Wed, 20 Jul 2022 21:35:55 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-        s=protonmail3; t=1658352960; x=1658612160;
-        bh=jH4VDOPv2lb/d3yrm1e5K4Tho7HF0+4gYPmK5Trdgk4=;
-        h=Date:To:From:Reply-To:Subject:Message-ID:Feedback-ID:From:To:Cc:
-         Date:Subject:Reply-To:Feedback-ID:Message-ID;
-        b=Debjlo6Fhvczg02s+bKqiwa59D37w9y5r9HfcN7F3Q7yOWJGKh66VWKgimV5IreHS
-         ziB+oY0zzVHeIlvQr9aSvtFo0acM2XeMiY58VbFtpKBAa1q23K1ZEhap65zhD+gNDY
-         0hKiWrgtCbw5xlSrMYfInlD1rsWu0cu+CSzDoZEUdroYQbdUcrNrq76nnmgBVJ5gRo
-         aMNcl7NQRNz8mETbmnQT45gpumYIATD33ZGFsXMU+dGwfWJg+aO1Mx2A7uUSenjMFo
-         2GVpfFS8A+CwQghg/VME2GZiMfZ3VUbeaMLLyJTv1j6U1evrkQvVZyGk5GgXcskmtE
-         hc853zAS8eG8Q==
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From:   rtl8821cerfe2 <rtl8821cerfe2@protonmail.com>
-Reply-To: rtl8821cerfe2 <rtl8821cerfe2@protonmail.com>
-Subject: rtw88: Doesn't work for 60-90 seconds several times a day
-Message-ID: <Ej2iRcw0tVYRZD-CNBij8Uu3T-8IG-NVQ_EUM4Oz6IstXLQn0JKvkcfec1RDYKReWdi7JbPiMTOmeihtId1j91nq_IdMWYY482HTOXecGCg=@protonmail.com>
-Feedback-ID: 34463299:user:proton
+        Wed, 20 Jul 2022 18:25:57 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E172D5F5B
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2022 15:25:49 -0700 (PDT)
+X-UUID: 7303a5cbfcee482ebc19e8e599b5ae40-20220721
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.8,REQID:32d62e1f-1f76-4e4c-a03b-6bba437f19f6,OB:20,L
+        OB:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,RULE:Release_Ham,AC
+        TION:release,TS:100
+X-CID-INFO: VERSION:1.1.8,REQID:32d62e1f-1f76-4e4c-a03b-6bba437f19f6,OB:20,LOB
+        :0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,RULE:Spam_GS981B3D,AC
+        TION:quarantine,TS:100
+X-CID-META: VersionHash:0f94e32,CLOUDID:5a9f06d8-5d6d-4eaf-a635-828a3ee48b7c,C
+        OID:dfdc1513ed4c,Recheck:0,SF:28|17|19|48,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:1,File:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 7303a5cbfcee482ebc19e8e599b5ae40-20220721
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1451868277; Thu, 21 Jul 2022 06:25:43 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Thu, 21 Jul 2022 06:25:41 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.3 via Frontend Transport; Thu, 21 Jul 2022 06:25:41 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
+        <km.lin@mediatek.com>, <jenhao.yang@mediatek.com>,
+        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <ted.huang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
+        <jsiuda@google.com>, <frankgor@google.com>, <kuabhs@google.com>,
+        <druth@google.com>, <abhishekpandit@google.com>,
+        <shawnku@google.com>, <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v2 2/4] mt76: mt7921s: fix race issue between reset and suspend/resume
+Date:   Thu, 21 Jul 2022 06:25:38 +0800
+Message-ID: <0a8e8ed3b179da75d4e141e0384992864e36b33a.1658355599.git.sean.wang@kernel.org>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <5f835553ee8b76e4a4ed83f9562eaa0b1a24c1e6.1658355599.git.sean.wang@kernel.org>
+References: <5f835553ee8b76e4a4ed83f9562eaa0b1a24c1e6.1658355599.git.sean.wang@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello.
+From: Sean Wang <sean.wang@mediatek.com>
 
-I am unable to open any sites in Firefox for 60-90 seconds at a time.
-On one occasion it was 156 seconds. Firefox gives up after 20 seconds
-or so. NetworkManager reports "limited connectivity". The router doesn't
-reply to pings. The journal shows that the laptop remains connected to
-the router. This happens several times a day.
+It is unexpected that the reset work is running simultaneously with
+the suspend or resume context and it is possible that reset work is still
+running even after mt7921 is suspended if we don't fix the race issue.
 
-However, my IRC client seems to be unaffected. It never detected any
-abnormally high lag during these events, not even the one that lasted
-156 seconds. It checks the lag every 30 seconds. Also, the bot named
-"phrik" from the #archlinux-offtopic channel reacts immediately when
-I send it "!ping" during one of these events. (It sends back "pong".)
-So I guess existing connections are not affected.
+Thus, the suspend procedure should be waiting until the reset is completed
+at the beginning and ignore the subsequent the reset requests.
 
-I have had this problem ever since support for RTL8821CE with RFE 2
-was added. (The wifi card's RFE type is 2.)
+In case there is an error that happens during either suspend or resume
+handler, we will schedule a reset task to recover the error before
+returning the error code to ensure we can immediately fix the error there.
 
-Other devices connected to the same router don't have this problem.
+Fixes: ca74b9b907f9 ("mt76: mt7921s: add reset support")
+Co-developed-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: YN Chen <YN.Chen@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+v2: use flush_work instead of cancel_work_sync
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/sdio.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-The laptop and the router are in the same room. The distance
-between them is about 3 meters.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
+index 487acd6e2be8..2face849fb4f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
+@@ -206,6 +206,7 @@ static int mt7921s_suspend(struct device *__dev)
+ 	pm->suspended = true;
+ 	set_bit(MT76_STATE_SUSPEND, &mdev->phy.state);
+ 
++	flush_work(&dev->reset_work);
+ 	cancel_delayed_work_sync(&pm->ps_work);
+ 	cancel_work_sync(&pm->wake_work);
+ 
+@@ -261,6 +262,9 @@ static int mt7921s_suspend(struct device *__dev)
+ 	clear_bit(MT76_STATE_SUSPEND, &mdev->phy.state);
+ 	pm->suspended = false;
+ 
++	if (err < 0)
++		mt7921_reset(&dev->mt76);
++
+ 	return err;
+ }
+ 
+@@ -276,7 +280,7 @@ static int mt7921s_resume(struct device *__dev)
+ 
+ 	err = mt7921_mcu_drv_pmctrl(dev);
+ 	if (err < 0)
+-		return err;
++		goto failed;
+ 
+ 	mt76_worker_enable(&mdev->tx_worker);
+ 	mt76_worker_enable(&mdev->sdio.txrx_worker);
+@@ -288,11 +292,12 @@ static int mt7921s_resume(struct device *__dev)
+ 		mt76_connac_mcu_set_deep_sleep(mdev, false);
+ 
+ 	err = mt76_connac_mcu_set_hif_suspend(mdev, false);
+-	if (err)
+-		return err;
+-
++failed:
+ 	pm->suspended = false;
+ 
++	if (err < 0)
++		mt7921_reset(&dev->mt76);
++
+ 	return err;
+ }
+ 
+-- 
+2.25.1
 
-
-These are the things I tried which did not help:
-
-- The rtw88_core option disable_lps_deep=3D1
-
-- `iw wlo1 set power_save off`
-
-- Installing wireless-regdb and uncommenting my country in
-  /etc/conf.d/wireless-regdom
-
-- Switching the router to "n only" mode. Previously it was in "b/g/n"
-  mode.
-
-- Making the router use channel 9 instead of "auto". By itself it was
-  selecting channels 1 or 11 the few times I checked that. Channel 9
-  seemed less crowded than those.
-
-- Making the router use 40 MHz channel width instead of the "20/40"
-  setting. This doubled the speed but didn't help with my problem.
-
-- The firmware from the rtl8821ce driver [0] (version 20.1.0),
-  instead of the one from linux-firmware (version 24.11.0). I used the
-  one with the length of 137616 bytes.
-
-This doesn't happen with the rtl8821ce driver, which is why I extracted
-that firmware from it, to see if it's a firmware issue.
-
-
-Pinging the router all day seems to prevent this problem. Enabling all
-the debug flags for rtw88_core also *may* prevent it. I'm not sure about
-that.
-
-
-Most of the time I don't have any bluetooth devices connected.
-When I do, they don't cause problems.
-
-
-I captured a bit of wifi traffic using another laptop, including two of
-these events, and noticed something strange:
-
-- rtw88 sends "Null function" telling the router it's going to sleep
-- router immediately sends ack (after less than 1 ms)
-- rtw88 resends "Null function" (same SN, Retry flag set)
-- router immediately sends ack
-- rtw88 resends
-- router immediately sends ack
-- rtw88 resends
-- ...
-- ...
-
-rtw88 resends the "Null function" 3-4 times, even though the router
-promptly sends ack each time, then it sends a new "Null function" with
-different SN and the process repeats. This seems to happen all the time,
-not just when I can't open any pages in Firefox. The rtl8821ce driver
-doesn't do this, but rtw88 with the old 20.1.0 firmware does. My phone
-doesn't do this either.
-
-I can provide the captures in private.
-
-
-Currently I'm using the rtw88_pci option disable_aspm=3D1, because kernel
-5.18 brought the freezes back. [1]
-
-
-My laptop is HP 250 G7 with a Core i3 7020U CPU.
-
-The RTL8821CE wifi card is in M.2 slot, not soldered to the motherboard,
-even though the interface is named wlo1. It has one antenna, in case
-that matters.
-
-The router is a Fiberhome HG6544C.
-
-The network is secured with WPA2 Personal.
-
-The kernel version is 5.18.5-arch1-1.
-
-The wifi firmware version is 24.11.0.
-
-NetworkManager version is 1.38.2-1.
-
-wpa_supplicant version is 2.10-4.
-
-The operating system is Arch Linux.
-
-
-
-Just out of curiosity, what is C2H with id 0x15 ? It is not handled by
-rtw88, but the firmware sends it often.
-
-
-[0] https://raw.githubusercontent.com/tomaspinho/rtl8821ce/be733dc86781c685=
-71650b395dd0fa6b53c0a039/hal/rtl8821c/hal8821c_fw.c
-[1] https://lore.kernel.org/linux-wireless/Te_PJvJjKCi-lK28Zu0d8VQG0AGdwTl6=
-cJydYEETLbc3gN0l8liXH1DSOZnKxUHYGxavLBCs1sqos2e6jeiRzzO0RLRSISdWvTiiPp0v9kM=
-=3D@protonmail.com/
