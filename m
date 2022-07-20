@@ -2,52 +2,54 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F829CCA485
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 01:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E6F7CCA47F
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Jul 2022 01:23:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240795AbiGTBXK (ORCPT
+        id S240877AbiGTBXM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Jul 2022 21:23:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32842 "EHLO
+        Tue, 19 Jul 2022 21:23:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240792AbiGTBNf (ORCPT
+        with ESMTP id S241693AbiGTBT2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Jul 2022 21:13:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59DD64B49F;
-        Tue, 19 Jul 2022 18:12:40 -0700 (PDT)
+        Tue, 19 Jul 2022 21:19:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9117968DFD;
+        Tue, 19 Jul 2022 18:15:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EAF7E61740;
-        Wed, 20 Jul 2022 01:12:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F3D6C36AE2;
-        Wed, 20 Jul 2022 01:12:38 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 04A246176F;
+        Wed, 20 Jul 2022 01:15:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 140E2C341D0;
+        Wed, 20 Jul 2022 01:15:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658279559;
-        bh=r7YlJCntL0XrhxsAKw8631lX25bI5NcVLxGL+fraBR8=;
+        s=k20201202; t=1658279733;
+        bh=VVfD/PvNIBacnTAoesvePzKBgQsTor72WSKO/3BjT6w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ozt0DOuTUp/3LRh/zJGeY72jrdIIu/8IOWDXFVVHsDolThBxKli0m57CIsS4/EdAA
-         VAhy6WmXvbv5axia+iSmoMi9be47/6X4w3GqirHGo8uxRXNF+b6DvbwFxDe7ii0E9A
-         IDRvjInv4yFvMs++dC+mgUoqY8jvpqemKIjmpi56DxwcKu+rBZYXa1LXd7+xjISJlI
-         l+58mCu7p6d4+90p4GzyHLE7TLDlFajqxn+lDSEabpQR8OWC50nyU30Qd9UcbdHfZ3
-         gZ/X1i0ooOlmIwCz6pUdzZQSoRzjOS+CAkqK6wbs2VuHSIn0QQrRcbXSDtyJZ9zLsZ
-         fNlT48gSwhYTA==
+        b=Y/4dGnA1vnZmQFmapklWh734saCqEC7I8UfRuDG390wwXSUSXYk6sLEgFLWIR34Gn
+         eluZ1gsgrpePw49oQmtFKOIghD68c5grEZKfRTTir1ZkiSp7M4l7dSre8fsqx/hg48
+         8JZbxNsKgVYG8nMd/F3Yh+Nx2GbiGYzM+5BqSOiS5ud/ATGu+n23JjokuW7nBRTjM1
+         2RvIL8NYAmypnQesZ6ZxqpwnjK3WpoyHoD7Aw9DV6H5Y2mgJdlOvMzQ/8dJhDZd2wj
+         8vg8KAVkw1oIl0ZpTuGei5c0dJv/Rud6OiTG2tGl3SyrRz7UekYlve5Ty1xqewmGGw
+         8TDLj7scnpLKw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Vinayak Yadawad <vinayak.yadawad@broadcom.com>,
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@kernel.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 31/54] wifi: cfg80211: Allow P2P client interface to indicate port authorization
-Date:   Tue, 19 Jul 2022 21:10:08 -0400
-Message-Id: <20220720011031.1023305-31-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 24/42] wifi: mac80211: do not wake queues on a vif that is being stopped
+Date:   Tue, 19 Jul 2022 21:13:32 -0400
+Message-Id: <20220720011350.1024134-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220720011031.1023305-1-sashal@kernel.org>
-References: <20220720011031.1023305-1-sashal@kernel.org>
+In-Reply-To: <20220720011350.1024134-1-sashal@kernel.org>
+References: <20220720011350.1024134-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -55,38 +57,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Vinayak Yadawad <vinayak.yadawad@broadcom.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 8d70f33ed7207e82e51d5a4436c8ba2268a83b14 ]
+[ Upstream commit f856373e2f31ffd340e47e2b00027bd4070f74b3 ]
 
-In case of 4way handshake offload, cfg80211_port_authorized
-enables driver to indicate successful 4way handshake to cfg80211 layer.
-Currently this path of port authorization is restricted to
-interface type NL80211_IFTYPE_STATION. This patch extends
-the use of port authorization API for P2P client as well.
+When a vif is being removed and sdata->bss is cleared, __ieee80211_wake_txqs
+can still be called on it, which crashes as soon as sdata->bss is being
+dereferenced.
+To fix this properly, check for SDATA_STATE_RUNNING before waking queues,
+and take the fq lock when setting it (to ensure that __ieee80211_wake_txqs
+observes the change when running on a different CPU)
 
-Signed-off-by: Vinayak Yadawad <vinayak.yadawad@broadcom.com>
-Link: https://lore.kernel.org/r/ef25cb49fcb921df2e5d99e574f65e8a009cc52c.1655905440.git.vinayak.yadawad@broadcom.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Acked-by: Toke Høiland-Jørgensen <toke@kernel.org>
+Link: https://lore.kernel.org/r/20220531190824.60019-1-nbd@nbd.name
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/sme.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/iface.c | 2 ++
+ net/mac80211/util.c  | 3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index ff4d48fcbfb2..607a68911047 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -1031,7 +1031,8 @@ void __cfg80211_port_authorized(struct wireless_dev *wdev, const u8 *bssid)
- {
- 	ASSERT_WDEV_LOCK(wdev);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 041859b5b71d..1f6878a14fff 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -377,7 +377,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 	bool cancel_scan;
+ 	struct cfg80211_nan_func *func;
  
--	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION))
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
-+		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
- 		return;
++	spin_lock_bh(&local->fq.lock);
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
++	spin_unlock_bh(&local->fq.lock);
  
- 	if (WARN_ON(!wdev->current_bss) ||
+ 	cancel_scan = rcu_access_pointer(local->scan_sdata) == sdata;
+ 	if (cancel_scan)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index be1911d8089f..d85a39a7b843 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -301,6 +301,9 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+ 	local_bh_disable();
+ 	spin_lock(&fq->lock);
+ 
++	if (!test_bit(SDATA_STATE_RUNNING, &sdata->state))
++		goto out;
++
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP)
+ 		ps = &sdata->bss->ps;
+ 
 -- 
 2.35.1
 
