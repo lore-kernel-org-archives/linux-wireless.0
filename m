@@ -2,191 +2,267 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D020C433EF
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 13:53:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A23E6CCA48C
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 20:09:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235271AbiGVNx2 (ORCPT
+        id S236833AbiGVUJT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jul 2022 09:53:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60582 "EHLO
+        Fri, 22 Jul 2022 16:09:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229671AbiGVNxV (ORCPT
+        with ESMTP id S236524AbiGVUJC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jul 2022 09:53:21 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67CA799669
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 06:53:20 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26MDEhob019065;
-        Fri, 22 Jul 2022 13:53:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding :
- content-type; s=qcppdkim1;
- bh=tjB4iQEkhBBqLzSqiv3yj1Fdo+3Ub3Ginm5un8RuVJ0=;
- b=E5Baayv1nfLUtf+GUBCYuZnusHM1xIpXC8MiCVQe7iYoKI0BU1YAp4GzWStX35CCWSpu
- FVZRY6aULFT1G+4cXtjKPsXYi80yEroXyHJrWuc17jb8bOMrS3VGObCEwjihquB4yqeH
- P4uFgZFrabkLXay7icv41rkBT1LtTx26gOgH0qiN+BiMlNVYJoa140uchuY0pcVUMnQE
- GhzxM9bVC2TON5Tp1l/y1Q8WPIlquRS6oELZFkV+2lFpFYbwwxZ+qQiUkBW6eNdzCHgj
- FlNFMtebFL3a14rM3t12t5Ifas7hku+7LYAc0GxFcQthRNlhOZdXlDaG50tyCD+t1ukX Og== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hfm47s8dk-4
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 22 Jul 2022 13:53:17 +0000
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.47.97.222])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26MDBuOF027190
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 22 Jul 2022 13:11:56 GMT
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Fri, 22 Jul 2022 06:11:56 -0700
-Received: from cnss-mw-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Fri, 22 Jul 2022 06:11:54 -0700
-From:   Veerendranath Jakkam <quic_vjakkam@quicinc.com>
-To:     <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] cfg80211: Add link_id to cfg80211_ch_switch_started_notify()
-Date:   Fri, 22 Jul 2022 18:41:42 +0530
-Message-ID: <20220722131143.3438042-1-quic_vjakkam@quicinc.com>
-X-Mailer: git-send-email 2.25.1
+        Fri, 22 Jul 2022 16:09:02 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2A701A6F98
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 13:09:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1658520540;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=9a81zK1rXqyZqW0NexaO3ZE6gbfBHT1L7oOMOxkQ2f4=;
+        b=U/8+uYKFqOKVbEQzbSeggGm36lDsqjXc5mEh7sRvbe0t4NhQBP5S8prBSqo1cGmjdSZW9Y
+        3EOhTjei1zmg7Fn5c9X7UNbHZQk8S+vwuQMKeDbwrazgS68juQuAanMGbKOEJ1cotC4AZA
+        fLhnwUjeGCMbtQaea1nAELliRwhLiVI=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-528-x_jOxS1nNlG8KHEIQ9CZkQ-1; Fri, 22 Jul 2022 16:08:53 -0400
+X-MC-Unique: x_jOxS1nNlG8KHEIQ9CZkQ-1
+Received: by mail-wm1-f71.google.com with SMTP id ay19-20020a05600c1e1300b003a315c2c1c0so4895821wmb.7
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 13:08:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=9a81zK1rXqyZqW0NexaO3ZE6gbfBHT1L7oOMOxkQ2f4=;
+        b=WOGYEzC5aXDbfyXSopcSjWZ+xgl7EKXl9gJ4jy7YyHc3wl+y0fieL9LQdA8BXvV+8y
+         FA9I3wJF27CUlUCJC7FBSoHpbfMgzeU0JfccTJboD0w79pUuMvnWRdlkjjLDUsmhpHp1
+         b8K0/1O9nNT94R7Zp6bXRocXeWQAsNPQco4MSR3uq5/RzdYVXTC0wwS+LtREYhCksFE9
+         uN2aUslYq8QgtZnDuk7Ym3UebdIwhCdnqw+dTW3NUqpKCYgzwb8rw4JZQG4GRey2JuNn
+         B4rrzntt5rM4nToOO5/VjS0Efa9pmdUh6ZEUP2RXINL2aUy+pc4NkvN2llsq0afPOshT
+         UVDA==
+X-Gm-Message-State: AJIora9NPsxQY2/qo/zq1XiJC48EnpG/rZ9qeXC1Lhtrnh66saZ+NScC
+        RH9RbX3FkCWpxN3mjx+GYbEiV5P+0F5kH6NWk6DcT0KPtY3R/ea/jAbki+kEul5DzRBm8mLSlKz
+        TBuPMZkGGmMCaoEyYjlDftodn26o=
+X-Received: by 2002:a7b:c8d3:0:b0:3a2:fe0d:ba2e with SMTP id f19-20020a7bc8d3000000b003a2fe0dba2emr13994339wml.115.1658520531787;
+        Fri, 22 Jul 2022 13:08:51 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1sQRY/qa4aHPYDods+ZCnZ3soQnYNBNfi4qRBz8v8FDMPquyo1CIoSCjj68nw4yGhy/3aDsBw==
+X-Received: by 2002:a7b:c8d3:0:b0:3a2:fe0d:ba2e with SMTP id f19-20020a7bc8d3000000b003a2fe0dba2emr13994318wml.115.1658520531447;
+        Fri, 22 Jul 2022 13:08:51 -0700 (PDT)
+Received: from vschneid.remote.csb ([185.11.37.247])
+        by smtp.gmail.com with ESMTPSA id p20-20020a1c5454000000b003a30c3d0c9csm10115170wmi.8.2022.07.22.13.08.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 22 Jul 2022 13:08:50 -0700 (PDT)
+From:   Valentin Schneider <vschneid@redhat.com>
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-wireless@vger.kernel.org
+Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Rui Salvaterra <rsalvaterra@gmail.com>,
+        "Eric W . Biederman" <ebiederm@xmission.com>,
+        stable@vger.kernel.org, Gregory Erwin <gregerwin256@gmail.com>,
+        Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH v10] ath9k: let sleep be interrupted when unregistering
+ hwrng
+In-Reply-To: <20220719201108.264322-1-Jason@zx2c4.com>
+References: <CAHmME9qrd25vfRYYvCWtPg+wVC5joEzzJiihCN+L4rqMfTL4Rg@mail.gmail.com>
+ <20220719201108.264322-1-Jason@zx2c4.com>
+Date:   Fri, 22 Jul 2022 21:08:49 +0100
+Message-ID: <xhsmhfsisgbam.mognet@vschneid.remote.csb>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 2kZznEus_ltXbC-te6Vyn0_INnWVhbN0
-X-Proofpoint-ORIG-GUID: 2kZznEus_ltXbC-te6Vyn0_INnWVhbN0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-22_04,2022-07-21_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- clxscore=1015 adultscore=0 mlxlogscore=999 bulkscore=0 malwarescore=0
- impostorscore=0 phishscore=0 mlxscore=0 spamscore=0 suspectscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207220058
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add link_id parameter to cfg80211_ch_switch_started_notify() to allow
-driver to indicate on which link channel switch started on MLD.
+On 19/07/22 22:11, Jason A. Donenfeld wrote:
 
-Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+> diff --git a/include/linux/sched.h b/include/linux/sched.h
+> index c46f3a63b758..f164098fb614 100644
+> --- a/include/linux/sched.h
+> +++ b/include/linux/sched.h
+> @@ -1936,6 +1936,7 @@ extern struct task_struct *find_get_task_by_vpid(pid_t nr);
+>
+>  extern int wake_up_state(struct task_struct *tsk, unsigned int state);
+>  extern int wake_up_process(struct task_struct *tsk);
+> +extern int wake_up_task_interruptible(struct task_struct *tsk);
+>  extern void wake_up_new_task(struct task_struct *tsk);
+>
+>  #ifdef CONFIG_SMP
+> diff --git a/include/linux/sched/signal.h b/include/linux/sched/signal.h
+> index cafbe03eed01..56a15f35e7b3 100644
+> --- a/include/linux/sched/signal.h
+> +++ b/include/linux/sched/signal.h
+> @@ -364,7 +364,7 @@ static inline void clear_notify_signal(void)
+>  static inline bool __set_notify_signal(struct task_struct *task)
+>  {
+>       return !test_and_set_tsk_thread_flag(task, TIF_NOTIFY_SIGNAL) &&
+> -	       !wake_up_state(task, TASK_INTERRUPTIBLE);
+> +	       !wake_up_task_interruptible(task);
+>  }
+>
+>  /*
+> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> index da0bf6fe9ecd..b178940185d7 100644
+> --- a/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -4280,6 +4280,12 @@ int wake_up_process(struct task_struct *p)
+>  }
+>  EXPORT_SYMBOL(wake_up_process);
+>
+> +int wake_up_task_interruptible(struct task_struct *p)
+> +{
+> +	return try_to_wake_up(p, TASK_INTERRUPTIBLE, 0);
+> +}
+> +EXPORT_SYMBOL_GPL(wake_up_task_interruptible);
+> +
+>  int wake_up_state(struct task_struct *p, unsigned int state)
+>  {
+>       return try_to_wake_up(p, state, 0);
+> --
+> 2.35.1
+
+
+The sched changes are unfortunate, as I had understood it the alternative
+would be fixing all sleeping hwrng's to make them have a proper wait
+pattern that doesn't require being sent a signal to avoid missing events,
+i.e. instead of 
+
+  hwrng->read():                               devm_hwrng_unregister():
+    schedule_timeout_interruptible(x);           set_notify_signal(waiting_reader);
+
+do
+
+  hwrng->read():                               devm_hwrng_unregister():
+    set_current_state(TASK_INTERRUPTIBLE)        rng->dying = true;
+    if (!rng->dying)                             wake_up_process(waiting_reader);
+        schedule_timeout(x);
+
+I had initially convinced myself this would be somewhat involved, but
+writing the above I thought maybe not... The below is applied on top of
+your v10, would you be able to test whether it actually works?
+
+I apologize for telling you to do one thing and then suggesting something else...
+
+IMO set_notify_signal() is for interrupting tasks that are in a wait-loop
+that has nothing to do with the calling code (e.g. task_work, I assume
+livepatching does that for the same reason), but here it's hwrng core code
+interrupting a sleeping hwrng device.
+
+It does however mean patching up any sleeping hwrng (a quick search tells
+me there are more, e.g. npcm-rng does readb_poll_timeout())
+
 ---
- include/net/cfg80211.h |  4 +++-
- net/mac80211/cfg.c     |  2 +-
- net/mac80211/mlme.c    |  2 +-
- net/wireless/nl80211.c |  8 ++++++--
- net/wireless/trace.h   | 11 +++++++----
- 5 files changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d5af3a7fc2b4..7b74aa0de04b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -8158,6 +8158,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
-  * cfg80211_ch_switch_started_notify - notify channel switch start
-  * @dev: the device on which the channel switch started
-  * @chandef: the future channel definition
-+ * @link_id: the link ID for MLO, must be 0 for non-MLO
-  * @count: the number of TBTTs until the channel switch happens
-  * @quiet: whether or not immediate quiet was requested by the AP
-  *
-@@ -8167,7 +8168,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
-  */
- void cfg80211_ch_switch_started_notify(struct net_device *dev,
- 				       struct cfg80211_chan_def *chandef,
--				       u8 count, bool quiet);
-+				       unsigned int link_id, u8 count,
-+				       bool quiet);
+diff --git a/drivers/char/hw_random/core.c b/drivers/char/hw_random/core.c
+index df45c265878e..40a73490bfdc 100644
+--- a/drivers/char/hw_random/core.c
++++ b/drivers/char/hw_random/core.c
+@@ -522,9 +522,12 @@ static int hwrng_fillfn(void *unused)
+ 			break;
  
- /**
-  * ieee80211_operating_class_to_band - convert operating class to band
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fe6500b36953..3d8b7107e8cb 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3733,7 +3733,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
+ 		if (rc <= 0) {
+-			if (kthread_should_stop())
++			set_current_state(TASK_INTERRUPTIBLE);
++			if (kthread_should_stop()) {
++				__set_current_state(TASK_RUNNING);
+ 				break;
+-			schedule_timeout_interruptible(HZ * 10);
++			}
++			schedule_timeout(HZ * 10);
+ 			continue;
+ 		}
  
- 	cfg80211_ch_switch_started_notify(sdata->dev,
--					  &sdata->deflink.csa_chandef,
-+					  &sdata->deflink.csa_chandef, 0,
- 					  params->count, params->block_tx);
+@@ -581,6 +584,8 @@ int hwrng_register(struct hwrng *rng)
+ 	init_completion(&rng->cleanup_done);
+ 	complete(&rng->cleanup_done);
  
- 	if (changed) {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 912095e4e256..5c15c37d65ff 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1905,7 +1905,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_link_data *link,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
- 	mutex_unlock(&local->mtx);
- 
--	cfg80211_ch_switch_started_notify(sdata->dev, &csa_ie.chandef,
-+	cfg80211_ch_switch_started_notify(sdata->dev, &csa_ie.chandef, 0,
- 					  csa_ie.count, csa_ie.mode);
- 
- 	if (local->ops->channel_switch) {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3580fe2f2f31..42430749913f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -18896,13 +18896,17 @@ EXPORT_SYMBOL(cfg80211_ch_switch_notify);
- 
- void cfg80211_ch_switch_started_notify(struct net_device *dev,
- 				       struct cfg80211_chan_def *chandef,
--				       u8 count, bool quiet)
-+				       unsigned int link_id, u8 count,
-+				       bool quiet)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 
--	trace_cfg80211_ch_switch_started_notify(dev, chandef);
-+	ASSERT_WDEV_LOCK(wdev);
-+	WARN_INVALID_LINK_ID(wdev, link_id);
++	rng->unregistering = false;
 +
-+	trace_cfg80211_ch_switch_started_notify(dev, chandef, link_id);
+ 	if (!current_rng ||
+ 	    (!cur_rng_set_by_user && rng->quality > current_rng->quality)) {
+ 		/*
+@@ -630,8 +635,10 @@ void hwrng_unregister(struct hwrng *rng)
  
- 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
- 				 NL80211_CMD_CH_SWITCH_STARTED_NOTIFY,
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 592b9e9e821a..1faf52c19084 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3245,18 +3245,21 @@ TRACE_EVENT(cfg80211_ch_switch_notify,
+ 	rcu_read_lock();
+ 	waiting_reader = xchg(&current_waiting_reader, UNREGISTERING_READER);
+-	if (waiting_reader && waiting_reader != UNREGISTERING_READER)
+-		set_notify_signal(waiting_reader);
++	if (waiting_reader && waiting_reader != UNREGISTERING_READER) {
++		rng->unregistering = true;
++		wake_up_process(waiting_reader);
++	}
+ 	rcu_read_unlock();
+ 	old_rng = current_rng;
+ 	list_del(&rng->list);
+diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
+index 8980dc36509e..35cac38054b5 100644
+--- a/drivers/net/wireless/ath/ath9k/rng.c
++++ b/drivers/net/wireless/ath/ath9k/rng.c
+@@ -75,9 +75,17 @@ static int ath9k_rng_read(struct hwrng *rng, void *buf, size_t max, bool wait)
+ 			bytes_read += max & 3UL;
+ 			memzero_explicit(&word, sizeof(word));
+ 		}
+-		if (!wait || !max || likely(bytes_read) || fail_stats > 110 ||
+-		    ((current->flags & PF_KTHREAD) && kthread_should_stop()) ||
+-		    schedule_timeout_interruptible(ath9k_rng_delay_get(++fail_stats)))
++		if (!wait || !max || likely(bytes_read) || fail_stats > 110)
++			break;
++
++		set_current_state(TASK_INTERRUPTIBLE);
++		if (rng->unregistering ||
++		    ((current->flags & PF_KTHREAD) && kthread_should_stop())) {
++			__set_current_state(TASK_RUNNING);
++			break;
++		}
++
++		if (schedule_timeout(ath9k_rng_delay_get(++fail_stats)))
+ 			break;
+ 	}
  
- TRACE_EVENT(cfg80211_ch_switch_started_notify,
- 	TP_PROTO(struct net_device *netdev,
--		 struct cfg80211_chan_def *chandef),
--	TP_ARGS(netdev, chandef),
-+		 struct cfg80211_chan_def *chandef,
-+		 unsigned int link_id),
-+	TP_ARGS(netdev, chandef, link_id),
- 	TP_STRUCT__entry(
- 		NETDEV_ENTRY
- 		CHAN_DEF_ENTRY
-+		__field(unsigned int, link_id)
- 	),
- 	TP_fast_assign(
- 		NETDEV_ASSIGN;
- 		CHAN_DEF_ASSIGN(chandef);
-+		__entry->link_id = link_id;
- 	),
--	TP_printk(NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT,
--		  NETDEV_PR_ARG, CHAN_DEF_PR_ARG)
-+	TP_printk(NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT ", link:%d",
-+		  NETDEV_PR_ARG, CHAN_DEF_PR_ARG, __entry->link_id)
- );
+diff --git a/include/linux/hw_random.h b/include/linux/hw_random.h
+index aa1d4da03538..778f10dfa12b 100644
+--- a/include/linux/hw_random.h
++++ b/include/linux/hw_random.h
+@@ -45,6 +45,7 @@ struct hwrng {
+ 	int (*read)(struct hwrng *rng, void *data, size_t max, bool wait);
+ 	unsigned long priv;
+ 	unsigned short quality;
++	int unregistering;
  
- TRACE_EVENT(cfg80211_radar_event,
--- 
-2.25.1
+ 	/* internal. */
+ 	struct list_head list;
+diff --git a/include/linux/sched/signal.h b/include/linux/sched/signal.h
+index 56a15f35e7b3..9b94a8f18b04 100644
+--- a/include/linux/sched/signal.h
++++ b/include/linux/sched/signal.h
+@@ -364,7 +364,7 @@ static inline void clear_notify_signal(void)
+ static inline bool __set_notify_signal(struct task_struct *task)
+ {
+ 	return !test_and_set_tsk_thread_flag(task, TIF_NOTIFY_SIGNAL) &&
+-	       !wake_up_task_interruptible(task);
++		!wake_up_state(task, TASK_INTERRUPTIBLE);
+ }
+ 
+ /*
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index e3e675eef63d..a463dbc92fcd 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4279,12 +4279,6 @@ int wake_up_process(struct task_struct *p)
+ }
+ EXPORT_SYMBOL(wake_up_process);
+ 
+-int wake_up_task_interruptible(struct task_struct *p)
+-{
+-	return try_to_wake_up(p, TASK_INTERRUPTIBLE, 0);
+-}
+-EXPORT_SYMBOL_GPL(wake_up_task_interruptible);
+-
+ int wake_up_state(struct task_struct *p, unsigned int state)
+ {
+ 	return try_to_wake_up(p, state, 0);
 
