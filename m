@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D27F4CCA48A
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 11:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7CDC433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 11:57:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235079AbiGVL5E (ORCPT
+        id S235100AbiGVL5F (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jul 2022 07:57:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52484 "EHLO
+        Fri, 22 Jul 2022 07:57:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234744AbiGVL4z (ORCPT
+        with ESMTP id S230251AbiGVL5A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jul 2022 07:56:55 -0400
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72952A9B8C
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:53 -0700 (PDT)
-Received: by mail-ed1-x52f.google.com with SMTP id z22so5553226edd.6
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:53 -0700 (PDT)
+        Fri, 22 Jul 2022 07:57:00 -0400
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08289BB203
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:59 -0700 (PDT)
+Received: by mail-ed1-x533.google.com with SMTP id c72so2682744edf.8
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=pqrs.dk; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ByHDj6/WZNLvf+U8I4CMzhK6/AcSzDl8NnQYMdbCHC0=;
-        b=FSMwh2vz58WxOv5apuHGTlYbe8dQNKcB8eRfB22RfKdiB3t/ALd2FrPamvdCAh0gbW
-         OQwuReunohVucJw3yYODEQzuMUfykVnM1DMctWhXxEwmPfXTgRhkb2h2lhnojwZ6i9YH
-         1nCNf7qLZ4/MiX9uPvfYxBjXPafrojGA14pgY=
+        bh=flnEvotZidaUh2ykk93snCPMpbwPpMdDiRUs0F6eFEc=;
+        b=Z6SfeP8zsYcJua2iTIQeZidzdyHntaXwsRbowZ7wR2rGGaujqr2+mDU88XYuiwUBD/
+         bNxPs/fLEpfyBMPa42WlZXmp2Nslb7bqnMpqo70+FQBVckDSgAhrA6PVgtnBV+V75ane
+         6vvH1huOD+yEuf8CiQ1EQSX/rYqyYpAZaLH1I=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ByHDj6/WZNLvf+U8I4CMzhK6/AcSzDl8NnQYMdbCHC0=;
-        b=YWd7n91ns1+bHwmPCUVpMzm0A0I1GFBXQUGF5h3YVYUnCcAuRcqiwArBlkR/+uhGvv
-         vHu5CQSLvs2iJDmE+JVhT7QfrVUz2ZBlEYDGLAAMjz4DVwswSc19mgMFO2QFrYeIaipg
-         KKrYFVUJRwTY01+Dkd7BWpohZUtA0j7vkazpR0H/LWrGTVk5VHXzPtC64/UNleJ0Ij/g
-         40TQhdblYyhvHvxHsd7MvZjWRtG0LHFl6aMHwTGJDHjm1lKOs0DnajPr38FGIOGclZsO
-         fJ6xCc4ITSGDfCjHTSpJCFJbj+H6L/yxZo3DJVx+eygwdBRm0qVdn+ZCDgYjq/tdUyFV
-         qwGw==
-X-Gm-Message-State: AJIora/MrxloQYaDG3ZPMqaG+WQKiBz341MmYJT7nP9AftRz93U7uiL6
-        A0bYSln2KUOrGWAEmu44EbWhKw==
-X-Google-Smtp-Source: AGRyM1vdGX0KozqUPHlKamS+jAQgi2PQ56UFeun3hPwIAEyV6QaNxCMTDCsIu960lsOqlMxNsia4dA==
-X-Received: by 2002:a05:6402:444c:b0:43b:d375:e932 with SMTP id o12-20020a056402444c00b0043bd375e932mr226594edb.399.1658491011990;
-        Fri, 22 Jul 2022 04:56:51 -0700 (PDT)
+        bh=flnEvotZidaUh2ykk93snCPMpbwPpMdDiRUs0F6eFEc=;
+        b=a5JVVhrVCNBil5LIt0/RPGj0K0xkIwr6ztWkYMJ4slbzwmgHf2e2mrJo7vtNoKClm7
+         hJ9wc9H82NR9MYoe3RV3+V0PsMuwctA+GXcNHCzJ6eb0zx4WXxvfHq11ZWBCfLwAzoWW
+         6cNKa7SjAETgHaCqtV2k4Mv2FoKjEPXg8WbbNKs3qJ4wwfwNNAKwBeO97DD7wzWoHQvY
+         Tnt2Wd1qxZ6HiI6RTHoIGROnhewdbftJe3kY0cB9fG1MULI1PZ7SAyCGJuEXDaOIzlf6
+         4GLbk4pb2q5o3nhSE9YK0dX95j6fU1pLzCqs6E4aQwyyx2WsFMK+QIoRZkKi4g8f4ZfQ
+         Dyrg==
+X-Gm-Message-State: AJIora/YOTLJkvbzNgXT1RS6A42THuGtQufJHQXsFv+78v1Sve3AtW8j
+        6TZSx+16iGC0Y7DZvLWABEVscg==
+X-Google-Smtp-Source: AGRyM1vURj2VAwzGo07/a5qNyG8Qpq1IH/QMoTDEVKfcuwz69Cs5aCxc6iH2rOLcwmbtCV9HVOtKUQ==
+X-Received: by 2002:a05:6402:2789:b0:43a:de54:40fd with SMTP id b9-20020a056402278900b0043ade5440fdmr234482ede.319.1658491018561;
+        Fri, 22 Jul 2022 04:56:58 -0700 (PDT)
 Received: from localhost.localdomain (80.71.142.18.ipv4.parknet.dk. [80.71.142.18])
-        by smtp.gmail.com with ESMTPSA id kx6-20020a170907774600b0072b3182368fsm1934370ejc.77.2022.07.22.04.56.51
+        by smtp.gmail.com with ESMTPSA id kx6-20020a170907774600b0072b3182368fsm1934370ejc.77.2022.07.22.04.56.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Jul 2022 04:56:51 -0700 (PDT)
+        Fri, 22 Jul 2022 04:56:58 -0700 (PDT)
 From:   =?UTF-8?q?Alvin=20=C5=A0ipraga?= <alvin@pqrs.dk>
 To:     Arend van Spriel <aspriel@gmail.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -55,17 +55,17 @@ To:     Arend van Spriel <aspriel@gmail.com>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>
-Cc:     Wright Feng <wright.feng@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+Cc:     Wataru Gohda <wataru.gohda@cypress.com>,
+        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
         Ahmad Fatoum <a.fatoum@pengutronix.de>,
         =?UTF-8?q?Alvin=20=C5=A0ipraga?= <alsi@bang-olufsen.dk>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 2/6] brcmfmac: fix scheduling while atomic issue when deleting flowring
-Date:   Fri, 22 Jul 2022 13:56:27 +0200
-Message-Id: <20220722115632.620681-3-alvin@pqrs.dk>
+Subject: [PATCH 5/6] brcmfmac: Fix to add skb free for TIM update info when tx is completed
+Date:   Fri, 22 Jul 2022 13:56:30 +0200
+Message-Id: <20220722115632.620681-6-alvin@pqrs.dk>
 X-Mailer: git-send-email 2.37.0
 In-Reply-To: <20220722115632.620681-1-alvin@pqrs.dk>
 References: <20220722115632.620681-1-alvin@pqrs.dk>
@@ -76,81 +76,85 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wright Feng <wright.feng@cypress.com>
+From: Wataru Gohda <wataru.gohda@cypress.com>
 
-We should not sleep while holding the spin lock. It makes
-'scheduling while atomic' in brcmf_msgbuf_delete_flowring.
-And to avoid race condition between deleting flowring and txflow,
-we only hold spin lock when seting flowring status to RING_CLOSING.
+The skb will be allocated to send TIM update info in brcmf_fws_tim_update.
+Currently the skb will be freed when tx is failed but it will not be freed
+when tx is completed successfully. The fix is to free the skb when tx is
+completed always.
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
-Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Signed-off-by: Wataru Gohda <wataru.gohda@cypress.com>
+Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
 Signed-off-by: Alvin Šipraga <alsi@bang-olufsen.dk>
 ---
- .../broadcom/brcm80211/brcmfmac/flowring.c         |  5 +----
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 14 ++++++++------
- 2 files changed, 9 insertions(+), 10 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c  |  3 +--
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c       | 16 ++++++++++------
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h       |  3 ++-
+ 3 files changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-index 096f6b969dd8..e1127d7e086d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-@@ -419,7 +419,6 @@ void brcmf_flowring_configure_addr_mode(struct brcmf_flowring *flow, int ifidx,
- 				flowid = flow->hash[i].flowid;
- 				if (flow->rings[flowid]->status != RING_OPEN)
- 					continue;
--				flow->rings[flowid]->status = RING_CLOSING;
- 				brcmf_msgbuf_delete_flowring(drvr, flowid);
- 			}
- 		}
-@@ -458,10 +457,8 @@ void brcmf_flowring_delete_peer(struct brcmf_flowring *flow, int ifidx,
- 		if ((sta || (memcmp(hash[i].mac, peer, ETH_ALEN) == 0)) &&
- 		    (hash[i].ifidx == ifidx)) {
- 			flowid = flow->hash[i].flowid;
--			if (flow->rings[flowid]->status == RING_OPEN) {
--				flow->rings[flowid]->status = RING_CLOSING;
-+			if (flow->rings[flowid]->status == RING_OPEN)
- 				brcmf_msgbuf_delete_flowring(drvr, flowid);
--			}
- 		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 2c95a08a5871..02a56edf08ba 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -368,8 +368,7 @@ brcmf_proto_bcdc_txcomplete(struct device *dev, struct sk_buff *txp,
+ 
+ 	/* await txstatus signal for firmware if active */
+ 	if (brcmf_fws_fc_active(bcdc->fws)) {
+-		if (!success)
+-			brcmf_fws_bustxfail(bcdc->fws, txp);
++		brcmf_fws_bustxcomplete(bcdc->fws, txp, success);
+ 	} else {
+ 		if (brcmf_proto_bcdc_hdrpull(bus_if->drvr, false, txp, &ifp))
+ 			brcmu_pkt_buf_free_skb(txp);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index d58525ebe618..85e3b953b0a9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -2475,7 +2475,8 @@ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
+ 	return fws->fcmode != BRCMF_FWS_FCMODE_NONE;
+ }
+ 
+-void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb)
++void brcmf_fws_bustxcomplete(struct brcmf_fws_info *fws, struct sk_buff *skb,
++			     bool success)
+ {
+ 	u32 hslot;
+ 
+@@ -2483,11 +2484,14 @@ void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb)
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return;
  	}
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index 174584b42972..cec53f934940 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -1400,22 +1400,24 @@ void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid)
- 	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
- 	struct msgbuf_tx_flowring_delete_req *delete;
- 	struct brcmf_commonring *commonring;
--	struct brcmf_commonring *commonring_del;
--
-+	struct brcmf_commonring *commonring_del = msgbuf->flowrings[flowid];
-+	struct brcmf_flowring *flow = msgbuf->flow;
- 	void *ret_ptr;
- 	u8 ifidx;
- 	int err;
- 	int retry = BRCMF_MAX_TXSTATUS_WAIT_RETRIES;
- 
--	/* wait for commonring txflow finished */
--	commonring_del = msgbuf->flowrings[flowid];
-+	/* make sure it is not in txflow */
- 	brcmf_commonring_lock(commonring_del);
-+	flow->rings[flowid]->status = RING_CLOSING;
-+	brcmf_commonring_unlock(commonring_del);
+-	brcmf_fws_lock(fws);
+-	hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
+-	brcmf_fws_txs_process(fws, BRCMF_FWS_TXSTATUS_HOST_TOSSED, hslot, 0, 0,
+-			      1);
+-	brcmf_fws_unlock(fws);
 +
-+	/* wait for commonring txflow finished */
- 	while (retry && atomic_read(&commonring_del->outstanding_tx)) {
- 		usleep_range(5000, 10000);
- 		retry--;
- 	}
--	brcmf_commonring_unlock(commonring_del);
--	if (!retry && atomic_read(&commonring_del->outstanding_tx)) {
-+	if (!retry) {
- 		brcmf_err("timed out waiting for txstatus\n");
- 		atomic_set(&commonring_del->outstanding_tx, 0);
- 	}
++	if (!success) {
++		brcmf_fws_lock(fws);
++		hslot = brcmf_skb_htod_tag_get_field(skb, HSLOT);
++		brcmf_fws_txs_process(fws, BRCMF_FWS_TXSTATUS_HOST_TOSSED, hslot,
++				      0, 0, 1);
++		brcmf_fws_unlock(fws);
++	}
+ }
+ 
+ void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index b16a9d1c0508..f9c36cd8f1de 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -40,7 +40,8 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb);
+ void brcmf_fws_reset_interface(struct brcmf_if *ifp);
+ void brcmf_fws_add_interface(struct brcmf_if *ifp);
+ void brcmf_fws_del_interface(struct brcmf_if *ifp);
+-void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb);
++void brcmf_fws_bustxcomplete(struct brcmf_fws_info *fws, struct sk_buff *skb,
++			     bool success);
+ void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked);
+ void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb);
+ 
 -- 
 2.37.0
 
