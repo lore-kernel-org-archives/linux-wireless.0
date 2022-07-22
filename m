@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D432CCCA48A
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 11:56:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3528C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 11:57:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234925AbiGVL44 (ORCPT
+        id S234784AbiGVL47 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jul 2022 07:56:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52442 "EHLO
+        Fri, 22 Jul 2022 07:56:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234529AbiGVL4y (ORCPT
+        with ESMTP id S234757AbiGVL46 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jul 2022 07:56:54 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EA359D1D6
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:51 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id c72so2682316edf.8
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:51 -0700 (PDT)
+        Fri, 22 Jul 2022 07:56:58 -0400
+Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 169B5A0B89
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:55 -0700 (PDT)
+Received: by mail-ej1-x629.google.com with SMTP id bp15so8195295ejb.6
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 04:56:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=pqrs.dk; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=sfJUu7YZvL2g6twgjpnle5UI1onmUJrVs9Bpz3S5FYc=;
-        b=a/t5NXgblmEZvwDxJtbKMOHWIKIUzapVoC99aGhYw62vKNQwYr4NY31RzsQSeqyD8D
-         IzHdYKfuLcMwGch+03d8fDOtaIf2+q1jmpsrJpiXnxcuLg+2296EziHOIKR/4W63mUhU
-         otDP3qwJ5QLtaAnqiw2t7sJsKMp7T53cJfmzY=
+        bh=Q/6C0hLMVNU55CHBk2mKAQizRq+SuLOg1CztoKY0K0w=;
+        b=BEVYIA0lnjGN1trnUmc0Ud1yyrhMRF7BQCNGY1RZGWN2aF7yCiMNOW3Nn0X7V6OP8w
+         G1nzBWscScxUURnwYrZrEs6o+haNY6jjbg+81D8L0NEtqxfKYf5K872HphS/EXDSdKUk
+         p8I42JuSTAq8FDHTdMhRq9VMskh/l+4vJYz9Q=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=sfJUu7YZvL2g6twgjpnle5UI1onmUJrVs9Bpz3S5FYc=;
-        b=xNRasqGgyIs7Nx7PD9EPCwOzeD1XkCfBM6r9B3tpOgSZH2xqoY/QtisojiB90rPsWL
-         bXPG7rCPskb64dMV+VNAmo0lbeUs99pvoy0ZXuJxpPsFEba6mXv+Mb4U0rFDJbT5Q+Ab
-         UeFheUn+KTkzUPYlpbUZanr5iBX+VqAdlVczuR2jjUJFb/Ff4O11V5oSS4vX+q0E6ADP
-         FjngsOvXZcBzOcyoRRLjAKo/ExHM/uHDYp9sVvlnU9L7SXqkpqFjMm6PW00/yXbdJ2I/
-         3D5ODsPeMX71NE2/KT6v8Ouh5kRROWhQMr8ijHxpVYHUhCUPbbjXy5UbWAaNFg2tLTNT
-         KMwg==
-X-Gm-Message-State: AJIora9aQI1mZB89fyjTeMdyLavYjeK7JgTwBqOGP+OFmz7hcwd3m3sa
-        aoijaCvGyD41zGlEuiJWQS9EYA==
-X-Google-Smtp-Source: AGRyM1vWDrGN9LZIzRynXR7EHhhtZ1o+0jbyaoh2maJYcYi6kAJuctrUKwkKKcU6r/5iaFjBTBkPSQ==
-X-Received: by 2002:a05:6402:278e:b0:43a:9cf5:6608 with SMTP id b14-20020a056402278e00b0043a9cf56608mr298484ede.76.1658491009835;
-        Fri, 22 Jul 2022 04:56:49 -0700 (PDT)
+        bh=Q/6C0hLMVNU55CHBk2mKAQizRq+SuLOg1CztoKY0K0w=;
+        b=BCU9feaUg7mcZHoftsyhMCu1PItaOiF7zB3rLjXwicMqwcSmRurdGRkUeIrq2PKVEm
+         E9L+0muDoHN7GWrWj/UdX25b9WogqrxSzgCnbqKSUJ6BbO4ePPTKSAmkWXNqp/43ZFXj
+         r/3K0kuiWJ2W+pXmBZfs3dVbv5yx5YAAgEWQDCYi3VkD5W8a8JxzY4ProlOvcS084yXk
+         EZPVzDAobVS/PjqrmCjakJueGglGN1LDkQP00N0ivgUpgvesfOoJYdnOgZnriFvEOXco
+         3HmR46O0svR1gvVpM+F8KsMb2eO7V3j8+H5hg1UYdMN92gK9fcVPbCLbqKzegJi/l1X1
+         Mt2A==
+X-Gm-Message-State: AJIora9Ga/Q8+gWpzo4oPNJOj3TIjT08kpyCnlYg67VklOhHNhY4+U8Y
+        gNYAFUANoo5OjxNRNvwNqCt+8Q==
+X-Google-Smtp-Source: AGRyM1uej07WP45uDK4ei4EmPhnABupcSWVKvAJ6snuX+mhlQSBrIveS1JVNXAIWbkE7EBLQ2EpEzA==
+X-Received: by 2002:a17:907:d92:b0:72e:e968:7fa1 with SMTP id go18-20020a1709070d9200b0072ee9687fa1mr160432ejc.731.1658491014160;
+        Fri, 22 Jul 2022 04:56:54 -0700 (PDT)
 Received: from localhost.localdomain (80.71.142.18.ipv4.parknet.dk. [80.71.142.18])
-        by smtp.gmail.com with ESMTPSA id kx6-20020a170907774600b0072b3182368fsm1934370ejc.77.2022.07.22.04.56.48
+        by smtp.gmail.com with ESMTPSA id kx6-20020a170907774600b0072b3182368fsm1934370ejc.77.2022.07.22.04.56.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Jul 2022 04:56:49 -0700 (PDT)
+        Fri, 22 Jul 2022 04:56:53 -0700 (PDT)
 From:   =?UTF-8?q?Alvin=20=C5=A0ipraga?= <alvin@pqrs.dk>
 To:     Arend van Spriel <aspriel@gmail.com>,
         Franky Lin <franky.lin@broadcom.com>,
@@ -63,9 +63,9 @@ Cc:     Wright Feng <wright.feng@cypress.com>,
         brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 1/6] brcmfmac: fix continuous 802.1x tx pending timeout error
-Date:   Fri, 22 Jul 2022 13:56:26 +0200
-Message-Id: <20220722115632.620681-2-alvin@pqrs.dk>
+Subject: [PATCH 3/6] brcmfmac: fix invalid address access when enabling SCAN log level
+Date:   Fri, 22 Jul 2022 13:56:28 +0200
+Message-Id: <20220722115632.620681-4-alvin@pqrs.dk>
 X-Mailer: git-send-email 2.37.0
 In-Reply-To: <20220722115632.620681-1-alvin@pqrs.dk>
 References: <20220722115632.620681-1-alvin@pqrs.dk>
@@ -78,89 +78,97 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Wright Feng <wright.feng@cypress.com>
 
-The race condition in brcmf_msgbuf_txflow and brcmf_msgbuf_delete_flowring
-makes tx_msghdr writing after brcmf_msgbuf_remove_flowring. Host
-driver should delete flowring after txflow complete and all txstatus back,
-or pend_8021x_cnt will never be zero and cause every connection 950
-milliseconds(MAX_WAIT_FOR_8021X_TX) delay.
+The variable i is changed when setting random MAC address and causes
+invalid address access when printing the value of pi->reqs[i]->reqid.
+
+We replace reqs index with ri to fix the issue.
+
+[  136.726473] Unable to handle kernel access to user memory outside uaccess routines at virtual address 0000000000000000
+[  136.737365] Mem abort info:
+[  136.740172]   ESR = 0x96000004
+[  136.743359]   Exception class = DABT (current EL), IL = 32 bits
+[  136.749294]   SET = 0, FnV = 0
+[  136.752481]   EA = 0, S1PTW = 0
+[  136.755635] Data abort info:
+[  136.758514]   ISV = 0, ISS = 0x00000004
+[  136.762487]   CM = 0, WnR = 0
+[  136.765522] user pgtable: 4k pages, 48-bit VAs, pgdp = 000000005c4e2577
+[  136.772265] [0000000000000000] pgd=0000000000000000
+[  136.777160] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+[  136.782732] Modules linked in: brcmfmac(O) brcmutil(O) cfg80211(O) compat(O)
+[  136.789788] Process wificond (pid: 3175, stack limit = 0x00000000053048fb)
+[  136.796664] CPU: 3 PID: 3175 Comm: wificond Tainted: G           O      4.19.42-00001-g531a5f5 #1
+[  136.805532] Hardware name: Freescale i.MX8MQ EVK (DT)
+[  136.810584] pstate: 60400005 (nZCv daif +PAN -UAO)
+[  136.815429] pc : brcmf_pno_config_sched_scans+0x6cc/0xa80 [brcmfmac]
+[  136.821811] lr : brcmf_pno_config_sched_scans+0x67c/0xa80 [brcmfmac]
+[  136.828162] sp : ffff00000e9a3880
+[  136.831475] x29: ffff00000e9a3890 x28: ffff800020543400
+[  136.836786] x27: ffff8000b1008880 x26: ffff0000012bf6a0
+[  136.842098] x25: ffff80002054345c x24: ffff800088d22400
+[  136.847409] x23: ffff0000012bf638 x22: ffff0000012bf6d8
+[  136.852721] x21: ffff8000aced8fc0 x20: ffff8000ac164400
+[  136.858032] x19: ffff00000e9a3946 x18: 0000000000000000
+[  136.863343] x17: 0000000000000000 x16: 0000000000000000
+[  136.868655] x15: ffff0000093f3b37 x14: 0000000000000050
+[  136.873966] x13: 0000000000003135 x12: 0000000000000000
+[  136.879277] x11: 0000000000000000 x10: ffff000009a61888
+[  136.884589] x9 : 000000000000000f x8 : 0000000000000008
+[  136.889900] x7 : 303a32303d726464 x6 : ffff00000a1f957d
+[  136.895211] x5 : 0000000000000000 x4 : ffff00000e9a3942
+[  136.900523] x3 : 0000000000000000 x2 : ffff0000012cead8
+[  136.905834] x1 : ffff0000012bf6d8 x0 : 0000000000000000
+[  136.911146] Call trace:
+[  136.913623]  brcmf_pno_config_sched_scans+0x6cc/0xa80 [brcmfmac]
+[  136.919658]  brcmf_pno_start_sched_scan+0xa4/0x118 [brcmfmac]
+[  136.925430]  brcmf_cfg80211_sched_scan_start+0x80/0xe0 [brcmfmac]
+[  136.931636]  nl80211_start_sched_scan+0x140/0x308 [cfg80211]
+[  136.937298]  genl_rcv_msg+0x358/0x3f4
+[  136.940960]  netlink_rcv_skb+0xb4/0x118
+[  136.944795]  genl_rcv+0x34/0x48
+[  136.947935]  netlink_unicast+0x264/0x300
+[  136.951856]  netlink_sendmsg+0x2e4/0x33c
+[  136.955781]  __sys_sendto+0x120/0x19c
 
 Signed-off-by: Wright Feng <wright.feng@cypress.com>
 Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
 Signed-off-by: Alvin Šipraga <alsi@bang-olufsen.dk>
 ---
- .../broadcom/brcm80211/brcmfmac/core.c        |  4 +++-
- .../broadcom/brcm80211/brcmfmac/msgbuf.c      | 23 ++++++++++++++++++-
- 2 files changed, 25 insertions(+), 2 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c   | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 87aef211b35f..8ca259ace001 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1484,8 +1484,10 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
- 				 !brcmf_get_pend_8021x_cnt(ifp),
- 				 MAX_WAIT_FOR_8021X_TX);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index fabfbb0b40b0..d0a7465be586 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -158,12 +158,12 @@ static int brcmf_pno_set_random(struct brcmf_if *ifp, struct brcmf_pno_info *pi)
+ 	struct brcmf_pno_macaddr_le pfn_mac;
+ 	u8 *mac_addr = NULL;
+ 	u8 *mac_mask = NULL;
+-	int err, i;
++	int err, i, ri;
  
--	if (!err)
-+	if (!err) {
- 		bphy_err(drvr, "Timed out waiting for no pending 802.1x packets\n");
-+		atomic_set(&ifp->pend_8021x_cnt, 0);
-+	}
+-	for (i = 0; i < pi->n_reqs; i++)
+-		if (pi->reqs[i]->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+-			mac_addr = pi->reqs[i]->mac_addr;
+-			mac_mask = pi->reqs[i]->mac_addr_mask;
++	for (ri = 0; ri < pi->n_reqs; ri++)
++		if (pi->reqs[ri]->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
++			mac_addr = pi->reqs[ri]->mac_addr;
++			mac_mask = pi->reqs[ri]->mac_addr_mask;
+ 			break;
+ 		}
  
- 	return !err;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index b2d0f7570aa9..174584b42972 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -71,6 +71,7 @@
- #define BRCMF_MSGBUF_TRICKLE_TXWORKER_THRS	32
- #define BRCMF_MSGBUF_UPDATE_RX_PTR_THRS		48
+@@ -185,7 +185,7 @@ static int brcmf_pno_set_random(struct brcmf_if *ifp, struct brcmf_pno_info *pi)
+ 	pfn_mac.mac[0] |= 0x02;
  
-+#define BRCMF_MAX_TXSTATUS_WAIT_RETRIES		10
- 
- struct msgbuf_common_hdr {
- 	u8				msgtype;
-@@ -806,8 +807,12 @@ static int brcmf_msgbuf_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
- 	flowid = brcmf_flowring_lookup(flow, eh->h_dest, skb->priority, ifidx);
- 	if (flowid == BRCMF_FLOWRING_INVALID_ID) {
- 		flowid = brcmf_msgbuf_flowring_create(msgbuf, ifidx, skb);
--		if (flowid == BRCMF_FLOWRING_INVALID_ID)
-+		if (flowid == BRCMF_FLOWRING_INVALID_ID) {
- 			return -ENOMEM;
-+		} else {
-+			brcmf_flowring_enqueue(flow, flowid, skb);
-+			return 0;
-+		}
- 	}
- 	queue_count = brcmf_flowring_enqueue(flow, flowid, skb);
- 	force = ((queue_count % BRCMF_MSGBUF_TRICKLE_TXWORKER_THRS) == 0);
-@@ -1395,9 +1400,25 @@ void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid)
- 	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
- 	struct msgbuf_tx_flowring_delete_req *delete;
- 	struct brcmf_commonring *commonring;
-+	struct brcmf_commonring *commonring_del;
-+
- 	void *ret_ptr;
- 	u8 ifidx;
- 	int err;
-+	int retry = BRCMF_MAX_TXSTATUS_WAIT_RETRIES;
-+
-+	/* wait for commonring txflow finished */
-+	commonring_del = msgbuf->flowrings[flowid];
-+	brcmf_commonring_lock(commonring_del);
-+	while (retry && atomic_read(&commonring_del->outstanding_tx)) {
-+		usleep_range(5000, 10000);
-+		retry--;
-+	}
-+	brcmf_commonring_unlock(commonring_del);
-+	if (!retry && atomic_read(&commonring_del->outstanding_tx)) {
-+		brcmf_err("timed out waiting for txstatus\n");
-+		atomic_set(&commonring_del->outstanding_tx, 0);
-+	}
- 
- 	/* no need to submit if firmware can not be reached */
- 	if (drvr->bus_if->state != BRCMF_BUS_UP) {
+ 	brcmf_dbg(SCAN, "enabling random mac: reqid=%llu mac=%pM\n",
+-		  pi->reqs[i]->reqid, pfn_mac.mac);
++		  pi->reqs[ri]->reqid, pfn_mac.mac);
+ 	err = brcmf_fil_iovar_data_set(ifp, "pfn_macaddr", &pfn_mac,
+ 				       sizeof(pfn_mac));
+ 	if (err)
 -- 
 2.37.0
 
