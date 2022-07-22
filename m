@@ -2,158 +2,137 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EDDDC43334
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 12:30:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17F25C433EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Jul 2022 13:12:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229704AbiGVMaY (ORCPT
+        id S229778AbiGVNMG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Jul 2022 08:30:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50048 "EHLO
+        Fri, 22 Jul 2022 09:12:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234347AbiGVMaU (ORCPT
+        with ESMTP id S229441AbiGVNMF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Jul 2022 08:30:20 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F0421B7B3
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 05:30:11 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id l23so8348962ejr.5
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 05:30:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=pqrs.dk; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=5lqye/hAmqL8Fnt3guUNsgTywC89s6aIPDnodlDq5eQ=;
-        b=Gnx8GXRDxk9/3ygHEnLtTVN8bhhXjnkpykXfjNntr1aau+1ER5I1ZxMEx28Jvpa4gh
-         6Qv9UVVNEb5bNfp7EIkgCPufTHaEgD6Cg/jgkMLSD3L89oOKlbIAVQmW3CerogUZkFjl
-         ySB4vo5Wk/ppKJPITbE5ztK0zU+Jx71WeNjMo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=5lqye/hAmqL8Fnt3guUNsgTywC89s6aIPDnodlDq5eQ=;
-        b=sMzqdbxO+vFeeBSdgzxS7p6PEuVLTsXiZUZklKj8QAz0nJMsAjdRzQouV1l0g2fdsf
-         iPCc4ZDL5t2ooSgIASCuLGXGIMx/V6ooO0F4AaiICbjVCNGbg6s2EsKQwq4Fua+XxpHJ
-         tlHgyPivGw1M50WcvuKdqUkLNAWGK3RztAH3pdxF05pHtUQvSvSLXhOPPDwlAtgnhcUy
-         Zx7wBTwmM1zWLAk/pwDIN2lnIQsiSi5TowLlwI5gHApyvxCIMX1IexhS6IOaYqbBeOZ3
-         jGnhAQgWcoURH6wX85pI9b9716sYdQwSCkwajomRA6p51V0sIYkWmWkMyDcvtHtnMuOV
-         PKmQ==
-X-Gm-Message-State: AJIora8TTUzdUJd1v2kHfj8mEDmUzMh5r3+ItkDrU0iyQYOarRLK8NN/
-        ZoBcY76fp8Qfsy+0FspbEWp7Cw==
-X-Google-Smtp-Source: AGRyM1v8ZZae8J7XVlQt6nOJwIGs8hqXBlcz5gENhw9RMFYyE+838PT+92etYbxcbxRe85a5a6yIew==
-X-Received: by 2002:a17:907:2cd4:b0:72b:7fa8:eafc with SMTP id hg20-20020a1709072cd400b0072b7fa8eafcmr314478ejc.438.1658493009879;
-        Fri, 22 Jul 2022 05:30:09 -0700 (PDT)
-Received: from localhost.localdomain (80.71.142.18.ipv4.parknet.dk. [80.71.142.18])
-        by smtp.gmail.com with ESMTPSA id f6-20020a05640214c600b0043a6df72c11sm2462432edx.63.2022.07.22.05.30.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Jul 2022 05:30:09 -0700 (PDT)
-From:   =?UTF-8?q?Alvin=20=C5=A0ipraga?= <alvin@pqrs.dk>
-To:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Cc:     Ting-Ying Li <tingying.li@cypress.com>,
-        Ahmad Fatoum <a.fatoum@pengutronix.de>,
-        =?UTF-8?q?Alvin=20=C5=A0ipraga?= <alsi@bang-olufsen.dk>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH -next 2/2] brcmfmac: don't allow arp/nd offload to be enabled if ap mode exists
-Date:   Fri, 22 Jul 2022 14:29:55 +0200
-Message-Id: <20220722122956.841786-3-alvin@pqrs.dk>
-X-Mailer: git-send-email 2.37.0
-In-Reply-To: <20220722122956.841786-1-alvin@pqrs.dk>
-References: <20220722122956.841786-1-alvin@pqrs.dk>
+        Fri, 22 Jul 2022 09:12:05 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 817DD18B35
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2022 06:12:01 -0700 (PDT)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26MCv5Gb000755;
+        Fri, 22 Jul 2022 13:11:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=NwdrEmDmoBzb/m9vnLkE03KHc15m46ZxNqQiuzcka+4=;
+ b=fx6i0p5vcTDfKxt1RcJJAcPOnn3yhophCLcvvcfVIIIloB6Wwt8FbITZ9a5kONNoEtOi
+ Lu3ZRcUm6WyCT4hb92/G37VqYt2Tk0ER7Dw/gXw5f10stYVTvMWIZq+wT4oOpaV6HWrC
+ Kb8LhOf/Hy2hkUpDBCNMkYC9hcPuiU7IZ5zRolKtzAjyR7XfN2yVio/xQw1xP9SimXfy
+ ctbUhQ+M80TBR0CpHMOTzA8vXBQQWcVVgJf1CSS0WxLDqAxgy3P/dMNUE78f65WNaCX6
+ lz/5hPk53gOFm/z9+tL6jFFLQBWFG7vrTAsdaZYKDdTpEJtw3CcP8z80J0UJlA+EUvXK zw== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hftv7889u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 22 Jul 2022 13:11:58 +0000
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.47.97.222])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 26MDBvPV026112
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 22 Jul 2022 13:11:58 GMT
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Fri, 22 Jul 2022 06:11:57 -0700
+Received: from cnss-mw-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Fri, 22 Jul 2022 06:11:56 -0700
+From:   Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] nl80211: Add support to send MLO link ID info in channel switch events
+Date:   Fri, 22 Jul 2022 18:41:43 +0530
+Message-ID: <20220722131143.3438042-2-quic_vjakkam@quicinc.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220722131143.3438042-1-quic_vjakkam@quicinc.com>
+References: <20220722131143.3438042-1-quic_vjakkam@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: u8zclpKO_EUGkggpSOqvFb13wmQ44It1
+X-Proofpoint-GUID: u8zclpKO_EUGkggpSOqvFb13wmQ44It1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-07-22_04,2022-07-21_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1011
+ suspectscore=0 impostorscore=0 adultscore=0 mlxlogscore=999 spamscore=0
+ phishscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2206140000 definitions=main-2207220056
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ting-Ying Li <tingying.li@cypress.com>
+Add support to send MLO link ID information in
+NL80211_CMD_CH_SWITCH_NOTIFY and NL80211_CMD_CH_SWITCH_STARTED_NOTIFY
+for userspace to know on which link the event is triggered.
 
-Add a condition to determine whether arp/nd offload enabling
-request is allowed. If there is any interface acts as ap
-mode and is operating, then reject the request of arp oflload
-enabling from cfg80211.
-
-Signed-off-by: Ting-Ying Li <tingying.li@cypress.com>
-Signed-off-by: Ahmad Fatoum <a.fatoum@pengutronix.de>
-Signed-off-by: Alvin Šipraga <alsi@bang-olufsen.dk>
+Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c      | 17 ++++++++++++++++-
- .../broadcom/brcm80211/brcmfmac/cfg80211.h      |  1 +
- .../wireless/broadcom/brcm80211/brcmfmac/core.c |  5 +++++
- 3 files changed, 22 insertions(+), 1 deletion(-)
+ net/wireless/nl80211.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 856fd5516ddf..29aa7613bcf3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -770,6 +770,21 @@ void brcmf_set_mpc(struct brcmf_if *ifp, int mpc)
- 	}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 42430749913f..cd177d2a99bb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -18809,6 +18809,7 @@ EXPORT_SYMBOL(cfg80211_pmksa_candidate_notify);
+ 
+ static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
+ 				     struct net_device *netdev,
++				     unsigned int link_id,
+ 				     struct cfg80211_chan_def *chandef,
+ 				     gfp_t gfp,
+ 				     enum nl80211_commands notif,
+@@ -18816,6 +18817,7 @@ static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
+ {
+ 	struct sk_buff *msg;
+ 	void *hdr;
++	struct wireless_dev *wdev = netdev->ieee80211_ptr;
+ 
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
+ 	if (!msg)
+@@ -18830,6 +18832,10 @@ static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
+ 	if (nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
+ 		goto nla_put_failure;
+ 
++	if (wdev->valid_links &&
++	    nla_put_u8(msg, NL80211_ATTR_MLO_LINK_ID, link_id))
++		goto nla_put_failure;
++
+ 	if (nl80211_send_chandef(msg, chandef))
+ 		goto nla_put_failure;
+ 
+@@ -18889,7 +18895,7 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+ 
+ 	cfg80211_sched_dfs_chan_update(rdev);
+ 
+-	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
++	nl80211_ch_switch_notify(rdev, dev, link_id, chandef, GFP_KERNEL,
+ 				 NL80211_CMD_CH_SWITCH_NOTIFY, 0, false);
  }
+ EXPORT_SYMBOL(cfg80211_ch_switch_notify);
+@@ -18908,7 +18914,7 @@ void cfg80211_ch_switch_started_notify(struct net_device *dev,
  
-+bool brcmf_is_apmode_operating(struct wiphy *wiphy)
-+{
-+	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct brcmf_cfg80211_vif *vif;
-+	bool ret = false;
-+
-+	list_for_each_entry(vif, &cfg->vif_list, list) {
-+		if (brcmf_is_apmode(vif) &&
-+		    test_bit(BRCMF_VIF_STATUS_AP_CREATED, &vif->sme_state))
-+			ret = true;
-+	}
-+
-+	return ret;
-+}
-+
- s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 				struct brcmf_if *ifp, bool aborted,
- 				bool fw_abort)
-@@ -5057,8 +5072,8 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			bphy_err(drvr, "bss_enable config failed %d\n", err);
- 	}
- 	brcmf_set_mpc(ifp, 1);
--	brcmf_configure_arp_nd_offload(ifp, true);
- 	clear_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
-+	brcmf_configure_arp_nd_offload(ifp, true);
- 	brcmf_net_setcarrier(ifp, false);
+ 	trace_cfg80211_ch_switch_started_notify(dev, chandef, link_id);
  
- 	return err;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index e4ebc2fa6ebb..3133b6509870 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -468,5 +468,6 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- void brcmf_set_mpc(struct brcmf_if *ndev, int mpc);
- void brcmf_abort_scanning(struct brcmf_cfg80211_info *cfg);
- void brcmf_cfg80211_free_netdev(struct net_device *ndev);
-+bool brcmf_is_apmode_operating(struct wiphy *wiphy);
- 
- #endif /* BRCMFMAC_CFG80211_H */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 87aef211b35f..ab5ed4a9e57a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -97,6 +97,11 @@ void brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable)
- 	s32 err;
- 	u32 mode;
- 
-+	if (enable && brcmf_is_apmode_operating(ifp->drvr->wiphy)) {
-+		brcmf_dbg(TRACE, "Skip ARP/ND offload enable when soft AP is running\n");
-+		return;
-+	}
-+
- 	if (enable)
- 		mode = BRCMF_ARP_OL_AGENT | BRCMF_ARP_OL_PEER_AUTO_REPLY;
- 	else
+-	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL,
++	nl80211_ch_switch_notify(rdev, dev, link_id, chandef, GFP_KERNEL,
+ 				 NL80211_CMD_CH_SWITCH_STARTED_NOTIFY,
+ 				 count, quiet);
+ }
 -- 
-2.37.0
+2.25.1
 
