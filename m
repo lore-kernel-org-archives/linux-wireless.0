@@ -2,73 +2,75 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B02B1C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 15:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 934D0C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 16:22:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235106AbiGYPtZ (ORCPT
+        id S236000AbiGYQWR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Jul 2022 11:49:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33418 "EHLO
+        Mon, 25 Jul 2022 12:22:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235629AbiGYPtY (ORCPT
+        with ESMTP id S235966AbiGYQWP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jul 2022 11:49:24 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26BE7DF4C
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2022 08:49:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1658764163; x=1690300163;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=5YsvTZ3SLUl41q6/6VelaZT7+ASuvmaPGGxeejvVPBI=;
-  b=q+EyIVWKh6HQkVEqJ0aYSkyDjPEBV/Mbkp2aIb4ntZ8l6jQf7M1Qu96x
-   nsxL8W4NjvxnzALUHnVL0oqqwJxVCp9DHqkOaJQoYmTBpr8B7//sjiNQV
-   ZVcQrMR2BGG7ZyZX9P1vTBco4fucwYKB7+Um6TvRlcnG/BxG8JNDMDJuD
-   U=;
-Received: from ironmsg-lv-alpha.qualcomm.com ([10.47.202.13])
-  by alexa-out.qualcomm.com with ESMTP; 25 Jul 2022 08:49:22 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg-lv-alpha.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2022 08:49:22 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Mon, 25 Jul 2022 08:49:22 -0700
-Received: from [10.110.46.151] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Mon, 25 Jul
- 2022 08:49:21 -0700
-Message-ID: <0c282a64-2ee7-f50f-1cbb-4c47b9089736@quicinc.com>
-Date:   Mon, 25 Jul 2022 08:49:20 -0700
+        Mon, 25 Jul 2022 12:22:15 -0400
+X-Greylist: delayed 357 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 25 Jul 2022 09:22:12 PDT
+Received: from mail-m121145.qiye.163.com (mail-m121145.qiye.163.com [115.236.121.145])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9CE3167EB;
+        Mon, 25 Jul 2022 09:22:12 -0700 (PDT)
+Received: from localhost.localdomain (unknown [113.118.189.34])
+        by mail-m121145.qiye.163.com (Hmail) with ESMTPA id 0C493800017;
+        Tue, 26 Jul 2022 00:16:10 +0800 (CST)
+From:   Chukun Pan <amadeus@jmu.edu.cn>
+To:     Jakub Kicinski <kubakici@wp.pl>
+Cc:     Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lintel Huang <lintel.huang@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Chukun Pan <amadeus@jmu.edu.cn>
+Subject: [PATCH] wifi: mt7601u: Add AP mode support
+Date:   Tue, 26 Jul 2022 00:16:03 +0800
+Message-Id: <20220725161603.15201-1-amadeus@jmu.edu.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH] ath11k: Add support to get power save duration for each
- client
-Content-Language: en-US
-To:     Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>,
-        <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
-References: <20220725054601.14719-1-quic_tamizhr@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20220725054601.14719-1-quic_tamizhr@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCTBodVkNDTkkfSUoYTkJCT1UTARMWGhIXJBQOD1
+        lXWRgSC1lBWUpKSFVKSkNVSkNCVUhPWVdZFhoPEhUdFFlBWU9LSFVKSktISkNVS1kG
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Ok06GTo4ND09PE42KD4WKwkr
+        PwIaFDBVSlVKTU5DTE1OTExLTE9PVTMWGhIXVRoWGh8eDgg7ERYOVR4fDlUYFUVZV1kSC1lBWUpK
+        SFVKSkNVSkNCVUhPWVdZCAFZQUlJTU03Bg++
+X-HM-Tid: 0a823624fe87b03akuuu0c493800017
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 7/24/2022 10:46 PM, Tamizh Chelvam Raja wrote:
-> From: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
-[snip]
-> Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
-> Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+Add AP mode support to mt7601u chipset.
+Simply tested it with firmware version
+201302052146 and it seems working fine.
 
-wrong order of S-O-Bs?
+Run-tested-by: Lintel Huang <lintel.huang@gmail.com>
+Signed-off-by: Chukun Pan <amadeus@jmu.edu.cn>
+---
+ drivers/net/wireless/mediatek/mt7601u/init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Author should be first, then the patch sender should be 2nd
+diff --git a/drivers/net/wireless/mediatek/mt7601u/init.c b/drivers/net/wireless/mediatek/mt7601u/init.c
+index 5d9e952b2966..d18800b41704 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/init.c
++++ b/drivers/net/wireless/mediatek/mt7601u/init.c
+@@ -609,7 +609,8 @@ int mt7601u_register_device(struct mt7601u_dev *dev)
+ 	SET_IEEE80211_PERM_ADDR(hw, dev->macaddr);
+ 
+ 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+-	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
++	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_AP);
+ 	wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
+ 
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+-- 
+2.25.1
+
