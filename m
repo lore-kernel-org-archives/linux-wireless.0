@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3847C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 02:36:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F66BCCA47C
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 02:36:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232868AbiGYCgE (ORCPT
+        id S232245AbiGYCgF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jul 2022 22:36:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47168 "EHLO
+        Sun, 24 Jul 2022 22:36:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232245AbiGYCgA (ORCPT
+        with ESMTP id S230058AbiGYCgA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 24 Jul 2022 22:36:00 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F193EE080
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 19:35:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 37B3DE038
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 19:35:57 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26P2ZcarE014742, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26P2Zg2vA014769, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26P2ZcarE014742
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26P2Zg2vA014769
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Mon, 25 Jul 2022 10:35:38 +0800
+        Mon, 25 Jul 2022 10:35:42 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Mon, 25 Jul 2022 10:35:44 +0800
+ 15.1.2375.28; Mon, 25 Jul 2022 10:35:48 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Mon, 25 Jul
- 2022 10:35:43 +0800
+ 2022 10:35:48 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 5/9] rtw89: coex: Add v1 version TDMA format and parameters
-Date:   Mon, 25 Jul 2022 10:35:05 +0800
-Message-ID: <20220725023509.43114-6-pkshih@realtek.com>
+Subject: [PATCH v2 9/9] rtw89: coex: Update Wi-Fi driver/firmware TDMA cycle report for RTL8852c
+Date:   Mon, 25 Jul 2022 10:35:09 +0800
+Message-ID: <20220725023509.43114-10-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220725023509.43114-1-pkshih@realtek.com>
 References: <20220725023509.43114-1-pkshih@realtek.com>
@@ -66,189 +66,200 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-RTL8852C use a later version Wi-Fi firmware, there are some parameters
-need to be defined. These new parameter can avoid some unexpected
-TDMA mode while Wi-Fi enter/leave lps.
+Because RTL8852c firmware handshake use different structure definition
+with RTL8852a, so it's necessary to update a version for RTL8852c.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 73 +++++++++++++++++++----
- drivers/net/wireless/realtek/rtw89/core.h | 19 ++++--
- 2 files changed, 75 insertions(+), 17 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 61 ++++++++++++++++++++---
+ drivers/net/wireless/realtek/rtw89/core.h | 60 +++++++++++++++++++++-
+ 2 files changed, 113 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index f8e335ead91a2..d520f144ee23a 100644
+index ca0e89d5a30ce..732502b64b255 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -923,8 +923,13 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 		break;
- 	case BTC_RPT_TYPE_TDMA:
- 		pcinfo = &pfwinfo->rpt_fbtc_tdma.cinfo;
--		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_tdma.finfo);
--		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo);
-+		if (chip->chip_id == RTL8852A) {
-+			pfinfo = (u8 *)&pfwinfo->rpt_fbtc_tdma.finfo;
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo);
-+		} else {
-+			pfinfo = (u8 *)&pfwinfo->rpt_fbtc_tdma.finfo_v1;
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo_v1);
-+		}
- 		pcinfo->req_fver = chip->fcxtdma_ver;
- 		pcinfo->rx_len = rpt_len;
- 		pcinfo->rx_cnt++;
-@@ -1037,7 +1042,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 	memcpy(pfinfo, rpt_content, pcinfo->req_len);
- 	pcinfo->valid = 1;
- 
--	if (rpt_type == BTC_RPT_TYPE_TDMA) {
-+	if (rpt_type == BTC_RPT_TYPE_TDMA && chip->chip_id == RTL8852A) {
- 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
- 			    "[BTC], %s(): check %d %zu\n", __func__,
- 			    BTC_DCNT_TDMA_NONSYNC, sizeof(dm->tdma_now));
-@@ -1050,7 +1055,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 				    dm->tdma_now.type, dm->tdma_now.rxflctrl,
- 				    dm->tdma_now.txpause, dm->tdma_now.wtgle_n,
- 				    dm->tdma_now.leak_n, dm->tdma_now.ext_ctrl,
--				    dm->tdma_now.rsvd0, dm->tdma_now.rsvd1);
-+				    dm->tdma_now.rxflctrl_role,
-+				    dm->tdma_now.option_ctrl);
- 
- 			rtw89_debug(rtwdev, RTW89_DBG_BTC,
- 				    "[BTC], %s(): %d rpt_fbtc_tdma %x %x %x %x %x %x %x %x\n",
-@@ -1061,14 +1067,46 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 				    pfwinfo->rpt_fbtc_tdma.finfo.wtgle_n,
- 				    pfwinfo->rpt_fbtc_tdma.finfo.leak_n,
- 				    pfwinfo->rpt_fbtc_tdma.finfo.ext_ctrl,
--				    pfwinfo->rpt_fbtc_tdma.finfo.rsvd0,
--				    pfwinfo->rpt_fbtc_tdma.finfo.rsvd1);
-+				    pfwinfo->rpt_fbtc_tdma.finfo.rxflctrl_role,
-+				    pfwinfo->rpt_fbtc_tdma.finfo.option_ctrl);
- 		}
- 
- 		_chk_btc_err(rtwdev, BTC_DCNT_TDMA_NONSYNC,
- 			     memcmp(&dm->tdma_now,
- 				    &pfwinfo->rpt_fbtc_tdma.finfo,
- 				    sizeof(dm->tdma_now)));
-+	} else if (rpt_type == BTC_RPT_TYPE_TDMA) {
-+		rtw89_debug(rtwdev, RTW89_DBG_BTC,
-+			    "[BTC], %s(): check %d %zu\n", __func__,
-+			    BTC_DCNT_TDMA_NONSYNC, sizeof(dm->tdma_now));
-+
-+		if (memcmp(&dm->tdma_now, &pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma,
-+			   sizeof(dm->tdma_now)) != 0) {
-+			rtw89_debug(rtwdev, RTW89_DBG_BTC,
-+				    "[BTC], %s(): %d tdma_now %x %x %x %x %x %x %x %x\n",
-+				    __func__, BTC_DCNT_TDMA_NONSYNC,
-+				    dm->tdma_now.type, dm->tdma_now.rxflctrl,
-+				    dm->tdma_now.txpause, dm->tdma_now.wtgle_n,
-+				    dm->tdma_now.leak_n, dm->tdma_now.ext_ctrl,
-+				    dm->tdma_now.rxflctrl_role,
-+				    dm->tdma_now.option_ctrl);
-+			rtw89_debug(rtwdev, RTW89_DBG_BTC,
-+				    "[BTC], %s(): %d rpt_fbtc_tdma %x %x %x %x %x %x %x %x\n",
-+				    __func__, BTC_DCNT_TDMA_NONSYNC,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.type,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.rxflctrl,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.txpause,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.wtgle_n,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.leak_n,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.ext_ctrl,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.rxflctrl_role,
-+				    pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma.option_ctrl);
-+		}
-+
-+		_chk_btc_err(rtwdev, BTC_DCNT_TDMA_NONSYNC,
-+			     memcmp(&dm->tdma_now,
-+				    &pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma,
-+				    sizeof(dm->tdma_now)));
- 	}
- 
- 	if (rpt_type == BTC_RPT_TYPE_SLOT) {
-@@ -1220,10 +1258,12 @@ static void _parse_btc_report(struct rtw89_dev *rtwdev,
- 
- static void _append_tdma(struct rtw89_dev *rtwdev)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_btc *btc = &rtwdev->btc;
- 	struct rtw89_btc_dm *dm = &btc->dm;
--	struct rtw89_btc_btf_tlv *tlv = NULL;
--	struct rtw89_btc_fbtc_tdma *v = NULL;
-+	struct rtw89_btc_btf_tlv *tlv;
-+	struct rtw89_btc_fbtc_tdma *v;
-+	struct rtw89_btc_fbtc_tdma_v1 *v1;
- 	u16 len = btc->policy_len;
- 
- 	if (!btc->update_policy_force &&
-@@ -1235,12 +1275,19 @@ static void _append_tdma(struct rtw89_dev *rtwdev)
- 	}
- 
- 	tlv = (struct rtw89_btc_btf_tlv *)&btc->policy[len];
--	v = (struct rtw89_btc_fbtc_tdma *)&tlv->val[0];
- 	tlv->type = CXPOLICY_TDMA;
--	tlv->len = sizeof(*v);
--
--	memcpy(v, &dm->tdma, sizeof(*v));
--	btc->policy_len += BTC_TLV_HDR_LEN  + sizeof(*v);
-+	if (chip->chip_id == RTL8852A) {
-+		v = (struct rtw89_btc_fbtc_tdma *)&tlv->val[0];
-+		tlv->len = sizeof(*v);
-+		memcpy(v, &dm->tdma, sizeof(*v));
-+		btc->policy_len += BTC_TLV_HDR_LEN  + sizeof(*v);
-+	} else {
-+		tlv->len = sizeof(*v1);
-+		v1 = (struct rtw89_btc_fbtc_tdma_v1 *)&tlv->val[0];
-+		v1->fver = chip->fcxtdma_ver;
-+		v1->tdma = dm->tdma;
-+		btc->policy_len += BTC_TLV_HDR_LEN  + sizeof(*v1);
-+	}
+@@ -912,12 +912,14 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 	struct rtw89_btc_fbtc_rpt_ctrl *prpt;
+ 	struct rtw89_btc_fbtc_rpt_ctrl_v1 *prpt_v1;
+ 	struct rtw89_btc_fbtc_cysta *pcysta_le32 = NULL;
++	struct rtw89_btc_fbtc_cysta_v1 *pcysta_v1 = NULL;
+ 	struct rtw89_btc_fbtc_cysta_cpu pcysta[1];
+ 	struct rtw89_btc_prpt *btc_prpt = NULL;
+ 	struct rtw89_btc_fbtc_slot *rtp_slot = NULL;
+ 	u8 rpt_type = 0, *rpt_content = NULL, *pfinfo = NULL;
+-	u16 wl_slot_set = 0;
++	u16 wl_slot_set = 0, wl_slot_real = 0;
+ 	u32 trace_step = btc->ctrl.trace_step, rpt_len = 0, diff_t;
++	u32 cnt_leak_slot = 0, bt_slot_real = 0, cnt_rx_imr = 0;
+ 	u8 i;
  
  	rtw89_debug(rtwdev, RTW89_DBG_BTC,
- 		    "[BTC], %s(): type:%d, rxflctrl=%d, txpause=%d, wtgle_n=%d, leak_n=%d, ext_ctrl=%d\n",
+@@ -975,10 +977,16 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		break;
+ 	case BTC_RPT_TYPE_CYSTA:
+ 		pcinfo = &pfwinfo->rpt_fbtc_cysta.cinfo;
+-		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_cysta.finfo);
+-		pcysta_le32 = &pfwinfo->rpt_fbtc_cysta.finfo;
+-		rtw89_btc_fbtc_cysta_to_cpu(pcysta_le32, pcysta);
+-		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_cysta.finfo);
++		if (chip->chip_id == RTL8852A) {
++			pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_cysta.finfo);
++			pcysta_le32 = &pfwinfo->rpt_fbtc_cysta.finfo;
++			rtw89_btc_fbtc_cysta_to_cpu(pcysta_le32, pcysta);
++			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_cysta.finfo);
++		} else {
++			pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_cysta.finfo_v1);
++			pcysta_v1 = &pfwinfo->rpt_fbtc_cysta.finfo_v1;
++			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_cysta.finfo_v1);
++		}
+ 		pcinfo->req_fver = chip->fcxcysta_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+@@ -1177,7 +1185,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 				    sizeof(dm->slot_now)));
+ 	}
+ 
+-	if (rpt_type == BTC_RPT_TYPE_CYSTA &&
++	if (rpt_type == BTC_RPT_TYPE_CYSTA && chip->chip_id == RTL8852A &&
+ 	    pcysta->cycles >= BTC_CYSTA_CHK_PERIOD) {
+ 		/* Check Leak-AP */
+ 		if (pcysta->slot_cnt[CXST_LK] != 0 &&
+@@ -1200,8 +1208,47 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		}
+ 
+ 		_chk_btc_err(rtwdev, BTC_DCNT_W1_FREEZE, pcysta->slot_cnt[CXST_W1]);
+-		_chk_btc_err(rtwdev, BTC_DCNT_W1_FREEZE, pcysta->slot_cnt[CXST_W1]);
++		_chk_btc_err(rtwdev, BTC_DCNT_W1_FREEZE, pcysta->slot_cnt[CXST_B1]);
+ 		_chk_btc_err(rtwdev, BTC_DCNT_CYCLE_FREEZE, (u32)pcysta->cycles);
++	} else if (rpt_type == BTC_RPT_TYPE_CYSTA && pcysta_v1 &&
++		   le16_to_cpu(pcysta_v1->cycles) >= BTC_CYSTA_CHK_PERIOD) {
++		cnt_leak_slot = le32_to_cpu(pcysta_v1->slot_cnt[CXST_LK]);
++		cnt_rx_imr = le32_to_cpu(pcysta_v1->leak_slot.cnt_rximr);
++		/* Check Leak-AP */
++		if (cnt_leak_slot != 0 && cnt_rx_imr != 0 &&
++		    dm->tdma_now.rxflctrl) {
++			if (cnt_leak_slot < BTC_LEAK_AP_TH * cnt_rx_imr)
++				dm->leak_ap = 1;
++		}
++
++		/* Check diff time between real WL slot and W1 slot */
++		if (dm->tdma_now.type == CXTDMA_OFF) {
++			wl_slot_set = le16_to_cpu(dm->slot_now[CXST_W1].dur);
++			wl_slot_real = le16_to_cpu(pcysta_v1->cycle_time.tavg[CXT_WL]);
++			if (wl_slot_real > wl_slot_set) {
++				diff_t = wl_slot_real - wl_slot_set;
++				_chk_btc_err(rtwdev, BTC_DCNT_WL_SLOT_DRIFT, diff_t);
++			}
++		}
++
++		/* Check diff time between real BT slot and EBT/E5G slot */
++		if (dm->tdma_now.type == CXTDMA_OFF &&
++		    dm->tdma_now.ext_ctrl == CXECTL_EXT &&
++		    btc->bt_req_len != 0) {
++			bt_slot_real = le16_to_cpu(pcysta_v1->cycle_time.tavg[CXT_BT]);
++
++			if (btc->bt_req_len > bt_slot_real) {
++				diff_t = btc->bt_req_len - bt_slot_real;
++				_chk_btc_err(rtwdev, BTC_DCNT_BT_SLOT_DRIFT, diff_t);
++			}
++		}
++
++		_chk_btc_err(rtwdev, BTC_DCNT_W1_FREEZE,
++			     le32_to_cpu(pcysta_v1->slot_cnt[CXST_W1]));
++		_chk_btc_err(rtwdev, BTC_DCNT_B1_FREEZE,
++			     le32_to_cpu(pcysta_v1->slot_cnt[CXST_B1]));
++		_chk_btc_err(rtwdev, BTC_DCNT_CYCLE_FREEZE,
++			     (u32)le16_to_cpu(pcysta_v1->cycles));
+ 	}
+ 
+ 	if (rpt_type == BTC_RPT_TYPE_CTRL && chip->chip_id == RTL8852A) {
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 6722aa26e48f4..6597365786e8f 100644
+index d62e19cc3da52..45e9d9aeefd3d 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -1368,8 +1368,15 @@ struct rtw89_btc_fbtc_tdma {
- 	u8 wtgle_n;
- 	u8 leak_n;
- 	u8 ext_ctrl;
--	u8 rsvd0;
--	u8 rsvd1;
-+	u8 rxflctrl_role;
-+	u8 option_ctrl;
-+} __packed;
-+
-+struct rtw89_btc_fbtc_tdma_v1 {
-+	u8 fver; /* chip_info::fcxtdma_ver */
-+	u8 rsvd;
-+	__le16 rsvd1;
-+	struct rtw89_btc_fbtc_tdma tdma;
+@@ -864,6 +864,7 @@ enum rtw89_btc_dcnt {
+ 	BTC_DCNT_SLOT_NONSYNC,
+ 	BTC_DCNT_BTCNT_FREEZE,
+ 	BTC_DCNT_WL_SLOT_DRIFT,
++	BTC_DCNT_BT_SLOT_DRIFT,
+ 	BTC_DCNT_WL_STA_LAST,
+ 	BTC_DCNT_NUM,
+ };
+@@ -1654,6 +1655,60 @@ struct rtw89_btc_fbtc_cysta { /* statistics for cycles */
+ 	__le16 tslot_cycle[BTC_CYCLE_SLOT_MAX];
  } __packed;
  
- #define CXMREG_MAX 30
-@@ -1683,7 +1690,8 @@ struct rtw89_btc_dm {
- 	u32 wl_btg_rx: 1;
- 	u32 trx_para_level: 8;
- 	u32 wl_stb_chg: 1;
--	u32 rsvd: 3;
-+	u32 tdma_instant_excute: 1;
-+	u32 rsvd: 2;
++struct rtw89_btc_fbtc_fdd_try_info {
++	__le16 cycles[CXT_FLCTRL_MAX];
++	__le16 tavg[CXT_FLCTRL_MAX]; /* avg try BT-Slot-TDD/BT-slot-FDD time */
++	__le16 tmax[CXT_FLCTRL_MAX]; /* max try BT-Slot-TDD/BT-slot-FDD time */
++} __packed;
++
++struct rtw89_btc_fbtc_cycle_time_info {
++	__le16 tavg[CXT_MAX]; /* avg wl/bt cycle time */
++	__le16 tmax[CXT_MAX]; /* max wl/bt cycle time */
++	__le16 tmaxdiff[CXT_MAX]; /* max wl-wl bt-bt cycle diff time */
++} __packed;
++
++struct rtw89_btc_fbtc_a2dp_trx_stat {
++	u8 empty_cnt;
++	u8 retry_cnt;
++	u8 tx_rate;
++	u8 tx_cnt;
++	u8 ack_cnt;
++	u8 nack_cnt;
++	u8 rsvd1;
++	u8 rsvd2;
++} __packed;
++
++struct rtw89_btc_fbtc_cycle_a2dp_empty_info {
++	__le16 cnt; /* a2dp empty cnt */
++	__le16 cnt_timeout; /* a2dp empty timeout cnt*/
++	__le16 tavg; /* avg a2dp empty time */
++	__le16 tmax; /* max a2dp empty time */
++} __packed;
++
++struct rtw89_btc_fbtc_cycle_leak_info {
++	__le32 cnt_rximr; /* the rximr occur at leak slot  */
++	__le16 tavg; /* avg leak-slot time */
++	__le16 tmax; /* max leak-slot time */
++} __packed;
++
++struct rtw89_btc_fbtc_cysta_v1 { /* statistics for cycles */
++	u8 fver;
++	u8 rsvd;
++	__le16 cycles; /* total cycle number */
++	__le16 slot_step_time[BTC_CYCLE_SLOT_MAX];
++	struct rtw89_btc_fbtc_cycle_time_info cycle_time;
++	struct rtw89_btc_fbtc_fdd_try_info fdd_try;
++	struct rtw89_btc_fbtc_cycle_a2dp_empty_info a2dp_ept;
++	struct rtw89_btc_fbtc_a2dp_trx_stat a2dp_trx[BTC_CYCLE_SLOT_MAX];
++	struct rtw89_btc_fbtc_cycle_leak_info leak_slot;
++	__le32 slot_cnt[CXST_MAX]; /* slot count */
++	__le32 bcn_cnt[CXBCN_MAX];
++	__le32 collision_cnt; /* counter for event/timer occur at the same time */
++	__le32 skip_cnt;
++	__le32 except_cnt;
++	__le32 except_map;
++} __packed;
++
+ struct rtw89_btc_fbtc_cynullsta { /* cycle null statistics */
+ 	u8 fver; /* chip_info::fcxnullsta_ver */
+ 	u8 rsvd;
+@@ -1830,7 +1885,10 @@ struct rtw89_btc_rpt_fbtc_slots {
  
- 	u16 slot_dur[CXST_MAX];
- 
-@@ -1765,7 +1773,10 @@ struct rtw89_btc_report_ctrl_state {
- 
- struct rtw89_btc_rpt_fbtc_tdma {
+ struct rtw89_btc_rpt_fbtc_cysta {
  	struct rtw89_btc_rpt_cmn_info cinfo; /* common info, by driver */
--	struct rtw89_btc_fbtc_tdma finfo; /* info from fw */
+-	struct rtw89_btc_fbtc_cysta finfo; /* info from fw */
 +	union {
-+		struct rtw89_btc_fbtc_tdma finfo; /* info from fw */
-+		struct rtw89_btc_fbtc_tdma_v1 finfo_v1; /* info from fw for 52C*/
++		struct rtw89_btc_fbtc_cysta finfo; /* info from fw for 52A*/
++		struct rtw89_btc_fbtc_cysta_v1 finfo_v1; /* info from fw for 52C*/
 +	};
  };
  
- struct rtw89_btc_rpt_fbtc_slots {
+ struct rtw89_btc_rpt_fbtc_step {
 -- 
 2.25.1
 
