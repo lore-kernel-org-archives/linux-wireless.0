@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82EB6C43334
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 02:36:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 956C5CCA48A
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 02:36:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233009AbiGYCgG (ORCPT
+        id S233035AbiGYCgH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jul 2022 22:36:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47170 "EHLO
+        Sun, 24 Jul 2022 22:36:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232347AbiGYCgA (ORCPT
+        with ESMTP id S233002AbiGYCgE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jul 2022 22:36:00 -0400
+        Sun, 24 Jul 2022 22:36:04 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 762F5E027
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 19:35:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E32FE03A
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 19:35:54 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26P2ZdXD2014752, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26P2ZYaM4014714, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26P2ZdXD2014752
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26P2ZYaM4014714
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Mon, 25 Jul 2022 10:35:39 +0800
+        Mon, 25 Jul 2022 10:35:34 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Mon, 25 Jul 2022 10:35:45 +0800
+ 15.1.2375.7; Mon, 25 Jul 2022 10:35:40 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Mon, 25 Jul
- 2022 10:35:44 +0800
+ 2022 10:35:39 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 6/9] rtw89: coex: update WL role info v1 for RTL8852C branch using
-Date:   Mon, 25 Jul 2022 10:35:06 +0800
-Message-ID: <20220725023509.43114-7-pkshih@realtek.com>
+Subject: [PATCH v2 2/9] rtw89: coex: Move Wi-Fi firmware coexistence matching version to chip
+Date:   Mon, 25 Jul 2022 10:35:02 +0800
+Message-ID: <20220725023509.43114-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220725023509.43114-1-pkshih@realtek.com>
 References: <20220725023509.43114-1-pkshih@realtek.com>
@@ -66,832 +66,361 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-The H2C format and support feature are different. The newer Wi-Fi firmware
-and driver branch need to handshake more information like DBCC or P2P
-connection info.
+To configure the different chips with different coexistence version,
+separated the firmware feature version matching number is necessary.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 294 +++++++++++++++++++---
- drivers/net/wireless/realtek/rtw89/core.h |  37 +++
- drivers/net/wireless/realtek/rtw89/fw.c   | 113 ++++++++-
- drivers/net/wireless/realtek/rtw89/fw.h   |  88 +++++--
- 4 files changed, 458 insertions(+), 74 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c     | 25 +++++-----
+ drivers/net/wireless/realtek/rtw89/core.h     | 50 +++++++++----------
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c | 14 ++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 14 ++++++
+ 4 files changed, 66 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index d520f144ee23a..a7e7bbdbf9bc8 100644
+index 286dd086a1338..f9c67aa1570dd 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -1493,12 +1493,17 @@ static void _fw_set_policy(struct rtw89_dev *rtwdev, u16 policy_type,
- 
- static void _fw_set_drv_info(struct rtw89_dev *rtwdev, u8 type)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
-+
- 	switch (type) {
- 	case CXDRVINFO_INIT:
- 		rtw89_fw_h2c_cxdrv_init(rtwdev);
- 		break;
- 	case CXDRVINFO_ROLE:
--		rtw89_fw_h2c_cxdrv_role(rtwdev);
-+		if (chip->chip_id == RTL8852A)
-+			rtw89_fw_h2c_cxdrv_role(rtwdev);
-+		else
-+			rtw89_fw_h2c_cxdrv_role_v1(rtwdev);
- 		break;
- 	case CXDRVINFO_CTRL:
- 		rtw89_fw_h2c_cxdrv_ctrl(rtwdev);
-@@ -1768,28 +1773,45 @@ static void _set_bt_afh_info(struct rtw89_dev *rtwdev)
- 	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
- 	struct rtw89_btc_bt_link_info *b = &bt->link_info;
- 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
-+	struct rtw89_btc_wl_active_role *r;
-+	struct rtw89_btc_wl_active_role_v1 *r1;
- 	u8 en = 0, i, ch = 0, bw = 0;
-+	u8 mode, connect_cnt;
- 
- 	if (btc->ctrl.manual || wl->status.map.scan)
- 		return;
- 
--	/* TODO if include module->ant.type == BTC_ANT_SHARED */
-+	if (chip->chip_id == RTL8852A) {
-+		mode = wl_rinfo->link_mode;
-+		connect_cnt = wl_rinfo->connect_cnt;
-+	} else {
-+		mode = wl_rinfo_v1->link_mode;
-+		connect_cnt = wl_rinfo_v1->connect_cnt;
-+	}
-+
- 	if (wl->status.map.rf_off || bt->whql_test ||
--	    wl_rinfo->link_mode == BTC_WLINK_NOLINK ||
--	    wl_rinfo->link_mode == BTC_WLINK_5G ||
--	    wl_rinfo->connect_cnt > BTC_TDMA_WLROLE_MAX) {
-+	    mode == BTC_WLINK_NOLINK || mode == BTC_WLINK_5G ||
-+	    connect_cnt > BTC_TDMA_WLROLE_MAX) {
- 		en = false;
--	} else if (wl_rinfo->link_mode == BTC_WLINK_2G_MCC ||
--		   wl_rinfo->link_mode == BTC_WLINK_2G_SCC) {
-+	} else if (mode == BTC_WLINK_2G_MCC || mode == BTC_WLINK_2G_SCC) {
- 		en = true;
- 		/* get p2p channel */
- 		for (i = 0; i < RTW89_PORT_NUM; i++) {
--			if (wl_rinfo->active_role[i].role ==
--			    RTW89_WIFI_ROLE_P2P_GO ||
--			    wl_rinfo->active_role[i].role ==
--			    RTW89_WIFI_ROLE_P2P_CLIENT) {
--				ch = wl_rinfo->active_role[i].ch;
--				bw = wl_rinfo->active_role[i].bw;
-+			r = &wl_rinfo->active_role[i];
-+			r1 = &wl_rinfo_v1->active_role_v1[i];
-+
-+			if (chip->chip_id == RTL8852A &&
-+			    (r->role == RTW89_WIFI_ROLE_P2P_GO ||
-+			     r->role == RTW89_WIFI_ROLE_P2P_CLIENT)) {
-+				ch = r->ch;
-+				bw = r->bw;
-+				break;
-+			} else if (chip->chip_id != RTL8852A &&
-+				   (r1->role == RTW89_WIFI_ROLE_P2P_GO ||
-+				    r1->role == RTW89_WIFI_ROLE_P2P_CLIENT)) {
-+				ch = r1->ch;
-+				bw = r1->bw;
- 				break;
- 			}
- 		}
-@@ -1797,10 +1819,18 @@ static void _set_bt_afh_info(struct rtw89_dev *rtwdev)
- 		en = true;
- 		/* get 2g channel  */
- 		for (i = 0; i < RTW89_PORT_NUM; i++) {
--			if (wl_rinfo->active_role[i].connected &&
--			    wl_rinfo->active_role[i].band == RTW89_BAND_2G) {
--				ch = wl_rinfo->active_role[i].ch;
--				bw = wl_rinfo->active_role[i].bw;
-+			r = &wl_rinfo->active_role[i];
-+			r1 = &wl_rinfo_v1->active_role_v1[i];
-+
-+			if (chip->chip_id == RTL8852A &&
-+			    r->connected && r->band == RTW89_BAND_2G) {
-+				ch = r->ch;
-+				bw = r->bw;
-+				break;
-+			} else if (chip->chip_id != RTL8852A &&
-+				   r1->connected && r1->band == RTW89_BAND_2G) {
-+				ch = r1->ch;
-+				bw = r1->bw;
- 				break;
- 			}
- 		}
-@@ -1853,6 +1883,7 @@ static bool _check_freerun(struct rtw89_dev *rtwdev)
- 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
- 	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
- 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
- 	struct rtw89_btc_bt_link_info *bt_linfo = &bt->link_info;
- 	struct rtw89_btc_bt_hid_desc *hid = &bt_linfo->hid_desc;
- 
-@@ -1862,7 +1893,8 @@ static bool _check_freerun(struct rtw89_dev *rtwdev)
- 	}
- 
- 	/* The below is dedicated antenna case */
--	if (wl_rinfo->connect_cnt > BTC_TDMA_WLROLE_MAX) {
-+	if (wl_rinfo->connect_cnt > BTC_TDMA_WLROLE_MAX ||
-+	    wl_rinfo_v1->connect_cnt > BTC_TDMA_WLROLE_MAX) {
- 		btc->dm.trx_para_level = 5;
- 		return true;
- 	}
-@@ -2877,19 +2909,27 @@ static void _action_wl_rfk(struct rtw89_dev *rtwdev)
- 
- static void _set_btg_ctrl(struct rtw89_dev *rtwdev)
+@@ -871,6 +871,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 			   struct rtw89_btc_btf_fwinfo *pfwinfo,
+ 			   u8 *prptbuf, u32 index)
  {
 +	const struct rtw89_chip_info *chip = rtwdev->chip;
  	struct rtw89_btc *btc = &rtwdev->btc;
- 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
- 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
- 	struct rtw89_btc_wl_dbcc_info *wl_dinfo = &wl->dbcc_info;
--	bool is_btg = false;
-+	bool is_btg;
-+	u8 mode;
- 
- 	if (btc->ctrl.manual)
- 		return;
- 
-+	if (chip->chip_id == RTL8852A)
-+		mode = wl_rinfo->link_mode;
-+	else
-+		mode = wl_rinfo_v1->link_mode;
-+
- 	/* notify halbb ignore GNT_BT or not for WL BB Rx-AGC control */
--	if (wl_rinfo->link_mode == BTC_WLINK_5G) /* always 0 if 5G */
-+	if (mode == BTC_WLINK_5G) /* always 0 if 5G */
- 		is_btg = false;
--	else if (wl_rinfo->link_mode == BTC_WLINK_25G_DBCC &&
-+	else if (mode == BTC_WLINK_25G_DBCC &&
- 		 wl_dinfo->real_band[RTW89_PHY_1] != RTW89_BAND_2G)
- 		is_btg = false;
- 	else
-@@ -2901,7 +2941,7 @@ static void _set_btg_ctrl(struct rtw89_dev *rtwdev)
- 
- 	btc->dm.wl_btg_rx = is_btg;
- 
--	if (wl_rinfo->link_mode == BTC_WLINK_25G_MCC)
-+	if (mode == BTC_WLINK_25G_MCC)
- 		return;
- 
- 	rtw89_ctrl_btg(rtwdev, is_btg);
-@@ -2974,6 +3014,7 @@ static void rtw89_tx_time_iter(void *data, struct ieee80211_sta *sta)
- 
- static void _set_wl_tx_limit(struct rtw89_dev *rtwdev)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_btc *btc = &rtwdev->btc;
- 	struct rtw89_btc_cx *cx = &btc->cx;
  	struct rtw89_btc_dm *dm = &btc->dm;
-@@ -2983,16 +3024,22 @@ static void _set_wl_tx_limit(struct rtw89_dev *rtwdev)
- 	struct rtw89_btc_bt_hfp_desc *hfp = &b->hfp_desc;
- 	struct rtw89_btc_bt_hid_desc *hid = &b->hid_desc;
- 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
- 	struct rtw89_txtime_data data = {.rtwdev = rtwdev};
--	u8 mode = wl_rinfo->link_mode;
--	u8 tx_retry = 0;
--	u32 tx_time = 0;
--	u16 enable = 0;
-+	u8 mode;
-+	u8 tx_retry;
-+	u32 tx_time;
-+	u16 enable;
- 	bool reenable = false;
- 
- 	if (btc->ctrl.manual)
- 		return;
- 
-+	if (chip->chip_id == RTL8852A)
-+		mode = wl_rinfo->link_mode;
-+	else
-+		mode = wl_rinfo_v1->link_mode;
-+
- 	if (btc->dm.freerun || btc->ctrl.igno_bt || b->profile_cnt.now == 0 ||
- 	    mode == BTC_WLINK_5G || mode == BTC_WLINK_NOLINK) {
- 		enable = 0;
-@@ -3036,13 +3083,21 @@ static void _set_wl_tx_limit(struct rtw89_dev *rtwdev)
- 
- static void _set_bt_rx_agc(struct rtw89_dev *rtwdev)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_btc *btc = &rtwdev->btc;
- 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
- 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
- 	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
- 	bool bt_hi_lna_rx = false;
-+	u8 mode;
-+
-+	if (chip->chip_id == RTL8852A)
-+		mode = wl_rinfo->link_mode;
-+	else
-+		mode = wl_rinfo_v1->link_mode;
- 
--	if (wl_rinfo->link_mode != BTC_WLINK_NOLINK && btc->dm.wl_btg_rx)
-+	if (mode != BTC_WLINK_NOLINK && btc->dm.wl_btg_rx)
- 		bt_hi_lna_rx = true;
- 
- 	if (bt_hi_lna_rx == bt->hi_lna_rx)
-@@ -3519,6 +3574,156 @@ static void _update_wl_info(struct rtw89_dev *rtwdev)
- 	_fw_set_drv_info(rtwdev, CXDRVINFO_ROLE);
- }
- 
-+static void _update_wl_info_v1(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_btc *btc = &rtwdev->btc;
-+	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
-+	struct rtw89_btc_wl_link_info *wl_linfo = wl->link_info;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo = &wl->role_info_v1;
-+	struct rtw89_btc_wl_dbcc_info *wl_dinfo = &wl->dbcc_info;
-+	u8 cnt_connect = 0, cnt_connecting = 0, cnt_active = 0;
-+	u8 cnt_2g = 0, cnt_5g = 0, phy;
-+	u32 wl_2g_ch[2] = {}, wl_5g_ch[2] = {};
-+	bool b2g = false, b5g = false, client_joined = false;
-+	u8 i;
-+
-+	memset(wl_rinfo, 0, sizeof(*wl_rinfo));
-+
-+	for (i = 0; i < RTW89_PORT_NUM; i++) {
-+		if (!wl_linfo[i].active)
-+			continue;
-+
-+		cnt_active++;
-+		wl_rinfo->active_role_v1[cnt_active - 1].role = wl_linfo[i].role;
-+		wl_rinfo->active_role_v1[cnt_active - 1].pid = wl_linfo[i].pid;
-+		wl_rinfo->active_role_v1[cnt_active - 1].phy = wl_linfo[i].phy;
-+		wl_rinfo->active_role_v1[cnt_active - 1].band = wl_linfo[i].band;
-+		wl_rinfo->active_role_v1[cnt_active - 1].noa = (u8)wl_linfo[i].noa;
-+		wl_rinfo->active_role_v1[cnt_active - 1].connected = 0;
-+
-+		wl->port_id[wl_linfo[i].role] = wl_linfo[i].pid;
-+
-+		phy = wl_linfo[i].phy;
-+
-+		if (rtwdev->dbcc_en && phy < RTW89_PHY_MAX) {
-+			wl_dinfo->role[phy] = wl_linfo[i].role;
-+			wl_dinfo->op_band[phy] = wl_linfo[i].band;
-+			_update_dbcc_band(rtwdev, phy);
-+			_fw_set_drv_info(rtwdev, CXDRVINFO_DBCC);
-+		}
-+
-+		if (wl_linfo[i].connected == MLME_NO_LINK) {
-+			continue;
-+		} else if (wl_linfo[i].connected == MLME_LINKING) {
-+			cnt_connecting++;
-+		} else {
-+			cnt_connect++;
-+			if ((wl_linfo[i].role == RTW89_WIFI_ROLE_P2P_GO ||
-+			     wl_linfo[i].role == RTW89_WIFI_ROLE_AP) &&
-+			     wl_linfo[i].client_cnt > 1)
-+				client_joined = true;
-+		}
-+
-+		wl_rinfo->role_map.val |= BIT(wl_linfo[i].role);
-+		wl_rinfo->active_role_v1[cnt_active - 1].ch = wl_linfo[i].ch;
-+		wl_rinfo->active_role_v1[cnt_active - 1].bw = wl_linfo[i].bw;
-+		wl_rinfo->active_role_v1[cnt_active - 1].connected = 1;
-+
-+		/* only care 2 roles + BT coex */
-+		if (wl_linfo[i].band != RTW89_BAND_2G) {
-+			if (cnt_5g <= ARRAY_SIZE(wl_5g_ch) - 1)
-+				wl_5g_ch[cnt_5g] = wl_linfo[i].ch;
-+			cnt_5g++;
-+			b5g = true;
-+		} else {
-+			if (cnt_2g <= ARRAY_SIZE(wl_2g_ch) - 1)
-+				wl_2g_ch[cnt_2g] = wl_linfo[i].ch;
-+			cnt_2g++;
-+			b2g = true;
-+		}
-+	}
-+
-+	wl_rinfo->connect_cnt = cnt_connect;
-+
-+	/* Be careful to change the following sequence!! */
-+	if (cnt_connect == 0) {
-+		wl_rinfo->link_mode = BTC_WLINK_NOLINK;
-+		wl_rinfo->role_map.role.none = 1;
-+	} else if (!b2g && b5g) {
-+		wl_rinfo->link_mode = BTC_WLINK_5G;
-+	} else if (wl_rinfo->role_map.role.nan) {
-+		wl_rinfo->link_mode = BTC_WLINK_2G_NAN;
-+	} else if (cnt_connect > BTC_TDMA_WLROLE_MAX) {
-+		wl_rinfo->link_mode = BTC_WLINK_OTHER;
-+	} else  if (b2g && b5g && cnt_connect == 2) {
-+		if (rtwdev->dbcc_en) {
-+			switch (wl_dinfo->role[RTW89_PHY_0]) {
-+			case RTW89_WIFI_ROLE_STATION:
-+				wl_rinfo->link_mode = BTC_WLINK_2G_STA;
-+				break;
-+			case RTW89_WIFI_ROLE_P2P_GO:
-+				wl_rinfo->link_mode = BTC_WLINK_2G_GO;
-+				break;
-+			case RTW89_WIFI_ROLE_P2P_CLIENT:
-+				wl_rinfo->link_mode = BTC_WLINK_2G_GC;
-+				break;
-+			case RTW89_WIFI_ROLE_AP:
-+				wl_rinfo->link_mode = BTC_WLINK_2G_AP;
-+				break;
-+			default:
-+				wl_rinfo->link_mode = BTC_WLINK_OTHER;
-+				break;
-+			}
-+		} else {
-+			wl_rinfo->link_mode = BTC_WLINK_25G_MCC;
-+		}
-+	} else if (!b5g && cnt_connect == 2) {
-+		if (wl_rinfo->role_map.role.station &&
-+		    (wl_rinfo->role_map.role.p2p_go ||
-+		    wl_rinfo->role_map.role.p2p_gc ||
-+		    wl_rinfo->role_map.role.ap)) {
-+			if (wl_2g_ch[0] == wl_2g_ch[1])
-+				wl_rinfo->link_mode = BTC_WLINK_2G_SCC;
-+			else
-+				wl_rinfo->link_mode = BTC_WLINK_2G_MCC;
-+		} else {
-+			wl_rinfo->link_mode = BTC_WLINK_2G_MCC;
-+		}
-+	} else if (!b5g && cnt_connect == 1) {
-+		if (wl_rinfo->role_map.role.station)
-+			wl_rinfo->link_mode = BTC_WLINK_2G_STA;
-+		else if (wl_rinfo->role_map.role.ap)
-+			wl_rinfo->link_mode = BTC_WLINK_2G_AP;
-+		else if (wl_rinfo->role_map.role.p2p_go)
-+			wl_rinfo->link_mode = BTC_WLINK_2G_GO;
-+		else if (wl_rinfo->role_map.role.p2p_gc)
-+			wl_rinfo->link_mode = BTC_WLINK_2G_GC;
-+		else
-+			wl_rinfo->link_mode = BTC_WLINK_OTHER;
-+	}
-+
-+	/* if no client_joined, don't care P2P-GO/AP role */
-+	if (wl_rinfo->role_map.role.p2p_go || wl_rinfo->role_map.role.ap) {
-+		if (!client_joined) {
-+			if (wl_rinfo->link_mode == BTC_WLINK_2G_SCC ||
-+			    wl_rinfo->link_mode == BTC_WLINK_2G_MCC) {
-+				wl_rinfo->link_mode = BTC_WLINK_2G_STA;
-+				wl_rinfo->connect_cnt = 1;
-+			} else if (wl_rinfo->link_mode == BTC_WLINK_2G_GO ||
-+				 wl_rinfo->link_mode == BTC_WLINK_2G_AP) {
-+				wl_rinfo->link_mode = BTC_WLINK_NOLINK;
-+				wl_rinfo->connect_cnt = 0;
-+			}
-+		}
-+	}
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_BTC,
-+		    "[BTC], cnt_connect = %d, connecting = %d, link_mode = %d\n",
-+		    cnt_connect, cnt_connecting, wl_rinfo->link_mode);
-+
-+	_fw_set_drv_info(rtwdev, CXDRVINFO_ROLE);
-+}
-+
- #define BTC_CHK_HANG_MAX 3
- #define BTC_SCB_INV_VALUE GENMASK(31, 0)
- 
-@@ -3669,23 +3874,31 @@ static bool _chk_wl_rfk_request(struct rtw89_dev *rtwdev)
- static
- void _run_coex(struct rtw89_dev *rtwdev, enum btc_reason_and_action reason)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_btc *btc = &rtwdev->btc;
- 	struct rtw89_btc_dm *dm = &rtwdev->btc.dm;
- 	struct rtw89_btc_cx *cx = &btc->cx;
- 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
- 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
--	u8 mode = wl_rinfo->link_mode;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
-+	u8 mode;
- 
- 	lockdep_assert_held(&rtwdev->mutex);
--	rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], %s(): reason=%d, mode=%d\n",
--		    __func__, reason, mode);
--	rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], %s(): wl_only=%d, bt_only=%d\n",
--		    __func__, dm->wl_only, dm->bt_only);
- 
- 	dm->run_reason = reason;
- 	_update_dm_step(rtwdev, reason);
- 	_update_btc_state_map(rtwdev);
- 
-+	if (chip->chip_id == RTL8852A)
-+		mode = wl_rinfo->link_mode;
-+	else
-+		mode = wl_rinfo_v1->link_mode;
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], %s(): reason=%d, mode=%d\n",
-+		    __func__, reason, mode);
-+	rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], %s(): wl_only=%d, bt_only=%d\n",
-+		    __func__, dm->wl_only, dm->bt_only);
-+
- 	/* Be careful to change the following function sequence!! */
- 	if (btc->ctrl.manual) {
- 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
-@@ -4239,6 +4452,7 @@ void rtw89_btc_ntfy_role_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif
- 			      struct rtw89_sta *rtwsta, enum btc_role_state state)
- {
- 	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
- 	struct ieee80211_sta *sta = rtwsta_to_sta(rtwsta);
- 	struct rtw89_btc *btc = &rtwdev->btc;
-@@ -4305,7 +4519,10 @@ void rtw89_btc_ntfy_role_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif
- 	wlinfo = &wl->link_info[r.pid];
- 
- 	memcpy(wlinfo, &r, sizeof(*wlinfo));
--	_update_wl_info(rtwdev);
-+	if (chip->chip_id == RTL8852A)
-+		_update_wl_info(rtwdev);
-+	else
-+		_update_wl_info_v1(rtwdev);
- 
- 	if (wlinfo->role == RTW89_WIFI_ROLE_STATION &&
- 	    wlinfo->connected == MLME_NO_LINK)
-@@ -4819,18 +5036,25 @@ static void _show_wl_role_info(struct rtw89_dev *rtwdev, struct seq_file *m)
- 
- static void _show_wl_info(struct rtw89_dev *rtwdev, struct seq_file *m)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_btc *btc = &rtwdev->btc;
- 	struct rtw89_btc_cx *cx = &btc->cx;
- 	struct rtw89_btc_wl_info *wl = &cx->wl;
- 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
-+	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
-+	u8 mode;
- 
- 	if (!(btc->dm.coex_info_map & BTC_COEX_INFO_WL))
- 		return;
- 
- 	seq_puts(m, "========== [WL Status] ==========\n");
- 
--	seq_printf(m, " %-15s : link_mode:%d, ",
--		   "[status]", (u32)wl_rinfo->link_mode);
-+	if (chip->chip_id == RTL8852A)
-+		mode = wl_rinfo->link_mode;
-+	else
-+		mode = wl_rinfo_v1->link_mode;
-+
-+	seq_printf(m, " %-15s : link_mode:%d, ", "[status]", mode);
- 
- 	seq_printf(m,
- 		   "rf_off:%d, power_save:%d, scan:%s(band:%d/phy_map:0x%x), ",
+ 	struct rtw89_btc_rpt_cmn_info *pcinfo = NULL;
+@@ -908,7 +909,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_ctrl.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_ctrl.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_ctrl.finfo);
+-		pcinfo->req_fver = BTCRPT_VER;
++		pcinfo->req_fver = chip->fcxbtcrpt_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -916,7 +917,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_tdma.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_tdma.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo);
+-		pcinfo->req_fver = FCXTDMA_VER;
++		pcinfo->req_fver = chip->fcxtdma_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -924,7 +925,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_slots.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_slots.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_slots.finfo);
+-		pcinfo->req_fver = FCXSLOTS_VER;
++		pcinfo->req_fver = chip->fcxslots_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -934,7 +935,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcysta_le32 = &pfwinfo->rpt_fbtc_cysta.finfo;
+ 		rtw89_btc_fbtc_cysta_to_cpu(pcysta_le32, pcysta);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_cysta.finfo);
+-		pcinfo->req_fver = FCXCYSTA_VER;
++		pcinfo->req_fver = chip->fcxcysta_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -943,7 +944,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_step.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_step.finfo.step[0]) *
+ 				  trace_step + 8;
+-		pcinfo->req_fver = FCXSTEP_VER;
++		pcinfo->req_fver = chip->fcxstep_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -951,7 +952,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_nullsta.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_nullsta.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_nullsta.finfo);
+-		pcinfo->req_fver = FCXNULLSTA_VER;
++		pcinfo->req_fver = chip->fcxnullsta_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -959,7 +960,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_mregval.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_mregval.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_mregval.finfo);
+-		pcinfo->req_fver = FCXMREG_VER;
++		pcinfo->req_fver = chip->fcxmreg_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -967,7 +968,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_gpio_dbg.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_gpio_dbg.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_gpio_dbg.finfo);
+-		pcinfo->req_fver = FCXGPIODBG_VER;
++		pcinfo->req_fver = chip->fcxgpiodbg_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -975,7 +976,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_btver.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_btver.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_btver.finfo);
+-		pcinfo->req_fver = FCX_BTVER_VER;
++		pcinfo->req_fver = chip->fcxbtver_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -983,7 +984,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_btscan.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_btscan.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_btscan.finfo);
+-		pcinfo->req_fver = FCX_BTSCAN_VER;
++		pcinfo->req_fver = chip->fcxbtscan_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -991,7 +992,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_btafh.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_btafh.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_btafh.finfo);
+-		pcinfo->req_fver = FCX_BTAFH_VER;
++		pcinfo->req_fver = chip->fcxbtafh_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
+@@ -999,7 +1000,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		pcinfo = &pfwinfo->rpt_fbtc_btdev.cinfo;
+ 		pfinfo = (u8 *)(&pfwinfo->rpt_fbtc_btdev.finfo);
+ 		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_btdev.finfo);
+-		pcinfo->req_fver = FCX_BTDEVINFO_VER;
++		pcinfo->req_fver = chip->fcxbtdevinfo_ver;
+ 		pcinfo->rx_len = rpt_len;
+ 		pcinfo->rx_cnt++;
+ 		break;
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 6597365786e8f..f4a3561ebcb85 100644
+index 05b5282c770da..686ff8760c847 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -1124,6 +1124,27 @@ struct rtw89_btc_wl_active_role {
- 	u16 rx_rate;
+@@ -1362,7 +1362,7 @@ struct rtw89_btc_cx {
  };
  
-+struct rtw89_btc_wl_active_role_v1 {
-+	u8 connected: 1;
-+	u8 pid: 3;
-+	u8 phy: 1;
-+	u8 noa: 1;
-+	u8 band: 2;
-+
-+	u8 client_ps: 1;
-+	u8 bw: 7;
-+
-+	u8 role;
-+	u8 ch;
-+
-+	u16 tx_lvl;
-+	u16 rx_lvl;
-+	u16 tx_rate;
-+	u16 rx_rate;
-+
-+	u32 noa_duration; /* ms */
-+};
-+
- struct rtw89_btc_wl_role_info_bpos {
- 	u16 none: 1;
- 	u16 station: 1;
-@@ -1151,6 +1172,21 @@ struct rtw89_btc_wl_role_info { /* struct size must be n*4 bytes */
- 	struct rtw89_btc_wl_active_role active_role[RTW89_PORT_NUM];
+ struct rtw89_btc_fbtc_tdma {
+-	u8 type;
++	u8 type; /* chip_info::fcxtdma_ver */
+ 	u8 rxflctrl;
+ 	u8 txpause;
+ 	u8 wtgle_n;
+@@ -1374,7 +1374,6 @@ struct rtw89_btc_fbtc_tdma {
+ 
+ #define CXMREG_MAX 30
+ #define FCXMAX_STEP 255 /*STEP trace record cnt, Max:65535, default:255*/
+-#define BTCRPT_VER 1
+ #define BTC_CYCLE_SLOT_MAX 48 /* must be even number, non-zero */
+ 
+ enum rtw89_btc_bt_rfk_counter {
+@@ -1387,7 +1386,7 @@ enum rtw89_btc_bt_rfk_counter {
  };
  
-+struct rtw89_btc_wl_role_info_v1 { /* struct size must be n*4 bytes */
-+	u8 connect_cnt;
-+	u8 link_mode;
-+	union rtw89_btc_wl_role_info_map role_map;
-+	struct rtw89_btc_wl_active_role_v1 active_role_v1[RTW89_PORT_NUM];
-+	u32 mrole_type; /* btc_wl_mrole_type */
-+	u32 mrole_noa_duration; /* ms */
-+
-+	u32 dbcc_en: 1;
-+	u32 dbcc_chg: 1;
-+	u32 dbcc_2g_phy: 2; /* which phy operate in 2G, HW_PHY_0 or HW_PHY_1 */
-+	u32 link_mode_chg: 1;
-+	u32 rsvd: 27;
-+};
-+
- struct rtw89_btc_wl_ver_info {
- 	u32 fw_coex; /* match with which coex_ver */
- 	u32 fw;
-@@ -1256,6 +1292,7 @@ struct rtw89_btc_wl_info {
- 	struct rtw89_btc_wl_ver_info  ver_info;
- 	struct rtw89_btc_wl_afh_info afh_info;
- 	struct rtw89_btc_wl_role_info role_info;
-+	struct rtw89_btc_wl_role_info_v1 role_info_v1;
- 	struct rtw89_btc_wl_scan_info scan_info;
- 	struct rtw89_btc_wl_dbcc_info dbcc_info;
- 	struct rtw89_btc_rf_para rf_para;
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 2867f395db4b3..3d86dcc8c0f71 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -1450,7 +1450,12 @@ int rtw89_fw_h2c_cxdrv_init(struct rtw89_dev *rtwdev)
- 	return -EBUSY;
- }
+ struct rtw89_btc_fbtc_rpt_ctrl {
+-	u16 fver;
++	u16 fver; /* chip_info::fcxbtcrpt_ver */
+ 	u16 rpt_cnt; /* tmr counters */
+ 	u32 wl_fw_coex_ver; /* match which driver's coex version */
+ 	u32 wl_fw_cx_offload;
+@@ -1473,10 +1472,9 @@ enum { /* STEP TYPE */
+ 	CXSTEP_MAX,
+ };
  
-+#define PORT_DATA_OFFSET 4
-+#define H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN 12
- #define H2C_LEN_CXDRVINFO_ROLE (4 + 12 * RTW89_PORT_NUM + H2C_LEN_CXDRVHDR)
-+#define H2C_LEN_CXDRVINFO_ROLE_V1 (4 + 16 * RTW89_PORT_NUM + \
-+				   H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN + \
-+				   H2C_LEN_CXDRVHDR)
- int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
- {
- 	struct rtw89_btc *btc = &rtwdev->btc;
-@@ -1459,6 +1464,7 @@ int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
- 	struct rtw89_btc_wl_role_info_bpos *bpos = &role_info->role_map.role;
- 	struct rtw89_btc_wl_active_role *active = role_info->active_role;
- 	struct sk_buff *skb;
-+	u8 offset = 0;
- 	u8 *cmd;
- 	int i;
+-#define FCXGPIODBG_VER 1
+ #define BTC_DBG_MAX1  32
+ struct rtw89_btc_fbtc_gpio_dbg {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxgpiodbg_ver */
+ 	u8 rsvd;
+ 	u16 rsvd2;
+ 	u32 en_map; /* which debug signal (see btc_wl_gpio_debug) is enable */
+@@ -1484,9 +1482,8 @@ struct rtw89_btc_fbtc_gpio_dbg {
+ 	u8 gpio_map[BTC_DBG_MAX1]; /*the debug signals to GPIO-Position */
+ } __packed;
  
-@@ -1490,19 +1496,19 @@ int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
- 	RTW89_SET_FWCMD_CXROLE_ROLE_NAN(cmd, bpos->nan);
+-#define FCXMREG_VER 1
+ struct rtw89_btc_fbtc_mreg_val {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxmreg_ver */
+ 	u8 reg_num;
+ 	__le16 rsvd;
+ 	__le32 mreg_val[CXMREG_MAX];
+@@ -1508,16 +1505,14 @@ struct rtw89_btc_fbtc_slot {
+ 	__le16 cxtype;
+ } __packed;
  
- 	for (i = 0; i < RTW89_PORT_NUM; i++, active++) {
--		RTW89_SET_FWCMD_CXROLE_ACT_CONNECTED(cmd, active->connected, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_PID(cmd, active->pid, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_PHY(cmd, active->phy, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_NOA(cmd, active->noa, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_BAND(cmd, active->band, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_CLIENT_PS(cmd, active->client_ps, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_BW(cmd, active->bw, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_ROLE(cmd, active->role, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_CH(cmd, active->ch, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_TX_LVL(cmd, active->tx_lvl, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_RX_LVL(cmd, active->rx_lvl, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_TX_RATE(cmd, active->tx_rate, i);
--		RTW89_SET_FWCMD_CXROLE_ACT_RX_RATE(cmd, active->rx_rate, i);
-+		RTW89_SET_FWCMD_CXROLE_ACT_CONNECTED(cmd, active->connected, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_PID(cmd, active->pid, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_PHY(cmd, active->phy, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_NOA(cmd, active->noa, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_BAND(cmd, active->band, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_CLIENT_PS(cmd, active->client_ps, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_BW(cmd, active->bw, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_ROLE(cmd, active->role, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_CH(cmd, active->ch, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_TX_LVL(cmd, active->tx_lvl, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_RX_LVL(cmd, active->rx_lvl, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_TX_RATE(cmd, active->tx_rate, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_RX_RATE(cmd, active->rx_rate, i, offset);
- 	}
+-#define FCXSLOTS_VER 1
+ struct rtw89_btc_fbtc_slots {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxslots_ver */
+ 	u8 tbl_num;
+ 	__le16 rsvd;
+ 	__le32 update_map;
+ 	struct rtw89_btc_fbtc_slot slot[CXST_MAX];
+ } __packed;
  
- 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
-@@ -1522,6 +1528,87 @@ int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
- 	return -EBUSY;
- }
+-#define FCXSTEP_VER 2
+ struct rtw89_btc_fbtc_step {
+ 	u8 type;
+ 	u8 val;
+@@ -1525,7 +1520,7 @@ struct rtw89_btc_fbtc_step {
+ } __packed;
  
-+int rtw89_fw_h2c_cxdrv_role_v1(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_btc *btc = &rtwdev->btc;
-+	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
-+	struct rtw89_btc_wl_role_info_v1 *role_info = &wl->role_info_v1;
-+	struct rtw89_btc_wl_role_info_bpos *bpos = &role_info->role_map.role;
-+	struct rtw89_btc_wl_active_role_v1 *active = role_info->active_role_v1;
-+	struct sk_buff *skb;
-+	u8 *cmd, offset;
-+	int i;
-+
-+	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_CXDRVINFO_ROLE_V1);
-+	if (!skb) {
-+		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_role\n");
-+		return -ENOMEM;
-+	}
-+	skb_put(skb, H2C_LEN_CXDRVINFO_ROLE_V1);
-+	cmd = skb->data;
-+
-+	RTW89_SET_FWCMD_CXHDR_TYPE(cmd, CXDRVINFO_ROLE);
-+	RTW89_SET_FWCMD_CXHDR_LEN(cmd, H2C_LEN_CXDRVINFO_ROLE_V1 - H2C_LEN_CXDRVHDR);
-+
-+	RTW89_SET_FWCMD_CXROLE_CONNECT_CNT(cmd, role_info->connect_cnt);
-+	RTW89_SET_FWCMD_CXROLE_LINK_MODE(cmd, role_info->link_mode);
-+
-+	RTW89_SET_FWCMD_CXROLE_ROLE_NONE(cmd, bpos->none);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_STA(cmd, bpos->station);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_AP(cmd, bpos->ap);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_VAP(cmd, bpos->vap);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_ADHOC(cmd, bpos->adhoc);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_ADHOC_MASTER(cmd, bpos->adhoc_master);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_MESH(cmd, bpos->mesh);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_MONITOR(cmd, bpos->moniter);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_P2P_DEV(cmd, bpos->p2p_device);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_P2P_GC(cmd, bpos->p2p_gc);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_P2P_GO(cmd, bpos->p2p_go);
-+	RTW89_SET_FWCMD_CXROLE_ROLE_NAN(cmd, bpos->nan);
-+
-+	offset = PORT_DATA_OFFSET;
-+	for (i = 0; i < RTW89_PORT_NUM; i++, active++) {
-+		RTW89_SET_FWCMD_CXROLE_ACT_CONNECTED(cmd, active->connected, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_PID(cmd, active->pid, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_PHY(cmd, active->phy, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_NOA(cmd, active->noa, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_BAND(cmd, active->band, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_CLIENT_PS(cmd, active->client_ps, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_BW(cmd, active->bw, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_ROLE(cmd, active->role, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_CH(cmd, active->ch, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_TX_LVL(cmd, active->tx_lvl, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_RX_LVL(cmd, active->rx_lvl, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_TX_RATE(cmd, active->tx_rate, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_RX_RATE(cmd, active->rx_rate, i, offset);
-+		RTW89_SET_FWCMD_CXROLE_ACT_NOA_DUR(cmd, active->noa_duration, i, offset);
-+	}
-+
-+	offset = H2C_LEN_CXDRVINFO_ROLE_V1 - H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN;
-+	RTW89_SET_FWCMD_CXROLE_MROLE_TYPE(cmd, role_info->mrole_type, offset);
-+	RTW89_SET_FWCMD_CXROLE_MROLE_NOA(cmd, role_info->mrole_noa_duration, offset);
-+	RTW89_SET_FWCMD_CXROLE_DBCC_EN(cmd, role_info->dbcc_en, offset);
-+	RTW89_SET_FWCMD_CXROLE_DBCC_CHG(cmd, role_info->dbcc_chg, offset);
-+	RTW89_SET_FWCMD_CXROLE_DBCC_2G_PHY(cmd, role_info->dbcc_2g_phy, offset);
-+	RTW89_SET_FWCMD_CXROLE_LINK_MODE_CHG(cmd, role_info->link_mode_chg, offset);
-+
-+	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
-+			      H2C_CAT_OUTSRC, BTFC_SET,
-+			      SET_DRV_INFO, 0, 0,
-+			      H2C_LEN_CXDRVINFO_ROLE_V1);
-+
-+	if (rtw89_h2c_tx(rtwdev, skb, false)) {
-+		rtw89_err(rtwdev, "failed to send h2c\n");
-+		goto fail;
-+	}
-+
-+	return 0;
-+fail:
-+	dev_kfree_skb_any(skb);
-+
-+	return -EBUSY;
-+}
-+
- #define H2C_LEN_CXDRVINFO_CTRL (4 + H2C_LEN_CXDRVHDR)
- int rtw89_fw_h2c_cxdrv_ctrl(struct rtw89_dev *rtwdev)
- {
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index e75ad22aa85df..5c38961b0e88e 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -2006,69 +2006,104 @@ static inline void RTW89_SET_FWCMD_CXROLE_ROLE_NAN(void *cmd, u16 val)
- 	le16p_replace_bits((__le16 *)((u8 *)(cmd) + 4), val, BIT(11));
- }
+ struct rtw89_btc_fbtc_steps {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxstep_ver */
+ 	u8 rsvd;
+ 	__le16 cnt;
+ 	__le16 pos_old;
+@@ -1533,9 +1528,8 @@ struct rtw89_btc_fbtc_steps {
+ 	struct rtw89_btc_fbtc_step step[FCXMAX_STEP];
+ } __packed;
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_CONNECTED(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_CONNECTED(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (6 + 12 * (n)), val, BIT(0));
-+	u8p_replace_bits((u8 *)cmd + (6 + (12 + offset) * n), val, BIT(0));
- }
+-#define FCXCYSTA_VER 2
+ struct rtw89_btc_fbtc_cysta { /* statistics for cycles */
+-	u8 fver;
++	u8 fver; /* chip_info::fcxcysta_ver */
+ 	u8 rsvd;
+ 	__le16 cycles; /* total cycle number */
+ 	__le16 cycles_a2dp[CXT_FLCTRL_MAX];
+@@ -1560,9 +1554,8 @@ struct rtw89_btc_fbtc_cysta { /* statistics for cycles */
+ 	__le16 tslot_cycle[BTC_CYCLE_SLOT_MAX];
+ } __packed;
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_PID(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_PID(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (6 + 12 * (n)), val, GENMASK(3, 1));
-+	u8p_replace_bits((u8 *)cmd + (6 + (12 + offset) * n), val, GENMASK(3, 1));
- }
+-#define FCXNULLSTA_VER 1
+ struct rtw89_btc_fbtc_cynullsta { /* cycle null statistics */
+-	u8 fver;
++	u8 fver; /* chip_info::fcxnullsta_ver */
+ 	u8 rsvd;
+ 	__le16 rsvd2;
+ 	__le32 max_t[2]; /* max_t for 0:null0/1:null1 */
+@@ -1570,9 +1563,8 @@ struct rtw89_btc_fbtc_cynullsta { /* cycle null statistics */
+ 	__le32 result[2][4]; /* 0:fail, 1:ok, 2:on_time, 3:retry */
+ } __packed;
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_PHY(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_PHY(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (6 + 12 * (n)), val, BIT(4));
-+	u8p_replace_bits((u8 *)cmd + (6 + (12 + offset) * n), val, BIT(4));
- }
+-#define FCX_BTVER_VER 1
+ struct rtw89_btc_fbtc_btver {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxbtver_ver */
+ 	u8 rsvd;
+ 	__le16 rsvd2;
+ 	__le32 coex_ver; /*bit[15:8]->shared, bit[7:0]->non-shared */
+@@ -1580,17 +1572,15 @@ struct rtw89_btc_fbtc_btver {
+ 	__le32 feature;
+ } __packed;
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_NOA(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_NOA(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (6 + 12 * (n)), val, BIT(5));
-+	u8p_replace_bits((u8 *)cmd + (6 + (12 + offset) * n), val, BIT(5));
- }
+-#define FCX_BTSCAN_VER 1
+ struct rtw89_btc_fbtc_btscan {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxbtscan_ver */
+ 	u8 rsvd;
+ 	__le16 rsvd2;
+ 	u8 scan[6];
+ } __packed;
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_BAND(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_BAND(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (6 + 12 * (n)), val, GENMASK(7, 6));
-+	u8p_replace_bits((u8 *)cmd + (6 + (12 + offset) * n), val, GENMASK(7, 6));
- }
+-#define FCX_BTAFH_VER 1
+ struct rtw89_btc_fbtc_btafh {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxbtafh_ver */
+ 	u8 rsvd;
+ 	__le16 rsvd2;
+ 	u8 afh_l[4]; /*bit0:2402, bit1: 2403.... bit31:2433 */
+@@ -1598,9 +1588,8 @@ struct rtw89_btc_fbtc_btafh {
+ 	u8 afh_h[4]; /*bit0:2466, bit1:2467......bit14:2480 */
+ } __packed;
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_CLIENT_PS(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_CLIENT_PS(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (7 + 12 * (n)), val, BIT(0));
-+	u8p_replace_bits((u8 *)cmd + (7 + (12 + offset) * n), val, BIT(0));
- }
+-#define FCX_BTDEVINFO_VER 1
+ struct rtw89_btc_fbtc_btdevinfo {
+-	u8 fver;
++	u8 fver; /* chip_info::fcxbtdevinfo_ver */
+ 	u8 rsvd;
+ 	__le16 vendor_id;
+ 	__le32 dev_name; /* only 24 bits valid */
+@@ -1666,8 +1655,6 @@ struct rtw89_btc_dbg {
+ 	u32 rb_val;
+ };
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_BW(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_BW(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (7 + 12 * (n)), val, GENMASK(7, 1));
-+	u8p_replace_bits((u8 *)cmd + (7 + (12 + offset) * n), val, GENMASK(7, 1));
- }
+-#define FCXTDMA_VER 1
+-
+ enum rtw89_btc_btf_fw_event {
+ 	BTF_EVNT_RPT = 0,
+ 	BTF_EVNT_BT_INFO = 1,
+@@ -2463,6 +2450,19 @@ struct rtw89_chip_info {
+ 	u8 scbd;
+ 	u8 mailbox;
  
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_ROLE(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_ROLE(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (8 + 12 * (n)), val, GENMASK(7, 0));
-+	u8p_replace_bits((u8 *)cmd + (8 + (12 + offset) * n), val, GENMASK(7, 0));
- }
- 
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_CH(void *cmd, u8 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_CH(void *cmd, u8 val, int n, u8 offset)
- {
--	u8p_replace_bits((u8 *)(cmd) + (9 + 12 * (n)), val, GENMASK(7, 0));
-+	u8p_replace_bits((u8 *)cmd + (9 + (12 + offset) * n), val, GENMASK(7, 0));
- }
- 
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_TX_LVL(void *cmd, u16 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_TX_LVL(void *cmd, u16 val, int n, u8 offset)
- {
--	le16p_replace_bits((__le16 *)((u8 *)(cmd) + (10 + 12 * (n))), val, GENMASK(15, 0));
-+	le16p_replace_bits((__le16 *)((u8 *)cmd + (10 + (12 + offset) * n)), val, GENMASK(15, 0));
- }
- 
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_RX_LVL(void *cmd, u16 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_RX_LVL(void *cmd, u16 val, int n, u8 offset)
- {
--	le16p_replace_bits((__le16 *)((u8 *)(cmd) + (12 + 12 * (n))), val, GENMASK(15, 0));
-+	le16p_replace_bits((__le16 *)((u8 *)cmd + (12 + (12 + offset) * n)), val, GENMASK(15, 0));
- }
- 
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_TX_RATE(void *cmd, u16 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_TX_RATE(void *cmd, u16 val, int n, u8 offset)
- {
--	le16p_replace_bits((__le16 *)((u8 *)(cmd) + (14 + 12 * (n))), val, GENMASK(15, 0));
-+	le16p_replace_bits((__le16 *)((u8 *)cmd + (14 + (12 + offset) * n)), val, GENMASK(15, 0));
- }
- 
--static inline void RTW89_SET_FWCMD_CXROLE_ACT_RX_RATE(void *cmd, u16 val, int n)
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_RX_RATE(void *cmd, u16 val, int n, u8 offset)
- {
--	le16p_replace_bits((__le16 *)((u8 *)(cmd) + (16 + 12 * (n))), val, GENMASK(15, 0));
-+	le16p_replace_bits((__le16 *)((u8 *)cmd + (16 + (12 + offset) * n)), val, GENMASK(15, 0));
-+}
++	u8 fcxbtcrpt_ver;
++	u8 fcxtdma_ver;
++	u8 fcxslots_ver;
++	u8 fcxcysta_ver;
++	u8 fcxstep_ver;
++	u8 fcxnullsta_ver;
++	u8 fcxmreg_ver;
++	u8 fcxgpiodbg_ver;
++	u8 fcxbtver_ver;
++	u8 fcxbtscan_ver;
++	u8 fcxbtafh_ver;
++	u8 fcxbtdevinfo_ver;
 +
-+static inline void RTW89_SET_FWCMD_CXROLE_ACT_NOA_DUR(void *cmd, u32 val, int n, u8 offset)
-+{
-+	le32p_replace_bits((__le32 *)((u8 *)cmd + (20 + (12 + offset) * n)), val, GENMASK(31, 0));
-+}
+ 	u8 afh_guard_ch;
+ 	const u8 *wl_rssi_thres;
+ 	const u8 *bt_rssi_thres;
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index f6810fbb3fab1..0dc92c16b4513 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -2157,6 +2157,20 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.btcx_desired		= 0x5,
+ 	.scbd			= 0x1,
+ 	.mailbox		= 0x1,
 +
-+static inline void RTW89_SET_FWCMD_CXROLE_MROLE_TYPE(void *cmd, u32 val, u8 offset)
-+{
-+	le32p_replace_bits((__le32 *)((u8 *)cmd + offset), val, GENMASK(31, 0));
-+}
++	.fcxbtcrpt_ver		= 1,
++	.fcxtdma_ver		= 1,
++	.fcxslots_ver		= 1,
++	.fcxcysta_ver		= 2,
++	.fcxstep_ver		= 2,
++	.fcxnullsta_ver		= 1,
++	.fcxmreg_ver		= 1,
++	.fcxgpiodbg_ver		= 1,
++	.fcxbtver_ver		= 1,
++	.fcxbtscan_ver		= 1,
++	.fcxbtafh_ver		= 1,
++	.fcxbtdevinfo_ver	= 1,
 +
-+static inline void RTW89_SET_FWCMD_CXROLE_MROLE_NOA(void *cmd, u32 val, u8 offset)
-+{
-+	le32p_replace_bits((__le32 *)((u8 *)cmd + offset + 4), val, GENMASK(31, 0));
-+}
+ 	.afh_guard_ch		= 6,
+ 	.wl_rssi_thres		= rtw89_btc_8852a_wl_rssi_thres,
+ 	.bt_rssi_thres		= rtw89_btc_8852a_bt_rssi_thres,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index 0218fa90526ca..62aa103a8272c 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -3006,6 +3006,20 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.btcx_desired		= 0x5,
+ 	.scbd			= 0x1,
+ 	.mailbox		= 0x1,
 +
-+static inline void RTW89_SET_FWCMD_CXROLE_DBCC_EN(void *cmd, u32 val, u8 offset)
-+{
-+	le32p_replace_bits((__le32 *)((u8 *)cmd + offset + 8), val, BIT(0));
-+}
++	.fcxbtcrpt_ver		= 4,
++	.fcxtdma_ver		= 3,
++	.fcxslots_ver		= 1,
++	.fcxcysta_ver		= 3,
++	.fcxstep_ver		= 3,
++	.fcxnullsta_ver		= 2,
++	.fcxmreg_ver		= 1,
++	.fcxgpiodbg_ver		= 1,
++	.fcxbtver_ver		= 1,
++	.fcxbtscan_ver		= 1,
++	.fcxbtafh_ver		= 1,
++	.fcxbtdevinfo_ver	= 1,
 +
-+static inline void RTW89_SET_FWCMD_CXROLE_DBCC_CHG(void *cmd, u32 val, u8 offset)
-+{
-+	le32p_replace_bits((__le32 *)((u8 *)cmd + offset + 8), val, BIT(1));
-+}
-+
-+static inline void RTW89_SET_FWCMD_CXROLE_DBCC_2G_PHY(void *cmd, u32 val, u8 offset)
-+{
-+	le32p_replace_bits((__le32 *)((u8 *)cmd + offset + 8), val, GENMASK(3, 2));
-+}
-+
-+static inline void RTW89_SET_FWCMD_CXROLE_LINK_MODE_CHG(void *cmd, u32 val, u8 offset)
-+{
-+	le32p_replace_bits((__le32 *)((u8 *)cmd + offset + 8), val, BIT(4));
- }
- 
- static inline void RTW89_SET_FWCMD_CXCTRL_MANUAL(void *cmd, u32 val)
-@@ -2600,6 +2635,7 @@ int rtw89_fw_h2c_set_ofld_cfg(struct rtw89_dev *rtwdev);
- int rtw89_fw_h2c_ra(struct rtw89_dev *rtwdev, struct rtw89_ra_info *ra, bool csi);
- int rtw89_fw_h2c_cxdrv_init(struct rtw89_dev *rtwdev);
- int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev);
-+int rtw89_fw_h2c_cxdrv_role_v1(struct rtw89_dev *rtwdev);
- int rtw89_fw_h2c_cxdrv_ctrl(struct rtw89_dev *rtwdev);
- int rtw89_fw_h2c_cxdrv_rfk(struct rtw89_dev *rtwdev);
- int rtw89_fw_h2c_del_pkt_offload(struct rtw89_dev *rtwdev, u8 id);
+ 	.afh_guard_ch		= 6,
+ 	.wl_rssi_thres		= rtw89_btc_8852c_wl_rssi_thres,
+ 	.bt_rssi_thres		= rtw89_btc_8852c_bt_rssi_thres,
 -- 
 2.25.1
 
