@@ -2,209 +2,183 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17E7FC43334
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Jul 2022 21:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C089AC43334
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 02:36:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231211AbiGXVRa (ORCPT
+        id S232131AbiGYCf7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jul 2022 17:17:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58772 "EHLO
+        Sun, 24 Jul 2022 22:35:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbiGXVRa (ORCPT
+        with ESMTP id S230058AbiGYCf6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Jul 2022 17:17:30 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AFDD10FC0
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 14:17:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1658697449; x=1690233449;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=slVzZ4lTxH/9XymiBgNHyxCLis6oKGDr4b8+06cytac=;
-  b=kKErWRpXehf5xQjMyVBnaWshUB25YZaUCQxcek/QmdLQfN+f2UmamVXn
-   isTAAfMRO8hsQscV8k3JrDeBOMJNr+3DV0d+Z0RZQtHaYpRDJO+7gUKTv
-   AcKOEcfrKOEQPq6gqpmx5AFCVIT/ZLZvVsN2X18IbspnhTovSPYMf2EqV
-   mnrZBhGPQHEX8P5iGkKIm8ZzZNFdq5HHT8i94q7nx9c2eoeHQLGmPdea0
-   mqPK7GfOajmYL5E5y8A7NjFHHnGZDF9mOijOeyAUUvaiUeT9m+NnkOQBW
-   KQSAXfCwOfD8g0uP3QScEordz6XVHNZHMIKwZmL5k26EJyxiuHDi/tGAE
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10418"; a="274432526"
-X-IronPort-AV: E=Sophos;i="5.93,191,1654585200"; 
-   d="scan'208";a="274432526"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2022 14:17:28 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,191,1654585200"; 
-   d="scan'208";a="549757433"
-Received: from lkp-server01.sh.intel.com (HELO e0eace57cfef) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 24 Jul 2022 14:17:27 -0700
-Received: from kbuild by e0eace57cfef with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oFiyc-0004IX-12;
-        Sun, 24 Jul 2022 21:17:26 +0000
-Date:   Mon, 25 Jul 2022 05:16:46 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>, nbd@nbd.name
-Cc:     kbuild-all@lists.01.org, linux-wireless@vger.kernel.org,
-        lorenzo.bianconi@redhat.com, sean.wang@mediatek.com
-Subject: Re: [PATCH] mt76: sdio: add rx_check callback for sdio devices
-Message-ID: <202207250528.8cxL1kpm-lkp@intel.com>
-References: <2902205ffea3f07349db8c1466e81a8a5f24dc86.1658474979.git.lorenzo@kernel.org>
+        Sun, 24 Jul 2022 22:35:58 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5D2D5DF87
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 19:35:54 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26P2ZXPx8014709, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26P2ZXPx8014709
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Mon, 25 Jul 2022 10:35:33 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Mon, 25 Jul 2022 10:35:39 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Mon, 25 Jul
+ 2022 10:35:38 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/9] rtw89: coex: update radio state for RTL8852A/RTL8852C
+Date:   Mon, 25 Jul 2022 10:35:01 +0800
+Message-ID: <20220725023509.43114-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220725023509.43114-1-pkshih@realtek.com>
+References: <20220725023509.43114-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2902205ffea3f07349db8c1466e81a8a5f24dc86.1658474979.git.lorenzo@kernel.org>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 07/25/2022 02:16:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzcvMjQgpFWkyCAxMToyOTowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Lorenzo,
+From: Ching-Te Ku <ku920601@realtek.com>
 
-I love your patch! Yet something to improve:
+Update scoreboard setting to let Bluetooth know Wi-Fi power save state.
 
-[auto build test ERROR on wireless-next/main]
-[also build test ERROR on linus/master v5.19-rc7 next-20220722]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/coex.c | 24 ++++++++++++++++-------
+ drivers/net/wireless/realtek/rtw89/core.h |  4 ++--
+ 2 files changed, 19 insertions(+), 9 deletions(-)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Lorenzo-Bianconi/mt76-sdio-add-rx_check-callback-for-sdio-devices/20220722-153400
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-config: ia64-allmodconfig (https://download.01.org/0day-ci/archive/20220725/202207250528.8cxL1kpm-lkp@intel.com/config)
-compiler: ia64-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/202e740929b81d6752f7f4586d5383c252ed8057
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Lorenzo-Bianconi/mt76-sdio-add-rx_check-callback-for-sdio-devices/20220722-153400
-        git checkout 202e740929b81d6752f7f4586d5383c252ed8057
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=ia64 SHELL=/bin/bash drivers/gpu/drm/amd/display/amdgpu_dm/ drivers/net/wireless/mediatek/mt76/mt7921/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
-   drivers/net/wireless/mediatek/mt76/mt7921/sdio.c: In function 'mt7921s_probe':
->> drivers/net/wireless/mediatek/mt76/mt7921/sdio.c:99:29: error: 'mt7921_rx_check' undeclared (first use in this function); did you mean 'mt7921e_rx_check'?
-      99 |                 .rx_check = mt7921_rx_check,
-         |                             ^~~~~~~~~~~~~~~
-         |                             mt7921e_rx_check
-   drivers/net/wireless/mediatek/mt76/mt7921/sdio.c:99:29: note: each undeclared identifier is reported only once for each function it appears in
-
-
-vim +99 drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
-
-    86	
-    87	static int mt7921s_probe(struct sdio_func *func,
-    88				 const struct sdio_device_id *id)
-    89	{
-    90		static const struct mt76_driver_ops drv_ops = {
-    91			.txwi_size = MT_SDIO_TXD_SIZE,
-    92			.survey_flags = SURVEY_INFO_TIME_TX |
-    93					SURVEY_INFO_TIME_RX |
-    94					SURVEY_INFO_TIME_BSS_RX,
-    95			.tx_prepare_skb = mt7921_usb_sdio_tx_prepare_skb,
-    96			.tx_complete_skb = mt7921_usb_sdio_tx_complete_skb,
-    97			.tx_status_data = mt7921_usb_sdio_tx_status_data,
-    98			.rx_skb = mt7921_queue_rx_skb,
-  > 99			.rx_check = mt7921_rx_check,
-   100			.sta_ps = mt7921_sta_ps,
-   101			.sta_add = mt7921_mac_sta_add,
-   102			.sta_assoc = mt7921_mac_sta_assoc,
-   103			.sta_remove = mt7921_mac_sta_remove,
-   104			.update_survey = mt7921_update_channel,
-   105		};
-   106		static const struct mt76_bus_ops mt7921s_ops = {
-   107			.rr = mt76s_rr,
-   108			.rmw = mt76s_rmw,
-   109			.wr = mt76s_wr,
-   110			.write_copy = mt76s_write_copy,
-   111			.read_copy = mt76s_read_copy,
-   112			.wr_rp = mt76s_wr_rp,
-   113			.rd_rp = mt76s_rd_rp,
-   114			.type = MT76_BUS_SDIO,
-   115		};
-   116		static const struct mt7921_hif_ops mt7921_sdio_ops = {
-   117			.init_reset = mt7921s_init_reset,
-   118			.reset = mt7921s_mac_reset,
-   119			.mcu_init = mt7921s_mcu_init,
-   120			.drv_own = mt7921s_mcu_drv_pmctrl,
-   121			.fw_own = mt7921s_mcu_fw_pmctrl,
-   122		};
-   123	
-   124		struct mt7921_dev *dev;
-   125		struct mt76_dev *mdev;
-   126		int ret;
-   127	
-   128		mdev = mt76_alloc_device(&func->dev, sizeof(*dev), &mt7921_ops,
-   129					 &drv_ops);
-   130		if (!mdev)
-   131			return -ENOMEM;
-   132	
-   133		dev = container_of(mdev, struct mt7921_dev, mt76);
-   134		dev->hif_ops = &mt7921_sdio_ops;
-   135	
-   136		sdio_set_drvdata(func, dev);
-   137	
-   138		ret = mt76s_init(mdev, func, &mt7921s_ops);
-   139		if (ret < 0)
-   140			goto error;
-   141	
-   142		ret = mt76s_hw_init(mdev, func, MT76_CONNAC2_SDIO);
-   143		if (ret)
-   144			goto error;
-   145	
-   146		mdev->rev = (mt76_rr(dev, MT_HW_CHIPID) << 16) |
-   147			    (mt76_rr(dev, MT_HW_REV) & 0xff);
-   148		dev_dbg(mdev->dev, "ASIC revision: %04x\n", mdev->rev);
-   149	
-   150		mdev->sdio.parse_irq = mt7921s_parse_intr;
-   151		mdev->sdio.intr_data = devm_kmalloc(mdev->dev,
-   152						    sizeof(struct mt7921_sdio_intr),
-   153						    GFP_KERNEL);
-   154		if (!mdev->sdio.intr_data) {
-   155			ret = -ENOMEM;
-   156			goto error;
-   157		}
-   158	
-   159		ret = mt76s_alloc_rx_queue(mdev, MT_RXQ_MAIN);
-   160		if (ret)
-   161			goto error;
-   162	
-   163		ret = mt76s_alloc_rx_queue(mdev, MT_RXQ_MCU);
-   164		if (ret)
-   165			goto error;
-   166	
-   167		ret = mt76s_alloc_tx(mdev);
-   168		if (ret)
-   169			goto error;
-   170	
-   171		ret = mt76_worker_setup(mt76_hw(dev), &mdev->sdio.txrx_worker,
-   172					mt7921s_txrx_worker, "sdio-txrx");
-   173		if (ret)
-   174			goto error;
-   175	
-   176		sched_set_fifo_low(mdev->sdio.txrx_worker.task);
-   177	
-   178		ret = mt7921_register_device(dev);
-   179		if (ret)
-   180			goto error;
-   181	
-   182		return 0;
-   183	
-   184	error:
-   185		mt76s_deinit(&dev->mt76);
-   186		mt76_free_device(&dev->mt76);
-   187	
-   188		return ret;
-   189	}
-   190	
-
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index 5e169388867f8..286dd086a1338 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -551,8 +551,10 @@ static void _send_fw_cmd(struct rtw89_dev *rtwdev, u8 h2c_class, u8 h2c_func,
+ 			    "[BTC], %s(): return by btc not init!!\n", __func__);
+ 		pfwinfo->cnt_h2c_fail++;
+ 		return;
+-	} else if ((wl->status.map.rf_off_pre == 1 && wl->status.map.rf_off == 1) ||
+-		   (wl->status.map.lps_pre == 1 && wl->status.map.lps == 1)) {
++	} else if ((wl->status.map.rf_off_pre == BTC_LPS_RF_OFF &&
++		    wl->status.map.rf_off == BTC_LPS_RF_OFF) ||
++		   (wl->status.map.lps_pre == BTC_LPS_RF_OFF &&
++		    wl->status.map.lps == BTC_LPS_RF_OFF)) {
+ 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
+ 			    "[BTC], %s(): return by wl off!!\n", __func__);
+ 		pfwinfo->cnt_h2c_fail++;
+@@ -3743,11 +3745,14 @@ void rtw89_btc_ntfy_poweron(struct rtw89_dev *rtwdev)
+ void rtw89_btc_ntfy_poweroff(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], %s(): !!\n", __func__);
+ 	btc->dm.cnt_notify[BTC_NCNT_POWER_OFF]++;
+ 
+ 	btc->cx.wl.status.map.rf_off = 1;
++	btc->cx.wl.status.map.busy = 0;
++	wl->status.map.lps = BTC_LPS_OFF;
+ 
+ 	_write_scbd(rtwdev, BTC_WSCB_ALL, false);
+ 	_run_coex(rtwdev, BTC_RSN_NTFY_POWEROFF);
+@@ -4239,6 +4244,7 @@ void rtw89_btc_ntfy_radio_state(struct rtw89_dev *rtwdev, enum btc_rfctrl rf_sta
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
++	u32 val;
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], %s(): rf_state = %d\n",
+ 		    __func__, rf_state);
+@@ -4248,10 +4254,12 @@ void rtw89_btc_ntfy_radio_state(struct rtw89_dev *rtwdev, enum btc_rfctrl rf_sta
+ 	case BTC_RFCTRL_WL_OFF:
+ 		wl->status.map.rf_off = 1;
+ 		wl->status.map.lps = BTC_LPS_OFF;
++		wl->status.map.busy = 0;
+ 		break;
+ 	case BTC_RFCTRL_FW_CTRL:
+ 		wl->status.map.rf_off = 0;
+ 		wl->status.map.lps = BTC_LPS_RF_OFF;
++		wl->status.map.busy = 0;
+ 		break;
+ 	case BTC_RFCTRL_WL_ON:
+ 	default:
+@@ -4261,14 +4269,17 @@ void rtw89_btc_ntfy_radio_state(struct rtw89_dev *rtwdev, enum btc_rfctrl rf_sta
+ 	}
+ 
+ 	if (rf_state == BTC_RFCTRL_WL_ON) {
++		btc->dm.cnt_dm[BTC_DCNT_BTCNT_FREEZE] = 0;
+ 		rtw89_btc_fw_en_rpt(rtwdev,
+ 				    RPT_EN_MREG | RPT_EN_BT_VER_INFO, true);
+-		_write_scbd(rtwdev, BTC_WSCB_ACTIVE, true);
++		val = BTC_WSCB_ACTIVE | BTC_WSCB_ON | BTC_WSCB_BTLOG;
++		_write_scbd(rtwdev, val, true);
+ 		_update_bt_scbd(rtwdev, true);
+ 		chip->ops->btc_init_cfg(rtwdev);
+ 	} else {
+ 		rtw89_btc_fw_en_rpt(rtwdev, RPT_EN_ALL, false);
+-		_write_scbd(rtwdev, BTC_WSCB_ACTIVE | BTC_WSCB_WLBUSY, false);
++		if (rf_state == BTC_RFCTRL_WL_OFF)
++			_write_scbd(rtwdev, BTC_WSCB_ALL, false);
+ 	}
+ 
+ 	_run_coex(rtwdev, BTC_RSN_NTFY_RADIO_STATE);
+@@ -4739,9 +4750,8 @@ static void _show_wl_info(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 		   "[status]", (u32)wl_rinfo->link_mode);
+ 
+ 	seq_printf(m,
+-		   "rf_off:%s, power_save:%s, scan:%s(band:%d/phy_map:0x%x), ",
+-		   wl->status.map.rf_off ? "Y" : "N",
+-		   wl->status.map.lps ? "Y" : "N",
++		   "rf_off:%d, power_save:%d, scan:%s(band:%d/phy_map:0x%x), ",
++		   wl->status.map.rf_off, wl->status.map.lps,
+ 		   wl->status.map.scan ? "Y" : "N",
+ 		   wl->scan_info.band[RTW89_PHY_0], wl->scan_info.phy_map);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 47dee2b37620a..05b5282c770da 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -936,12 +936,12 @@ struct rtw89_btc_wl_smap {
+ 	u32 roaming: 1;
+ 	u32 _4way: 1;
+ 	u32 rf_off: 1;
+-	u32 lps: 1;
++	u32 lps: 2;
+ 	u32 ips: 1;
+ 	u32 init_ok: 1;
+ 	u32 traffic_dir : 2;
+ 	u32 rf_off_pre: 1;
+-	u32 lps_pre: 1;
++	u32 lps_pre: 2;
+ };
+ 
+ enum rtw89_tfc_lv {
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.25.1
+
