@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60077CCA47C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 008DDC43334
 	for <linux-wireless@archiver.kernel.org>; Mon, 25 Jul 2022 02:36:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232704AbiGYCgB (ORCPT
+        id S232752AbiGYCgC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Jul 2022 22:36:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47150 "EHLO
+        Sun, 24 Jul 2022 22:36:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230156AbiGYCf7 (ORCPT
+        with ESMTP id S230484AbiGYCf7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 24 Jul 2022 22:35:59 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 298DFE020
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 19:35:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E20FE02A
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2022 19:35:56 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26P2ZZd04014719, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26P2ZZd04014719
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26P2Zf4bA014761, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26P2Zf4bA014761
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Mon, 25 Jul 2022 10:35:35 +0800
+        Mon, 25 Jul 2022 10:35:41 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Mon, 25 Jul 2022 10:35:41 +0800
+ 15.1.2375.7; Mon, 25 Jul 2022 10:35:47 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Mon, 25 Jul
- 2022 10:35:40 +0800
+ 2022 10:35:47 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 3/9] rtw89: coex: Add logic to parsing rtl8852c firmware type ctrl report
-Date:   Mon, 25 Jul 2022 10:35:03 +0800
-Message-ID: <20220725023509.43114-4-pkshih@realtek.com>
+Subject: [PATCH v2 8/9] rtw89: coex: Add v1 Wi-Fi SCC coexistence policy
+Date:   Mon, 25 Jul 2022 10:35:08 +0800
+Message-ID: <20220725023509.43114-9-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220725023509.43114-1-pkshih@realtek.com>
 References: <20220725023509.43114-1-pkshih@realtek.com>
@@ -56,241 +56,221 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzcvMjQgpFWkyCAxMToyOTowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-Add a part of logic to parse type of ctrl report from firmware, and
-remove Bluetooth packet counter count from driver, the feature was
-moved to firmware at rtl8852c.
+Because the later firmware had patched some new feature, it can control
+the Wi-Fi/BT slots more efficiently. This patch enhance it for better
+Wi-Fi SCC mode performance.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c     | 44 +++++++++++--
- drivers/net/wireless/realtek/rtw89/core.h     | 63 +++++++++++++++++--
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 18 +-----
- 3 files changed, 98 insertions(+), 27 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 107 +++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtw89/core.h |   7 ++
+ 2 files changed, 112 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index f9c67aa1570dd..020b2628ef2c4 100644
+index 6c84d06bfbff3..ca0e89d5a30ce 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -876,7 +876,9 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 	struct rtw89_btc_dm *dm = &btc->dm;
- 	struct rtw89_btc_rpt_cmn_info *pcinfo = NULL;
- 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
--	struct rtw89_btc_fbtc_rpt_ctrl *prpt = NULL;
-+	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
-+	struct rtw89_btc_fbtc_rpt_ctrl *prpt;
-+	struct rtw89_btc_fbtc_rpt_ctrl_v1 *prpt_v1;
- 	struct rtw89_btc_fbtc_cysta *pcysta_le32 = NULL;
- 	struct rtw89_btc_fbtc_cysta_cpu pcysta[1];
- 	struct rtw89_btc_prpt *btc_prpt = NULL;
-@@ -907,8 +909,13 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 	switch (rpt_type) {
- 	case BTC_RPT_TYPE_CTRL:
- 		pcinfo = &pfwinfo->rpt_ctrl.cinfo;
--		pfinfo = (u8 *)(&pfwinfo->rpt_ctrl.finfo);
--		pcinfo->req_len = sizeof(pfwinfo->rpt_ctrl.finfo);
-+		if (chip->chip_id == RTL8852A) {
-+			pfinfo = (u8 *)(&pfwinfo->rpt_ctrl.finfo);
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_ctrl.finfo);
-+		} else {
-+			pfinfo = (u8 *)(&pfwinfo->rpt_ctrl.finfo_v1);
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_ctrl.finfo_v1);
-+		}
- 		pcinfo->req_fver = chip->fcxbtcrpt_ver;
- 		pcinfo->rx_len = rpt_len;
- 		pcinfo->rx_cnt++;
-@@ -1127,12 +1134,12 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 		_chk_btc_err(rtwdev, BTC_DCNT_CYCLE_FREEZE, (u32)pcysta->cycles);
- 	}
+@@ -273,6 +273,21 @@ enum btc_cx_poicy_type {
+ 	/* TDMA off + Ext-Ctrl + pri: E2G-slot block all BT */
+ 	BTC_CXP_OFFE_DEF2 = (BTC_CXP_OFFE << 8) | 1,
  
--	if (rpt_type == BTC_RPT_TYPE_CTRL) {
-+	if (rpt_type == BTC_RPT_TYPE_CTRL && chip->chip_id == RTL8852A) {
- 		prpt = &pfwinfo->rpt_ctrl.finfo;
- 		btc->fwinfo.rpt_en_map = prpt->rpt_enable;
- 		wl->ver_info.fw_coex = prpt->wl_fw_coex_ver;
- 		wl->ver_info.fw = prpt->wl_fw_ver;
--		dm->wl_fw_cx_offload = !!(prpt->wl_fw_cx_offload);
-+		dm->wl_fw_cx_offload = !!prpt->wl_fw_cx_offload;
++	/* TDMA off + Ext-Ctrl + pri: default */
++	BTC_CXP_OFFE_2GBWISOB = (BTC_CXP_OFFE << 8) | 2,
++
++	/* TDMA off + Ext-Ctrl + pri: E2G-slot block all BT */
++	BTC_CXP_OFFE_2GISOB = (BTC_CXP_OFFE << 8) | 3,
++
++	/* TDMA off + Ext-Ctrl + pri: E2G-slot WL > BT */
++	BTC_CXP_OFFE_2GBWMIXB = (BTC_CXP_OFFE << 8) | 4,
++
++	/* TDMA off + Ext-Ctrl + pri: E2G/EBT-slot WL > BT */
++	BTC_CXP_OFFE_WL = (BTC_CXP_OFFE << 8) | 5,
++
++	/* TDMA off + Ext-Ctrl + pri: default */
++	BTC_CXP_OFFE_2GBWMIXB2 = (BTC_CXP_OFFE << 8) | 6,
++
+ 	/* TDMA Fix slot-0: W1:B1 = 30:30 */
+ 	BTC_CXP_FIX_TD3030 = (BTC_CXP_FIX << 8) | 0,
  
- 		_chk_btc_err(rtwdev, BTC_DCNT_RPT_FREEZE,
- 			     pfwinfo->event[BTF_EVNT_RPT]);
-@@ -1145,6 +1152,33 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			btc->cx.cnt_bt[BTC_BCNT_POLUT] =
- 				rtw89_mac_get_plt_cnt(rtwdev, RTW89_MAC_0);
- 		}
-+	} else if (rpt_type == BTC_RPT_TYPE_CTRL) {
-+		prpt_v1 = &pfwinfo->rpt_ctrl.finfo_v1;
-+		btc->fwinfo.rpt_en_map = le32_to_cpu(prpt_v1->rpt_info.en);
-+		wl->ver_info.fw_coex = le32_to_cpu(prpt_v1->wl_fw_info.cx_ver);
-+		wl->ver_info.fw = le32_to_cpu(prpt_v1->wl_fw_info.fw_ver);
-+		dm->wl_fw_cx_offload = !!le32_to_cpu(prpt_v1->wl_fw_info.cx_offload);
-+
-+		for (i = RTW89_PHY_0; i < RTW89_PHY_MAX; i++)
-+			memcpy(&dm->gnt.band[i], &prpt_v1->gnt_val[i],
-+			       sizeof(dm->gnt.band[i]));
-+
-+		btc->cx.cnt_bt[BTC_BCNT_HIPRI_TX] = le32_to_cpu(prpt_v1->bt_cnt[BTC_BCNT_HI_TX]);
-+		btc->cx.cnt_bt[BTC_BCNT_HIPRI_RX] = le32_to_cpu(prpt_v1->bt_cnt[BTC_BCNT_HI_RX]);
-+		btc->cx.cnt_bt[BTC_BCNT_LOPRI_TX] = le32_to_cpu(prpt_v1->bt_cnt[BTC_BCNT_LO_TX]);
-+		btc->cx.cnt_bt[BTC_BCNT_LOPRI_RX] = le32_to_cpu(prpt_v1->bt_cnt[BTC_BCNT_LO_RX]);
-+		btc->cx.cnt_bt[BTC_BCNT_POLUT] = le32_to_cpu(prpt_v1->bt_cnt[BTC_BCNT_POLLUTED]);
-+
-+		_chk_btc_err(rtwdev, BTC_DCNT_BTCNT_FREEZE, 0);
-+		_chk_btc_err(rtwdev, BTC_DCNT_RPT_FREEZE,
-+			     pfwinfo->event[BTF_EVNT_RPT]);
-+
-+		if (le32_to_cpu(prpt_v1->bt_cnt[BTC_BCNT_RFK_TIMEOUT]) > 0)
-+			bt->rfk_info.map.timeout = 1;
-+		else
-+			bt->rfk_info.map.timeout = 0;
-+
-+		dm->error.map.bt_rfk_timeout = bt->rfk_info.map.timeout;
- 	}
- 
- 	if (rpt_type >= BTC_RPT_TYPE_BT_VER &&
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 686ff8760c847..6722aa26e48f4 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -809,7 +809,7 @@ struct rtw89_mac_ax_gnt {
- 	u8 gnt_bt;
- 	u8 gnt_wl_sw_en;
- 	u8 gnt_wl;
--};
-+} __packed;
- 
- #define RTW89_MAC_AX_COEX_GNT_NR 2
- struct rtw89_mac_ax_coex_gnt {
-@@ -1376,13 +1376,18 @@ struct rtw89_btc_fbtc_tdma {
- #define FCXMAX_STEP 255 /*STEP trace record cnt, Max:65535, default:255*/
- #define BTC_CYCLE_SLOT_MAX 48 /* must be even number, non-zero */
- 
--enum rtw89_btc_bt_rfk_counter {
-+enum rtw89_btc_bt_sta_counter {
- 	BTC_BCNT_RFK_REQ = 0,
- 	BTC_BCNT_RFK_GO = 1,
- 	BTC_BCNT_RFK_REJECT = 2,
- 	BTC_BCNT_RFK_FAIL = 3,
- 	BTC_BCNT_RFK_TIMEOUT = 4,
--	BTC_BCNT_RFK_MAX
-+	BTC_BCNT_HI_TX = 5,
-+	BTC_BCNT_HI_RX = 6,
-+	BTC_BCNT_LO_TX = 7,
-+	BTC_BCNT_LO_RX = 8,
-+	BTC_BCNT_POLLUTED = 9,
-+	BTC_BCNT_STA_MAX
+@@ -440,6 +455,16 @@ enum btc_wl_link_mode {
+ 	BTC_WLINK_MAX
  };
  
- struct rtw89_btc_fbtc_rpt_ctrl {
-@@ -1399,11 +1404,56 @@ struct rtw89_btc_fbtc_rpt_ctrl {
- 	u32 mb_a2dp_empty_cnt; /* a2dp empty count */
- 	u32 mb_a2dp_flct_cnt; /* a2dp empty flow control counter */
- 	u32 mb_a2dp_full_cnt; /* a2dp empty full counter */
--	u32 bt_rfk_cnt[BTC_BCNT_RFK_MAX];
-+	u32 bt_rfk_cnt[BTC_BCNT_HI_TX];
- 	u32 c2h_cnt; /* fw send c2h counter  */
- 	u32 h2c_cnt; /* fw recv h2c counter */
- } __packed;
- 
-+struct rtw89_btc_fbtc_rpt_ctrl_info {
-+	__le32 cnt; /* fw report counter */
-+	__le32 en; /* report map */
-+	__le32 para; /* not used */
++enum btc_wl_mrole_type {
++	BTC_WLMROLE_NONE = 0x0,
++	BTC_WLMROLE_STA_GC,
++	BTC_WLMROLE_STA_GC_NOA,
++	BTC_WLMROLE_STA_GO,
++	BTC_WLMROLE_STA_GO_NOA,
++	BTC_WLMROLE_STA_STA,
++	BTC_WLMROLE_MAX
++};
 +
-+	__le32 cnt_c2h; /* fw send c2h counter  */
-+	__le32 cnt_h2c; /* fw recv h2c counter */
-+	__le32 len_c2h; /* The total length of the last C2H  */
-+
-+	__le32 cnt_aoac_rf_on;  /* rf-on counter for aoac switch notify */
-+	__le32 cnt_aoac_rf_off; /* rf-off counter for aoac switch notify */
-+} __packed;
-+
-+struct rtw89_btc_fbtc_rpt_ctrl_wl_fw_info {
-+	__le32 cx_ver; /* match which driver's coex version */
-+	__le32 cx_offload;
-+	__le32 fw_ver;
-+} __packed;
-+
-+struct rtw89_btc_fbtc_rpt_ctrl_a2dp_empty {
-+	__le32 cnt_empty; /* a2dp empty count */
-+	__le32 cnt_flowctrl; /* a2dp empty flow control counter */
-+	__le32 cnt_tx;
-+	__le32 cnt_ack;
-+	__le32 cnt_nack;
-+} __packed;
-+
-+struct rtw89_btc_fbtc_rpt_ctrl_bt_mailbox {
-+	__le32 cnt_send_ok; /* fw send mailbox ok counter */
-+	__le32 cnt_send_fail; /* fw send mailbox fail counter */
-+	__le32 cnt_recv; /* fw recv mailbox counter */
-+	struct rtw89_btc_fbtc_rpt_ctrl_a2dp_empty a2dp;
-+} __packed;
-+
-+struct rtw89_btc_fbtc_rpt_ctrl_v1 {
-+	u8 fver;
-+	u8 rsvd;
-+	__le16 rsvd1;
-+	struct rtw89_btc_fbtc_rpt_ctrl_info rpt_info;
-+	struct rtw89_btc_fbtc_rpt_ctrl_wl_fw_info wl_fw_info;
-+	struct rtw89_btc_fbtc_rpt_ctrl_bt_mailbox bt_mbx_info;
-+	__le32 bt_cnt[BTC_BCNT_STA_MAX];
-+	struct rtw89_mac_ax_gnt gnt_val[RTW89_PHY_MAX];
-+} __packed;
-+
- enum rtw89_fbtc_ext_ctrl_type {
- 	CXECTL_OFF = 0x0, /* tdma off */
- 	CXECTL_B2 = 0x1, /* allow B2 (beacon-early) */
-@@ -1707,7 +1757,10 @@ struct rtw89_btc_rpt_cmn_info {
- 
- struct rtw89_btc_report_ctrl_state {
- 	struct rtw89_btc_rpt_cmn_info cinfo; /* common info, by driver */
--	struct rtw89_btc_fbtc_rpt_ctrl finfo; /* info from fw */
-+	union {
-+		struct rtw89_btc_fbtc_rpt_ctrl finfo; /* info from fw for 52A*/
-+		struct rtw89_btc_fbtc_rpt_ctrl_v1 finfo_v1; /* info from fw for 52C*/
-+	};
- };
- 
- struct rtw89_btc_rpt_fbtc_tdma {
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 62aa103a8272c..f4012f1e04d91 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -2793,23 +2793,7 @@ void rtw8852c_btc_bt_aci_imp(struct rtw89_dev *rtwdev)
- static
- void rtw8852c_btc_update_bt_cnt(struct rtw89_dev *rtwdev)
- {
--	struct rtw89_btc *btc = &rtwdev->btc;
--	struct rtw89_btc_cx *cx = &btc->cx;
--	u32 val;
--
--	val = rtw89_read32(rtwdev, R_BTC_BT_CNT_HIGH);
--	cx->cnt_bt[BTC_BCNT_HIPRI_TX] = FIELD_GET(B_AX_STATIS_BT_HI_TX_MASK, val);
--	cx->cnt_bt[BTC_BCNT_HIPRI_RX] = FIELD_GET(B_AX_STATIS_BT_HI_RX_MASK, val);
--
--	val = rtw89_read32(rtwdev, R_BTC_BT_CNT_LOW);
--	cx->cnt_bt[BTC_BCNT_LOPRI_TX] = FIELD_GET(B_AX_STATIS_BT_LO_TX_1_MASK, val);
--	cx->cnt_bt[BTC_BCNT_LOPRI_RX] = FIELD_GET(B_AX_STATIS_BT_LO_RX_1_MASK, val);
--
--	/* clock-gate off before reset counter*/
--	rtw89_write32_set(rtwdev, R_AX_BTC_CFG, B_AX_DIS_BTC_CLK_G);
--	rtw89_write32_clr(rtwdev, R_AX_BT_CNT_CFG, B_AX_BT_CNT_RST);
--	rtw89_write32_set(rtwdev, R_AX_BT_CNT_CFG, B_AX_BT_CNT_RST);
--	rtw89_write32_clr(rtwdev, R_AX_BTC_CFG, B_AX_DIS_BTC_CLK_G);
-+	/* Feature move to firmware */
+ enum btc_bt_hid_type {
+ 	BTC_HID_218 = BIT(0),
+ 	BTC_HID_418 = BIT(1),
+@@ -1949,6 +1974,7 @@ static bool _check_freerun(struct rtw89_dev *rtwdev)
  }
  
- static
+ #define _tdma_set_flctrl(btc, flc) ({(btc)->dm.tdma.rxflctrl = flc; })
++#define _tdma_set_flctrl_role(btc, role) ({(btc)->dm.tdma.rxflctrl_role = role; })
+ #define _tdma_set_tog(btc, wtg) ({(btc)->dm.tdma.wtgle_n = wtg; })
+ #define _tdma_set_lek(btc, lek) ({(btc)->dm.tdma.leak_n = lek; })
+ 
+@@ -2340,9 +2366,10 @@ void rtw89_btc_set_policy_v1(struct rtw89_dev *rtwdev, u16 policy_type)
+ 	struct rtw89_btc_dm *dm = &btc->dm;
+ 	struct rtw89_btc_fbtc_tdma *t = &dm->tdma;
+ 	struct rtw89_btc_fbtc_slot *s = dm->slot;
++	struct rtw89_btc_wl_role_info_v1 *wl_rinfo = &btc->cx.wl.role_info_v1;
+ 	struct rtw89_btc_bt_hid_desc *hid = &btc->cx.bt.link_info.hid_desc;
+ 	struct rtw89_btc_bt_hfp_desc *hfp = &btc->cx.bt.link_info.hfp_desc;
+-	u8 type;
++	u8 type, null_role;
+ 	u32 tbl_w1, tbl_b1, tbl_b4;
+ 
+ 	type = FIELD_GET(BTC_CXP_MASK, policy_type);
+@@ -2687,6 +2714,12 @@ void rtw89_btc_set_policy_v1(struct rtw89_dev *rtwdev, u16 policy_type)
+ 		break;
+ 	}
+ 
++	if (wl_rinfo->link_mode == BTC_WLINK_2G_SCC && dm->tdma.rxflctrl) {
++		null_role = FIELD_PREP(0x0f, dm->wl_scc.null_role1) |
++			    FIELD_PREP(0xf0, dm->wl_scc.null_role2);
++		_tdma_set_flctrl_role(btc, null_role);
++	}
++
+ 	/* enter leak_slot after each null-1 */
+ 	if (dm->leak_ap && dm->tdma.leak_n > 1)
+ 		_tdma_set_lek(btc, 1);
+@@ -3663,6 +3696,68 @@ static void _action_wl_2g_scc(struct rtw89_dev *rtwdev)
+ 	}
+ }
+ 
++static void _action_wl_2g_scc_v1(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
++	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
++	struct rtw89_btc_dm *dm = &btc->dm;
++	struct rtw89_btc_wl_role_info_v1 *wl_rinfo = &wl->role_info_v1;
++	u16 policy_type = BTC_CXP_OFF_BT;
++	u32 dur;
++
++	if (btc->mdinfo.ant.type == BTC_ANT_DEDICATED) {
++		policy_type = BTC_CXP_OFF_EQ0;
++	} else {
++		/* shared-antenna */
++		switch (wl_rinfo->mrole_type) {
++		case BTC_WLMROLE_STA_GC:
++			dm->wl_scc.null_role1 = RTW89_WIFI_ROLE_STATION;
++			dm->wl_scc.null_role2 = RTW89_WIFI_ROLE_P2P_CLIENT;
++			dm->wl_scc.ebt_null = 0; /* no ext-slot-control */
++			_action_by_bt(rtwdev);
++			return;
++		case BTC_WLMROLE_STA_STA:
++			dm->wl_scc.null_role1 = RTW89_WIFI_ROLE_STATION;
++			dm->wl_scc.null_role2 = RTW89_WIFI_ROLE_STATION;
++			dm->wl_scc.ebt_null = 0; /* no ext-slot-control */
++			_action_by_bt(rtwdev);
++			return;
++		case BTC_WLMROLE_STA_GC_NOA:
++		case BTC_WLMROLE_STA_GO:
++		case BTC_WLMROLE_STA_GO_NOA:
++			dm->wl_scc.null_role1 = RTW89_WIFI_ROLE_STATION;
++			dm->wl_scc.null_role2 = RTW89_WIFI_ROLE_NONE;
++			dur = wl_rinfo->mrole_noa_duration;
++
++			if (wl->status.map._4way) {
++				dm->wl_scc.ebt_null = 0;
++				policy_type = BTC_CXP_OFFE_WL;
++			} else if (bt->link_info.status.map.connect == 0) {
++				dm->wl_scc.ebt_null = 0;
++				policy_type = BTC_CXP_OFFE_2GISOB;
++			} else if (bt->link_info.a2dp_desc.exist &&
++				   dur < btc->bt_req_len) {
++				dm->wl_scc.ebt_null = 1; /* tx null at EBT */
++				policy_type = BTC_CXP_OFFE_2GBWMIXB2;
++			} else if (bt->link_info.a2dp_desc.exist ||
++				   bt->link_info.pan_desc.exist) {
++				dm->wl_scc.ebt_null = 1; /* tx null at EBT */
++				policy_type = BTC_CXP_OFFE_2GBWISOB;
++			} else {
++				dm->wl_scc.ebt_null = 0;
++				policy_type = BTC_CXP_OFFE_2GBWISOB;
++			}
++			break;
++		default:
++			break;
++		}
++	}
++
++	_set_ant(rtwdev, NM_EXEC, BTC_PHY_ALL, BTC_ANT_W2G);
++	_set_policy(rtwdev, policy_type, BTC_ACT_WL_2G_SCC);
++}
++
+ static void _action_wl_2g_ap(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_btc *btc = &rtwdev->btc;
+@@ -4384,7 +4479,10 @@ void _run_coex(struct rtw89_dev *rtwdev, enum btc_reason_and_action reason)
+ 		_action_wl_2g_gc(rtwdev);
+ 		break;
+ 	case BTC_WLINK_2G_SCC:
+-		_action_wl_2g_scc(rtwdev);
++		if (chip->chip_id == RTL8852A)
++			_action_wl_2g_scc(rtwdev);
++		else if (chip->chip_id == RTL8852C)
++			_action_wl_2g_scc_v1(rtwdev);
+ 		break;
+ 	case BTC_WLINK_2G_MCC:
+ 		_action_wl_2g_mcc(rtwdev);
+@@ -5667,6 +5765,11 @@ static const char *steps_to_str(u16 step)
+ 	CASE_BTC_POLICY_STR(OFFB_BWB0);
+ 	CASE_BTC_POLICY_STR(OFFE_DEF);
+ 	CASE_BTC_POLICY_STR(OFFE_DEF2);
++	CASE_BTC_POLICY_STR(OFFE_2GBWISOB);
++	CASE_BTC_POLICY_STR(OFFE_2GISOB);
++	CASE_BTC_POLICY_STR(OFFE_2GBWMIXB);
++	CASE_BTC_POLICY_STR(OFFE_WL);
++	CASE_BTC_POLICY_STR(OFFE_2GBWMIXB2);
+ 	CASE_BTC_POLICY_STR(FIX_TD3030);
+ 	CASE_BTC_POLICY_STR(FIX_TD5050);
+ 	CASE_BTC_POLICY_STR(FIX_TD2030);
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 99c9d162d9520..d62e19cc3da52 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -1160,6 +1160,12 @@ struct rtw89_btc_wl_role_info_bpos {
+ 	u16 nan: 1;
+ };
+ 
++struct rtw89_btc_wl_scc_ctrl {
++	u8 null_role1;
++	u8 null_role2;
++	u8 ebt_null; /* if tx null at EBT slot */
++};
++
+ union rtw89_btc_wl_role_info_map {
+ 	u16 val;
+ 	struct rtw89_btc_wl_role_info_bpos role;
+@@ -1708,6 +1714,7 @@ struct rtw89_btc_dm {
+ 	struct rtw89_btc_rf_trx_para rf_trx_para;
+ 	struct rtw89_btc_wl_tx_limit_para wl_tx_limit;
+ 	struct rtw89_btc_dm_step dm_step;
++	struct rtw89_btc_wl_scc_ctrl wl_scc;
+ 	union rtw89_btc_dm_error_map error;
+ 	u32 cnt_dm[BTC_DCNT_NUM];
+ 	u32 cnt_notify[BTC_NCNT_NUM];
 -- 
 2.25.1
 
