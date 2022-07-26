@@ -2,77 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C62ACCA48A
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jul 2022 01:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0387C433EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Jul 2022 02:39:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230109AbiGZBub (ORCPT
+        id S236463AbiGZCjL convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Jul 2022 21:50:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42996 "EHLO
+        Mon, 25 Jul 2022 22:39:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229853AbiGZBu3 (ORCPT
+        with ESMTP id S229626AbiGZCjK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Jul 2022 21:50:29 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36071FD07;
-        Mon, 25 Jul 2022 18:50:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D424EB8117D;
-        Tue, 26 Jul 2022 01:50:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8A0FAC341CD;
-        Tue, 26 Jul 2022 01:50:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1658800225;
-        bh=OsAN9HGhITAkPXlmjN57EqCCQ9DXUiETQ3Nkkd4dfrs=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=ltRDX9AhRzDa08ROH7fIt2dFj6PaOIWFjHdy6tyu842rJZJvY4o2XYr57wLR7vnPl
-         awEjSZQBLJd+v0CkJDgMHSyDGH77QsDtBH9F5dIpJh6uD9ODjQ/NetDRl9OyCNqmHT
-         QIVY4H4IlIgCQj0RNfvQ1LN0vzRhJNadFbBmQlrZKvkzfM/1qlSmf1Wl9DyjG+qTcT
-         0ECHI+UuzVdUvX7BKzhwTHGtN0kLNXcU9lfHnLWJBdnS246WWONzRTpzVE2XRavnbC
-         BIJ6GQTI2uRFiOgmqP8HsaSI6t9Z686a9Y6rBCAmZJEkeW4mAw+cpEBSxVQ5wP1jHa
-         ACbb+Smbt2E+Q==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 69B48E450B3;
-        Tue, 26 Jul 2022 01:50:25 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        Mon, 25 Jul 2022 22:39:10 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2ED452982A;
+        Mon, 25 Jul 2022 19:39:08 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26Q2c1mI5003030, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26Q2c1mI5003030
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Tue, 26 Jul 2022 10:38:01 +0800
+Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Tue, 26 Jul 2022 10:38:07 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Tue, 26 Jul 2022 10:37:10 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::415c:a915:a507:e600]) by
+ RTEXMBS04.realtek.com.tw ([fe80::415c:a915:a507:e600%5]) with mapi id
+ 15.01.2308.027; Tue, 26 Jul 2022 10:38:06 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     "williamsukatube@163.com" <williamsukatube@163.com>,
+        "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
+        "kvalo@kernel.org" <kvalo@kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "edumazet@google.com" <edumazet@google.com>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "pabeni@redhat.com" <pabeni@redhat.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     William Dean <williamsukatube@gmail.com>,
+        Hacash Robot <hacashRobot@santino.com>
+Subject: RE: [PATCH] rtw88: check the return value of alloc_workqueue()
+Thread-Topic: [PATCH] rtw88: check the return value of alloc_workqueue()
+Thread-Index: AQHYnl76EnGR994/20i9s4ZrF2kwK62P9GPw
+Date:   Tue, 26 Jul 2022 02:38:06 +0000
+Message-ID: <303b6e26a6514b5485a3ca5286ae98c6@realtek.com>
+References: <20220723063756.2956189-1-williamsukatube@163.com>
+In-Reply-To: <20220723063756.2956189-1-williamsukatube@163.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXDAG01.realtek.com.tw, 9
+x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
+ rules found
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/7/26_=3F=3F_12:18:00?=
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: pull-request: wireless-next-2022-07-25
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <165880022542.16692.5363435934726922878.git-patchwork-notify@kernel.org>
-Date:   Tue, 26 Jul 2022 01:50:25 +0000
-References: <20220725174547.EA465C341C6@smtp.kernel.org>
-In-Reply-To: <20220725174547.EA465C341C6@smtp.kernel.org>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
 
-This pull request was applied to netdev/net-next.git (master)
-by Jakub Kicinski <kuba@kernel.org>:
-
-On Mon, 25 Jul 2022 17:45:47 +0000 (UTC) you wrote:
-> Hi,
+> -----Original Message-----
+> From: williamsukatube@163.com <williamsukatube@163.com>
+> Sent: Saturday, July 23, 2022 2:38 PM
+> To: tony0620emma@gmail.com; kvalo@kernel.org; davem@davemloft.net; edumazet@google.com; kuba@kernel.org;
+> pabeni@redhat.com; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
+> Cc: William Dean <williamsukatube@gmail.com>; Hacash Robot <hacashRobot@santino.com>
+> Subject: [PATCH] rtw88: check the return value of alloc_workqueue()
 > 
-> here's a pull request to net-next tree, more info below. Please let me know if
-> there are any problems.
+> From: William Dean <williamsukatube@gmail.com>
 > 
-> Kalle
+> The function alloc_workqueue() in rtw_core_init() can fail, but
+> there is no check of its return value. To fix this bug, its return value
+> should be checked with new error handling code.
 > 
-> [...]
+> Fixes: fe101716c7c9d ("rtw88: replace tx tasklet with work queue")
+> Reported-by: Hacash Robot <hacashRobot@santino.com>
+> Signed-off-by: William Dean <williamsukatube@gmail.com>
 
-Here is the summary with links:
-  - pull-request: wireless-next-2022-07-25
-    https://git.kernel.org/netdev/net-next/c/2baf8ba532a1
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+Thank you
 
+> ---
+>  drivers/net/wireless/realtek/rtw88/main.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+> index efabd5b1bf5b..645ef1d01895 100644
+> --- a/drivers/net/wireless/realtek/rtw88/main.c
+> +++ b/drivers/net/wireless/realtek/rtw88/main.c
+> @@ -1984,6 +1984,10 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+>  	timer_setup(&rtwdev->tx_report.purge_timer,
+>  		    rtw_tx_report_purge_timer, 0);
+>  	rtwdev->tx_wq = alloc_workqueue("rtw_tx_wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
+> +	if (!rtwdev->tx_wq) {
+> +		rtw_warn(rtwdev, "alloc_workqueue rtw_tx_wq failed\n");
+> +		return -ENOMEM;
+> +	}
+> 
+>  	INIT_DELAYED_WORK(&rtwdev->watch_dog_work, rtw_watch_dog_work);
+>  	INIT_DELAYED_WORK(&coex->bt_relink_work, rtw_coex_bt_relink_work);
+> --
+> 2.25.1
 
