@@ -2,169 +2,292 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B57C19F2B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3290BC19F2C
 	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jul 2022 23:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236776AbiG0XBx (ORCPT
+        id S236090AbiG0XBw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Jul 2022 19:01:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34770 "EHLO
+        Wed, 27 Jul 2022 19:01:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233151AbiG0XBo (ORCPT
+        with ESMTP id S233884AbiG0XBo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 27 Jul 2022 19:01:44 -0400
 Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A18520F57
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C985F2126D
         for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2022 16:01:42 -0700 (PDT)
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.66.137])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 180711C0083;
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.64.218])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 4A8831C0083;
         Wed, 27 Jul 2022 23:01:41 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id CE47114007E;
-        Wed, 27 Jul 2022 23:01:40 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 11AB2840082;
+        Wed, 27 Jul 2022 23:01:41 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 7091013C2B1;
+        by mail3.candelatech.com (Postfix) with ESMTP id C535013C2B4;
         Wed, 27 Jul 2022 16:01:40 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7091013C2B1
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C535013C2B4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1658962900;
-        bh=CB4r0epo/phmbdAeqdcdoUPvSqWWQK2NG+odvpWXl2E=;
+        bh=U62uDKXFG/RFxHiwu6VCFhIYD7bBNOqB1YVAhzed3QM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=To/Tjs0sZSCdA1SFEwXRFAy9HWAJdW9Kzxwq8NFoGcCFfZ6bYXjIC3IFOyUUbX+Cs
-         JgI83ufa/MZwc2EkpuGxIKFH7/WiewgSX8IWZEZ5d7xgfO+ysz3LWcYGjSiEfZ9FpP
-         nLqJWpWLCwJCmYQKR6tUy1CjAfMZb6JQl9TNsQHg=
+        b=lMhmCRVCxL6DzhlsQU32qOOvq6hxMk01bRidq3Vn3sotonGUNGYmD5m0xwE0wxpBy
+         wW3hpuoDcc6kQql1VZbRuaD7jvGao/lP5u7LV1gw+51rfc206/6pPSgkj1f56/8Jwi
+         EdJccFmSEAjxXXA9R15vcUDUHaNANsNL0hKlrsdc=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     nbd@nbd.name, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 08/12] wifi: mt76: mt7915: use nss for calculating rx-chains
-Date:   Wed, 27 Jul 2022 16:01:18 -0700
-Message-Id: <20220727230122.29842-8-greearb@candelatech.com>
+Subject: [PATCH 10/12] wifi: mt76: mt7915: ethtool counters for driver rx path
+Date:   Wed, 27 Jul 2022 16:01:20 -0700
+Message-Id: <20220727230122.29842-10-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220727230122.29842-1-greearb@candelatech.com>
 References: <20220727230122.29842-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1658962901-xjM6_qNSDwyJ
+X-MDID: 1658962901-Sv54ik0-xyn5
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-When group-5 is enabled, we can find the actuall NSS used.
-In that case, update the rx chains info so that the upper
-stack can give better idea of actual antenna usage.
-
-In case of stbc, the hardware already double nss, but rssi
-is not reported properly (it is '17') for the secondary chains.
-So, decrease nss in the status msg so that mac80211 does not try
-to average the invalid RSSI.
+Add some per-phy counters for rx errors in the driver.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../net/wireless/mediatek/mt76/mt7915/mac.c   | 30 ++++++++++++++-----
- 1 file changed, 23 insertions(+), 7 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 48 ++++++++++++++-----
+ .../net/wireless/mediatek/mt76/mt7915/main.c  | 22 +++++++++
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    | 11 +++++
+ 3 files changed, 70 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 17bc64960f04..1d2909c0c04c 100644
+index ca6748d67ce0..408121c4260f 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -487,10 +487,10 @@ static int
- mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+@@ -488,6 +488,7 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
  			struct mt76_rx_status *status,
  			struct ieee80211_supported_band *sband,
--			__le32 *rxv, u8 *mode)
-+			__le32 *rxv, u8 *mode, u8 *nss)
+ 			__le32 *rxv, u8 *mode, u8 *nss,
++			struct mib_stats *mib,
+ 			struct mt76_sta_stats *stats)
  {
  	u32 v0, v2;
--	u8 stbc, gi, bw, dcm, nss;
-+	u8 stbc, gi, bw, dcm;
- 	int i, idx;
- 	bool cck = false;
- 
-@@ -498,7 +498,7 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
- 	v2 = le32_to_cpu(rxv[2]);
- 
- 	idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
--	nss = FIELD_GET(MT_PRXV_NSTS, v0) + 1;
-+	*nss = FIELD_GET(MT_PRXV_NSTS, v0) + 1;
- 
- 	if (!is_mt7915(&dev->mt76)) {
- 		stbc = FIELD_GET(MT_PRXV_HT_STBC, v0);
-@@ -530,7 +530,6 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+@@ -527,15 +528,19 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 		status->encoding = RX_ENC_HT;
+ 		if (gi)
+ 			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+-		if (i > 31)
++		if (i > 31) {
++			mib->rx_d_bad_ht_rix++;
  			return -EINVAL;
++		}
  		break;
  	case MT_PHY_TYPE_VHT:
--		status->nss = nss;
  		status->encoding = RX_ENC_VHT;
  		if (gi)
  			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
-@@ -541,7 +540,6 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+-		if (i > 11)
++		if (i > 11) {
++			mib->rx_d_bad_vht_rix++;
+ 			return -EINVAL;
++		}
+ 		break;
+ 	case MT_PHY_TYPE_HE_MU:
  	case MT_PHY_TYPE_HE_SU:
- 	case MT_PHY_TYPE_HE_EXT_SU:
- 	case MT_PHY_TYPE_HE_TB:
--		status->nss = nss;
- 		status->encoding = RX_ENC_HE;
- 		i &= GENMASK(3, 0);
+@@ -550,6 +555,7 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 		status->he_dcm = dcm;
+ 		break;
+ 	default:
++		mib->rx_d_bad_mode++;
+ 		return -EINVAL;
+ 	}
+ 	status->rate_idx = i;
+@@ -587,6 +593,7 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 			stats->rx_bw_160++;
+ 		break;
+ 	default:
++		mib->rx_d_bad_bw++;
+ 		return -EINVAL;
+ 	}
  
-@@ -582,6 +580,17 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
- 	if (*mode < MT_PHY_TYPE_HE_SU && gi)
- 		status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+@@ -642,9 +649,12 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	__le16 fc = 0;
+ 	int idx;
+ 	struct mt76_sta_stats *stats = NULL;
++	struct mib_stats *mib = &phy->mib;
  
-+	/* in case stbc is set, the nss value returned by hardware is already
-+	 * correct (ie, 2 instead of 1 for 1 spatial stream).  But, at least in cases
-+	 * where we are configured for a single antenna, then the second chain RSSI is '17',
-+	 * which I take to mean 'not set'.  To keep from adding this to the average rssi up in
-+	 * mac80211 rx logic, decrease nss here.
-+	 */
-+	if (stbc)
-+		*nss >>= 1;
+ 	memset(status, 0, sizeof(*status));
+ 
++	mib->rx_d_skb++;
 +
-+	status->nss = *nss;
-+
- 	return 0;
- }
+ 	if ((rxd1 & MT_RXD1_NORMAL_BAND_IDX) && !phy->band_idx) {
+ 		mphy = dev->mt76.phy2;
+ 		if (!mphy)
+@@ -657,8 +667,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	if (!test_bit(MT76_STATE_RUNNING, &mphy->state))
+ 		return -EINVAL;
  
-@@ -755,6 +764,8 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- 	if (rxd1 & MT_RXD1_NORMAL_GROUP_3) {
- 		u32 v0, v1;
- 		int ret;
-+		int i;
-+		u8 nss;
+-	if (rxd2 & MT_RXD2_NORMAL_AMSDU_ERR)
++	if (rxd2 & MT_RXD2_NORMAL_AMSDU_ERR) {
++		mib->rx_d_rxd2_amsdu_err++;
+ 		return -EINVAL;
++	}
+ 
+ 	hdr_trans = rxd2 & MT_RXD2_NORMAL_HDR_TRANS;
+ 	if (hdr_trans && (rxd1 & MT_RXD1_NORMAL_CM))
+@@ -692,8 +704,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	else
+ 		sband = &mphy->sband_2g.sband;
+ 
+-	if (!sband->channels)
++	if (!sband->channels) {
++		mib->rx_d_null_channels++;
+ 		return -EINVAL;
++	}
+ 
+ 	if ((rxd0 & csum_mask) == csum_mask)
+ 		skb->ip_summed = CHECKSUM_UNNECESSARY;
+@@ -713,8 +727,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 
+ 	remove_pad = FIELD_GET(MT_RXD2_NORMAL_HDR_OFFSET, rxd2);
+ 
+-	if (rxd2 & MT_RXD2_NORMAL_MAX_LEN_ERROR)
++	if (rxd2 & MT_RXD2_NORMAL_MAX_LEN_ERROR) {
++		mib->rx_d_max_len_err++;
+ 		return -EINVAL;
++	}
+ 
+ 	rxd += 6;
+ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_4) {
+@@ -726,8 +742,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 		seq_ctrl = FIELD_GET(MT_RXD8_SEQ_CTRL, v2);
+ 
+ 		rxd += 4;
+-		if ((u8 *)rxd - skb->data >= skb->len)
++		if ((u8 *)rxd - skb->data >= skb->len) {
++			mib->rx_d_too_short++;
+ 			return -EINVAL;
++		}
+ 	}
+ 
+ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_1) {
+@@ -758,8 +776,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 			}
+ 		}
+ 		rxd += 4;
+-		if ((u8 *)rxd - skb->data >= skb->len)
++		if ((u8 *)rxd - skb->data >= skb->len) {
++			mib->rx_d_too_short++;
+ 			return -EINVAL;
++		}
+ 	}
+ 
+ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_2) {
+@@ -781,8 +801,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 		}
+ 
+ 		rxd += 2;
+-		if ((u8 *)rxd - skb->data >= skb->len)
++		if ((u8 *)rxd - skb->data >= skb->len) {
++			mib->rx_d_too_short++;
+ 			return -EINVAL;
++		}
+ 	}
+ 
+ 	/* RXD Group 3 - P-RXV */
+@@ -794,8 +816,10 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
  
  		rxv = rxd; /* DW16 assuming group 1,2,3,4 */
  		rxd += 2;
-@@ -771,11 +782,11 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- 		/* TODO:  When group-5 is enabled, use nss (and stbc) to
- 		 * calculate chains properly for this particular skb.
- 		 */
--		status->chains = mphy->antenna_mask;
- 		status->chain_signal[0] = to_rssi(MT_PRXV_RCPI0, v1);
- 		status->chain_signal[1] = to_rssi(MT_PRXV_RCPI1, v1);
- 		status->chain_signal[2] = to_rssi(MT_PRXV_RCPI2, v1);
- 		status->chain_signal[3] = to_rssi(MT_PRXV_RCPI3, v1);
-+		nss = hweight8(mphy->antenna_mask);
+-		if ((u8 *)rxd - skb->data >= skb->len)
++		if ((u8 *)rxd - skb->data >= skb->len) {
++			mib->rx_d_too_short++;
+ 			return -EINVAL;
++		}
  
+ 		v0 = le32_to_cpu(rxv[0]);  /* DW16, P-VEC1 31:0 */
+ 		/* DW17, RX_RCPI copied over P-VEC 64:32 Per RX Format doc. */
+@@ -816,13 +840,15 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
  		/* RXD Group 5 - C-RXV */
  		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
-@@ -786,10 +797,15 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 			rxd += 18;
+-			if ((u8 *)rxd - skb->data >= skb->len)
++			if ((u8 *)rxd - skb->data >= skb->len) {
++				mib->rx_d_too_short++;
+ 				return -EINVAL;
++			}
+ 		}
  
  		if (!is_mt7915(&dev->mt76) || (rxd1 & MT_RXD1_NORMAL_GROUP_5)) {
  			ret = mt7915_mac_fill_rx_rate(dev, status, sband, rxv,
--						      &mode);
-+						      &mode, &nss);
+-						      &mode, &nss, stats);
++						      &mode, &nss, mib, stats);
  			if (ret < 0)
  				return ret;
-+		} else {
-+			status->nss = nss;
- 		}
-+
-+		for (i = 0; i < nss; i++)
-+			status->chains |= BIT(i);
- 	}
+ 		} else {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index db3c32eebb04..b99a667ff251 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -1157,6 +1157,17 @@ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
+ 	"rx_vec_queue_overflow_drop_cnt",
+ 	"rx_ba_cnt",
  
- 	amsdu_info = FIELD_GET(MT_RXD4_NORMAL_PAYLOAD_FORMAT, rxd4);
++	/* driver rx counters */
++	"d_rx_skb",
++	"d_rx_rxd2_amsdu_err",
++	"d_rx_null_channels",
++	"d_rx_max_len_err",
++	"d_rx_too_short",
++	"d_rx_bad_ht_rix",
++	"d_rx_bad_vht_rix",
++	"d_rx_bad_mode",
++	"d_rx_bad_bw",
++
+ 	/* per vif counters */
+ 	"v_tx_mpdu_attempts", /* counting any retries */
+ 	"v_tx_mpdu_fail",  /* frames that failed even after retry */
+@@ -1323,6 +1334,17 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ 	data[ei++] = mib->rx_vec_queue_overflow_drop_cnt;
+ 	data[ei++] = mib->rx_ba_cnt;
+ 
++	/* rx stats from driver */
++	data[ei++] = mib->rx_d_skb;
++	data[ei++] = mib->rx_d_rxd2_amsdu_err;
++	data[ei++] = mib->rx_d_null_channels;
++	data[ei++] = mib->rx_d_max_len_err;
++	data[ei++] = mib->rx_d_too_short;
++	data[ei++] = mib->rx_d_bad_ht_rix;
++	data[ei++] = mib->rx_d_bad_vht_rix;
++	data[ei++] = mib->rx_d_bad_mode;
++	data[ei++] = mib->rx_d_bad_bw;
++
+ 	/* Add values for all stations owned by this vif */
+ 	wi.initial_stat_idx = ei;
+ 	ieee80211_iterate_stations_atomic(hw, mt7915_ethtool_worker, &wi);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 39757e7f00e7..c5401e6e3cda 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -216,6 +216,17 @@ struct mib_stats {
+ 
+ 	u32 tx_amsdu[8];
+ 	u32 tx_amsdu_cnt;
++
++	/* rx stats from the driver */
++	u32 rx_d_skb; /* total skb received in rx path */
++	u32 rx_d_rxd2_amsdu_err;
++	u32 rx_d_null_channels;
++	u32 rx_d_max_len_err;
++	u32 rx_d_too_short;
++	u32 rx_d_bad_ht_rix;
++	u32 rx_d_bad_vht_rix;
++	u32 rx_d_bad_mode;
++	u32 rx_d_bad_bw;
+ };
+ 
+ struct mt7915_hif {
 -- 
 2.20.1
 
