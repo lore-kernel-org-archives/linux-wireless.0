@@ -2,125 +2,169 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 067D1C19F29
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B57C19F2B
 	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jul 2022 23:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235229AbiG0XBu (ORCPT
+        id S236776AbiG0XBx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Jul 2022 19:01:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34778 "EHLO
+        Wed, 27 Jul 2022 19:01:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233766AbiG0XBo (ORCPT
+        with ESMTP id S233151AbiG0XBo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 27 Jul 2022 19:01:44 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35CB42181E
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2022 16:01:43 -0700 (PDT)
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A18520F57
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2022 16:01:42 -0700 (PDT)
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.7.64.75])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id AAB1A2005E;
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.66.137])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 180711C0083;
         Wed, 27 Jul 2022 23:01:41 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 6B3758007B;
-        Wed, 27 Jul 2022 23:01:41 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id CE47114007E;
+        Wed, 27 Jul 2022 23:01:40 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 28BD213C2B1;
-        Wed, 27 Jul 2022 16:01:41 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 28BD213C2B1
+        by mail3.candelatech.com (Postfix) with ESMTP id 7091013C2B1;
+        Wed, 27 Jul 2022 16:01:40 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7091013C2B1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1658962901;
-        bh=pO2GKPhCZ0/STsKTAzAQh3+K4aMTP5A/BqeWnzeSEQA=;
+        s=default; t=1658962900;
+        bh=CB4r0epo/phmbdAeqdcdoUPvSqWWQK2NG+odvpWXl2E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bCuWY0Oi0ycwWjT6jQmbJjLV7SEOvevA3Nc9Sj6tx4RYuoVJwEqW4CudYz7aF5ol1
-         NY2drWVPzVTFGaVRVaMeI1iFC1yYEAqdRnidDDQCe5ydVMi601933ad04n6HGp2NcV
-         SZMeZk4kfMwQv9dQsECPBM6xiMcNLFlzL6pK+AUE=
+        b=To/Tjs0sZSCdA1SFEwXRFAy9HWAJdW9Kzxwq8NFoGcCFfZ6bYXjIC3IFOyUUbX+Cs
+         JgI83ufa/MZwc2EkpuGxIKFH7/WiewgSX8IWZEZ5d7xgfO+ysz3LWcYGjSiEfZ9FpP
+         nLqJWpWLCwJCmYQKR6tUy1CjAfMZb6JQl9TNsQHg=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     nbd@nbd.name, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 12/12] wifi: mt76: mt7915: add rx-ppdu-size-out-of-range ethtool counter
-Date:   Wed, 27 Jul 2022 16:01:22 -0700
-Message-Id: <20220727230122.29842-12-greearb@candelatech.com>
+Subject: [PATCH 08/12] wifi: mt76: mt7915: use nss for calculating rx-chains
+Date:   Wed, 27 Jul 2022 16:01:18 -0700
+Message-Id: <20220727230122.29842-8-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220727230122.29842-1-greearb@candelatech.com>
 References: <20220727230122.29842-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1658962902-FUVu7abVkSsQ
+X-MDID: 1658962901-xjM6_qNSDwyJ
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Support this additional MIB counter, it shares register with
-the rx-fifo-overflow counter.
+When group-5 is enabled, we can find the actuall NSS used.
+In that case, update the rx chains info so that the upper
+stack can give better idea of actual antenna usage.
+
+In case of stbc, the hardware already double nss, but rssi
+is not reported properly (it is '17') for the secondary chains.
+So, decrease nss in the status msg so that mac80211 does not try
+to average the invalid RSSI.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c    | 1 +
- drivers/net/wireless/mediatek/mt76/mt7915/main.c   | 4 +++-
- drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h | 1 +
- drivers/net/wireless/mediatek/mt76/mt7915/regs.h   | 1 +
- 4 files changed, 6 insertions(+), 1 deletion(-)
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 30 ++++++++++++++-----
+ 1 file changed, 23 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index afd480dd255b..921fad4a3873 100644
+index 17bc64960f04..1d2909c0c04c 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -2490,6 +2490,7 @@ void mt7915_mac_update_stats(struct mt7915_phy *phy)
+@@ -487,10 +487,10 @@ static int
+ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 			struct mt76_rx_status *status,
+ 			struct ieee80211_supported_band *sband,
+-			__le32 *rxv, u8 *mode)
++			__le32 *rxv, u8 *mode, u8 *nss)
+ {
+ 	u32 v0, v2;
+-	u8 stbc, gi, bw, dcm, nss;
++	u8 stbc, gi, bw, dcm;
+ 	int i, idx;
+ 	bool cck = false;
  
- 	cnt = mt76_rr(dev, MT_MIB_SDR4(phy->band_idx));
- 	mib->rx_fifo_full_cnt += FIELD_GET(MT_MIB_SDR4_RX_FIFO_FULL_MASK, cnt);
-+	mib->rx_oor_cnt += FIELD_GET(MT_MIB_SDR4_RX_OOR_MASK, cnt);
+@@ -498,7 +498,7 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 	v2 = le32_to_cpu(rxv[2]);
  
- 	cnt = mt76_rr(dev, MT_MIB_SDR5(phy->band_idx));
- 	mib->rx_mpdu_cnt += cnt;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index f2e215468a38..4c847aac6de8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -1148,6 +1148,7 @@ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
+ 	idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
+-	nss = FIELD_GET(MT_PRXV_NSTS, v0) + 1;
++	*nss = FIELD_GET(MT_PRXV_NSTS, v0) + 1;
  
- 	/* rx counters */
- 	"rx_fifo_full_cnt",
-+	"rx_oor_cnt", /* rx ppdu length is bad */
- 	"rx_mpdu_cnt",
- 	"channel_idle_cnt",
- 	"rx_vector_mismatch_cnt",
-@@ -1331,7 +1332,8 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
- 		data[ei++] = mib->tx_amsdu[i];
+ 	if (!is_mt7915(&dev->mt76)) {
+ 		stbc = FIELD_GET(MT_PRXV_HT_STBC, v0);
+@@ -530,7 +530,6 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 			return -EINVAL;
+ 		break;
+ 	case MT_PHY_TYPE_VHT:
+-		status->nss = nss;
+ 		status->encoding = RX_ENC_VHT;
+ 		if (gi)
+ 			status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+@@ -541,7 +540,6 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 	case MT_PHY_TYPE_HE_SU:
+ 	case MT_PHY_TYPE_HE_EXT_SU:
+ 	case MT_PHY_TYPE_HE_TB:
+-		status->nss = nss;
+ 		status->encoding = RX_ENC_HE;
+ 		i &= GENMASK(3, 0);
  
- 	/* rx counters */
--	data[ei++] = mib->rx_fifo_full_cnt;
-+	data[ei++] = mib->rx_fifo_full_cnt; /* group-5 might exacerbate this */
-+	data[ei++] = mib->rx_oor_cnt;
- 	data[ei++] = mib->rx_mpdu_cnt;
- 	data[ei++] = mib->channel_idle_cnt;
- 	data[ei++] = mib->rx_vector_mismatch_cnt;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index c0bb87bf2a2c..895dff9d053c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -208,6 +208,7 @@ struct mib_stats {
+@@ -582,6 +580,17 @@ mt7915_mac_fill_rx_rate(struct mt7915_dev *dev,
+ 	if (*mode < MT_PHY_TYPE_HE_SU && gi)
+ 		status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
  
- 	/* rx stats */
- 	u32 rx_fifo_full_cnt;
-+	u32 rx_oor_cnt;
- 	u32 channel_idle_cnt;
- 	u32 rx_vector_mismatch_cnt;
- 	u32 rx_delimiter_fail_cnt;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index 8bbc9a0ae699..d8c0caa71122 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -292,6 +292,7 @@ enum offs_rev {
++	/* in case stbc is set, the nss value returned by hardware is already
++	 * correct (ie, 2 instead of 1 for 1 spatial stream).  But, at least in cases
++	 * where we are configured for a single antenna, then the second chain RSSI is '17',
++	 * which I take to mean 'not set'.  To keep from adding this to the average rssi up in
++	 * mac80211 rx logic, decrease nss here.
++	 */
++	if (stbc)
++		*nss >>= 1;
++
++	status->nss = *nss;
++
+ 	return 0;
+ }
  
- #define MT_MIB_SDR4(_band)		MT_WF_MIB(_band, __OFFS(MIB_SDR4))
- #define MT_MIB_SDR4_RX_FIFO_FULL_MASK	GENMASK(15, 0)
-+#define MT_MIB_SDR4_RX_OOR_MASK		GENMASK(23, 16)
+@@ -755,6 +764,8 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	if (rxd1 & MT_RXD1_NORMAL_GROUP_3) {
+ 		u32 v0, v1;
+ 		int ret;
++		int i;
++		u8 nss;
  
- /* rx mpdu counter, full 32 bits */
- #define MT_MIB_SDR5(_band)		MT_WF_MIB(_band, __OFFS(MIB_SDR5))
+ 		rxv = rxd; /* DW16 assuming group 1,2,3,4 */
+ 		rxd += 2;
+@@ -771,11 +782,11 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 		/* TODO:  When group-5 is enabled, use nss (and stbc) to
+ 		 * calculate chains properly for this particular skb.
+ 		 */
+-		status->chains = mphy->antenna_mask;
+ 		status->chain_signal[0] = to_rssi(MT_PRXV_RCPI0, v1);
+ 		status->chain_signal[1] = to_rssi(MT_PRXV_RCPI1, v1);
+ 		status->chain_signal[2] = to_rssi(MT_PRXV_RCPI2, v1);
+ 		status->chain_signal[3] = to_rssi(MT_PRXV_RCPI3, v1);
++		nss = hweight8(mphy->antenna_mask);
+ 
+ 		/* RXD Group 5 - C-RXV */
+ 		if (rxd1 & MT_RXD1_NORMAL_GROUP_5) {
+@@ -786,10 +797,15 @@ mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
+ 
+ 		if (!is_mt7915(&dev->mt76) || (rxd1 & MT_RXD1_NORMAL_GROUP_5)) {
+ 			ret = mt7915_mac_fill_rx_rate(dev, status, sband, rxv,
+-						      &mode);
++						      &mode, &nss);
+ 			if (ret < 0)
+ 				return ret;
++		} else {
++			status->nss = nss;
+ 		}
++
++		for (i = 0; i < nss; i++)
++			status->chains |= BIT(i);
+ 	}
+ 
+ 	amsdu_info = FIELD_GET(MT_RXD4_NORMAL_PAYLOAD_FORMAT, rxd4);
 -- 
 2.20.1
 
