@@ -2,140 +2,125 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2864C3F6B0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jul 2022 23:01:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 067D1C19F29
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jul 2022 23:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234046AbiG0XBr (ORCPT
+        id S235229AbiG0XBu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Jul 2022 19:01:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34756 "EHLO
+        Wed, 27 Jul 2022 19:01:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231808AbiG0XBo (ORCPT
+        with ESMTP id S233766AbiG0XBo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 27 Jul 2022 19:01:44 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EED2C205E7
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2022 16:01:41 -0700 (PDT)
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35CB42181E
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2022 16:01:43 -0700 (PDT)
 X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.165])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 5B91420061;
-        Wed, 27 Jul 2022 23:01:40 +0000 (UTC)
+Received: from mx1-us1.ppe-hosted.com (unknown [10.7.64.75])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id AAB1A2005E;
+        Wed, 27 Jul 2022 23:01:41 +0000 (UTC)
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 0F6679C0066;
-        Wed, 27 Jul 2022 23:01:39 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 6B3758007B;
+        Wed, 27 Jul 2022 23:01:41 +0000 (UTC)
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 8D80813C2B3;
-        Wed, 27 Jul 2022 16:01:39 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 8D80813C2B3
+        by mail3.candelatech.com (Postfix) with ESMTP id 28BD213C2B1;
+        Wed, 27 Jul 2022 16:01:41 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 28BD213C2B1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1658962899;
-        bh=hw54Lh/cn+8Lf1SYZ1CzOHrOZuIUOp2lGdLr85Xg6eI=;
+        s=default; t=1658962901;
+        bh=pO2GKPhCZ0/STsKTAzAQh3+K4aMTP5A/BqeWnzeSEQA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jJnYj9AB0JLiRaMSrWSytXAPTmwv6tiZAhemcunPRz0dyXikrYWTV2hjnYraWlfmM
-         nTQKse/0+SGNkhiDROzHG9OzOK4/wiDwb7DJy/h+xbi9Kkq/pngY2IsZAqHVXaH3r8
-         DCm2dipOrRY2Xr+HsctgvpACau0Zzf/cqyUHBHkc=
+        b=bCuWY0Oi0ycwWjT6jQmbJjLV7SEOvevA3Nc9Sj6tx4RYuoVJwEqW4CudYz7aF5ol1
+         NY2drWVPzVTFGaVRVaMeI1iFC1yYEAqdRnidDDQCe5ydVMi601933ad04n6HGp2NcV
+         SZMeZk4kfMwQv9dQsECPBM6xiMcNLFlzL6pK+AUE=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     nbd@nbd.name, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 03/12] wifi: mt76: mt7915: debugfs hook to enable TXS for NO_SKB pkt-ids
-Date:   Wed, 27 Jul 2022 16:01:13 -0700
-Message-Id: <20220727230122.29842-3-greearb@candelatech.com>
+Subject: [PATCH 12/12] wifi: mt76: mt7915: add rx-ppdu-size-out-of-range ethtool counter
+Date:   Wed, 27 Jul 2022 16:01:22 -0700
+Message-Id: <20220727230122.29842-12-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220727230122.29842-1-greearb@candelatech.com>
 References: <20220727230122.29842-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1658962900-osxRL_D2RqZY
+X-MDID: 1658962902-FUVu7abVkSsQ
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-This lets user turn on/off this feature.  Enabling gives better
-tx-rate related stats, but will cause extra driver and (maybe)
-firmware work.  Not sure if it actually affects performance or
-not.
+Support this additional MIB counter, it shares register with
+the rx-fifo-overflow counter.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 24 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |  3 ++-
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  5 ++++
- 3 files changed, 31 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c    | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c   | 4 +++-
+ drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7915/regs.h   | 1 +
+ 4 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index cab6e02e1f8c..f71d80cd4002 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -633,6 +633,29 @@ mt7915_fw_util_wa_show(struct seq_file *file, void *data)
- 
- DEFINE_SHOW_ATTRIBUTE(mt7915_fw_util_wa);
- 
-+static int
-+mt7915_txs_for_no_skb_set(void *data, u64 val)
-+{
-+	struct mt7915_dev *dev = data;
-+
-+	dev->txs_for_no_skb_enabled = !!val;
-+
-+	return 0;
-+}
-+
-+static int
-+mt7915_txs_for_no_skb_get(void *data, u64 *val)
-+{
-+	struct mt7915_dev *dev = data;
-+
-+	*val = dev->txs_for_no_skb_enabled;
-+
-+	return 0;
-+}
-+
-+DEFINE_DEBUGFS_ATTRIBUTE(fops_txs_for_no_skb, mt7915_txs_for_no_skb_get,
-+			 mt7915_txs_for_no_skb_set, "%lld\n");
-+
- static void
- mt7915_ampdu_stat_read_phy(struct mt7915_phy *phy,
- 			   struct seq_file *file)
-@@ -1017,6 +1040,7 @@ int mt7915_init_debugfs(struct mt7915_phy *phy)
- 			    &mt7915_fw_util_wm_fops);
- 	debugfs_create_file("fw_util_wa", 0400, dir, dev,
- 			    &mt7915_fw_util_wa_fops);
-+	debugfs_create_file("force_txs", 0600, dir, dev, &fops_txs_for_no_skb);
- 	debugfs_create_file("implicit_txbf", 0600, dir, dev,
- 			    &fops_implicit_txbf);
- 	debugfs_create_file("txpower_sku", 0400, dir, phy,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 2d1a8d8b04fb..cf4d11c0a88d 100644
+index afd480dd255b..921fad4a3873 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1257,7 +1257,8 @@ void mt7915_mac_write_txwi(struct mt7915_dev *dev, __le32 *txwi,
- 	txwi[4] = 0;
+@@ -2490,6 +2490,7 @@ void mt7915_mac_update_stats(struct mt7915_phy *phy)
  
- 	val = FIELD_PREP(MT_TXD5_PID, pid);
--	if (pid >= MT_PACKET_ID_FIRST)
-+	if (pid >= MT_PACKET_ID_FIRST ||
-+	    (pid == MT_PACKET_ID_NO_SKB && dev->txs_for_no_skb_enabled))
- 		val |= MT_TXD5_TX_STATUS_HOST;
- 	txwi[5] = cpu_to_le32(val);
+ 	cnt = mt76_rr(dev, MT_MIB_SDR4(phy->band_idx));
+ 	mib->rx_fifo_full_cnt += FIELD_GET(MT_MIB_SDR4_RX_FIFO_FULL_MASK, cnt);
++	mib->rx_oor_cnt += FIELD_GET(MT_MIB_SDR4_RX_OOR_MASK, cnt);
  
+ 	cnt = mt76_rr(dev, MT_MIB_SDR5(phy->band_idx));
+ 	mib->rx_mpdu_cnt += cnt;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index f2e215468a38..4c847aac6de8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -1148,6 +1148,7 @@ static const char mt7915_gstrings_stats[][ETH_GSTRING_LEN] = {
+ 
+ 	/* rx counters */
+ 	"rx_fifo_full_cnt",
++	"rx_oor_cnt", /* rx ppdu length is bad */
+ 	"rx_mpdu_cnt",
+ 	"channel_idle_cnt",
+ 	"rx_vector_mismatch_cnt",
+@@ -1331,7 +1332,8 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
+ 		data[ei++] = mib->tx_amsdu[i];
+ 
+ 	/* rx counters */
+-	data[ei++] = mib->rx_fifo_full_cnt;
++	data[ei++] = mib->rx_fifo_full_cnt; /* group-5 might exacerbate this */
++	data[ei++] = mib->rx_oor_cnt;
+ 	data[ei++] = mib->rx_mpdu_cnt;
+ 	data[ei++] = mib->channel_idle_cnt;
+ 	data[ei++] = mib->rx_vector_mismatch_cnt;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 4dcae6991669..fa755bfa223f 100644
+index c0bb87bf2a2c..895dff9d053c 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -294,6 +294,11 @@ struct mt7915_dev {
- 	u16 chainmask;
- 	u16 chainshift;
- 	u32 hif_idx;
-+	/* Should we request TXS for MT_PACKET_ID_NO_SKB?  Doing so gives better
-+	 * costs but causes a great deal more TXS packet processing by driver and
-+	 * creation by firmware, so may be a performance drag.
-+	 */
-+	bool txs_for_no_skb_enabled;
+@@ -208,6 +208,7 @@ struct mib_stats {
  
- 	struct work_struct init_work;
- 	struct work_struct rc_work;
+ 	/* rx stats */
+ 	u32 rx_fifo_full_cnt;
++	u32 rx_oor_cnt;
+ 	u32 channel_idle_cnt;
+ 	u32 rx_vector_mismatch_cnt;
+ 	u32 rx_delimiter_fail_cnt;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+index 8bbc9a0ae699..d8c0caa71122 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+@@ -292,6 +292,7 @@ enum offs_rev {
+ 
+ #define MT_MIB_SDR4(_band)		MT_WF_MIB(_band, __OFFS(MIB_SDR4))
+ #define MT_MIB_SDR4_RX_FIFO_FULL_MASK	GENMASK(15, 0)
++#define MT_MIB_SDR4_RX_OOR_MASK		GENMASK(23, 16)
+ 
+ /* rx mpdu counter, full 32 bits */
+ #define MT_MIB_SDR5(_band)		MT_WF_MIB(_band, __OFFS(MIB_SDR5))
 -- 
 2.20.1
 
