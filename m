@@ -2,92 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1FC7C04A68
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jul 2022 06:32:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7184C04A68
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Jul 2022 06:51:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229762AbiG0Gcu (ORCPT
+        id S230329AbiG0Gvr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Jul 2022 02:32:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45408 "EHLO
+        Wed, 27 Jul 2022 02:51:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbiG0Gcr (ORCPT
+        with ESMTP id S230356AbiG0Gv2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Jul 2022 02:32:47 -0400
-Received: from alexa-out-sd-01.qualcomm.com (alexa-out-sd-01.qualcomm.com [199.106.114.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C3773C8F7
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2022 23:32:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1658903566; x=1690439566;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=StAwd9Yq3ilcHJTzCCnVUCEz2K4sPRTAkvruuE94TMc=;
-  b=Ci24JRs+9f9cC/ZnYwfXyzp4KldTGoJOnW3hS0mH6kAoQ6nBFlp8vhqA
-   pMDlq6HS8w7QtmtoaxOCLgthNWo9IXGU3foK55wF2JnkItItCQIiODpp2
-   vV6tS1DDaBCKiHlfwAugcCm4EQsUjpo6JCLOO6ropi/WDn9XsaX6xzG+a
-   4=;
-Received: from unknown (HELO ironmsg02-sd.qualcomm.com) ([10.53.140.142])
-  by alexa-out-sd-01.qualcomm.com with ESMTP; 26 Jul 2022 23:32:46 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg02-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jul 2022 23:32:46 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 26 Jul 2022 23:32:45 -0700
-Received: from haric-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 26 Jul 2022 23:32:43 -0700
-From:   <quic_haric@quicinc.com>
-To:     <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>,
-        Hari Chandrakanthan <quic_haric@quicinc.com>
-Subject: [PATCH] mac80211 : allow bw change during channel switch in mesh
-Date:   Wed, 27 Jul 2022 12:02:29 +0530
-Message-ID: <1658903549-21218-1-git-send-email-quic_haric@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        Wed, 27 Jul 2022 02:51:28 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8AF3CBC88
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2022 23:50:49 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 26R6oS5B1001384, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 26R6oS5B1001384
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Wed, 27 Jul 2022 14:50:28 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Wed, 27 Jul 2022 14:50:34 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.27; Wed, 27 Jul
+ 2022 14:50:33 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
+CC:     <gary.chang@realtek.com>, <phhuang@realtek.com>,
+        <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 2/4] rtw88: fix stopping queues in wrong timing when HW scan
+Date:   Wed, 27 Jul 2022 14:50:01 +0800
+Message-ID: <20220727065003.28340-3-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220727065003.28340-1-pkshih@realtek.com>
+References: <20220727065003.28340-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 07/27/2022 06:32:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzcvMjcgpFekyCAwMToxNDowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Hari Chandrakanthan <quic_haric@quicinc.com>
+From: Chih-Kang Chang <gary.chang@realtek.com>
 
-From 'IEEE Std 802.11-2020 section 11.8.8.4.1' :
-The mesh channel switch may be triggered by the need to avoid
-interference to a detected radar signal, or to reassign mesh STA
-channels to ensure the MBSS connectivity.
-A 20/40 MHz MBSS may be changed to a 20 MHz MBSS and a 20 MHz MBSS may be
-changed to a 20/40 MHz MBSS.
+HW scan need to start queues after switch to OP channel, and stop queues
+before leaving op channel. However, in original code, driver will start
+queues after switch to OP channel, but stop queues until switch to OP
+channel next time, that will cause packets transmitted in wrong channel.
+So we fix the stop queues timing.
 
-Since the standard allows the change of bandwidth during
-the channel switch in mesh, remove the bandwidth check present in
-ieee80211_set_csa_beacon.
-
-Fixes: c6da674aff94 ("{nl,cfg,mac}80211: enable the triggering of CSA frame in mesh")
-Signed-off-by: Hari Chandrakanthan <quic_haric@quicinc.com>
+Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- net/mac80211/cfg.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/fw.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fe6500b..5db2cba 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3598,9 +3598,6 @@ static int ieee80211_set_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_IFTYPE_MESH_POINT: {
- 		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index efa51b2f53025..a644e2b617a14 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -2227,7 +2227,12 @@ void rtw_hw_scan_chan_switch(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 				chan_type = COEX_SWITCH_TO_24G_NOFORSCAN;
+ 			rtw_coex_switchband_notify(rtwdev, chan_type);
+ 		}
+-		if (rtw_is_op_chan(rtwdev, chan))
++		/* The channel of C2H RTW_SCAN_NOTIFY_ID_PRESWITCH is next
++		 * channel that hardware will switch. We need to stop queue
++		 * if next channel is non-op channel.
++		 */
++		if (!rtw_is_op_chan(rtwdev, chan) &&
++		    rtw_is_op_chan(rtwdev, hal->current_channel))
+ 			ieee80211_stop_queues(rtwdev->hw);
+ 	}
  
--		if (params->chandef.width != sdata->vif.bss_conf.chandef.width)
--			return -EINVAL;
--
- 		/* changes into another band are not supported */
- 		if (sdata->vif.bss_conf.chandef.chan->band !=
- 		    params->chandef.chan->band)
 -- 
-2.7.4
+2.25.1
 
