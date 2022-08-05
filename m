@@ -2,49 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F538C00140
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Aug 2022 22:14:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CCEDC00140
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Aug 2022 23:38:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241632AbiHEWON (ORCPT
+        id S241414AbiHEXin (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Aug 2022 18:14:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60480 "EHLO
+        Fri, 5 Aug 2022 19:38:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240259AbiHEWOM (ORCPT
+        with ESMTP id S238710AbiHEXim (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Aug 2022 18:14:12 -0400
-X-Greylist: delayed 480 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 05 Aug 2022 15:14:09 PDT
-Received: from web01.jcd-groupe.fr (web01.jcd-groupe.fr [5.196.240.210])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E7F5175B0
-        for <linux-wireless@vger.kernel.org>; Fri,  5 Aug 2022 15:14:09 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by web01.jcd-groupe.fr (Postfix) with ESMTP id C44E3100E3D
-        for <linux-wireless@vger.kernel.org>; Sat,  6 Aug 2022 00:06:07 +0200 (CEST)
-X-Virus-Scanned: Debian amavisd-new at web01.jcd-groupe.fr
-Received: from web01.jcd-groupe.fr ([127.0.0.1])
-        by localhost (web01.jcd-groupe.fr [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id iteE-umIpXBu for <linux-wireless@vger.kernel.org>;
-        Sat,  6 Aug 2022 00:06:06 +0200 (CEST)
-Received: by web01.jcd-groupe.fr (Postfix, from userid 5081)
-        id 30D441010D4; Sat,  6 Aug 2022 00:06:06 +0200 (CEST)
+        Fri, 5 Aug 2022 19:38:42 -0400
+X-Greylist: delayed 24040 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 05 Aug 2022 16:38:41 PDT
+Received: from toro.compassinternetsolutions.com (unknown [138.128.241.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D3261839B
+        for <linux-wireless@vger.kernel.org>; Fri,  5 Aug 2022 16:38:40 -0700 (PDT)
+Received: from towingselectedto by toro.compassinternetsolutions.com with local (Exim 4.95)
+        (envelope-from <towingselectedto@toro.compassinternetsolutions.com>)
+        id 1oK0e6-008aWu-0D
+        for linux-wireless@vger.kernel.org;
+        Fri, 05 Aug 2022 12:57:58 -0400
 To:     linux-wireless@vger.kernel.org
-Subject: Procedo Academy "THE WORLD FINANCIAL CRISIS CAN MAKE YOU A MILLIONAIRE!"
-X-PHP-Originating-Script: 5081:class-phpmailer.php
-Date:   Fri, 5 Aug 2022 22:06:06 +0000
-From:   Procedo Academy <postmaster@procedo-academy.com>
-Reply-To: contact@procedo-academy.com
-Message-ID: <f3e4d5dae320c5d1661f4a5af3df116e@www.procedo-academy.com>
-X-Mailer: PHPMailer 5.2.22 (https://github.com/PHPMailer/PHPMailer)
+Subject: =?us-ascii?Q?Subject:_CRYPTOCURRENCY_WILL_MAKE_YOU_A_BILLION?=  =?us-ascii?Q?AIRE?=
+X-PHP-Script: www.selectedtowing.com/index.php for 191.101.31.49, 191.101.31.49
+Date:   Fri, 5 Aug 2022 16:57:57 +0000
+From:   Selected Towing <wordpress@selectedtowing.com>
+Reply-To: arnaldo@coinso.com
+Message-ID: <Y4gD0QKhOHLA4iWHYWgRf3qx0NdxFRzteS1tdVUtA@www.selectedtowing.com>
+X-Mailer: PHPMailer 6.5.0 (https://github.com/PHPMailer/PHPMailer)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - toro.compassinternetsolutions.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [1064 996] / [47 12]
+X-AntiAbuse: Sender Address Domain - toro.compassinternetsolutions.com
+X-Get-Message-Sender-Via: toro.compassinternetsolutions.com: authenticated_id: towingselectedto/from_h
+X-Authenticated-Sender: toro.compassinternetsolutions.com: wordpress@selectedtowing.com
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Corps du message :
-CRYPTOCURRENCY DROP WILL MAKE YOU A MILLIONAIRE https://telegra.ph/Cryptocurrency-makes-people-millionaires-at-15-people-per-hour---Page-48790-08-02
+Message Body:
+THE FALL IN THE PRICE OF BITCOIN WILL MAKE YOU A BILLIONAIRE https://telegra.ph/Cryptocurrency-makes-people-millionaires-at-15-people-per-hour---Page-54827-08-02-2
 
--- 
-Cet e-mail a été envoyé via le formulaire de contact de Procedo Academy (http://procedo-academy.com)
+--
+This e-mail was sent from a contact form on Selected Towing (http://www.selectedtowing.com)
 
