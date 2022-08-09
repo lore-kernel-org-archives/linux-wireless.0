@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBF4DC25B0E
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 08:41:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64051C25B07
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 08:41:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240977AbiHIIlr (ORCPT
+        id S240978AbiHIIlr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 9 Aug 2022 04:41:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44134 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240945AbiHIIlk (ORCPT
+        with ESMTP id S240968AbiHIIlm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Aug 2022 04:41:40 -0400
+        Tue, 9 Aug 2022 04:41:42 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6C9A86359
-        for <linux-wireless@vger.kernel.org>; Tue,  9 Aug 2022 01:41:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1B25D6359
+        for <linux-wireless@vger.kernel.org>; Tue,  9 Aug 2022 01:41:40 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2798fEL81006240, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2798fGEM1006249, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2798fEL81006240
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2798fGEM1006249
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 9 Aug 2022 16:41:14 +0800
+        Tue, 9 Aug 2022 16:41:16 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 9 Aug 2022 16:41:24 +0800
+ 15.1.2375.7; Tue, 9 Aug 2022 16:41:26 +0800
 Received: from localhost (172.16.16.191) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 9 Aug 2022
- 16:41:23 +0800
+ 16:41:26 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
 CC:     <gary.chang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/7] wifi: rtw88: add mutex when set regulatory and get Tx power table
-Date:   Tue, 9 Aug 2022 16:41:02 +0800
-Message-ID: <20220809084107.38137-3-pkshih@realtek.com>
+Subject: [PATCH v2 4/7] wifi: rtw88: fix WARNING:rtw_get_tx_power_params() during HW scan
+Date:   Tue, 9 Aug 2022 16:41:04 +0800
+Message-ID: <20220809084107.38137-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220809084107.38137-1-pkshih@realtek.com>
 References: <20220809084107.38137-1-pkshih@realtek.com>
@@ -66,67 +66,146 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chih-Kang Chang <gary.chang@realtek.com>
 
-Applying regulatory and getting Tx power table will access hal
-data, it should hold rtwdev::mutex to avoid hal data changed during
-setting flow.
+During HW scan, the channel related feilds in hal struct changed partially.
+If setting Tx power will get WARNING:rtw_get_tx_power_params() due to some
+of fields in hal struct mismatch. Therefore, we fix to change all required
+fields in hal struct when channel switch during HW scan.
 
 Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 11 +++++++----
- drivers/net/wireless/realtek/rtw88/regd.c  |  2 ++
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw88/fw.c       | 37 +++++++++++++------
+ drivers/net/wireless/realtek/rtw88/fw.h       |  2 +-
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/main.h     |  1 +
+ 4 files changed, 28 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 7cde6bcf253b4..9ebe544e51d0d 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -621,11 +621,13 @@ static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
- 	struct rtw_debugfs_priv *debugfs_priv = m->private;
- 	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
- 	struct rtw_hal *hal = &rtwdev->hal;
--	u8 path, rate;
-+	u8 path, rate, bw, ch, regd;
- 	struct rtw_power_params pwr_param = {0};
--	u8 bw = hal->current_band_width;
--	u8 ch = hal->current_channel;
--	u8 regd = rtw_regd_get(rtwdev);
-+
-+	mutex_lock(&rtwdev->mutex);
-+	bw = hal->current_band_width;
-+	ch = hal->current_channel;
-+	regd = rtw_regd_get(rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index c08220ae65fe1..992cae1b05fbb 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -14,6 +14,7 @@
+ #include "util.h"
+ #include "wow.h"
+ #include "ps.h"
++#include "phy.h"
  
- 	seq_printf(m, "channel: %u\n", ch);
- 	seq_printf(m, "bandwidth: %u\n", bw);
-@@ -667,6 +669,7 @@ static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
+ static void rtw_fw_c2h_cmd_handle_ext(struct rtw_dev *rtwdev,
+ 				      struct sk_buff *skb)
+@@ -2087,10 +2088,9 @@ void rtw_hw_scan_complete(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 	rtw_core_scan_complete(rtwdev, vif, true);
+ 
+ 	rtwvif = (struct rtw_vif *)vif->drv_priv;
+-	if (chan) {
+-		hal->current_channel = chan;
+-		hal->current_band_type = chan > 14 ? RTW_BAND_5G : RTW_BAND_2G;
+-	}
++	if (chan)
++		rtw_store_op_chan(rtwdev, false);
++	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
+ 	ieee80211_wake_queues(rtwdev->hw);
+ 	ieee80211_scan_completed(rtwdev->hw, &info);
+ 
+@@ -2179,14 +2179,23 @@ void rtw_hw_scan_status_report(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 		rtw_dbg(rtwdev, RTW_DBG_HW_SCAN, "HW scan aborted with code: %d\n", rc);
+ }
+ 
+-void rtw_store_op_chan(struct rtw_dev *rtwdev)
++void rtw_store_op_chan(struct rtw_dev *rtwdev, bool backup)
+ {
+ 	struct rtw_hw_scan_info *scan_info = &rtwdev->scan_info;
+ 	struct rtw_hal *hal = &rtwdev->hal;
++	u8 band;
+ 
+-	scan_info->op_chan = hal->current_channel;
+-	scan_info->op_bw = hal->current_band_width;
+-	scan_info->op_pri_ch_idx = hal->current_primary_channel_index;
++	if (backup) {
++		scan_info->op_chan = hal->current_channel;
++		scan_info->op_bw = hal->current_band_width;
++		scan_info->op_pri_ch_idx = hal->current_primary_channel_index;
++		scan_info->op_pri_ch = hal->primary_channel;
++	} else {
++		band = scan_info->op_chan > 14 ? RTW_BAND_5G : RTW_BAND_2G;
++		rtw_update_channel(rtwdev, scan_info->op_chan,
++				   scan_info->op_pri_ch,
++				   band, scan_info->op_bw);
++	}
+ }
+ 
+ void rtw_clear_op_chan(struct rtw_dev *rtwdev)
+@@ -2196,6 +2205,7 @@ void rtw_clear_op_chan(struct rtw_dev *rtwdev)
+ 	scan_info->op_chan = 0;
+ 	scan_info->op_bw = 0;
+ 	scan_info->op_pri_ch_idx = 0;
++	scan_info->op_pri_ch = 0;
+ }
+ 
+ static bool rtw_is_op_chan(struct rtw_dev *rtwdev, u8 channel)
+@@ -2210,7 +2220,7 @@ void rtw_hw_scan_chan_switch(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 	struct rtw_c2h_cmd *c2h;
+ 	enum rtw_scan_notify_id id;
+-	u8 chan, status;
++	u8 chan, band, status;
+ 
+ 	if (!test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
+ 		return;
+@@ -2221,10 +2231,13 @@ void rtw_hw_scan_chan_switch(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 	status = GET_CHAN_SWITCH_STATUS(c2h->payload);
+ 
+ 	if (id == RTW_SCAN_NOTIFY_ID_POSTSWITCH) {
+-		if (rtw_is_op_chan(rtwdev, chan))
++		band = chan > 14 ? RTW_BAND_5G : RTW_BAND_2G;
++		rtw_update_channel(rtwdev, chan, chan, band,
++				   RTW_CHANNEL_WIDTH_20);
++		if (rtw_is_op_chan(rtwdev, chan)) {
++			rtw_store_op_chan(rtwdev, false);
+ 			ieee80211_wake_queues(rtwdev->hw);
+-		hal->current_channel = chan;
+-		hal->current_band_type = chan > 14 ? RTW_BAND_5G : RTW_BAND_2G;
++		}
+ 	} else if (id == RTW_SCAN_NOTIFY_ID_PRESWITCH) {
+ 		if (IS_CH_5G_BAND(chan)) {
+ 			rtw_coex_switchband_notify(rtwdev, COEX_SWITCH_TO_5G);
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
+index 20c56e0312c1e..a5a965803a3cc 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.h
++++ b/drivers/net/wireless/realtek/rtw88/fw.h
+@@ -847,7 +847,7 @@ int rtw_fw_dump_fifo(struct rtw_dev *rtwdev, u8 fifo_sel, u32 addr, u32 size,
+ 		     u32 *buffer);
+ void rtw_fw_scan_notify(struct rtw_dev *rtwdev, bool start);
+ void rtw_fw_adaptivity(struct rtw_dev *rtwdev);
+-void rtw_store_op_chan(struct rtw_dev *rtwdev);
++void rtw_store_op_chan(struct rtw_dev *rtwdev, bool backup);
+ void rtw_clear_op_chan(struct rtw_dev *rtwdev);
+ void rtw_hw_scan_start(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		       struct ieee80211_scan_request *req);
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index fa6a920fa8054..ef60041fe6bf6 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -397,7 +397,7 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (is_zero_ether_addr(rtwvif->bssid))
+ 			rtw_clear_op_chan(rtwdev);
+ 		else
+-			rtw_store_op_chan(rtwdev);
++			rtw_store_op_chan(rtwdev, true);
  	}
  
- 	mutex_unlock(&hal->tx_power_mutex);
-+	mutex_unlock(&rtwdev->mutex);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
-index 315c2b193e92c..2f547cbcf6da5 100644
---- a/drivers/net/wireless/realtek/rtw88/regd.c
-+++ b/drivers/net/wireless/realtek/rtw88/regd.c
-@@ -479,6 +479,7 @@ void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 	rtw_dbg(rtwdev, RTW_DBG_REGD, "regd state: %d -> %d\n",
- 		rtwdev->regd.state, next_regd.state);
- 
-+	mutex_lock(&rtwdev->mutex);
- 	rtwdev->regd = next_regd;
- 	rtw_dbg_regd_dump(rtwdev, "get alpha2 %c%c from initiator %d: ",
- 			  request->alpha2[0],
-@@ -487,6 +488,7 @@ void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 
- 	rtw_phy_adaptivity_set_mode(rtwdev);
- 	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
-+	mutex_unlock(&rtwdev->mutex);
- }
- 
- u8 rtw_regd_get(struct rtw_dev *rtwdev)
+ 	if (changed & BSS_CHANGED_BEACON_INT) {
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index e15d35f2c5957..bccd7b28f60c7 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1966,6 +1966,7 @@ struct rtw_hw_scan_info {
+ 	struct ieee80211_vif *scanning_vif;
+ 	u8 probe_pg_size;
+ 	u8 op_pri_ch_idx;
++	u8 op_pri_ch;
+ 	u8 op_chan;
+ 	u8 op_bw;
+ };
 -- 
 2.25.1
 
