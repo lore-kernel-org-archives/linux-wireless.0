@@ -2,75 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9208CC25B0C
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 06:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ACA7C19F2D
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 06:01:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235135AbiHIGAN (ORCPT
+        id S235805AbiHIGBU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Aug 2022 02:00:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51776 "EHLO
+        Tue, 9 Aug 2022 02:01:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234583AbiHIGAG (ORCPT
+        with ESMTP id S235895AbiHIGBF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Aug 2022 02:00:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D219C1F614
-        for <linux-wireless@vger.kernel.org>; Mon,  8 Aug 2022 23:00:05 -0700 (PDT)
+        Tue, 9 Aug 2022 02:01:05 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E12829587
+        for <linux-wireless@vger.kernel.org>; Mon,  8 Aug 2022 23:01:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8B8E2B81071
-        for <linux-wireless@vger.kernel.org>; Tue,  9 Aug 2022 06:00:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2EEBC433D6;
-        Tue,  9 Aug 2022 06:00:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7785D60F5A
+        for <linux-wireless@vger.kernel.org>; Tue,  9 Aug 2022 06:01:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25EDCC433C1;
+        Tue,  9 Aug 2022 06:01:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660024803;
-        bh=e04cgMv3jq2XN98bllzzP5Geh38BzRMDNIYAw80RZyA=;
+        s=k20201202; t=1660024862;
+        bh=J5P7UgcBiACB74XwoIB9P3wjqlscnTg7/iXqLIvHaUA=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=MtkXZpKPFeDBgvuA3D2s8uBVit79rRlD1lmXRCWd57a//S8jYOx9p4WZ8ylFfnfYx
-         +1awtoyJ3SdSr4h9TqGRIeobmgxM0WAE0B/yiJ0WXWG3ZWwyDQuyWtiFNLYhTzmpP8
-         Il87q9vDCdMCYX2SPMKFtNjv29SWE8leRuvrg5cGmq3Fnt3UdkAMZ57EGHpZppSBNE
-         FA2b+UhXNcJHfklzdWjdBoSrX8jA4cDputRbQLGu11ECtOfsA99GYUlSYdYzyRwnnZ
-         0pVYIi0gev0WdOCgx2hW/YIGxBOU6CHHXU1Rofy0tVy61dXPraWkaXCqY4as2NFAfN
-         yp4YoO30YRKYw==
+        b=rhPz0cmQ5qSHLWonSeah4/zlYHJMRMTj/IJvm8IltwRaqm6voGa8pAYuYwrBHHCZ6
+         Mg+LG7g6BTsnTgx3R9NHE6hRP7sDS+rtw3G6nXlDYJaoxk1+feQLSs+jXGWn5+5dgx
+         XJck9pCmVR5N0cWAaKrHEU1cluBS/NhA3NB4mzD9aZ/gzbrvPhv+yEdd8xwLIeFuB9
+         U+/yo9eSyhzQ3XGZV1qKrHsVGesgn1AlVnyg04jAWxk+/+tjPp6Dn5XbD1wNPh6HFP
+         kvV/FtCYs0X8Sm7oBD2l7JjhxgtUcWJjNxvgmiS/EJKJY85ic/+DOffIgdebHkxX9c
+         pIwuULs46Ft5Q==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3] wifi: rtlwifi: 8192de: correct checking of IQK reload
+Subject: Re: [PATCH] wifi: rtw89: refine leaving LPS function
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220801113345.42016-1-pkshih@realtek.com>
-References: <20220801113345.42016-1-pkshih@realtek.com>
+In-Reply-To: <20220802123712.16577-1-pkshih@realtek.com>
+References: <20220802123712.16577-1-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <linux-wireless@vger.kernel.org>
+Cc:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166002480066.8958.6976882122569958583.kvalo@kernel.org>
-Date:   Tue,  9 Aug 2022 06:00:02 +0000 (UTC)
+Message-ID: <166002486028.8958.6537033415855663867.kvalo@kernel.org>
+Date:   Tue,  9 Aug 2022 06:01:01 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> Since IQK could spend time, we make a cache of IQK result matrix that looks
-> like iqk_matrix[channel_idx].val[x][y], and we can reload the matrix if we
-> have made a cache. To determine a cache is made, we check
-> iqk_matrix[channel_idx].val[0][0].
+> From: Zong-Zhe Yang <kevin_yang@realtek.com>
 > 
-> The initial commit 7274a8c22980 ("rtlwifi: rtl8192de: Merge phy routines")
-> make a mistake that checks incorrect iqk_matrix[channel_idx].val[0] that
-> is always true, and this mistake is found by commit ee3db469dd31
-> ("wifi: rtlwifi: remove always-true condition pointed out by GCC 12"), so
-> I recall the vendor driver to find fix and apply the correctness.
+> It's unnecessary to iterate leaving PS mode.
+> So, move it out of the iteration.
 > 
-> Fixes: 7274a8c22980 ("rtlwifi: rtl8192de: Merge phy routines")
+> Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
 Patch applied to wireless-next.git, thanks.
 
-93fbc1ebd978 wifi: rtlwifi: 8192de: correct checking of IQK reload
+674ece275a8e wifi: rtw89: refine leaving LPS function
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220801113345.42016-1-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220802123712.16577-1-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
