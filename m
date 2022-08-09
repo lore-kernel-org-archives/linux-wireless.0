@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65F5EC3F6B0
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 08:41:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BFFC25B06
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 08:41:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240958AbiHIIlp (ORCPT
+        id S239203AbiHIIlo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Aug 2022 04:41:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44126 "EHLO
+        Tue, 9 Aug 2022 04:41:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240921AbiHIIlk (ORCPT
+        with ESMTP id S240900AbiHIIlk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 9 Aug 2022 04:41:40 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2FFB91EEC8
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A64881EECB
         for <linux-wireless@vger.kernel.org>; Tue,  9 Aug 2022 01:41:38 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2798fCrR5006235, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2798fKIQ1006262, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2798fCrR5006235
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2798fKIQ1006262
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 9 Aug 2022 16:41:12 +0800
+        Tue, 9 Aug 2022 16:41:20 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.28; Tue, 9 Aug 2022 16:41:23 +0800
+ 15.1.2375.28; Tue, 9 Aug 2022 16:41:30 +0800
 Received: from localhost (172.16.16.191) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 9 Aug 2022
- 16:41:22 +0800
+ 16:41:30 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
 CC:     <gary.chang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/7] wifi: rtw88: add mutex when set SAR
-Date:   Tue, 9 Aug 2022 16:41:01 +0800
-Message-ID: <20220809084107.38137-2-pkshih@realtek.com>
+Subject: [PATCH v2 7/7] wifi: rtw88: prohibit enter IPS during HW scan
+Date:   Tue, 9 Aug 2022 16:41:07 +0800
+Message-ID: <20220809084107.38137-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220809084107.38137-1-pkshih@realtek.com>
 References: <20220809084107.38137-1-pkshih@realtek.com>
@@ -66,29 +66,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chih-Kang Chang <gary.chang@realtek.com>
 
-Applying SAR will access hal data, it should hold rtwdev::mutex
-to avoid hal data changed during setting flow.
+Mac80211 core may ask driver to change to idle mode during HW scan,
+then H2C command for HW scan will send failed since chip is in idle
+mode. Therefore, We check the SCANNING flag before entering IPS to
+prevent this behavior.
 
 Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index b6af199ae5e11..fa6a920fa8054 100644
+index ef60041fe6bf6..07578ccc4bab3 100644
 --- a/drivers/net/wireless/realtek/rtw88/mac80211.c
 +++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -875,7 +875,9 @@ static int rtw_ops_set_sar_specs(struct ieee80211_hw *hw,
- {
- 	struct rtw_dev *rtwdev = hw->priv;
+@@ -101,7 +101,8 @@ static int rtw_ops_config(struct ieee80211_hw *hw, u32 changed)
+ 		rtw_set_channel(rtwdev);
  
-+	mutex_lock(&rtwdev->mutex);
- 	rtw_set_sar_specs(rtwdev, sar);
-+	mutex_unlock(&rtwdev->mutex);
+ 	if ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
+-	    (hw->conf.flags & IEEE80211_CONF_IDLE))
++	    (hw->conf.flags & IEEE80211_CONF_IDLE) &&
++	    !test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
+ 		rtw_enter_ips(rtwdev);
  
- 	return 0;
- }
+ out:
 -- 
 2.25.1
 
