@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 905F8C3F6B0
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 10:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C707C3F6B0
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 10:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242681AbiHIKuk (ORCPT
+        id S242688AbiHIKul (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Aug 2022 06:50:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57656 "EHLO
+        Tue, 9 Aug 2022 06:50:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241993AbiHIKua (ORCPT
+        with ESMTP id S241268AbiHIKua (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 9 Aug 2022 06:50:30 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C87552BD0
-        for <linux-wireless@vger.kernel.org>; Tue,  9 Aug 2022 03:50:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E47702DCE
+        for <linux-wireless@vger.kernel.org>; Tue,  9 Aug 2022 03:50:27 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 279Ao8y15018827, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 279AoAHm9018837, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 279Ao8y15018827
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 279AoAHm9018837
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 9 Aug 2022 18:50:08 +0800
+        Tue, 9 Aug 2022 18:50:11 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 9 Aug 2022 18:50:19 +0800
+ 15.1.2375.7; Tue, 9 Aug 2022 18:50:21 +0800
 Received: from localhost (172.16.16.191) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 9 Aug 2022
- 18:50:18 +0800
+ 18:50:20 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 02/13] wifi: rtw89: introduce rtw89_chan for channel stuffs
-Date:   Tue, 9 Aug 2022 18:49:41 +0800
-Message-ID: <20220809104952.61355-3-pkshih@realtek.com>
+Subject: [PATCH v3 04/13] wifi: rtw89: create rtw89_chan centrally to avoid breakage
+Date:   Tue, 9 Aug 2022 18:49:43 +0800
+Message-ID: <20220809104952.61355-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220809104952.61355-1-pkshih@realtek.com>
 References: <20220809104952.61355-1-pkshih@realtek.com>
@@ -66,699 +66,327 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Introduce struct rtw89_chan ahead to encapsulate stuffs from struct
-rtw89_channel_params. These stuffs have a clone in HAL and are used
-throughout driver. After multiple channels support, it's expected that
-each channel instance has a configuration of them. So, we refine them
-with struct rtw89_chan by precise type first, and will re-arrange HAL
-by struct rtw89_chan in the following as well.
+Sometimes we need to write current rtw89_chan outside set_channel(),
+e.g. during HW scan, we adjust it to align FW process through C2H.
+However, we don't have full parameters to fill entire rtw89_chan.
+And it will breakage if we update only part of current rtw89_chan.
+That is what we don't want to see because most flows throughout
+driver treat rtw89_chan as a whole.
 
-(No logic has changed.)
+So, we divide struct rtw89_chan to basic part and derived part. The
+basic part contains the parameters which we are always able to know.
+And the derived part will be calculated by the basic part. Then, a
+central function, rtw89_chan_create(), is added to deal with this.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c     |  38 ++---
- drivers/net/wireless/realtek/rtw89/core.h     |  18 +--
- drivers/net/wireless/realtek/rtw89/phy.c      |   8 +-
- drivers/net/wireless/realtek/rtw89/phy.h      |   2 +-
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  37 ++---
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 138 +++++++++---------
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c |   7 +-
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.h |   2 +-
- 8 files changed, 128 insertions(+), 122 deletions(-)
+ drivers/net/wireless/realtek/rtw89/chan.c | 98 +++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/chan.h |  2 +
+ drivers/net/wireless/realtek/rtw89/core.c | 70 +---------------
+ drivers/net/wireless/realtek/rtw89/core.h |  6 +-
+ drivers/net/wireless/realtek/rtw89/fw.c   |  7 +-
+ drivers/net/wireless/realtek/rtw89/mac.c  |  7 +-
+ 6 files changed, 109 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 68c9b12d223a0..d7c3a2ac137f8 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -226,7 +226,7 @@ static void rtw89_traffic_stats_accu(struct rtw89_dev *rtwdev,
+diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
+index a5d1bf573ea62..0bf27a344d2b4 100644
+--- a/drivers/net/wireless/realtek/rtw89/chan.c
++++ b/drivers/net/wireless/realtek/rtw89/chan.c
+@@ -4,6 +4,104 @@
+ 
+ #include "chan.h"
+ 
++static enum rtw89_subband rtw89_get_subband_type(enum rtw89_band band,
++						 u8 center_chan)
++{
++	switch (band) {
++	default:
++	case RTW89_BAND_2G:
++		switch (center_chan) {
++		default:
++		case 1 ... 14:
++			return RTW89_CH_2G;
++		}
++	case RTW89_BAND_5G:
++		switch (center_chan) {
++		default:
++		case 36 ... 64:
++			return RTW89_CH_5G_BAND_1;
++		case 100 ... 144:
++			return RTW89_CH_5G_BAND_3;
++		case 149 ... 177:
++			return RTW89_CH_5G_BAND_4;
++		}
++	case RTW89_BAND_6G:
++		switch (center_chan) {
++		default:
++		case 1 ... 29:
++			return RTW89_CH_6G_BAND_IDX0;
++		case 33 ... 61:
++			return RTW89_CH_6G_BAND_IDX1;
++		case 65 ... 93:
++			return RTW89_CH_6G_BAND_IDX2;
++		case 97 ... 125:
++			return RTW89_CH_6G_BAND_IDX3;
++		case 129 ... 157:
++			return RTW89_CH_6G_BAND_IDX4;
++		case 161 ... 189:
++			return RTW89_CH_6G_BAND_IDX5;
++		case 193 ... 221:
++			return RTW89_CH_6G_BAND_IDX6;
++		case 225 ... 253:
++			return RTW89_CH_6G_BAND_IDX7;
++		}
++	}
++}
++
++static enum rtw89_sc_offset rtw89_get_primary_chan_idx(enum rtw89_bandwidth bw,
++						       u32 center_freq,
++						       u32 primary_freq)
++{
++	u8 primary_chan_idx;
++	u32 offset;
++
++	switch (bw) {
++	default:
++	case RTW89_CHANNEL_WIDTH_20:
++		primary_chan_idx = RTW89_SC_DONT_CARE;
++		break;
++	case RTW89_CHANNEL_WIDTH_40:
++		if (primary_freq > center_freq)
++			primary_chan_idx = RTW89_SC_20_UPPER;
++		else
++			primary_chan_idx = RTW89_SC_20_LOWER;
++		break;
++	case RTW89_CHANNEL_WIDTH_80:
++	case RTW89_CHANNEL_WIDTH_160:
++		if (primary_freq > center_freq) {
++			offset = (primary_freq - center_freq - 10) / 20;
++			primary_chan_idx = RTW89_SC_20_UPPER + offset * 2;
++		} else {
++			offset = (center_freq - primary_freq - 10) / 20;
++			primary_chan_idx = RTW89_SC_20_LOWER + offset * 2;
++		}
++		break;
++	}
++
++	return primary_chan_idx;
++}
++
++void rtw89_chan_create(struct rtw89_chan *chan, u8 center_chan, u8 primary_chan,
++		       enum rtw89_band band, enum rtw89_bandwidth bandwidth)
++{
++	enum nl80211_band nl_band = rtw89_hw_to_nl80211_band(band);
++	u32 center_freq, primary_freq;
++
++	memset(chan, 0, sizeof(*chan));
++	chan->channel = center_chan;
++	chan->primary_channel = primary_chan;
++	chan->band_type = band;
++	chan->band_width = bandwidth;
++
++	center_freq = ieee80211_channel_to_frequency(center_chan, nl_band);
++	primary_freq = ieee80211_channel_to_frequency(primary_chan, nl_band);
++
++	chan->freq = center_freq;
++	chan->subband_type = rtw89_get_subband_type(band, center_chan);
++	chan->pri_ch_idx = rtw89_get_primary_chan_idx(bandwidth, center_freq,
++						      primary_freq);
++}
++
+ bool rtw89_assign_entity_chan(struct rtw89_dev *rtwdev,
+ 			      enum rtw89_sub_entity_idx idx,
+ 			      const struct rtw89_chan *new)
+diff --git a/drivers/net/wireless/realtek/rtw89/chan.h b/drivers/net/wireless/realtek/rtw89/chan.h
+index ac5cc356b8182..d39311a3d5baf 100644
+--- a/drivers/net/wireless/realtek/rtw89/chan.h
++++ b/drivers/net/wireless/realtek/rtw89/chan.h
+@@ -21,6 +21,8 @@ static inline void rtw89_set_entity_state(struct rtw89_dev *rtwdev, bool active)
+ 	WRITE_ONCE(hal->entity_active, active);
  }
  
- static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
--				     struct rtw89_channel_params *chan_param)
-+				     struct rtw89_chan *chan)
- {
- 	struct ieee80211_channel *channel = chandef->chan;
- 	enum nl80211_chan_width width = chandef->width;
-@@ -344,13 +344,13 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
++void rtw89_chan_create(struct rtw89_chan *chan, u8 center_chan, u8 primary_chan,
++		       enum rtw89_band band, enum rtw89_bandwidth bandwidth);
+ bool rtw89_assign_entity_chan(struct rtw89_dev *rtwdev,
+ 			      enum rtw89_sub_entity_idx idx,
+ 			      const struct rtw89_chan *new);
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 78d9e6a7a0981..6ffad5da9161e 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -233,10 +233,8 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 	u32 primary_freq, center_freq;
+ 	u8 center_chan;
+ 	u8 bandwidth = RTW89_CHANNEL_WIDTH_20;
+-	u8 primary_chan_idx = 0;
+ 	u32 offset;
+ 	u8 band;
+-	u8 subband;
+ 
+ 	center_chan = channel->hw_value;
+ 	primary_freq = channel->center_freq;
+@@ -246,15 +244,12 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+ 		bandwidth = RTW89_CHANNEL_WIDTH_20;
+-		primary_chan_idx = RTW89_SC_DONT_CARE;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_40:
+ 		bandwidth = RTW89_CHANNEL_WIDTH_40;
+ 		if (primary_freq > center_freq) {
+-			primary_chan_idx = RTW89_SC_20_UPPER;
+ 			center_chan -= 2;
+ 		} else {
+-			primary_chan_idx = RTW89_SC_20_LOWER;
+ 			center_chan += 2;
+ 		}
+ 		break;
+@@ -263,11 +258,9 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
+ 		bandwidth = nl_to_rtw89_bandwidth(width);
+ 		if (primary_freq > center_freq) {
+ 			offset = (primary_freq - center_freq - 10) / 20;
+-			primary_chan_idx = RTW89_SC_20_UPPER + offset * 2;
+ 			center_chan -= 2 + offset * 4;
+ 		} else {
+ 			offset = (center_freq - primary_freq - 10) / 20;
+-			primary_chan_idx = RTW89_SC_20_LOWER + offset * 2;
+ 			center_chan += 2 + offset * 4;
+ 		}
+ 		break;
+@@ -289,68 +282,7 @@ static void rtw89_get_channel_params(struct cfg80211_chan_def *chandef,
  		break;
  	}
  
--	chan_param->center_chan = center_chan;
--	chan_param->center_freq = center_freq;
--	chan_param->primary_chan = channel->hw_value;
--	chan_param->bandwidth = bandwidth;
--	chan_param->pri_ch_idx = primary_chan_idx;
--	chan_param->band_type = band;
--	chan_param->subband_type = subband;
-+	chan->channel = center_chan;
-+	chan->freq = center_freq;
-+	chan->primary_channel = channel->hw_value;
-+	chan->band_type = band;
-+	chan->band_width = bandwidth;
-+	chan->subband_type = subband;
-+	chan->pri_ch_idx = primary_chan_idx;
+-	switch (band) {
+-	default:
+-	case RTW89_BAND_2G:
+-		switch (center_chan) {
+-		default:
+-		case 1 ... 14:
+-			subband = RTW89_CH_2G;
+-			break;
+-		}
+-		break;
+-	case RTW89_BAND_5G:
+-		switch (center_chan) {
+-		default:
+-		case 36 ... 64:
+-			subband = RTW89_CH_5G_BAND_1;
+-			break;
+-		case 100 ... 144:
+-			subband = RTW89_CH_5G_BAND_3;
+-			break;
+-		case 149 ... 177:
+-			subband = RTW89_CH_5G_BAND_4;
+-			break;
+-		}
+-		break;
+-	case RTW89_BAND_6G:
+-		switch (center_chan) {
+-		default:
+-		case 1 ... 29:
+-			subband = RTW89_CH_6G_BAND_IDX0;
+-			break;
+-		case 33 ... 61:
+-			subband = RTW89_CH_6G_BAND_IDX1;
+-			break;
+-		case 65 ... 93:
+-			subband = RTW89_CH_6G_BAND_IDX2;
+-			break;
+-		case 97 ... 125:
+-			subband = RTW89_CH_6G_BAND_IDX3;
+-			break;
+-		case 129 ... 157:
+-			subband = RTW89_CH_6G_BAND_IDX4;
+-			break;
+-		case 161 ... 189:
+-			subband = RTW89_CH_6G_BAND_IDX5;
+-			break;
+-		case 193 ... 221:
+-			subband = RTW89_CH_6G_BAND_IDX6;
+-			break;
+-		case 225 ... 253:
+-			subband = RTW89_CH_6G_BAND_IDX7;
+-			break;
+-		}
+-		break;
+-	}
+-
+-	chan->channel = center_chan;
+-	chan->freq = center_freq;
+-	chan->primary_channel = channel->hw_value;
+-	chan->band_type = band;
+-	chan->band_width = bandwidth;
+-	chan->subband_type = subband;
+-	chan->pri_ch_idx = primary_chan_idx;
++	rtw89_chan_create(chan, center_chan, channel->hw_value, band, bandwidth);
  }
  
  void rtw89_core_set_chip_txpwr(struct rtw89_dev *rtwdev)
-@@ -371,7 +371,7 @@ void rtw89_set_channel(struct rtw89_dev *rtwdev)
- 	struct ieee80211_hw *hw = rtwdev->hw;
- 	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_hal *hal = &rtwdev->hal;
--	struct rtw89_channel_params ch_param;
-+	struct rtw89_chan chan;
- 	struct rtw89_channel_help_params bak;
- 	u8 center_chan, bandwidth;
- 	bool band_changed;
-@@ -379,28 +379,28 @@ void rtw89_set_channel(struct rtw89_dev *rtwdev)
- 
- 	entity_active = rtw89_get_entity_state(rtwdev);
- 
--	rtw89_get_channel_params(&hw->conf.chandef, &ch_param);
--	if (WARN(ch_param.center_chan == 0, "Invalid channel\n"))
-+	rtw89_get_channel_params(&hw->conf.chandef, &chan);
-+	if (WARN(chan.channel == 0, "Invalid channel\n"))
- 		return;
- 
--	center_chan = ch_param.center_chan;
--	bandwidth = ch_param.bandwidth;
--	band_changed = hal->current_band_type != ch_param.band_type;
-+	center_chan = chan.channel;
-+	bandwidth = chan.band_width;
-+	band_changed = hal->current_band_type != chan.band_type;
- 
- 	hal->current_band_width = bandwidth;
- 	hal->current_channel = center_chan;
--	hal->current_freq = ch_param.center_freq;
-+	hal->current_freq = chan.freq;
- 	hal->prev_primary_channel = hal->current_primary_channel;
- 	hal->prev_band_type = hal->current_band_type;
--	hal->current_primary_channel = ch_param.primary_chan;
--	hal->current_band_type = ch_param.band_type;
--	hal->current_subband = ch_param.subband_type;
-+	hal->current_primary_channel = chan.primary_channel;
-+	hal->current_band_type = chan.band_type;
-+	hal->current_subband = chan.subband_type;
- 
- 	rtw89_set_entity_state(rtwdev, true);
- 
- 	rtw89_chip_set_channel_prepare(rtwdev, &bak);
- 
--	chip->ops->set_channel(rtwdev, &ch_param);
-+	chip->ops->set_channel(rtwdev, &chan);
- 
- 	rtw89_core_set_chip_txpwr(rtwdev);
- 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 9d5aa47e03878..194cba379285b 100644
+index 86e7341198c6f..cc61043fb5da6 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -624,14 +624,14 @@ enum rtw89_sc_offset {
- 	RTW89_SC_40_LOWER	= 10,
- };
+@@ -632,10 +632,14 @@ enum rtw89_sc_offset {
  
--struct rtw89_channel_params {
--	u8 center_chan;
--	u32 center_freq;
--	u8 primary_chan;
--	u8 bandwidth;
--	u8 pri_ch_idx;
--	u8 band_type;
--	u8 subband_type;
-+struct rtw89_chan {
-+	u8 channel;
+ struct rtw89_chan {
+ 	u8 channel;
+-	u32 freq;
+ 	u8 primary_channel;
+ 	enum rtw89_band band_type;
+ 	enum rtw89_bandwidth band_width;
++
++	/* The follow-up are derived from the above. We must ensure that it
++	 * is assigned correctly in rtw89_chan_create() if new one is added.
++	 */
 +	u32 freq;
-+	u8 primary_channel;
-+	enum rtw89_band band_type;
-+	enum rtw89_bandwidth band_width;
-+	enum rtw89_subband subband_type;
-+	enum rtw89_sc_offset pri_ch_idx;
+ 	enum rtw89_subband subband_type;
+ 	enum rtw89_sc_offset pri_ch_idx;
  };
- 
- struct rtw89_channel_help_params {
-@@ -2100,7 +2100,7 @@ struct rtw89_chip_ops {
- 	bool (*write_rf)(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
- 			 u32 addr, u32 mask, u32 data);
- 	void (*set_channel)(struct rtw89_dev *rtwdev,
--			    struct rtw89_channel_params *param);
-+			    const struct rtw89_chan *chan);
- 	void (*set_channel_help)(struct rtw89_dev *rtwdev, bool enter,
- 				 struct rtw89_channel_help_params *p);
- 	int (*read_efuse)(struct rtw89_dev *rtwdev, u8 *log_map);
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index 1532c0a6bbc44..ad86c93a36ebf 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -542,12 +542,12 @@ void rtw89_phy_ra_assoc(struct rtw89_dev *rtwdev, struct ieee80211_sta *sta)
- }
- 
- u8 rtw89_phy_get_txsc(struct rtw89_dev *rtwdev,
--		      struct rtw89_channel_params *param,
-+		      const struct rtw89_chan *chan,
- 		      enum rtw89_bandwidth dbw)
- {
--	enum rtw89_bandwidth cbw = param->bandwidth;
--	u8 pri_ch = param->primary_chan;
--	u8 central_ch = param->center_chan;
-+	enum rtw89_bandwidth cbw = chan->band_width;
-+	u8 pri_ch = chan->primary_channel;
-+	u8 central_ch = chan->channel;
- 	u8 txsc_idx = 0;
- 	u8 tmp = 0;
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index e20636f54b553..d1f6e38a98ce3 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.h
-+++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -439,7 +439,7 @@ rtw89_rfk_parser(struct rtw89_dev *rtwdev, const struct rtw89_rfk_tbl *tbl);
- void rtw89_phy_write_reg3_tbl(struct rtw89_dev *rtwdev,
- 			      const struct rtw89_phy_reg3_tbl *tbl);
- u8 rtw89_phy_get_txsc(struct rtw89_dev *rtwdev,
--		      struct rtw89_channel_params *param,
-+		      const struct rtw89_chan *chan,
- 		      enum rtw89_bandwidth dbw);
- u32 rtw89_phy_read_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
- 		      u32 addr, u32 mask);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 81bd0c4fe21bc..6a87f30ca25ca 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -660,7 +660,7 @@ static void rtw8852a_power_trim(struct rtw89_dev *rtwdev)
- }
- 
- static void rtw8852a_set_channel_mac(struct rtw89_dev *rtwdev,
--				     struct rtw89_channel_params *param,
-+				     const struct rtw89_chan *chan,
- 				     u8 mac_idx)
- {
- 	u32 rf_mod = rtw89_mac_reg_by_idx(R_AX_WMAC_RFMOD, mac_idx);
-@@ -669,20 +669,20 @@ static void rtw8852a_set_channel_mac(struct rtw89_dev *rtwdev,
- 	u32 chk_rate = rtw89_mac_reg_by_idx(R_AX_TXRATE_CHK, mac_idx);
- 	u8 txsc20 = 0, txsc40 = 0;
- 
--	switch (param->bandwidth) {
-+	switch (chan->band_width) {
- 	case RTW89_CHANNEL_WIDTH_80:
--		txsc40 = rtw89_phy_get_txsc(rtwdev, param,
-+		txsc40 = rtw89_phy_get_txsc(rtwdev, chan,
- 					    RTW89_CHANNEL_WIDTH_40);
- 		fallthrough;
- 	case RTW89_CHANNEL_WIDTH_40:
--		txsc20 = rtw89_phy_get_txsc(rtwdev, param,
-+		txsc20 = rtw89_phy_get_txsc(rtwdev, chan,
- 					    RTW89_CHANNEL_WIDTH_20);
- 		break;
- 	default:
- 		break;
- 	}
- 
--	switch (param->bandwidth) {
-+	switch (chan->band_width) {
- 	case RTW89_CHANNEL_WIDTH_80:
- 		rtw89_write8_mask(rtwdev, rf_mod, B_AX_WMAC_RFMOD_MASK, BIT(1));
- 		rtw89_write32(rtwdev, sub_carr, txsc20 | (txsc40 << 4));
-@@ -699,7 +699,7 @@ static void rtw8852a_set_channel_mac(struct rtw89_dev *rtwdev,
- 		break;
- 	}
- 
--	if (param->center_chan > 14)
-+	if (chan->channel > 14)
- 		rtw89_write8_set(rtwdev, chk_rate,
- 				 B_AX_CHECK_CCK_EN | B_AX_RTS_LIMIT_IN_OFDM6);
- 	else
-@@ -1130,35 +1130,36 @@ static void rtw8852a_bbrst_for_rfk(struct rtw89_dev *rtwdev,
- }
- 
- static void rtw8852a_set_channel_bb(struct rtw89_dev *rtwdev,
--				    struct rtw89_channel_params *param,
-+				    const struct rtw89_chan *chan,
- 				    enum rtw89_phy_idx phy_idx)
- {
--	bool cck_en = param->center_chan <= 14;
--	u8 pri_ch_idx = param->pri_ch_idx;
-+	bool cck_en = chan->channel <= 14;
-+	u8 pri_ch_idx = chan->pri_ch_idx;
- 
- 	if (cck_en)
--		rtw8852a_ctrl_sco_cck(rtwdev, param->center_chan,
--				      param->primary_chan, param->bandwidth);
-+		rtw8852a_ctrl_sco_cck(rtwdev, chan->channel,
-+				      chan->primary_channel,
-+				      chan->band_width);
- 
--	rtw8852a_ctrl_ch(rtwdev, param->center_chan, phy_idx);
--	rtw8852a_ctrl_bw(rtwdev, pri_ch_idx, param->bandwidth, phy_idx);
-+	rtw8852a_ctrl_ch(rtwdev, chan->channel, phy_idx);
-+	rtw8852a_ctrl_bw(rtwdev, pri_ch_idx, chan->band_width, phy_idx);
- 	if (cck_en) {
- 		rtw89_phy_write32_mask(rtwdev, R_RXCCA, B_RXCCA_DIS, 0);
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 8dcd02d90f457..cee9815b6df6f 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -2388,11 +2388,8 @@ void rtw89_store_op_chan(struct rtw89_dev *rtwdev, bool backup)
+ 		scan_info->op_bw = cur->band_width;
+ 		scan_info->op_band = cur->band_type;
  	} else {
- 		rtw89_phy_write32_mask(rtwdev, R_RXCCA, B_RXCCA_DIS, 1);
- 		rtw8852a_bbrst_for_rfk(rtwdev, phy_idx);
+-		new = *cur;
+-		new.primary_channel = scan_info->op_pri_ch;
+-		new.channel = scan_info->op_chan;
+-		new.band_width = scan_info->op_bw;
+-		new.band_type = scan_info->op_band;
++		rtw89_chan_create(&new, scan_info->op_chan, scan_info->op_pri_ch,
++				  scan_info->op_band, scan_info->op_bw);
+ 		rtw89_assign_entity_chan(rtwdev, RTW89_SUB_ENTITY_0, &new);
  	}
--	rtw8852a_spur_elimination(rtwdev, param->center_chan);
-+	rtw8852a_spur_elimination(rtwdev, chan->channel);
- 	rtw89_phy_write32_mask(rtwdev, R_MAC_PIN_SEL, B_CH_IDX_SEG0,
--			       param->primary_chan);
-+			       chan->primary_channel);
- 	rtw8852a_bb_reset_all(rtwdev, phy_idx);
  }
- 
- static void rtw8852a_set_channel(struct rtw89_dev *rtwdev,
--				 struct rtw89_channel_params *params)
-+				 const struct rtw89_chan *chan)
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index b9fb983b6ce24..b90ab56b1c771 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -3655,7 +3655,6 @@ rtw89_mac_c2h_scanofld_rsp(struct rtw89_dev *rtwdev, struct sk_buff *c2h,
+ 			   u32 len)
  {
--	rtw8852a_set_channel_mac(rtwdev, params, RTW89_MAC_0);
--	rtw8852a_set_channel_bb(rtwdev, params, RTW89_PHY_0);
-+	rtw8852a_set_channel_mac(rtwdev, chan, RTW89_MAC_0);
-+	rtw8852a_set_channel_bb(rtwdev, chan, RTW89_PHY_0);
- }
- 
- static void rtw8852a_dfs_en(struct rtw89_dev *rtwdev, bool en)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index b697aef2faf2d..8c00aaeedb920 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -567,7 +567,7 @@ static void rtw8852c_power_trim(struct rtw89_dev *rtwdev)
- }
- 
- static void rtw8852c_set_channel_mac(struct rtw89_dev *rtwdev,
--				     struct rtw89_channel_params *param,
-+				     const struct rtw89_chan *chan,
- 				     u8 mac_idx)
- {
- 	u32 rf_mod = rtw89_mac_reg_by_idx(R_AX_WMAC_RFMOD, mac_idx);
-@@ -578,24 +578,24 @@ static void rtw8852c_set_channel_mac(struct rtw89_dev *rtwdev,
- 	u8 rf_mod_val = 0, chk_rate_mask = 0;
- 	u32 txsc;
- 
--	switch (param->bandwidth) {
-+	switch (chan->band_width) {
- 	case RTW89_CHANNEL_WIDTH_160:
--		txsc80 = rtw89_phy_get_txsc(rtwdev, param,
-+		txsc80 = rtw89_phy_get_txsc(rtwdev, chan,
- 					    RTW89_CHANNEL_WIDTH_80);
- 		fallthrough;
- 	case RTW89_CHANNEL_WIDTH_80:
--		txsc40 = rtw89_phy_get_txsc(rtwdev, param,
-+		txsc40 = rtw89_phy_get_txsc(rtwdev, chan,
- 					    RTW89_CHANNEL_WIDTH_40);
- 		fallthrough;
- 	case RTW89_CHANNEL_WIDTH_40:
--		txsc20 = rtw89_phy_get_txsc(rtwdev, param,
-+		txsc20 = rtw89_phy_get_txsc(rtwdev, chan,
- 					    RTW89_CHANNEL_WIDTH_20);
+ 	struct ieee80211_vif *vif = rtwdev->scan_info.scanning_vif;
+-	const struct rtw89_chan *cur = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
+ 	struct rtw89_chan new;
+ 	u8 reason, status, tx_fail, band;
+ 	u16 chan;
+@@ -3682,11 +3681,7 @@ rtw89_mac_c2h_scanofld_rsp(struct rtw89_dev *rtwdev, struct sk_buff *c2h,
+ 		rtw89_hw_scan_complete(rtwdev, vif, false);
  		break;
- 	default:
- 		break;
- 	}
- 
--	switch (param->bandwidth) {
-+	switch (chan->band_width) {
- 	case RTW89_CHANNEL_WIDTH_160:
- 		rf_mod_val = AX_WMAC_RFMOD_160M;
- 		txsc = FIELD_PREP(B_AX_TXSC_20M_MASK, txsc20) |
-@@ -620,7 +620,7 @@ static void rtw8852c_set_channel_mac(struct rtw89_dev *rtwdev,
- 	rtw89_write8_mask(rtwdev, rf_mod, B_AX_WMAC_RFMOD_MASK, rf_mod_val);
- 	rtw89_write32(rtwdev, sub_carr, txsc);
- 
--	switch (param->band_type) {
-+	switch (chan->band_type) {
- 	case RTW89_BAND_2G:
- 		chk_rate_mask = B_AX_BAND_MODE;
- 		break;
-@@ -629,7 +629,7 @@ static void rtw8852c_set_channel_mac(struct rtw89_dev *rtwdev,
- 		chk_rate_mask = B_AX_CHECK_CCK_EN | B_AX_RTS_LIMIT_IN_OFDM6;
- 		break;
- 	default:
--		rtw89_warn(rtwdev, "Invalid band_type:%d\n", param->band_type);
-+		rtw89_warn(rtwdev, "Invalid band_type:%d\n", chan->band_type);
- 		return;
- 	}
- 	rtw89_write8_clr(rtwdev, chk_rate, B_AX_BAND_MODE | B_AX_CHECK_CCK_EN |
-@@ -920,7 +920,7 @@ static void rtw8852c_decode_chan_idx(struct rtw89_dev *rtwdev, u8 chan_idx,
- }
- 
- static void rtw8852c_set_gain_offset(struct rtw89_dev *rtwdev,
--				     const struct rtw89_channel_params *param,
-+				     const struct rtw89_chan *chan,
- 				     enum rtw89_phy_idx phy_idx,
- 				     enum rtw89_rf_path path)
- {
-@@ -939,7 +939,7 @@ static void rtw8852c_set_gain_offset(struct rtw89_dev *rtwdev,
- 	if (rtwdev->dbcc_en && path == RF_PATH_B)
- 		phy_idx = RTW89_PHY_1;
- 
--	if (param->band_type == RTW89_BAND_2G) {
-+	if (chan->band_type == RTW89_BAND_2G) {
- 		offset_q0 = efuse_gain->offset[path][RTW89_GAIN_OFFSET_2G_CCK];
- 		offset_base_q4 = efuse_gain->offset_base[phy_idx];
- 
-@@ -948,7 +948,7 @@ static void rtw8852c_set_gain_offset(struct rtw89_dev *rtwdev,
- 		rtw89_phy_write32_mask(rtwdev, R_RPL_OFST, B_RPL_OFST_MASK, tmp & 0x7f);
- 	}
- 
--	switch (param->subband_type) {
-+	switch (chan->subband_type) {
- 	default:
- 	case RTW89_CH_2G:
- 		gain_band = RTW89_GAIN_OFFSET_2G_OFDM;
-@@ -977,14 +977,14 @@ static void rtw8852c_set_gain_offset(struct rtw89_dev *rtwdev,
- }
- 
- static void rtw8852c_ctrl_ch(struct rtw89_dev *rtwdev,
--			     const struct rtw89_channel_params *param,
-+			     const struct rtw89_chan *chan,
- 			     enum rtw89_phy_idx phy_idx)
- {
- 	u8 sco;
--	u16 central_freq = param->center_freq;
--	u8 central_ch = param->center_chan;
--	u8 band = param->band_type;
--	u8 subband = param->subband_type;
-+	u16 central_freq = chan->freq;
-+	u8 central_ch = chan->channel;
-+	u8 band = chan->band_type;
-+	u8 subband = chan->subband_type;
- 	bool is_2g = band == RTW89_BAND_2G;
- 	u8 chan_idx;
- 
-@@ -996,7 +996,7 @@ static void rtw8852c_ctrl_ch(struct rtw89_dev *rtwdev,
- 	if (phy_idx == RTW89_PHY_0) {
- 		/* Path A */
- 		rtw8852c_set_gain_error(rtwdev, subband, RF_PATH_A);
--		rtw8852c_set_gain_offset(rtwdev, param, phy_idx, RF_PATH_A);
-+		rtw8852c_set_gain_offset(rtwdev, chan, phy_idx, RF_PATH_A);
- 
- 		if (is_2g)
- 			rtw89_phy_write32_idx(rtwdev, R_PATH0_BAND_SEL_V1,
-@@ -1009,7 +1009,7 @@ static void rtw8852c_ctrl_ch(struct rtw89_dev *rtwdev,
- 		/* Path B */
- 		if (!rtwdev->dbcc_en) {
- 			rtw8852c_set_gain_error(rtwdev, subband, RF_PATH_B);
--			rtw8852c_set_gain_offset(rtwdev, param, phy_idx, RF_PATH_B);
-+			rtw8852c_set_gain_offset(rtwdev, chan, phy_idx, RF_PATH_B);
- 
- 			if (is_2g)
- 				rtw89_phy_write32_idx(rtwdev,
-@@ -1038,7 +1038,7 @@ static void rtw8852c_ctrl_ch(struct rtw89_dev *rtwdev,
- 	} else {
- 		/* Path B */
- 		rtw8852c_set_gain_error(rtwdev, subband, RF_PATH_B);
--		rtw8852c_set_gain_offset(rtwdev, param, phy_idx, RF_PATH_B);
-+		rtw8852c_set_gain_offset(rtwdev, chan, phy_idx, RF_PATH_B);
- 
- 		if (is_2g)
- 			rtw89_phy_write32_idx(rtwdev, R_PATH1_BAND_SEL_V1,
-@@ -1095,7 +1095,7 @@ static void rtw8852c_ctrl_ch(struct rtw89_dev *rtwdev,
- 		}
- 	}
- 
--	chan_idx = rtw8852c_encode_chan_idx(rtwdev, param->primary_chan, band);
-+	chan_idx = rtw8852c_encode_chan_idx(rtwdev, chan->primary_channel, band);
- 	rtw89_phy_write32_idx(rtwdev, R_MAC_PIN_SEL, B_CH_IDX_SEG0, chan_idx, phy_idx);
- }
- 
-@@ -1246,12 +1246,12 @@ rtw8852c_ctrl_bw(struct rtw89_dev *rtwdev, u8 pri_ch, u8 bw,
- }
- 
- static u32 rtw8852c_spur_freq(struct rtw89_dev *rtwdev,
--			      struct rtw89_channel_params *param)
-+			      const struct rtw89_chan *chan)
- {
--	u8 center_chan = param->center_chan;
--	u8 bw = param->bandwidth;
-+	u8 center_chan = chan->channel;
-+	u8 bw = chan->band_width;
- 
--	switch (param->band_type) {
-+	switch (chan->band_type) {
- 	case RTW89_BAND_2G:
- 		if (bw == RTW89_CHANNEL_WIDTH_20) {
- 			if (center_chan >= 5 && center_chan <= 8)
-@@ -1285,19 +1285,19 @@ static u32 rtw8852c_spur_freq(struct rtw89_dev *rtwdev,
- #define MAX_TONE_NUM 2048
- 
- static void rtw8852c_set_csi_tone_idx(struct rtw89_dev *rtwdev,
--				      struct rtw89_channel_params *param,
-+				      const struct rtw89_chan *chan,
- 				      enum rtw89_phy_idx phy_idx)
- {
- 	u32 spur_freq;
- 	s32 freq_diff, csi_idx, csi_tone_idx;
- 
--	spur_freq = rtw8852c_spur_freq(rtwdev, param);
-+	spur_freq = rtw8852c_spur_freq(rtwdev, chan);
- 	if (spur_freq == 0) {
- 		rtw89_phy_write32_idx(rtwdev, R_SEG0CSI_EN, B_SEG0CSI_EN, 0, phy_idx);
- 		return;
- 	}
- 
--	freq_diff = (spur_freq - param->center_freq) * 1000000;
-+	freq_diff = (spur_freq - chan->freq) * 1000000;
- 	csi_idx = s32_div_u32_round_closest(freq_diff, CARRIER_SPACING_78_125);
- 	s32_div_u32_round_down(csi_idx, MAX_TONE_NUM, &csi_tone_idx);
- 
-@@ -1325,7 +1325,7 @@ static const struct rtw89_nbi_reg_def rtw8852c_nbi_reg_def[] = {
- };
- 
- static void rtw8852c_set_nbi_tone_idx(struct rtw89_dev *rtwdev,
--				      struct rtw89_channel_params *param,
-+				      const struct rtw89_chan *chan,
- 				      enum rtw89_rf_path path)
- {
- 	const struct rtw89_nbi_reg_def *nbi = &rtw8852c_nbi_reg_def[path];
-@@ -1335,34 +1335,37 @@ static void rtw8852c_set_nbi_tone_idx(struct rtw89_dev *rtwdev,
- 	s32 nbi_frac_idx, nbi_frac_tone_idx;
- 	bool notch2_chk = false;
- 
--	spur_freq = rtw8852c_spur_freq(rtwdev, param);
-+	spur_freq = rtw8852c_spur_freq(rtwdev, chan);
- 	if (spur_freq == 0) {
- 		rtw89_phy_write32_mask(rtwdev, nbi->notch1_en.addr, nbi->notch1_en.mask, 0);
- 		rtw89_phy_write32_mask(rtwdev, nbi->notch1_en.addr, nbi->notch1_en.mask, 0);
- 		return;
- 	}
- 
--	fc = param->center_freq;
--	if (param->bandwidth == RTW89_CHANNEL_WIDTH_160) {
-+	fc = chan->freq;
-+	if (chan->band_width == RTW89_CHANNEL_WIDTH_160) {
- 		fc = (spur_freq > fc) ? fc + 40 : fc - 40;
--		if ((fc > spur_freq && param->center_chan < param->primary_chan) ||
--		    (fc < spur_freq && param->center_chan > param->primary_chan))
-+		if ((fc > spur_freq &&
-+		     chan->channel < chan->primary_channel) ||
-+		    (fc < spur_freq &&
-+		     chan->channel > chan->primary_channel))
- 			notch2_chk = true;
- 	}
- 
- 	freq_diff = (spur_freq - fc) * 1000000;
- 	nbi_idx = s32_div_u32_round_down(freq_diff, CARRIER_SPACING_312_5, &nbi_frac_idx);
- 
--	if (param->bandwidth == RTW89_CHANNEL_WIDTH_20) {
-+	if (chan->band_width == RTW89_CHANNEL_WIDTH_20) {
- 		s32_div_u32_round_down(nbi_idx + 32, 64, &nbi_tone_idx);
- 	} else {
--		u16 tone_para = (param->bandwidth == RTW89_CHANNEL_WIDTH_40) ? 128 : 256;
-+		u16 tone_para = (chan->band_width == RTW89_CHANNEL_WIDTH_40) ?
-+				128 : 256;
- 
- 		s32_div_u32_round_down(nbi_idx, tone_para, &nbi_tone_idx);
- 	}
- 	nbi_frac_tone_idx = s32_div_u32_round_closest(nbi_frac_idx, CARRIER_SPACING_78_125);
- 
--	if (param->bandwidth == RTW89_CHANNEL_WIDTH_160 && notch2_chk) {
-+	if (chan->band_width == RTW89_CHANNEL_WIDTH_160 && notch2_chk) {
- 		rtw89_phy_write32_mask(rtwdev, nbi->notch2_idx.addr,
- 				       nbi->notch2_idx.mask, nbi_tone_idx);
- 		rtw89_phy_write32_mask(rtwdev, nbi->notch2_frac_idx.addr,
-@@ -1404,42 +1407,42 @@ static void rtw8852c_spur_notch(struct rtw89_dev *rtwdev, u32 val,
- }
- 
- static void rtw8852c_spur_elimination(struct rtw89_dev *rtwdev,
--				      struct rtw89_channel_params *param,
-+				      const struct rtw89_chan *chan,
- 				      u8 pri_ch_idx,
- 				      enum rtw89_phy_idx phy_idx)
- {
--	rtw8852c_set_csi_tone_idx(rtwdev, param, phy_idx);
-+	rtw8852c_set_csi_tone_idx(rtwdev, chan, phy_idx);
- 
- 	if (phy_idx == RTW89_PHY_0) {
--		if (param->bandwidth == RTW89_CHANNEL_WIDTH_160 &&
-+		if (chan->band_width == RTW89_CHANNEL_WIDTH_160 &&
- 		    (pri_ch_idx == RTW89_SC_20_LOWER ||
- 		     pri_ch_idx == RTW89_SC_20_UP3X)) {
- 			rtw8852c_spur_notch(rtwdev, 0xe7f, RTW89_PHY_0);
- 			if (!rtwdev->dbcc_en)
- 				rtw8852c_spur_notch(rtwdev, 0xe7f, RTW89_PHY_1);
--		} else if (param->bandwidth == RTW89_CHANNEL_WIDTH_160 &&
-+		} else if (chan->band_width == RTW89_CHANNEL_WIDTH_160 &&
- 			   (pri_ch_idx == RTW89_SC_20_UPPER ||
- 			    pri_ch_idx == RTW89_SC_20_LOW3X)) {
- 			rtw8852c_spur_notch(rtwdev, 0x280, RTW89_PHY_0);
- 			if (!rtwdev->dbcc_en)
- 				rtw8852c_spur_notch(rtwdev, 0x280, RTW89_PHY_1);
- 		} else {
--			rtw8852c_set_nbi_tone_idx(rtwdev, param, RF_PATH_A);
-+			rtw8852c_set_nbi_tone_idx(rtwdev, chan, RF_PATH_A);
- 			if (!rtwdev->dbcc_en)
--				rtw8852c_set_nbi_tone_idx(rtwdev, param,
-+				rtw8852c_set_nbi_tone_idx(rtwdev, chan,
- 							  RF_PATH_B);
- 		}
- 	} else {
--		if (param->bandwidth == RTW89_CHANNEL_WIDTH_160 &&
-+		if (chan->band_width == RTW89_CHANNEL_WIDTH_160 &&
- 		    (pri_ch_idx == RTW89_SC_20_LOWER ||
- 		     pri_ch_idx == RTW89_SC_20_UP3X)) {
- 			rtw8852c_spur_notch(rtwdev, 0xe7f, RTW89_PHY_1);
--		} else if (param->bandwidth == RTW89_CHANNEL_WIDTH_160 &&
-+		} else if (chan->band_width == RTW89_CHANNEL_WIDTH_160 &&
- 			   (pri_ch_idx == RTW89_SC_20_UPPER ||
- 			    pri_ch_idx == RTW89_SC_20_LOW3X)) {
- 			rtw8852c_spur_notch(rtwdev, 0x280, RTW89_PHY_1);
- 		} else {
--			rtw8852c_set_nbi_tone_idx(rtwdev, param, RF_PATH_B);
-+			rtw8852c_set_nbi_tone_idx(rtwdev, chan, RF_PATH_B);
- 		}
- 	}
- 
-@@ -1450,14 +1453,14 @@ static void rtw8852c_spur_elimination(struct rtw89_dev *rtwdev,
- }
- 
- static void rtw8852c_5m_mask(struct rtw89_dev *rtwdev,
--			     struct rtw89_channel_params *param,
-+			     const struct rtw89_chan *chan,
- 			     enum rtw89_phy_idx phy_idx)
- {
--	u8 pri_ch = param->primary_chan;
-+	u8 pri_ch = chan->primary_channel;
- 	bool mask_5m_low;
- 	bool mask_5m_en;
- 
--	switch (param->bandwidth) {
-+	switch (chan->band_width) {
- 	case RTW89_CHANNEL_WIDTH_40:
- 		mask_5m_en = true;
- 		mask_5m_low = pri_ch == 2;
-@@ -1690,21 +1693,22 @@ static void rtw8852c_bb_sethw(struct rtw89_dev *rtwdev)
- }
- 
- static void rtw8852c_set_channel_bb(struct rtw89_dev *rtwdev,
--				    struct rtw89_channel_params *param,
-+				    const struct rtw89_chan *chan,
- 				    enum rtw89_phy_idx phy_idx)
- {
--	bool cck_en = param->band_type == RTW89_BAND_2G;
--	u8 pri_ch_idx = param->pri_ch_idx;
-+	bool cck_en = chan->band_type == RTW89_BAND_2G;
-+	u8 pri_ch_idx = chan->pri_ch_idx;
- 	u32 mask, reg;
- 	u32 ru_alloc_msk[2] = {B_P80_AT_HIGH_FREQ_RU_ALLOC_PHY0,
- 			       B_P80_AT_HIGH_FREQ_RU_ALLOC_PHY1};
- 
--	if (param->band_type == RTW89_BAND_2G)
--		rtw8852c_ctrl_sco_cck(rtwdev, param->center_chan,
--				      param->primary_chan, param->bandwidth);
-+	if (chan->band_type == RTW89_BAND_2G)
-+		rtw8852c_ctrl_sco_cck(rtwdev, chan->channel,
-+				      chan->primary_channel,
-+				      chan->band_width);
- 
--	rtw8852c_ctrl_ch(rtwdev, param, phy_idx);
--	rtw8852c_ctrl_bw(rtwdev, pri_ch_idx, param->bandwidth, phy_idx);
-+	rtw8852c_ctrl_ch(rtwdev, chan, phy_idx);
-+	rtw8852c_ctrl_bw(rtwdev, pri_ch_idx, chan->band_width, phy_idx);
- 	if (cck_en) {
- 		rtw89_phy_write32_mask(rtwdev, R_UPD_CLK_ADC, B_ENABLE_CCK, 1);
- 		rtw89_phy_write32_mask(rtwdev, R_RXCCA_V1, B_RXCCA_DIS_V1, 0);
-@@ -1717,17 +1721,17 @@ static void rtw8852c_set_channel_bb(struct rtw89_dev *rtwdev,
- 				      B_PD_ARBITER_OFF, 0x1, phy_idx);
- 	}
- 
--	rtw8852c_spur_elimination(rtwdev, param, pri_ch_idx, phy_idx);
--	rtw8852c_ctrl_btg(rtwdev, param->band_type == RTW89_BAND_2G);
--	rtw8852c_5m_mask(rtwdev, param, phy_idx);
-+	rtw8852c_spur_elimination(rtwdev, chan, pri_ch_idx, phy_idx);
-+	rtw8852c_ctrl_btg(rtwdev, chan->band_type == RTW89_BAND_2G);
-+	rtw8852c_5m_mask(rtwdev, chan, phy_idx);
- 
--	if (param->bandwidth == RTW89_CHANNEL_WIDTH_160 &&
-+	if (chan->band_width == RTW89_CHANNEL_WIDTH_160 &&
- 	    rtwdev->hal.cv != CHIP_CAV) {
- 		rtw89_phy_write32_idx(rtwdev, R_P80_AT_HIGH_FREQ,
- 				      B_P80_AT_HIGH_FREQ, 0x0, phy_idx);
- 		reg = rtw89_mac_reg_by_idx(R_P80_AT_HIGH_FREQ_BB_WRP,
- 					   phy_idx);
--		if (param->primary_chan > param->center_chan) {
-+		if (chan->primary_channel > chan->channel) {
- 			rtw89_phy_write32_mask(rtwdev,
- 					       R_P80_AT_HIGH_FREQ_RU_ALLOC,
- 					       ru_alloc_msk[phy_idx], 1);
-@@ -1742,8 +1746,8 @@ static void rtw8852c_set_channel_bb(struct rtw89_dev *rtwdev,
- 		}
- 	}
- 
--	if (param->band_type == RTW89_BAND_6G &&
--	    param->bandwidth == RTW89_CHANNEL_WIDTH_160)
-+	if (chan->band_type == RTW89_BAND_6G &&
-+	    chan->band_width == RTW89_CHANNEL_WIDTH_160)
- 		rtw89_phy_write32_idx(rtwdev, R_CDD_EVM_CHK_EN,
- 				      B_CDD_EVM_CHK_EN, 0, phy_idx);
- 	else
-@@ -1773,11 +1777,11 @@ static void rtw8852c_set_channel_bb(struct rtw89_dev *rtwdev,
- }
- 
- static void rtw8852c_set_channel(struct rtw89_dev *rtwdev,
--				 struct rtw89_channel_params *params)
-+				 const struct rtw89_chan *chan)
- {
--	rtw8852c_set_channel_mac(rtwdev, params, RTW89_MAC_0);
--	rtw8852c_set_channel_bb(rtwdev, params, RTW89_PHY_0);
--	rtw8852c_set_channel_rf(rtwdev, params, RTW89_PHY_0);
-+	rtw8852c_set_channel_mac(rtwdev, chan, RTW89_MAC_0);
-+	rtw8852c_set_channel_bb(rtwdev, chan, RTW89_PHY_0);
-+	rtw8852c_set_channel_rf(rtwdev, chan, RTW89_PHY_0);
- }
- 
- static void rtw8852c_dfs_en(struct rtw89_dev *rtwdev, bool en)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-index 4186d825d19b7..fa109ee673cfc 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-@@ -3802,11 +3802,12 @@ void rtw8852c_ctrl_bw_ch(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- }
- 
- void rtw8852c_set_channel_rf(struct rtw89_dev *rtwdev,
--			     struct rtw89_channel_params *param,
-+			     const struct rtw89_chan *chan,
- 			     enum rtw89_phy_idx phy_idx)
- {
--	rtw8852c_ctrl_bw_ch(rtwdev, phy_idx, param->center_chan, param->band_type,
--			    param->bandwidth);
-+	rtw8852c_ctrl_bw_ch(rtwdev, phy_idx, chan->channel,
-+			    chan->band_type,
-+			    chan->band_width);
- }
- 
- void rtw8852c_mcc_get_ch_info(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-index 5118a49da8d3e..928a587cdd056 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.h
-@@ -21,7 +21,7 @@ void rtw8852c_tssi_cont_en_phyidx(struct rtw89_dev *rtwdev, bool en, u8 phy_idx)
- void rtw8852c_wifi_scan_notify(struct rtw89_dev *rtwdev, bool scan_start,
- 			       enum rtw89_phy_idx phy_idx);
- void rtw8852c_set_channel_rf(struct rtw89_dev *rtwdev,
--			     struct rtw89_channel_params *param,
-+			     const struct rtw89_chan *chan,
- 			     enum rtw89_phy_idx phy_idx);
- void rtw8852c_lck_init(struct rtw89_dev *rtwdev);
- void rtw8852c_lck_track(struct rtw89_dev *rtwdev);
+ 	case RTW89_SCAN_ENTER_CH_NOTIFY:
+-		new = *cur;
+-		new.channel = chan;
+-		new.primary_channel = chan;
+-		new.band_type = band;
+-		new.band_width = RTW89_CHANNEL_WIDTH_20;
++		rtw89_chan_create(&new, chan, chan, band, RTW89_CHANNEL_WIDTH_20);
+ 		rtw89_assign_entity_chan(rtwdev, RTW89_SUB_ENTITY_0, &new);
+ 		if (rtw89_is_op_chan(rtwdev, band, chan)) {
+ 			rtw89_store_op_chan(rtwdev, false);
 -- 
 2.25.1
 
