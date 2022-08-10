@@ -2,77 +2,98 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2EC3C19F2D
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Aug 2022 19:21:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E15DC19F2A
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Aug 2022 05:48:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245235AbiHITVx (ORCPT
+        id S230417AbiHJFkr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Aug 2022 15:21:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53938 "EHLO
+        Wed, 10 Aug 2022 01:40:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346251AbiHITUt (ORCPT
+        with ESMTP id S229605AbiHJFkq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Aug 2022 15:20:49 -0400
+        Wed, 10 Aug 2022 01:40:46 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8026B6B;
-        Tue,  9 Aug 2022 12:20:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB6DB6FA16;
+        Tue,  9 Aug 2022 22:40:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7C4ED61326;
-        Tue,  9 Aug 2022 19:20:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DC600C433B5;
-        Tue,  9 Aug 2022 19:20:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 33EDF613EA;
+        Wed, 10 Aug 2022 05:40:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0613EC433C1;
+        Wed, 10 Aug 2022 05:40:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660072814;
-        bh=81XeKBIOTuViOXzOT+xKcRsK1UYPVU/Cp4BxSy5DYWM=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=R0KHcgYDNmNEGZQ1AOLZIS0k2iQxvRXpal+2Vre18QuI/mM0fFfFYSgPvjUhu0Lrh
-         ofu+yVlIKsKbnQJ3ZjNNTAWRMan22qxxXgTtidkBBojQQTecd5779I28Q1tXy5uqsg
-         wjZmJZJple/3r77jxYefwskElBtYHbbnQfzlZEizlTfwKQbPbhs3xZ3KT2jjcUGYDg
-         TIPn6D+nRMLiq54HlsNd/2DjBwS/EplAmljqQcO9MidYG/grapa5OIMZzOpdzAKH4N
-         Jh3GGq7getfPocYmDD4TOX18iP9drZSUgGS2wM+zWOAPF6j/1Jm6FaCjPZl+awPyMD
-         Zr8ovfbF29nIA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id B8B6FC43142;
-        Tue,  9 Aug 2022 19:20:14 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        s=k20201202; t=1660110044;
+        bh=2gJbWzpALWoqhREzI/65nFaQ3yxD3pDPr1VTzYjHy+s=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=fzRn+ofHWrjxCo1fS/haXsAksgnUchkHQXx3AWr9zJzAyBuKjio6BFnQ1Trx67/mW
+         6RKlZ1NjDR4rTIa8iZX0m4UTJogmmtyB+noNhIiUYCFS7v0xVI58MzEQumVheyVU+K
+         Ldp5On1v8KPvLNFSwEOo+a9EsbUAZFTCM3lUrjfJftRxOnj7r21BXsZ8KVuZEqH+Ry
+         8OgZHDYq25/V+skynaRWH7VtfTw5F27il2qeGur4XytxH8fku4sn2/hXRa5W40j1+q
+         swthC80o85VMRczLv6ZiqUA+R6kSDxiUBxL+qyG8AOKOjEnCWpO8pms+P5nCBPPv0x
+         SXv/k6FdcPnpg==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Alvin =?utf-8?Q?=C5=A0ipraga?= <alvin@pqrs.dk>
+Cc:     Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Alvin =?utf-8?Q?=C5=A0ipraga?= <alsi@bang-olufsen.dk>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next 0/2] brcmfmac: AP STA concurrency patches from Cypress/Infineon
+References: <20220722122956.841786-1-alvin@pqrs.dk>
+Date:   Wed, 10 Aug 2022 08:40:36 +0300
+In-Reply-To: <20220722122956.841786-1-alvin@pqrs.dk> ("Alvin
+ \=\?utf-8\?Q\?\=C5\=A0ipraga\=22's\?\=
+        message of "Fri, 22 Jul 2022 14:29:53 +0200")
+Message-ID: <87o7wshd0r.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: pull-request: wireless-2022-08-09
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <166007281475.26938.13151240188198368050.git-patchwork-notify@kernel.org>
-Date:   Tue, 09 Aug 2022 19:20:14 +0000
-References: <20220809164756.B1DAEC433D6@smtp.kernel.org>
-In-Reply-To: <20220809164756.B1DAEC433D6@smtp.kernel.org>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+Alvin =C5=A0ipraga <alvin@pqrs.dk> writes:
 
-This pull request was applied to netdev/net.git (master)
-by Jakub Kicinski <kuba@kernel.org>:
+> From: Alvin =C5=A0ipraga <alsi@bang-olufsen.dk>
+>
+> We are using these two patches from Infineon (formerly Cypress) to
+> enable AP+STA mode on our CYW89359-based platform. They come from the
+> FMAC driver release package distributed by Infineon.
+>
+> The key thing here is that apsta needs to be set to 1 in order for AP
+> mode to work concurrently with STA mode. I cannot speak for other
+> chipsets so a review from the Broadcom side would be welcome here.
+>
+> For the ARP/ND offload being disabled in AP mode, I am of the view that
+> this is correct, but while Arend has given his Reviewed-by on it
+> previously, it was part of a different series [1], so I am sending
+> without in order to jog some memories.
+>
+> [1] https://lore.kernel.org/linux-wireless/20201020022812.37064-3-wright.=
+feng@cypress.com/#t
+>
+> Soontak Lee (1):
+>   brcmfmac: Support multiple AP interfaces and fix STA disconnection
+>     issue
+>
+> Ting-Ying Li (1):
+>   brcmfmac: don't allow arp/nd offload to be enabled if ap mode exists
 
-On Tue,  9 Aug 2022 16:47:56 +0000 (UTC) you wrote:
-> Hi,
-> 
-> here's a pull request to net tree, more info below. Please let me know if there
-> are any problems.
-> 
-> Kalle
-> 
-> [...]
+Arend, Franky & Hante: could you please take a look at this patchset?
+Also I hope that people from Infineon could comment.
 
-Here is the summary with links:
-  - pull-request: wireless-2022-08-09
-    https://git.kernel.org/netdev/net/c/7ba0fa7f32f3
+--=20
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
