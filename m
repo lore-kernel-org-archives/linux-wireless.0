@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B986C25B0C
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Aug 2022 16:33:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D30EC25B0C
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Aug 2022 16:37:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238771AbiHKQdW (ORCPT
+        id S238883AbiHKQhf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Aug 2022 12:33:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38236 "EHLO
+        Thu, 11 Aug 2022 12:37:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239161AbiHKQcG (ORCPT
+        with ESMTP id S239293AbiHKQgu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Aug 2022 12:32:06 -0400
+        Thu, 11 Aug 2022 12:36:50 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D10571F607;
-        Thu, 11 Aug 2022 09:10:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45E6165540;
+        Thu, 11 Aug 2022 09:12:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2108B6141C;
-        Thu, 11 Aug 2022 16:10:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 513A4C433D7;
-        Thu, 11 Aug 2022 16:10:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A9EA961470;
+        Thu, 11 Aug 2022 16:12:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D798FC433D6;
+        Thu, 11 Aug 2022 16:12:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660234238;
-        bh=cuELR775QdGlYh0X9aGx2dI7+ENiTWaA3FYXQ7YC858=;
+        s=k20201202; t=1660234335;
+        bh=F7Za96Zk9fR31g27p/6/PHrEOPrA9xzIElgi9R/ZIzY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hSSfSLM23HD8RfcLKmyPDWC/xWzAxWhjPs1pHIEpHnfCk2Lb+PazGZr23BQOh4yzl
-         AkpBZdgH1XST8XYn6uxsoS6feQFhX0HaZHSFaVymXVyM5lcgbvGlj7eNl6CnZR4GY8
-         p04ayDpp5DOSvFFEorBCR37oimdqa3J9rUwPso4ZGM0ucOy6qhUgvwJ/nJDj5U7g/0
-         dxp3VR4Il6qZJ/oB2sCQraE63rUYq9mVgp2bY/meZn0mUBqnvJeuk2e4Xn6YvQB3Zy
-         b1GipZBiF8Dj0RkshiaoPjWzob0XMhb4yZ2E4xLdRW9HxqG1wzNRkgzql6yirpEV8H
-         P9Ri9hPIIcO/A==
+        b=lgLspGvM5DbfahGo0AJzkdL6xtROKmX8ekHiB360q21AHfxW6whQDwzLodWQ9W38M
+         M+nv2uEYOqg8L0skjFI8AcxoG2ilWaYGc+xv836Kt6mzg4QXBK+GvZ6MyU4uHIbYPE
+         Y8L7iDiphyozcpoLkT5UNi3GSxsODfK7ttCwRZm3nZjsM/AZncVQz2sQTDtaLNdBuI
+         8x+KK64dbOU6723X63gFCo5wD5/wRb+0BvU1B3NXj2sI/DLvSFfQ8jdrykO3sdGq++
+         hHnokE2kqhcfQz8oAtZH4gvhm3XNbFvWGADgwKw4JYYo+oGCZM2TFCX9y64rlg4Q3H
+         sk02tj5heP06w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zheyu Ma <zheyuma97@gmail.com>, Kalle Valo <kvalo@kernel.org>,
@@ -40,12 +40,12 @@ Cc:     Zheyu Ma <zheyuma97@gmail.com>, Kalle Valo <kvalo@kernel.org>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 12/14] wifi: rtl8xxxu: Fix the error handling of the probe function
-Date:   Thu, 11 Aug 2022 12:09:40 -0400
-Message-Id: <20220811160948.1542842-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 10/12] wifi: rtl8xxxu: Fix the error handling of the probe function
+Date:   Thu, 11 Aug 2022 12:11:36 -0400
+Message-Id: <20220811161144.1543598-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220811160948.1542842-1-sashal@kernel.org>
-References: <20220811160948.1542842-1-sashal@kernel.org>
+In-Reply-To: <20220811161144.1543598-1-sashal@kernel.org>
+References: <20220811161144.1543598-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -80,10 +80,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 11 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index b80cff96dea1..6c01ec172183 100644
+index e73613b9f2f5..ba9ac025d440 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6055,7 +6055,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+@@ -6023,7 +6023,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
  	if (!hw) {
  		ret = -ENOMEM;
  		priv = NULL;
@@ -92,7 +92,7 @@ index b80cff96dea1..6c01ec172183 100644
  	}
  
  	priv = hw->priv;
-@@ -6074,24 +6074,24 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+@@ -6042,24 +6042,24 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
  
  	ret = rtl8xxxu_parse_usb(priv, interface);
  	if (ret)
@@ -121,7 +121,7 @@ index b80cff96dea1..6c01ec172183 100644
  	}
  
  	rtl8xxxu_print_chipinfo(priv);
-@@ -6099,12 +6099,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+@@ -6067,12 +6067,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
  	ret = priv->fops->load_firmware(priv);
  	if (ret) {
  		dev_err(&udev->dev, "Fatal - failed to load firmware\n");
@@ -136,7 +136,7 @@ index b80cff96dea1..6c01ec172183 100644
  
  	hw->wiphy->max_scan_ssids = 1;
  	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
-@@ -6154,12 +6154,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+@@ -6120,12 +6120,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
  	if (ret) {
  		dev_err(&udev->dev, "%s: Failed to register: %i\n",
  			__func__, ret);
@@ -151,7 +151,7 @@ index b80cff96dea1..6c01ec172183 100644
  	usb_set_intfdata(interface, NULL);
  
  	if (priv) {
-@@ -6167,9 +6167,10 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+@@ -6133,9 +6133,10 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
  		mutex_destroy(&priv->usb_buf_mutex);
  		mutex_destroy(&priv->h2c_mutex);
  	}
