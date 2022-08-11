@@ -2,69 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E3DC19F2A
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 Aug 2022 15:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7797C25B0C
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 Aug 2022 15:29:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235512AbiHKPU7 (ORCPT
+        id S235738AbiHKP3V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 Aug 2022 11:20:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38682 "EHLO
+        Thu, 11 Aug 2022 11:29:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234338AbiHKPU6 (ORCPT
+        with ESMTP id S235708AbiHKP3P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 Aug 2022 11:20:58 -0400
-Received: from bg5.exmail.qq.com (bg4.exmail.qq.com [43.154.54.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 837A23DBCC;
-        Thu, 11 Aug 2022 08:20:56 -0700 (PDT)
-X-QQ-mid: bizesmtp91t1660231252tpxlpmh5
-Received: from localhost.localdomain ( [182.148.14.53])
-        by bizesmtp.qq.com (ESMTP) with 
-        id ; Thu, 11 Aug 2022 23:20:47 +0800 (CST)
-X-QQ-SSF: 0100000000200060B000B00A0000000
-X-QQ-FEAT: 7Lv6dviieSTkIkfiWi6vr7/WReokV0mJGkaNMIfEWGttLpnU4KeFOwsZs+1CJ
-        XJkfYeC60QjNVkFUI2camKyCeBmFwTy6gP/b5BCQQu848a6r38v3GKluemLxM9vlPjAWaSB
-        5cmnbNbm9Jt53f2L8NamPESpCia896WMG3jrBQF/8MHkn4BtevWqMEnurOz/PBgcwjx0iy9
-        iXjWpaZDZ9cmitG0YtWQwzYqLYskmlqBsJ81IMI2rBm+q2m6mDQ1wejXVr/B2KfBvteMB8l
-        QQxpzeJ4WY5OfkrFIWmtvKrEewGZ+jQEN2IIGeffZiO0AUZunsXm17NYd/F3nxr4EWN6bEz
-        KLKOhjtGkViWRAn7UAr5Q6xadBi/s2S6ETUCBdwVqChCRVl7p4qBPXCSZpHCcbUICopR71F
-        12DEGgJhHAs=
-X-QQ-GoodBg: 0
-From:   Shaomin Deng <dengshaomin@cdjrlc.com>
-To:     zajec5@gmail.com
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Shaomin Deng <dengshaomin@cdjrlc.com>
-Subject: [PATCH] bcma: Fix typo in comments
-Date:   Thu, 11 Aug 2022 11:20:43 -0400
-Message-Id: <20220811152043.11446-1-dengshaomin@cdjrlc.com>
+        Thu, 11 Aug 2022 11:29:15 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89F6692F57;
+        Thu, 11 Aug 2022 08:29:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3137FB82157;
+        Thu, 11 Aug 2022 15:29:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2D6CC43470;
+        Thu, 11 Aug 2022 15:29:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660231752;
+        bh=ZrVVdqJ1lXbKlPTTe/MiF2IuGjRwNIlSt/ErmVMx+tA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=g0d4Sukdx57W5vYnuAd3ExcTdQwFbz2L6+7ibgM3pCM9djIC1tb2xNxzZsy7/eh8F
+         9N7+HPWrXc2qooiawXLfTcL1NNRKKO8kdipJeoAWSLN8O/pAqJk9gRdvpZtozDImny
+         UqbpMo+ufTWv9tjcRhzWJvcR9ux4Tsq3+G9yw6s+Jsu+rxfQ34NSvFWuIrKjtB1XlC
+         38jAKE9xOxZcXR0L2z5QnJIP+J4kbWfSlDL8eDeb9MJn6gUyuWJUtEJsdwWvkamirQ
+         nzavdxCLGezYTnluAEBBMPCu+NfZpfyKyYlWxj+VDnEVBlLK2dLsKP0B6e+3J9RWMv
+         Llkl8GAJRipNQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Maxime Bizon <mbizon@freebox.fr>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.19 004/105] ath10k: fix misreported tx bandwidth for 160Mhz
+Date:   Thu, 11 Aug 2022 11:26:48 -0400
+Message-Id: <20220811152851.1520029-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220811152851.1520029-1-sashal@kernel.org>
+References: <20220811152851.1520029-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybglogicsvr:qybglogicsvr4
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove the repeated word "registers" in comments.
+From: Maxime Bizon <mbizon@freebox.fr>
 
-Signed-off-by: Shaomin Deng <dengshaomin@cdjrlc.com>
+[ Upstream commit 75a7062e533e309a9ca0812c69f3ac3cefadb8b1 ]
+
+Because of this missing switch case, 160Mhz transmit was reported as
+20Mhz, leading to wrong airtime calculation and AQL limiting max
+throughput.
+
+Tested-on: QCA9984 hw2.0 PCI 10.4-3.10-00047
+
+Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/cd2735a40da7f4fcc5323e3fca3775e7b5402ece.camel@freebox.fr
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/bcma/driver_mips.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 12aca34e8db0..4f01e6b17bb9 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -30,7 +30,7 @@ enum bcma_boot_dev {
- 	BCMA_BOOT_DEV_NAND,
- };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 771252dd6d4e..e8727c0b0171 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -3884,6 +3884,10 @@ ath10k_update_per_peer_tx_stats(struct ath10k *ar,
+ 		arsta->tx_info.status.rates[0].flags |=
+ 				IEEE80211_TX_RC_80_MHZ_WIDTH;
+ 		break;
++	case RATE_INFO_BW_160:
++		arsta->tx_info.status.rates[0].flags |=
++				IEEE80211_TX_RC_160_MHZ_WIDTH;
++		break;
+ 	}
  
--/* The 47162a0 hangs when reading MIPS DMP registers registers */
-+/* The 47162a0 hangs when reading MIPS DMP registers */
- static inline bool bcma_core_mips_bcm47162a0_quirk(struct bcma_device *dev)
- {
- 	return dev->bus->chipinfo.id == BCMA_CHIP_ID_BCM47162 &&
+ 	if (peer_stats->succ_pkts) {
 -- 
 2.35.1
 
