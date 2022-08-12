@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 145F6C3F6B0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C60AC282E7
 	for <linux-wireless@archiver.kernel.org>; Fri, 12 Aug 2022 16:10:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239209AbiHLQKe (ORCPT
+        id S239223AbiHLQKh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Aug 2022 12:10:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36866 "EHLO
+        Fri, 12 Aug 2022 12:10:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239188AbiHLQK2 (ORCPT
+        with ESMTP id S239192AbiHLQKa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Aug 2022 12:10:28 -0400
+        Fri, 12 Aug 2022 12:10:30 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85D4B31DF7
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 09:10:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6789082FB4
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 09:10:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 092E6B82478
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 16:10:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D3E1C433D6;
-        Fri, 12 Aug 2022 16:10:22 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0BF78B8247C
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 16:10:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 323EDC433D7;
+        Fri, 12 Aug 2022 16:10:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660320623;
-        bh=GhrbCjA8qAMw06+pY8HCPTBOJtkv3xyVyDkR1J6VF4I=;
+        s=k20201202; t=1660320625;
+        bh=/hX3OzB39UruIkacA08xZgaTBDYUxigx0gBqm8j9Lvc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=StPyltCz2e9k/K7pTSUkbPIPLa79/mS04L41Ylln76UZRX4UASI4f2c5YzSEwz1oe
-         kXSpRHZxb/HZw+LuXANR3ZMSgGCT2spiwr0heTI0HRgh4V1n5hYA3EYgCDlZjuRI32
-         fwbn62Q1rdeUliVZnAhZfo6PYPCru5qCMA3MsI2VPdfyhpyFLYxbyLDxQsDaRWTRzq
-         evvh5t68WiC9geYZrtO+9CWRF23JfJ4BfY6nyrKZc2XMLZQSeiZpmpCbSd0kYIs1YS
-         hl+UpEeN9QB2niXfP96e9F7jfgAeruw60WWRyA3YNh7DMKf81SKZBeHzDFwHOIzews
-         4H1XJVjrveopQ==
+        b=aq10gSTBsPNEe/0tGvifGSq0W1VGCEOu0WTMtCUkCd5S2GaGpMU7VxdHf+/o2kZfq
+         JSSiiKzFgYtU3NQ/1krNwzvOo3g090BNQT8IpjZ3mDfhA8xx/ISh8CIG62I0h21Zhq
+         UVAPL8ZnOI5omdZBcwvA3Rq45fJ5PBqwjYxEfP7gQRVTwRhX1DNfKbjtTmJ9c7MZwT
+         Iu8/IfsRBHByhYWbCn1RqRDlN9hwaP9y8XcDx8rM+fFMhZioUeq3fs9KXr2F2E10AN
+         9cHH8EWpUqIAo9VY+ncEi2zBXbUFjSMO6kxRaERTRSbB6IYeIku2Dr/w7umYC9fwvA
+         1mtEPnQxirxvg==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath12k@lists.infradead.org
-Subject: [PATCH 16/50] wifi: ath12k: add dp_rx.h
-Date:   Fri, 12 Aug 2022 19:09:29 +0300
-Message-Id: <20220812161003.27279-17-kvalo@kernel.org>
+Subject: [PATCH 18/50] wifi: ath12k: add dp_tx.h
+Date:   Fri, 12 Aug 2022 19:09:31 +0300
+Message-Id: <20220812161003.27279-19-kvalo@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220812161003.27279-1-kvalo@kernel.org>
 References: <20220812161003.27279-1-kvalo@kernel.org>
@@ -55,173 +55,54 @@ commit will be one big patch. See the cover letter for more info.)
 
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/dp_rx.h | 160 ++++++++++++++++++++++++++++++++
- 1 file changed, 160 insertions(+)
+ drivers/net/wireless/ath/ath12k/dp_tx.h | 41 +++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.h b/drivers/net/wireless/ath/ath12k/dp_rx.h
+diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.h b/drivers/net/wireless/ath/ath12k/dp_tx.h
 new file mode 100644
-index 000000000000..60a52f83bdcd
+index 000000000000..436d77e5e9ee
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.h
-@@ -0,0 +1,160 @@
++++ b/drivers/net/wireless/ath/ath12k/dp_tx.h
+@@ -0,0 +1,41 @@
 +/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
 + * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
 + * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
 + */
-+#ifndef ATH12K_DP_RX_H
-+#define ATH12K_DP_RX_H
++
++#ifndef ATH12K_DP_TX_H
++#define ATH12K_DP_TX_H
 +
 +#include "core.h"
-+#include "rx_desc.h"
-+#include "debug.h"
++#include "hal_tx.h"
 +
-+#define DP_MAX_NWIFI_HDR_LEN	30
-+
-+struct ath12k_dp_rx_tid {
-+	u8 tid;
-+	u32 *vaddr;
-+	dma_addr_t paddr;
-+	u32 size;
-+	u32 ba_win_sz;
-+	bool active;
-+
-+	/* Info related to rx fragments */
-+	u32 cur_sn;
-+	u16 last_frag_no;
-+	u16 rx_frag_bitmap;
-+
-+	struct sk_buff_head rx_frags;
-+	struct hal_reo_dest_ring *dst_ring_desc;
-+
-+	/* Timer info related to fragments */
-+	struct timer_list frag_timer;
-+	struct ath12k_base *ab;
++struct ath12k_dp_htt_wbm_tx_status {
++	bool acked;
++	int ack_rssi;
 +};
 +
-+struct ath12k_dp_rx_reo_cache_flush_elem {
-+	struct list_head list;
-+	struct ath12k_dp_rx_tid data;
-+	unsigned long ts;
-+};
++int ath12k_dp_tx_htt_h2t_ver_req_msg(struct ath12k_base *ab);
++int ath12k_dp_tx(struct ath12k *ar, struct ath12k_vif *arvif,
++		 struct sk_buff *skb);
++void ath12k_dp_tx_completion_handler(struct ath12k_base *ab, int ring_id);
 +
-+struct ath12k_dp_rx_reo_cmd {
-+	struct list_head list;
-+	struct ath12k_dp_rx_tid data;
-+	int cmd_num;
-+	void (*handler)(struct ath12k_dp *dp, void *ctx,
-+			enum hal_reo_cmd_status status);
-+};
++int ath12k_dp_tx_htt_h2t_ppdu_stats_req(struct ath12k *ar, u32 mask);
++int
++ath12k_dp_tx_htt_h2t_ext_stats_req(struct ath12k *ar, u8 type,
++				   struct htt_ext_stats_cfg_params *cfg_params,
++				   u64 cookie);
++int ath12k_dp_tx_htt_rx_monitor_mode_ring_config(struct ath12k *ar, bool reset);
 +
-+#define ATH12K_DP_RX_REO_DESC_FREE_THRES  64
-+#define ATH12K_DP_RX_REO_DESC_FREE_TIMEOUT_MS 1000
-+
-+enum ath12k_dp_rx_decap_type {
-+	DP_RX_DECAP_TYPE_RAW,
-+	DP_RX_DECAP_TYPE_NATIVE_WIFI,
-+	DP_RX_DECAP_TYPE_ETHERNET2_DIX,
-+	DP_RX_DECAP_TYPE_8023,
-+};
-+
-+struct ath12k_dp_rx_rfc1042_hdr {
-+	u8 llc_dsap;
-+	u8 llc_ssap;
-+	u8 llc_ctrl;
-+	u8 snap_oui[3];
-+	__be16 snap_type;
-+} __packed;
-+
-+struct ath_pktlog_hdr {
-+	u16 flags;
-+	u16 missed_cnt;
-+	u16 log_type;
-+	u16 size;
-+	u32 timestamp;
-+	u32 type_specific_data;
-+	struct mlo_timestamp m_timestamp;
-+	u8 payload[];
-+};
-+
-+static inline u32 ath12k_he_gi_to_nl80211_he_gi(u8 sgi)
-+{
-+	u32 ret = 0;
-+
-+	switch (sgi) {
-+	case RX_MSDU_START_SGI_0_8_US:
-+		ret = NL80211_RATE_INFO_HE_GI_0_8;
-+		break;
-+	case RX_MSDU_START_SGI_1_6_US:
-+		ret = NL80211_RATE_INFO_HE_GI_1_6;
-+		break;
-+	case RX_MSDU_START_SGI_3_2_US:
-+		ret = NL80211_RATE_INFO_HE_GI_3_2;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
-+int ath12k_dp_rx_ampdu_start(struct ath12k *ar,
-+			     struct ieee80211_ampdu_params *params);
-+int ath12k_dp_rx_ampdu_stop(struct ath12k *ar,
-+			    struct ieee80211_ampdu_params *params);
-+int ath12k_dp_rx_peer_pn_replay_config(struct ath12k_vif *arvif,
-+				       const u8 *peer_addr,
-+				       enum set_key_cmd key_cmd,
-+				       struct ieee80211_key_conf *key);
-+void ath12k_dp_rx_peer_tid_cleanup(struct ath12k *ar, struct ath12k_peer *peer);
-+void ath12k_dp_rx_peer_tid_delete(struct ath12k *ar,
-+				  struct ath12k_peer *peer, u8 tid);
-+int ath12k_dp_rx_peer_tid_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_id,
-+				u8 tid, u32 ba_win_sz, u16 ssn,
-+				enum hal_pn_type pn_type);
-+void ath12k_dp_htt_htc_t2h_msg_handler(struct ath12k_base *ab,
-+				       struct sk_buff *skb);
-+int ath12k_dp_rx_pdev_reo_setup(struct ath12k_base *ab);
-+void ath12k_dp_rx_pdev_reo_cleanup(struct ath12k_base *ab);
-+int ath12k_dp_rx_htt_setup(struct ath12k_base *ab);
-+int ath12k_dp_rx_alloc(struct ath12k_base *ab);
-+void ath12k_dp_rx_free(struct ath12k_base *ab);
-+int ath12k_dp_rx_pdev_alloc(struct ath12k_base *ab, int pdev_idx);
-+void ath12k_dp_rx_pdev_free(struct ath12k_base *ab, int pdev_idx);
-+void ath12k_dp_rx_reo_cmd_list_cleanup(struct ath12k_base *ab);
-+void ath12k_dp_rx_process_reo_status(struct ath12k_base *ab);
-+int ath12k_dp_rx_process_wbm_err(struct ath12k_base *ab,
-+				 struct napi_struct *napi, int budget);
-+int ath12k_dp_rx_process_err(struct ath12k_base *ab, struct napi_struct *napi,
-+			     int budget);
-+int ath12k_dp_rx_process(struct ath12k_base *ab, int mac_id,
-+			 struct napi_struct *napi,
-+			 int budget);
-+int ath12k_dp_rx_bufs_replenish(struct ath12k_base *ab, int mac_id,
-+				struct dp_rxdma_ring *rx_ring,
-+				int req_entries,
-+				enum hal_rx_buf_return_buf_manager mgr,
-+				bool hw_cc);
-+int ath12k_dp_htt_tlv_iter(struct ath12k_base *ab, const void *ptr, size_t len,
-+			   int (*iter)(struct ath12k_base *ar, u16 tag, u16 len,
-+				       const void *ptr, void *data),
-+			   void *data);
-+int ath12k_dp_rx_pdev_mon_attach(struct ath12k *ar);
-+int ath12k_dp_rx_peer_frag_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_id);
-+
-+int ath12k_dp_rx_pktlog_start(struct ath12k_base *ab);
-+int ath12k_dp_rx_pktlog_stop(struct ath12k_base *ab, bool stop_timer);
-+u8 ath12k_dp_rx_h_l3pad(struct ath12k_base *ab,
-+			struct hal_rx_desc *desc);
-+struct ath12k_peer *
-+ath12k_dp_rx_h_find_peer(struct ath12k_base *ab, struct sk_buff *msdu);
-+u8 ath12k_dp_rx_h_decap_type(struct ath12k_base *ab,
-+			     struct hal_rx_desc *desc);
-+u32 ath12k_dp_rx_h_mpdu_err(struct ath12k_base *ab,
-+			    struct hal_rx_desc *desc);
-+void ath12k_dp_rx_h_ppdu(struct ath12k *ar, struct hal_rx_desc *rx_desc,
-+			 struct ieee80211_rx_status *rx_status);
-+struct ath12k_peer *
-+ath12k_dp_rx_h_find_peer(struct ath12k_base *ab, struct sk_buff *msdu);
-+
-+int ath12k_dp_rxdma_ring_sel_config_qcn9274(struct ath12k_base *ab);
-+int ath12k_dp_rxdma_ring_sel_config_wcn7850(struct ath12k_base *ab);
-+
-+#endif /* ATH12K_DP_RX_H */
++int ath12k_dp_tx_htt_rx_filter_setup(struct ath12k_base *ab, u32 ring_id,
++				     int mac_id, enum hal_ring_type ring_type,
++				     int rx_buf_size,
++				     struct htt_rx_ring_tlv_filter *tlv_filter);
++void ath12k_dp_tx_put_bank_profile(struct ath12k_dp *dp, u8 bank_id);
++int ath12k_dp_tx_htt_tx_filter_setup(struct ath12k_base *ab, u32 ring_id,
++				     int mac_id, enum hal_ring_type ring_type,
++				     int tx_buf_size,
++				     struct htt_tx_ring_tlv_filter *htt_tlv_filter);
++int ath12k_dp_tx_htt_tx_monitor_mode_ring_config(struct ath12k *ar, bool reset);
++int ath12k_dp_tx_htt_monitor_mode_ring_config(struct ath12k *ar, bool reset);
++#endif
 
