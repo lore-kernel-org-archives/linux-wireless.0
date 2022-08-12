@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97DD5C00140
-	for <linux-wireless@archiver.kernel.org>; Fri, 12 Aug 2022 16:10:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C018DC25B0E
+	for <linux-wireless@archiver.kernel.org>; Fri, 12 Aug 2022 16:10:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239224AbiHLQKx (ORCPT
+        id S239213AbiHLQKz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 12 Aug 2022 12:10:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38080 "EHLO
+        Fri, 12 Aug 2022 12:10:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239219AbiHLQKo (ORCPT
+        with ESMTP id S239200AbiHLQKp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 12 Aug 2022 12:10:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF5BD9F0E2
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 09:10:33 -0700 (PDT)
+        Fri, 12 Aug 2022 12:10:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3639B65BA
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 09:10:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3D979B82469
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 16:10:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E848C433D6;
-        Fri, 12 Aug 2022 16:10:30 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B4A0261583
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2022 16:10:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EDB8C433D6;
+        Fri, 12 Aug 2022 16:10:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660320631;
-        bh=fngFF9Btjy/pt6aVZVv1jBTVLwfa791PvmuCrvtujbE=;
+        s=k20201202; t=1660320635;
+        bh=EO2M9PD2y6uILKWTsymF3d2Mm+4Zm2Vw/co6k6oEf8o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gDnWAD2bqUnEGdJRngykmToQaga/Se3D7WJFWCvR6ooEU38aKmdEdzWQb9BJRyY60
-         CajXSg7INPMINu1VOEwXYwmfBZyuVjy93VvshlshKmprO7Ir79oiG7zvr+vLNCjbMu
-         UVrSPY7EKfiM31CJ0eZybFKrCxmaaOPcArOvnl+j2HkGGEN3X8QL/uxWO/ldmRoqFj
-         dGfkvRRg6sYWiDVTFtFB8Nzkcrnk2L6wzFM1OWR1GdEHzalWVaCiLbEAOBJtnrRnNZ
-         NCub9DY745rqtyyBK1LFDVCBh7tMy8/1l+V1y9rtojdLzdRHpxVLPr8GxseHxqTBsK
-         Xp/LWcJaFp9eA==
+        b=q4tHxvDs6nRkMzjFCMBdl1LQChpWV0DqmIDshQ/WXDD/ozE6ZVNgY8B1D+seaGHZs
+         kxHPviUZwza7S6BYU5zoEG9NzLoJBfxiM+cj2k825TGb+JQWbiHu6IFoEdCGdjuFB0
+         3R5p+DPlrP+pXvy4iMjT8scelbR+T0ygjQ3Z9tTSu1dR6gPY67Gdm/CeU2dBEbZNJ4
+         aJrikVyok+UUlJSjovO9PqAsnUlAoakPTUybNEJkESIa/tHRUBKNe2cedGBWkv62cP
+         FgWckBTRUGRSXgOW+FeFlMhPZRkoq4DndsslOd2Dnue+eKA4Zw4Naor7ftgEi/vGAO
+         9xnVxVDk57igw==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath12k@lists.infradead.org
-Subject: [PATCH 23/50] wifi: ath12k: add hal_rx.h
-Date:   Fri, 12 Aug 2022 19:09:36 +0300
-Message-Id: <20220812161003.27279-24-kvalo@kernel.org>
+Subject: [PATCH 27/50] wifi: ath12k: add htc.c
+Date:   Fri, 12 Aug 2022 19:09:40 +0300
+Message-Id: <20220812161003.27279-28-kvalo@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220812161003.27279-1-kvalo@kernel.org>
 References: <20220812161003.27279-1-kvalo@kernel.org>
@@ -55,707 +55,802 @@ commit will be one big patch. See the cover letter for more info.)
 
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/hal_rx.h | 694 +++++++++++++++++++++++++++++++
- 1 file changed, 694 insertions(+)
+ drivers/net/wireless/ath/ath12k/htc.c | 789 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 789 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.h b/drivers/net/wireless/ath/ath12k/hal_rx.h
+diff --git a/drivers/net/wireless/ath/ath12k/htc.c b/drivers/net/wireless/ath/ath12k/htc.c
 new file mode 100644
-index 000000000000..883ea1be2525
+index 000000000000..4ac320a2a303
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/hal_rx.h
-@@ -0,0 +1,694 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++++ b/drivers/net/wireless/ath/ath12k/htc.c
+@@ -0,0 +1,789 @@
++// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
 + * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
 + * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
 + */
++#include <linux/skbuff.h>
++#include <linux/ctype.h>
 +
-+#ifndef ATH12K_HAL_RX_H
-+#define ATH12K_HAL_RX_H
++#include "debug.h"
++#include "hif.h"
 +
-+struct hal_rx_wbm_rel_info {
-+	u32 cookie;
-+	enum hal_wbm_rel_src_module err_rel_src;
-+	enum hal_reo_dest_ring_push_reason push_reason;
-+	u32 err_code;
-+	bool first_msdu;
-+	bool last_msdu;
-+	bool continuation;
-+	void *rx_desc;
-+	bool hw_cc_done;
-+};
-+
-+#define HAL_INVALID_PEERID 0xffff
-+#define VHT_SIG_SU_NSS_MASK 0x7
-+
-+#define HAL_RX_MAX_MCS 12
-+#define HAL_RX_MAX_NSS 8
-+
-+#define HAL_RX_MPDU_INFO_PN_GET_BYTE1(__val) \
-+	le32_get_bits((__val), GENMASK(7, 0))
-+
-+#define HAL_RX_MPDU_INFO_PN_GET_BYTE2(__val) \
-+	le32_get_bits((__val), GENMASK(15, 8))
-+
-+#define HAL_RX_MPDU_INFO_PN_GET_BYTE3(__val) \
-+	le32_get_bits((__val), GENMASK(23, 16))
-+
-+#define HAL_RX_MPDU_INFO_PN_GET_BYTE4(__val) \
-+	le32_get_bits((__val), GENMASK(31, 24))
-+
-+struct hal_rx_mon_status_tlv_hdr {
-+	u32 hdr;
-+	u8 value[];
-+};
-+
-+enum hal_rx_su_mu_coding {
-+	HAL_RX_SU_MU_CODING_BCC,
-+	HAL_RX_SU_MU_CODING_LDPC,
-+	HAL_RX_SU_MU_CODING_MAX,
-+};
-+
-+enum hal_rx_gi {
-+	HAL_RX_GI_0_8_US,
-+	HAL_RX_GI_0_4_US,
-+	HAL_RX_GI_1_6_US,
-+	HAL_RX_GI_3_2_US,
-+	HAL_RX_GI_MAX,
-+};
-+
-+enum hal_rx_bw {
-+	HAL_RX_BW_20MHZ,
-+	HAL_RX_BW_40MHZ,
-+	HAL_RX_BW_80MHZ,
-+	HAL_RX_BW_160MHZ,
-+	HAL_RX_BW_MAX,
-+};
-+
-+enum hal_rx_preamble {
-+	HAL_RX_PREAMBLE_11A,
-+	HAL_RX_PREAMBLE_11B,
-+	HAL_RX_PREAMBLE_11N,
-+	HAL_RX_PREAMBLE_11AC,
-+	HAL_RX_PREAMBLE_11AX,
-+	HAL_RX_PREAMBLE_MAX,
-+};
-+
-+enum hal_rx_reception_type {
-+	HAL_RX_RECEPTION_TYPE_SU,
-+	HAL_RX_RECEPTION_TYPE_MU_MIMO,
-+	HAL_RX_RECEPTION_TYPE_MU_OFDMA,
-+	HAL_RX_RECEPTION_TYPE_MU_OFDMA_MIMO,
-+	HAL_RX_RECEPTION_TYPE_MAX,
-+};
-+
-+enum hal_rx_legacy_rate {
-+	HAL_RX_LEGACY_RATE_1_MBPS,
-+	HAL_RX_LEGACY_RATE_2_MBPS,
-+	HAL_RX_LEGACY_RATE_5_5_MBPS,
-+	HAL_RX_LEGACY_RATE_6_MBPS,
-+	HAL_RX_LEGACY_RATE_9_MBPS,
-+	HAL_RX_LEGACY_RATE_11_MBPS,
-+	HAL_RX_LEGACY_RATE_12_MBPS,
-+	HAL_RX_LEGACY_RATE_18_MBPS,
-+	HAL_RX_LEGACY_RATE_24_MBPS,
-+	HAL_RX_LEGACY_RATE_36_MBPS,
-+	HAL_RX_LEGACY_RATE_48_MBPS,
-+	HAL_RX_LEGACY_RATE_54_MBPS,
-+	HAL_RX_LEGACY_RATE_INVALID,
-+};
-+
-+#define HAL_TLV_STATUS_PPDU_NOT_DONE            0
-+#define HAL_TLV_STATUS_PPDU_DONE                1
-+#define HAL_TLV_STATUS_BUF_DONE                 2
-+#define HAL_TLV_STATUS_PPDU_NON_STD_DONE        3
-+#define HAL_RX_FCS_LEN                          4
-+
-+enum hal_rx_mon_status {
-+	HAL_RX_MON_STATUS_PPDU_NOT_DONE,
-+	HAL_RX_MON_STATUS_PPDU_DONE,
-+	HAL_RX_MON_STATUS_BUF_DONE,
-+};
-+
-+#define HAL_RX_MAX_MPDU		256
-+#define HAL_RX_NUM_WORDS_PER_PPDU_BITMAP	(HAL_RX_MAX_MPDU >> 5)
-+
-+struct hal_rx_user_status {
-+	u32 mcs:4,
-+	nss:3,
-+	ofdma_info_valid:1,
-+	ul_ofdma_ru_start_index:7,
-+	ul_ofdma_ru_width:7,
-+	ul_ofdma_ru_size:8;
-+	u32 ul_ofdma_user_v0_word0;
-+	u32 ul_ofdma_user_v0_word1;
-+	u32 ast_index;
-+	u32 tid;
-+	u16 tcp_msdu_count;
-+	u16 tcp_ack_msdu_count;
-+	u16 udp_msdu_count;
-+	u16 other_msdu_count;
-+	u16 frame_control;
-+	u8 frame_control_info_valid;
-+	u8 data_sequence_control_info_valid;
-+	u16 first_data_seq_ctrl;
-+	u32 preamble_type;
-+	u16 ht_flags;
-+	u16 vht_flags;
-+	u16 he_flags;
-+	u8 rs_flags;
-+	u8 ldpc;
-+	u32 mpdu_cnt_fcs_ok;
-+	u32 mpdu_cnt_fcs_err;
-+	u32 mpdu_fcs_ok_bitmap[HAL_RX_NUM_WORDS_PER_PPDU_BITMAP];
-+	u32 mpdu_ok_byte_count;
-+	u32 mpdu_err_byte_count;
-+};
-+
-+#define HAL_MAX_UL_MU_USERS	37
-+
-+struct hal_rx_mon_ppdu_info {
-+	u32 ppdu_id;
-+	u32 last_ppdu_id;
-+	u64 ppdu_ts;
-+	u32 num_mpdu_fcs_ok;
-+	u32 num_mpdu_fcs_err;
-+	u32 preamble_type;
-+	u32 mpdu_len;
-+	u16 chan_num;
-+	u16 tcp_msdu_count;
-+	u16 tcp_ack_msdu_count;
-+	u16 udp_msdu_count;
-+	u16 other_msdu_count;
-+	u16 peer_id;
-+	u8 rate;
-+	u8 mcs;
-+	u8 nss;
-+	u8 bw;
-+	u8 vht_flag_values1;
-+	u8 vht_flag_values2;
-+	u8 vht_flag_values3[4];
-+	u8 vht_flag_values4;
-+	u8 vht_flag_values5;
-+	u16 vht_flag_values6;
-+	u8 is_stbc;
-+	u8 gi;
-+	u8 sgi;
-+	u8 ldpc;
-+	u8 beamformed;
-+	u8 rssi_comb;
-+	u16 tid;
-+	u8 fc_valid;
-+	u16 ht_flags;
-+	u16 vht_flags;
-+	u16 he_flags;
-+	u16 he_mu_flags;
-+	u8 dcm;
-+	u8 ru_alloc;
-+	u8 reception_type;
-+	u64 tsft;
-+	u64 rx_duration;
-+	u16 frame_control;
-+	u32 ast_index;
-+	u8 rs_fcs_err;
-+	u8 rs_flags;
-+	u8 cck_flag;
-+	u8 ofdm_flag;
-+	u8 ulofdma_flag;
-+	u8 frame_control_info_valid;
-+	u16 he_per_user_1;
-+	u16 he_per_user_2;
-+	u8 he_per_user_position;
-+	u8 he_per_user_known;
-+	u16 he_flags1;
-+	u16 he_flags2;
-+	u8 he_RU[4];
-+	u16 he_data1;
-+	u16 he_data2;
-+	u16 he_data3;
-+	u16 he_data4;
-+	u16 he_data5;
-+	u16 he_data6;
-+	u32 ppdu_len;
-+	u32 prev_ppdu_id;
-+	u32 device_id;
-+	u16 first_data_seq_ctrl;
-+	u8 monitor_direct_used;
-+	u8 data_sequence_control_info_valid;
-+	u8 ltf_size;
-+	u8 rxpcu_filter_pass;
-+	s8 rssi_chain[8][8];
-+	u32 num_users;
-+	u32 mpdu_fcs_ok_bitmap[HAL_RX_NUM_WORDS_PER_PPDU_BITMAP];
-+	u8 addr1[ETH_ALEN];
-+	u8 addr2[ETH_ALEN];
-+	u8 addr3[ETH_ALEN];
-+	u8 addr4[ETH_ALEN];
-+	struct hal_rx_user_status userstats[HAL_MAX_UL_MU_USERS];
-+	u8 userid;
-+	u16 ampdu_id[HAL_MAX_UL_MU_USERS];
-+	bool first_msdu_in_mpdu;
-+	bool is_ampdu;
-+	u8 medium_prot_type;
-+};
-+
-+#define HAL_RX_PPDU_START_INFO0_PPDU_ID		GENMASK(15, 0)
-+
-+struct hal_rx_ppdu_start {
-+	__le32 info0;
-+	__le32 chan_num;
-+	__le32 ppdu_start_ts;
-+} __packed;
-+
-+#define HAL_RX_PPDU_END_USER_STATS_INFO0_MPDU_CNT_FCS_ERR	GENMASK(25, 16)
-+
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_MPDU_CNT_FCS_OK	GENMASK(8, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_FC_VALID		BIT(9)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_QOS_CTRL_VALID		BIT(10)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_HT_CTRL_VALID		BIT(11)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_PKT_TYPE		GENMASK(23, 20)
-+
-+#define HAL_RX_PPDU_END_USER_STATS_INFO2_AST_INDEX		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO2_FRAME_CTRL		GENMASK(31, 16)
-+
-+#define HAL_RX_PPDU_END_USER_STATS_INFO3_QOS_CTRL		GENMASK(31, 16)
-+
-+#define HAL_RX_PPDU_END_USER_STATS_INFO4_UDP_MSDU_CNT		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO4_TCP_MSDU_CNT		GENMASK(31, 16)
-+
-+#define HAL_RX_PPDU_END_USER_STATS_INFO5_OTHER_MSDU_CNT		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO5_TCP_ACK_MSDU_CNT	GENMASK(31, 16)
-+
-+#define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_BITMAP		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_EOSP_BITMAP	GENMASK(31, 16)
-+
-+#define HAL_RX_PPDU_END_USER_STATS_RSVD2_6_MPDU_OK_BYTE_COUNT	GENMASK(24, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_RSVD2_8_MPDU_ERR_BYTE_COUNT	GENMASK(24, 0)
-+
-+struct hal_rx_ppdu_end_user_stats {
-+	__le32 rsvd0[2];
-+	__le32 info0;
-+	__le32 info1;
-+	__le32 info2;
-+	__le32 info3;
-+	__le32 ht_ctrl;
-+	__le32 rsvd1[2];
-+	__le32 info4;
-+	__le32 info5;
-+	__le32 info6;
-+	__le32 rsvd2[11];
-+} __packed;
-+
-+struct hal_rx_ppdu_end_user_stats_ext {
-+	__le32 info0;
-+	__le32 info1;
-+	__le32 info2;
-+	__le32 info3;
-+	__le32 info4;
-+	__le32 info5;
-+	__le32 info6;
-+} __packed;
-+
-+#define HAL_RX_HT_SIG_INFO_INFO0_MCS		GENMASK(6, 0)
-+#define HAL_RX_HT_SIG_INFO_INFO0_BW		BIT(7)
-+
-+#define HAL_RX_HT_SIG_INFO_INFO1_STBC		GENMASK(5, 4)
-+#define HAL_RX_HT_SIG_INFO_INFO1_FEC_CODING	BIT(6)
-+#define HAL_RX_HT_SIG_INFO_INFO1_GI		BIT(7)
-+
-+struct hal_rx_ht_sig_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
-+
-+#define HAL_RX_LSIG_B_INFO_INFO0_RATE	GENMASK(3, 0)
-+#define HAL_RX_LSIG_B_INFO_INFO0_LEN	GENMASK(15, 4)
-+
-+struct hal_rx_lsig_b_info {
-+	__le32 info0;
-+} __packed;
-+
-+#define HAL_RX_LSIG_A_INFO_INFO0_RATE		GENMASK(3, 0)
-+#define HAL_RX_LSIG_A_INFO_INFO0_LEN		GENMASK(16, 5)
-+#define HAL_RX_LSIG_A_INFO_INFO0_PKT_TYPE	GENMASK(27, 24)
-+
-+struct hal_rx_lsig_a_info {
-+	__le32 info0;
-+} __packed;
-+
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_BW		GENMASK(1, 0)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_STBC	BIT(3)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_GROUP_ID	GENMASK(9, 4)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_NSTS	GENMASK(21, 10)
-+
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_GI_SETTING		GENMASK(1, 0)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_SU_MU_CODING	BIT(2)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_MCS			GENMASK(7, 4)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_BEAMFORMED		BIT(8)
-+
-+struct hal_rx_vht_sig_a_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
-+
-+enum hal_rx_vht_sig_a_gi_setting {
-+	HAL_RX_VHT_SIG_A_NORMAL_GI = 0,
-+	HAL_RX_VHT_SIG_A_SHORT_GI = 1,
-+	HAL_RX_VHT_SIG_A_SHORT_GI_AMBIGUITY = 3,
-+};
-+
-+#define HE_GI_0_8 0
-+#define HE_GI_0_4 1
-+#define HE_GI_1_6 2
-+#define HE_GI_3_2 3
-+
-+#define HE_LTF_1_X 0
-+#define HE_LTF_2_X 1
-+#define HE_LTF_4_X 2
-+
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_MCS	GENMASK(6, 3)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_DCM		BIT(7)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_BW	GENMASK(20, 19)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_CP_LTF_SIZE	GENMASK(22, 21)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_NSTS		GENMASK(25, 23)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_BSS_COLOR		GENMASK(13, 8)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_SPATIAL_REUSE	GENMASK(18, 15)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_FORMAT_IND	BIT(0)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_BEAM_CHANGE	BIT(1)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_DL_UL_FLAG	BIT(2)
-+
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_TXOP_DURATION	GENMASK(6, 0)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_CODING		BIT(7)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_LDPC_EXTRA	BIT(8)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_STBC		BIT(9)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_TXBF		BIT(10)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_PKT_EXT_FACTOR	GENMASK(12, 11)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_PKT_EXT_PE_DISAM	BIT(13)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_DOPPLER_IND	BIT(15)
-+
-+struct hal_rx_he_sig_a_su_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
-+
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_UL_FLAG		BIT(1)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_MCS_OF_SIGB		GENMASK(3, 1)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_DCM_OF_SIGB		BIT(4)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_BSS_COLOR		GENMASK(10, 5)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_SPATIAL_REUSE	GENMASK(14, 11)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_TRANSMIT_BW		GENMASK(17, 15)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_NUM_SIGB_SYMB	GENMASK(21, 18)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_COMP_MODE_SIGB	BIT(22)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_CP_LTF_SIZE		GENMASK(24, 23)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO0_DOPPLER_INDICATION	BIT(25)
-+
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_TXOP_DURATION	GENMASK(6, 0)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_CODING		BIT(7)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_NUM_LTF_SYMB	GENMASK(10, 8)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_LDPC_EXTRA		BIT(11)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_STBC		BIT(12)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_TXBF		BIT(10)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_PKT_EXT_FACTOR	GENMASK(14, 13)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO1_PKT_EXT_PE_DISAM	BIT(15)
-+
-+struct hal_rx_he_sig_a_mu_dl_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
-+
-+#define HAL_RX_HE_SIG_B1_MU_INFO_INFO0_RU_ALLOCATION	GENMASK(7, 0)
-+
-+struct hal_rx_he_sig_b1_mu_info {
-+	__le32 info0;
-+} __packed;
-+
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_ID           GENMASK(10, 0)
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_MCS		GENMASK(18, 15)
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_CODING	BIT(20)
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_NSTS		GENMASK(31, 29)
-+
-+struct hal_rx_he_sig_b2_mu_info {
-+	__le32 info0;
-+} __packed;
-+
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_ID	GENMASK(10, 0)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_NSTS	GENMASK(13, 11)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_TXBF	BIT(19)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_MCS	GENMASK(18, 15)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_DCM	BIT(19)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_CODING	BIT(20)
-+
-+struct hal_rx_he_sig_b2_ofdma_info {
-+	__le32 info0;
-+} __packed;
-+
-+enum hal_rx_ul_reception_type {
-+	HAL_RECEPTION_TYPE_ULOFMDA,
-+	HAL_RECEPTION_TYPE_ULMIMO,
-+	HAL_RECEPTION_TYPE_OTHER,
-+	HAL_RECEPTION_TYPE_FRAMELESS
-+};
-+
-+#define HAL_RX_PHYRX_RSSI_LEGACY_INFO_INFO0_RSSI_COMB	GENMASK(15, 8)
-+#define HAL_RX_PHYRX_RSSI_LEGACY_INFO_RSVD1_RECEPTION   GENMASK(3, 0)
-+
-+struct hal_rx_phyrx_rssi_legacy_info {
-+	__le32 rsvd[35];
-+	__le32 info0;
-+} __packed;
-+
-+#define HAL_RX_MPDU_START_INFO0_PPDU_ID	GENMASK(31, 16)
-+#define HAL_RX_MPDU_START_INFO1_PEERID	GENMASK(31, 16)
-+#define HAL_RX_MPDU_START_INFO2_MPDU_LEN GENMASK(13, 0)
-+struct hal_rx_mpdu_start {
-+	__le32 info0;
-+	__le32 info1;
-+	__le32 rsvd1[11];
-+	__le32 info2;
-+	__le32 rsvd2[9];
-+} __packed;
-+
-+#define HAL_RX_PPDU_END_DURATION	GENMASK(23, 0)
-+struct hal_rx_ppdu_end_duration {
-+	__le32 rsvd0[9];
-+	__le32 info0;
-+	__le32 rsvd1[4];
-+} __packed;
-+
-+struct hal_rx_rxpcu_classification_overview {
-+	u32 rsvd0;
-+} __packed;
-+
-+struct hal_rx_msdu_desc_info {
-+	u32 msdu_flags;
-+	u16 msdu_len; /* 14 bits for length */
-+};
-+
-+#define HAL_RX_NUM_MSDU_DESC 6
-+struct hal_rx_msdu_list {
-+	struct hal_rx_msdu_desc_info msdu_info[HAL_RX_NUM_MSDU_DESC];
-+	u32 sw_cookie[HAL_RX_NUM_MSDU_DESC];
-+	u8 rbm[HAL_RX_NUM_MSDU_DESC];
-+};
-+
-+#define HAL_RX_FBM_ACK_INFO0_ADDR1_31_0		GENMASK(31, 0)
-+#define HAL_RX_FBM_ACK_INFO1_ADDR1_47_32	GENMASK(15, 0)
-+#define HAL_RX_FBM_ACK_INFO1_ADDR2_15_0		GENMASK(31, 16)
-+#define HAL_RX_FBM_ACK_INFO2_ADDR2_47_16	GENMASK(31, 0)
-+
-+struct hal_rx_frame_bitmap_ack {
-+	__le32 reserved;
-+	__le32 info0;
-+	__le32 info1;
-+	__le32 info2;
-+	__le32 reserved1[10];
-+} __packed;
-+
-+#define HAL_RX_RESP_REQ_INFO0_PPDU_ID		GENMASK(15, 0)
-+#define HAL_RX_RESP_REQ_INFO0_RECEPTION_TYPE	BIT(16)
-+#define HAL_RX_RESP_REQ_INFO1_DURATION		GENMASK(15, 0)
-+#define HAL_RX_RESP_REQ_INFO1_RATE_MCS		GENMASK(24, 21)
-+#define HAL_RX_RESP_REQ_INFO1_SGI		GENMASK(26, 25)
-+#define HAL_RX_RESP_REQ_INFO1_STBC		BIT(27)
-+#define HAL_RX_RESP_REQ_INFO1_LDPC		BIT(28)
-+#define HAL_RX_RESP_REQ_INFO1_IS_AMPDU		BIT(29)
-+#define HAL_RX_RESP_REQ_INFO2_NUM_USER		GENMASK(6, 0)
-+#define HAL_RX_RESP_REQ_INFO3_ADDR1_31_0	GENMASK(31, 0)
-+#define HAL_RX_RESP_REQ_INFO4_ADDR1_47_32	GENMASK(15, 0)
-+#define HAL_RX_RESP_REQ_INFO4_ADDR1_15_0	GENMASK(31, 16)
-+#define HAL_RX_RESP_REQ_INFO5_ADDR1_47_16	GENMASK(31, 0)
-+
-+struct hal_rx_resp_req_info {
-+	__le32 info0;
-+	__le32 reserved[1];
-+	__le32 info1;
-+	__le32 info2;
-+	__le32 reserved1[2];
-+	__le32 info3;
-+	__le32 info4;
-+	__le32 info5;
-+	__le32 reserved2[5];
-+} __packed;
-+
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_0 0xDDBEEF
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_1 0xADBEEF
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_2 0xBDBEEF
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_3 0xCDBEEF
-+
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W0_VALID		BIT(30)
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W0_VER		BIT(31)
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W1_NSS		GENMASK(2, 0)
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W1_MCS		GENMASK(6, 3)
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W1_LDPC		BIT(7)
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W1_DCM		BIT(8)
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W1_RU_START	GENMASK(15, 9)
-+#define HAL_RX_UL_OFDMA_USER_INFO_V0_W1_RU_SIZE		GENMASK(18, 16)
-+
-+/* HE Radiotap data1 Mask */
-+#define HE_SU_FORMAT_TYPE 0x0000
-+#define HE_EXT_SU_FORMAT_TYPE 0x0001
-+#define HE_MU_FORMAT_TYPE  0x0002
-+#define HE_TRIG_FORMAT_TYPE  0x0003
-+#define HE_BEAM_CHANGE_KNOWN 0x0008
-+#define HE_DL_UL_KNOWN 0x0010
-+#define HE_MCS_KNOWN 0x0020
-+#define HE_DCM_KNOWN 0x0040
-+#define HE_CODING_KNOWN 0x0080
-+#define HE_LDPC_EXTRA_SYMBOL_KNOWN 0x0100
-+#define HE_STBC_KNOWN 0x0200
-+#define HE_DATA_BW_RU_KNOWN 0x4000
-+#define HE_DOPPLER_KNOWN 0x8000
-+#define HE_BSS_COLOR_KNOWN 0x0004
-+
-+/* HE Radiotap data2 Mask */
-+#define HE_GI_KNOWN 0x0002
-+#define HE_TXBF_KNOWN 0x0010
-+#define HE_PE_DISAMBIGUITY_KNOWN 0x0020
-+#define HE_TXOP_KNOWN 0x0040
-+#define HE_LTF_SYMBOLS_KNOWN 0x0004
-+#define HE_PRE_FEC_PADDING_KNOWN 0x0008
-+#define HE_MIDABLE_PERIODICITY_KNOWN 0x0080
-+
-+/* HE radiotap data3 shift values */
-+#define HE_BEAM_CHANGE_SHIFT 6
-+#define HE_DL_UL_SHIFT 7
-+#define HE_TRANSMIT_MCS_SHIFT 8
-+#define HE_DCM_SHIFT 12
-+#define HE_CODING_SHIFT 13
-+#define HE_LDPC_EXTRA_SYMBOL_SHIFT 14
-+#define HE_STBC_SHIFT 15
-+
-+/* HE radiotap data4 shift values */
-+#define HE_STA_ID_SHIFT 4
-+
-+/* HE radiotap data5 */
-+#define HE_GI_SHIFT 4
-+#define HE_LTF_SIZE_SHIFT 6
-+#define HE_LTF_SYM_SHIFT 8
-+#define HE_TXBF_SHIFT 14
-+#define HE_PE_DISAMBIGUITY_SHIFT 15
-+#define HE_PRE_FEC_PAD_SHIFT 12
-+
-+/* HE radiotap data6 */
-+#define HE_DOPPLER_SHIFT 4
-+#define HE_TXOP_SHIFT 8
-+
-+/* HE radiotap HE-MU flags1 */
-+#define HE_SIG_B_MCS_KNOWN 0x0010
-+#define HE_SIG_B_DCM_KNOWN 0x0040
-+#define HE_SIG_B_SYM_NUM_KNOWN 0x8000
-+#define HE_RU_0_KNOWN 0x0100
-+#define HE_RU_1_KNOWN 0x0200
-+#define HE_RU_2_KNOWN 0x0400
-+#define HE_RU_3_KNOWN 0x0800
-+#define HE_DCM_FLAG_1_SHIFT 5
-+#define HE_SPATIAL_REUSE_MU_KNOWN 0x0100
-+#define HE_SIG_B_COMPRESSION_FLAG_1_KNOWN 0x4000
-+
-+/* HE radiotap HE-MU flags2 */
-+#define HE_SIG_B_COMPRESSION_FLAG_2_SHIFT 3
-+#define HE_BW_KNOWN 0x0004
-+#define HE_NUM_SIG_B_SYMBOLS_SHIFT 4
-+#define HE_SIG_B_COMPRESSION_FLAG_2_KNOWN 0x0100
-+#define HE_NUM_SIG_B_FLAG_2_SHIFT 9
-+#define HE_LTF_FLAG_2_SYMBOLS_SHIFT 12
-+#define HE_LTF_KNOWN 0x8000
-+
-+/* HE radiotap per_user_1 */
-+#define HE_STA_SPATIAL_SHIFT 11
-+#define HE_TXBF_SHIFT 14
-+#define HE_RESERVED_SET_TO_1_SHIFT 19
-+#define HE_STA_CODING_SHIFT 20
-+
-+/* HE radiotap per_user_2 */
-+#define HE_STA_MCS_SHIFT 4
-+#define HE_STA_DCM_SHIFT 5
-+
-+/* HE radiotap per user known */
-+#define HE_USER_FIELD_POSITION_KNOWN 0x01
-+#define HE_STA_ID_PER_USER_KNOWN 0x02
-+#define HE_STA_NSTS_KNOWN 0x04
-+#define HE_STA_TX_BF_KNOWN 0x08
-+#define HE_STA_SPATIAL_CONFIG_KNOWN 0x10
-+#define HE_STA_MCS_KNOWN 0x20
-+#define HE_STA_DCM_KNOWN 0x40
-+#define HE_STA_CODING_KNOWN 0x80
-+
-+#define HAL_RX_MPDU_ERR_FCS			BIT(0)
-+#define HAL_RX_MPDU_ERR_DECRYPT			BIT(1)
-+#define HAL_RX_MPDU_ERR_TKIP_MIC		BIT(2)
-+#define HAL_RX_MPDU_ERR_AMSDU_ERR		BIT(3)
-+#define HAL_RX_MPDU_ERR_OVERFLOW		BIT(4)
-+#define HAL_RX_MPDU_ERR_MSDU_LEN		BIT(5)
-+#define HAL_RX_MPDU_ERR_MPDU_LEN		BIT(6)
-+#define HAL_RX_MPDU_ERR_UNENCRYPTED_FRAME	BIT(7)
-+
-+static inline u32 ath12k_he_ru_tones_to_nl80211_he_ru_alloc(u16 ru_tones)
++struct sk_buff *ath12k_htc_alloc_skb(struct ath12k_base *ab, int size)
 +{
-+	u32 ret = 0;
++	struct sk_buff *skb;
 +
-+	switch (ru_tones) {
-+	case RU_26:
-+		ret = NL80211_RATE_INFO_HE_RU_ALLOC_26;
-+		break;
-+	case RU_52:
-+		ret = NL80211_RATE_INFO_HE_RU_ALLOC_52;
-+		break;
-+	case RU_106:
-+		ret = NL80211_RATE_INFO_HE_RU_ALLOC_106;
-+		break;
-+	case RU_242:
-+		ret = NL80211_RATE_INFO_HE_RU_ALLOC_242;
-+		break;
-+	case RU_484:
-+		ret = NL80211_RATE_INFO_HE_RU_ALLOC_484;
-+		break;
-+	case RU_996:
-+		ret = NL80211_RATE_INFO_HE_RU_ALLOC_996;
-+		break;
++	skb = dev_alloc_skb(size + sizeof(struct ath12k_htc_hdr));
++	if (!skb)
++		return NULL;
++
++	skb_reserve(skb, sizeof(struct ath12k_htc_hdr));
++
++	/* FW/HTC requires 4-byte aligned streams */
++	if (!IS_ALIGNED((unsigned long)skb->data, 4))
++		ath12k_warn(ab, "Unaligned HTC tx skb\n");
++
++	return skb;
++}
++
++static void ath12k_htc_control_tx_complete(struct ath12k_base *ab,
++					   struct sk_buff *skb)
++{
++	kfree_skb(skb);
++}
++
++static struct sk_buff *ath12k_htc_build_tx_ctrl_skb(void *ab)
++{
++	struct sk_buff *skb;
++	struct ath12k_skb_cb *skb_cb;
++
++	skb = dev_alloc_skb(ATH12K_HTC_CONTROL_BUFFER_SIZE);
++	if (!skb)
++		return NULL;
++
++	skb_reserve(skb, sizeof(struct ath12k_htc_hdr));
++	WARN_ON_ONCE(!IS_ALIGNED((unsigned long)skb->data, 4));
++
++	skb_cb = ATH12K_SKB_CB(skb);
++	memset(skb_cb, 0, sizeof(*skb_cb));
++
++	ath12k_dbg(ab, ATH12K_DBG_HTC, "%s: skb %pK\n", __func__, skb);
++	return skb;
++}
++
++static void ath12k_htc_prepare_tx_skb(struct ath12k_htc_ep *ep,
++				      struct sk_buff *skb)
++{
++	struct ath12k_htc_hdr *hdr;
++
++	hdr = (struct ath12k_htc_hdr *)skb->data;
++
++	memset(hdr, 0, sizeof(*hdr));
++	hdr->htc_info = le32_encode_bits(ep->eid, HTC_HDR_ENDPOINTID) |
++			le32_encode_bits((skb->len - sizeof(*hdr)),
++					 HTC_HDR_PAYLOADLEN);
++
++	if (ep->tx_credit_flow_enabled)
++		hdr->htc_info |= le32_encode_bits(ATH12K_HTC_FLAG_NEED_CREDIT_UPDATE,
++						  HTC_HDR_FLAGS);
++
++	spin_lock_bh(&ep->htc->tx_lock);
++	hdr->ctrl_info = le32_encode_bits(ep->seq_no++, HTC_HDR_CONTROLBYTES1);
++	spin_unlock_bh(&ep->htc->tx_lock);
++}
++
++int ath12k_htc_send(struct ath12k_htc *htc,
++		    enum ath12k_htc_ep_id eid,
++		    struct sk_buff *skb)
++{
++	struct ath12k_htc_ep *ep = &htc->endpoint[eid];
++	struct ath12k_skb_cb *skb_cb = ATH12K_SKB_CB(skb);
++	struct device *dev = htc->ab->dev;
++	struct ath12k_base *ab = htc->ab;
++	int credits = 0;
++	int ret;
++
++	if (eid >= ATH12K_HTC_EP_COUNT) {
++		ath12k_warn(ab, "Invalid endpoint id: %d\n", eid);
++		return -ENOENT;
 +	}
++
++	skb_push(skb, sizeof(struct ath12k_htc_hdr));
++
++	if (ep->tx_credit_flow_enabled) {
++		credits = DIV_ROUND_UP(skb->len, htc->target_credit_size);
++		spin_lock_bh(&htc->tx_lock);
++		if (ep->tx_credits < credits) {
++			ath12k_dbg(ab, ATH12K_DBG_HTC,
++				   "htc insufficient credits ep %d required %d available %d\n",
++				   eid, credits, ep->tx_credits);
++			spin_unlock_bh(&htc->tx_lock);
++			ret = -EAGAIN;
++			goto err_pull;
++		}
++		ep->tx_credits -= credits;
++		ath12k_dbg(ab, ATH12K_DBG_HTC,
++			   "htc ep %d consumed %d credits (total %d)\n",
++			   eid, credits, ep->tx_credits);
++		spin_unlock_bh(&htc->tx_lock);
++	}
++
++	ath12k_htc_prepare_tx_skb(ep, skb);
++
++	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
++	ret = dma_mapping_error(dev, skb_cb->paddr);
++	if (ret) {
++		ret = -EIO;
++		goto err_credits;
++	}
++
++	ret = ath12k_ce_send(htc->ab, skb, ep->ul_pipe_id, ep->eid);
++	if (ret)
++		goto err_unmap;
++
++	return 0;
++
++err_unmap:
++	dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
++err_credits:
++	if (ep->tx_credit_flow_enabled) {
++		spin_lock_bh(&htc->tx_lock);
++		ep->tx_credits += credits;
++		ath12k_dbg(ab, ATH12K_DBG_HTC,
++			   "htc ep %d reverted %d credits back (total %d)\n",
++			   eid, credits, ep->tx_credits);
++		spin_unlock_bh(&htc->tx_lock);
++
++		if (ep->ep_ops.ep_tx_credits)
++			ep->ep_ops.ep_tx_credits(htc->ab);
++	}
++err_pull:
++	skb_pull(skb, sizeof(struct ath12k_htc_hdr));
 +	return ret;
 +}
 +
-+void ath12k_hal_reo_status_queue_stats(struct ath12k_base *ab,
-+				       struct hal_tlv_64_hdr *tlv,
-+				       struct hal_reo_status *status);
-+void ath12k_hal_reo_flush_queue_status(struct ath12k_base *ab,
-+				       struct hal_tlv_64_hdr *tlv,
-+				       struct hal_reo_status *status);
-+void ath12k_hal_reo_flush_cache_status(struct ath12k_base *ab,
-+				       struct hal_tlv_64_hdr *tlv,
-+				       struct hal_reo_status *status);
-+void ath12k_hal_reo_unblk_cache_status(struct ath12k_base *ab,
-+				       struct hal_tlv_64_hdr *tlv,
-+				       struct hal_reo_status *status);
-+void ath12k_hal_reo_flush_timeout_list_status(struct ath12k_base *ab,
-+					      struct hal_tlv_64_hdr *tlv,
-+					      struct hal_reo_status *status);
-+void ath12k_hal_reo_desc_thresh_reached_status(struct ath12k_base *ab,
-+					       struct hal_tlv_64_hdr *tlv,
-+					       struct hal_reo_status *status);
-+void ath12k_hal_reo_update_rx_reo_queue_status(struct ath12k_base *ab,
-+					       struct hal_tlv_64_hdr *tlv,
-+					       struct hal_reo_status *status);
-+void ath12k_hal_rx_msdu_link_info_get(struct hal_rx_msdu_link *link, u32 *num_msdus,
-+				      u32 *msdu_cookies,
-+				      enum hal_rx_buf_return_buf_manager *rbm);
-+void ath12k_hal_rx_msdu_link_desc_set(struct ath12k_base *ab,
-+				      struct hal_wbm_release_ring *dst_desc,
-+				      struct hal_wbm_release_ring *src_desc,
-+				      enum hal_wbm_rel_bm_act action);
-+void ath12k_hal_rx_buf_addr_info_set(struct ath12k_buffer_addr *binfo,
-+				     dma_addr_t paddr, u32 cookie, u8 manager);
-+void ath12k_hal_rx_buf_addr_info_get(struct ath12k_buffer_addr *binfo,
-+				     dma_addr_t *paddr,
-+				     u32 *cookie, u8 *rbm);
-+int ath12k_hal_desc_reo_parse_err(struct ath12k_base *ab,
-+				  struct hal_reo_dest_ring *desc,
-+				  dma_addr_t *paddr, u32 *desc_bank);
-+int ath12k_hal_wbm_desc_parse_err(struct ath12k_base *ab, void *desc,
-+				  struct hal_rx_wbm_rel_info *rel_info);
-+void ath12k_hal_rx_reo_ent_paddr_get(struct ath12k_base *ab,
-+				     struct ath12k_buffer_addr *buff_addr,
-+				     dma_addr_t *paddr, u32 *cookie);
++static void
++ath12k_htc_process_credit_report(struct ath12k_htc *htc,
++				 const struct ath12k_htc_credit_report *report,
++				 int len,
++				 enum ath12k_htc_ep_id eid)
++{
++	struct ath12k_base *ab = htc->ab;
++	struct ath12k_htc_ep *ep;
++	int i, n_reports;
 +
-+#endif
++	if (len % sizeof(*report))
++		ath12k_warn(ab, "Uneven credit report len %d", len);
++
++	n_reports = len / sizeof(*report);
++
++	spin_lock_bh(&htc->tx_lock);
++	for (i = 0; i < n_reports; i++, report++) {
++		if (report->eid >= ATH12K_HTC_EP_COUNT)
++			break;
++
++		ep = &htc->endpoint[report->eid];
++		ep->tx_credits += report->credits;
++
++		ath12k_dbg(ab, ATH12K_DBG_HTC, "htc ep %d got %d credits (total %d)\n",
++			   report->eid, report->credits, ep->tx_credits);
++
++		if (ep->ep_ops.ep_tx_credits) {
++			spin_unlock_bh(&htc->tx_lock);
++			ep->ep_ops.ep_tx_credits(htc->ab);
++			spin_lock_bh(&htc->tx_lock);
++		}
++	}
++	spin_unlock_bh(&htc->tx_lock);
++}
++
++static int ath12k_htc_process_trailer(struct ath12k_htc *htc,
++				      u8 *buffer,
++				      int length,
++				      enum ath12k_htc_ep_id src_eid)
++{
++	struct ath12k_base *ab = htc->ab;
++	int status = 0;
++	struct ath12k_htc_record *record;
++	size_t len;
++
++	while (length > 0) {
++		record = (struct ath12k_htc_record *)buffer;
++
++		if (length < sizeof(record->hdr)) {
++			status = -EINVAL;
++			break;
++		}
++
++		if (record->hdr.len > length) {
++			/* no room left in buffer for record */
++			ath12k_warn(ab, "Invalid record length: %d\n",
++				    record->hdr.len);
++			status = -EINVAL;
++			break;
++		}
++
++		switch (record->hdr.id) {
++		case ATH12K_HTC_RECORD_CREDITS:
++			len = sizeof(struct ath12k_htc_credit_report);
++			if (record->hdr.len < len) {
++				ath12k_warn(ab, "Credit report too long\n");
++				status = -EINVAL;
++				break;
++			}
++			ath12k_htc_process_credit_report(htc,
++							 record->credit_report,
++							 record->hdr.len,
++							 src_eid);
++			break;
++		default:
++			ath12k_warn(ab, "Unhandled record: id:%d length:%d\n",
++				    record->hdr.id, record->hdr.len);
++			break;
++		}
++
++		if (status)
++			break;
++
++		/* multiple records may be present in a trailer */
++		buffer += sizeof(record->hdr) + record->hdr.len;
++		length -= sizeof(record->hdr) + record->hdr.len;
++	}
++
++	return status;
++}
++
++static void ath12k_htc_suspend_complete(struct ath12k_base *ab, bool ack)
++{
++	ath12k_dbg(ab, ATH12K_DBG_BOOT, "boot suspend complete %d\n", ack);
++
++	if (ack)
++		set_bit(ATH12K_FLAG_HTC_SUSPEND_COMPLETE, &ab->dev_flags);
++	else
++		clear_bit(ATH12K_FLAG_HTC_SUSPEND_COMPLETE, &ab->dev_flags);
++
++	complete(&ab->htc_suspend);
++}
++
++void ath12k_htc_rx_completion_handler(struct ath12k_base *ab,
++				      struct sk_buff *skb)
++{
++	int status = 0;
++	struct ath12k_htc *htc = &ab->htc;
++	struct ath12k_htc_hdr *hdr;
++	struct ath12k_htc_ep *ep;
++	u16 payload_len;
++	u32 trailer_len = 0;
++	size_t min_len;
++	u8 eid;
++	bool trailer_present;
++
++	hdr = (struct ath12k_htc_hdr *)skb->data;
++	skb_pull(skb, sizeof(*hdr));
++
++	eid = le32_get_bits(hdr->htc_info, HTC_HDR_ENDPOINTID);
++
++	if (eid >= ATH12K_HTC_EP_COUNT) {
++		ath12k_warn(ab, "HTC Rx: invalid eid %d\n", eid);
++		goto out;
++	}
++
++	ep = &htc->endpoint[eid];
++
++	payload_len = le32_get_bits(hdr->htc_info, HTC_HDR_PAYLOADLEN);
++
++	if (payload_len + sizeof(*hdr) > ATH12K_HTC_MAX_LEN) {
++		ath12k_warn(ab, "HTC rx frame too long, len: %zu\n",
++			    payload_len + sizeof(*hdr));
++		goto out;
++	}
++
++	if (skb->len < payload_len) {
++		ath12k_warn(ab, "HTC Rx: insufficient length, got %d, expected %d\n",
++			    skb->len, payload_len);
++		goto out;
++	}
++
++	/* get flags to check for trailer */
++	trailer_present = le32_get_bits(hdr->htc_info, HTC_HDR_FLAGS) &
++			  ATH12K_HTC_FLAG_TRAILER_PRESENT;
++
++	if (trailer_present) {
++		u8 *trailer;
++
++		trailer_len = le32_get_bits(hdr->ctrl_info,
++					    HTC_HDR_CONTROLBYTES0);
++		min_len = sizeof(struct ath12k_htc_record_hdr);
++
++		if ((trailer_len < min_len) ||
++		    (trailer_len > payload_len)) {
++			ath12k_warn(ab, "Invalid trailer length: %d\n",
++				    trailer_len);
++			goto out;
++		}
++
++		trailer = (u8 *)hdr;
++		trailer += sizeof(*hdr);
++		trailer += payload_len;
++		trailer -= trailer_len;
++		status = ath12k_htc_process_trailer(htc, trailer,
++						    trailer_len, eid);
++		if (status)
++			goto out;
++
++		skb_trim(skb, skb->len - trailer_len);
++	}
++
++	if (trailer_len >= payload_len)
++		/* zero length packet with trailer data, just drop these */
++		goto out;
++
++	if (eid == ATH12K_HTC_EP_0) {
++		struct ath12k_htc_msg *msg = (struct ath12k_htc_msg *)skb->data;
++
++		switch (le32_get_bits(msg->msg_svc_id, HTC_MSG_MESSAGEID)) {
++		case ATH12K_HTC_MSG_READY_ID:
++		case ATH12K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
++			/* handle HTC control message */
++			if (completion_done(&htc->ctl_resp)) {
++				/* this is a fatal error, target should not be
++				 * sending unsolicited messages on the ep 0
++				 */
++				ath12k_warn(ab, "HTC rx ctrl still processing\n");
++				complete(&htc->ctl_resp);
++				goto out;
++			}
++
++			htc->control_resp_len =
++				min_t(int, skb->len,
++				      ATH12K_HTC_MAX_CTRL_MSG_LEN);
++
++			memcpy(htc->control_resp_buffer, skb->data,
++			       htc->control_resp_len);
++
++			complete(&htc->ctl_resp);
++			break;
++		case ATH12K_HTC_MSG_SEND_SUSPEND_COMPLETE:
++			ath12k_htc_suspend_complete(ab, true);
++			break;
++		case ATH12K_HTC_MSG_NACK_SUSPEND:
++			ath12k_htc_suspend_complete(ab, false);
++			break;
++		case ATH12K_HTC_MSG_WAKEUP_FROM_SUSPEND_ID:
++			break;
++		default:
++			ath12k_warn(ab, "ignoring unsolicited htc ep0 event %u\n",
++				    le32_get_bits(msg->msg_svc_id, HTC_MSG_MESSAGEID));
++			break;
++		}
++		goto out;
++	}
++
++	ath12k_dbg(ab, ATH12K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
++		   eid, skb);
++	ep->ep_ops.ep_rx_complete(ab, skb);
++
++	/* poll tx completion for interrupt disabled CE's */
++	ath12k_ce_poll_send_completed(ab, ep->ul_pipe_id);
++
++	/* skb is now owned by the rx completion handler */
++	skb = NULL;
++out:
++	kfree_skb(skb);
++}
++
++static void ath12k_htc_control_rx_complete(struct ath12k_base *ab,
++					   struct sk_buff *skb)
++{
++	/* This is unexpected. FW is not supposed to send regular rx on this
++	 * endpoint.
++	 */
++	ath12k_warn(ab, "unexpected htc rx\n");
++	kfree_skb(skb);
++}
++
++static const char *htc_service_name(enum ath12k_htc_svc_id id)
++{
++	switch (id) {
++	case ATH12K_HTC_SVC_ID_RESERVED:
++		return "Reserved";
++	case ATH12K_HTC_SVC_ID_RSVD_CTRL:
++		return "Control";
++	case ATH12K_HTC_SVC_ID_WMI_CONTROL:
++		return "WMI";
++	case ATH12K_HTC_SVC_ID_WMI_DATA_BE:
++		return "DATA BE";
++	case ATH12K_HTC_SVC_ID_WMI_DATA_BK:
++		return "DATA BK";
++	case ATH12K_HTC_SVC_ID_WMI_DATA_VI:
++		return "DATA VI";
++	case ATH12K_HTC_SVC_ID_WMI_DATA_VO:
++		return "DATA VO";
++	case ATH12K_HTC_SVC_ID_WMI_CONTROL_MAC1:
++		return "WMI MAC1";
++	case ATH12K_HTC_SVC_ID_WMI_CONTROL_MAC2:
++		return "WMI MAC2";
++	case ATH12K_HTC_SVC_ID_NMI_CONTROL:
++		return "NMI Control";
++	case ATH12K_HTC_SVC_ID_NMI_DATA:
++		return "NMI Data";
++	case ATH12K_HTC_SVC_ID_HTT_DATA_MSG:
++		return "HTT Data";
++	case ATH12K_HTC_SVC_ID_TEST_RAW_STREAMS:
++		return "RAW";
++	case ATH12K_HTC_SVC_ID_IPA_TX:
++		return "IPA TX";
++	case ATH12K_HTC_SVC_ID_PKT_LOG:
++		return "PKT LOG";
++	case ATH12K_HTC_SVC_ID_WMI_CONTROL_DIAG:
++		return "WMI DIAG";
++	}
++
++	return "Unknown";
++}
++
++static void ath12k_htc_reset_endpoint_states(struct ath12k_htc *htc)
++{
++	struct ath12k_htc_ep *ep;
++	int i;
++
++	for (i = ATH12K_HTC_EP_0; i < ATH12K_HTC_EP_COUNT; i++) {
++		ep = &htc->endpoint[i];
++		ep->service_id = ATH12K_HTC_SVC_ID_UNUSED;
++		ep->max_ep_message_len = 0;
++		ep->max_tx_queue_depth = 0;
++		ep->eid = i;
++		ep->htc = htc;
++		ep->tx_credit_flow_enabled = true;
++	}
++}
++
++static u8 ath12k_htc_get_credit_allocation(struct ath12k_htc *htc,
++					   u16 service_id)
++{
++	u8 i, allocation = 0;
++
++	for (i = 0; i < ATH12K_HTC_MAX_SERVICE_ALLOC_ENTRIES; i++) {
++		if (htc->service_alloc_table[i].service_id == service_id) {
++			allocation =
++				htc->service_alloc_table[i].credit_allocation;
++		}
++	}
++
++	return allocation;
++}
++
++static int ath12k_htc_setup_target_buffer_assignments(struct ath12k_htc *htc)
++{
++	struct ath12k_htc_svc_tx_credits *serv_entry;
++	u32 svc_id[] = {
++		ATH12K_HTC_SVC_ID_WMI_CONTROL,
++		ATH12K_HTC_SVC_ID_WMI_CONTROL_MAC1,
++		ATH12K_HTC_SVC_ID_WMI_CONTROL_MAC2,
++	};
++	int i, credits;
++
++	credits = htc->total_transmit_credits;
++	serv_entry = htc->service_alloc_table;
++
++	if ((htc->wmi_ep_count == 0) ||
++	    (htc->wmi_ep_count > ARRAY_SIZE(svc_id)))
++		return -EINVAL;
++
++	/* Divide credits among number of endpoints for WMI */
++	credits = credits / htc->wmi_ep_count;
++	for (i = 0; i < htc->wmi_ep_count; i++) {
++		serv_entry[i].service_id = svc_id[i];
++		serv_entry[i].credit_allocation = credits;
++	}
++
++	return 0;
++}
++
++int ath12k_htc_wait_target(struct ath12k_htc *htc)
++{
++	int i, status = 0;
++	struct ath12k_base *ab = htc->ab;
++	unsigned long time_left;
++	struct ath12k_htc_ready *ready;
++	u16 message_id;
++	u16 credit_count;
++	u16 credit_size;
++
++	time_left = wait_for_completion_timeout(&htc->ctl_resp,
++						ATH12K_HTC_WAIT_TIMEOUT_HZ);
++	if (!time_left) {
++		ath12k_warn(ab, "failed to receive control response completion, polling..\n");
++
++		for (i = 0; i < ab->hw_params->ce_count; i++)
++			ath12k_ce_per_engine_service(htc->ab, i);
++
++		time_left =
++			wait_for_completion_timeout(&htc->ctl_resp,
++						    ATH12K_HTC_WAIT_TIMEOUT_HZ);
++
++		if (!time_left)
++			status = -ETIMEDOUT;
++	}
++
++	if (status < 0) {
++		ath12k_warn(ab, "ctl_resp never came in (%d)\n", status);
++		return status;
++	}
++
++	if (htc->control_resp_len < sizeof(*ready)) {
++		ath12k_warn(ab, "Invalid HTC ready msg len:%d\n",
++			    htc->control_resp_len);
++		return -ECOMM;
++	}
++
++	ready = (struct ath12k_htc_ready *)htc->control_resp_buffer;
++	message_id = le32_get_bits(ready->id_credit_count, HTC_MSG_MESSAGEID);
++	credit_count = le32_get_bits(ready->id_credit_count,
++				     HTC_READY_MSG_CREDITCOUNT);
++	credit_size = le32_get_bits(ready->size_ep, HTC_READY_MSG_CREDITSIZE);
++
++	if (message_id != ATH12K_HTC_MSG_READY_ID) {
++		ath12k_warn(ab, "Invalid HTC ready msg: 0x%x\n", message_id);
++		return -ECOMM;
++	}
++
++	htc->total_transmit_credits = credit_count;
++	htc->target_credit_size = credit_size;
++
++	ath12k_dbg(ab, ATH12K_DBG_HTC,
++		   "Target ready! transmit resources: %d size:%d\n",
++		   htc->total_transmit_credits, htc->target_credit_size);
++
++	if ((htc->total_transmit_credits == 0) ||
++	    (htc->target_credit_size == 0)) {
++		ath12k_warn(ab, "Invalid credit size received\n");
++		return -ECOMM;
++	}
++
++	ath12k_htc_setup_target_buffer_assignments(htc);
++
++	return 0;
++}
++
++int ath12k_htc_connect_service(struct ath12k_htc *htc,
++			       struct ath12k_htc_svc_conn_req *conn_req,
++			       struct ath12k_htc_svc_conn_resp *conn_resp)
++{
++	struct ath12k_base *ab = htc->ab;
++	struct ath12k_htc_conn_svc *req_msg;
++	struct ath12k_htc_conn_svc_resp resp_msg_dummy;
++	struct ath12k_htc_conn_svc_resp *resp_msg = &resp_msg_dummy;
++	enum ath12k_htc_ep_id assigned_eid = ATH12K_HTC_EP_COUNT;
++	struct ath12k_htc_ep *ep;
++	struct sk_buff *skb;
++	unsigned int max_msg_size = 0;
++	int length, status;
++	unsigned long time_left;
++	bool disable_credit_flow_ctrl = false;
++	u16 message_id, service_id, flags = 0;
++	u8 tx_alloc = 0;
++
++	/* special case for HTC pseudo control service */
++	if (conn_req->service_id == ATH12K_HTC_SVC_ID_RSVD_CTRL) {
++		disable_credit_flow_ctrl = true;
++		assigned_eid = ATH12K_HTC_EP_0;
++		max_msg_size = ATH12K_HTC_MAX_CTRL_MSG_LEN;
++		memset(&resp_msg_dummy, 0, sizeof(resp_msg_dummy));
++		goto setup;
++	}
++
++	tx_alloc = ath12k_htc_get_credit_allocation(htc,
++						    conn_req->service_id);
++	if (!tx_alloc)
++		ath12k_dbg(ab, ATH12K_DBG_BOOT,
++			   "boot htc service %s does not allocate target credits\n",
++			   htc_service_name(conn_req->service_id));
++
++	skb = ath12k_htc_build_tx_ctrl_skb(htc->ab);
++	if (!skb) {
++		ath12k_warn(ab, "Failed to allocate HTC packet\n");
++		return -ENOMEM;
++	}
++
++	length = sizeof(*req_msg);
++	skb_put(skb, length);
++	memset(skb->data, 0, length);
++
++	req_msg = (struct ath12k_htc_conn_svc *)skb->data;
++	req_msg->msg_svc_id = le32_encode_bits(ATH12K_HTC_MSG_CONNECT_SERVICE_ID,
++					       HTC_MSG_MESSAGEID);
++
++	flags |= u32_encode_bits(tx_alloc, ATH12K_HTC_CONN_FLAGS_RECV_ALLOC);
++
++	/* Only enable credit flow control for WMI ctrl service */
++	if (!(conn_req->service_id == ATH12K_HTC_SVC_ID_WMI_CONTROL ||
++	      conn_req->service_id == ATH12K_HTC_SVC_ID_WMI_CONTROL_MAC1 ||
++	      conn_req->service_id == ATH12K_HTC_SVC_ID_WMI_CONTROL_MAC2)) {
++		flags |= ATH12K_HTC_CONN_FLAGS_DISABLE_CREDIT_FLOW_CTRL;
++		disable_credit_flow_ctrl = true;
++	}
++
++	req_msg->flags_len = le32_encode_bits(flags, HTC_SVC_MSG_CONNECTIONFLAGS);
++	req_msg->msg_svc_id |= le32_encode_bits(conn_req->service_id,
++						HTC_SVC_MSG_SERVICE_ID);
++
++	reinit_completion(&htc->ctl_resp);
++
++	status = ath12k_htc_send(htc, ATH12K_HTC_EP_0, skb);
++	if (status) {
++		kfree_skb(skb);
++		return status;
++	}
++
++	/* wait for response */
++	time_left = wait_for_completion_timeout(&htc->ctl_resp,
++						ATH12K_HTC_CONN_SVC_TIMEOUT_HZ);
++	if (!time_left) {
++		ath12k_err(ab, "Service connect timeout\n");
++		return -ETIMEDOUT;
++	}
++
++	/* we controlled the buffer creation, it's aligned */
++	resp_msg = (struct ath12k_htc_conn_svc_resp *)htc->control_resp_buffer;
++	message_id = le32_get_bits(resp_msg->msg_svc_id, HTC_MSG_MESSAGEID);
++	service_id = le32_get_bits(resp_msg->msg_svc_id,
++				   HTC_SVC_RESP_MSG_SERVICEID);
++
++	if ((message_id != ATH12K_HTC_MSG_CONNECT_SERVICE_RESP_ID) ||
++	    (htc->control_resp_len < sizeof(*resp_msg))) {
++		ath12k_err(ab, "Invalid resp message ID 0x%x", message_id);
++		return -EPROTO;
++	}
++
++	ath12k_dbg(ab, ATH12K_DBG_HTC,
++		   "HTC Service %s connect response: status: %u, assigned ep: %u\n",
++		   htc_service_name(service_id),
++		   le32_get_bits(resp_msg->flags_len, HTC_SVC_RESP_MSG_STATUS),
++		   le32_get_bits(resp_msg->flags_len, HTC_SVC_RESP_MSG_ENDPOINTID));
++
++	conn_resp->connect_resp_code = le32_get_bits(resp_msg->flags_len,
++						     HTC_SVC_RESP_MSG_STATUS);
++
++	/* check response status */
++	if (conn_resp->connect_resp_code != ATH12K_HTC_CONN_SVC_STATUS_SUCCESS) {
++		ath12k_err(ab, "HTC Service %s connect request failed: 0x%x)\n",
++			   htc_service_name(service_id),
++		       conn_resp->connect_resp_code);
++		return -EPROTO;
++	}
++
++	assigned_eid = le32_get_bits(resp_msg->flags_len,
++				     HTC_SVC_RESP_MSG_ENDPOINTID);
++
++	max_msg_size = le32_get_bits(resp_msg->flags_len,
++				     HTC_SVC_RESP_MSG_MAXMSGSIZE);
++
++setup:
++
++	if (assigned_eid >= ATH12K_HTC_EP_COUNT)
++		return -EPROTO;
++
++	if (max_msg_size == 0)
++		return -EPROTO;
++
++	ep = &htc->endpoint[assigned_eid];
++	ep->eid = assigned_eid;
++
++	if (ep->service_id != ATH12K_HTC_SVC_ID_UNUSED)
++		return -EPROTO;
++
++	/* return assigned endpoint to caller */
++	conn_resp->eid = assigned_eid;
++	conn_resp->max_msg_len = le32_get_bits(resp_msg->flags_len,
++					       HTC_SVC_RESP_MSG_MAXMSGSIZE);
++
++	/* setup the endpoint */
++	ep->service_id = conn_req->service_id;
++	ep->max_tx_queue_depth = conn_req->max_send_queue_depth;
++	ep->max_ep_message_len = le32_get_bits(resp_msg->flags_len,
++					       HTC_SVC_RESP_MSG_MAXMSGSIZE);
++	ep->tx_credits = tx_alloc;
++
++	/* copy all the callbacks */
++	ep->ep_ops = conn_req->ep_ops;
++
++	status = ath12k_hif_map_service_to_pipe(htc->ab,
++						ep->service_id,
++						&ep->ul_pipe_id,
++						&ep->dl_pipe_id);
++	if (status)
++		return status;
++
++	ath12k_dbg(ab, ATH12K_DBG_BOOT,
++		   "boot htc service '%s' ul pipe %d dl pipe %d eid %d ready\n",
++		   htc_service_name(ep->service_id), ep->ul_pipe_id,
++		   ep->dl_pipe_id, ep->eid);
++
++	if (disable_credit_flow_ctrl && ep->tx_credit_flow_enabled) {
++		ep->tx_credit_flow_enabled = false;
++		ath12k_dbg(ab, ATH12K_DBG_BOOT,
++			   "boot htc service '%s' eid %d TX flow control disabled\n",
++			   htc_service_name(ep->service_id), assigned_eid);
++	}
++
++	return status;
++}
++
++int ath12k_htc_start(struct ath12k_htc *htc)
++{
++	struct sk_buff *skb;
++	int status = 0;
++	struct ath12k_base *ab = htc->ab;
++	struct ath12k_htc_setup_complete_extended *msg;
++
++	skb = ath12k_htc_build_tx_ctrl_skb(htc->ab);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, sizeof(*msg));
++	memset(skb->data, 0, skb->len);
++
++	msg = (struct ath12k_htc_setup_complete_extended *)skb->data;
++	msg->msg_id = le32_encode_bits(ATH12K_HTC_MSG_SETUP_COMPLETE_EX_ID,
++				       HTC_MSG_MESSAGEID);
++
++	ath12k_dbg(ab, ATH12K_DBG_HTC, "HTC is using TX credit flow control\n");
++
++	status = ath12k_htc_send(htc, ATH12K_HTC_EP_0, skb);
++	if (status) {
++		kfree_skb(skb);
++		return status;
++	}
++
++	return 0;
++}
++
++int ath12k_htc_init(struct ath12k_base *ab)
++{
++	struct ath12k_htc *htc = &ab->htc;
++	struct ath12k_htc_svc_conn_req conn_req;
++	struct ath12k_htc_svc_conn_resp conn_resp;
++	int ret;
++
++	spin_lock_init(&htc->tx_lock);
++
++	ath12k_htc_reset_endpoint_states(htc);
++
++	htc->ab = ab;
++
++	switch (ab->wmi_ab.preferred_hw_mode) {
++	case WMI_HOST_HW_MODE_SINGLE:
++		htc->wmi_ep_count = 1;
++		break;
++	case WMI_HOST_HW_MODE_DBS:
++	case WMI_HOST_HW_MODE_DBS_OR_SBS:
++		htc->wmi_ep_count = 2;
++		break;
++	case WMI_HOST_HW_MODE_DBS_SBS:
++		htc->wmi_ep_count = 3;
++		break;
++	default:
++		htc->wmi_ep_count = ab->hw_params->max_radios;
++		break;
++	}
++
++	/* setup our pseudo HTC control endpoint connection */
++	memset(&conn_req, 0, sizeof(conn_req));
++	memset(&conn_resp, 0, sizeof(conn_resp));
++	conn_req.ep_ops.ep_tx_complete = ath12k_htc_control_tx_complete;
++	conn_req.ep_ops.ep_rx_complete = ath12k_htc_control_rx_complete;
++	conn_req.max_send_queue_depth = ATH12K_NUM_CONTROL_TX_BUFFERS;
++	conn_req.service_id = ATH12K_HTC_SVC_ID_RSVD_CTRL;
++
++	/* connect fake service */
++	ret = ath12k_htc_connect_service(htc, &conn_req, &conn_resp);
++	if (ret) {
++		ath12k_err(ab, "could not connect to htc service (%d)\n", ret);
++		return ret;
++	}
++
++	init_completion(&htc->ctl_resp);
++
++	return 0;
++}
 
