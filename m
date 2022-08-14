@@ -2,91 +2,137 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 874B7C25B06
-	for <linux-wireless@archiver.kernel.org>; Sun, 14 Aug 2022 17:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C418C25B06
+	for <linux-wireless@archiver.kernel.org>; Sun, 14 Aug 2022 23:37:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231443AbiHNRuf (ORCPT
+        id S229590AbiHNXhb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Aug 2022 13:50:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37474 "EHLO
+        Sun, 14 Aug 2022 19:37:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbiHNRue (ORCPT
+        with ESMTP id S229450AbiHNXha (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Aug 2022 13:50:34 -0400
-Received: from mail-oi1-x22c.google.com (mail-oi1-x22c.google.com [IPv6:2607:f8b0:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A74C1C923;
-        Sun, 14 Aug 2022 10:50:33 -0700 (PDT)
-Received: by mail-oi1-x22c.google.com with SMTP id n133so6630153oib.0;
-        Sun, 14 Aug 2022 10:50:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:from:to:cc;
-        bh=knj+8z4UTU4OZaEAZ8wqsUOuV/Nu60xNyiNJljXS19Q=;
-        b=QHsxPE57quzg5BAU+EIYqrOCV22xtAzg9GALEKqEOwhtkF3jZKMel3HyWqwkv5vNfd
-         trrHS0dcVJKUs9A+Ng0uQd1JQwp1s4c9Ghy2s4hpkl5+R11bK/qWbihJ08yA0Rca8q0u
-         wn+pXwVEK49cNtR4/0x2lqAaBRjOqyoKS2YET+/0tuevpwYpa9euaMmJfENeVUTRA0qv
-         vQpAGRBfHFHk8MCk6zuCABSAsFlK0qJdYcFIQkY0SF8y8srcf7N7QL9iXqNAfh9Xj1eO
-         fOpGhdsZcOZv+VFTWAmHiyb/KsOmQ6cBefBk5h2YLPzoHFAq0Far4ayxUQAtCFAcLP5F
-         7Orw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:x-gm-message-state:from:to:cc;
-        bh=knj+8z4UTU4OZaEAZ8wqsUOuV/Nu60xNyiNJljXS19Q=;
-        b=R7nezJ/2tkymsJAdXcCkbOVqNussnNwk3HqdpiOfNZR+o4DZLt416RBT6RTLuuX5UE
-         KHPAxs8aCfV6J0LdGb3k8xvjUxvA9ftry8hxMj5NoGXHJiZq5SpDvSOJ3bPC53iGCycK
-         6+7P0DyCRZ8K8JMsjcL0tRlr5pEgH0eHRL+U4nq3HPztSW03lCYiAOngB1f/kEl9ZINK
-         myj++wmqXgg/uEOkrkNRTarDk/zJVUBbxqK944utX1sGP3ny+grboyMkWODBqP5YUy2h
-         Bez027elv+4Rc7uMOtBiPXJ01IY3PjFEvA2IKeXq/2HkX0OO9OrGBliQju3zpBrrGM+C
-         Jn0w==
-X-Gm-Message-State: ACgBeo3KaDtnWT3frjZWIl0TexqScFJ3S0KB5LFB70ooBUs+PfXii7cu
-        29TwXnK6Laz34+dNfd/1LBQWJHrnJmc=
-X-Google-Smtp-Source: AA6agR5RnSps4UtO1s0bbx9x06cJYKqMO6GiHSZzgzKSgb9LxS6C2z32RZ2oZvy0oGO49dtDAYI7Eg==
-X-Received: by 2002:a54:4496:0:b0:343:2d07:fe01 with SMTP id v22-20020a544496000000b003432d07fe01mr8765781oiv.226.1660499432764;
-        Sun, 14 Aug 2022 10:50:32 -0700 (PDT)
-Received: from localhost.localdomain ([216.130.59.33])
-        by smtp.gmail.com with ESMTPSA id t14-20020a056870638e00b0010e5a5dfcb4sm995874oap.0.2022.08.14.10.50.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 14 Aug 2022 10:50:32 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-To:     gregkh@linuxfoundation.org
-Cc:     phil@philpotter.co.uk, linux-staging@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/2] staging: r8188eu: Add Rosewill USB-N150 Nano to device tables
-Date:   Sun, 14 Aug 2022 12:50:27 -0500
-Message-Id: <20220814175027.2689-1-Larry.Finger@lwfinger.net>
-X-Mailer: git-send-email 2.37.1
+        Sun, 14 Aug 2022 19:37:30 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 548EC63E6
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2022 16:37:24 -0700 (PDT)
+X-UUID: 148538d08d3a4f8398125ab81465287c-20220815
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=bQilvMFKBxazIlswRqWv91yqQ/yCqwwKRxMlrAjTfZU=;
+        b=GL90L7P6nK13GFdisTvzHnlzkVUl0lhiFTa0I/FPzbgGvFfUNPMHjiuRgunMrHPMG8TPH2NW5p8NNwtOAfVVaj/JBcDom+gD/m+QVzfLIEmbHI5rDDdOaJChKFv5sWLEYflwoOwybUygEviIirNLbbNM5z/BDR0KSXpQTRGKrgY=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.9,REQID:d12fe960-88ff-4c33-b300-159f3b3ee92c,OB:0,LO
+        B:0,IP:0,URL:5,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_H
+        am,ACTION:release,TS:5
+X-CID-META: VersionHash:3d8acc9,CLOUDID:e49d9f9c-da39-4e3b-a854-56c7d2111b46,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:11|1,File:
+        nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 148538d08d3a4f8398125ab81465287c-20220815
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1793945494; Mon, 15 Aug 2022 07:37:17 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Mon, 15 Aug 2022 07:37:15 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Mon, 15 Aug 2022 07:37:15 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
+        <km.lin@mediatek.com>, <jenhao.yang@mediatek.com>,
+        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <ted.huang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
+        <jsiuda@google.com>, <frankgor@google.com>, <kuabhs@google.com>,
+        <druth@google.com>, <abhishekpandit@google.com>,
+        <shawnku@google.com>, <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH] mt76: mt7921: get rid of the false positive reset
+Date:   Mon, 15 Aug 2022 07:37:14 +0800
+Message-ID: <95b03bb77ce93cb2cade98d947309cd669721939.1660519674.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This device is reported as using the RTL8188EUS chip.
+From: Sean Wang <sean.wang@mediatek.com>
 
-It has the improbable USB ID of 0bda:ffef, which normally would belong
-to Realtek, but this ID works for the reporter.
+False positive reset would be possibly triggered by those commands we
+applied in suspend with HZ MCU timeout, especially it happened when we
+enabled kernel log in pm core to diagnose how much time we spend in each
+driver during suspend procedure. So we enlarge the value and align the MCU
+timeout as other commands we did to reduce the false positive reset.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/staging/r8188eu/os_dep/usb_intf.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c  | 7 +------
+ drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c | 7 +------
+ drivers/net/wireless/mediatek/mt76/mt7921/usb.c      | 7 +------
+ 3 files changed, 3 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/staging/r8188eu/os_dep/usb_intf.c b/drivers/staging/r8188eu/os_dep/usb_intf.c
-index cc2b44f60c46..9147d176da4f 100644
---- a/drivers/staging/r8188eu/os_dep/usb_intf.c
-+++ b/drivers/staging/r8188eu/os_dep/usb_intf.c
-@@ -28,6 +28,7 @@ static struct usb_device_id rtw_usb_id_tbl[] = {
- 	/*=== Realtek demoboard ===*/
- 	{USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8179)}, /* 8188EUS */
- 	{USB_DEVICE(USB_VENDER_ID_REALTEK, 0x0179)}, /* 8188ETV */
-+	{USB_DEVICE(USB_VENDER_ID_REALTEK, 0xffef)}, /* Rosewill USB-N150 Nano */
- 	/*=== Customer ID ===*/
- 	/****** 8188EUS ********/
- 	{USB_DEVICE(0x07B8, 0x8179)}, /* Abocom - Abocom */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
+index 5efda694fb9d..64568536c1e9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
+@@ -30,12 +30,7 @@ mt7921_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (cmd == MCU_UNI_CMD(HIF_CTRL) ||
+-	    cmd == MCU_UNI_CMD(SUSPEND) ||
+-	    cmd == MCU_UNI_CMD(OFFLOAD))
+-		mdev->mcu.timeout = HZ;
+-	else
+-		mdev->mcu.timeout = 3 * HZ;
++	mdev->mcu.timeout = 3 * HZ;
+ 
+ 	if (cmd == MCU_CMD(FW_SCATTER))
+ 		txq = MT_MCUQ_FWDL;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c
+index e038d7404323..5c1489766d9f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/sdio_mcu.c
+@@ -33,12 +33,7 @@ mt7921s_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (cmd == MCU_UNI_CMD(HIF_CTRL) ||
+-	    cmd == MCU_UNI_CMD(SUSPEND) ||
+-	    cmd == MCU_UNI_CMD(OFFLOAD))
+-		mdev->mcu.timeout = HZ;
+-	else
+-		mdev->mcu.timeout = 3 * HZ;
++	mdev->mcu.timeout = 3 * HZ;
+ 
+ 	if (cmd == MCU_CMD(FW_SCATTER))
+ 		type = MT7921_SDIO_FWDL;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/usb.c b/drivers/net/wireless/mediatek/mt76/mt7921/usb.c
+index dd3b8884e162..d06cee386acd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/usb.c
+@@ -106,12 +106,7 @@ mt7921u_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (cmd == MCU_UNI_CMD(HIF_CTRL) ||
+-	    cmd == MCU_UNI_CMD(SUSPEND) ||
+-	    cmd == MCU_UNI_CMD(OFFLOAD))
+-		mdev->mcu.timeout = HZ;
+-	else
+-		mdev->mcu.timeout = 3 * HZ;
++	mdev->mcu.timeout = 3 * HZ;
+ 
+ 	if (cmd != MCU_CMD(FW_SCATTER))
+ 		ep = MT_EP_OUT_INBAND_CMD;
 -- 
-2.37.1
+2.25.1
 
