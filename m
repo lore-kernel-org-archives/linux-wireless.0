@@ -2,129 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5EEC00140
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Aug 2022 12:20:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7618C25B08
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Aug 2022 18:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241337AbiHOMUi (ORCPT
+        id S233085AbiHOSKO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Aug 2022 08:20:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33142 "EHLO
+        Mon, 15 Aug 2022 14:10:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231732AbiHOMUg (ORCPT
+        with ESMTP id S233033AbiHOSKN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Aug 2022 08:20:36 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91E9B2647
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2022 05:20:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1660566035; x=1692102035;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=KalQqM3q/G0BQ/+bduaR5oyhn4VN1sBctd0e2o8g32k=;
-  b=Q+LIrFLVgMfTYan0lA44N6pxpuC08zt+G5RnNWZ3fG+EBhup4t5bMm17
-   nKNyYqFz2zigIdqJwzv0Op1Q/xeZa7pNUm3BMG2moeZd/yqT35wyPpIJ6
-   zXPn3uh2/nxLe2NxBzlE1WTnVTbZs7F1JfbGnf/2ifWYijDFhNxbxwMsH
-   fdPFNcqwDxxR1I3oDKd3TS5Y/2DvI2J7NXQzl6/2dQer1CT1Hi2a/eG9h
-   vCX1guxCEr6O107pkqRBLn8Sa72NYWrX5gKl9Qo2F55RKXV4b6PM8W2BC
-   XfMo0VaaJ90zhg12DAaqqWek2z1bxN0XiZGR6mjkgumdH+NuytMk4pWDQ
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10439"; a="378234541"
-X-IronPort-AV: E=Sophos;i="5.93,238,1654585200"; 
-   d="scan'208";a="378234541"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Aug 2022 05:20:35 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,238,1654585200"; 
-   d="scan'208";a="582859426"
-Received: from lkp-server02.sh.intel.com (HELO 3d2a4d02a2a9) ([10.239.97.151])
-  by orsmga006.jf.intel.com with ESMTP; 15 Aug 2022 05:20:33 -0700
-Received: from kbuild by 3d2a4d02a2a9 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oNZ57-0000zh-07;
-        Mon, 15 Aug 2022 12:20:33 +0000
-Date:   Mon, 15 Aug 2022 20:20:08 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>, kvalo@kernel.org
-Cc:     kbuild-all@lists.01.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] wifi: rtw89: correct BA CAM allocation
-Message-ID: <202208152030.442QsT2L-lkp@intel.com>
-References: <20220815070703.26965-4-pkshih@realtek.com>
+        Mon, 15 Aug 2022 14:10:13 -0400
+Received: from albert.telenet-ops.be (albert.telenet-ops.be [IPv6:2a02:1800:110:4::f00:1a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 407562A24F
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2022 11:10:10 -0700 (PDT)
+Received: from ramsan.of.borg ([84.195.186.194])
+        by albert.telenet-ops.be with bizsmtp
+        id 7uA42800C4C55Sk06uA4oE; Mon, 15 Aug 2022 20:10:09 +0200
+Received: from geert (helo=localhost)
+        by ramsan.of.borg with local-esmtp (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1oNeXL-001DJO-RF; Mon, 15 Aug 2022 20:10:03 +0200
+Date:   Mon, 15 Aug 2022 20:10:03 +0200 (CEST)
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+X-X-Sender: geert@ramsan.of.borg
+To:     linux-kernel@vger.kernel.org
+cc:     linux-parisc@vger.kernel.org, linux-staging@lists.linux.dev,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kvmarm@lists.cs.columbia.edu, linux-arm-kernel@lists.infradead.org,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org
+Subject: Re: Build regressions/improvements in v6.0-rc1
+In-Reply-To: <20220815180438.2875559-1-geert@linux-m68k.org>
+Message-ID: <alpine.DEB.2.22.394.2208152006320.289321@ramsan.of.borg>
+References: <CAHk-=wgRFjPHV-Y_eKP9wQMLFDgG+dEUHiv5wC17OQHsG5z7BA@mail.gmail.com> <20220815180438.2875559-1-geert@linux-m68k.org>
+User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220815070703.26965-4-pkshih@realtek.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Ping-Ke,
+On Mon, 15 Aug 2022, Geert Uytterhoeven wrote:
+> Below is the list of build error/warning regressions/improvements in
+> v6.0-rc1[1] compared to v5.19[2].
+>
+> Summarized:
+>  - build errors: +26/-15
 
-I love your patch! Perhaps something to improve:
+   + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: .cfi_endproc without corresponding .cfi_startproc:  => 32
+   + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: bad or irreducible absolute expression:  => 16
+   + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: junk at end of line, first unrecognized character is `:':  => 16
+   + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: no such instruction: `be 0x100(%sr2,%r0)':  => 29
+   + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: no such instruction: `ldi 0,%r20':  => 30
+   + /kisskb/src/arch/parisc/kernel/vdso32/restart_syscall.S: Error: no such instruction: `ldw 0(%sp),%r31':  => 26
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ble 0x100(%sr2,%r0)':  => 51, 46
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ldi 0,%r25':  => 44
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ldi 1,%r25':  => 49
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: no such instruction: `ldi 173,%r20':  => 50, 45
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.callinfo':  => 40
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.entry':  => 41
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.exit':  => 54
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.proc':  => 39
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.procend':  => 55
+   + /kisskb/src/arch/parisc/kernel/vdso32/sigtramp.S: Error: unknown pseudo-op: `.stringz':  => 76
 
-[auto build test WARNING on wireless-next/main]
-[also build test WARNING on wireless/main linus/master v6.0-rc1 next-20220815]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+parisc64-gcc11/generic-64bit_defconfig
+parisc-gcc11/generic-32bit_defconfig
+parisc-gcc11/parisc-{allmod,allno,def}config
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Ping-Ke-Shih/wifi-rtw89-correct-BA-CAM-allocation/20220815-151009
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-config: parisc-allyesconfig (https://download.01.org/0day-ci/archive/20220815/202208152030.442QsT2L-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/336a217f279e1188ec626d83a9f6edc636e68aa5
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Ping-Ke-Shih/wifi-rtw89-correct-BA-CAM-allocation/20220815-151009
-        git checkout 336a217f279e1188ec626d83a9f6edc636e68aa5
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=parisc SHELL=/bin/bash drivers/net/
+   + /kisskb/src/arch/sh/include/asm/io.h: error: cast to pointer from integer of different size [-Werror=int-to-pointer-cast]:  => 239:34
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+sh4-gcc11/sh-allmodconfig (drivers/staging/octeon/ethernet-mem.c)
 
-All warnings (new ones prefixed by >>):
+   + /kisskb/src/drivers/gpu/drm/amd/amdgpu/../display/dc/dml/dcn30/display_mode_vba_30.c: error: the frame size of 2096 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]:  => 6806:1
+   + /kisskb/src/drivers/gpu/drm/amd/amdgpu/../display/dc/dml/dcn32/display_mode_vba_32.c: error: the frame size of 2160 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]:  => 3778:1
 
-   drivers/net/wireless/realtek/rtw89/debug.c: In function 'rtw89_dump_ba_cam':
->> drivers/net/wireless/realtek/rtw89/debug.c:2450:42: warning: format '%ld' expects argument of type 'long int', but argument 4 has type 'int' [-Wformat=]
-    2450 |                 seq_printf(m, "tid[%u]=%ld", entry->tid,
-         |                                        ~~^
-         |                                          |
-         |                                          long int
-         |                                        %d
-    2451 |                            entry - rtwdev->cam_info.ba_cam_entry);
-         |                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         |                                  |
-         |                                  int
+x86_64-gcc8/x86-allmodconfig
 
+   + /kisskb/src/include/linux/bitfield.h: error: call to '__field_overflow' declared with attribute error: value doesn't fit into mask:  => 151:3
 
-vim +2450 drivers/net/wireless/realtek/rtw89/debug.c
+mipsel-gcc5/mips-allmodconfig (net/mac80211/tx.c)
 
-  2435	
-  2436	static void rtw89_dump_ba_cam(struct seq_file *m, struct rtw89_sta *rtwsta)
-  2437	{
-  2438		struct rtw89_vif *rtwvif = rtwsta->rtwvif;
-  2439		struct rtw89_dev *rtwdev = rtwvif->rtwdev;
-  2440		struct rtw89_ba_cam_entry *entry;
-  2441		bool first = true;
-  2442	
-  2443		list_for_each_entry(entry, &rtwsta->ba_cam_list, list) {
-  2444			if (first) {
-  2445				seq_puts(m, "\tba_cam ");
-  2446				first = false;
-  2447			} else {
-  2448				seq_puts(m, ", ");
-  2449			}
-> 2450			seq_printf(m, "tid[%u]=%ld", entry->tid,
-  2451				   entry - rtwdev->cam_info.ba_cam_entry);
-  2452		}
-  2453		seq_puts(m, "\n");
-  2454	}
-  2455	
+   + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_603' declared with attribute error: FIELD_GET: mask is not constant:  => 354:38
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+arm64-gcc5/arm64-allmodconfig (arch/arm64/kvm/arm.c)
+
+   + /kisskb/src/include/linux/random.h: error: 'latent_entropy' undeclared (first use in this function):  => 25:39
+
+powerpc-gcc5/powerpc-all{mod,yes}config
+powerpc-gcc5/ppc32_allmodconfig
+powerpc-gcc5/ppc64_book3e_allmodconfig
+powerpc-gcc5/ppc64le_allmodconfig
+
+   + /kisskb/src/include/linux/random.h: error: 'latent_entropy' undeclared (first use in this function); did you mean 'add_latent_entropy'?:  => 25:46
+
+powerpc-gcc11/powerpc-all{mod,yes}config
+powerpc-gcc11/ppc64_book3e_allmodconfig
+
+   + {standard input}: Error: displacement to undefined symbol .L377 overflows 12-bit field:  => 2286
+   + {standard input}: Error: displacement to undefined symbol .L378 overflows 8-bit field :  => 2302
+   + {standard input}: Error: displacement to undefined symbol .L382 overflows 8-bit field :  => 2213
+
+sh4-gcc11/sh-allmodconfig (seen before, root cause is internal compiler error)
+
+> [1] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/568035b01cfb107af8d2e4bd2fb9aea22cf5b868/ (all 135 configs)
+> [2] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/3d7cb6b04c3f3115719235cc6866b10326de34cd/ (all 135 configs)
+
+Gr{oetje,eeting}s,
+
+ 						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+ 							    -- Linus Torvalds
