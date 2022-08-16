@@ -2,43 +2,42 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6E16C25B0E
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 16:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEC36C32773
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 16:56:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236370AbiHPQ4E (ORCPT
+        id S236120AbiHPQ4F (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Aug 2022 12:56:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57652 "EHLO
+        Tue, 16 Aug 2022 12:56:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230416AbiHPQ4C (ORCPT
+        with ESMTP id S231383AbiHPQ4C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 16 Aug 2022 12:56:02 -0400
 X-Greylist: delayed 599 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 16 Aug 2022 09:56:01 PDT
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D90F7C52E;
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E7027A53E;
         Tue, 16 Aug 2022 09:56:01 -0700 (PDT)
 From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1660668017; bh=YXaNHGMYKcjnJgddXdsTHTKJZxjmymYUBGBhAxB3I4o=;
+        t=1660667963; bh=Cpep50bBsl3EKKvdNAywi37Bu/EoeXf5XyFEV+YxBmM=;
         h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=DXfoS0miGmxKBA8B2KiiSBadXfu6qRGg+xljltxxTrQPrbTHAakuf4QR+TQvkn7vB
-         Y2GLQQHjCapNS7IUT9wfOkb0I/4RHmnuFIKaETruLe+ryJNv5WrDcHS47PZtIoaXq4
-         DOdDbdrukydiRLSsiBPGOzKxPIEWhzedQsLvG/uUFzgZhj5Y+EuUs9Pc9FIQQVTvPS
-         hrag/niyLG3+nXfzk7mHGo01m+3qpgYSp0oA/uIMbRnVAaW/a+tDwnM3rU1rKhypNM
-         JMnhCGlo2xPbAE91QARGMYQv1iRbkswK/Ympepn+JGj8x+F9exI9nsGEnTprtKn3Zr
-         oETRD+T/vUMwg==
+        b=BvMCqMuOoppf4gCJsutQ36g28L+WKA1kqc+jgarufGgnIanrX09diiBBXeMxsZy91
+         bmtgSlcHA9jR98EXbyQNpOl0dYhlu3Zez+kpND8UWuF+FB9E/yXCCKRYUDvB7n37iO
+         D4tnxYMVlkFD/cYWlvBpbHKR4VutKv9ikIXV4STqr/iajvBpvSSpp9Be+LWgA1dk5t
+         8Cxr30H+2sAx5Bv6itV9X7N+TnjspFEqFdil03J+I9m4V0QlEKXoT241qcdwvyFHi8
+         i2Aq02YGZoNSr+pJNa4u8Zcbx3sux6EHE5S9+XD6tppT8uC7lIgiDairONwq9b0sgb
+         E9WY7qMCs1auA==
 To:     Jilin Yuan <yuanjilin@cdjrlc.com>, kvalo@kernel.org,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Jilin Yuan <yuanjilin@cdjrlc.com>
 Subject: Re: [PATCH] wifi: ath9k: fix repeated words in comments
-In-Reply-To: <87y1vouoqs.fsf@toke.dk>
+In-Reply-To: <20220709123724.46525-1-yuanjilin@cdjrlc.com>
 References: <20220709123724.46525-1-yuanjilin@cdjrlc.com>
- <87y1vouoqs.fsf@toke.dk>
-Date:   Tue, 16 Aug 2022 18:40:17 +0200
+Date:   Tue, 16 Aug 2022 18:39:23 +0200
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87v8qsuopa.fsf@toke.dk>
+Message-ID: <87y1vouoqs.fsf@toke.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
@@ -46,18 +45,11 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
->Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+Jilin Yuan <yuanjilin@cdjrlc.com> writes:
 
-> Jilin Yuan <yuanjilin@cdjrlc.com> writes:
+>  Delete the redundant word 'the'.
+>  Delete the redundant word 'to'.
 >
->>  Delete the redundant word 'the'.
->>  Delete the redundant word 'to'.
->>
->> Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
->
-> Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+> Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 
-However, the patch does not apply cleanly to the ath-next tree. Please
-fix that and resubmit, retaining my ACK...
-
--Toke
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
