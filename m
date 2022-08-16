@@ -2,59 +2,64 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31585C25B0E
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 11:17:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA919C25B0E
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 13:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234177AbiHPLRf (ORCPT
+        id S235462AbiHPNY5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Aug 2022 07:17:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34744 "EHLO
+        Tue, 16 Aug 2022 09:24:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234815AbiHPLRS (ORCPT
+        with ESMTP id S229887AbiHPNY4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Aug 2022 07:17:18 -0400
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1425751A30
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2022 02:52:41 -0700 (PDT)
-Received: from fsav413.sakura.ne.jp (fsav413.sakura.ne.jp [133.242.250.112])
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 27G9qRYd039633;
-        Tue, 16 Aug 2022 18:52:27 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Received: from www262.sakura.ne.jp (202.181.97.72)
- by fsav413.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav413.sakura.ne.jp);
- Tue, 16 Aug 2022 18:52:27 +0900 (JST)
-X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav413.sakura.ne.jp)
-Received: from [192.168.1.9] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
-        (authenticated bits=0)
-        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 27G9qQJG039630
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
-        Tue, 16 Aug 2022 18:52:27 +0900 (JST)
-        (envelope-from penguin-kernel@I-love.SAKURA.ne.jp)
-Message-ID: <e0bcd6d4-4029-4ab3-0405-054d26262f64@I-love.SAKURA.ne.jp>
-Date:   Tue, 16 Aug 2022 18:52:23 +0900
+        Tue, 16 Aug 2022 09:24:56 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E0C86B6A;
+        Tue, 16 Aug 2022 06:24:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6B1B1B81A0C;
+        Tue, 16 Aug 2022 13:24:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A77D1C433D6;
+        Tue, 16 Aug 2022 13:24:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1660656293;
+        bh=HnM4pxjUtPvA70Cr3g+ceoTLOVrmwq33Kb8C1Uf60yE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=v/O+UdqMxG9H1YcwcqpB7mBuCSekiVH+WxSptSakOuDh4LLm3Yg4kwZxS7NGO1Ib5
+         mq+nDPAOhPrTqY/fOujjuaa6qqokG3Ksyedgq6ue3P1IPu2qz7K7r4ak0QEMBd0l0J
+         T5QBclds4ZRmb3koC6lEvWzzHUsuOHz2re7taFbk=
+Date:   Tue, 16 Aug 2022 15:24:50 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     phil@philpotter.co.uk, linux-staging@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] staging: r8188eu: Add Rosewill USB-N150 Nano to
+ device tables
+Message-ID: <Yvuaor2ppSiG9Sao@kroah.com>
+References: <20220814175027.2689-1-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.1.2
-Subject: Re: [PATCH] ath9k: avoid uninit memory read in ath9k_htc_rx_msg()
-Content-Language: en-US
-From:   Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-To:     Toke Hoiland-Jorgensen <toke@toke.dk>,
-        Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        ath9k-devel@qca.qualcomm.com
-References: <000000000000c98a7f05ac744f53@google.com>
- <cd4287be-5434-039e-59ba-2a9cb2ab5185@I-love.SAKURA.ne.jp>
-In-Reply-To: <cd4287be-5434-039e-59ba-2a9cb2ab5185@I-love.SAKURA.ne.jp>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220814175027.2689-1-Larry.Finger@lwfinger.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2022/07/30 21:13, Tetsuo Handa wrote:
-> We have two choices. One is to workaround by adding __GFP_ZERO so that
-> ath9k_htc_rx_msg() sees 0 if pkt_len is invalid. The other is to let
-> ath9k_htc_rx_msg() validate pkt_len before accessing.
+On Sun, Aug 14, 2022 at 12:50:27PM -0500, Larry Finger wrote:
+> This device is reported as using the RTL8188EUS chip.
+> 
+> It has the improbable USB ID of 0bda:ffef, which normally would belong
+> to Realtek, but this ID works for the reporter.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  drivers/staging/r8188eu/os_dep/usb_intf.c | 1 +
+>  1 file changed, 1 insertion(+)
 
-Which choice do we want to go?
+Where is patch 2/2?
 
+thanks,
+
+greg k-h
