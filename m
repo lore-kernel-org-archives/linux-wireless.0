@@ -2,197 +2,71 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC541C2BB41
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 10:36:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B22B3C25B0E
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 10:56:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234818AbiHPKgY (ORCPT
+        id S234216AbiHPK4K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Aug 2022 06:36:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42922 "EHLO
+        Tue, 16 Aug 2022 06:56:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234973AbiHPKfu (ORCPT
+        with ESMTP id S235208AbiHPKzl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Aug 2022 06:35:50 -0400
-Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA5255FAD2
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2022 01:40:24 -0700 (PDT)
-Received: by mail-io1-f70.google.com with SMTP id z4-20020a6b0a04000000b006887f66dcf3so2137737ioi.18
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2022 01:40:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc;
-        bh=S7sXChFfUUDqSARJ95OntzRb6yK9dHFthrmWhZP2eZY=;
-        b=BTv35woC/r7FSDWYtC+Wn2NfL3BSqx4TQ9ImqrtrAKx/1OSePyzSW0g/BGZ6T8cM5u
-         8gDWmpiPc+QaQ3URdBKOpFG7wz2ro4C0h8yqINJ4Tyc1C7SKOm52JrnfPYZjleT+x7Wd
-         PIDAN8xlycA/qVNPPehBfQexTLw+12Q1433ZeEY46LIjlUJC7rlhPhI2TwcMM7ZjuNgS
-         Mp1XrHcb776T6JaiZoOEhXGbSwBoYg0ppfySu+W+oIhAdPpewjR1Lvm0pVCxtOVH0SYu
-         UfE1rQRZuIIc8lza5XL9RxTF+IujH9k2/eIcHoohlRMSFN7XoowL17ACYwihbs7nZxH6
-         0quA==
-X-Gm-Message-State: ACgBeo3mND4lT9FhXSGUZOQ5Jgdv0L3uV9j+0dKFULvAje7AbXWn36bB
-        hb+TEneyJidCkLcOjEo1R0ribTyYhAVdmQa87TRyD/e0EnRY
-X-Google-Smtp-Source: AA6agR4KYBTAkbzdDt+iqgXQAeuVNL/5PRmdr0Xm9+Ri8L+Gjxo676Q2XGjawBiHrpsy7415qhjZqC44zZ3h8xHwHQnxzqB+JzgH
+        Tue, 16 Aug 2022 06:55:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13118F2C9E
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2022 03:09:51 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F1F5612F0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2022 10:09:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2744AC433C1;
+        Tue, 16 Aug 2022 10:09:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1660644590;
+        bh=papoG9pIkm60eff7CO4HmAEVFaVlnwUd0ZxEl94h/QM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=cdMHX7MGRqkIAW3y5ZKwWrL4oifDJZY6ow0gpyqKs1/EcZyEW7aBb1luXHvu2sRbf
+         S1CppV4Q6DR7JnbETCmouh03EaUweZX7Ue7EdpI88K9PeyculVQSbn+lAxadYRuueV
+         HMgPSSRPCN9B/rL6W7EeFsfZU44q99dpp8Wl4NB+z/K4e/pqxo+J9qISm7oTBwuTIt
+         i/n+0Nu4+1DX+RV1lReo8YkHWYkoPZim0kF4Js49Bk0sgiFAz0cnhNHWvyWTXVGvCz
+         9RHxONozqaxIzxVsD5gDt5VwD7DWge9iBn4qROYBAUUFHfoxcyqAu9Y9+IZzNULXFY
+         4RL6AF+jqg0dw==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: mt7921: remove dead code
+Date:   Tue, 16 Aug 2022 12:09:41 +0200
+Message-Id: <2354824dc68444c83a71f7121582f482ee0adab1.1660644457.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
-X-Received: by 2002:a6b:b802:0:b0:67b:de15:c1fb with SMTP id
- i2-20020a6bb802000000b0067bde15c1fbmr8215634iof.215.1660639223858; Tue, 16
- Aug 2022 01:40:23 -0700 (PDT)
-Date:   Tue, 16 Aug 2022 01:40:23 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000009cd7a05e657b38e@google.com>
-Subject: [syzbot] upstream boot error: BUG: unable to handle kernel paging
- request in ieee80211_register_hw
-From:   syzbot <syzbot+655209e079e67502f2da@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, edumazet@google.com,
-        johannes@sipsolutions.net, kuba@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, pabeni@redhat.com,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+remove duplicated code in mt7921_pci_suspend routine.
 
-syzbot found the following issue on:
-
-HEAD commit:    4a9350597aff Merge tag 'sound-fix-6.0-rc1' of git://git.ke..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=11515705080000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=bc6716795f118372
-dashboard link: https://syzkaller.appspot.com/bug?extid=655209e079e67502f2da
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-userspace arch: i386
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+655209e079e67502f2da@syzkaller.appspotmail.com
-
-usbcore: registered new interface driver nfcmrvl
-Loading iSCSI transport class v2.0-870.
-scsi host0: Virtio SCSI HBA
-st: Version 20160209, fixed bufsize 32768, s/g segs 256
-Rounding down aligned max_sectors from 4294967295 to 4294967288
-db_root: cannot open: /etc/target
-slram: not enough parameters.
-ftl_cs: FTL header not found.
-wireguard: WireGuard 1.0.0 loaded. See www.wireguard.com for information.
-wireguard: Copyright (C) 2015-2019 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
-eql: Equalizer2002: Simon Janes (simon@ncm.com) and David S. Miller (davem@redhat.com)
-MACsec IEEE 802.1AE
-tun: Universal TUN/TAP device driver, 1.6
-vcan: Virtual CAN interface driver
-vxcan: Virtual CAN Tunnel driver
-slcan: serial line CAN interface driver
-CAN device driver interface
-usbcore: registered new interface driver usb_8dev
-usbcore: registered new interface driver ems_usb
-usbcore: registered new interface driver gs_usb
-usbcore: registered new interface driver kvaser_usb
-usbcore: registered new interface driver mcba_usb
-usbcore: registered new interface driver peak_usb
-e100: Intel(R) PRO/100 Network Driver
-e100: Copyright(c) 1999-2006 Intel Corporation
-e1000: Intel(R) PRO/1000 Network Driver
-e1000: Copyright (c) 1999-2006 Intel Corporation.
-e1000e: Intel(R) PRO/1000 Network Driver
-e1000e: Copyright(c) 1999 - 2015 Intel Corporation.
-mkiss: AX.25 Multikiss, Hans Albas PE1AYX
-AX.25: 6pack driver, Revision: 0.3.0
-AX.25: bpqether driver version 004
-PPP generic driver version 2.4.2
-PPP BSD Compression module registered
-PPP Deflate Compression module registered
-PPP MPPE Compression module registered
-NET: Registered PF_PPPOX protocol family
-PPTP driver version 0.8.5
-SLIP: version 0.8.4-NET3.019-NEWTTY (dynamic channels, max=256) (6 bit encapsulation enabled).
-CSLIP: code copyright 1989 Regents of the University of California.
-SLIP linefill/keepalive option.
-hdlc: HDLC support module revision 1.22
-LAPB Ethernet driver version 0.02
-usbcore: registered new interface driver ath9k_htc
-usbcore: registered new interface driver carl9170
-usbcore: registered new interface driver ath6kl_usb
-usbcore: registered new interface driver ar5523
-usbcore: registered new interface driver ath10k_usb
-usbcore: registered new interface driver rndis_wlan
-mac80211_hwsim: initializing netlink
-BUG: unable to handle page fault for address: ffffddffe0000001
-#PF: supervisor read access in kernel mode
-#PF: error_code(0x0000) - not-present page
-PGD 11829067 P4D 11829067 PUD 0 
-Oops: 0000 [#1] PREEMPT SMP KASAN
-CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.19.0-syzkaller-14090-g4a9350597aff #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/22/2022
-RIP: 0010:ieee80211_register_hw+0x2872/0x3eb0 net/mac80211/main.c:1069
-Code: 89 e7 e8 31 3b b8 f8 45 39 ec 0f 84 0b 03 00 00 e8 e3 3e b8 f8 4c 8d 75 f4 48 89 e8 48 b9 00 00 00 00 00 fc ff df 48 c1 e8 03 <0f> b6 14 08 48 89 e8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85 d6
-RSP: 0000:ffffc90000067a40 EFLAGS: 00010a03
-RAX: 1fffe1ffe0000001 RBX: 0000000000000000 RCX: dffffc0000000000
-RDX: ffff8881401b8000 RSI: ffffffff88c3c82d RDI: 0000000000000005
-RBP: ffff0fff0000000c R08: 0000000000000005 R09: 0000000000000000
-R10: 000000000000076d R11: 0000000000000000 R12: 0000000000000000
-R13: 000000000000076d R14: ffff0fff00000000 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: ffffddffe0000001 CR3: 000000000bc8e000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- mac80211_hwsim_new_radio+0x255f/0x4dd0 drivers/net/wireless/mac80211_hwsim.c:4129
- init_mac80211_hwsim+0x5aa/0x73b drivers/net/wireless/mac80211_hwsim.c:5379
- do_one_initcall+0xfe/0x650 init/main.c:1296
- do_initcall_level init/main.c:1369 [inline]
- do_initcalls init/main.c:1385 [inline]
- do_basic_setup init/main.c:1404 [inline]
- kernel_init_freeable+0x6b1/0x73a init/main.c:1611
- kernel_init+0x1a/0x1d0 init/main.c:1500
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:306
- </TASK>
-Modules linked in:
-CR2: ffffddffe0000001
----[ end trace 0000000000000000 ]---
-RIP: 0010:ieee80211_register_hw+0x2872/0x3eb0 net/mac80211/main.c:1069
-Code: 89 e7 e8 31 3b b8 f8 45 39 ec 0f 84 0b 03 00 00 e8 e3 3e b8 f8 4c 8d 75 f4 48 89 e8 48 b9 00 00 00 00 00 fc ff df 48 c1 e8 03 <0f> b6 14 08 48 89 e8 83 e0 07 83 c0 03 38 d0 7c 08 84 d2 0f 85 d6
-RSP: 0000:ffffc90000067a40 EFLAGS: 00010a03
-RAX: 1fffe1ffe0000001 RBX: 0000000000000000 RCX: dffffc0000000000
-RDX: ffff8881401b8000 RSI: ffffffff88c3c82d RDI: 0000000000000005
-RBP: ffff0fff0000000c R08: 0000000000000005 R09: 0000000000000000
-R10: 000000000000076d R11: 0000000000000000 R12: 0000000000000000
-R13: 000000000000076d R14: ffff0fff00000000 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff8880b9a00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: ffffddffe0000001 CR3: 000000000bc8e000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-----------------
-Code disassembly (best guess):
-   0:	89 e7                	mov    %esp,%edi
-   2:	e8 31 3b b8 f8       	callq  0xf8b83b38
-   7:	45 39 ec             	cmp    %r13d,%r12d
-   a:	0f 84 0b 03 00 00    	je     0x31b
-  10:	e8 e3 3e b8 f8       	callq  0xf8b83ef8
-  15:	4c 8d 75 f4          	lea    -0xc(%rbp),%r14
-  19:	48 89 e8             	mov    %rbp,%rax
-  1c:	48 b9 00 00 00 00 00 	movabs $0xdffffc0000000000,%rcx
-  23:	fc ff df
-  26:	48 c1 e8 03          	shr    $0x3,%rax
-* 2a:	0f b6 14 08          	movzbl (%rax,%rcx,1),%edx <-- trapping instruction
-  2e:	48 89 e8             	mov    %rbp,%rax
-  31:	83 e0 07             	and    $0x7,%eax
-  34:	83 c0 03             	add    $0x3,%eax
-  37:	38 d0                	cmp    %dl,%al
-  39:	7c 08                	jl     0x43
-  3b:	84 d2                	test   %dl,%dl
-  3d:	0f                   	.byte 0xf
-  3e:	85 d6                	test   %edx,%esi
-
-
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 9b75756c2837..2eaff6b6aa13 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -405,9 +405,6 @@ static int mt7921_pci_suspend(struct device *device)
+ 	if (err)
+ 		goto restore_napi;
+ 
+-	if (err)
+-		goto restore_napi;
+-
+ 	return 0;
+ 
+ restore_napi:
+-- 
+2.37.2
+
