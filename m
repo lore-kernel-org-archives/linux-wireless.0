@@ -2,212 +2,248 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD1EFC32774
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 06:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13146C2BB41
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Aug 2022 07:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230121AbiHPGnc (ORCPT
+        id S230132AbiHPHNs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Aug 2022 02:43:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47758 "EHLO
+        Tue, 16 Aug 2022 03:13:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230113AbiHPGnF (ORCPT
+        with ESMTP id S231531AbiHPHN0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Aug 2022 02:43:05 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 62329F2D6B
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2022 18:33:14 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 27G1WsQG2011759, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 27G1WsQG2011759
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 16 Aug 2022 09:32:54 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 16 Aug 2022 09:33:06 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 16 Aug
- 2022 09:33:06 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/3] wifi: rtw89: 8852c: declare correct BA CAM number
-Date:   Tue, 16 Aug 2022 09:32:45 +0800
-Message-ID: <20220816013247.6243-2-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220816013247.6243-1-pkshih@realtek.com>
-References: <20220816013247.6243-1-pkshih@realtek.com>
+        Tue, 16 Aug 2022 03:13:26 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63DFB18DCE1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2022 21:44:40 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27G31pAX000356;
+        Tue, 16 Aug 2022 04:43:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=qcppdkim1;
+ bh=zIA+fZqlZx/rjs6oujnUrA96RwP+POPHbLBSEiMs9a4=;
+ b=obHcGeVsQAVFlBECDkMzD8gdNVNbT5GAuKrHsKBhYVDamUNLD3CwRxLyRKiwaTPliX6s
+ wdI8SShBBpKLOEX5C7K5sYqgn39LwsxRtxDO7lc7bB1u6CYJRKyHGpgriTH0gWy+qOOY
+ ulaDh8sD7acm4hT1hOBxUlPTbYqqzd54pdZ4R4uYgOJ5bEgpc3JuZouYRDF5hF7XIKq9
+ dBZEnaec7qEpvE4A1nY3owU1ZXs/eEQSRdLY/XRccJuiHUjn+vc0g//yqWccRBgVQtwC
+ D12AvgM5Y3lpghelvCULBJ6XLGIZoCiXyz+Kzgx7ZIZiNGShs4oYTAf6LF86Vz46lohI rQ== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3j01w0rgw7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 Aug 2022 04:43:45 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 27G4hi9r030434
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 Aug 2022 04:43:44 GMT
+Received: from youghand-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.22; Mon, 15 Aug 2022 21:43:42 -0700
+From:   Youghandhar Chintala <quic_youghand@quicinc.com>
+To:     <ath10k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Youghandhar Chintala <quic_youghand@quicinc.com>,
+        Douglas Anderson <dianders@chromium.org>
+Subject: [PATCH] wifi: ath10k: Delay the unmapping of the buffer
+Date:   Tue, 16 Aug 2022 10:13:10 +0530
+Message-ID: <20220816044310.19101-1-quic_youghand@quicinc.com>
+X-Mailer: git-send-email 2.37.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 08/16/2022 01:16:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzgvMTUgpFWkyCAxMDo1MjowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 0Gr-GHGiIYs_-16S31hyrVni7pGrLu4w
+X-Proofpoint-GUID: 0Gr-GHGiIYs_-16S31hyrVni7pGrLu4w
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-16_03,2022-08-16_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 impostorscore=0
+ mlxscore=0 malwarescore=0 spamscore=0 suspectscore=0 priorityscore=1501
+ phishscore=0 bulkscore=0 mlxlogscore=999 adultscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
+ definitions=main-2208160018
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-8852A has 2 BA CAM entries, but 8852C has 8 entries. Add a field to
-discriminate their differences.
+We are seeing a corner case where host receiving copy completion for WMI
+command though copy engine is processing it. Once host receives the
+copy completion, host is unmapping corresponding memory which results
+in SMMU fault. To avoid such conditions though host receives copy
+completion, as a work around we are adding a delay to unmap the memory
+for WMI end point.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.2.0-01387-QCAHLSWMTPLZ-1
+
+Tested-by: Douglas Anderson <dianders@chromium.org>
+Signed-off-by: Youghandhar Chintala <quic_youghand@quicinc.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c     | 14 +++++++++-----
- drivers/net/wireless/realtek/rtw89/core.h     | 14 ++++++++------
- drivers/net/wireless/realtek/rtw89/fw.c       |  4 ++--
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
- 5 files changed, 21 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 15 +++++++++++++++
+ drivers/net/wireless/ath/ath10k/htc.c  |  8 ++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  2 ++
+ 3 files changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index a5880a54812e7..07aa722164203 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -2266,13 +2266,15 @@ void rtw89_core_release_all_bits_map(unsigned long *addr, unsigned int nbits)
- 	bitmap_zero(addr, nbits);
- }
- 
--int rtw89_core_acquire_sta_ba_entry(struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx)
-+int rtw89_core_acquire_sta_ba_entry(struct rtw89_dev *rtwdev,
-+				    struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_ba_cam_entry *entry;
- 	u8 idx;
- 
--	idx = rtw89_core_acquire_bit_map(rtwsta->ba_cam_map, RTW89_BA_CAM_NUM);
--	if (idx == RTW89_BA_CAM_NUM) {
-+	idx = rtw89_core_acquire_bit_map(rtwsta->ba_cam_map, chip->bacam_num);
-+	if (idx == chip->bacam_num) {
- 		/* allocate a static BA CAM to tid=0, so replace the existing
- 		 * one if BA CAM is full. Hardware will process the original tid
- 		 * automatically.
-@@ -2290,12 +2292,14 @@ int rtw89_core_acquire_sta_ba_entry(struct rtw89_sta *rtwsta, u8 tid, u8 *cam_id
- 	return 0;
- }
- 
--int rtw89_core_release_sta_ba_entry(struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx)
-+int rtw89_core_release_sta_ba_entry(struct rtw89_dev *rtwdev,
-+				    struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx)
- {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_ba_cam_entry *entry;
- 	int i;
- 
--	for (i = 0; i < RTW89_BA_CAM_NUM; i++) {
-+	for (i = 0; i < chip->bacam_num; i++) {
- 		if (!test_bit(i, rtwsta->ba_cam_map))
- 			continue;
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 7a9d6f5d8a513..38228dbe2a7dd 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -1915,8 +1915,6 @@ struct rtw89_ra_report {
- 
- DECLARE_EWMA(rssi, 10, 16);
- 
--#define RTW89_BA_CAM_NUM 2
--
- struct rtw89_ba_cam_entry {
- 	u8 tid;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index d1ac64026cb3..c2fda8deb9ef 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -99,6 +99,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA988X_HW_2_0_VERSION,
+@@ -138,6 +139,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -178,6 +180,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -252,6 +255,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -291,6 +295,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -330,6 +335,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -373,6 +379,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = true,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -418,6 +425,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA9984_HW_1_0_DEV_VERSION,
+@@ -470,6 +478,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA9888_HW_2_0_DEV_VERSION,
+@@ -519,6 +528,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_0_DEV_VERSION,
+@@ -558,6 +568,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -599,6 +610,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -631,6 +643,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -677,6 +690,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = false,
+ 		.hw_restart_disconnect = false,
+ 		.use_fw_tx_credits = true,
++		.delay_unmap_buffer = false,
+ 	},
+ 	{
+ 		.id = WCN3990_HW_1_0_DEV_VERSION,
+@@ -709,6 +723,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.dynamic_sar_support = true,
+ 		.hw_restart_disconnect = true,
+ 		.use_fw_tx_credits = false,
++		.delay_unmap_buffer = true,
+ 	},
  };
-@@ -1924,6 +1922,7 @@ struct rtw89_ba_cam_entry {
- #define RTW89_MAX_ADDR_CAM_NUM		128
- #define RTW89_MAX_BSSID_CAM_NUM		20
- #define RTW89_MAX_SEC_CAM_NUM		128
-+#define RTW89_MAX_BA_CAM_NUM		8
- #define RTW89_SEC_CAM_IN_ADDR_CAM	7
  
- struct rtw89_addr_cam_entry {
-@@ -1988,8 +1987,8 @@ struct rtw89_sta {
- 	bool cctl_tx_retry_limit;
- 	u32 data_tx_cnt_lmt:6;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 6d1784f74bea..e04b9545cca6 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -56,6 +56,14 @@ void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ 	ath10k_dbg(ar, ATH10K_DBG_HTC, "%s: ep %d skb %pK\n", __func__,
+ 		   ep->eid, skb);
  
--	DECLARE_BITMAP(ba_cam_map, RTW89_BA_CAM_NUM);
--	struct rtw89_ba_cam_entry ba_cam_entry[RTW89_BA_CAM_NUM];
-+	DECLARE_BITMAP(ba_cam_map, RTW89_MAX_BA_CAM_NUM);
-+	struct rtw89_ba_cam_entry ba_cam_entry[RTW89_MAX_BA_CAM_NUM];
++	/* A corner case where the copy completion is reaching to host but still
++	 * copy engine is processing it due to which host unmaps corresponding
++	 * memory and causes SMMU fault, hence as workaround adding delay
++	 * the unmapping memory to avoid SMMU faults.
++	 */
++	if (ar->hw_params.delay_unmap_buffer &&
++	    ep->ul_pipe_id == 3)
++		mdelay(2);
+ 	hdr = (struct ath10k_htc_hdr *)skb->data;
+ 	ath10k_htc_restore_tx_skb(ep->htc, skb);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 1b99f3a39a11..9643031a4427 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -637,6 +637,8 @@ struct ath10k_hw_params {
+ 	bool hw_restart_disconnect;
+ 
+ 	bool use_fw_tx_credits;
++
++	bool delay_unmap_buffer;
  };
  
- struct rtw89_efuse {
-@@ -2393,6 +2392,7 @@ struct rtw89_chip_info {
- 	u8 acam_num;
- 	u8 bcam_num;
- 	u8 scam_num;
-+	u8 bacam_num;
- 
- 	u8 sec_ctrl_efuse_size;
- 	u32 physical_efuse_size;
-@@ -3910,8 +3910,10 @@ void rtw89_set_channel(struct rtw89_dev *rtwdev);
- u8 rtw89_core_acquire_bit_map(unsigned long *addr, unsigned long size);
- void rtw89_core_release_bit_map(unsigned long *addr, u8 bit);
- void rtw89_core_release_all_bits_map(unsigned long *addr, unsigned int nbits);
--int rtw89_core_acquire_sta_ba_entry(struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx);
--int rtw89_core_release_sta_ba_entry(struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx);
-+int rtw89_core_acquire_sta_ba_entry(struct rtw89_dev *rtwdev,
-+				    struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx);
-+int rtw89_core_release_sta_ba_entry(struct rtw89_dev *rtwdev,
-+				    struct rtw89_sta *rtwsta, u8 tid, u8 *cam_idx);
- void rtw89_vif_type_mapping(struct ieee80211_vif *vif, bool assoc);
- int rtw89_chip_info_setup(struct rtw89_dev *rtwdev);
- bool rtw89_ra_report_to_bitrate(struct rtw89_dev *rtwdev, u8 rpt_rate, u16 *bitrate);
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 6473015a6b2a1..4d39cf9185378 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -644,8 +644,8 @@ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
- 	int ret;
- 
- 	ret = valid ?
--	      rtw89_core_acquire_sta_ba_entry(rtwsta, params->tid, &entry_idx) :
--	      rtw89_core_release_sta_ba_entry(rtwsta, params->tid, &entry_idx);
-+	      rtw89_core_acquire_sta_ba_entry(rtwdev, rtwsta, params->tid, &entry_idx) :
-+	      rtw89_core_release_sta_ba_entry(rtwdev, rtwsta, params->tid, &entry_idx);
- 	if (ret) {
- 		/* it still works even if we don't have static BA CAM, because
- 		 * hardware can create dynamic BA CAM automatically.
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 81bd0c4fe21bc..4a1f7b5e83f6c 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -2125,6 +2125,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
- 	.acam_num		= 128,
- 	.bcam_num		= 10,
- 	.scam_num		= 128,
-+	.bacam_num		= 2,
- 	.sec_ctrl_efuse_size	= 4,
- 	.physical_efuse_size	= 1216,
- 	.logical_efuse_size	= 1536,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index b697aef2faf2d..a74b4c550ec1a 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -2972,6 +2972,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
- 	.acam_num		= 128,
- 	.bcam_num		= 20,
- 	.scam_num		= 128,
-+	.bacam_num		= 8,
- 	.sec_ctrl_efuse_size	= 4,
- 	.physical_efuse_size	= 1216,
- 	.logical_efuse_size	= 2048,
+ struct htt_resp;
 -- 
-2.25.1
+2.37.0
 
