@@ -2,167 +2,99 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F653C25B08
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 Aug 2022 10:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64CC1C32772
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 Aug 2022 12:39:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233706AbiHQK4G (ORCPT
+        id S239513AbiHQMj4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Aug 2022 06:56:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50604 "EHLO
+        Wed, 17 Aug 2022 08:39:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239059AbiHQKzx (ORCPT
+        with ESMTP id S239499AbiHQMju (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Aug 2022 06:55:53 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 084E461DAD
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2022 03:55:53 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27HAVg58032600;
-        Wed, 17 Aug 2022 10:55:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=y0eZou6ChvKdSEhvoYjAllfowJMUO7DVYp0qu6Cl54U=;
- b=UmTqJeOYQmsjnHGfKJakTFE6hlC4Cdz+LRecJihLArpt4ReSGnWIIcw5Kemeu0qG2K3q
- hjtIGmvXdxaqN7eS+S1lbFJjtcsDC6UrP9Ow15wMcCsQGFAOpJV2r6j2eoftf3tjzuN1
- oCQxdfq62rePWGsl7rA8XlOXIdqkacaZIZThj9WZfVz+In5LyPI7B3HnFCToYcvWX2tF
- EzVEkiB8Kb/8PBJThE6Dux/Dy9aUb5rtNbnBfeO4WioEI1NxzCP5d+LAhfs5YZXHo6ag
- FI7GMxAWvUFaJgAzWrrabWrqGfdjCTf4APBTHc2q7qJ1LQhlGlCo39j66MjCp649giWo jg== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3j0tqc91dy-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 17 Aug 2022 10:55:50 +0000
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.47.97.222])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 27HAgdHO005201
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 17 Aug 2022 10:42:39 GMT
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 17 Aug 2022 03:42:39 -0700
-Received: from CDCCSTEX0180100-LIN.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 17 Aug 2022 03:42:37 -0700
-From:   Vasanthakumar <quic_vthiagar@quicinc.com>
-To:     <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
-Subject: [PATCH 2/2] wifi: mac80211: use the corresponding link for stats update
-Date:   Wed, 17 Aug 2022 16:12:13 +0530
-Message-ID: <20220817104213.2531-3-quic_vthiagar@quicinc.com>
+        Wed, 17 Aug 2022 08:39:50 -0400
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [52.237.72.81])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id AE01B5E64C
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2022 05:39:47 -0700 (PDT)
+Received: from ubuntu.localdomain (unknown [106.117.76.235])
+        by mail-app2 (Coremail) with SMTP id by_KCgBnbvZx4fxiKwT3Ag--.45860S2;
+        Wed, 17 Aug 2022 20:39:23 +0800 (CST)
+From:   Duoming Zhou <duoming@zju.edu.cn>
+To:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc:     briannorris@chromium.org, amitkarwar@gmail.com,
+        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
+        huxinming820@gmail.com, kvalo@kernel.org, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        netdev@vger.kernel.org, johannes@sipsolutions.net,
+        gregkh@linuxfoundation.org, rafael@kernel.org,
+        Duoming Zhou <duoming@zju.edu.cn>
+Subject: [PATCH v7 0/2] Remove useless param of devcoredump functions and fix bugs
+Date:   Wed, 17 Aug 2022 20:39:11 +0800
+Message-Id: <cover.1660739276.git.duoming@zju.edu.cn>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220817104213.2531-1-quic_vthiagar@quicinc.com>
-References: <20220817104213.2531-1-quic_vthiagar@quicinc.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: HLzl-gF9VqWIZEIJ4vEnEPy_VIk3Cl3q
-X-Proofpoint-ORIG-GUID: HLzl-gF9VqWIZEIJ4vEnEPy_VIk3Cl3q
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-08-17_05,2022-08-16_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
- bulkscore=0 priorityscore=1501 impostorscore=0 phishscore=0
- lowpriorityscore=0 adultscore=0 mlxlogscore=723 suspectscore=0
- clxscore=1015 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2207270000 definitions=main-2208170042
+X-CM-TRANSID: by_KCgBnbvZx4fxiKwT3Ag--.45860S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7ZFW8JFyDtw18XFyDXrW3trb_yoW8CFyfpF
+        48Kas7ZrySkrsxuayxJF1xCF98J3WxWa43Kr9Fv3s5W3WfAFyrJr15uFyFkryDXFW8ta43
+        tF13Jw13GF9aqFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+        Y2ka0xkIwI1lc2xSY4AK67AK6ryUMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
+        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+        b7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+        vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
+        cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
+        nxnUUI43ZEXa7VUjNtx3UUUUU==
+X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAgwFAVZdtbEgdgAbsI
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
+The first patch removes the extra gfp_t param of dev_coredumpv()
+and dev_coredumpm().
 
-With link_id reported in rx_status for MLO connection, do the
-stats update on the appropriate link instead of always deflink.
+The second patch fix sleep in atomic context bugs of mwifiex
+caused by dev_coredumpv().
 
-Signed-off-by: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
----
- net/mac80211/rx.c | 35 +++++++++++++++++++++++++++++------
- 1 file changed, 29 insertions(+), 6 deletions(-)
+Duoming Zhou (2):
+  devcoredump: remove the useless gfp_t parameter in dev_coredumpv and
+    dev_coredumpm
+  mwifiex: fix sleep in atomic context bugs caused by dev_coredumpv
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 80f2e3bc5e70..7f350886039a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -4524,19 +4524,30 @@ static void ieee80211_rx_8023(struct ieee80211_rx_data *rx,
- 	struct ieee80211_sta_rx_stats *stats;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
- 	struct sta_info *sta = rx->sta;
-+	struct link_sta_info *link_sta;
- 	struct sk_buff *skb = rx->skb;
- 	void *sa = skb->data + ETH_ALEN;
- 	void *da = skb->data;
- 
--	stats = &sta->deflink.rx_stats;
-+	if (rx->link_id >= 0) {
-+		link_sta = rcu_dereference(sta->link[rx->link_id]);
-+		if (WARN_ON_ONCE(!link_sta)) {
-+			dev_kfree_skb(rx->skb);
-+			return;
-+		}
-+	} else {
-+		link_sta = &sta->deflink;
-+	}
-+
-+	stats = &link_sta->rx_stats;
- 	if (fast_rx->uses_rss)
--		stats = this_cpu_ptr(sta->deflink.pcpu_rx_stats);
-+		stats = this_cpu_ptr(link_sta->pcpu_rx_stats);
- 
- 	/* statistics part of ieee80211_rx_h_sta_process() */
- 	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
- 		stats->last_signal = status->signal;
- 		if (!fast_rx->uses_rss)
--			ewma_signal_add(&sta->deflink.rx_stats_avg.signal,
-+			ewma_signal_add(&link_sta->rx_stats_avg.signal,
- 					-status->signal);
- 	}
- 
-@@ -4552,7 +4563,7 @@ static void ieee80211_rx_8023(struct ieee80211_rx_data *rx,
- 
- 			stats->chain_signal_last[i] = signal;
- 			if (!fast_rx->uses_rss)
--				ewma_signal_add(&sta->deflink.rx_stats_avg.chain_signal[i],
-+				ewma_signal_add(&link_sta->rx_stats_avg.chain_signal[i],
- 						-signal);
- 		}
- 	}
-@@ -4628,7 +4639,8 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 		u8 da[ETH_ALEN];
- 		u8 sa[ETH_ALEN];
- 	} addrs __aligned(2);
--	struct ieee80211_sta_rx_stats *stats = &sta->deflink.rx_stats;
-+	struct link_sta_info *link_sta;
-+	struct ieee80211_sta_rx_stats *stats;
- 
- 	/* for parallel-rx, we need to have DUP_VALIDATED, otherwise we write
- 	 * to a common data structure; drivers can implement that per queue
-@@ -4729,8 +4741,19 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	return true;
-  drop:
- 	dev_kfree_skb(skb);
-+
-+	if (rx->link_id >= 0) {
-+		link_sta = rcu_dereference(sta->link[rx->link_id]);
-+		if (!link_sta)
-+			return true;
-+	} else {
-+		link_sta = &sta->deflink;
-+	}
-+
- 	if (fast_rx->uses_rss)
--		stats = this_cpu_ptr(sta->deflink.pcpu_rx_stats);
-+		stats = this_cpu_ptr(link_sta->pcpu_rx_stats);
-+	else
-+		stats = &link_sta->rx_stats;
- 
- 	stats->dropped++;
- 	return true;
+ drivers/base/devcoredump.c                       | 16 ++++++----------
+ drivers/bluetooth/btmrvl_sdio.c                  |  2 +-
+ drivers/bluetooth/hci_qca.c                      |  2 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c       |  2 +-
+ drivers/gpu/drm/etnaviv/etnaviv_dump.c           |  2 +-
+ drivers/gpu/drm/msm/disp/msm_disp_snapshot.c     |  4 ++--
+ drivers/gpu/drm/msm/msm_gpu.c                    |  4 ++--
+ drivers/media/platform/qcom/venus/core.c         |  2 +-
+ drivers/net/can/spi/mcp251xfd/mcp251xfd-dump.c   |  2 +-
+ drivers/net/wireless/ath/ath10k/coredump.c       |  2 +-
+ .../net/wireless/ath/wil6210/wil_crash_dump.c    |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c      |  6 ++----
+ drivers/net/wireless/marvell/mwifiex/init.c      |  9 +++++----
+ drivers/net/wireless/marvell/mwifiex/main.c      |  3 +--
+ drivers/net/wireless/marvell/mwifiex/main.h      |  3 ++-
+ drivers/net/wireless/marvell/mwifiex/sta_event.c |  6 +++---
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c  |  3 +--
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c  |  3 +--
+ drivers/net/wireless/realtek/rtw88/main.c        |  2 +-
+ drivers/net/wireless/realtek/rtw89/ser.c         |  2 +-
+ drivers/remoteproc/qcom_q6v5_mss.c               |  2 +-
+ drivers/remoteproc/remoteproc_coredump.c         |  8 ++++----
+ include/drm/drm_print.h                          |  2 +-
+ include/linux/devcoredump.h                      | 13 ++++++-------
+ sound/soc/intel/avs/apl.c                        |  2 +-
+ sound/soc/intel/avs/skl.c                        |  2 +-
+ sound/soc/intel/catpt/dsp.c                      |  2 +-
+ 28 files changed, 51 insertions(+), 59 deletions(-)
+
 -- 
 2.17.1
 
