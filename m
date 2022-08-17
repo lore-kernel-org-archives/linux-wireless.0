@@ -2,292 +2,148 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C12AC32771
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Aug 2022 02:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E7D8C32774
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Aug 2022 04:17:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242896AbiHRC4A (ORCPT
+        id S243048AbiHRERW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Aug 2022 22:56:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50094 "EHLO
+        Thu, 18 Aug 2022 00:17:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242889AbiHRCz6 (ORCPT
+        with ESMTP id S242969AbiHRERP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Aug 2022 22:55:58 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 29F39A59AB
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2022 19:55:57 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 27I2tWiaD010841, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 27I2tWiaD010841
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Thu, 18 Aug 2022 10:55:32 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Thu, 18 Aug 2022 10:55:45 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 18 Aug
- 2022 10:55:43 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <leo.li@realtek.com>, <timlee@realtek.com>, <phhuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] wifi: rtw89: pci: fix PCI PHY auto adaption by using software restore
-Date:   Thu, 18 Aug 2022 10:55:28 +0800
-Message-ID: <20220818025530.9087-4-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220818025530.9087-1-pkshih@realtek.com>
-References: <20220818025530.9087-1-pkshih@realtek.com>
+        Thu, 18 Aug 2022 00:17:15 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12DA49082A
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2022 21:17:13 -0700 (PDT)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27HLRYKk004487;
+        Thu, 18 Aug 2022 04:16:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=X6hVRp9DMi8VBf/VJ9jda9XU4iYMCXLDe+c2+MZseAE=;
+ b=XXgIeFXQ1qwVGa8KZhUso0MqYcHPPh+sa1SraXVZyJg3xA0rb7iBMWNMxrmgx7C9BlQe
+ Hb7R5f8vLDL0zt8bJOWnX6GaxPdKIH+2Sni9x1BIvka7shOeITOwb3B1mBbnqo/b+wEe
+ UvSqoBgPN0wKMiSWwL39Xw0dDWBKmW3ik8pKsxBqVpmaZGPfLuWhOy07S9Sp6DBhvQgK
+ Qqz3PQjlNACXFYz/PJF9q+HD7F/4thwvrebARZExwAUCU4fnjnxoD+uAhdnCV9Ci/TFO
+ o99YRJILZ59CTlblZdrRlTcLTgtP86lXLW23NtTVVWRbwopru1pIMjPskC1st/u+3LB1 +Q== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3j12hhjkp2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 18 Aug 2022 04:16:57 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 27I4Gu0A012160
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 18 Aug 2022 04:16:56 GMT
+Received: from [10.110.78.115] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Wed, 17 Aug
+ 2022 16:52:46 -0700
+Message-ID: <681e43b3-51c0-ed6c-4607-d60127650283@quicinc.com>
+Date:   Wed, 17 Aug 2022 16:52:42 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 08/18/2022 02:43:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzgvMTggpFekyCAxMjo0MDowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH 19/50] wifi: ath12k: add hal.c
+Content-Language: en-US
+To:     Kalle Valo <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>
+CC:     <ath12k@lists.infradead.org>
+References: <20220812161003.27279-1-kvalo@kernel.org>
+ <20220812161003.27279-20-kvalo@kernel.org>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20220812161003.27279-20-kvalo@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: YkjPgBSJYuzT4H5jwqMKFf_nSe67yQoS
+X-Proofpoint-ORIG-GUID: YkjPgBSJYuzT4H5jwqMKFf_nSe67yQoS
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-08-18_02,2022-08-16_02,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=999 bulkscore=0 lowpriorityscore=0 spamscore=0
+ priorityscore=1501 adultscore=0 suspectscore=0 mlxscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
+ definitions=main-2208180014
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chia-Yuan Li <leo.li@realtek.com>
+On 8/12/2022 9:09 AM, Kalle Valo wrote:
+> From: Kalle Valo <quic_kvalo@quicinc.com>
+> 
+> (Patches split into one patch per file for easier review, but the final
+> commit will be one big patch. See the cover letter for more info.)
+> 
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+> ---
+>   drivers/net/wireless/ath/ath12k/hal.c | 2179 +++++++++++++++++++++++++++++++++
+>   1 file changed, 2179 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless/ath/ath12k/hal.c
 
-There is chance that PCI PHY auto adaption fail. When first time boot up,
-software restore the right adaption value and close PHY auto adaption
-mechanism.
+snip
 
-Signed-off-by: Chia-Yuan Li <leo.li@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/pci.c | 102 +++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/pci.h |  28 +++++++
- drivers/net/wireless/realtek/rtw89/reg.h |  12 +++
- 3 files changed, 142 insertions(+)
+> +static void ath12k_hal_srng_src_hw_init(struct ath12k_base *ab,
+> +					struct hal_srng *srng)
+> +{
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index c68fec9eb5a64..63361400eede9 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -3219,6 +3219,107 @@ static void rtw89_pci_free_irq(struct rtw89_dev *rtwdev,
- 	pci_free_irq_vectors(pdev);
- }
- 
-+static int rtw89_read32_mio(struct rtw89_dev *rtwdev, u16 addr, u32 *val)
-+{
-+	u8 page_sel, addr_lsb;
-+	u32 val32;
-+	int ret;
-+
-+	page_sel = FIELD_GET(MIO_ADDR_PAGE_MASK, addr);
-+	addr_lsb = FIELD_GET(B_AX_PCIE_MIO_ADDR_MASK, addr);
-+	val32 = FIELD_PREP(B_AX_PCIE_MIO_ADDR_PAGE_V1_MASK, page_sel) |
-+		FIELD_PREP(B_AX_PCIE_MIO_ADDR_MASK, addr_lsb);
-+
-+	rtw89_write32_set(rtwdev, R_AX_SYS_SDIO_CTRL, B_AX_PCIE_AUXCLK_GATE);
-+	rtw89_write32(rtwdev, R_AX_PCIE_MIO_INTF, val32 | B_AX_PCIE_MIO_RE);
-+	rtw89_write32(rtwdev, R_AX_PCIE_MIO_INTF, val32 | B_AX_PCIE_MIO_BYIOREG);
-+
-+	ret = read_poll_timeout_atomic(rtw89_read32, val32,
-+				       val32 & B_AX_PCIE_MIO_BYIOREG, true,
-+				       1, 1000, rtwdev, R_AX_PCIE_MIO_INTF);
-+	if (ret) {
-+		rtw89_err(rtwdev, "MIO write timeout\n");
-+		rtw89_write32_clr(rtwdev, R_AX_PCIE_MIO_INTF,
-+				  B_AX_PCIE_MIO_RE | B_AX_PCIE_MIO_BYIOREG);
-+		rtw89_write32_clr(rtwdev, R_AX_SYS_SDIO_CTRL,
-+				  B_AX_PCIE_AUXCLK_GATE);
-+		return ret;
-+	}
-+
-+	*val = rtw89_read32(rtwdev, R_AX_PCIE_MIO_INTD);
-+	rtw89_write32_clr(rtwdev, R_AX_SYS_SDIO_CTRL, B_AX_PCIE_AUXCLK_GATE);
-+
-+	return 0;
-+}
-+
-+static u16 gray_code_to_bin(u16 gray_code, u32 bit_num)
-+{
-+	u16 bin = 0, gray_bit;
-+	u32 bit_idx;
-+
-+	for (bit_idx = 0; bit_idx < bit_num; bit_idx++) {
-+		gray_bit = (gray_code >> bit_idx) & 0x1;
-+		if (bit_num - bit_idx > 1)
-+			gray_bit ^= (gray_code >> (bit_idx + 1)) & 0x1;
-+		bin |= (gray_bit << bit_idx);
-+	}
-+
-+	return bin;
-+}
-+
-+static int rtw89_pci_filter_out(struct rtw89_dev *rtwdev)
-+{
-+	u16 val16, filter_out_val;
-+	u32 val, phy_offset;
-+	int ret;
-+
-+	if (rtwdev->chip->chip_id != RTL8852C)
-+		return 0;
-+
-+	val = rtw89_read32_mask(rtwdev, R_AX_PCIE_MIX_CFG_V1, B_AX_ASPM_CTRL_MASK);
-+	if (val == B_AX_ASPM_CTRL_L1)
-+		return 0;
-+
-+	ret = rtw89_read32_mio(rtwdev, RTW89_PCIE_L1_STS_V1, &val);
-+	if (ret)
-+		return ret;
-+
-+	val = FIELD_GET(RTW89_BCFG_LINK_SPEED_MASK, val);
-+	if (val == RTW89_PCIE_GEN1_SPEED) {
-+		phy_offset = R_RAC_DIRECT_OFFSET_G1;
-+	} else if (val == RTW89_PCIE_GEN2_SPEED) {
-+		phy_offset = R_RAC_DIRECT_OFFSET_G2;
-+		val16 = rtw89_read16(rtwdev, phy_offset + RAC_ANA10 * RAC_MULT);
-+		rtw89_write16_set(rtwdev, phy_offset + RAC_ANA10 * RAC_MULT,
-+				  val16 | B_PCIE_BIT_PINOUT_DIS);
-+		rtw89_write16_set(rtwdev, phy_offset + RAC_ANA19 * RAC_MULT,
-+				  val16 & ~B_PCIE_BIT_RD_SEL);
-+
-+		val16 = rtw89_read16_mask(rtwdev,
-+					  phy_offset + RAC_ANA1F * RAC_MULT,
-+					  FILTER_OUT_EQ_MASK);
-+		val16 = gray_code_to_bin(val16, hweight16(val16));
-+		filter_out_val = rtw89_read16(rtwdev, phy_offset + RAC_ANA24 *
-+					      RAC_MULT);
-+		filter_out_val &= ~REG_FILTER_OUT_MASK;
-+		filter_out_val |= FIELD_PREP(REG_FILTER_OUT_MASK, val16);
-+
-+		rtw89_write16(rtwdev, phy_offset + RAC_ANA24 * RAC_MULT,
-+			      filter_out_val);
-+		rtw89_write16_set(rtwdev, phy_offset + RAC_ANA0A * RAC_MULT,
-+				  B_BAC_EQ_SEL);
-+		rtw89_write16_set(rtwdev,
-+				  R_RAC_DIRECT_OFFSET_G1 + RAC_ANA0C * RAC_MULT,
-+				  B_PCIE_BIT_PSAVE);
-+	} else {
-+		return -EOPNOTSUPP;
-+	}
-+	rtw89_write16_set(rtwdev, phy_offset + RAC_ANA0C * RAC_MULT,
-+			  B_PCIE_BIT_PSAVE);
-+
-+	return 0;
-+}
-+
- static void rtw89_pci_clkreq_set(struct rtw89_dev *rtwdev, bool enable)
- {
- 	int ret;
-@@ -3667,6 +3768,7 @@ int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto err_clear_resource;
- 	}
- 
-+	rtw89_pci_filter_out(rtwdev);
- 	rtw89_pci_link_cfg(rtwdev);
- 	rtw89_pci_l1ss_cfg(rtwdev);
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
-index a118647213e35..d69ca19d44aea 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.h
-+++ b/drivers/net/wireless/realtek/rtw89/pci.h
-@@ -11,11 +11,18 @@
- #define MDIO_PG1_G1 1
- #define MDIO_PG0_G2 2
- #define MDIO_PG1_G2 3
-+#define RAC_CTRL_PPR			0x00
-+#define RAC_ANA0A			0x0A
-+#define B_BAC_EQ_SEL			BIT(5)
-+#define RAC_ANA0C			0x0C
-+#define B_PCIE_BIT_PSAVE		BIT(15)
- #define RAC_ANA10			0x10
-+#define B_PCIE_BIT_PINOUT_DIS		BIT(3)
- #define RAC_REG_REV2			0x1B
- #define BAC_CMU_EN_DLY_MASK		GENMASK(15, 12)
- #define PCIE_DPHY_DLY_25US		0x1
- #define RAC_ANA19			0x19
-+#define B_PCIE_BIT_RD_SEL		BIT(2)
- #define RAC_ANA1F			0x1F
- #define RAC_ANA24			0x24
- #define B_AX_DEGLITCH			GENMASK(11, 8)
-@@ -45,6 +52,16 @@
- #define B_AX_SEL_REQ_ENTR_L1		BIT(2)
- #define B_AX_SEL_REQ_EXIT_L1		BIT(0)
- 
-+#define R_AX_PCIE_MIX_CFG_V1		0x300C
-+#define B_AX_ASPM_CTRL_L1		BIT(17)
-+#define B_AX_ASPM_CTRL_L0		BIT(16)
-+#define B_AX_ASPM_CTRL_MASK		GENMASK(17, 16)
-+#define B_AX_XFER_PENDING_FW		BIT(11)
-+#define B_AX_XFER_PENDING		BIT(10)
-+#define B_AX_REQ_EXIT_L1		BIT(9)
-+#define B_AX_REQ_ENTR_L1		BIT(8)
-+#define B_AX_L1SUB_DISABLE		BIT(0)
-+
- #define R_AX_PCIE_BG_CLR		0x303C
- #define B_AX_BG_CLR_ASYNC_M3		BIT(4)
- 
-@@ -88,7 +105,10 @@
- #define B_AX_PCIE_WDT_TIMER_S1_MASK GENMASK(31, 0)
- 
- #define R_RAC_DIRECT_OFFSET_G1 0x3800
-+#define FILTER_OUT_EQ_MASK GENMASK(14, 10)
- #define R_RAC_DIRECT_OFFSET_G2 0x3880
-+#define REG_FILTER_OUT_MASK GENMASK(6, 2)
-+#define RAC_MULT 2
- 
- #define RTW89_PCI_WR_RETRY_CNT		20
- 
-@@ -518,6 +538,14 @@
- #define RTW89_PCIE_BIT_CFG_RST_MSTATE	BIT(0)
- #define RTW89_PCIE_PHY_RATE		0x82
- #define RTW89_PCIE_PHY_RATE_MASK	GENMASK(1, 0)
-+#define RTW89_PCIE_L1_STS_V1		0x2080
-+#define RTW89_BCFG_LINK_SPEED_MASK	GENMASK(19, 16)
-+#define RTW89_PCIE_GEN1_SPEED		0x01
-+#define RTW89_PCIE_GEN2_SPEED		0x02
-+#define RTW89_PCIE_L1SS_CAP_V1		0x2160
-+#define RTW89_PCIE_L1SS_SUP_V1		0x2164
-+#define RTW89_PCIE_L1SS_STS_V1		0x2168
-+#define RTW89_PCIE_ASPM_CTRL_V1		0x270C
- #define INTF_INTGRA_MINREF_V1	90
- #define INTF_INTGRA_HOSTREF_V1	100
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 497c1e9263fc0..f55ea3f834f89 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -143,6 +143,18 @@
- #define R_AX_PMC_DBG_CTRL2 0x00CC
- #define B_AX_SYSON_DIS_PMCR_AX_WRMSK BIT(2)
- 
-+#define R_AX_PCIE_MIO_INTF 0x00E4
-+#define B_AX_PCIE_MIO_ADDR_PAGE_V1_MASK GENMASK(20, 16)
-+#define B_AX_PCIE_MIO_BYIOREG BIT(13)
-+#define B_AX_PCIE_MIO_RE BIT(12)
-+#define B_AX_PCIE_MIO_WE_MASK GENMASK(11, 8)
-+#define MIO_WRITE_BYTE_ALL 0xF
-+#define B_AX_PCIE_MIO_ADDR_MASK GENMASK(7, 0)
-+#define MIO_ADDR_PAGE_MASK GENMASK(12, 8)
-+
-+#define R_AX_PCIE_MIO_INTD 0x00E8
-+#define B_AX_PCIE_MIO_DATA_MASK GENMASK(31, 0)
-+
- #define R_AX_SYS_CFG1 0x00F0
- #define B_AX_CHIP_VER_MASK GENMASK(15, 12)
- 
--- 
-2.25.1
+snip
 
+> +	/* interrupt setup */
+> +	/* NOTE: IPQ8074 v2 requires the interrupt timer threshold in the
+> +	 * unit of 8 usecs instead of 1 usec (as required by v1).
+
+why do we care about IPQ8074 when it isn't supported by this driver?
+and where is the 8 us vs 1 us logic anyway?
+
+> +	 */
+> +	val = u32_encode_bits(srng->intr_timer_thres_us,
+> +			      HAL_TCL1_RING_CONSR_INT_SETUP_IX0_INTR_TMR_THOLD);
+
+snip
+
+> +static void ath12k_hal_srng_update_hp_tp_addr(struct ath12k_base *ab,
+> +					      int shadow_cfg_idx,
+> +					  enum hal_ring_type ring_type,
+> +					  int ring_num)
+
+inconsistent indentation?
+snip
+
+> +void ath12k_hal_srng_shadow_update_hp_tp(struct ath12k_base *ab,
+> +					 struct hal_srng *srng)
+> +{
+> +	lockdep_assert_held(&srng->lock);
+> +
+> +	/* check whether the ring is emptry. Update the shadow
+
+s/emptry/empty/
+
+> +	 * HP only when then ring isn't' empty.
+> +	 */
+> +	if (srng->ring_dir == HAL_SRNG_DIR_SRC &&
+> +	    *srng->u.src_ring.tp_addr != srng->u.src_ring.hp)
+> +		ath12k_hal_srng_access_end(ab, srng);
+> +}
+> +
+
+snip
+
+> +void ath12k_hal_srng_deinit(struct ath12k_base *ab)
+> +{
+> +	struct ath12k_hal *hal = &ab->hal;
+> +
+> +	ath12k_hal_unregister_srng_lock_keys(ab);
+> +	ath12k_hal_free_cont_rdp(ab);
+> +	ath12k_hal_free_cont_wrp(ab);
+> +	kfree(hal->srng_config);
+
+perhaps set hal->srng_config = NULL so that there isn't a dangling pointer?
+
+snip
