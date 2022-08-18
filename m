@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1922C28B2B
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 Aug 2022 02:55:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83193C25B08
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 Aug 2022 02:56:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242893AbiHRCz5 (ORCPT
+        id S242895AbiHRCz7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 Aug 2022 22:55:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50062 "EHLO
+        Wed, 17 Aug 2022 22:55:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242889AbiHRCzz (ORCPT
+        with ESMTP id S242890AbiHRCz5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 Aug 2022 22:55:55 -0400
+        Wed, 17 Aug 2022 22:55:57 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 203C6A5C4E
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2022 19:55:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AAC56A599E
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2022 19:55:56 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 27I2tYCo9010861, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 27I2tYCo9010861
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 27I2tS871010826, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 27I2tS871010826
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Thu, 18 Aug 2022 10:55:34 +0800
+        Thu, 18 Aug 2022 10:55:29 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Thu, 18 Aug 2022 10:55:47 +0800
+ 15.1.2375.31; Thu, 18 Aug 2022 10:55:41 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 18 Aug
- 2022 10:55:46 +0800
+ 2022 10:55:41 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <leo.li@realtek.com>, <timlee@realtek.com>, <phhuang@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/5] wifi: rtw89: pci: correct suspend/resume setting for variant chips
-Date:   Thu, 18 Aug 2022 10:55:30 +0800
-Message-ID: <20220818025530.9087-6-pkshih@realtek.com>
+Subject: [PATCH 1/5] wifi: rtw89: add retry to change power_mode state
+Date:   Thu, 18 Aug 2022 10:55:26 +0800
+Message-ID: <20220818025530.9087-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220818025530.9087-1-pkshih@realtek.com>
 References: <20220818025530.9087-1-pkshih@realtek.com>
@@ -57,83 +57,82 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzgvMTggpFekyCAxMjo0MDowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Chin-Yen Lee <timlee@realtek.com>
 
-We find that suspend/resume tests cause 8852CE lost, because some pci
-registers are changed for 8852CE. So, correct them accordingly.
+When starting to send heavy traffic in low power mode,
+driver will call multiple tx wake notify to wake firmware
+within a short time. In this situation, firmware may miss
+power mode change request from driver and leads to status
+error. So we change driver to call power_mode_change at most
+three times to make sure firmware could get the request.
 
 Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/pci.c | 31 ++++++++++++++++++------
- 1 file changed, 23 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtw89/mac.c | 23 +++++++++++++++++------
+ drivers/net/wireless/realtek/rtw89/mac.h |  1 +
+ 2 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 8ae06c3f27dbb..4254e110b370d 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -3713,14 +3713,20 @@ static int __maybe_unused rtw89_pci_suspend(struct device *dev)
- {
- 	struct ieee80211_hw *hw = dev_get_drvdata(dev);
- 	struct rtw89_dev *rtwdev = hw->priv;
-+	enum rtw89_core_chip_id chip_id = rtwdev->chip->chip_id;
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 93124b815825f..61c7e79714925 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -1053,18 +1053,29 @@ void rtw89_mac_power_mode_change(struct rtw89_dev *rtwdev, bool enter)
+ 	enum rtw89_rpwm_req_pwr_state state;
+ 	unsigned long delay = enter ? 10 : 150;
+ 	int ret;
++	int i;
  
--	rtw89_write32_clr(rtwdev, R_AX_SYS_SDIO_CTRL,
--			  B_AX_PCIE_DIS_L2_CTRL_LDO_HCI);
- 	rtw89_write32_set(rtwdev, R_AX_RSV_CTRL, B_AX_WLOCK_1C_BIT6);
- 	rtw89_write32_set(rtwdev, R_AX_RSV_CTRL, B_AX_R_DIS_PRST);
- 	rtw89_write32_clr(rtwdev, R_AX_RSV_CTRL, B_AX_WLOCK_1C_BIT6);
--	rtw89_write32_set(rtwdev, R_AX_PCIE_INIT_CFG1,
--			  B_AX_PCIE_PERST_KEEP_REG | B_AX_PCIE_TRAIN_KEEP_REG);
-+	if (chip_id == RTL8852A || chip_id == RTL8852B) {
-+		rtw89_write32_clr(rtwdev, R_AX_SYS_SDIO_CTRL,
-+				  B_AX_PCIE_DIS_L2_CTRL_LDO_HCI);
-+		rtw89_write32_set(rtwdev, R_AX_PCIE_INIT_CFG1,
-+				  B_AX_PCIE_PERST_KEEP_REG | B_AX_PCIE_TRAIN_KEEP_REG);
-+	} else {
-+		rtw89_write32_clr(rtwdev, R_AX_PCIE_PS_CTRL_V1,
-+				  B_AX_CMAC_EXIT_L1_EN | B_AX_DMAC0_EXIT_L1_EN);
+ 	if (enter)
+ 		state = rtw89_mac_get_req_pwr_state(rtwdev);
+ 	else
+ 		state = RTW89_MAC_RPWM_REQ_PWR_STATE_ACTIVE;
+ 
+-	rtw89_mac_send_rpwm(rtwdev, state, false);
+-	ret = read_poll_timeout_atomic(rtw89_mac_check_cpwm_state, ret, !ret,
+-				       delay, 15000, false, rtwdev, state);
+-	if (ret)
+-		rtw89_err(rtwdev, "firmware failed to ack for %s ps mode\n",
+-			  enter ? "entering" : "leaving");
++	for (i = 0; i < RPWM_TRY_CNT; i++) {
++		rtw89_mac_send_rpwm(rtwdev, state, false);
++		ret = read_poll_timeout_atomic(rtw89_mac_check_cpwm_state, ret,
++					       !ret, delay, 15000, false,
++					       rtwdev, state);
++		if (!ret)
++			break;
++
++		if (i == RPWM_TRY_CNT - 1)
++			rtw89_err(rtwdev, "firmware failed to ack for %s ps mode\n",
++				  enter ? "entering" : "leaving");
++		else
++			rtw89_debug(rtwdev, RTW89_DBG_UNEXP,
++				    "%d time firmware failed to ack for %s ps mode\n",
++				    i + 1, enter ? "entering" : "leaving");
 +	}
- 
- 	return 0;
  }
-@@ -3741,15 +3747,24 @@ static int __maybe_unused rtw89_pci_resume(struct device *dev)
- {
- 	struct ieee80211_hw *hw = dev_get_drvdata(dev);
- 	struct rtw89_dev *rtwdev = hw->priv;
-+	enum rtw89_core_chip_id chip_id = rtwdev->chip->chip_id;
  
--	rtw89_write32_set(rtwdev, R_AX_SYS_SDIO_CTRL,
--			  B_AX_PCIE_DIS_L2_CTRL_LDO_HCI);
- 	rtw89_write32_set(rtwdev, R_AX_RSV_CTRL, B_AX_WLOCK_1C_BIT6);
- 	rtw89_write32_clr(rtwdev, R_AX_RSV_CTRL, B_AX_R_DIS_PRST);
- 	rtw89_write32_clr(rtwdev, R_AX_RSV_CTRL, B_AX_WLOCK_1C_BIT6);
--	rtw89_write32_clr(rtwdev, R_AX_PCIE_INIT_CFG1,
--			  B_AX_PCIE_PERST_KEEP_REG | B_AX_PCIE_TRAIN_KEEP_REG);
-+	if (chip_id == RTL8852A || chip_id == RTL8852B) {
-+		rtw89_write32_set(rtwdev, R_AX_SYS_SDIO_CTRL,
-+				  B_AX_PCIE_DIS_L2_CTRL_LDO_HCI);
-+		rtw89_write32_clr(rtwdev, R_AX_PCIE_INIT_CFG1,
-+				  B_AX_PCIE_PERST_KEEP_REG | B_AX_PCIE_TRAIN_KEEP_REG);
-+	} else {
-+		rtw89_write32_set(rtwdev, R_AX_PCIE_PS_CTRL_V1,
-+				  B_AX_CMAC_EXIT_L1_EN | B_AX_DMAC0_EXIT_L1_EN);
-+		rtw89_write32_clr(rtwdev, R_AX_PCIE_PS_CTRL_V1,
-+				  B_AX_SEL_REQ_ENTR_L1);
-+	}
- 	rtw89_pci_l2_hci_ldo(rtwdev);
-+	rtw89_pci_filter_out(rtwdev);
- 	rtw89_pci_link_cfg(rtwdev);
- 	rtw89_pci_l1ss_cfg(rtwdev);
+ void rtw89_mac_notify_wake(struct rtw89_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
+index f66619354734d..986e359a82237 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.h
++++ b/drivers/net/wireless/realtek/rtw89/mac.h
+@@ -11,6 +11,7 @@
+ #define ADDR_CAM_ENT_SIZE  0x40
+ #define BSSID_CAM_ENT_SIZE 0x08
+ #define HFC_PAGE_UNIT 64
++#define RPWM_TRY_CNT 3
  
+ enum rtw89_mac_hwmod_sel {
+ 	RTW89_DMAC_SEL = 0,
 -- 
 2.25.1
 
