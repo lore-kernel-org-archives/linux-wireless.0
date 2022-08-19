@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F1ECC32771
-	for <linux-wireless@archiver.kernel.org>; Fri, 19 Aug 2022 11:24:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F943C32773
+	for <linux-wireless@archiver.kernel.org>; Fri, 19 Aug 2022 11:25:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348816AbiHSLYs (ORCPT
+        id S1348830AbiHSLZb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 19 Aug 2022 07:24:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57242 "EHLO
+        Fri, 19 Aug 2022 07:25:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348802AbiHSLYr (ORCPT
+        with ESMTP id S1348835AbiHSLZV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2022 07:24:47 -0400
-Received: from mx0b-0064b401.pphosted.com (mx0b-0064b401.pphosted.com [205.220.178.238])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43E34D8B0B;
-        Fri, 19 Aug 2022 04:24:46 -0700 (PDT)
-Received: from pps.filterd (m0250812.ppops.net [127.0.0.1])
-        by mx0a-0064b401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27JBMD5E016045;
-        Fri, 19 Aug 2022 11:22:14 GMT
+        Fri, 19 Aug 2022 07:25:21 -0400
+Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A182FD9EAA;
+        Fri, 19 Aug 2022 04:25:16 -0700 (PDT)
+Received: from pps.filterd (m0250809.ppops.net [127.0.0.1])
+        by mx0a-0064b401.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 27JBM6OK008105;
+        Fri, 19 Aug 2022 04:22:43 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=PPS06212021;
- bh=WMvSFQrNg9jy7ZPJXBanJPEWB3O315IcGwsFcXi5PVM=;
- b=PvZaiFDJeME4TT23PNN9/0N4DVGZdpmYda67WOh9sRijZS7hwhFpU731FvQMiudCq9Dt
- J9kkgi1clonruxhNojsp2baLHzNbDy7rjUZZvK86aIf4mvja+qcVID3JqiOwxLoMyKOC
- c50CbL7UKhY7bQdfBhz7KJ5M4RNcpzv/RYxONiS52NUc7Ik6Ey9b39wYXraFxDPYYKG9
- IOf9kZshIKPg/BOGGrSvXQJ9jAhn5VHTxoVSMiBaqgpIKwMRTD2jNQZqwcOhCPsGx8bh
- CRUPWdrIUIUDu5AJYONXhRPviIiWN7dIfrcZ1Gxjm5F4LCYDlgc7Hb22nTbv4vLUFMcQ ng== 
+ bh=OxkVfPdV09BsblCgs3m0EpWVHAADlKxxQ31Gvrw9Euo=;
+ b=g677eaDY6ccDN1X+BphKynRgQ3Fas8CSJhLsubF73HuXxUIQVhtWRGgRTH/vlTsb1Hwx
+ 2svye79h+b/FO5o2+aVQLHv9a5bl9KDlsKqWRu/hdeoH3DimvZmEmXhTCi7rHaZFIakT
+ aX267n6KlEnuHhA5BML9DvHgiYgEvwFXxw6LwZftiF8Krv+AhCYJVKMH9orWfHk6svCh
+ e36j9rTDwm3sC6B1Qf5D6e0Jsv/hQx1wbXAaLCOhv47vGNlPwBL0FaW+a1CmYwWMrUNl
+ 7xjTzwP0bkEQwm2Arh2MYuFDGMO18DmMw0ujDtOwApvK/mLG1cnx3QtyKY41dNKSOsxX KA== 
 Received: from ala-exchng01.corp.ad.wrs.com (unknown-82-252.windriver.com [147.11.82.252])
-        by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 3hx2x8n9bq-1
+        by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 3hxbfjn0sj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 19 Aug 2022 11:22:13 +0000
+        Fri, 19 Aug 2022 04:22:42 -0700
 Received: from otp-dpanait-l2.corp.ad.wrs.com (128.224.125.191) by
  ala-exchng01.corp.ad.wrs.com (147.11.82.252) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2242.12; Fri, 19 Aug 2022 04:22:09 -0700
+ 15.1.2242.12; Fri, 19 Aug 2022 04:22:38 -0700
 From:   Dragos-Marian Panait <dragos.panait@windriver.com>
 To:     <stable@vger.kernel.org>
 CC:     Pavel Skripkin <paskripkin@gmail.com>,
@@ -52,28 +52,28 @@ CC:     Pavel Skripkin <paskripkin@gmail.com>,
         "John W . Linville" <linville@tuxdriver.com>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH 4.19 1/1] ath9k: fix use-after-free in ath9k_hif_usb_rx_cb
-Date:   Fri, 19 Aug 2022 14:21:56 +0300
-Message-ID: <20220819112156.922376-2-dragos.panait@windriver.com>
+Subject: [PATCH 4.14 1/1] ath9k: fix use-after-free in ath9k_hif_usb_rx_cb
+Date:   Fri, 19 Aug 2022 14:22:26 +0300
+Message-ID: <20220819112226.922595-2-dragos.panait@windriver.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220819112156.922376-1-dragos.panait@windriver.com>
-References: <20220819112156.922376-1-dragos.panait@windriver.com>
+In-Reply-To: <20220819112226.922595-1-dragos.panait@windriver.com>
+References: <20220819112226.922595-1-dragos.panait@windriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 X-Originating-IP: [128.224.125.191]
 X-ClientProxiedBy: ala-exchng01.corp.ad.wrs.com (147.11.82.252) To
  ala-exchng01.corp.ad.wrs.com (147.11.82.252)
-X-Proofpoint-ORIG-GUID: of5Jb9G9edqog7KXz1agItmQY9O-C_Vd
-X-Proofpoint-GUID: of5Jb9G9edqog7KXz1agItmQY9O-C_Vd
+X-Proofpoint-GUID: eP2hJnvv-X8YTHkC7Sqt6ivkzF88Q8rA
+X-Proofpoint-ORIG-GUID: eP2hJnvv-X8YTHkC7Sqt6ivkzF88Q8rA
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
  definitions=2022-08-19_06,2022-08-18_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- phishscore=0 malwarescore=0 bulkscore=0 clxscore=1015 mlxscore=0
- lowpriorityscore=0 spamscore=0 mlxlogscore=977 adultscore=0
- impostorscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2207270000 definitions=main-2208190044
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
+ mlxlogscore=977 clxscore=1015 phishscore=0 bulkscore=0 priorityscore=1501
+ impostorscore=0 spamscore=0 lowpriorityscore=0 mlxscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
+ definitions=main-2208190044
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -120,7 +120,7 @@ Signed-off-by: Dragos-Marian Panait <dragos.panait@windriver.com>
  2 files changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 9f64e32381f9..81107100e368 100644
+index 16dff4b89a86..d66d3c9299fb 100644
 --- a/drivers/net/wireless/ath/ath9k/htc.h
 +++ b/drivers/net/wireless/ath/ath9k/htc.h
 @@ -325,11 +325,11 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
@@ -141,7 +141,7 @@ index 9f64e32381f9..81107100e368 100644
  
  #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
 diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index cb136d9d4621..49d587330990 100644
+index 88e3b4a4de31..9fcdda6f7088 100644
 --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
 +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
 @@ -946,7 +946,6 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
