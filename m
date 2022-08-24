@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A183C00140
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Aug 2022 06:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD4EC00140
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Aug 2022 06:33:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234937AbiHXGOu (ORCPT
+        id S235051AbiHXGdf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Aug 2022 02:14:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49710 "EHLO
+        Wed, 24 Aug 2022 02:33:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234949AbiHXGOs (ORCPT
+        with ESMTP id S235043AbiHXGdd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Aug 2022 02:14:48 -0400
+        Wed, 24 Aug 2022 02:33:33 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 26A8E43E42
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2022 23:14:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1F7237F0A4
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2022 23:33:30 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 27O6EL6d8025118, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 27O6X6jL4002231, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 27O6EL6d8025118
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 27O6X6jL4002231
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Wed, 24 Aug 2022 14:14:21 +0800
+        Wed, 24 Aug 2022 14:33:06 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 24 Aug 2022 14:14:35 +0800
+ 15.1.2375.31; Wed, 24 Aug 2022 14:33:20 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 24 Aug
- 2022 14:14:35 +0800
+ 2022 14:33:20 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
-CC:     <cj.hsieh@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wifi: rtw89: enlarge the CFO tracking boundary
-Date:   Wed, 24 Aug 2022 14:14:25 +0800
-Message-ID: <20220824061425.13764-1-pkshih@realtek.com>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] wifi: rtw89: pci: correct TX resource checking in low power mode
+Date:   Wed, 24 Aug 2022 14:33:12 +0800
+Message-ID: <20220824063312.15784-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220824063312.15784-1-pkshih@realtek.com>
+References: <20220824063312.15784-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -48,7 +50,7 @@ X-KSE-AntiSpam-Interceptor-Info: trusted connection
 X-KSE-Antiphishing-Info: Clean
 X-KSE-Antiphishing-ScanningType: Deterministic
 X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 08/24/2022 06:01:00
+X-KSE-Antiphishing-Bases: 08/24/2022 06:20:00
 X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
  rules found
 X-KSE-Antivirus-Interceptor-Info: scan successful
@@ -62,31 +64,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Cheng-Chieh Hsieh <cj.hsieh@realtek.com>
+Number of TX resource must be minimum of TX_BD and TX_WD. Only considering
+TX_BD could drop TX packets pulled from mac80211 if TX_WD is unavailable.
 
-The calibration value of XTAL offset may be too large in some wifi
-modules, that the CFO tracking mechanism under the existing tracking
-boundary can not adjust the CFO to the tolerable range. So we enlarge it.
-
-Signed-off-by: Cheng-Chieh Hsieh <cj.hsieh@realtek.com>
+Fixes: 52edbb9fb78a ("rtw89: ps: access TX/RX rings via another registers in low power mode")
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/phy.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index e20636f54b553..67544ee868cf2 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.h
-+++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -56,7 +56,7 @@
- #define CFO_TRK_STOP_TH (2 << 2)
- #define CFO_SW_COMP_FINE_TUNE (2 << 2)
- #define CFO_PERIOD_CNT 15
--#define CFO_BOUND 32
-+#define CFO_BOUND 64
- #define CFO_TP_UPPER 100
- #define CFO_TP_LOWER 50
- #define CFO_COMP_PERIOD 250
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index 8a093e1cb328e..7bb1b494c5d15 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -926,10 +926,12 @@ u32 __rtw89_pci_check_and_reclaim_tx_resource_noio(struct rtw89_dev *rtwdev,
+ {
+ 	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
+ 	struct rtw89_pci_tx_ring *tx_ring = &rtwpci->tx_rings[txch];
++	struct rtw89_pci_tx_wd_ring *wd_ring = &tx_ring->wd_ring;
+ 	u32 cnt;
+ 
+ 	spin_lock_bh(&rtwpci->trx_lock);
+ 	cnt = rtw89_pci_get_avail_txbd_num(tx_ring);
++	cnt = min(cnt, wd_ring->curr_num);
+ 	spin_unlock_bh(&rtwpci->trx_lock);
+ 
+ 	return cnt;
 -- 
 2.25.1
 
