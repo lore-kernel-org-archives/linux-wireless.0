@@ -2,110 +2,62 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB040ECAAA6
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Aug 2022 17:00:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7757DECAAD6
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Aug 2022 18:56:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235364AbiHZRAu (ORCPT
+        id S1345243AbiHZS4L (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Aug 2022 13:00:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44672 "EHLO
+        Fri, 26 Aug 2022 14:56:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234351AbiHZRAp (ORCPT
+        with ESMTP id S1345521AbiHZSzu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Aug 2022 13:00:45 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8A71BC80E
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2022 10:00:42 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id m10-20020a17090a730a00b001fa986fd8eeso8659264pjk.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2022 10:00:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=cAmRLOTm/YIdX7Lx7jAm2pYzm8lrQiOwQoZv0peuAxs=;
-        b=FvqzwxrhmgT+ZlSeOB5ijNu8CUB2D1AhBZkmXY3N6KRGs6+3s38HWfS6Tj9ZKBrl5F
-         J+8BHwkKa9i2u6/1whLOMlSe/sJEcb/fYlUOvAsUMIvaC5sdbyYLN4GWHk+XeYzuABWz
-         DzlxaPDKMqjhyp+pWEZKguEVA82EqhSQF9+Z/xUhZl+W37YjWLLcoJy9/Q2vgt217Mvd
-         yYPxSo+dRF2gSdKeOwlo4E016hKkoG8kNIZLSNxGy8FUF+wPMrRzcyz8nFQDcuCe4G2L
-         uTDDzFj/KvxhlQBC64INrMM2QGlGhqVwlxUKT2shrGr8eymlGHf7QW692g7tDy9BDB30
-         HMQQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=cAmRLOTm/YIdX7Lx7jAm2pYzm8lrQiOwQoZv0peuAxs=;
-        b=YWZsBd1Qbej/H/sjC9OSLG6l9/en2kJy/bvvO/5O3RDrai58O2Cbtd3NPO0aBXuQmp
-         8GcDwwNS8xLXOVmNXNzS5hO+D+9nSH5cSsO/y/p8kdvX4+vm+iIRhtmJ+j4h101gm7xe
-         IEkMO71PlmLVRpljAx/VPqphxok1fMf8QydMq+EqE8Lqs5qhb5GvxMqXVAq8enHPT6d6
-         kjosr+Sr4mSzXbCN//Ecuc5aeCIJif+xfHYSwWRArNTViDrpof/3vGTVVDr90Xpof4Uz
-         alTKz038d04n1bfM1mStMlvPz/mzuRTERxTMFl+6Ga3k3Wr5748UAq/atRZpNrsFlbwu
-         H8qA==
-X-Gm-Message-State: ACgBeo0so9XbWjwXjFOg7bmrnV1cAhzteLu0PJ9xl9T+zr3d91YrhxM3
-        o/f0o+4OL/IZ5AuO4QYZzT0zf4fCS2Y=
-X-Google-Smtp-Source: AA6agR7Qwy36zRAvmlaEYra9VRjLgAM1zeVj+6LQl92FD91gH4Y2Gx3bR22h6M7zD7Ft2Jw5pV9Fxg==
-X-Received: by 2002:a17:902:c102:b0:172:ce4b:870c with SMTP id 2-20020a170902c10200b00172ce4b870cmr4385549pli.155.1661533242130;
-        Fri, 26 Aug 2022 10:00:42 -0700 (PDT)
-Received: from jprestwo-xps.none ([50.39.168.145])
-        by smtp.gmail.com with ESMTPSA id y9-20020a634949000000b0041d322b3bf6sm1685034pgk.77.2022.08.26.10.00.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Aug 2022 10:00:41 -0700 (PDT)
-From:   James Prestwood <prestwoj@gmail.com>
+        Fri, 26 Aug 2022 14:55:50 -0400
+X-Greylist: delayed 1682 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 26 Aug 2022 11:51:38 PDT
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AA604505E
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2022 11:51:35 -0700 (PDT)
+Received: from p200300daa713fa00d95ad2224e59825a.dip0.t-ipconnect.de ([2003:da:a713:fa00:d95a:d222:4e59:825a] helo=localhost.localdomain)
+        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+        (Exim 4.94.2)
+        (envelope-from <nbd@nbd.name>)
+        id 1oRdzP-0003Hc-FH; Fri, 26 Aug 2022 20:23:31 +0200
+From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Cc:     James Prestwood <prestwoj@gmail.com>
-Subject: [PATCH v3 1/2] include: nl80211: Add POWERED_ADDR_CHANGE feature
-Date:   Fri, 26 Aug 2022 10:00:31 -0700
-Message-Id: <20220826170032.2860883-2-prestwoj@gmail.com>
-X-Mailer: git-send-email 2.34.3
-In-Reply-To: <20220826170032.2860883-1-prestwoj@gmail.com>
-References: <20220826170032.2860883-1-prestwoj@gmail.com>
+Cc:     kvalo@kernel.org
+Subject: [PATCH 6.0] wifi: mt76: fix reading current per-tid starting sequence number for aggregation
+Date:   Fri, 26 Aug 2022 20:23:29 +0200
+Message-Id: <20220826182329.18155-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add a new extended feature bit signifying that the wireless hardware
-supports changing the MAC address while the underlying net_device is
-powered. Note that this has a different meaning from
-IFF_LIVE_ADDR_CHANGE as additional restrictions might be imposed by
-the hardware, such as:
+The code was accidentally shifting register values down by tid % 32 instead of
+(tid * field_size) % 32.
 
- - No connection is active on this interface, carrier is off
- - No scan is in progress
- - No offchannel operations are in progress
-
-Signed-off-by: James Prestwood <prestwoj@gmail.com>
+Cc: stable@vger.kernel.org
+Fixes: a28bef561a5c ("mt76: mt7615: re-enable offloading of sequence number assignment")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/uapi/linux/nl80211.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d9490e3062a7..57ead424a0c3 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -6174,6 +6174,14 @@ enum nl80211_feature_flags {
-  * @NL80211_EXT_FEATURE_RADAR_BACKGROUND: Device supports background radar/CAC
-  *	detection.
-  *
-+ * @NL80211_EXT_FEATURE_POWERED_ADDR_CHANGE: Device can perform a MAC address
-+ *	change without having to bring the underlying network device down
-+ *	first. For example, in station mode this can be used to vary the
-+ *	origin MAC address prior to a connection to a new AP for privacy
-+ *	or other reasons. Note that certain driver specific restrictions
-+ *	might apply, e.g. no scans in progress, no offchannel operations
-+ *	in progress, and no active connections.
-+ *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
-@@ -6241,6 +6249,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_BSS_COLOR,
- 	NL80211_EXT_FEATURE_FILS_CRYPTO_OFFLOAD,
- 	NL80211_EXT_FEATURE_RADAR_BACKGROUND,
-+	NL80211_EXT_FEATURE_POWERED_ADDR_CHANGE,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index ad6c7d632eed..d6aae60c440d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -1088,7 +1088,7 @@ u32 mt7615_mac_get_sta_tid_sn(struct mt7615_dev *dev, int wcid, u8 tid)
+ 	offset %= 32;
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
+ 	val = mt76_rr(dev, addr);
+-	val >>= (tid % 32);
++	val >>= offset;
+ 
+ 	if (offset > 20) {
+ 		addr += 4;
 -- 
-2.34.3
+2.36.1
 
