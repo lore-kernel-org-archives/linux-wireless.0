@@ -2,86 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04365ECAAD5
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Aug 2022 12:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0533FC6FA82
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Aug 2022 12:26:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232257AbiH2MYR (ORCPT
+        id S230296AbiH2M0z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Aug 2022 08:24:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51278 "EHLO
+        Mon, 29 Aug 2022 08:26:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230222AbiH2MXv (ORCPT
+        with ESMTP id S229810AbiH2M00 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2022 08:23:51 -0400
-Received: from mail.nfschina.com (unknown [IPv6:2400:dd01:100f:2:72e2:84ff:fe10:5f45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 06318A7AB4;
-        Mon, 29 Aug 2022 05:08:19 -0700 (PDT)
-Received: from localhost (unknown [127.0.0.1])
-        by mail.nfschina.com (Postfix) with ESMTP id 9CBAE1E80D5E;
-        Mon, 29 Aug 2022 19:09:05 +0800 (CST)
-X-Virus-Scanned: amavisd-new at test.com
-Received: from mail.nfschina.com ([127.0.0.1])
-        by localhost (mail.nfschina.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id baIy2p6apqZl; Mon, 29 Aug 2022 19:09:02 +0800 (CST)
-Received: from localhost.localdomain (unknown [180.167.10.98])
-        (Authenticated sender: liqiong@nfschina.com)
-        by mail.nfschina.com (Postfix) with ESMTPA id 0D4FF1E80D59;
-        Mon, 29 Aug 2022 19:09:02 +0800 (CST)
-From:   Li Qiong <liqiong@nfschina.com>
-To:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Yu Zhe <yuzhe@nfschina.com>,
-        Li Qiong <liqiong@nfschina.com>
-Subject: [PATCH v2] wifi: brcmfmac: add error code in brcmf_notify_sched_scan_results()
-Date:   Mon, 29 Aug 2022 19:12:56 +0800
-Message-Id: <20220829111256.21923-1-liqiong@nfschina.com>
-X-Mailer: git-send-email 2.11.0
-In-Reply-To: <20220829065831.14023-1-liqiong@nfschina.com>
-References: <20220829065831.14023-1-liqiong@nfschina.com>
+        Mon, 29 Aug 2022 08:26:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8968C30F55;
+        Mon, 29 Aug 2022 05:10:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AE09BB80F93;
+        Mon, 29 Aug 2022 12:10:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5EA1FC433D6;
+        Mon, 29 Aug 2022 12:10:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661775017;
+        bh=fK7S2U9FH3Mh1H4KPhuYrCAu21172KjX+5QYn8bZxhw=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=TBIvehqlXAnaUEIBMGrGtucuAxZHCjYUbH9gZTzp39B5ATUAioe8WO3EhAjb3uXxe
+         dMkxYY6hb+WC6eHZyS/cPa8r2CKTI01EB9MGyg1IsF1/oZT7KJghqNmyKNC9XH8ves
+         Cj3pIf4EmX/G+vS/jKdpHZhOleUGsARHnbS9xEcHQZhYvclYHJsMAatPyh4hKIzTRv
+         ajwmDjfIKqrpsF4i7DFIPFPAdyZsb0nMzw3IdNk/hNCLbimS7UVtlTLrinQs2UaKDw
+         YTwmujROS5OWbAtqbFtveKef90uGKF6IuQSib+pIDDHdy0cvO/DcGODQekO/LzgUrc
+         qkbrfSs4DNb4A==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4809AE924D7;
+        Mon, 29 Aug 2022 12:10:17 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH net-next] genetlink: start to validate reserved header bytes
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <166177501728.22813.10790787483082655487.git-patchwork-notify@kernel.org>
+Date:   Mon, 29 Aug 2022 12:10:17 +0000
+References: <20220825001830.1911524-1-kuba@kernel.org>
+In-Reply-To: <20220825001830.1911524-1-kuba@kernel.org>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     davem@davemloft.net, netdev@vger.kernel.org, edumazet@google.com,
+        pabeni@redhat.com, jiri@resnulli.us, johannes@sipsolutions.net,
+        linux-block@vger.kernel.org, osmocom-net-gprs@lists.osmocom.org,
+        linux-wpan@vger.kernel.org, wireguard@lists.zx2c4.com,
+        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-pm@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-cifs@vger.kernel.org, cluster-devel@redhat.com,
+        mptcp@lists.linux.dev, lvs-devel@vger.kernel.org,
+        netfilter-devel@vger.kernel.org,
+        linux-security-module@vger.kernel.org, dev@openvswitch.org,
+        linux-s390@vger.kernel.org, tipc-discussion@lists.sourceforge.net
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The err code is 0 at the first two "out_err" paths, add error code
-'-EINVAL' for these error paths.
+Hello:
 
-Signed-off-by: Li Qiong <liqiong@nfschina.com>
----
-v1->v2:
-- Modify subject.
-- Resend patch and CC to linux-wireless.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+This patch was applied to netdev/net-next.git (master)
+by David S. Miller <davem@davemloft.net>:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index db45da33adfd..b965649bb0e4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3553,6 +3553,7 @@ brcmf_notify_sched_scan_results(struct brcmf_if *ifp,
- 	WARN_ON(status != BRCMF_PNO_SCAN_COMPLETE);
- 	brcmf_dbg(SCAN, "PFN NET FOUND event. count: %d\n", result_count);
- 	if (!result_count) {
-+		err = -EINVAL;
- 		bphy_err(drvr, "FALSE PNO Event. (pfn_count == 0)\n");
- 		goto out_err;
- 	}
-@@ -3560,6 +3561,7 @@ brcmf_notify_sched_scan_results(struct brcmf_if *ifp,
- 	netinfo_start = brcmf_get_netinfo_array(pfn_result);
- 	datalen = e->datalen - ((void *)netinfo_start - (void *)pfn_result);
- 	if (datalen < result_count * sizeof(*netinfo)) {
-+		err = -EINVAL;
- 		bphy_err(drvr, "insufficient event data\n");
- 		goto out_err;
- 	}
+On Wed, 24 Aug 2022 17:18:30 -0700 you wrote:
+> We had historically not checked that genlmsghdr.reserved
+> is 0 on input which prevents us from using those precious
+> bytes in the future.
+> 
+> One use case would be to extend the cmd field, which is
+> currently just 8 bits wide and 256 is not a lot of commands
+> for some core families.
+> 
+> [...]
+
+Here is the summary with links:
+  - [net-next] genetlink: start to validate reserved header bytes
+    https://git.kernel.org/netdev/net-next/c/9c5d03d36251
+
+You are awesome, thank you!
 -- 
-2.11.0
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
