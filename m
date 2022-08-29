@@ -2,93 +2,157 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F3FAECAAD2
-	for <linux-wireless@archiver.kernel.org>; Mon, 29 Aug 2022 15:35:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C336ECAAD5
+	for <linux-wireless@archiver.kernel.org>; Mon, 29 Aug 2022 16:01:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229587AbiH2Pfs (ORCPT
+        id S229894AbiH2QBE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 29 Aug 2022 11:35:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35840 "EHLO
+        Mon, 29 Aug 2022 12:01:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229566AbiH2Pfr (ORCPT
+        with ESMTP id S229481AbiH2QA6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2022 11:35:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6E577B28E
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2022 08:35:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 839086117B
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2022 15:35:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0E34C433D6;
-        Mon, 29 Aug 2022 15:35:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661787344;
-        bh=ZWwqvIOS9mKhwMqfV535d6v5lPa4Z7WaRzovmpmsTIM=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=j77jFmbVcXy8QsAxHW060Wx/JU21N7UD8xeipEs78TYaxExRfYhxrmIkCODMNH9Nh
-         iBTtl/Xz500VNGlfI/UwVrMjBTtXTbNc2psXglt+oL7i/uHp94u2+vps30xr7Pebnb
-         6oKsWSm8KpD0BM4C5SyHxw2Hf21AOr+dYonKE3e6c/Rcd7mk+EYm61N+a62Uuxc//8
-         Odb0huZdHLLG7TvAOm6dhN/+lEmzzz8PyM5EqpzqMh6D3N6m6Gk+XTM0A04H0lskjE
-         W1JUxJ1Eh4UpkCF2le7GMaCM4ZJqBZBzJiD9jVRgTUhnKYDOo/ZUwFnJ1n4x3Mzt0Y
-         KAYjut4Yhtd5w==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Nathan Chancellor <nathan@kernel.org>
-Cc:     Ping-Ke Shih <pkshih@realtek.com>, tony0620emma@gmail.com,
+        Mon, 29 Aug 2022 12:00:58 -0400
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 588FC5F9BF
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2022 09:00:56 -0700 (PDT)
+Received: by mail-pg1-x535.google.com with SMTP id v4so8067367pgi.10
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2022 09:00:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:user-agent:references
+         :in-reply-to:date:to:from:subject:message-id:from:to:cc;
+        bh=4M0i3XiDN/+kkqbpcLkvRg3J5WfZu733Pqyignr2Kxk=;
+        b=JthZYmGosV2+yTcDS7/k3vYteoerjPi2oQ+isK6Eh6d0E7LAplpFmNzQtH+Nv/cPp1
+         qvzoOJQLr5mbSNpO5S7+7fq90TsISJuqUTr9gIWVcaW311oKvP50DzePiIy8SlX3tX8A
+         kEgarZMIv5QBDiSGsmNURNVckAdaL1CFJvu1Mve6k/5oPBtUXQ95O/6JJsX+jUgvRnB5
+         6NOGCCJTwthXa2wN9iE43pYVwpNv+jjFs+LJcN/HueZ61gHL2QJsrtL5voRP+Kz8gOt8
+         D93cm5nwrb27A1MnVL0k8boZzLmxUGSgO3n+VrneSMWI/n923u1qfsksYpsOmpT1OskC
+         Aq1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:user-agent:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc;
+        bh=4M0i3XiDN/+kkqbpcLkvRg3J5WfZu733Pqyignr2Kxk=;
+        b=7Ts3zMdS7n4ZVZGwJW69vWXUC2z1F6B6HOZjwOA4lXY2E3SMPJcDQd1yx6jZlXwptC
+         AVTzKFjkH4cm0E3DEOcq8Qq5G3byTR7j7bVdJKKaXAEubi7TKgFkhq/iuYpFB6TG2Bz4
+         tY0oenZqEqOfqN2crtXAcSWPUnA8S2NBjdIxxrQXkrDtz2Az0TSJn3FFC5xKw74i8qCM
+         9uQLiIAslFtaNylC1BZXlP7hYu/EqugcTnfvEDyBU8mKIXPjjAI8RFL09pZf0SY0b7do
+         mQLm07aG8JYsF0LCtOPfO3nMjwuEcb6l+e00DWiYFcTgC9sAjVOXwTgMq6IIkAx6lsQ3
+         pnzg==
+X-Gm-Message-State: ACgBeo0a40ggd6xf+3RxJWUkz+bR4rxYqY+MoyVMarHZIImp2P0oz8KF
+        WSuzfJa9iV1An9A8Cca5WQ9AEFeUc7U=
+X-Google-Smtp-Source: AA6agR5Zrz3Bi9fGWpmhzcbq9L9UVUFdnstys+FjCIVHNLZdUu9Pqpe6mfnLlGUGGlQifFknauUq3Q==
+X-Received: by 2002:a63:ba05:0:b0:42b:229d:e644 with SMTP id k5-20020a63ba05000000b0042b229de644mr14125318pgf.125.1661788855520;
+        Mon, 29 Aug 2022 09:00:55 -0700 (PDT)
+Received: from [192.168.254.16] ([50.39.168.145])
+        by smtp.gmail.com with ESMTPSA id q2-20020a170902a3c200b001714e7608fdsm7708211plb.256.2022.08.29.09.00.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Aug 2022 09:00:55 -0700 (PDT)
+Message-ID: <cba322cbf992067e843114ab53da610978768d64.camel@gmail.com>
+Subject: Re: Automatically adding OCI in mac80211
+From:   James Prestwood <prestwoj@gmail.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wifi: rtw88: fix uninitialized use of primary channel index
-In-Reply-To: <YwZ+RsHL+n02gHZx@dev-arch.thelio-3990X> (Nathan Chancellor's
-        message of "Wed, 24 Aug 2022 12:38:46 -0700")
-References: <20220815062004.22920-1-pkshih@realtek.com>
-        <YwZ+RsHL+n02gHZx@dev-arch.thelio-3990X>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-Date:   Mon, 29 Aug 2022 18:35:39 +0300
-Message-ID: <87o7w3f4fo.fsf@kernel.org>
+Date:   Mon, 29 Aug 2022 09:00:54 -0700
+In-Reply-To: <199f2ac280a1e1a195add45290411a9c1dc519fc.camel@sipsolutions.net>
+References: <432703ce83ac979ba06e2b85d6dc500f246c6a76.camel@gmail.com>
+         <199f2ac280a1e1a195add45290411a9c1dc519fc.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.4 (3.40.4-5.fc34) 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Nathan Chancellor <nathan@kernel.org> writes:
+On Sat, 2022-08-27 at 16:46 +0200, Johannes Berg wrote:
+> On Fri, 2022-08-26 at 14:12 -0700, James Prestwood wrote:
+> > Long ago support for multiple authenticated BSS's was removed due
+> > to
+> > its complexity. 
+> > 
+> 
+> Well, actually, you can still authenticate with multiple BSSes, we
+> just
+> don't really track it.
 
-> On Mon, Aug 15, 2022 at 02:20:04PM +0800, Ping-Ke Shih wrote:
->
->> clang reports uninitialized use:
->> 
->> >> drivers/net/wireless/realtek/rtw88/main.c:731:2: warning: variable
->>    'primary_channel_idx' is used uninitialized whenever switch default is
->>    taken [-Wsometimes-uninitialized]
->>            default:
->>            ^~~~~~~
->>    drivers/net/wireless/realtek/rtw88/main.c:754:39: note: uninitialized
->>    use occurs here
->>            hal->current_primary_channel_index = primary_channel_idx;
->>                                                 ^~~~~~~~~~~~~~~~~~~
->>    drivers/net/wireless/realtek/rtw88/main.c:687:24: note: initialize the
->>    variable 'primary_channel_idx' to silence this warning
->>            u8 primary_channel_idx;
->>                                  ^
->>                                   = '\0'
->> 
->> This situation could not happen, because possible channel bandwidth
->> 20/40/80MHz are enumerated.
->> 
->> Fixes: 341dd1f7de4c ("wifi: rtw88: add the update channel flow to support setting by parameters")
->> Reported-by: kernel test robot <lkp@intel.com>
->> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
->
-> Reviewed-by: Nathan Chancellor <nathan@kernel.org>
->
-> Can we get this into -next soon? This warning is breaking our builds due
-> to CONFIG_WERROR.
+Yes what I meant (which I never made clear) was that once you
+authenticate you can never go back to the original BSS without fully
+disconnecting.
 
-Johannes applied it:
+> 
+> > CMD_AUTHENTICATE now changes state/channel, and is not
+> > recoverable if authentication fails (i.e. disconnect). 
+> 
+> It never did anything else though, IIRC? Anyway, doesn't matter much
+> now.
+> 
+> > The spec
+> > actually allows/intends for multiple authentications to be
+> > supported
+> > and FT specifically can really benefit from this.
+> 
+> Sure, and with FT especially you can do some things over the DS too -
+> but the kernel no longer cares, which is the part that was removed,
+> if
+> you try to assoc without ever authenticating it doesn't matter as far
+> as
+> the kernel is concerned.
+> 
+> > As a workaround we started playing around with using
+> > CMD_FRAME/offchannel for authentication, bypassing the kernels
+> > state.
+> > This works, and we can authenticate, fail, try another BSS etc. all
+> > without the kernel knowing, then proceed to association.
+> 
+> Should work, yeah.
+> 
+> > The small problem is dealing with OCV. Prior, we would call
+> > CMD_AUTHENTICATE (channel changes), then GET_INTERFACE in order to
+> > obtain the channel/operating class to build the OCI element. Now,
+> > since
+> > authentication is done offchannel we cannot use GET_INTERFACE.
+> > Deriving
+> > the OCI based on capabilities is certainly possible, after all this
+> > is
+> > what the kernel does, but rather than trying to mirror/maintain
+> > that
+> > code I thought it would be great if the kernel could append the OCI
+> > automatically to the association request. This would also save a
+> > round
+> > trip since GET_INTERFACE wouldn't be needed.
+> 
+> I don't understand. You already have to know the channel in order to
+> even *do* this (off-channel TX)? The kernel doesn't really know much
+> about operating classes, so that part seems a bit tricky.
+> 
+> Also note that this is not going to work so well with MLO due to the
+> link and MLD addresses, and the kernel currently inserting the ML
+> element, so not sure you're going to want to go this route now.
 
-https://git.kernel.org/netdev/net-next/c/4ffb4d25ef12
+Yeah, true the kernel doesn't have the tables for operating classes... 
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+Basically the critical info we need is the channel width and center1
+frequency (plus center2 freq for 80+80) values for the offchannel
+operation.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+So maybe another API for getting this? Give it a channel/freq and a BSS
+MAC, and run roughly the same derivation as
+ieee80211_determine_chantype().
+
+The only problem here is when picking the channel the kernel tries one
+configuration, and if it fails it downgrades the width... So this would
+need to be fixed to know ahead of time, if thats possible.
+
+Note, adding something like this would also benefit FT-over-DS since
+currently you cannot do OCV with it.
+
+Thanks,
+James
+
+> 
+> johannes
+
+
