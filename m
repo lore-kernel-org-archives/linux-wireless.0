@@ -2,105 +2,141 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC52ECAAD4
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Aug 2022 13:30:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA08ECAAD4
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Aug 2022 13:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231356AbiHaNaE (ORCPT
+        id S229710AbiHaN7c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 Aug 2022 09:30:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37906 "EHLO
+        Wed, 31 Aug 2022 09:59:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbiHaNaD (ORCPT
+        with ESMTP id S229449AbiHaN7a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2022 09:30:03 -0400
-X-Greylist: delayed 402 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 31 Aug 2022 06:29:59 PDT
-Received: from giacobini.uberspace.de (giacobini.uberspace.de [185.26.156.129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D4C31A3B6
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2022 06:29:57 -0700 (PDT)
-Received: (qmail 15005 invoked by uid 990); 31 Aug 2022 13:23:14 -0000
-Authentication-Results: giacobini.uberspace.de;
-        auth=pass (plain)
-From:   Soenke Huster <soenke.huster@eknoes.de>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Cc:     Soenke Huster <soenke.huster@eknoes.de>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: mac80211_hwsim: check length for virtio packets
-Date:   Wed, 31 Aug 2022 15:22:06 +0200
-Message-Id: <20220831132205.129922-1-soenke.huster@eknoes.de>
-X-Mailer: git-send-email 2.37.3
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Bar: /
-X-Rspamd-Report: R_MISSING_CHARSET(0.5) MIME_GOOD(-0.1) MID_CONTAINS_FROM(1) BAYES_HAM(-0.616589)
-X-Rspamd-Score: 0.78341
-Received: from unknown (HELO unkown) (::1)
-        by giacobini.uberspace.de (Haraka/2.8.28) with ESMTPSA; Wed, 31 Aug 2022 15:23:14 +0200
+        Wed, 31 Aug 2022 09:59:30 -0400
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBFDAD5EA6
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2022 06:59:29 -0700 (PDT)
+Received: by mail-wm1-x333.google.com with SMTP id k6-20020a05600c1c8600b003a54ecc62f6so8044202wms.5
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2022 06:59:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc;
+        bh=cSSofcj/fzMSByM5TVTgE5q2OyrYMYhLB+GYNE0Xyz4=;
+        b=pyp/sWqwVMNjuTDgXKy2xJU4zNe8YHcfTuG9uaK40qK+9W6QnEiDFp/jZr8xvxGuwQ
+         QMH+/q0v5y/++TJbvxnrAx+pWlcQdbcZvsow5YG0gHpIcd8dbAeW8oZS1FM/HxHFSicj
+         cofJtsK5jftFd8Tqg8HMW98cREiajAItIL6tt85TTdTgyo4h4yh2NM3FvQTGLkslJ9IP
+         4vcqED7SG2Gu/KfS0J1p1cEdHLc5iDWnD20ArYsxyqdx3Zb1HldursHJX7Ycn97Rg8+v
+         +yPh3BFsiIS4nnrk0Kiy6Sq8CBhTEiyuHXyOQL0OvvIAUEaMaSfnfDguzeT8MhmhTlGQ
+         mIWw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc;
+        bh=cSSofcj/fzMSByM5TVTgE5q2OyrYMYhLB+GYNE0Xyz4=;
+        b=gc19zH8lE0Z3QGwZYIk5W5pbzgr7F07Vtvpj6iQ1ap8VzW/3zfUNC8G4OqpqWDb1b2
+         74BgtD0Q/UsdU7oF+rjd2KL0ktittzinWtuj8p5qrjsMt/ljh5nqTSyv+jwnKqKQI4JG
+         MV56DSgY0EXYjY9sjW3qCu+DB5vR7rejmLA6eIniXR8SN3gJ8Z93uZraRROXceoVBeyK
+         0Rz/+KP/lzwEspNjK3HoEpYpnyRLaBi4K6YB/XKzUUTaTUkL2FcsMhHqvaYo+xn6oyFf
+         88PMTjI21n8eAoz8KReKf1eqf88typYLSu9hLIYOUwXPz1qbHVZG8jBFfCI0Kko1i+EB
+         dAog==
+X-Gm-Message-State: ACgBeo1Fdf9B/sswe/pnQu4sg1y9DIg4e06QOAFDYrio6XKUq62xdjWC
+        /1+GKT9aEPEnwT0Nue26UnA=
+X-Google-Smtp-Source: AA6agR48qgoPoDLg7p8UlN5f7LHXpph8oQW3vkazLk1o7IYal+/uufU+dT909GvKMvNk3rUsmhNkVg==
+X-Received: by 2002:a7b:cd91:0:b0:3a8:5262:6aa9 with SMTP id y17-20020a7bcd91000000b003a852626aa9mr2029458wmj.143.1661954368218;
+        Wed, 31 Aug 2022 06:59:28 -0700 (PDT)
+Received: from smtpclient.apple (p200300c56f185400edcb108dfd391000.dip0.t-ipconnect.de. [2003:c5:6f18:5400:edcb:108d:fd39:1000])
+        by smtp.gmail.com with ESMTPSA id h21-20020a05600c351500b003a502c23f2asm2586312wmq.16.2022.08.31.06.59.27
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 31 Aug 2022 06:59:27 -0700 (PDT)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.100.31\))
+Subject: Re: [RFC 0/4] mac80211: add TPC support in control path
+From:   Jonas Jelonek <jelonek.jonas@gmail.com>
+In-Reply-To: <CE871D89-B996-4D8B-8C65-7C53382C30D8@gmail.com>
+Date:   Wed, 31 Aug 2022 15:59:26 +0200
+Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name,
+        =?utf-8?Q?Thomas_H=C3=BChn?= <thomas.huehn@hs-nordhausen.de>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <7CFDCFCC-A369-4F41-90E1-A26591C20D92@gmail.com>
+References: <20220829144147.484787-1-jelonek.jonas@gmail.com>
+ <467218ec220ea6e36b4222efc5c46e4e350fe1ea.camel@sipsolutions.net>
+ <CE871D89-B996-4D8B-8C65-7C53382C30D8@gmail.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+X-Mailer: Apple Mail (2.3696.100.31)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-An invalid packet with a length shorther than the specified length in the
-netlink header can lead to use-after-frees and slab-out-of-bounds in the
-processing of the netlink attributes, such as the following:
 
-  BUG: KASAN: slab-out-of-bounds in __nla_validate_parse+0x1258/0x2010
-  Read of size 2 at addr ffff88800ac7952c by task kworker/0:1/12
+> On 29. Aug 2022, at 17:06, Jonas Jelonek <jelonek.jonas@gmail.com> =
+wrote:
+>=20
+> We planned to get these changes upstream at first to have the =
+foundation for TPC
+> in the mac80211, and then develop driver implementations and TPC =
+algorithm on=20
+> top of this once all is reviewed, approved and upstream.=20
+> The ath9k tpc support is currently not upstream-ready but can be in a =
+next version.
+> For testing the actual TPC support I modified minstrel=E2=80=99s =
+debugfs to be able to set=20
+> fixed tx-power per STA.
+>=20
+> I think we can develop this series further to come up with fully =
+working driver
+> implementation and a TPC algorithm if you think that would be better.=20=
 
-  Workqueue: events hwsim_virtio_rx_work
-  Call Trace:
-   <TASK>
-   dump_stack_lvl+0x45/0x5d
-   print_report.cold+0x5e/0x5e5
-   kasan_report+0xb1/0x1c0
-   __nla_validate_parse+0x1258/0x2010
-   __nla_parse+0x22/0x30
-   hwsim_virtio_handle_cmd.isra.0+0x13f/0x2d0
-   hwsim_virtio_rx_work+0x1b2/0x370
-   process_one_work+0x8df/0x1530
-   worker_thread+0x575/0x11a0
-   kthread+0x29d/0x340
-   ret_from_fork+0x22/0x30
- </TASK>
+> Else we could also provide at least a debugfs patch to be able to set =
+fixed
+> tx-power per STA.
+>=20
+> Greetings
+> Jonas
+>=20
+>> On 29. Aug 2022, at 16:46, Johannes Berg <johannes@sipsolutions.net> =
+wrote:
+>>=20
+>> On Mon, 2022-08-29 at 16:41 +0200, Jonas Jelonek wrote:
+>>>=20
+>>> I tested the tx-power annotation with an implementation of TPC in =
+ath9k
+>>> (not included in this RFC) and small changes in minstrel_ht for =
+debugfs
+>>> access. Tx-power status report in ath9k required the proposed =
+utility
+>>> function in mac80211.
+>>>=20
+>>=20
+>> Huh wait, now that I got to the end of the series ... this doesn't
+>> actually *do* anything, so what's the point? Shouldn't it come with =
+some
+>> implementation of the control?
+>>=20
+>> johannes
+>=20
 
-Discarding packets with an invalid length solves this.
-Therefore, skb->len must be set at reception.
+I am working on the hwsim support right now, tpc support in hwsim=E2=80=99=
+s control path is implemented.
+However I encountered a problem in the status path. Hwsim seems to hand =
+over to mac80211
+tx-status asynchronously via ieee80211_tx_status_irqsafe only. There, =
+the skb is added to
+ieee80211_local->skb_queue and then dequeued in =
+=E2=80=98ieee80211_tasklet_handler=E2=80=99 to be passed
+to =E2=80=98ieee80211_tx_status=E2=80=99. For tx rates this is =
+sufficient, but there is no space left in=20
+ieee80211_tx_info->status to pass the tx-power per packet.
+Please correct me if I missed something in the code.
 
-Signed-off-by: Soenke Huster <soenke.huster@eknoes.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+My idea to solve this may be: to use the SKB extension (struct skb_ext =
+*extensions) to pass the=20
+tx-power information (and maybe more) for each SKB. Could this be an =
+appropriate approach or=20
+do I miss something here? Maybe someone who is much more aware of the =
+mac80211 layer=20
+design does have a better idea for this?
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4fb8f68e5c3b..6bd9bd50071e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -5436,6 +5436,10 @@ static int hwsim_virtio_handle_cmd(struct sk_buff *skb)
- 
- 	nlh = nlmsg_hdr(skb);
- 	gnlh = nlmsg_data(nlh);
-+
-+	if (skb->len < nlh->nlmsg_len)
-+		return -EINVAL;
-+
- 	err = genlmsg_parse(nlh, &hwsim_genl_family, tb, HWSIM_ATTR_MAX,
- 			    hwsim_genl_policy, NULL);
- 	if (err) {
-@@ -5478,7 +5482,8 @@ static void hwsim_virtio_rx_work(struct work_struct *work)
- 	spin_unlock_irqrestore(&hwsim_virtio_lock, flags);
- 
- 	skb->data = skb->head;
--	skb_set_tail_pointer(skb, len);
-+	skb_reset_tail_pointer(skb);
-+	skb_put(skb, len);
- 	hwsim_virtio_handle_cmd(skb);
- 
- 	spin_lock_irqsave(&hwsim_virtio_lock, flags);
--- 
-2.37.3
-
+Greetings
+Jonas=
