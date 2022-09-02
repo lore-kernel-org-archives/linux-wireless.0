@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C95ECAAD5
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF77C6FA82
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236998AbiIBOvx (ORCPT
+        id S236618AbiIBOvy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Sep 2022 10:51:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58692 "EHLO
+        Fri, 2 Sep 2022 10:51:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236660AbiIBOvJ (ORCPT
+        with ESMTP id S236673AbiIBOvJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 2 Sep 2022 10:51:09 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88E1BC7B81
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 07:13:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 120FEC9E98
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 07:13:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=Vkn9bX2get9xJfGaW7IT8bl2uJfcZVU6lSSkxkJlWGQ=;
-        t=1662127995; x=1663337595; b=Amz6I0JlBrc2iHnh7BQM5CO3IVP4wZ8GZqc0NOj3xL//Djg
-        FEa6AzprOZWt/EaulGisOHwuAt/J7+RJ6pOinIhSkmVzKNpTSEOebbiIG2WXSXQEPKXtysIbn2anF
-        pcd1u2LOM0UuO0sIGMijqXxnZnH/19HV0ZUdI3mpOFk8Nkx1V3Z+XKVTlOxelXpZ0Wcvnz9CjIp3x
-        Xw4XcGqxxAJFQBoKYwOkZSQIBJ1iNtuIFj+8yCCFq6dkKy7kpgCZ/5KH01x44m65OLxGthu6amVSf
-        mQjJ2Q4fydGTjC32pgY5dc4c7rU+/lVYnciXMg3CZfNor+c8ednz9pY+kXXtrYXA==;
+        Resent-Cc:Resent-Message-ID; bh=Fcb7MRhNBRPyuXfJFlok0Kl/XOD0L9kPs1dLRrs+SN8=;
+        t=1662127996; x=1663337596; b=aL0NZV4IWD6130p92onIB9cghnYnSWdv7PGtsTaRyef+Rrm
+        +KnSzKLkTNxZPjfBWTE0HM1AxP9XdjwO4MOdX/Hj9MXFFwznIg2ww0vc7QF895NzsUKAlKDsAvgGE
+        wStLrBkytRqGnaMgnkTADN8qmrD2HwwiPdIqu5rMAe0wNfaB3m+nqfSJqovKv3QAWj4ht0I7iSjDC
+        L4E9Oks8fB5wDZ1AUDHS6wSCNY64eiFDiY4rRPQY3Q79lPpTe3mHdSxPXoTYahUFiAQtMRjoPlnMe
+        9HfPif6osjb8QCwAViB96osWVxCCEQNdobLV+rESOPFngn2kEVN9gO3IGSO0b2VQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oU7Pz-006Ch3-1N;
-        Fri, 02 Sep 2022 16:13:11 +0200
+        id 1oU7Q2-006Ch3-1P;
+        Fri, 02 Sep 2022 16:13:14 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 23/27] wifi: mac80211: fix double SW scan stop
-Date:   Fri,  2 Sep 2022 16:12:55 +0200
-Message-Id: <20220902161143.90c4cba91722.If9fe28ed40e21b8979e56cf498491f003432a461@changeid>
+Subject: [PATCH 25/27] wifi: mac80211_hwsim: always activate all links
+Date:   Fri,  2 Sep 2022 16:12:57 +0200
+Message-Id: <20220902161143.f532f47ae5aa.I1e04b12b2784ea52f91f4bffb2c4af7686482435@changeid>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220902141259.377789-1-johannes@sipsolutions.net>
 References: <20220902141259.377789-1-johannes@sipsolutions.net>
@@ -48,31 +48,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When we stop a not-yet-started scan, we erroneously call
-into the driver, causing a sequence of sw_scan_start()
-followed by sw_scan_complete() twice. This now causes a
-warning in hwsim with the recent commit that validates
-the address passed to wmediumd/virtio. Fix this by doing
-the calls only if we were actually scanning.
+By default, even in client mode, hwsim always had all links
+active, where it then uses them in a round-robin fashion.
+Re-enable that by activating all valid links work right after
+the connection is authorized.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index fa8ddf576bc1..a30964589a94 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -482,7 +482,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- 	/* Set power back to normal operating levels. */
- 	ieee80211_hw_config(local, 0);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index f044db1621dd..96f7333f7ce1 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2476,6 +2476,14 @@ static int mac80211_hwsim_sta_state(struct ieee80211_hw *hw,
+ 	if (old_state == IEEE80211_STA_NOTEXIST)
+ 		return mac80211_hwsim_sta_add(hw, vif, sta);
  
--	if (!hw_scan) {
-+	if (!hw_scan && was_scanning) {
- 		ieee80211_configure_filter(local);
- 		drv_sw_scan_complete(local, scan_sdata);
- 		ieee80211_offchannel_return(local);
++	/*
++	 * when client is authorized (AP station marked as such),
++	 * enable all links
++	 */
++	if (vif->type == NL80211_IFTYPE_STATION &&
++	    new_state == IEEE80211_STA_AUTHORIZED && !sta->tdls)
++		ieee80211_set_active_links_async(vif, vif->valid_links);
++
+ 	return 0;
+ }
+ 
 -- 
 2.37.2
 
