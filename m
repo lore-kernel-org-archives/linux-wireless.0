@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F23C38145
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:51:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE108ECAAD5
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236037AbiIBOvr (ORCPT
+        id S236939AbiIBOvs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Sep 2022 10:51:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33448 "EHLO
+        Fri, 2 Sep 2022 10:51:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236277AbiIBOvH (ORCPT
+        with ESMTP id S236602AbiIBOvI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2022 10:51:07 -0400
+        Fri, 2 Sep 2022 10:51:08 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F9507269B
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3FFCC6CFD
         for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 07:13:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=XUUgvV9lcE4V8T0asYtoaM4o40lQDnW9AZ3b9btMzn4=;
-        t=1662127992; x=1663337592; b=sNGwT/HmzYcWbUgYAnxiecif9UUd38sBNBmX4+TLvovTYCL
-        kpRcsgjpuE2/L++06PfpuaOxXdVFuERS5sG+wqI2diD/pHVoVw45nMyv0WNm7hrmbDcAEJtcXyQMu
-        uI1K+OhzsQo4mo5cxWHNZ/C5F0aWjuZjqNXiZHbB5nohOT5QdmLaWkC2VAX6K6EcUahG98w5PDOkl
-        cWuSpfbNPq1Xr2a+8/GZeA8okqzwOmVK6kTa2d7GGrNbmrfM4Smfue/AMUgsrA72T8wcaTH7AjeY7
-        DHKNvh9oADWIoWLSp77mWSISUJ+a9W0PAWEo8SuBqipDod8qWJwN/mOzuUXy6y0A==;
+        Resent-Cc:Resent-Message-ID; bh=AIU9Cq4XFIi0mNMtUqFV+kVrHz3R9jjwNT8zL48ZNN8=;
+        t=1662127992; x=1663337592; b=KqrwBpGe7KAaADEy6KIZ5nM9OLNRj8RDAtEKBKlPmBkUf7k
+        +Udd1sjp/mXdM1/l/VQLg+7GpP966Gug8qfDhIK7ljPFlqxndv3PkSARQCQPQcz9rUEpWKQQjrk8V
+        3RX+RWho2vsow5AuA+QlgV9L9RVXk02IgVepcMw2hj4djBj7ABucEzBZXmfiD0eUSXmzoKO24D62n
+        oUFkbhmACjus72kqubG/in7hxO2971LcrNVRx7Iu3mGeNy5hs9RtDm4zRMG0aJ4ZNrZE5sDhbs+Yg
+        OA8+eCv0YCVum8zlrXywqFZ3kbBmT9xMWpmI9hTWcXhoE9OilrV4kfoH+QAbVTiA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oU7Py-006Ch3-0v;
+        id 1oU7Py-006Ch3-2o;
         Fri, 02 Sep 2022 16:13:10 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 19/27] wifi: mac80211: call drv_sta_state() under sdata_lock() in reconfig
-Date:   Fri,  2 Sep 2022 16:12:51 +0200
-Message-Id: <20220902161143.6f0d7eaf8ef2.I1fb12610d109f47a09f859b8faf653b643e8b9b4@changeid>
+Subject: [PATCH 21/27] wifi: mac80211: set up beacon timing config on links
+Date:   Fri,  2 Sep 2022 16:12:53 +0200
+Message-Id: <20220902161143.b3ab2553538c.I47c496386723d852da80f17e8b504a97176aa696@changeid>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220902141259.377789-1-johannes@sipsolutions.net>
 References: <20220902141259.377789-1-johannes@sipsolutions.net>
@@ -48,73 +48,122 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Currently, other paths calling drv_sta_state() hold the mutex
-and therefore drivers can assume that, and look at links with
-that protection. Fix that for the reconfig path as well; to
-do it more easily use ieee80211_reconfig_stations() for the
-AP/AP_VLAN station reconfig as well.
+On secondary MLO links, I forgot to set the beacon interval
+and DTIM period, fix that.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/util.c | 28 +++++++++++++---------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
+ net/mac80211/mlme.c | 83 +++++++++++++++++++++++++--------------------
+ 1 file changed, 47 insertions(+), 36 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 0eed18189491..0ea5d50091dc 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2530,7 +2530,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 			if (link)
- 				ieee80211_assign_chanctx(local, sdata, link);
- 		}
--		sdata_unlock(sdata);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index bf883f2e6de3..8a2237106002 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4819,6 +4819,40 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 	return ret;
+ }
  
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_AP_VLAN:
-@@ -2549,6 +2548,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 					    &sdata->deflink.tx_conf[i]);
- 			break;
- 		}
-+		sdata_unlock(sdata);
++static bool ieee80211_get_dtim(const struct cfg80211_bss_ies *ies,
++			       u8 *dtim_count, u8 *dtim_period)
++{
++	const u8 *tim_ie = cfg80211_find_ie(WLAN_EID_TIM, ies->data, ies->len);
++	const u8 *idx_ie = cfg80211_find_ie(WLAN_EID_MULTI_BSSID_IDX, ies->data,
++					 ies->len);
++	const struct ieee80211_tim_ie *tim = NULL;
++	const struct ieee80211_bssid_index *idx;
++	bool valid = tim_ie && tim_ie[1] >= 2;
++
++	if (valid)
++		tim = (void *)(tim_ie + 2);
++
++	if (dtim_count)
++		*dtim_count = valid ? tim->dtim_count : 0;
++
++	if (dtim_period)
++		*dtim_period = valid ? tim->dtim_period : 0;
++
++	/* Check if value is overridden by non-transmitted profile */
++	if (!idx_ie || idx_ie[1] < 3)
++		return valid;
++
++	idx = (void *)(idx_ie + 2);
++
++	if (dtim_count)
++		*dtim_count = idx->dtim_count;
++
++	if (dtim_period)
++		*dtim_period = idx->dtim_period;
++
++	return true;
++}
++
+ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 				    struct ieee80211_mgmt *mgmt,
+ 				    struct ieee802_11_elems *elems,
+@@ -4882,8 +4916,19 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 			goto out_err;
  
- 		/* common change flags for all interface types */
- 		changed = BSS_CHANGED_ERP_CTS_PROT |
-@@ -2657,23 +2657,21 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	}
+ 		if (link_id != assoc_data->assoc_link_id) {
+-			err = ieee80211_prep_channel(sdata, link,
+-						     assoc_data->link[link_id].bss,
++			struct cfg80211_bss *cbss = assoc_data->link[link_id].bss;
++			const struct cfg80211_bss_ies *ies;
++
++			rcu_read_lock();
++			ies = rcu_dereference(cbss->ies);
++			ieee80211_get_dtim(ies,
++					   &link->conf->sync_dtim_count,
++					   &link->u.mgd.dtim_period);
++			link->conf->dtim_period = link->u.mgd.dtim_period ?: 1;
++			link->conf->beacon_int = cbss->beacon_interval;
++			rcu_read_unlock();
++
++			err = ieee80211_prep_channel(sdata, link, cbss,
+ 						     &link->u.mgd.conn_flags);
+ 			if (err) {
+ 				link_info(link, "prep_channel failed\n");
+@@ -6356,40 +6401,6 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
+ 	rcu_read_unlock();
+ }
  
- 	/* APs are now beaconing, add back stations */
--	mutex_lock(&local->sta_mtx);
--	list_for_each_entry(sta, &local->sta_list, list) {
--		enum ieee80211_sta_state state;
+-static bool ieee80211_get_dtim(const struct cfg80211_bss_ies *ies,
+-			       u8 *dtim_count, u8 *dtim_period)
+-{
+-	const u8 *tim_ie = cfg80211_find_ie(WLAN_EID_TIM, ies->data, ies->len);
+-	const u8 *idx_ie = cfg80211_find_ie(WLAN_EID_MULTI_BSSID_IDX, ies->data,
+-					 ies->len);
+-	const struct ieee80211_tim_ie *tim = NULL;
+-	const struct ieee80211_bssid_index *idx;
+-	bool valid = tim_ie && tim_ie[1] >= 2;
 -
--		if (!sta->uploaded)
--			continue;
+-	if (valid)
+-		tim = (void *)(tim_ie + 2);
 -
--		if (sta->sdata->vif.type != NL80211_IFTYPE_AP &&
--		    sta->sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
- 			continue;
- 
--		for (state = IEEE80211_STA_NOTEXIST;
--		     state < sta->sta_state; state++)
--			WARN_ON(drv_sta_state(local, sta->sdata, sta, state,
--					      state + 1));
-+		sdata_lock(sdata);
-+		switch (sdata->vif.type) {
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_AP:
-+			ieee80211_reconfig_stations(sdata);
-+			break;
-+		default:
-+			break;
-+		}
-+		sdata_unlock(sdata);
- 	}
--	mutex_unlock(&local->sta_mtx);
- 
- 	/* add back keys */
- 	list_for_each_entry(sdata, &local->interfaces, list)
+-	if (dtim_count)
+-		*dtim_count = valid ? tim->dtim_count : 0;
+-
+-	if (dtim_period)
+-		*dtim_period = valid ? tim->dtim_period : 0;
+-
+-	/* Check if value is overridden by non-transmitted profile */
+-	if (!idx_ie || idx_ie[1] < 3)
+-		return valid;
+-
+-	idx = (void *)(idx_ie + 2);
+-
+-	if (dtim_count)
+-		*dtim_count = idx->dtim_count;
+-
+-	if (dtim_period)
+-		*dtim_period = idx->dtim_period;
+-
+-	return true;
+-}
+-
+ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 				     struct cfg80211_bss *cbss, s8 link_id,
+ 				     const u8 *ap_mld_addr, bool assoc,
 -- 
 2.37.2
 
