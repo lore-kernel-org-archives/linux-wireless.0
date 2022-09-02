@@ -2,122 +2,117 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA35C38145
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 10:10:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E534ECAAD5
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 11:31:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235978AbiIBKK5 (ORCPT
+        id S236116AbiIBLbo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Sep 2022 06:10:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35004 "EHLO
+        Fri, 2 Sep 2022 07:31:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236058AbiIBKKE (ORCPT
+        with ESMTP id S231752AbiIBLbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2022 06:10:04 -0400
-Received: from mail-oa1-x2f.google.com (mail-oa1-x2f.google.com [IPv6:2001:4860:4864:20::2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD39DC12C3
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 03:09:32 -0700 (PDT)
-Received: by mail-oa1-x2f.google.com with SMTP id 586e51a60fabf-11ee4649dfcso3613408fac.1
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Sep 2022 03:09:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=yzl0ZrHrtS0bnPSG44eioa1iLSYXF3Tc3C5yrNYDd80=;
-        b=C9C/+LEIemsC8vbeTwp0NyDtpc8NYyTf1ueQFHLcBF/nGBvMl7n1n+Hgh0h23iJ5ws
-         0KjenkMCI+pCnoUayZVTpyae9/Qgxd2MVeI6HLLnd1GgC8rQEwCv998H5bNaXqstp6Q/
-         SPTHk+uQxp24Fr6AYA9ihMvEPEkuKAIkQTaQE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=yzl0ZrHrtS0bnPSG44eioa1iLSYXF3Tc3C5yrNYDd80=;
-        b=C2Ojf5u3FXU5TJU1qRt7vlyO2nWpFJJN+76WKR388pCqTfyVnjCzP1AsD/C9LSVzNc
-         m+6LNPdRZBg5c0NoDDMRFuQFdiOtKChhCgcn6AwxdWW2mtoWQ2RJOmQj83R7SWeWR7sa
-         kn5aSUycge6MwQS5JaQe8CDZ3htZfRLqtD86QJ8NTRqyVL6Pf42WzKGSiBEeX0Ubg730
-         mNb8SdvD9MAAHNj6EIDGOAF14bz+lW0x23qYr8Ce3NuuoAEidz3oJ0jaw0z6XD2NAkdI
-         xbpGoUbyq36aE+Ardx3J8SwIKULX3zxiijE/zDkiGop1QXugpD5V0wBg3l5J0AP71kdV
-         hvVQ==
-X-Gm-Message-State: ACgBeo2qkzaUpwrYGbu94PkxvjLIO5rVBlpP3FhxmPqVwRWycqOGc50v
-        DvtcRxO2FTqKobD37ilQBuV89ns1pMgnRAPEzGwK4w==
-X-Google-Smtp-Source: AA6agR62NTLZlvXvfpgnWEonZFEoCEvniVFzFhXbD/r7tKrVgYGr7Jii8BwiW9R1IlNtpeBkBxg7nPZGPoJKNavAslI=
-X-Received: by 2002:a05:6870:4347:b0:10e:d8ab:deb2 with SMTP id
- x7-20020a056870434700b0010ed8abdeb2mr1810265oah.146.1662113371092; Fri, 02
- Sep 2022 03:09:31 -0700 (PDT)
+        Fri, 2 Sep 2022 07:31:21 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 443E12ED57;
+        Fri,  2 Sep 2022 04:28:17 -0700 (PDT)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 282AZ0HU011955;
+        Fri, 2 Sep 2022 11:28:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=GFKlOK2MHqrQ4/ulA3KE7mAQxG5Fey86F/oL7hzKte8=;
+ b=NEGy2A1TfEjXOrXdkqS+x3BxIIez01KhJPdu9lZ07z76973AADudc95gD4dPN1hlgtzY
+ M/9tZBaC076yi1AxLyCOVqz6oxySta+4NfMBlXy4OXulAzCyjZHw1R0Urzb9M1uPn+8o
+ z+7FUygvzbvIVPdMnIrqTXX508Ecfk8YlKK8sMmgnDtsEq40YrKxhVSzBSsfVsGttVL2
+ ZfDHB13t6Lmd9/4VEHmQ9oRh2RGq2xDfSUh0QdtssXcsuWTln/4V17oISWa8S80UhwX2
+ dsXNcaTYo/BKsJ1iZjC6+e5tORcY/LQfKwzux1212X8a1ZEjrA0rH1dcHfJqZqyh1Dg4 9A== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jb7hasmj2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 02 Sep 2022 11:28:04 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 282BS35Z006226
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 2 Sep 2022 11:28:03 GMT
+Received: from mpubbise-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Fri, 2 Sep 2022 04:28:01 -0700
+From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+To:     <ath11k@lists.infradead.org>, <robh@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>
+CC:     <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        "Manikanta Pubbisetty" <quic_mpubbise@quicinc.com>
+Subject: [PATCH v3 1/2] dt: bindings: net: add bindings to add WoW support on WCN6750
+Date:   Fri, 2 Sep 2022 16:55:19 +0530
+Message-ID: <20220902112520.24804-2-quic_mpubbise@quicinc.com>
+X-Mailer: git-send-email 2.37.1
+In-Reply-To: <20220902112520.24804-1-quic_mpubbise@quicinc.com>
+References: <20220902112520.24804-1-quic_mpubbise@quicinc.com>
 MIME-Version: 1.0
-References: <e8fb69386675e5d128db141dabb9e6dad75eb841.1661516424.git.vinayak.yadawad@broadcom.com>
- <c177e3cc-ae69-b8c8-bb72-be85b2262149@quicinc.com> <ce01865907335ee597d204eb3cc8caea6b6326c2.camel@sipsolutions.net>
- <CAMLe8U9Stc7YewmobnC0m9-+dWn7YUFY5OrqmM-CkMcOtHADkw@mail.gmail.com>
-In-Reply-To: <CAMLe8U9Stc7YewmobnC0m9-+dWn7YUFY5OrqmM-CkMcOtHADkw@mail.gmail.com>
-From:   Vinayak Yadawad <vinayak.yadawad@broadcom.com>
-Date:   Fri, 2 Sep 2022 15:39:20 +0530
-Message-ID: <CAMLe8U--x06mAUcgrV7RWR7WUKkN+Q=19YVtHNtG7YyfhBpSHw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] cfg80211: Update Transition Disable policy during
- port authorization
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        linux-wireless@vger.kernel.org,
-        Jithu Jance <jithu.jance@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: cG38xICLmF4NTy4KzXm4Bsm1aJlNAn2o
+X-Proofpoint-ORIG-GUID: cG38xICLmF4NTy4KzXm4Bsm1aJlNAn2o
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-09-02_02,2022-08-31_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 spamscore=0
+ clxscore=1015 suspectscore=0 priorityscore=1501 lowpriorityscore=0
+ mlxscore=0 mlxlogscore=999 adultscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2209020055
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes, Jeff,
+Add required bindings to support WoW (Wake on Wireless) on
+WCN6750 which is based on ath11k driver.
 
-I have published the version2 with the above points mentioned.
-[PATCHv2,1/1] cfg80211: Update Transition Disable policy during port
-authorization
+Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+---
+ .../bindings/net/wireless/qcom,ath11k.yaml         | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-On Tue, Aug 30, 2022 at 2:46 PM Vinayak Yadawad
-<vinayak.yadawad@broadcom.com> wrote:
->
-> Hi Jeff, Johannes,
->
-> From your points we understand, we need a length variable and the
-> td_bitmap value.
->
-> As per the spec
-> https://www.wi-fi.org/download.php?file=/sites/default/files/private/WPA3_Specification_v3.0.pdf(
-> Table 4. Transition Disable KDE format),
-> we do have variable length of the bitmap. So we could
-> 1. Add 2 arguments
-> 2. One would be for the length of td_bitmap.
-> 3. The second argument would be an u8 bitmap array depending on length
-> of bitmap.
-> Accordingly checks can be added to indicate/ignore the indication of
-> bitmap to upper layer.
-> Also the driver can update these fields as length 0 and array NULL in
-> case no value to be updated by the driver.
->
-> On Mon, Aug 29, 2022 at 3:22 PM Johannes Berg <johannes@sipsolutions.net> wrote:
-> >
-> > On Fri, 2022-08-26 at 08:48 -0700, Jeff Johnson wrote:
-> > >
-> > > > @@ -3268,6 +3270,7 @@ enum nl80211_attrs {
-> > > >
-> > > >     NL80211_ATTR_TX_HW_TIMESTAMP,
-> > > >     NL80211_ATTR_RX_HW_TIMESTAMP,
-> > > > +   NL80211_ATTR_TD_BITMAP,
-> > > >
-> > > >     /* add attributes here, update the policy in nl80211.c */
-> > >
-> > > Johannes, do you want the policy updated even thought this is
-> > > driver->userspace and hence the policy is never applied to it?
-> >
-> > Yeah in a sense, it doesn't really matter... I think not updating is
-> > fine, then it will likely even be rejected, at least in any new
-> > commands.
-> >
-> > > >             struct {
-> > > >                     u8 bssid[ETH_ALEN];
-> > > > +                   s16 td_bitmap;
-> > >
-> > > I know you are using -1 as an indication that the bitmap is not used,
-> > > but using signed with a bitmap seems strange since bitops can be
-> > > affected by sign extension. Just something that set off my Spider-Sense.
-> >
-> > Yeah true ... maybe a separate validity bool would've been better?
-> > dunno.
-> >
-> > johannes
-> >
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+index a677b056f112..f7cf135aa37f 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+@@ -66,6 +66,18 @@ properties:
+     required:
+       - iommus
+ 
++  qcom,smem-states:
++    $ref: /schemas/types.yaml#/definitions/phandle-array
++    description: State bits used by the AP to signal the WLAN Q6.
++    items:
++      - description: Signal bits used to enable/disable low power mode
++                     on WCN6750 in the case of WoW (Wake on Wireless).
++
++  qcom,smem-state-names:
++    description: The names of the state bits used for SMP2P output.
++    items:
++      - const: wlan-smp2p-out
++
+ required:
+   - compatible
+   - reg
+@@ -448,6 +460,8 @@ examples:
+                      <GIC_SPI 799 IRQ_TYPE_EDGE_RISING>;
+         qcom,rproc = <&remoteproc_wpss>;
+         memory-region = <&wlan_fw_mem>, <&wlan_ce_mem>;
++        qcom,smem-states = <&wlan_smp2p_out 0>;
++        qcom,smem-state-names = "wlan-smp2p-out";
+         wifi-firmware {
+                 iommus = <&apps_smmu 0x1c02 0x1>;
+         };
+-- 
+2.37.1
+
