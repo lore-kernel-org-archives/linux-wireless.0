@@ -2,115 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94D60C38145
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 127C7C38145
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:04:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238454AbiIBOE2 (ORCPT
+        id S238857AbiIBOEl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Sep 2022 10:04:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54400 "EHLO
+        Fri, 2 Sep 2022 10:04:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239035AbiIBODy (ORCPT
+        with ESMTP id S239105AbiIBOEC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2022 10:03:54 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 097871306E2
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 06:32:51 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 282Col853016071, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 282Col853016071
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 2 Sep 2022 20:50:47 +0800
-Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 2 Sep 2022 20:51:04 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 2 Sep 2022 20:51:04 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::d902:19b0:8613:5b97]) by
- RTEXMBS04.realtek.com.tw ([fe80::d902:19b0:8613:5b97%5]) with mapi id
- 15.01.2375.007; Fri, 2 Sep 2022 20:51:03 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     "kvalo@kernel.org" <kvalo@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        DeanKu <ku920601@realtek.com>
-Subject: Re: [PATCH v2 3/9] rtw89: coex: Add logic to parsing rtl8852c firmware type ctrl report
-Thread-Topic: [PATCH v2 3/9] rtw89: coex: Add logic to parsing rtl8852c
- firmware type ctrl report
-Thread-Index: AQHYn89LmSG721eAHkiGbBLHgdD4ya3L7Bmq///jawA=
-Date:   Fri, 2 Sep 2022 12:51:03 +0000
-Message-ID: <cfaf9a9a991a942bdac8f556372401e3f1e3aeb1.camel@realtek.com>
-References: <20220725023509.43114-1-pkshih@realtek.com>
-         <20220725023509.43114-4-pkshih@realtek.com> <87tu5qb816.fsf@kernel.org>
-In-Reply-To: <87tu5qb816.fsf@kernel.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.36.1-2 
-x-originating-ip: [172.16.17.75]
-x-kse-serverinfo: RTEXMBS06.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvMiDkuIrljYggMDc6NDU6MDA=?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <84F801366F32FC4284397BE3A8EAEBB0@realtek.com>
-Content-Transfer-Encoding: base64
+        Fri, 2 Sep 2022 10:04:02 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72995148D11
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 06:33:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=w2HUe7Es17kP59gNgIPZBWy7C9aq9/2YnNXR3m3gUmo=; t=1662125584; x=1663335184; 
+        b=g1LVZHWFvTaIPWeSXEXhadlsp/6keOLFWWRQWnYRasjxmsSXZgQ6w+retX8gOobfx82VyJ+A2JI
+        8uPgt1CAb4aUNFMTGLR4Tggs4huEaio+/m9F9npcQ4n/7F55ysSpzmLibcIGyVgROjNJWH6mJvISV
+        9YZHDnHNsR6LsFZO4IbZb7vqrxnoaamrt8UaVBnkEDP+3fjAtBZbHgGvHunDlTwoZpxzouRqq/q9N
+        hzlFbFtsKlNaFxXiIu72ruranX9Hvz+UNyMSHGKm15akDs5m7bu+SzfeJUegykUpaSGAM+pspFslQ
+        jIzrceTPX1QaAN3uy7mjXm08wRn1GVILQiPw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1oU662-0069og-19;
+        Fri, 02 Sep 2022 14:48:30 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+Subject: [PATCH] wifi: mac80211: fix link warning in RX agg timer expiry
+Date:   Fri,  2 Sep 2022 14:48:27 +0200
+Message-Id: <20220902144826.8ef6beda92f6.I3d9a23c49e1df3bd0c91ef0e1c1805dd09937db8@changeid>
+X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gRnJpLCAyMDIyLTA5LTAyIGF0IDA5OjMyICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBQ
-aW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4gd3JpdGVzOg0KPiANCj4gPiBGcm9tOiBD
-aGluZy1UZSBLdSA8a3U5MjA2MDFAcmVhbHRlay5jb20+DQo+ID4gDQo+ID4gQWRkIGEgcGFydCBv
-ZiBsb2dpYyB0byBwYXJzZSB0eXBlIG9mIGN0cmwgcmVwb3J0IGZyb20gZmlybXdhcmUsIGFuZA0K
-PiA+IHJlbW92ZSBCbHVldG9vdGggcGFja2V0IGNvdW50ZXIgY291bnQgZnJvbSBkcml2ZXIsIHRo
-ZSBmZWF0dXJlIHdhcw0KPiA+IG1vdmVkIHRvIGZpcm13YXJlIGF0IHJ0bDg4NTJjLg0KPiA+IA0K
-PiA+IFNpZ25lZC1vZmYtYnk6IENoaW5nLVRlIEt1IDxrdTkyMDYwMUByZWFsdGVrLmNvbT4NCj4g
-PiBTaWduZWQtb2ZmLWJ5OiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gPiAt
-LS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OS9jb2V4LmMgICAgIHwg
-NDQgKysrKysrKysrKystLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg5
-L2NvcmUuaCAgICAgfCA2MyArKysrKysrKysrKysrKysrKy0tDQo+ID4gIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL3JlYWx0ZWsvcnR3ODkvcnR3ODg1MmMuYyB8IDE4ICstLS0tLQ0KPiA+ICAzIGZpbGVz
-IGNoYW5nZWQsIDk4IGluc2VydGlvbnMoKyksIDI3IGRlbGV0aW9ucygtKQ0KPiA+IA0KPiA+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg5L2NvZXguYw0KPiA+
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OS9jb2V4LmMNCj4gPiBpbmRleCBm
-OWM2N2FhMTU3MGRkLi4wMjBiMjYyOGVmMmM0IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODkvY29leC5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvcmVhbHRlay9ydHc4OS9jb2V4LmMNCj4gPiBAQCAtODc2LDcgKzg3Niw5IEBAIHN0YXRp
-YyB1MzIgX2Noa19idGNfcmVwb3J0KHN0cnVjdCBydHc4OV9kZXYgKnJ0d2RldiwNCj4gPiAgCXN0
-cnVjdCBydHc4OV9idGNfZG0gKmRtID0gJmJ0Yy0+ZG07DQo+ID4gIAlzdHJ1Y3QgcnR3ODlfYnRj
-X3JwdF9jbW5faW5mbyAqcGNpbmZvID0gTlVMTDsNCj4gPiAgCXN0cnVjdCBydHc4OV9idGNfd2xf
-aW5mbyAqd2wgPSAmYnRjLT5jeC53bDsNCj4gPiAtCXN0cnVjdCBydHc4OV9idGNfZmJ0Y19ycHRf
-Y3RybCAqcHJwdCA9IE5VTEw7DQo+ID4gKwlzdHJ1Y3QgcnR3ODlfYnRjX2J0X2luZm8gKmJ0ID0g
-JmJ0Yy0+Y3guYnQ7DQo+ID4gKwlzdHJ1Y3QgcnR3ODlfYnRjX2ZidGNfcnB0X2N0cmwgKnBycHQ7
-DQo+ID4gKwlzdHJ1Y3QgcnR3ODlfYnRjX2ZidGNfcnB0X2N0cmxfdjEgKnBycHRfdjE7DQo+ID4g
-IAlzdHJ1Y3QgcnR3ODlfYnRjX2ZidGNfY3lzdGEgKnBjeXN0YV9sZTMyID0gTlVMTDsNCj4gPiAg
-CXN0cnVjdCBydHc4OV9idGNfZmJ0Y19jeXN0YV9jcHUgcGN5c3RhWzFdOw0KPiA+ICAJc3RydWN0
-IHJ0dzg5X2J0Y19wcnB0ICpidGNfcHJwdCA9IE5VTEw7DQo+ID4gQEAgLTkwNyw4ICs5MDksMTMg
-QEAgc3RhdGljIHUzMiBfY2hrX2J0Y19yZXBvcnQoc3RydWN0IHJ0dzg5X2RldiAqcnR3ZGV2LA0K
-PiA+ICAJc3dpdGNoIChycHRfdHlwZSkgew0KPiA+ICAJY2FzZSBCVENfUlBUX1RZUEVfQ1RSTDoN
-Cj4gPiAgCQlwY2luZm8gPSAmcGZ3aW5mby0+cnB0X2N0cmwuY2luZm87DQo+ID4gLQkJcGZpbmZv
-ID0gKHU4ICopKCZwZndpbmZvLT5ycHRfY3RybC5maW5mbyk7DQo+ID4gLQkJcGNpbmZvLT5yZXFf
-bGVuID0gc2l6ZW9mKHBmd2luZm8tPnJwdF9jdHJsLmZpbmZvKTsNCj4gPiArCQlpZiAoY2hpcC0+
-Y2hpcF9pZCA9PSBSVEw4ODUyQSkgew0KPiA+ICsJCQlwZmluZm8gPSAodTggKikoJnBmd2luZm8t
-PnJwdF9jdHJsLmZpbmZvKTsNCj4gPiArCQkJcGNpbmZvLT5yZXFfbGVuID0gc2l6ZW9mKHBmd2lu
-Zm8tPnJwdF9jdHJsLmZpbmZvKTsNCj4gPiArCQl9IGVsc2Ugew0KPiA+ICsJCQlwZmluZm8gPSAo
-dTggKikoJnBmd2luZm8tPnJwdF9jdHJsLmZpbmZvX3YxKTsNCj4gPiArCQkJcGNpbmZvLT5yZXFf
-bGVuID0gc2l6ZW9mKHBmd2luZm8tPnJwdF9jdHJsLmZpbmZvX3YxKTsNCj4gPiArCQl9DQo+IA0K
-PiBUaGF0IHU4IGNhc3QgaXMgbm90IHJlYWxseSBwcmV0dHksIHNob3VsZG4ndCBwZmluZm8gYmUg
-YSB2b2lkIHBvaW50ZXINCj4gYW5kIHRoZW4gYWxsIHRoZXNlIGNhc3RzIGNvdWxkIGJlIGF2b2lk
-ZWQ/IEJ1dCBvZiBjb3Vyc2UgdGhhdCdzIG5vdA0KPiBpbnRyb2R1Y2VkIGJ5IHRoaXMgcGF0Y2gg
-c28gbmVlZCB0byByZXNlbmQgdGhlIHBhdGNoIGJlY2F1c2Ugb2YgdGhpcy4NCj4gDQoNClRoYW5r
-cyBmb3IgcG9pbnRpbmcgdGhpcyBvdXQsIEkgd2lsbCBjaGFuZ2UgcGluZm8gdG8gdm9pZCBwb2lu
-dGVyDQphbG9uZyB3aXRoIG5leHQgcGF0Y2hzZXQgb2YgY29leCBjaGFuZ2VzLg0KDQpQaW5nLUtl
-DQoNCg==
+From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+
+The rx data link pointer isn't set from the RX aggregation timer,
+resulting in a later warning. Fix that by setting it to the first
+valid link for now, with a FIXME to worry about statistics later,
+it's not very important since it's just the timeout case.
+
+Fixes: 56057da4569b ("wifi: mac80211: rx: track link in RX data")
+Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index cc139fe5fb78..511c809e2c6b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4084,6 +4084,7 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ 		.link_id = -1,
+ 	};
+ 	struct tid_ampdu_rx *tid_agg_rx;
++	u8 link_id;
+ 
+ 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
+ 	if (!tid_agg_rx)
+@@ -4103,6 +4104,9 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ 		};
+ 		drv_event_callback(rx.local, rx.sdata, &event);
+ 	}
++	/* FIXME: statistics won't be right with this */
++	link_id = sta->sta.valid_links ? ffs(sta->sta.valid_links) - 1 : 0;
++	rx.link = rcu_dereference(sta->sdata->link[link_id]);
+ 
+ 	ieee80211_rx_handlers(&rx, &frames);
+ }
+-- 
+2.37.2
+
