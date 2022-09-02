@@ -2,109 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AB1ECAAD5
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1007BC38145
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Sep 2022 14:19:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236064AbiIBOTR (ORCPT
+        id S238113AbiIBOTc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Sep 2022 10:19:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57324 "EHLO
+        Fri, 2 Sep 2022 10:19:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236073AbiIBOSu (ORCPT
+        with ESMTP id S238536AbiIBOTP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2022 10:18:50 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 119E4106DB4
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 06:44:42 -0700 (PDT)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 282Ar9Ot006598;
-        Fri, 2 Sep 2022 12:54:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=OR00aDu05wizlIsoeTPnNtPz9tPjGRV1Toqs51iUOek=;
- b=ks271CKm9WnHfL1HAK+npwlHmzxcDHgBrKaOZYEOvbtia24ik29dEGfuFls59AUpmQVa
- 1Yy74HXfjZbt3dnUDfRSapASJhH4d8azPsezoUlBXw9IUhWkvWDADSjKB+5Kr6YL6FgC
- j/7LjlLQrwO1YrYWFuGGGmpUxW2HIUP6igqMzrpquUh5Z91gwMC5T/bdalUeIyFXvc+h
- uoQCvzuWq3r7S9VQpBdDeprRT1IOe8AUZ0sJ5Vhe22PyCdQ8ZcpP8r4S7PPuW1RqKo5z
- 4472IQnKefy6fc21j5Zto9Oij+0W+574h53lp6TkVV3VJxkioT7wvHWo8S40NvN46IWJ zw== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jb5k925bn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 02 Sep 2022 12:54:29 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 282CsS4K007408
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 2 Sep 2022 12:54:28 GMT
-Received: from [10.216.25.75] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Fri, 2 Sep 2022
- 05:54:27 -0700
-Message-ID: <6fd6c592-3bad-ce39-24ea-e28d5ad98e7b@quicinc.com>
-Date:   Fri, 2 Sep 2022 18:24:23 +0530
+        Fri, 2 Sep 2022 10:19:15 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 550EFA6C5D
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 06:45:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C7331B82A99
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2022 12:49:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE5B1C433D7;
+        Fri,  2 Sep 2022 12:49:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662122967;
+        bh=AZvZJ0jjzWJfltJK4ejkskk2BjBVpGVq9U3dhyhrP5o=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=TZRfdlq79lFLOc38iSKpu6WCPb/sdeTDTuz8vjp6wkTYLvO3dVYDnJqpXbfP31Wqy
+         cUXe2CqYB2sf7XpnIjK0TDhBF21CYsuX8NBaSZiioAO9F1mOtNSQ007KKOJ2x9Sypx
+         ArblIQosACIxEA5ZiK3myJutrer707e5V1hwNoMUt4ISn6vdfr155ZSab0C+n/+QwY
+         TijMnFh3dMHwnbALiWEvARCgioc7d2BaSvus8crpevVtGlrDA5dT7dXwF9kaGklbxo
+         czPqN3o4KKzxazRCe1fJjA9Xy6uFMvaFhcgEKhBFe1hZXhIx4icVIapNyI9xWYs/rq
+         HSCK3y2UTaqKg==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] ath11k: Add multi TX ring support for WCN6750
+References: <20220720135113.15755-1-quic_mpubbise@quicinc.com>
+        <20220720135113.15755-3-quic_mpubbise@quicinc.com>
+Date:   Fri, 02 Sep 2022 15:49:24 +0300
+In-Reply-To: <20220720135113.15755-3-quic_mpubbise@quicinc.com> (Manikanta
+        Pubbisetty's message of "Wed, 20 Jul 2022 19:21:12 +0530")
+Message-ID: <878rn2aqln.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH 1/3] ath11k: Enable threaded NAPI on WCN6750
-Content-Language: en-US
-To:     Kalle Valo <kvalo@kernel.org>
-CC:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-References: <20220720135113.15755-2-quic_mpubbise@quicinc.com>
- <166212222808.10242.13626602156198198987.kvalo@kernel.org>
-From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-In-Reply-To: <166212222808.10242.13626602156198198987.kvalo@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: O3jMhQAjcFGgTxSPJIuGklltC0ToKwdA
-X-Proofpoint-GUID: O3jMhQAjcFGgTxSPJIuGklltC0ToKwdA
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-09-02_02,2022-08-31_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
- mlxlogscore=855 malwarescore=0 spamscore=0 adultscore=0 lowpriorityscore=0
- bulkscore=0 clxscore=1015 mlxscore=0 priorityscore=1501 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2207270000
- definitions=main-2209020062
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/2/2022 6:07 PM, Kalle Valo wrote:
-> Manikanta Pubbisetty <quic_mpubbise@quicinc.com> wrote:
-> 
->> Enable threaded NAPI on WCN6750. Unlike traditional NAPI poll which
->> runs in softirq context and on the core which scheduled the NAPI,
->> threaded NAPI makes use of kernel threads which are under direct
->> control of the scheduler and helps in balancing the NAPI processing
->> load across multiple CPUs thereby improving throughput.
->>
->> In the case of WCN6750, enabling threaded NAPI has improved
->> 160 MHz RX throughput by nearly 400 Mbps. This should give similar
->> gains for other ath11k devices as well, therefore enable threaded
->> NAPI on all other devices.
->>
->> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
->>
->> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-> 
-> Fails to apply and no base commit provided, so please rebase.
-> 
-> error: patch failed: drivers/net/wireless/ath/ath11k/core.c:111
-> error: drivers/net/wireless/ath/ath11k/core.c: patch does not apply
-> error: patch failed: drivers/net/wireless/ath/ath11k/hw.h:205
-> error: drivers/net/wireless/ath/ath11k/hw.h: patch does not apply
-> stg import: Diff does not apply cleanly
-> 
-> 3 patches set to Changes Requested.
-> 
-> 12924009 [1/3] ath11k: Enable threaded NAPI on WCN6750
-> 12924011 [2/3] ath11k: Add multi TX ring support for WCN6750
-> 12924010 [3/3] ath11k: Increase TCL data ring size for WCN6750
-> 
+Manikanta Pubbisetty <quic_mpubbise@quicinc.com> writes:
 
-Sure, thanks!
+> Currently in the case of WCN6750, only one TCL ring is used for TX,
+> this is limiting the TX throughput in 160 MHz case, enabling multiple
+> TCL rings on WCN6750 has shown an improvement of nearly 300 Mbps in
+> the case of TCP TX, therefore add the support of multi TX ring for
+> WCN6750.
+>
+> Currently TCL ring is selected based on CPU ID, this logic cannot be
+> applied for WCN6750 as there is chance of out of order TX of packets
+> and to avoid this, choose TCL ring based on flow hash so that packets
+> of the same flow will end up on same TCL ring. For the same reason,
+> TCL ring retry logic is also not applicable for WCN6750.
+>
+> Also the mapping of TCL, WBM & RBM IDs for WCN6750 is different from
+> existing devices. Create a new TCM/WBM/RBM mapping for WCN6750.
+>
+> Change does not impact existing ath11k devices.
+
+It would also nice to document _why_ it doesn't impact existing (or do
+you mean "other"?) devices.
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
