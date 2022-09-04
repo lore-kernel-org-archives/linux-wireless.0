@@ -2,77 +2,162 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DCFEECAAD3
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 10:30:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67940ECAAD3
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233841AbiIDKa2 (ORCPT
+        id S234925AbiIDT3a (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Sep 2022 06:30:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54616 "EHLO
+        Sun, 4 Sep 2022 15:29:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233770AbiIDKaY (ORCPT
+        with ESMTP id S234810AbiIDT3Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Sep 2022 06:30:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECD2221825;
-        Sun,  4 Sep 2022 03:30:22 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 222A560F50;
-        Sun,  4 Sep 2022 10:30:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8204AC433D7;
-        Sun,  4 Sep 2022 10:30:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662287421;
-        bh=RkI0hhVrrvBqxRvzAZ5DNYiG0Bfm/d6twdk9t3loTRY=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=uasdT41/7EUbJakvDPjIF5WgTfd9FzuRqAV3miqQWReQS1AG8ZYz0dACsC2SXJAla
-         YRTsDumwa6qf8Q0PdfXBIaXgcnOgS3ZZII5Mbtr/+nG6aKA8vaYv/V7CdlGd4ADSFm
-         vDtQkVQPV9R0H0ARNFbq80/+I9Vo8uJLm8Xpd4ClSc9vZUSA02nWURfErhI9yAsDPC
-         SSdYxBGC4/BeHBaqXlb9sAVkO96rZ9h2MvwZSOYB7LTBcxgo8wg0VJF+k452XUMv8+
-         n9mUsiIjCGy+Q2KglqLrZ2YDLztxtsjlVmuvdF1q7fbbwXODL/MsUdOZt5YimHN7uB
-         /gEa7jSxYAsnA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 6DD59C59A4C;
-        Sun,  4 Sep 2022 10:30:21 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        Sun, 4 Sep 2022 15:29:25 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E2102A9
+        for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=286l/mBXFdy7JvDZ6GJznj7ef9gXPpBcfEHSW032al8=;
+        t=1662319761; x=1663529361; b=XGOHEo6OL+hdhT2nYhTEGvxIBm+9vg7ZxGqeU6l7RrzvSVp
+        pBB6HD9rIiC3+WH6RSXpgO0qH7ipLe9xlxQwNYYOS2dx/SksItAO5lpi4rqUBzuCcoflj0qWHZRMs
+        LcDZAKQxPMF3WYh62K02Zm0BDicwRsSnSXxgQoKxsJBoEphk3y7ut7pi+0K8ZBLnzWGhp2QdHc3ox
+        Q66iDAjIOBJlvFHOXNVgDG3YE7XeDHtYof8V+kyPMEfxYuWhY7HTAGtIW1VVMMMmtl9pI8Y6QCYm7
+        QdEBLzkJ+CsCF8KrVr8WPXwnrfLleP1qckmUmKHry81G1bLjRvS/TG7Ll63C4+dA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1oUvIz-007pTZ-1G;
+        Sun, 04 Sep 2022 21:29:17 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/12] wifi: ipw2x00: fix array of flexible structures warnings
+Date:   Sun,  4 Sep 2022 21:29:02 +0200
+Message-Id: <20220904212910.645346411660.I471e8fadce54ea262920828f25b8e84545bcd07e@changeid>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
+References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: pull-request: wireless-next-2022-09-03
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <166228742144.4621.13260139142356270842.git-patchwork-notify@kernel.org>
-Date:   Sun, 04 Sep 2022 10:30:21 +0000
-References: <20220903152903.134214-1-johannes@sipsolutions.net>
-In-Reply-To: <20220903152903.134214-1-johannes@sipsolutions.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+From: Johannes Berg <johannes.berg@intel.com>
 
-This pull request was applied to netdev/net-next.git (master)
-by David S. Miller <davem@davemloft.net>:
+There are a number of these here, fix them by using
+appropriate casts. No binary changes.
 
-On Sat,  3 Sep 2022 17:29:02 +0200 you wrote:
-> Hi,
-> 
-> Here's the promised pull request from wireless-next. Most of
-> the updates are rtw89 and MLO work really, for more MLO work
-> I'm waiting to get net merged into net-next (and then back to
-> us) so we don't cause strange conflicts.
-> 
-> [...]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/intel/ipw2x00/libipw.h    | 13 ++++++-------
+ drivers/net/wireless/intel/ipw2x00/libipw_rx.c | 10 +++++-----
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-Here is the summary with links:
-  - pull-request: wireless-next-2022-09-03
-    https://git.kernel.org/netdev/net-next/c/9837ec955b46
-
-You are awesome, thank you!
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw.h b/drivers/net/wireless/intel/ipw2x00/libipw.h
+index 7964ef7d15f0..bec7bc273748 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw.h
++++ b/drivers/net/wireless/intel/ipw2x00/libipw.h
+@@ -405,7 +405,7 @@ struct libipw_auth {
+ 	__le16 transaction;
+ 	__le16 status;
+ 	/* challenge */
+-	struct libipw_info_element info_element[];
++	u8 variable[];
+ } __packed;
+ 
+ struct libipw_channel_switch {
+@@ -423,7 +423,6 @@ struct libipw_action {
+ 	union {
+ 		struct libipw_action_exchange {
+ 			u8 token;
+-			struct libipw_info_element info_element[0];
+ 		} exchange;
+ 		struct libipw_channel_switch channel_switch;
+ 
+@@ -441,7 +440,7 @@ struct libipw_disassoc {
+ struct libipw_probe_request {
+ 	struct libipw_hdr_3addr header;
+ 	/* SSID, supported rates */
+-	struct libipw_info_element info_element[];
++	u8 variable[];
+ } __packed;
+ 
+ struct libipw_probe_response {
+@@ -451,7 +450,7 @@ struct libipw_probe_response {
+ 	__le16 capability;
+ 	/* SSID, supported rates, FH params, DS params,
+ 	 * CF params, IBSS params, TIM (if beacon), RSN */
+-	struct libipw_info_element info_element[];
++	u8 variable[];
+ } __packed;
+ 
+ /* Alias beacon for probe_response */
+@@ -462,7 +461,7 @@ struct libipw_assoc_request {
+ 	__le16 capability;
+ 	__le16 listen_interval;
+ 	/* SSID, supported rates, RSN */
+-	struct libipw_info_element info_element[];
++	u8 variable[];
+ } __packed;
+ 
+ struct libipw_reassoc_request {
+@@ -470,7 +469,7 @@ struct libipw_reassoc_request {
+ 	__le16 capability;
+ 	__le16 listen_interval;
+ 	u8 current_ap[ETH_ALEN];
+-	struct libipw_info_element info_element[];
++	u8 variable[];
+ } __packed;
+ 
+ struct libipw_assoc_response {
+@@ -479,7 +478,7 @@ struct libipw_assoc_response {
+ 	__le16 status;
+ 	__le16 aid;
+ 	/* supported rates */
+-	struct libipw_info_element info_element[];
++	u8 variable[];
+ } __packed;
+ 
+ struct libipw_txb {
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+index 7a684b76f39b..48d6870bbf4e 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+@@ -1329,8 +1329,8 @@ static int libipw_handle_assoc_resp(struct libipw_device *ieee, struct libipw_as
+ 	network->wpa_ie_len = 0;
+ 	network->rsn_ie_len = 0;
+ 
+-	if (libipw_parse_info_param
+-	    (frame->info_element, stats->len - sizeof(*frame), network))
++	if (libipw_parse_info_param((void *)frame->variable,
++				    stats->len - sizeof(*frame), network))
+ 		return 1;
+ 
+ 	network->mode = 0;
+@@ -1389,8 +1389,8 @@ static int libipw_network_init(struct libipw_device *ieee, struct libipw_probe_r
+ 	network->wpa_ie_len = 0;
+ 	network->rsn_ie_len = 0;
+ 
+-	if (libipw_parse_info_param
+-	    (beacon->info_element, stats->len - sizeof(*beacon), network))
++	if (libipw_parse_info_param((void *)beacon->variable,
++				    stats->len - sizeof(*beacon), network))
+ 		return 1;
+ 
+ 	network->mode = 0;
+@@ -1510,7 +1510,7 @@ static void libipw_process_probe_response(struct libipw_device
+ 	struct libipw_network *target;
+ 	struct libipw_network *oldest = NULL;
+ #ifdef CONFIG_LIBIPW_DEBUG
+-	struct libipw_info_element *info_element = beacon->info_element;
++	struct libipw_info_element *info_element = (void *)beacon->variable;
+ #endif
+ 	unsigned long flags;
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.37.2
 
