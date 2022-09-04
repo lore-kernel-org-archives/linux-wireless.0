@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54111C6FA82
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4967AECAAD3
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234855AbiIDT3k (ORCPT
+        id S234885AbiIDT3m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Sep 2022 15:29:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37094 "EHLO
+        Sun, 4 Sep 2022 15:29:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234865AbiIDT32 (ORCPT
+        with ESMTP id S234870AbiIDT33 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Sep 2022 15:29:28 -0400
+        Sun, 4 Sep 2022 15:29:29 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33D58E5E
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5D2EBA8
         for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=dbRmkAzkUxubCRqZSj12TlW1QQJBHreXUsd+ZDfikec=;
-        t=1662319762; x=1663529362; b=q7B31tv/A+ZX4gUGEhRvFVINyXj7CTwOKMk1jYLGp75iXn5
-        lYsD10un4dzMfVYEDfZW6eOwripAOqsxWyzbUvQFvJjBBOckdtYA0Bb/c/RsYBNDsGwjRxTDeWJTa
-        B+QkRI8X47g2BglA0xH2Yu5+UtLaFVmSj/QBD21zzG1HZsz6k1asT3ytoH5luS5iLIF7Tko+QyCON
-        69lmkX0NGkzBuLrsDhJUdMtF5glY39AagKqVIIQrGCM5EYtk6bWMQDJWeko6Qr8FlYSe9y9gHqkAm
-        WixCXv/AoumhY1EhwIqFi2gNn4fPAq2DhAdNJpFVdTcNeyBBR0HzOdfOfss+NIbg==;
+        Resent-Cc:Resent-Message-ID; bh=gYgaKVyiBI90mSc6lxv3ELz+4I5kkCVxXuIrJojxnts=;
+        t=1662319762; x=1663529362; b=KKtijKH7Qn/OA/Bjoqn24xRZpuw2vFoO0oxG0HITkR55EGX
+        JEEWQCVhGVie/2c7nltdqD69LALhoLUHt9ijTtPGtWuspDj/uaaQCpu2i0qRZAMHEW5rVUnfi/aMm
+        Zf2atqCO4ZUjmivlb+a5CS6mdGDyAa+6zPCW8C0bxtV+dUy/Deg5p1NHA+Oi5GBjbEc/eIDD1kH64
+        CxwCgd/vFk0c2xI9P6nHhELEGn3yj9wLi1AD7zp9O+nY1S2dt8y3WDbHbFnIPWMop+yaWaq2TFiFh
+        ytopht/sIw6AK+HAFZCyQvI9wyF8/8vusiSkX7JsV2CE6Q/0gg5Fnt5tclINVFxg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oUvJ1-007pTZ-08;
+        id 1oUvJ1-007pTZ-1h;
         Sun, 04 Sep 2022 21:29:19 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 07/12] wifi: mwifiex: fix array of flexible structures warnings
-Date:   Sun,  4 Sep 2022 21:29:07 +0200
-Message-Id: <20220904212910.2c885310ebee.If7177ea588b56c405eee6e6df595e9efccdfb99a@changeid>
+Subject: [PATCH 09/12] wifi: mwifiex: fix endian annotations in casts
+Date:   Sun,  4 Sep 2022 21:29:09 +0200
+Message-Id: <20220904212910.3f72609a3825.If4048592701bf04981be1dab18eaaa339b2ea382@changeid>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
@@ -48,59 +48,50 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There are two, just change them to have a "u8 data[]" type
-member, and add casts where needed. No binary changes.
+These cause sparse warnings, and since the device generally
+works in little endian we can assume the code is correct, so
+just fix the casts accordingly. No binary changes on x86.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/fw.h      | 4 ++--
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 26a48d8f49be..b4f945a549f7 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -2104,7 +2104,7 @@ struct mwifiex_fw_mef_entry {
- struct host_cmd_ds_mef_cfg {
- 	__le32 criteria;
- 	__le16 num_entries;
--	struct mwifiex_fw_mef_entry mef_entry[];
-+	u8 mef_entry_data[];
- } __packed;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index c2f2ce2a3f95..d3ab9572e711 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -911,14 +911,14 @@ static int mwifiex_usb_prepare_tx_aggr_skb(struct mwifiex_adapter *adapter,
+ 		memcpy(payload, skb_tmp->data, skb_tmp->len);
+ 		if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
+ 			/* do not padding for last packet*/
+-			*(u16 *)payload = cpu_to_le16(skb_tmp->len);
+-			*(u16 *)&payload[2] =
++			*(__le16 *)payload = cpu_to_le16(skb_tmp->len);
++			*(__le16 *)&payload[2] =
+ 				cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2 | 0x80);
+ 			skb_trim(skb_aggr, skb_aggr->len - pad);
+ 		} else {
+ 			/* add aggregation interface header */
+-			*(u16 *)payload = cpu_to_le16(skb_tmp->len + pad);
+-			*(u16 *)&payload[2] =
++			*(__le16 *)payload = cpu_to_le16(skb_tmp->len + pad);
++			*(__le16 *)&payload[2] =
+ 				cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2);
+ 		}
  
- #define CONNECTION_TYPE_INFRA   0
-@@ -2254,7 +2254,7 @@ struct coalesce_receive_filt_rule {
- struct host_cmd_ds_coalesce_cfg {
- 	__le16 action;
- 	__le16 num_of_rules;
--	struct coalesce_receive_filt_rule rule[];
-+	u8 rule_data[];
- } __packed;
+@@ -1097,9 +1097,9 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
+ 		}
  
- struct host_cmd_ds_multi_chan_policy {
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 512b5bb9cf6f..e2800a831c8e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1435,7 +1435,7 @@ mwifiex_cmd_mef_cfg(struct mwifiex_private *priv,
- 		mef_entry = (struct mwifiex_fw_mef_entry *)pos;
- 		mef_entry->mode = mef->mef_entry[i].mode;
- 		mef_entry->action = mef->mef_entry[i].action;
--		pos += sizeof(*mef_cfg->mef_entry);
-+		pos += sizeof(*mef_entry);
- 
- 		if (mwifiex_cmd_append_rpn_expression(priv,
- 						      &mef->mef_entry[i], &pos))
-@@ -1631,7 +1631,7 @@ mwifiex_cmd_coalesce_cfg(struct mwifiex_private *priv,
- 
- 	coalesce_cfg->action = cpu_to_le16(cmd_action);
- 	coalesce_cfg->num_of_rules = cpu_to_le16(cfg->num_of_rules);
--	rule = coalesce_cfg->rule;
-+	rule = (void *)coalesce_cfg->rule_data;
- 
- 	for (cnt = 0; cnt < cfg->num_of_rules; cnt++) {
- 		rule->header.type = cpu_to_le16(TLV_TYPE_COALESCE_RULE);
+ 		payload = skb->data;
+-		*(u16 *)&payload[2] =
++		*(__le16 *)&payload[2] =
+ 			cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2 | 0x80);
+-		*(u16 *)payload = cpu_to_le16(skb->len);
++		*(__le16 *)payload = cpu_to_le16(skb->len);
+ 		skb_send = skb;
+ 		context = &port->tx_data_list[port->tx_data_ix++];
+ 		return mwifiex_usb_construct_send_urb(adapter, port, ep,
 -- 
 2.37.2
 
