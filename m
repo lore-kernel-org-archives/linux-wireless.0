@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4967AECAAD3
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD39ECAAD3
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234885AbiIDT3m (ORCPT
+        id S234888AbiIDT3o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Sep 2022 15:29:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37168 "EHLO
+        Sun, 4 Sep 2022 15:29:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234870AbiIDT33 (ORCPT
+        with ESMTP id S234804AbiIDT33 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 4 Sep 2022 15:29:29 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5D2EBA8
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33F34E6F
         for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=gYgaKVyiBI90mSc6lxv3ELz+4I5kkCVxXuIrJojxnts=;
-        t=1662319762; x=1663529362; b=KKtijKH7Qn/OA/Bjoqn24xRZpuw2vFoO0oxG0HITkR55EGX
-        JEEWQCVhGVie/2c7nltdqD69LALhoLUHt9ijTtPGtWuspDj/uaaQCpu2i0qRZAMHEW5rVUnfi/aMm
-        Zf2atqCO4ZUjmivlb+a5CS6mdGDyAa+6zPCW8C0bxtV+dUy/Deg5p1NHA+Oi5GBjbEc/eIDD1kH64
-        CxwCgd/vFk0c2xI9P6nHhELEGn3yj9wLi1AD7zp9O+nY1S2dt8y3WDbHbFnIPWMop+yaWaq2TFiFh
-        ytopht/sIw6AK+HAFZCyQvI9wyF8/8vusiSkX7JsV2CE6Q/0gg5Fnt5tclINVFxg==;
+        Resent-Cc:Resent-Message-ID; bh=FaVm/KMr8KZJ4C2iMgCupxVWJ5k7WqrPwqGZksbYjzU=;
+        t=1662319762; x=1663529362; b=xV7oDyzuLXKY26NVK1a8q/xrHX4TVNaJ8M4ffd56F3ED7xx
+        ewSi5Lq3CtIbYhf/IHUhoxp7snnXrdnXYs+1rGJh8z1StbM1HvYz75J7y76xhGfs+5A4L4mXKlF85
+        Wpjj+PB70Cm+29lR6cI87RkftaNMLM/DcW/QnuHMCLj/Hd1xUQGiM8XstlMh5QkpMHr6QcPCL8hcH
+        R5aNq1IxqPpenY2rfr2oFhN+xvUKITVmEIF+yVscDw7w8k/cO92to9zwfDxb7uE4AGLCwM5rdZh3X
+        CXiNaiI32I1qwRl/bZyuNQqcSNMCY55jr9t6SJWxfWeqbWy9JygdMeXmXzlm1fxg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oUvJ1-007pTZ-1h;
-        Sun, 04 Sep 2022 21:29:19 +0200
+        id 1oUvJ0-007pTZ-2X;
+        Sun, 04 Sep 2022 21:29:18 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 09/12] wifi: mwifiex: fix endian annotations in casts
-Date:   Sun,  4 Sep 2022 21:29:09 +0200
-Message-Id: <20220904212910.3f72609a3825.If4048592701bf04981be1dab18eaaa339b2ea382@changeid>
+Subject: [PATCH 06/12] wifi: mwifiex: mark a variable unused
+Date:   Sun,  4 Sep 2022 21:29:06 +0200
+Message-Id: <20220904212910.5d67f55178a1.If0789ab326935896e5886fa06dbb9ef0da6c0b41@changeid>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
@@ -48,50 +48,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-These cause sparse warnings, and since the device generally
-works in little endian we can assume the code is correct, so
-just fix the casts accordingly. No binary changes on x86.
+We need to read a value from the device to wake it, but if it
+succeeds we don't really care about it. Mark the variable to
+avoid a compiler warning.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index c2f2ce2a3f95..d3ab9572e711 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -911,14 +911,14 @@ static int mwifiex_usb_prepare_tx_aggr_skb(struct mwifiex_adapter *adapter,
- 		memcpy(payload, skb_tmp->data, skb_tmp->len);
- 		if (skb_queue_empty(&port->tx_aggr.aggr_list)) {
- 			/* do not padding for last packet*/
--			*(u16 *)payload = cpu_to_le16(skb_tmp->len);
--			*(u16 *)&payload[2] =
-+			*(__le16 *)payload = cpu_to_le16(skb_tmp->len);
-+			*(__le16 *)&payload[2] =
- 				cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2 | 0x80);
- 			skb_trim(skb_aggr, skb_aggr->len - pad);
- 		} else {
- 			/* add aggregation interface header */
--			*(u16 *)payload = cpu_to_le16(skb_tmp->len + pad);
--			*(u16 *)&payload[2] =
-+			*(__le16 *)payload = cpu_to_le16(skb_tmp->len + pad);
-+			*(__le16 *)&payload[2] =
- 				cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2);
- 		}
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index f7f9277602a5..5dcf61761a16 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -644,7 +644,7 @@ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+-	int retval;
++	int retval __maybe_unused;
  
-@@ -1097,9 +1097,9 @@ static int mwifiex_usb_aggr_tx_data(struct mwifiex_adapter *adapter, u8 ep,
- 		}
- 
- 		payload = skb->data;
--		*(u16 *)&payload[2] =
-+		*(__le16 *)&payload[2] =
- 			cpu_to_le16(MWIFIEX_TYPE_AGGR_DATA_V2 | 0x80);
--		*(u16 *)payload = cpu_to_le16(skb->len);
-+		*(__le16 *)payload = cpu_to_le16(skb->len);
- 		skb_send = skb;
- 		context = &port->tx_data_list[port->tx_data_ix++];
- 		return mwifiex_usb_construct_send_urb(adapter, port, ep,
+ 	mwifiex_dbg(adapter, EVENT,
+ 		    "event: Wakeup device...\n");
 -- 
 2.37.2
 
