@@ -2,43 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF65BECAAD3
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EFA2ECAAD3
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235028AbiIDT3e (ORCPT
+        id S235044AbiIDT3g (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Sep 2022 15:29:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36944 "EHLO
+        Sun, 4 Sep 2022 15:29:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229596AbiIDT3Z (ORCPT
+        with ESMTP id S234794AbiIDT32 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Sep 2022 15:29:25 -0400
+        Sun, 4 Sep 2022 15:29:28 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E4CD302
-        for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33BF7DCC
+        for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=H3TVLDVNZQr0RQ9LVIulr4oOuxYblE+Bh++oeCm9M2A=; t=1662319761; x=1663529361; 
-        b=pbwqs71vv+TEe2OhY0Pw5H0Ff5MOfKWTcjahPlI2whBrzhZCjWd/3qMgwmCEt5DdGiNznquuL+n
-        lAU06hBtWia9qXRRuxhce6Rgo1t/D4O28xfJ9ElCNOb9UNR/6jDcILUvDfdXGCqft/kGE8btmLUFY
-        MmPpCYfFllhYzhhic5NB93Y3FCNKBt4iv6PMFDnzODL5ljZDIYphpFCvOL+T7YMXbw3oA8BQhYw78
-        hdyxHIQUWyreP83F6Vvg9WBxLQ42+9qUBO440ZuLQzRlarpSlcTj8jel0X9DUF2ngBehIVIsH0wGl
-        HRc98RL7n+KrDZflJm/aGhGpSjbS+Rej1Cpw==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=EJmCzvimHGVmyoK2N+rHdXGNgYNdH1jC2BojVX04m4U=;
+        t=1662319762; x=1663529362; b=HQ3ipsduqQ+IJmQK3doDUnWe/OEOIMePgLUUU/CvUv6cJ85
+        jylsvhlj9qVIW66CPk4mlK70kiorqCdSBjIgLxYdn74EW0bDzssOixSZnmaGaO+ETBeYIItuIK/BA
+        cg4FrDZJxiNkdkmR+h24Ggx7pd04ZXvc62uXO61n1gX+LQl822A7Xyt5Ln4HpvE4UTPbEKyNJEyHM
+        c09hXo4lOM2sNXbe7T+34e26ro0P9rRMa5Je7uHHvjN3OaFBIRaZr1kU1Dqhkrpk63F0ndsnK/c87
+        fkSLgbBQAMf1cQ4tW2aQ6FXJdioCc7TPRJKeR1EdsAASWYwOKWWOWH87tvUyoHtg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oUvIz-007pTZ-0Q;
-        Sun, 04 Sep 2022 21:29:17 +0200
+        id 1oUvJ1-007pTZ-2b;
+        Sun, 04 Sep 2022 21:29:19 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 01/12] wifi: ipw2100: fix warnings about non-kernel-doc
-Date:   Sun,  4 Sep 2022 21:29:01 +0200
-Message-Id: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH 10/12] wifi: cw1200: remove RCU STA pointer handling in TX
+Date:   Sun,  4 Sep 2022 21:29:10 +0200
+Message-Id: <20220904212910.e5bc20dd17bf.Ib570ff7fde33c2b6eddef493a3541fa04eb47181@changeid>
 X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
+References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -47,36 +49,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Just remove the extra asterisk to make it not be
-kernel-doc formatted.
+We can call this in one of two ways: through mac80211, where
+we're already in an RCU read-side critical section, or from
+some other code in the driver where this pointer can only be
+NULL. In any case, we get a 'free' already protected pointer
+to the sta through info->control.sta, so we can use it on
+the stack without any further protection.
+
+Remove the rcu_dereference() and critical section.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Cc: Solomon Peachy <pizza@shaftnet.org>
+---
+ drivers/net/wireless/st/cw1200/txrx.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index ac36c899134e..b0f23cf1a621 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -6529,7 +6529,7 @@ static struct pci_driver ipw2100_pci_driver = {
- 	.shutdown = ipw2100_shutdown,
- };
+diff --git a/drivers/net/wireless/st/cw1200/txrx.c b/drivers/net/wireless/st/cw1200/txrx.c
+index fde21fca6c5e..ab19e0403dc2 100644
+--- a/drivers/net/wireless/st/cw1200/txrx.c
++++ b/drivers/net/wireless/st/cw1200/txrx.c
+@@ -762,8 +762,7 @@ void cw1200_tx(struct ieee80211_hw *dev,
+ 	if (ret)
+ 		goto drop;
  
--/**
-+/*
-  * Initialize the ipw2100 driver/module
-  *
-  * @returns 0 if ok, < 0 errno node con error.
-@@ -6561,7 +6561,7 @@ static int __init ipw2100_init(void)
- 	return ret;
- }
+-	rcu_read_lock();
+-	sta = rcu_dereference(t.sta);
++	sta = t.sta;
  
--/**
-+/*
-  * Cleanup ipw2100 driver registration
-  */
- static void __exit ipw2100_exit(void)
+ 	spin_lock_bh(&priv->ps_state_lock);
+ 	{
+@@ -776,8 +775,6 @@ void cw1200_tx(struct ieee80211_hw *dev,
+ 	if (tid_update && sta)
+ 		ieee80211_sta_set_buffered(sta, t.txpriv.tid, true);
+ 
+-	rcu_read_unlock();
+-
+ 	cw1200_bh_wakeup(priv);
+ 
+ 	return;
 -- 
 2.37.2
 
