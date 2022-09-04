@@ -2,44 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF1B2C54EE9
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF65BECAAD3
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234988AbiIDT3c (ORCPT
+        id S235028AbiIDT3e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Sep 2022 15:29:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36942 "EHLO
+        Sun, 4 Sep 2022 15:29:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234855AbiIDT3Z (ORCPT
+        with ESMTP id S229596AbiIDT3Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 4 Sep 2022 15:29:25 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E3782E1
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E4CD302
         for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=aWTMKTni8LE38W0sPBEwDKc7LbsI4GZP/Z8aTMB/o1s=;
-        t=1662319761; x=1663529361; b=Twe27cmbxFqWTF9lqRUcRSPuMbDH4eVUt5tgO7JdiTYGW8B
-        ng2LBtq6zRkLtD3wxFL23lYNNrK8CgjzaRJLlJcNQBsvLI8ZMAZDYGtxVdq/j7wGkwgWwqopbyCEj
-        j1W/qK1yJZl0S3NwYPtwTMwdUepXVqNP5zHi2L5UpSyJIj8gR1cVzLpYXQbqr/ZPLKzQ8ynyJaY8O
-        iq9urxS00+1lZ+4Smep5Uor3ZJdvvwlUVFfkzSOsUlIIn3gW1H/EUjeMilalMcfSz6VqI0QZ7H7wv
-        8o07De1auAy5JeZzPW37UfjpHDx6XYjWyCOWwjkPuQp8TLtUNOQ0YIx9V+cQCt5A==;
+        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=H3TVLDVNZQr0RQ9LVIulr4oOuxYblE+Bh++oeCm9M2A=; t=1662319761; x=1663529361; 
+        b=pbwqs71vv+TEe2OhY0Pw5H0Ff5MOfKWTcjahPlI2whBrzhZCjWd/3qMgwmCEt5DdGiNznquuL+n
+        lAU06hBtWia9qXRRuxhce6Rgo1t/D4O28xfJ9ElCNOb9UNR/6jDcILUvDfdXGCqft/kGE8btmLUFY
+        MmPpCYfFllhYzhhic5NB93Y3FCNKBt4iv6PMFDnzODL5ljZDIYphpFCvOL+T7YMXbw3oA8BQhYw78
+        hdyxHIQUWyreP83F6Vvg9WBxLQ42+9qUBO440ZuLQzRlarpSlcTj8jel0X9DUF2ngBehIVIsH0wGl
+        HRc98RL7n+KrDZflJm/aGhGpSjbS+Rej1Cpw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oUvIz-007pTZ-21;
+        id 1oUvIz-007pTZ-0Q;
         Sun, 04 Sep 2022 21:29:17 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/12] wifi: libertas: fix a couple of sparse warnings
-Date:   Sun,  4 Sep 2022 21:29:03 +0200
-Message-Id: <20220904212910.76c34b2ae7a0.Ieb97c72b6d26f9d695cc4ab10fa7af5c3509612b@changeid>
+Subject: [PATCH 01/12] wifi: ipw2100: fix warnings about non-kernel-doc
+Date:   Sun,  4 Sep 2022 21:29:01 +0200
+Message-Id: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 X-Mailer: git-send-email 2.37.2
-In-Reply-To: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
-References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -48,43 +47,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
- - endian swapping is required in one place, use the
-   already swapped 'bsssize' local
- - lbs_disablemesh need not be exported and can be static
+Just remove the extra asterisk to make it not be
+kernel-doc formatted.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/marvell/libertas/cfg.c  | 2 +-
- drivers/net/wireless/marvell/libertas/main.c | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index 5e3ae00153b8..3e065cbb0af9 100644
---- a/drivers/net/wireless/marvell/libertas/cfg.c
-+++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -546,7 +546,7 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 	pos = scanresp->bssdesc_and_tlvbuffer;
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index ac36c899134e..b0f23cf1a621 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -6529,7 +6529,7 @@ static struct pci_driver ipw2100_pci_driver = {
+ 	.shutdown = ipw2100_shutdown,
+ };
  
- 	lbs_deb_hex(LBS_DEB_SCAN, "SCAN_RSP", scanresp->bssdesc_and_tlvbuffer,
--			scanresp->bssdescriptsize);
-+		    bsssize);
+-/**
++/*
+  * Initialize the ipw2100 driver/module
+  *
+  * @returns 0 if ok, < 0 errno node con error.
+@@ -6561,7 +6561,7 @@ static int __init ipw2100_init(void)
+ 	return ret;
+ }
  
- 	tsfdesc = pos + bsssize;
- 	tsfsize = 4 + 8 * scanresp->nr_sets;
-diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/marvell/libertas/main.c
-index 5c9f295536ea..8f5220cee112 100644
---- a/drivers/net/wireless/marvell/libertas/main.c
-+++ b/drivers/net/wireless/marvell/libertas/main.c
-@@ -39,8 +39,7 @@ unsigned int lbs_debug;
- EXPORT_SYMBOL_GPL(lbs_debug);
- module_param_named(libertas_debug, lbs_debug, int, 0644);
- 
--unsigned int lbs_disablemesh;
--EXPORT_SYMBOL_GPL(lbs_disablemesh);
-+static unsigned int lbs_disablemesh;
- module_param_named(libertas_disablemesh, lbs_disablemesh, int, 0644);
- 
- 
+-/**
++/*
+  * Cleanup ipw2100 driver registration
+  */
+ static void __exit ipw2100_exit(void)
 -- 
 2.37.2
 
