@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64298C54EE9
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54111C6FA82
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234933AbiIDT3j (ORCPT
+        id S234855AbiIDT3k (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Sep 2022 15:29:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37092 "EHLO
+        Sun, 4 Sep 2022 15:29:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234798AbiIDT32 (ORCPT
+        with ESMTP id S234865AbiIDT32 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 4 Sep 2022 15:29:28 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33CFEE47
-        for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33D58E5E
+        for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=Vgsv8HQMTzYZeqKn9+OV7mnf0XXRWj0X2rUbLf9lWWg=;
-        t=1662319762; x=1663529362; b=eLRy5Ct1rol4HPGK0a2hHpRy++GDWGkhbkP2T62VG81BnUt
-        clOPmVlDWICVa5VOBDF91nZDiQj1xO/N0mt8OiGbwKnYSz+bnalJzea9VEzOd/swD/FD1Z/JReY57
-        O5HrvI/8jSTkWjkjjgEeadBlOaItzHv+6xprCII26woMR6adEwFDwFNZCwMP84F8HV1UG0QAwCMmm
-        CbmaHhHILhITI+F4CRo/VhxB8FTsq5NX4GuEkdU7+axtReFp5DXoXG6jIMifOIJMnpj2ycRP0N5xh
-        coBT4wqiDfYQ8UPLODdH+eWVBNE9mPdk59TqcRNc3STWCPXxfxxt/GMX9Chu8ADw==;
+        Resent-Cc:Resent-Message-ID; bh=dbRmkAzkUxubCRqZSj12TlW1QQJBHreXUsd+ZDfikec=;
+        t=1662319762; x=1663529362; b=q7B31tv/A+ZX4gUGEhRvFVINyXj7CTwOKMk1jYLGp75iXn5
+        lYsD10un4dzMfVYEDfZW6eOwripAOqsxWyzbUvQFvJjBBOckdtYA0Bb/c/RsYBNDsGwjRxTDeWJTa
+        B+QkRI8X47g2BglA0xH2Yu5+UtLaFVmSj/QBD21zzG1HZsz6k1asT3ytoH5luS5iLIF7Tko+QyCON
+        69lmkX0NGkzBuLrsDhJUdMtF5glY39AagKqVIIQrGCM5EYtk6bWMQDJWeko6Qr8FlYSe9y9gHqkAm
+        WixCXv/AoumhY1EhwIqFi2gNn4fPAq2DhAdNJpFVdTcNeyBBR0HzOdfOfss+NIbg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oUvJ0-007pTZ-0d;
-        Sun, 04 Sep 2022 21:29:18 +0200
+        id 1oUvJ1-007pTZ-08;
+        Sun, 04 Sep 2022 21:29:19 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 05/12] wifi: wl18xx: add some missing endian conversions
-Date:   Sun,  4 Sep 2022 21:29:05 +0200
-Message-Id: <20220904212910.2b5cb713cf4b.Ibabba2deb7bb22863d3a134e7a3333422d7eff17@changeid>
+Subject: [PATCH 07/12] wifi: mwifiex: fix array of flexible structures warnings
+Date:   Sun,  4 Sep 2022 21:29:07 +0200
+Message-Id: <20220904212910.2c885310ebee.If7177ea588b56c405eee6e6df595e9efccdfb99a@changeid>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
@@ -48,33 +48,59 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This caused sparse warnings, and clearly is needed per
-how other firmware interfaces behave.
+There are two, just change them to have a "u8 data[]" type
+member, and add casts where needed. No binary changes.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wl18xx/event.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/fw.h      | 4 ++--
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index 13d78ada4bb6..34d95f458e1a 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -131,10 +131,10 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 26a48d8f49be..b4f945a549f7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -2104,7 +2104,7 @@ struct mwifiex_fw_mef_entry {
+ struct host_cmd_ds_mef_cfg {
+ 	__le32 criteria;
+ 	__le16 num_entries;
+-	struct mwifiex_fw_mef_entry mef_entry[];
++	u8 mef_entry_data[];
+ } __packed;
  
- 	if (vector & TIME_SYNC_EVENT_ID)
- 		wlcore_event_time_sync(wl,
--			mbox->time_sync_tsf_high_msb,
--			mbox->time_sync_tsf_high_lsb,
--			mbox->time_sync_tsf_low_msb,
--			mbox->time_sync_tsf_low_lsb);
-+			le16_to_cpu(mbox->time_sync_tsf_high_msb),
-+			le16_to_cpu(mbox->time_sync_tsf_high_lsb),
-+			le16_to_cpu(mbox->time_sync_tsf_low_msb),
-+			le16_to_cpu(mbox->time_sync_tsf_low_lsb));
+ #define CONNECTION_TYPE_INFRA   0
+@@ -2254,7 +2254,7 @@ struct coalesce_receive_filt_rule {
+ struct host_cmd_ds_coalesce_cfg {
+ 	__le16 action;
+ 	__le16 num_of_rules;
+-	struct coalesce_receive_filt_rule rule[];
++	u8 rule_data[];
+ } __packed;
  
- 	if (vector & RADAR_DETECTED_EVENT_ID) {
- 		wl1271_info("radar event: channel %d type %s",
+ struct host_cmd_ds_multi_chan_policy {
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 512b5bb9cf6f..e2800a831c8e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1435,7 +1435,7 @@ mwifiex_cmd_mef_cfg(struct mwifiex_private *priv,
+ 		mef_entry = (struct mwifiex_fw_mef_entry *)pos;
+ 		mef_entry->mode = mef->mef_entry[i].mode;
+ 		mef_entry->action = mef->mef_entry[i].action;
+-		pos += sizeof(*mef_cfg->mef_entry);
++		pos += sizeof(*mef_entry);
+ 
+ 		if (mwifiex_cmd_append_rpn_expression(priv,
+ 						      &mef->mef_entry[i], &pos))
+@@ -1631,7 +1631,7 @@ mwifiex_cmd_coalesce_cfg(struct mwifiex_private *priv,
+ 
+ 	coalesce_cfg->action = cpu_to_le16(cmd_action);
+ 	coalesce_cfg->num_of_rules = cpu_to_le16(cfg->num_of_rules);
+-	rule = coalesce_cfg->rule;
++	rule = (void *)coalesce_cfg->rule_data;
+ 
+ 	for (cnt = 0; cnt < cfg->num_of_rules; cnt++) {
+ 		rule->header.type = cpu_to_le16(TLV_TYPE_COALESCE_RULE);
 -- 
 2.37.2
 
