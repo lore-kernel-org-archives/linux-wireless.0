@@ -2,42 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EFA2ECAAD3
-	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5572CC54EE9
+	for <linux-wireless@archiver.kernel.org>; Sun,  4 Sep 2022 19:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235044AbiIDT3g (ORCPT
+        id S234931AbiIDT3i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 4 Sep 2022 15:29:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37058 "EHLO
+        Sun, 4 Sep 2022 15:29:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234794AbiIDT32 (ORCPT
+        with ESMTP id S234858AbiIDT32 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 4 Sep 2022 15:29:28 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33BF7DCC
-        for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE426B06
+        for <linux-wireless@vger.kernel.org>; Sun,  4 Sep 2022 12:29:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=EJmCzvimHGVmyoK2N+rHdXGNgYNdH1jC2BojVX04m4U=;
-        t=1662319762; x=1663529362; b=HQ3ipsduqQ+IJmQK3doDUnWe/OEOIMePgLUUU/CvUv6cJ85
-        jylsvhlj9qVIW66CPk4mlK70kiorqCdSBjIgLxYdn74EW0bDzssOixSZnmaGaO+ETBeYIItuIK/BA
-        cg4FrDZJxiNkdkmR+h24Ggx7pd04ZXvc62uXO61n1gX+LQl822A7Xyt5Ln4HpvE4UTPbEKyNJEyHM
-        c09hXo4lOM2sNXbe7T+34e26ro0P9rRMa5Je7uHHvjN3OaFBIRaZr1kU1Dqhkrpk63F0ndsnK/c87
-        fkSLgbBQAMf1cQ4tW2aQ6FXJdioCc7TPRJKeR1EdsAASWYwOKWWOWH87tvUyoHtg==;
+        Resent-Cc:Resent-Message-ID; bh=B8SI0E2hnpzDhiu//tK/sDIPcyBjMkdBfArPwseBvIU=;
+        t=1662319761; x=1663529361; b=gPjI4XgEX6tua194A6nS3pcZPAXt88L4J3041csFSdR9Za6
+        AqHlUFkvO6NR5bMTaqrxscbdQDFgkWS5sSDClShe/IfvXIPvS4Ki0rXpQVmRKhp8eeaC8rG9X7LaT
+        Z3gI0qV3+guAEmmad2X3YyW0vm1RjFH3gCRYCe94Kvfnak0IzGmf5ZVoExxWEuKDWCuPBGNVa/hYL
+        6eDycwzKVLHyrl+aICy21YF24AJ0dRqCIFGXejv9Ku7MYr47IRoFGzEbeXd3CSo9hjGCiN4pTCupi
+        8kwzv7ngqWSPFjHAaMRi9dJrUJAa7LaOc1f8AAelX5vnc5QfD0zgcd/i71ow1J7w==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1oUvJ1-007pTZ-2b;
+        id 1oUvJ1-007pTZ-0s;
         Sun, 04 Sep 2022 21:29:19 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 10/12] wifi: cw1200: remove RCU STA pointer handling in TX
-Date:   Sun,  4 Sep 2022 21:29:10 +0200
-Message-Id: <20220904212910.e5bc20dd17bf.Ib570ff7fde33c2b6eddef493a3541fa04eb47181@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 08/12] wifi: mwifiex: fix endian conversion
+Date:   Sun,  4 Sep 2022 21:29:08 +0200
+Message-Id: <20220904212910.a32e45adb2b2.I8c966b07c0bf7be4485967b044d9dad3f4772a27@changeid>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
 References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
@@ -49,45 +48,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We can call this in one of two ways: through mac80211, where
-we're already in an RCU read-side critical section, or from
-some other code in the driver where this pointer can only be
-NULL. In any case, we get a 'free' already protected pointer
-to the sta through info->control.sta, so we can use it on
-the stack without any further protection.
-
-Remove the rcu_dereference() and critical section.
+Clearly the value should be converted and then compared,
+not the result of the comparison be converted. No binary
+changes on x86.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Cc: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/st/cw1200/txrx.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/sta_event.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/txrx.c b/drivers/net/wireless/st/cw1200/txrx.c
-index fde21fca6c5e..ab19e0403dc2 100644
---- a/drivers/net/wireless/st/cw1200/txrx.c
-+++ b/drivers/net/wireless/st/cw1200/txrx.c
-@@ -762,8 +762,7 @@ void cw1200_tx(struct ieee80211_hw *dev,
- 	if (ret)
- 		goto drop;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index b95e90a7d124..b6315fccd1bb 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -623,7 +623,7 @@ mwifiex_fw_dump_info_event(struct mwifiex_private *priv,
+ 		adapter->event_skb->data, event_skb->len);
+ 	adapter->devdump_len += event_skb->len;
  
--	rcu_read_lock();
--	sta = rcu_dereference(t.sta);
-+	sta = t.sta;
- 
- 	spin_lock_bh(&priv->ps_state_lock);
- 	{
-@@ -776,8 +775,6 @@ void cw1200_tx(struct ieee80211_hw *dev,
- 	if (tid_update && sta)
- 		ieee80211_sta_set_buffered(sta, t.txpriv.tid, true);
- 
--	rcu_read_unlock();
--
- 	cw1200_bh_wakeup(priv);
- 
- 	return;
+-	if (le16_to_cpu(fw_dump_hdr->type == FW_DUMP_INFO_ENDED)) {
++	if (le16_to_cpu(fw_dump_hdr->type) == FW_DUMP_INFO_ENDED) {
+ 		mwifiex_dbg(adapter, MSG,
+ 			    "receive end of transmission flag event!\n");
+ 		goto upload_dump;
 -- 
 2.37.2
 
