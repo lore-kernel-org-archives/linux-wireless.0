@@ -2,92 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD93ECAAD5
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Sep 2022 15:40:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B37D6ECAAD5
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Sep 2022 17:15:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238370AbiIEPkD (ORCPT
+        id S231545AbiIERPQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Sep 2022 11:40:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60030 "EHLO
+        Mon, 5 Sep 2022 13:15:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237446AbiIEPkC (ORCPT
+        with ESMTP id S231697AbiIERPO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Sep 2022 11:40:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E98510FCD
-        for <linux-wireless@vger.kernel.org>; Mon,  5 Sep 2022 08:40:01 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Mon, 5 Sep 2022 13:15:14 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70C9C4B0FE
+        for <linux-wireless@vger.kernel.org>; Mon,  5 Sep 2022 10:15:13 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2AE556133D
-        for <linux-wireless@vger.kernel.org>; Mon,  5 Sep 2022 15:40:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5296C433C1;
-        Mon,  5 Sep 2022 15:39:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662392400;
-        bh=TeFUX4zgahpMMjfFEW8qtMj1TNi6vP6+FKMLxpAoaLY=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=pvD3/iR3GVQo+4Xkwze0mBv57r7smizgtOBInEoToiryakaCHts2E8yvdyp5urKNj
-         y96R/b4QtDNtxrdtR6vbd1sHqyC5MR+t4CzkmoPyo++DFdkcEOpI5Nk5YJsWbWPSPR
-         LVIzQ8Umbw/QN98HIbU+w/eKrFISOxrHAiiUpOSLZX+W34tygIP3cgc8NhOBgc5l8K
-         OJhI05AIO6SEZcBx09cfodk+5IcqMjfLsWfLEXL2ybBwrVQJ4P2l+YRHB5l+6+ez0q
-         C/aqF+5V3w1Fo8HQ+88X2acBWdjbhpX0bqOcKc7Hzl9HXTbM6WpaFqaHMr0HfJk8W/
-         kArfofgdbLScA==
-From:   Kalle Valo <kvalo@kernel.org>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 9A553353D3;
+        Mon,  5 Sep 2022 17:15:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1662398111; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lqcIPRczxfdWmkZO56Kcs83+FDpNphXjP0tEpVlr5po=;
+        b=x/qpakKfGis4g+seQSubpFaqRmZYGSO69JFx5LcL+8e1bA+POzNT+ZAm3lWgQOg5HcQQ7z
+        tsBaKRplXdJW2Z2rvhl4xT1Kbh5FvuJcSiat/SjPt3K0/rhmGBLFLS/EtOoTtIQkeqWQJl
+        BI0C4tGCi71oRrdP6x3TYHsciKUeIQU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1662398111;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lqcIPRczxfdWmkZO56Kcs83+FDpNphXjP0tEpVlr5po=;
+        b=5n8cy8fiULoFLurr1YhFj0CmLdG2cB88tvq8HFeT8/nqYOJX9BVUnYWW4LxdLopLCSPtQI
+        d0zB+kj8Lcjlx7CQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4111113A66;
+        Mon,  5 Sep 2022 17:15:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id ZnYLDZ8uFmOLCQAAMHmgww
+        (envelope-from <lhenriques@suse.de>); Mon, 05 Sep 2022 17:15:11 +0000
+Received: from localhost (brahms.olymp [local])
+        by brahms.olymp (OpenSMTPD) with ESMTPA id 09434c0c;
+        Mon, 5 Sep 2022 17:16:00 +0000 (UTC)
+Date:   Mon, 5 Sep 2022 18:16:00 +0100
+From:   =?iso-8859-1?Q?Lu=EDs?= Henriques <lhenriques@suse.de>
 To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 04/12] wifi: rndis_wlan: fix array of flexible structures warning
-References: <20220904212910.8169e8c9090c.I0357e80cc86be2d4ac6205d1f53568444dcf7c9b@changeid>
-        <20220904212910.0e7ce5fdbcfb.I972158734def3f93b93a3858a087cbc2cca6337e@changeid>
-Date:   Mon, 05 Sep 2022 18:39:58 +0300
-In-Reply-To: <20220904212910.0e7ce5fdbcfb.I972158734def3f93b93a3858a087cbc2cca6337e@changeid>
-        (Johannes Berg's message of "Sun, 4 Sep 2022 21:29:04 +0200")
-Message-ID: <87tu5lde41.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+Subject: Re: New 6.1 net/mac80211/rx.c warning with iwlwifi / Ultimate-N 6300
+ wifi
+Message-ID: <YxYu0CawomVcTlRn@suse.de>
+References: <498d714c-76be-9d04-26db-a1206878de5e@redhat.com>
+ <YwNNXKEFcX/GK2Sv@suse.de>
+ <644e506ab60a58b95bdbbb5d9c3e425622931f8f.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <644e506ab60a58b95bdbbb5d9c3e425622931f8f.camel@sipsolutions.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Mon, Aug 22, 2022 at 12:21:49PM +0200, Johannes Berg wrote:
+> On Mon, 2022-08-22 at 10:33 +0100, Luís Henriques wrote:
+> > On Sat, Aug 20, 2022 at 03:12:33PM +0200, Hans de Goede wrote:
+> > > Hi All,
+> > > 
+> > > While testing 6.0-rc1 on a Dell Latitude E6430 with:
+> > > 
+> > > 03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300 (rev 35)
+> > > 
+> > 
+> > I've just seem a similar splat on -rc2, with a different card:
+> > 
+> > 02:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
+> > 
+> 
+> Yeah this is an issue with the new multi-link work.
+> 
+> We've seen it too, though the rx->link _should_ be set to deflink here
+> in the cases of non-MLO connections.
+> 
+> We're investigating.
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Use "u8 bssid_data[]" with an appropriate cast. No binary
-> changes.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/rndis_wlan.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-> index 325933217b41..82a7458e01ae 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -251,7 +251,7 @@ struct ndis_80211_bssid_ex {
->  
->  struct ndis_80211_bssid_list_ex {
->  	__le32 num_items;
-> -	struct ndis_80211_bssid_ex bssid[];
-> +	u8 bssid_data[];
->  } __packed;
->  
->  struct ndis_80211_fixed_ies {
-> @@ -2084,7 +2084,8 @@ static int rndis_check_bssid_list(struct usbnet *usbdev, u8 *match_bssid,
->  	netdev_dbg(usbdev->net, "%s(): buflen: %d\n", __func__, len);
->  
->  	bssid_len = 0;
-> -	bssid = next_bssid_list_item(bssid_list->bssid, &bssid_len, buf, len);
-> +	bssid = next_bssid_list_item((void *)bssid_list->bssid_data,
-> +				     &bssid_len, buf, len);
+FWIW I'm still seeing this with RC4.
 
-Same comment as in patch 2, I just feel the code gets worse because of a
-compiler warning.
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Cheers,
+--
+Luís
