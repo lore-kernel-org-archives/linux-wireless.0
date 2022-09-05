@@ -2,76 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E72ECAAD3
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Sep 2022 17:31:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C5AECAAD5
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Sep 2022 17:36:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231658AbiIERbj (ORCPT
+        id S231642AbiIERgb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Sep 2022 13:31:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36778 "EHLO
+        Mon, 5 Sep 2022 13:36:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231630AbiIERbh (ORCPT
+        with ESMTP id S230035AbiIERga (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Sep 2022 13:31:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 652055A2E2
-        for <linux-wireless@vger.kernel.org>; Mon,  5 Sep 2022 10:31:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Mon, 5 Sep 2022 13:36:30 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECCE25E668
+        for <linux-wireless@vger.kernel.org>; Mon,  5 Sep 2022 10:36:29 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E60916144D
-        for <linux-wireless@vger.kernel.org>; Mon,  5 Sep 2022 17:31:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A412C433D6;
-        Mon,  5 Sep 2022 17:31:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662399090;
-        bh=hjSUIFLLP713kGAkqYkFD9HnQwl67J2zTmeFtfJwdyc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=KjvXTg0fO2mu7tGnq9WvnI/+l1tTLRgurn0wxXuKmkqj1DTbjIKUKTQheNICkJoE2
-         DtDJMWiy16mbtpRee5+g+4kSocwzyDDQepC5UrGLwLINZog5VG92xU0lztk7DY3HSX
-         03sxHjEtiHtEj6NrzS4LCxhOHFGXjG4oKMvTty/hN91B/t34p726HVip4l8N6xdQH/
-         QbC5EDc/u09u+RG9Ly8XS82pOurg61CPlx4QbGA6SMCxHGFVM4yGWePbVMVHmvCzpv
-         e2cCDOyLm0dPc7VphTNHzyYu79AEO4q6Q7uVpGbYs07ULWPKxC4myWZ5/l22Qv1s37
-         K1ZuKT6n7bJHg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath12k\@lists.infradead.org" <ath12k@lists.infradead.org>
-Subject: Re: [PATCH 31/50] wifi: ath12k: add mac.c
-References: <20220812161003.27279-1-kvalo@kernel.org>
-        <20220812161003.27279-32-kvalo@kernel.org>
-        <c9c4f3027e294e148bd595e3db1a62a8@realtek.com>
-Date:   Mon, 05 Sep 2022 20:31:24 +0300
-In-Reply-To: <c9c4f3027e294e148bd595e3db1a62a8@realtek.com> (Ping-Ke Shih's
-        message of "Mon, 15 Aug 2022 06:09:40 +0000")
-Message-ID: <87h71laftf.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id AA53133993;
+        Mon,  5 Sep 2022 17:36:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1662399388; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=G6W8U86kPx/mPCR+56y7wv4ZsWr7F5WzkVJfYQbzX10=;
+        b=qb/7wr33HpUbIqHcn3VNMJFe1LHTpvK9MuUzjGamhiA2wnPCiZ/GbalPXyLEDYVYBjXgam
+        3VfKpnmC+eovGl+KHB1NBNVnJA3ucHizXaLEs5tAB7svQj61ERsbdSETxHaI2u90D/WmKs
+        WMaMo9grzCTN/IdHYfUREfmG0SGj86s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1662399388;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=G6W8U86kPx/mPCR+56y7wv4ZsWr7F5WzkVJfYQbzX10=;
+        b=YKWCRwVaHKZ3qjAQPZ7B4Z2s40TLXHS0o/xovxZ0x3MdbZNW4lal8bC2qd/XqFldvytXai
+        zQnFK40EK1QoJsBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 59061139C7;
+        Mon,  5 Sep 2022 17:36:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 8EYgE5wzFmP5EQAAMHmgww
+        (envelope-from <lhenriques@suse.de>); Mon, 05 Sep 2022 17:36:28 +0000
+Received: from localhost (brahms.olymp [local])
+        by brahms.olymp (OpenSMTPD) with ESMTPA id acde58a4;
+        Mon, 5 Sep 2022 17:37:20 +0000 (UTC)
+Date:   Mon, 5 Sep 2022 18:37:20 +0100
+From:   =?iso-8859-1?Q?Lu=EDs?= Henriques <lhenriques@suse.de>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+Subject: Re: New 6.1 net/mac80211/rx.c warning with iwlwifi / Ultimate-N 6300
+ wifi
+Message-ID: <YxYz0OhcbmMzUvMp@suse.de>
+References: <498d714c-76be-9d04-26db-a1206878de5e@redhat.com>
+ <YwNNXKEFcX/GK2Sv@suse.de>
+ <644e506ab60a58b95bdbbb5d9c3e425622931f8f.camel@sipsolutions.net>
+ <YxYu0CawomVcTlRn@suse.de>
+ <f2288c0419d2d1a4ae9935e52c0ef62bfaed5f9a.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <f2288c0419d2d1a4ae9935e52c0ef62bfaed5f9a.camel@sipsolutions.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> writes:
+On Mon, Sep 05, 2022 at 07:23:41PM +0200, Johannes Berg wrote:
+> On Mon, 2022-09-05 at 18:16 +0100, Luís Henriques wrote:
+> > On Mon, Aug 22, 2022 at 12:21:49PM +0200, Johannes Berg wrote:
+> > > On Mon, 2022-08-22 at 10:33 +0100, Luís Henriques wrote:
+> > > > On Sat, Aug 20, 2022 at 03:12:33PM +0200, Hans de Goede wrote:
+> > > > > Hi All,
+> > > > > 
+> > > > > While testing 6.0-rc1 on a Dell Latitude E6430 with:
+> > > > > 
+> > > > > 03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300 (rev 35)
+> > > > > 
+> > > > 
+> > > > I've just seem a similar splat on -rc2, with a different card:
+> > > > 
+> > > > 02:00.0 Network controller: Intel Corporation Wireless 8260 (rev 3a)
+> > > > 
+> > > 
+> > > Yeah this is an issue with the new multi-link work.
+> > > 
+> > > We've seen it too, though the rx->link _should_ be set to deflink here
+> > > in the cases of non-MLO connections.
+> > > 
+> > > We're investigating.
+> > 
+> > FWIW I'm still seeing this with RC4.
+> > 
+> 
+> Yes we just missed rc4, but 
+> 
+> commit 4a86c5462616e0d690ad3c94dc84c3b5f1ea5631
+> Author: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+> Date:   Fri Sep 2 16:11:31 2022 +0200
+> 
+>     wifi: mac80211: fix link warning in RX agg timer expiry
+> 
+> 
+> should be coming to a tree near you soon. :)
 
->> +static int get_num_chains(u32 mask)
->> +{
->> +	int num_chains = 0;
->> +
->> +	while (mask) {
->> +		if (mask & BIT(0))
->> +			num_chains++;
->> +		mask >>= 1;
->> +	}
->> +
->> +	return num_chains;
->> +}
->
-> use hweight32()?
+Ah! Awesome, thank you for the update.
 
-Yup, we'll fix that. Thanks!
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Cheers,
+--
+Luís
