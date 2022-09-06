@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71FC3ECAAD5
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Sep 2022 14:02:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E4B5ECAAA1
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Sep 2022 14:05:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239920AbiIFOCZ (ORCPT
+        id S239513AbiIFOFR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Sep 2022 10:02:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43546 "EHLO
+        Tue, 6 Sep 2022 10:05:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239694AbiIFOAU (ORCPT
+        with ESMTP id S241283AbiIFODz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2022 10:00:20 -0400
+        Tue, 6 Sep 2022 10:03:55 -0400
 Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB81C83F2E
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Sep 2022 06:44:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6C5316580
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Sep 2022 06:44:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662471860; x=1694007860;
+  t=1662471885; x=1694007885;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Qw4/LQBfMM8AzS7rwZHBIi2flgUOzLeoUR4QNprbkeo=;
-  b=jdIm1OhJCQCw1Y/SIXctjqzHQeDKq5sM1GyHmP9WJhPqc9FxZkZrq881
-   UKw7BYGH4dP379KDnYPjc9+BfCNxnlCChdjiwjogzMifVaWNWj4I5LJpj
-   Rfl4CDE0kcDtmkgq09Yg3FckwRP6L45So9WUsvLaLAPqdgfcwwg9iRy1P
-   AeZk5UTUGliXvsp1zUHbsh8M+zDPy1NuM3YyJRuroeR53LEOUz8ictUo8
-   2jnw/f+F4u+04tpZ5j9X3JhxqNJ7Lb793vKBhVDFNpYL3SbH5IZhVYF7g
-   QsAWmE3aUg85zxDx7LofV48vWAWThOg2yEkxjdtNl4Y+yBKGWXYGDT8ls
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10462"; a="276332678"
+  bh=eLTKNs2xRpBl+HRdpQSAS6NVnjHB428wqLA1/yU+acc=;
+  b=fuLFCHWwKA/UPjilqRBicRu8JR2udHIMbAHUaBMhVyx7sBWmfbiSg2Nz
+   GAKLjavDT6HY2bS0ly1jjr2gPFXXQ109fJTAsTYa4ul0eHGJ2YMXhZMA6
+   JSUX32TGw1nn7pzMhNzODmqpikQO1qIFqnhlKU0S2px5bj0UJhkG7CtmB
+   tpCCrgmatvm4nJw54H7nbZ3jSHWGIxP3yf3JL04dKVuJBSGyRfdmP1wjJ
+   aDnqC41M/IS76PK9Wrte1zPDHQ3W8AF+ZrsFuVr+vYij23uOQVG7T2glx
+   //2kuGHLlsa3Alqb0X2riFyiZnLGdykxDa9Tpg3qqxJs5fxWqAAEN8o5G
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10462"; a="276332703"
 X-IronPort-AV: E=Sophos;i="5.93,294,1654585200"; 
-   d="scan'208";a="276332678"
+   d="scan'208";a="276332703"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Sep 2022 06:43:17 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Sep 2022 06:43:23 -0700
 X-IronPort-AV: E=Sophos;i="5.93,294,1654585200"; 
-   d="scan'208";a="942459600"
+   d="scan'208";a="942459640"
 Received: from ygueta-mobl2.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.249.82.178])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Sep 2022 06:43:16 -0700
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Sep 2022 06:43:22 -0700
 From:   gregory.greenman@intel.com
 To:     kvalo@kernel.org, johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 02/15] wifi: iwlwifi: mvm: fix typo in struct iwl_rx_no_data API
-Date:   Tue,  6 Sep 2022 16:42:06 +0300
-Message-Id: <20220906161827.80f7eda56163.Ib783512104f0c135695b4d59b637f3eef3e8f537@changeid>
+Subject: [PATCH 04/15] wifi: iwlwifi: mvm: rxmq: further unify some VHT/HE code
+Date:   Tue,  6 Sep 2022 16:42:08 +0300
+Message-Id: <20220906161827.d1e8673b9443.I6d81fc9dd0856d75e3a799c23f0f8d212b077fca@changeid>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20220906134219.365090-1-gregory.greenman@intel.com>
 References: <20220906134219.365090-1-gregory.greenman@intel.com>
@@ -57,35 +57,86 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The version 2 is also for RX, of course, that's just a typo.
+There's some duplication here, unify it so that adding EHT
+becomes easier.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/rx.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 36 ++++++++-----------
+ 1 file changed, 14 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-index 1989b270862b..74a01888715b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2012-2014, 2018-2021 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-  */
-@@ -668,7 +668,7 @@ struct iwl_rx_no_data {
- 	__le32 phy_info[2];
- 	__le32 rx_vec[2];
- } __packed; /* RX_NO_DATA_NTFY_API_S_VER_1,
--	       TX_NO_DATA_NTFY_API_S_VER_2 */
-+	       RX_NO_DATA_NTFY_API_S_VER_2 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index c0a779867938..1aadccd8841f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1473,7 +1473,7 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	struct ieee80211_radiotap_he_mu *he_mu = NULL;
+ 	u32 rate_n_flags = phy_data->rate_n_flags;
+ 	u32 he_type = rate_n_flags & RATE_MCS_HE_TYPE_MSK;
+-	u8 stbc, ltf;
++	u8 ltf;
+ 	static const struct ieee80211_radiotap_he known = {
+ 		.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN |
+ 				     IEEE80211_RADIOTAP_HE_DATA1_DATA_DCM_KNOWN |
+@@ -1538,19 +1538,6 @@ static void iwl_mvm_rx_he(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		he->data1 |=
+ 			cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN);
  
- struct iwl_frame_release {
- 	u8 baid;
+-	stbc = (rate_n_flags & RATE_MCS_STBC_MSK) >> RATE_MCS_STBC_POS;
+-	rx_status->nss =
+-		((rate_n_flags & RATE_MCS_NSS_MSK) >>
+-		 RATE_MCS_NSS_POS) + 1;
+-	rx_status->rate_idx = rate_n_flags & RATE_MCS_CODE_MSK;
+-	rx_status->encoding = RX_ENC_HE;
+-	rx_status->enc_flags |= stbc << RX_ENC_FLAG_STBC_SHIFT;
+-	if (rate_n_flags & RATE_MCS_BF_MSK)
+-		rx_status->enc_flags |= RX_ENC_FLAG_BF;
+-
+-	rx_status->he_dcm =
+-		!!(rate_n_flags & RATE_HE_DUAL_CARRIER_MODE_MSK);
+-
+ #define CHECK_TYPE(F)							\
+ 	BUILD_BUG_ON(IEEE80211_RADIOTAP_HE_DATA1_FORMAT_ ## F !=	\
+ 		     (RATE_MCS_HE_TYPE_ ## F >> RATE_MCS_HE_TYPE_POS))
+@@ -1730,6 +1717,17 @@ static void iwl_mvm_rx_fill_status(struct iwl_mvm *mvm,
+ 	if (rate_n_flags & RATE_MCS_LDPC_MSK)
+ 		rx_status->enc_flags |= RX_ENC_FLAG_LDPC;
+ 
++	switch (format) {
++	case RATE_MCS_VHT_MSK:
++		rx_status->encoding = RX_ENC_VHT;
++		break;
++	case RATE_MCS_HE_MSK:
++		rx_status->encoding = RX_ENC_HE;
++		rx_status->he_dcm =
++			!!(rate_n_flags & RATE_HE_DUAL_CARRIER_MODE_MSK);
++		break;
++	}
++
+ 	switch (format) {
+ 	case RATE_MCS_HT_MSK:
+ 		rx_status->encoding = RX_ENC_HT;
+@@ -1737,17 +1735,11 @@ static void iwl_mvm_rx_fill_status(struct iwl_mvm *mvm,
+ 		rx_status->enc_flags |= stbc << RX_ENC_FLAG_STBC_SHIFT;
+ 		break;
+ 	case RATE_MCS_VHT_MSK:
++	case RATE_MCS_HE_MSK:
+ 		rx_status->nss =
+-			((rate_n_flags & RATE_MCS_NSS_MSK) >>
+-			RATE_MCS_NSS_POS) + 1;
++			u32_get_bits(rate_n_flags, RATE_MCS_NSS_MSK) + 1;
+ 		rx_status->rate_idx = rate_n_flags & RATE_MCS_CODE_MSK;
+-		rx_status->encoding = RX_ENC_VHT;
+ 		rx_status->enc_flags |= stbc << RX_ENC_FLAG_STBC_SHIFT;
+-		if (rate_n_flags & RATE_MCS_BF_MSK)
+-			rx_status->enc_flags |= RX_ENC_FLAG_BF;
+-		break;
+-	case RATE_MCS_HE_MSK:
+-		/* handled above */
+ 		break;
+ 	default: {
+ 		int rate = iwl_mvm_legacy_hw_idx_to_mac80211_idx(rate_n_flags,
 -- 
 2.35.3
 
