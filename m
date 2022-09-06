@@ -2,474 +2,180 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6053CC6FA83
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Sep 2022 15:46:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB2DECAAA1
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Sep 2022 22:03:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233352AbiIFPqu (ORCPT
+        id S229627AbiIFWDz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Sep 2022 11:46:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36762 "EHLO
+        Tue, 6 Sep 2022 18:03:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233285AbiIFPq3 (ORCPT
+        with ESMTP id S229449AbiIFWDy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2022 11:46:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8002C742A;
-        Tue,  6 Sep 2022 07:56:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AC1C061540;
-        Tue,  6 Sep 2022 13:48:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D240C4314A;
-        Tue,  6 Sep 2022 13:48:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1662472082;
-        bh=D09i4niAL/tZkd/Azuo1u80Iahe4uodRVTNoEk6h7MM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RcUNO1X1CmSO3bingJTm3u4J3bfnegUw0E2tsLvp9NtEx7YNOFfBcOmqVRh7fAgPw
-         XifCX9g2hbnirEJmb1iCAs7Qhh2F74tFQ24YxnOzLlFtl3VfoqWxQXHu3m4qfu6IA9
-         a9wev9wkSCpNQppT4B7oDrL2zlRhYriY8bulgeiQ=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-        Catherine Sullivan <csully@google.com>,
-        David Awogbemila <awogbemila@google.com>,
-        Dimitris Michailidis <dmichail@fungible.com>,
-        Eric Dumazet <edumazet@google.com>,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jeroen de Borst <jeroendb@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        oss-drivers@corigine.com,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 5.19 142/155] net: Use u64_stats_fetch_begin_irq() for stats fetch.
-Date:   Tue,  6 Sep 2022 15:31:30 +0200
-Message-Id: <20220906132835.439488751@linuxfoundation.org>
-X-Mailer: git-send-email 2.37.3
-In-Reply-To: <20220906132829.417117002@linuxfoundation.org>
-References: <20220906132829.417117002@linuxfoundation.org>
-User-Agent: quilt/0.67
+        Tue, 6 Sep 2022 18:03:54 -0400
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D3E384EDD
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Sep 2022 15:03:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1662501833; x=1694037833;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Gzsx0sqcIR+vSmALrntEU2uCEsZm8SlFkhJyCcOSmgI=;
+  b=Q6pTVFYvhyUYfv3sX7oNvtpgod6uYVpMaEQVyMldW1hMpqFQSliK2krp
+   opzczcIjtVumDDkPbZnl9vHkNzm5CZJdpp/p+2hJT42gHNju1jWuijtMW
+   986rjVcF1kBcZ27KvdijiH23t+VP5VW7oJ8lpLHo1WrW7Nu4+XMY/kaMs
+   OxCIf1x33r7Li6Gk/x3NQH74kZHXSxin2P2UuWs4UVeB/WZ8OGm7RBlpW
+   im7We41jVwdOCxl5w88BwQHan9qmbtEh/LXO10OAebSh/mK5FE0Nlurqy
+   5DXsLhkkpf0KmHy1s+6qPKKFIvz4PFWtdMAozs+ZdqH1J/Ayjgdf1voY0
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10462"; a="295451368"
+X-IronPort-AV: E=Sophos;i="5.93,294,1654585200"; 
+   d="scan'208";a="295451368"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Sep 2022 15:03:53 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,294,1654585200"; 
+   d="scan'208";a="682564896"
+Received: from lkp-server02.sh.intel.com (HELO 95dfd251caa2) ([10.239.97.151])
+  by fmsmga004.fm.intel.com with ESMTP; 06 Sep 2022 15:03:49 -0700
+Received: from kbuild by 95dfd251caa2 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oVgfc-0005hj-1d;
+        Tue, 06 Sep 2022 22:03:48 +0000
+Date:   Wed, 7 Sep 2022 06:03:39 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Deren Wu <Deren.Wu@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     kbuild-all@lists.01.org, Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+Subject: Re: [PATCH v2] wifi: mt76: mt7921: introduce Country Location
+ Control support
+Message-ID: <202209070520.bQXe62tP-lkp@intel.com>
+References: <a7b8353c71c5c8689d22dc450721c98ed11ab912.1662454722.git.deren.wu@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a7b8353c71c5c8689d22dc450721c98ed11ab912.1662454722.git.deren.wu@mediatek.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Hi Deren,
 
-commit 278d3ba61563ceed3cb248383ced19e14ec7bc1f upstream.
+Thank you for the patch! Perhaps something to improve:
 
-On 32bit-UP u64_stats_fetch_begin() disables only preemption. If the
-reader is in preemptible context and the writer side
-(u64_stats_update_begin*()) runs in an interrupt context (IRQ or
-softirq) then the writer can update the stats during the read operation.
-This update remains undetected.
+[auto build test WARNING on wireless-next/main]
+[also build test WARNING on wireless/main linus/master v6.0-rc4 next-20220906]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Use u64_stats_fetch_begin_irq() to ensure the stats fetch on 32bit-UP
-are not interrupted by a writer. 32bit-SMP remains unaffected by this
-change.
+url:    https://github.com/intel-lab-lkp/linux/commits/Deren-Wu/wifi-mt76-mt7921-introduce-Country-Location-Control-support/20220906-171401
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+config: arm64-randconfig-s042-20220906 (https://download.01.org/0day-ci/archive/20220907/202209070520.bQXe62tP-lkp@intel.com/config)
+compiler: aarch64-linux-gcc (GCC) 12.1.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # apt-get install sparse
+        # sparse version: v0.6.4-39-gce1a6720-dirty
+        # https://github.com/intel-lab-lkp/linux/commit/e0bf37418dbcff6f111fbf6dad1d142180e2ec4f
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Deren-Wu/wifi-mt76-mt7921-introduce-Country-Location-Control-support/20220906-171401
+        git checkout e0bf37418dbcff6f111fbf6dad1d142180e2ec4f
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=arm64 SHELL=/bin/bash
 
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Catherine Sullivan <csully@google.com>
-Cc: David Awogbemila <awogbemila@google.com>
-Cc: Dimitris Michailidis <dmichail@fungible.com>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Jeroen de Borst <jeroendb@google.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: Simon Horman <simon.horman@corigine.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: oss-drivers@corigine.com
-Cc: stable@vger.kernel.org
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Reviewed-by: Simon Horman <simon.horman@corigine.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/net/ethernet/cortina/gemini.c                |   24 +++++++++----------
- drivers/net/ethernet/fungible/funeth/funeth_txrx.h   |    4 +--
- drivers/net/ethernet/google/gve/gve_ethtool.c        |   16 ++++++------
- drivers/net/ethernet/google/gve/gve_main.c           |   12 ++++-----
- drivers/net/ethernet/huawei/hinic/hinic_rx.c         |    4 +--
- drivers/net/ethernet/huawei/hinic/hinic_tx.c         |    4 +--
- drivers/net/ethernet/netronome/nfp/nfp_net_common.c  |    8 +++---
- drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c |    8 +++---
- drivers/net/netdevsim/netdev.c                       |    4 +--
- net/mac80211/sta_info.c                              |    8 +++---
- net/mpls/af_mpls.c                                   |    4 +--
- 11 files changed, 48 insertions(+), 48 deletions(-)
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
 
---- a/drivers/net/ethernet/cortina/gemini.c
-+++ b/drivers/net/ethernet/cortina/gemini.c
-@@ -1919,7 +1919,7 @@ static void gmac_get_stats64(struct net_
- 
- 	/* Racing with RX NAPI */
- 	do {
--		start = u64_stats_fetch_begin(&port->rx_stats_syncp);
-+		start = u64_stats_fetch_begin_irq(&port->rx_stats_syncp);
- 
- 		stats->rx_packets = port->stats.rx_packets;
- 		stats->rx_bytes = port->stats.rx_bytes;
-@@ -1931,11 +1931,11 @@ static void gmac_get_stats64(struct net_
- 		stats->rx_crc_errors = port->stats.rx_crc_errors;
- 		stats->rx_frame_errors = port->stats.rx_frame_errors;
- 
--	} while (u64_stats_fetch_retry(&port->rx_stats_syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&port->rx_stats_syncp, start));
- 
- 	/* Racing with MIB and TX completion interrupts */
- 	do {
--		start = u64_stats_fetch_begin(&port->ir_stats_syncp);
-+		start = u64_stats_fetch_begin_irq(&port->ir_stats_syncp);
- 
- 		stats->tx_errors = port->stats.tx_errors;
- 		stats->tx_packets = port->stats.tx_packets;
-@@ -1945,15 +1945,15 @@ static void gmac_get_stats64(struct net_
- 		stats->rx_missed_errors = port->stats.rx_missed_errors;
- 		stats->rx_fifo_errors = port->stats.rx_fifo_errors;
- 
--	} while (u64_stats_fetch_retry(&port->ir_stats_syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&port->ir_stats_syncp, start));
- 
- 	/* Racing with hard_start_xmit */
- 	do {
--		start = u64_stats_fetch_begin(&port->tx_stats_syncp);
-+		start = u64_stats_fetch_begin_irq(&port->tx_stats_syncp);
- 
- 		stats->tx_dropped = port->stats.tx_dropped;
- 
--	} while (u64_stats_fetch_retry(&port->tx_stats_syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&port->tx_stats_syncp, start));
- 
- 	stats->rx_dropped += stats->rx_missed_errors;
- }
-@@ -2031,18 +2031,18 @@ static void gmac_get_ethtool_stats(struc
- 	/* Racing with MIB interrupt */
- 	do {
- 		p = values;
--		start = u64_stats_fetch_begin(&port->ir_stats_syncp);
-+		start = u64_stats_fetch_begin_irq(&port->ir_stats_syncp);
- 
- 		for (i = 0; i < RX_STATS_NUM; i++)
- 			*p++ = port->hw_stats[i];
- 
--	} while (u64_stats_fetch_retry(&port->ir_stats_syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&port->ir_stats_syncp, start));
- 	values = p;
- 
- 	/* Racing with RX NAPI */
- 	do {
- 		p = values;
--		start = u64_stats_fetch_begin(&port->rx_stats_syncp);
-+		start = u64_stats_fetch_begin_irq(&port->rx_stats_syncp);
- 
- 		for (i = 0; i < RX_STATUS_NUM; i++)
- 			*p++ = port->rx_stats[i];
-@@ -2050,13 +2050,13 @@ static void gmac_get_ethtool_stats(struc
- 			*p++ = port->rx_csum_stats[i];
- 		*p++ = port->rx_napi_exits;
- 
--	} while (u64_stats_fetch_retry(&port->rx_stats_syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&port->rx_stats_syncp, start));
- 	values = p;
- 
- 	/* Racing with TX start_xmit */
- 	do {
- 		p = values;
--		start = u64_stats_fetch_begin(&port->tx_stats_syncp);
-+		start = u64_stats_fetch_begin_irq(&port->tx_stats_syncp);
- 
- 		for (i = 0; i < TX_MAX_FRAGS; i++) {
- 			*values++ = port->tx_frag_stats[i];
-@@ -2065,7 +2065,7 @@ static void gmac_get_ethtool_stats(struc
- 		*values++ = port->tx_frags_linearized;
- 		*values++ = port->tx_hw_csummed;
- 
--	} while (u64_stats_fetch_retry(&port->tx_stats_syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&port->tx_stats_syncp, start));
- }
- 
- static int gmac_get_ksettings(struct net_device *netdev,
---- a/drivers/net/ethernet/fungible/funeth/funeth_txrx.h
-+++ b/drivers/net/ethernet/fungible/funeth/funeth_txrx.h
-@@ -205,9 +205,9 @@ struct funeth_rxq {
- 
- #define FUN_QSTAT_READ(q, seq, stats_copy) \
- 	do { \
--		seq = u64_stats_fetch_begin(&(q)->syncp); \
-+		seq = u64_stats_fetch_begin_irq(&(q)->syncp); \
- 		stats_copy = (q)->stats; \
--	} while (u64_stats_fetch_retry(&(q)->syncp, (seq)))
-+	} while (u64_stats_fetch_retry_irq(&(q)->syncp, (seq)))
- 
- #define FUN_INT_NAME_LEN (IFNAMSIZ + 16)
- 
---- a/drivers/net/ethernet/google/gve/gve_ethtool.c
-+++ b/drivers/net/ethernet/google/gve/gve_ethtool.c
-@@ -177,14 +177,14 @@ gve_get_ethtool_stats(struct net_device
- 				struct gve_rx_ring *rx = &priv->rx[ring];
- 
- 				start =
--				  u64_stats_fetch_begin(&priv->rx[ring].statss);
-+				  u64_stats_fetch_begin_irq(&priv->rx[ring].statss);
- 				tmp_rx_pkts = rx->rpackets;
- 				tmp_rx_bytes = rx->rbytes;
- 				tmp_rx_skb_alloc_fail = rx->rx_skb_alloc_fail;
- 				tmp_rx_buf_alloc_fail = rx->rx_buf_alloc_fail;
- 				tmp_rx_desc_err_dropped_pkt =
- 					rx->rx_desc_err_dropped_pkt;
--			} while (u64_stats_fetch_retry(&priv->rx[ring].statss,
-+			} while (u64_stats_fetch_retry_irq(&priv->rx[ring].statss,
- 						       start));
- 			rx_pkts += tmp_rx_pkts;
- 			rx_bytes += tmp_rx_bytes;
-@@ -198,10 +198,10 @@ gve_get_ethtool_stats(struct net_device
- 		if (priv->tx) {
- 			do {
- 				start =
--				  u64_stats_fetch_begin(&priv->tx[ring].statss);
-+				  u64_stats_fetch_begin_irq(&priv->tx[ring].statss);
- 				tmp_tx_pkts = priv->tx[ring].pkt_done;
- 				tmp_tx_bytes = priv->tx[ring].bytes_done;
--			} while (u64_stats_fetch_retry(&priv->tx[ring].statss,
-+			} while (u64_stats_fetch_retry_irq(&priv->tx[ring].statss,
- 						       start));
- 			tx_pkts += tmp_tx_pkts;
- 			tx_bytes += tmp_tx_bytes;
-@@ -259,13 +259,13 @@ gve_get_ethtool_stats(struct net_device
- 			data[i++] = rx->fill_cnt - rx->cnt;
- 			do {
- 				start =
--				  u64_stats_fetch_begin(&priv->rx[ring].statss);
-+				  u64_stats_fetch_begin_irq(&priv->rx[ring].statss);
- 				tmp_rx_bytes = rx->rbytes;
- 				tmp_rx_skb_alloc_fail = rx->rx_skb_alloc_fail;
- 				tmp_rx_buf_alloc_fail = rx->rx_buf_alloc_fail;
- 				tmp_rx_desc_err_dropped_pkt =
- 					rx->rx_desc_err_dropped_pkt;
--			} while (u64_stats_fetch_retry(&priv->rx[ring].statss,
-+			} while (u64_stats_fetch_retry_irq(&priv->rx[ring].statss,
- 						       start));
- 			data[i++] = tmp_rx_bytes;
- 			data[i++] = rx->rx_cont_packet_cnt;
-@@ -331,9 +331,9 @@ gve_get_ethtool_stats(struct net_device
- 			}
- 			do {
- 				start =
--				  u64_stats_fetch_begin(&priv->tx[ring].statss);
-+				  u64_stats_fetch_begin_irq(&priv->tx[ring].statss);
- 				tmp_tx_bytes = tx->bytes_done;
--			} while (u64_stats_fetch_retry(&priv->tx[ring].statss,
-+			} while (u64_stats_fetch_retry_irq(&priv->tx[ring].statss,
- 						       start));
- 			data[i++] = tmp_tx_bytes;
- 			data[i++] = tx->wake_queue;
---- a/drivers/net/ethernet/google/gve/gve_main.c
-+++ b/drivers/net/ethernet/google/gve/gve_main.c
-@@ -51,10 +51,10 @@ static void gve_get_stats(struct net_dev
- 		for (ring = 0; ring < priv->rx_cfg.num_queues; ring++) {
- 			do {
- 				start =
--				  u64_stats_fetch_begin(&priv->rx[ring].statss);
-+				  u64_stats_fetch_begin_irq(&priv->rx[ring].statss);
- 				packets = priv->rx[ring].rpackets;
- 				bytes = priv->rx[ring].rbytes;
--			} while (u64_stats_fetch_retry(&priv->rx[ring].statss,
-+			} while (u64_stats_fetch_retry_irq(&priv->rx[ring].statss,
- 						       start));
- 			s->rx_packets += packets;
- 			s->rx_bytes += bytes;
-@@ -64,10 +64,10 @@ static void gve_get_stats(struct net_dev
- 		for (ring = 0; ring < priv->tx_cfg.num_queues; ring++) {
- 			do {
- 				start =
--				  u64_stats_fetch_begin(&priv->tx[ring].statss);
-+				  u64_stats_fetch_begin_irq(&priv->tx[ring].statss);
- 				packets = priv->tx[ring].pkt_done;
- 				bytes = priv->tx[ring].bytes_done;
--			} while (u64_stats_fetch_retry(&priv->tx[ring].statss,
-+			} while (u64_stats_fetch_retry_irq(&priv->tx[ring].statss,
- 						       start));
- 			s->tx_packets += packets;
- 			s->tx_bytes += bytes;
-@@ -1274,9 +1274,9 @@ void gve_handle_report_stats(struct gve_
- 			}
- 
- 			do {
--				start = u64_stats_fetch_begin(&priv->tx[idx].statss);
-+				start = u64_stats_fetch_begin_irq(&priv->tx[idx].statss);
- 				tx_bytes = priv->tx[idx].bytes_done;
--			} while (u64_stats_fetch_retry(&priv->tx[idx].statss, start));
-+			} while (u64_stats_fetch_retry_irq(&priv->tx[idx].statss, start));
- 			stats[stats_idx++] = (struct stats) {
- 				.stat_name = cpu_to_be32(TX_WAKE_CNT),
- 				.value = cpu_to_be64(priv->tx[idx].wake_queue),
---- a/drivers/net/ethernet/huawei/hinic/hinic_rx.c
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_rx.c
-@@ -74,14 +74,14 @@ void hinic_rxq_get_stats(struct hinic_rx
- 	unsigned int start;
- 
- 	do {
--		start = u64_stats_fetch_begin(&rxq_stats->syncp);
-+		start = u64_stats_fetch_begin_irq(&rxq_stats->syncp);
- 		stats->pkts = rxq_stats->pkts;
- 		stats->bytes = rxq_stats->bytes;
- 		stats->errors = rxq_stats->csum_errors +
- 				rxq_stats->other_errors;
- 		stats->csum_errors = rxq_stats->csum_errors;
- 		stats->other_errors = rxq_stats->other_errors;
--	} while (u64_stats_fetch_retry(&rxq_stats->syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&rxq_stats->syncp, start));
- }
- 
- /**
---- a/drivers/net/ethernet/huawei/hinic/hinic_tx.c
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_tx.c
-@@ -99,14 +99,14 @@ void hinic_txq_get_stats(struct hinic_tx
- 	unsigned int start;
- 
- 	do {
--		start = u64_stats_fetch_begin(&txq_stats->syncp);
-+		start = u64_stats_fetch_begin_irq(&txq_stats->syncp);
- 		stats->pkts    = txq_stats->pkts;
- 		stats->bytes   = txq_stats->bytes;
- 		stats->tx_busy = txq_stats->tx_busy;
- 		stats->tx_wake = txq_stats->tx_wake;
- 		stats->tx_dropped = txq_stats->tx_dropped;
- 		stats->big_frags_pkts = txq_stats->big_frags_pkts;
--	} while (u64_stats_fetch_retry(&txq_stats->syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&txq_stats->syncp, start));
- }
- 
- /**
---- a/drivers/net/ethernet/netronome/nfp/nfp_net_common.c
-+++ b/drivers/net/ethernet/netronome/nfp/nfp_net_common.c
-@@ -1629,21 +1629,21 @@ static void nfp_net_stat64(struct net_de
- 		unsigned int start;
- 
- 		do {
--			start = u64_stats_fetch_begin(&r_vec->rx_sync);
-+			start = u64_stats_fetch_begin_irq(&r_vec->rx_sync);
- 			data[0] = r_vec->rx_pkts;
- 			data[1] = r_vec->rx_bytes;
- 			data[2] = r_vec->rx_drops;
--		} while (u64_stats_fetch_retry(&r_vec->rx_sync, start));
-+		} while (u64_stats_fetch_retry_irq(&r_vec->rx_sync, start));
- 		stats->rx_packets += data[0];
- 		stats->rx_bytes += data[1];
- 		stats->rx_dropped += data[2];
- 
- 		do {
--			start = u64_stats_fetch_begin(&r_vec->tx_sync);
-+			start = u64_stats_fetch_begin_irq(&r_vec->tx_sync);
- 			data[0] = r_vec->tx_pkts;
- 			data[1] = r_vec->tx_bytes;
- 			data[2] = r_vec->tx_errors;
--		} while (u64_stats_fetch_retry(&r_vec->tx_sync, start));
-+		} while (u64_stats_fetch_retry_irq(&r_vec->tx_sync, start));
- 		stats->tx_packets += data[0];
- 		stats->tx_bytes += data[1];
- 		stats->tx_errors += data[2];
---- a/drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c
-+++ b/drivers/net/ethernet/netronome/nfp/nfp_net_ethtool.c
-@@ -494,7 +494,7 @@ static u64 *nfp_vnic_get_sw_stats(struct
- 		unsigned int start;
- 
- 		do {
--			start = u64_stats_fetch_begin(&nn->r_vecs[i].rx_sync);
-+			start = u64_stats_fetch_begin_irq(&nn->r_vecs[i].rx_sync);
- 			data[0] = nn->r_vecs[i].rx_pkts;
- 			tmp[0] = nn->r_vecs[i].hw_csum_rx_ok;
- 			tmp[1] = nn->r_vecs[i].hw_csum_rx_inner_ok;
-@@ -502,10 +502,10 @@ static u64 *nfp_vnic_get_sw_stats(struct
- 			tmp[3] = nn->r_vecs[i].hw_csum_rx_error;
- 			tmp[4] = nn->r_vecs[i].rx_replace_buf_alloc_fail;
- 			tmp[5] = nn->r_vecs[i].hw_tls_rx;
--		} while (u64_stats_fetch_retry(&nn->r_vecs[i].rx_sync, start));
-+		} while (u64_stats_fetch_retry_irq(&nn->r_vecs[i].rx_sync, start));
- 
- 		do {
--			start = u64_stats_fetch_begin(&nn->r_vecs[i].tx_sync);
-+			start = u64_stats_fetch_begin_irq(&nn->r_vecs[i].tx_sync);
- 			data[1] = nn->r_vecs[i].tx_pkts;
- 			data[2] = nn->r_vecs[i].tx_busy;
- 			tmp[6] = nn->r_vecs[i].hw_csum_tx;
-@@ -515,7 +515,7 @@ static u64 *nfp_vnic_get_sw_stats(struct
- 			tmp[10] = nn->r_vecs[i].hw_tls_tx;
- 			tmp[11] = nn->r_vecs[i].tls_tx_fallback;
- 			tmp[12] = nn->r_vecs[i].tls_tx_no_fallback;
--		} while (u64_stats_fetch_retry(&nn->r_vecs[i].tx_sync, start));
-+		} while (u64_stats_fetch_retry_irq(&nn->r_vecs[i].tx_sync, start));
- 
- 		data += NN_RVEC_PER_Q_STATS;
- 
---- a/drivers/net/netdevsim/netdev.c
-+++ b/drivers/net/netdevsim/netdev.c
-@@ -67,10 +67,10 @@ nsim_get_stats64(struct net_device *dev,
- 	unsigned int start;
- 
- 	do {
--		start = u64_stats_fetch_begin(&ns->syncp);
-+		start = u64_stats_fetch_begin_irq(&ns->syncp);
- 		stats->tx_bytes = ns->tx_bytes;
- 		stats->tx_packets = ns->tx_packets;
--	} while (u64_stats_fetch_retry(&ns->syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&ns->syncp, start));
- }
- 
- static int
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2221,9 +2221,9 @@ static inline u64 sta_get_tidstats_msdu(
- 	u64 value;
- 
- 	do {
--		start = u64_stats_fetch_begin(&rxstats->syncp);
-+		start = u64_stats_fetch_begin_irq(&rxstats->syncp);
- 		value = rxstats->msdu[tid];
--	} while (u64_stats_fetch_retry(&rxstats->syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&rxstats->syncp, start));
- 
- 	return value;
- }
-@@ -2289,9 +2289,9 @@ static inline u64 sta_get_stats_bytes(st
- 	u64 value;
- 
- 	do {
--		start = u64_stats_fetch_begin(&rxstats->syncp);
-+		start = u64_stats_fetch_begin_irq(&rxstats->syncp);
- 		value = rxstats->bytes;
--	} while (u64_stats_fetch_retry(&rxstats->syncp, start));
-+	} while (u64_stats_fetch_retry_irq(&rxstats->syncp, start));
- 
- 	return value;
- }
---- a/net/mpls/af_mpls.c
-+++ b/net/mpls/af_mpls.c
-@@ -1079,9 +1079,9 @@ static void mpls_get_stats(struct mpls_d
- 
- 		p = per_cpu_ptr(mdev->stats, i);
- 		do {
--			start = u64_stats_fetch_begin(&p->syncp);
-+			start = u64_stats_fetch_begin_irq(&p->syncp);
- 			local = p->stats;
--		} while (u64_stats_fetch_retry(&p->syncp, start));
-+		} while (u64_stats_fetch_retry_irq(&p->syncp, start));
- 
- 		stats->rx_packets	+= local.rx_packets;
- 		stats->rx_bytes		+= local.rx_bytes;
+sparse warnings: (new ones prefixed by >>)
+>> drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:1089:25: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted __le16 [addressable] [usertype] len @@     got unsigned long @@
+   drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:1089:25: sparse:     expected restricted __le16 [addressable] [usertype] len
+   drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:1089:25: sparse:     got unsigned long
+>> drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:1090:65: sparse: sparse: incorrect type in argument 3 (different base types) @@     expected int len @@     got restricted __le16 [addressable] [usertype] len @@
+   drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:1090:65: sparse:     expected int len
+   drivers/net/wireless/mediatek/mt76/mt7921/mcu.c:1090:65: sparse:     got restricted __le16 [addressable] [usertype] len
 
+vim +1089 drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
 
+  1048	
+  1049	static
+  1050	int __mt7921_mcu_set_clc(struct mt7921_dev *dev, u8 *alpha2,
+  1051				 enum environment_cap env_cap,
+  1052				 struct mt7921_clc *clc,
+  1053				 u8 idx)
+  1054	{
+  1055		struct sk_buff *skb;
+  1056		struct {
+  1057			u8 ver;
+  1058			u8 pad0;
+  1059			__le16 len;
+  1060			u8 idx;
+  1061			u8 env;
+  1062			u8 pad1[2];
+  1063			u8 alpha2[2];
+  1064			u8 type[2];
+  1065			u8 rsvd[64];
+  1066		} __packed req = {
+  1067			.idx = idx,
+  1068			.env = env_cap,
+  1069		};
+  1070		int ret, valid_cnt = 0;
+  1071		u8 i, *pos;
+  1072	
+  1073		if (!clc)
+  1074			return 0;
+  1075	
+  1076		pos = clc->data;
+  1077		for (i = 0; i < clc->nr_country; i++) {
+  1078			struct mt7921_clc_rule *rule = (struct mt7921_clc_rule *)pos;
+  1079			u16 len = le16_to_cpu(rule->len);
+  1080	
+  1081			pos += len + sizeof(*rule);
+  1082			if (rule->alpha2[0] != alpha2[0] ||
+  1083			    rule->alpha2[1] != alpha2[1])
+  1084				continue;
+  1085	
+  1086			memcpy(req.alpha2, rule->alpha2, 2);
+  1087			memcpy(req.type, rule->type, 2);
+  1088	
+> 1089			req.len = sizeof(req) + len;
+> 1090			skb = __mt76_mcu_msg_alloc(&dev->mt76, &req, req.len,
+  1091						   sizeof(req), GFP_KERNEL);
+  1092			if (!skb)
+  1093				return -ENOMEM;
+  1094			skb_put_data(skb, rule->data, len);
+  1095	
+  1096			ret = mt76_mcu_skb_send_msg(&dev->mt76, skb,
+  1097						    MCU_CE_CMD(SET_CLC), false);
+  1098			if (ret < 0)
+  1099				return ret;
+  1100			valid_cnt++;
+  1101		}
+  1102	
+  1103		if (!valid_cnt)
+  1104			return -ENOENT;
+  1105	
+  1106		return 0;
+  1107	}
+  1108	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
