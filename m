@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E81C38145
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 08:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B855ECAAD3
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 08:45:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229792AbiIGIo6 (ORCPT
+        id S229904AbiIGIpB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Sep 2022 04:44:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48296 "EHLO
+        Wed, 7 Sep 2022 04:45:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229850AbiIGIoo (ORCPT
+        with ESMTP id S229870AbiIGIop (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2022 04:44:44 -0400
+        Wed, 7 Sep 2022 04:44:45 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F1AFD29830
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 01:44:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7DB1C2B245
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 01:44:41 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2878iD3R1020381, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2878iD3R1020381
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2878iGD11020904, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2878iGD11020904
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Wed, 7 Sep 2022 16:44:13 +0800
+        Wed, 7 Sep 2022 16:44:16 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 7 Sep 2022 16:44:31 +0800
+ 15.1.2375.7; Wed, 7 Sep 2022 16:44:34 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 7 Sep 2022
- 16:44:31 +0800
+ 16:44:34 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/5] wifi: rtw89: use u32_get_bits to access C2H content of PHY capability
-Date:   Wed, 7 Sep 2022 16:43:58 +0800
-Message-ID: <20220907084402.66480-2-pkshih@realtek.com>
+Subject: [PATCH v2 4/5] wifi: rtw89: record signal strength per RF path
+Date:   Wed, 7 Sep 2022 16:44:01 +0800
+Message-ID: <20220907084402.66480-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220907084402.66480-1-pkshih@realtek.com>
 References: <20220907084402.66480-1-pkshih@realtek.com>
@@ -56,112 +56,184 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvNyCkV6TIIDA2OjI0OjAw?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The definitions of bit fields in structure will be wrong in big-endian
-platform, so use u32_get_bits() to access them.
+Originally, we show average signal strength. To support TX diversity, this
+patch prepares strength per path, then we can decide TX path.
+
+  RSSI: -54 dBm (raw=112, prev=110) [-57, -52]
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/fw.h  | 41 +++++++++++++++---------
- drivers/net/wireless/realtek/rtw89/mac.c | 17 +++++-----
- 2 files changed, 35 insertions(+), 23 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c     | 20 +++++++++++++------
+ drivers/net/wireless/realtek/rtw89/core.h     |  4 +++-
+ drivers/net/wireless/realtek/rtw89/debug.c    | 10 +++++++++-
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  6 +++---
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  6 +++---
+ 5 files changed, 32 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index edd43f00994c4..de70d012cd9bc 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -63,21 +63,32 @@ enum rtw89_mac_c2h_type {
- 	RTW89_FWCMD_C2HREG_FUNC_NULL = 0xFF
- };
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 71ee237a7c286..0f474b50b161e 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -1143,9 +1143,14 @@ static void rtw89_core_rx_process_phy_ppdu_iter(void *data,
+ {
+ 	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
+ 	struct rtw89_rx_phy_ppdu *phy_ppdu = (struct rtw89_rx_phy_ppdu *)data;
++	struct rtw89_dev *rtwdev = rtwsta->rtwdev;
++	int i;
  
--struct rtw89_c2h_phy_cap {
--	u32 func:7;
--	u32 ack:1;
--	u32 len:4;
--	u32 seq:4;
--	u32 rx_nss:8;
--	u32 bw:8;
--
--	u32 tx_nss:8;
--	u32 prot:8;
--	u32 nic:8;
--	u32 wl_func:8;
--
--	u32 hw_type:8;
--} __packed;
-+#define RTW89_GET_C2H_PHYCAP_FUNC(info) \
-+	u32_get_bits(*((const u32 *)(info)), GENMASK(6, 0))
-+#define RTW89_GET_C2H_PHYCAP_ACK(info) \
-+	u32_get_bits(*((const u32 *)(info)), BIT(7))
-+#define RTW89_GET_C2H_PHYCAP_LEN(info) \
-+	u32_get_bits(*((const u32 *)(info)), GENMASK(11, 8))
-+#define RTW89_GET_C2H_PHYCAP_SEQ(info) \
-+	u32_get_bits(*((const u32 *)(info)), GENMASK(15, 12))
-+#define RTW89_GET_C2H_PHYCAP_RX_NSS(info) \
-+	u32_get_bits(*((const u32 *)(info)), GENMASK(23, 16))
-+#define RTW89_GET_C2H_PHYCAP_BW(info) \
-+	u32_get_bits(*((const u32 *)(info)), GENMASK(31, 24))
-+#define RTW89_GET_C2H_PHYCAP_TX_NSS(info) \
-+	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(7, 0))
-+#define RTW89_GET_C2H_PHYCAP_PROT(info) \
-+	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(15, 8))
-+#define RTW89_GET_C2H_PHYCAP_NIC(info) \
-+	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(23, 16))
-+#define RTW89_GET_C2H_PHYCAP_WL_FUNC(info) \
-+	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(31, 24))
-+#define RTW89_GET_C2H_PHYCAP_HW_TYPE(info) \
-+	u32_get_bits(*((const u32 *)(info) + 2), GENMASK(7, 0))
-+#define RTW89_GET_C2H_PHYCAP_ANT_TX_NUM(info) \
-+	u32_get_bits(*((const u32 *)(info) + 3), GENMASK(15, 8))
-+#define RTW89_GET_C2H_PHYCAP_ANT_RX_NUM(info) \
-+	u32_get_bits(*((const u32 *)(info) + 3), GENMASK(23, 16))
- 
- enum rtw89_fw_c2h_category {
- 	RTW89_C2H_CAT_TEST,
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index f5bae0b282082..a845575124486 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -2262,23 +2262,24 @@ int rtw89_mac_setup_phycap(struct rtw89_dev *rtwdev)
- 	struct rtw89_hal *hal = &rtwdev->hal;
- 	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	struct rtw89_mac_c2h_info c2h_info = {0};
--	struct rtw89_c2h_phy_cap *cap =
--		(struct rtw89_c2h_phy_cap *)&c2h_info.c2hreg[0];
-+	u8 tx_nss;
-+	u8 rx_nss;
- 	u32 ret;
- 
- 	ret = rtw89_mac_read_phycap(rtwdev, &c2h_info);
- 	if (ret)
- 		return ret;
- 
--	hal->tx_nss = cap->tx_nss ?
--		      min_t(u8, cap->tx_nss, chip->tx_nss) : chip->tx_nss;
--	hal->rx_nss = cap->rx_nss ?
--		      min_t(u8, cap->rx_nss, chip->rx_nss) : chip->rx_nss;
-+	tx_nss = RTW89_GET_C2H_PHYCAP_TX_NSS(c2h_info.c2hreg);
-+	rx_nss = RTW89_GET_C2H_PHYCAP_RX_NSS(c2h_info.c2hreg);
-+
-+	hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
-+	hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
- 
- 	rtw89_debug(rtwdev, RTW89_DBG_FW,
- 		    "phycap hal/phy/chip: tx_nss=0x%x/0x%x/0x%x rx_nss=0x%x/0x%x/0x%x\n",
--		    hal->tx_nss, cap->tx_nss, chip->tx_nss,
--		    hal->rx_nss, cap->rx_nss, chip->rx_nss);
-+		    hal->tx_nss, tx_nss, chip->tx_nss,
-+		    hal->rx_nss, rx_nss, chip->rx_nss);
- 
- 	return 0;
+-	if (rtwsta->mac_id == phy_ppdu->mac_id && phy_ppdu->to_self)
++	if (rtwsta->mac_id == phy_ppdu->mac_id && phy_ppdu->to_self) {
+ 		ewma_rssi_add(&rtwsta->avg_rssi, phy_ppdu->rssi_avg);
++		for (i = 0; i < rtwdev->chip->rf_path_num; i++)
++			ewma_rssi_add(&rtwsta->rssi[i], phy_ppdu->rssi[i]);
++	}
  }
+ 
+ #define VAR_LEN 0xff
+@@ -1201,15 +1206,15 @@ static int rtw89_core_process_phy_status_ie(struct rtw89_dev *rtwdev, u8 *addr,
+ 
+ static void rtw89_core_update_phy_ppdu(struct rtw89_rx_phy_ppdu *phy_ppdu)
+ {
+-	s8 *rssi = phy_ppdu->rssi;
++	u8 *rssi = phy_ppdu->rssi;
+ 	u8 *buf = phy_ppdu->buf;
+ 
+ 	phy_ppdu->ie = RTW89_GET_PHY_STS_IE_MAP(buf);
+ 	phy_ppdu->rssi_avg = RTW89_GET_PHY_STS_RSSI_AVG(buf);
+-	rssi[RF_PATH_A] = RTW89_RSSI_RAW_TO_DBM(RTW89_GET_PHY_STS_RSSI_A(buf));
+-	rssi[RF_PATH_B] = RTW89_RSSI_RAW_TO_DBM(RTW89_GET_PHY_STS_RSSI_B(buf));
+-	rssi[RF_PATH_C] = RTW89_RSSI_RAW_TO_DBM(RTW89_GET_PHY_STS_RSSI_C(buf));
+-	rssi[RF_PATH_D] = RTW89_RSSI_RAW_TO_DBM(RTW89_GET_PHY_STS_RSSI_D(buf));
++	rssi[RF_PATH_A] = RTW89_GET_PHY_STS_RSSI_A(buf);
++	rssi[RF_PATH_B] = RTW89_GET_PHY_STS_RSSI_B(buf);
++	rssi[RF_PATH_C] = RTW89_GET_PHY_STS_RSSI_C(buf);
++	rssi[RF_PATH_D] = RTW89_GET_PHY_STS_RSSI_D(buf);
+ }
+ 
+ static int rtw89_core_rx_process_phy_ppdu(struct rtw89_dev *rtwdev,
+@@ -2365,6 +2370,7 @@ int rtw89_core_sta_add(struct rtw89_dev *rtwdev,
+ 	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
+ 	int i;
+ 
++	rtwsta->rtwdev = rtwdev;
+ 	rtwsta->rtwvif = rtwvif;
+ 	rtwsta->prev_rssi = 0;
+ 	INIT_LIST_HEAD(&rtwsta->ba_cam_list);
+@@ -2373,6 +2379,8 @@ int rtw89_core_sta_add(struct rtw89_dev *rtwdev,
+ 		rtw89_core_txq_init(rtwdev, sta->txq[i]);
+ 
+ 	ewma_rssi_init(&rtwsta->avg_rssi);
++	for (i = 0; i < rtwdev->chip->rf_path_num; i++)
++		ewma_rssi_init(&rtwsta->rssi[i]);
+ 
+ 	if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls) {
+ 		/* for station mode, assign the mac_id from itself */
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 3f944e631ee23..392a8bf4372e8 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -522,7 +522,7 @@ struct rtw89_rx_phy_ppdu {
+ 	u8 *buf;
+ 	u32 len;
+ 	u8 rssi_avg;
+-	s8 rssi[RF_PATH_MAX];
++	u8 rssi[RF_PATH_MAX];
+ 	u8 mac_id;
+ 	u8 chan_idx;
+ 	u8 ie;
+@@ -2136,12 +2136,14 @@ struct rtw89_sec_cam_entry {
+ struct rtw89_sta {
+ 	u8 mac_id;
+ 	bool disassoc;
++	struct rtw89_dev *rtwdev;
+ 	struct rtw89_vif *rtwvif;
+ 	struct rtw89_ra_info ra;
+ 	struct rtw89_ra_report ra_report;
+ 	int max_agg_wait;
+ 	u8 prev_rssi;
+ 	struct ewma_rssi avg_rssi;
++	struct ewma_rssi rssi[RF_PATH_MAX];
+ 	struct rtw89_ampdu_params ampdu_params[IEEE80211_NUM_TIDS];
+ 	struct ieee80211_rx_status rx_status;
+ 	u16 rx_hw_rate;
+diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
+index 738cfcd6fd328..5cce542b77652 100644
+--- a/drivers/net/wireless/realtek/rtw89/debug.c
++++ b/drivers/net/wireless/realtek/rtw89/debug.c
+@@ -2290,7 +2290,9 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
+ 	struct rate_info *rate = &rtwsta->ra_report.txrate;
+ 	struct ieee80211_rx_status *status = &rtwsta->rx_status;
+ 	struct seq_file *m = (struct seq_file *)data;
++	struct rtw89_dev *rtwdev = rtwsta->rtwdev;
+ 	u8 rssi;
++	int i;
+ 
+ 	seq_printf(m, "TX rate [%d]: ", rtwsta->mac_id);
+ 
+@@ -2335,8 +2337,14 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
+ 	seq_printf(m, "\t(hw_rate=0x%x)\n", rtwsta->rx_hw_rate);
+ 
+ 	rssi = ewma_rssi_read(&rtwsta->avg_rssi);
+-	seq_printf(m, "RSSI: %d dBm (raw=%d, prev=%d)\n",
++	seq_printf(m, "RSSI: %d dBm (raw=%d, prev=%d) [",
+ 		   RTW89_RSSI_RAW_TO_DBM(rssi), rssi, rtwsta->prev_rssi);
++	for (i = 0; i < rtwdev->chip->rf_path_num; i++) {
++		rssi = ewma_rssi_read(&rtwsta->rssi[i]);
++		seq_printf(m, "%d%s", RTW89_RSSI_RAW_TO_DBM(rssi),
++			   i + 1 == rtwdev->chip->rf_path_num ? "" : ", ");
++	}
++	seq_puts(m, "]\n");
+ }
+ 
+ static void
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index c872c8bfb33df..d25fe3f14b303 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -2051,12 +2051,12 @@ static void rtw8852a_query_ppdu(struct rtw89_dev *rtwdev,
+ 				struct ieee80211_rx_status *status)
+ {
+ 	u8 path;
+-	s8 *rx_power = phy_ppdu->rssi;
++	u8 *rx_power = phy_ppdu->rssi;
+ 
+-	status->signal = max_t(s8, rx_power[RF_PATH_A], rx_power[RF_PATH_B]);
++	status->signal = RTW89_RSSI_RAW_TO_DBM(max(rx_power[RF_PATH_A], rx_power[RF_PATH_B]));
+ 	for (path = 0; path < rtwdev->chip->rf_path_num; path++) {
+ 		status->chains |= BIT(path);
+-		status->chain_signal[path] = rx_power[path];
++		status->chain_signal[path] = RTW89_RSSI_RAW_TO_DBM(rx_power[path]);
+ 	}
+ 	if (phy_ppdu->valid)
+ 		rtw8852a_fill_freq_with_ppdu(rtwdev, phy_ppdu, status);
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index ac025618374f3..0e5461b02660b 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -2837,12 +2837,12 @@ static void rtw8852c_query_ppdu(struct rtw89_dev *rtwdev,
+ 				struct ieee80211_rx_status *status)
+ {
+ 	u8 path;
+-	s8 *rx_power = phy_ppdu->rssi;
++	u8 *rx_power = phy_ppdu->rssi;
+ 
+-	status->signal = max_t(s8, rx_power[RF_PATH_A], rx_power[RF_PATH_B]);
++	status->signal = RTW89_RSSI_RAW_TO_DBM(max(rx_power[RF_PATH_A], rx_power[RF_PATH_B]));
+ 	for (path = 0; path < rtwdev->chip->rf_path_num; path++) {
+ 		status->chains |= BIT(path);
+-		status->chain_signal[path] = rx_power[path];
++		status->chain_signal[path] = RTW89_RSSI_RAW_TO_DBM(rx_power[path]);
+ 	}
+ 	if (phy_ppdu->valid)
+ 		rtw8852c_fill_freq_with_ppdu(rtwdev, phy_ppdu, status);
 -- 
 2.25.1
 
