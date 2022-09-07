@@ -2,80 +2,69 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FABAECAAD3
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 08:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA360ECAAD3
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 08:03:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230222AbiIGICi (ORCPT
+        id S230228AbiIGIDE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Sep 2022 04:02:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49098 "EHLO
+        Wed, 7 Sep 2022 04:03:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230218AbiIGICF (ORCPT
+        with ESMTP id S230226AbiIGICi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2022 04:02:05 -0400
+        Wed, 7 Sep 2022 04:02:38 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 750C1AA37A;
-        Wed,  7 Sep 2022 01:01:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77EE3AB192
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 01:02:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5C480615B0;
-        Wed,  7 Sep 2022 08:01:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CA85C433D7;
-        Wed,  7 Sep 2022 08:01:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A31C4617C0
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 08:02:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 576DAC4314F;
+        Wed,  7 Sep 2022 08:02:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662537712;
-        bh=M72LimJubYG55D07kyPiSwEOdkaTR+QpalmclsdUG9w=;
+        s=k20201202; t=1662537736;
+        bh=9KAqY7aetdItbTsJtRpGHaOUvbqpChlrc5OGfYixmoE=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=u8FYGjKK/yERsqYw5DaNvvMKsVl08Eu7qAXT0tgGhHjYRsO0oQPuKWHLZOquO48Iv
-         2/DRPsYXc+zXFB98L8LnMxOxecdkgOTosiHBBWTYWJsok8OKG21UIzLS+Xug2xSfzs
-         2zb/et2joRPQ+fP8JN7QGGGkn+eEHXzevQ8h+dhD6Dz1qR2ZWK4/4ani6LDaqaDiiK
-         NSw5+RXNPgz8X53sPBEi7+zTgYOPolc5rJwzpYfky9b8r6mAsLqRcdVAYMrEoMFxRG
-         V8y7G8m+tihcAB12xKyKhwrZOJfM9D/GUs2jG4ugoKXX1eU9ctGI2xRkVuSrIbwGec
-         v012PcG9JqkRA==
+        b=MMUHGuQS/zyP7d2K9aLX4AVMwpWd8gCcRKfArlBKkB1ZNa5jwoDMtHVJRzesp0jS/
+         /ErOO51958HdVa8XN3GTtpIn6gnGyIUs7/QIPaIBxqdugweIJf+/M945QQJe6+AVRm
+         eqlZo5p6j9lTmrgg39Iqm6Gc9c4pKvI+uCJLAefWw7n99fDAq0KR6FnpvQ+fwplm5g
+         eDRbUavIo4yGMHUIq8dxemCJei2SWYMZNh5ZF6yDn0ybdglH4+urOxxjnktspA4e7Z
+         H4I4h97Piqnp7r+zm7+mTYjBXw5qwAxAx0HB0NPFV1JIYxkGj5HsGnVDuR+YvOvZMf
+         jW2GwpYmnjWRg==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3 linux-next] wifi: brcmfmac: remove redundant variable
- err
+Subject: Re: [PATCH v2] wifi: rtl8xxxu: Fix skb misuse in TX queue selection
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220831132254.303697-1-cui.jinpeng2@zte.com.cn>
-References: <20220831132254.303697-1-cui.jinpeng2@zte.com.cn>
-To:     cgel.zte@gmail.com
-Cc:     aspriel@gmail.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        johannes.berg@intel.com, alsi@bang-olufsen.dk,
-        loic.poulain@linaro.org, quic_vjakkam@quicinc.com,
-        cui.jinpeng2@zte.com.cn, smoch@web.de, hdegoede@redhat.com,
-        prestwoj@gmail.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Zeal Robot <zealci@zte.com.cn>
+In-Reply-To: <7fa4819a-4f20-b2af-b7a6-8ee01ac49295@gmail.com>
+References: <7fa4819a-4f20-b2af-b7a6-8ee01ac49295@gmail.com>
+To:     Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, Jes.Sorensen@gmail.com
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166253770653.23292.6858653088795782018.kvalo@kernel.org>
-Date:   Wed,  7 Sep 2022 08:01:48 +0000 (UTC)
+Message-ID: <166253773363.23292.14170408152286611932.kvalo@kernel.org>
+Date:   Wed,  7 Sep 2022 08:02:15 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-cgel.zte@gmail.com wrote:
+Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
 
-> From: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
+> rtl8xxxu_queue_select() selects the wrong TX queues because it's
+> reading memory from the wrong address. It expects to find ieee80211_hdr
+> at skb->data, but that's not the case after skb_push(). Move the call
+> to rtl8xxxu_queue_select() before the call to skb_push().
 > 
-> Return value from brcmf_fil_iovar_data_set() and
-> brcmf_config_ap_mgmt_ie() directly instead of
-> taking this in another redundant variable.
-> 
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Jinpeng Cui <cui.jinpeng2@zte.com.cn>
+> Fixes: 26f1fad29ad9 ("New driver: rtl8xxxu (mac80211)")
+> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 
 Patch applied to wireless-next.git, thanks.
 
-e56a770883b2 wifi: brcmfmac: remove redundant variable err
+edd5747aa12e wifi: rtl8xxxu: Fix skb misuse in TX queue selection
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220831132254.303697-1-cui.jinpeng2@zte.com.cn/
+https://patchwork.kernel.org/project/linux-wireless/patch/7fa4819a-4f20-b2af-b7a6-8ee01ac49295@gmail.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
