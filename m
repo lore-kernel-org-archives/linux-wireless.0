@@ -2,70 +2,166 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79184ECAAD3
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 08:20:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E81C38145
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 08:45:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229476AbiIGIUW (ORCPT
+        id S229792AbiIGIo6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Sep 2022 04:20:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59008 "EHLO
+        Wed, 7 Sep 2022 04:44:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229593AbiIGIUU (ORCPT
+        with ESMTP id S229850AbiIGIoo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2022 04:20:20 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54CE627DDE
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 01:20:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E0E61617BB
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 08:20:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D49CC433D6;
-        Wed,  7 Sep 2022 08:20:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662538818;
-        bh=vC1xo+f/KdGX8B0lKVlxVLXN+g1w016Xr/3R/zixVPo=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=gJvE3dXJYJOtsg/Mtkg1BHuJGOO3ZtWuUe2h3bqZu1VcJfIgQsZxhwM8YVzxRrIdl
-         plgWcPZxKCcx4/0hZAdyjbscZLQLM99BiIW6sq7X3zrXhVZ6r+ncMSPbIe2doBEXGg
-         YaU46pI00XlWcVI+pPcP2unVuE3XZD7KUtx2A3Qv2kANQkm8ANSwIRA9U/0NP0+jJ6
-         49G0en/VqvmmhSROw2NjNU9ULYcXXCz/1ANZ8ZuUpmrYedFU4RBT/zNR0sq9jCc9rj
-         1n2A7Jr65CJFLrZlxREA0qXG40CeETaM1cfTFPN503X0tsHmjoDOEKNgOIgJTcXlP4
-         K0I2nWrMjIWnQ==
-Content-Type: text/plain; charset="utf-8"
+        Wed, 7 Sep 2022 04:44:44 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F1AFD29830
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 01:44:39 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2878iD3R1020381, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2878iD3R1020381
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Wed, 7 Sep 2022 16:44:13 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 7 Sep 2022 16:44:31 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 7 Sep 2022
+ 16:44:31 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/5] wifi: rtw89: use u32_get_bits to access C2H content of PHY capability
+Date:   Wed, 7 Sep 2022 16:43:58 +0800
+Message-ID: <20220907084402.66480-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220907084402.66480-1-pkshih@realtek.com>
+References: <20220907084402.66480-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] ath11k: Enable remain-on-channel support on WCN6750
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220901080656.3450-1-quic_mpubbise@quicinc.com>
-References: <20220901080656.3450-1-quic_mpubbise@quicinc.com>
-To:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166253881172.23728.9477056475033732029.kvalo@kernel.org>
-Date:   Wed,  7 Sep 2022 08:20:17 +0000 (UTC)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/07/2022 08:13:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvNyCkV6TIIDA2OjI0OjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Manikanta Pubbisetty <quic_mpubbise@quicinc.com> wrote:
+The definitions of bit fields in structure will be wrong in big-endian
+platform, so use u32_get_bits() to access them.
 
-> Enable remain on channel support on WCN6750 as it is needed for
-> GAS, Passpoint.
-> 
-> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
-> 
-> Signed-off-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/fw.h  | 41 +++++++++++++++---------
+ drivers/net/wireless/realtek/rtw89/mac.c | 17 +++++-----
+ 2 files changed, 35 insertions(+), 23 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-36893e45b192 ath11k: Enable remain-on-channel support on WCN6750
-
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index edd43f00994c4..de70d012cd9bc 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -63,21 +63,32 @@ enum rtw89_mac_c2h_type {
+ 	RTW89_FWCMD_C2HREG_FUNC_NULL = 0xFF
+ };
+ 
+-struct rtw89_c2h_phy_cap {
+-	u32 func:7;
+-	u32 ack:1;
+-	u32 len:4;
+-	u32 seq:4;
+-	u32 rx_nss:8;
+-	u32 bw:8;
+-
+-	u32 tx_nss:8;
+-	u32 prot:8;
+-	u32 nic:8;
+-	u32 wl_func:8;
+-
+-	u32 hw_type:8;
+-} __packed;
++#define RTW89_GET_C2H_PHYCAP_FUNC(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(6, 0))
++#define RTW89_GET_C2H_PHYCAP_ACK(info) \
++	u32_get_bits(*((const u32 *)(info)), BIT(7))
++#define RTW89_GET_C2H_PHYCAP_LEN(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(11, 8))
++#define RTW89_GET_C2H_PHYCAP_SEQ(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(15, 12))
++#define RTW89_GET_C2H_PHYCAP_RX_NSS(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(23, 16))
++#define RTW89_GET_C2H_PHYCAP_BW(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(31, 24))
++#define RTW89_GET_C2H_PHYCAP_TX_NSS(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(7, 0))
++#define RTW89_GET_C2H_PHYCAP_PROT(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(15, 8))
++#define RTW89_GET_C2H_PHYCAP_NIC(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(23, 16))
++#define RTW89_GET_C2H_PHYCAP_WL_FUNC(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(31, 24))
++#define RTW89_GET_C2H_PHYCAP_HW_TYPE(info) \
++	u32_get_bits(*((const u32 *)(info) + 2), GENMASK(7, 0))
++#define RTW89_GET_C2H_PHYCAP_ANT_TX_NUM(info) \
++	u32_get_bits(*((const u32 *)(info) + 3), GENMASK(15, 8))
++#define RTW89_GET_C2H_PHYCAP_ANT_RX_NUM(info) \
++	u32_get_bits(*((const u32 *)(info) + 3), GENMASK(23, 16))
+ 
+ enum rtw89_fw_c2h_category {
+ 	RTW89_C2H_CAT_TEST,
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index f5bae0b282082..a845575124486 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -2262,23 +2262,24 @@ int rtw89_mac_setup_phycap(struct rtw89_dev *rtwdev)
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_mac_c2h_info c2h_info = {0};
+-	struct rtw89_c2h_phy_cap *cap =
+-		(struct rtw89_c2h_phy_cap *)&c2h_info.c2hreg[0];
++	u8 tx_nss;
++	u8 rx_nss;
+ 	u32 ret;
+ 
+ 	ret = rtw89_mac_read_phycap(rtwdev, &c2h_info);
+ 	if (ret)
+ 		return ret;
+ 
+-	hal->tx_nss = cap->tx_nss ?
+-		      min_t(u8, cap->tx_nss, chip->tx_nss) : chip->tx_nss;
+-	hal->rx_nss = cap->rx_nss ?
+-		      min_t(u8, cap->rx_nss, chip->rx_nss) : chip->rx_nss;
++	tx_nss = RTW89_GET_C2H_PHYCAP_TX_NSS(c2h_info.c2hreg);
++	rx_nss = RTW89_GET_C2H_PHYCAP_RX_NSS(c2h_info.c2hreg);
++
++	hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
++	hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_FW,
+ 		    "phycap hal/phy/chip: tx_nss=0x%x/0x%x/0x%x rx_nss=0x%x/0x%x/0x%x\n",
+-		    hal->tx_nss, cap->tx_nss, chip->tx_nss,
+-		    hal->rx_nss, cap->rx_nss, chip->rx_nss);
++		    hal->tx_nss, tx_nss, chip->tx_nss,
++		    hal->rx_nss, rx_nss, chip->rx_nss);
+ 
+ 	return 0;
+ }
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220901080656.3450-1-quic_mpubbise@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.1
 
