@@ -2,101 +2,161 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B047FECAAD3
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 09:22:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40930C38145
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 09:27:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230465AbiIGJWv convert rfc822-to-8bit (ORCPT
+        id S230305AbiIGJ1d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Sep 2022 05:22:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40798 "EHLO
+        Wed, 7 Sep 2022 05:27:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230383AbiIGJWW (ORCPT
+        with ESMTP id S229492AbiIGJ1c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2022 05:22:22 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 80543B14EA
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 02:22:06 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2879LdxY6001184, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2879LdxY6001184
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Wed, 7 Sep 2022 17:21:39 +0800
-Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Wed, 7 Sep 2022 17:21:57 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 7 Sep 2022 17:21:57 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::d902:19b0:8613:5b97]) by
- RTEXMBS04.realtek.com.tw ([fe80::d902:19b0:8613:5b97%5]) with mapi id
- 15.01.2375.007; Wed, 7 Sep 2022 17:21:57 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Kalle Valo <kvalo@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 5/5] wifi: rtw89: support TX diversity for 1T2R chipset
-Thread-Topic: [PATCH 5/5] wifi: rtw89: support TX diversity for 1T2R chipset
-Thread-Index: AQHYvtUX9S6OuK1vWk2v/+fM36dyR63TnkiDgAAaXiA=
-Date:   Wed, 7 Sep 2022 09:21:57 +0000
-Message-ID: <11c57bd5bd924dacb5769e716abe4310@realtek.com>
-References: <20220902124422.13610-1-pkshih@realtek.com>
-        <20220902124422.13610-6-pkshih@realtek.com> <878rmvaap0.fsf@kernel.org>
-In-Reply-To: <878rmvaap0.fsf@kernel.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS06.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/9/7_=3F=3F_07:34:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+        Wed, 7 Sep 2022 05:27:32 -0400
+X-Greylist: delayed 98 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 07 Sep 2022 02:27:30 PDT
+Received: from sibelius.xs4all.nl (80-61-163-207.fixed.kpn.net [80.61.163.207])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ECB67FF90;
+        Wed,  7 Sep 2022 02:27:30 -0700 (PDT)
+Received: from localhost (bloch.sibelius.xs4all.nl [local])
+        by bloch.sibelius.xs4all.nl (OpenSMTPD) with ESMTPA id b640ccba;
+        Wed, 7 Sep 2022 11:27:25 +0200 (CEST)
+Date:   Wed, 7 Sep 2022 11:27:25 +0200 (CEST)
+From:   Mark Kettenis <mark.kettenis@xs4all.nl>
+To:     Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Cc:     aspriel@gmail.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, alyssa@rosenzweig.io,
+        asahi@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
+        davem@davemloft.net, devicetree@vger.kernel.org,
+        edumazet@google.com, marcan@marcan.st, kuba@kernel.org,
+        kvalo@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        pabeni@redhat.com, zajec5@gmail.com, robh+dt@kernel.org,
+        SHA-cyfmac-dev-list@infineon.com, sven@svenpeter.dev
+In-Reply-To: <E1oVpne-005LCR-RJ@rmk-PC.armlinux.org.uk>
+        (rmk+kernel@armlinux.org.uk)
+Subject: Re: [PATCH net-next 12/12] arm64: dts: apple: Add WiFi module and antenna
+ properties
+References: <YxhMaYOfnM+7FG+W@shell.armlinux.org.uk> <E1oVpne-005LCR-RJ@rmk-PC.armlinux.org.uk>
+Message-ID: <d3ced546b81f9820@bloch.sibelius.xs4all.nl>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+> From: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+> Date: Wed, 07 Sep 2022 08:48:42 +0100
+> 
+> From: Hector Martin <marcan@marcan.st>
+> 
+> Add the new module-instance/antenna-sku properties required to select
+> WiFi firmwares properly to all board device trees.
+> 
+> Signed-off-by: Hector Martin <marcan@marcan.st>
+> Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
 
+Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
 
-> -----Original Message-----
-> From: Kalle Valo <kvalo@kernel.org>
-> Sent: Wednesday, September 7, 2022 3:47 PM
-> To: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH 5/5] wifi: rtw89: support TX diversity for 1T2R chipset
+> ---
+>  arch/arm64/boot/dts/apple/t8103-j274.dts  | 4 ++++
+>  arch/arm64/boot/dts/apple/t8103-j293.dts  | 4 ++++
+>  arch/arm64/boot/dts/apple/t8103-j313.dts  | 4 ++++
+>  arch/arm64/boot/dts/apple/t8103-j456.dts  | 4 ++++
+>  arch/arm64/boot/dts/apple/t8103-j457.dts  | 4 ++++
+>  arch/arm64/boot/dts/apple/t8103-jxxx.dtsi | 2 ++
+>  6 files changed, 22 insertions(+)
 > 
-> Ping-Ke Shih <pkshih@realtek.com> writes:
+> diff --git a/arch/arm64/boot/dts/apple/t8103-j274.dts b/arch/arm64/boot/dts/apple/t8103-j274.dts
+> index 2cd429efba5b..c1f3ba9c39f6 100644
+> --- a/arch/arm64/boot/dts/apple/t8103-j274.dts
+> +++ b/arch/arm64/boot/dts/apple/t8103-j274.dts
+> @@ -21,6 +21,10 @@ aliases {
+>  	};
+>  };
+>  
+> +&wifi0 {
+> +	brcm,board-type = "apple,atlantisb";
+> +};
+> +
+>  /*
+>   * Force the bus number assignments so that we can declare some of the
+>   * on-board devices and properties that are populated by the bootloader
+> diff --git a/arch/arm64/boot/dts/apple/t8103-j293.dts b/arch/arm64/boot/dts/apple/t8103-j293.dts
+> index 49cdf4b560a3..ecb10d237a05 100644
+> --- a/arch/arm64/boot/dts/apple/t8103-j293.dts
+> +++ b/arch/arm64/boot/dts/apple/t8103-j293.dts
+> @@ -17,6 +17,10 @@ / {
+>  	model = "Apple MacBook Pro (13-inch, M1, 2020)";
+>  };
+>  
+> +&wifi0 {
+> +	brcm,board-type = "apple,honshu";
+> +};
+> +
+>  /*
+>   * Remove unused PCIe ports and disable the associated DARTs.
+>   */
+> diff --git a/arch/arm64/boot/dts/apple/t8103-j313.dts b/arch/arm64/boot/dts/apple/t8103-j313.dts
+> index b0ebb45bdb6f..df741737b8e6 100644
+> --- a/arch/arm64/boot/dts/apple/t8103-j313.dts
+> +++ b/arch/arm64/boot/dts/apple/t8103-j313.dts
+> @@ -17,6 +17,10 @@ / {
+>  	model = "Apple MacBook Air (M1, 2020)";
+>  };
+>  
+> +&wifi0 {
+> +	brcm,board-type = "apple,shikoku";
+> +};
+> +
+>  /*
+>   * Remove unused PCIe ports and disable the associated DARTs.
+>   */
+> diff --git a/arch/arm64/boot/dts/apple/t8103-j456.dts b/arch/arm64/boot/dts/apple/t8103-j456.dts
+> index 884fddf7d363..8c6bf9592510 100644
+> --- a/arch/arm64/boot/dts/apple/t8103-j456.dts
+> +++ b/arch/arm64/boot/dts/apple/t8103-j456.dts
+> @@ -21,6 +21,10 @@ aliases {
+>  	};
+>  };
+>  
+> +&wifi0 {
+> +	brcm,board-type = "apple,capri";
+> +};
+> +
+>  &i2c0 {
+>  	hpm2: usb-pd@3b {
+>  		compatible = "apple,cd321x";
+> diff --git a/arch/arm64/boot/dts/apple/t8103-j457.dts b/arch/arm64/boot/dts/apple/t8103-j457.dts
+> index d7c622931627..fe7c0aaf7d62 100644
+> --- a/arch/arm64/boot/dts/apple/t8103-j457.dts
+> +++ b/arch/arm64/boot/dts/apple/t8103-j457.dts
+> @@ -21,6 +21,10 @@ aliases {
+>  	};
+>  };
+>  
+> +&wifi0 {
+> +	brcm,board-type = "apple,santorini";
+> +};
+> +
+>  /*
+>   * Force the bus number assignments so that we can declare some of the
+>   * on-board devices and properties that are populated by the bootloader
+> diff --git a/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi b/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi
+> index fe2ae40fa9dd..3d15b8e2a6c1 100644
+> --- a/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi
+> +++ b/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi
+> @@ -71,8 +71,10 @@ hpm1: usb-pd@3f {
+>  &port00 {
+>  	bus-range = <1 1>;
+>  	wifi0: network@0,0 {
+> +		compatible = "pci14e4,4425";
+>  		reg = <0x10000 0x0 0x0 0x0 0x0>;
+>  		/* To be filled by the loader */
+>  		local-mac-address = [00 00 00 00 00 00];
+> +		apple,antenna-sku = "XX";
+>  	};
+>  };
+> -- 
+> 2.30.2
 > 
-> > Check RSSI strength to decide which path is better, and then set TX path
-> > accordingly.
-> >
-> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 > 
-> [...]
 > 
-> > +static void rtw89_phy_tx_path_div_sta_iter(void *data, struct ieee80211_sta *sta)
-> > +{
-> > +	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
-> > +	struct rtw89_dev *rtwdev = rtwsta->rtwdev;
-> > +	struct rtw89_vif *rtwvif = rtwsta->rtwvif;
-> > +	struct rtw89_hal *hal = &rtwdev->hal;
-> > +	bool *done = (bool *)data;
-> 
-> data is a void pointer, you don't need the cast here.
-> 
-
-I have sent v2 to fix it. 
-Thanks.
-
-Ping-Ke
-
