@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E0BC6FA8B
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 07:48:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FEC2C6FA83
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Sep 2022 07:48:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230062AbiIGHs0 (ORCPT
+        id S230108AbiIGHsb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Sep 2022 03:48:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43652 "EHLO
+        Wed, 7 Sep 2022 03:48:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230109AbiIGHsH (ORCPT
+        with ESMTP id S230151AbiIGHsL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2022 03:48:07 -0400
+        Wed, 7 Sep 2022 03:48:11 -0400
 Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B721BA7201;
-        Wed,  7 Sep 2022 00:47:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BF26A6C2A;
+        Wed,  7 Sep 2022 00:48:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=armlinux.org.uk; s=pandora-2019; h=Date:Sender:Message-Id:Content-Type:
         Content-Transfer-Encoding:MIME-Version:Subject:Cc:To:From:References:
         In-Reply-To:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=oGsSCx6vnYSPKIXNfcv9dULMF1Fss3aaza+G+S+XB44=; b=sKkx8NmDr+T1CCtGVXje60yVmh
-        MJ3nG7CvwVUndP4oEy8E4/0OiNvbeeJwCgPk7eWDn2mDdL5dz8E6Cbn4Q6iH7mwr+egayhqlBiRsn
-        vyqs2MbwiHbqrqZngMGjyVVLtEsmVJ3yw5lKZixBavykEDx5ev/AWtqAUHnaJEdYmLOvbcbYoTfIF
-        PkcFENhKUEuGhdLG3zbyC58llTe5lfhQxxkNtu6Sooy7PMP0Ii16NIs5/LLZXzuAqjGjr7fwdiYI8
-        RJmHvqUWjqOJQPlKBjo4wLCCcTxKDbvcbIo5zOFCu058LITIbA1oTamr6gac+gHt1m03zpWFh5O9W
-        qoL5NmkA==;
-Received: from e0022681537dd.dyn.armlinux.org.uk ([fd8f:7570:feb6:1:222:68ff:fe15:37dd]:38216 helo=rmk-PC.armlinux.org.uk)
+        bh=2ZMWSPwBF52GouKAY5XPhuPnFdHSUvHNIP8zJJW7PvQ=; b=wEfqqr6V/A7r+LBwg7BrZWVJFT
+        YV7sdHGiEXlFqqd4wyIGukposEhG5hu0eTH//qm4qJl0CjTrVp1IP9YEnf9BmUa5OLafzANGUanDh
+        juUrlFCIaRWIk1MDxsoiLXgkD2p4OuYLdBfysT1poX/L32FEoZug2we0UZm1ODWn5szcw5Cr64D3h
+        g7iuycuGorIc0oNsNPIqvl7wN5x3L2CwiWAWRLweHJtshgtSnLzg3zSEwFiGi70CHPeIthQBPFP7r
+        N/D3i9eCmnO88s31I9FUxhgu0rwg/+Ru+JJ//0PQojDOpQQKoRMAT8k9Od8FyvZecksArGtla3yfz
+        VlR6kpJw==;
+Received: from e0022681537dd.dyn.armlinux.org.uk ([fd8f:7570:feb6:1:222:68ff:fe15:37dd]:46584 helo=rmk-PC.armlinux.org.uk)
         by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <rmk@armlinux.org.uk>)
-        id 1oVpmq-0004uV-2Q; Wed, 07 Sep 2022 08:47:52 +0100
+        id 1oVpn0-0004v4-DF; Wed, 07 Sep 2022 08:48:02 +0100
 Received: from rmk by rmk-PC.armlinux.org.uk with local (Exim 4.94.2)
         (envelope-from <rmk@rmk-PC.armlinux.org.uk>)
-        id 1oVpmp-005LBS-AQ; Wed, 07 Sep 2022 08:47:51 +0100
+        id 1oVpmz-005LBe-KD; Wed, 07 Sep 2022 08:48:01 +0100
 In-Reply-To: <YxhMaYOfnM+7FG+W@shell.armlinux.org.uk>
 References: <YxhMaYOfnM+7FG+W@shell.armlinux.org.uk>
 From:   Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
@@ -56,90 +56,194 @@ Cc:     Alyssa Rosenzweig <alyssa@rosenzweig.io>, asahi@lists.linux.dev,
         "Rafa__ Mi__ecki" <zajec5@gmail.com>,
         Rob Herring <robh+dt@kernel.org>,
         SHA-cyfmac-dev-list@infineon.com, Sven Peter <sven@svenpeter.dev>
-Subject: [PATCH net-next 02/12] brcmfmac: firmware: Handle per-board clm_blob
- files
+Subject: [PATCH net-next 04/12] brcmfmac: firmware: Support passing in
+ multiple board_types
 MIME-Version: 1.0
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1oVpmp-005LBS-AQ@rmk-PC.armlinux.org.uk>
+Message-Id: <E1oVpmz-005LBe-KD@rmk-PC.armlinux.org.uk>
 Sender: Russell King <rmk@armlinux.org.uk>
-Date:   Wed, 07 Sep 2022 08:47:51 +0100
+Date:   Wed, 07 Sep 2022 08:48:01 +0100
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Hector Martin <marcan@marcan.st>
 
-Teach brcm_alt_fw_paths to correctly split off variable length
-extensions, and enable alt firmware lookups for the CLM blob firmware
-requests.
+Apple platforms have firmware and config files identified with multiple
+dimensions. We want to be able to find the most specific firmware
+available for any given platform, progressively trying more general
+firmwares.
 
-Apple platforms have per-board CLM blob files.
+To do this, first add support for passing in multiple board_types,
+which will be tried in sequence.
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Since this will cause more log spam due to missing firmwares, also
+switch the secondary firmware fecthes to use the _nowarn variant, which
+will not log if the firmware is not found.
+
 Signed-off-by: Hector Martin <marcan@marcan.st>
 Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
 ---
- .../broadcom/brcm80211/brcmfmac/firmware.c    | 33 +++++++++++--------
- 1 file changed, 20 insertions(+), 13 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/firmware.c    | 53 +++++++++++++++----
+ .../broadcom/brcm80211/brcmfmac/firmware.h    |  4 +-
+ .../broadcom/brcm80211/brcmfmac/pcie.c        |  4 +-
+ .../broadcom/brcm80211/brcmfmac/sdio.c        |  2 +-
+ 4 files changed, 49 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 15e99d8865bd..6c7c0c8f94ce 100644
+index 6c7c0c8f94ce..371c086d1f48 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -587,22 +587,29 @@ static int brcmf_fw_complete_request(const struct firmware *fw,
+@@ -430,6 +430,7 @@ struct brcmf_fw {
+ 	struct device *dev;
+ 	struct brcmf_fw_request *req;
+ 	u32 curpos;
++	unsigned int board_index;
+ 	void (*done)(struct device *dev, int err, struct brcmf_fw_request *req);
+ };
  
- static char *brcm_alt_fw_path(const char *path, const char *board_type)
+@@ -616,17 +617,21 @@ static int brcmf_fw_request_firmware(const struct firmware **fw,
+ 				     struct brcmf_fw *fwctx)
  {
--	char alt_path[BRCMF_FW_NAME_LEN];
--	char suffix[5];
-+	char base[BRCMF_FW_NAME_LEN];
-+	const char *suffix;
-+	char *ret;
- 
--	strscpy(alt_path, path, BRCMF_FW_NAME_LEN);
--	/* At least one character + suffix */
--	if (strlen(alt_path) < 5)
-+	if (!board_type)
- 		return NULL;
- 
--	/* strip .txt or .bin at the end */
--	strscpy(suffix, alt_path + strlen(alt_path) - 4, 5);
--	alt_path[strlen(alt_path) - 4] = 0;
--	strlcat(alt_path, ".", BRCMF_FW_NAME_LEN);
--	strlcat(alt_path, board_type, BRCMF_FW_NAME_LEN);
--	strlcat(alt_path, suffix, BRCMF_FW_NAME_LEN);
-+	suffix = strrchr(path, '.');
-+	if (!suffix || suffix == path)
-+		return NULL;
-+
-+	/* strip extension at the end */
-+	strscpy(base, path, BRCMF_FW_NAME_LEN);
-+	base[suffix - path] = 0;
-+
-+	ret = kasprintf(GFP_KERNEL, "%s.%s%s", base, board_type, suffix);
-+	if (!ret)
-+		brcmf_err("out of memory allocating firmware path for '%s'\n",
-+			  path);
-+
-+	brcmf_dbg(TRACE, "FW alt path: %s\n", ret);
- 
--	return kstrdup(alt_path, GFP_KERNEL);
-+	return ret;
- }
- 
- static int brcmf_fw_request_firmware(const struct firmware **fw,
-@@ -612,7 +619,7 @@ static int brcmf_fw_request_firmware(const struct firmware **fw,
+ 	struct brcmf_fw_item *cur = &fwctx->req->items[fwctx->curpos];
++	unsigned int i;
  	int ret;
  
- 	/* Files can be board-specific, first try a board-specific path */
--	if (cur->type == BRCMF_FW_TYPE_NVRAM && fwctx->req->board_type) {
-+	if (fwctx->req->board_type) {
+-	/* Files can be board-specific, first try a board-specific path */
+-	if (fwctx->req->board_type) {
++	/* Files can be board-specific, first try board-specific paths */
++	for (i = 0; i < ARRAY_SIZE(fwctx->req->board_types); i++) {
  		char *alt_path;
  
- 		alt_path = brcm_alt_fw_path(cur->path, fwctx->req->board_type);
+-		alt_path = brcm_alt_fw_path(cur->path, fwctx->req->board_type);
++		if (!fwctx->req->board_types[i])
++			goto fallback;
++		alt_path = brcm_alt_fw_path(cur->path,
++					    fwctx->req->board_types[i]);
+ 		if (!alt_path)
+ 			goto fallback;
+ 
+-		ret = request_firmware(fw, alt_path, fwctx->dev);
++		ret = firmware_request_nowarn(fw, alt_path, fwctx->dev);
+ 		kfree(alt_path);
+ 		if (ret == 0)
+ 			return ret;
+@@ -660,15 +665,40 @@ static void brcmf_fw_request_done_alt_path(const struct firmware *fw, void *ctx)
+ {
+ 	struct brcmf_fw *fwctx = ctx;
+ 	struct brcmf_fw_item *first = &fwctx->req->items[0];
++	const char *board_type, *alt_path;
+ 	int ret = 0;
+ 
+-	/* Fall back to canonical path if board firmware not found */
+-	if (!fw)
+-		ret = request_firmware_nowait(THIS_MODULE, true, first->path,
++	if (fw) {
++		brcmf_fw_request_done(fw, ctx);
++		return;
++	}
++
++	/* Try next board firmware */
++	if (fwctx->board_index < ARRAY_SIZE(fwctx->req->board_types)) {
++		board_type = fwctx->req->board_types[fwctx->board_index++];
++		if (!board_type)
++			goto fallback;
++		alt_path = brcm_alt_fw_path(first->path, board_type);
++		if (!alt_path)
++			goto fallback;
++
++		ret = request_firmware_nowait(THIS_MODULE, true, alt_path,
+ 					      fwctx->dev, GFP_KERNEL, fwctx,
+-					      brcmf_fw_request_done);
++					      brcmf_fw_request_done_alt_path);
++		kfree(alt_path);
+ 
+-	if (fw || ret < 0)
++		if (ret < 0)
++			brcmf_fw_request_done(fw, ctx);
++		return;
++	}
++
++fallback:
++	/* Fall back to canonical path if board firmware not found */
++	ret = request_firmware_nowait(THIS_MODULE, true, first->path,
++				      fwctx->dev, GFP_KERNEL, fwctx,
++				      brcmf_fw_request_done);
++
++	if (ret < 0)
+ 		brcmf_fw_request_done(fw, ctx);
+ }
+ 
+@@ -712,10 +742,11 @@ int brcmf_fw_get_firmwares(struct device *dev, struct brcmf_fw_request *req,
+ 	fwctx->done = fw_cb;
+ 
+ 	/* First try alternative board-specific path if any */
+-	if (fwctx->req->board_type)
++	if (fwctx->req->board_types[0])
+ 		alt_path = brcm_alt_fw_path(first->path,
+-					    fwctx->req->board_type);
++					    fwctx->req->board_types[0]);
+ 	if (alt_path) {
++		fwctx->board_index++;
+ 		ret = request_firmware_nowait(THIS_MODULE, true, alt_path,
+ 					      fwctx->dev, GFP_KERNEL, fwctx,
+ 					      brcmf_fw_request_done_alt_path);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+index e290dec9c53d..1266cbaee072 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+@@ -11,6 +11,8 @@
+ 
+ #define BRCMF_FW_DEFAULT_PATH		"brcm/"
+ 
++#define BRCMF_FW_MAX_BOARD_TYPES	8
++
+ /**
+  * struct brcmf_firmware_mapping - Used to map chipid/revmask to firmware
+  *	filename and nvram filename. Each bus type implementation should create
+@@ -66,7 +68,7 @@ struct brcmf_fw_request {
+ 	u16 domain_nr;
+ 	u16 bus_nr;
+ 	u32 n_items;
+-	const char *board_type;
++	const char *board_types[BRCMF_FW_MAX_BOARD_TYPES];
+ 	struct brcmf_fw_item items[];
+ };
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index ec73d2620ec9..2a74c9d8d46a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1852,11 +1852,13 @@ brcmf_pcie_prepare_fw_request(struct brcmf_pciedev_info *devinfo)
+ 	fwreq->items[BRCMF_PCIE_FW_NVRAM].flags = BRCMF_FW_REQF_OPTIONAL;
+ 	fwreq->items[BRCMF_PCIE_FW_CLM].type = BRCMF_FW_TYPE_BINARY;
+ 	fwreq->items[BRCMF_PCIE_FW_CLM].flags = BRCMF_FW_REQF_OPTIONAL;
+-	fwreq->board_type = devinfo->settings->board_type;
+ 	/* NVRAM reserves PCI domain 0 for Broadcom's SDK faked bus */
+ 	fwreq->domain_nr = pci_domain_nr(devinfo->pdev->bus) + 1;
+ 	fwreq->bus_nr = devinfo->pdev->bus->number;
+ 
++	brcmf_dbg(PCIE, "Board: %s\n", devinfo->settings->board_type);
++	fwreq->board_types[0] = devinfo->settings->board_type;
++
+ 	return fwreq;
+ }
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 73a74635a77d..266b8d23d402 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4424,7 +4424,7 @@ brcmf_sdio_prepare_fw_request(struct brcmf_sdio *bus)
+ 	fwreq->items[BRCMF_SDIO_FW_NVRAM].type = BRCMF_FW_TYPE_NVRAM;
+ 	fwreq->items[BRCMF_SDIO_FW_CLM].type = BRCMF_FW_TYPE_BINARY;
+ 	fwreq->items[BRCMF_SDIO_FW_CLM].flags = BRCMF_FW_REQF_OPTIONAL;
+-	fwreq->board_type = bus->sdiodev->settings->board_type;
++	fwreq->board_types[0] = bus->sdiodev->settings->board_type;
+ 
+ 	return fwreq;
+ }
 -- 
 2.30.2
 
