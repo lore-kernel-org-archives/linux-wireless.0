@@ -2,43 +2,45 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6BB7C38145
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 05:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B8E6ECAAD5
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 05:13:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229614AbiIHFNm (ORCPT
+        id S229687AbiIHFNn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Sep 2022 01:13:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50340 "EHLO
+        Thu, 8 Sep 2022 01:13:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbiIHFNl (ORCPT
+        with ESMTP id S229514AbiIHFNm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2022 01:13:41 -0400
+        Thu, 8 Sep 2022 01:13:42 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DAEAAB69C1
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 22:13:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5EDF8B6D48
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 22:13:37 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2885D8Og8009344, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2885DAqX4009464, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2885D8Og8009344
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2885DAqX4009464
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Thu, 8 Sep 2022 13:13:08 +0800
+        Thu, 8 Sep 2022 13:13:11 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 8 Sep 2022 13:13:27 +0800
+ 15.1.2375.31; Thu, 8 Sep 2022 13:13:29 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 8 Sep 2022
- 13:13:26 +0800
+ 13:13:29 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <leo.li@realtek.com>, <timlee@realtek.com>, <echuang@realtek.com>,
         <phhuang@realtek.com>, <chiuyitang@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/9] wifi: rtw89: complete basic features of 8852c
-Date:   Thu, 8 Sep 2022 13:12:48 +0800
-Message-ID: <20220908051257.25353-1-pkshih@realtek.com>
+Subject: [PATCH 2/9] wifi: rtw89: 8852c: enable the interference cancellation of MU-MIMO on 6GHz
+Date:   Thu, 8 Sep 2022 13:12:50 +0800
+Message-ID: <20220908051257.25353-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220908051257.25353-1-pkshih@realtek.com>
+References: <20220908051257.25353-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -64,43 +66,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In this patchset, we turn on basic features low power mode and hardware
-scan, and add some fixes found by testing.
+Enable MU-MIMO interference cancellation (MUIC) to yield expected
+performance of receiving MU-MIMO packets on 6GHz.
 
-Chia-Yuan Li (1):
-  wifi: rtw89: set response rate selection
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/reg.h      | 2 ++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 5 +++++
+ 2 files changed, 7 insertions(+)
 
-Chin-Yen Lee (2):
-  wifi: rtw89: support deep ps mode for rtw8852c
-  wifi: rtw89: call tx_wake notify for 8852c in deep ps mode
-
-Eric Huang (1):
-  wifi: rtw89: add DIG register struct to share common algorithm
-
-Ping-Ke Shih (2):
-  wifi: rtw89: 8852c: enable the interference cancellation of MU-MIMO on
-    6GHz
-  wifi: rtw89: 8852c: enlarge polling timeout of RX DCK
-
-Po-Hao Huang (2):
-  wifi: rtw89: 8852c: support hw_scan
-  wifi: rtw89: split scan including lots of channels
-
-Yi-Tang Chiu (1):
-  wifi: rtw89: 8852c: set TX to single path TX on path B in 6GHz band
-
- drivers/net/wireless/realtek/rtw89/core.c     |  8 ++-
- drivers/net/wireless/realtek/rtw89/core.h     | 49 +++++++++++++++
- drivers/net/wireless/realtek/rtw89/fw.c       | 25 +++++---
- drivers/net/wireless/realtek/rtw89/fw.h       |  8 ++-
- drivers/net/wireless/realtek/rtw89/mac.c      | 34 +++++++++--
- drivers/net/wireless/realtek/rtw89/phy.c      | 59 ++++++++++---------
- drivers/net/wireless/realtek/rtw89/reg.h      | 56 ++++++++++++++++--
- drivers/net/wireless/realtek/rtw89/rtw8852a.c | 29 ++++++++-
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 52 ++++++++++++++--
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c |  3 +-
- 10 files changed, 269 insertions(+), 54 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
+index d75894895dc7b..2537fee1125e5 100644
+--- a/drivers/net/wireless/realtek/rtw89/reg.h
++++ b/drivers/net/wireless/realtek/rtw89/reg.h
+@@ -3674,6 +3674,8 @@
+ #define R_S1_ADDCK 0x3E00
+ #define B_S1_ADDCK_I GENMASK(9, 0)
+ #define B_S1_ADDCK_Q GENMASK(19, 10)
++#define R_MUIC 0x40F8
++#define B_MUIC_EN BIT(0)
+ #define R_DCFO 0x4264
+ #define B_DCFO GENMASK(1, 0)
+ #define R_SEG0CSI 0x42AC
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index 32f5077c1bcb6..a30b723cc992e 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -1791,6 +1791,11 @@ static void rtw8852c_set_channel_bb(struct rtw89_dev *rtwdev,
+ 		}
+ 	}
+ 
++	if (chan->band_type == RTW89_BAND_6G)
++		rtw89_phy_write32_set(rtwdev, R_MUIC, B_MUIC_EN);
++	else
++		rtw89_phy_write32_clr(rtwdev, R_MUIC, B_MUIC_EN);
++
+ 	rtw8852c_bb_reset_all(rtwdev, phy_idx);
+ }
+ 
 -- 
 2.25.1
 
