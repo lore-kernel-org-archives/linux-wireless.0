@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9141ECAAD5
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 05:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E0E7C38145
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 05:13:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229876AbiIHFNv (ORCPT
+        id S229914AbiIHFNw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Sep 2022 01:13:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50500 "EHLO
+        Thu, 8 Sep 2022 01:13:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229777AbiIHFNs (ORCPT
+        with ESMTP id S229778AbiIHFNs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 8 Sep 2022 01:13:48 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7DE36B7EC9
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7DE87B7ECA
         for <linux-wireless@vger.kernel.org>; Wed,  7 Sep 2022 22:13:45 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2885DHSD0009755, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2885DHSD0009755
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2885DEtsC009614, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2885DEtsC009614
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Thu, 8 Sep 2022 13:13:17 +0800
+        Thu, 8 Sep 2022 13:13:14 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 8 Sep 2022 13:13:36 +0800
+ 15.1.2375.7; Thu, 8 Sep 2022 13:13:33 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 8 Sep 2022
- 13:13:35 +0800
+ 13:13:32 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <leo.li@realtek.com>, <timlee@realtek.com>, <echuang@realtek.com>,
         <phhuang@realtek.com>, <chiuyitang@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 8/9] wifi: rtw89: 8852c: support hw_scan
-Date:   Thu, 8 Sep 2022 13:12:56 +0800
-Message-ID: <20220908051257.25353-9-pkshih@realtek.com>
+Subject: [PATCH 5/9] wifi: rtw89: set response rate selection
+Date:   Thu, 8 Sep 2022 13:12:53 +0800
+Message-ID: <20220908051257.25353-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220908051257.25353-1-pkshih@realtek.com>
 References: <20220908051257.25353-1-pkshih@realtek.com>
@@ -58,155 +58,191 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvOCCkV6TIIDEyOjQ5OjAw?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+From: Chia-Yuan Li <leo.li@realtek.com>
 
-This enables hw_scan function for 52c. The mechanism is similar to 52a
-except that it adds modifications required for 6G channels and extends the
-command length to make driver compatible to both newer and existing
-firmware.
+With suitable response rate, it can acknowledge peer packets are received.
+Otherwise, peer could re-transmit again due to missing of ACK frames.
+To achieve this, refer to RX rate and CMAC table to choose the smaller
+as initial response rate.
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Chia-Yuan Li <leo.li@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h | 14 ++++++++++++++
- drivers/net/wireless/realtek/rtw89/fw.c   |  9 ++++++---
- drivers/net/wireless/realtek/rtw89/fw.h   |  4 +++-
- drivers/net/wireless/realtek/rtw89/mac.c  |  7 ++++---
- 4 files changed, 27 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.h     |  6 ++++++
+ drivers/net/wireless/realtek/rtw89/mac.c      | 13 ++++++++++++
+ drivers/net/wireless/realtek/rtw89/reg.h      | 21 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  8 ++++++-
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  8 ++++++-
+ 5 files changed, 54 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 5beaf311df052..5e6f767b05cb7 100644
+index ac148c4b547c8..e32900615bda0 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -3783,6 +3783,20 @@ enum nl80211_band rtw89_hw_to_nl80211_band(enum rtw89_band hw_band)
- 	}
- }
- 
-+static inline
-+enum rtw89_band rtw89_nl80211_to_hw_band(enum nl80211_band nl_band)
-+{
-+	switch (nl_band) {
-+	default:
-+	case NL80211_BAND_2GHZ:
-+		return RTW89_BAND_2G;
-+	case NL80211_BAND_5GHZ:
-+		return RTW89_BAND_5G;
-+	case NL80211_BAND_6GHZ:
-+		return RTW89_BAND_6G;
-+	}
-+}
-+
- static inline
- enum rtw89_bandwidth nl_to_rtw89_bandwidth(enum nl80211_chan_width width)
- {
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 72f6534754fff..d8f3ee7a74716 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -227,6 +227,7 @@ static const struct __fw_feat_cfg fw_feat_tbl[] = {
- 	__CFG_FW_FEAT(RTL8852A, ge, 0, 13, 36, 0, CRASH_TRIGGER),
- 	__CFG_FW_FEAT(RTL8852C, le, 0, 27, 33, 0, NO_DEEP_PS),
- 	__CFG_FW_FEAT(RTL8852C, ge, 0, 27, 34, 0, TX_WAKE),
-+	__CFG_FW_FEAT(RTL8852C, ge, 0, 27, 36, 0, SCAN_OFFLOAD),
+@@ -2550,6 +2550,11 @@ struct rtw89_imr_info {
+ 	u32 tmac_imr_set;
  };
  
- static void rtw89_fw_recognize_features(struct rtw89_dev *rtwdev)
-@@ -1895,7 +1896,7 @@ int rtw89_fw_h2c_scan_list_offload(struct rtw89_dev *rtwdev, int len,
- 	return -EBUSY;
- }
++struct rtw89_rrsr_cfgs {
++	struct rtw89_reg3_def ref_rate;
++	struct rtw89_reg3_def rsc;
++};
++
+ struct rtw89_dig_regs {
+ 	u32 seg0_pd_reg;
+ 	u32 pd_lower_bound_mask;
+@@ -2674,6 +2679,7 @@ struct rtw89_chip_info {
+ 	const struct rtw89_reg_def *dcfo_comp;
+ 	u8 dcfo_comp_sft;
+ 	const struct rtw89_imr_info *imr_info;
++	const struct rtw89_rrsr_cfgs *rrsr_cfgs;
+ };
  
--#define H2C_LEN_SCAN_OFFLOAD 20
-+#define H2C_LEN_SCAN_OFFLOAD 28
- int rtw89_fw_h2c_scan_offload(struct rtw89_dev *rtwdev,
- 			      struct rtw89_scan_option *option,
- 			      struct rtw89_vif *rtwvif)
-@@ -1926,6 +1927,8 @@ int rtw89_fw_h2c_scan_offload(struct rtw89_dev *rtwdev,
- 						       scan_info->op_pri_ch);
- 		RTW89_SET_FWCMD_SCANOFLD_TARGET_CENTRAL_CH(cmd,
- 							   scan_info->op_chan);
-+		RTW89_SET_FWCMD_SCANOFLD_TARGET_CH_BAND(cmd,
-+							scan_info->op_band);
- 	}
- 
- 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
-@@ -2360,7 +2363,7 @@ static void rtw89_hw_scan_add_chan(struct rtw89_dev *rtwdev, int chan_type,
- 
- 	if (ssid_num) {
- 		ch_info->num_pkt = ssid_num;
--		band = ch_info->ch_band;
-+		band = rtw89_hw_to_nl80211_band(ch_info->ch_band);
- 
- 		list_for_each_entry(info, &scan_info->pkt_list[band], list) {
- 			ch_info->probe_id = info->id;
-@@ -2417,7 +2420,7 @@ static int rtw89_hw_scan_add_chan_list(struct rtw89_dev *rtwdev,
- 
- 		ch_info->period = req->duration_mandatory ?
- 				  req->duration : RTW89_CHANNEL_TIME;
--		ch_info->ch_band = channel->band;
-+		ch_info->ch_band = rtw89_nl80211_to_hw_band(channel->band);
- 		ch_info->central_ch = channel->hw_value;
- 		ch_info->pri_ch = channel->hw_value;
- 		ch_info->rand_seq_num = random_seq;
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index edd43f00994c4..9d1e785d5b4e9 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -186,7 +186,7 @@ struct rtw89_h2creg_sch_tx_en {
- #define RTW89_SCANOFLD_MAX_IE_LEN 512
- #define RTW89_SCANOFLD_PKT_NONE 0xFF
- #define RTW89_SCANOFLD_DEBUG_MASK 0x1F
--#define RTW89_MAC_CHINFO_SIZE 20
-+#define RTW89_MAC_CHINFO_SIZE 24
- 
- struct rtw89_mac_chinfo {
- 	u8 period;
-@@ -2456,6 +2456,8 @@ static inline void RTW89_SET_FWCMD_SCANOFLD_TSF_SLOW(void *cmd, u32 val)
- 	le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(19, 16))
- #define RTW89_GET_MAC_C2H_SCANOFLD_STATUS(c2h) \
- 	le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(23, 20))
-+#define RTW89_GET_MAC_C2H_ACTUAL_PERIOD(c2h) \
-+	le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(31, 24))
- #define RTW89_GET_MAC_C2H_SCANOFLD_TX_FAIL(c2h) \
- 	le32_get_bits(*((const __le32 *)(c2h) + 5), GENMASK(3, 0))
- #define RTW89_GET_MAC_C2H_SCANOFLD_AIR_DENSITY(c2h) \
+ union rtw89_bus_info {
 diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 6621e98d514b2..c020a0d44cee0 100644
+index f5bae0b282082..6621e98d514b2 100644
 --- a/drivers/net/wireless/realtek/rtw89/mac.c
 +++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -3716,7 +3716,7 @@ rtw89_mac_c2h_scanofld_rsp(struct rtw89_dev *rtwdev, struct sk_buff *c2h,
+@@ -1979,6 +1979,8 @@ static int tmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
+ 
+ static int trxptcl_init(struct rtw89_dev *rtwdev, u8 mac_idx)
  {
- 	struct ieee80211_vif *vif = rtwdev->scan_info.scanning_vif;
- 	struct rtw89_chan new;
--	u8 reason, status, tx_fail, band;
-+	u8 reason, status, tx_fail, band, actual_period;
- 	u16 chan;
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_rrsr_cfgs *rrsr = chip->rrsr_cfgs;
+ 	u32 reg, val, sifs;
+ 	int ret;
  
- 	tx_fail = RTW89_GET_MAC_C2H_SCANOFLD_TX_FAIL(c2h->data);
-@@ -3724,13 +3724,14 @@ rtw89_mac_c2h_scanofld_rsp(struct rtw89_dev *rtwdev, struct sk_buff *c2h,
- 	chan = RTW89_GET_MAC_C2H_SCANOFLD_PRI_CH(c2h->data);
- 	reason = RTW89_GET_MAC_C2H_SCANOFLD_RSP(c2h->data);
- 	band = RTW89_GET_MAC_C2H_SCANOFLD_BAND(c2h->data);
-+	actual_period = RTW89_GET_MAC_C2H_ACTUAL_PERIOD(c2h->data);
+@@ -2009,6 +2011,11 @@ static int trxptcl_init(struct rtw89_dev *rtwdev, u8 mac_idx)
+ 	reg = rtw89_mac_reg_by_idx(R_AX_RXTRIG_TEST_USER_2, mac_idx);
+ 	rtw89_write32_set(rtwdev, reg, B_AX_RXTRIG_FCSCHK_EN);
  
- 	if (!(rtwdev->chip->support_bands & BIT(NL80211_BAND_6GHZ)))
- 		band = chan > 14 ? RTW89_BAND_5G : RTW89_BAND_2G;
++	reg = rtw89_mac_reg_by_idx(rrsr->ref_rate.addr, mac_idx);
++	rtw89_write32_mask(rtwdev, reg, rrsr->ref_rate.mask, rrsr->ref_rate.data);
++	reg = rtw89_mac_reg_by_idx(rrsr->rsc.addr, mac_idx);
++	rtw89_write32_mask(rtwdev, reg, rrsr->rsc.mask, rrsr->rsc.data);
++
+ 	return 0;
+ }
  
- 	rtw89_debug(rtwdev, RTW89_DBG_HW_SCAN,
--		    "band: %d, chan: %d, reason: %d, status: %d, tx_fail: %d\n",
--		    band, chan, reason, status, tx_fail);
-+		    "band: %d, chan: %d, reason: %d, status: %d, tx_fail: %d, actual: %d\n",
-+		    band, chan, reason, status, tx_fail, actual_period);
+@@ -2087,6 +2094,7 @@ static int rmac_init(struct rtw89_dev *rtwdev, u8 mac_idx)
  
- 	switch (reason) {
- 	case RTW89_SCAN_LEAVE_CH_NOTIFY:
+ static int cmac_com_init(struct rtw89_dev *rtwdev, u8 mac_idx)
+ {
++	enum rtw89_core_chip_id chip_id = rtwdev->chip->chip_id;
+ 	u32 val, reg;
+ 	int ret;
+ 
+@@ -2101,6 +2109,11 @@ static int cmac_com_init(struct rtw89_dev *rtwdev, u8 mac_idx)
+ 	val = u32_replace_bits(val, 0, B_AX_TXSC_80M_MASK);
+ 	rtw89_write32(rtwdev, reg, val);
+ 
++	if (chip_id == RTL8852A || chip_id == RTL8852B) {
++		reg = rtw89_mac_reg_by_idx(R_AX_PTCL_RRSR1, mac_idx);
++		rtw89_write32_mask(rtwdev, reg, B_AX_RRSR_RATE_EN_MASK, RRSR_OFDM_CCK_EN);
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
+index 23823f03c5218..3a8dd81acfa6b 100644
+--- a/drivers/net/wireless/realtek/rtw89/reg.h
++++ b/drivers/net/wireless/realtek/rtw89/reg.h
+@@ -1833,6 +1833,13 @@
+ #define B_AX_TXSC_40M_MASK GENMASK(7, 4)
+ #define B_AX_TXSC_20M_MASK GENMASK(3, 0)
+ 
++#define R_AX_PTCL_RRSR1 0xC090
++#define R_AX_PTCL_RRSR1_C1 0xE090
++#define B_AX_RRSR_RATE_EN_MASK GENMASK(11, 8)
++#define RRSR_OFDM_CCK_EN 3
++#define B_AX_RSC_MASK GENMASK(7, 6)
++#define B_AX_RRSR_CCK_MASK GENMASK(3, 0)
++
+ #define R_AX_CMAC_ERR_IMR 0xC160
+ #define R_AX_CMAC_ERR_IMR_C1 0xE160
+ #define B_AX_WMAC_TX_ERR_IND_EN BIT(7)
+@@ -2563,6 +2570,20 @@
+ #define WMAC_SPEC_SIFS_OFDM_52C 0x11
+ #define WMAC_SPEC_SIFS_CCK	 0xA
+ 
++#define R_AX_TRXPTCL_RRSR_CTL_0 0xCC08
++#define R_AX_TRXPTCL_RRSR_CTL_0_C1 0xEC08
++#define B_AX_RESP_TX_MACID_CCA_TH_EN BIT(31)
++#define B_AX_RESP_TX_PWRMODE_MASK GENMASK(30, 28)
++#define B_AX_FTM_RRSR_RATE_EN_MASK GENMASK(27, 24)
++#define B_AX_NESS_MASK GENMASK(23, 22)
++#define B_AX_WMAC_RESP_DOPPLEB_AX_EN BIT(21)
++#define B_AX_WMAC_RESP_DCM_EN BIT(20)
++#define B_AX_WMAC_RRSB_AX_CCK_MASK GENMASK(19, 16)
++#define B_AX_WMAC_RESP_RATE_EN_MASK GENMASK(15, 12)
++#define B_AX_WMAC_RESP_RSC_MASK GENMASK(11, 10)
++#define B_AX_WMAC_RESP_REF_RATE_SEL BIT(9)
++#define B_AX_WMAC_RESP_REF_RATE_MASK GENMASK(8, 0)
++
+ #define R_AX_MAC_LOOPBACK 0xCC20
+ #define R_AX_MAC_LOOPBACK_C1 0xEC20
+ #define B_AX_MACLBK_EN BIT(0)
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index 6cdecd833afbc..882c4bf1ace23 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -453,6 +453,11 @@ static const struct rtw89_imr_info rtw8852a_imr_info = {
+ 	.tmac_imr_set		= B_AX_TMAC_IMR_SET,
+ };
+ 
++static const struct rtw89_rrsr_cfgs rtw8852a_rrsr_cfgs = {
++	.ref_rate = {R_AX_TRXPTCL_RRSR_CTL_0, B_AX_WMAC_RESP_REF_RATE_SEL, 0},
++	.rsc = {R_AX_TRXPTCL_RRSR_CTL_0, B_AX_WMAC_RESP_RSC_MASK, 2},
++};
++
+ static const struct rtw89_dig_regs rtw8852a_dig_regs = {
+ 	.seg0_pd_reg = R_SEG0R_PD,
+ 	.pd_lower_bound_mask = B_SEG0R_PD_LOWER_BOUND_MSK,
+@@ -2224,7 +2229,8 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.page_regs		= &rtw8852a_page_regs,
+ 	.dcfo_comp		= &rtw8852a_dcfo_comp,
+ 	.dcfo_comp_sft		= 3,
+-	.imr_info		= &rtw8852a_imr_info
++	.imr_info		= &rtw8852a_imr_info,
++	.rrsr_cfgs		= &rtw8852a_rrsr_cfgs,
+ };
+ EXPORT_SYMBOL(rtw8852a_chip_info);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index a1747acd383d1..1d3b1776540f4 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -131,6 +131,11 @@ static const struct rtw89_imr_info rtw8852c_imr_info = {
+ 	.tmac_imr_set		= B_AX_TMAC_IMR_SET_V1,
+ };
+ 
++static const struct rtw89_rrsr_cfgs rtw8852c_rrsr_cfgs = {
++	.ref_rate = {R_AX_TRXPTCL_RRSR_CTL_0, B_AX_WMAC_RESP_REF_RATE_SEL, 0},
++	.rsc = {R_AX_PTCL_RRSR1, B_AX_RSC_MASK, 2},
++};
++
+ static const struct rtw89_dig_regs rtw8852c_dig_regs = {
+ 	.seg0_pd_reg = R_SEG0R_PD,
+ 	.pd_lower_bound_mask = B_SEG0R_PD_LOWER_BOUND_MSK,
+@@ -3068,7 +3073,8 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.page_regs		= &rtw8852c_page_regs,
+ 	.dcfo_comp		= &rtw8852c_dcfo_comp,
+ 	.dcfo_comp_sft		= 5,
+-	.imr_info		= &rtw8852c_imr_info
++	.imr_info		= &rtw8852c_imr_info,
++	.rrsr_cfgs		= &rtw8852c_rrsr_cfgs,
+ };
+ EXPORT_SYMBOL(rtw8852c_chip_info);
+ 
 -- 
 2.25.1
 
