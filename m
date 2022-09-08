@@ -2,99 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F57EECAAD5
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 09:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 250ABC54EE9
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 12:15:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231371AbiIHJSy (ORCPT
+        id S230223AbiIHMPn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Sep 2022 05:18:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59742 "EHLO
+        Thu, 8 Sep 2022 08:15:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230001AbiIHJSs (ORCPT
+        with ESMTP id S229574AbiIHMPl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2022 05:18:48 -0400
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6290DD293A
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Sep 2022 02:18:45 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1662628723; bh=idX9htAOlhMB3K5vdodzlR2ovFnvxgJtSye+uG5Dlog=;
+        Thu, 8 Sep 2022 08:15:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD660B7288
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Sep 2022 05:15:38 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B34EE61CC4
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Sep 2022 12:15:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F000C433C1;
+        Thu,  8 Sep 2022 12:15:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662639337;
+        bh=7CYWYb+qA5ZDBgkdQGwl08oLEGOaV3jooXzyK0p8b/E=;
         h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=SCw3997poR4wzziJwcAXbqCHPS9W6NIX7grDPj6pthtwKvcRoOA9dOV3vEbaEvzsY
-         bxA46ma9c+yZBI+cXWeKGPE3IQBlOyFBjJUlkaI6X7rx3NDf38mwS7Oj+LaG233rnf
-         nyRw7J2bkbcJkJAKlmW9TBvav8oWRLVl5ePbXNpGD8GWRWLImZqamTZhST72MZwM+m
-         e21aE1AsyYdHUGuWtr/FNNSRQ9aiDdihmQ+PpLbMgWs+qZnms2Z9hV+vTSBA68AXSR
-         0d33tYLfo2Kd/GkRjvoGAlbourxxg3d0QjFZuRKBeUy75QVnixAtw4fnhmgurVsPiK
-         s0Q65dZ8R6K6A==
-To:     Emmanuel Grumbach <egrumbach@gmail.com>
-Cc:     Gregory Greenman <gregory.greenman@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Ayala Beker <ayala.beker@intel.com>,
-        linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>
-Subject: Re: [PATCH] iwlwifi: Mark IWLMEI as broken
-In-Reply-To: <CANUX_P3NRqD2YWfkFri37F982QVaCASfyz2qaicGjc9wJ6mDYQ@mail.gmail.com>
-References: <20220907134450.1183045-1-toke@toke.dk>
- <CANUX_P3NRqD2YWfkFri37F982QVaCASfyz2qaicGjc9wJ6mDYQ@mail.gmail.com>
-Date:   Thu, 08 Sep 2022 11:18:43 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87illyxlzg.fsf@toke.dk>
+        b=U0NnvlI/DeqtccTbKaeTkksnwSVr/ILYgSSh7X9pewsi7OOU9TMYfS3H8GeMNd+Qa
+         tglqgg+L6qZF0ud49tCDkBty0HeIQF0iFwUJY6ITtcY9jBPIAKiYLuB4gqCbMn7HBQ
+         H239kd7bR5sZJkzvHIdS6Z332v8HXcFPWQlI/jDb9Mrlktik7MQ0Pb6XocUMqUmjrt
+         w/cmlV8GMPXnkLPLJD7jRYfRAytDuVBLxxfZYLdyX5XRAS3NUp2jywI5GeRhT0AogG
+         pZbdBvWGXhYB7iu6sCDpzQ7OXbpWPUW4d7xuHG+wKE0a0pdSzN5Ibtj2d2E3HRp5+F
+         VFH4u5Rp020BA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Robert Marko <robert.marko@sartura.hr>
+Cc:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] ath11k: Enable threaded NAPI on WCN6750
+In-Reply-To: <CA+HBbNEAgMPKJFrAYGUT1x-XAX81tTNj4W5xgW-bYSm5j_r_4w@mail.gmail.com>
+        (Robert Marko's message of "Thu, 8 Sep 2022 10:49:30 +0200")
+References: <20220720135113.15755-1-quic_mpubbise@quicinc.com>
+        <20220720135113.15755-2-quic_mpubbise@quicinc.com>
+        <87czceaqng.fsf@kernel.org>
+        <dcc14883-51c9-c1bb-bbea-1b309eccedf2@quicinc.com>
+        <CA+HBbNGEoSyfbs=FHtWyvBnG_jh9m=Q9KW=Pcfq+pDdHWEV4mw@mail.gmail.com>
+        <7615c815-ca2e-c6f1-b627-6e10f1272442@quicinc.com>
+        <CA+HBbNEm9GhYcXQ9gXEb=U4x=BZTDp4UBqF8eNH1N0uCBLdadQ@mail.gmail.com>
+        <5c07bcd5-574c-b13b-44c2-ef8ed9f23cf0@quicinc.com>
+        <878rmucqhu.fsf@kernel.org>
+        <CA+HBbNEAgMPKJFrAYGUT1x-XAX81tTNj4W5xgW-bYSm5j_r_4w@mail.gmail.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+Date:   Thu, 08 Sep 2022 15:15:31 +0300
+Message-ID: <87tu5i83ks.fsf@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Emmanuel Grumbach <egrumbach@gmail.com> writes:
+Robert Marko <robert.marko@sartura.hr> writes:
 
-> Hi,
+> On Thu, Sep 8, 2022 at 8:46 AM Kalle Valo <kvalo@kernel.org> wrote:
 >
+>>
+>> Manikanta Pubbisetty <quic_mpubbise@quicinc.com> writes:
+>>
+>> > On 9/2/2022 7:16 PM, Robert Marko wrote:
+>> >> On Fri, Sep 2, 2022 at 3:42 PM Manikanta Pubbisetty
+>> >> <quic_mpubbise@quicinc.com> wrote:
+>> >>>
+>> >>> On 9/2/2022 6:50 PM, Robert Marko wrote:
+>> >>>> On Fri, Sep 2, 2022 at 3:18 PM Manikanta Pubbisetty
+>> >>>> <quic_mpubbise@quicinc.com> wrote:
+>> >>>>>
+>> >>>>> Regardless of the chip family, even I feel that the tput changes like
+>> >>>>> these should be tested on all the chipsets. Availability of the hardware
+>> >>>>> and time are something which are stopping me in testing the changes on
+>> >>>>> all supported targets.
+>> >>>>>
+>> >>>>> As I said, I had made the changes only to WCN6750 initially (using a
+>> >>>>> hw_param). Can we take that approach for now and enable this for other
+>> >>>>> targets only if required & upon thorough testing?
+>> >>>>
+>> >>>> I can tell you that on IPQ8074 threaded NAPI really improves perfromance.
+>> >>>>
+>> >>>
+>> >>> Great. Do you have any test results on IPQ8074?
+>> >>
+>> >> I dont have full test results, but on Poco F2 Pro as the client @80MHz AX
+>> >> I got ~720Mbps compared to ~550Mbps before.
+>> >>
+>> >> I can tell you that in OpenWrt, we have had it enabled for 6+ months
+>> >> at this point
+>> >> and its been really good.
+>> >>
+>> >
+>> > That's a significant improvement, great to hear that. We have another
+>> > strong reason to have this change in upstream driver.
+>>
+>> Indeed, thanks Robert. Is the code in openwrt similar as what
+>> Manikanta's patch does?
 >
-> On Wed, Sep 7, 2022 at 5:02 PM Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
-e.dk> wrote:
->>
->> From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
->>
->> The iwlmei driver breaks iwlwifi when returning from suspend; the bug
->> report[0] has been open for four months now, and now fix seems to be
->> forthcoming. Since just disabling the iwlmei driver works as a workaroun=
-d,
->> let's mark the config option as broken until it can be fixed properly.
->>
->> [0] https://bugzilla.kernel.org/show_bug.cgi?id=3D215937
->>
->> Fixes: 2da4366f9e2c ("iwlwifi: mei: add the driver to allow cooperation =
-with CSME")
->> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
->
-> I am not very proud of this, to say the least, but unfortunately,
-> despite Toke's patience and
-> his willingness to provide logs and all, I couldn't find the time to fix =
-this.
+> It's actually identical, we are also just calling dev_set_threaded
+> before napi_enable.
 
-Well, thanks for your efforts anyway :)
+Nice, even better :)
 
-> We had tested against NetworkManager wpa_s, but not against iwd.
-> From the start, we thought distro wouldn't enable this and this is why
-> we disabled iwlmei by default.
-> This driver is meant to be used by specific groups that need this and
-> they'll know how to enable this
-> driver even if it is marked as BROKEN.
->
-> This is why, with a heavy heart:
-> Acked-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-Thanks!
-
-> I'd also suggest to CC this to stable 5.17+
-
-I expect the Fixes tag will be enough to get this pulled into stable,
-but I'll try to keep an eye on it and submit it there manually if not...
-
-> Thanks Toke and Sorry!
-
-You're welcome :)
-
--Toke
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
