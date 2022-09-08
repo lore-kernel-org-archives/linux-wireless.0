@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B40DBC6FA83
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 07:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC058C38145
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Sep 2022 07:42:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230266AbiIHHmd (ORCPT
+        id S230371AbiIHHme (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Sep 2022 03:42:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37678 "EHLO
+        Thu, 8 Sep 2022 03:42:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230112AbiIHHm3 (ORCPT
+        with ESMTP id S229792AbiIHHm3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 8 Sep 2022 03:42:29 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2277FD51DE
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Sep 2022 00:42:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ECA5BD51EE
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Sep 2022 00:42:27 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2887fvOJ3010385, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2887fvOJ3010385
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2887frKrB010329, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2887frKrB010329
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Thu, 8 Sep 2022 15:41:57 +0800
+        Thu, 8 Sep 2022 15:41:53 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Thu, 8 Sep 2022 15:42:16 +0800
+ 15.1.2375.31; Thu, 8 Sep 2022 15:42:12 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 8 Sep 2022
- 15:42:16 +0800
+ 15:42:11 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 5/5] wifi: rtw89: support TX diversity for 1T2R chipset
-Date:   Thu, 8 Sep 2022 15:41:40 +0800
-Message-ID: <20220908074140.39776-6-pkshih@realtek.com>
+Subject: [PATCH v3 1/5] wifi: rtw89: use u32_get_bits to access C2H content of PHY capability
+Date:   Thu, 8 Sep 2022 15:41:36 +0800
+Message-ID: <20220908074140.39776-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220908074140.39776-1-pkshih@realtek.com>
 References: <20220908074140.39776-1-pkshih@realtek.com>
@@ -56,176 +56,112 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvOCCkV6TIIDA2OjAwOjAw?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Check RSSI strength to decide which path is better, and then set TX path
-accordingly.
+The definitions of bit fields in structure will be wrong in big-endian
+platform, so use u32_get_bits() to access them.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c  |  1 +
- drivers/net/wireless/realtek/rtw89/core.h  |  1 +
- drivers/net/wireless/realtek/rtw89/debug.c |  4 +-
- drivers/net/wireless/realtek/rtw89/phy.c   | 56 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/phy.h   |  1 +
- drivers/net/wireless/realtek/rtw89/reg.h   |  6 +++
- 6 files changed, 68 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/fw.h  | 41 +++++++++++++++---------
+ drivers/net/wireless/realtek/rtw89/mac.c | 17 +++++-----
+ 2 files changed, 35 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 0f474b50b161e..8c64af9157e49 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -2218,6 +2218,7 @@ static void rtw89_track_work(struct work_struct *work)
- 	rtw89_chip_rfk_track(rtwdev);
- 	rtw89_phy_ra_update(rtwdev);
- 	rtw89_phy_cfo_track(rtwdev);
-+	rtw89_phy_tx_path_div_track(rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index edd43f00994c4..de70d012cd9bc 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -63,21 +63,32 @@ enum rtw89_mac_c2h_type {
+ 	RTW89_FWCMD_C2HREG_FUNC_NULL = 0xFF
+ };
  
- 	if (rtwdev->lps_enabled && !rtwdev->btc.lps)
- 		rtw89_enter_lps_track(rtwdev);
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 392a8bf4372e8..40453ed6a6997 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -34,6 +34,7 @@ extern const struct ieee80211_ops rtw89_ops;
- #define MAX_RSSI 110
- #define RSSI_FACTOR 1
- #define RTW89_RSSI_RAW_TO_DBM(rssi) ((s8)((rssi) >> RSSI_FACTOR) - MAX_RSSI)
-+#define RTW89_TX_DIV_RSSI_RAW_TH (2 << RSSI_FACTOR)
+-struct rtw89_c2h_phy_cap {
+-	u32 func:7;
+-	u32 ack:1;
+-	u32 len:4;
+-	u32 seq:4;
+-	u32 rx_nss:8;
+-	u32 bw:8;
+-
+-	u32 tx_nss:8;
+-	u32 prot:8;
+-	u32 nic:8;
+-	u32 wl_func:8;
+-
+-	u32 hw_type:8;
+-} __packed;
++#define RTW89_GET_C2H_PHYCAP_FUNC(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(6, 0))
++#define RTW89_GET_C2H_PHYCAP_ACK(info) \
++	u32_get_bits(*((const u32 *)(info)), BIT(7))
++#define RTW89_GET_C2H_PHYCAP_LEN(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(11, 8))
++#define RTW89_GET_C2H_PHYCAP_SEQ(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(15, 12))
++#define RTW89_GET_C2H_PHYCAP_RX_NSS(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(23, 16))
++#define RTW89_GET_C2H_PHYCAP_BW(info) \
++	u32_get_bits(*((const u32 *)(info)), GENMASK(31, 24))
++#define RTW89_GET_C2H_PHYCAP_TX_NSS(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(7, 0))
++#define RTW89_GET_C2H_PHYCAP_PROT(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(15, 8))
++#define RTW89_GET_C2H_PHYCAP_NIC(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(23, 16))
++#define RTW89_GET_C2H_PHYCAP_WL_FUNC(info) \
++	u32_get_bits(*((const u32 *)(info) + 1), GENMASK(31, 24))
++#define RTW89_GET_C2H_PHYCAP_HW_TYPE(info) \
++	u32_get_bits(*((const u32 *)(info) + 2), GENMASK(7, 0))
++#define RTW89_GET_C2H_PHYCAP_ANT_TX_NUM(info) \
++	u32_get_bits(*((const u32 *)(info) + 3), GENMASK(15, 8))
++#define RTW89_GET_C2H_PHYCAP_ANT_RX_NUM(info) \
++	u32_get_bits(*((const u32 *)(info) + 3), GENMASK(23, 16))
  
- #define RTW89_HTC_MASK_VARIANT GENMASK(1, 0)
- #define RTW89_HTC_VARIANT_HE 3
-diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
-index a34f612ac8d90..eed28c3b440f4 100644
---- a/drivers/net/wireless/realtek/rtw89/debug.c
-+++ b/drivers/net/wireless/realtek/rtw89/debug.c
-@@ -2291,6 +2291,7 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
- 	struct ieee80211_rx_status *status = &rtwsta->rx_status;
- 	struct seq_file *m = (struct seq_file *)data;
- 	struct rtw89_dev *rtwdev = rtwsta->rtwdev;
-+	struct rtw89_hal *hal = &rtwdev->hal;
- 	u8 rssi;
- 	int i;
+ enum rtw89_fw_c2h_category {
+ 	RTW89_C2H_CAT_TEST,
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index f5bae0b282082..a845575124486 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -2262,23 +2262,24 @@ int rtw89_mac_setup_phycap(struct rtw89_dev *rtwdev)
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_mac_c2h_info c2h_info = {0};
+-	struct rtw89_c2h_phy_cap *cap =
+-		(struct rtw89_c2h_phy_cap *)&c2h_info.c2hreg[0];
++	u8 tx_nss;
++	u8 rx_nss;
+ 	u32 ret;
  
-@@ -2341,7 +2342,8 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
- 		   RTW89_RSSI_RAW_TO_DBM(rssi), rssi, rtwsta->prev_rssi);
- 	for (i = 0; i < rtwdev->chip->rf_path_num; i++) {
- 		rssi = ewma_rssi_read(&rtwsta->rssi[i]);
--		seq_printf(m, "%d%s", RTW89_RSSI_RAW_TO_DBM(rssi),
-+		seq_printf(m, "%d%s%s", RTW89_RSSI_RAW_TO_DBM(rssi),
-+			   hal->tx_path_diversity && (hal->antenna_tx & BIT(i)) ? "*" : "",
- 			   i + 1 == rtwdev->chip->rf_path_num ? "" : ", ");
- 	}
- 	seq_puts(m, "]\n");
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index a2ebef0051b83..9733ad1135f16 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -3660,6 +3660,62 @@ void rtw89_phy_dig(struct rtw89_dev *rtwdev)
- 		rtw89_phy_dig_sdagc_follow_pagc_config(rtwdev, false);
+ 	ret = rtw89_mac_read_phycap(rtwdev, &c2h_info);
+ 	if (ret)
+ 		return ret;
+ 
+-	hal->tx_nss = cap->tx_nss ?
+-		      min_t(u8, cap->tx_nss, chip->tx_nss) : chip->tx_nss;
+-	hal->rx_nss = cap->rx_nss ?
+-		      min_t(u8, cap->rx_nss, chip->rx_nss) : chip->rx_nss;
++	tx_nss = RTW89_GET_C2H_PHYCAP_TX_NSS(c2h_info.c2hreg);
++	rx_nss = RTW89_GET_C2H_PHYCAP_RX_NSS(c2h_info.c2hreg);
++
++	hal->tx_nss = tx_nss ? min_t(u8, tx_nss, chip->tx_nss) : chip->tx_nss;
++	hal->rx_nss = rx_nss ? min_t(u8, rx_nss, chip->rx_nss) : chip->rx_nss;
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_FW,
+ 		    "phycap hal/phy/chip: tx_nss=0x%x/0x%x/0x%x rx_nss=0x%x/0x%x/0x%x\n",
+-		    hal->tx_nss, cap->tx_nss, chip->tx_nss,
+-		    hal->rx_nss, cap->rx_nss, chip->rx_nss);
++		    hal->tx_nss, tx_nss, chip->tx_nss,
++		    hal->rx_nss, rx_nss, chip->rx_nss);
+ 
+ 	return 0;
  }
- 
-+static void rtw89_phy_tx_path_div_sta_iter(void *data, struct ieee80211_sta *sta)
-+{
-+	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
-+	struct rtw89_dev *rtwdev = rtwsta->rtwdev;
-+	struct rtw89_vif *rtwvif = rtwsta->rtwvif;
-+	struct rtw89_hal *hal = &rtwdev->hal;
-+	bool *done = data;
-+	u8 rssi_a, rssi_b;
-+	u32 candidate;
-+
-+	if (rtwvif->wifi_role != RTW89_WIFI_ROLE_STATION || sta->tdls)
-+		return;
-+
-+	if (*done)
-+		return;
-+
-+	*done = true;
-+
-+	rssi_a = ewma_rssi_read(&rtwsta->rssi[RF_PATH_A]);
-+	rssi_b = ewma_rssi_read(&rtwsta->rssi[RF_PATH_B]);
-+
-+	if (rssi_a > rssi_b + RTW89_TX_DIV_RSSI_RAW_TH)
-+		candidate = RF_A;
-+	else if (rssi_b > rssi_a + RTW89_TX_DIV_RSSI_RAW_TH)
-+		candidate = RF_B;
-+	else
-+		return;
-+
-+	if (hal->antenna_tx == candidate)
-+		return;
-+
-+	hal->antenna_tx = candidate;
-+	rtw89_fw_h2c_txpath_cmac_tbl(rtwdev, rtwsta);
-+
-+	if (hal->antenna_tx == RF_A) {
-+		rtw89_phy_write32_mask(rtwdev, R_P0_RFMODE, B_P0_RFMODE_MUX, 0x12);
-+		rtw89_phy_write32_mask(rtwdev, R_P1_RFMODE, B_P1_RFMODE_MUX, 0x11);
-+	} else if (hal->antenna_tx == RF_B) {
-+		rtw89_phy_write32_mask(rtwdev, R_P0_RFMODE, B_P0_RFMODE_MUX, 0x11);
-+		rtw89_phy_write32_mask(rtwdev, R_P1_RFMODE, B_P1_RFMODE_MUX, 0x12);
-+	}
-+}
-+
-+void rtw89_phy_tx_path_div_track(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hal *hal = &rtwdev->hal;
-+	bool done = false;
-+
-+	if (!hal->tx_path_diversity)
-+		return;
-+
-+	ieee80211_iterate_stations_atomic(rtwdev->hw,
-+					  rtw89_phy_tx_path_div_sta_iter,
-+					  &done);
-+}
-+
- static void rtw89_phy_env_monitor_init(struct rtw89_dev *rtwdev)
- {
- 	rtw89_phy_ccx_top_setting_init(rtwdev);
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index 0eeab18fd97e8..ee3bc5e111e16 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.h
-+++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -491,6 +491,7 @@ void rtw89_phy_set_phy_regs(struct rtw89_dev *rtwdev, u32 addr, u32 mask,
- 			    u32 val);
- void rtw89_phy_dig_reset(struct rtw89_dev *rtwdev);
- void rtw89_phy_dig(struct rtw89_dev *rtwdev);
-+void rtw89_phy_tx_path_div_track(struct rtw89_dev *rtwdev);
- void rtw89_phy_set_bss_color(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif);
- void rtw89_phy_tssi_ctrl_set_bandedge_cfg(struct rtw89_dev *rtwdev,
- 					  enum rtw89_mac_idx mac_idx,
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 38139fff03475..cd7b21b49df8f 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3553,6 +3553,9 @@
- #define B_P0_RXCK_VAL GENMASK(18, 16)
- #define B_P0_TXCK_ON BIT(15)
- #define B_P0_TXCK_VAL GENMASK(14, 12)
-+#define R_P0_RFMODE 0x12AC
-+#define B_P0_RFMODE_ORI_TXRX_FTM_TX GENMASK(31, 4)
-+#define B_P0_RFMODE_MUX GENMASK(11, 4)
- #define R_P0_NRBW 0x12B8
- #define B_P0_NRBW_DBG BIT(30)
- #define R_S0_RXDC 0x12D4
-@@ -3659,6 +3662,9 @@
- #define B_P1_EN_SOUND_WO_NDP BIT(1)
- #define R_S1_HW_SI_DIS 0x3200
- #define B_S1_HW_SI_DIS_W_R_TRIG GENMASK(30, 28)
-+#define R_P1_RFMODE 0x32AC
-+#define B_P1_RFMODE_ORI_TXRX_FTM_TX GENMASK(31, 4)
-+#define B_P1_RFMODE_MUX GENMASK(11, 4)
- #define R_P1_DBGMOD 0x32B8
- #define B_P1_DBGMOD_ON BIT(30)
- #define R_S1_RXDC 0x32D4
 -- 
 2.25.1
 
