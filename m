@@ -2,104 +2,139 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3246ECAAD5
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Sep 2022 07:21:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C73C6FA83
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Sep 2022 07:46:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229741AbiILHVX (ORCPT
+        id S230041AbiILHqu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Sep 2022 03:21:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56788 "EHLO
+        Mon, 12 Sep 2022 03:46:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230036AbiILHU5 (ORCPT
+        with ESMTP id S230005AbiILHqn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2022 03:20:57 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7D95832069
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2022 00:17:54 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28C7HKiD4019106, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28C7HKiD4019106
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Mon, 12 Sep 2022 15:17:20 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Mon, 12 Sep 2022 15:17:40 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 12 Sep
- 2022 15:17:40 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <timlee@realtek.com>, <kevin_yang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] wifi: rtw89: 8852c: L1 DMA reset has offloaded to FW
-Date:   Mon, 12 Sep 2022 15:17:04 +0800
-Message-ID: <20220912071706.13619-2-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220912071706.13619-1-pkshih@realtek.com>
-References: <20220912071706.13619-1-pkshih@realtek.com>
+        Mon, 12 Sep 2022 03:46:43 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9A791A3B9;
+        Mon, 12 Sep 2022 00:46:35 -0700 (PDT)
+X-UUID: 974102ee514c46779d604914c54fb22d-20220912
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=8nqBvEoYhhM10pqeIUysrjTuBKAUboHsqeHxK1jGstA=;
+        b=O6uT2cFoKC41d0EaVV522525+9lckgOck4c3Lt1VN2TQTqYA1cHorzfZpXEWa44CMguIlQ4oEu2XmMgB9e5MGOwqpsDUxuwl0hy5YrTEJH+fBDgBtN6fTNS0YQIODeYd19TVa2rz8oXgy++M41Cs506qekQPNG8chPw0gBz565c=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.10,REQID:fc17f0b4-2541-4899-9761-8f5c472f4cd7,OB:0,L
+        OB:0,IP:0,URL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Releas
+        e_Ham,ACTION:release,TS:-25
+X-CID-META: VersionHash:84eae18,CLOUDID:1b0b1bec-2856-4fce-b125-09d4c7ebe045,C
+        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
+        ,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 974102ee514c46779d604914c54fb22d-20220912
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1867544988; Mon, 12 Sep 2022 15:46:30 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Mon, 12 Sep 2022 15:46:28 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Mon, 12 Sep 2022 15:46:28 +0800
+From:   Deren Wu <Deren.Wu@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
+CC:     Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        "Eric-SY Chang" <Eric-SY.Chang@mediatek.com>,
+        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        "Ryder Lee" <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Deren Wu <deren.wu@mediatek.com>, <stable@vger.kernel.org>
+Subject: [PATCH] wifi: mt76: mt7921e: fix random fw download fail
+Date:   Mon, 12 Sep 2022 15:45:48 +0800
+Message-ID: <c513094e569a21f23c9b5dfe17cd299b76b514d2.1662968113.git.deren.wu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 09/12/2022 06:51:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvMTIgpFekyCAwMjozNzowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Deren Wu <deren.wu@mediatek.com>
 
-For 8852C, rtw89_pci_lv1rst_stop_dma() and rtw89_pci_lv1rst_start_dma()
-are offloaded to FW L1 reset flow. So, driver no longer needs to do them.
+In case of PCIe interoperability problem shows up, the firmware
+payload my be corrupted in download stage. Turn off L0s to keep
+fw download process accurately.
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+[ 1093.528363] mt7921e 0000:3b:00.0: Message 00000007 (seq 7) timeout
+[ 1093.528414] mt7921e 0000:3b:00.0: Failed to start patch
+[ 1096.600156] mt7921e 0000:3b:00.0: Message 00000010 (seq 8) timeout
+[ 1096.600207] mt7921e 0000:3b:00.0: Failed to release patch semaphore
+[ 1097.699031] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1098.758427] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1099.834408] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1100.915264] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1101.990625] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1103.077587] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1104.173258] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1105.248466] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1106.336969] mt7921e 0000:3b:00.0: Timeout for driver own
+[ 1106.397542] mt7921e 0000:3b:00.0: hardware init failed
+
+Cc: stable@vger.kernel.org
+Fixes: bf3747ae2e25 ("mt76: mt7921: enable aspm by default")
+Signed-off-by: Deren Wu <deren.wu@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtw89/pci.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7921/pci.c     | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c | 2 ++
+ drivers/net/wireless/mediatek/mt76/mt7921/regs.h    | 2 ++
+ 3 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index d2cbe0468cd78..2c59ae06e4db9 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -3520,6 +3520,9 @@ static int rtw89_pci_lv1rst_stop_dma(struct rtw89_dev *rtwdev)
- 	u32 val, dma_rst = 0;
- 	int ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 9d1ba838e54f..43a8deeb17df 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -148,6 +148,7 @@ static u32 __mt7921_reg_addr(struct mt7921_dev *dev, u32 addr)
+ 		{ 0x820c8000, 0x0c000, 0x02000 }, /* WF_UMAC_TOP (PSE) */
+ 		{ 0x820cc000, 0x0e000, 0x01000 }, /* WF_UMAC_TOP (PP) */
+ 		{ 0x820cd000, 0x0f000, 0x01000 }, /* WF_MDP_TOP */
++		{ 0x74030000, 0x10000, 0x10000 }, /* PCIE_MAC_IREG */
+ 		{ 0x820ce000, 0x21c00, 0x00200 }, /* WF_LMAC_TOP (WF_SEC) */
+ 		{ 0x820cf000, 0x22000, 0x01000 }, /* WF_LMAC_TOP (WF_PF) */
+ 		{ 0x820e0000, 0x20000, 0x00400 }, /* WF_LMAC_TOP BN0 (WF_CFG) */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
+index 5efda694fb9d..19facf31e4e1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mcu.c
+@@ -59,6 +59,8 @@ int mt7921e_mcu_init(struct mt7921_dev *dev)
+ 	if (err)
+ 		return err;
  
-+	if (rtwdev->chip->chip_id == RTL8852C)
-+		return 0;
++	mt76_rmw_field(dev, MT_PCIE_MAC_PM, MT_PCIE_MAC_PM_L0S_DIS, 1);
 +
- 	rtw89_pci_ctrl_dma_all_pcie(rtwdev, MAC_AX_FUNC_DIS);
- 	ret = rtw89_pci_poll_io_idle(rtwdev);
- 	if (ret) {
-@@ -3575,6 +3578,9 @@ static int rtw89_pci_lv1rst_start_dma(struct rtw89_dev *rtwdev)
- {
- 	u32 ret;
+ 	err = mt7921_run_firmware(dev);
  
-+	if (rtwdev->chip->chip_id == RTL8852C)
-+		return 0;
-+
- 	rtw89_pci_ctrl_hci_dma_en(rtwdev, MAC_AX_FUNC_DIS);
- 	rtw89_pci_ctrl_hci_dma_en(rtwdev, MAC_AX_FUNC_EN);
- 	rtw89_pci_clr_idx_all(rtwdev);
+ 	mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[MT_MCUQ_FWDL], false);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+index ea643260ceb6..c65582acfa55 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+@@ -440,6 +440,8 @@
+ #define MT_PCIE_MAC_BASE		0x10000
+ #define MT_PCIE_MAC(ofs)		(MT_PCIE_MAC_BASE + (ofs))
+ #define MT_PCIE_MAC_INT_ENABLE		MT_PCIE_MAC(0x188)
++#define MT_PCIE_MAC_PM			MT_PCIE_MAC(0x194)
++#define MT_PCIE_MAC_PM_L0S_DIS		BIT(8)
+ 
+ #define MT_DMA_SHDL(ofs)		(0x7c026000 + (ofs))
+ #define MT_DMASHDL_SW_CONTROL		MT_DMA_SHDL(0x004)
 -- 
-2.25.1
+2.18.0
 
