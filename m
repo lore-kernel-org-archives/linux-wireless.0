@@ -2,72 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B39CC6FA83
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Sep 2022 09:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B53ECAAA1
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Sep 2022 01:44:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230049AbiIKJCy (ORCPT
+        id S229643AbiILBoW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Sep 2022 05:02:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48792 "EHLO
+        Sun, 11 Sep 2022 21:44:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230055AbiIKJCs (ORCPT
+        with ESMTP id S229514AbiILBoV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Sep 2022 05:02:48 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8C53399E4;
-        Sun, 11 Sep 2022 02:02:45 -0700 (PDT)
-Received: from kwepemi500012.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4MQNx80db2zHnm7;
-        Sun, 11 Sep 2022 17:00:44 +0800 (CST)
-Received: from cgs.huawei.com (10.244.148.83) by
- kwepemi500012.china.huawei.com (7.221.188.12) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Sun, 11 Sep 2022 17:02:42 +0800
-From:   Gaosheng Cui <cuigaosheng1@huawei.com>
-To:     <gregory.greenman@intel.com>, <kvalo@kernel.org>,
-        <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
-        <pabeni@redhat.com>, <luciano.coelho@intel.com>,
-        <johannes.berg@intel.com>, <cuigaosheng1@huawei.com>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH 1/2] iwlwifi: remove killer1650w_2ax_cfg and killer1650x_2ax_cfg declarations
-Date:   Sun, 11 Sep 2022 17:02:40 +0800
-Message-ID: <20220911090241.3207201-2-cuigaosheng1@huawei.com>
+        Sun, 11 Sep 2022 21:44:21 -0400
+Received: from mail-pf1-f196.google.com (mail-pf1-f196.google.com [209.85.210.196])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D23F525287;
+        Sun, 11 Sep 2022 18:44:19 -0700 (PDT)
+Received: by mail-pf1-f196.google.com with SMTP id l65so7173889pfl.8;
+        Sun, 11 Sep 2022 18:44:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=lJBwS02KAdobM2rJ9xyt/rRL/BLUdzQqKDAHOmdhQwE=;
+        b=p85UjUmP2Lios22KIJ1lGnXzUVoB8WGNtVNiKpYyWA0pivm5pJQIc0wEFwCFmeCUjo
+         Wun/OV/UwGUigaV2rGTC4HErTUg5AeVrRaY4zpy4ruvst1ptwehW8W2/RShIo7F+IJRH
+         GyCS31pXt/hIZWLkuamC36YeNRSXU48wUZSzFanxZ21DF3jzWFpMIyiBRUd5EqMjC47V
+         DI9l6y3xtDK8sx2CX544rhBhRJ2zefSlXbfzoelwLwXUpBxK744MqHUdKwkql+nwvneb
+         ZZkHmayDSCaqjg5rtn3+rD49tVUKaMJWiWYR+oCxbZtILEkVkwM6Zj31pYhO9sOC6s52
+         7F8A==
+X-Gm-Message-State: ACgBeo3b1WxwT767V+QnYHUPNyFcqbm9g2Ouomps6JCqB5TVriVsleFY
+        1qIXRC1C/xLaU3EdJluFyQ==
+X-Google-Smtp-Source: AA6agR4GNqbOZMdL3AGFjqFghIhvbmujkopFW5+Iqj+rUm/hhwSHEaE0h5hU1bAS0LtxtBqJy12zRA==
+X-Received: by 2002:a05:6a00:1910:b0:52f:13d7:44c4 with SMTP id y16-20020a056a00191000b0052f13d744c4mr24491877pfi.32.1662947059307;
+        Sun, 11 Sep 2022 18:44:19 -0700 (PDT)
+Received: from localhost.localdomain ([156.146.53.107])
+        by smtp.gmail.com with ESMTPSA id y65-20020a62ce44000000b00536816c0d4asm4055702pfg.147.2022.09.11.18.44.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 11 Sep 2022 18:44:18 -0700 (PDT)
+From:   sunliming <sunliming@kylinos.cn>
+To:     pkshih@realtek.com, kvalo@kernel.org, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kelulanainsley@gmail.com, sunliming <sunliming@kylinos.cn>,
+        kernel test robot <lkp@intel.com>
+Subject: [PATCH] rtw89: coex: fix for variable set but not used warning
+Date:   Mon, 12 Sep 2022 09:44:11 +0800
+Message-Id: <20220912014411.1432175-1-sunliming@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220911090241.3207201-1-cuigaosheng1@huawei.com>
-References: <20220911090241.3207201-1-cuigaosheng1@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.244.148.83]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500012.china.huawei.com (7.221.188.12)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-killer1650w_2ax_cfg and killer1650x_2ax_cfg have been removed since
-commit 5e003982b07a ("iwlwifi: move AX200 devices to the new table"),
-so remove them.
+Fix below kernel warning:
+drivers/net/wireless/realtek/rtw89/coex.c:3244:25: warning: variable 'cnt_connecting'
+set but not used [-Wunused-but-set-variable]
 
-Signed-off-by: Gaosheng Cui <cuigaosheng1@huawei.com>
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: sunliming <sunliming@kylinos.cn>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index f5b556a103e8..dd30a997c172 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -620,8 +620,6 @@ extern const struct iwl_cfg killer1650s_2ax_cfg_qu_b0_hr_b0;
- extern const struct iwl_cfg killer1650i_2ax_cfg_qu_b0_hr_b0;
- extern const struct iwl_cfg killer1650s_2ax_cfg_qu_c0_hr_b0;
- extern const struct iwl_cfg killer1650i_2ax_cfg_qu_c0_hr_b0;
--extern const struct iwl_cfg killer1650x_2ax_cfg;
--extern const struct iwl_cfg killer1650w_2ax_cfg;
- extern const struct iwl_cfg iwl_qnj_b0_hr_b0_cfg;
- extern const struct iwl_cfg iwlax210_2ax_cfg_so_jf_b0;
- extern const struct iwl_cfg iwlax211_2ax_cfg_so_gf_a0;
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index 683854bba217..ee4817358c35 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -3290,7 +3290,7 @@ static void _update_wl_info(struct rtw89_dev *rtwdev)
+ 	struct rtw89_btc_wl_link_info *wl_linfo = wl->link_info;
+ 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
+ 	struct rtw89_btc_wl_dbcc_info *wl_dinfo = &wl->dbcc_info;
+-	u8 i, cnt_connect = 0, cnt_connecting = 0, cnt_active = 0;
++	u8 i, cnt_connect = 0, cnt_active = 0;
+ 	u8 cnt_2g = 0, cnt_5g = 0, phy;
+ 	u32 wl_2g_ch[2] = {0}, wl_5g_ch[2] = {0};
+ 	bool b2g = false, b5g = false, client_joined = false;
+@@ -3324,9 +3324,7 @@ static void _update_wl_info(struct rtw89_dev *rtwdev)
+ 
+ 		if (wl_linfo[i].connected == MLME_NO_LINK) {
+ 			continue;
+-		} else if (wl_linfo[i].connected == MLME_LINKING) {
+-			cnt_connecting++;
+-		} else {
++		} else if (wl_linfo[i].connected != MLME_LINKING) {
+ 			cnt_connect++;
+ 			if ((wl_linfo[i].role == RTW89_WIFI_ROLE_P2P_GO ||
+ 			     wl_linfo[i].role == RTW89_WIFI_ROLE_AP) &&
 -- 
 2.25.1
 
