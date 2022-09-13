@@ -2,410 +2,166 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41CCDC6FA83
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Sep 2022 22:15:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2107C6FA83
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Sep 2022 00:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230293AbiILWPk (ORCPT
+        id S229629AbiIMAnl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Sep 2022 18:15:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34358 "EHLO
+        Mon, 12 Sep 2022 20:43:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230292AbiILWOk (ORCPT
+        with ESMTP id S229518AbiIMAnk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2022 18:14:40 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 498454E848;
-        Mon, 12 Sep 2022 15:14:00 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28CK012t007156;
-        Mon, 12 Sep 2022 22:13:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding :
- content-type; s=qcppdkim1;
- bh=DRxI8WtvP7N6NAkSiy/KPGp6Kl2U9dUfyD4FiVUj7rU=;
- b=FTR5Coedskovmd6TNt0kqIDGUjqgbennARYfP/lf7luknVymlGVp8P8v3WIHpqVXdbMu
- o3H3SLRaH/fxHfrwMb+VDqfDqXM+lPmYmjP5GUKY9WRtr+zdvZ3C9EPtojRx/tn6ZL4N
- eW6deFNvjeiz2jvIPbFYHfkAVviqRB0/WKIe5HnMc0L7YV/LVo7Xnz591GtgD5/7VOFG
- XY+40JflFZQs8vE9J0njVTcgAIIwA+kAg0g617zNWi6HPqCfd2kBy5NIze325cxmdIav
- iFgCcynEuQqH2Spe9CbqYLJvYQ4OXxWT8nLw93gphPe3MG2Vn5vMw7tLFANOvc6kiqdK 1w== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jgkgknc8g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Sep 2022 22:13:43 +0000
-Received: from pps.filterd (NALASPPMTA04.qualcomm.com [127.0.0.1])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 28CMDfsc016239;
-        Mon, 12 Sep 2022 22:13:41 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 3jh43se8b0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Sep 2022 22:13:41 +0000
-Received: from NALASPPMTA04.qualcomm.com (NALASPPMTA04.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 28CMDf8R016233;
-        Mon, 12 Sep 2022 22:13:41 GMT
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (PPS) with ESMTPS id 28CMDfmM016232
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 12 Sep 2022 22:13:41 +0000
-Received: from quicinc.com (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Mon, 12 Sep
- 2022 15:13:41 -0700
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-To:     Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-CC:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH] wifi: ath11k: Make QMI message rules const
-Date:   Mon, 12 Sep 2022 15:13:35 -0700
-Message-ID: <20220912221335.27520-1-quic_jjohnson@quicinc.com>
-X-Mailer: git-send-email 2.37.0
+        Mon, 12 Sep 2022 20:43:40 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B73CE5007E
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2022 17:43:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1663029819; x=1694565819;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=0iVMdILEFLjPV8GdCF1vrOXrDe6ZlR5gIHm7ALqKrK4=;
+  b=hahPNVfn3WX64ArOYAuGAGe08WfU5T497indHt0QdT+bVTZvMxIcSh0H
+   R9h6t/wY+NMMljxCc9q82mnhDON1wWNhd8pYlRmNjsTIuzjDppMQ0Dh9p
+   81PpOLHSKsqQObvq1RDIU7EvoVfC9KziFLuDAOqcEYNtzuf3NpPujYATg
+   Vmw8StfkSKUlPRvxbW9uLxLGea2r4VzLawqLOOSQON45BjP6/SoBSAzZm
+   JwOD+GoRVZsPAvOuWCZ6S0+CSPhvkbu4An4LIci/t74VkHm3jq5nCh78+
+   T1wkV2X/53WWgG0gUg3UarYpickTQ1fvB9MsSi6/KomssRFqSJ5sE+zXi
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10468"; a="359730402"
+X-IronPort-AV: E=Sophos;i="5.93,311,1654585200"; 
+   d="scan'208";a="359730402"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Sep 2022 17:43:39 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,311,1654585200"; 
+   d="scan'208";a="758590470"
+Received: from lkp-server02.sh.intel.com (HELO 4011df4f4fd3) ([10.239.97.151])
+  by fmsmga001.fm.intel.com with ESMTP; 12 Sep 2022 17:43:38 -0700
+Received: from kbuild by 4011df4f4fd3 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oXu1Z-00032B-1H;
+        Tue, 13 Sep 2022 00:43:37 +0000
+Date:   Tue, 13 Sep 2022 08:42:53 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [wireless:for-next] BUILD SUCCESS
+ 781b80f452fcc1cfc16ee41f12556626a9ced049
+Message-ID: <631fd20d.aP1GsdOqsH4KKnj8%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: fLMHrxkRrfkpg6lWYgDZpKnPn-Q-8KQF
-X-Proofpoint-ORIG-GUID: fLMHrxkRrfkpg6lWYgDZpKnPn-Q-8KQF
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-12_14,2022-09-12_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 lowpriorityscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2207270000 definitions=main-2209120076
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Commit ff6d365898d ("soc: qcom: qmi: use const for struct
-qmi_elem_info") allows QMI message encoding/decoding rules to be
-const, so do that for ath11k.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git for-next
+branch HEAD: 781b80f452fcc1cfc16ee41f12556626a9ced049  wifi: mt76: fix 5 GHz connection regression on mt76x0/mt76x2
 
-Compile tested only.
+elapsed time: 727m
 
-Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
----
-Depends-on: https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git/commit/?h=for-next&id=ff6d365898d4d31bd557954c7fc53f38977b491c
+configs tested: 88
+configs skipped: 5
 
- drivers/net/wireless/ath/ath11k/qmi.c | 68 +++++++++++++--------------
- 1 file changed, 34 insertions(+), 34 deletions(-)
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index 2be45683260c..fa6c21a4897d 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.c
-+++ b/drivers/net/wireless/ath/ath11k/qmi.c
-@@ -279,7 +279,7 @@ static struct qmi_elem_info qmi_wlanfw_host_cap_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_host_cap_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_host_cap_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -296,7 +296,7 @@ static struct qmi_elem_info qmi_wlanfw_host_cap_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_ind_register_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_ind_register_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_OPT_FLAG,
- 		.elem_len	= 1,
-@@ -521,7 +521,7 @@ static struct qmi_elem_info qmi_wlanfw_ind_register_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_ind_register_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_ind_register_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -557,7 +557,7 @@ static struct qmi_elem_info qmi_wlanfw_ind_register_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_mem_cfg_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_mem_cfg_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_8_BYTE,
- 		.elem_len	= 1,
-@@ -589,7 +589,7 @@ static struct qmi_elem_info qmi_wlanfw_mem_cfg_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_mem_seg_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_mem_seg_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -631,7 +631,7 @@ static struct qmi_elem_info qmi_wlanfw_mem_seg_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_request_mem_ind_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_request_mem_ind_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_DATA_LEN,
- 		.elem_len	= 1,
-@@ -658,7 +658,7 @@ static struct qmi_elem_info qmi_wlanfw_request_mem_ind_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_mem_seg_resp_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_mem_seg_resp_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_8_BYTE,
- 		.elem_len	= 1,
-@@ -698,7 +698,7 @@ static struct qmi_elem_info qmi_wlanfw_mem_seg_resp_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_respond_mem_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_respond_mem_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_DATA_LEN,
- 		.elem_len	= 1,
-@@ -725,7 +725,7 @@ static struct qmi_elem_info qmi_wlanfw_respond_mem_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_respond_mem_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_respond_mem_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -743,7 +743,7 @@ static struct qmi_elem_info qmi_wlanfw_respond_mem_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_cap_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_cap_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_EOTI,
- 		.array_type	= NO_ARRAY,
-@@ -751,7 +751,7 @@ static struct qmi_elem_info qmi_wlanfw_cap_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_device_info_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_device_info_req_msg_v01_ei[] = {
- 	{
- 		.data_type      = QMI_EOTI,
- 		.array_type     = NO_ARRAY,
-@@ -759,7 +759,7 @@ static struct qmi_elem_info qmi_wlanfw_device_info_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlfw_device_info_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlfw_device_info_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -813,7 +813,7 @@ static struct qmi_elem_info qmi_wlfw_device_info_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_rf_chip_info_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_rf_chip_info_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -839,7 +839,7 @@ static struct qmi_elem_info qmi_wlanfw_rf_chip_info_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_rf_board_info_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_rf_board_info_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -856,7 +856,7 @@ static struct qmi_elem_info qmi_wlanfw_rf_board_info_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_soc_info_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_soc_info_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -872,7 +872,7 @@ static struct qmi_elem_info qmi_wlanfw_soc_info_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_fw_version_info_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_fw_version_info_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -898,7 +898,7 @@ static struct qmi_elem_info qmi_wlanfw_fw_version_info_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_cap_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_cap_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -1099,7 +1099,7 @@ static struct qmi_elem_info qmi_wlanfw_cap_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_bdf_download_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_bdf_download_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_1_BYTE,
- 		.elem_len	= 1,
-@@ -1234,7 +1234,7 @@ static struct qmi_elem_info qmi_wlanfw_bdf_download_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_bdf_download_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_bdf_download_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -1252,7 +1252,7 @@ static struct qmi_elem_info qmi_wlanfw_bdf_download_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_m3_info_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_m3_info_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_8_BYTE,
- 		.elem_len	= 1,
-@@ -1276,7 +1276,7 @@ static struct qmi_elem_info qmi_wlanfw_m3_info_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_m3_info_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_m3_info_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -1293,7 +1293,7 @@ static struct qmi_elem_info qmi_wlanfw_m3_info_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_ce_tgt_pipe_cfg_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_ce_tgt_pipe_cfg_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -1346,7 +1346,7 @@ static struct qmi_elem_info qmi_wlanfw_ce_tgt_pipe_cfg_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_ce_svc_pipe_cfg_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_ce_svc_pipe_cfg_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -1381,7 +1381,7 @@ static struct qmi_elem_info qmi_wlanfw_ce_svc_pipe_cfg_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_shadow_reg_cfg_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_shadow_reg_cfg_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_2_BYTE,
- 		.elem_len	= 1,
-@@ -1405,7 +1405,7 @@ static struct qmi_elem_info qmi_wlanfw_shadow_reg_cfg_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_shadow_reg_v2_cfg_s_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_shadow_reg_v2_cfg_s_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -1422,7 +1422,7 @@ static struct qmi_elem_info qmi_wlanfw_shadow_reg_v2_cfg_s_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_wlan_mode_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_wlan_mode_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_UNSIGNED_4_BYTE,
- 		.elem_len	= 1,
-@@ -1457,7 +1457,7 @@ static struct qmi_elem_info qmi_wlanfw_wlan_mode_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_wlan_mode_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_wlan_mode_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -1475,7 +1475,7 @@ static struct qmi_elem_info qmi_wlanfw_wlan_mode_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_wlan_cfg_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_wlan_cfg_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_OPT_FLAG,
- 		.elem_len	= 1,
-@@ -1614,7 +1614,7 @@ static struct qmi_elem_info qmi_wlanfw_wlan_cfg_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_wlan_cfg_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_wlan_cfg_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
-@@ -1631,28 +1631,28 @@ static struct qmi_elem_info qmi_wlanfw_wlan_cfg_resp_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_mem_ready_ind_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_mem_ready_ind_msg_v01_ei[] = {
- 	{
- 		.data_type = QMI_EOTI,
- 		.array_type = NO_ARRAY,
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_fw_ready_ind_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_fw_ready_ind_msg_v01_ei[] = {
- 	{
- 		.data_type = QMI_EOTI,
- 		.array_type = NO_ARRAY,
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_cold_boot_cal_done_ind_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_cold_boot_cal_done_ind_msg_v01_ei[] = {
- 	{
- 		.data_type = QMI_EOTI,
- 		.array_type = NO_ARRAY,
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_wlan_ini_req_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_wlan_ini_req_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_OPT_FLAG,
- 		.elem_len	= 1,
-@@ -1678,7 +1678,7 @@ static struct qmi_elem_info qmi_wlanfw_wlan_ini_req_msg_v01_ei[] = {
- 	},
- };
- 
--static struct qmi_elem_info qmi_wlanfw_wlan_ini_resp_msg_v01_ei[] = {
-+static const struct qmi_elem_info qmi_wlanfw_wlan_ini_resp_msg_v01_ei[] = {
- 	{
- 		.data_type	= QMI_STRUCT,
- 		.elem_len	= 1,
+gcc tested configs:
+um                           x86_64_defconfig
+um                             i386_defconfig
+m68k                             allyesconfig
+powerpc                           allnoconfig
+x86_64                              defconfig
+i386                                defconfig
+x86_64                           rhel-8.3-kvm
+sh                               allmodconfig
+x86_64                          rhel-8.3-func
+i386                 randconfig-a001-20220912
+mips                             allyesconfig
+arc                  randconfig-r043-20220912
+i386                 randconfig-a002-20220912
+x86_64                         rhel-8.3-kunit
+powerpc                          allmodconfig
+i386                 randconfig-a004-20220912
+x86_64                    rhel-8.3-kselftests
+i386                 randconfig-a003-20220912
+i386                 randconfig-a005-20220912
+arc                  randconfig-r043-20220911
+x86_64                           rhel-8.3-syz
+i386                 randconfig-a006-20220912
+alpha                            allyesconfig
+x86_64                               rhel-8.3
+s390                 randconfig-r044-20220911
+m68k                             allmodconfig
+arc                              allyesconfig
+riscv                randconfig-r042-20220911
+arm                                 defconfig
+i386                             allyesconfig
+x86_64                           allyesconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+x86_64               randconfig-a001-20220912
+x86_64               randconfig-a006-20220912
+x86_64               randconfig-a004-20220912
+x86_64               randconfig-a002-20220912
+x86_64               randconfig-a003-20220912
+x86_64               randconfig-a005-20220912
+ia64                             allmodconfig
+sparc                             allnoconfig
+ia64                             alldefconfig
+sh                          kfr2r09_defconfig
+m68k                         amcore_defconfig
+csky                                defconfig
+csky                              allnoconfig
+alpha                             allnoconfig
+arc                               allnoconfig
+riscv                             allnoconfig
+sh                   secureedge5410_defconfig
+arm                         s3c6400_defconfig
+powerpc                      pasemi_defconfig
+i386                          randconfig-c001
+loongarch                           defconfig
+loongarch                         allnoconfig
+arm                             rpc_defconfig
+sh                           se7343_defconfig
+sh                            hp6xx_defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+sh                             shx3_defconfig
+powerpc                 linkstation_defconfig
+sh                      rts7751r2d1_defconfig
+arm                          pxa910_defconfig
+arm                            qcom_defconfig
+
+clang tested configs:
+riscv                randconfig-r042-20220912
+i386                 randconfig-a013-20220912
+i386                 randconfig-a011-20220912
+i386                 randconfig-a012-20220912
+hexagon              randconfig-r041-20220912
+i386                 randconfig-a014-20220912
+hexagon              randconfig-r045-20220911
+hexagon              randconfig-r045-20220912
+i386                 randconfig-a015-20220912
+hexagon              randconfig-r041-20220911
+i386                 randconfig-a016-20220912
+s390                 randconfig-r044-20220912
+x86_64               randconfig-a016-20220912
+x86_64               randconfig-a012-20220912
+x86_64               randconfig-a013-20220912
+x86_64               randconfig-a014-20220912
+x86_64               randconfig-a011-20220912
+x86_64               randconfig-a015-20220912
+x86_64                        randconfig-k001
+arm                         s3c2410_defconfig
+
 -- 
-2.37.0
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
