@@ -2,345 +2,162 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE379C6FA8D
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Sep 2022 05:16:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81CDCC6FA91
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Sep 2022 05:16:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbiIMFQZ (ORCPT
+        id S230070AbiIMFQ3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Sep 2022 01:16:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52866 "EHLO
+        Tue, 13 Sep 2022 01:16:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229969AbiIMFPw (ORCPT
+        with ESMTP id S230023AbiIMFQA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2022 01:15:52 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E69E4BA74
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2022 22:15:50 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28D1wS0G011288;
-        Tue, 13 Sep 2022 05:15:48 GMT
+        Tue, 13 Sep 2022 01:16:00 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A7BA4BD00
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2022 22:15:59 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28D5EwAt003405;
+        Tue, 13 Sep 2022 05:15:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=N/d92Y7f4rSySdqyTQ+agQwIhh7BN2WBMp+c2BaZZ/E=;
- b=H4a92sAX5MDXnZy3d7yJsD9SH9CYyJmdXCltqFWPn8PCzAi8N3wLVtLN7lHyfPpjaqfs
- w1H4ucO/C/6w3+XXwxHGClx83uAgHk0nGZ0v/aU65aX6bRqAnzRrGFJPDMO24DZrRVZJ
- C6o8sHHrScRdqYBdFjHyKyhY37054IOwPf5voTgb2Tr/Ac/mtDAMTa9yPt5vUKuvETIF
- rsXvVYqAGCMSpVJ7TklAVxL5bDJTSvbD384RTOqChJBzJ3Ugs4bTfKTgROKwpmTWUw3w
- 8T4nXlw4gI/6/DlgNYl0PvsFQhulhLgpkZlvoho0dXvy7b84DgKboTK0OLyh6yYqV6RV pw== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jjbh1909y-1
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=60bRtmFjNvT6LC3UYZQHBnguRZ1sGGjmPtz8GBAj30Q=;
+ b=TpWI9ZsYtGItM1lIytnX2NGtB0t66dlZzJyWPsOyzWRc9WLNaD3RPI3HNMI1iNNgi9he
+ EI7RFpOZQiMAfFTe+gl4V2FXgoAXj3SHpmkf0Zts9MnXXSHBs02mm/4eto0JeqqO9ZqV
+ xQE7zCkodA2xuOMljpDL4NVGLifPAaNcrWxTTmW47Z3RZOB8qo9hyzS3nHK1AKWMxg00
+ 21ptKoXEwD/SrPwWiy1MGwU6876H2fg3uEtHvNj0KXZRX6rrQBhGkmIPIw5wbk5qrE/f
+ 0EtXi1nwTHxohAUCi6+IihL/lwXmkhDSLXYc6FzJBIjgPXG6B37lfGiIhzykamrK7SVv bA== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jgk6ke4d2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 13 Sep 2022 05:15:47 +0000
+        Tue, 13 Sep 2022 05:15:53 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28D5FlHG021673
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28D5Fqm9003324
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 13 Sep 2022 05:15:47 GMT
+        Tue, 13 Sep 2022 05:15:52 GMT
 Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Mon, 12 Sep 2022 22:15:46 -0700
+ 15.2.986.29; Mon, 12 Sep 2022 22:15:51 -0700
 From:   Wen Gong <quic_wgong@quicinc.com>
 To:     <ath11k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH v3 09/15] wifi: ath11k: add parse of transmit power envelope element
-Date:   Tue, 13 Sep 2022 01:15:12 -0400
-Message-ID: <20220913051518.23051-10-quic_wgong@quicinc.com>
+Subject: [PATCH v3 13/15] wifi: ath11k: discard BSS_CHANGED_TXPOWER when EXT_TPC_REG_SUPPORT for 6 GHz
+Date:   Tue, 13 Sep 2022 01:15:16 -0400
+Message-ID: <20220913051518.23051-14-quic_wgong@quicinc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220913051518.23051-1-quic_wgong@quicinc.com>
 References: <20220913051518.23051-1-quic_wgong@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
 X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: uJye41bhJTR2q02lhCLuVSXCn-yGbIsN
-X-Proofpoint-ORIG-GUID: uJye41bhJTR2q02lhCLuVSXCn-yGbIsN
+X-Proofpoint-GUID: A-SufkDTlzaXjBznatA2HP9clZ54A00A
+X-Proofpoint-ORIG-GUID: A-SufkDTlzaXjBznatA2HP9clZ54A00A
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
  definitions=2022-09-13_02,2022-09-12_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- priorityscore=1501 mlxscore=0 bulkscore=0 malwarescore=0 suspectscore=0
- phishscore=0 spamscore=0 impostorscore=0 adultscore=0 mlxlogscore=999
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 adultscore=0
+ mlxscore=0 suspectscore=0 priorityscore=1501 phishscore=0 bulkscore=0
+ lowpriorityscore=0 clxscore=1015 impostorscore=0 spamscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2207270000 definitions=main-2209130023
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The transmit power envelope element has some fields for power, ath11k
-should parse it according to IEEE Std 802.11ax™‐2021.
+When station is connected to a 6 GHz AP, it has 2 way to configure
+the power limit to firmware. The first way is to send 2 wmi command
+WMI_PDEV_PARAM_TXPOWER_LIMIT2G/WMI_PDEV_PARAM_TXPOWER_LIMIT5G to
+firmware, the second way is to send WMI_VDEV_SET_TPC_POWER_CMDID to
+firmware which include more parameters for power control.
+
+When firmware support SERVICE_EXT_TPC_REG, it means firmware support
+the second way for WMI_VDEV_SET_TPC_POWER_CMDID, then ath11k discard
+BSS_CHANGED_TXPOWER flag from mac80211 which is used to the first way
+for 6 GHz band in this patch and select the second way in the subsequent
+patch.
 
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-01720.1-QCAHSPSWPL_V1_V2_SILICONZ_LITE-1
 
 Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/core.h |  38 +++++
- drivers/net/wireless/ath/ath11k/mac.c  | 185 +++++++++++++++++++++++++
- 2 files changed, 223 insertions(+)
+ drivers/net/wireless/ath/ath11k/hw.c  |  6 ++++++
+ drivers/net/wireless/ath/ath11k/hw.h  |  1 +
+ drivers/net/wireless/ath/ath11k/mac.c | 19 +++++++++++++++++--
+ 3 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 681a58aaa26b..506829febad7 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -212,6 +212,43 @@ enum ath11k_monitor_flags {
- 	ATH11K_FLAG_MONITOR_VDEV_CREATED,
- };
+diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
+index 712818edb4ca..5734fbfc6db5 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.c
++++ b/drivers/net/wireless/ath/ath11k/hw.c
+@@ -812,6 +812,12 @@ bool ath11k_hw_supports_6g_cc_ext(struct ath11k *ar)
+ 	return ath11k_hw_supports_cc_ext(ar->ab) && ar->supports_6ghz;
+ }
  
-+/**
-+ * struct chan_power_info - TPE containing power info per channel chunk
-+ * @chan_cfreq: channel center freq (MHz)
-+ * e.g.
-+ * channel 37/20 MHz,  it is 6135
-+ * channel 37/40 MHz,  it is 6125
-+ * channel 37/80 MHz,  it is 6145
-+ * channel 37/160 MHz, it is 6185
-+ * @tx_power: transmit power (dBm)
-+ */
-+struct chan_power_info {
-+	u16 chan_cfreq;
-+	s8 tx_power;
-+};
++bool ath11k_hw_supports_tpc_ext(struct ath11k *ar)
++{
++	return ath11k_hw_supports_6g_cc_ext(ar) &&
++	       test_bit(WMI_TLV_SERVICE_EXT_TPC_REG_SUPPORT, ar->ab->wmi_ab.svc_map);
++}
 +
-+/**
-+ * struct reg_tpc_power_info - regulatory TPC power info
-+ * @is_psd_power: is PSD power or not
-+ * @eirp_power: Maximum EIRP power (dBm), valid only if power is PSD
-+ * @power_type_6g: type of power (SP/LPI/VLP)
-+ * @num_pwr_levels: number of power levels
-+ * @reg_max: Array of maximum TX power (dBm) per PSD value
-+ * @ap_constraint_power: AP constraint power (dBm)
-+ * @tpe: TPE values processed from TPE IE
-+ * @chan_power_info: power info to send to firmware
-+ */
-+struct ath11k_reg_tpc_power_info {
-+	bool is_psd_power;
-+	u8 eirp_power;
-+	enum wmi_reg_6g_ap_type power_type_6g;
-+	u8 num_pwr_levels;
-+	u8 reg_max[IEEE80211_MAX_NUM_PWR_LEVEL];
-+	u8 ap_constraint_power;
-+	s8 tpe[IEEE80211_MAX_NUM_PWR_LEVEL];
-+	struct chan_power_info chan_power_info[IEEE80211_MAX_NUM_PWR_LEVEL];
-+};
-+
- struct ath11k_vif {
- 	u32 vdev_id;
- 	enum wmi_vdev_type vdev_type;
-@@ -263,6 +300,7 @@ struct ath11k_vif {
- 	bool bcca_zero_sent;
- 	bool do_not_send_tmpl;
- 	struct ieee80211_chanctx_conf chanctx;
-+	struct ath11k_reg_tpc_power_info reg_tpc_info;
- };
+ const struct ath11k_hw_ops ipq8074_ops = {
+ 	.get_hw_mac_from_pdev_id = ath11k_hw_ipq8074_mac_from_pdev_id,
+ 	.wmi_init_config = ath11k_init_wmi_config_ipq8074,
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index 969d29aaee6a..909ddd0fa187 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -279,6 +279,7 @@ static inline int ath11k_hw_mac_id_to_srng_id(struct ath11k_hw_params *hw,
  
- struct ath11k_vif_iter {
+ bool ath11k_hw_supports_cc_ext(struct ath11k_base *ab);
+ bool ath11k_hw_supports_6g_cc_ext(struct ath11k *ar);
++bool ath11k_hw_supports_tpc_ext(struct ath11k *ar);
+ 
+ struct ath11k_fw_ie {
+ 	__le32 id;
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index a18b12abb63d..6eb707473ed3 100644
+index e1bdfe466bc7..54d7327265d6 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6988,6 +6988,189 @@ static int ath11k_start_vdev_delay(struct ieee80211_hw *hw,
+@@ -3078,6 +3078,16 @@ static int ath11k_mac_config_obss_pd(struct ath11k *ar,
  	return 0;
  }
  
-+static u8 ath11k_mac_get_tpe_count(u8 txpwr_intrprt, u8 txpwr_cnt)
++static bool ath11k_mac_supports_station_tpc(struct ath11k *ar,
++					    struct ath11k_vif *arvif,
++					    const struct cfg80211_chan_def *chandef)
 +{
-+	switch (txpwr_intrprt) {
-+	/* Refer "Table 9-276-Meaning of Maximum Transmit Power Count subfield
-+	 * if the Maximum Transmit Power Interpretation subfield is 0 or 2" of
-+	 * "IEEE Std 802.11ax 2021".
-+	 */
-+	case IEEE80211_TPE_LOCAL_EIRP:
-+	case IEEE80211_TPE_REG_CLIENT_EIRP:
-+		txpwr_cnt = txpwr_cnt <= 3 ? txpwr_cnt : 3;
-+		txpwr_cnt = txpwr_cnt + 1;
-+		break;
-+	/* Refer "Table 9-277-Meaning of Maximum Transmit Power Count subfield
-+	 * if Maximum Transmit Power Interpretation subfield is 1 or 3" of
-+	 * "IEEE Std 802.11ax 2021".
-+	 */
-+	case IEEE80211_TPE_LOCAL_EIRP_PSD:
-+	case IEEE80211_TPE_REG_CLIENT_EIRP_PSD:
-+		txpwr_cnt = txpwr_cnt <= 4 ? txpwr_cnt : 4;
-+		txpwr_cnt = txpwr_cnt ? (BIT(txpwr_cnt - 1)) : 1;
-+		break;
-+	}
-+
-+	return txpwr_cnt;
++	return ath11k_hw_supports_tpc_ext(ar) &&
++	       arvif->vdev_type == WMI_VDEV_TYPE_STA &&
++	       chandef->chan &&
++	       chandef->chan->band == NL80211_BAND_6GHZ;
 +}
 +
-+static u8 ath11k_mac_get_num_pwr_levels(struct cfg80211_chan_def *chan_def)
-+{
-+	if (chan_def->chan->flags & IEEE80211_CHAN_PSD) {
-+		switch (chan_def->width) {
-+		case NL80211_CHAN_WIDTH_20:
-+			return 1;
-+		case NL80211_CHAN_WIDTH_40:
-+			return 2;
-+		case NL80211_CHAN_WIDTH_80:
-+			return 4;
-+		case NL80211_CHAN_WIDTH_80P80:
-+		case NL80211_CHAN_WIDTH_160:
-+			return 8;
-+		default:
-+			return 1;
-+		}
-+	} else {
-+		switch (chan_def->width) {
-+		case NL80211_CHAN_WIDTH_20:
-+			return 1;
-+		case NL80211_CHAN_WIDTH_40:
-+			return 2;
-+		case NL80211_CHAN_WIDTH_80:
-+			return 3;
-+		case NL80211_CHAN_WIDTH_80P80:
-+		case NL80211_CHAN_WIDTH_160:
-+			return 4;
-+		default:
-+			return 1;
-+		}
-+	}
-+}
-+
-+static void ath11k_mac_parse_tx_pwr_env(struct ath11k *ar,
-+					struct ieee80211_vif *vif,
-+					struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
-+	struct ieee80211_tx_pwr_env *single_tpe;
-+	enum wmi_reg_6g_client_type client_type;
-+	struct cur_regulatory_info *reg_info;
-+	int i;
-+	u8 pwr_count, pwr_interpret, pwr_category;
-+	u8 psd_index = 0, non_psd_index = 0, local_tpe_count = 0, reg_tpe_count = 0;
-+	bool use_local_tpe, non_psd_set = false, psd_set = false;
-+
-+	reg_info = &ab->reg_info_store[ar->pdev_idx];
-+	client_type = reg_info->client_type;
-+
-+	for (i = 0; i < bss_conf->tx_pwr_env_num; i++) {
-+		single_tpe = &bss_conf->tx_pwr_env[i];
-+		pwr_category = u8_get_bits(single_tpe->tx_power_info,
-+					   IEEE80211_TX_PWR_ENV_INFO_CATEGORY);
-+		pwr_interpret = u8_get_bits(single_tpe->tx_power_info,
-+					    IEEE80211_TX_PWR_ENV_INFO_INTERPRET);
-+
-+		if (pwr_category == client_type) {
-+			if (pwr_interpret == IEEE80211_TPE_LOCAL_EIRP ||
-+			    pwr_interpret == IEEE80211_TPE_LOCAL_EIRP_PSD)
-+				local_tpe_count++;
-+			else if (pwr_interpret == IEEE80211_TPE_REG_CLIENT_EIRP ||
-+				 pwr_interpret == IEEE80211_TPE_REG_CLIENT_EIRP_PSD)
-+				reg_tpe_count++;
-+		}
-+	}
-+
-+	if (!reg_tpe_count && !local_tpe_count) {
-+		ath11k_warn(ab,
-+			    "no transmit power envelope match client power type %d\n",
-+			    client_type);
-+		return;
-+	} else if (!reg_tpe_count) {
-+		use_local_tpe = true;
-+	} else {
-+		use_local_tpe = false;
-+	}
-+
-+	for (i = 0; i < bss_conf->tx_pwr_env_num; i++) {
-+		single_tpe = &bss_conf->tx_pwr_env[i];
-+		pwr_category = u8_get_bits(single_tpe->tx_power_info,
-+					   IEEE80211_TX_PWR_ENV_INFO_CATEGORY);
-+		pwr_interpret = u8_get_bits(single_tpe->tx_power_info,
-+					    IEEE80211_TX_PWR_ENV_INFO_INTERPRET);
-+
-+		if (pwr_category != client_type)
-+			continue;
-+
-+		/* get local transmit power envelope */
-+		if (use_local_tpe) {
-+			if (pwr_interpret == IEEE80211_TPE_LOCAL_EIRP) {
-+				non_psd_index = i;
-+				non_psd_set = true;
-+			} else if (pwr_interpret == IEEE80211_TPE_LOCAL_EIRP_PSD) {
-+				psd_index = i;
-+				psd_set = true;
-+			}
-+		/* get regulatory transmit power envelope */
+ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 					   struct ieee80211_vif *vif,
+ 					   struct ieee80211_bss_conf *info,
+@@ -3268,8 +3278,13 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac vdev_id %i txpower %d\n",
+ 			   arvif->vdev_id, info->txpower);
+ 
+-		arvif->txpower = info->txpower;
+-		ath11k_mac_txpower_recalc(ar);
++		if (ath11k_mac_supports_station_tpc(ar, arvif, &info->chandef)) {
++			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
++				   "discard tx power, change to set TPC power\n");
 +		} else {
-+			if (pwr_interpret == IEEE80211_TPE_REG_CLIENT_EIRP) {
-+				non_psd_index = i;
-+				non_psd_set = true;
-+			} else if (pwr_interpret == IEEE80211_TPE_REG_CLIENT_EIRP_PSD) {
-+				psd_index = i;
-+				psd_set = true;
-+			}
++			arvif->txpower = info->txpower;
++			ath11k_mac_txpower_recalc(ar);
 +		}
-+	}
-+
-+	if (non_psd_set && !psd_set) {
-+		single_tpe = &bss_conf->tx_pwr_env[non_psd_index];
-+		pwr_count = u8_get_bits(single_tpe->tx_power_info,
-+					IEEE80211_TX_PWR_ENV_INFO_COUNT);
-+		pwr_interpret = u8_get_bits(single_tpe->tx_power_info,
-+					    IEEE80211_TX_PWR_ENV_INFO_INTERPRET);
-+		arvif->reg_tpc_info.is_psd_power = false;
-+		arvif->reg_tpc_info.eirp_power = 0;
-+
-+		arvif->reg_tpc_info.num_pwr_levels =
-+			ath11k_mac_get_tpe_count(pwr_interpret, pwr_count);
-+		for (i = 0; i < arvif->reg_tpc_info.num_pwr_levels; i++) {
-+			ath11k_dbg(ab, ATH11K_DBG_MAC,
-+				   "non PSD power[%d] : %d\n",
-+				   i, single_tpe->tx_power[i]);
-+			arvif->reg_tpc_info.tpe[i] = single_tpe->tx_power[i] / 2;
-+		}
-+	}
-+
-+	if (psd_set) {
-+		single_tpe = &bss_conf->tx_pwr_env[psd_index];
-+		pwr_count = u8_get_bits(single_tpe->tx_power_info,
-+					IEEE80211_TX_PWR_ENV_INFO_COUNT);
-+		pwr_interpret = u8_get_bits(single_tpe->tx_power_info,
-+					    IEEE80211_TX_PWR_ENV_INFO_INTERPRET);
-+		arvif->reg_tpc_info.is_psd_power = true;
-+
-+		if (pwr_count == 0) {
-+			ath11k_dbg(ab, ATH11K_DBG_MAC,
-+				   "TPE PSD power : %d\n", single_tpe->tx_power[0]);
-+			arvif->reg_tpc_info.num_pwr_levels =
-+				ath11k_mac_get_num_pwr_levels(&ctx->def);
-+			for (i = 0; i < arvif->reg_tpc_info.num_pwr_levels; i++)
-+				arvif->reg_tpc_info.tpe[i] = single_tpe->tx_power[0] / 2;
-+		} else {
-+			arvif->reg_tpc_info.num_pwr_levels =
-+				ath11k_mac_get_tpe_count(pwr_interpret, pwr_count);
-+			for (i = 0; i < arvif->reg_tpc_info.num_pwr_levels; i++) {
-+				ath11k_dbg(ab, ATH11K_DBG_MAC,
-+					   "TPE PSD power[%d] : %d\n",
-+					   i, single_tpe->tx_power[i]);
-+				arvif->reg_tpc_info.tpe[i] = single_tpe->tx_power[i] / 2;
-+			}
-+		}
-+	}
-+}
-+
- static int
- ath11k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif,
-@@ -7016,6 +7199,8 @@ ath11k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
- 		if (power_type == IEEE80211_REG_UNSET_AP)
- 			power_type = IEEE80211_REG_LPI_AP;
- 		ath11k_reg_handle_chan_list(ab, reg_info, power_type);
-+
-+		ath11k_mac_parse_tx_pwr_env(ar, vif, ctx);
  	}
  
- 	/* for QCA6390 bss peer must be created before vdev_start */
+ 	if (changed & BSS_CHANGED_PS &&
 -- 
 2.31.1
 
