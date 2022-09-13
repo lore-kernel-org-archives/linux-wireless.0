@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C616FC54EE9
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Sep 2022 09:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA95C6FA82
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Sep 2022 09:27:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231284AbiIMJ1B (ORCPT
+        id S231150AbiIMJ1C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Sep 2022 05:27:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58726 "EHLO
+        Tue, 13 Sep 2022 05:27:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231178AbiIMJ07 (ORCPT
+        with ESMTP id S231279AbiIMJ1A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2022 05:26:59 -0400
+        Tue, 13 Sep 2022 05:27:00 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 60EC221248
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2022 02:26:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 675A427FCC
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2022 02:26:59 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28D9QUOD0005554, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28D9QWYI0005611, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28D9QUOD0005554
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28D9QWYI0005611
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 13 Sep 2022 17:26:30 +0800
+        Tue, 13 Sep 2022 17:26:32 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 13 Sep 2022 17:26:50 +0800
+ 15.1.2375.7; Tue, 13 Sep 2022 17:26:52 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 13 Sep
- 2022 17:26:50 +0800
+ 2022 17:26:52 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/7] wifi: rtw89: coex: Add v1 Wi-Fi firmware power-saving null data report
-Date:   Tue, 13 Sep 2022 17:25:41 +0800
-Message-ID: <20220913092546.43722-3-pkshih@realtek.com>
+Subject: [PATCH v2 4/7] wifi: rtw89: coex: Parsing Wi-Fi firmware error message from reports
+Date:   Tue, 13 Sep 2022 17:25:43 +0800
+Message-ID: <20220913092546.43722-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220913092546.43722-1-pkshih@realtek.com>
 References: <20220913092546.43722-1-pkshih@realtek.com>
@@ -66,159 +66,65 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-The later version Wi-Fi firmware will report null data TX times,
-so the structure is different from before.
+Parsing firmware error message from original version and v1 reports to
+show up exception counter of commands from firmware in debug message.
+Then, we can make sure exchange commands are correct totally.
+
+In the later version Wi-Fi firmware(v1), the report format was changed.
+With this update, we can yield correct report from proper struct.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 82 +++++++++++++++++------
- drivers/net/wireless/realtek/rtw89/core.h | 14 +++-
- 2 files changed, 74 insertions(+), 22 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 398bc395bc392..74d503ea4965e 100644
+index 6fdc2c33b7c6a..66adf4eb44559 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -1003,8 +1003,13 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 		break;
- 	case BTC_RPT_TYPE_NULLSTA:
- 		pcinfo = &pfwinfo->rpt_fbtc_nullsta.cinfo;
--		pfinfo = &pfwinfo->rpt_fbtc_nullsta.finfo;
--		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_nullsta.finfo);
-+		if (chip->chip_id == RTL8852A) {
-+			pfinfo = &pfwinfo->rpt_fbtc_nullsta.finfo;
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_nullsta.finfo);
-+		} else {
-+			pfinfo = &pfwinfo->rpt_fbtc_nullsta.finfo_v1;
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_nullsta.finfo_v1);
-+		}
- 		pcinfo->req_fver = chip->fcxnullsta_ver;
- 		pcinfo->rx_len = rpt_len;
- 		pcinfo->rx_cnt++;
-@@ -6218,10 +6223,12 @@ static void _show_fbtc_cysta(struct rtw89_dev *rtwdev, struct seq_file *m)
+@@ -5963,14 +5963,24 @@ static void _show_dm_info(struct rtw89_dev *rtwdev, struct seq_file *m)
  
- static void _show_fbtc_nullsta(struct rtw89_dev *rtwdev, struct seq_file *m)
+ static void _show_error(struct rtw89_dev *rtwdev, struct seq_file *m)
  {
 +	const struct rtw89_chip_info *chip = rtwdev->chip;
  	struct rtw89_btc *btc = &rtwdev->btc;
  	struct rtw89_btc_btf_fwinfo *pfwinfo = &btc->fwinfo;
--	struct rtw89_btc_rpt_cmn_info *pcinfo = NULL;
--	struct rtw89_btc_fbtc_cynullsta *ns = NULL;
-+	struct rtw89_btc_rpt_cmn_info *pcinfo;
-+	struct rtw89_btc_fbtc_cynullsta *ns;
-+	struct rtw89_btc_fbtc_cynullsta_v1 *ns_v1;
- 	u8 i = 0;
+-	struct rtw89_btc_fbtc_cysta *pcysta = NULL;
++	struct rtw89_btc_fbtc_cysta *pcysta;
++	struct rtw89_btc_fbtc_cysta_v1 *pcysta_v1;
++	u32 except_cnt, exception_map;
  
- 	if (!btc->dm.tdma_now.rxflctrl)
-@@ -6231,25 +6238,58 @@ static void _show_fbtc_nullsta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 	if (!pcinfo->valid)
+-	pcysta = &pfwinfo->rpt_fbtc_cysta.finfo;
++	if (chip->chip_id == RTL8852A) {
++		pcysta = &pfwinfo->rpt_fbtc_cysta.finfo;
++		except_cnt = le32_to_cpu(pcysta->except_cnt);
++		exception_map = le32_to_cpu(pcysta->exception);
++	} else {
++		pcysta_v1 = &pfwinfo->rpt_fbtc_cysta.finfo_v1;
++		except_cnt = le32_to_cpu(pcysta_v1->except_cnt);
++		exception_map = le32_to_cpu(pcysta_v1->except_map);
++	}
+ 
+-	if (pfwinfo->event[BTF_EVNT_BUF_OVERFLOW] == 0 &&
+-	    pcysta->except_cnt == 0 &&
++	if (pfwinfo->event[BTF_EVNT_BUF_OVERFLOW] == 0 && except_cnt == 0 &&
+ 	    !pfwinfo->len_mismch && !pfwinfo->fver_mismch)
  		return;
  
--	ns = &pfwinfo->rpt_fbtc_nullsta.finfo;
-+	if (chip->chip_id == RTL8852A) {
-+		ns = &pfwinfo->rpt_fbtc_nullsta.finfo;
+@@ -5995,10 +6005,10 @@ static void _show_error(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 	}
  
--	seq_printf(m, " %-15s : ", "[null_sta]");
-+		seq_printf(m, " %-15s : ", "[null_sta]");
- 
--	for (i = 0; i < 2; i++) {
--		if (i != 0)
--			seq_printf(m, ", null-%d", i);
--		else
--			seq_printf(m, "null-%d", i);
--		seq_printf(m, "[ok:%d/", le32_to_cpu(ns->result[i][1]));
--		seq_printf(m, "fail:%d/", le32_to_cpu(ns->result[i][0]));
--		seq_printf(m, "on_time:%d/", le32_to_cpu(ns->result[i][2]));
--		seq_printf(m, "retry:%d/", le32_to_cpu(ns->result[i][3]));
--		seq_printf(m, "avg_t:%d.%03d/",
--			   le32_to_cpu(ns->avg_t[i]) / 1000,
--			   le32_to_cpu(ns->avg_t[i]) % 1000);
--		seq_printf(m, "max_t:%d.%03d]",
--			   le32_to_cpu(ns->max_t[i]) / 1000,
--			   le32_to_cpu(ns->max_t[i]) % 1000);
-+		for (i = 0; i < 2; i++) {
-+			if (i != 0)
-+				seq_printf(m, ", null-%d", i);
-+			else
-+				seq_printf(m, "null-%d", i);
-+			seq_printf(m, "[ok:%d/",
-+				   le32_to_cpu(ns->result[i][1]));
-+			seq_printf(m, "fail:%d/",
-+				   le32_to_cpu(ns->result[i][0]));
-+			seq_printf(m, "on_time:%d/",
-+				   le32_to_cpu(ns->result[i][2]));
-+			seq_printf(m, "retry:%d/",
-+				   le32_to_cpu(ns->result[i][3]));
-+			seq_printf(m, "avg_t:%d.%03d/",
-+				   le32_to_cpu(ns->avg_t[i]) / 1000,
-+				   le32_to_cpu(ns->avg_t[i]) % 1000);
-+			seq_printf(m, "max_t:%d.%03d]",
-+				   le32_to_cpu(ns->max_t[i]) / 1000,
-+				   le32_to_cpu(ns->max_t[i]) % 1000);
-+		}
-+	} else {
-+		ns_v1 = &pfwinfo->rpt_fbtc_nullsta.finfo_v1;
-+
-+		seq_printf(m, " %-15s : ", "[null_sta]");
-+
-+		for (i = 0; i < 2; i++) {
-+			if (i != 0)
-+				seq_printf(m, ", null-%d", i);
-+			else
-+				seq_printf(m, "null-%d", i);
-+			seq_printf(m, "[Tx:%d/",
-+				   le32_to_cpu(ns_v1->result[i][4]));
-+			seq_printf(m, "[ok:%d/",
-+				   le32_to_cpu(ns_v1->result[i][1]));
-+			seq_printf(m, "fail:%d/",
-+				   le32_to_cpu(ns_v1->result[i][0]));
-+			seq_printf(m, "on_time:%d/",
-+				   le32_to_cpu(ns_v1->result[i][2]));
-+			seq_printf(m, "retry:%d/",
-+				   le32_to_cpu(ns_v1->result[i][3]));
-+			seq_printf(m, "avg_t:%d.%03d/",
-+				   le32_to_cpu(ns_v1->avg_t[i]) / 1000,
-+				   le32_to_cpu(ns_v1->avg_t[i]) % 1000);
-+			seq_printf(m, "max_t:%d.%03d]",
-+				   le32_to_cpu(ns_v1->max_t[i]) / 1000,
-+				   le32_to_cpu(ns_v1->max_t[i]) % 1000);
-+		}
+ 	/* cycle statistics exceptions */
+-	if (pcysta->exception || pcysta->except_cnt) {
++	if (exception_map || except_cnt) {
+ 		seq_printf(m,
+ 			   "exception-type: 0x%x, exception-cnt = %d",
+-			   pcysta->exception, pcysta->except_cnt);
++			   exception_map, except_cnt);
  	}
  	seq_puts(m, "\n");
  }
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index bd2c09e69f08d..6737ce7b6ebb6 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -1718,6 +1718,15 @@ struct rtw89_btc_fbtc_cynullsta { /* cycle null statistics */
- 	__le32 result[2][4]; /* 0:fail, 1:ok, 2:on_time, 3:retry */
- } __packed;
- 
-+struct rtw89_btc_fbtc_cynullsta_v1 { /* cycle null statistics */
-+	u8 fver; /* chip_info::fcxnullsta_ver */
-+	u8 rsvd;
-+	__le16 rsvd2;
-+	__le32 max_t[2]; /* max_t for 0:null0/1:null1 */
-+	__le32 avg_t[2]; /* avg_t for 0:null0/1:null1 */
-+	__le32 result[2][5]; /* 0:fail, 1:ok, 2:on_time, 3:retry, 4:tx */
-+} __packed;
-+
- struct rtw89_btc_fbtc_btver {
- 	u8 fver; /* chip_info::fcxbtver_ver */
- 	u8 rsvd;
-@@ -1898,7 +1907,10 @@ struct rtw89_btc_rpt_fbtc_step {
- 
- struct rtw89_btc_rpt_fbtc_nullsta {
- 	struct rtw89_btc_rpt_cmn_info cinfo; /* common info, by driver */
--	struct rtw89_btc_fbtc_cynullsta finfo; /* info from fw */
-+	union {
-+		struct rtw89_btc_fbtc_cynullsta finfo; /* info from fw */
-+		struct rtw89_btc_fbtc_cynullsta_v1 finfo_v1; /* info from fw */
-+	};
- };
- 
- struct rtw89_btc_rpt_fbtc_mreg {
 -- 
 2.25.1
 
