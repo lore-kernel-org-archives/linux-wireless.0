@@ -2,109 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46954C6FA82
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Sep 2022 03:36:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA9EECAAD8
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Sep 2022 03:45:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229723AbiINDgy (ORCPT
+        id S229521AbiINDo7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Sep 2022 23:36:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46350 "EHLO
+        Tue, 13 Sep 2022 23:44:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbiINDgn (ORCPT
+        with ESMTP id S229489AbiINDo5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2022 23:36:43 -0400
-Received: from smtp12.infineon.com (smtp12.infineon.com [217.10.52.106])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30F8D5FAFC
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2022 20:36:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1663126603; x=1694662603;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=oFM2uhYPRUF0wpUQfUjmHmeBa7D8iHYyJsyi+cvFRTg=;
-  b=JG9TXFc4VHjsFcqGy9ibQ5hnICum662mKfJRM2L+qlORlE1pzEetjZtT
-   pQgv/AY2+JGqY0w0NgdEV6QAx6mu+XbEfVFADDkNpwngH4AI64kUSwkxQ
-   rBOhCxmTd/KeQf2BKq2IZR2mrNbMyW90vfq9Xw/Lx15jRJPJfhWq0YQAN
-   8=;
-X-SBRS: None
-X-IronPort-AV: E=McAfee;i="6500,9779,10469"; a="317080323"
-X-IronPort-AV: E=Sophos;i="5.93,313,1654552800"; 
-   d="scan'208";a="317080323"
-Received: from unknown (HELO mucxv003.muc.infineon.com) ([172.23.11.20])
-  by smtp11.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2022 05:36:42 +0200
-Received: from MUCSE803.infineon.com (MUCSE803.infineon.com [172.23.29.29])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mucxv003.muc.infineon.com (Postfix) with ESMTPS
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2022 05:36:41 +0200 (CEST)
-Received: from MUCSE804.infineon.com (172.23.29.30) by MUCSE803.infineon.com
- (172.23.29.29) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Wed, 14 Sep
- 2022 05:36:41 +0200
-Received: from mailrelay-cypress4.infineon.com (172.23.18.56) by
- SMTP-MailRelay1.infineon.com (172.23.29.5) with Microsoft SMTP Server id
- 15.2.986.29; Wed, 14 Sep 2022 05:36:40 +0200
-mailrelay-external-outbound: True
-X-IronPort-AV: E=McAfee;i="6500,9779,10469"; a="255707222"
-X-IronPort-AV: E=Sophos;i="5.93,313,1654552800"; 
-   d="scan'208";a="255707222"
-Received: from unknown (HELO mail.spansion.com) ([10.248.30.8])
-  by mailrelay-cypress4.infineon.com with ESMTP; 14 Sep 2022 05:36:40 +0200
-Received: from inf2.aus.cypress.com (10.248.80.6) by BIZ-EXHT102.spansion.com
- (10.248.30.8) with Microsoft SMTP Server id 14.3.498.0; Tue, 13 Sep 2022
- 22:36:39 -0500
-Received: from iot-wlan-dev-u03.aus.cypress.com (iot-wlan-dev-u03
- [10.248.81.193])       by inf2.aus.cypress.com (Postfix) with ESMTP id 7BA70100243;
-        Tue, 13 Sep 2022 22:36:39 -0500 (CDT)
-Received: by iot-wlan-dev-u03.aus.cypress.com (Postfix, from userid 27991)      id
- 791F6980794; Tue, 13 Sep 2022 22:36:39 -0500 (CDT)
-From:   Ian Lin <ian.lin@infineon.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <brcm80211-dev-list@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>, <franky.lin@broadcom.com>,
-        <hante.meuleman@broadcom.com>, <kvalo@kernel.org>,
-        <Double.Lo@infineon.com>, <ian.lin@infineon.com>
-Subject: [PATCH 5/5] brcmfmac: fix P2P device discovery failure
-Date:   Tue, 13 Sep 2022 22:36:20 -0500
-Message-ID: <20220914033620.12742-6-ian.lin@infineon.com>
-X-Mailer: git-send-email 2.25.0
-In-Reply-To: <20220914033620.12742-1-ian.lin@infineon.com>
-References: <20220914033620.12742-1-ian.lin@infineon.com>
+        Tue, 13 Sep 2022 23:44:57 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DF024F1B4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2022 20:44:55 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28E2WXm4022024;
+        Wed, 14 Sep 2022 03:44:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : to : cc : from : subject : content-type :
+ content-transfer-encoding; s=qcppdkim1;
+ bh=o6RB6A0kpfsIefD+sTPm1sGlkCN0lI6Kz9AXWfCogaA=;
+ b=gnl+YFTJs5T4WKlfS5jdg8oka67Khas/WzzgZCZDtAgOMRJ8RUNjsVK9FuodFQScddKI
+ wXDe6jDVVYV9NkiOaVkxz28vlvx1Z8D7x6fPsqGsekxaja8TU8qhoTgsNLOMqJJ0HVVw
+ Mz+9G4fqhaGlWvgVEfaOVo/RRDtnCdu4WH5V28cNYaChMuE9JHA/ayyhJctQ5NaF9ph1
+ /Hy4eVBO0cfoK7MPnylTlNcVm1qK1lEU5/4Uccrd3yIURNnn14lg/z7Vu6laqGV5jwet
+ TE6CWwt5s1QEfBwfxE5esAI3tsv/JAeiLjmGTLir9f+f4aSxICpl1dzKqop0DuM1Bw9Z XA== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jjxys14t4-3
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 14 Sep 2022 03:44:46 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28E3DTZF009823
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 14 Sep 2022 03:13:29 GMT
+Received: from [10.253.15.55] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Tue, 13 Sep
+ 2022 20:13:28 -0700
+Message-ID: <e1c5fbac-7e6e-c643-f24d-32cec779f2d3@quicinc.com>
+Date:   Wed, 14 Sep 2022 11:13:24 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Content-Language: en-US
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+CC:     <ath11k@lists.infradead.org>
+From:   Wen Gong <quic_wgong@quicinc.com>
+Subject: unicast probe response bssid changed by "wifi: mac80211: do link->MLD
+ address translation on RX"
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 5fHklR2gwj1hwg5rSl67vcDrkX9hr4yp
+X-Proofpoint-GUID: 5fHklR2gwj1hwg5rSl67vcDrkX9hr4yp
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-13_12,2022-09-13_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0 mlxscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 impostorscore=0
+ adultscore=0 mlxlogscore=603 spamscore=0 clxscore=1015 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2208220000 definitions=main-2209140016
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chung-Hsien Hsu <chung-hsien.hsu@infineon.com>
+Hi Johannes,
 
-Commit 2de64ca7c9fa ("brcmfmac: p2p: Deal with set but unused
-variables") removed the setting of vif for p2p device discovery in
-brcmf_p2p_scan_prep(), causing the discovery failure.
+The mac addr of unicast rx packet all changed to the MLD address by 
+below patch.
+Now the probe presponse which is unicast packet is also changed mac 
+address here.
+I found bssid which is the MLD address of my test AP in cfg80211_get_bss().
+For example, if the AP has 2 mlo links, link 1 is 5 GHz band, link 2 is 
+2.4 GHz band,
+then the 2 probe reponse will be changed to a same one.
+seems we should skip probe presponse for the mac address change here, right?
 
-Add back the setting to brcmf_p2p_scan_prep() to fix this.
-
-Fixes: 2de64ca7c9fa ("brcmfmac: p2p: Deal with set but unused variables")
-Signed-off-by: Chung-Hsien Hsu <chung-hsien.hsu@infineon.com>
-Signed-off-by: Ian Lin <ian.lin@infineon.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index b3d706a2e68c..068f8fe0e0c4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -912,6 +912,8 @@ int brcmf_p2p_scan_prep(struct wiphy *wiphy,
- 		if (err)
- 			return err;
- 
-+		vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
-+
- 		/* override .run_escan() callback. */
- 		cfg->escan_info.run = brcmf_p2p_run_escan;
- 	}
--- 
-2.25.0
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?id=42fb9148c078004d07b4c39bd7b1086b6165780c
+wifi: mac80211: do link->MLD address translation on RX
 
