@@ -2,89 +2,94 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA9EECAAD8
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Sep 2022 03:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ADDFECAAD3
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Sep 2022 03:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229521AbiINDo7 (ORCPT
+        id S229833AbiINDvb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Sep 2022 23:44:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57684 "EHLO
+        Tue, 13 Sep 2022 23:51:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbiINDo5 (ORCPT
+        with ESMTP id S229863AbiINDv0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2022 23:44:57 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DF024F1B4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2022 20:44:55 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28E2WXm4022024;
-        Wed, 14 Sep 2022 03:44:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : to : cc : from : subject : content-type :
- content-transfer-encoding; s=qcppdkim1;
- bh=o6RB6A0kpfsIefD+sTPm1sGlkCN0lI6Kz9AXWfCogaA=;
- b=gnl+YFTJs5T4WKlfS5jdg8oka67Khas/WzzgZCZDtAgOMRJ8RUNjsVK9FuodFQScddKI
- wXDe6jDVVYV9NkiOaVkxz28vlvx1Z8D7x6fPsqGsekxaja8TU8qhoTgsNLOMqJJ0HVVw
- Mz+9G4fqhaGlWvgVEfaOVo/RRDtnCdu4WH5V28cNYaChMuE9JHA/ayyhJctQ5NaF9ph1
- /Hy4eVBO0cfoK7MPnylTlNcVm1qK1lEU5/4Uccrd3yIURNnn14lg/z7Vu6laqGV5jwet
- TE6CWwt5s1QEfBwfxE5esAI3tsv/JAeiLjmGTLir9f+f4aSxICpl1dzKqop0DuM1Bw9Z XA== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jjxys14t4-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Sep 2022 03:44:46 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28E3DTZF009823
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Sep 2022 03:13:29 GMT
-Received: from [10.253.15.55] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Tue, 13 Sep
- 2022 20:13:28 -0700
-Message-ID: <e1c5fbac-7e6e-c643-f24d-32cec779f2d3@quicinc.com>
-Date:   Wed, 14 Sep 2022 11:13:24 +0800
+        Tue, 13 Sep 2022 23:51:26 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4DEB06F55A
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2022 20:51:23 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28E3omQA3007510, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28E3omQA3007510
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Wed, 14 Sep 2022 11:50:48 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Wed, 14 Sep 2022 11:51:09 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 14 Sep
+ 2022 11:51:09 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/4] wifi: rtw89: add firmware drop and crash simulation
+Date:   Wed, 14 Sep 2022 11:50:30 +0800
+Message-ID: <20220914035034.14521-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-CC:     <ath11k@lists.infradead.org>
-From:   Wen Gong <quic_wgong@quicinc.com>
-Subject: unicast probe response bssid changed by "wifi: mac80211: do link->MLD
- address translation on RX"
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 5fHklR2gwj1hwg5rSl67vcDrkX9hr4yp
-X-Proofpoint-GUID: 5fHklR2gwj1hwg5rSl67vcDrkX9hr4yp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-13_12,2022-09-13_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0 mlxscore=0
- priorityscore=1501 malwarescore=0 suspectscore=0 impostorscore=0
- adultscore=0 mlxlogscore=603 spamscore=0 clxscore=1015 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2208220000 definitions=main-2209140016
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/14/2022 03:18:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvMTMgpFWkyCAxMToxMjowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes,
+First patch is to unify the use of rtw89_h2c_tx() in which we don't check
+the return value in if-expression. Instead, use 'ret' variable and bypass
+it to upper callers.
 
-The mac addr of unicast rx packet all changed to the MLD address by 
-below patch.
-Now the probe presponse which is unicast packet is also changed mac 
-address here.
-I found bssid which is the MLD address of my test AP in cfg80211_get_bss().
-For example, if the AP has 2 mlo links, link 1 is 5 GHz band, link 2 is 
-2.4 GHz band,
-then the 2 probe reponse will be changed to a same one.
-seems we should skip probe presponse for the mac address change here, right?
+The remaining three patches are to introduce new firmware features -- drop
+and crash simulation. The first feature is to drop packets when calling
+flush ops with drop=1. The crash simulation is to verify if driver can
+handle events of abnormal conditions of firmware or hardware reported by
+firmware.
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?id=42fb9148c078004d07b4c39bd7b1086b6165780c
-wifi: mac80211: do link->MLD address translation on RX
+Ping-Ke Shih (1):
+  wifi: rtw89: unify use of rtw89_h2c_tx()
+
+Zong-Zhe Yang (3):
+  wifi: rtw89: introudce functions to drop packets
+  wifi: rtw89: 8852c: support fw crash simulation
+  wifi: rtw89: support SER L1 simulation
+
+ drivers/net/wireless/realtek/rtw89/core.h     |  29 ++-
+ drivers/net/wireless/realtek/rtw89/debug.c    |  62 ++++-
+ drivers/net/wireless/realtek/rtw89/fw.c       | 242 +++++++++++++-----
+ drivers/net/wireless/realtek/rtw89/fw.h       |  35 ++-
+ drivers/net/wireless/realtek/rtw89/mac.c      |  53 +++-
+ drivers/net/wireless/realtek/rtw89/mac.h      |   4 +
+ drivers/net/wireless/realtek/rtw89/mac80211.c |  22 +-
+ drivers/net/wireless/realtek/rtw89/ser.c      |   4 +-
+ 8 files changed, 370 insertions(+), 81 deletions(-)
+
+-- 
+2.25.1
 
