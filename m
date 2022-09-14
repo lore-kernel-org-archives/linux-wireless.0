@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA16C6FA8E
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Sep 2022 09:02:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F4DECAAD3
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Sep 2022 09:05:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230433AbiINJCa (ORCPT
+        id S231139AbiINJFY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Sep 2022 05:02:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47738 "EHLO
+        Wed, 14 Sep 2022 05:05:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbiINJBn (ORCPT
+        with ESMTP id S230451AbiINJEl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2022 05:01:43 -0400
+        Wed, 14 Sep 2022 05:04:41 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A867539F;
-        Wed, 14 Sep 2022 02:01:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CC9D785B4;
+        Wed, 14 Sep 2022 02:02:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 57A1D619AF;
-        Wed, 14 Sep 2022 09:01:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADCDFC433D7;
-        Wed, 14 Sep 2022 09:01:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D0E2261984;
+        Wed, 14 Sep 2022 09:02:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74FF3C433B5;
+        Wed, 14 Sep 2022 09:02:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663146099;
-        bh=mJoz7j0/vbeN00YCtxMscWRKSQYrc90JW6+Tx06LKJU=;
+        s=k20201202; t=1663146166;
+        bh=qKQAtBCemtDy6vUzTVwLIzS9ZjFKriakfnd7Kgeag/U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=COGRsSOvoVgCRwB8xiCymhaWoz4Y1a9AR80m7ai6n0X4qOkLGgr/a5iaMqXIjlnR4
-         Ra45f6qPMwoJ+lIzuQ7U8YPzshpOhOB1sMBzmCHhAQLYdcSuDSih2sxloCwp0CUojf
-         sLrNRPzdR4XrjNbvnljdw5l/prEEGdNpYiCTL/dACN9R7vrsCD1xmJQQ6CALqqtMRH
-         BUUxFSjH3HNjB+U1L+q1C9Bq5TclYErncEGfMZJ/+MhxoTiv2ZASN83PMKhJCCDRFs
-         GaZtexnzqkd/LN3INWRn9QgyMusw5hz41PgPjJhfS9l5f0eJA3G+C1YjNIlQb3u0uK
-         7heb8cJb9BJrA==
+        b=PnhSd5j0hpzHj25pxD7/CTMcKd7pS3WbiBnjY7C/gjqHXgjMs0dCsErIF3nM3YGSY
+         pL6y/wr1AcGR60alSQSMddVUUu2kEW6w8XetktMu5p5ilbyOg2rd6Z8gIDv7+BGVr2
+         ZcxzIKPxzyl9KpxBo46XBA8GvdPSSmYg6z2EZHIHu5dMkcQttyHDBIG0W61VHapRug
+         KkOXILYay3eKNAuhzRNwjYHPe+apvt/HXZ3PGJ+fvXevJwwfLAvgn/hn5+ILWzVFlP
+         CScbBxsLDBFRila0cKsKlUfx0OL7LK3sMh+3QSxHMTmo0GxHfKmTddU5FXG02XEfSn
+         bFWf8bx+4lung==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Soenke Huster <soenke.huster@eknoes.de>,
@@ -41,12 +41,12 @@ Cc:     Soenke Huster <soenke.huster@eknoes.de>,
         kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
         kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 10/22] wifi: mac80211_hwsim: check length for virtio packets
-Date:   Wed, 14 Sep 2022 05:00:51 -0400
-Message-Id: <20220914090103.470630-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 07/16] wifi: mac80211_hwsim: check length for virtio packets
+Date:   Wed, 14 Sep 2022 05:02:15 -0400
+Message-Id: <20220914090224.470913-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220914090103.470630-1-sashal@kernel.org>
-References: <20220914090103.470630-1-sashal@kernel.org>
+In-Reply-To: <20220914090224.470913-1-sashal@kernel.org>
+References: <20220914090224.470913-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -94,10 +94,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index b511e705a46e4..3d5b0c1e5da30 100644
+index feddf4045a8ca..52a2574b7d13b 100644
 --- a/drivers/net/wireless/mac80211_hwsim.c
 +++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -4780,6 +4780,10 @@ static int hwsim_virtio_handle_cmd(struct sk_buff *skb)
+@@ -4278,6 +4278,10 @@ static int hwsim_virtio_handle_cmd(struct sk_buff *skb)
  
  	nlh = nlmsg_hdr(skb);
  	gnlh = nlmsg_data(nlh);
@@ -108,7 +108,7 @@ index b511e705a46e4..3d5b0c1e5da30 100644
  	err = genlmsg_parse(nlh, &hwsim_genl_family, tb, HWSIM_ATTR_MAX,
  			    hwsim_genl_policy, NULL);
  	if (err) {
-@@ -4822,7 +4826,8 @@ static void hwsim_virtio_rx_work(struct work_struct *work)
+@@ -4320,7 +4324,8 @@ static void hwsim_virtio_rx_work(struct work_struct *work)
  	spin_unlock_irqrestore(&hwsim_virtio_lock, flags);
  
  	skb->data = skb->head;
