@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C342AECAAA1
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 23:08:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AF19ECAAA1
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 23:15:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229723AbiIPXI6 (ORCPT
+        id S229849AbiIPXPy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Sep 2022 19:08:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51168 "EHLO
+        Fri, 16 Sep 2022 19:15:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229727AbiIPXI5 (ORCPT
+        with ESMTP id S229869AbiIPXPv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2022 19:08:57 -0400
+        Fri, 16 Sep 2022 19:15:51 -0400
 Received: from fudo.makrotopia.org (fudo.makrotopia.org [IPv6:2a07:2ec0:3002::71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5813BB6A9
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2022 16:08:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91D7382D09
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2022 16:15:46 -0700 (PDT)
 Received: from local
         by fudo.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
          (Exim 4.96)
         (envelope-from <daniel@makrotopia.org>)
-        id 1oZKS7-000740-0G;
-        Sat, 17 Sep 2022 01:08:55 +0200
-Date:   Sat, 17 Sep 2022 00:08:49 +0100
+        id 1oZKNm-0006z8-3B;
+        Sat, 17 Sep 2022 01:04:27 +0200
+Date:   Sat, 17 Sep 2022 00:04:21 +0100
 From:   Daniel Golle <daniel@makrotopia.org>
 To:     linux-wireless@vger.kernel.org, Stanislaw Gruszka <stf_xl@wp.pl>,
         Helmut Schaa <helmut.schaa@googlemail.com>
@@ -32,39 +32,47 @@ Cc:     Kalle Valo <kvalo@kernel.org>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 15/15] rt2x00: correctly set BBP register 86 for MT7620
-Message-ID: <YyUCAab/UdlTViSp@makrotopia.org>
+Subject: [PATCH RESEND 01/15] rt2x00: define RF5592 in init_eeprom routine
+Message-ID: <YyUA9QVEM+D2VOL4@makrotopia.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Instead of 0 set the correct value for BBP register 86 for MT7620.
+From: Tomislav Požega <pozega.tomislav@gmail.com>
 
-Reported-by: Serge Vasilugin <vasilugin@yandex.ru>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+This patch fixes following crash on Linksys EA2750 during 5GHz wifi
+init:
+
+[    7.955153] rt2800pci 0000:01:00.0: card - bus=0x1, slot = 0x0 irq=4
+[    7.962259] rt2800pci 0000:01:00.0: loaded eeprom from mtd device "Factory"
+[    7.969435] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5592, rev 0222 detected
+[    7.977348] ieee80211 phy0: rt2800_init_eeprom: Error - Invalid RF chipset 0x0000 detected
+[    7.985793] ieee80211 phy0: rt2x00lib_probe_dev: Error - Failed to allocate device
+[    7.993569] CPU 0 Unable to handle kernel paging request at virtual address 00000024, epc == 800c8f54, ra == 80249ff8
+[    8.004408] Oops[#1]:
+
+Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 1da51536e73802..fe0d72b2cd2ebb 100644
+index 18102fbe36d6cc..cc9c5554fdc9ca 100644
 --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
 +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4192,7 +4192,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
- 		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
- 		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
--		rt2800_bbp_write(rt2x00dev, 86, 0);
-+		if (rt2x00_rt(rt2x00dev, RT6352))
-+			rt2800_bbp_write(rt2x00dev, 86, 0x38);
-+		else
-+			rt2800_bbp_write(rt2x00dev, 86, 0);
- 	}
+@@ -9435,6 +9435,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		rf = RF3853;
+ 	else if (rt2x00_rt(rt2x00dev, RT5350))
+ 		rf = RF5350;
++	else if (rt2x00_rt(rt2x00dev, RT5592))
++		rf = RF5592;
+ 	else
+ 		rf = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
  
- 	if (rf->channel <= 14) {
 -- 
 2.37.3
 
