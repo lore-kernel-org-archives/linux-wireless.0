@@ -2,92 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E314ECAAD8
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 16:42:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2079AECAAD8
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 16:47:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229599AbiIPQmL (ORCPT
+        id S229662AbiIPQrF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Sep 2022 12:42:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59022 "EHLO
+        Fri, 16 Sep 2022 12:47:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiIPQmK (ORCPT
+        with ESMTP id S229495AbiIPQrD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2022 12:42:10 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F05A3DBC6
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2022 09:42:09 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id v4so20834789pgi.10
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2022 09:42:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date;
-        bh=LEDsCQxg94Ho/eSvAXdsw7dBF4zL19ANIEnTAH5+po8=;
-        b=zTYYsWG2PwhmbAyvgkK6bo8KmNvqXUMkrcoqnoeKOPAkmTjw0VkOHdf3CR3UagVMAS
-         1yPP/O+QqYyWPdORQyguxxwh3bC9A8rYmFym65+nhzKErWIUquKhTp/gBV7Tz5aIbe/r
-         IyUI9CL4D9uQvbINQSIqsqm9x528vlqldvtI/kg6eu6YaWSeodUcw+weRcT5bcWtPoCL
-         E6tgPXrppmk9kC7l5AKwF1STKgv1RanxnOFXUSoc7U7kc0J+Azyl+gaYKa8QNLw1wI5W
-         ZDJf+X1vyls+0Asa4owaigwZLJjMT8nhDxr/poQ6kG5xgZLzSeK14bWdnyMdwe2QqSEz
-         Xg4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date;
-        bh=LEDsCQxg94Ho/eSvAXdsw7dBF4zL19ANIEnTAH5+po8=;
-        b=Zr5hCOjjwRDEphmS2/zz2XYu1ea/MyC9SF48s8Ht6p1qKMwtRbUmZpAOT11IeekTG8
-         YV0zQ/4ctGoWZWDIYCpXvt43ki6f+U9OYl/d47WrDMRV9km9TG/9QF7BF8Lj5Ek7SuUG
-         1Vqcv74/0GgPC/lUf2kRDfD9c5O6vuJ6euZoY3FnaQo0nEji2+JECLXrope+M4d/zcyw
-         NUv6Yl8R6WX1WsDOGp3DZNJYoXdfhmOIjJJoee9+lMIDpSJzDuuR4qA6zhRxNJ19PkOj
-         v7f21WzPhcI7nmm1tb7z5Y+RAr77K+MDuKjbJ3OqMvLGoLzXbWcQPCl8/M3ZRMq18O3F
-         G9xA==
-X-Gm-Message-State: ACrzQf1w/fHFntfZv3qgme7mlufH4IemDHoj0FP43K1y/2hnFqS0fMOa
-        WufscBz8zHc4SzUKZjVAGdZoRGZ2Z0KvW2KOdsXzew==
-X-Google-Smtp-Source: AMsMyM6AxlzL2A98zdX6EJeu5CT29YoSqGXQTMp6kFIoV9p5CjQ8UX6T01Qfr5U8fhir2FL3+ygLrPrF0cmX8CTMWmg=
-X-Received: by 2002:a63:1d1a:0:b0:433:f6ea:dce6 with SMTP id
- d26-20020a631d1a000000b00433f6eadce6mr5188833pgd.178.1663346528832; Fri, 16
- Sep 2022 09:42:08 -0700 (PDT)
+        Fri, 16 Sep 2022 12:47:03 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A72A6ADD
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2022 09:47:02 -0700 (PDT)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28GG31m7021724;
+        Fri, 16 Sep 2022 16:46:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=zqi4EV6qPnp3p1tyr1Elb5opL0fitFGRnaLyZHpX6BE=;
+ b=DXiasinW6rOpdqMq8IsLWaUEeJa6fsSOv4jwU2EDtFKRFB2vUVsykcXAqq93j4tb/A86
+ s06uMPsuIP31zcv12JuuakR6/54MRfTudEsiRLMJOwWXYKi6HRYVrYEmVQEAHaq22CK4
+ mwG6n4EtogHqv2YiKgJaxCTZOgrfAv6Ysu/CGVutwrc2GfaB3V8M6qucJW7uh2RulqzZ
+ bvlvSI51gg2203FuG/FszxObirdAo30HP0b/qLcjpt9N/Xpre+GjIcWAU2EsbSjw6Vz7
+ rov/Euml0A4qcA70AUicxV1EnDN9jFdp5/Na+vTwWZcYybsbKU4gFsTL4J4qq53zP3it Dg== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jm9m1bqwj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 16 Sep 2022 16:46:45 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28GGPtdd017565
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 16 Sep 2022 16:25:55 GMT
+Received: from [10.110.7.80] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Fri, 16 Sep
+ 2022 09:25:54 -0700
+Message-ID: <29fe28db-622d-7784-128f-8ec6b4d5a0a3@quicinc.com>
+Date:   Fri, 16 Sep 2022 09:25:53 -0700
 MIME-Version: 1.0
-Received: by 2002:a05:7300:8b26:b0:78:c13b:6a7a with HTTP; Fri, 16 Sep 2022
- 09:42:08 -0700 (PDT)
-From:   Loic Poulain <loic.poulain@linaro.org>
-Date:   Fri, 16 Sep 2022 18:42:08 +0200
-Message-ID: <CAMZdPi_+zQe41xSx+LHj_FDeHu7rs=TEgbWGBaMxcoSrOvXLRQ@mail.gmail.com>
-Subject: Re: [PATCH v3 1/1] wcn36xx: Add RX frame SNR as a source of system entropy
-To:     "Bryan O'Donoghue" <bryan.odonoghue@linaro.org>
-Cc:     "Jason A . Donenfeld" <Jason@zx2c4.com>, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, kvalo@kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        pabeni@redhat.com, wcn36xx@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH] wifi: mac80211: Align with Draft P802.11be_D1.5
+Content-Language: en-US
+To:     Howard Hsu <howard-yh.hsu@mediatek.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>
+References: <20220916141700.28378-1-howard-yh.hsu@mediatek.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20220916141700.28378-1-howard-yh.hsu@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: Z8WkJoe3Q_HbCQjLdR0s1q1VDCN9qXGy
+X-Proofpoint-GUID: Z8WkJoe3Q_HbCQjLdR0s1q1VDCN9qXGy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-16_10,2022-09-16_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ suspectscore=0 bulkscore=0 impostorscore=0 lowpriorityscore=0
+ malwarescore=0 adultscore=0 mlxlogscore=999 spamscore=0 mlxscore=0
+ phishscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2209160123
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 15 Sept 2022 at 02:41, Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-wrote:
->
-> The signal-to-noise-ratio SNR is returned by the wcn36xx firmware for each
-> received frame. SNR represents all of the unwanted interference signal
-> after filtering out the fundamental frequency and harmonics of the
-> frequency.
->
-> Noise can come from various electromagnetic sources, from temperature
-> affecting the performance hardware components or quantization effects
-> converting from analog to digital domains.
->
-> The SNR value returned by the WiFi firmware then is a good source of
-> entropy.
->
-> Other WiFi drivers offer up the noise component of the FFT as an entropy
-> source for the random pool e.g.
->
-> commit 2aa56cca3571 ("ath9k: Mix the received FFT bins to the random
-pool")
->
-> I attended Jason's talk on sources of randomness at Plumbers and it
-> occurred to me that SNR is a reasonable candidate to add.
->
-> Cc: Jason A. Donenfeld <Jason@zx2c4.com>
-> Signed-off-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+On 9/16/2022 7:17 AM, Howard Hsu wrote:
+> Fix ieee80211_prep_channel to aligh with Draft P80211.be_D1.5. It shall
 
-Acked-by: Loic Poulain <loic.poulain@linaro.org>
+s/aligh/align/
+
+why refer to D1.5? Current code is using D2.0 definitions.
+
+further note it seems at some point we should move all definitions to 
+D2.1 (in which case EHT operation information is now at offset 8 of the 
+EHT operation element)
+
+
+
+> shift 4 byte to fetch EHT Operation information.
+> 
+> Signed-off-by: Howard Hsu <howard-yh.hsu@mediatek.com>
+> ---
+>   net/mac80211/mlme.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index ff449e0c2e62..9bb085eab12a 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -4735,7 +4735,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+>   						   cbss_ies->data, cbss_ies->len);
+>   		if (eht_oper_ie && eht_oper_ie[1] >=
+>   		    1 + sizeof(struct ieee80211_eht_operation))
+> -			eht_oper = (void *)(eht_oper_ie + 3);
+> +			eht_oper = (void *)(eht_oper_ie + 4);
+>   		else
+>   			eht_oper = NULL;
+>   	}
+
