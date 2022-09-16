@@ -2,82 +2,146 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A5E7ECAAD8
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 22:55:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F19D9ECAAD8
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 23:05:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229714AbiIPWzz (ORCPT
+        id S229771AbiIPXFS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Sep 2022 18:55:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39300 "EHLO
+        Fri, 16 Sep 2022 19:05:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229723AbiIPWzy (ORCPT
+        with ESMTP id S229539AbiIPXFR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2022 18:55:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B04CABF2F;
-        Fri, 16 Sep 2022 15:55:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 35D2362DD1;
-        Fri, 16 Sep 2022 22:55:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90A05C43470;
-        Fri, 16 Sep 2022 22:55:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663368950;
-        bh=CxePb5gSHUo+VC915HSKvQFTvB1YDl7G7mETr2pEKdM=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=bQLRcpJO4wQpxuKyGPt8hrvOCf0+UCyiCoUTiiNwv/aIhNN2dBjfLe9+QF/vrP3qz
-         yETSihoSo2NYig77KvTY3XH/HlCWIokQfpFPLYX8Qv2gyRTME+saS6Ot3RD4E39+2u
-         ZbzrYBduaPFhF8M4EDAqy/Ag9+IysO1rAr4ocN5mjDDjZk2rQaERZC+Ey8RuAkZcv8
-         jATd6s/+YmiMLcTLj/AGvyq1gL5PLUo0akM3FuoXQ9eliemMvzjswZ1xUJIzWfcw+o
-         xxagVoK8vIdeTEZPhRw3QtjglIMZbew9OpEnnDlG0PTcC4PqVIy8GEhcI3ffi/x3hM
-         3UtsVZcy30L4A==
-Received: by mail-wm1-f47.google.com with SMTP id v185-20020a1cacc2000000b003b42e4f278cso718695wme.5;
-        Fri, 16 Sep 2022 15:55:50 -0700 (PDT)
-X-Gm-Message-State: ACrzQf0htlC4P9wklDtoerfl3559sCb/6L0fIA/MpQcZsLmEfbYS5B+b
-        AusuQfNMR3YqbmYhm1mjUsbe4NUwrbm5AsgYwMY=
-X-Google-Smtp-Source: AMsMyM4DdIs0+/VNJIbbOCv56yQxPrcSrae4oNrMbcWmbPGfpBk1PqD5XW8+CRbBoA9out17hpCehWfW1Yb7zoW8xm0=
-X-Received: by 2002:a7b:c2a2:0:b0:3a8:4959:a327 with SMTP id
- c2-20020a7bc2a2000000b003a84959a327mr4772463wmk.50.1663368948773; Fri, 16 Sep
- 2022 15:55:48 -0700 (PDT)
-MIME-Version: 1.0
-References: <404d2f5ec663128342541fa392a47226a46e5634.1663219530.git.objelf@gmail.com>
- <YyRCtrOtPqu2oEPj@kroah.com>
-In-Reply-To: <YyRCtrOtPqu2oEPj@kroah.com>
-From:   Sean Wang <sean.wang@kernel.org>
-Date:   Fri, 16 Sep 2022 15:55:36 -0700
-X-Gmail-Original-Message-ID: <CAGp9Lzqyd0c0Aw6XSjsepKw_RsTawvbF512DvzaXisRxdYbMZA@mail.gmail.com>
-Message-ID: <CAGp9Lzqyd0c0Aw6XSjsepKw_RsTawvbF512DvzaXisRxdYbMZA@mail.gmail.com>
-Subject: Re: [PATCH 5.19] wifi: mt76: mt7921e: fix crash in chip reset fail
-To:     Greg KH <gregkh@linuxfoundation.org>
-Cc:     sean.wang@mediatek.com, stable@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Deren Wu <deren.wu@mediatek.com>,
+        Fri, 16 Sep 2022 19:05:17 -0400
+X-Greylist: delayed 63 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 16 Sep 2022 16:05:15 PDT
+Received: from fudo.makrotopia.org (fudo.makrotopia.org [IPv6:2a07:2ec0:3002::71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57D9F46615
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2022 16:05:14 -0700 (PDT)
+Received: from local
+        by fudo.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
+         (Exim 4.96)
+        (envelope-from <daniel@makrotopia.org>)
+        id 1oZKOW-0006zn-32;
+        Sat, 17 Sep 2022 01:05:13 +0200
+Date:   Sat, 17 Sep 2022 00:05:02 +0100
+From:   Daniel Golle <daniel@makrotopia.org>
+To:     linux-wireless@vger.kernel.org, Stanislaw Gruszka <stf_xl@wp.pl>,
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Cc:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
         Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH 03/15] rt2x00: add support for external PA on MT7620
+Message-ID: <YyUBHg40OUWfuUWD@makrotopia.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi, Greg
+Implement support for external PA connected to MT7620A.
 
-On Fri, Sep 16, 2022 at 2:39 AM Greg KH <gregkh@linuxfoundation.org> wrote:
->
-> On Thu, Sep 15, 2022 at 01:32:35PM +0800, sean.wang@mediatek.com wrote:
-> > From: Deren Wu <deren.wu@mediatek.com>
-> >
-> > commit fa3fbe64037839f448dc569212bafc5a495d8219 upstream.
->
-> This is already in the 5.19.9 kernel release, right?  Do we need it
-> again?
+Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
+[pozega.tomislav@gmail.com: use chanreg and dccal helpers.]
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800.h   |  1 +
+ .../net/wireless/ralink/rt2x00/rt2800lib.c    | 52 ++++++++++++++++++-
+ 2 files changed, 52 insertions(+), 1 deletion(-)
 
-Ah, If so, we don't need it again. It seemed unavailable when I
-submitted the patch. Sorry for bothering you.
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index d758e887445783..431502021dc2fe 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -2739,6 +2739,7 @@ enum rt2800_eeprom_word {
+ #define EEPROM_NIC_CONF2_RX_STREAM	FIELD16(0x000f)
+ #define EEPROM_NIC_CONF2_TX_STREAM	FIELD16(0x00f0)
+ #define EEPROM_NIC_CONF2_CRYSTAL	FIELD16(0x0600)
++#define EEPROM_NIC_CONF2_EXTERNAL_PA	FIELD16(0x8000)
+ 
+ /*
+  * EEPROM LNA
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index cc9c5554fdc9ca..b34453bd87174f 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -4368,6 +4368,43 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_iq_calibrate(rt2x00dev, rf->channel);
+ 	}
+ 
++	if (rt2x00_rt(rt2x00dev, RT6352)) {
++		if (test_bit(CAPABILITY_EXTERNAL_PA_TX0,
++			     &rt2x00dev->cap_flags)) {
++			reg = rt2800_register_read(rt2x00dev, RF_CONTROL3);
++			reg |= 0x00000101;
++			rt2800_register_write(rt2x00dev, RF_CONTROL3, reg);
++
++			reg = rt2800_register_read(rt2x00dev, RF_BYPASS3);
++			reg |= 0x00000101;
++			rt2800_register_write(rt2x00dev, RF_BYPASS3, reg);
++
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 43, 0x73);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 44, 0x73);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 45, 0x73);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 46, 0x27);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 47, 0xC8);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 48, 0xA4);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 49, 0x05);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 54, 0x27);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 55, 0xC8);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 56, 0xA4);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 57, 0x05);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 58, 0x27);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 59, 0xC8);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 60, 0xA4);
++			rt2800_rfcsr_write_chanreg(rt2x00dev, 61, 0x05);
++			rt2800_rfcsr_write_dccal(rt2x00dev, 05, 0x00);
++
++			rt2800_register_write(rt2x00dev, TX0_RF_GAIN_CORRECT,
++					      0x36303636);
++			rt2800_register_write(rt2x00dev, TX0_RF_GAIN_ATTEN,
++					      0x6C6C6B6C);
++			rt2800_register_write(rt2x00dev, TX1_RF_GAIN_ATTEN,
++					      0x6C6C6B6C);
++		}
++	}
++
+ 	bbp = rt2800_bbp_read(rt2x00dev, 4);
+ 	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 2 * conf_is_ht40(conf));
+ 	rt2800_bbp_write(rt2x00dev, 4, bbp);
+@@ -9566,7 +9603,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	eeprom = rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1);
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3352)) {
++	if (rt2x00_rt(rt2x00dev, RT3352) ||
++	    rt2x00_rt(rt2x00dev, RT6352)) {
+ 		if (rt2x00_get_field16(eeprom,
+ 		    EEPROM_NIC_CONF1_EXTERNAL_TX0_PA_3352))
+ 		    __set_bit(CAPABILITY_EXTERNAL_PA_TX0,
+@@ -9577,6 +9615,18 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 			      &rt2x00dev->cap_flags);
+ 	}
+ 
++	eeprom = rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF2);
++
++	if (rt2x00_rt(rt2x00dev, RT6352) && eeprom != 0 && eeprom != 0xffff) {
++		if (!rt2x00_get_field16(eeprom,
++					EEPROM_NIC_CONF2_EXTERNAL_PA)) {
++			__clear_bit(CAPABILITY_EXTERNAL_PA_TX0,
++				    &rt2x00dev->cap_flags);
++			__clear_bit(CAPABILITY_EXTERNAL_PA_TX1,
++				    &rt2x00dev->cap_flags);
++		}
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+2.37.3
 
-    Sean
-
->
-> thanks,
->
-> greg k-h
