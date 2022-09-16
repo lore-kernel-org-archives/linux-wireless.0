@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A0F9C54EE9
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 16:03:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 212CAECAAA1
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Sep 2022 16:04:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230137AbiIPQDz (ORCPT
+        id S230203AbiIPQD5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Sep 2022 12:03:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39250 "EHLO
+        Fri, 16 Sep 2022 12:03:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230206AbiIPQD2 (ORCPT
+        with ESMTP id S230249AbiIPQDd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2022 12:03:28 -0400
+        Fri, 16 Sep 2022 12:03:33 -0400
 Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9618DB56D4;
-        Fri, 16 Sep 2022 09:03:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD3E0B6016;
+        Fri, 16 Sep 2022 09:03:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=armlinux.org.uk; s=pandora-2019; h=Date:Sender:Message-Id:Content-Type:
         Content-Transfer-Encoding:MIME-Version:Subject:Cc:To:From:References:
         In-Reply-To:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=euGjEP5KKPvWOnsVlf1QQNH2sq2qPX4DZ0kmuvczwCE=; b=KBifPY+MOqET7Rstnb8pTi4Ngj
-        Kgf5/LRagQK/pNZ38qx1oCj2OCUI2ML+Ze+regOX1Po9a/BLwHdkbZxxdnbx3vYoIo2ihqObBI3kp
-        h5iO8nJouNReJx8h7CYmiz7sjNsss1Gmoq+H/9zmqs+lO1DkRA6QStoyPa0TaxQFUjSJG5aZAQNEp
-        3kW4yk4J518it9VVDzA1JBD6zsBvvsFxtEi1XhHSNNqZVpZaEGOvjrBJ2jkTpDsbaY99m4/17hcAc
-        pq+ONLLjsLqCbNhMJ9yX5n8AXw714+8srxUKyip4uR1Yxd9jI2G6/g//E4ZuQhZ6r4Hbosx0gsBpI
-        rZ1gzvlw==;
-Received: from e0022681537dd.dyn.armlinux.org.uk ([fd8f:7570:feb6:1:222:68ff:fe15:37dd]:41316 helo=rmk-PC.armlinux.org.uk)
+        bh=06h/aLRDpzu0LJwNKp8/O+DW8AdR6QoYK87bZj9Y9rE=; b=OV7B74hkZgueUtosq2xMVJX84k
+        ccK3aMa1th9/C0UDJlVXTnuFbqyT/cq6WfQU07NAOy9aMVfwf4Z0hGMqOgtAaG6NMLn7I0DqWLx9d
+        eEFeU4XjzM5SxFTWptTd+Br948eosJb9Z7UT+kEGBfq2Jgdp0e2kYO1FgLdTTi953Z3ksnN9Zqpul
+        XYkFLuUYbfMW4VtgKcxitEJ+DXgtFDwZFmurAwegpNCY9ah/GNZisu42yKikp+85qRskGCN64EEBM
+        bVtQaWREn4TNupVNSdeFfBkmpEGsBHZSqLDqsJsi3b/THYTeuzRGJdY6k6bfPKaUGXAayc9tJCh+N
+        UzRjMgGw==;
+Received: from e0022681537dd.dyn.armlinux.org.uk ([fd8f:7570:feb6:1:222:68ff:fe15:37dd]:33148 helo=rmk-PC.armlinux.org.uk)
         by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <rmk@armlinux.org.uk>)
-        id 1oZDo8-0006wF-Qp; Fri, 16 Sep 2022 17:03:12 +0100
+        id 1oZDoJ-0006wx-1V; Fri, 16 Sep 2022 17:03:23 +0100
 Received: from rmk by rmk-PC.armlinux.org.uk with local (Exim 4.94.2)
         (envelope-from <rmk@rmk-PC.armlinux.org.uk>)
-        id 1oZDo8-0077aq-6I; Fri, 16 Sep 2022 17:03:12 +0100
+        id 1oZDoI-0077b3-Dd; Fri, 16 Sep 2022 17:03:22 +0100
 In-Reply-To: <YySd3pASZKUh4leX@shell.armlinux.org.uk>
 References: <YySd3pASZKUh4leX@shell.armlinux.org.uk>
 From:   Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
@@ -56,278 +56,127 @@ Cc:     Alyssa Rosenzweig <alyssa@rosenzweig.io>, asahi@lists.linux.dev,
         "Rafa__ Mi__ecki" <zajec5@gmail.com>,
         Rob Herring <robh+dt@kernel.org>,
         SHA-cyfmac-dev-list@infineon.com, Sven Peter <sven@svenpeter.dev>
-Subject: [PATCH wireless-next v3 10/12] brcmfmac: pcie: Support PCIe core
- revisions >= 64
+Subject: [PATCH wireless-next v3 12/12] arm64: dts: apple: Add WiFi module and
+ antenna properties
 MIME-Version: 1.0
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1oZDo8-0077aq-6I@rmk-PC.armlinux.org.uk>
+Message-Id: <E1oZDoI-0077b3-Dd@rmk-PC.armlinux.org.uk>
 Sender: Russell King <rmk@armlinux.org.uk>
-Date:   Fri, 16 Sep 2022 17:03:12 +0100
+Date:   Fri, 16 Sep 2022 17:03:22 +0100
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Hector Martin <marcan@marcan.st>
 
-These newer PCIe core revisions include new sets of registers that must
-be used instead of the legacy ones. Introduce a brcmf_pcie_reginfo to
-hold the specific register offsets and values to use for a given
-platform, and change all the register accesses to indirect through it.
+Add the new module-instance/antenna-sku properties required to select
+WiFi firmwares properly to all board device trees.
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Hector Martin <marcan@marcan.st>
+Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+Acked-by: Hector Martin <marcan@marcan.st>
+Signed-off-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
 ---
- .../broadcom/brcm80211/brcmfmac/pcie.c        | 125 +++++++++++++++---
- 1 file changed, 105 insertions(+), 20 deletions(-)
+ arch/arm64/boot/dts/apple/t8103-j274.dts  | 4 ++++
+ arch/arm64/boot/dts/apple/t8103-j293.dts  | 4 ++++
+ arch/arm64/boot/dts/apple/t8103-j313.dts  | 4 ++++
+ arch/arm64/boot/dts/apple/t8103-j456.dts  | 4 ++++
+ arch/arm64/boot/dts/apple/t8103-j457.dts  | 4 ++++
+ arch/arm64/boot/dts/apple/t8103-jxxx.dtsi | 2 ++
+ 6 files changed, 22 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 2e9af2cacc2f..36fc643af086 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -119,6 +119,12 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- #define BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_0	0x140
- #define BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_1	0x144
- 
-+#define BRCMF_PCIE_64_PCIE2REG_INTMASK		0xC14
-+#define BRCMF_PCIE_64_PCIE2REG_MAILBOXINT	0xC30
-+#define BRCMF_PCIE_64_PCIE2REG_MAILBOXMASK	0xC34
-+#define BRCMF_PCIE_64_PCIE2REG_H2D_MAILBOX_0	0xA20
-+#define BRCMF_PCIE_64_PCIE2REG_H2D_MAILBOX_1	0xA24
-+
- #define BRCMF_PCIE2_INTA			0x01
- #define BRCMF_PCIE2_INTB			0x02
- 
-@@ -138,6 +144,8 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- #define	BRCMF_PCIE_MB_INT_D2H3_DB0		0x400000
- #define	BRCMF_PCIE_MB_INT_D2H3_DB1		0x800000
- 
-+#define BRCMF_PCIE_MB_INT_FN0			(BRCMF_PCIE_MB_INT_FN0_0 | \
-+						 BRCMF_PCIE_MB_INT_FN0_1)
- #define BRCMF_PCIE_MB_INT_D2H_DB		(BRCMF_PCIE_MB_INT_D2H0_DB0 | \
- 						 BRCMF_PCIE_MB_INT_D2H0_DB1 | \
- 						 BRCMF_PCIE_MB_INT_D2H1_DB0 | \
-@@ -147,6 +155,40 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- 						 BRCMF_PCIE_MB_INT_D2H3_DB0 | \
- 						 BRCMF_PCIE_MB_INT_D2H3_DB1)
- 
-+#define	BRCMF_PCIE_64_MB_INT_D2H0_DB0		0x1
-+#define	BRCMF_PCIE_64_MB_INT_D2H0_DB1		0x2
-+#define	BRCMF_PCIE_64_MB_INT_D2H1_DB0		0x4
-+#define	BRCMF_PCIE_64_MB_INT_D2H1_DB1		0x8
-+#define	BRCMF_PCIE_64_MB_INT_D2H2_DB0		0x10
-+#define	BRCMF_PCIE_64_MB_INT_D2H2_DB1		0x20
-+#define	BRCMF_PCIE_64_MB_INT_D2H3_DB0		0x40
-+#define	BRCMF_PCIE_64_MB_INT_D2H3_DB1		0x80
-+#define	BRCMF_PCIE_64_MB_INT_D2H4_DB0		0x100
-+#define	BRCMF_PCIE_64_MB_INT_D2H4_DB1		0x200
-+#define	BRCMF_PCIE_64_MB_INT_D2H5_DB0		0x400
-+#define	BRCMF_PCIE_64_MB_INT_D2H5_DB1		0x800
-+#define	BRCMF_PCIE_64_MB_INT_D2H6_DB0		0x1000
-+#define	BRCMF_PCIE_64_MB_INT_D2H6_DB1		0x2000
-+#define	BRCMF_PCIE_64_MB_INT_D2H7_DB0		0x4000
-+#define	BRCMF_PCIE_64_MB_INT_D2H7_DB1		0x8000
-+
-+#define BRCMF_PCIE_64_MB_INT_D2H_DB		(BRCMF_PCIE_64_MB_INT_D2H0_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H0_DB1 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H1_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H1_DB1 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H2_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H2_DB1 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H3_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H3_DB1 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H4_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H4_DB1 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H5_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H5_DB1 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H6_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H6_DB1 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H7_DB0 | \
-+						 BRCMF_PCIE_64_MB_INT_D2H7_DB1)
-+
- #define BRCMF_PCIE_SHARED_VERSION_7		7
- #define BRCMF_PCIE_MIN_SHARED_VERSION		5
- #define BRCMF_PCIE_MAX_SHARED_VERSION		BRCMF_PCIE_SHARED_VERSION_7
-@@ -273,6 +315,7 @@ struct brcmf_pciedev_info {
- 	char nvram_name[BRCMF_FW_NAME_LEN];
- 	char clm_name[BRCMF_FW_NAME_LEN];
- 	const struct firmware *clm_fw;
-+	const struct brcmf_pcie_reginfo *reginfo;
- 	void __iomem *regs;
- 	void __iomem *tcm;
- 	u32 ram_base;
-@@ -359,6 +402,36 @@ static const u32 brcmf_ring_itemsize[BRCMF_NROF_COMMON_MSGRINGS] = {
- 	BRCMF_D2H_MSGRING_RX_COMPLETE_ITEMSIZE
+diff --git a/arch/arm64/boot/dts/apple/t8103-j274.dts b/arch/arm64/boot/dts/apple/t8103-j274.dts
+index 2cd429efba5b..c1f3ba9c39f6 100644
+--- a/arch/arm64/boot/dts/apple/t8103-j274.dts
++++ b/arch/arm64/boot/dts/apple/t8103-j274.dts
+@@ -21,6 +21,10 @@ aliases {
+ 	};
  };
  
-+struct brcmf_pcie_reginfo {
-+	u32 intmask;
-+	u32 mailboxint;
-+	u32 mailboxmask;
-+	u32 h2d_mailbox_0;
-+	u32 h2d_mailbox_1;
-+	u32 int_d2h_db;
-+	u32 int_fn0;
++&wifi0 {
++	brcm,board-type = "apple,atlantisb";
 +};
 +
-+static const struct brcmf_pcie_reginfo brcmf_reginfo_default = {
-+	.intmask = BRCMF_PCIE_PCIE2REG_INTMASK,
-+	.mailboxint = BRCMF_PCIE_PCIE2REG_MAILBOXINT,
-+	.mailboxmask = BRCMF_PCIE_PCIE2REG_MAILBOXMASK,
-+	.h2d_mailbox_0 = BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_0,
-+	.h2d_mailbox_1 = BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_1,
-+	.int_d2h_db = BRCMF_PCIE_MB_INT_D2H_DB,
-+	.int_fn0 = BRCMF_PCIE_MB_INT_FN0,
+ /*
+  * Force the bus number assignments so that we can declare some of the
+  * on-board devices and properties that are populated by the bootloader
+diff --git a/arch/arm64/boot/dts/apple/t8103-j293.dts b/arch/arm64/boot/dts/apple/t8103-j293.dts
+index 49cdf4b560a3..ecb10d237a05 100644
+--- a/arch/arm64/boot/dts/apple/t8103-j293.dts
++++ b/arch/arm64/boot/dts/apple/t8103-j293.dts
+@@ -17,6 +17,10 @@ / {
+ 	model = "Apple MacBook Pro (13-inch, M1, 2020)";
+ };
+ 
++&wifi0 {
++	brcm,board-type = "apple,honshu";
 +};
 +
-+static const struct brcmf_pcie_reginfo brcmf_reginfo_64 = {
-+	.intmask = BRCMF_PCIE_64_PCIE2REG_INTMASK,
-+	.mailboxint = BRCMF_PCIE_64_PCIE2REG_MAILBOXINT,
-+	.mailboxmask = BRCMF_PCIE_64_PCIE2REG_MAILBOXMASK,
-+	.h2d_mailbox_0 = BRCMF_PCIE_64_PCIE2REG_H2D_MAILBOX_0,
-+	.h2d_mailbox_1 = BRCMF_PCIE_64_PCIE2REG_H2D_MAILBOX_1,
-+	.int_d2h_db = BRCMF_PCIE_64_MB_INT_D2H_DB,
-+	.int_fn0 = 0,
+ /*
+  * Remove unused PCIe ports and disable the associated DARTs.
+  */
+diff --git a/arch/arm64/boot/dts/apple/t8103-j313.dts b/arch/arm64/boot/dts/apple/t8103-j313.dts
+index b0ebb45bdb6f..df741737b8e6 100644
+--- a/arch/arm64/boot/dts/apple/t8103-j313.dts
++++ b/arch/arm64/boot/dts/apple/t8103-j313.dts
+@@ -17,6 +17,10 @@ / {
+ 	model = "Apple MacBook Air (M1, 2020)";
+ };
+ 
++&wifi0 {
++	brcm,board-type = "apple,shikoku";
 +};
 +
- static void brcmf_pcie_setup(struct device *dev, int ret,
- 			     struct brcmf_fw_request *fwreq);
- static struct brcmf_fw_request *
-@@ -802,30 +875,29 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo,
+ /*
+  * Remove unused PCIe ports and disable the associated DARTs.
+  */
+diff --git a/arch/arm64/boot/dts/apple/t8103-j456.dts b/arch/arm64/boot/dts/apple/t8103-j456.dts
+index 884fddf7d363..8c6bf9592510 100644
+--- a/arch/arm64/boot/dts/apple/t8103-j456.dts
++++ b/arch/arm64/boot/dts/apple/t8103-j456.dts
+@@ -21,6 +21,10 @@ aliases {
+ 	};
+ };
  
- static void brcmf_pcie_intr_disable(struct brcmf_pciedev_info *devinfo)
- {
--	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXMASK, 0);
-+	brcmf_pcie_write_reg32(devinfo, devinfo->reginfo->mailboxmask, 0);
- }
- 
- 
- static void brcmf_pcie_intr_enable(struct brcmf_pciedev_info *devinfo)
- {
--	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXMASK,
--			       BRCMF_PCIE_MB_INT_D2H_DB |
--			       BRCMF_PCIE_MB_INT_FN0_0 |
--			       BRCMF_PCIE_MB_INT_FN0_1);
-+	brcmf_pcie_write_reg32(devinfo, devinfo->reginfo->mailboxmask,
-+			       devinfo->reginfo->int_d2h_db |
-+			       devinfo->reginfo->int_fn0);
- }
- 
- static void brcmf_pcie_hostready(struct brcmf_pciedev_info *devinfo)
- {
- 	if (devinfo->shared.flags & BRCMF_PCIE_SHARED_HOSTRDY_DB1)
- 		brcmf_pcie_write_reg32(devinfo,
--				       BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_1, 1);
-+				       devinfo->reginfo->h2d_mailbox_1, 1);
- }
- 
- static irqreturn_t brcmf_pcie_quick_check_isr(int irq, void *arg)
- {
- 	struct brcmf_pciedev_info *devinfo = (struct brcmf_pciedev_info *)arg;
- 
--	if (brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXINT)) {
-+	if (brcmf_pcie_read_reg32(devinfo, devinfo->reginfo->mailboxint)) {
- 		brcmf_pcie_intr_disable(devinfo);
- 		brcmf_dbg(PCIE, "Enter\n");
- 		return IRQ_WAKE_THREAD;
-@@ -840,15 +912,14 @@ static irqreturn_t brcmf_pcie_isr_thread(int irq, void *arg)
- 	u32 status;
- 
- 	devinfo->in_irq = true;
--	status = brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXINT);
-+	status = brcmf_pcie_read_reg32(devinfo, devinfo->reginfo->mailboxint);
- 	brcmf_dbg(PCIE, "Enter %x\n", status);
- 	if (status) {
--		brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXINT,
-+		brcmf_pcie_write_reg32(devinfo, devinfo->reginfo->mailboxint,
- 				       status);
--		if (status & (BRCMF_PCIE_MB_INT_FN0_0 |
--			      BRCMF_PCIE_MB_INT_FN0_1))
-+		if (status & devinfo->reginfo->int_fn0)
- 			brcmf_pcie_handle_mb_data(devinfo);
--		if (status & BRCMF_PCIE_MB_INT_D2H_DB) {
-+		if (status & devinfo->reginfo->int_d2h_db) {
- 			if (devinfo->state == BRCMFMAC_PCIE_STATE_UP)
- 				brcmf_proto_msgbuf_rx_trigger(
- 							&devinfo->pdev->dev);
-@@ -907,8 +978,8 @@ static void brcmf_pcie_release_irq(struct brcmf_pciedev_info *devinfo)
- 	if (devinfo->in_irq)
- 		brcmf_err(bus, "Still in IRQ (processing) !!!\n");
- 
--	status = brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXINT);
--	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXINT, status);
-+	status = brcmf_pcie_read_reg32(devinfo, devinfo->reginfo->mailboxint);
-+	brcmf_pcie_write_reg32(devinfo, devinfo->reginfo->mailboxint, status);
- 
- 	devinfo->irq_allocated = false;
- }
-@@ -960,7 +1031,7 @@ static int brcmf_pcie_ring_mb_ring_bell(void *ctx)
- 
- 	brcmf_dbg(PCIE, "RING !\n");
- 	/* Any arbitrary value will do, lets use 1 */
--	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_H2D_MAILBOX_0, 1);
-+	brcmf_pcie_write_reg32(devinfo, devinfo->reginfo->h2d_mailbox_0, 1);
- 
- 	return 0;
- }
-@@ -1723,15 +1794,22 @@ static int brcmf_pcie_buscoreprep(void *ctx)
- static int brcmf_pcie_buscore_reset(void *ctx, struct brcmf_chip *chip)
- {
- 	struct brcmf_pciedev_info *devinfo = (struct brcmf_pciedev_info *)ctx;
--	u32 val;
-+	struct brcmf_core *core;
-+	u32 val, reg;
- 
- 	devinfo->ci = chip;
- 	brcmf_pcie_reset_device(devinfo);
- 
--	val = brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXINT);
-+	/* reginfo is not ready yet */
-+	core = brcmf_chip_get_core(chip, BCMA_CORE_PCIE2);
-+	if (core->rev >= 64)
-+		reg = BRCMF_PCIE_64_PCIE2REG_MAILBOXINT;
-+	else
-+		reg = BRCMF_PCIE_PCIE2REG_MAILBOXINT;
++&wifi0 {
++	brcm,board-type = "apple,capri";
++};
 +
-+	val = brcmf_pcie_read_reg32(devinfo, reg);
- 	if (val != 0xffffffff)
--		brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_MAILBOXINT,
--				       val);
-+		brcmf_pcie_write_reg32(devinfo, reg, val);
+ &i2c0 {
+ 	hpm2: usb-pd@3b {
+ 		compatible = "apple,cd321x";
+diff --git a/arch/arm64/boot/dts/apple/t8103-j457.dts b/arch/arm64/boot/dts/apple/t8103-j457.dts
+index d7c622931627..fe7c0aaf7d62 100644
+--- a/arch/arm64/boot/dts/apple/t8103-j457.dts
++++ b/arch/arm64/boot/dts/apple/t8103-j457.dts
+@@ -21,6 +21,10 @@ aliases {
+ 	};
+ };
  
- 	return 0;
- }
-@@ -2117,6 +2195,7 @@ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	struct brcmf_fw_request *fwreq;
- 	struct brcmf_pciedev_info *devinfo;
- 	struct brcmf_pciedev *pcie_bus_dev;
-+	struct brcmf_core *core;
- 	struct brcmf_bus *bus;
- 
- 	brcmf_dbg(PCIE, "Enter %x:%x\n", pdev->vendor, pdev->device);
-@@ -2136,6 +2215,12 @@ brcmf_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto fail;
- 	}
- 
-+	core = brcmf_chip_get_core(devinfo->ci, BCMA_CORE_PCIE2);
-+	if (core->rev >= 64)
-+		devinfo->reginfo = &brcmf_reginfo_64;
-+	else
-+		devinfo->reginfo = &brcmf_reginfo_default;
++&wifi0 {
++	brcm,board-type = "apple,santorini";
++};
 +
- 	pcie_bus_dev = kzalloc(sizeof(*pcie_bus_dev), GFP_KERNEL);
- 	if (pcie_bus_dev == NULL) {
- 		ret = -ENOMEM;
-@@ -2305,7 +2390,7 @@ static int brcmf_pcie_pm_leave_D3(struct device *dev)
- 	brcmf_dbg(PCIE, "Enter, dev=%p, bus=%p\n", dev, bus);
- 
- 	/* Check if device is still up and running, if so we are ready */
--	if (brcmf_pcie_read_reg32(devinfo, BRCMF_PCIE_PCIE2REG_INTMASK) != 0) {
-+	if (brcmf_pcie_read_reg32(devinfo, devinfo->reginfo->intmask) != 0) {
- 		brcmf_dbg(PCIE, "Try to wakeup device....\n");
- 		if (brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D0_INFORM))
- 			goto cleanup;
+ /*
+  * Force the bus number assignments so that we can declare some of the
+  * on-board devices and properties that are populated by the bootloader
+diff --git a/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi b/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi
+index fe2ae40fa9dd..3d15b8e2a6c1 100644
+--- a/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi
++++ b/arch/arm64/boot/dts/apple/t8103-jxxx.dtsi
+@@ -71,8 +71,10 @@ hpm1: usb-pd@3f {
+ &port00 {
+ 	bus-range = <1 1>;
+ 	wifi0: network@0,0 {
++		compatible = "pci14e4,4425";
+ 		reg = <0x10000 0x0 0x0 0x0 0x0>;
+ 		/* To be filled by the loader */
+ 		local-mac-address = [00 00 00 00 00 00];
++		apple,antenna-sku = "XX";
+ 	};
+ };
 -- 
 2.30.2
 
