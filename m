@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD03CC54EE9
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Sep 2022 12:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89486ECAAD3
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Sep 2022 12:12:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229939AbiISMMQ (ORCPT
+        id S229962AbiISMMR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Sep 2022 08:12:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44764 "EHLO
+        Mon, 19 Sep 2022 08:12:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229908AbiISMMP (ORCPT
+        with ESMTP id S229492AbiISMMP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 19 Sep 2022 08:12:15 -0400
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80468A1B7
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 958D4B1EE
         for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2022 05:12:12 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28J8Ii4F009247;
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28JAo282019353;
         Mon, 19 Sep 2022 12:12:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=qcppdkim1;
- bh=T4jwKNSPgfdG/oaSUFg7J31xSxRg48n34avFdwEcAV8=;
- b=R5AUiG+9xkjJ9x0Xbus0+9Pi3qcmedpjSwmiusDyUjynJw+AErk9mhylB4kRRNBPecEk
- UWBplhyUhoz1alrT+D8NugpOyLD/Vdh2+/U2Bq+2yxJIsimbB7+Hin4bdBrBINl70hH1
- m3JYtQ9cgAqCN81tL1n9e6SUMYc71bj3HEMTb/x3tsrrTA9EhuoNi76OuDndK/3yfxqW
- i6KK86UqC7KEAdvMStzpeD6/9hqfjcWbSgh9cQKHxozY5OwrCdsBPHoSKmdhzZxwCrMn
- GXmCTrQ1UI7d/cfnAKHJC8mrWuyl3GuTUoGLP7oHJBNLWIpqvgHWFBeF2I1bJUrwBuwb gQ== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jn6f84jux-1
+ bh=uSH9scg0N/s6aP+KS+BRJOom8+y8vJ1wGzkciAP6jBY=;
+ b=a0gEwcIBEk/QqvtaeHfISfF2At3HHXVOCGVzFmDmWdqjfrVrX+8XlGhSntGtWpsSPJHc
+ afn2Wm90AVkoTjj9K2dMHTk41cl60gYeF7ASnmn6xPOWLWpjwgAebqEG8NVAlsa4PSOq
+ 67GlYTvX4juaBnLZQsXQ7F3fDdSMavz22ZRlPeeoTLU9ROtfk8Ei1/yf+x8gpjKCWGn8
+ PashKyYEvzAwAOfrNZJJiRJ4g6L0NA0P2B6N/h4TOVXL2gGnjOuc6/rELYBv3vP4DdgQ
+ xZXTOAlA4BFMPbvoZE8WwwPeGeTfYDJsyyBOX+YYt01ws5yjLJhRhQg5lk1wadWJP2Oe QQ== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jn6b1vk33-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 19 Sep 2022 12:12:08 +0000
+        Mon, 19 Sep 2022 12:12:09 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28JCC8E5020125
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28JCC9p4032572
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 19 Sep 2022 12:12:08 GMT
+        Mon, 19 Sep 2022 12:12:09 GMT
 Received: from u20-san1p10030.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Mon, 19 Sep 2022 05:12:07 -0700
+ 15.2.986.29; Mon, 19 Sep 2022 05:12:08 -0700
 From:   Veerendranath Jakkam <quic_vjakkam@quicinc.com>
 To:     <johannes@sipsolutions.net>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/4] wifi: mac80211: Add support for randomizing auth and deauth frames TA
-Date:   Mon, 19 Sep 2022 05:11:53 -0700
-Message-ID: <20220919121155.3069765-2-quic_vjakkam@quicinc.com>
+Subject: [PATCH v2 4/4] wifi: cfg80211: Add support to trigger external authentication for MLO connection
+Date:   Mon, 19 Sep 2022 05:11:55 -0700
+Message-ID: <20220919121155.3069765-4-quic_vjakkam@quicinc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220919121155.3069765-1-quic_vjakkam@quicinc.com>
 References: <20220919121155.3069765-1-quic_vjakkam@quicinc.com>
@@ -57,297 +57,118 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 9CT4wJlWCWaxrrYvQqxQL1LYF1RTMOT5
-X-Proofpoint-ORIG-GUID: 9CT4wJlWCWaxrrYvQqxQL1LYF1RTMOT5
+X-Proofpoint-GUID: yENniJbf_JNe459IJDAuVzWDzKpHlm1K
+X-Proofpoint-ORIG-GUID: yENniJbf_JNe459IJDAuVzWDzKpHlm1K
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
  definitions=2022-09-19_05,2022-09-16_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
- impostorscore=0 priorityscore=1501 phishscore=0 adultscore=0 bulkscore=0
- mlxlogscore=999 malwarescore=0 clxscore=1015 lowpriorityscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2209190082
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ malwarescore=0 suspectscore=0 impostorscore=0 bulkscore=0 spamscore=0
+ adultscore=0 lowpriorityscore=0 clxscore=1015 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
+ definitions=main-2209190082
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Configure randomized transmit address of the authentication frames to
-the driver when advertise NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA
-to enable receive behavior to accept frames with the same random MAC
-address as RA also those frames need to be acknowledged similarly to the
-frames sent to the local permanent MAC address. Disable the random MAC
-address configuration when deauthentication frames with same random MAC
-address received or transmitted.
+Currently, there is no support for drivers to indicate external
+authentication request is for MLO or non-MLO connection. This
+information needed for userspace to consider MLO specific changes
+during authentication like adding Multi-Link IE with MLD address in
+authentication frames. Also, the transmit address of the authentication
+frames can be different from the interface address for MLO connection.
+
+Add transmit address parameter in external authentication request to
+indicate userspace to enable MLO and use the transmit address as TA in
+the authentication frames. If transmit address not indicated by driver
+userspace must do legacy authentication.
+
+Also, If the driver is using transmit address different from interface
+address it should advertise
+NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA flag. This is needed since
+the external authentication request may get triggered before association
+and cfg80211 won't have link address information by that time.
 
 Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
 ---
- include/net/mac80211.h    |  9 ++++++++
- net/mac80211/driver-ops.h | 10 +++++++++
- net/mac80211/main.c       |  5 +++++
- net/mac80211/rx.c         | 45 ++++++++++++++++++++++++++++++++++-----
- net/mac80211/trace.h      | 19 +++++++++++++++++
- net/mac80211/tx.c         | 27 +++++++++++++++++++++++
- 6 files changed, 110 insertions(+), 5 deletions(-)
+ include/net/cfg80211.h |  9 +++++++++
+ net/wireless/core.h    |  1 +
+ net/wireless/mlme.c    |  2 +-
+ net/wireless/nl80211.c | 10 ++++++++++
+ 4 files changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ac2bad57933f..662b5db84fe3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1832,6 +1832,7 @@ struct ieee80211_vif_cfg {
-  * @offload_flags: 802.3 -> 802.11 enapsulation offload flags, see
-  *	&enum ieee80211_offload_flags.
-  * @mbssid_tx_vif: Pointer to the transmitting interface if MBSSID is enabled.
-+ * @random_addr: random address in use for this interface.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e09ff87146c1..4d490d507333 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3604,6 +3604,14 @@ struct cfg80211_pmk_conf {
+  *	the real status code for failures. Used only for the authentication
+  *	response command interface (user space to driver).
+  * @pmkid: The identifier to refer a PMKSA.
++ * @tx_addr: Driver shall fill this parameter to indicate userpsace to enable
++ *	MLO and use tx_addr as TA of the authentication frames. Also, Drivers
++ *	which may use transmit address different from interface address must
++ *	indicate %NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA since the
++ *	external authentication request may get triggered before association and
++ *	cfg80211 won't have link address information by that time. If transmit
++ *	address not indicated by driver userspace must do legacy authentication.
++ *	This parameter valid only for the authentication request event.
   */
- struct ieee80211_vif {
- 	enum nl80211_iftype type;
-@@ -1861,6 +1862,8 @@ struct ieee80211_vif {
- 
- 	struct ieee80211_vif *mbssid_tx_vif;
- 
-+	u8 random_addr[ETH_ALEN] __aligned(2);
-+
- 	/* must be last */
- 	u8 drv_priv[] __aligned(sizeof(void *));
- };
-@@ -4164,6 +4167,11 @@ struct ieee80211_prep_tx_info {
-  *	Note that a sta can also be inserted or removed with valid links,
-  *	i.e. passed to @sta_add/@sta_state with sta->valid_links not zero.
-  *	In fact, cannot change from having valid_links and not having them.
-+ * @config_random_mac: Configure random MAC address to send acknowledgment when
-+ *	RA of the received frame matches with configured random MAC address.
-+ *	Also, clear random MAC address configuration if zero MAC address set.
-+ *	Driver must register callback for this when advertise
-+ *	%NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -4519,6 +4527,7 @@ struct ieee80211_ops {
- 				struct ieee80211_vif *vif,
- 				struct ieee80211_sta *sta,
- 				u16 old_links, u16 new_links);
-+	void (*config_random_mac)(struct ieee80211_hw *hw, const u8 *mac_addr);
+ struct cfg80211_external_auth_params {
+ 	enum nl80211_external_auth_action action;
+@@ -3612,6 +3620,7 @@ struct cfg80211_external_auth_params {
+ 	unsigned int key_mgmt_suite;
+ 	u16 status;
+ 	const u8 *pmkid;
++	u8 tx_addr[ETH_ALEN] __aligned(2);
  };
  
  /**
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 81e40b0a3b16..ea2cd8048638 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1479,4 +1479,14 @@ int drv_change_sta_links(struct ieee80211_local *local,
- 			 struct ieee80211_sta *sta,
- 			 u16 old_links, u16 new_links);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 775e16cb99ed..288cb91c24f3 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -566,5 +566,6 @@ void cfg80211_remove_link(struct wireless_dev *wdev, unsigned int link_id);
+ void cfg80211_remove_links(struct wireless_dev *wdev);
+ int cfg80211_remove_virtual_intf(struct cfg80211_registered_device *rdev,
+ 				 struct wireless_dev *wdev);
++bool cfg80211_allowed_address(struct wireless_dev *wdev, const u8 *addr);
  
-+static inline void drv_config_random_mac(struct ieee80211_local *local,
-+					 const u8 *mac_addr)
-+{
-+	if (local->ops->config_random_mac) {
-+		trace_drv_config_random_mac(local, mac_addr);
-+		local->ops->config_random_mac(&local->hw, mac_addr);
-+		trace_drv_return_void(local);
-+	}
-+}
+ #endif /* __NET_WIRELESS_CORE_H */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 43d1b815aaba..17ce998cdc42 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -657,7 +657,7 @@ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
+ 	cfg80211_mgmt_registrations_update(wdev);
+ }
+ 
+-static bool cfg80211_allowed_address(struct wireless_dev *wdev, const u8 *addr)
++bool cfg80211_allowed_address(struct wireless_dev *wdev, const u8 *addr)
+ {
+ 	int i;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8ff8b1c040f0..fdeda730ebdb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -19703,6 +19703,16 @@ int cfg80211_external_auth_request(struct net_device *dev,
+ 		    params->ssid.ssid))
+ 		goto nla_put_failure;
+ 
++	if (!is_zero_ether_addr(params->tx_addr)) {
++		if (!cfg80211_allowed_address(wdev, params->tx_addr) &&
++		    !wiphy_ext_feature_isset(&rdev->wiphy,
++			    NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA))
++			return -EINVAL;
 +
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 46f3eddc2388..707b38865227 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -953,6 +953,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	     !local->ops->tdls_recv_channel_switch))
- 		return -EOPNOTSUPP;
- 
-+	if ((hw->wiphy->features &
-+	     NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA) &&
-+	    !local->ops->config_random_mac)
-+		return -EOPNOTSUPP;
-+
- 	if (WARN_ON(ieee80211_hw_check(hw, SUPPORTS_TX_FRAG) &&
- 		    !local->ops->set_frag_threshold))
- 		return -EINVAL;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a57811372027..e76653795c1c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -4211,6 +4211,21 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
- 	bool multicast = is_multicast_ether_addr(hdr->addr1) ||
- 			 ieee80211_is_s1g_beacon(hdr->frame_control);
-+	bool skip_addr1_check = false;
-+
-+	if ((ieee80211_is_auth(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control)) &&
-+	    wiphy_ext_feature_isset(
-+		   sdata->local->hw.wiphy,
-+		   NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA) &&
-+	    ether_addr_equal(sdata->vif.random_addr, hdr->addr1)) {
-+		skip_addr1_check = true;
-+		if (ieee80211_is_deauth(hdr->frame_control)) {
-+			eth_zero_addr(sdata->vif.random_addr);
-+			drv_config_random_mac(sdata->local,
-+					      rx->sdata->vif.random_addr);
-+		}
-+	}
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
-@@ -4220,6 +4235,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 			return false;
- 		if (multicast)
- 			return true;
-+		if (skip_addr1_check)
-+			return true;
- 		return ieee80211_is_our_addr(sdata, hdr->addr1, &rx->link_id);
- 	case NL80211_IFTYPE_ADHOC:
- 		if (!bssid)
-@@ -4232,7 +4249,7 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 			return true;
- 		if (!ieee80211_bssid_match(bssid, sdata->u.ibss.bssid))
- 			return false;
--		if (!multicast &&
-+		if (!multicast && !skip_addr1_check &&
- 		    !ether_addr_equal(sdata->vif.addr, hdr->addr1))
- 			return false;
- 		if (!rx->sta) {
-@@ -4252,7 +4269,7 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 			return false;
- 		if (!is_broadcast_ether_addr(bssid))
- 			return false;
--		if (!multicast &&
-+		if (!multicast && !skip_addr1_check &&
- 		    !ether_addr_equal(sdata->dev->dev_addr, hdr->addr1))
- 			return false;
- 		if (!rx->sta) {
-@@ -4270,10 +4287,12 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 			return false;
- 		if (multicast)
- 			return true;
-+		if (skip_addr1_check)
-+			return true;
- 		return ether_addr_equal(sdata->vif.addr, hdr->addr1);
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_AP:
--		if (!bssid)
-+		if (!bssid && !skip_addr1_check)
- 			return ieee80211_is_our_addr(sdata, hdr->addr1,
- 						     &rx->link_id);
- 
-@@ -4285,7 +4304,7 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 			 * and location updates. Note that mac80211
- 			 * itself never looks at these frames.
- 			 */
--			if (!multicast &&
-+			if (!multicast && !skip_addr1_check &&
- 			    !ieee80211_is_our_addr(sdata, hdr->addr1,
- 						   &rx->link_id))
- 				return false;
-@@ -4657,6 +4676,21 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	} addrs __aligned(2);
- 	struct link_sta_info *link_sta;
- 	struct ieee80211_sta_rx_stats *stats;
-+	bool skip_addr1_check = false;
-+
-+	if ((ieee80211_is_auth(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control)) &&
-+	    wiphy_ext_feature_isset(
-+		   rx->sdata->local->hw.wiphy,
-+		   NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA) &&
-+	    ether_addr_equal(rx->sdata->vif.random_addr, hdr->addr1)) {
-+		skip_addr1_check = true;
-+		if (ieee80211_is_deauth(hdr->frame_control)) {
-+			eth_zero_addr(rx->sdata->vif.random_addr);
-+			drv_config_random_mac(rx->sdata->local,
-+					      rx->sdata->vif.random_addr);
-+		}
-+	}
- 
- 	/* for parallel-rx, we need to have DUP_VALIDATED, otherwise we write
- 	 * to a common data structure; drivers can implement that per queue
-@@ -4690,7 +4724,8 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	 * punting here will make it go through the full checks in
- 	 * ieee80211_accept_frame().
- 	 */
--	if (!ether_addr_equal(fast_rx->vif_addr, hdr->addr1))
-+	if (!skip_addr1_check &&
-+	    !ether_addr_equal(fast_rx->vif_addr, hdr->addr1))
- 		return false;
- 
- 	if ((hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FROMDS |
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 9f4377566c42..4996fd5a6887 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -3026,6 +3026,25 @@ TRACE_EVENT(stop_queue,
- 	)
- );
- 
-+TRACE_EVENT(drv_config_random_mac,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 const u8 *mac_addr),
-+
-+	TP_ARGS(local, mac_addr),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__array(char, mac_addr, ETH_ALEN)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		memcpy(__entry->mac_addr, mac_addr, ETH_ALEN);
-+	),
-+
-+	TP_printk(LOCAL_PR_FMT ", addr:%pM", LOCAL_PR_ARG, __entry->mac_addr)
-+);
-+
- #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 24c0a1706b92..76e2457050cb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2048,6 +2048,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	int headroom;
- 	enum ieee80211_encrypt encrypt;
-+	bool our_addr = true;
- 
- 	if (info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)
- 		encrypt = ENCRYPT_NO;
-@@ -2071,6 +2072,32 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	info->control.vif = &sdata->vif;
- 
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_OCB:
-+		if (!ether_addr_equal(sdata->dev->dev_addr, hdr->addr2))
-+			our_addr = false;
-+		break;
-+	default:
-+		if (!ieee80211_is_our_addr(sdata, hdr->addr2, NULL))
-+			our_addr = false;
-+		break;
++		if (nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, params->tx_addr))
++			goto nla_put_failure;
 +	}
 +
-+	if (!our_addr &&
-+	    wiphy_ext_feature_isset(
-+		   local->hw.wiphy,
-+		   NL80211_EXT_FEATURE_AUTH_AND_DEAUTH_RANDOM_TA)) {
-+		if (ieee80211_is_auth(hdr->frame_control)) {
-+			drv_config_random_mac(local, hdr->addr2);
-+			ether_addr_copy(sdata->vif.random_addr, hdr->addr2);
-+		} else if (ieee80211_is_deauth(hdr->frame_control) &&
-+			   ether_addr_equal(sdata->vif.random_addr,
-+					    hdr->addr2)) {
-+			eth_zero_addr(sdata->vif.random_addr);
-+			drv_config_random_mac(local, sdata->vif.random_addr);
-+		}
-+	}
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		if (ieee80211_is_data(hdr->frame_control) &&
- 		    is_unicast_ether_addr(hdr->addr1)) {
+ 	genlmsg_end(msg, hdr);
+ 	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg,
+ 			wdev->conn_owner_nlportid);
 -- 
 2.25.1
 
