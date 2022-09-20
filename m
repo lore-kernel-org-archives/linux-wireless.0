@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 276FCC54EE9
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Sep 2022 10:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23CE8ECAAD8
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Sep 2022 10:07:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230478AbiITKGl (ORCPT
+        id S229929AbiITKHT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Sep 2022 06:06:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33010 "EHLO
+        Tue, 20 Sep 2022 06:07:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231209AbiITKGN (ORCPT
+        with ESMTP id S230506AbiITKHE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2022 06:06:13 -0400
+        Tue, 20 Sep 2022 06:07:04 -0400
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DA1561703
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2022 03:05:49 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28K7xkEH003441;
-        Tue, 20 Sep 2022 10:05:43 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAF4061738
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2022 03:07:02 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28K7xcFc023504;
+        Tue, 20 Sep 2022 10:05:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=+ZUNOp+ii3f76ZX7ecrwsYhNG5DBFifaGnTQBCkEx9Q=;
- b=fYiYYIm6GooOZUqatd4qFFDlbbQSrueGsVv1HqtM73rMhTVVxrNgMMFZqfR6Szy6dR8v
- hIznuHpVcKKVpJw1MojW8H7VjsNARMIBgUhoeMTOGa1P4/KZ0HFTiSt9t/+BCjWiCCPm
- QD1ryrFN/LXxXGB2uNn4koO3Om8ZRbZMPQdoYgv8R5UF/9/p9HbCE7GQWcgm38axRY2M
- stWhrrVbB77Dku/7rUxsbjUMdtipgNZvERrFhYuu+nG0z7Jsz+WVrM4GE8dyghKTygKh
- Yr7+GNbWFsmlqwNcB7B18/ASz8JCLX84HOyDTSqwDV5ACinYBsK9eDXyesbCuARFw5V0 Xw== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jpw78ana0-1
+ bh=zoGG73whL65cB+dCMtnJXPjzU/eTvaiJulFQDEVaFg4=;
+ b=ZyCT/aH+qGs8VCUW3o9Y7muVsNJ8wA5oHIBYzdWbirKMamxq9M1kkxPtNJt+u7R1Br1k
+ OqDazcSZTH136QoYqppZr/BE8QhU9RdOJp1KCt7leEZBY0FA1r8IErMfubdHjHj+lBqG
+ RxS6tLRAR1w5Nkj/A8/vQpDCsnkx7uodyr8rPDYCDuh4WuREAensoclC5yxZdgkPG7qB
+ m2XFOw0yptBqmkVLR7pKE1uSwqSI+d6IwqszXYXRwI93c+PznfBCXAgJlillBAzd1COY
+ VatbCASZIkTkiAATBXuT8LKH+NIhAaWQH/qXQ5Q7wr/53oUmRhTOxp9Q0PZm4YyqXK/S 3A== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jpxaejbgv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 20 Sep 2022 10:05:42 +0000
+        Tue, 20 Sep 2022 10:05:47 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28KA5gKH012328
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28KA5lSt004547
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 20 Sep 2022 10:05:42 GMT
+        Tue, 20 Sep 2022 10:05:47 GMT
 Received: from CDCCSTEX0180100-LIN.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Tue, 20 Sep 2022 03:05:40 -0700
+ 15.2.986.29; Tue, 20 Sep 2022 03:05:45 -0700
 From:   Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
 To:     <johannes@sipsolutions.net>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [RFC 1/4] wifi: cfg80211: Add provision to advertise multiple radio in one wiphy
-Date:   Tue, 20 Sep 2022 15:35:15 +0530
-Message-ID: <20220920100518.19705-2-quic_vthiagar@quicinc.com>
+Subject: [RFC 4/4] wifi: nl80211: send iface combination to user space in multi-hardware wiphy
+Date:   Tue, 20 Sep 2022 15:35:18 +0530
+Message-ID: <20220920100518.19705-5-quic_vthiagar@quicinc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20220920100518.19705-1-quic_vthiagar@quicinc.com>
 References: <20220920100518.19705-1-quic_vthiagar@quicinc.com>
@@ -56,216 +56,201 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: B_SvgrCHHgeegoqhbKCn6QbQQkX6yLJh
-X-Proofpoint-GUID: B_SvgrCHHgeegoqhbKCn6QbQQkX6yLJh
+X-Proofpoint-GUID: 023v3_eOp-ZNsMR85izsJ5WRlI-hMI_m
+X-Proofpoint-ORIG-GUID: 023v3_eOp-ZNsMR85izsJ5WRlI-hMI_m
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
  definitions=2022-09-20_02,2022-09-16_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- lowpriorityscore=0 spamscore=0 impostorscore=0 bulkscore=0 clxscore=1015
- priorityscore=1501 mlxscore=0 adultscore=0 suspectscore=0 malwarescore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
+ priorityscore=1501 suspectscore=0 lowpriorityscore=0 mlxlogscore=759
+ adultscore=0 clxscore=1015 malwarescore=0 phishscore=0 impostorscore=0
+ mlxscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2209130000 definitions=main-2209200061
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The prerequisite for MLO support in cfg80211/mac80211 is that all
-the links participating in MLO must be from the same wiphy/ieee80211_hw.
-To meet this expectation, some drivers may need to group multiple discrete
-hardware each acting as a link in MLO under one wiphy. Though most of the
-hardware abstractions must be handled within the driver itself, it may be
-required to have some sort of mapping while describing interface
-combination capabilities for each of the underlying hardware. This commit
-adds an advertisement provision for drivers supporting such MLO mode of
-operation.
-
-Capability advertisement such as the number of supported channels for each
-physical hardware has been identified to support some of the common use
-cases.
+A new nested nl attribute is added to the same existing NL command to
+advertise the iface combination capability for each underlying hardware
+when driver groups more than one physical hardware under one wiphy to
+enable MLO among them.
 
 Signed-off-by: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
 ---
- include/net/cfg80211.h |  24 +++++++++
- net/wireless/core.c    | 109 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 133 insertions(+)
+ include/uapi/linux/nl80211.h | 50 ++++++++++++++++++++++++-
+ net/wireless/nl80211.c       | 71 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 120 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e09ff87146c1..4662231ad068 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5088,6 +5088,18 @@ struct wiphy_iftype_akm_suites {
- 	int n_akm_suites;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 070b31277402..678da076b122 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5779,6 +5779,10 @@ enum nl80211_iface_limit_attrs {
+  * @NL80211_IFACE_COMB_BI_MIN_GCD: u32 attribute specifying the minimum GCD of
+  *	different beacon intervals supported by all the interface combinations
+  *	in this group (if not present, all beacon intervals be identical).
++ * @NL80211_IFACE_COMB_PER_HW_COMB: nested attribute specifying the interface
++ *	combination for each underlying hardware when multiple hardware are
++ *	registered under one wiphy,
++ *	see &enum nl80211_if_comb_per_hw_comb_attrs.
+  * @NUM_NL80211_IFACE_COMB: number of attributes
+  * @MAX_NL80211_IFACE_COMB: highest attribute number
+  *
+@@ -5795,7 +5799,19 @@ enum nl80211_iface_limit_attrs {
+  *	numbers = [ #{STA} <= 1, #{P2P-client,P2P-GO} <= 3 ], max = 4
+  *	=> allows a STA plus three P2P interfaces
+  *
+- * The list of these four possibilities could completely be contained
++ *	When describing per-hardware combinations in multi-hardware in
++ *	one wiphy model, the first possibility can further include the finer
++ *	capabilities like below
++ *	hw_chan_idx = 0, numbers = [ #{STA} <= 1, #{AP} <= 1 ],
++ *	channels = 1, max = 2
++ *	=> allows a STA plus an AP interface on the underlying hardware mac
++ *	   advertised at index 0 in wiphy @hw_chans array.
++ *	hw_chan_idx = 1, numbers = [ #{STA} <= 1, #{AP} <= 2 ],
++ *	channels = 1, max = 3
++ *	=> allows a STA plus two AP interfaces on the underlying hardware mac
++ *	   advertised at index 1 in wiphy @hw_chans array.
++ *
++ * The list of these five possibilities could completely be contained
+  * within the %NL80211_ATTR_INTERFACE_COMBINATIONS attribute to indicate
+  * that any of these groups must match.
+  *
+@@ -5814,12 +5830,44 @@ enum nl80211_if_combination_attrs {
+ 	NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS,
+ 	NL80211_IFACE_COMB_RADAR_DETECT_REGIONS,
+ 	NL80211_IFACE_COMB_BI_MIN_GCD,
++	NL80211_IFACE_COMB_PER_HW_COMB,
+ 
+ 	/* keep last */
+ 	NUM_NL80211_IFACE_COMB,
+ 	MAX_NL80211_IFACE_COMB = NUM_NL80211_IFACE_COMB - 1
  };
  
 +/**
-+ * struct ieee80211_supported_chans_per_hw - supported channels as per the
-+ * underlying physical hardware configuration
++ * enum nl80211_if_comb_per_hw_comb_attrs - per-hardware iface combination
++ * attributes with multi-hw radios in one wiphy model
 + *
-+ * @n_chans: number of channels in @chans
-+ * @chans: list of channels supported by the constituent hardware
++ * @NL80211_IFACE_COMB_PER_HW_COMB_UNSPEC: (reserved)
++ * @NL80211_IFACE_COMB_PER_HW_COMB_HW_IDX: u8 attribute specifying the index
++ *	to the wiphy @hw_chans list for which the iface combination is being
++ *	described.
++ * @NL80211_IFACE_COMB_PER_HW_COMB_LIMITS: nested attribute containing the
++ *	limits for the given interface types, see
++ *	&enum nl80211_iface_limit_attrs.
++ * @NL80211_IFACE_COMB_PER_HW_COMB_MAXIMUM: u32 attribute giving the maximum
++ *	number of interfaces that can be created in this group. This number
++ *	does not apply to the interfaces purely managed in software.
++ * @NL80211_IFACE_COMB_PER_HW_COMB_NUM_CHANNELS: u32 attribute specifying the
++ *	number of different channels that can be used in this group.
++ * @NUM_NL80211_IFACE_COMB_PER_HW_COMB: number of attributes
++ * @MAX_NL80211_IFACE_COMB_PER_HW_COMB: highest attribute number
 + */
-+struct ieee80211_chans_per_hw {
-+	int n_chans;
-+	struct ieee80211_channel chans[];
++enum nl80211_if_comb_per_hw_comb_attrs {
++	NL80211_IFACE_COMB_PER_HW_COMB_UNSPEC,
++	NL80211_IFACE_COMB_PER_HW_COMB_HW_IDX,
++	NL80211_IFACE_COMB_PER_HW_COMB_LIMITS,
++	NL80211_IFACE_COMB_PER_HW_COMB_MAXIMUM,
++	NL80211_IFACE_COMB_PER_HW_COMB_NUM_CHANNELS,
++
++	/* keep last */
++	NUM_NL80211_IFACE_COMB_PER_HW_COMB,
++	MAX_NL80211_IFACE_COMB_PER_HW_COMB =
++			NUM_NL80211_IFACE_COMB_PER_HW_COMB - 1
 +};
-+
+ 
  /**
-  * struct wiphy - wireless hardware description
-  * @mtx: mutex for the data (structures) of this device
-@@ -5297,6 +5309,15 @@ struct wiphy_iftype_akm_suites {
-  *	NL80211_MAX_NR_AKM_SUITES in order to avoid compatibility issues with
-  *	legacy userspace and maximum allowed value is
-  *	CFG80211_MAX_NUM_AKM_SUITES.
-+ *
-+ * @hw_chans: list of the channels supported by every constituent underlying
-+ *	hardware. Drivers abstracting multiple discrete hardware (radio) under
-+ *	one wiphy can advertise the list of channels supported by each physical
-+ *	hardware in this list. Underlying hardware specific channel list can be
-+ *	used while describing interface combination for each of them.
-+ * @num_hw: number of underlying hardware for which the channels list are
-+ *	advertised in @hw_chans.
-+ *
-  */
- struct wiphy {
- 	struct mutex mtx;
-@@ -5445,6 +5466,9 @@ struct wiphy {
- 	u8 ema_max_profile_periodicity;
- 	u16 max_num_akm_suites;
- 
-+	struct ieee80211_chans_per_hw **hw_chans;
-+	int num_hw;
-+
- 	char priv[] __aligned(NETDEV_ALIGN);
- };
- 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5b0c4d5b80cf..4163602a1b9a 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -653,6 +653,110 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 	return 0;
+  * enum nl80211_plink_state - state of a mesh peer link finite state machine
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b7d466010e81..1f3b79e10697 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1595,6 +1595,74 @@ static int nl80211_put_iftypes(struct sk_buff *msg, u32 attr, u16 ifmodes)
+ 	return -ENOBUFS;
  }
  
-+static int cfg80211_check_hw_chans(const struct ieee80211_chans_per_hw *chans1,
-+				   const struct ieee80211_chans_per_hw *chans2)
++static int
++nl80211_put_per_hw_iface_combinations(struct wiphy *wiphy, struct sk_buff *msg,
++				      const struct ieee80211_iface_combination *c)
 +{
-+	int i, j;
-+
-+	if (!chans1 || !chans2)
-+		return -EINVAL;
-+
-+	if (!chans1->n_chans || !chans2->n_chans)
-+		return -EINVAL;
-+
-+	/*
-+	 * for now same channel is not allowed in more than one
-+	 * physical hardware.
-+	 */
-+	for (i = 0; i < chans1->n_chans; i++)
-+		for (j = 0; j < chans2->n_chans; j++)
-+			if (chans1->chans[i].center_freq ==
-+			    chans2->chans[i].center_freq)
-+				return -EINVAL;
-+	return 0;
-+}
-+
-+static bool
-+cfg80211_hw_chans_in_supported_list(struct wiphy *wiphy,
-+				    const struct ieee80211_chans_per_hw *chans)
-+{
-+	enum nl80211_band band;
-+	struct ieee80211_supported_band *sband;
-+	bool found;
-+	int i, j;
-+
-+	for (i = 0; i < chans->n_chans; i++) {
-+		found = false;
-+		for (band = 0; band < NUM_NL80211_BANDS; band++) {
-+			sband = wiphy->bands[band];
-+			if (!sband)
-+				continue;
-+			for (j = 0; j < sband->n_channels; j++) {
-+				if (chans->chans[i].center_freq ==
-+				    sband->channels[j].center_freq) {
-+					found = true;
-+					break;
-+				}
-+			}
-+
-+			if (found)
-+				break;
-+		}
-+
-+		if (!found)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+static int cfg80211_validate_per_hw_chans(struct wiphy *wiphy)
-+{
-+	int i, j;
-+	int ret;
++	struct nlattr *hw_combis;
++	int i;
 +
 +	if (!wiphy->num_hw)
 +		return 0;
 +
-+	if (!wiphy->hw_chans)
-+		return -EINVAL;
++	hw_combis = nla_nest_start(msg, NL80211_IFACE_COMB_PER_HW_COMB);
++	if (!hw_combis)
++		return -ENOBUFS;
 +
-+	/*
-+	 * advertisement of supported channels in wiphy->bands should be
-+	 * sufficient when physical hardware is one.
-+	 */
-+	if (wiphy->num_hw < 2)
-+		return -EINVAL;
++	for (i = 0; i < c->n_hw_list; i++) {
++		struct nlattr *hw_combi, *limits;
++		int l;
 +
-+	for (i = 0; i < wiphy->num_hw; i++) {
-+		for (j = 0; j < wiphy->num_hw; j++) {
-+			const struct ieee80211_chans_per_hw *hw_chans1;
-+			const struct ieee80211_chans_per_hw *hw_chans2;
++		hw_combi = nla_nest_start(msg, i + 1);
++		if (!hw_combi)
++			return -ENOBUFS;
 +
-+			if (i == j)
-+				continue;
++		if (nla_put_u8(msg, NL80211_IFACE_COMB_PER_HW_COMB_HW_IDX,
++			       c->iface_hw_list[i].hw_chans_idx))
++			return -ENOBUFS;
 +
-+			hw_chans1 = wiphy->hw_chans[i];
-+			hw_chans2 = wiphy->hw_chans[j];
-+			ret = cfg80211_check_hw_chans(hw_chans1, hw_chans2);
-+			if (ret)
-+				return ret;
++		limits = nla_nest_start(msg,
++					NL80211_IFACE_COMB_PER_HW_COMB_LIMITS);
++		if (!limits)
++			return -ENOBUFS;
++
++		for (l = 0; l < c->iface_hw_list->n_limits; l++) {
++			struct nlattr *limit;
++
++			limit = nla_nest_start(msg, l + 1);
++			if (!limit)
++				return -ENOBUFS;
++
++			if (nla_put_u16(msg, NL80211_IFACE_LIMIT_MAX,
++					c->iface_hw_list[i].limits[l].max))
++				return -ENOBUFS;
++
++			if (nla_put_u16(msg, NL80211_IFACE_LIMIT_TYPES,
++					c->iface_hw_list[i].limits[l].types))
++				return -ENOBUFS;
++
++			nla_nest_end(msg, limit);
 +		}
++		nla_nest_end(msg, limits);
++
++		if (nla_put_u32(msg,
++				NL80211_IFACE_COMB_PER_HW_COMB_NUM_CHANNELS,
++				c->iface_hw_list[i].num_different_channels))
++			return -ENOBUFS;
++
++		if (nla_put_u16(msg,
++				NL80211_IFACE_COMB_PER_HW_COMB_MAXIMUM,
++				c->iface_hw_list[i].max_interfaces))
++			return -ENOBUFS;
++
++		nla_nest_end(msg, hw_combi);
 +	}
 +
-+	for (i = 0; i < wiphy->num_hw; i++) {
-+		const struct ieee80211_chans_per_hw *hw_chans;
-+
-+		hw_chans = wiphy->hw_chans[i];
-+		if (!cfg80211_hw_chans_in_supported_list(wiphy, hw_chans)) {
-+			WARN_ON(1);
-+			return -EINVAL;
-+		}
-+	}
++	nla_nest_end(msg, hw_combis);
 +
 +	return 0;
 +}
 +
- int wiphy_register(struct wiphy *wiphy)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-@@ -908,6 +1012,11 @@ int wiphy_register(struct wiphy *wiphy)
- 		return -EINVAL;
+ static int nl80211_put_iface_combinations(struct wiphy *wiphy,
+ 					  struct sk_buff *msg,
+ 					  bool large)
+@@ -1658,6 +1726,9 @@ static int nl80211_put_iface_combinations(struct wiphy *wiphy,
+ 				c->beacon_int_min_gcd))
+ 			goto nla_put_failure;
+ 
++		if (large && nl80211_put_per_hw_iface_combinations(wiphy, msg, c))
++			goto nla_put_failure;
++
+ 		nla_nest_end(msg, nl_combi);
  	}
  
-+	if (cfg80211_validate_per_hw_chans(&rdev->wiphy)) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+
- 	for (i = 0; i < rdev->wiphy.n_vendor_commands; i++) {
- 		/*
- 		 * Validate we have a policy (can be explicitly set to
 -- 
 2.17.1
 
