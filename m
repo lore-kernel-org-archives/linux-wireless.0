@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3F87C6FA82
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Sep 2022 01:11:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A923C6FA82
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Sep 2022 01:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229610AbiITBL2 (ORCPT
+        id S230035AbiITBLa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Sep 2022 21:11:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45814 "EHLO
+        Mon, 19 Sep 2022 21:11:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229932AbiITBLC (ORCPT
+        with ESMTP id S229973AbiITBLF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2022 21:11:02 -0400
+        Mon, 19 Sep 2022 21:11:05 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ABDFF52FC8
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2022 18:10:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EE55852E63
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2022 18:10:33 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28K1A0BQ0031060, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28K1A0BQ0031060
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28K19ucP6031045, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28K19ucP6031045
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 20 Sep 2022 09:10:00 +0800
+        Tue, 20 Sep 2022 09:09:56 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 20 Sep 2022 09:10:22 +0800
+ 15.1.2375.31; Tue, 20 Sep 2022 09:10:19 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 20 Sep
- 2022 09:10:22 +0800
+ 2022 09:10:18 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/9] wifi: rtw89: coex: add WL_S0 hardware TX/RX mask to allow WL_S0 TX/RX during GNT_BT
-Date:   Tue, 20 Sep 2022 09:09:35 +0800
-Message-ID: <20220920010939.12173-6-pkshih@realtek.com>
+Subject: [PATCH 2/9] wifi: rtw89: coex: translate slot ID to readable name
+Date:   Tue, 20 Sep 2022 09:09:32 +0800
+Message-ID: <20220920010939.12173-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220920010939.12173-1-pkshih@realtek.com>
 References: <20220920010939.12173-1-pkshih@realtek.com>
@@ -56,41 +56,79 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvMTkgpFWkyCAwNzowODowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-WiFi/BT combo module could only have two antenna, namely WL_S0 and WL_S1.
-WiFi can use two antenna to TX/RX 2SS data, and BT can share one of the
-antenna. This patch is to allow WiFi to TX/RX 1SS data like ACK/RTS/CTS to
-improve Wi-Fi performance while coexisting with Bluetooth.
+To analyze debug log quickly, use readable name in string format instead.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/rtw8852a.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/realtek/rtw89/coex.c | 30 ++++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index a2d0f2e2794e5..c6c92a2a16134 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -1843,6 +1843,9 @@ static void rtw8852a_btc_init_cfg(struct rtw89_dev *rtwdev)
- 				      RF_PATH_A, BTC_BT_SS_GROUP, 0x5ff);
- 		rtw8852a_set_trx_mask(rtwdev,
- 				      RF_PATH_B, BTC_BT_SS_GROUP, 0x5ff);
-+		/* set path-A(S0) Tx/Rx no-mask if GNT_WL=0 && BT_S1=tx group */
-+		rtw8852a_set_trx_mask(rtwdev,
-+				      RF_PATH_A, BTC_BT_TX_GROUP, 0x5ff);
- 	} else { /* set WL Tx stb if GNT_WL = 0 && BT_S1 = ss group for 3-ant */
- 		rtw8852a_set_trx_mask(rtwdev,
- 				      RF_PATH_A, BTC_BT_SS_GROUP, 0x5df);
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index 991ebd94086bf..b6366e0cf82ad 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -5727,6 +5727,7 @@ static void _show_bt_info(struct rtw89_dev *rtwdev, struct seq_file *m)
+ #define CASE_BTC_ACT_STR(e) case BTC_ACT_ ## e | BTC_ACT_EXT_BIT: return #e
+ #define CASE_BTC_POLICY_STR(e) \
+ 	case BTC_CXP_ ## e | BTC_POLICY_EXT_BIT: return #e
++#define CASE_BTC_SLOT_STR(e) case CXST_ ## e: return #e
+ 
+ static const char *steps_to_str(u16 step)
+ {
+@@ -5840,6 +5841,32 @@ static const char *steps_to_str(u16 step)
+ 	}
+ }
+ 
++static const char *id_to_slot(u32 id)
++{
++	switch (id) {
++	CASE_BTC_SLOT_STR(OFF);
++	CASE_BTC_SLOT_STR(B2W);
++	CASE_BTC_SLOT_STR(W1);
++	CASE_BTC_SLOT_STR(W2);
++	CASE_BTC_SLOT_STR(W2B);
++	CASE_BTC_SLOT_STR(B1);
++	CASE_BTC_SLOT_STR(B2);
++	CASE_BTC_SLOT_STR(B3);
++	CASE_BTC_SLOT_STR(B4);
++	CASE_BTC_SLOT_STR(LK);
++	CASE_BTC_SLOT_STR(BLK);
++	CASE_BTC_SLOT_STR(E2G);
++	CASE_BTC_SLOT_STR(E5G);
++	CASE_BTC_SLOT_STR(EBT);
++	CASE_BTC_SLOT_STR(ENULL);
++	CASE_BTC_SLOT_STR(WLK);
++	CASE_BTC_SLOT_STR(W1FDD);
++	CASE_BTC_SLOT_STR(B1FDD);
++	default:
++		return "unknown";
++	}
++}
++
+ static
+ void seq_print_segment(struct seq_file *m, const char *prefix, u16 *data,
+ 		       u8 len, u8 seg_len, u8 start_idx, u8 ring_len)
+@@ -6239,7 +6266,8 @@ static void _show_fbtc_cysta_v1(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 		if (!le32_to_cpu(pcysta->slot_cnt[i]))
+ 			continue;
+ 
+-		seq_printf(m, ", %d:%d", i, le32_to_cpu(pcysta->slot_cnt[i]));
++		seq_printf(m, ", %s:%d", id_to_slot(i),
++			   le32_to_cpu(pcysta->slot_cnt[i]));
+ 	}
+ 
+ 	if (dm->tdma_now.rxflctrl)
 -- 
 2.25.1
 
