@@ -2,94 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C19ECAAD8
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Sep 2022 09:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8962ECAAD8
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Sep 2022 10:18:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230372AbiIUJUm (ORCPT
+        id S231373AbiIUKST (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Sep 2022 05:20:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49422 "EHLO
+        Wed, 21 Sep 2022 06:18:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230403AbiIUJUP (ORCPT
+        with ESMTP id S231281AbiIUKSQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2022 05:20:15 -0400
-Received: from out29-148.mail.aliyun.com (out29-148.mail.aliyun.com [115.124.29.148])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 995EE239;
-        Wed, 21 Sep 2022 02:19:28 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.08073047|-1;BR=01201311R111S08rulernew998_84748_2000303;CH=blue;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0363558-0.00159698-0.962047;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047190;MF=arda@allwinnertech.com;NM=1;PH=DS;RN=9;RT=9;SR=0;TI=SMTPD_---.PKrbnDF_1663751957;
-Received: from SunxiBot.allwinnertech.com(mailfrom:arda@allwinnertech.com fp:SMTPD_---.PKrbnDF_1663751957)
-          by smtp.aliyun-inc.com;
-          Wed, 21 Sep 2022 17:19:25 +0800
-From:   Aran Dalton <arda@allwinnertech.com>
-To:     johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com
-Cc:     johannes.berg@intel.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] cfg80211: fix dead lock for nl80211_del_interface()
-Date:   Wed, 21 Sep 2022 17:19:13 +0800
-Message-Id: <20220921091913.110749-2-arda@allwinnertech.com>
-X-Mailer: git-send-email 2.29.0
-In-Reply-To: <20220921091913.110749-1-arda@allwinnertech.com>
-References: <20220921091913.110749-1-arda@allwinnertech.com>
+        Wed, 21 Sep 2022 06:18:16 -0400
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A23495AEC;
+        Wed, 21 Sep 2022 03:18:15 -0700 (PDT)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1663755493; bh=41XcwKKXbTueP4NKKCKH4lAY+pFFUeOnqxXy3lPn1ug=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=lJguM4Tas+94MZ4o+K6U+S6b3KtF/3NGs7bLIX8xdqGg2wleZiEeAjQjbyyRKkef5
+         FgueoQrNLlJAX9L8fz3Jl9aN6I19w/xKfjuKuJL0nsMiQqKPa45KFWLaq/Q/Z4EdxH
+         4kVCgjxbbj+5D+QP9l5NJu2yoZXTbS3rOJicJ03HMCLZCUSOMv+SeSMZ6sMd552xMc
+         0sO63E8uYEMRwZSc+JTB2RUa0cq6zcVF3GK6ctVm/h+bUUbAXkaoApZZZnwy4wWuZ4
+         rkht3utd+mrPBlERzQuDVD5FailtpGpD8sIrofhs0E5dNsUWLfd1zorxArMjx35Boo
+         8NClFG+kSd2Rg==
+To:     Jilin Yuan <yuanjilin@cdjrlc.com>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jilin Yuan <yuanjilin@cdjrlc.com>
+Subject: Re: [PATCH] ath9k: fix repeated words in comments
+In-Reply-To: <20220915030559.42371-1-yuanjilin@cdjrlc.com>
+References: <20220915030559.42371-1-yuanjilin@cdjrlc.com>
+Date:   Wed, 21 Sep 2022 12:18:12 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87a66tvxnf.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Both nl80211_del_interface and cfg80211_netdev_notifier_call hold the
-same wiphy_lock, then cause deadlock.
+Jilin Yuan <yuanjilin@cdjrlc.com> writes:
 
-The main call stack as bellow:
+> Delete the redundant word 'to'.
+>
+> Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 
-nl80211_del_interface() takes wiphy_lock
- -> cfg80211_remove_virtual_intf
-  -> rdev_del_virtual_intf
-   -> rdev->ops->del_virtual_intf
-    -> cfg80211_unregister_netdevice
-     -> cfg80211_unregister_wdev
-      -> _cfg80211_unregister_wdev
-       -> unregister_netdevice
-        -> unregister_netdevice_queue
-         -> unregister_netdevice_many
-          -> call_netdevice_notifiers(NETDEV_UNREGISTER, dev);
-           -> call_netdevice_notifiers_extack
-            -> call_netdevice_notifiers_info
-             -> raw_notifier_call_chain
-              -> cfg80211_netdev_notifier_call
-               -> wiphy_lock(&rdev->wiphy), _cfg80211_unregister_wdev
-
-Fixes: a05829a7222e ("cfg80211: avoid holding the RTNL when calling the driver")
-Signed-off-by: Aran Dalton <arda@allwinnertech.com>
----
- net/wireless/nl80211.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bdacddc3ffa3..664bf977b7bc 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4269,6 +4269,7 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct wireless_dev *wdev = info->user_ptr[1];
-+	int ret;
- 
- 	if (!rdev->ops->del_virtual_intf)
- 		return -EOPNOTSUPP;
-@@ -4296,9 +4297,11 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
- 	else
- 		dev_close(wdev->netdev);
- 
-+	ret = cfg80211_remove_virtual_intf(rdev, wdev);
-+
- 	mutex_lock(&rdev->wiphy.mtx);
- 
--	return cfg80211_remove_virtual_intf(rdev, wdev);
-+	return ret;
- }
- 
- static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
--- 
-2.29.0
-
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
