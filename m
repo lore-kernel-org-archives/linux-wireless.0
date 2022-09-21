@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C05C6FA8B
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Sep 2022 09:05:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11BF9C32771
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Sep 2022 09:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230504AbiIUJFJ (ORCPT
+        id S229844AbiIUJFK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Sep 2022 05:05:09 -0400
+        Wed, 21 Sep 2022 05:05:10 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230280AbiIUJFD (ORCPT
+        with ESMTP id S230476AbiIUJFE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2022 05:05:03 -0400
+        Wed, 21 Sep 2022 05:05:04 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7626927CC7;
-        Wed, 21 Sep 2022 02:05:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C244C45047;
+        Wed, 21 Sep 2022 02:05:03 -0700 (PDT)
 Received: from kwepemi500012.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MXXSg1gSZzlWpB;
-        Wed, 21 Sep 2022 17:00:51 +0800 (CST)
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MXXSh2kq6zlWsV;
+        Wed, 21 Sep 2022 17:00:52 +0800 (CST)
 Received: from cgs.huawei.com (10.244.148.83) by
  kwepemi500012.china.huawei.com (7.221.188.12) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Wed, 21 Sep 2022 17:04:57 +0800
+ 15.1.2375.31; Wed, 21 Sep 2022 17:04:58 +0800
 From:   Gaosheng Cui <cuigaosheng1@huawei.com>
 To:     <idosch@nvidia.com>, <petrm@nvidia.com>, <davem@davemloft.net>,
         <edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
@@ -33,9 +33,9 @@ To:     <idosch@nvidia.com>, <petrm@nvidia.com>, <davem@davemloft.net>,
 CC:     <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-mediatek@lists.infradead.org>
-Subject: [PATCH 3/5] neighbour: Remove unused inline function neigh_key_eq16()
-Date:   Wed, 21 Sep 2022 17:04:53 +0800
-Message-ID: <20220921090455.752011-4-cuigaosheng1@huawei.com>
+Subject: [PATCH 5/5] net: Remove unused inline function dst_hold_and_use()
+Date:   Wed, 21 Sep 2022 17:04:55 +0800
+Message-ID: <20220921090455.752011-6-cuigaosheng1@huawei.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220921090455.752011-1-cuigaosheng1@huawei.com>
 References: <20220921090455.752011-1-cuigaosheng1@huawei.com>
@@ -50,31 +50,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-All uses of neigh_key_eq16() have
+All uses of dst_hold_and_use() have
 been removed since commit 1202cdd66531 ("Remove DECnet support
 from kernel"), so remove it.
 
 Signed-off-by: Gaosheng Cui <cuigaosheng1@huawei.com>
 ---
- include/net/neighbour.h | 5 -----
- 1 file changed, 5 deletions(-)
+ include/net/dst.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/include/net/neighbour.h b/include/net/neighbour.h
-index 3827a6b395fd..20745cf7ae1a 100644
---- a/include/net/neighbour.h
-+++ b/include/net/neighbour.h
-@@ -276,11 +276,6 @@ static inline void *neighbour_priv(const struct neighbour *n)
+diff --git a/include/net/dst.h b/include/net/dst.h
+index 6aa252c3fc55..00b479ce6b99 100644
+--- a/include/net/dst.h
++++ b/include/net/dst.h
+@@ -239,12 +239,6 @@ static inline void dst_use_noref(struct dst_entry *dst, unsigned long time)
+ 	}
+ }
  
- extern const struct nla_policy nda_policy[];
- 
--static inline bool neigh_key_eq16(const struct neighbour *n, const void *pkey)
+-static inline void dst_hold_and_use(struct dst_entry *dst, unsigned long time)
 -{
--	return *(const u16 *)n->primary_key == *(const u16 *)pkey;
+-	dst_hold(dst);
+-	dst_use_noref(dst, time);
 -}
 -
- static inline bool neigh_key_eq32(const struct neighbour *n, const void *pkey)
+ static inline struct dst_entry *dst_clone(struct dst_entry *dst)
  {
- 	return *(const u32 *)n->primary_key == *(const u32 *)pkey;
+ 	if (dst)
 -- 
 2.25.1
 
