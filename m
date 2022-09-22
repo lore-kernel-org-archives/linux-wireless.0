@@ -2,59 +2,59 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F56C6FA82
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Sep 2022 07:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D54EC6FA90
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Sep 2022 07:20:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230266AbiIVHUM (ORCPT
+        id S231143AbiIVHUj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Sep 2022 03:20:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42296 "EHLO
+        Thu, 22 Sep 2022 03:20:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230422AbiIVHUH (ORCPT
+        with ESMTP id S230452AbiIVHU1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2022 03:20:07 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3317B72879;
-        Thu, 22 Sep 2022 00:20:03 -0700 (PDT)
+        Thu, 22 Sep 2022 03:20:27 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB2999E885;
+        Thu, 22 Sep 2022 00:20:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 157EEB834DB;
-        Thu, 22 Sep 2022 07:20:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51B9BC433D6;
-        Thu, 22 Sep 2022 07:19:58 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F190FB8121A;
+        Thu, 22 Sep 2022 07:20:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 556D2C433C1;
+        Thu, 22 Sep 2022 07:20:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1663831200;
-        bh=zxzYj5mlDqzaq0nOcgSF728ZPS1FFMPmRhm6jfyyUKE=;
+        s=k20201202; t=1663831222;
+        bh=u9Bp3bqGdZlLLuGXD1du6yfpdjQYW5Nnh9/fnq4kOfs=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=a6jBUhg3ZKEukMKQPA9mJwCSO31qT3PCwh9+VVvmJsDoqEAcdQ9RrOAwdOZTrgz2A
-         UhalyqV+AGsXjCc3AfIIT8vc5TGgqkFh8XY+R00cGitJ+qiXIfLWkBR79kZBPxszFV
-         1GFvdyYCn7iewqNoDxNR6sVAWEYqnYuep7yH4x8osPwo5oiQqsv7u35VeozPEHGl1a
-         yMievXAvPidX2IN+TuuX9SvOc3I6uYw80BeknqkGnfxPAuE34J/Lws1ddg9yIle+5J
-         vt6XpTr6tHnkNBRvUZzdBL0UYliHTvORYGC0F35ZP0is8BFYueayslugHHabsHtBb3
-         Q/GJfQUvXnlWQ==
+        b=GBTJaboA6BIW0AudBq1+bnH98My8yQmetP8JvFp/Suh0CiCpbTUpmbKyvTJKpmJ+I
+         80dtBiclx73xEKxuOlk6GGPyy5w8u/4SNgLjol12PuyQKkbAgGd9/bPMG/FCAyRhYn
+         gDpff5OmpJMuQ+4xCN7jI0J/RiuR+4FLwtp6i0zuuGOPkECM+S5s7FbQc9i01aiw6i
+         Ss7h/wAeMBEV8Vi84pzeUls3DrzL4eHRcYLznPyEpr0lM1sWvCz+xrKPFh4S//k5t4
+         c4JiOagQ4wlCC13uRMSDNPkJIfUmA2DVRoZ+o1JE7YN0FcHpFWjGBhL/A1mwtw+9RV
+         rbd6MBPn2XLfA==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Subject: Re: [PATCH] ath9k: fix repeated words in comments
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220915030559.42371-1-yuanjilin@cdjrlc.com>
-References: <20220915030559.42371-1-yuanjilin@cdjrlc.com>
+In-Reply-To: <20220915030859.45384-1-yuanjilin@cdjrlc.com>
+References: <20220915030859.45384-1-yuanjilin@cdjrlc.com>
 To:     Jilin Yuan <yuanjilin@cdjrlc.com>
 Cc:     toke@toke.dk, davem@davemloft.net, edumazet@google.com,
         kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         Jilin Yuan <yuanjilin@cdjrlc.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166383119616.28267.3193737136745129397.kvalo@kernel.org>
-Date:   Thu, 22 Sep 2022 07:19:58 +0000 (UTC)
+Message-ID: <166383121843.28267.6007123847146495303.kvalo@kernel.org>
+Date:   Thu, 22 Sep 2022 07:20:20 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Jilin Yuan <yuanjilin@cdjrlc.com> wrote:
 
-> Delete the redundant word 'to'.
+> Delete the redundant word 'the'.
 > 
 > Signed-off-by: Jilin Yuan <yuanjilin@cdjrlc.com>
 > Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
@@ -62,10 +62,10 @@ Jilin Yuan <yuanjilin@cdjrlc.com> wrote:
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-02be97c7b2de wifi: ath9k: fix repeated to words in a comment
+1035deb32391 wifi: ath9k: fix repeated the words in a comment
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220915030559.42371-1-yuanjilin@cdjrlc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220915030859.45384-1-yuanjilin@cdjrlc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
