@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A069ECAAD8
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Sep 2022 06:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A057C6FA90
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Sep 2022 06:54:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229866AbiIWGyT (ORCPT
+        id S230163AbiIWGyZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Sep 2022 02:54:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56082 "EHLO
+        Fri, 23 Sep 2022 02:54:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229966AbiIWGyN (ORCPT
+        with ESMTP id S229616AbiIWGyO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Sep 2022 02:54:13 -0400
+        Fri, 23 Sep 2022 02:54:14 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 44B2D129686
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2022 23:54:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 565C712968A
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2022 23:54:10 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28N6rczeF020912, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28N6rczeF020912
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28N6rWXF1020798, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28N6rWXF1020798
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 23 Sep 2022 14:53:38 +0800
+        Fri, 23 Sep 2022 14:53:32 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Fri, 23 Sep 2022 14:54:02 +0800
+ 15.1.2375.31; Fri, 23 Sep 2022 14:53:56 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 23 Sep
- 2022 14:54:01 +0800
+ 2022 14:53:55 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 9/9] wifi: rtw89: 8852b: configure DLE mem
-Date:   Fri, 23 Sep 2022 14:53:11 +0800
-Message-ID: <20220923065311.123356-10-pkshih@realtek.com>
+Subject: [PATCH 3/9] wifi: rtw89: add DMA busy checking bits to chip info
+Date:   Fri, 23 Sep 2022 14:53:05 +0800
+Message-ID: <20220923065311.123356-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220923065311.123356-1-pkshih@realtek.com>
 References: <20220923065311.123356-1-pkshih@realtek.com>
@@ -56,143 +56,125 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvMjMgpFekyCAwMzozMDowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Configure DLE (data link engine) memory size for operating modes.
+8852B has less DMA channels, so its checking bits are different from other
+chips.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac.c      | 14 ++++++++++++++
- drivers/net/wireless/realtek/rtw89/mac.h      |  7 +++++++
- drivers/net/wireless/realtek/rtw89/rtw8852b.c | 14 ++++++++++++++
- 3 files changed, 35 insertions(+)
+ drivers/net/wireless/realtek/rtw89/pci.c       | 10 +++++-----
+ drivers/net/wireless/realtek/rtw89/pci.h       |  9 ++++++++-
+ drivers/net/wireless/realtek/rtw89/rtw8852ae.c |  2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852be.c |  6 ++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852ce.c |  2 +-
+ 5 files changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index d6c3e607fc12e..7654cf52ca350 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -1256,6 +1256,10 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
- 	.wde_size0 = {RTW89_WDE_PG_64, 4095, 1,},
- 	/* DLFW */
- 	.wde_size4 = {RTW89_WDE_PG_64, 0, 4096,},
-+	/* PCIE 64 */
-+	.wde_size6 = {RTW89_WDE_PG_64, 512, 0,},
-+	/* DLFW */
-+	.wde_size9 = {RTW89_WDE_PG_64, 0, 1024,},
- 	/* 8852C DLFW */
- 	.wde_size18 = {RTW89_WDE_PG_64, 0, 2048,},
- 	/* 8852C PCIE SCC */
-@@ -1264,6 +1268,10 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
- 	.ple_size0 = {RTW89_PLE_PG_128, 1520, 16,},
- 	/* DLFW */
- 	.ple_size4 = {RTW89_PLE_PG_128, 64, 1472,},
-+	/* PCIE 64 */
-+	.ple_size6 = {RTW89_PLE_PG_128, 496, 16,},
-+	/* DLFW */
-+	.ple_size8 = {RTW89_PLE_PG_128, 64, 960,},
- 	/* 8852C DLFW */
- 	.ple_size18 = {RTW89_PLE_PG_128, 2544, 16,},
- 	/* 8852C PCIE SCC */
-@@ -1272,6 +1280,8 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
- 	.wde_qt0 = {3792, 196, 0, 107,},
- 	/* DLFW */
- 	.wde_qt4 = {0, 0, 0, 0,},
-+	/* PCIE 64 */
-+	.wde_qt6 = {448, 48, 0, 16,},
- 	/* 8852C DLFW */
- 	.wde_qt17 = {0, 0, 0,  0,},
- 	/* 8852C PCIE SCC */
-@@ -1282,6 +1292,8 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
- 	.ple_qt5 = {264, 0, 32, 20, 64, 13, 1101, 0, 64, 128, 120,},
- 	/* DLFW */
- 	.ple_qt13 = {0, 0, 16, 48, 0, 0, 0, 0, 0, 0, 0,},
-+	/* PCIE 64 */
-+	.ple_qt18 = {147, 0, 16, 20, 17, 13, 89, 0, 32, 14, 8, 0,},
- 	/* DLFW 52C */
- 	.ple_qt44 = {0, 0, 16, 256, 0, 0, 0, 0, 0, 0, 0, 0,},
- 	/* DLFW 52C */
-@@ -1290,6 +1302,8 @@ const struct rtw89_mac_size_set rtw89_mac_size = {
- 	.ple_qt46 = {525, 0, 16, 20, 13, 13, 178, 0, 32, 62, 8, 16,},
- 	/* 8852C PCIE SCC */
- 	.ple_qt47 = {525, 0, 32, 20, 1034, 13, 1199, 0, 1053, 62, 160, 1037,},
-+	/* PCIE 64 */
-+	.ple_qt58 = {147, 0, 16, 20, 157, 13, 229, 0, 172, 14, 24, 0,},
- };
- EXPORT_SYMBOL(rtw89_mac_size);
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index 002d3ce0e35b2..957f4e550a7ef 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -2272,19 +2272,19 @@ static int rtw89_poll_txdma_ch_idle_pcie(struct rtw89_dev *rtwdev)
+ {
+ 	const struct rtw89_pci_info *info = rtwdev->pci_info;
+ 	u32 ret, check, dma_busy;
+-	u32 dma_busy1 = info->dma_busy1_reg;
++	u32 dma_busy1 = info->dma_busy1.addr;
+ 	u32 dma_busy2 = info->dma_busy2_reg;
  
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-index 6137499d11fe6..738a328591a50 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.h
-+++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -690,23 +690,30 @@ struct rtw89_mac_size_set {
- 	const struct rtw89_hfc_prec_cfg hfc_preccfg_pcie;
- 	const struct rtw89_dle_size wde_size0;
- 	const struct rtw89_dle_size wde_size4;
-+	const struct rtw89_dle_size wde_size6;
-+	const struct rtw89_dle_size wde_size9;
- 	const struct rtw89_dle_size wde_size18;
- 	const struct rtw89_dle_size wde_size19;
- 	const struct rtw89_dle_size ple_size0;
- 	const struct rtw89_dle_size ple_size4;
-+	const struct rtw89_dle_size ple_size6;
-+	const struct rtw89_dle_size ple_size8;
- 	const struct rtw89_dle_size ple_size18;
- 	const struct rtw89_dle_size ple_size19;
- 	const struct rtw89_wde_quota wde_qt0;
- 	const struct rtw89_wde_quota wde_qt4;
-+	const struct rtw89_wde_quota wde_qt6;
- 	const struct rtw89_wde_quota wde_qt17;
- 	const struct rtw89_wde_quota wde_qt18;
- 	const struct rtw89_ple_quota ple_qt4;
- 	const struct rtw89_ple_quota ple_qt5;
- 	const struct rtw89_ple_quota ple_qt13;
-+	const struct rtw89_ple_quota ple_qt18;
- 	const struct rtw89_ple_quota ple_qt44;
- 	const struct rtw89_ple_quota ple_qt45;
- 	const struct rtw89_ple_quota ple_qt46;
- 	const struct rtw89_ple_quota ple_qt47;
-+	const struct rtw89_ple_quota ple_qt58;
- };
+-	check = B_AX_ACH0_BUSY | B_AX_ACH1_BUSY | B_AX_ACH2_BUSY |
+-		B_AX_ACH3_BUSY | B_AX_ACH4_BUSY | B_AX_ACH5_BUSY |
+-		B_AX_ACH6_BUSY | B_AX_ACH7_BUSY | B_AX_CH8_BUSY |
+-		B_AX_CH9_BUSY | B_AX_CH12_BUSY;
++	check = info->dma_busy1.mask;
  
- extern const struct rtw89_mac_size_set rtw89_mac_size;
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-index 8428614a3b150..9f9908418ee4e 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-@@ -6,6 +6,19 @@
- #include "mac.h"
+ 	ret = read_poll_timeout(rtw89_read32, dma_busy, (dma_busy & check) == 0,
+ 				10, 100, false, rtwdev, dma_busy1);
+ 	if (ret)
+ 		return ret;
+ 
++	if (!dma_busy2)
++		return 0;
++
+ 	check = B_AX_CH10_BUSY | B_AX_CH11_BUSY;
+ 
+ 	ret = read_poll_timeout(rtw89_read32, dma_busy, (dma_busy & check) == 0,
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
+index 391058de47ec5..e49ffc9cf7903 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.h
++++ b/drivers/net/wireless/realtek/rtw89/pci.h
+@@ -468,6 +468,13 @@
+ #define B_AX_ACH0_BUSY			BIT(8)
+ #define B_AX_RPQ_BUSY			BIT(1)
+ #define B_AX_RXQ_BUSY			BIT(0)
++#define DMA_BUSY1_CHECK		(B_AX_ACH0_BUSY | B_AX_ACH1_BUSY | B_AX_ACH2_BUSY | \
++				 B_AX_ACH3_BUSY | B_AX_ACH4_BUSY | B_AX_ACH5_BUSY | \
++				 B_AX_ACH6_BUSY | B_AX_ACH7_BUSY | B_AX_CH8_BUSY | \
++				 B_AX_CH9_BUSY | B_AX_CH12_BUSY)
++#define DMA_BUSY1_CHECK_V1	(B_AX_ACH0_BUSY | B_AX_ACH1_BUSY | B_AX_ACH2_BUSY | \
++				 B_AX_ACH3_BUSY | B_AX_CH8_BUSY | B_AX_CH9_BUSY | \
++				 B_AX_CH12_BUSY)
+ 
+ #define R_AX_PCIE_DMA_BUSY2	0x131C
+ #define B_AX_CH11_BUSY			BIT(1)
+@@ -754,7 +761,7 @@ struct rtw89_pci_info {
+ 	u32 txbd_rwptr_clr2_reg;
+ 	struct rtw89_reg_def dma_stop1;
+ 	struct rtw89_reg_def dma_stop2;
+-	u32 dma_busy1_reg;
++	struct rtw89_reg_def dma_busy1;
+ 	u32 dma_busy2_reg;
+ 	u32 dma_busy3_reg;
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
+index 48485bd9c149f..0cd8c0c44d19d 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
+@@ -35,7 +35,7 @@ static const struct rtw89_pci_info rtw8852a_pci_info = {
+ 	.txbd_rwptr_clr2_reg	= R_AX_TXBD_RWPTR_CLR2,
+ 	.dma_stop1		= {R_AX_PCIE_DMA_STOP1, B_AX_TX_STOP1_MASK},
+ 	.dma_stop2		= {R_AX_PCIE_DMA_STOP2, B_AX_TX_STOP2_ALL},
+-	.dma_busy1_reg		= R_AX_PCIE_DMA_BUSY1,
++	.dma_busy1		= {R_AX_PCIE_DMA_BUSY1, DMA_BUSY1_CHECK},
+ 	.dma_busy2_reg		= R_AX_PCIE_DMA_BUSY2,
+ 	.dma_busy3_reg		= R_AX_PCIE_DMA_BUSY1,
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852be.c b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
+index 4590535841be3..7bf95c38d3eb2 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852be.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
+@@ -9,6 +9,12 @@
  #include "reg.h"
  
-+static const struct rtw89_dle_mem rtw8852b_dle_mem_pcie[] = {
-+	[RTW89_QTA_SCC] = {RTW89_QTA_SCC, &rtw89_mac_size.wde_size6,
-+			   &rtw89_mac_size.ple_size6, &rtw89_mac_size.wde_qt6,
-+			   &rtw89_mac_size.wde_qt6, &rtw89_mac_size.ple_qt18,
-+			   &rtw89_mac_size.ple_qt58},
-+	[RTW89_QTA_DLFW] = {RTW89_QTA_DLFW, &rtw89_mac_size.wde_size9,
-+			    &rtw89_mac_size.ple_size8, &rtw89_mac_size.wde_qt4,
-+			    &rtw89_mac_size.wde_qt4, &rtw89_mac_size.ple_qt13,
-+			    &rtw89_mac_size.ple_qt13},
-+	[RTW89_QTA_INVALID] = {RTW89_QTA_INVALID, NULL, NULL, NULL, NULL, NULL,
-+			       NULL},
-+};
+ static const struct rtw89_pci_info rtw8852b_pci_info = {
++	.dma_stop1		= {R_AX_PCIE_DMA_STOP1, B_AX_TX_STOP1_MASK_V1},
++	.dma_stop2		= {0},
++	.dma_busy1		= {R_AX_PCIE_DMA_BUSY1, DMA_BUSY1_CHECK_V1},
++	.dma_busy2_reg		= 0,
++	.dma_busy3_reg		= R_AX_PCIE_DMA_BUSY1,
 +
- static int rtw8852b_mac_enable_bb_rf(struct rtw89_dev *rtwdev)
- {
- 	int ret;
-@@ -68,6 +81,7 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
- 	.chip_id		= RTL8852B,
- 	.fifo_size		= 196608,
- 	.dle_scc_rsvd_size	= 98304,
-+	.dle_mem		= rtw8852b_dle_mem_pcie,
- 	.dma_ch_mask		= BIT(RTW89_DMA_ACH4) | BIT(RTW89_DMA_ACH5) |
- 				  BIT(RTW89_DMA_ACH6) | BIT(RTW89_DMA_ACH7) |
- 				  BIT(RTW89_DMA_B1MG) | BIT(RTW89_DMA_B1HI),
+ 	.tx_dma_ch_mask		= BIT(RTW89_TXCH_ACH4) | BIT(RTW89_TXCH_ACH5) |
+ 				  BIT(RTW89_TXCH_ACH6) | BIT(RTW89_TXCH_ACH7) |
+ 				  BIT(RTW89_TXCH_CH10) | BIT(RTW89_TXCH_CH11),
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+index c7370f5df8b54..35901f64d17de 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+@@ -44,7 +44,7 @@ static const struct rtw89_pci_info rtw8852c_pci_info = {
+ 	.txbd_rwptr_clr2_reg	= R_AX_TXBD_RWPTR_CLR2_V1,
+ 	.dma_stop1		= {R_AX_HAXI_DMA_STOP1, B_AX_TX_STOP1_MASK},
+ 	.dma_stop2		= {R_AX_HAXI_DMA_STOP2, B_AX_TX_STOP2_ALL},
+-	.dma_busy1_reg		= R_AX_HAXI_DMA_BUSY1,
++	.dma_busy1		= {R_AX_HAXI_DMA_BUSY1, DMA_BUSY1_CHECK},
+ 	.dma_busy2_reg		= R_AX_HAXI_DMA_BUSY2,
+ 	.dma_busy3_reg		= R_AX_HAXI_DMA_BUSY3,
+ 
 -- 
 2.25.1
 
