@@ -2,59 +2,125 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6257C32771
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Sep 2022 18:49:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD3F1C32771
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Sep 2022 19:33:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230164AbiIZSt2 (ORCPT
+        id S229993AbiIZTdn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Sep 2022 14:49:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50848 "EHLO
+        Mon, 26 Sep 2022 15:33:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230108AbiIZSt1 (ORCPT
+        with ESMTP id S229621AbiIZTdm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2022 14:49:27 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A28488DFA
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 11:49:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1664218165;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0LEzoipDzoru5BZ1IIOpL/p338KJGh9e0r8cRS5PNUA=;
-        b=MnxgcQC4gH3fN2jxaRmB6/ZQbugPTbNnrvD56a4Llux5r/YfbfThdBBjcDvgvrXsW5lsBD
-        pP9d0tHsZrqmq+Ww9xGWsIYFOTcrWvT5GR+j9tnnhYgSYw6CHjDXkhomeOiySGihLYFtht
-        5M2RsuiRxMmQJKcnbP5ZtgxcpKkDRAk=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-149-F8q_BXxvOb2jKqpfVKMGdA-1; Mon, 26 Sep 2022 14:49:22 -0400
-X-MC-Unique: F8q_BXxvOb2jKqpfVKMGdA-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Mon, 26 Sep 2022 15:33:42 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6A999E68C
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 12:33:40 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.166])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 725F62A0073
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 19:33:39 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 48A3090007E
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 19:33:39 +0000 (UTC)
+Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8E99F101AA79;
-        Mon, 26 Sep 2022 18:49:21 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.39.192.170])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9AACC492B05;
-        Mon, 26 Sep 2022 18:49:19 +0000 (UTC)
-From:   Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To:     jtornosm@redhat.com
-Cc:     gregory.greenman@intel.com, kvalo@kernel.org,
-        linux-wireless@vger.kernel.org, pstourac@redhat.com
-Subject: Re: [PATCH] iwlwifi: mvm: fix double list_add at iwl_mvm_mac_wake_tx_queue (other cases)
-Date:   Mon, 26 Sep 2022 20:49:17 +0200
-Message-Id: <20220926184917.6535-1-jtornosm@redhat.com>
-In-Reply-To: <20220909121235.575541-1-jtornosm@redhat.com>
-References: <20220909121235.575541-1-jtornosm@redhat.com>
+        by mail3.candelatech.com (Postfix) with ESMTPSA id C735513C2B0
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 12:33:38 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C735513C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1664220818;
+        bh=Nid3DgXtW9vcP0LBrx+DrRdZnWKpQ9uzG3qdg2ASEHo=;
+        h=To:From:Subject:Date:From;
+        b=h6CaRECpH4ndSGR7lEE7+B3qMpH3ZwOyCzxwKlS542SvBk5+hhabXP1ER+darG/F3
+         uAItUUsSvKKNYvtcXQ4fuBFC3AnqfpSV0adT+zyl6pngoVVi3s1K82IuXCspPTyuwR
+         sIWbwVFOi3R2ewSLiO3RgA+jxGR/8aMPYCkODkHc=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Ben Greear <greearb@candelatech.com>
+Subject: iwlmvm potential issue in txpath
+Organization: Candela Technologies
+Message-ID: <1824eca9-4f41-b349-c91f-dc2561126d90@candelatech.com>
+Date:   Mon, 26 Sep 2022 12:33:38 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-MDID: 1664220819-ULgkezikQvrs
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Could someone please review this patch?
-This is just a second part of a previous patch already acked (14a3aacf517a9)
+Hello,
+
+I'm trying to track down a use-after-free and similar bugs in ax210...
+
+ From looking at this code, I am thinking maybe this is part of the problem:
+
+When this code returns non-zero, the skb is freed by calling code.
+
+But in the section with #### HERE #### below, I think it could free
+skb and still return != 0, which would cause double-free?
+
+int iwl_mvm_tx_skb_sta(struct iwl_mvm *mvm, struct sk_buff *skb,
+		       struct ieee80211_sta *sta)
+{
+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+	struct ieee80211_tx_info info;
+	struct sk_buff_head mpdus_skbs;
+	unsigned int payload_len;
+	int ret;
+
+	if (WARN_ON_ONCE(!mvmsta))
+		return -1;
+
+	if (WARN_ON_ONCE(mvmsta->sta_id == IWL_MVM_INVALID_STA))
+		return -1;
+
+	memcpy(&info, skb->cb, sizeof(info));
+
+	if (!skb_is_gso(skb))
+		return iwl_mvm_tx_mpdu(mvm, skb, &info, sta);
+
+	payload_len = skb_tail_pointer(skb) - skb_transport_header(skb) -
+		tcp_hdrlen(skb) + skb->data_len;
+
+	if (payload_len <= skb_shinfo(skb)->gso_size)
+		return iwl_mvm_tx_mpdu(mvm, skb, &info, sta);
+
+	__skb_queue_head_init(&mpdus_skbs);
+
+	ret = iwl_mvm_tx_tso(mvm, skb, &info, sta, &mpdus_skbs);
+	if (ret)
+		return ret;
+
+	if (WARN_ON(skb_queue_empty(&mpdus_skbs)))
+		return ret;
+
+	while (!skb_queue_empty(&mpdus_skbs)) {
+		skb = __skb_dequeue(&mpdus_skbs);
+
+		ret = iwl_mvm_tx_mpdu(mvm, skb, &info, sta);
+		if (ret) {
+
+#### HERE ####
+			__skb_queue_purge(&mpdus_skbs);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+
+Maybe return 0 in that error branch?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
