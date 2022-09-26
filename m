@@ -2,89 +2,110 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E9FC32771
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Sep 2022 09:43:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C3FC32771
+	for <linux-wireless@archiver.kernel.org>; Mon, 26 Sep 2022 09:44:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234308AbiIZJnd (ORCPT
+        id S232965AbiIZJoN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Sep 2022 05:43:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50856 "EHLO
+        Mon, 26 Sep 2022 05:44:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233462AbiIZJnL (ORCPT
+        with ESMTP id S234502AbiIZJnj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2022 05:43:11 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13006491D4
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 02:41:07 -0700 (PDT)
+        Mon, 26 Sep 2022 05:43:39 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 238F7476DA
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 02:41:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 27D18B8077E
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 09:40:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED64AC433D7;
-        Mon, 26 Sep 2022 09:40:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A4B3160B4A
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 09:41:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B46FC433D6;
+        Mon, 26 Sep 2022 09:41:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664185222;
-        bh=YuJrJQvn7eAFlcWAnDADbd79XWhQ9EoxPA3mdG1pQSQ=;
+        s=k20201202; t=1664185271;
+        bh=f00h5sF3WBB/NQzTissBhyroT5VCQxGpAmwnvW6QaiY=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Xtr0H0ALERc1vQZE8oLjvT6RdvFNkzwIJcRt7SAHhCEkOAdUuQ8HRjaCSjNxyDaeR
-         AQu6g4AnMe2OOAVxHcXfRJFmAIQO9Ms9V2VREdy/2A1kUvN9EGQMcSKivpV1ffh9vQ
-         ASOAVlEYvOkGOTw21R5V9KuMhG/DY9WAKDP0P2vPeA95mhqb31Kyhbc4t4grnmXs1i
-         7mF7T44UeCbqBLYcmX0nD7Gqoypc6wT1Z0IfbirPY9aqRm3SjlXW2Se3CKaOkN/JXa
-         n+G5HvH4V/zjegFiVY21phYy46XrMf59HsRntaV7uQB8mRthTvZtDFQN+zoJQs3rZY
-         qyXPodXQ2vR0g==
+        b=QF2gy5Alv5ZmF3jltTiYGfeVLoCOTgWwzATe5Wk/eHec0TrBOpZu7pYkiU+d5pZry
+         GIXarnTuZllFT6U9P2b7NLh2hYxBtTPCnd//YiuHl4jrc3JdUcM21DotjVvMJ4ifbA
+         UT0l7LcoDk5kh+M6hp4ruZpOkwo/hy2UWhXl2Hoq1EZtDPYJRkNLcMkg9W3F6JllIV
+         ljtzYS1f/MlZyCCeMm2ImjyH5SbAnJnsT2gUvzRTRzvQp4gEYGXLSPoDJFTrbo+qP2
+         fVjCv4d06JAHphuChLBy4iMOvYF7dtTnGUnZIo99Ize/dUvLQdEc0JPs7krXphZdvP
+         IMrSR5aynYPGg==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCHv2] ath11k: Add spectral scan support for 160 MHz
+Subject: Re: [PATCH] wifi: ath11k: Fix deadlock during WoWLAN suspend
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220725055001.15194-1-quic_tamizhr@quicinc.com>
-References: <20220725055001.15194-1-quic_tamizhr@quicinc.com>
-To:     Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+In-Reply-To: <20220919021435.2459-1-quic_bqiang@quicinc.com>
+References: <20220919021435.2459-1-quic_bqiang@quicinc.com>
+To:     Baochen Qiang <quic_bqiang@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166418521856.13691.10782071280432195867.kvalo@kernel.org>
-Date:   Mon, 26 Sep 2022 09:40:21 +0000 (UTC)
+Message-ID: <166418526848.13691.14908006715046928554.kvalo@kernel.org>
+Date:   Mon, 26 Sep 2022 09:41:10 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Tamizh Chelvam Raja <quic_tamizhr@quicinc.com> wrote:
+Baochen Qiang <quic_bqiang@quicinc.com> wrote:
 
-> There are two types of 160 MHz spectral scan support mentioned below
+> We are seeing system hangs during WoWLAN suspend, and get below
+> two stacks:
 > 
-> 1. Fragmented approach
-> 2. Single event approach
+> Stack1:
+> [ffffb02cc1557b20] __schedule at ffffffff8bb10860
+> [ffffb02cc1557ba8] schedule at ffffffff8bb10f24
+> [ffffb02cc1557bb8] schedule_timeout at ffffffff8bb16d88
+> [ffffb02cc1557c30] wait_for_completion at ffffffff8bb11778
+> [ffffb02cc1557c78] __flush_work at ffffffff8b0b30cd
+> [ffffb02cc1557cf0] __cancel_work_timer at ffffffff8b0b33ad
+> [ffffb02cc1557d60] ath11k_mac_drain_tx at ffffffffc0c1f0ca [ath11k]
+> [ffffb02cc1557d70] ath11k_wow_op_suspend at ffffffffc0c5201e [ath11k]
+> [ffffb02cc1557da8] __ieee80211_suspend at ffffffffc11e2bd3 [mac80211]
+> [ffffb02cc1557dd8] wiphy_suspend at ffffffffc0f901ac [cfg80211]
+> [ffffb02cc1557e08] dpm_run_callback at ffffffff8b75118a
+> [ffffb02cc1557e38] __device_suspend at ffffffff8b751630
+> [ffffb02cc1557e70] async_suspend at ffffffff8b7519ea
+> [ffffb02cc1557e88] async_run_entry_fn at ffffffff8b0bf4ce
+> [ffffb02cc1557ea8] process_one_work at ffffffff8b0b1a24
+> [ffffb02cc1557ee0] worker_thread at ffffffff8b0b1c4a
+> [ffffb02cc1557f18] kthread at ffffffff8b0b9cb8
+> [ffffb02cc1557f50] ret_from_fork at ffffffff8b001d32
 > 
-> In this fragmented approach, single 160 MHz will be split as two
-> 80 MHz buffer. First fft sample buffer will contain spectral scan
-> result of primary 80 MHz and the second fft sample buffer will contain
-> secondary 80 MHz and here cfreq1 and cfreq2 will be mentioned.
-> In case of 160 MHz on 36th channel will contain cfreq1 as 5210 and
-> cfreq2 as 5290. Chipsets which support this approach are IPQ8074/IPQ6018.
+> Stack2:
+> [ffffb02cc00b7d18] __schedule at ffffffff8bb10860
+> [ffffb02cc00b7da0] schedule at ffffffff8bb10f24
+> [ffffb02cc00b7db0] schedule_preempt_disabled at ffffffff8bb112b4
+> [ffffb02cc00b7db8] __mutex_lock at ffffffff8bb127ea
+> [ffffb02cc00b7e38] ath11k_mgmt_over_wmi_tx_work at ffffffffc0c1aa44 [ath11k]
+> [ffffb02cc00b7ea8] process_one_work at ffffffff8b0b1a24
+> [ffffb02cc00b7ee0] worker_thread at ffffffff8b0b1c4a
+> [ffffb02cc00b7f18] kthread at ffffffff8b0b9cb8
+> [ffffb02cc00b7f50] ret_from_fork at ffffffff8b001d32
 > 
-> Replacing freq1 with freq2 in every secondary sepctral scan event to
-> distinguish between two different 80 MHz spectral event data.
+> From the first stack, ath11k_mac_drain_tx calls
+> cancel_work_sync(&ar->wmi_mgmt_tx_work) and waits all packets to be sent
+> out or dropped. However, we find from Stack2 that this work item is blocked
+> because ar->conf_mutex is already held by ath11k_wow_op_suspend.
 > 
-> In the 2nd approach each fft sample buffer will contain spectral scan
-> result for whole 160 MHz by mentioning cfreq1 as 5250 which is center
-> frequency of whole 160 MHz. Chipset which support this approach is QCN9074.
+> Fix this issue by moving ath11k_mac_wait_tx_complete to the start of
+> ath11k_wow_op_suspend where ar->conf_mutex has not been acquired. And
+> this change also makes the logic in ath11k_wow_op_suspend match the
+> logic in ath11k_mac_op_start and ath11k_mac_op_stop.
 > 
-> Host will receive spectral event from target for every 5 fft samples.
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
 > 
-> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-01120-QCAHKSWPL-1
-> Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01120-QCAHKSWP
-> 
-> Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+> Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-c92f774a95c6 wifi: ath11k: Add spectral scan support for 160 MHz
+d78c8b7131dc wifi: ath11k: Fix deadlock during WoWLAN suspend
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220725055001.15194-1-quic_tamizhr@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20220919021435.2459-1-quic_bqiang@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
