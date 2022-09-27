@@ -2,97 +2,109 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B99DDC54EE9
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Sep 2022 13:33:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FCF9C6FA82
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Sep 2022 14:00:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230446AbiI0Ndp (ORCPT
+        id S233060AbiI0OAa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Sep 2022 09:33:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50056 "EHLO
+        Tue, 27 Sep 2022 10:00:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232862AbiI0NdT (ORCPT
+        with ESMTP id S233058AbiI0N7z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2022 09:33:19 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B05E580A4
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2022 06:31:54 -0700 (PDT)
-Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=bjornoya.blackshift.org)
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <mkl@pengutronix.de>)
-        id 1odAgT-0004Qu-4S; Tue, 27 Sep 2022 15:31:37 +0200
-Received: from pengutronix.de (unknown [IPv6:2a01:4f8:1c1c:29e9:22:41ff:fe00:1400])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        (Authenticated sender: mkl-all@blackshift.org)
-        by smtp.blackshift.org (Postfix) with ESMTPSA id 98235EE174;
-        Tue, 27 Sep 2022 13:31:34 +0000 (UTC)
-Date:   Tue, 27 Sep 2022 15:31:32 +0200
-From:   Marc Kleine-Budde <mkl@pengutronix.de>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     davem@davemloft.net, netdev@vger.kernel.org, edumazet@google.com,
-        pabeni@redhat.com, kvalo@kernel.org, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, linux-can@vger.kernel.org
-Subject: Re: [PATCH net-next] net: drop the weight argument from
- netif_napi_add
-Message-ID: <20220927133132.ze3wx54shojraa5a@pengutronix.de>
-References: <20220927132753.750069-1-kuba@kernel.org>
+        Tue, 27 Sep 2022 09:59:55 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38C2FE39;
+        Tue, 27 Sep 2022 06:59:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=eaizC767E4tlXw5DDeGAD1g3hUIMeIhOVHKkmtgXYTo=; t=1664287171; x=1665496771; 
+        b=gcniAqls0krY6PATagJrjDrzrD1ZovHU10lHPBw18jfTq5DFvcYyEbC8KUXSInHimldKM/ckUg5
+        +MWlioKAw267XxbBZ9McLggY1+uJwYTW7kssVtAYKQoU+Y5P4Z3Gz8YNeQwiTUmR2gEkx5INiMxT3
+        MdtCKZqYZJydPWPMvbDbag5o9guta2rwBpteDU52BYNEbL1QgyE0R9AcGtUnwTufqT135kK0NyutL
+        EgWggjJXl7ZHFDibPLjDJLVTBIBun3oE2Rl+hfgrCztvoO3NF/g1FIErgyl9iw5PA0iKjfkJBNhwD
+        191rbR4oNcTrBIfzcpc9AemOW0FYFTZTNmiw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1odB7P-009bLz-0k;
+        Tue, 27 Sep 2022 15:59:28 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: pull-request: wireless-2022-09-27
+Date:   Tue, 27 Sep 2022 15:59:22 +0200
+Message-Id: <20220927135923.45312-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="sn3iwhk4ctenflmz"
-Content-Disposition: inline
-In-Reply-To: <20220927132753.750069-1-kuba@kernel.org>
-X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
-X-SA-Exim-Mail-From: mkl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Hi,
 
---sn3iwhk4ctenflmz
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+So I was out for plugfest, and a couple of things accumulated.
+I know it's getting late, but these seem important, some are
+fixes for reported regressions, some are locking bugs, and a
+memory corruption with some drivers is also there ...
 
-On 27.09.2022 06:27:53, Jakub Kicinski wrote:
-> We tell driver developers to always pass NAPI_POLL_WEIGHT
-> as the weight to netif_napi_add(). This may be confusing
-> to newcomers, drop the weight argument, those who really
-> need to tweak the weight can use netif_napi_add_weight().
->=20
-> Signed-off-by: Jakub Kicinski <kuba@kernel.org>
-> ---
->  drivers/net/can/ctucanfd/ctucanfd_base.c      |  2 +-
->  drivers/net/can/ifi_canfd/ifi_canfd.c         |  2 +-
->  drivers/net/can/m_can/m_can.c                 |  3 +--
+Please pull and let me know if there's any problem.
 
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de> # for CAN
+Thanks,
+johannes
 
-regards,
-Marc
 
---=20
-Pengutronix e.K.                 | Marc Kleine-Budde           |
-Embedded Linux                   | https://www.pengutronix.de  |
-Vertretung West/Dortmund         | Phone: +49-231-2826-924     |
-Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-5555 |
 
---sn3iwhk4ctenflmz
-Content-Type: application/pgp-signature; name="signature.asc"
+The following changes since commit 781b80f452fcc1cfc16ee41f12556626a9ced049:
 
------BEGIN PGP SIGNATURE-----
+  wifi: mt76: fix 5 GHz connection regression on mt76x0/mt76x2 (2022-09-12 14:26:02 +0300)
 
-iQEzBAABCgAdFiEEBsvAIBsPu6mG7thcrX5LkNig010FAmMy+zEACgkQrX5LkNig
-013DrQgAnSKMI/Gmp2TfD4MpcjCCFFzRyLlfs/viJiu7YHBCsRclZMTAAjTAnyD1
-/t5maqlOkdRi0wZCqcu/kF7vgnbmNYuFfEw4RlAWGZl9AXXgo6jPXxz8qEpnlr5B
-5lQuaVneytM0+ky5WLWl3uqB6JG++Ra+L3jDESRAcwXiJNJPg92n2IglPENuBNxT
-s6CrSuetrV0OAvEaU8IJAtIYIIFjMy7P3itZY535ngx65mhiEomQ9Er3ohkRvCzi
-teo7zO/iutWshQQK1WKjNQ1P/L+aDvtAvGlnx5Sf5Ap4cYauwiywsqRjzlzdPVou
-EQLAVrG9cy8yPUyKXWpmvifg3osHlQ==
-=pEGT
------END PGP SIGNATURE-----
+are available in the Git repository at:
 
---sn3iwhk4ctenflmz--
+  git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2022-09-27
+
+for you to fetch changes up to 6546646a7fb0d7fe1caef947889497c16aaecc8c:
+
+  wifi: mac80211: mlme: Fix double unlock on assoc success handling (2022-09-27 10:34:45 +0200)
+
+----------------------------------------------------------------
+A few late-comer fixes:
+ * locking in mac80211 MLME
+ * non-QoS driver crash/regression
+ * minstrel memory corruption
+ * TX deadlock
+ * TX queues not always enabled
+ * HE/EHT bitrate calculation
+
+----------------------------------------------------------------
+Alexander Wetzel (2):
+      wifi: mac80211: don't start TX with fq->lock to fix deadlock
+      wifi: mac80211: ensure vif queues are operational after start
+
+Hans de Goede (1):
+      wifi: mac80211: fix regression with non-QoS drivers
+
+Paweł Lenkow (1):
+      wifi: mac80211: fix memory corruption in minstrel_ht_update_rates()
+
+Rafael Mendonca (2):
+      wifi: mac80211: mlme: Fix missing unlock on beacon RX
+      wifi: mac80211: mlme: Fix double unlock on assoc success handling
+
+Tamizh Chelvam Raja (1):
+      wifi: cfg80211: fix MCS divisor value
+
+ net/mac80211/mlme.c                |  9 ++++++---
+ net/mac80211/rc80211_minstrel_ht.c |  6 ++++--
+ net/mac80211/status.c              |  2 +-
+ net/mac80211/tx.c                  |  4 ++++
+ net/mac80211/util.c                | 12 ++++++------
+ net/wireless/util.c                |  4 ++--
+ 6 files changed, 23 insertions(+), 14 deletions(-)
+
