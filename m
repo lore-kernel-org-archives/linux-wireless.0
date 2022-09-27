@@ -2,82 +2,171 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3020FC54EE9
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Sep 2022 06:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA4F1C54EE9
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Sep 2022 06:28:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229942AbiI0GKc (ORCPT
+        id S229976AbiI0G2C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Sep 2022 02:10:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53110 "EHLO
+        Tue, 27 Sep 2022 02:28:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbiI0GK2 (ORCPT
+        with ESMTP id S229889AbiI0G2B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2022 02:10:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D907E89817
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 23:10:26 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6A791615D2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2022 06:10:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4ED88C433D6;
-        Tue, 27 Sep 2022 06:10:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664259025;
-        bh=p+tciQcNn1OBJeqx8zukaAf1oTB0/gjbtLf7IvZt8wE=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Hw3LW+V0Iga4lJLlv5lAo9VtzVCTMrabkXZfjhxzMkSCYPj8Xu7e+HY1oOd1cvSaq
-         bD4VmLF3AmvME7hWegqPxZQzuc2AeGHgsh0isiei97QmI+fgY7pSLatniMWkgJLqLX
-         F6b/u+cJNNhJnW6iUauKl0d7qeeNZ7JiL02IuarXe9yuxhQh2mgRqSpvw2ZsMWukV4
-         FccONr5jfxO264N7hiLjg/WiKdYk83rgfmDvz78Ntb9rFmWstlOx746U1lH4J8/LU6
-         liFX8bqDeKuL8wZ5Ue/RllXYTpGYVhiJkMYUKGB5ESjg4tdMIXLPLpjpCqDh3J5VGA
-         UoVFUZD/LGhBQ==
-Content-Type: text/plain; charset="utf-8"
+        Tue, 27 Sep 2022 02:28:01 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DC0C3857D6
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2022 23:27:54 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28R6QlAK2008416, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28R6QlAK2008416
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Tue, 27 Sep 2022 14:26:47 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 27 Sep 2022 14:27:12 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 27 Sep
+ 2022 14:27:12 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 8/9] wifi: rtw89: check DLE FIFO size with reserved size
+Date:   Tue, 27 Sep 2022 14:26:10 +0800
+Message-ID: <20220927062611.30484-9-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220927062611.30484-1-pkshih@realtek.com>
+References: <20220927062611.30484-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/9] wifi: rtw89: pci: mask out unsupported TX channels
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20220923065311.123356-2-pkshih@realtek.com>
-References: <20220923065311.123356-2-pkshih@realtek.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <linux-wireless@vger.kernel.org>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166425902202.10854.17474411201005765804.kvalo@kernel.org>
-Date:   Tue, 27 Sep 2022 06:10:25 +0000 (UTC)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/27/2022 06:02:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvMjcgpFekyCAwNDo1MzowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+For SCC mode, some FIFO are reserved, so compare the quantity after minus
+the reserved size.
 
-> 8852BE doesn't support some TX channels, so mask them out, or it access
-> undefined registers.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.h     |  1 +
+ drivers/net/wireless/realtek/rtw89/mac.c      | 17 +++++++++++++++--
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |  2 ++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
+ 5 files changed, 20 insertions(+), 2 deletions(-)
 
-Failed to apply, please rebase.
-
-error: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtw89/core.h).
-error: could not build fake ancestor
-hint: Use 'git am --show-current-patch=diff' to see the failed patch
-Applying: wifi: rtw89: 8852b: implement chip_ops::{enable,disable}_bb_rf
-Patch failed at 0001 wifi: rtw89: 8852b: implement chip_ops::{enable,disable}_bb_rf
-
-9 patches set to Changes Requested.
-
-12986219 [1/9] wifi: rtw89: pci: mask out unsupported TX channels
-12986221 [2/9] wifi: rtw89: mac: define DMA channel mask to avoid unsupported channels
-12986224 [3/9] wifi: rtw89: add DMA busy checking bits to chip info
-12986225 [4/9] wifi: rtw89: 8852b: implement chip_ops::{enable,disable}_bb_rf
-12986216 [5/9] wifi: rtw89: pci: add to do PCI auto calibration
-12986217 [6/9] wifi: rtw89: pci: set power cut closed for 8852be
-12986218 [7/9] wifi: rtw89: mac: correct register of report IMR
-12986222 [8/9] wifi: rtw89: check DLE FIFO size with reserved size
-12986223 [9/9] wifi: rtw89: 8852b: configure DLE mem
-
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index be01350ee0e29..db041b32a8c2c 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2612,6 +2612,7 @@ struct rtw89_chip_info {
+ 	const struct rtw89_chip_ops *ops;
+ 	const char *fw_name;
+ 	u32 fifo_size;
++	u32 dle_scc_rsvd_size;
+ 	u16 max_amsdu_limit;
+ 	bool dis_2g_40m_ul_ofdma;
+ 	u32 rsvd_ple_ofst;
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 8fd70730689f8..892fdb7f090ef 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -1324,6 +1324,17 @@ static inline u32 dle_used_size(const struct rtw89_dle_size *wde,
+ 	       ple->pge_size * (ple->lnk_pge_num + ple->unlnk_pge_num);
+ }
+ 
++static u32 dle_expected_used_size(struct rtw89_dev *rtwdev,
++				  enum rtw89_qta_mode mode)
++{
++	u32 size = rtwdev->chip->fifo_size;
++
++	if (mode == RTW89_QTA_SCC)
++		size -= rtwdev->chip->dle_scc_rsvd_size;
++
++	return size;
++}
++
+ static void dle_func_en(struct rtw89_dev *rtwdev, bool enable)
+ {
+ 	if (enable)
+@@ -1491,7 +1502,8 @@ static int dle_init(struct rtw89_dev *rtwdev, enum rtw89_qta_mode mode,
+ 		ext_wde_min_qt_wcpu = ext_cfg->wde_min_qt->wcpu;
+ 	}
+ 
+-	if (dle_used_size(cfg->wde_size, cfg->ple_size) != rtwdev->chip->fifo_size) {
++	if (dle_used_size(cfg->wde_size, cfg->ple_size) !=
++	    dle_expected_used_size(rtwdev, mode)) {
+ 		rtw89_err(rtwdev, "[ERR]wd/dle mem cfg\n");
+ 		ret = -EINVAL;
+ 		goto error;
+@@ -2604,7 +2616,8 @@ static int dle_quota_change(struct rtw89_dev *rtwdev, enum rtw89_qta_mode mode)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (dle_used_size(cfg->wde_size, cfg->ple_size) != rtwdev->chip->fifo_size) {
++	if (dle_used_size(cfg->wde_size, cfg->ple_size) !=
++	    dle_expected_used_size(rtwdev, mode)) {
+ 		rtw89_err(rtwdev, "[ERR]wd/dle mem cfg\n");
+ 		return -EINVAL;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index 948a2027ed69c..7841476803535 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -2190,6 +2190,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.ops			= &rtw8852a_chip_ops,
+ 	.fw_name		= "rtw89/rtw8852a_fw.bin",
+ 	.fifo_size		= 458752,
++	.dle_scc_rsvd_size	= 0,
+ 	.max_amsdu_limit	= 3500,
+ 	.dis_2g_40m_ul_ofdma	= true,
+ 	.rsvd_ple_ofst		= 0x6f800,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+index 799da0c9f75ad..8428614a3b150 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+@@ -66,6 +66,8 @@ static const struct rtw89_chip_ops rtw8852b_chip_ops = {
+ 
+ const struct rtw89_chip_info rtw8852b_chip_info = {
+ 	.chip_id		= RTL8852B,
++	.fifo_size		= 196608,
++	.dle_scc_rsvd_size	= 98304,
+ 	.dma_ch_mask		= BIT(RTW89_DMA_ACH4) | BIT(RTW89_DMA_ACH5) |
+ 				  BIT(RTW89_DMA_ACH6) | BIT(RTW89_DMA_ACH7) |
+ 				  BIT(RTW89_DMA_B1MG) | BIT(RTW89_DMA_B1HI),
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index c8c0d68e16014..67653b3e1a356 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -3039,6 +3039,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.ops			= &rtw8852c_chip_ops,
+ 	.fw_name		= "rtw89/rtw8852c_fw.bin",
+ 	.fifo_size		= 458752,
++	.dle_scc_rsvd_size	= 0,
+ 	.max_amsdu_limit	= 8000,
+ 	.dis_2g_40m_ul_ofdma	= false,
+ 	.rsvd_ple_ofst		= 0x6f800,
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20220923065311.123356-2-pkshih@realtek.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.1
 
