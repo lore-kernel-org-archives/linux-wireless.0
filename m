@@ -2,105 +2,147 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9960C07E9D
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Sep 2022 19:49:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 620CFC54EE9
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Sep 2022 22:38:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231139AbiI0TtM (ORCPT
+        id S231329AbiI0WiA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Sep 2022 15:49:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32942 "EHLO
+        Tue, 27 Sep 2022 18:38:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232032AbiI0TtK (ORCPT
+        with ESMTP id S231218AbiI0Wh7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2022 15:49:10 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DB111B8692
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2022 12:49:09 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id c30so13440776edn.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2022 12:49:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=Kh9VhIbAqqpxrVaH6TD1pxAYzrcHTMunAiWw8OIGpgY=;
-        b=FXOF5xQbqiWiV6NpDNOV1N0Hy/FMkLJBPhG21qpeYHRrgsXCdQGf57SaVp/DbH4ww7
-         mraHmttKzhgdGZsptG692XsVBkulWxjP6OCJdXfs77BOGd9STtCSMs1QTw/w0HZMx2kJ
-         +zhEE859BgmwoyWXbxZqGGF/6c5zyuJ7CMyKbG44Qig/mWtnJRZlbeb96rOMbHK0mi0w
-         GSBLqL1zeF9GSH2HsP7lXznxjf14WF91/zXSEjsvHg7KiMrLcb84ErjoPOOIBfe9bTbb
-         UlxGbtlOCAI5CpWrDepMvCZ+UteBP6jlqihbaWnEVQmSx66Z6lfWnyycO1DOiQJgF3Bl
-         W3xw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=Kh9VhIbAqqpxrVaH6TD1pxAYzrcHTMunAiWw8OIGpgY=;
-        b=jHlFMKoexREGbf6ZAGJwh67MAx5kGCtsHa8jegktRy0eV6QskrsIYaBGoIarVEY5Uh
-         w1dwdkU0AuiwXz8yHrd9FY8g3Nr2Vo8rTMP214VyqV5HWbEMu/RH+qhiVtuiU45+yyes
-         AZ4fIXtl3/PGE8Y78wRC0uIaxyihAuexSM4BAIf9JoBmSp8wgzJl9tulhcVZqSHH7+HF
-         cD8zqJ9m7jD0gYIn9/Tbm2RACUILBQ9nGhACtJm5a9454fhMY55URnZi2i0hIn0XBh7L
-         Pceck9QUQt1qjeAdeoFtWW8Cyv34lVhOBXYVEg3X1LVNkTU4WgBn0bvKKucpcyxEcMDg
-         Gliw==
-X-Gm-Message-State: ACrzQf3PYURAk4TpJ0WX8dEzMiq6KYek6TV5pcrIhmAqxl71ZmmxsC87
-        zMKyn+4QitE43m4FVen5vIU=
-X-Google-Smtp-Source: AMsMyM4oVwbxVu8sw60dixBDA6QVU9GUdhIM0DIezDH464CHnpKf+vvfh/5bnnzLfZqqkKGfh6TGbw==
-X-Received: by 2002:aa7:c689:0:b0:457:2012:2374 with SMTP id n9-20020aa7c689000000b0045720122374mr15907788edq.229.1664308147880;
-        Tue, 27 Sep 2022 12:49:07 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.23])
-        by smtp.gmail.com with ESMTPSA id v2-20020aa7d9c2000000b00457c321454asm1511927eds.37.2022.09.27.12.49.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 Sep 2022 12:49:06 -0700 (PDT)
-Message-ID: <5ba1e0f4-6eda-43bb-d426-e2a9447cd06e@gmail.com>
-Date:   Tue, 27 Sep 2022 22:49:05 +0300
+        Tue, 27 Sep 2022 18:37:59 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56D40B1BA0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2022 15:37:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1664318278; x=1695854278;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=XmZk+tiXNkcHkDyOLmTjo9h+xv9BS+SOES5yxWMj1ug=;
+  b=Ed6WCtUlHVWK5WGc78xsJDeM2sB5iviF47DCx4ZVxWp5UDiEO54RJRyj
+   wHEE2W1eOiFY7y6abf8qE6c169rFyKWZkIsc3JJvHyN1qMwokK2NvL4Wp
+   b0lhnu10G/Kt4tCnTI4Gg/WBxnizS0NYI4ORwz30FRV9g2gWI6S5QJi4U
+   wjOZlcPqKu5Rfdn+yHw7iw1WYB0AiPbTuii0gmODkGMZbkHF9bnAdGinF
+   wO5nVyOzJqcPYqNx0kd+4zV2EmOdB1bj6FyMFkv4BMaHW3aBroNQLoQ6C
+   sruObmMKi2W115HD4+86O+1LNQcIx8j3lVkAlssm2BORFxTF0PznQMdG/
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10483"; a="281819484"
+X-IronPort-AV: E=Sophos;i="5.93,350,1654585200"; 
+   d="scan'208";a="281819484"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2022 15:37:58 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10483"; a="654892065"
+X-IronPort-AV: E=Sophos;i="5.93,350,1654585200"; 
+   d="scan'208";a="654892065"
+Received: from lkp-server02.sh.intel.com (HELO dfa2c9fcd321) ([10.239.97.151])
+  by orsmga001.jf.intel.com with ESMTP; 27 Sep 2022 15:37:56 -0700
+Received: from kbuild by dfa2c9fcd321 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1odJD9-0001eu-2J;
+        Tue, 27 Sep 2022 22:37:55 +0000
+Date:   Wed, 28 Sep 2022 06:36:56 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Johannes Berg <johannes.berg@intel.com>
+Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>
+Subject: [wireless:for-next] BUILD SUCCESS
+ 6546646a7fb0d7fe1caef947889497c16aaecc8c
+Message-ID: <63337b08.JkEcNhtfiqzO/c8o%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH 1/4] wifi: rtl8xxxu: gen2: Turn on the rate control
-Content-Language: en-US
-To:     Jes Sorensen <jes.sorensen@gmail.com>,
-        linux-wireless@vger.kernel.org
-Cc:     chris.chiu@canonical.com, Barry Day <briselec@gmail.com>
-References: <56712d04-1505-2cbb-b6ac-3af4e73de108@gmail.com>
- <78cec57b-2678-acf3-99b3-271e0f9bdbad@gmail.com>
- <ac73924f-4c52-b8e6-1628-e34fc673a35d@gmail.com>
-From:   Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <ac73924f-4c52-b8e6-1628-e34fc673a35d@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 25/09/2022 19:53, Jes Sorensen wrote:
-> On 9/18/22 08:35, Bitterblue Smith wrote:
->> Inform the firmware when connecting to a network. This makes the
->> firmware enable the rate control, which makes the upload faster.
->>
->> Don't inform the firmware when disconnecting from a network, because
->> that makes reconnecting impossible for some reason:
-> 
-> Have you dug through the vendor driver to see what it does here?
-> 
-> Thanks,
-> Jes
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git for-next
+branch HEAD: 6546646a7fb0d7fe1caef947889497c16aaecc8c  wifi: mac80211: mlme: Fix double unlock on assoc success handling
 
-I hadn't investigated, but since you asked :) I looked into it today.
+elapsed time: 741m
 
-The vendor driver doesn't do anything weird. Our report_connect
-function *should* work.
+configs tested: 69
+configs skipped: 2
 
-And it turns out it does work! I restored the original form of the
-function to test something and reconnecting worked. I couldn't
-reproduce the problem anymore. Not much has changed in rtl8xxxu since
-the last time I tried this, so it was easy to find the reason: fixing
-the queue selection [0] fixed the reconnecting problem. Before, it was
-sending the auth attempts using queue 0x7 (TXDESC_QUEUE_VO). With the
-queue selection fix it uses queue 0x12 (TXDESC_QUEUE_MGNT). Perhaps
-queue 0x7 is not functional when the firmware knows it's not connected
-to a network?
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-I guess I have to send a different patch for this now.
+gcc tested configs:
+um                             i386_defconfig
+um                           x86_64_defconfig
+powerpc                           allnoconfig
+sh                               allmodconfig
+arc                                 defconfig
+powerpc                          allmodconfig
+alpha                               defconfig
+mips                             allyesconfig
+x86_64                           rhel-8.3-syz
+x86_64                         rhel-8.3-kunit
+x86_64                           rhel-8.3-kvm
+s390                             allmodconfig
+s390                                defconfig
+i386                 randconfig-a001-20220926
+x86_64                          rhel-8.3-func
+m68k                             allmodconfig
+i386                 randconfig-a002-20220926
+arc                              allyesconfig
+i386                 randconfig-a003-20220926
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+alpha                            allyesconfig
+s390                             allyesconfig
+i386                 randconfig-a004-20220926
+m68k                             allyesconfig
+i386                 randconfig-a005-20220926
+i386                 randconfig-a006-20220926
+arc                  randconfig-r043-20220926
+x86_64                               rhel-8.3
+i386                          randconfig-a001
+i386                          randconfig-a003
+x86_64                           allyesconfig
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+i386                          randconfig-a005
+x86_64                        randconfig-a006
+arm                                 defconfig
+arc                  randconfig-r043-20220925
+x86_64                        randconfig-a013
+i386                                defconfig
+x86_64                        randconfig-a011
+x86_64                        randconfig-a015
+arm64                            allyesconfig
+arm                              allyesconfig
+riscv                randconfig-r042-20220925
+s390                 randconfig-r044-20220925
+i386                             allyesconfig
+ia64                             allmodconfig
 
-[0] https://lore.kernel.org/linux-wireless/7fa4819a-4f20-b2af-b7a6-8ee01ac49295@gmail.com/
+clang tested configs:
+hexagon              randconfig-r041-20220926
+hexagon              randconfig-r045-20220926
+riscv                randconfig-r042-20220926
+s390                 randconfig-r044-20220926
+i386                 randconfig-a016-20220926
+i386                          randconfig-a002
+i386                          randconfig-a004
+x86_64                        randconfig-a005
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+i386                          randconfig-a006
+hexagon              randconfig-r041-20220925
+i386                 randconfig-a012-20220926
+i386                 randconfig-a013-20220926
+x86_64                        randconfig-a012
+i386                 randconfig-a011-20220926
+x86_64                        randconfig-a016
+x86_64                        randconfig-a014
+i386                 randconfig-a014-20220926
+i386                 randconfig-a015-20220926
+hexagon              randconfig-r045-20220925
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
