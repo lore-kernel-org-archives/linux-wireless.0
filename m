@@ -2,76 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 383FEC54EE9
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Sep 2022 22:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D31AC54EE9
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Sep 2022 00:00:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230185AbiI0Wug (ORCPT
+        id S230455AbiI1AAT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Sep 2022 18:50:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38162 "EHLO
+        Tue, 27 Sep 2022 20:00:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229698AbiI0Wue (ORCPT
+        with ESMTP id S229846AbiI1AAS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2022 18:50:34 -0400
-X-Greylist: delayed 971 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 27 Sep 2022 15:50:32 PDT
-Received: from mail.andi.de1.cc (mail.andi.de1.cc [IPv6:2a01:238:4321:8900:456f:ecd6:43e:202c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0272329CBA
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2022 15:50:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=kemnade.info; s=20220719; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=25v4d3njgQmFUNX8yL5/Bp3Safnvcd3pkxov2ZeF2z4=; b=c+g4nfmVPO2gW0ZRnVvFeNWug4
-        PR3X+hM/a4j4afc7XuJ7KJKQDkwrrQX0LOoWfe9m3edLmGlAfvbHPK4Gm/SxlqB5x6GJsr0CPlXuQ
-        dXbEjnYrJ5sen/wB5r8aUazZ/6Udazb2kx6gvfudDGnzid5tjdqKAUYnxjw2eL+VqRaT/OBz5foh9
-        4O4NdmR7ohvJqNtenQtE/K5FPSyx1UGbViYVC6Pv8lksoWupBabCkpw1haa6YWEo3VlTVFqxNvRYA
-        Y1BY3zDWiMuE625YnW0XCHE3LtqGX3Kq6N7L/rlKWIkWj7m2UO2TFR1npx0eRb3Ejp6VggadQueTq
-        gkPA5TRQ==;
-Received: from p200300ccff151c001a3da2fffebfd33a.dip0.t-ipconnect.de ([2003:cc:ff15:1c00:1a3d:a2ff:febf:d33a] helo=aktux)
-        by mail.andi.de1.cc with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <andreas@kemnade.info>)
-        id 1odJ9e-0007pZ-Fu; Wed, 28 Sep 2022 00:34:18 +0200
-Date:   Wed, 28 Sep 2022 00:34:17 +0200
-From:   Andreas Kemnade <andreas@kemnade.info>
-To:     linux-firmware@kernel.org, linux-wireless@vger.kernel.org
-Subject: brcmfmac nvram files best practices
-Message-ID: <20220928003417.0bc3e5f1@aktux>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        Tue, 27 Sep 2022 20:00:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58EFB4F66B;
+        Tue, 27 Sep 2022 17:00:17 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E695461C32;
+        Wed, 28 Sep 2022 00:00:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 52B85C433D6;
+        Wed, 28 Sep 2022 00:00:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664323216;
+        bh=ArdbH1IxmmTpIBhNoIUVX6yecZTrCF3CXVPoewnTKkc=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=MRQ1fiwWpr9drm7pGC2EbemNIc/AUA0FcBxXVd9fCQr7klYES2NvMHMV8qf++Uo1E
+         Xj/eOYjFEwi4Cb+3HIakPiNFlCUe8hLDoHFTFy7SbKUi+JdPr4y8BW1HVg8Kp0uTC5
+         BPVLHjkppbg6vHW430FAlmQPVwPXSkGnr+1CANqfI3qFMubqfg4BCff2g8QwXZAxaV
+         sMsgPHwBzvJJ9gViZhjBuPFcD+KqvCgviZ1dI3pPHoMBbjJ/GbiVLHHEdHLDC+8ON0
+         9M5C+3fEU17xmA6lhv0U0kq/jDG1kbkGQUwKCBf4C1j3RNprmi+W6sMacRnMFWyf8t
+         VcgjtQhRIdosw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 35B4EC04E59;
+        Wed, 28 Sep 2022 00:00:16 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Subject: Re: pull-request: wireless-2022-09-27
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <166432321621.4011.11228713870076371415.git-patchwork-notify@kernel.org>
+Date:   Wed, 28 Sep 2022 00:00:16 +0000
+References: <20220927135923.45312-1-johannes@sipsolutions.net>
+In-Reply-To: <20220927135923.45312-1-johannes@sipsolutions.net>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Hello:
 
-I am working on mainlining stuff for several ebook readers (esp.
-kobo/tolino ones). I often find a CyberTan WC121 (BCM43362) SDIO WiFi
-chip there.
-That one requires a nvram file. It can be found in the vendor system
-(often an ancient 3.0.35 kernel with bcmdhd driver)
+This pull request was applied to netdev/net.git (master)
+by Jakub Kicinski <kuba@kernel.org>:
 
-So now, it would be nice to have it installed via package management.
-A source for that missing file is (besides of sdcard backups of the original
-system):
-https://download.pageplace.de/ereader/15.3.2/OS44/update.zip 
-(linked from here: https://mytolino.de/software-updates-tolino-ereader/) 
-path system/lib/firmware/wc121/nvram.txt needs to be present at
-/lib/firmware/brcm/brcmfmac43362-sdio.kobo,tolino-shine2hd.txt
+On Tue, 27 Sep 2022 15:59:22 +0200 you wrote:
+> Hi,
+> 
+> So I was out for plugfest, and a couple of things accumulated.
+> I know it's getting late, but these seem important, some are
+> fixes for reported regressions, some are locking bugs, and a
+> memory corruption with some drivers is also there ...
+> 
+> [...]
 
-The only problem is that I do not see a distribution license there. So
-I am hesitating to just submit that one to the linux-firmware.git
+Here is the summary with links:
+  - pull-request: wireless-2022-09-27
+    https://git.kernel.org/netdev/net/c/44d70bb561da
 
-Are there any best practices to deal with that situation? find any
-source which also includes a license (and which hopefully allows
-distribution)? or is there any way to reverse-engineer that stuff.
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-How were things done for the nvram.txt files already present in
-linux-firmware.git?
 
-Regards,
-Andreas Kemnade
