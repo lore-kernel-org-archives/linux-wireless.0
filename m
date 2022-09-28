@@ -2,273 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E709C6FA82
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Sep 2022 22:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2363AC6FA82
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Sep 2022 22:49:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234509AbiI1WWS (ORCPT
+        id S234141AbiI1WtR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Sep 2022 18:22:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38662 "EHLO
+        Wed, 28 Sep 2022 18:49:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233803AbiI1WWR (ORCPT
+        with ESMTP id S234109AbiI1WtP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2022 18:22:17 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41C29F1857;
-        Wed, 28 Sep 2022 15:22:16 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id v186so13695475pfv.11;
-        Wed, 28 Sep 2022 15:22:16 -0700 (PDT)
+        Wed, 28 Sep 2022 18:49:15 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1058B111DC5
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2022 15:49:15 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id b23so13734610pfp.9
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2022 15:49:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=h9q5EucT92dTMgZ65QlxwzC3EbF26KJeQy8ojKaTJsQ=;
-        b=ccZ7o3C4g7EKdkAFC7A6RSoIRSNWR/jTucS539ALbO/BDFLa1W0dvDXSv2dOlEIaHX
-         39lLdgahKAxfKYP/iPFwpr3UuCzrUMyGUO5SP4NxR7GZDuzlQ0rwDuSeWvS8gAMY86bX
-         c7yKZREt1ye52R9db9WMsS0E+Zq7g7NfYckuIarz3Ri3J4ec6XCO63HHQJtiTDB/j6cR
-         Kvhc2NGQnEraQwCEGiHQaL1NrB+Ow8e2rtHFBBeUtp5nYfdZfJ7+tzsj3M0CwvJf9TO0
-         G0KwCE3CoKoxi0z61EfWng6PCuHlF5HjKBIbiIt3ZouLC6cukYwA4aWn9rFZr4CU61Jb
-         0fAw==
+        bh=Yrf9VypQmXniiAt1Rrqqdwkj06oR7gkPD9h3efyfcaY=;
+        b=WDGdFfpvzhqU1ZnRxaqxRcJ22foTvQ1gbkCFu6ztXYfIDE+gwTWmn2dRXMgy5jgzjR
+         X909+NKSbCtXbUWLCjL4VocKXEa+Aj896zxXW94FFXGL32h5tOor9oDqI9IuYR3RQFaF
+         c5hCj37MVPF3+xyd42nkXxV42eyPgeWMeG8GCj6pHFA2IqvCJ/skSxUA3j4BdjweEB9Z
+         SVFo++CV+6pIaBHrUIv/2N/OnSwPDDUvheV4ICvicyJf1WDmX//H/tqn2GTU5wDYj8Ed
+         lmrayRBGcXqeltYMlTrAJNUR+ZE12rwnJ4qdSxWvGC00QG4hEpVtassPyx/Ht0sEy+v5
+         4GEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date;
-        bh=h9q5EucT92dTMgZ65QlxwzC3EbF26KJeQy8ojKaTJsQ=;
-        b=ME+i0bwYHCb5RYP4dAL60D0NcWyujgN19AEokcKfNowWXEcQbOt1MT1Tafgp4m2tKi
-         RMAS92YN8X938c7lFlvNVYmw8sL3gBD4ZqTI09rYvkUA1JrTON1vPEMUV9pnbjIS5Nwb
-         tAUz5ibY1HzQAMDgRBoHdOBl7cVsQqO/dpUR04/MoxyijWcKBtUptdK6TRZzMIZ9jdiC
-         9Ybt+ttshKSFBh++aV15mZVyXlFO1ZMU6BTUun8vGjdujc16KsNdzBQUlBwHevspi5mE
-         af3XoVG20xDt5wYVZzNUrElxaoiAz7/LXDAz3wDjlmEmD0U17+x6hyrDGQANMA2+HKOL
-         V33A==
-X-Gm-Message-State: ACrzQf3OYe7/xtNZftn3VY8N01nfjCESCZhMQ4DE0q0ReUobt+MrtmG/
-        tha4NzaIDPTt3k05syOnyjw=
-X-Google-Smtp-Source: AMsMyM47/rVC6avgrBDqVXzsmRxaZF4fFTnlT3jhL2Jzg4kOeJ380zTeWYQVXYsbUTrE8jDhbGlTOw==
-X-Received: by 2002:a05:6a00:1410:b0:528:5a5a:d846 with SMTP id l16-20020a056a00141000b005285a5ad846mr93329pfu.9.1664403735320;
-        Wed, 28 Sep 2022 15:22:15 -0700 (PDT)
-Received: from dtor-ws.mtv.corp.google.com ([2620:15c:9d:2:1a91:59b8:faf:7b4f])
-        by smtp.gmail.com with ESMTPSA id ru21-20020a17090b2bd500b002008a85bac1sm2023694pjb.49.2022.09.28.15.22.14
+        bh=Yrf9VypQmXniiAt1Rrqqdwkj06oR7gkPD9h3efyfcaY=;
+        b=qXGFiVO5GvKe0Y1nUr7zxII/oEVPTPokxQlj9ZhNVR9UqjqwerSCioFg97ZKQb1UC3
+         Y/8X0UDU1Hu/lYzizrhunsV+Q3Bmb4nbO7V3dDTuHsCdesTCgr4OnOHBc5ybb89jsrsc
+         I2KH/Sur/em+e9VfxiKrXIOD0dJW+vGP3yO0U0ZKxBikZ02Y81TxYWvWJQ6apaBtWfBZ
+         qFyWNPpIEn1Qkabpm9Uwf1jzfqx1muq7eJIeF06+zs77mCpA5s12t9HMMXWPlLnFuaVE
+         R48M25mXDnNEfkt+0yo4Ea1StgsyJDAgH9+ZP+F+EkPvawdYa75f3g8SvjtkvH2jjiDX
+         Fkqw==
+X-Gm-Message-State: ACrzQf0+1VXYhzXiiWQkM6OKH+ik+kotHUhL9nLqa01vuYyf2q854cmF
+        MyZwu9KlVUH/8hNDdA6aLPXJaT3KiJc=
+X-Google-Smtp-Source: AMsMyM4AKteQKMlJKcyAS6FYfSWFaQLlvDl4zljbRZfY/CFWvaE1Dp4hOkfoNkAGMhCpOrSVVvd7xQ==
+X-Received: by 2002:a63:da4b:0:b0:439:14a8:52b with SMTP id l11-20020a63da4b000000b0043914a8052bmr96473pgj.500.1664405354362;
+        Wed, 28 Sep 2022 15:49:14 -0700 (PDT)
+Received: from jprestwo-xps.none ([50.54.173.139])
+        by smtp.gmail.com with ESMTPSA id ob6-20020a17090b390600b001f2fa09786asm643738pjb.19.2022.09.28.15.49.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Sep 2022 15:22:14 -0700 (PDT)
-From:   Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] wireless: wl1251: switch to using gpiod API
-Date:   Wed, 28 Sep 2022 15:22:10 -0700
-Message-Id: <20220928222210.1922758-2-dmitry.torokhov@gmail.com>
-X-Mailer: git-send-email 2.38.0.rc1.362.ged0d419d3c-goog
-In-Reply-To: <20220928222210.1922758-1-dmitry.torokhov@gmail.com>
-References: <20220928222210.1922758-1-dmitry.torokhov@gmail.com>
+        Wed, 28 Sep 2022 15:49:14 -0700 (PDT)
+From:   James Prestwood <prestwoj@gmail.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     James Prestwood <prestwoj@gmail.com>
+Subject: [PATCH 1/1] wifi: mac80211: fix probe req HE capabilities access
+Date:   Wed, 28 Sep 2022 15:49:10 -0700
+Message-Id: <20220928224910.453232-2-prestwoj@gmail.com>
+X-Mailer: git-send-email 2.34.3
+In-Reply-To: <20220928224910.453232-1-prestwoj@gmail.com>
+References: <20220928224910.453232-1-prestwoj@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This switches the driver from legacy gpio API to a newer gpiod API.
+When building the probe request IEs HE support is checked for
+the 6GHz band (wiphy->bands[NL80211_BAND_6GHZ]). If supported
+the HE capability IE should be included according to the spec.
+The problem is the 16-bit capability is obtained from the
+band object (sband) that was passed in, not the 6GHz band
+object (sband6). If the sband object doesn't support HE it will
+result in a warning.
 
-Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Fixes: 7d29bc50b30e ("mac80211: always include HE 6GHz capability in probe request")
+Signed-off-by: James Prestwood <prestwoj@gmail.com>
 ---
- drivers/net/wireless/ti/wl1251/spi.c    | 63 +++++++++++++------------
- drivers/net/wireless/ti/wl1251/wl1251.h |  1 -
- 2 files changed, 34 insertions(+), 30 deletions(-)
+ net/mac80211/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index 08d9814b49c1..0ef590a6db53 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -5,6 +5,7 @@
-  * Copyright (C) 2008 Nokia Corporation
-  */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0ea5d50091dc..be69cddaf139 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2046,7 +2046,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_sub_if_data *sdata,
+ 		if (he_cap) {
+ 			enum nl80211_iftype iftype =
+ 				ieee80211_vif_type_p2p(&sdata->vif);
+-			__le16 cap = ieee80211_get_he_6ghz_capa(sband, iftype);
++			__le16 cap = ieee80211_get_he_6ghz_capa(sband6, iftype);
  
-+#include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <linux/module.h>
-@@ -12,15 +13,19 @@
- #include <linux/swab.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
--#include <linux/gpio.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/of.h>
--#include <linux/of_gpio.h>
- #include <linux/regulator/consumer.h>
- 
- #include "wl1251.h"
- #include "reg.h"
- #include "spi.h"
- 
-+struct wl1251_spi {
-+	struct spi_device *spi;
-+	struct gpio_desc *power_gpio;
-+};
-+
- static irqreturn_t wl1251_irq(int irq, void *cookie)
- {
- 	struct wl1251 *wl;
-@@ -34,13 +39,9 @@ static irqreturn_t wl1251_irq(int irq, void *cookie)
- 	return IRQ_HANDLED;
- }
- 
--static struct spi_device *wl_to_spi(struct wl1251 *wl)
--{
--	return wl->if_priv;
--}
--
- static void wl1251_spi_reset(struct wl1251 *wl)
- {
-+	struct wl1251_spi *wl_spi = wl->if_priv;
- 	u8 *cmd;
- 	struct spi_transfer t;
- 	struct spi_message m;
-@@ -60,7 +61,7 @@ static void wl1251_spi_reset(struct wl1251 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(wl_spi->spi, &m);
- 
- 	wl1251_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- 
-@@ -69,6 +70,7 @@ static void wl1251_spi_reset(struct wl1251 *wl)
- 
- static void wl1251_spi_wake(struct wl1251 *wl)
- {
-+	struct wl1251_spi *wl_spi = wl->if_priv;
- 	struct spi_transfer t;
- 	struct spi_message m;
- 	u8 *cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
-@@ -112,7 +114,7 @@ static void wl1251_spi_wake(struct wl1251 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(wl_spi->spi, &m);
- 
- 	wl1251_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
- 
-@@ -128,6 +130,7 @@ static void wl1251_spi_reset_wake(struct wl1251 *wl)
- static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
- 			    size_t len)
- {
-+	struct wl1251_spi *wl_spi = wl->if_priv;
- 	struct spi_transfer t[3];
- 	struct spi_message m;
- 	u8 *busy_buf;
-@@ -157,7 +160,7 @@ static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
- 	t[2].len = len;
- 	spi_message_add_tail(&t[2], &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(wl_spi->spi, &m);
- 
- 	/* FIXME: check busy words */
- 
-@@ -168,6 +171,7 @@ static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
- static void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf,
- 			     size_t len)
- {
-+	struct wl1251_spi *wl_spi = wl->if_priv;
- 	struct spi_transfer t[2];
- 	struct spi_message m;
- 	u32 *cmd;
-@@ -190,7 +194,7 @@ static void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf,
- 	t[1].len = len;
- 	spi_message_add_tail(&t[1], &m);
- 
--	spi_sync(wl_to_spi(wl), &m);
-+	spi_sync(wl_spi->spi, &m);
- 
- 	wl1251_dump(DEBUG_SPI, "spi_write cmd -> ", cmd, sizeof(*cmd));
- 	wl1251_dump(DEBUG_SPI, "spi_write buf -> ", buf, len);
-@@ -208,8 +212,10 @@ static void wl1251_spi_disable_irq(struct wl1251 *wl)
- 
- static int wl1251_spi_set_power(struct wl1251 *wl, bool enable)
- {
--	if (gpio_is_valid(wl->power_gpio))
--		gpio_set_value(wl->power_gpio, enable);
-+	struct wl1251_spi *wl_spi = wl->if_priv;
-+
-+	if (wl_spi->power_gpio)
-+		gpiod_set_value_cansleep(wl_spi->power_gpio, enable);
- 
- 	return 0;
- }
-@@ -227,12 +233,19 @@ static int wl1251_spi_probe(struct spi_device *spi)
- {
- 	struct device_node *np = spi->dev.of_node;
- 	struct ieee80211_hw *hw;
-+	struct wl1251_spi *wl_spi;
- 	struct wl1251 *wl;
- 	int ret;
- 
- 	if (!np)
- 		return -ENODEV;
- 
-+	wl_spi = devm_kzalloc(&spi->dev, sizeof(*wl_spi), GFP_KERNEL);
-+	if (!wl_spi)
-+		return -ENOMEM;
-+
-+	wl_spi->spi = spi;
-+
- 	hw = wl1251_alloc_hw();
- 	if (IS_ERR(hw))
- 		return PTR_ERR(hw);
-@@ -241,7 +254,7 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 
- 	SET_IEEE80211_DEV(hw, &spi->dev);
- 	spi_set_drvdata(spi, wl);
--	wl->if_priv = spi;
-+	wl->if_priv = wl_spi;
- 	wl->if_ops = &wl1251_spi_ops;
- 
- 	/* This is the only SPI value that we need to set here, the rest
-@@ -257,25 +270,17 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 
- 	wl->use_eeprom = of_property_read_bool(np, "ti,wl1251-has-eeprom");
- 
--	wl->power_gpio = of_get_named_gpio(np, "ti,power-gpio", 0);
--	if (wl->power_gpio == -EPROBE_DEFER) {
--		ret = -EPROBE_DEFER;
--		goto out_free;
--	}
--
--	if (gpio_is_valid(wl->power_gpio)) {
--		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
--					GPIOF_OUT_INIT_LOW, "wl1251 power");
--		if (ret) {
-+	wl_spi->power_gpio = devm_gpiod_get(&spi->dev, "ti,power",
-+					    GPIOD_OUT_LOW);
-+	ret = PTR_ERR_OR_ZERO(wl_spi->power_gpio);
-+	if (ret) {
-+		if (ret != -EPROBE_DEFER)
- 			wl1251_error("Failed to request gpio: %d\n", ret);
--			goto out_free;
--		}
--	} else {
--		wl1251_error("set power gpio missing in platform data");
--		ret = -ENODEV;
- 		goto out_free;
- 	}
- 
-+	gpiod_set_consumer_name(wl_spi->power_gpio, "wl1251 power");
-+
- 	wl->irq = spi->irq;
- 	if (wl->irq < 0) {
- 		wl1251_error("irq missing in platform data");
-diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
-index 23ae07dd4c2e..83adbc3c25dc 100644
---- a/drivers/net/wireless/ti/wl1251/wl1251.h
-+++ b/drivers/net/wireless/ti/wl1251/wl1251.h
-@@ -262,7 +262,6 @@ struct wl1251 {
- 	void *if_priv;
- 	const struct wl1251_if_operations *if_ops;
- 
--	int power_gpio;
- 	int irq;
- 	bool use_eeprom;
- 
+ 			pos = ieee80211_write_he_6ghz_cap(pos, cap, end);
+ 		}
 -- 
-2.38.0.rc1.362.ged0d419d3c-goog
+2.34.3
 
