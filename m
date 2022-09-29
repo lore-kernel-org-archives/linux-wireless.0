@@ -2,83 +2,82 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8360C433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Sep 2022 15:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17355C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Sep 2022 15:15:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234959AbiI2PEw (ORCPT
+        id S235539AbiI2PPe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Sep 2022 11:04:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36042 "EHLO
+        Thu, 29 Sep 2022 11:15:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234485AbiI2PEv (ORCPT
+        with ESMTP id S230349AbiI2PPd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2022 11:04:51 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1029515FD0;
-        Thu, 29 Sep 2022 08:04:49 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id r8-20020a17090a560800b00205eaaba073so1589840pjf.1;
-        Thu, 29 Sep 2022 08:04:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date;
-        bh=IgnHi+RcHTXZNmj2VHSJ2SFXpFxGODlDM88DUFhnlCk=;
-        b=gjUKFhvViouLKkhlJrIfKovkfe+bQSw5wSj/UfXX6uvTRu9tcQ/JU0XHYosAnXpHHn
-         xIKYlYrQn2Ru5LKlYZCgt1Q6E24uZov8E299zwgwQ48Bh/4MkyrRgmA9250QX4J7zMVT
-         MdHWq1k6Bnzzorhjd5V6FwJwWgLtwyGAdZfUKwpLAl+zja4xJgNU1b1boWG7xkVCbrmv
-         OXOpJEGii0I6nmK6QDTECuWW9IeIu6p6QPafZf1tVvt3f0UuVkn8kn3rbGjWiHF3fcNF
-         +HllUJaHZhtTONBaCD+gKLK9SnglzMi05W1Nv0gzUWT5cwmrRg/pEXcusA7kaavaRJtE
-         z5+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=IgnHi+RcHTXZNmj2VHSJ2SFXpFxGODlDM88DUFhnlCk=;
-        b=iQPIzUewZeJVVQ4hlPmYAM7LJQ0aFsLiYN2lXg88/q9ljrGRoPv3/1BhoSXKo1+DvC
-         jAFJoirelETsTgGLxh/TTVy3LcD3fA7VEGlGDg4OuJ5JBsd3VHaMR6DsFHfWmj+1zwYm
-         rTZdAKz3X3N3Wspmoi/IclQA3MltfgqSHqpJ/yN6gCB1C1W7hQEFTYLtu9ceHs5PCFqi
-         fSjcWIyWpsLrHUV7/5wQI1JKsYyPVZQorLgklbApKOeS8kI5eWbpSDVDQbI80cq/Yqqo
-         V53CEzMpRjv8Tyfz1tFDXQajVEK8iqoVup/lAIPN3fAH/53EKAIcdhoSRsLvtblaT/X3
-         PcNQ==
-X-Gm-Message-State: ACrzQf3PuuIJ+nYceQHSddnyTtcGJh27rythqspGxnbIcVTXZrWUJj8k
-        PYS7qIwYrLGDDsnPeXToVJs=
-X-Google-Smtp-Source: AMsMyM5s5dW8ez5512q976BZUNSH3Ye55LuUnU26hsQIQQTP5qkGh3Kv0jmERjtEyK8+Fjp/5yxZIg==
-X-Received: by 2002:a17:902:a511:b0:178:9702:7199 with SMTP id s17-20020a170902a51100b0017897027199mr3761615plq.155.1664463888193;
-        Thu, 29 Sep 2022 08:04:48 -0700 (PDT)
-Received: from google.com ([2620:15c:9d:2:637c:7f23:f348:a9e6])
-        by smtp.gmail.com with ESMTPSA id b12-20020a63d80c000000b00422c003cf78sm5597419pgh.82.2022.09.29.08.04.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Sep 2022 08:04:47 -0700 (PDT)
-Date:   Thu, 29 Sep 2022 08:04:44 -0700
-From:   Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] wifi: wl1251: drop support for platform data
-Message-ID: <YzW0DKogKykrtonb@google.com>
-References: <20220928222210.1922758-1-dmitry.torokhov@gmail.com>
+        Thu, 29 Sep 2022 11:15:33 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BBCBF962E
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2022 08:15:31 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mx1-us1.ppe-hosted.com (unknown [10.110.51.179])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id DFE952006C;
+        Thu, 29 Sep 2022 15:15:29 +0000 (UTC)
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id A3BC1AC007A;
+        Thu, 29 Sep 2022 15:15:29 +0000 (UTC)
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 0DF2413C2B0;
+        Thu, 29 Sep 2022 08:15:29 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 0DF2413C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1664464529;
+        bh=a82NZpNM2XqN9NMLXMML8VSmIpuj6XiCTB9HcJ8sQKs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=HNIIide954zRRBplElULF/98q7vV4nP7JZbFCa+2xBgH1ojsmxyg4xyG/iQxf8h36
+         TETM+lY4AJrARBPfQ6FIqPNmS5WN7aDzLXMO9aNWlbtGGHuUmqwUz80+9+GgljYeaq
+         XPKKCBI6J7929w0cZ1AIsB9kxY/lJ1dAyJZ/An2o=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     nbd@nbd.name, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] wifi: mt76: mt7915: add two additional errors to ack-failure mask.
+Date:   Thu, 29 Sep 2022 08:15:26 -0700
+Message-Id: <20220929151526.9559-2-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220929151526.9559-1-greearb@candelatech.com>
+References: <20220929151526.9559-1-greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220928222210.1922758-1-dmitry.torokhov@gmail.com>
+Content-Transfer-Encoding: 8bit
+X-MDID: 1664464530-JeCLJNR05JiN
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Sep 28, 2022 at 03:22:09PM -0700, Dmitry Torokhov wrote:
-> There are no users of wl1251_platform_data left in the mainline kernel,
-> so let's remove it.
-> 
-> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> ---
->  .../net/wireless/ti/wilink_platform_data.c    | 35 ---------------
->  drivers/net/wireless/ti/wl1251/sdio.c         |  8 +---
->  drivers/net/wireless/ti/wl1251/spi.c          | 15 ++-----
->  include/linux/wl12xx.h                        | 44 -------------------
+From: Ben Greear <greearb@candelatech.com>
 
-Apparently there are a few places still referencing this header. I will
-resubmit.
+These other two bits also indicate tx failure as far as I can tell from
+reading the documents.
 
-Thanks.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
+index 67ce216fb564..075048ab784f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
+@@ -133,10 +133,12 @@ enum {
+ #define MT_TXS0_TXOP_TIMEOUT		BIT(20)
+ #define MT_TXS0_BIP_ERROR		BIT(19)
+ 
++#define MT_TXS0_TXOP_LIMIT		BIT(20)
++#define MT_TXS0_BIP_OR_BF_ERROR		BIT(19)
+ #define MT_TXS0_QUEUE_TIMEOUT		BIT(18)
+ #define MT_TXS0_RTS_TIMEOUT		BIT(17)
+ #define MT_TXS0_ACK_TIMEOUT		BIT(16)
+-#define MT_TXS0_ACK_ERROR_MASK		GENMASK(18, 16)
++#define MT_TXS0_ACK_ERROR_MASK		GENMASK(20, 16)
+ 
+ #define MT_TXS0_TX_STATUS_HOST		BIT(15)
+ #define MT_TXS0_TX_STATUS_MCU		BIT(14)
 -- 
-Dmitry
+2.20.1
+
