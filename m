@@ -2,137 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E41C32771
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Sep 2022 22:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5B1DC04A95
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Sep 2022 01:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234109AbiI1WtR (ORCPT
+        id S233868AbiI2BZi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Sep 2022 18:49:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35916 "EHLO
+        Wed, 28 Sep 2022 21:25:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229901AbiI1WtP (ORCPT
+        with ESMTP id S229940AbiI2BZh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2022 18:49:15 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADDC21114F6
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2022 15:49:14 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id r8-20020a17090a560800b00205eaaba073so2884297pjf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2022 15:49:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=EO1SU1X2FUBsNtFwmlpCnKck5Lg/0kTWiFSbiQDbQB8=;
-        b=NihL1qOcRdAax6ULgQoRKIllcORIg7yrFvHYEtyiUkZatT4WeSdI1XfPmoylDoJ1bH
-         SqdpsdihA9saSvAeQn2C4e85rlN5+6IGQGY4/6Q6/tYIZEdNDZXLyoj4c3eVuxQIEKsO
-         oRliHiGWH35ufYd1/TwmHfs6baDWGHMFI+pOdsCs9YzMRiut29AY4zSRfmhOHoLXYZwu
-         b0F7nsmKj7a4zM8AiYk7Zfb1VAt6a3qHA2L/GYRTLvRtV3R6Xgqe5fDj+qVpHlImAJ5q
-         5ydUXKRr+680zs8AS5asVl5NksKMoK8+aOh/uq56tXV0K54kTzomJAjf711NXeAirTgP
-         escA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date;
-        bh=EO1SU1X2FUBsNtFwmlpCnKck5Lg/0kTWiFSbiQDbQB8=;
-        b=wLJv5tzqhcXuhRJ+M3krJqQFEvMMRSor03DpAs6s6uTGh1jf0rJhKYZj++cdMHgimq
-         goCnm5/+2nNKFOlKoKflrIRblzzjl11zZt0XMx79BFimNEuInylw/mFfq9omFpmSR/fN
-         w11qmmiEKY1MhHujicjFlvT3k5/6Bu0UZefCpuxlRz6sxKHtRoLP/y3jfUmQ377xsNNq
-         x4j01x81lq0bA6nIfFZ2xxxh5xQBn50N528MYEAUZ0kntCZfR+xdZO1pp2J1n3hxcz3u
-         DDbRS7oMcE55WXrx7AEswzeyu6HUYDfrjOgUWKuDDj/dEjCpIfiP/d+s8hFmEcmICnMD
-         bz+Q==
-X-Gm-Message-State: ACrzQf39WUi3Nkmb2FXbNH5dHaDEafr6416dMSxDKQHuOfvW8zP0Zh8e
-        QkAy+Ykzo7C5pAsihOHV33cblPrjD5U=
-X-Google-Smtp-Source: AMsMyM43V9NUSod2OtBGTTumTJqHoSGkIZe4sLVGf3luThC9BtPO9bo4KNc545sA3XpdDxj8qHxIJQ==
-X-Received: by 2002:a17:902:d50b:b0:178:3ea4:2945 with SMTP id b11-20020a170902d50b00b001783ea42945mr195810plg.67.1664405353816;
-        Wed, 28 Sep 2022 15:49:13 -0700 (PDT)
-Received: from jprestwo-xps.none ([50.54.173.139])
-        by smtp.gmail.com with ESMTPSA id ob6-20020a17090b390600b001f2fa09786asm643738pjb.19.2022.09.28.15.49.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Sep 2022 15:49:13 -0700 (PDT)
-From:   James Prestwood <prestwoj@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     James Prestwood <prestwoj@gmail.com>
-Subject: [PATCH 0/1] Fix potential HE IE bug and some other questions
-Date:   Wed, 28 Sep 2022 15:49:09 -0700
-Message-Id: <20220928224910.453232-1-prestwoj@gmail.com>
-X-Mailer: git-send-email 2.34.3
+        Wed, 28 Sep 2022 21:25:37 -0400
+Received: from smtp3.infineon.com (smtp3.infineon.com [217.10.52.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2B9D20F72
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2022 18:25:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1664414736; x=1695950736;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=4CQKyZ6vaxFFeGMenzA2UOFjxf6iUdL+/fDeatxf0xY=;
+  b=GQwJg1oR+glGmnBpuUnOIZxVKKVNDLiVp85pTJvZ5MfQYkSt5BE+bvzx
+   /jdNbZL3F8QRajk+cIs0DJaMifnHXDYBQzEeX3oTfBJP/sjuHMT+uAue5
+   47Ue02yVJo2EEdLixmVd/LH4j1t+I3nPB+ciZqxWjlOSxuzS5Be7VGVRu
+   E=;
+X-SBRS: None
+X-IronPort-AV: E=McAfee;i="6500,9779,10484"; a="2355166"
+X-IronPort-AV: E=Sophos;i="5.93,353,1654552800"; 
+   d="scan'208";a="2355166"
+Received: from unknown (HELO mucxv003.muc.infineon.com) ([172.23.11.20])
+  by smtp2.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2022 03:25:34 +0200
+Received: from MUCSE819.infineon.com (MUCSE819.infineon.com [172.23.29.45])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mucxv003.muc.infineon.com (Postfix) with ESMTPS
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2022 03:25:33 +0200 (CEST)
+Received: from MUCSE824.infineon.com (172.23.29.55) by MUCSE819.infineon.com
+ (172.23.29.45) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Thu, 29 Sep
+ 2022 03:25:33 +0200
+Received: from mailrelay-cypress3.infineon.com (172.23.18.46) by
+ SMTP-MailRelay3.infineon.com (172.23.29.16) with Microsoft SMTP Server id
+ 15.2.986.29; Thu, 29 Sep 2022 03:25:33 +0200
+mailrelay-external-outbound: True
+X-IronPort-AV: E=McAfee;i="6500,9779,10484"; a="264114135"
+X-IronPort-AV: E=Sophos;i="5.93,353,1654552800"; 
+   d="scan'208";a="264114135"
+Received: from unknown (HELO mail.spansion.com) ([10.248.30.8])
+  by mailrelay-cypress3.infineon.com with ESMTP; 29 Sep 2022 03:25:33 +0200
+Received: from inf2.aus.cypress.com (10.248.80.6) by BIZ-EXHT102.spansion.com
+ (10.248.30.8) with Microsoft SMTP Server id 14.3.498.0; Wed, 28 Sep 2022
+ 20:25:31 -0500
+Received: from iot-wlan-dev-u03.aus.cypress.com (iot-wlan-dev-u03
+ [10.248.81.193])       by inf2.aus.cypress.com (Postfix) with ESMTP id BB4D410038C;
+        Wed, 28 Sep 2022 20:25:31 -0500 (CDT)
+Received: by iot-wlan-dev-u03.aus.cypress.com (Postfix, from userid 27991)      id
+ B4B50980853; Wed, 28 Sep 2022 20:25:31 -0500 (CDT)
+From:   Ian Lin <ian.lin@infineon.com>
+To:     <linux-wireless@vger.kernel.org>
+CC:     <brcm80211-dev-list@broadcom.com>,
+        <brcm80211-dev-list@cypress.com>, <franky.lin@broadcom.com>,
+        <hante.meuleman@broadcom.com>, <kvalo@kernel.org>,
+        <Double.Lo@infineon.com>, <ian.lin@infineon.com>
+Subject: [PATCH v3 0/4] brcmfmac: Add dump_survey cfg80211 ops series
+Date:   Wed, 28 Sep 2022 20:25:23 -0500
+Message-ID: <20220929012527.4152-1-ian.lin@infineon.com>
+X-Mailer: git-send-email 2.25.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I believe there is a bug when building the probe request IEs for the
-HE capabilities. More info in the patch. While looking at this I
-noticed some other confusing code related to building the probe
-request.
+Add dump_survey cfg80211 ops for HostApd AutoChannelSelection.
+And fix related bug.
 
-Looking at ieee80211_build_preq_ies. It is passed 'bands_used' which
-is a bitmask of bands. A probe request is only sent out on a single
-band so why would this contain multiple bands? We then loop over these
-bands and call ieee80211_build_preq_ies_band for each one.
-This, AFAICT, would append the same IEs multiple times if 'bands_used'
-contained more than one band. Internal to mac80211/util.c its only
-passed BIT(chan->band), but mac80211/scan.c seems to pass a list...
+Changes in v3:
+  - refine error message in brcmf_parse_dump_obss
+  - fix typo in brcmf_cfg80211_dump_survey
 
-Below is the warning I am seeing (many, many times). It says the warning
-is in build_preq_ies, but it really seems like this is not correct
-and its actually in ieee80211_get_he_6ghz_capa since I see no warning
-message as others _should_ have.
+Changes in v2:
+  - refine error handling in brcmf_parse_dump_obss
+  - delare variable by using stack memory in brcmf_cfg80211_dump_survey
+  - provide debug message in error case of cfg80211_set_channel
+  - remove unnecessary NULL assignment in brcmf_cfg80211_attach
 
-[  732.130000] ------------[ cut here ]------------
-[  732.130000] WARNING: CPU: 0 PID: 1352 at include/net/cfg80211.h:608 ieee80211_build_preq_ies+0x766/0x84d
-[  732.130000] Modules linked in:
-[  732.130000] CPU: 0 PID: 1352 Comm: kworker/u2:0 Tainted: G        W         5.19.0 #1
-[  732.130000] Workqueue: rad6 ieee80211_scan_work
-[  732.130000] Stack:
-[  732.130000]  605d0943 60256c96 60035421 00000001
-[  732.130000]  6052cddd 60450efa 61f3d5d9 60454c00
-[  732.130000]  00000000 00000000 00000009 6003e77d
-[  732.130000] Call Trace:
-[  732.130000]  [<60256c96>] ? dump_stack_print_info+0xe1/0xef
-[  732.130000]  [<60035421>] ? um_set_signals+0x0/0x3c
-[  732.130000]  [<60450efa>] ? _printk+0x0/0x9f
-[  732.130000]  [<60454c00>] ? dump_stack_lvl+0x47/0x52
-[  732.130000]  [<6003e77d>] ? __warn+0xf2/0x123
-[  732.130000]  [<60035449>] ? um_set_signals+0x28/0x3c
-[  732.130000]  [<604501bb>] ? warn_slowpath_fmt+0xd6/0xe2
-[  732.130000]  [<6042830f>] ? ieee80211_prepare_and_rx_handle+0xbf4/0xc22
-[  732.130000]  [<604500e5>] ? warn_slowpath_fmt+0x0/0xe2
-[  732.130000]  [<603d3bc5>] ? ieee80211_ie_split_ric+0xe4/0xfe
-[  732.130000]  [<60035421>] ? um_set_signals+0x0/0x3c
-[  732.130000]  [<604341ac>] ? ieee80211_vif_type_p2p+0x0/0x26
-[  732.130000]  [<6043aeb5>] ? ieee80211_build_preq_ies+0x766/0x84d
-[  732.130000]  [<60035377>] ? unblock_signals+0x36/0xe0
-[  732.130000]  [<60429f6c>] ? skb_put_zero+0x2c/0x34
-[  732.130000]  [<60429f40>] ? skb_put_zero+0x0/0x34
-[  732.130000]  [<6043b095>] ? ieee80211_build_probe_req+0xf9/0x161
-[  732.130000]  [<6040c2ed>] ? ieee80211_scan_state_send_probe+0xaf/0x14c
-[  732.130000]  [<60051181>] ? queue_delayed_work_on+0x67/0x72
-[  732.130000]  [<6040d1b0>] ? ieee80211_scan_work+0x40b/0x503
-[  732.130000]  [<6040cda5>] ? ieee80211_scan_work+0x0/0x503
-[  732.130000]  [<600529de>] ? process_one_work+0x1b0/0x2b1
-[  732.130000]  [<6004f829>] ? move_linked_works+0x0/0x57
-[  732.130000]  [<60053086>] ? worker_thread+0x270/0x39b
-[  732.130000]  [<6004f909>] ? set_pf_worker+0x0/0x5f
-[  732.130000]  [<60057231>] ? arch_local_irq_save+0x0/0x26
-[  732.130000]  [<60035449>] ? um_set_signals+0x28/0x3c
-[  732.130000]  [<60052e16>] ? worker_thread+0x0/0x39b
-[  732.130000]  [<600588ef>] ? kthread_exit+0x0/0x37
-[  732.130000]  [<60052e16>] ? worker_thread+0x0/0x39b
-[  732.130000]  [<60058a6d>] ? kthread+0x11f/0x124
-[  732.130000]  [<60035377>] ? unblock_signals+0x36/0xe0
-[  732.130000]  [<60021f95>] ? new_thread_handler+0x86/0xbb
-[  732.130000] ---[ end trace 0000000000000000 ]---
-[  732.210000] ------------[ cut here ]------------
+Double Lo (1):
+  brcmfmac: fix CERT-P2P:5.1.10 failure
 
+Ramesh Rangavittal (1):
+  brcmfmac: Fix authentication latency caused by OBSS stats survey
 
-James Prestwood (1):
-  wifi: mac80211: fix probe req HE capabilities access
+Wright Feng (2):
+  brcmfmac: Add dump_survey cfg80211 ops for HostApd
+    AutoChannelSelection
+  brcmfmac: fix firmware trap while dumping obss stats
 
- net/mac80211/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 258 ++++++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/feature.c     |   3 +-
+ .../broadcom/brcm80211/brcmfmac/feature.h     |   4 +-
+ 3 files changed, 263 insertions(+), 2 deletions(-)
 
 -- 
-2.34.3
+2.25.0
 
