@@ -2,84 +2,89 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB24C433F5
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Sep 2022 11:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE1F6C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Sep 2022 13:34:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231148AbiI3LpV (ORCPT
+        id S231431AbiI3NeY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Sep 2022 07:45:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53036 "EHLO
+        Fri, 30 Sep 2022 09:34:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231388AbiI3Loq (ORCPT
+        with ESMTP id S230131AbiI3NeX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2022 07:44:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E7F997B0A;
-        Fri, 30 Sep 2022 04:40:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EBC1B622F0;
-        Fri, 30 Sep 2022 11:40:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 545F6C43146;
-        Fri, 30 Sep 2022 11:40:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664538018;
-        bh=HsvH0qhigQTeALvxiMjsw/7hodkJsvDkmd4/t/Md1So=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=WEq3Mi7F1q2l4m3BKlA+jbpQGE74Pv+uWLMzM/UsDLyOrZWKLfBBzCIDnidhiWYVH
-         r+wTkUsbLI2FSQhq8NPNhLVKHobCI+yMErJFmGPspVAVZ2IJzCA94fF7J12VfGmBJk
-         ZwzgxlT3GwUOykAQw17lbvYwIZAc9ZuGf+nr8IAeJ16xZdbYPIcwuYkltvwYC9Zj0z
-         BwdpL6ZQ9ksPOaS3XKz4dzYOts0LYOpBLocUPs9YdGbaCpDOooO8xAfnOSkDLHgjek
-         xFdbTYsAqGYq+A2rqhc0WHiMeaB9LA9+sAU/V0+lBqVBY5oVTtXAskeUeTINb3mPbz
-         hJCSjp6qhGTUQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 3CCE8E49FA9;
-        Fri, 30 Sep 2022 11:40:18 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        Fri, 30 Sep 2022 09:34:23 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1472317C22B
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2022 06:34:21 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28UDXgPM2027243, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28UDXgPM2027243
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Fri, 30 Sep 2022 21:33:42 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Fri, 30 Sep 2022 21:34:08 +0800
+Received: from localhost (172.16.20.103) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 30 Sep
+ 2022 21:34:07 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] wifi: rtw89: 8852c: rfk: correct miscoding delay of DPK
+Date:   Fri, 30 Sep 2022 21:33:18 +0800
+Message-ID: <20220930133318.6335-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220930133318.6335-1-pkshih@realtek.com>
+References: <20220930133318.6335-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] net-next: skbuff: refactor pskb_pull
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <166453801824.4225.1578250985659181646.git-patchwork-notify@kernel.org>
-Date:   Fri, 30 Sep 2022 11:40:18 +0000
-References: <20220928125522.GA100793@debian>
-In-Reply-To: <20220928125522.GA100793@debian>
-To:     Richard Gobert <richardbgobert@gmail.com>
-Cc:     davem@davemloft.net, yoshfuji@linux-ipv6.org, dsahern@kernel.org,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        johannes@sipsolutions.net, steffen.klassert@secunet.com,
-        herbert@gondor.apana.org.au, imagedong@tencent.com, kafai@fb.com,
-        asml.silence@gmail.com, keescook@chromium.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.20.103]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 09/30/2022 13:14:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzkvMzAgpFekyCAxMToxNDowMA==?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36504.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello:
+Using mdelay() can work well, but calibration causes too much time. Use
+proper udelay() to get shorter time and the same result.
 
-This patch was applied to netdev/net-next.git (master)
-by David S. Miller <davem@davemloft.net>:
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Wed, 28 Sep 2022 14:55:31 +0200 you wrote:
-> pskb_may_pull already contains all of the checks performed by
-> pskb_pull.
-> Use pskb_may_pull for validation in pskb_pull, eliminating the
-> duplication and making __pskb_pull obsolete.
-> Replace __pskb_pull with pskb_pull where applicable.
-> 
-> Signed-off-by: Richard Gobert <richardbgobert@gmail.com>
-> 
-> [...]
-
-Here is the summary with links:
-  - net-next: skbuff: refactor pskb_pull
-    https://git.kernel.org/netdev/net-next/c/d427c8999b07
-
-You are awesome, thank you!
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
+index 1e67a565a9e0c..b0672b906e7bc 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
+@@ -1666,7 +1666,7 @@ static u8 _dpk_one_shot(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
+ 
+ 	ret = read_poll_timeout_atomic(rtw89_phy_read32_mask, val, val == 0x55,
+ 				       10, 20000, false, rtwdev, 0xbff8, MASKBYTE0);
+-	mdelay(10);
++	udelay(10);
+ 	rtw89_phy_write32_clr(rtwdev, R_NCTL_N1, MASKBYTE0);
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK,
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.25.1
 
