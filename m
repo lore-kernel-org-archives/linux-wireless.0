@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20D93C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Sep 2022 13:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69598C433F5
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Sep 2022 13:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231436AbiI3NeZ (ORCPT
+        id S231468AbiI3NiD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Sep 2022 09:34:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33362 "EHLO
+        Fri, 30 Sep 2022 09:38:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230363AbiI3NeX (ORCPT
+        with ESMTP id S230363AbiI3NiA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2022 09:34:23 -0400
+        Fri, 30 Sep 2022 09:38:00 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 21FEF15FC7A
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2022 06:34:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E00FD13DD9D
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2022 06:37:58 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28UDXf992027239, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 28UDbQi65003278, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28UDXf992027239
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 28UDbQi65003278
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 30 Sep 2022 21:33:41 +0800
+        Fri, 30 Sep 2022 21:37:26 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 30 Sep 2022 21:34:07 +0800
+ 15.1.2375.31; Fri, 30 Sep 2022 21:37:52 +0800
 Received: from localhost (172.16.20.103) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 30 Sep
- 2022 21:34:06 +0800
+ 2022 21:37:51 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] wifi: rtw89: 8852c: correct set of IQK backup registers
-Date:   Fri, 30 Sep 2022 21:33:17 +0800
-Message-ID: <20220930133318.6335-1-pkshih@realtek.com>
+Subject: [PATCH 2/2] wifi: rtw89: phy: ignore warning of bb gain cfg_type 4
+Date:   Fri, 30 Sep 2022 21:36:59 +0800
+Message-ID: <20220930133659.7789-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220930133659.7789-1-pkshih@realtek.com>
+References: <20220930133659.7789-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -62,30 +64,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-IQK can change the values of this register set, so need to backup and
-restore the values. During we rewrite IQK, the policy is changed. Some
-values are controlled and filled by IQK, and don't need to restore after
-IQK. Therefore, remove this kind of registers from this array.
+The new BB parameters add new cfg_tpe 4 to improve performance of eFEM
+modules (rfe_type >= 50), but we are using iFEM modules for now, so this
+warning can be ignored.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw89/phy.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-index 006c2cf931116..1e67a565a9e0c 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-@@ -22,8 +22,7 @@ static const u32 _tssi_de_mcs_5m[RF_PATH_NUM_8852C] = {0x5828, 0x7828};
- static const u32 _tssi_de_mcs_10m[RF_PATH_NUM_8852C] = {0x5830, 0x7830};
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index 6a6bdc652e09e..b1821d2474b3b 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -1036,6 +1036,7 @@ static void rtw89_phy_config_bb_gain(struct rtw89_dev *rtwdev,
+ {
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	union rtw89_phy_bb_gain_arg arg = { .addr = reg->addr };
++	struct rtw89_efuse *efuse = &rtwdev->efuse;
  
- static const u32 rtw8852c_backup_bb_regs[] = {
--	0x813c, 0x8124, 0x8120, 0xc0d4, 0xc0d8, 0xc0e8, 0x823c, 0x8224, 0x8220,
--	0xc1d4, 0xc1d8, 0xc1e8
-+	0x8120, 0xc0d4, 0xc0d8, 0xc0e8, 0x8220, 0xc1d4, 0xc1d8, 0xc1e8
- };
- 
- static const u32 rtw8852c_backup_rf_regs[] = {
+ 	if (arg.gain_band >= RTW89_BB_GAIN_BAND_NR)
+ 		return;
+@@ -1061,6 +1062,11 @@ static void rtw89_phy_config_bb_gain(struct rtw89_dev *rtwdev,
+ 	case 3:
+ 		rtw89_phy_cfg_bb_gain_op1db(rtwdev, arg, reg->data);
+ 		break;
++	case 4:
++		/* This cfg_type is only used by rfe_type >= 50 with eFEM */
++		if (efuse->rfe_type < 50)
++			break;
++		fallthrough;
+ 	default:
+ 		rtw89_warn(rtwdev,
+ 			   "bb gain {0x%x:0x%x} with unknown cfg type: %d\n",
 -- 
 2.25.1
 
