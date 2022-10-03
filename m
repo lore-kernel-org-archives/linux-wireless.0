@@ -2,104 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 048ACC433F5
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Oct 2022 09:46:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 978A7C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Oct 2022 09:50:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231231AbiJCJqU (ORCPT
+        id S229600AbiJCJuF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Oct 2022 05:46:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49056 "EHLO
+        Mon, 3 Oct 2022 05:50:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230063AbiJCJpz (ORCPT
+        with ESMTP id S231337AbiJCJt2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2022 05:45:55 -0400
-Received: from nbd.name (nbd.name [46.4.11.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7916D52446
-        for <linux-wireless@vger.kernel.org>; Mon,  3 Oct 2022 02:42:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-        s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=gsvEW9b4xM7C/0WZ9F58acduG6vrtTO9pEwJqtrYgH0=; b=t3dUFNs+ZP5kXm3/hzNc6rSPEE
-        wltHNYoAi+szpRH3SWX5ZWoGn7QqQaFgEdLCFWfzrpbXcjziWBCVbYhSJcyfwI53Ft6U4MTgcfe2t
-        eScXdeCxY0vdW6xXLcDkd22EFKTeVyFiaD5BfFuJLzK4hJcODfOd1Lxd2yaDjSYDjklk=;
-Received: from p200300daa7301d00d4086823c46c59c0.dip0.t-ipconnect.de ([2003:da:a730:1d00:d408:6823:c46c:59c0] helo=Maecks.lan)
-        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-        (Exim 4.94.2)
-        (envelope-from <nbd@nbd.name>)
-        id 1ofHnz-009qu9-Hn
-        for linux-wireless@vger.kernel.org; Mon, 03 Oct 2022 11:32:07 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] wifi: mt76: declare netdev support for scatter/gather on 7915e and 7921e
-Date:   Mon,  3 Oct 2022 11:32:06 +0200
-Message-Id: <20221003093206.86323-4-nbd@nbd.name>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20221003093206.86323-1-nbd@nbd.name>
-References: <20221003093206.86323-1-nbd@nbd.name>
+        Mon, 3 Oct 2022 05:49:28 -0400
+X-Greylist: delayed 1330 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 03 Oct 2022 02:49:22 PDT
+Received: from forward102j.mail.yandex.net (forward102j.mail.yandex.net [5.45.198.243])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94D8425F7;
+        Mon,  3 Oct 2022 02:49:21 -0700 (PDT)
+Received: from myt6-efff10c3476a.qloud-c.yandex.net (myt6-efff10c3476a.qloud-c.yandex.net [IPv6:2a02:6b8:c12:13a3:0:640:efff:10c3])
+        by forward102j.mail.yandex.net (Yandex) with ESMTP id 3FA244BE8DF0;
+        Mon,  3 Oct 2022 12:12:23 +0300 (MSK)
+Received: by myt6-efff10c3476a.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id 0vVcFmtQu1-CLhOiAOp;
+        Mon, 03 Oct 2022 12:12:22 +0300
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (Client certificate not present)
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1664788342;
+        bh=SNMppGXILPRmAUGOgbtHH6mka3pq7302+CIsjfv+mvU=;
+        h=Message-Id:Date:Cc:Subject:To:From;
+        b=j/8XpG/vRJ95g7cR8cjmCTuWByl5baHB+IvPMFdyNoGKi0RQvsKRyuux/SOyt4x32
+         4n6/2gVSNBb0fGNHqwidEv54SW8fN6kWRfbEC4tn4qEN34jMYZM7tmpz9gdjFzhOro
+         2uSlZnyJIgRf3TyFmSr0KQ1wFgYXQBYZ1vujIEWc=
+Authentication-Results: myt6-efff10c3476a.qloud-c.yandex.net; dkim=pass header.i=@yandex.ru
+From:   Peter Kosyh <pkosyh@yandex.ru>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Peter Kosyh <pkosyh@yandex.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: Check return value of ath10k_get_arvif in ath10k_wmi_event_tdls_peer
+Date:   Mon,  3 Oct 2022 12:12:17 +0300
+Message-Id: <20221003091217.322598-1-pkosyh@yandex.ru>
+X-Mailer: git-send-email 2.37.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This helps with locally generated TCP traffic to avoid unnecessary data
-copying. Also bump the maximum number of fragments to the limit imposed
-by the firmware txp struct.
+Return value of a function 'ath10k_get_arvif' is dereferenced without
+checking for null in ath10k_wmi_event_tdls_peer, but it is usually checked
+for this function.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Make ath10k_wmi_event_tdls_peer do check retval of ath10k_get_arvif.
+
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Signed-off-by: Peter Kosyh <pkosyh@yandex.ru>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 5 +++--
- drivers/net/wireless/mediatek/mt76/mt7921/init.c | 4 +++-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index d3011965451d..ff49d3837b9e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -330,7 +330,8 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
- 	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
- 	hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
- 	hw->netdev_features = NETIF_F_RXCSUM |
--			      NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM;
-+			      NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM |
-+			      NETIF_F_SG;
- 
- 	hw->radiotap_timestamp.units_pos =
- 		IEEE80211_RADIOTAP_TIMESTAMP_UNIT_US;
-@@ -368,7 +369,7 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
- 	ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
- 
--	hw->max_tx_fragments = 4;
-+	hw->max_tx_fragments = 6;
- 
- 	if (phy->mt76->cap.has_2ghz) {
- 		phy->mt76->sband_2g.sband.ht_cap.cap |=
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index b607f0a51c68..9543584abfb5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -57,6 +57,8 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
- 	hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
- 	hw->netdev_features = NETIF_F_RXCSUM |
- 			      NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM;
-+	if (mt76_is_mmio(&dev->mt76))
-+		hw->netdev_features |= NETIF_F_SG;
- 
- 	hw->radiotap_timestamp.units_pos =
- 		IEEE80211_RADIOTAP_TIMESTAMP_UNIT_US;
-@@ -104,7 +106,7 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
- 	if (dev->pm.enable)
- 		ieee80211_hw_set(hw, CONNECTION_MONITOR);
- 
--	hw->max_tx_fragments = 4;
-+	hw->max_tx_fragments = 6;
- 
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 876410a47d1d..1f2c37c642ff 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -585,6 +585,11 @@ static void ath10k_wmi_event_tdls_peer(struct ath10k *ar, struct sk_buff *skb)
+ 			goto exit;
+ 		}
+ 		arvif = ath10k_get_arvif(ar, __le32_to_cpu(ev->vdev_id));
++		if (!arvif) {
++			ath10k_warn(ar, "no vif for vdev_id %d found\n",
++				__le32_to_cpu(ev->vdev_id));
++			goto exit;
++		}
+ 		ieee80211_tdls_oper_request(
+ 					arvif->vif, station->addr,
+ 					NL80211_TDLS_TEARDOWN,
 -- 
-2.36.1
+2.37.0
 
