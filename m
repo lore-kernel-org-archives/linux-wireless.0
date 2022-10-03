@@ -2,84 +2,93 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 978A7C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Oct 2022 09:50:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F72EC4332F
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Oct 2022 13:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbiJCJuF (ORCPT
+        id S230139AbiJCNM0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Oct 2022 05:50:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60488 "EHLO
+        Mon, 3 Oct 2022 09:12:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231337AbiJCJt2 (ORCPT
+        with ESMTP id S230055AbiJCNMV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2022 05:49:28 -0400
-X-Greylist: delayed 1330 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 03 Oct 2022 02:49:22 PDT
-Received: from forward102j.mail.yandex.net (forward102j.mail.yandex.net [5.45.198.243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94D8425F7;
-        Mon,  3 Oct 2022 02:49:21 -0700 (PDT)
-Received: from myt6-efff10c3476a.qloud-c.yandex.net (myt6-efff10c3476a.qloud-c.yandex.net [IPv6:2a02:6b8:c12:13a3:0:640:efff:10c3])
-        by forward102j.mail.yandex.net (Yandex) with ESMTP id 3FA244BE8DF0;
-        Mon,  3 Oct 2022 12:12:23 +0300 (MSK)
-Received: by myt6-efff10c3476a.qloud-c.yandex.net (smtp/Yandex) with ESMTPSA id 0vVcFmtQu1-CLhOiAOp;
-        Mon, 03 Oct 2022 12:12:22 +0300
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (Client certificate not present)
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1664788342;
-        bh=SNMppGXILPRmAUGOgbtHH6mka3pq7302+CIsjfv+mvU=;
-        h=Message-Id:Date:Cc:Subject:To:From;
-        b=j/8XpG/vRJ95g7cR8cjmCTuWByl5baHB+IvPMFdyNoGKi0RQvsKRyuux/SOyt4x32
-         4n6/2gVSNBb0fGNHqwidEv54SW8fN6kWRfbEC4tn4qEN34jMYZM7tmpz9gdjFzhOro
-         2uSlZnyJIgRf3TyFmSr0KQ1wFgYXQBYZ1vujIEWc=
-Authentication-Results: myt6-efff10c3476a.qloud-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Peter Kosyh <pkosyh@yandex.ru>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Peter Kosyh <pkosyh@yandex.ru>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: Check return value of ath10k_get_arvif in ath10k_wmi_event_tdls_peer
-Date:   Mon,  3 Oct 2022 12:12:17 +0300
-Message-Id: <20221003091217.322598-1-pkosyh@yandex.ru>
-X-Mailer: git-send-email 2.37.0
+        Mon, 3 Oct 2022 09:12:21 -0400
+Received: from mail-qt1-x829.google.com (mail-qt1-x829.google.com [IPv6:2607:f8b0:4864:20::829])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 485944D4FD
+        for <linux-wireless@vger.kernel.org>; Mon,  3 Oct 2022 06:12:11 -0700 (PDT)
+Received: by mail-qt1-x829.google.com with SMTP id y2so6267683qtv.5
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2022 06:12:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:from:to:cc:subject:date;
+        bh=vcAo4Tv8RirNyJ7H+0GJV8Qy6IyumHjkZT29kYTFCLY=;
+        b=HaJlmlBWdtp4Hg7KuX7XgNz4C4g6NhzlMZBIhX895DzQ3xAtG9RGFR+EY/IB4j/tV/
+         Ic27tieC/tEIzSoeZri/nVYjQZR3ItLZSSaxKPA/MWUr+U2B9vFz1zFtw8SzF5vVTzbs
+         I8YMu1STD+xgtnc8yM6F964kIRRX88G7AM2qe0OSyGD2SIFJYHFhuQAK5DyO/lwY5PJN
+         Gf5/n5jgF2DYBosuIiwU5c68/jwBS7A9QNJ0YJ3qy2iDFI8q+N3tuP7MbsYtrQ3rFce8
+         HUTw9N1xUFfP4efgYZ58BCycuhJ8UcjyykEP+ZO9aJSa/r8MwCdECkkBvVC5j9yM3ClW
+         7S7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:x-gm-message-state:from:to:cc:subject:date;
+        bh=vcAo4Tv8RirNyJ7H+0GJV8Qy6IyumHjkZT29kYTFCLY=;
+        b=hJZTqVhU52T1ien0hU5izgB7lMqkpUnbdXk/daM8YSI8ZXswvyzyG6ONQNnhWGe/iO
+         vMmH5rIbA8teRXzlYjXL9SRW7gFHNdroCo5lieAuSqyApyAAUZsIcEEsYOJLAVXZUyAQ
+         ehp2LQYQ2CAjHBvXh5JhAea6JWUJpMCR3JqrvnB0GGBZy9WbZx1mkvGXPu3jyeDxBpFP
+         KWS3ir3JERsMwr/AuRPOBP6QDySTdaJken5qP3qxcPICS79sDNaR4e+YtOhaUKQAVrFk
+         TTrA7phe6spqqA8NPxrV0JOItOwSokE+iPUNCVw2xC2eieigtR+EutNKDUR+pAWEzKTl
+         kUYQ==
+X-Gm-Message-State: ACrzQf1GL5YwHW6/nYI7Np0/Oz9gMQgLsy4P2kSsWIxdynTaJrBIhtz3
+        mSyzuUEU5PodgU66O++XrQOGXJoqvaw=
+X-Google-Smtp-Source: AMsMyM6y6Sxeanxqx8+TbpJh5FpXXmfbbiZDlqtQk1lH0uzunu6sVsj90rPf37n0Oz40yoP7DefuGg==
+X-Received: by 2002:a05:622a:288:b0:35c:fe52:2e5 with SMTP id z8-20020a05622a028800b0035cfe5202e5mr15555703qtw.59.1664802721465;
+        Mon, 03 Oct 2022 06:12:01 -0700 (PDT)
+Received: from ?IPV6:2620:10d:c0a8:1102::1844? ([2620:10d:c091:480::f61a])
+        by smtp.gmail.com with ESMTPSA id f21-20020a05620a409500b006bbc3724affsm12064261qko.45.2022.10.03.06.12.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Oct 2022 06:12:00 -0700 (PDT)
+From:   Jes Sorensen <jes.sorensen@gmail.com>
+X-Google-Original-From: Jes Sorensen <Jes.Sorensen@gmail.com>
+Message-ID: <012874df-59d4-8973-3dee-48f42208f9fc@gmail.com>
+Date:   Mon, 3 Oct 2022 09:12:00 -0400
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.0
+Subject: Re: rtl8xxxu: Should it support RTL8188EU?
+Content-Language: en-US
+To:     Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>
+References: <2999b8e8-5706-8bfb-c3a5-5c547ab0a170@gmail.com>
+In-Reply-To: <2999b8e8-5706-8bfb-c3a5-5c547ab0a170@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Return value of a function 'ath10k_get_arvif' is dereferenced without
-checking for null in ath10k_wmi_event_tdls_peer, but it is usually checked
-for this function.
+On 10/1/22 17:42, Bitterblue Smith wrote:
+> Considering there is a driver for RTL8188EU already in staging,
+> which people have been whittling down, should I put any effort
+> into adding support to rtl8xxxu?
+> 
+> It's actually mostly working already [0], but rtl8xxxu doesn't
+> have AP mode, adhoc mode, power saving, etc so it wouldn't be
+> necessarily better than the driver in staging.
+> 
+> [0] https://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git/log/drivers/net/wireless/realtek/rtl8xxxu?h=rtl8xxxu-8188eu
 
-Make ath10k_wmi_event_tdls_peer do check retval of ath10k_get_arvif.
+The staging driver is based on the vendor driver which is rather
+dreadful. Given the similarity of the chips, it feels really silly to
+have a second driver for just one chip.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+I see no reason to abandon 8188eu support in rtl8xxxu, but given my
+total lack of time, I am also not able to invest in it.
 
-Signed-off-by: Peter Kosyh <pkosyh@yandex.ru>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 876410a47d1d..1f2c37c642ff 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -585,6 +585,11 @@ static void ath10k_wmi_event_tdls_peer(struct ath10k *ar, struct sk_buff *skb)
- 			goto exit;
- 		}
- 		arvif = ath10k_get_arvif(ar, __le32_to_cpu(ev->vdev_id));
-+		if (!arvif) {
-+			ath10k_warn(ar, "no vif for vdev_id %d found\n",
-+				__le32_to_cpu(ev->vdev_id));
-+			goto exit;
-+		}
- 		ieee80211_tdls_oper_request(
- 					arvif->vif, station->addr,
- 					NL80211_TDLS_TEARDOWN,
--- 
-2.37.0
+Cheers,
+Jes
 
