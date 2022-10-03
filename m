@@ -2,120 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1260C433F5
-	for <linux-wireless@archiver.kernel.org>; Sun,  2 Oct 2022 23:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B73C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Oct 2022 08:28:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229599AbiJBXJD (ORCPT
+        id S231455AbiJCI2L (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 2 Oct 2022 19:09:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53978 "EHLO
+        Mon, 3 Oct 2022 04:28:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230252AbiJBXIc (ORCPT
+        with ESMTP id S231185AbiJCI1u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Oct 2022 19:08:32 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3C563F1C5;
-        Sun,  2 Oct 2022 16:03:44 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id s206so8362217pgs.3;
-        Sun, 02 Oct 2022 16:03:44 -0700 (PDT)
+        Mon, 3 Oct 2022 04:27:50 -0400
+Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B2F27CB71
+        for <linux-wireless@vger.kernel.org>; Mon,  3 Oct 2022 01:01:24 -0700 (PDT)
+Received: by mail-lj1-x233.google.com with SMTP id bs18so9274651ljb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2022 01:01:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date;
-        bh=n1ZKaRc7L1J2HOhRbYn9RSi5qC1K6qbvvzoJx4l1wPI=;
-        b=NQrtagJuL/eU9k+3dIZTrXanbh7ZCwRBOsXt30plUPXwV9cnJ5aUSC/Z/7kSPGjNPB
-         w06BVt6WuYLmgiepoGqsH4FUQvhXQOJ1hM0pn5zytkEM25lS2pveUfUPwRrJSRqr3R3c
-         VYL053MeF4TwZ7V3h1ekY+e122fqkv2WnxFMb1C8qyGpAEfjkxTOtvmrCyQmp8M8BjrE
-         IZQh/6AGpIbaGxSdA5GIdlD6P+9QARM9ZKt3JKmWJ/uD45XbMqBBsnI30ziAtN1K78Gq
-         LtIWqfiuX2oRgIAZpxj+hZXFjvsK2/YgrFjpiTW9OCoEVOpL5xer2dx4Vh9J4ZOnbLHc
-         IVmg==
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=sqPhdgc4x0rFX6jSUaMvQV/4rWzTW8uK47Qidhfh0rI=;
+        b=tlabUIfMve+6gKvjEvInsOvpyRtCAySTN5+kPE7YCnehpxV0xE2GWdzDQ+BZnrAt8l
+         PqqV9pxnTvNvD3TCP0bV41t/+x9XDdK8fcQvJ8tRlzZMr4ch5sJXRfG4Xcn8gI1gIVh/
+         CWxJg5rDg7256CxPVRWZba5hFcqiJTRJ4TEXA/IqoejiABn01qaSppA8sQD5SjWRBdvk
+         qkGgMQ9fvPiJWAbi8I2Zqkdg/cbeaGkxsOHnpMarEK1BF3adhnfHNNLFGSY37inzqi3x
+         qrBx+jJQRiC3W751FH6G80BCenbtbbr42L7RiUFiObfWDN4qMB+cczYarumaL48d1AKI
+         0LwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-message-state:from:to:cc:subject:date;
-        bh=n1ZKaRc7L1J2HOhRbYn9RSi5qC1K6qbvvzoJx4l1wPI=;
-        b=nYdSl1woxhZTc2cDFhFO4JvYPrO2zRhQdGVQ5a5cu+Vc4p6oyySakA7y4z3SgLRrTE
-         SXcGiQXnqpIMAakafTYoQhB5xfs8yR2BeQ6eBOH0aMAlhv9dB3fOqT9RPbF4kTp1DNKE
-         h9dvJU9Ufz1IdYXZ4KH5YchEcpCoTBRowWJo7KFow7nK5O1P7w9QSPJPlqiuV8Z4/zyZ
-         ihyEOm6bM0U6qOHvV+Qk4vMTaAiOV9hh533E0OqoH/l+WMuxywuLqMbLKz5c2u3+k3Pw
-         Ik1k7msJlL4JyWOoSoow1whlzO1l0cjqcopybSoNlU3lpg0Vqn4fueJWCkItFaNq8t2w
-         TV6A==
-X-Gm-Message-State: ACrzQf181/sugW454P0XLvzpCxYYcUhwfx6JZ6rw64QGjOmFu0yBQqco
-        TL8GCz/8ZqOGIuF++0zm9JA=
-X-Google-Smtp-Source: AMsMyM4/g+UHH4GSV1/seyANUGimsPVf59o9/jOSn/Qy82po5YDBirhhImKDBvffmo1Iyrliw2/BQA==
-X-Received: by 2002:a05:6a00:1503:b0:540:e2c7:2387 with SMTP id q3-20020a056a00150300b00540e2c72387mr19857714pfu.48.1664751774537;
-        Sun, 02 Oct 2022 16:02:54 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id s17-20020aa78bd1000000b0056160437e88sm1117103pfd.20.2022.10.02.16.02.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 02 Oct 2022 16:02:53 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <035bb415-283f-e540-7c85-ae21103158de@roeck-us.net>
-Date:   Sun, 2 Oct 2022 16:02:52 -0700
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=sqPhdgc4x0rFX6jSUaMvQV/4rWzTW8uK47Qidhfh0rI=;
+        b=Xfw5ULrdJhQZBPTQrzK6eSeh/04b3Y+WTG41DFppTrP0UW/6qE3dqfOvuH08zd6sPL
+         clrBcb5B1aTLMcrFeXqxin34mVzIeq69J3wWDnQGhOThx6iUe0ePFh5ZeiBfjVoIBwvd
+         u2tLHtIO0y/sEc3cFZynwbEYv/lFhz5kJU/EsAA+b3zetXuQIFg+lSlujayMmCbvka4N
+         xL9saH6kqH9egazZEssUE6DRQ3BLzf8bUJbci4fc1KjKxNvYaYwhAb0azrvPeJpBBc3Y
+         RVSeRo8QSgJ4KhDLmJ5T3G2wpwxlPMxqzva+qJH5qhyoZKv8VIOPb2Q+gJaBz5kPyyHZ
+         SNVQ==
+X-Gm-Message-State: ACrzQf25ziVSg6A6zTxaifNG1U59ewvMUE2T9hKQuyZJIuKzHu+PvDiC
+        KiqKZ9Jghe1SvxSr3BMcRxBJQHW5HzDPg+eM48Kd8g==
+X-Google-Smtp-Source: AMsMyM4dt3pJrT4PgxmqCYV2z1aCasIondPwtpfZEkJ4PTEsPdRIfBppS6R3jxg2Dr+hZoQbPVgIS6TGUOFNB/Q0omo=
+X-Received: by 2002:a2e:9b85:0:b0:26d:295f:dfc3 with SMTP id
+ z5-20020a2e9b85000000b0026d295fdfc3mr6344840lji.363.1664784031692; Mon, 03
+ Oct 2022 01:00:31 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH net-next] net: drop the weight argument from
- netif_napi_add
-Content-Language: en-US
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     davem@davemloft.net, netdev@vger.kernel.org, edumazet@google.com,
-        pabeni@redhat.com, kvalo@kernel.org, johannes@sipsolutions.net,
-        linux-wireless@vger.kernel.org, mkl@pengutronix.de,
-        linux-can@vger.kernel.org
-References: <20220927132753.750069-1-kuba@kernel.org>
- <20221002172427.GA3027039@roeck-us.net> <20221002105938.684fec1f@kernel.org>
-From:   Guenter Roeck <linux@roeck-us.net>
-In-Reply-To: <20221002105938.684fec1f@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <0000000000001850d105e9f9e6de@google.com> <026ada86847b6f5a9f89cf005b5d75d035ff6a19.camel@sipsolutions.net>
+In-Reply-To: <026ada86847b6f5a9f89cf005b5d75d035ff6a19.camel@sipsolutions.net>
+From:   Dmitry Vyukov <dvyukov@google.com>
+Date:   Mon, 3 Oct 2022 10:00:20 +0200
+Message-ID: <CACT4Y+bxKRmaFC1qvFBWoPS8gqJ+5Uvf_tv1HLx1o0pd-SeULg@mail.gmail.com>
+Subject: Re: [syzbot] WARNING: lock held when returning to user space in ieee80211_change_mac
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     syzbot <syzbot+4ef359e6b423499fa4e1@syzkaller.appspotmail.com>,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, pabeni@redhat.com,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/2/22 10:59, Jakub Kicinski wrote:
-> On Sun, 2 Oct 2022 10:24:27 -0700 Guenter Roeck wrote:
->> On Tue, Sep 27, 2022 at 06:27:53AM -0700, Jakub Kicinski wrote:
->>> We tell driver developers to always pass NAPI_POLL_WEIGHT
->>> as the weight to netif_napi_add(). This may be confusing
->>> to newcomers, drop the weight argument, those who really
->>> need to tweak the weight can use netif_napi_add_weight().
->>>
->>> Signed-off-by: Jakub Kicinski <kuba@kernel.org>
->>
->> That seems to have missed some (or at least one) file(s).
->>
->> Building mips:cavium_octeon_defconfig ... failed
->> --------------
->> Error log:
->> drivers/net/ethernet/cavium/octeon/octeon_mgmt.c: In function 'octeon_mgmt_probe':
->> drivers/net/ethernet/cavium/octeon/octeon_mgmt.c:1399:9: error: too many arguments to function 'netif_napi_add'
->>   1399 |         netif_napi_add(netdev, &p->napi, octeon_mgmt_napi_poll,
->>        |         ^~~~~~~~~~~~~~
->> In file included from include/linux/etherdevice.h:21,
->>                   from drivers/net/ethernet/cavium/octeon/octeon_mgmt.c:11:
->> include/linux/netdevice.h:2562:1: note: declared here
->>   2562 | netif_napi_add(struct net_device *dev, struct napi_struct *napi,
-> 
-> Fix sent, sorry. I don't see any more problems grepping again now..
+On Sun, 2 Oct 2022 at 22:02, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+> On Sat, 2022-10-01 at 07:26 -0700, syzbot wrote:
+> > Hello,
+> >
+> > syzbot found the following issue on:
+> >
+> > HEAD commit:    6627a2074d5c net/smc: Support SO_REUSEPORT
+> > git tree:       net-next
+> > console output: https://syzkaller.appspot.com/x/log.txt?x=10183a70880000
+> > kernel config:  https://syzkaller.appspot.com/x/.config?x=d4d64087513b5aa1
+> > dashboard link: https://syzkaller.appspot.com/bug?extid=4ef359e6b423499fa4e1
+> > compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+> >
+> > Unfortunately, I don't have any reproducer for this issue yet.
+> >
+> > Downloadable assets:
+> > disk image: https://storage.googleapis.com/syzbot-assets/9ecb75606956/disk-6627a207.raw.xz
+> > vmlinux: https://storage.googleapis.com/syzbot-assets/1073865fcb40/vmlinux-6627a207.xz
+> >
+> > IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> > Reported-by: syzbot+4ef359e6b423499fa4e1@syzkaller.appspotmail.com
+> >
+> > ================================================
+> > WARNING: lock held when returning to user space!
+> > 6.0.0-rc6-syzkaller-01407-g6627a2074d5c #0 Not tainted
+> > ------------------------------------------------
+> > syz-executor.3/10164 is leaving the kernel with locks still held!
+> > 1 lock held by syz-executor.3/10164:
+> >  #0: ffff888147acaa88 (&local->mtx){+.+.}-{3:3}, at: ieee80211_can_powered_addr_change net/mac80211/iface.c:217 [inline]
+> >  #0: ffff888147acaa88 (&local->mtx){+.+.}-{3:3}, at: ieee80211_change_mac+0x9b4/0xf40 net/mac80211/iface.c:264
+> >
+>
+> Uh, right. Pretty sure this will fix it once I merge it:
+>
+> https://patchwork.kernel.org/project/linux-wireless/patch/Yx9LJFA7PDSRmb/M@kili/
+>
+> johannes
 
-I think that was the only one. The following coccinelle script helps.
+Let's tell syzbot about the fix:
 
-Guenter
-
----
-virtual report
-
-@s@
-expression a, b, c, d;
-position p;
-@@
-
-   netif_napi_add@p(a, b, c, d);
-
-@script:python depends on report@
-p << s.p;
-@@
-print "Bad netif_napi_add() call at %s:%s" % (p[0].file, p[0].line)
+#syz fix:
+wifi: mac80211: unlock on error in ieee80211_can_powered_addr_change()
