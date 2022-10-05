@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 627ABC433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEDBC4332F
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229678AbiJENBf (ORCPT
+        id S230102AbiJENBg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:01:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41936 "EHLO
+        Wed, 5 Oct 2022 09:01:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230102AbiJENA7 (ORCPT
+        with ESMTP id S229803AbiJENBA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2022 09:00:59 -0400
+        Wed, 5 Oct 2022 09:01:00 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD57B2CDFA
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E06DC7858D
         for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=xRkrtuwYnKvPIX2Ba1ckI+oIYR9JRBS0+AoC1T8tI9o=;
-        t=1664974858; x=1666184458; b=FYLh0OgkOW7RdNLO+F4UwHxvvo9LIXJBpT8APQOPjj2Ke6D
-        +9NB+IXdWN6/AtiJiOoF9BhGM9pF2Z94mjMvOfWtln1NXBFN8aGwLc11rno/qtDq8GKW95WAwXlRS
-        MvkbI15WlFJ7UKZpFwVxnZBmmXyku9vqUE8GRHdpjbVnLfcunn5auXk1+zTPVAWqnwgYVZN8/A8tI
-        1zaG3yqHGlmB23e++DTPpyOsALs4PoBCOuxeAfuZgrBNAuCufR2ZITdgcXk7fcTCXUDMpaV3tCGvc
-        bXmGVOBwQUTQqQvX2pMHlKdCjWSW4ASX33fLwic6BO2v5T/iKAAEZYNWkqUIDZHQ==;
+        Resent-Cc:Resent-Message-ID; bh=zPXv8CpRqSfC+2E07BiyKX6p+qPItrMKN0h1iuIuiXg=;
+        t=1664974858; x=1666184458; b=cSSiHy1olbOJynNb+Hea0aaRjC3IQYMsm9DfN6cQ9/aMIoz
+        SlSGaezFCQliaP8fAzMImHoy0LFN3EKgiTkpeNCcLc4vG4+dUhhgdmAIlVt6Z7G44+1MWoCKtNh1X
+        jRMOgNrCku17nbiEU9TJ8Bli4eHfXUeD9kD/uK2QVxOFExxBEPt22MfDuGSGD9nXSduhmUTp+desr
+        ehOcpzuK/6CGVGU4DGMWasocA47XcwC5QLkO326jQc3dlhId0GlgcOwjVTZO+z967W5pVz0SunGb2
+        reH1yhmmCCZqCFOK/lqUpqY0GIVvwTOTBx20ejAC5pBAJ6e2vhSjcz4YbzOQrQbQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og41A-00G2RL-1v;
-        Wed, 05 Oct 2022 15:00:56 +0200
+        id 1og41B-00G2RL-0O;
+        Wed, 05 Oct 2022 15:00:57 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 24/28] wifi: mac80211: don't clear DTIM period after setting it
-Date:   Wed,  5 Oct 2022 15:00:44 +0200
-Message-Id: <20221005145226.5f2ee3b22e83.If419dfd118a03544cefd9a395bfe07235d427468@changeid>
+Subject: [PATCH 26/28] wifi: mac80211: agg-rx: avoid band check
+Date:   Wed,  5 Oct 2022 15:00:46 +0200
+Message-Id: <20221005145226.f32e23c8ab35.I8453a5e212e30c8afc456a54c73cead6ba928b05@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -48,81 +48,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Fix the code that sets the DTIM period to always propagate it
-into link->conf->dtim_period and not overwrite it, while still
-preferring to set it from the beacon data if available.
+If the deflink of the station is on 6 GHz, then it won't have HT.
+If at the same time we're using MLO, then vif.bss_conf isn't used,
+and thus vif.bss_conf.chandef.chan is NULL, causing the code to
+crash.
+
+Fix this by just checking for both HT and HE, and refusing the
+aggregation session if both are not present. This might be a bit
+wrong since it would accept an aggregation session from a peer
+that has HE but no HT on 2.4 or 5 GHz, but such a peer shouldn't
+exist in the first place, and it probably supports aggregation if
+it has HE support.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ net/mac80211/agg-rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 50a376f86ec2..a651d3ffd8e6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2717,18 +2717,10 @@ static u32 ieee80211_link_set_associated(struct ieee80211_link_data *link,
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index f8bec5ee5b44..bd41022f4894 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -297,7 +297,7 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
  	}
  
- 	if (link->u.mgd.have_beacon) {
--		/*
--		 * If the AP is buggy we may get here with no DTIM period
--		 * known, so assume it's 1 which is the only safe assumption
--		 * in that case, although if the TIM IE is broken powersave
--		 * probably just won't work at all.
--		 */
--		bss_conf->dtim_period = link->u.mgd.dtim_period ?: 1;
- 		bss_conf->beacon_rate = bss->beacon_rate;
- 		changed |= BSS_CHANGED_BEACON_INFO;
- 	} else {
- 		bss_conf->beacon_rate = NULL;
--		bss_conf->dtim_period = 0;
- 	}
- 
- 	/* Tell the driver to monitor connection quality (if supported) */
-@@ -4934,10 +4926,11 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
-+		struct cfg80211_bss *cbss = assoc_data->link[link_id].bss;
- 		struct ieee80211_link_data *link;
- 		struct link_sta_info *link_sta;
- 
--		if (!assoc_data->link[link_id].bss)
-+		if (!cbss)
- 			continue;
- 
- 		link = sdata_dereference(sdata->link[link_id], sdata);
-@@ -4957,19 +4950,25 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 		if (WARN_ON(!link_sta))
- 			goto out_err;
- 
--		if (link_id != assoc_data->assoc_link_id) {
--			struct cfg80211_bss *cbss = assoc_data->link[link_id].bss;
-+		if (!link->u.mgd.have_beacon) {
- 			const struct cfg80211_bss_ies *ies;
- 
- 			rcu_read_lock();
--			ies = rcu_dereference(cbss->ies);
-+			ies = rcu_dereference(cbss->beacon_ies);
-+			if (ies)
-+				link->u.mgd.have_beacon = true;
-+			else
-+				ies = rcu_dereference(cbss->ies);
- 			ieee80211_get_dtim(ies,
- 					   &link->conf->sync_dtim_count,
- 					   &link->u.mgd.dtim_period);
--			link->conf->dtim_period = link->u.mgd.dtim_period ?: 1;
- 			link->conf->beacon_int = cbss->beacon_interval;
- 			rcu_read_unlock();
-+		}
- 
-+		link->conf->dtim_period = link->u.mgd.dtim_period ?: 1;
-+
-+		if (link_id != assoc_data->assoc_link_id) {
- 			err = ieee80211_prep_channel(sdata, link, cbss,
- 						     &link->u.mgd.conn_flags);
- 			if (err) {
+ 	if (!sta->sta.deflink.ht_cap.ht_supported &&
+-	    sta->sdata->vif.bss_conf.chandef.chan->band != NL80211_BAND_6GHZ) {
++	    !sta->sta.deflink.he_cap.has_he) {
+ 		ht_dbg(sta->sdata,
+ 		       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
+ 		       sta->sta.addr, tid);
 -- 
 2.37.3
 
