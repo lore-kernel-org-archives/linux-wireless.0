@@ -2,42 +2,44 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ADEFC4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 08:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44D09C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 08:33:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230056AbiJEIdQ (ORCPT
+        id S229517AbiJEIdS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 04:33:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32884 "EHLO
+        Wed, 5 Oct 2022 04:33:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230071AbiJEIdH (ORCPT
+        with ESMTP id S230041AbiJEIdH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Oct 2022 04:33:07 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0057775489
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 01:32:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2922C7333E
+        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 01:32:50 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2958W88B0010386, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2958W88I0010386, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2958W88B0010386
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2958W88I0010386
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
         Wed, 5 Oct 2022 16:32:08 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Wed, 5 Oct 2022 16:32:26 +0800
+ 15.1.2375.7; Wed, 5 Oct 2022 16:32:36 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 5 Oct 2022
- 16:32:26 +0800
+ 16:32:30 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <echuang@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/6] wifi: rtw89: 8852b: add more to support 8852b
-Date:   Wed, 5 Oct 2022 16:32:06 +0800
-Message-ID: <20221005083212.45683-1-pkshih@realtek.com>
+Subject: [PATCH 5/6] wifi: rtw89: make generic functions to convert subband gain index
+Date:   Wed, 5 Oct 2022 16:32:11 +0800
+Message-ID: <20221005083212.45683-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221005083212.45683-1-pkshih@realtek.com>
+References: <20221005083212.45683-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -63,38 +65,140 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-First patch is to leverage coex code to 8852b, so move the chunk to a
-generic code. Second is a CFO issue found during 8852b development. Patches
-3-6 are to add more chip_ops/chip_info needed by 8852b. The last patch is
-a big one, because chip_ops::set_channel contains lots of settings.
+The gain tables use different domain index, so we need to convert the index
+from subband of chandef. Since these conversion functions can share with
+8852b, make generic functions for further use.
 
-Ching-Te Ku (1):
-  wifi: rtw89: coex: move chip_ops::btc_bt_aci_imp to a generic code
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/phy.h      | 44 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 46 +------------------
+ 2 files changed, 46 insertions(+), 44 deletions(-)
 
-Eric Huang (1):
-  wifi: rtw89: parse PHY status only when PPDU is to_self
-
-Ping-Ke Shih (4):
-  wifi: rtw89: 8852b: set proper configuration before loading NCTL
-  wifi: rtw89: 8852b: add HFC quota arrays
-  wifi: rtw89: make generic functions to convert subband gain index
-  wifi: rtw89: 8852b: add chip_ops::set_channel
-
- drivers/net/wireless/realtek/rtw89/coex.c     |   9 +-
- drivers/net/wireless/realtek/rtw89/core.c     |   3 +
- drivers/net/wireless/realtek/rtw89/core.h     |   2 +-
- drivers/net/wireless/realtek/rtw89/phy.c      |  21 +-
- drivers/net/wireless/realtek/rtw89/phy.h      |  46 ++
- drivers/net/wireless/realtek/rtw89/reg.h      |  60 +-
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  14 -
- drivers/net/wireless/realtek/rtw89/rtw8852b.c | 596 ++++++++++++++++++
- .../net/wireless/realtek/rtw89/rtw8852b_rfk.c | 256 ++++++++
- .../net/wireless/realtek/rtw89/rtw8852b_rfk.h |  14 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  60 +-
- 11 files changed, 1000 insertions(+), 81 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c
- create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.h
-
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
+index 030a7c904a28d..1129d462bfbdb 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.h
++++ b/drivers/net/wireless/realtek/rtw89/phy.h
+@@ -374,6 +374,50 @@ static inline u32 rtw89_phy_read32_mask(struct rtw89_dev *rtwdev,
+ 	return rtw89_read32_mask(rtwdev, addr | RTW89_PHY_ADDR_OFFSET, mask);
+ }
+ 
++static inline
++enum rtw89_gain_offset rtw89_subband_to_gain_offset_band_of_ofdm(enum rtw89_subband subband)
++{
++	switch (subband) {
++	default:
++	case RTW89_CH_2G:
++		return RTW89_GAIN_OFFSET_2G_OFDM;
++	case RTW89_CH_5G_BAND_1:
++		return RTW89_GAIN_OFFSET_5G_LOW;
++	case RTW89_CH_5G_BAND_3:
++		return RTW89_GAIN_OFFSET_5G_MID;
++	case RTW89_CH_5G_BAND_4:
++		return RTW89_GAIN_OFFSET_5G_HIGH;
++	}
++}
++
++static inline
++enum rtw89_phy_bb_gain_band rtw89_subband_to_bb_gain_band(enum rtw89_subband subband)
++{
++	switch (subband) {
++	default:
++	case RTW89_CH_2G:
++		return RTW89_BB_GAIN_BAND_2G;
++	case RTW89_CH_5G_BAND_1:
++		return RTW89_BB_GAIN_BAND_5G_L;
++	case RTW89_CH_5G_BAND_3:
++		return RTW89_BB_GAIN_BAND_5G_M;
++	case RTW89_CH_5G_BAND_4:
++		return RTW89_BB_GAIN_BAND_5G_H;
++	case RTW89_CH_6G_BAND_IDX0:
++	case RTW89_CH_6G_BAND_IDX1:
++		return RTW89_BB_GAIN_BAND_6G_L;
++	case RTW89_CH_6G_BAND_IDX2:
++	case RTW89_CH_6G_BAND_IDX3:
++		return RTW89_BB_GAIN_BAND_6G_M;
++	case RTW89_CH_6G_BAND_IDX4:
++	case RTW89_CH_6G_BAND_IDX5:
++		return RTW89_BB_GAIN_BAND_6G_H;
++	case RTW89_CH_6G_BAND_IDX6:
++	case RTW89_CH_6G_BAND_IDX7:
++		return RTW89_BB_GAIN_BAND_6G_UH;
++	}
++}
++
+ enum rtw89_rfk_flag {
+ 	RTW89_RFK_F_WRF = 0,
+ 	RTW89_RFK_F_WM = 1,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index 00f564be29e8d..f6bcac8268166 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -788,40 +788,12 @@ static const struct rtw8852c_bb_gain_op1db bb_gain_op1db_a = {
+ 	.mask_tia0_lna6 = 0xff000000,
+ };
+ 
+-static enum rtw89_phy_bb_gain_band
+-rtw8852c_mapping_gain_band(enum rtw89_subband subband)
+-{
+-	switch (subband) {
+-	default:
+-	case RTW89_CH_2G:
+-		return RTW89_BB_GAIN_BAND_2G;
+-	case RTW89_CH_5G_BAND_1:
+-		return RTW89_BB_GAIN_BAND_5G_L;
+-	case RTW89_CH_5G_BAND_3:
+-		return RTW89_BB_GAIN_BAND_5G_M;
+-	case RTW89_CH_5G_BAND_4:
+-		return RTW89_BB_GAIN_BAND_5G_H;
+-	case RTW89_CH_6G_BAND_IDX0:
+-	case RTW89_CH_6G_BAND_IDX1:
+-		return RTW89_BB_GAIN_BAND_6G_L;
+-	case RTW89_CH_6G_BAND_IDX2:
+-	case RTW89_CH_6G_BAND_IDX3:
+-		return RTW89_BB_GAIN_BAND_6G_M;
+-	case RTW89_CH_6G_BAND_IDX4:
+-	case RTW89_CH_6G_BAND_IDX5:
+-		return RTW89_BB_GAIN_BAND_6G_H;
+-	case RTW89_CH_6G_BAND_IDX6:
+-	case RTW89_CH_6G_BAND_IDX7:
+-		return RTW89_BB_GAIN_BAND_6G_UH;
+-	}
+-}
+-
+ static void rtw8852c_set_gain_error(struct rtw89_dev *rtwdev,
+ 				    enum rtw89_subband subband,
+ 				    enum rtw89_rf_path path)
+ {
+ 	const struct rtw89_phy_bb_gain_info *gain = &rtwdev->bb_gain;
+-	u8 gain_band = rtw8852c_mapping_gain_band(subband);
++	u8 gain_band = rtw89_subband_to_bb_gain_band(subband);
+ 	s32 val;
+ 	u32 reg;
+ 	u32 mask;
+@@ -979,21 +951,7 @@ static void rtw8852c_set_gain_offset(struct rtw89_dev *rtwdev,
+ 		rtw89_phy_write32_mask(rtwdev, R_RPL_OFST, B_RPL_OFST_MASK, tmp & 0x7f);
+ 	}
+ 
+-	switch (chan->subband_type) {
+-	default:
+-	case RTW89_CH_2G:
+-		gain_band = RTW89_GAIN_OFFSET_2G_OFDM;
+-		break;
+-	case RTW89_CH_5G_BAND_1:
+-		gain_band = RTW89_GAIN_OFFSET_5G_LOW;
+-		break;
+-	case RTW89_CH_5G_BAND_3:
+-		gain_band = RTW89_GAIN_OFFSET_5G_MID;
+-		break;
+-	case RTW89_CH_5G_BAND_4:
+-		gain_band = RTW89_GAIN_OFFSET_5G_HIGH;
+-		break;
+-	}
++	gain_band = rtw89_subband_to_gain_offset_band_of_ofdm(chan->subband_type);
+ 
+ 	offset_q0 = -efuse_gain->offset[path][gain_band];
+ 	offset_base_q4 = efuse_gain->offset_base[phy_idx];
 -- 
 2.25.1
 
