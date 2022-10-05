@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16F53C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 845CEC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229592AbiJENBh (ORCPT
+        id S230090AbiJENBj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:01:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41816 "EHLO
+        Wed, 5 Oct 2022 09:01:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230103AbiJENBA (ORCPT
+        with ESMTP id S230054AbiJENBA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Oct 2022 09:01:00 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E066E1EEC5
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 012BD78592
+        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=LJgemMc53fMQH8DyNCNSKfurOl+Pw13ePCGXpV93fPs=;
-        t=1664974858; x=1666184458; b=uX2LTN7D6juzDczcP5ONQnIwqNx//ZlTGSmF2wa3BDB4ILl
-        +NzZGBlFXAheMQrrrGas+o9gmnUa5dn1Wza055juUSlZS06bFTsiwI6gIEE0QK4kU8EYQYMzinJS8
-        uam3hTt5YKGSgfgqYbwAnDPWaTQIyZAjPsm1ghL+WZCW+KmDv4lLxAO/WN33DVUvEfU8BC6zD3szP
-        fNhcT/xouPl11vFEiydD/kVp3Xxe32TahKiSQSXaAVmyl6l+YSsfs3wF8UfzhI+Bktu7KelKgGmtv
-        mJBSMBYlagSe2hh95g2tJuBhqAPAAMVSWltzsVcQu/mb+b4VXv4WoStfnKq1cIxA==;
+        Resent-Cc:Resent-Message-ID; bh=uppWoO0h4MdQEjM22vXzX8mYeeKMXuQ4/Jb1fhgoQtE=;
+        t=1664974859; x=1666184459; b=MQSW42vkhRhApYltSkmJTVFnLpPS/AsdExM5tizzFX6g5vx
+        Wxt7E0dmsqXlB+fRRNmHlw+DbxDU8vz0qLr/D1H24yF+oGuymrd967UqNhDx6T2Qg3GZ3/TkeyTp4
+        nwgeDWiFFxUnCGGKWfaOclSmN3ujHyjt3o5lN6D9zzPx/cB7Aw3JHWQ289TtkqV+stjqPw2IfJQ5A
+        08x+Eo/F+IzGMvgLTkqckW+63GjeU5U0Edaf7LKjCrrbKgZ+Km8sUk1q5Hj4BKUrECjYuWP+7z4E0
+        TaJEIk6pqy3ludEVG7kZ0TwwfVvLq3UWtAZb/QEYbzw+pZ8pAixPzvYLnsEJn9AA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og41A-00G2RL-2k;
-        Wed, 05 Oct 2022 15:00:56 +0200
+        id 1og41B-00G2RL-19;
+        Wed, 05 Oct 2022 15:00:57 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 25/28] wifi: mac80211: prohibit IEEE80211_HT_CAP_DELAY_BA with MLO
-Date:   Wed,  5 Oct 2022 15:00:45 +0200
-Message-Id: <20221005145226.0381d8226a14.I13b8b159cb3ef31f9718447c81be8f975db2b313@changeid>
+Subject: [PATCH 27/28] wifi: mac80211: remove support for AddBA with fragmentation
+Date:   Wed,  5 Oct 2022 15:00:47 +0200
+Message-Id: <20221005145226.633fb92be811.I00470eddf867445ccdcf919dadd6378ae7a0356d@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -48,36 +48,58 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This won't work right at least with the code as it is, so
-at least for now just assume it's never set for MLO. It may
-very well never change, almost no drivers support it.
+HE added support for dynamic fragmentation inside aggregation
+sessions, but no existing driver ever advertises it. Thus,
+remove the code for now, it cannot work as-is in MLO. For it
+to properly work in MLO, we'd need to validate that the frag
+level is identical across all the link bands/iftypes, which
+is a good amount of complex code that's just not worth it as
+long as no driver has support for it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/main.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ net/mac80211/agg-rx.c | 19 -------------------
+ 1 file changed, 19 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 25e72812000e..425793dd7c9c 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1087,6 +1087,16 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index bd41022f4894..c6fa53230450 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -183,34 +183,15 @@ static void ieee80211_add_addbaext(struct ieee80211_sub_if_data *sdata,
+ 				   const struct ieee80211_addba_ext_ie *req,
+ 				   u16 buf_size)
+ {
+-	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_addba_ext_ie *resp;
+-	const struct ieee80211_sta_he_cap *he_cap;
+-	u8 frag_level, cap_frag_level;
+ 	u8 *pos;
  
- 		channels += sband->n_channels;
+-	sband = ieee80211_get_sband(sdata);
+-	if (!sband)
+-		return;
+-	he_cap = ieee80211_get_he_iftype_cap(sband,
+-					     ieee80211_vif_type_p2p(&sdata->vif));
+-	if (!he_cap)
+-		return;
+-
+ 	pos = skb_put_zero(skb, 2 + sizeof(struct ieee80211_addba_ext_ie));
+ 	*pos++ = WLAN_EID_ADDBA_EXT;
+ 	*pos++ = sizeof(struct ieee80211_addba_ext_ie);
+ 	resp = (struct ieee80211_addba_ext_ie *)pos;
+ 	resp->data = req->data & IEEE80211_ADDBA_EXT_NO_FRAG;
  
-+		/*
-+		 * Due to the way the aggregation code handles this and it
-+		 * being an HT capability, we can't really support delayed
-+		 * BA in MLO (yet).
-+		 */
-+		if (WARN_ON(sband->ht_cap.ht_supported &&
-+			    (sband->ht_cap.cap & IEEE80211_HT_CAP_DELAY_BA) &&
-+			    hw->wiphy->flags & WIPHY_FLAG_SUPPORTS_MLO))
-+			return -EINVAL;
-+
- 		if (max_bitrates < sband->n_bitrates)
- 			max_bitrates = sband->n_bitrates;
- 		supp_ht = supp_ht || sband->ht_cap.ht_supported;
+-	frag_level = u32_get_bits(req->data,
+-				  IEEE80211_ADDBA_EXT_FRAG_LEVEL_MASK);
+-	cap_frag_level = u32_get_bits(he_cap->he_cap_elem.mac_cap_info[0],
+-				      IEEE80211_HE_MAC_CAP0_DYNAMIC_FRAG_MASK);
+-	if (frag_level > cap_frag_level)
+-		frag_level = cap_frag_level;
+-	resp->data |= u8_encode_bits(frag_level,
+-				     IEEE80211_ADDBA_EXT_FRAG_LEVEL_MASK);
+ 	resp->data |= u8_encode_bits(buf_size >> IEEE80211_ADDBA_EXT_BUF_SIZE_SHIFT,
+ 				     IEEE80211_ADDBA_EXT_BUF_SIZE_MASK);
+ }
 -- 
 2.37.3
 
