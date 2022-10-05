@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ADE1C433F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE887C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229538AbiJENA5 (ORCPT
+        id S230087AbiJENA7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:00:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41704 "EHLO
+        Wed, 5 Oct 2022 09:00:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230024AbiJENAz (ORCPT
+        with ESMTP id S229864AbiJENAz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Oct 2022 09:00:55 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C70071EEC9
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6DFA1EEC4
         for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=Dz3cpMbKVTgi/LgtRVPv4Yp0tjzRZpJdH55/cnHyiXY=;
-        t=1664974853; x=1666184453; b=isrgxQkMGYJB3+CtX5eoG6QSDJdM3vRNEycccob1f1wjkDN
-        uxRoTawQNCQep/aJejYB7/CTrDrfZvRCEZKjqTw/naDQnHx6g1Sylmk9ie244B+I1XDbbxBgFH9Dd
-        rud1vg6utC4hQuSURNMoSd2N5obQX2NV7aikr7iXM1AUmv2Q2ZL1/GsVF3/QmgJGK1FmmWEwqBJoV
-        NoTU9vZo1Mp/HvBJvwpg3kwP8I+t5MbrXsf42AEU0rrJH8Zb+sDn5KguyZGuRULLErRgnT6QEuO5c
-        t1Caj9I3Xmf/K5K62broNUKeelwYeI8eq8pnUqr7NDH0seJfPWYfwnLREq1aBCyQ==;
+        Resent-Cc:Resent-Message-ID; bh=4DrVks/oLCHsvAvq6VmANYpykKV+vXjQxwOHB0WGXzg=;
+        t=1664974853; x=1666184453; b=XfE4+anMungqnaEA2DE56fuQtzea58xeB6pgKAejT+AMt96
+        PUO37qyKXqVUMUnNKhyKvEausT9NbrjmdsyERC4ekWo1u/YUupcpURiboQZFhnWXhy0/FcL8mUNQ0
+        EhFAtkA6iazbQG4HiJ5X91Htr9FsI9omYz1KcCJrIcKAlMwRPpptmfqKXVrUgzU+4SXN9Be04NZ0r
+        91szTlIIb4+ongks8DykFW92fKMuvihPDd47UW4HGMilme/MU4AB6bIm1gebX57xPJngNN+WzgrNk
+        CKBNVXUuGvB5jIsntKWtkctXQeoMHBq4lRQKj0R7kI8i58spBPWuaeFheluwmVyw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og414-00G2RL-2X;
-        Wed, 05 Oct 2022 15:00:50 +0200
+        id 1og415-00G2RL-1g;
+        Wed, 05 Oct 2022 15:00:51 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH 01/28] wifi: mac80211: add pointer from link STA to STA
-Date:   Wed,  5 Oct 2022 15:00:21 +0200
-Message-Id: <20221005145226.79cdfa994df6.I362a711645dc73579dfc3c93fb553f8ffc98765c@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 04/28] wifi: mac80211: recalc station aggregate data during link switch
+Date:   Wed,  5 Oct 2022 15:00:24 +0200
+Message-Id: <20221005145226.0605ef900411.I9354dd019bc87dc98e10b036a03fac844e547ad8@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -46,52 +46,129 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-While often not needed, this considerably simplifies going from a link
-to the STA. This helps in cases such as debugfs where a single pointer
-should allow accessing a specific link and the STA.
+During link switching, the active links change, so we need to
+recalculate the aggregate data in the stations.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h  | 3 +++
- net/mac80211/sta_info.c | 1 +
- 2 files changed, 4 insertions(+)
+ net/mac80211/link.c     | 17 +++++++++++++++++
+ net/mac80211/sta_info.c | 33 ++++++++++++++++++++++++---------
+ net/mac80211/sta_info.h |  2 ++
+ 3 files changed, 43 insertions(+), 9 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ac2bad57933f..7778a92d9582 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2176,6 +2176,7 @@ struct ieee80211_sta_aggregates {
-  * All link specific info for a STA link for a non MLD STA(single)
-  * or a MLD STA(multiple entries) are stored here.
-  *
-+ * @sta: reference to owning STA
-  * @addr: MAC address of the Link STA. For non-MLO STA this is same as the addr
-  *	in ieee80211_sta. For MLO Link STA this addr can be same or different
-  *	from addr in ieee80211_sta (representing MLD STA addr)
-@@ -2196,6 +2197,8 @@ struct ieee80211_sta_aggregates {
-  *
-  */
- struct ieee80211_link_sta {
-+	struct ieee80211_sta *sta;
+diff --git a/net/mac80211/link.c b/net/mac80211/link.c
+index e309708abae8..d1f5a9f7c647 100644
+--- a/net/mac80211/link.c
++++ b/net/mac80211/link.c
+@@ -357,6 +357,11 @@ static int _ieee80211_set_active_links(struct ieee80211_sub_if_data *sdata,
+ 	list_for_each_entry(sta, &local->sta_list, list) {
+ 		if (sdata != sta->sdata)
+ 			continue;
 +
- 	u8 addr[ETH_ALEN];
- 	u8 link_id;
- 	enum ieee80211_smps_mode smps_mode;
++		/* this is very temporary, but do it anyway */
++		__ieee80211_sta_recalc_aggregates(sta,
++						  old_active | active_links);
++
+ 		ret = drv_change_sta_links(local, sdata, &sta->sta,
+ 					   old_active,
+ 					   old_active | active_links);
+@@ -369,10 +374,22 @@ static int _ieee80211_set_active_links(struct ieee80211_sub_if_data *sdata,
+ 	list_for_each_entry(sta, &local->sta_list, list) {
+ 		if (sdata != sta->sdata)
+ 			continue;
++
++		__ieee80211_sta_recalc_aggregates(sta, active_links);
++
+ 		ret = drv_change_sta_links(local, sdata, &sta->sta,
+ 					   old_active | active_links,
+ 					   active_links);
+ 		WARN_ON_ONCE(ret);
++
++		/*
++		 * Do it again, just in case - the driver might very
++		 * well have called ieee80211_sta_recalc_aggregates()
++		 * from there when filling in the new links, which
++		 * would set it wrong since the vif's active links are
++		 * not switched yet...
++		 */
++		__ieee80211_sta_recalc_aggregates(sta, active_links);
+ 	}
+ 
+ 	for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
 diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index cebfd148bb40..71b1488bd390 100644
+index e6beaea4075e..2bb6a71c72ef 100644
 --- a/net/mac80211/sta_info.c
 +++ b/net/mac80211/sta_info.c
-@@ -511,6 +511,7 @@ static void sta_info_add_link(struct sta_info *sta,
- 	link_info->sta = sta;
- 	link_info->link_id = link_id;
- 	link_info->pub = link_sta;
-+	link_info->pub->sta = &sta->sta;
- 	link_sta->link_id = link_id;
- 	rcu_assign_pointer(sta->link[link_id], link_info);
- 	rcu_assign_pointer(sta->sta.link[link_id], link_sta);
+@@ -2151,22 +2151,30 @@ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
+ }
+ EXPORT_SYMBOL(ieee80211_sta_register_airtime);
+ 
+-void ieee80211_sta_recalc_aggregates(struct ieee80211_sta *pubsta)
++void __ieee80211_sta_recalc_aggregates(struct sta_info *sta, u16 active_links)
+ {
+-	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+-	struct ieee80211_link_sta *link_sta;
+-	int link_id, i;
+ 	bool first = true;
++	int link_id;
+ 
+-	if (!pubsta->valid_links || !pubsta->mlo) {
+-		pubsta->cur = &pubsta->deflink.agg;
++	if (!sta->sta.valid_links || !sta->sta.mlo) {
++		sta->sta.cur = &sta->sta.deflink.agg;
+ 		return;
+ 	}
+ 
+ 	rcu_read_lock();
+-	for_each_sta_active_link(&sta->sdata->vif, pubsta, link_sta, link_id) {
++	for (link_id = 0; link_id < ARRAY_SIZE((sta)->link); link_id++) {
++		struct ieee80211_link_sta *link_sta;
++		int i;
++
++		if (!(active_links & BIT(link_id)))
++			continue;
++
++		link_sta = rcu_dereference(sta->sta.link[link_id]);
++		if (!link_sta)
++			continue;
++
+ 		if (first) {
+-			sta->cur = pubsta->deflink.agg;
++			sta->cur = sta->sta.deflink.agg;
+ 			first = false;
+ 			continue;
+ 		}
+@@ -2185,7 +2193,14 @@ void ieee80211_sta_recalc_aggregates(struct ieee80211_sta *pubsta)
+ 	}
+ 	rcu_read_unlock();
+ 
+-	pubsta->cur = &sta->cur;
++	sta->sta.cur = &sta->cur;
++}
++
++void ieee80211_sta_recalc_aggregates(struct ieee80211_sta *pubsta)
++{
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
++
++	__ieee80211_sta_recalc_aggregates(sta, sta->sdata->vif.active_links);
+ }
+ EXPORT_SYMBOL(ieee80211_sta_recalc_aggregates);
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 6e672bf9c79d..69820b551668 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -927,6 +927,8 @@ void ieee80211_sta_set_max_amsdu_subframes(struct sta_info *sta,
+ 					   const u8 *ext_capab,
+ 					   unsigned int ext_capab_len);
+ 
++void __ieee80211_sta_recalc_aggregates(struct sta_info *sta, u16 active_links);
++
+ enum sta_stats_type {
+ 	STA_STATS_RATE_TYPE_INVALID = 0,
+ 	STA_STATS_RATE_TYPE_LEGACY,
 -- 
 2.37.3
 
