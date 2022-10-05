@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 950B3C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 711D3C43217
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229848AbiJENB1 (ORCPT
+        id S229977AbiJENB3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:01:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41874 "EHLO
+        Wed, 5 Oct 2022 09:01:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230082AbiJENA6 (ORCPT
+        with ESMTP id S230090AbiJENA7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2022 09:00:58 -0400
+        Wed, 5 Oct 2022 09:00:59 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A39A1D0E3
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7000773303
         for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=2TAa8j0qrDw6tMJ6oZmo+IquULME6WO2a+91Cw6lz54=;
-        t=1664974857; x=1666184457; b=bAtjrd6ByCfFMXLd2NOpf3cIuoiatGZhEmq2QYlbjopK6cx
-        S3Pl2Kcs9OHrTJryxwSi2GmDzBJdcC2kIEFuSZw0uzIYSJ+npfJXRXLJFuOApfy90DI4WH9CaS5lH
-        aqqNwnPtNeiMLeZkFn9abdeLwB9GTSWUR4KRjljoedxNVTjcKXisCVvoo/dd8Trvz1oPx2h+fgK6O
-        Yih/Z2kRkomWfFB378lvGXSE2+UuE1IF/nb0Fc4MElbaX9+czBWpvbssXp3OXVVC5uZ2R6hYrpTR8
-        66IGa4qDJimLxrXz40KvjRc3/INEGqT5uDqPKFyPIXNP3ov6W6NEbTH9pvxUpszg==;
+        Resent-Cc:Resent-Message-ID; bh=tek+gBhqRDC/tLMtcDGwvGf9KPohG5ehmzlAhzDqx+Q=;
+        t=1664974857; x=1666184457; b=ZEyKmYqsuEoO0NQ7ZOeIBVdgDx5dsq0G44hXlzpEITcRAoM
+        XPqiNMCSMcMtxEwEgxNs8QNhLUuJKV9sBb1JWl34VfkyhHXX5uJuRpt2HXq6xsmJcUN/ghobsQSQw
+        XLzsmfq1pKLpDvlJobu0bZkhnPnHEso4Up8PDLpzmfyPVxH529r/CPOB5/xRo5BvSmYx6mViIBGpj
+        9XjQhvvnPq3/N/ce8EbFIsf9ih9C7AboFy1NqiK7HFkez2b1bVimVqn4wvqxnhhQ5vuPZWLcxh1Vy
+        FYV0tCidIuVDtERFOvscL4W+4W3t/icHquLCMH2yCSTacGErB47MTAlDnydfajMA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og419-00G2RL-17;
+        id 1og419-00G2RL-2b;
         Wed, 05 Oct 2022 15:00:55 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 19/28] wifi: fix multi-link element subelement iteration
-Date:   Wed,  5 Oct 2022 15:00:39 +0200
-Message-Id: <20221005145226.1c962d927d1b.I0e8ed4861b89687a8d35c093a40e1df2a3436d59@changeid>
+Subject: [PATCH 21/28] wifi: mac80211: check link ID in auth/assoc continuation
+Date:   Wed,  5 Oct 2022 15:00:41 +0200
+Message-Id: <20221005145226.c6a22c9df471.Ibc1e59b9113255445a9dd4c66246d9805c39c337@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -48,31 +48,60 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The subelements obviously start after the common data, including
-the common multi-link element structure definition itself. This
-bug was possibly just hidden by the higher bits of the control
-being set to 0, so the iteration just found one bogus element
-and most of the code could continue anyway.
+Ensure that the link ID matches in auth/assoc continuation,
+otherwise we need to reset all the data.
 
-Fixes: 0f48b8b88aa9 ("wifi: ieee80211: add definitions for multi-link element")
+Fixes: 81151ce462e5 ("wifi: mac80211: support MLO authentication/association with one link")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/mlme.c        | 7 +++++--
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index f51e939f28f2..6252f02f38b7 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -4593,7 +4593,7 @@ static inline u8 ieee80211_mle_common_size(const u8 *data)
- 		return 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 517a50abdb09..b704656027db 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -390,6 +390,7 @@ struct ieee80211_mgd_auth_data {
+ 	bool done, waiting;
+ 	bool peer_confirmed;
+ 	bool timeout_started;
++	int link_id;
+ 
+ 	u8 ap_addr[ETH_ALEN] __aligned(2);
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1ad0bf3bfcae..c46f355265ee 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -6702,6 +6702,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	       req->ap_mld_addr ?: req->bss->bssid,
+ 	       ETH_ALEN);
+ 	auth_data->bss = req->bss;
++	auth_data->link_id = req->link_id;
+ 
+ 	if (req->auth_data_len >= 4) {
+ 		if (req->auth_type == NL80211_AUTHTYPE_SAE) {
+@@ -6720,7 +6721,8 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	 * removal and re-addition of the STA entry in
+ 	 * ieee80211_prep_connection().
+ 	 */
+-	cont_auth = ifmgd->auth_data && req->bss == ifmgd->auth_data->bss;
++	cont_auth = ifmgd->auth_data && req->bss == ifmgd->auth_data->bss &&
++		    ifmgd->auth_data->link_id == req->link_id;
+ 
+ 	if (req->ie && req->ie_len) {
+ 		memcpy(&auth_data->data[auth_data->data_len],
+@@ -7044,7 +7046,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 		/* keep sta info, bssid if matching */
+ 		match = ether_addr_equal(ifmgd->auth_data->ap_addr,
+-					 assoc_data->ap_addr);
++					 assoc_data->ap_addr) &&
++			ifmgd->auth_data->link_id == req->link_id;
+ 		ieee80211_destroy_auth_data(sdata, match);
  	}
  
--	return common + mle->variable[0];
-+	return sizeof(*mle) + common + mle->variable[0];
- }
- 
- /**
 -- 
 2.37.3
 
