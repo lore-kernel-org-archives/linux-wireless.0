@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7929C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4522AC433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230096AbiJENBY (ORCPT
+        id S230024AbiJENB0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:01:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41842 "EHLO
+        Wed, 5 Oct 2022 09:01:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230078AbiJENA6 (ORCPT
+        with ESMTP id S230081AbiJENA6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Oct 2022 09:00:58 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E609E2CDDE
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74E3F7332A
+        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=9VSh7S6ZvvOM6di/mKAqKw0yp+jDdDCZUlSwTNXpD30=;
-        t=1664974857; x=1666184457; b=NdltjU8zOYRXcAHcdiIYqEOeqf3/OtyzZwPVlrVflItOvXS
-        NVvGJMAlyPf0K4IrwPNDpYOtzArFbULy1e8jKJoODBIpabBU6ymkocw00aWwNQHi+AkgPQ7jEWAY6
-        9feWCLFUcNmf9rHSdBLqqn+4QY1pffz0xSbFmtYqH/euZ2jP/mOK8ZZ0xbu7bRnbDBflbDQGSVJQz
-        7vvlVGHQHXJdEnoTEkHWLhLtmzFTfZeQDxL+70sa8G4w+DQjFYJipP4E7zZXXSmCjb4gTnl68CAtM
-        Sd6kdcmVJgwdXkVFbqk0/2+S61MgngiSiWqLXz05fs9Q3bZU/k9PRHHjl4kdUEgg==;
+        Resent-Cc:Resent-Message-ID; bh=IKPJSlQGXfxUM9lm+G8gRSwLdq5YtAR7FbJ6wt9C2Y4=;
+        t=1664974857; x=1666184457; b=ccEWIWhykasrAdvsFz4kPPeeg+avYd50PnjOH+36gj3Oa6O
+        NfIIujEoHCoDO3LKj87Ua+IZ/Bm3d6AM3f5aGoU1Plw3qiscni48BFwfvAjdhaahavY1hvqm1OKct
+        31uaMgym0ToPQ9lUbqBv1Th2P1Gzyig2qzDGtjnW/NDzbAQux60C+WHEM45bpr//iz2aHJ/N/PdnM
+        FDAKoxN6Twff9p9J36AZBQ1aAlmQkY5Wanc2O6//n88pqZtJ1x0srxy2uIi1JmEk1PvwBx06V2q+V
+        8GmRp+l2SGtNo/b4H/M7WUORQr1ifbZY7XwQE3kcppVenqlBPY2RBbuHtjwxX6gQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og419-00G2RL-0H;
+        id 1og419-00G2RL-1r;
         Wed, 05 Oct 2022 15:00:55 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 18/28] wifi: mac80211: add RCU _check() link access variants
-Date:   Wed,  5 Oct 2022 15:00:38 +0200
-Message-Id: <20221005145226.be2d0a5f0c99.I6d4abf13505122fca79578bb9da9473214602f13@changeid>
+Subject: [PATCH 20/28] wifi: mac80211: mlme: fix null-ptr deref on failed assoc
+Date:   Wed,  5 Oct 2022 15:00:40 +0200
+Message-Id: <20221005145226.9c36543a1a23.I8591bee1fc964ac6b37f94e5a9501e0cf5432f2c@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -48,41 +48,54 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We might sometimes need to use RCU and locking in the same code
-path, so add the two variants link_conf_dereference_check() and
-link_sta_dereference_check().
+If association to an AP without a link 0 fails, then we crash in
+tracing because it assumes that either ap_mld_addr or link 0 BSS
+is valid, since we clear sdata->vif.valid_links and then don't
+add the ap_mld_addr to the struct.
 
+Since we clear also sdata->vif.cfg.ap_addr, keep a local copy of
+it and assign it earlier, before clearing valid_links, to fix
+this.
+
+Fixes: 81151ce462e5 ("wifi: mac80211: support MLO authentication/association with one link")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ net/mac80211/mlme.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c413050ec8dd..cda4584dfd51 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1915,6 +1915,10 @@ static inline bool lockdep_vif_mutex_held(struct ieee80211_vif *vif)
- 	rcu_dereference_protected((vif)->link_conf[link_id],	\
- 				  lockdep_vif_mutex_held(vif))
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b6f378e7edea..1ad0bf3bfcae 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5082,6 +5082,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_rx_assoc_resp resp = {
+ 		.uapsd_queues = -1,
+ 	};
++	u8 ap_mld_addr[ETH_ALEN] __aligned(2);
+ 	unsigned int link_id;
  
-+#define link_conf_dereference_check(vif, link_id)		\
-+	rcu_dereference_check((vif)->link_conf[link_id],	\
-+			      lockdep_vif_mutex_held(vif))
-+
- /**
-  * enum ieee80211_key_flags - key flags
-  *
-@@ -2311,6 +2315,10 @@ static inline bool lockdep_sta_mutex_held(struct ieee80211_sta *pubsta)
- 	rcu_dereference_protected((sta)->link[link_id],		\
- 				  lockdep_sta_mutex_held(sta))
+ 	sdata_assert_lock(sdata);
+@@ -5251,6 +5252,11 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 				resp.uapsd_queues |= ieee80211_ac_to_qos_mask[ac];
+ 	}
  
-+#define link_sta_dereference_check(sta, link_id)		\
-+	rcu_dereference_check((sta)->link[link_id],		\
-+			      lockdep_sta_mutex_held(sta))
++	if (sdata->vif.valid_links) {
++		ether_addr_copy(ap_mld_addr, sdata->vif.cfg.ap_addr);
++		resp.ap_mld_addr = ap_mld_addr;
++	}
 +
- #define for_each_sta_active_link(vif, sta, link_sta, link_id)			\
- 	for (link_id = 0; link_id < ARRAY_SIZE((sta)->link); link_id++)		\
- 		if ((!(vif)->active_links ||					\
+ 	ieee80211_destroy_assoc_data(sdata,
+ 				     status_code == WLAN_STATUS_SUCCESS ?
+ 					ASSOC_SUCCESS :
+@@ -5260,8 +5266,6 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 	resp.len = len;
+ 	resp.req_ies = ifmgd->assoc_req_ies;
+ 	resp.req_ies_len = ifmgd->assoc_req_ies_len;
+-	if (sdata->vif.valid_links)
+-		resp.ap_mld_addr = sdata->vif.cfg.ap_addr;
+ 	cfg80211_rx_assoc_resp(sdata->dev, &resp);
+ notify_driver:
+ 	drv_mgd_complete_tx(sdata->local, sdata, &info);
 -- 
 2.37.3
 
