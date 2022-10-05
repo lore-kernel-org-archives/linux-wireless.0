@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA15C43217
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D491C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229495AbiJENBR (ORCPT
+        id S229738AbiJENBT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:01:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41814 "EHLO
+        Wed, 5 Oct 2022 09:01:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230059AbiJENA5 (ORCPT
+        with ESMTP id S230070AbiJENA5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Oct 2022 09:00:57 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A6D41F619
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 084711EECF
         for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=fk7QTKv+txphYCbm6e2QV+zaModpfM+XhJJ/DzsWMKI=;
-        t=1664974856; x=1666184456; b=V6Z3z6caAmGawZtk9iCrcFj6cjjj8z9xDzoRkKVgNUXuVCV
-        QVuB6UOUt8nIpb0WA6JmRsP9DgbDyvbhGHaWgUOp8hdyyGykq6k3rkFRS/lAhT/ludH3r9DrRyXZG
-        NHdnrBfMzrqVA2rBsX9OcEkP9gDSh8QG+xpSjUbDRUgnQtdToSSJ23qmyEAbSg+Q4N0pP/DLFDPY8
-        OZW8mGnIKGlIPACFdU+5wGgiweSVsQ04fOedeqjO1wPiqNbljYJoGDXnR72LGK0cHCHhrsyJvsP9V
-        BWy6hoKafgtz/Xda+X7rd/b47r22Vx3YV7Y8gdTn62XcaU6Oi0lkCLBq2xxjmpPw==;
+        Resent-Cc:Resent-Message-ID; bh=9tv3I5iPzNPH5DgrY9SUK8azWbNXtWI9nPFvJjn4vUw=;
+        t=1664974856; x=1666184456; b=JzNLYOi/ZKFsRCUBanQywBsssX7345HAU0JKv6SJGxHdXQp
+        RYmBrja/nRm8A+7rjDWWH2opA5MiImBjBd4B8+yln/aEOV8OeHwYNGr35TH6HUb6Y4zpHzkUJCKDD
+        3+ZKIe6oYQWn5fgzGfx1b/SD7xMSYgnfL+TLle9pxHEAnp/kRRRWAnnPDHhmWQH2ZxWzM/Orenqge
+        EyuzHK485bjF45L+rQDW7P5TgpOneKM4whATq8viDdyZergMzzBuQFGowkre1EcRawPeorj3+wWZT
+        dotbMnS3Mm7JiYfoP2iIkkAL3hN63pBBZffogFq8FOoOi72kv6+x64fn+AhYQORQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og417-00G2RL-2X;
-        Wed, 05 Oct 2022 15:00:53 +0200
+        id 1og418-00G2RL-10;
+        Wed, 05 Oct 2022 15:00:54 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 13/28] wifi: nl80211: use link ID in NL80211_CMD_SET_BSS
-Date:   Wed,  5 Oct 2022 15:00:33 +0200
-Message-Id: <20221005145226.3c9f8b71f53e.Id8cbedd0a18273dbe9f25a2bd4d987f22cfc3aac@changeid>
+Cc:     Haim Dreyfuss <haim.dreyfuss@intel.com>
+Subject: [PATCH 15/28] wifi: mac80211: advertise TWT requester only with HW support
+Date:   Wed,  5 Oct 2022 15:00:35 +0200
+Message-Id: <20221005145226.4c01851c1557.I671c4b73e3a85580a977e9166a5721add10c37e1@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -46,59 +46,94 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-We clearly need the link ID here, to know the right BSS
-to configure. Use/require it.
+Currently, we rely only on the AP capability. If the AP supports
+TWT responder we will advertise TWT requester even if the driver
+or HW doesn't support it. This this by checking the HW capability.
 
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 2 ++
- net/wireless/nl80211.c | 4 +++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4d35a4234417..659dd1bee70f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2105,6 +2105,7 @@ struct mpath_info {
-  *
-  * Used to change BSS parameters (mainly for AP mode).
-  *
-+ * @link_id: link_id or -1 for non-MLD
-  * @use_cts_prot: Whether to use CTS protection
-  *	(0 = no, 1 = yes, -1 = do not change)
-  * @use_short_preamble: Whether the use of short preambles is allowed
-@@ -2122,6 +2123,7 @@ struct mpath_info {
-  * @p2p_opp_ps: P2P opportunistic PS (-1 = no change)
-  */
- struct bss_parameters {
-+	int link_id;
- 	int use_cts_prot;
- 	int use_short_preamble;
- 	int use_short_slot_time;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ad7393cd3d18..1d0277758d0e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7780,6 +7780,7 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
- 	int err;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2e4bb75c68c0..b6f378e7edea 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3870,9 +3870,15 @@ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
+ 	}
+ }
  
- 	memset(&params, 0, sizeof(params));
-+	params.link_id = nl80211_link_id_or_invalid(info->attrs);
- 	/* default to not changing parameters */
- 	params.use_cts_prot = -1;
- 	params.use_short_preamble = -1;
-@@ -16564,7 +16565,8 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
- 		.doit = nl80211_set_bss,
- 		.flags = GENL_UNS_ADMIN_PERM,
--		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
-+					 NL80211_FLAG_MLO_VALID_LINK_ID),
- 	},
- 	{
- 		.cmd = NL80211_CMD_GET_REG,
+-static bool ieee80211_twt_req_supported(const struct link_sta_info *link_sta,
++static bool ieee80211_twt_req_supported(struct ieee80211_sub_if_data *sdata,
++					struct ieee80211_supported_band *sband,
++					const struct link_sta_info *link_sta,
+ 					const struct ieee802_11_elems *elems)
+ {
++	const struct ieee80211_sta_he_cap *own_he_cap =
++		ieee80211_get_he_iftype_cap(sband,
++					    ieee80211_vif_type_p2p(&sdata->vif));
++
+ 	if (elems->ext_capab_len < 10)
+ 		return false;
+ 
+@@ -3880,14 +3886,19 @@ static bool ieee80211_twt_req_supported(const struct link_sta_info *link_sta,
+ 		return false;
+ 
+ 	return link_sta->pub->he_cap.he_cap_elem.mac_cap_info[0] &
+-		IEEE80211_HE_MAC_CAP0_TWT_RES;
++		IEEE80211_HE_MAC_CAP0_TWT_RES &&
++		own_he_cap &&
++		(own_he_cap->he_cap_elem.mac_cap_info[0] &
++			IEEE80211_HE_MAC_CAP0_TWT_REQ);
+ }
+ 
+-static int ieee80211_recalc_twt_req(struct ieee80211_link_data *link,
++static int ieee80211_recalc_twt_req(struct ieee80211_sub_if_data *sdata,
++				    struct ieee80211_supported_band *sband,
++				    struct ieee80211_link_data *link,
+ 				    struct link_sta_info *link_sta,
+ 				    struct ieee802_11_elems *elems)
+ {
+-	bool twt = ieee80211_twt_req_supported(link_sta, elems);
++	bool twt = ieee80211_twt_req_supported(sdata, sband, link_sta, elems);
+ 
+ 	if (link->conf->twt_requester != twt) {
+ 		link->conf->twt_requester = twt;
+@@ -4129,7 +4140,8 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
+ 		else
+ 			bss_conf->twt_protected = false;
+ 
+-		*changed |= ieee80211_recalc_twt_req(link, link_sta, elems);
++		*changed |= ieee80211_recalc_twt_req(sdata, sband, link,
++						     link_sta, elems);
+ 
+ 		if (elems->eht_operation && elems->eht_cap &&
+ 		    !(link->u.mgd.conn_flags & IEEE80211_CONN_DISABLE_EHT)) {
+@@ -5472,6 +5484,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 	struct ieee802_11_elems *elems;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
++	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *chan;
+ 	struct link_sta_info *link_sta;
+ 	struct sta_info *sta;
+@@ -5734,7 +5747,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 		goto free;
+ 	}
+ 
+-	changed |= ieee80211_recalc_twt_req(link, link_sta, elems);
++	if (WARN_ON(!link->conf->chandef.chan))
++		goto free;
++
++	sband = local->hw.wiphy->bands[link->conf->chandef.chan->band];
++
++	changed |= ieee80211_recalc_twt_req(sdata, sband, link, link_sta, elems);
+ 
+ 	if (ieee80211_config_bw(link, elems->ht_cap_elem,
+ 				elems->vht_cap_elem, elems->ht_operation,
 -- 
 2.37.3
 
