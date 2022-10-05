@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 711D3C43217
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36249C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229977AbiJENB3 (ORCPT
+        id S230110AbiJENBb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:01:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41774 "EHLO
+        Wed, 5 Oct 2022 09:01:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230090AbiJENA7 (ORCPT
+        with ESMTP id S230093AbiJENA7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Oct 2022 09:00:59 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7000773303
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA34C1E3F5
         for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=tek+gBhqRDC/tLMtcDGwvGf9KPohG5ehmzlAhzDqx+Q=;
-        t=1664974857; x=1666184457; b=ZEyKmYqsuEoO0NQ7ZOeIBVdgDx5dsq0G44hXlzpEITcRAoM
-        XPqiNMCSMcMtxEwEgxNs8QNhLUuJKV9sBb1JWl34VfkyhHXX5uJuRpt2HXq6xsmJcUN/ghobsQSQw
-        XLzsmfq1pKLpDvlJobu0bZkhnPnHEso4Up8PDLpzmfyPVxH529r/CPOB5/xRo5BvSmYx6mViIBGpj
-        9XjQhvvnPq3/N/ce8EbFIsf9ih9C7AboFy1NqiK7HFkez2b1bVimVqn4wvqxnhhQ5vuPZWLcxh1Vy
-        FYV0tCidIuVDtERFOvscL4W+4W3t/icHquLCMH2yCSTacGErB47MTAlDnydfajMA==;
+        Resent-Cc:Resent-Message-ID; bh=PbW8judF+pUNDM+G5aD3fMMdWTuvhSRw/ik1euIOPYQ=;
+        t=1664974858; x=1666184458; b=kh825iYLNtiJCRthHd0+8vCIv4DaSR46yfJaIMXxtoal0nZ
+        8ZKWLF0shXfqMi768YHvmKH/HHn4oko9chLnyTrTyC1mtHI/1gGbsQTYBqdjcW4Kr60BkhPUDI+m1
+        9Xljut13R8wSZTdLG/5iLwy+4fFtIa9vNXksRgVIxR6bifdthrZGMWKDjds7WcPFHnbCO3S1n2TK3
+        WWFG5I58C5ldFd5PCLKY2zskuMaUi5eIRy2uOd2faH+FpzILdeZejRCMjTmiI4o3s86seo0i7WOPr
+        T92PhpVjSYFyj4pQhne/T6uHc7cN/npNaPx9kHjbvPjXSvPokxvmpkGyurGD3cIw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og419-00G2RL-2b;
-        Wed, 05 Oct 2022 15:00:55 +0200
+        id 1og41A-00G2RL-19;
+        Wed, 05 Oct 2022 15:00:56 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 21/28] wifi: mac80211: check link ID in auth/assoc continuation
-Date:   Wed,  5 Oct 2022 15:00:41 +0200
-Message-Id: <20221005145226.c6a22c9df471.Ibc1e59b9113255445a9dd4c66246d9805c39c337@changeid>
+Subject: [PATCH 23/28] wifi: mac80211: change AddBA deny error message
+Date:   Wed,  5 Oct 2022 15:00:43 +0200
+Message-Id: <20221005145226.ab7386682152.I5002d55dfe804187586114419374b70229e96549@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -48,60 +48,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Ensure that the link ID matches in auth/assoc continuation,
-otherwise we need to reset all the data.
+If the station has no HT, we deny the aggregation session
+but the error message talks about QoS; change it to say HT
+instead.
 
-Fixes: 81151ce462e5 ("wifi: mac80211: support MLO authentication/association with one link")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h | 1 +
- net/mac80211/mlme.c        | 7 +++++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ net/mac80211/agg-rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 517a50abdb09..b704656027db 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -390,6 +390,7 @@ struct ieee80211_mgd_auth_data {
- 	bool done, waiting;
- 	bool peer_confirmed;
- 	bool timeout_started;
-+	int link_id;
- 
- 	u8 ap_addr[ETH_ALEN] __aligned(2);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1ad0bf3bfcae..c46f355265ee 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -6702,6 +6702,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	       req->ap_mld_addr ?: req->bss->bssid,
- 	       ETH_ALEN);
- 	auth_data->bss = req->bss;
-+	auth_data->link_id = req->link_id;
- 
- 	if (req->auth_data_len >= 4) {
- 		if (req->auth_type == NL80211_AUTHTYPE_SAE) {
-@@ -6720,7 +6721,8 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	 * removal and re-addition of the STA entry in
- 	 * ieee80211_prep_connection().
- 	 */
--	cont_auth = ifmgd->auth_data && req->bss == ifmgd->auth_data->bss;
-+	cont_auth = ifmgd->auth_data && req->bss == ifmgd->auth_data->bss &&
-+		    ifmgd->auth_data->link_id == req->link_id;
- 
- 	if (req->ie && req->ie_len) {
- 		memcpy(&auth_data->data[auth_data->data_len],
-@@ -7044,7 +7046,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 		/* keep sta info, bssid if matching */
- 		match = ether_addr_equal(ifmgd->auth_data->ap_addr,
--					 assoc_data->ap_addr);
-+					 assoc_data->ap_addr) &&
-+			ifmgd->auth_data->link_id == req->link_id;
- 		ieee80211_destroy_auth_data(sdata, match);
- 	}
- 
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index eaef88a603e5..f8bec5ee5b44 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -299,7 +299,7 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	if (!sta->sta.deflink.ht_cap.ht_supported &&
+ 	    sta->sdata->vif.bss_conf.chandef.chan->band != NL80211_BAND_6GHZ) {
+ 		ht_dbg(sta->sdata,
+-		       "STA %pM erroneously requests BA session on tid %d w/o QoS\n",
++		       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
+ 		       sta->sta.addr, tid);
+ 		/* send a response anyway, it's an error case if we get here */
+ 		goto end;
 -- 
 2.37.3
 
