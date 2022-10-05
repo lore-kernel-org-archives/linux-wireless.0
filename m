@@ -2,24 +2,24 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22333C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 08:33:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F74C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 08:33:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230061AbiJEIdM (ORCPT
+        id S230038AbiJEIdN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 04:33:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32850 "EHLO
+        Wed, 5 Oct 2022 04:33:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230056AbiJEIdE (ORCPT
+        with ESMTP id S230054AbiJEIdE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Oct 2022 04:33:04 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A322E74DC6
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 01:32:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 79615753AD
+        for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 01:32:51 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2958W88G0010386, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2958W88F0010386, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2958W88G0010386
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2958W88F0010386
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
         Wed, 5 Oct 2022 16:32:08 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
@@ -29,14 +29,14 @@ Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 5 Oct 2022
- 16:32:28 +0800
+ 16:32:27 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <echuang@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/6] wifi: rtw89: 8852b: set proper configuration before loading NCTL
-Date:   Wed, 5 Oct 2022 16:32:09 +0800
-Message-ID: <20221005083212.45683-4-pkshih@realtek.com>
+Subject: [PATCH 2/6] wifi: rtw89: parse PHY status only when PPDU is to_self
+Date:   Wed, 5 Oct 2022 16:32:08 +0800
+Message-ID: <20221005083212.45683-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221005083212.45683-1-pkshih@realtek.com>
 References: <20221005083212.45683-1-pkshih@realtek.com>
@@ -65,61 +65,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Before loading RF NCTL table, we need to configure IQK/DPK clock and reset
-them, and then polling NCTL state ready. Since 8852BE needs additional
-one setting, add it by this patch. Also, give them proper names.
+From: Eric Huang <echuang@realtek.com>
 
+Without this fix, some non-self packets are used to count CFO (center
+frequency offset), and average CFO has unstable variation. Then, it causes
+unexpected performance.
+
+Signed-off-by: Eric Huang <echuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/phy.c | 12 +++++++-----
- drivers/net/wireless/realtek/rtw89/reg.h |  2 ++
- 2 files changed, 9 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index d9c4debecc622..fb7872225ee3d 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -1368,13 +1368,15 @@ static void rtw89_phy_init_rf_nctl(struct rtw89_dev *rtwdev)
- 	int ret;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index bc2994865372b..a0fa9639b5097 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -1255,6 +1255,9 @@ static int rtw89_core_rx_parse_phy_sts(struct rtw89_dev *rtwdev,
+ 	if (phy_ppdu->ie < RTW89_CCK_PKT)
+ 		return -EINVAL;
  
- 	/* IQK/DPK clock & reset */
--	rtw89_phy_write32_set(rtwdev, 0x0c60, 0x3);
--	rtw89_phy_write32_set(rtwdev, 0x0c6c, 0x1);
--	rtw89_phy_write32_set(rtwdev, 0x58ac, 0x8000000);
--	rtw89_phy_write32_set(rtwdev, 0x78ac, 0x8000000);
-+	rtw89_phy_write32_set(rtwdev, R_IOQ_IQK_DPK, 0x3);
-+	rtw89_phy_write32_set(rtwdev, R_GNT_BT_WGT_EN, 0x1);
-+	rtw89_phy_write32_set(rtwdev, R_P0_PATH_RST, 0x8000000);
-+	rtw89_phy_write32_set(rtwdev, R_P1_PATH_RST, 0x8000000);
-+	if (chip->chip_id == RTL8852B)
-+		rtw89_phy_write32_set(rtwdev, R_IOQ_IQK_DPK, 0x2);
- 
- 	/* check 0x8080 */
--	rtw89_phy_write32(rtwdev, 0x8000, 0x8);
-+	rtw89_phy_write32(rtwdev, R_NCTL_CFG, 0x8);
- 
- 	ret = read_poll_timeout(rtw89_phy_nctl_poll, val, val == 0x4, 10,
- 				1000, false, rtwdev);
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 874cca85eaadf..82af17d7d8d31 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -4039,6 +4039,7 @@
- #define B_P0_RFM_TX_OPT BIT(6)
- #define B_P0_RFM_BT_EN BIT(5)
- #define B_P0_RFM_OUT GENMASK(4, 0)
-+#define R_P0_PATH_RST 0x58AC
- #define R_P0_TXDPD 0x58D4
- #define B_P0_TXDPD GENMASK(31, 28)
- #define R_P0_TXPW_RSTB 0x58DC
-@@ -4083,6 +4084,7 @@
- #define R_P1_RFCTM 0x7864
- #define R_P1_RFCTM_RDY BIT(26)
- #define B_P1_RFCTM_VAL GENMASK(25, 20)
-+#define R_P1_PATH_RST 0x78AC
- #define R_P1_TXPW_RSTB 0x78DC
- #define B_P1_TXPW_RSTB_MANON BIT(30)
- #define B_P1_TXPW_RSTB_TSSI BIT(31)
++	if (!phy_ppdu->to_self)
++		return 0;
++
+ 	pos = (u8 *)phy_ppdu->buf + PHY_STS_HDR_LEN;
+ 	end = (u8 *)phy_ppdu->buf + phy_ppdu->len;
+ 	while (pos < end) {
 -- 
 2.25.1
 
