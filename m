@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72570C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E689C433F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Oct 2022 13:01:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230022AbiJENBO (ORCPT
+        id S230038AbiJENBQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Oct 2022 09:01:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41776 "EHLO
+        Wed, 5 Oct 2022 09:01:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230045AbiJENA4 (ORCPT
+        with ESMTP id S230048AbiJENA5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2022 09:00:56 -0400
+        Wed, 5 Oct 2022 09:00:57 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 285801EC5C
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4F961CFF3
         for <linux-wireless@vger.kernel.org>; Wed,  5 Oct 2022 06:00:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=GujKab8TBG7vuyXwNHTACuM5NBxz65biyCHTWfa7zrY=;
-        t=1664974855; x=1666184455; b=siK/Sbi9NTSGTCvwp89Cby/9XnM7htQ4zKJIT71+xiJ+TuH
-        mKgtLCAkBs3VVvLxYQRGGbLdnfK3lpjWZ4iT+sOd8HGrzT8kb7X9blGpqmKvwVX6GmdMFPJT9Xwrz
-        4t29uERH8+FwIFhknD84ROrsF9qTVh0gLwosUNiCov1aJfFrLKw40mA9Zec8UqZmyZF7Rq7zPFyTQ
-        2GUUxPNrqScQjKxtWo4SJ/S/d8hoLo/G7BH7sHT3qJORAmNz5f4eJ5OBr00ch81wvavje8yqmFXUF
-        gi+OkSt+4SOs4Y9mxhk+0Lt0ynd3KHIdL0SakkPm/ZJMwpALzXXz9YvGqEJ3luUw==;
+        Resent-Cc:Resent-Message-ID; bh=kejRBNsSzCbijVEws28khCIFmKWb5Q+voIF3xu66D4c=;
+        t=1664974856; x=1666184456; b=IJZfipf8vO9d4IRhlbroFvvV89Q5wOt3+ggOpNf98z4QxQ6
+        7w/+OhvA/nME2LAfTfZV7pgSnIVboXar8k25tH/W9K7asQlfZyvdN8nvrZatOHCGB2VG16vgFXz7P
+        MgCWoEu3Xrclm4STrVjr3Gu+udJ74oHWOHbf38T2mYAM9LMJuQYfRAFtNDNIkDpib0DlOpCOzWoST
+        pI0FxTqyYhXCP4YLXYxaNRQ0IOwhAGIxxMzi9VlMHG1o7dz+xIyTNLFWpj/PqF/o4uD7UL/oq8bqr
+        rEweaAMU4ogn0PLlnuzhm3JT0oAlWbldqil7u5ZNmZACOZuVFvItxpN3qMCB65gQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1og417-00G2RL-0v;
-        Wed, 05 Oct 2022 15:00:53 +0200
+        id 1og418-00G2RL-0F;
+        Wed, 05 Oct 2022 15:00:54 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 11/28] wifi: mac80211: wme: use ap_addr instead of deflink BSSID
-Date:   Wed,  5 Oct 2022 15:00:31 +0200
-Message-Id: <20221005145226.3270406f08ac.Iba00b0fc46614689b2241c1b7a86734aa9b9f580@changeid>
+Subject: [PATCH 14/28] wifi: mac80211: use link_id in ieee80211_change_bss()
+Date:   Wed,  5 Oct 2022 15:00:34 +0200
+Message-Id: <20221005145226.590dadcad812.I61f4492fce85a5c7717facefeddb20e8528d320c@changeid>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221005130048.217341-1-johannes@sipsolutions.net>
 References: <20221005130048.217341-1-johannes@sipsolutions.net>
@@ -48,28 +48,121 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We use this to look up the destination station, so it
-needs to be the MLD address of the AP for an MLO; use
-ap_addr instead of the BSSID.
+We should set the parameters here per link, except
+unfortunately ap_isolate, but we can't really change
+that anymore so it'll remain a quirk in the API in
+that you need to change it on one of the valid links
+and it'll apply to all.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/wme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/cfg.c | 40 +++++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index ecc1de2e68a5..9fab97f6fbea 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -211,7 +211,7 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
- 		if (sta)
- 			break;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 687b4c878d4a..ef5700eac05c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2554,47 +2554,50 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
+ 				struct bss_parameters *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_link_data *link;
+ 	struct ieee80211_supported_band *sband;
+ 	u32 changed = 0;
  
--		ra = sdata->deflink.u.mgd.bssid;
-+		ra = sdata->vif.cfg.ap_addr;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		ra = skb->data;
+-	if (!sdata_dereference(sdata->deflink.u.ap.beacon, sdata))
++	link = ieee80211_link_or_deflink(sdata, params->link_id, true);
++	if (IS_ERR(link))
++		return PTR_ERR(link);
++
++	if (!sdata_dereference(link->u.ap.beacon, sdata))
+ 		return -ENOENT;
+ 
+-	sband = ieee80211_get_sband(sdata);
++	sband = ieee80211_get_link_sband(link);
+ 	if (!sband)
+ 		return -EINVAL;
+ 
+ 	if (params->use_cts_prot >= 0) {
+-		sdata->vif.bss_conf.use_cts_prot = params->use_cts_prot;
++		link->conf->use_cts_prot = params->use_cts_prot;
+ 		changed |= BSS_CHANGED_ERP_CTS_PROT;
+ 	}
+ 	if (params->use_short_preamble >= 0) {
+-		sdata->vif.bss_conf.use_short_preamble =
+-			params->use_short_preamble;
++		link->conf->use_short_preamble = params->use_short_preamble;
+ 		changed |= BSS_CHANGED_ERP_PREAMBLE;
+ 	}
+ 
+-	if (!sdata->vif.bss_conf.use_short_slot &&
++	if (!link->conf->use_short_slot &&
+ 	    (sband->band == NL80211_BAND_5GHZ ||
+ 	     sband->band == NL80211_BAND_6GHZ)) {
+-		sdata->vif.bss_conf.use_short_slot = true;
++		link->conf->use_short_slot = true;
+ 		changed |= BSS_CHANGED_ERP_SLOT;
+ 	}
+ 
+ 	if (params->use_short_slot_time >= 0) {
+-		sdata->vif.bss_conf.use_short_slot =
+-			params->use_short_slot_time;
++		link->conf->use_short_slot = params->use_short_slot_time;
+ 		changed |= BSS_CHANGED_ERP_SLOT;
+ 	}
+ 
+ 	if (params->basic_rates) {
+-		ieee80211_parse_bitrates(sdata->vif.bss_conf.chandef.width,
++		ieee80211_parse_bitrates(link->conf->chandef.width,
+ 					 wiphy->bands[sband->band],
+ 					 params->basic_rates,
+ 					 params->basic_rates_len,
+-					 &sdata->vif.bss_conf.basic_rates);
++					 &link->conf->basic_rates);
+ 		changed |= BSS_CHANGED_BASIC_RATES;
+-		ieee80211_check_rate_mask(&sdata->deflink);
++		ieee80211_check_rate_mask(link);
+ 	}
+ 
+ 	if (params->ap_isolate >= 0) {
+@@ -2606,30 +2609,29 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
+ 	}
+ 
+ 	if (params->ht_opmode >= 0) {
+-		sdata->vif.bss_conf.ht_operation_mode =
+-			(u16) params->ht_opmode;
++		link->conf->ht_operation_mode = (u16)params->ht_opmode;
+ 		changed |= BSS_CHANGED_HT;
+ 	}
+ 
+ 	if (params->p2p_ctwindow >= 0) {
+-		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow &=
++		link->conf->p2p_noa_attr.oppps_ctwindow &=
+ 					~IEEE80211_P2P_OPPPS_CTWINDOW_MASK;
+-		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow |=
++		link->conf->p2p_noa_attr.oppps_ctwindow |=
+ 			params->p2p_ctwindow & IEEE80211_P2P_OPPPS_CTWINDOW_MASK;
+ 		changed |= BSS_CHANGED_P2P_PS;
+ 	}
+ 
+ 	if (params->p2p_opp_ps > 0) {
+-		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow |=
++		link->conf->p2p_noa_attr.oppps_ctwindow |=
+ 					IEEE80211_P2P_OPPPS_ENABLE_BIT;
+ 		changed |= BSS_CHANGED_P2P_PS;
+ 	} else if (params->p2p_opp_ps == 0) {
+-		sdata->vif.bss_conf.p2p_noa_attr.oppps_ctwindow &=
++		link->conf->p2p_noa_attr.oppps_ctwindow &=
+ 					~IEEE80211_P2P_OPPPS_ENABLE_BIT;
+ 		changed |= BSS_CHANGED_P2P_PS;
+ 	}
+ 
+-	ieee80211_link_info_change_notify(sdata, &sdata->deflink, changed);
++	ieee80211_link_info_change_notify(sdata, link, changed);
+ 
+ 	return 0;
+ }
 -- 
 2.37.3
 
