@@ -2,157 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A92AC43217
-	for <linux-wireless@archiver.kernel.org>; Thu,  6 Oct 2022 11:00:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC30C433F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  6 Oct 2022 11:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231184AbiJFLAz (ORCPT
+        id S231604AbiJFLKM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 6 Oct 2022 07:00:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45426 "EHLO
+        Thu, 6 Oct 2022 07:10:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231421AbiJFLAd (ORCPT
+        with ESMTP id S231473AbiJFLJw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2022 07:00:33 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 052C8C17
-        for <linux-wireless@vger.kernel.org>; Thu,  6 Oct 2022 04:00:32 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 296AqI0P029835;
-        Thu, 6 Oct 2022 11:00:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=FUpW+TcHJwzFUTK2T06ChfCe8BXBkuBely7XwKdn/8k=;
- b=LN9TWYzwLanJ/yxnfC2k9uq8hxZZErnEqWalV/xFqhy8w+vOlkDEx97f1cwwZWlA0kB/
- myUZc0MXblJLBA28i0PTKR/aV5AuTRZIo7TCQ56yiHa2tOgBo/iodHcq0IhOexoRp6sH
- SKGVgGerKNr2wUSrRV3qst+1O3L05c5hKw6qsm6KrwmngIZoTMled/z5jMKVXeytIfnN
- 3cjbb4zf+y3r9FhXkSNDN0k3emkswJNRqAOeRJYu8ILzqeQM87y4hAZOHpmbiTnlTb2a
- i4/sQRN1wTS1uCFLSMZJfVY5VlLUSTvzKJUpP5Z21ec6RAfT/MKNTqygSDSfYXn8OuK6 pg== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k0rf43uvv-1
+        Thu, 6 Oct 2022 07:09:52 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAAB4B80
+        for <linux-wireless@vger.kernel.org>; Thu,  6 Oct 2022 04:09:34 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2968oV3V008266;
+        Thu, 6 Oct 2022 11:09:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=JOU6sAf6K59sYTg+SjQ6b0QFX7OSsS+9DqOQIY3Xao8=;
+ b=UxJx6logFvb2mPHCWfhoRXjM0wCk+sL2aWBKEyiKfqjG28mCVT78F2VVo5Vz6jCxcY7e
+ WhSppDarvFg3qGciT12DYjLWV8XusbWhGK0D2diNKd0rJmdPkbVkVGh6z+RjPdZfvDoj
+ wabmgtCny03jg5KNCILsVq5WV/2wX9hrGx+g8C36UgTlX3NuwUHPuWlTblO/pDkoRFV6
+ UxJK72dDEqEF/3BejOgSzeY5gxF+ou4iJiZSkLLkmV63VyL08HTJRPDebCNnAsh6Funp
+ eEzO0+hGxkXDfdF6AnGr8pooy28vk2fEnQY9Dmnne8Cp3I80pXOoax2LgswPQMxlZNgf Bg== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k1qykrruy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 06 Oct 2022 11:00:29 +0000
+        Thu, 06 Oct 2022 11:09:30 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 296B0SjV017405
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 296B9UkY002559
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 6 Oct 2022 11:00:28 GMT
-Received: from kathirve-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Thu, 6 Oct 2022 04:00:26 -0700
-From:   Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Sriram R <quic_srirrama@quicinc.com>,
-        Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
-Subject: [PATCH 7/8] wifi: ath11k: add new hw ops for IPQ5018 to get rx dest ring hashmap
-Date:   Thu, 6 Oct 2022 16:29:12 +0530
-Message-ID: <20221006105913.18356-8-quic_kathirve@quicinc.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20221006105913.18356-1-quic_kathirve@quicinc.com>
-References: <20221006105913.18356-1-quic_kathirve@quicinc.com>
+        Thu, 6 Oct 2022 11:09:30 GMT
+Received: from [10.216.43.141] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Thu, 6 Oct 2022
+ 04:09:28 -0700
+Message-ID: <13b44ce9-e000-cdcf-c057-b176edb6d31f@quicinc.com>
+Date:   Thu, 6 Oct 2022 16:39:23 +0530
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH 05/28] wifi: cfg80211: support reporting failed links
+Content-Language: en-US
+To:     Johannes Berg <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>
+References: <20221005145226.2224328320e7.I53966b9c7572fe1a08a7dc02ed29be9e1b0467fc@changeid>
+ <0e354734-6f6b-8170-b453-e699fc9962e5@quicinc.com>
+ <0fd2932c29adcc6be5fe5528d297b7deb0e0617b.camel@sipsolutions.net>
+From:   Veerendranath Jakkam <quic_vjakkam@quicinc.com>
+In-Reply-To: <0fd2932c29adcc6be5fe5528d297b7deb0e0617b.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: CEk7U8onRqfq3CGgy-fRgMr7S8NEcpKQ
-X-Proofpoint-ORIG-GUID: CEk7U8onRqfq3CGgy-fRgMr7S8NEcpKQ
+X-Proofpoint-ORIG-GUID: hj74eK2pFKY0zcOaKIVuiQCyElaeEX13
+X-Proofpoint-GUID: hj74eK2pFKY0zcOaKIVuiQCyElaeEX13
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
  definitions=2022-10-05_05,2022-10-06_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- priorityscore=1501 bulkscore=0 phishscore=0 mlxlogscore=999 suspectscore=0
- spamscore=0 mlxscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2210060066
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ clxscore=1015 suspectscore=0 phishscore=0 spamscore=0 priorityscore=1501
+ bulkscore=0 mlxscore=0 impostorscore=0 mlxlogscore=748 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2210060067
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sriram R <quic_srirrama@quicinc.com>
 
-The Destination ring control register is different
-for IPQ5018 when compared to IPQ8074/IPQ6018/QCN9074.
-Hence create a new hw ops to fetch the hash ring map
-for different device variants. ipq5018 hw ops
-is similar to qcn9074 except for this change, so reuse
-all the qcn9074 ops for ipq5018.
+On 10/6/2022 4:21 PM, Johannes Berg wrote:
+> On Thu, 2022-10-06 at 16:19 +0530, Veerendranath Jakkam wrote:
+>> I think similar enhancement needed for cfg80211_roamed/NL80211_CMD_ROAM
+>> also to know accepted and rejected links info during roaming.
+>>
+> Not sure, in that case we might care only about the successful links
+> since wpa_s didn't request the others, so maybe it doesn't matter?
 
-Tested-on : IPQ5018 hw1.0 AHB WLAN.HK.2.5.0.1-01192-QCAHKSWPL_SILICONZ-1 v1
+Drivers can offload EAPOL 4WHS to wpa_supplicant during roaming with 
+non-FT AKMs. In that case supplicant needs to know rejected links info 
+to validate AP's MLO Link KDEs in 3/4 frame.
 
-Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
-Co-developed-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
-Signed-off-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/hw.c | 44 ++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+Ex: Driver handles only re-association request and response frames while 
+doing roaming with non-FT AKM then offload 4WHS to wpa_supplicant
 
-diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
-index bd77314de65e..3ece72b587a5 100644
---- a/drivers/net/wireless/ath/ath11k/hw.c
-+++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -791,6 +791,49 @@ static void ath11k_hw_wcn6855_reo_setup(struct ath11k_base *ab)
- 			   ring_hash_map);
- }
- 
-+static void ath11k_hw_ipq5018_reo_setup(struct ath11k_base *ab)
-+{
-+	u32 reo_base = HAL_SEQ_WCSS_UMAC_REO_REG;
-+	u32 val;
-+
-+	/* Each hash entry uses three bits to map to a particular ring. */
-+	u32 ring_hash_map = HAL_HASH_ROUTING_RING_SW1 << 0 |
-+		HAL_HASH_ROUTING_RING_SW2 << 4 |
-+		HAL_HASH_ROUTING_RING_SW3 << 8 |
-+		HAL_HASH_ROUTING_RING_SW4 << 12 |
-+		HAL_HASH_ROUTING_RING_SW1 << 16 |
-+		HAL_HASH_ROUTING_RING_SW2 << 20 |
-+		HAL_HASH_ROUTING_RING_SW3 << 24 |
-+		HAL_HASH_ROUTING_RING_SW4 << 28;
-+
-+	val = ath11k_hif_read32(ab, reo_base + HAL_REO1_GEN_ENABLE);
-+
-+	val &= ~HAL_REO1_GEN_ENABLE_FRAG_DST_RING;
-+	val |= FIELD_PREP(HAL_REO1_GEN_ENABLE_FRAG_DST_RING,
-+			HAL_SRNG_RING_ID_REO2SW1) |
-+		FIELD_PREP(HAL_REO1_GEN_ENABLE_AGING_LIST_ENABLE, 1) |
-+		FIELD_PREP(HAL_REO1_GEN_ENABLE_AGING_FLUSH_ENABLE, 1);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_GEN_ENABLE, val);
-+
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_0(ab),
-+			   HAL_DEFAULT_REO_TIMEOUT_USEC);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_1(ab),
-+			   HAL_DEFAULT_REO_TIMEOUT_USEC);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_2(ab),
-+			   HAL_DEFAULT_REO_TIMEOUT_USEC);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_3(ab),
-+			   HAL_DEFAULT_REO_TIMEOUT_USEC);
-+
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_DEST_RING_CTRL_IX_0,
-+			   ring_hash_map);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_DEST_RING_CTRL_IX_1,
-+			   ring_hash_map);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_DEST_RING_CTRL_IX_2,
-+			   ring_hash_map);
-+	ath11k_hif_write32(ab, reo_base + HAL_REO1_DEST_RING_CTRL_IX_3,
-+			   ring_hash_map);
-+}
-+
- static u16 ath11k_hw_ipq8074_mpdu_info_get_peerid(u8 *tlv_data)
- {
- 	u16 peer_id = 0;
-@@ -1117,6 +1160,7 @@ const struct ath11k_hw_ops ipq5018_ops = {
- 	.rx_desc_get_mpdu_ppdu_id = ath11k_hw_qcn9074_rx_desc_get_mpdu_ppdu_id,
- 	.rx_desc_set_msdu_len = ath11k_hw_qcn9074_rx_desc_set_msdu_len,
- 	.rx_desc_get_attention = ath11k_hw_qcn9074_rx_desc_get_attention,
-+	.reo_setup = ath11k_hw_ipq5018_reo_setup,
- 	.rx_desc_get_msdu_payload = ath11k_hw_qcn9074_rx_desc_get_msdu_payload,
- 	.mpdu_info_get_peerid = ath11k_hw_ipq8074_mpdu_info_get_peerid,
- 	.rx_desc_mac_addr2_valid = ath11k_hw_ipq9074_rx_desc_mac_addr2_valid,
--- 
-2.38.0
+>
+> In any case, I have no driver I deal with that would ever use this API,
+> so I can't really do anything about it.
 
+No problem, I will post the required changes for 
+cfg80211_roamed/NL80211_CMD_ROAM path, hope that is fine.
+
+>
+> johannes
