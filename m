@@ -2,52 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B3A5C4332F
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31746C43219
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:21:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231645AbiJIWU5 (ORCPT
+        id S231757AbiJIWVy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:20:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44212 "EHLO
+        Sun, 9 Oct 2022 18:21:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231858AbiJIWTf (ORCPT
+        with ESMTP id S231258AbiJIWTw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:19:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5703433A20;
-        Sun,  9 Oct 2022 15:16:44 -0700 (PDT)
+        Sun, 9 Oct 2022 18:19:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA00731EC4;
+        Sun,  9 Oct 2022 15:17:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 891B960D14;
-        Sun,  9 Oct 2022 22:13:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60C0EC433C1;
-        Sun,  9 Oct 2022 22:13:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1301060CF5;
+        Sun,  9 Oct 2022 22:16:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5254FC433B5;
+        Sun,  9 Oct 2022 22:16:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665353584;
-        bh=OgQjpOolkW7jauhX45LnxD4niW+zPKmRX1OZN/8owKE=;
+        s=k20201202; t=1665353788;
+        bh=ihi/X+jRwStHBrEQc38wWsGR2lD4+0D/n45zAeO5vlU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cCca7TzqCxiDmo1SgHINfsnYSVqqKoAJkYvR0N174Lm6ClfI1hFGooTSS1fe8jy+X
-         yt8CDSm/N9/xyidr/jF5Zkwhm3H6txlAVlnGySTTSOZB31PewHNZvGxlnzwwFdlHTn
-         W89lnG2w2UKF2KcGfYU93yUyKuLM/89XriU79SD+sxr5EO0TwOkmMv9zZBcbnpZEYl
-         EVSIZ+ZW2maM8AnH+u80k2vD7bSE9uIGRn2vsnlEFJLuh9dOTG2VJlOwQ+uNqMV9is
-         i2QivTOz8LA+23HrSTGWoqdSVhIzNonYuGt33eZQGbsCZuyixhwTYpDjo0n2BUkbEX
-         vgaW22Xkg6fCA==
+        b=DCASfawybmc53IrzPLWmkFe35lOG+92QUFIhPOAgw/11x0bu3NcktyJ6SL1q9/iXg
+         uGJwUtI4qdzBjyJoKAjJicOa6lqYoQnB+BH3kbcSerPqM5MaSPdqYbvqsWCiOdAO03
+         qj/VZZfyhu7Yevq1IBLWP5ru1OHGMrRIMBb5N7Q7Q80YM1chjuC2NM0p4LM1JeCyKF
+         fkGEHc+/qdu0JqctzZASSpdi1atPOcIie512rrleGobxuQT324uX+Gh+y/nkn8bZmM
+         JnJa/BCw/fM1CEfOhjbx8mbk1244PGVJHZ9B2CjotENpryPxnnRXFVweBrF3kxnqql
+         iJhB9Crx598+g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Daniel Golle <daniel@makrotopia.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
+Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        helmut.schaa@googlemail.com, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.0 64/77] wifi: rt2x00: set VGC gain for both chains of MT7620
-Date:   Sun,  9 Oct 2022 18:07:41 -0400
-Message-Id: <20221009220754.1214186-64-sashal@kernel.org>
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.19 24/73] rtw89: ser: leave lps with mutex
+Date:   Sun,  9 Oct 2022 18:14:02 -0400
+Message-Id: <20221009221453.1216158-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221009220754.1214186-1-sashal@kernel.org>
-References: <20221009220754.1214186-1-sashal@kernel.org>
+In-Reply-To: <20221009221453.1216158-1-sashal@kernel.org>
+References: <20221009221453.1216158-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,36 +55,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Daniel Golle <daniel@makrotopia.org>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-[ Upstream commit 0e09768c085709e10ece3b68f6ac921d3f6a9caa ]
+[ Upstream commit 8676031bae1c91037d06341214f4150b33707c68 ]
 
-Set bbp66 for all chains of the MT7620.
+Calling rtw89_leave_lps() should hold rtwdev::mutex.
+So, fix it.
 
-Reported-by: Serge Vasilugin <vasilugin@yandex.ru>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/29e161397e5c9d9399da0fe87d44458aa2b90a78.1663445157.git.daniel@makrotopia.org
+Link: https://lore.kernel.org/r/20220704023453.19935-5-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/ser.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 5e7bca935dd4..fec85db7dbc7 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -5645,7 +5645,8 @@ static inline void rt2800_set_vgc(struct rt2x00_dev *rt2x00dev,
- 	if (qual->vgc_level != vgc_level) {
- 		if (rt2x00_rt(rt2x00dev, RT3572) ||
- 		    rt2x00_rt(rt2x00dev, RT3593) ||
--		    rt2x00_rt(rt2x00dev, RT3883)) {
-+		    rt2x00_rt(rt2x00dev, RT3883) ||
-+		    rt2x00_rt(rt2x00dev, RT6352)) {
- 			rt2800_bbp_write_with_rx_chain(rt2x00dev, 66,
- 						       vgc_level);
- 		} else if (rt2x00_rt(rt2x00dev, RT5592)) {
+diff --git a/drivers/net/wireless/realtek/rtw89/ser.c b/drivers/net/wireless/realtek/rtw89/ser.c
+index 9e95ed972710..5d88200cbd3e 100644
+--- a/drivers/net/wireless/realtek/rtw89/ser.c
++++ b/drivers/net/wireless/realtek/rtw89/ser.c
+@@ -152,7 +152,10 @@ static void ser_state_run(struct rtw89_ser *ser, u8 evt)
+ 	rtw89_debug(rtwdev, RTW89_DBG_SER, "ser: %s receive %s\n",
+ 		    ser_st_name(ser), ser_ev_name(ser, evt));
+ 
++	mutex_lock(&rtwdev->mutex);
+ 	rtw89_leave_lps(rtwdev);
++	mutex_unlock(&rtwdev->mutex);
++
+ 	ser->st_tbl[ser->state].st_func(ser, evt);
+ }
+ 
 -- 
 2.35.1
 
