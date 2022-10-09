@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12034C433F5
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:16:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49C16C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:19:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231504AbiJIWQx (ORCPT
+        id S231244AbiJIWTw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:16:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56554 "EHLO
+        Sun, 9 Oct 2022 18:19:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231492AbiJIWQU (ORCPT
+        with ESMTP id S231239AbiJIWSI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:16:20 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76F1B6278;
-        Sun,  9 Oct 2022 15:14:17 -0700 (PDT)
+        Sun, 9 Oct 2022 18:18:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12D133718B;
+        Sun,  9 Oct 2022 15:15:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AF3BCB80DCE;
-        Sun,  9 Oct 2022 22:11:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CC3EC433D6;
-        Sun,  9 Oct 2022 22:11:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 58AEB60CF5;
+        Sun,  9 Oct 2022 22:12:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57D7AC433B5;
+        Sun,  9 Oct 2022 22:12:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665353469;
-        bh=qgniTSF+OJAJ5oQQqmSqvcCBvyeFINIUvqYDGmh5u6Y=;
+        s=k20201202; t=1665353578;
+        bh=Nf/HQ7h/Z5nwQBjoAMYb7EpY/DT/8776VVnjScGaUA8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hf023Bi/MhNYrPGWqUfBwqDskjI7fkkT0n2B/44RTNgoJgsyOwJyowIKFSkmWLzVF
-         7DdPcAVvOEaTFTYM6v5e6Xf58VLz1wtZNLUB+QdMJqs6GO8zZ4c8ZN1AjYB5UX2M/3
-         9K6QY4hhW/AphSIB8YPYHq2Vj4JTVaAq6SXQ2HF2+HW6q4YUtw876n4BkUVReavPOV
-         V32nGufGmtL3bRQgFhpEGgWW0fNiAFDspgpv7MwI3cuaIilama+AmLP8YYZuRxyIFH
-         DRSNltJVk4p7NT8FRPV8on562kByGIkhz4/GfAeE7nB8p97Ha58ZhkMqYpHOLozPEB
-         fV0JgwXvjTFww==
+        b=jxFEvVpMUVk8AJkCSABuYUZfmm1ZMekSytRECLhu8BvgZYbpSTBTmiV2baojPz+IF
+         xDTzcYoWJ+HZDEQ74Rd5WRhaG/nqSl0fMx2I2uTnWUFl90KRnfCcLuWqLPMQw6qdvh
+         vxTk6o2+LEmBuMWJxkmcTL5VdWElsSvbPRzKy63apBSlDOz7IrYV8uucf2AFw6yTi+
+         UoxgvabFCa1NACHFbUP5gFMj2+xQ22iTvELQuRuQYQvYawwB7z8eBBanQ47lAw3hci
+         VBx39vdHED6tu70IgvQxPVOHgrY80vZpoH7HzmVoDJ56f+F3V+L2IrUznnkk0xzjV/
+         6xsFLdeI+KNSQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Po-Hao Huang <phhuang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+Cc:     Daniel Golle <daniel@makrotopia.org>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
         Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.0 42/77] wifi: rtw89: free unused skb to prevent memory leak
-Date:   Sun,  9 Oct 2022 18:07:19 -0400
-Message-Id: <20221009220754.1214186-42-sashal@kernel.org>
+        stf_xl@wp.pl, helmut.schaa@googlemail.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 62/77] wifi: rt2x00: don't run Rt5592 IQ calibration on MT7620
+Date:   Sun,  9 Oct 2022 18:07:39 -0400
+Message-Id: <20221009220754.1214186-62-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221009220754.1214186-1-sashal@kernel.org>
 References: <20221009220754.1214186-1-sashal@kernel.org>
@@ -55,33 +55,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+From: Daniel Golle <daniel@makrotopia.org>
 
-[ Upstream commit eae672f386049146058b9e5d3d33e9e4af9dca1d ]
+[ Upstream commit d3aad83d05aec0cfd7670cf0028f2ad4b81de92e ]
 
-This avoid potential memory leak under power saving mode.
+The function rt2800_iq_calibrate is intended for Rt5592 only.
+Don't call it for MT7620 which has it's own calibration functions.
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Reported-by: Serge Vasilugin <vasilugin@yandex.ru>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220916033811.13862-6-pkshih@realtek.com
+Link: https://lore.kernel.org/r/31a1c34ddbd296b82f38c18c9ae7339059215fdc.1663445157.git.daniel@makrotopia.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index a5880a54812e..8b338e5ce364 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -872,6 +872,7 @@ int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
- 		rtw89_debug(rtwdev, RTW89_DBG_FW,
- 			    "ignore h2c due to power is off with firmware state=%d\n",
- 			    test_bit(RTW89_FLAG_FW_RDY, rtwdev->flags));
-+		dev_kfree_skb(skb);
- 		return 0;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 18102fbe36d6..de81b6060359 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -4365,7 +4365,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2*rt2x00dev->lna_gain;
+ 		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
+ 
+-		rt2800_iq_calibrate(rt2x00dev, rf->channel);
++		if (rt2x00_rt(rt2x00dev, RT5592))
++			rt2800_iq_calibrate(rt2x00dev, rf->channel);
  	}
  
+ 	bbp = rt2800_bbp_read(rt2x00dev, 4);
 -- 
 2.35.1
 
