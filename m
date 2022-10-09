@@ -2,53 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD57C4332F
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:40:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96117C4332F
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:41:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233044AbiJIWkb (ORCPT
+        id S232273AbiJIWlK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:40:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48726 "EHLO
+        Sun, 9 Oct 2022 18:41:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233430AbiJIWkI (ORCPT
+        with ESMTP id S233477AbiJIWkO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:40:08 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98FBE41536;
-        Sun,  9 Oct 2022 15:21:37 -0700 (PDT)
+        Sun, 9 Oct 2022 18:40:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6156E3122B;
+        Sun,  9 Oct 2022 15:21:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AB4DFB80DD6;
-        Sun,  9 Oct 2022 22:11:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5177BC433C1;
-        Sun,  9 Oct 2022 22:11:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B1C0560D2B;
+        Sun,  9 Oct 2022 22:21:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA296C433D7;
+        Sun,  9 Oct 2022 22:20:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665353467;
-        bh=Ltf1k6nZbq/4KQz6xsOUMvd7H8pKv9s2/hbk21ToTPs=;
+        s=k20201202; t=1665354061;
+        bh=nUdMMQEpAsFa/VwMhJUvn/GloQUOApviNiwb6m3B3EU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mFGwaHuiCdUPufA3+pk12DdJJdaFnnMX2FMzvPLv9D+OZbj7Gj9/PgF8XGvcTKsCQ
-         sEG3j6JYWYn8IIZDsW1vbqxjRHG0a5TuL/u5z+BWBE7Kf3mBpJk4vucfpKaI+iDRpU
-         ayK6uZRIhmbIrJZN07UEcGw5ZpoMgVBfU8qR2yWISYX8rlOOAfzx5EX+CxiEM/s4Cm
-         wrTZYyCkSVn21/1UuejTYmZ4bQSo6O/jpAHZU7fK63y288tXcRFmNXVRwzrEglg/KF
-         EPmzpuUVw+k0ZUZppq6GAfE/jkuqWJKCFB8dYhWhdY2FgDdcmYjccQyxRpEWlPyhzY
-         2yyoRU7nniGkQ==
+        b=AmAwti6/dqVBAf3hBb4enBHunrUoV4XsQ8PkXEBVKOJHgaXpapl2T6KvkzUzwbf+n
+         hv4k2w7tF8opojWRw7PufH58MUHXrAvnjiskYMyljCyH/VC5xp+mUvgzguJP7ZgKmj
+         hZOLlIQa6rsLJVBICDbFLIkYRuRjjvYRb1lTtdMJQYxgZyVlcEHRP/bdP5LR73n5FS
+         Gs3hk+eRZEAFQ2IrXAB6c/gukXx1ujsd4tDZj+PhQY9a2QrMPOGMQ3vbBPfNyd0L5Z
+         J21ACmIAQYv1q08UawNIEadSTDS6ph9vQZH6IJCAViGK9jpTl1YSpiYJkEa0WfHqdi
+         059EfhEEJ4LiA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sean Wang <sean.wang@mediatek.com>, YN Chen <YN.Chen@mediatek.com>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        lorenzo@kernel.org, ryder.lee@mediatek.com, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, matthias.bgg@gmail.com, deren.wu@mediatek.com,
-        johannes.berg@intel.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.0 41/77] wifi: mt76: mt7921: reset msta->airtime_ac while clearing up hw value
-Date:   Sun,  9 Oct 2022 18:07:18 -0400
-Message-Id: <20221009220754.1214186-41-sashal@kernel.org>
+Cc:     Daniel Golle <daniel@makrotopia.org>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        helmut.schaa@googlemail.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 38/46] wifi: rt2x00: set correct TX_SW_CFG1 MAC register for MT7620
+Date:   Sun,  9 Oct 2022 18:19:03 -0400
+Message-Id: <20221009221912.1217372-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221009220754.1214186-1-sashal@kernel.org>
-References: <20221009220754.1214186-1-sashal@kernel.org>
+In-Reply-To: <20221009221912.1217372-1-sashal@kernel.org>
+References: <20221009221912.1217372-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,35 +56,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sean Wang <sean.wang@mediatek.com>
+From: Daniel Golle <daniel@makrotopia.org>
 
-[ Upstream commit 1bf66dc31032ff5292f4d5b76436653f269fcfbd ]
+[ Upstream commit eeb50acf15762b61921f9df18663f839f387c054 ]
 
-We should reset mstat->airtime_ac along with clear up the entries in the
-hardware WLAN table for the Rx and Rx accumulative airtime. Otherwsie, the
-value msta->airtime_ac - [tx, rx]_last may be a negative and that is not
-the actual airtime the device took in the last run.
+Set correct TX_SW_CFG1 MAC register as it is done also in v3 of the
+vendor driver[1].
 
-Reported-by: YN Chen <YN.Chen@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+[1]: https://gitlab.com/dm38/padavan-ng/-/blob/master/trunk/proprietary/rt_wifi/rtpci/3.0.X.X/mt76x2/chips/rt6352.c#L531
+Reported-by: Serge Vasilugin <vasilugin@yandex.ru>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/4be38975ce600a34249e12d09a3cb758c6e71071.1663445157.git.daniel@makrotopia.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 1438a9f8d1fd..33bd64fe5c74 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -752,6 +752,7 @@ void mt7921_mac_sta_assoc(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 
- 	mt7921_mac_wtbl_update(dev, msta->wcid.idx,
- 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
-+	memset(msta->airtime_ac, 0, sizeof(msta->airtime_ac));
- 
- 	mt7921_mcu_sta_update(dev, sta, vif, true, MT76_STA_INFO_STATE_ASSOC);
- 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 0a47180f321a..cc879035acae 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -5868,7 +5868,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+ 	} else if (rt2x00_rt(rt2x00dev, RT6352)) {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000401);
+-		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x000C0000);
++		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x000C0001);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, TX_ALC_VGA3, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, TX0_BB_GAIN_ATTEN, 0x0);
 -- 
 2.35.1
 
