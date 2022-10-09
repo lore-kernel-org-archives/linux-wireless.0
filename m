@@ -2,49 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2574AC43219
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:44:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32AB5C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:44:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232248AbiJIWoX (ORCPT
+        id S232300AbiJIWoZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:44:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40728 "EHLO
+        Sun, 9 Oct 2022 18:44:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233055AbiJIWns (ORCPT
+        with ESMTP id S233084AbiJIWnv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:43:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1018C4316F;
-        Sun,  9 Oct 2022 15:22:41 -0700 (PDT)
+        Sun, 9 Oct 2022 18:43:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA1441D33;
+        Sun,  9 Oct 2022 15:22:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7E86660CF1;
-        Sun,  9 Oct 2022 22:21:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BB90C433C1;
-        Sun,  9 Oct 2022 22:21:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BBB4A60CF5;
+        Sun,  9 Oct 2022 22:20:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1175C433C1;
+        Sun,  9 Oct 2022 22:20:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665354062;
-        bh=iYlU4/p1iGxQIlLnWlGWS/f9607nv1e5iqmLXZRpJv4=;
+        s=k20201202; t=1665354059;
+        bh=3dk4lsVmXc2kcE7gGqoX3o3+0bQ4x9VGpzcSJYn+YW4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NH0/hOhf3l3jSuZ9bCZHq3I4dJ91F6cbNHrLlpUqNEG4zZDEekAsXnoD4w/jVwMOg
-         fmwu31z/Gq6lZLpsmBztAcokJT4/Y5avKHUW7MC+tO0aBwrWvlJqkmn6f3Z37oe7Ln
-         P89i1o/IlRRxH1pqj7ESFUlbWQs/5ng0qJ2MfMQNsrEAwgaxs+S1BF0eWIGZ5VwQc0
-         6YAnBu3AK0CN6DthiCmkV7v6UrBncandu5B0lsIodMD1heEU0u6lwn0XIytquP9t8L
-         uOraFk9EFFQElmMHsV0Vb1XdbbeBRbP3gUyTBkUdEk189Oy5v5IetSKSPcjDpxW93s
-         O6DCxlVIoz7TQ==
+        b=CPqnJM8McNXNqfU3hMaaaqXvLfFMM6mcNB7B1dYOv4zS5IQQzMqXpZoAQXb1hUmLD
+         B2jY56tfI0dVWtmk1LupcMzvRkS2JgOg3nhiqD+SzmrL1T6+MX9p2ozb/lK+Q+uiFF
+         qv9KhYx7crK14Xm5cvjww5FwXME8c8DVsgDfVQ80cr7p4Y9rqIY+I4ltyftrJ6ySZo
+         /35oXf7KQdvIwgRHL8MI92radd6bcr3PMjSWneToUI8EXM0i6k2N/npWDMmF+peyeE
+         Te35wOUVGyxEMOvFIqXce9vfOKvnZMSmA9gdtaxyKnK1PVTvxnuhTVWHzcUSChwZ7x
+         TPxlyp/xnpoRg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Daniel Golle <daniel@makrotopia.org>,
         Serge Vasilugin <vasilugin@yandex.ru>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
         Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        helmut.schaa@googlemail.com, davem@davemloft.net,
+        stf_xl@wp.pl, helmut.schaa@googlemail.com, davem@davemloft.net,
         edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 39/46] wifi: rt2x00: set VGC gain for both chains of MT7620
-Date:   Sun,  9 Oct 2022 18:19:04 -0400
-Message-Id: <20221009221912.1217372-39-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 37/46] wifi: rt2x00: don't run Rt5592 IQ calibration on MT7620
+Date:   Sun,  9 Oct 2022 18:19:02 -0400
+Message-Id: <20221009221912.1217372-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221009221912.1217372-1-sashal@kernel.org>
 References: <20221009221912.1217372-1-sashal@kernel.org>
@@ -58,34 +57,34 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Daniel Golle <daniel@makrotopia.org>
 
-[ Upstream commit 0e09768c085709e10ece3b68f6ac921d3f6a9caa ]
+[ Upstream commit d3aad83d05aec0cfd7670cf0028f2ad4b81de92e ]
 
-Set bbp66 for all chains of the MT7620.
+The function rt2800_iq_calibrate is intended for Rt5592 only.
+Don't call it for MT7620 which has it's own calibration functions.
 
 Reported-by: Serge Vasilugin <vasilugin@yandex.ru>
 Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/29e161397e5c9d9399da0fe87d44458aa2b90a78.1663445157.git.daniel@makrotopia.org
+Link: https://lore.kernel.org/r/31a1c34ddbd296b82f38c18c9ae7339059215fdc.1663445157.git.daniel@makrotopia.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index cc879035acae..92a5231cdd95 100644
+index deddb0afd312..0a47180f321a 100644
 --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
 +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -5645,7 +5645,8 @@ static inline void rt2800_set_vgc(struct rt2x00_dev *rt2x00dev,
- 	if (qual->vgc_level != vgc_level) {
- 		if (rt2x00_rt(rt2x00dev, RT3572) ||
- 		    rt2x00_rt(rt2x00dev, RT3593) ||
--		    rt2x00_rt(rt2x00dev, RT3883)) {
-+		    rt2x00_rt(rt2x00dev, RT3883) ||
-+		    rt2x00_rt(rt2x00dev, RT6352)) {
- 			rt2800_bbp_write_with_rx_chain(rt2x00dev, 66,
- 						       vgc_level);
- 		} else if (rt2x00_rt(rt2x00dev, RT5592)) {
+@@ -4365,7 +4365,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2*rt2x00dev->lna_gain;
+ 		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
+ 
+-		rt2800_iq_calibrate(rt2x00dev, rf->channel);
++		if (rt2x00_rt(rt2x00dev, RT5592))
++			rt2800_iq_calibrate(rt2x00dev, rf->channel);
+ 	}
+ 
+ 	bbp = rt2800_bbp_read(rt2x00dev, 4);
 -- 
 2.35.1
 
