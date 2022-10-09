@@ -2,49 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A7DC433F5
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62212C433FE
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:30:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232196AbiJIWaZ (ORCPT
+        id S232266AbiJIWa2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:30:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39724 "EHLO
+        Sun, 9 Oct 2022 18:30:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232434AbiJIW3c (ORCPT
+        with ESMTP id S231764AbiJIW0q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:29:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FAAC3AB3B;
-        Sun,  9 Oct 2022 15:19:16 -0700 (PDT)
+        Sun, 9 Oct 2022 18:26:46 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F7E32E680;
+        Sun,  9 Oct 2022 15:18:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1052260C27;
-        Sun,  9 Oct 2022 22:19:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28991C433D6;
-        Sun,  9 Oct 2022 22:19:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id ACB65B80DF2;
+        Sun,  9 Oct 2022 22:17:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12165C43470;
+        Sun,  9 Oct 2022 22:17:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665353955;
-        bh=b1JReA7msw8YFQ4mrmLLiR3n9OjUXXEI8mQ1BJL3EgM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=sac1LphMinSZarnx36G8qI6pV1BbKZCPo464Ql2KO+yotU9Lyf4xwWhCJSZDaUIkB
-         AHyjd4KYZ+IkizagoX00bmU36tIXKnRC6vszBzWu8UWqRtaEIghsLPn/EJCUvGgHVe
-         vy5YhfCpxXe89ap0zV8UyAQf6an+U5YvxOCYWpWqIBRMQ7Mw+JMNYI5+4aRaqEun6C
-         W1RhrDC4hjLVtPHcMZTTr10civv1GtGUsIdJmeAxC74LZefHTbWTMPEA2GRb0AgfaP
-         2YpRPPtiGL9fMXNxRCoC1SFgwnlWvqEgOSB0IGB8zQ/ipa2UFhBsWoyr/2aw60HDmt
-         51JXmexBJr9Ow==
+        s=k20201202; t=1665353839;
+        bh=KwB7yzHmIKvJrXcnQgncUVi1felkVMXMpemxmBu6DsM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=gPWuCQqy72llXWMyJroxGjmJzSad0AEr4tMHVmlZ72xVH/OgBBmMi4z+nFX1CYE2H
+         NruRMbEn4ZOYgbVP2uRD4YYT1quSTepBfE/q4JAmF9xBN4k56lXedsVSaZuorTOVoC
+         vmVi5W5stwUt6GOHOLeN6bjoeH5F79S4vnAdFX4jT2xNJiF/LtzeNQkc5/1ZAW8BPL
+         y0NkskhT4tJTwNcvRPg13G9wrQL5vapBirQb0zTXVxi5UcCFvg//MotV/3c1fmAogA
+         geLvYdholrR5FyeX9IaSNGyTftJB0u3vtdaHGtDT1hCMvQw2bBeyUIlhaYJAHe8z1O
+         FvZtHovFX2LBw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        tony0620emma@gmail.com, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 01/46] wifi: rtw88: phy: fix warning of possible buffer overflow
-Date:   Sun,  9 Oct 2022 18:18:26 -0400
-Message-Id: <20221009221912.1217372-1-sashal@kernel.org>
+Cc:     Jianglei Nie <niejianglei2021@163.com>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.19 37/73] wifi: ath11k: mhi: fix potential memory leak in ath11k_mhi_register()
+Date:   Sun,  9 Oct 2022 18:14:15 -0400
+Message-Id: <20221009221453.1216158-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221009221453.1216158-1-sashal@kernel.org>
+References: <20221009221453.1216158-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,66 +56,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Jianglei Nie <niejianglei2021@163.com>
 
-[ Upstream commit 86331c7e0cd819bf0c1d0dcf895e0c90b0aa9a6f ]
+[ Upstream commit 43e7c3505ec70db3d3c6458824d5fa40f62e3e7b ]
 
-reported by smatch
+mhi_alloc_controller() allocates a memory space for mhi_ctrl. When gets
+some error, mhi_ctrl should be freed with mhi_free_controller(). But
+when ath11k_mhi_read_addr_from_dt() fails, the function returns without
+calling mhi_free_controller(), which will lead to a memory leak.
 
-phy.c:854 rtw_phy_linear_2_db() error: buffer overflow 'db_invert_table[i]'
-8 <= 8 (assuming for loop doesn't break)
+We can fix it by calling mhi_free_controller() when
+ath11k_mhi_read_addr_from_dt() fails.
 
-However, it seems to be a false alarm because we prevent it originally via
-       if (linear >= db_invert_table[11][7])
-               return 96; /* maximum 96 dB */
-
-Still, we adjust the code to be more readable and avoid smatch warning.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220727065003.28340-5-pkshih@realtek.com
+Signed-off-by: Jianglei Nie <niejianglei2021@163.com>
+Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20220907073704.58806-1-niejianglei2021@163.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/phy.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath11k/mhi.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index 569dd3cfde35..df2edb87468f 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -751,23 +751,18 @@ static u8 rtw_phy_linear_2_db(u64 linear)
- 	u8 j;
- 	u32 dB;
- 
--	if (linear >= db_invert_table[11][7])
--		return 96; /* maximum 96 dB */
--
- 	for (i = 0; i < 12; i++) {
--		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][7])
--			break;
--		else if (i > 2 && linear <= db_invert_table[i][7])
--			break;
-+		for (j = 0; j < 8; j++) {
-+			if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
-+				goto cnt;
-+			else if (i > 2 && linear <= db_invert_table[i][j])
-+				goto cnt;
-+		}
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index c44df17719f6..86995e8dc913 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -402,8 +402,7 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
+ 	ret = ath11k_mhi_get_msi(ab_pci);
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to get msi for mhi\n");
+-		mhi_free_controller(mhi_ctrl);
+-		return ret;
++		goto free_controller;
  	}
  
--	for (j = 0; j < 8; j++) {
--		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
--			break;
--		else if (i > 2 && linear <= db_invert_table[i][j])
--			break;
--	}
-+	return 96; /* maximum 96 dB */
+ 	if (!test_bit(ATH11K_FLAG_MULTI_MSI_VECTORS, &ab->dev_flags))
+@@ -412,7 +411,7 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
+ 	if (test_bit(ATH11K_FLAG_FIXED_MEM_RGN, &ab->dev_flags)) {
+ 		ret = ath11k_mhi_read_addr_from_dt(mhi_ctrl);
+ 		if (ret < 0)
+-			return ret;
++			goto free_controller;
+ 	} else {
+ 		mhi_ctrl->iova_start = 0;
+ 		mhi_ctrl->iova_stop = 0xFFFFFFFF;
+@@ -440,18 +439,22 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
+ 	default:
+ 		ath11k_err(ab, "failed assign mhi_config for unknown hw rev %d\n",
+ 			   ab->hw_rev);
+-		mhi_free_controller(mhi_ctrl);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto free_controller;
+ 	}
  
-+cnt:
- 	if (j == 0 && i == 0)
- 		goto end;
+ 	ret = mhi_register_controller(mhi_ctrl, ath11k_mhi_config);
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to register to mhi bus, err = %d\n", ret);
+-		mhi_free_controller(mhi_ctrl);
+-		return ret;
++		goto free_controller;
+ 	}
  
+ 	return 0;
++
++free_controller:
++	mhi_free_controller(mhi_ctrl);
++	ab_pci->mhi_ctrl = NULL;
++	return ret;
+ }
+ 
+ void ath11k_mhi_unregister(struct ath11k_pci *ab_pci)
 -- 
 2.35.1
 
