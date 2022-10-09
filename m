@@ -2,49 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4F95C4321E
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:49:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0052DC4332F
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:50:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233409AbiJIWtz (ORCPT
+        id S233439AbiJIWuG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:49:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58106 "EHLO
+        Sun, 9 Oct 2022 18:50:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233475AbiJIWtL (ORCPT
+        with ESMTP id S233522AbiJIWtR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:49:11 -0400
+        Sun, 9 Oct 2022 18:49:17 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BE50205D7;
-        Sun,  9 Oct 2022 15:25:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDDAB101F;
+        Sun,  9 Oct 2022 15:25:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 87F07B80DCE;
-        Sun,  9 Oct 2022 22:23:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9D54C433C1;
-        Sun,  9 Oct 2022 22:23:05 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 560F0B80DEA;
+        Sun,  9 Oct 2022 22:25:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAEB7C433B5;
+        Sun,  9 Oct 2022 22:25:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665354187;
-        bh=j3yQ7o0hPyCMBF62obUgLRMZOFQxxyZ8YaSbdvVdaLQ=;
-        h=From:To:Cc:Subject:Date:From;
-        b=dr+CxJNcAmc8IhXT+4iMzGsEeFYn0bMQM/CBjRxIolx16Q9yDgLAN16JdP7YpsXhK
-         NOJ2gEeIVOO5x6KdQ1MaH3LuFLwQXJkhyM6CSFVaObsxvfr9eVaPnIGjXVcbmw8jKq
-         jol0tbh4k+XfAldaLM4mbAPj2tJOxkRVQMEVHXg406to0E5jajZAr0R0EKE8pOIBvI
-         O1yDwcQSj0Eh4vZK/UI7AOV0dQmfrfrEsvygVWrF7Mb1yNIKc2xgzumSJ3d4nanCLj
-         J2a59Tczra0EYyTG5IiKNC38VlLKI3SDteX9+nlFd8QZJCpS6UUKgFoIsAm8Cmn52C
-         wn1j3P9FCdc8A==
+        s=k20201202; t=1665354339;
+        bh=AV3dXYVdawBurlLUfKnkCxYe4h33AiN01pwO+9A7fS8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UgR3X0F0OdLWsby+CLAzt3o0guT5vAvViLuKAjorfO4JGgJ7TdMgPT+A3oYxrJobe
+         aypfmVDmQgzYp3YY3dTQIeGl0a/kwdYaPJFMPrn3eY0h7Hq1xgvMLJm1bEI3ZY+nPB
+         jdopRfZ6iUslwBMVmZzxB7Mb1/QjwT/xwan6l9nyW3riWN0o6MQl5sgT/uksQ3kbyH
+         mvan0FOGDzbZxIEcs/jkOHY1Wkgd71zAJluVk/HA3z+KhhxXuRsaaC+nISMrjsCAF0
+         RDhBL5TURPUQ+hCCUEJSMry1hrwlW/7IDlg1nSSbiC4lz6NnqoaXKNxze32HCNn9mm
+         MFhyG4s+DyI9A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+Cc:     Daniel Golle <daniel@makrotopia.org>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
         Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        tony0620emma@gmail.com, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 01/29] wifi: rtw88: phy: fix warning of possible buffer overflow
-Date:   Sun,  9 Oct 2022 18:22:36 -0400
-Message-Id: <20221009222304.1218873-1-sashal@kernel.org>
+        helmut.schaa@googlemail.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 21/25] wifi: rt2x00: correctly set BBP register 86 for MT7620
+Date:   Sun,  9 Oct 2022 18:24:26 -0400
+Message-Id: <20221009222436.1219411-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221009222436.1219411-1-sashal@kernel.org>
+References: <20221009222436.1219411-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,66 +56,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Daniel Golle <daniel@makrotopia.org>
 
-[ Upstream commit 86331c7e0cd819bf0c1d0dcf895e0c90b0aa9a6f ]
+[ Upstream commit c9aada64fe6493461127f1522d7e2f01792d2424 ]
 
-reported by smatch
+Instead of 0 set the correct value for BBP register 86 for MT7620.
 
-phy.c:854 rtw_phy_linear_2_db() error: buffer overflow 'db_invert_table[i]'
-8 <= 8 (assuming for loop doesn't break)
-
-However, it seems to be a false alarm because we prevent it originally via
-       if (linear >= db_invert_table[11][7])
-               return 96; /* maximum 96 dB */
-
-Still, we adjust the code to be more readable and avoid smatch warning.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Reported-by: Serge Vasilugin <vasilugin@yandex.ru>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220727065003.28340-5-pkshih@realtek.com
+Link: https://lore.kernel.org/r/257267247ee4fa7ebc6a5d0c4948b3f8119c0d77.1663445157.git.daniel@makrotopia.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/phy.c | 21 ++++++++-------------
- 1 file changed, 8 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index 02da69e9dfe7..2227bbd14644 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -586,23 +586,18 @@ static u8 rtw_phy_linear_2_db(u64 linear)
- 	u8 j;
- 	u32 dB;
- 
--	if (linear >= db_invert_table[11][7])
--		return 96; /* maximum 96 dB */
--
- 	for (i = 0; i < 12; i++) {
--		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][7])
--			break;
--		else if (i > 2 && linear <= db_invert_table[i][7])
--			break;
-+		for (j = 0; j < 8; j++) {
-+			if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
-+				goto cnt;
-+			else if (i > 2 && linear <= db_invert_table[i][j])
-+				goto cnt;
-+		}
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 9469517ac65f..c9fa56b721b2 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -3658,7 +3658,10 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
+ 		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
+ 		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
+-		rt2800_bbp_write(rt2x00dev, 86, 0);
++		if (rt2x00_rt(rt2x00dev, RT6352))
++			rt2800_bbp_write(rt2x00dev, 86, 0x38);
++		else
++			rt2800_bbp_write(rt2x00dev, 86, 0);
  	}
  
--	for (j = 0; j < 8; j++) {
--		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
--			break;
--		else if (i > 2 && linear <= db_invert_table[i][j])
--			break;
--	}
-+	return 96; /* maximum 96 dB */
- 
-+cnt:
- 	if (j == 0 && i == 0)
- 		goto end;
- 
+ 	if (rf->channel <= 14) {
 -- 
 2.35.1
 
