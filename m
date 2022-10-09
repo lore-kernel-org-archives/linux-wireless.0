@@ -2,51 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6961C4167B
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A7DC433F5
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:30:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232134AbiJIWaX (ORCPT
+        id S232196AbiJIWaZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:30:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42168 "EHLO
+        Sun, 9 Oct 2022 18:30:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232064AbiJIW1D (ORCPT
+        with ESMTP id S232434AbiJIW3c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:27:03 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0221B85D;
-        Sun,  9 Oct 2022 15:18:50 -0700 (PDT)
+        Sun, 9 Oct 2022 18:29:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FAAC3AB3B;
+        Sun,  9 Oct 2022 15:19:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3146AB80DDD;
-        Sun,  9 Oct 2022 22:18:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9A9FC433D7;
-        Sun,  9 Oct 2022 22:18:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1052260C27;
+        Sun,  9 Oct 2022 22:19:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28991C433D6;
+        Sun,  9 Oct 2022 22:19:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665353902;
-        bh=F5C9xZeKmsTJNbgIxGRpnScpQISfkO8XGRXBB5xjG3o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IBkt+ZT8uNStTKgysnK7x2lw0rxzq82IRVk7aJmGtgzvbFMiwbbsbyz0e6SaiqaFo
-         9z6c9mKqHGz/XRfyHyEFlfoqb4AjdbXyTDXVF88WzIgcB8q8tFh1xu1zw00/SbGDd8
-         UcNm/D7bJpMWxP1hDIuavIjcHIqNWKHj8NwaB1bKZNAO04U+VoJUJNfKUBrvVQvknS
-         Sy41wX2MeTWWTAWMhYa0D8hnPlOQ5vQCKp7AfaHGeLnP6+NjyGuQk+mfnsG/1jBCxs
-         ekR5cJfw6q6QxdWMzOFuMKBYkr7dXxk+Qbdu47t0d1jVl4ZHdR0XQ5HAbc/dFj67CP
-         1zhUfeawJF6aw==
+        s=k20201202; t=1665353955;
+        bh=b1JReA7msw8YFQ4mrmLLiR3n9OjUXXEI8mQ1BJL3EgM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=sac1LphMinSZarnx36G8qI6pV1BbKZCPo464Ql2KO+yotU9Lyf4xwWhCJSZDaUIkB
+         AHyjd4KYZ+IkizagoX00bmU36tIXKnRC6vszBzWu8UWqRtaEIghsLPn/EJCUvGgHVe
+         vy5YhfCpxXe89ap0zV8UyAQf6an+U5YvxOCYWpWqIBRMQ7Mw+JMNYI5+4aRaqEun6C
+         W1RhrDC4hjLVtPHcMZTTr10civv1GtGUsIdJmeAxC74LZefHTbWTMPEA2GRb0AgfaP
+         2YpRPPtiGL9fMXNxRCoC1SFgwnlWvqEgOSB0IGB8zQ/ipa2UFhBsWoyr/2aw60HDmt
+         51JXmexBJr9Ow==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Daniel Golle <daniel@makrotopia.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
+Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        stf_xl@wp.pl, helmut.schaa@googlemail.com, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.19 58/73] wifi: rt2x00: don't run Rt5592 IQ calibration on MT7620
-Date:   Sun,  9 Oct 2022 18:14:36 -0400
-Message-Id: <20221009221453.1216158-58-sashal@kernel.org>
+        tony0620emma@gmail.com, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 01/46] wifi: rtw88: phy: fix warning of possible buffer overflow
+Date:   Sun,  9 Oct 2022 18:18:26 -0400
+Message-Id: <20221009221912.1217372-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221009221453.1216158-1-sashal@kernel.org>
-References: <20221009221453.1216158-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,36 +53,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Daniel Golle <daniel@makrotopia.org>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-[ Upstream commit d3aad83d05aec0cfd7670cf0028f2ad4b81de92e ]
+[ Upstream commit 86331c7e0cd819bf0c1d0dcf895e0c90b0aa9a6f ]
 
-The function rt2800_iq_calibrate is intended for Rt5592 only.
-Don't call it for MT7620 which has it's own calibration functions.
+reported by smatch
 
-Reported-by: Serge Vasilugin <vasilugin@yandex.ru>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+phy.c:854 rtw_phy_linear_2_db() error: buffer overflow 'db_invert_table[i]'
+8 <= 8 (assuming for loop doesn't break)
+
+However, it seems to be a false alarm because we prevent it originally via
+       if (linear >= db_invert_table[11][7])
+               return 96; /* maximum 96 dB */
+
+Still, we adjust the code to be more readable and avoid smatch warning.
+
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/31a1c34ddbd296b82f38c18c9ae7339059215fdc.1663445157.git.daniel@makrotopia.org
+Link: https://lore.kernel.org/r/20220727065003.28340-5-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/phy.c | 21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index cbdaf7992f98..b4fb4d1bff57 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4365,7 +4365,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		reg = (rf->channel <= 14 ? 0x1c : 0x24) + 2*rt2x00dev->lna_gain;
- 		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 569dd3cfde35..df2edb87468f 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -751,23 +751,18 @@ static u8 rtw_phy_linear_2_db(u64 linear)
+ 	u8 j;
+ 	u32 dB;
  
--		rt2800_iq_calibrate(rt2x00dev, rf->channel);
-+		if (rt2x00_rt(rt2x00dev, RT5592))
-+			rt2800_iq_calibrate(rt2x00dev, rf->channel);
+-	if (linear >= db_invert_table[11][7])
+-		return 96; /* maximum 96 dB */
+-
+ 	for (i = 0; i < 12; i++) {
+-		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][7])
+-			break;
+-		else if (i > 2 && linear <= db_invert_table[i][7])
+-			break;
++		for (j = 0; j < 8; j++) {
++			if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
++				goto cnt;
++			else if (i > 2 && linear <= db_invert_table[i][j])
++				goto cnt;
++		}
  	}
  
- 	bbp = rt2800_bbp_read(rt2x00dev, 4);
+-	for (j = 0; j < 8; j++) {
+-		if (i <= 2 && (linear << FRAC_BITS) <= db_invert_table[i][j])
+-			break;
+-		else if (i > 2 && linear <= db_invert_table[i][j])
+-			break;
+-	}
++	return 96; /* maximum 96 dB */
+ 
++cnt:
+ 	if (j == 0 && i == 0)
+ 		goto end;
+ 
 -- 
 2.35.1
 
