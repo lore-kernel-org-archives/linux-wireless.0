@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06912C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E65F3C433FE
 	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 12:54:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230140AbiJIMyy (ORCPT
+        id S229935AbiJIMy4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 08:54:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47780 "EHLO
+        Sun, 9 Oct 2022 08:54:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230142AbiJIMyp (ORCPT
+        with ESMTP id S230143AbiJIMyp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 9 Oct 2022 08:54:45 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 43692C5F
-        for <linux-wireless@vger.kernel.org>; Sun,  9 Oct 2022 05:54:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 434BAC49
+        for <linux-wireless@vger.kernel.org>; Sun,  9 Oct 2022 05:54:38 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 299CrwdeF029524, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 299Cs3Q91029540, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 299CrwdeF029524
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 299Cs3Q91029540
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Sun, 9 Oct 2022 20:53:59 +0800
+        Sun, 9 Oct 2022 20:54:03 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Sun, 9 Oct 2022 20:54:27 +0800
+ 15.1.2375.31; Sun, 9 Oct 2022 20:54:31 +0800
 Received: from localhost (172.16.16.215) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Sun, 9 Oct 2022
- 20:54:27 +0800
+ 20:54:31 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/9] wifi: rtw89: 8852b: add chip_ops related to BT coexistence
-Date:   Sun, 9 Oct 2022 20:53:59 +0800
-Message-ID: <20221009125403.19662-6-pkshih@realtek.com>
+Subject: [PATCH 9/9] wifi: rtw89: 8852b: add basic attributes of chip_info
+Date:   Sun, 9 Oct 2022 20:54:03 +0800
+Message-ID: <20221009125403.19662-10-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221009125403.19662-1-pkshih@realtek.com>
 References: <20221009125403.19662-1-pkshih@realtek.com>
@@ -64,367 +64,301 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-These chip_ops are used to assist BT coexistence module to control chip
-specific operations, such as initial, pre-AGC, BT grant, set wifi priority
-and tx power, RX gain, and get BT counter.
+Add  8852b specific constant tables and basic attributes containing
+common chip_ops, firmware name, supported TX/RX NSS, number of CAM,
+coexistence version, control register set, and so on.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/reg.h      |   1 +
- drivers/net/wireless/realtek/rtw89/rtw8852b.c | 305 ++++++++++++++++++
- 2 files changed, 306 insertions(+)
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c | 235 ++++++++++++++++++
+ 1 file changed, 235 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 376ce7135b388..570fb1aee80c3 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3151,6 +3151,7 @@
- #define BTC_BREAK_PARAM 0xf0ffffff
- 
- #define R_BTC_BT_COEX_MSK_TABLE 0xDA30
-+#define B_BTC_PRI_MASK_RXCCK_V1 BIT(28)
- #define B_BTC_PRI_MASK_TX_RESP_V1 BIT(3)
- 
- #define R_AX_BT_COEX_CFG_2 0xDA34
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-index 09374b92f6617..ee5a29f35db25 100644
+index 290d83cb83d5a..0918b75ab1d94 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-@@ -56,6 +56,44 @@ static const struct rtw89_dle_mem rtw8852b_dle_mem_pcie[] = {
- 			       NULL},
- };
+@@ -217,6 +217,150 @@ static const struct rtw89_reg3_def rtw8852b_btc_preagc_dis_defs[] = {
  
-+static const struct rtw89_reg3_def rtw8852b_btc_preagc_en_defs[] = {
-+	{0x46D0, GENMASK(1, 0), 0x3},
-+	{0x4790, GENMASK(1, 0), 0x3},
-+	{0x4AD4, GENMASK(31, 0), 0xf},
-+	{0x4AE0, GENMASK(31, 0), 0xf},
-+	{0x4688, GENMASK(31, 24), 0x80},
-+	{0x476C, GENMASK(31, 24), 0x80},
-+	{0x4694, GENMASK(7, 0), 0x80},
-+	{0x4694, GENMASK(15, 8), 0x80},
-+	{0x4778, GENMASK(7, 0), 0x80},
-+	{0x4778, GENMASK(15, 8), 0x80},
-+	{0x4AE4, GENMASK(23, 0), 0x780D1E},
-+	{0x4AEC, GENMASK(23, 0), 0x780D1E},
-+	{0x469C, GENMASK(31, 26), 0x34},
-+	{0x49F0, GENMASK(31, 26), 0x34},
+ static DECLARE_PHY_REG3_TBL(rtw8852b_btc_preagc_dis_defs);
+ 
++static const u32 rtw8852b_h2c_regs[RTW89_H2CREG_MAX] = {
++	R_AX_H2CREG_DATA0, R_AX_H2CREG_DATA1,  R_AX_H2CREG_DATA2,
++	R_AX_H2CREG_DATA3
 +};
 +
-+static DECLARE_PHY_REG3_TBL(rtw8852b_btc_preagc_en_defs);
-+
-+static const struct rtw89_reg3_def rtw8852b_btc_preagc_dis_defs[] = {
-+	{0x46D0, GENMASK(1, 0), 0x0},
-+	{0x4790, GENMASK(1, 0), 0x0},
-+	{0x4AD4, GENMASK(31, 0), 0x60},
-+	{0x4AE0, GENMASK(31, 0), 0x60},
-+	{0x4688, GENMASK(31, 24), 0x1a},
-+	{0x476C, GENMASK(31, 24), 0x1a},
-+	{0x4694, GENMASK(7, 0), 0x2a},
-+	{0x4694, GENMASK(15, 8), 0x2a},
-+	{0x4778, GENMASK(7, 0), 0x2a},
-+	{0x4778, GENMASK(15, 8), 0x2a},
-+	{0x4AE4, GENMASK(23, 0), 0x79E99E},
-+	{0x4AEC, GENMASK(23, 0), 0x79E99E},
-+	{0x469C, GENMASK(31, 26), 0x26},
-+	{0x49F0, GENMASK(31, 26), 0x26},
++static const u32 rtw8852b_c2h_regs[RTW89_C2HREG_MAX] = {
++	R_AX_C2HREG_DATA0, R_AX_C2HREG_DATA1, R_AX_C2HREG_DATA2,
++	R_AX_C2HREG_DATA3
 +};
 +
-+static DECLARE_PHY_REG3_TBL(rtw8852b_btc_preagc_dis_defs);
++static const struct rtw89_page_regs rtw8852b_page_regs = {
++	.hci_fc_ctrl	= R_AX_HCI_FC_CTRL,
++	.ch_page_ctrl	= R_AX_CH_PAGE_CTRL,
++	.ach_page_ctrl	= R_AX_ACH0_PAGE_CTRL,
++	.ach_page_info	= R_AX_ACH0_PAGE_INFO,
++	.pub_page_info3	= R_AX_PUB_PAGE_INFO3,
++	.pub_page_ctrl1	= R_AX_PUB_PAGE_CTRL1,
++	.pub_page_ctrl2	= R_AX_PUB_PAGE_CTRL2,
++	.pub_page_info1	= R_AX_PUB_PAGE_INFO1,
++	.pub_page_info2 = R_AX_PUB_PAGE_INFO2,
++	.wp_page_ctrl1	= R_AX_WP_PAGE_CTRL1,
++	.wp_page_ctrl2	= R_AX_WP_PAGE_CTRL2,
++	.wp_page_info1	= R_AX_WP_PAGE_INFO1,
++};
++
++static const struct rtw89_reg_def rtw8852b_dcfo_comp = {
++	R_DCFO_COMP_S0, B_DCFO_COMP_S0_MSK
++};
++
++static const struct rtw89_imr_info rtw8852b_imr_info = {
++	.wdrls_imr_set		= B_AX_WDRLS_IMR_SET,
++	.wsec_imr_reg		= R_AX_SEC_DEBUG,
++	.wsec_imr_set		= B_AX_IMR_ERROR,
++	.mpdu_tx_imr_set	= 0,
++	.mpdu_rx_imr_set	= 0,
++	.sta_sch_imr_set	= B_AX_STA_SCHEDULER_IMR_SET,
++	.txpktctl_imr_b0_reg	= R_AX_TXPKTCTL_ERR_IMR_ISR,
++	.txpktctl_imr_b0_clr	= B_AX_TXPKTCTL_IMR_B0_CLR,
++	.txpktctl_imr_b0_set	= B_AX_TXPKTCTL_IMR_B0_SET,
++	.txpktctl_imr_b1_reg	= R_AX_TXPKTCTL_ERR_IMR_ISR_B1,
++	.txpktctl_imr_b1_clr	= B_AX_TXPKTCTL_IMR_B1_CLR,
++	.txpktctl_imr_b1_set	= B_AX_TXPKTCTL_IMR_B1_SET,
++	.wde_imr_clr		= B_AX_WDE_IMR_CLR,
++	.wde_imr_set		= B_AX_WDE_IMR_SET,
++	.ple_imr_clr		= B_AX_PLE_IMR_CLR,
++	.ple_imr_set		= B_AX_PLE_IMR_SET,
++	.host_disp_imr_clr	= B_AX_HOST_DISP_IMR_CLR,
++	.host_disp_imr_set	= B_AX_HOST_DISP_IMR_SET,
++	.cpu_disp_imr_clr	= B_AX_CPU_DISP_IMR_CLR,
++	.cpu_disp_imr_set	= B_AX_CPU_DISP_IMR_SET,
++	.other_disp_imr_clr	= B_AX_OTHER_DISP_IMR_CLR,
++	.other_disp_imr_set	= 0,
++	.bbrpt_com_err_imr_reg	= R_AX_BBRPT_COM_ERR_IMR_ISR,
++	.bbrpt_chinfo_err_imr_reg = R_AX_BBRPT_CHINFO_ERR_IMR_ISR,
++	.bbrpt_err_imr_set	= 0,
++	.bbrpt_dfs_err_imr_reg	= R_AX_BBRPT_DFS_ERR_IMR_ISR,
++	.ptcl_imr_clr		= B_AX_PTCL_IMR_CLR_ALL,
++	.ptcl_imr_set		= B_AX_PTCL_IMR_SET,
++	.cdma_imr_0_reg		= R_AX_DLE_CTRL,
++	.cdma_imr_0_clr		= B_AX_DLE_IMR_CLR,
++	.cdma_imr_0_set		= B_AX_DLE_IMR_SET,
++	.cdma_imr_1_reg		= 0,
++	.cdma_imr_1_clr		= 0,
++	.cdma_imr_1_set		= 0,
++	.phy_intf_imr_reg	= R_AX_PHYINFO_ERR_IMR,
++	.phy_intf_imr_clr	= 0,
++	.phy_intf_imr_set	= 0,
++	.rmac_imr_reg		= R_AX_RMAC_ERR_ISR,
++	.rmac_imr_clr		= B_AX_RMAC_IMR_CLR,
++	.rmac_imr_set		= B_AX_RMAC_IMR_SET,
++	.tmac_imr_reg		= R_AX_TMAC_ERR_IMR_ISR,
++	.tmac_imr_clr		= B_AX_TMAC_IMR_CLR,
++	.tmac_imr_set		= B_AX_TMAC_IMR_SET,
++};
++
++static const struct rtw89_rrsr_cfgs rtw8852b_rrsr_cfgs = {
++	.ref_rate = {R_AX_TRXPTCL_RRSR_CTL_0, B_AX_WMAC_RESP_REF_RATE_SEL, 0},
++	.rsc = {R_AX_TRXPTCL_RRSR_CTL_0, B_AX_WMAC_RESP_RSC_MASK, 2},
++};
++
++static const struct rtw89_dig_regs rtw8852b_dig_regs = {
++	.seg0_pd_reg = R_SEG0R_PD_V1,
++	.pd_lower_bound_mask = B_SEG0R_PD_LOWER_BOUND_MSK,
++	.pd_spatial_reuse_en = B_SEG0R_PD_SPATIAL_REUSE_EN_MSK_V1,
++	.p0_lna_init = {R_PATH0_LNA_INIT_V1, B_PATH0_LNA_INIT_IDX_MSK},
++	.p1_lna_init = {R_PATH1_LNA_INIT_V1, B_PATH1_LNA_INIT_IDX_MSK},
++	.p0_tia_init = {R_PATH0_TIA_INIT_V1, B_PATH0_TIA_INIT_IDX_MSK_V1},
++	.p1_tia_init = {R_PATH1_TIA_INIT_V1, B_PATH1_TIA_INIT_IDX_MSK_V1},
++	.p0_rxb_init = {R_PATH0_RXB_INIT_V1, B_PATH0_RXB_INIT_IDX_MSK_V1},
++	.p1_rxb_init = {R_PATH1_RXB_INIT_V1, B_PATH1_RXB_INIT_IDX_MSK_V1},
++	.p0_p20_pagcugc_en = {R_PATH0_P20_FOLLOW_BY_PAGCUGC_V2,
++			      B_PATH0_P20_FOLLOW_BY_PAGCUGC_EN_MSK},
++	.p0_s20_pagcugc_en = {R_PATH0_S20_FOLLOW_BY_PAGCUGC_V2,
++			      B_PATH0_S20_FOLLOW_BY_PAGCUGC_EN_MSK},
++	.p1_p20_pagcugc_en = {R_PATH1_P20_FOLLOW_BY_PAGCUGC_V2,
++			      B_PATH1_P20_FOLLOW_BY_PAGCUGC_EN_MSK},
++	.p1_s20_pagcugc_en = {R_PATH1_S20_FOLLOW_BY_PAGCUGC_V2,
++			      B_PATH1_S20_FOLLOW_BY_PAGCUGC_EN_MSK},
++};
++
++static const struct rtw89_btc_rf_trx_para rtw89_btc_8852b_rf_ul[] = {
++	{15, 0, 0, 7}, /* 0 -> original */
++	{15, 2, 0, 7}, /* 1 -> for BT-connected ACI issue && BTG co-rx */
++	{15, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
++	{15, 0, 0, 7}, /* 3- >reserved for shared-antenna */
++	{15, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
++	{15, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
++	{6, 1, 0, 7},
++	{13, 1, 0, 7},
++	{13, 1, 0, 7}
++};
++
++static const struct rtw89_btc_rf_trx_para rtw89_btc_8852b_rf_dl[] = {
++	{15, 0, 0, 7}, /* 0 -> original */
++	{15, 2, 0, 7}, /* 1 -> reserved for shared-antenna */
++	{15, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
++	{15, 0, 0, 7}, /* 3- >reserved for shared-antenna */
++	{15, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
++	{15, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
++	{15, 1, 0, 7},
++	{15, 1, 0, 7},
++	{15, 1, 0, 7}
++};
++
++static const struct rtw89_btc_fbtc_mreg rtw89_btc_8852b_mon_reg[] = {
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda24),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda28),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda2c),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda30),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda4c),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda10),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda20),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xda34),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xcef4),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0x8424),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xd200),
++	RTW89_DEF_FBTC_MREG(REG_MAC, 4, 0xd220),
++	RTW89_DEF_FBTC_MREG(REG_BB, 4, 0x980),
++	RTW89_DEF_FBTC_MREG(REG_BT_MODEM, 4, 0x178),
++};
++
++static const u8 rtw89_btc_8852b_wl_rssi_thres[BTC_WL_RSSI_THMAX] = {70, 60, 50, 40};
++static const u8 rtw89_btc_8852b_bt_rssi_thres[BTC_BT_RSSI_THMAX] = {50, 40, 30, 20};
 +
  static int rtw8852b_pwr_on_func(struct rtw89_dev *rtwdev)
  {
  	u32 val32;
-@@ -1397,6 +1435,55 @@ rtw8852b_init_txpwr_unit(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
- 	return 0;
- }
- 
-+static void rtw8852b_bb_ctrl_btc_preagc(struct rtw89_dev *rtwdev, bool bt_en)
-+{
-+	rtw89_phy_write_reg3_tbl(rtwdev, bt_en ? &rtw8852b_btc_preagc_en_defs_tbl :
-+						 &rtw8852b_btc_preagc_dis_defs_tbl);
-+}
-+
-+static void rtw8852b_ctrl_btg(struct rtw89_dev *rtwdev, bool btg)
-+{
-+	if (btg) {
-+		rtw89_phy_write32_mask(rtwdev, R_PATH0_BT_SHARE_V1,
-+				       B_PATH0_BT_SHARE_V1, 0x1);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH0_BTG_PATH_V1,
-+				       B_PATH0_BTG_PATH_V1, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_LNA6_OP1DB_V1,
-+				       B_PATH1_G_LNA6_OP1DB_V1, 0x20);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_TIA0_LNA6_OP1DB_V1,
-+				       B_PATH1_G_TIA0_LNA6_OP1DB_V1, 0x30);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_BT_SHARE_V1,
-+				       B_PATH1_BT_SHARE_V1, 0x1);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_BTG_PATH_V1,
-+				       B_PATH1_BTG_PATH_V1, 0x1);
-+		rtw89_phy_write32_mask(rtwdev, R_PMAC_GNT, B_PMAC_GNT_P1, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_CHBW_MOD_V1, B_BT_SHARE, 0x1);
-+		rtw89_phy_write32_mask(rtwdev, R_FC0_BW_V1, B_ANT_RX_BT_SEG0, 0x2);
-+		rtw89_phy_write32_mask(rtwdev, R_BT_DYN_DC_EST_EN_V1,
-+				       B_BT_DYN_DC_EST_EN_MSK, 0x1);
-+		rtw89_phy_write32_mask(rtwdev, R_GNT_BT_WGT_EN, B_GNT_BT_WGT_EN, 0x1);
-+	} else {
-+		rtw89_phy_write32_mask(rtwdev, R_PATH0_BT_SHARE_V1,
-+				       B_PATH0_BT_SHARE_V1, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH0_BTG_PATH_V1,
-+				       B_PATH0_BTG_PATH_V1, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_LNA6_OP1DB_V1,
-+				       B_PATH1_G_LNA6_OP1DB_V1, 0x1a);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_G_TIA0_LNA6_OP1DB_V1,
-+				       B_PATH1_G_TIA0_LNA6_OP1DB_V1, 0x2a);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_BT_SHARE_V1,
-+				       B_PATH1_BT_SHARE_V1, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_PATH1_BTG_PATH_V1,
-+				       B_PATH1_BTG_PATH_V1, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_PMAC_GNT, B_PMAC_GNT_P1, 0xc);
-+		rtw89_phy_write32_mask(rtwdev, R_CHBW_MOD_V1, B_BT_SHARE, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_FC0_BW_V1, B_ANT_RX_BT_SEG0, 0x0);
-+		rtw89_phy_write32_mask(rtwdev, R_BT_DYN_DC_EST_EN_V1,
-+				       B_BT_DYN_DC_EST_EN_MSK, 0x1);
-+		rtw89_phy_write32_mask(rtwdev, R_GNT_BT_WGT_EN, B_GNT_BT_WGT_EN, 0x0);
-+	}
-+}
-+
- static u8 rtw8852b_get_thermal(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path)
- {
- 	if (rtwdev->is_tssi_mode[rf_path]) {
-@@ -1414,6 +1501,212 @@ static u8 rtw8852b_get_thermal(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_p
- 	return rtw89_read_rf(rtwdev, rf_path, RR_TM, RR_TM_VAL);
- }
- 
-+static void rtw8852b_btc_set_rfe(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_btc *btc = &rtwdev->btc;
-+	struct rtw89_btc_module *module = &btc->mdinfo;
-+
-+	module->rfe_type = rtwdev->efuse.rfe_type;
-+	module->cv = rtwdev->hal.cv;
-+	module->bt_solo = 0;
-+	module->switch_type = BTC_SWITCH_INTERNAL;
-+
-+	if (module->rfe_type > 0)
-+		module->ant.num = module->rfe_type % 2 ? 2 : 3;
-+	else
-+		module->ant.num = 2;
-+
-+	module->ant.diversity = 0;
-+	module->ant.isolation = 10;
-+
-+	if (module->ant.num == 3) {
-+		module->ant.type = BTC_ANT_DEDICATED;
-+		module->bt_pos = BTC_BT_ALONE;
-+	} else {
-+		module->ant.type = BTC_ANT_SHARED;
-+		module->bt_pos = BTC_BT_BTG;
-+	}
-+}
-+
-+static
-+void rtw8852b_set_trx_mask(struct rtw89_dev *rtwdev, u8 path, u8 group, u32 val)
-+{
-+	rtw89_write_rf(rtwdev, path, RR_LUTWE, RFREG_MASK, 0x20000);
-+	rtw89_write_rf(rtwdev, path, RR_LUTWA, RFREG_MASK, group);
-+	rtw89_write_rf(rtwdev, path, RR_LUTWD0, RFREG_MASK, val);
-+	rtw89_write_rf(rtwdev, path, RR_LUTWE, RFREG_MASK, 0x0);
-+}
-+
-+static void rtw8852b_btc_init_cfg(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_btc *btc = &rtwdev->btc;
-+	struct rtw89_btc_module *module = &btc->mdinfo;
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
-+	const struct rtw89_mac_ax_coex coex_params = {
-+		.pta_mode = RTW89_MAC_AX_COEX_RTK_MODE,
-+		.direction = RTW89_MAC_AX_COEX_INNER,
-+	};
-+
-+	/* PTA init  */
-+	rtw89_mac_coex_init(rtwdev, &coex_params);
-+
-+	/* set WL Tx response = Hi-Pri */
-+	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_TX_RESP, true);
-+	chip->ops->btc_set_wl_pri(rtwdev, BTC_PRI_MASK_BEACON, true);
-+
-+	/* set rf gnt debug off */
-+	rtw89_write_rf(rtwdev, RF_PATH_A, RR_WLSEL, RFREG_MASK, 0x0);
-+	rtw89_write_rf(rtwdev, RF_PATH_B, RR_WLSEL, RFREG_MASK, 0x0);
-+
-+	/* set WL Tx thru in TRX mask table if GNT_WL = 0 && BT_S1 = ss group */
-+	if (module->ant.type == BTC_ANT_SHARED) {
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_A, BTC_BT_SS_GROUP, 0x5ff);
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_B, BTC_BT_SS_GROUP, 0x5ff);
-+		/* set path-A(S0) Tx/Rx no-mask if GNT_WL=0 && BT_S1=tx group */
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_A, BTC_BT_TX_GROUP, 0x5ff);
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_B, BTC_BT_TX_GROUP, 0x55f);
-+	} else { /* set WL Tx stb if GNT_WL = 0 && BT_S1 = ss group for 3-ant */
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_A, BTC_BT_SS_GROUP, 0x5df);
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_B, BTC_BT_SS_GROUP, 0x5df);
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_A, BTC_BT_TX_GROUP, 0x5ff);
-+		rtw8852b_set_trx_mask(rtwdev, RF_PATH_B, BTC_BT_TX_GROUP, 0x5ff);
-+	}
-+
-+	/* set PTA break table */
-+	rtw89_write32(rtwdev, R_BTC_BREAK_TABLE, BTC_BREAK_PARAM);
-+
-+	 /* enable BT counter 0xda40[16,2] = 2b'11 */
-+	rtw89_write32_set(rtwdev, R_AX_CSR_MODE, B_AX_BT_CNT_RST | B_AX_STATIS_BT_EN);
-+	btc->cx.wl.status.map.init_ok = true;
-+}
-+
-+static
-+void rtw8852b_btc_set_wl_pri(struct rtw89_dev *rtwdev, u8 map, bool state)
-+{
-+	u32 bitmap;
-+	u32 reg;
-+
-+	switch (map) {
-+	case BTC_PRI_MASK_TX_RESP:
-+		reg = R_BTC_BT_COEX_MSK_TABLE;
-+		bitmap = B_BTC_PRI_MASK_TX_RESP_V1;
-+		break;
-+	case BTC_PRI_MASK_BEACON:
-+		reg = R_AX_WL_PRI_MSK;
-+		bitmap = B_AX_PTA_WL_PRI_MASK_BCNQ;
-+		break;
-+	case BTC_PRI_MASK_RX_CCK:
-+		reg = R_BTC_BT_COEX_MSK_TABLE;
-+		bitmap = B_BTC_PRI_MASK_RXCCK_V1;
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	if (state)
-+		rtw89_write32_set(rtwdev, reg, bitmap);
-+	else
-+		rtw89_write32_clr(rtwdev, reg, bitmap);
-+}
-+
-+union rtw8852b_btc_wl_txpwr_ctrl {
-+	u32 txpwr_val;
-+	struct {
-+		union {
-+			u16 ctrl_all_time;
-+			struct {
-+				s16 data:9;
-+				u16 rsvd:6;
-+				u16 flag:1;
-+			} all_time;
-+		};
-+		union {
-+			u16 ctrl_gnt_bt;
-+			struct {
-+				s16 data:9;
-+				u16 rsvd:7;
-+			} gnt_bt;
-+		};
-+	};
-+} __packed;
-+
-+static void
-+rtw8852b_btc_set_wl_txpwr_ctrl(struct rtw89_dev *rtwdev, u32 txpwr_val)
-+{
-+	union rtw8852b_btc_wl_txpwr_ctrl arg = { .txpwr_val = txpwr_val };
-+	s32 val;
-+
-+#define __write_ctrl(_reg, _msk, _val, _en, _cond)		\
-+do {								\
-+	u32 _wrt = FIELD_PREP(_msk, _val);			\
-+	BUILD_BUG_ON(!!(_msk & _en));				\
-+	if (_cond)						\
-+		_wrt |= _en;					\
-+	else							\
-+		_wrt &= ~_en;					\
-+	rtw89_mac_txpwr_write32_mask(rtwdev, RTW89_PHY_0, _reg,	\
-+				     _msk | _en, _wrt);		\
-+} while (0)
-+
-+	switch (arg.ctrl_all_time) {
-+	case 0xffff:
-+		val = 0;
-+		break;
-+	default:
-+		val = arg.all_time.data;
-+		break;
-+	}
-+
-+	__write_ctrl(R_AX_PWR_RATE_CTRL, B_AX_FORCE_PWR_BY_RATE_VALUE_MASK,
-+		     val, B_AX_FORCE_PWR_BY_RATE_EN,
-+		     arg.ctrl_all_time != 0xffff);
-+
-+	switch (arg.ctrl_gnt_bt) {
-+	case 0xffff:
-+		val = 0;
-+		break;
-+	default:
-+		val = arg.gnt_bt.data;
-+		break;
-+	}
-+
-+	__write_ctrl(R_AX_PWR_COEXT_CTRL, B_AX_TXAGC_BT_MASK, val,
-+		     B_AX_TXAGC_BT_EN, arg.ctrl_gnt_bt != 0xffff);
-+
-+#undef __write_ctrl
-+}
-+
-+static
-+s8 rtw8852b_btc_get_bt_rssi(struct rtw89_dev *rtwdev, s8 val)
-+{
-+	return clamp_t(s8, val, -100, 0) + 100;
-+}
-+
-+static
-+void rtw8852b_btc_update_bt_cnt(struct rtw89_dev *rtwdev)
-+{
-+	/* Feature move to firmware */
-+}
-+
-+static void rtw8852b_btc_wl_s1_standby(struct rtw89_dev *rtwdev, bool state)
-+{
-+	rtw89_write_rf(rtwdev, RF_PATH_B, RR_LUTWE, RFREG_MASK, 0x80000);
-+	rtw89_write_rf(rtwdev, RF_PATH_B, RR_LUTWA, RFREG_MASK, 0x1);
-+	rtw89_write_rf(rtwdev, RF_PATH_B, RR_LUTWD1, RFREG_MASK, 0x31);
-+
-+	/* set WL standby = Rx for GNT_BT_Tx = 1->0 settle issue */
-+	if (state)
-+		rtw89_write_rf(rtwdev, RF_PATH_B, RR_LUTWD0, RFREG_MASK, 0x579);
-+	else
-+		rtw89_write_rf(rtwdev, RF_PATH_B, RR_LUTWD0, RFREG_MASK, 0x20);
-+
-+	rtw89_write_rf(rtwdev, RF_PATH_B, RR_LUTWE, RFREG_MASK, 0x0);
-+}
-+
-+static void rtw8852b_btc_set_wl_rx_gain(struct rtw89_dev *rtwdev, u32 level)
-+{
-+}
-+
- static int rtw8852b_mac_enable_bb_rf(struct rtw89_dev *rtwdev)
- {
- 	int ret;
-@@ -1481,8 +1774,20 @@ static const struct rtw89_chip_ops rtw8852b_chip_ops = {
+@@ -2195,10 +2339,13 @@ static const struct rtw89_chip_ops rtw8852b_chip_ops = {
+ 	.disable_bb_rf		= rtw8852b_mac_disable_bb_rf,
+ 	.bb_reset		= rtw8852b_bb_reset,
+ 	.bb_sethw		= rtw8852b_bb_sethw,
++	.read_rf		= rtw89_phy_read_rf_v1,
++	.write_rf		= rtw89_phy_write_rf_v1,
+ 	.set_channel		= rtw8852b_set_channel,
+ 	.set_channel_help	= rtw8852b_set_channel_help,
+ 	.read_efuse		= rtw8852b_read_efuse,
+ 	.read_phycap		= rtw8852b_read_phycap,
++	.fem_setup		= NULL,
+ 	.power_trim		= rtw8852b_power_trim,
+ 	.set_txpwr		= rtw8852b_set_txpwr,
  	.set_txpwr_ctrl		= rtw8852b_set_txpwr_ctrl,
- 	.init_txpwr_unit	= rtw8852b_init_txpwr_unit,
- 	.get_thermal		= rtw8852b_get_thermal,
-+	.ctrl_btg		= rtw8852b_ctrl_btg,
-+	.bb_ctrl_btc_preagc	= rtw8852b_bb_ctrl_btc_preagc,
+@@ -2208,8 +2355,16 @@ static const struct rtw89_chip_ops rtw8852b_chip_ops = {
+ 	.query_ppdu		= rtw8852b_query_ppdu,
+ 	.bb_ctrl_btc_preagc	= rtw8852b_bb_ctrl_btc_preagc,
+ 	.cfg_txrx_path		= rtw8852b_bb_cfg_txrx_path,
++	.set_txpwr_ul_tb_offset	= rtw8852b_set_txpwr_ul_tb_offset,
  	.pwr_on_func		= rtw8852b_pwr_on_func,
  	.pwr_off_func		= rtw8852b_pwr_off_func,
-+
-+	.btc_set_rfe		= rtw8852b_btc_set_rfe,
-+	.btc_init_cfg		= rtw8852b_btc_init_cfg,
-+	.btc_set_wl_pri		= rtw8852b_btc_set_wl_pri,
-+	.btc_set_wl_txpwr_ctrl	= rtw8852b_btc_set_wl_txpwr_ctrl,
-+	.btc_get_bt_rssi	= rtw8852b_btc_get_bt_rssi,
-+	.btc_update_bt_cnt	= rtw8852b_btc_update_bt_cnt,
-+	.btc_wl_s1_standby	= rtw8852b_btc_wl_s1_standby,
-+	.btc_set_wl_rx_gain	= rtw8852b_btc_set_wl_rx_gain,
-+	.btc_set_policy		= rtw89_btc_set_policy,
- };
++	.fill_txdesc		= rtw89_core_fill_txdesc,
++	.fill_txdesc_fwcmd	= rtw89_core_fill_txdesc,
++	.cfg_ctrl_path		= rtw89_mac_cfg_ctrl_path,
++	.mac_cfg_gnt		= rtw89_mac_cfg_gnt,
++	.stop_sch_tx		= rtw89_mac_stop_sch_tx,
++	.resume_sch_tx		= rtw89_mac_resume_sch_tx,
++	.h2c_dctl_sec_cam	= NULL,
  
+ 	.btc_set_rfe		= rtw8852b_btc_set_rfe,
+ 	.btc_init_cfg		= rtw8852b_btc_init_cfg,
+@@ -2225,12 +2380,46 @@ static const struct rtw89_chip_ops rtw8852b_chip_ops = {
  const struct rtw89_chip_info rtw8852b_chip_info = {
+ 	.chip_id		= RTL8852B,
+ 	.ops			= &rtw8852b_chip_ops,
++	.fw_name		= "rtw89/rtw8852b_fw.bin",
+ 	.fifo_size		= 196608,
+ 	.dle_scc_rsvd_size	= 98304,
++	.max_amsdu_limit	= 3500,
++	.dis_2g_40m_ul_ofdma	= true,
++	.rsvd_ple_ofst		= 0x2f800,
+ 	.hfc_param_ini		= rtw8852b_hfc_param_ini_pcie,
+ 	.dle_mem		= rtw8852b_dle_mem_pcie,
++	.rf_base_addr		= {0xe000, 0xf000},
+ 	.pwr_on_seq		= NULL,
+ 	.pwr_off_seq		= NULL,
++	.bb_table		= &rtw89_8852b_phy_bb_table,
++	.bb_gain_table		= &rtw89_8852b_phy_bb_gain_table,
++	.rf_table		= {&rtw89_8852b_phy_radioa_table,
++				   &rtw89_8852b_phy_radiob_table,},
++	.nctl_table		= &rtw89_8852b_phy_nctl_table,
++	.byr_table		= &rtw89_8852b_byr_table,
++	.txpwr_lmt_2g		= &rtw89_8852b_txpwr_lmt_2g,
++	.txpwr_lmt_5g		= &rtw89_8852b_txpwr_lmt_5g,
++	.txpwr_lmt_ru_2g	= &rtw89_8852b_txpwr_lmt_ru_2g,
++	.txpwr_lmt_ru_5g	= &rtw89_8852b_txpwr_lmt_ru_5g,
++	.txpwr_factor_rf	= 2,
++	.txpwr_factor_mac	= 1,
++	.dig_table		= NULL,
++	.dig_regs		= &rtw8852b_dig_regs,
++	.tssi_dbw_table		= NULL,
++	.support_chanctx_num	= 0,
++	.support_bands		= BIT(NL80211_BAND_2GHZ) |
++				  BIT(NL80211_BAND_5GHZ),
++	.support_bw160		= false,
++	.hw_sec_hdr		= false,
++	.rf_path_num		= 2,
++	.tx_nss			= 2,
++	.rx_nss			= 2,
++	.acam_num		= 128,
++	.bcam_num		= 10,
++	.scam_num		= 128,
++	.bacam_num		= 2,
++	.bacam_dynamic_num	= 4,
++	.bacam_v1		= false,
+ 	.sec_ctrl_efuse_size	= 4,
+ 	.physical_efuse_size	= 1216,
+ 	.logical_efuse_size	= 2048,
+@@ -2239,6 +2428,52 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
+ 	.dav_log_efuse_size	= 16,
+ 	.phycap_addr		= 0x580,
+ 	.phycap_size		= 128,
++	.para_ver		= 0,
++	.wlcx_desired		= 0x05050000,
++	.btcx_desired		= 0x5,
++	.scbd			= 0x1,
++	.mailbox		= 0x1,
++	.btc_fwinfo_buf		= 1024,
++
++	.fcxbtcrpt_ver		= 1,
++	.fcxtdma_ver		= 1,
++	.fcxslots_ver		= 1,
++	.fcxcysta_ver		= 2,
++	.fcxstep_ver		= 2,
++	.fcxnullsta_ver		= 1,
++	.fcxmreg_ver		= 1,
++	.fcxgpiodbg_ver		= 1,
++	.fcxbtver_ver		= 1,
++	.fcxbtscan_ver		= 1,
++	.fcxbtafh_ver		= 1,
++	.fcxbtdevinfo_ver	= 1,
++	.afh_guard_ch		= 6,
++	.wl_rssi_thres		= rtw89_btc_8852b_wl_rssi_thres,
++	.bt_rssi_thres		= rtw89_btc_8852b_bt_rssi_thres,
++	.rssi_tol		= 2,
++	.mon_reg_num		= ARRAY_SIZE(rtw89_btc_8852b_mon_reg),
++	.mon_reg		= rtw89_btc_8852b_mon_reg,
++	.rf_para_ulink_num	= ARRAY_SIZE(rtw89_btc_8852b_rf_ul),
++	.rf_para_ulink		= rtw89_btc_8852b_rf_ul,
++	.rf_para_dlink_num	= ARRAY_SIZE(rtw89_btc_8852b_rf_dl),
++	.rf_para_dlink		= rtw89_btc_8852b_rf_dl,
++	.ps_mode_supported	= BIT(RTW89_PS_MODE_RFOFF) |
++				  BIT(RTW89_PS_MODE_CLK_GATED) |
++				  BIT(RTW89_PS_MODE_PWR_GATED),
++	.low_power_hci_modes	= 0,
++	.h2c_cctl_func_id	= H2C_FUNC_MAC_CCTLINFO_UD,
++	.hci_func_en_addr	= R_AX_HCI_FUNC_EN,
++	.h2c_desc_size		= sizeof(struct rtw89_txwd_body),
++	.txwd_body_size		= sizeof(struct rtw89_txwd_body),
++	.h2c_ctrl_reg		= R_AX_H2CREG_CTRL,
++	.h2c_regs		= rtw8852b_h2c_regs,
++	.c2h_ctrl_reg		= R_AX_C2HREG_CTRL,
++	.c2h_regs		= rtw8852b_c2h_regs,
++	.page_regs		= &rtw8852b_page_regs,
++	.dcfo_comp		= &rtw8852b_dcfo_comp,
++	.dcfo_comp_sft		= 3,
++	.imr_info		= &rtw8852b_imr_info,
++	.rrsr_cfgs		= &rtw8852b_rrsr_cfgs,
+ 	.dma_ch_mask		= BIT(RTW89_DMA_ACH4) | BIT(RTW89_DMA_ACH5) |
+ 				  BIT(RTW89_DMA_ACH6) | BIT(RTW89_DMA_ACH7) |
+ 				  BIT(RTW89_DMA_B1MG) | BIT(RTW89_DMA_B1HI),
 -- 
 2.25.1
 
