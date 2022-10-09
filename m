@@ -2,55 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 628B5C433F5
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B88E8C4332F
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Oct 2022 22:12:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231278AbiJIWKl (ORCPT
+        id S231357AbiJIWMV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Oct 2022 18:10:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42092 "EHLO
+        Sun, 9 Oct 2022 18:12:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230483AbiJIWJ2 (ORCPT
+        with ESMTP id S230355AbiJIWLa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Oct 2022 18:09:28 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CB5228732;
-        Sun,  9 Oct 2022 15:08:56 -0700 (PDT)
+        Sun, 9 Oct 2022 18:11:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B6E92982F;
+        Sun,  9 Oct 2022 15:09:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8404CB80DD8;
-        Sun,  9 Oct 2022 22:08:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE41FC4347C;
-        Sun,  9 Oct 2022 22:08:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BB8CB60CA3;
+        Sun,  9 Oct 2022 22:09:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D78A8C433D6;
+        Sun,  9 Oct 2022 22:09:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665353329;
-        bh=uFZzpqGeI0F+s1iei+vQqMl4q+FdPp2Sji8X1gj9HgQ=;
+        s=k20201202; t=1665353364;
+        bh=Rsz9rKTGJKYtTSkNCLrjg0+4EQ57GBD6604qCTdupwE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IItcKXBvThrqEvex+TKmSNPHr/y08vOckhqLhLtQVePAwJTjNEEuuKuUIKXec7hZ0
-         YAyVL+RWjtzOnzrZX3ouYyUyAHA13c/m1z0fruoQ0G0cvrgY1qBok7Amt02ZoJ17VT
-         Zkl7p+H2iow5Qr4wc0RH5nSNTpy3VfuZsI78pc7Q/P99YV552nopS/Rz9S4JQyBXTz
-         mwWDqVbDiwcY1DiujVVmYLo4e256iuxtz9d4a7GMMJBNJiFkaKzAs56kM3+Avzhv6q
-         r+w5hRg34J5ze9guqVgG8NorH8f27k88botWUTF20N9islLzbkFMiqWNJkjdn/sodJ
-         TjY8KzymOOdZg==
+        b=A9fXsCkE4cOgznKx2T0rOlFXLMxQcY06/FZM6olu9CrfPtpBdai7R+6O/hvLicH6i
+         /DXWNcsDCTPYeDxzqMMkyk8k+7UMUYBBSrFiz3Zt9vucYX5oSWbTkjML2vOxxQL6kJ
+         1FeMr+yoN7jvQ9dW4OuwKVbSva1wMnm/smvM+mA/5pP8Xf+P88QgOJ4QozjuuX+25m
+         EdhHsA4+sUSkxzNX0MBw8vH1d1DtslzEh6DEpHp4njwnoLkr6PP5gKQ7Z1LP2Jkrpd
+         m3xUS8ywtrBj4s4U1hvqSFJjOyedHemNTF3YgR4Hrbi2nwkogFo13gvN0rp8abxg6l
+         2Pkv2itRNfFQw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
-        syzbot <syzbot+2ca247c2d60c7023de7f@syzkaller.appspotmail.com>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.0 20/77] wifi: ath9k: avoid uninit memory read in ath9k_htc_rx_msg()
-Date:   Sun,  9 Oct 2022 18:06:57 -0400
-Message-Id: <20221009220754.1214186-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.0 27/77] rtw89: ser: leave lps with mutex
+Date:   Sun,  9 Oct 2022 18:07:04 -0400
+Message-Id: <20221009220754.1214186-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221009220754.1214186-1-sashal@kernel.org>
 References: <20221009220754.1214186-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -58,147 +55,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-[ Upstream commit b383e8abed41cc6ff1a3b34de75df9397fa4878c ]
+[ Upstream commit 8676031bae1c91037d06341214f4150b33707c68 ]
 
-syzbot is reporting uninit value at ath9k_htc_rx_msg() [1], for
-ioctl(USB_RAW_IOCTL_EP_WRITE) can call ath9k_hif_usb_rx_stream() with
-pkt_len = 0 but ath9k_hif_usb_rx_stream() uses
-__dev_alloc_skb(pkt_len + 32, GFP_ATOMIC) based on an assumption that
-pkt_len is valid. As a result, ath9k_hif_usb_rx_stream() allocates skb
-with uninitialized memory and ath9k_htc_rx_msg() is reading from
-uninitialized memory.
+Calling rtw89_leave_lps() should hold rtwdev::mutex.
+So, fix it.
 
-Since bytes accessed by ath9k_htc_rx_msg() is not known until
-ath9k_htc_rx_msg() is called, it would be difficult to check minimal valid
-pkt_len at "if (pkt_len > 2 * MAX_RX_BUF_SIZE) {" line in
-ath9k_hif_usb_rx_stream().
-
-We have two choices. One is to workaround by adding __GFP_ZERO so that
-ath9k_htc_rx_msg() sees 0 if pkt_len is invalid. The other is to let
-ath9k_htc_rx_msg() validate pkt_len before accessing. This patch chose
-the latter.
-
-Note that I'm not sure threshold condition is correct, for I can't find
-details on possible packet length used by this protocol.
-
-Link: https://syzkaller.appspot.com/bug?extid=2ca247c2d60c7023de7f [1]
-Reported-by: syzbot <syzbot+2ca247c2d60c7023de7f@syzkaller.appspotmail.com>
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/7acfa1be-4b5c-b2ce-de43-95b0593fb3e5@I-love.SAKURA.ne.jp
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20220704023453.19935-5-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/htc_hst.c | 43 +++++++++++++++---------
- 1 file changed, 28 insertions(+), 15 deletions(-)
+ drivers/net/wireless/realtek/rtw89/ser.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 994ec48b2f66..ca05b07a45e6 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -364,33 +364,27 @@ void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
+diff --git a/drivers/net/wireless/realtek/rtw89/ser.c b/drivers/net/wireless/realtek/rtw89/ser.c
+index 726223f25dc6..7240364e8f7d 100644
+--- a/drivers/net/wireless/realtek/rtw89/ser.c
++++ b/drivers/net/wireless/realtek/rtw89/ser.c
+@@ -152,7 +152,10 @@ static void ser_state_run(struct rtw89_ser *ser, u8 evt)
+ 	rtw89_debug(rtwdev, RTW89_DBG_SER, "ser: %s receive %s\n",
+ 		    ser_st_name(ser), ser_ev_name(ser, evt));
+ 
++	mutex_lock(&rtwdev->mutex);
+ 	rtw89_leave_lps(rtwdev);
++	mutex_unlock(&rtwdev->mutex);
++
+ 	ser->st_tbl[ser->state].st_func(ser, evt);
  }
  
- static void ath9k_htc_fw_panic_report(struct htc_target *htc_handle,
--				      struct sk_buff *skb)
-+				      struct sk_buff *skb, u32 len)
- {
- 	uint32_t *pattern = (uint32_t *)skb->data;
- 
--	switch (*pattern) {
--	case 0x33221199:
--		{
-+	if (*pattern == 0x33221199 && len >= sizeof(struct htc_panic_bad_vaddr)) {
- 		struct htc_panic_bad_vaddr *htc_panic;
- 		htc_panic = (struct htc_panic_bad_vaddr *) skb->data;
- 		dev_err(htc_handle->dev, "ath: firmware panic! "
- 			"exccause: 0x%08x; pc: 0x%08x; badvaddr: 0x%08x.\n",
- 			htc_panic->exccause, htc_panic->pc,
- 			htc_panic->badvaddr);
--		break;
--		}
--	case 0x33221299:
--		{
-+		return;
-+	}
-+	if (*pattern == 0x33221299) {
- 		struct htc_panic_bad_epid *htc_panic;
- 		htc_panic = (struct htc_panic_bad_epid *) skb->data;
- 		dev_err(htc_handle->dev, "ath: firmware panic! "
- 			"bad epid: 0x%08x\n", htc_panic->epid);
--		break;
--		}
--	default:
--		dev_err(htc_handle->dev, "ath: unknown panic pattern!\n");
--		break;
-+		return;
- 	}
-+	dev_err(htc_handle->dev, "ath: unknown panic pattern!\n");
- }
- 
- /*
-@@ -411,16 +405,26 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 	if (!htc_handle || !skb)
- 		return;
- 
-+	/* A valid message requires len >= 8.
-+	 *
-+	 *   sizeof(struct htc_frame_hdr) == 8
-+	 *   sizeof(struct htc_ready_msg) == 8
-+	 *   sizeof(struct htc_panic_bad_vaddr) == 16
-+	 *   sizeof(struct htc_panic_bad_epid) == 8
-+	 */
-+	if (unlikely(len < sizeof(struct htc_frame_hdr)))
-+		goto invalid;
- 	htc_hdr = (struct htc_frame_hdr *) skb->data;
- 	epid = htc_hdr->endpoint_id;
- 
- 	if (epid == 0x99) {
--		ath9k_htc_fw_panic_report(htc_handle, skb);
-+		ath9k_htc_fw_panic_report(htc_handle, skb, len);
- 		kfree_skb(skb);
- 		return;
- 	}
- 
- 	if (epid < 0 || epid >= ENDPOINT_MAX) {
-+invalid:
- 		if (pipe_id != USB_REG_IN_PIPE)
- 			dev_kfree_skb_any(skb);
- 		else
-@@ -432,21 +436,30 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 
- 		/* Handle trailer */
- 		if (htc_hdr->flags & HTC_FLAGS_RECV_TRAILER) {
--			if (be32_to_cpu(*(__be32 *) skb->data) == 0x00C60000)
-+			if (be32_to_cpu(*(__be32 *) skb->data) == 0x00C60000) {
- 				/* Move past the Watchdog pattern */
- 				htc_hdr = (struct htc_frame_hdr *)(skb->data + 4);
-+				len -= 4;
-+			}
- 		}
- 
- 		/* Get the message ID */
-+		if (unlikely(len < sizeof(struct htc_frame_hdr) + sizeof(__be16)))
-+			goto invalid;
- 		msg_id = (__be16 *) ((void *) htc_hdr +
- 				     sizeof(struct htc_frame_hdr));
- 
- 		/* Now process HTC messages */
- 		switch (be16_to_cpu(*msg_id)) {
- 		case HTC_MSG_READY_ID:
-+			if (unlikely(len < sizeof(struct htc_ready_msg)))
-+				goto invalid;
- 			htc_process_target_rdy(htc_handle, htc_hdr);
- 			break;
- 		case HTC_MSG_CONNECT_SERVICE_RESPONSE_ID:
-+			if (unlikely(len < sizeof(struct htc_frame_hdr) +
-+				     sizeof(struct htc_conn_svc_rspmsg)))
-+				goto invalid;
- 			htc_process_conn_rsp(htc_handle, htc_hdr);
- 			break;
- 		default:
 -- 
 2.35.1
 
