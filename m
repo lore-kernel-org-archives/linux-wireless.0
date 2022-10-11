@@ -2,182 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D05FDC433F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Oct 2022 10:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 532FFC433F5
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Oct 2022 10:53:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229619AbiJKKF2 (ORCPT
+        id S229865AbiJKKxa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Oct 2022 06:05:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59850 "EHLO
+        Tue, 11 Oct 2022 06:53:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229773AbiJKKFY (ORCPT
+        with ESMTP id S229600AbiJKKx3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Oct 2022 06:05:24 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 364BD4F1B8
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2022 03:05:16 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29B6lAbe009058;
-        Tue, 11 Oct 2022 10:05:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=1zBQ5tDHr7Zvy+7qqqBMs86MO2wzcjRuHocuC2qMIyY=;
- b=O/SnqMK2SD9KEHsd3HEogI8MN4dJpH7Kbkqp8BTD0Y0Wyyib+tWK+y1hCUnLKCpzv4aZ
- Wo6lHpBlVgnJrUY27cYSsHLmE6fyn5LF/joCHlwp18OIKBR8kO/oyPVS/8kD9wIQ91SK
- PUgV9MN9RtYvcZju0fydGPvV9Bgegmcgs8F4roKFQYyLEWyfoOAkDff9galbTnFNz0nT
- Hpwk84a04loZln37TwitByc9HngO/kT8u2CPPn3dmxnmfkRD4EA7cJXPZWn0/5mB5pQ9
- oTbqWD7J5mRDuHap3bYDhEU+notlAky6u9XjI6llx6wuReoa1LjBTQxqRYtuNPlipZFH 5A== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k4rx4sqcs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 11 Oct 2022 10:05:10 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29BA59XG020398
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 11 Oct 2022 10:05:09 GMT
-Received: from ssreeela-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Tue, 11 Oct 2022 03:05:07 -0700
-From:   Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
-Subject: [PATCH] ath11k: Fix firmware crash on vdev delete race condition
-Date:   Tue, 11 Oct 2022 15:23:46 +0530
-Message-ID: <20221011095346.3901-1-quic_ssreeela@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
+        Tue, 11 Oct 2022 06:53:29 -0400
+Received: from wnew3-smtp.messagingengine.com (wnew3-smtp.messagingengine.com [64.147.123.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5751E37184;
+        Tue, 11 Oct 2022 03:53:27 -0700 (PDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.west.internal (Postfix) with ESMTP id B498C2B066B9;
+        Tue, 11 Oct 2022 06:53:25 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute3.internal (MEProxy); Tue, 11 Oct 2022 06:53:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:date:date:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to; s=fm2; t=1665485605; x=1665489205; bh=5bI3YI3TxD
+        wB3OBrM9zXo72ykVPw/KrTh1LKAdTEzQI=; b=wvKNwKMxqrtAUNztuQlpfH9rp1
+        brYdNWsHKjW5fJGmq9KxBMWNgghy92WBf4MC7Df/2iyjxjmhvBS9lfU/852FLQBp
+        cwYxE7DKRf1odZT1cYvYmIOjaFXYHx1v9iQfOZ1r45PpQULyQ73bENRT2VQaF14n
+        YlSUTQWrnjdvMW5/vOFs1RpnahKqADuw8MKEfsOS7DOCiPl8jJUcMj54k+6YL/cP
+        Tldi28IarLCcK31EyloZYKNFdkDjGMo5sgbySgmeTpy7U14eqb6cErLRRWgnPBRL
+        5JF2BDvJFdUGJNEaZehLDR7ifkamlAlDo52ovoiZk8a6s4AnrGC4lGLa7D/Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:in-reply-to:message-id
+        :mime-version:references:reply-to:sender:subject:subject:to:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm3; t=1665485605; x=1665489205; bh=5bI3YI3TxDwB3OBrM9zXo72ykVPw
+        /KrTh1LKAdTEzQI=; b=QiyfXg4wplRnzHFR+cKAh/LuF+QhtxgGfaKaoB9f8dyO
+        41zuh4OCh3LAMg4AEswO0xUhCGhmzHV8pNpkmkRBcuTeFDIeiBfw464gNOdcqn4I
+        fFFPIYbZCGph4Y1DbFmnVdv7soycxHa2mLCXm1LiV2NLX5Ofs0QiFuHBNtEOyXcM
+        uSFkq7zJo2eoNmSWveue5aUznNqZ04sn7yu2lATDofJ0jSGdfILE6BQEBY2e32qg
+        H0XRSS/QYLFzQYuA4wig9W2u4LP2bAW4VtELDlZbNut75XPUyRQ5DeCUiiHM2elL
+        vp6jgsEcas+IeiCGy2bMpewivf1Zqz3ZMcf30umdXg==
+X-ME-Sender: <xms:JEtFY32lcooBYztdni67Wwmf0LubIg_dQcMQkf3jQrxQ-oDXKtPCUw>
+    <xme:JEtFY2HgsDD9Sbsgfw-Jy2gu8rI3E0Sl9eGDOrmslweQR1ZqSxMeUEs_-Yh-k0Swd
+    mPXzYddL1kPBGVBsoI>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrfeejiedgvdelucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:JEtFY34Hs5N1C3qu7St5NaZMRwdLH8GqRYGVSNCkcjMa44U90zOy6Q>
+    <xmx:JEtFY83QAC37vCJ0ovUwIfvJSa_Vo9YEENl-M-JBNfvib88fBVKhGQ>
+    <xmx:JEtFY6HZMGQ9A2HNXL7dS-yvA5FZgAEJlvb5J-il0U7Y-PCW9C3p5A>
+    <xmx:JUtFY9C-zwgQtavNsqAMd3xx1ciDw6jSZur_Rm2SJnHJdxi7sCsWrmxdE6s>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id B75D1B60086; Tue, 11 Oct 2022 06:53:24 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-1015-gaf7d526680-fm-20220929.001-gaf7d5266
+Mime-Version: 1.0
+Message-Id: <e21a4eab-fe4f-4028-a22e-d60a6feb4dac@app.fastmail.com>
+In-Reply-To: <87tu4aok1j.fsf@kernel.org>
+References: <CA+G9fYsZ_qypa=jHY_dJ=tqX4515+qrV9n2SWXVDHve826nF7Q@mail.gmail.com>
+ <87ilkrpqka.fsf@kernel.org>
+ <158e9f4f-9929-4244-b040-78f2e54bc028@app.fastmail.com>
+ <87tu4aok1j.fsf@kernel.org>
+Date:   Tue, 11 Oct 2022 12:53:04 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Kalle Valo" <kvalo@kernel.org>
+Cc:     "Naresh Kamboju" <naresh.kamboju@linaro.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "open list" <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        "Eric Dumazet" <edumazet@google.com>,
+        "Jakub Kicinski" <kuba@kernel.org>,
+        "Paolo Abeni" <pabeni@redhat.com>, ath11k@lists.infradead.org,
+        regressions@lists.linux.dev, lkft-triage@lists.linaro.org
+Subject: Re: drivers/net/wireless/ath/ath11k/mac.c:2238:29: warning:
+ 'ath11k_peer_assoc_h_he_limit' reading 16 bytes from a region of size 0
 Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: lIQiGnXPEnzWRhdRGsCjtfHLOK5Fb3w5
-X-Proofpoint-ORIG-GUID: lIQiGnXPEnzWRhdRGsCjtfHLOK5Fb3w5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-10-11_03,2022-10-10_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- priorityscore=1501 suspectscore=0 spamscore=0 mlxlogscore=999
- impostorscore=0 phishscore=0 adultscore=0 clxscore=1011 malwarescore=0
- bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2210110056
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Current code does not wait for vdev delete completion on vdev create
-failures and tries to send another vdev create followed by vdev set
-param to firmware with same vdev id. This causes firmware crash.
-Fix this crash by waiting for vdev delete completion on vdev
-create failures.
+On Tue, Oct 11, 2022, at 10:12 AM, Kalle Valo wrote:
+> "Arnd Bergmann" <arnd@arndb.de> writes:
 
-Tested-on: IPQ8074 WLAN.HK.2.6.0.1-00905-QCAHKSWPL_SILICONZ-1
+>
+> You guessed correctly, disabling KASAN makes the warning go away. So no
+> point of reporting this to GCC, thanks for the help!
 
-Signed-off-by: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/mac.c | 60 +++++++++++++++++----------
- 1 file changed, 37 insertions(+), 23 deletions(-)
+What I meant was that if the problem is specific to KASAN, it might
+be nice to report it in the gcc bug tracker with the KASAN component,
+ideally with some kind of minimized test case or at least preprocessed
+source.
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 84d956ad4093..261246383fc6 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6162,6 +6162,40 @@ void ath11k_mac_11d_scan_stop_all(struct ath11k_base *ab)
- 	}
- }
- 
-+static int ath11k_mac_vdev_delete(struct ath11k *ar, struct ath11k_vif *arvif)
-+{
-+	unsigned long time_left;
-+	struct ieee80211_vif *vif = arvif->vif;
-+	int ret = 0;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	reinit_completion(&ar->vdev_delete_done);
-+
-+	ret = ath11k_wmi_vdev_delete(ar, arvif->vdev_id);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to delete WMI vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	time_left = wait_for_completion_timeout(&ar->vdev_delete_done,
-+						ATH11K_VDEV_DELETE_TIMEOUT_HZ);
-+	if (time_left == 0) {
-+		ath11k_warn(ar->ab, "Timeout in receiving vdev delete response\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	ar->ab->free_vdev_map |= 1LL << (arvif->vdev_id);
-+	ar->allocated_vdev_map &= ~(1LL << arvif->vdev_id);
-+	ar->num_created_vdevs--;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "vdev %pM deleted, vdev_id %d\n",
-+		   vif->addr, arvif->vdev_id);
-+
-+	return ret;
-+}
-+
- static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif)
- {
-@@ -6399,10 +6433,7 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- err_vdev_del:
--	ath11k_wmi_vdev_delete(ar, arvif->vdev_id);
--	ar->num_created_vdevs--;
--	ar->allocated_vdev_map &= ~(1LL << arvif->vdev_id);
--	ab->free_vdev_map |= 1LL << arvif->vdev_id;
-+	ath11k_mac_vdev_delete(ar, arvif);
- 	spin_lock_bh(&ar->data_lock);
- 	list_del(&arvif->list);
- 	spin_unlock_bh(&ar->data_lock);
-@@ -6431,7 +6462,6 @@ static void ath11k_mac_op_remove_interface(struct ieee80211_hw *hw,
- 	struct ath11k *ar = hw->priv;
- 	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
- 	struct ath11k_base *ab = ar->ab;
--	unsigned long time_left;
- 	int ret;
- 	int i;
- 
-@@ -6452,29 +6482,13 @@ static void ath11k_mac_op_remove_interface(struct ieee80211_hw *hw,
- 				    arvif->vdev_id, ret);
- 	}
- 
--	reinit_completion(&ar->vdev_delete_done);
--
--	ret = ath11k_wmi_vdev_delete(ar, arvif->vdev_id);
-+	ret = ath11k_mac_vdev_delete(ar, arvif);
- 	if (ret) {
--		ath11k_warn(ab, "failed to delete WMI vdev %d: %d\n",
-+		ath11k_warn(ab, "failed to delete vdev %d: %d\n",
- 			    arvif->vdev_id, ret);
- 		goto err_vdev_del;
- 	}
- 
--	time_left = wait_for_completion_timeout(&ar->vdev_delete_done,
--						ATH11K_VDEV_DELETE_TIMEOUT_HZ);
--	if (time_left == 0) {
--		ath11k_warn(ab, "Timeout in receiving vdev delete response\n");
--		goto err_vdev_del;
--	}
--
--	ab->free_vdev_map |= 1LL << (arvif->vdev_id);
--	ar->allocated_vdev_map &= ~(1LL << arvif->vdev_id);
--	ar->num_created_vdevs--;
--
--	ath11k_dbg(ab, ATH11K_DBG_MAC, "vdev %pM deleted, vdev_id %d\n",
--		   vif->addr, arvif->vdev_id);
--
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR) {
- 		clear_bit(ATH11K_FLAG_MONITOR_VDEV_CREATED, &ar->monitor_flags);
- 		ar->monitor_vdev_id = -1;
--- 
-2.17.1
-
+   Arnd
