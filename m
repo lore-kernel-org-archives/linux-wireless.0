@@ -2,111 +2,109 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9063EC43217
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Oct 2022 19:26:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53791C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Oct 2022 20:37:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229944AbiJLT0i convert rfc822-to-8bit (ORCPT
+        id S229703AbiJLUhk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Oct 2022 15:26:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39388 "EHLO
+        Wed, 12 Oct 2022 16:37:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229748AbiJLT0b (ORCPT
+        with ESMTP id S229489AbiJLUhj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2022 15:26:31 -0400
-Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A9910251A;
-        Wed, 12 Oct 2022 12:26:30 -0700 (PDT)
-Received: from omf12.hostedemail.com (a10.router.float.18 [10.200.18.1])
-        by unirelay01.hostedemail.com (Postfix) with ESMTP id 2096E1C6C41;
-        Wed, 12 Oct 2022 19:17:09 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf12.hostedemail.com (Postfix) with ESMTPA id AB9FC17;
-        Wed, 12 Oct 2022 19:16:43 +0000 (UTC)
-Message-ID: <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
-Subject: Re: [PATCH v1 3/5] treewide: use get_random_u32() when possible
-From:   Joe Perches <joe@perches.com>
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        linux-kernel@vger.kernel.org
-Cc:     brcm80211-dev-list.pdl@broadcom.com, cake@lists.bufferbloat.net,
-        ceph-devel@vger.kernel.org, coreteam@netfilter.org,
-        dccp@vger.kernel.org, dev@openvswitch.org,
-        dmaengine@vger.kernel.org, drbd-dev@lists.linbit.com,
-        dri-devel@lists.freedesktop.org, kasan-dev@googlegroups.com,
-        linux-actions@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mm@kvack.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-raid@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-sctp@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        lvs-devel@vger.kernel.org, netdev@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, rds-devel@oss.oracle.com,
-        SHA-cyfmac-dev-list@infineon.com, target-devel@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net
-Date:   Wed, 12 Oct 2022 12:16:53 -0700
-In-Reply-To: <20221005214844.2699-4-Jason@zx2c4.com>
-References: <20221005214844.2699-1-Jason@zx2c4.com>
-         <20221005214844.2699-4-Jason@zx2c4.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8BIT
-User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
+        Wed, 12 Oct 2022 16:37:39 -0400
+Received: from mail-oa1-x35.google.com (mail-oa1-x35.google.com [IPv6:2001:4860:4864:20::35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B2FA102DED
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2022 13:37:37 -0700 (PDT)
+Received: by mail-oa1-x35.google.com with SMTP id 586e51a60fabf-1322fa1cf6fso81609fac.6
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2022 13:37:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=donbowman.ca; s=google;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=KSwQr18BbuLQCo5sc8X61BxuhXJCLO2tHeJ+hlWv6fQ=;
+        b=AHGIBz1O6V0nn60TM9s1NugihCpKX+9wo2n0HR2abi9W1DlGG4w8HUZ7tp5EpaB5rR
+         CadRANnbh2D9EMjko+QT149UG4E+H3Pt0nymXV0dzr3IUHaQVda/Hb+hcWaQ5df3P3Ib
+         pJUhA334tuS+5gy3mYQcgTAsofvVTEgxEcs+4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=KSwQr18BbuLQCo5sc8X61BxuhXJCLO2tHeJ+hlWv6fQ=;
+        b=AwmeSTzxyHQ9T50lY704/e5pETDsKG05GcxKehcjQ7WRFBkHaQLGR6fC1N76Qu7Zyk
+         xDXrcocdEyiCFtOWIr5olgTwWzN/i2X3h4C37ruQA0GOxdM90HunMYplCkIg+sjYaN2A
+         +vnFfZ1U23r3xfqyYaPbj6dcSnl1D4aRCmsExdb1dG8LT/b6wV8TSm0U38WItm3bRRLO
+         izcYcC0CAr0kYUByBcwyM2KMv46Asm92ZpP3nOUT/MNWTcFE3rEPAmwVwpY0dg0wgJ62
+         JE1qRw1K6+d/M42shj3QQs6C37s4Wic1dcoszapcWkPapv30RGEPA9NLsaES5OKChiwI
+         Z68w==
+X-Gm-Message-State: ACrzQf07d+vhQY9Z5XNhFzcG3xHX3r7Oivfw1Ydwmcgjb3Slh1cKa4A9
+        2kCa01QEmxLvHQKVj8J9QKQB+UBI+++CuV7Bk+D1CnW416lFmw==
+X-Google-Smtp-Source: AMsMyM6mTTgRZn7pahLb6220Qpv8fu45l033Gp5NAETGR7FsFcD4qgizCN3I04lsCivPysLOgBUje1mESRFpKjLcDSc=
+X-Received: by 2002:a05:6871:a6:b0:12b:8d8d:d7b with SMTP id
+ u38-20020a05687100a600b0012b8d8d0d7bmr3530848oaa.197.1665607057163; Wed, 12
+ Oct 2022 13:37:37 -0700 (PDT)
 MIME-Version: 1.0
-X-Stat-Signature: c3d78nppyrywoyngway5d943fw3wwtdu
-X-Rspamd-Server: rspamout03
-X-Rspamd-Queue-Id: AB9FC17
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX1/Qw27OeRP8/mQW0Su38d7rwhSo1NO9QCw=
-X-HE-Tag: 1665602203-428634
+From:   Don Bowman <db@donbowman.ca>
+Date:   Wed, 12 Oct 2022 16:37:26 -0400
+Message-ID: <CADJev7-wMryV+Mw=cHBLAXT0nXVB5fbyYNyqWc5aBhBLUbm7pw@mail.gmail.com>
+Subject: re: [PATCH 10/12] iwlwifi: Add support for getting rf id with blank
+ otp Inbox
+To:     linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2022-10-05 at 23:48 +0200, Jason A. Donenfeld wrote:
-> The prandom_u32() function has been a deprecated inline wrapper around
-> get_random_u32() for several releases now, and compiles down to the
-> exact same code. Replace the deprecated wrapper with a direct call to
-> the real function.
-[]
-> diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
-[]
-> @@ -734,7 +734,7 @@ static int send_connect(struct c4iw_ep *ep)
->  				   &ep->com.remote_addr;
->  	int ret;
->  	enum chip_type adapter_type = ep->com.dev->rdev.lldi.adapter_type;
-> -	u32 isn = (prandom_u32() & ~7UL) - 1;
-> +	u32 isn = (get_random_u32() & ~7UL) - 1;
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 10/12] iwlwifi: Add support for getting rf id with blank otp
+Date: Thu, 26 Aug 2021 14:45:55 +0300 [thread overview]
+Message-ID: <e9265c03dee77861f5aeb8d94569b51d28bca148.camel@coelho.fi> (raw)
+In-Reply-To: <ce687133d7edf29abb421a9f1a105bb9eedd9761.camel@coelho.fi>
 
-trivia:
+On Thu, 2021-08-26 at 14:30 +0300, Luca Coelho wrote:
+> On Sat, 2021-08-21 at 17:07 +0300, Kalle Valo wrote:
+> > Luca Coelho <luca@coelho.fi> writes:
+> >
+> > > From: Matti Gottlieb <matti.gottlieb@intel.com>
+> > >
+> > > When having a blank OTP the only way to get the rf id
+> > > and the cdb info is from prph registers.
+> > >
+> > > Currently there is some implementation for this, but it
+> > > is located in the wrong place in the code (should be before
+> > > trying to understand what HW is connected and not after),
+> > > and it has a partial implementation.
+> > >
+> > > Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+> > > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-There are somewhat odd size mismatches here.
 
-I had to think a tiny bit if random() returned a value from 0 to 7
-and was promoted to a 64 bit value then truncated to 32 bit.
+I find this patch breaks my Asus UX433FA
+Intel Corporation Cannon Point-LP CNVi [Wireless-AC] (rev 30)
 
-Perhaps these would be clearer as ~7U and not ~7UL
+[    4.350690] iwlwifi 0000:00:14.3: enabling device (0000 -> 0002)
+[    4.352211] iwlwifi 0000:00:14.3: Can find a correct rfid for crf id 0x5a2
+[    4.352239] iwlwifi: probe of 0000:00:14.3 failed with error -22
 
->  	struct net_device *netdev;
->  	u64 params;
->  
-> @@ -2469,7 +2469,7 @@ static int accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
->  	}
->  
->  	if (!is_t4(adapter_type)) {
-> -		u32 isn = (prandom_u32() & ~7UL) - 1;
-> +		u32 isn = (get_random_u32() & ~7UL) - 1;
+it worked prior. I notice a few other people online with the same
+cannon point asus with the same issue.
 
-etc...
+I'm not sure what other diagnostics i can provide but more than happy
+to. Is there a way to dump the OTP out?
 
-drivers/infiniband/hw/cxgb4/cm.c:	u32 isn = (prandom_u32() & ~7UL) - 1;
-drivers/infiniband/hw/cxgb4/cm.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
-drivers/net/ethernet/chelsio/inline_crypto/chtls/chtls_cm.c:	rpl5->iss = cpu_to_be32((prandom_u32() & ~7UL) - 1);
-drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
-drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
-drivers/target/iscsi/cxgbit/cxgbit_cm.c:	rpl5->iss = cpu_to_be32((prandom_u32() & ~7UL) - 1);
-
+00:14.3 Network controller: Intel Corporation Cannon Point-LP CNVi
+[Wireless-AC] (rev 30)
+DeviceName: WLAN
+Subsystem: Intel Corporation Cannon Point-LP CNVi [Wireless-AC]
+Flags: fast devsel, IRQ 16
+Memory at b111c000 (64-bit, non-prefetchable) [size=16K]
+Capabilities: [c8] Power Management version 3
+Capabilities: [d0] MSI: Enable- Count=1/1 Maskable- 64bit+
+Capabilities: [40] Express Root Complex Integrated Endpoint, MSI 00
+Capabilities: [80] MSI-X: Enable- Count=16 Masked-
+Capabilities: [100] Null
+Capabilities: [14c] Latency Tolerance Reporting
+Capabilities: [164] Vendor Specific Information: ID=0010 Rev=0 Len=014 <?>
+Kernel modules: iwlwifi
