@@ -2,124 +2,197 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED4CC43219
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Oct 2022 23:02:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5872EC433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Oct 2022 00:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229546AbiJKXCE (ORCPT
+        id S229678AbiJLAQj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Oct 2022 19:02:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41736 "EHLO
+        Tue, 11 Oct 2022 20:16:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229616AbiJKXB5 (ORCPT
+        with ESMTP id S229477AbiJLAQh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Oct 2022 19:01:57 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59A9B95E63;
-        Tue, 11 Oct 2022 16:01:54 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5E2E8B817F6;
-        Tue, 11 Oct 2022 23:01:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9723CC433D6;
-        Tue, 11 Oct 2022 23:01:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665529308;
-        bh=gCI+X2WOw4l6GrJak35sDaAf8gDE0fXgutS5wo82m0c=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=AJFptayVxOqteJVOLykn7hUdHTEFBSFYdPDnURZs6EbQ5lnc5EDwMPEWLIY2Zkc6k
-         ToDJ69GFb03nJ1ZHa3Bu1XZh90AT8husNifCGxqExcBTtq73zRbzdbLGz1yV1PS0BR
-         YgADbRNTz4kaxl1FPtL5h69IOLIEA3uAgLFu6LoZOj6vAhrzGGJogNzed4iTNoQ9kU
-         RplOVmj/pT0WrloWUBcPNyJldLUtdrL9BReJJkpTFUke93m8zD4dIphjguaBr6M6BU
-         xC/9Fc6Zmo9mtTlbNcRQZT+mur3mj5hpEnCkCHrxZUfVSrUfpxEhWQqxTOA+fraPtq
-         COtQHCYR1WDtw==
-Date:   Tue, 11 Oct 2022 16:01:44 -0700
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc:     linux-kernel@vger.kernel.org, patches@lists.linux.dev,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Christoph =?UTF-8?B?QsO2aG13YWxkZXI=?= 
-        <christoph.boehmwalder@linbit.com>, Christoph Hellwig <hch@lst.de>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Dave Airlie <airlied@redhat.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Florian Westphal <fw@strlen.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "H . Peter Anvin" <hpa@zytor.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Helge Deller <deller@gmx.de>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Huacai Chen <chenhuacai@kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Jan Kara <jack@suse.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Jens Axboe <axboe@kernel.dk>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Jozsef Kadlecsik <kadlec@netfilter.org>,
-        KP Singh <kpsingh@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Marco Elver <elver@google.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Richard Weinberger <richard@nod.at>,
-        Russell King <linux@armlinux.org.uk>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Thomas Graf <tgraf@suug.ch>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        WANG Xuerui <kernel@xen0n.name>, Will Deacon <will@kernel.org>,
-        Yury Norov <yury.norov@gmail.com>,
-        dri-devel@lists.freedesktop.org, kasan-dev@googlegroups.com,
-        kernel-janitors@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-mm@kvack.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-nvme@lists.infradead.org, linux-parisc@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        loongarch@lists.linux.dev, netdev@vger.kernel.org,
-        sparclinux@vger.kernel.org, x86@kernel.org
-Subject: Re: [PATCH v6 0/7] treewide cleanup of random integer usage
-Message-ID: <20221011160144.1c0dc2af@kernel.org>
-In-Reply-To: <20221010230613.1076905-1-Jason@zx2c4.com>
-References: <20221010230613.1076905-1-Jason@zx2c4.com>
+        Tue, 11 Oct 2022 20:16:37 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AD0A2BE3B
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2022 17:16:29 -0700 (PDT)
+X-UUID: 166e1b330e7f4059ac73151a75fe78e2-20221012
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=5TvfMAlcOhTEuPMwksbIJp8PJAyLBIEodner5gvucXc=;
+        b=jrjkrQc7Ddj5lEC2YGH+Xi6za0m/bNCeZhu0SG/qGW7qPu1pczdTIvZWG3doN5VzINZbuUnm2h+U3Ruz9lYK6R3TwZL3JCvQIwFBcRxSdCGgQwtzR7/iwzUcLLaUUYLJGtfBtjy5dIsXNoP7/a93k12CGP9pZ0aiy/Yc6yztOoc=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.11,REQID:addfe02e-8709-4372-b3c4-d63921d7057a,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:95
+X-CID-INFO: VERSION:1.1.11,REQID:addfe02e-8709-4372-b3c4-d63921d7057a,IP:0,URL
+        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
+        :quarantine,TS:95
+X-CID-META: VersionHash:39a5ff1,CLOUDID:1f019ce1-2948-402a-a6e4-b5d31fe11eb7,B
+        ulkID:221012081627PUVMOWF2,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48|823|
+        824,TC:nil,Content:0,EDM:-3,IP:nil,URL:11|1,File:nil,Bulk:nil,QS:nil,BEC:n
+        il,COL:0
+X-UUID: 166e1b330e7f4059ac73151a75fe78e2-20221012
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 353111499; Wed, 12 Oct 2022 08:16:26 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Wed, 12 Oct 2022 08:16:25 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Wed, 12 Oct 2022 08:16:25 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <YN.Chen@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <Deren.Wu@mediatek.com>,
+        <km.lin@mediatek.com>, <jenhao.yang@mediatek.com>,
+        <robin.chiu@mediatek.com>, <Eddie.Chen@mediatek.com>,
+        <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+        <ted.huang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <Tom.Chou@mediatek.com>, <steve.lee@mediatek.com>,
+        <jsiuda@google.com>, <frankgor@google.com>, <kuabhs@google.com>,
+        <druth@google.com>, <abhishekpandit@google.com>,
+        <shawnku@google.com>, <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>
+Subject: [PATCH v2 2/7] wifi: mt76: mt7921: add chanctx parameter to mt76_connac_mcu_uni_add_bss signature
+Date:   Wed, 12 Oct 2022 08:16:16 +0800
+Message-ID: <4b07e80768cdbe5a1c6e067500f84489f3995a1d.1665533390.git.objelf@gmail.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <8d784dba38cfb2183af2e4d9fc822a27ef34dcd2.1665533390.git.objelf@gmail.com>
+References: <8d784dba38cfb2183af2e4d9fc822a27ef34dcd2.1665533390.git.objelf@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 10 Oct 2022 17:06:06 -0600 Jason A. Donenfeld wrote:
-> - If you want a secure or an insecure random u64, use get_random_u64().
-> - If you want a secure or an insecure random u32, use get_random_u32().
->   * The old function prandom_u32() has been deprecated for a while now
->     and is just a wrapper around get_random_u32(). Same for
->     get_random_int().
-> - If you want a secure or an insecure random u16, use get_random_u16().
-> - If you want a secure or an insecure random u8, use get_random_u8().
-> - If you want secure or insecure random bytes, use get_random_bytes().
->   * The old function prandom_bytes() has been deprecated for a while now
->     and has long been a wrapper around get_random_bytes().
-> - If you want a non-uniform random u32, u16, or u8 bounded by a certain
->   open interval maximum, use prandom_u32_max().
->   * I say "non-uniform", because it doesn't do any rejection sampling or
->     divisions. Hence, it stays within the prandom_* namespace.
+From: Sean Wang <sean.wang@mediatek.com>
 
-Acked-by: Jakub Kicinski <kuba@kernel.org>
+Add a chanctx parameter to mt76_connac_mcu_uni_add_bss signature to allow
+the firmware binds the BSS into the specific channel context.
+
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c      |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c |  7 ++++---
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h |  3 ++-
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c      |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c     | 10 ++++++----
+ 5 files changed, 14 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 3dac76e6df4d..83f30305414d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -1119,7 +1119,7 @@ mt7615_mcu_uni_add_bss(struct mt7615_phy *phy, struct ieee80211_vif *vif,
+ 	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 
+ 	return mt76_connac_mcu_uni_add_bss(phy->mt76, vif, &mvif->sta.wcid,
+-					   enable);
++					   enable, NULL);
+ }
+ 
+ static inline int
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 4b12d65dc076..fffdb6976e52 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1398,10 +1398,11 @@ EXPORT_SYMBOL_GPL(mt76_connac_mcu_uni_set_chctx);
+ int mt76_connac_mcu_uni_add_bss(struct mt76_phy *phy,
+ 				struct ieee80211_vif *vif,
+ 				struct mt76_wcid *wcid,
+-				bool enable)
++				bool enable,
++				struct ieee80211_chanctx_conf *ctx)
+ {
+ 	struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
+-	struct cfg80211_chan_def *chandef = &phy->chandef;
++	struct cfg80211_chan_def *chandef = ctx ? &ctx->def : &phy->chandef;
+ 	enum nl80211_band band = chandef->chan->band;
+ 	struct mt76_dev *mdev = phy->dev;
+ 	struct {
+@@ -1518,7 +1519,7 @@ int mt76_connac_mcu_uni_add_bss(struct mt76_phy *phy,
+ 			return err;
+ 	}
+ 
+-	return mt76_connac_mcu_uni_set_chctx(phy, mvif, NULL);
++	return mt76_connac_mcu_uni_set_chctx(phy, mvif, ctx);
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_mcu_uni_add_bss);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index b7e29b177a6c..bc1c47daa81a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1742,7 +1742,8 @@ int mt76_connac_mcu_uni_set_chctx(struct mt76_phy *phy,
+ int mt76_connac_mcu_uni_add_bss(struct mt76_phy *phy,
+ 				struct ieee80211_vif *vif,
+ 				struct mt76_wcid *wcid,
+-				bool enable);
++				bool enable,
++				struct ieee80211_chanctx_conf *ctx);
+ int mt76_connac_mcu_sta_cmd(struct mt76_phy *phy,
+ 			    struct mt76_sta_cmd_info *info);
+ void mt76_connac_mcu_beacon_loss_iter(void *priv, u8 *mac,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 6860468ed191..2cf709a80b5f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -866,7 +866,7 @@ mt7921_vif_connect_iter(void *priv, u8 *mac,
+ 
+ 	if (vif->type == NL80211_IFTYPE_AP) {
+ 		mt76_connac_mcu_uni_add_bss(dev->phy.mt76, vif, &mvif->sta.wcid,
+-					    true);
++					    true, NULL);
+ 		mt7921_mcu_sta_update(dev, NULL, vif, true,
+ 				      MT76_STA_INFO_STATE_NONE);
+ 		mt7921_mcu_uni_add_beacon_offload(dev, hw, vif, true);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 7e409ac7d9a8..82df5fa4fbc7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -748,7 +748,7 @@ void mt7921_mac_sta_assoc(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 
+ 	if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls)
+ 		mt76_connac_mcu_uni_add_bss(&dev->mphy, vif, &mvif->sta.wcid,
+-					    true);
++					    true, NULL);
+ 
+ 	mt7921_mac_wtbl_update(dev, msta->wcid.idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+@@ -780,7 +780,8 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 		ewma_rssi_init(&mvif->rssi);
+ 		if (!sta->tdls)
+ 			mt76_connac_mcu_uni_add_bss(&dev->mphy, vif,
+-						    &mvif->sta.wcid, false);
++						    &mvif->sta.wcid, false,
++						    NULL);
+ 	}
+ 
+ 	spin_lock_bh(&dev->sta_poll_lock);
+@@ -1534,7 +1535,7 @@ mt7921_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	mt7921_mutex_acquire(dev);
+ 
+ 	err = mt76_connac_mcu_uni_add_bss(phy->mt76, vif, &mvif->sta.wcid,
+-					  true);
++					  true, NULL);
+ 	if (err)
+ 		goto out;
+ 
+@@ -1565,7 +1566,8 @@ mt7921_stop_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (err)
+ 		goto out;
+ 
+-	mt76_connac_mcu_uni_add_bss(phy->mt76, vif, &mvif->sta.wcid, false);
++	mt76_connac_mcu_uni_add_bss(phy->mt76, vif, &mvif->sta.wcid, false,
++				    NULL);
+ 
+ out:
+ 	mt7921_mutex_release(dev);
+-- 
+2.25.1
+
