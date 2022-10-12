@@ -2,133 +2,121 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A02CC07E9D
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Oct 2022 18:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3177C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Oct 2022 19:26:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229871AbiJLShK (ORCPT
+        id S229663AbiJLT0H (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Oct 2022 14:37:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58960 "EHLO
+        Wed, 12 Oct 2022 15:26:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229843AbiJLShH (ORCPT
+        with ESMTP id S229808AbiJLTZ6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2022 14:37:07 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB19E72ECB
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2022 11:37:06 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29CI4KQk003210;
-        Wed, 12 Oct 2022 18:37:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=afAjwPb82p+I7X56ClS+IfEVa5ChNF4VT+6LxdnBFeM=;
- b=Ww7+aB8x5oM33qNN1ksc5bYQD8DV1HdttUBLbbhGYV2es+WbSkVPgogRaLTNbk8wDtHv
- ozxiXSDEWjKj4YrKrlk3F2XTTG9quNM75eKoWVxFD6xFTx1nZTtwGJswVk6QjBdhQpty
- qqXGLUJqspXkLEm9rggDfF/Ix6DHVD1q8jRcrD+Q2fKxkba9JkOTnStLX5V0FWbVI647
- rR+bkeqRhwEwuVghkNaJOpUA+vmBpP1aSvrJir5SyWfRuEzCQAFH6vKF8cq3SJ9Sf5o2
- HfRy2T6QGI3tAVNRL03iGx1v7Kc017r/t9fE5ECKtTVmCaj3CrXhwFjx4xDW3ompImAF OQ== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k5xtf0p5n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 12 Oct 2022 18:37:00 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29CIaxAC021444
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 12 Oct 2022 18:36:59 GMT
-Received: from msinada-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Wed, 12 Oct 2022 11:36:59 -0700
-From:   Muna Sinada <quic_msinada@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Muna Sinada <quic_msinada@quicinc.com>
-Subject: [PATCH 4/4] wifi: ath11k: generate rx and tx mcs maps for supported HE mcs
-Date:   Wed, 12 Oct 2022 11:36:47 -0700
-Message-ID: <1665599807-12908-5-git-send-email-quic_msinada@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1665599807-12908-1-git-send-email-quic_msinada@quicinc.com>
-References: <1665599807-12908-1-git-send-email-quic_msinada@quicinc.com>
+        Wed, 12 Oct 2022 15:25:58 -0400
+Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F960FF23E
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2022 12:25:53 -0700 (PDT)
+Received: by mail-lj1-x22d.google.com with SMTP id a6so73398ljq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2022 12:25:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=mCH1mBRGKm9XJ+0zaVrmeYH3UMnCiw0sMzGuVdA+Xm4=;
+        b=DVKzeXes7fhslfgcATHkasSUQ09TYjIboyKog+Tb03PanCVYGHvZ9A66FVCSl7cgcD
+         E3BvbSgaK314zyKMQcIBTuqiSGT1U1CIxu6K0I82nWeR/iA/fotOmfXMobAJTGx+POob
+         ClzdoJykGzIPe6k/bvaQS7mTXLO9A+uY2jKQX0fdXENKe9WcctvKtL81OuNo4QHOBlTV
+         3RpR0UlAaLu1ACIRs/EkpP2XaYZ7sgPjgp0HYIycZ9WNJpCu2W8/DfxFcfBzpH0jEJnq
+         NYCwznyqAoVS3HBZPQG5rHBhMHWO9eP9mo+ifdab/w4MmEIX9mWOeN1A4x/hPZmAi+qF
+         40iA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mCH1mBRGKm9XJ+0zaVrmeYH3UMnCiw0sMzGuVdA+Xm4=;
+        b=FcsikgCOwRJHI5fMp5I7i/17eunePLwwgTqttl59HuzJLYRnPnkZt2y7AdCqojAqgA
+         Kc+8DxPW/ZKSF6kuwoqCzvsg+Hr5gyCleyiWREY/z2a1U1DVnkc8QKvAzdLHPlWt/7kp
+         vLrihtXiGvwu9zkYplIrsL4qJSYl8Qm/9ts0ZQEvN+Lzmaf7HlSmtm9IXHRcCtp+HO2F
+         uUrsYxltDz+FaK9qi8y3bRDtlupczrK3QqvZYVpG/MAU0+GH0ENd9nGuZtVHQgZtlN5S
+         9Pn9+OOP8nZv9wQo6qWkbusXcAWbwZ6wC6/yvLfe5hSlCODVlM0RCwo3VnQmxFIYX+Q1
+         VIpg==
+X-Gm-Message-State: ACrzQf2TPh97jVFc3CSQW5uSKmgrGoLqAsQEKSD2md6W6OuWIYRlgDiV
+        Sie4rObXzXz/rUF+Ag9tJAA9T9W+6goJ0g==
+X-Google-Smtp-Source: AMsMyM74Gwq3RCXbkcUxUIR24aWko10ATiEh3PgUuAWsIHLhtvVzQYcr1viyyvEJimkLvWoPNfZKyA==
+X-Received: by 2002:a2e:8e8a:0:b0:26e:7c92:542a with SMTP id z10-20020a2e8e8a000000b0026e7c92542amr9419754ljk.109.1665602751172;
+        Wed, 12 Oct 2022 12:25:51 -0700 (PDT)
+Received: from localhost.localdomain (c-fdcc225c.014-348-6c756e10.bbcust.telenor.se. [92.34.204.253])
+        by smtp.gmail.com with ESMTPSA id c21-20020ac25f75000000b0049fe6f36880sm79738lfc.51.2022.10.12.12.25.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Oct 2022 12:25:50 -0700 (PDT)
+From:   Linus Walleij <linus.walleij@linaro.org>
+To:     =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc:     linux-wireless@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>
+Subject: [PATCH] bcma: gpio: Convert to immutable gpio irqchip
+Date:   Wed, 12 Oct 2022 21:23:48 +0200
+Message-Id: <20221012192348.2234478-1-linus.walleij@linaro.org>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: oa1nxg03_iiNLoJEg1ZIuuzg85YWC50P
-X-Proofpoint-ORIG-GUID: oa1nxg03_iiNLoJEg1ZIuuzg85YWC50P
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-10-12_09,2022-10-12_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- impostorscore=0 bulkscore=0 phishscore=0 spamscore=0 suspectscore=0
- lowpriorityscore=0 mlxlogscore=999 adultscore=0 malwarescore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2210120120
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Generate rx and tx mcs maps in ath11k_mac_set_hemcsmap() and set them
-in supported mcs/nss for HE capabilities.
+This switches the BCMA gpio irqchip to be immutable.
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00356-QCAHKSWPL_SILICONZ-1
+Tested on the D-Link DWL-6810AP.
 
-Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
+Cc: Marc Zyngier <maz@kernel.org>
+Cc: Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 30 +++++++++++++++++++++++-------
- 1 file changed, 23 insertions(+), 7 deletions(-)
+ drivers/bcma/driver_gpio.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index cf827c68af72..ba668994372c 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -5463,20 +5463,36 @@ static void ath11k_mac_set_hemcsmap(struct ath11k *ar,
- 				    struct ath11k_pdev_cap *cap,
- 				    struct ieee80211_sta_he_cap *he_cap)
- {
--	struct ath11k_band_cap *band_cap = &cap->band[band];
-+	u16 txmcs_map, rxmcs_map;
-+	u32 i;
+diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
+index fac8ff983aec..eff6fc330632 100644
+--- a/drivers/bcma/driver_gpio.c
++++ b/drivers/bcma/driver_gpio.c
+@@ -82,6 +82,7 @@ static void bcma_gpio_irq_unmask(struct irq_data *d)
+ 	int gpio = irqd_to_hwirq(d);
+ 	u32 val = bcma_chipco_gpio_in(cc, BIT(gpio));
  
-+	rxmcs_map = 0;
-+	txmcs_map = 0;
-+	for (i = 0; i < 8; i++) {
-+		if (i < ar->num_tx_chains &&
-+		    (ar->cfg_tx_chainmask >> cap->tx_chain_mask_shift) & BIT(i))
-+			txmcs_map |= IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2);
-+		else
-+			txmcs_map |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
-+
-+		if (i < ar->num_rx_chains &&
-+		    (ar->cfg_rx_chainmask >> cap->tx_chain_mask_shift) & BIT(i))
-+			rxmcs_map |= IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2);
-+		else
-+			rxmcs_map |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
-+	}
- 	he_cap->he_mcs_nss_supp.rx_mcs_80 =
--		cpu_to_le16(band_cap->he_mcs & 0xffff);
-+		cpu_to_le16(rxmcs_map & 0xffff);
- 	he_cap->he_mcs_nss_supp.tx_mcs_80 =
--		cpu_to_le16(band_cap->he_mcs & 0xffff);
-+		cpu_to_le16(txmcs_map & 0xffff);
- 	he_cap->he_mcs_nss_supp.rx_mcs_160 =
--		cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
-+		cpu_to_le16(rxmcs_map & 0xffff);
- 	he_cap->he_mcs_nss_supp.tx_mcs_160 =
--		cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
-+		cpu_to_le16(txmcs_map & 0xffff);
- 	he_cap->he_mcs_nss_supp.rx_mcs_80p80 =
--		cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
-+		cpu_to_le16(rxmcs_map & 0xffff);
- 	he_cap->he_mcs_nss_supp.tx_mcs_80p80 =
--		cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
-+		cpu_to_le16(txmcs_map & 0xffff);
++	gpiochip_enable_irq(gc, gpio);
+ 	bcma_chipco_gpio_polarity(cc, BIT(gpio), val);
+ 	bcma_chipco_gpio_intmask(cc, BIT(gpio), BIT(gpio));
+ }
+@@ -93,12 +94,15 @@ static void bcma_gpio_irq_mask(struct irq_data *d)
+ 	int gpio = irqd_to_hwirq(d);
+ 
+ 	bcma_chipco_gpio_intmask(cc, BIT(gpio), 0);
++	gpiochip_disable_irq(gc, gpio);
  }
  
- static int ath11k_mac_copy_he_cap(struct ath11k *ar,
+-static struct irq_chip bcma_gpio_irq_chip = {
++static const struct irq_chip bcma_gpio_irq_chip = {
+ 	.name		= "BCMA-GPIO",
+ 	.irq_mask	= bcma_gpio_irq_mask,
+ 	.irq_unmask	= bcma_gpio_irq_unmask,
++	.flags		= IRQCHIP_IMMUTABLE,
++	GPIOCHIP_IRQ_RESOURCE_HELPERS,
+ };
+ 
+ static irqreturn_t bcma_gpio_irq_handler(int irq, void *dev_id)
+@@ -139,7 +143,7 @@ static int bcma_gpio_irq_init(struct bcma_drv_cc *cc)
+ 	bcma_chipco_gpio_intmask(cc, ~0, 0);
+ 	bcma_cc_set32(cc, BCMA_CC_IRQMASK, BCMA_CC_IRQ_GPIO);
+ 
+-	girq->chip = &bcma_gpio_irq_chip;
++	gpio_irq_chip_set_chip(girq, &bcma_gpio_irq_chip);
+ 	/* This will let us handle the parent IRQ in the driver */
+ 	girq->parent_handler = NULL;
+ 	girq->num_parents = 0;
 -- 
-2.7.4
+2.34.1
 
