@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B1A4C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 12 Oct 2022 08:33:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 316E1C4332F
+	for <linux-wireless@archiver.kernel.org>; Wed, 12 Oct 2022 08:33:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229766AbiJLIdm (ORCPT
+        id S229567AbiJLIdo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Oct 2022 04:33:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58034 "EHLO
+        Wed, 12 Oct 2022 04:33:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229761AbiJLIdc (ORCPT
+        with ESMTP id S229734AbiJLIdc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 12 Oct 2022 04:33:32 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CD993B5155
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2022 01:33:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B2F80B56FD
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2022 01:33:05 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 29C8WRekC026287, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 29C8WReoC026287, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36504.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 29C8WRekC026287
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 29C8WReoC026287
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
         Wed, 12 Oct 2022 16:32:27 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36504.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Wed, 12 Oct 2022 16:32:50 +0800
+ 15.1.2375.7; Wed, 12 Oct 2022 16:32:56 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 12 Oct
- 2022 16:32:50 +0800
+ 2022 16:32:52 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/5] wifi: rtw89: 8852b: add RF calibration part 1
-Date:   Wed, 12 Oct 2022 16:32:29 +0800
-Message-ID: <20221012083234.20224-1-pkshih@realtek.com>
+Subject: [PATCH 2/5] wifi: rtw89: 8852b: rfk: add RCK
+Date:   Wed, 12 Oct 2022 16:32:31 +0800
+Message-ID: <20221012083234.20224-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221012083234.20224-1-pkshih@realtek.com>
+References: <20221012083234.20224-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -62,28 +64,89 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RF calibration includes a lot of register settings, and they need many
-iterations to fine tune RF parameters. These iterations spend time, so
-additional struct fields are introduced to save calibration results, and
-then we can reuse these results if conditions are the same.
+RCK is synchronize RC calibration. Driver triggers this calibration and
+sets the result to register. This calibration is needed once when interface
+is going to up.
 
-Since they do lots of things, line-of-code is much more than other
-functions. Therefore, I split RF calibration into two patchset, and this
-is the first one.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../net/wireless/realtek/rtw89/rtw8852b_rfk.c | 43 +++++++++++++++++++
+ .../net/wireless/realtek/rtw89/rtw8852b_rfk.h |  1 +
+ 2 files changed, 44 insertions(+)
 
-Ping-Ke Shih (5):
-  wifi: rtw89: 8852b: rfk: add DACK
-  wifi: rtw89: 8852b: rfk: add RCK
-  wifi: rtw89: 8852b: rfk: add RX DCK
-  wifi: rtw89: 8852b: rfk: add IQK
-  wifi: rtw89: 8852b: rfk: add TSSI
-
- drivers/net/wireless/realtek/rtw89/core.h     |   15 +
- drivers/net/wireless/realtek/rtw89/reg.h      |   83 +
- .../net/wireless/realtek/rtw89/rtw8852b_rfk.c | 2770 +++++++++++++++++
- .../net/wireless/realtek/rtw89/rtw8852b_rfk.h |    8 +
- 4 files changed, 2876 insertions(+)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c
+index 5c35f4fb38ff5..1dcb900ef7007 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c
+@@ -32,6 +32,41 @@ static u8 _kpath(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
+ 	return val;
+ }
+ 
++static void _rck(struct rtw89_dev *rtwdev, enum rtw89_rf_path path)
++{
++	u32 rf_reg5;
++	u32 rck_val;
++	u32 val;
++	int ret;
++
++	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RCK] ====== S%d RCK ======\n", path);
++
++	rf_reg5 = rtw89_read_rf(rtwdev, path, RR_RSV1, RFREG_MASK);
++
++	rtw89_write_rf(rtwdev, path, RR_RSV1, RR_RSV1_RST, 0x0);
++	rtw89_write_rf(rtwdev, path, RR_MOD, RR_MOD_MASK, RR_MOD_V_RX);
++
++	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RCK] RF0x00 = 0x%05x\n",
++		    rtw89_read_rf(rtwdev, path, RR_MOD, RFREG_MASK));
++
++	/* RCK trigger */
++	rtw89_write_rf(rtwdev, path, RR_RCKC, RFREG_MASK, 0x00240);
++
++	ret = read_poll_timeout_atomic(rtw89_read_rf, val, val, 2, 30,
++				       false, rtwdev, path, RR_RCKS, BIT(3));
++
++	rck_val = rtw89_read_rf(rtwdev, path, RR_RCKC, RR_RCKC_CA);
++
++	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RCK] rck_val = 0x%x, ret = %d\n",
++		    rck_val, ret);
++
++	rtw89_write_rf(rtwdev, path, RR_RCKC, RFREG_MASK, rck_val);
++	rtw89_write_rf(rtwdev, path, RR_RSV1, RFREG_MASK, rf_reg5);
++
++	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[RCK] RF 0x1b = 0x%x\n",
++		    rtw89_read_rf(rtwdev, path, RR_RCKC, RFREG_MASK));
++}
++
+ static void _afe_init(struct rtw89_dev *rtwdev)
+ {
+ 	rtw89_write32(rtwdev, R_AX_PHYREG_SET, 0xf);
+@@ -453,6 +488,14 @@ static void _dac_cal(struct rtw89_dev *rtwdev, bool force)
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[DACK]DACK finish!!!\n");
+ }
+ 
++void rtw8852b_rck(struct rtw89_dev *rtwdev)
++{
++	u8 path;
++
++	for (path = 0; path < RF_PATH_NUM_8852B; path++)
++		_rck(rtwdev, path);
++}
++
+ void rtw8852b_dack(struct rtw89_dev *rtwdev)
+ {
+ 	u8 phy_map = rtw89_btc_phymap(rtwdev, RTW89_PHY_0, 0);
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.h b/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.h
+index bc2ff7380b927..84325abc7f2c2 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.h
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.h
+@@ -7,6 +7,7 @@
+ 
+ #include "core.h"
+ 
++void rtw8852b_rck(struct rtw89_dev *rtwdev);
+ void rtw8852b_dack(struct rtw89_dev *rtwdev);
+ void rtw8852b_set_channel_rf(struct rtw89_dev *rtwdev,
+ 			     const struct rtw89_chan *chan,
 -- 
 2.25.1
 
