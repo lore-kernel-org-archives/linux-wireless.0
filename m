@@ -2,108 +2,131 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC8F5C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Oct 2022 21:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA61C433FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Oct 2022 21:28:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230255AbiJRVKQ (ORCPT
+        id S230125AbiJRV2v (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Oct 2022 17:10:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33108 "EHLO
+        Tue, 18 Oct 2022 17:28:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229871AbiJRVKN (ORCPT
+        with ESMTP id S230095AbiJRV2r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2022 17:10:13 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA3CA4E422;
-        Tue, 18 Oct 2022 14:10:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666127411; x=1697663411;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=t0qr5y5RO8+qSe873oiemwL8NkKjsYL7al2DaasvpX4=;
-  b=Rzq0Ud5qU7AADB+0/U1i2p5weOvPyaZQy99Scc+0oa01889r62NlpA0y
-   q7nXUqoukPulbZIo35R8YpOJIne8m5fxZS8j54wuUX8bdlJASdpk/B5uS
-   vB81TBdh5zGQBuYBTfOk1aFm+rE/n4eJstVbGdZvjd+5XFrC6jjuFSnkL
-   p1OJCIfB3yvOmvLT7BEDeSr1YOXpBDwfR7DwHZeKKf6aiEVQVAg+VtfP1
-   QP/Qmj2Fq9glFFs8OFWHTxTGrL4w7OyBm5dgFZ5Csp4JgiFM72zHbedh+
-   UDk0kveqCr8H38hS3pMo1B3j2RaoMhkLMfwMKBG+sRUieq1v2dBAVHghN
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10504"; a="306221533"
-X-IronPort-AV: E=Sophos;i="5.95,194,1661842800"; 
-   d="scan'208";a="306221533"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2022 14:10:11 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10504"; a="662108042"
-X-IronPort-AV: E=Sophos;i="5.95,194,1661842800"; 
-   d="scan'208";a="662108042"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by orsmga001.jf.intel.com with ESMTP; 18 Oct 2022 14:10:09 -0700
-Received: from andy by smile.fi.intel.com with local (Exim 4.96)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1oktqh-009Ydm-1s;
-        Wed, 19 Oct 2022 00:10:07 +0300
-Date:   Wed, 19 Oct 2022 00:10:07 +0300
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Kalle Valo <kvalo@kernel.org>
-Subject: Re: [PATCH] wifi: rt2x00: use explicitly signed type for clamping
-Message-ID: <Y08WL6kcTH4uehHx@smile.fi.intel.com>
-References: <202210190108.ESC3pc3D-lkp@intel.com>
- <20221018202734.140489-1-Jason@zx2c4.com>
- <Y08PVnsTw75sHfbg@smile.fi.intel.com>
- <Y08SGz/xGSN87ynk@zx2c4.com>
- <Y08TQwcY3zL3kGHR@smile.fi.intel.com>
- <CAHmME9qQAqXYR0+K=32otECgrni51Z0c38iO3h1VRM4Xf3o2=Q@mail.gmail.com>
+        Tue, 18 Oct 2022 17:28:47 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9194BB7EDE
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2022 14:28:46 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29IJVqtb021451;
+        Tue, 18 Oct 2022 21:28:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=zH9E5mTn/MnoPvBc3jO3qr502s/aQlo3hB8caxiLngc=;
+ b=OIzDtzyQQE1cHUxNYlvb1uMmDSYWPpNZXTqiL3+4WfAIg0bgDEOaB0CBR2Q2Q2M9oV2U
+ uDo3m5uoQP/6upG3tJH58i8EAfDTmDDyQdszmQRLURBlr4q/s8Urd/kKgaIptLBVWAZ6
+ UDs9DupOrtly/XbkTp7rqzNQ4aAuz/YX6LRb3Z1Wp8gytV6x1PRwBt8/O75Sgn7Bt057
+ 71qztQ3SCfX2ALwNxKSGq9+zvsbamJo8oElh4SRHpVJSEQuoNZyF4aErFAB5qQZKmGei
+ 0b1cslv6kmMc1WA3r4DhGPtf9s/FXR4Ans7t9B3N7fa+RooQH8S7hT9DA55wnkjt3h3X dg== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k9n2p313x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 18 Oct 2022 21:28:42 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29ILSgKe010051
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 18 Oct 2022 21:28:42 GMT
+Received: from msinada-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Tue, 18 Oct 2022 14:28:41 -0700
+From:   Muna Sinada <quic_msinada@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Muna Sinada <quic_msinada@quicinc.com>
+Subject: [PATCH v2 1/4] wifi: ath11k: modify accessor macros to match index size
+Date:   Tue, 18 Oct 2022 14:28:18 -0700
+Message-ID: <1666128501-12364-2-git-send-email-quic_msinada@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1666128501-12364-1-git-send-email-quic_msinada@quicinc.com>
+References: <1666128501-12364-1-git-send-email-quic_msinada@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHmME9qQAqXYR0+K=32otECgrni51Z0c38iO3h1VRM4Xf3o2=Q@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: I_LCyF-EQ00VZK2hiFEEs0jw-Q8fR_Nc
+X-Proofpoint-GUID: I_LCyF-EQ00VZK2hiFEEs0jw-Q8fR_Nc
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-18_07,2022-10-18_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
+ mlxscore=0 lowpriorityscore=0 suspectscore=0 bulkscore=0 malwarescore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=739 adultscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
+ definitions=main-2210180120
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 18, 2022 at 02:58:30PM -0600, Jason A. Donenfeld wrote:
-> On Tue, Oct 18, 2022 at 2:57 PM Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com> wrote:
-> > On Tue, Oct 18, 2022 at 02:52:43PM -0600, Jason A. Donenfeld wrote:
-> > > On Tue, Oct 18, 2022 at 11:40:54PM +0300, Andy Shevchenko wrote:
-> > > > On Tue, Oct 18, 2022 at 02:27:34PM -0600, Jason A. Donenfeld wrote:
-> > > > > On some platforms, `char` is unsigned, which makes casting -7 to char
-> > > > > overflow, which in turn makes the clamping operation bogus. Instead,
-> > > > > deal with an explicit `s8` type, so that the comparison is always
-> > > > > signed, and return an s8 result from the function as well. Note that
-> > > > > this function's result is assigned to a `short`, which is always signed.
-> > > >
-> > > > Why not to use short? See my patch I just sent.
-> > >
-> > > Trying to have the most minimal change here that doesn't rock the boat.
-> > > I'm not out to rewrite the driver. I don't know the original author's
-> > > rationales. This patch here is correct and will generate the same code
-> > > as before on architectures where it wasn't broken.
-> > >
-> > > However, if you want your "change the codegen" patch to be taken
-> > > seriously, you should probably send it to the wireless maintainers like
-> > > this one, and they can decide. Personally, I don't really care either
-> > > way.
-> >
-> > I have checked the code paths there and I found no evidence that short can't be
-> > used. That's why my patch.
-> 
-> Do you have a rationale why you want to change codegen?
+HE PHY is only 11 bytes, therefore it should be using byte indexes
+instead of dword. Change corresponding macros to reflect this.
 
-It's not a hot path as far as I understand and keeping data types aligned seems
-to me worth it even if codegen is changed. IS it so awful with short?
+Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/wmi.h | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 8f2c07d70a4a..368b7755e800 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -2857,30 +2857,32 @@ struct rx_reorder_queue_remove_params {
+ #define WMI_VDEV_PARAM_TXBF_SU_TX_BFER BIT(2)
+ #define WMI_VDEV_PARAM_TXBF_MU_TX_BFER BIT(3)
+ 
+-#define HECAP_PHYDWORD_0	0
+-#define HECAP_PHYDWORD_1	1
+-#define HECAP_PHYDWORD_2	2
++#define HE_PHYCAP_BYTE_0	0
++#define HE_PHYCAP_BYTE_1	1
++#define HE_PHYCAP_BYTE_2	2
++#define HE_PHYCAP_BYTE_3	3
++#define HE_PHYCAP_BYTE_4	4
+ 
+-#define HECAP_PHY_SU_BFER		BIT(31)
++#define HECAP_PHY_SU_BFER		BIT(7)
+ #define HECAP_PHY_SU_BFEE		BIT(0)
+ #define HECAP_PHY_MU_BFER		BIT(1)
+-#define HECAP_PHY_UL_MUMIMO		BIT(22)
+-#define HECAP_PHY_UL_MUOFDMA		BIT(23)
++#define HECAP_PHY_UL_MUMIMO		BIT(6)
++#define HECAP_PHY_UL_MUOFDMA		BIT(7)
+ 
+ #define HECAP_PHY_SUBFMR_GET(hecap_phy) \
+-	FIELD_GET(HECAP_PHY_SU_BFER, hecap_phy[HECAP_PHYDWORD_0])
++	FIELD_GET(HECAP_PHY_SU_BFER, hecap_phy[HE_PHYCAP_BYTE_3])
+ 
+ #define HECAP_PHY_SUBFME_GET(hecap_phy) \
+-	FIELD_GET(HECAP_PHY_SU_BFEE, hecap_phy[HECAP_PHYDWORD_1])
++	FIELD_GET(HECAP_PHY_SU_BFEE, hecap_phy[HE_PHYCAP_BYTE_4])
+ 
+ #define HECAP_PHY_MUBFMR_GET(hecap_phy) \
+-	FIELD_GET(HECAP_PHY_MU_BFER, hecap_phy[HECAP_PHYDWORD_1])
++	FIELD_GET(HECAP_PHY_MU_BFER, hecap_phy[HE_PHYCAP_BYTE_4])
+ 
+ #define HECAP_PHY_ULMUMIMO_GET(hecap_phy) \
+-	FIELD_GET(HECAP_PHY_UL_MUMIMO, hecap_phy[HECAP_PHYDWORD_0])
++	FIELD_GET(HECAP_PHY_UL_MUMIMO, hecap_phy[HE_PHYCAP_BYTE_2])
+ 
+ #define HECAP_PHY_ULOFDMA_GET(hecap_phy) \
+-	FIELD_GET(HECAP_PHY_UL_MUOFDMA, hecap_phy[HECAP_PHYDWORD_0])
++	FIELD_GET(HECAP_PHY_UL_MUOFDMA, hecap_phy[HE_PHYCAP_BYTE_2])
+ 
+ #define HE_MODE_SU_TX_BFEE	BIT(0)
+ #define HE_MODE_SU_TX_BFER	BIT(1)
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.7.4
 
