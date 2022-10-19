@@ -2,105 +2,92 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87470C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Oct 2022 11:13:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62FD9C43217
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Oct 2022 11:49:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230157AbiJSLM6 (ORCPT
+        id S230417AbiJSLtq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Oct 2022 07:12:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44172 "EHLO
+        Wed, 19 Oct 2022 07:49:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230384AbiJSLMf (ORCPT
+        with ESMTP id S231952AbiJSLs5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2022 07:12:35 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 082A0303F0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2022 03:39:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=s36QNv/moHHJ+f1RqNZgsNfQjM0SpYNUcmf7spZNn7Y=;
-        t=1666175976; x=1667385576; b=gyEbPrU6sBS5kxCmEah0RJ2cfUAvFtUMMl9Z2gsUbZ5eiLG
-        Xq+74oih8jKHvkte6yvui/gt6gGAKsZO9fAnsjr2obvkkv1g8SU+sv4nQzb7ME/eLNNPIj92BT4RC
-        ROS4Ypdj1JbLOkpkBgz4Jhiz4lmBE7+iUFTMfIGExLZHOXaWsdzrE148dSdgZdSAphNyv+H1pmYUZ
-        4rDh8rGVr0TyKDtYHFH5riZFPt03kBhuVTMab3bCUuQLSxGOWLUV/OObNZEdaw+K5pGMscXJwqwtJ
-        iaNQzNs3rkpexByknuTOBvbVi2Q+zaYuTB7UIZU+OjfxNrCl9Z8i2RiOVcUOSIAw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1ol5Wz-00B30v-0z;
-        Wed, 19 Oct 2022 11:38:33 +0200
-Message-ID: <5f652efb43226f67e932f5aaf97cd717992bfd81.camel@sipsolutions.net>
-Subject: Re: wifi: mac80211: Re: unicast probe response bssid changed by
- "wifi: mac80211: do link->MLD address translation on RX"
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Wen Gong <quic_wgong@quicinc.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc:     ath11k@lists.infradead.org, ath12k@lists.infradead.org
-Date:   Wed, 19 Oct 2022 11:38:32 +0200
-In-Reply-To: <9fe7c0f2-e02f-e87f-dced-90e973c8992f@quicinc.com>
-References: <e1c5fbac-7e6e-c643-f24d-32cec779f2d3@quicinc.com>
-         <9fe7c0f2-e02f-e87f-dced-90e973c8992f@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
+        Wed, 19 Oct 2022 07:48:57 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 627CC169128;
+        Wed, 19 Oct 2022 04:27:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1666178873; x=1697714873;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Gq6k+2v0sgUYQcVJmhpXsMbxRry1yR7Pv/R1hXeZor8=;
+  b=I+mhUoiIMYuVRx4JNxu2Qa6Y8W+rLA9k8JiI3FI6+5Lbj42CLFzYkqXE
+   GkEhe5L6dE9rHGA23P/19VwSojheUfO0HJQFew/HuERc2pYFftJv3xK1Y
+   bMjVb5ojQz//ppzwdPe4+p15SQHAfMZW0cn0UebTV82GnSI0BKsRC2LMx
+   VYoFeo0+Viy5oWB/58e0ybcLO0AoENBRAMHFvSzZ8aNhc6dwugQw6DEyL
+   jiohEeP8KyewS6+1SlXdJJS6WuON5slNMS1fIxnespt2wz+dsz7YKOfIx
+   KuaKok5QQm8emuZU2r2AmbmhYDQq6sSUAKI3ikUZOM5dduTWYiWC3CryL
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10504"; a="392679241"
+X-IronPort-AV: E=Sophos;i="5.95,196,1661842800"; 
+   d="scan'208";a="392679241"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2022 04:05:01 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10504"; a="629204413"
+X-IronPort-AV: E=Sophos;i="5.95,196,1661842800"; 
+   d="scan'208";a="629204413"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga002.jf.intel.com with ESMTP; 19 Oct 2022 04:04:59 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1ol6sb-009p1H-1r;
+        Wed, 19 Oct 2022 14:04:57 +0300
+Date:   Wed, 19 Oct 2022 14:04:57 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Stanislaw Gruszka <stf_xl@wp.pl>
+Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@kernel.org>
+Subject: Re: [PATCH] wifi: rt2x00: use explicitly signed type for clamping
+Message-ID: <Y0/Z2aHKYVPsiWa5@smile.fi.intel.com>
+References: <202210190108.ESC3pc3D-lkp@intel.com>
+ <20221018202734.140489-1-Jason@zx2c4.com>
+ <20221019085219.GA81503@wp.pl>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221019085219.GA81503@wp.pl>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2022-10-19 at 17:35 +0800, Wen Gong wrote:
-> On 9/14/2022 11:13 AM, Wen Gong wrote:
-> > Hi Johannes,
-> >=20
-> > The mac addr of unicast rx packet all changed to the MLD address by=20
-> > below patch.
-> > Now the probe presponse which is unicast packet is also changed mac=20
-> > address here.
-> > I found bssid which is the MLD address of my test AP in=20
-> > cfg80211_get_bss().
-> > For example, if the AP has 2 mlo links, link 1 is 5 GHz band, link 2=
-=20
-> > is 2.4 GHz band,
-> > then the 2 probe reponse will be changed to a same one.
-> > seems we should skip probe presponse for the mac address change here,=
-=20
-> > right?
-> >=20
-> > https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?i=
-d=3D42fb9148c078004d07b4c39bd7b1086b6165780c=20
-> >=20
-> > wifi: mac80211: do link->MLD address translation on RX
-> >=20
-> Hi Johannes,
->=20
-> May I get your comment about this?
+On Wed, Oct 19, 2022 at 10:52:19AM +0200, Stanislaw Gruszka wrote:
+> On Tue, Oct 18, 2022 at 02:27:34PM -0600, Jason A. Donenfeld wrote:
+> > On some platforms, `char` is unsigned, which makes casting -7 to char
+> > overflow, which in turn makes the clamping operation bogus. Instead,
+> > deal with an explicit `s8` type, so that the comparison is always
+> > signed, and return an s8 result from the function as well. Note that
+> > this function's result is assigned to a `short`, which is always signed.
+> > 
+> > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > Cc: Stanislaw Gruszka <stf_xl@wp.pl>
+> > Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+> > Cc: Kalle Valo <kvalo@kernel.org>
+> > Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+> 
+> I prefer s8 just because is shorter name than short :-)
 
-Yes I've actually seen this issue as well.
+Shouldn't the corresponding data structure type be fixed accordingly?
 
-> I did below change in my local test to workaround the issue.
->=20
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index a57811372027..eaff5353520a 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -4858,7 +4858,8 @@ static bool ieee80211_prepare_and_rx_handle(struct=
-=20
-> ieee80211_rx_data *rx,
->  =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 shwt->hwtstamp =3D skb_hwtst=
-amps(skb)->hwtstamp;
->  =C2=A0=C2=A0=C2=A0=C2=A0 }
->=20
-> -=C2=A0=C2=A0=C2=A0 if (unlikely(link_sta)) {
-> +=C2=A0=C2=A0=C2=A0 if (unlikely(link_sta) &&
-> +=C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 !(ieee80211_is_probe_resp(hdr->fra=
-me_control))) {
->  =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0 /* translate to MLD addresse=
-s */
->=20
+-- 
+With Best Regards,
+Andy Shevchenko
 
-Maybe it should also be for beacons or so?
 
-johannes
