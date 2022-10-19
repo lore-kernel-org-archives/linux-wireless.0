@@ -2,145 +2,126 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0103C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Oct 2022 12:33:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58717C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Oct 2022 12:36:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230297AbiJSMdb (ORCPT
+        id S231515AbiJSMga (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Oct 2022 08:33:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55504 "EHLO
+        Wed, 19 Oct 2022 08:36:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233147AbiJSMdE (ORCPT
+        with ESMTP id S231184AbiJSMgC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2022 08:33:04 -0400
-Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ED9815A304
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2022 05:12:04 -0700 (PDT)
-Received: by mail-qk1-x72e.google.com with SMTP id b25so10495119qkk.7
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2022 05:12:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=uZLHL73mpnCWBwVHdH8NaBZIpeTUZhU6UooVah42CMc=;
-        b=S1PwHXJt3ONBq1X/XET/6X6lFt1Q+BsDS6ss/5nkuhlKyaJ1j08bJPI3h4qhfuy9+O
-         sZP4JyaXb5hClBiBwgcTIQJ8qraUvBtV/3PoZj2jrb8x8ebL3uvs0z5phMtzusmqpm+u
-         BsiuW85DDmvwYaUh1es5w/OMiihXSyfYqE7KjhUw9CxnGdHPGzE7ATnTtMIg7151ci1i
-         IAx8BpXh9aMNJkziI44l86ZvhjBdRmugAXJu2zYEWvPpFBIhdf1PwL6B+A+TLt16B+g7
-         EeWGBhw+ZbcLQzwbY64Qzm0KraYCjW+GVDCPiB/ui9jUM4ISF8y9DbdD4pojYagDMdhY
-         kuWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=uZLHL73mpnCWBwVHdH8NaBZIpeTUZhU6UooVah42CMc=;
-        b=okKlb43A4SEXfDGDxkiy0duyTvbiDQ4OqYwt229XERnpKg3im7DispshOFJQPMh5QP
-         Ln8qG9S3QPUaCJPoefB3n2X1rlcfWeGLjmWouvaFlSr0MfsRnzxCpAg34z9E4mRYeZ+6
-         //I49DmwKF0iJmhxlvZSL5A9JomeCMqQKnQN2PaXYRYeSGc3wGu8axAW7qWQDVyoI3cl
-         5NingsNqmtySvy80JJ8YxWWX3Fw6eYmUZSsJnJKqszNwqVhWpfUH1Tltwun8OU8UFh6R
-         mtn7zKDwPnRO+LG9AbpX6ZM2Rb0IC+s8elgky4aTI/oupeBK+PI6BNqM6J+ecOkNdOAY
-         j8Sw==
-X-Gm-Message-State: ACrzQf3qNdPw1oLPiCVXrxRa2M/Tycehbo7l5WjafvMDG/bcFGm8Xcax
-        vfY3g1bqq5g65sRuW9NcY8j9K732xLm1mA==
-X-Google-Smtp-Source: AMsMyM52HLn4bk5XU58g1/MwIKbQ/2pqXIQfVBs+/WgUD/QtH1JkotQcNyUKGN+/2TGogS1XU1OxzA==
-X-Received: by 2002:ac8:7dc8:0:b0:39c:e637:b995 with SMTP id c8-20020ac87dc8000000b0039ce637b995mr5901857qte.528.1666180721174;
-        Wed, 19 Oct 2022 04:58:41 -0700 (PDT)
-Received: from [10.176.68.61] ([192.19.148.250])
-        by smtp.gmail.com with ESMTPSA id bs20-20020a05620a471400b006b615cd8c13sm4646902qkb.106.2022.10.19.04.58.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Oct 2022 04:58:40 -0700 (PDT)
-Message-ID: <e622b8bd-5490-5d8c-6209-c1ace0d1acf3@gmail.com>
-Date:   Wed, 19 Oct 2022 13:58:38 +0200
+        Wed, 19 Oct 2022 08:36:02 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 440E313ECD3
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2022 05:15:54 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29J9W97N027977;
+        Wed, 19 Oct 2022 10:04:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : from : to : cc : references : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=IzyciU5Q8WUy5W2mpOACpQv7Au32S3s5cLbd5S+lbkw=;
+ b=l42mvld7gbpqFti/7Ip5N359FHFzdAXT1NyYSAfdn6riam9qFfSNLVZAWcvhl9ECqNTp
+ EpGPjujmINBKKVZeKn4kN6J0EoTsg1DKyVJKTN0D4kRFOTR6Pfhjzt1mLKI1i5Ad2Bob
+ jn73dpAK8dSU27zkjfi6cPgaterT6w64zAu2JgW49pjYp7aI+takeizQ0WUgvE2xgQHr
+ TZsKD5zk7CsBc76WDOR/F+Rn3pGURlwUjNv+zD1zSCJYwaruO10Hu/haSsLuzC3ZO1QX
+ cK54efNFMd1dfsU/jUsGrKzzGknhEi7vbUdvzJUfeFT+e0jz+4kJT8vmmPWLgT/hBTM6 UA== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3k9qwp36sj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 19 Oct 2022 10:04:46 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 29JA4jLv007051
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 19 Oct 2022 10:04:45 GMT
+Received: from [10.231.195.37] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Wed, 19 Oct
+ 2022 03:04:43 -0700
+Message-ID: <de54f4e0-810b-70a0-7629-39a2957ecd3d@quicinc.com>
+Date:   Wed, 19 Oct 2022 18:04:41 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH 3/7] brcmfmac: add support for vendor-specific firmware
- api
+ Thunderbird/91.12.0
+Subject: wifi: hostapd:/wpa_supplicant MLO Re: [PATCH 00/27] another set of
+ MLO patches
 Content-Language: en-US
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     arend.vanspriel@broadcom.com, linux-wireless@vger.kernel.org
-References: <20220613091915.18884-1-arend.vanspriel@broadcom.com>
- <CAJ65rDxy3ERmDAV1BYH_BCUM3_GnzotWpp7yYO6OtA_CZVgbzw@mail.gmail.com>
- <87sfmlo9yi.fsf@kernel.org> <4e5c9cc1-a00e-c3de-3186-6d4cf5694339@gmail.com>
-From:   Arend Van Spriel <aspriel@gmail.com>
-In-Reply-To: <4e5c9cc1-a00e-c3de-3186-6d4cf5694339@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From:   Wen Gong <quic_wgong@quicinc.com>
+To:     "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Peer, Ilan" <ilan.peer@intel.com>
+CC:     <ath11k@lists.infradead.org>
+References: <20220902141259.377789-1-johannes@sipsolutions.net>
+ <6175bc95-201c-cfab-2ae6-9ba77e830394@quicinc.com>
+ <09556b33ad998ad243cf75dbc230f3b07349a87e.camel@sipsolutions.net>
+ <935ef9e9-2092-e3f0-0edd-4aa29f4fa775@quicinc.com>
+ <e01e75013f71ede7b29f2751238935e7147796f2.camel@sipsolutions.net>
+ <f3afceb8-8120-12c7-74b9-caa3abce5cb8@quicinc.com>
+ <DM6PR11MB3897D1A4E13419D9F938F559F5449@DM6PR11MB3897.namprd11.prod.outlook.com>
+ <96bcc467-c530-46de-8f91-c5eb0af7a368@quicinc.com>
+ <776991f3-384e-f487-83b7-e1fbfd40cc4f@quicinc.com>
+In-Reply-To: <776991f3-384e-f487-83b7-e1fbfd40cc4f@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: hmIvF4Sm6AnoYiJEyxXFsqY_92wzy8em
+X-Proofpoint-ORIG-GUID: hmIvF4Sm6AnoYiJEyxXFsqY_92wzy8em
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-19_06,2022-10-19_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
+ phishscore=0 bulkscore=0 mlxlogscore=968 malwarescore=0 adultscore=0
+ priorityscore=1501 mlxscore=0 suspectscore=0 spamscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2210190055
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 7/29/2022 11:32 AM, Arend Van Spriel wrote:
-> On 7/28/2022 11:36 AM, Kalle Valo wrote:
->> aspriel@gmail.com writes:
->>
->>> The driver is being used by multiple vendors who develop the firmware
->>> api independently. So far the firmware api as used by the driver has
->>> not diverged (yet). This change adds framework for supporting multiple
->>> firmware apis. The vendor-specific support code has to provide a number
->>> of callback operations. Right now it is only attach and detach callbacks
->>> so no real functionality as the api is still common. This code only
->>> adds WCC variant anyway, which is selected for all devices right now.
+Hi Ilan/Andrei,
+
+Will you send your patches of wpa_supplicant for MLO to upstream?😁
+
+On 10/11/2022 10:28 AM, Wen Gong wrote:
+> Hi Ilan/Andrei,
+>
+> Will you send your patches of wpa_supplicant to upstream?😁
+>
+> On 9/28/2022 11:12 PM, Wen Gong wrote:
+>> On 9/12/2022 9:17 PM, Otcheretianski, Andrei wrote:
+>>>>> Well, OK, you obviously are adjusting the supplicant to work with MLO
+>>>>> (otherwise you wouldn't get an MLO connection in the first place), so
+>>>>> yeah, this is part of the adjustments needed.
+>>>>>
+>>>>> Ilan/Andrei have all of this working, maybe we can share the patches
+>>>>> even before rebase etc.
+>>> Hi,
+>>> Our implementation is based on our internal tree, so it will take 
+>>> some time to cleanup and port it for upstream.
+>>> Hopefully I will have some time to work on it this and next week and 
+>>> maybe we will be able to share something initial.
+>> May I get your patches?
 >>>
->>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->>> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
->>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>
->> [...]
->>
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Kconfig
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Kconfig
->>> @@ -8,6 +8,22 @@ config BRCMFMAC
->>>         interface support. If you choose to build a module, it'll be 
->>> called
->>>         brcmfmac.ko.
->>>
->>> +config BRCMFMAC_VENDOR_MODULES
->>> +    bool "Use vendor-specific modules"
->>> +    depends on BRCMFMAC = m
->>> +    help
->>> +      This option will build separate modules for the vendor-specific
->>> +      firmware support. If not selected the vendor-specific support
->>> +      will be build in brcmfmac.ko.
->>> +
->>> +config BRCMFMAC_VENDOR_WCC
->>> +    bool "Broadcom WCC"
->>> +    default y
->>> +    depends on BRCMFMAC
->>> +        help
->>> +          This option will allow the driver to communicate with devices
->>> +          shipped by Broadcom WCC division.
->>> +
->>
->> I'm not really a fan of these Kconfig options, I would rather have them
->> always enabled. Why do we need these options, what would be the use case
->> when user disables these?
-> 
-> I assume with "always enabled" you mean "drop these options". Obviously 
-> I would prefer to keep them. The default will result in a single module 
-> with all vendor support built-in, but this allows people to trim down 
-> their configuration based on what they have. So the choices are:
-> 
-> 1) single module with all vendor support built-in
-> 2) single module with partial vendor support built-in (as needed)
-> 
->     allows users to select vendor for their specific device not carrying
->     stuff they don't need. If they have a Cypress/Infineon device they
->     only need support for that.
-> 
-> 3) separate vendor support modules loaded as needed during device probe
-> 
->     build all (or some) vendor support modules and they are loaded into
->     memory only when they are needed for the device detected.
-
-Hi Kalle,
-
-I wanted to give this series another try, but the conversation above 
-never came to any conclusion/consensus. Maybe good to finish this before 
-resending?
-
-Regards,
-Arend
+>>> Andrei
+>>>>> johannes
+>>>> Thanks.
+>>>>
+>>>> It is good to share me the wpa_supplicant patches ASAP.
+>>>>
+>>>> And I have another question:
+>>>>
+>>>> When mac80211 use the MLD addr in authentication/assoc request,
+>>>>
+>>>> finally, it should be replaced with one link's address in air port, 
+>>>> right?
+>>>>
+>>>> It means the MLD addr will never exist in mac80211 header of packet 
+>>>> in the
+>>>> air port, right?
