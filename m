@@ -2,104 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1043C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Oct 2022 22:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22646C43217
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Oct 2022 23:23:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230341AbiJSW5f (ORCPT
+        id S231742AbiJSXXa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Oct 2022 18:57:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43594 "EHLO
+        Wed, 19 Oct 2022 19:23:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230120AbiJSW5d (ORCPT
+        with ESMTP id S231731AbiJSXX2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2022 18:57:33 -0400
-Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A0FE1C39C4;
-        Wed, 19 Oct 2022 15:57:30 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        Wed, 19 Oct 2022 19:23:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D47A157F63;
+        Wed, 19 Oct 2022 16:23:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Mt5j146jXz4xGQ;
-        Thu, 20 Oct 2022 09:57:25 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-        s=201702; t=1666220248;
-        bh=bE8FsV7P/1dHPlwdOCqJYtJ+w6dJbFF/0a+T7QYskUo=;
-        h=Date:From:To:Cc:Subject:From;
-        b=sa4bbByjkwl667rQ6I35JPts4O6Lff8gBAbOY0fOLMSM9AH736fVbXcXj3Pjow6Qh
-         pyX7RsBIhNPTzCTojuNyzi8wX/lOJkLCp/22L+KnfB2Qeg4lJS1FgVfaIiJII+CFUZ
-         x4R5f8OZ5AcpeGPa0YsWPhYuNkTFzyVCEHRxqw/JcNkI1FUn4rahYi3FNwYwym/fpV
-         Iz4x09Hd0K1wu3QkRB0JX0gkq3BX0CHmKRhJ5ZeaycTjdZYHmbJv0gePNo9ncukF3E
-         7oT/y8Od7KEJjQLp0B2Izbx3L7IcDg9GITsHpstJnDjN6sXhnYpo02aswX9M0preUN
-         ImJi8nMSkqzKg==
-Date:   Thu, 20 Oct 2022 03:23:40 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Kalle Valo <kvalo@kernel.org>,
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C737D601C3;
+        Wed, 19 Oct 2022 23:23:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEAC7C433D6;
+        Wed, 19 Oct 2022 23:23:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666221806;
+        bh=X48XrQw65DNcOVu2462NouGJs7xrBBJ/pVCEccoAvnE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=TDmNJzGT2nxlSvbcsbTQGlwK/446bfChwnahMF3ppVgL6TzUsww6AGpsPhyyod8ll
+         UY60JoH7bmJwe00mW7DjE9N2K6wgHCuUDp79Hxj/r0gtygum+aA+jFSjW0sn6F35cv
+         +GtjxIwqdVDAuHBJFgeA8NAk/5wY7LYKMU7lVecwYfPnKGhiYowN6lz6DeE6Ra/jZC
+         rsXQZKExrHu/+ohun0Rsy8p+go2q3UFvV6kO5uFRa3hk39k6Gpl0T2Kyp5LlWpfAOE
+         hlj1neX/uVAqDW8iGopA5jxEK8aABFiUFxNPjEzsCn7dNC6Es9ckicwmPOjMMjr6yB
+         3/QRTN+2gRHlw==
+Date:   Wed, 19 Oct 2022 16:23:24 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>,
+        Johannes Berg <johannes.berg@intel.com>
+Cc:     Kalle Valo <kvalo@kernel.org>,
         Johannes Berg <johannes@sipsolutions.net>,
-        Wireless <linux-wireless@vger.kernel.org>
-Cc:     David Miller <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
         Ilan Peer <ilan.peer@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: manual merge of the wireless-next tree with Linus' tree
-Message-ID: <20221020032340.5cf101c0@canb.auug.org.au>
+Subject: Re: linux-next: manual merge of the wireless-next tree with Linus'
+ tree
+Message-ID: <20221019162324.2baaa7e8@kernel.org>
+In-Reply-To: <20221020032340.5cf101c0@canb.auug.org.au>
+References: <20221020032340.5cf101c0@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/QPch7.CbFCOkhnPOVW._2io";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/QPch7.CbFCOkhnPOVW._2io
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, 20 Oct 2022 03:23:40 +1100 Stephen Rothwell wrote:
+> Today's linux-next merge of the wireless-next tree got a conflict in:
+> 
+>   net/mac80211/util.c
+> 
+> between commit:
+> 
+>   ff05d4b45dd8 ("wifi: mac80211: fix MBSSID parsing use-after-free")
+> 
+> from the origin tree and commit:
+> 
+>   ff05d4b45dd8 ("wifi: mac80211: fix MBSSID parsing use-after-free")
 
-Hi all,
-
-FIXME: Add owner of second tree to To:
-       Add author(s)/SOB of conflicting commits.
-
-Today's linux-next merge of the wireless-next tree got a conflict in:
-
-  net/mac80211/util.c
-
-between commit:
-
-  ff05d4b45dd8 ("wifi: mac80211: fix MBSSID parsing use-after-free")
-
-from the origin tree and commit:
-
-  ff05d4b45dd8 ("wifi: mac80211: fix MBSSID parsing use-after-free")
-
-from the wireless-next tree.
-
-I fixed it up (I just used the latter version) and can carry the fix as
-necessary. This is now fixed as far as linux-next is concerned, but any
-non trivial conflicts should be mentioned to your upstream maintainer
-when your tree is submitted for merging.  You may also want to consider
-cooperating with the maintainer of the conflicting tree to minimise any
-particularly complex conflicts.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/QPch7.CbFCOkhnPOVW._2io
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmNQJIwACgkQAVBC80lX
-0GxAlAf/aHM3on2G4e5RKXL4lH05joPGVAbUVxATSIVImtY4deYQEQng/x32Z/bC
-avmlu2lCwUTtLaCp94cPwmHu6cjmCCFythOz3w053z16/CO7Uy/Kdjpwdug+J1z5
-V9MLMXlFFisDx4aYaJiq0daYJW1yggdqkZpdn34N1c7cw8kvLTeMDmOGEjlERe4Z
-Uu5M0EskEgncOljFcwjBmoTe6dNfF3wyXUuj9urIV64MHF68gCsjE6r946trlynH
-FkFDqFBgO8B1YsXLWam5snGldbrjGfApd9ky5fhpoi+PejQ+F3+4hz2+XuqZ616Z
-6FztdQoZDMH10HHJphQFh9L+s6mtGA==
-=fsIU
------END PGP SIGNATURE-----
-
---Sig_/QPch7.CbFCOkhnPOVW._2io--
+Dunno if this is a glitch or real problem. But it reminds me - I see
+there is direct wireless -> wireless-next merge without going via
+Linus's tree. I think you may have mentioned it to us, but not sure
+if I said this clearly - let's try to avoid such merges. Linus certainly
+doesn't like when we do net -> net-next merges without sending net to
+him first and forwarding. I'm not 100% sure why (maybe Steven knows)
+- whether it's an aesthetic thing or avoiding real issues thing, but
+either way it's _a_ thing :S
