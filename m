@@ -2,369 +2,170 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06DCEC67871
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Oct 2022 22:38:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5437C67871
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Oct 2022 23:10:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230035AbiJXWif (ORCPT
+        id S230202AbiJXXK1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Oct 2022 18:38:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43486 "EHLO
+        Mon, 24 Oct 2022 19:10:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231235AbiJXWiL (ORCPT
+        with ESMTP id S230502AbiJXXJ6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2022 18:38:11 -0400
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A50BC248C86
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 14:01:28 -0700 (PDT)
-Received: by mail-ed1-f48.google.com with SMTP id a67so33440749edf.12
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 14:01:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=iL5IxU4ag5e42KhfKvIV7D5t0Zjj2uNWATzzLvJ6Lc4=;
-        b=YsU7x8P7+qCD6ZBNAiLukHDm3K9UUBb2o0B6xxy43DNEgBzY2ge+BOCF9q5Wh1yFxo
-         0m3+dZT09IKVKdRvJnrr2DCl6xoJyb0OkttkEOVBk8Qh8zMbmdszRKNjVaw+9qx/lMMr
-         HVN5JplHwxOwxXAzM0IZ5AqtpbdFq7ffynx5NxGJltJ6ahykhsputsIeOqkMHww1/7FP
-         9JTFcKaVEfhEFXbwhGtDiPlgM+1rnIIvbLnj1I87cojHQQCy4nQnqGB1CF8J3SVpDZ0o
-         UFQweDaYEJ8tnX/2S3sjwPFx8zK+cx1cRjrhYubUahqgs1sXYFPFVj+2eo8iLSjsHgto
-         RcHg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=iL5IxU4ag5e42KhfKvIV7D5t0Zjj2uNWATzzLvJ6Lc4=;
-        b=gAuFvRa6Oel8zwQ0FR4o6xfdrF3LLVSw6cJwuAMsjITg1rSqlPDsqqXGjlUomzaoHD
-         z/Rt8Sr+WziyNFSSpAEajTthLAUE6qrSo/y9reBo8VX7slYfWG7TuxPnzWZFusQUbQj/
-         cS4PyY4jbqZ2YTn4AL2GBWWIj1C3PFPr5RSWEErCKRMYHxYP3g6cGhjK6nLM95k6533P
-         AofY7afaEHW8rR3bHmY26i8k3A+hwwnugd9wOFSDI5OdxJC245rnDo+NFqJ7mlYXEcNe
-         luRTq5SnXzXd5k96wcK2sJeMNw4y8AkjQkDUwIArQ5iVQgQ/BpKO8UZOD77tRfQZPslE
-         jcJw==
-X-Gm-Message-State: ACrzQf3rGtdUGXpgTsh7/fo4RSQ3J07hRBakRogiC6pApXD5SAqMVfSK
-        2HrZWRe1e5ievZSIglamRs32LGoOhuU=
-X-Google-Smtp-Source: AMsMyM5b9FZ9HNmbHshIWft2FpRQKnGqyC0Zy97dYvMs+bv87N9yQF0pt8VOMCdPbRg3Z1l87eYpwg==
-X-Received: by 2002:a05:6402:3487:b0:45d:2674:d187 with SMTP id v7-20020a056402348700b0045d2674d187mr32333180edc.386.1666644896214;
-        Mon, 24 Oct 2022 13:54:56 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.23])
-        by smtp.gmail.com with ESMTPSA id r10-20020a17090609ca00b007262a5e2204sm352900eje.153.2022.10.24.13.54.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Oct 2022 13:54:55 -0700 (PDT)
-Message-ID: <25b7381d-178c-d909-015e-1acf7698ec13@gmail.com>
-Date:   Mon, 24 Oct 2022 23:54:54 +0300
+        Mon, 24 Oct 2022 19:09:58 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D362B814DD
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 14:30:38 -0700 (PDT)
+X-UUID: 3aed31930c0c47b6b8f99c05f2745f84-20221024
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=fe5kXgrIZ2IAqtJZZy0J/San/kl1OX9abjcU8xs8rCs=;
+        b=sIsFtw5mIpqMG35r1TEzCuXC1xdxxoLkVgfBTvKmnVUueppHvMyEv2x2iijRGtqziEPf7mpuwKD7+2Z9fnIPaudLNqqXO0Eqn6FYGT6x+gevqkrbIrGsDZDR6lmIZ6c/edkXyIVVu1TXJcvN8/JkM+Dg+xwUUYs+ZVcu4/nWFyU=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.12,REQID:70b14244-2cfa-44f5-874e-8e39c96e4446,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:62cd327,CLOUDID:e7f282c8-03ab-4171-989e-341ab5339257,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 3aed31930c0c47b6b8f99c05f2745f84-20221024
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 442155476; Mon, 24 Oct 2022 20:45:33 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Mon, 24 Oct 2022 20:45:32 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Mon, 24 Oct 2022 20:45:32 +0800
+From:   Deren Wu <Deren.Wu@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
+CC:     Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        "Eric-SY Chang" <Eric-SY.Chang@mediatek.com>,
+        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        "Ryder Lee" <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
+        Deren Wu <deren.wu@mediatek.com>
+Subject: [PATCH v2] wifi: mt76: fix bandwidth 80MHz link fail in 6GHz band
+Date:   Mon, 24 Oct 2022 20:45:08 +0800
+Message-ID: <85b5e8374fc9b86fb955060c1840f3b2a1d187e4.1666614616.git.deren.wu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.3
-Subject: [PATCH v2 2/5] wifi: rtl8xxxu: Fix the CCK RSSI calculation
-Content-Language: en-US
-From:   Bitterblue Smith <rtl8821cerfe2@gmail.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>
-References: <1edda764-94ca-2123-0ba6-6b04a1b01709@gmail.com>
-In-Reply-To: <1edda764-94ca-2123-0ba6-6b04a1b01709@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The CCK RSSI calculation is incorrect for the RTL8723BU, RTL8192EU,
-and RTL8188FU. Add new functions for these chips with code copied from
-their vendor drivers. Use the old code only for the RTL8723AU and
-RTL8192CU.
+From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-I didn't notice any difference in the reported signal strength with my
-RTL8188FU, but I didn't look very hard either.
+Due to information missing, the firmware may be fail on bandwidth
+related settings in mt7921/mt7922. Add new cmd STA_REC_HE_V2 to apply
+additional capabilities in 6GHz band.
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Tested-by: Ben Greear <greearb@candelatech.com>
+Co-developed-by: Deren Wu <deren.wu@mediatek.com>
+Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 ---
-v2:
- - No change.
+v2: Fix le16/cpu type problem, reported by kernel test robot <lkp@intel.com>
 ---
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |  3 ++
- .../realtek/rtl8xxxu/rtl8xxxu_8188f.c         | 32 ++++++++++++++++
- .../realtek/rtl8xxxu/rtl8xxxu_8192c.c         |  1 +
- .../realtek/rtl8xxxu/rtl8xxxu_8192e.c         | 23 +++++++++++
- .../realtek/rtl8xxxu/rtl8xxxu_8723a.c         | 23 +++++++++++
- .../realtek/rtl8xxxu/rtl8xxxu_8723b.c         | 29 ++++++++++++++
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 38 ++++++++++++-------
- 7 files changed, 135 insertions(+), 14 deletions(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 34 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  | 11 ++++++
+ 2 files changed, 45 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 14f0b3224553..34eb040214ad 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1395,6 +1395,7 @@ struct rtl8xxxu_priv {
- 	u32 ep_tx_normal_queue:1;
- 	u32 ep_tx_low_queue:1;
- 	u32 rx_buf_aggregation:1;
-+	u32 cck_agc_report_type:1;
- 	u8 default_crystal_cap;
- 	unsigned int pipe_interrupt;
- 	unsigned int pipe_in;
-@@ -1500,6 +1501,7 @@ struct rtl8xxxu_fileops {
- 			     bool short_preamble, bool ampdu_enable,
- 			     u32 rts_rate);
- 	void (*set_crystal_cap) (struct rtl8xxxu_priv *priv, u8 crystal_cap);
-+	s8 (*cck_rssi) (struct rtl8xxxu_priv *priv, u8 cck_agc_rpt);
- 	int writeN_block_size;
- 	int rx_agg_buf_size;
- 	char tx_desc_size;
-@@ -1611,6 +1613,7 @@ void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
- 			   u8 arg1, u8 arg2, u8 arg3, u8 arg4, u8 arg5);
- void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv);
- void rtl8723a_set_crystal_cap(struct rtl8xxxu_priv *priv, u8 crystal_cap);
-+s8 rtl8723a_cck_rssi(struct rtl8xxxu_priv *priv, u8 cck_agc_rpt);
- 
- extern struct rtl8xxxu_fileops rtl8188fu_fops;
- extern struct rtl8xxxu_fileops rtl8192cu_fops;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
-index 371dc4a68404..79210ba927ae 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
-@@ -1658,6 +1658,37 @@ static void rtl8188f_set_crystal_cap(struct rtl8xxxu_priv *priv, u8 crystal_cap)
- 	cfo->crystal_cap = crystal_cap;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 011fc9729b38..9bba18d24c71 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -744,6 +744,39 @@ mt76_connac_mcu_sta_he_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
+ 	he->pkt_ext = 2;
  }
  
-+static s8 rtl8188f_cck_rssi(struct rtl8xxxu_priv *priv, u8 cck_agc_rpt)
++static void
++mt76_connac_mcu_sta_he_tlv_v2(struct sk_buff *skb, struct ieee80211_sta *sta)
 +{
-+	s8 rx_pwr_all = 0x00;
-+	u8 vga_idx, lna_idx;
++	struct ieee80211_sta_he_cap *he_cap = &sta->deflink.he_cap;
++	struct ieee80211_he_cap_elem *elem = &he_cap->he_cap_elem;
++	struct sta_rec_he_v2 *he;
++	struct tlv *tlv;
 +
-+	lna_idx = (cck_agc_rpt & 0xE0) >> 5;
-+	vga_idx = cck_agc_rpt & 0x1F;
++	tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_HE_V2, sizeof(*he));
 +
-+	switch (lna_idx) {
-+	case 7:
-+		if (vga_idx <= 27)
-+			rx_pwr_all = -100 + 2 * (27 - vga_idx);
-+		else
-+			rx_pwr_all = -100;
-+		break;
-+	case 5:
-+		rx_pwr_all = -74 + 2 * (21 - vga_idx);
-+		break;
-+	case 3:
-+		rx_pwr_all = -60 + 2 * (20 - vga_idx);
-+		break;
-+	case 1:
-+		rx_pwr_all = -44 + 2 * (19 - vga_idx);
-+		break;
++	he = (struct sta_rec_he_v2 *)tlv;
++	memcpy(he->he_phy_cap, elem->phy_cap_info, sizeof(he->he_phy_cap));
++	memcpy(he->he_mac_cap, elem->mac_cap_info, sizeof(he->he_mac_cap));
++
++	switch (sta->deflink.bandwidth) {
++	case IEEE80211_STA_RX_BW_160:
++		if (elem->phy_cap_info[0] &
++		    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G)
++			he->max_nss_mcs[CMD_HE_MCS_BW8080] =
++				he_cap->he_mcs_nss_supp.rx_mcs_80p80;
++
++		he->max_nss_mcs[CMD_HE_MCS_BW160] =
++				he_cap->he_mcs_nss_supp.rx_mcs_160;
++		fallthrough;
 +	default:
++		he->max_nss_mcs[CMD_HE_MCS_BW80] =
++				he_cap->he_mcs_nss_supp.rx_mcs_80;
 +		break;
 +	}
 +
-+	return rx_pwr_all;
++	he->pkt_ext = IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_16US;
 +}
 +
- struct rtl8xxxu_fileops rtl8188fu_fops = {
- 	.parse_efuse = rtl8188fu_parse_efuse,
- 	.load_firmware = rtl8188fu_load_firmware,
-@@ -1683,6 +1714,7 @@ struct rtl8xxxu_fileops rtl8188fu_fops = {
- 	.report_connect = rtl8xxxu_gen2_report_connect,
- 	.fill_txdesc = rtl8xxxu_fill_txdesc_v2,
- 	.set_crystal_cap = rtl8188f_set_crystal_cap,
-+	.cck_rssi = rtl8188f_cck_rssi,
- 	.writeN_block_size = 128,
- 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-index e9bc94edfa79..9dfeeaa74927 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-@@ -561,6 +561,7 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.update_rate_mask = rtl8xxxu_update_rate_mask,
- 	.report_connect = rtl8xxxu_gen1_report_connect,
- 	.fill_txdesc = rtl8xxxu_fill_txdesc_v1,
-+	.cck_rssi = rtl8723a_cck_rssi,
- 	.writeN_block_size = 128,
- 	.rx_agg_buf_size = 16000,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index 20924bafcb50..8af2c9dd923e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1689,6 +1689,28 @@ static void rtl8192eu_init_aggregation(struct rtl8xxxu_priv *priv)
- 	rtl8xxxu_write32(priv, REG_RXDMA_AGG_PG_TH, agg_rx);
- }
+ static u8
+ mt76_connac_get_phy_mode_v2(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 			    enum nl80211_band band, struct ieee80211_sta *sta)
+@@ -838,6 +871,7 @@ void mt76_connac_mcu_sta_tlv(struct mt76_phy *mphy, struct sk_buff *skb,
+ 	/* starec he */
+ 	if (sta->deflink.he_cap.has_he) {
+ 		mt76_connac_mcu_sta_he_tlv(skb, sta);
++		mt76_connac_mcu_sta_he_tlv_v2(skb, sta);
+ 		if (band == NL80211_BAND_6GHZ &&
+ 		    sta_state == MT76_STA_INFO_STATE_ASSOC) {
+ 			struct sta_rec_he_6g_capa *he_6g_capa;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index cf4ce3b1fc21..8166722d4717 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -354,6 +354,16 @@ struct sta_rec_he {
+ 	u8 rsv2[2];
+ } __packed;
  
-+static s8 rtl8192e_cck_rssi(struct rtl8xxxu_priv *priv, u8 cck_agc_rpt)
-+{
-+	static const s8 lna_gain_table_0[8] = {15, 9, -10, -21, -23, -27, -43, -44};
-+	static const s8 lna_gain_table_1[8] = {24, 18, 13, -4, -11, -18, -31, -36};
++struct sta_rec_he_v2 {
++	__le16 tag;
++	__le16 len;
++	u8 he_mac_cap[6];
++	u8 he_phy_cap[11];
++	u8 pkt_ext;
++	/* 0: BW80, 1: BW160, 2: BW8080 */
++	__le16 max_nss_mcs[CMD_HE_MCS_BW_NUM];
++} __packed;
 +
-+	s8 rx_pwr_all = 0x00;
-+	u8 vga_idx, lna_idx;
-+	s8 lna_gain = 0;
-+
-+	lna_idx = (cck_agc_rpt & 0xE0) >> 5;
-+	vga_idx = cck_agc_rpt & 0x1F;
-+
-+	if (priv->cck_agc_report_type == 0)
-+		lna_gain = lna_gain_table_0[lna_idx];
-+	else
-+		lna_gain = lna_gain_table_1[lna_idx];
-+
-+	rx_pwr_all = lna_gain - (2 * vga_idx);
-+
-+	return rx_pwr_all;
-+}
-+
- struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.parse_efuse = rtl8192eu_parse_efuse,
- 	.load_firmware = rtl8192eu_load_firmware,
-@@ -1711,6 +1733,7 @@ struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.report_connect = rtl8xxxu_gen2_report_connect,
- 	.fill_txdesc = rtl8xxxu_fill_txdesc_v2,
- 	.set_crystal_cap = rtl8723a_set_crystal_cap,
-+	.cck_rssi = rtl8192e_cck_rssi,
- 	.writeN_block_size = 128,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
- 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-index 552763a2215c..8d8eb16a0970 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-@@ -386,6 +386,28 @@ void rtl8723a_set_crystal_cap(struct rtl8xxxu_priv *priv, u8 crystal_cap)
- 	cfo->crystal_cap = crystal_cap;
- }
+ struct sta_rec_amsdu {
+ 	__le16 tag;
+ 	__le16 len;
+@@ -779,6 +789,7 @@ enum {
+ 	STA_REC_BFEE,
+ 	STA_REC_PHY = 0x15,
+ 	STA_REC_HE_6G = 0x17,
++	STA_REC_HE_V2 = 0x19,
+ 	STA_REC_MAX_NUM
+ };
  
-+s8 rtl8723a_cck_rssi(struct rtl8xxxu_priv *priv, u8 cck_agc_rpt)
-+{
-+	s8 rx_pwr_all = 0x00;
-+
-+	switch (cck_agc_rpt & 0xc0) {
-+	case 0xc0:
-+		rx_pwr_all = -46 - (cck_agc_rpt & 0x3e);
-+		break;
-+	case 0x80:
-+		rx_pwr_all = -26 - (cck_agc_rpt & 0x3e);
-+		break;
-+	case 0x40:
-+		rx_pwr_all = -12 - (cck_agc_rpt & 0x3e);
-+		break;
-+	case 0x00:
-+		rx_pwr_all = 16 - (cck_agc_rpt & 0x3e);
-+		break;
-+	}
-+
-+	return rx_pwr_all;
-+}
-+
- struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.parse_efuse = rtl8723au_parse_efuse,
- 	.load_firmware = rtl8723au_load_firmware,
-@@ -408,6 +430,7 @@ struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.report_connect = rtl8xxxu_gen1_report_connect,
- 	.fill_txdesc = rtl8xxxu_fill_txdesc_v1,
- 	.set_crystal_cap = rtl8723a_set_crystal_cap,
-+	.cck_rssi = rtl8723a_cck_rssi,
- 	.writeN_block_size = 1024,
- 	.rx_agg_buf_size = 16000,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-index ead2ff5edad1..7acbcf32aad7 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-@@ -1639,6 +1639,34 @@ static void rtl8723bu_init_statistics(struct rtl8xxxu_priv *priv)
- 	rtl8xxxu_write32(priv, REG_OFDM0_FA_RSTC, val32);
- }
- 
-+static s8 rtl8723b_cck_rssi(struct rtl8xxxu_priv *priv, u8 cck_agc_rpt)
-+{
-+	s8 rx_pwr_all = 0x00;
-+	u8 vga_idx, lna_idx;
-+
-+	lna_idx = (cck_agc_rpt & 0xE0) >> 5;
-+	vga_idx = cck_agc_rpt & 0x1F;
-+
-+	switch (lna_idx) {
-+	case 6:
-+		rx_pwr_all = -34 - (2 * vga_idx);
-+		break;
-+	case 4:
-+		rx_pwr_all = -14 - (2 * vga_idx);
-+		break;
-+	case 1:
-+		rx_pwr_all = 6 - (2 * vga_idx);
-+		break;
-+	case 0:
-+		rx_pwr_all = 16 - (2 * vga_idx);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return rx_pwr_all;
-+}
-+
- struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.parse_efuse = rtl8723bu_parse_efuse,
- 	.load_firmware = rtl8723bu_load_firmware,
-@@ -1664,6 +1692,7 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.report_connect = rtl8xxxu_gen2_report_connect,
- 	.fill_txdesc = rtl8xxxu_fill_txdesc_v2,
- 	.set_crystal_cap = rtl8723a_set_crystal_cap,
-+	.cck_rssi = rtl8723b_cck_rssi,
- 	.writeN_block_size = 1024,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
- 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 86a3457fd951..7023f6accda7 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4325,6 +4325,29 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		val32 &= 0xfff00fff;
- 		val32 |= 0x0007e000;
- 		rtl8xxxu_write32(priv, REG_AFE_MISC, val32);
-+
-+		/*
-+		 * 0x824[9] = 0x82C[9] = 0xA80[7] those registers setting
-+		 * should be equal or CCK RSSI report may be incorrect
-+		 */
-+		val32 = rtl8xxxu_read32(priv, REG_FPGA0_XA_HSSI_PARM2);
-+		priv->cck_agc_report_type = val32 & FPGA0_HSSI_PARM2_CCK_HIGH_PWR;
-+
-+		val32 = rtl8xxxu_read32(priv, REG_FPGA0_XB_HSSI_PARM2);
-+		if (priv->cck_agc_report_type != (bool)(val32 & FPGA0_HSSI_PARM2_CCK_HIGH_PWR)) {
-+			if (priv->cck_agc_report_type)
-+				val32 |= FPGA0_HSSI_PARM2_CCK_HIGH_PWR;
-+			else
-+				val32 &= ~FPGA0_HSSI_PARM2_CCK_HIGH_PWR;
-+			rtl8xxxu_write32(priv, REG_FPGA0_XB_HSSI_PARM2, val32);
-+		}
-+
-+		val32 = rtl8xxxu_read32(priv, 0xa80);
-+		if (priv->cck_agc_report_type)
-+			val32 |= BIT(7);
-+		else
-+			val32 &= ~BIT(7);
-+		rtl8xxxu_write32(priv, 0xa80, val32);
- 	}
- 
- 	/* Initialise the center frequency offset tracking */
-@@ -5314,20 +5337,7 @@ static void rtl8xxxu_rx_parse_phystats(struct rtl8xxxu_priv *priv,
- 		 */
- 		u8 cck_agc_rpt = phy_stats->cck_agc_rpt_ofdm_cfosho_a;
- 
--		switch (cck_agc_rpt & 0xc0) {
--		case 0xc0:
--			rx_status->signal = -46 - (cck_agc_rpt & 0x3e);
--			break;
--		case 0x80:
--			rx_status->signal = -26 - (cck_agc_rpt & 0x3e);
--			break;
--		case 0x40:
--			rx_status->signal = -12 - (cck_agc_rpt & 0x3e);
--			break;
--		case 0x00:
--			rx_status->signal = 16 - (cck_agc_rpt & 0x3e);
--			break;
--		}
-+		rx_status->signal = priv->fops->cck_rssi(priv, cck_agc_rpt);
- 	} else {
- 		bool parse_cfo = priv->fops->set_crystal_cap &&
- 				 priv->vif &&
 -- 
-2.38.0
+2.18.0
+
