@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F1BEFA373F
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 00:33:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 101ADC67871
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 00:33:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231156AbiJYAdd (ORCPT
+        id S229914AbiJYAdr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Oct 2022 20:33:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57736 "EHLO
+        Mon, 24 Oct 2022 20:33:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230381AbiJYAdJ (ORCPT
+        with ESMTP id S229682AbiJYAdO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2022 20:33:09 -0400
+        Mon, 24 Oct 2022 20:33:14 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3060820347;
-        Mon, 24 Oct 2022 15:57:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF9082BB1E;
+        Mon, 24 Oct 2022 15:58:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666652281; x=1698188281;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=/QFYcqzzhog465CEp7hJCINJC63rwNPJ/l0XxVVSM6g=;
-  b=IphW3CK6tjTAbqJpyvEU5yD+tVjeukfE0aGA9BR5AnSK/KieuDcM1yT8
-   5ebACnvzZEQ4A4odoBErIgAmiIuTzSLVj6oF28kClfGeOrIX39sYggBeZ
-   tIP/09DEy6WgTrX29qzOIEi1GXRNgnP2x9u0ypx24JpCdddvoyhEfz9SJ
-   MQ/Nc30R4B4Vz/x6Jfw8o1DtKcZvFGmLhrO7GmJNXdIVs8ugOpUy2ZZ+j
-   pHTSvedNCrVFEYZ3yLIi2hXt/0dmT4SxE3L5dLyHxerecemflRhzJDEk5
-   yjyDN6y4zwx7NzCftQUKAmVhb6f2IJfmpSfw9HgPmj9Y8ca7OrLfHtxOR
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="308633271"
+  t=1666652294; x=1698188294;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Dg022xT9wrRgqUOEQj0+Hywo+Hdp+CKqSuOIoBjxANA=;
+  b=C22EG5XcyJX2f9Ys6Grt+UBMZlGLH/lCGgd7tZ1gN1686+UC7ougWr99
+   aIrHkzfS74BbWWuz0Ch+Fdb+qBXcqD2O1oHy+0BMpHJl9ZaYRYZwz16Pt
+   /IBNuH/SgBPSY7gxkAm+dO19oVm9ev8d+Mr0Texj/K9+28FugoE/Kf0mr
+   JFXCkeOWuAlqGL0L87ToRM0OzVfrlqdHNIwYED8UGTK+tI3PwDgi3t+3g
+   xSciMN9ruUD6oYTfGDUSXspM1IbIYMZ3GrZCpQ3BQynOshUa7SnLsxUG/
+   lPZFlnO4LglySCyrzjRs5lXame45ywF+xnPOe50wc30nNrQlui1ugoyp3
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="308633276"
 X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
-   d="scan'208";a="308633271"
+   d="scan'208";a="308633276"
 Received: from orsmga006.jf.intel.com ([10.7.209.51])
   by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 15:57:56 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="609363400"
+X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="609363407"
 X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
-   d="scan'208";a="609363400"
+   d="scan'208";a="609363407"
 Received: from pkearns-mobl1.amr.corp.intel.com (HELO guptapa-desk.intel.com) ([10.252.131.64])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 15:57:55 -0700
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 15:57:56 -0700
 From:   Pawan Gupta <pawan.kumar.gupta@linux.intel.com>
 To:     scott.d.constable@intel.com, daniel.sneddon@linux.intel.com,
         Jakub Kicinski <kuba@kernel.org>, dave.hansen@intel.com,
@@ -49,59 +49,63 @@ To:     scott.d.constable@intel.com, daniel.sneddon@linux.intel.com,
         Eric Dumazet <edumazet@google.com>
 Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         x86@kernel.org, gregkh@linuxfoundation.org, netdev@vger.kernel.org
-Subject: [RFC PATCH 0/2] Branch Target Injection (BTI) gadget in minstrel
-Date:   Mon, 24 Oct 2022 15:57:45 -0700
-Message-Id: <cover.1666651511.git.pawan.kumar.gupta@linux.intel.com>
+Subject: [RFC PATCH 2/2] minstrel_ht: Mitigate BTI gadget minstrel_ht_get_expected_throughput()
+Date:   Mon, 24 Oct 2022 15:57:47 -0700
+Message-Id: <ceb2bcdc79f1494151e85734fa7bdc639df275bb.1666651511.git.pawan.kumar.gupta@linux.intel.com>
 X-Mailer: git-send-email 2.37.3
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <cover.1666651511.git.pawan.kumar.gupta@linux.intel.com>
+References: <cover.1666651511.git.pawan.kumar.gupta@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Static analysis indicate that indirect target
+minstrel_ht_get_expected_throughput() could be used as a disclosure
+gadget for Intra-mode Branch Target Injection (IMBTI) and Branch History
+Injection (BHI).
 
-There is a theoretical possibility of using
-minstrel_ht_get_expected_throughput() as a disclosure gadget for Branch
-History Injection (BHI)/Intra-mode Branch Target Injection (IMBTI) [1].
-Requesting feedback on the couple of patches that mitigates this.
+ASM generated by compilers indicate a construct of a typical disclosure
+gadget, where an adversary-controlled register contents can be used to
+transiently access an arbitrary memory location.
 
-First patch adds a generic speculation barrier. Second patch uses the
-speculation barrier to mitigate BHI/IMBTI.
+Although there are no known ways to exploit this, but to be on safer
+side mitigate it by adding a speculation barrier.
 
-The other goal of this series is to start a discussion on whether such
-hard to exploit, but theoretical possible attacks deems to be mitigated.
-
-In general Branch Target Injection class of attacks involves an adversary
-controlling an indirect branch target to misspeculate to a disclosure gadget.
-For a successful attack an adversary also needs to control the register
-contents used by the disclosure gadget.
-
-Assuming preconditions are met, a disclosure gadget would transiently do
-below:
-
-  1. Loads an attacker chosen data from memory.
-  2. Based on the data, modifies cache state that is observable by an attacker.
-
-Although both these operations are architecturally invisible, the cache state
-changes could be used to infer the data.
-
-Disclosure gadget is mitigated by adding a speculation barrier.
-
-Thanks,
-Pawan
-
-[1] https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/technical-documentation/branch-history-injection.html
-
-Pawan Gupta (2):
-  nospec: Add a generic barrier_nospec()
-  minstrel_ht: Mitigate BTI gadget minstrel_ht_get_expected_throughput()
-
- include/linux/nospec.h             | 4 ++++
+Reported-by: Scott D. Constable <scott.d.constable@intel.com>
+Signed-off-by: Pawan Gupta <pawan.kumar.gupta@linux.intel.com>
+---
  net/mac80211/rc80211_minstrel_ht.c | 9 +++++++++
- 2 files changed, 13 insertions(+)
+ 1 file changed, 9 insertions(+)
 
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3d91b98db099..7cf90666a865 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -11,6 +11,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/ieee80211.h>
+ #include <linux/minmax.h>
++#include <linux/nospec.h>
+ #include <net/mac80211.h>
+ #include "rate.h"
+ #include "sta_info.h"
+@@ -1999,6 +2000,14 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
+ 	struct minstrel_ht_sta *mi = priv_sta;
+ 	int i, j, prob, tp_avg;
+ 
++	/*
++	 * Protect against IMBTI/BHI.
++	 *
++	 * Transiently executing this function with an adversary controlled
++	 * argument may disclose secrets. Speculation barrier prevents that.
++	 */
++	barrier_nospec();
++
+ 	i = MI_RATE_GROUP(mi->max_tp_rate[0]);
+ 	j = MI_RATE_IDX(mi->max_tp_rate[0]);
+ 	prob = mi->groups[i].rates[j].prob_avg;
 -- 
 2.37.3
 
