@@ -2,181 +2,131 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3B57ECAAA1
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Oct 2022 16:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C169FA373F
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Oct 2022 16:44:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230124AbiJXQUz (ORCPT
+        id S231229AbiJXQoX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Oct 2022 12:20:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39994 "EHLO
+        Mon, 24 Oct 2022 12:44:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235023AbiJXQTo (ORCPT
+        with ESMTP id S229872AbiJXQnp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2022 12:19:44 -0400
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9CC113642D
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 08:05:57 -0700 (PDT)
-Received: by mail-lf1-x12a.google.com with SMTP id be13so17207771lfb.4
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 08:05:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:subject:user-agent:references:in-reply-to:message-id
-         :date:cc:to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=nRsMD24MBKjCrh0a+nDTpMudpb4meIyVbWzP/n6buGs=;
-        b=ZgbHg0u1Equbyb3HDbwT69ixtbmUTIslT3ygWaG1L+ts4TpAA3c0A1fUwB4oW0Vu3x
-         jZ+BNcZ73tNpMwXpnzFjpUAu2E9JaUdHcxrxNiHqdAmZeuQpNKc7JZFl76Tkekyw+cCg
-         FKtpqY2hw5rKUZc97WWRCGqD5CO7iqqDYZEso=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:subject:user-agent:references:in-reply-to:message-id
-         :date:cc:to:from:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=nRsMD24MBKjCrh0a+nDTpMudpb4meIyVbWzP/n6buGs=;
-        b=pMTCb4LQ4oCOjM4rZiLZhSaOLeYlX65XDRKjsd1V78EOEKkoI1u8Y8ASEIFPtTGd1Z
-         gHjvCiFNAwmr7XBXMIy7ah2yqz+IEhvWaHGMIxBw0D53NRKhJ0GnC6h9tJwvKrCzwj9+
-         h/ZyX5ARjqafflbkNm2tZSxYZCu4TjtUNksGNNqN0ul6WaLul1O7HMPXfx66DEjYrla1
-         yyFOqRNadNODRmp0PskS4mdVG6yS12/Jmk+1flXpz68jm3z/MXThShMsc0fOSF6fwe2h
-         Ce9nyofyBAEIj+xAZ3lHrS0hm3YHWlFw0cpd4RhjXmL/0RrUi1go3vIMbZ/H6HdIRBPg
-         gwrQ==
-X-Gm-Message-State: ACrzQf0YlowwEbTRW8qrXms8FY8or7BNYu4pxGjmw13JtjpSNhINsNUB
-        c1u6bbpku6ByR6u/0Hye95N+zUlJrlgvSh/v
-X-Google-Smtp-Source: AMsMyM7EcaK+r22A9nW85xhKvhBFb/3jqSyMdLKX+b6CtPSPiv3gpSSYO6tfOF/pR7TPE3tHXPB+5g==
-X-Received: by 2002:a17:907:a46:b0:782:1c1c:8141 with SMTP id be6-20020a1709070a4600b007821c1c8141mr27684498ejc.549.1666621611316;
-        Mon, 24 Oct 2022 07:26:51 -0700 (PDT)
-Received: from [192.168.178.38] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id b19-20020a17090630d300b0073c0b87ba34sm15637815ejb.198.2022.10.24.07.26.44
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 24 Oct 2022 07:26:44 -0700 (PDT)
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-To:     Linus Walleij <linus.walleij@linaro.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        "Chi-Hsien Lin" <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>
-CC:     <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>
-Date:   Mon, 24 Oct 2022 16:26:42 +0200
-Message-ID: <1840a6374e8.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <20221024124002.10120-1-linus.walleij@linaro.org>
-References: <20221024124002.10120-1-linus.walleij@linaro.org>
-User-Agent: AquaMail/1.39.1 (build: 103901207)
-Subject: Re: [PATCH] brcm80211: brcmsmac: Drop BMCMA consistency check
+        Mon, 24 Oct 2022 12:43:45 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 906BB647E1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 08:30:03 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3D91BB81A97
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 13:54:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D09AC433D6;
+        Mon, 24 Oct 2022 13:54:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666619663;
+        bh=bwqPATfhA9ITtSQoko92JrBwkzgbni+rSAGqUyOweco=;
+        h=Date:From:To:Cc:Subject:From;
+        b=GXKjhxz21eFZP0ojjzaKVDgoqgtjwVJvCVmmkVJv9XwoDq9aF7XCDkex9uy2R/Q6e
+         HPACg15gRJHvKKaQy5Fy2eJ+m9yafuVCuzt+BMuHbz6f4JbOhyU5/4JOzOUTU7RZh0
+         Ol2DzlCxs42M3WL51ohOKl3CcJTG0m8y8c236MPUq0Drd+bOHKzOopSQzf7ub438zW
+         PoDMedcYdVbFXPLHCOg56tUGbAotoYpi0xUP6Q22ADLEugXD1q4yBObg1IyNh3TSjg
+         eNLU9OXQ91df1BaiQHRoGHbtcmc1YLoOzK5F0LKuQHROQb4AD4JISEhLmn2BdlKgVo
+         DGFPENQrSsq8Q==
+Date:   Mon, 24 Oct 2022 15:54:07 +0200
+From:   Michael Walle <mwalle@kernel.org>
+To:     Ajay Singh <ajay.kathat@microchip.com>,
+        Claudiu Beznea <claudiu.beznea@microchip.com>
+Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>
+Subject: wilc1000 kernel crash
+Message-ID: <20221024135407.7udo3dwl3mqyv2yj@0002.3ffe.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000088eb2205ebc9194d"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---00000000000088eb2205ebc9194d
-Content-Type: text/plain; format=flowed; charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Hi,
 
-On October 24, 2022 2:40:08 PM Linus Walleij <linus.walleij@linaro.org> wrote:
+I'm using the WILC1000 wifi chip in SDIO mode and with NetworkManager
+which seems to be probing the network in the background. What I am
+seeing is a kernel oops while processing the workqueue.
 
-> The driver looks up the BCMA parent GPIO driver and checks that
-> this succeeds, but then it goes on to use the deprecated GPIO
-> call gpio_is_valid() to check the consistency of the .base
-> member of the BCMA GPIO struct. Surely this belongs in the
-> BCMA driver: we cannot have all drivers performing cosistency
+This is on a kernel 5.15.74, but it also happens with the latest next,
+but not that often - I guess due to a different timing.
 
-Should be: consistency
+My reduced steps to reproduce are the following:
+  $ while true; do ifconfig wlan0 up; iw dev wlan0 scan & \
+      ifconfig wlan0 down; done
 
->
-> checks on the internals of things they are passed.
+After a while I'll get the following splash:
 
-Apart from the typo in the subject and missing wifi: prefix (replace 
-'brcm80211' by 'wifi')...
+[  487.955326] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+[  487.955363] Mem abort info:
+[  487.955366]   ESR = 0x96000004
+[  487.955370]   EC = 0x25: DABT (current EL), IL = 32 bits
+[  487.965939] FW not responding
+[  487.971033]   SET = 0, FnV = 0
+[  487.971039]   EA = 0, S1PTW = 0
+[  487.971043]   FSC = 0x04: level 0 translation fault
+[  487.971047] Data abort info:
+[  487.971050]   ISV = 0, ISS = 0x00000004
+[  487.971053]   CM = 0, WnR = 0
+[  487.971059] user pgtable: 4k pages, 48-bit VAs, pgdp=00000000497b0000
+[  487.971066] [0000000000000000] pgd=0000000000000000, p4d=0000000000000000
+[  487.971085] Internal error: Oops: 96000004 [#1] SMP
+[  487.971094] Modules linked in:
+[  487.971104] CPU: 1 PID: 9 Comm: kworker/u8:0 Not tainted 5.15.74-00013-g2d5897cb12ef #130
+[  487.971113] Hardware name: NXP i.MX8MNano DDR3L EVK board (DT)
+[  487.971122] Workqueue: WILC_wq handle_rcvd_ntwrk_info
+[  488.035377] wilc1000_sdio mmc1:0001:1: chipid (001003a0)
+[  487.971085] Internal error: Oops:
+[  488.041180] 96000004 [#1] SMP
+[  488.041186] pstate: 60000005 (nZCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[  488.041196] pc : handle_rcvd_ntwrk_info+0x7c/0xc4
+[  488.041208] lr : handle_rcvd_ntwrk_info+0x70/0xc4
+[  488.049128] wilc1000_sdio mmc1:0001:1: has_thrpt_enh3 = 1...
+[  488.057273] sp : ffff80000a20bd70
+[  488.057277] x29: ffff80000a20bd70 x28: 0000000000000000 x27: 0000000000000000
+[  488.057289] x26: ffff000000118470 x25: ffff000005059d05 x24: ffff00000de94d30
+[  488.057299] x23: 0000000000000000
+[  488.062670] wilc1000_sdio mmc1:0001:1 wlan0: ChipID [1003a0] loading firmware [atmel/wilc1000_wifi_firmware-1.bin]
+[  488.070418]  x22: ffff000005059d00 x21: 0000000000000000
+[  488.070428] x20: ffff00000de94d00 x19: ffff00000de94d28 x18: 0000000000000000
+[  488.070440] x17: 0000000000000000 x16: 0000000000000000 x15: a4270000a4030001
+[  488.070450] x14: 010102f2500018dd x13: 0018dd0000010002 x12: 0546000000000000
+[  488.070461] x11: 0000000000000000 x10: 0000000000000000 x9 : ffff800008ad92a0
+[  488.150644] x8 : fefefefefefefeff x7 : 0000000000000018 x6 : ffff0000063e88c0
+[  488.157799] x5 : 0000000000000000 x4 : 0000000000000003 x3 : 0000000000000000
+[  488.164947] x2 : 0000000000000000 x1 : 0000000000000001 x0 : 0000000000000001
+[  488.172095] Call trace:
+[  488.174548]  handle_rcvd_ntwrk_info+0x7c/0xc4
+[  488.175400] FW not responding
+[  488.178927]  process_one_work+0x1ec/0x48c
+[  488.178941]  worker_thread+0x170/0x564
+[  488.178948]  kthread+0x128/0x13c
+[  488.178959]  ret_from_fork+0x10/0x20
+[  488.185280] FW not responding
+[  488.185958] Code: 9415ea8e b4000060 39400401 35000201 (f94002a3)
+[  488.192042] FW not responding
+[  488.192957] ---[ end trace fa915dc840cf0355 ]---
+[  488.199700] FW not responding
+[  488.205601] Kernel panic - not syncing: Oops: Fatal exception
+[  488.205608] SMP: stopping secondary CPUs
+[  488.205630] Kernel Offset: disabled
+[  488.205634] CPU features: 0x00002001,20000846
+[  488.205642] Memory Limit: none
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/led.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
+In handle_rcvd_ntwrk_info() scan_req->scan_result isn't valid anymore,
+although it doesn't contain NULL. Thus the driver is calling into a
+bogus function pointer. There seems to be no locking between the
+asynchronous calls within the workqueue (wilc_enqueue_work()) and when
+the interface is disabled (wilc_deinit()). wilc_deinit() will free the
+host_if_drv object which might still be used within the workqueue
+context.
 
+BTW, ignore the "FW not repsonding" for now, that seems to be a
+different problem.
 
-
-
---00000000000088eb2205ebc9194d
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-2Gzj3QNJRLsZu1TLyOyBBIr/BE7UiY3RabgRzknBGAPmzhS+fmyM8OtM5BYBsFBrSUFtZZO2p/tf
-Nbc24J2zf2peoZ8MK+7WQqummYlOnz+FyDkA9EybeNMcS5C+xi/PAgMBAAGjggHdMIIB2TAOBgNV
-HQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRwOi8vc2VjdXJl
-Lmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcnQwQQYI
-KwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24y
-Y2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3
-dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRCMEAwPqA8oDqG
-OGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3Js
-MCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYDVR0lBAwwCgYIKwYB
-BQUHAwQwHwYDVR0jBBgwFoAUljPR5lgXWzR1ioFWZNW+SN6hj88wHQYDVR0OBBYEFIikAXd8CEtv
-ZbDflDRnf3tuStPuMA0GCSqGSIb3DQEBCwUAA4IBAQCdS5XCYx6k2GGZui9DlFsFm75khkqAU7rT
-zBX04sJU1+B1wtgmWTVIzW7ugdtDZ4gzaV0S9xRhpDErjJaltxPbCylb1DEsLj+AIvBR34caW6ZG
-sQk444t0HPb29HnWYj+OllIGMbdJWr0/P95ZrKk2bP24ub3ZP/8SyzrohfIba9WZKMq6g2nTLZE3
-BtkeSGJx/8dy0h8YmRn+adOrxKXHxhSL8BNn8wsmIZyYWe6fRcBtO3Ks2DOLyHCdkoFlN8x9VUQF
-N2ulEgqCbRKkx+qNirW86eF138lr1gRxzclu/38ko//MmkAYR/+hP3WnBll7zbpIt0jc9wyFkSqH
-p8a1MYICbTCCAmkCAQEwazBbMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1z
-YTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMgUGVyc29uYWxTaWduIDIgQ0EgMjAyMAIMTv1t
-bpIzNUky46LXMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCAveRtt/3jB8sTtwCaT
-TRsXYEh5LwIXBxf/0wv/BegIvzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
-BTEPFw0yMjEwMjQxNTAzNTJaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
-AwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzAL
-BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAOu9p8C7ac9ctXESmd6HJMetoVSFcPvUVPRIk
-pWqbZlB4G86UaBA9S8qOo1g04IT+OJo1kJqTFzAXm13raPq/CGO2vJjjneMXh8EYFyxTvia2sMMg
-K9M3Q+KB5mmvzSYbKkpITKwTKVSXgs6eELp3nI2HHbp5MsXOxYMZzuyiR1V8/YzZb6FeUmU+u+9z
-MMiQQf1I+9tFKVzbLqhkIf1aZOeQhAhTv55BDjwBBp/ptD7N9vYOVXTJz6RPx3KbWlFhI0KXCV62
-hLzx7brZCzRXOUZvCHsAfJEx8eqQwzwE8PMdhZPcVl+xFHDAM7L7keTxiZOmVoEGNvNSugNC1/ni
-YQ==
---00000000000088eb2205ebc9194d--
+-michael
