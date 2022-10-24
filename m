@@ -2,109 +2,103 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE5DFC38A2D
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Oct 2022 17:17:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F33DC38A2D
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Oct 2022 17:43:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229542AbiJXRRn (ORCPT
+        id S231955AbiJXRn3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Oct 2022 13:17:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48534 "EHLO
+        Mon, 24 Oct 2022 13:43:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231960AbiJXRRH (ORCPT
+        with ESMTP id S231794AbiJXRnG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2022 13:17:07 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97E77EE0E;
-        Mon, 24 Oct 2022 08:51:49 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id bu30so16944594wrb.8;
-        Mon, 24 Oct 2022 08:51:48 -0700 (PDT)
+        Mon, 24 Oct 2022 13:43:06 -0400
+Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00A2DA50DF;
+        Mon, 24 Oct 2022 09:17:59 -0700 (PDT)
+Received: by mail-wr1-x42a.google.com with SMTP id o4so8812687wrq.6;
+        Mon, 24 Oct 2022 09:17:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=12Hfsvc693TZxjDoiKEIy9pxMoUJGBSzkAbLmqYNUHc=;
-        b=MBySkf9aiTOI+X0qset5bfU5PmhUY3Ddaq86yiT1By0eVERf8SGpEeZpxIFyVTJT5F
-         yUdEstP4Ftp6i17BqHD6xRh1NNuu/bFwj+j9EedEGRk8Vm/D7/79iUMl8G2VoGkZhm1Z
-         +eu3sEytauSBAkVW2OBZktRjqAHjwPxZ43MyGARfBCc3onPefeVwvswHGkgZ1JrXSf7/
-         n4k3vxKaiH6OQtbeWrL2zVOWM8k3z56iQyspfP89r7TC1mUVR+b6c17JLHui95+x9/y2
-         x2vDtI2Hs/ljNsKzmRpQSs9I1X9DQ8nU4dT2xjc+eoCEFy3cNty2sym4/m0JK9/VjihE
-         ERQw==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=7aiClwPR9sAvkuS66cGq13emR+XEGSOWezje9CRd5Ko=;
+        b=AXE1YHREz/ElPMozg6VRmr+8PZ5DdwECsVZN7yJ4+M7mMjSuztlivbhKAGSPlpO8xS
+         mVyPlRhBrJ4UV7tEiyzPBNqT8sOhCp2I/SCgVpB2ffO6n7BhMASip8PXg85j18sD9ybG
+         VzqiFw2yKpDaaQ6tRZ6yhHM/qi4r1iRhKLjZUZhwOuXOjn+7buIwW8gmw/ppPFAQvXw5
+         SwhpwSCZauJoF3nJMna0pVro0QhhpmPydJ7MXabd7CbJDBUsvsVEerLJ2yzz7DOCig5c
+         m+K9nvR+SI3JHF3UE9QIseWkYn7rx74gahSTUQkqTV90/O5VJZ6M77gIkJz2V5Nr8Mf2
+         27RQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:subject:from:cc:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=12Hfsvc693TZxjDoiKEIy9pxMoUJGBSzkAbLmqYNUHc=;
-        b=jEkbzvcHc4eOP2CQgDD3pVCGRXphWGo4Gz6TSDyCQ8ornbJgAHcwrNHl33jkTJ8uCq
-         W+KLDk5Sf+Whuktazcmt6wdUL7BBJghowUTv3DfHx1GyFCDCXJahyaMlxxvqc6gb7+G3
-         NwGv6RlW4doEthqQNRxz/CTYcaqUnZawBkOYZQ1peQSz6cgOTJQ9kumAvI8GmHr8fxnj
-         g4t+zJj54uocDyiSQUneqgw+ddHLPJ5C/t4LTNT5XjMySe/dp779X/r+JsxGnEcx87Gf
-         68ct01ZTxIr3fV9NzwREtqRj0pA95OLH2pAekL0BWCJyw0LuYasMsptWK5zJIml0nrJQ
-         mdYQ==
-X-Gm-Message-State: ACrzQf1o9852AxWCIJLg8bDQPZg7Bs70ocoHhtluni1F9vUtUVAvBigf
-        eiPuy0wONv9XlhE2nIeiZLlso1k572O8lZV1
-X-Google-Smtp-Source: AMsMyM7ru3zgHPhzmq1cPiu4/GsUgya8geED2sp+Kl1Z2vuNu9KGxL3Ep5jk0PULaQ1+0iBhJn7zEg==
-X-Received: by 2002:adf:eb84:0:b0:22a:917e:1c20 with SMTP id t4-20020adfeb84000000b0022a917e1c20mr21439631wrn.223.1666620061633;
-        Mon, 24 Oct 2022 07:01:01 -0700 (PDT)
-Received: from [192.168.0.210] (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.googlemail.com with ESMTPSA id v1-20020adfedc1000000b00228daaa84aesm27118102wro.25.2022.10.24.07.01.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Oct 2022 07:01:01 -0700 (PDT)
-Message-ID: <aeec15d5-6f7a-2c4f-0f90-72c52d082ce8@gmail.com>
-Date:   Mon, 24 Oct 2022 15:00:59 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.1
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7aiClwPR9sAvkuS66cGq13emR+XEGSOWezje9CRd5Ko=;
+        b=OsatyBm0RJPxmdBfYKd2xJSrkiq02WOBO/t38SR0feOyDcaX+BXLnArTtHgaMEdbhW
+         23HreML8fEAKJ5Octm/ZsSW1NEmh4drGF8AZRa5CDs+kXVXUjoNMNgq74SfG31gmRIs3
+         yIbFgXCg2BP7GkqOPx3Cw8orYPUohXHWri9jQVKScLLaE+qA4hfGi0W8OtuNDo+r+SLK
+         xqh81EeZLeTUq66EnMijhnhvdtDyNkTP36CFk480cp6Dn1zOnXuZN9iOcRFmvP16h6et
+         VAyDCxzQtKxAxYGzID3e3oWFgTh0ko9LUtwrDXxndCvPv/eX/YuO3UBG23W2BzUnLHHQ
+         Lhwg==
+X-Gm-Message-State: ACrzQf3ZgWsxKlnX3FMjQpY0Yo0Lcyn0cSiLCMRIpu55GP3sGrJ8VWzI
+        0o1vNTTTHyA0O8S+hd0RkJBIdHsV9L9nK4Ga
+X-Google-Smtp-Source: AMsMyM79gyjjA1L/l7GuLr9GMJwmIUmhcGN19aJsAyi2OUBUUVgXjjYM2Ikso+u3DDCb8NxBRju7WQ==
+X-Received: by 2002:adf:e3c1:0:b0:236:6d5d:ffa2 with SMTP id k1-20020adfe3c1000000b002366d5dffa2mr5420960wrm.557.1666625995849;
+        Mon, 24 Oct 2022 08:39:55 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id h17-20020a5d4311000000b002366ded5864sm4241575wrq.116.2022.10.24.08.39.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Oct 2022 08:39:55 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From:   "Colin King (gmail)" <colin.i.king@gmail.com>
-Subject: Variables being modified but not used in
- net/wireless/lib80211_crypt_tkip.c
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Paolo Abeni <pabeni@redhat.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k: remove variable sent
+Date:   Mon, 24 Oct 2022 16:39:54 +0100
+Message-Id: <20221024153954.2168503-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.37.3
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Variable sent is just being incremented and it's never used
+anywhere else. The variable and the increment are redundant so
+remove it.
 
-I was reviewing some clang scan build static analysis results and found 
-an interesting warning:
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Source: net/wireless/lib80211_crypt_tkip.c
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ba271a10d4ab..39abb59d8771 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1678,7 +1678,6 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info;
+ 	struct list_head bf_q;
+ 	struct ath_buf *bf_tail = NULL, *bf = NULL;
+-	int sent = 0;
+ 	int i, ret;
+ 
+ 	INIT_LIST_HEAD(&bf_q);
+@@ -1707,7 +1706,6 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
+ 
+ 			bf_tail = bf;
+ 			nframes--;
+-			sent++;
+ 			TX_STAT_INC(sc, txq->axq_qnum, a_queued_hw);
+ 
+ 			if (an->sta && skb_queue_empty(&tid->retry_q))
+-- 
+2.37.3
 
-net/wireless/lib80211_crypt_tkip.c:667:7: warning: variable 'iv32' set 
-but not used [-Wunused-but-set-variable]
-                 u32 iv32 = tkey->tx_iv32;
-
-The variables iv32 and iv16 are being decremented, but are not 
-referenced after that. The seq[] array is being updated with the 
-pre-decremented values. Is that correct?
-
-         if (seq) {
-                 /* Return the sequence number of the last transmitted 
-frame. */
-                 u16 iv16 = tkey->tx_iv16;
-                 u32 iv32 = tkey->tx_iv32;
-                 if (iv16 == 0)
-                         iv32--;
-                 iv16--;
-                 seq[0] = tkey->tx_iv16;
-                 seq[1] = tkey->tx_iv16 >> 8;
-                 seq[2] = tkey->tx_iv32;
-                 seq[3] = tkey->tx_iv32 >> 8;
-                 seq[4] = tkey->tx_iv32 >> 16;
-                 seq[5] = tkey->tx_iv32 >> 24;
-         }
-
-         return TKIP_KEY_LEN;
-
-Colin
