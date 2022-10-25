@@ -2,95 +2,81 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17BFBC38A2D
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 20:34:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C529DECDFA1
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 22:00:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230522AbiJYUe4 (ORCPT
+        id S231628AbiJYWAk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Oct 2022 16:34:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56192 "EHLO
+        Tue, 25 Oct 2022 18:00:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230057AbiJYUev (ORCPT
+        with ESMTP id S229937AbiJYWAi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2022 16:34:51 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AED431359
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2022 13:34:48 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id q71so12665392pgq.8
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Oct 2022 13:34:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=K4idpmkzDBgIbVIVOkIoDw91xN0C1Ri4v3+lvv9+Gd0=;
-        b=SsdGHf7mcgc0mw3x0Nxou+jWD7Yzfr/8TN70eljMThtqGt1SAMy+sbeY3wMbaG4/h/
-         ARsQXXdkdYTnu+Sgp+7m8qsaqpJFjU1xgWPlppE6HcE2QtYMLGGR3tcGtazSDj6aRvbP
-         BfluYK1sm0jk7MpBezhrmEqNto2FzBtk34SY5Pd83/77dxkbygOSoMwJhpu+w9xj4gi3
-         H6drvb4o/IangNxKBRQGxZx5+qpJOnOEh7N0+F+lnu0Ex9Kd0QGYUXmIGBG5M5uSm8XX
-         mswW4fPsFp42YshmohHMTq05QqL6v7jwGTOyIEtnZEEaWTDRakfGt749ILBwIEZcmizL
-         b1rg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=K4idpmkzDBgIbVIVOkIoDw91xN0C1Ri4v3+lvv9+Gd0=;
-        b=5czSpXSR9r2O0gdxYUAtBz4ZJKhZc6hQVWqyMLv8wPrScA3yJ0bkDGBL84YYMqb9+l
-         IGmeMzMfoY+dZpHRz8qi6x9DjmwSTcVdXxFEbkrZdoQr9UbigFG5szNV4b/lzH//5/Be
-         5CzYjpBYNnqSvG83MVLUL11I9tNjysbVtrCXNj44SfpSaAr9TLJhgSYEMVtqD/37OsAh
-         jjZH9NAxaT2ChhMQTHTHmsMH57iCAXWrrudFXtIoL0a2a3uCLswJ38Gx4Y4PwldMPnQV
-         FihY/c5EgoNidnzGiOVBYpnCvLWReTRKrUcOMPu9oXRn9nRMGlJZQWX/QZxhaE1akNld
-         Sy+g==
-X-Gm-Message-State: ACrzQf0xF+W6gE1T/bZhmKRnPmTGXKPHuZQCujG4Of+8kKre6kzTnx/U
-        xQMRMMk11wuSOx3Hs66uJDoCgjYqiXo=
-X-Google-Smtp-Source: AMsMyM77EwmHdy0cPNAGH8xE4Wq1vwkn7JYpz6Hc2Bjm6/STJytbNhnz374okBALGgKFQBAWNiksBg==
-X-Received: by 2002:a63:5511:0:b0:439:12f6:fb9a with SMTP id j17-20020a635511000000b0043912f6fb9amr35025644pgb.197.1666730087628;
-        Tue, 25 Oct 2022 13:34:47 -0700 (PDT)
-Received: from jprestwo-xps.none ([50.39.160.234])
-        by smtp.gmail.com with ESMTPSA id n22-20020a17090a161600b0020dd9382124sm5514731pja.57.2022.10.25.13.34.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Oct 2022 13:34:47 -0700 (PDT)
-From:   James Prestwood <prestwoj@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     James Prestwood <prestwoj@gmail.com>
-Subject: [PATCH 0/1] Fix __ieee80211_disconnect when not associated
-Date:   Tue, 25 Oct 2022 13:34:42 -0700
-Message-Id: <20221025203443.410121-1-prestwoj@gmail.com>
-X-Mailer: git-send-email 2.34.3
+        Tue, 25 Oct 2022 18:00:38 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 074987E82A;
+        Tue, 25 Oct 2022 15:00:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1666735238; x=1698271238;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=44neLNb+622C3/v3IvkT8+w76MsPFc0VdmFApC/mlJI=;
+  b=jvFDf5cNiksrX72OlI1IwLQf/ZzzlsYqYiIVmJp5VDxQ8TlFsDHklOIl
+   rHX5pM0k90uRSzu+uG0SxL6S8JgiSgtZemdWOZ5bhZkPI+EUMucDQz5SX
+   SKaWQlJCUxVIZCLddJkRSoFjNB9kJ1FP6CenG1CPCjujwuihDnwu8UVFm
+   i3+sY1mY/aljTNKlRsBB+/lfUQj0OjTIzIo3pNby1CLhJyrxBGIqDqmxl
+   fFFLbHcHMDa7uRHSafTTUqI5U+vlgbnfo/xJnDolOGfpRbMmZTkA5ITXk
+   xzQwJS5qw0K/NhPhu7eE7nm3C52550uhKLTbv7y1QCVmCmhGatjQMPSGe
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10511"; a="308895372"
+X-IronPort-AV: E=Sophos;i="5.95,213,1661842800"; 
+   d="scan'208";a="308895372"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2022 15:00:37 -0700
+X-IronPort-AV: E=McAfee;i="6500,9779,10511"; a="774360203"
+X-IronPort-AV: E=Sophos;i="5.95,213,1661842800"; 
+   d="scan'208";a="774360203"
+Received: from jlluce-mobl1.amr.corp.intel.com (HELO [10.212.217.182]) ([10.212.217.182])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2022 15:00:36 -0700
+Message-ID: <b4a64b97-32d2-d83d-9146-ebc9a4cc9ff6@intel.com>
+Date:   Tue, 25 Oct 2022 15:00:35 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [RFC PATCH 0/2] Branch Target Injection (BTI) gadget in minstrel
+Content-Language: en-US
+To:     Peter Zijlstra <peterz@infradead.org>,
+        Pawan Gupta <pawan.kumar.gupta@linux.intel.com>
+Cc:     scott.d.constable@intel.com, daniel.sneddon@linux.intel.com,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Paolo Abeni <pabeni@redhat.com>,
+        antonio.gomez.iglesias@linux.intel.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        x86@kernel.org, gregkh@linuxfoundation.org, netdev@vger.kernel.org
+References: <cover.1666651511.git.pawan.kumar.gupta@linux.intel.com>
+ <Y1fDiJtxTe8mtBF8@hirez.programming.kicks-ass.net>
+From:   Dave Hansen <dave.hansen@intel.com>
+In-Reply-To: <Y1fDiJtxTe8mtBF8@hirez.programming.kicks-ass.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-A user reported some behavior where IWD hangs expecting another event
-to come and it never does. This was due to the firmware (iwlwifi)
-timing out after authentication and calling __ieee80211_disconnect
-which essentially does nothing if not associated. The problem here
-is userspace expects some event to come after authenticating whether
-it be an association, disconnect, death etc.
+On 10/25/22 04:07, Peter Zijlstra wrote:
+> I think the focus should be on finding the source sites, not protecting
+> the target sites. Where can an attacker control the register content and
+> have an indirect jump/call.
 
-This my attempt at fixing the problem. Note that the real issue
-here is iwlwifi. The user can reliably reproduce this problem which
-points to a firmware issue since a connection loss should be quite
-rare I assume. Regardless, any bad driver/firmware could cause this
-behavior since __ieee80211_disconnect only handles being associated.
+How would this work with something like 'struct file_operations' which
+provide a rich set of indirect calls that frequently have fully
+user-controlled values in registers?
 
-I personally cannot test this, so I hacked mac80211 to call
-__ieee80211_disconnect immediately after sending the authenticate
-event. This effectively causes the same behavior and indeed this
-patch causes a disconnect which is the behavior I would expect.
-
-I asked about this a week ago with no response so hopefully this
-gets more attention and at least gets the conversation going, even
-if I went about the fix wrong.
-
-James Prestwood (1):
-  wifi: mac80211: handle connection loss in __ieee80211_disconnect
-
- net/mac80211/mlme.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
--- 
-2.34.3
-
+It certainly wouldn't *hurt* to be zeroing out the registers that are
+unused at indirect call sites.  But, the majority of gadgets in this
+case used rdi and rsi, which are the least likely to be able to be
+zapped at call sites.
