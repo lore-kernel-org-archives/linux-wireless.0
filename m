@@ -2,122 +2,77 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A03DDC38A2D
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 01:15:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57166C67871
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 01:20:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230428AbiJYBPC (ORCPT
+        id S231377AbiJYBUn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Oct 2022 21:15:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41934 "EHLO
+        Mon, 24 Oct 2022 21:20:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231346AbiJYBOf (ORCPT
+        with ESMTP id S231301AbiJYBT7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2022 21:14:35 -0400
+        Mon, 24 Oct 2022 21:19:59 -0400
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABEFE12D39
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 17:31:09 -0700 (PDT)
-X-UUID: 2237ceaf7ce74651baf6b271c570f5d6-20221025
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73F4346229
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 17:45:03 -0700 (PDT)
+X-UUID: 9f74efae27154d9d8174044a6893f9ad-20221025
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=S60QWh2u+ENNyc/oOBO8S02pSM05EoJivJ9ovxNPLIw=;
-        b=LqimzUeMGIU4VpifX/QzUXOkXD9eeqgpHDoViIj8sJjtUu19H10TCfU0Uryft7+tw29lEGmmFjoLiDWn07cwkhfyDG3KAVHkTDB9I4p4nJP3cnyrF/zvXVTGu3/cCTuCuqd6DqxPb5Il+XDAXSYS5aYQoEpMsRuypoAdYPViz10=;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=axatU4fcD+wolPyz4bGrdQ9wRDjsPIVraTvvyidQSxU=;
+        b=IxerMc4MBbQIlHH8erRikzj/KxIGLNEao/siRzqL3hnR6iSaxmc8yviZcCdCeNFuBaPyrBbdGyHChT61cqNL3ahMuIIh2NM/j40MWYPVplsWyam3ddekEyMrH21cn3psAaAfVPvYtVxU2HoRJJuAvNQm4cJLb7O0905CAoK5EOQ=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.12,REQID:0e50cdd1-0237-4cad-a1f0-7059da7095a7,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:62cd327,CLOUDID:8992f56c-89d3-4bfa-baad-dc632a24bca3,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 2237ceaf7ce74651baf6b271c570f5d6-20221025
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+X-CID-O-INFO: VERSION:1.1.12,REQID:e938d554-0014-419e-864d-1089159c13f3,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:45
+X-CID-INFO: VERSION:1.1.12,REQID:e938d554-0014-419e-864d-1089159c13f3,IP:0,URL
+        :0,TC:0,Content:0,EDM:0,RT:0,SF:45,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+        elease,TS:45
+X-CID-META: VersionHash:62cd327,CLOUDID:198588e4-e572-4957-be22-d8f73f3158f9,B
+        ulkID:221025084459R6K0WYCR,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48|102,
+        TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:
+        0
+X-UUID: 9f74efae27154d9d8174044a6893f9ad-20221025
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw02.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 631811380; Tue, 25 Oct 2022 08:31:03 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1056121580; Tue, 25 Oct 2022 08:44:57 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 25 Oct 2022 08:31:02 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Tue, 25 Oct 2022 08:31:02 +0800
+ 15.2.792.15; Tue, 25 Oct 2022 08:44:57 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkmbs11n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
+ Transport; Tue, 25 Oct 2022 08:44:57 +0800
+Message-ID: <42da87e3aa229722fac9566aaef963acd28d9c7a.camel@mediatek.com>
+Subject: Re: [PATCH 1/2] wifi: mt76: mt7915: enable use_cts_prot support
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
 CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Shayne Chen <shayne.chen@mediatek.com>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/2] wifi: mt76: mt7915: enable use_cts_prot support
-Date:   Tue, 25 Oct 2022 08:31:00 +0800
-Message-ID: <f13c8c4ae61eb1374ca65e92b03e908c21073917.1666657715.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        <linux-mediatek@lists.infradead.org>
+Date:   Tue, 25 Oct 2022 08:44:57 +0800
+In-Reply-To: <f13c8c4ae61eb1374ca65e92b03e908c21073917.1666657715.git.ryder.lee@mediatek.com>
+References: <f13c8c4ae61eb1374ca65e92b03e908c21073917.1666657715.git.ryder.lee@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This adds selectable RTC/CTS enablement for each interface.
+On Tue, 2022-10-25 at 08:31 +0800, Ryder Lee wrote:
+> This adds selectable RTC/CTS enablement for each interface.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> Change-Id: I5eb7851b513d4140d879676154e2abe769969c01
+> ---
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Change-Id: I5eb7851b513d4140d879676154e2abe769969c01
----
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c    | 13 +++++++++++++
- drivers/net/wireless/mediatek/mt76/mt7915/main.c   |  3 +++
- drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h |  2 ++
- 3 files changed, 18 insertions(+)
+Oops. I accidentally included our internal change-id for both patch.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 1ce2b91353e7..8b637dfe81fc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -232,6 +232,19 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
- 	rcu_read_unlock();
- }
- 
-+void mt7915_mac_enable_rtscts(struct mt7915_dev *dev,
-+			      struct ieee80211_vif *vif, bool enable)
-+{
-+	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
-+	u32 addr;
-+
-+	addr = mt7915_mac_wtbl_lmac_addr(dev, mvif->sta.wcid.idx, 5);
-+	if (enable)
-+		mt76_set(dev, addr, BIT(5));
-+	else
-+		mt76_clear(dev, addr, BIT(5));
-+}
-+
- static int
- mt7915_mac_fill_rx(struct mt7915_dev *dev, struct sk_buff *skb)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index ac320182c2ce..1eb50811f4b0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -598,6 +598,9 @@ static void mt7915_bss_info_changed(struct ieee80211_hw *hw,
- 		mt7915_mcu_add_obss_spr(dev, vif, info->he_obss_pd.enable);
- 	}
- 
-+	if (changed & BSS_CHANGED_ERP_CTS_PROT)
-+		mt7915_mac_enable_rtscts(dev, vif, info->use_cts_prot);
-+
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
- 		int slottime = info->use_short_slot ? 9 : 20;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index b0b57ee1e00f..ff5b01b279b8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -554,6 +554,8 @@ bool mt7915_mac_wtbl_update(struct mt7915_dev *dev, int idx, u32 mask);
- void mt7915_mac_reset_counters(struct mt7915_phy *phy);
- void mt7915_mac_cca_stats_reset(struct mt7915_phy *phy);
- void mt7915_mac_enable_nf(struct mt7915_dev *dev, bool ext_phy);
-+void mt7915_mac_enable_rtscts(struct mt7915_dev *dev,
-+			      struct ieee80211_vif *vif, bool enable);
- void mt7915_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
- 			   struct sk_buff *skb, struct mt76_wcid *wcid, int pid,
- 			   struct ieee80211_key_conf *key,
--- 
-2.36.1
+@Felix, can you help to drop them while merging?
+
+Ryder
 
