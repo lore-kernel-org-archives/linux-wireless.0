@@ -2,93 +2,140 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1AA4FA373D
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 00:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE111C67871
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Oct 2022 01:15:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230280AbiJYAds (ORCPT
+        id S231513AbiJYBO7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Oct 2022 20:33:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53908 "EHLO
+        Mon, 24 Oct 2022 21:14:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229945AbiJYAdS (ORCPT
+        with ESMTP id S231345AbiJYBOf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2022 20:33:18 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B07D757BE4;
-        Mon, 24 Oct 2022 15:58:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666652294; x=1698188294;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=t3bv2MkjydtsyaQXVR2HQj9d69MKIx3tGIYCICf7vKY=;
-  b=aQxgHaZdJNYAbonuzsqyEAE9Y4sl0jDSCJoSSfd5mL4a+CYBr/TDVdIE
-   4Az5nQ1kMpKjb4OUs+oJmIBzCckUDRbjHGOgOfaj2p1GoKictzIwzjFYG
-   rtpRDL+oQ4OuEZMhwPGepkk70uma5xwUC4umyvF3gUrDKZ2PbPN5NzVl6
-   C9zbm8RZSDHBQTBny8HvbVb0JVFcrfgbINLvC7Skevtu0PApU62z3csDe
-   jNSE0QgacAvr6Q70noiv6IB47K1Gd6pzeYaIRCif9mAU6jPZRREeouNGi
-   sa2ujiCWAVOwBvKQLsZ9IXTrlSw2/UckrIa74+wXOaiCa3iz+NT6T9vTM
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="308633274"
-X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
-   d="scan'208";a="308633274"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 15:57:56 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="609363403"
-X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
-   d="scan'208";a="609363403"
-Received: from pkearns-mobl1.amr.corp.intel.com (HELO guptapa-desk.intel.com) ([10.252.131.64])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 15:57:56 -0700
-From:   Pawan Gupta <pawan.kumar.gupta@linux.intel.com>
-To:     scott.d.constable@intel.com, daniel.sneddon@linux.intel.com,
-        Jakub Kicinski <kuba@kernel.org>, dave.hansen@intel.com,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Paolo Abeni <pabeni@redhat.com>,
-        antonio.gomez.iglesias@linux.intel.com,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, gregkh@linuxfoundation.org, netdev@vger.kernel.org
-Subject: [RFC PATCH 1/2] nospec: Add a generic barrier_nospec()
-Date:   Mon, 24 Oct 2022 15:57:46 -0700
-Message-Id: <a29745ae921ed03084b7d4bdec38c7b01d764fb9.1666651511.git.pawan.kumar.gupta@linux.intel.com>
-X-Mailer: git-send-email 2.37.3
-In-Reply-To: <cover.1666651511.git.pawan.kumar.gupta@linux.intel.com>
-References: <cover.1666651511.git.pawan.kumar.gupta@linux.intel.com>
+        Mon, 24 Oct 2022 21:14:35 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB9C565F0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2022 17:31:09 -0700 (PDT)
+X-UUID: 17981f4668864a4386296d375c3edf20-20221025
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Hfoh3gTks+PoKuD/YhCze4rtA1NKdyMWVodyLUoe7cU=;
+        b=WZ6PigxrHv4cGKF2yfJSnmks/Ln1DBltw8C1mA/PERYSvSnqS3zcv+ZonCw/lO//EDJUYgdIZab0FS1CdYNyWZ+A17ChSl8DOaGFE0qSjWtp1Ev6aHhilcPSU9UQvgoz45t+3+1NfBVJxlDELrjpqvXWvo0/6wmTf4IXoygJ8yQ=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.12,REQID:a689d6b9-f191-43bf-b336-030f6529107b,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:62cd327,CLOUDID:2b168cc8-03ab-4171-989e-341ab5339257,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 17981f4668864a4386296d375c3edf20-20221025
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 480552330; Tue, 25 Oct 2022 08:31:04 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Tue, 25 Oct 2022 08:31:03 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Tue, 25 Oct 2022 08:31:03 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
+CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] wifi: mt76: mt7615: enable use_cts_prot support
+Date:   Tue, 25 Oct 2022 08:31:01 +0800
+Message-ID: <4aff52fcb41b69e9305f3ef78459d4717817607c.1666657715.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <f13c8c4ae61eb1374ca65e92b03e908c21073917.1666657715.git.ryder.lee@mediatek.com>
+References: <f13c8c4ae61eb1374ca65e92b03e908c21073917.1666657715.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-barrier_nospec() is a speculation barrier with an arch dependent
-implementation. Architectures that don't need a speculation barrier
-shouldn't have to define an arch specific version.
+This adds selectable RTC/CTS enablement for each interface.
 
-To be able to use barrier_nospec() in non-architecture code add a
-generic version that does nothing. Architectures needing speculation
-barrier can override the generic version in their asm/barrier.h.
-
-Signed-off-by: Pawan Gupta <pawan.kumar.gupta@linux.intel.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Change-Id: Id36a67f1f1ef21e42cfbbe97a5a502b7a2c2d786
 ---
- include/linux/nospec.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c   | 15 +++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c  |  3 +++
+ .../net/wireless/mediatek/mt76/mt7615/mt7615.h    |  2 ++
+ drivers/net/wireless/mediatek/mt76/mt7615/regs.h  |  2 ++
+ 4 files changed, 22 insertions(+)
 
-diff --git a/include/linux/nospec.h b/include/linux/nospec.h
-index c1e79f72cd89..60e040a5df27 100644
---- a/include/linux/nospec.h
-+++ b/include/linux/nospec.h
-@@ -60,6 +60,10 @@ static inline unsigned long array_index_mask_nospec(unsigned long index,
- 	(typeof(_i)) (_i & _mask);					\
- })
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 2ce1705c0f43..45cad911687d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -1177,6 +1177,21 @@ void mt7615_mac_set_rates(struct mt7615_phy *phy, struct mt7615_sta *sta,
+ }
+ EXPORT_SYMBOL_GPL(mt7615_mac_set_rates);
  
-+#ifndef barrier_nospec
-+#define barrier_nospec()	do { } while (0)
-+#endif
++void mt7615_mac_enable_rtscts(struct mt7615_dev *dev,
++			      struct ieee80211_vif *vif, bool enable)
++{
++	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
++	u32 addr;
 +
- /* Speculation control prctl */
- int arch_prctl_spec_ctrl_get(struct task_struct *task, unsigned long which);
- int arch_prctl_spec_ctrl_set(struct task_struct *task, unsigned long which,
++	addr = mt7615_mac_wtbl_addr(dev, mvif->sta.wcid.idx) + 3 * 4;
++
++	if (enable)
++		mt76_set(dev, addr, MT_WTBL_W3_RTS);
++	else
++		mt76_clear(dev, addr, MT_WTBL_W3_RTS);
++}
++EXPORT_SYMBOL_GPL(mt7615_mac_enable_rtscts);
++
+ static int
+ mt7615_mac_wtbl_update_key(struct mt7615_dev *dev, struct mt76_wcid *wcid,
+ 			   struct ieee80211_key_conf *key,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 8d4733f87cda..98f9e2155009 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -572,6 +572,9 @@ static void mt7615_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
++	if (changed & BSS_CHANGED_ERP_CTS_PROT)
++		mt7615_mac_enable_rtscts(dev, vif, info->use_cts_prot);
++
+ 	if (changed & BSS_CHANGED_BEACON_ENABLED && info->enable_beacon) {
+ 		mt7615_mcu_add_bss_info(phy, vif, NULL, true);
+ 		mt7615_mcu_sta_add(phy, vif, NULL, true);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 060d52c81d9e..f632e6a99038 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -473,6 +473,8 @@ void mt7615_mac_reset_counters(struct mt7615_dev *dev);
+ void mt7615_mac_cca_stats_reset(struct mt7615_phy *phy);
+ void mt7615_mac_set_scs(struct mt7615_phy *phy, bool enable);
+ void mt7615_mac_enable_nf(struct mt7615_dev *dev, bool ext_phy);
++void mt7615_mac_enable_rtscts(struct mt7615_dev *dev,
++			      struct ieee80211_vif *vif, bool enable);
+ void mt7615_mac_sta_poll(struct mt7615_dev *dev);
+ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
+ 			  struct sk_buff *skb, struct mt76_wcid *wcid,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+index 6712ad9faeaa..fa1b9b26b399 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+@@ -446,6 +446,8 @@ enum mt7615_reg_base {
+ #define MT_WTBL_RIUCR3_RATE6		GENMASK(19, 8)
+ #define MT_WTBL_RIUCR3_RATE7		GENMASK(31, 20)
+ 
++#define MT_WTBL_W3_RTS			BIT(22)
++
+ #define MT_WTBL_W5_CHANGE_BW_RATE	GENMASK(7, 5)
+ #define MT_WTBL_W5_SHORT_GI_20		BIT(8)
+ #define MT_WTBL_W5_SHORT_GI_40		BIT(9)
 -- 
-2.37.3
+2.36.1
 
