@@ -2,61 +2,61 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3C27FA3741
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Oct 2022 13:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B83FA3742
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Oct 2022 13:16:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234037AbiJZNQm (ORCPT
+        id S234042AbiJZNQw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Oct 2022 09:16:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51678 "EHLO
+        Wed, 26 Oct 2022 09:16:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234034AbiJZNQh (ORCPT
+        with ESMTP id S232625AbiJZNQi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2022 09:16:37 -0400
+        Wed, 26 Oct 2022 09:16:38 -0400
 Received: from mx1.tq-group.com (mx1.tq-group.com [93.104.207.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 548118306F;
-        Wed, 26 Oct 2022 06:16:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7BFCFAA60;
+        Wed, 26 Oct 2022 06:16:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
-  t=1666790196; x=1698326196;
+  t=1666790197; x=1698326197;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=rmV74reOQIhMVx3wfFt0WNHhPTZ+EE2t0X4nueZsE3E=;
-  b=lwV9B2/GGH8BD3LR4e9svhvvx7RNQizqm6gj1u8lWwh2uS3mbd2h7m77
-   fFIeenw0jw/sk36Jn7aB0/3WrSp0hL8FXfH2ZmWULWIKn+xthB/wfu0o+
-   ZBsxG0dMlFqe2vKriIiEh9HpznGjM3EH8yUW1KIryzddTvbzCcTwpW7MJ
-   NF7GBKeuu/1t0Cinlw6WPO1PYp5Jvbv9lpEOZkAP0uBqIMbpc0lL3Rk4I
-   dZlsGK1d153gvSVyeNXgRCb1NPTwDbtBfJtG0cofHZfv5BNuWtn0A0PW5
-   f7weVBgDd80tPnUa8YQLJgSzJCqUt9KtMF+Wg70X6SeXKVXrXJCCscCTv
-   A==;
+  bh=uD3B1j8AxBWEwgk4/bzdEnH3IBUS1p5ckVASZEy9HSQ=;
+  b=iSp/2XKnaAngenVIBu4Dpp8SnEcvEOmoe4gcUI4RTPqf0SVbfqnaBmC0
+   W4zyVeTr0aIpAwCQJ3XZifMQTdJyOU/2QZMyLtX8bY6o81St3oCbhMoDJ
+   eKZSuZYTXV+MitqNVmbKg1eDdLMVVhIMXgt4wKgHeVVJKsaw9AEtmVeBh
+   EPxLBn/3VNL7OjzZhTKRhPlGZFPC16Owq+p5F4nxn5ybYrDUPdzoArSJI
+   U2RDPJLXLgJvWmchJHi5053E2JxWECFwlxH+oV6V4/2TrmryelMx/cYFE
+   O63sR5oILlAOnH5ekbODXCUNkGIcCXBLb+F5HKYPAPJeYpsHvbDXPrHfG
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.95,214,1661810400"; 
-   d="scan'208";a="26988469"
+   d="scan'208";a="26988473"
 Received: from unknown (HELO tq-pgp-pr1.tq-net.de) ([192.168.6.15])
-  by mx1-pgp.tq-group.com with ESMTP; 26 Oct 2022 15:16:31 +0200
+  by mx1-pgp.tq-group.com with ESMTP; 26 Oct 2022 15:16:32 +0200
 Received: from mx1.tq-group.com ([192.168.6.7])
   by tq-pgp-pr1.tq-net.de (PGP Universal service);
-  Wed, 26 Oct 2022 15:16:31 +0200
+  Wed, 26 Oct 2022 15:16:32 +0200
 X-PGP-Universal: processed;
-        by tq-pgp-pr1.tq-net.de on Wed, 26 Oct 2022 15:16:31 +0200
+        by tq-pgp-pr1.tq-net.de on Wed, 26 Oct 2022 15:16:32 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
-  t=1666790191; x=1698326191;
+  t=1666790192; x=1698326192;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=rmV74reOQIhMVx3wfFt0WNHhPTZ+EE2t0X4nueZsE3E=;
-  b=FXDp8xAAIqGd6/RL9y8KrOnNq0i/vgBaqMYdKGbnkXh0qoMQa68LPoQ3
-   5JBbE5FQHNkEgB0edF+VAwEUnlpvFXIynS+aBvLjzFu9ClGKITol5aLab
-   Ndh6731IPrB2/3d+OG5sVUbsWvU1m+RVoRpmf0Te2jM0r7qI/AbPip9n6
-   vIT5zrl4QaS8x9eUdclxXUnA52znNWj8c64Y1PODYEuhDJQbzJxOyxBEb
-   sfl/JUUIDDL5qJ9wr+Wo2UCO8p3YPG5kx2eclsonv9VPs9hEOMxZnvT44
-   CD2caRrZVFM8riiFR/i0e115nWeWRJjm7jJyc6udD37yC8gx/F7vDMAyU
+  bh=uD3B1j8AxBWEwgk4/bzdEnH3IBUS1p5ckVASZEy9HSQ=;
+  b=qtmEsX8/qH2EXnLlTpIwKrKrOgC1DZ3uM3SSju+YcoTKgV81NBav9tyt
+   ZWWbw9sLueP6Niakhin9beVoVcazw7AVz/pJLa0B5Z610gajyVagK+s3s
+   LHFrkECj5a/QwNicakJM64TIVDFT6Qa/OQa6On/+SBNkw27+s3yw1SENL
+   TDfpF4wjXxI9d5zYwWqUnSkfZmtYx8vOk6GNA8jmsJQztpjqtZjwrMHoc
+   0fRhQOy2ii6nTfGyPXmi9iKc0zjVc/3Bq0cTDjeamzWETp13EhQhn3+0S
+   +oxI7nRpFYpiF5HnFM5hxkeGXGP/ZJeEa1SgJ0UKXBNobAjwYx2znZlQ+
    g==;
 X-IronPort-AV: E=Sophos;i="5.95,214,1661810400"; 
-   d="scan'208";a="26988468"
+   d="scan'208";a="26988472"
 Received: from vtuxmail01.tq-net.de ([10.115.0.20])
-  by mx1.tq-group.com with ESMTP; 26 Oct 2022 15:16:31 +0200
+  by mx1.tq-group.com with ESMTP; 26 Oct 2022 15:16:32 +0200
 Received: from localhost.localdomain (SCHIFFERM-M2.tq-net.de [10.121.49.14])
-        by vtuxmail01.tq-net.de (Postfix) with ESMTPA id 21BFC280072;
+        by vtuxmail01.tq-net.de (Postfix) with ESMTPA id C3A53280073;
         Wed, 26 Oct 2022 15:16:30 +0200 (CEST)
 From:   Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
 To:     Arnd Bergmann <arnd@arndb.de>,
@@ -79,9 +79,9 @@ Cc:     Marcel Holtmann <marcel@holtmann.org>,
         netdev@vger.kernel.org, devicetree@vger.kernel.org,
         linux@ew.tq-group.com,
         Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
-Subject: [RFC 1/5] misc: introduce notify-device driver
-Date:   Wed, 26 Oct 2022 15:15:30 +0200
-Message-Id: <db30127ab4741d4e71b768881197f4791174f545.1666786471.git.matthias.schiffer@ew.tq-group.com>
+Subject: [RFC 3/5] bluetooth: hci_mrvl: select firmwares to load by match data
+Date:   Wed, 26 Oct 2022 15:15:32 +0200
+Message-Id: <8417016ef049fa74a3b2961fdbc91638aebaf3a6.1666786471.git.matthias.schiffer@ew.tq-group.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1666786471.git.matthias.schiffer@ew.tq-group.com>
 References: <cover.1666786471.git.matthias.schiffer@ew.tq-group.com>
@@ -91,199 +91,130 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-A notify-device is a synchronization facility that allows to query
-"readiness" across drivers, without creating a direct dependency between
-the driver modules. The notify-device can also be used to trigger deferred
-probes.
+Make the driver more generic by adding a driver info struct. We also add
+support for devices without firmware (for example when the firmware is
+loaded by the WLAN driver on a combined module).
 
 Signed-off-by: Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
 ---
- drivers/misc/Kconfig          |   4 ++
- drivers/misc/Makefile         |   1 +
- drivers/misc/notify-device.c  | 109 ++++++++++++++++++++++++++++++++++
- include/linux/notify-device.h |  33 ++++++++++
- 4 files changed, 147 insertions(+)
- create mode 100644 drivers/misc/notify-device.c
- create mode 100644 include/linux/notify-device.h
+ drivers/bluetooth/hci_mrvl.c | 57 +++++++++++++++++++++++++++++-------
+ 1 file changed, 46 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 358ad56f6524..63559e9f854c 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -496,6 +496,10 @@ config VCPU_STALL_DETECTOR
+diff --git a/drivers/bluetooth/hci_mrvl.c b/drivers/bluetooth/hci_mrvl.c
+index fbc3f7c3a5c7..5d191687a34a 100644
+--- a/drivers/bluetooth/hci_mrvl.c
++++ b/drivers/bluetooth/hci_mrvl.c
+@@ -14,6 +14,7 @@
+ #include <linux/module.h>
+ #include <linux/tty.h>
+ #include <linux/of.h>
++#include <linux/of_device.h>
+ #include <linux/serdev.h>
  
- 	  If you do not intend to run this kernel as a guest, say N.
+ #include <net/bluetooth/bluetooth.h>
+@@ -33,6 +34,20 @@ enum {
+ 	STATE_FW_REQ_PENDING,
+ };
  
-+config NOTIFY_DEVICE
-+	tristate "Notify device"
-+	depends on OF
-+
- source "drivers/misc/c2port/Kconfig"
- source "drivers/misc/eeprom/Kconfig"
- source "drivers/misc/cb710/Kconfig"
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index ac9b3e757ba1..1e8012112b43 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -62,3 +62,4 @@ obj-$(CONFIG_HI6421V600_IRQ)	+= hi6421v600-irq.o
- obj-$(CONFIG_OPEN_DICE)		+= open-dice.o
- obj-$(CONFIG_GP_PCI1XXXX)	+= mchp_pci1xxxx/
- obj-$(CONFIG_VCPU_STALL_DETECTOR)	+= vcpu_stall_detector.o
-+obj-$(CONFIG_NOTIFY_DEVICE)	+= notify-device.o
-diff --git a/drivers/misc/notify-device.c b/drivers/misc/notify-device.c
-new file mode 100644
-index 000000000000..42e0980394ea
---- /dev/null
-+++ b/drivers/misc/notify-device.c
-@@ -0,0 +1,109 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+
-+#include <linux/device/class.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/notify-device.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+
-+static void notify_device_release(struct device *dev)
-+{
-+	of_node_put(dev->of_node);
-+	kfree(dev);
-+}
-+
-+static struct class notify_device_class = {
-+	.name = "notify-device",
-+	.owner = THIS_MODULE,
-+	.dev_release = notify_device_release,
++struct mrvl_driver_info {
++	const char *firmware_helper;
++	const char *firmware;
 +};
 +
-+static struct platform_driver notify_device_driver = {
-+	.driver = {
-+		.name = "notify-device",
-+	},
++static const struct mrvl_driver_info mrvl_driver_info_8897 = {
++	.firmware_helper = "mrvl/helper_uart_3000000.bin",
++	.firmware = "mrvl/uart8897_bt.bin",
 +};
 +
-+struct device *notify_device_create(struct device *parent, const char *child)
-+{
-+	struct device_node *node;
-+	struct device *dev;
-+	int err;
++/* Fallback for non-OF instances */
++static const struct mrvl_driver_info *const mrvl_driver_info_default =
++	&mrvl_driver_info_8897;
 +
-+	if (!parent->of_node)
-+		return ERR_PTR(-EINVAL);
+ struct mrvl_data {
+ 	struct sk_buff *rx_skb;
+ 	struct sk_buff_head txq;
+@@ -44,6 +59,7 @@ struct mrvl_data {
+ 
+ struct mrvl_serdev {
+ 	struct hci_uart hu;
++	const struct mrvl_driver_info *info;
+ };
+ 
+ struct hci_mrvl_pkt {
+@@ -353,18 +369,29 @@ static int mrvl_load_firmware(struct hci_dev *hdev, const char *name)
+ 
+ static int mrvl_setup(struct hci_uart *hu)
+ {
++	const struct mrvl_driver_info *info;
+ 	int err;
+ 
+-	hci_uart_set_flow_control(hu, true);
++	if (hu->serdev) {
++		struct mrvl_serdev *mrvldev = serdev_device_get_drvdata(hu->serdev);
+ 
+-	err = mrvl_load_firmware(hu->hdev, "mrvl/helper_uart_3000000.bin");
+-	if (err) {
+-		bt_dev_err(hu->hdev, "Unable to download firmware helper");
+-		return -EINVAL;
++		info = mrvldev->info;
++	} else {
++		info = mrvl_driver_info_default;
+ 	}
+ 
+-	/* Let the final ack go out before switching the baudrate */
+-	hci_uart_wait_until_sent(hu);
++	if (info->firmware_helper) {
++		hci_uart_set_flow_control(hu, true);
 +
-+	node = of_get_child_by_name(parent->of_node, child);
-+	if (!node)
-+		return NULL;
++		err = mrvl_load_firmware(hu->hdev, info->firmware_helper);
++		if (err) {
++			bt_dev_err(hu->hdev, "Unable to download firmware helper");
++			return -EINVAL;
++		}
 +
-+	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-+	if (!dev) {
-+		of_node_put(node);
-+		return ERR_PTR(-ENOMEM);
++		/* Let the final ack go out before switching the baudrate */
++		hci_uart_wait_until_sent(hu);
++	}
+ 
+ 	if (hu->serdev)
+ 		serdev_device_set_baudrate(hu->serdev, 3000000);
+@@ -373,9 +400,11 @@ static int mrvl_setup(struct hci_uart *hu)
+ 
+ 	hci_uart_set_flow_control(hu, false);
+ 
+-	err = mrvl_load_firmware(hu->hdev, "mrvl/uart8897_bt.bin");
+-	if (err)
+-		return err;
++	if (info->firmware) {
++		err = mrvl_load_firmware(hu->hdev, info->firmware);
++		if (err)
++			return err;
++	}
+ 
+ 	return 0;
+ }
+@@ -401,6 +430,12 @@ static int mrvl_serdev_probe(struct serdev_device *serdev)
+ 	if (!mrvldev)
+ 		return -ENOMEM;
+ 
++	if (IS_ENABLED(CONFIG_OF)) {
++		mrvldev->info = of_device_get_match_data(&serdev->dev);
++		if (!mrvldev->info)
++			return -ENODEV;
 +	}
 +
-+	dev_set_name(dev, "%s:%s", dev_name(parent), child);
-+	dev->class = &notify_device_class;
-+	dev->parent = parent;
-+	dev->of_node = node;
-+	err = device_register(dev);
-+	if (err) {
-+		put_device(dev);
-+		return ERR_PTR(err);
-+	}
-+
-+	dev->driver = &notify_device_driver.driver;
-+	err = device_bind_driver(dev);
-+	if (err) {
-+		device_unregister(dev);
-+		return ERR_PTR(err);
-+	}
-+
-+	return dev;
-+}
-+EXPORT_SYMBOL_GPL(notify_device_create);
-+
-+void notify_device_destroy(struct device *dev)
-+{
-+	if (!dev)
-+		return;
-+
-+	device_release_driver(dev);
-+	device_unregister(dev);
-+}
-+EXPORT_SYMBOL_GPL(notify_device_destroy);
-+
-+struct device *notify_device_find_by_of_node(struct device_node *node)
-+{
-+	return class_find_device_by_of_node(&notify_device_class, node);
-+}
-+EXPORT_SYMBOL_GPL(notify_device_find_by_of_node);
-+
-+static int __init notify_device_init(void)
-+{
-+	int err;
-+
-+	err = class_register(&notify_device_class);
-+	if (err)
-+		return err;
-+
-+	err = platform_driver_register(&notify_device_driver);
-+	if (err) {
-+		class_unregister(&notify_device_class);
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
-+static void __exit notify_device_exit(void)
-+{
-+	platform_driver_unregister(&notify_device_driver);
-+	class_unregister(&notify_device_class);
-+}
-+
-+module_init(notify_device_init);
-+module_exit(notify_device_exit);
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/notify-device.h b/include/linux/notify-device.h
-new file mode 100644
-index 000000000000..f8c3e15d3b8f
---- /dev/null
-+++ b/include/linux/notify-device.h
-@@ -0,0 +1,33 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+
-+#ifndef _LINUX_NOTIFY_DEVICE_H
-+#define _LINUX_NOTIFY_DEVICE_H
-+#include <linux/device.h>
-+#include <linux/of.h>
-+
-+#ifdef CONFIG_NOTIFY_DEVICE
-+
-+struct device *notify_device_create(struct device *parent, const char *child);
-+void notify_device_destroy(struct device *dev);
-+struct device *notify_device_find_by_of_node(struct device_node *node);
-+
-+#else
-+
-+static inline struct device *notify_device_create(struct device *parent,
-+						  const char *child)
-+{
-+	return NULL;
-+}
-+
-+static inline void notify_device_destroy(struct device *dev)
-+{
-+}
-+
-+static inline struct device *notify_device_find_by_of_node(struct device_node *node)
-+{
-+	return NULL;
-+}
-+
-+#endif
-+
-+#endif /* _LINUX_NOTIFY_DEVICE_H */
+ 	mrvldev->hu.serdev = serdev;
+ 	serdev_device_set_drvdata(serdev, mrvldev);
+ 
+@@ -416,7 +451,7 @@ static void mrvl_serdev_remove(struct serdev_device *serdev)
+ 
+ #ifdef CONFIG_OF
+ static const struct of_device_id mrvl_bluetooth_of_match[] = {
+-	{ .compatible = "mrvl,88w8897" },
++	{ .compatible = "mrvl,88w8897", .data = &mrvl_driver_info_8897 },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, mrvl_bluetooth_of_match);
 -- 
 2.25.1
 
