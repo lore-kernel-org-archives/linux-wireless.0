@@ -2,35 +2,35 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD82FA3741
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Oct 2022 13:16:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3390C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Oct 2022 13:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233973AbiJZNQg (ORCPT
+        id S233715AbiJZNQj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Oct 2022 09:16:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51568 "EHLO
+        Wed, 26 Oct 2022 09:16:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233390AbiJZNQf (ORCPT
+        with ESMTP id S233619AbiJZNQh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2022 09:16:35 -0400
+        Wed, 26 Oct 2022 09:16:37 -0400
 Received: from mx1.tq-group.com (mx1.tq-group.com [93.104.207.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21AA4A99D5;
-        Wed, 26 Oct 2022 06:16:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B27CC87085;
+        Wed, 26 Oct 2022 06:16:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
-  t=1666790194; x=1698326194;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=mjFPBPmpLWz/562nklZTla4ladz+0IGVjIOFuv2LArA=;
-  b=g2Yh5SKETTVgbyXjbhuqHF8wiqtjMF3HD/VnrHDKwvzXNmYOJDKFQxw/
-   3u4XyEyUFqjIzr9LsK68QWeHA1zswcujuWJ5/ALwhaaqvcWdeqxVY3pE5
-   1S0ZcUXDUtrKbdf9EfaNk4dAN4tkZe5ch89w0J4F4DeCGExBBX5vyDmcf
-   V2+b5DSxKMaJ9phlsHoyAC+D7mTjnzt/QzDHpweZbj+1UxWhBXBWjgt3A
-   EEL8Sweo/izH6dickrdNPA1t2ng/I78+hLL0y4aIz/v3knfSAimXt6Bj+
-   FJJJVGRn6pu+pJnmZs0clvlRzh3eDVJHl3UTuGJxtwTWbTURlmaEL4wTj
-   g==;
+  t=1666790196; x=1698326196;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=SZraRyM7DZleVZcuBicugzAwWfORdbPbN+RhQtnWZ+c=;
+  b=Yy6Jurd1G+5PuVFvg87d3TfPLMvJuQdJkQs0Qc7iZGYioj30LSxiNHx9
+   f5SyReOTX0J+iYi2hN68qgl7Bx87SSJ0p1tLfaFi/5KWDFVtxLuTCmH0T
+   502Xm9/xOBX/pjTZu9BZrNI0i+XyOFcS3kRJzfcfFVivANF30rPTg4NTs
+   MUty3laK0vfokZguG174gaJg3rq9iCdnWvKU7ORHZbLKGtorOic13thuu
+   xy7wREcTF6GDlUSbrD71Dt1lwz2VZYn0kIXVPFGJQ3prUg/lpI2hVsYMM
+   mBslZn1740sCAYvrV8XTKA9DpRlqhMdBI+jN0DA+4yqSdKRK084XtbKo3
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.95,214,1661810400"; 
-   d="scan'208";a="26988467"
+   d="scan'208";a="26988471"
 Received: from unknown (HELO tq-pgp-pr1.tq-net.de) ([192.168.6.15])
   by mx1-pgp.tq-group.com with ESMTP; 26 Oct 2022 15:16:31 +0200
 Received: from mx1.tq-group.com ([192.168.6.7])
@@ -41,23 +41,23 @@ X-PGP-Universal: processed;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
   t=1666790191; x=1698326191;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=mjFPBPmpLWz/562nklZTla4ladz+0IGVjIOFuv2LArA=;
-  b=VkLkxiFpxIRXSvtH9mdheulw/zvTruyrS/vc9L0P69NBK8JYa8AMRgYJ
-   hEHrAkXwDGTMCnRVT3yX3frv80r/tPy4dAIfcw4LCm38awoH0Vhb8HOH7
-   YWwetleT4ujenU/RvxoXQ2C85ybsZxE9caxuoY89vpapB+JyO7UZ1W99U
-   PtlWKjo/aWDCmUwiVMye0cDfpowfV51SzGDFO0X55SBjdxO9w/SHuDvJV
-   M1RBKlZ/FcnataEHlp2nlFDAKxqKcuATaVjAdDKZ0HTFh4LAjsqvh6DQL
-   RlQz/n1KCzIVoVXfO6kMdVolcnzFfap1Mu/4efFQ76vsoduJJfNx5J87C
-   w==;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=SZraRyM7DZleVZcuBicugzAwWfORdbPbN+RhQtnWZ+c=;
+  b=bxJFbnSHUHAVIw6Ud7sc0xIgs2fxUXz60xwsj6VVdyN6zDf6tPCP8NSk
+   baon64StCZvSWTltBrb5UtB3HjXaxSJ2gnHgXOdIaX9JcKzxbj1FBHHrM
+   GyTJBu1B261V/S979rb6438CiTcaIxEltvXiJXz9GFpaCt6irKEUnGnBo
+   QrHEAy0J4VAvlC0oPtDBDY5E37DgtDr8V9/UEUrYzqaWv+Bxsva6EUvp4
+   8sp1nJqg778KyuJZvJy27N0TySSwpCMZmX4uvrPtRjkfVanqH+pxTv5wZ
+   UWKEnKvyvZQi4FQ921CZbza+eTYiikcH/xcS0cFdqGdH8RWceRYtd3UtX
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.95,214,1661810400"; 
-   d="scan'208";a="26988466"
+   d="scan'208";a="26988470"
 Received: from vtuxmail01.tq-net.de ([10.115.0.20])
   by mx1.tq-group.com with ESMTP; 26 Oct 2022 15:16:31 +0200
 Received: from localhost.localdomain (SCHIFFERM-M2.tq-net.de [10.121.49.14])
-        by vtuxmail01.tq-net.de (Postfix) with ESMTPA id BFB01280056;
-        Wed, 26 Oct 2022 15:16:29 +0200 (CEST)
+        by vtuxmail01.tq-net.de (Postfix) with ESMTPA id 7212E280056;
+        Wed, 26 Oct 2022 15:16:30 +0200 (CEST)
 From:   Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
 To:     Arnd Bergmann <arnd@arndb.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -79,91 +79,75 @@ Cc:     Marcel Holtmann <marcel@holtmann.org>,
         netdev@vger.kernel.org, devicetree@vger.kernel.org,
         linux@ew.tq-group.com,
         Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
-Subject: [RFC 0/5] "notify-device" for cross-driver readiness notification
-Date:   Wed, 26 Oct 2022 15:15:29 +0200
-Message-Id: <cover.1666786471.git.matthias.schiffer@ew.tq-group.com>
+Subject: [RFC 2/5] wireless: mwifiex: signal firmware readiness using notify-device
+Date:   Wed, 26 Oct 2022 15:15:31 +0200
+Message-Id: <5d5e1e4b2f4d6c8abc4332f8664f911f26b18878.1666786471.git.matthias.schiffer@ew.tq-group.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <cover.1666786471.git.matthias.schiffer@ew.tq-group.com>
+References: <cover.1666786471.git.matthias.schiffer@ew.tq-group.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch series is obviously missing documentation, MAINTAINERS
-entries, etc., but I'd like to solicit some basic feedback on whether
-this approach makes sense at all before I proceed. If it does, the
-naming is also very much open for bikeshedding - I'm not too happy with
-"notify-device".
+Signed-off-by: Matthias Schiffer <matthias.schiffer@ew.tq-group.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 14 ++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/main.h |  1 +
+ 2 files changed, 15 insertions(+)
 
-The basic problem that the notify-device tries to solve is the
-synchronization of firmware loading readiness between the Marvell/NXP
-WLAN and Bluetooth drivers, but it may also be applicable to other
-drivers.
-
-The WLAN and Bluetooth adapters are handled by separate drivers, and may
-be connected to the CPU using different interfaces (for example SDIO for
-WLAN and UART for Bluetooth). However, both adapters share a single
-firmware that may be uploaded via either interface.
-
-For the SDIO+UART case, uploading the firmware via SDIO is usually
-preferable, but even when the interface doesn't matter, it seems like a
-good idea to clearly define which driver should handle it. To avoid
-making the Bluetooth driver more complicated than necessary in this case,
-we'd like to defer the probing of the driver until the firmware is ready.
-
-For this purpose, we are introducing a notify-device, with the following
-properties:
-
-- The device is created by a driver as soon as some "readiness
-  condition" is satisfied
-- Creating the device also binds a stub driver, so deferred probes are
-  triggered
-- Looking up the notify device is possible via OF node / phandle reference
-
-This approach avoids a hard dependency between the WLAN and Bluetooth
-driver, and works regardless of the driver load order.
-
-The first patch implementes the notify-device driver itself, and the
-rest shows how the device could be hooked up to the mwifiex and hci_mrvl
-drivers. A device tree making use of the notify-device could look like
-the following:
-
-    &sdhci1 {
-        wifi@1 {
-            compatible = "marvell,sd8987";
-            reg = <1>;
-    
-            wifi_firmware: firmware-notifier {};
-        };
-    };
-
-    &main_uart3 {
-        bluetooth {
-            compatible = "marvell,sd8987-bt";
-            firmware-ready = <&wifi_firmware>;
-        };
-    };
-
-
-Matthias Schiffer (5):
-  misc: introduce notify-device driver
-  wireless: mwifiex: signal firmware readiness using notify-device
-  bluetooth: hci_mrvl: select firmwares to load by match data
-  bluetooth: hci_mrvl: add support for SD8987
-  bluetooth: hci_mrvl: allow waiting for firmware load using
-    notify-device
-
- drivers/bluetooth/hci_mrvl.c                |  77 ++++++++++++--
- drivers/misc/Kconfig                        |   4 +
- drivers/misc/Makefile                       |   1 +
- drivers/misc/notify-device.c                | 109 ++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.c |  14 +++
- drivers/net/wireless/marvell/mwifiex/main.h |   1 +
- include/linux/notify-device.h               |  33 ++++++
- 7 files changed, 228 insertions(+), 11 deletions(-)
- create mode 100644 drivers/misc/notify-device.c
- create mode 100644 include/linux/notify-device.h
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index da2e6557e684..92176e90b11e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -5,6 +5,7 @@
+  * Copyright 2011-2020 NXP
+  */
+ 
++#include <linux/notify-device.h>
+ #include <linux/suspend.h>
+ 
+ #include "main.h"
+@@ -661,6 +662,16 @@ static int _mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	mwifiex_drv_get_driver_version(adapter, fmt, sizeof(fmt) - 1);
+ 	mwifiex_dbg(adapter, MSG, "driver_version = %s\n", fmt);
+ 	adapter->is_up = true;
++
++	adapter->notify_dev = notify_device_create(adapter->dev, "firmware-notifier");
++	if (IS_ERR(adapter->notify_dev)) {
++		/* This error is not fatal */
++		mwifiex_dbg(adapter, ERROR,
++			    "cannot create firmware notify device: %d\n",
++			    PTR_ERR(adapter->notify_dev));
++		adapter->notify_dev = NULL;
++	}
++
+ 	goto done;
+ 
+ err_add_intf:
+@@ -1482,6 +1493,9 @@ static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
+ 		rtnl_unlock();
+ 	}
+ 
++	notify_device_destroy(adapter->notify_dev);
++	adapter->notify_dev = NULL;
++
+ 	wiphy_unregister(adapter->wiphy);
+ 	wiphy_free(adapter->wiphy);
+ 	adapter->wiphy = NULL;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 63f861e6b28a..b28e90db3128 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -870,6 +870,7 @@ struct mwifiex_adapter {
+ 	int winner;
+ 	struct device *dev;
+ 	struct wiphy *wiphy;
++	struct device *notify_dev;
+ 	u8 perm_addr[ETH_ALEN];
+ 	unsigned long work_flags;
+ 	u32 fw_release_number;
 -- 
 2.25.1
 
