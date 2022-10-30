@@ -2,196 +2,146 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B161AECAAA1
-	for <linux-wireless@archiver.kernel.org>; Sun, 30 Oct 2022 17:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D769AFA3742
+	for <linux-wireless@archiver.kernel.org>; Sun, 30 Oct 2022 17:23:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229678AbiJ3RSk (ORCPT
+        id S229718AbiJ3RXH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 30 Oct 2022 13:18:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52834 "EHLO
+        Sun, 30 Oct 2022 13:23:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229785AbiJ3RSg (ORCPT
+        with ESMTP id S229497AbiJ3RXF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2022 13:18:36 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE04AEB4
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2022 10:18:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1667150313; x=1698686313;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=dqe4uFJUf60/9KLFp1ym7W8/0ysf+3HQVxOIWkYPYg4=;
-  b=DSDkuSWDXdfBdEVhyi/2uVsKRlLLDcjh4AsYlrt32oKF00yFFSl8svs1
-   UkWyz2VclFY7PNgMm6HWfBcegDmQ9BbdysBZ1/xWtH3d1a8P9LnZB1GOz
-   LAvFjErSltNQQJsz5HDkmIr+pd/btBQ1h0fhhbr6VXxiOc8n0zYm+vVn/
-   cOumx4NEK4y9YFc/xUdIsVGrJkoBvceMnOjoIB8hzBRH0B8S2XdBwDmei
-   as/SH0n4aKXJPpimljNrjngyPRcTwg6/2ZGmTB5QALyuNu7Ba3p57l3RU
-   YYC5XQIuLf/Ir+MBpq7HZ4Qc3mxldbCQW93hGD2RdZciOqWvg1fQtfrt7
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10516"; a="372973243"
-X-IronPort-AV: E=Sophos;i="5.95,226,1661842800"; 
-   d="scan'208";a="372973243"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2022 10:18:33 -0700
-X-IronPort-AV: E=McAfee;i="6500,9779,10516"; a="633290259"
-X-IronPort-AV: E=Sophos;i="5.95,226,1661842800"; 
-   d="scan'208";a="633290259"
-Received: from gustyuzh-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.83.75])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2022 10:18:31 -0700
-From:   gregory.greenman@intel.com
-To:     kvalo@kernel.org, johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 5/6] wifi: iwlwifi: mei: avoid blocking sap messages handling due to rtnl lock
-Date:   Sun, 30 Oct 2022 19:17:44 +0200
-Message-Id: <20221030191011.8599f2b4e9dd.I518f79e9099bf815c5f8d90235b4ce3250f59970@changeid>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20221030171745.132081-1-gregory.greenman@intel.com>
-References: <20221030171745.132081-1-gregory.greenman@intel.com>
+        Sun, 30 Oct 2022 13:23:05 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A23FFE65
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2022 10:22:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1667150532;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xy7b3nRtAL8M7+VedHsmmAKhtOAAl2XLancWVFWUXlg=;
+        b=QEzw2EIxzUZDuA47lwrL8ZmmuL+PG0bpVXOIU/ngFShCEh81q8Hotl2fIk1YvKg+b8mLHy
+        slj7KcnyTxBHTkw8dpjOlc7w3Qipug4Uuk8Zwf/GKENK7FU/Hkut9qjMiVVODUTxMyJ4l3
+        AOZft2gMihPTDmmlB1sbs2is95C++Yk=
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
+ [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-329-Y28CiQ5vPOmYHv6NJ3Jwfg-1; Sun, 30 Oct 2022 13:22:10 -0400
+X-MC-Unique: Y28CiQ5vPOmYHv6NJ3Jwfg-1
+Received: by mail-qt1-f198.google.com with SMTP id cc18-20020a05622a411200b0039cdeb3a699so6355151qtb.23
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2022 10:22:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:user-agent:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xy7b3nRtAL8M7+VedHsmmAKhtOAAl2XLancWVFWUXlg=;
+        b=RFAD04gitZaPuuVAfx3LuAmnSOmLlUPZj/5dJ+t3qatvOLDAHWicJG+KjZVk50SG7W
+         kvZrbASRwq7YshvbUZ0wJ7nX8DcZ/WdyUnM5WGndvKfjVWy3/a7t99vkiL6Aus09GHYu
+         gn1OlEXCJVqlh+iIJnFc1otSHJ97YhCGeIj+GeJwM7uu/66AFFSej45dK8SEZBMvz92N
+         e7FmJF8lU70dbbA2vJBRDH3HtbGoACmBs1CNsHoiwmDialrXO0mnEwmCsOm3t2nqaUnQ
+         Zkvit5JWV+EI+I+5WbuF3PcDZIRBGvf0YmiagH2AszftRIQwXF+L/DY91hN4lKf7cSBT
+         ipwQ==
+X-Gm-Message-State: ACrzQf1vQRljXx+NFUQy3kOkWVmyVbzJZqQbaLwG+ipfcFeQDLQi0POe
+        bSu5dq9yQP+NhgJZxttNQX6zZnKCaerEYHNbWBOXfkT4OUdfTQeXqrtsEUog69ogeQWtYkampsc
+        VYomKEgeFJubguGPL/c8a92EvCmE=
+X-Received: by 2002:ac8:598b:0:b0:39d:9b6:69b3 with SMTP id e11-20020ac8598b000000b0039d09b669b3mr7692934qte.39.1667150529820;
+        Sun, 30 Oct 2022 10:22:09 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM5Dk+KkOvrrP3MpVWYtppipjk4B4K/I4Euc13541SOxoveysaouQDittrzMAvU/bssh9bNjNA==
+X-Received: by 2002:ac8:598b:0:b0:39d:9b6:69b3 with SMTP id e11-20020ac8598b000000b0039d09b669b3mr7692910qte.39.1667150529468;
+        Sun, 30 Oct 2022 10:22:09 -0700 (PDT)
+Received: from gerbillo.redhat.com (146-241-106-170.dyn.eolo.it. [146.241.106.170])
+        by smtp.gmail.com with ESMTPSA id s16-20020a05620a255000b006ee7923c187sm3213642qko.42.2022.10.30.10.22.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 30 Oct 2022 10:22:08 -0700 (PDT)
+Message-ID: <27a6a587fee5e9172e41acd16ae1bc1f556fdbd7.camel@redhat.com>
+Subject: Re: [RFC][PATCH v2 19/31] timers: net: Use del_timer_shutdown()
+ before freeing timer
+From:   Paolo Abeni <pabeni@redhat.com>
+To:     Jakub Kicinski <kuba@kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Mirko Lindner <mlindner@marvell.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        Martin KaFai Lau <martin.lau@kernel.org>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Kuniyuki Iwashima <kuniyu@amazon.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Menglong Dong <imagedong@tencent.com>,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, lvs-devel@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-nfs@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net
+Date:   Sun, 30 Oct 2022 18:22:03 +0100
+In-Reply-To: <20221028154617.3c63ba68@kernel.org>
+References: <20221027150525.753064657@goodmis.org>
+         <20221027150928.780676863@goodmis.org>
+         <20221027155513.60b211e2@gandalf.local.home>
+         <CAHk-=wjAjW2P5To82+CAM0Rx8RexQBHPTVZBWBPHyEPGm37oFA@mail.gmail.com>
+         <20221027163453.383bbf8e@gandalf.local.home>
+         <CAHk-=whoS+krLU7JNe=hMp2VOcwdcCdTXhdV8qqKoViwzzJWfA@mail.gmail.com>
+         <20221027170720.31497319@gandalf.local.home>
+         <20221027183511.66b058c4@gandalf.local.home>
+         <20221028183149.2882a29b@gandalf.local.home>
+         <20221028154617.3c63ba68@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 (3.42.4-2.fc35) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+On Fri, 2022-10-28 at 15:46 -0700, Jakub Kicinski wrote:
+> On Fri, 28 Oct 2022 18:31:49 -0400 Steven Rostedt wrote:
+> > Could someone from networking confirm (or deny) that the timer being
+> > removed in sk_stop_timer() will no longer be used even if del_timer()
+> > returns false?
+> > 
+> > net/core/sock.c:
+> > 
+> > void sk_stop_timer(struct sock *sk, struct timer_list* timer)
+> > {
+> > 	if (del_timer(timer))
+> > 		__sock_put(sk);
+> > }
+> > 
+> > If this is the case, then I'll add the following interface:
+> > 
+> >    del_timer_sync_shutdown() // the common case which syncs
+> > 
+> >    del_timer_shutdown() // the uncommon case, that returns immediately
+> >                         // used for those cases that add extra code to
+> >                         // handle it, like sk_stop_timer()
+> 
+> Sorry too many bugs at once :)
+> 
+> FWIW Paolo was saying privately earlier today that he spotted some cases
+> of reuse, he gave an example of ccid2_hc_tx_packet_recv()
 
-The AMT_STATE sap message handler tries to take the rtnl lock.
-This means that in case the rtnl lock is already taken, sap messages
-will not be processed.
-When an interface is brought up, the host requests ownership from
-csme. However, since the rtnl lock is already held, if there is a
-pending amt state message, the host will not be able to read the
-ownership confirm message because the amt state message handler
-is pending. As a result, the host fails to get ownership although
-csme granted it.
-Fix it by moving the part that needs the rtnl lock into a dedicated
-worker, so handling sap messages can continue.
+For the records, there are other cases, e.g. after sk_stop_timer() in 
+clear_3rdack_retransmission() (mptcp code) the timer can be-rearmed
+without re-initializing. I *think* there are more of such use in the 
+in ax25/rose code.
 
-Fixes: 2da4366f9e2c ("iwlwifi: mei: add the driver to allow cooperation with CSME")
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mei/main.c | 57 ++++++++++++-------
- 1 file changed, 37 insertions(+), 20 deletions(-)
+> So we can't convert all cases of sk_stop_timer() in one fell swoop :(
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-index 64a637ef199c..c0142093c768 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-@@ -152,6 +152,8 @@ struct iwl_mei_filters {
-  * @csa_throttle_end_wk: used when &csa_throttled is true
-  * @data_q_lock: protects the access to the data queues which are
-  *	accessed without the mutex.
-+ * @netdev_work: used to defer registering and unregistering of the netdev to
-+ *	avoid taking the rtnl lock in the SAP messages handlers.
-  * @sap_seq_no: the sequence number for the SAP messages
-  * @seq_no: the sequence number for the SAP messages
-  * @dbgfs_dir: the debugfs dir entry
-@@ -172,6 +174,7 @@ struct iwl_mei {
- 	bool device_down;
- 	struct delayed_work csa_throttle_end_wk;
- 	spinlock_t data_q_lock;
-+	struct work_struct netdev_work;
- 
- 	atomic_t sap_seq_no;
- 	atomic_t seq_no;
-@@ -591,6 +594,33 @@ static rx_handler_result_t iwl_mei_rx_handler(struct sk_buff **pskb)
- 	return res;
- }
- 
-+static void iwl_mei_netdev_work(struct work_struct *wk)
-+{
-+	struct iwl_mei *mei =
-+		container_of(wk, struct iwl_mei, netdev_work);
-+	struct net_device *netdev;
-+
-+	/*
-+	 * First take rtnl and only then the mutex to avoid an ABBA
-+	 * with iwl_mei_set_netdev()
-+	 */
-+	rtnl_lock();
-+	mutex_lock(&iwl_mei_mutex);
-+
-+	netdev = rcu_dereference_protected(iwl_mei_cache.netdev,
-+					   lockdep_is_held(&iwl_mei_mutex));
-+	if (netdev) {
-+		if (mei->amt_enabled)
-+			netdev_rx_handler_register(netdev, iwl_mei_rx_handler,
-+						   mei);
-+		else
-+			netdev_rx_handler_unregister(netdev);
-+	}
-+
-+	mutex_unlock(&iwl_mei_mutex);
-+	rtnl_unlock();
-+}
-+
- static void
- iwl_mei_handle_rx_start_ok(struct mei_cl_device *cldev,
- 			   const struct iwl_sap_me_msg_start_ok *rsp,
-@@ -743,38 +773,23 @@ static void iwl_mei_handle_amt_state(struct mei_cl_device *cldev,
- 				     const struct iwl_sap_msg_dw *dw)
- {
- 	struct iwl_mei *mei = mei_cldev_get_drvdata(cldev);
--	struct net_device *netdev;
- 
--	/*
--	 * First take rtnl and only then the mutex to avoid an ABBA
--	 * with iwl_mei_set_netdev()
--	 */
--	rtnl_lock();
- 	mutex_lock(&iwl_mei_mutex);
- 
--	netdev = rcu_dereference_protected(iwl_mei_cache.netdev,
--					   lockdep_is_held(&iwl_mei_mutex));
--
- 	if (mei->amt_enabled == !!le32_to_cpu(dw->val))
- 		goto out;
- 
- 	mei->amt_enabled = dw->val;
- 
--	if (mei->amt_enabled) {
--		if (netdev)
--			netdev_rx_handler_register(netdev, iwl_mei_rx_handler, mei);
--
-+	if (mei->amt_enabled)
- 		iwl_mei_set_init_conf(mei);
--	} else {
--		if (iwl_mei_cache.ops)
--			iwl_mei_cache.ops->rfkill(iwl_mei_cache.priv, false);
--		if (netdev)
--			netdev_rx_handler_unregister(netdev);
--	}
-+	else if (iwl_mei_cache.ops)
-+		iwl_mei_cache.ops->rfkill(iwl_mei_cache.priv, false, false);
-+
-+	schedule_work(&mei->netdev_work);
- 
- out:
- 	mutex_unlock(&iwl_mei_mutex);
--	rtnl_unlock();
- }
- 
- static void iwl_mei_handle_nic_owner(struct mei_cl_device *cldev,
-@@ -1827,6 +1842,7 @@ static int iwl_mei_probe(struct mei_cl_device *cldev,
- 			  iwl_mei_csa_throttle_end_wk);
- 	init_waitqueue_head(&mei->get_ownership_wq);
- 	spin_lock_init(&mei->data_q_lock);
-+	INIT_WORK(&mei->netdev_work, iwl_mei_netdev_work);
- 
- 	mei_cldev_set_drvdata(cldev, mei);
- 	mei->cldev = cldev;
-@@ -1989,6 +2005,7 @@ static void iwl_mei_remove(struct mei_cl_device *cldev)
- 	 */
- 	cancel_work_sync(&mei->send_csa_msg_wk);
- 	cancel_delayed_work_sync(&mei->csa_throttle_end_wk);
-+	cancel_work_sync(&mei->netdev_work);
- 
- 	/*
- 	 * If someone waits for the ownership, let him know that we are going
--- 
-2.35.3
+On the positive side, I think converting the sk_stop_timer in 
+inet_csk_clear_xmit_timers() should be safe and should cover the issue
+reported by Guenter
+
+Cheers,
+
+Paolo
 
