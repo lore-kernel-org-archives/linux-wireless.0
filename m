@@ -2,108 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EFB2FA3747
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Oct 2022 15:56:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C9D8FA3741
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Oct 2022 16:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232115AbiJaP4z (ORCPT
+        id S231911AbiJaQkZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Oct 2022 11:56:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59884 "EHLO
+        Mon, 31 Oct 2022 12:40:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232080AbiJaP4o (ORCPT
+        with ESMTP id S231715AbiJaQkY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2022 11:56:44 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 358451262F;
-        Mon, 31 Oct 2022 08:56:40 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id a14so16605447wru.5;
-        Mon, 31 Oct 2022 08:56:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=yiIQqUgAicF1IqI0TD1/vWxeqEODaUy7zyfXvnZJius=;
-        b=B4GLhZdBSMgf4MInk9YzxaAZdPHiTWlOPOIGf29fu2Y90nYFRbsxKO2toypxwyCT7y
-         CGOGYT60OdC+G2F10/wvDJrR586+EKMUZONdyiv+Vs3AIKxD145/fOfMTmMQsDCxZ3Ot
-         S4tHjP1JavUMCfi0p80zqozsY/gRwFvR7Xrl4nA9QUvSePyWOvkRQtFl1ZrcekZGMihJ
-         sXLJiTjilWYsPTnkgRgNyMUyUAm76wI5f+FhveF0ulOIgw1QShKfo34EyFUqawJfA9Gz
-         6/oTXtnaNXp5lxc6lvH4t3lvPxJxJH6t2dP8OcNdRZ8x0JURzm0gkr1UU6gzBgnVX6tE
-         xiiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=yiIQqUgAicF1IqI0TD1/vWxeqEODaUy7zyfXvnZJius=;
-        b=su/JP05BVcuvqoTRAXwHM8gHw9Au4P6dhfdVWF5g4SXpyLCD90CnqPEoOrkSNy9I1r
-         LSMBv1uJZs+XHG13HXXZe80mDMbEPW/HPtKsmXXXu3656AQ9Lh3H1Ql1+170Y2kYH2fq
-         IKPtg2vn//Ly6c94+QSTJMjMhZNalQZjFLvB35lhZ6LCHXXjFYPssLpHc08cl+8nCk21
-         qZGoSATXX0k32M0axUjMFWK3YoKpIwVDbj4DcgK4li5/UxM58kTBReBO7Ld6XAh2N0/j
-         ECae9XDLkxlJtKjlJyKzXoPRFw3El5QtC9xnYdmZOgu/GSFcfXkmafMQLck2C/NhycAP
-         2Xlw==
-X-Gm-Message-State: ACrzQf23IBf1kxinDtByGfr6ypjNwiTQHF5NXzD3/L1q8z7//SrG/G9H
-        icbyNUkzfCc9Pa3jOkIyOKA=
-X-Google-Smtp-Source: AMsMyM4/irtNqZnPzYVXBivUMUii0bMR2GOzaMUXE9e4uh5P3vwnckqqZANG/P8yFmPZyq7Uv3Ythw==
-X-Received: by 2002:a05:6000:2c3:b0:236:dd92:16d1 with SMTP id o3-20020a05600002c300b00236dd9216d1mr912518wry.50.1667231798642;
-        Mon, 31 Oct 2022 08:56:38 -0700 (PDT)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id n10-20020a05600c3b8a00b003cf71b1f66csm4077946wms.0.2022.10.31.08.56.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Oct 2022 08:56:37 -0700 (PDT)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192ee: remove static variable stop_report_cnt
-Date:   Mon, 31 Oct 2022 15:56:37 +0000
-Message-Id: <20221031155637.871164-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.37.3
+        Mon, 31 Oct 2022 12:40:24 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31EC12BC3
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2022 09:40:19 -0700 (PDT)
+X-UUID: c86cb0e97aa1404ca78c3866a77dcbe1-20221101
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Kn5ON56E+2GGeTfZAHdKpdblBG6mvoErQSTcFC+fO0g=;
+        b=irmIwhzlSIuDPdSt7VnuNfjqJjNm1KDtqxQc3PVAOCahaNKlwmaXKq90uYWjEruSVRZfpGYwPK201ZmPelSOPnznHjaDXBFAVhqO7T/GlX2/Ara0PRLqf/J3zVhBATkagDUxc6PHaz5QWcJXrQYMiaJXzD2sGE/VQD/IguH39LU=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.12,REQID:fec8abca-d3f9-46bd-8e1f-601a8dad0bd3,IP:0,U
+        RL:0,TC:0,Content:26,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:26
+X-CID-META: VersionHash:62cd327,CLOUDID:edee2390-1a78-4832-bd08-74b1519dcfbf,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:4,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: c86cb0e97aa1404ca78c3866a77dcbe1-20221101
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1237564921; Tue, 01 Nov 2022 00:40:13 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Tue, 1 Nov 2022 00:40:12 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Tue, 1 Nov 2022 00:40:12 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Bo Jiao <Bo.Jiao@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 07/10] wifi: mt76: connac: add more bss info command tags
+Date:   Tue, 1 Nov 2022 00:39:57 +0800
+Message-ID: <20221031164000.17063-8-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20221031164000.17063-1-shayne.chen@mediatek.com>
+References: <20221031164000.17063-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Variable stop_report_cnt is being set or incremented but is never
-being used for anything meaningful. The variable and code relating
-to it's use is redundant and can be removed.
+Add bss info tags which will be used in new chipset.
+This is a preliminary patch to add mt7996 chipset support.
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-index 8043d819fb85..a182cdeb58e2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-@@ -997,7 +997,6 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u16 read_point, write_point;
- 	bool ret = false;
--	static u8 stop_report_cnt;
- 	struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 909b2ba67c11..ed1d24822c37 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1255,14 +1255,23 @@ enum {
  
- 	{
-@@ -1038,13 +1037,6 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
- 	    rtlpriv->psc.rfoff_reason > RF_CHANGE_BY_PS)
- 		ret = true;
+ enum {
+ 	UNI_BSS_INFO_BASIC = 0,
++	UNI_BSS_INFO_RA = 1,
+ 	UNI_BSS_INFO_RLM = 2,
+ 	UNI_BSS_INFO_BSS_COLOR = 4,
+ 	UNI_BSS_INFO_HE_BASIC = 5,
+ 	UNI_BSS_INFO_BCN_CONTENT = 7,
++	UNI_BSS_INFO_BCN_CSA = 8,
++	UNI_BSS_INFO_BCN_BCC = 9,
++	UNI_BSS_INFO_BCN_MBSSID = 10,
++	UNI_BSS_INFO_RATE = 11,
+ 	UNI_BSS_INFO_QBSS = 15,
++	UNI_BSS_INFO_SEC = 16,
++	UNI_BSS_INFO_TXCMD = 18,
+ 	UNI_BSS_INFO_UAPSD = 19,
+ 	UNI_BSS_INFO_PS = 21,
+ 	UNI_BSS_INFO_BCNFT = 22,
++	UNI_BSS_INFO_OFFLOAD = 25,
++	UNI_BSS_INFO_MLD = 26,
+ };
  
--	if (hw_queue < BEACON_QUEUE) {
--		if (!ret)
--			stop_report_cnt++;
--		else
--			stop_report_cnt = 0;
--	}
--
- 	return ret;
- }
- 
+ enum {
 -- 
-2.37.3
+2.25.1
 
