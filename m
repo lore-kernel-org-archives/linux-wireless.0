@@ -2,132 +2,139 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63CBFECAAA1
-	for <linux-wireless@archiver.kernel.org>; Mon, 31 Oct 2022 18:02:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C562BFA3746
+	for <linux-wireless@archiver.kernel.org>; Mon, 31 Oct 2022 21:17:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229691AbiJaSCR (ORCPT
+        id S230306AbiJaVRS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Oct 2022 14:02:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41126 "EHLO
+        Mon, 31 Oct 2022 17:17:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbiJaSCQ (ORCPT
+        with ESMTP id S230262AbiJaVRP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2022 14:02:16 -0400
-Received: from omta35.uswest2.a.cloudfilter.net (omta35.uswest2.a.cloudfilter.net [35.89.44.34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC20B13D1E
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2022 11:02:15 -0700 (PDT)
-Received: from eig-obgw-5014a.ext.cloudfilter.net ([10.0.29.198])
-        by cmsmtp with ESMTP
-        id pXhiopPjflI84pZ71o9odP; Mon, 31 Oct 2022 18:02:15 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTP
-        id pZ6yoyqRV4gRbpZ6zoCJcx; Mon, 31 Oct 2022 18:02:13 +0000
-X-Authority-Analysis: v=2.4 cv=EMIVbnVC c=1 sm=1 tr=0 ts=63600da5
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
- a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=Qawa6l4ZSaYA:10
- a=wYkD_t78qR0A:10 a=XPDCPBHLajm3aRFYHAUA:9 a=QEXdDO2ut3YA:10
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=4M+EkqO2JIQhdRROs6iO5knFvCzc2rYBZdIfB6LFo1M=; b=eYQmoSDCBMmgeFFVkQtGqxSpu6
-        VbhdOaE5Q6z1ta4Y4WbtONilXDaXlCi7bvqUp8/lBqNx3816DhW7waQaBPrFYo8iL6kIxedBrjOH/
-        jy9CgKAef2zrh7WR3I/lKcQ53sXf5Of1HnTWJZFr4xfyO9CbMtYVD4yD5xvLMRjZ5J2DEq5BgDRjc
-        Nn/C6ck/0lGwUdTO81d7vAqLMQZUfRuqN6ooq3H9vgDYkCjV30tD7evQn4amKnGbjPgzJM1dmNs3G
-        AwaJd2eIAZIIcJ2KrPdjC3v1jf9dcM/cj1vdI3Sgnd8kpkl9vxnClkoDV2kPABGgGES8vtrNo24uB
-        wi3lTTag==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:60834 helo=[192.168.15.7])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1opZ6x-002ncA-Um;
-        Mon, 31 Oct 2022 13:02:12 -0500
-Message-ID: <fb504b1e-e558-c3ed-61ed-220a24299599@embeddedor.com>
-Date:   Mon, 31 Oct 2022 12:01:51 -0500
+        Mon, 31 Oct 2022 17:17:15 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4098E13CD4;
+        Mon, 31 Oct 2022 14:17:14 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 29VL74A2020997;
+        Mon, 31 Oct 2022 21:17:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=xEQOZoeQz+d79gocLoLfDMdECpn1lTupjLfLjzlXF4A=;
+ b=KBWk26G3AiJJRu3ZtwxD3fLBUOogsRhKmez992ZXJgN7G1TRxU/axB2kO4405OUi1CQc
+ ixB4ohXyYS6+VMANFgOSH6mSpy5sqUxUmVlOU65s39rTkfOxAc/axWiJYepHTxu9oX4P
+ 69mL23AnJ2Za47Nzw9sj3FrdITWH+MjGwEPC2FAaUMIlWBz9yRoXkV/BT/UXwHixpB+3
+ SAf48od7hWCxbY/GfNy8Y+MtdLj4AZZcXMg0m2zP0mmDTr69X6XAkp88alf8l8FzQ2MA
+ MzmrddmAb4kCuzSH/cL1ekcWsRTx+Gz0F/XfE10Gl1taT7KNdc0fIMfgZY1bhEx20bme xg== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3kjj148tst-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 31 Oct 2022 21:17:00 +0000
+Received: from pps.filterd (NALASPPMTA01.qualcomm.com [127.0.0.1])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 29VLGxkk000771;
+        Mon, 31 Oct 2022 21:16:59 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 3khdpm6d0n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 31 Oct 2022 21:16:59 +0000
+Received: from NALASPPMTA01.qualcomm.com (NALASPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 29VLGxO3000760;
+        Mon, 31 Oct 2022 21:16:59 GMT
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (PPS) with ESMTPS id 29VLGx1U000759
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 31 Oct 2022 21:16:59 +0000
+Received: from [10.110.19.51] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Mon, 31 Oct
+ 2022 14:16:58 -0700
+Message-ID: <55c4d139-0f22-e7ba-398a-e3e0d8919220@quicinc.com>
+Date:   Mon, 31 Oct 2022 14:16:57 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH v2 1/6] cfg80211: Avoid clashing function prototypes
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Subject: Re: [PATCH] ath11k (gcc13): synchronize
+ ath11k_mac_he_gi_to_nl80211_he_gi()'s return type
 Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>,
+To:     "Jiri Slaby (SUSE)" <jirislaby@kernel.org>, <kvalo@kernel.org>
+CC:     <linux-kernel@vger.kernel.org>, Martin Liska <mliska@suse.cz>,
         "David S. Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>,
-        linux-hardening@vger.kernel.org
-References: <cover.1666894751.git.gustavoars@kernel.org>
- <c8239f5813dec6e5cfb554ca92b1783a18ac5537.1666894751.git.gustavoars@kernel.org>
- <a92ffa8db8228b5cb41939dc37d6ee677aef0619.camel@sipsolutions.net>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <a92ffa8db8228b5cb41939dc37d6ee677aef0619.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        Paolo Abeni <pabeni@redhat.com>, <ath11k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+References: <20221031114341.10377-1-jirislaby@kernel.org>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20221031114341.10377-1-jirislaby@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1opZ6x-002ncA-Um
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:60834
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 4
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfFDZ61MlAWN0jmKOs65rQpyFkdSy/vJ+8Tq6HcQfI1dhDzZTn7bCmFETn+QkWMecHj0MafkgnXxUer+x0M+3v04lzEb1QJ5FpsQ9OixXAPYiy0JimY9G
- uddpXUDuQQ4LbVVP0AlVCqUabQLVAJ4xE5V0F38mB0K3FCmaroaY6W0Ng84XEGGmLA/D98n/gu7BRZg7txt9Y9qeLH4iiigSx59C3vQITpgTcHbPHobzn4Oz
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: D3seMyoJ8ZICL02O27qI9D3IV_24DjZK
+X-Proofpoint-GUID: D3seMyoJ8ZICL02O27qI9D3IV_24DjZK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-31_21,2022-10-31_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 suspectscore=0
+ phishscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0 mlxscore=0
+ bulkscore=0 mlxlogscore=939 impostorscore=0 malwarescore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2210310131
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-
-On 10/28/22 03:22, Johannes Berg wrote:
-> Hm.
+On 10/31/2022 4:43 AM, Jiri Slaby (SUSE) wrote:
+> ath11k_mac_he_gi_to_nl80211_he_gi() generates a valid warning with gcc-13:
+>    drivers/net/wireless/ath/ath11k/mac.c:321:20: error: conflicting types for 'ath11k_mac_he_gi_to_nl80211_he_gi' due to enum/integer mismatch; have 'enum nl80211_he_gi(u8)'
+>    drivers/net/wireless/ath/ath11k/mac.h:166:5: note: previous declaration of 'ath11k_mac_he_gi_to_nl80211_he_gi' with type 'u32(u8)'
 > 
-> If you're splitting out per driver,
+> I.e. the type of the return value ath11k_mac_he_gi_to_nl80211_he_gi() in
+> the declaration is u32, while the definition spells enum nl80211_he_gi.
+> Synchronize them to the latter.
 > 
->> +++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
->> @@ -9870,7 +9870,7 @@ static int ipw_wx_sw_reset(struct net_device *dev,
->>   
->>   /* Rebase the WE IOCTLs to zero for the handler array */
->>   static iw_handler ipw_wx_handlers[] = {
->> -	IW_HANDLER(SIOCGIWNAME, (iw_handler)cfg80211_wext_giwname),
->> +	IW_HANDLER(SIOCGIWNAME, cfg80211_wext_giwname),
-> 
-> I can see how this (and similar) still belongs into this patch since
-> it's related to the cfg80211 change, but
-> 
->> +++ b/drivers/net/wireless/intersil/orinoco/wext.c
->> @@ -154,9 +154,10 @@ static struct iw_statistics *orinoco_get_wireless_stats(struct net_device *dev)
->>   
->>   static int orinoco_ioctl_setwap(struct net_device *dev,
->>   				struct iw_request_info *info,
->> -				struct sockaddr *ap_addr,
->> +				union iwreq_data *wrqu,
->>   				char *extra)
->>   {
->> +	struct sockaddr *ap_addr = &wrqu->ap_addr;
-> 
-> why this (and similar) too?
+> Cc: Martin Liska <mliska@suse.cz>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Eric Dumazet <edumazet@google.com>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Paolo Abeni <pabeni@redhat.com>
+> Cc: ath11k@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: Jiri Slaby (SUSE) <jirislaby@kernel.org>
 
-mmh... yeah; orinoco should be a separate patch. :)
+Suggest the subject should be
+wifi: ath11k: synchronize ath11k_mac_he_gi_to_nl80211_he_gi()'s return type
 
-Thanks
---
-Gustavo
+The reference to gcc in the description should be sufficient.
 
+Kalle can update this when he merges
+
+Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+
+> ---
+>   drivers/net/wireless/ath/ath11k/mac.h | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
+> index 2a0d3afb0c99..0231783ad754 100644
+> --- a/drivers/net/wireless/ath/ath11k/mac.h
+> +++ b/drivers/net/wireless/ath/ath11k/mac.h
+> @@ -163,7 +163,7 @@ void ath11k_mac_drain_tx(struct ath11k *ar);
+>   void ath11k_mac_peer_cleanup_all(struct ath11k *ar);
+>   int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
+>   u8 ath11k_mac_bw_to_mac80211_bw(u8 bw);
+> -u32 ath11k_mac_he_gi_to_nl80211_he_gi(u8 sgi);
+> +enum nl80211_he_gi ath11k_mac_he_gi_to_nl80211_he_gi(u8 sgi);
+>   enum nl80211_he_ru_alloc ath11k_mac_phy_he_ru_to_nl80211_he_ru_alloc(u16 ru_phy);
+>   enum nl80211_he_ru_alloc ath11k_mac_he_ru_tones_to_nl80211_he_ru_alloc(u16 ru_tones);
+>   enum ath11k_supported_bw ath11k_mac_mac80211_bw_to_ath11k_bw(enum rate_info_bw bw);
 
