@@ -2,84 +2,194 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1843C433FE
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Nov 2022 11:02:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 651B7C43219
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Nov 2022 11:44:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231796AbiKDLCZ (ORCPT
+        id S231653AbiKDLof (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Nov 2022 07:02:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39424 "EHLO
+        Fri, 4 Nov 2022 07:44:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231927AbiKDLBz (ORCPT
+        with ESMTP id S231393AbiKDLoe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2022 07:01:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 713C72CDD2
-        for <linux-wireless@vger.kernel.org>; Fri,  4 Nov 2022 04:01:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Fri, 4 Nov 2022 07:44:34 -0400
+Received: from phobos.denx.de (phobos.denx.de [IPv6:2a01:238:438b:c500:173d:9f52:ddab:ee01])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 209022CC88;
+        Fri,  4 Nov 2022 04:44:32 -0700 (PDT)
+Received: from tr.lan (ip-86-49-120-218.bb.vodafone.cz [86.49.120.218])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E59E6213C
-        for <linux-wireless@vger.kernel.org>; Fri,  4 Nov 2022 11:01:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1151C433B5;
-        Fri,  4 Nov 2022 11:01:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667559712;
-        bh=Go9ZPS1D7b5vhLir1KiMzmsxIwAedkfzRsChBg5iZNA=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=ZgVNuzMQLuGBnqcpBD5xqPYA9VZKD2c287btfU+Ka0IZY4lq/N9nvpbu/37ARrUMt
-         P4VfLlmsrPMl7gFsXWQLinyE/nL5XlMtBacd0RJWOaFnp56t/4jUunGU6a5VEit7xh
-         ZBAQUr7rKRs3PwbuJxqF/FNh5QngtQmHasb/aej2WbGwTyMikDiCGzYc4xbwaLABDY
-         Rrlow2x7Wxi9vt6Tc7HBIWws7HpT2WYYBCKH2ICmkJfpLhWWd2qRDqgbfZo5N7cPgl
-         61Ix3k2ZkLskeb/eSZwwl8m2GsxLFh7XgMyLimORjorFyKbhEfKPMOB9CEhb0Mnt5L
-         0y8CcVzLjedEA==
-Content-Type: text/plain; charset="utf-8"
+        (Authenticated sender: marex@denx.de)
+        by phobos.denx.de (Postfix) with ESMTPSA id 75B05851B1;
+        Fri,  4 Nov 2022 12:44:29 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+        s=phobos-20191101; t=1667562270;
+        bh=WQ4HOFN/7c2kS7OZKALwxE5vFMhHm87eUUnd126S1Xw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=WgZ1m64NdaWjPw4pOjPkbp8c3kzXxhREdhl2dOcQA8OaNe/TC1gmWch9tP7iuXmu/
+         tnMdTMnLgoiuJDYk+bsyTd42BiQt3F6RYexbtBUSMU9OPK8FSvcvI3VbrHg3RZlprM
+         Ml4eLTCk1Ui5n/fP58g8MaLV1YIwWYmRVZ8hpwVRDcPo57Aps/fOx6N0i55Rpv6fRG
+         1FsYcUM03l3IMMtSNc+uc1+O4SMiLsQo0I6RfkqrbGqAOQfRIlBzISdleNbeqXvSZx
+         Mchz/KKfppPNwCjWanCeNp6u5zTn7w+bocW9zhqNI1/Iux5ZdK3yg2PJrn7Bz4wYMD
+         J2D/6wY4JWawg==
+From:   Marek Vasut <marex@denx.de>
+To:     linux-wireless@vger.kernel.org
+Cc:     Marek Vasut <marex@denx.de>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Angus Ainslie <angus@akkea.ca>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Kalle Valo <kvalo@kernel.org>,
+        Martin Fuzzey <martin.fuzzey@flowbird.group>,
+        Martin Kepplinger <martink@posteo.de>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
+        Siva Rebbagondla <siva8118@gmail.com>, netdev@vger.kernel.org
+Subject: [PATCH v2] wifi: rsi: Fix handling of 802.3 EAPOL frames sent via control port
+Date:   Fri,  4 Nov 2022 12:44:12 +0100
+Message-Id: <20221104114412.9711-1-marex@denx.de>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v4 1/5] wifi: rtl8xxxu: Add central frequency offset
- tracking
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <80aba428-0aff-f4b2-dea5-35d1425982b6@gmail.com>
-References: <80aba428-0aff-f4b2-dea5-35d1425982b6@gmail.com>
-To:     Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Jes Sorensen <Jes.Sorensen@gmail.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166755970986.3283.8272687655557599604.kvalo@kernel.org>
-Date:   Fri,  4 Nov 2022 11:01:51 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: clamav-milter 0.103.6 at phobos.denx.de
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+When using wpa_supplicant v2.10, this driver is no longer able to
+associate with any AP and fails in the EAPOL 4-way handshake while
+sending the 2/4 message to the AP. The problem is not present in
+wpa_supplicant v2.9 or older. The problem stems from HostAP commit
+144314eaa ("wpa_supplicant: Send EAPOL frames over nl80211 where available")
+which changes the way EAPOL frames are sent, from them being send
+at L2 frames to them being sent via nl80211 control port.
 
-> According to Realtek programmers, "to adjust oscillator to align
-> central frequency of connected AP. Then, it can yield better
-> performance." From commit fb8517f4fade ("rtw88: 8822c: add CFO
-> tracking").
-> 
-> The RTL8192CU and a version of RTL8723AU apparently don't have the
-> ability to adjust the oscillator, so this doesn't apply to them.
-> 
-> This also doesn't apply to the wifi + bluetooth combo chips (RTL8723AU
-> and RTL8723BU) because the CFO tracking should only be done when
-> bluetooth is disabled, and determining that looked complicated.
-> 
-> That leaves only the RTL8192EU and RTL8188FU chips. I tested this with
-> the latter.
-> 
-> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+An EAPOL frame sent as L2 frame is passed to the WiFi driver with
+skb->protocol ETH_P_PAE, while EAPOL frame sent via nl80211 control
+port has skb->protocol set to ETH_P_802_3 . The later happens in
+ieee80211_tx_control_port(), where the EAPOL frame is encapsulated
+into 802.3 frame.
 
-5 patches applied to wireless-next.git, thanks.
+The rsi_91x driver handles ETH_P_PAE EAPOL frames as high-priority
+frames and sends them via highest-priority transmit queue, while
+the ETH_P_802_3 frames are sent as regular frames. The EAPOL 4-way
+handshake frames must be sent as highest-priority, otherwise the
+4-way handshake times out.
 
-57b328bc7996 wifi: rtl8xxxu: Add central frequency offset tracking
-2ad2a813b803 wifi: rtl8xxxu: Fix the CCK RSSI calculation
-7b0ac469e331 wifi: rtl8xxxu: Recognise all possible chip cuts
-e952deaa95ba wifi: rtl8xxxu: Set IEEE80211_HW_SUPPORT_FAST_XMIT
-bd954a7e4aa0 wifi: rtl8xxxu: Use dev_* instead of pr_info
+Therefore, to fix this problem, inspect the ETH_P_802_3 frames in
+the rsi_91x driver, check the ethertype of the encapsulated frame,
+and in case it is ETH_P_PAE, transmit the frame via high-priority
+queue just like other ETH_P_PAE frames.
 
+Fixes: 0eb42586cf876 ("rsi: data packet descriptor enhancements")
+Signed-off-by: Marek Vasut <marex@denx.de>
+---
+NOTE: I am really unsure about the method of finding out the exact
+      place of ethernet header in the encapsulated packet and then
+      extracting the ethertype from it. Is there maybe some sort of
+      helper function for that purpose ?
+---
+V2: - Turn the duplicated code into common function
+---
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: Angus Ainslie <angus@akkea.ca>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Kalle Valo <kvalo@kernel.org>
+Cc: Martin Fuzzey <martin.fuzzey@flowbird.group>
+Cc: Martin Kepplinger <martink@posteo.de>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>
+Cc: Siva Rebbagondla <siva8118@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c | 22 +++++++++++++++++++++-
+ drivers/net/wireless/rsi/rsi_91x_hal.c  |  5 ++++-
+ drivers/net/wireless/rsi/rsi_common.h   |  1 +
+ 3 files changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index 0f3a80f66b61c..59bf5c8069c98 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -364,6 +364,25 @@ struct ieee80211_vif *rsi_get_vif(struct rsi_hw *adapter, u8 *mac)
+ 	return NULL;
+ }
+ 
++bool rsi_is_tx_eapol(struct sk_buff *skb)
++{
++	struct ethhdr *eth_hdr;
++	unsigned int hdr_len;
++
++	if (skb->protocol == cpu_to_be16(ETH_P_PAE))
++		return true;
++
++	if (skb->protocol == cpu_to_be16(ETH_P_802_3)) {
++		hdr_len = ieee80211_get_hdrlen_from_skb(skb) +
++			  sizeof(rfc1042_header) - ETH_HLEN + 2;
++		eth_hdr = (struct ethhdr *)(skb->data + hdr_len);
++		if (eth_hdr->h_proto == cpu_to_be16(ETH_P_PAE))
++			return true;
++	}
++
++	return false;
++}
++
+ /**
+  * rsi_core_xmit() - This function transmits the packets received from mac80211
+  * @common: Pointer to the driver private structure.
+@@ -466,7 +485,8 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 							      tid, 0);
+ 			}
+ 		}
+-		if (skb->protocol == cpu_to_be16(ETH_P_PAE)) {
++
++		if (rsi_is_tx_eapol(skb)) {
+ 			q_num = MGMT_SOFT_Q;
+ 			skb->priority = q_num;
+ 		}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+index c61f83a7333b6..a35866e9161e5 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_hal.c
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -159,6 +159,7 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	struct rsi_data_desc *data_desc;
+ 	struct rsi_xtended_desc *xtend_desc;
+ 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
++	bool tx_eapol = false;
+ 	u8 header_size;
+ 	u8 vap_id = 0;
+ 	u8 dword_align_bytes;
+@@ -168,6 +169,8 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 	vif = info->control.vif;
+ 	tx_params = (struct skb_info *)info->driver_data;
+ 
++	tx_eapol = rsi_is_tx_eapol(skb);
++
+ 	header_size = FRAME_DESC_SZ + sizeof(struct rsi_xtended_desc);
+ 	if (header_size > skb_headroom(skb)) {
+ 		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+@@ -231,7 +234,7 @@ int rsi_prepare_data_desc(struct rsi_common *common, struct sk_buff *skb)
+ 		}
+ 	}
+ 
+-	if (skb->protocol == cpu_to_be16(ETH_P_PAE)) {
++	if (tx_eapol) {
+ 		rsi_dbg(INFO_ZONE, "*** Tx EAPOL ***\n");
+ 
+ 		data_desc->frame_info = cpu_to_le16(RATE_INFO_ENABLE);
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 7aa5124575cfe..8843c7634e2f9 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -83,6 +83,7 @@ u16 rsi_get_connected_channel(struct ieee80211_vif *vif);
+ struct rsi_hw *rsi_91x_init(u16 oper_mode);
+ void rsi_91x_deinit(struct rsi_hw *adapter);
+ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len);
++bool rsi_is_tx_eapol(struct sk_buff *skb);
+ #ifdef CONFIG_PM
+ int rsi_config_wowlan(struct rsi_hw *adapter, struct cfg80211_wowlan *wowlan);
+ #endif
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/80aba428-0aff-f4b2-dea5-35d1425982b6@gmail.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.35.1
 
