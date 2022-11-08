@@ -2,99 +2,108 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3CDCC4332F
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Nov 2022 07:42:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 587D7C43217
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Nov 2022 09:36:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233577AbiKHHlv (ORCPT
+        id S233761AbiKHJgM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Nov 2022 02:41:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41254 "EHLO
+        Tue, 8 Nov 2022 04:36:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233734AbiKHHla (ORCPT
+        with ESMTP id S233745AbiKHJgK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2022 02:41:30 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46EB818E39;
-        Mon,  7 Nov 2022 23:41:17 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E7B31B818A4;
-        Tue,  8 Nov 2022 07:41:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8504C433D6;
-        Tue,  8 Nov 2022 07:41:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667893274;
-        bh=ByJfhaoaY6HddmbTF0YfvhHmft9TNEzZg+mTg1/kn80=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=acLhMm23m3W06kYTWEo4bJXgzhmTkMMNI2WDDDGLFrBVovrJl65Xpkm7fRudWNMIc
-         KMbKrXpn3PjXh50Z6WTQIDB5RW6EoBZxusmPU82W+Q9qXlbVOpKQ0SwBhKPZOWRrMt
-         vdBgzMuMTL9Vd5Yl0suvg/YVcPa3iMAi5Msu5wpsbumipo4PwbWkBZEiG7qgFY/Kkq
-         uBCRR8Drz54qK5EPBkLh5ZZZiiTxi0cPhYvAqSSLkUUfbaqhn3//YuDI5U5/UHZKo9
-         Si8jOM0K4h7mr17FFO7X5UHLjS9LYYplJreE863HTtkMUoA2s2ZGrch0Q40gmTjmMZ
-         aY9wvbbivWTCA==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v5] wifi: rsi: Fix handling of 802.3 EAPOL frames sent via
- control port
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20221104163339.227432-1-marex@denx.de>
-References: <20221104163339.227432-1-marex@denx.de>
-To:     Marek Vasut <marex@denx.de>
-Cc:     linux-wireless@vger.kernel.org, Marek Vasut <marex@denx.de>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Angus Ainslie <angus@akkea.ca>,
+        Tue, 8 Nov 2022 04:36:10 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 822A6220ED;
+        Tue,  8 Nov 2022 01:36:09 -0800 (PST)
+Received: from canpemm500002.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N62v02zL1zpWG3;
+        Tue,  8 Nov 2022 17:32:28 +0800 (CST)
+Received: from localhost.localdomain (10.175.103.91) by
+ canpemm500002.china.huawei.com (7.192.104.244) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 8 Nov 2022 17:36:07 +0800
+From:   Wei Li <liwei391@huawei.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Martin Fuzzey <martin.fuzzey@flowbird.group>,
-        Martin Kepplinger <martink@posteo.de>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
-        Siva Rebbagondla <siva8118@gmail.com>, netdev@vger.kernel.org
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <166789327017.4985.4306929119411941567.kvalo@kernel.org>
-Date:   Tue,  8 Nov 2022 07:41:11 +0000 (UTC)
+        Paolo Abeni <pabeni@redhat.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <huawei.libin@huawei.com>
+Subject: [PATCH v1 2/3] rtlwifi: rtl8723ae: Correct the header guard of rtl8723ae/{fw,led,phy}.h
+Date:   Tue, 8 Nov 2022 17:34:46 +0800
+Message-ID: <20221108093447.3588889-3-liwei391@huawei.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221108093447.3588889-1-liwei391@huawei.com>
+References: <20221108093447.3588889-1-liwei391@huawei.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ canpemm500002.china.huawei.com (7.192.104.244)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Marek Vasut <marex@denx.de> wrote:
+Rename the header guard of rtl8723ae/{fw,led,phy}.h from __RTL92C* to
+__RTL8723E* that corresponding with the module name.
 
-> When using wpa_supplicant v2.10, this driver is no longer able to
-> associate with any AP and fails in the EAPOL 4-way handshake while
-> sending the 2/4 message to the AP. The problem is not present in
-> wpa_supplicant v2.9 or older. The problem stems from HostAP commit
-> 144314eaa ("wpa_supplicant: Send EAPOL frames over nl80211 where available")
-> which changes the way EAPOL frames are sent, from them being send
-> at L2 frames to them being sent via nl80211 control port.
-> 
-> An EAPOL frame sent as L2 frame is passed to the WiFi driver with
-> skb->protocol ETH_P_PAE, while EAPOL frame sent via nl80211 control
-> port has skb->protocol set to ETH_P_802_3 . The later happens in
-> ieee80211_tx_control_port(), where the EAPOL frame is encapsulated
-> into 802.3 frame.
-> 
-> The rsi_91x driver handles ETH_P_PAE EAPOL frames as high-priority
-> frames and sends them via highest-priority transmit queue, while
-> the ETH_P_802_3 frames are sent as regular frames. The EAPOL 4-way
-> handshake frames must be sent as highest-priority, otherwise the
-> 4-way handshake times out.
-> 
-> Therefore, to fix this problem, inspect the skb control flags and
-> if flag IEEE80211_TX_CTRL_PORT_CTRL_PROTO is set, assume this is
-> an EAPOL frame and transmit the frame via high-priority queue just
-> like other ETH_P_PAE frames.
-> 
-> Fixes: 0eb42586cf87 ("rsi: data packet descriptor enhancements")
-> Signed-off-by: Marek Vasut <marex@denx.de>
+Fixes: c592e631bcec ("rtlwifi: rtl8723ae: Add new driver")
+Signed-off-by: Wei Li <liwei391@huawei.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h  | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.h | 4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.h | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-Patch applied to wireless-next.git, thanks.
-
-b8f6efccbb9d wifi: rsi: Fix handling of 802.3 EAPOL frames sent via control port
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h
+index 3f9ed9b4428e..3ab4a7389012 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h
+@@ -1,8 +1,8 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ /* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+-#ifndef __RTL92C__FW__H__
+-#define __RTL92C__FW__H__
++#ifndef __RTL8723E__FW__H__
++#define __RTL8723E__FW__H__
+ 
+ #define FW_8192C_SIZE					0x3000
+ #define FW_8192C_START_ADDRESS			0x1000
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.h
+index 9f85845d23cd..372f02409dda 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.h
+@@ -1,8 +1,8 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ /* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+-#ifndef __RTL92CE_LED_H__
+-#define __RTL92CE_LED_H__
++#ifndef __RTL8723E_LED_H__
++#define __RTL8723E_LED_H__
+ 
+ void rtl8723e_init_sw_leds(struct ieee80211_hw *hw);
+ void rtl8723e_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.h
+index 98bfe02f66d5..40c89095fd57 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.h
+@@ -1,8 +1,8 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ /* Copyright(c) 2009-2012  Realtek Corporation.*/
+ 
+-#ifndef __RTL92C_PHY_H__
+-#define __RTL92C_PHY_H__
++#ifndef __RTL8723E_PHY_H__
++#define __RTL8723E_PHY_H__
+ 
+ #define MAX_PRECMD_CNT				16
+ #define MAX_RFDEPENDCMD_CNT			16
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20221104163339.227432-1-marex@denx.de/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.1
 
