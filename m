@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 024EBC43219
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Nov 2022 14:01:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63711C43219
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Nov 2022 14:45:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234931AbiKHOBo (ORCPT
+        id S234151AbiKHOpy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Nov 2022 09:01:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35900 "EHLO
+        Tue, 8 Nov 2022 09:45:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234957AbiKHOBk (ORCPT
+        with ESMTP id S234800AbiKHOpo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2022 09:01:40 -0500
+        Tue, 8 Nov 2022 09:45:44 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52A55682BD
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Nov 2022 06:01:39 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21AE210A8
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Nov 2022 06:45:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 05C30B81AF2
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Nov 2022 14:01:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E32D6C433D6;
-        Tue,  8 Nov 2022 14:01:35 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BC205B81B08
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Nov 2022 14:45:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81372C433D6;
+        Tue,  8 Nov 2022 14:45:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667916096;
-        bh=9prAyGVeteAqqEgdah8x4O25W796zsM/hMuDhu14HI0=;
+        s=k20201202; t=1667918740;
+        bh=2kooCGud+rjaS6L4Gd38qK6vl6TzkcqcMznVDB1kckk=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=ByzqXn4+OWE99tlqZypSWAaHb4gsVGWoAiYFV/1LFrPGUGwREoJHjQ8r4MK5vBDA3
-         8gOXFxczaw/xksGs6YM8sMqJcoC7l2GOrFmC86q+G4QD2jN3VtrnIp8vSz1Xr3AzkX
-         1XO8dgWynzQxIcizCK2W2+7nX+pwW97UEk0ddD1CoXq0IB3TvjrBgyAaGuOrsuWAHD
-         +gBbeHRZzITKUB7Er5BzDXp56RTgr/Jb3Ec6OIsXodYRXqMCu7QGEN4X0zKDCuMssj
-         Ym2LZGhURee7TTJY91eWoxzjMcGjRHAP7A74F4XUc2IbOdw0SqLkIncRq8eC8QVBWc
-         AVWa26JAZNQTQ==
+        b=Wqa17tY9DUXPi1vEdkphMT+axzdEDC3HrORIIEzjpzy3ODMARrJ4UmUfF4laAiyaW
+         8ioN1T1zlk7BUeQjoXsgec9ZPr7xcl57YgJdjEM+KRrPRJ+xMQb3whcBS331dfoLVt
+         buxvPQYZNESDcT+RRRQY0eNERL+dA1mFzApIWgZ/cuQbzyECkJNq9AvhGYIi6MsQnP
+         1D8guavBxaU1JA/wBjBsFVGUJ9oy+GwJlafR3M6CAEvvAMNTsY/7Mietj8E6jhKyFH
+         f4B9xAHF/wmjHb3S+9MY3RjkvQz8IusMhqzOOzcPJelScgPge6E/pCEg27D1AxFPb2
+         g8l+asUZCiBLA==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     Jeff Johnson <quic_jjohnson@quicinc.com>
 Cc:     <linux-wireless@vger.kernel.org>, <ath12k@lists.infradead.org>
-Subject: Re: [PATCH 34/50] wifi: ath12k: add mhi.h
+Subject: Re: [PATCH 35/50] wifi: ath12k: add pci.c
 References: <20220812161003.27279-1-kvalo@kernel.org>
-        <20220812161003.27279-35-kvalo@kernel.org>
-        <d4d4ab35-b38c-6369-e436-5eb37c502ca6@quicinc.com>
-Date:   Tue, 08 Nov 2022 16:01:34 +0200
-In-Reply-To: <d4d4ab35-b38c-6369-e436-5eb37c502ca6@quicinc.com> (Jeff
-        Johnson's message of "Thu, 18 Aug 2022 15:30:53 -0700")
-Message-ID: <87cz9xee9t.fsf@kernel.org>
+        <20220812161003.27279-36-kvalo@kernel.org>
+        <7b06d248-c976-6c9f-4d5c-5dec7b1d5511@quicinc.com>
+Date:   Tue, 08 Nov 2022 16:45:37 +0200
+In-Reply-To: <7b06d248-c976-6c9f-4d5c-5dec7b1d5511@quicinc.com> (Jeff
+        Johnson's message of "Thu, 18 Aug 2022 16:02:14 -0700")
+Message-ID: <878rklec8e.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -54,20 +54,76 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 Jeff Johnson <quic_jjohnson@quicinc.com> writes:
 
 > On 8/12/2022 9:09 AM, Kalle Valo wrote:
->
 >> From: Kalle Valo <quic_kvalo@quicinc.com>
 >>
 >> (Patches split into one patch per file for easier review, but the final
 >> commit will be one big patch. See the cover letter for more info.)
 >>
 >> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-
-[...]
-
->> +extern struct mhi_controller_config ath12k_mhi_config_qcn9274;
->> +extern struct mhi_controller_config ath12k_mhi_config_wcn7850;
+>> ---
+>>   drivers/net/wireless/ath/ath12k/pci.c | 1344 +++++++++++++++++++++++++++++++++
+>>   1 file changed, 1344 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath12k/pci.c
+>> b/drivers/net/wireless/ath/ath12k/pci.c
 >
-> imo both should be const
+> snip
+>
+>> +static void ath12k_pci_remove(struct pci_dev *pdev)
+>> +{
+>> +	struct ath12k_base *ab = pci_get_drvdata(pdev);
+>> +	struct ath12k_pci *ab_pci = ath12k_pci_priv(ab);
+>> +
+>> +	if (test_bit(ATH12K_FLAG_QMI_FAIL, &ab->dev_flags)) {
+>> +		ath12k_pci_power_down(ab);
+>> +		ath12k_qmi_deinit_service(ab);
+>> +		goto qmi_fail;
+>> +	}
+>> +
+>> +	set_bit(ATH12K_FLAG_UNREGISTERING, &ab->dev_flags);
+>> +
+>> +	cancel_work_sync(&ab->reset_work);
+>> +	ath12k_core_deinit(ab);
+>> +
+>> +qmi_fail:
+>> +	ath12k_mhi_unregister(ab_pci);
+>> +
+>> +	ath12k_pci_free_irq(ab);
+>> +	ath12k_pci_msi_free(ab_pci);
+>> +	ath12k_pci_free_region(ab_pci);
+>> +
+>> +	ath12k_hal_srng_deinit(ab);
+>> +	ath12k_ce_free_pipes(ab);
+>> +	destroy_workqueue(ab->workqueue_aux);
+>
+> it seems strange/asymetrical to destroy this here.
+>
+> it was allocated in ath12k_core_alloc() so I'd expect it to be
+> destroyed in ath12k_core_free() to maintain symmetry
+
+Fixed.
+
+> in addition I don't see ab->workqueue being destroyed, and imo that
+> should also take place in ath12k_core_free() for the same reason
+
+This is also fixed.
+
+>> +static SIMPLE_DEV_PM_OPS(ath12k_pci_pm_ops,
+>> +			 ath12k_pci_pm_suspend,
+>> +			 ath12k_pci_pm_resume);
+>> +
+>> +static struct pci_driver ath12k_pci_driver = {
+>> +	.name = "ath12k_pci",
+>> +	.id_table = ath12k_pci_id_table,
+>> +	.probe = ath12k_pci_probe,
+>> +	.remove = ath12k_pci_remove,
+>> +	.shutdown = ath12k_pci_shutdown,
+>> +#ifdef CONFIG_PM
+>> +	.driver.pm = &ath12k_pci_pm_ops,
+>> +#endif
+>
+> conditional compilation is unnecessary here since SIMPLE_DEV_PM_OPS
+> handles the conditional
 
 Fixed.
 
