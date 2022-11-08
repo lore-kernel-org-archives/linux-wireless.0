@@ -2,135 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B44C433FE
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Nov 2022 01:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F1BC433FE
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Nov 2022 07:40:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232391AbiKHBvp convert rfc822-to-8bit (ORCPT
+        id S233527AbiKHHkQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Nov 2022 20:51:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39270 "EHLO
+        Tue, 8 Nov 2022 02:40:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbiKHBvo (ORCPT
+        with ESMTP id S233433AbiKHHjx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2022 20:51:44 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E51D1D66D
-        for <linux-wireless@vger.kernel.org>; Mon,  7 Nov 2022 17:51:43 -0800 (PST)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2A81oxvK7027538, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2A81oxvK7027538
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 8 Nov 2022 09:50:59 +0800
-Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Tue, 8 Nov 2022 09:51:37 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 8 Nov 2022 09:51:36 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b]) by
- RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b%5]) with mapi id
- 15.01.2375.007; Tue, 8 Nov 2022 09:51:36 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        "kvalo@kernel.org" <kvalo@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2] wifi: rtw89: 8852b: change debug mask of message of no TX resource
-Thread-Topic: [PATCH v2] wifi: rtw89: 8852b: change debug mask of message of
- no TX resource
-Thread-Index: AQHY8xN6CWZUdm/fEkimHHP3Z4ZYnq40Qsww
-Date:   Tue, 8 Nov 2022 01:51:36 +0000
-Message-ID: <fc1f2b8dbaab427e85eede5c7783be5e@realtek.com>
-References: <20221108014230.11068-1-pkshih@realtek.com>
-In-Reply-To: <20221108014230.11068-1-pkshih@realtek.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS03.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/11/7_=3F=3F_10:50:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Tue, 8 Nov 2022 02:39:53 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A6424047C
+        for <linux-wireless@vger.kernel.org>; Mon,  7 Nov 2022 23:38:46 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3EA586134B
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Nov 2022 07:38:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11EB7C433D6;
+        Tue,  8 Nov 2022 07:38:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667893125;
+        bh=qqCHVGdy1NTRGJfq+z6rM25KMkvl/TwScrD2H6QGlqg=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=OOiTd5UtTMY9BKUF+z4Wqdz4gsfprgWtx53ceeiSmHVDb1vm4o28epeFs6OetwFdJ
+         P2eG3oftA90ARK5/qkrPvjkqiKkKwH8MgyxTUn1B8KtXTAoi21DfDp9u3zYbRLn0B+
+         MiLngALoAVjhwG7m4+W62jcqm9eijUu40RaeyF/ncdLOuvttwuZDixFcpVH48XwCrJ
+         zLMAo1oywMVS7z5d1ISLDAOyVQDcAokDVz2ia2B0RLICmU3RnIHEUXDkMd6FiDuJqO
+         ZtrAFt/M8jsn+kq1z/rNkXLH4JQop20u3kRuykX0Bk5d733zKWhMiDzpAavS487mpH
+         kypaAPQt7iCRQ==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v4 1/3] wifi: brcmfmac: correctly remove all p2p vif
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20221024085215.27616-2-ian.lin@infineon.com>
+References: <20221024085215.27616-2-ian.lin@infineon.com>
+To:     Ian Lin <ian.lin@infineon.com>
+Cc:     <linux-wireless@vger.kernel.org>,
+        <brcm80211-dev-list@broadcom.com>, <franky.lin@broadcom.com>,
+        <hante.meuleman@broadcom.com>, <Double.Lo@infineon.com>,
+        <ian.lin@infineon.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <166789311335.4985.13018926346518083987.kvalo@kernel.org>
+Date:   Tue,  8 Nov 2022 07:38:43 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Ian Lin <ian.lin@infineon.com> wrote:
 
+> From: Brian Henriquez <brian.henriquez@cypress.com>
+> 
+> When deleting a P2P AGO interface we should make sure that
+> relevant entry in bss_idx[] array is removed. We were always
+> removing only 'vif' at P2PAPI_BSSCFG_CONNECTION before,
+> regardless of the number of created P2P AGO interfaces.
+> brcmfmac: correctly remove all p2p vif
+> 
+> Signed-off-by: Brian Henriquez <brian.henriquez@cypress.com>
+> Signed-off-by: Chi-hsien Lin <chi-hsien.lin@infineon.com>
+> Signed-off-by: Ian Lin <ian.lin@infineon.com>
 
-> -----Original Message-----
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> Sent: Tuesday, November 8, 2022 9:43 AM
-> To: kvalo@kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Subject: [PATCH v2] wifi: rtw89: 8852b: change debug mask of message of no TX resource
-> 
-> 8852B has smaller TX FIFO than others in WiFi chip, so it would be buffer
-> full frequently, but it doesn't affect TX performance. However, it shows
-> verbose debug messages with RTW89_DBG_UNEXP mask that is used to indicate
-> abnormal behavior, so change debug mask to RTW89_DBG_TXRX for 8852B.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+3 patches applied to wireless-next.git, thanks.
 
-Sorry, I forget to add changelog of v2.
+c7caaa6f7278 wifi: brcmfmac: correctly remove all p2p vif
+52617bee3718 wifi: brcmfmac: Fix for when connect request is not success
+c81c1fd4e907 wifi: brcmfmac: Avoiding Connection delay
 
-v2: add comment to explain why we change debug mask for certain situations.
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20221024085215.27616-2-ian.lin@infineon.com/
 
-> ---
->  drivers/net/wireless/realtek/rtw89/pci.c | 16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-> index 07a2e23759f0b..7aa0af18cdd50 100644
-> --- a/drivers/net/wireless/realtek/rtw89/pci.c
-> +++ b/drivers/net/wireless/realtek/rtw89/pci.c
-> @@ -971,8 +971,10 @@ static u32 __rtw89_pci_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev,
->  	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
->  	struct rtw89_pci_tx_ring *tx_ring = &rtwpci->tx_rings[txch];
->  	struct rtw89_pci_tx_wd_ring *wd_ring = &tx_ring->wd_ring;
-> +	const struct rtw89_chip_info *chip = rtwdev->chip;
->  	u32 bd_cnt, wd_cnt, min_cnt = 0;
->  	struct rtw89_pci_rx_ring *rx_ring;
-> +	enum rtw89_debug_mask debug_mask;
->  	u32 cnt;
-> 
->  	rx_ring = &rtwpci->rx_rings[RTW89_RXCH_RPQ];
-> @@ -996,10 +998,20 @@ static u32 __rtw89_pci_check_and_reclaim_tx_resource(struct rtw89_dev *rtwdev,
->  	bd_cnt = rtw89_pci_get_avail_txbd_num(tx_ring);
->  	wd_cnt = wd_ring->curr_num;
->  	min_cnt = min(bd_cnt, wd_cnt);
-> -	if (min_cnt == 0)
-> -		rtw89_debug(rtwdev, rtwpci->low_power ? RTW89_DBG_TXRX : RTW89_DBG_UNEXP,
-> +	if (min_cnt == 0) {
-> +		/* This message can be frequently shown in low power mode or
-> +		 * high traffic with 8852B, and we have recognized it as normal
-> +		 * behavior, so print with mask RTW89_DBG_TXRX in these situations.
-> +		 */
-> +		if (rtwpci->low_power || chip->chip_id == RTL8852B)
-> +			debug_mask = RTW89_DBG_TXRX;
-> +		else
-> +			debug_mask = RTW89_DBG_UNEXP;
-> +
-> +		rtw89_debug(rtwdev, debug_mask,
->  			    "still no tx resource after reclaim: wd_cnt=%d bd_cnt=%d\n",
->  			    wd_cnt, bd_cnt);
-> +	}
-> 
->  out_unlock:
->  	spin_unlock_bh(&rtwpci->trx_lock);
-> --
-> 2.25.1
-> 
-> 
-> ------Please consider the environment before printing this e-mail.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
