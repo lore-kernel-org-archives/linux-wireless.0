@@ -2,56 +2,56 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D6CEC433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Nov 2022 20:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1067CC43217
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Nov 2022 20:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230336AbiKIUgu (ORCPT
+        id S230413AbiKIUgv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Nov 2022 15:36:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40682 "EHLO
+        Wed, 9 Nov 2022 15:36:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229578AbiKIUgs (ORCPT
+        with ESMTP id S230131AbiKIUgt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2022 15:36:48 -0500
+        Wed, 9 Nov 2022 15:36:49 -0500
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 594EA6348
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D20526571
         for <linux-wireless@vger.kernel.org>; Wed,  9 Nov 2022 12:36:43 -0800 (PST)
-X-UUID: 7cf933f76bb04ef396e7b5a5273db250-20221110
+X-UUID: fec2de67236d4e3ca90c3eff30ed51ef-20221110
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Cm6aeQXtOIew7s/6XKyXKoAR6/e/hUbX5UAYzfJ20yc=;
-        b=BKpLNMT03EysaD1VbtNAvPs+ryS4pj+04quskplJGOvKyIlQltaBrjxaRA65w71xq7ftzIR5GGXgqQfZazL1sR3JK3+C5HtiVtgUHQRLaMlFLTr8uTXhzJ8ZJjwt/EFxdLetU4m7uZA1G82BOMimZ0dheZmPNtJVqp4nYoAR7Vk=;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=uZhvCrRiMi2aBYLOV+LTIHtca+9+6S37UZOnpSic+js=;
+        b=IoYmy7NGsiZIP4H0lFa6cSrfrmWRBmhxnSkF3/ahXJzP9AFewusFyD1LGxXTObcm7mLCdTtFaK3yc3OcLFcvXa4dI0dMx7qxzdCvVsLPIEnwuRgysOOyb6ndMdsLjwR2nNiV+wl6tyG67mTBG/1IpyTA0ABRDJiZMJnk9+9GkqI=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.12,REQID:e3b9e887-0111-42d3-bf6c-776d737bba94,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:-5
-X-CID-META: VersionHash:62cd327,CLOUDID:3f1a185d-100c-4555-952b-a62c895efded,B
+X-CID-O-INFO: VERSION:1.1.12,REQID:9c8befb4-1afa-4190-830b-5aa165cd5088,IP:0,U
+        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:-25
+X-CID-META: VersionHash:62cd327,CLOUDID:d5f9cf85-088c-4756-8f76-577be701e693,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 7cf933f76bb04ef396e7b5a5273db250-20221110
+        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: fec2de67236d4e3ca90c3eff30ed51ef-20221110
 Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1000246709; Thu, 10 Nov 2022 04:36:37 +0800
+        with ESMTP id 1236080848; Thu, 10 Nov 2022 04:36:36 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Thu, 10 Nov 2022 04:36:36 +0800
+ 15.2.792.15; Thu, 10 Nov 2022 04:36:35 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Thu, 10 Nov 2022 04:36:36 +0800
+ 15.2.792.15 via Frontend Transport; Thu, 10 Nov 2022 04:36:35 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
 CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Shayne Chen <shayne.chen@mediatek.com>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v3 3/4] wifi: mt76: mt7915: add full system reset into debugfs
-Date:   Thu, 10 Nov 2022 04:36:33 +0800
-Message-ID: <8412f8ef42951780653813495a7c0f7f8f80c465.1668024217.git.ryder.lee@mediatek.com>
+        Bo Jiao <bo.jiao@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Bo Jiao <Bo.Jiao@mediatek.com>
+Subject: [PATCH v3 1/4] wifi: mt76: mt7915: rework mt7915_dma_reset()
+Date:   Thu, 10 Nov 2022 04:36:31 +0800
+Message-ID: <3e6ef9fb1d2e09d415b4c489cc9c62134a05b3c1.1668024217.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <3e6ef9fb1d2e09d415b4c489cc9c62134a05b3c1.1668024217.git.ryder.lee@mediatek.com>
-References: <3e6ef9fb1d2e09d415b4c489cc9c62134a05b3c1.1668024217.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -59,235 +59,262 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Trigger firmware crash and enable full system recovery through debugfs.
-This also renames knob "fw_ser" to a clear-cut name "sys_recovery".
+From: Bo Jiao <bo.jiao@mediatek.com>
 
+Reuse mt7915_dma_disable() to reduce duplicated code.
+This is a preliminary patch to enable full system reset.
+
+Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Bo Jiao <Bo.Jiao@mediatek.com>
 ---
-change since v2 - print out the text for what the various values that can be written to this debugfs file do.
+change since v3 - fix indentation
 ---
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 81 +++++++++++++++----
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |  5 ++
- .../net/wireless/mediatek/mt76/mt7915/mcu.h   |  2 +
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  2 +
- .../net/wireless/mediatek/mt76/mt7915/regs.h  |  4 +
- 5 files changed, 80 insertions(+), 14 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/dma.c   | 110 ++++++++++++++----
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   |  69 +----------
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |   1 +
+ 3 files changed, 91 insertions(+), 89 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index e1d15394a621..10af98ea5ea8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -46,8 +46,8 @@ DEFINE_DEBUGFS_ATTRIBUTE(fops_implicit_txbf, mt7915_implicit_txbf_get,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+index e4fa240834d8..38360f940747 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+@@ -50,23 +50,37 @@ static void mt7915_dma_config(struct mt7915_dev *dev)
+ #define TXQ_CONFIG(q, wfdma, int, id)	Q_CONFIG(__TXQ(q), (wfdma), (int), (id))
  
- /* test knob of system error recovery */
- static ssize_t
--mt7915_fw_ser_set(struct file *file, const char __user *user_buf,
--		  size_t count, loff_t *ppos)
-+mt7915_sys_recovery_set(struct file *file, const char __user *user_buf,
-+			size_t count, loff_t *ppos)
- {
- 	struct mt7915_phy *phy = file->private_data;
- 	struct mt7915_dev *dev = phy->dev;
-@@ -71,8 +71,18 @@ mt7915_fw_ser_set(struct file *file, const char __user *user_buf,
- 		return -EINVAL;
+ 	if (is_mt7915(&dev->mt76)) {
+-		RXQ_CONFIG(MT_RXQ_MAIN, WFDMA0, MT_INT_RX_DONE_BAND0, MT7915_RXQ_BAND0);
+-		RXQ_CONFIG(MT_RXQ_MCU, WFDMA1, MT_INT_RX_DONE_WM, MT7915_RXQ_MCU_WM);
+-		RXQ_CONFIG(MT_RXQ_MCU_WA, WFDMA1, MT_INT_RX_DONE_WA, MT7915_RXQ_MCU_WA);
+-		RXQ_CONFIG(MT_RXQ_BAND1, WFDMA0, MT_INT_RX_DONE_BAND1, MT7915_RXQ_BAND1);
+-		RXQ_CONFIG(MT_RXQ_BAND1_WA, WFDMA1, MT_INT_RX_DONE_WA_EXT, MT7915_RXQ_MCU_WA_EXT);
+-		RXQ_CONFIG(MT_RXQ_MAIN_WA, WFDMA1, MT_INT_RX_DONE_WA_MAIN, MT7915_RXQ_MCU_WA);
++		RXQ_CONFIG(MT_RXQ_MAIN, WFDMA0, MT_INT_RX_DONE_BAND0,
++			   MT7915_RXQ_BAND0);
++		RXQ_CONFIG(MT_RXQ_MCU, WFDMA1, MT_INT_RX_DONE_WM,
++			   MT7915_RXQ_MCU_WM);
++		RXQ_CONFIG(MT_RXQ_MCU_WA, WFDMA1, MT_INT_RX_DONE_WA,
++			   MT7915_RXQ_MCU_WA);
++		RXQ_CONFIG(MT_RXQ_BAND1, WFDMA0, MT_INT_RX_DONE_BAND1,
++			   MT7915_RXQ_BAND1);
++		RXQ_CONFIG(MT_RXQ_BAND1_WA, WFDMA1, MT_INT_RX_DONE_WA_EXT,
++			   MT7915_RXQ_MCU_WA_EXT);
++		RXQ_CONFIG(MT_RXQ_MAIN_WA, WFDMA1, MT_INT_RX_DONE_WA_MAIN,
++			   MT7915_RXQ_MCU_WA);
+ 		TXQ_CONFIG(0, WFDMA1, MT_INT_TX_DONE_BAND0, MT7915_TXQ_BAND0);
+ 		TXQ_CONFIG(1, WFDMA1, MT_INT_TX_DONE_BAND1, MT7915_TXQ_BAND1);
+-		MCUQ_CONFIG(MT_MCUQ_WM, WFDMA1, MT_INT_TX_DONE_MCU_WM, MT7915_TXQ_MCU_WM);
+-		MCUQ_CONFIG(MT_MCUQ_WA, WFDMA1, MT_INT_TX_DONE_MCU_WA, MT7915_TXQ_MCU_WA);
+-		MCUQ_CONFIG(MT_MCUQ_FWDL, WFDMA1, MT_INT_TX_DONE_FWDL, MT7915_TXQ_FWDL);
++		MCUQ_CONFIG(MT_MCUQ_WM, WFDMA1, MT_INT_TX_DONE_MCU_WM,
++			    MT7915_TXQ_MCU_WM);
++		MCUQ_CONFIG(MT_MCUQ_WA, WFDMA1, MT_INT_TX_DONE_MCU_WA,
++			    MT7915_TXQ_MCU_WA);
++		MCUQ_CONFIG(MT_MCUQ_FWDL, WFDMA1, MT_INT_TX_DONE_FWDL,
++			    MT7915_TXQ_FWDL);
+ 	} else {
+-		RXQ_CONFIG(MT_RXQ_MCU, WFDMA0, MT_INT_RX_DONE_WM, MT7916_RXQ_MCU_WM);
+-		RXQ_CONFIG(MT_RXQ_BAND1_WA, WFDMA0, MT_INT_RX_DONE_WA_EXT_MT7916, MT7916_RXQ_MCU_WA_EXT);
+-		MCUQ_CONFIG(MT_MCUQ_WM, WFDMA0, MT_INT_TX_DONE_MCU_WM, MT7915_TXQ_MCU_WM);
+-		MCUQ_CONFIG(MT_MCUQ_WA, WFDMA0, MT_INT_TX_DONE_MCU_WA_MT7916, MT7915_TXQ_MCU_WA);
+-		MCUQ_CONFIG(MT_MCUQ_FWDL, WFDMA0, MT_INT_TX_DONE_FWDL, MT7915_TXQ_FWDL);
++		RXQ_CONFIG(MT_RXQ_MCU, WFDMA0, MT_INT_RX_DONE_WM,
++			   MT7916_RXQ_MCU_WM);
++		RXQ_CONFIG(MT_RXQ_BAND1_WA, WFDMA0, MT_INT_RX_DONE_WA_EXT_MT7916,
++			   MT7916_RXQ_MCU_WA_EXT);
++		MCUQ_CONFIG(MT_MCUQ_WM, WFDMA0, MT_INT_TX_DONE_MCU_WM,
++			    MT7915_TXQ_MCU_WM);
++		MCUQ_CONFIG(MT_MCUQ_WA, WFDMA0, MT_INT_TX_DONE_MCU_WA_MT7916,
++			    MT7915_TXQ_MCU_WA);
++		MCUQ_CONFIG(MT_MCUQ_FWDL, WFDMA0, MT_INT_TX_DONE_FWDL,
++			    MT7915_TXQ_FWDL);
  
- 	switch (val) {
-+	/*
-+	 * 0: grab firmware current SER state.
-+	 * 1: trigger & enable system error L1 recovery.
-+	 * 2: trigger & enable system error L2 recovery.
-+	 * 3: trigger & enable system error L3 rx abort.
-+	 * 4: trigger & enable system error L3 tx abort
-+	 * 5: trigger & enable system error L3 tx disable.
-+	 * 6: trigger & enable system error L3 bf recovery.
-+	 * 7: trigger & enable system error full recovery.
-+	 * 8: trigger firmware crash.
-+	 */
- 	case SER_QUERY:
--		/* grab firmware SER stats */
- 		ret = mt7915_mcu_set_ser(dev, 0, 0, ext_phy);
- 		break;
- 	case SER_SET_RECOVER_L1:
-@@ -87,6 +97,23 @@ mt7915_fw_ser_set(struct file *file, const char __user *user_buf,
- 
- 		ret = mt7915_mcu_set_ser(dev, SER_RECOVER, val, ext_phy);
- 		break;
-+
-+	/* enable full chip reset */
-+	case SER_SET_RECOVER_FULL:
-+		mt76_set(dev, MT_WFDMA0_MCU_HOST_INT_ENA, MT_MCU_CMD_WDT_MASK);
-+		ret = mt7915_mcu_set_ser(dev, 1, 3, ext_phy);
-+		if (ret)
-+			return ret;
-+
-+		dev->recovery.state |= MT_MCU_CMD_WDT_MASK;
-+		mt7915_reset(dev);
-+		break;
-+
-+	/* WARNING: trigger firmware crash */
-+	case SER_SET_SYSTEM_ASSERT:
-+		mt76_wr(dev, MT_MCU_WM_CIRQ_EINT_MASK_CLR_ADDR, BIT(18));
-+		mt76_wr(dev, MT_MCU_WM_CIRQ_EINT_SOFT_ADDR, BIT(18));
-+		break;
- 	default:
- 		break;
+ 		if (is_mt7916(&dev->mt76) && mtk_wed_device_active(&dev->mt76.mmio.wed)) {
+ 			RXQ_CONFIG(MT_RXQ_MAIN, WFDMA0, MT_INT_WED_RX_DONE_BAND0_MT7916,
+@@ -77,16 +91,23 @@ static void mt7915_dma_config(struct mt7915_dev *dev)
+ 				   MT7916_RXQ_BAND1);
+ 			RXQ_CONFIG(MT_RXQ_MAIN_WA, WFDMA0, MT_INT_WED_RX_DONE_WA_MAIN_MT7916,
+ 				   MT7916_RXQ_MCU_WA_MAIN);
+-			TXQ_CONFIG(0, WFDMA0, MT_INT_WED_TX_DONE_BAND0, MT7915_TXQ_BAND0);
+-			TXQ_CONFIG(1, WFDMA0, MT_INT_WED_TX_DONE_BAND1, MT7915_TXQ_BAND1);
++			TXQ_CONFIG(0, WFDMA0, MT_INT_WED_TX_DONE_BAND0,
++				   MT7915_TXQ_BAND0);
++			TXQ_CONFIG(1, WFDMA0, MT_INT_WED_TX_DONE_BAND1,
++				   MT7915_TXQ_BAND1);
+ 		} else {
+-			RXQ_CONFIG(MT_RXQ_MAIN, WFDMA0, MT_INT_RX_DONE_BAND0_MT7916, MT7916_RXQ_BAND0);
+-			RXQ_CONFIG(MT_RXQ_MCU_WA, WFDMA0, MT_INT_RX_DONE_WA, MT7916_RXQ_MCU_WA);
+-			RXQ_CONFIG(MT_RXQ_BAND1, WFDMA0, MT_INT_RX_DONE_BAND1_MT7916, MT7916_RXQ_BAND1);
++			RXQ_CONFIG(MT_RXQ_MAIN, WFDMA0, MT_INT_RX_DONE_BAND0_MT7916,
++				   MT7916_RXQ_BAND0);
++			RXQ_CONFIG(MT_RXQ_MCU_WA, WFDMA0, MT_INT_RX_DONE_WA,
++				   MT7916_RXQ_MCU_WA);
++			RXQ_CONFIG(MT_RXQ_BAND1, WFDMA0, MT_INT_RX_DONE_BAND1_MT7916,
++				   MT7916_RXQ_BAND1);
+ 			RXQ_CONFIG(MT_RXQ_MAIN_WA, WFDMA0, MT_INT_RX_DONE_WA_MAIN_MT7916,
+ 				   MT7916_RXQ_MCU_WA_MAIN);
+-			TXQ_CONFIG(0, WFDMA0, MT_INT_TX_DONE_BAND0, MT7915_TXQ_BAND0);
+-			TXQ_CONFIG(1, WFDMA0, MT_INT_TX_DONE_BAND1, MT7915_TXQ_BAND1);
++			TXQ_CONFIG(0, WFDMA0, MT_INT_TX_DONE_BAND0,
++				   MT7915_TXQ_BAND0);
++			TXQ_CONFIG(1, WFDMA0, MT_INT_TX_DONE_BAND1,
++				   MT7915_TXQ_BAND1);
+ 		}
  	}
-@@ -95,20 +122,45 @@ mt7915_fw_ser_set(struct file *file, const char __user *user_buf,
+ }
+@@ -514,6 +535,53 @@ int mt7915_dma_init(struct mt7915_dev *dev, struct mt7915_phy *phy2)
+ 	return 0;
  }
  
- static ssize_t
--mt7915_fw_ser_get(struct file *file, char __user *user_buf,
--		  size_t count, loff_t *ppos)
-+mt7915_sys_recovery_get(struct file *file, char __user *user_buf,
-+			size_t count, loff_t *ppos)
- {
- 	struct mt7915_phy *phy = file->private_data;
- 	struct mt7915_dev *dev = phy->dev;
- 	char *buff;
- 	int desc = 0;
- 	ssize_t ret;
--	static const size_t bufsz = 400;
-+	static const size_t bufsz = 1024;
- 
- 	buff = kmalloc(bufsz, GFP_KERNEL);
- 	if (!buff)
- 		return -ENOMEM;
- 
-+	/* HELP */
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "Please echo the correct value ...\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "0: grab firmware transient SER state\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "1: trigger system error L1 recovery\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "2: trigger system error L2 recovery\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "3: trigger system error L3 rx abort\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "4: trigger system error L3 tx abort\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "5: trigger system error L3 tx disable\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "6: trigger system error L3 bf recovery\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "7: trigger system error full recovery\n");
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "8: trigger firmware crash\n");
++int mt7915_dma_reset(struct mt7915_dev *dev, bool force)
++{
++	struct mt76_phy *mphy_ext = dev->mt76.phys[MT_BAND1];
++	int i;
 +
-+	/* SER statistics */
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "\nlet's dump firmware SER statistics...\n");
- 	desc += scnprintf(buff + desc, bufsz - desc,
- 			  "::E  R , SER_STATUS        = 0x%08x\n",
- 			  mt76_rr(dev, MT_SWDEF_SER_STATS));
-@@ -139,15 +191,19 @@ mt7915_fw_ser_get(struct file *file, char __user *user_buf,
- 	desc += scnprintf(buff + desc, bufsz - desc,
- 			  "::E  R , SER_LMAC_WISR7_B1 = 0x%08x\n",
- 			  mt76_rr(dev, MT_SWDEF_LAMC_WISR7_BN1_STATS));
-+	desc += scnprintf(buff + desc, bufsz - desc,
-+			  "\nSYS_RESET_COUNT: WM %d, WA %d\n",
-+			  dev->recovery.wm_reset_count,
-+			  dev->recovery.wa_reset_count);
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
- 	kfree(buff);
- 	return ret;
- }
- 
--static const struct file_operations mt7915_fw_ser_ops = {
--	.write = mt7915_fw_ser_set,
--	.read = mt7915_fw_ser_get,
-+static const struct file_operations mt7915_sys_recovery_ops = {
-+	.write = mt7915_sys_recovery_set,
-+	.read = mt7915_sys_recovery_get,
- 	.open = simple_open,
- 	.llseek = default_llseek,
- };
-@@ -598,10 +654,6 @@ mt7915_fw_util_wm_show(struct seq_file *file, void *data)
- 	struct mt7915_dev *dev = file->private;
- 
- 	seq_printf(file, "Program counter: 0x%x\n", mt76_rr(dev, MT_WM_MCU_PC));
--	seq_printf(file, "Exception state: 0x%x\n",
--		   is_mt7915(&dev->mt76) ?
--		   (u32)mt76_get_field(dev, MT_FW_EXCEPTION, GENMASK(15, 8)) :
--		   (u32)mt76_get_field(dev, MT_FW_EXCEPTION, GENMASK(7, 0)));
- 
- 	if (dev->fw.debug_wm) {
- 		seq_printf(file, "Busy: %u%%  Peak busy: %u%%\n",
-@@ -1010,7 +1062,8 @@ int mt7915_init_debugfs(struct mt7915_phy *phy)
- 	debugfs_create_file("xmit-queues", 0400, dir, phy,
- 			    &mt7915_xmit_queues_fops);
- 	debugfs_create_file("tx_stats", 0400, dir, phy, &mt7915_tx_stats_fops);
--	debugfs_create_file("fw_ser", 0600, dir, phy, &mt7915_fw_ser_ops);
-+	debugfs_create_file("sys_recovery", 0600, dir, phy,
-+			    &mt7915_sys_recovery_ops);
- 	debugfs_create_file("fw_debug_wm", 0600, dir, dev, &fops_fw_debug_wm);
- 	debugfs_create_file("fw_debug_wa", 0600, dir, dev, &fops_fw_debug_wa);
- 	debugfs_create_file("fw_debug_bin", 0600, dir, dev, &fops_fw_debug_bin);
++	/* clean up hw queues */
++	for (i = 0; i < ARRAY_SIZE(dev->mt76.phy.q_tx); i++) {
++		mt76_queue_tx_cleanup(dev, dev->mphy.q_tx[i], true);
++		if (mphy_ext)
++			mt76_queue_tx_cleanup(dev, mphy_ext->q_tx[i], true);
++	}
++
++	for (i = 0; i < ARRAY_SIZE(dev->mt76.q_mcu); i++)
++		mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[i], true);
++
++	mt76_for_each_q_rx(&dev->mt76, i)
++		mt76_queue_rx_cleanup(dev, &dev->mt76.q_rx[i]);
++
++	/* reset wfsys */
++	if (force)
++		mt7915_wfsys_reset(dev);
++
++	mt7915_dma_disable(dev, force);
++
++	/* reset hw queues */
++	for (i = 0; i < __MT_TXQ_MAX; i++) {
++		mt76_queue_reset(dev, dev->mphy.q_tx[i]);
++		if (mphy_ext)
++			mt76_queue_reset(dev, mphy_ext->q_tx[i]);
++	}
++
++	for (i = 0; i < __MT_MCUQ_MAX; i++)
++		mt76_queue_reset(dev, dev->mt76.q_mcu[i]);
++
++	mt76_for_each_q_rx(&dev->mt76, i)
++		mt76_queue_reset(dev, &dev->mt76.q_rx[i]);
++
++	mt76_tx_status_check(&dev->mt76, true);
++
++	mt7915_dma_enable(dev);
++
++	mt76_for_each_q_rx(&dev->mt76, i)
++		mt76_queue_rx_reset(dev, i);
++
++	return 0;
++}
++
+ void mt7915_dma_cleanup(struct mt7915_dev *dev)
+ {
+ 	mt7915_dma_disable(dev, true);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index 69ce3b39aa53..c8e69644c552 100644
+index 324f0f58572b..3b1259f14de6 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -1503,6 +1503,11 @@ void mt7915_mac_reset_work(struct work_struct *work)
- 		mt76_clear(dev, MT_WFDMA0_MCU_HOST_INT_ENA,
- 			   MT_MCU_CMD_WDT_MASK);
+@@ -1306,73 +1306,6 @@ mt7915_update_beacons(struct mt7915_dev *dev)
+ 		mt7915_update_vif_beacon, mphy_ext->hw);
+ }
  
-+		if (READ_ONCE(dev->recovery.state) & MT_MCU_CMD_WA_WDT)
-+			dev->recovery.wa_reset_count++;
-+		else
-+			dev->recovery.wm_reset_count++;
-+
- 		mt7915_mac_full_reset(dev);
+-static void
+-mt7915_dma_reset(struct mt7915_dev *dev)
+-{
+-	struct mt76_phy *mphy_ext = dev->mt76.phys[MT_BAND1];
+-	u32 hif1_ofs = MT_WFDMA0_PCIE1(0) - MT_WFDMA0(0);
+-	int i;
+-
+-	mt76_clear(dev, MT_WFDMA0_GLO_CFG,
+-		   MT_WFDMA0_GLO_CFG_TX_DMA_EN |
+-		   MT_WFDMA0_GLO_CFG_RX_DMA_EN);
+-
+-	if (is_mt7915(&dev->mt76))
+-		mt76_clear(dev, MT_WFDMA1_GLO_CFG,
+-			   MT_WFDMA1_GLO_CFG_TX_DMA_EN |
+-			   MT_WFDMA1_GLO_CFG_RX_DMA_EN);
+-	if (dev->hif2) {
+-		mt76_clear(dev, MT_WFDMA0_GLO_CFG + hif1_ofs,
+-			   MT_WFDMA0_GLO_CFG_TX_DMA_EN |
+-			   MT_WFDMA0_GLO_CFG_RX_DMA_EN);
+-
+-		if (is_mt7915(&dev->mt76))
+-			mt76_clear(dev, MT_WFDMA1_GLO_CFG + hif1_ofs,
+-				   MT_WFDMA1_GLO_CFG_TX_DMA_EN |
+-				   MT_WFDMA1_GLO_CFG_RX_DMA_EN);
+-	}
+-
+-	usleep_range(1000, 2000);
+-
+-	for (i = 0; i < __MT_TXQ_MAX; i++) {
+-		mt76_queue_tx_cleanup(dev, dev->mphy.q_tx[i], true);
+-		if (mphy_ext)
+-			mt76_queue_tx_cleanup(dev, mphy_ext->q_tx[i], true);
+-	}
+-
+-	for (i = 0; i < __MT_MCUQ_MAX; i++)
+-		mt76_queue_tx_cleanup(dev, dev->mt76.q_mcu[i], true);
+-
+-	mt76_for_each_q_rx(&dev->mt76, i)
+-		mt76_queue_rx_reset(dev, i);
+-
+-	mt76_tx_status_check(&dev->mt76, true);
+-
+-	/* re-init prefetch settings after reset */
+-	mt7915_dma_prefetch(dev);
+-
+-	mt76_set(dev, MT_WFDMA0_GLO_CFG,
+-		 MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN);
+-	if (is_mt7915(&dev->mt76))
+-		mt76_set(dev, MT_WFDMA1_GLO_CFG,
+-			 MT_WFDMA1_GLO_CFG_TX_DMA_EN |
+-			 MT_WFDMA1_GLO_CFG_RX_DMA_EN |
+-			 MT_WFDMA1_GLO_CFG_OMIT_TX_INFO |
+-			 MT_WFDMA1_GLO_CFG_OMIT_RX_INFO);
+-	if (dev->hif2) {
+-		mt76_set(dev, MT_WFDMA0_GLO_CFG + hif1_ofs,
+-			 MT_WFDMA0_GLO_CFG_TX_DMA_EN |
+-			 MT_WFDMA0_GLO_CFG_RX_DMA_EN);
+-
+-		if (is_mt7915(&dev->mt76))
+-			mt76_set(dev, MT_WFDMA1_GLO_CFG + hif1_ofs,
+-				 MT_WFDMA1_GLO_CFG_TX_DMA_EN |
+-				 MT_WFDMA1_GLO_CFG_RX_DMA_EN |
+-				 MT_WFDMA1_GLO_CFG_OMIT_TX_INFO |
+-				 MT_WFDMA1_GLO_CFG_OMIT_RX_INFO);
+-	}
+-}
+-
+ void mt7915_tx_token_put(struct mt7915_dev *dev)
+ {
+ 	struct mt76_txwi_cache *txwi;
+@@ -1424,7 +1357,7 @@ void mt7915_mac_reset_work(struct work_struct *work)
+ 	mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_DMA_STOPPED);
  
- 		/* enable mcu irq */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-index 87cd1bfff3e6..5a8c57a1421f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
-@@ -448,6 +448,8 @@ enum {
- 	SER_SET_RECOVER_L3_TX_ABORT,
- 	SER_SET_RECOVER_L3_TX_DISABLE,
- 	SER_SET_RECOVER_L3_BF,
-+	SER_SET_RECOVER_FULL,
-+	SER_SET_SYSTEM_ASSERT,
- 	/* action */
- 	SER_ENABLE = 2,
- 	SER_RECOVER
+ 	if (mt7915_wait_reset_state(dev, MT_MCU_CMD_RESET_DONE)) {
+-		mt7915_dma_reset(dev);
++		mt7915_dma_reset(dev, false);
+ 
+ 		mt7915_tx_token_put(dev);
+ 		idr_init(&dev->mt76.token);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 49caf7b21a20..96ef06511552 100644
+index fe6a6d3b0a32..5af26e60e902 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -306,6 +306,8 @@ struct mt7915_dev {
- 
- 	struct {
- 		u32 state;
-+		u32 wa_reset_count;
-+		u32 wm_reset_count;
- 		bool hw_full_reset:1;
- 		bool hw_init_done:1;
- 		bool restart:1;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index 9120380d74c6..d7756cb0d29b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -711,6 +711,8 @@ enum offs_rev {
- #define MT_MCU_CMD_NORMAL_STATE		BIT(5)
- #define MT_MCU_CMD_ERROR_MASK		GENMASK(5, 1)
- 
-+#define MT_MCU_CMD_WA_WDT		BIT(31)
-+#define MT_MCU_CMD_WM_WDT		BIT(30)
- #define MT_MCU_CMD_WDT_MASK		GENMASK(31, 30)
- 
- /* TOP RGU */
-@@ -1129,5 +1131,7 @@ enum offs_rev {
- #define MT_MCU_WM_CIRQ(ofs)			(MT_MCU_WM_CIRQ_BASE + (ofs))
- #define MT_MCU_WM_CIRQ_IRQ_MASK_CLR_ADDR	MT_MCU_WM_CIRQ(0x80)
- #define MT_MCU_WM_CIRQ_IRQ_SOFT_ADDR		MT_MCU_WM_CIRQ(0xc0)
-+#define MT_MCU_WM_CIRQ_EINT_MASK_CLR_ADDR	MT_MCU_WM_CIRQ(0x108)
-+#define MT_MCU_WM_CIRQ_EINT_SOFT_ADDR		MT_MCU_WM_CIRQ(0x118)
- 
- #endif
+@@ -443,6 +443,7 @@ s8 mt7915_eeprom_get_power_delta(struct mt7915_dev *dev, int band);
+ int mt7915_dma_init(struct mt7915_dev *dev, struct mt7915_phy *phy2);
+ void mt7915_dma_prefetch(struct mt7915_dev *dev);
+ void mt7915_dma_cleanup(struct mt7915_dev *dev);
++int mt7915_dma_reset(struct mt7915_dev *dev, bool force);
+ int mt7915_mcu_init(struct mt7915_dev *dev);
+ int mt7915_mcu_twt_agrt_update(struct mt7915_dev *dev,
+ 			       struct mt7915_vif *mvif,
 -- 
 2.36.1
 
