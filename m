@@ -2,50 +2,53 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39914C433FE
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Nov 2022 21:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 209ACC43217
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Nov 2022 21:47:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231587AbiKIVrh (ORCPT
+        id S231808AbiKIVri (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Nov 2022 16:47:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
+        Wed, 9 Nov 2022 16:47:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229774AbiKIVrf (ORCPT
+        with ESMTP id S229806AbiKIVrf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 9 Nov 2022 16:47:35 -0500
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 395B12FFC2
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99AB32FFD9
         for <linux-wireless@vger.kernel.org>; Wed,  9 Nov 2022 13:47:34 -0800 (PST)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2A9LkDCs005728;
-        Wed, 9 Nov 2022 21:47:30 GMT
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2A9IqRNI025960;
+        Wed, 9 Nov 2022 21:47:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=VV7ly2Dqm6UweAuAMenqAhQ9oCb0lE2XPWsvbFpB31A=;
- b=OgyArwqweJ/yBnjCKPrCdsJy5pg4gAaZ+Kqv3A4k/D/Fai5jpKsyLAJkL2ant8CJi/FL
- b2fyeMyT/K6XthNVcQxJWHfr8sAnHFrN+fu7SHGT1xerlEsHIAAep9duWkpPvwG9YEEM
- mIwmj0dxl+8Qo5MIAGow6Dh+MyOxRA4rKRuqz3jJLT3N7t5j5DospGGwsjMaOpMs+kDU
- DXA89eBF0wlS+mZ2V0rV6V1DNtVX0XI2VCktdEOyiAmg4n/OZfIOvCYTY4pDK2rszeq4
- LejrZjO46SkCe8J8Pfgf0sTrSNOynDN6DWkf0sU4CycBDlYhruXkV9MPad9Y6MrLKQMC pw== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3krg1y8skp-1
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=T4kka6uK5TK0gPTGoTZjgWje6/qWZa8rq2lVfToWzq8=;
+ b=femi/Fhd+tBjBfDAS/4Xci5ASmPDgBh/fv7c6EW8A5/T5c03Dfo7nNmLHaTAQYBoibMc
+ AQCCWo3JcEgC6rim9ntCZTrUGeSHVvAkBbr6ld2+6fpDeCI1S97uA3RsV7tLAOcXtz6W
+ 4BRP4kcrpt35w+KMuwEbctCkdHLVOwNxa4QmMbD4RMVUo+5CFUQj5ytKvgfhS9ON/jmg
+ CkqFsQ91gM7k1EfkLeBqjAb5BHnTaI4pvYcnSziUJPXnN4quay4ZInnp1zJ1KfjwIbA8
+ 1Ek+V3hvbKnTpeaiRXLjxNRZhW8R69d7EZcSFl9JfVF6hu29m36hV4WtrW/O4TlJI+lJ bw== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3krfrprug7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 09 Nov 2022 21:47:30 +0000
+        Wed, 09 Nov 2022 21:47:31 +0000
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2A9LlUGT029933
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2A9LlV0G029046
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 9 Nov 2022 21:47:30 GMT
+        Wed, 9 Nov 2022 21:47:31 GMT
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Wed, 9 Nov 2022 13:47:29 -0800
+ 15.2.986.29; Wed, 9 Nov 2022 13:47:30 -0800
 From:   Aloka Dixit <quic_alokad@quicinc.com>
 To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
 CC:     Aloka Dixit <quic_alokad@quicinc.com>
-Subject: [PATCH v7 0/3] Additional processing in NL80211_CMD_SET_BEACON
-Date:   Wed, 9 Nov 2022 13:47:17 -0800
-Message-ID: <20221109214720.6097-1-quic_alokad@quicinc.com>
+Subject: [PATCH v7 3/3] mac80211: additional processing in ieee80211_change_beacon
+Date:   Wed, 9 Nov 2022 13:47:20 -0800
+Message-ID: <20221109214720.6097-4-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20221109214720.6097-1-quic_alokad@quicinc.com>
+References: <20221109214720.6097-1-quic_alokad@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
@@ -53,57 +56,76 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: LPTw_ZKvXiN71tz_mpLT-ARl5wm7F3j1
-X-Proofpoint-ORIG-GUID: LPTw_ZKvXiN71tz_mpLT-ARl5wm7F3j1
+X-Proofpoint-ORIG-GUID: WTe1k7qXIrgiDmPGzQ6BJEkW2V5G3Snv
+X-Proofpoint-GUID: WTe1k7qXIrgiDmPGzQ6BJEkW2V5G3Snv
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-09_06,2022-11-09_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
- priorityscore=1501 impostorscore=0 suspectscore=0 clxscore=1011
- lowpriorityscore=0 bulkscore=0 mlxscore=0 spamscore=0 mlxlogscore=999
- adultscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2210170000 definitions=main-2211090164
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ lowpriorityscore=0 clxscore=1015 mlxscore=0 bulkscore=0 phishscore=0
+ adultscore=0 mlxlogscore=875 malwarescore=0 priorityscore=1501 spamscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211090164
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-v7: Resolved conflicts with MLO code changes.
+Process FILS discovery and unsolicited broadcast probe response
+transmission configurations in ieee80211_change_beacon().
 
-FILS discovery and unsolicited broadcast probe response transmissions
-are configured as part of NL80211_CMD_START_AP, however both stop
-after userspace uses the NL80211_CMD_SET_BEACON command as these
-attributes are not processed as part of this command.
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
+ net/mac80211/cfg.c | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
 
-- Modify the local variable in nl80211_set_beacon() and input parameter
-to rdev_change_beacon() from type struct cfg80211_beacon_data to
-type struct cfg80211_ap_settings to support the new processing.
-- Modify ieee80211_change_beacon() to reflect the new input parameter type.
-- Modify driver specific functions pointed by change_beacon to reflect
-the new input parameter type.
-- Add the missing implementation in nl80211 and mac80211 to process
-FILS discovery and unsolicited broadcast probe response configurations.
-
-Aloka Dixit (3):
-  cfg80211: modify prototype for change_beacon
-  nl80211: additional processing in NL80211_CMD_SET_BEACON
-  mac80211: additional processing in ieee80211_change_beacon
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c    |  4 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c   |  3 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    |  4 +-
- .../net/wireless/marvell/mwifiex/cfg80211.c   |  3 +-
- .../wireless/microchip/wilc1000/cfg80211.c    |  4 +-
- .../net/wireless/quantenna/qtnfmac/cfg80211.c |  4 +-
- .../staging/rtl8723bs/os_dep/ioctl_cfg80211.c |  6 ++-
- include/net/cfg80211.h                        |  2 +-
- net/mac80211/cfg.c                            | 38 ++++++++++---
- net/wireless/nl80211.c                        | 28 ++++++++--
- net/wireless/rdev-ops.h                       |  2 +-
- net/wireless/trace.h                          | 54 ++++++++++---------
- 12 files changed, 102 insertions(+), 50 deletions(-)
-
-
-base-commit: b8f6efccbb9dc0ff5dee7e20d69a4747298ee603
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index feb54b5e6ebd..3e8e74d01dc9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1405,6 +1405,7 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	struct cfg80211_beacon_data *beacon = &params->beacon;
+ 	struct beacon_data *old;
+ 	int err;
++	u32 changed;
+ 	struct ieee80211_bss_conf *link_conf;
+ 
+ 	sdata_assert_lock(sdata);
+@@ -1429,13 +1430,33 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	if (err < 0)
+ 		return err;
+ 
++	changed = err;
++
++	if (params->fils_discovery.max_interval) {
++		err = ieee80211_set_fils_discovery(sdata,
++						   &params->fils_discovery,
++						   link, link_conf);
++		if (err < 0)
++			return err;
++		changed |= BSS_CHANGED_FILS_DISCOVERY;
++	}
++
++	if (params->unsol_bcast_probe_resp.interval) {
++		err = ieee80211_set_unsol_bcast_probe_resp(sdata,
++							   &params->unsol_bcast_probe_resp,
++							   link, link_conf);
++		if (err < 0)
++			return err;
++		changed |= BSS_CHANGED_UNSOL_BCAST_PROBE_RESP;
++	}
++
+ 	if (beacon->he_bss_color_valid &&
+ 	    beacon->he_bss_color.enabled != link_conf->he_bss_color.enabled) {
+ 		link_conf->he_bss_color.enabled = beacon->he_bss_color.enabled;
+-		err |= BSS_CHANGED_HE_BSS_COLOR;
++		changed |= BSS_CHANGED_HE_BSS_COLOR;
+ 	}
+ 
+-	ieee80211_link_info_change_notify(sdata, link, err);
++	ieee80211_link_info_change_notify(sdata, link, changed);
+ 	return 0;
+ }
+ 
 -- 
 2.17.1
 
