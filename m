@@ -2,83 +2,112 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D3AC4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Nov 2022 15:47:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A67C43217
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Nov 2022 16:29:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231676AbiKJPr2 (ORCPT
+        id S231741AbiKJQ3Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Nov 2022 10:47:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33034 "EHLO
+        Thu, 10 Nov 2022 11:29:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231668AbiKJPr0 (ORCPT
+        with ESMTP id S231727AbiKJQ3W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Nov 2022 10:47:26 -0500
-Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF19E3E097
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2022 07:47:25 -0800 (PST)
-Received: from evilbit.green-communications.fr ([92.154.77.116]) by
- mrelayeu.kundenserver.de (mreue106 [213.165.67.119]) with ESMTPSA (Nemesis)
- id 1MzhWp-1pF4A43W5p-00vdVc; Thu, 10 Nov 2022 16:42:01 +0100
-From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
-To:     linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>
-Subject: [PATCH 1/4] wifi: mt76: mt7915: fix antenna selection with bad eeprom.
-Date:   Thu, 10 Nov 2022 16:39:50 +0100
-Message-Id: <20221110153953.22562-2-nicolas.cavallari@green-communications.fr>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221110153953.22562-1-nicolas.cavallari@green-communications.fr>
-References: <20221110153953.22562-1-nicolas.cavallari@green-communications.fr>
+        Thu, 10 Nov 2022 11:29:22 -0500
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A5482FFDD
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2022 08:29:21 -0800 (PST)
+Received: by mail-pl1-x631.google.com with SMTP id y4so1812123plb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2022 08:29:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=content-disposition:mime-version:message-id:subject:cc:to:date:from
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qnovQdeIx+egc+wctWL+zO6cHJ44FnQ3qczpXh6b5Rc=;
+        b=Gwp1kDX1FCipY1yoLpoRT+LKjTgivm7wfhgwGSd+RxZ9DNE5AG3m9vlIgq9mLbP0Mv
+         nQbd8Jt8mHZgthGzGyDe8BU1HvPhBk04H663rBtsiO7WgszATd/0LdyYYXz/0Gpdb7it
+         FEhrmO0m4dENT3TwGhnrL3hBp/C7TXrZIQVZQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:date:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qnovQdeIx+egc+wctWL+zO6cHJ44FnQ3qczpXh6b5Rc=;
+        b=R8ZO3iLThgrTHp8+d1TYBM+ULWmwzxzHDhHVBwWwDUrpCnFOgSgsSgd3813i9nDjRN
+         L9CyuN/6Wb9OlLj2D0tS4iLoHBqgH35vQLxLJXM0y3hibH2eqbJp+53j1okt8g/5LXt1
+         wGXDr7g9pHxXmzT3Bafy+cClCavxYbn6BKhvzretxA8MjZhoutnqvBNr+dwbf2OfR/Vs
+         bUahmNhWKOr5AgO0WYqXFGIoaopcNFYw7tMNdsHZ7rQpaq7ghdO6KUxAtoxFLSoqU+Y9
+         3ypLaHSWhiqhJVt1XdlhaLTTvzzzD3OWlq/BIRYp4mybbayCTveJvJLyViB902ufP9Tm
+         nnzw==
+X-Gm-Message-State: ANoB5plpHvFM5/LnYPqVpAvYV6kEDh/s7RwFZIdm1nx1zmLY8dJVANHE
+        NU3alHEfThk5YJ3Jqa8fCqk5hJvyzKeqRg==
+X-Google-Smtp-Source: AA0mqf4OAxg/aPEkLol3W9r99Ywjc2Hkx53s92PFLJXoZPdWyG8E6OPkaKwZNdmxaRGyPJxvqOAU9Q==
+X-Received: by 2002:a17:902:ca0d:b0:188:9806:2e05 with SMTP id w13-20020a170902ca0d00b0018898062e05mr4228345pld.112.1668097760798;
+        Thu, 10 Nov 2022 08:29:20 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id nn14-20020a17090b38ce00b00213d28a6dedsm3315459pjb.13.2022.11.10.08.29.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Nov 2022 08:29:20 -0800 (PST)
+From:   coverity-bot <keescook@chromium.org>
+X-Google-Original-From: coverity-bot <keescook+coverity-bot@chromium.org>
+Date:   Thu, 10 Nov 2022 08:29:19 -0800
+To:     Daniel Drake <dsd@laptop.org>
+Cc:     linux-kernel@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>,
+        linux-wireless@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        linux-next@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Coverity: if_sdio_reset_card_worker(): Error handling issues
+Message-ID: <202211100829.34D7E6894@keescook>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:an+zU4zPZRczEKtChIwamWZftx3+8s+3rlfGTCytN669OSHlNqx
- 4q7ofdhDDZTgiimYDAQ5bhQ9/QnXXMwR4XVqtsiE328sVjMXOsQ8m8N5MO0Z3tkZeD0RWQj
- iVXQWc/F9qEyYFCALMWRBI2PQPTW8OKryzkZ2UGp9zniQ8NX+aZFz+kHmRav1XlvaLvNy0z
- JgR+IoPq3Q+lyQK6rM4OQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:eeYztmMBW+g=:le72UVqBGMTvKjhqMv6eSz
- wIE8taRR/UrIXYbC9Xg2n5uwPKGX6bvUR11OPcfpsn0QwJ9c/iYzvGBwp0NTcxgUopfZGCfuT
- Q6DgGjnCCzDKoh6L8ReiKdb+s25mtc1Mx14W0yrKiQuH1WIjkWOYDnyNYBkusPzX1nGgFofvm
- Dt/UYCe3HQ62BSM43sA/N1hLwmJpXhtzPjgSdj3Zosojb2YdEbtLuddyrQJx+BwzTxAGvFvmP
- wDwh0gXUJMSlyuhIAhLwGeeA4PxEzYIsw3fB7GGALGkQq/gshQ4umbqlyPTYcFyEjBFjSb1mi
- BHcRXURYp9/9pzq5TBKApXd7wYBizpyJelHYp6K7JysYkvtOvGIpni8vNO2NcC2KAkKosdq94
- PlJAzb4iin2lXtUHUs5+bjaHUA4k2tzrUFEix/NbSTGQGGCajgWmoDIChCDH3RT1CTuOgSTPW
- rYBAunml5lN0PwR57aM2cwufz/7vIPHNh9C8zv5gfRcKIQgBZ3AZn/lBm9r+SrWUs4+yUCwtZ
- 1VIGc3Iu4iHXRcf5qQTVnYHiIEa+OZ4ScOtt6EegnqjKC686ZGbJGSUT3aeTKB4SDWY2rsPCb
- pSzxq15kc4B4iT77C0NOUSqurlfHOv3BW+E07Qz2cOphcKbSZGAO2BmKRtM74ztuvVzaUWV7S
- VNViQ//BH59M1VWM6GHY5Ll26L+nv10gkgmNHi0/QdcFoZAu1O+/30deFi0iin2zQd3j7PJN5
- 43YnksSJTOSgC5j5qBf7uLVvhbTKlo7JWvP9+/ygAn+JLA0/b2JYXCZGIi6YycMlOFITnwAXY
- TZETdzrdVsSNHuKKQu/Lcho8/0sI7Xp02GjWOADMytCSL+9vcg=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If the nss value is zero in the eeprom, set it to the max.
-This eeprom fragment from a mt7915 DBDC shows the problem:
+Hello!
 
-00000190: 24 24 08 00 28 00 00 15 00 00 00 00 00 00 00 00
+This is an experimental semi-automated report about issues detected by
+Coverity from a scan of next-20221110 as part of the linux-next scan project:
+https://scan.coverity.com/projects/linux-next-weekly-scan
 
-Fixes: 51a87540232c ("wifi: mt76: mt7915: rework eeprom tx paths and streams init")
-Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
----
- drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c | 2 ++
- 1 file changed, 2 insertions(+)
+You're getting this email because you were associated with the identified
+lines of code (noted below) that were touched by commits:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-index e2482c65d639..83bced0c0785 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-@@ -208,6 +208,8 @@ void mt7915_eeprom_parse_hw_cap(struct mt7915_dev *dev,
- 			nss_max = 2;
- 	}
- 
-+	if (!nss)
-+		nss = nss_max;
- 	nss = min_t(u8, min_t(u8, nss_max, nss), path);
- 
- 	mphy->chainmask = BIT(path) - 1;
+  Fri Jun 10 14:57:47 2011 -0400
+    9a821f5d0fc3 ("libertas: add sd8686 reset_card support")
+
+Coverity reported the following:
+
+*** CID 1527255:  Error handling issues  (CHECKED_RETURN)
+drivers/net/wireless/marvell/libertas/if_sdio.c:1048 in if_sdio_reset_card_worker()
+1042     	 * We run it in a workqueue totally independent from the if_sdio_card
+1043     	 * instance for that reason.
+1044     	 */
+1045
+1046     	pr_info("Resetting card...");
+1047     	mmc_remove_host(reset_host);
+vvv     CID 1527255:  Error handling issues  (CHECKED_RETURN)
+vvv     Calling "mmc_add_host" without checking return value (as is done elsewhere 27 out of 32 times).
+1048     	mmc_add_host(reset_host);
+1049     }
+1050     static DECLARE_WORK(card_reset_work, if_sdio_reset_card_worker);
+1051
+1052     static void if_sdio_reset_card(struct lbs_private *priv)
+1053     {
+
+If this is a false positive, please let us know so we can mark it as
+such, or teach the Coverity rules to be smarter. If not, please make
+sure fixes get into linux-next. :) For patches fixing this, please
+include these lines (but double-check the "Fixes" first):
+
+Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+Addresses-Coverity-ID: 1527255 ("Error handling issues")
+Fixes: 9a821f5d0fc3 ("libertas: add sd8686 reset_card support")
+
+Thanks for your attention!
+
 -- 
-2.38.1
-
+Coverity-bot
