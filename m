@@ -2,24 +2,23 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D82BAC433FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Nov 2022 15:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D3AC4332F
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Nov 2022 15:47:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231674AbiKJPr2 (ORCPT
+        id S231676AbiKJPr2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 10 Nov 2022 10:47:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32822 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231681AbiKJPrZ (ORCPT
+        with ESMTP id S231668AbiKJPr0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Nov 2022 10:47:25 -0500
-X-Greylist: delayed 309 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 10 Nov 2022 07:47:24 PST
+        Thu, 10 Nov 2022 10:47:26 -0500
 Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43C793E0A6
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2022 07:47:24 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF19E3E097
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2022 07:47:25 -0800 (PST)
 Received: from evilbit.green-communications.fr ([92.154.77.116]) by
  mrelayeu.kundenserver.de (mreue106 [213.165.67.119]) with ESMTPSA (Nemesis)
- id 1MZk5x-1oWQ1N2sFD-00Wms6; Thu, 10 Nov 2022 16:42:02 +0100
+ id 1MzhWp-1pF4A43W5p-00vdVc; Thu, 10 Nov 2022 16:42:01 +0100
 From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
 To:     linux-wireless@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>,
@@ -27,159 +26,59 @@ Cc:     Felix Fietkau <nbd@nbd.name>,
         Ryder Lee <ryder.lee@mediatek.com>,
         Shayne Chen <shayne.chen@mediatek.com>,
         Sean Wang <sean.wang@mediatek.com>
-Subject: [PATCH 4/4] wifi: mt76: mt7915: don't claim 160MHz support with mt7915 DBDC
-Date:   Thu, 10 Nov 2022 16:39:53 +0100
-Message-Id: <20221110153953.22562-5-nicolas.cavallari@green-communications.fr>
+Subject: [PATCH 1/4] wifi: mt76: mt7915: fix antenna selection with bad eeprom.
+Date:   Thu, 10 Nov 2022 16:39:50 +0100
+Message-Id: <20221110153953.22562-2-nicolas.cavallari@green-communications.fr>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221110153953.22562-1-nicolas.cavallari@green-communications.fr>
 References: <20221110153953.22562-1-nicolas.cavallari@green-communications.fr>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:hdCc4p4xDDbyDoUyNOU2iJp595S2wa6epFe7YT97gG+3hfHs7JO
- RPZx7M/aK9vpAPCLMvIn1Sy1LasekiWPcxP/2bG5bSnsgdp28q4KaI7viWckSF9jqIXKSSB
- GL57mjgg8y/ySNI8yCgiS2zkezcjxTWkRwNldNY2eMcMrAryzqu2TONd2wHkGICGytrs3Qb
- FTDKG8ybVgcHDBsPzVsog==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:p0mUQi40ceA=:hhxUmzbH1Mo4D2NaqQltHT
- +9pS1xRnOGGdY1uHFWyGr8JReNYmivd/adferQk1qIcWwmdHdw67wlri1rDCj5g7tbbnVeSIY
- H4ew5Msr1QNzOIdABfs2cLyxCbJD64fxq6m7NRiEwgb6efuUfxEZ+UTb5XVz9i0CWwaIxOH0t
- ltCfhukZL9e5ZzwqPbAFhyoXT+JOvEY786IwDz3we+ZOFq0tkCKYRe1e024ofi42HFodhj/kY
- 05E4zOEmNVdejYxopND4QEBE2B5qGAMKpQH/BeXojmyooy6RJWN1O3oTq2WhpTYpYcIHs8otc
- CcxbYeMChBMg9DsG4E1XIPB6Xm30ltHgvqyNzoO7Fz7MH0zOxniCoitWo4pDTe2AObtK4/XDJ
- GbqtwpYZWjlyEOFLDd9O+b9VpTsOG3pHOcWqWsMx+pjbNye82whGtvVX9pIKJ+gR1rFp1zmaX
- 1JM1guQTohM428p7gbC07GiCumeXb5W36FOl2mI9a5NgaWK/cWamSgRkZ3cYR/PXLsWSC1xhe
- 3YXp5FUR9kYkkalZYNq7ARFfMD4sDSDFWXnsb/MvZbzl6LYoAtwMvJbEFE90ur51rag2Q/+oO
- NySDfuwRXKwkaVijdvYUvGiS/x8OVV8Tgg3ABtSv8GqctduoqjkxfOgUu8ELh5aO3yz8nKX0R
- NPkhaAXkc/yFYYveGFwq7JnzOZIzHPkuxCAxsdHqWun0bSkuqP9AezPzsMv9pi69rmsVv3KTE
- Rn60WgaRY/fpolO1z/f2DZUtYY5m2V4GGNuXhI57dhs/xKhWCe0HxUS/5GxH2MFpKw724Ynen
- Nk2xpdNhf1xVlfhW0wGxnE4Wx+O3snfJNNZoNhAxrd4lKFA0ZKAPts+4F58Ixb2pWZF3ZbTlU
- uvepUpcQQ66aAq3sSXRSjl8h/GBw77g4KO+UNpFM8798bxqe/p1GenDVFdYHth1WOxUKjGkOR
- mZl0c+p4P/NTzU+EX/klWPjMKJ3YryXcUh9WynJYT0xG/aBLjsqXy9OIq1EO5IRSGTenjuV02
- LGe2VrXLzUmH5uZDp0yxuDw0erMufc/0qN+0Wlpgu6sDkEWq+wBnKHWQuRiMLcbUAntgEkfiI
- wBxfx+3QnbekoFW4hHaRLTHKnALRs1CL/Y5nZj+jrK8b2Cc4dgedkaLuanRcUom/ZZQ60zORp
- dXjZjOX6LDHhsrgH28Y7TLcPXF8RWX1hTqOeC0ZTBEqzwp9NpcUBgrqHEmPPVQiGTcJJ7FeHe
- yRZX5eeh32e3eOWomJB9XYOV8I245UCdc1CLV5alOhWe48s+BF2VP2dyt9y/Qzd82tYNb4tAR
- 7C7hfB+8VUO5LSQldv9JkibjXU6SB8jR8oSgTu6lhrKfJlyzbvs=
+X-Provags-ID: V03:K1:an+zU4zPZRczEKtChIwamWZftx3+8s+3rlfGTCytN669OSHlNqx
+ 4q7ofdhDDZTgiimYDAQ5bhQ9/QnXXMwR4XVqtsiE328sVjMXOsQ8m8N5MO0Z3tkZeD0RWQj
+ iVXQWc/F9qEyYFCALMWRBI2PQPTW8OKryzkZ2UGp9zniQ8NX+aZFz+kHmRav1XlvaLvNy0z
+ JgR+IoPq3Q+lyQK6rM4OQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:eeYztmMBW+g=:le72UVqBGMTvKjhqMv6eSz
+ wIE8taRR/UrIXYbC9Xg2n5uwPKGX6bvUR11OPcfpsn0QwJ9c/iYzvGBwp0NTcxgUopfZGCfuT
+ Q6DgGjnCCzDKoh6L8ReiKdb+s25mtc1Mx14W0yrKiQuH1WIjkWOYDnyNYBkusPzX1nGgFofvm
+ Dt/UYCe3HQ62BSM43sA/N1hLwmJpXhtzPjgSdj3Zosojb2YdEbtLuddyrQJx+BwzTxAGvFvmP
+ wDwh0gXUJMSlyuhIAhLwGeeA4PxEzYIsw3fB7GGALGkQq/gshQ4umbqlyPTYcFyEjBFjSb1mi
+ BHcRXURYp9/9pzq5TBKApXd7wYBizpyJelHYp6K7JysYkvtOvGIpni8vNO2NcC2KAkKosdq94
+ PlJAzb4iin2lXtUHUs5+bjaHUA4k2tzrUFEix/NbSTGQGGCajgWmoDIChCDH3RT1CTuOgSTPW
+ rYBAunml5lN0PwR57aM2cwufz/7vIPHNh9C8zv5gfRcKIQgBZ3AZn/lBm9r+SrWUs4+yUCwtZ
+ 1VIGc3Iu4iHXRcf5qQTVnYHiIEa+OZ4ScOtt6EegnqjKC686ZGbJGSUT3aeTKB4SDWY2rsPCb
+ pSzxq15kc4B4iT77C0NOUSqurlfHOv3BW+E07Qz2cOphcKbSZGAO2BmKRtM74ztuvVzaUWV7S
+ VNViQ//BH59M1VWM6GHY5Ll26L+nv10gkgmNHi0/QdcFoZAu1O+/30deFi0iin2zQd3j7PJN5
+ 43YnksSJTOSgC5j5qBf7uLVvhbTKlo7JWvP9+/ygAn+JLA0/b2JYXCZGIi6YycMlOFITnwAXY
+ TZETdzrdVsSNHuKKQu/Lcho8/0sI7Xp02GjWOADMytCSL+9vcg=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The hardware simply does not support this in DBDC mode.  Remove it from
-the HE capabilities.
+If the nss value is zero in the eeprom, set it to the max.
+This eeprom fragment from a mt7915 DBDC shows the problem:
 
+00000190: 24 24 08 00 28 00 00 15 00 00 00 00 00 00 00 00
+
+Fixes: 51a87540232c ("wifi: mt76: mt7915: rework eeprom tx paths and streams init")
 Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
 ---
- .../net/wireless/mediatek/mt76/mt7915/init.c  | 47 ++++++++++++-------
- 1 file changed, 31 insertions(+), 16 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index f2707115b5f3..e257b031400f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -737,8 +737,12 @@ mt7915_set_stream_he_txbf_caps(struct mt7915_phy *phy,
- 	u8 c, sts_160 = sts;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+index e2482c65d639..83bced0c0785 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+@@ -208,6 +208,8 @@ void mt7915_eeprom_parse_hw_cap(struct mt7915_dev *dev,
+ 			nss_max = 2;
+ 	}
  
- 	/* Can do 1/2 of STS in 160Mhz mode for mt7915 */
--	if (is_mt7915(&dev->mt76) && !dev->dbdc_support)
--		sts_160 /= 2;
-+	if (is_mt7915(&dev->mt76)) {
-+		if (!dev->dbdc_support)
-+			sts_160 /= 2;
-+		else
-+			sts_160 = 0;
-+	}
++	if (!nss)
++		nss = nss_max;
+ 	nss = min_t(u8, min_t(u8, nss_max, nss), path);
  
- #ifdef CONFIG_MAC80211_MESH
- 	if (vif == NL80211_IFTYPE_MESH_POINT)
-@@ -748,8 +752,9 @@ mt7915_set_stream_he_txbf_caps(struct mt7915_phy *phy,
- 	elem->phy_cap_info[3] &= ~IEEE80211_HE_PHY_CAP3_SU_BEAMFORMER;
- 	elem->phy_cap_info[4] &= ~IEEE80211_HE_PHY_CAP4_MU_BEAMFORMER;
- 
--	c = IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK |
--	    IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK;
-+	c = IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK;
-+	if (sts_160)
-+		c |= IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK;
- 	elem->phy_cap_info[5] &= ~c;
- 
- 	c = IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMING_FB |
-@@ -765,8 +770,9 @@ mt7915_set_stream_he_txbf_caps(struct mt7915_phy *phy,
- 	elem->phy_cap_info[2] |= c;
- 
- 	c = IEEE80211_HE_PHY_CAP4_SU_BEAMFORMEE |
--	    IEEE80211_HE_PHY_CAP4_BEAMFORMEE_MAX_STS_UNDER_80MHZ_4 |
--	    IEEE80211_HE_PHY_CAP4_BEAMFORMEE_MAX_STS_ABOVE_80MHZ_4;
-+	    IEEE80211_HE_PHY_CAP4_BEAMFORMEE_MAX_STS_UNDER_80MHZ_4;
-+	if (sts_160)
-+		c |= IEEE80211_HE_PHY_CAP4_BEAMFORMEE_MAX_STS_ABOVE_80MHZ_4;
- 	elem->phy_cap_info[4] |= c;
- 
- 	/* do not support NG16 due to spec D4.0 changes subcarrier idx */
-@@ -791,12 +797,13 @@ mt7915_set_stream_he_txbf_caps(struct mt7915_phy *phy,
- 	elem->phy_cap_info[4] |= IEEE80211_HE_PHY_CAP4_MU_BEAMFORMER;
- 
- 	/* num_snd_dim
--	 * for mt7915, max supported sts is 2 for bw > 80MHz
-+	 * for mt7915, max supported sts is 2 for bw > 80MHz and 0 if dbdc
- 	 */
- 	c = FIELD_PREP(IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK,
--		       sts - 1) |
--	    FIELD_PREP(IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK,
--		       sts_160 - 1);
-+		       sts - 1);
-+	if (sts_160)
-+		c |= FIELD_PREP(IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK,
-+				sts_160 - 1);
- 	elem->phy_cap_info[5] |= c;
- 
- 	c = IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMING_FB |
-@@ -841,11 +848,14 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
- 	u16 mcs_map_160 = 0;
- 	u8 nss_160;
- 
--	/* Can do 1/2 of NSS streams in 160Mhz mode for mt7915 */
--	if (is_mt7915(&dev->mt76) && !dev->dbdc_support)
-+	if (!is_mt7915(&dev->mt76))
-+		nss_160 = nss;
-+	else if (!dev->dbdc_support)
-+		/* Can do 1/2 of NSS streams in 160Mhz mode for mt7915 */
- 		nss_160 = nss / 2;
- 	else
--		nss_160 = nss;
-+		/* Can't do 160MHz with mt7915 dbdc */
-+		nss_160 = 0;
- 
- 	for (i = 0; i < 8; i++) {
- 		if (i < nss)
-@@ -891,11 +901,14 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
- 		if (band == NL80211_BAND_2GHZ)
- 			he_cap_elem->phy_cap_info[0] =
- 				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G;
--		else
-+		else if (nss_160)
- 			he_cap_elem->phy_cap_info[0] =
- 				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
- 				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
- 				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G;
-+		else
-+			he_cap_elem->phy_cap_info[0] =
-+				IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G;
- 
- 		he_cap_elem->phy_cap_info[1] =
- 			IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD;
-@@ -949,9 +962,11 @@ mt7915_init_he_caps(struct mt7915_phy *phy, enum nl80211_band band,
- 				IEEE80211_HE_PHY_CAP7_HE_SU_MU_PPDU_4XLTF_AND_08_US_GI;
- 			he_cap_elem->phy_cap_info[8] |=
- 				IEEE80211_HE_PHY_CAP8_20MHZ_IN_40MHZ_HE_PPDU_IN_2G |
--				IEEE80211_HE_PHY_CAP8_20MHZ_IN_160MHZ_HE_PPDU |
--				IEEE80211_HE_PHY_CAP8_80MHZ_IN_160MHZ_HE_PPDU |
- 				IEEE80211_HE_PHY_CAP8_DCM_MAX_RU_484;
-+			if (nss_160)
-+				he_cap_elem->phy_cap_info[8] |=
-+					IEEE80211_HE_PHY_CAP8_20MHZ_IN_160MHZ_HE_PPDU |
-+					IEEE80211_HE_PHY_CAP8_80MHZ_IN_160MHZ_HE_PPDU;
- 			he_cap_elem->phy_cap_info[9] |=
- 				IEEE80211_HE_PHY_CAP9_LONGER_THAN_16_SIGB_OFDM_SYM |
- 				IEEE80211_HE_PHY_CAP9_NON_TRIGGERED_CQI_FEEDBACK |
+ 	mphy->chainmask = BIT(path) - 1;
 -- 
 2.38.1
 
