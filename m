@@ -2,97 +2,137 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A67BBC4332F
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Nov 2022 06:22:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24300C4321E
+	for <linux-wireless@archiver.kernel.org>; Thu, 10 Nov 2022 07:06:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232412AbiKJGWm (ORCPT
+        id S232698AbiKJHGm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Nov 2022 01:22:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40046 "EHLO
+        Thu, 10 Nov 2022 02:06:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbiKJGWl (ORCPT
+        with ESMTP id S229697AbiKJHGl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Nov 2022 01:22:41 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FF522E9CB;
-        Wed,  9 Nov 2022 22:22:39 -0800 (PST)
-Received: from dggpeml500023.china.huawei.com (unknown [172.30.72.55])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4N7BWW315VzJnYn;
-        Thu, 10 Nov 2022 14:19:35 +0800 (CST)
-Received: from ubuntu1804.huawei.com (10.67.174.58) by
- dggpeml500023.china.huawei.com (7.185.36.114) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 10 Nov 2022 14:22:37 +0800
-From:   Xiu Jianfeng <xiujianfeng@huawei.com>
-To:     <kvalo@kernel.org>, <davem@davemloft.net>, <edumazet@google.com>,
-        <kuba@kernel.org>, <pabeni@redhat.com>, <rmani@qti.qualcomm.com>
-CC:     <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v2] wifi: ath10k: Fix return value in ath10k_pci_init()
-Date:   Thu, 10 Nov 2022 14:19:26 +0800
-Message-ID: <20221110061926.18163-1-xiujianfeng@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        Thu, 10 Nov 2022 02:06:41 -0500
+Received: from mog.warmcat.com (mog.warmcat.com [178.170.10.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7A42014016
+        for <linux-wireless@vger.kernel.org>; Wed,  9 Nov 2022 23:06:39 -0800 (PST)
+Received: from mx.warmcat.com (host31-53-12-215.range31-53.btcentralplus.com [31.53.12.215])
+        by mog.warmcat.com (Postfix) with ESMTPSA id 47070135602;
+        Thu, 10 Nov 2022 07:06:38 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mog.warmcat.com 47070135602
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=warmcat.com;
+        s=default; t=1668063998;
+        bh=SfBt8l0StuIlhXHfiIXOhOe1e1OySq0YJvgq5p1+oRo=;
+        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+        b=N8t2GGDzGibp2X9/KeBOQDype9iCnd51WISFaO87nNHz/hsdQ+66fusZ0y7ePrOYM
+         QiL1n0SL2/tw+72DiH4DTRdmeKwCN2oRCKv6Kzumom5+w11/wXg05kAH+Lxl4wI8fe
+         IQBLMuCSo3h4XzKTEdO6EYj/J3Z8wz6MMG5THGQM=
+Received: from [192.168.4.115] (unknown [192.168.4.115])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (Client did not present a certificate)
+        by mx.warmcat.com (Postfix) with ESMTPSA id 4B8072A00DA;
+        Thu, 10 Nov 2022 07:06:37 +0000 (GMT)
+Message-ID: <258c07af-5ca1-dbaa-ac19-6c30459b5fca@warmcat.com>
+Date:   Thu, 10 Nov 2022 07:06:35 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.174.58]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpeml500023.china.huawei.com (7.185.36.114)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Subject: Re: AP6275 / bcm43752 pcie on mainline brcmf
+From:   Andy Green <andy@warmcat.com>
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        franky.lin@broadcom.com
+Cc:     linux-wireless@vger.kernel.org
+References: <1D540F2B-17E8-4992-BD06-4AA4A66B1964@warmcat.com>
+ <1845da4b838.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+ <b5f564da-d0c1-4617-fef1-771ccdda18e4@warmcat.com>
+Content-Language: en-US
+In-Reply-To: <b5f564da-d0c1-4617-fef1-771ccdda18e4@warmcat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This driver is attempting to register to support two different buses.
-if either of these is successful then ath10k_pci_init() should return 0
-so that hardware attached to the successful bus can be probed and
-supported. only if both of these are unsuccessful should ath10k_pci_init()
-return an errno.
 
-Fixes: 0b523ced9a3c ("ath10k: add basic skeleton to support ahb")
-Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
 
----
-v2: modify according to Jeff's suggestion, and change the commit message
-    and body as well.
----
- drivers/net/wireless/ath/ath10k/pci.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
+On 11/9/22 19:35, Andy Green wrote:
+> 
+> On 11/9/22 18:26, Arend Van Spriel wrote:
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e56c6a6b1379..728d607289c3 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3792,18 +3792,22 @@ static struct pci_driver ath10k_pci_driver = {
- 
- static int __init ath10k_pci_init(void)
- {
--	int ret;
-+	int ret1, ret2;
- 
--	ret = pci_register_driver(&ath10k_pci_driver);
--	if (ret)
-+	ret1 = pci_register_driver(&ath10k_pci_driver);
-+	if (ret1)
- 		printk(KERN_ERR "failed to register ath10k pci driver: %d\n",
--		       ret);
-+		       ret1);
- 
--	ret = ath10k_ahb_init();
--	if (ret)
--		printk(KERN_ERR "ahb init failed: %d\n", ret);
-+	ret2 = ath10k_ahb_init();
-+	if (ret2)
-+		printk(KERN_ERR "ahb init failed: %d\n", ret2);
- 
--	return ret;
-+	if (ret1 && ret2)
-+		return ret1;
-+
-+	/* registered to at least one bus */
-+	return 0;
- }
- module_init(ath10k_pci_init);
- 
--- 
-2.17.1
+>> Can you share any kernel logs preferably with debug=0x1416 passed 
+>> during insmod.
+>>
+> I passed that in modprobe.d/ but the only logs are its usual ones and 
+> the ones I added
 
+It seems the debug logging needs a few additional config options 
+additionally.
+
+[    3.469000] brcmfmac: brcmfmac_module_init No platform data available.
+[    3.469140] brcmfmac 0002:21:00.0: enabling device (0000 -> 0002)
+[    3.469179] brcmfmac: brcmf_chip_recognition found AXI chip: BCM43752/2
+[    3.470077] brcmfmac: brcmf_chip_cores_check  [1 ] core 0x800:65 
+base 0x18000000 wrap 0x18100000
+[    3.470079] brcmfmac: brcmf_chip_cores_check  [2 ] core 0x812:82 
+base 0x18001000 wrap 0x18101000
+[    3.470081] brcmfmac: brcmf_chip_cores_check  [3 ] core 0x83e:16 
+base 0x18002000 wrap 0x18102000
+[    3.470082] brcmfmac: brcmf_chip_cores_check  [4 ] core 0x83c:65 
+base 0x18003000 wrap 0x18103000
+[    3.470084] brcmfmac: brcmf_chip_cores_check  [5 ] core 0x829:26 
+base 0x18004000 wrap 0x18104000
+[    3.470085] brcmfmac: brcmf_chip_cores_check  [6 ] core 0x844:2 
+base 0x18005000 wrap 0x18105000
+[    3.470087] brcmfmac: brcmf_chip_cores_check  [7 ] core 0x840:15 
+base 0x18010000 wrap 0x00000000
+[    3.470088] brcmfmac: brcmf_chip_cores_check  [8 ] core 0x827:35 
+base 0x18012000 wrap 0x00000000
+[    3.470090] brcmfmac: brcmf_chip_cores_check  [9 ] core 0x240:0 
+base 0x00000000 wrap 0x1810a000
+[    3.470091] brcmfmac: brcmf_chip_cores_check  [10] core 0x135:0 
+base 0x00000000 wrap 0x18112000
+[    3.470092] brcmfmac: brcmf_chip_cores_check  [11] core 0x135:0 
+base 0x00000000 wrap 0x18113000
+[    3.470094] brcmfmac: brcmf_chip_set_passive Enter
+[    3.579150] brcmfmac: brcmf_chip_set_passive Enter
+[    3.579630] brcmfmac: brcmf_chip_tcm_rambase: 43752 OK
+[    3.579631] brcmfmac: brcmf_chip_get_raminfo RAM: base=0x170000 
+size=1310720 (0x140000) sr=0 (0x0)
+[    3.579655] brcmfmac: brcmf_chip_setup ccrev=65, pmurev=35, 
+pmucaps=0x84565f23
+[    3.579657] brcmfmac: brcmf_get_module_param Enter, bus=2, 
+chip=43752, rev=2
+[    3.579663] brcmfmac: brcmf_alloc Enter
+[    3.579675] brcmfmac: brcmf_fw_alloc_request: using 
+brcm/fw_bcm43752a2_pcie for chip BCM43752/2
+[    3.579678] brcmfmac: brcmf_fw_get_firmwares enter: dev=0002:21:00.0
+[    3.579680] brcmfmac: brcm_alt_fw_path FW alt path: 
+brcm/fw_bcm43752a2_pcie.rockchip,rk3588-evb1-v10.bin
+[    3.583510] brcmfmac: brcmf_fw_complete_request firmware 
+brcm/fw_bcm43752a2_pcie.bin found
+[    3.583516] brcmfmac: brcm_alt_fw_path FW alt path: 
+brcm/fw_bcm43752a2_pcie.rockchip,rk3588-evb1-v10.txt
+[    3.583726] brcmfmac: brcmf_fw_complete_request firmware 
+brcm/fw_bcm43752a2_pcie.txt found
+[    3.583727] brcmfmac: brcmf_fw_request_nvram_done enter: dev=0002:21:00.0
+[    3.583782] brcmfmac: brcmf_fw_request_nvram_done nvram 
+000000001685ccfe len 6040
+[    3.583784] brcmfmac: brcm_alt_fw_path FW alt path: 
+brcm/fw_bcm43752a2_pcie.rockchip,rk3588-evb1-v10.clm_blob
+[    3.584081] brcmfmac: brcmf_fw_complete_request firmware 
+brcm/fw_bcm43752a2_pcie.clm_blob found
+[    3.584278] brcmfmac: brcmf_chip_tcm_rambase: 43752 OK
+[    3.584279] brcmfmac: brcmf_chip_get_raminfo RAM: base=0x170000 
+size=1310720 (0x140000) sr=0 (0x0)
+[    3.677816] brcmfmac: Download NVRAM brcm/fw_bcm43752a2_pcie.txt
+[    3.678423] brcmfmac: brcmf_pcie_download_fw_nvram: sharedram_addr 
+0xfa1a05e5
+[    3.678425] brcmfmac: brcmf_chip_set_active Enter
+[    9.707127] brcmfmac 0002:21:00.0: brcmf_pcie_download_fw_nvram: FW 
+failed to initialize
+[    9.707144] brcmfmac: brcmf_detach Enter
+[    9.731123] brcmfmac: brcmf_bus_change_state 0 -> 0
+[    9.731126] brcmfmac: brcmf_proto_detach Enter
+
+-Andy
