@@ -2,49 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47B1DC43219
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Nov 2022 20:19:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39799C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Nov 2022 20:19:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237541AbiKNUT3 (ORCPT
+        id S237555AbiKNUTc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Nov 2022 15:19:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43576 "EHLO
+        Mon, 14 Nov 2022 15:19:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237480AbiKNUT1 (ORCPT
+        with ESMTP id S237459AbiKNUT2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2022 15:19:27 -0500
+        Mon, 14 Nov 2022 15:19:28 -0500
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3E1264D7
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2022 12:19:25 -0800 (PST)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AEGCcAJ004775;
-        Mon, 14 Nov 2022 20:19:23 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6139665B6
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2022 12:19:27 -0800 (PST)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AEHIxTY011758;
+        Mon, 14 Nov 2022 20:19:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=z7d4cJXbcpH/yaETSN31zaww4Q+Q/pGdHsMA3y/rAEI=;
- b=iDZx0plp9DJznlYx1+hy5BvsqnqF/Wl1rjXjC56PtEy1CV6lSJewPo6ud10z4UqZHZmJ
- CjffN+Qf8xMYrdId4GnOQtwXdH7CNP8tJZeR1dzzYBVKoaqGYtXT7nS9VhOiFJ3OCGaR
- roXZF2uhDgYRGE9MLT8OVDIFAtk2knHYz+pxSYDC5mt7uwwUKixZwp/wofL3+8Rnigzf
- kFX1bAPOQXUV0jBetgpHalyUh5a4PStUVwIpoyJx/ACfEfbc6KARpBJCTTXKjAk1VOwc
- pWEwJFZ3FnkujQH1btmgt0MSnkiVc1L3W4hkRZCZi8jaFpG/ePYk4J92rTsPw32gmkuf 6g== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3kugkpj66y-1
+ bh=sXdG+H81RMYB0ikFa49YTLX1rrZQ5AjO3sCsHWQLqMY=;
+ b=TmXWULk4pfV5JV0MqyztI38mn7zkAa6QC8G5O6PcIGzFxy7cFplmUjedg8eXG5j0j8yl
+ Vib5CY6MSy+oPDoRvSrwpyfs7WQ1R1hqA6ba+ui+NoTnbSn3OJ3b2kKDil0Myny93gup
+ 7GiLC3Fc4iC/q3RL1/XS43V47QJbZQ2biw7eOM1hm7E851SmJQ953nCOI/RPZn4QRAvb
+ +vL2J90a8r1qpTk5R5WrqJOL9s85uxbt5/UW6vZ5fq/5w+eslZxUqw+a2jtv8pMpCcY6
+ jQE9hE8/JjZr8psEcrk8dxf3rTFfO/QQL9IJoUJE1+wGaOuReE32q8rj7vTkyUSxlgfh 1Q== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3kusye0h30-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 14 Nov 2022 20:19:22 +0000
+        Mon, 14 Nov 2022 20:19:24 +0000
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AEKJL9b025231
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AEKJN54028462
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 14 Nov 2022 20:19:21 GMT
+        Mon, 14 Nov 2022 20:19:23 GMT
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Mon, 14 Nov 2022 12:19:21 -0800
+ 15.2.986.29; Mon, 14 Nov 2022 12:19:22 -0800
 From:   Aloka Dixit <quic_alokad@quicinc.com>
 To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 01/10] mac80211: generate EMA beacons in AP mode
-Date:   Mon, 14 Nov 2022 12:19:03 -0800
-Message-ID: <20221114201912.22893-2-quic_alokad@quicinc.com>
+Subject: [PATCH v2 05/10] ath11k: create a structure for WMI vdev up parameters
+Date:   Mon, 14 Nov 2022 12:19:07 -0800
+Message-ID: <20221114201912.22893-6-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20221114201912.22893-1-quic_alokad@quicinc.com>
 References: <20221114201912.22893-1-quic_alokad@quicinc.com>
@@ -55,405 +55,214 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 2oEQazBCd1TcDYWt7Dm-Egub0yevi5Dx
-X-Proofpoint-GUID: 2oEQazBCd1TcDYWt7Dm-Egub0yevi5Dx
+X-Proofpoint-GUID: W3EJJGgmHpqft-uA6yf5JxleVuYGsX6R
+X-Proofpoint-ORIG-GUID: W3EJJGgmHpqft-uA6yf5JxleVuYGsX6R
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-14_13,2022-11-11_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 adultscore=0
- priorityscore=1501 lowpriorityscore=0 impostorscore=0 spamscore=0
- clxscore=1015 suspectscore=0 mlxlogscore=999 malwarescore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2211140143
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 mlxscore=0 spamscore=0
+ clxscore=1015 impostorscore=0 phishscore=0 priorityscore=1501
+ suspectscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2210170000 definitions=main-2211140143
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add APIs to generate an array of beacons for an EMA AP (enhanced
-multiple BSSID advertisements), each including a single MBSSID element.
-EMA profile periodicity equals the count of elements.
+Include an instance of the structure instead of individual parameters
+as input to ath11k_wmi_vdev_up().
 
-- ieee80211_beacon_get_template_ema_list() - Generate and return all
-EMA beacon templates. Drivers must call ieee80211_beacon_free_ema_list()
-to free the memory. No change in the prototype for the existing API,
-ieee80211_beacon_get_template(), which should be used for non-EMA AP.
-
-- ieee80211_beacon_get_template_ema_index() - Generate a beacon which
-includes the multiple BSSID element at the given index. Drivers can use
-this function in a loop until NULL is returned which indicates end of
-available MBSSID elements.
-
-- ieee80211_beacon_free_ema_list() - free the memory allocated for the
-list of EMA beacon templates.
-
-Modify exsiting functions ieee80211_beacon_get_ap(),
-ieee80211_get_mbssid_beacon_len() and ieee80211_beacon_add_mbssid()
-to accept a new parameter for EMA index.
-
+Tested-on : IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
 Co-developed-by: John Crispin <john@phrozen.org>
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
+v2: Renaming of struct wmi_vdev_up_cmd parameters and additions in struct
+vdev_up_params moved to separate patches.
 
-v2:
-- Limited the use of IEEE80211_INCLUDE_ALL_MBSSID_ELEMS to only
-__ieee80211_beacon_get and its callers. Remaining functions now use
-existing MBSSID element count (u8) to decide between EMA vs non-EMA
-beacon generation. Macro cannot removed completely as the callers of
-__ieee80211_beacon_get() do not have access to the beacon pointer
-containing MBSSID count.
+drivers/net/wireless/ath/ath11k/mac.c | 31 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath11k/wmi.c | 13 +++++------
+ drivers/net/wireless/ath/ath11k/wmi.h |  9 ++++++--
+ 3 files changed, 38 insertions(+), 15 deletions(-)
 
-- Changed the prototype of ema_index in all function except
-__ieee80211_beacon_get() from int to u8.
-
-- Modified ieee80211_beacon_get_ap_ema_list() to return a list of beacons.
-
-- Added WARN_ON() in ieee80211_beacon_get_ap_ema_list().
-
-include/net/mac80211.h     |  68 +++++++++++++++++++
- net/mac80211/cfg.c         |   7 +-
- net/mac80211/ieee80211_i.h |  10 ++-
- net/mac80211/tx.c          | 134 ++++++++++++++++++++++++++++++++++---
- 4 files changed, 202 insertions(+), 17 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 721c450a9ccd..ff37f8f46c34 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -5225,6 +5225,74 @@ ieee80211_beacon_get_template(struct ieee80211_hw *hw,
- 			      struct ieee80211_mutable_offsets *offs,
- 			      unsigned int link_id);
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 2b96205e996e..d4b87d4de22a 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -923,6 +923,7 @@ static int ath11k_mac_monitor_vdev_start(struct ath11k *ar, int vdev_id,
+ 	struct ieee80211_channel *channel;
+ 	struct wmi_vdev_start_req_arg arg = {};
+ 	int ret;
++	struct vdev_up_params params = { 0 };
  
-+/**
-+ * ieee80211_beacon_get_template_ema_index - EMA beacon template generation
-+ * @hw: pointer obtained from ieee80211_alloc_hw().
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @offs: &struct ieee80211_mutable_offsets pointer to struct that will
-+ *	receive the offsets that may be updated by the driver.
-+ * @link_id: the link id to which the beacon belongs (or 0 for a non-MLD AP).
-+ * @ema_index: index of the beacon in the EMA set.
-+ *
-+ * This function follows the same rules as ieee80211_beacon_get_template()
-+ * but returns a beacon template which includes multiple BSSID element at the
-+ * requested index.
-+ *
-+ * Return: The beacon template. %NULL indicates the end of EMA templates.
-+ */
-+struct sk_buff *
-+ieee80211_beacon_get_template_ema_index(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					struct ieee80211_mutable_offsets *offs,
-+					unsigned int link_id, u8 ema_index);
-+
-+/**
-+ * struct ieee80211_ema_beacons - List of EMA beacons
-+ * @cnt: count of EMA beacons.
-+ *
-+ * @bcn: array of EMA beacons.
-+ * @bcn.skb: the skb containing this specific beacon
-+ * @bcn.offs: &struct ieee80211_mutable_offsets pointer to struct that will
-+ *	receive the offsets that may be updated by the driver.
-+ */
-+struct ieee80211_ema_beacons {
-+	u8 cnt;
-+	struct {
-+		struct sk_buff *skb;
-+		struct ieee80211_mutable_offsets offs;
-+	} bcn[];
-+};
-+
-+/**
-+ * ieee80211_beacon_get_template_ema_list - EMA beacon template generation
-+ * @hw: pointer obtained from ieee80211_alloc_hw().
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @link_id: the link id to which the beacon belongs (or 0 for a non-MLD AP)
-+ *
-+ * This function follows the same rules as ieee80211_beacon_get_template()
-+ * but allocates and returns a pointer to list of all beacon templates required
-+ * to cover all profiles in the multiple BSSID set. Each template includes only
-+ * one multiple BSSID element.
-+ *
-+ * Driver must call ieee80211_beacon_free_ema_list() to free the memory.
-+ *
-+ * Return: EMA beacon templates of type struct ieee80211_ema_beacons *.
-+ *	%NULL on error.
-+ */
-+struct ieee80211_ema_beacons *
-+ieee80211_beacon_get_template_ema_list(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
-+				       unsigned int link_id);
-+
-+/**
-+ * ieee80211_beacon_free_ema_list - free an EMA beacon template list
-+ * @ema_beacons: list of EMA beacons of type &struct ieee80211_ema_beacons pointers.
-+ *
-+ * This function will free a list previously acquired by calling
-+ * ieee80211_beacon_get_template_ema_list()
-+ */
-+void ieee80211_beacon_free_ema_list(struct ieee80211_ema_beacons *ema_beacons);
-+
- /**
-  * ieee80211_beacon_get_tim - beacon generation function
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c848fe04dd44..b60e8c835e46 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1121,11 +1121,11 @@ static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (params->mbssid_ies) {
- 		mbssid = params->mbssid_ies;
- 		size += struct_size(new->mbssid_ies, elem, mbssid->cnt);
--		size += ieee80211_get_mbssid_beacon_len(mbssid);
-+		size += ieee80211_get_mbssid_beacon_len(mbssid, mbssid->cnt);
- 	} else if (old && old->mbssid_ies) {
- 		mbssid = old->mbssid_ies;
- 		size += struct_size(new->mbssid_ies, elem, mbssid->cnt);
--		size += ieee80211_get_mbssid_beacon_len(mbssid);
-+		size += ieee80211_get_mbssid_beacon_len(mbssid, mbssid->cnt);
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -963,7 +964,9 @@ static int ath11k_mac_monitor_vdev_start(struct ath11k *ar, int vdev_id,
+ 		return ret;
  	}
  
- 	new = kzalloc(size, GFP_KERNEL);
-@@ -3338,7 +3338,8 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
- 	len = beacon->head_len + beacon->tail_len + beacon->beacon_ies_len +
- 	      beacon->proberesp_ies_len + beacon->assocresp_ies_len +
- 	      beacon->probe_resp_len + beacon->lci_len + beacon->civicloc_len +
--	      ieee80211_get_mbssid_beacon_len(beacon->mbssid_ies);
-+	      ieee80211_get_mbssid_beacon_len(beacon->mbssid_ies,
-+					      beacon->mbssid_ies->cnt);
- 
- 	new_beacon = kzalloc(sizeof(*new_beacon) + len, GFP_KERNEL);
- 	if (!new_beacon)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 63ff0d2524b6..e6ee40866dfa 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1166,13 +1166,17 @@ ieee80211_vif_get_shift(struct ieee80211_vif *vif)
- }
- 
- static inline int
--ieee80211_get_mbssid_beacon_len(struct cfg80211_mbssid_elems *elems)
-+ieee80211_get_mbssid_beacon_len(struct cfg80211_mbssid_elems *elems, u8 i)
+-	ret = ath11k_wmi_vdev_up(ar, vdev_id, 0, ar->mac_addr);
++	params.vdev_id = vdev_id,
++	params.bssid = ar->mac_addr,
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to put up monitor vdev %i: %d\n",
+ 			    vdev_id, ret);
+@@ -1423,6 +1426,7 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
  {
--	int i, len = 0;
-+	int len = 0;
+ 	struct ath11k *ar = arvif->ar;
+ 	int ret = 0;
++	struct vdev_up_params params = { 0 };
  
--	if (!elems)
-+	if (!elems || !elems->cnt || i > elems->cnt)
- 		return 0;
+ 	lockdep_assert_held(&arvif->ar->conf_mutex);
  
-+	if (i < elems->cnt)
-+		return elems->elem[i].len;
+@@ -1450,8 +1454,10 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 
+ 	ether_addr_copy(arvif->bssid, info->bssid);
+ 
+-	ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-				 arvif->bssid);
++	params.vdev_id = arvif->vdev_id;
++	params.aid = arvif->aid;
++	params.bssid = arvif->bssid;
++	ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to bring up vdev %d: %i\n",
+ 			    arvif->vdev_id, ret);
+@@ -2709,6 +2715,7 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	struct ath11k_peer *peer;
+ 	bool is_auth = false;
+ 	int ret;
++	struct vdev_up_params params = { 0 };
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -2757,7 +2764,10 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	arvif->aid = vif->cfg.aid;
+ 	ether_addr_copy(arvif->bssid, bss_conf->bssid);
+ 
+-	ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
++	params.vdev_id = arvif->vdev_id;
++	params.aid = arvif->aid;
++	params.bssid = arvif->bssid;
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to set vdev %d up: %d\n",
+ 			    arvif->vdev_id, ret);
+@@ -7011,6 +7021,8 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 	/* TODO: Update ar->rx_channel */
+ 
+ 	for (i = 0; i < n_vifs; i++) {
++		struct vdev_up_params params = { 0 };
 +
-+	/* i == elems->cnt, calculate total length of all MBSSID elements */
- 	for (i = 0; i < elems->cnt; i++)
- 		len += elems->elem[i].len;
+ 		arvif = (void *)vifs[i].vif->drv_priv;
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index bb2e54610101..ac4a916e7573 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -5089,13 +5089,20 @@ ieee80211_beacon_get_finish(struct ieee80211_hw *hw,
+ 		if (WARN_ON(!arvif->is_started))
+@@ -7051,8 +7063,10 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 			ath11k_warn(ab, "failed to update bcn tmpl during csa: %d\n",
+ 				    ret);
+ 
+-		ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-					 arvif->bssid);
++		params.vdev_id = arvif->vdev_id;
++		params.aid = arvif->aid;
++		params.bssid = arvif->bssid;
++		ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed to bring vdev up %d: %d\n",
+ 				    arvif->vdev_id, ret);
+@@ -7144,6 +7158,7 @@ static int ath11k_start_vdev_delay(struct ieee80211_hw *hw,
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ath11k_vif *arvif = (void *)vif->drv_priv;
+ 	int ret;
++	struct vdev_up_params params = { 0 };
+ 
+ 	if (WARN_ON(arvif->is_started))
+ 		return -EBUSY;
+@@ -7170,7 +7185,9 @@ static int ath11k_start_vdev_delay(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR) {
+-		ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, 0, ar->mac_addr);
++		params.vdev_id = arvif->vdev_id,
++		params.bssid = ar->mac_addr,
++		ret = ath11k_wmi_vdev_up(ar, &params);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed put monitor up: %d\n", ret);
+ 			return ret;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 6a1d9ad699e2..f589569fec0d 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -992,7 +992,7 @@ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 	return ret;
  }
  
- static void
--ieee80211_beacon_add_mbssid(struct sk_buff *skb, struct beacon_data *beacon)
-+ieee80211_beacon_add_mbssid(struct sk_buff *skb, struct beacon_data *beacon,
-+			    u8 i)
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params)
  {
--	int i;
-+	if (!beacon->mbssid_ies || !beacon->mbssid_ies->cnt ||
-+	    i > beacon->mbssid_ies->cnt)
-+		return;
+ 	struct ath11k_pdev_wmi *wmi = ar->wmi;
+ 	struct wmi_vdev_up_cmd *cmd;
+@@ -1001,7 +1001,7 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 	struct sk_buff *skb;
+ 	int ret;
  
--	if (!beacon->mbssid_ies)
-+	if (i < beacon->mbssid_ies->cnt) {
-+		skb_put_data(skb, beacon->mbssid_ies->elem[i].data,
-+			     beacon->mbssid_ies->elem[i].len);
- 		return;
-+	}
+-	arvif = ath11k_mac_get_arvif(ar, vdev_id);
++	arvif = ath11k_mac_get_arvif(ar, params->vdev_id);
  
-+	/* i == beacon->mbssid_ies->cnt, include all MBSSID elements */
- 	for (i = 0; i < beacon->mbssid_ies->cnt; i++)
- 		skb_put_data(skb, beacon->mbssid_ies->elem[i].data,
- 			     beacon->mbssid_ies->elem[i].len);
-@@ -5108,7 +5115,8 @@ ieee80211_beacon_get_ap(struct ieee80211_hw *hw,
+ 	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, sizeof(*cmd));
+ 	if (!skb)
+@@ -1011,10 +1011,11 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 
+ 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_VDEV_UP_CMD) |
+ 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
+-	cmd->vdev_id = vdev_id;
+-	cmd->vdev_assoc_id = aid;
+ 
+-	ether_addr_copy(cmd->vdev_bssid.addr, bssid);
++	cmd->vdev_id = params->vdev_id;
++	cmd->vdev_assoc_id = params->aid;
++
++	ether_addr_copy(cmd->vdev_bssid.addr, params->bssid);
+ 
+ 	if (arvif && arvif->vif->type == NL80211_IFTYPE_STATION) {
+ 		bss_conf = &arvif->vif->bss_conf;
+@@ -1035,7 +1036,7 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
+ 		   "WMI mgmt vdev up id 0x%x assoc id %d bssid %pM\n",
+-		   vdev_id, aid, bssid);
++		   params->vdev_id, params->aid, params->bssid);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 5d915adfe90c..425ca6da84d7 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -2612,6 +2612,12 @@ struct wmi_vdev_delete_cmd {
+ 	u32 vdev_id;
+ } __packed;
+ 
++struct vdev_up_params {
++	u32 vdev_id;
++	u32 aid;
++	const u8 *bssid;
++};
++
+ struct wmi_vdev_up_cmd {
+ 	u32 tlv_header;
+ 	u32 vdev_id;
+@@ -6013,8 +6019,7 @@ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
  			struct ieee80211_mutable_offsets *offs,
- 			bool is_template,
- 			struct beacon_data *beacon,
--			struct ieee80211_chanctx_conf *chanctx_conf)
-+			struct ieee80211_chanctx_conf *chanctx_conf,
-+			u8 ema_index)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-@@ -5127,7 +5135,9 @@ ieee80211_beacon_get_ap(struct ieee80211_hw *hw,
- 	/* headroom, head length,
- 	 * tail length, maximum TIM length and multiple BSSID length
- 	 */
--	mbssid_len = ieee80211_get_mbssid_beacon_len(beacon->mbssid_ies);
-+	mbssid_len = ieee80211_get_mbssid_beacon_len(beacon->mbssid_ies,
-+						     ema_index);
-+
- 	skb = dev_alloc_skb(local->tx_headroom + beacon->head_len +
- 			    beacon->tail_len + 256 +
- 			    local->hw.extra_beacon_tailroom + mbssid_len);
-@@ -5145,7 +5155,7 @@ ieee80211_beacon_get_ap(struct ieee80211_hw *hw,
- 		offs->cntdwn_counter_offs[0] = beacon->cntdwn_counter_offsets[0];
- 
- 		if (mbssid_len) {
--			ieee80211_beacon_add_mbssid(skb, beacon);
-+			ieee80211_beacon_add_mbssid(skb, beacon, ema_index);
- 			offs->mbssid_off = skb->len - mbssid_len;
- 		}
- 
-@@ -5164,12 +5174,51 @@ ieee80211_beacon_get_ap(struct ieee80211_hw *hw,
- 	return skb;
- }
- 
-+static struct ieee80211_ema_beacons *
-+ieee80211_beacon_get_ap_ema_list(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_link_data *link,
-+				 struct ieee80211_mutable_offsets *offs,
-+				 bool is_template, struct beacon_data *beacon,
-+				 struct ieee80211_chanctx_conf *chanctx_conf)
-+{
-+	struct ieee80211_ema_beacons *ema = NULL;
-+
-+	if (!beacon->mbssid_ies || !beacon->mbssid_ies->cnt)
-+		return NULL;
-+
-+	ema = kzalloc(struct_size(ema, bcn, beacon->mbssid_ies->cnt),
-+		      GFP_ATOMIC);
-+	if (!ema)
-+		return NULL;
-+
-+	for (ema->cnt = 0; ema->cnt < beacon->mbssid_ies->cnt; ema->cnt++) {
-+		ema->bcn[ema->cnt].skb =
-+			ieee80211_beacon_get_ap(hw, vif, link,
-+						&ema->bcn[ema->cnt].offs,
-+						is_template, beacon,
-+						chanctx_conf, ema->cnt);
-+		if (!ema->bcn[ema->cnt].skb)
-+			break;
-+	}
-+
-+	if (ema->cnt == beacon->mbssid_ies->cnt)
-+		return ema;
-+
-+	ieee80211_beacon_free_ema_list(ema);
-+	return NULL;
-+}
-+
-+#define IEEE80211_INCLUDE_ALL_MBSSID_ELEMS -1
-+
- static struct sk_buff *
- __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif,
- 		       struct ieee80211_mutable_offsets *offs,
- 		       bool is_template,
--		       unsigned int link_id)
-+		       unsigned int link_id,
-+		       int ema_index,
-+		       struct ieee80211_ema_beacons **ema_beacons)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct beacon_data *beacon = NULL;
-@@ -5198,8 +5247,29 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		if (!beacon)
- 			goto out;
- 
--		skb = ieee80211_beacon_get_ap(hw, vif, link, offs, is_template,
--					      beacon, chanctx_conf);
-+		if (ema_beacons) {
-+			*ema_beacons =
-+				ieee80211_beacon_get_ap_ema_list(hw, vif, link,
-+								 offs,
-+								 is_template,
-+								 beacon,
-+								 chanctx_conf);
-+		} else {
-+			if (beacon->mbssid_ies && beacon->mbssid_ies->cnt) {
-+				if (ema_index >= beacon->mbssid_ies->cnt)
-+					goto out; /* End of MBSSID elements */
-+
-+				if (ema_index <= IEEE80211_INCLUDE_ALL_MBSSID_ELEMS)
-+					ema_index = beacon->mbssid_ies->cnt;
-+			} else {
-+				ema_index = 0;
-+			}
-+
-+			skb = ieee80211_beacon_get_ap(hw, vif, link, offs,
-+						      is_template, beacon,
-+						      chanctx_conf,
-+						      ema_index);
-+		}
- 	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
- 		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 		struct ieee80211_hdr *hdr;
-@@ -5287,10 +5357,50 @@ ieee80211_beacon_get_template(struct ieee80211_hw *hw,
- 			      struct ieee80211_mutable_offsets *offs,
- 			      unsigned int link_id)
- {
--	return __ieee80211_beacon_get(hw, vif, offs, true, link_id);
-+	return __ieee80211_beacon_get(hw, vif, offs, true, link_id,
-+				      IEEE80211_INCLUDE_ALL_MBSSID_ELEMS, NULL);
- }
- EXPORT_SYMBOL(ieee80211_beacon_get_template);
- 
-+struct sk_buff *
-+ieee80211_beacon_get_template_ema_index(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					struct ieee80211_mutable_offsets *offs,
-+					unsigned int link_id, u8 ema_index)
-+{
-+	return __ieee80211_beacon_get(hw, vif, offs, true, link_id, ema_index,
-+				      NULL);
-+}
-+EXPORT_SYMBOL(ieee80211_beacon_get_template_ema_index);
-+
-+void ieee80211_beacon_free_ema_list(struct ieee80211_ema_beacons *ema_beacons)
-+{
-+	u8 i;
-+
-+	if (!ema_beacons)
-+		return;
-+
-+	for (i = 0; i < ema_beacons->cnt; i++)
-+		kfree_skb(ema_beacons->bcn[i].skb);
-+
-+	kfree(ema_beacons);
-+}
-+EXPORT_SYMBOL(ieee80211_beacon_free_ema_list);
-+
-+struct ieee80211_ema_beacons *
-+ieee80211_beacon_get_template_ema_list(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
-+				       unsigned int link_id)
-+{
-+	struct ieee80211_ema_beacons *ema_beacons = NULL;
-+
-+	WARN_ON(__ieee80211_beacon_get(hw, vif, NULL, false, link_id, 0,
-+				       &ema_beacons));
-+
-+	return ema_beacons;
-+}
-+EXPORT_SYMBOL(ieee80211_beacon_get_template_ema_list);
-+
- struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 					 struct ieee80211_vif *vif,
- 					 u16 *tim_offset, u16 *tim_length,
-@@ -5298,7 +5408,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- {
- 	struct ieee80211_mutable_offsets offs = {};
- 	struct sk_buff *bcn = __ieee80211_beacon_get(hw, vif, &offs, false,
--						     link_id);
-+						     link_id,
-+						     IEEE80211_INCLUDE_ALL_MBSSID_ELEMS,
-+						     NULL);
- 	struct sk_buff *copy;
- 	int shift;
- 
+ 			struct sk_buff *bcn);
+ int ath11k_wmi_vdev_down(struct ath11k *ar, u8 vdev_id);
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid,
+-		       const u8 *bssid);
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params);
+ int ath11k_wmi_vdev_stop(struct ath11k *ar, u8 vdev_id);
+ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 			  bool restart);
 -- 
 2.17.1
 
