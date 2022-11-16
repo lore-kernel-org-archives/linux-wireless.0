@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 383C7C43217
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Nov 2022 16:43:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF42C433FE
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Nov 2022 16:43:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238991AbiKPQnh (ORCPT
+        id S233996AbiKPQni (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Nov 2022 11:43:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52722 "EHLO
+        Wed, 16 Nov 2022 11:43:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231871AbiKPQm5 (ORCPT
+        with ESMTP id S233373AbiKPQm6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Nov 2022 11:42:57 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAEB010F1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2022 08:39:13 -0800 (PST)
+        Wed, 16 Nov 2022 11:42:58 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D87463BA
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2022 08:39:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 41D7EB81DFD
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2022 16:39:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26B12C433D7;
-        Wed, 16 Nov 2022 16:39:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E05761EE8
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2022 16:39:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76CF5C433C1;
+        Wed, 16 Nov 2022 16:39:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668616750;
-        bh=nrZOIO3N0PTcs2bo+RME3lnticKkVFUeUIH+god7Uh4=;
+        s=k20201202; t=1668616755;
+        bh=06sDRd78VTtNmx83EZSjrTSGYt5bO+/lXO2UWJZh2BE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O1YlXJhRelBA9esOmxnN7Vx+P/ZW0F3IrQrrTM9xZRFzGLk5dy2sHwqaDnLfh1J3A
-         Fbv9lc0I58c0I7n3LBVBo0AX+M9ATlGIt+RWY1cpAU7c3Jgajc8H0495qbSeuRhPKP
-         LyAT8HCdZ5i3cinL3Z/Breudxx02A59L/xr+97u5tt2tF5NxzX6hPqs70VLgZ9nQXa
-         fazABCE1pJHt6oIGT8uFmwMyvt9ahfn/er06MNtehXLWCmCivFXi+sH9YnKcL4BbLs
-         6yB4B5TJPuAQ/1HkpkVsB0goHdPRSR+6lml9buVHMOUinnpDU45O2f/2YsPhOaBHRs
-         mmDrJo8XpUwtw==
+        b=hoeMfqwLGXCIUxT9OPX458eeUy9nPiwPjq+fImCmOXXKlKOBmMM6Wt9yGwamu7cRm
+         opx36TqgAI1aZvTuDsM2mHh1KauM0P42kDQYuc5/MKZRXkOmC5zfrpxY78nN7ucknr
+         se+zN4Hb6+dYpsxSzl7fZOzuYl8WjWP0/vyg2npsOAFFQ2GhSE43XOSuevh+xbHhjU
+         AI1/nGzCfTjVwaU2iWMHmCHutN1X1MHMJCGhICPYiW8N0PiVkwqhEe8b7a7rnL21TI
+         /hV4fiWJmFV99MF5VkjN7KOYE7QIzmiDOvcQzrF3mPvIbXk+qa5tgB2cup54lXdN5t
+         Diso+mlna6cQQ==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath12k@lists.infradead.org
-Subject: [PATCH v2 03/50] wifi: ath12k: add ce.c
-Date:   Wed, 16 Nov 2022 18:38:15 +0200
-Message-Id: <20221116163902.24996-4-kvalo@kernel.org>
+Subject: [PATCH v2 07/50] wifi: ath12k: add dbring.c
+Date:   Wed, 16 Nov 2022 18:38:19 +0200
+Message-Id: <20221116163902.24996-8-kvalo@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221116163902.24996-1-kvalo@kernel.org>
 References: <20221116163902.24996-1-kvalo@kernel.org>
@@ -55,977 +55,370 @@ commit will be one big patch. See the cover letter for more info.)
 
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/ce.c | 964 +++++++++++++++++++++++++++++++++++
- 1 file changed, 964 insertions(+)
+ drivers/net/wireless/ath/ath12k/dbring.c | 357 +++++++++++++++++++++++++++++++
+ 1 file changed, 357 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath12k/ce.c b/drivers/net/wireless/ath/ath12k/ce.c
+diff --git a/drivers/net/wireless/ath/ath12k/dbring.c b/drivers/net/wireless/ath/ath12k/dbring.c
 new file mode 100644
-index 000000000000..aed6987804bf
+index 000000000000..9aa2631be1a8
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/ce.c
-@@ -0,0 +1,964 @@
++++ b/drivers/net/wireless/ath/ath12k/dbring.c
+@@ -0,0 +1,357 @@
 +// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
-+ * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
 + * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
 + */
 +
-+#include "dp_rx.h"
++#include "core.h"
 +#include "debug.h"
-+#include "hif.h"
 +
-+const struct ce_attr ath12k_host_ce_config_qcn9274[] = {
-+	/* CE0: host->target HTC control and raw streams */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 16,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE1: target->host HTT + HTC control */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath12k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE2: target->host WMI */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 128,
-+		.recv_cb = ath12k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE3: host->target WMI (mac0) */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 32,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE4: host->target HTT */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 2048,
-+		.src_sz_max = 256,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE5: target->host pktlog */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath12k_dp_htt_htc_t2h_msg_handler,
-+	},
-+
-+	/* CE6: target autonomous hif_memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE7: host->target WMI (mac1) */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 32,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE8: target autonomous hif_memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE9: MHI */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE10: MHI */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE11: MHI */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE12: CV Prefetch */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE13: CV Prefetch */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE14: target->host dbg log */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath12k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE15: reserved for future use */
-+	{
-+		.flags = (CE_ATTR_FLAGS | CE_ATTR_DIS_INTR),
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+};
-+
-+const struct ce_attr ath12k_host_ce_config_wcn7850[] = {
-+	/* CE0: host->target HTC control and raw streams */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 16,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE1: target->host HTT + HTC control */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath12k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE2: target->host WMI */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 64,
-+		.recv_cb = ath12k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE3: host->target WMI (mac0) */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 32,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE4: host->target HTT */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 2048,
-+		.src_sz_max = 256,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE5: target->host pktlog */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE6: target autonomous hif_memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE7: host->target WMI (mac1) */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE8: target autonomous hif_memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+};
-+
-+static int ath12k_ce_rx_buf_enqueue_pipe(struct ath12k_ce_pipe *pipe,
-+					 struct sk_buff *skb, dma_addr_t paddr)
++static int ath12k_dbring_bufs_replenish(struct ath12k *ar,
++					struct ath12k_dbring *ring,
++					struct ath12k_dbring_element *buff,
++					gfp_t gfp)
 +{
-+	struct ath12k_base *ab = pipe->ab;
-+	struct ath12k_ce_ring *ring = pipe->dest_ring;
++	struct ath12k_base *ab = ar->ab;
 +	struct hal_srng *srng;
-+	unsigned int write_index;
-+	unsigned int nentries_mask = ring->nentries_mask;
-+	struct hal_ce_srng_dest_desc *desc;
++	dma_addr_t paddr;
++	void *ptr_aligned, *ptr_unaligned, *desc;
 +	int ret;
++	int buf_id;
++	u32 cookie;
 +
-+	lockdep_assert_held(&ab->ce.ce_lock);
++	srng = &ab->hal.srng_list[ring->refill_srng.ring_id];
 +
-+	write_index = ring->write_index;
-+
-+	srng = &ab->hal.srng_list[ring->hal_ring_id];
-+
-+	spin_lock_bh(&srng->lock);
++	lockdep_assert_held(&srng->lock);
 +
 +	ath12k_hal_srng_access_begin(ab, srng);
 +
-+	if (unlikely(ath12k_hal_srng_src_num_free(ab, srng, false) < 1)) {
-+		ret = -ENOSPC;
-+		goto exit;
++	ptr_unaligned = buff->payload;
++	ptr_aligned = PTR_ALIGN(ptr_unaligned, ring->buf_align);
++	paddr = dma_map_single(ab->dev, ptr_aligned, ring->buf_sz,
++			       DMA_FROM_DEVICE);
++
++	ret = dma_mapping_error(ab->dev, paddr);
++	if (ret)
++		goto err;
++
++	spin_lock_bh(&ring->idr_lock);
++	buf_id = idr_alloc(&ring->bufs_idr, buff, 0, ring->bufs_max, gfp);
++	spin_unlock_bh(&ring->idr_lock);
++	if (buf_id < 0) {
++		ret = -ENOBUFS;
++		goto err_dma_unmap;
 +	}
 +
 +	desc = ath12k_hal_srng_src_get_next_entry(ab, srng);
 +	if (!desc) {
-+		ret = -ENOSPC;
-+		goto exit;
++		ret = -ENOENT;
++		goto err_idr_remove;
 +	}
 +
-+	ath12k_hal_ce_dst_set_desc(desc, paddr);
++	buff->paddr = paddr;
 +
-+	ring->skb[write_index] = skb;
-+	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
-+	ring->write_index = write_index;
++	cookie = u32_encode_bits(ar->pdev_idx, DP_RXDMA_BUF_COOKIE_PDEV_ID) |
++		 u32_encode_bits(buf_id, DP_RXDMA_BUF_COOKIE_BUF_ID);
 +
-+	pipe->rx_buf_needed--;
++	ath12k_hal_rx_buf_addr_info_set(desc, paddr, cookie, 0);
 +
-+	ret = 0;
-+exit:
 +	ath12k_hal_srng_access_end(ab, srng);
 +
-+	spin_unlock_bh(&srng->lock);
++	return 0;
 +
-+	return ret;
-+}
-+
-+static int ath12k_ce_rx_post_pipe(struct ath12k_ce_pipe *pipe)
-+{
-+	struct ath12k_base *ab = pipe->ab;
-+	struct sk_buff *skb;
-+	dma_addr_t paddr;
-+	int ret = 0;
-+
-+	if (!(pipe->dest_ring || pipe->status_ring))
-+		return 0;
-+
-+	spin_lock_bh(&ab->ce.ce_lock);
-+	while (pipe->rx_buf_needed) {
-+		skb = dev_alloc_skb(pipe->buf_sz);
-+		if (!skb) {
-+			ret = -ENOMEM;
-+			goto exit;
-+		}
-+
-+		WARN_ON_ONCE(!IS_ALIGNED((unsigned long)skb->data, 4));
-+
-+		paddr = dma_map_single(ab->dev, skb->data,
-+				       skb->len + skb_tailroom(skb),
-+				       DMA_FROM_DEVICE);
-+		if (unlikely(dma_mapping_error(ab->dev, paddr))) {
-+			ath12k_warn(ab, "failed to dma map ce rx buf\n");
-+			dev_kfree_skb_any(skb);
-+			ret = -EIO;
-+			goto exit;
-+		}
-+
-+		ATH12K_SKB_RXCB(skb)->paddr = paddr;
-+
-+		ret = ath12k_ce_rx_buf_enqueue_pipe(pipe, skb, paddr);
-+		if (ret) {
-+			ath12k_warn(ab, "failed to enqueue rx buf: %d\n", ret);
-+			dma_unmap_single(ab->dev, paddr,
-+					 skb->len + skb_tailroom(skb),
-+					 DMA_FROM_DEVICE);
-+			dev_kfree_skb_any(skb);
-+			goto exit;
-+		}
-+	}
-+
-+exit:
-+	spin_unlock_bh(&ab->ce.ce_lock);
-+	return ret;
-+}
-+
-+static int ath12k_ce_completed_recv_next(struct ath12k_ce_pipe *pipe,
-+					 struct sk_buff **skb, int *nbytes)
-+{
-+	struct ath12k_base *ab = pipe->ab;
-+	struct hal_ce_srng_dst_status_desc *desc;
-+	struct hal_srng *srng;
-+	unsigned int sw_index;
-+	unsigned int nentries_mask;
-+	int ret = 0;
-+
-+	spin_lock_bh(&ab->ce.ce_lock);
-+
-+	sw_index = pipe->dest_ring->sw_index;
-+	nentries_mask = pipe->dest_ring->nentries_mask;
-+
-+	srng = &ab->hal.srng_list[pipe->status_ring->hal_ring_id];
-+
-+	spin_lock_bh(&srng->lock);
-+
-+	ath12k_hal_srng_access_begin(ab, srng);
-+
-+	desc = ath12k_hal_srng_dst_get_next_entry(ab, srng);
-+	if (!desc) {
-+		ret = -EIO;
-+		goto err;
-+	}
-+
-+	*nbytes = ath12k_hal_ce_dst_status_get_length(desc);
-+	if (*nbytes == 0) {
-+		ret = -EIO;
-+		goto err;
-+	}
-+
-+	*skb = pipe->dest_ring->skb[sw_index];
-+	pipe->dest_ring->skb[sw_index] = NULL;
-+
-+	sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
-+	pipe->dest_ring->sw_index = sw_index;
-+
-+	pipe->rx_buf_needed++;
++err_idr_remove:
++	spin_lock_bh(&ring->idr_lock);
++	idr_remove(&ring->bufs_idr, buf_id);
++	spin_unlock_bh(&ring->idr_lock);
++err_dma_unmap:
++	dma_unmap_single(ab->dev, paddr, ring->buf_sz,
++			 DMA_FROM_DEVICE);
 +err:
 +	ath12k_hal_srng_access_end(ab, srng);
-+
-+	spin_unlock_bh(&srng->lock);
-+
-+	spin_unlock_bh(&ab->ce.ce_lock);
-+
 +	return ret;
 +}
 +
-+static void ath12k_ce_recv_process_cb(struct ath12k_ce_pipe *pipe)
++static int ath12k_dbring_fill_bufs(struct ath12k *ar,
++				   struct ath12k_dbring *ring,
++				   gfp_t gfp)
 +{
-+	struct ath12k_base *ab = pipe->ab;
-+	struct sk_buff *skb;
-+	struct sk_buff_head list;
-+	unsigned int nbytes, max_nbytes;
-+	int ret;
-+
-+	__skb_queue_head_init(&list);
-+	while (ath12k_ce_completed_recv_next(pipe, &skb, &nbytes) == 0) {
-+		max_nbytes = skb->len + skb_tailroom(skb);
-+		dma_unmap_single(ab->dev, ATH12K_SKB_RXCB(skb)->paddr,
-+				 max_nbytes, DMA_FROM_DEVICE);
-+
-+		if (unlikely(max_nbytes < nbytes)) {
-+			ath12k_warn(ab, "rxed more than expected (nbytes %d, max %d)",
-+				    nbytes, max_nbytes);
-+			dev_kfree_skb_any(skb);
-+			continue;
-+		}
-+
-+		skb_put(skb, nbytes);
-+		__skb_queue_tail(&list, skb);
-+	}
-+
-+	while ((skb = __skb_dequeue(&list))) {
-+		ath12k_dbg(ab, ATH12K_DBG_AHB, "rx ce pipe %d len %d\n",
-+			   pipe->pipe_num, skb->len);
-+		pipe->recv_cb(ab, skb);
-+	}
-+
-+	ret = ath12k_ce_rx_post_pipe(pipe);
-+	if (ret && ret != -ENOSPC) {
-+		ath12k_warn(ab, "failed to post rx buf to pipe: %d err: %d\n",
-+			    pipe->pipe_num, ret);
-+		mod_timer(&ab->rx_replenish_retry,
-+			  jiffies + ATH12K_CE_RX_POST_RETRY_JIFFIES);
-+	}
-+}
-+
-+static struct sk_buff *ath12k_ce_completed_send_next(struct ath12k_ce_pipe *pipe)
-+{
-+	struct ath12k_base *ab = pipe->ab;
-+	struct hal_ce_srng_src_desc *desc;
++	struct ath12k_dbring_element *buff;
 +	struct hal_srng *srng;
-+	unsigned int sw_index;
-+	unsigned int nentries_mask;
-+	struct sk_buff *skb;
++	struct ath12k_base *ab = ar->ab;
++	int num_remain, req_entries, num_free;
++	u32 align;
++	int size, ret;
 +
-+	spin_lock_bh(&ab->ce.ce_lock);
-+
-+	sw_index = pipe->src_ring->sw_index;
-+	nentries_mask = pipe->src_ring->nentries_mask;
-+
-+	srng = &ab->hal.srng_list[pipe->src_ring->hal_ring_id];
++	srng = &ab->hal.srng_list[ring->refill_srng.ring_id];
 +
 +	spin_lock_bh(&srng->lock);
 +
-+	ath12k_hal_srng_access_begin(ab, srng);
++	num_free = ath12k_hal_srng_src_num_free(ab, srng, true);
++	req_entries = min(num_free, ring->bufs_max);
++	num_remain = req_entries;
++	align = ring->buf_align;
++	size = sizeof(*buff) + ring->buf_sz + align - 1;
 +
-+	desc = ath12k_hal_srng_src_reap_next(ab, srng);
-+	if (!desc) {
-+		skb = ERR_PTR(-EIO);
-+		goto err_unlock;
++	while (num_remain > 0) {
++		buff = kzalloc(size, gfp);
++		if (!buff)
++			break;
++
++		ret = ath12k_dbring_bufs_replenish(ar, ring, buff, gfp);
++		if (ret) {
++			ath12k_warn(ab, "failed to replenish db ring num_remain %d req_ent %d\n",
++				    num_remain, req_entries);
++			kfree(buff);
++			break;
++		}
++		num_remain--;
 +	}
 +
-+	skb = pipe->src_ring->skb[sw_index];
-+
-+	pipe->src_ring->skb[sw_index] = NULL;
-+
-+	sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
-+	pipe->src_ring->sw_index = sw_index;
-+
-+err_unlock:
 +	spin_unlock_bh(&srng->lock);
 +
-+	spin_unlock_bh(&ab->ce.ce_lock);
-+
-+	return skb;
++	return num_remain;
 +}
 +
-+static void ath12k_ce_send_done_cb(struct ath12k_ce_pipe *pipe)
++int ath12k_dbring_wmi_cfg_setup(struct ath12k *ar,
++				struct ath12k_dbring *ring,
++				enum wmi_direct_buffer_module id)
 +{
-+	struct ath12k_base *ab = pipe->ab;
-+	struct sk_buff *skb;
-+
-+	while (!IS_ERR(skb = ath12k_ce_completed_send_next(pipe))) {
-+		if (!skb)
-+			continue;
-+
-+		dma_unmap_single(ab->dev, ATH12K_SKB_CB(skb)->paddr, skb->len,
-+				 DMA_TO_DEVICE);
-+		dev_kfree_skb_any(skb);
-+	}
-+}
-+
-+static void ath12k_ce_srng_msi_ring_params_setup(struct ath12k_base *ab, u32 ce_id,
-+						 struct hal_srng_params *ring_params)
-+{
-+	u32 msi_data_start;
-+	u32 msi_data_count, msi_data_idx;
-+	u32 msi_irq_start;
-+	u32 addr_lo;
-+	u32 addr_hi;
++	struct ath12k_wmi_pdev_dma_ring_cfg_arg arg = {0};
 +	int ret;
 +
-+	ret = ath12k_hif_get_user_msi_vector(ab, "CE",
-+					     &msi_data_count, &msi_data_start,
-+					     &msi_irq_start);
-+
-+	if (ret)
-+		return;
-+
-+	ath12k_hif_get_msi_address(ab, &addr_lo, &addr_hi);
-+	ath12k_hif_get_ce_msi_idx(ab, ce_id, &msi_data_idx);
-+
-+	ring_params->msi_addr = addr_lo;
-+	ring_params->msi_addr |= (dma_addr_t)(((uint64_t)addr_hi) << 32);
-+	ring_params->msi_data = (msi_data_idx % msi_data_count) + msi_data_start;
-+	ring_params->flags |= HAL_SRNG_FLAGS_MSI_INTR;
-+}
-+
-+static int ath12k_ce_init_ring(struct ath12k_base *ab,
-+			       struct ath12k_ce_ring *ce_ring,
-+			       int ce_id, enum hal_ring_type type)
-+{
-+	struct hal_srng_params params = { 0 };
-+	int ret;
-+
-+	params.ring_base_paddr = ce_ring->base_addr_ce_space;
-+	params.ring_base_vaddr = ce_ring->base_addr_owner_space;
-+	params.num_entries = ce_ring->nentries;
-+
-+	if (!(CE_ATTR_DIS_INTR & ab->hw_params->host_ce_config[ce_id].flags))
-+		ath12k_ce_srng_msi_ring_params_setup(ab, ce_id, &params);
-+
-+	switch (type) {
-+	case HAL_CE_SRC:
-+		if (!(CE_ATTR_DIS_INTR & ab->hw_params->host_ce_config[ce_id].flags))
-+			params.intr_batch_cntr_thres_entries = 1;
-+		break;
-+	case HAL_CE_DST:
-+		params.max_buffer_len = ab->hw_params->host_ce_config[ce_id].src_sz_max;
-+		if (!(ab->hw_params->host_ce_config[ce_id].flags & CE_ATTR_DIS_INTR)) {
-+			params.intr_timer_thres_us = 1024;
-+			params.flags |= HAL_SRNG_FLAGS_LOW_THRESH_INTR_EN;
-+			params.low_threshold = ce_ring->nentries - 3;
-+		}
-+		break;
-+	case HAL_CE_DST_STATUS:
-+		if (!(ab->hw_params->host_ce_config[ce_id].flags & CE_ATTR_DIS_INTR)) {
-+			params.intr_batch_cntr_thres_entries = 1;
-+			params.intr_timer_thres_us = 0x1000;
-+		}
-+		break;
-+	default:
-+		ath12k_warn(ab, "Invalid CE ring type %d\n", type);
++	if (id >= WMI_DIRECT_BUF_MAX)
 +		return -EINVAL;
-+	}
 +
-+	/* TODO: Init other params needed by HAL to init the ring */
++	arg.pdev_id = DP_SW2HW_MACID(ring->pdev_id);
++	arg.module_id = id;
++	arg.base_paddr_lo = lower_32_bits(ring->refill_srng.paddr);
++	arg.base_paddr_hi = upper_32_bits(ring->refill_srng.paddr);
++	arg.head_idx_paddr_lo = lower_32_bits(ring->hp_addr);
++	arg.head_idx_paddr_hi = upper_32_bits(ring->hp_addr);
++	arg.tail_idx_paddr_lo = lower_32_bits(ring->tp_addr);
++	arg.tail_idx_paddr_hi = upper_32_bits(ring->tp_addr);
++	arg.num_elems = ring->bufs_max;
++	arg.buf_size = ring->buf_sz;
++	arg.num_resp_per_event = ring->num_resp_per_event;
++	arg.event_timeout_ms = ring->event_timeout_ms;
 +
-+	ret = ath12k_hal_srng_setup(ab, type, ce_id, 0, &params);
-+	if (ret < 0) {
-+		ath12k_warn(ab, "failed to setup srng: %d ring_id %d\n",
-+			    ret, ce_id);
++	ret = ath12k_wmi_pdev_dma_ring_cfg(ar, &arg);
++	if (ret) {
++		ath12k_warn(ar->ab, "failed to setup db ring cfg\n");
 +		return ret;
 +	}
 +
-+	ce_ring->hal_ring_id = ret;
++	return 0;
++}
++
++int ath12k_dbring_set_cfg(struct ath12k *ar, struct ath12k_dbring *ring,
++			  u32 num_resp_per_event, u32 event_timeout_ms,
++			  int (*handler)(struct ath12k *,
++					 struct ath12k_dbring_data *))
++{
++	if (WARN_ON(!ring))
++		return -EINVAL;
++
++	ring->num_resp_per_event = num_resp_per_event;
++	ring->event_timeout_ms = event_timeout_ms;
++	ring->handler = handler;
 +
 +	return 0;
 +}
 +
-+static struct ath12k_ce_ring *
-+ath12k_ce_alloc_ring(struct ath12k_base *ab, int nentries, int desc_sz)
++int ath12k_dbring_buf_setup(struct ath12k *ar,
++			    struct ath12k_dbring *ring,
++			    struct ath12k_dbring_cap *db_cap)
 +{
-+	struct ath12k_ce_ring *ce_ring;
-+	dma_addr_t base_addr;
-+
-+	ce_ring = kzalloc(struct_size(ce_ring, skb, nentries), GFP_KERNEL);
-+	if (!ce_ring)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ce_ring->nentries = nentries;
-+	ce_ring->nentries_mask = nentries - 1;
-+
-+	/* Legacy platforms that do not support cache
-+	 * coherent DMA are unsupported
-+	 */
-+	ce_ring->base_addr_owner_space_unaligned =
-+		dma_alloc_coherent(ab->dev,
-+				   nentries * desc_sz + CE_DESC_RING_ALIGN,
-+				   &base_addr, GFP_KERNEL);
-+	if (!ce_ring->base_addr_owner_space_unaligned) {
-+		kfree(ce_ring);
-+		return ERR_PTR(-ENOMEM);
-+	}
-+
-+	ce_ring->base_addr_ce_space_unaligned = base_addr;
-+
-+	ce_ring->base_addr_owner_space =
-+		PTR_ALIGN(ce_ring->base_addr_owner_space_unaligned,
-+			  CE_DESC_RING_ALIGN);
-+
-+	ce_ring->base_addr_ce_space = ALIGN(ce_ring->base_addr_ce_space_unaligned,
-+					    CE_DESC_RING_ALIGN);
-+
-+	return ce_ring;
-+}
-+
-+static int ath12k_ce_alloc_pipe(struct ath12k_base *ab, int ce_id)
-+{
-+	struct ath12k_ce_pipe *pipe = &ab->ce.ce_pipe[ce_id];
-+	const struct ce_attr *attr = &ab->hw_params->host_ce_config[ce_id];
-+	struct ath12k_ce_ring *ring;
-+	int nentries;
-+	int desc_sz;
-+
-+	pipe->attr_flags = attr->flags;
-+
-+	if (attr->src_nentries) {
-+		pipe->send_cb = ath12k_ce_send_done_cb;
-+		nentries = roundup_pow_of_two(attr->src_nentries);
-+		desc_sz = ath12k_hal_ce_get_desc_size(HAL_CE_DESC_SRC);
-+		ring = ath12k_ce_alloc_ring(ab, nentries, desc_sz);
-+		if (IS_ERR(ring))
-+			return PTR_ERR(ring);
-+		pipe->src_ring = ring;
-+	}
-+
-+	if (attr->dest_nentries) {
-+		pipe->recv_cb = attr->recv_cb;
-+		nentries = roundup_pow_of_two(attr->dest_nentries);
-+		desc_sz = ath12k_hal_ce_get_desc_size(HAL_CE_DESC_DST);
-+		ring = ath12k_ce_alloc_ring(ab, nentries, desc_sz);
-+		if (IS_ERR(ring))
-+			return PTR_ERR(ring);
-+		pipe->dest_ring = ring;
-+
-+		desc_sz = ath12k_hal_ce_get_desc_size(HAL_CE_DESC_DST_STATUS);
-+		ring = ath12k_ce_alloc_ring(ab, nentries, desc_sz);
-+		if (IS_ERR(ring))
-+			return PTR_ERR(ring);
-+		pipe->status_ring = ring;
-+	}
-+
-+	return 0;
-+}
-+
-+void ath12k_ce_per_engine_service(struct ath12k_base *ab, u16 ce_id)
-+{
-+	struct ath12k_ce_pipe *pipe = &ab->ce.ce_pipe[ce_id];
-+
-+	if (pipe->send_cb)
-+		pipe->send_cb(pipe);
-+
-+	if (pipe->recv_cb)
-+		ath12k_ce_recv_process_cb(pipe);
-+}
-+
-+void ath12k_ce_poll_send_completed(struct ath12k_base *ab, u8 pipe_id)
-+{
-+	struct ath12k_ce_pipe *pipe = &ab->ce.ce_pipe[pipe_id];
-+
-+	if ((pipe->attr_flags & CE_ATTR_DIS_INTR) && pipe->send_cb)
-+		pipe->send_cb(pipe);
-+}
-+
-+int ath12k_ce_send(struct ath12k_base *ab, struct sk_buff *skb, u8 pipe_id,
-+		   u16 transfer_id)
-+{
-+	struct ath12k_ce_pipe *pipe = &ab->ce.ce_pipe[pipe_id];
-+	struct hal_ce_srng_src_desc *desc;
++	struct ath12k_base *ab = ar->ab;
 +	struct hal_srng *srng;
-+	unsigned int write_index, sw_index;
-+	unsigned int nentries_mask;
-+	int ret = 0;
-+	u8 byte_swap_data = 0;
-+	int num_used;
++	int ret;
 +
-+	/* Check if some entries could be regained by handling tx completion if
-+	 * the CE has interrupts disabled and the used entries is more than the
-+	 * defined usage threshold.
-+	 */
-+	if (pipe->attr_flags & CE_ATTR_DIS_INTR) {
-+		spin_lock_bh(&ab->ce.ce_lock);
-+		write_index = pipe->src_ring->write_index;
++	srng = &ab->hal.srng_list[ring->refill_srng.ring_id];
++	ring->bufs_max = ring->refill_srng.size /
++		ath12k_hal_srng_get_entrysize(ab, HAL_RXDMA_DIR_BUF);
 +
-+		sw_index = pipe->src_ring->sw_index;
++	ring->buf_sz = db_cap->min_buf_sz;
++	ring->buf_align = db_cap->min_buf_align;
++	ring->pdev_id = db_cap->pdev_id;
++	ring->hp_addr = ath12k_hal_srng_get_hp_addr(ab, srng);
++	ring->tp_addr = ath12k_hal_srng_get_tp_addr(ab, srng);
 +
-+		if (write_index >= sw_index)
-+			num_used = write_index - sw_index;
-+		else
-+			num_used = pipe->src_ring->nentries - sw_index +
-+				   write_index;
-+
-+		spin_unlock_bh(&ab->ce.ce_lock);
-+
-+		if (num_used > ATH12K_CE_USAGE_THRESHOLD)
-+			ath12k_ce_poll_send_completed(ab, pipe->pipe_num);
-+	}
-+
-+	if (test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags))
-+		return -ESHUTDOWN;
-+
-+	spin_lock_bh(&ab->ce.ce_lock);
-+
-+	write_index = pipe->src_ring->write_index;
-+	nentries_mask = pipe->src_ring->nentries_mask;
-+
-+	srng = &ab->hal.srng_list[pipe->src_ring->hal_ring_id];
-+
-+	spin_lock_bh(&srng->lock);
-+
-+	ath12k_hal_srng_access_begin(ab, srng);
-+
-+	if (unlikely(ath12k_hal_srng_src_num_free(ab, srng, false) < 1)) {
-+		ath12k_hal_srng_access_end(ab, srng);
-+		ret = -ENOBUFS;
-+		goto unlock;
-+	}
-+
-+	desc = ath12k_hal_srng_src_get_next_reaped(ab, srng);
-+	if (!desc) {
-+		ath12k_hal_srng_access_end(ab, srng);
-+		ret = -ENOBUFS;
-+		goto unlock;
-+	}
-+
-+	if (pipe->attr_flags & CE_ATTR_BYTE_SWAP_DATA)
-+		byte_swap_data = 1;
-+
-+	ath12k_hal_ce_src_set_desc(desc, ATH12K_SKB_CB(skb)->paddr,
-+				   skb->len, transfer_id, byte_swap_data);
-+
-+	pipe->src_ring->skb[write_index] = skb;
-+	pipe->src_ring->write_index = CE_RING_IDX_INCR(nentries_mask,
-+						       write_index);
-+
-+	ath12k_hal_srng_access_end(ab, srng);
-+
-+unlock:
-+	spin_unlock_bh(&srng->lock);
-+
-+	spin_unlock_bh(&ab->ce.ce_lock);
++	ret = ath12k_dbring_fill_bufs(ar, ring, GFP_KERNEL);
 +
 +	return ret;
 +}
 +
-+static void ath12k_ce_rx_pipe_cleanup(struct ath12k_ce_pipe *pipe)
++int ath12k_dbring_srng_setup(struct ath12k *ar, struct ath12k_dbring *ring,
++			     int ring_num, int num_entries)
 +{
-+	struct ath12k_base *ab = pipe->ab;
-+	struct ath12k_ce_ring *ring = pipe->dest_ring;
-+	struct sk_buff *skb;
-+	int i;
-+
-+	if (!(ring && pipe->buf_sz))
-+		return;
-+
-+	for (i = 0; i < ring->nentries; i++) {
-+		skb = ring->skb[i];
-+		if (!skb)
-+			continue;
-+
-+		ring->skb[i] = NULL;
-+		dma_unmap_single(ab->dev, ATH12K_SKB_RXCB(skb)->paddr,
-+				 skb->len + skb_tailroom(skb), DMA_FROM_DEVICE);
-+		dev_kfree_skb_any(skb);
-+	}
-+}
-+
-+void ath12k_ce_cleanup_pipes(struct ath12k_base *ab)
-+{
-+	struct ath12k_ce_pipe *pipe;
-+	int pipe_num;
-+
-+	for (pipe_num = 0; pipe_num < ab->hw_params->ce_count; pipe_num++) {
-+		pipe = &ab->ce.ce_pipe[pipe_num];
-+		ath12k_ce_rx_pipe_cleanup(pipe);
-+
-+		/* Cleanup any src CE's which have interrupts disabled */
-+		ath12k_ce_poll_send_completed(ab, pipe_num);
-+
-+		/* NOTE: Should we also clean up tx buffer in all pipes? */
-+	}
-+}
-+
-+void ath12k_ce_rx_post_buf(struct ath12k_base *ab)
-+{
-+	struct ath12k_ce_pipe *pipe;
-+	int i;
 +	int ret;
 +
-+	for (i = 0; i < ab->hw_params->ce_count; i++) {
-+		pipe = &ab->ce.ce_pipe[i];
-+		ret = ath12k_ce_rx_post_pipe(pipe);
-+		if (ret) {
-+			if (ret == -ENOSPC)
-+				continue;
-+
-+			ath12k_warn(ab, "failed to post rx buf to pipe: %d err: %d\n",
-+				    i, ret);
-+			mod_timer(&ab->rx_replenish_retry,
-+				  jiffies + ATH12K_CE_RX_POST_RETRY_JIFFIES);
-+
-+			return;
-+		}
-+	}
-+}
-+
-+void ath12k_ce_rx_replenish_retry(struct timer_list *t)
-+{
-+	struct ath12k_base *ab = from_timer(ab, t, rx_replenish_retry);
-+
-+	ath12k_ce_rx_post_buf(ab);
-+}
-+
-+static void ath12k_ce_shadow_config(struct ath12k_base *ab)
-+{
-+	int i;
-+
-+	for (i = 0; i < ab->hw_params->ce_count; i++) {
-+		if (ab->hw_params->host_ce_config[i].src_nentries)
-+			ath12k_hal_srng_update_shadow_config(ab, HAL_CE_SRC, i);
-+
-+		if (ab->hw_params->host_ce_config[i].dest_nentries) {
-+			ath12k_hal_srng_update_shadow_config(ab, HAL_CE_DST, i);
-+			ath12k_hal_srng_update_shadow_config(ab, HAL_CE_DST_STATUS, i);
-+		}
-+	}
-+}
-+
-+void ath12k_ce_get_shadow_config(struct ath12k_base *ab,
-+				 u32 **shadow_cfg, u32 *shadow_cfg_len)
-+{
-+	if (!ab->hw_params->supports_shadow_regs)
-+		return;
-+
-+	ath12k_hal_srng_get_shadow_config(ab, shadow_cfg, shadow_cfg_len);
-+
-+	/* shadow is already configured */
-+	if (*shadow_cfg_len)
-+		return;
-+
-+	/* shadow isn't configured yet, configure now.
-+	 * non-CE srngs are configured firstly, then
-+	 * all CE srngs.
-+	 */
-+	ath12k_hal_srng_shadow_config(ab);
-+	ath12k_ce_shadow_config(ab);
-+
-+	/* get the shadow configuration */
-+	ath12k_hal_srng_get_shadow_config(ab, shadow_cfg, shadow_cfg_len);
-+}
-+
-+int ath12k_ce_init_pipes(struct ath12k_base *ab)
-+{
-+	struct ath12k_ce_pipe *pipe;
-+	int i;
-+	int ret;
-+
-+	ath12k_ce_get_shadow_config(ab, &ab->qmi.ce_cfg.shadow_reg_v3,
-+				    &ab->qmi.ce_cfg.shadow_reg_v3_len);
-+
-+	for (i = 0; i < ab->hw_params->ce_count; i++) {
-+		pipe = &ab->ce.ce_pipe[i];
-+
-+		if (pipe->src_ring) {
-+			ret = ath12k_ce_init_ring(ab, pipe->src_ring, i,
-+						  HAL_CE_SRC);
-+			if (ret) {
-+				ath12k_warn(ab, "failed to init src ring: %d\n",
-+					    ret);
-+				/* Should we clear any partial init */
-+				return ret;
-+			}
-+
-+			pipe->src_ring->write_index = 0;
-+			pipe->src_ring->sw_index = 0;
-+		}
-+
-+		if (pipe->dest_ring) {
-+			ret = ath12k_ce_init_ring(ab, pipe->dest_ring, i,
-+						  HAL_CE_DST);
-+			if (ret) {
-+				ath12k_warn(ab, "failed to init dest ring: %d\n",
-+					    ret);
-+				/* Should we clear any partial init */
-+				return ret;
-+			}
-+
-+			pipe->rx_buf_needed = pipe->dest_ring->nentries ?
-+					      pipe->dest_ring->nentries - 2 : 0;
-+
-+			pipe->dest_ring->write_index = 0;
-+			pipe->dest_ring->sw_index = 0;
-+		}
-+
-+		if (pipe->status_ring) {
-+			ret = ath12k_ce_init_ring(ab, pipe->status_ring, i,
-+						  HAL_CE_DST_STATUS);
-+			if (ret) {
-+				ath12k_warn(ab, "failed to init dest status ing: %d\n",
-+					    ret);
-+				/* Should we clear any partial init */
-+				return ret;
-+			}
-+
-+			pipe->status_ring->write_index = 0;
-+			pipe->status_ring->sw_index = 0;
-+		}
++	ret = ath12k_dp_srng_setup(ar->ab, &ring->refill_srng, HAL_RXDMA_DIR_BUF,
++				   ring_num, ar->pdev_idx, num_entries);
++	if (ret < 0) {
++		ath12k_warn(ar->ab, "failed to setup srng: %d ring_id %d\n",
++			    ret, ring_num);
++		goto err;
 +	}
 +
 +	return 0;
++err:
++	ath12k_dp_srng_cleanup(ar->ab, &ring->refill_srng);
++	return ret;
 +}
 +
-+void ath12k_ce_free_pipes(struct ath12k_base *ab)
++int ath12k_dbring_get_cap(struct ath12k_base *ab,
++			  u8 pdev_idx,
++			  enum wmi_direct_buffer_module id,
++			  struct ath12k_dbring_cap *db_cap)
 +{
-+	struct ath12k_ce_pipe *pipe;
-+	int desc_sz;
 +	int i;
 +
-+	for (i = 0; i < ab->hw_params->ce_count; i++) {
-+		pipe = &ab->ce.ce_pipe[i];
++	if (!ab->num_db_cap || !ab->db_caps)
++		return -ENOENT;
 +
-+		if (pipe->src_ring) {
-+			desc_sz = ath12k_hal_ce_get_desc_size(HAL_CE_DESC_SRC);
-+			dma_free_coherent(ab->dev,
-+					  pipe->src_ring->nentries * desc_sz +
-+					  CE_DESC_RING_ALIGN,
-+					  pipe->src_ring->base_addr_owner_space,
-+					  pipe->src_ring->base_addr_ce_space);
-+			kfree(pipe->src_ring);
-+			pipe->src_ring = NULL;
-+		}
-+
-+		if (pipe->dest_ring) {
-+			desc_sz = ath12k_hal_ce_get_desc_size(HAL_CE_DESC_DST);
-+			dma_free_coherent(ab->dev,
-+					  pipe->dest_ring->nentries * desc_sz +
-+					  CE_DESC_RING_ALIGN,
-+					  pipe->dest_ring->base_addr_owner_space,
-+					  pipe->dest_ring->base_addr_ce_space);
-+			kfree(pipe->dest_ring);
-+			pipe->dest_ring = NULL;
-+		}
-+
-+		if (pipe->status_ring) {
-+			desc_sz =
-+			  ath12k_hal_ce_get_desc_size(HAL_CE_DESC_DST_STATUS);
-+			dma_free_coherent(ab->dev,
-+					  pipe->status_ring->nentries * desc_sz +
-+					  CE_DESC_RING_ALIGN,
-+					  pipe->status_ring->base_addr_owner_space,
-+					  pipe->status_ring->base_addr_ce_space);
-+			kfree(pipe->status_ring);
-+			pipe->status_ring = NULL;
-+		}
-+	}
-+}
-+
-+int ath12k_ce_alloc_pipes(struct ath12k_base *ab)
-+{
-+	struct ath12k_ce_pipe *pipe;
-+	int i;
-+	int ret;
-+	const struct ce_attr *attr;
-+
-+	spin_lock_init(&ab->ce.ce_lock);
-+
-+	for (i = 0; i < ab->hw_params->ce_count; i++) {
-+		attr = &ab->hw_params->host_ce_config[i];
-+		pipe = &ab->ce.ce_pipe[i];
-+		pipe->pipe_num = i;
-+		pipe->ab = ab;
-+		pipe->buf_sz = attr->src_sz_max;
-+
-+		ret = ath12k_ce_alloc_pipe(ab, i);
-+		if (ret) {
-+			/* Free any parial successful allocation */
-+			ath12k_ce_free_pipes(ab);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+int ath12k_ce_get_attr_flags(struct ath12k_base *ab, int ce_id)
-+{
-+	if (ce_id >= ab->hw_params->ce_count)
++	if (id >= WMI_DIRECT_BUF_MAX)
 +		return -EINVAL;
 +
-+	return ab->hw_params->host_ce_config[ce_id].flags;
++	for (i = 0; i < ab->num_db_cap; i++) {
++		if (pdev_idx == ab->db_caps[i].pdev_id &&
++		    id == ab->db_caps[i].id) {
++			*db_cap = ab->db_caps[i];
++
++			return 0;
++		}
++	}
++
++	return -ENOENT;
++}
++
++int ath12k_dbring_buffer_release_event(struct ath12k_base *ab,
++				       struct ath12k_dbring_buf_release_event *ev)
++{
++	struct ath12k_dbring *ring;
++	struct hal_srng *srng;
++	struct ath12k *ar;
++	struct ath12k_dbring_element *buff;
++	struct ath12k_dbring_data handler_data;
++	struct ath12k_buffer_addr desc;
++	u8 *vaddr_unalign;
++	u32 num_entry, num_buff_reaped;
++	u8 pdev_idx, rbm;
++	u32 cookie;
++	int buf_id;
++	int size;
++	dma_addr_t paddr;
++	int ret = 0;
++
++	pdev_idx = le32_to_cpu(ev->fixed.pdev_id);
++
++	if (pdev_idx >= ab->num_radios) {
++		ath12k_warn(ab, "Invalid pdev id %d\n", pdev_idx);
++		return -EINVAL;
++	}
++
++	if (ev->fixed.num_buf_release_entry !=
++	    ev->fixed.num_meta_data_entry) {
++		ath12k_warn(ab, "Buffer entry %d mismatch meta entry %d\n",
++			    ev->fixed.num_buf_release_entry,
++			    ev->fixed.num_meta_data_entry);
++		return -EINVAL;
++	}
++
++	ar = ab->pdevs[pdev_idx].ar;
++
++	rcu_read_lock();
++	if (!rcu_dereference(ab->pdevs_active[pdev_idx])) {
++		ret = -EINVAL;
++		goto rcu_unlock;
++	}
++
++	switch (ev->fixed.module_id) {
++	case WMI_DIRECT_BUF_SPECTRAL:
++		break;
++	default:
++		ring = NULL;
++		ath12k_warn(ab, "Recv dma buffer release ev on unsupp module %d\n",
++			    ev->fixed.module_id);
++		break;
++	}
++
++	if (!ring) {
++		ret = -EINVAL;
++		goto rcu_unlock;
++	}
++
++	srng = &ab->hal.srng_list[ring->refill_srng.ring_id];
++	num_entry = le32_to_cpu(ev->fixed.num_buf_release_entry);
++	size = sizeof(*buff) + ring->buf_sz + ring->buf_align - 1;
++	num_buff_reaped = 0;
++
++	spin_lock_bh(&srng->lock);
++
++	while (num_buff_reaped < num_entry) {
++		desc.info0 = ev->buf_entry[num_buff_reaped].paddr_lo;
++		desc.info1 = ev->buf_entry[num_buff_reaped].paddr_hi;
++		handler_data.meta = ev->meta_data[num_buff_reaped];
++
++		num_buff_reaped++;
++
++		ath12k_hal_rx_buf_addr_info_get(&desc, &paddr, &cookie, &rbm);
++
++		buf_id = u32_get_bits(cookie, DP_RXDMA_BUF_COOKIE_BUF_ID);
++
++		spin_lock_bh(&ring->idr_lock);
++		buff = idr_find(&ring->bufs_idr, buf_id);
++		if (!buff) {
++			spin_unlock_bh(&ring->idr_lock);
++			continue;
++		}
++		idr_remove(&ring->bufs_idr, buf_id);
++		spin_unlock_bh(&ring->idr_lock);
++
++		dma_unmap_single(ab->dev, buff->paddr, ring->buf_sz,
++				 DMA_FROM_DEVICE);
++
++		if (ring->handler) {
++			vaddr_unalign = buff->payload;
++			handler_data.data = PTR_ALIGN(vaddr_unalign,
++						      ring->buf_align);
++			handler_data.data_sz = ring->buf_sz;
++
++			ring->handler(ar, &handler_data);
++		}
++
++		memset(buff, 0, size);
++		ath12k_dbring_bufs_replenish(ar, ring, buff, GFP_ATOMIC);
++	}
++
++	spin_unlock_bh(&srng->lock);
++
++rcu_unlock:
++	rcu_read_unlock();
++
++	return ret;
++}
++
++void ath12k_dbring_srng_cleanup(struct ath12k *ar, struct ath12k_dbring *ring)
++{
++	ath12k_dp_srng_cleanup(ar->ab, &ring->refill_srng);
++}
++
++void ath12k_dbring_buf_cleanup(struct ath12k *ar, struct ath12k_dbring *ring)
++{
++	struct ath12k_dbring_element *buff;
++	int buf_id;
++
++	spin_lock_bh(&ring->idr_lock);
++	idr_for_each_entry(&ring->bufs_idr, buff, buf_id) {
++		idr_remove(&ring->bufs_idr, buf_id);
++		dma_unmap_single(ar->ab->dev, buff->paddr,
++				 ring->buf_sz, DMA_FROM_DEVICE);
++		kfree(buff);
++	}
++
++	idr_destroy(&ring->bufs_idr);
++	spin_unlock_bh(&ring->idr_lock);
 +}
 
