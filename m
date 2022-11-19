@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB802C43219
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Nov 2022 02:22:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FD3DC4332F
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Nov 2022 02:22:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233521AbiKSCWw (ORCPT
+        id S234167AbiKSCWx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Nov 2022 21:22:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58260 "EHLO
+        Fri, 18 Nov 2022 21:22:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235344AbiKSCVM (ORCPT
+        with ESMTP id S235865AbiKSCWT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2022 21:21:12 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 331DC15FF9;
-        Fri, 18 Nov 2022 18:14:37 -0800 (PST)
+        Fri, 18 Nov 2022 21:22:19 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 862A57C452;
+        Fri, 18 Nov 2022 18:15:05 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 69BDCCE2104;
-        Sat, 19 Nov 2022 02:14:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79E51C433D7;
-        Sat, 19 Nov 2022 02:14:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2A7F3B82677;
+        Sat, 19 Nov 2022 02:15:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A04EC433B5;
+        Sat, 19 Nov 2022 02:15:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668824049;
-        bh=LJuXFRrohITPW5o/NWROAe/Hfesl4OxQ4ROoWvTWE60=;
+        s=k20201202; t=1668824103;
+        bh=KDw9EjK9+mwAfTvh1wRhZgqj6HHKnxmWbRovU+8NZ0E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SLXbCudm6hcj6Q6m7zmlvqaU35EEmfkhlPT3Lyfmjad0Zc7o1m10SNdqRJUweiZFY
-         QdTvySOpYtB2ehv0PCbROG8BcfAjL+yAIfF4YF6uT15rlbuz9Y3lm+Ql089WETT7K3
-         8g9Y0zDxx1xpKrabrAaRLUKfzbNUlcBvINQe9fEm4JBsBVo+aqqKQ7I2B2lD+ozIs9
-         /FX3E+kcQ7tKsg5pibSSih/6sKjxczzGuqhUomAs7bQSAxtNZUpLTcQCOi/3cM9SQU
-         EMDtPNahWdZR5ux4iXsSIsW4MoIegoqNBf+zhR7YLkiHLW1+kLsJq+jePkr0lVEXpD
-         QrSnc3NuVhLhg==
+        b=LlYG9oT16m6t+lhjnOIX9H/xdb+s3pCv3r6IR4FkxGIc+Z/8mIsRXN8uSQdSwFvcG
+         9f4lr9WFhXH0wVEICBGkMsv2iNZbS9L8ykJ09yyI2piL29OWSLpxNHaB6sEVY+ehds
+         2HHztFLz0qwbGQwJ7omMmfMzlTd9HoSqCAt35Kzxu6H+hf16MWjsnWSBZSAjOdyNGl
+         +nzb6tUVXPgK+E2W437blsjkC4Dfs/LyuZsdJmczd0kZYHtkQ+dN1Tlr63LeXBTGH4
+         GSvrIE2Y5oELp4FcEiaSgUp4ZghvdHJmSMwDgARpqBCc6BC7BvA0RuPZ89WsVw2fTR
+         Q2Idp4QgV8PPQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Tyler J. Stachecki" <stachecki.tyler@gmail.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 07/27] wifi: ath11k: Fix QCN9074 firmware boot on x86
-Date:   Fri, 18 Nov 2022 21:13:32 -0500
-Message-Id: <20221119021352.1774592-7-sashal@kernel.org>
+Cc:     Jonas Jelonek <jelonek.jonas@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 02/18] wifi: mac80211_hwsim: fix debugfs attribute ps with rc table support
+Date:   Fri, 18 Nov 2022 21:14:43 -0500
+Message-Id: <20221119021459.1775052-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221119021352.1774592-1-sashal@kernel.org>
-References: <20221119021352.1774592-1-sashal@kernel.org>
+In-Reply-To: <20221119021459.1775052-1-sashal@kernel.org>
+References: <20221119021459.1775052-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,48 +55,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: "Tyler J. Stachecki" <stachecki.tyler@gmail.com>
+From: Jonas Jelonek <jelonek.jonas@gmail.com>
 
-[ Upstream commit 3a89b6dec9920026eaa90fe8457f4348d3388a98 ]
+[ Upstream commit 69188df5f6e4cecc6b76b958979ba363cd5240e8 ]
 
-The 2.7.0 series of QCN9074's firmware requests 5 segments
-of memory instead of 3 (as in the 2.5.0 series).
+Fixes a warning that occurs when rc table support is enabled
+(IEEE80211_HW_SUPPORTS_RC_TABLE) in mac80211_hwsim and the PS mode
+is changed via the exported debugfs attribute.
 
-The first segment (11M) is too large to be kalloc'd in one
-go on x86 and requires piecemeal 1MB allocations, as was
-the case with the prior public firmware (2.5.0, 15M).
+When the PS mode is changed, a packet is broadcasted via
+hwsim_send_nullfunc by creating and transmitting a plain skb with only
+header initialized. The ieee80211 rate array in the control buffer is
+zero-initialized. When ratetbl support is enabled, ieee80211_get_tx_rates
+is called for the skb with sta parameter set to NULL and thus no
+ratetbl can be used. The final rate array then looks like
+[-1,0; 0,0; 0,0; 0,0] which causes the warning in ieee80211_get_tx_rate.
 
-Since f6f92968e1e5, ath11k will break the memory requests,
-but only if there were fewer than 3 segments requested by
-the firmware. It seems that 5 segments works fine and
-allows QCN9074 to boot on x86 with firmware 2.7.0, so
-change things accordingly.
+The issue is fixed by setting the count of the first rate with idx '0'
+to 1 and hence ieee80211_get_tx_rates won't overwrite it with idx '-1'.
 
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01208-QCAHKSWPL_SILICONZ-1
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.16
-
-Signed-off-by: Tyler J. Stachecki <stachecki.tyler@gmail.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20221022042728.43015-1-stachecki.tyler@gmail.com
+Signed-off-by: Jonas Jelonek <jelonek.jonas@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/qmi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
-index 3d5930330703..25940b683ea4 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.h
-+++ b/drivers/net/wireless/ath/ath11k/qmi.h
-@@ -27,7 +27,7 @@
- #define ATH11K_QMI_WLANFW_MAX_NUM_MEM_SEG_V01	52
- #define ATH11K_QMI_CALDB_SIZE			0x480000
- #define ATH11K_QMI_BDF_EXT_STR_LENGTH		0x20
--#define ATH11K_QMI_FW_MEM_REQ_SEGMENT_CNT	3
-+#define ATH11K_QMI_FW_MEM_REQ_SEGMENT_CNT	5
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index a6d4ff4760ad..255286b2324e 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -775,6 +775,7 @@ static void hwsim_send_nullfunc(struct mac80211_hwsim_data *data, u8 *mac,
+ 	struct hwsim_vif_priv *vp = (void *)vif->drv_priv;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_hdr *hdr;
++	struct ieee80211_tx_info *cb;
  
- #define QMI_WLFW_REQUEST_MEM_IND_V01		0x0035
- #define QMI_WLFW_FW_MEM_READY_IND_V01		0x0037
+ 	if (!vp->assoc)
+ 		return;
+@@ -796,6 +797,10 @@ static void hwsim_send_nullfunc(struct mac80211_hwsim_data *data, u8 *mac,
+ 	memcpy(hdr->addr2, mac, ETH_ALEN);
+ 	memcpy(hdr->addr3, vp->bssid, ETH_ALEN);
+ 
++	cb = IEEE80211_SKB_CB(skb);
++	cb->control.rates[0].count = 1;
++	cb->control.rates[1].idx = -1;
++
+ 	rcu_read_lock();
+ 	mac80211_hwsim_tx_frame(data->hw, skb,
+ 				rcu_dereference(vif->chanctx_conf)->def.chan);
 -- 
 2.35.1
 
