@@ -2,49 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D7DC4332F
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Nov 2022 02:23:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEFAC4321E
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Nov 2022 02:23:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235614AbiKSCXH (ORCPT
+        id S235759AbiKSCXo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Nov 2022 21:23:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59210 "EHLO
+        Fri, 18 Nov 2022 21:23:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235990AbiKSCWc (ORCPT
+        with ESMTP id S236079AbiKSCWj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2022 21:22:32 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43682A6A18;
-        Fri, 18 Nov 2022 18:15:10 -0800 (PST)
+        Fri, 18 Nov 2022 21:22:39 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A53C3C722C;
+        Fri, 18 Nov 2022 18:15:17 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6855BB82670;
-        Sat, 19 Nov 2022 02:15:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 077FEC433D6;
-        Sat, 19 Nov 2022 02:15:00 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 221F7B82672;
+        Sat, 19 Nov 2022 02:15:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3709FC433D6;
+        Sat, 19 Nov 2022 02:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668824102;
-        bh=lOjJ92ySfAV9G+uygflEoFdCaYxc2VJLfKHKYksRM5M=;
-        h=From:To:Cc:Subject:Date:From;
-        b=bQqXLRSdZD3GV+sc8R40gK3BNdVXSwEasf3178dL0GnWOWy6Z7ekn89SrbQwHHCUX
-         lXsFDw61Rms95tRgqhhp7mdWO7NaSdwl1vB4oY35OQ0wsxIiHJJ9E9FTsr4COKUDag
-         +cYo0KFsQg0iEfeiWBFa+p5rMpX7Iw2u9zKjHjvnuhqwBLFBoww+90TCRqmx9+eQf+
-         oHjdoSbsJskKpve0xm3MgodfvfZYmviOkcNk2IxfTJgyChD3s8dlihZkZQ8ws1FZwv
-         96BXG+mXlqbui6iCII6YKMcr0cFnLRdieHScyJcXpxhRcHaFBxkM05kE3RoY73empT
-         B6mnenIB8gFWw==
+        s=k20201202; t=1668824112;
+        bh=YJu98InK8ViYVAsNOFzmBhrdJLfvaAKKWOwF9ZkvTI0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=X31njGWIjWb1IjKagI2obi26muH2sfGt2XZD2maMHwBnmcV+WkcGE0ybKqx2zUlYW
+         BDB3dkD3UQZ6QkE+kL4m1ULu17EOc/nhheYznuXoUneT0+4pFnGmuCBglYYP4OodFQ
+         632ibVhQewSCeSX1d6RW692wD7z/YZ+eR3pQt3tDra2qsiondHrI4v0Xzz6bhhURVl
+         dKMmxkeOK0uNdBzYjiDJP2jyXnywiT/rSGVwnM5whhUdqS7NNQLBUOODRakYq1Qq9P
+         NeWNtDDChI+ohfnHy6/KsJdOIfS2KuQ8lTJHlTmFETF16bTYzSkq2pzaPWjHQeyIve
+         EHHk0/zGywAlA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     taozhang <taozhang@bestechnic.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 01/18] wifi: mac80211: fix memory free error when registering wiphy fail
-Date:   Fri, 18 Nov 2022 21:14:42 -0500
-Message-Id: <20221119021459.1775052-1-sashal@kernel.org>
+Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        songmuchun@bytedance.com, Julia.Lawall@inria.fr,
+        akpm@linux-foundation.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 05/18] wifi: airo: do not assign -1 to unsigned char
+Date:   Fri, 18 Nov 2022 21:14:46 -0500
+Message-Id: <20221119021459.1775052-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221119021459.1775052-1-sashal@kernel.org>
+References: <20221119021459.1775052-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,51 +55,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: taozhang <taozhang@bestechnic.com>
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
 
-[ Upstream commit 50b2e8711462409cd368c41067405aa446dfa2af ]
+[ Upstream commit e6cb8769452e8236b52134e5cb4a18b8f5986932 ]
 
-ieee80211_register_hw free the allocated cipher suites when
-registering wiphy fail, and ieee80211_free_hw will re-free it.
+With char becoming unsigned by default, and with `char` alone being
+ambiguous and based on architecture, we get a warning when assigning the
+unchecked output of hex_to_bin() to that unsigned char. Mark `key` as a
+`u8`, which matches the struct's type, and then check each call to
+hex_to_bin() before casting.
 
-set wiphy_ciphers_allocated to false after freeing allocated
-cipher suites.
-
-Signed-off-by: taozhang <taozhang@bestechnic.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20221024162843.535921-1-Jason@zx2c4.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/main.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/cisco/airo.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 73893025922f..ae90ac3be59a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1349,8 +1349,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	ieee80211_led_exit(local);
- 	destroy_workqueue(local->workqueue);
-  fail_workqueue:
--	if (local->wiphy_ciphers_allocated)
-+	if (local->wiphy_ciphers_allocated) {
- 		kfree(local->hw.wiphy->cipher_suites);
-+		local->wiphy_ciphers_allocated = false;
-+	}
- 	kfree(local->int_scan_req);
- 	return result;
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 0569f37e9ed5..8c9c6bfbaeee 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -5236,7 +5236,7 @@ static int get_wep_tx_idx(struct airo_info *ai)
+ 	return -1;
  }
-@@ -1420,8 +1422,10 @@ void ieee80211_free_hw(struct ieee80211_hw *hw)
- 	mutex_destroy(&local->iflist_mtx);
- 	mutex_destroy(&local->mtx);
  
--	if (local->wiphy_ciphers_allocated)
-+	if (local->wiphy_ciphers_allocated) {
- 		kfree(local->hw.wiphy->cipher_suites);
-+		local->wiphy_ciphers_allocated = false;
-+	}
+-static int set_wep_key(struct airo_info *ai, u16 index, const char *key,
++static int set_wep_key(struct airo_info *ai, u16 index, const u8 *key,
+ 		       u16 keylen, int perm, int lock)
+ {
+ 	static const unsigned char macaddr[ETH_ALEN] = { 0x01, 0, 0, 0, 0, 0 };
+@@ -5287,7 +5287,7 @@ static void proc_wepkey_on_close(struct inode *inode, struct file *file)
+ 	struct net_device *dev = PDE_DATA(inode);
+ 	struct airo_info *ai = dev->ml_priv;
+ 	int i, rc;
+-	char key[16];
++	u8 key[16];
+ 	u16 index = 0;
+ 	int j = 0;
  
- 	idr_for_each(&local->ack_status_frames,
- 		     ieee80211_free_ack_frame, NULL);
+@@ -5315,12 +5315,22 @@ static void proc_wepkey_on_close(struct inode *inode, struct file *file)
+ 	}
+ 
+ 	for (i = 0; i < 16*3 && data->wbuffer[i+j]; i++) {
++		int val;
++
++		if (i % 3 == 2)
++			continue;
++
++		val = hex_to_bin(data->wbuffer[i+j]);
++		if (val < 0) {
++			airo_print_err(ai->dev->name, "WebKey passed invalid key hex");
++			return;
++		}
+ 		switch(i%3) {
+ 		case 0:
+-			key[i/3] = hex_to_bin(data->wbuffer[i+j])<<4;
++			key[i/3] = (u8)val << 4;
+ 			break;
+ 		case 1:
+-			key[i/3] |= hex_to_bin(data->wbuffer[i+j]);
++			key[i/3] |= (u8)val;
+ 			break;
+ 		}
+ 	}
 -- 
 2.35.1
 
