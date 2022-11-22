@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD81C43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 14:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32833C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 14:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233643AbiKVOxC (ORCPT
+        id S233703AbiKVOxD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Nov 2022 09:53:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38872 "EHLO
+        Tue, 22 Nov 2022 09:53:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233512AbiKVOw6 (ORCPT
+        with ESMTP id S233521AbiKVOw6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 22 Nov 2022 09:52:58 -0500
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93E75CE11
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93DA6C773
         for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 06:52:42 -0800 (PST)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1oxUdc-0006Lf-4z; Tue, 22 Nov 2022 15:52:40 +0100
+        id 1oxUdc-0006Li-4p; Tue, 22 Nov 2022 15:52:40 +0100
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1oxUdY-005s7P-3F; Tue, 22 Nov 2022 15:52:37 +0100
+        id 1oxUdY-005s7U-8D; Tue, 22 Nov 2022 15:52:37 +0100
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1oxUdX-00H3kf-LO; Tue, 22 Nov 2022 15:52:35 +0100
+        id 1oxUdX-00H3kl-NA; Tue, 22 Nov 2022 15:52:35 +0100
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -41,9 +41,9 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Da Xue <da@libre.computer>, Po-Hao Huang <phhuang@realtek.com>,
         Viktor Petrenko <g0000ga@gmail.com>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v3 04/11] rtw88: Drop h2c.lock
-Date:   Tue, 22 Nov 2022 15:52:19 +0100
-Message-Id: <20221122145226.4065843-5-s.hauer@pengutronix.de>
+Subject: [PATCH v3 06/11] rtw88: iterate over vif/sta list non-atomically
+Date:   Tue, 22 Nov 2022 15:52:21 +0100
+Message-Id: <20221122145226.4065843-7-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221122145226.4065843-1-s.hauer@pengutronix.de>
 References: <20221122145226.4065843-1-s.hauer@pengutronix.de>
@@ -57,117 +57,219 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The h2c.lock spinlock is used in rtw_fw_send_h2c_command() and
-rtw_fw_send_h2c_packet().  Most callers call this with rtwdev->mutex
-held, except from one callsite in the debugfs code. The debugfs code
-alone doesn't justify the extra lock, so acquire rtwdev->mutex in
-debugfs and drop the now unnecessary spinlock.
+The driver uses ieee80211_iterate_active_interfaces_atomic()
+and ieee80211_iterate_stations_atomic() in several places and does
+register accesses in the iterators. This doesn't cope with upcoming
+USB support as registers can only be accessed non-atomically.
+
+Split these into a two stage process: First use the atomic iterator
+functions to collect all active interfaces or stations on a list, then
+iterate over the list non-atomically and call the iterator on each
+entry.
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Suggested-by: Pkshih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c |  2 ++
- drivers/net/wireless/realtek/rtw88/fw.c    | 13 ++++---------
- drivers/net/wireless/realtek/rtw88/main.c  |  1 -
- drivers/net/wireless/realtek/rtw88/main.h  |  2 --
- 4 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 70e19f2a1a355..f5b8a77ebc67b 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -392,7 +392,9 @@ static ssize_t rtw_debugfs_set_h2c(struct file *filp,
- 		return -EINVAL;
+Notes:
+    Changes since v1:
+    - Change subject
+    - Add some lockdep_assert_held(&rtwdev->mutex);
+    - make locally used functions static
+    - Add comment how &rtwdev->mutex protects us from stations/interfaces
+      being deleted between collecting them and iterating over them.
+
+ drivers/net/wireless/realtek/rtw88/phy.c  |   6 +-
+ drivers/net/wireless/realtek/rtw88/ps.c   |   2 +-
+ drivers/net/wireless/realtek/rtw88/util.c | 103 ++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/util.h |  12 ++-
+ 4 files changed, 116 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index bd7d05e080848..128e75a81bf3c 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -300,7 +300,7 @@ static void rtw_phy_stat_rssi(struct rtw_dev *rtwdev)
+ 
+ 	data.rtwdev = rtwdev;
+ 	data.min_rssi = U8_MAX;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_stat_rssi_iter, &data);
++	rtw_iterate_stas(rtwdev, rtw_phy_stat_rssi_iter, &data);
+ 
+ 	dm_info->pre_min_rssi = dm_info->min_rssi;
+ 	dm_info->min_rssi = data.min_rssi;
+@@ -544,7 +544,7 @@ static void rtw_phy_ra_info_update(struct rtw_dev *rtwdev)
+ 	if (rtwdev->watch_dog_cnt & 0x3)
+ 		return;
+ 
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
+ }
+ 
+ static u32 rtw_phy_get_rrsr_mask(struct rtw_dev *rtwdev, u8 rate_idx)
+@@ -597,7 +597,7 @@ static void rtw_phy_rrsr_update(struct rtw_dev *rtwdev)
+ 	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 
+ 	dm_info->rrsr_mask_min = RRSR_RATE_ORDER_MAX;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_rrsr_mask_min_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_phy_rrsr_mask_min_iter, rtwdev);
+ 	rtw_write32(rtwdev, REG_RRSR, dm_info->rrsr_val_init & dm_info->rrsr_mask_min);
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
+index c93da743681fc..11594940d6b00 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.c
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -61,7 +61,7 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
+ 		return ret;
  	}
  
-+	mutex_lock(&rtwdev->mutex);
- 	rtw_fw_h2c_cmd_dbg(rtwdev, param);
-+	mutex_unlock(&rtwdev->mutex);
+-	rtw_iterate_vifs_atomic(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
++	rtw_iterate_vifs(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
  
- 	return count;
+ 	rtw_coex_ips_notify(rtwdev, COEX_IPS_LEAVE);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/util.c b/drivers/net/wireless/realtek/rtw88/util.c
+index cdfd66a85075a..ff3c269fb1a72 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.c
++++ b/drivers/net/wireless/realtek/rtw88/util.c
+@@ -105,3 +105,106 @@ void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
+ 		*mcs = rate - DESC_RATEMCS0;
+ 	}
  }
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 0b5f903c0f366..a58c80d4825b1 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -322,7 +322,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		h2c[3], h2c[2], h2c[1], h2c[0],
- 		h2c[7], h2c[6], h2c[5], h2c[4]);
- 
--	spin_lock(&rtwdev->h2c.lock);
++
++struct rtw_stas_entry {
++	struct list_head list;
++	struct ieee80211_sta *sta;
++};
++
++struct rtw_iter_stas_data {
++	struct rtw_dev *rtwdev;
++	struct list_head list;
++};
++
++static void rtw_collect_sta_iter(void *data, struct ieee80211_sta *sta)
++{
++	struct rtw_iter_stas_data *iter_stas = data;
++	struct rtw_stas_entry *stas_entry;
++
++	stas_entry = kmalloc(sizeof(*stas_entry), GFP_ATOMIC);
++	if (!stas_entry)
++		return;
++
++	stas_entry->sta = sta;
++	list_add_tail(&stas_entry->list, &iter_stas->list);
++}
++
++void rtw_iterate_stas(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data,
++				       struct ieee80211_sta *sta),
++		      void *data)
++{
++	struct rtw_iter_stas_data iter_data;
++	struct rtw_stas_entry *sta_entry, *tmp;
++
++	/* &rtwdev->mutex makes sure no stations can be removed between
++	 * collecting the stations and iterating over them.
++	 */
 +	lockdep_assert_held(&rtwdev->mutex);
- 
- 	box = rtwdev->h2c.last_box_num;
- 	switch (box) {
-@@ -344,7 +344,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		break;
- 	default:
- 		WARN(1, "invalid h2c mail box number\n");
--		goto out;
++
++	iter_data.rtwdev = rtwdev;
++	INIT_LIST_HEAD(&iter_data.list);
++
++	ieee80211_iterate_stations_atomic(rtwdev->hw, rtw_collect_sta_iter,
++					  &iter_data);
++
++	list_for_each_entry_safe(sta_entry, tmp, &iter_data.list,
++				 list) {
++		list_del_init(&sta_entry->list);
++		iterator(data, sta_entry->sta);
++		kfree(sta_entry);
++	}
++}
++
++struct rtw_vifs_entry {
++	struct list_head list;
++	struct ieee80211_vif *vif;
++	u8 mac[ETH_ALEN];
++};
++
++struct rtw_iter_vifs_data {
++	struct rtw_dev *rtwdev;
++	struct list_head list;
++};
++
++static void rtw_collect_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++{
++	struct rtw_iter_vifs_data *iter_stas = data;
++	struct rtw_vifs_entry *vifs_entry;
++
++	vifs_entry = kmalloc(sizeof(*vifs_entry), GFP_ATOMIC);
++	if (!vifs_entry)
 +		return;
- 	}
++
++	vifs_entry->vif = vif;
++	ether_addr_copy(vifs_entry->mac, mac);
++	list_add_tail(&vifs_entry->list, &iter_stas->list);
++}
++
++void rtw_iterate_vifs(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data, u8 *mac,
++				       struct ieee80211_vif *vif),
++		      void *data)
++{
++	struct rtw_iter_vifs_data iter_data;
++	struct rtw_vifs_entry *vif_entry, *tmp;
++
++	/* &rtwdev->mutex makes sure no interfaces can be removed between
++	 * collecting the interfaces and iterating over them.
++	 */
++	lockdep_assert_held(&rtwdev->mutex);
++
++	iter_data.rtwdev = rtwdev;
++	INIT_LIST_HEAD(&iter_data.list);
++
++	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   rtw_collect_vif_iter, &iter_data);
++
++	list_for_each_entry_safe(vif_entry, tmp, &iter_data.list,
++				 list) {
++		list_del_init(&vif_entry->list);
++		iterator(data, vif_entry->mac, vif_entry->vif);
++		kfree(vif_entry);
++	}
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
+index 0c23b5069be0b..dc89655254002 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.h
++++ b/drivers/net/wireless/realtek/rtw88/util.h
+@@ -7,9 +7,6 @@
  
- 	ret = read_poll_timeout_atomic(rtw_read8, box_state,
-@@ -353,7 +353,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
+ struct rtw_dev;
  
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to send h2c command\n");
--		goto out;
-+		return;
- 	}
+-#define rtw_iterate_vifs(rtwdev, iterator, data)                               \
+-	ieee80211_iterate_active_interfaces(rtwdev->hw,                        \
+-			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
+ #define rtw_iterate_vifs_atomic(rtwdev, iterator, data)                        \
+ 	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,                 \
+ 			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
+@@ -20,6 +17,15 @@ struct rtw_dev;
+ #define rtw_iterate_keys_rcu(rtwdev, vif, iterator, data)		       \
+ 	ieee80211_iter_keys_rcu((rtwdev)->hw, vif, iterator, data)
  
- 	for (idx = 0; idx < 4; idx++)
-@@ -363,9 +363,6 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 
- 	if (++rtwdev->h2c.last_box_num >= 4)
- 		rtwdev->h2c.last_box_num = 0;
--
--out:
--	spin_unlock(&rtwdev->h2c.lock);
- }
- 
- void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
-@@ -377,15 +374,13 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
++void rtw_iterate_vifs(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data, u8 *mac,
++				       struct ieee80211_vif *vif),
++		      void *data);
++void rtw_iterate_stas(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data,
++				       struct ieee80211_sta *sta),
++				       void *data);
++
+ static inline u8 *get_hdr_bssid(struct ieee80211_hdr *hdr)
  {
- 	int ret;
- 
--	spin_lock(&rtwdev->h2c.lock);
-+	lockdep_assert_held(&rtwdev->mutex);
- 
- 	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
- 	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
- 	if (ret)
- 		rtw_err(rtwdev, "failed to send h2c packet\n");
- 	rtwdev->h2c.seq++;
--
--	spin_unlock(&rtwdev->h2c.lock);
- }
- 
- void
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 710ddb0283c82..c98e56890401c 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -2067,7 +2067,6 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	skb_queue_head_init(&rtwdev->coex.queue);
- 	skb_queue_head_init(&rtwdev->tx_report.queue);
- 
--	spin_lock_init(&rtwdev->h2c.lock);
- 	spin_lock_init(&rtwdev->txq_lock);
- 	spin_lock_init(&rtwdev->tx_report.q_lock);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index f24d17f482aaa..4b57542bef1e9 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -2020,8 +2020,6 @@ struct rtw_dev {
- 	struct {
- 		/* incicate the mail box to use with fw */
- 		u8 last_box_num;
--		/* protect to send h2c to fw */
--		spinlock_t lock;
- 		u32 seq;
- 	} h2c;
- 
+ 	__le16 fc = hdr->frame_control;
 -- 
 2.30.2
 
