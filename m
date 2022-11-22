@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A3C2C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 14:54:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE691C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 14:54:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234087AbiKVOyC (ORCPT
+        id S234126AbiKVOyr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Nov 2022 09:54:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39092 "EHLO
+        Tue, 22 Nov 2022 09:54:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233779AbiKVOxa (ORCPT
+        with ESMTP id S233834AbiKVOxd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2022 09:53:30 -0500
+        Tue, 22 Nov 2022 09:53:33 -0500
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96EEE1A3AB
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 06:52:58 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7313031EDB
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 06:53:06 -0800 (PST)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1oxUdc-0006Lk-4s; Tue, 22 Nov 2022 15:52:40 +0100
+        id 1oxUdc-0006Lg-50; Tue, 22 Nov 2022 15:52:40 +0100
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1oxUdY-005s7c-Hp; Tue, 22 Nov 2022 15:52:37 +0100
+        id 1oxUdY-005s7R-60; Tue, 22 Nov 2022 15:52:37 +0100
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1oxUdX-00H3l0-Sw; Tue, 22 Nov 2022 15:52:35 +0100
+        id 1oxUdX-00H3kr-Pu; Tue, 22 Nov 2022 15:52:35 +0100
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -41,9 +41,9 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Da Xue <da@libre.computer>, Po-Hao Huang <phhuang@realtek.com>,
         Viktor Petrenko <g0000ga@gmail.com>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v3 11/11] rtw88: Add rtw8723du chipset support
-Date:   Tue, 22 Nov 2022 15:52:26 +0100
-Message-Id: <20221122145226.4065843-12-s.hauer@pengutronix.de>
+Subject: [PATCH v3 08/11] rtw88: Add rtw8821cu chipset support
+Date:   Tue, 22 Nov 2022 15:52:23 +0100
+Message-Id: <20221122145226.4065843-9-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221122145226.4065843-1-s.hauer@pengutronix.de>
 References: <20221122145226.4065843-1-s.hauer@pengutronix.de>
@@ -57,7 +57,7 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for the rtw8723du chipset based on
+Add support for the rtw8821cu chipset based on
 https://github.com/ulli-kroll/rtw88-usb.git
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
@@ -65,157 +65,157 @@ Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 
 Notes:
     Changes since v2:
-    - Re-add this patch, tested on hardware now
-    
-    Changes since v1:
-    - Fix txdesc checksum calculation: Unlike other chips this one needs
-      a chksum = ~chksum at the end
-    - Fix efuse layout (struct rtw8723de_efuse and struct rtw8723du_efuse need
-      to be in a union as they are used alternatively)
+    - Fix txdesc checksum calculation. The checksum must be calculated over
+      a fixed number of words.
 
- drivers/net/wireless/realtek/rtw88/Kconfig    | 11 ++++++
+ drivers/net/wireless/realtek/rtw88/Kconfig    | 11 ++++
  drivers/net/wireless/realtek/rtw88/Makefile   |  3 ++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 28 +++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h | 13 ++++++-
- .../net/wireless/realtek/rtw88/rtw8723du.c    | 36 +++++++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8723du.h    | 10 ++++++
- 6 files changed, 100 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.h
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 18 +++++++
+ drivers/net/wireless/realtek/rtw88/rtw8821c.h | 21 ++++++++
+ .../net/wireless/realtek/rtw88/rtw8821cu.c    | 50 +++++++++++++++++++
+ .../net/wireless/realtek/rtw88/rtw8821cu.h    | 10 ++++
+ 6 files changed, 113 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.h
 
 diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
-index 138289bc5ad0c..651ab56d9c6bd 100644
+index 1624c5db69bac..2b500dbefbc2d 100644
 --- a/drivers/net/wireless/realtek/rtw88/Kconfig
 +++ b/drivers/net/wireless/realtek/rtw88/Kconfig
-@@ -86,6 +86,17 @@ config RTW88_8723DE
+@@ -75,6 +75,17 @@ config RTW88_8821CE
  
- 	  802.11n PCIe wireless network adapter
+ 	  802.11ac PCIe wireless network adapter
  
-+config RTW88_8723DU
-+	tristate "Realtek 8723DU USB wireless network adapter"
++config RTW88_8821CU
++	tristate "Realtek 8821CU USB wireless network adapter"
 +	depends on USB
 +	select RTW88_CORE
 +	select RTW88_USB
-+	select RTW88_8723D
++	select RTW88_8821C
 +	help
-+	  Select this option will enable support for 8723DU chipset
++	  Select this option will enable support for 8821CU chipset
 +
-+	  802.11n USB wireless network adapter
++	  802.11ac USB wireless network adapter
 +
- config RTW88_8821CE
- 	tristate "Realtek 8821CE PCI wireless network adapter"
- 	depends on PCI
+ config RTW88_DEBUG
+ 	bool "Realtek rtw88 debug support"
+ 	depends on RTW88_CORE
 diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
-index 06883d7323b05..e0950dbc2565a 100644
+index 9e095f8181483..3c1f08f12e44e 100644
 --- a/drivers/net/wireless/realtek/rtw88/Makefile
 +++ b/drivers/net/wireless/realtek/rtw88/Makefile
-@@ -44,6 +44,9 @@ rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
- obj-$(CONFIG_RTW88_8723DE)	+= rtw88_8723de.o
- rtw88_8723de-objs		:= rtw8723de.o
+@@ -44,6 +44,9 @@ rtw88_8821c-objs		:= rtw8821c.o rtw8821c_table.o
+ obj-$(CONFIG_RTW88_8821CE)	+= rtw88_8821ce.o
+ rtw88_8821ce-objs		:= rtw8821ce.o
  
-+obj-$(CONFIG_RTW88_8723DU)	+= rtw88_8723du.o
-+rtw88_8723du-objs		:= rtw8723du.o
++obj-$(CONFIG_RTW88_8821CU)	+= rtw88_8821cu.o
++rtw88_8821cu-objs		:= rtw8821cu.o
 +
- obj-$(CONFIG_RTW88_8821C)	+= rtw88_8821c.o
- rtw88_8821c-objs		:= rtw8821c.o rtw8821c_table.o
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 0a4f770fcbb7e..2d2f768bae2ea 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -210,6 +210,12 @@ static void rtw8723de_efuse_parsing(struct rtw_efuse *efuse,
+ obj-$(CONFIG_RTW88_PCI)		+= rtw88_pci.o
+ obj-$(CONFIG_RTW88_USB)		+= rtw88_usb.o
+ rtw88_pci-objs			:= pci.o
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 9afdc5ce86b43..17f800f6efbd0 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -26,6 +26,12 @@ static void rtw8821ce_efuse_parsing(struct rtw_efuse *efuse,
  	ether_addr_copy(efuse->addr, map->e.mac_addr);
  }
  
-+static void rtw8723du_efuse_parsing(struct rtw_efuse *efuse,
-+				    struct rtw8723d_efuse *map)
++static void rtw8821cu_efuse_parsing(struct rtw_efuse *efuse,
++				    struct rtw8821c_efuse *map)
 +{
 +	ether_addr_copy(efuse->addr, map->u.mac_addr);
 +}
 +
- static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- {
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
-@@ -239,6 +245,9 @@ static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ enum rtw8821ce_rf_set {
+ 	SWITCH_TO_BTG,
+ 	SWITCH_TO_WLG,
+@@ -68,6 +74,9 @@ static int rtw8821c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
  	case RTW_HCI_TYPE_PCIE:
- 		rtw8723de_efuse_parsing(efuse, map);
+ 		rtw8821ce_efuse_parsing(efuse, map);
  		break;
 +	case RTW_HCI_TYPE_USB:
-+		rtw8723du_efuse_parsing(efuse, map);
++		rtw8821cu_efuse_parsing(efuse, map);
 +		break;
  	default:
  		/* unsupported now */
  		return -ENOTSUPP;
-@@ -1945,6 +1954,24 @@ static void rtw8723d_pwr_track(struct rtw_dev *rtwdev)
- 	dm_info->pwr_trk_triggered = false;
+@@ -1148,6 +1157,13 @@ static void rtw8821c_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
+ 			 dm_info->cck_pd_default + new_lvl * 2);
  }
  
-+static void rtw8723d_fill_txdesc_checksum(struct rtw_dev *rtwdev,
++static void rtw8821c_fill_txdesc_checksum(struct rtw_dev *rtwdev,
 +					  struct rtw_tx_pkt_info *pkt_info,
 +					  u8 *txdesc)
 +{
-+	size_t words = 32 / 2; /* calculate the first 32 bytes (16 words) */
-+	__le16 chksum = 0;
-+	__le16 *data = (__le16 *)(txdesc);
-+
-+	SET_TX_DESC_TXDESC_CHECKSUM(txdesc, 0x0000);
-+
-+	while (words--)
-+		chksum ^= *data++;
-+
-+	chksum = ~chksum;
-+
-+	SET_TX_DESC_TXDESC_CHECKSUM(txdesc, __le16_to_cpu(chksum));
++	fill_txdesc_checksum_common(txdesc, 16);
 +}
 +
- static struct rtw_chip_ops rtw8723d_ops = {
- 	.phy_set_param		= rtw8723d_phy_set_param,
- 	.read_efuse		= rtw8723d_read_efuse,
-@@ -1965,6 +1992,7 @@ static struct rtw_chip_ops rtw8723d_ops = {
- 	.config_bfee		= NULL,
- 	.set_gid_table		= NULL,
- 	.cfg_csi_rate		= NULL,
-+	.fill_txdesc_checksum	= rtw8723d_fill_txdesc_checksum,
- 
- 	.coex_set_init		= rtw8723d_coex_cfg_init,
- 	.coex_set_ant_switch	= NULL,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index 4641f6e047b41..a356318a5c15b 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -41,6 +41,14 @@ struct rtw8723de_efuse {
- 	u8 sub_device_id[2];
+ static struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8821c[] = {
+ 	{0x0086,
+ 	 RTW_PWR_CUT_ALL_MSK,
+@@ -1521,6 +1537,7 @@ static const struct rtw_rfe_def rtw8821c_rfe_defs[] = {
+ 	[2] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
+ 	[4] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
+ 	[6] = RTW_DEF_RFE(8821c, 0, 0),
++	[34] = RTW_DEF_RFE(8821c, 0, 0),
  };
  
-+struct rtw8723du_efuse {
-+	u8 res4[48];                    /* 0xd0 */
-+	u8 vender_id[2];                /* 0x100 */
-+	u8 product_id[2];               /* 0x102 */
-+	u8 usb_option;                  /* 0x104 */
-+	u8 mac_addr[ETH_ALEN];          /* 0x107 */
+ static struct rtw_hw_reg rtw8821c_dig[] = {
+@@ -1595,6 +1612,7 @@ static struct rtw_chip_ops rtw8821c_ops = {
+ 	.config_bfee		= rtw8821c_bf_config_bfee,
+ 	.set_gid_table		= rtw_bf_set_gid_table,
+ 	.cfg_csi_rate		= rtw_bf_cfg_csi_rate,
++	.fill_txdesc_checksum	= rtw8821c_fill_txdesc_checksum,
+ 
+ 	.coex_set_init		= rtw8821c_coex_cfg_init,
+ 	.coex_set_ant_switch	= rtw8821c_coex_cfg_ant_switch,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+index 2698801fc35d5..1c81260f3a542 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+@@ -9,6 +9,26 @@
+ 
+ #define RCR_VHT_ACK		BIT(26)
+ 
++struct rtw8821cu_efuse {
++	u8 res4[4];			/* 0xd0 */
++	u8 usb_optional_function;
++	u8 res5[0x1e];
++	u8 res6[2];
++	u8 serial[0x0b];		/* 0xf5 */
++	u8 vid;				/* 0x100 */
++	u8 res7;
++	u8 pid;
++	u8 res8[4];
++	u8 mac_addr[ETH_ALEN];		/* 0x107 */
++	u8 res9[2];
++	u8 vendor_name[0x07];
++	u8 res10[2];
++	u8 device_name[0x14];
++	u8 res11[0xcf];
++	u8 package_type;		/* 0x1fb */
++	u8 res12[0x4];
 +};
 +
- struct rtw8723d_efuse {
- 	__le16 rtl_id;
- 	u8 rsvd[2];
-@@ -69,7 +77,10 @@ struct rtw8723d_efuse {
- 	u8 rfe_option;
- 	u8 country_code[2];
+ struct rtw8821ce_efuse {
+ 	u8 mac_addr[ETH_ALEN];		/* 0xd0 */
+ 	u8 vender_id[2];
+@@ -73,6 +93,7 @@ struct rtw8821c_efuse {
  	u8 res[3];
--	struct rtw8723de_efuse e;
-+	union {
-+		struct rtw8723de_efuse e;
-+		struct rtw8723du_efuse u;
-+	};
+ 	union {
+ 		struct rtw8821ce_efuse e;
++		struct rtw8821cu_efuse u;
+ 	};
  };
  
- extern const struct rtw_chip_info rtw8723d_hw_spec;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723du.c b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821cu.c b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
 new file mode 100644
-index 0000000000000..d2c8a114d19af
+index 0000000000000..f43e200515f5b
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
-@@ -0,0 +1,36 @@
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821cu.c
+@@ -0,0 +1,50 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/* Copyright(c) 2018-2019  Realtek Corporation
 + */
@@ -223,49 +223,63 @@ index 0000000000000..d2c8a114d19af
 +#include <linux/module.h>
 +#include <linux/usb.h>
 +#include "main.h"
-+#include "rtw8723du.h"
++#include "rtw8821cu.h"
 +#include "usb.h"
 +
-+static const struct usb_device_id rtw_8723du_id_table[] = {
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK,
-+					0xD723,
-+					0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8723d_hw_spec) }, /* 8723DU 1*1 */
-+	{ },
++static const struct usb_device_id rtw_8821cu_id_table[] = {
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xb82b, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xb820, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc821, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc820, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc82a, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc82b, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8821CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc811, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8811CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0x8811, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* 8811CU */
++	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0x2006, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&(rtw8821c_hw_spec) }, /* TOTOLINK A650UA v3 */
++	{},
 +};
-+MODULE_DEVICE_TABLE(usb, rtw_8723du_id_table);
++MODULE_DEVICE_TABLE(usb, rtw_8821cu_id_table);
 +
-+static int rtw8723du_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
++static int rtw_8821cu_probe(struct usb_interface *intf,
++			    const struct usb_device_id *id)
 +{
 +	return rtw_usb_probe(intf, id);
 +}
 +
-+static struct usb_driver rtw_8723du_driver = {
-+	.name = "rtw_8723du",
-+	.id_table = rtw_8723du_id_table,
-+	.probe = rtw8723du_probe,
++static struct usb_driver rtw_8821cu_driver = {
++	.name = "rtw_8821cu",
++	.id_table = rtw_8821cu_id_table,
++	.probe = rtw_8821cu_probe,
 +	.disconnect = rtw_usb_disconnect,
 +};
-+module_usb_driver(rtw_8723du_driver);
++module_usb_driver(rtw_8821cu_driver);
 +
 +MODULE_AUTHOR("Hans Ulli Kroll <linux@ulli-kroll.de>");
-+MODULE_DESCRIPTION("Realtek 802.11n wireless 8723du driver");
++MODULE_DESCRIPTION("Realtek 802.11ac wireless 8821cu driver");
 +MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723du.h b/drivers/net/wireless/realtek/rtw88/rtw8723du.h
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821cu.h b/drivers/net/wireless/realtek/rtw88/rtw8821cu.h
 new file mode 100644
-index 0000000000000..c0ffd621f087d
+index 0000000000000..c896792240011
 --- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723du.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821cu.h
 @@ -0,0 +1,10 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/* Copyright(c) 2018-2019  Realtek Corporation
 + */
 +
-+#ifndef __RTW_8723DU_H_
-+#define __RTW_8723DU_H_
++#ifndef __RTW_8821CU_H_
++#define __RTW_8821CU_H_
 +
-+extern struct rtw_chip_info rtw8723d_hw_spec;
++extern struct rtw_chip_info rtw8821c_hw_spec;
 +
 +#endif
 -- 
