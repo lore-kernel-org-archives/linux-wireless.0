@@ -2,43 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EF60C43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 08:52:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 350DEC4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 08:52:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232547AbiKVIwG (ORCPT
+        id S232906AbiKVIwI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Nov 2022 03:52:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52670 "EHLO
+        Tue, 22 Nov 2022 03:52:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232254AbiKVIwE (ORCPT
+        with ESMTP id S232590AbiKVIwG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2022 03:52:04 -0500
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AAF62F003
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 00:52:02 -0800 (PST)
-X-UUID: f90487894f034c339156c61af66e326d-20221122
+        Tue, 22 Nov 2022 03:52:06 -0500
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E05F62F003
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 00:52:05 -0800 (PST)
+X-UUID: 0db16cc7e88745a9b9c340ada649e5e8-20221122
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=jRY0/X6npHU23sCc6+6ysjUEqHNuBf9oD+tzOCnltL4=;
-        b=T6JP2GDvePArffTJU2LcHHcntuhU9l8Ec/nGm5cCaKYBveyRW80vpYNhvtB8wFeKfFAzwNwQxxO6v2Ct4u5jwHjJdS84eLJCUdARdX0HEun+MbheTy18LSVKX6/EBHKtNYCNK2ycbJxj14hOFocVsZcMCt4meZJ0W2QrBY25Cs8=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=nNKzdXulPYqj0Gp9ooAOh/o+mTRfVfsdPXAg5bt+9Ok=;
+        b=e+YPRORmweHj7tJy1keMYGlDjxwKsPIaTZoycbCOYB/1Cw9IGKaTnS26rJTRif7BKuEo7v9jZz8JslTA3RnI9xSYC3plz3QnGRB1W+eVK81aYRfC9b72u0LgStBYb1y3vw2n2wD1lyg4Ks545aT+wuuXBChYozcMz2qXhoXbs2c=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.13,REQID:f212d51c-3634-49a2-b35a-636a9e1ba34f,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:-25
-X-CID-META: VersionHash:d12e911,CLOUDID:825ff7f8-3a34-4838-abcf-dfedf9dd068e,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: f90487894f034c339156c61af66e326d-20221122
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+X-CID-O-INFO: VERSION:1.1.12,REQID:b870e6a3-8b8b-42d4-ab87-92a1c09ee729,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:90
+X-CID-INFO: VERSION:1.1.12,REQID:b870e6a3-8b8b-42d4-ab87-92a1c09ee729,IP:0,URL
+        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
+        N:quarantine,TS:90
+X-CID-META: VersionHash:62cd327,CLOUDID:e25ff7f8-3a34-4838-abcf-dfedf9dd068e,B
+        ulkID:2211221652029DJJTO2Y,BulkQuantity:0,Recheck:0,SF:28|17|19|48,TC:nil,
+        Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 0db16cc7e88745a9b9c340ada649e5e8-20221122
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 397814155; Tue, 22 Nov 2022 16:51:58 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 2032864605; Tue, 22 Nov 2022 16:51:59 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
  mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 22 Nov 2022 16:51:57 +0800
+ 15.2.792.15; Tue, 22 Nov 2022 16:51:59 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Tue, 22 Nov 2022 16:51:57 +0800
+ 15.2.792.15 via Frontend Transport; Tue, 22 Nov 2022 16:51:59 +0800
 From:   Shayne Chen <shayne.chen@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
@@ -48,9 +51,9 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Bo Jiao <Bo.Jiao@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 2/9] wifi: mt76: mt7996: add DMA support
-Date:   Tue, 22 Nov 2022 16:45:47 +0800
-Message-ID: <20221122084554.9494-3-shayne.chen@mediatek.com>
+Subject: [PATCH 9/9] wifi: mt76: add mt7996 module support
+Date:   Tue, 22 Nov 2022 16:45:54 +0800
+Message-ID: <20221122084554.9494-10-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20221122084554.9494-1-shayne.chen@mediatek.com>
 References: <20221122084554.9494-1-shayne.chen@mediatek.com>
@@ -66,376 +69,28 @@ for easier review. Refer to the cover letter for more info.)
 
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7996/dma.c   | 360 ++++++++++++++++++
- 1 file changed, 360 insertions(+)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7996/dma.c
+ drivers/net/wireless/mediatek/mt76/Kconfig  | 1 +
+ drivers/net/wireless/mediatek/mt76/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/dma.c b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-new file mode 100644
-index 000000000000..c09fe4274935
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-@@ -0,0 +1,360 @@
-+// SPDX-License-Identifier: ISC
-+/*
-+ * Copyright (C) 2022 MediaTek Inc.
-+ */
-+
-+#include "mt7996.h"
-+#include "../dma.h"
-+#include "mac.h"
-+
-+static int mt7996_poll_tx(struct napi_struct *napi, int budget)
-+{
-+	struct mt7996_dev *dev;
-+
-+	dev = container_of(napi, struct mt7996_dev, mt76.tx_napi);
-+
-+	mt76_connac_tx_cleanup(&dev->mt76);
-+	if (napi_complete_done(napi, 0))
-+		mt7996_irq_enable(dev, MT_INT_TX_DONE_MCU);
-+
-+	return 0;
-+}
-+
-+static void mt7996_dma_config(struct mt7996_dev *dev)
-+{
-+#define Q_CONFIG(q, wfdma, int, id) do {		\
-+	if (wfdma)					\
-+		dev->q_wfdma_mask |= (1 << (q));	\
-+	dev->q_int_mask[(q)] = int;			\
-+	dev->q_id[(q)] = id;				\
-+} while (0)
-+
-+#define MCUQ_CONFIG(q, wfdma, int, id)	Q_CONFIG(q, (wfdma), (int), (id))
-+#define RXQ_CONFIG(q, wfdma, int, id)	Q_CONFIG(__RXQ(q), (wfdma), (int), (id))
-+#define TXQ_CONFIG(q, wfdma, int, id)	Q_CONFIG(__TXQ(q), (wfdma), (int), (id))
-+
-+	/* rx queue */
-+	RXQ_CONFIG(MT_RXQ_MCU, WFDMA0, MT_INT_RX_DONE_WM, MT7996_RXQ_MCU_WM);
-+	RXQ_CONFIG(MT_RXQ_MCU_WA, WFDMA0, MT_INT_RX_DONE_WA, MT7996_RXQ_MCU_WA);
-+
-+	/* band0/band1 */
-+	RXQ_CONFIG(MT_RXQ_MAIN, WFDMA0, MT_INT_RX_DONE_BAND0, MT7996_RXQ_BAND0);
-+	RXQ_CONFIG(MT_RXQ_MAIN_WA, WFDMA0, MT_INT_RX_DONE_WA_MAIN, MT7996_RXQ_MCU_WA_MAIN);
-+
-+	/* band2 */
-+	RXQ_CONFIG(MT_RXQ_BAND2, WFDMA0, MT_INT_RX_DONE_BAND2, MT7996_RXQ_BAND2);
-+	RXQ_CONFIG(MT_RXQ_BAND2_WA, WFDMA0, MT_INT_RX_DONE_WA_TRI, MT7996_RXQ_MCU_WA_TRI);
-+
-+	/* data tx queue */
-+	TXQ_CONFIG(0, WFDMA0, MT_INT_TX_DONE_BAND0, MT7996_TXQ_BAND0);
-+	TXQ_CONFIG(1, WFDMA0, MT_INT_TX_DONE_BAND1, MT7996_TXQ_BAND1);
-+	TXQ_CONFIG(2, WFDMA0, MT_INT_TX_DONE_BAND2, MT7996_TXQ_BAND2);
-+
-+	/* mcu tx queue */
-+	MCUQ_CONFIG(MT_MCUQ_WM, WFDMA0, MT_INT_TX_DONE_MCU_WM, MT7996_TXQ_MCU_WM);
-+	MCUQ_CONFIG(MT_MCUQ_WA, WFDMA0, MT_INT_TX_DONE_MCU_WA, MT7996_TXQ_MCU_WA);
-+	MCUQ_CONFIG(MT_MCUQ_FWDL, WFDMA0, MT_INT_TX_DONE_FWDL, MT7996_TXQ_FWDL);
-+}
-+
-+static void __mt7996_dma_prefetch(struct mt7996_dev *dev, u32 ofs)
-+{
-+#define PREFETCH(_base, _depth)	((_base) << 16 | (_depth))
-+	/* prefetch SRAM wrapping boundary for tx/rx ring. */
-+	mt76_wr(dev, MT_MCUQ_EXT_CTRL(MT_MCUQ_FWDL) + ofs, PREFETCH(0x0, 0x2));
-+	mt76_wr(dev, MT_MCUQ_EXT_CTRL(MT_MCUQ_WM) + ofs, PREFETCH(0x20, 0x2));
-+	mt76_wr(dev, MT_TXQ_EXT_CTRL(0) + ofs, PREFETCH(0x40, 0x4));
-+	mt76_wr(dev, MT_TXQ_EXT_CTRL(1) + ofs, PREFETCH(0x80, 0x4));
-+	mt76_wr(dev, MT_MCUQ_EXT_CTRL(MT_MCUQ_WA) + ofs, PREFETCH(0xc0, 0x2));
-+	mt76_wr(dev, MT_TXQ_EXT_CTRL(2) + ofs, PREFETCH(0xe0, 0x4));
-+	mt76_wr(dev, MT_RXQ_BAND1_CTRL(MT_RXQ_MCU) + ofs, PREFETCH(0x120, 0x2));
-+	mt76_wr(dev, MT_RXQ_BAND1_CTRL(MT_RXQ_MCU_WA) + ofs, PREFETCH(0x140, 0x2));
-+	mt76_wr(dev, MT_RXQ_BAND1_CTRL(MT_RXQ_MAIN_WA) + ofs, PREFETCH(0x160, 0x2));
-+	mt76_wr(dev, MT_RXQ_BAND1_CTRL(MT_RXQ_BAND2_WA) + ofs, PREFETCH(0x180, 0x2));
-+	mt76_wr(dev, MT_RXQ_BAND1_CTRL(MT_RXQ_MAIN) + ofs, PREFETCH(0x1a0, 0x10));
-+	mt76_wr(dev, MT_RXQ_BAND1_CTRL(MT_RXQ_BAND2) + ofs, PREFETCH(0x2a0, 0x10));
-+
-+	mt76_set(dev, WF_WFDMA0_GLO_CFG_EXT1 + ofs, WF_WFDMA0_GLO_CFG_EXT1_CALC_MODE);
-+}
-+
-+void mt7996_dma_prefetch(struct mt7996_dev *dev)
-+{
-+	__mt7996_dma_prefetch(dev, 0);
-+	if (dev->hif2)
-+		__mt7996_dma_prefetch(dev, MT_WFDMA0_PCIE1(0) - MT_WFDMA0(0));
-+}
-+
-+static void mt7996_dma_disable(struct mt7996_dev *dev, bool reset)
-+{
-+	u32 hif1_ofs = 0;
-+
-+	if (dev->hif2)
-+		hif1_ofs = MT_WFDMA0_PCIE1(0) - MT_WFDMA0(0);
-+
-+	if (reset) {
-+		mt76_clear(dev, MT_WFDMA0_RST,
-+			   MT_WFDMA0_RST_DMASHDL_ALL_RST |
-+			   MT_WFDMA0_RST_LOGIC_RST);
-+
-+		mt76_set(dev, MT_WFDMA0_RST,
-+			 MT_WFDMA0_RST_DMASHDL_ALL_RST |
-+			 MT_WFDMA0_RST_LOGIC_RST);
-+
-+		if (dev->hif2) {
-+			mt76_clear(dev, MT_WFDMA0_RST + hif1_ofs,
-+				   MT_WFDMA0_RST_DMASHDL_ALL_RST |
-+				   MT_WFDMA0_RST_LOGIC_RST);
-+
-+			mt76_set(dev, MT_WFDMA0_RST + hif1_ofs,
-+				 MT_WFDMA0_RST_DMASHDL_ALL_RST |
-+				 MT_WFDMA0_RST_LOGIC_RST);
-+		}
-+	}
-+
-+	/* disable */
-+	mt76_clear(dev, MT_WFDMA0_GLO_CFG,
-+		   MT_WFDMA0_GLO_CFG_TX_DMA_EN |
-+		   MT_WFDMA0_GLO_CFG_RX_DMA_EN |
-+		   MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
-+		   MT_WFDMA0_GLO_CFG_OMIT_RX_INFO |
-+		   MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
-+
-+	if (dev->hif2) {
-+		mt76_clear(dev, MT_WFDMA0_GLO_CFG + hif1_ofs,
-+			   MT_WFDMA0_GLO_CFG_TX_DMA_EN |
-+			   MT_WFDMA0_GLO_CFG_RX_DMA_EN |
-+			   MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
-+			   MT_WFDMA0_GLO_CFG_OMIT_RX_INFO |
-+			   MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
-+	}
-+}
-+
-+static int mt7996_dma_enable(struct mt7996_dev *dev)
-+{
-+	u32 hif1_ofs = 0;
-+	u32 irq_mask;
-+
-+	if (dev->hif2)
-+		hif1_ofs = MT_WFDMA0_PCIE1(0) - MT_WFDMA0(0);
-+
-+	/* reset dma idx */
-+	mt76_wr(dev, MT_WFDMA0_RST_DTX_PTR, ~0);
-+	if (dev->hif2)
-+		mt76_wr(dev, MT_WFDMA0_RST_DTX_PTR + hif1_ofs, ~0);
-+
-+	/* configure delay interrupt off */
-+	mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG0, 0);
-+	mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG1, 0);
-+	mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG2, 0);
-+
-+	if (dev->hif2) {
-+		mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG0 + hif1_ofs, 0);
-+		mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG1 + hif1_ofs, 0);
-+		mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG2 + hif1_ofs, 0);
-+	}
-+
-+	/* configure perfetch settings */
-+	mt7996_dma_prefetch(dev);
-+
-+	/* hif wait WFDMA idle */
-+	mt76_set(dev, MT_WFDMA0_BUSY_ENA,
-+		 MT_WFDMA0_BUSY_ENA_TX_FIFO0 |
-+		 MT_WFDMA0_BUSY_ENA_TX_FIFO1 |
-+		 MT_WFDMA0_BUSY_ENA_RX_FIFO);
-+
-+	if (dev->hif2)
-+		mt76_set(dev, MT_WFDMA0_BUSY_ENA + hif1_ofs,
-+			 MT_WFDMA0_PCIE1_BUSY_ENA_TX_FIFO0 |
-+			 MT_WFDMA0_PCIE1_BUSY_ENA_TX_FIFO1 |
-+			 MT_WFDMA0_PCIE1_BUSY_ENA_RX_FIFO);
-+
-+	mt76_poll(dev, MT_WFDMA_EXT_CSR_HIF_MISC,
-+		  MT_WFDMA_EXT_CSR_HIF_MISC_BUSY, 0, 1000);
-+
-+	/* set WFDMA Tx/Rx */
-+	mt76_set(dev, MT_WFDMA0_GLO_CFG,
-+		 MT_WFDMA0_GLO_CFG_TX_DMA_EN |
-+		 MT_WFDMA0_GLO_CFG_RX_DMA_EN |
-+		 MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
-+		 MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
-+
-+	/* GLO_CFG_EXT0 */
-+	mt76_set(dev, WF_WFDMA0_GLO_CFG_EXT0,
-+		 WF_WFDMA0_GLO_CFG_EXT0_RX_WB_RXD |
-+		 WF_WFDMA0_GLO_CFG_EXT0_WED_MERGE_MODE);
-+
-+	/* GLO_CFG_EXT1 */
-+	mt76_set(dev, WF_WFDMA0_GLO_CFG_EXT1,
-+		 WF_WFDMA0_GLO_CFG_EXT1_TX_FCTRL_MODE);
-+
-+	if (dev->hif2) {
-+		mt76_set(dev, MT_WFDMA0_GLO_CFG + hif1_ofs,
-+			 MT_WFDMA0_GLO_CFG_TX_DMA_EN |
-+			 MT_WFDMA0_GLO_CFG_RX_DMA_EN |
-+			 MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
-+			 MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
-+
-+		/* GLO_CFG_EXT0 */
-+		mt76_set(dev, WF_WFDMA0_GLO_CFG_EXT0 + hif1_ofs,
-+			 WF_WFDMA0_GLO_CFG_EXT0_RX_WB_RXD |
-+			 WF_WFDMA0_GLO_CFG_EXT0_WED_MERGE_MODE);
-+
-+		/* GLO_CFG_EXT1 */
-+		mt76_set(dev, WF_WFDMA0_GLO_CFG_EXT1 + hif1_ofs,
-+			 WF_WFDMA0_GLO_CFG_EXT1_TX_FCTRL_MODE);
-+
-+		mt76_set(dev, MT_WFDMA_HOST_CONFIG,
-+			 MT_WFDMA_HOST_CONFIG_PDMA_BAND);
-+	}
-+
-+	if (dev->hif2) {
-+		/* fix hardware limitation, pcie1's rx ring3 is not available
-+		 * so, redirect pcie0 rx ring3 interrupt to pcie1
-+		 */
-+		mt76_set(dev, MT_WFDMA0_RX_INT_PCIE_SEL,
-+			 MT_WFDMA0_RX_INT_SEL_RING3);
-+
-+		/* TODO: redirect rx ring6 interrupt to pcie0 for wed function */
-+	}
-+
-+	/* enable interrupts for TX/RX rings */
-+	irq_mask = MT_INT_RX_DONE_MCU |
-+		   MT_INT_TX_DONE_MCU |
-+		   MT_INT_MCU_CMD;
-+
-+	if (!dev->mphy.band_idx)
-+		irq_mask |= MT_INT_BAND0_RX_DONE;
-+
-+	if (dev->dbdc_support)
-+		irq_mask |= MT_INT_BAND1_RX_DONE;
-+
-+	if (dev->tbtc_support)
-+		irq_mask |= MT_INT_BAND2_RX_DONE;
-+
-+	mt7996_irq_enable(dev, irq_mask);
-+
-+	return 0;
-+}
-+
-+int mt7996_dma_init(struct mt7996_dev *dev)
-+{
-+	u32 hif1_ofs = 0;
-+	int ret;
-+
-+	mt7996_dma_config(dev);
-+
-+	mt76_dma_attach(&dev->mt76);
-+
-+	if (dev->hif2)
-+		hif1_ofs = MT_WFDMA0_PCIE1(0) - MT_WFDMA0(0);
-+
-+	mt7996_dma_disable(dev, true);
-+
-+	/* init tx queue */
-+	ret = mt76_connac_init_tx_queues(dev->phy.mt76,
-+					 MT_TXQ_ID(dev->mphy.band_idx),
-+					 MT7996_TX_RING_SIZE,
-+					 MT_TXQ_RING_BASE(0), 0);
-+	if (ret)
-+		return ret;
-+
-+	/* command to WM */
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WM,
-+				  MT_MCUQ_ID(MT_MCUQ_WM),
-+				  MT7996_TX_MCU_RING_SIZE,
-+				  MT_MCUQ_RING_BASE(MT_MCUQ_WM));
-+	if (ret)
-+		return ret;
-+
-+	/* command to WA */
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_WA,
-+				  MT_MCUQ_ID(MT_MCUQ_WA),
-+				  MT7996_TX_MCU_RING_SIZE,
-+				  MT_MCUQ_RING_BASE(MT_MCUQ_WA));
-+	if (ret)
-+		return ret;
-+
-+	/* firmware download */
-+	ret = mt76_init_mcu_queue(&dev->mt76, MT_MCUQ_FWDL,
-+				  MT_MCUQ_ID(MT_MCUQ_FWDL),
-+				  MT7996_TX_FWDL_RING_SIZE,
-+				  MT_MCUQ_RING_BASE(MT_MCUQ_FWDL));
-+	if (ret)
-+		return ret;
-+
-+	/* event from WM */
-+	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU],
-+			       MT_RXQ_ID(MT_RXQ_MCU),
-+			       MT7996_RX_MCU_RING_SIZE,
-+			       MT_RX_BUF_SIZE,
-+			       MT_RXQ_RING_BASE(MT_RXQ_MCU));
-+	if (ret)
-+		return ret;
-+
-+	/* event from WA */
-+	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU_WA],
-+			       MT_RXQ_ID(MT_RXQ_MCU_WA),
-+			       MT7996_RX_MCU_RING_SIZE,
-+			       MT_RX_BUF_SIZE,
-+			       MT_RXQ_RING_BASE(MT_RXQ_MCU_WA));
-+	if (ret)
-+		return ret;
-+
-+	/* rx data queue for band0 and band1 */
-+	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MAIN],
-+			       MT_RXQ_ID(MT_RXQ_MAIN),
-+			       MT7996_RX_RING_SIZE,
-+			       MT_RX_BUF_SIZE,
-+			       MT_RXQ_RING_BASE(MT_RXQ_MAIN));
-+	if (ret)
-+		return ret;
-+
-+	/* tx free notify event from WA for band0 */
-+	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MAIN_WA],
-+			       MT_RXQ_ID(MT_RXQ_MAIN_WA),
-+			       MT7996_RX_MCU_RING_SIZE,
-+			       MT_RX_BUF_SIZE,
-+			       MT_RXQ_RING_BASE(MT_RXQ_MAIN_WA));
-+	if (ret)
-+		return ret;
-+
-+	if (dev->tbtc_support || dev->mphy.band_idx == MT_BAND2) {
-+		/* rx data queue for band2 */
-+		ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_BAND2],
-+				       MT_RXQ_ID(MT_RXQ_BAND2),
-+				       MT7996_RX_RING_SIZE,
-+				       MT_RX_BUF_SIZE,
-+				       MT_RXQ_RING_BASE(MT_RXQ_BAND2) + hif1_ofs);
-+		if (ret)
-+			return ret;
-+
-+		/* tx free notify event from WA for band2
-+		 * use pcie0's rx ring3, but, redirect pcie0 rx ring3 interrupt to pcie1
-+		 */
-+		ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_BAND2_WA],
-+				       MT_RXQ_ID(MT_RXQ_BAND2_WA),
-+				       MT7996_RX_MCU_RING_SIZE,
-+				       MT_RX_BUF_SIZE,
-+				       MT_RXQ_RING_BASE(MT_RXQ_BAND2_WA));
-+		if (ret)
-+			return ret;
-+	}
-+
-+	ret = mt76_init_queues(dev, mt76_dma_rx_poll);
-+	if (ret < 0)
-+		return ret;
-+
-+	netif_napi_add_tx(&dev->mt76.tx_napi_dev, &dev->mt76.tx_napi,
-+			  mt7996_poll_tx);
-+	napi_enable(&dev->mt76.tx_napi);
-+
-+	mt7996_dma_enable(dev);
-+
-+	return 0;
-+}
-+
-+void mt7996_dma_cleanup(struct mt7996_dev *dev)
-+{
-+	mt7996_dma_disable(dev, true);
-+
-+	mt76_dma_cleanup(&dev->mt76);
-+}
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index 9ff43f1fc50d..d7f90a0eb21e 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -34,3 +34,4 @@ source "drivers/net/wireless/mediatek/mt76/mt7603/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7615/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7915/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7921/Kconfig"
++source "drivers/net/wireless/mediatek/mt76/mt7996/Kconfig"
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index c78ae4b89761..84c99b7e57f9 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -35,3 +35,4 @@ obj-$(CONFIG_MT7603E) += mt7603/
+ obj-$(CONFIG_MT7615_COMMON) += mt7615/
+ obj-$(CONFIG_MT7915E) += mt7915/
+ obj-$(CONFIG_MT7921_COMMON) += mt7921/
++obj-$(CONFIG_MT7996E) += mt7996/
 -- 
 2.25.1
 
