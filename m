@@ -2,138 +2,104 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D146C43217
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 13:20:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73B8CC4167E
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Nov 2022 13:22:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233459AbiKVNUI (ORCPT
+        id S233711AbiKVNWW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Nov 2022 08:20:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50058 "EHLO
+        Tue, 22 Nov 2022 08:22:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232404AbiKVNUH (ORCPT
+        with ESMTP id S233714AbiKVNWS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2022 08:20:07 -0500
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 956E863CD8
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 05:20:06 -0800 (PST)
-Received: by mail-ed1-x52f.google.com with SMTP id s5so20544492edc.12
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 05:20:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=skymem-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OOzIbrFIOKeJXJT4ID/MUCczRZmmy/MUgRjL2diXaTc=;
-        b=exKArqMppRWvzwf3ELZJ+WIimhqTiI0eQUPBRXmFBulCFmneBcH9Du2QIac/RFgtB0
-         ykN9/Me7ltc8TFWhmNzPiQ3qYQlvB1977JR+h9ccv4Lc6MXyLPV7gModyDCR2xukjiIf
-         F9nSWGWjCA7aYQVANWKilM4s//f5IpoT8mTc6UZy8pKVGi+SjIufo3LoYBNsT8PLqBYO
-         VA81jm9pDN0AZj2/68Zb88mPhJYrEiIS3D7ZXF2FqxLSrsPcxbW/088aIm8ubbbXiz4Y
-         dTGGnv5rUGkfowZVNtCbk/5HsZzuvL9bnDmQ224JipcbMZrK7a0ze8FzosN5yb+e6zGt
-         6yiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OOzIbrFIOKeJXJT4ID/MUCczRZmmy/MUgRjL2diXaTc=;
-        b=7Brqmlob4jo1HSRavV9MFb7eS/1r8ZccWTvfihNrlgaqxuqonyUedYHeX1OD0fd3zP
-         qqTjhoLuoMa74DSLW4Y80gqz9GxuNN3xST66vVzBP6qu8XZRinNvekS8AXi/m/4FMfZZ
-         MjC2LZ6KaO/vw/KLuqvU+ixL4USldPN99u8GWNy0+Qa5uLlfAkAgM6f3tyoRkSdpPF1l
-         OXlPE3dOd+eyBs+Ov/O/zqxfRemjt3ygOqltIFb1DZAal/je7aeEREV/dlv6hv9irrgK
-         6VF90oAEBSu3UpwQA/hIFuWAhlHmK9SdNjwBz9HEhbv1o+GJjUmewAsD2JqBvhKqZCj5
-         A56g==
-X-Gm-Message-State: ANoB5pkCZhhxOvIn4BauqYEpj+Xfi9QEq8cKITkFFThq/LmjE8iNTSZX
-        Ml0A4A2T6zB8znmpq3p7SpzoIM9ZR1qI5RjKPcPprlwVAfl3Ga69
-X-Google-Smtp-Source: AA0mqf6RIQN3NAIPq8n53brtdf2c7RBwC0dm3F1Hg3vcuzZA+yL7BZxfmN50fae3ZbC8cj8CDbzO4XEicnkv+Bo+9Ew=
-X-Received: by 2002:a05:6402:5d5:b0:464:fa1:9ece with SMTP id
- n21-20020a05640205d500b004640fa19ecemr21917763edx.262.1669123205084; Tue, 22
- Nov 2022 05:20:05 -0800 (PST)
+        Tue, 22 Nov 2022 08:22:18 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EB3A64A0D
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2022 05:22:13 -0800 (PST)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AMCYjOR004296;
+        Tue, 22 Nov 2022 13:22:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=tsi+9NEN2i66EJyk9LigVF98gEhQEdFidfq3/nXxxFM=;
+ b=XzM6hT86w8OHlrWSqT8BYP/IHIXmrWMzN0Olsz39PRsYsyvWW2asKXmbBpKEinEdQ+T4
+ BSMcmGyPwu4Rb7rbzw7n+FRb9Q18pMpzoSKy2njlw9Xi9UDFjty4R1RF03BcSotaa6BP
+ iLIXexKjl4s2enKtdR/Ct9pyTs4g0m+szYevB9JfMYj0L4/Wky4rCukY/AplsO9GHgT2
+ 2HB5/7W1aNw40j23R/6304/SoJ8ONBkm0GAyx/JQvAiYaCRgbGzHAaBW4HfD2i1riWYQ
+ t1ZUIKabhWveZkKy3zBvInn0D0wgXt+vbdmXUBMqEWcWURUsNi1RHn2fsUqGEfbT7i5A fA== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m0hwp9nt8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Nov 2022 13:22:08 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AMDM8Mh008420
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Nov 2022 13:22:08 GMT
+Received: from kathirve-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.36; Tue, 22 Nov 2022 05:22:06 -0800
+From:   Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Sriram R <quic_srirrama@quicinc.com>,
+        Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+Subject: [PATCHv2 1/8] wifi: dt: bindings: net: add IPQ5018 compatible entry for ath11k
+Date:   Tue, 22 Nov 2022 18:51:45 +0530
+Message-ID: <20221122132152.17771-2-quic_kathirve@quicinc.com>
+X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20221122132152.17771-1-quic_kathirve@quicinc.com>
+References: <20221122132152.17771-1-quic_kathirve@quicinc.com>
 MIME-Version: 1.0
-References: <20221122131248.23738-1-lukas.bulwahn@gmail.com>
-In-Reply-To: <20221122131248.23738-1-lukas.bulwahn@gmail.com>
-From:   Info Skymem <info@skymem.com>
-Date:   Tue, 22 Nov 2022 14:19:54 +0100
-Message-ID: <CAKvd=_ivRY1kDZYqygm2ZQCrcWV4f7RJjTdgw2i27gW9aUjCVA@mail.gmail.com>
-Subject: Re: [PATCH] wifi: b43: remove reference to removed config B43_PCMCIA
-To:     Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Cc:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 4ljHf4E-On1WS_Mi5RsXUpNVXyRbpsCN
+X-Proofpoint-ORIG-GUID: 4ljHf4E-On1WS_Mi5RsXUpNVXyRbpsCN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-22_06,2022-11-18_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
+ malwarescore=0 mlxlogscore=687 lowpriorityscore=0 mlxscore=0 bulkscore=0
+ spamscore=0 phishscore=0 adultscore=0 priorityscore=1501 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211220098
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
-thank you for your information.
+From: Sriram R <quic_srirrama@quicinc.com>
 
-On our website you can find email addresses of companies and people.
-https://www.skymem.info
+Add IPQ5018 device support for ath11k.
 
-In short, it=E2=80=99s like Google for emails.
+Tested-on : IPQ5018 hw1.0 AHB WLAN.HK.2.6.0.1-00861-QCAHKSWPL_SILICONZ-1
 
-Best regards,
-Robert,
-Skymem team
+Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
+Co-developed-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+Signed-off-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+---
+ Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-On Tue, Nov 22, 2022 at 2:15 PM Lukas Bulwahn <lukas.bulwahn@gmail.com> wro=
-te:
->
-> Commit 399500da18f7 ("ssb: pick PCMCIA host code support from b43 driver"=
-)
-> removes the config B43_PCMCIA.
->
-> Clean up the last reference to this removed config B43_PCMCIA in the
-> b43_print_driverinfo() function.
->
-> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-> ---
->  drivers/net/wireless/broadcom/b43/main.c | 10 +++-------
->  1 file changed, 3 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wirel=
-ess/broadcom/b43/main.c
-> index 298febbdffc0..92ca0b2ca286 100644
-> --- a/drivers/net/wireless/broadcom/b43/main.c
-> +++ b/drivers/net/wireless/broadcom/b43/main.c
-> @@ -5784,15 +5784,12 @@ void b43_controller_restart(struct b43_wldev *dev=
-, const char *reason)
->
->  static void b43_print_driverinfo(void)
->  {
-> -       const char *feat_pci =3D "", *feat_pcmcia =3D "", *feat_nphy =3D =
-"",
-> +       const char *feat_pci =3D "", *feat_nphy =3D "",
->                    *feat_leds =3D "", *feat_sdio =3D "";
->
->  #ifdef CONFIG_B43_PCI_AUTOSELECT
->         feat_pci =3D "P";
->  #endif
-> -#ifdef CONFIG_B43_PCMCIA
-> -       feat_pcmcia =3D "M";
-> -#endif
->  #ifdef CONFIG_B43_PHY_N
->         feat_nphy =3D "N";
->  #endif
-> @@ -5803,9 +5800,8 @@ static void b43_print_driverinfo(void)
->         feat_sdio =3D "S";
->  #endif
->         printk(KERN_INFO "Broadcom 43xx driver loaded "
-> -              "[ Features: %s%s%s%s%s ]\n",
-> -              feat_pci, feat_pcmcia, feat_nphy,
-> -              feat_leds, feat_sdio);
-> +              "[ Features: %s%s%s%s ]\n",
-> +              feat_pci, feat_nphy, feat_leds, feat_sdio);
->  }
->
->  static int __init b43_init(void)
-> --
-> 2.17.1
->
->
-> _______________________________________________
-> b43-dev mailing list
-> b43-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/b43-dev
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+index f7cf135aa37f..a29ca77db6aa 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+@@ -21,6 +21,7 @@ properties:
+       - qcom,ipq8074-wifi
+       - qcom,ipq6018-wifi
+       - qcom,wcn6750-wifi
++      - qcom,ipq5018-wifi
+ 
+   reg:
+     maxItems: 1
+
+base-commit: ef907406320c7af8b6a9e0b140a11ebb3a0fa371
+-- 
+2.17.1
+
