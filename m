@@ -2,106 +2,67 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 036E8C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Nov 2022 08:30:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34B28C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Nov 2022 08:46:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229853AbiKYIaI convert rfc822-to-8bit (ORCPT
+        id S229751AbiKYIqM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Nov 2022 03:30:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47636 "EHLO
+        Fri, 25 Nov 2022 03:46:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229734AbiKYIaG (ORCPT
+        with ESMTP id S229732AbiKYIqD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2022 03:30:06 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6F30731210;
-        Fri, 25 Nov 2022 00:30:05 -0800 (PST)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2AP8StpE6006039, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2AP8StpE6006039
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 25 Nov 2022 16:28:55 +0800
-Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+        Fri, 25 Nov 2022 03:46:03 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05E4D1FF80;
+        Fri, 25 Nov 2022 00:46:01 -0800 (PST)
+Received: from canpemm500010.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NJSzk0C7jzJnwf;
+        Fri, 25 Nov 2022 16:42:42 +0800 (CST)
+Received: from localhost.localdomain (10.175.112.70) by
+ canpemm500010.china.huawei.com (7.192.105.118) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 25 Nov 2022 16:29:38 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Fri, 25 Nov 2022 16:29:38 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b]) by
- RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b%5]) with mapi id
- 15.01.2375.007; Fri, 25 Nov 2022 16:29:38 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Sascha Hauer <s.hauer@pengutronix.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Hochbaum <alex@appudo.com>,
-        Da Xue <da@libre.computer>,
-        "Bernie Huang" <phhuang@realtek.com>,
-        Viktor Petrenko <g0000ga@gmail.com>
-Subject: RE: [PATCH v3 03/11] rtw88: Drop rf_lock
-Thread-Topic: [PATCH v3 03/11] rtw88: Drop rf_lock
-Thread-Index: AQHY/oIygBK3Wh67DEaTX45BCElsma5PUv2Q
-Date:   Fri, 25 Nov 2022 08:29:38 +0000
-Message-ID: <71f8444cb3bf4859843339614f61a6e8@realtek.com>
-References: <20221122145226.4065843-1-s.hauer@pengutronix.de>
- <20221122145226.4065843-4-s.hauer@pengutronix.de>
-In-Reply-To: <20221122145226.4065843-4-s.hauer@pengutronix.de>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS03.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/11/25_=3F=3F_06:00:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+ 15.1.2375.31; Fri, 25 Nov 2022 16:45:59 +0800
+From:   Wang Yufen <wangyufen@huawei.com>
+To:     <nbd@nbd.name>, <lorenzo@kernel.org>, <ryder.lee@mediatek.com>,
+        <shayne.chen@mediatek.com>, <sean.wang@mediatek.com>,
+        <kvalo@kernel.org>, <davem@davemloft.net>
+CC:     <chui-hao.chiu@mediatek.com>, <wangyufen@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH wireless] mt76: mt7915: add missing of_node_put()
+Date:   Fri, 25 Nov 2022 17:06:07 +0800
+Message-ID: <1669367167-12983-1-git-send-email-wangyufen@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Type: text/plain
+X-Originating-IP: [10.175.112.70]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ canpemm500010.china.huawei.com (7.192.105.118)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Add missing of_node_put() after of_reserved_mem_lookup()
 
+Fixes: 99ad32a4ca3a ("mt76: mt7915: add support for MT7986")
+Signed-off-by: Wang Yufen <wangyufen@huawei.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/soc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> -----Original Message-----
-> From: Sascha Hauer <s.hauer@pengutronix.de>
-> Sent: Tuesday, November 22, 2022 10:52 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Neo Jou <neojou@gmail.com>; Hans Ulli Kroll <linux@ulli-kroll.de>; Ping-Ke Shih <pkshih@realtek.com>;
-> Yan-Hsuan Chuang <tony0620emma@gmail.com>; Kalle Valo <kvalo@kernel.org>; netdev@vger.kernel.org;
-> linux-kernel@vger.kernel.org; Martin Blumenstingl <martin.blumenstingl@googlemail.com>;
-> kernel@pengutronix.de; Johannes Berg <johannes@sipsolutions.net>; Alexander Hochbaum <alex@appudo.com>;
-> Da Xue <da@libre.computer>; Bernie Huang <phhuang@realtek.com>; Viktor Petrenko <g0000ga@gmail.com>;
-> Sascha Hauer <s.hauer@pengutronix.de>
-> Subject: [PATCH v3 03/11] rtw88: Drop rf_lock
-> 
-> The rtwdev->rf_lock spinlock protects the rf register accesses in
-> rtw_read_rf() and rtw_write_rf(). Most callers of these functions hold
-> rtwdev->mutex already with the exception of the callsites in the debugfs
-> code. The debugfs code doesn't justify an extra lock, so acquire the mutex
-> there as well before calling rf register accessors and drop the now
-> unnecessary spinlock.
-> 
-> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
-
-[...]
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+index c74afa7..ee7ddda 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+@@ -278,6 +278,7 @@ static int mt7986_wmac_coninfra_setup(struct mt7915_dev *dev)
+ 		return -EINVAL;
+ 
+ 	rmem = of_reserved_mem_lookup(np);
++	of_node_put(np);
+ 	if (!rmem)
+ 		return -EINVAL;
+ 
+-- 
+1.8.3.1
 
