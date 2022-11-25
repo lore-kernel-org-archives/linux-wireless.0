@@ -2,169 +2,155 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2994FC433FE
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Nov 2022 07:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E673FC433FE
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Nov 2022 07:36:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229609AbiKYHZe (ORCPT
+        id S229583AbiKYHgx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Nov 2022 02:25:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49866 "EHLO
+        Fri, 25 Nov 2022 02:36:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229664AbiKYHZ3 (ORCPT
+        with ESMTP id S229436AbiKYHgw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2022 02:25:29 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E39B52DAA8
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2022 23:25:26 -0800 (PST)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2AP7OU5d8004227, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2AP7OU5d8004227
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 25 Nov 2022 15:24:30 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 25 Nov 2022 15:25:14 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 25 Nov
- 2022 15:25:13 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] wifi: rtw89: add HE radiotap for monitor mode
-Date:   Fri, 25 Nov 2022 15:24:15 +0800
-Message-ID: <20221125072416.94752-3-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221125072416.94752-1-pkshih@realtek.com>
-References: <20221125072416.94752-1-pkshih@realtek.com>
+        Fri, 25 Nov 2022 02:36:52 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0E3C264BF
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2022 23:36:46 -0800 (PST)
+X-UUID: 65eb905388454e5c96cf3dc6b9d690ce-20221125
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=7OfNukSIJCfSvdmDLdM4fonmtezX9J+mk1ntbpFnZ7M=;
+        b=DcTOISLexRWAtT4I8V/oIPsa1AW2kvH8Ts91KtuDL7PSHtXH+WZuEH732wZBU/Typ5oen+gxxSZyxhCzqKER6zM2QWTETu3o8LhaWnHBSG0qRn6P66ONzc0ncJOZ4/uytZ61OKHmt2IKxWrO7AFMLZoJn5Jic6IKijGC3fh13GI=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.14,REQID:d62941e8-2613-43f2-9159-d64db94a0cb7,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:dcaaed0,CLOUDID:3a6d39dc-6ad4-42ff-91f3-18e0272db660,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 65eb905388454e5c96cf3dc6b9d690ce-20221125
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 510169411; Fri, 25 Nov 2022 15:36:41 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Fri, 25 Nov 2022 15:36:40 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Fri, 25 Nov 2022 15:36:40 +0800
+From:   Deren Wu <Deren.Wu@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
+CC:     Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Deren Wu <deren.wu@mediatek.com>
+Subject: [PATCH] wifi: mt76: mt7921e: introduce reboot notifier support
+Date:   Fri, 25 Nov 2022 15:36:00 +0800
+Message-ID: <28482de35c4f1589dcf96b662a48bc558fe46e8f.1669361180.git.deren.wu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 11/25/2022 07:02:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzExLzI1IKRXpMggMDQ6MTA6MDA=?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With basic HE radiotap, we can check data rate in sniffer data. To store
-the radiotap data, we reserve headroom of aligned 64 bytes, and then
-update HE radiotap in monitor mode, so it doesn't affect performance in
-normal mode.
+From: Leon Yen <Leon.Yen@mediatek.com>
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Some combinations of hosts cannnot detect mt7921e after reboot. The
+interoperability issue is caused by the status mismatch between host
+and chip fw. In such cases, the driver should stop chip activities
+and reset chip to default state before reboot.
+
+Co-developed-by: Deren Wu <deren.wu@mediatek.com>
+Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+Signed-off-by: Leon Yen <Leon.Yen@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 22 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/core.h | 18 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/pci.c  |  2 +-
- 3 files changed, 41 insertions(+), 1 deletion(-)
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  1 +
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   | 25 +++++++++++++++++++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index af8daa101f457..190d72df800f9 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1480,6 +1480,27 @@ static void rtw89_core_hw_to_sband_rate(struct ieee80211_rx_status *rx_status)
- 	rx_status->rate_idx -= 4;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index 6fc04ed34ec3..64156d32b62d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -306,6 +306,7 @@ struct mt7921_dev {
+ 	struct sk_buff_head ipv6_ns_list;
+ 
+ 	enum environment_cap country_ie_env;
++	struct notifier_block reboot_nb;
+ };
+ 
+ enum {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 28342ec940f0..6d20b3ed5db1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -6,6 +6,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
++#include <linux/reboot.h>
+ 
+ #include "mt7921.h"
+ #include "mac.h"
+@@ -110,6 +111,7 @@ static void mt7921e_unregister_device(struct mt7921_dev *dev)
+ 	struct mt76_connac_pm *pm = &dev->pm;
+ 
+ 	cancel_work_sync(&dev->init_work);
++	unregister_reboot_notifier(&dev->reboot_nb);
+ 	mt76_unregister_device(&dev->mt76);
+ 	mt76_for_each_q_rx(&dev->mt76, i)
+ 		napi_disable(&dev->mt76.napi[i]);
+@@ -226,6 +228,24 @@ static u32 mt7921_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
+ 	return dev->bus_ops->rmw(mdev, addr, mask, val);
  }
  
-+static void rtw89_core_update_radiotap(struct rtw89_dev *rtwdev,
-+				       struct sk_buff *skb,
-+				       struct ieee80211_rx_status *rx_status)
++static int mt7921e_reboot_notifier(struct notifier_block *nb,
++				   unsigned long code, void *unused)
 +{
-+	static const struct ieee80211_radiotap_he known_he = {
-+		.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN |
-+				     IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN),
-+		.data2 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN),
-+	};
-+	struct ieee80211_radiotap_he *he;
++	struct mt7921_dev *dev = container_of(nb, struct mt7921_dev,
++					      reboot_nb);
++	struct mt76_connac_pm *pm = &dev->pm;
 +
-+	if (!(rtwdev->hw->conf.flags & IEEE80211_CONF_MONITOR))
-+		return;
++	cancel_delayed_work_sync(&pm->ps_work);
++	cancel_work_sync(&pm->wake_work);
 +
-+	if (rx_status->encoding == RX_ENC_HE) {
-+		rx_status->flag |= RX_FLAG_RADIOTAP_HE;
-+		he = skb_push(skb, sizeof(*he));
-+		*he = known_he;
-+	}
++	/* chip cleanup before reboot */
++	mt7921_mcu_drv_pmctrl(dev);
++	mt7921_dma_cleanup(dev);
++	mt7921_wfsys_reset(dev);
++
++	return NOTIFY_DONE;
 +}
 +
- static void rtw89_core_rx_to_mac80211(struct rtw89_dev *rtwdev,
- 				      struct rtw89_rx_phy_ppdu *phy_ppdu,
- 				      struct rtw89_rx_desc_info *desc_info,
-@@ -1494,6 +1515,7 @@ static void rtw89_core_rx_to_mac80211(struct rtw89_dev *rtwdev,
+ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 			    const struct pci_device_id *id)
+ {
+@@ -361,6 +381,11 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 	if (ret)
+ 		goto err_free_irq;
  
- 	rtw89_core_hw_to_sband_rate(rx_status);
- 	rtw89_core_rx_stats(rtwdev, phy_ppdu, desc_info, skb_ppdu);
-+	rtw89_core_update_radiotap(rtwdev, skb_ppdu, rx_status);
- 	/* In low power mode, it does RX in thread context. */
- 	local_bh_disable();
- 	ieee80211_rx_napi(rtwdev->hw, NULL, skb_ppdu, napi);
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 1b0acb1c5450e..0be8f7bd3ca2d 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -35,6 +35,7 @@ extern const struct ieee80211_ops rtw89_ops;
- #define RSSI_FACTOR 1
- #define RTW89_RSSI_RAW_TO_DBM(rssi) ((s8)((rssi) >> RSSI_FACTOR) - MAX_RSSI)
- #define RTW89_TX_DIV_RSSI_RAW_TH (2 << RSSI_FACTOR)
-+#define RTW89_RADIOTAP_ROOM ALIGN(sizeof(struct ieee80211_radiotap_he), 64)
- 
- #define RTW89_HTC_MASK_VARIANT GENMASK(1, 0)
- #define RTW89_HTC_VARIANT_HE 3
-@@ -4383,6 +4384,23 @@ static inline struct rtw89_fw_suit *rtw89_fw_suit_get(struct rtw89_dev *rtwdev,
- 	return &fw_info->normal;
- }
- 
-+static inline struct sk_buff *rtw89_alloc_skb_for_rx(struct rtw89_dev *rtwdev,
-+						     unsigned int length)
-+{
-+	struct sk_buff *skb;
++	dev->reboot_nb.notifier_call = mt7921e_reboot_notifier;
++	ret = register_reboot_notifier(&dev->reboot_nb);
++	if (ret)
++		goto err_free_irq;
 +
-+	if (rtwdev->hw->conf.flags & IEEE80211_CONF_MONITOR) {
-+		skb = dev_alloc_skb(length + RTW89_RADIOTAP_ROOM);
-+		if (!skb)
-+			return NULL;
-+
-+		skb_reserve(skb, RTW89_RADIOTAP_ROOM);
-+		return skb;
-+	}
-+
-+	return dev_alloc_skb(length);
-+}
-+
- int rtw89_core_tx_write(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta, struct sk_buff *skb, int *qsel);
- int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 7aa0af18cdd50..1c4500ba777c6 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -267,7 +267,7 @@ static u32 rtw89_pci_rxbd_deliver_skbs(struct rtw89_dev *rtwdev,
+ 	return 0;
  
- 		rtw89_core_query_rxdesc(rtwdev, desc_info, skb->data, rxinfo_size);
- 
--		new = dev_alloc_skb(desc_info->pkt_size);
-+		new = rtw89_alloc_skb_for_rx(rtwdev, desc_info->pkt_size);
- 		if (!new)
- 			goto err_sync_device;
- 
+ err_free_irq:
 -- 
-2.25.1
+2.18.0
 
