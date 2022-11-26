@@ -2,117 +2,101 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BB2C43217
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Nov 2022 23:51:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C7EEC4332F
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Nov 2022 08:14:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229980AbiKYXvU (ORCPT
+        id S229487AbiKZIOt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Nov 2022 18:51:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42350 "EHLO
+        Sat, 26 Nov 2022 03:14:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229514AbiKYXvS (ORCPT
+        with ESMTP id S229450AbiKZIOs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2022 18:51:18 -0500
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8895E18E;
-        Fri, 25 Nov 2022 15:51:17 -0800 (PST)
-Received: by mail-pj1-f43.google.com with SMTP id k2-20020a17090a4c8200b002187cce2f92so8907494pjh.2;
-        Fri, 25 Nov 2022 15:51:17 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UBCy9qp7TSwSwGwI/krp6oqH0EI9xTeC+ExI/AlQHzg=;
-        b=1OQZpXZ9Ed1f3U724rkw+MtCYUcdJtTOkQ3OJ37kYyDX/+ASIHd6vmK9sV2RyiKbDR
-         ffkPd2ZaEPqioDrIqq60oCchjlF1lDAjF6VQHiegOBVIjzBfg9O5LIsr17MGXVrhfHJ1
-         EpSV4AkvHA61ahLrikQ2SE8nCgoDrWzsdzSJlEvmLg0VS+Mfjt+DoY/n7vJxRMSDT0yY
-         M+5bSNwfcAKFZcSNTjEgcGXAitcGRLhVqwn8PT38U/J8WQuqXeGpHSbYU7jTEST9os7J
-         lhcWIDCR0gTByg9ebWcdcGzslqg1QCVb16SGCkSxfiJymBuUdmuTNnhxFpy5HCr5kqjH
-         8B4w==
-X-Gm-Message-State: ANoB5pmSedKMG6RkTCcAwZoIvPyhtzK5azH+FU+4AfjKzrZo/Eipmx+E
-        RQuM+oZM4QaEN5RqE01/84Q=
-X-Google-Smtp-Source: AA0mqf40CELg5Cd4cKADSnuQ7zDvszL+QjMGY2dYDbM8qR4FVWtlF2gM/wXRLECZg2wkT9gOazTizw==
-X-Received: by 2002:a17:90a:b88c:b0:218:e1c1:b4f3 with SMTP id o12-20020a17090ab88c00b00218e1c1b4f3mr15351878pjr.201.1669420276891;
-        Fri, 25 Nov 2022 15:51:16 -0800 (PST)
-Received: from [192.168.3.219] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id q6-20020a17090311c600b001865c298588sm3937409plh.258.2022.11.25.15.51.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Nov 2022 15:51:15 -0800 (PST)
-Message-ID: <d448b944-708a-32d4-37d7-0be16ee5f73c@acm.org>
-Date:   Fri, 25 Nov 2022 15:51:11 -0800
+        Sat, 26 Nov 2022 03:14:48 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B2F226571;
+        Sat, 26 Nov 2022 00:14:46 -0800 (PST)
+Received: from dggpeml500023.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NK4JJ4tqnzmW5Q;
+        Sat, 26 Nov 2022 16:14:08 +0800 (CST)
+Received: from [10.174.176.83] (10.174.176.83) by
+ dggpeml500023.china.huawei.com (7.185.36.114) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Sat, 26 Nov 2022 16:14:43 +0800
+Message-ID: <88650c25-5358-1f03-dc96-fb7fc550fb18@huawei.com>
+Date:   Sat, 26 Nov 2022 16:14:43 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH 1/5] driver core: make struct class.dev_uevent() take a
- const *
-Content-Language: en-US
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>, Luis Chamberlain <mcgrof@kernel.org>,
-        Russ Weight <russell.h.weight@intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Jean Delvare <jdelvare@suse.com>,
-        Johan Hovold <johan@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Keith Busch <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Sebastian Reichel <sre@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Raed Salem <raeds@nvidia.com>,
-        Chen Zhongjin <chenzhongjin@huawei.com>,
-        Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
-        Avihai Horon <avihaih@nvidia.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Colin Ian King <colin.i.king@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jakob Koschel <jakobkoschel@gmail.com>,
-        Antoine Tenart <atenart@kernel.org>,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Wang Yufen <wangyufen@huawei.com>, linux-block@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-References: <20221123122523.1332370-1-gregkh@linuxfoundation.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20221123122523.1332370-1-gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.0
+Subject: Re: [PATCH wireless] wifi: wilc1000: Fix UAF in wilc_netdev_cleanup()
+ when iterator the RCU list
+To:     <Ajay.Kathat@microchip.com>
+References: <20221124151349.2386077-1-zhangxiaoxu5@huawei.com>
+ <a6d8f548-bcf4-4a02-df25-3a06aa8f2b42@microchip.com>
+From:   "zhangxiaoxu (A)" <zhangxiaoxu5@huawei.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <kvalo@kernel.org>, <davem@davemloft.net>, <edumazet@google.com>,
+        <kuba@kernel.org>, <pabeni@redhat.com>,
+        <Claudiu.Beznea@microchip.com>
+In-Reply-To: <a6d8f548-bcf4-4a02-df25-3a06aa8f2b42@microchip.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.176.83]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpeml500023.china.huawei.com (7.185.36.114)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/23/22 04:25, Greg Kroah-Hartman wrote:
-> diff --git a/include/linux/mISDNif.h b/include/linux/mISDNif.h
-> index 7dd1f01ec4f9..7aab4a769736 100644
-> --- a/include/linux/mISDNif.h
-> +++ b/include/linux/mISDNif.h
-> @@ -586,7 +586,7 @@ extern struct mISDNclock *mISDN_register_clock(char *, int, clockctl_func_t *,
->   						void *);
->   extern void	mISDN_unregister_clock(struct mISDNclock *);
->   
-> -static inline struct mISDNdevice *dev_to_mISDN(struct device *dev)
-> +static inline struct mISDNdevice *dev_to_mISDN(const struct device *dev)
->   {
->   	if (dev)
->   		return dev_get_drvdata(dev);
 
-Why does the dev_to_mISDN() function drop constness? I haven't found an 
-explanation for this in the cover letter.
 
-Thanks,
+On 2022/11/26 0:17, Ajay.Kathat@microchip.com wrote:
+> 
+> On 24/11/22 20:43, Zhang Xiaoxu wrote:
+>> EXTERNAL EMAIL: Do not click links or open attachments unless you know the content is safe
+>>
+>> There is a UAF read when remove the wilc1000_spi module:
+>>
+>>   BUG: KASAN: use-after-free in wilc_netdev_cleanup.cold+0xc4/0xe0 [wilc1000]
+>>   Read of size 8 at addr ffff888116846900 by task rmmod/386
+>>
+>>   CPU: 2 PID: 386 Comm: rmmod Tainted: G                 N 6.1.0-rc6+ #8
+>>   Call Trace:
+>>    dump_stack_lvl+0x68/0x85
+>>    print_report+0x16c/0x4a3
+>>    kasan_report+0x95/0x190
+>>    wilc_netdev_cleanup.cold+0xc4/0xe0
+>>    wilc_bus_remove+0x52/0x60
+>>    spi_remove+0x46/0x60
+>>    device_remove+0x73/0xc0
+>>    device_release_driver_internal+0x12d/0x210
+>>    driver_detach+0x84/0x100
+>>    bus_remove_driver+0x90/0x120
+>>    driver_unregister+0x4f/0x80
+>>    __x64_sys_delete_module+0x2fc/0x440
+>>    do_syscall_64+0x38/0x90
+>>    entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>>
+>> Since set 'needs_free_netdev=true' when initialize the net device, the
+>> net device will be freed when unregister, then use the freed 'vif' to
+>> find the next will UAF read.
+> 
+> 
+> Did you test this behaviour on the real device. I am seeing a kernel crash when the module is unloaded after the connection with an AP.
+Thanks Ajay,
+I have no real device, what kind of crash about your scenario?
+> As I see, "vif_list" is used to maintain the interface list, so even when one interface is removed, another element is fetched from the "vif_list", not using the freed "vif"
+For example if the "vif_list" has device A and device B, just like:
+   A->next = &B
+   B->prev = &A
 
-Bart.
+When iterator on the vif_list,
+   1st: Got A and unregister A, A will be freed since needs_free_netdev=true
+   2nd: Try get B from A->next, A already freed in the first step, UAF occurred.
 
+rcu list no implement the interface like "list_for_each_entry_safe".
+> 
+> Regards,
+> Ajay
+> 
