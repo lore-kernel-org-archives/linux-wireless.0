@@ -2,87 +2,115 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 367FBC46467
-	for <linux-wireless@archiver.kernel.org>; Sun, 27 Nov 2022 08:45:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE832C352A1
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Nov 2022 13:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbiK0IpQ (ORCPT
+        id S229575AbiK0Ny5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Nov 2022 03:45:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57566 "EHLO
+        Sun, 27 Nov 2022 08:54:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229487AbiK0IpO (ORCPT
+        with ESMTP id S229450AbiK0Nyz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Nov 2022 03:45:14 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 021E612AB3
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2022 00:45:09 -0800 (PST)
-X-UUID: 534304b763be4b7a8fb82ed53f9f4a24-20221127
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=degEPpez7R0PK8gPSumCmltIgpOy/w9YTRhbX2/Q2qU=;
-        b=kdSOkbyNAhtELS80VWWThKcV8xhLJg9xyLUKMIv7amiMVkmLhwblRFWDrOF1jg5n1xzAEjWdH8Hff8q4voAGDl0InE4PjCDSEnQAyjj6Ob81C30/p+AbDZsNWFAjnbkwg89ST8WqrcIo2pcvVVfIvMKwMaUn0E4aciLPvD540Y4=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:9791ed34-ceb7-4039-b70d-a13e9e6bd5d6,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:90
-X-CID-INFO: VERSION:1.1.14,REQID:9791ed34-ceb7-4039-b70d-a13e9e6bd5d6,IP:0,URL
-        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
-        N:quarantine,TS:90
-X-CID-META: VersionHash:dcaaed0,CLOUDID:e30dec2f-2938-482e-aafd-98d66723b8a9,B
-        ulkID:221127164504AF8W1MLR,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48,TC:n
-        il,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 534304b763be4b7a8fb82ed53f9f4a24-20221127
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 999147435; Sun, 27 Nov 2022 16:45:03 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Sun, 27 Nov 2022 16:45:02 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Sun, 27 Nov 2022 16:45:02 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] wifi: mt76: mt7915: fix endianness of mt7915_mcu_set_obss_spr_pd()
-Date:   Sun, 27 Nov 2022 16:45:00 +0800
-Message-ID: <ff2080860ee5b28f7dcde70bada720ba55b0bac5.1669538240.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Sun, 27 Nov 2022 08:54:55 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03880B86E;
+        Sun, 27 Nov 2022 05:54:55 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9A4C860D28;
+        Sun, 27 Nov 2022 13:54:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68D01C433D6;
+        Sun, 27 Nov 2022 13:54:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1669557294;
+        bh=yBXFwdf6dHy6NKqLSbFuwY2ODTarq/fHEqUCJbDArGc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Nk7s5lWEAiKkbiHApH4KVdNYo+dE77wMv9el27gVNLV6vJ8bqio04oPle12nog6/N
+         QZJnMGnTpuchNmx+393MIhVm5To4LYwv2fgwAWxLOKa3Wbo2x7CZmTxpFABdw+u3gk
+         BKlc2ytv29xRY3fdiySvnZCwugu9Z2Y1dflPI6q8=
+Date:   Sun, 27 Nov 2022 14:45:36 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Russ Weight <russell.h.weight@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Jean Delvare <jdelvare@suse.com>,
+        Johan Hovold <johan@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Karsten Keil <isdn@linux-pingi.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Raed Salem <raeds@nvidia.com>,
+        Chen Zhongjin <chenzhongjin@huawei.com>,
+        Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
+        Avihai Horon <avihaih@nvidia.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Colin Ian King <colin.i.king@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jakob Koschel <jakobkoschel@gmail.com>,
+        Antoine Tenart <atenart@kernel.org>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Wang Yufen <wangyufen@huawei.com>, linux-block@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 1/5] driver core: make struct class.dev_uevent() take a
+ const *
+Message-ID: <Y4NqAJW5V0tAP8ax@kroah.com>
+References: <20221123122523.1332370-1-gregkh@linuxfoundation.org>
+ <d448b944-708a-32d4-37d7-0be16ee5f73c@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d448b944-708a-32d4-37d7-0be16ee5f73c@acm.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix sparse: sparse: incorrect type in assignment (different base types).
+On Fri, Nov 25, 2022 at 03:51:11PM -0800, Bart Van Assche wrote:
+> On 11/23/22 04:25, Greg Kroah-Hartman wrote:
+> > diff --git a/include/linux/mISDNif.h b/include/linux/mISDNif.h
+> > index 7dd1f01ec4f9..7aab4a769736 100644
+> > --- a/include/linux/mISDNif.h
+> > +++ b/include/linux/mISDNif.h
+> > @@ -586,7 +586,7 @@ extern struct mISDNclock *mISDN_register_clock(char *, int, clockctl_func_t *,
+> >   						void *);
+> >   extern void	mISDN_unregister_clock(struct mISDNclock *);
+> > -static inline struct mISDNdevice *dev_to_mISDN(struct device *dev)
+> > +static inline struct mISDNdevice *dev_to_mISDN(const struct device *dev)
+> >   {
+> >   	if (dev)
+> >   		return dev_get_drvdata(dev);
+> 
+> Why does the dev_to_mISDN() function drop constness? I haven't found an
+> explanation for this in the cover letter.
 
-Fixes: a6335031eb96 ("wifi: mt76: mt7915: add support to configure spatial reuse parameter set")
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I agree, this is going to be fixed up, see the thread starting here:
+	https://lore.kernel.org/r/Y34+V2bCDdqujBDk@kroah.com
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 7a6cb25fdaed..9e479d41eab5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3438,8 +3438,8 @@ mt7915_mcu_set_obss_spr_pd(struct mt7915_phy *phy,
- 	if (he_obss_pd->sr_ctrl & IEEE80211_HE_SPR_SRG_INFORMATION_PRESENT)
- 		req.param.pd_th_srg = max_th - he_obss_pd->max_offset;
- 
--	req.param.obss_pd_min = 82;
--	req.param.obss_pd_min_srg = 82;
-+	req.param.obss_pd_min = cpu_to_le16(82);
-+	req.param.obss_pd_min_srg = cpu_to_le16(82);
- 	req.param.txpwr_restrict_mode = 2;
- 	req.param.txpwr_ref = 21;
- 
--- 
-2.36.1
+I'll work on making a const / non const version for these so that we
+don't loose the marking.
 
+Oh wait, no, this function is fine, it's not modifying the device
+structure at all, and only returning the pointer in the private data
+stored in the device.  There is no loss of const-ness here.
+
+thanks,
+
+greg k-h
