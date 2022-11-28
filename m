@@ -2,161 +2,138 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A54AC433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Nov 2022 07:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE66CC433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Nov 2022 08:45:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229816AbiK1H5y (ORCPT
+        id S229971AbiK1IpX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Nov 2022 02:57:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55070 "EHLO
+        Mon, 28 Nov 2022 03:45:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbiK1H5x (ORCPT
+        with ESMTP id S230022AbiK1IpV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2022 02:57:53 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3A77BCF7
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2022 23:57:52 -0800 (PST)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2AS7uvMdB016567, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2AS7uvMdB016567
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Mon, 28 Nov 2022 15:56:58 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Mon, 28 Nov 2022 15:57:42 +0800
-Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 28 Nov
- 2022 15:57:41 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wifi: rtw88: 8821c: enable BT device recovery mechanism
-Date:   Mon, 28 Nov 2022 15:56:53 +0800
-Message-ID: <20221128075653.5221-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+        Mon, 28 Nov 2022 03:45:21 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 723FD17AB9
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2022 00:45:19 -0800 (PST)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AS5oJTA018909;
+        Mon, 28 Nov 2022 08:45:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : from : to : cc : references : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=jus7okDsZiVBsZ9MUogqbWkyxD8xss8oPtgSM/wya8E=;
+ b=OP+6AisnARUAinT/mzBAuipCEOlbrR1Kn+Ggl4DW0ypWsVoP0cJ5T10ks9Vemb4vHFWq
+ Rb6CQCXT0KDxi4Yx5Mg/0RzlyyxqPEbzAtLi1ijr4AZPhdrUarXlVCqrAS5XxAnJa2Ar
+ 67X6g678m9BeT5p8hXQ0eQBGBEene9nnRrspQdcLUZCj6Uh8sMaQ5kicNDWaKqdeiyBQ
+ A8l3oVA7V3xVyTA7/lsHFH/HEgFwqVeOfWa9KZL5hqbQjlSIBrStKx1Yq5jUsg1AkL1r
+ jeTa31MBVZvlt5GZyEmhmOotuh1cpo8wG9f+9WsVPiHbPtVEJtNON+jVpvg87iFUPiiY 5w== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m3bywutuu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 28 Nov 2022 08:45:08 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2AS8j7j7025262
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 28 Nov 2022 08:45:07 GMT
+Received: from [10.231.195.37] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Mon, 28 Nov
+ 2022 00:45:05 -0800
+Message-ID: <a3edddb2-82e4-2c79-564f-1918b59aead9@quicinc.com>
+Date:   Mon, 28 Nov 2022 16:45:03 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 11/28/2022 07:36:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzExLzI4IKRXpMggMDY6MDA6MDA=?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: wifi: hostapd:/wpa_supplicant MLO Re: [PATCH 00/27] another set
+ of MLO patches
+Content-Language: en-US
+From:   Wen Gong <quic_wgong@quicinc.com>
+To:     "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Peer, Ilan" <ilan.peer@intel.com>
+CC:     <ath11k@lists.infradead.org>
+References: <20220902141259.377789-1-johannes@sipsolutions.net>
+ <6175bc95-201c-cfab-2ae6-9ba77e830394@quicinc.com>
+ <09556b33ad998ad243cf75dbc230f3b07349a87e.camel@sipsolutions.net>
+ <935ef9e9-2092-e3f0-0edd-4aa29f4fa775@quicinc.com>
+ <e01e75013f71ede7b29f2751238935e7147796f2.camel@sipsolutions.net>
+ <f3afceb8-8120-12c7-74b9-caa3abce5cb8@quicinc.com>
+ <DM6PR11MB3897D1A4E13419D9F938F559F5449@DM6PR11MB3897.namprd11.prod.outlook.com>
+ <96bcc467-c530-46de-8f91-c5eb0af7a368@quicinc.com>
+ <776991f3-384e-f487-83b7-e1fbfd40cc4f@quicinc.com>
+ <de54f4e0-810b-70a0-7629-39a2957ecd3d@quicinc.com>
+In-Reply-To: <de54f4e0-810b-70a0-7629-39a2957ecd3d@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: lyAcXvc_U3sxVIY_J-_kUeEDSB16VFEV
+X-Proofpoint-GUID: lyAcXvc_U3sxVIY_J-_kUeEDSB16VFEV
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-28_07,2022-11-25_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
+ suspectscore=0 bulkscore=0 phishscore=0 lowpriorityscore=0 spamscore=0
+ impostorscore=0 priorityscore=1501 adultscore=0 clxscore=1011
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211280067
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-8821ce is a combo card, and BT is a USB device that could get card lost
-during stress test, and need WiFi firmware to detect and recover it, so
-driver sends a H2C to enable this mechanism.
+Hi Andrei,
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/fw.c  | 10 ++++++++++
- drivers/net/wireless/realtek/rtw88/fw.h  |  6 ++++++
- drivers/net/wireless/realtek/rtw88/mac.c | 18 +++++++++++++++++-
- 3 files changed, 33 insertions(+), 1 deletion(-)
+Is below all your patches for MLO in wpa_suppplicant for station mode?
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 0b5f903c0f366..59cc2a0a0bd0d 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -824,6 +824,16 @@ void rtw_fw_set_nlo_info(struct rtw_dev *rtwdev, bool enable)
- 	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
- }
- 
-+void rtw_fw_set_recover_bt_device(struct rtw_dev *rtwdev)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RECOVER_BT_DEV);
-+	SET_RECOVER_BT_DEV_EN(h2c_pkt, 1);
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
- void rtw_fw_set_pg_info(struct rtw_dev *rtwdev)
- {
- 	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index a5a965803a3cc..a44a634bec619 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -550,6 +550,8 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
- #define H2C_CMD_AOAC_GLOBAL_INFO	0x82
- #define H2C_CMD_NLO_INFO		0x8C
- 
-+#define H2C_CMD_RECOVER_BT_DEV		0xD1
-+
- #define SET_H2C_CMD_ID_CLASS(h2c_pkt, value)				       \
- 	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(7, 0))
- 
-@@ -749,6 +751,9 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
- #define SET_NLO_LOC_NLO_INFO(h2c_pkt, value)                                   \
- 	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 16))
- 
-+#define SET_RECOVER_BT_DEV_EN(h2c_pkt, value)				       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(8))
-+
- #define GET_FW_DUMP_LEN(_header)					\
- 	le32_get_bits(*((__le32 *)(_header) + 0x00), GENMASK(15, 0))
- #define GET_FW_DUMP_SEQ(_header)					\
-@@ -838,6 +843,7 @@ void rtw_fw_set_aoac_global_info_cmd(struct rtw_dev *rtwdev,
- 				     u8 group_key_enc);
- 
- void rtw_fw_set_nlo_info(struct rtw_dev *rtwdev, bool enable);
-+void rtw_fw_set_recover_bt_device(struct rtw_dev *rtwdev);
- void rtw_fw_update_pkt_probe_req(struct rtw_dev *rtwdev,
- 				 struct cfg80211_ssid *ssid);
- void rtw_fw_channel_switch(struct rtw_dev *rtwdev, bool enable);
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index 52076e89d59a3..c7e64f7036ac2 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -906,7 +906,8 @@ static int __rtw_download_firmware_legacy(struct rtw_dev *rtwdev,
- 	return ret;
- }
- 
--int rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw)
-+static
-+int _rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw)
- {
- 	if (rtw_chip_wcpu_11n(rtwdev))
- 		return __rtw_download_firmware_legacy(rtwdev, fw);
-@@ -914,6 +915,21 @@ int rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw)
- 	return __rtw_download_firmware(rtwdev, fw);
- }
- 
-+int rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw)
-+{
-+	int ret;
-+
-+	ret = _rtw_download_firmware(rtwdev, fw);
-+	if (ret)
-+		return ret;
-+
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE &&
-+	    rtwdev->chip->id == RTW_CHIP_TYPE_8821C)
-+		rtw_fw_set_recover_bt_device(rtwdev);
-+
-+	return 0;
-+}
-+
- static u32 get_priority_queues(struct rtw_dev *rtwdev, u32 queues)
- {
- 	const struct rtw_rqpn *rqpn = rtwdev->fifo.rqpn;
--- 
-2.25.1
+[00/13] MLD STA: Add SME MLO support
 
+https://patchwork.ozlabs.org/project/hostap/list/?series=329909&state=*
+
+On 10/19/2022 6:04 PM, Wen Gong wrote:
+> Hi Ilan/Andrei,
+>
+> Will you send your patches of wpa_supplicant for MLO to upstream?😁
+>
+> On 10/11/2022 10:28 AM, Wen Gong wrote:
+>> Hi Ilan/Andrei,
+>>
+>> Will you send your patches of wpa_supplicant to upstream?😁
+>>
+>> On 9/28/2022 11:12 PM, Wen Gong wrote:
+>>> On 9/12/2022 9:17 PM, Otcheretianski, Andrei wrote:
+>>>>>> Well, OK, you obviously are adjusting the supplicant to work with 
+>>>>>> MLO
+>>>>>> (otherwise you wouldn't get an MLO connection in the first 
+>>>>>> place), so
+>>>>>> yeah, this is part of the adjustments needed.
+>>>>>>
+>>>>>> Ilan/Andrei have all of this working, maybe we can share the patches
+>>>>>> even before rebase etc.
+>>>> Hi,
+>>>> Our implementation is based on our internal tree, so it will take 
+>>>> some time to cleanup and port it for upstream.
+>>>> Hopefully I will have some time to work on it this and next week 
+>>>> and maybe we will be able to share something initial.
+>>> May I get your patches?
+>>>>
+>>>> Andrei
+>>>>>> johannes
+>>>>> Thanks.
+>>>>>
+>>>>> It is good to share me the wpa_supplicant patches ASAP.
+>>>>>
+>>>>> And I have another question:
+>>>>>
+>>>>> When mac80211 use the MLD addr in authentication/assoc request,
+>>>>>
+>>>>> finally, it should be replaced with one link's address in air 
+>>>>> port, right?
+>>>>>
+>>>>> It means the MLD addr will never exist in mac80211 header of 
+>>>>> packet in the
+>>>>> air port, right?
