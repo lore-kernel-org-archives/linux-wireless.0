@@ -2,96 +2,137 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57267C433FE
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Nov 2022 11:35:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD160C433FE
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Nov 2022 13:29:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230289AbiK1LfT (ORCPT
+        id S231777AbiK1N3R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Nov 2022 06:35:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49006 "EHLO
+        Mon, 28 Nov 2022 08:29:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229764AbiK1LfR (ORCPT
+        with ESMTP id S231773AbiK1N3O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2022 06:35:17 -0500
+        Mon, 28 Nov 2022 08:29:14 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93FBE12616;
-        Mon, 28 Nov 2022 03:35:16 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 495D71CFCD
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2022 05:29:12 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 419EFB80D59;
-        Mon, 28 Nov 2022 11:35:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F459C433C1;
-        Mon, 28 Nov 2022 11:35:13 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 02CB1B80BA6
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2022 13:29:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD332C433C1;
+        Mon, 28 Nov 2022 13:29:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669635314;
-        bh=ZkIZfPnaLcuA/RaAoaCVtaq1MX5bTLkRHY/vKivsiG8=;
-        h=From:Subject:To:Cc:Date:From;
-        b=h18736wmHeS+bd2tolnynxk2I/nj1FMGa6Wg5620SlaSsTgkP9w6q2SYT8BUSYLTP
-         9N3vdoIhWHz+QtRLSw099OPkf/EEctQxu0tPNzR3XSxT7TJHcNt8EkGQgC22K2+KAT
-         TVFou+H7W8PaSesqZJ7GoXVIJp2AhcPY5fBImy2+BEoDSorDa2zIeFFmlRBuKAA6ih
-         tIOd4olKnKTJ0VNmwub+Y7AFvRWyOmCSIsFzoHLyC2jeTQzYMctMCoENssr6qKs3jn
-         sUyQqkP7n3nid2Fny1wzmry5UqjXb7G86VL1yn+9Hjv33Jl79+beC/XbSPjqPqAPbm
-         gjmjjGBYJydMw==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        s=k20201202; t=1669642149;
+        bh=YzLvejoEX32ZSiRN/J9lyWo8MYx3z7PhhgVHuNta2TY=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=AFN3WKv1EwrTajpkqhqUPx6VFiAzPSKr/3T7ZBn5X4NaUCNEEKzgZ7bADEtAlzp7C
+         4gNZ5i6lC9IJOz2CIH7Bio5Dnt75ryY+Iq/InMgDqgs64KaQEvK47rNeppLvomE47M
+         Ptgl3NmeqSV54zreWMSXAvyZHH70u8k110UKMYRXH0LOSGvY50ncRhIu5hR9AhYkDT
+         oEfeMLa0UWSY+49fF2Jx3Yj/2yD7WHCc5pbm3zIxPHLSvjAEZqRtgRSTzBbHtRWH+I
+         4jUgGVSVF6rb9AzKJ7D5DOosKKB0o7C6EDhujrXBhFl5Syy2zwAXcb0/z0n4f13C9h
+         nL+U+0xv5khvQ==
 From:   Kalle Valo <kvalo@kernel.org>
-Subject: pull-request: wireless-2022-11-28
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Message-Id: <20221128113513.6F459C433C1@smtp.kernel.org>
-Date:   Mon, 28 Nov 2022 11:35:13 +0000 (UTC)
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/6] wifi: rtw89: introduce helpers to wait/complete on condition
+References: <20221118051042.29968-1-pkshih@realtek.com>
+        <20221118051042.29968-4-pkshih@realtek.com>
+Date:   Mon, 28 Nov 2022 15:29:05 +0200
+In-Reply-To: <20221118051042.29968-4-pkshih@realtek.com> (Ping-Ke Shih's
+        message of "Fri, 18 Nov 2022 13:10:39 +0800")
+Message-ID: <87sfi35hsu.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Ping-Ke Shih <pkshih@realtek.com> writes:
 
-here's a pull request to net tree, more info below. Please let me know if there
-are any problems.
+> From: Zong-Zhe Yang <kevin_yang@realtek.com>
+>
+> MCC (multi-channel concurrency) related H2Cs require to wait for C2H
+> responses to judge the execution result and data. We introduce helpers
+> to assist this process. Besides, we would like the helpers to be generic
+> for use in driver even outside of MCC H2C/C2H, so we make a independent
+> patch for them.
+>
+> In the following, I describe the things first.
+> ```
+> (A)	C2H is generated by FW, and then transferred upto driver. Hence,
+> 	driver cannot get it immediately without a bit waitting/blocking.
+> 	For this, we choose to use wait_for_completion_*() instead of
+> 	busy polling.
+> (B)	From the driver management perspective, a scenario, e.g. MCC,
+> 	may have mulitple kind of H2C functions requiring this process
+> 	to wait for corresponding C2Hs. But, the driver management flow
+> 	uses mutex to protect each behavior. So, one scenario triggers
+> 	one H2C function at one time. To avoid rampant instances of
+> 	struct completion for each H2C function, we choose to use one
+> 	struct completion with one condition flag for one scenario.
+> (C)	C2Hs, which H2Cs will be waitting for, cannot be ordered with
+> 	driver management flow, i.e. cannot enqueue work to the same
+> 	ordered workqueue and cannot lock by the same mutex, to prevent
+> 	H2C side from getting no C2H responses. So, those C2Hs are parsed
+> 	in interrupt context directly as done in previous commit.
+> (D)	Following (C), the above underline H2Cs and C2Hs will be handled
+> 	in different contexts without sync. So, we use atomic_cmpxchg()
+> 	to compare and change the condition in atomic.
+> ```
+>
+> So, we introduce struct rtw89_wait_info which combines struct completion
+> and atomic_t. Then, the below are the descriptions for helper functions.
+> * rtw89_wait_for_cond() to wait for a completion based on a condition.
+> * rtw89_complete_cond() to complete a given condition and carry data.
+> Each rtw89_wait_info instance independently determines the meaning of
+> its waitting conditions. But, RTW89_WAIT_COND_IDLE (UINT_MAX) is reserved.
+>
+> Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Kalle
+Just nitpicking a couple of items:
 
-The following changes since commit 91018bbcc664b6c9410ddccacd2239a4acadcfc9:
+Otherwise an excellent commit log but the meaning of C2H and H2C is not
+clear for me. I guess they mean "chip to host" and "host to chip", but
+would be good to clarify that in the beginning.
 
-  Merge tag 'wireless-2022-11-03' of git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless (2022-11-03 21:07:40 -0700)
+> --- a/drivers/net/wireless/realtek/rtw89/core.h
+> +++ b/drivers/net/wireless/realtek/rtw89/core.h
+> @@ -2802,6 +2802,34 @@ struct rtw89_mac_info {
+>  	u8 cpwm_seq_num;
+>  };
+>  
+> +struct rtw89_completion_data {
+> +	bool err;
+> +#define RTW89_COMPLETION_BUF_SIZE 24
+> +	u8 buf[RTW89_COMPLETION_BUF_SIZE];
+> +};
 
-are available in the Git repository at:
+Having a define withing a struct looks odd to me, I would prefer to have
+it outside of the struct.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2022-11-28
+> +#define rtw89_completion_cast(cmpl_data, ptr)				\
+> +({									\
+> +	typecheck(struct rtw89_completion_data *, cmpl_data);		\
+> +	BUILD_BUG_ON(sizeof(*(ptr)) > RTW89_COMPLETION_BUF_SIZE);	\
+> +	(typeof(ptr))(cmpl_data)->buf;					\
+> +})
 
-for you to fetch changes up to 3e8f7abcc3473bc9603323803aeaed4ffcc3a2ab:
+Wouldn't this be cleaner as a static inline function?
 
-  wifi: mac8021: fix possible oob access in ieee80211_get_rate_duration (2022-11-25 12:45:53 +0100)
+> +struct rtw89_wait_info {
+> +#define RTW89_WAIT_COND_IDLE UINT_MAX
+> +	atomic_t cond;
+> +	struct completion completion;
+> +	struct rtw89_completion_data data;
+> +};
 
-----------------------------------------------------------------
-wireless fixes for v6.1
+Also here would prefer the define outside the struct.
 
-Third, and hopefully final, set of fixes for v6.1. We are marking the
-rsi driver as orphan, have some Information Element parsing fixes to
-wilc1000 driver and three small fixes to the stack.
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-----------------------------------------------------------------
-Johannes Berg (2):
-      wifi: cfg80211: fix buffer overflow in elem comparison
-      wifi: cfg80211: don't allow multi-BSSID in S1G
-
-Lorenzo Bianconi (1):
-      wifi: mac8021: fix possible oob access in ieee80211_get_rate_duration
-
-Marek Vasut (1):
-      MAINTAINERS: mark rsi wifi driver as orphan
-
-Phil Turnbull (4):
-      wifi: wilc1000: validate pairwise and authentication suite offsets
-      wifi: wilc1000: validate length of IEEE80211_P2P_ATTR_OPER_CHANNEL attribute
-      wifi: wilc1000: validate length of IEEE80211_P2P_ATTR_CHANNEL_LIST attribute
-      wifi: wilc1000: validate number of channels
-
- MAINTAINERS                                        |  4 +--
- drivers/net/wireless/microchip/wilc1000/cfg80211.c | 39 +++++++++++++++++-----
- drivers/net/wireless/microchip/wilc1000/hif.c      | 21 +++++++++---
- net/mac80211/airtime.c                             |  3 ++
- net/wireless/scan.c                                | 10 ++++--
- 5 files changed, 58 insertions(+), 19 deletions(-)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
