@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26181C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 10:10:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB6AC4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 10:10:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231241AbiK2KKL (ORCPT
+        id S232174AbiK2KKi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Nov 2022 05:10:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33806 "EHLO
+        Tue, 29 Nov 2022 05:10:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230385AbiK2KJW (ORCPT
+        with ESMTP id S230011AbiK2KJ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2022 05:09:22 -0500
+        Tue, 29 Nov 2022 05:09:59 -0500
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8FCC5E9D9
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 02:08:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43A4F5E9CC
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 02:08:38 -0800 (PST)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxX1-0006yC-Mv; Tue, 29 Nov 2022 11:08:03 +0100
+        id 1ozxX1-0006yE-N1; Tue, 29 Nov 2022 11:08:03 +0100
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxWy-0012i5-GE; Tue, 29 Nov 2022 11:08:01 +0100
+        id 1ozxWy-0012iF-LB; Tue, 29 Nov 2022 11:08:01 +0100
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxWx-00BYGx-EN; Tue, 29 Nov 2022 11:07:59 +0100
+        id 1ozxWx-00BYGm-BG; Tue, 29 Nov 2022 11:07:59 +0100
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -41,12 +41,10 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Da Xue <da@libre.computer>, Po-Hao Huang <phhuang@realtek.com>,
         Viktor Petrenko <g0000ga@gmail.com>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v4 04/11] wifi: rtw88: Drop h2c.lock
-Date:   Tue, 29 Nov 2022 11:07:47 +0100
-Message-Id: <20221129100754.2753237-5-s.hauer@pengutronix.de>
+Subject: [PATCH v4 00/11] RTW88: Add support for USB variants
+Date:   Tue, 29 Nov 2022 11:07:43 +0100
+Message-Id: <20221129100754.2753237-1-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20221129100754.2753237-1-s.hauer@pengutronix.de>
-References: <20221129100754.2753237-1-s.hauer@pengutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -57,117 +55,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The h2c.lock spinlock is used in rtw_fw_send_h2c_command() and
-rtw_fw_send_h2c_packet().  Most callers call this with rtwdev->mutex
-held, except from one callsite in the debugfs code. The debugfs code
-alone doesn't justify the extra lock, so acquire rtwdev->mutex in
-debugfs and drop the now unnecessary spinlock.
+v4 of this patchset. No big changes, only the review comments from v3
+are integrated.
 
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
----
- drivers/net/wireless/realtek/rtw88/debug.c |  2 ++
- drivers/net/wireless/realtek/rtw88/fw.c    | 13 ++++---------
- drivers/net/wireless/realtek/rtw88/main.c  |  1 -
- drivers/net/wireless/realtek/rtw88/main.h  |  2 --
- 4 files changed, 6 insertions(+), 12 deletions(-)
+Sascha Hauer (11):
+  wifi: rtw88: print firmware type in info message
+  wifi: rtw88: Call rtw_fw_beacon_filter_config() with rtwdev->mutex
+    held
+  wifi: rtw88: Drop rf_lock
+  wifi: rtw88: Drop h2c.lock
+  wifi: rtw88: Drop coex mutex
+  wifi: rtw88: iterate over vif/sta list non-atomically
+  wifi: rtw88: Add common USB chip support
+  wifi: rtw88: Add rtw8821cu chipset support
+  wifi: rtw88: Add rtw8822bu chipset support
+  wifi: rtw88: Add rtw8822cu chipset support
+  wifi: rtw88: Add rtw8723du chipset support
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 70e19f2a1a355..f5b8a77ebc67b 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -392,7 +392,9 @@ static ssize_t rtw_debugfs_set_h2c(struct file *filp,
- 		return -EINVAL;
- 	}
- 
-+	mutex_lock(&rtwdev->mutex);
- 	rtw_fw_h2c_cmd_dbg(rtwdev, param);
-+	mutex_unlock(&rtwdev->mutex);
- 
- 	return count;
- }
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 0b5f903c0f366..a58c80d4825b1 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -322,7 +322,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		h2c[3], h2c[2], h2c[1], h2c[0],
- 		h2c[7], h2c[6], h2c[5], h2c[4]);
- 
--	spin_lock(&rtwdev->h2c.lock);
-+	lockdep_assert_held(&rtwdev->mutex);
- 
- 	box = rtwdev->h2c.last_box_num;
- 	switch (box) {
-@@ -344,7 +344,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		break;
- 	default:
- 		WARN(1, "invalid h2c mail box number\n");
--		goto out;
-+		return;
- 	}
- 
- 	ret = read_poll_timeout_atomic(rtw_read8, box_state,
-@@ -353,7 +353,7 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to send h2c command\n");
--		goto out;
-+		return;
- 	}
- 
- 	for (idx = 0; idx < 4; idx++)
-@@ -363,9 +363,6 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 
- 	if (++rtwdev->h2c.last_box_num >= 4)
- 		rtwdev->h2c.last_box_num = 0;
--
--out:
--	spin_unlock(&rtwdev->h2c.lock);
- }
- 
- void rtw_fw_h2c_cmd_dbg(struct rtw_dev *rtwdev, u8 *h2c)
-@@ -377,15 +374,13 @@ static void rtw_fw_send_h2c_packet(struct rtw_dev *rtwdev, u8 *h2c_pkt)
- {
- 	int ret;
- 
--	spin_lock(&rtwdev->h2c.lock);
-+	lockdep_assert_held(&rtwdev->mutex);
- 
- 	FW_OFFLOAD_H2C_SET_SEQ_NUM(h2c_pkt, rtwdev->h2c.seq);
- 	ret = rtw_hci_write_data_h2c(rtwdev, h2c_pkt, H2C_PKT_SIZE);
- 	if (ret)
- 		rtw_err(rtwdev, "failed to send h2c packet\n");
- 	rtwdev->h2c.seq++;
--
--	spin_unlock(&rtwdev->h2c.lock);
- }
- 
- void
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 710ddb0283c82..c98e56890401c 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -2067,7 +2067,6 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	skb_queue_head_init(&rtwdev->coex.queue);
- 	skb_queue_head_init(&rtwdev->tx_report.queue);
- 
--	spin_lock_init(&rtwdev->h2c.lock);
- 	spin_lock_init(&rtwdev->txq_lock);
- 	spin_lock_init(&rtwdev->tx_report.q_lock);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index f24d17f482aaa..4b57542bef1e9 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -2020,8 +2020,6 @@ struct rtw_dev {
- 	struct {
- 		/* incicate the mail box to use with fw */
- 		u8 last_box_num;
--		/* protect to send h2c to fw */
--		spinlock_t lock;
- 		u32 seq;
- 	} h2c;
- 
+ drivers/net/wireless/realtek/rtw88/Kconfig    |  47 +
+ drivers/net/wireless/realtek/rtw88/Makefile   |  15 +
+ drivers/net/wireless/realtek/rtw88/coex.c     |   3 +-
+ drivers/net/wireless/realtek/rtw88/debug.c    |  15 +
+ drivers/net/wireless/realtek/rtw88/fw.c       |  13 +-
+ drivers/net/wireless/realtek/rtw88/hci.h      |   9 +-
+ drivers/net/wireless/realtek/rtw88/mac.c      |   3 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c |   2 +-
+ drivers/net/wireless/realtek/rtw88/main.c     |  12 +-
+ drivers/net/wireless/realtek/rtw88/main.h     |  12 +-
+ drivers/net/wireless/realtek/rtw88/phy.c      |   6 +-
+ drivers/net/wireless/realtek/rtw88/ps.c       |   2 +-
+ drivers/net/wireless/realtek/rtw88/reg.h      |   1 +
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c |  28 +
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h |  13 +-
+ .../net/wireless/realtek/rtw88/rtw8723du.c    |  36 +
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c |  18 +
+ drivers/net/wireless/realtek/rtw88/rtw8821c.h |  21 +
+ .../net/wireless/realtek/rtw88/rtw8821cu.c    |  50 +
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c |  19 +
+ .../net/wireless/realtek/rtw88/rtw8822bu.c    |  90 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c |  24 +
+ .../net/wireless/realtek/rtw88/rtw8822cu.c    |  44 +
+ drivers/net/wireless/realtek/rtw88/tx.h       |  31 +
+ drivers/net/wireless/realtek/rtw88/usb.c      | 917 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/usb.h      | 107 ++
+ drivers/net/wireless/realtek/rtw88/util.c     | 103 ++
+ drivers/net/wireless/realtek/rtw88/util.h     |  12 +-
+ 28 files changed, 1615 insertions(+), 38 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822bu.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822cu.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/usb.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/usb.h
+
 -- 
 2.30.2
 
