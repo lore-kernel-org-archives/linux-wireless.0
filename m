@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E406C46467
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 10:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FD6C4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 10:08:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232333AbiK2KIg (ORCPT
+        id S231804AbiK2KIj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Nov 2022 05:08:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32856 "EHLO
+        Tue, 29 Nov 2022 05:08:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232215AbiK2KIU (ORCPT
+        with ESMTP id S232240AbiK2KIV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2022 05:08:20 -0500
+        Tue, 29 Nov 2022 05:08:21 -0500
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06B3D21884
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 190F8218BF
         for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 02:08:14 -0800 (PST)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxX1-0006y8-NA; Tue, 29 Nov 2022 11:08:03 +0100
+        id 1ozxX1-0006y5-N3; Tue, 29 Nov 2022 11:08:03 +0100
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxWy-0012hw-An; Tue, 29 Nov 2022 11:08:01 +0100
+        id 1ozxWy-0012ho-5L; Tue, 29 Nov 2022 11:08:00 +0100
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxWx-00BYHI-M8; Tue, 29 Nov 2022 11:07:59 +0100
+        id 1ozxWx-00BYH3-Fw; Tue, 29 Nov 2022 11:07:59 +0100
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -41,9 +41,9 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Da Xue <da@libre.computer>, Po-Hao Huang <phhuang@realtek.com>,
         Viktor Petrenko <g0000ga@gmail.com>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v4 11/11] wifi: rtw88: Add rtw8723du chipset support
-Date:   Tue, 29 Nov 2022 11:07:54 +0100
-Message-Id: <20221129100754.2753237-12-s.hauer@pengutronix.de>
+Subject: [PATCH v4 06/11] wifi: rtw88: iterate over vif/sta list non-atomically
+Date:   Tue, 29 Nov 2022 11:07:49 +0100
+Message-Id: <20221129100754.2753237-7-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221129100754.2753237-1-s.hauer@pengutronix.de>
 References: <20221129100754.2753237-1-s.hauer@pengutronix.de>
@@ -57,202 +57,220 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for the rtw8723du chipset based on
-https://github.com/ulli-kroll/rtw88-usb.git
+The driver uses ieee80211_iterate_active_interfaces_atomic()
+and ieee80211_iterate_stations_atomic() in several places and does
+register accesses in the iterators. This doesn't cope with upcoming
+USB support as registers can only be accessed non-atomically.
+
+Split these into a two stage process: First use the atomic iterator
+functions to collect all active interfaces or stations on a list, then
+iterate over the list non-atomically and call the iterator on each
+entry.
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Suggested-by: Ping-Ke shih <pkshih@realtek.com>
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
 
 Notes:
-    Changes since v3:
-    - drop unnecessary rtw8723du.h
-    
-    Changes since v2:
-    - Re-add this patch, tested on hardware now
-    
     Changes since v1:
-    - Fix txdesc checksum calculation: Unlike other chips this one needs
-      a chksum = ~chksum at the end
-    - Fix efuse layout (struct rtw8723de_efuse and struct rtw8723du_efuse need
-      to be in a union as they are used alternatively)
+    - Change subject
+    - Add some lockdep_assert_held(&rtwdev->mutex);
+    - make locally used functions static
+    - Add comment how &rtwdev->mutex protects us from stations/interfaces
+      being deleted between collecting them and iterating over them.
 
- drivers/net/wireless/realtek/rtw88/Kconfig    | 11 ++++++
- drivers/net/wireless/realtek/rtw88/Makefile   |  3 ++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 28 +++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h | 13 ++++++-
- .../net/wireless/realtek/rtw88/rtw8723du.c    | 36 +++++++++++++++++++
- 5 files changed, 90 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.c
+ drivers/net/wireless/realtek/rtw88/phy.c  |   6 +-
+ drivers/net/wireless/realtek/rtw88/ps.c   |   2 +-
+ drivers/net/wireless/realtek/rtw88/util.c | 103 ++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/util.h |  12 ++-
+ 4 files changed, 116 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
-index 138289bc5ad0c..651ab56d9c6bd 100644
---- a/drivers/net/wireless/realtek/rtw88/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw88/Kconfig
-@@ -86,6 +86,17 @@ config RTW88_8723DE
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index bd7d05e080848..128e75a81bf3c 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -300,7 +300,7 @@ static void rtw_phy_stat_rssi(struct rtw_dev *rtwdev)
  
- 	  802.11n PCIe wireless network adapter
+ 	data.rtwdev = rtwdev;
+ 	data.min_rssi = U8_MAX;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_stat_rssi_iter, &data);
++	rtw_iterate_stas(rtwdev, rtw_phy_stat_rssi_iter, &data);
  
-+config RTW88_8723DU
-+	tristate "Realtek 8723DU USB wireless network adapter"
-+	depends on USB
-+	select RTW88_CORE
-+	select RTW88_USB
-+	select RTW88_8723D
-+	help
-+	  Select this option will enable support for 8723DU chipset
-+
-+	  802.11n USB wireless network adapter
-+
- config RTW88_8821CE
- 	tristate "Realtek 8821CE PCI wireless network adapter"
- 	depends on PCI
-diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
-index fe2dd90204a78..fe7293ee87b45 100644
---- a/drivers/net/wireless/realtek/rtw88/Makefile
-+++ b/drivers/net/wireless/realtek/rtw88/Makefile
-@@ -44,6 +44,9 @@ rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
- obj-$(CONFIG_RTW88_8723DE)	+= rtw88_8723de.o
- rtw88_8723de-objs		:= rtw8723de.o
+ 	dm_info->pre_min_rssi = dm_info->min_rssi;
+ 	dm_info->min_rssi = data.min_rssi;
+@@ -544,7 +544,7 @@ static void rtw_phy_ra_info_update(struct rtw_dev *rtwdev)
+ 	if (rtwdev->watch_dog_cnt & 0x3)
+ 		return;
  
-+obj-$(CONFIG_RTW88_8723DU)	+= rtw88_8723du.o
-+rtw88_8723du-objs		:= rtw8723du.o
-+
- obj-$(CONFIG_RTW88_8821C)	+= rtw88_8821c.o
- rtw88_8821c-objs		:= rtw8821c.o rtw8821c_table.o
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 0a4f770fcbb7e..2d2f768bae2ea 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -210,6 +210,12 @@ static void rtw8723de_efuse_parsing(struct rtw_efuse *efuse,
- 	ether_addr_copy(efuse->addr, map->e.mac_addr);
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_phy_ra_info_update_iter, rtwdev);
  }
  
-+static void rtw8723du_efuse_parsing(struct rtw_efuse *efuse,
-+				    struct rtw8723d_efuse *map)
+ static u32 rtw_phy_get_rrsr_mask(struct rtw_dev *rtwdev, u8 rate_idx)
+@@ -597,7 +597,7 @@ static void rtw_phy_rrsr_update(struct rtw_dev *rtwdev)
+ 	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 
+ 	dm_info->rrsr_mask_min = RRSR_RATE_ORDER_MAX;
+-	rtw_iterate_stas_atomic(rtwdev, rtw_phy_rrsr_mask_min_iter, rtwdev);
++	rtw_iterate_stas(rtwdev, rtw_phy_rrsr_mask_min_iter, rtwdev);
+ 	rtw_write32(rtwdev, REG_RRSR, dm_info->rrsr_val_init & dm_info->rrsr_mask_min);
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
+index c93da743681fc..11594940d6b00 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.c
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -61,7 +61,7 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
+ 		return ret;
+ 	}
+ 
+-	rtw_iterate_vifs_atomic(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
++	rtw_iterate_vifs(rtwdev, rtw_restore_port_cfg_iter, rtwdev);
+ 
+ 	rtw_coex_ips_notify(rtwdev, COEX_IPS_LEAVE);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/util.c b/drivers/net/wireless/realtek/rtw88/util.c
+index cdfd66a85075a..ff3c269fb1a72 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.c
++++ b/drivers/net/wireless/realtek/rtw88/util.c
+@@ -105,3 +105,106 @@ void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
+ 		*mcs = rate - DESC_RATEMCS0;
+ 	}
+ }
++
++struct rtw_stas_entry {
++	struct list_head list;
++	struct ieee80211_sta *sta;
++};
++
++struct rtw_iter_stas_data {
++	struct rtw_dev *rtwdev;
++	struct list_head list;
++};
++
++static void rtw_collect_sta_iter(void *data, struct ieee80211_sta *sta)
 +{
-+	ether_addr_copy(efuse->addr, map->u.mac_addr);
++	struct rtw_iter_stas_data *iter_stas = data;
++	struct rtw_stas_entry *stas_entry;
++
++	stas_entry = kmalloc(sizeof(*stas_entry), GFP_ATOMIC);
++	if (!stas_entry)
++		return;
++
++	stas_entry->sta = sta;
++	list_add_tail(&stas_entry->list, &iter_stas->list);
 +}
 +
- static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++void rtw_iterate_stas(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data,
++				       struct ieee80211_sta *sta),
++		      void *data)
++{
++	struct rtw_iter_stas_data iter_data;
++	struct rtw_stas_entry *sta_entry, *tmp;
++
++	/* &rtwdev->mutex makes sure no stations can be removed between
++	 * collecting the stations and iterating over them.
++	 */
++	lockdep_assert_held(&rtwdev->mutex);
++
++	iter_data.rtwdev = rtwdev;
++	INIT_LIST_HEAD(&iter_data.list);
++
++	ieee80211_iterate_stations_atomic(rtwdev->hw, rtw_collect_sta_iter,
++					  &iter_data);
++
++	list_for_each_entry_safe(sta_entry, tmp, &iter_data.list,
++				 list) {
++		list_del_init(&sta_entry->list);
++		iterator(data, sta_entry->sta);
++		kfree(sta_entry);
++	}
++}
++
++struct rtw_vifs_entry {
++	struct list_head list;
++	struct ieee80211_vif *vif;
++	u8 mac[ETH_ALEN];
++};
++
++struct rtw_iter_vifs_data {
++	struct rtw_dev *rtwdev;
++	struct list_head list;
++};
++
++static void rtw_collect_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
++{
++	struct rtw_iter_vifs_data *iter_stas = data;
++	struct rtw_vifs_entry *vifs_entry;
++
++	vifs_entry = kmalloc(sizeof(*vifs_entry), GFP_ATOMIC);
++	if (!vifs_entry)
++		return;
++
++	vifs_entry->vif = vif;
++	ether_addr_copy(vifs_entry->mac, mac);
++	list_add_tail(&vifs_entry->list, &iter_stas->list);
++}
++
++void rtw_iterate_vifs(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data, u8 *mac,
++				       struct ieee80211_vif *vif),
++		      void *data)
++{
++	struct rtw_iter_vifs_data iter_data;
++	struct rtw_vifs_entry *vif_entry, *tmp;
++
++	/* &rtwdev->mutex makes sure no interfaces can be removed between
++	 * collecting the interfaces and iterating over them.
++	 */
++	lockdep_assert_held(&rtwdev->mutex);
++
++	iter_data.rtwdev = rtwdev;
++	INIT_LIST_HEAD(&iter_data.list);
++
++	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   rtw_collect_vif_iter, &iter_data);
++
++	list_for_each_entry_safe(vif_entry, tmp, &iter_data.list,
++				 list) {
++		list_del_init(&vif_entry->list);
++		iterator(data, vif_entry->mac, vif_entry->vif);
++		kfree(vif_entry);
++	}
++}
+diff --git a/drivers/net/wireless/realtek/rtw88/util.h b/drivers/net/wireless/realtek/rtw88/util.h
+index 0c23b5069be0b..dc89655254002 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.h
++++ b/drivers/net/wireless/realtek/rtw88/util.h
+@@ -7,9 +7,6 @@
+ 
+ struct rtw_dev;
+ 
+-#define rtw_iterate_vifs(rtwdev, iterator, data)                               \
+-	ieee80211_iterate_active_interfaces(rtwdev->hw,                        \
+-			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
+ #define rtw_iterate_vifs_atomic(rtwdev, iterator, data)                        \
+ 	ieee80211_iterate_active_interfaces_atomic(rtwdev->hw,                 \
+ 			IEEE80211_IFACE_ITER_NORMAL, iterator, data)
+@@ -20,6 +17,15 @@ struct rtw_dev;
+ #define rtw_iterate_keys_rcu(rtwdev, vif, iterator, data)		       \
+ 	ieee80211_iter_keys_rcu((rtwdev)->hw, vif, iterator, data)
+ 
++void rtw_iterate_vifs(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data, u8 *mac,
++				       struct ieee80211_vif *vif),
++		      void *data);
++void rtw_iterate_stas(struct rtw_dev *rtwdev,
++		      void (*iterator)(void *data,
++				       struct ieee80211_sta *sta),
++				       void *data);
++
+ static inline u8 *get_hdr_bssid(struct ieee80211_hdr *hdr)
  {
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
-@@ -239,6 +245,9 @@ static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- 	case RTW_HCI_TYPE_PCIE:
- 		rtw8723de_efuse_parsing(efuse, map);
- 		break;
-+	case RTW_HCI_TYPE_USB:
-+		rtw8723du_efuse_parsing(efuse, map);
-+		break;
- 	default:
- 		/* unsupported now */
- 		return -ENOTSUPP;
-@@ -1945,6 +1954,24 @@ static void rtw8723d_pwr_track(struct rtw_dev *rtwdev)
- 	dm_info->pwr_trk_triggered = false;
- }
- 
-+static void rtw8723d_fill_txdesc_checksum(struct rtw_dev *rtwdev,
-+					  struct rtw_tx_pkt_info *pkt_info,
-+					  u8 *txdesc)
-+{
-+	size_t words = 32 / 2; /* calculate the first 32 bytes (16 words) */
-+	__le16 chksum = 0;
-+	__le16 *data = (__le16 *)(txdesc);
-+
-+	SET_TX_DESC_TXDESC_CHECKSUM(txdesc, 0x0000);
-+
-+	while (words--)
-+		chksum ^= *data++;
-+
-+	chksum = ~chksum;
-+
-+	SET_TX_DESC_TXDESC_CHECKSUM(txdesc, __le16_to_cpu(chksum));
-+}
-+
- static struct rtw_chip_ops rtw8723d_ops = {
- 	.phy_set_param		= rtw8723d_phy_set_param,
- 	.read_efuse		= rtw8723d_read_efuse,
-@@ -1965,6 +1992,7 @@ static struct rtw_chip_ops rtw8723d_ops = {
- 	.config_bfee		= NULL,
- 	.set_gid_table		= NULL,
- 	.cfg_csi_rate		= NULL,
-+	.fill_txdesc_checksum	= rtw8723d_fill_txdesc_checksum,
- 
- 	.coex_set_init		= rtw8723d_coex_cfg_init,
- 	.coex_set_ant_switch	= NULL,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index 4641f6e047b41..a356318a5c15b 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -41,6 +41,14 @@ struct rtw8723de_efuse {
- 	u8 sub_device_id[2];
- };
- 
-+struct rtw8723du_efuse {
-+	u8 res4[48];                    /* 0xd0 */
-+	u8 vender_id[2];                /* 0x100 */
-+	u8 product_id[2];               /* 0x102 */
-+	u8 usb_option;                  /* 0x104 */
-+	u8 mac_addr[ETH_ALEN];          /* 0x107 */
-+};
-+
- struct rtw8723d_efuse {
- 	__le16 rtl_id;
- 	u8 rsvd[2];
-@@ -69,7 +77,10 @@ struct rtw8723d_efuse {
- 	u8 rfe_option;
- 	u8 country_code[2];
- 	u8 res[3];
--	struct rtw8723de_efuse e;
-+	union {
-+		struct rtw8723de_efuse e;
-+		struct rtw8723du_efuse u;
-+	};
- };
- 
- extern const struct rtw_chip_info rtw8723d_hw_spec;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723du.c b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
-new file mode 100644
-index 0000000000000..4148151037c7c
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723du.c
-@@ -0,0 +1,36 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/* Copyright(c) 2018-2019  Realtek Corporation
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/usb.h>
-+#include "main.h"
-+#include "rtw8723d.h"
-+#include "usb.h"
-+
-+static const struct usb_device_id rtw_8723du_id_table[] = {
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK,
-+					0xD723,
-+					0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8723d_hw_spec) }, /* 8723DU 1*1 */
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(usb, rtw_8723du_id_table);
-+
-+static int rtw8723du_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtw_usb_probe(intf, id);
-+}
-+
-+static struct usb_driver rtw_8723du_driver = {
-+	.name = "rtw_8723du",
-+	.id_table = rtw_8723du_id_table,
-+	.probe = rtw8723du_probe,
-+	.disconnect = rtw_usb_disconnect,
-+};
-+module_usb_driver(rtw_8723du_driver);
-+
-+MODULE_AUTHOR("Hans Ulli Kroll <linux@ulli-kroll.de>");
-+MODULE_DESCRIPTION("Realtek 802.11n wireless 8723du driver");
-+MODULE_LICENSE("Dual BSD/GPL");
+ 	__le16 fc = hdr->frame_control;
 -- 
 2.30.2
 
