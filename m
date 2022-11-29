@@ -2,112 +2,107 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB6AC4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 10:10:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C2E3C4321E
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 11:10:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232174AbiK2KKi (ORCPT
+        id S232291AbiK2LKm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Nov 2022 05:10:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34092 "EHLO
+        Tue, 29 Nov 2022 06:10:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230011AbiK2KJ7 (ORCPT
+        with ESMTP id S232635AbiK2LKg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2022 05:09:59 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43A4F5E9CC
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 02:08:38 -0800 (PST)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1ozxX1-0006yE-N1; Tue, 29 Nov 2022 11:08:03 +0100
-Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1ozxWy-0012iF-LB; Tue, 29 Nov 2022 11:08:01 +0100
-Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1ozxWx-00BYGm-BG; Tue, 29 Nov 2022 11:07:59 +0100
-From:   Sascha Hauer <s.hauer@pengutronix.de>
+        Tue, 29 Nov 2022 06:10:36 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98998BBA
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 03:10:35 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2DF7C616A0
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 11:10:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1BB2C433D6;
+        Tue, 29 Nov 2022 11:10:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669720234;
+        bh=Vo1h5c5yYhZpaGlAJTVMWRh5gAvNdsziUO0LWAm+iAw=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=CHRM1gks4ryL/sOKO6hYFNldBXhHPDnfIEAijpC0+Jk4T3D8oAop+X8XIWAtldf6a
+         Hb15KOosWdniudh6CDZO4fJv/iPL/gKEe6pmRDMsvD3H8+X453+GZsjHHclbs+BI+E
+         WP+ZJd/9FUWYo/V3LhmRQXauGqfSmXbsmidAJdnuDeO9LETlaDJ/n8rRVxJBpEziVw
+         /1tk4vejpory3Ypl0VyaCxmOo66Hh3ziSVLT1788HTe+hCDPKUgX0CqTTIaS5OxKsZ
+         UMfr+MfQWng3po/MHzehXTi4icelwd6pAP8bfrFQFls+E6gcbju37795UyrRsOAXj7
+         oU9vGuVJWb8WA==
+From:   Kalle Valo <kvalo@kernel.org>
 To:     linux-wireless@vger.kernel.org
-Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        kernel@pengutronix.de, Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Hochbaum <alex@appudo.com>,
-        Da Xue <da@libre.computer>, Po-Hao Huang <phhuang@realtek.com>,
-        Viktor Petrenko <g0000ga@gmail.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v4 00/11] RTW88: Add support for USB variants
-Date:   Tue, 29 Nov 2022 11:07:43 +0100
-Message-Id: <20221129100754.2753237-1-s.hauer@pengutronix.de>
-X-Mailer: git-send-email 2.30.2
+Cc:     ath12k@lists.infradead.org
+Subject: Re: [PATCH v2 00/50] wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices
+References: <20221116163902.24996-1-kvalo@kernel.org>
+        <878rjv5drj.fsf@kernel.org>
+Date:   Tue, 29 Nov 2022 13:10:28 +0200
+In-Reply-To: <878rjv5drj.fsf@kernel.org> (Kalle Valo's message of "Mon, 28 Nov
+        2022 16:56:16 +0200")
+Message-ID: <87y1ru3tjv.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-v4 of this patchset. No big changes, only the review comments from v3
-are integrated.
+Kalle Valo <kvalo@kernel.org> writes:
 
-Sascha Hauer (11):
-  wifi: rtw88: print firmware type in info message
-  wifi: rtw88: Call rtw_fw_beacon_filter_config() with rtwdev->mutex
-    held
-  wifi: rtw88: Drop rf_lock
-  wifi: rtw88: Drop h2c.lock
-  wifi: rtw88: Drop coex mutex
-  wifi: rtw88: iterate over vif/sta list non-atomically
-  wifi: rtw88: Add common USB chip support
-  wifi: rtw88: Add rtw8821cu chipset support
-  wifi: rtw88: Add rtw8822bu chipset support
-  wifi: rtw88: Add rtw8822cu chipset support
-  wifi: rtw88: Add rtw8723du chipset support
+> Kalle Valo <kvalo@kernel.org> writes:
+>
+>> From: Kalle Valo <quic_kvalo@quicinc.com>
+>>
+>> ath12k is a new mac80211 driver for Qualcomm Wi-Fi 7 devices, first
+>> supporting QCN9274 and WCN7850 PCI devices.  QCN9274 supports both AP
+>> and station; WCN7850 supports only station mode. Monitor mode is not
+>> (yet) supported. Only PCI bus devices are supported.
+>>
+>> ath12k is forked from an earlier version of ath11k. It was simpler to
+>> have a "clean start" for the new generation and not try to share the
+>> code with ath11k. This makes maintenance easier and avoids major
+>> changes in ath11k, which would have significantly increased the risk
+>> of regressions in existing setups.
+>>
+>> ath12k uses le32 and cpu_to_le32() macros to handle endian
+>> conversions, instead of using the firmware byte swap feature utilized
+>> by ath11k. There is only one kernel module, named ath12k.ko.
+>>
+>> Currently ath12k only supports HE mode (IEEE 802.11ax) or older, but
+>> work is ongoing to add EHT mode (IEEE 802.11be) support.
+>>
+>> The size of the driver is ~41 kLOC and 45 files. To make the review
+>> easier, this initial version of ath12k does not support Device Tree,
+>> debugfs or any other extra features. Those will be added later, after
+>> ath12k is accepted to upstream.
+>>
+>> The driver is build tested by Intel's kernel test robot with both GCC
+>> and Clang. Sparse reports no warnings. The driver is mostly free of
+>> checkpatch warnings, albeit few of the warnings are omitted on
+>> purpose, list of them here:
+>>
+>> https://github.com/qca/qca-swiss-army-knife/blob/master/tools/scripts/ath12k/ath12k-check#L52
+>>
+>> The driver has had multiple authors who are listed in alphabetical
+>> order below.
+>>
+>> Co-developed-by: Balamurugan S <quic_bselvara@quicinc.com>
+>> Signed-off-by: Balamurugan S <quic_bselvara@quicinc.com>
+>> Co-developed-by: Balamurugan Selvarajan <quic_bselvara@quicinc.com>
+>> Signed-off-by: Balamurugan Selvarajan <quic_bselvara@quicinc.com>
+>
+> I noticed that Balamurugan is twice here, fixed in the pending branch:
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=master-pending&id=b644733d58cb65d2e319bad0e0f89a852021c5c2
 
- drivers/net/wireless/realtek/rtw88/Kconfig    |  47 +
- drivers/net/wireless/realtek/rtw88/Makefile   |  15 +
- drivers/net/wireless/realtek/rtw88/coex.c     |   3 +-
- drivers/net/wireless/realtek/rtw88/debug.c    |  15 +
- drivers/net/wireless/realtek/rtw88/fw.c       |  13 +-
- drivers/net/wireless/realtek/rtw88/hci.h      |   9 +-
- drivers/net/wireless/realtek/rtw88/mac.c      |   3 +
- drivers/net/wireless/realtek/rtw88/mac80211.c |   2 +-
- drivers/net/wireless/realtek/rtw88/main.c     |  12 +-
- drivers/net/wireless/realtek/rtw88/main.h     |  12 +-
- drivers/net/wireless/realtek/rtw88/phy.c      |   6 +-
- drivers/net/wireless/realtek/rtw88/ps.c       |   2 +-
- drivers/net/wireless/realtek/rtw88/reg.h      |   1 +
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  28 +
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  13 +-
- .../net/wireless/realtek/rtw88/rtw8723du.c    |  36 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  18 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.h |  21 +
- .../net/wireless/realtek/rtw88/rtw8821cu.c    |  50 +
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  19 +
- .../net/wireless/realtek/rtw88/rtw8822bu.c    |  90 ++
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  24 +
- .../net/wireless/realtek/rtw88/rtw8822cu.c    |  44 +
- drivers/net/wireless/realtek/rtw88/tx.h       |  31 +
- drivers/net/wireless/realtek/rtw88/usb.c      | 917 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/usb.h      | 107 ++
- drivers/net/wireless/realtek/rtw88/util.c     | 103 ++
- drivers/net/wireless/realtek/rtw88/util.h     |  12 +-
- 28 files changed, 1615 insertions(+), 38 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822bu.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822cu.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/usb.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/usb.h
+And the big patch is now applied to ath-next branch:
+
+d889913205cf wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices
 
 -- 
-2.30.2
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
