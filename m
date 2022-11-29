@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2252C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 08:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A80BEC46467
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 08:33:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230438AbiK2Idw (ORCPT
+        id S230506AbiK2Id4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Nov 2022 03:33:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45334 "EHLO
+        Tue, 29 Nov 2022 03:33:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230435AbiK2IdP (ORCPT
+        with ESMTP id S230339AbiK2IdQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2022 03:33:15 -0500
+        Tue, 29 Nov 2022 03:33:16 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CC2A93B2
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 00:32:36 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 39CA855B6
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 00:32:38 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2AT8VhOM2002138, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2AT8VkzS6002146, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2AT8VhOM2002138
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2AT8VkzS6002146
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 29 Nov 2022 16:31:43 +0800
+        Tue, 29 Nov 2022 16:31:46 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Tue, 29 Nov 2022 16:32:27 +0800
+ 15.1.2507.9; Tue, 29 Nov 2022 16:32:30 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 29 Nov
- 2022 16:32:27 +0800
+ 2022 16:32:30 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 0/6] wifi: rtw89: preparation of MCC
-Date:   Tue, 29 Nov 2022 16:31:24 +0800
-Message-ID: <20221129083130.45708-1-pkshih@realtek.com>
+Subject: [PATCH v2 2/6] wifi: rtw89: check if atomic before queuing c2h
+Date:   Tue, 29 Nov 2022 16:31:26 +0800
+Message-ID: <20221129083130.45708-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221129083130.45708-1-pkshih@realtek.com>
+References: <20221129083130.45708-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -58,42 +60,155 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patchset is preparation of MCC, which needs many handshakes between
-driver and firmware, so rtw89_wait_for_cond() and rtw89_complete_cond()
-are introduced to assist this work.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Based on above APIs, implement H2C and C2H handlers to interactive with
-firmware, and callers of H2C will be added by another patchset.
+Before queuing C2H work, we check atomicity of the C2H's handler first now.
+If atomic or lock-free, handle it directly; otherwise, handle it with mutex
+in work as previous. This prepares for MAC MCC C2Hs which require to be
+processed directly. And, their handlers will be functions which can be
+considered atomic.
 
-Another basic preparation is to link rtw89_vif and channel context, but
-we still use first entry as default currently, so adjust index of instance
-of chandef when remove_chanctx().
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/fw.c  | 47 ++++++++++++++++++++++--
+ drivers/net/wireless/realtek/rtw89/fw.h  | 14 +++++++
+ drivers/net/wireless/realtek/rtw89/mac.c | 10 +++++
+ drivers/net/wireless/realtek/rtw89/mac.h |  1 +
+ 4 files changed, 68 insertions(+), 4 deletions(-)
 
-v2:
-  - move #define out of struct definition
-  - use bare casting of completion data
-  - explain H2C and C2H in commit message
-
-Zong-Zhe Yang (6):
-  wifi: rtw89: rfk: rename rtw89_mcc_info to rtw89_rfk_mcc_info
-  wifi: rtw89: check if atomic before queuing c2h
-  wifi: rtw89: introduce helpers to wait/complete on condition
-  wifi: rtw89: mac: process MCC related C2H
-  wifi: rtw89: fw: implement MCC related H2C
-  wifi: rtw89: link rtw89_vif and chanctx stuffs
-
- drivers/net/wireless/realtek/rtw89/chan.c     |  40 +-
- drivers/net/wireless/realtek/rtw89/core.c     |  37 ++
- drivers/net/wireless/realtek/rtw89/core.h     |  54 ++-
- drivers/net/wireless/realtek/rtw89/fw.c       | 386 ++++++++++++++-
- drivers/net/wireless/realtek/rtw89/fw.h       | 451 +++++++++++++++++-
- drivers/net/wireless/realtek/rtw89/mac.c      | 181 +++++++
- drivers/net/wireless/realtek/rtw89/mac.h      |  35 ++
- drivers/net/wireless/realtek/rtw89/mac80211.c |   1 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |   4 +-
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c |  20 +-
- 10 files changed, 1174 insertions(+), 35 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 3d7b99e15967e..544f6d4b68735 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -11,6 +11,9 @@
+ #include "phy.h"
+ #include "reg.h"
+ 
++static void rtw89_fw_c2h_cmd_handle(struct rtw89_dev *rtwdev,
++				    struct sk_buff *skb);
++
+ static struct sk_buff *rtw89_fw_h2c_alloc_skb(struct rtw89_dev *rtwdev, u32 len,
+ 					      bool header)
+ {
+@@ -2382,8 +2385,43 @@ void rtw89_fw_free_all_early_h2c(struct rtw89_dev *rtwdev)
+ 	mutex_unlock(&rtwdev->mutex);
+ }
+ 
++static void rtw89_fw_c2h_parse_attr(struct sk_buff *c2h)
++{
++	struct rtw89_fw_c2h_attr *attr = RTW89_SKB_C2H_CB(c2h);
++
++	attr->category = RTW89_GET_C2H_CATEGORY(c2h->data);
++	attr->class = RTW89_GET_C2H_CLASS(c2h->data);
++	attr->func = RTW89_GET_C2H_FUNC(c2h->data);
++	attr->len = RTW89_GET_C2H_LEN(c2h->data);
++}
++
++static bool rtw89_fw_c2h_chk_atomic(struct rtw89_dev *rtwdev,
++				    struct sk_buff *c2h)
++{
++	struct rtw89_fw_c2h_attr *attr = RTW89_SKB_C2H_CB(c2h);
++	u8 category = attr->category;
++	u8 class = attr->class;
++	u8 func = attr->func;
++
++	switch (category) {
++	default:
++		return false;
++	case RTW89_C2H_CAT_MAC:
++		return rtw89_mac_c2h_chk_atomic(rtwdev, class, func);
++	}
++}
++
+ void rtw89_fw_c2h_irqsafe(struct rtw89_dev *rtwdev, struct sk_buff *c2h)
+ {
++	rtw89_fw_c2h_parse_attr(c2h);
++	if (!rtw89_fw_c2h_chk_atomic(rtwdev, c2h))
++		goto enqueue;
++
++	rtw89_fw_c2h_cmd_handle(rtwdev, c2h);
++	dev_kfree_skb_any(c2h);
++	return;
++
++enqueue:
+ 	skb_queue_tail(&rtwdev->c2h_queue, c2h);
+ 	ieee80211_queue_work(rtwdev->hw, &rtwdev->c2h_work);
+ }
+@@ -2391,10 +2429,11 @@ void rtw89_fw_c2h_irqsafe(struct rtw89_dev *rtwdev, struct sk_buff *c2h)
+ static void rtw89_fw_c2h_cmd_handle(struct rtw89_dev *rtwdev,
+ 				    struct sk_buff *skb)
+ {
+-	u8 category = RTW89_GET_C2H_CATEGORY(skb->data);
+-	u8 class = RTW89_GET_C2H_CLASS(skb->data);
+-	u8 func = RTW89_GET_C2H_FUNC(skb->data);
+-	u16 len = RTW89_GET_C2H_LEN(skb->data);
++	struct rtw89_fw_c2h_attr *attr = RTW89_SKB_C2H_CB(skb);
++	u8 category = attr->category;
++	u8 class = attr->class;
++	u8 func = attr->func;
++	u16 len = attr->len;
+ 	bool dump = true;
+ 
+ 	if (!test_bit(RTW89_FLAG_RUNNING, rtwdev->flags))
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 509a3eac5ffe3..d76d0c80f0256 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -2778,6 +2778,20 @@ static inline void RTW89_SET_FWCMD_TSF32_TOGL_EARLY(void *cmd, u32 val)
+ #define RTW89_GET_C2H_LEN(c2h) \
+ 	le32_get_bits(*((const __le32 *)(c2h) + 1), GENMASK(13, 0))
+ 
++struct rtw89_fw_c2h_attr {
++	u8 category;
++	u8 class;
++	u8 func;
++	u16 len;
++};
++
++static inline struct rtw89_fw_c2h_attr *RTW89_SKB_C2H_CB(struct sk_buff *skb)
++{
++	static_assert(sizeof(skb->cb) >= sizeof(struct rtw89_fw_c2h_attr));
++
++	return (struct rtw89_fw_c2h_attr *)skb->cb;
++}
++
+ #define RTW89_GET_C2H_LOG_SRT_PRT(c2h) (char *)((__le32 *)(c2h) + 2)
+ #define RTW89_GET_C2H_LOG_LEN(len) ((len) - RTW89_C2H_HEADER_LEN)
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 6587cdf6ba624..098637a848953 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -4208,6 +4208,16 @@ void (* const rtw89_mac_c2h_info_handler[])(struct rtw89_dev *rtwdev,
+ 	[RTW89_MAC_C2H_FUNC_BCN_CNT] = rtw89_mac_c2h_bcn_cnt,
+ };
+ 
++bool rtw89_mac_c2h_chk_atomic(struct rtw89_dev *rtwdev, u8 class, u8 func)
++{
++	switch (class) {
++	default:
++		return false;
++	case RTW89_MAC_C2H_CLASS_MCC:
++		return true;
++	}
++}
++
+ void rtw89_mac_c2h_handle(struct rtw89_dev *rtwdev, struct sk_buff *skb,
+ 			  u32 len, u8 class, u8 func)
+ {
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
+index 045e8ec61a41e..82b9e81fe4744 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.h
++++ b/drivers/net/wireless/realtek/rtw89/mac.h
+@@ -894,6 +894,7 @@ static inline int rtw89_chip_disable_bb_rf(struct rtw89_dev *rtwdev)
+ 
+ u32 rtw89_mac_get_err_status(struct rtw89_dev *rtwdev);
+ int rtw89_mac_set_err_status(struct rtw89_dev *rtwdev, u32 err);
++bool rtw89_mac_c2h_chk_atomic(struct rtw89_dev *rtwdev, u8 class, u8 func);
+ void rtw89_mac_c2h_handle(struct rtw89_dev *rtwdev, struct sk_buff *skb,
+ 			  u32 len, u8 class, u8 func);
+ int rtw89_mac_setup_phycap(struct rtw89_dev *rtwdev);
 -- 
 2.25.1
 
