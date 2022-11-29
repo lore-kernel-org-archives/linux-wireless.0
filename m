@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78152C47089
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 10:08:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B78BEC4332F
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 10:08:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229899AbiK2KIM (ORCPT
+        id S232302AbiK2KIf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Nov 2022 05:08:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60776 "EHLO
+        Tue, 29 Nov 2022 05:08:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232141AbiK2KIL (ORCPT
+        with ESMTP id S231492AbiK2KIP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2022 05:08:11 -0500
+        Tue, 29 Nov 2022 05:08:15 -0500
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 567EB14011
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 02:08:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E60282182C
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 02:08:13 -0800 (PST)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxX5-0006yF-5r; Tue, 29 Nov 2022 11:08:07 +0100
+        id 1ozxX1-0006y9-Mr; Tue, 29 Nov 2022 11:08:03 +0100
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxWy-0012iI-OY; Tue, 29 Nov 2022 11:08:01 +0100
+        id 1ozxWy-0012i0-EQ; Tue, 29 Nov 2022 11:08:01 +0100
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1ozxWx-00BYHF-Kz; Tue, 29 Nov 2022 11:07:59 +0100
+        id 1ozxWx-00BYH0-F9; Tue, 29 Nov 2022 11:07:59 +0100
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -41,9 +41,9 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Da Xue <da@libre.computer>, Po-Hao Huang <phhuang@realtek.com>,
         Viktor Petrenko <g0000ga@gmail.com>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v4 10/11] wifi: rtw88: Add rtw8822cu chipset support
-Date:   Tue, 29 Nov 2022 11:07:53 +0100
-Message-Id: <20221129100754.2753237-11-s.hauer@pengutronix.de>
+Subject: [PATCH v4 05/11] wifi: rtw88: Drop coex mutex
+Date:   Tue, 29 Nov 2022 11:07:48 +0100
+Message-Id: <20221129100754.2753237-6-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221129100754.2753237-1-s.hauer@pengutronix.de>
 References: <20221129100754.2753237-1-s.hauer@pengutronix.de>
@@ -57,175 +57,88 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for the rtw8822cu chipset based on
-https://github.com/ulli-kroll/rtw88-usb.git
+coex->mutex is used in rtw_coex_info_request() only. Most callers of this
+function hold rtwdev->mutex already, except for one callsite in the
+debugfs code. The debugfs code alone doesn't justify the extra lock, so
+acquire rtwdev->mutex there as well and drop the now unnecessary
+spinlock.
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 ---
+ drivers/net/wireless/realtek/rtw88/coex.c  | 3 +--
+ drivers/net/wireless/realtek/rtw88/debug.c | 2 ++
+ drivers/net/wireless/realtek/rtw88/main.c  | 2 --
+ drivers/net/wireless/realtek/rtw88/main.h  | 2 --
+ 4 files changed, 3 insertions(+), 6 deletions(-)
 
-Notes:
-    Changes since v3:
-    - drop unnecessary rtw8822cu.h
-    
-    Changes since v1:
-    - Add more Device IDs from https://github.com/morrownr/8821cu-20210118.git
-
- drivers/net/wireless/realtek/rtw88/Kconfig    | 11 +++++
- drivers/net/wireless/realtek/rtw88/Makefile   |  3 ++
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 24 ++++++++++
- .../net/wireless/realtek/rtw88/rtw8822cu.c    | 44 +++++++++++++++++++
- 4 files changed, 82 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822cu.c
-
-diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
-index 10f4e7f88b858..138289bc5ad0c 100644
---- a/drivers/net/wireless/realtek/rtw88/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw88/Kconfig
-@@ -64,6 +64,17 @@ config RTW88_8822CE
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 6276ad6242991..38697237ee5f0 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -633,7 +633,7 @@ static struct sk_buff *rtw_coex_info_request(struct rtw_dev *rtwdev,
+ 	struct rtw_coex *coex = &rtwdev->coex;
+ 	struct sk_buff *skb_resp = NULL;
  
- 	  802.11ac PCIe wireless network adapter
+-	mutex_lock(&coex->mutex);
++	lockdep_assert_held(&rtwdev->mutex);
  
-+config RTW88_8822CU
-+	tristate "Realtek 8822CU USB wireless network adapter"
-+	depends on USB
-+	select RTW88_CORE
-+	select RTW88_USB
-+	select RTW88_8822C
-+	help
-+	  Select this option will enable support for 8822CU chipset
-+
-+	  802.11ac USB wireless network adapter
-+
- config RTW88_8723DE
- 	tristate "Realtek 8723DE PCI wireless network adapter"
- 	depends on PCI
-diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
-index 6984bfb7a3170..fe2dd90204a78 100644
---- a/drivers/net/wireless/realtek/rtw88/Makefile
-+++ b/drivers/net/wireless/realtek/rtw88/Makefile
-@@ -35,6 +35,9 @@ rtw88_8822c-objs		:= rtw8822c.o rtw8822c_table.o
- obj-$(CONFIG_RTW88_8822CE)	+= rtw88_8822ce.o
- rtw88_8822ce-objs		:= rtw8822ce.o
+ 	rtw_fw_query_bt_mp_info(rtwdev, req);
  
-+obj-$(CONFIG_RTW88_8822CU)	+= rtw88_8822cu.o
-+rtw88_8822cu-objs		:= rtw8822cu.o
-+
- obj-$(CONFIG_RTW88_8723D)	+= rtw88_8723d.o
- rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
+@@ -650,7 +650,6 @@ static struct sk_buff *rtw_coex_info_request(struct rtw_dev *rtwdev,
+ 	}
  
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index fccb15dfb9595..964e27887fe2d 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -29,6 +29,12 @@ static void rtw8822ce_efuse_parsing(struct rtw_efuse *efuse,
- 	ether_addr_copy(efuse->addr, map->e.mac_addr);
+ out:
+-	mutex_unlock(&coex->mutex);
+ 	return skb_resp;
  }
  
-+static void rtw8822cu_efuse_parsing(struct rtw_efuse *efuse,
-+				    struct rtw8822c_efuse *map)
-+{
-+	ether_addr_copy(efuse->addr, map->u.mac_addr);
-+}
-+
- static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- {
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
-@@ -58,6 +64,9 @@ static int rtw8822c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- 	case RTW_HCI_TYPE_PCIE:
- 		rtw8822ce_efuse_parsing(efuse, map);
- 		break;
-+	case RTW_HCI_TYPE_USB:
-+		rtw8822cu_efuse_parsing(efuse, map);
-+		break;
- 	default:
- 		/* unsupported now */
- 		return -ENOTSUPP;
-@@ -4557,6 +4566,18 @@ static void rtw8822c_adaptivity(struct rtw_dev *rtwdev)
- 	rtw_phy_set_edcca_th(rtwdev, l2h, h2l);
- }
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index f5b8a77ebc67b..fa3d73b333ba0 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -841,7 +841,9 @@ static int rtw_debugfs_get_coex_info(struct seq_file *m, void *v)
+ 	struct rtw_debugfs_priv *debugfs_priv = m->private;
+ 	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
  
-+static void rtw8822c_fill_txdesc_checksum(struct rtw_dev *rtwdev,
-+					  struct rtw_tx_pkt_info *pkt_info,
-+					  u8 *txdesc)
-+{
-+	const struct rtw_chip_info *chip = rtwdev->chip;
-+	size_t words;
-+
-+	words = (pkt_info->pkt_offset * 8 + chip->tx_pkt_desc_sz) / 2;
-+
-+	fill_txdesc_checksum_common(txdesc, words);
-+}
-+
- static const struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8822c[] = {
- 	{0x0086,
- 	 RTW_PWR_CUT_ALL_MSK,
-@@ -4895,6 +4916,8 @@ static const struct rtw_rfe_def rtw8822c_rfe_defs[] = {
- 	[0] = RTW_DEF_RFE(8822c, 0, 0),
- 	[1] = RTW_DEF_RFE(8822c, 0, 0),
- 	[2] = RTW_DEF_RFE(8822c, 0, 0),
-+	[3] = RTW_DEF_RFE(8822c, 0, 0),
-+	[4] = RTW_DEF_RFE(8822c, 0, 0),
- 	[5] = RTW_DEF_RFE(8822c, 0, 5),
- 	[6] = RTW_DEF_RFE(8822c, 0, 0),
++	mutex_lock(&rtwdev->mutex);
+ 	rtw_coex_display_coex_info(rtwdev, m);
++	mutex_unlock(&rtwdev->mutex);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index c98e56890401c..0a2ce7f50f412 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -2071,7 +2071,6 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+ 	spin_lock_init(&rtwdev->tx_report.q_lock);
+ 
+ 	mutex_init(&rtwdev->mutex);
+-	mutex_init(&rtwdev->coex.mutex);
+ 	mutex_init(&rtwdev->hal.tx_power_mutex);
+ 
+ 	init_waitqueue_head(&rtwdev->coex.wait);
+@@ -2143,7 +2142,6 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
+ 	}
+ 
+ 	mutex_destroy(&rtwdev->mutex);
+-	mutex_destroy(&rtwdev->coex.mutex);
+ 	mutex_destroy(&rtwdev->hal.tx_power_mutex);
+ }
+ EXPORT_SYMBOL(rtw_core_deinit);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 4b57542bef1e9..77fd48b6cc453 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1501,8 +1501,6 @@ struct rtw_coex_stat {
  };
-@@ -4978,6 +5001,7 @@ static struct rtw_chip_ops rtw8822c_ops = {
- 	.cfo_track		= rtw8822c_cfo_track,
- 	.config_tx_path		= rtw8822c_config_tx_path,
- 	.config_txrx_mode	= rtw8822c_config_trx_mode,
-+	.fill_txdesc_checksum	= rtw8822c_fill_txdesc_checksum,
  
- 	.coex_set_init		= rtw8822c_coex_cfg_init,
- 	.coex_set_ant_switch	= NULL,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822cu.c b/drivers/net/wireless/realtek/rtw88/rtw8822cu.c
-new file mode 100644
-index 0000000000000..af28ca09d41fb
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822cu.c
-@@ -0,0 +1,44 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/* Copyright(c) 2018-2019  Realtek Corporation
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/usb.h>
-+#include "main.h"
-+#include "rtw8822c.h"
-+#include "usb.h"
-+
-+static const struct usb_device_id rtw_8822cu_id_table[] = {
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc82c, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8822c_hw_spec) },
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc812, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8822c_hw_spec) },
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xc82e, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8822c_hw_spec) },
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xd820, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8822c_hw_spec) },
-+	{ USB_DEVICE_AND_INTERFACE_INFO(RTW_USB_VENDOR_ID_REALTEK, 0xd82b, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8822c_hw_spec) },
-+	{ USB_DEVICE_AND_INTERFACE_INFO(0x13b1, 0x0043, 0xff, 0xff, 0xff),
-+	  .driver_info = (kernel_ulong_t)&(rtw8822c_hw_spec) }, /* Alpha - Alpha */
-+	{},
-+};
-+MODULE_DEVICE_TABLE(usb, rtw_8822cu_id_table);
-+
-+static int rtw8822bu_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtw_usb_probe(intf, id);
-+}
-+
-+static struct usb_driver rtw_8822cu_driver = {
-+	.name = "rtw_8822cu",
-+	.id_table = rtw_8822cu_id_table,
-+	.probe = rtw8822bu_probe,
-+	.disconnect = rtw_usb_disconnect,
-+};
-+module_usb_driver(rtw_8822cu_driver);
-+
-+MODULE_AUTHOR("Realtek Corporation");
-+MODULE_DESCRIPTION("Realtek 802.11ac wireless 8822cu driver");
-+MODULE_LICENSE("Dual BSD/GPL");
+ struct rtw_coex {
+-	/* protects coex info request section */
+-	struct mutex mutex;
+ 	struct sk_buff_head queue;
+ 	wait_queue_head_t wait;
+ 
 -- 
 2.30.2
 
