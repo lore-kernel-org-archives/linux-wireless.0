@@ -2,143 +2,210 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FB03C46467
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 08:02:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8368CC4167B
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Nov 2022 08:33:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230072AbiK2ICJ (ORCPT
+        id S230459AbiK2Idy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Nov 2022 03:02:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51356 "EHLO
+        Tue, 29 Nov 2022 03:33:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230094AbiK2ICB (ORCPT
+        with ESMTP id S230458AbiK2IdQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2022 03:02:01 -0500
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AAA91F2FB
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 00:02:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1669708920; x=1701244920;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=kgdL2DBERAgb8vvH9bctu6RI2UVX4CdhLjLoa7Ts/lw=;
-  b=ce7Iig7J9P7+ueMSqKpf1rVBr8S2Z0WYitnXEHiaPKmMcXSAyoBe4UWP
-   p2DT0t6ZqW0hhtWP5kT/pMO0iDkzKKhkrScVPLI3Ez5w4S86w/tC5YmD0
-   sb9URmD5sPQL/F2nqIUOGVSMpTU/LmmH9l/7vLsaZYdo8/s0qdUVkkD3J
-   C2hKaAW6OcTTncKkA7ykWhlvCFZAIpfLsBzTEvRVBJD3lOsvWH+b6LU9R
-   9DgGkHWXPo2ALJ1mjN/2fmDyi1FBQ9oS9WMICIQbHvlRFT7h9BNQpavhH
-   HBQjRNt9qwOWLKRZeRhShD2scnLlQW1x8sivNiV4sEHKlADB5PiPaT1as
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10545"; a="377194074"
-X-IronPort-AV: E=Sophos;i="5.96,202,1665471600"; 
-   d="scan'208";a="377194074"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2022 00:01:59 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10545"; a="712283208"
-X-IronPort-AV: E=Sophos;i="5.96,202,1665471600"; 
-   d="scan'208";a="712283208"
-Received: from lkp-server01.sh.intel.com (HELO 64a2d449c951) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 29 Nov 2022 00:01:58 -0800
-Received: from kbuild by 64a2d449c951 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1ozvYz-0008n9-1P;
-        Tue, 29 Nov 2022 08:01:57 +0000
-Date:   Tue, 29 Nov 2022 16:01:17 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: [wireless-next:main] BUILD SUCCESS
- eceb024ee3eed1bacb5c32a4847269f2685e2ea4
-Message-ID: <6385bc4d.fGygq3SPpcP200kI%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Tue, 29 Nov 2022 03:33:16 -0500
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8066F26E1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2022 00:32:37 -0800 (PST)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2AT8ViXZ2002142, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2AT8ViXZ2002142
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Tue, 29 Nov 2022 16:31:44 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Tue, 29 Nov 2022 16:32:29 +0800
+Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 29 Nov
+ 2022 16:32:29 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/6] wifi: rtw89: rfk: rename rtw89_mcc_info to rtw89_rfk_mcc_info
+Date:   Tue, 29 Nov 2022 16:31:25 +0800
+Message-ID: <20221129083130.45708-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221129083130.45708-1-pkshih@realtek.com>
+References: <20221129083130.45708-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 11/29/2022 08:08:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzExLzI5IKRXpMggMDY6MDE6MDA=?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-branch HEAD: eceb024ee3eed1bacb5c32a4847269f2685e2ea4  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-elapsed time: 945m
+The `rtw89_mcc_info mcc` is only for RFK MCC stuffs instead of common
+MCC management info. Replace it with `rtw89_rfk_mcc_info rfk_mcc` to
+avoid confusion and reserve `struct rtw89_mcc_info mcc` for MCC management
+code.
 
-configs tested: 64
-configs skipped: 2
+(No logic changes.)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.h     |  4 ++--
+ drivers/net/wireless/realtek/rtw89/fw.c       | 10 +++++-----
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  4 ++--
+ .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 20 +++++++++----------
+ 4 files changed, 19 insertions(+), 19 deletions(-)
 
-gcc tested configs:
-arc                                 defconfig
-alpha                               defconfig
-arc                  randconfig-r043-20221128
-um                             i386_defconfig
-s390                             allmodconfig
-um                           x86_64_defconfig
-s390                                defconfig
-powerpc                           allnoconfig
-s390                             allyesconfig
-x86_64                           rhel-8.3-syz
-m68k                             allmodconfig
-x86_64                           rhel-8.3-kvm
-alpha                            allyesconfig
-x86_64                         rhel-8.3-kunit
-arc                              allyesconfig
-m68k                             allyesconfig
-x86_64                          rhel-8.3-func
-x86_64                    rhel-8.3-kselftests
-ia64                             allmodconfig
-sh                               allmodconfig
-x86_64                              defconfig
-i386                 randconfig-a003-20221128
-i386                                defconfig
-i386                 randconfig-a001-20221128
-i386                 randconfig-a006-20221128
-mips                             allyesconfig
-i386                 randconfig-a004-20221128
-i386                 randconfig-a002-20221128
-powerpc                          allmodconfig
-i386                 randconfig-a005-20221128
-x86_64                               rhel-8.3
-x86_64                        randconfig-a013
-x86_64                           allyesconfig
-x86_64                        randconfig-a011
-x86_64               randconfig-a003-20221128
-x86_64               randconfig-a004-20221128
-x86_64               randconfig-a002-20221128
-x86_64               randconfig-a005-20221128
-x86_64               randconfig-a001-20221128
-x86_64               randconfig-a006-20221128
-x86_64                        randconfig-a015
-i386                             allyesconfig
-arm                                 defconfig
-arm                              allyesconfig
-arm64                            allyesconfig
-
-clang tested configs:
-hexagon              randconfig-r041-20221128
-hexagon              randconfig-r045-20221128
-riscv                randconfig-r042-20221128
-s390                 randconfig-r044-20221128
-i386                 randconfig-a012-20221128
-i386                 randconfig-a014-20221128
-i386                 randconfig-a015-20221128
-x86_64               randconfig-a013-20221128
-i386                 randconfig-a016-20221128
-i386                 randconfig-a011-20221128
-x86_64               randconfig-a012-20221128
-i386                 randconfig-a013-20221128
-x86_64               randconfig-a014-20221128
-x86_64                        randconfig-a012
-x86_64               randconfig-a011-20221128
-x86_64                        randconfig-a014
-x86_64               randconfig-a016-20221128
-x86_64                        randconfig-a016
-x86_64               randconfig-a015-20221128
-
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 1b0acb1c5450e..691d417d37334 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -3031,7 +3031,7 @@ struct rtw89_dack_info {
+ #define RTW89_IQK_CHS_NR 2
+ #define RTW89_IQK_PATH_NR 4
+ 
+-struct rtw89_mcc_info {
++struct rtw89_rfk_mcc_info {
+ 	u8 ch[RTW89_IQK_CHS_NR];
+ 	u8 band[RTW89_IQK_CHS_NR];
+ 	u8 table_idx;
+@@ -3577,7 +3577,7 @@ struct rtw89_dev {
+ 	struct rtw89_dack_info dack;
+ 	struct rtw89_iqk_info iqk;
+ 	struct rtw89_dpk_info dpk;
+-	struct rtw89_mcc_info mcc;
++	struct rtw89_rfk_mcc_info rfk_mcc;
+ 	struct rtw89_lck_info lck;
+ 	struct rtw89_rx_dck_info rx_dck;
+ 	bool is_tssi_mode[RF_PATH_MAX];
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 10c5ed21da025..3d7b99e15967e 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -2263,7 +2263,7 @@ int rtw89_fw_h2c_rf_reg(struct rtw89_dev *rtwdev,
+ int rtw89_fw_h2c_rf_ntfy_mcc(struct rtw89_dev *rtwdev)
+ {
+ 	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
+-	struct rtw89_mcc_info *mcc_info = &rtwdev->mcc;
++	struct rtw89_rfk_mcc_info *rfk_mcc = &rtwdev->rfk_mcc;
+ 	struct rtw89_fw_h2c_rf_get_mccch *mccch;
+ 	struct sk_buff *skb;
+ 	int ret;
+@@ -2276,10 +2276,10 @@ int rtw89_fw_h2c_rf_ntfy_mcc(struct rtw89_dev *rtwdev)
+ 	skb_put(skb, sizeof(*mccch));
+ 	mccch = (struct rtw89_fw_h2c_rf_get_mccch *)skb->data;
+ 
+-	mccch->ch_0 = cpu_to_le32(mcc_info->ch[0]);
+-	mccch->ch_1 = cpu_to_le32(mcc_info->ch[1]);
+-	mccch->band_0 = cpu_to_le32(mcc_info->band[0]);
+-	mccch->band_1 = cpu_to_le32(mcc_info->band[1]);
++	mccch->ch_0 = cpu_to_le32(rfk_mcc->ch[0]);
++	mccch->ch_1 = cpu_to_le32(rfk_mcc->ch[1]);
++	mccch->band_0 = cpu_to_le32(rfk_mcc->band[0]);
++	mccch->band_1 = cpu_to_le32(rfk_mcc->band[1]);
+ 	mccch->current_channel = cpu_to_le32(chan->channel);
+ 	mccch->current_band_type = cpu_to_le32(chan->band_type);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index 9bc98fd5d4ac2..a87482cc25f58 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -1832,11 +1832,11 @@ static void rtw8852c_set_channel_help(struct rtw89_dev *rtwdev, bool enter,
+ 
+ static void rtw8852c_rfk_init(struct rtw89_dev *rtwdev)
+ {
+-	struct rtw89_mcc_info *mcc_info = &rtwdev->mcc;
++	struct rtw89_rfk_mcc_info *rfk_mcc = &rtwdev->rfk_mcc;
+ 
+ 	rtwdev->is_tssi_mode[RF_PATH_A] = false;
+ 	rtwdev->is_tssi_mode[RF_PATH_B] = false;
+-	memset(mcc_info, 0, sizeof(*mcc_info));
++	memset(rfk_mcc, 0, sizeof(*rfk_mcc));
+ 	rtw8852c_lck_init(rtwdev);
+ 
+ 	rtw8852c_rck(rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
+index b0672b906e7bc..60cd676fe22c9 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
+@@ -1030,9 +1030,9 @@ static bool _iqk_nbtxk(struct rtw89_dev *rtwdev,
+ 
+ static bool _lok_finetune_check(struct rtw89_dev *rtwdev, u8 path)
+ {
+-	struct rtw89_mcc_info *mcc_info = &rtwdev->mcc;
++	struct rtw89_rfk_mcc_info *rfk_mcc = &rtwdev->rfk_mcc;
+ 	struct rtw89_iqk_info *iqk_info = &rtwdev->iqk;
+-	u8 idx = mcc_info->table_idx;
++	u8 idx = rfk_mcc->table_idx;
+ 	bool is_fail1,  is_fail2;
+ 	u32 val;
+ 	u32 core_i;
+@@ -1375,10 +1375,10 @@ static void _iqk_afebb_restore(struct rtw89_dev *rtwdev,
+ 
+ static void _iqk_preset(struct rtw89_dev *rtwdev, u8 path)
+ {
+-	struct rtw89_mcc_info *mcc_info = &rtwdev->mcc;
++	struct rtw89_rfk_mcc_info *rfk_mcc = &rtwdev->rfk_mcc;
+ 	u8 idx = 0;
+ 
+-	idx = mcc_info->table_idx;
++	idx = rfk_mcc->table_idx;
+ 	rtw89_phy_write32_mask(rtwdev, R_COEF_SEL + (path << 8), B_COEF_SEL_IQC, idx);
+ 	rtw89_phy_write32_mask(rtwdev, R_CFIR_LUT + (path << 8), B_CFIR_LUT_G3, idx);
+ 	rtw89_write_rf(rtwdev, path, RR_RSV1, RR_RSV1_RST, 0x0);
+@@ -3824,20 +3824,20 @@ void rtw8852c_set_channel_rf(struct rtw89_dev *rtwdev,
+ void rtw8852c_mcc_get_ch_info(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
+ {
+ 	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
+-	struct rtw89_mcc_info *mcc_info = &rtwdev->mcc;
+-	u8 idx = mcc_info->table_idx;
++	struct rtw89_rfk_mcc_info *rfk_mcc = &rtwdev->rfk_mcc;
++	u8 idx = rfk_mcc->table_idx;
+ 	int i;
+ 
+ 	for (i = 0; i < RTW89_IQK_CHS_NR; i++) {
+-		if (mcc_info->ch[idx] == 0)
++		if (rfk_mcc->ch[idx] == 0)
+ 			break;
+ 		if (++idx >= RTW89_IQK_CHS_NR)
+ 			idx = 0;
+ 	}
+ 
+-	mcc_info->table_idx = idx;
+-	mcc_info->ch[idx] = chan->channel;
+-	mcc_info->band[idx] = chan->band_type;
++	rfk_mcc->table_idx = idx;
++	rfk_mcc->ch[idx] = chan->channel;
++	rfk_mcc->band[idx] = chan->band_type;
+ }
+ 
+ void rtw8852c_rck(struct rtw89_dev *rtwdev)
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.25.1
+
