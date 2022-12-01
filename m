@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFF1DC43217
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Dec 2022 03:44:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A225C4321E
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Dec 2022 03:45:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229601AbiLADo6 (ORCPT
+        id S229626AbiLADo7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Nov 2022 22:44:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59046 "EHLO
+        Wed, 30 Nov 2022 22:44:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbiLADo4 (ORCPT
+        with ESMTP id S229566AbiLADo6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2022 22:44:56 -0500
+        Wed, 30 Nov 2022 22:44:58 -0500
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C49979075D
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2022 19:44:50 -0800 (PST)
-X-UUID: 8c95f5e5ed2145bab913468e825b0803-20221201
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7326790769
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2022 19:44:53 -0800 (PST)
+X-UUID: e4772005a8c946c7b0e8fe57e5edf807-20221201
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=pdn4ilndUShBfEwJMZoAT9iAd2cV94PGdSIcoqPHRE4=;
-        b=recSrXoG8HhQNWeTqz8JSf2no+oYqsNzFH7Zz64zWHemfgDDV6X+j+2ETqHmdWvSM2/Gdy3XPZxnOa2hxJr9s3E8DfJ6oDc0zUNh7e/huFYhM5dTCTU3I55M0os5ctA49acGHmoyBX9TZnK9BwHJ4ok6BcmOAZMV1YlyHz1Sop4=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=R695219Wd4kGuWj0TRGlztnKlAYxGRy5SeEHcLiIi+s=;
+        b=jO5un83w6WnS2JVk0zrI/ysycYzjdHvX8xh4YXoAaJCIVGLtct+j7B2UvJC9Pn86OPR3UEbz1DGCNuOyZc8Vbm0wdT4b9o74sZQZqL1wXHazIxq9EjSpWy72rQ/sneq3N885IAAvUNDyFoRbM8g9X9ag+bmWFszotukd+abo0X4=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:7c0a6aa3-e1e0-49a6-bba2-95cb9c2a3eb0,IP:0,U
+X-CID-O-INFO: VERSION:1.1.14,REQID:19ac712c-f378-4e68-97ef-858bce79f79d,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
         :release,TS:95
-X-CID-INFO: VERSION:1.1.14,REQID:7c0a6aa3-e1e0-49a6-bba2-95cb9c2a3eb0,IP:0,URL
+X-CID-INFO: VERSION:1.1.14,REQID:19ac712c-f378-4e68-97ef-858bce79f79d,IP:0,URL
         :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
         :quarantine,TS:95
-X-CID-META: VersionHash:dcaaed0,CLOUDID:e8aa376c-41fe-47b6-8eb4-ec192dedaf7d,B
-        ulkID:221201114448OXBOAR4B,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48,TC:n
+X-CID-META: VersionHash:dcaaed0,CLOUDID:5d50d01e-5e1d-4ab5-ab8e-3e04efc02b30,B
+        ulkID:221201114451JL94V2FN,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48,TC:n
         il,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 8c95f5e5ed2145bab913468e825b0803-20221201
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+X-UUID: e4772005a8c946c7b0e8fe57e5edf807-20221201
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1655589162; Thu, 01 Dec 2022 11:44:45 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 543524590; Thu, 01 Dec 2022 11:44:48 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Thu, 1 Dec 2022 11:44:45 +0800
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Thu, 1 Dec 2022 11:44:47 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Thu, 1 Dec 2022 11:44:45 +0800
+ 15.2.792.15 via Frontend Transport; Thu, 1 Dec 2022 11:44:47 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
 CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
@@ -49,10 +49,12 @@ CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/5] wifi: mt76: mt7915: fix scene detection flow of spatial reuse
-Date:   Thu, 1 Dec 2022 11:44:40 +0800
-Message-ID: <d1c11adff6b57c9104bb16df19f62700e2505473.1669861862.git.ryder.lee@mediatek.com>
+Subject: [PATCH 3/5] wifi: mt76: mt7996: enable use_cts_prot support
+Date:   Thu, 1 Dec 2022 11:44:42 +0800
+Message-ID: <0ec617fd8907e6b32060e7c1aefaca42f2c8a0cd.1669861863.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <d1c11adff6b57c9104bb16df19f62700e2505473.1669861862.git.ryder.lee@mediatek.com>
+References: <d1c11adff6b57c9104bb16df19f62700e2505473.1669861862.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -60,48 +62,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Firmware is in the driving seat while sr_scene_detect is enabled,
-so driver needs to skip operation to avoid mangling scene detection
-algorithm.
+This adds selectable RTC/CTS enablement for each interface.
 
-Fixes: a633503 ("wifi: mt76: mt7915: add support to configure spatial reuse parameter set")
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/mac.c    | 13 +++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c   |  3 +++
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |  2 ++
+ 3 files changed, 18 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 9e479d41eab5..718e52744994 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3535,22 +3535,22 @@ int mt7915_mcu_add_obss_spr(struct mt7915_phy *phy, struct ieee80211_vif *vif,
- 	if (ret)
- 		return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index c9c9b82352eb..554f9bcb69e2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -218,6 +218,19 @@ static void mt7996_mac_sta_poll(struct mt7996_dev *dev)
+ 	rcu_read_unlock();
+ }
  
-+	/* firmware dynamically adjusts PD threshold so skip manual control */
-+	if (sr_scene_detect && !he_obss_pd->enable)
-+		return 0;
++void mt7996_mac_enable_rtscts(struct mt7996_dev *dev,
++			      struct ieee80211_vif *vif, bool enable)
++{
++	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
++	u32 addr;
 +
- 	/* enable spatial reuse */
- 	ret = mt7915_mcu_enable_obss_spr(phy, SPR_ENABLE, he_obss_pd->enable);
- 	if (ret)
- 		return ret;
++	addr = mt7996_mac_wtbl_lmac_addr(dev, mvif->sta.wcid.idx, 5);
++	if (enable)
++		mt76_set(dev, addr, BIT(5));
++	else
++		mt76_clear(dev, addr, BIT(5));
++}
++
+ static void
+ mt7996_mac_decode_he_radiotap_ru(struct mt76_rx_status *status,
+ 				 struct ieee80211_radiotap_he *he,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 21dea3fa7dc1..d43530a9786b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -523,6 +523,9 @@ static void mt7996_bss_info_changed(struct ieee80211_hw *hw,
+ 		mt7996_mcu_add_obss_spr(dev, vif, info->he_obss_pd.enable);
+ 	}
  
--	if (!he_obss_pd->enable)
-+	if (sr_scene_detect || !he_obss_pd->enable)
- 		return 0;
++	if (changed & BSS_CHANGED_ERP_CTS_PROT)
++		mt7996_mac_enable_rtscts(dev, vif, info->use_cts_prot);
++
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+ 		int slottime = info->use_short_slot ? 9 : 20;
  
- 	ret = mt7915_mcu_enable_obss_spr(phy, SPR_ENABLE_TX, true);
- 	if (ret)
- 		return ret;
- 
--	/* firmware dynamically adjusts PD threshold so skip manual control */
--	if (sr_scene_detect)
--		return 0;
--
- 	/* set SRG/non-SRG OBSS PD threshold */
- 	ret = mt7915_mcu_set_obss_spr_pd(phy, he_obss_pd);
- 	if (ret)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+index 167f615f099e..00c58878524e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -464,6 +464,8 @@ bool mt7996_mac_wtbl_update(struct mt7996_dev *dev, int idx, u32 mask);
+ void mt7996_mac_reset_counters(struct mt7996_phy *phy);
+ void mt7996_mac_cca_stats_reset(struct mt7996_phy *phy);
+ void mt7996_mac_enable_nf(struct mt7996_dev *dev, u8 band);
++void mt7996_mac_enable_rtscts(struct mt7996_dev *dev,
++			      struct ieee80211_vif *vif, bool enable);
+ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
+ 			   struct sk_buff *skb, struct mt76_wcid *wcid, int pid,
+ 			   struct ieee80211_key_conf *key, u32 changed);
 -- 
 2.18.0
 
