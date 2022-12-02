@@ -2,81 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC1A8C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 18:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6940C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 18:24:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234286AbiLBSCU (ORCPT
+        id S234273AbiLBSYv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Dec 2022 13:02:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57146 "EHLO
+        Fri, 2 Dec 2022 13:24:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234457AbiLBSCB (ORCPT
+        with ESMTP id S233783AbiLBSYu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2022 13:02:01 -0500
-X-Greylist: delayed 600 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 02 Dec 2022 10:01:58 PST
-Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A36CE51D8;
-        Fri,  2 Dec 2022 10:01:57 -0800 (PST)
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-        by ns.iliad.fr (Postfix) with ESMTP id 91E7920055;
-        Fri,  2 Dec 2022 18:42:13 +0100 (CET)
-Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
-        by ns.iliad.fr (Postfix) with ESMTP id 816D920041;
-        Fri,  2 Dec 2022 18:42:13 +0100 (CET)
-Message-ID: <19ea39c87df3c54cbc487466f806bc157d0bf563.camel@freebox.fr>
-Subject: Re: [regression] Bug 216753 - 6e 6 ghz bands are disabled since
- 5.16 on intel ax211
-From:   Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To:     Dave Chiluk <chiluk@ubuntu.com>,
-        Marcel Holtmann <marcel@holtmann.org>
-Cc:     Thorsten Leemhuis <regressions@leemhuis.info>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "Greenman, Gregory" <gregory.greenman@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Fri, 02 Dec 2022 18:42:13 +0100
-In-Reply-To: <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
-References: <14722778-dda0-cb9f-8647-892493d94a5c@leemhuis.info>
-         <2026016246ef719605c9932feeb56b105833593b.camel@intel.com>
-         <CAMfi-DRE-u5TNu2zAL-7A-ENHM9EiJeYJ38BL_FMdk6QmW7c9w@mail.gmail.com>
-         <9a03c244-adff-afaf-7385-d8e89cd3f338@leemhuis.info>
-         <02F8DDF1-EC0D-4EBD-88F5-7E000841C337@holtmann.org>
-         <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
-Organization: Freebox
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
-Mime-Version: 1.0
+        Fri, 2 Dec 2022 13:24:50 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D25CCEFB8
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 10:24:50 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C27D7B80A09
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 18:24:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE0A1C433D6;
+        Fri,  2 Dec 2022 18:24:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1670005487;
+        bh=daFI3VrqJ1nxDaMH4ZCDmVBTFhL9mnMuXznIP5kTJ/g=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=W2lyL0VGcY4Ji15/vMmd/Y43cIiQn05WSZ7EP3qeqeg2NXexle/dhSlwf6U10JiYJ
+         r54RZlxCKngzGoHJLVAPjNrRzPnd2yydl7azuL3KAJ16k9LnSXIQqLOR2Rz+apsuvy
+         PM/L/IO7zT/iN3RHy/3jYfEbyMTl+8SWNCBOWnao6wnAisy9iW0f6sBfncMRJtVJAI
+         Ya6Uh74NuUxyDKUlhsjTZN9kLblyXyy5cUGueUg0aG76FxiiE7xDsNKrKnNhTX3Vfo
+         KagHHr9enK6XH20wrhkvZIuahD7Yssw3ntlrELZGihYtmDFoheoHMt8tqulWwPxfYO
+         dkMy+BSmHEsjQ==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] wifi: ath10k: fix QCOM_SMEM dependency
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20221202103027.25974-1-kvalo@kernel.org>
+References: <20221202103027.25974-1-kvalo@kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <167000548228.19912.958966715275438470.kvalo@kernel.org>
+Date:   Fri,  2 Dec 2022 18:24:46 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Kalle Valo <kvalo@kernel.org> wrote:
 
-On Fri, 2022-12-02 at 11:18 -0600, Dave Chiluk wrote:
+> From: Kalle Valo <quic_kvalo@quicinc.com>
+> 
+> Nathan noticed that when HWSPINLOCK is disabled there's a Kconfig warning:
+> 
+>   WARNING: unmet direct dependencies detected for QCOM_SMEM
+>     Depends on [n]: (ARCH_QCOM [=y] || COMPILE_TEST [=n]) && HWSPINLOCK [=n]
+>     Selected by [m]:
+>     - ATH10K_SNOC [=m] && NETDEVICES [=y] && WLAN [=y] && WLAN_VENDOR_ATH [=y] && ATH10K [=m] && (ARCH_QCOM [=y] || COMPILE_TEST [=n])
+> 
+> The problem here is that QCOM_SMEM depends on HWSPINLOCK so we cannot select
+> QCOM_SMEM and instead we neeed to use 'depends on'.
+> 
+> Reported-by: Nathan Chancellor <nathan@kernel.org>
+> Link: https://lore.kernel.org/all/Y4YsyaIW+CPdHWv3@dev-arch.thelio-3990X/
+> Fixes: 4d79f6f34bbb ("wifi: ath10k: Store WLAN firmware version in SMEM image table")
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-Hello,
+Patch applied to wireless-next.git, thanks.
 
-> The 6ghz band becomes disabled as soon as I upgrade to the 5.16+
-> linux-stable kernels. So from a user perspective this really is a
-> case of a kernel upgrade breaking user-space.  This is what led me
-> down this rabbit hole here.
- 
-FWIW
-
-I have the same issue on a Lenovo T14 gen2 laptop with built-in ax210
-card, and sold as Wifi-6E compliant.
-
-The exact patch you mention causes the issue, so it seems my bios does
-not return the correct values either.
-
-I recompiled the kernel with all those cmd_allow_xxx bitmaps set to ~0
-and 6Ghz works fine.
+d03407183d97 wifi: ath10k: fix QCOM_SMEM dependency
 
 -- 
-Maxime
+https://patchwork.kernel.org/project/linux-wireless/patch/20221202103027.25974-1-kvalo@kernel.org/
 
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
