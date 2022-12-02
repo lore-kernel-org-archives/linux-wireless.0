@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82BB7C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 19:44:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 226EDC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 19:45:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234826AbiLBToV (ORCPT
+        id S234659AbiLBTpc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Dec 2022 14:44:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45646 "EHLO
+        Fri, 2 Dec 2022 14:45:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234635AbiLBToS (ORCPT
+        with ESMTP id S234827AbiLBTp1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2022 14:44:18 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4135FD49D2
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 11:44:18 -0800 (PST)
+        Fri, 2 Dec 2022 14:45:27 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21779F3F86
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 11:45:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D296C6221B
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 19:44:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1963AC433C1;
-        Fri,  2 Dec 2022 19:44:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A9A6762035
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 19:45:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAF3AC433D6;
+        Fri,  2 Dec 2022 19:45:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670010257;
-        bh=z1mnKRXZKTS8eedlEdEeB0UUSYlcIX8Zc5mLsq2A76s=;
+        s=k20201202; t=1670010326;
+        bh=+vuLtTA0VXJm+0+wd3FJqvgQoko7iiNr/V34abeWt+4=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=GGeePiwEb6FSiXMFlkn/kJLqF/Vfv8CHKxvJ3O3ted72FFvLhbQfUqIZ/UBHYgOc+
-         xKBGuNyhflMLtszMXddms2zy6pXVez/ZWFyKFmGvgVv+gwPFavvGf+NTddRzpMOLJm
-         3Kw3w+AMv8RtujfTtfCOeCe21FWX5FFj002117j3Wo3o8UREopwT8rLy0Np7UTWt5g
-         dr7oNlv1Hrc/kCSmBoYjBOZ/cMP9fsosfc1nBnVCDEQ0KJFhjvR6e/rUjLVXVJN4cs
-         cVyx3qG+W6hdS5/tEgE5tIkyR1jvQLeKJ/yrb1fahef4aXs99lQfPP85WT+brc5ZRk
-         zMedDfllnLiew==
+        b=AeMR5nZ1GsW19O1s90l2bgS//XMUCQfX7zk79BPSO7Hi13KQ4Nlm5asBzN9WmPmpG
+         Vpua0CmP3atR2KzhsvxOvOfjxWFn0qgspXhllfkAAE4ZucnEOkFo7L73aliLDLWOWW
+         sDHFxU0ZbDQdwQMvJexcSvQAXjt6OTY5LhcHSFRjGcxOvw1zwDye6+1BPf6bLU5uO7
+         G9ZoFNHGcBmhe/StsaFWPRlKnyZVyT8NW4G3ddL5X3zH3/Z/eCzSC6xbBcRvAL1yZg
+         1PgKqXkNSiMhZMNJiLY3BTF1qEGBk/Z28WO6H3ocoMeLlkuch0jIboAW0XmJ8FBNK7
+         /iGxe5RNgTkKA==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -46,8 +46,8 @@ Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
         Govindaraj Saminathan <quic_gsaminat@quicinc.com>,
         Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <167001025076.14016.10499660209048981214.kvalo@kernel.org>
-Date:   Fri,  2 Dec 2022 19:44:15 +0000 (UTC)
+Message-ID: <167001032276.14016.8815714083482597468.kvalo@kernel.org>
+Date:   Fri,  2 Dec 2022 19:45:24 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -75,7 +75,9 @@ Karthikeyan Kathirvel <quic_kathirve@quicinc.com> wrote:
 > Signed-off-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-I cleaned up the commit log.
+Patch applied to ath-next branch of ath.git, thanks.
+
+e44de90453bb wifi: ath11k: Fix race condition with struct htt_ppdu_stats_info
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/patch/20221124071104.22506-1-quic_kathirve@quicinc.com/
