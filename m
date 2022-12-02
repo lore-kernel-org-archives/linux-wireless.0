@@ -2,61 +2,31 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B276C4321E
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 17:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01AA9C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 17:47:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234131AbiLBRSt convert rfc822-to-8bit (ORCPT
+        id S234273AbiLBRrj convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Dec 2022 12:18:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57726 "EHLO
+        Fri, 2 Dec 2022 12:47:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234418AbiLBRSX (ORCPT
+        with ESMTP id S234336AbiLBRrW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2022 12:18:23 -0500
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 671565BD74;
-        Fri,  2 Dec 2022 09:18:21 -0800 (PST)
-Received: by mail-lj1-f176.google.com with SMTP id n1so6125694ljg.3;
-        Fri, 02 Dec 2022 09:18:21 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=9GdwYktE3SJ00+EzqM3Nkk4pKYtF1FV5Z9anlWL/Lco=;
-        b=iUeI5HpurfpaM6B9dh/gPa5uKtSvwyHHOoe/0o68Sl7L+IEvXV3hWoyCRUA0KJ/JBb
-         I/w5FH4gUd/eOAfeBXoxCQI1sQWBsCJTcP/Htdg7PfZm5mMY10rg+B5aoag0qav6x8lB
-         ZuaP2PO9QBCbsAgdSyI5h91EApR+A9q/CN7m/L6qTAwg/n1mRwkuvR4VJ5AHgMbXw3oL
-         CGa8FbjDsjPklTFac4ysAtT+4mzyvH6D/YcwoZhqU8AJvyQTYBJqqm2oZwGObp8DGYoC
-         mQMD0O/I/nsBOtSzulkO7lJfGYy/TIex5Yna/+e1e7j7Pk34RyKOFSUy0QhUSvxNpC64
-         zUbA==
-X-Gm-Message-State: ANoB5pmULHehCTCJ4I4Q7w9H47Oov5FeYHEFrh+qJNVWwFpXbEfDAH96
-        jCm8DpK8ps2LAx/HegUdihHgKoohv8JgxMT9bAE=
-X-Google-Smtp-Source: AA0mqf6Ixf5KE4K3HzvCHs9+2md4zU+Ibf4J/03MJ7mAN0kNY9SU3CPWK3WOuRJjsR8P5ZNeHZcPkA==
-X-Received: by 2002:a05:651c:c97:b0:277:13ef:53ab with SMTP id bz23-20020a05651c0c9700b0027713ef53abmr24476126ljb.328.1670001498587;
-        Fri, 02 Dec 2022 09:18:18 -0800 (PST)
-Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com. [209.85.167.54])
-        by smtp.gmail.com with ESMTPSA id g3-20020ac25383000000b00492dba3c85asm1074415lfh.220.2022.12.02.09.18.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Dec 2022 09:18:17 -0800 (PST)
-Received: by mail-lf1-f54.google.com with SMTP id g7so8381811lfv.5;
-        Fri, 02 Dec 2022 09:18:16 -0800 (PST)
-X-Received: by 2002:a19:f010:0:b0:4a2:2e81:9be5 with SMTP id
- p16-20020a19f010000000b004a22e819be5mr25394338lfc.486.1670001495941; Fri, 02
- Dec 2022 09:18:15 -0800 (PST)
-MIME-Version: 1.0
-References: <14722778-dda0-cb9f-8647-892493d94a5c@leemhuis.info>
- <2026016246ef719605c9932feeb56b105833593b.camel@intel.com>
- <CAMfi-DRE-u5TNu2zAL-7A-ENHM9EiJeYJ38BL_FMdk6QmW7c9w@mail.gmail.com>
- <9a03c244-adff-afaf-7385-d8e89cd3f338@leemhuis.info> <02F8DDF1-EC0D-4EBD-88F5-7E000841C337@holtmann.org>
-In-Reply-To: <02F8DDF1-EC0D-4EBD-88F5-7E000841C337@holtmann.org>
-From:   Dave Chiluk <chiluk@ubuntu.com>
-Date:   Fri, 2 Dec 2022 11:18:03 -0600
-X-Gmail-Original-Message-ID: <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
-Message-ID: <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
+        Fri, 2 Dec 2022 12:47:22 -0500
+Received: from mail.holtmann.org (coyote.holtmann.net [212.227.132.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C4D8E1195;
+        Fri,  2 Dec 2022 09:46:39 -0800 (PST)
+Received: from smtpclient.apple (p4fefca0f.dip0.t-ipconnect.de [79.239.202.15])
+        by mail.holtmann.org (Postfix) with ESMTPSA id 9FA51CED00;
+        Fri,  2 Dec 2022 18:46:38 +0100 (CET)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
 Subject: Re: [regression] Bug 216753 - 6e 6 ghz bands are disabled since 5.16
  on intel ax211
-To:     Marcel Holtmann <marcel@holtmann.org>
+From:   Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
+Date:   Fri, 2 Dec 2022 18:46:38 +0100
 Cc:     Thorsten Leemhuis <regressions@leemhuis.info>,
         "Coelho, Luciano" <luciano.coelho@intel.com>,
         "Greenman, Gregory" <gregory.greenman@intel.com>,
@@ -64,71 +34,79 @@ Cc:     Thorsten Leemhuis <regressions@leemhuis.info>,
         Johannes Berg <johannes@sipsolutions.net>,
         "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
+Message-Id: <457D8649-B855-43BB-B3AD-334E166FED31@holtmann.org>
+References: <14722778-dda0-cb9f-8647-892493d94a5c@leemhuis.info>
+ <2026016246ef719605c9932feeb56b105833593b.camel@intel.com>
+ <CAMfi-DRE-u5TNu2zAL-7A-ENHM9EiJeYJ38BL_FMdk6QmW7c9w@mail.gmail.com>
+ <9a03c244-adff-afaf-7385-d8e89cd3f338@leemhuis.info>
+ <02F8DDF1-EC0D-4EBD-88F5-7E000841C337@holtmann.org>
+ <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
+To:     Dave Chiluk <chiluk@ubuntu.com>
+X-Mailer: Apple Mail (2.3696.120.41.1.1)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Running
-$ iw reg set US
-or
-$ iw reg set DE
-do not result in the bands becoming enabled.  I should have included
-that in the initial bug report.   Additionally shouldn't the country
-code should be getting gathered through 802.11d from the broadcast APs
-within region?
+Hi Dave,
 
-Also crda is now disabled in both debian and Ubuntu.
-https://bugs.debian.org/1003903
-https://bugs.launchpad.net/ubuntu/jammy/+source/crda/+bug/1958918
+> Running
+> $ iw reg set US
+> or
+> $ iw reg set DE
+> do not result in the bands becoming enabled.  I should have included
+> that in the initial bug report.   Additionally shouldn't the country
+> code should be getting gathered through 802.11d from the broadcast APs
+> within region?
+> 
+> Also crda is now disabled in both debian and Ubuntu.
+> https://bugs.debian.org/1003903
+> https://bugs.launchpad.net/ubuntu/jammy/+source/crda/+bug/1958918
+> 
+> I'm specifically on 22.04, and the 6ghz band works on the 5.15 ubuntu
+> kernel and the 5.15.79 linux-stable kernel.
+> The 6ghz band becomes disabled as soon as I upgrade to the 5.16+
+> linux-stable kernels. So from a user perspective this really is a case
+> of a kernel upgrade breaking user-space.  This is what led me down
+> this rabbit hole here.
+> 
+> If there's something that needs to be done differently from a
+> userspace perspective I'm all ears, but this seems as if it's a hard
+> disable by the above mentioned commit.
 
-I'm specifically on 22.04, and the 6ghz band works on the 5.15 ubuntu
-kernel and the 5.15.79 linux-stable kernel.
-The 6ghz band becomes disabled as soon as I upgrade to the 5.16+
-linux-stable kernels. So from a user perspective this really is a case
-of a kernel upgrade breaking user-space.  This is what led me down
-this rabbit hole here.
+can you run iwd and set Country=DE (or US) in its main.conf. I think
+most distros have a 2.0 package of iwd available. With iwd we have
+implemented all the handling and re-scanning to make sure we actually
+get to use 6Ghz is available.
 
-If there's something that needs to be done differently from a
-userspace perspective I'm all ears, but this seems as if it's a hard
-disable by the above mentioned commit.
+Btw. you can run iwd from its source tree. No need to install it if
+You don’t want to mess up your system. Just make sure to disable
+wpa_supplicant so it doesn’t interfere.
 
-Thanks,
+I have this working on 6.0 kernel (not with ax211 hardware though) and
+it needed some help to get the regdom loaded correctly. I think the key
+part was to install crda on Fedora.
 
-On Fri, Dec 2, 2022 at 10:46 AM Marcel Holtmann <marcel@holtmann.org> wrote:
->
-> Hi Thorsten,
->
-> >> The other possibility is that this is actually a bios bug, as the DSM
-> >> is being read out of ACPI.  In which case that would be Dell's fault.
-> >
-> > Yes and no, but no:
-> >
-> > A kernel change exposed this problem, hence it doesn't matter if the
-> > BIOS is faulty: it's makes it a kernel regression and those are not
-> > allowed. For more on this see
-> > https://docs.kernel.org/admin-guide/reporting-issues.html
-> >
-> > That at least would be the normal approach. But the thing is: the legal
-> > implications when it comes to things like wifi make this somewhat
-> > trickier. :-/
->
-> so you need to set your country code first before any of the regulatory
-> enabled channels on 6Ghz get used. Otherwise you are stuck in the world
-> domain that doesn’t allow 6Ghz at all.
->
-> Two choices, either you run iwd and just set Country=DE where this than
-> would be persistent; see iwd.config(5). Or you do this via iw reg set DE
-> manually. wpa_supplicant has a set_country wrapper, but I don’t see it
-> being used anywhere, so I assume you have to do this manually when using
-> wpa_supplicant.
->
-> And of course tools like crda etc. need to be fully functional to load
-> the appropriate regulatory information. Since any 6Ghz operation is
-> blocked by default.
->
-> Regards
->
-> Marcel
->
+$ iw reg get
+global
+country DE: DFS-ETSI
+	(2400 - 2483 @ 40), (N/A, 20), (N/A)
+	(5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
+	(5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS, AUTO-BW
+	(5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
+	(5725 - 5875 @ 80), (N/A, 13), (N/A)
+	(5945 - 6425 @ 160), (N/A, 23), (N/A), NO-OUTDOOR
+	(57000 - 66000 @ 2160), (N/A, 40), (N/A)
+
+Unless you see it available in iw reg get, then it is also not available,
+but I remember that you also have per PHY regdom and other fun stuff. As
+I said, it was a breath to get it running with iwd once you set your
+country code in the config file.
+
+On a note, you could run iwmon and see what nl80211 related calls to
+regdom handling actually happen.
+
+Regards
+
+Marcel
+
