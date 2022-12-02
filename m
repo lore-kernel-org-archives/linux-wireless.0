@@ -2,31 +2,34 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01AA9C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 17:47:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC1A8C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 18:02:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234273AbiLBRrj convert rfc822-to-8bit (ORCPT
+        id S234286AbiLBSCU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Dec 2022 12:47:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37494 "EHLO
+        Fri, 2 Dec 2022 13:02:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234336AbiLBRrW (ORCPT
+        with ESMTP id S234457AbiLBSCB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2022 12:47:22 -0500
-Received: from mail.holtmann.org (coyote.holtmann.net [212.227.132.17])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C4D8E1195;
-        Fri,  2 Dec 2022 09:46:39 -0800 (PST)
-Received: from smtpclient.apple (p4fefca0f.dip0.t-ipconnect.de [79.239.202.15])
-        by mail.holtmann.org (Postfix) with ESMTPSA id 9FA51CED00;
-        Fri,  2 Dec 2022 18:46:38 +0100 (CET)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
-Subject: Re: [regression] Bug 216753 - 6e 6 ghz bands are disabled since 5.16
- on intel ax211
-From:   Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
-Date:   Fri, 2 Dec 2022 18:46:38 +0100
+        Fri, 2 Dec 2022 13:02:01 -0500
+X-Greylist: delayed 600 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 02 Dec 2022 10:01:58 PST
+Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A36CE51D8;
+        Fri,  2 Dec 2022 10:01:57 -0800 (PST)
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 91E7920055;
+        Fri,  2 Dec 2022 18:42:13 +0100 (CET)
+Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 816D920041;
+        Fri,  2 Dec 2022 18:42:13 +0100 (CET)
+Message-ID: <19ea39c87df3c54cbc487466f806bc157d0bf563.camel@freebox.fr>
+Subject: Re: [regression] Bug 216753 - 6e 6 ghz bands are disabled since
+ 5.16 on intel ax211
+From:   Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To:     Dave Chiluk <chiluk@ubuntu.com>,
+        Marcel Holtmann <marcel@holtmann.org>
 Cc:     Thorsten Leemhuis <regressions@leemhuis.info>,
         "Coelho, Luciano" <luciano.coelho@intel.com>,
         "Greenman, Gregory" <gregory.greenman@intel.com>,
@@ -34,79 +37,46 @@ Cc:     Thorsten Leemhuis <regressions@leemhuis.info>,
         Johannes Berg <johannes@sipsolutions.net>,
         "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Transfer-Encoding: 8BIT
-Message-Id: <457D8649-B855-43BB-B3AD-334E166FED31@holtmann.org>
+Date:   Fri, 02 Dec 2022 18:42:13 +0100
+In-Reply-To: <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
 References: <14722778-dda0-cb9f-8647-892493d94a5c@leemhuis.info>
- <2026016246ef719605c9932feeb56b105833593b.camel@intel.com>
- <CAMfi-DRE-u5TNu2zAL-7A-ENHM9EiJeYJ38BL_FMdk6QmW7c9w@mail.gmail.com>
- <9a03c244-adff-afaf-7385-d8e89cd3f338@leemhuis.info>
- <02F8DDF1-EC0D-4EBD-88F5-7E000841C337@holtmann.org>
- <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
-To:     Dave Chiluk <chiluk@ubuntu.com>
-X-Mailer: Apple Mail (2.3696.120.41.1.1)
+         <2026016246ef719605c9932feeb56b105833593b.camel@intel.com>
+         <CAMfi-DRE-u5TNu2zAL-7A-ENHM9EiJeYJ38BL_FMdk6QmW7c9w@mail.gmail.com>
+         <9a03c244-adff-afaf-7385-d8e89cd3f338@leemhuis.info>
+         <02F8DDF1-EC0D-4EBD-88F5-7E000841C337@holtmann.org>
+         <CAMfi-DQfuro4c_VUrFHBTv8sPnwuV8XhTV_W7qswGeCC2t-wzg@mail.gmail.com>
+Organization: Freebox
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
 
-> Running
-> $ iw reg set US
-> or
-> $ iw reg set DE
-> do not result in the bands becoming enabled.  I should have included
-> that in the initial bug report.   Additionally shouldn't the country
-> code should be getting gathered through 802.11d from the broadcast APs
-> within region?
-> 
-> Also crda is now disabled in both debian and Ubuntu.
-> https://bugs.debian.org/1003903
-> https://bugs.launchpad.net/ubuntu/jammy/+source/crda/+bug/1958918
-> 
-> I'm specifically on 22.04, and the 6ghz band works on the 5.15 ubuntu
-> kernel and the 5.15.79 linux-stable kernel.
+On Fri, 2022-12-02 at 11:18 -0600, Dave Chiluk wrote:
+
+Hello,
+
 > The 6ghz band becomes disabled as soon as I upgrade to the 5.16+
-> linux-stable kernels. So from a user perspective this really is a case
-> of a kernel upgrade breaking user-space.  This is what led me down
-> this rabbit hole here.
-> 
-> If there's something that needs to be done differently from a
-> userspace perspective I'm all ears, but this seems as if it's a hard
-> disable by the above mentioned commit.
+> linux-stable kernels. So from a user perspective this really is a
+> case of a kernel upgrade breaking user-space.  This is what led me
+> down this rabbit hole here.
+ 
+FWIW
 
-can you run iwd and set Country=DE (or US) in its main.conf. I think
-most distros have a 2.0 package of iwd available. With iwd we have
-implemented all the handling and re-scanning to make sure we actually
-get to use 6Ghz is available.
+I have the same issue on a Lenovo T14 gen2 laptop with built-in ax210
+card, and sold as Wifi-6E compliant.
 
-Btw. you can run iwd from its source tree. No need to install it if
-You don’t want to mess up your system. Just make sure to disable
-wpa_supplicant so it doesn’t interfere.
+The exact patch you mention causes the issue, so it seems my bios does
+not return the correct values either.
 
-I have this working on 6.0 kernel (not with ax211 hardware though) and
-it needed some help to get the regdom loaded correctly. I think the key
-part was to install crda on Fedora.
+I recompiled the kernel with all those cmd_allow_xxx bitmaps set to ~0
+and 6Ghz works fine.
 
-$ iw reg get
-global
-country DE: DFS-ETSI
-	(2400 - 2483 @ 40), (N/A, 20), (N/A)
-	(5150 - 5250 @ 80), (N/A, 23), (N/A), NO-OUTDOOR, AUTO-BW
-	(5250 - 5350 @ 80), (N/A, 20), (0 ms), NO-OUTDOOR, DFS, AUTO-BW
-	(5470 - 5725 @ 160), (N/A, 26), (0 ms), DFS
-	(5725 - 5875 @ 80), (N/A, 13), (N/A)
-	(5945 - 6425 @ 160), (N/A, 23), (N/A), NO-OUTDOOR
-	(57000 - 66000 @ 2160), (N/A, 40), (N/A)
+-- 
+Maxime
 
-Unless you see it available in iw reg get, then it is also not available,
-but I remember that you also have per PHY regdom and other fun stuff. As
-I said, it was a breath to get it running with iwd once you set your
-country code in the config file.
 
-On a note, you could run iwmon and see what nl80211 related calls to
-regdom handling actually happen.
-
-Regards
-
-Marcel
 
