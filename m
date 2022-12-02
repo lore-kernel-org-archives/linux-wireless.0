@@ -2,114 +2,85 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39BE3C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 08:13:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FFBBC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Dec 2022 10:30:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232772AbiLBIM5 (ORCPT
+        id S233160AbiLBKae (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Dec 2022 03:12:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55726 "EHLO
+        Fri, 2 Dec 2022 05:30:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232710AbiLBIMl (ORCPT
+        with ESMTP id S232402AbiLBKad (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2022 03:12:41 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C395815820
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 00:12:38 -0800 (PST)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1p119o-00059a-IC; Fri, 02 Dec 2022 09:12:28 +0100
-Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1p119m-001lGP-Ko; Fri, 02 Dec 2022 09:12:27 +0100
-Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1p119m-00BfDY-N6; Fri, 02 Dec 2022 09:12:26 +0100
-From:   Sascha Hauer <s.hauer@pengutronix.de>
-To:     linux-wireless@vger.kernel.org
-Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        kernel@pengutronix.de, Alexander Hochbaum <alex@appudo.com>,
-        Da Xue <da@libre.computer>, Po-Hao Huang <phhuang@realtek.com>,
-        Viktor Petrenko <g0000ga@gmail.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v5 00/11] RTW88: Add support for USB variants
-Date:   Fri,  2 Dec 2022 09:12:13 +0100
-Message-Id: <20221202081224.2779981-1-s.hauer@pengutronix.de>
+        Fri, 2 Dec 2022 05:30:33 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E2411EEE8
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 02:30:32 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 351D762245
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 10:30:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 090CDC433C1;
+        Fri,  2 Dec 2022 10:30:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669977031;
+        bh=CfgyzpxmSmzWgIJtr6+lsNS9AutZwLfpv3tLyzOCSis=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Q1EWW03Alvg9kwkss5etZrV15t6vHoC5FTGJwnmA4/jo0AsGEj8zHEGpDeBzTssY4
+         XOogjolP6t9IKglOEDyyAHVBQVdbnKzavtK0FCcW4NWgqpZT1pA6Sqkb3jcD8rU98x
+         l7mqiTKGo1AVY2pOm/PH0e3ri0BcQlRP/ZQOIttXqCrDD5D7NnGic1MJRMh8BfG08j
+         BJmxtPKstwTFCaUhhTLDHQAJaMG7yZTA4iqZyzcqHa6j1bGE6Sfue7MKYH6if9IqL3
+         6IhYYhMjmV8Xl3OcN45VriZnq0csHJmqDqIqlLOYBLMUc+Z85AcFOlHxVTg2SP33ui
+         IT42alFOLQy7g==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] wifi: ath10k: fix QCOM_SMEM dependency
+Date:   Fri,  2 Dec 2022 12:30:27 +0200
+Message-Id: <20221202103027.25974-1-kvalo@kernel.org>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This has only small changes to the last version. I dropped the endless
-loop check again and added the "Edimax EW-7611ULB V2" to the rtw8723du
-id table.
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-Sascha
+Nathan noticed that when HWSPINLOCK is disabled there's a Kconfig warning:
 
-Sascha Hauer (11):
-  wifi: rtw88: print firmware type in info message
-  wifi: rtw88: Call rtw_fw_beacon_filter_config() with rtwdev->mutex
-    held
-  wifi: rtw88: Drop rf_lock
-  wifi: rtw88: Drop h2c.lock
-  wifi: rtw88: Drop coex mutex
-  wifi: rtw88: iterate over vif/sta list non-atomically
-  wifi: rtw88: Add common USB chip support
-  wifi: rtw88: Add rtw8821cu chipset support
-  wifi: rtw88: Add rtw8822bu chipset support
-  wifi: rtw88: Add rtw8822cu chipset support
-  wifi: rtw88: Add rtw8723du chipset support
+  WARNING: unmet direct dependencies detected for QCOM_SMEM
+    Depends on [n]: (ARCH_QCOM [=y] || COMPILE_TEST [=n]) && HWSPINLOCK [=n]
+    Selected by [m]:
+    - ATH10K_SNOC [=m] && NETDEVICES [=y] && WLAN [=y] && WLAN_VENDOR_ATH [=y] && ATH10K [=m] && (ARCH_QCOM [=y] || COMPILE_TEST [=n])
 
- drivers/net/wireless/realtek/rtw88/Kconfig    |  47 +
- drivers/net/wireless/realtek/rtw88/Makefile   |  15 +
- drivers/net/wireless/realtek/rtw88/coex.c     |   3 +-
- drivers/net/wireless/realtek/rtw88/debug.c    |  15 +
- drivers/net/wireless/realtek/rtw88/fw.c       |  13 +-
- drivers/net/wireless/realtek/rtw88/hci.h      |   9 +-
- drivers/net/wireless/realtek/rtw88/mac.c      |   3 +
- drivers/net/wireless/realtek/rtw88/mac80211.c |   2 +-
- drivers/net/wireless/realtek/rtw88/main.c     |  12 +-
- drivers/net/wireless/realtek/rtw88/main.h     |  12 +-
- drivers/net/wireless/realtek/rtw88/phy.c      |   6 +-
- drivers/net/wireless/realtek/rtw88/ps.c       |   2 +-
- drivers/net/wireless/realtek/rtw88/reg.h      |   1 +
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  28 +
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  13 +-
- .../net/wireless/realtek/rtw88/rtw8723du.c    |  36 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  18 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.h |  21 +
- .../net/wireless/realtek/rtw88/rtw8821cu.c    |  50 +
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  19 +
- .../net/wireless/realtek/rtw88/rtw8822bu.c    |  90 ++
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  24 +
- .../net/wireless/realtek/rtw88/rtw8822cu.c    |  44 +
- drivers/net/wireless/realtek/rtw88/tx.h       |  31 +
- drivers/net/wireless/realtek/rtw88/usb.c      | 911 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/usb.h      | 107 ++
- drivers/net/wireless/realtek/rtw88/util.c     | 103 ++
- drivers/net/wireless/realtek/rtw88/util.h     |  12 +-
- 28 files changed, 1609 insertions(+), 38 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723du.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821cu.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822bu.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822cu.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/usb.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/usb.h
+The problem here is that QCOM_SMEM depends on HWSPINLOCK so we cannot select
+QCOM_SMEM and instead we neeed to use 'depends on'.
 
+Reported-by: Nathan Chancellor <nathan@kernel.org>
+Link: https://lore.kernel.org/all/Y4YsyaIW+CPdHWv3@dev-arch.thelio-3990X/
+Fixes: 4d79f6f34bbb ("wifi: ath10k: Store WLAN firmware version in SMEM image table")
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+---
+ drivers/net/wireless/ath/ath10k/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index e0a51dad8e42..e6ea884cafc1 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -44,7 +44,7 @@ config ATH10K_SNOC
+ 	tristate "Qualcomm ath10k SNOC support"
+ 	depends on ATH10K
+ 	depends on ARCH_QCOM || COMPILE_TEST
+-	select QCOM_SMEM
++	depends on QCOM_SMEM
+ 	select QCOM_SCM
+ 	select QCOM_QMI_HELPERS
+ 	help
+
+base-commit: e9ab0b2e680b069437f54bf4076310f636af05e6
 -- 
 2.30.2
 
