@@ -2,148 +2,109 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 034D7C4332F
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Dec 2022 07:38:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D096C4332F
+	for <linux-wireless@archiver.kernel.org>; Sat,  3 Dec 2022 12:09:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229665AbiLCHiM (ORCPT
+        id S229540AbiLCMJs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 3 Dec 2022 02:38:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47174 "EHLO
+        Sat, 3 Dec 2022 07:09:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229537AbiLCHiL (ORCPT
+        with ESMTP id S229463AbiLCMJr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Dec 2022 02:38:11 -0500
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7156F15815
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2022 23:38:03 -0800 (PST)
-X-UUID: 5e9ef8983a284c308246157671120e6d-20221203
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=G7PaMZS6/hyIDt9quG3UjPne+lkluujZYa1twV0Y0Dg=;
-        b=Qks8/xxEbvJhIVi8jsnTiO69tob6igurHc5hX31nJymR5hcrd0Ho289NZX/nf+R1gzZ+DtLTTLB76XSbWgbl8z9HlJTuOgxLKE8UhttKVLETo8WxkgRYD0Tb7E0lUCuOE1BAdfZCXlRuxWTZJfzK/3Lc/diAg0IIlewy6qYAgss=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:cea4f620-fe09-4d6d-92c4-35e80277b31e,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:-25
-X-CID-META: VersionHash:dcaaed0,CLOUDID:8641091f-5e1d-4ab5-ab8e-3e04efc02b30,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 5e9ef8983a284c308246157671120e6d-20221203
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1675924302; Sat, 03 Dec 2022 15:37:57 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Sat, 3 Dec 2022 15:37:56 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Sat, 3 Dec 2022 15:37:56 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] wifi: mt76: mt7915: split mcu chan_mib array up
-Date:   Sat, 3 Dec 2022 15:37:54 +0800
-Message-ID: <51130dcbc200962672540cb726dd9841c5ad7fe9.1670049959.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Sat, 3 Dec 2022 07:09:47 -0500
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 649A55F78
+        for <linux-wireless@vger.kernel.org>; Sat,  3 Dec 2022 04:09:46 -0800 (PST)
+Received: by mail-wm1-x333.google.com with SMTP id ay8-20020a05600c1e0800b003d0808d2826so3472438wmb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Dec 2022 04:09:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=wZNjLyfcR24Uofkeztq5VOnSbTFddNyUrBeNzR+noDA=;
+        b=E5cpp/T+D7FM/oH8la/aMSSMIwOL97wJPn2M5fR/K6vhOT38QJ31WppKIXc5csrS0b
+         OIz3jPQzCWXeXmCKTz6w4JjMFq+6uTKSDHbEeVfYYywcr220+I1/JLMmNZuzBS/5be81
+         kBMOKp/nRC+lYakV9W5c1FwZYbOtwQyaWYIf81ZwFyhZVhvbqFfVSd/W+ocEKr4m8IJ2
+         puuIbNX0sAM2/fSQp/9JlTnDOLkFJ5+4KuVh82L5hyiheITgSgpuyvFeRD5cnQSRJZgk
+         yF7o4WBZuSm745hu0T7l+XW7sf7wcth4/xM3DlQ0k+r6sZQ64ph6xBTyZuF7KdMBd6ok
+         aGzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wZNjLyfcR24Uofkeztq5VOnSbTFddNyUrBeNzR+noDA=;
+        b=1DcvveWdV4l8T9gxY0M6ikkzVNHrvgOdx5ThSQ+mHzNEG/KNI/cqatr3gg6spSs3l0
+         lZWpw96JjO2yaYKtdpjKXvIL5yTayveMGr/RWpa9PEqUYm4nH12B3Dyn0UnR1ClI+Ux/
+         kTAGeHOjZyL5sZnEEELipXlMrHOERAcQycCf0IvLc5XQuDLVpq3lMfXHkW13BN8NSaMk
+         KD+Akst5Np1uC+9HAH3OMmNnsf02xfwGrJ4PNXOyG/d4ut6hpdbD7CBZDjEA9onsVUK0
+         8aFP+MBhKs19AywHD3N5bNqmi5Wn9AzVh2LxDOwCe2nKjM/ismimbSh4irCB8Hgf0Fj0
+         OYmg==
+X-Gm-Message-State: ANoB5plqUaafS1o69SK1v0P5DuXm2ciRrmrJm7idCEevxg5q9xEYxl4Y
+        pwpy8RBjXKL5/H2eY9aJzF3mtefLy3Q=
+X-Google-Smtp-Source: AA0mqf6kYr6jkysyhWybj9YwusCGCHXYkXg5Qj7vAFabVqvGqz3iAQgKRojZ2hImB7lFX1iOwdZM+w==
+X-Received: by 2002:a05:600c:1f1b:b0:3c5:a867:e59f with SMTP id bd27-20020a05600c1f1b00b003c5a867e59fmr39465913wmb.146.1670069384757;
+        Sat, 03 Dec 2022 04:09:44 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id r15-20020adfdc8f000000b002425787c5easm835888wrj.96.2022.12.03.04.09.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 03 Dec 2022 04:09:44 -0800 (PST)
+Date:   Sat, 3 Dec 2022 15:09:38 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org
+Subject: [bug report] wifi: mt76: move mt76_rate_power from core to mt76x02
+ driver code
+Message-ID: <Y4s8gszsMUvPfIV9@kili>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The current flow confuses coverity check that leads to false reporting,
-so split the offs[] into two pieces according to chipset revision to
-silence coverity tool.
+Hello Felix Fietkau,
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 50 ++++++++++---------
- 1 file changed, 27 insertions(+), 23 deletions(-)
+The patch b376d96362d8: "wifi: mt76: move mt76_rate_power from core
+to mt76x02 driver code" from Sep 28, 2022, leads to the following
+Smatch static checker warning:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index b2652de082ba..ca315af3905b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -2974,38 +2974,42 @@ int mt7915_mcu_apply_tx_dpd(struct mt7915_phy *phy)
- 
- int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
- {
--	/* strict order */
--	static const u32 offs[] = {
--		MIB_NON_WIFI_TIME,
--		MIB_TX_TIME,
--		MIB_RX_TIME,
--		MIB_OBSS_AIRTIME,
--		MIB_TXOP_INIT_COUNT,
--		/* v2 */
--		MIB_NON_WIFI_TIME_V2,
--		MIB_TX_TIME_V2,
--		MIB_RX_TIME_V2,
--		MIB_OBSS_AIRTIME_V2
--	};
- 	struct mt76_channel_state *state = phy->mt76->chan_state;
- 	struct mt76_channel_state *state_ts = &phy->state_ts;
- 	struct mt7915_dev *dev = phy->dev;
- 	struct mt7915_mcu_mib *res, req[5];
- 	struct sk_buff *skb;
--	int i, ret, start = 0, ofs = 20;
-+	static const u32 *offs;
-+	int i, ret, len, offs_cc;
- 	u64 cc_tx;
- 
--	if (!is_mt7915(&dev->mt76)) {
--		start = 5;
--		ofs = 0;
-+	/* strict order */
-+	if (is_mt7915(&dev->mt76)) {
-+		static const u32 chip_offs[] = {
-+			MIB_NON_WIFI_TIME,
-+			MIB_TX_TIME,
-+			MIB_RX_TIME,
-+			MIB_OBSS_AIRTIME,
-+			MIB_TXOP_INIT_COUNT,
-+		};
-+		len = ARRAY_SIZE(chip_offs);
-+		offs = chip_offs;
-+		offs_cc = 20;
-+	} else {
-+		static const u32 chip_offs[] = {
-+			MIB_NON_WIFI_TIME_V2,
-+			MIB_TX_TIME_V2,
-+			MIB_RX_TIME_V2,
-+			MIB_OBSS_AIRTIME_V2
-+		};
-+		len = ARRAY_SIZE(chip_offs);
-+		offs = chip_offs;
-+		offs_cc = 0;
- 	}
- 
--	for (i = 0; i < 5; i++) {
-+	for (i = 0; i < len; i++) {
- 		req[i].band = cpu_to_le32(phy->mt76->band_idx);
--		req[i].offs = cpu_to_le32(offs[i + start]);
--
--		if (!is_mt7915(&dev->mt76) && i == 3)
--			break;
-+		req[i].offs = cpu_to_le32(offs[i]);
- 	}
- 
- 	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_CMD(GET_MIB_INFO),
-@@ -3013,7 +3017,7 @@ int mt7915_mcu_get_chan_mib_info(struct mt7915_phy *phy, bool chan_switch)
- 	if (ret)
- 		return ret;
- 
--	res = (struct mt7915_mcu_mib *)(skb->data + ofs);
-+	res = (struct mt7915_mcu_mib *)(skb->data + offs_cc);
- 
- #define __res_u64(s) le64_to_cpu(res[s].data)
- 	/* subtract Tx backoff time from Tx duration */
--- 
-2.18.0
+	drivers/net/wireless/mediatek/mt76/mt76x0/phy.c:645 mt76x0_phy_get_target_power()
+	error: buffer overflow 'dev->rate_power.vht' 2 <= 9
 
+drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+    635                 *target_power = cur_power + dev->rate_power.ofdm[index];
+    636                 *target_pa_power = mt76x0_phy_get_rf_pa_mode(dev, 0, index + 4);
+    637                 break;
+    638         }
+    639         case 4:
+    640                 /* vht rates */
+    641                 tx_rate = info[1] & 0xf;
+    642                 if (tx_rate > 9)
+                            ^^^^^^^^^^^
+
+    643                         return -EINVAL;
+    644 
+--> 645                 *target_power = cur_power + dev->rate_power.vht[tx_rate];
+
+In the original code this was a 10 element array but now it's only 2
+elements.
+
+    646                 *target_pa_power = mt76x0_phy_get_rf_pa_mode(dev, 1, tx_rate);
+    647                 break;
+    648         default:
+    649                 /* ht rates */
+    650                 tx_rate = info[1] & 0x7f;
+    651                 if (tx_rate > 9)
+    652                         return -EINVAL;
+    653 
+    654                 *target_power = cur_power + dev->rate_power.ht[tx_rate];
+    655                 *target_pa_power = mt76x0_phy_get_rf_pa_mode(dev, 1, tx_rate);
+    656                 break;
+    657         }
+    658 
+    659         return 0;
+    660 }
+
+regards,
+dan carpenter
