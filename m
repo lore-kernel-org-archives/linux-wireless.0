@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D29C47088
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Dec 2022 19:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A015AC4332F
+	for <linux-wireless@archiver.kernel.org>; Sat,  3 Dec 2022 21:33:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229722AbiLCT3e (ORCPT
+        id S229636AbiLCVdc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 3 Dec 2022 14:29:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36300 "EHLO
+        Sat, 3 Dec 2022 16:33:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229602AbiLCT3d (ORCPT
+        with ESMTP id S229502AbiLCVdb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Dec 2022 14:29:33 -0500
+        Sat, 3 Dec 2022 16:33:31 -0500
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECC761B7AC
-        for <linux-wireless@vger.kernel.org>; Sat,  3 Dec 2022 11:29:27 -0800 (PST)
-X-UUID: e73743a7582041c48d4d69d8cec8cdfd-20221204
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2910610051
+        for <linux-wireless@vger.kernel.org>; Sat,  3 Dec 2022 13:33:26 -0800 (PST)
+X-UUID: ec91222c7b6f40199193fa746be8c330-20221204
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Dkqrim5MMKDqnuM1SehC9SWivtj3cFY8upiktgS3Xn4=;
-        b=NFQ4vKKGDuE7txP71cniMD9muOZLj4N77SPUcqn/1Q7JXfboybcFltQ9GLYDEBFA26nYCoHI7suWr4JOSOKVGZ3zejzPj5qyIu9ZrwB1Jww3acbxlb/hv+EPMPP+vdYcB/UKTJWqhyLj2hYedv/QkisnzPSzarIWqqbw5BL7IPM=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=By8Hs0ILcc6/2bwMt7Sag9YleAroulw6Wer7whCyctY=;
+        b=hGhJ2Ue7VCRoeuApY7eXc0E2yqXQtqjLfmMNgIlb9XkgWqgoc/YKkGFToSYlxZ+XFI9hB2TuGaknL067uPcS3OI2ignrxcweAbSeHPXqlUzX1d/cKGADLApJbmdW81fN+AyJISjQE8BDZqr6BpCaiKOhjxCRXSoRjf7uFQKjTmE=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:d02710d4-4fc9-47c6-a6b9-62137077016f,IP:0,U
+X-CID-O-INFO: VERSION:1.1.14,REQID:31045957-f857-4920-9133-aa2e768653b2,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
         :release,TS:95
-X-CID-INFO: VERSION:1.1.14,REQID:d02710d4-4fc9-47c6-a6b9-62137077016f,IP:0,URL
+X-CID-INFO: VERSION:1.1.14,REQID:31045957-f857-4920-9133-aa2e768653b2,IP:0,URL
         :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
         :quarantine,TS:95
-X-CID-META: VersionHash:dcaaed0,CLOUDID:fd2a766c-41fe-47b6-8eb4-ec192dedaf7d,B
-        ulkID:221204032924B55VSVO2,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48,TC:n
+X-CID-META: VersionHash:dcaaed0,CLOUDID:c3620f1f-5e1d-4ab5-ab8e-3e04efc02b30,B
+        ulkID:221204053324BUU9RUCX,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48,TC:n
         il,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: e73743a7582041c48d4d69d8cec8cdfd-20221204
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+X-UUID: ec91222c7b6f40199193fa746be8c330-20221204
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1389504256; Sun, 04 Dec 2022 03:29:24 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Sun, 4 Dec 2022 03:29:23 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 477027229; Sun, 04 Dec 2022 05:33:22 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Sun, 4 Dec 2022 05:33:21 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Sun, 4 Dec 2022 03:29:23 +0800
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Sun, 4 Dec 2022 05:33:21 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
 CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
@@ -49,12 +49,12 @@ CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         Evelyn Tsai <evelyn.tsai@mediatek.com>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 3/3] wifi: mt76: mt7915: check the correctness of event data first
-Date:   Sun, 4 Dec 2022 03:29:19 +0800
-Message-ID: <57af9227896a13eadc062b52d238f179d4ebd049.1670095617.git.ryder.lee@mediatek.com>
+Subject: [PATCH v2 3/3] wifi: mt76: mt7915: check the correctness of event data
+Date:   Sun, 4 Dec 2022 05:33:19 +0800
+Message-ID: <4872e6fb6ca30b62a45d45a46c623a413acfaae2.1670102099.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <ba197e342d4d99d2e1be2e731ae989f57f5cf8a9.1670095617.git.ryder.lee@mediatek.com>
-References: <ba197e342d4d99d2e1be2e731ae989f57f5cf8a9.1670095617.git.ryder.lee@mediatek.com>
+In-Reply-To: <3fec8b8c618a78d1197f4060f89fa8bdd836b425.1670102099.git.ryder.lee@mediatek.com>
+References: <3fec8b8c618a78d1197f4060f89fa8bdd836b425.1670102099.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -71,7 +71,7 @@ Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
  1 file changed, 17 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index f9e4c3e80af0..7cb45cd55ada 100644
+index 86ec767266cc..37a3c1f082d9 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 @@ -232,8 +232,11 @@ mt7915_mcu_rx_csa_notify(struct mt7915_dev *dev, struct sk_buff *skb)
