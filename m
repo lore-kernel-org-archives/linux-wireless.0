@@ -2,272 +2,109 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D231C352A1
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Dec 2022 17:08:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C1E6C4332F
+	for <linux-wireless@archiver.kernel.org>; Sat,  3 Dec 2022 19:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229755AbiLCRIi (ORCPT
+        id S229714AbiLCT3e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 3 Dec 2022 12:08:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35476 "EHLO
+        Sat, 3 Dec 2022 14:29:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229722AbiLCRIh (ORCPT
+        with ESMTP id S229615AbiLCT3d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Dec 2022 12:08:37 -0500
-Received: from mail-qk1-x72d.google.com (mail-qk1-x72d.google.com [IPv6:2607:f8b0:4864:20::72d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BF8F15718
-        for <linux-wireless@vger.kernel.org>; Sat,  3 Dec 2022 09:08:35 -0800 (PST)
-Received: by mail-qk1-x72d.google.com with SMTP id g10so2058596qkl.6
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Dec 2022 09:08:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:subject:user-agent:references:in-reply-to:message-id
-         :date:cc:to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=B2SlwI4T7GWD0JP8fTo9jEzx8NubqOhcSQdGnBCWOFo=;
-        b=ItMGOTmb5wlSKkiQU+HZTwVAEQhgb8TGEXvGqIWW2vEuuiX9LAyfcIdkZr72uU5HJh
-         X59GcnUf8K+8Mqc5w6sx03QJRNxODif/UPJXY3evJdyc+qE42MFW82PsR9nEgrK4Ef8M
-         6KskuJ9Cl44GI5s/sj/4Qdz7YVS76awaCAzzk=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:subject:user-agent:references:in-reply-to:message-id
-         :date:cc:to:from:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=B2SlwI4T7GWD0JP8fTo9jEzx8NubqOhcSQdGnBCWOFo=;
-        b=IulfJb4rikPz7Xh4Rqcw5yVFXCr3j2Y7Vq+cKoS3CulP0GmJ+cH3r7uohmfmNxviNa
-         GYGh0VxwZ4HzHnUlVxnILz1Pcuy+dMxhvgNhEepOYITw8ZOdZ4oF+TQf/GIkdi6m2VKU
-         Q0BlfLuDf6k/vTeysi5SZDOQcWEkq6S8DlK+8pa9ZeV2I/SwkGBU3/cyYAZbo/GzZ83I
-         vTRw0/LyUMC+VuZRu9UeNTmKT71PSwuy/rJv37YipCuYnGE+vmsD4qIpSkAXyLazsLHP
-         j6l0JbGmPmE+8jnt1m/51l9euPuTH7Uas/zFSp/4y+hEwLIaRVOka5kpwM0rRoHs/AOB
-         k+9Q==
-X-Gm-Message-State: ANoB5pmlyTzdAGSHPwF28TGrluWEwWiJzHf+cKoZYD7ik2unsOvgoXiF
-        DPM4ouSrT3rIFklfsvFRW093ouVnMvxRNQM4xLU=
-X-Google-Smtp-Source: AA0mqf5zy9TZ3teipsGWYTYqsXZUhrlIf8+oQBzCMBih7u/G2H6Ubr5OlRjZiOPvpKV4q17I7bzeRA==
-X-Received: by 2002:a05:620a:205b:b0:6fa:1a09:138f with SMTP id d27-20020a05620a205b00b006fa1a09138fmr70323417qka.658.1670087314161;
-        Sat, 03 Dec 2022 09:08:34 -0800 (PST)
-Received: from [192.168.178.38] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id bz13-20020a05622a1e8d00b003999d25e772sm6421082qtb.71.2022.12.03.09.08.32
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 03 Dec 2022 09:08:33 -0800 (PST)
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-To:     Angus Ainslie <angus@akkea.ca>
-CC:     Andy Green <andy@warmcat.com>, Shengyu Qu <wiagn233@outlook.com>,
-        <franky.lin@broadcom.com>, <linux-wireless@vger.kernel.org>
-Date:   Sat, 03 Dec 2022 18:08:30 +0100
-Message-ID: <184d8f5fab0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <c33d42d546aa6755acc00b8b2e3a4b36@akkea.ca>
-References: <TY3P286MB26114DD461F50814980453E598029@TY3P286MB2611.JPNP286.PROD.OUTLOOK.COM>
- <08416710-655a-c87c-a599-3fe2563f7de4@warmcat.com>
- <18470a1e910.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <TY3P286MB26115A58795F264893CCB40198029@TY3P286MB2611.JPNP286.PROD.OUTLOOK.COM>
- <184720fc920.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <TY3P286MB26118BD94839F752CADCCF5298079@TY3P286MB2611.JPNP286.PROD.OUTLOOK.COM>
- <625f1d5d-e137-7ad7-96b9-92035e87df8b@broadcom.com>
- <638afa8e-a393-410c-3182-0d8e9b6da17d@warmcat.com>
- <7bf5884906b1abc30adebd3c915a3259@akkea.ca>
- <18486ca8490.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <a25fbe81f6f5615a2cfb7fda80d6db9b@akkea.ca>
- <3163e341-bcfc-a2c3-f0e1-5b62c9da2f43@broadcom.com>
- <852dcabac6bd70a7d55b5ea3f6b0df20@akkea.ca>
- <184d89525a0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <c33d42d546aa6755acc00b8b2e3a4b36@akkea.ca>
-User-Agent: AquaMail/1.40.1 (build: 104001224)
-Subject: Re: AP6275 / bcm43752 pcie on mainline brcmf
+        Sat, 3 Dec 2022 14:29:33 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27219192AA
+        for <linux-wireless@vger.kernel.org>; Sat,  3 Dec 2022 11:29:26 -0800 (PST)
+X-UUID: 2b4c80ad791e4f5f830550f84a5eaa8f-20221204
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Yt/yPwPuW3hAfnkfu7eCbMYq4Vk2iv+uMPNFflGJg0o=;
+        b=o02GCb2paAaA1PJKkfnZKcZpBMH2M4UizSGD9+v6S33oNM9nAbDea8lJaVHOjw4ZuYitfWrqhi31Ai3gNqz5ge5f5ByOJvvUJaxs0jmixcfPIcTBjkcKoDBtLsV7BjH4dGnoLzzVLdfZLnLT9Yp/430rmhd5+JQoFc9oeWIiQWA=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.14,REQID:6a975d0b-2a2f-4064-ac23-71518ba9dbbb,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:90
+X-CID-INFO: VERSION:1.1.14,REQID:6a975d0b-2a2f-4064-ac23-71518ba9dbbb,IP:0,URL
+        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
+        N:quarantine,TS:90
+X-CID-META: VersionHash:dcaaed0,CLOUDID:fc2a766c-41fe-47b6-8eb4-ec192dedaf7d,B
+        ulkID:221204032922R0NUAOW6,BulkQuantity:1,Recheck:0,SF:38|28|17|19|48,TC:n
+        il,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:43,QS:nil,BEC:nil,COL:0
+X-UUID: 2b4c80ad791e4f5f830550f84a5eaa8f-20221204
+Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 274066127; Sun, 04 Dec 2022 03:29:24 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Sun, 4 Dec 2022 03:29:23 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Sun, 4 Dec 2022 03:29:21 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
+CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/3] wifi: mt76: mt7915: check return value before accessing free_block_num
+Date:   Sun, 4 Dec 2022 03:29:18 +0800
+Message-ID: <dd5fe6b099de6c47fa00ecd4b698ba846d6963ce.1670095617.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <ba197e342d4d99d2e1be2e731ae989f57f5cf8a9.1670095617.git.ryder.lee@mediatek.com>
+References: <ba197e342d4d99d2e1be2e731ae989f57f5cf8a9.1670095617.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000023af1005eeef81b0"
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---00000000000023af1005eeef81b0
-Content-Type: text/plain; format=flowed; charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Check return value of mt7915_mcu_get_eeprom_free_block() first before
+accessing free_block_num.
 
-On December 3, 2022 4:37:19 PM Angus Ainslie <angus@akkea.ca> wrote:
+Fixes: bbc1d4154ec1 ("mt76: mt7915: add default calibrated data support")
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c | 7 +++++--
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c    | 4 ++--
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-> On 2022-12-03 07:22, Arend Van Spriel wrote:
->> On December 3, 2022 2:56:39 PM Angus Ainslie <angus@akkea.ca> wrote:
->>
->>> On 2022-11-29 11:48, Arend van Spriel wrote:
->>>> On 11/17/2022 7:36 PM, Angus Ainslie wrote:
->>>>> On 2022-11-17 10:12, Arend Van Spriel wrote:
->>>>>> On November 17, 2022 5:06:25 PM Angus Ainslie <angus@akkea.ca>
->>>>>> wrote:
->>>>>>
->>>>>>> On 2022-11-17 04:01, Andy Green wrote:
->>>>>>>> On 11/17/22 09:23, Arend van Spriel wrote:
->>>>>>>>> On 11/16/2022 1:25 PM, Shengyu Qu wrote:
->>>>>>>>>> Got a new version of downstream driver and firmware here:
->>>>>>>>>> https://gitlab.com/rk3588_linux/linux/external/rkwifibt/-/tree/linux-5.10-gen-rkr3.4
->>>>>>>>>
->>>>>>>>> Thanks for that. The firmware indeed seems to originate from
->>>>>>>>> Synaptics
->>>>>>>>> and this module can be found on wifi-alliance product finder:
->>>>>>>>>
->>>>>>>>> https://www.wi-fi.org/product-finder-results?sort_by=certified&sort_order=desc&keywords=ap6275
->>>>>>>>>
->>>>>>>>> We have no known contacts there and they do not seem to have
->>>>>>>>> much
->>>>>>>>> interest in open-source. In that gitlab repo I see they are
->>>>>>>>> providing
->>>>>>>>> bcmdhd driver and I assume they consider that sufficient.
->>>>>>>>>
->>>>>>>>> Will see what I can do. First have to think on how to approach
->>>>>>>>> this
->>>>>>>>> failure to get most out of a debug effort. I do not have the
->>>>>>>>> module
->>>>>>>>> over here so we would need to go back and forth. The fact that
->>>>>>>>> the
->>>>>>>>> issue is seen on both SDIO and PCIe is somewhat encouraging.
->>>>>>>>
->>>>>>>> Yes it seems that at some point with some firmware, SDIO has
->>>>>>>> worked
->>>>>>>> for, eg, Angus.  And, it should work well with bchdhd (but that
->>>>>>>> does
->>>>>>>> not seem to work for scan for me on v6.1-rc5 uplevel with the
->>>>>>>> firmware
->>>>>>>> load changed to use kernel apis; but the firmware has no timeout
->>>>>>>> on
->>>>>>>> bcmdhd). So it doesn't feel a million miles away.
->>>>>>>
->>>>>>> This is the firmware we have been using for SDIO. It was sent to
->>>>>>> us
->>>>>>> directly by SparkLAN so not sure how it compares to other
->>>>>>> variants.
->>>>>>>
->>>>>>> https://source.puri.sm/Librem5/firmware-brcm43752-nonfree/-/tree/master/firmware/brcm
->>>>>>
->>>>>> It is a tad bit older:
->>>>>>
->>>>>> $ strings brcmfmac43752-sdio.bin | grep FW-TAG
->>>>>> <FW-TAG>4362a2-roml/config_sdio_ampak_release_he
->>>>>> Version=18.35.387.23.7 (b328500@shgit) (wlan=r880297)
->>>>>> Date=2020-07-13T10:34:00Z FWID=01-f50fdff0
->>>>>
->>>>> Currently it's broken for hotspot mode but I haven't had the chance
->>>>> to
->>>>> see if that is FW or something further up the stack.
->>>>
->>>> Hi Angus,
->>>>
->>>> When you added support for this device in brcmfmac you marked it as a
->>>> Cypress device. Are you sure about that? AFAICT this device is coming
->>>> from Synaptics.
->>>
->>> Hi Arend,
->>>
->>> I assumed Cypress based on the fact that it most closely resembled the
->>> 4373 from the driver side.
->>
->> Right. Both are based on the same chip architecture that they brought
->> from Broadcom so the similarities are not surprising.
->>
->>> How would I figure out whether it's Cypress or Synaptics ?
->>>
->>> When I search the web for it I only find SparkLAN or "AMPAK
->>> technology"
->>> references.
->>
->> Earlier my colleague Franky found this link to WFA certificate:
->>
->> https://api.cert.wi-fi.org/api/certificate/download/public?variantId=103641
->>
->> WFA and FCC are usually good sources of info. Also the product pages
->> of the vendors are worth checking. I have them bookmarked out of
->> professional interest ;-)
->
-> I did find FCC references but those seemed ambiguous as well. Thanks for
-> the wi-fi.org link.
->
-> Should I send a patch renaming SDIO_DEVICE_ID_BROADCOM_CYPRESS_43752 ->
-> SDIO_DEVICE_ID_BROADCOM_43752 ?
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+index 59069fb86414..3ab07ad0c26e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+@@ -111,8 +111,11 @@ static int mt7915_eeprom_load(struct mt7915_dev *dev)
+ 		u8 free_block_num;
+ 		u32 block_num, i;
+ 
+-		mt7915_mcu_get_eeprom_free_block(dev, &free_block_num);
+-		/* efuse info not enough */
++		ret = mt7915_mcu_get_eeprom_free_block(dev, &free_block_num);
++		if (ret < 0)
++			return ret;
++
++		/* efuse info isn't enough */
+ 		if (free_block_num >= 29)
+ 			return -EINVAL;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index ca315af3905b..f9e4c3e80af0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -2792,8 +2792,8 @@ int mt7915_mcu_get_eeprom(struct mt7915_dev *dev, u32 offset)
+ 	int ret;
+ 	u8 *buf;
+ 
+-	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_QUERY(EFUSE_ACCESS), &req,
+-				sizeof(req), true, &skb);
++	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_EXT_QUERY(EFUSE_ACCESS),
++					&req, sizeof(req), true, &skb);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.18.0
 
-Feel free to do so. I have some cleanup work queued up so I can also take 
-care of it.
-
-Regards,
-Arend
-
-
-
---00000000000023af1005eeef81b0
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-2Gzj3QNJRLsZu1TLyOyBBIr/BE7UiY3RabgRzknBGAPmzhS+fmyM8OtM5BYBsFBrSUFtZZO2p/tf
-Nbc24J2zf2peoZ8MK+7WQqummYlOnz+FyDkA9EybeNMcS5C+xi/PAgMBAAGjggHdMIIB2TAOBgNV
-HQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRwOi8vc2VjdXJl
-Lmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcnQwQQYI
-KwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24y
-Y2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3
-dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRCMEAwPqA8oDqG
-OGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3Js
-MCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYDVR0lBAwwCgYIKwYB
-BQUHAwQwHwYDVR0jBBgwFoAUljPR5lgXWzR1ioFWZNW+SN6hj88wHQYDVR0OBBYEFIikAXd8CEtv
-ZbDflDRnf3tuStPuMA0GCSqGSIb3DQEBCwUAA4IBAQCdS5XCYx6k2GGZui9DlFsFm75khkqAU7rT
-zBX04sJU1+B1wtgmWTVIzW7ugdtDZ4gzaV0S9xRhpDErjJaltxPbCylb1DEsLj+AIvBR34caW6ZG
-sQk444t0HPb29HnWYj+OllIGMbdJWr0/P95ZrKk2bP24ub3ZP/8SyzrohfIba9WZKMq6g2nTLZE3
-BtkeSGJx/8dy0h8YmRn+adOrxKXHxhSL8BNn8wsmIZyYWe6fRcBtO3Ks2DOLyHCdkoFlN8x9VUQF
-N2ulEgqCbRKkx+qNirW86eF138lr1gRxzclu/38ko//MmkAYR/+hP3WnBll7zbpIt0jc9wyFkSqH
-p8a1MYICbTCCAmkCAQEwazBbMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1z
-YTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMgUGVyc29uYWxTaWduIDIgQ0EgMjAyMAIMTv1t
-bpIzNUky46LXMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCA9t5NaUq1HPuTPCi2K
-rDOfilAVnl1qwXF7EMSlzaYSQTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
-BTEPFw0yMjEyMDMxNzA4MzRaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
-AwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzAL
-BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAQHHyAIK15Fl9Q4gddpzy3AFOtMY75SF43lVA
-vZ5LUj65JzK77pXcaTtNynzej+aE1gLdCXG79i6+Cwg+8CNKGif7207f2RzRhnnofYj3ILILW+tE
-JIYVBy0+e6cAJO/z/RoupFHBXlRhn9y0iJ8H7q5hyW0hJQda2uKy5IH3DbcC15JFfFHkAyJ0KHSJ
-HwTRlbwsAQcSKzFanq/orP9YascSqPnp9UzR+Cn4nkdY4bp70THRy8iNFgWaLIgmrA/hCfO4cOKs
-fUwX+bCPvigZ4wYhtwGwfGJXEGdKWPiGl7v0LuGCMCCGIJNUz4Q3MTAqyuFtR8xGs+z2xe1jrv4v
-Wg==
---00000000000023af1005eeef81b0--
