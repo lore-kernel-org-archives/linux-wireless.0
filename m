@@ -2,68 +2,84 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCE55C47088
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Dec 2022 06:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3720C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Dec 2022 08:36:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231564AbiLEGRL (ORCPT
+        id S232131AbiLEIgf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Dec 2022 01:17:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46832 "EHLO
+        Mon, 5 Dec 2022 03:36:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231579AbiLEGRJ (ORCPT
+        with ESMTP id S231450AbiLEIgb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2022 01:17:09 -0500
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 871DD1147C;
-        Sun,  4 Dec 2022 22:17:06 -0800 (PST)
-Received: from dggpeml500024.china.huawei.com (unknown [172.30.72.55])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NQYG96Y8lz15N5G;
-        Mon,  5 Dec 2022 14:16:17 +0800 (CST)
-Received: from huawei.com (10.175.112.208) by dggpeml500024.china.huawei.com
- (7.185.36.10) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 5 Dec
- 2022 14:17:03 +0800
-From:   Yuan Can <yuancan@huawei.com>
-To:     <amitkarwar@gmail.com>, <siva8118@gmail.com>, <kvalo@kernel.org>,
-        <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
-        <pabeni@redhat.com>, <prameela.j04cs@gmail.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-CC:     <yuancan@huawei.com>
-Subject: [PATCH] rsi: Fix memory leak in rsi_coex_attach()
-Date:   Mon, 5 Dec 2022 06:14:41 +0000
-Message-ID: <20221205061441.114632-1-yuancan@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        Mon, 5 Dec 2022 03:36:31 -0500
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C261EF5A7
+        for <linux-wireless@vger.kernel.org>; Mon,  5 Dec 2022 00:36:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1670229389; x=1701765389;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=j9RzQRJLdjfPMMtpcrjEfnEY88LIyCJs4ahkyhyI5VE=;
+  b=LffGYndYF64Y72XMa4V8US4dcUduiGIMFJnzwsvzzndRNkZ72/qMtxjT
+   C+jlOkS06uSxqFdfYG84z13WiXXUn36TgEX9Y+ksAHJ9D/2ZcKXXj2PLt
+   ym+0XBSEvkYK69cbz7suhCGGErvN9dfcGylXeC5TgxgZRn432vVgK76R5
+   BePuQOhdkYhhqgyWlJtYR4j4k1DC0kNmeb7b/Ipu30uvcVwA1qQrGcTeH
+   FBg0qdC8Ye6wC9Y8buuqlYht77TPCHnXzQuL3HonK+ApBLmcuRn7Iyvow
+   Hn9ooorL48O/U+/JaFKBsnX5VECGPBvrSOrKSw3UZVG0EdqxKhyVnMK9O
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10551"; a="316323058"
+X-IronPort-AV: E=Sophos;i="5.96,218,1665471600"; 
+   d="scan'208";a="316323058"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2022 00:36:14 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10551"; a="752100344"
+X-IronPort-AV: E=Sophos;i="5.96,218,1665471600"; 
+   d="scan'208";a="752100344"
+Received: from eamit-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.251.181.23])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2022 00:36:12 -0800
+From:   gregory.greenman@intel.com
+To:     kvalo@kernel.org, johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 01/11] wifi: iwlwifi: nvm-parse: enable WiFi7 for Fm radio for now
+Date:   Mon,  5 Dec 2022 10:35:38 +0200
+Message-Id: <20221205102808.f73face1a674.Ic62ee5c61c0ef2a5b5e9f89782b7bc82b0caa408@changeid>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20221205083548.236620-1-gregory.greenman@intel.com>
+References: <20221205083548.236620-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.112.208]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpeml500024.china.huawei.com (7.185.36.10)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The coex_cb needs to be freed when rsi_create_kthread() failed in
-rsi_coex_attach().
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fixes: 2108df3c4b18 ("rsi: add coex support")
-Signed-off-by: Yuan Can <yuancan@huawei.com>
+We're still working out how the hardware/firmware (will) advertise
+support for this - for now, assume that Fm radio supports it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_coex.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
-index 8a3d86897ea8..45ac9371f262 100644
---- a/drivers/net/wireless/rsi/rsi_91x_coex.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
-@@ -160,6 +160,7 @@ int rsi_coex_attach(struct rsi_common *common)
- 			       rsi_coex_scheduler_thread,
- 			       "Coex-Tx-Thread")) {
- 		rsi_dbg(ERR_ZONE, "%s: Unable to init tx thrd\n", __func__);
-+		kfree(coex_cb);
- 		return -EINVAL;
- 	}
- 	return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 476b90f32626..aa8e08487b52 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -1964,6 +1964,8 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_BAND_5_2_ENABLED);
+ 	nvm->sku_cap_mimo_disabled =
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_MIMO_DISABLED);
++	if (CSR_HW_RFID_TYPE(trans->hw_rf_id) == IWL_CFG_RF_TYPE_FM)
++		nvm->sku_cap_11be_enable = true;
+ 
+ 	/* Initialize PHY sku data */
+ 	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
 -- 
-2.17.1
+2.35.3
 
