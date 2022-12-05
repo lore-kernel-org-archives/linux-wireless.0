@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD49C4321E
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Dec 2022 08:36:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B9D3C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Dec 2022 08:37:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232155AbiLEIgv (ORCPT
+        id S232157AbiLEIgx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Dec 2022 03:36:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57512 "EHLO
+        Mon, 5 Dec 2022 03:36:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232135AbiLEIgh (ORCPT
+        with ESMTP id S232064AbiLEIgj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2022 03:36:37 -0500
+        Mon, 5 Dec 2022 03:36:39 -0500
 Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DA2717068
-        for <linux-wireless@vger.kernel.org>; Mon,  5 Dec 2022 00:36:37 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF288167D5
+        for <linux-wireless@vger.kernel.org>; Mon,  5 Dec 2022 00:36:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1670229397; x=1701765397;
+  t=1670229398; x=1701765398;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=m0SOCPKcLlxZ70kZelXgEFGapdM6Bkyb50dZt6Wfkeo=;
-  b=ekFnU0Y2yIJ5SLGzbgN0pwR6yzdHDFw9D4LH/DnqfEUuOD2NB9btmHAj
-   Tt8UvOerCE0vulFpcR6quyjunQxaG4Cl00yweR/VV4XrSewN+TvJLS9Kq
-   j10N84buKsBM1/CdNQA9rhcFLjsI4mOJjBMLuwg2Ji5pLVQ0Mn8dke/BM
-   uiH2Gfsk3JZZ5LwVVT5PR3w/kZgV0t9U7hwBHEXBQjJIEvFMRMGaYp3o3
-   jw7AOh/HAj+5e7UVJIjJvKAN9tVt2aOqWxWHF2Rpsxldys68u3HLcWkts
-   i52RG3crCXRKogaIitIeWqggYRW/WnCplIoOXeeHPERZ8p2JFD29oyx7f
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10551"; a="316323173"
+  bh=9Bo8N8MZt9QrHd19vziMqepB+X0g7B3hFJ+RDzh5gVw=;
+  b=hwKNJKE8PtuaDhEQy6woALtDf3puOvMNcyx87KX0DfjkG58eKlaun1oQ
+   rtSuUDEvuuMPV1o7sF13XyvzC8NBAScN9bY6uXYawN+L3KeRwXOHMrZkc
+   WbdD1N0uO7OnpV1/9FJMozqXMhJDFjpRAqGCg82Y49S9PffywkEftHQfj
+   OqZ8hClDZoGYzOkzXrFAPr2vAn69ttMbCWjreykoSG3bidS4RzcyyEg1F
+   Pq7RT/MUq531o1fojjnZDl8s5+QFOEJOSqkjzwqmpXVTcdH9kLs+lHGye
+   nKABsybb2eiI/avXH9DtNKE7Fa1+QC3Uo7r83VqKKgjLgLcqdd2zMtLN6
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10551"; a="316323196"
 X-IronPort-AV: E=Sophos;i="5.96,218,1665471600"; 
-   d="scan'208";a="316323173"
+   d="scan'208";a="316323196"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2022 00:36:33 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10551"; a="752100436"
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2022 00:36:38 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10551"; a="752100450"
 X-IronPort-AV: E=Sophos;i="5.96,218,1665471600"; 
-   d="scan'208";a="752100436"
+   d="scan'208";a="752100450"
 Received: from eamit-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.251.181.23])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2022 00:36:31 -0800
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2022 00:36:36 -0800
 From:   gregory.greenman@intel.com
 To:     kvalo@kernel.org, johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Tom Rix <trix@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     linux-wireless@vger.kernel.org,
+        Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 08/11] wifi: iwlwifi: mei: clean up comments
-Date:   Mon,  5 Dec 2022 10:35:45 +0200
-Message-Id: <20221205102808.f1ff5aff270b.Ie4ba3f980a35455ed95e7c0cae854231fccc89e2@changeid>
+Subject: [PATCH 10/11] wifi: iwlwifi: dump: Update check for UMAC valid FW address
+Date:   Mon,  5 Dec 2022 10:35:47 +0200
+Message-Id: <20221205102808.e4b7fc650144.I46103baf400bb4ae69d82738e402a3903b17c030@changeid>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20221205083548.236620-1-gregory.greenman@intel.com>
 References: <20221205083548.236620-1-gregory.greenman@intel.com>
@@ -56,138 +56,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tom Rix <trix@redhat.com>
+From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 
-SPDX
-*.h use /* */ style comments
+The error dump base address check for UMAC
+need an update based on current hardware.
 
-Spelling replacements
-commnunication to communication
-adsress to address
-procotol to protocol
-addtional to additional
-kown to know
-negotiaion to negotiation
-mssage to message
-
-Signed-off-by: Tom Rix <trix@redhat.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mei/iwl-mei.h    |  6 +++---
- drivers/net/wireless/intel/iwlwifi/mei/main.c       |  2 +-
- drivers/net/wireless/intel/iwlwifi/mei/sap.h        | 10 +++++-----
- drivers/net/wireless/intel/iwlwifi/mei/trace-data.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/mei/trace.h      |  2 +-
- 5 files changed, 11 insertions(+), 11 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/iwl-mei.h b/drivers/net/wireless/intel/iwlwifi/mei/iwl-mei.h
-index 2b639eef595d..ae66192feefe 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/iwl-mei.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/iwl-mei.h
-@@ -1,4 +1,4 @@
--// SPDX-License-Identifier: GPL-2.0-only
-+/* SPDX-License-Identifier: GPL-2.0-only */
- /*
-  * Copyright (C) 2021 Intel Corporation
-  */
-@@ -13,7 +13,7 @@
- /**
-  * DOC: Introduction
-  *
-- * iwlmei is the kernel module that is in charge of the commnunication between
-+ * iwlmei is the kernel module that is in charge of the communication between
-  * the iwlwifi driver and the CSME firmware's WLAN driver. This communication
-  * uses the SAP protocol defined in another file.
-  * iwlwifi can request or release ownership on the WiFi device through iwlmei.
-@@ -348,7 +348,7 @@ void iwl_mei_set_rfkill_state(bool hw_rfkill, bool sw_rfkill);
- /**
-  * iwl_mei_set_nic_info() - set mac address
-  * @mac_address: mac address to set
-- * @nvm_address: NVM mac adsress to set
-+ * @nvm_address: NVM mac address to set
-  *
-  * This function must be called upon mac address change.
-  */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-index b89989b6399a..f9d11935ed97 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
-@@ -1963,7 +1963,7 @@ static int iwl_mei_probe(struct mei_cl_device *cldev,
- 	iwl_mei_dbgfs_register(mei);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 0a41cd0ab243..0c6b49fcb00d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -122,6 +122,9 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
+ 	u32 version = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
+ 					      UCODE_ALIVE_NTFY, 0);
+ 	u32 i;
++	struct iwl_trans *trans = mvm->trans;
++	enum iwl_device_family device_family = trans->trans_cfg->device_family;
++
  
- 	/*
--	 * We now have a Rx function in place, start the SAP procotol
-+	 * We now have a Rx function in place, start the SAP protocol
- 	 * we expect to get the SAP_ME_MSG_START_OK response later on.
- 	 */
- 	mutex_lock(&iwl_mei_mutex);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/sap.h b/drivers/net/wireless/intel/iwlwifi/mei/sap.h
-index 6c0ad4adbf32..3b56637b9697 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/sap.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/sap.h
-@@ -1,4 +1,4 @@
--// SPDX-License-Identifier: GPL-2.0-only
-+/* SPDX-License-Identifier: GPL-2.0-only */
- /*
-  * Copyright (C) 2021 - 2022 Intel Corporation
-  */
-@@ -25,7 +25,7 @@
-  *
-  * Since this messaging system cannot support high amounts of
-  * traffic, iwlwifi and the CSME firmware's WLAN driver have an
-- * addtional communication pipe to exchange information. The body
-+ * additional communication pipe to exchange information. The body
-  * of the message is copied to a shared area and the message that
-  * goes over the ME interface just signals the other side
-  * that a new message is waiting in the shared area. The ME
-@@ -55,7 +55,7 @@
- /**
-  * DOC: Host and driver state messages
-  *
-- * In order to let CSME konw about the host state and the host driver state,
-+ * In order to let CSME know about the host state and the host driver state,
-  * the host sends messages that let CSME know about the host's state.
-  * When the host driver is loaded, the host sends %SAP_MSG_NOTIF_WIFIDR_UP.
-  * When the host driver is unloaded, the host sends %SAP_MSG_NOTIF_WIFIDR_DOWN.
-@@ -76,7 +76,7 @@
-  * DOC: Ownership
-  *
-  * The device can be controlled either by the CSME firmware or
-- * by the host driver: iwlwifi. There is a negotiaion between
-+ * by the host driver: iwlwifi. There is a negotiation between
-  * those two entities to determine who controls (or owns) the
-  * device. Since the CSME can control the device even when the
-  * OS is not working or even missing, the CSME can request the
-@@ -136,7 +136,7 @@ enum iwl_sap_me_msg_id {
-  * struct iwl_sap_me_msg_hdr - the header of the ME message
-  * @type: the type of the message, see &enum iwl_sap_me_msg_id.
-  * @seq_num: a sequence number used for debug only.
-- * @len: the length of the mssage.
-+ * @len: the length of the message.
-  */
- struct iwl_sap_me_msg_hdr {
- 	__le32 type;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h b/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h
-index 83639c6225ca..15cb0bb4e9dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/trace-data.h
-@@ -1,4 +1,4 @@
--// SPDX-License-Identifier: GPL-2.0-only
-+/* SPDX-License-Identifier: GPL-2.0-only */
- /*
-  * Copyright(c) 2021        Intel Corporation
-  */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mei/trace.h b/drivers/net/wireless/intel/iwlwifi/mei/trace.h
-index 45ecb22ec84a..20ff836733bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mei/trace.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mei/trace.h
-@@ -1,4 +1,4 @@
--// SPDX-License-Identifier: GPL-2.0-only
-+/* SPDX-License-Identifier: GPL-2.0-only */
- /*
-  * Copyright(c) 2021        Intel Corporation
-  */
+ 	if (version == 6) {
+ 		struct iwl_alive_ntf_v6 *palive;
+@@ -230,7 +233,8 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
+ 
+ 	if (umac_error_table) {
+ 		if (umac_error_table >=
+-		    mvm->trans->cfg->min_umac_error_event_table) {
++		    mvm->trans->cfg->min_umac_error_event_table ||
++		    device_family >= IWL_DEVICE_FAMILY_BZ) {
+ 			iwl_fw_umac_set_alive_err_table(mvm->trans,
+ 							umac_error_table);
+ 		} else {
 -- 
 2.35.3
 
