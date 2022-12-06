@@ -2,153 +2,63 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A321C3A5A7
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Dec 2022 08:03:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F0E2C352A1
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Dec 2022 08:59:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232198AbiLFIDC (ORCPT
+        id S234462AbiLFI7t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Dec 2022 03:03:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40264 "EHLO
+        Tue, 6 Dec 2022 03:59:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232064AbiLFICy (ORCPT
+        with ESMTP id S234451AbiLFI7r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Dec 2022 03:02:54 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 785F4616F
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Dec 2022 00:02:52 -0800 (PST)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2B67eo3C008798;
-        Tue, 6 Dec 2022 08:02:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=O8eHqCqnTSmaRzEVQxzCPxxOsKkuN8jinLZDrJYVKGc=;
- b=hhqh6k+g6wgIsyQIxtiN4eI4WFxnU4jvediV9QsB+be2UnozZTCeKy2KU8BCV4QUj48j
- qoXD82TmLj1VoIdzn7qg1LMjmQDkJlT3/2qTccuLhK4TF1uORfP6zEbIxtwD6H7D781N
- 7ugOGWeF97sCRUQYfv8jJIilBeLJK8AhCfuyQrjqoiFC2n/QvSM3OM9UMsgJXcV4SCqy
- siJah3YxA0N5b60wxmziRd0E+GASADBdxn4l+JIq/8KTpkYlBKIcllGbTlsgvy3f0vt/
- hKHw/Z+H/gBkIg6urQhpGNEr0kh5GyU08WUF16W1VOMSyK1HuARYpfz2cvYKFxNjChiN BQ== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3m9trk0way-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 06 Dec 2022 08:02:48 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2B682mjZ011987
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 6 Dec 2022 08:02:48 GMT
-Received: from cnss-mw-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Tue, 6 Dec 2022 00:02:46 -0800
-From:   Veerendranath Jakkam <quic_vjakkam@quicinc.com>
-To:     <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] wifi: cfg80211: Extend cfg80211_new_sta() for MLD AP
-Date:   Tue, 6 Dec 2022 13:32:24 +0530
-Message-ID: <20221206080226.1702646-2-quic_vjakkam@quicinc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221206080226.1702646-1-quic_vjakkam@quicinc.com>
-References: <20221206080226.1702646-1-quic_vjakkam@quicinc.com>
+        Tue, 6 Dec 2022 03:59:47 -0500
+Received: from baptiste.telenet-ops.be (baptiste.telenet-ops.be [IPv6:2a02:1800:120:4::f00:13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ADD211A0C
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Dec 2022 00:59:45 -0800 (PST)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed20:947e:1fc0:ebbb:447b])
+        by baptiste.telenet-ops.be with bizsmtp
+        id swzj2800A4BwbnS01wzjWS; Tue, 06 Dec 2022 09:59:43 +0100
+Received: from geert (helo=localhost)
+        by ramsan.of.borg with local-esmtp (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1p2Tnj-002ibG-8h; Tue, 06 Dec 2022 09:59:43 +0100
+Date:   Tue, 6 Dec 2022 09:59:43 +0100 (CET)
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+X-X-Sender: geert@ramsan.of.borg
+To:     linux-kernel@vger.kernel.org
+cc:     linux-wireless@vger.kernel.org
+Subject: Re: Build regressions/improvements in v6.1-rc8
+In-Reply-To: <20221206085158.349363-1-geert@linux-m68k.org>
+Message-ID: <alpine.DEB.2.22.394.2212060957480.648028@ramsan.of.borg>
+References: <CAHk-=wgyXu4D44b8wQU9dpTYUft6WhZ0wr3nV1fziy6k0GwCCw@mail.gmail.com> <20221206085158.349363-1-geert@linux-m68k.org>
+User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: K5OU6r2NLvKHYJiOQ9WVG6vUxu9rBsAL
-X-Proofpoint-ORIG-GUID: K5OU6r2NLvKHYJiOQ9WVG6vUxu9rBsAL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-06_05,2022-12-05_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- spamscore=0 suspectscore=0 bulkscore=0 clxscore=1015 phishscore=0
- malwarescore=0 adultscore=0 impostorscore=0 lowpriorityscore=0 mlxscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2212060065
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for drivers to indicate STA connection when user space SME
-(e.g., hostapd) is not used for MLD AP. Add new parameters in struct
-station_info to provide (re)association link ID, station's MLD address
-and (Re)Association Response IEs in cfg80211_new_sta().
+On Tue, 6 Dec 2022, Geert Uytterhoeven wrote:
+> JFYI, when comparing v6.1-rc8[1] to v6.1-rc7[3], the summaries are:
+>  - build errors: +1/-3
 
-Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
----
- include/net/cfg80211.h | 22 ++++++++++++++++++++++
- net/wireless/nl80211.c | 16 ++++++++++++++++
- 2 files changed, 38 insertions(+)
+   + /kisskb/src/drivers/net/wireless/cisco/airo.c: error: 'status_rid.currentXmitRate' is used uninitialized [-Werror=uninitialized]:  => 6152:45
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 03d4f4deadae..15619e0f5f0b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1882,6 +1882,22 @@ struct cfg80211_tid_stats {
-  *	received packet with an FCS error matches the peer MAC address.
-  * @airtime_link_metric: mesh airtime link metric.
-  * @connected_to_as: true if mesh STA has a path to authentication server
-+ * @mlo_params_valid: Indicates @assoc_link_id and @mld_addr fields are valid.
-+ *	Drivers use this only in cfg80211_new_sta() calls when AP MLD's MLME/SME
-+ *	is offload to driver. Drivers won't fill this information in
-+ *	cfg80211_del_sta_sinfo(), get_station() and dump_station() callbacks.
-+ * @assoc_link_id: Indicates link ID of the AP MLD link on which the station
-+ *	association happened.
-+ * @mld_addr: MLD address if the station is an MLD. Otherwise, set to all zeros.
-+ * @assoc_resp_ies: IEs from (Re)Association Response.
-+ *	This is used only when in AP mode with drivers that do not use user
-+ *	space MLME/SME implementation. The information is provided only for the
-+ *	cfg80211_new_sta() calls to notify user space of the IEs. Drivers won't
-+ *	fill this information in cfg80211_del_sta_sinfo(), get_station() and
-+ *	dump_station() callbacks. Userspace needs this information to determine
-+ *	the other affiliated link stations information when MLD station is
-+ *	connected.
-+ * @assoc_resp_ies_len: Length of @assoc_resp_ies buffer in octets.
-  */
- struct station_info {
- 	u64 filled;
-@@ -1941,6 +1957,12 @@ struct station_info {
- 	u32 airtime_link_metric;
- 
- 	u8 connected_to_as;
-+
-+	bool mlo_params_valid;
-+	u8 assoc_link_id;
-+	u8 mld_addr[ETH_ALEN] __aligned(2);
-+	const u8 *assoc_resp_ies;
-+	size_t assoc_resp_ies_len;
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 33a82ecab9d5..5a20bf8b85d6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6527,6 +6527,22 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		    sinfo->assoc_req_ies))
- 		goto nla_put_failure;
- 
-+	if (sinfo->assoc_resp_ies_len &&
-+	    nla_put(msg, NL80211_ATTR_RESP_IE, sinfo->assoc_resp_ies_len,
-+		    sinfo->assoc_resp_ies))
-+		goto nla_put_failure;
-+
-+	if (sinfo->mlo_params_valid) {
-+		if (nla_put_u8(msg, NL80211_ATTR_MLO_LINK_ID,
-+			       sinfo->assoc_link_id))
-+			goto nla_put_failure;
-+
-+		if (!is_zero_ether_addr(sinfo->mld_addr) &&
-+		    nla_put(msg, NL80211_ATTR_MLD_ADDR, ETH_ALEN,
-+			    sinfo->mld_addr))
-+			goto nla_put_failure;
-+	}
-+
- 	cfg80211_sinfo_release_content(sinfo);
- 	genlmsg_end(msg, hdr);
- 	return 0;
--- 
-2.25.1
+sh4-gcc11/sh-allmodconfig
 
+Looks like a real issue, albeit not new (but never seen before?).
+
+> [1] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/76dcd734eca23168cb008912c0f69ff408905235/ (all 152 configs)
+> [3] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/b7b275e60bcd5f89771e865a8239325f86d9927d/ (all 152 configs)
+
+Gr{oetje,eeting}s,
+
+ 						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+ 							    -- Linus Torvalds
