@@ -2,33 +2,33 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7062CC4708C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AEA9C352A1
 	for <linux-wireless@archiver.kernel.org>; Tue,  6 Dec 2022 10:41:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232184AbiLFKkg (ORCPT
+        id S232511AbiLFKkh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Dec 2022 05:40:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39026 "EHLO
+        Tue, 6 Dec 2022 05:40:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231848AbiLFKkJ (ORCPT
+        with ESMTP id S231474AbiLFKkJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 6 Dec 2022 05:40:09 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF6C91DF0A
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 076D51A3B2
         for <linux-wireless@vger.kernel.org>; Tue,  6 Dec 2022 02:40:08 -0800 (PST)
-Received: from dggpemm500007.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NRGzK5ZlfzqST0;
-        Tue,  6 Dec 2022 18:35:57 +0800 (CST)
+Received: from dggpemm500007.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NRH3B4DY6zFqpy;
+        Tue,  6 Dec 2022 18:39:18 +0800 (CST)
 Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
  (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 6 Dec
- 2022 18:40:06 +0800
+ 2022 18:40:05 +0800
 From:   Yang Yingliang <yangyingliang@huawei.com>
 To:     <pkshih@realtek.com>, <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>, <yangyingliang@huawei.com>
-Subject: [PATCH 3/3] rtlwifi: rtl8723be: don't call kfree_skb() under spin_lock_irqsave()
-Date:   Tue, 6 Dec 2022 18:37:40 +0800
-Message-ID: <20221206103740.1963605-4-yangyingliang@huawei.com>
+Subject: [PATCH 1/3] rtlwifi: rtl8821ae: don't call kfree_skb() under spin_lock_irqsave()
+Date:   Tue, 6 Dec 2022 18:37:38 +0800
+Message-ID: <20221206103740.1963605-2-yangyingliang@huawei.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221206103740.1963605-1-yangyingliang@huawei.com>
 References: <20221206103740.1963605-1-yangyingliang@huawei.com>
@@ -51,14 +51,14 @@ once.
 Fixes: 5c99f04fec93 ("rtlwifi: rtl8723be: Update driver to match Realtek release of 06/28/14")
 Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 189cc6437600..3d105960a835 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -30,8 +30,10 @@ static void _rtl8723be_return_beacon_queue_skb(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 7e0f62d59fe1..a7e3250957dc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -26,8 +26,10 @@ static void _rtl8821ae_return_beacon_queue_skb(struct ieee80211_hw *hw)
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
  	struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[BEACON_QUEUE];
@@ -69,10 +69,11 @@ index 189cc6437600..3d105960a835 100644
  	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
  	while (skb_queue_len(&ring->queue)) {
  		struct rtl_tx_desc *entry = &ring->desc[ring->idx];
-@@ -42,9 +44,12 @@ static void _rtl8723be_return_beacon_queue_skb(struct ieee80211_hw *hw)
+@@ -37,10 +39,12 @@ static void _rtl8821ae_return_beacon_queue_skb(struct ieee80211_hw *hw)
+ 				 rtlpriv->cfg->ops->get_desc(hw, (u8 *)entry,
  						true, HW_DESC_TXBUFF_ADDR),
  				 skb->len, DMA_TO_DEVICE);
- 		kfree_skb(skb);
+-		kfree_skb(skb);
 +		__skb_queue_tail(&free_list, skb);
  		ring->idx = (ring->idx + 1) % ring->entries;
  	}
@@ -81,7 +82,7 @@ index 189cc6437600..3d105960a835 100644
 +	__skb_queue_purge(&free_list);
  }
  
- static void _rtl8723be_set_bcn_ctrl_reg(struct ieee80211_hw *hw,
+ static void _rtl8821ae_set_bcn_ctrl_reg(struct ieee80211_hw *hw,
 -- 
 2.25.1
 
