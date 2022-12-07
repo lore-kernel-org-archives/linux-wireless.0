@@ -2,73 +2,72 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6344C352A1
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Dec 2022 14:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA9CDC352A1
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Dec 2022 15:03:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229863AbiLGOyn (ORCPT
+        id S230144AbiLGPDU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Dec 2022 09:54:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42876 "EHLO
+        Wed, 7 Dec 2022 10:03:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbiLGOym (ORCPT
+        with ESMTP id S230164AbiLGPCw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2022 09:54:42 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B30454E6AB;
-        Wed,  7 Dec 2022 06:54:40 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 556FEB81E6F;
-        Wed,  7 Dec 2022 14:54:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35015C433D6;
-        Wed,  7 Dec 2022 14:54:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670424878;
-        bh=mtEarKHCsxRpEvBu4Wfxw0tEXAYjUKCgGEcgBv28W94=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=dfHya90T74mUPQAbcMZ9qyxCYFJM3wGN+GhKK5MKDc1SUkfXtxhDI+SedftI/pnK5
-         RsTRZUkNtAieJ+rkV/W6MzyWPOtgY26kdjl6PLNGMNf/sPOmQkOAz3VfOr/ejxseMj
-         5O7Pd2FQFvY+u2Y07dq8rbrm4Jb67Qz9914h8qXT9MDc0KltsI4kvPM/oa+Qo/vBl+
-         HoJTJrA6A5mmA2YSPTSMMcFXTQV3czwQmzECvo2oR5MaxzpqZQf9P2A0NBhngMtmTL
-         FmzoKQ6lGAHNKZWWOFNy6Qb0TRFLdehps2YPlKlRUusJccakPdMMAgVhNXiLqw2R4k
-         3I0uWDzXQnhaw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Build regressions/improvements in v6.1-rc8
-References: <CAHk-=wgyXu4D44b8wQU9dpTYUft6WhZ0wr3nV1fziy6k0GwCCw@mail.gmail.com>
-        <20221206085158.349363-1-geert@linux-m68k.org>
-        <alpine.DEB.2.22.394.2212060957480.648028@ramsan.of.borg>
-Date:   Wed, 07 Dec 2022 16:54:31 +0200
-In-Reply-To: <alpine.DEB.2.22.394.2212060957480.648028@ramsan.of.borg> (Geert
-        Uytterhoeven's message of "Tue, 6 Dec 2022 09:59:43 +0100 (CET)")
-Message-ID: <87cz8vmfh4.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Wed, 7 Dec 2022 10:02:52 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16054264D
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2022 07:02:35 -0800 (PST)
+Received: from dggpemm500007.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NS0qW2KmRzmWPN;
+        Wed,  7 Dec 2022 23:01:43 +0800 (CST)
+Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
+ (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 7 Dec
+ 2022 23:02:33 +0800
+From:   Yang Yingliang <yangyingliang@huawei.com>
+To:     <kvalo@kernel.org>, <libertas-dev@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>
+CC:     <yangyingliang@huawei.com>
+Subject: [PATCH v2 1/4] libertas_tf: don't call kfree_skb() under spin_lock_irqsave()
+Date:   Wed, 7 Dec 2022 23:00:05 +0800
+Message-ID: <20221207150008.111743-2-yangyingliang@huawei.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221207150008.111743-1-yangyingliang@huawei.com>
+References: <20221207150008.111743-1-yangyingliang@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpemm500007.china.huawei.com (7.185.36.183)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
+It is not allowed to call kfree_skb() from hardware interrupt
+context or with interrupts being disabled. So replace kfree_skb()
+with dev_kfree_skb_irq() under spin_lock_irqsave(). Compile
+tested only.
 
-> On Tue, 6 Dec 2022, Geert Uytterhoeven wrote:
->> JFYI, when comparing v6.1-rc8[1] to v6.1-rc7[3], the summaries are:
->>  - build errors: +1/-3
->
->   + /kisskb/src/drivers/net/wireless/cisco/airo.c: error: 'status_rid.currentXmitRate' is used uninitialized [-Werror=uninitialized]:  => 6152:45
->
-> sh4-gcc11/sh-allmodconfig
->
-> Looks like a real issue, albeit not new (but never seen before?).
+Fixes: fc75122fabb5 ("libertas_tf: use irqsave() in USB's complete callback")
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+---
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Weird, I can't find any recent change which would affect this function.
-So you have seen this warning only on v6.1-rc8?
-
-Anyway, could someone send a patch to fix this?
-
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index 75b5319d033f..1750f5e93de2 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -613,7 +613,7 @@ static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	memcpy(priv->cmd_resp_buff, recvbuff + MESSAGE_HEADER_LEN,
+ 	       recvlength - MESSAGE_HEADER_LEN);
+-	kfree_skb(skb);
++	dev_kfree_skb_irq(skb);
+ 	lbtf_cmd_response_rx(priv);
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ }
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.25.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
