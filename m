@@ -2,35 +2,37 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA88EC4708E
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Dec 2022 15:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA33C352A1
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Dec 2022 15:03:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229723AbiLGPDY (ORCPT
+        id S230196AbiLGPD0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Dec 2022 10:03:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50208 "EHLO
+        Wed, 7 Dec 2022 10:03:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbiLGPCx (ORCPT
+        with ESMTP id S229650AbiLGPCy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2022 10:02:53 -0500
+        Wed, 7 Dec 2022 10:02:54 -0500
 Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34E5C3890
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2022 07:02:37 -0800 (PST)
-Received: from dggpemm500007.china.huawei.com (unknown [172.30.72.55])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NS0mQ05qxzJp6P;
-        Wed,  7 Dec 2022 22:59:02 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47197BF63
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2022 07:02:39 -0800 (PST)
+Received: from dggpemm500007.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NS0mR0YvVzJp5L;
+        Wed,  7 Dec 2022 22:59:03 +0800 (CST)
 Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
  (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 7 Dec
- 2022 23:02:32 +0800
+ 2022 23:02:33 +0800
 From:   Yang Yingliang <yangyingliang@huawei.com>
 To:     <kvalo@kernel.org>, <libertas-dev@lists.infradead.org>,
         <linux-wireless@vger.kernel.org>
 CC:     <yangyingliang@huawei.com>
-Subject: [PATCH v2 0/4] libertas/libertas_tf: don't call kfree_skb() under spin_lock_irqsave()
-Date:   Wed, 7 Dec 2022 23:00:04 +0800
-Message-ID: <20221207150008.111743-1-yangyingliang@huawei.com>
+Subject: [PATCH v2 3/4] libertas/main: don't call kfree_skb() under spin_lock_irqsave()
+Date:   Wed, 7 Dec 2022 23:00:07 +0800
+Message-ID: <20221207150008.111743-4-yangyingliang@huawei.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221207150008.111743-1-yangyingliang@huawei.com>
+References: <20221207150008.111743-1-yangyingliang@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -43,25 +45,29 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 It is not allowed to call kfree_skb() from hardware interrupt
-context or with interrupts being disabled. As the comment of
-dev_kfree_skb_irq() says, kfree_skb() can be replaced with
-dev_kfree_skb_irq().
+context or with interrupts being disabled. So replace kfree_skb()
+with dev_kfree_skb_irq() under spin_lock_irqsave(). Compile
+tested only.
 
-v1 -> v2:
-  Update commit messages.
+Fixes: d2e7b3425c47 ("libertas: disable functionality when interface is down")
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+---
+ drivers/net/wireless/marvell/libertas/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yang Yingliang (4):
-  libertas_tf: don't call kfree_skb() under spin_lock_irqsave()
-  libertas/if_usb: don't call kfree_skb() under spin_lock_irqsave()
-  libertas/main: don't call kfree_skb() under spin_lock_irqsave()
-  libertas/cmdresp: don't call kfree_skb() under spin_lock_irqsave()
-
- drivers/net/wireless/marvell/libertas/cmdresp.c   | 2 +-
- drivers/net/wireless/marvell/libertas/if_usb.c    | 2 +-
- drivers/net/wireless/marvell/libertas/main.c      | 2 +-
- drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/marvell/libertas/main.c
+index 8f5220cee112..f42d28d99763 100644
+--- a/drivers/net/wireless/marvell/libertas/main.c
++++ b/drivers/net/wireless/marvell/libertas/main.c
+@@ -216,7 +216,7 @@ int lbs_stop_iface(struct lbs_private *priv)
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	priv->iface_running = false;
+-	kfree_skb(priv->currenttxskb);
++	dev_kfree_skb_irq(priv->currenttxskb);
+ 	priv->currenttxskb = NULL;
+ 	priv->tx_pending_len = 0;
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
 -- 
 2.25.1
 
