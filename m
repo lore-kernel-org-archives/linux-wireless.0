@@ -2,42 +2,39 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA33C352A1
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Dec 2022 15:03:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B08C352A1
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Dec 2022 15:07:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230196AbiLGPD0 (ORCPT
+        id S229760AbiLGPHM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Dec 2022 10:03:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50222 "EHLO
+        Wed, 7 Dec 2022 10:07:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229650AbiLGPCy (ORCPT
+        with ESMTP id S229652AbiLGPHL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2022 10:02:54 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47197BF63
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2022 07:02:39 -0800 (PST)
-Received: from dggpemm500007.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NS0mR0YvVzJp5L;
-        Wed,  7 Dec 2022 22:59:03 +0800 (CST)
+        Wed, 7 Dec 2022 10:07:11 -0500
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A73E1BCB
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2022 07:07:10 -0800 (PST)
+Received: from dggpemm500007.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4NS0wq4ccMz15N4c;
+        Wed,  7 Dec 2022 23:06:19 +0800 (CST)
 Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
  (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 7 Dec
- 2022 23:02:33 +0800
+ 2022 23:07:08 +0800
 From:   Yang Yingliang <yangyingliang@huawei.com>
-To:     <kvalo@kernel.org>, <libertas-dev@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>
+To:     <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>
 CC:     <yangyingliang@huawei.com>
-Subject: [PATCH v2 3/4] libertas/main: don't call kfree_skb() under spin_lock_irqsave()
-Date:   Wed, 7 Dec 2022 23:00:07 +0800
-Message-ID: <20221207150008.111743-4-yangyingliang@huawei.com>
+Subject: [PATCH v2] wl3501_cs: don't call kfree_skb() under spin_lock_irqsave()
+Date:   Wed, 7 Dec 2022 23:04:53 +0800
+Message-ID: <20221207150453.114742-1-yangyingliang@huawei.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221207150008.111743-1-yangyingliang@huawei.com>
-References: <20221207150008.111743-1-yangyingliang@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  dggpemm500007.china.huawei.com (7.185.36.183)
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -49,25 +46,28 @@ context or with interrupts being disabled. So replace kfree_skb()
 with dev_kfree_skb_irq() under spin_lock_irqsave(). Compile
 tested only.
 
-Fixes: d2e7b3425c47 ("libertas: disable functionality when interface is down")
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 ---
- drivers/net/wireless/marvell/libertas/main.c | 2 +-
+v1 -> v2:
+  Update commit message and add a fix tag.
+---
+ drivers/net/wireless/wl3501_cs.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/marvell/libertas/main.c
-index 8f5220cee112..f42d28d99763 100644
---- a/drivers/net/wireless/marvell/libertas/main.c
-+++ b/drivers/net/wireless/marvell/libertas/main.c
-@@ -216,7 +216,7 @@ int lbs_stop_iface(struct lbs_private *priv)
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index 1b532e00a56f..7fb2f9513476 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -1328,7 +1328,7 @@ static netdev_tx_t wl3501_hard_start_xmit(struct sk_buff *skb,
+ 	} else {
+ 		++dev->stats.tx_packets;
+ 		dev->stats.tx_bytes += skb->len;
+-		kfree_skb(skb);
++		dev_kfree_skb_irq(skb);
  
- 	spin_lock_irqsave(&priv->driver_lock, flags);
- 	priv->iface_running = false;
--	kfree_skb(priv->currenttxskb);
-+	dev_kfree_skb_irq(priv->currenttxskb);
- 	priv->currenttxskb = NULL;
- 	priv->tx_pending_len = 0;
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 		if (this->tx_buffer_cnt < 2)
+ 			netif_stop_queue(dev);
 -- 
 2.25.1
 
