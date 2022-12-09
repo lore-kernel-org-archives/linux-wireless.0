@@ -2,172 +2,79 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B26A8C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Dec 2022 03:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B96C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Dec 2022 03:47:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229754AbiLIDSW convert rfc822-to-8bit (ORCPT
+        id S230036AbiLIDrF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Dec 2022 22:18:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49242 "EHLO
+        Thu, 8 Dec 2022 22:47:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229542AbiLIDSV (ORCPT
+        with ESMTP id S230033AbiLIDrA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Dec 2022 22:18:21 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6DA547D069;
-        Thu,  8 Dec 2022 19:18:17 -0800 (PST)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2B93GWplC026671, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2B93GWplC026671
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 9 Dec 2022 11:16:32 +0800
-Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 9 Dec 2022 11:17:20 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Fri, 9 Dec 2022 11:17:20 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b]) by
- RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b%5]) with mapi id
- 15.01.2375.007; Fri, 9 Dec 2022 11:17:20 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Kalle Valo <kvalo@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-CC:     Jakub Kicinski <kuba@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Neo Jou <neojou@gmail.com>,
-        Hans Ulli Kroll <linux@ulli-kroll.de>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Alexander Hochbaum <alex@appudo.com>,
-        Da Xue <da@libre.computer>,
-        "Bernie Huang" <phhuang@realtek.com>,
-        Viktor Petrenko <g0000ga@gmail.com>
-Subject: RE: [PATCH v4 08/11] wifi: rtw88: Add rtw8821cu chipset support
-Thread-Topic: [PATCH v4 08/11] wifi: rtw88: Add rtw8821cu chipset support
-Thread-Index: AQHZA9p/gdNauXKGBEa6UnG4y/tPNK5VjnKAgAALtACADn7s0IAAx4yA
-Date:   Fri, 9 Dec 2022 03:17:19 +0000
-Message-ID: <7699d3f9e4a244349807a34b3981e26c@realtek.com>
-References: <20221129100754.2753237-1-s.hauer@pengutronix.de>
-        <20221129100754.2753237-9-s.hauer@pengutronix.de>
-        <20221129081753.087b7a35@kernel.org>
-        <d2113f20-d547-ce16-ff7f-2d1286321014@lwfinger.net>
- <87tu260yeb.fsf@kernel.org>
-In-Reply-To: <87tu260yeb.fsf@kernel.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS05.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2022/12/9_=3F=3F_02:13:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Thu, 8 Dec 2022 22:47:00 -0500
+Received: from pv50p00im-ztdg10011301.me.com (pv50p00im-ztdg10011301.me.com [17.58.6.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB6EBB2EDE
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Dec 2022 19:46:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zzy040330.moe;
+        s=sig1; t=1670557610;
+        bh=M/NG7opl2pujEn6z9UDdCBRv6DyefkxjNT4PBlqOqow=;
+        h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+        b=XF4ycNDW5H6Kq22yeIMT0Jcr8/J9AUu9e8Om+8L+oXYC7T79bnoZuesN9ZPYeD6hY
+         9gK7eUCwwQLgOQqfLB96xu/FBLjr7nwsy2dNx3o2t03Ppb2SwY1J5vOiCro87A8ieo
+         phnJHz+vqC7Ih+ui69Sbp3FX62rz4eFi3Hsd2X0DHUZwSxKeWxATDWVMEBxu2iPSF2
+         fazzY+3a4419W1K2Lsx5AyLPTxvkvHp7Y1InNLLMh/r7JZ54MDZawOJznw+G/5na/G
+         4b0z91Qc2YpDTd9fVeGA1aytj0NID+IYRUSnrwrmnxMUCHbCTcgK+IYP0l6eqwEHJ1
+         Y2bxfBirPnm6Q==
+Received: from [192.168.1.28] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
+        by pv50p00im-ztdg10011301.me.com (Postfix) with ESMTPSA id 7B3331806D3;
+        Fri,  9 Dec 2022 03:46:47 +0000 (UTC)
+Message-ID: <08319f41-b745-23f4-a3b4-42d2bffbb471@zzy040330.moe>
+Date:   Fri, 9 Dec 2022 11:46:44 +0800
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [v5] wifi: rtl8xxxu: fixing IQK failures for rtl8192eu
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Jes.Sorensen@gmail.com, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ping-Ke Shih <pkshih@realtek.com>
+References: <20221207033926.11777-1-JunASAKA@zzy040330.moe>
+ <167051122141.9839.8256110387408123706.kvalo@kernel.org>
+Content-Language: en-US
+From:   Jun ASAKA <JunASAKA@zzy040330.moe>
+In-Reply-To: <167051122141.9839.8256110387408123706.kvalo@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: q2am-jmUu2iUbxjGiqeLqVwO3UyDX8p3
+X-Proofpoint-ORIG-GUID: q2am-jmUu2iUbxjGiqeLqVwO3UyDX8p3
+X-Proofpoint-Virus-Version: =?UTF-8?Q?vendor=3Dfsecure_engine=3D1.1.170-22c6f66c430a71ce266a39bfe25bc?=
+ =?UTF-8?Q?2903e8d5c8f:6.0.517,18.0.883,17.0.605.474.0000000_definitions?=
+ =?UTF-8?Q?=3D2022-06-21=5F08:2022-06-21=5F01,2022-06-21=5F08,2020-01-23?=
+ =?UTF-8?Q?=5F02_signatures=3D0?=
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
+ bulkscore=0 clxscore=1030 malwarescore=0 adultscore=0 suspectscore=0
+ mlxlogscore=420 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2209130000 definitions=main-2212090030
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
-
-> -----Original Message-----
-> From: Kalle Valo <kvalo@kernel.org>
-> Sent: Thursday, December 8, 2022 10:21 PM
-> To: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>; Sascha Hauer <s.hauer@pengutronix.de>;
-> linux-wireless@vger.kernel.org; Neo Jou <neojou@gmail.com>; Hans Ulli Kroll <linux@ulli-kroll.de>; Ping-Ke
-> Shih <pkshih@realtek.com>; Yan-Hsuan Chuang <tony0620emma@gmail.com>; netdev@vger.kernel.org;
-> linux-kernel@vger.kernel.org; Martin Blumenstingl <martin.blumenstingl@googlemail.com>;
-> kernel@pengutronix.de; Johannes Berg <johannes@sipsolutions.net>; Alexander Hochbaum <alex@appudo.com>;
-> Da Xue <da@libre.computer>; Bernie Huang <phhuang@realtek.com>; Viktor Petrenko <g0000ga@gmail.com>
-> Subject: Re: [PATCH v4 08/11] wifi: rtw88: Add rtw8821cu chipset support
-> 
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
-> 
-> > On 11/29/22 10:17, Jakub Kicinski wrote:
-> >> On Tue, 29 Nov 2022 11:07:51 +0100 Sascha Hauer wrote:
-> >>> +config RTW88_8821CU
-> >>> +	tristate "Realtek 8821CU USB wireless network adapter"
-> >>> +	depends on USB
-> >>> +	select RTW88_CORE
-> >>> +	select RTW88_USB
-> >>> +	select RTW88_8821C
-> >>> +	help
-> >>> +	  Select this option will enable support for 8821CU chipset
-> >>> +
-> >>> +	  802.11ac USB wireless network adapter
-> >>
-> >> Those kconfig knobs add so little code, why not combine them all into
-> >> one? No point bothering the user with 4 different questions with amount
-> >> to almost nothing.
-> >
-> > I see only one knob there, name RTW88_8821CU. The other configuration
-> > variables select parts of the code that are shared with other drivers
-> > such as RTW88_8821CE and these parts must be there.
-> 
-> I just test compiled these patches and we have four new questions:
-> 
->   Realtek 8822BU USB wireless network adapter (RTW88_8822BU) [N/m/?] (NEW) m
->   Realtek 8822CU USB wireless network adapter (RTW88_8822CU) [N/m/?] (NEW) m
->   Realtek 8723DU USB wireless network adapter (RTW88_8723DU) [N/m/?] (NEW) m
->   Realtek 8821CU USB wireless network adapter (RTW88_8821CU) [N/m/?] (NEW)
-> 
-> To me this looks too fine grained. Does it really make sense, for
-> example, to enable RTW88_8822BU but not RTW88_8822CU? Would just having
-> RTW88_USB containing all USB devices be more sensible? And the same for
-> PCI, and if we have in the future, SDIO devices.
-> 
-
-Summerize Realtek 802.11n/11ac WiFi drivers after this patchset:
-
-                        Kconfig
-  driver      #-of-ko   knob   support chips
-  ---------------------------------------------------------------------
-  rtl8xxxu   1          1      8188fu, 8192cu, 8192eu, 8723au, 8723bu
-  rtlwifi    15         9      8192se, 8723ae, 8723be, 8192ee, 8192de, 8188ee, 8192ce, 8821ae
-                               8192cu
-  rtw88      15         8      8723de, 8821ce, 8822be, 8822ce
-                               8723du, 8821cu, 8822bu, 8822cu
-
-If we merge into single one Kconfig knob, we could have a long list name
-
-"Realtek 8723DU/8821CU/8822BU/8822CU USB wireless network adapter"
-
-or an implicit name
-
-"Realtek 802.11n/802.11ac USB wireless network adapter"
-
-The string mixes "802.11n/802.11ac" because hardware architecture of
-Realtek WiFi chips change during 11n/11ac generations, so rtlwifi (old architecture)
-and rtw88 (new architecture) support both 11n and 11ac chips. That is a little
-bit inconvenient to people who wants to know which driver support his own WiFi
-module explicitly.
-
-Another thing is to save some compile time and disk space to build these .ko if
-we have separated knobs. For Ubuntu or other distros users, I think they
-may not care about this, because distros have already built drivers and disk
-of notebook or desktop is large. But, for embedded users, like Raspberry Pi
-or proprietary embedded system, they may want to highly customize drivers
-due to limit of hardware resource.
-
-Therefore, I prefer to preserve current Kconfig. Though single one knob is
-really simple for anything.
-
-Ping-Ke
-
+On 08/12/2022 22:53, Kalle Valo wrote:
+> Jun ASAKA <JunASAKA@zzy040330.moe> wrote:
+>
+>> Fixing "Path A RX IQK failed" and "Path B RX IQK failed"
+>> issues for rtl8192eu chips by replacing the arguments with
+>> the ones in the updated official driver as shown below.
+>> 1. https://github.com/Mange/rtl8192eu-linux-driver
+>> 2. vendor driver version: 5.6.4
+>>
+>> Signed-off-by: Jun ASAKA <JunASAKA@zzy040330.moe>
+>> Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+> Patch applied to wireless-next.git, thanks.
+>
+> 695c5d3a8055 wifi: rtl8xxxu: fixing IQK failures for rtl8192eu
+>
+Thanks!
