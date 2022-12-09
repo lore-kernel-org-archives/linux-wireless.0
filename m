@@ -2,98 +2,83 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9C11C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Dec 2022 01:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11CA0C04FDE
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Dec 2022 01:15:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229798AbiLIBBk (ORCPT
+        id S229737AbiLIBPq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Dec 2022 20:01:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46652 "EHLO
+        Thu, 8 Dec 2022 20:15:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229564AbiLIBBb (ORCPT
+        with ESMTP id S229661AbiLIBPo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Dec 2022 20:01:31 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77BB7A504A;
-        Thu,  8 Dec 2022 17:01:25 -0800 (PST)
-Received: from dggpeml500026.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NSt05678NzqSt2;
-        Fri,  9 Dec 2022 08:57:09 +0800 (CST)
-Received: from [10.174.178.66] (10.174.178.66) by
- dggpeml500026.china.huawei.com (7.185.36.106) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 9 Dec 2022 09:01:21 +0800
-Message-ID: <2faab482-33cd-fb07-f0cf-472566784825@huawei.com>
-Date:   Fri, 9 Dec 2022 09:01:20 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.0.2
-Subject: Re: [PATCH] ipw2200: fix memory leak in ipw_wdev_init()
-To:     Jiri Pirko <jiri@resnulli.us>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        Thu, 8 Dec 2022 20:15:44 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA90CD2C0;
+        Thu,  8 Dec 2022 17:15:43 -0800 (PST)
+Received: from dggpeml500026.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NStKP2wF7zJpDQ;
+        Fri,  9 Dec 2022 09:12:09 +0800 (CST)
+Received: from huawei.com (10.175.101.6) by dggpeml500026.china.huawei.com
+ (7.185.36.106) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 9 Dec
+ 2022 09:15:41 +0800
+From:   Zhengchao Shao <shaozhengchao@huawei.com>
+To:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <stas.yakovlev@gmail.com>, <kvalo@kernel.org>,
         <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
-        <pabeni@redhat.com>, <linville@tuxdriver.com>,
-        <weiyongjun1@huawei.com>, <yuehaibing@huawei.com>
-References: <20221208122630.2850534-1-shaozhengchao@huawei.com>
- <Y5HgAAVpYB9WQbz6@nanopsycho>
-From:   shaozhengchao <shaozhengchao@huawei.com>
-In-Reply-To: <Y5HgAAVpYB9WQbz6@nanopsycho>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.66]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+        <pabeni@redhat.com>
+CC:     <linville@tuxdriver.com>, <weiyongjun1@huawei.com>,
+        <yuehaibing@huawei.com>, <shaozhengchao@huawei.com>
+Subject: [PATCH v2] ipw2200: fix memory leak in ipw_wdev_init()
+Date:   Fri, 9 Dec 2022 09:24:22 +0800
+Message-ID: <20221209012422.182669-1-shaozhengchao@huawei.com>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  dggpeml500026.china.huawei.com (7.185.36.106)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+In the error path of ipw_wdev_init(), exception value is returned, and
+the memory applied for in the function is not released. Also the memory
+is not released in ipw_pci_probe(). As a result, memory leakage occurs.
+So memory release needs to be added to the error path of ipw_wdev_init().
 
+Fixes: a3caa99e6c68 ("libipw: initiate cfg80211 API conversion (v2)")
+Signed-off-by: Zhengchao Shao <shaozhengchao@huawei.com>
+---
+v2: return value of wiphy_register() instead of -EIO
+---
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-On 2022/12/8 21:00, Jiri Pirko wrote:
-> Thu, Dec 08, 2022 at 01:26:30PM CET, shaozhengchao@huawei.com wrote:
->> In the error path of ipw_wdev_init(), exception value is returned, and
->> the memory applied for in the function is not released. Also the memory
->> is not released in ipw_pci_probe(). As a result, memory leakage occurs.
->> So memory release needs to be added to the error path of ipw_wdev_init().
->>
->> Fixes: a3caa99e6c68 ("libipw: initiate cfg80211 API conversion (v2)")
->> Signed-off-by: Zhengchao Shao <shaozhengchao@huawei.com>
->> ---
->> drivers/net/wireless/intel/ipw2x00/ipw2200.c | 8 +++++++-
->> 1 file changed, 7 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
->> index 5b483de18c81..cead5c7fc91e 100644
->> --- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
->> +++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
->> @@ -11397,9 +11397,15 @@ static int ipw_wdev_init(struct net_device *dev)
->> 	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
->>
->> 	/* With that information in place, we can now register the wiphy... */
->> -	if (wiphy_register(wdev->wiphy))
->> +	if (wiphy_register(wdev->wiphy)) {
-> 
-> While you are at it, how about to take the actual return value of
-> wiphy_register() into account?
-> 
-> 
-Hi Jiri:
-	Thank you for your suggestion. I will change it in V2.
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index 5b483de18c81..4c317a7c93ac 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -11397,9 +11397,14 @@ static int ipw_wdev_init(struct net_device *dev)
+ 	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
+ 
+ 	/* With that information in place, we can now register the wiphy... */
+-	if (wiphy_register(wdev->wiphy))
+-		rc = -EIO;
++	rc = wiphy_register(wdev->wiphy);
++	if (rc)
++		goto out;
++
++	return 0;
+ out:
++	kfree(priv->ieee->a_band.channels);
++	kfree(priv->ieee->bg_band.channels);
+ 	return rc;
+ }
+ 
+-- 
+2.34.1
 
-Zhengchao Shao
->> 		rc = -EIO;
->> +		goto out;
->> +	}
->> +
->> +	return 0;
->> out:
->> +	kfree(priv->ieee->a_band.channels);
->> +	kfree(priv->ieee->bg_band.channels);
->> 	return rc;
->> }
->>
->> -- 
->> 2.34.1
->>
