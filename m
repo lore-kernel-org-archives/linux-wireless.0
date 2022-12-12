@@ -2,92 +2,78 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DAECC4167B
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Dec 2022 10:41:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A25AC10F1E
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Dec 2022 11:17:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232142AbiLLKl0 (ORCPT
+        id S231787AbiLLLRv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Dec 2022 05:41:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33736 "EHLO
+        Mon, 12 Dec 2022 06:17:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231756AbiLLKkj (ORCPT
+        with ESMTP id S232432AbiLLLRM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2022 05:40:39 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D668EFCF7;
-        Mon, 12 Dec 2022 02:34:44 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Mon, 12 Dec 2022 06:17:12 -0500
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5954255B5
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2022 03:15:40 -0800 (PST)
+Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7310360F40;
-        Mon, 12 Dec 2022 10:34:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38DD8C433D2;
-        Mon, 12 Dec 2022 10:34:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670841283;
-        bh=vrFxeli8F3EO2DuQDN+jCz2CjmUYhcY2TDhvXHFi1sY=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Ih/zua0q5zv06/kPWeiWPGYMeRX+Z4H3lNCbZs3KtqqI2GB2fJomdYLYtmCf9vsvY
-         kP6LB990E27y5DI3Ihs1NK9+n17LsSiMnZ0InA6FBEpmKs4J6WPUBzVINC5nfDU6F0
-         cPeqVZ6e38b2ETLg8HW4bsSTv0VKIQtrKWlH3si7Npx/YlVPbnUPbFvfdl2f9GqdzB
-         bIDwXvwKIxRpWuY6nACaWV3zt0ynOCy0yDsX3HfzHVLrf5iXGAcxueXUIpw6jzD7Vo
-         0Lb5efMzUWHXTwRt2DP++//CX8VK89BF6xcJaef1FCUli5EOxuPwvsuQG1RasWxHCx
-         tY4seVfMFg7Iw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: pull-request: wireless-next-2022-12-12
-References: <20221212093026.5C5AEC433D2@smtp.kernel.org>
-Date:   Mon, 12 Dec 2022 12:34:39 +0200
-In-Reply-To: <20221212093026.5C5AEC433D2@smtp.kernel.org> (Kalle Valo's
-        message of "Mon, 12 Dec 2022 09:30:26 +0000 (UTC)")
-Message-ID: <877cywnc5c.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        (Authenticated sender: kholk11)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 33CAD6600363;
+        Mon, 12 Dec 2022 11:15:37 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1670843738;
+        bh=ChOKXmAMcKCTWwH41gASrLbQANZal4s0KXhEMEBDovI=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=cqW3WJq+SfyziEYqn5tNeHwMhbNc1nnJJ5fydymWwK527QiMIzeQtPLkweOUijE+3
+         pNLFwmJ5/yQF0NSpc8ENsmpP/co6C5UdL93SQxPLY4ojTEZg8B/rXpUC6liDzknCzT
+         TxNwXKxW3zNNq98Alo3MtDBBsYFYsfLSU87UfWZ4AsQp7C7YG2QCB6UHeJ8Ib9oM7E
+         gptJLhfj7j9GJsQKBR70AEvJl5GdKqG+D/U7LWK01gNQ2tzVKuMtCnavOQpv7scFsv
+         HjYvmXtZnAV4ZZrzo8UysjXwKvJwmNEmS8e/2Z7drb6WhTv4wNqaM9lOKuGHHv6KQ4
+         8BvyKXIWxqj6A==
+Message-ID: <c2c71a7c-065a-2720-ac1d-8f27af2a723f@collabora.com>
+Date:   Mon, 12 Dec 2022 12:15:34 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] wifi: mt76: mt7921: resource leaks at
+ mt7921_check_offload_capability()
+Content-Language: en-US
+To:     sean.wang@mediatek.com, nbd@nbd.name, lorenzo.bianconi@redhat.com
+Cc:     Soul.Huang@mediatek.com, YN.Chen@mediatek.com,
+        Leon.Yen@mediatek.com, Eric-SY.Chang@mediatek.com,
+        Deren.Wu@mediatek.com, km.lin@mediatek.com,
+        jenhao.yang@mediatek.com, robin.chiu@mediatek.com,
+        Eddie.Chen@mediatek.com, ch.yeh@mediatek.com,
+        posh.sun@mediatek.com, ted.huang@mediatek.com,
+        Stella.Chang@mediatek.com, Tom.Chou@mediatek.com,
+        steve.lee@mediatek.com, jsiuda@google.com, frankgor@google.com,
+        kuabhs@google.com, druth@google.com, abhishekpandit@google.com,
+        shawnku@google.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+References: <1670540517-21517-1-git-send-email-sean.wang@mediatek.com>
+From:   AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
+In-Reply-To: <1670540517-21517-1-git-send-email-sean.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@kernel.org> writes:
+Il 09/12/22 00:01, sean.wang@mediatek.com ha scritto:
+> From: Sean Wang <sean.wang@mediatek.com>
+> 
+> Fixed coverity issue with resource leaks at variable "fw" going out of
+> scope leaks the storage it points to mt7921_check_offload_capability().
+> 
+> Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+> Addresses-Coverity-ID: 1527806 ("Resource leaks")
+> Fixes: 034ae28b56f1 ("wifi: mt76: mt7921: introduce remain_on_channel support")
+> Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 
-> here's a pull request to net-next tree, more info below. Please let me know if
-> there are any problems.
->
-> Kalle
->
-> The following changes since commit 65e6af6cebefbf7d8d8ac52b71cd251c2071ad00:
->
->   net: ethernet: mtk_wed: fix sleep while atomic in mtk_wed_wo_queue_refill (2022-12-02 21:23:02 -0800)
->
-> are available in the Git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git tags/wireless-next-2022-12-12
->
-> for you to fetch changes up to 832c3f66f53f1eb20f424b916a311ad82074ef0d:
->
->   Merge tag 'iwlwifi-next-for-kalle-2022-12-07' of http://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next (2022-12-08 16:54:33 +0200)
->
-> ----------------------------------------------------------------
-> wireless-next patches for v6.2
->
-> Fourth set of patches for v6.2. Few final patches, a big change is
-> that rtw88 now has USB support.
->
-> Major changes:
->
-> rtw88
->
-> * support USB devices rtw8821cu, rtw8822bu, rtw8822cu and rtw8723du
->
-> ----------------------------------------------------------------
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 
-Sorry for sending this so late, I was supposed to send it on Friday but
-didn't manage to. All the patches have been in wireless-next since
-Thursday so this should be safe to merge. But if it's too late please do
-drop this, I'll then submit these again for v6.3.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
