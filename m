@@ -2,73 +2,96 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 318AFC4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Dec 2022 11:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CADC4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Dec 2022 15:33:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231160AbiLLL0c (ORCPT
+        id S232512AbiLLPdu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Dec 2022 06:26:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37324 "EHLO
+        Mon, 12 Dec 2022 10:33:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231394AbiLLL0M (ORCPT
+        with ESMTP id S232528AbiLLPdi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2022 06:26:12 -0500
-X-Greylist: delayed 904 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 12 Dec 2022 03:26:07 PST
-Received: from sender4-of-o56.zoho.com (sender4-of-o56.zoho.com [136.143.188.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F837E2C
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2022 03:26:07 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1670843460; cv=none; 
-        d=zohomail.com; s=zohoarc; 
-        b=P8ATCRNeS7CrZpiqS/5D6g/Rmg2kXyo3Me81MC8jqcrE4G6DRzaoLA+e/NuXH+NPlKYfWbuV85s0FIbJwA6JrOGeNv3mzK4CShcGUkeYfpj/xqPYEf01v9UF3jtCZCSwDgSg30+eZ0GKBnWHFt7LM1kyNK67WJeJKYZuKYJ6tYM=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-        t=1670843460; h=Content-Type:Content-Transfer-Encoding:Date:From:MIME-Version:Message-ID:Subject:To; 
-        bh=8YjlatOgfim3c4e1yzqSgNvBF1L6HS4j6nLCp2C8Rak=; 
-        b=hvOj4TlNXLdtCJpzKfPj0EyI0zChKGxU7ajEGnidO/lrggbr7e2JlTF5Dl8XZADc35/7VSPAXmdxeivOJGt9jG4kZdzpSIa/eHwBJueKH8Mk6FzmZhwCgPJVnUOQDDC9+wjOw7+d4LBkifwBs7xxybrmbHzv//3JhLQeoghrAxY=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-        dkim=pass  header.i=charlespiekarski.com;
-        spf=pass  smtp.mailfrom=contact@charlespiekarski.com;
-        dmarc=pass header.from=<contact@charlespiekarski.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1670843460;
-        s=zoho; d=charlespiekarski.com; i=contact@charlespiekarski.com;
-        h=Message-ID:Date:Date:MIME-Version:To:To:From:From:Subject:Subject:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To:Cc;
-        bh=8YjlatOgfim3c4e1yzqSgNvBF1L6HS4j6nLCp2C8Rak=;
-        b=F9NUTwH+0auImIGocO+z+DeGI7x3UBJoHr93G/kSjkDT3hUONrUL2MgEL/X88Z39
-        1bUfOZ/PCcIEp/XWwjPPPNYtyjdyFS6l/Q4hyEm2YZL0iUuffWeDCaVX/dqHLx4gdGa
-        +AmIk3t67D85n7tQaugty+zeeJse7wQnnrHZjkCI=
-Received: from [192.168.100.145] (195-166-223-48.fibre.u-mee.com [195.166.223.48]) by mx.zohomail.com
-        with SMTPS id 1670843460132151.13554411423263; Mon, 12 Dec 2022 03:11:00 -0800 (PST)
-Message-ID: <a2a454c5-3940-52d0-77b7-e5f8376720ae@charlespiekarski.com>
-Date:   Mon, 12 Dec 2022 12:10:58 +0100
+        Mon, 12 Dec 2022 10:33:38 -0500
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A7311005E
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2022 07:33:37 -0800 (PST)
+Received: by mail-wm1-x335.google.com with SMTP id bg10so5768602wmb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2022 07:33:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ZIxktvDnzAq4COgkYt0knjrMZ3maL29etVrhbwvLz6A=;
+        b=IcF8TFB+DErdN4WwpbhKskKdBkaaHZ2tnSM7M1T+c9gzY+zPQRLzTNqpl4rajH0eJ0
+         ik07M5mZG4Vd3Ik/OGd17u3Gbj58KWQLkrBUgMpvQk+D/gyAN27oADfT7hzreLe9oryj
+         uQ7gOsNL+RXaUIZLCurN/qg4ekUjX7jTRPuvvNzpat+HDdSgLnLhP5LlShyTvw8mCphQ
+         gHbDPQTog+K26l9K4o271Q7gm5L2P01h2BPzW5NjY9wKOHCqxaVwMOrMwGrSR+vbDgmz
+         jTAm58zEwkueNtzC8z0zAk9XHqH1wpqgcSMxZjrTLSv5FYPbLMgtTxENs/6UVzwr2vgs
+         4+pw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZIxktvDnzAq4COgkYt0knjrMZ3maL29etVrhbwvLz6A=;
+        b=YQufjtGqFh6mhBvBRWy8IA/VZUrPkrHOx/yzV8T3sQQBNChdhRh5ly2dUgaLN/x4Da
+         +TFsYqxdx+HH9Kdt6LqF81B/GloFwijcBzbYduqzOrUNAoZBV9su78ioPYkj8X0C9uoY
+         SvnHHK/Qnv/tP0PdLvPxzHVFo4gVYkEcDMUGR/hy3e3DlEel36QB7a2rrctmonWwN2Kj
+         787+mhpGuS2cXu2pgyVhMkG6D8ZJ8vxd1gFOVwq+ELc1SDODZsuBr4xg5XZQRVDGC4lV
+         IYYNNUzqrCPJxdMe6TdVwtcwr0+bPYmOQqfl3kGqyTaVd9Y0E3/iKJx7VKCPMsvy+hvc
+         iwXA==
+X-Gm-Message-State: ANoB5pl2Zg6gBW0iC8epf+C4BtjjVtJAEiJrJurAyW/FZKOSw4M2PoF8
+        MjjA8UWBK5bLE/YiTO5O/Ok=
+X-Google-Smtp-Source: AA0mqf6/GiTDx7JILus/PTMjQTbpu0eFZb1gmP6UB+Uus1lG3t+V20HXy/PLyqWE1gbLfmDou4xb9g==
+X-Received: by 2002:a05:600c:253:b0:3d2:17a5:17fe with SMTP id 19-20020a05600c025300b003d217a517femr6720181wmj.18.1670859215716;
+        Mon, 12 Dec 2022 07:33:35 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id t123-20020a1c4681000000b003cf87623c16sm9758516wma.4.2022.12.12.07.33.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Dec 2022 07:33:35 -0800 (PST)
+Date:   Mon, 12 Dec 2022 18:33:30 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     pkshih@realtek.com
+Cc:     linux-wireless@vger.kernel.org
+Subject: [bug report] rtw89: add Realtek 802.11ax driver
+Message-ID: <Y5dJymTl15fBnQtV@kili>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-To:     linux-wireless@vger.kernel.org
-Content-Language: en-GB
-From:   Charles Piekarski <contact@charlespiekarski.com>
-Subject: Realtek 8852BE support
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dear Sir or Madam,
+Hello Ping-Ke Shih,
 
-I would like to kindly ask for information if Realtek 8852BE Wi-Fi 6 
-module is supported or will be supported by the Linux kernel. 
-Regrettably, the module does not work under Ubuntu 22.04.1 and 22.10, at 
-least out of the box, and I was unable to find any useful information to 
-get it working in a safe way (with Secure Boot enabled).
+The patch e3ec7017f6a2: "rtw89: add Realtek 802.11ax driver" from Oct
+11, 2021, leads to the following potential issue (just from reading
+the code):
 
-Kind regards,
-Charles Piekarski
+drivers/net/wireless/realtek/rtw89/core.h
+    3878 static inline u32
+    3879 rtw89_read32_mask(struct rtw89_dev *rtwdev, u32 addr, u32 mask)
+    3880 {
+    3881         u32 shift = __ffs(mask);
+    3882         u32 orig;
+    3883         u32 ret;
+    3884 
+    3885         orig = rtw89_read32(rtwdev, addr);
+--> 3886         ret = (orig & mask) >> shift;
 
--- 
+I think this line should be:
 
-This email (including any attachments) is private, confidential and may 
-contain privileged material. If you have received this email in error, 
-please notify the sender and delete it (including any attachments) 
-immediately. If you are not the addressee of this email, you must not 
-copy, forward, distribute, disclose or use any of the information in it 
-or any attachments.
+	ret = (orig & mask) >> (shift - 1);
+
+A typical mask here is 0xff so __ffs() is 1 because the first bit is
+set.  This code will do: ret = (orig & 0xff) >> 1;  I think it should be
+ret = (orig & 0xff) >> 0;
+
+If the mask was 0xff00 I would expect >> 8 instead of >> 9 etc.
+
+    3887 
+    3888         return ret;
+    3889 }
+
+regards,
+dan carpenter
