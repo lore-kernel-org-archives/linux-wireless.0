@@ -2,135 +2,118 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACB94C10F1B
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Dec 2022 02:28:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4263EC001B2
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Dec 2022 03:58:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236903AbiLNC2b (ORCPT
+        id S237278AbiLND6u (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Dec 2022 21:28:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39910 "EHLO
+        Tue, 13 Dec 2022 22:58:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbiLNC23 (ORCPT
+        with ESMTP id S237157AbiLND6s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2022 21:28:29 -0500
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A769A1F9F3
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2022 18:28:28 -0800 (PST)
-X-UUID: f301869136394011a3be5bb182399f41-20221214
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=qAl+m1OTr5en6yAHBXyL88TpRTYUyea0S1uSD/4DSXE=;
-        b=vBzqekjkuFQbKIc5ALOS5OjaaPKfDPIRe5h89BnAaK0besoWChudU39KOMMfIbeZH8A+NjN8iPOqeWwoKJIQjiezpkm+JWXxgUrxls8Swvy9rjkCz0EV+a4GFr8Qt/AtnlaEGmENIGg+w74/Rc8HhUbF75ySvpsNULXd9mVLhjI=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:cde0644f-65e0-49b5-9d2c-451da0731650,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:-25
-X-CID-META: VersionHash:dcaaed0,CLOUDID:02173625-4387-4253-a41d-4f6f2296b154,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: f301869136394011a3be5bb182399f41-20221214
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <howard-yh.hsu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 206152887; Wed, 14 Dec 2022 10:28:25 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Wed, 14 Dec 2022 10:28:24 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Wed, 14 Dec 2022 10:28:24 +0800
-From:   Howard Hsu <howard-yh.hsu@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Ryder Lee <ryder.Lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Howard Hsu <howard-yh.hsu@mediatek.com>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v3 4/4] wifi: mt76: mt7915: add error message in mt7915_thermal_set_cur_throttle_state()
-Date:   Wed, 14 Dec 2022 10:28:09 +0800
-Message-ID: <20221214022809.32087-5-howard-yh.hsu@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20221214022809.32087-1-howard-yh.hsu@mediatek.com>
-References: <20221214022809.32087-1-howard-yh.hsu@mediatek.com>
+        Tue, 13 Dec 2022 22:58:48 -0500
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8FBF414038
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2022 19:58:47 -0800 (PST)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2BE3vslE7030736, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2BE3vslE7030736
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Wed, 14 Dec 2022 11:57:54 +0800
+Received: from RTEXDAG02.realtek.com.tw (172.21.6.101) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Wed, 14 Dec 2022 11:58:43 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXDAG02.realtek.com.tw (172.21.6.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Wed, 14 Dec 2022 11:58:42 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b]) by
+ RTEXMBS04.realtek.com.tw ([fe80::15b5:fc4b:72f3:424b%5]) with mapi id
+ 15.01.2375.007; Wed, 14 Dec 2022 11:58:42 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Andrea Merello <andrea.merello@gmail.com>,
+        Taehee Yoo <ap420073@gmail.com>
+Subject: RE: [PATCH v2 1/5] wifi: rtl8xxxu: Deduplicate the efuse dumping code
+Thread-Topic: [PATCH v2 1/5] wifi: rtl8xxxu: Deduplicate the efuse dumping
+ code
+Thread-Index: AQHZDxgjr9H+heonc0atvavXN3M/9a5sjprQ
+Date:   Wed, 14 Dec 2022 03:58:42 +0000
+Message-ID: <40b9a6949d22484493e49af0200ca65d@realtek.com>
+References: <c9619d20-ba6b-1611-dafb-9fe14617e1ee@gmail.com>
+In-Reply-To: <c9619d20-ba6b-1611-dafb-9fe14617e1ee@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXDAG02.realtek.com.tw, 9
+x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
+ rules found
+x-kse-antivirus-interceptor-info: scan successful
+x-kse-antivirus-info: =?utf-8?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzEyLzE0IOS4iuWNiCAxMjo0NjowMA==?=
+x-kse-bulkmessagesfiltering-scan-result: protection disabled
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add dev_err so that it is easier to see invalid setting while looking at
-dmesg.
-
-Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Howard Hsu <howard-yh.hsu@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c   | 12 +++++++-----
- drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h |  2 ++
- 2 files changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 0ab9e1320fac..a89b37a320c0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -145,8 +145,11 @@ mt7915_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 	u8 throttling = MT7915_THERMAL_THROTTLE_MAX - state;
- 	int ret;
- 
--	if (state > MT7915_CDEV_THROTTLE_MAX)
-+	if (state > MT7915_CDEV_THROTTLE_MAX) {
-+		dev_err(phy->dev->mt76.dev,
-+			"please specify a valid throttling state\n");
- 		return -EINVAL;
-+	}
- 
- 	if (state == phy->cdev_state)
- 		return 0;
-@@ -175,7 +178,7 @@ static void mt7915_unregister_thermal(struct mt7915_phy *phy)
- 	struct wiphy *wiphy = phy->mt76->hw->wiphy;
- 
- 	if (!phy->cdev)
--	    return;
-+		return;
- 
- 	sysfs_remove_link(&wiphy->dev.kobj, "cooling_device");
- 	thermal_cooling_device_unregister(phy->cdev);
-@@ -209,8 +212,8 @@ static int mt7915_thermal_init(struct mt7915_phy *phy)
- 		return PTR_ERR(hwmon);
- 
- 	/* initialize critical/maximum high temperature */
--	phy->throttle_temp[MT7915_CRIT_TEMP_IDX] = 110;
--	phy->throttle_temp[MT7915_MAX_TEMP_IDX] = 120;
-+	phy->throttle_temp[MT7915_CRIT_TEMP_IDX] = MT7915_CRIT_TEMP;
-+	phy->throttle_temp[MT7915_MAX_TEMP_IDX] = MT7915_MAX_TEMP;
- 
- 	return 0;
- }
-@@ -1182,7 +1185,6 @@ static void mt7915_stop_hardware(struct mt7915_dev *dev)
- 		mt7986_wmac_disable(dev);
- }
- 
--
- int mt7915_register_device(struct mt7915_dev *dev)
- {
- 	struct mt7915_phy *phy2;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index e58650bbbd14..942d70c53825 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -72,6 +72,8 @@
- 
- #define MT7915_CRIT_TEMP_IDX		0
- #define MT7915_MAX_TEMP_IDX		1
-+#define MT7915_CRIT_TEMP		110
-+#define MT7915_MAX_TEMP			120
- 
- struct mt7915_vif;
- struct mt7915_sta;
--- 
-2.18.0
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQml0dGVyYmx1ZSBTbWl0
+aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+DQo+IFNlbnQ6IFdlZG5lc2RheSwgRGVjZW1iZXIg
+MTQsIDIwMjIgMToyNyBBTQ0KPiBUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+
+IENjOiBKZXMgU29yZW5zZW4gPEplcy5Tb3JlbnNlbkBnbWFpbC5jb20+OyBQaW5nLUtlIFNoaWgg
+PHBrc2hpaEByZWFsdGVrLmNvbT47IEFuZHJlYSBNZXJlbGxvDQo+IDxhbmRyZWEubWVyZWxsb0Bn
+bWFpbC5jb20+OyBUYWVoZWUgWW9vIDxhcDQyMDA3M0BnbWFpbC5jb20+DQo+IFN1YmplY3Q6IFtQ
+QVRDSCB2MiAxLzVdIHdpZmk6IHJ0bDh4eHh1OiBEZWR1cGxpY2F0ZSB0aGUgZWZ1c2UgZHVtcGlu
+ZyBjb2RlDQo+IA0KPiBFdmVyeSBjaGlwIGZhbWlseSBleGNlcHQgUlRMODcyM0FVIGhhcyBhIGNv
+cHkgb2YgdGhlIGVmdXNlIGR1bXBpbmcNCj4gY29kZS4gUmVtb3ZlIHRoaXMgYW5kIGR1bXAgdGhl
+IGVmdXNlIGZyb20gYSBzaW5nbGUgcGxhY2UgdXNpbmcgYSBuZXcNCj4gZnVuY3Rpb24gcnRsOHh4
+eHVfZHVtcF9lZnVzZSgpLg0KPiANCj4gQWxzbywgdXNlIHByaW50X2hleF9kdW1wKCkgdG8gcHJp
+bnQgdGhlIGVmdXNlIGluc3RlYWQgb2YgYSBsb29wIGFuZA0KPiBkZXZfaW5mbygpLiBJdCBzaG93
+cyB0aGUgQVNDSUkgaW50ZXJwcmV0YXRpb24gb2YgdGhlIGJ5dGVzLCB3aGljaCBpcw0KPiBuaWNl
+Lg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBn
+bWFpbC5jb20+DQo+IC0tLQ0KPiB2MjoNCj4gIC0gUGF0Y2ggaXMgbmV3IGluIHYyLg0KPiAtLS0N
+Cj4gIC4uLi9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9ydGw4eHh4dV84MTg4Zi5jIHwg
+MTEgLS0tLS0tLS0tLS0NCj4gIC4uLi9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9ydGw4
+eHh4dV84MTkyYy5jIHwgMTAgLS0tLS0tLS0tLQ0KPiAgLi4uL25ldC93aXJlbGVzcy9yZWFsdGVr
+L3J0bDh4eHh1L3J0bDh4eHh1XzgxOTJlLmMgfCAgOSAtLS0tLS0tLS0NCj4gIC4uLi9uZXQvd2ly
+ZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9ydGw4eHh4dV84NzIzYi5jIHwgMTEgLS0tLS0tLS0tLS0N
+Cj4gIC4uLi9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9ydGw4eHh4dV9jb3JlLmMgIHwg
+MTQgKysrKysrKysrKysrKysNCj4gIDUgZmlsZXMgY2hhbmdlZCwgMTQgaW5zZXJ0aW9ucygrKSwg
+NDEgZGVsZXRpb25zKC0pDQo+IA0KDQpbLi4uXQ0KDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25l
+dC93aXJlbGVzcy9yZWFsdGVrL3J0bDh4eHh1L3J0bDh4eHh1X2NvcmUuYw0KPiBiL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsOHh4eHUvcnRsOHh4eHVfY29yZS5jDQo+IGluZGV4IDNl
+ZDQzNTQwMWU1Ny4uODI3NjcyY2U5NTNkIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJl
+bGVzcy9yZWFsdGVrL3J0bDh4eHh1L3J0bDh4eHh1X2NvcmUuYw0KPiArKysgYi9kcml2ZXJzL25l
+dC93aXJlbGVzcy9yZWFsdGVrL3J0bDh4eHh1L3J0bDh4eHh1X2NvcmUuYw0KPiBAQCAtMTgxMyw2
+ICsxODEzLDE3IEBAIHN0YXRpYyBpbnQgcnRsOHh4eHVfcmVhZF9lZnVzZShzdHJ1Y3QgcnRsOHh4
+eHVfcHJpdiAqcHJpdikNCj4gIAlyZXR1cm4gcmV0Ow0KPiAgfQ0KPiANCj4gK3N0YXRpYyB2b2lk
+IHJ0bDh4eHh1X2R1bXBfZWZ1c2Uoc3RydWN0IHJ0bDh4eHh1X3ByaXYgKnByaXYpDQo+ICt7DQo+
+ICsJZGV2X2luZm8oJnByaXYtPnVkZXYtPmRldiwNCj4gKwkJICJEdW1waW5nIGVmdXNlIGZvciBS
+VEwlcyAoMHglMDJ4IGJ5dGVzKTpcbiIsDQo+ICsJCSBwcml2LT5jaGlwX25hbWUsIEVGVVNFX1JF
+QUxfQ09OVEVOVF9MRU5fODcyM0EpOw0KPiArDQo+ICsJcHJpbnRfaGV4X2R1bXAoS0VSTl9JTkZP
+LCAiIiwgRFVNUF9QUkVGSVhfT0ZGU0VULCAxNiwgMSwNCj4gKwkJICAgICAgIHByaXYtPmVmdXNl
+X3dpZmkucmF3LCBFRlVTRV9SRUFMX0NPTlRFTlRfTEVOXzg3MjNBLA0KDQpFRlVTRV9NQVBfTEVO
+IHNlZW1zIHRvIGJlIG1vcmUgc3VpdGFibGUsIGJlY2F1c2U6DQoNCgl1bmlvbiB7DQoJCXU4IHJh
+d1tFRlVTRV9NQVBfTEVOXTsNCgkJLi4uDQoJfSBlZnVzZV93aWZpOw0KDQphbmQsIHN1ZmZpeCBf
+ODcyM0EgaXMgd2VpcmQgdG8gbWUuDQoNCj4gKwkJICAgICAgIHRydWUpOw0KPiArfQ0KPiArDQo+
+ICB2b2lkIHJ0bDh4eHh1X3Jlc2V0XzgwNTEoc3RydWN0IHJ0bDh4eHh1X3ByaXYgKnByaXYpDQo+
+ICB7DQo+ICAJdTggdmFsODsNCj4gQEAgLTY4MzksNiArNjg1MCw5IEBAIHN0YXRpYyBpbnQgcnRs
+OHh4eHVfcHJvYmUoc3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGVyZmFjZSwNCj4gIAkJZ290byBl
+cnJfc2V0X2ludGZkYXRhOw0KPiAgCX0NCj4gDQo+ICsJaWYgKHJ0bDh4eHh1X2RlYnVnICYgUlRM
+OFhYWFVfREVCVUdfRUZVU0UpDQo+ICsJCXJ0bDh4eHh1X2R1bXBfZWZ1c2UocHJpdik7DQo+ICsN
+Cj4gIAlydGw4eHh4dV9wcmludF9jaGlwaW5mbyhwcml2KTsNCj4gDQo+ICAJcmV0ID0gcHJpdi0+
+Zm9wcy0+bG9hZF9maXJtd2FyZShwcml2KTsNCj4gLS0NCj4gMi4zOC4wDQo+IA0KPiAtLS0tLS1Q
+bGVhc2UgY29uc2lkZXIgdGhlIGVudmlyb25tZW50IGJlZm9yZSBwcmludGluZyB0aGlzIGUtbWFp
+bC4NCg==
