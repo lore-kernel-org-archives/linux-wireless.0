@@ -2,167 +2,158 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B72DC001B2
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Dec 2022 09:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F227C46467
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Dec 2022 11:23:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237926AbiLNJki (ORCPT
+        id S237440AbiLNLXn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Dec 2022 04:40:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48650 "EHLO
+        Wed, 14 Dec 2022 06:23:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237919AbiLNJkY (ORCPT
+        with ESMTP id S238111AbiLNLXj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2022 04:40:24 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7588C1EAC7
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2022 01:40:05 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BE9R793004237;
-        Wed, 14 Dec 2022 09:39:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding :
- content-type; s=qcppdkim1;
- bh=89ZQ6jkpZxUnRtX/ZZVOfblWawR1yYrS+8jEyYqsKIc=;
- b=nx+dW6EI1IfVjKPumz0NzCjK1m3uTCktvSIdioxfmDU1Juc5sWGFE3Mea80Oz01KjEu4
- uzHIFuxxIdLJg2vNssdH3/qH8949khxf2Q+0xD7OadhBMR0V1sTbq3jfotPSwJUl3DIo
- +hUBZycaXMOC9r83anX230kTcTg+ltEmHEbvVs0A6mbZHLspKEqVTKA7PRGma/JdZw++
- hvw7ZSfh+x0zhroAb8EJmCP/6VLyoBYpbmhfR5/ZaoK5L9KL+/09hYZBPgtYb9O2cLS8
- pO6HozScDEPSMoJ6uQszV1XQhPn5myiH7T1/TC0G3sva+HSz3uznPIjJG+lMesJN8DZf Tw== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3mf6rvrk2h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Dec 2022 09:39:54 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 2BE9drLh021902
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 14 Dec 2022 09:39:53 GMT
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 14 Dec 2022 01:39:52 -0800
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <johannes@sipsolutions.net>, <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
-Subject: [PATCH] wifi: cfg80211: call reg_notifier for self managed wiphy from driver hint
-Date:   Wed, 14 Dec 2022 04:39:37 -0500
-Message-ID: <20221214093937.14987-1-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.31.1
+        Wed, 14 Dec 2022 06:23:39 -0500
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B37D655E
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2022 03:23:37 -0800 (PST)
+Received: by mail-ej1-x632.google.com with SMTP id t17so43745702eju.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2022 03:23:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=p1biEslHldAsmR+Scn/udysfoqjERpj8d8iKhGCik3o=;
+        b=BCugCobdpsH3wo40WL/P80oVxoNjoiANSpFRkCbnOi0uGXbu0kiEPtlRh+inB+fs1+
+         qp+CRFwePi/p+dMSNTIsnOl5XyfFLcmnbLaqKFfKf1oIHRhlVL8cYzc3/mMQR+afHXpf
+         rKuVpa45HtR3IdEq1+5CMpzhuOudn1OeThLYyxT4+H1SYE/2h5Gxe83XkrB/nD4kWSiu
+         Cl5AoaDAPHn58HHNJVFrk1uUB0WCBlnOTJa9tV00ht+e/tHOT7EtsxmbAMEGnYislurr
+         9VajTkWmYgjymxFCbrAR3BJlcS93w1ryXCawCSltvE+n490G4c3Zm2tIdc82YwM7fACn
+         1tgg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=p1biEslHldAsmR+Scn/udysfoqjERpj8d8iKhGCik3o=;
+        b=B60fPNMUcqIgBauRYI5uivwTCido/ewMyPovOcbFBgY3pml0x1KboStcWeTkmg6qcv
+         pfGAUEj/MOxzPWHncWC1sVIpEseC+HCX0ndzYlWMZUDA9KOIdreAdd0+teWHoumoorhp
+         psOn6Vr7kCm49IjpeCVaovMb5whUiHZ5p+Bzvj8BmsqJ+3NlEC0Q1KI7xVyfqL+HYBps
+         LGxK/ifypl+5q5nvZp0gYfkwi+Y4/hCDsuvEq7WlneB5i+akYwGVJDHZUehGywjTRarG
+         mywCPNQkWYyKxK7QP4PN7JhAfYHcDXqf4H2yth2R7SaXkIimMLaSBHa0UdK/HPxQla4/
+         IalQ==
+X-Gm-Message-State: AFqh2kopN/az6yquKwwKsXIY6DE/2Tu7Wxwf5s9/BG9T6UnPBRR6kRsE
+        4TBHC1xIfi+lea771glOorryFRyY0MA=
+X-Google-Smtp-Source: AMrXdXukpy5GIdKnIRtPeucDx5PlJm8E03rRhe4naAUdaEtbGgyOQxv3QqQhAxPZSC5I+3XglCBTUA==
+X-Received: by 2002:a17:906:6b13:b0:7ae:29fa:ba8f with SMTP id q19-20020a1709066b1300b007ae29faba8fmr2131417ejr.2.1671017015786;
+        Wed, 14 Dec 2022 03:23:35 -0800 (PST)
+Received: from [192.168.1.50] ([79.119.240.153])
+        by smtp.gmail.com with ESMTPSA id c2-20020a17090618a200b007c10bb5b4b8sm5675202ejf.224.2022.12.14.03.23.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Dec 2022 03:23:34 -0800 (PST)
+Message-ID: <1e366190-eb84-3cdb-6408-18dfa8da18c0@gmail.com>
+Date:   Wed, 14 Dec 2022 13:23:32 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ropPHB8IANkwUPI808U-jB35xs3zp7gV
-X-Proofpoint-ORIG-GUID: ropPHB8IANkwUPI808U-jB35xs3zp7gV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-14_03,2022-12-13_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- impostorscore=0 spamscore=0 priorityscore=1501 bulkscore=0 mlxscore=0
- suspectscore=0 phishscore=0 clxscore=1015 lowpriorityscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2212140075
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.3
+Subject: Re: [PATCH v2 1/5] wifi: rtl8xxxu: Deduplicate the efuse dumping code
+To:     Ping-Ke Shih <pkshih@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Andrea Merello <andrea.merello@gmail.com>,
+        Taehee Yoo <ap420073@gmail.com>
+References: <c9619d20-ba6b-1611-dafb-9fe14617e1ee@gmail.com>
+ <40b9a6949d22484493e49af0200ca65d@realtek.com>
+Content-Language: en-US
+From:   Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <40b9a6949d22484493e49af0200ca65d@realtek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently the regulatory driver does not call the regulatory callback
-reg_notifier for self managed wiphys. Sometimes driver needs cfg80211
-to calculate the info of ieee80211_channel such as flags and power,
-and driver needs to get the info of ieee80211_channel after hint of
-driver, but driver does not know when calculation of the info of
-ieee80211_channel become finished, so add notify to driver after
-reg_process_self_managed_hint() from cfg80211 is a good way, then
-driver could get the correct info in callback of reg_notifier.
+On 14/12/2022 05:58, Ping-Ke Shih wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+>> Sent: Wednesday, December 14, 2022 1:27 AM
+>> To: linux-wireless@vger.kernel.org
+>> Cc: Jes Sorensen <Jes.Sorensen@gmail.com>; Ping-Ke Shih <pkshih@realtek.com>; Andrea Merello
+>> <andrea.merello@gmail.com>; Taehee Yoo <ap420073@gmail.com>
+>> Subject: [PATCH v2 1/5] wifi: rtl8xxxu: Deduplicate the efuse dumping code
+>>
+>> Every chip family except RTL8723AU has a copy of the efuse dumping
+>> code. Remove this and dump the efuse from a single place using a new
+>> function rtl8xxxu_dump_efuse().
+>>
+>> Also, use print_hex_dump() to print the efuse instead of a loop and
+>> dev_info(). It shows the ASCII interpretation of the bytes, which is
+>> nice.
+>>
+>> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+>> ---
+>> v2:
+>>  - Patch is new in v2.
+>> ---
+>>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c | 11 -----------
+>>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c | 10 ----------
+>>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c |  9 ---------
+>>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 11 -----------
+>>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 14 ++++++++++++++
+>>  5 files changed, 14 insertions(+), 41 deletions(-)
+>>
+> 
+> [...]
+> 
+>> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> index 3ed435401e57..827672ce953d 100644
+>> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+>> @@ -1813,6 +1813,17 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
+>>  	return ret;
+>>  }
+>>
+>> +static void rtl8xxxu_dump_efuse(struct rtl8xxxu_priv *priv)
+>> +{
+>> +	dev_info(&priv->udev->dev,
+>> +		 "Dumping efuse for RTL%s (0x%02x bytes):\n",
+>> +		 priv->chip_name, EFUSE_REAL_CONTENT_LEN_8723A);
+>> +
+>> +	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1,
+>> +		       priv->efuse_wifi.raw, EFUSE_REAL_CONTENT_LEN_8723A,
+> 
+> EFUSE_MAP_LEN seems to be more suitable, because:
+> 
+> 	union {
+> 		u8 raw[EFUSE_MAP_LEN];
+> 		...
+> 	} efuse_wifi;
+> 
+> and, suffix _8723A is weird to me.
+> 
+Yes, that's better. I didn't notice EFUSE_MAP_LEN.
 
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
----
- net/wireless/reg.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4f3f31244e8b..e3f500832427 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3085,6 +3085,18 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	reg_free_request(reg_request);
- }
- 
-+static void queue_regulatory_request(struct regulatory_request *request)
-+{
-+	request->alpha2[0] = toupper(request->alpha2[0]);
-+	request->alpha2[1] = toupper(request->alpha2[1]);
-+
-+	spin_lock(&reg_requests_lock);
-+	list_add_tail(&request->list, &reg_requests_list);
-+	spin_unlock(&reg_requests_lock);
-+
-+	schedule_work(&reg_work);
-+}
-+
- static void notify_self_managed_wiphys(struct regulatory_request *request)
- {
- 	struct cfg80211_registered_device *rdev;
-@@ -3095,6 +3107,13 @@ static void notify_self_managed_wiphys(struct regulatory_request *request)
- 		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
- 		    request->initiator == NL80211_REGDOM_SET_BY_USER)
- 			reg_call_notifier(wiphy, request);
-+
-+		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-+		    request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
-+		    request->wiphy_idx == get_wiphy_idx(wiphy)) {
-+			reg_call_notifier(wiphy, request);
-+			request->wiphy_idx = WIPHY_IDX_INVALID;
-+		}
- 	}
- }
- 
-@@ -3172,6 +3191,7 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
- 	const struct ieee80211_regdomain *regd;
- 	enum nl80211_band band;
- 	struct regulatory_request request = {};
-+	struct regulatory_request *driver_request;
- 
- 	ASSERT_RTNL();
- 	lockdep_assert_wiphy(wiphy);
-@@ -3199,6 +3219,13 @@ static void reg_process_self_managed_hint(struct wiphy *wiphy)
- 	request.initiator = NL80211_REGDOM_SET_BY_DRIVER;
- 
- 	nl80211_send_wiphy_reg_change_event(&request);
-+
-+	driver_request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	if (!driver_request)
-+		return;
-+
-+	memcpy(driver_request, &request, sizeof(*driver_request));
-+	queue_regulatory_request(driver_request);
- }
- 
- static void reg_process_self_managed_hints(void)
-@@ -3225,18 +3252,6 @@ static void reg_todo(struct work_struct *work)
- 	rtnl_unlock();
- }
- 
--static void queue_regulatory_request(struct regulatory_request *request)
--{
--	request->alpha2[0] = toupper(request->alpha2[0]);
--	request->alpha2[1] = toupper(request->alpha2[1]);
--
--	spin_lock(&reg_requests_lock);
--	list_add_tail(&request->list, &reg_requests_list);
--	spin_unlock(&reg_requests_lock);
--
--	schedule_work(&reg_work);
--}
--
- /*
-  * Core regulatory hint -- happens during cfg80211_init()
-  * and when we restore regulatory settings.
-
-base-commit: 922932ca02191a390f7f52fb6e21c44b50e14025
--- 
-2.31.1
+>> +		       true);
+>> +}
+>> +
+>>  void rtl8xxxu_reset_8051(struct rtl8xxxu_priv *priv)
+>>  {
+>>  	u8 val8;
+>> @@ -6839,6 +6850,9 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+>>  		goto err_set_intfdata;
+>>  	}
+>>
+>> +	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE)
+>> +		rtl8xxxu_dump_efuse(priv);
+>> +
+>>  	rtl8xxxu_print_chipinfo(priv);
+>>
+>>  	ret = priv->fops->load_firmware(priv);
+>> --
+>> 2.38.0
+>>
+>> ------Please consider the environment before printing this e-mail.
 
