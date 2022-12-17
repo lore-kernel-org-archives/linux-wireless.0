@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4695FC3DA6E
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Dec 2022 14:18:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 954BDC4332F
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Dec 2022 14:18:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230372AbiLQOSO (ORCPT
+        id S230386AbiLQOSP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Dec 2022 09:18:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38722 "EHLO
+        Sat, 17 Dec 2022 09:18:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230370AbiLQOSM (ORCPT
+        with ESMTP id S229921AbiLQOSO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Dec 2022 09:18:12 -0500
+        Sat, 17 Dec 2022 09:18:14 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 93D0BA1AA
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2022 06:18:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A574E11C1B
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2022 06:18:12 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2BHEH6q04024801, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2BHEH6q04024801
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 2BHEHFSC0024833, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 2BHEHFSC0024833
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Sat, 17 Dec 2022 22:17:06 +0800
+        Sat, 17 Dec 2022 22:17:15 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Sat, 17 Dec 2022 22:17:57 +0800
+ 15.1.2375.32; Sat, 17 Dec 2022 22:18:05 +0800
 Received: from localhost (172.16.16.141) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Sat, 17 Dec
- 2022 22:17:56 +0800
+ 2022 22:18:04 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/7] wifi: rtw89: add BTC format version to support newer firmware and features
-Date:   Sat, 17 Dec 2022 22:17:38 +0800
-Message-ID: <20221217141745.43291-1-pkshih@realtek.com>
+Subject: [PATCH 7/7] wifi: rtw89: coex: Change TDMA related logic to version separate
+Date:   Sat, 17 Dec 2022 22:17:45 +0800
+Message-ID: <20221217141745.43291-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221217141745.43291-1-pkshih@realtek.com>
+References: <20221217141745.43291-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -54,49 +56,174 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIyLzEyLzE3IKRXpMggMTE6MjQ6MDA=?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With more chips support, BT coexistence needs to handle newer firmware and
-features. In vendor driver, versions of BT coexistence, firmware and
-features are all fixed, which means it doesn't consider that a BT
-coexistence can work well with _all_ firmware; instead, rtw89 must be.
+From: Ching-Te Ku <ku920601@realtek.com>
 
-The method we propose in this patchset is to add a btc_ver, namely
-'struct rtw89_btc_ver', to define BTC formation version for specific
-chip and firmware version. Also, this can be extended to define which
-BTC features firmware can support.
+In order to make different version of TDMA and coming update in the future
+can all work well, use BTC format version to replace chip_id, because
+format could change for specific chip_id.
 
-Therefore, we define btc_ver in first patch, and then remove old design
-version number from chip_info by second patch. Later patches are to adjust
-the code to close our desire step by step.
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/coex.c | 47 ++++++++++++-----------
+ drivers/net/wireless/realtek/rtw89/core.h | 12 +++---
+ 2 files changed, 32 insertions(+), 27 deletions(-)
 
-To review easier, we keep patches smaller and backward compatible, so the
-number of total patches is about 20+, and this patchset only contains
-partial patches.
-
-Ching-Te Ku (5):
-  wifi: rtw89: coex: Enable Bluetooth report when show debug info
-  wifi: rtw89: coex: Update BTC firmware report bitmap definition
-  wifi: rtw89: coex: Add v2 BT AFH report and related variable
-  wifi: rtw89: coex: refactor _chk_btc_report() to extend more features
-  wifi: rtw89: coex: Change TDMA related logic to version separate
-
-Ping-Ke Shih (2):
-  wifi: rtw89: coex: add BTC format version derived from firmware
-    version
-  wifi: rtw89: coex: use new introduction BTC version format
-
- drivers/net/wireless/realtek/rtw89/coex.c     | 792 +++++++++++-------
- drivers/net/wireless/realtek/rtw89/coex.h     |   1 +
- drivers/net/wireless/realtek/rtw89/core.h     | 106 ++-
- drivers/net/wireless/realtek/rtw89/fw.c       |   2 +
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  14 -
- drivers/net/wireless/realtek/rtw89/rtw8852b.c |  15 +-
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |  14 -
- 7 files changed, 581 insertions(+), 363 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index db0c694c4f92b..2cb7ed1636030 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -1045,12 +1045,14 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		break;
+ 	case BTC_RPT_TYPE_TDMA:
+ 		pcinfo = &pfwinfo->rpt_fbtc_tdma.cinfo;
+-		if (chip->chip_id == RTL8852A) {
+-			pfinfo = &pfwinfo->rpt_fbtc_tdma.finfo;
+-			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo);
++		if (ver->fcxtdma == 1) {
++			pfinfo = &pfwinfo->rpt_fbtc_tdma.finfo.v1;
++			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo.v1);
++		} else if (ver->fcxtdma == 3) {
++			pfinfo = &pfwinfo->rpt_fbtc_tdma.finfo.v3;
++			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo.v3);
+ 		} else {
+-			pfinfo = &pfwinfo->rpt_fbtc_tdma.finfo_v1;
+-			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_tdma.finfo_v1);
++			goto err;
+ 		}
+ 		pcinfo->req_fver = ver->fcxtdma;
+ 		break;
+@@ -1232,16 +1234,18 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 			    "[BTC], %s(): check %d %zu\n", __func__,
+ 			    BTC_DCNT_TDMA_NONSYNC,
+ 			    sizeof(dm->tdma_now));
+-		if (chip->chip_id == RTL8852A)
++		if (ver->fcxtdma == 1)
+ 			_chk_btc_err(rtwdev, BTC_DCNT_TDMA_NONSYNC,
+ 				     memcmp(&dm->tdma_now,
+-					    &pfwinfo->rpt_fbtc_tdma.finfo_v1,
++					    &pfwinfo->rpt_fbtc_tdma.finfo.v1,
+ 					    sizeof(dm->tdma_now)));
+-		else
++		else if (ver->fcxtdma == 3)
+ 			_chk_btc_err(rtwdev, BTC_DCNT_TDMA_NONSYNC,
+ 				     memcmp(&dm->tdma_now,
+-					    &pfwinfo->rpt_fbtc_tdma.finfo,
++					    &pfwinfo->rpt_fbtc_tdma.finfo.v3.tdma,
+ 					    sizeof(dm->tdma_now)));
++		else
++			goto err;
+ 		break;
+ 	case BTC_RPT_TYPE_SLOT:
+ 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
+@@ -1375,13 +1379,12 @@ static void _parse_btc_report(struct rtw89_dev *rtwdev,
+ 
+ static void _append_tdma(struct rtw89_dev *rtwdev)
+ {
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
+ 	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_dm *dm = &btc->dm;
+ 	struct rtw89_btc_btf_tlv *tlv;
+ 	struct rtw89_btc_fbtc_tdma *v;
+-	struct rtw89_btc_fbtc_tdma_v1 *v1;
++	struct rtw89_btc_fbtc_tdma_v3 *v3;
+ 	u16 len = btc->policy_len;
+ 
+ 	if (!btc->update_policy_force &&
+@@ -1394,17 +1397,17 @@ static void _append_tdma(struct rtw89_dev *rtwdev)
+ 
+ 	tlv = (struct rtw89_btc_btf_tlv *)&btc->policy[len];
+ 	tlv->type = CXPOLICY_TDMA;
+-	if (chip->chip_id == RTL8852A) {
++	if (ver->fcxtdma == 1) {
+ 		v = (struct rtw89_btc_fbtc_tdma *)&tlv->val[0];
+ 		tlv->len = sizeof(*v);
+ 		memcpy(v, &dm->tdma, sizeof(*v));
+-		btc->policy_len += BTC_TLV_HDR_LEN  + sizeof(*v);
++		btc->policy_len += BTC_TLV_HDR_LEN + sizeof(*v);
+ 	} else {
+-		tlv->len = sizeof(*v1);
+-		v1 = (struct rtw89_btc_fbtc_tdma_v1 *)&tlv->val[0];
+-		v1->fver = ver->fcxtdma;
+-		v1->tdma = dm->tdma;
+-		btc->policy_len += BTC_TLV_HDR_LEN  + sizeof(*v1);
++		tlv->len = sizeof(*v3);
++		v3 = (struct rtw89_btc_fbtc_tdma_v3 *)&tlv->val[0];
++		v3->fver = ver->fcxtdma;
++		memcpy(&v3->tdma, &dm->tdma, sizeof(v3->tdma));
++		btc->policy_len += BTC_TLV_HDR_LEN + sizeof(*v3);
+ 	}
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_BTC,
+@@ -6281,8 +6284,8 @@ static void _show_error(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 
+ static void _show_fbtc_tdma(struct rtw89_dev *rtwdev, struct seq_file *m)
+ {
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_btf_fwinfo *pfwinfo = &btc->fwinfo;
+ 	struct rtw89_btc_rpt_cmn_info *pcinfo = NULL;
+ 	struct rtw89_btc_fbtc_tdma *t = NULL;
+@@ -6294,10 +6297,10 @@ static void _show_fbtc_tdma(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 	if (!pcinfo->valid)
+ 		return;
+ 
+-	if (chip->chip_id == RTL8852A)
+-		t = &pfwinfo->rpt_fbtc_tdma.finfo;
++	if (ver->fcxtdma == 1)
++		t = &pfwinfo->rpt_fbtc_tdma.finfo.v1;
+ 	else
+-		t = &pfwinfo->rpt_fbtc_tdma.finfo_v1.tdma;
++		t = &pfwinfo->rpt_fbtc_tdma.finfo.v3.tdma;
+ 
+ 	seq_printf(m,
+ 		   " %-15s : ", "[tdma_policy]");
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index af42e67897b6e..2d7b8c7182472 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -1450,13 +1450,18 @@ struct rtw89_btc_fbtc_tdma {
+ 	u8 option_ctrl;
+ } __packed;
+ 
+-struct rtw89_btc_fbtc_tdma_v1 {
++struct rtw89_btc_fbtc_tdma_v3 {
+ 	u8 fver; /* btc_ver::fcxtdma */
+ 	u8 rsvd;
+ 	__le16 rsvd1;
+ 	struct rtw89_btc_fbtc_tdma tdma;
+ } __packed;
+ 
++union rtw89_btc_fbtc_tdma_le32 {
++	struct rtw89_btc_fbtc_tdma v1;
++	struct rtw89_btc_fbtc_tdma_v3 v3;
++};
++
+ #define CXMREG_MAX 30
+ #define FCXMAX_STEP 255 /*STEP trace record cnt, Max:65535, default:255*/
+ #define BTC_CYCLE_SLOT_MAX 48 /* must be even number, non-zero */
+@@ -1946,10 +1951,7 @@ struct rtw89_btc_report_ctrl_state {
+ 
+ struct rtw89_btc_rpt_fbtc_tdma {
+ 	struct rtw89_btc_rpt_cmn_info cinfo; /* common info, by driver */
+-	union {
+-		struct rtw89_btc_fbtc_tdma finfo; /* info from fw */
+-		struct rtw89_btc_fbtc_tdma_v1 finfo_v1; /* info from fw for 52C*/
+-	};
++	union rtw89_btc_fbtc_tdma_le32 finfo;
+ };
+ 
+ struct rtw89_btc_rpt_fbtc_slots {
 -- 
 2.25.1
 
