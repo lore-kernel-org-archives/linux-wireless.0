@@ -2,49 +2,55 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74F26C3DA79
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Dec 2022 16:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB17C4167B
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Dec 2022 16:24:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231890AbiLRQXD (ORCPT
+        id S231800AbiLRQYc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Dec 2022 11:23:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35678 "EHLO
+        Sun, 18 Dec 2022 11:24:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231665AbiLRQWh (ORCPT
+        with ESMTP id S230503AbiLRQXT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Dec 2022 11:22:37 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72D8913D68;
-        Sun, 18 Dec 2022 08:09:11 -0800 (PST)
+        Sun, 18 Dec 2022 11:23:19 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6501913E2B;
+        Sun, 18 Dec 2022 08:09:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D035F60C58;
-        Sun, 18 Dec 2022 16:08:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D65D5C433EF;
-        Sun, 18 Dec 2022 16:08:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E641160DD5;
+        Sun, 18 Dec 2022 16:09:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 099EFC433D2;
+        Sun, 18 Dec 2022 16:09:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671379702;
-        bh=lYeqhZTVdxlXHUF1Ro3QXXxj16GCd6F402Y0YWB+ewA=;
+        s=k20201202; t=1671379749;
+        bh=UYhx+evpP8ZHfD9IL8KQ848NFyz7PIEsaO34Dd8PASY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NZ8iUBxzaaPe9/zx1D7uViQM5/68HD6JrYPQLLpDq6ceTRWhngrRtO8isK1YewXw8
-         nYe/lEsqvxBTyrsBVhZxFtKpMbJble4iKN43k6Ft/uAqNERVpts5V1/55NQuaO3WoC
-         P2501SgC+A8w+ID79fbyXVfOMeoBpyDbBBUwbIQduFkY5lUIczJpxinJ0r0b8mle7H
-         JfPsBDUYCHlml6iCV93PFflMmTL9hQXgsvn1+eEdwrLKL+k+x3129dKfv+eecriaDG
-         oicvbIDYa6YEE58PUK84y80j3tmu57MN/3humvnmJ3FhqIV/YIyShfpb8Ut847Vmco
-         M0wE9WjjQM36Q==
+        b=I6DZP8ljOBHHZdKxgzFWgV3IdTMSh3OKRkD3zO6x02cHlx/I0EaVBRJmcHnYFu3Aq
+         UQ28oHV+w4XDmwS1SzGOGfCAApQBjTWL8rpHf62KwUJ3wOKYfj4PeoFdkCl56xYgyY
+         YXy8pMuHQZ4tiHTSqCHzM+K7uHg4OsJbtziHBIQ3JuOnnJQat88lCOJaWx6wUazR24
+         C8Fcv5LsNRSgxgL1xma/0xaJX5VM5eE2m9oWxLkXACqA/+5h5J4+QK8DNiJYLIdTU+
+         2E4hgr4qUvP9k1k5J37rcPjYIlw0WKb4Z5ODY1cCX9GKLhUo2P3mpWiqadBlFdr0Sr
+         CTewV9wPrfcuw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Youghandhar Chintala <quic_youghand@quicinc.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.0 09/73] wifi: ath10k: Delay the unmapping of the buffer
-Date:   Sun, 18 Dec 2022 11:06:37 -0500
-Message-Id: <20221218160741.927862-9-sashal@kernel.org>
+Cc:     Minsuk Kang <linuxlovemin@yonsei.ac.kr>,
+        Dokyung Song <dokyungs@yonsei.ac.kr>,
+        Jisoo Jang <jisoo.jang@yonsei.ac.kr>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        aspriel@gmail.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        marcan@marcan.st, alsi@bang-olufsen.dk, rmk+kernel@armlinux.org.uk,
+        linus.walleij@linaro.org, ardb@kernel.org,
+        wsa+renesas@sang-engineering.com, phil@raspberrypi.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 23/73] wifi: brcmfmac: Fix potential shift-out-of-bounds in brcmf_fw_alloc_request()
+Date:   Sun, 18 Dec 2022 11:06:51 -0500
+Message-Id: <20221218160741.927862-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221218160741.927862-1-sashal@kernel.org>
 References: <20221218160741.927862-1-sashal@kernel.org>
@@ -56,266 +62,146 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Youghandhar Chintala <quic_youghand@quicinc.com>
+From: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
 
-[ Upstream commit acd4324e5f1f11351630234297f95076f0ac9a2f ]
+[ Upstream commit 81d17f6f3331f03c8eafdacea68ab773426c1e3c ]
 
-On WCN3990, we are seeing a rare scenario where copy engine hardware is
-sending a copy complete interrupt to the host driver while still
-processing the buffer that the driver has sent, this is leading into an
-SMMU fault triggering kernel panic. This is happening on copy engine
-channel 3 (CE3) where the driver normally enqueues WMI commands to the
-firmware. Upon receiving a copy complete interrupt, host driver will
-immediately unmap and frees the buffer presuming that hardware has
-processed the buffer. In the issue case, upon receiving copy complete
-interrupt, host driver will unmap and free the buffer but since hardware
-is still accessing the buffer (which in this case got unmapped in
-parallel), SMMU hardware will trigger an SMMU fault resulting in a
-kernel panic.
+This patch fixes a shift-out-of-bounds in brcmfmac that occurs in
+BIT(chiprev) when a 'chiprev' provided by the device is too large.
+It should also not be equal to or greater than BITS_PER_TYPE(u32)
+as we do bitwise AND with a u32 variable and BIT(chiprev). The patch
+adds a check that makes the function return NULL if that is the case.
+Note that the NULL case is later handled by the bus-specific caller,
+brcmf_usb_probe_cb() or brcmf_usb_reset_resume(), for example.
 
-In order to avoid this, as a work around, add a delay before unmapping
-the copy engine source DMA buffer. This is conditionally done for
-WCN3990 and only for the CE3 channel where issue is seen.
+Found by a modified version of syzkaller.
 
-Below is the crash signature:
+UBSAN: shift-out-of-bounds in drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+shift exponent 151055786 is too large for 64-bit type 'long unsigned int'
+CPU: 0 PID: 1885 Comm: kworker/0:2 Tainted: G           O      5.14.0+ #132
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
+Workqueue: usb_hub_wq hub_event
+Call Trace:
+ dump_stack_lvl+0x57/0x7d
+ ubsan_epilogue+0x5/0x40
+ __ubsan_handle_shift_out_of_bounds.cold+0x53/0xdb
+ ? lock_chain_count+0x20/0x20
+ brcmf_fw_alloc_request.cold+0x19/0x3ea
+ ? brcmf_fw_get_firmwares+0x250/0x250
+ ? brcmf_usb_ioctl_resp_wait+0x1a7/0x1f0
+ brcmf_usb_get_fwname+0x114/0x1a0
+ ? brcmf_usb_reset_resume+0x120/0x120
+ ? number+0x6c4/0x9a0
+ brcmf_c_process_clm_blob+0x168/0x590
+ ? put_dec+0x90/0x90
+ ? enable_ptr_key_workfn+0x20/0x20
+ ? brcmf_common_pd_remove+0x50/0x50
+ ? rcu_read_lock_sched_held+0xa1/0xd0
+ brcmf_c_preinit_dcmds+0x673/0xc40
+ ? brcmf_c_set_joinpref_default+0x100/0x100
+ ? rcu_read_lock_sched_held+0xa1/0xd0
+ ? rcu_read_lock_bh_held+0xb0/0xb0
+ ? lock_acquire+0x19d/0x4e0
+ ? find_held_lock+0x2d/0x110
+ ? brcmf_usb_deq+0x1cc/0x260
+ ? mark_held_locks+0x9f/0xe0
+ ? lockdep_hardirqs_on_prepare+0x273/0x3e0
+ ? _raw_spin_unlock_irqrestore+0x47/0x50
+ ? trace_hardirqs_on+0x1c/0x120
+ ? brcmf_usb_deq+0x1a7/0x260
+ ? brcmf_usb_rx_fill_all+0x5a/0xf0
+ brcmf_attach+0x246/0xd40
+ ? wiphy_new_nm+0x1476/0x1d50
+ ? kmemdup+0x30/0x40
+ brcmf_usb_probe+0x12de/0x1690
+ ? brcmf_usbdev_qinit.constprop.0+0x470/0x470
+ usb_probe_interface+0x25f/0x710
+ really_probe+0x1be/0xa90
+ __driver_probe_device+0x2ab/0x460
+ ? usb_match_id.part.0+0x88/0xc0
+ driver_probe_device+0x49/0x120
+ __device_attach_driver+0x18a/0x250
+ ? driver_allows_async_probing+0x120/0x120
+ bus_for_each_drv+0x123/0x1a0
+ ? bus_rescan_devices+0x20/0x20
+ ? lockdep_hardirqs_on_prepare+0x273/0x3e0
+ ? trace_hardirqs_on+0x1c/0x120
+ __device_attach+0x207/0x330
+ ? device_bind_driver+0xb0/0xb0
+ ? kobject_uevent_env+0x230/0x12c0
+ bus_probe_device+0x1a2/0x260
+ device_add+0xa61/0x1ce0
+ ? __mutex_unlock_slowpath+0xe7/0x660
+ ? __fw_devlink_link_to_suppliers+0x550/0x550
+ usb_set_configuration+0x984/0x1770
+ ? kernfs_create_link+0x175/0x230
+ usb_generic_driver_probe+0x69/0x90
+ usb_probe_device+0x9c/0x220
+ really_probe+0x1be/0xa90
+ __driver_probe_device+0x2ab/0x460
+ driver_probe_device+0x49/0x120
+ __device_attach_driver+0x18a/0x250
+ ? driver_allows_async_probing+0x120/0x120
+ bus_for_each_drv+0x123/0x1a0
+ ? bus_rescan_devices+0x20/0x20
+ ? lockdep_hardirqs_on_prepare+0x273/0x3e0
+ ? trace_hardirqs_on+0x1c/0x120
+ __device_attach+0x207/0x330
+ ? device_bind_driver+0xb0/0xb0
+ ? kobject_uevent_env+0x230/0x12c0
+ bus_probe_device+0x1a2/0x260
+ device_add+0xa61/0x1ce0
+ ? __fw_devlink_link_to_suppliers+0x550/0x550
+ usb_new_device.cold+0x463/0xf66
+ ? hub_disconnect+0x400/0x400
+ ? _raw_spin_unlock_irq+0x24/0x30
+ hub_event+0x10d5/0x3330
+ ? hub_port_debounce+0x280/0x280
+ ? __lock_acquire+0x1671/0x5790
+ ? wq_calc_node_cpumask+0x170/0x2a0
+ ? lock_release+0x640/0x640
+ ? rcu_read_lock_sched_held+0xa1/0xd0
+ ? rcu_read_lock_bh_held+0xb0/0xb0
+ ? lockdep_hardirqs_on_prepare+0x273/0x3e0
+ process_one_work+0x873/0x13e0
+ ? lock_release+0x640/0x640
+ ? pwq_dec_nr_in_flight+0x320/0x320
+ ? rwlock_bug.part.0+0x90/0x90
+ worker_thread+0x8b/0xd10
+ ? __kthread_parkme+0xd9/0x1d0
+ ? process_one_work+0x13e0/0x13e0
+ kthread+0x379/0x450
+ ? _raw_spin_unlock_irq+0x24/0x30
+ ? set_kthread_struct+0x100/0x100
+ ret_from_fork+0x1f/0x30
 
-wifi smmu error: kernel: [ 10.120965] arm-smmu 15000000.iommu: Unhandled
-context fault: fsr=0x402, iova=0x7fdfd8ac0,
-fsynr=0x500003,cbfrsynra=0xc1, cb=6 arm-smmu 15000000.iommu: Unhandled
-context fault:fsr=0x402, iova=0x7fe06fdc0, fsynr=0x710003,
-cbfrsynra=0xc1, cb=6 qcom-q6v5-mss 4080000.remoteproc: fatal error
-received: err_qdi.c:1040:EF:wlan_process:0x1:WLAN RT:0x2091:
-cmnos_thread.c:3998:Asserted in copy_engine.c:AXI_ERROR_DETECTED:2149
-remoteproc remoteproc0: crash detected in
-4080000.remoteproc: type fatal error <3> remoteproc remoteproc0:
-handling crash #1 in 4080000.remoteproc
-
-pc : __arm_lpae_unmap+0x500/0x514
-lr : __arm_lpae_unmap+0x4bc/0x514
-sp : ffffffc011ffb530
-x29: ffffffc011ffb590 x28: 0000000000000000
-x27: 0000000000000000 x26: 0000000000000004
-x25: 0000000000000003 x24: ffffffc011ffb890
-x23: ffffffa762ef9be0 x22: ffffffa77244ef00
-x21: 0000000000000009 x20: 00000007fff7c000
-x19: 0000000000000003 x18: 0000000000000000
-x17: 0000000000000004 x16: ffffffd7a357d9f0
-x15: 0000000000000000 x14: 00fd5d4fa7ffffff
-x13: 000000000000000e x12: 0000000000000000
-x11: 00000000ffffffff x10: 00000000fffffe00
-x9 : 000000000000017c x8 : 000000000000000c
-x7 : 0000000000000000 x6 : ffffffa762ef9000
-x5 : 0000000000000003 x4 : 0000000000000004
-x3 : 0000000000001000 x2 : 00000007fff7c000
-x1 : ffffffc011ffb890 x0 : 0000000000000000 Call trace:
-__arm_lpae_unmap+0x500/0x514
-__arm_lpae_unmap+0x4bc/0x514
-__arm_lpae_unmap+0x4bc/0x514
-arm_lpae_unmap_pages+0x78/0xa4
-arm_smmu_unmap_pages+0x78/0x104
-__iommu_unmap+0xc8/0x1e4
-iommu_unmap_fast+0x38/0x48
-__iommu_dma_unmap+0x84/0x104
-iommu_dma_free+0x34/0x50
-dma_free_attrs+0xa4/0xd0
-ath10k_htt_rx_free+0xc4/0xf4 [ath10k_core] ath10k_core_stop+0x64/0x7c
-[ath10k_core]
-ath10k_halt+0x11c/0x180 [ath10k_core]
-ath10k_stop+0x54/0x94 [ath10k_core]
-drv_stop+0x48/0x1c8 [mac80211]
-ieee80211_do_open+0x638/0x77c [mac80211] ieee80211_open+0x48/0x5c
-[mac80211]
-__dev_open+0xb4/0x174
-__dev_change_flags+0xc4/0x1dc
-dev_change_flags+0x3c/0x7c
-devinet_ioctl+0x2b4/0x580
-inet_ioctl+0xb0/0x1b4
-sock_do_ioctl+0x4c/0x16c
-compat_ifreq_ioctl+0x1cc/0x35c
-compat_sock_ioctl+0x110/0x2ac
-__arm64_compat_sys_ioctl+0xf4/0x3e0
-el0_svc_common+0xb4/0x17c
-el0_svc_compat_handler+0x2c/0x58
-el0_svc_compat+0x8/0x2c
-
-Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.2.0-01387-QCAHLSWMTPLZ-1
-
-Tested-by: Douglas Anderson <dianders@chromium.org>
-Signed-off-by: Youghandhar Chintala <quic_youghand@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20221012142733.32420-1-quic_youghand@quicinc.com
+Reported-by: Dokyung Song <dokyungs@yonsei.ac.kr>
+Reported-by: Jisoo Jang <jisoo.jang@yonsei.ac.kr>
+Reported-by: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
+Signed-off-by: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20221024071329.504277-1-linuxlovemin@yonsei.ac.kr
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 16 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/htc.c  |  9 +++++++++
- drivers/net/wireless/ath/ath10k/hw.h   |  2 ++
- 3 files changed, 27 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index d1ac64026cb3..9a8ea7231a9e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -99,6 +99,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA988X_HW_2_0_VERSION,
-@@ -138,6 +139,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA9887_HW_1_0_VERSION,
-@@ -178,6 +180,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -213,6 +216,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = true,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -252,6 +256,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-@@ -291,6 +296,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_0_VERSION,
-@@ -330,6 +336,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA6174_HW_3_2_VERSION,
-@@ -373,6 +380,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = true,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA99X0_HW_2_0_DEV_VERSION,
-@@ -418,6 +426,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -470,6 +479,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -519,6 +529,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -558,6 +569,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -599,6 +611,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA9377_HW_1_1_DEV_VERSION,
-@@ -631,6 +644,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
-@@ -677,6 +691,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = false,
- 		.hw_restart_disconnect = false,
- 		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
- 	},
- 	{
- 		.id = WCN3990_HW_1_0_DEV_VERSION,
-@@ -709,6 +724,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.dynamic_sar_support = true,
- 		.hw_restart_disconnect = true,
- 		.use_fw_tx_credits = false,
-+		.delay_unmap_buffer = true,
- 	},
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index b8379e4034a4..55d538978e9c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -737,6 +737,11 @@ brcmf_fw_alloc_request(u32 chip, u32 chiprev,
+ 	u32 i, j;
+ 	char end = '\0';
  
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 6d1784f74bea..5bfeecb95fca 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -56,6 +56,15 @@ void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- 	ath10k_dbg(ar, ATH10K_DBG_HTC, "%s: ep %d skb %pK\n", __func__,
- 		   ep->eid, skb);
- 
-+	/* A corner case where the copy completion is reaching to host but still
-+	 * copy engine is processing it due to which host unmaps corresponding
-+	 * memory and causes SMMU fault, hence as workaround adding delay
-+	 * the unmapping memory to avoid SMMU faults.
-+	 */
-+	if (ar->hw_params.delay_unmap_buffer &&
-+	    ep->ul_pipe_id == 3)
-+		mdelay(2);
++	if (chiprev >= BITS_PER_TYPE(u32)) {
++		brcmf_err("Invalid chip revision %u\n", chiprev);
++		return NULL;
++	}
 +
- 	hdr = (struct ath10k_htc_hdr *)skb->data;
- 	ath10k_htc_restore_tx_skb(ep->htc, skb);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 1b99f3a39a11..9643031a4427 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -637,6 +637,8 @@ struct ath10k_hw_params {
- 	bool hw_restart_disconnect;
- 
- 	bool use_fw_tx_credits;
-+
-+	bool delay_unmap_buffer;
- };
- 
- struct htt_resp;
+ 	for (i = 0; i < table_size; i++) {
+ 		if (mapping_table[i].chipid == chip &&
+ 		    mapping_table[i].revmask & BIT(chiprev))
 -- 
 2.35.1
 
