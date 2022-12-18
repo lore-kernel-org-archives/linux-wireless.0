@@ -2,54 +2,52 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E260CC4167B
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Dec 2022 16:17:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32787C4167B
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Dec 2022 16:20:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231700AbiLRQRv (ORCPT
+        id S231893AbiLRQUH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Dec 2022 11:17:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52176 "EHLO
+        Sun, 18 Dec 2022 11:20:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231809AbiLRQRB (ORCPT
+        with ESMTP id S231722AbiLRQTY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Dec 2022 11:17:01 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C51971117C;
-        Sun, 18 Dec 2022 08:07:33 -0800 (PST)
+        Sun, 18 Dec 2022 11:19:24 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E84911823;
+        Sun, 18 Dec 2022 08:07:57 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4DD59B80BD1;
-        Sun, 18 Dec 2022 16:07:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EADFC433D2;
-        Sun, 18 Dec 2022 16:07:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D94E160DCF;
+        Sun, 18 Dec 2022 16:07:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0C84C433D2;
+        Sun, 18 Dec 2022 16:07:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671379625;
-        bh=FlM+n9VFNfrw3Gdn05AUOd5H5amrmG05tgYCykYIpA8=;
+        s=k20201202; t=1671379676;
+        bh=BL7sQewwLjIOeanSD40g+ARo/y7lqQpX/cNbGuTTniE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=boG8HsUAORd6pu+KmeJ3uPqa5i2zKNaHYpOBdWyyQSf/7qnbGZWD64XjifNbEPJ3G
-         h0EOuUa2YIYRqbcTcyFffrnF9tVsSu95sHwEuNyrthRQILI7PoCqtwRXNqmN/6IlxC
-         wRrB+wu79O1IApPEyzuV3lsY889UZbza0yFWfndUQO5/pJk4MyMvjifcxWfEYfD2aq
-         6X2P0zudFD6b43Uus9cw5XhheyfExFwSsBouNnulay28favcofurpSTZ0JWYRCdLaz
-         FAKUnycHbdzdq6VFt/jIXZt0Vuoed0EMjZnHQMk/ihnxAkqEWBOCytf8XcKTyc4HOO
-         m3Kyej+xoSHlw==
+        b=GiOxsQDfh37/17xsoCPrz6INjEaw9fUdomZnKODal5P3K2YWJSAcqr+ewTcW83lsH
+         6TZqPs14+X1YRI9RQUjzWnfeUcOg2+IOyu/0Au5SM3IpgVJZREFXh7ON2frgZffTkr
+         L5j4ZQSNxK9mCDWE8ExkhHtbDEf0iVlHXjeHltwDQnyOwwyabAbGY/+yCLJ1/5Y8yg
+         vvNLXp69Z0zE56gaX+/sh6OLKPdPCHJ+faU4Zu+8Sbog72Oxe/w1PGVog8rtDQO6q7
+         r746RkXTQ98sh8lt8EdICDMLI3tohThtxZ/v0khZf+JJ8OeBUrDGx+HAuxip6XeC+D
+         1EYPyZyRHtrTQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Dokyung Song <dokyungs@yonsei.ac.kr>,
-        Deren Wu <deren.wu@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
-        Sasha Levin <sashal@kernel.org>, ryder.lee@mediatek.com,
+Cc:     Shigeru Yoshida <syoshida@redhat.com>,
+        syzbot+95001b1fd6dfcc716c29@syzkaller.appspotmail.com,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, pontus.fuchs@gmail.com,
         kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, matthias.bgg@gmail.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.1 71/85] wifi: mt76: do not run mt76u_status_worker if the device is not running
-Date:   Sun, 18 Dec 2022 11:01:28 -0500
-Message-Id: <20221218160142.925394-71-sashal@kernel.org>
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.0 05/73] wifi: ar5523: Fix use-after-free on ar5523_cmd() timed out
+Date:   Sun, 18 Dec 2022 11:06:33 -0500
+Message-Id: <20221218160741.927862-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221218160142.925394-1-sashal@kernel.org>
-References: <20221218160142.925394-1-sashal@kernel.org>
+In-Reply-To: <20221218160741.927862-1-sashal@kernel.org>
+References: <20221218160741.927862-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,104 +56,108 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+From: Shigeru Yoshida <syoshida@redhat.com>
 
-[ Upstream commit bd5dac7ced5a7c9faa4dc468ac9560c3256df845 ]
+[ Upstream commit b6702a942a069c2a975478d719e98d83cdae1797 ]
 
-Fix the following NULL pointer dereference avoiding to run
-mt76u_status_worker thread if the device is not running yet.
+syzkaller reported use-after-free with the stack trace like below [1]:
 
-KASAN: null-ptr-deref in range
-[0x0000000000000000-0x0000000000000007]
-CPU: 0 PID: 98 Comm: kworker/u2:2 Not tainted 5.14.0+ #78 Hardware
-name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
-Workqueue: mt76 mt76u_tx_status_data
-RIP: 0010:mt76x02_mac_fill_tx_status.isra.0+0x82c/0x9e0
-Code: c5 48 b8 00 00 00 00 00 fc ff df 80 3c 02 00 0f 85 94 01 00 00
-48 b8 00 00 00 00 00 fc ff df 4d 8b 34 24 4c 89 f2 48 c1 ea 03 <0f>
-b6
-04 02 84 c0 74 08 3c 03 0f 8e 89 01 00 00 41 8b 16 41 0f b7
-RSP: 0018:ffffc900005af988 EFLAGS: 00010246
-RAX: dffffc0000000000 RBX: ffffc900005afae8 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: ffffffff832fc661 RDI: ffffc900005afc2a
-RBP: ffffc900005afae0 R08: 0000000000000001 R09: fffff520000b5f3c
-R10: 0000000000000003 R11: fffff520000b5f3b R12: ffff88810b6132d8
-R13: 000000000000ffff R14: 0000000000000000 R15: ffffc900005afc28
-FS:  0000000000000000(0000) GS:ffff88811aa00000(0000)
-knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fa0eda6a000 CR3: 0000000118f17000 CR4: 0000000000750ef0
-PKRU: 55555554
-Call Trace:
- mt76x02_send_tx_status+0x1d2/0xeb0
- mt76x02_tx_status_data+0x8e/0xd0
- mt76u_tx_status_data+0xe1/0x240
- process_one_work+0x92b/0x1460
- worker_thread+0x95/0xe00
- kthread+0x3a1/0x480
- ret_from_fork+0x1f/0x30
-Modules linked in:
---[ end trace 8df5d20fc5040f65 ]--
-RIP: 0010:mt76x02_mac_fill_tx_status.isra.0+0x82c/0x9e0
-Code: c5 48 b8 00 00 00 00 00 fc ff df 80 3c 02 00 0f 85 94 01 00 00
-48 b8 00 00 00 00 00 fc ff df 4d 8b 34 24 4c 89 f2 48 c1 ea 03 <0f>
-b6
-04 02 84 c0 74 08 3c 03 0f 8e 89 01 00 00 41 8b 16 41 0f b7
-RSP: 0018:ffffc900005af988 EFLAGS: 00010246
-RAX: dffffc0000000000 RBX: ffffc900005afae8 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: ffffffff832fc661 RDI: ffffc900005afc2a
-RBP: ffffc900005afae0 R08: 0000000000000001 R09: fffff520000b5f3c
-R10: 0000000000000003 R11: fffff520000b5f3b R12: ffff88810b6132d8
-R13: 000000000000ffff R14: 0000000000000000 R15: ffffc900005afc28
-FS:  0000000000000000(0000) GS:ffff88811aa00000(0000)
-knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fa0eda6a000 CR3: 0000000118f17000 CR4: 0000000000750ef0
-PKRU: 55555554
+[   38.960489][    C3] ==================================================================
+[   38.963216][    C3] BUG: KASAN: use-after-free in ar5523_cmd_tx_cb+0x220/0x240
+[   38.964950][    C3] Read of size 8 at addr ffff888048e03450 by task swapper/3/0
+[   38.966363][    C3]
+[   38.967053][    C3] CPU: 3 PID: 0 Comm: swapper/3 Not tainted 6.0.0-09039-ga6afa4199d3d-dirty #18
+[   38.968464][    C3] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.0-1.fc36 04/01/2014
+[   38.969959][    C3] Call Trace:
+[   38.970841][    C3]  <IRQ>
+[   38.971663][    C3]  dump_stack_lvl+0xfc/0x174
+[   38.972620][    C3]  print_report.cold+0x2c3/0x752
+[   38.973626][    C3]  ? ar5523_cmd_tx_cb+0x220/0x240
+[   38.974644][    C3]  kasan_report+0xb1/0x1d0
+[   38.975720][    C3]  ? ar5523_cmd_tx_cb+0x220/0x240
+[   38.976831][    C3]  ar5523_cmd_tx_cb+0x220/0x240
+[   38.978412][    C3]  __usb_hcd_giveback_urb+0x353/0x5b0
+[   38.979755][    C3]  usb_hcd_giveback_urb+0x385/0x430
+[   38.981266][    C3]  dummy_timer+0x140c/0x34e0
+[   38.982925][    C3]  ? notifier_call_chain+0xb5/0x1e0
+[   38.984761][    C3]  ? rcu_read_lock_sched_held+0xb/0x60
+[   38.986242][    C3]  ? lock_release+0x51c/0x790
+[   38.987323][    C3]  ? _raw_read_unlock_irqrestore+0x37/0x70
+[   38.988483][    C3]  ? __wake_up_common_lock+0xde/0x130
+[   38.989621][    C3]  ? reacquire_held_locks+0x4a0/0x4a0
+[   38.990777][    C3]  ? lock_acquire+0x472/0x550
+[   38.991919][    C3]  ? rcu_read_lock_sched_held+0xb/0x60
+[   38.993138][    C3]  ? lock_acquire+0x472/0x550
+[   38.994890][    C3]  ? dummy_urb_enqueue+0x860/0x860
+[   38.996266][    C3]  ? do_raw_spin_unlock+0x16f/0x230
+[   38.997670][    C3]  ? dummy_urb_enqueue+0x860/0x860
+[   38.999116][    C3]  call_timer_fn+0x1a0/0x6a0
+[   39.000668][    C3]  ? add_timer_on+0x4a0/0x4a0
+[   39.002137][    C3]  ? reacquire_held_locks+0x4a0/0x4a0
+[   39.003809][    C3]  ? __next_timer_interrupt+0x226/0x2a0
+[   39.005509][    C3]  __run_timers.part.0+0x69a/0xac0
+[   39.007025][    C3]  ? dummy_urb_enqueue+0x860/0x860
+[   39.008716][    C3]  ? call_timer_fn+0x6a0/0x6a0
+[   39.010254][    C3]  ? cpuacct_percpu_seq_show+0x10/0x10
+[   39.011795][    C3]  ? kvm_sched_clock_read+0x14/0x40
+[   39.013277][    C3]  ? sched_clock_cpu+0x69/0x2b0
+[   39.014724][    C3]  run_timer_softirq+0xb6/0x1d0
+[   39.016196][    C3]  __do_softirq+0x1d2/0x9be
+[   39.017616][    C3]  __irq_exit_rcu+0xeb/0x190
+[   39.019004][    C3]  irq_exit_rcu+0x5/0x20
+[   39.020361][    C3]  sysvec_apic_timer_interrupt+0x8f/0xb0
+[   39.021965][    C3]  </IRQ>
+[   39.023237][    C3]  <TASK>
 
-Moreover move stat_work schedule out of the for loop.
+In ar5523_probe(), ar5523_host_available() calls ar5523_cmd() as below
+(there are other functions which finally call ar5523_cmd()):
 
-Reported-by: Dokyung Song <dokyungs@yonsei.ac.kr>
-Co-developed-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: Deren Wu <deren.wu@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ar5523_probe()
+-> ar5523_host_available()
+   -> ar5523_cmd_read()
+      -> ar5523_cmd()
+
+If ar5523_cmd() timed out, then ar5523_host_available() failed and
+ar5523_probe() freed the device structure.  So, ar5523_cmd_tx_cb()
+might touch the freed structure.
+
+This patch fixes this issue by canceling in-flight tx cmd if submitted
+urb timed out.
+
+Link: https://syzkaller.appspot.com/bug?id=9e12b2d54300842b71bdd18b54971385ff0d0d3a [1]
+Reported-by: syzbot+95001b1fd6dfcc716c29@syzkaller.appspotmail.com
+Signed-off-by: Shigeru Yoshida <syoshida@redhat.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20221009183223.420015-1-syoshida@redhat.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ar5523/ar5523.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 4c4033bb1bb3..0597df2729a6 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -766,6 +766,9 @@ static void mt76u_status_worker(struct mt76_worker *w)
- 	struct mt76_queue *q;
- 	int i;
- 
-+	if (!test_bit(MT76_STATE_RUNNING, &dev->phy.state))
-+		return;
-+
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
- 		q = dev->phy.q_tx[i];
- 		if (!q)
-@@ -785,11 +788,11 @@ static void mt76u_status_worker(struct mt76_worker *w)
- 			wake_up(&dev->tx_wait);
- 
- 		mt76_worker_schedule(&dev->tx_worker);
--
--		if (dev->drv->tx_status_data &&
--		    !test_and_set_bit(MT76_READING_STATS, &dev->phy.state))
--			queue_work(dev->wq, &dev->usb.stat_work);
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 6f937d2cc126..ce3d613fa36c 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -241,6 +241,11 @@ static void ar5523_cmd_tx_cb(struct urb *urb)
  	}
-+
-+	if (dev->drv->tx_status_data &&
-+	    !test_and_set_bit(MT76_READING_STATS, &dev->phy.state))
-+		queue_work(dev->wq, &dev->usb.stat_work);
  }
  
- static void mt76u_tx_status_data(struct work_struct *work)
++static void ar5523_cancel_tx_cmd(struct ar5523 *ar)
++{
++	usb_kill_urb(ar->tx_cmd.urb_tx);
++}
++
+ static int ar5523_cmd(struct ar5523 *ar, u32 code, const void *idata,
+ 		      int ilen, void *odata, int olen, int flags)
+ {
+@@ -280,6 +285,7 @@ static int ar5523_cmd(struct ar5523 *ar, u32 code, const void *idata,
+ 	}
+ 
+ 	if (!wait_for_completion_timeout(&cmd->done, 2 * HZ)) {
++		ar5523_cancel_tx_cmd(ar);
+ 		cmd->odata = NULL;
+ 		ar5523_err(ar, "timeout waiting for command %02x reply\n",
+ 			   code);
 -- 
 2.35.1
 
