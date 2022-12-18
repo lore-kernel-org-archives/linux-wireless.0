@@ -2,53 +2,49 @@ Return-Path: <linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFCB8C46467
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Dec 2022 16:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E003AC4708D
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Dec 2022 16:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232934AbiLRQyw (ORCPT
+        id S232977AbiLRQzB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Dec 2022 11:54:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35716 "EHLO
+        Sun, 18 Dec 2022 11:55:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231740AbiLRQxy (ORCPT
+        with ESMTP id S231625AbiLRQx6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Dec 2022 11:53:54 -0500
+        Sun, 18 Dec 2022 11:53:58 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AAB911839;
-        Sun, 18 Dec 2022 08:19:04 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 223EE1A394;
+        Sun, 18 Dec 2022 08:19:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CAF5260DC9;
-        Sun, 18 Dec 2022 16:18:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E605C433F0;
-        Sun, 18 Dec 2022 16:18:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 06D2760DD3;
+        Sun, 18 Dec 2022 16:18:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D740C433F0;
+        Sun, 18 Dec 2022 16:18:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671380327;
-        bh=C2r1yf5k0Jyo9wduj/o8oUBtqDfWJcgONjmk2tx6RIg=;
+        s=k20201202; t=1671380331;
+        bh=7WpPQ3defKTuGZnnRJZBdNPv8X4+ILUJ6TyEU8dBKH8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eS0ZFANWKGAw7CjzLFE7GwJFnFdcIK74qwux2xH65l16QxUsFO1TlKozXkIm0vzP2
-         nVeck0ZOFnbZWpAjrhx+3/Lq1NfZRxe39uSW1JqwR0Y/9Z4qNim8CKHPF0vrl7Uu0z
-         +c5ibnoGUBUoyPuxB01jkm5diC3/WYB0IgsM6fbB/e7oFt1lWsXBzcILnL35gd8MJX
-         KKAVs3I8cxwuhdsnekvEXC5WNITUfYLWnvTXnb8KBOLwUAt1tLoA4walJiQnWnot8D
-         YgqctZIn+UlcOCovIuiAUe+NRgeXR5uMGVHDrfpeh+TgeNqq7t81H9Qvq6NqGcqmcw
-         Vlc8EZbcNCZew==
+        b=vLn9Dj5uaL2aDb//V3e4+rWpmySkXSnIf3aHdd3LtIEdQ6o5hrSZ2aL3okdF0GqP+
+         Vii4Xj9mwYAxuD2SCMMxyQUeX6eT9TmulpB42qMdudXGiwJnx11CZQl8LDTwCTWUNJ
+         L1NS/b6FoflXYW6/cbif0DVqfrWKM0eunKw+cGK87JYAqyrIf8lG1aIqhii0RtKAbS
+         WQIJEqiVOOOte73gjlI1mAR/f+LHELUJfGACtcXiKrAY3MSVYgX9qcw3BwBs1e/8Xj
+         S5l7N32tFysYc3hvJ+/eBKgfdYTnnAB+0AyDOwL8mgEJnY6cINAExMCFefn5DmxbMD
+         aiaSdmW+6FOcQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wright Feng <wright.feng@cypress.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
-        Ian Lin <ian.lin@infineon.com>, Kalle Valo <kvalo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, aspriel@gmail.com,
-        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, marcan@marcan.st, linus.walleij@linaro.org,
-        rmk+kernel@armlinux.org.uk, soontak.lee@cypress.com,
-        alep@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 02/30] brcmfmac: return error when getting invalid max_flowrings from dongle
-Date:   Sun, 18 Dec 2022 11:18:07 -0500
-Message-Id: <20221218161836.933697-2-sashal@kernel.org>
+Cc:     Shigeru Yoshida <syoshida@redhat.com>,
+        syzbot+95001b1fd6dfcc716c29@syzkaller.appspotmail.com,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, pontus.fuchs@gmail.com,
+        kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 04/30] wifi: ar5523: Fix use-after-free on ar5523_cmd() timed out
+Date:   Sun, 18 Dec 2022 11:18:09 -0500
+Message-Id: <20221218161836.933697-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221218161836.933697-1-sashal@kernel.org>
 References: <20221218161836.933697-1-sashal@kernel.org>
@@ -60,41 +56,108 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wright Feng <wright.feng@cypress.com>
+From: Shigeru Yoshida <syoshida@redhat.com>
 
-[ Upstream commit 2aca4f3734bd717e04943ddf340d49ab62299a00 ]
+[ Upstream commit b6702a942a069c2a975478d719e98d83cdae1797 ]
 
-When firmware hit trap at initialization, host will read abnormal
-max_flowrings number from dongle, and it will cause kernel panic when
-doing iowrite to initialize dongle ring.
-To detect this error at early stage, we directly return error when getting
-invalid max_flowrings(>256).
+syzkaller reported use-after-free with the stack trace like below [1]:
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Ian Lin <ian.lin@infineon.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20220929031001.9962-3-ian.lin@infineon.com
+[   38.960489][    C3] ==================================================================
+[   38.963216][    C3] BUG: KASAN: use-after-free in ar5523_cmd_tx_cb+0x220/0x240
+[   38.964950][    C3] Read of size 8 at addr ffff888048e03450 by task swapper/3/0
+[   38.966363][    C3]
+[   38.967053][    C3] CPU: 3 PID: 0 Comm: swapper/3 Not tainted 6.0.0-09039-ga6afa4199d3d-dirty #18
+[   38.968464][    C3] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.0-1.fc36 04/01/2014
+[   38.969959][    C3] Call Trace:
+[   38.970841][    C3]  <IRQ>
+[   38.971663][    C3]  dump_stack_lvl+0xfc/0x174
+[   38.972620][    C3]  print_report.cold+0x2c3/0x752
+[   38.973626][    C3]  ? ar5523_cmd_tx_cb+0x220/0x240
+[   38.974644][    C3]  kasan_report+0xb1/0x1d0
+[   38.975720][    C3]  ? ar5523_cmd_tx_cb+0x220/0x240
+[   38.976831][    C3]  ar5523_cmd_tx_cb+0x220/0x240
+[   38.978412][    C3]  __usb_hcd_giveback_urb+0x353/0x5b0
+[   38.979755][    C3]  usb_hcd_giveback_urb+0x385/0x430
+[   38.981266][    C3]  dummy_timer+0x140c/0x34e0
+[   38.982925][    C3]  ? notifier_call_chain+0xb5/0x1e0
+[   38.984761][    C3]  ? rcu_read_lock_sched_held+0xb/0x60
+[   38.986242][    C3]  ? lock_release+0x51c/0x790
+[   38.987323][    C3]  ? _raw_read_unlock_irqrestore+0x37/0x70
+[   38.988483][    C3]  ? __wake_up_common_lock+0xde/0x130
+[   38.989621][    C3]  ? reacquire_held_locks+0x4a0/0x4a0
+[   38.990777][    C3]  ? lock_acquire+0x472/0x550
+[   38.991919][    C3]  ? rcu_read_lock_sched_held+0xb/0x60
+[   38.993138][    C3]  ? lock_acquire+0x472/0x550
+[   38.994890][    C3]  ? dummy_urb_enqueue+0x860/0x860
+[   38.996266][    C3]  ? do_raw_spin_unlock+0x16f/0x230
+[   38.997670][    C3]  ? dummy_urb_enqueue+0x860/0x860
+[   38.999116][    C3]  call_timer_fn+0x1a0/0x6a0
+[   39.000668][    C3]  ? add_timer_on+0x4a0/0x4a0
+[   39.002137][    C3]  ? reacquire_held_locks+0x4a0/0x4a0
+[   39.003809][    C3]  ? __next_timer_interrupt+0x226/0x2a0
+[   39.005509][    C3]  __run_timers.part.0+0x69a/0xac0
+[   39.007025][    C3]  ? dummy_urb_enqueue+0x860/0x860
+[   39.008716][    C3]  ? call_timer_fn+0x6a0/0x6a0
+[   39.010254][    C3]  ? cpuacct_percpu_seq_show+0x10/0x10
+[   39.011795][    C3]  ? kvm_sched_clock_read+0x14/0x40
+[   39.013277][    C3]  ? sched_clock_cpu+0x69/0x2b0
+[   39.014724][    C3]  run_timer_softirq+0xb6/0x1d0
+[   39.016196][    C3]  __do_softirq+0x1d2/0x9be
+[   39.017616][    C3]  __irq_exit_rcu+0xeb/0x190
+[   39.019004][    C3]  irq_exit_rcu+0x5/0x20
+[   39.020361][    C3]  sysvec_apic_timer_interrupt+0x8f/0xb0
+[   39.021965][    C3]  </IRQ>
+[   39.023237][    C3]  <TASK>
+
+In ar5523_probe(), ar5523_host_available() calls ar5523_cmd() as below
+(there are other functions which finally call ar5523_cmd()):
+
+ar5523_probe()
+-> ar5523_host_available()
+   -> ar5523_cmd_read()
+      -> ar5523_cmd()
+
+If ar5523_cmd() timed out, then ar5523_host_available() failed and
+ar5523_probe() freed the device structure.  So, ar5523_cmd_tx_cb()
+might touch the freed structure.
+
+This patch fixes this issue by canceling in-flight tx cmd if submitted
+urb timed out.
+
+Link: https://syzkaller.appspot.com/bug?id=9e12b2d54300842b71bdd18b54971385ff0d0d3a [1]
+Reported-by: syzbot+95001b1fd6dfcc716c29@syzkaller.appspotmail.com
+Signed-off-by: Shigeru Yoshida <syoshida@redhat.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20221009183223.420015-1-syoshida@redhat.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ar5523/ar5523.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index b5d2e5b9f67c..8d4512c7181e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1109,6 +1109,10 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 				BRCMF_NROF_H2D_COMMON_MSGRINGS;
- 		max_completionrings = BRCMF_NROF_D2H_COMMON_MSGRINGS;
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 58e189ec672f..5d3cf354f6cb 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -241,6 +241,11 @@ static void ar5523_cmd_tx_cb(struct urb *urb)
  	}
-+	if (max_flowrings > 256) {
-+		brcmf_err(bus, "invalid max_flowrings(%d)\n", max_flowrings);
-+		return -EIO;
-+	}
+ }
  
- 	if (devinfo->dma_idx_sz != 0) {
- 		bufsz = (max_submissionrings + max_completionrings) *
++static void ar5523_cancel_tx_cmd(struct ar5523 *ar)
++{
++	usb_kill_urb(ar->tx_cmd.urb_tx);
++}
++
+ static int ar5523_cmd(struct ar5523 *ar, u32 code, const void *idata,
+ 		      int ilen, void *odata, int olen, int flags)
+ {
+@@ -280,6 +285,7 @@ static int ar5523_cmd(struct ar5523 *ar, u32 code, const void *idata,
+ 	}
+ 
+ 	if (!wait_for_completion_timeout(&cmd->done, 2 * HZ)) {
++		ar5523_cancel_tx_cmd(ar);
+ 		cmd->odata = NULL;
+ 		ar5523_err(ar, "timeout waiting for command %02x reply\n",
+ 			   code);
 -- 
 2.35.1
 
