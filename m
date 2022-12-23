@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40E63C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Dec 2022 10:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 458A8C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Dec 2022 10:16:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234990AbiLWKQp (ORCPT
+        id S230158AbiLWKQr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Dec 2022 05:16:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48766 "EHLO
+        Fri, 23 Dec 2022 05:16:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230158AbiLWKQk (ORCPT
+        with ESMTP id S229680AbiLWKQk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 23 Dec 2022 05:16:40 -0500
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5F501C10E
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2022 02:16:39 -0800 (PST)
-X-UUID: ad4671b214d849699b5e57cdfd0988f3-20221223
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D38522618
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2022 02:16:38 -0800 (PST)
+X-UUID: 4a0a8ac310d848569adfd0caa6ba86b4-20221223
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=g4uPlhoxLdAQhmHGbNEm5ojAY0RU+YdbQcWOPs8ae04=;
-        b=IdLAx5ElG3d7h0GV7ElHknOkQ+nDvLUF8/rEvcPryezTvEX1LoozQEd9kEM+gkGwQRD4dkS2rnPBOmW1LgG/ztGLheFSILrxyvwVw11tkuwbYK4tZdIMoq2hJRYnXd+w4zpUyw0yHYDkid9vOOLd+U48qwszI6uHep1NNNh6CW8=;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Q7vP9AmIc7exdMlaPxDaWmhgtLnhX7HZ3tBM0yG+NGk=;
+        b=X9NGpQ//oOxgsDHeTSDVcIDCKU1JQ4jCtNBPZEUZ/iM83dDhKRf3Roo1kSV81xdSxR5/FGy5B5e+AShpokqdBBvzGxhK1M0uAXvTC3SZ/mh2LD0tPAT3sm0EWYVjgPY5aU6/JcRyTkHJXaR8tWEsNH8V6qB4mufc73k0XpNZVKU=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:8b93768e-8b0b-4acd-9cb6-f66e333b8294,IP:0,U
+X-CID-O-INFO: VERSION:1.1.14,REQID:23256c67-05a2-4920-b19a-facec5c448a1,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
         :release,TS:95
-X-CID-INFO: VERSION:1.1.14,REQID:8b93768e-8b0b-4acd-9cb6-f66e333b8294,IP:0,URL
+X-CID-INFO: VERSION:1.1.14,REQID:23256c67-05a2-4920-b19a-facec5c448a1,IP:0,URL
         :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
         :quarantine,TS:95
-X-CID-META: VersionHash:dcaaed0,CLOUDID:98ee9d52-dd49-462e-a4be-2143a3ddc739,B
-        ulkID:221223181634FZ9F9VWL,BulkQuantity:0,Recheck:0,SF:28|17|19|48,TC:nil,
+X-CID-META: VersionHash:dcaaed0,CLOUDID:21f5388a-8530-4eff-9f77-222cf6e2895b,B
+        ulkID:221223181634WQ5NJQX3,BulkQuantity:0,Recheck:0,SF:28|17|19|48,TC:nil,
         Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: ad4671b214d849699b5e57cdfd0988f3-20221223
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+X-UUID: 4a0a8ac310d848569adfd0caa6ba86b4-20221223
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1801261752; Fri, 23 Dec 2022 18:16:32 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 569510095; Fri, 23 Dec 2022 18:16:31 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.792.15; Fri, 23 Dec 2022 18:16:30 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
@@ -51,12 +51,10 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Bo Jiao <Bo.Jiao@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 4/4] wifi: mt76: connac: fix POWER_CTRL command name typo
-Date:   Fri, 23 Dec 2022 18:13:48 +0800
-Message-ID: <20221223101348.11504-4-shayne.chen@mediatek.com>
+Subject: [PATCH 1/4] wifi: mt76: mt7996: fix chainmask calculation in mt7996_set_antenna()
+Date:   Fri, 23 Dec 2022 18:13:45 +0800
+Message-ID: <20221223101348.11504-1-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20221223101348.11504-1-shayne.chen@mediatek.com>
-References: <20221223101348.11504-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -64,41 +62,30 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix typo MCU_UNI_CMD_POWER_CREL to MCU_UNI_CMD_POWER_CTRL.
+Fix per-band chainmask when restoring from the dev chainmask.
 
-Fixes: 779d34de055e ("wifi: mt76: connac: add more unified command IDs")
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h | 2 +-
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c      | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index f1e942b9a887..82fdf6d794bc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -1198,7 +1198,7 @@ enum {
- 	MCU_UNI_CMD_REPT_MUAR = 0x09,
- 	MCU_UNI_CMD_WSYS_CONFIG = 0x0b,
- 	MCU_UNI_CMD_REG_ACCESS = 0x0d,
--	MCU_UNI_CMD_POWER_CREL = 0x0f,
-+	MCU_UNI_CMD_POWER_CTRL = 0x0f,
- 	MCU_UNI_CMD_RX_HDR_TRANS = 0x12,
- 	MCU_UNI_CMD_SER = 0x13,
- 	MCU_UNI_CMD_TWT = 0x14,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index a88fc7680b1a..d781c6e0f33a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -2399,7 +2399,7 @@ mt7996_mcu_restart(struct mt76_dev *dev)
- 		.power_mode = 1,
- 	};
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 4421cd54311b..c423b052e4f4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -880,7 +880,10 @@ mt7996_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+ 	phy->mt76->antenna_mask = tx_ant;
  
--	return mt76_mcu_send_msg(dev, MCU_WM_UNI_CMD(POWER_CREL), &req,
-+	return mt76_mcu_send_msg(dev, MCU_WM_UNI_CMD(POWER_CTRL), &req,
- 				 sizeof(req), false);
- }
- 
+ 	/* restore to the origin chainmask which might have auxiliary path */
+-	if (hweight8(tx_ant) == max_nss)
++	if (hweight8(tx_ant) == max_nss && band_idx < MT_BAND2)
++		phy->mt76->chainmask = ((dev->chainmask >> shift) &
++					(BIT(dev->chainshift[band_idx + 1] - shift) - 1)) << shift;
++	else if (hweight8(tx_ant) == max_nss)
+ 		phy->mt76->chainmask = (dev->chainmask >> shift) << shift;
+ 	else
+ 		phy->mt76->chainmask = tx_ant << shift;
 -- 
 2.25.1
 
