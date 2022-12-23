@@ -2,144 +2,90 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71C3EC4167B
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Dec 2022 10:16:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D81AC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Dec 2022 10:21:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235166AbiLWKQt (ORCPT
+        id S229734AbiLWKVH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Dec 2022 05:16:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48782 "EHLO
+        Fri, 23 Dec 2022 05:21:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231345AbiLWKQm (ORCPT
+        with ESMTP id S230311AbiLWKVF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Dec 2022 05:16:42 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D34031C117
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2022 02:16:40 -0800 (PST)
-X-UUID: cdb4a5d009d6441c844c71543034ce44-20221223
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=hy0CmzTQE73ei2a3CPbMsjO25cSAWzLtKhHWkwKDlac=;
-        b=KwrQlALDb68ZD4kA/fCLFSstg0Ym8MrL7S6/BaoCQjA8shtpUAEEH+723l0v4EJdhiT9cSoTj+nN1EoC4eXFB0zYYfHJULO+oAis+qjC/6+wv1Skq+jgz4rfdtdzSAN8S/DzyHOZR0GWdQOwSth+V9j1iiqklhhfSVt7YZCp1lM=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.14,REQID:fe62eef4-b911-4d51-91a2-4681aef45d9e,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:90
-X-CID-INFO: VERSION:1.1.14,REQID:fe62eef4-b911-4d51-91a2-4681aef45d9e,IP:0,URL
-        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
-        N:quarantine,TS:90
-X-CID-META: VersionHash:dcaaed0,CLOUDID:218dc7f3-ff42-4fb0-b929-626456a83c14,B
-        ulkID:221223181634Q29SJXWV,BulkQuantity:0,Recheck:0,SF:28|17|19|48,TC:nil,
-        Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: cdb4a5d009d6441c844c71543034ce44-20221223
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1905078482; Fri, 23 Dec 2022 18:16:31 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Fri, 23 Dec 2022 18:16:30 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Fri, 23 Dec 2022 18:16:30 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Bo Jiao <Bo.Jiao@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 2/4] wifi: mt76: mt7996: update register for CFEND_RATE
-Date:   Fri, 23 Dec 2022 18:13:46 +0800
-Message-ID: <20221223101348.11504-2-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20221223101348.11504-1-shayne.chen@mediatek.com>
-References: <20221223101348.11504-1-shayne.chen@mediatek.com>
+        Fri, 23 Dec 2022 05:21:05 -0500
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56454D2DE;
+        Fri, 23 Dec 2022 02:21:04 -0800 (PST)
+Received: by mail-pl1-x633.google.com with SMTP id m4so4599438pls.4;
+        Fri, 23 Dec 2022 02:21:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=mccO5ilouRfJn5sBNa6schD4KBFUl4BO3DNqcpmuMnU=;
+        b=H8nrQFqZ+dBwnGND8DBOmO3s+dREzXShgUWq+kar0WMMWgJ1rGjuVbUTveyNz27MZ2
+         kBjWGRuI5VwMY/Crx28FT2bemzzM4PErFE2eVwD5J/Z+7dWiOWjcgbJD4Bf8xiNv+6sN
+         0O0yRG1uao1Vs9Sx1seGVGAg9Vfd8PsSDnxkDh4y7iHv8GeoNXKdxcSPt0Q7Q1rS4+Ln
+         SJAN+ZXvxmYcXp0RLivWvLqbn/w0Ic9EMXzJLkP+HDkp//Sabl7j7oAyDmnR1RH/up7f
+         fmuGuAJPJjQXi7iw9C9p6ETe+c4kDmnUdF0lSikLhyy6c8c3tWuPN8ttQyyiUmv4Kr8H
+         zqlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mccO5ilouRfJn5sBNa6schD4KBFUl4BO3DNqcpmuMnU=;
+        b=pARLbdBYXE+2NqUhvJ253YEK+3YKBz+I66hGW63DWXF8LxDCB0f0cithCzuVAN/PBC
+         VdfBBneoj36AKjNtVMfH6Maz9PyPPFYnZpJVEfLwK/OIhW3OwF07snGi2qfi0YyD0fSO
+         NQPvEaoSwpkeM7eE5AL54gZqsT9vkQNu4WiAka5KTw4JRbbCijtC4BWtcT4iViQK3yxf
+         4zapwqM1uvmwXyxd930QrlrPDpPSf603dhMGefpeOeXbWaqzqIv7ZLDPO+CuhSKwnRsz
+         R79n7BZmdcNSOfvoeeVVQjywFXg1irW6lXdPTrtM88prpKT52BjDQBmwvUnIt2mAtWoe
+         Dk5A==
+X-Gm-Message-State: AFqh2kqRkqT/8IpUARTpH/6yFjnL2itxlUG4W4RbXtT1bqMo9n8xwyGG
+        ypNYaJVI21BBuk8fMvcEDkUrNdu3Qvo=
+X-Google-Smtp-Source: AMrXdXtLPTS/mQ/11Q80UKTLmZyxHRNWRCOQkcZiw97vrTTj2Oc51xgkiTPKmeflg806mQUgeUbyug==
+X-Received: by 2002:a17:902:d647:b0:189:cc58:7784 with SMTP id y7-20020a170902d64700b00189cc587784mr7658369plh.45.1671790863848;
+        Fri, 23 Dec 2022 02:21:03 -0800 (PST)
+Received: from masabert ([202.12.244.3])
+        by smtp.gmail.com with ESMTPSA id q15-20020a17090311cf00b001754fa42065sm2054878plh.143.2022.12.23.02.21.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Dec 2022 02:21:03 -0800 (PST)
+Received: by masabert (Postfix, from userid 1000)
+        id 969DE23603AD; Fri, 23 Dec 2022 19:21:00 +0900 (JST)
+From:   Masanari Iida <standby24x7@gmail.com>
+To:     linux-kernel@vger.kernel.org, pkshih@realtek.com,
+        linux-wireless@vger.kernel.org
+Cc:     Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] wifl: rtw89: Fix a typo in debug message
+Date:   Fri, 23 Dec 2022 19:20:58 +0900
+Message-Id: <20221223102058.162179-1-standby24x7@gmail.com>
+X-Mailer: git-send-email 2.25.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In newer chipsets, CFEND_RATE setting has been moved to different hw
-module.
+This patch fixes a spelling typo in debug message.
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mac.c  |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7996/mmio.c |  1 +
- drivers/net/wireless/mediatek/mt76/mt7996/regs.h | 15 ++++++++-------
- 3 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 0b3e28748e76..ce4242f90e9f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -1690,7 +1690,7 @@ void mt7996_mac_set_timing(struct mt7996_phy *phy)
- 	else
- 		val = MT7996_CFEND_RATE_11B;
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
+index 582ff0d3a9ea..cd6c39b7f802 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c
+@@ -1643,7 +1643,7 @@ static void _doiqk(struct rtw89_dev *rtwdev, bool force,
+ 	rtw89_btc_ntfy_wl_rfk(rtwdev, phy_map, BTC_WRFKT_IQK, BTC_WRFK_ONESHOT_START);
  
--	mt76_rmw_field(dev, MT_AGG_ACR0(band_idx), MT_AGG_ACR_CFEND_RATE, val);
-+	mt76_rmw_field(dev, MT_RATE_HRCR0(band_idx), MT_RATE_HRCR0_CFEND_RATE, val);
- 	mt76_clear(dev, MT_ARB_SCR(band_idx),
- 		   MT_ARB_SCR_TX_DISABLE | MT_ARB_SCR_RX_DISABLE);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-index 60781d046216..d8a2c1a744b2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-@@ -21,6 +21,7 @@ static const struct __base mt7996_reg_base[] = {
- 	[WF_ETBF_BASE]		= { { 0x820ea000, 0x820fa000, 0x830ea000 } },
- 	[WF_LPON_BASE]		= { { 0x820eb000, 0x820fb000, 0x830eb000 } },
- 	[WF_MIB_BASE]		= { { 0x820ed000, 0x820fd000, 0x830ed000 } },
-+	[WF_RATE_BASE]		= { { 0x820ee000, 0x820fe000, 0x830ee000 } },
- };
- 
- static const struct __map mt7996_reg_map[] = {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h b/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-index 42980b97b4d4..7a28cae34e34 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-@@ -33,6 +33,7 @@ enum base_rev {
- 	WF_ETBF_BASE,
- 	WF_LPON_BASE,
- 	WF_MIB_BASE,
-+	WF_RATE_BASE,
- 	__MT_REG_BASE_MAX,
- };
- 
-@@ -235,13 +236,6 @@ enum base_rev {
- 						 FIELD_PREP(MT_WTBL_LMAC_ID, _id) | \
- 						 FIELD_PREP(MT_WTBL_LMAC_DW, _dw))
- 
--/* AGG: band 0(0x820e2000), band 1(0x820f2000), band 2(0x830e2000) */
--#define MT_WF_AGG_BASE(_band)			__BASE(WF_AGG_BASE, (_band))
--#define MT_WF_AGG(_band, ofs)			(MT_WF_AGG_BASE(_band) + (ofs))
--
--#define MT_AGG_ACR0(_band)			MT_WF_AGG(_band, 0x054)
--#define MT_AGG_ACR_CFEND_RATE			GENMASK(13, 0)
--
- /* ARB: band 0(0x820e3000), band 1(0x820f3000), band 2(0x830e3000) */
- #define MT_WF_ARB_BASE(_band)			__BASE(WF_ARB_BASE, (_band))
- #define MT_WF_ARB(_band, ofs)			(MT_WF_ARB_BASE(_band) + (ofs))
-@@ -300,6 +294,13 @@ enum base_rev {
- #define MT_WF_RMAC_RSVD0(_band)			MT_WF_RMAC(_band, 0x03e0)
- #define MT_WF_RMAC_RSVD0_EIFS_CLR		BIT(21)
- 
-+/* RATE: band 0(0x820ee000), band 1(0x820fe000), band 2(0x830ee000) */
-+#define MT_WF_RATE_BASE(_band)			__BASE(WF_RATE_BASE, (_band))
-+#define MT_WF_RATE(_band, ofs)			(MT_WF_RATE_BASE(_band) + (ofs))
-+
-+#define MT_RATE_HRCR0(_band)			MT_WF_RATE(_band, 0x050)
-+#define MT_RATE_HRCR0_CFEND_RATE		GENMASK(14, 0)
-+
- /* WFDMA0 */
- #define MT_WFDMA0_BASE				0xd4000
- #define MT_WFDMA0(ofs)				(MT_WFDMA0_BASE + (ofs))
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK,
+-		    "[IQK]==========IQK strat!!!!!==========\n");
++		    "[IQK]==========IQK start!!!!!==========\n");
+ 	iqk_info->iqk_times++;
+ 	iqk_info->kcount = 0;
+ 	iqk_info->version = RTW8852A_IQK_VER;
 -- 
-2.25.1
+2.38.1
 
