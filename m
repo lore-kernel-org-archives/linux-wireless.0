@@ -2,55 +2,55 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05E17C4708E
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Dec 2022 23:31:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98469C46467
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Dec 2022 23:32:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232679AbiL0Xbg (ORCPT
+        id S232730AbiL0Xc2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Dec 2022 18:31:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57812 "EHLO
+        Tue, 27 Dec 2022 18:32:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232572AbiL0XbB (ORCPT
+        with ESMTP id S232645AbiL0Xb3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Dec 2022 18:31:01 -0500
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8756BDF21;
-        Tue, 27 Dec 2022 15:30:46 -0800 (PST)
-Received: by mail-ed1-x52d.google.com with SMTP id s5so20853172edc.12;
-        Tue, 27 Dec 2022 15:30:46 -0800 (PST)
+        Tue, 27 Dec 2022 18:31:29 -0500
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 027ABE02F;
+        Tue, 27 Dec 2022 15:30:49 -0800 (PST)
+Received: by mail-ed1-x535.google.com with SMTP id c17so20833998edj.13;
+        Tue, 27 Dec 2022 15:30:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=69RnArZw8pH7v6gYxnQGzkJOThGnroKfpqTaxkmeVcY=;
-        b=VAG6baKX/Mbr2DiVvAd65r0OFECQlNI7HMyeV5xK5EFM/UA2S2OKtOulpjvKMcBtfl
-         5HrY4slBX+ZTCC8atGBqBz4TNbgCVtEYt256Ba86Qr5xa3cZBnBY7ewZZq0wPNzLx5+/
-         EdzV9LQ964qkyv3XzxNFudAa37qfu9eW2JlrrmSqIrqJI1SNB8szOKArWKknQcT2EfqK
-         tjWtVUw5C3i6F3Y02mKz1ynaR+cATwqAkwAG8FIHrTQKyuCK3MvWReYEkidjBwHxieRY
-         rt4+TzAwkZY2EnxqlHAkctd8d6QH6cWJZRCnPp1cXsZQZbv/e7Fi254KasR44zT4Hsxh
-         kXBg==
+        bh=Z1azAtpeEKYDc3NsUxyyhrkCkOfc9fkFfo7oykDXpuo=;
+        b=XlGMCT0G2gcvou7A9Uz3FQJacwyUgb1Zz5lAyFoZzyZHCj1HKXqd+/VkL80XXWWrRJ
+         SVsmc35bG4CZMUFjWlknxhSyXoMi0KWKe2VP0Zho3Y7CU6Xk7NliivisFCzVOOs8NlGQ
+         Y0zNWolAgXyiIKDs26GR7w7hct40DjTv0GzA+YgZLLtglN0cWduBlAOziEajdQ44u8bC
+         TeJuBAJQgs39nuwxrriA2O9KS5UQYldzGB5e3Qo9+CHpcajWmj/fcoUV46vc4nMBFN4t
+         rtvMi1t1azNEkEGqD7iSN8wjhJdspfYH8PfehG1RwOox+e0+Lcu8ESu7ZDUTTa6ayi3v
+         61kQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=69RnArZw8pH7v6gYxnQGzkJOThGnroKfpqTaxkmeVcY=;
-        b=jsZ67VLsCP1dNPvGLQ5VZlc4KhD3jBZmZ99BbHccDPwFDicerqKqgTYrWeUeZNvwZw
-         uvyqMLVp3DL7d0ngjf35M6rjx+Vren0YiWVA+WxX8CNaBmvSImT3eib3sHLxrJp1RmFj
-         dcaRMHc3zgqvV4nR0MsRqHlbe9N6P+hytnVM33mGjdp3z3UVMw/+Epi2vS42Ojzn/tlF
-         ltdT8281OsleaPKkk1fXHsci8K5lpwZ3oKTSc2J0QH2p+LDbkGU18SHVCT7PIjR+veSL
-         kfmQ7JYtqcYJlnO/p3S7SypEbDZmulZ9hxRCLhzo+o2qPCb7WbzUc9WDxOMP6c4lwk9b
-         iQwA==
-X-Gm-Message-State: AFqh2kob/Wb1picBH8fwdi/jHG82un/MEMM8swhCTwsRUB0uycpFonMa
-        zZCuhEw/NAIp4o5CMuz+SUveORk5t/k=
-X-Google-Smtp-Source: AMrXdXuFjWYhuXY54NqEai5crXRnZmHWyZmaV0No9HAtAyd8YZaEWgoMr1yvq0OCoKF2/JAOZP3PgA==
-X-Received: by 2002:a05:6402:1055:b0:467:c3cb:49aa with SMTP id e21-20020a056402105500b00467c3cb49aamr19724907edu.4.1672183845760;
-        Tue, 27 Dec 2022 15:30:45 -0800 (PST)
+        bh=Z1azAtpeEKYDc3NsUxyyhrkCkOfc9fkFfo7oykDXpuo=;
+        b=6TSN+AtHBQvF2axE+sBzP/WZdXUWdQJ6OF0inkKj66AQNsfurIYglv2+6Z2pMLfD9d
+         FEd62EBhWYabGms2LWfh2lLd03sgvTXfGVWa+LuFMPR84MBZqgVsyrcEQErxRft2/dp8
+         HytKwmX9XuOLaGbCsDpxY2ZuUvMaffqYZcl/lUY3WnxXibVDocFHquTpVhSluub1iI6o
+         WxcL2T7VmkNSlgtC9RDl0QIXM1thUBCi6XhhW0gJBOz5BdPZZ1ykLq/h+CSOn3BqcWYv
+         99QyfiS6yjoZAqL3j0OX+D2SQbB3bl2FD1mbbXaz9EHfkFD00gO8m6DN/bkES0RUb23R
+         vUtQ==
+X-Gm-Message-State: AFqh2kreKyCx11dR2mEx05XQBJhSAGI/nokM4q+fAaDBkiWF4LLuLKls
+        aRzcZQVUtCxz0EHG+IPB8EUSan4ubqs=
+X-Google-Smtp-Source: AMrXdXviXpG2jnGIM6KWSd7+hKRFh7JMbeSihF1O6ETNZdqhS0oAdWefk7N0xooLLUxc3msgYlPS0w==
+X-Received: by 2002:a05:6402:282:b0:480:c06:2833 with SMTP id l2-20020a056402028200b004800c062833mr15317548edv.38.1672183847852;
+        Tue, 27 Dec 2022 15:30:47 -0800 (PST)
 Received: from localhost.localdomain (dynamic-2a01-0c23-c4cf-d900-0000-0000-0000-0e63.c23.pool.telefonica.de. [2a01:c23:c4cf:d900::e63])
-        by smtp.googlemail.com with ESMTPSA id r7-20020aa7c147000000b0046cbcc86bdesm6489978edp.7.2022.12.27.15.30.44
+        by smtp.googlemail.com with ESMTPSA id r7-20020aa7c147000000b0046cbcc86bdesm6489978edp.7.2022.12.27.15.30.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Dec 2022 15:30:45 -0800 (PST)
+        Tue, 27 Dec 2022 15:30:47 -0800 (PST)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
@@ -62,9 +62,9 @@ Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
         Neo Jou <neojou@gmail.com>, Pkshih <pkshih@realtek.com>,
         Jernej Skrabec <jernej.skrabec@gmail.com>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [RFC PATCH v1 11/19] rtw88: mac: Add support for the SDIO HCI in the TX/page table setup
-Date:   Wed, 28 Dec 2022 00:30:12 +0100
-Message-Id: <20221227233020.284266-12-martin.blumenstingl@googlemail.com>
+Subject: [RFC PATCH v1 13/19] rtw88: mac: Add support for SDIO specifics in the power on sequence
+Date:   Wed, 28 Dec 2022 00:30:14 +0100
+Message-Id: <20221227233020.284266-14-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20221227233020.284266-1-martin.blumenstingl@googlemail.com>
 References: <20221227233020.284266-1-martin.blumenstingl@googlemail.com>
@@ -74,39 +74,116 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-txdma_queue_mapping() and priority_queue_cfg() can use the first entry
-of each chip's rqpn_table and page_table. Add this mapping so data
-transmission is possible on SDIO based chipsets.
+Add the code specific to SDIO HCI in the MAC power on sequence. This is
+based on the RTL8822BS and RTL8822CS vendor drivers.
 
+Co-developed-by: Jernej Skrabec <jernej.skrabec@gmail.com>
+Signed-off-by: Jernej Skrabec <jernej.skrabec@gmail.com>
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac.c | 41 ++++++++++++++++++++++--
+ 1 file changed, 39 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index c04938691add..8e1fa824b32b 100644
+index 8e1fa824b32b..ad71f9838d1d 100644
 --- a/drivers/net/wireless/realtek/rtw88/mac.c
 +++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -1041,6 +1041,9 @@ static int txdma_queue_mapping(struct rtw_dev *rtwdev)
- 		else
- 			return -EINVAL;
+@@ -7,6 +7,7 @@
+ #include "reg.h"
+ #include "fw.h"
+ #include "debug.h"
++#include "sdio.h"
+ 
+ void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 			 u8 primary_ch_idx)
+@@ -60,6 +61,7 @@ EXPORT_SYMBOL(rtw_set_channel_mac);
+ 
+ static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
+ {
++	unsigned int retry;
+ 	u32 value32;
+ 	u8 value8;
+ 
+@@ -77,6 +79,26 @@ static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
+ 	case RTW_HCI_TYPE_PCIE:
+ 		rtw_write32_set(rtwdev, REG_HCI_OPT_CTRL, BIT_USB_SUS_DIS);
  		break;
 +	case RTW_HCI_TYPE_SDIO:
-+		rqpn = &chip->rqpn_table[0];
++		rtw_write8_clr(rtwdev, REG_SDIO_HSUS_CTRL, BIT(0));
++
++		for (retry = 0; retry < RTW_PWR_POLLING_CNT; retry++) {
++			if (rtw_read8(rtwdev, REG_SDIO_HSUS_CTRL) & BIT(1))
++				break;
++
++			usleep_range(10, 50);
++		}
++
++		if (retry == RTW_PWR_POLLING_CNT) {
++			rtw_err(rtwdev, "failed to poll REG_SDIO_HSUS_CTRL[1]");
++			return -ETIMEDOUT;
++		}
++
++		if (rtw_sdio_is_sdio30_supported(rtwdev))
++			rtw_write8_set(rtwdev, REG_HCI_OPT_CTRL + 2, BIT(2));
++		else
++			rtw_write8_clr(rtwdev, REG_HCI_OPT_CTRL + 2, BIT(2));
 +		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -1203,6 +1206,9 @@ static int priority_queue_cfg(struct rtw_dev *rtwdev)
- 		else
- 			return -EINVAL;
+ 	case RTW_HCI_TYPE_USB:
  		break;
-+	case RTW_HCI_TYPE_SDIO:
-+		pg_tbl = &chip->page_table[0];
-+		break;
  	default:
+@@ -248,6 +270,7 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ {
+ 	const struct rtw_chip_info *chip = rtwdev->chip;
+ 	const struct rtw_pwr_seq_cmd **pwr_seq;
++	u32 imr;
+ 	u8 rpwm;
+ 	bool cur_pwr;
+ 
+@@ -278,12 +301,19 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ 	 */
+ 	rtw_hci_power_switch(rtwdev, false);
+ 
++	imr = rtw_read32(rtwdev, REG_SDIO_HIMR);
++	rtw_write32(rtwdev, REG_SDIO_HIMR, 0);
++
+ 	pwr_seq = pwr_on ? chip->pwr_on_seq : chip->pwr_off_seq;
+-	if (rtw_pwr_seq_parser(rtwdev, pwr_seq))
++	if (rtw_pwr_seq_parser(rtwdev, pwr_seq)) {
++		rtw_write32(rtwdev, REG_SDIO_HIMR, imr);
  		return -EINVAL;
- 	}
++	}
+ 
+ 	rtw_hci_power_switch(rtwdev, pwr_on);
+ 
++	rtw_write32(rtwdev, REG_SDIO_HIMR, imr);
++
+ 	return 0;
+ }
+ 
+@@ -450,6 +480,9 @@ static void download_firmware_reg_backup(struct rtw_dev *rtwdev,
+ 	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, 0x200);
+ 	rtw_write32(rtwdev, REG_RQPN_CTRL_2, bckp[bckp_idx - 1].val);
+ 
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO)
++		rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++
+ 	/* Disable beacon related functions */
+ 	tmp = rtw_read8(rtwdev, REG_BCN_CTRL);
+ 	bckp[bckp_idx].len = 1;
+@@ -1062,8 +1095,12 @@ static int txdma_queue_mapping(struct rtw_dev *rtwdev)
+ 	if (rtw_chip_wcpu_11ac(rtwdev))
+ 		rtw_write32(rtwdev, REG_H2CQ_CSR, BIT_H2CQ_FULL);
+ 
+-	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB)
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO) {
++		rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++		rtw_write32(rtwdev, REG_SDIO_TX_CTRL, 0);
++	} else if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB) {
+ 		rtw_write8_set(rtwdev, REG_TXDMA_PQ_MAP, BIT_RXDMA_ARBBW_EN);
++	}
+ 
+ 	return 0;
+ }
 -- 
 2.39.0
 
