@@ -2,65 +2,56 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 514B4C3DA7D
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Jan 2023 03:04:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F18A4C3DA7C
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Jan 2023 04:01:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229788AbjABCkc (ORCPT
+        id S229674AbjABEBr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 1 Jan 2023 21:40:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55074 "EHLO
+        Sun, 1 Jan 2023 23:01:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjABCkc (ORCPT
+        with ESMTP id S229447AbjABEBp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jan 2023 21:40:32 -0500
-Received: from out20-135.mail.aliyun.com (out20-135.mail.aliyun.com [115.124.20.135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D75F9DEF
-        for <linux-wireless@vger.kernel.org>; Sun,  1 Jan 2023 18:40:30 -0800 (PST)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.693145|0.3908663;BR=01201311R361S06rulernew998_84748_2000303;CH=blue;DM=|AD|false|;DS=CONTINUE|ham_system_inform|0.0129092-0.000629568-0.986461;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047205;MF=aiden.leong@aibsd.com;NM=1;PH=DS;RN=8;RT=8;SR=0;TI=SMTPD_---.QiPcDg-_1672627227;
-Received: from localhost.localdomain(mailfrom:aiden.leong@aibsd.com fp:SMTPD_---.QiPcDg-_1672627227)
-          by smtp.aliyun-inc.com;
-          Mon, 02 Jan 2023 10:40:28 +0800
-From:   Aiden Leong <aiden.leong@aibsd.com>
+        Sun, 1 Jan 2023 23:01:45 -0500
+Received: from mx0.riseup.net (mx0.riseup.net [198.252.153.6])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F65BBD0
+        for <linux-wireless@vger.kernel.org>; Sun,  1 Jan 2023 20:01:42 -0800 (PST)
+Received: from fews1.riseup.net (fews1-pn.riseup.net [10.0.1.83])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256
+         client-signature RSA-PSS (2048 bits) client-digest SHA256)
+        (Client CN "mail.riseup.net", Issuer "R3" (not verified))
+        by mx0.riseup.net (Postfix) with ESMTPS id 4Nlhxy0cV1z9slr;
+        Mon,  2 Jan 2023 04:01:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=riseup.net; s=squak;
+        t=1672632102; bh=Djj7C6+JjkmMT7mxUTxv46ab9dTnFZNEb5YhNRpyjAM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Nzj4h8eAuHH8kYbd3j6LzyvB3uPng43T5no+NawiEfwPvkqhR+BKNrHrPp4UEOKmh
+         X9Xz2kFA+Pv0+9oUo/Vu9C8aRp7I9oPqT9clc2Wd58pgiV5iOlwuumCu2b3ax1nL6h
+         mTeupuWXfKhvwaskZdcXnkThVmzTJfTfJa0xS66w=
+X-Riseup-User-ID: 449FE3E42DDDF3A325B329708943F7DB8B442FC3847D819FF11583971F815A16
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+         by fews1.riseup.net (Postfix) with ESMTPSA id 4Nlhxw5HrXz5vLh;
+        Mon,  2 Jan 2023 04:01:40 +0000 (UTC)
+From:   Dang Huynh <danct12@riseup.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     gregory.greenman@intel.com, kvalo@kernel.org, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        Aiden Leong <aiden.leong@aibsd.com>
-Subject: [PATCH 1/2] iwlwifi: pcie: add support for AX101NGW
-Date:   Mon,  2 Jan 2023 10:40:21 +0800
-Message-Id: <20230102024021.2900-1-aiden.leong@aibsd.com>
-X-Mailer: git-send-email 2.39.0
+Cc:     Felix Fietkau <nbd@nbd.name>, johannes@sipsolutions.net
+Subject: Re: [PATCH v4] wifi: mac80211: fix initialization of rx->link and
+ rx->link_sta
+Date:   Mon, 02 Jan 2023 11:01:38 +0700
+Message-ID: <6879486.31r3eYUQgx@melttower>
+In-Reply-To: <20221217085624.52077-1-nbd@nbd.name>
+References: <20221217085624.52077-1-nbd@nbd.name>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-AX101NGW(0x4DF0, 0x0244) should have tx_with_siso_diversity unset.
+Using a CF-WU785AC (MT7612U) with this patch applied on top of kernel 6.1.2, I 
+can confirm that this fixed my kernel panic issue.
 
-Signed-off-by: Aiden Leong <aiden.leong@aibsd.com>
----
-Ref Commit: 9352ed0165ff4313ab340c979446c3d64c531f7a
-Tested on my own device.
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Tested-by: Dang Huynh <danct12@riseup.net>
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 99768d6a6032..a46df1320372 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -986,6 +986,11 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- 		      iwl_qu_c0_hr_b0, iwl_ax201_name),
- 
- 	/* QuZ */
-+	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
-+		      IWL_CFG_MAC_TYPE_QUZ, SILICON_B_STEP,
-+		      IWL_CFG_RF_TYPE_HR1, IWL_CFG_RF_ID_HR1,
-+		      IWL_CFG_NO_160, IWL_CFG_CORES_BT, IWL_CFG_NO_CDB, IWL_CFG_NO_JACKET,
-+		      iwl_cfg_quz_a0_hr_b0, iwl_ax101_name),
- 	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
- 		      IWL_CFG_MAC_TYPE_QUZ, IWL_CFG_ANY,
- 		      IWL_CFG_RF_TYPE_HR1, IWL_CFG_ANY,
--- 
-2.39.0
 
