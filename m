@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFDBFC46467
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Jan 2023 14:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C898C3DA7D
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Jan 2023 14:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237723AbjACODk (ORCPT
+        id S237726AbjACODm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Jan 2023 09:03:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52812 "EHLO
+        Tue, 3 Jan 2023 09:03:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237727AbjACODX (ORCPT
+        with ESMTP id S237729AbjACODX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 3 Jan 2023 09:03:23 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DEE8A10573
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DE7C9101DF
         for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2023 06:03:19 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 303E2ARr8016670, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 303E2G5d8016843, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 303E2ARr8016670
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 303E2G5d8016843
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 3 Jan 2023 22:02:10 +0800
+        Tue, 3 Jan 2023 22:02:16 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Tue, 3 Jan 2023 22:03:05 +0800
+ 15.1.2507.9; Tue, 3 Jan 2023 22:03:11 +0800
 Received: from localhost (172.16.19.22) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 3 Jan 2023
- 22:03:05 +0800
+ 22:03:11 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/7] wifi: rtw89: coex: Remove le32 to CPU translator at firmware cycle report
-Date:   Tue, 3 Jan 2023 22:02:32 +0800
-Message-ID: <20230103140238.15601-2-pkshih@realtek.com>
+Subject: [PATCH 7/7] wifi: rtw89: coex: Update WiFi role info H2C report
+Date:   Tue, 3 Jan 2023 22:02:38 +0800
+Message-ID: <20230103140238.15601-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230103140238.15601-1-pkshih@realtek.com>
 References: <20230103140238.15601-1-pkshih@realtek.com>
@@ -62,327 +62,157 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-There are at least 2 version of cycle report format. If the code keep
-translating the report to local variable, the numbers of variable in
-check btc report function will out of maximum variable numbers. And
-most of these variable are using only one time, it is not necessary
-to store at memory.
+Change style to feature version separate. And because there are
+different WiFi roles number in the firmware, it will make structure
+length longer or shorter, so update the length calculator to cover
+the difference.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 190 +++++++---------------
- 1 file changed, 60 insertions(+), 130 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c |  7 +++--
+ drivers/net/wireless/realtek/rtw89/fw.c   | 36 +++++++++++++++--------
+ 2 files changed, 27 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 2cb7ed1636030..a594f5c729608 100644
+index 21d1011d50c9d..f97ddbcb51046 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -910,76 +910,6 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
+@@ -1772,16 +1772,17 @@ static void _fw_set_policy(struct rtw89_dev *rtwdev, u16 policy_type,
+ 
+ static void _fw_set_drv_info(struct rtw89_dev *rtwdev, u8 type)
+ {
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
++	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 
+ 	switch (type) {
+ 	case CXDRVINFO_INIT:
+ 		rtw89_fw_h2c_cxdrv_init(rtwdev);
+ 		break;
+ 	case CXDRVINFO_ROLE:
+-		if (chip->chip_id == RTL8852A)
++		if (ver->fwlrole == 0)
+ 			rtw89_fw_h2c_cxdrv_role(rtwdev);
+-		else
++		else if (ver->fwlrole == 1)
+ 			rtw89_fw_h2c_cxdrv_role_v1(rtwdev);
+ 		break;
+ 	case CXDRVINFO_CTRL:
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 0328874a0d10e..19a49ef243fa4 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -1818,33 +1818,36 @@ int rtw89_fw_h2c_cxdrv_init(struct rtw89_dev *rtwdev)
+ 
+ #define PORT_DATA_OFFSET 4
+ #define H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN 12
+-#define H2C_LEN_CXDRVINFO_ROLE (4 + 12 * RTW89_PORT_NUM + H2C_LEN_CXDRVHDR)
+-#define H2C_LEN_CXDRVINFO_ROLE_V1 (4 + 16 * RTW89_PORT_NUM + \
+-				   H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN + \
+-				   H2C_LEN_CXDRVHDR)
++#define H2C_LEN_CXDRVINFO_ROLE_SIZE(max_role_num) \
++	(4 + 12 * (max_role_num) + H2C_LEN_CXDRVHDR)
++
+ int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct rtw89_btc_wl_role_info *role_info = &wl->role_info;
+ 	struct rtw89_btc_wl_role_info_bpos *bpos = &role_info->role_map.role;
+ 	struct rtw89_btc_wl_active_role *active = role_info->active_role;
+ 	struct sk_buff *skb;
++	u32 len;
+ 	u8 offset = 0;
+ 	u8 *cmd;
+ 	int ret;
+ 	int i;
+ 
+-	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_CXDRVINFO_ROLE);
++	len = H2C_LEN_CXDRVINFO_ROLE_SIZE(ver->max_role_num);
++
++	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
+ 	if (!skb) {
+ 		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_role\n");
+ 		return -ENOMEM;
  	}
+-	skb_put(skb, H2C_LEN_CXDRVINFO_ROLE);
++	skb_put(skb, len);
+ 	cmd = skb->data;
+ 
+ 	RTW89_SET_FWCMD_CXHDR_TYPE(cmd, CXDRVINFO_ROLE);
+-	RTW89_SET_FWCMD_CXHDR_LEN(cmd, H2C_LEN_CXDRVINFO_ROLE - H2C_LEN_CXDRVHDR);
++	RTW89_SET_FWCMD_CXHDR_LEN(cmd, len - H2C_LEN_CXDRVHDR);
+ 
+ 	RTW89_SET_FWCMD_CXROLE_CONNECT_CNT(cmd, role_info->connect_cnt);
+ 	RTW89_SET_FWCMD_CXROLE_LINK_MODE(cmd, role_info->link_mode);
+@@ -1881,7 +1884,7 @@ int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
+ 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+ 			      H2C_CAT_OUTSRC, BTFC_SET,
+ 			      SET_DRV_INFO, 0, 0,
+-			      H2C_LEN_CXDRVINFO_ROLE);
++			      len);
+ 
+ 	ret = rtw89_h2c_tx(rtwdev, skb, false);
+ 	if (ret) {
+@@ -1896,28 +1899,35 @@ int rtw89_fw_h2c_cxdrv_role(struct rtw89_dev *rtwdev)
+ 	return ret;
  }
  
--struct rtw89_btc_fbtc_cysta_cpu {
--	u8 fver;
--	u8 rsvd;
--	u16 cycles;
--	u16 cycles_a2dp[CXT_FLCTRL_MAX];
--	u16 a2dpept;
--	u16 a2dpeptto;
--	u16 tavg_cycle[CXT_MAX];
--	u16 tmax_cycle[CXT_MAX];
--	u16 tmaxdiff_cycle[CXT_MAX];
--	u16 tavg_a2dp[CXT_FLCTRL_MAX];
--	u16 tmax_a2dp[CXT_FLCTRL_MAX];
--	u16 tavg_a2dpept;
--	u16 tmax_a2dpept;
--	u16 tavg_lk;
--	u16 tmax_lk;
--	u32 slot_cnt[CXST_MAX];
--	u32 bcn_cnt[CXBCN_MAX];
--	u32 leakrx_cnt;
--	u32 collision_cnt;
--	u32 skip_cnt;
--	u32 exception;
--	u32 except_cnt;
--	u16 tslot_cycle[BTC_CYCLE_SLOT_MAX];
--};
--
--static void rtw89_btc_fbtc_cysta_to_cpu(const struct rtw89_btc_fbtc_cysta *src,
--					struct rtw89_btc_fbtc_cysta_cpu *dst)
--{
--	static_assert(sizeof(*src) == sizeof(*dst));
--
--#define __CPY_U8(_x)	({dst->_x = src->_x; })
--#define __CPY_LE16(_x)	({dst->_x = le16_to_cpu(src->_x); })
--#define __CPY_LE16S(_x)	({int _i; for (_i = 0; _i < ARRAY_SIZE(dst->_x); _i++) \
--				   dst->_x[_i] = le16_to_cpu(src->_x[_i]); })
--#define __CPY_LE32(_x)	({dst->_x = le32_to_cpu(src->_x); })
--#define __CPY_LE32S(_x)	({int _i; for (_i = 0; _i < ARRAY_SIZE(dst->_x); _i++) \
--				   dst->_x[_i] = le32_to_cpu(src->_x[_i]); })
--
--	__CPY_U8(fver);
--	__CPY_U8(rsvd);
--	__CPY_LE16(cycles);
--	__CPY_LE16S(cycles_a2dp);
--	__CPY_LE16(a2dpept);
--	__CPY_LE16(a2dpeptto);
--	__CPY_LE16S(tavg_cycle);
--	__CPY_LE16S(tmax_cycle);
--	__CPY_LE16S(tmaxdiff_cycle);
--	__CPY_LE16S(tavg_a2dp);
--	__CPY_LE16S(tmax_a2dp);
--	__CPY_LE16(tavg_a2dpept);
--	__CPY_LE16(tmax_a2dpept);
--	__CPY_LE16(tavg_lk);
--	__CPY_LE16(tmax_lk);
--	__CPY_LE32S(slot_cnt);
--	__CPY_LE32S(bcn_cnt);
--	__CPY_LE32(leakrx_cnt);
--	__CPY_LE32(collision_cnt);
--	__CPY_LE32(skip_cnt);
--	__CPY_LE32(exception);
--	__CPY_LE32(except_cnt);
--	__CPY_LE16S(tslot_cycle);
--
--#undef __CPY_U8
--#undef __CPY_LE16
--#undef __CPY_LE16S
--#undef __CPY_LE32
--#undef __CPY_LE32S
--}
--
- #define BTC_LEAK_AP_TH 10
- #define BTC_CYSTA_CHK_PERIOD 100
- 
-@@ -1002,9 +932,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
- 	struct rtw89_btc_fbtc_rpt_ctrl *prpt;
- 	struct rtw89_btc_fbtc_rpt_ctrl_v1 *prpt_v1;
--	struct rtw89_btc_fbtc_cysta *pcysta_le32 = NULL;
-+	struct rtw89_btc_fbtc_cysta *pcysta = NULL;
- 	struct rtw89_btc_fbtc_cysta_v1 *pcysta_v1 = NULL;
--	struct rtw89_btc_fbtc_cysta_cpu pcysta[1];
- 	struct rtw89_btc_prpt *btc_prpt = NULL;
- 	void *rpt_content = NULL, *pfinfo = NULL;
- 	u8 rpt_type = 0;
-@@ -1066,8 +995,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 		pcinfo = &pfwinfo->rpt_fbtc_cysta.cinfo;
- 		if (chip->chip_id == RTL8852A) {
- 			pfinfo = &pfwinfo->rpt_fbtc_cysta.finfo;
--			pcysta_le32 = &pfwinfo->rpt_fbtc_cysta.finfo;
--			rtw89_btc_fbtc_cysta_to_cpu(pcysta_le32, pcysta);
-+			pcysta = &pfwinfo->rpt_fbtc_cysta.finfo;
- 			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_cysta.finfo);
- 		} else {
- 			pfinfo = &pfwinfo->rpt_fbtc_cysta.finfo_v1;
-@@ -1259,13 +1187,13 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 		break;
- 	case BTC_RPT_TYPE_CYSTA:
- 		if (chip->chip_id == RTL8852A) {
--			if (pcysta->cycles < BTC_CYSTA_CHK_PERIOD)
-+			if (le16_to_cpu(pcysta->cycles) < BTC_CYSTA_CHK_PERIOD)
- 				break;
- 			/* Check Leak-AP */
--			if (pcysta->slot_cnt[CXST_LK] != 0 &&
--			    pcysta->leakrx_cnt != 0 && dm->tdma_now.rxflctrl) {
--				if (pcysta->slot_cnt[CXST_LK] <
--				    BTC_LEAK_AP_TH * pcysta->leakrx_cnt)
-+			if (le32_to_cpu(pcysta->slot_cnt[CXST_LK]) != 0 &&
-+			    le32_to_cpu(pcysta->leakrx_cnt) != 0 && dm->tdma_now.rxflctrl) {
-+				if (le32_to_cpu(pcysta->slot_cnt[CXST_LK]) <
-+				    BTC_LEAK_AP_TH * le32_to_cpu(pcysta->leakrx_cnt))
- 					dm->leak_ap = 1;
- 			}
- 
-@@ -1276,18 +1204,18 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			else
- 				wl_slot_set = le16_to_cpu(dm->slot_now[CXST_W1].dur);
- 
--			if (pcysta->tavg_cycle[CXT_WL] > wl_slot_set) {
--				diff_t = pcysta->tavg_cycle[CXT_WL] - wl_slot_set;
-+			if (le16_to_cpu(pcysta->tavg_cycle[CXT_WL]) > wl_slot_set) {
-+				diff_t = le16_to_cpu(pcysta->tavg_cycle[CXT_WL]) - wl_slot_set;
- 				_chk_btc_err(rtwdev,
- 					     BTC_DCNT_WL_SLOT_DRIFT, diff_t);
- 			}
- 
- 			_chk_btc_err(rtwdev, BTC_DCNT_W1_FREEZE,
--				     pcysta->slot_cnt[CXST_W1]);
-+				     le32_to_cpu(pcysta->slot_cnt[CXST_W1]));
- 			_chk_btc_err(rtwdev, BTC_DCNT_W1_FREEZE,
--				     pcysta->slot_cnt[CXST_B1]);
-+				     le32_to_cpu(pcysta->slot_cnt[CXST_B1]));
- 			_chk_btc_err(rtwdev, BTC_DCNT_CYCLE_FREEZE,
--				     (u32)pcysta->cycles);
-+				     le16_to_cpu(pcysta->cycles));
- 		} else {
- 			if (le16_to_cpu(pcysta_v1->cycles) < BTC_CYSTA_CHK_PERIOD)
- 				break;
-@@ -6385,7 +6313,6 @@ static void _show_fbtc_cysta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 	struct rtw89_btc_bt_a2dp_desc *a2dp = &btc->cx.bt.link_info.a2dp_desc;
- 	struct rtw89_btc_rpt_cmn_info *pcinfo = NULL;
- 	struct rtw89_btc_fbtc_cysta *pcysta_le32 = NULL;
--	struct rtw89_btc_fbtc_cysta_cpu pcysta[1];
- 	union rtw89_btc_fbtc_rxflct r;
- 	u8 i, cnt = 0, slot_pair;
- 	u16 cycle, c_begin, c_end, store_index;
-@@ -6395,64 +6322,65 @@ static void _show_fbtc_cysta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		return;
- 
- 	pcysta_le32 = &pfwinfo->rpt_fbtc_cysta.finfo;
--	rtw89_btc_fbtc_cysta_to_cpu(pcysta_le32, pcysta);
- 	seq_printf(m,
- 		   " %-15s : cycle:%d, bcn[all:%d/all_ok:%d/bt:%d/bt_ok:%d]",
--		   "[cycle_cnt]", pcysta->cycles, pcysta->bcn_cnt[CXBCN_ALL],
--		   pcysta->bcn_cnt[CXBCN_ALL_OK],
--		   pcysta->bcn_cnt[CXBCN_BT_SLOT],
--		   pcysta->bcn_cnt[CXBCN_BT_OK]);
-+		   "[cycle_cnt]",
-+		   le16_to_cpu(pcysta_le32->cycles),
-+		   le32_to_cpu(pcysta_le32->bcn_cnt[CXBCN_ALL]),
-+		   le32_to_cpu(pcysta_le32->bcn_cnt[CXBCN_ALL_OK]),
-+		   le32_to_cpu(pcysta_le32->bcn_cnt[CXBCN_BT_SLOT]),
-+		   le32_to_cpu(pcysta_le32->bcn_cnt[CXBCN_BT_OK]));
- 
- 	for (i = 0; i < CXST_MAX; i++) {
--		if (!pcysta->slot_cnt[i])
-+		if (!le32_to_cpu(pcysta_le32->slot_cnt[i]))
- 			continue;
--		seq_printf(m,
--			   ", %d:%d", (u32)i, pcysta->slot_cnt[i]);
-+		seq_printf(m, ", %d:%d", (u32)i,
-+			   le32_to_cpu(pcysta_le32->slot_cnt[i]));
- 	}
- 
- 	if (dm->tdma_now.rxflctrl) {
--		seq_printf(m,
--			   ", leak_rx:%d", pcysta->leakrx_cnt);
-+		seq_printf(m, ", leak_rx:%d",
-+			   le32_to_cpu(pcysta_le32->leakrx_cnt));
- 	}
- 
--	if (pcysta->collision_cnt) {
--		seq_printf(m,
--			   ", collision:%d", pcysta->collision_cnt);
-+	if (le32_to_cpu(pcysta_le32->collision_cnt)) {
-+		seq_printf(m, ", collision:%d",
-+			   le32_to_cpu(pcysta_le32->collision_cnt));
- 	}
- 
--	if (pcysta->skip_cnt) {
--		seq_printf(m,
--			   ", skip:%d", pcysta->skip_cnt);
-+	if (le32_to_cpu(pcysta_le32->skip_cnt)) {
-+		seq_printf(m, ", skip:%d",
-+			   le32_to_cpu(pcysta_le32->skip_cnt));
- 	}
- 	seq_puts(m, "\n");
- 
- 	seq_printf(m, " %-15s : avg_t[wl:%d/bt:%d/lk:%d.%03d]",
- 		   "[cycle_time]",
--		   pcysta->tavg_cycle[CXT_WL],
--		   pcysta->tavg_cycle[CXT_BT],
--		   pcysta->tavg_lk / 1000, pcysta->tavg_lk % 1000);
--	seq_printf(m,
--		   ", max_t[wl:%d/bt:%d/lk:%d.%03d]",
--		   pcysta->tmax_cycle[CXT_WL],
--		   pcysta->tmax_cycle[CXT_BT],
--		   pcysta->tmax_lk / 1000, pcysta->tmax_lk % 1000);
--	seq_printf(m,
--		   ", maxdiff_t[wl:%d/bt:%d]\n",
--		   pcysta->tmaxdiff_cycle[CXT_WL],
--		   pcysta->tmaxdiff_cycle[CXT_BT]);
--
--	if (pcysta->cycles == 0)
-+		   le16_to_cpu(pcysta_le32->tavg_cycle[CXT_WL]),
-+		   le16_to_cpu(pcysta_le32->tavg_cycle[CXT_BT]),
-+		   le16_to_cpu(pcysta_le32->tavg_lk) / 1000,
-+		   le16_to_cpu(pcysta_le32->tavg_lk) % 1000);
-+	seq_printf(m, ", max_t[wl:%d/bt:%d/lk:%d.%03d]",
-+		   le16_to_cpu(pcysta_le32->tmax_cycle[CXT_WL]),
-+		   le16_to_cpu(pcysta_le32->tmax_cycle[CXT_BT]),
-+		   le16_to_cpu(pcysta_le32->tmax_lk) / 1000,
-+		   le16_to_cpu(pcysta_le32->tmax_lk) % 1000);
-+	seq_printf(m, ", maxdiff_t[wl:%d/bt:%d]\n",
-+		   le16_to_cpu(pcysta_le32->tmaxdiff_cycle[CXT_WL]),
-+		   le16_to_cpu(pcysta_le32->tmaxdiff_cycle[CXT_BT]));
++#define H2C_LEN_CXDRVINFO_ROLE_SIZE_V1(max_role_num) \
++	(4 + 16 * (max_role_num) + H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN + H2C_LEN_CXDRVHDR)
 +
-+	if (le16_to_cpu(pcysta_le32->cycles) == 0)
- 		return;
+ int rtw89_fw_h2c_cxdrv_role_v1(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct rtw89_btc_wl_role_info_v1 *role_info = &wl->role_info_v1;
+ 	struct rtw89_btc_wl_role_info_bpos *bpos = &role_info->role_map.role;
+ 	struct rtw89_btc_wl_active_role_v1 *active = role_info->active_role_v1;
+ 	struct sk_buff *skb;
++	u32 len;
+ 	u8 *cmd, offset;
+ 	int ret;
+ 	int i;
  
- 	/* 1 cycle record 1 wl-slot and 1 bt-slot */
- 	slot_pair = BTC_CYCLE_SLOT_MAX / 2;
- 
--	if (pcysta->cycles <= slot_pair)
-+	if (le16_to_cpu(pcysta_le32->cycles) <= slot_pair)
- 		c_begin = 1;
- 	else
--		c_begin = pcysta->cycles - slot_pair + 1;
-+		c_begin = le16_to_cpu(pcysta_le32->cycles) - slot_pair + 1;
- 
--	c_end = pcysta->cycles;
-+	c_end = le16_to_cpu(pcysta_le32->cycles);
- 
- 	for (cycle = c_begin; cycle <= c_end; cycle++) {
- 		cnt++;
-@@ -6461,13 +6389,13 @@ static void _show_fbtc_cysta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		if (cnt % (BTC_CYCLE_SLOT_MAX / 4) == 1)
- 			seq_printf(m,
- 				   " %-15s : ->b%02d->w%02d", "[cycle_step]",
--				   pcysta->tslot_cycle[store_index],
--				   pcysta->tslot_cycle[store_index + 1]);
-+				   le16_to_cpu(pcysta_le32->tslot_cycle[store_index]),
-+				   le16_to_cpu(pcysta_le32->tslot_cycle[store_index + 1]));
- 		else
- 			seq_printf(m,
- 				   "->b%02d->w%02d",
--				   pcysta->tslot_cycle[store_index],
--				   pcysta->tslot_cycle[store_index + 1]);
-+				   le16_to_cpu(pcysta_le32->tslot_cycle[store_index]),
-+				   le16_to_cpu(pcysta_le32->tslot_cycle[store_index + 1]));
- 		if (cnt % (BTC_CYCLE_SLOT_MAX / 4) == 0 || cnt == c_end)
- 			seq_puts(m, "\n");
+-	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_CXDRVINFO_ROLE_V1);
++	len = H2C_LEN_CXDRVINFO_ROLE_SIZE_V1(ver->max_role_num);
++
++	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
+ 	if (!skb) {
+ 		rtw89_err(rtwdev, "failed to alloc skb for h2c cxdrv_role\n");
+ 		return -ENOMEM;
  	}
-@@ -6476,28 +6404,30 @@ static void _show_fbtc_cysta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		seq_printf(m,
- 			   " %-15s : a2dp_ept:%d, a2dp_late:%d",
- 			   "[a2dp_t_sta]",
--			   pcysta->a2dpept, pcysta->a2dpeptto);
-+			   le16_to_cpu(pcysta_le32->a2dpept),
-+			   le16_to_cpu(pcysta_le32->a2dpeptto));
+-	skb_put(skb, H2C_LEN_CXDRVINFO_ROLE_V1);
++	skb_put(skb, len);
+ 	cmd = skb->data;
  
- 		seq_printf(m,
- 			   ", avg_t:%d, max_t:%d",
--			   pcysta->tavg_a2dpept, pcysta->tmax_a2dpept);
-+			   le16_to_cpu(pcysta_le32->tavg_a2dpept),
-+			   le16_to_cpu(pcysta_le32->tmax_a2dpept));
- 		r.val = dm->tdma_now.rxflctrl;
+ 	RTW89_SET_FWCMD_CXHDR_TYPE(cmd, CXDRVINFO_ROLE);
+-	RTW89_SET_FWCMD_CXHDR_LEN(cmd, H2C_LEN_CXDRVINFO_ROLE_V1 - H2C_LEN_CXDRVHDR);
++	RTW89_SET_FWCMD_CXHDR_LEN(cmd, len - H2C_LEN_CXDRVHDR);
  
- 		if (r.type && r.tgln_n) {
- 			seq_printf(m,
- 				   ", cycle[PSTDMA:%d/TDMA:%d], ",
--				   pcysta->cycles_a2dp[CXT_FLCTRL_ON],
--				   pcysta->cycles_a2dp[CXT_FLCTRL_OFF]);
-+				   le16_to_cpu(pcysta_le32->cycles_a2dp[CXT_FLCTRL_ON]),
-+				   le16_to_cpu(pcysta_le32->cycles_a2dp[CXT_FLCTRL_OFF]));
- 
- 			seq_printf(m,
- 				   "avg_t[PSTDMA:%d/TDMA:%d], ",
--				   pcysta->tavg_a2dp[CXT_FLCTRL_ON],
--				   pcysta->tavg_a2dp[CXT_FLCTRL_OFF]);
-+				   le16_to_cpu(pcysta_le32->tavg_a2dp[CXT_FLCTRL_ON]),
-+				   le16_to_cpu(pcysta_le32->tavg_a2dp[CXT_FLCTRL_OFF]));
- 
- 			seq_printf(m,
- 				   "max_t[PSTDMA:%d/TDMA:%d]",
--				   pcysta->tmax_a2dp[CXT_FLCTRL_ON],
--				   pcysta->tmax_a2dp[CXT_FLCTRL_OFF]);
-+				   le16_to_cpu(pcysta_le32->tmax_a2dp[CXT_FLCTRL_ON]),
-+				   le16_to_cpu(pcysta_le32->tmax_a2dp[CXT_FLCTRL_OFF]));
- 		}
- 		seq_puts(m, "\n");
+ 	RTW89_SET_FWCMD_CXROLE_CONNECT_CNT(cmd, role_info->connect_cnt);
+ 	RTW89_SET_FWCMD_CXROLE_LINK_MODE(cmd, role_info->link_mode);
+@@ -1953,7 +1963,7 @@ int rtw89_fw_h2c_cxdrv_role_v1(struct rtw89_dev *rtwdev)
+ 		RTW89_SET_FWCMD_CXROLE_ACT_NOA_DUR(cmd, active->noa_duration, i, offset);
  	}
+ 
+-	offset = H2C_LEN_CXDRVINFO_ROLE_V1 - H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN;
++	offset = len - H2C_LEN_CXDRVINFO_ROLE_DBCC_LEN;
+ 	RTW89_SET_FWCMD_CXROLE_MROLE_TYPE(cmd, role_info->mrole_type, offset);
+ 	RTW89_SET_FWCMD_CXROLE_MROLE_NOA(cmd, role_info->mrole_noa_duration, offset);
+ 	RTW89_SET_FWCMD_CXROLE_DBCC_EN(cmd, role_info->dbcc_en, offset);
+@@ -1964,7 +1974,7 @@ int rtw89_fw_h2c_cxdrv_role_v1(struct rtw89_dev *rtwdev)
+ 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+ 			      H2C_CAT_OUTSRC, BTFC_SET,
+ 			      SET_DRV_INFO, 0, 0,
+-			      H2C_LEN_CXDRVINFO_ROLE_V1);
++			      len);
+ 
+ 	ret = rtw89_h2c_tx(rtwdev, skb, false);
+ 	if (ret) {
 -- 
 2.25.1
 
