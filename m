@@ -2,72 +2,98 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33939C46467
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Jan 2023 13:56:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8402C3DA7D
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Jan 2023 14:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237708AbjACN41 (ORCPT
+        id S237598AbjACODg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Jan 2023 08:56:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50242 "EHLO
+        Tue, 3 Jan 2023 09:03:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237684AbjACN40 (ORCPT
+        with ESMTP id S237714AbjACODU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2023 08:56:26 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D104FD2EF
-        for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2023 05:56:25 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6CD8361290
-        for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2023 13:56:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78961C433D2;
-        Tue,  3 Jan 2023 13:56:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672754184;
-        bh=fEOl+OM0Xl1eH2Ye987QUe5q8B/8P/xX5wh5r/X92so=;
-        h=From:To:Cc:Subject:Date:From;
-        b=dn4nk++GlWRlQXQd+LyKkw5qTG2dvqUXfwIflCNMCxgo7Z1EuIsC5vJcWtr46ZFbE
-         PtWHKY0rJaAxCzWtT7CAWolWADxT0DCPcM8ainoLQD6Nq6M7lolZF7jOzprkul62h7
-         hcbmpVbcZttorxftWj2pLpBbPjtl+ZK9Pcba3UmQNev8v6dg88WmaQNOqFXyRdVGoX
-         3wSgmkt2jJZ5/Tq1XNqLlMv1x8o27sCfBjZBuKgtrZnE1Anyaiu9xqanmuBPOEn4H0
-         38Q744vuY87U815lzi7gNHK2kigNlHFstYIjS+ljt+R2KEQUAvYDLMO1q66KzqjtFr
-         9Vd5Xl/53cqBQ==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] wifi: mt76: fix switch default case in mt7996_reverse_frag0_hdr_trans
-Date:   Tue,  3 Jan 2023 14:56:19 +0100
-Message-Id: <6b0edfcb0d34a233a243f3817fbf98550ffb73df.1672754107.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.39.0
+        Tue, 3 Jan 2023 09:03:20 -0500
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DA86A1056B
+        for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2023 06:03:18 -0800 (PST)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 303E2FxN4016808, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 303E2FxN4016808
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Tue, 3 Jan 2023 22:02:15 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Tue, 3 Jan 2023 22:03:10 +0800
+Received: from localhost (172.16.19.22) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 3 Jan 2023
+ 22:03:10 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] wifi: rtw89: coex: only read Bluetooth counter of report version 1 for RTL8852A
+Date:   Tue, 3 Jan 2023 22:02:37 +0800
+Message-ID: <20230103140238.15601-7-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230103140238.15601-1-pkshih@realtek.com>
+References: <20230103140238.15601-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.19.22]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: trusted connection
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Deterministic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 01/03/2023 13:50:00
+X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
+ rules found
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIzLzEvMyCkVaTIIDAxOjA0OjAw?=
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The switch default case for frame_contorl is invalid. Return -EINVAL
-error for it.
+From: Ching-Te Ku <ku920601@realtek.com>
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Only when firmware control report version is 1, need to get the counter by
+reading the register. The other version will monitor the counter at
+firmware. And upstream branch only RTL8852A has this old version.
+
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 0b3e28748e76..e198ab006c46 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -469,7 +469,7 @@ static int mt7996_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_gap)
- 		ether_addr_copy(hdr.addr4, eth_hdr->h_source);
- 		break;
- 	default:
--		break;
-+		return -EINVAL;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index 1875c2537ddbd..1800a56091be4 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -1878,9 +1878,13 @@ static
+ void rtw8852a_btc_update_bt_cnt(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_cx *cx = &btc->cx;
+ 	u32 val;
  
- 	skb_pull(skb, hdr_gap + sizeof(struct ethhdr) - 2);
++	if (ver->fcxbtcrpt != 1)
++		return;
++
+ 	val = rtw89_read32(rtwdev, R_AX_BT_STAST_HIGH);
+ 	cx->cnt_bt[BTC_BCNT_HIPRI_TX] = FIELD_GET(B_AX_STATIS_BT_HI_TX_MASK, val);
+ 	cx->cnt_bt[BTC_BCNT_HIPRI_RX] = FIELD_GET(B_AX_STATIS_BT_HI_RX_MASK, val);
 -- 
-2.39.0
+2.25.1
 
