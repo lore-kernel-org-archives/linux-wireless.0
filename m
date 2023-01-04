@@ -2,84 +2,93 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13726C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Jan 2023 11:41:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D063C46467
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Jan 2023 12:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234876AbjADLln (ORCPT
+        id S234873AbjADMQU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Jan 2023 06:41:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55130 "EHLO
+        Wed, 4 Jan 2023 07:16:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234789AbjADLlm (ORCPT
+        with ESMTP id S234726AbjADMQR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2023 06:41:42 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BD90C33;
-        Wed,  4 Jan 2023 03:41:41 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1425A613F8;
-        Wed,  4 Jan 2023 11:41:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2CDCC433F2;
-        Wed,  4 Jan 2023 11:41:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672832500;
-        bh=UOkLJ8/shdFIUGOHuDtn1pstz2A0lwIELqP5/G4QGxg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IUvMkekXwUhgXkcFN6GX8/l6d2AIgq5hX80C4CNjR7HrY78UcWjMUwemItN56TNWh
-         eqDojVtBvTEMX3KErRmtOerTa/L//2fIoG4NXZSLqqWLncwRljPP/FVZLJrOf0811h
-         1SHP8SIZI5UrjHBKZZAqUIi+iccyIQHfJ7ZCyd4NlgNWDpdDpo5vSwMmyW9TaHIaD7
-         zDF6l39V99cM/4vpKVkdG2n7HJBTFdYY5KzFtG2hr+yu5enbRLNXg2M9rjbNZZ1CwO
-         kmbS1QzG+m9gq4+5YeKxyWP217Ugt70A69jBcHiYQE/ErghSMjGblretA6q7oBa+sY
-         rN/ciz4yMoEVg==
-Date:   Wed, 4 Jan 2023 13:41:36 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Cc:     pkshih@realtek.com, kvalo@kernel.org, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        Wed, 4 Jan 2023 07:16:17 -0500
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A719F016;
+        Wed,  4 Jan 2023 04:16:16 -0800 (PST)
+Received: from fedcomp.. (unknown [46.242.14.200])
+        by mail.ispras.ru (Postfix) with ESMTPSA id 4DF7D419E9CB;
+        Wed,  4 Jan 2023 12:16:10 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 4DF7D419E9CB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+        s=default; t=1672834570;
+        bh=Z6aS5qwzvrT0EpnS1M75E2ZCaAMxUHd9r+HBXrqbyEI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=NGRgfg+jgxe1kSHwci/iiw6fMSJJpkpM1F9rNjloL3XOiDp9BcJ1WsRyqJsIadf/r
+         4koYwwmC1SkBuRFq7fxtghx588QHzzzkJl6muwt/7OYdkWrVesYIScCQizYx+Cyueo
+         cevtkGepSizm2VSYlYfHjKaGQHCbnA14P2TJn5J4=
+From:   Fedor Pchelkin <pchelkin@ispras.ru>
+To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>
+Cc:     Fedor Pchelkin <pchelkin@ispras.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Sujith <Sujith.Manoharan@atheros.com>,
+        "John W. Linville" <linville@tuxdriver.com>,
+        Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+        Senthil Balasubramanian <senthilkumar@atheros.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: rtw89: Add missing check for alloc_workqueue
-Message-ID: <Y7Vl8CHL935On/7o@unreal>
-References: <20230104093353.48239-1-jiasheng@iscas.ac.cn>
+        linux-kernel@vger.kernel.org,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        lvc-project@linuxtesting.org,
+        syzbot+e008dccab31bd3647609@syzkaller.appspotmail.com,
+        syzbot+6692c72009680f7c4eb2@syzkaller.appspotmail.com
+Subject: [PATCH v3] wifi: ath9k: htc_hst: free skb in ath9k_htc_rx_msg() if there is no callback function
+Date:   Wed,  4 Jan 2023 15:15:58 +0300
+Message-Id: <20230104121558.38969-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230103224815.304147-1-pchelkin@ispras.ru>
+References: 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230104093353.48239-1-jiasheng@iscas.ac.cn>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jan 04, 2023 at 05:33:53PM +0800, Jiasheng Jiang wrote:
-> Add check for the return value of alloc_workqueue since it may return
-> NULL pointer.
-> 
-> Fixes: e3ec7017f6a2 ("rtw89: add Realtek 802.11ax driver")
-> Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
-> ---
->  drivers/net/wireless/realtek/rtw89/core.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-> index 931aff8b5dc9..006fe0499f81 100644
-> --- a/drivers/net/wireless/realtek/rtw89/core.c
-> +++ b/drivers/net/wireless/realtek/rtw89/core.c
-> @@ -3124,6 +3124,8 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
->  	INIT_DELAYED_WORK(&rtwdev->cfo_track_work, rtw89_phy_cfo_track_work);
->  	INIT_DELAYED_WORK(&rtwdev->forbid_ba_work, rtw89_forbid_ba_work);
->  	rtwdev->txq_wq = alloc_workqueue("rtw89_tx_wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
-> +	if (!rtwdev->txq_wq)
-> +		return -ENOMEM;
+It is stated that ath9k_htc_rx_msg() either frees the provided skb or
+passes its management to another callback function. However, the skb is
+not freed in case there is no another callback function, and Syzkaller was
+able to cause a memory leak. Also minor comment fix.
 
-While the change is fixing one issue, you are adding another one.
-There is no destroy of this workqueue if rtw89_load_firmware fails.
+Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
 
-Thanks
+Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
+Reported-by: syzbot+e008dccab31bd3647609@syzkaller.appspotmail.com
+Reported-by: syzbot+6692c72009680f7c4eb2@syzkaller.appspotmail.com
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+v1->v2: added Reported-by tag
+v2->v3: use 'goto invalid' instead of freeing skb in place
 
->  	spin_lock_init(&rtwdev->ba_lock);
->  	spin_lock_init(&rtwdev->rpwm_lock);
->  	mutex_init(&rtwdev->mutex);
-> -- 
-> 2.25.1
-> 
+ drivers/net/wireless/ath/ath9k/htc_hst.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index ca05b07a45e6..0c95f6b145ff 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -478,6 +478,8 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
+ 		if (endpoint->ep_callbacks.rx)
+ 			endpoint->ep_callbacks.rx(endpoint->ep_callbacks.priv,
+ 						  skb, epid);
++		else
++			goto invalid;
+ 	}
+ }
+ 
+-- 
+2.34.1
+
