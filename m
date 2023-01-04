@@ -2,113 +2,83 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 075F0C46467
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Jan 2023 12:41:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C7DC46467
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Jan 2023 13:23:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234206AbjADMlx (ORCPT
+        id S233103AbjADNWr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Jan 2023 07:41:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58686 "EHLO
+        Wed, 4 Jan 2023 08:22:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239264AbjADMlv (ORCPT
+        with ESMTP id S239646AbjADNWY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2023 07:41:51 -0500
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3155AE07
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Jan 2023 04:41:50 -0800 (PST)
-Received: by mail-pj1-x1033.google.com with SMTP id n12so23092588pjp.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2023 04:41:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=yonsei-ac-kr.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=eYqAuotZakvJbzXu+JOiNvmSNcfzCg1hdPWkKPrWBFI=;
-        b=Ki2ktntELCQCy5wPrCXk9VJXnRfBaarhWGUU1fHT3SXVGGOHGKjlq0eTAaul5yAi7U
-         sOdUKm6bAoIB+nzN8qEO0Nt2Xy8MRRSB35uSiVVfsw56hAkcuv9DRxNTOySlCvpAmlLg
-         l+KDC/CEqwrYkwpf2lxRLtq1D051mJZboFAe1gnW15tVtb35TsTq1WYJuerNHepEcpVJ
-         D4r5C8Y8hZjq4a5+/s2RI85EIhXOPNdageAw7kOWUiLFXWRfcGVheRrkXGJSJryTK/eS
-         ZgRWxKi5zDtukgsqBljrKuNexGlnC2ngrb+qhTy5c0AO6bg1IImhNZJU2V3KCOm7KHe9
-         V81w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=eYqAuotZakvJbzXu+JOiNvmSNcfzCg1hdPWkKPrWBFI=;
-        b=fUKFy/3oGi6VWNy1tJU4DAq1FcQaLKuSJo+Mqdvj51trMTR66gW/8RNJQvatoyq/2x
-         frtzP9tcRr6TXNu7rq37K8z8+tcmwlWsFZrRcyBn8D6jSsMuRCnHusXKzDbie0uJHjUu
-         hA1PhUEQtpDi+2WZ55gmgEWX2BI82AVjfjn6lunhOoDgiVYkCdzd2UJxJ+AHtj5jVJqh
-         6nKFyIZVaBLf62tlpoz8ntZI/qb3/nPfYU0c/7ahdmidWez440cir1x/YK2+nv7CbZi4
-         iKW9JSaieXfsV4PuLu8q1Iu0lNF0aTAQ2aiVRrjj5ZytBdyga4EHhS8qWpfeWjJneYSB
-         Lkig==
-X-Gm-Message-State: AFqh2kpcwXBSgAhq7rYoAsawYbhGiNh10UxV4FyZn1oex9URrErctcZ7
-        vTRbw513ObreGC4L8FSTEUYfI3Bfd2kXDJM89aPctQ==
-X-Google-Smtp-Source: AMrXdXtUYW3grFI5DS65MO1EJU5CLzV8RXIAN2NiO371Xw9drsGl1qvewH+6IVgVigfzZ3aRoOZmWw==
-X-Received: by 2002:a05:6a20:d819:b0:b2:3b40:32b1 with SMTP id iv25-20020a056a20d81900b000b23b4032b1mr55335626pzb.57.1672836109414;
-        Wed, 04 Jan 2023 04:41:49 -0800 (PST)
-Received: from localhost.localdomain ([165.132.118.52])
-        by smtp.gmail.com with ESMTPSA id q28-20020aa7983c000000b0057255b7c8easm18570752pfl.33.2023.01.04.04.41.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Jan 2023 04:41:49 -0800 (PST)
-From:   Minsuk Kang <linuxlovemin@yonsei.ac.kr>
-To:     linux-wireless@vger.kernel.org, toke@toke.dk
-Cc:     kvalo@kernel.org, dokyungs@yonsei.ac.kr, jisoo.jang@yonsei.ac.kr,
-        Minsuk Kang <linuxlovemin@yonsei.ac.kr>
-Subject: [PATCH v2] ath9k: Fix potential stack-out-of-bounds write in ath9k_wmi_rsp_callback()
-Date:   Wed,  4 Jan 2023 21:41:30 +0900
-Message-Id: <20230104124130.10996-1-linuxlovemin@yonsei.ac.kr>
-X-Mailer: git-send-email 2.25.1
+        Wed, 4 Jan 2023 08:22:24 -0500
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 293CF2735
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Jan 2023 05:22:21 -0800 (PST)
+Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <sha@pengutronix.de>)
+        id 1pD3ie-0004DB-CH; Wed, 04 Jan 2023 14:22:12 +0100
+Received: from sha by ptx.hi.pengutronix.de with local (Exim 4.92)
+        (envelope-from <sha@pengutronix.de>)
+        id 1pD3id-00011P-5S; Wed, 04 Jan 2023 14:22:11 +0100
+Date:   Wed, 4 Jan 2023 14:22:11 +0100
+From:   Sascha Hauer <s.hauer@pengutronix.de>
+To:     Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc:     linux-wireless@vger.kernel.org, tony0620emma@gmail.com,
+        kvalo@kernel.org, pkshih@realtek.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/4] rtw88: Four fixes found while working on SDIO support
+Message-ID: <20230104132211.GW11668@pengutronix.de>
+References: <20221229124845.1155429-1-martin.blumenstingl@googlemail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221229124845.1155429-1-martin.blumenstingl@googlemail.com>
+X-Sent-From: Pengutronix Hildesheim
+X-URL:  http://www.pengutronix.de/
+X-Accept-Language: de,en
+X-Accept-Content-Type: text/plain
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
+X-SA-Exim-Mail-From: sha@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix a stack-out-of-bounds write that occurs in a WMI response callback
-function that is called after a timeout occurs in ath9k_wmi_cmd().
-The callback writes to wmi->cmd_rsp_buf, a stack-allocated buffer that
-could no longer be valid when a timeout occurs. Set wmi->last_seq_id to
-0 when a timeout occurred.
+On Thu, Dec 29, 2022 at 01:48:41PM +0100, Martin Blumenstingl wrote:
+> This series consists of three patches which are fixing existing
+> behavior (meaning: it either affects PCIe or USB or both) in the rtw88
+> driver.
+> 
+> The first change adds the packed attribute to the eFuse structs. This
+> was spotted by Ping-Ke while reviewing the SDIO support patches from
+> [0].
+> 
+> The remaining three changes relate to locking (barrier hold) problems.
+> We previously had discussed patches for this for SDIO support, but the
+> problem never ocurred while testing USB cards. It turns out that these
+> are still needed and I think that they also fix the same problems for
+> USB users (it's not clear how often it happens there though).
 
-Found by a modified version of syzkaller.
+Indeed I haven't stumbled over any of the issues you fix in this series.
+I briefly looked into it and it might be that at least some of the code
+paths are only used with beam forming support. Could it be that my
+cheapo USB sticks do not support that?
 
-BUG: KASAN: stack-out-of-bounds in ath9k_wmi_ctrl_rx
-Write of size 4
-Call Trace:
- memcpy
- ath9k_wmi_ctrl_rx
- ath9k_htc_rx_msg
- ath9k_hif_usb_reg_in_cb
- __usb_hcd_giveback_urb
- usb_hcd_giveback_urb
- dummy_timer
- call_timer_fn
- run_timer_softirq
- __do_softirq
- irq_exit_rcu
- sysvec_apic_timer_interrupt
+For what it's worth, I gave this series a quick test and didn't see any
+regressions, so:
 
-Signed-off-by: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
----
-v1->v2:
-  Reset wmi->last_seq_id to 0 instead of introducing a new 'timedout'
-  field when a timeout occurred.
+Tested-by: Sascha Hauer <s.hauer@pengutronix.de>
 
- drivers/net/wireless/ath/ath9k/wmi.c | 1 +
- 1 file changed, 1 insertion(+)
+Sascha
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index f315c54bd3ac..19345b8f7bfd 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -341,6 +341,7 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	if (!time_left) {
- 		ath_dbg(common, WMI, "Timeout waiting for WMI command: %s\n",
- 			wmi_cmd_to_name(cmd_id));
-+		wmi->last_seq_id = 0;
- 		mutex_unlock(&wmi->op_mutex);
- 		return -ETIMEDOUT;
- 	}
 -- 
-2.25.1
-
+Pengutronix e.K.                           |                             |
+Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
+31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
