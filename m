@@ -2,70 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11921C3DA7A
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Jan 2023 08:58:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3891C5479D
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Jan 2023 09:10:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231735AbjAEI6g (ORCPT
+        id S231712AbjAEJJr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Jan 2023 03:58:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50902 "EHLO
+        Thu, 5 Jan 2023 04:09:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231684AbjAEI6c (ORCPT
+        with ESMTP id S232080AbjAEJJW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2023 03:58:32 -0500
-Received: from out30-54.freemail.mail.aliyun.com (out30-54.freemail.mail.aliyun.com [115.124.30.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFE274FD74;
-        Thu,  5 Jan 2023 00:58:29 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R741e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045170;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=12;SR=0;TI=SMTPD_---0VYvOwUl_1672909085;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0VYvOwUl_1672909085)
-          by smtp.aliyun-inc.com;
-          Thu, 05 Jan 2023 16:58:27 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     stf_xl@wp.pl
-Cc:     helmut.schaa@googlemail.com, kvalo@kernel.org, davem@davemloft.net,
+        Thu, 5 Jan 2023 04:09:22 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6997C5017D;
+        Thu,  5 Jan 2023 01:09:21 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0905E61929;
+        Thu,  5 Jan 2023 09:09:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1F44C433D2;
+        Thu,  5 Jan 2023 09:09:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1672909760;
+        bh=Br5C/uDEZK1Yfd+HJpl97NIZZHEqGbxQ5YfknJjVjAU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Txu4a/n2IHl5nt5WRP3pqB7IP4KyrZNf0l0ncRjbTsjYiQkIFxjMcPK4wNOXch7L3
+         yb6QtPrpGTg8QyWHDg2p2MGW+1dyxXejtSCJ0wKCGV09mHXSzLQeuBPF2m/FEoYBWf
+         MUwYMLp7EuLk+C7cE+ikg8VWLytjHOTHWVtVB2LozF5cN/oEevADVB+2jEOP+LLEAN
+         vz2uZ1shdVpSazzRSv+CCunu4VqzwKekxQjclZQuuMOhfmWngiN/yJ0lHL0m/BMNe7
+         sTb0R8VhZWNsO9ZnFzSdPGRX9ohZ8zR2H/i4Zg3EM43BMeB/279TKc1mxYrHiQ6m83
+         bd2sX4vJXW3kg==
+Date:   Thu, 5 Jan 2023 11:09:16 +0200
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Jiasheng Jiang <jiasheng@iscas.ac.cn>
+Cc:     pkshih@realtek.com, kvalo@kernel.org, davem@davemloft.net,
         edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] wifi: rt2x00: Remove useless else if
-Date:   Thu,  5 Jan 2023 16:58:02 +0800
-Message-Id: <20230105085802.30905-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: rtw89: Add missing check for alloc_workqueue
+Message-ID: <Y7aTvDWQnHQfN3su@unreal>
+References: <20230104142353.25093-1-jiasheng@iscas.ac.cn>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230104142353.25093-1-jiasheng@iscas.ac.cn>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The assignment of the else and else if branches is the same, so the else
-if here is redundant, so we remove it and add a comment to make the code
-here readable.
+On Wed, Jan 04, 2023 at 10:23:53PM +0800, Jiasheng Jiang wrote:
+> On Wed, Jan 04, 2023 at 07:41:36PM +0800, Leon Romanovsky wrote:
+> > On Wed, Jan 04, 2023 at 05:33:53PM +0800, Jiasheng Jiang wrote:
+> >> Add check for the return value of alloc_workqueue since it may return
+> >> NULL pointer.
+> >> 
+> >> Fixes: e3ec7017f6a2 ("rtw89: add Realtek 802.11ax driver")
+> >> Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
+> >> ---
+> >>  drivers/net/wireless/realtek/rtw89/core.c | 2 ++
+> >>  1 file changed, 2 insertions(+)
+> >> 
+> >> diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+> >> index 931aff8b5dc9..006fe0499f81 100644
+> >> --- a/drivers/net/wireless/realtek/rtw89/core.c
+> >> +++ b/drivers/net/wireless/realtek/rtw89/core.c
+> >> @@ -3124,6 +3124,8 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
+> >>  	INIT_DELAYED_WORK(&rtwdev->cfo_track_work, rtw89_phy_cfo_track_work);
+> >>  	INIT_DELAYED_WORK(&rtwdev->forbid_ba_work, rtw89_forbid_ba_work);
+> >>  	rtwdev->txq_wq = alloc_workqueue("rtw89_tx_wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
+> >> +	if (!rtwdev->txq_wq)
+> >> +		return -ENOMEM;
+> > 
+> > While the change is fixing one issue, you are adding another one.
+> > There is no destroy of this workqueue if rtw89_load_firmware fails.
+> 
+> Actually, I do not think the missing of destroy_workqueue is introduced by me.
+> Even without my patch, the destroy_workqueue is still missing.
 
-./drivers/net/wireless/ralink/rt2x00/rt2800lib.c:8927:9-11: WARNING: possible condition with no effect (if == else).
+Not really, without your change, rtw89_core_init() never failed.
 
-Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3631
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> Anyway, I will submit a v2 that adds the missing destroy_workqueue.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 12b700c7b9c3..36b9cd4dd138 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -8924,9 +8924,7 @@ static void rt2800_rxiq_calibration(struct rt2x00_dev *rt2x00dev)
- 
- 				if (i < 2 && (bbptemp & 0x800000))
- 					result = (bbptemp & 0xffffff) - 0x1000000;
--				else if (i == 4)
--					result = bbptemp;
--				else
-+				else /* This branch contains if(i==4) */
- 					result = bbptemp;
- 
- 				if (i == 0)
--- 
-2.20.1.7.g153144c
+Thanks
 
+> 
+> Thanks,
+> Jiang
+> 
