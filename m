@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61C4AC63705
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Jan 2023 16:44:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53951C61DB3
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Jan 2023 16:44:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236189AbjAFQos (ORCPT
+        id S236159AbjAFQor (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Jan 2023 11:44:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57336 "EHLO
+        Fri, 6 Jan 2023 11:44:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236116AbjAFQna (ORCPT
+        with ESMTP id S236151AbjAFQnb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2023 11:43:30 -0500
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2040.outbound.protection.outlook.com [40.107.236.40])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F87D7A3B2;
-        Fri,  6 Jan 2023 08:42:57 -0800 (PST)
+        Fri, 6 Jan 2023 11:43:31 -0500
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2052.outbound.protection.outlook.com [40.107.244.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E47E37CDD0;
+        Fri,  6 Jan 2023 08:42:59 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eSQYw2cWFMx8V28onIGgb41pKTxh8rduxMUx2FNWjIVqAe2koKLgl7iqVg5L4FzNNZf3FlQJJzo7z/jUXLOvgJZQJcGSAZ51pPrRccV33E2JRT3MU3Q2xxfNO3Po/c9wdYiQMmQ/ZEYgtT6awD8IPWyrjDR14M5t0Xu1a9BjMYEqdKhoMiDBYDviYZ6NJIbQUaqGit54TpnFvkuu/dPPkpLFaTKJvQzaPrwdKp3pPNXcN7Uy2H+7hRRWZ0RTNfmElOCxBA9mKnz8BSgjw4ad2ydjTlFnha1oACSvq+iQvOpGyLxmzT+FJA7hnvCDAUhcoe02iNcRs3H1jNFfqnD+4A==
+ b=bxX13QTs3SwIX72p0Dcyb9ZT48dwndwX1Jo0M2SX5IuMehGfI/nJPztS4kY+vqAmD89LPfEDvzVXuFHj1nrceRjmlflqoqHa1VSYHqFufmyRNwz1RThz0HyDPG2fW8qXE8akVdkpnw/zt2kigP3p0omL/IjBMVm0EvBNdOSYRLGZEjiE+NNlWmgGb17CzdqcDGOFIIg006vaMkhJbfdN2Zh4hc7uo1xBoLn7Pps9SCe6Y8dMsRxY1LjDPJuTwY0nK068QvvD/o9JgrkCJbs7TNKQvU9NGtEF5UMu4/cnhHffK1GEAHYHhMJMzUunv+qApwVf2b8/VoDyrHFZNYoZ1Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XygBCBJmZO0lHIPyUqo5uBagRbdg24bsaUztUT0w2OA=;
- b=U7RF1Mv9M/7ktoeSixiPJb0RBgPfQMyfW47JLIY9v/V06xNmBpYqwwP9MRMYgs58L+5IZti3hkOqbbYq6KAQHWW5n6OaGi/RuOds1rVEn/YZIjH+80HzAtjmpXJIDY9FVHyOF3HRj3GU73NdMdKorCuDCRRdfZHPVxbzcmj4gVQScRwJjhMz/gi2wfntFASC2f8nJoy6PmZjAGQrKaMYQO8bSH5TbUoi4AmuJeslXMsiNAXKuJJXg/mFnuAiThgvW7cJg/2i+U4aZ/M56CaI6dChr4B6X9fmnae8hyegf7X0qN3SMVVD+835xqLpcJrvbfwtN3FkJ6thrW9E8l2Mpg==
+ bh=gzG5H4TYc4/7qSv+sCyigoBtM53TeWCoA9jDKKuj2uo=;
+ b=Pw8nB48825Gp1Lue95FJaeJWGP4L/GBTHtTDD88ikRvODFD/wvdbda25HjGqwYBohS8hyqEJFjms1SdXpO+R4VV17aaoHvKn/dF0mqBVfmpwFAojKDpmuQjw2i2RaW3JOCaTapN82A+PGfSKQWbVGNiymItw+TatnxKfianOjQW66ncrZzwH/b63HDMAxblDaA8lzhQJRRnf6FU2VbXQdXrpti1xpk/sIH/gsB5TutkY8wubxmYXqZP0Azb7l5MNxniV9wjbf2HiUFMRjxbutiHgd+R64eyaXcuCmcAW0tTmMC4gd0Iil+C04pZanZivajTthn6je8+NunNqnHvzbQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XygBCBJmZO0lHIPyUqo5uBagRbdg24bsaUztUT0w2OA=;
- b=Tbh9/8B/UT9ocDz73PJS6qggA2YkfcxiwdbNHJ7C+/M618gI82WTBjD9XZmLiwKNMaPVsQVel5XO3Dqo5HK30KdC4visbWytfIgPcsb3niLfkH8UXWG4+6ahc7eZ40oQV2aJ/Z4NN3CT7YuZ9ylEKkkixrXwdppRQqqHWQuHpLa4jRKTdYhXGGvLA1+HpqLeHRW9zlo2exR+VmZwZxpSuQINFeHCPmXLK3VYfrFxpThNTehgovzYuEX8q/KV4aOo8sQTToSyS21xfU6aYu9pQd5r8xskpkbPGNipvwgdKtiTKzl7YwabFCO54FOTK22iWEVYpLgOWtEMDuLrycimYA==
+ bh=gzG5H4TYc4/7qSv+sCyigoBtM53TeWCoA9jDKKuj2uo=;
+ b=WyY1TjMVJnlz52coLQeHeH9IznA7WtTmrFyNfjKdDuIoN7WGY8aaC/Js1PrD78O4Qro0koGcwQuLJ2RNDqd//U94QC+edzgI5SHlKJza2pRIbOpctWhrSa64e6xV64U/NRpK/1sAws4dEzALKWXZiZ4p0euOOBkoNgJ3N5OCrrxYlCKYbRYfXlZaNGYdXH1ZLUTo5iGELMRRB17HjiKhUWYyp1qWidHOsDZ4BRImzFNaHkBsylxS5yHEdbcjXxgsp8rhQoGYSj55u/71Y66moL5tQ0KoGBY0fBCxzZXP20o2d4SmzkftVEDekW4qbcAgNNoeNBbZ6fI26kDqmjpv2w==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from LV2PR12MB5869.namprd12.prod.outlook.com (2603:10b6:408:176::16)
  by DS0PR12MB6437.namprd12.prod.outlook.com (2603:10b6:8:cb::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5944.19; Fri, 6 Jan
- 2023 16:42:50 +0000
+ 2023 16:42:52 +0000
 Received: from LV2PR12MB5869.namprd12.prod.outlook.com
  ([fe80::f8b0:df13:5f8d:12a]) by LV2PR12MB5869.namprd12.prod.outlook.com
  ([fe80::f8b0:df13:5f8d:12a%9]) with mapi id 15.20.5944.019; Fri, 6 Jan 2023
- 16:42:50 +0000
+ 16:42:52 +0000
 From:   Jason Gunthorpe <jgg@nvidia.com>
 To:     Lu Baolu <baolu.lu@linux.intel.com>,
         Joerg Roedel <joro@8bytes.org>,
@@ -61,194 +61,278 @@ Cc:     Alex Williamson <alex.williamson@redhat.com>,
         netdev@vger.kernel.org, nouveau@lists.freedesktop.org,
         Niklas Schnelle <schnelle@linux.ibm.com>,
         virtualization@lists.linux-foundation.org
-Subject: [PATCH 3/8] iommu: Add a gfp parameter to iommu_map_sg()
-Date:   Fri,  6 Jan 2023 12:42:43 -0400
-Message-Id: <3-v1-6e8b3997c46d+89e-iommu_map_gfp_jgg@nvidia.com>
+Subject: [PATCH 8/8] iommu/s390: Push the gfp parameter to the kmem_cache_alloc()'s
+Date:   Fri,  6 Jan 2023 12:42:48 -0400
+Message-Id: <8-v1-6e8b3997c46d+89e-iommu_map_gfp_jgg@nvidia.com>
 In-Reply-To: <0-v1-6e8b3997c46d+89e-iommu_map_gfp_jgg@nvidia.com>
 References: 
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MN2PR02CA0022.namprd02.prod.outlook.com
- (2603:10b6:208:fc::35) To LV2PR12MB5869.namprd12.prod.outlook.com
+X-ClientProxiedBy: MN2PR02CA0009.namprd02.prod.outlook.com
+ (2603:10b6:208:fc::22) To LV2PR12MB5869.namprd12.prod.outlook.com
  (2603:10b6:408:176::16)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: LV2PR12MB5869:EE_|DS0PR12MB6437:EE_
-X-MS-Office365-Filtering-Correlation-Id: 535936a7-378c-498f-b9be-08daf0050bdd
+X-MS-Office365-Filtering-Correlation-Id: a0017374-1d4e-494e-3c18-08daf0050c9a
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ddBXClO3TdH885FpT+z6/fu7Zb+wH0xL2xQyi5Ww08ecDMP0xEsQrCXXm0MQgdh/8tNP4Fl2MYyC5jXzQVJpelBoltQei2DzzGTRuQFsRRbfdWQhoksq7uEhu+9Y1MYdzO9R06xkBs7LvXMqiiirNCk+8sRpNMD6+Up8+nBJ39YAlm4YGNGLVbLb1sDP3CZIXq0JttCNBf4WpvHyQmntDZjcn6hBuxYzyLkoRjT72atPrSl4TJ9XO8iAinAwyQaoEI5qkrC0fII+EC5SDIvI+45xteZ/0oR4Wvs850mNBlu/u+36AwgU0YLZ5VgQqmia5wYUyUiDRyet4nsgUsdtiIkD+OEJO0O7A8EqSIwATJ8cvIzPOLLVijtCw7sTKiUmvamZdxV0PiYCeHfLx5ZW+BfRO8oUvt1ooSQQcaOyqaruAn4f9czuLaFU6fTRsZN+x4PnEpgWupfButSSwoKHdqttj2t0nEKpuZi42M05u8DhAAsEANzZKioXyUfc7GdLzvYJ6RIixYBfFH4/4kLPxL2gYE4rJqhfFSq2iJkkIOt8orsWqmcI0U3dSPrJdnS7RME+TcMhuR1luYOYMiEfCoVjlbM38VxbRkttR8zntLtOUiZINvEwIZah/dFRxVkhZxubGI0+4Rny4gwzPFJSewbotyEPhTR4WiNM2nzZo+NVpDvVw4naD4vNb0Kw/gRR
+X-Microsoft-Antispam-Message-Info: qhQN2tDydbCVLbhZ93Se++51k+9xCzhFbxHRGUavBJji5EpqwM9abcbsF7V0lzTYHcnucm4+GxrnaZSKNTOWYweqB28MEEVITP40FJ+9Q7SrUFeZAwdVukNeGTgNa5C2GYXKGeiRS8okwrz95MqRBgPgffNlsOnB6tpTX3puABx6FgEEokb9MvvtD19MTYLIThXfrbiQ7fFFcTrQMhvMbhA1P/kTGykB58Ig5S7Qch+Do2ivTlnyuk3wyGiE2VuTKd9ClLMfNacvr9B2zraoBA9mc7Y1SsNZNzrpL2ta/FJQzotvhwF6eQQE9+zcZMccQzk9Vgk8+ineqFhThWWjP22SFFRibPd4gv86NF8dW+YHlc2lBgeQrBCKatHQMyLnUBRwyoNSsVkA6QLKqxYWmDDGC1MIqYoYZiyT4bFY8+rW7OlFBVa7ignf/iiMGBbeDTLX+NMPWW7GXXyZhvViw2Rp1tZnIhOTvH0d6gOyAVmU/9M1LXp8VtiuxDfo50kxenPwQqh8I2ojcsH2VSKB9bswYcnjYb0sotdtK7hTw0naUYV+xk4wsTkd1GhUu4xBEGpFlVSZwHqah5vCDIEQE2v6RCFKIt10uU2SvH3tOYNTR+J9/HBpa1ienutudhs2JsOrxsY0swbL2Dkae6ai1Q0PIhvGX4xPt3J0lh7sGQS90+/t9zC5J1E0Bo6m3bjY
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV2PR12MB5869.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(136003)(376002)(346002)(39860400002)(396003)(451199015)(7416002)(5660300002)(54906003)(2906002)(41300700001)(8676002)(66946007)(8936002)(66476007)(316002)(4326008)(66556008)(83380400001)(6666004)(478600001)(110136005)(6506007)(36756003)(186003)(2616005)(26005)(6512007)(6486002)(86362001)(38100700002)(4216001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YJTzNNnR3Uo+lIW612KJEyyU0///XWaTmv5nX0TzHqzZ95ZRuXp0s/HoXNG6?=
- =?us-ascii?Q?J9tBBh2Z0O3ALrSEGeWpinoWAGCU0XXJKJA/+BLHLxkrd4ZVpIJTtTcvgv7+?=
- =?us-ascii?Q?PAejS1ZLpz+wxQMBocQfnI5FryaaRKElZSe09BvnJA7uBR4rRmJ811lynPCZ?=
- =?us-ascii?Q?TYMM+oJ9W1WF8bA1l1/aOWzirpM6OmMzrEHYZdp4jon4B39IXjGyXqjWFrMe?=
- =?us-ascii?Q?LzuKRdY+qaXw05Lo0UY7dzE3BMYvvOw8Ktors0oUofi7ekv3eNrhnDhi1UVf?=
- =?us-ascii?Q?O+BZkuiUvzhEBn5oCw8nad2z4RxbI16s8W9dgeS8k29DuLQ40RNylYAvh35G?=
- =?us-ascii?Q?Xiq2d/+dclcC+LmgQ/f+5++ajD3OahVIJU0r0gj3CqIrXnJKOALL7I9yU0xL?=
- =?us-ascii?Q?Dd2rJODEmbgwh2FzukPG+JQoFD4edmXj/CMZs+7aLh4cSbwafMHFymFTP475?=
- =?us-ascii?Q?l4VKcl4i0gk0LIpozkKIo5ksQDDoDrFL1eTti+QMQypZ2nIzEZk25nH3BJPV?=
- =?us-ascii?Q?v7wrGGQmQrdJRIAt95O8qch94ORmwRiIDKKTwOoHIgBisv9hJLH1n6fx1l4m?=
- =?us-ascii?Q?/g+VPun+JODgqYWF5TggiBUzAg1ZR2UKYfgMAdC/YnO7uSlnbe1qWPAUOY47?=
- =?us-ascii?Q?/DRnGFQQYU/pjKXpnRyDS7lJRa3sYXSUXGjN+XFzkqmBc3QushkqC1/L87WZ?=
- =?us-ascii?Q?FrgDv5wJGC+etsEJva23pB/6dzwjPlNSPZtGLuyOgf9FlDfCKZikIFsDLixj?=
- =?us-ascii?Q?MfMm70YVDqWCX4ZQUtuVO3FtwAka3zp2MYKr184BBSR6S6SqUrsBk1kUziLF?=
- =?us-ascii?Q?PYseHbw/NEjo0PyjlM4Iokc7bBOoeYBlF9cmxhT24jc2I/xNpvtBHjABYR0g?=
- =?us-ascii?Q?yKa3JZMOsPE8T7u0Z3X/5JBq9HvGfAxNr4sK+pwJH30kI75OLa4ywsgrYMeJ?=
- =?us-ascii?Q?vZkcOjP7a62FS3joF8VcqcDTZ5o1prNRu3GKNXgy6qkn90af91pTmHTkJyas?=
- =?us-ascii?Q?B4rrl2aNeqXUrZEG7xEmNEzOuSkLXvnhFYIvlE8rUfdn3yi9FCA1nsw5ehcC?=
- =?us-ascii?Q?no9AdUZBUFxf6me3c9On96h4v3w/KHJ3x4O5MPVjMRj6mVinPGaE/cpHscTe?=
- =?us-ascii?Q?mVIT+NZ5BDy3IcHVl+D4BXVer84L9vFFOfDy3PW+WJS4z/WPx4bs4QNx8ocg?=
- =?us-ascii?Q?QRxJQaW3m0Dfhrxrce+G31bLszWcN+a2+W9goXmUzROPtPhwvNiKLmHBktSG?=
- =?us-ascii?Q?8JTjw4RtYxdoFnglxbT7m3wRH9rkEjsk4gQ+/0OdFytsRwVWi64Ccdx6Vxl4?=
- =?us-ascii?Q?WULL5MeSMGMCkdlh5UFQLHmWs/0D20jkNwxMtsdoUvTVHp3J4NeR7qRMN14x?=
- =?us-ascii?Q?RJNFV8qFwGi/3+Thu8bnuZE/Pwghtm9o+3W+ix+M0l+znpfNdmjkBaYstFUs?=
- =?us-ascii?Q?QvPYARDHQMBUM6ymfwRvw/+/RsyIc5OmeuyebPNcudimG34c6to4Xzmqv0o3?=
- =?us-ascii?Q?tzNVownh0Ev4VJ7HYdZIwEb5Mq+XTleVUjLTcQTPpq/549NDPM2NoME+ZG00?=
- =?us-ascii?Q?qcR+BR4a2PLG3KHEFWhIFLo/1v5STJhyi9XwD/e+?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Sc5MxYePZ38UOERpbfLkiFylsIZuVor4DKkdlwSgsWKdtdRNjboiT7D2VVA4?=
+ =?us-ascii?Q?70ECVb+7YVZNcEd/rpY3fsAYKJZdHDvRCxqyujDdrfDQcgofx7lR5Lom1Aek?=
+ =?us-ascii?Q?BF1jDR4ok9WRQmIhusgec1qtLDaUfGcrZXZFcY1D7L4lC6++buac6PDHpJ+m?=
+ =?us-ascii?Q?gHvomrtIOB1UO38R894mmdPJZzeycTebpVIdQDfBIOQfxgocNtVBvgTP8qpV?=
+ =?us-ascii?Q?y3lBx/NsUNYWpUmuBZOjzarydFuA0eF/ytnRzl4kZAOoUtTuSOE7WBBPW/au?=
+ =?us-ascii?Q?y6NwoO1yLzwcKr5JMOw3VnL2RIdQIxEwEDw518bTsmXHFba+8tSOb/OkEyhT?=
+ =?us-ascii?Q?BAXVX4/OrDlKOj+5x8qrNwiWzFSJytCDK2oxd+4oijUaf3ZzNHmshuHpShIb?=
+ =?us-ascii?Q?e8S33dAK3hcmohqQkygAM/0kbo5rI1aZFyBa7TSx6fz3TlSPPk0+Joqw6Wz6?=
+ =?us-ascii?Q?ZaQSDhyUQ1ekmgTcWYmi51h5K9OBAGwGvyRL8SgCSlXmhi4VlupSyRLF4J44?=
+ =?us-ascii?Q?Fn5fTqJYvmotixmgzU1EzpqOxS9GIu4/937LK83J57aAs3GXbl89NcEGgEs7?=
+ =?us-ascii?Q?53baYdZtFtbWvFa2FQgUS8XxtIDLGxGX40KhylZcFTOFbxjcleQLEXKLObsB?=
+ =?us-ascii?Q?XLs+UBAmjn1gYfDOKASu1Dt9ma+Ib0PJn9I1sucMPqh2WWIwjhdiSj4Dnaxt?=
+ =?us-ascii?Q?NYhFO9BLJOdLax3Itiq0n54/kQJmcRR0DNYx17HgHGrD90dIM0pjkzUsHtHJ?=
+ =?us-ascii?Q?eaquqzx+0IHYUk/HhP++bxIy/n0dKeX+IjbTAaygITTuYxXgqmYc/Vyckq8+?=
+ =?us-ascii?Q?PVvyLrN9PFE0EO4q7jj4rRVP4xX8LuPQO5nZW2V76DhOsCiuYkw0hR8ParBB?=
+ =?us-ascii?Q?QBLGvPZTjlN+UtkwX9zv8W3YKw+/t2est/7VlOgWRypzP2UmFMekuFSPlt6u?=
+ =?us-ascii?Q?XrkSVZBfG2ug/63+wEuH+repKEfZgIspgrnkkvmPOMbB4rf8FHpeq+fjI7kG?=
+ =?us-ascii?Q?mzUpvRsmw9qrxvFEW2KNggBHNJtn9Smzmj0eYNP77myqrx5Kb1DpVzDNm2P4?=
+ =?us-ascii?Q?wjsRhmQgoFzt9JL1DAMfueID/cvoZkwNN4fttzWDVBOIMAvRBYwgwXAddPdF?=
+ =?us-ascii?Q?E8XkyuPB88/i6CWg4lh5NIwQPpdAjc8GjWBVM9PtbUZ11lmpOdhfHx0vrcMp?=
+ =?us-ascii?Q?0b9xbKsXWYDAxzkwNHxSg76i3R1oXCSuY4Go1fDOf6x58HtqhdXUgsnxc4u+?=
+ =?us-ascii?Q?rFa47+O1fU0UGwaTUZz2uf1GpwKrsQix5bywJ81XtlsaubnDRFXIGDcqWH+p?=
+ =?us-ascii?Q?kFtZTL8NY8MsIeFqWiswBPaONdVTr6Lwj8xJj3jlEF1BUdYv1VFNHucc0qOj?=
+ =?us-ascii?Q?rz3+vDO/0LaHQ/6ucXF/zr5U1I4Xmv51NIV2qG6DMyzIHRqBsq4nlxZhM7Wc?=
+ =?us-ascii?Q?dqT0z6rLcS6XI8ZM4rXn8FNlTnhLzsYr0spsIbe7Z8Y9HRZyqMwQE8lVU2IL?=
+ =?us-ascii?Q?A1zXm9hg5IbgPdUXk+IiLp9UmzUTzJs0f2MWB75Y3FFzVvhPez8hQiWzWOpo?=
+ =?us-ascii?Q?f1j2eP2ukOEC+LlQ2SQTt5CRuAX9n60a2/UAGuc4?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 535936a7-378c-498f-b9be-08daf0050bdd
+X-MS-Exchange-CrossTenant-Network-Message-Id: a0017374-1d4e-494e-3c18-08daf0050c9a
 X-MS-Exchange-CrossTenant-AuthSource: LV2PR12MB5869.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jan 2023 16:42:49.2960
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jan 2023 16:42:50.5174
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: EFaw49bMjIpwknKATZ1zNEDU+mjzkKu8bY0BTiBK5vw8YKqbcAsHpkrWECXxbnN8
+X-MS-Exchange-CrossTenant-UserPrincipalName: WGZm3I+oQ+4QRJzUh+HSjTL0W5DpYFauZa8CmmV9xmQuH2FSE6KkMuNfczmmYs+W
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6437
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Follow the pattern for iommu_map() and remove iommu_map_sg_atomic().
-
-This allows __iommu_dma_alloc_noncontiguous() to use a GFP_KERNEL
-allocation here, based on the provided gfp flags.
+dma_alloc_cpu_table() and dma_alloc_page_table() are eventually called by
+iommufd through s390_iommu_map_pages() and it should not be forced to
+atomic. Thread the gfp parameter through the call chain starting from
+s390_iommu_map_pages().
 
 Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- drivers/iommu/dma-iommu.c |  5 +++--
- drivers/iommu/iommu.c     | 21 +++++----------------
- include/linux/iommu.h     | 18 +++++-------------
- 3 files changed, 13 insertions(+), 31 deletions(-)
+ arch/s390/include/asm/pci_dma.h |  5 +++--
+ arch/s390/pci/pci_dma.c         | 31 +++++++++++++++++--------------
+ drivers/iommu/s390-iommu.c      | 15 +++++++++------
+ 3 files changed, 29 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-index 7016db569f81fc..8c2788633c1766 100644
---- a/drivers/iommu/dma-iommu.c
-+++ b/drivers/iommu/dma-iommu.c
-@@ -833,7 +833,8 @@ static struct page **__iommu_dma_alloc_noncontiguous(struct device *dev,
- 			arch_dma_prep_coherent(sg_page(sg), sg->length);
- 	}
+diff --git a/arch/s390/include/asm/pci_dma.h b/arch/s390/include/asm/pci_dma.h
+index 91e63426bdc53f..7119c04c51c5c8 100644
+--- a/arch/s390/include/asm/pci_dma.h
++++ b/arch/s390/include/asm/pci_dma.h
+@@ -186,9 +186,10 @@ static inline unsigned long *get_st_pto(unsigned long entry)
  
--	ret = iommu_map_sg_atomic(domain, iova, sgt->sgl, sgt->orig_nents, ioprot);
-+	ret = iommu_map_sg(domain, iova, sgt->sgl, sgt->orig_nents, ioprot,
-+			   gfp);
- 	if (ret < 0 || ret < size)
- 		goto out_free_sg;
+ /* Prototypes */
+ void dma_free_seg_table(unsigned long);
+-unsigned long *dma_alloc_cpu_table(void);
++unsigned long *dma_alloc_cpu_table(gfp_t gfp);
+ void dma_cleanup_tables(unsigned long *);
+-unsigned long *dma_walk_cpu_trans(unsigned long *rto, dma_addr_t dma_addr);
++unsigned long *dma_walk_cpu_trans(unsigned long *rto, dma_addr_t dma_addr,
++				  gfp_t gfp);
+ void dma_update_cpu_trans(unsigned long *entry, phys_addr_t page_addr, int flags);
  
-@@ -1281,7 +1282,7 @@ static int iommu_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 	 * We'll leave any physical concatenation to the IOMMU driver's
- 	 * implementation - it knows better than we do.
- 	 */
--	ret = iommu_map_sg_atomic(domain, iova, sg, nents, prot);
-+	ret = iommu_map_sg(domain, iova, sg, nents, prot, GFP_ATOMIC);
- 	if (ret < 0 || ret < iova_len)
- 		goto out_free_iova;
- 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index fee37bb246f3ea..11fb3981e25642 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -2465,9 +2465,9 @@ size_t iommu_unmap_fast(struct iommu_domain *domain,
+ extern const struct dma_map_ops s390_pci_dma_ops;
+diff --git a/arch/s390/pci/pci_dma.c b/arch/s390/pci/pci_dma.c
+index ea478d11fbd132..2d9b01d7ca4c5c 100644
+--- a/arch/s390/pci/pci_dma.c
++++ b/arch/s390/pci/pci_dma.c
+@@ -27,11 +27,11 @@ static int zpci_refresh_global(struct zpci_dev *zdev)
+ 				  zdev->iommu_pages * PAGE_SIZE);
  }
- EXPORT_SYMBOL_GPL(iommu_unmap_fast);
  
--static ssize_t __iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
--		struct scatterlist *sg, unsigned int nents, int prot,
--		gfp_t gfp)
-+ssize_t iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
-+		     struct scatterlist *sg, unsigned int nents, int prot,
-+		     gfp_t gfp)
+-unsigned long *dma_alloc_cpu_table(void)
++unsigned long *dma_alloc_cpu_table(gfp_t gfp)
  {
- 	const struct iommu_domain_ops *ops = domain->ops;
- 	size_t len = 0, mapped = 0;
-@@ -2475,6 +2475,8 @@ static ssize_t __iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
- 	unsigned int i = 0;
- 	int ret;
+ 	unsigned long *table, *entry;
  
-+	might_sleep_if(gfpflags_allow_blocking(gfp));
-+
- 	while (i <= nents) {
- 		phys_addr_t s_phys = sg_phys(sg);
+-	table = kmem_cache_alloc(dma_region_table_cache, GFP_ATOMIC);
++	table = kmem_cache_alloc(dma_region_table_cache, gfp);
+ 	if (!table)
+ 		return NULL;
  
-@@ -2514,21 +2516,8 @@ static ssize_t __iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
- 
- 	return ret;
+@@ -45,11 +45,11 @@ static void dma_free_cpu_table(void *table)
+ 	kmem_cache_free(dma_region_table_cache, table);
  }
--
--ssize_t iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
--		     struct scatterlist *sg, unsigned int nents, int prot)
--{
--	might_sleep();
--	return __iommu_map_sg(domain, iova, sg, nents, prot, GFP_KERNEL);
--}
- EXPORT_SYMBOL_GPL(iommu_map_sg);
  
--ssize_t iommu_map_sg_atomic(struct iommu_domain *domain, unsigned long iova,
--		    struct scatterlist *sg, unsigned int nents, int prot)
--{
--	return __iommu_map_sg(domain, iova, sg, nents, prot, GFP_ATOMIC);
--}
--
- /**
-  * report_iommu_fault() - report about an IOMMU fault to the IOMMU framework
-  * @domain: the iommu domain where the fault has happened
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 521cd79700f4d8..d5c16dc33c87de 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -474,10 +474,8 @@ extern size_t iommu_unmap_fast(struct iommu_domain *domain,
- 			       unsigned long iova, size_t size,
- 			       struct iommu_iotlb_gather *iotlb_gather);
- extern ssize_t iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
--		struct scatterlist *sg, unsigned int nents, int prot);
--extern ssize_t iommu_map_sg_atomic(struct iommu_domain *domain,
--				   unsigned long iova, struct scatterlist *sg,
--				   unsigned int nents, int prot);
-+			    struct scatterlist *sg, unsigned int nents,
-+			    int prot, gfp_t gfp);
- extern phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova);
- extern void iommu_set_fault_handler(struct iommu_domain *domain,
- 			iommu_fault_handler_t handler, void *token);
-@@ -791,14 +789,7 @@ static inline size_t iommu_unmap_fast(struct iommu_domain *domain,
- 
- static inline ssize_t iommu_map_sg(struct iommu_domain *domain,
- 				   unsigned long iova, struct scatterlist *sg,
--				   unsigned int nents, int prot)
--{
--	return -ENODEV;
--}
--
--static inline ssize_t iommu_map_sg_atomic(struct iommu_domain *domain,
--				  unsigned long iova, struct scatterlist *sg,
--				  unsigned int nents, int prot)
-+				   unsigned int nents, int prot, gfp_t gfp)
+-static unsigned long *dma_alloc_page_table(void)
++static unsigned long *dma_alloc_page_table(gfp_t gfp)
  {
- 	return -ENODEV;
- }
-@@ -1109,7 +1100,8 @@ iommu_get_domain_for_dev_pasid(struct device *dev, ioasid_t pasid,
- static inline size_t iommu_map_sgtable(struct iommu_domain *domain,
- 			unsigned long iova, struct sg_table *sgt, int prot)
- {
--	return iommu_map_sg(domain, iova, sgt->sgl, sgt->orig_nents, prot);
-+	return iommu_map_sg(domain, iova, sgt->sgl, sgt->orig_nents, prot,
-+			    GFP_KERNEL);
+ 	unsigned long *table, *entry;
+ 
+-	table = kmem_cache_alloc(dma_page_table_cache, GFP_ATOMIC);
++	table = kmem_cache_alloc(dma_page_table_cache, gfp);
+ 	if (!table)
+ 		return NULL;
+ 
+@@ -63,7 +63,7 @@ static void dma_free_page_table(void *table)
+ 	kmem_cache_free(dma_page_table_cache, table);
  }
  
- #ifdef CONFIG_IOMMU_DEBUGFS
+-static unsigned long *dma_get_seg_table_origin(unsigned long *rtep)
++static unsigned long *dma_get_seg_table_origin(unsigned long *rtep, gfp_t gfp)
+ {
+ 	unsigned long old_rte, rte;
+ 	unsigned long *sto;
+@@ -72,7 +72,7 @@ static unsigned long *dma_get_seg_table_origin(unsigned long *rtep)
+ 	if (reg_entry_isvalid(rte)) {
+ 		sto = get_rt_sto(rte);
+ 	} else {
+-		sto = dma_alloc_cpu_table();
++		sto = dma_alloc_cpu_table(gfp);
+ 		if (!sto)
+ 			return NULL;
+ 
+@@ -90,7 +90,7 @@ static unsigned long *dma_get_seg_table_origin(unsigned long *rtep)
+ 	return sto;
+ }
+ 
+-static unsigned long *dma_get_page_table_origin(unsigned long *step)
++static unsigned long *dma_get_page_table_origin(unsigned long *step, gfp_t gfp)
+ {
+ 	unsigned long old_ste, ste;
+ 	unsigned long *pto;
+@@ -99,7 +99,7 @@ static unsigned long *dma_get_page_table_origin(unsigned long *step)
+ 	if (reg_entry_isvalid(ste)) {
+ 		pto = get_st_pto(ste);
+ 	} else {
+-		pto = dma_alloc_page_table();
++		pto = dma_alloc_page_table(gfp);
+ 		if (!pto)
+ 			return NULL;
+ 		set_st_pto(&ste, virt_to_phys(pto));
+@@ -116,18 +116,19 @@ static unsigned long *dma_get_page_table_origin(unsigned long *step)
+ 	return pto;
+ }
+ 
+-unsigned long *dma_walk_cpu_trans(unsigned long *rto, dma_addr_t dma_addr)
++unsigned long *dma_walk_cpu_trans(unsigned long *rto, dma_addr_t dma_addr,
++				  gfp_t gfp)
+ {
+ 	unsigned long *sto, *pto;
+ 	unsigned int rtx, sx, px;
+ 
+ 	rtx = calc_rtx(dma_addr);
+-	sto = dma_get_seg_table_origin(&rto[rtx]);
++	sto = dma_get_seg_table_origin(&rto[rtx], gfp);
+ 	if (!sto)
+ 		return NULL;
+ 
+ 	sx = calc_sx(dma_addr);
+-	pto = dma_get_page_table_origin(&sto[sx]);
++	pto = dma_get_page_table_origin(&sto[sx], gfp);
+ 	if (!pto)
+ 		return NULL;
+ 
+@@ -170,7 +171,8 @@ static int __dma_update_trans(struct zpci_dev *zdev, phys_addr_t pa,
+ 		return -EINVAL;
+ 
+ 	for (i = 0; i < nr_pages; i++) {
+-		entry = dma_walk_cpu_trans(zdev->dma_table, dma_addr);
++		entry = dma_walk_cpu_trans(zdev->dma_table, dma_addr,
++					   GFP_ATOMIC);
+ 		if (!entry) {
+ 			rc = -ENOMEM;
+ 			goto undo_cpu_trans;
+@@ -186,7 +188,8 @@ static int __dma_update_trans(struct zpci_dev *zdev, phys_addr_t pa,
+ 		while (i-- > 0) {
+ 			page_addr -= PAGE_SIZE;
+ 			dma_addr -= PAGE_SIZE;
+-			entry = dma_walk_cpu_trans(zdev->dma_table, dma_addr);
++			entry = dma_walk_cpu_trans(zdev->dma_table, dma_addr,
++						   GFP_ATOMIC);
+ 			if (!entry)
+ 				break;
+ 			dma_update_cpu_trans(entry, page_addr, flags);
+@@ -576,7 +579,7 @@ int zpci_dma_init_device(struct zpci_dev *zdev)
+ 
+ 	spin_lock_init(&zdev->iommu_bitmap_lock);
+ 
+-	zdev->dma_table = dma_alloc_cpu_table();
++	zdev->dma_table = dma_alloc_cpu_table(GFP_KERNEL);
+ 	if (!zdev->dma_table) {
+ 		rc = -ENOMEM;
+ 		goto out;
+diff --git a/drivers/iommu/s390-iommu.c b/drivers/iommu/s390-iommu.c
+index ed33c6cce08362..7dcfffed260e6b 100644
+--- a/drivers/iommu/s390-iommu.c
++++ b/drivers/iommu/s390-iommu.c
+@@ -52,7 +52,7 @@ static struct iommu_domain *s390_domain_alloc(unsigned domain_type)
+ 	if (!s390_domain)
+ 		return NULL;
+ 
+-	s390_domain->dma_table = dma_alloc_cpu_table();
++	s390_domain->dma_table = dma_alloc_cpu_table(GFP_KERNEL);
+ 	if (!s390_domain->dma_table) {
+ 		kfree(s390_domain);
+ 		return NULL;
+@@ -260,7 +260,8 @@ static void s390_iommu_iotlb_sync_map(struct iommu_domain *domain,
+ 
+ static int s390_iommu_validate_trans(struct s390_domain *s390_domain,
+ 				     phys_addr_t pa, dma_addr_t dma_addr,
+-				     unsigned long nr_pages, int flags)
++				     unsigned long nr_pages, int flags,
++				     gfp_t gfp)
+ {
+ 	phys_addr_t page_addr = pa & PAGE_MASK;
+ 	unsigned long *entry;
+@@ -268,7 +269,8 @@ static int s390_iommu_validate_trans(struct s390_domain *s390_domain,
+ 	int rc;
+ 
+ 	for (i = 0; i < nr_pages; i++) {
+-		entry = dma_walk_cpu_trans(s390_domain->dma_table, dma_addr);
++		entry = dma_walk_cpu_trans(s390_domain->dma_table, dma_addr,
++					   gfp);
+ 		if (unlikely(!entry)) {
+ 			rc = -ENOMEM;
+ 			goto undo_cpu_trans;
+@@ -284,7 +286,7 @@ static int s390_iommu_validate_trans(struct s390_domain *s390_domain,
+ 	while (i-- > 0) {
+ 		dma_addr -= PAGE_SIZE;
+ 		entry = dma_walk_cpu_trans(s390_domain->dma_table,
+-					   dma_addr);
++					   dma_addr, gfp);
+ 		if (!entry)
+ 			break;
+ 		dma_update_cpu_trans(entry, 0, ZPCI_PTE_INVALID);
+@@ -301,7 +303,8 @@ static int s390_iommu_invalidate_trans(struct s390_domain *s390_domain,
+ 	int rc = 0;
+ 
+ 	for (i = 0; i < nr_pages; i++) {
+-		entry = dma_walk_cpu_trans(s390_domain->dma_table, dma_addr);
++		entry = dma_walk_cpu_trans(s390_domain->dma_table, dma_addr,
++					   GFP_ATOMIC);
+ 		if (unlikely(!entry)) {
+ 			rc = -EINVAL;
+ 			break;
+@@ -339,7 +342,7 @@ static int s390_iommu_map_pages(struct iommu_domain *domain,
+ 		flags |= ZPCI_TABLE_PROTECTED;
+ 
+ 	rc = s390_iommu_validate_trans(s390_domain, paddr, iova,
+-				       pgcount, flags);
++				       pgcount, flags, gfp);
+ 	if (!rc)
+ 		*mapped = size;
+ 
 -- 
 2.39.0
 
