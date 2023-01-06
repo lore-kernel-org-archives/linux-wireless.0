@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CD6C4708D
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Jan 2023 12:09:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA9DFC5479D
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Jan 2023 12:09:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232291AbjAFMJV (ORCPT
+        id S232320AbjAFMJX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Jan 2023 07:09:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48276 "EHLO
+        Fri, 6 Jan 2023 07:09:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229703AbjAFMJQ (ORCPT
+        with ESMTP id S231764AbjAFMJQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 6 Jan 2023 07:09:16 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 68BFB728A9
-        for <linux-wireless@vger.kernel.org>; Fri,  6 Jan 2023 04:09:14 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 239A17289E
+        for <linux-wireless@vger.kernel.org>; Fri,  6 Jan 2023 04:09:13 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 306C84NB0028231, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 306C8BEJ0028278, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 306C84NB0028231
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 306C8BEJ0028278
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 6 Jan 2023 20:08:04 +0800
+        Fri, 6 Jan 2023 20:08:11 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Fri, 6 Jan 2023 20:09:01 +0800
+ 15.1.2507.9; Fri, 6 Jan 2023 20:09:07 +0800
 Received: from localhost (172.16.18.220) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 6 Jan 2023
- 20:09:00 +0800
+ 20:09:07 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/7] wifi: rtw89: coex: Add version code for Wi-Fi firmware coexistence control
-Date:   Fri, 6 Jan 2023 20:08:38 +0800
-Message-ID: <20230106120844.17441-2-pkshih@realtek.com>
+Subject: [PATCH 7/7] wifi: rtw89: coex: Change Wi-Fi role info related logic to version separate
+Date:   Fri, 6 Jan 2023 20:08:44 +0800
+Message-ID: <20230106120844.17441-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230106120844.17441-1-pkshih@realtek.com>
 References: <20230106120844.17441-1-pkshih@realtek.com>
@@ -62,40 +62,197 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-The newer Wi-Fi firmware are all changed to "Not to send H2C to
-mention firmware how many call flow step should firmware trace".
-The structure had removed the member, and define the steps number
-at newer version firmware.
+The Wi-Fi role info structure will need to H2C to firmware, firmware
+need these information to do some multi-role operation. v1 add DBCC
+and NOA information in the structure. And driver side also need to
+put/get values at the corresponding version of structure.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/fw.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 39 ++++++++++++-----------
+ 1 file changed, 20 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 19a49ef243fa4..543c10b8349d9 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -1992,8 +1992,8 @@ int rtw89_fw_h2c_cxdrv_role_v1(struct rtw89_dev *rtwdev)
- #define H2C_LEN_CXDRVINFO_CTRL (4 + H2C_LEN_CXDRVHDR)
- int rtw89_fw_h2c_cxdrv_ctrl(struct rtw89_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index ec31dd0751cee..d48ae25823ffa 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -2075,6 +2075,7 @@ static void _set_bt_afh_info(struct rtw89_dev *rtwdev)
+ {
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
+ 	struct rtw89_btc_bt_link_info *b = &bt->link_info;
+@@ -2088,7 +2089,7 @@ static void _set_bt_afh_info(struct rtw89_dev *rtwdev)
+ 	if (btc->ctrl.manual || wl->status.map.scan)
+ 		return;
+ 
+-	if (chip->chip_id == RTL8852A) {
++	if (ver->fwlrole == 0) {
+ 		mode = wl_rinfo->link_mode;
+ 		connect_cnt = wl_rinfo->connect_cnt;
+ 	} else {
+@@ -2107,13 +2108,13 @@ static void _set_bt_afh_info(struct rtw89_dev *rtwdev)
+ 			r = &wl_rinfo->active_role[i];
+ 			r1 = &wl_rinfo_v1->active_role_v1[i];
+ 
+-			if (chip->chip_id == RTL8852A &&
++			if (ver->fwlrole == 0 &&
+ 			    (r->role == RTW89_WIFI_ROLE_P2P_GO ||
+ 			     r->role == RTW89_WIFI_ROLE_P2P_CLIENT)) {
+ 				ch = r->ch;
+ 				bw = r->bw;
+ 				break;
+-			} else if (chip->chip_id != RTL8852A &&
++			} else if (ver->fwlrole == 1 &&
+ 				   (r1->role == RTW89_WIFI_ROLE_P2P_GO ||
+ 				    r1->role == RTW89_WIFI_ROLE_P2P_CLIENT)) {
+ 				ch = r1->ch;
+@@ -2128,12 +2129,12 @@ static void _set_bt_afh_info(struct rtw89_dev *rtwdev)
+ 			r = &wl_rinfo->active_role[i];
+ 			r1 = &wl_rinfo_v1->active_role_v1[i];
+ 
+-			if (chip->chip_id == RTL8852A &&
++			if (ver->fwlrole == 0 &&
+ 			    r->connected && r->band == RTW89_BAND_2G) {
+ 				ch = r->ch;
+ 				bw = r->bw;
+ 				break;
+-			} else if (chip->chip_id != RTL8852A &&
++			} else if (ver->fwlrole == 1 &&
+ 				   r1->connected && r1->band == RTW89_BAND_2G) {
+ 				ch = r1->ch;
+ 				bw = r1->bw;
+@@ -3581,8 +3582,8 @@ static void _action_wl_rfk(struct rtw89_dev *rtwdev)
+ 
+ static void _set_btg_ctrl(struct rtw89_dev *rtwdev)
  {
 -	const struct rtw89_chip_info *chip = rtwdev->chip;
  	struct rtw89_btc *btc = &rtwdev->btc;
 +	const struct rtw89_btc_ver *ver = btc->ver;
- 	struct rtw89_btc_ctrl *ctrl = &btc->ctrl;
- 	struct sk_buff *skb;
- 	u8 *cmd;
-@@ -2013,7 +2013,7 @@ int rtw89_fw_h2c_cxdrv_ctrl(struct rtw89_dev *rtwdev)
- 	RTW89_SET_FWCMD_CXCTRL_MANUAL(cmd, ctrl->manual);
- 	RTW89_SET_FWCMD_CXCTRL_IGNORE_BT(cmd, ctrl->igno_bt);
- 	RTW89_SET_FWCMD_CXCTRL_ALWAYS_FREERUN(cmd, ctrl->always_freerun);
--	if (chip->chip_id == RTL8852A)
-+	if (ver->fcxctrl == 0)
- 		RTW89_SET_FWCMD_CXCTRL_TRACE_STEP(cmd, ctrl->trace_step);
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
+ 	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
+@@ -3593,7 +3594,7 @@ static void _set_btg_ctrl(struct rtw89_dev *rtwdev)
+ 	if (btc->ctrl.manual)
+ 		return;
  
- 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+-	if (chip->chip_id == RTL8852A)
++	if (ver->fwlrole == 0)
+ 		mode = wl_rinfo->link_mode;
+ 	else
+ 		mode = wl_rinfo_v1->link_mode;
+@@ -3686,8 +3687,8 @@ static void rtw89_tx_time_iter(void *data, struct ieee80211_sta *sta)
+ 
+ static void _set_wl_tx_limit(struct rtw89_dev *rtwdev)
+ {
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_cx *cx = &btc->cx;
+ 	struct rtw89_btc_dm *dm = &btc->dm;
+ 	struct rtw89_btc_wl_info *wl = &cx->wl;
+@@ -3707,7 +3708,7 @@ static void _set_wl_tx_limit(struct rtw89_dev *rtwdev)
+ 	if (btc->ctrl.manual)
+ 		return;
+ 
+-	if (chip->chip_id == RTL8852A)
++	if (ver->fwlrole == 0)
+ 		mode = wl_rinfo->link_mode;
+ 	else
+ 		mode = wl_rinfo_v1->link_mode;
+@@ -3755,8 +3756,8 @@ static void _set_wl_tx_limit(struct rtw89_dev *rtwdev)
+ 
+ static void _set_bt_rx_agc(struct rtw89_dev *rtwdev)
+ {
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
+ 	struct rtw89_btc_wl_role_info_v1 *wl_rinfo_v1 = &wl->role_info_v1;
+@@ -3764,7 +3765,7 @@ static void _set_bt_rx_agc(struct rtw89_dev *rtwdev)
+ 	bool bt_hi_lna_rx = false;
+ 	u8 mode;
+ 
+-	if (chip->chip_id == RTL8852A)
++	if (ver->fwlrole == 0)
+ 		mode = wl_rinfo->link_mode;
+ 	else
+ 		mode = wl_rinfo_v1->link_mode;
+@@ -4628,8 +4629,8 @@ static bool _chk_wl_rfk_request(struct rtw89_dev *rtwdev)
+ static
+ void _run_coex(struct rtw89_dev *rtwdev, enum btc_reason_and_action reason)
+ {
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_dm *dm = &rtwdev->btc.dm;
+ 	struct rtw89_btc_cx *cx = &btc->cx;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+@@ -4644,7 +4645,7 @@ void _run_coex(struct rtw89_dev *rtwdev, enum btc_reason_and_action reason)
+ 	_update_dm_step(rtwdev, reason);
+ 	_update_btc_state_map(rtwdev);
+ 
+-	if (chip->chip_id == RTL8852A)
++	if (ver->fwlrole == 0)
+ 		mode = wl_rinfo->link_mode;
+ 	else
+ 		mode = wl_rinfo_v1->link_mode;
+@@ -4766,9 +4767,9 @@ void _run_coex(struct rtw89_dev *rtwdev, enum btc_reason_and_action reason)
+ 		break;
+ 	case BTC_WLINK_2G_SCC:
+ 		bt->scan_rx_low_pri = true;
+-		if (chip->chip_id == RTL8852A)
++		if (ver->fwlrole == 0)
+ 			_action_wl_2g_scc(rtwdev);
+-		else if (chip->chip_id == RTL8852C)
++		else if (ver->fwlrole == 1)
+ 			_action_wl_2g_scc_v1(rtwdev);
+ 		break;
+ 	case BTC_WLINK_2G_MCC:
+@@ -5206,10 +5207,10 @@ void rtw89_btc_ntfy_role_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif
+ 			      struct rtw89_sta *rtwsta, enum btc_role_state state)
+ {
+ 	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
+ 	struct ieee80211_sta *sta = rtwsta_to_sta(rtwsta);
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct rtw89_btc_wl_link_info r = {0};
+ 	struct rtw89_btc_wl_link_info *wlinfo = NULL;
+@@ -5273,7 +5274,7 @@ void rtw89_btc_ntfy_role_info(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif
+ 	wlinfo = &wl->link_info[r.pid];
+ 
+ 	memcpy(wlinfo, &r, sizeof(*wlinfo));
+-	if (chip->chip_id == RTL8852A)
++	if (ver->fwlrole == 0)
+ 		_update_wl_info(rtwdev);
+ 	else
+ 		_update_wl_info_v1(rtwdev);
+@@ -5789,8 +5790,8 @@ static void _show_wl_role_info(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 
+ static void _show_wl_info(struct rtw89_dev *rtwdev, struct seq_file *m)
+ {
+-	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
++	const struct rtw89_btc_ver *ver = btc->ver;
+ 	struct rtw89_btc_cx *cx = &btc->cx;
+ 	struct rtw89_btc_wl_info *wl = &cx->wl;
+ 	struct rtw89_btc_wl_role_info *wl_rinfo = &wl->role_info;
+@@ -5802,7 +5803,7 @@ static void _show_wl_info(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 
+ 	seq_puts(m, "========== [WL Status] ==========\n");
+ 
+-	if (chip->chip_id == RTL8852A)
++	if (ver->fwlrole == 0)
+ 		mode = wl_rinfo->link_mode;
+ 	else
+ 		mode = wl_rinfo_v1->link_mode;
 -- 
 2.25.1
 
