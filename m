@@ -2,73 +2,85 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7B6C46467
-	for <linux-wireless@archiver.kernel.org>; Sat,  7 Jan 2023 15:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4435FC54EBD
+	for <linux-wireless@archiver.kernel.org>; Sat,  7 Jan 2023 15:01:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232523AbjAGPBj (ORCPT
+        id S232671AbjAGPBs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 7 Jan 2023 10:01:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59606 "EHLO
+        Sat, 7 Jan 2023 10:01:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232521AbjAGPBM (ORCPT
+        with ESMTP id S232528AbjAGPBS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Jan 2023 10:01:12 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C689A61443;
-        Sat,  7 Jan 2023 07:01:10 -0800 (PST)
+        Sat, 7 Jan 2023 10:01:18 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7D5F41657;
+        Sat,  7 Jan 2023 07:01:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 71A9EB81913;
-        Sat,  7 Jan 2023 15:01:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 995D7C433EF;
-        Sat,  7 Jan 2023 15:01:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5ECBC60C23;
+        Sat,  7 Jan 2023 15:01:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AC3BC433EF;
+        Sat,  7 Jan 2023 15:01:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673103668;
-        bh=1N4qUATX9JRex5hZQtihEei+C+P46WN8C/vJ/eXH0n8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=UhBNcTlXO5liRKqWrNuFIhsUlc80ucvZPcAzGbgOI9KENU8OGR0diRqhcpTzt9Xcz
-         SoP8wAxjJO+Sz15YBiNjgdjUUbt+D1loZc3I6KHNzSdQfUrfqsAWod9/jGklD8cy3X
-         QLJ2hCRo8AalA9POx1c7W+oWU7M8tMZ33dFRBJCc5JYycFA6gY/glsWrOeqyDNhVKl
-         pNw5NAiG+gu9f+jeHyskUjzIJ45W5CilLK5v3Bd5kZpOEAQIuimtg65+oksvW72PX8
-         /LeeC+qrrjgc/nxMFJnJGVWn+a1ZynB9Co4aBR/IZveYJBzaF/oew7ka13BD4bvcWZ
-         3qAj6VL9t0RgA==
+        s=k20201202; t=1673103675;
+        bh=jOq3HAgMjaj1SFCSBHKjYOyCtvfDE2riyu3cWxH+X7Q=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=h36/BbOexF8lH31I6phb+fEO8vmXUX0AkHvP+tgSJQo6226yJPnfW3hfY4S8qdX73
+         wdGg/0l89MLnn1+ubafmNfvn/f4/zpN3kF5ka4vj7bE77jZAL4mcWTiKVzmxoVSjGP
+         NNvLifN6mblwB8URCc5hni1eAqBJP2Mlu6blYN3RPki0JbFHYcdTUPzmSA1oPD5ROk
+         pXQUr1tJRERoT0MQ/c2KvydxAdc9oMQdHcxYGq4xFA45dghm5RsakzANNnbt9yOru2
+         k62CMyr1jhcsnNsuLbp1sepp9/90fnS0eWZNxhD/jZqx9XPHdt6ZfpidH9PuJVkEzr
+         NpZPsJ9qQQFZw==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     netdev@vger.kernel.org, lorenzo.bianconi@redhat.com, nbd@nbd.name,
         sujuan.chen@mediatek.com, daniel@makrotopia.org, leon@kernel.org
-Subject: [PATCH 0/4] mt76: add wed reset callbacks
-Date:   Sat,  7 Jan 2023 16:00:35 +0100
-Message-Id: <cover.1673103214.git.lorenzo@kernel.org>
+Subject: [PATCH 2/4] wifi: mt76: dma: reset wed queues in mt76_dma_rx_reset
+Date:   Sat,  7 Jan 2023 16:00:37 +0100
+Message-Id: <780d576a44c7f241886aaf8b3dd5eb51a879dfcd.1673103214.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.39.0
+In-Reply-To: <cover.1673103214.git.lorenzo@kernel.org>
+References: <cover.1673103214.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce Wireless Ethernet Dispatcher reset callbacks in order to complete
-reset requested by ethernet NIC.
+From: Sujuan Chen <sujuan.chen@mediatek.com>
 
-This patch is based on the following mtk_eth_soc series:
-https://lore.kernel.org/netdev/cover.1673102767.git.lorenzo@kernel.org/T/#m830c78ce34a4383ae1dedc5349bed19a74dbf4af
+This is a preliminary patch to introduce proper wed reset support.
 
-Lorenzo Bianconi (2):
-  wifi: mt76: mt7915: add mt7915 wed reset callbacks
-  wifi: mt76: mt7915: complete wed reset support
+Tested-by: Daniel Golle <daniel@makrotopia.org>
+Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/dma.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Sujuan Chen (2):
-  wifi: mt76: dma: add reset to mt76_dma_wed_setup signature
-  wifi: mt76: dma: reset wed queues in mt76_dma_rx_reset
-
- drivers/net/wireless/mediatek/mt76/dma.c      | 27 +++++++----
- drivers/net/wireless/mediatek/mt76/dma.h      |  1 +
- drivers/net/wireless/mediatek/mt76/mt76.h     |  3 ++
- .../net/wireless/mediatek/mt76/mt7915/dma.c   | 45 ++++++++++++++++---
- .../net/wireless/mediatek/mt76/mt7915/mac.c   |  6 +++
- .../net/wireless/mediatek/mt76/mt7915/mmio.c  | 42 +++++++++++++++++
- 6 files changed, 111 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 5629b949fac0..93c42082f1c2 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -766,8 +766,13 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
+ 		q->desc[i].ctrl = cpu_to_le32(MT_DMA_CTL_DMA_DONE);
+ 
+ 	mt76_dma_rx_cleanup(dev, q);
+-	mt76_dma_sync_idx(dev, q);
+-	mt76_dma_rx_fill(dev, q, false);
++
++	/* reset WED rx queues */
++	mt76_dma_wed_setup(dev, q, true);
++	if (q->flags != MT_WED_Q_TXFREE) {
++		mt76_dma_sync_idx(dev, q);
++		mt76_dma_rx_fill(dev, q, false);
++	}
+ }
+ 
+ static void
 -- 
 2.39.0
 
