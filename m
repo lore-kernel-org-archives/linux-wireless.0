@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F869C54EBC
-	for <linux-wireless@archiver.kernel.org>; Sun,  8 Jan 2023 01:30:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90248C46467
+	for <linux-wireless@archiver.kernel.org>; Sun,  8 Jan 2023 01:31:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231671AbjAHBax (ORCPT
+        id S232110AbjAHBbD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 7 Jan 2023 20:30:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47484 "EHLO
+        Sat, 7 Jan 2023 20:31:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231533AbjAHBaw (ORCPT
+        with ESMTP id S232106AbjAHBbA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Jan 2023 20:30:52 -0500
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D957E1000
-        for <linux-wireless@vger.kernel.org>; Sat,  7 Jan 2023 17:30:50 -0800 (PST)
-Received: by mail-pf1-x429.google.com with SMTP id c9so3749166pfj.5
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2023 17:30:50 -0800 (PST)
+        Sat, 7 Jan 2023 20:31:00 -0500
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB473633E
+        for <linux-wireless@vger.kernel.org>; Sat,  7 Jan 2023 17:30:59 -0800 (PST)
+Received: by mail-pg1-x535.google.com with SMTP id 78so3649329pgb.8
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2023 17:30:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=schmorgal.com; s=google;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=aukUG7G4mJzk2l5eLMtMhDac84dRtZO/NL0wRxvV5bk=;
-        b=Ijxb/24IC1QEwcFPwKJk4vJx2f6a8zMHcCVr/IsNjIGR2KzZbwDO35AJaWgi1jyKrW
-         WSM+WXH6JOT9P065y2RaXl8S4f3Qn50st7OBaUbdPoRUy8Up0tjjEOEUM70mE9Wezpwo
-         w36HUDl/gULXddw8GGTNXSf5mmaJjmgRY+6BM=
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gZnUzt96M2CHw2T17VotljT7ugAqa2z/W5TDXEKxdek=;
+        b=a8Aw21mdqnBwiNQAC6YlwGKZTGrHdKVqz7GMHC9WUOUEApaCqM9bbx4CS0jeBEldiO
+         3EbAzVDuDCdpzpp4FLt15YdjwnY7FuBVjvKBr6HMWCbkMH6r73KxFhqJH0611ipJ9njb
+         ZFFIyOAUDrNACu+h+usurCdIeGQ07p40ATepQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=aukUG7G4mJzk2l5eLMtMhDac84dRtZO/NL0wRxvV5bk=;
-        b=m0LI6P1dcBz/lpx5+Bx9ELUcM0RM+Sx2YQT9DDL1WDqLCUqrZLf7uKEM4wyNfHHuNS
-         HWhHJZR1FQ1+K1CR6nuxSdZtfjh8nm8w6jZypSCzWOgNMNUxGo1fauaH8DUugkiuspBK
-         l/MV6rvwCldmvHEnb2FcOKsrWaGKbO5shulVhhdibus28DVzlzZFw/VEVz8CGNhN1iin
-         N9byOl4lhd7l0RcKe7WSSu9eQf05wfvIQgM2492/Aa/4gHAxz8Jy0nP0KtVW6gTEJP5b
-         iU62XyNZ927HZbE4fltUl+lLqh0MGge+kdq10t/gio5zXh3+Pwl4AXWMgB5D94awsMpD
-         BddA==
-X-Gm-Message-State: AFqh2krAUR1+KGwjjQFiNsue02WSn6KuQ6A29YCyMNillN7CFl2psqDY
-        e4mmy6qaleveAgeLRUoDnT+2xw==
-X-Google-Smtp-Source: AMrXdXt1YyhzMqHrXb31aa2EUig1lyLxmOXR47HOZG7xnl6pDXO98PqEkXxynRd/lMzDNFeB/mp3Tw==
-X-Received: by 2002:a05:6a00:d4e:b0:581:a2b6:df19 with SMTP id n14-20020a056a000d4e00b00581a2b6df19mr34548691pfv.14.1673141450142;
-        Sat, 07 Jan 2023 17:30:50 -0800 (PST)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=gZnUzt96M2CHw2T17VotljT7ugAqa2z/W5TDXEKxdek=;
+        b=lbPBNHBBYJAzFPX6PXalOCfU3IdL7IQ3reE/9iZtdaTF6z0XAf9yAPKMtI5mPumbfZ
+         kGl5MIuUukL2LaL65U+yNsGba/624mQ5xiRQYm3RY4XDbUSXT3FVagYWCF0b2OAHwTE4
+         TAm9qN0Ns5uoUEweRZ24zD0QVBxlAQCl/BujW2fEYcxK/GWZEC4fdN81gnwzZZMHLbpI
+         u+FcGNUnbJxyFhdXs+XMKvbiuH+Y8ahGdrK8IAiIkDlQoVQWKsZJ9zfByst5Q6IiTOE0
+         NgRYf4zhbo1K7NLByRQyzDJsT3htm1h5QpRTlaL/C2bVTksXFkt/pA9yYctqAMLF0xtH
+         jGAA==
+X-Gm-Message-State: AFqh2kr2ujJ66MM0JrUIBSTfLpXKat4MWFjRYadgCx4nUa0ewpBTaVt2
+        38lc27VcrCt+gEytdIaH1SObAg==
+X-Google-Smtp-Source: AMrXdXsNEgSj+Fg3BAhdyK6itnO+JVw3YnT/0zGRBxhPgoZOvT438HNfu2sNa85PNKDMAjBFdJafhg==
+X-Received: by 2002:a05:6a00:1485:b0:574:251b:c5fe with SMTP id v5-20020a056a00148500b00574251bc5femr71889826pfu.20.1673141458702;
+        Sat, 07 Jan 2023 17:30:58 -0800 (PST)
 Received: from doug-ryzen-5700G.. ([192.183.212.197])
-        by smtp.gmail.com with ESMTPSA id x14-20020aa79a4e000000b005811c421e6csm3323714pfj.162.2023.01.07.17.30.48
+        by smtp.gmail.com with ESMTPSA id x14-20020aa79a4e000000b005811c421e6csm3323714pfj.162.2023.01.07.17.30.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 Jan 2023 17:30:49 -0800 (PST)
+        Sat, 07 Jan 2023 17:30:58 -0800 (PST)
 From:   Doug Brown <doug@schmorgal.com>
 To:     Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -55,66 +56,85 @@ To:     Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>
 Cc:     libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, Doug Brown <doug@schmorgal.com>
-Subject: [PATCH v2 0/4] wifi: libertas: IE handling fixes
-Date:   Sat,  7 Jan 2023 17:30:12 -0800
-Message-Id: <20230108013016.222494-1-doug@schmorgal.com>
+Subject: [PATCH v2 2/4] wifi: libertas: only add RSN/WPA IE in lbs_add_wpa_tlv
+Date:   Sat,  7 Jan 2023 17:30:14 -0800
+Message-Id: <20230108013016.222494-3-doug@schmorgal.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230108013016.222494-1-doug@schmorgal.com>
+References: <20230108013016.222494-1-doug@schmorgal.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series implements two fixes for the libertas driver that restore
-compatibility with modern wpa_supplicant versions, and adds support for
-WPS in the process.
+The existing code only converts the first IE to a TLV, but it returns a
+value that takes the length of all IEs into account. When there is more
+than one IE (which happens with modern wpa_supplicant versions for
+example), the returned length is too long and extra junk TLVs get sent
+to the firmware, resulting in an association failure.
 
-1) Better handling of the RSN/WPA IE in association requests:
-   The previous logic was always just grabbing the first one, and didn't
-   handle multiple IEs properly, which wpa_supplicant adds nowadays.
+Fix this by finding the first RSN or WPA IE and only adding that. This
+has the extra benefit of working properly if the RSN/WPA IE isn't the
+first one in the IE buffer.
 
-2) Support for IEs in scan requests:
-   Modern wpa_supplicant always adds an "extended capabilities" IE,
-   which violates max_scan_ie_len in this driver. Go ahead and allow
-   scan IEs, and handle WPS based on the info that Dan provided.
+While we're at it, clean up the code to use the available structs like
+the other lbs_add_* functions instead of directly manipulating the TLV
+buffer.
 
-These changes have been tested on a Marvell PXA168-based device with a
-Marvell 88W8686 Wi-Fi chipset. I've confirmed that with these changes
-applied, modern wpa_supplicant versions connect properly and WPS also
-works correctly (tested with "wpa_cli -i wlan0 wps_pbc any").
+Signed-off-by: Doug Brown <doug@schmorgal.com>
+---
+ drivers/net/wireless/marvell/libertas/cfg.c | 28 +++++++++++++--------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
-Dan, I wanted to point out that based on my packet sniffing, I
-determined that the 0x011B TLV automatically wraps its contents in a
-vendor-specific IE header. I may have misunderstood and you were already
-saying that, but I wanted to clarify just to be sure. If I explicitly
-included the WPS IE's 2-byte 0xDD/length header inside of the TLV data,
-I ended up with a duplicate 0xDD, with the outer one having a length
-that was 2 more than the inner/original. Wireshark barfed on it.
-
-Changes since V1 (which was a single patch linked here [1]):
-
-- Switch to cfg80211_find_*_elem when looking for specific IEs,
-  resulting in cleaner/safer code.
-- Use mrvl_ie_data struct for cleaner manipulation of TLV buffer, and
-  fix capitalization of the "data" member to avoid checkpatch warnings.
-- Implement idea suggested by Dan to change max_scan_ie_len to be
-  nonzero and enable WPS support in probe requests while we're at it.
-- Remove "Fixes:" tag; I'm not sure if it's still appropriate or not
-  with it depending on the capitalization fix.
-- Clarify comments.
-
-[1] https://lore.kernel.org/all/20230102234714.169831-1-doug@schmorgal.com/
-
-Doug Brown (4):
-  wifi: libertas: fix capitalization in mrvl_ie_data struct
-  wifi: libertas: only add RSN/WPA IE in lbs_add_wpa_tlv
-  wifi: libertas: add new TLV type for WPS enrollee IE
-  wifi: libertas: add support for WPS enrollee IE in probe requests
-
- drivers/net/wireless/marvell/libertas/cfg.c   | 76 +++++++++++++++----
- drivers/net/wireless/marvell/libertas/types.h |  3 +-
- 2 files changed, 65 insertions(+), 14 deletions(-)
-
+diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
+index 3e065cbb0af9..5cd78fefbe4c 100644
+--- a/drivers/net/wireless/marvell/libertas/cfg.c
++++ b/drivers/net/wireless/marvell/libertas/cfg.c
+@@ -416,10 +416,20 @@ static int lbs_add_cf_param_tlv(u8 *tlv)
+ 
+ static int lbs_add_wpa_tlv(u8 *tlv, const u8 *ie, u8 ie_len)
+ {
+-	size_t tlv_len;
++	struct mrvl_ie_data *wpatlv = (struct mrvl_ie_data *)tlv;
++	const struct element *wpaie;
++
++	/* Find the first RSN or WPA IE to use */
++	wpaie = cfg80211_find_elem(WLAN_EID_RSN, ie, ie_len);
++	if (!wpaie)
++		wpaie = cfg80211_find_vendor_elem(WLAN_OUI_MICROSOFT,
++						  WLAN_OUI_TYPE_MICROSOFT_WPA,
++						  ie, ie_len);
++	if (!wpaie || wpaie->datalen > 128)
++		return 0;
+ 
+ 	/*
+-	 * We need just convert an IE to an TLV. IEs use u8 for the header,
++	 * Convert the found IE to a TLV. IEs use u8 for the header,
+ 	 *   u8      type
+ 	 *   u8      len
+ 	 *   u8[]    data
+@@ -428,14 +438,12 @@ static int lbs_add_wpa_tlv(u8 *tlv, const u8 *ie, u8 ie_len)
+ 	 *   __le16  len
+ 	 *   u8[]    data
+ 	 */
+-	*tlv++ = *ie++;
+-	*tlv++ = 0;
+-	tlv_len = *tlv++ = *ie++;
+-	*tlv++ = 0;
+-	while (tlv_len--)
+-		*tlv++ = *ie++;
+-	/* the TLV is two bytes larger than the IE */
+-	return ie_len + 2;
++	wpatlv->header.type = wpaie->id;
++	wpatlv->header.len = wpaie->datalen;
++	memcpy(wpatlv->data, wpaie->data, wpaie->datalen);
++
++	/* Return the total number of bytes added to the TLV buffer */
++	return sizeof(struct mrvl_ie_header) + wpaie->datalen;
+ }
+ 
+ /*
 -- 
 2.34.1
 
