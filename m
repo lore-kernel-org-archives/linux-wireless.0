@@ -2,44 +2,48 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4060C67871
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Jan 2023 17:06:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B9EC54EBD
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Jan 2023 17:06:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229453AbjAIRG3 (ORCPT
+        id S235921AbjAIRGb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Jan 2023 12:06:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52442 "EHLO
+        Mon, 9 Jan 2023 12:06:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237301AbjAIQ6Q (ORCPT
+        with ESMTP id S237311AbjAIQ6R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2023 11:58:16 -0500
+        Mon, 9 Jan 2023 11:58:17 -0500
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74C4532271
-        for <linux-wireless@vger.kernel.org>; Mon,  9 Jan 2023 08:58:09 -0800 (PST)
-X-UUID: f4bed8999a7a44b0aad0802d6dd60d7c-20230110
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFCE0614F
+        for <linux-wireless@vger.kernel.org>; Mon,  9 Jan 2023 08:58:14 -0800 (PST)
+X-UUID: 1a26b75fcb1e44948294235735ea811b-20230110
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=LBtyWl3xBwubYwNLRwUnjRtwq/o0DZ3qA2MNE7i/b0c=;
-        b=f3MdgkJInwk8LNUwWtI7Ub8GrU3TapiPLrJzCaEAJmERyGnEdU724XMAnZCzdkMepxeNqUgEaw2CX2GlNjeLwLJF8+KMTWvkkodngmqwpsNBUcWBxVKMtF7Ko/WDwGz4XjWLm8M3z+TIsVY72IaCU8eXfY3GPVuFsB8U/Qn5d9g=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=eM0NwOGFlLu9vFSEUrdZRsSrF/f4poIqUeaQPkLxJi8=;
+        b=PJBZ8okeiXrOD6YX040Hb+T2Xg0ipE0ozKgU56Rlz5XwBHn6+jguWn1rCdVxdVU+3Dx2lROnDvyqQkFDRzd7qgvSonOxtOLIF6CzH4Le2CTgg7gGEctnouzxyqO7LcEbOs6ukpKuEAslbfE75x978BTxnLGEz1Jfggcr48aRhYo=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.17,REQID:26ef40d0-413f-4346-a348-bd958ff1b73f,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:543e81c,CLOUDID:0eedbb8b-8530-4eff-9f77-222cf6e2895b,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+X-CID-O-INFO: VERSION:1.1.17,REQID:29c2c8af-5ee9-4d26-ba70-b3081657357f,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:95
+X-CID-INFO: VERSION:1.1.17,REQID:29c2c8af-5ee9-4d26-ba70-b3081657357f,IP:0,URL
+        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
+        :quarantine,TS:95
+X-CID-META: VersionHash:543e81c,CLOUDID:35edbb8b-8530-4eff-9f77-222cf6e2895b,B
+        ulkID:230110005809TECWI5M9,BulkQuantity:0,Recheck:0,SF:28|17|19|48,TC:nil,
+        Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0
+        ,OSA:0
 X-CID-BVR: 0
-X-UUID: f4bed8999a7a44b0aad0802d6dd60d7c-20230110
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+X-UUID: 1a26b75fcb1e44948294235735ea811b-20230110
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 827041310; Tue, 10 Jan 2023 00:58:05 +0800
+        with ESMTP id 92812605; Tue, 10 Jan 2023 00:58:06 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 10 Jan 2023 00:58:05 +0800
+ 15.2.792.15; Tue, 10 Jan 2023 00:58:04 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Tue, 10 Jan 2023 00:58:05 +0800
+ 15.2.792.15 via Frontend Transport; Tue, 10 Jan 2023 00:58:04 +0800
 From:   Shayne Chen <shayne.chen@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
@@ -49,9 +53,9 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Bo Jiao <Bo.Jiao@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 06/13] wifi: mt76: add EHT rate stats for ethtool
-Date:   Tue, 10 Jan 2023 00:57:24 +0800
-Message-ID: <20230109165731.682-7-shayne.chen@mediatek.com>
+Subject: [PATCH 03/13] wifi: mt76: connac: add helpers for EHT capability
+Date:   Tue, 10 Jan 2023 00:57:21 +0800
+Message-ID: <20230109165731.682-4-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20230109165731.682-1-shayne.chen@mediatek.com>
 References: <20230109165731.682-1-shayne.chen@mediatek.com>
@@ -62,56 +66,96 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support to get EHT rate stats from ethtool.
+Add helpers to get eht cap and phymode on different bands and vifs.
 This is the preliminary patch to add EHT support for mt7996.
 
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h        | 2 +-
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 6 ++++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 46 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  4 ++
+ 2 files changed, 50 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index b3fd3abfdd9f..3d3c68b9e1cf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -272,7 +272,7 @@ enum mt76_phy_type {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 5a047e630860..efb9bfaa187f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -1329,6 +1329,40 @@ u8 mt76_connac_get_phy_mode(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_get_phy_mode);
  
- struct mt76_sta_stats {
- 	u64 tx_mode[__MT_PHY_TYPE_MAX];
--	u64 tx_bw[4];		/* 20, 40, 80, 160 */
-+	u64 tx_bw[5];		/* 20, 40, 80, 160, 320 */
- 	u64 tx_nss[4];		/* 1, 2, 3, 4 */
- 	u64 tx_mcs[16];		/* mcs idx */
- 	u64 tx_bytes;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index c423b052e4f4..9ea2e1198477 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -1084,10 +1084,14 @@ static const char mt7996_gstrings_stats[][ETH_GSTRING_LEN] = {
- 	"v_tx_mode_he_ext_su",
- 	"v_tx_mode_he_tb",
- 	"v_tx_mode_he_mu",
-+	"v_tx_mode_eht_su",
-+	"v_tx_mode_eht_trig",
-+	"v_tx_mode_eht_mu",
- 	"v_tx_bw_20",
- 	"v_tx_bw_40",
- 	"v_tx_bw_80",
- 	"v_tx_bw_160",
-+	"v_tx_bw_320",
- 	"v_tx_mcs_0",
- 	"v_tx_mcs_1",
- 	"v_tx_mcs_2",
-@@ -1100,6 +1104,8 @@ static const char mt7996_gstrings_stats[][ETH_GSTRING_LEN] = {
- 	"v_tx_mcs_9",
- 	"v_tx_mcs_10",
- 	"v_tx_mcs_11",
-+	"v_tx_mcs_12",
-+	"v_tx_mcs_13",
- };
++u8 mt76_connac_get_phy_mode_ext(struct mt76_phy *phy, struct ieee80211_vif *vif,
++				enum nl80211_band band)
++{
++	const struct ieee80211_sta_eht_cap *eht_cap;
++	struct ieee80211_supported_band *sband;
++	u8 mode = 0;
++
++	if (band == NL80211_BAND_6GHZ)
++		mode |= PHY_MODE_AX_6G;
++
++	sband = phy->hw->wiphy->bands[band];
++	eht_cap = ieee80211_get_eht_iftype_cap(sband, vif->type);
++
++	if (!eht_cap || !eht_cap->has_eht)
++		return mode;
++
++	switch (band) {
++	case NL80211_BAND_6GHZ:
++		mode |= PHY_MODE_BE_6G;
++		break;
++	case NL80211_BAND_5GHZ:
++		mode |= PHY_MODE_BE_5G;
++		break;
++	case NL80211_BAND_2GHZ:
++		mode |= PHY_MODE_BE_24G;
++		break;
++	default:
++		break;
++	}
++
++	return mode;
++}
++EXPORT_SYMBOL_GPL(mt76_connac_get_phy_mode_ext);
++
+ const struct ieee80211_sta_he_cap *
+ mt76_connac_get_he_phy_cap(struct mt76_phy *phy, struct ieee80211_vif *vif)
+ {
+@@ -1341,6 +1375,18 @@ mt76_connac_get_he_phy_cap(struct mt76_phy *phy, struct ieee80211_vif *vif)
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac_get_he_phy_cap);
  
- #define MT7996_SSTATS_LEN ARRAY_SIZE(mt7996_gstrings_stats)
++const struct ieee80211_sta_eht_cap *
++mt76_connac_get_eht_phy_cap(struct mt76_phy *phy, struct ieee80211_vif *vif)
++{
++	enum nl80211_band band = phy->chandef.chan->band;
++	struct ieee80211_supported_band *sband;
++
++	sband = phy->hw->wiphy->bands[band];
++
++	return ieee80211_get_eht_iftype_cap(sband, vif->type);
++}
++EXPORT_SYMBOL_GPL(mt76_connac_get_eht_phy_cap);
++
+ #define DEFAULT_HE_PE_DURATION		4
+ #define DEFAULT_HE_DURATION_RTS_THRES	1023
+ static void
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 947b0900daec..efba24bd3c6b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1870,8 +1870,12 @@ void mt76_connac_mcu_reg_wr(struct mt76_dev *dev, u32 offset, u32 val);
+ 
+ const struct ieee80211_sta_he_cap *
+ mt76_connac_get_he_phy_cap(struct mt76_phy *phy, struct ieee80211_vif *vif);
++const struct ieee80211_sta_eht_cap *
++mt76_connac_get_eht_phy_cap(struct mt76_phy *phy, struct ieee80211_vif *vif);
+ u8 mt76_connac_get_phy_mode(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 			    enum nl80211_band band, struct ieee80211_sta *sta);
++u8 mt76_connac_get_phy_mode_ext(struct mt76_phy *phy, struct ieee80211_vif *vif,
++				enum nl80211_band band);
+ 
+ int mt76_connac_mcu_add_key(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 			    struct mt76_connac_sta_key_conf *sta_key_conf,
 -- 
 2.25.1
 
