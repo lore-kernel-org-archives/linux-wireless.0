@@ -2,91 +2,186 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C16DEC5479D
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Jan 2023 09:21:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD794C46467
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Jan 2023 09:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235794AbjAKJVt (ORCPT
+        id S229920AbjAKJ1E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Jan 2023 04:21:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55176 "EHLO
+        Wed, 11 Jan 2023 04:27:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238303AbjAKJV2 (ORCPT
+        with ESMTP id S232053AbjAKJ0Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2023 04:21:28 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2C1F60C1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2023 01:21:25 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id o13so11759306pjg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2023 01:21:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sartura.hr; s=sartura;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=BDAYJ0rba9Lt9b0XJjJxh+A0UhRZ127T1rCwiGZHjnc=;
-        b=x2XQxLUwZR2yYsRMaInf7HWF92ZLD+A8Ta/XpfOy9ltRTG81C6B4t3CzTcmvP7jz3/
-         lWh6f2dtGJ219/jUuv2iH7m/U4NGBjFHzp4071AJBOgyXRI1ViS2OKfAS8IL4VqJH41J
-         Sy8z6MGyzL59k+PLtxV0hmjP4lkCDie1EJO1VFeVSeJqtTm1ierzThCCy4zhfPI1bJJq
-         WFxrtIqvv7HqOo8fSEqABusv8jmYDrsdBNamTK0v9HWaNAQhTdj17J1A/NH1zrh3/0Vf
-         IZODWNH23nkOj9DJvhqo5rr6LJGyKBZnO2cbdGaE+ivTzuOeqxf0C3NlLLut3Tsm9Dtq
-         uu5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=BDAYJ0rba9Lt9b0XJjJxh+A0UhRZ127T1rCwiGZHjnc=;
-        b=4tnGTuF+RgtwFcI4yCrzpL0hnvDTwDHLmRbRNIuE/VkKpDX75/wrbeM1/BbtgeGKq2
-         lILiEkMl8tjwAkfTcwKazaBxjbwoGOZ2GUCUMUX4o0If3/N9ID6bhzkbkyZmTwRyw2O3
-         oE/Fw1xikmPI9Hdm8Ab8pZEqkrNzGEA3akl1cU/QwjQWKarcY2lRyACnPu3jYjOVI0zq
-         NXwOnnPVHYe1wY634gi+YCt3xc5+cWzNjNQas072dYxKMPHAofuG2RB9wt0BDPRQCOvy
-         73yXS5Ae8d6oIKlVrPihdQDmMaZH5VivypTX8GzPQ9JSAb1SgY2F+g1d4IC3fkjj/lS/
-         Q8gg==
-X-Gm-Message-State: AFqh2kpvSaooKi3XyAmtBGWowRhrdoo+vaNGuk6kN2tSmS4uYm7ZnB9E
-        6syyp8DqUxDDRewozKj2T6dYcqdutTNxs28h+fmhGg==
-X-Google-Smtp-Source: AMrXdXs1BfLQg12NC/c7gfJ2HOmIPIiSva1z4dPZByoL2IWMaM3TOIFUfRduiYyr0b0soYPNL3Jt1Ey8jdQq4xjQLaw=
-X-Received: by 2002:a17:90b:48cf:b0:226:164f:522e with SMTP id
- li15-20020a17090b48cf00b00226164f522emr3628516pjb.22.1673428885353; Wed, 11
- Jan 2023 01:21:25 -0800 (PST)
+        Wed, 11 Jan 2023 04:26:25 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DD16F4F
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2023 01:25:54 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 247C161B20
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2023 09:25:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8171C433EF;
+        Wed, 11 Jan 2023 09:25:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673429153;
+        bh=kLmYwShz2xeYyy2k3zaai252O8SuZ5TMqTM79yByxjI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=a+XENMxiE9l20MOiRkQQLJN+wOCXWd6JKAiaEPmd6t2L/rXY2wBDtmzHrWSE9oegk
+         KOWTAIWM73r4C9eNmevh8d4mElEimXA6entZrGT97OQauO9V90RrJrM2XL4jpw8gcM
+         eZkQmFZdJsukCaM67/6Dpy1C2eBFfcD/kWzEQm48PQCXJWfInuaGM/u61h9vp9mHJE
+         iQt+wKfQpheN97XlvmwkXIsv7KOYe5rB4LcmB7cuG0Iwa44ursxv6is2eX04C85Un7
+         3OSPq+yQSTj1qnAc6buhEGZ4UZ2w4SxJdh5wLPgwyPHXmuFkPKpw8vVduyj0ahpicA
+         e380YpBc+uP0Q==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     mhi@lists.linux.dev
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] mhi: allow MHI client drivers to provide the firmware via a pointer
+Date:   Wed, 11 Jan 2023 11:25:45 +0200
+Message-Id: <20230111092547.21425-2-kvalo@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230111092547.21425-1-kvalo@kernel.org>
+References: <20230111092547.21425-1-kvalo@kernel.org>
 MIME-Version: 1.0
-References: <20221105194943.826847-1-robimarko@gmail.com> <20221105194943.826847-2-robimarko@gmail.com>
- <20221107174727.GA7535@thinkpad> <87cz9xcqbd.fsf@kernel.org>
- <877czn8c2n.fsf@kernel.org> <CA+HBbNFCFtJwzN=6SCsWnDmAjPkmxE4guH1RrLc+-HByLcVVXA@mail.gmail.com>
- <87k02jzgkz.fsf@kernel.org>
-In-Reply-To: <87k02jzgkz.fsf@kernel.org>
-From:   Robert Marko <robert.marko@sartura.hr>
-Date:   Wed, 11 Jan 2023 10:21:14 +0100
-Message-ID: <CA+HBbNHi0zTeV0DRmwLjZu+XzUQEZQNnSpBMeQeUPiBu3v-2BQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] wifi: ath11k: use unique QRTR instance ID
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Manivannan Sadhasivam <mani@kernel.org>,
-        Robert Marko <robimarko@gmail.com>, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        gregkh@linuxfoundation.org, elder@linaro.org,
-        hemantk@codeaurora.org, quic_jhugo@quicinc.com,
-        quic_qianyu@quicinc.com, bbhatt@codeaurora.org,
-        mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, ansuelsmth@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Really sorry, I just didn't manage to get this finalised due to other
-> stuff and now I'm leaving for a two week vacation :(
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-Any news regarding this, I have a PR for ipq807x support in OpenWrt
-and the current workaround for supporting AHB + PCI or multiple PCI
-cards is breaking cards like QCA6390 which are obviously really
-popular.
+Currently MHI loads the firmware image from the path provided by client
+devices. ath11k needs to support firmware image embedded along with meta data
+(named as firmware-2.bin). So allow the client driver to request the firmware
+file from user space on it's own and provide the firmware image data and size
+to MHI via a pointer struct mhi_controller::fw_data.
 
-Regards,
-Robert
+This is an optional feature, if fw_data is NULL MHI load the firmware using the
+name from struct mhi_controller::fw_image string as before.
+
+Tested with ath11k and WCN6855 hw2.0.
+
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+---
+ drivers/bus/mhi/host/boot.c | 27 +++++++++++++++++++--------
+ include/linux/mhi.h         |  6 ++++++
+ 2 files changed, 25 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/bus/mhi/host/boot.c b/drivers/bus/mhi/host/boot.c
+index 1c69feee1703..d6d5f424491e 100644
+--- a/drivers/bus/mhi/host/boot.c
++++ b/drivers/bus/mhi/host/boot.c
+@@ -365,12 +365,10 @@ int mhi_alloc_bhie_table(struct mhi_controller *mhi_cntrl,
+ }
+ 
+ static void mhi_firmware_copy(struct mhi_controller *mhi_cntrl,
+-			      const struct firmware *firmware,
++			      const u8 *buf, size_t remainder,
+ 			      struct image_info *img_info)
+ {
+-	size_t remainder = firmware->size;
+ 	size_t to_cpy;
+-	const u8 *buf = firmware->data;
+ 	struct mhi_buf *mhi_buf = img_info->mhi_buf;
+ 	struct bhi_vec_entry *bhi_vec = img_info->bhi_vec;
+ 
+@@ -392,9 +390,10 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
+ 	const struct firmware *firmware = NULL;
+ 	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+ 	const char *fw_name;
++	const u8 *fw_data;
+ 	void *buf;
+ 	dma_addr_t dma_addr;
+-	size_t size;
++	size_t size, fw_sz;
+ 	int i, ret;
+ 
+ 	if (MHI_PM_IN_ERROR_STATE(mhi_cntrl->pm_state)) {
+@@ -424,6 +423,14 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
+ 	fw_name = (mhi_cntrl->ee == MHI_EE_EDL) ?
+ 		mhi_cntrl->edl_image : mhi_cntrl->fw_image;
+ 
++	if (!fw_name && mhi_cntrl->fbc_download &&
++	    mhi_cntrl->fw_data && mhi_cntrl->fw_sz) {
++		size = mhi_cntrl->sbl_size;
++		fw_data = mhi_cntrl->fw_data;
++		fw_sz = mhi_cntrl->fw_sz;
++		goto skip_req_fw;
++	}
++
+ 	if (!fw_name || (mhi_cntrl->fbc_download && (!mhi_cntrl->sbl_size ||
+ 						     !mhi_cntrl->seg_len))) {
+ 		dev_err(dev,
+@@ -443,6 +450,10 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
+ 	if (size > firmware->size)
+ 		size = firmware->size;
+ 
++	fw_data = firmware->data;
++	fw_sz = firmware->size;
++
++skip_req_fw:
+ 	buf = dma_alloc_coherent(mhi_cntrl->cntrl_dev, size, &dma_addr,
+ 				 GFP_KERNEL);
+ 	if (!buf) {
+@@ -451,7 +462,7 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
+ 	}
+ 
+ 	/* Download image using BHI */
+-	memcpy(buf, firmware->data, size);
++	memcpy(buf, fw_data, size);
+ 	ret = mhi_fw_load_bhi(mhi_cntrl, dma_addr, size);
+ 	dma_free_coherent(mhi_cntrl->cntrl_dev, size, buf, dma_addr);
+ 
+@@ -463,7 +474,7 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
+ 	}
+ 
+ 	/* Wait for ready since EDL image was loaded */
+-	if (fw_name == mhi_cntrl->edl_image) {
++	if (fw_name && fw_name == mhi_cntrl->edl_image) {
+ 		release_firmware(firmware);
+ 		goto fw_load_ready_state;
+ 	}
+@@ -478,14 +489,14 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
+ 	 */
+ 	if (mhi_cntrl->fbc_download) {
+ 		ret = mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->fbc_image,
+-					   firmware->size);
++					   fw_sz);
+ 		if (ret) {
+ 			release_firmware(firmware);
+ 			goto error_fw_load;
+ 		}
+ 
+ 		/* Load the firmware into BHIE vec table */
+-		mhi_firmware_copy(mhi_cntrl, firmware, mhi_cntrl->fbc_image);
++		mhi_firmware_copy(mhi_cntrl, fw_data, fw_sz, mhi_cntrl->fbc_image);
+ 	}
+ 
+ 	release_firmware(firmware);
+diff --git a/include/linux/mhi.h b/include/linux/mhi.h
+index a5441ad33c74..0d11fe22633e 100644
+--- a/include/linux/mhi.h
++++ b/include/linux/mhi.h
+@@ -299,6 +299,10 @@ struct mhi_controller_config {
+  * @iova_start: IOMMU starting address for data (required)
+  * @iova_stop: IOMMU stop address for data (required)
+  * @fw_image: Firmware image name for normal booting (optional)
++ * @fw_data: Firmware image data content for normal booting, used only
++ *           if fw_image is NULL (optional)
++ * @fw_sz: Firmware image data size for normal booting, used only if fw_image
++ *         is NULL (optional)
+  * @edl_image: Firmware image name for emergency download mode (optional)
+  * @rddm_size: RAM dump size that host should allocate for debugging purpose
+  * @sbl_size: SBL image size downloaded through BHIe (optional)
+@@ -384,6 +388,8 @@ struct mhi_controller {
+ 	dma_addr_t iova_start;
+ 	dma_addr_t iova_stop;
+ 	const char *fw_image;
++	const u8 *fw_data;
++	size_t fw_sz;
+ 	const char *edl_image;
+ 	size_t rddm_size;
+ 	size_t sbl_size;
 -- 
-Robert Marko
-Staff Embedded Linux Engineer
-Sartura Ltd.
-Lendavska ulica 16a
-10000 Zagreb, Croatia
-Email: robert.marko@sartura.hr
-Web: www.sartura.hr
+2.30.2
+
