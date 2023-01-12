@@ -2,91 +2,119 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AF09C54EBD
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Jan 2023 10:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17CF4C54EBD
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Jan 2023 10:29:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238257AbjALKR6 (ORCPT
+        id S239674AbjALK34 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Jan 2023 05:17:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50124 "EHLO
+        Thu, 12 Jan 2023 05:29:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239865AbjALKPz (ORCPT
+        with ESMTP id S239923AbjALK3C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2023 05:15:55 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EA78BF2;
-        Thu, 12 Jan 2023 02:15:52 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D99AE61FCA;
-        Thu, 12 Jan 2023 10:15:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DCBCC433EF;
-        Thu, 12 Jan 2023 10:15:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673518551;
-        bh=eZSAfDKuRBo0xGVikbboiQneetQV4uSvYjwwu4EYGa0=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=WyHIKPds/xpQeQuBcbJcgTRVOWErVVr9bdlytmSVrh8GXxP84ll9AGmqGGdZ9hCR3
-         nzkwBoAxRLsYKBhMa5rvZhg6LUbHNhDc1eDEkO7E8iOEVT4Sr421gJlWPvyR/9kChw
-         /tQzlqY8OCLcJ9UL9sJfZryQbVNxD5Zc3dFv7aivqlGkfR6XBb2Jjm0HSksIXH4b5z
-         Hs8FP8OeXz+pyzN2Q3i9WgfRHz0OKiwsk+WJgiWu/bIl3G8Y8lAv/t5k+93Nh+rl0H
-         DIPCYmLJ1MwL+7au6LbsizTKzRQs47Oil/CbPkeNvIqvdljdK+4LKVt0ZDR615CWne
-         v+GFMCyekccUg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Abhishek Kumar <kuabhs@chromium.org>
-Cc:     Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Subject: Re: [PATCH] ath10k: snoc: enable threaded napi on WCN3990
-References: <20221220075215.1.Ic12e347e0d61a618124b742614e82bbd5d770173@changeid>
-        <56d4941a-ad35-37ca-48ca-5f1bf7a86d25@quicinc.com>
-        <CACTWRwt7oQrCyHf=ZF6dW8TtRhOfa14XMZW39cYZWi4hhszcqg@mail.gmail.com>
-Date:   Thu, 12 Jan 2023 12:15:42 +0200
-In-Reply-To: <CACTWRwt7oQrCyHf=ZF6dW8TtRhOfa14XMZW39cYZWi4hhszcqg@mail.gmail.com>
-        (Abhishek Kumar's message of "Wed, 28 Dec 2022 16:01:38 -0800")
-Message-ID: <87tu0wcb3l.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Thu, 12 Jan 2023 05:29:02 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7070332192
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2023 02:26:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=3ZD8s7Jbcvn0ZhGwbWeAY8+NiThfyRdrFFr7bggYdFA=;
+        t=1673519178; x=1674728778; b=fWeGJJ86ExKvmB8Jw8s6AD86b/murYmkFs5BiTnI75iqPRz
+        qofr94yVUb+1a54EbGYbnqsUx5ubtP6DPQ7yq0LYGcBrNa00ogXRG57zMCxhim4WZ8d2oi3yLtivj
+        Xg/PFgFYU4OUtTwiAq6g7Mms7lKxQLlFeY405LnvKBbS2Lom9V5eiQA3Tr7rywMYGfp5DncOOBelU
+        uNtkHwAkGt15UM2ZZAFj2rZlef69ockPpmuow0dPMv3eNCm5ts9bJ8IpBQTELbIGpKyhIHZ/D0x1F
+        MgT7gZq6vwCpdnZvhrFQjX3RBHnbQ9ptvI+x4/W79ZJjKzzKGLl+RbjzNjSIY5KA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1pFumm-00H3Av-22;
+        Thu, 12 Jan 2023 11:26:16 +0100
+Message-ID: <64731257b957f50b0f66e4d2fcd8c24dea8d70ff.camel@sipsolutions.net>
+Subject: Re: [RFC v2 4/6] mac80211: add utility function for tx_rate -
+ rate_info conversion
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jonas Jelonek <jelonek.jonas@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc:     nbd@nbd.name
+Date:   Thu, 12 Jan 2023 11:26:15 +0100
+In-Reply-To: <20220920104032.496697-5-jelonek.jonas@gmail.com>
+References: <20220920104032.496697-1-jelonek.jonas@gmail.com>
+         <20220920104032.496697-5-jelonek.jonas@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Abhishek Kumar <kuabhs@chromium.org> writes:
+On Tue, 2022-09-20 at 12:40 +0200, Jonas Jelonek wrote:
+> This patch adds an utility function to mac80211 for conversion between
+> ieee80211_tx_rate (mac80211.h) and rate_info (cfg80211.h).
+>=20
+> struct ieee80211_tx_rate is space limited to annotate rates up to IEEE
+> 802.11ac. The new struct rate_info is able to annotate IEEE 802.11ax
+> rates and beyond. Several drivers internally still use ieee80211_tx_rate
+> but mac80211 expects rate_info in struct ieee80211_rate_status. This
+> struct is in turn required to allow, e.g., tx-power status report or
+> dynamic number of mrr stages.
+>=20
+> Signed-off-by: Jonas Jelonek <jelonek.jonas@gmail.com>
+> ---
+>  include/net/mac80211.h |  4 ++++
+>  net/mac80211/util.c    | 35 +++++++++++++++++++++++++++++++++++
+>  2 files changed, 39 insertions(+)
+>=20
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index c4b55c7273ed..f17a03caa361 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1051,6 +1051,10 @@ ieee80211_rate_get_vht_nss(const struct ieee80211_=
+tx_rate *rate)
+>  	return (rate->idx >> 4) + 1;
+>  }
+> =20
+> +void ieee80211_rate_get_rate_info(const struct ieee80211_tx_rate *rate,
+> +				  struct wiphy *wiphy, u8 band,
+> +				  struct rate_info *rate_info);
+> +
+>  /**
+>   * struct ieee80211_tx_info - skb transmit information
+>   *
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 0ea5d50091dc..c76dc255bec3 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -4867,3 +4867,38 @@ void ieee80211_fragment_element(struct sk_buff *sk=
+b, u8 *len_pos)
+> =20
+>  	*len_pos =3D elem_len;
+>  }
+> +
+> +
 
->> > --- a/drivers/net/wireless/ath/ath10k/snoc.c
->> > +++ b/drivers/net/wireless/ath/ath10k/snoc.c
->> > @@ -927,6 +927,9 @@ static int ath10k_snoc_hif_start(struct ath10k *ar)
->> >
->> >       bitmap_clear(ar_snoc->pending_ce_irqs, 0, CE_COUNT_MAX);
->> >
->> > +     if (ar->hw_params.enable_threaded_napi)
->> > +             dev_set_threaded(&ar->napi_dev, true);
->> > +
->>
->> Since this is done in the API specific to WCN3990, we do not need
->> hw_param for this.
->
-> Just so that I am clear, are you suggesting to enable this by default
-> in snoc.c, similar to what you did in
->
-> https://lore.kernel.org/all/20220905071805.31625-2-quic_mpubbise@quicinc.com/
->
-> If my understanding is correct and there is no objection, I can remove
-> hw_param and enable it by default on snoc.c . I used hw_param because,
-> as I see it, threaded NAPI can have some adverse effect on the cache
-> utilization and power.
+nit: use just one blank line.
 
-WCN3990 is the only device using SNOC bus so the hw_param is not needed.
-It's safe to call dev_set_threaded() in ath10k_snoc_hif_start()
-unconditionally as it only affects WCN3990.
+johannes
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+> +void ieee80211_rate_get_rate_info(const struct ieee80211_tx_rate *rate,
+> +				  struct wiphy *wiphy, u8 band,
+> +				  struct rate_info *rate_info)
+> +{
+> +	memset(rate_info, 0, sizeof(struct rate_info));
+> +
+> +	if (rate->flags & IEEE80211_TX_RC_MCS) { /* 802.11n */
+> +		rate_info->flags |=3D RATE_INFO_FLAGS_MCS;
+> +		rate_info->mcs =3D rate->idx;
+> +	} else if (rate->flags & IEEE80211_TX_RC_VHT_MCS) { /* 802.11ac */
+> +		rate_info->flags |=3D RATE_INFO_FLAGS_VHT_MCS;
+> +		rate_info->mcs =3D ieee80211_rate_get_vht_mcs(rate);
+> +		rate_info->nss =3D ieee80211_rate_get_vht_nss(rate);
+> +	} else { /* 802.11a/b/g */
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+what about HE/EHT?
+
+johannes
