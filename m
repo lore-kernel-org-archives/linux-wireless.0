@@ -2,42 +2,44 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D86C54EBD
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Jan 2023 09:10:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B207CC54EBD
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Jan 2023 09:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241041AbjAMJKU (ORCPT
+        id S241167AbjAMJKW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Jan 2023 04:10:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44140 "EHLO
+        Fri, 13 Jan 2023 04:10:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240704AbjAMJJs (ORCPT
+        with ESMTP id S241146AbjAMJJ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2023 04:09:48 -0500
+        Fri, 13 Jan 2023 04:09:57 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C50B43D9F
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2023 01:07:12 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1C8C143DB3
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2023 01:07:14 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30D95o642029918, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30D95uu46029946, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30D95o642029918
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30D95uu46029946
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Fri, 13 Jan 2023 17:05:50 +0800
+        Fri, 13 Jan 2023 17:05:56 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 13 Jan 2023 17:06:49 +0800
+ 15.1.2375.32; Fri, 13 Jan 2023 17:06:55 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 13 Jan
- 2023 17:06:49 +0800
+ 2023 17:06:53 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <gary.chang@realtek.com>, <echuang@realtek.com>,
         <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/4] wifi: rtw89: fix some incorrect settings
-Date:   Fri, 13 Jan 2023 17:06:28 +0800
-Message-ID: <20230113090632.60957-1-pkshih@realtek.com>
+Subject: [PATCH 4/4] wifi: rtw89: 8852b: fill the missing configuration about queue empty checking
+Date:   Fri, 13 Jan 2023 17:06:32 +0800
+Message-ID: <20230113090632.60957-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230113090632.60957-1-pkshih@realtek.com>
+References: <20230113090632.60957-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -63,33 +65,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The patches in this patchset are not functional related, but all are to
-correct register settings. In fact, they doesn't obvious affect user
-experience, but still need to correct them as expected.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Chih-Kang Chang (1):
-  wifi: rtw89: 8852c: rfk: correct ADC clock settings
+The configurations, wde_qempty_acq_num and wde_qempty_mgq_sel, are used
+when MAC checks if TX queues are empty. Fill the corresponding setting
+for 8852B.
 
-Eric Huang (1):
-  wifi: rtw89: correct register definitions of digital CFO and spur
-    elimination
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Zong-Zhe Yang (2):
-  wifi: rtw89: fix assignation of TX BD RAM table
-  wifi: rtw89: 8852b: fill the missing configuration about queue empty
-    checking
-
- drivers/net/wireless/realtek/rtw89/pci.c      | 15 +++++-
- drivers/net/wireless/realtek/rtw89/pci.h      | 15 +++---
- drivers/net/wireless/realtek/rtw89/reg.h      |  9 +++-
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |  6 +--
- .../net/wireless/realtek/rtw89/rtw8852ae.c    |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8852b.c |  2 +
- .../net/wireless/realtek/rtw89/rtw8852be.c    |  1 +
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 51 ++++++++++++++-----
- .../net/wireless/realtek/rtw89/rtw8852ce.c    |  1 +
- 9 files changed, 77 insertions(+), 24 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+index b9e5363e524b3..caa0887db8a3c 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+@@ -2437,6 +2437,8 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
+ 	.rsvd_ple_ofst		= 0x2f800,
+ 	.hfc_param_ini		= rtw8852b_hfc_param_ini_pcie,
+ 	.dle_mem		= rtw8852b_dle_mem_pcie,
++	.wde_qempty_acq_num	= 4,
++	.wde_qempty_mgq_sel	= 4,
+ 	.rf_base_addr		= {0xe000, 0xf000},
+ 	.pwr_on_seq		= NULL,
+ 	.pwr_off_seq		= NULL,
 -- 
 2.25.1
 
