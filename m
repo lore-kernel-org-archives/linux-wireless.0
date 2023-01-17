@@ -2,97 +2,93 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 475E7C3DA78
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 11:42:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D999C3DA78
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 11:52:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236411AbjAQLmL (ORCPT
+        id S236438AbjAQLwz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Jan 2023 06:42:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56350 "EHLO
+        Tue, 17 Jan 2023 06:52:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236596AbjAQLl6 (ORCPT
+        with ESMTP id S236058AbjAQLwy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2023 06:41:58 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 188111F5C1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 03:41:57 -0800 (PST)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30HBfh3nB012217, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30HBfh3nB012217
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 17 Jan 2023 19:41:43 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Tue, 17 Jan 2023 19:41:44 +0800
-Received: from localhost (172.16.17.65) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 17 Jan
- 2023 19:41:43 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/8] wifi: rtw89: coex: Clear Bluetooth HW PTA counter when radio state change
-Date:   Tue, 17 Jan 2023 19:41:03 +0800
-Message-ID: <20230117114109.4298-3-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230117114109.4298-1-pkshih@realtek.com>
-References: <20230117114109.4298-1-pkshih@realtek.com>
+        Tue, 17 Jan 2023 06:52:54 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 583DF233CF;
+        Tue, 17 Jan 2023 03:52:53 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 07FD5B815AA;
+        Tue, 17 Jan 2023 11:52:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F245EC433D2;
+        Tue, 17 Jan 2023 11:52:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673956370;
+        bh=+fBuNs29t8yNPv6q51lyGENRRsy/0iZMXu1O4lAOniQ=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=Dix/JRvzda3WspkxvRp3kxxnBmsIoxY2NgLSprROHZ0qlxGw7s/fUzJ6BB0AsmhAi
+         LDhkNPFamjnwUqZndKAWqtN+NWeazr3C0tgpwfbRycye0X+SSJYz6AW/LAxKMo9P0M
+         3ltjdPBkrnSa5/f86OYQX3l9mlyGeTD6RafI61+QmsapV2/OkPtGk1Y2U7/DbZdyr6
+         uUI8RyjQdgYqmYhh/1/Fi8KYz7RM4ZuKW61y/o9g+tRmVelUvaGL5wvt5PHC7GtrkM
+         c7hIaNX9RpQCTWhVO5ithzfwSbj9cap7IM24/IO/k9ynW6fyiiS5mboZFuGiJFeOVs
+         B+W8SirZu/7Gg==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.16.17.65]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: trusted connection
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Deterministic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 01/17/2023 11:09:00
-X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
- rules found
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIzLzEvMTcgpFekyCAwOToxNDowMA==?=
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v4] wifi: ath9k: htc_hst: free skb in ath9k_htc_rx_msg()
+ if
+ there is no callback function
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230104123546.51427-1-pchelkin@ispras.ru>
+References: <20230104123546.51427-1-pchelkin@ispras.ru>
+To:     Fedor Pchelkin <pchelkin@ispras.ru>
+Cc:     =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Fedor Pchelkin <pchelkin@ispras.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Sujith <Sujith.Manoharan@atheros.com>,
+        "John W. Linville" <linville@tuxdriver.com>,
+        Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+        Senthil Balasubramanian <senthilkumar@atheros.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        lvc-project@linuxtesting.org,
+        syzbot+e008dccab31bd3647609@syzkaller.appspotmail.com,
+        syzbot+6692c72009680f7c4eb2@syzkaller.appspotmail.com
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <167395636331.22891.14427855957409091076.kvalo@kernel.org>
+Date:   Tue, 17 Jan 2023 11:52:46 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ching-Te Ku <ku920601@realtek.com>
+Fedor Pchelkin <pchelkin@ispras.ru> wrote:
 
-Reset the counter no matter Wi-Fi is notified turning into power save or
-not. With rest the counter coexistence will recognize Bluetooth is hanged
-easily.
+> It is stated that ath9k_htc_rx_msg() either frees the provided skb or
+> passes its management to another callback function. However, the skb is
+> not freed in case there is no another callback function, and Syzkaller was
+> able to cause a memory leak. Also minor comment fix.
+> 
+> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+> 
+> Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
+> Reported-by: syzbot+e008dccab31bd3647609@syzkaller.appspotmail.com
+> Reported-by: syzbot+6692c72009680f7c4eb2@syzkaller.appspotmail.com
+> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/coex.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index a9db33e3bcade..ee6b5fff4928b 100644
---- a/drivers/net/wireless/realtek/rtw89/coex.c
-+++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -5335,7 +5335,6 @@ void rtw89_btc_ntfy_radio_state(struct rtw89_dev *rtwdev, enum btc_rfctrl rf_sta
- 	}
- 
- 	if (rf_state == BTC_RFCTRL_WL_ON) {
--		btc->dm.cnt_dm[BTC_DCNT_BTCNT_FREEZE] = 0;
- 		rtw89_btc_fw_en_rpt(rtwdev, RPT_EN_MREG, true);
- 		val = BTC_WSCB_ACTIVE | BTC_WSCB_ON | BTC_WSCB_BTLOG;
- 		_write_scbd(rtwdev, val, true);
-@@ -5347,6 +5346,8 @@ void rtw89_btc_ntfy_radio_state(struct rtw89_dev *rtwdev, enum btc_rfctrl rf_sta
- 			_write_scbd(rtwdev, BTC_WSCB_ALL, false);
- 	}
- 
-+	btc->dm.cnt_dm[BTC_DCNT_BTCNT_FREEZE] = 0;
-+
- 	_run_coex(rtwdev, BTC_RSN_NTFY_RADIO_STATE);
- 
- 	wl->status.map.rf_off_pre = wl->status.map.rf_off;
+9b25e3985477 wifi: ath9k: htc_hst: free skb in ath9k_htc_rx_msg() if there is no callback function
+
 -- 
-2.25.1
+https://patchwork.kernel.org/project/linux-wireless/patch/20230104123546.51427-1-pchelkin@ispras.ru/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
