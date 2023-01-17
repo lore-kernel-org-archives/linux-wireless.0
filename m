@@ -2,182 +2,278 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0008C678D7
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 09:00:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDE5DC63797
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 09:33:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236020AbjAQJA4 (ORCPT
+        id S236496AbjAQJdV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Jan 2023 04:00:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58276 "EHLO
+        Tue, 17 Jan 2023 04:33:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235874AbjAQI76 (ORCPT
+        with ESMTP id S236106AbjAQJco (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2023 03:59:58 -0500
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2104.outbound.protection.outlook.com [40.107.237.104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F0F51D91F;
-        Tue, 17 Jan 2023 00:59:46 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RN7Z0a0XIfFrpeb7E0y2RRaC89x0bXK8OG1jjF5s3wxj8gtdxHMdD6XFgd+NdPlUOL0POdhP8BtF50mYcEUvt0nsLMyIBOSH6OuRr54gpirlbemYMrAhBRpzU0aFFptOZCBVu/we4W/5TuEfzUM1N5K24gJq2BLZ9CumilMtUNMdOoKu+U9GwZe76GlG8tfr3BtdbDbWs864OYJ/BkUPGZlahbfVRabJklUE7HwZ7dHH8PYTItolWUhbRdWX8K+DYRBkdNFsA/ZSaPV30YI8tFVX40HMD8kdX+YhTIR6JDhbgQZaeRM2oLdg+TfI25ZbaQQi/GmYlBXfqf/rbavaGA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LzkQowbY7n4G/e1S7ouqM8pPZO4R4Ng1SmH8pKMgouU=;
- b=im0jvMkUFDjI4T6rsv6W+IR+QbJje0ex5TvWztO9xr8zgGslSP2L3mi2guV4RmTwgYu/ZzdaqXLg50f+q44VdLS/im4lNH8gVNc2FkyMmq/h39UgBPygG2VXwVZxdW4wR+9aqkq+pcKI7BzUkVqDc62zypUbu080dxBOgI47zJsDWn5gYD/GyF1xOLrsfSeCTu90zZl4KfKknNu38/1Oh/TePmeD7MiVK/X9qUZo/qedICoIb1kUHt1iNSFK90Grln+ZPAxgtFl4eF7LckDToh7zhswInpTBoq4T47007BRn5d1H3VSJFFykwYjT/Kb5tgud/IdtxPjz0/bTvTbC+A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=corigine.com; dmarc=pass action=none header.from=corigine.com;
- dkim=pass header.d=corigine.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=corigine.onmicrosoft.com; s=selector2-corigine-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LzkQowbY7n4G/e1S7ouqM8pPZO4R4Ng1SmH8pKMgouU=;
- b=lM5ThGS8VHl+4ss+iq7BkgAtkCgSlQW0mD5ReEVqupDUkg+ZBlZmh20iIMsq3hI19Pklat0vL2XjpGhrgN8mdZxnR+RaVBbhZa3oLBrwH9N6ed5RF8qEt88XQmMa3Who2y6N+vq8PIYkML8VxRA+NlaT9ZkVAL6qCNsqYGiwTqE=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=corigine.com;
-Received: from PH0PR13MB4842.namprd13.prod.outlook.com (2603:10b6:510:78::6)
- by BN0PR13MB4647.namprd13.prod.outlook.com (2603:10b6:408:129::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6002.13; Tue, 17 Jan
- 2023 08:59:43 +0000
-Received: from PH0PR13MB4842.namprd13.prod.outlook.com
- ([fe80::eb5c:910f:3730:fd65]) by PH0PR13MB4842.namprd13.prod.outlook.com
- ([fe80::eb5c:910f:3730:fd65%6]) with mapi id 15.20.5986.023; Tue, 17 Jan 2023
- 08:59:43 +0000
-Date:   Tue, 17 Jan 2023 09:59:36 +0100
-From:   Simon Horman <simon.horman@corigine.com>
-To:     Doug Brown <doug@schmorgal.com>
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Dan Williams <dcbw@redhat.com>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH v3 2/4] wifi: libertas: only add RSN/WPA IE in
- lbs_add_wpa_tlv
-Message-ID: <Y8ZjeKeNx0eHxt7f@corigine.com>
-References: <20230116202126.50400-1-doug@schmorgal.com>
- <20230116202126.50400-3-doug@schmorgal.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230116202126.50400-3-doug@schmorgal.com>
-X-ClientProxiedBy: AM3PR07CA0086.eurprd07.prod.outlook.com
- (2603:10a6:207:6::20) To PH0PR13MB4842.namprd13.prod.outlook.com
- (2603:10b6:510:78::6)
+        Tue, 17 Jan 2023 04:32:44 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3680FA5EC
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 01:31:40 -0800 (PST)
+X-UUID: bb385a9c964911eda06fc9ecc4dadd91-20230117
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=8oVfLaW56c/kNrNce8+es3cYvqc2J6QaPeCdRq6UxJs=;
+        b=IxMI8gT0e8z7+P6lur2X4AXS4XgtyW6DDsEepLgyj6Gs6SNsPfNA261gIfvLbhLTdzj8mxE2YV/pNAxd1DklsvnILTXq9kfqztmD81bzPLmN4xhJ3Nfz5GQlrsh7GIB23g+xocIrOmtytaE0iuCp0+W1lFxVHJ8YC7f0K21Erck=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.18,REQID:9fa54733-21c1-4e7e-8e64-a19266be1d4c,IP:0,U
+        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:-25
+X-CID-META: VersionHash:3ca2d6b,CLOUDID:06d80df6-ff42-4fb0-b929-626456a83c14,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+X-CID-BVR: 0
+X-UUID: bb385a9c964911eda06fc9ecc4dadd91-20230117
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 2107484675; Tue, 17 Jan 2023 17:31:33 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Tue, 17 Jan 2023 17:31:32 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Tue, 17 Jan 2023 17:31:32 +0800
+From:   Deren Wu <deren.wu@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
+CC:     Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        "Eric-SY Chang" <Eric-SY.Chang@mediatek.com>,
+        Deren Wu <Deren.Wu@mediatek.com>, KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        "Ryder Lee" <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Neil Chen <yn.chen@mediatek.com>,
+        "Deren Wu" <deren.wu@mediatek.com>
+Subject: [PATCH] wifi: mt76: mt7921: fix rx filter incorrect by drv/fw inconsistent
+Date:   Tue, 17 Jan 2023 17:30:59 +0800
+Message-ID: <b9ebeda5d445f66fceb17c48c8251093dfe94c57.1673947063.git.deren.wu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR13MB4842:EE_|BN0PR13MB4647:EE_
-X-MS-Office365-Filtering-Correlation-Id: 10491783-affb-428d-56b7-08daf8692c7b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ZQlPW+2hLLYIlNwv6j1Ky0NDlHaebisa6urcMbNl+oAjdtOzWEDn11aeW25J5HHXUsxd+IcaMem2xlUTH5StZsUkuB6lh70wZ0H8Jq1dwPeR5ss9QnuxFEtXC32boTDOcVD4hgGwBvkdGt7OFqtR66bNVNVWndlw9V8mcz0M3H7uDt8hQP/3cnIrmlh2h/QLSQeNcI60Jiw+Jv8GSiFF/kfJiPwdUM0BNoi3jm4Z5D6+4zZ3L8PZs3yFJNDdM+6BgghgzRXCmh9jsh3gQnzvIEwM2EXCMPR1c6VssHqDVZXKt+RXrSXGRglU0QTKSo9N0clAZ2EeItn85ciiSXA24tTSxsaqgIlfZvicij0pO3LWBRI3SzkwRO1W5ZLSDFaiev6buIn9z7iW/Qchr5spo52ILfIQCMUa6UqoW5LH7FZt3TJBbRExSWvlGSrkFmKUqq7wVUms19pJFeDCOqzoWKjEJykf3lIti+DPVpT0VXfnmnvI77PcQfMN+pMdhgwRJzr61HGJwquHuWyMJhbpuAkGIq4OfYNc36KbW/8RHRRk5v6UR+LThH++x4L9BPWFSp59pIOkgP5sV55aNGmBdJz5Wq87jqby1ycNSTdJvxfhXVbLSQVkTxsLfOQq/RphdLUru1GQYy35HHzdj02vcA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR13MB4842.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(39830400003)(376002)(366004)(346002)(136003)(396003)(451199015)(6486002)(478600001)(41300700001)(966005)(6512007)(38100700002)(186003)(86362001)(316002)(54906003)(2616005)(66476007)(66556008)(66946007)(4326008)(5660300002)(36756003)(6506007)(2906002)(7416002)(6666004)(44832011)(6916009)(83380400001)(8936002)(8676002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?g8blp8j6k8C89JmiBAF5G4FNee+VyTGsJztRgVkoHnpXr3f8EawGqVYR2HM+?=
- =?us-ascii?Q?bzBRv20FQhRYlAtzw53cQo3ojkEXpHAZES31eOEA2BBKBDva5L8BU5cwsb86?=
- =?us-ascii?Q?kx8V9MWzQlL8j7RgWeqLzB7Yemdt4x78O/WkVzaAPtM3IWJDes9TPheBJNVT?=
- =?us-ascii?Q?1a5B7LnknWh6bmDypwi9iBK9hozBnBVDB6NHdShQh+wMM5WDYPv1v7iNMe2U?=
- =?us-ascii?Q?hL4kUFDV7K5LVOG5VJR0fMLo6JdaEo+ZAk8xJ/U+9L5xq5+Inv8jLhpmNY+G?=
- =?us-ascii?Q?Gw0qDf0rYf2bceC7t6MWRlj0+CoQ3djcmLSs2doLvVfCPB+05LqOvEz3O7mQ?=
- =?us-ascii?Q?HXcAM6+0kUWtYvkuenYy3lf6lLrgarOxzHspPpQXs12mJAi1MZZIxPG95jtk?=
- =?us-ascii?Q?PUSnyt3FCfkqgWTuNDyddOoQ2wSJAtyPHoyu3sDfoZIBGv0s1eZcLVhVT69k?=
- =?us-ascii?Q?BegYmWea6QUR2i2qmzm4Jf/KiwJ5+ER27UfPM2BfL0NeW4URoIn4WugjbcHq?=
- =?us-ascii?Q?CexxrLRecgJW5rx9zDD+QcDd/JsG5vZ2b8ysItgO8vFh0R1B9M32xo00G9ag?=
- =?us-ascii?Q?FR+4xxE++d/OhPFGWFmwd8t/t1JKKkeWKwaRp9mx6gpXNWxQ2lqu2nzPO2FN?=
- =?us-ascii?Q?lpnOHIyf0TVwMoTZF6Q8YWATUiQXzHo0JSpt5D0WVY4KS0Dv4uUF5wnxPDBV?=
- =?us-ascii?Q?V8KHoyWBvzreRu0G/rCyXgBC8AZ3FR1MUSi+r0FF/DgTL3dT5IIoQOMmUBKu?=
- =?us-ascii?Q?U/F02bbPG+79FHPWNqanX4mfNZOwkkf8Un+1Am5plRB2hOMvMBuu5hY3V2cK?=
- =?us-ascii?Q?IAAbwnTVLyf/JMBoJj5vjgcimfMxbELG9OqMaDsn1g9NPv5Hq2beoaFZgeyp?=
- =?us-ascii?Q?n/MljP1vt+//yisj1zZIPUDV7NA7jrTUvQA6H5N3lRKKrUYGs0YPmXuKyYR+?=
- =?us-ascii?Q?yo7xQ4D4aEAvDfpYrmnMJ+gddcmdcAkmvAo6x8xmZhD8vv18FqcufYVjObeN?=
- =?us-ascii?Q?49jh37V5DbJS8zsQeF6oKW67k/dF8+EXokH3znMvPUqZ9iAlTm13EQL3+caw?=
- =?us-ascii?Q?andUd4IK6qXY4kfc+4o/q3cG+ZGX8gvtLWQosf7pSau0icPKVmKn8wQyOmQk?=
- =?us-ascii?Q?EwnJc58nNcFXZiODSeaUaCuokpoBXuRQygA7yn6rnSUk0abegTSg5dtsnl7U?=
- =?us-ascii?Q?5J7bFdoRnwNUzwRHeDe1S05WRVGCZZdtxE0ztNJTKrWjZJz0vOyUBbTPaN0A?=
- =?us-ascii?Q?kieXsPqNbDS49CSzwvc8SuxGd+J4/TIIBBQMQcd3ypzrKmVqkiDEOiDJkBRr?=
- =?us-ascii?Q?AL6j96mQtwaSfTjayHby3OYmbeCqbeUcYeALnRtm0vDfOYoznBiTw10heI9v?=
- =?us-ascii?Q?QhRTJCUy+IypnsmEYAwuj/wRLPImksob/vdw/Ri/wNXhggYiuRu/aRoqiH+T?=
- =?us-ascii?Q?YQl1sBA+ORTTPZw6Wa3czya7w/7Xuo3KavMfJUzBzs7h/g9Qx81jhkpbkr0O?=
- =?us-ascii?Q?oLzeD2eivuVuTuaHKhyzYuJdqL93gC2K36Vxb+NK0qeF+ad1CaR1R3oL8R7w?=
- =?us-ascii?Q?GrcAaxnBFSljWWLhFwz1rum67qBPQQH63I/w8eOpW7CccS9OXWCtdBbitsFz?=
- =?us-ascii?Q?E/Jq+KglzzO6g8Zsk0qGAoIhzNuSxw1uNnJafnMNORGI1Px8hAEc1E+kQgWr?=
- =?us-ascii?Q?y03dDw=3D=3D?=
-X-OriginatorOrg: corigine.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 10491783-affb-428d-56b7-08daf8692c7b
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR13MB4842.namprd13.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jan 2023 08:59:43.0225
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: fe128f2c-073b-4c20-818e-7246a585940c
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: I3mo/j2Vl3EhQ67wWqyA7dYKPOFMCpXX4i+9xeFtCo1OufLhxDanh0/sNU+OqV5MlEbqjm3zLCZjpBOQr4JJKJrHsnuaVPZujDupWGcpOUw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR13MB4647
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jan 16, 2023 at 12:21:24PM -0800, Doug Brown wrote:
-> [You don't often get email from doug@schmorgal.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
-> 
-> The existing code only converts the first IE to a TLV, but it returns a
-> value that takes the length of all IEs into account. When there is more
-> than one IE (which happens with modern wpa_supplicant versions for
-> example), the returned length is too long and extra junk TLVs get sent
-> to the firmware, resulting in an association failure.
-> 
-> Fix this by finding the first RSN or WPA IE and only adding that. This
-> has the extra benefit of working properly if the RSN/WPA IE isn't the
-> first one in the IE buffer.
-> 
-> While we're at it, clean up the code to use the available structs like
-> the other lbs_add_* functions instead of directly manipulating the TLV
-> buffer.
-> 
-> Signed-off-by: Doug Brown <doug@schmorgal.com>
-> ---
->  drivers/net/wireless/marvell/libertas/cfg.c | 28 +++++++++++++--------
->  1 file changed, 18 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-> index 3e065cbb0af9..3f35dc7a1d7d 100644
-> --- a/drivers/net/wireless/marvell/libertas/cfg.c
-> +++ b/drivers/net/wireless/marvell/libertas/cfg.c
+From: Neil Chen <yn.chen@mediatek.com>
 
-...
+The rx filter, in mt7921 series, may be changed in fw operation. There is
+a racing problem if rx filter controlled by both driver and firmware at
+the same time. To avoid this issue, let mt7921 driver set rx filter by new
+command MCU_CE_CMD_SET_RX_FILTER and allow the firmware controlling it
+only.
 
-> @@ -428,14 +438,12 @@ static int lbs_add_wpa_tlv(u8 *tlv, const u8 *ie, u8 ie_len)
->          *   __le16  len
->          *   u8[]    data
->          */
-> -       *tlv++ = *ie++;
-> -       *tlv++ = 0;
-> -       tlv_len = *tlv++ = *ie++;
-> -       *tlv++ = 0;
-> -       while (tlv_len--)
-> -               *tlv++ = *ie++;
-> -       /* the TLV is two bytes larger than the IE */
-> -       return ie_len + 2;
-> +       wpatlv->header.type = cpu_to_le16(wpaie->id);
-> +       wpatlv->header.len = cpu_to_le16(wpaie->datalen);
-> +       memcpy(wpatlv->data, wpaie->data, wpaie->datalen);
+Reviewed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Deren Wu <deren.wu@mediatek.com>
+Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+Signed-off-by: Neil Chen <yn.chen@mediatek.com>
+---
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  1 +
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |  2 -
+ .../net/wireless/mediatek/mt76/mt7921/main.c  | 48 ++-----------------
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 36 +++++++++++++-
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  2 +
+ .../wireless/mediatek/mt76/mt7921/testmode.c  |  1 -
+ 6 files changed, 40 insertions(+), 50 deletions(-)
 
-Hi Doug,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index f1e942b9a887..1baea5d5bdb1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1238,6 +1238,7 @@ enum {
+ 	MCU_CE_CMD_TEST_CTRL = 0x01,
+ 	MCU_CE_CMD_START_HW_SCAN = 0x03,
+ 	MCU_CE_CMD_SET_PS_PROFILE = 0x05,
++	MCU_CE_CMD_SET_RX_FILTER = 0x0a,
+ 	MCU_CE_CMD_SET_CHAN_DOMAIN = 0x0f,
+ 	MCU_CE_CMD_SET_BSS_CONNECTED = 0x16,
+ 	MCU_CE_CMD_SET_BSS_ABORT = 0x17,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index d4b681d7e1d2..4b935867c2b2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -229,8 +229,6 @@ int mt7921_mac_init(struct mt7921_dev *dev)
+ 	for (i = 0; i < 2; i++)
+ 		mt7921_mac_init_band(dev, i);
+ 
+-	dev->mt76.rxfilter = mt76_rr(dev, MT_WF_RFCR(0));
+-
+ 	return mt76_connac_mcu_set_rts_thresh(&dev->mt76, 0x92b, 0);
+ }
+ EXPORT_SYMBOL_GPL(mt7921_mac_init);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 76ac5069638f..df7bd84b28d2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -681,7 +681,6 @@ static int mt7921_config(struct ieee80211_hw *hw, u32 changed)
+ 		ieee80211_iterate_active_interfaces(hw,
+ 						    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 						    mt7921_sniffer_interface_iter, dev);
+-		dev->mt76.rxfilter = mt76_rr(dev, MT_WF_RFCR(0));
+ 	}
+ 
+ out:
+@@ -710,53 +709,12 @@ static void mt7921_configure_filter(struct ieee80211_hw *hw,
+ 				    u64 multicast)
+ {
+ 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
+-	u32 ctl_flags = MT_WF_RFCR1_DROP_ACK |
+-			MT_WF_RFCR1_DROP_BF_POLL |
+-			MT_WF_RFCR1_DROP_BA |
+-			MT_WF_RFCR1_DROP_CFEND |
+-			MT_WF_RFCR1_DROP_CFACK;
+-	u32 flags = 0;
+-
+-#define MT76_FILTER(_flag, _hw) do {					\
+-		flags |= *total_flags & FIF_##_flag;			\
+-		dev->mt76.rxfilter &= ~(_hw);				\
+-		dev->mt76.rxfilter |= !(flags & FIF_##_flag) * (_hw);	\
+-	} while (0)
+ 
+ 	mt7921_mutex_acquire(dev);
+-
+-	dev->mt76.rxfilter &= ~(MT_WF_RFCR_DROP_OTHER_BSS |
+-				MT_WF_RFCR_DROP_OTHER_BEACON |
+-				MT_WF_RFCR_DROP_FRAME_REPORT |
+-				MT_WF_RFCR_DROP_PROBEREQ |
+-				MT_WF_RFCR_DROP_MCAST_FILTERED |
+-				MT_WF_RFCR_DROP_MCAST |
+-				MT_WF_RFCR_DROP_BCAST |
+-				MT_WF_RFCR_DROP_DUPLICATE |
+-				MT_WF_RFCR_DROP_A2_BSSID |
+-				MT_WF_RFCR_DROP_UNWANTED_CTL |
+-				MT_WF_RFCR_DROP_STBC_MULTI);
+-
+-	MT76_FILTER(OTHER_BSS, MT_WF_RFCR_DROP_OTHER_TIM |
+-			       MT_WF_RFCR_DROP_A3_MAC |
+-			       MT_WF_RFCR_DROP_A3_BSSID);
+-
+-	MT76_FILTER(FCSFAIL, MT_WF_RFCR_DROP_FCSFAIL);
+-
+-	MT76_FILTER(CONTROL, MT_WF_RFCR_DROP_CTS |
+-			     MT_WF_RFCR_DROP_RTS |
+-			     MT_WF_RFCR_DROP_CTL_RSV |
+-			     MT_WF_RFCR_DROP_NDPA);
+-
+-	*total_flags = flags;
+-	mt76_wr(dev, MT_WF_RFCR(0), dev->mt76.rxfilter);
+-
+-	if (*total_flags & FIF_CONTROL)
+-		mt76_clear(dev, MT_WF_RFCR1(0), ctl_flags);
+-	else
+-		mt76_set(dev, MT_WF_RFCR1(0), ctl_flags);
+-
++	mt7921_mcu_set_rxfilter(dev, *total_flags, 0, 0);
+ 	mt7921_mutex_release(dev);
++
++	*total_flags &= (FIF_OTHER_BSS | FIF_FCSFAIL | FIF_CONTROL);
+ }
+ 
+ static void mt7921_bss_info_changed(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 8930b5a4467c..8aeb030fb763 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -1019,6 +1019,8 @@ int mt7921_mcu_set_beacon_filter(struct mt7921_dev *dev,
+ 				 struct ieee80211_vif *vif,
+ 				 bool enable)
+ {
++#define MT7921_FIF_BIT_CLR		BIT(1)
++#define MT7921_FIF_BIT_SET		BIT(0)
+ 	int err;
+ 
+ 	if (enable) {
+@@ -1026,7 +1028,11 @@ int mt7921_mcu_set_beacon_filter(struct mt7921_dev *dev,
+ 		if (err)
+ 			return err;
+ 
+-		mt76_set(dev, MT_WF_RFCR(0), MT_WF_RFCR_DROP_OTHER_BEACON);
++		err = mt7921_mcu_set_rxfilter(dev, 0,
++					      MT7921_FIF_BIT_SET,
++					      MT_WF_RFCR_DROP_OTHER_BEACON);
++		if (err)
++			return err;
+ 
+ 		return 0;
+ 	}
+@@ -1035,7 +1041,11 @@ int mt7921_mcu_set_beacon_filter(struct mt7921_dev *dev,
+ 	if (err)
+ 		return err;
+ 
+-	mt76_clear(dev, MT_WF_RFCR(0), MT_WF_RFCR_DROP_OTHER_BEACON);
++	err = mt7921_mcu_set_rxfilter(dev, 0,
++				      MT7921_FIF_BIT_CLR,
++				      MT_WF_RFCR_DROP_OTHER_BEACON);
++	if (err)
++		return err;
+ 
+ 	return 0;
+ }
+@@ -1255,3 +1265,25 @@ int mt7921_mcu_set_clc(struct mt7921_dev *dev, u8 *alpha2,
+ 	}
+ 	return 0;
+ }
++
++int mt7921_mcu_set_rxfilter(struct mt7921_dev *dev, u32 fif,
++			    u8 bit_op, u32 bit_map)
++{
++	struct {
++		u8 rsv[4];
++		u8 mode;
++		u8 rsv2[3];
++		__le32 fif;
++		__le32 bit_map; /* bit_* for bitmap update */
++		u8 bit_op;
++		u8 pad[51];
++	} __packed data = {
++		.mode = fif ? 1 : 2,
++		.fif = cpu_to_le32(fif),
++		.bit_map = cpu_to_le32(bit_map),
++		.bit_op = bit_op,
++	};
++
++	return mt76_mcu_send_msg(&dev->mt76, MCU_CE_CMD(SET_RX_FILTER),
++				 &data, sizeof(data), false);
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index efff4d43d796..248a4bc30955 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -383,6 +383,8 @@ int mt7921_mcu_get_rx_rate(struct mt7921_phy *phy, struct ieee80211_vif *vif,
+ 			   struct ieee80211_sta *sta, struct rate_info *rate);
+ int mt7921_mcu_fw_log_2_host(struct mt7921_dev *dev, u8 ctrl);
+ void mt7921_mcu_rx_event(struct mt7921_dev *dev, struct sk_buff *skb);
++int mt7921_mcu_set_rxfilter(struct mt7921_dev *dev, u32 fif,
++			    u8 bit_op, u32 bit_map);
+ 
+ static inline void mt7921_irq_enable(struct mt7921_dev *dev, u32 mask)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/testmode.c b/drivers/net/wireless/mediatek/mt76/mt7921/testmode.c
+index bdec8684ce94..7f408212e716 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/testmode.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/testmode.c
+@@ -59,7 +59,6 @@ mt7921_tm_set(struct mt7921_dev *dev, struct mt7921_tm_cmd *req)
+ 		cancel_work_sync(&pm->wake_work);
+ 		__mt7921_mcu_drv_pmctrl(dev);
+ 
+-		mt76_wr(dev, MT_WF_RFCR(0), dev->mt76.rxfilter);
+ 		phy->test.state = MT76_TM_STATE_ON;
+ 	}
+ 
+-- 
+2.18.0
 
-Thanks for fixing the endiness issues with cpu_to_le16()
-This part looks good to me now. Likewise for patch 4/4.
-
-One suggestion I have, which is probably taking things to far,
-is a helper for what seems to be repeated code-pattern.
-But I don't feel strongly about that.
-
-> +
-> +       /* Return the total number of bytes added to the TLV buffer */
-> +       return sizeof(struct mrvl_ie_header) + wpaie->datalen;
->  }
-> 
->  /*
-> --
-> 2.34.1
-> 
