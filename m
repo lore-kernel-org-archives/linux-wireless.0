@@ -2,162 +2,105 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0334C67871
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 10:50:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E141C63797
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 11:04:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236476AbjAQKuW (ORCPT
+        id S235999AbjAQLEW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Jan 2023 05:50:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50452 "EHLO
+        Tue, 17 Jan 2023 06:04:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236302AbjAQKuF (ORCPT
+        with ESMTP id S235897AbjAQLEU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2023 05:50:05 -0500
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E655D305DD;
-        Tue, 17 Jan 2023 02:49:56 -0800 (PST)
-Received: by mail-ej1-x631.google.com with SMTP id kt14so15479775ejc.3;
-        Tue, 17 Jan 2023 02:49:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oEl5w3M2BxeInD007F9yz+ClAXsGzIrzPwOm53wRn2c=;
-        b=MJEaKEJ7fdlL6OHko24C4S6CQ/GRhC/Olgy2IwdB4J3UWS7LDT51are5lq/HsDDIRo
-         qI53dnKoU1AH/yv01DDjk58f/jpnM5ryJQocP4PbwZmttIMIRUGvEU/G1oFdZB3NOCBH
-         I91JDyx2LQHkzK6PlTadjjBTtwo/eoECzKF6tPfdhwXvqy89ZLypDEw9OuebK1cnv09e
-         ZL7awtJN6J9Yp0gDko2zsctw9OOgwh53KWVnZwXb+8v4WwEg81P/nMvNzDChVSJgsBf7
-         H/m9SxWhpKW+1MW5KjgiCWzqOjtuvI6lmzbsZ43PnpY6c2n5eECtNXri2qKJXRxZX7wz
-         yz9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oEl5w3M2BxeInD007F9yz+ClAXsGzIrzPwOm53wRn2c=;
-        b=AuKMhJ3okkgpyXndMd1LNmxnygVSCjneCAr+cW13aZxh6YmMF6neLs+EqvgDd93r+b
-         T5Y59GuRkqSAZBvxVj/5DrS4ytovNnIDJR7xcVmwPQZIVnT2MVR+TQrQq5591OwsvqEt
-         136TZiK19DgeL0GVe2dkcoaK3Hhxh+ea7rJLcCYvdjqfEX/H3Bu4VLwD7cg0+LedPd08
-         9Bdfz7KkUZl8kbrO6U20dOl2gk2XfqtMaWtnXVDESi67bfcgyG5KoZfvhoxVKWaL4+aW
-         JSLdkMKwFRsD+R2yVl/DNLir0tr/lZZiUsYPIne9oVH897eFXkLznQsxiBwFc36DndUk
-         lBoQ==
-X-Gm-Message-State: AFqh2kpLU3Zl7eBdAT4OkvpL/CE+KkH5ksO8hcI3TelZVLlTmkmdFXeE
-        KNh35rXM1Wb8ZBG4XrkLH2SpvDnEBmrqJQ==
-X-Google-Smtp-Source: AMrXdXs+YTxG71f1EHeVsqTMCFdl+RK6LpG9x3XKcBukWeJcgYcI4IvSMfkNMIQKloUClzbW68FJNw==
-X-Received: by 2002:a17:906:b299:b0:86e:a013:c26f with SMTP id q25-20020a170906b29900b0086ea013c26fmr2433012ejz.19.1673952595335;
-        Tue, 17 Jan 2023 02:49:55 -0800 (PST)
-Received: from [0.0.0.0] (tor-exit-13.zbau.f3netze.de. [2a0b:f4c0:16c:13::1])
-        by smtp.gmail.com with ESMTPSA id rf26-20020a1709076a1a00b00871a4ab4736sm1666699ejc.97.2023.01.17.02.49.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Jan 2023 02:49:54 -0800 (PST)
-From:   Edward Chow <persmule@gmail.com>
-X-Google-Original-From: Edward Chow <equu@openmail.cc>
-To:     lpieralisi@kernel.org, toke@toke.dk, kvalo@kernel.org
-Cc:     linux-pci@vger.kernel.org, robh@kernel.org,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Edward Chow <equu@openmail.cc>
-Subject: [PATCH 3/3] wifi: ath10k: only load compatible DT cal data
-Date:   Tue, 17 Jan 2023 17:28:10 +0800
-Message-Id: <20230117092810.1149187-1-equu@openmail.cc>
-X-Mailer: git-send-email 2.39.0
-In-Reply-To: <ea4e2fed-383d-829d-8a2a-9239768ccd94@openmail.cc>
-References: <ea4e2fed-383d-829d-8a2a-9239768ccd94@openmail.cc>
+        Tue, 17 Jan 2023 06:04:20 -0500
+Received: from air.basealt.ru (air.basealt.ru [194.107.17.39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3CDA2A99B;
+        Tue, 17 Jan 2023 03:04:18 -0800 (PST)
+Received: by air.basealt.ru (Postfix, from userid 490)
+        id 7CAC82F2022C; Tue, 17 Jan 2023 11:04:17 +0000 (UTC)
+Received: from localhost (broadband-188-32-10-232.ip.moscow.rt.ru [188.32.10.232])
+        by air.basealt.ru (Postfix) with ESMTPSA id 6CF1B2F2022A;
+        Tue, 17 Jan 2023 11:04:14 +0000 (UTC)
+Date:   Tue, 17 Jan 2023 14:04:14 +0300
+From:   "Alexey V. Vissarionov" <gremlin@altlinux.org>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+        Raja Mani <rmani@qca.qualcomm.com>,
+        Suraj Sumangala <surajs@qca.qualcomm.com>,
+        Vivek Natarajan <nataraja@qca.qualcomm.com>,
+        Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, lvc-project@linuxtesting.org,
+        "Alexey V. Vissarionov" <gremlin@altlinux.org>
+Subject: [PATCH] ath6kl: minor fix for allocation size
+Message-ID: <20230117110414.GC12547@altlinux.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="KFztAG8eRSV9hGtP"
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Loading calibration data from an OF device tree node not declared
-compatible with the device (e.g. a PCI device with calibration data
-from corresponding DT node gets replaced, so the newly installed
-device become incompatible with the node) or driver may lead to fatal
-result, e.g. kernel panic.
 
-The driver should check whether the DT node corresponding to the
-device compatible with it, and load calibration data only from
-compatible node.
+--KFztAG8eRSV9hGtP
+Content-Type: text/plain; charset=koi8-r
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Edward Chow <equu@openmail.cc>
----
- drivers/net/wireless/ath/ath10k/core.c | 28 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/pci.c  |  2 +-
- drivers/net/wireless/ath/ath10k/pci.h  |  2 ++
- 3 files changed, 31 insertions(+), 1 deletion(-)
+Although the "param" pointer occupies more or equal space compared
+to "*param", the allocation size should use the size of variable
+itself.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 5eb131ab916f..e4d7ec7f3b59 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -26,6 +26,7 @@
- #include "testmode.h"
- #include "wmi-ops.h"
- #include "coredump.h"
-+#include "pci.h"
- 
- unsigned int ath10k_debug_mask;
- EXPORT_SYMBOL(ath10k_debug_mask);
-@@ -1958,6 +1959,33 @@ static int ath10k_download_cal_nvmem(struct ath10k *ar, const char *cell_name)
- 	size_t len;
- 	int ret;
- 
-+	/* devm_nvmem_cell_get() will get a cell first from the OF
-+	 * DT node representing the given device with nvmem-cell-name
-+	 * "calibration", and from the global lookup table as a fallback,
-+	 * and an ath9k device could be either a pci one or a platform one.
-+	 *
-+	 * If the OF DT node is not compatible with the real device, the
-+	 * calibration data got from the node should not be applied.
-+	 *
-+	 * dev_is_pci(ar->dev) && ( no OF node || caldata not from node
-+	 * || not compatible ) -> do not use caldata .
-+	 *
-+	 * !dev_is_pci(ar->dev) -> always use caldata .
-+	 *
-+	 * The judgement for compatibility differs with ath9k for many
-+	 * DT using "qcom,ath10k" as compatibility string.
-+	 */
-+	if (dev_is_pci(ar->dev) &&
-+	    (!ar->dev->of_node ||
-+	     (of_property_match_string(ar->dev->of_node,
-+				       "nvmem-cell-names",
-+				       cell_name) < 0) ||
-+	     !of_device_is_compatible(ar->dev->of_node,
-+				      "qcom,ath10k") ||
-+	     !of_pci_node_match_device(ar->dev->of_node,
-+				       &ath10k_pci_driver)))
-+		return ERR_PTR(-ENOENT);
-+
- 	cell = devm_nvmem_cell_get(ar->dev, cell_name);
- 	if (IS_ERR(cell)) {
- 		ret = PTR_ERR(cell);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 728d607289c3..5d9f6046f8cf 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3780,7 +3780,7 @@ static SIMPLE_DEV_PM_OPS(ath10k_pci_pm_ops,
- 			 ath10k_pci_pm_suspend,
- 			 ath10k_pci_pm_resume);
- 
--static struct pci_driver ath10k_pci_driver = {
-+struct pci_driver ath10k_pci_driver = {
- 	.name = "ath10k_pci",
- 	.id_table = ath10k_pci_id_table,
- 	.probe = ath10k_pci_probe,
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index 480cd97ab739..de676797b736 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -209,6 +209,8 @@ static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
- #define DIAG_ACCESS_CE_TIMEOUT_US 10000 /* 10 ms */
- #define DIAG_ACCESS_CE_WAIT_US	50
- 
-+extern struct pci_driver ath10k_pci_driver;
-+
- void ath10k_pci_write32(struct ath10k *ar, u32 offset, u32 value);
- void ath10k_pci_soc_write32(struct ath10k *ar, u32 addr, u32 val);
- void ath10k_pci_reg_write32(struct ath10k *ar, u32 addr, u32 val);
--- 
-2.39.0
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
+Fixes: bdcd81707973cf8a ("Add ath6kl cleaned up driver")
+Signed-off-by: Alexey V. Vissarionov <gremlin@altlinux.org>
+
+diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/a=
+th/ath6kl/bmi.c
+index bde5a10d470c8e74..af98e871199d317f 100644
+--- a/drivers/net/wireless/ath/ath6kl/bmi.c
++++ b/drivers/net/wireless/ath/ath6kl/bmi.c
+@@ -246,7 +246,7 @@ int ath6kl_bmi_execute(struct ath6kl *ar, u32 addr, u32=
+ *param)
+ 		return -EACCES;
+ 	}
+=20
+-	size =3D sizeof(cid) + sizeof(addr) + sizeof(param);
++	size =3D sizeof(cid) + sizeof(addr) + sizeof(*param);
+ 	if (size > ar->bmi.max_cmd_size) {
+ 		WARN_ON(1);
+ 		return -EINVAL;
+
+
+
+--=20
+Alexey V. Vissarionov
+gremlin =F0=F2=E9 altlinux =F4=FE=EB org; +vii-cmiii-ccxxix-lxxix-xlii
+GPG: 0D92F19E1C0DC36E27F61A29CD17E2B43D879005 @ hkp://keys.gnupg.net
+
+--KFztAG8eRSV9hGtP
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCgAGBQJjxoCuAAoJEFv2F9znRj5KRfIQAKOtCsMbHx5QVZZ5ciUVwZCP
+2xcj4qRP7/GVJ8w87ip8n8QzRcMVaYposz3eLLGrXqUtb5UzWLCCpknXydwyXcsG
+JMeR3l05cJzA7q2oyN3gtwwO37cA78U+vj5zCM1kooLuVdtlvZkBI6lIPIkUtgLz
+VXsthfQbf2GRAMMHuJdZz8trH3xo8/FDAeEZKi6/r9lOc3v+cLewnQ+cUO85HSB7
+lf4r0/cge8vFcDdMLq6WOO9X+zIeVvTYndo6ji1PUlf4mBOZbagWLsyIYjAxbvv/
+W9l8N4K5AFX2ns/7kw8/ubf3Zx1e9H7iEHquAuMLPIh9knBuzIhLOQlfFG6b7zgs
+6DF6I5HxX6ok20P62MoTbXNJF4I9JHWSEsg1Hr5D2Phvn3QRoGF5gu/L0IBxanRi
+BUHKZzq+L6R013Wx/T3O7ifU3gHO9BidBIWLhU8+uAZ3VBB0DPUxPpO+dnNWoVtM
+9ObMF5ecbwN9xsnIR+mNq4cK4pfd7YQeQ7PAN5fGK3Jq+fV8w79msRef4VQFOnmQ
+GcNInjCp91KOdRoZBujkvZJmMy3cWOAvOIninLO3wIwHDHOPCrDc/KeWUWYayj8i
+lzEE4GYNgdYb10l3GceadGV4m8EOguvF2Dnascwj+blBDNLFMxTzhpPOOxlSYJf/
+rFtQugNyq60h3LY1TtDi
+=V3e7
+-----END PGP SIGNATURE-----
+
+--KFztAG8eRSV9hGtP--
