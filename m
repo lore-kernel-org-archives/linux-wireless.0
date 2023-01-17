@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E9DC3DA78
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 13:54:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98544C677F1
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 13:54:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229502AbjAQNyC (ORCPT
+        id S230222AbjAQNyE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Jan 2023 08:54:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46282 "EHLO
+        Tue, 17 Jan 2023 08:54:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229888AbjAQNxt (ORCPT
+        with ESMTP id S231370AbjAQNxj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2023 08:53:49 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD144125B1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 05:53:48 -0800 (PST)
+        Tue, 17 Jan 2023 08:53:39 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E617D125B1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 05:53:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 64C4061457
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 13:53:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77105C433EF;
-        Tue, 17 Jan 2023 13:53:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A1CBDB8163A
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 13:53:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03D6EC433D2;
+        Tue, 17 Jan 2023 13:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673963627;
-        bh=OwhjfaJDJFfPveP54ZhJTXttaD1CkKhPjvzkL9JwFbg=;
+        s=k20201202; t=1673963616;
+        bh=nk+Re60RYHcCBiN7iaGHXgD9hFEjuZ/uY5jRwFwkFHQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H6TnpnYcQmtZzboJ0OSMYG+YR4R4Oy6L8JylfaIay7GIFLh8jyxngF3Icv3eubQAW
-         PE1EVocO/zdmDY1Md7BSnh+dns7Z7eVVYbFjJIjmKvrWLnKK2mJxfxiVjp1K+akmHN
-         XgkcI2x3siD9RjKZFXvdLOt4VEpJdiHBVhA9ErFtPLYcAymsWsMqP45aT7rpbDDYSI
-         po0niM5n088sad1dIphEf5DCTPAcOCaFVmKsiJLKAmUuxfZh30bpa7CWSHhOXTSQAS
-         7SJXWk9OY837fShXUqLKRj0swWb9jjypOqT+DgROmJgMzSoplTXJ1em80PwyPjNPNB
-         P20yLxJ+5Fhtw==
+        b=eqipFMRzcY9D3plcGsg6521Adlwl9oaNgujWuUvyaCHV4NYUU+8LjzSe7oNAKFKOs
+         GAodNN+VLbDTUsW6ngPvPLG+rmczoDBPXFLbrlLZAYz8oVHH3B0/RrZYY384htuUYs
+         ibmhW7ZOPoO9pVxS1fWBF/Ss71q43UtgkU1KitKdW2UtC3Y+SVRI+suZIJPrfWaRW/
+         xSukEU7h1inis3Z5lpq98xR02zeRg3QNKPTmDyU09b5CfIquznoXGzwyNl/cABKQYX
+         0id9Ll3h/pzWMrPchDsfIRWXRzO56p1nchWuM3K0tsLGVezrnNbGFyrZr5ta66aRax
+         o4tym+HDjrXUw==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
-Subject: [PATCH v2 4/4] wifi: mt76: enable page_pool stats
-Date:   Tue, 17 Jan 2023 14:53:17 +0100
-Message-Id: <67e548ad9f420f396e308dd9b9657b7ebc20ff69.1673963374.git.lorenzo@kernel.org>
+Subject: [PATCH v2 1/4] wifi: mt76: mt7915: fix memory leak in mt7915_mmio_wed_init_rx_buf
+Date:   Tue, 17 Jan 2023 14:53:14 +0100
+Message-Id: <b68224ce9d47722fd46c14479c14d40df9cdc633.1673963374.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <cover.1673963374.git.lorenzo@kernel.org>
 References: <cover.1673963374.git.lorenzo@kernel.org>
@@ -48,191 +48,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Enable page_pool ethtool statistics for mt7915 and mt7921 chipsets.
+Free mt76_txwi_cache pointer in mt7915_mmio_wed_init_rx_buf routine in
+case of failure.
 
-Tested-by: Felix Fietkau <nbd@nbd.name>
-Tested-by: Deren Wu <deren.wu@mediatek.com>
+Fixes: 4f831d18d12d ("wifi: mt76: mt7915: enable WED RX support")
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/Kconfig    |  1 +
- drivers/net/wireless/mediatek/mt76/mac80211.c | 13 ++++++++
- drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
- .../net/wireless/mediatek/mt76/mt7915/main.c  | 26 ++++++++++------
- .../net/wireless/mediatek/mt76/mt7921/main.c  | 31 ++++++++++++++++---
- 5 files changed, 58 insertions(+), 14 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mmio.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
-index 18152c16c36f..90e958e608aa 100644
---- a/drivers/net/wireless/mediatek/mt76/Kconfig
-+++ b/drivers/net/wireless/mediatek/mt76/Kconfig
-@@ -2,6 +2,7 @@
- config MT76_CORE
- 	tristate
- 	select PAGE_POOL
-+	select PAGE_POOL_STATS
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+index b96348002815..20efbf47110b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+@@ -637,9 +637,14 @@ static u32 mt7915_mmio_wed_init_rx_buf(struct mtk_wed_device *wed, int size)
+ 		int token;
+ 		void *ptr;
  
- config MT76_LEDS
- 	bool
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 3d6b6f12ffde..21fa1077c5b5 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -1729,6 +1729,19 @@ void mt76_ethtool_worker(struct mt76_ethtool_worker_info *wi,
- }
- EXPORT_SYMBOL_GPL(mt76_ethtool_worker);
- 
-+void mt76_ethtool_page_pool_stats(struct mt76_dev *dev, u64 *data, int *index)
-+{
-+	struct page_pool_stats stats = {};
-+	int i;
++		if (!t)
++			goto unmap;
 +
-+	mt76_for_each_q_rx(dev, i)
-+		page_pool_get_stats(dev->q_rx[i].page_pool, &stats);
-+
-+	page_pool_ethtool_stats_get(data, &stats);
-+	*index += page_pool_ethtool_stats_get_count();
-+}
-+EXPORT_SYMBOL_GPL(mt76_ethtool_page_pool_stats);
-+
- enum mt76_dfs_state mt76_phy_dfs_state(struct mt76_phy *phy)
- {
- 	struct ieee80211_hw *hw = phy->hw;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index b195bb98f7ca..9037780f9e88 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -1311,6 +1311,7 @@ mt76u_bulk_msg(struct mt76_dev *dev, void *data, int len, int *actual_len,
- 	return usb_bulk_msg(udev, pipe, data, len, actual_len, timeout);
- }
+ 		page = __dev_alloc_pages(GFP_KERNEL, get_order(length));
+-		if (!page)
++		if (!page) {
++			mt76_put_rxwi(&dev->mt76, t);
+ 			goto unmap;
++		}
  
-+void mt76_ethtool_page_pool_stats(struct mt76_dev *dev, u64 *data, int *index);
- void mt76_ethtool_worker(struct mt76_ethtool_worker_info *wi,
- 			 struct mt76_sta_stats *stats);
- int mt76_skb_adjust_pad(struct sk_buff *skb, int pad);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 0511d6a505b0..9ae10e780d74 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -1280,19 +1280,22 @@ void mt7915_get_et_strings(struct ieee80211_hw *hw,
- 			   struct ieee80211_vif *vif,
- 			   u32 sset, u8 *data)
- {
--	if (sset == ETH_SS_STATS)
--		memcpy(data, *mt7915_gstrings_stats,
--		       sizeof(mt7915_gstrings_stats));
-+	if (sset != ETH_SS_STATS)
-+		return;
-+
-+	memcpy(data, *mt7915_gstrings_stats, sizeof(mt7915_gstrings_stats));
-+	data += sizeof(mt7915_gstrings_stats);
-+	page_pool_ethtool_stats_get_strings(data);
- }
+ 		ptr = page_address(page);
+ 		phy_addr = dma_map_single(dev->mt76.dma_dev, ptr,
+@@ -647,6 +652,7 @@ static u32 mt7915_mmio_wed_init_rx_buf(struct mtk_wed_device *wed, int size)
+ 					  DMA_TO_DEVICE);
+ 		if (unlikely(dma_mapping_error(dev->mt76.dev, phy_addr))) {
+ 			__free_pages(page, get_order(length));
++			mt76_put_rxwi(&dev->mt76, t);
+ 			goto unmap;
+ 		}
  
- static
- int mt7915_get_et_sset_count(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif, int sset)
- {
--	if (sset == ETH_SS_STATS)
--		return MT7915_SSTATS_LEN;
-+	if (sset != ETH_SS_STATS)
-+		return 0;
+@@ -656,6 +662,7 @@ static u32 mt7915_mmio_wed_init_rx_buf(struct mtk_wed_device *wed, int size)
+ 			dma_unmap_single(dev->mt76.dma_dev, phy_addr,
+ 					 wed->wlan.rx_size, DMA_TO_DEVICE);
+ 			__free_pages(page, get_order(length));
++			mt76_put_rxwi(&dev->mt76, t);
+ 			goto unmap;
+ 		}
  
--	return 0;
-+	return MT7915_SSTATS_LEN + page_pool_ethtool_stats_get_count();
- }
- 
- static void mt7915_ethtool_worker(void *wi_data, struct ieee80211_sta *sta)
-@@ -1320,7 +1323,7 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
- 	};
- 	struct mib_stats *mib = &phy->mib;
- 	/* See mt7915_ampdu_stat_read_phy, etc */
--	int i, ei = 0;
-+	int i, ei = 0, stats_size;
- 
- 	mutex_lock(&dev->mt76.mutex);
- 
-@@ -1401,9 +1404,12 @@ void mt7915_get_et_stats(struct ieee80211_hw *hw,
- 		return;
- 
- 	ei += wi.worker_stat_count;
--	if (ei != MT7915_SSTATS_LEN)
--		dev_err(dev->mt76.dev, "ei: %d  MT7915_SSTATS_LEN: %d",
--			ei, (int)MT7915_SSTATS_LEN);
-+
-+	mt76_ethtool_page_pool_stats(&dev->mt76, &data[ei], &ei);
-+
-+	stats_size = MT7915_SSTATS_LEN + page_pool_ethtool_stats_get_count();
-+	if (ei != stats_size)
-+		dev_err(dev->mt76.dev, "ei: %d size: %d", ei, stats_size);
- }
- 
- static void
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 76ac5069638f..7d53ddd3bf15 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -1135,17 +1135,34 @@ static void
- mt7921_get_et_strings(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		      u32 sset, u8 *data)
- {
-+	struct mt7921_dev *dev = mt7921_hw_dev(hw);
-+
- 	if (sset != ETH_SS_STATS)
- 		return;
- 
- 	memcpy(data, *mt7921_gstrings_stats, sizeof(mt7921_gstrings_stats));
-+
-+	if (mt76_is_sdio(&dev->mt76))
-+		return;
-+
-+	data += sizeof(mt7921_gstrings_stats);
-+	page_pool_ethtool_stats_get_strings(data);
- }
- 
- static int
- mt7921_get_et_sset_count(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			 int sset)
- {
--	return sset == ETH_SS_STATS ? ARRAY_SIZE(mt7921_gstrings_stats) : 0;
-+	struct mt7921_dev *dev = mt7921_hw_dev(hw);
-+
-+	if (sset != ETH_SS_STATS)
-+		return 0;
-+
-+	if (mt76_is_sdio(&dev->mt76))
-+		return ARRAY_SIZE(mt7921_gstrings_stats);
-+
-+	return ARRAY_SIZE(mt7921_gstrings_stats) +
-+	       page_pool_ethtool_stats_get_count();
- }
- 
- static void
-@@ -1165,6 +1182,7 @@ void mt7921_get_et_stats(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			 struct ethtool_stats *stats, u64 *data)
- {
- 	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
-+	int stats_size = ARRAY_SIZE(mt7921_gstrings_stats);
- 	struct mt7921_phy *phy = mt7921_hw_phy(hw);
- 	struct mt7921_dev *dev = phy->dev;
- 	struct mib_stats *mib = &phy->mib;
-@@ -1220,9 +1238,14 @@ void mt7921_get_et_stats(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		return;
- 
- 	ei += wi.worker_stat_count;
--	if (ei != ARRAY_SIZE(mt7921_gstrings_stats))
--		dev_err(dev->mt76.dev, "ei: %d  SSTATS_LEN: %zu",
--			ei, ARRAY_SIZE(mt7921_gstrings_stats));
-+
-+	if (!mt76_is_sdio(&dev->mt76)) {
-+		mt76_ethtool_page_pool_stats(&dev->mt76, &data[ei], &ei);
-+		stats_size += page_pool_ethtool_stats_get_count();
-+	}
-+
-+	if (ei != stats_size)
-+		dev_err(dev->mt76.dev, "ei: %d  SSTATS_LEN: %d", ei, stats_size);
- }
- 
- static u64
 -- 
 2.39.0
 
