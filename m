@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F9BC63797
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 11:42:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDEDCC3DA78
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Jan 2023 11:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236374AbjAQLmB (ORCPT
+        id S236637AbjAQLmD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Jan 2023 06:42:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56348 "EHLO
+        Tue, 17 Jan 2023 06:42:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236400AbjAQLl5 (ORCPT
+        with ESMTP id S231452AbjAQLl5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 17 Jan 2023 06:41:57 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DCDA41F5C1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 03:41:55 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 93FE9234CE
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2023 03:41:56 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30HBflvuF012226, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30HBflvuF012226
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30HBfnjY7012239, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30HBfnjY7012239
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 17 Jan 2023 19:41:47 +0800
+        Tue, 17 Jan 2023 19:41:49 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Tue, 17 Jan 2023 19:41:47 +0800
+ 15.1.2375.32; Tue, 17 Jan 2023 19:41:50 +0800
 Received: from localhost (172.16.17.65) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 17 Jan
- 2023 19:41:46 +0800
+ 2023 19:41:49 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/8] wifi: rtw89: coex: Refine coexistence log
-Date:   Tue, 17 Jan 2023 19:41:05 +0800
-Message-ID: <20230117114109.4298-5-pkshih@realtek.com>
+Subject: [PATCH 7/8] wifi: rtw89: coex: Fix test fail when coexist with raspberryPI A2DP idle
+Date:   Tue, 17 Jan 2023 19:41:08 +0800
+Message-ID: <20230117114109.4298-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230117114109.4298-1-pkshih@realtek.com>
 References: <20230117114109.4298-1-pkshih@realtek.com>
@@ -56,288 +56,42 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIzLzEvMTcgpFekyCAwOToxNDowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-Adjust the log format and correct variable reference to make the log
-more readable.
+The origin code will enable TDMA WL:BT = 50:50 to prevent Wi-Fi
+throughput suddenly drop to 0 in the moment while A2DP pause.
+And this protection just a short moment, and will turn to Bluetooth
+idle case when A2DP turn into sniff mode. But the raspberryPI simulated
+A2DP device will not turn into sniff mode. So the protection will bring
+the throughput drop.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 158 +++++++++++-----------
- 1 file changed, 76 insertions(+), 82 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 5d6d6230344b0..33f369e4ff4cf 100644
+index c0e8a0b2e0b75..89214f2db9851 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -6401,20 +6401,21 @@ static void _show_fbtc_slots(struct rtw89_dev *rtwdev, struct seq_file *m)
- 
- 	for (i = 0; i < CXST_MAX; i++) {
- 		s = &dm->slot_now[i];
--		if (i % 6 == 0)
-+		if (i % 5 == 0)
- 			seq_printf(m,
--				   " %-15s : %02d[%03d/0x%x/%d]",
-+				   " %-15s : %5s[%03d/0x%x/%d]",
- 				   "[slot_list]",
--				   (u32)i,
-+				   id_to_slot((u32)i),
- 				   s->dur, s->cxtbl, s->cxtype);
+@@ -3847,7 +3847,7 @@ static void _action_by_bt(struct rtw89_dev *rtwdev)
+ 	case BTC_BT_NOPROFILE:
+ 		if (_check_freerun(rtwdev))
+ 			_action_freerun(rtwdev);
+-		else if (a2dp.active || pan.active)
++		else if (pan.active)
+ 			_action_bt_pan(rtwdev);
  		else
- 			seq_printf(m,
--				   ", %02d[%03d/0x%x/%d]",
--				   (u32)i,
-+				   ", %5s[%03d/0x%x/%d]",
-+				   id_to_slot((u32)i),
- 				   s->dur, s->cxtbl, s->cxtype);
--		if (i % 6 == 5)
-+		if (i % 5 == 4)
- 			seq_puts(m, "\n");
- 	}
-+	seq_puts(m, "\n");
- }
- 
- static void _show_fbtc_cysta_v2(struct rtw89_dev *rtwdev, struct seq_file *m)
-@@ -6446,7 +6447,7 @@ static void _show_fbtc_cysta_v2(struct rtw89_dev *rtwdev, struct seq_file *m)
- 	for (i = 0; i < CXST_MAX; i++) {
- 		if (!le32_to_cpu(pcysta_le32->slot_cnt[i]))
- 			continue;
--		seq_printf(m, ", %d:%d", (u32)i,
-+		seq_printf(m, ", %s:%d", id_to_slot((u32)i),
- 			   le32_to_cpu(pcysta_le32->slot_cnt[i]));
- 	}
- 
-@@ -6481,7 +6482,7 @@ static void _show_fbtc_cysta_v2(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		   le16_to_cpu(pcysta_le32->tmaxdiff_cycle[CXT_WL]),
- 		   le16_to_cpu(pcysta_le32->tmaxdiff_cycle[CXT_BT]));
- 
--	if (le16_to_cpu(pcysta_le32->cycles) == 0)
-+	if (le16_to_cpu(pcysta_le32->cycles) <= 1)
- 		return;
- 
- 	/* 1 cycle record 1 wl-slot and 1 bt-slot */
-@@ -6608,7 +6609,7 @@ static void _show_fbtc_cysta_v3(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		   le16_to_cpu(pcysta->cycle_time.tmaxdiff[CXT_BT]));
- 
- 	cycle = le16_to_cpu(pcysta->cycles);
--	if (cycle == 0)
-+	if (cycle <= 1)
- 		return;
- 
- 	/* 1 cycle record 1 wl-slot and 1 bt-slot */
-@@ -6630,40 +6631,39 @@ static void _show_fbtc_cysta_v3(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		cnt++;
- 		store_index = ((cycle - 1) % slot_pair) * 2;
- 
--		if (cnt % divide_cnt == 1) {
--			seq_printf(m, "\n\r %-15s : ", "[cycle_step]");
--		} else {
--			seq_printf(m, "->b%02d",
--				   le16_to_cpu(pcysta->slot_step_time[store_index]));
--			if (a2dp->exist) {
--				a2dp_trx = &pcysta->a2dp_trx[store_index];
--				seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
--					   a2dp_trx->empty_cnt,
--					   a2dp_trx->retry_cnt,
--					   a2dp_trx->tx_rate ? 3 : 2,
--					   a2dp_trx->tx_cnt,
--					   a2dp_trx->ack_cnt,
--					   a2dp_trx->nack_cnt);
--			}
--			seq_printf(m, "->w%02d",
--				   le16_to_cpu(pcysta->slot_step_time[store_index + 1]));
--			if (a2dp->exist) {
--				a2dp_trx = &pcysta->a2dp_trx[store_index + 1];
--				seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
--					   a2dp_trx->empty_cnt,
--					   a2dp_trx->retry_cnt,
--					   a2dp_trx->tx_rate ? 3 : 2,
--					   a2dp_trx->tx_cnt,
--					   a2dp_trx->ack_cnt,
--					   a2dp_trx->nack_cnt);
--			}
-+		if (cnt % divide_cnt == 1)
-+			seq_printf(m, " %-15s : ", "[cycle_step]");
-+
-+		seq_printf(m, "->b%02d",
-+			   le16_to_cpu(pcysta->slot_step_time[store_index]));
-+		if (a2dp->exist) {
-+			a2dp_trx = &pcysta->a2dp_trx[store_index];
-+			seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
-+				   a2dp_trx->empty_cnt,
-+				   a2dp_trx->retry_cnt,
-+				   a2dp_trx->tx_rate ? 3 : 2,
-+				   a2dp_trx->tx_cnt,
-+				   a2dp_trx->ack_cnt,
-+				   a2dp_trx->nack_cnt);
- 		}
--		if (cnt % (BTC_CYCLE_SLOT_MAX / 4) == 0 || cnt == c_end)
-+		seq_printf(m, "->w%02d",
-+			   le16_to_cpu(pcysta->slot_step_time[store_index + 1]));
-+		if (a2dp->exist) {
-+			a2dp_trx = &pcysta->a2dp_trx[store_index + 1];
-+			seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
-+				   a2dp_trx->empty_cnt,
-+				   a2dp_trx->retry_cnt,
-+				   a2dp_trx->tx_rate ? 3 : 2,
-+				   a2dp_trx->tx_cnt,
-+				   a2dp_trx->ack_cnt,
-+				   a2dp_trx->nack_cnt);
-+		}
-+		if (cnt % divide_cnt == 0 || cnt == c_end)
- 			seq_puts(m, "\n");
- 	}
- 
- 	if (a2dp->exist) {
--		seq_printf(m, "%-15s : a2dp_ept:%d, a2dp_late:%d",
-+		seq_printf(m, " %-15s : a2dp_ept:%d, a2dp_late:%d",
- 			   "[a2dp_t_sta]",
- 			   le16_to_cpu(pcysta->a2dp_ept.cnt),
- 			   le16_to_cpu(pcysta->a2dp_ept.cnt_timeout));
-@@ -6741,7 +6741,7 @@ static void _show_fbtc_cysta_v4(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		   le16_to_cpu(pcysta->cycle_time.tmaxdiff[CXT_BT]));
- 
- 	cycle = le16_to_cpu(pcysta->cycles);
--	if (cycle == 0)
-+	if (cycle <= 1)
- 		return;
- 
- 	/* 1 cycle record 1 wl-slot and 1 bt-slot */
-@@ -6763,40 +6763,39 @@ static void _show_fbtc_cysta_v4(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		cnt++;
- 		store_index = ((cycle - 1) % slot_pair) * 2;
- 
--		if (cnt % divide_cnt == 1) {
--			seq_printf(m, "\n\r %-15s : ", "[cycle_step]");
--		} else {
--			seq_printf(m, "->b%02d",
--				   le16_to_cpu(pcysta->slot_step_time[store_index]));
--			if (a2dp->exist) {
--				a2dp_trx = &pcysta->a2dp_trx[store_index];
--				seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
--					   a2dp_trx->empty_cnt,
--					   a2dp_trx->retry_cnt,
--					   a2dp_trx->tx_rate ? 3 : 2,
--					   a2dp_trx->tx_cnt,
--					   a2dp_trx->ack_cnt,
--					   a2dp_trx->nack_cnt);
--			}
--			seq_printf(m, "->w%02d",
--				   le16_to_cpu(pcysta->slot_step_time[store_index + 1]));
--			if (a2dp->exist) {
--				a2dp_trx = &pcysta->a2dp_trx[store_index + 1];
--				seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
--					   a2dp_trx->empty_cnt,
--					   a2dp_trx->retry_cnt,
--					   a2dp_trx->tx_rate ? 3 : 2,
--					   a2dp_trx->tx_cnt,
--					   a2dp_trx->ack_cnt,
--					   a2dp_trx->nack_cnt);
--			}
-+		if (cnt % divide_cnt == 1)
-+			seq_printf(m, " %-15s : ", "[cycle_step]");
-+
-+		seq_printf(m, "->b%02d",
-+			   le16_to_cpu(pcysta->slot_step_time[store_index]));
-+		if (a2dp->exist) {
-+			a2dp_trx = &pcysta->a2dp_trx[store_index];
-+			seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
-+				   a2dp_trx->empty_cnt,
-+				   a2dp_trx->retry_cnt,
-+				   a2dp_trx->tx_rate ? 3 : 2,
-+				   a2dp_trx->tx_cnt,
-+				   a2dp_trx->ack_cnt,
-+				   a2dp_trx->nack_cnt);
- 		}
--		if (cnt % (BTC_CYCLE_SLOT_MAX / 4) == 0 || cnt == c_end)
-+		seq_printf(m, "->w%02d",
-+			   le16_to_cpu(pcysta->slot_step_time[store_index + 1]));
-+		if (a2dp->exist) {
-+			a2dp_trx = &pcysta->a2dp_trx[store_index + 1];
-+			seq_printf(m, "(%d/%d/%dM/%d/%d/%d)",
-+				   a2dp_trx->empty_cnt,
-+				   a2dp_trx->retry_cnt,
-+				   a2dp_trx->tx_rate ? 3 : 2,
-+				   a2dp_trx->tx_cnt,
-+				   a2dp_trx->ack_cnt,
-+				   a2dp_trx->nack_cnt);
-+		}
-+		if (cnt % divide_cnt == 0 || cnt == c_end)
- 			seq_puts(m, "\n");
- 	}
- 
- 	if (a2dp->exist) {
--		seq_printf(m, "%-15s : a2dp_ept:%d, a2dp_late:%d",
-+		seq_printf(m, " %-15s : a2dp_ept:%d, a2dp_late:%d",
- 			   "[a2dp_t_sta]",
- 			   le16_to_cpu(pcysta->a2dp_ept.cnt),
- 			   le16_to_cpu(pcysta->a2dp_ept.cnt_timeout));
-@@ -6827,13 +6826,9 @@ static void _show_fbtc_nullsta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 
- 	ns = &pfwinfo->rpt_fbtc_nullsta.finfo;
- 	if (ver->fcxnullsta == 1) {
--		seq_printf(m, " %-15s : ", "[null_sta]");
--
- 		for (i = 0; i < 2; i++) {
--			if (i != 0)
--				seq_printf(m, ", null-%d", i);
--			else
--				seq_printf(m, "null-%d", i);
-+			seq_printf(m, " %-15s : ", "[NULL-STA]");
-+			seq_printf(m, "null-%d", i);
- 			seq_printf(m, "[ok:%d/",
- 				   le32_to_cpu(ns->v1.result[i][1]));
- 			seq_printf(m, "fail:%d/",
-@@ -6845,17 +6840,14 @@ static void _show_fbtc_nullsta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 			seq_printf(m, "avg_t:%d.%03d/",
- 				   le32_to_cpu(ns->v1.avg_t[i]) / 1000,
- 				   le32_to_cpu(ns->v1.avg_t[i]) % 1000);
--			seq_printf(m, "max_t:%d.%03d]",
-+			seq_printf(m, "max_t:%d.%03d]\n",
- 				   le32_to_cpu(ns->v1.max_t[i]) / 1000,
- 				   le32_to_cpu(ns->v1.max_t[i]) % 1000);
- 		}
- 	} else {
--		seq_printf(m, " %-15s : ", "[null_sta]");
- 		for (i = 0; i < 2; i++) {
--			if (i != 0)
--				seq_printf(m, ", null-%d", i);
--			else
--				seq_printf(m, "null-%d", i);
-+			seq_printf(m, " %-15s : ", "[NULL-STA]");
-+			seq_printf(m, "null-%d", i);
- 			seq_printf(m, "[Tx:%d/",
- 				   le32_to_cpu(ns->v2.result[i][4]));
- 			seq_printf(m, "[ok:%d/",
-@@ -6869,12 +6861,11 @@ static void _show_fbtc_nullsta(struct rtw89_dev *rtwdev, struct seq_file *m)
- 			seq_printf(m, "avg_t:%d.%03d/",
- 				   le32_to_cpu(ns->v2.avg_t[i]) / 1000,
- 				   le32_to_cpu(ns->v2.avg_t[i]) % 1000);
--			seq_printf(m, "max_t:%d.%03d]",
-+			seq_printf(m, "max_t:%d.%03d]\n",
- 				   le32_to_cpu(ns->v2.max_t[i]) / 1000,
- 				   le32_to_cpu(ns->v2.max_t[i]) % 1000);
- 		}
- 	}
--	seq_puts(m, "\n");
- }
- 
- static void _show_fbtc_step_v2(struct rtw89_dev *rtwdev, struct seq_file *m)
-@@ -7147,6 +7138,9 @@ static void _show_mreg(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		if (cnt % 6 == 5)
- 			seq_puts(m, "\n");
- 		cnt++;
-+
-+		if (i >= pmreg->reg_num)
-+			seq_puts(m, "\n");
- 	}
- 
- 	pcinfo = &pfwinfo->rpt_fbtc_gpio_dbg.cinfo;
+ 			_action_bt_idle(rtwdev);
 -- 
 2.25.1
 
