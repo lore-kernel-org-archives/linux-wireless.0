@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E325C00A5A
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Jan 2023 06:25:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9497C00A5A
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Jan 2023 06:25:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229792AbjASGZg (ORCPT
+        id S229653AbjASGZh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Jan 2023 01:25:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52002 "EHLO
+        Thu, 19 Jan 2023 01:25:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229626AbjASGZb (ORCPT
+        with ESMTP id S229674AbjASGZc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2023 01:25:31 -0500
+        Thu, 19 Jan 2023 01:25:32 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 32C3B5C0FD
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2023 22:25:28 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ADA97656FD
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2023 22:25:30 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30J6PDdS4005731, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30J6PDdS4005731
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30J6PGU60005756, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30J6PGU60005756
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Thu, 19 Jan 2023 14:25:13 +0800
+        Thu, 19 Jan 2023 14:25:16 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Thu, 19 Jan 2023 14:25:14 +0800
+ 15.1.2507.9; Thu, 19 Jan 2023 14:25:17 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 19 Jan
- 2023 14:25:13 +0800
+ 2023 14:25:16 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/3] wifi: rtw89: fix and generalize TSF functions
-Date:   Thu, 19 Jan 2023 14:24:50 +0800
-Message-ID: <20230119062453.58341-1-pkshih@realtek.com>
+Subject: [PATCH 3/3] wifi: rtw89: mac: add function to get TSF
+Date:   Thu, 19 Jan 2023 14:24:53 +0800
+Message-ID: <20230119062453.58341-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230119062453.58341-1-pkshih@realtek.com>
+References: <20230119062453.58341-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -54,28 +56,81 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIzLzEvMTkgpFekyCAwMzozNzowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For multiple VIF, we need to organize TSF to make interfaces operate
-properly, as well as time slot of BT coexistence mechanism. Normally,
-we only handle to avoid issuing conflicts of beacon in AP mode (or GO).
-So, use this patchset to prepare things for MCC.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Zong-Zhe Yang (3):
-  wifi: rtw89: correct unit for port offset and refine macro
-  wifi: rtw89: split out generic part of rtw89_mac_port_tsf_sync()
-  wifi: rtw89: mac: add function to get TSF
+Add mac function rtw89_mac_port_get_tsf() to get TSF by port.
+It will be used when MCC (multi-channel concurrency) calculates
+timing things.
 
- drivers/net/wireless/realtek/rtw89/mac.c | 51 +++++++++++++++++++-----
- drivers/net/wireless/realtek/rtw89/mac.h | 17 +++++++-
- 2 files changed, 56 insertions(+), 12 deletions(-)
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/mac.c | 18 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/mac.h | 11 +++++++++++
+ 2 files changed, 29 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index c13edd33b1a48..9e73ef6f9bc6e 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -4061,6 +4061,24 @@ int rtw89_mac_port_update(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
+ 	return 0;
+ }
+ 
++int rtw89_mac_port_get_tsf(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
++			   u64 *tsf)
++{
++	const struct rtw89_port_reg *p = &rtw_port_base;
++	u32 tsf_low, tsf_high;
++	int ret;
++
++	ret = rtw89_mac_check_mac_en(rtwdev, rtwvif->mac_idx, RTW89_CMAC_SEL);
++	if (ret)
++		return ret;
++
++	tsf_low = rtw89_read32_port(rtwdev, rtwvif, p->tsftr_l);
++	tsf_high = rtw89_read32_port(rtwdev, rtwvif, p->tsftr_h);
++	*tsf = (u64)tsf_high << 32 | tsf_low;
++
++	return 0;
++}
++
+ static void rtw89_mac_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
+ 						      struct cfg80211_bss *bss,
+ 						      void *data)
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
+index 4c50527aad61b..553b38a6d2c31 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.h
++++ b/drivers/net/wireless/realtek/rtw89/mac.h
+@@ -827,6 +827,15 @@ static inline u32 rtw89_mac_reg_by_port(u32 base, u8 port, u8 mac_idx)
+ 	return rtw89_mac_reg_by_idx(base + port * 0x40, mac_idx);
+ }
+ 
++static inline u32
++rtw89_read32_port(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif, u32 base)
++{
++	u32 reg;
++
++	reg = rtw89_mac_reg_by_port(base, rtwvif->port, rtwvif->mac_idx);
++	return rtw89_read32(rtwdev, reg);
++}
++
+ static inline u32
+ rtw89_read32_port_mask(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
+ 		       u32 base, u32 mask)
+@@ -910,6 +919,8 @@ void rtw89_mac_port_tsf_sync(struct rtw89_dev *rtwdev,
+ 			     struct rtw89_vif *rtwvif,
+ 			     struct rtw89_vif *rtwvif_src,
+ 			     u16 offset_tu);
++int rtw89_mac_port_get_tsf(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
++			   u64 *tsf);
+ void rtw89_mac_set_he_obss_narrow_bw_ru(struct rtw89_dev *rtwdev,
+ 					struct ieee80211_vif *vif);
+ void rtw89_mac_stop_ap(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif);
 -- 
 2.25.1
 
