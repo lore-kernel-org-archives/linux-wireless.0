@@ -2,114 +2,70 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 017EBC00A5A
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Jan 2023 14:35:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F144BC00A5A
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Jan 2023 14:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230306AbjASOft (ORCPT
+        id S230306AbjASOzJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Jan 2023 09:35:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57212 "EHLO
+        Thu, 19 Jan 2023 09:55:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231329AbjASOfe (ORCPT
+        with ESMTP id S231180AbjASOyx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2023 09:35:34 -0500
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80C0C67974
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2023 06:35:25 -0800 (PST)
-Received: by mail-ej1-x62e.google.com with SMTP id hw16so6116371ejc.10
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2023 06:35:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+/wCr+oyngzlRh+eWqadAOW0a1BZXf9k2NIv2t5yris=;
-        b=cm8cYIGyYEcCjRHE8Y3hWnXqcfV3RaWQqqu1DW0SwarXmigQYYPOrSXRNG4pnCQvfJ
-         M8tPUZSponY8NXAJyjyivZLc1xXiA6YDAYU5Js8H0xryoglPAa5Ev44NvoGLp+dSS8uz
-         yrPsHvlnu6qK8QvPFk9LNXEcCq2O5gXd8FF96PomUMAM0VgCV2lOVobHISF6n6vjRay/
-         3xXfZedzDDZnS+Ypvi6AXF9lLnNNgcU1bz8v/YLUAk68OU2FPPswlTSu/eex+gt3fD8k
-         DzEuts1nuw24Drnr8qUv5t6QuHabsNUP05ZDtody0GdrAEDdWrk39TusVXtBqAv+YGjF
-         SXPw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+/wCr+oyngzlRh+eWqadAOW0a1BZXf9k2NIv2t5yris=;
-        b=jGLcPvkhZSZp4PxPfsd+2w5MpClxll7/s3RJL2ePQhYvJLfA4VN1vi9CoGA61pNqn5
-         GUi7KCZIE6IUu42JcTRhYMw/CfqhCBgyGI/DBq914DUpL21i/oKJxku+jiwX/OX8CBwS
-         HiFZtlJuM2ZCE6+kXlYLvoS2KTy5c5U6J+3FyVs6w5bgxg70Kdz3dgZ9SX2eV+ifU6rf
-         6H//Nh4nyGsBX0lILvIruOwxHDNWlXjfsZnYFEHPehMaEuHwcW67704/6KM5Jd/pnjaU
-         k+q1PtlUSkXqHApijRVTuL/2+zanDuIiBdirAKrTopClNIzcUI5tMC8mJ+VZTuZsrjHo
-         qzcQ==
-X-Gm-Message-State: AFqh2kp9f1M8VqUrCSAkpdNIYOuxZPE/3gP4aAE7AY++cJqimQOHMG4n
-        n2/DVkXTqRWblRt0qs+CzVM=
-X-Google-Smtp-Source: AMrXdXswBj5005ZBT8Z9L1a4yMcqJqHKUSLzVyZU9d7LclGqY4KDqXUfJJlp1lD6RjDIUdn62rXSBw==
-X-Received: by 2002:a17:907:d110:b0:7ae:8194:7e06 with SMTP id uy16-20020a170907d11000b007ae81947e06mr13024176ejc.56.1674138923865;
-        Thu, 19 Jan 2023 06:35:23 -0800 (PST)
-Received: from smtpclient.apple ([2001:9e8:f13d:5500:8810:952c:6d58:93ff])
-        by smtp.gmail.com with ESMTPSA id lh2-20020a170906f8c200b00877696c015asm1564130ejb.134.2023.01.19.06.35.23
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 19 Jan 2023 06:35:23 -0800 (PST)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.300.101.1.3\))
-Subject: Re: [RFC v2 4/6] mac80211: add utility function for tx_rate -
- rate_info conversion
-From:   Jonas Jelonek <jelonek.jonas@gmail.com>
-In-Reply-To: <f364ace23f73e90f9cf62b5c8238e78599b6b7ab.camel@sipsolutions.net>
-Date:   Thu, 19 Jan 2023 15:34:52 +0100
-Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Content-Transfer-Encoding: 7bit
-Message-Id: <3AA54978-0B7D-4FFD-9A45-423CDC2D1658@gmail.com>
-References: <20220920104032.496697-1-jelonek.jonas@gmail.com>
- <20220920104032.496697-5-jelonek.jonas@gmail.com>
- <64731257b957f50b0f66e4d2fcd8c24dea8d70ff.camel@sipsolutions.net>
- <9AE44A41-6357-4F3A-BF75-8E3B0A381E9B@gmail.com>
- <f364ace23f73e90f9cf62b5c8238e78599b6b7ab.camel@sipsolutions.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
-X-Mailer: Apple Mail (2.3731.300.101.1.3)
+        Thu, 19 Jan 2023 09:54:53 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A436974EA8
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2023 06:54:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=pbS/bX9VJ8VmQVK8TpueUPlWivBwz9nNw66dd1UfI8s=;
+        t=1674140090; x=1675349690; b=udIHqE7bOG7dJgqgLcydt3K62cNhNK3leXvfKLZRY09WQZi
+        wEGXX3X02a9Gwt4GEZ+1koHhafCdqUimEK7QNY85ghkoR/NaIlNh0E5VogaNmY90VGoqhhRg/tJxr
+        hKD1mSl49ehW5vEwQFiYg8tAuSkMTiqcAdlhVOr/CllCrKHNDNKdk314CQqNHQ0bw0n2/sNtbQ5eO
+        4QuRbmDnv5MHQGN7CvzXHQ4oBodEUhrvAuMfnh2Xn2eVoC7Rf6tY8UUW7euyVfcZtZHb6FcLwL1Z/
+        dOdehwokk5z/1jmueQqUJqEqUDfXpi2wzpieGT4DBnuzuM3eqwndwYEv3BkDu4rw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1pIWJM-006Y8W-2j;
+        Thu, 19 Jan 2023 15:54:40 +0100
+Message-ID: <2a2332211b2ca9daa968a3644006f5c9e0c88a00.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/2] nl80211: add support to enable/disable bss color
+ collision detection
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Nicolas Cavallari <nicolas.cavallari@green-communications.fr>,
+        Rameshkumar Sundaram <quic_ramess@quicinc.com>,
+        ath11k@lists.infradead.org, Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Thu, 19 Jan 2023 15:54:39 +0100
+In-Reply-To: <1609a645-3e23-7e37-9aa1-94f970e481e2@green-communications.fr>
+References: <20221226083328.29051-1-quic_ramess@quicinc.com>
+         <20221226083328.29051-2-quic_ramess@quicinc.com>
+         <74c57dc34af10537f98f5bb9b6ce80e5676e09b0.camel@sipsolutions.net>
+         <1609a645-3e23-7e37-9aa1-94f970e481e2@green-communications.fr>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Thu, 2023-01-19 at 15:52 +0100, Nicolas Cavallari wrote:
+>=20
+> This may not be related, but the software color collision detection=20
+> sends a netlink message for every colliding frame and it can hose up the=
+=20
+> system if the other network is very active.
+>=20
+> Also, cfg80211_bss_color_notify() complains that the wdev lock isn't held=
+.
 
-> On 19. Jan 2023, at 12:35, Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> On Thu, 2023-01-19 at 12:31 +0100, Jonas Jelonek wrote:
->>> On 12. Jan 2023, at 11:26, Johannes Berg <johannes@sipsolutions.net>
->>> wrote:
->>> 
->>>> +void ieee80211_rate_get_rate_info(const struct ieee80211_tx_rate *rate,
->>>> + 							struct wiphy *wiphy, u8 band,
->>>> +  							struct rate_info *rate_info)
->>>> +{
->>>> +  	memset(rate_info, 0, sizeof(struct rate_info));
->>>> +
->>>> +  	if (rate->flags & IEEE80211_TX_RC_MCS) { /* 802.11n */
->>>> +  		rate_info->flags |= RATE_INFO_FLAGS_MCS;
->>>> +  		rate_info->mcs = rate->idx;
->>>> +  	} else if (rate->flags & IEEE80211_TX_RC_VHT_MCS) { /* 802.11ac */
->>>> +  		rate_info->flags |= RATE_INFO_FLAGS_VHT_MCS;
->>>> +  		rate_info->mcs = ieee80211_rate_get_vht_mcs(rate);
->>>> +  		rate_info->nss = ieee80211_rate_get_vht_nss(rate);
->>>> +  } else { /* 802.11a/b/g */
->>> 
->>> what about HE/EHT?
->> 
->> ieee80211_tx_rate uses an s8 for rate/MCS index, so only up to VHT
->> rates fit in there.
->> For rates above VHT, rate_info is needed, thus are are no HE/EHT rates
->> occuring in
->> ieee80211_tx_rate. Same applies to your comment on the hwsim
->> conversion.
-> 
-> I guess I should've read the commit message more closely ;-)
-> 
-> But please add kernel-doc to the function; both in general it'd be good
-> to have, and in particular explaining that this is more for older
-> drivers I guess?
+Yay.
 
-I will add that in my next RFC version to make sure this is clear.
+Lorenzo can you take a look at that?
 
-Jonas
+johannes
