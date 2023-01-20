@@ -2,102 +2,136 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29BF1C004D4
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Jan 2023 00:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD9EAC004D4
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Jan 2023 03:19:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229630AbjATAmk (ORCPT
+        id S229810AbjATDTF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Jan 2023 19:42:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48670 "EHLO
+        Thu, 19 Jan 2023 22:19:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229703AbjATAmi (ORCPT
+        with ESMTP id S229518AbjATDTE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2023 19:42:38 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A20BB4A230
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2023 16:42:37 -0800 (PST)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30K0Nf9F022939;
-        Fri, 20 Jan 2023 00:42:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=dcmEx5oOmofBfvPm6M4zS+VuS9JPhpJdaHVdoi4Uxnc=;
- b=a0dtsf4o4iMt74LcIx7Qem4ry+RrfQwGi9tjEjuyrQj0SSkjcWwXcTdjLqIy1PP98+zU
- +2lc32DRh14hhMJ5D/ZQX0b8gHDwlhXcuNFhUxbWDk0higvjGMe/tffMDjrnilnpDzMx
- W0/XVlkl2hCq/Pe7dFIr47HQPgwduiJaP91KcIVt+U5Krm+/CAVr0JnrdB9C+84sSkpQ
- wTg9g+a+jTL9vH42BNpESy3giIhW6X9KoulUQaf7FVeU8NAF8ZUVWZLxnaNkv0TUQ7Xh
- X7AgGHatCTUQ20BPGvrEVis6DwS43EoLWKU+bZkwaTWFGCCEsrZG8ywdp96qS9k8enQo 3A== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3n6xktjpsn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 20 Jan 2023 00:42:34 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 30K0gXBX003177
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 20 Jan 2023 00:42:33 GMT
-Received: from [10.110.52.22] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Thu, 19 Jan
- 2023 16:42:32 -0800
-Message-ID: <0b77bad5-f55c-73d5-7cd0-dfed57871f25@quicinc.com>
-Date:   Thu, 19 Jan 2023 16:42:31 -0800
+        Thu, 19 Jan 2023 22:19:04 -0500
+Received: from mail-ot1-x32f.google.com (mail-ot1-x32f.google.com [IPv6:2607:f8b0:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A697C0
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2023 19:19:03 -0800 (PST)
+Received: by mail-ot1-x32f.google.com with SMTP id g2-20020a9d6b02000000b006864bf5e658so2406309otp.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2023 19:19:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=landley-net.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=WxJtcfmjg8bDlWo77QXfqDNdo8CBClhx9W/RQtlqbwY=;
+        b=195AXt9odDu2myrtF32+GBb0qMFgjNikCrpxsa+WbA8hIOrugiKzMmRa6ck9jEEnh+
+         BAiMUjeACSwa7DIsy0nd31WMLgqeemkaP54UGh/z5/4/iE4OKfk/JF3Mfjc9Slk04hNo
+         yl5Eob9OFP8rjo94KXNck41rTFVGwR12Dn+yA5SLoZAqZ3VzofVm+vx+0BgQAYSmr785
+         93R2tgLtdgq0ZrmMjpy2ltpjwYB3CfaG5BeK8n4rbY9oAJxrmKWOuImd3ZYcTj/FPdb2
+         jJLXFRha+Q7ERnsBZifTFijpda8XPNDI9gPItiLsvkjmbQtAsn8L1qQF4XOocbXXc8zc
+         lOGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=WxJtcfmjg8bDlWo77QXfqDNdo8CBClhx9W/RQtlqbwY=;
+        b=HkyZ2f7ggvKZMGrRYxzwZNRSPSQqnTvdXPH1MJHnAnRbXnjE1iaM/E3enC9OMOXEQK
+         XSMDICqB82/b44XrojS8nsk0OzH+58zJzd3FZcK4FwQgbTfc2cf8w67YskY/v/vsjMId
+         ncJXnYHwEmC35T+4ptOe0FrIDAThNhFzvo2pdPfu9rqq01iCdNX2Ffx2cnjluMwxLaBK
+         8YAJ1893mqN0llOea+zhT2mrAjwtRpAHI4dcFg/RklFCq3zuPW+9s0pEthK2Yp1RcEMa
+         BpK+/JW35c3WStoz1JUfMZJ8c1HC+wXwVE9ku3kS5HMa8yvVfQlrvHhZ4XO0n8eKEXqq
+         qF1A==
+X-Gm-Message-State: AFqh2kr86NC2zAFf+t3cGP4eDolrS+vvFvK8OEUy7KUt1atNhNYJIOKk
+        lTAM80QkrFDa+OVXCfFshthfdQ==
+X-Google-Smtp-Source: AMrXdXsEe/2+E0aFpK50BI2W31LvjkQnB05BvrClqgL71HBhXQ2hq9P1I+orXsNyKBoEZPHv4iTJdA==
+X-Received: by 2002:a9d:704f:0:b0:685:579f:918e with SMTP id x15-20020a9d704f000000b00685579f918emr6930248otj.0.1674184742349;
+        Thu, 19 Jan 2023 19:19:02 -0800 (PST)
+Received: from ?IPV6:2607:fb90:f20b:1885:28a8:1eff:fe1b:3320? ([2607:fb90:f20b:1885:28a8:1eff:fe1b:3320])
+        by smtp.gmail.com with ESMTPSA id m6-20020a9d73c6000000b006860be3a43fsm7631822otk.14.2023.01.19.19.19.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Jan 2023 19:19:01 -0800 (PST)
+Message-ID: <0f51dac4-836b-0ff2-38c6-5521745c1c88@landley.net>
+Date:   Thu, 19 Jan 2023 21:31:21 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Subject: Re: [RFC 3/4] wifi: nl80211: validate RU puncturing bitmap
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Muna Sinada <quic_msinada@quicinc.com>
-CC:     <linux-wireless@vger.kernel.org>
-References: <1670006154-6092-1-git-send-email-quic_msinada@quicinc.com>
- <1670006154-6092-4-git-send-email-quic_msinada@quicinc.com>
- <3df39d4f2e2e64bd3899cfbe7bade547e54330f7.camel@sipsolutions.net>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: Calculating array sizes in C - was: Re: Build
+ regressions/improvements in v6.2-rc1
 Content-Language: en-US
-From:   Aloka Dixit <quic_alokad@quicinc.com>
-In-Reply-To: <3df39d4f2e2e64bd3899cfbe7bade547e54330f7.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: X6r2sZvvrAoSD9UlABJTRli3NKyhXv89
-X-Proofpoint-GUID: X6r2sZvvrAoSD9UlABJTRli3NKyhXv89
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-01-19_16,2023-01-19_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- clxscore=1015 spamscore=0 mlxlogscore=314 lowpriorityscore=0 bulkscore=0
- malwarescore=0 priorityscore=1501 mlxscore=0 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2301200002
+To:     "Michael.Karcher" <Michael.Karcher@fu-berlin.de>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-sh@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linuxppc-dev@lists.ozlabs.org, kasan-dev@googlegroups.com,
+        linux-xtensa@linux-xtensa.org,
+        Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
+        Arnd Bergmann <arnd@arndb.de>
+References: <CAHk-=wgf929uGOVpiWALPyC7pv_9KbwB2EAvQ3C4woshZZ5zqQ@mail.gmail.com>
+ <20221227082932.798359-1-geert@linux-m68k.org>
+ <alpine.DEB.2.22.394.2212270933530.311423@ramsan.of.borg>
+ <c05bee5d-0d69-289b-fe4b-98f4cd31a4f5@physik.fu-berlin.de>
+ <CAMuHMdXNJveXHeS=g-aHbnxtyACxq1wCeaTg8LbpYqJTCqk86g@mail.gmail.com>
+ <3800eaa8-a4da-b2f0-da31-6627176cb92e@physik.fu-berlin.de>
+ <CAMuHMdWbBRkhecrqcir92TgZnffMe8ku2t7PcVLqA6e6F-j=iw@mail.gmail.com>
+ <429140e0-72fe-c91c-53bc-124d33ab5ffa@physik.fu-berlin.de>
+ <CAMuHMdWpHSsAB3WosyCVgS6+t4pU35Xfj3tjmdCDoyS2QkS7iw@mail.gmail.com>
+ <0d238f02-4d78-6f14-1b1b-f53f0317a910@physik.fu-berlin.de>
+ <1732342f-49fe-c20e-b877-bc0a340e1a50@fu-berlin.de>
+From:   Rob Landley <rob@landley.net>
+In-Reply-To: <1732342f-49fe-c20e-b877-bc0a340e1a50@fu-berlin.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/19/2023 7:37 AM, Johannes Berg wrote:
-> Frankly I'm not happy for this to be stuck into set_interface() like
-> that - can we add it to set_channel() only or something? At least there
-> should be too? And read it only if the channel is actually touched? This
-> feels very ad-hoc.
+
+
+On 1/19/23 16:11, Michael.Karcher wrote:
+> Isn't this supposed to be caught by this check:
+>>>>
+>>>>          a, __same_type(a, NULL)
+>>>>
+>>>> ?
+>>>
+>>> Yeah, but gcc thinks it is smarter than us...
+>>> Probably it drops the test, assuming UB cannot happen.
+>> Hmm, sounds like a GGC bug to me then. Not sure how to fix this then.
 > 
-> johannes
+> 
+> I don't see a clear bug at this point. We are talking about the C expression
+> 
+>    __same_type((void*)0, (void*)0)? 0 : sizeof((void*)0)/sizeof(*((void*0))
 
-Hi Johannes,
+*(void*) is type "void" which does not have a size.
 
-I will work on these comments.
+The problem is gcc "optimizing out" an earlier type check, the same way it
+"optimizes out" checks for signed integer math overflowing, or "optimizes out" a
+comparison to pointers from two different local variables from different
+function calls trying to calculate the amount of stack used, or "optimizes out"
+using char *x = (char *)1; as a flag value and then doing "if (!(x-1)) because
+it can "never happen"...
+> I suggest to file a bug against gcc complaining about a "spurious 
+> warning", and using "-Werror -Wno-error-sizeof-pointer-div" until gcc is 
+> adapted to not emit the warning about the pointer division if the result 
+> is not used.
 
-Secondly, this RFC uses ieee80211_valid_disable_subchannel_bitmap() 
-defined in following RFC you sent:
-https://patchwork.kernel.org/project/linux-wireless/patch/20220325140859.e48bf244f157.I3547481d49f958389f59dfeba3fcc75e72b0aa6e@changeid/
+Remember when gcc got rewritten in c++ starting in 2007?
 
-Is there is any plan for the next version?
-If not, I can move the validation function defined in cfg80211 to 
-mac80211 from the following patch-set:
-https://patchwork.kernel.org/project/linux-wireless/patch/20220214223051.3610-3-quic_alokad@quicinc.com/
+Historically the main marketing push of C++ was that it contains the whole of C
+and therefore MUST be just as good a language, the same way a mud pie contains
+an entire glass of water and therefore MUST be just as good a beverage. Anything
+C can do that C++ _can't_ do is seen as an existential threat by C++ developers.
+They've worked dilligently to "fix" C not being a giant pile of "undefined
+behavior" the way C++ is for 15 years now.
 
-You had asked me about exporting this during the review as well.
+I have... opinions on this.
 
-Please let me know so that I can incorporate accordingly.
-Thanks.
+> Regards,
+>    Michael Karcher
+
+Rob
