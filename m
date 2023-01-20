@@ -2,85 +2,116 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01C45C46467
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Jan 2023 04:54:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F16C46467
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Jan 2023 05:18:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230449AbjATEyM (ORCPT
+        id S231300AbjATFSh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Jan 2023 23:54:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49232 "EHLO
+        Fri, 20 Jan 2023 00:18:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230481AbjATExr (ORCPT
+        with ESMTP id S230215AbjATFSV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2023 23:53:47 -0500
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BA3BCE8A2;
-        Thu, 19 Jan 2023 20:45:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674189914; x=1705725914;
-  h=message-id:date:mime-version:cc:subject:to:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=DuOBg1V/kEEpNk+BV4bYqVrWJSOOFRR3sdWDamFrvt0=;
-  b=DpH5Gz6m8iV2ch09fwLFA5GAnqlxbeNoa7S3bI/YFsVgN87LhKKoHb0Q
-   cSCYdT3KmY8GtvjtNyqfoyZjFlZdvPRAzezNcOKx6+isXeCmUB45fV3DF
-   026+DbQtNrLVHraaQW0P2BkA1avJfJCRa80U8itPz7XQ3IEFFPIYbClxs
-   28pG13X7QphCrYMsq60VrkQyCLoGnlbwbBVjTPl45e3wWdRgqLxggzixe
-   SAA5swOR1eMGWiVdWM7YFfhsxGvQQy2A0iZNyMvQ//2lqzy3XrGkXktPN
-   QJ1loYld9EDGI/1Qb4zzbto8KYzzKZkmUqKFZsbc6A6sRmm5zTKHoGxD2
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="308821076"
-X-IronPort-AV: E=Sophos;i="5.97,229,1669104000"; 
-   d="scan'208";a="308821076"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 03:47:51 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="988957189"
-X-IronPort-AV: E=Sophos;i="5.97,229,1669104000"; 
-   d="scan'208";a="988957189"
-Received: from blu2-mobl.ccr.corp.intel.com (HELO [10.252.185.248]) ([10.252.185.248])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 03:47:45 -0800
-Message-ID: <08c874f6-0c59-0b74-a2c8-7ad61356af6f@linux.intel.com>
-Date:   Thu, 19 Jan 2023 19:47:42 +0800
+        Fri, 20 Jan 2023 00:18:21 -0500
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C5BCDF957;
+        Thu, 19 Jan 2023 21:07:32 -0800 (PST)
+Received: by mail-wm1-x331.google.com with SMTP id o17-20020a05600c511100b003db021ef437so2812082wms.4;
+        Thu, 19 Jan 2023 21:07:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=HhMPVNs8pc5Gcf/TDLS+cJfOurg6Vice8ut9+SSmMY8=;
+        b=lPBcCni7LAwqOkrg3tNCH8jOSMnkyLgfAXhdSPuWk9jqGAy9XkKAhwTW8VXN/9cXFV
+         /EN0DPv42as4B6vtPxwtHVBwWplBaFE/xI5qQE1NXH2AxyMx+9gxLM6ptWd4KJEHRmzb
+         PWErnbqiYuGQMwvJmYfqM0L2mhGwa+odHughUHnkGdEyq6xKmjaDieso4h0auyn1xV0/
+         lBCEyQlbbCtZSbCcG8TVIhyA7/s3F7B1TPz8ZVSzu0Eb+ilsNuvhPuFTvNLaf5EP+9e8
+         SOaQlWzjm95h2IVLfV4LSD8eAOj5Q8/S5SKJDdPTZEuZbGPPrCSjmErCocWV6VcxF625
+         40sQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=HhMPVNs8pc5Gcf/TDLS+cJfOurg6Vice8ut9+SSmMY8=;
+        b=aCsddHc2ydYxmY8WAPB7NdvGA8XCFIBJveipTumBJ6rzR9qoozt9dQ7k1IJHk7vn2j
+         9tnu1HUxV8W4/xY89Y4pFiTemdLQlRpSGU7/Q0I8sSPzSl20ZV9CLXSfhtTPPUcjbhRB
+         Q5koJG+d+kSt3M+rZCiHy/yC2X+4ZiYj3fy7HrzdtfUUAPYkN3iNWRvB5eLj551aAzId
+         9WzFaaJl2m1qzWuOGG3t3oFY0EBh7XqIqeU65VwllOvk2xVPb1R5E4nKRqqkdFiomRX3
+         slzHWcSR2IMCktAd/zict30VP4EBBCbt6N6M1zdAoO7L41Vy5z9idvK6ADSFeHHGrw3/
+         c0lg==
+X-Gm-Message-State: AFqh2koPFMCfXugtjvPuTLSSBEw2dP8n0x4lXLtgC9HeGxqIB6znShS1
+        wzQXP+bubcKz3r07xfX2mwxGJqTAiZbUTw==
+X-Google-Smtp-Source: AMrXdXuIRvrqtfIdcYDBTulA2LssPIlvNF6wzU/SosHvPjy1IlAsQclQWt+6yA36sTmWOi1wqynaYg==
+X-Received: by 2002:a05:600c:3412:b0:3da:f678:1d47 with SMTP id y18-20020a05600c341200b003daf6781d47mr12556081wmp.14.1674191250364;
+        Thu, 19 Jan 2023 21:07:30 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id x15-20020a05600c188f00b003db122d5ac2sm1036738wmp.15.2023.01.19.21.07.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Jan 2023 21:07:29 -0800 (PST)
+Date:   Fri, 20 Jan 2023 08:07:26 +0300
+From:   Dan Carpenter <error27@gmail.com>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     gregkh@linuxfoundation.org, phil@philpotter.co.uk,
+        linux-staging@lists.linux.dev, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Gaurav Pathak <gauravpathak129@gmail.com>
+Subject: Re: [PATCH] staging: r8188eu: Fix some endian problems
+Message-ID: <Y8ohjkgNjyQPD+Dd@kadam>
+References: <20230119191219.12080-1-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Cc:     baolu.lu@linux.intel.com,
-        Alex Williamson <alex.williamson@redhat.com>,
-        ath10k@lists.infradead.org, ath11k@lists.infradead.org,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        dri-devel@lists.freedesktop.org, iommu@lists.linux.dev,
-        kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-remoteproc@vger.kernel.org,
-        linux-s390@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-tegra@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, nouveau@lists.freedesktop.org,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v2 06/10] iommu/intel: Add a gfp parameter to
- alloc_pgtable_page()
-Content-Language: en-US
-To:     Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Robin Murphy <robin.murphy@arm.com>
-References: <6-v2-ce66f632bd0d+484-iommu_map_gfp_jgg@nvidia.com>
-From:   Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <6-v2-ce66f632bd0d+484-iommu_map_gfp_jgg@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230119191219.12080-1-Larry.Finger@lwfinger.net>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2023/1/19 2:00, Jason Gunthorpe wrote:
-> This is eventually called by iommufd through intel_iommu_map_pages() and
-> it should not be forced to atomic. Push the GFP_ATOMIC to all callers.
+On Thu, Jan 19, 2023 at 01:12:19PM -0600, Larry Finger wrote:
+> Sparse lists the following warnings:
 > 
-> Signed-off-by: Jason Gunthorpe<jgg@nvidia.com>
+>   CHECK   drivers/staging/r8188eu/core/rtw_mlme.c
+> drivers/staging/r8188eu/core/rtw_mlme.c:1197:49: warning: incorrect type in
+> 					 argument 2 (different base types)
+> drivers/staging/r8188eu/core/rtw_mlme.c:1197:49:    expected restricted
+> 					 __le16 [usertype] mstatus_rpt
+> drivers/staging/r8188eu/core/rtw_mlme.c:1197:49:    got unsigned short
+> 					 [assigned] [usertype] media_status_rpt
+> drivers/staging/r8188eu/core/rtw_mlme.c:1275:57: warning: incorrect type in
+> 					 argument 2 (different base types)
+> drivers/staging/r8188eu/core/rtw_mlme.c:1275:57:    expected restricted
+> 					 __le16 [usertype] mstatus_rpt
+> drivers/staging/r8188eu/core/rtw_mlme.c:1275:57:    got unsigned short
+> 					 [assigned] [usertype] media_status
+>   CHECK   drivers/staging/r8188eu/core/rtw_mlme_ext.c
+> drivers/staging/r8188eu/core/rtw_mlme_ext.c:6842:58: warning: incorrect type
+> 					 in argument 2 (different base types)
+> drivers/staging/r8188eu/core/rtw_mlme_ext.c:6842:58:    expected restricted
+> 					 __le16 [usertype] mstatus_rpt
+> drivers/staging/r8188eu/core/rtw_mlme_ext.c:6842:58:    got unsigned short
+> 					 [assigned] [usertype] media_status
+> 
+> The second argument of rtl8188e_set_FwMediaStatus_cmd() needs to be in CPU
+> order, not little-endian; however, when it uses that value to call
+> FillH2CCmd_88E() the parameter must be in little-endian order as that
+> value will be sent to the firmware. Note that the conversion from LE to CPU
+> order was le16_to_cpu() rather than the correct cpu_to_le16.
+> 
+> The definition of FillH2CCmd_88E() is revised, and the proper conversion
+> routine is used.
+> 
+> Note that the original code performed one byte swap on the secong argument
+> of FillH2CCmd_88E(), and got the correct answer even though the semantics
+> were very wrong.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Reportewd-by: Gaurav Pathak <gauravpathak129@gmail.com>
+         ^
+Extra 'w'.
 
-Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
+Reviewed-by: Dan Carpenter <error27@gmail.com>
 
-Best regards,
-baolu
+regards,
+dan carpenter
+
