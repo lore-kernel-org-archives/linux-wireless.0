@@ -2,105 +2,172 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE9A6C54E94
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Jan 2023 21:26:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EDEDC38142
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Jan 2023 22:34:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229752AbjAUV0v (ORCPT
+        id S229706AbjAUWeI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Jan 2023 16:26:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60768 "EHLO
+        Sat, 21 Jan 2023 17:34:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229526AbjAUV0u (ORCPT
+        with ESMTP id S229523AbjAUWeH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Jan 2023 16:26:50 -0500
-Received: from outpost1.zedat.fu-berlin.de (outpost1.zedat.fu-berlin.de [130.133.4.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED1531DBA8;
-        Sat, 21 Jan 2023 13:26:48 -0800 (PST)
-Received: from inpost2.zedat.fu-berlin.de ([130.133.4.69])
-          by outpost.zedat.fu-berlin.de (Exim 4.95)
-          with esmtps (TLS1.3)
-          tls TLS_AES_256_GCM_SHA384
-          (envelope-from <glaubitz@zedat.fu-berlin.de>)
-          id 1pJLNr-001fc4-Li; Sat, 21 Jan 2023 22:26:43 +0100
-Received: from dynamic-089-012-154-190.89.12.pool.telefonica.de ([89.12.154.190] helo=[192.168.1.11])
-          by inpost2.zedat.fu-berlin.de (Exim 4.95)
-          with esmtpsa (TLS1.3)
-          tls TLS_AES_128_GCM_SHA256
-          (envelope-from <glaubitz@physik.fu-berlin.de>)
-          id 1pJLNr-001xPR-F4; Sat, 21 Jan 2023 22:26:43 +0100
-Message-ID: <7c6b114a-38f8-1a0b-8623-d492f9cc2fb9@physik.fu-berlin.de>
-Date:   Sat, 21 Jan 2023 22:26:42 +0100
+        Sat, 21 Jan 2023 17:34:07 -0500
+Received: from ns2.wdyn.eu (ns2.wdyn.eu [IPv6:2a03:4000:40:5b2::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BE6AD22781
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jan 2023 14:34:04 -0800 (PST)
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1674340441;
+        bh=P6+ziXRyt9lSBTiYS6tf8C6lTLDbSMjShNMtBVlAcPg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=g6pgw7l1LAYR63qDZ9f9hJ3tWzwJeXH1RbcCVNR5ZlhNVbZY0JIoDc2AMvBeFGJni
+         U7CVe1R6mRRtxHsz474y1YTVemtIclKqV01NzR7c8pdXWjUgRHysErgBfZXUh3a2TF
+         mn4bUUEYyDDwKjYdBALxohcjE9OEa1iaKUUhR4ac=
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net,
+        Alexander Wetzel <alexander@wetzel-home.de>,
+        stable@vger.kernel.org
+Subject: [stable v6.1 2/2] wifi: mac80211: Fix iTXQ AMPDU fragmentation handling
+Date:   Sat, 21 Jan 2023 23:33:30 +0100
+Message-Id: <20230121223330.389255-2-alexander@wetzel-home.de>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230121223330.389255-1-alexander@wetzel-home.de>
+References: <20230121223330.389255-1-alexander@wetzel-home.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: Calculating array sizes in C - was: Re: Build
- regressions/improvements in v6.2-rc1
-Content-Language: en-US
-To:     Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-sh@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linuxppc-dev@lists.ozlabs.org, kasan-dev@googlegroups.com,
-        linux-xtensa@linux-xtensa.org, Arnd Bergmann <arnd@arndb.de>
-References: <CAHk-=wgf929uGOVpiWALPyC7pv_9KbwB2EAvQ3C4woshZZ5zqQ@mail.gmail.com>
- <20221227082932.798359-1-geert@linux-m68k.org>
- <alpine.DEB.2.22.394.2212270933530.311423@ramsan.of.borg>
- <c05bee5d-0d69-289b-fe4b-98f4cd31a4f5@physik.fu-berlin.de>
- <CAMuHMdXNJveXHeS=g-aHbnxtyACxq1wCeaTg8LbpYqJTCqk86g@mail.gmail.com>
- <3800eaa8-a4da-b2f0-da31-6627176cb92e@physik.fu-berlin.de>
- <CAMuHMdWbBRkhecrqcir92TgZnffMe8ku2t7PcVLqA6e6F-j=iw@mail.gmail.com>
- <429140e0-72fe-c91c-53bc-124d33ab5ffa@physik.fu-berlin.de>
- <CAMuHMdWpHSsAB3WosyCVgS6+t4pU35Xfj3tjmdCDoyS2QkS7iw@mail.gmail.com>
- <0d238f02-4d78-6f14-1b1b-f53f0317a910@physik.fu-berlin.de>
- <1732342f-49fe-c20e-b877-bc0a340e1a50@fu-berlin.de>
- <c1d233b9-bc85-dce9-ffa0-eb3170602c6c@physik.fu-berlin.de>
- <def16c9b-7bb1-a454-0896-b063a9e85964@fu-berlin.de>
-From:   John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-In-Reply-To: <def16c9b-7bb1-a454-0896-b063a9e85964@fu-berlin.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Original-Sender: glaubitz@physik.fu-berlin.de
-X-Originating-IP: 89.12.154.190
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi!
+This is a backport of 'commit 592234e941f1 ("wifi: mac80211: Fix iTXQ
+AMPDU fragmentation handling")' from linux 6.2.
 
-On 1/20/23 20:29, Michael Karcher wrote:
-> Hello Adrian,
->> Could you post a kernel patch for that? I would be happy to test it on my
->> SH-7785CLR board. Also, I'm going to file a bug report against GCC.
-> 
-> I filed the bug already. It's https://gcc.gnu.org/bugzilla/show_bug.cgi?id=108483.
-> 
-> The diff is attached. It's published as CC0 in case anyone considers this trivial change copyrightable. This patch prevents this one specific warning from being upgraded to "error" even if you configure the kernel to use "-Werror". It still keeps it active as warning, though.
+mac80211 must not enable aggregation wile transmitting a fragmented
+MPDU. Enforce that for mac80211 internal TX queues (iTXQs).
 
-I used the following variant and it fixes the issue for me:
+Cc: stable@vger.kernel.org
+Link: https://lore.kernel.org/r/20230106223141.98696-1-alexander@wetzel-home.de
+Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+---
+ net/mac80211/agg-tx.c |  2 --
+ net/mac80211/ht.c     | 37 +++++++++++++++++++++++++++++++++++++
+ net/mac80211/tx.c     | 13 +++++++------
+ 3 files changed, 44 insertions(+), 8 deletions(-)
 
-diff --git a/arch/sh/Makefile b/arch/sh/Makefile
-index 5c8776482530..11b22f7167d2 100644
---- a/arch/sh/Makefile
-+++ b/arch/sh/Makefile
-@@ -167,7 +167,7 @@ drivers-y                   += arch/sh/drivers/
-  cflags-y       += $(foreach d, $(cpuincdir-y), -I $(srctree)/arch/sh/include/$(d)) \
-                    $(foreach d, $(machdir-y), -I $(srctree)/arch/sh/include/$(d))
-  
--KBUILD_CFLAGS          += -pipe $(cflags-y)
-+KBUILD_CFLAGS          += -pipe -Wno-error=sizeof-pointer-div $(cflags-y)
-  KBUILD_CPPFLAGS                += $(cflags-y)
-  KBUILD_AFLAGS          += $(cflags-y)
-
-If you agree, can you post a patch to LKML so we can unbreak the SH build for CONFIG_WERROR?
-
-Thanks,
-Adrian
-
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 07c892aa8c73..e26a72f3a104 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -511,8 +511,6 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 	 */
+ 	clear_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
+ 
+-	ieee80211_agg_stop_txq(sta, tid);
+-
+ 	/*
+ 	 * Make sure no packets are being processed. This ensures that
+ 	 * we have a valid starting sequence number and that in-flight
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 83bc41346ae7..ae42e956eff5 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -391,6 +391,43 @@ void ieee80211_ba_session_work(struct work_struct *work)
+ 
+ 		tid_tx = sta->ampdu_mlme.tid_start_tx[tid];
+ 		if (!blocked && tid_tx) {
++			struct ieee80211_sub_if_data *sdata = sta->sdata;
++			struct ieee80211_local *local = sdata->local;
++
++			if (local->ops->wake_tx_queue) {
++				struct txq_info *txqi =
++					to_txq_info(sta->sta.txq[tid]);
++				struct fq *fq = &local->fq;
++
++				spin_lock_bh(&fq->lock);
++
++				/* Allow only frags to be dequeued */
++				set_bit(IEEE80211_TXQ_STOP, &txqi->flags);
++
++				if (!skb_queue_empty(&txqi->frags)) {
++					/* Fragmented Tx is ongoing, wait for it
++					 * to finish. Reschedule worker to retry
++					 * later.
++					 */
++
++					spin_unlock_bh(&fq->lock);
++					spin_unlock_bh(&sta->lock);
++
++					/* Give the task working on the txq a
++					 * chance to send out the queued frags
++					 */
++					synchronize_net();
++
++					mutex_unlock(&sta->ampdu_mlme.mtx);
++
++					ieee80211_queue_work(&sdata->local->hw,
++							     work);
++					return;
++				}
++
++				spin_unlock_bh(&fq->lock);
++			}
++
+ 			/*
+ 			 * Assign it over to the normal tid_tx array
+ 			 * where it "goes live".
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3363e322cfd9..b114886c66de 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1295,7 +1295,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	if (!(info->flags & IEEE80211_TX_CTL_DONTFRAG)) {
+ 		if (!(tx->flags & IEEE80211_TX_UNICAST) ||
+ 		    skb->len + FCS_LEN <= local->hw.wiphy->frag_threshold ||
+-		    info->flags & IEEE80211_TX_CTL_AMPDU)
++		    (info->flags & IEEE80211_TX_CTL_AMPDU &&
++		     !local->ops->wake_tx_queue))
+ 			info->flags |= IEEE80211_TX_CTL_DONTFRAG;
+ 	}
+ 
+@@ -3725,7 +3726,6 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		return NULL;
+ 
+ begin:
+-	skb = NULL;
+ 	spin_lock(&local->queue_stop_reason_lock);
+ 	q_stopped = local->queue_stop_reasons[q];
+ 	spin_unlock(&local->queue_stop_reason_lock);
+@@ -3738,9 +3738,6 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 
+ 	spin_lock_bh(&fq->lock);
+ 
+-	if (unlikely(test_bit(IEEE80211_TXQ_STOP, &txqi->flags)))
+-		goto out;
+-
+ 	/* Make sure fragments stay together. */
+ 	skb = __skb_dequeue(&txqi->frags);
+ 	if (unlikely(skb)) {
+@@ -3750,6 +3747,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		IEEE80211_SKB_CB(skb)->control.flags &=
+ 			~IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+ 	} else {
++		if (unlikely(test_bit(IEEE80211_TXQ_STOP, &txqi->flags)))
++			goto out;
++
+ 		skb = fq_tin_dequeue(fq, tin, fq_tin_dequeue_func);
+ 	}
+ 
+@@ -3800,7 +3800,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
+-		info->flags |= IEEE80211_TX_CTL_AMPDU;
++		info->flags |= (IEEE80211_TX_CTL_AMPDU |
++				IEEE80211_TX_CTL_DONTFRAG);
+ 	else
+ 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 
 -- 
-  .''`.  John Paul Adrian Glaubitz
-: :' :  Debian Developer
-`. `'   Physicist
-   `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
+2.39.0
 
