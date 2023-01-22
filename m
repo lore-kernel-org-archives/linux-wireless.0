@@ -2,138 +2,111 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FC5AC54EAA
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Jan 2023 01:49:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72401C25B4E
+	for <linux-wireless@archiver.kernel.org>; Sun, 22 Jan 2023 10:48:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbjAVBtv (ORCPT
+        id S229921AbjAVKs5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Jan 2023 20:49:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49688 "EHLO
+        Sun, 22 Jan 2023 05:48:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbjAVBtu (ORCPT
+        with ESMTP id S229622AbjAVKs4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Jan 2023 20:49:50 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D696C1F908
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jan 2023 17:49:49 -0800 (PST)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 30M1nhxs023022;
-        Sun, 22 Jan 2023 01:49:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=BTa5aTS5wPqLRBjFrqk6qKhpWB3VG58KH2NHA7ttiE8=;
- b=b4VojyWIZbAF9YuoGz2YI+ok3vVoL4Y/94WD5psNngIStWqkiYuH4nx1JJuu+cSQcgn4
- hGV5in/ScXUxhyB0/3r/vhP+iJUanhJ0VP43bUDNr3zWCg7fqVrEKxpGy5q5xldjq3+4
- t0jSP6LTcGUUelQq1P7iJloIkeD6z4IzjZmy2zjKiMKqkFS4sw32peht8PpRdfg1PHwW
- gw7OKXz9ULoDM87KY1IgMyvAIbqjsY7/TGbroImuED0p3mgsWU+GXTDWq/BxbP62KUDl
- szeMOB1zQPck/KcvUoGx37crYHsAB+yF9UrR4/DgC7kBwTFbshG2hdyFjXmf380RVTjv YA== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3n89fm11rv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 22 Jan 2023 01:49:42 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 30M1nc37027993;
-        Sun, 22 Jan 2023 01:49:38 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3n894k9t8m-1;
-        Sun, 22 Jan 2023 01:49:38 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 30M1ncS7027988;
-        Sun, 22 Jan 2023 01:49:38 GMT
-Received: from rgnanase-linux.qualcomm.com (rgnanase-linux.qualcomm.com [10.201.162.135])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 30M1ncQC027987;
-        Sun, 22 Jan 2023 01:49:38 +0000
-Received: by rgnanase-linux.qualcomm.com (Postfix, from userid 2378837)
-        id CF84C110200D; Sun, 22 Jan 2023 07:19:37 +0530 (IST)
-From:   Ramya Gnanasekar <quic_rgnanase@quicinc.com>
-To:     ath12k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Ramya Gnanasekar <quic_rgnanase@quicinc.com>
-Subject: [PATCH] wifi: ath12k: Handle lock during peer_id find
-Date:   Sun, 22 Jan 2023 07:19:36 +0530
-Message-Id: <20230122014936.3594-1-quic_rgnanase@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: AcMF6wBdrzhmvwpLCOEjIWv-uwv2ZFbT
-X-Proofpoint-GUID: AcMF6wBdrzhmvwpLCOEjIWv-uwv2ZFbT
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-01-21_17,2023-01-20_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1011
- malwarescore=0 bulkscore=0 phishscore=0 lowpriorityscore=0 mlxlogscore=554
- mlxscore=0 priorityscore=1501 adultscore=0 suspectscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2301220014
+        Sun, 22 Jan 2023 05:48:56 -0500
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E2E816322;
+        Sun, 22 Jan 2023 02:48:55 -0800 (PST)
+Received: by mail-qv1-f43.google.com with SMTP id u20so7120209qvq.4;
+        Sun, 22 Jan 2023 02:48:55 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=HqaHL17YkcYl2MpnxdcgTIjHQUTlapqDHuhLmiWa9Bc=;
+        b=gbQ2AH+JTuzhlLJAPjP2mekCYPgVIRNrWmxdzQPhP25Y4qTb3Lv898WmjsPkISnLBl
+         eofxsUiQRSc+JreF6NJQ2IRdd4kLvOUKWL+8uTpWk89gzoDonondGM/fdcth30pwYftW
+         BD4UssSWmgVUWvVhjSN1IOwA0jfV7grVyqFNfXC48uCj5iUI03+6gTxdUMNq00JSg659
+         gOQfLu+zrMajODdVJwxz6zbkdNh97RSZcAviH8ZZRy5uO7B+z32dayYG28o9krEXvQmI
+         FZxlu8CGaqwq0PHzA2gQHMritt5uRwVGHtYZDQ4xuJfQHGF0mv7fpp23eyx3cmA+LFHK
+         93EQ==
+X-Gm-Message-State: AFqh2kqSiKJf0PSogaNJQo/uq/zn0TfJ7PGSJLVmPyToBhwTX9P0Nca/
+        PACU/SU4OfU5XTPQfZpfQE87Hyr1Z5wEqg==
+X-Google-Smtp-Source: AMrXdXuuvaaqou2sGpOfGtEv0RFLZPCbmXNtdTakI6WViQeCUsxUptelsSAsM6RFvLsYqOoXcsf0+w==
+X-Received: by 2002:a05:6214:88e:b0:537:4d4a:6da9 with SMTP id cz14-20020a056214088e00b005374d4a6da9mr10267940qvb.12.1674384534444;
+        Sun, 22 Jan 2023 02:48:54 -0800 (PST)
+Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com. [209.85.219.175])
+        by smtp.gmail.com with ESMTPSA id d8-20020ae9ef08000000b0070905e2674dsm5631770qkg.76.2023.01.22.02.48.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 22 Jan 2023 02:48:54 -0800 (PST)
+Received: by mail-yb1-f175.google.com with SMTP id t16so7021184ybk.2;
+        Sun, 22 Jan 2023 02:48:53 -0800 (PST)
+X-Received: by 2002:a25:9012:0:b0:7b8:a0b8:f7ec with SMTP id
+ s18-20020a259012000000b007b8a0b8f7ecmr2856562ybl.36.1674384533646; Sun, 22
+ Jan 2023 02:48:53 -0800 (PST)
+MIME-Version: 1.0
+References: <a85c256af01f64389a078c2b37c3b72a27d97536.1668005062.git.geert+renesas@glider.be>
+ <0bb76233-062c-a1c5-da88-4f04feccd5b2@linaro.org> <CABBYNZJX+9SxW48qSSmyyMa7_bvqzwHafa0BNOz4Kz_Jc+gu9Q@mail.gmail.com>
+In-Reply-To: <CABBYNZJX+9SxW48qSSmyyMa7_bvqzwHafa0BNOz4Kz_Jc+gu9Q@mail.gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Sun, 22 Jan 2023 11:48:40 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdUHo6zEPMF_VR=0Xn2PNHrQRGwzrOP2GXvDN9S19jMaGQ@mail.gmail.com>
+Message-ID: <CAMuHMdUHo6zEPMF_VR=0Xn2PNHrQRGwzrOP2GXvDN9S19jMaGQ@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: leds: Document Bluetooth and WLAN triggers
+To:     Luiz Augusto von Dentz <luiz.dentz@gmail.com>
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Pavel Machek <pavel@ucw.cz>, Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Jacek Anaszewski <jacek.anaszewski@gmail.com>,
+        linux-leds@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ath12k_peer_find_by_id() requires that the caller hold the
-ab->base_lock. Currently the WBM error path does not hold
-the lock and calling that function, leads to the
-following lockdep_assert()in QCN9274:
+On Fri, Jan 20, 2023 at 10:42 PM Luiz Augusto von Dentz
+<luiz.dentz@gmail.com> wrote:
+> On Fri, Jan 20, 2023 at 8:42 AM Krzysztof Kozlowski
+> <krzysztof.kozlowski@linaro.org> wrote:
+> >
+> > On 09/11/2022 15:46, Geert Uytterhoeven wrote:
+> > > Add the missing trigger patterns for Bluetooth and WLAN activity, which
+> > > are already in active use.
+> > >
+> > > While at it, move the mmc pattern comment where it belongs, and restore
+> > > alphabetical sort order.
+> > >
+> > > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > > ---
+> > > arch/arm64/boot/dts/renesas/r8a774a1-hihope-rzg2m-rev2.dtb: leds: bt_active_led:linux,default-trigger: 'oneOf' conditional failed, one must be fixed:
+> > >       'hci0-power' is not one of ['backlight', 'default-on', 'heartbeat', 'disk-activity', 'ide-disk', 'timer', 'pattern']
+> > >       'hci0-power' does not match '^mmc[0-9]+$'
+> > >       From schema: Documentation/devicetree/bindings/leds/leds-gpio.yaml
+> > > arch/arm64/boot/dts/renesas/r8a774a1-hihope-rzg2m-rev2.dtb: leds: wlan_active_led:linux,default-trigger: 'oneOf' conditional failed, one must be fixed:
+> > >       'phy0tx' is not one of ['backlight', 'default-on', 'heartbeat', 'disk-activity', 'ide-disk', 'timer', 'pattern']
+> > >       'phy0tx' does not match '^mmc[0-9]+$'
+> > >       From schema: Documentation/devicetree/bindings/leds/leds-gpio.yaml
+> >
+> > This patch got lost... Rob, Lee or Pavel, can you pick it up?
+> >
+> > It's with Rob's approval:
+> > https://lore.kernel.org/all/166861772609.231295.14812410099261417331.robh@kernel.org/
+>
+> If it is going to be applied via bluetooth-next make sure to resend it
+> since last time our CI was not able to apply it thus why we didn't
+> apply it in the first place.
 
-[105162.160893] ------------[ cut here ]------------
-[105162.160916] WARNING: CPU: 3 PID: 0 at drivers/net/wireless/ath/ath12k/peer.c:71 ath12k_peer_find_by_id+0x52/0x60 [ath12k]
-[105162.160933] Modules linked in: ath12k(O) qrtr_mhi qrtr mac80211 cfg80211 mhi qmi_helpers libarc4 nvme nvme_core [last unloaded: ath12k(O)]
-[105162.160967] CPU: 3 PID: 0 Comm: swapper/3 Tainted: G        W  O       6.1.0-rc2+ #3
-[105162.160972] Hardware name: Intel(R) Client Systems NUC8i7HVK/NUC8i7HVB, BIOS HNKBLi70.86A.0056.2019.0506.1527 05/06/2019
-[105162.160977] RIP: 0010:ath12k_peer_find_by_id+0x52/0x60 [ath12k]
-[105162.160990] Code: 07 eb 0f 39 68 24 74 0a 48 8b 00 48 39 f8 75 f3 31 c0 5b 5d c3 48 8d bf b0 f2 00 00 be ff ff ff ff e8 22 20 c4 e2 85 c0 75 bf <0f> 0b eb bb 66 2e 0f 1f 84 00 00 00 00 00 41 54 4c 8d a7 98 f2 00
-[105162.160996] RSP: 0018:ffffa223001acc60 EFLAGS: 00010246
-[105162.161003] RAX: 0000000000000000 RBX: ffff9f0573940000 RCX: 0000000000000000
-[105162.161008] RDX: 0000000000000001 RSI: ffffffffa3951c8e RDI: ffffffffa39a96d7
-[105162.161013] RBP: 000000000000000a R08: 0000000000000000 R09: 0000000000000000
-[105162.161017] R10: ffffa223001acb40 R11: ffffffffa3d57c60 R12: ffff9f057394f2e0
-[105162.161022] R13: ffff9f0573940000 R14: ffff9f04ecd659c0 R15: ffff9f04d5a9b040
-[105162.161026] FS:  0000000000000000(0000) GS:ffff9f0575600000(0000) knlGS:0000000000000000
-[105162.161031] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[105162.161036] CR2: 00001d5c8277a008 CR3: 00000001e6224006 CR4: 00000000003706e0
-[105162.161041] Call Trace:
-[105162.161046]  <IRQ>
-[105162.161051]  ath12k_dp_rx_process_wbm_err+0x6da/0xaf0 [ath12k]
-[105162.161072]  ? ath12k_dp_rx_process_err+0x80e/0x15a0 [ath12k]
-[105162.161084]  ? __lock_acquire+0x4ca/0x1a60
-[105162.161104]  ath12k_dp_service_srng+0x263/0x310 [ath12k]
-[105162.161120]  ath12k_pci_ext_grp_napi_poll+0x1c/0x70 [ath12k]
-[105162.161133]  __napi_poll+0x22/0x260
-[105162.161141]  net_rx_action+0x2f8/0x380
-[105162.161153]  __do_softirq+0xd0/0x4c9
-[105162.161162]  irq_exit_rcu+0x88/0xe0
-[105162.161169]  common_interrupt+0xa5/0xc0
-[105162.161174]  </IRQ>
-[105162.161179]  <TASK>
-[105162.161184]  asm_common_interrupt+0x22/0x40
+Resent as v2, https://lore.kernel.org/r/0d0de1bc949d24e08174205c13c0b59bd73c1ea8.1674384302.git.geert+renesas@glider.be
 
-Handle spin lock/unlock in WBM error path to hold the necessary lock
-expected by ath12k_peer_find_by_id().
+Gr{oetje,eeting}s,
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0-03171-QCAHKSWPL_SILICONZ-1
+                        Geert
 
-Signed-off-by: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index d6835d13f7ec..c0efdd76d291 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -3495,11 +3495,14 @@ static int ath12k_dp_rx_h_null_q_desc(struct ath12k *ar, struct sk_buff *msdu,
- 	msdu_len = ath12k_dp_rx_h_msdu_len(ab, desc);
- 	peer_id = ath12k_dp_rx_h_peer_id(ab, desc);
- 
-+	spin_lock(&ab->base_lock);
- 	if (!ath12k_peer_find_by_id(ab, peer_id)) {
-+		spin_unlock(&ab->base_lock);
- 		ath12k_dbg(ab, ATH12K_DBG_DATA, "invalid peer id received in wbm err pkt%d\n",
- 			   peer_id);
- 		return -EINVAL;
- 	}
-+	spin_unlock(&ab->base_lock);
- 
- 	if (!rxcb->is_frag && ((msdu_len + hal_rx_desc_sz) > DP_RX_BUFFER_SIZE)) {
- 		/* First buffer will be freed by the caller, so deduct it's length */
--- 
-2.17.1
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
