@@ -2,188 +2,86 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66528C54EED
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Jan 2023 14:28:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1884C05027
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Jan 2023 14:52:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231503AbjAWO2N (ORCPT
+        id S231978AbjAWOwG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Jan 2023 09:28:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41722 "EHLO
+        Mon, 23 Jan 2023 09:52:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231690AbjAWO2M (ORCPT
+        with ESMTP id S231775AbjAWOwF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2023 09:28:12 -0500
-Received: from 1.mo552.mail-out.ovh.net (1.mo552.mail-out.ovh.net [178.32.96.117])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC3D0C673
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2023 06:28:10 -0800 (PST)
-Received: from mxplan5.mail.ovh.net (unknown [10.109.143.167])
-        by mo552.mail-out.ovh.net (Postfix) with ESMTPS id 731DB2B568;
-        Mon, 23 Jan 2023 13:10:17 +0000 (UTC)
-Received: from kaod.org (37.59.142.109) by DAG4EX2.mxp5.local (172.16.2.32)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.16; Mon, 23 Jan
- 2023 14:10:10 +0100
-Authentication-Results: garm.ovh; auth=pass (GARM-109S0035e8cf7e5-490b-4306-97b9-26c7bcdb01f8,
-                    A67B952EB2D8D9A0A9F9E7F867E869D975DF4B5D) smtp.auth=clg@kaod.org
-X-OVh-ClientIp: 82.64.250.170
-Message-ID: <d1743abc-3d9f-cdf4-dfbe-67aac4b1b8cd@kaod.org>
-Date:   Mon, 23 Jan 2023 14:10:05 +0100
+        Mon, 23 Jan 2023 09:52:05 -0500
+X-Greylist: delayed 532 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 Jan 2023 06:52:04 PST
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DED31027A
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2023 06:52:04 -0800 (PST)
+Received: from dispatch1-us1.ppe-hosted.com (localhost.localdomain [127.0.0.1])
+        by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 0EDE3353A0
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2023 14:43:13 +0000 (UTC)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 7CED6500090;
+        Mon, 23 Jan 2023 14:43:10 +0000 (UTC)
+Received: from [192.168.1.115] (unknown [98.97.43.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 7E45013C2B0;
+        Mon, 23 Jan 2023 06:43:09 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7E45013C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1674484990;
+        bh=p2JZvDv+P9tF4FgfBh85Rs0fin2p3rcXYGA87qvpHKc=;
+        h=Subject:To:References:From:Date:In-Reply-To:From;
+        b=kJPyLlaAYgcYcBSmHMrF4edP2djLIiwzRq8j6MbbvKKS7l/JUH84g5EVZNe6Nn/fe
+         pCEyqsfi1bkYBful5ChODoiBwAWyMbOQYgASMVjxnZ7bj0kE1AAXTXCyB1te7KyAmS
+         MiEB96unwPy1Qlr/Ubff7w0F9jWvkAtzYc4LcJys=
+Subject: Re: wifi: mt76: mt7915e: mt7916 5GHz and 6GHz stopped working
+To:     Florian Schmidt <florian@fls.name>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <c7fc198f2a4ed9c1345a05c0397a9fc5@mail.infomaniak.com>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <519290aa-3b88-2c21-7ca3-10186d9e807a@candelatech.com>
+Date:   Mon, 23 Jan 2023 06:43:08 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v2 02/13] spi: Replace all spi->chip_select and
- spi->cs_gpiod references with function call
-Content-Language: en-US
-To:     Amit Kumar Mahapatra <amit.kumar-mahapatra@amd.com>,
-        <broonie@kernel.org>, <miquel.raynal@bootlin.com>,
-        <richard@nod.at>, <vigneshr@ti.com>, <jic23@kernel.org>,
-        <tudor.ambarus@microchip.com>, <pratyush@kernel.org>,
-        <sanju.mehta@amd.com>, <chin-ting_kuo@aspeedtech.com>,
-        <kdasu.kdev@gmail.com>, <f.fainelli@gmail.com>,
-        <rjui@broadcom.com>, <sbranden@broadcom.com>,
-        <eajames@linux.ibm.com>, <olteanv@gmail.com>, <han.xu@nxp.com>,
-        <john.garry@huawei.com>, <shawnguo@kernel.org>,
-        <s.hauer@pengutronix.de>, <narmstrong@baylibre.com>,
-        <khilman@baylibre.com>, <matthias.bgg@gmail.com>,
-        <haibo.chen@nxp.com>, <linus.walleij@linaro.org>,
-        <daniel@zonque.org>, <haojian.zhuang@gmail.com>,
-        <robert.jarzmik@free.fr>, <agross@kernel.org>,
-        <bjorn.andersson@linaro.org>, <heiko@sntech.de>,
-        <krzysztof.kozlowski@linaro.org>, <andi@etezian.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <wens@csie.org>, <jernej.skrabec@gmail.com>, <samuel@sholland.org>,
-        <masahisa.kojima@linaro.org>, <jaswinder.singh@linaro.org>,
-        <rostedt@goodmis.org>, <mingo@redhat.com>,
-        <l.stelmach@samsung.com>, <davem@davemloft.net>,
-        <edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
-        <alex.aring@gmail.com>, <stefan@datenfreihafen.org>,
-        <kvalo@kernel.org>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>, <skomatineni@nvidia.com>,
-        <sumit.semwal@linaro.org>, <christian.koenig@amd.com>,
-        <j.neuschaefer@gmx.net>, <vireshk@kernel.org>, <rmfrfs@gmail.com>,
-        <johan@kernel.org>, <elder@kernel.org>,
-        <gregkh@linuxfoundation.org>
-CC:     <git@amd.com>, <linux-spi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <joel@jms.id.au>,
-        <andrew@aj.id.au>, <radu_nicolae.pirea@upb.ro>,
-        <nicolas.ferre@microchip.com>, <alexandre.belloni@bootlin.com>,
-        <claudiu.beznea@microchip.com>,
-        <bcm-kernel-feedback-list@broadcom.com>, <fancer.lancer@gmail.com>,
-        <kernel@pengutronix.de>, <festevam@gmail.com>, <linux-imx@nxp.com>,
-        <jbrunet@baylibre.com>, <martin.blumenstingl@googlemail.com>,
-        <avifishman70@gmail.com>, <tmaimon77@gmail.com>,
-        <tali.perry1@gmail.com>, <venture@google.com>, <yuenn@google.com>,
-        <benjaminfair@google.com>, <yogeshgaur.83@gmail.com>,
-        <konrad.dybcio@somainline.org>, <alim.akhtar@samsung.com>,
-        <ldewangan@nvidia.com>, <michal.simek@amd.com>,
-        <linux-aspeed@lists.ozlabs.org>, <openbmc@lists.ozlabs.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-rpi-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>,
-        <linux-rockchip@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-sunxi@lists.linux.dev>, <linux-tegra@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-wpan@vger.kernel.org>,
-        <libertas-dev@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
-        <lars@metafoo.de>, <Michael.Hennerich@analog.com>,
-        <linux-iio@vger.kernel.org>, <michael@walle.cc>,
-        <palmer@dabbelt.com>, <linux-riscv@lists.infradead.org>,
-        <linux-media@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        <greybus-dev@lists.linaro.org>, <linux-staging@lists.linux.dev>,
-        <amitrkcian2002@gmail.com>
-References: <20230119185342.2093323-1-amit.kumar-mahapatra@amd.com>
- <20230119185342.2093323-3-amit.kumar-mahapatra@amd.com>
-From:   =?UTF-8?Q?C=c3=a9dric_Le_Goater?= <clg@kaod.org>
-In-Reply-To: <20230119185342.2093323-3-amit.kumar-mahapatra@amd.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <c7fc198f2a4ed9c1345a05c0397a9fc5@mail.infomaniak.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-MW
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [37.59.142.109]
-X-ClientProxiedBy: DAG6EX2.mxp5.local (172.16.2.52) To DAG4EX2.mxp5.local
- (172.16.2.32)
-X-Ovh-Tracer-GUID: d8c081e3-7749-496f-b92b-664d73f13c17
-X-Ovh-Tracer-Id: 9743537793859029808
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvhedruddukedgfeekucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepkfffgggfuffvvehfhfgjtgfgihesthekredttdefjeenucfhrhhomhepveorughrihgtucfnvgcuifhorghtvghruceotghlgheskhgrohgurdhorhhgqeenucggtffrrghtthgvrhhnpeffudefleeiudejfeffhfejffeigffhhffhvdekieejheelvdeufffhjedtheeggeenucfkphepuddvjedrtddrtddruddpfeejrdehledrudegvddruddtleenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhepihhnvghtpeduvdejrddtrddtrddupdhmrghilhhfrhhomhepoegtlhhgsehkrghougdrohhrgheqpdhnsggprhgtphhtthhopedupdhrtghpthhtoheprghmihhtrdhkuhhmrghrqdhmrghhrghprghtrhgrsegrmhgurdgtohhmpdhkohhnrhgrugdrugihsggtihhosehsohhmrghinhhlihhnvgdrohhrghdphihoghgvshhhghgruhhrrdekfeesghhmrghilhdrtghomhdpsggvnhhjrghmihhnfhgrihhrsehgohhoghhlvgdrtghomhdphihuvghnnhesghhoohhglhgvrdgtohhmpdhvvghnthhurhgvsehgohhoghhlvgdrtghomhdpthgrlhhirdhpvghrrhihudesghhmrghilhdrtghomhdpthhmrghimhhonhejjeesghhmrghilhdrtg
- homhdprghvihhfihhshhhmrghnjedtsehgmhgrihhlrdgtohhmpdhmrghrthhinhdrsghluhhmvghnshhtihhnghhlsehgohhoghhlvghmrghilhdrtghomhdplhhinhhugidqihhmgiesnhigphdrtghomhdpfhgvshhtvghvrghmsehgmhgrihhlrdgtohhmpdgrlhhimhdrrghkhhhtrghrsehsrghmshhunhhgrdgtohhmpdhkvghrnhgvlhesphgvnhhguhhtrhhonhhigidruggvpdgstghmqdhkvghrnhgvlhdqfhgvvggusggrtghkqdhlihhsthessghrohgruggtohhmrdgtohhmpdgtlhgruhguihhurdgsvgiinhgvrgesmhhitghrohgthhhiphdrtghomhdprghlvgigrghnughrvgdrsggvlhhlohhnihessghoohhtlhhinhdrtghomhdpnhhitgholhgrshdrfhgvrhhrvgesmhhitghrohgthhhiphdrtghomhdprhgrughupghnihgtohhlrggvrdhpihhrvggrsehuphgsrdhrohdprghnughrvgifsegrjhdrihgurdgruhdpjhhovghlsehjmhhsrdhiugdrrghupdhlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdplhhinhhugidqshhpihesvhhgvghrrdhkvghrnhgvlhdrohhrghdpghhithesrghmugdrtghomhdpghhrvghgkhhhsehlihhnuhigfhhouhhnuggrthhiohhnrdhorhhgpdhfrghntggvrhdrlhgrnhgtvghrsehgmhgrihhlrdgtohhmpdhluggvfigrnhhgrghnsehnvhhiughirgdrtghomhdpmhhitghhrghlrdhsihhmvghksegrmhgurdgtohhmpdhlihhnuhigqdgrshhpvggvuge
- slhhishhtshdrohiilhgrsghsrdhorhhgpdhgrhgvhigsuhhsqdguvghvsehlihhsthhsrdhlihhnrghrohdrohhrghdpughrihdquggvvhgvlheslhhishhtshdrfhhrvggvuggvshhkthhophdrohhrghdplhhinhhugidqmhgvughirgesvhhgvghrrdhkvghrnhgvlhdrohhrghdplhhinhhugidqrhhishgtvheslhhishhtshdrihhnfhhrrgguvggrugdrohhrghdpphgrlhhmvghrsegurggssggvlhhtrdgtohhmpdhmihgthhgrvghlseifrghllhgvrdgttgdplhhinhhugidqihhiohesvhhgvghrrdhkvghrnhgvlhdrohhrghdpofhitghhrggvlhdrjfgvnhhnvghrihgthhesrghnrghlohhgrdgtohhmpdhlrghrshesmhgvthgrfhhoohdruggvpdhlihhnuhigqdhmthgusehlihhsthhsrdhinhhfrhgruggvrggurdhorhhgpdhlihhnuhigqdifihhrvghlvghsshesvhhgvghrrdhkvghrnhgvlhdrohhrghdplhhisggvrhhtrghsqdguvghvsehlihhsthhsrdhinhhfrhgruggvrggurdhorhhgpdhlihhnuhigqdifphgrnhesvhhgvghrrdhkvghrnhgvlhdrohhrghdpnhgvthguvghvsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhlihhnuhigqdhtvghgrhgrsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhlihhnuhigqdhsuhhngihisehlihhsthhsrdhlihhnuhigrdguvghvpdhlihhnuhigqdhsthhmfedvsehsthdqmhguqdhmrghilhhmrghnrdhsthhorhhmrhgvphhlhidrtghomhdplhhinhhugidqshgrmhhsuhhn
- ghdqshhotgesvhhgvghrrdhkvghrnhgvlhdrohhrghdplhhinhhugidqrhhotghktghhihhpsehlihhsthhsrdhinhhfrhgruggvrggurdhorhhgpdhlihhnuhigqdgrrhhmqdhmshhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhlihhnuhigqdhmvgguihgrthgvkheslhhishhtshdrihhnfhhrrgguvggrugdrohhrghdplhhinhhugidqrghmlhhoghhitgeslhhishhtshdrihhnfhhrrgguvggrugdrohhrghdplhhinhhugidqrhhpihdqkhgvrhhnvghlsehlihhsthhsrdhinhhfrhgruggvrggurdhorhhgpdhlihhnuhigqdgrrhhmqdhkvghrnhgvlheslhhishhtshdrihhnfhhrrgguvggrugdrohhrghdpohhpvghnsghmtgeslhhishhtshdrohiilhgrsghsrdhorhhgpdgvlhguvghrsehkvghrnhgvlhdrohhrghdplhhinhhugidqshhtrghgihhngheslhhishhtshdrlhhinhhugidruggvvhdpjhhohhgrnheskhgvrhhnvghlrdhorhhgpdhvihhrvghshhhksehkvghrnhgvlhdrohhrghdphhgrohhjihgrnhdriihhuhgrnhhgsehgmhgrihhlrdgtohhmpdgurghnihgvlhesiihonhhquhgvrdhorhhgpdhlihhnuhhsrdifrghllhgvihhjsehlihhnrghrohdrohhrghdphhgrihgsohdrtghhvghnsehngihprdgtohhmpdhmrghtthhhihgrshdrsghgghesghhmrghilhdrtghomhdpshdrhhgruhgvrhesphgvnhhguhhtrhhonhhigidruggvpdhshhgrfihnghhuoheskhgvrhhnvghlrdhorhhgpdhjohhhnhdrghgrr
- hhrhieshhhurgifvghirdgtohhmpdhhrghnrdiguhesnhigphdrtghomhdpohhlthgvrghnvhesghhmrghilhdrtghomhdpvggrjhgrmhgvsheslhhinhhugidrihgsmhdrtghomhdprhhosggvrhhtrdhjrghriihmihhksehfrhgvvgdrfhhrpdhssghrrghnuggvnhessghrohgruggtohhmrdgtohhmpdhfrdhfrghinhgvlhhlihesghhmrghilhdrtghomhdpkhgurghsuhdrkhguvghvsehgmhgrihhlrdgtohhmpdgthhhinhdqthhinhhgpghkuhhosegrshhpvggvughtvggthhdrtghomhdpshgrnhhjuhdrmhgvhhhtrgesrghmugdrtghomhdpphhrrghthihushhhsehkvghrnhgvlhdrohhrghdpthhuughorhdrrghmsggrrhhushesmhhitghrohgthhhiphdrtghomhdpjhhitgdvfeeskhgvrhhnvghlrdhorhhgpdhvihhgnhgvshhhrhesthhirdgtohhmpdhrihgthhgrrhgusehnohgurdgrthdpmhhiqhhuvghlrdhrrgihnhgrlhessghoohhtlhhinhdrtghomhdpsghrohhonhhivgeskhgvrhhnvghlrdhorhhgpdhrjhhuihessghrohgruggtohhmrdgtohhmpdgrghhrohhssheskhgvrhhnvghlrdhorhhgpdgsjhhorhhnrdgrnhguvghrshhsohhnsehlihhnrghrohdrohhrghdphhgvihhkohesshhnthgvtghhrdguvgdpjhdrnhgvuhhstghhrggvfhgvrhesghhmgidrnhgvthdptghhrhhishhtihgrnhdrkhhovghnihhgsegrmhgurdgtohhmpdhsuhhmihhtrdhsvghmfigrlheslhhinhgrrhhordhorhhgpdhskh
- homhgrthhinhgvnhhisehnvhhiughirgdrtghomhdpjhhonhgrthhhrghnhhesnhhvihguihgrrdgtohhmpdhthhhivghrrhihrdhrvgguihhnghesghhmrghilhdrtghomhdpkhhvrghloheskhgvrhhnvghlrdhorhhgpdhsthgvfhgrnhesuggrthgvnhhfrhgvihhhrghfvghnrdhorhhgpdgrlhgvgidrrghrihhnghesghhmrghilhdrtghomhdpphgrsggvnhhisehrvgguhhgrthdrtghomhdpkhhusggrsehkvghrnhgvlhdrohhrghdpvgguuhhmrgiivghtsehgohhoghhlvgdrtghomhdpuggrvhgvmhesuggrvhgvmhhlohhfthdrnhgvthdplhdrshhtvghlmhgrtghhsehsrghmshhunhhgrdgtohhmpdhmihhnghhosehrvgguhhgrthdrtghomhdprhhoshhtvgguthesghhoohgumhhishdrohhrghdpjhgrshifihhnuggvrhdrshhinhhghheslhhinhgrrhhordhorhhgpdhmrghsrghhihhsrgdrkhhojhhimhgrsehlihhnrghrohdrohhrghdpshgrmhhuvghlsehshhholhhlrghnugdrohhrghdpjhgvrhhnvghjrdhskhhrrggsvggtsehgmhgrihhlrdgtohhmpdifvghnshestghsihgvrdhorhhgpdgrlhgvgigrnhgurhgvrdhtohhrghhuvgesfhhoshhsrdhsthdrtghomhdpmhgtohhquhgvlhhinhdrshhtmhefvdesghhmrghilhdrtghomhdprghnughisegvthgviihirghnrdhorhhgpdhkrhiihihsiihtohhfrdhkohiilhhofihskhhisehlihhnrghrohdrohhrghdprhhmfhhrfhhssehgmhgrihhlrdgtohhmpdg
- rmhhithhrkhgtihgrnhdvtddtvdesghhmrghilhdrtghomhdpoffvtefjohhsthepmhhoheehvddpmhhouggvpehsmhhtphhouhht
+X-MDID: 1674484991-BvmAhqJEYMYu
+X-MDID-O: us5-ut7-1674484991-BvmAhqJEYMYu
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 1/19/23 19:53, Amit Kumar Mahapatra wrote:
-> diff --git a/drivers/spi/spi-aspeed-smc.c b/drivers/spi/spi-aspeed-smc.c
-> index 873ff2cf72c9..b7a9ec550ba1 100644
-> --- a/drivers/spi/spi-aspeed-smc.c
-> +++ b/drivers/spi/spi-aspeed-smc.c
-> @@ -296,7 +296,7 @@ static const struct aspeed_spi_data ast2400_spi_data;
->   static int do_aspeed_spi_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
->   {
->   	struct aspeed_spi *aspi = spi_controller_get_devdata(mem->spi->master);
-> -	struct aspeed_spi_chip *chip = &aspi->chips[mem->spi->chip_select];
-> +	struct aspeed_spi_chip *chip = &aspi->chips[spi_get_chipselect(mem->spi, 0)];
->   	u32 addr_mode, addr_mode_backup;
->   	u32 ctl_val;
->   	int ret = 0;
-> @@ -377,7 +377,8 @@ static const char *aspeed_spi_get_name(struct spi_mem *mem)
->   	struct aspeed_spi *aspi = spi_controller_get_devdata(mem->spi->master);
->   	struct device *dev = aspi->dev;
->   
-> -	return devm_kasprintf(dev, GFP_KERNEL, "%s.%d", dev_name(dev), mem->spi->chip_select);
-> +	return devm_kasprintf(dev, GFP_KERNEL, "%s.%d", dev_name(dev),
-> +			      spi_get_chipselect(mem->spi, 0));
->   }
->   
->   struct aspeed_spi_window {
-> @@ -553,7 +554,7 @@ static int aspeed_spi_do_calibration(struct aspeed_spi_chip *chip);
->   static int aspeed_spi_dirmap_create(struct spi_mem_dirmap_desc *desc)
->   {
->   	struct aspeed_spi *aspi = spi_controller_get_devdata(desc->mem->spi->master);
-> -	struct aspeed_spi_chip *chip = &aspi->chips[desc->mem->spi->chip_select];
-> +	struct aspeed_spi_chip *chip = &aspi->chips[spi_get_chipselect(desc->mem->spi, 0)];
->   	struct spi_mem_op *op = &desc->info.op_tmpl;
->   	u32 ctl_val;
->   	int ret = 0;
-> @@ -620,7 +621,7 @@ static ssize_t aspeed_spi_dirmap_read(struct spi_mem_dirmap_desc *desc,
->   				      u64 offset, size_t len, void *buf)
->   {
->   	struct aspeed_spi *aspi = spi_controller_get_devdata(desc->mem->spi->master);
-> -	struct aspeed_spi_chip *chip = &aspi->chips[desc->mem->spi->chip_select];
-> +	struct aspeed_spi_chip *chip = &aspi->chips[spi_get_chipselect(desc->mem->spi, 0)];
->   
->   	/* Switch to USER command mode if mapping window is too small */
->   	if (chip->ahb_window_size < offset + len) {
-> @@ -670,7 +671,7 @@ static int aspeed_spi_setup(struct spi_device *spi)
->   {
->   	struct aspeed_spi *aspi = spi_controller_get_devdata(spi->master);
->   	const struct aspeed_spi_data *data = aspi->data;
-> -	unsigned int cs = spi->chip_select;
-> +	unsigned int cs = spi_get_chipselect(spi, 0);
->   	struct aspeed_spi_chip *chip = &aspi->chips[cs];
->   
->   	chip->aspi = aspi;
-> @@ -697,7 +698,7 @@ static int aspeed_spi_setup(struct spi_device *spi)
->   static void aspeed_spi_cleanup(struct spi_device *spi)
->   {
->   	struct aspeed_spi *aspi = spi_controller_get_devdata(spi->master);
-> -	unsigned int cs = spi->chip_select;
-> +	unsigned int cs = spi_get_chipselect(spi, 0);
->   
->   	aspeed_spi_chip_enable(aspi, cs, false);
->   
 
-For the Aspeed driver,
+On 1/23/23 5:32 AM, Florian Schmidt wrote:
+> Hi all,
+> 
+> Using current firmware and kernel 6.1 (or 6.2-rc4 from wireless-testing), the 5 and 6GHz stopped working on MT7916  (from AsiaRF). It used to work with older firmware and kernel.
+> 
+> As a workaround, reverting to the older firmware seems to work. I can also get the 5GHz (but not the 6GHz!) to work building the driver using the workaround described on this dd-wrt bug report: https://github.com/openwrt/mt76/issues/720
+> 
+> How can I be of any assist investigating and fixing this issue?
+> 
+> Thanks,
+> Florian
+> 
 
-Reviewed-by: Cédric Le Goater <clg@kaod.org>
+We have a patch to hack the driver to allow one or the other with new
+firmware.  Can post a version for 5.19 kernel soon, and we'll rebase on
+something newer at some point soon.
+
+Looks like root cause is that the mtk firmware added restrictions and cannot
+be made to properly calibrate on both bands without a reboot.
 
 Thanks,
+Ben
 
-C.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
