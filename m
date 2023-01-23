@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B745C05027
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Jan 2023 06:54:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06CEFC38142
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Jan 2023 06:54:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230352AbjAWGyq (ORCPT
+        id S230354AbjAWGyq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 23 Jan 2023 01:54:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44908 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230082AbjAWGyp (ORCPT
+        with ESMTP id S230109AbjAWGyp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 23 Jan 2023 01:54:45 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5FFB11423A
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jan 2023 22:54:41 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A90B61A487
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Jan 2023 22:54:42 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30N6sVDL1012879, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30N6sVDL1012879
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 30N6sQCA1012865, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 30N6sQCA1012865
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Mon, 23 Jan 2023 14:54:31 +0800
+        Mon, 23 Jan 2023 14:54:26 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.9; Mon, 23 Jan 2023 14:54:34 +0800
+ 15.1.2375.32; Mon, 23 Jan 2023 14:54:29 +0800
 Received: from localhost (172.16.16.32) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 23 Jan
- 2023 14:54:33 +0800
+ 2023 14:54:28 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <timlee@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/6] wifi: rtw89: 8852b: reset IDMEM mode to default value
-Date:   Mon, 23 Jan 2023 14:53:59 +0800
-Message-ID: <20230123065401.14174-5-pkshih@realtek.com>
+Subject: [PATCH 1/6] wifi: rtw89: fix potential wrong mapping for pkt-offload
+Date:   Mon, 23 Jan 2023 14:53:56 +0800
+Message-ID: <20230123065401.14174-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230123065401.14174-1-pkshih@realtek.com>
 References: <20230123065401.14174-1-pkshih@realtek.com>
@@ -56,61 +56,78 @@ X-KSE-AttachmentFiltering-Interceptor-Info: no applicable attachment filtering
 X-KSE-Antivirus-Interceptor-Info: scan successful
 X-KSE-Antivirus-Info: =?big5?B?Q2xlYW4sIGJhc2VzOiAyMDIzLzEvMjMgpFekyCAxMjozNzowMA==?=
 X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: protection disabled
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For different firmware type, it could use different IDMEM mode, so reset
-it to default to avoid encountering error during we bisect firmware
-version, like
+From: Chin-Yen Lee <timlee@realtek.com>
 
-  rtw89_8852be 0000:03:00.0: Firmware version 0.29.26.0, cmd version 0, type 5
-  rtw89_8852be 0000:03:00.0: Firmware version 0.29.26.0, cmd version 0, type 3
-  rtw89_8852be 0000:03:00.0: fw security fail
-  rtw89_8852be 0000:03:00.0: download firmware fail
-  rtw89_8852be 0000:03:00.0: [ERR]fwdl 0x1E0 = 0x62
-  rtw89_8852be 0000:03:00.0: [ERR]fwdl 0x83F2 = 0x8
-  rtw89_8852be 0000:03:00.0: [ERR]fw PC = 0xb8931154
-  rtw89_8852be 0000:03:00.0: [ERR]fw PC = 0xb8931154
-  rtw89_8852be 0000:03:00.0: [ERR]fw PC = 0xb8931150
-  rtw89_8852be 0000:03:00.0: [ERR]fw PC = 0xb8931154
+When driver fails to send H2C to firmware for pkt-offload, we should not
+update the pkt_list of driver, and need to release allocated pkt index to
+avoid wrong mapping between driver and firmware.
 
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac.c | 5 +++++
- drivers/net/wireless/realtek/rtw89/reg.h | 3 +++
- 2 files changed, 8 insertions(+)
+ drivers/net/wireless/realtek/rtw89/fw.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 5ab0590485e0d..af1196cbf3a55 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -3411,6 +3411,11 @@ int rtw89_mac_enable_cpu(struct rtw89_dev *rtwdev, u8 boot_reason, bool dlfw)
- 		val |= B_AX_WCPU_FWDL_EN;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 85c7172e931bf..210785149801b 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -948,13 +948,13 @@ static int rtw89_fw_h2c_add_wow_fw_ofld(struct rtw89_dev *rtwdev,
+ 	if (!skb)
+ 		goto err;
  
- 	rtw89_write32(rtwdev, R_AX_WCPU_FW_CTRL, val);
-+
-+	if (rtwdev->chip->chip_id == RTL8852B)
-+		rtw89_write32_mask(rtwdev, R_AX_SEC_CTRL,
-+				   B_AX_SEC_IDMEM_SIZE_CONFIG_MASK, 0x2);
-+
- 	rtw89_write16_mask(rtwdev, R_AX_BOOT_REASON, B_AX_BOOT_REASON_MASK,
- 			   boot_reason);
- 	rtw89_write32_set(rtwdev, R_AX_PLATFORM_ENABLE, B_AX_WCPU_EN);
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 036953f0ec464..600257909df27 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -275,6 +275,9 @@
- #define B_AX_S1_LDO2PWRCUT_F BIT(23)
- #define B_AX_S0_LDO_VSEL_F_MASK GENMASK(22, 21)
+-	list_add_tail(&info->list, &rtw_wow->pkt_list);
+ 	ret = rtw89_fw_h2c_add_pkt_offload(rtwdev, &info->id, skb);
+ 	kfree_skb(skb);
  
-+#define R_AX_SEC_CTRL 0x0C00
-+#define B_AX_SEC_IDMEM_SIZE_CONFIG_MASK GENMASK(17, 16)
-+
- #define R_AX_FILTER_MODEL_ADDR 0x0C04
+ 	if (ret)
+-		return ret;
++		goto err;
  
- #define R_AX_HAXI_INIT_CFG1 0x1000
++	list_add_tail(&info->list, &rtw_wow->pkt_list);
+ 	*id = info->id;
+ 	return 0;
+ 
+@@ -2133,6 +2133,7 @@ int rtw89_fw_h2c_add_pkt_offload(struct rtw89_dev *rtwdev, u8 *id,
+ 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_LEN_PKT_OFLD + skb_ofld->len);
+ 	if (!skb) {
+ 		rtw89_err(rtwdev, "failed to alloc skb for h2c pkt offload\n");
++		rtw89_core_release_bit_map(rtwdev->pkt_offload, alloc_id);
+ 		return -ENOMEM;
+ 	}
+ 	skb_put(skb, H2C_LEN_PKT_OFLD);
+@@ -2151,6 +2152,7 @@ int rtw89_fw_h2c_add_pkt_offload(struct rtw89_dev *rtwdev, u8 *id,
+ 	ret = rtw89_h2c_tx(rtwdev, skb, false);
+ 	if (ret) {
+ 		rtw89_err(rtwdev, "failed to send h2c\n");
++		rtw89_core_release_bit_map(rtwdev->pkt_offload, alloc_id);
+ 		goto fail;
+ 	}
+ 
+@@ -2684,13 +2686,14 @@ static int rtw89_append_probe_req_ie(struct rtw89_dev *rtwdev,
+ 			goto out;
+ 		}
+ 
+-		list_add_tail(&info->list, &scan_info->pkt_list[band]);
+ 		ret = rtw89_fw_h2c_add_pkt_offload(rtwdev, &info->id, new);
+ 		if (ret) {
+ 			kfree_skb(new);
++			kfree(info);
+ 			goto out;
+ 		}
+ 
++		list_add_tail(&info->list, &scan_info->pkt_list[band]);
+ 		kfree_skb(new);
+ 	}
+ out:
 -- 
 2.25.1
 
