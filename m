@@ -2,62 +2,94 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D2AC54EAA
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Jan 2023 12:43:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB1B5C54E94
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Jan 2023 13:42:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232664AbjAXMnX (ORCPT
+        id S233118AbjAXNmU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Jan 2023 07:43:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48470 "EHLO
+        Tue, 24 Jan 2023 08:42:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233952AbjAXMnU (ORCPT
+        with ESMTP id S234258AbjAXNmN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2023 07:43:20 -0500
-Received: from ns2.wdyn.eu (ns2.wdyn.eu [IPv6:2a03:4000:40:5b2::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CED0244BF1;
-        Tue, 24 Jan 2023 04:43:18 -0800 (PST)
-Message-ID: <b277fe42-4241-9000-17e7-8be7f65680b2@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1674564197;
-        bh=7NVmxZ1R+2ahOVxfbhqsdoAG0FsdNmcjeYS6okXWCQ0=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=f+tjETaoyttT4Qc1fvn2n0nF/9jHVFugqO1WL+ag/e8RLKytS1u5d9pGMqVPo4CgQ
-         fJmFRcX6M+3TfHKhtwr+BvawlcfXI0lH4NBdQXQKnWLIZPQZSPvIDq0yj6AwENvh75
-         zlDbEhGpG/497UHBAkeDcJ88ajPLz7M/piCGpNTk=
-Date:   Tue, 24 Jan 2023 13:43:15 +0100
+        Tue, 24 Jan 2023 08:42:13 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAF2E3E61E;
+        Tue, 24 Jan 2023 05:41:58 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6335DB811DD;
+        Tue, 24 Jan 2023 13:41:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F52EC4339E;
+        Tue, 24 Jan 2023 13:41:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674567713;
+        bh=rGPzs7kmVKrk2vlRWmqB9RBll/IIAzm77xKeCZXA8J4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Bp80HCUuNx1iDJombS5GxZLrsa6390/4f58Cb9tRYCU6TIf9TZ8+kbspLYnakV4r+
+         qlBV9yhb91vet21gaHZgCxx3fzEPh8aLni7j6pvlSCab3VoHJjqZizrebHqtDfWPA8
+         MWkRi+JbInYXFEWxNxEUXcebZ00rwtox7NVZciP0XmIZmT9zSmmsfQjE4xa9nPbSxt
+         4wQm21rC802VzTgL3JcTz2Km8YsAZgwJwa/NWqU9hvvov3lwKNnm1YRuO5LQY70rdC
+         RKLaZNKDmhEtyB0xFMRmxbgoAwe4MNHKgGXK7XKkuWRPmilIWDPdOourF0ubN2DRcf
+         MQ0up2Y2karOw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Sriram R <quic_srirrama@quicinc.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 08/35] mac80211: Fix MLO address translation for multiple bss case
+Date:   Tue, 24 Jan 2023 08:41:04 -0500
+Message-Id: <20230124134131.637036-8-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230124134131.637036-1-sashal@kernel.org>
+References: <20230124134131.637036-1-sashal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH] wifi: cfg80211: Fix use after free for wext
-Content-Language: en-US
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, stable@vger.kernel.org
-References: <20230124114515.186771-1-alexander@wetzel-home.de>
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-In-Reply-To: <20230124114515.186771-1-alexander@wetzel-home.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 24.01.23 12:45, Alexander Wetzel wrote:
-> Key information in wext.connect is not reset on (re)connect and can hold
-> data from a previous connection.
-> 
-> Reset key data to avoid that drivers or mac80211 incorrectly detect a
-> WEP connection request and access the freed or already reused memory.
-> 
-> Additionally optimize cfg80211_sme_connect() and avoid an useless
-> schedule of conn_work.
-> 
-> Fixes: fffd0934b939 ("cfg80211: rework key operation")
-> Cc: stable@vger.kernel.org
-> Link: https://lore.kernel.org/r/c80f04d2-8159-a02a-9287-26e5ec838826@wetzel-home.de
-> Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
+From: Sriram R <quic_srirrama@quicinc.com>
 
-Send out an outdated version. Still does the job but I'll send a v2.
-Which will reset more key data and updates the comment.
+[ Upstream commit fa22b51ace8aa106267636f36170e940e676809c ]
 
-Alexander
+When multiple interfaces are present in the local interface
+list, new skb copy is taken before rx processing except for
+the first interface. The address translation happens each
+time only on the original skb since the hdr pointer is not
+updated properly to the newly created skb.
+
+As a result frames start to drop in userspace when address
+based checks or search fails.
+
+Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
+Link: https://lore.kernel.org/r/20221208040050.25922-1-quic_srirrama@quicinc.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/rx.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f99416d2e144..60b83cbbd5b0 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4859,6 +4859,9 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
+ 		 */
+ 		shwt = skb_hwtstamps(rx->skb);
+ 		shwt->hwtstamp = skb_hwtstamps(skb)->hwtstamp;
++
++		/* Update the hdr pointer to the new skb for translation below */
++		hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	}
+ 
+ 	if (unlikely(link_sta)) {
+-- 
+2.39.0
 
