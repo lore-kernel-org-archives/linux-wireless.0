@@ -2,106 +2,81 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8BD5C52D11
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Jan 2023 16:54:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA189C05027
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Jan 2023 18:25:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231741AbjAZQyY (ORCPT
+        id S231835AbjAZSZk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Jan 2023 11:54:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34446 "EHLO
+        Thu, 26 Jan 2023 13:25:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231771AbjAZQyW (ORCPT
+        with ESMTP id S229721AbjAZSZj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2023 11:54:22 -0500
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51F535DC24
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2023 08:54:11 -0800 (PST)
-Received: by mail-ej1-x629.google.com with SMTP id vw16so6633284ejc.12
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2023 08:54:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jMqgyELLnC0C+2WUX5iqsLgbeN4/cYRY4wYf6RxgQL4=;
-        b=DDmo9TGH0CWqvG2i//66W5nWHgVVuSWRsww7irkO0X77Klq4iYWeJD708lVLn6LhIj
-         dM/8VJS45daXSZL5g76jWmlGHCjzQFWZxWCzzFoFhb3WhAQJ1vm73mzAn9ZGkAUGL6PC
-         OLcT9NXE/Klhjmwhx0tIIBiKR7b+RRc6j3twae68a6XcSHA8vwQ93VApxzv3JOi2LRWG
-         yF08KlsoSKGlOM8G+ON0AmcmOtOxf/ck9afGj+2Aj8Z/p0Pyj0SsGeICvL1wOLGByVvP
-         4P65OePkDki6o0E0VyTEMTrDy6wtWFTULYBjjmf+NVQwr0sHWk9976oLZxpdV8wBAwo2
-         AvAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jMqgyELLnC0C+2WUX5iqsLgbeN4/cYRY4wYf6RxgQL4=;
-        b=OD0WX1Xygwm6ZY+/Xwsye/ZR83wGHYp7/wOoo4FtS52k02eQWKvdBTL+/8xxrya8PD
-         RApz3ZziT4y1DY7JbCWhSTtrO4s3pE0wFgJJHWf6Xe9bpHIGIFi9VNIXJzlmxZJ923l4
-         C17dX8EDM4tY3RZT6CNXDxOwyuCmEVT7yMbL67i5ycRyBG8EuMi5nw/y1uwmiLAsobkp
-         Qg6qKy9FTkt7l2DPySxDptF47HCzmErTcceLnjM9Tu+111v7Pf7hQsFXXvj+pc4GaRVu
-         3Zj201XuVj5PPTEWrOmOtlyf00c/4rXxKUDQzLi0ywOmQiyr7vkPk2xPshSHCcxXhn3G
-         7W4w==
-X-Gm-Message-State: AFqh2kppTxGjMV62bQy/SEfHG1iKjlezX9Ryj3IRl0F7kWfjRnyst8VP
-        ItTrjHNp398VstrzkfiZvyE=
-X-Google-Smtp-Source: AMrXdXvu6vQzi1nOC04Hd6ucVIwPHKaiX+xCedPf+mppYlWXdGAkUCKWCtAbaOFHkNlHDKdRgvdIKg==
-X-Received: by 2002:a17:906:8618:b0:877:5772:25f with SMTP id o24-20020a170906861800b008775772025fmr33705722ejx.60.1674752049274;
-        Thu, 26 Jan 2023 08:54:09 -0800 (PST)
-Received: from smtpclient.apple ([2001:9e8:f12f:c200:289e:467c:f188:afa6])
-        by smtp.gmail.com with ESMTPSA id bj14-20020a170906b04e00b00878a8937009sm110975ejb.199.2023.01.26.08.54.08
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 26 Jan 2023 08:54:08 -0800 (PST)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.300.101.1.3\))
-Subject: Re: [RFC v2 5/6] mac80211_hwsim: add TPC per packet support
-From:   Jonas Jelonek <jelonek.jonas@gmail.com>
-In-Reply-To: <5d15d193c76dcc2cbd59b26912973e3bce34c776.camel@sipsolutions.net>
-Date:   Thu, 26 Jan 2023 17:53:37 +0100
-Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <03B7A24C-D6E2-4DBB-B52D-6174539BB781@gmail.com>
-References: <20220920104032.496697-1-jelonek.jonas@gmail.com>
- <20220920104032.496697-6-jelonek.jonas@gmail.com>
- <5d15d193c76dcc2cbd59b26912973e3bce34c776.camel@sipsolutions.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
-X-Mailer: Apple Mail (2.3731.300.101.1.3)
+        Thu, 26 Jan 2023 13:25:39 -0500
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2B1261869;
+        Thu, 26 Jan 2023 10:25:26 -0800 (PST)
+Received: from fedcomp.intra.ispras.ru (unknown [46.242.14.200])
+        by mail.ispras.ru (Postfix) with ESMTPSA id C55AB44C1003;
+        Thu, 26 Jan 2023 18:25:21 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru C55AB44C1003
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+        s=default; t=1674757521;
+        bh=Afq4b2X8eBtK6SxOlqW9d62Bwf0KZ0SsOAymNkS7amw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=kdpTNvL3PZpEagtlTlMTtFOwQbQ5HB+uXPkNZ5x+X29xL9t2yZpBXyJSIlJ7imTca
+         gIO7l0btapr9pXKIe6Bi5HwqU60PseWBqrXsPbKwq5MAUbNRpIaxN5RUDaQZ4ptbzp
+         TQZxFaGLQZr0s21HG4q4IUfLgwwgsVbTeEOf5VKg=
+From:   Fedor Pchelkin <pchelkin@ispras.ru>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Fedor Pchelkin <pchelkin@ispras.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        Oliver Neukum <oneukum@suse.com>,
+        Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org,
+        syzbot+555908813b2ea35dae9a@syzkaller.appspotmail.com
+Subject: [PATCH] wifi: ath6kl: reduce WARN to dev_dbg() in callback
+Date:   Thu, 26 Jan 2023 21:24:31 +0300
+Message-Id: <20230126182431.867984-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+The warn is triggered on a known race condition that is correctly handled.
+Using WARN() hinders automated testing. Reducing severity.
 
-> On 12. Jan 2023, at 11:31, Johannes Berg <johannes@sipsolutions.net> =
-wrote:
->=20
-> On Tue, 2022-09-20 at 12:40 +0200, Jonas Jelonek wrote:
->> @@ -4846,16 +4989,32 @@ static int =
-hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
->>=20
->> tx_attempts =3D (struct hwsim_tx_rate *)nla_data(
->>       info->attrs[HWSIM_ATTR_TX_INFO]);
->> + tx_attempts_flags =3D (struct hwsim_tx_rate_flag *)nla_data(
->> +     info->attrs[HWSIM_ATTR_TX_INFO_FLAGS]);
->> + sta =3D (struct ieee80211_sta *)txi->rate_driver_data[1];
->=20
-> That seems dangerous - what if the STA was freed already? You don't =
-walk
-> the pending list or something if the STA goes away.
+Fixes: de2070fc4aa7 ("ath6kl: Fix kernel panic on continuous driver load/unload")
+Reported-and-tested-by: syzbot+555908813b2ea35dae9a@syzkaller.appspotmail.com
+Signed-off-by: Oliver Neukum <oneukum@suse.com>
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Yes, I see. Is it in general a bad idea to take the sta reference from =
-ieee80211_control, put
-it in rate_driver_data and use it for tx-status? I guess I should pass =
-sta to tx_status_ext whenever
-possible because it is used for several statistics.
-
-I could think of two ways:
-- add NULL checks for the case that the sta pointer might be freed as =
-you said
-- get sta by using, e.g., sta_info_get_by_addrs to get the sta if it is =
-available. However, this always
-loops through the sta list. Might be a performance issue?
-
-Or do you suggest something different?
-
-Jonas
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_pipe.c b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+index c68848819a52..9b88d96bfe96 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+@@ -960,8 +960,8 @@ static int ath6kl_htc_pipe_rx_complete(struct ath6kl *ar, struct sk_buff *skb,
+ 	 * Thus the possibility of ar->htc_target being NULL
+ 	 * via ath6kl_recv_complete -> ath6kl_usb_io_comp_work.
+ 	 */
+-	if (WARN_ON_ONCE(!target)) {
+-		ath6kl_err("Target not yet initialized\n");
++	if (!target) {
++		ath6kl_dbg(ATH6KL_DBG_HTC, "Target not yet initialized\n");
+ 		status = -EINVAL;
+ 		goto free_skb;
+ 	}
+-- 
+2.34.1
 
