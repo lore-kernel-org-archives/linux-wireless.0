@@ -2,91 +2,75 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC52C54EAA
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Jan 2023 12:23:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD0EC54EAA
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Jan 2023 14:08:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232344AbjA0MXL (ORCPT
+        id S233014AbjA0OIm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Jan 2023 07:23:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56232 "EHLO
+        Fri, 27 Jan 2023 09:08:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233466AbjA0MWi (ORCPT
+        with ESMTP id S233231AbjA0OIl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2023 07:22:38 -0500
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB6DD7EFF2;
-        Fri, 27 Jan 2023 04:20:02 -0800 (PST)
-Received: from [2a02:8108:963f:de38:4bc7:2566:28bd:b73c]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1pLN21-0002rS-UX; Fri, 27 Jan 2023 12:36:33 +0100
-Message-ID: <37e7c161-fb66-b49c-78c6-c6349774800a@leemhuis.info>
-Date:   Fri, 27 Jan 2023 12:36:33 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [6.2][regression] after commit
- cd372b8c99c5a5cf6a464acebb7e4a79af7ec8ae stopping working wifi mt7921e
- #forregzbot
-Content-Language: en-US, de-DE
-From:   "Linux kernel regression tracking (#update)" 
-        <regressions@leemhuis.info>
-To:     Linux List Kernel Mailing <linux-wireless@vger.kernel.org>,
-        Linux List Kernel Mailing <linux-kernel@vger.kernel.org>,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-References: <CABXGCsMEnQd=gYKTd1knRsWuxCb=Etv5nAre+XJS_s5FgVteYA@mail.gmail.com>
- <7910b036-d639-0e1f-4638-fce5497487a7@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <7910b036-d639-0e1f-4638-fce5497487a7@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1674822002;021dca91;
-X-HE-SMSGID: 1pLN21-0002rS-UX
+        Fri, 27 Jan 2023 09:08:41 -0500
+X-Greylist: delayed 331 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 27 Jan 2023 06:08:39 PST
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4CB2113C0
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2023 06:08:39 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by mailout1.hostsharing.net (Postfix) with ESMTPS id 324C0100A854F;
+        Fri, 27 Jan 2023 15:01:08 +0100 (CET)
+Received: from localhost (unknown [89.246.108.87])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by h08.hostsharing.net (Postfix) with ESMTPSA id 0B5DD602EB97;
+        Fri, 27 Jan 2023 15:01:08 +0100 (CET)
+X-Mailbox-Line: From 111c7ee895f12d951e95a2edcd06d87ca26a7d0f Mon Sep 17 00:00:00 2001
+Message-Id: <cover.1674827105.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Fri, 27 Jan 2023 15:00:00 +0100
+Subject: [PATCH 0/3] mwifiex material for next
+To:     Kalle Valo <kvalo@kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi017@gmail.com>,
+        Sharvari Harisangam <sharvari.harisangam@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, Sherry Sun <sherry.sun@nxp.com>,
+        Matt Ranostay <mranostay@ti.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-[TLDR: This mail in primarily relevant for Linux kernel regression
-tracking. See link in footer if these mails annoy you.]
+Amend mwifiex with a missing compatible string, add support for
+SD8978 chips (aka IW416) and silence a gratuitous message on probe.
 
-On 22.12.22 13:36, Thorsten Leemhuis wrote:
-> [Note: this mail contains only information for Linux kernel regression
-> tracking. Mails like these contain '#forregzbot' in the subject to make
-> then easy to spot and filter out. The author also tried to remove most
-> or all individuals from the list of recipients to spare them the hassle.]
-> 
-> On 21.12.22 02:10, Mikhail Gavrilov wrote:
->> Hi,
->> The kernel 6.2 preparation cycle has begun.
->> And after the kernel was updated on my laptop, the wifi stopped working.
->>
->> Bisecting blames this commit:
->> cd372b8c99c5a5cf6a464acebb7e4a79af7ec8ae is the first bad commit
->> commit cd372b8c99c5a5cf6a464acebb7e4a79af7ec8ae
->> Author: Lorenzo Bianconi <lorenzo@kernel.org>
->> Date:   Sat Nov 12 16:40:35 2022 +0100
->>
->>     wifi: mt76: add WED RX support to mt76_dma_{add,get}_buf
->>
-> 
-> Thanks for the report. To be sure below issue doesn't fall through the
-> cracks unnoticed, I'm adding it to regzbot, my Linux kernel regression
-> tracking bot:
-> 
-> #regzbot introduced cd372b8c99c5a5 ^
-> https://bugzilla.kernel.org/show_bug.cgi?id=216829
-> #regzbot title wifi: mt76: wifi stopped working
-> #regzbot ignore-activity
-> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+The firmware for SD8978 is available at the following URL, I've reached
+out to NXP to get it into the linux-firmware repository:
 
-Regzbot for some reason missed to notice the fix properly, so point to
-it manually:
+https://github.com/NXP/imx-firmware/raw/lf-5.15.52_2.1.0/nxp/FwImage_IW416_SD/sdiouartiw416_combo_v0.bin
 
-#regzbot fix 953519b35227
-#regzbot ignore-activity
+Thanks!
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-That page also explains what to do if mails like this annoy you.
+Lukas Wunner (3):
+  wifi: mwifiex: Add missing compatible string for SD8787
+  wifi: mwifiex: Support SD8978 chipset
+  wifi: mwifiex: Support firmware hotfix version in GET_HW_SPEC
+    responses
+
+ .../bindings/net/wireless/marvell-8xxx.txt    |  4 ++-
+ drivers/net/wireless/marvell/mwifiex/Kconfig  |  5 ++--
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c |  5 ++++
+ drivers/net/wireless/marvell/mwifiex/fw.h     |  1 +
+ drivers/net/wireless/marvell/mwifiex/sdio.c   | 26 +++++++++++++++++--
+ drivers/net/wireless/marvell/mwifiex/sdio.h   |  1 +
+ include/linux/mmc/sdio_ids.h                  |  1 +
+ 7 files changed, 38 insertions(+), 5 deletions(-)
+
+-- 
+2.39.1
 
