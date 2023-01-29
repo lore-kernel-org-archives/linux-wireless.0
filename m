@@ -2,71 +2,93 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EC4C636CB
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Jan 2023 10:16:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BA7FC61D97
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Jan 2023 12:49:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234885AbjA2KQs (ORCPT
+        id S233753AbjA2Mth (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Jan 2023 05:16:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60022 "EHLO
+        Sun, 29 Jan 2023 07:49:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234569AbjA2KQi (ORCPT
+        with ESMTP id S229605AbjA2Mtg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jan 2023 05:16:38 -0500
-Received: from mail-io1-xd2b.google.com (mail-io1-xd2b.google.com [IPv6:2607:f8b0:4864:20::d2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A16BF2332F
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jan 2023 02:16:35 -0800 (PST)
-Received: by mail-io1-xd2b.google.com with SMTP id q6so832816ior.12
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jan 2023 02:16:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=g5IBe5UTsevcTshAgBB76XBrtyBK5HUE5XKUcKD5N2Y=;
-        b=d/7QcExYJWf+2g08OyQESgzl1Y4KwsFydsM723Cdv7v0U50wCpiqi1ZoaAiLIAnLco
-         pL7TCKCk+h7AvqrQEoaw89hrptqW3MSqjdNKu3Imvd0J+u2F7KvD4PJoxooxlV43GkXo
-         d1O3214Ee4OVgKwKezqPzM5vokApicDmRk06+cGoXAAfYnPJ7BVqcIl8SI9Zh0iSzrpP
-         PRzjb1hq77GlRnB5H2/iExnN0gMh6lPZSOES4TWLJvjmMNbaBK+SiDmEbr7kDhkfWdJb
-         OdzlX9GVsLyR3vAPPtR5JNdKcB5rLgcuI+r38FDNXtZK0cTPAdc0cdq5ig+/bHdaY8jT
-         bpnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=g5IBe5UTsevcTshAgBB76XBrtyBK5HUE5XKUcKD5N2Y=;
-        b=O6FzpXcjqakYB8Ofev5dNwTXuQy2EzSWqaVv7vZZsNjegDF8ANaw6EKWJRlnI8A/w+
-         g3fVojlZL66C+vvdMeqb4QeRRqmkMkVQ8PAVfybIN8uffRxMbS7Bv3gKsrZHfjZv7nEd
-         HAE9L+mCgFkbd/BQFPL2tFRcpXEJd5puMVRaWXI07LDkumqEr88lgBq+SV1mGdGeaGL6
-         5fxqCy9RCNeFtJ2MXD73oMje7Ii0eKTB/ZPPaRvvXFlJ+NVaI2BAS85XrxNdIao7C0lT
-         zuJzpH5HoeMcAMO4JrHl/kROpDI9FVX7BABmrw2yz60JNDqg4n8Bdn2uZhxBv4M/WLRR
-         p62w==
-X-Gm-Message-State: AFqh2kpsjGtKHvKTCQqpk4BL0ieKn8sb/O91UCcGEOZ2RrGmVSlT1RHf
-        lO1ikNhmI/+kmeSuaJw4wSzwRlxeY3+/cFcTgj9pm4qdPKo=
-X-Google-Smtp-Source: AMrXdXsLPnmnRvggdbLOveEy/yAnWbOjxSvYGvOp/3Mt3qL1hs9KP9YdxzW3c7HtDRyqc5bCd5mmXnoGu6agpXNOpmA=
-X-Received: by 2002:a02:a993:0:b0:39e:8a0f:90e6 with SMTP id
- q19-20020a02a993000000b0039e8a0f90e6mr5326921jam.43.1674987395013; Sun, 29
- Jan 2023 02:16:35 -0800 (PST)
+        Sun, 29 Jan 2023 07:49:36 -0500
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51CCE1E2BC;
+        Sun, 29 Jan 2023 04:49:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net; s=s31663417;
+        t=1674996564; bh=JjSLd0m8cRytyvJTD2h8ilJ4qprOTJIhhPyxhW1Hs7M=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
+        b=WYhpWPQxOm7A8S4H4+YBbhRKOw/lEN0MzGaJzVaFzLAbwuu0qZOH70cCEYv3AzbDE
+         a31G6KvCyRMbea+br5jmmMQm0fFjdm1ljNOm0Id2OO1pvkcWKH5Xtk0wFpCaZ79okn
+         9ktF532/5WD4Hf5UHqGriGP4ZjwYk8y7DI8qJEP7BpREs/1EtFFpJ2dfF/ch/EV1Xi
+         bnquxJ41ALG1Jt7ovudZbWvKrsV5ghRwGZAeuTHuUjC2ZPzb/Ls79elts93xMwoskn
+         IB/g3SlSNR2JqvCILHa+LQM+xi0mFfQEw13ypsFzUrC17gnsVotFljBJPqtZOAUlXg
+         4ajGuV4/0T3Bg==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from probook ([95.223.44.193]) by mail.gmx.net (mrgmx004
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1Mwwdl-1oSutz2s8Z-00yNTj; Sun, 29
+ Jan 2023 13:49:24 +0100
+From:   =?UTF-8?q?Jonathan=20Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     =?UTF-8?q?Jonathan=20Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wl1251: Fix a typo ("boradcast")
+Date:   Sun, 29 Jan 2023 13:49:18 +0100
+Message-Id: <20230129124919.1305057-1-j.neuschaefer@gmx.net>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-From:   Eugene Konev <uejikov@gmail.com>
-Date:   Sun, 29 Jan 2023 17:16:23 +0700
-Message-ID: <CAO7DJoDCV_NnKqR==GYmtFnMdJrbEvz7UzTQjydWPs4RnaCkpQ@mail.gmail.com>
-Subject: wireless-regdb: Regulatory rules for Russia (RU) on 5GHz
-To:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:ijQXBCwdC00JRP2C79RCUndGcFf6aXNCkRiUS+d0Xs4LzjmeRKr
+ eD2pc3hQsmGq/UedJfaTUTqxhaqN5bIcc+aA8jeHIWmBAm8D5SeXH7b4ay7ECwFFMyzFMgO
+ +bdOJPivDMhCDzxFmXGAYOynnEDESvhm5Zf4IHxPogw6m/cUw/WQnDSmT91dyp5shNxal56
+ mKoGl1BE0a0ZA5VE56Giw==
+UI-OutboundReport: notjunk:1;M01:P0:6HIQhe0tTsI=;wWunIsnufDb2HeOu1FgjQM8684R
+ elQTRIyDhTfDqtqdHBdTWh6HN8ifIT8q2h3aB1/lRqE69hUsm4fdf3MXEIn4gUbdAnM/QDl8W
+ 4VR3P9E2FSvN222u7MC9KbNs+CbNozdxU2QLktV4XdV18I5mysdtltCQ+hMgZ4M+HTLZ1wxiD
+ /b8UY/Kn0XYRwLisKacxhG9WhV0bmB1pZUFknRT6JNAGUXvZEV+eTeRQQacq/D4XmoaptHTst
+ UOHCaDVCx3c0OuMTgzRp8PNPWkZkGsfKL0c2xctfV5nAN4bg9k0byNYwjLdL6PTaTCKKXo6l7
+ E+N9foSKxvGs8IteCiYRQwTqseHg6j3Qmp/GHVmd4jMKD1UHFMNGetmdJu38bjigdbpv4HgJD
+ HtEC4g68bF+TnHXAhITfAGbsFHBCGM0JLQQzkc61gPdXkQ6j3yPMWGzbRu9CLMGeM1O2qrhHP
+ AwF5A0qTIhsT2lemGGO2yjikFa2oe0Silt5pqjgbT1Qdzoo6FUdioyCbgYoXuicy4jN3QYT8a
+ 0O+kiYc90wiUcItZFUzS7HhPtlhS/21zwIhNteh5rVwq7NX5jKmk6EB8+DHxENVyHpPfTmUX6
+ xhKyX0U6mwjXC+Xd6uK95A5yR1Uah7O1SI7zOuk4ndKLS7pPRIXKEn7FjFtHV/N6edj7xrd9C
+ xFhGXwLwH48TZ0GU/I770oWL3ueG9hxIFPA8+yJ6OiU8zVM9ASAVwahJawjlOmT7ArM3j4W1v
+ ZxCTMowDPXivIGAaWasf5gyfbptR09x5WA4tjqaJVtwzEXYE3KmVb3pD1270nvZcubyKrzqYZ
+ lO2NUDGr8hmPxkYiW1Q6hAHpqiETdxc4JbG2BX/rJdpKVF6nJht24cEJTxF525lsIYxjctLIu
+ QUM03/Xyn1+4hgFTHKkPZwibCDHSyx4pywm1rtdnnw9MGKvQMJMfzyedJPkI40zIMSgw+oYkW
+ OfhIgy+qDO0fgQxJb3coI2DP/jY=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Current regulatory rules for using 5GHz bands in Russia are the following:
-5150-5350 MHz: Max EIRP spectral density 20 mW/MHz, max EIRP 200 mWt,
-indoor use only, automatic transmit power control.
-5650-5850 MHz: Max EIRP spectral density 20 mW/MHz, max EIRP 200 mW,
-indoor use only, automatic transmit power control.
-(rules in russian: https://docs.cntd.ru/document/902048009?section=text)
+It should be "broadcast".
 
-Does automatic transmit power control requirement means that DFS
-should be enabled on both bands? If so, which DFS region should be
-assigned? DFS-ETSI?
+Signed-off-by: Jonathan Neusch=C3=A4fer <j.neuschaefer@gmx.net>
+=2D--
+ drivers/net/wireless/ti/wl1251/init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--- 
-Eugene Konev
+diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/=
+ti/wl1251/init.c
+index a19cce3a7e6f0..5663f197ea69f 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/init.c
++++ b/drivers/net/wireless/ti/wl1251/init.c
+@@ -373,7 +373,7 @@ int wl1251_hw_init(struct wl1251 *wl)
+ 	if (ret < 0)
+ 		goto out_free_data_path;
+
+-	/* Beacons and boradcast settings */
++	/* Beacons and broadcast settings */
+ 	ret =3D wl1251_hw_init_beacon_broadcast(wl);
+ 	if (ret < 0)
+ 		goto out_free_data_path;
+=2D-
+2.39.0
+
