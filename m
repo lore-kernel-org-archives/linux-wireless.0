@@ -2,90 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA00DC54EED
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Jan 2023 13:48:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84525C61DA4
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Jan 2023 14:03:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236222AbjA3Nsb (ORCPT
+        id S237048AbjA3ODD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Jan 2023 08:48:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56568 "EHLO
+        Mon, 30 Jan 2023 09:03:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231191AbjA3Nsa (ORCPT
+        with ESMTP id S236987AbjA3OCv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2023 08:48:30 -0500
-Received: from exchange.fintech.ru (e10edge.fintech.ru [195.54.195.159])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBF8739B8E;
-        Mon, 30 Jan 2023 05:48:27 -0800 (PST)
-Received: from Ex16-01.fintech.ru (10.0.10.18) by exchange.fintech.ru
- (195.54.195.159) with Microsoft SMTP Server (TLS) id 14.3.498.0; Mon, 30 Jan
- 2023 16:48:24 +0300
-Received: from Ex16-01.fintech.ru (10.0.10.18) by Ex16-01.fintech.ru
- (10.0.10.18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2242.4; Mon, 30 Jan
- 2023 16:48:24 +0300
-Received: from Ex16-01.fintech.ru ([fe80::2534:7600:5275:d3f9]) by
- Ex16-01.fintech.ru ([fe80::2534:7600:5275:d3f9%7]) with mapi id
- 15.01.2242.004; Mon, 30 Jan 2023 16:48:24 +0300
-From:   =?utf-8?B?0JbQsNC90LTQsNGA0L7QstC40Ycg0J3QuNC60LjRgtCwINCY0LPQvtGA0LU=?=
-         =?utf-8?B?0LLQuNGH?= <n.zhandarovich@fintech.ru>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC:     "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Alexey Khoroshilov" <khoroshilov@ispras.ru>,
-        "lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>
-Subject: RE: [PATCH 5.10 1/1] mt76: fix mt7615_init_tx_queues() return value
-Thread-Topic: [PATCH 5.10 1/1] mt76: fix mt7615_init_tx_queues() return value
-Thread-Index: AQHZNKePV9Tuf82zRk2tMrTfyN8UZK62u2sAgAA3O6D//9G7AIAANNZg
-Date:   Mon, 30 Jan 2023 13:48:24 +0000
-Message-ID: <e17c785dbacf4605a726cc939bee6533@fintech.ru>
-References: <20230130123655.86339-1-n.zhandarovich@fintech.ru>
- <20230130123655.86339-2-n.zhandarovich@fintech.ru>
- <Y9fAkt/5BRist//g@kroah.com> <b945bd5f3d414ac5bc589d65cf439f7b@fintech.ru>
- <Y9fIFirNHNP06e1L@kroah.com>
-In-Reply-To: <Y9fIFirNHNP06e1L@kroah.com>
-Accept-Language: ru-RU, en-US
-Content-Language: ru-RU
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.0.253.138]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Mon, 30 Jan 2023 09:02:51 -0500
+Received: from phobos.denx.de (phobos.denx.de [IPv6:2a01:238:438b:c500:173d:9f52:ddab:ee01])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A423B0E2;
+        Mon, 30 Jan 2023 06:02:42 -0800 (PST)
+Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: marex@denx.de)
+        by phobos.denx.de (Postfix) with ESMTPSA id E9DB2852C0;
+        Mon, 30 Jan 2023 15:02:38 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+        s=phobos-20191101; t=1675087360;
+        bh=I9qoCeiFdZwWtoDstV4Bw6+TIyjJzJfTohVx+3k+nHM=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=aHzsJyV4HCWjKDnrmzaXgjc6ANf9EO2SGRrlOJyxOSPQ9qOh3Z5d881HR1PoTK+B9
+         fkxy05jJPp2wCXOsNbno+htj1nkobuTCQCXmqYxscBG6ycPBltVapv33SVS3lwVGOg
+         TN/f9zDXcjSREe7toqfiYbDc1W6XUYxuV7ZzCNAMf5aEi3Qgn5ym5fUg/zg+l46LRT
+         Xbrwnl8YufnLMbodkaPzbEHmZG2FjbNFX7vxkbERKBPuqOtO/Jsc/gxY0QWy9MxcXP
+         RU0oWmuOIMu9VOVQQrf6UGzDYYWJpf6CClqJjIFj8FOUceJXKRoyQ7aUlurhTc/0JL
+         XxMCHbUUHhP1Q==
+Message-ID: <22ab680d-cb57-74ab-1a37-c7d7b5c29895@denx.de>
+Date:   Mon, 30 Jan 2023 15:02:38 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH] wifi: rsi: Adding new driver Maintainers
+To:     Ganapathi Kondraju <ganapathi.kondraju@silabs.com>,
+        linux-wireless@vger.kernel.org
+Cc:     Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@kernel.org>,
+        Martin Fuzzey <martin.fuzzey@flowbird.group>,
+        Martin Kepplinger <martink@posteo.de>,
+        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
+        netdev@vger.kernel.org,
+        Jerome Pouiller <Jerome.Pouiller@silabs.com>,
+        Angus Ainslie <angus@akkea.ca>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        narasimha.anumolu@silabs.com, amol.hanwate@silabs.com,
+        shivanadam.gude@silabs.com, srinivas.chappidi@silabs.com
+References: <1675071591-7138-1-git-send-email-ganapathi.kondraju@silabs.com>
+Content-Language: en-US
+From:   Marek Vasut <marex@denx.de>
+In-Reply-To: <1675071591-7138-1-git-send-email-ganapathi.kondraju@silabs.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: clamav-milter 0.103.6 at phobos.denx.de
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PiBPbiBNb24sIEphbiAzMCwgMjAyMyBhdCAwMToyNzoyNlBNICswMDAwLCDQltCw0L3QtNCw0YDQ
-vtCy0LjRhyDQndC40LrQuNGC0LAg0JjQs9C+0YDQtdCy0LjRhw0KPiB3cm90ZToNCj4gPiA+IFdo
-YXQgaXMgdGhlIGdpdCBjb21taXQgaWQgb2YgdGhpcyB1cHN0cmVhbT8NCj4gPiA+DQo+ID4gPiBB
-bmQgSSBjYW4ndCBhcHBseSB0aGlzIGFzLWlzIGZvciB0aGUgb2J2aW91cyByZWFzb24gaXQgd291
-bGQgbWVzcyB1cA0KPiA+ID4gdGhlIGNoYW5nZWxvZywgaG93IGRpZCB5b3UgY3JlYXRlIHRoaXM/
-DQo+ID4gPg0KPiA+ID4gY29uZnVzZWQsDQo+ID4gPg0KPiA+ID4gZ3JlZyBrLWgNCj4gPg0KPiA+
-IENvbW1pdCBpbiBxdWVzdGlvbiBpcyBiNjcxZGEzM2QxYzU5NzNmOTBmMDk4ZmY2NmE5MTk1MzY5
-MWRmNTgyDQo+ID4gdXBzdHJlYW0uIEkgd2Fzbid0IGNlcnRhaW4gaXQgbWFrZXMgc2Vuc2UgdG8g
-YmFja3BvcnQgdGhlIHdob2xlIHBhdGNoDQo+ID4gYXMgb25seSBhIHNtYWxsIHBvcnRpb24gb2Yg
-aXQgcGVydGFpbnMgdG8gdGhlIGZhdWx0IGF0IHF1ZXN0aW9uLg0KPiANCj4gV2hhdCBpcyB0aGUg
-ImZhdWx0Ij8NCg0KSW4gNS4xMC55ICJtdDc2MTVfaW5pdF90eF9xdWV1ZXMoKSByZXR1cm5zIDAg
-cmVnYXJkbGVzcyBvZiBob3cgZmluYWwNCm10NzYxNV9pbml0X3R4X3F1ZXVlKCkgcGVyZm9ybXMu
-IElmIG10NzYxNV9pbml0X3R4X3F1ZXVlKCkgZmFpbHMgKGR1ZSB0bw0KbWVtb3J5IGlzc3Vlcywg
-Zm9yIGluc3RhbmNlKSwgcGFyZW50IGZ1bmN0aW9uIHdpbGwgc3RpbGwgZXJyb25lb3VzbHkNCnJl
-dHVybiAwLiINCg0KVGhpcyB3YXMgZml4ZWQgdXBzdHJlYW0sIGFsdGhvdWdoIHRoYXQgcGFydGlj
-dWxhciBjb21taXQncyBzY29wZSB3YXMgYnJvYWRlci4NCg0KPiBBbmQgd2h5IG5vdCB0YWtlIHRo
-ZSB3aG9sZSB0aGluZz8gIFdoYXQncyB3cm9uZyB3aXRoIHRoYXQ/ICBXZSBhbG1vc3QNCj4gYWx3
-YXlzIHdhbnQgdG8gdGFrZSB3aGF0ZXZlciBpcyBpbiBMaW51cydzIHRyZWUgYmVjYXVzZSB3aGVu
-IHdlIGRvIG5vdCwgd2UNCj4gYWxtb3N0IGFsd2F5cyBjYXVzZSBidWdzIG9yIG90aGVyIHByb2Js
-ZW1zIChsYXRlciBtZXJnZSBpc3N1ZXMuKQ0KPiANCj4gU28gYWx3YXlzIHRha2UgdGhlIG9yaWdp
-bmFsIGZpeCBwbGVhc2UuDQo+IA0KPiB0aGFua3MsDQo+IA0KPiBncmVnIGstaA0KDQpUaGF0IG1h
-a2VzIHNlbnNlLCBvZiBjb3Vyc2UuIFRoYW5rcyBmb3IgeW91ciBwYXRpZW5jZSwgd2lsbCB3b3Jr
-IHRvd2FyZCBiYWNrcG9ydGluZyB0aGUgd2hvbGUgdGhpbmcuDQoNCnJlZ2FyZHMsDQoNCk5pa2l0
-YQ0K
+On 1/30/23 10:39, Ganapathi Kondraju wrote:
+> Silicon Labs acquired Redpine Signals recently. It needs to continue
+> giving support to the existing REDPINE WIRELESS DRIVER. Added new
+> Maintainers for it.
+> 
+> Signed-off-by: Ganapathi Kondraju <ganapathi.kondraju@silabs.com>
+> ---
+>   MAINTAINERS | 7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index ea941dc..af07b88 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -17709,8 +17709,13 @@ S:	Maintained
+>   F:	drivers/net/wireless/realtek/rtw89/
+>   
+>   REDPINE WIRELESS DRIVER
+> +M:	Narasimha Anumolu <narasimha.anumolu@silabs.com>
+> +M:	Ganapathi Kondraju <ganapathi.kondraju@silabs.com>
+> +M:	Amol Hanwate <amol.hanwate@silabs.com>
+> +M:	Shivanadam Gude <shivanadam.gude@silabs.com>
+> +M:	Jérôme Pouiller <jerome.pouiller@silabs.com>
+
+Please keep the list sorted.
