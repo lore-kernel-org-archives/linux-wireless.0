@@ -2,93 +2,98 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFC15C61DA4
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Jan 2023 14:05:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60079C54EED
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Jan 2023 15:16:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237082AbjA3OFp (ORCPT
+        id S238041AbjA3PP6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Jan 2023 09:05:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48252 "EHLO
+        Mon, 30 Jan 2023 10:15:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237075AbjA3OFo (ORCPT
+        with ESMTP id S236908AbjA3PP4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2023 09:05:44 -0500
-Received: from mail-io1-xd2f.google.com (mail-io1-xd2f.google.com [IPv6:2607:f8b0:4864:20::d2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26B5C2A172
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2023 06:05:42 -0800 (PST)
-Received: by mail-io1-xd2f.google.com with SMTP id l7so2055142ioa.7
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2023 06:05:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=/Qb6zMVyzjtj0/TQ/Lyc3HSKCfDqcZxkwmAqIFLNINM=;
-        b=BeH6FnitCZVR0iI8gmCER8IMJQNBB9NGcYTMaGX+FL0/YdxrRBrh7iRP5ou+BuabkR
-         EbE2h0BytgkGmKEhV0h5JP8bgdlMAwqSHCjKgMTq6ua8kGtj3den1FGKohq96yftyIsP
-         bHhD01xY4jrU0CBScgm6zigpUW3eMQ10lZKf7xh7C80mtrO+7mqK8CGgTzusyjeurlBB
-         J5hiN3KFQNBHgmaiJE9vc48vqRD5nzGcYI5HOwrlBISi80zq4JNvO+ilk9HoafF45JtR
-         kx+UWfEBfyY12byYGRApJ8rnswNpFRzl6hNpEiVXUiEEmIhN7S1ZsfRQQ+YxGu35pA1/
-         xuCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/Qb6zMVyzjtj0/TQ/Lyc3HSKCfDqcZxkwmAqIFLNINM=;
-        b=QB60S8v2OXvPgYWXNGaaTvb2JqLufT2yB/zd1/5bTvu3QHKEWqxzf78WePtY/Ftu8x
-         WCEy3TY9Tyh1sbVUzljpnC8r5eUXuiiWaZd5ncaVtUVrhVzsxSJakF+yhB7HAPoVMtfZ
-         H/hYZa24u4/nx7UcqZVxHbiZkmkF8cT458m/Wa8uKVs3kVezcCHiI0lJq4mcEw+hDxlI
-         a+aLd30vIvhqgzpCA9HFUDeSh8Z1o4JXLwcnKQKaCr4TaQaPyfw8JGxR+zyFwBX+TZab
-         rceAV+iAye1uDy3sklUak5N1yCqHuKaP4xmLO8607RtctITFOCnZDeseqPgNw2/JCTt4
-         TIHQ==
-X-Gm-Message-State: AO0yUKWeLsUH5JCLoADruGFc2Upf6unVWnqHBiJKKcx3nf0cjUwZ2PUO
-        eEBE4AAy3TH9kZwIO8l7QXAchOLvAIj1gAtARiHFtpC0iHM=
-X-Google-Smtp-Source: AK7set8i73j2W5MrUkGmaATl3/fl0ZwGGUj/7GzNZuA/U713Mx2VRsiEqZSrl87R92Elath1nwYywvhdl8mku6BqjiQ=
-X-Received: by 2002:a02:6f51:0:b0:3b1:4f93:69b8 with SMTP id
- b17-20020a026f51000000b003b14f9369b8mr567256jae.117.1675087541420; Mon, 30
- Jan 2023 06:05:41 -0800 (PST)
+        Mon, 30 Jan 2023 10:15:56 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBC209F;
+        Mon, 30 Jan 2023 07:15:33 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7F4DCB810C5;
+        Mon, 30 Jan 2023 15:14:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92B30C433EF;
+        Mon, 30 Jan 2023 15:14:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1675091697;
+        bh=a90xOxXdB9OfE6RDvIPeW0/Rs9qLjfMK4/iU5SQsr+M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Qhg7Gq0GRWzDG5WdtbKlYpHeurP+ox7s6RY3ZxVqgYy4MD+SlfNvlTqMud9BvVmgn
+         toS83V+xCfsTDkxn6G+XbNfr+xoGIos68x1ytoBWb742IgNud/mWDZybq2qAo8pU5w
+         j94Ed+1zOKFp+EUvby24Iig8Cp8L9HtfPoscQqn4=
+Date:   Mon, 30 Jan 2023 15:01:23 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     =?utf-8?B?0JbQsNC90LTQsNGA0L7QstC40Ycg0J3QuNC60LjRgtCwINCY0LPQvtGA0LU=?=
+         =?utf-8?B?0LLQuNGH?= <n.zhandarovich@fintech.ru>
+Cc:     "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        "lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>
+Subject: Re: [PATCH 5.10 1/1] mt76: fix mt7615_init_tx_queues() return value
+Message-ID: <Y9fNs5QWbrJh+yH6@kroah.com>
+References: <20230130123655.86339-1-n.zhandarovich@fintech.ru>
+ <20230130123655.86339-2-n.zhandarovich@fintech.ru>
+ <Y9fAkt/5BRist//g@kroah.com>
+ <b945bd5f3d414ac5bc589d65cf439f7b@fintech.ru>
+ <Y9fIFirNHNP06e1L@kroah.com>
+ <e17c785dbacf4605a726cc939bee6533@fintech.ru>
 MIME-Version: 1.0
-From:   Eugene Konev <uejikov@gmail.com>
-Date:   Mon, 30 Jan 2023 21:05:30 +0700
-Message-ID: <CAO7DJoAXrB8e+q2uHD6Cq6A2UV5pN0=6ieAVV+yJp0ht1bPhyg@mail.gmail.com>
-Subject: [PATCH] Update regulatory info for Russia (RU) on 5GHz
-To:     sforshee@kernel.org
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e17c785dbacf4605a726cc939bee6533@fintech.ru>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Update regulatory info for Russia on 5GHz in accordance with
-current regulatory rules.
+On Mon, Jan 30, 2023 at 01:48:24PM +0000, Жандарович Никита Игоревич wrote:
+> > On Mon, Jan 30, 2023 at 01:27:26PM +0000, Жандарович Никита Игоревич
+> > wrote:
+> > > > What is the git commit id of this upstream?
+> > > >
+> > > > And I can't apply this as-is for the obvious reason it would mess up
+> > > > the changelog, how did you create this?
+> > > >
+> > > > confused,
+> > > >
+> > > > greg k-h
+> > >
+> > > Commit in question is b671da33d1c5973f90f098ff66a91953691df582
+> > > upstream. I wasn't certain it makes sense to backport the whole patch
+> > > as only a small portion of it pertains to the fault at question.
+> > 
+> > What is the "fault"?
+> 
+> In 5.10.y "mt7615_init_tx_queues() returns 0 regardless of how final
+> mt7615_init_tx_queue() performs. If mt7615_init_tx_queue() fails (due to
+> memory issues, for instance), parent function will still erroneously
+> return 0."
 
-Source: https://docs.cntd.ru/document/902048009?section=3Dtext
+And how can memory issues actually be triggered in a real system?  Is
+this a fake problem or something you can validate and verify works
+properly?
 
-Signed-off-by: Eugene Konev <uejikov@gmail.com>
----
- db.txt | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Don't worry about fake issues for stable backports please.
 
-diff --git a/db.txt b/db.txt
-index 3f74194..9bc2c1c 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1500,10 +1500,11 @@ country RS: DFS-ETSI
-        # 60 GHz band channels 1-4, ref: Etsi En 302 567
-        (57000 - 66000 @ 2160), (40)
+thanks,
 
--country RU:
-+# Source: https://docs.cntd.ru/document/902048009?section=3Dtext
-+country RU: DFS-ETSI
-        (2400 - 2483.5 @ 40), (20)
--       (5150 - 5350 @ 160), (20), NO-OUTDOOR
--       (5650 - 5850 @ 160), (20), NO-OUTDOOR
-+       (5150 - 5350 @ 160), (200 mW), NO-OUTDOOR, DFS
-+       (5650 - 5850 @ 160), (200 mW), NO-OUTDOOR, DFS
-        # 60 GHz band channels 1-4, ref: Changes to NLA 124_Order
-=E2=84=96129_22042015.pdf
-        (57000 - 66000 @ 2160), (40), NO-OUTDOOR
-
---=20
-2.30.2
+greg k-h
