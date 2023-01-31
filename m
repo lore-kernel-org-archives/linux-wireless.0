@@ -2,44 +2,44 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B13C636CC
-	for <linux-wireless@archiver.kernel.org>; Tue, 31 Jan 2023 09:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53178C38142
+	for <linux-wireless@archiver.kernel.org>; Tue, 31 Jan 2023 09:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230514AbjAaJgl (ORCPT
+        id S231671AbjAaJgm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 31 Jan 2023 04:36:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34522 "EHLO
+        Tue, 31 Jan 2023 04:36:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbjAaJgk (ORCPT
+        with ESMTP id S230494AbjAaJgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2023 04:36:40 -0500
+        Tue, 31 Jan 2023 04:36:41 -0500
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEF3B2C654
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2023 01:36:35 -0800 (PST)
-X-UUID: bd8824cea14a11ed945fc101203acc17-20230131
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C09B129173
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2023 01:36:36 -0800 (PST)
+X-UUID: bd86c890a14a11ed945fc101203acc17-20230131
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=wk57CLPktMLMZKsUmSKMarC76ezZLyYoRQv8LVBtbi8=;
-        b=oTfz5xqTtP1b5EDhUmlrKmfqruYbLpBmBH9Eb/VVWnBcEM1+9kuBFH4tIWjfpdfWp6WdMgPwt2FlUpA1I6iAdMHJsPDiurWdRNYakOMtmHK8uzBvVhCxep2qAushwkW3HQb6rivXvTrjxheDMxZe7a5DZYhe1Dn/i9dLz+Pu9MU=;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=rgBgoPIks5ILoAiAo1k2ULVWyeQf7aPW4gZTo3R8QaQ=;
+        b=LboazErbLBZ6zK73z9R4fHtXfxlZUAC7mv5GuG+P+pDimiUc+bC6p25CDKt69R3Q13flvSpA/tJtV2p/ZkaVY0slFHIJWcYLBZmA/z5ZvcM1YrnGwLQe3mo2osF+uxVI7kAGQKo74P9ud+5UveQR73aQj3E5ErC1HT9YNoPZ3cE=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.18,REQID:2d565793-a9f7-426f-b0c2-87cc0262c091,IP:0,U
+X-CID-O-INFO: VERSION:1.1.18,REQID:eb3e5d2b-aa46-4093-895f-9e2adb76a4e8,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
         release,TS:0
-X-CID-META: VersionHash:3ca2d6b,CLOUDID:d664da55-dd49-462e-a4be-2143a3ddc739,B
+X-CID-META: VersionHash:3ca2d6b,CLOUDID:6132758d-8530-4eff-9f77-222cf6e2895b,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+        RL:1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
 X-CID-BVR: 0
-X-UUID: bd8824cea14a11ed945fc101203acc17-20230131
+X-UUID: bd86c890a14a11ed945fc101203acc17-20230131
 Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
         (envelope-from <shayne.chen@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 807627957; Tue, 31 Jan 2023 17:36:29 +0800
+        with ESMTP id 1947778696; Tue, 31 Jan 2023 17:36:29 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
  mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Tue, 31 Jan 2023 17:36:29 +0800
+ 15.2.792.15; Tue, 31 Jan 2023 17:36:28 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Tue, 31 Jan 2023 17:36:29 +0800
+ 15.2.792.15 via Frontend Transport; Tue, 31 Jan 2023 17:36:28 +0800
 From:   Shayne Chen <shayne.chen@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>
 CC:     linux-wireless <linux-wireless@vger.kernel.org>,
@@ -49,12 +49,10 @@ CC:     linux-wireless <linux-wireless@vger.kernel.org>,
         Bo Jiao <Bo.Jiao@mediatek.com>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v2 04/13] wifi: mt76: connac: add cmd id related to EHT support
-Date:   Tue, 31 Jan 2023 17:36:02 +0800
-Message-ID: <20230131093611.30914-5-shayne.chen@mediatek.com>
+Subject: [PATCH v2 00/13] Add EHT support for mt7996
+Date:   Tue, 31 Jan 2023 17:35:58 +0800
+Message-ID: <20230131093611.30914-1-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20230131093611.30914-1-shayne.chen@mediatek.com>
-References: <20230131093611.30914-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK:  N
@@ -62,33 +60,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is the preliminary patch to add EHT support for mt7996.
+This series adds initial EHT support for mt7996 driver, which currently
+covers features of EHT SU mode. More EHT features are work in progress
+and will be introduced in further patches.
 
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h | 2 ++
- 1 file changed, 2 insertions(+)
+This series is based on the following series:
+- wifi: mt76: mt7996: fix chainmask calculation in mt7996_set_antenna()
+  https://patchwork.kernel.org/project/linux-wireless/patch/20221223101348.11504-1-shayne.chen@mediatek.com/
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 2c22f60cc56d..672491afff3e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -793,6 +793,7 @@ enum {
- 	STA_REC_PHY = 0x15,
- 	STA_REC_HE_6G = 0x17,
- 	STA_REC_HE_V2 = 0x19,
-+	STA_REC_EHT = 0x22,
- 	STA_REC_HDRT = 0x28,
- 	STA_REC_HDR_TRANS = 0x2B,
- 	STA_REC_MAX_NUM
-@@ -1203,6 +1204,7 @@ enum {
- 	MCU_UNI_CMD_REPT_MUAR = 0x09,
- 	MCU_UNI_CMD_WSYS_CONFIG = 0x0b,
- 	MCU_UNI_CMD_REG_ACCESS = 0x0d,
-+	MCU_UNI_CMD_CHIP_CONFIG = 0x0e,
- 	MCU_UNI_CMD_POWER_CTRL = 0x0f,
- 	MCU_UNI_CMD_RX_HDR_TRANS = 0x12,
- 	MCU_UNI_CMD_SER = 0x13,
+v2:
+  - add eth param to mt76_ethtool_worker() to prevent from breaking HE stats
+
+MeiChia Chiu (1):
+  wifi: mt76: mt7996: add EHT beamforming support
+
+Shayne Chen (12):
+  wifi: mt76: add EHT phy type
+  wifi: mt76: connac: add CMD_CBW_320MHZ
+  wifi: mt76: connac: add helpers for EHT capability
+  wifi: mt76: connac: add cmd id related to EHT support
+  wifi: mt76: increase wcid size to 1088
+  wifi: mt76: add EHT rate stats for ethtool
+  wifi: mt76: mt7996: add variants support
+  wifi: mt76: mt7996: add helpers for wtbl and interface limit
+  wifi: mt76: mt7996: rework capability init
+  wifi: mt76: mt7996: add EHT capability init
+  wifi: mt76: mt7996: add support for EHT rate report
+  wifi: mt76: mt7996: enable EHT support in firmware
+
+ drivers/net/wireless/mediatek/mt76/mac80211.c |  11 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  13 +-
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |   2 +
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  |  46 ++
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  12 +-
+ .../net/wireless/mediatek/mt76/mt7915/main.c  |   2 +-
+ .../net/wireless/mediatek/mt76/mt7921/main.c  |   2 +-
+ .../wireless/mediatek/mt76/mt7996/debugfs.c   |   8 +-
+ .../wireless/mediatek/mt76/mt7996/eeprom.c    |  27 ++
+ .../net/wireless/mediatek/mt76/mt7996/init.c  | 400 +++++++++++-------
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   |  36 +-
+ .../net/wireless/mediatek/mt76/mt7996/main.c  |  12 +-
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 186 +++++++-
+ .../net/wireless/mediatek/mt76/mt7996/mcu.h   |  16 +
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |  25 +-
+ 15 files changed, 603 insertions(+), 195 deletions(-)
+
 -- 
 2.25.1
 
