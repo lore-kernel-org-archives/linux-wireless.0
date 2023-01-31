@@ -2,77 +2,93 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DAEAC636CD
-	for <linux-wireless@archiver.kernel.org>; Tue, 31 Jan 2023 09:15:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B13C636CC
+	for <linux-wireless@archiver.kernel.org>; Tue, 31 Jan 2023 09:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232173AbjAaJPI (ORCPT
+        id S230514AbjAaJgl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 31 Jan 2023 04:15:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39712 "EHLO
+        Tue, 31 Jan 2023 04:36:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232732AbjAaJOv (ORCPT
+        with ESMTP id S229574AbjAaJgk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2023 04:14:51 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D7F8172B
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2023 01:12:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=wHpyEmUDwtWILP/PZi9ibazx/yx6gRrjsYE8DG/i8M4=;
-        t=1675156349; x=1676365949; b=r/8Z6OEnIJ6/YlsYMt6J1uUv8iQrfAo+s55BcaF7XhZBPtK
-        qmHA06rgqgkqolCOjfVSF0Qd2ThE8/53j+CJpfY4KuKFnjBgw/UavFzIsHoAaFeH+pUuHzSU8SZSE
-        3lDizwn1wUXDWUVDQ/uVSnmE2p579/NORbyxE8Fw2pxr7oMehBv0KRqvyHC9c/vDhS+EB26m5wkWa
-        u5BGbiLq5fmXoeiZdulGkWDz8SKxqrEpQROELFFO6EY4vw1sWic4A5a7UPXWuUs/+hgDP6329ZNL5
-        ayEfNzPyB1e9VHD5IuZrxdfsCdoI3BE1EB2EknTMZNI799u5v7TIKQ5/rzV9ru/Q==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1pMmgc-00Gulb-2T;
-        Tue, 31 Jan 2023 10:12:18 +0100
-Message-ID: <958c5e666aaab3b18065c1e1c140c9ea34f2229c.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: cfg80211: call reg_notifier for self managed
- wiphy from driver hint
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Wen Gong <quic_wgong@quicinc.com>, ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 31 Jan 2023 10:12:17 +0100
-In-Reply-To: <31632d31-8c98-081f-bcf4-0966efe1256a@quicinc.com>
-References: <20221214093937.14987-1-quic_wgong@quicinc.com>
-         <0881ee1d0ae43ae18ab4b71ec8b5fd62263bbb69.camel@sipsolutions.net>
-         <31632d31-8c98-081f-bcf4-0966efe1256a@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+        Tue, 31 Jan 2023 04:36:40 -0500
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEF3B2C654
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2023 01:36:35 -0800 (PST)
+X-UUID: bd8824cea14a11ed945fc101203acc17-20230131
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=wk57CLPktMLMZKsUmSKMarC76ezZLyYoRQv8LVBtbi8=;
+        b=oTfz5xqTtP1b5EDhUmlrKmfqruYbLpBmBH9Eb/VVWnBcEM1+9kuBFH4tIWjfpdfWp6WdMgPwt2FlUpA1I6iAdMHJsPDiurWdRNYakOMtmHK8uzBvVhCxep2qAushwkW3HQb6rivXvTrjxheDMxZe7a5DZYhe1Dn/i9dLz+Pu9MU=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.18,REQID:2d565793-a9f7-426f-b0c2-87cc0262c091,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:3ca2d6b,CLOUDID:d664da55-dd49-462e-a4be-2143a3ddc739,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+X-CID-BVR: 0
+X-UUID: bd8824cea14a11ed945fc101203acc17-20230131
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 807627957; Tue, 31 Jan 2023 17:36:29 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Tue, 31 Jan 2023 17:36:29 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.792.15 via Frontend Transport; Tue, 31 Jan 2023 17:36:29 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Bo Jiao <Bo.Jiao@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH v2 04/13] wifi: mt76: connac: add cmd id related to EHT support
+Date:   Tue, 31 Jan 2023 17:36:02 +0800
+Message-ID: <20230131093611.30914-5-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20230131093611.30914-1-shayne.chen@mediatek.com>
+References: <20230131093611.30914-1-shayne.chen@mediatek.com>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2023-01-31 at 14:07 +0800, Wen Gong wrote:
-> On 1/19/2023 9:52 PM, Johannes Berg wrote:
-> > On Wed, 2022-12-14 at 04:39 -0500, Wen Gong wrote:
-> > > Currently the regulatory driver does not call the regulatory callback
-> > > reg_notifier for self managed wiphys. Sometimes driver needs cfg80211
-> > > to calculate the info of ieee80211_channel such as flags and power,
-> > > and driver needs to get the info of ieee80211_channel after hint of
-> > > driver, but driver does not know when calculation of the info of
-> > > ieee80211_channel become finished, so add notify to driver after
-> > > reg_process_self_managed_hint() from cfg80211 is a good way, then
-> > > driver could get the correct info in callback of reg_notifier.
-> > Seems reasonable - but maybe unexpected to some drivers, perhaps it
-> > should be opt-in?
-> >=20
-> > Though I guess not many drivers actually use this infrastructure in the
-> > first place?
->=20
-> Yes, I will add a new flag such as WIPHY_FLAG_NOTIFY_REGDOM_BY_DRIVER=20
-> for this driver.
->=20
-> is it ok?
+This is the preliminary patch to add EHT support for mt7996.
 
-Sounds OK.
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index 2c22f60cc56d..672491afff3e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -793,6 +793,7 @@ enum {
+ 	STA_REC_PHY = 0x15,
+ 	STA_REC_HE_6G = 0x17,
+ 	STA_REC_HE_V2 = 0x19,
++	STA_REC_EHT = 0x22,
+ 	STA_REC_HDRT = 0x28,
+ 	STA_REC_HDR_TRANS = 0x2B,
+ 	STA_REC_MAX_NUM
+@@ -1203,6 +1204,7 @@ enum {
+ 	MCU_UNI_CMD_REPT_MUAR = 0x09,
+ 	MCU_UNI_CMD_WSYS_CONFIG = 0x0b,
+ 	MCU_UNI_CMD_REG_ACCESS = 0x0d,
++	MCU_UNI_CMD_CHIP_CONFIG = 0x0e,
+ 	MCU_UNI_CMD_POWER_CTRL = 0x0f,
+ 	MCU_UNI_CMD_RX_HDR_TRANS = 0x12,
+ 	MCU_UNI_CMD_SER = 0x13,
+-- 
+2.25.1
+
