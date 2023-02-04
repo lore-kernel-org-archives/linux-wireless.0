@@ -2,64 +2,64 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DC32C636D6
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Feb 2023 23:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF719C61DA4
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Feb 2023 23:30:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232476AbjBDXad (ORCPT
+        id S232576AbjBDXae (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 4 Feb 2023 18:30:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35784 "EHLO
+        Sat, 4 Feb 2023 18:30:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232124AbjBDXaa (ORCPT
+        with ESMTP id S229578AbjBDXab (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Feb 2023 18:30:30 -0500
-Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1ACD22DF8;
-        Sat,  4 Feb 2023 15:30:28 -0800 (PST)
-Received: by mail-ed1-x52e.google.com with SMTP id q19so8426130edd.2;
-        Sat, 04 Feb 2023 15:30:28 -0800 (PST)
+        Sat, 4 Feb 2023 18:30:31 -0500
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFA3B20D3F;
+        Sat,  4 Feb 2023 15:30:29 -0800 (PST)
+Received: by mail-ej1-x62f.google.com with SMTP id k4so24897643eje.1;
+        Sat, 04 Feb 2023 15:30:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=b6UgdhmqWocOBQz+eQ8ew5GqkBUQxNNwSV7ocstJJqs=;
-        b=QQBddVqS2/y8BHJEpL0Gok9noxj5m3QC3aAsMRYvcruT3kqu6I7QgdsEb5eXypojuy
-         ZT6cyhabERR3oMuv7M6SdHEzV+TIDlTElsLir4OtTd+ab+QCFxHV1tFlkJeusC6w3Fkv
-         RitfAXmTN43OzfoHVaS7MC64eISy8OtyHy/+5dm2VjzUoteCMOJDSZZ9IF/B7Zy7AtDL
-         6g933RxqErpj9Z1pW7SmBegfkMLSbddY97GZWlxtzIA/cM3GrZUN89rhPdNR1qmLljua
-         AzxxEPc4wG/kLgC5BlzBrV3hNTfEZ4efJLDMx9ZknTkFjiLZvxIeu4osLQNZ25Ys4LbN
-         tA3g==
+        bh=z2OOn9fRXNRi/D1wH37mZYRXmM0quMrDez5IgGiosfE=;
+        b=SEpEv7LYUi6fgDWjw58MnVru5yw3PR4Nv9F5hz9BybL1VI5ncXJWDCa0A+RMTUDTW9
+         VS8x1Johk107INT5c6XKACchwDjsJ0wAKpkXTkITuGwAp5pzu2vO7jr7cKFksMJjXtcm
+         zxSWaqoudv9upUL1uek3oEHUBglZUOozLKhCsV5nKOIoyGDfMO/UwmKMQTD3LSfYPtNj
+         pt6rLNM19iVCnjUaRNrQQznFMYJAZ/IoIeHyUAbImG6dGVd9lvmPCZh9LAlwoyMqk0iN
+         O4utBltvi7sqz6ohwpgxCXeHKzGKRzmcn4WWX6YlXNGKdGXM+bnL4jkzDBhW9LxcGsUn
+         mcXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=b6UgdhmqWocOBQz+eQ8ew5GqkBUQxNNwSV7ocstJJqs=;
-        b=IDzLrAS9XGj3l6rlUmIv11oyBzmqYvYzgXo4arvjw8Z35AuA7ZqU6Np9LnyhlXkCYb
-         MGHqQ5hQjyDVdg2ggWl5rCfkk7CqF40y+BwULXWfwiVeSC3H7K4X3p9yMf0c/z2xESxb
-         BDyQixgSdcByVgwQ6wSLSnHcUvRTFgmS6EaG7SgHDDr164r0oDNaHStvLdnhtQpf0mcp
-         GydMjTJeeuFUMLVpALAMoXndG7tHqY2416PSnDwDz5b9n2ZypFzcxkgsQgmD+8BtlsUE
-         hi2zjXQGUhgGfppIebcAq1IemZmRJe27qz8BEcnJGqopkYizfDnw7Zwy/evIpTDA+yIP
-         1+Nw==
-X-Gm-Message-State: AO0yUKUKj9vVyMtQIv45VobRcKEsHgy9ghIcaz8Gcw2g8WbKplu6Vfeu
-        WP1HFbU4IJbvzj8L1f9Mzj0l0pri6hE=
-X-Google-Smtp-Source: AK7set/xbtNPaYyRyrRexiTwkymptbgSjSZV1sYj7RCcoc7XJ42wiUlUuMpKaEL9+JLRL9OIbmo/+w==
-X-Received: by 2002:a50:9f4a:0:b0:4aa:a4f3:49cd with SMTP id b68-20020a509f4a000000b004aaa4f349cdmr1848814edf.19.1675553426583;
-        Sat, 04 Feb 2023 15:30:26 -0800 (PST)
+        bh=z2OOn9fRXNRi/D1wH37mZYRXmM0quMrDez5IgGiosfE=;
+        b=sgMjfN1WG5x+ypSUh8sRoMbEB1MnJHaFPSUWAvvXwCmpFdNdgmuqeefrTLpgtcRYAd
+         2WfY8jYcO7wHxVfWbjc3BEVLFS4W21b5w9OzIvQ0BpR/5mX9/WNcNwpMb+NBNWttfNXA
+         nWNlPFXEidOI1fk0QRRqaVE7an8RM6pdGa78uJuUkLbTeKC8v5c0iq4qDBGfpdvgH6hf
+         gNlymxyBfz3GHTvjQXcq27EKzsdNd3Ep9WcCnSb3k44qNSX1zSaOqTjFmazfhxwAlFbz
+         YQ7ppu265Nb7xPMgwOqZ7C5ktle3hzl0cWFqcoBCt62+QD6Uyt7Y2jmMGb2fO9TtR5Am
+         gl5Q==
+X-Gm-Message-State: AO0yUKWkpZyKTdAdMrol7oOUk15ZCOeh1adnCgGjsOoanRcNeMMt964x
+        LfKMspovPIsvfIdSuFBKk7j+8f8FQio=
+X-Google-Smtp-Source: AK7set9RFpSCBsOLZmbEz9QMqDpnQ3kXDdCfwx9PGfRzdBnIj20vsnMnQFO91WSbWBcbTxeHRtcGFg==
+X-Received: by 2002:a17:906:5658:b0:878:7b5c:3811 with SMTP id v24-20020a170906565800b008787b5c3811mr13627277ejr.42.1675553428265;
+        Sat, 04 Feb 2023 15:30:28 -0800 (PST)
 Received: from localhost.localdomain (dynamic-2a01-0c22-7777-cc00-f22f-74ff-fe21-0725.c22.pool.telefonica.de. [2a01:c22:7777:cc00:f22f:74ff:fe21:725])
-        by smtp.googlemail.com with ESMTPSA id v5-20020a1709061dc500b0084d4e9a13cbsm3386658ejh.221.2023.02.04.15.30.25
+        by smtp.googlemail.com with ESMTPSA id v5-20020a1709061dc500b0084d4e9a13cbsm3386658ejh.221.2023.02.04.15.30.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 04 Feb 2023 15:30:26 -0800 (PST)
+        Sat, 04 Feb 2023 15:30:27 -0800 (PST)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     tony0620emma@gmail.com, kvalo@kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Neo Jou <neojou@gmail.com>,
         Jernej Skrabec <jernej.skrabec@gmail.com>, pkshih@realtek.com,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2 2/4] wifi: rtw88: pci: Change queue datatype to enum rtw_tx_queue_type
-Date:   Sun,  5 Feb 2023 00:29:59 +0100
-Message-Id: <20230204233001.1511643-3-martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 4/4] wifi: rtw88: mac: Use existing macros in rtw_pwr_seq_parser()
+Date:   Sun,  5 Feb 2023 00:30:01 +0100
+Message-Id: <20230204233001.1511643-5-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230204233001.1511643-1-martin.blumenstingl@googlemail.com>
 References: <20230204233001.1511643-1-martin.blumenstingl@googlemail.com>
@@ -69,8 +69,9 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This makes it easier to understand which values are allowed for the
-"queue" variable when using the enum instead of an u8.
+Replace the magic numbers for the intf_mask with their existing
+RTW_PWR_INTF_PCI_MSK and RTW_PWR_INTF_USB_MSK macros to make the code
+easier to understand.
 
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
@@ -81,82 +82,26 @@ Changes from v1 -> v2:
 - add Ping-Ke's Acked-by
 
 
- drivers/net/wireless/realtek/rtw88/pci.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtw88/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 45ce7e624c03..5492107fc85b 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -30,7 +30,8 @@ static u32 rtw_pci_tx_queue_idx_addr[] = {
- 	[RTW_TX_QUEUE_H2C]	= RTK_PCI_TXBD_IDX_H2CQ,
- };
- 
--static u8 rtw_pci_get_tx_qsel(struct sk_buff *skb, u8 queue)
-+static u8 rtw_pci_get_tx_qsel(struct sk_buff *skb,
-+			      enum rtw_tx_queue_type queue)
- {
- 	switch (queue) {
- 	case RTW_TX_QUEUE_BCN:
-@@ -542,7 +543,7 @@ static int rtw_pci_setup(struct rtw_dev *rtwdev)
- static void rtw_pci_dma_release(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
- {
- 	struct rtw_pci_tx_ring *tx_ring;
--	u8 queue;
-+	enum rtw_tx_queue_type queue;
- 
- 	rtw_pci_reset_trx_ring(rtwdev);
- 	for (queue = 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++) {
-@@ -608,8 +609,8 @@ static void rtw_pci_deep_ps_enter(struct rtw_dev *rtwdev)
- {
- 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
- 	struct rtw_pci_tx_ring *tx_ring;
-+	enum rtw_tx_queue_type queue;
- 	bool tx_empty = true;
--	u8 queue;
- 
- 	if (rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_TX_WAKE))
- 		goto enter_deep_ps;
-@@ -803,7 +804,8 @@ static void rtw_pci_flush_queues(struct rtw_dev *rtwdev, u32 queues, bool drop)
- 	__rtw_pci_flush_queues(rtwdev, pci_queues, drop);
- }
- 
--static void rtw_pci_tx_kick_off_queue(struct rtw_dev *rtwdev, u8 queue)
-+static void rtw_pci_tx_kick_off_queue(struct rtw_dev *rtwdev,
-+				      enum rtw_tx_queue_type queue)
- {
- 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
- 	struct rtw_pci_tx_ring *ring;
-@@ -822,7 +824,7 @@ static void rtw_pci_tx_kick_off_queue(struct rtw_dev *rtwdev, u8 queue)
- static void rtw_pci_tx_kick_off(struct rtw_dev *rtwdev)
- {
- 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
--	u8 queue;
-+	enum rtw_tx_queue_type queue;
- 
- 	for (queue = 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++)
- 		if (test_and_clear_bit(queue, rtwpci->tx_queued))
-@@ -831,7 +833,8 @@ static void rtw_pci_tx_kick_off(struct rtw_dev *rtwdev)
- 
- static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
- 				 struct rtw_tx_pkt_info *pkt_info,
--				 struct sk_buff *skb, u8 queue)
-+				 struct sk_buff *skb,
-+				 enum rtw_tx_queue_type queue)
- {
- 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
- 	const struct rtw_chip_info *chip = rtwdev->chip;
-@@ -949,9 +952,9 @@ static int rtw_pci_tx_write(struct rtw_dev *rtwdev,
- 			    struct rtw_tx_pkt_info *pkt_info,
- 			    struct sk_buff *skb)
- {
-+	enum rtw_tx_queue_type queue = rtw_hw_queue_mapping(skb);
- 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
- 	struct rtw_pci_tx_ring *ring;
--	u8 queue = rtw_hw_queue_mapping(skb);
- 	int ret;
- 
- 	ret = rtw_pci_tx_write_data(rtwdev, pkt_info, skb, queue);
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index 98777f294945..4e5c194aac29 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -217,10 +217,10 @@ static int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
+ 	cut_mask = cut_version_to_mask(cut);
+ 	switch (rtw_hci_type(rtwdev)) {
+ 	case RTW_HCI_TYPE_PCIE:
+-		intf_mask = BIT(2);
++		intf_mask = RTW_PWR_INTF_PCI_MSK;
+ 		break;
+ 	case RTW_HCI_TYPE_USB:
+-		intf_mask = BIT(1);
++		intf_mask = RTW_PWR_INTF_USB_MSK;
+ 		break;
+ 	default:
+ 		return -EINVAL;
 -- 
 2.39.1
 
