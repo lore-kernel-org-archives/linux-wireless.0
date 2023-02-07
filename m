@@ -2,90 +2,68 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14A01C636D6
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Feb 2023 10:42:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA5D0C636CD
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Feb 2023 11:23:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231695AbjBGKmy (ORCPT
+        id S231627AbjBGLXc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Feb 2023 05:42:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44176 "EHLO
+        Tue, 7 Feb 2023 06:23:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230075AbjBGKmx (ORCPT
+        with ESMTP id S231636AbjBGLX2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2023 05:42:53 -0500
-X-Greylist: delayed 593 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 07 Feb 2023 02:42:18 PST
-Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 909AA7A97;
-        Tue,  7 Feb 2023 02:42:15 -0800 (PST)
-Received: from mxbulk.masterlogin.de (unknown [192.168.10.85])
-        by mxout3.routing.net (Postfix) with ESMTP id 546166003B;
-        Tue,  7 Feb 2023 10:25:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1675765518;
+        Tue, 7 Feb 2023 06:23:28 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C68B4EEC
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Feb 2023 03:22:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675768958;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=uj3s91N95T2F3BwhUboKahqX3DOnIiHlbQ37Lz6ta+g=;
-        b=JOp9XjaFJmuJYY2z436g99uQ5iccj+m5ZbLs0A6C0TTT9Y72j1wYnqHqrmi1dG2o+u74Yi
-        JqipeNbljDl8LdBejFBhwpLWcJ4ABa99YWUkEn34ncqn6/T5E3L4o9yonq9DmsW6OAJYsx
-        fLNRy2vea1KYTeErgeP4iGjBCVXeeAs=
-Received: from frank-G5.. (fttx-pool-217.61.159.155.bambit.de [217.61.159.155])
-        by mxbulk.masterlogin.de (Postfix) with ESMTPSA id B6FA31226E8;
-        Tue,  7 Feb 2023 10:25:17 +0000 (UTC)
-From:   Frank Wunderlich <linux@fw-web.de>
-To:     linux-mediatek@lists.infradead.org
-Cc:     Frank Wunderlich <frank-w@public-files.de>,
-        Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lpL7xLToQHaBruNrQ6jvsEn58M8HRkbgtnnVi3id2K4=;
+        b=N8v1es2o18oR1p2tb93tn7c6okT8h9lTHbEPqiy2ETZahqwLz0Ei8Ki4fE/M6ZFf4nmj+P
+        7IcCMN2wHFxN6p5/B0uvXk4TthOAyDUz7oGM6QHfr5A2He/j/7oSWrgyabRjRUHeKnNlX2
+        /Ug7JGoHoaaLcsgvwBOmpZdjTTRDC1Q=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-365-8KJiM5dqOcSw9QMgXaFCCA-1; Tue, 07 Feb 2023 06:22:35 -0500
+X-MC-Unique: 8KJiM5dqOcSw9QMgXaFCCA-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 5504D101A52E;
+        Tue,  7 Feb 2023 11:22:34 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.33.36.97])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 97886492C3C;
+        Tue,  7 Feb 2023 11:22:32 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <000000000000b0b3c005f3a09383@google.com>
+References: <000000000000b0b3c005f3a09383@google.com>
+To:     syzbot <syzbot+a440341a59e3b7142895@syzkaller.appspotmail.com>
+Cc:     dhowells@redhat.com, davem@davemloft.net, edumazet@google.com,
+        hch@lst.de, jhubbard@nvidia.com, johannes@sipsolutions.net,
+        kuba@kernel.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] dt-bindings: mt76: add active-low property to led
-Date:   Tue,  7 Feb 2023 11:25:01 +0100
-Message-Id: <20230207102501.11418-1-linux@fw-web.de>
-X-Mailer: git-send-email 2.34.1
+        pabeni@redhat.com, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] general protection fault in skb_dequeue (3)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3104640.1675768952.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Date:   Tue, 07 Feb 2023 11:22:32 +0000
+Message-ID: <3104641.1675768952@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Frank Wunderlich <frank-w@public-files.de>
-
-LEDs can be in low-active mode, so add dt property for it.
-
-Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
----
- .../devicetree/bindings/net/wireless/mediatek,mt76.yaml      | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-index f0c78f994491..212508672979 100644
---- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-@@ -112,6 +112,11 @@ properties:
-     $ref: /schemas/leds/common.yaml#
-     additionalProperties: false
-     properties:
-+      led-active-low:
-+        description:
-+          LED is enabled with ground signal.
-+        type: boolean
-+
-       led-sources:
-         maxItems: 1
- 
--- 
-2.34.1
+#syz test: https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/linux-=
+fs.git/ iov-fixes
 
