@@ -2,201 +2,219 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45476C636CC
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Feb 2023 10:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 742E7C636D6
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Feb 2023 10:38:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231686AbjBGKiE (ORCPT
+        id S231528AbjBGKie (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Feb 2023 05:38:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37494 "EHLO
+        Tue, 7 Feb 2023 05:38:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231621AbjBGKh4 (ORCPT
+        with ESMTP id S231682AbjBGKiT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2023 05:37:56 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70FA62D7F;
-        Tue,  7 Feb 2023 02:37:26 -0800 (PST)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 317ACm60005434;
-        Tue, 7 Feb 2023 10:37:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=E/fAdF/zkHo45BBMEQJvly0JrNdpGoTOtqVn/he4rmM=;
- b=UWNOBzJOi6XPpzG8gK8llbhOKEBI1m5tXXWe47UW0IPCxOtwPJNfeXvMmopLz9CVKJMc
- GOR1fdDOO/2B7nPUjuK7zTLiAHcyaN8MEkL/xUbOUhQhd3Z2Jw9ozSK+vpx97qcscXcH
- 09whVCH/XpClv4toU2ZDP2yv+05CCC4WhiEwtjAxHFH1QJ+saY++UwXb/dz3EtAspJER
- u61BDpM/DpUjsYHQsazApPg/WsfLgFFkzB6e8CCpRM5i9XJzeJCrwuR6x8dTsRKUrFGf
- xIhEo732OwHKkqWtl2JkVWhCeotkYZgFkx2onHUXv68/eN97dTSeZj2lBcIOSb7v8lJG zw== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3nkfes8teg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 07 Feb 2023 10:37:17 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 317AbGXm013120
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 7 Feb 2023 10:37:16 GMT
-Received: from youghand-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Tue, 7 Feb 2023 02:37:12 -0800
-From:   Youghandhar Chintala <quic_youghand@quicinc.com>
-To:     <kvalo@kernel.org>, <davem@davemloft.net>, <edumazet@google.com>,
-        <kuba@kernel.org>, <pabeni@redhat.com>, <robh+dt@kernel.org>,
-        <krzysztof.kozlowski+dt@linaro.org>
-CC:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Youghandhar Chintala <quic_youghand@quicinc.com>
-Subject: [PATCH v3 2/2] wifi: ath11k: PMIC XO cal data support
-Date:   Tue, 7 Feb 2023 16:06:07 +0530
-Message-ID: <20230207103607.12213-3-quic_youghand@quicinc.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20230207103607.12213-1-quic_youghand@quicinc.com>
-References: <20230207103607.12213-1-quic_youghand@quicinc.com>
+        Tue, 7 Feb 2023 05:38:19 -0500
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6127238667
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Feb 2023 02:37:49 -0800 (PST)
+Received: by mail-pg1-x533.google.com with SMTP id 5so6202476pgd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2023 02:37:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sartura.hr; s=sartura;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=jLh9pEVrRCrNudQh0YY993IrWd2qZxs35VLB+sjiW8Q=;
+        b=gbofRDFYEVoX+XklzMQeWEvjHnnc6Y9axDfL3ISYpqray65HFFngOOBGnKC/ZO9nUT
+         QyYyvBHpRHubhD+9+YCBw/g+o8uSQNb6pfKIQSS/klrcnRXYAMxEXdnmnoF0aLdV34YS
+         KN0R6J3tHfne8rdlfR8Tqifok01q3JoynzW+lw0SwY7wxjKyn8mt/NiWxzdRSmD9YJGi
+         N1QVlSoYJjXfeBxxQUrC1yl6Q1sjxnWzT1a6TBzD10sAFSuemKIhaaUuNhIKbuklv+4E
+         mPdBagUICGqeRUra8iu/8NUukHpnFlFDlWd6kMH5ibpohgWIFvT8FjZQSn4yNJryfDkN
+         YoUg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jLh9pEVrRCrNudQh0YY993IrWd2qZxs35VLB+sjiW8Q=;
+        b=cwrMLA43BRezwvqhpEdTZNsVQLkZ0PfQSUEz/VafrmEiqHSYTvbQF1WOTJ0rHU2O5a
+         5jdhM72ADED9P36tr8H3lzZCuXJv+vETmnOHGu4Y/yrwXWbsjyWjTau3xcKRPsFFYa+F
+         FpGpcOZAW6Ngfv+Suk1vLQtTeCuIISQ9K0GRVuzqGdRRvegvo8zcDjvXhWwMSpbOpUsF
+         nk7TlGZlkFdV4pjYYW+3k35ZlyYf0UHVRcGg9oEcZ7xENT19PMb+6EszBJ59V3Bcf941
+         koBXR5hkL90dDJN2+JXHoMqhjAWkNlBnK3cLMIrGx9Uay/5q0YuA/XZByjjADKW0FRJU
+         WtUg==
+X-Gm-Message-State: AO0yUKXg/BjFajLFLacnib+lxAOpNFllaVC69VfOeQhjz93t2V6F1lR7
+        L4IlJQeetQfQnFFoeNcMOxf5t4Ydnwt0j7j6qEZuQA==
+X-Google-Smtp-Source: AK7set/yvpTNpygND1JZcdOTmd7gU6Z2SnqIvdZ3UlYgqI16MYWRblxUFMhpDU3/H1AaaYGaCi3dANjJrxpfc83xzJ0=
+X-Received: by 2002:a63:9550:0:b0:4db:99fb:e855 with SMTP id
+ t16-20020a639550000000b004db99fbe855mr435594pgn.42.1675766267461; Tue, 07 Feb
+ 2023 02:37:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: kb4DSf_GnsmS9hUYbUqC6Q5VhCqTPd6z
-X-Proofpoint-ORIG-GUID: kb4DSf_GnsmS9hUYbUqC6Q5VhCqTPd6z
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
- definitions=2023-02-07_03,2023-02-06_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- adultscore=0 suspectscore=0 mlxlogscore=999 impostorscore=0 mlxscore=0
- malwarescore=0 spamscore=0 lowpriorityscore=0 clxscore=1015 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2302070095
+References: <20230207103207.759-1-quic_youghand@quicinc.com> <20230207103207.759-4-quic_youghand@quicinc.com>
+In-Reply-To: <20230207103207.759-4-quic_youghand@quicinc.com>
+From:   Robert Marko <robert.marko@sartura.hr>
+Date:   Tue, 7 Feb 2023 11:37:36 +0100
+Message-ID: <CA+HBbNFQ9N3cZyPoP6i7HSate181_6TREPss_UD7RX1746sVXA@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] wifi: ath11k: PMIC XO cal data support
+To:     Youghandhar Chintala <quic_youghand@quicinc.com>
+Cc:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PMIC XO is the clock source for Wi-Fi RF clock in integrated Wi-Fi
-chipset ex: WCN6750. Due to board layout errors XO frequency drifts
-can cause Wi-Fi RF clock inaccuracy.
-XO calibration test tree in Factory Test Mode is used to find the
-best frequency offset(for example +/-2 KHz )by programming XO trim
-register. This ensure system clock stays within required 20 ppm
-WLAN RF clock.
+On Tue, Feb 7, 2023 at 11:33 AM Youghandhar Chintala
+<quic_youghand@quicinc.com> wrote:
+>
+> PMIC XO is the clock source for Wi-Fi RF clock in integrated Wi-Fi
+> chipset ex: WCN6750. Due to board layout errors XO frequency drifts
+> can cause Wi-Fi RF clock inaccuracy.
+> XO calibration test tree in Factory Test Mode is used to find the
+> best frequency offset(for example +/-2 KHz )by programming XO trim
+> register. This ensure system clock stays within required 20 ppm
+> WLAN RF clock.
+>
+> Retrieve the XO trim offset via system firmware (e.g., device tree),
+> especially in the case where the device doesn't have a useful EEPROM
+> on which to store the calibrated XO offset (e.g., for integrated Wi-Fi).
+> Calibrated XO offset is sent to firmware, which compensate the clock drift
+> by programing the XO trim register.
 
-Retrieve the XO trim offset via system firmware (e.g., device tree),
-especially in the case where the device doesn't have a useful EEPROM
-on which to store the calibrated XO offset (e.g., for integrated Wi-Fi).
-Calibrated XO offset is sent to firmware, which compensate the clock drift
-by programing the XO trim register.
+This is still a bit too vague for me and the DT binding is allowing
+for pretty much
+anything to be passed.
 
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
+This XO trim offset is offset from which register base?
+And, what is supposed to populate it?
 
-Signed-off-by: Youghandhar Chintala <quic_youghand@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/ahb.c  |  8 ++++++++
- drivers/net/wireless/ath/ath11k/core.h |  3 +++
- drivers/net/wireless/ath/ath11k/qmi.c  | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/qmi.h  |  4 +++-
- 4 files changed, 38 insertions(+), 1 deletion(-)
+Regards,
+Robert
+>
+> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
+>
+> Signed-off-by: Youghandhar Chintala <quic_youghand@quicinc.com>
+> ---
+>  drivers/net/wireless/ath/ath11k/ahb.c  |  8 ++++++++
+>  drivers/net/wireless/ath/ath11k/core.h |  3 +++
+>  drivers/net/wireless/ath/ath11k/qmi.c  | 24 ++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath11k/qmi.h  |  4 +++-
+>  4 files changed, 38 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+> index d34a4d6325b2..89580b4e47a9 100644
+> --- a/drivers/net/wireless/ath/ath11k/ahb.c
+> +++ b/drivers/net/wireless/ath/ath11k/ahb.c
+> @@ -1039,6 +1039,14 @@ static int ath11k_ahb_fw_resources_init(struct ath11k_base *ab)
+>         ab_ahb->fw.iommu_domain = iommu_dom;
+>         of_node_put(node);
+>
+> +       ret = of_property_read_u32(pdev->dev.of_node, "xo-cal-data", &ab->xo_cal_data);
+> +       if (ret) {
+> +               ath11k_dbg(ab, ATH11K_DBG_AHB, "failed to get xo-cal-data property\n");
+> +               return 0;
+> +       }
+> +       ab->xo_cal_supported = true;
+> +       ath11k_dbg(ab, ATH11K_DBG_AHB, "xo cal data 0x%x\n", ab->xo_cal_data);
+> +
+>         return 0;
+>
+>  err_iommu_unmap:
+> diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+> index 22460b0abf03..783398e98915 100644
+> --- a/drivers/net/wireless/ath/ath11k/core.h
+> +++ b/drivers/net/wireless/ath/ath11k/core.h
+> @@ -969,6 +969,9 @@ struct ath11k_base {
+>                 const struct ath11k_pci_ops *ops;
+>         } pci;
+>
+> +       bool xo_cal_supported;
+> +       u32 xo_cal_data;
+> +
+>         /* must be last */
+>         u8 drv_priv[] __aligned(sizeof(void *));
+>  };
+> diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+> index 145f20a681bd..67f386b001ab 100644
+> --- a/drivers/net/wireless/ath/ath11k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/qmi.c
+> @@ -1451,6 +1451,24 @@ static struct qmi_elem_info qmi_wlanfw_wlan_mode_req_msg_v01_ei[] = {
+>                 .offset         = offsetof(struct qmi_wlanfw_wlan_mode_req_msg_v01,
+>                                            hw_debug),
+>         },
+> +       {
+> +               .data_type  = QMI_OPT_FLAG,
+> +               .elem_len   = 1,
+> +               .elem_size  = sizeof(u8),
+> +               .array_type = NO_ARRAY,
+> +               .tlv_type   = 0x11,
+> +               .offset     = offsetof(struct qmi_wlanfw_wlan_mode_req_msg_v01,
+> +                                      xo_cal_data_valid),
+> +       },
+> +       {
+> +               .data_type  = QMI_UNSIGNED_1_BYTE,
+> +               .elem_len   = 1,
+> +               .elem_size  = sizeof(u8),
+> +               .array_type = NO_ARRAY,
+> +               .tlv_type   = 0x11,
+> +               .offset     = offsetof(struct qmi_wlanfw_wlan_mode_req_msg_v01,
+> +                                      xo_cal_data),
+> +       },
+>         {
+>                 .data_type      = QMI_EOTI,
+>                 .array_type     = NO_ARRAY,
+> @@ -2610,6 +2628,12 @@ static int ath11k_qmi_wlanfw_mode_send(struct ath11k_base *ab,
+>         req.hw_debug_valid = 1;
+>         req.hw_debug = 0;
+>
+> +       if (ab->xo_cal_supported) {
+> +               req.xo_cal_data_valid = 1;
+> +               req.xo_cal_data = ab->xo_cal_data;
+> +       }
+> +       ath11k_dbg(ab, ATH11K_DBG_QMI, "xo_cal_supported %d\n", ab->xo_cal_supported);
+> +
+>         ret = qmi_txn_init(&ab->qmi.handle, &txn,
+>                            qmi_wlanfw_wlan_mode_resp_msg_v01_ei, &resp);
+>         if (ret < 0)
+> diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
+> index 2ec56a34fa81..db61ce0d5689 100644
+> --- a/drivers/net/wireless/ath/ath11k/qmi.h
+> +++ b/drivers/net/wireless/ath/ath11k/qmi.h
+> @@ -450,7 +450,7 @@ struct qmi_wlanfw_m3_info_resp_msg_v01 {
+>         struct qmi_response_type_v01 resp;
+>  };
+>
+> -#define QMI_WLANFW_WLAN_MODE_REQ_MSG_V01_MAX_LEN       11
+> +#define QMI_WLANFW_WLAN_MODE_REQ_MSG_V01_MAX_LEN       17
+>  #define QMI_WLANFW_WLAN_MODE_RESP_MSG_V01_MAX_LEN      7
+>  #define QMI_WLANFW_WLAN_CFG_REQ_MSG_V01_MAX_LEN                803
+>  #define QMI_WLANFW_WLAN_CFG_RESP_MSG_V01_MAX_LEN       7
+> @@ -470,6 +470,8 @@ struct qmi_wlanfw_wlan_mode_req_msg_v01 {
+>         u32 mode;
+>         u8 hw_debug_valid;
+>         u8 hw_debug;
+> +       u8 xo_cal_data_valid;
+> +       u8 xo_cal_data;
+>  };
+>
+>  struct qmi_wlanfw_wlan_mode_resp_msg_v01 {
+> --
+> 2.38.0
+>
+>
+> --
+> ath11k mailing list
+> ath11k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath11k
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index d34a4d6325b2..89580b4e47a9 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -1039,6 +1039,14 @@ static int ath11k_ahb_fw_resources_init(struct ath11k_base *ab)
- 	ab_ahb->fw.iommu_domain = iommu_dom;
- 	of_node_put(node);
- 
-+	ret = of_property_read_u32(pdev->dev.of_node, "xo-cal-data", &ab->xo_cal_data);
-+	if (ret) {
-+		ath11k_dbg(ab, ATH11K_DBG_AHB, "failed to get xo-cal-data property\n");
-+		return 0;
-+	}
-+	ab->xo_cal_supported = true;
-+	ath11k_dbg(ab, ATH11K_DBG_AHB, "xo cal data 0x%x\n", ab->xo_cal_data);
-+
- 	return 0;
- 
- err_iommu_unmap:
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 22460b0abf03..783398e98915 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -969,6 +969,9 @@ struct ath11k_base {
- 		const struct ath11k_pci_ops *ops;
- 	} pci;
- 
-+	bool xo_cal_supported;
-+	u32 xo_cal_data;
-+
- 	/* must be last */
- 	u8 drv_priv[] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
-index 145f20a681bd..67f386b001ab 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.c
-+++ b/drivers/net/wireless/ath/ath11k/qmi.c
-@@ -1451,6 +1451,24 @@ static struct qmi_elem_info qmi_wlanfw_wlan_mode_req_msg_v01_ei[] = {
- 		.offset		= offsetof(struct qmi_wlanfw_wlan_mode_req_msg_v01,
- 					   hw_debug),
- 	},
-+	{
-+		.data_type  = QMI_OPT_FLAG,
-+		.elem_len   = 1,
-+		.elem_size  = sizeof(u8),
-+		.array_type = NO_ARRAY,
-+		.tlv_type   = 0x11,
-+		.offset     = offsetof(struct qmi_wlanfw_wlan_mode_req_msg_v01,
-+				       xo_cal_data_valid),
-+	},
-+	{
-+		.data_type  = QMI_UNSIGNED_1_BYTE,
-+		.elem_len   = 1,
-+		.elem_size  = sizeof(u8),
-+		.array_type = NO_ARRAY,
-+		.tlv_type   = 0x11,
-+		.offset     = offsetof(struct qmi_wlanfw_wlan_mode_req_msg_v01,
-+				       xo_cal_data),
-+	},
- 	{
- 		.data_type	= QMI_EOTI,
- 		.array_type	= NO_ARRAY,
-@@ -2610,6 +2628,12 @@ static int ath11k_qmi_wlanfw_mode_send(struct ath11k_base *ab,
- 	req.hw_debug_valid = 1;
- 	req.hw_debug = 0;
- 
-+	if (ab->xo_cal_supported) {
-+		req.xo_cal_data_valid = 1;
-+		req.xo_cal_data = ab->xo_cal_data;
-+	}
-+	ath11k_dbg(ab, ATH11K_DBG_QMI, "xo_cal_supported %d\n", ab->xo_cal_supported);
-+
- 	ret = qmi_txn_init(&ab->qmi.handle, &txn,
- 			   qmi_wlanfw_wlan_mode_resp_msg_v01_ei, &resp);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/ath/ath11k/qmi.h b/drivers/net/wireless/ath/ath11k/qmi.h
-index 2ec56a34fa81..db61ce0d5689 100644
---- a/drivers/net/wireless/ath/ath11k/qmi.h
-+++ b/drivers/net/wireless/ath/ath11k/qmi.h
-@@ -450,7 +450,7 @@ struct qmi_wlanfw_m3_info_resp_msg_v01 {
- 	struct qmi_response_type_v01 resp;
- };
- 
--#define QMI_WLANFW_WLAN_MODE_REQ_MSG_V01_MAX_LEN	11
-+#define QMI_WLANFW_WLAN_MODE_REQ_MSG_V01_MAX_LEN	17
- #define QMI_WLANFW_WLAN_MODE_RESP_MSG_V01_MAX_LEN	7
- #define QMI_WLANFW_WLAN_CFG_REQ_MSG_V01_MAX_LEN		803
- #define QMI_WLANFW_WLAN_CFG_RESP_MSG_V01_MAX_LEN	7
-@@ -470,6 +470,8 @@ struct qmi_wlanfw_wlan_mode_req_msg_v01 {
- 	u32 mode;
- 	u8 hw_debug_valid;
- 	u8 hw_debug;
-+	u8 xo_cal_data_valid;
-+	u8 xo_cal_data;
- };
- 
- struct qmi_wlanfw_wlan_mode_resp_msg_v01 {
+
+
 -- 
-2.38.0
-
+Robert Marko
+Staff Embedded Linux Engineer
+Sartura Ltd.
+Lendavska ulica 16a
+10000 Zagreb, Croatia
+Email: robert.marko@sartura.hr
+Web: www.sartura.hr
