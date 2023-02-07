@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0C1C64ED8
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Feb 2023 14:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A4ADC636CC
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Feb 2023 14:30:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232315AbjBGO3f (ORCPT
+        id S232725AbjBGO3r (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Feb 2023 09:29:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43298 "EHLO
+        Tue, 7 Feb 2023 09:29:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232154AbjBGO33 (ORCPT
+        with ESMTP id S232693AbjBGO3f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Feb 2023 09:29:29 -0500
+        Tue, 7 Feb 2023 09:29:35 -0500
 Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 693F3190;
-        Tue,  7 Feb 2023 06:29:28 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6905B1258C;
+        Tue,  7 Feb 2023 06:29:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1675780168; x=1707316168;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=slc0KZtNoZ1bsJm/e5gBRrLuxfQ5uLgrlphY9y9ttTg=;
-  b=lpiMw+Bj0CmC8rQDkHxuRJRcqbqGh5mJ1leqs4iGwudehS+pojE39vvU
-   6ccy9coHWxN94L3+2Y4tRFFTOScYKWknUgvwm7t8LM2YbtQx2gd2qqQeQ
-   z+/ePK5laZ7hfRnru1ZbEYlq5ko8KlFQoSnq3XpHWyqfwaVPoJAR6gmIh
-   bRIW5cOl7/0k6e4G5SM0YdkQw0EQaz9MXmaT0tMISgBCQVt3xIXqLc/Nj
-   OwahdjmUl6Tf+gi+7pmOlu0SHgVrAJ7iNg1NoScMS06EhxUx3G4RxOAh9
-   6WsVz1p7c9WYZnMSHQ39ynhAZF1AfcL5Rxrkj3ooUBue/uvog+2hqDPcn
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10614"; a="329537327"
+  t=1675780173; x=1707316173;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=9Dq4mU58s7wFVOS4xMQ0zOI9I/hT6Ikw0b7RarExmhA=;
+  b=k4wRtOqYylZ0jOf6D5Q3iqoaQx3coK3u4oGxbPZjA6Gngmnz80FH7zrK
+   TLDmYhlGIKb8l0wvrTxnEcesRvtV9qCQnqEHHX5kPM+M7IYjaujIc5/bQ
+   l7AImczCNaoXb+tFkdvnY8sRhgkCoIMY+WShmvXTx0JxipnxW37tDYIuB
+   fu1E7BGzmUZoLo/j4DZNrq/O48VzhJKOe9+1digKvwiUk8qxgT6cXlIrS
+   VPWKM+HV+XCol1o2SwFFF1XYK/kRw7af65wCrz4e4UOjJljeeo7zrDBAD
+   Qmox7V1HaaH9E18Ubsj8oIALDtl9QRemN5z6u7Aovqt1sQYHbFXmjkuah
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10614"; a="329537345"
 X-IronPort-AV: E=Sophos;i="5.97,278,1669104000"; 
-   d="scan'208";a="329537327"
+   d="scan'208";a="329537345"
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2023 06:29:27 -0800
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2023 06:29:32 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10614"; a="790811308"
+X-IronPort-AV: E=McAfee;i="6500,9779,10614"; a="790811317"
 X-IronPort-AV: E=Sophos;i="5.97,278,1669104000"; 
-   d="scan'208";a="790811308"
+   d="scan'208";a="790811317"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga004.jf.intel.com with ESMTP; 07 Feb 2023 06:29:22 -0800
+  by orsmga004.jf.intel.com with ESMTP; 07 Feb 2023 06:29:28 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 95C3D1C5; Tue,  7 Feb 2023 16:30:00 +0200 (EET)
+        id 4035E252; Tue,  7 Feb 2023 16:30:02 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Linus Walleij <linus.walleij@linaro.org>,
@@ -99,111 +99,204 @@ Cc:     Bartosz Golaszewski <brgl@bgdev.pl>,
         Li Yang <leoyang.li@nxp.com>, Lee Jones <lee@kernel.org>,
         Rob Herring <robh+dt@kernel.org>,
         Frank Rowand <frowand.list@gmail.com>
-Subject: [PATCH v3 00/12] gpiolib cleanups
-Date:   Tue,  7 Feb 2023 16:29:40 +0200
-Message-Id: <20230207142952.51844-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 02/12] gpiolib: coldfire: remove custom asm/gpio.h
+Date:   Tue,  7 Feb 2023 16:29:42 +0200
+Message-Id: <20230207142952.51844-3-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.39.1
+In-Reply-To: <20230207142952.51844-1-andriy.shevchenko@linux.intel.com>
+References: <20230207142952.51844-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-These are some older patches Arnd did last year, rebased to
-linux-next-20230207. On top there are Andy's patches regarding
-similar topic.
+From: Arnd Bergmann <arnd@arndb.de>
 
-The main goal is to remove some of the legacy bits of the gpiolib
-interfaces, where the corner cases are easily avoided or replaced
-with gpio descriptor based interfaces.
+Now that coldfire is the only user of a custom asm/gpio.h, it seems
+better to remove this as well, and have the same interface everywhere.
 
-Changes in v3:
-- reworked touchscreen patch in accordance with Dmitry's comments
-- rebased on the latest Linux Next
-- added on top Andy's series
+For the gpio_get_value()/gpio_set_value()/gpio_to_irq(), gpio_cansleep()
+functions, the custom version is only a micro-optimization to inline the
+function for constant GPIO numbers. However, in the coldfire defconfigs,
+I was unable to find a single instance where this micro-optimization
+was even used, and according to Geert the only user appears to be the
+QSPI chip that is disabled everywhere.
 
-Changes in v2:
-- dropped patch 8 after Andy's identical patch was merged
-- rebase on latest gpio tree
-- leave unused gpio_cansleep() in place for now
-- address feedback from Andy Shevchenko
+The custom gpio_request_one() function is even less useful, as it is
+guarded by an #ifdef that is never true.
 
-Andy Shevchenko (5):
-  gpio: aggregator: Add missing header(s)
-  gpiolib: Drop unused forward declaration from driver.h
-  gpiolib: Deduplicate forward declarations in consumer.h
-  gpiolib: Group forward declarations in consumer.h
-  gpiolib: Clean up headers
-
-Arnd Bergmann (7):
-  gpiolib: remove empty asm/gpio.h files
-  gpiolib: coldfire: remove custom asm/gpio.h
-  gpiolib: remove asm-generic/gpio.h
-  gpiolib: remove gpio_set_debounce
-  gpiolib: remove legacy gpio_export
-  gpiolib: split linux/gpio/driver.h out of linux/gpio.h
-  gpiolib: split of_mm_gpio_chip out of linux/of_gpio.h
-
- Documentation/admin-guide/gpio/sysfs.rst      |   2 +-
- Documentation/driver-api/gpio/legacy.rst      |  23 ---
- .../zh_CN/driver-api/gpio/legacy.rst          |  20 ---
- Documentation/translations/zh_TW/gpio.txt     |  19 ---
- MAINTAINERS                                   |   1 -
- arch/arm/Kconfig                              |   1 -
- arch/arm/include/asm/gpio.h                   |  21 ---
- arch/arm/mach-omap1/irq.c                     |   1 +
- arch/arm/mach-omap2/pdata-quirks.c            |   9 +-
- arch/arm/mach-orion5x/board-rd88f5182.c       |   1 +
- arch/arm/mach-s3c/s3c64xx.c                   |   1 +
- arch/arm/mach-sa1100/assabet.c                |   1 +
- arch/arm/plat-orion/gpio.c                    |   1 +
- arch/m68k/Kconfig.cpu                         |   1 -
- arch/m68k/include/asm/gpio.h                  |  95 -----------
- arch/m68k/include/asm/mcfgpio.h               |   2 +-
- arch/powerpc/platforms/44x/Kconfig            |   1 +
- arch/powerpc/platforms/4xx/gpio.c             |   2 +-
- arch/powerpc/platforms/8xx/Kconfig            |   1 +
- arch/powerpc/platforms/8xx/cpm1.c             |   2 +-
- arch/powerpc/platforms/Kconfig                |   2 +
- arch/powerpc/sysdev/cpm_common.c              |   2 +-
- arch/sh/Kconfig                               |   1 -
- arch/sh/boards/board-magicpanelr2.c           |   1 +
- arch/sh/boards/mach-ap325rxa/setup.c          |   7 +-
- arch/sh/include/asm/gpio.h                    |  45 ------
- drivers/gpio/Kconfig                          |  19 ++-
- drivers/gpio/TODO                             |  15 +-
- drivers/gpio/gpio-aggregator.c                |   9 +-
- drivers/gpio/gpio-altera.c                    |   2 +-
- drivers/gpio/gpio-davinci.c                   |   2 -
- drivers/gpio/gpio-mm-lantiq.c                 |   2 +-
- drivers/gpio/gpio-mpc5200.c                   |   2 +-
- drivers/gpio/gpiolib-acpi.c                   |  10 +-
- drivers/gpio/gpiolib-acpi.h                   |   1 -
- drivers/gpio/gpiolib-of.c                     |   9 +-
- drivers/gpio/gpiolib-of.h                     |   1 -
- drivers/gpio/gpiolib-swnode.c                 |   5 +-
- drivers/gpio/gpiolib-sysfs.c                  |  25 ++-
- drivers/gpio/gpiolib.c                        |   9 +-
- drivers/input/touchscreen/ads7846.c           |  24 +--
- drivers/media/pci/sta2x11/sta2x11_vip.c       |  10 +-
- drivers/net/ieee802154/ca8210.c               |   3 +-
- .../broadcom/brcm80211/brcmsmac/led.c         |   1 +
- drivers/pinctrl/core.c                        |   1 -
- drivers/soc/fsl/qe/gpio.c                     |   2 +-
- include/asm-generic/gpio.h                    | 147 ------------------
- include/linux/gpio.h                          | 100 +++++++-----
- include/linux/gpio/consumer.h                 |  24 +--
- include/linux/gpio/driver.h                   |  31 +++-
- .../legacy-of-mm-gpiochip.h}                  |  33 +---
- include/linux/mfd/ucb1x00.h                   |   1 +
- include/linux/of_gpio.h                       |  21 ---
- 53 files changed, 223 insertions(+), 549 deletions(-)
- delete mode 100644 arch/arm/include/asm/gpio.h
+Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Acked-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/m68k/Kconfig.cpu        |  1 -
+ arch/m68k/include/asm/gpio.h | 95 ------------------------------------
+ drivers/gpio/Kconfig         |  8 ---
+ include/linux/gpio.h         |  7 ---
+ 4 files changed, 111 deletions(-)
  delete mode 100644 arch/m68k/include/asm/gpio.h
- delete mode 100644 arch/sh/include/asm/gpio.h
- delete mode 100644 include/asm-generic/gpio.h
- copy include/linux/{of_gpio.h => gpio/legacy-of-mm-gpiochip.h} (50%)
 
+diff --git a/arch/m68k/Kconfig.cpu b/arch/m68k/Kconfig.cpu
+index 9380f6e3bb66..96a0fb4f1af5 100644
+--- a/arch/m68k/Kconfig.cpu
++++ b/arch/m68k/Kconfig.cpu
+@@ -24,7 +24,6 @@ config M68KCLASSIC
+ 
+ config COLDFIRE
+ 	bool "Coldfire CPU family support"
+-	select ARCH_HAVE_CUSTOM_GPIO_H
+ 	select CPU_HAS_NO_BITFIELDS
+ 	select CPU_HAS_NO_CAS
+ 	select CPU_HAS_NO_MULDIV64
+diff --git a/arch/m68k/include/asm/gpio.h b/arch/m68k/include/asm/gpio.h
+deleted file mode 100644
+index 5cfc0996ba94..000000000000
+--- a/arch/m68k/include/asm/gpio.h
++++ /dev/null
+@@ -1,95 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0-only */
+-/*
+- * Coldfire generic GPIO support
+- *
+- * (C) Copyright 2009, Steven King <sfking@fdwdc.com>
+-*/
+-
+-#ifndef coldfire_gpio_h
+-#define coldfire_gpio_h
+-
+-#include <linux/io.h>
+-#include <asm/coldfire.h>
+-#include <asm/mcfsim.h>
+-#include <asm/mcfgpio.h>
+-/*
+- * The Generic GPIO functions
+- *
+- * If the gpio is a compile time constant and is one of the Coldfire gpios,
+- * use the inline version, otherwise dispatch thru gpiolib.
+- */
+-
+-static inline int gpio_get_value(unsigned gpio)
+-{
+-	if (__builtin_constant_p(gpio) && gpio < MCFGPIO_PIN_MAX)
+-		return mcfgpio_read(__mcfgpio_ppdr(gpio)) & mcfgpio_bit(gpio);
+-	else
+-		return __gpio_get_value(gpio);
+-}
+-
+-static inline void gpio_set_value(unsigned gpio, int value)
+-{
+-	if (__builtin_constant_p(gpio) && gpio < MCFGPIO_PIN_MAX) {
+-		if (gpio < MCFGPIO_SCR_START) {
+-			unsigned long flags;
+-			MCFGPIO_PORTTYPE data;
+-
+-			local_irq_save(flags);
+-			data = mcfgpio_read(__mcfgpio_podr(gpio));
+-			if (value)
+-				data |= mcfgpio_bit(gpio);
+-			else
+-				data &= ~mcfgpio_bit(gpio);
+-			mcfgpio_write(data, __mcfgpio_podr(gpio));
+-			local_irq_restore(flags);
+-		} else {
+-			if (value)
+-				mcfgpio_write(mcfgpio_bit(gpio),
+-						MCFGPIO_SETR_PORT(gpio));
+-			else
+-				mcfgpio_write(~mcfgpio_bit(gpio),
+-						MCFGPIO_CLRR_PORT(gpio));
+-		}
+-	} else
+-		__gpio_set_value(gpio, value);
+-}
+-
+-static inline int gpio_to_irq(unsigned gpio)
+-{
+-#if defined(MCFGPIO_IRQ_MIN)
+-	if ((gpio >= MCFGPIO_IRQ_MIN) && (gpio < MCFGPIO_IRQ_MAX))
+-#else
+-	if (gpio < MCFGPIO_IRQ_MAX)
+-#endif
+-		return gpio + MCFGPIO_IRQ_VECBASE;
+-	else
+-		return __gpio_to_irq(gpio);
+-}
+-
+-static inline int gpio_cansleep(unsigned gpio)
+-{
+-	return gpio < MCFGPIO_PIN_MAX ? 0 : __gpio_cansleep(gpio);
+-}
+-
+-#ifndef CONFIG_GPIOLIB
+-static inline int gpio_request_one(unsigned gpio, unsigned long flags, const char *label)
+-{
+-	int err;
+-
+-	err = gpio_request(gpio, label);
+-	if (err)
+-		return err;
+-
+-	if (flags & GPIOF_DIR_IN)
+-		err = gpio_direction_input(gpio);
+-	else
+-		err = gpio_direction_output(gpio,
+-			(flags & GPIOF_INIT_HIGH) ? 1 : 0);
+-
+-	if (err)
+-		gpio_free(gpio);
+-
+-	return err;
+-}
+-#endif /* !CONFIG_GPIOLIB */
+-#endif
+diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+index 218d7e4c27ff..06a268d56800 100644
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -3,14 +3,6 @@
+ # GPIO infrastructure and drivers
+ #
+ 
+-config ARCH_HAVE_CUSTOM_GPIO_H
+-	bool
+-	help
+-	  Selecting this config option from the architecture Kconfig allows
+-	  the architecture to provide a custom asm/gpio.h implementation
+-	  overriding the default implementations.  New uses of this are
+-	  strongly discouraged.
+-
+ menuconfig GPIOLIB
+ 	bool "GPIO Support"
+ 	help
+diff --git a/include/linux/gpio.h b/include/linux/gpio.h
+index 85beb236c925..2b75017b3aad 100644
+--- a/include/linux/gpio.h
++++ b/include/linux/gpio.h
+@@ -54,11 +54,6 @@ struct gpio {
+ };
+ 
+ #ifdef CONFIG_GPIOLIB
+-
+-#ifdef CONFIG_ARCH_HAVE_CUSTOM_GPIO_H
+-#include <asm/gpio.h>
+-#else
+-
+ #include <asm-generic/gpio.h>
+ 
+ static inline int gpio_get_value(unsigned int gpio)
+@@ -81,8 +76,6 @@ static inline int gpio_to_irq(unsigned int gpio)
+ 	return __gpio_to_irq(gpio);
+ }
+ 
+-#endif /* ! CONFIG_ARCH_HAVE_CUSTOM_GPIO_H */
+-
+ /* CONFIG_GPIOLIB: bindings for managed devices that want to request gpios */
+ 
+ struct device;
 -- 
 2.39.1
 
