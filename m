@@ -2,89 +2,152 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2AD0C636CC
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 16:32:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C1EC74A44
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 17:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230310AbjBHQcn (ORCPT
+        id S230094AbjBHReV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Feb 2023 11:32:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41232 "EHLO
+        Wed, 8 Feb 2023 12:34:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230475AbjBHQck (ORCPT
+        with ESMTP id S231913AbjBHReF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2023 11:32:40 -0500
-Received: from nbd.name (nbd.name [46.4.11.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F8D93754D
-        for <linux-wireless@vger.kernel.org>; Wed,  8 Feb 2023 08:32:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-        s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-        References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=HpEUS/vI6UC3HBFGhG36LzbViRV53Vh9XedAd7fhGXs=; b=uMoK+rrb1mp63J9kTJUOLVVWTp
-        A/kXAND0biwrJB+tplDEc6ytOfwlAj8D+7GuWFMUB6XW6gNznEIoHNTYoGUpikJR/5uwRlmYmOZ54
-        3nNnIGhE/Xq/ieRWD7EialORu2SwxOtcDykr6gwx/DUKyYoh3HjEt+VJBjrRzi/xVL/g=;
-Received: from p200300daa717ad04a56d64ef60554cdc.dip0.t-ipconnect.de ([2003:da:a717:ad04:a56d:64ef:6055:4cdc] helo=nf.local)
-        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <nbd@nbd.name>)
-        id 1pPnN2-0065qs-QK; Wed, 08 Feb 2023 17:32:32 +0100
-Message-ID: <80317d6f-47d9-d824-1a58-7ffbfd46d716@nbd.name>
-Date:   Wed, 8 Feb 2023 17:32:32 +0100
+        Wed, 8 Feb 2023 12:34:05 -0500
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96ADF3251B;
+        Wed,  8 Feb 2023 09:34:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1675877641; x=1707413641;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=bloKEk7wdB/KAamzH2f498CjQ4BYd7MQyp/8x7HupR0=;
+  b=ndMqj0wLWnynraZ4MaSqQjmWUqDE9EKatFTzXOej52AbdsLmzrSeNx20
+   aUbcIyl9ImbCOVXwlKr2v9maSlZ95f1685hEjERnKz90rTozgd7IZ3LA2
+   VBdx6PMyPjpmzMtZNJW4hoZRsmMt2iJg888nMlvb/M6Q2Le50JGJpTduM
+   ejGAQTgVythJgG/WxpPKsY6CDVUXa6EluO/z36jEVP5qZBhgMoIpZjisu
+   zhQQOt0Z7AnpH9csGO6juefQ0XASW7A0/OMx6p3ENt4OhxoDwmqBOeJd2
+   hmf/tQW0BlcBluExU+R79G9TnunPJrvN06XyRrkA6Fg0HHj6RRcU4dXgf
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="310225283"
+X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
+   d="scan'208";a="310225283"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2023 09:33:21 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="697722976"
+X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
+   d="scan'208";a="697722976"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga008.jf.intel.com with ESMTP; 08 Feb 2023 09:33:15 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 8B16F1F8; Wed,  8 Feb 2023 19:33:47 +0200 (EET)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Vincenzo Palazzo <vincenzopalazzodev@gmail.com>,
+        Devarsh Thakkar <devarsht@ti.com>,
+        Michael Walle <michael@walle.cc>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Dipen Patel <dipenp@nvidia.com>,
+        Thierry Reding <treding@nvidia.com>,
+        Stefan Schmidt <stefan@datenfreihafen.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Lee Jones <lee@kernel.org>, linux-gpio@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-doc-tw-discuss@lists.sourceforge.net,
+        linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
+        linux-samsung-soc@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-wpan@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, linux-arch@vger.kernel.org,
+        devicetree@vger.kernel.org
+Cc:     Bartosz Golaszewski <brgl@bgdev.pl>,
+        Jonathan Corbet <corbet@lwn.net>, Alex Shi <alexs@kernel.org>,
+        Yanteng Si <siyanteng@loongson.cn>,
+        Hu Haowen <src.res@email.cn>,
+        Russell King <linux@armlinux.org.uk>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Janusz Krzysztofik <jmkrzyszt@gmail.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
+        Mun Yew Tham <mun.yew.tham@intel.com>,
+        Keerthy <j-keerthy@ti.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alexander Aring <alex.aring@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@kernel.org>, Qiang Zhao <qiang.zhao@nxp.com>,
+        Li Yang <leoyang.li@nxp.com>, Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: [PATCH v4 02/18] ARM: s3c24xx: Use the right include
+Date:   Wed,  8 Feb 2023 19:33:27 +0200
+Message-Id: <20230208173343.37582-3-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.39.1
+In-Reply-To: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
+References: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.6.1
-Subject: Re: [PATCH 2/2] linux-firmware: update firmware for MT7916
-Content-Language: en-US
-To:     shayne.chen@mediatek.com, "jwboyer@kernel.org" <jwboyer@kernel.org>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
-        "lorenzo@kernel.org" <lorenzo@kernel.org>,
-        Ryder Lee <Ryder.Lee@mediatek.com>,
-        =?UTF-8?B?RXZlbHluIFRzYWkgKOiUoeePiumIuik=?= 
-        <Evelyn.Tsai@mediatek.com>
-References: <20221123110743.22005-1-shayne.chen@mediatek.com>
- <20221123110743.22005-2-shayne.chen@mediatek.com>
- <d6244fd6-62bd-ba07-fe18-dee559594ece@nbd.name>
- <c82307e02e6d2c29d2e30209c76fe8bb7c86616f.camel@mediatek.com>
-From:   Felix Fietkau <nbd@nbd.name>
-In-Reply-To: <c82307e02e6d2c29d2e30209c76fe8bb7c86616f.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 08.02.23 17:13, shayne.chen@mediatek.com wrote:
-> On Wed, 2023-02-01 at 17:07 +0100, Felix Fietkau wrote:
->> On 23.11.22 12:07, Shayne Chen wrote:
->> > This patch updates firmware files v211120221031 for MT7916 WiFi
->> > NIC.
->> > 
->> > Signed-off-by: Shayne Chen<shayne.chen@mediatek.com>
->> 
->> More and more users are complaining that this firmware update
->> introduces 
->> a regression of not being able to support 5 GHz and 6 GHz together 
->> anymore. Apparently the EEPROM data needs to be patched to limit
->> support 
->> to one of the two bands, otherwise both don't work.
->> Switching at runtime apparently doesn't work without a firmware
->> restart.
->> 
->> Is there any chance we could get a firmware that fixes this bug?
->> 
-> Hi Felix,
-> 
-> We've released new firmware which enables 5+6 GHz on mt7916 band1 to
-> mt76 community, and are collecting feedbacks from users.
-> I'll send the updated firmware after getting positive feedbacks.
-That sounds great.
+From: Linus Walleij <linus.walleij@linaro.org>
 
-Thanks a lot,
+The file s3c64xx.c is including <linux/gpio.h> despite using no
+symbols from the file, however it needs it to implicitly bring in
+of_have_populated_dt() so include <linux/of.h> explicitly instead.
 
-- Felix
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/arm/mach-s3c/s3c64xx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-s3c/s3c64xx.c b/arch/arm/mach-s3c/s3c64xx.c
+index e97bd59083a8..9f9717874d67 100644
+--- a/arch/arm/mach-s3c/s3c64xx.c
++++ b/arch/arm/mach-s3c/s3c64xx.c
+@@ -21,13 +21,13 @@
+ #include <linux/ioport.h>
+ #include <linux/serial_core.h>
+ #include <linux/serial_s3c.h>
++#include <linux/of.h>
+ #include <linux/platform_device.h>
+ #include <linux/reboot.h>
+ #include <linux/io.h>
+ #include <linux/clk/samsung.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/irq.h>
+-#include <linux/gpio.h>
+ #include <linux/irqchip/arm-vic.h>
+ #include <clocksource/samsung_pwm.h>
+ 
+-- 
+2.39.1
 
