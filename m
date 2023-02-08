@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A16C636CC
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 17:34:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8777C64EC4
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 17:35:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232171AbjBHRea (ORCPT
+        id S231422AbjBHRe0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Feb 2023 12:34:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39762 "EHLO
+        Wed, 8 Feb 2023 12:34:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231912AbjBHReF (ORCPT
+        with ESMTP id S231674AbjBHRd7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2023 12:34:05 -0500
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E26F485B7;
-        Wed,  8 Feb 2023 09:34:02 -0800 (PST)
+        Wed, 8 Feb 2023 12:33:59 -0500
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55583BDBB;
+        Wed,  8 Feb 2023 09:33:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1675877642; x=1707413642;
+  t=1675877636; x=1707413636;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=4IQLDrOahYJ8lFlzrwNEYRM9qJTE1X0tQcaYGhsJEHc=;
-  b=G2Ko6LLEX419EYXpdWaN8RhlyDnSogCqqhneGWnR2JAwN2RFyqDNHUDI
-   rN1ajcGYE5yfWTt6trWdCVWJm28p3xUt1m0UBsEjsElQw3NJfoDXbaTpT
-   w0zI3lhnm2+j6yUlWucFcTZ345Hh6o1MJpOzb1WXVDPb0gQPgsrncN6j6
-   GlzouI9RtGDe+qv280oaHs/fRMoI9HLhgnuA6D+aK5IOfYVKq7boyu4Zz
-   by00KfscW3lKUEvpUVH7SOfU9HzS168qOVBtfWT/RPqVLlNHNCHpImf7I
-   AQR2TlKJvvFWDFLulGgORzUDErVCruG+g+ORPef1JRE9RcJNtyrf5jhhD
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="310225303"
+  bh=89Ua2SwK+9eoP7ii20ihjA/BcfunvekbP9EUK6guMxA=;
+  b=CAjO61dTj7RKn2EJPQPpYHblquK/iyxwSeG3cmPJ0pAUNVnazJySNx1M
+   6iaB7lyI2IKcgwEKsQuDIz88j5w9q+MNpmC3D3IxTTEXjzxAW1ca7R6pn
+   EACwyaxMcQXGXN/ZbJMb02iHPuR1m3gmvhtlv+GamSjTwE+qwpGyDQDf0
+   1v/Az6fO/9P7jzEKHJk3arvoS9eKLPOeyOzPlNUt3EUmU0q/fRXmw9ZsT
+   7GuOL+KSgWY0ZehkRZ0Wggj3e0pGLu8NW2TTKHWQJKv8RhfyMKguGZsjv
+   5ZN2zzF5jVi5RlnsYc/Ntg7Vw9JsxIm+Skmd5WDNusaAim6GLUuRzxRY7
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="327564277"
 X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
-   d="scan'208";a="310225303"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2023 09:33:21 -0800
+   d="scan'208";a="327564277"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2023 09:33:39 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="697722979"
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="644939003"
 X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
-   d="scan'208";a="697722979"
+   d="scan'208";a="644939003"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga008.jf.intel.com with ESMTP; 08 Feb 2023 09:33:15 -0800
+  by orsmga006.jf.intel.com with ESMTP; 08 Feb 2023 09:33:29 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 9FC47210; Wed,  8 Feb 2023 19:33:47 +0200 (EET)
+        id 694D3590; Wed,  8 Feb 2023 19:33:48 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Arnd Bergmann <arnd@arndb.de>,
@@ -105,9 +105,9 @@ Cc:     Bartosz Golaszewski <brgl@bgdev.pl>,
         Kalle Valo <kvalo@kernel.org>, Qiang Zhao <qiang.zhao@nxp.com>,
         Li Yang <leoyang.li@nxp.com>, Rob Herring <robh+dt@kernel.org>,
         Frank Rowand <frowand.list@gmail.com>
-Subject: [PATCH v4 03/18] hte: tegra-194: Use proper includes
-Date:   Wed,  8 Feb 2023 19:33:28 +0200
-Message-Id: <20230208173343.37582-4-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v4 15/18] gpiolib: Drop unused forward declaration from driver.h
+Date:   Wed,  8 Feb 2023 19:33:40 +0200
+Message-Id: <20230208173343.37582-16-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
 References: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
@@ -117,47 +117,26 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Linus Walleij <linus.walleij@linaro.org>
+There is no struct device_node pointers anywhere in the header,
+drop unused forward declaration.
 
-The test driver uses the gpiod consumer API so include the right
-<linux/gpio/consumer.h> header. This may cause a problem with
-struct of_device_id being implcitly pulled in by the legacy
-header <linux/gpio.h> so include <linux/mod_devicetable.h>
-explicitly as well.
-
-While at it, drop explicit moduleparam.h (it's included with module.h)
-and sort the headers.
-
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/hte/hte-tegra194-test.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ include/linux/gpio/driver.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/hte/hte-tegra194-test.c b/drivers/hte/hte-tegra194-test.c
-index 5d776a185bd6..358d4a10c6a1 100644
---- a/drivers/hte/hte-tegra194-test.c
-+++ b/drivers/hte/hte-tegra194-test.c
-@@ -6,14 +6,14 @@
-  */
+diff --git a/include/linux/gpio/driver.h b/include/linux/gpio/driver.h
+index ccd8a512d854..262a84ce9bcb 100644
+--- a/include/linux/gpio/driver.h
++++ b/include/linux/gpio/driver.h
+@@ -16,7 +16,6 @@
  
- #include <linux/err.h>
--#include <linux/module.h>
--#include <linux/moduleparam.h>
-+#include <linux/gpio/consumer.h>
-+#include <linux/hte.h>
- #include <linux/interrupt.h>
--#include <linux/gpio.h>
--#include <linux/timer.h>
-+#include <linux/mod_devicetable.h>
-+#include <linux/module.h>
- #include <linux/platform_device.h>
-+#include <linux/timer.h>
- #include <linux/workqueue.h>
--#include <linux/hte.h>
- 
- /*
-  * This sample HTE GPIO test driver demonstrates HTE API usage by enabling
+ struct gpio_desc;
+ struct of_phandle_args;
+-struct device_node;
+ struct seq_file;
+ struct gpio_device;
+ struct module;
 -- 
 2.39.1
 
