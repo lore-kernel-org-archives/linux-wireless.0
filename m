@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2358C05027
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 17:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 912E8C678DB
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 17:34:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232212AbjBHRei (ORCPT
+        id S232097AbjBHRef (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Feb 2023 12:34:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39668 "EHLO
+        Wed, 8 Feb 2023 12:34:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231791AbjBHReC (ORCPT
+        with ESMTP id S231992AbjBHReM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2023 12:34:02 -0500
+        Wed, 8 Feb 2023 12:34:12 -0500
 Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C9043EFD7;
-        Wed,  8 Feb 2023 09:33:58 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 296094FCD7;
+        Wed,  8 Feb 2023 09:34:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1675877639; x=1707413639;
+  t=1675877646; x=1707413646;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=jEiPyYdsZVsJV2pdec9rr5rbdBbMyx922ioXFsE3FmA=;
-  b=GgPQWj61joidJSlNP80475DZ9KMe9zfLScnJh9f0uKMywqb/afYb1UJ1
-   MgFjVkQkHuIqRmXmwsmJPLISal9lm/fcLCSDxgXMfgQW9KwLey48xkTTX
-   sBLM+YR0fYHS3V0/lAPVFHrQ2fmBO0BDQdbdbbgkubtF/vPuiTqu91MGh
-   bMOcw7xjLMaaa9Pjm8nLXoOyqdm2H/lHoMq54PDxc48WtO3P+IIrjttji
-   jToxr+fGai8UaAYga6zaNLnxZaG6csxCzEOF0BvP9W+HmL7MYvb+CMad8
-   mW+Wt5D574ifql4IJecu0x3Gu/QEkNWHVAj/lWmkX+ml9QLYpGzOgn6If
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="310225189"
+  bh=t/VM8/VvZGy84HjkdGTixpmW6D3tM4wtEJkqNOFR1p8=;
+  b=WRercOgWRkNUokbpc6Cb00vhkMPLkwssPuQqaPcNjeKT7cX5BGg96mid
+   CtZOKStgsanUebZHk6SWrLw52me6XyuwDrVlZnjDrmNk9e5f4k3/sK77r
+   kN35keTyDQJOqxC9ulfToDk12Q6O5XMzNS+eQp0+UbKot1dQZ1YHePDAo
+   /Ow64xdTX10A4YE3MOUq3PeMB9kTkMl1Y88sxBBtKAg+ev1w+kuy2uNV2
+   Cppx4ixZmXQWBgrJQbwGNLuFwzP8G/0JMMOsPjlnq4iCpTZqV+bBfioHh
+   fzZMQix5pTcPfGXbXFwhzUC72Uy3xaNg7UX/e+DJQ132U5oi3qwJud60e
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="310225373"
 X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
-   d="scan'208";a="310225189"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2023 09:33:14 -0800
+   d="scan'208";a="310225373"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2023 09:33:27 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="697722954"
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="660703925"
 X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
-   d="scan'208";a="697722954"
+   d="scan'208";a="660703925"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga008.jf.intel.com with ESMTP; 08 Feb 2023 09:33:08 -0800
+  by orsmga007.jf.intel.com with ESMTP; 08 Feb 2023 09:33:21 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 76D751C5; Wed,  8 Feb 2023 19:33:47 +0200 (EET)
+        id BFF94269; Wed,  8 Feb 2023 19:33:47 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Arnd Bergmann <arnd@arndb.de>,
@@ -104,10 +104,11 @@ Cc:     Bartosz Golaszewski <brgl@bgdev.pl>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Kalle Valo <kvalo@kernel.org>, Qiang Zhao <qiang.zhao@nxp.com>,
         Li Yang <leoyang.li@nxp.com>, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: [PATCH v4 01/18] ARM: orion/gpio: Use the right include
-Date:   Wed,  8 Feb 2023 19:33:26 +0200
-Message-Id: <20230208173343.37582-2-andriy.shevchenko@linux.intel.com>
+        Frank Rowand <frowand.list@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH v4 05/18] gpiolib: remove empty asm/gpio.h files
+Date:   Wed,  8 Feb 2023 19:33:30 +0200
+Message-Id: <20230208173343.37582-6-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
 References: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
@@ -117,41 +118,147 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Linus Walleij <linus.walleij@linaro.org>
+From: Arnd Bergmann <arnd@arndb.de>
 
-This is a GPIO driver so include <linux/gpio/driver.h> and not
-the legacy <linux/gpio.h> header. Switch a single call to the
-legacy API and use <linux/gpio/consumer.h> as well.
+The arm and sh versions of this file are identical to the generic
+versions and can just be removed.
 
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+The drivers that actually use the sh3 specific version also include
+cpu/gpio.h directly, with the exception of magicpanelr2, which is
+easily fixed. This leaves coldfire as the only gpio driver
+that needs something custom for gpiolib.
+
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Acked-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Reviewed-by: Vincenzo Palazzo <vincenzopalazzodev@gmail.com>
 ---
- arch/arm/plat-orion/gpio.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ arch/arm/Kconfig                    |  1 -
+ arch/arm/include/asm/gpio.h         | 21 --------------
+ arch/sh/Kconfig                     |  1 -
+ arch/sh/boards/board-magicpanelr2.c |  1 +
+ arch/sh/include/asm/gpio.h          | 45 -----------------------------
+ 5 files changed, 1 insertion(+), 68 deletions(-)
+ delete mode 100644 arch/arm/include/asm/gpio.h
+ delete mode 100644 arch/sh/include/asm/gpio.h
 
-diff --git a/arch/arm/plat-orion/gpio.c b/arch/arm/plat-orion/gpio.c
-index 3ef9ecdd6343..595e9cb33c1d 100644
---- a/arch/arm/plat-orion/gpio.c
-+++ b/arch/arm/plat-orion/gpio.c
-@@ -18,7 +18,8 @@
- #include <linux/spinlock.h>
- #include <linux/bitops.h>
- #include <linux/io.h>
--#include <linux/gpio.h>
-+#include <linux/gpio/driver.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/leds.h>
- #include <linux/of.h>
- #include <linux/of_irq.h>
-@@ -312,7 +313,7 @@ int orion_gpio_led_blink_set(struct gpio_desc *desc, int state,
- 	case GPIO_LED_NO_BLINK_LOW:
- 	case GPIO_LED_NO_BLINK_HIGH:
- 		orion_gpio_set_blink(gpio, 0);
--		gpio_set_value(gpio, state);
-+		gpiod_set_raw_value(desc, state);
- 		break;
- 	case GPIO_LED_BLINK:
- 		orion_gpio_set_blink(gpio, 1);
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index e24a9820e12f..1d1a603d964d 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -24,7 +24,6 @@ config ARM
+ 	select ARCH_HAS_SYNC_DMA_FOR_CPU
+ 	select ARCH_HAS_TEARDOWN_DMA_OPS if MMU
+ 	select ARCH_HAS_TICK_BROADCAST if GENERIC_CLOCKEVENTS_BROADCAST
+-	select ARCH_HAVE_CUSTOM_GPIO_H
+ 	select ARCH_HAVE_NMI_SAFE_CMPXCHG if CPU_V7 || CPU_V7M || CPU_V6K
+ 	select ARCH_HAS_GCOV_PROFILE_ALL
+ 	select ARCH_KEEP_MEMBLOCK
+diff --git a/arch/arm/include/asm/gpio.h b/arch/arm/include/asm/gpio.h
+deleted file mode 100644
+index 4ebbb58f06ea..000000000000
+--- a/arch/arm/include/asm/gpio.h
++++ /dev/null
+@@ -1,21 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-#ifndef _ARCH_ARM_GPIO_H
+-#define _ARCH_ARM_GPIO_H
+-
+-#include <asm-generic/gpio.h>
+-
+-/* The trivial gpiolib dispatchers */
+-#define gpio_get_value  __gpio_get_value
+-#define gpio_set_value  __gpio_set_value
+-#define gpio_cansleep   __gpio_cansleep
+-
+-/*
+- * Provide a default gpio_to_irq() which should satisfy every case.
+- * However, some platforms want to do this differently, so allow them
+- * to override it.
+- */
+-#ifndef gpio_to_irq
+-#define gpio_to_irq	__gpio_to_irq
+-#endif
+-
+-#endif /* _ARCH_ARM_GPIO_H */
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index 0665ac0add0b..ccb866750a88 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -4,7 +4,6 @@ config SUPERH
+ 	select ARCH_32BIT_OFF_T
+ 	select ARCH_ENABLE_MEMORY_HOTPLUG if SPARSEMEM && MMU
+ 	select ARCH_ENABLE_MEMORY_HOTREMOVE if SPARSEMEM && MMU
+-	select ARCH_HAVE_CUSTOM_GPIO_H
+ 	select ARCH_HAVE_NMI_SAFE_CMPXCHG if (GUSA_RB || CPU_SH4A)
+ 	select ARCH_HAS_BINFMT_FLAT if !MMU
+ 	select ARCH_HAS_CURRENT_STACK_POINTER
+diff --git a/arch/sh/boards/board-magicpanelr2.c b/arch/sh/boards/board-magicpanelr2.c
+index 56bd386ff3b0..75de893152af 100644
+--- a/arch/sh/boards/board-magicpanelr2.c
++++ b/arch/sh/boards/board-magicpanelr2.c
+@@ -21,6 +21,7 @@
+ #include <linux/sh_intc.h>
+ #include <mach/magicpanelr2.h>
+ #include <asm/heartbeat.h>
++#include <cpu/gpio.h>
+ #include <cpu/sh7720.h>
+ 
+ /* Dummy supplies, where voltage doesn't matter */
+diff --git a/arch/sh/include/asm/gpio.h b/arch/sh/include/asm/gpio.h
+deleted file mode 100644
+index 588c1380e4cb..000000000000
+--- a/arch/sh/include/asm/gpio.h
++++ /dev/null
+@@ -1,45 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0
+- *
+- *  include/asm-sh/gpio.h
+- *
+- * Generic GPIO API and pinmux table support for SuperH.
+- *
+- * Copyright (c) 2008 Magnus Damm
+- */
+-#ifndef __ASM_SH_GPIO_H
+-#define __ASM_SH_GPIO_H
+-
+-#include <linux/kernel.h>
+-#include <linux/errno.h>
+-
+-#if defined(CONFIG_CPU_SH3)
+-#include <cpu/gpio.h>
+-#endif
+-
+-#include <asm-generic/gpio.h>
+-
+-#ifdef CONFIG_GPIOLIB
+-
+-static inline int gpio_get_value(unsigned gpio)
+-{
+-	return __gpio_get_value(gpio);
+-}
+-
+-static inline void gpio_set_value(unsigned gpio, int value)
+-{
+-	__gpio_set_value(gpio, value);
+-}
+-
+-static inline int gpio_cansleep(unsigned gpio)
+-{
+-	return __gpio_cansleep(gpio);
+-}
+-
+-static inline int gpio_to_irq(unsigned gpio)
+-{
+-	return __gpio_to_irq(gpio);
+-}
+-
+-#endif /* CONFIG_GPIOLIB */
+-
+-#endif /* __ASM_SH_GPIO_H */
 -- 
 2.39.1
 
