@@ -2,46 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72C05C678D5
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 17:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2358C05027
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Feb 2023 17:34:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230402AbjBHRed (ORCPT
+        id S232212AbjBHRei (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Feb 2023 12:34:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39706 "EHLO
+        Wed, 8 Feb 2023 12:34:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231875AbjBHReD (ORCPT
+        with ESMTP id S231791AbjBHReC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Feb 2023 12:34:03 -0500
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 759F24390F;
-        Wed,  8 Feb 2023 09:33:59 -0800 (PST)
+        Wed, 8 Feb 2023 12:34:02 -0500
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C9043EFD7;
+        Wed,  8 Feb 2023 09:33:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1675877640; x=1707413640;
+  t=1675877639; x=1707413639;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=YtyTSKv3igoWzjKzirfnsuSbOV1zJhPUEQxw+fpoykQ=;
-  b=HcHdtHAkD7WCj8eQy/VW/Ke/F2a37B7t3bwc6m4fdR6abo7QVBUCdDBi
-   AScQ/paiga1eP1Uf4il4g4usjc6Qh8JP1bOWAIB4GTPMx8SCPdQ17qqCF
-   FQ+fPPL5KE3J3n4Jn24C/9+R4F40PQtkpGsHTsxwV8dIEj8tGLkHx3bCO
-   xXLyfBFfWeNa5vkatuivEutt5MFt5pa3DnbQ5XYz6GV46uw/2ORttJ9Po
-   eLW2v11AzRk4shNsYLosOxbSfsvv8c3OxFmL+JsybMIovZ6HDDaI/lylA
-   5G0SL5PgW1RL+oBRB2aGiHK2FZpBEvdEIVEA9sfZ2OSkG7nRNM9ufPhSF
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="331153853"
+  bh=jEiPyYdsZVsJV2pdec9rr5rbdBbMyx922ioXFsE3FmA=;
+  b=GgPQWj61joidJSlNP80475DZ9KMe9zfLScnJh9f0uKMywqb/afYb1UJ1
+   MgFjVkQkHuIqRmXmwsmJPLISal9lm/fcLCSDxgXMfgQW9KwLey48xkTTX
+   sBLM+YR0fYHS3V0/lAPVFHrQ2fmBO0BDQdbdbbgkubtF/vPuiTqu91MGh
+   bMOcw7xjLMaaa9Pjm8nLXoOyqdm2H/lHoMq54PDxc48WtO3P+IIrjttji
+   jToxr+fGai8UaAYga6zaNLnxZaG6csxCzEOF0BvP9W+HmL7MYvb+CMad8
+   mW+Wt5D574ifql4IJecu0x3Gu/QEkNWHVAj/lWmkX+ml9QLYpGzOgn6If
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="310225189"
 X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
-   d="scan'208";a="331153853"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2023 09:33:39 -0800
+   d="scan'208";a="310225189"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2023 09:33:14 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="669265907"
+X-IronPort-AV: E=McAfee;i="6500,9779,10615"; a="697722954"
 X-IronPort-AV: E=Sophos;i="5.97,281,1669104000"; 
-   d="scan'208";a="669265907"
+   d="scan'208";a="697722954"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga007.fm.intel.com with ESMTP; 08 Feb 2023 09:33:33 -0800
+  by orsmga008.jf.intel.com with ESMTP; 08 Feb 2023 09:33:08 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 78A38591; Wed,  8 Feb 2023 19:33:48 +0200 (EET)
+        id 76D751C5; Wed,  8 Feb 2023 19:33:47 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Arnd Bergmann <arnd@arndb.de>,
@@ -105,9 +105,9 @@ Cc:     Bartosz Golaszewski <brgl@bgdev.pl>,
         Kalle Valo <kvalo@kernel.org>, Qiang Zhao <qiang.zhao@nxp.com>,
         Li Yang <leoyang.li@nxp.com>, Rob Herring <robh+dt@kernel.org>,
         Frank Rowand <frowand.list@gmail.com>
-Subject: [PATCH v4 16/18] gpiolib: Deduplicate forward declarations in consumer.h
-Date:   Wed,  8 Feb 2023 19:33:41 +0200
-Message-Id: <20230208173343.37582-17-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v4 01/18] ARM: orion/gpio: Use the right include
+Date:   Wed,  8 Feb 2023 19:33:26 +0200
+Message-Id: <20230208173343.37582-2-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
 References: <20230208173343.37582-1-andriy.shevchenko@linux.intel.com>
@@ -117,46 +117,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The struct fwnode_handle pointer is used in both branches of ifdeffery,
-no need to have a copy of the same in each of them, just make it global.
+From: Linus Walleij <linus.walleij@linaro.org>
 
+This is a GPIO driver so include <linux/gpio/driver.h> and not
+the legacy <linux/gpio.h> header. Switch a single call to the
+legacy API and use <linux/gpio/consumer.h> as well.
+
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- include/linux/gpio/consumer.h | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ arch/arm/plat-orion/gpio.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/gpio/consumer.h b/include/linux/gpio/consumer.h
-index 59cb20cfac3d..a7eb8aa1e54c 100644
---- a/include/linux/gpio/consumer.h
-+++ b/include/linux/gpio/consumer.h
-@@ -8,6 +8,7 @@
- #include <linux/err.h>
- 
- struct device;
-+struct fwnode_handle;
- struct gpio_desc;
- struct gpio_array;
- 
-@@ -171,9 +172,6 @@ int gpiod_set_consumer_name(struct gpio_desc *desc, const char *name);
- struct gpio_desc *gpio_to_desc(unsigned gpio);
- int desc_to_gpio(const struct gpio_desc *desc);
- 
--/* Child properties interface */
--struct fwnode_handle;
--
- struct gpio_desc *fwnode_gpiod_get_index(struct fwnode_handle *fwnode,
- 					 const char *con_id, int index,
- 					 enum gpiod_flags flags,
-@@ -546,9 +544,6 @@ static inline int desc_to_gpio(const struct gpio_desc *desc)
- 	return -EINVAL;
- }
- 
--/* Child properties interface */
--struct fwnode_handle;
--
- static inline
- struct gpio_desc *fwnode_gpiod_get_index(struct fwnode_handle *fwnode,
- 					 const char *con_id, int index,
+diff --git a/arch/arm/plat-orion/gpio.c b/arch/arm/plat-orion/gpio.c
+index 3ef9ecdd6343..595e9cb33c1d 100644
+--- a/arch/arm/plat-orion/gpio.c
++++ b/arch/arm/plat-orion/gpio.c
+@@ -18,7 +18,8 @@
+ #include <linux/spinlock.h>
+ #include <linux/bitops.h>
+ #include <linux/io.h>
+-#include <linux/gpio.h>
++#include <linux/gpio/driver.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/leds.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+@@ -312,7 +313,7 @@ int orion_gpio_led_blink_set(struct gpio_desc *desc, int state,
+ 	case GPIO_LED_NO_BLINK_LOW:
+ 	case GPIO_LED_NO_BLINK_HIGH:
+ 		orion_gpio_set_blink(gpio, 0);
+-		gpio_set_value(gpio, state);
++		gpiod_set_raw_value(desc, state);
+ 		break;
+ 	case GPIO_LED_BLINK:
+ 		orion_gpio_set_blink(gpio, 1);
 -- 
 2.39.1
 
