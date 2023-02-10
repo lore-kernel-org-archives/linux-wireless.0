@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A096CC05027
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Feb 2023 11:16:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BEC9C636D3
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Feb 2023 11:17:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232270AbjBJLQ6 (ORCPT
+        id S232306AbjBJLQ7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Feb 2023 06:16:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57722 "EHLO
+        Fri, 10 Feb 2023 06:16:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232065AbjBJLQt (ORCPT
+        with ESMTP id S232027AbjBJLQt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 10 Feb 2023 06:16:49 -0500
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09D2772DD6
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D5372DDA
         for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2023 03:16:39 -0800 (PST)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1pQROO-0003KV-Ot; Fri, 10 Feb 2023 12:16:36 +0100
+        id 1pQROO-0003KU-Os; Fri, 10 Feb 2023 12:16:36 +0100
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1pQROM-003xEW-CS; Fri, 10 Feb 2023 12:16:35 +0100
+        id 1pQROM-003xEU-Aa; Fri, 10 Feb 2023 12:16:35 +0100
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1pQROM-008k9X-Mu; Fri, 10 Feb 2023 12:16:34 +0100
+        id 1pQROM-008k9c-OR; Fri, 10 Feb 2023 12:16:34 +0100
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless@vger.kernel.org
 Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -41,10 +41,12 @@ Cc:     Neo Jou <neojou@gmail.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
         Andreas Henriksson <andreas@fatal.se>,
         Viktor Petrenko <g0000ga@gmail.com>,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v2 0/3] wifi: rtw88: USB fixes
-Date:   Fri, 10 Feb 2023 12:16:29 +0100
-Message-Id: <20230210111632.1985205-1-s.hauer@pengutronix.de>
+Subject: [PATCH v2 2/3] wifi: rtw88: usb: send Zero length packets if necessary
+Date:   Fri, 10 Feb 2023 12:16:31 +0100
+Message-Id: <20230210111632.1985205-3-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230210111632.1985205-1-s.hauer@pengutronix.de>
+References: <20230210111632.1985205-1-s.hauer@pengutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -55,34 +57,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series addresses issues for the recently added RTW88 USB support
-reported by Andreas Henriksson and also our customer.
+Zero length packets are necessary when sending URBs with size
+multiple of bulkout_size, otherwise the hardware just stalls.
 
-The hardware can't handle urbs that have a size of multiple of the
-bulkout_size (usually 512 bytes). The symptom is that the hardware
-stalls completely. The issue can be reproduced by sending a suitably
-sized ping packet from the device:
+Fixes: a82dfd33d1237 ("wifi: rtw88: Add common USB chip support")
+Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+---
+ drivers/net/wireless/realtek/rtw88/usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-ping -s 394 <somehost>
-
-(It's 394 bytes here on a RTL8822CU and RTL8821CU, the actual size may
-differ on other chips, it was 402 bytes on a RTL8723DU)
-
-Other than that qsel was not set correctly. The sympton here is that
-only one of multiple bulk endpoints was used to send data.
-
-Changes since v1:
-- Use URB_ZERO_PACKET to let the USB host controller handle it automatically
-  rather than working around the issue.
-
-Sascha Hauer (3):
-  wifi: rtw88: usb: Set qsel correctly
-  wifi: rtw88: usb: send Zero length packets if necessary
-  wifi: rtw88: usb: drop now unnecessary URB size check
-
- drivers/net/wireless/realtek/rtw88/usb.c | 18 +++---------------
- 1 file changed, 3 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+index d9e995544e405..1a09c9288198a 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -271,6 +271,7 @@ static int rtw_usb_write_port(struct rtw_dev *rtwdev, u8 qsel, struct sk_buff *s
+ 		return -ENOMEM;
+ 
+ 	usb_fill_bulk_urb(urb, usbd, pipe, skb->data, skb->len, cb, context);
++	urb->transfer_flags |= URB_ZERO_PACKET;
+ 	ret = usb_submit_urb(urb, GFP_ATOMIC);
+ 
+ 	usb_free_urb(urb);
 -- 
 2.30.2
 
