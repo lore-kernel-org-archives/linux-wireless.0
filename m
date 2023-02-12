@@ -2,107 +2,74 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87D9CC677F1
-	for <linux-wireless@archiver.kernel.org>; Sun, 12 Feb 2023 12:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0381C05027
+	for <linux-wireless@archiver.kernel.org>; Sun, 12 Feb 2023 14:53:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229715AbjBLMQl (ORCPT
+        id S229463AbjBLOw7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 12 Feb 2023 07:16:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60168 "EHLO
+        Sun, 12 Feb 2023 09:52:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229656AbjBLMQg (ORCPT
+        with ESMTP id S229664AbjBLOw5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 12 Feb 2023 07:16:36 -0500
-Received: from soltyk.jannau.net (soltyk.jannau.net [144.76.91.90])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D823DE052;
-        Sun, 12 Feb 2023 04:16:33 -0800 (PST)
-Received: from robin.home.jannau.net (p579ad32f.dip0.t-ipconnect.de [87.154.211.47])
-        by soltyk.jannau.net (Postfix) with ESMTPSA id 37C2626F76B;
-        Sun, 12 Feb 2023 13:16:31 +0100 (CET)
-From:   Janne Grunau <j@jannau.net>
-Subject: [PATCH v2 0/4] dt-bindings: net: Add network-class.yaml schema
-Date:   Sun, 12 Feb 2023 13:16:28 +0100
-Message-Id: <20230203-dt-bindings-network-class-v2-0-499686795073@jannau.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAJzY6GMC/42OSwrCMBCGryJZOzKZ2IeuvIe4SDtDG5UpJLEip
- Xc39QSufj74X4tJEoMkc94tJsocUpi0AO13ph+9DgKBCxtCckjogDN0QTnokEAlv6f4gP7pU4L
- W1Y0w182JyZR855NAF73249aAiMBloZccRSC31lJp25xjSHmKn9+J2Ra5/rM3W0A4ViTomooQ+
- XL3qv51KDZzW9f1C4fabxDdAAAA
-To:     "David S. Miller" <davem@davemloft.net>,
+        Sun, 12 Feb 2023 09:52:57 -0500
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FBAD3A9A;
+        Sun, 12 Feb 2023 06:52:56 -0800 (PST)
+Received: from fpc.. (unknown [46.242.14.200])
+        by mail.ispras.ru (Postfix) with ESMTPSA id 2D4C140D403D;
+        Sun, 12 Feb 2023 14:52:54 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 2D4C140D403D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+        s=default; t=1676213574;
+        bh=1BOm5AF/SVPewGAsff3Q3TCQ4aozkAkOLj7Mo396mAE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=HWiNqTf6viB3SkNSJIpMeGSyqyOZnFh1lrs096bNFBD4OwxPj6tOY93Yue5jmyRjs
+         2Y762XhvHCYPEiYeGGLaRb49aeFK8jYbY+yCaLywabHsLSgMc28w2qaQP3U21Avm2c
+         fXLttrcQlZhMr9RZB7YVSGSSuDHjTHj2AjMEQOMo=
+From:   Fedor Pchelkin <pchelkin@ispras.ru>
+To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc:     Fedor Pchelkin <pchelkin@ispras.ru>, Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Mailing List <devicetree-spec@vger.kernel.org>,
-        Kalle Valo <kvalo@kernel.org>, van Spriel <arend@broadcom.com>,
-        =?utf-8?q?J=C3=A9r=C3=B4me_Pouiller?= <jerome.pouiller@silabs.com>,
-        Dinh Nguyen <dinguyen@kernel.org>,
-        Ley Foon Tan <lftan@altera.com>,
-        Chee Nouk Phoon <cnphoon@altera.com>
-Cc:     netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Janne Grunau <j@jannau.net>
-X-Mailer: b4 0.12.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2214; i=j@jannau.net;
- h=from:subject:message-id; bh=y7QrjK1UKfIGXPczHYVce0GeZzI5ACPm72GbLe9dHPc=;
- b=owGbwMvMwCG2UNrmdq9+ahrjabUkhuQXN+atn7qg2jhxduj922unGymYVfUGnlw5RaUwdDuTT
- aK6UHRRRykLgxgHg6yYIkuS9ssOhtU1ijG1D8Jg5rAygQxh4OIUgImIizAynGqae35x2N7/ospc
- n1dGJhTnhh5h3Hmk9uKZ/JbpYnHHbBj+Sm9y+8fyXrj49t6J4dw+cqnPxUvz1vzhYs3I2rJznZU
- qDwA=
-X-Developer-Key: i=j@jannau.net; a=openpgp;
- fpr=8B336A6BE4E5695E89B8532B81E806F586338419
+        "John W. Linville" <linville@tuxdriver.com>,
+        Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+        Senthil Balasubramanian <senthilkumar@atheros.com>,
+        Sujith <Sujith.Manoharan@atheros.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        lvc-project@linuxtesting.org
+Subject: [PATCH 0/1] wifi: ath9k: hif_usb: fix memory leak of remain_skbs
+Date:   Sun, 12 Feb 2023 17:52:37 +0300
+Message-Id: <20230212145238.123055-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The Devicetree Specification, Release v0.3 specifies in section 4.3.1
-a "Network Class Binding". This covers MAC address and maximal frame
-size properties. "local-mac-address" and "mac-address" with a fixed
-"address-size" of 48 bits are already in the ethernet-controller.yaml
-schema so move those over.
+Hello,
 
-Keep "address-size" fixed to 48 bits as it's unclear if network protocols
-using 64-bit mac addresses like ZigBee, 6LoWPAN and others are relevant for
-this binding. This allows mac address array size validation for ethernet
-and wireless lan devices.
+the problem is described in the following patch.
 
-"max-frame-size" in the Devicetree Specification is written to cover the
-whole layer 2 ethernet frame but actual use for this property is the
-payload size. Keep the description from ethernet-controller.yaml which
-specifies the property as MTU.
+Some remarks:
+I'm not quite sure if the function proposed in the patch should be placed
+somewhere else in the code... The patch now calls it during device
+deinitialization after urbs deallocation, and I suppose the interrupt
+callback ath9k_hif_usb_rx_stream() not to be executed during/after that
+period (in this case the leak would still remain, but I couldn't reproduce
+this particular case). Maybe the function freeing remain_skbs should be
+placed right before calling 'kfree(hif_dev)'?
 
-Signed-off-by: Janne Grunau <j@jannau.net>
----
-Changes in v2:
-- Added "max-frame-size" with the description from ethernet-controller.yaml
-- Restrict "address-size" to 48-bits
-- Fix the mac-address array size to 6 bytes
-- Drop duplicate default value from "max-frame-size" description
-- Fix 2 nios2 dts files which incorrectly use the ethernet frame size of 1518
-- Link to v1: https://lore.kernel.org/r/20230203-dt-bindings-network-class-v1-0-452e0375200d@jannau.net
+The patch is made on top of [1] master branch.
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/
 
 ---
-Janne Grunau (4):
-      dt-bindings: net: Add network-class schema for mac-address properties
-      dt-bindings: wireless: bcm4329-fmac: Use network-class.yaml schema
-      dt-bindings: wireless: silabs,wfx: Use network-class.yaml
-      nios2: dts: Fix tse_mac "max-frame-size" property
+Regards,
 
- .../bindings/net/ethernet-controller.yaml          | 25 +-----------
- .../devicetree/bindings/net/network-class.yaml     | 44 ++++++++++++++++++++++
- .../bindings/net/wireless/brcm,bcm4329-fmac.yaml   |  5 ++-
- .../bindings/net/wireless/silabs,wfx.yaml          |  5 +--
- arch/nios2/boot/dts/10m50_devboard.dts             |  2 +-
- arch/nios2/boot/dts/3c120_devboard.dts             |  2 +-
- 6 files changed, 52 insertions(+), 31 deletions(-)
----
-base-commit: 1b929c02afd37871d5afb9d498426f83432e71c2
-change-id: 20230203-dt-bindings-network-class-8367edd679d2
-
-Best regards,
--- 
-Janne Grunau <j@jannau.net>
-
+Fedor
