@@ -2,80 +2,69 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF7EC636D4
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Feb 2023 14:43:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A547C636CC
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Feb 2023 15:10:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229793AbjBOOnA (ORCPT
+        id S229852AbjBOPKR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Feb 2023 09:43:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39974 "EHLO
+        Wed, 15 Feb 2023 10:10:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229780AbjBOOm7 (ORCPT
+        with ESMTP id S229614AbjBOPKQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2023 09:42:59 -0500
-X-Greylist: delayed 587 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 15 Feb 2023 06:42:56 PST
-Received: from relay05.th.seeweb.it (relay05.th.seeweb.it [IPv6:2001:4b7a:2000:18::166])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDC8D14EAC
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2023 06:42:56 -0800 (PST)
-Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by m-r2.th.seeweb.it (Postfix) with ESMTPSA id 4F99A3FAF5;
-        Wed, 15 Feb 2023 15:33:05 +0100 (CET)
-Message-ID: <b12bf08c-f8b8-d561-f85a-475ec5677710@somainline.org>
-Date:   Wed, 15 Feb 2023 15:33:04 +0100
+        Wed, 15 Feb 2023 10:10:16 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72F1E25976;
+        Wed, 15 Feb 2023 07:10:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=+IhXvip6E0zB3m+HmAxx505GyG5cx1vo0UJZ0GujIH0=;
+        t=1676473815; x=1677683415; b=PGR/oPAmC1dCpGoSUF2uLvszQ5SfjrJGDfq+Nj6HJr+yBKM
+        M9ucmRIaSTb7zvYNcMNhfASMmBgPS0r3mVupPair1PF0TObX9q5ulOiYK+zmOxPk3v2rIsTZcUihM
+        rZXx7oerBqfpgnabnOvCdLu2R0qypqpV9mCwbH2PZrVJ8l2XaJ8+ULyapO8qQ44U+YcghgxAvJoQb
+        dcpqlN8s2Iam3KHoa42of8R1mh2zrnEk5CkC+xRNL+tX1eNTXhfuPg9ffZ+thRStRwGBC/nAILcGB
+        1ZGcdBSwa8Wf9nLTI7FQguUmUSd5XIcvK/cKKbpp9vYFOey2WE5kcO9VM/IaT3DQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1pSJQC-00D6at-0S;
+        Wed, 15 Feb 2023 16:10:12 +0100
+Message-ID: <0d4b99ab0a5bedc82f35bc1e548a611564b010e5.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/2] wifi: cfg80211: Add beacon hint notifier support
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     "Youghandhar Chintala (Temp)" <quic_youghand@quicinc.com>,
+        ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        quic_mpubbise@quicinc.com
+Date:   Wed, 15 Feb 2023 16:10:11 +0100
+In-Reply-To: <96cab5d9-9090-4cb2-ff17-eadc9da12f50@quicinc.com>
+References: <20221222124221.30894-1-quic_youghand@quicinc.com>
+         <20221222124221.30894-2-quic_youghand@quicinc.com>
+         <1df59863e78e8ddbe7eb3a74e6dd4c8f0bd7f098.camel@sipsolutions.net>
+         <96cab5d9-9090-4cb2-ff17-eadc9da12f50@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.2
-Subject: Re: [PATCH] wifi: mac80211: make rate u32 in sta_set_rate_info_rx()
-Content-Language: en-US
-To:     Shayne Chen <shayne.chen@mediatek.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>
-References: <20230209110659.25447-1-shayne.chen@mediatek.com>
-From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@somainline.org>
-In-Reply-To: <20230209110659.25447-1-shayne.chen@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Il 09/02/23 12:06, Shayne Chen ha scritto:
-> The value of last_rate in ieee80211_sta_rx_stats is degraded from u32 to
-> u16 after being assigned to rate variable, which causes information loss
-> in STA_STATS_FIELD_TYPE and later bitfields.
-> 
-> Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+> >=20
+> > Why is this even needed? You should always get reg_notifier after this
+> > anyway?
+>=20
+> Currently when channel flag changed through the beacon hints are not=20
+> informed to driver.
+>=20
+> reg_notifier will be triggered for regdomain changes but not for channel =
+flag changes due to beacon hints.
+>=20
 
-In struct ieee80211_sta_rx_stats, `last_rate` is u32, hence this local `rate`
-must be u32, or information loss may happen. Agreed.
+So maybe triggering reg notifier once would be sufficient, a la Wen's
+patch that I recently merged?
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-
-> ---
->   net/mac80211/sta_info.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index 27c737fe7fb8..bd532d3f925d 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -2418,7 +2418,7 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u32 rate,
->   
->   static int sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
->   {
-> -	u16 rate = READ_ONCE(sta_get_last_rx_stats(sta)->last_rate);
-> +	u32 rate = READ_ONCE(sta_get_last_rx_stats(sta)->last_rate);
->   
->   	if (rate == STA_STATS_RATE_INVALID)
->   		return -EINVAL;
-> 
-
+johannes
