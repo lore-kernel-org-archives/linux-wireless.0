@@ -2,39 +2,29 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F24C636CC
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Feb 2023 14:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF7EC636D4
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Feb 2023 14:43:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229715AbjBOOeE (ORCPT
+        id S229793AbjBOOnA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Feb 2023 09:34:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33134 "EHLO
+        Wed, 15 Feb 2023 09:43:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229706AbjBOOeC (ORCPT
+        with ESMTP id S229780AbjBOOm7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Feb 2023 09:34:02 -0500
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1AD438B7A
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2023 06:33:48 -0800 (PST)
+        Wed, 15 Feb 2023 09:42:59 -0500
+X-Greylist: delayed 587 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 15 Feb 2023 06:42:56 PST
+Received: from relay05.th.seeweb.it (relay05.th.seeweb.it [IPv6:2001:4b7a:2000:18::166])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDC8D14EAC
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2023 06:42:56 -0800 (PST)
 Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
         (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        (Authenticated sender: kholk11)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 9EDFB6602193;
-        Wed, 15 Feb 2023 14:33:46 +0000 (GMT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1676471627;
-        bh=MAUAP9Z+ubwKhLvoWcUFpD46AsMhuehnGPYnsopRURA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=VIpZD1hIOXiKELwyig7jOOWzYaJ9DEPCkZmRICqxZJRmy6v7k8dFPDBhFNzBgqfo3
-         M/ihsAYO0fZw/l9BngO/gS1Wkspez7RXaRug0snJ7YQLt3+ySD52CZaEdGZtP3f4Bq
-         gVJYUFaOhjDMpyni04oe2HkT46N0/OXNAmu/jEGSdrhkdDkHzaR0EuwVjhdan6mHH6
-         w9o0DAcXS85kSAaFaVOlMTSR6NLroE1QWYKaf9QTsp+9mO1SoFAUo+nqeFBzDI7aKS
-         YlZ7L7bjGqUzAJSh9gNuHtGSjyzxfMZuLPtNGTZqmFpt9DBpUSfjjOhaBQdab8tHw5
-         JmSPDZSddPyaA==
-Message-ID: <ee62f808-51fc-3fe3-22f6-60cbd144ae07@collabora.com>
-Date:   Wed, 15 Feb 2023 15:33:44 +0100
+        by m-r2.th.seeweb.it (Postfix) with ESMTPSA id 4F99A3FAF5;
+        Wed, 15 Feb 2023 15:33:05 +0100 (CET)
+Message-ID: <b12bf08c-f8b8-d561-f85a-475ec5677710@somainline.org>
+Date:   Wed, 15 Feb 2023 15:33:04 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.7.2
@@ -50,7 +40,7 @@ Cc:     Johannes Berg <johannes@sipsolutions.net>,
         linux-mediatek <linux-mediatek@lists.infradead.org>
 References: <20230209110659.25447-1-shayne.chen@mediatek.com>
 From:   AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
+        <angelogioacchino.delregno@somainline.org>
 In-Reply-To: <20230209110659.25447-1-shayne.chen@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -69,8 +59,6 @@ In struct ieee80211_sta_rx_stats, `last_rate` is u32, hence this local `rate`
 must be u32, or information loss may happen. Agreed.
 
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-
-P.S.: Sorry for sending twice, the first one got out of the wrong mailbox.
 
 > ---
 >   net/mac80211/sta_info.c | 2 +-
