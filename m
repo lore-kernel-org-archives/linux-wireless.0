@@ -2,78 +2,76 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D371C636CC
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Feb 2023 19:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 399CAC61DA4
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Feb 2023 19:58:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229841AbjBPTtK (ORCPT
+        id S229602AbjBPT6E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Feb 2023 14:49:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53422 "EHLO
+        Thu, 16 Feb 2023 14:58:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229668AbjBPTtJ (ORCPT
+        with ESMTP id S229637AbjBPT6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Feb 2023 14:49:09 -0500
+        Thu, 16 Feb 2023 14:58:03 -0500
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1982A3B0FF;
-        Thu, 16 Feb 2023 11:49:08 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B2C03B233
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2023 11:58:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=WNdiQ0yBLM1h4tRsy9XJpXwPANeEXou8utTvULJaBs8=;
-        t=1676576948; x=1677786548; b=JuutzsYnl+A5g6WQD8zt0x/yhByw8cMrKCV1BMwPCJ7Ga5h
-        lObOMU+1dVdMerXe28rMMMkvmineUsULTOrnCFKGAzxwYoF4HZbsvP15Qv4FEnnHD2srAla6AJiK3
-        vvEH/VjEIVwZHLJnhZd+E5gBq3aZn6g5qgrN7BVqfrQOZt2ds8i660gosYzA4yLAZPkpWgQTWa1hM
-        T2W0eL3+NlwX9rNYMhCD97s6VRiRL529qV6KW8ZoHDRHF59mhbDVsJEiGjcGHrFLagHd6KhqTRJ8+
-        2ZfDS+jOCZaiyWd6qnqaQ6kvUdfu6I88fRsnf0//o7p99nZqCFPjEH2IPXeSnsBg==;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=KHs2AeR1yP7T6fcAppFJZ2Re/SmHPZ4f4BskqUk80TM=; t=1676577481; x=1677787081; 
+        b=hiR2j8OnQCzpWtLrvMazm3Fw98m+Tl1GkNzfp/+NtyZ9VbHTFLA7aa4EPCCxOXtUbEZHEveKQ8d
+        R172F3Gazo3lG4xRUYzBsA5O4vykOLod1yvB+0iNqFqHXbCzrOVsFJfYWUnBnodmn28K+HIHpN5ia
+        H4JnJqB0SULQLKS9HKVcGzoQWPbPuFkwIoXvjV651P/wQxT5cwVhObu6ndU7W4JxUgI3zYA+Rc1mD
+        NgbiUkX3TkcKvWGsC3FjPLwiJ6nt9RbAU4OJnCWqnCFcPOc7Vs+wziWF48HnRUIVGc7groXvfQPur
+        gzmXTFhMQt0p4H4bPSoTkB+PzV7MAD4suyAA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1pSkFd-00EB5g-28;
-        Thu, 16 Feb 2023 20:49:05 +0100
-Message-ID: <fbae8518cdb529e175ee771bdd288bd64858f67c.camel@sipsolutions.net>
-Subject: Re: pull-request: wireless-next-2023-03-16
+        id 1pSkOC-00EBGe-2l;
+        Thu, 16 Feb 2023 20:57:56 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Kalle Valo <kvalo@kernel.org>
-Date:   Thu, 16 Feb 2023 20:49:04 +0100
-In-Reply-To: <20230216113253.2cbb360e@kernel.org>
-References: <20230216105406.208416-1-johannes@sipsolutions.net>
-         <20230216113253.2cbb360e@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wifi: iwlwifi: mvm: remove unused iwl_dbgfs_is_match()
+Date:   Thu, 16 Feb 2023 20:57:54 +0100
+Message-Id: <20230216205754.d500dcc2e90c.Id87df297263f86b5bba002f7cbb387abc13adf53@changeid>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2023-02-16 at 11:32 -0800, Jakub Kicinski wrote:
-> On Thu, 16 Feb 2023 11:54:05 +0100 Johannes Berg wrote:
-> > Here's a last (obviously) set of new work for -next. The
-> > major changes are summarized in the tag below.
-> >=20
-> > Please pull and let me know if there's any problem.
->=20
-> Could you follow up soon with fixes for the compilation warnings?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Huh, yes, sorry about that.
+This inline function is unused, remove it.
 
-> drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c:441:21: warning: unu=
-sed function 'iwl_dbgfs_is_match' [-Wunused-function]
-> static inline char *iwl_dbgfs_is_match(char *name, char *buf)
->                     ^
->=20
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-That's particularly odd, feels like that was already unused since (my)
-commit 3a894a9f319f ("iwlwifi: remove TOF implementation")? But that's
-_ancient_.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+index 78d8b37eb71a..3779ac040ba0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+@@ -438,13 +438,6 @@ static ssize_t iwl_dbgfs_bf_params_read(struct file *file,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
+-static inline char *iwl_dbgfs_is_match(char *name, char *buf)
+-{
+-	int len = strlen(name);
+-
+-	return !strncmp(name, buf, len) ? buf + len : NULL;
+-}
+-
+ static ssize_t iwl_dbgfs_os_device_timediff_read(struct file *file,
+ 						 char __user *user_buf,
+ 						 size_t count, loff_t *ppos)
+-- 
+2.39.2
 
-So I think probably the new ones are different than that one, how did
-you find this one?
-
-Anyway there are far too many left ...
-
-johannes
