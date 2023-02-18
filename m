@@ -2,64 +2,64 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0016C6379F
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Feb 2023 15:30:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAB9CC636CC
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Feb 2023 15:30:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229735AbjBRPaU (ORCPT
+        id S229766AbjBRPaW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Feb 2023 10:30:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56952 "EHLO
+        Sat, 18 Feb 2023 10:30:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229496AbjBRPaS (ORCPT
+        with ESMTP id S229475AbjBRPaU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Feb 2023 10:30:18 -0500
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBA8816AC7;
-        Sat, 18 Feb 2023 07:30:17 -0800 (PST)
-Received: by mail-ed1-x536.google.com with SMTP id z7so1207822edb.12;
-        Sat, 18 Feb 2023 07:30:17 -0800 (PST)
+        Sat, 18 Feb 2023 10:30:20 -0500
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 826D216AC6;
+        Sat, 18 Feb 2023 07:30:19 -0800 (PST)
+Received: by mail-ed1-x531.google.com with SMTP id fd2so3567474edb.2;
+        Sat, 18 Feb 2023 07:30:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Ni0fK5BfMyJtYgVbYHoBsAm9oiht0nB3z1bCOO7slv4=;
-        b=N8ggBGuqML1xN64UiQy3Wx5Inec69C0sv/QjAB3bzhi1ET+ddaU+h5baJ3p8zR0750
-         J637LBnZS6vMICvdf7a16QclscJxfE5o8e+vixIfFhgvSdzXnAjvV3ch+yl5nla7W3n7
-         SwXq+xXz45DubgBtXwkp477GFiamCSclJJvgQBEL03nup+N7ufm/d8cBdr8lGtY6AU2+
-         LUuFZNlvZ1ewMwQMXLOgIyYebtXFYpTZD91W9veGG3984jyY/wCdPPjkYL5RWXigHnnH
-         UUcHyts0BjIkgLLaQfcH17XZgVQNMdH+VT8fhUE0+dj6+Ss0xhVsmWV1cFy5XldFYRfz
-         cqGA==
+        bh=j+7Oq4TPhe/bGdXGLEkYt4uVs6oTPzxKjeEpllAxDeY=;
+        b=GeKzr6+bv66/KA8JqqQjWZleGr8Wsn7bojhQShZQDujWMkrSoG49hBMB8Cc43/I1mR
+         fI/ZfboPrD/WdH968xbiCtyTLZIeWEHYcbhOVkYlr0L/7NYWxCSPz6BZTVOSXzU4WKBL
+         +qZVx/5Z2HvQI8g6uhH/ch92XmFg2eAxfc+djrr4AMyw76t5OuMblDxAwDleDzYFsCUU
+         T9BQ3rcwvkM3uEGq2TEme2HhkMvhN7OEUrWb+YFU+99QUVJ0xRKmzr4G4EO4vxAAfaCm
+         d1Xir4Ubutkpzvnum8w6ToVpHdIECQWYcWGwHCcyzC1mPTotIaNNs+uUgy+u+nPdqRWZ
+         Mnaw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Ni0fK5BfMyJtYgVbYHoBsAm9oiht0nB3z1bCOO7slv4=;
-        b=IHItRh5LEdJSh22hBxoOBNe2aPzbBD1rlDoksrKMCf0SC98V7tqVkpkl5LDxUdtgqI
-         +5utXOoBEzDZzqsQUNCcgFGbmqXZxpuRL33p9L8RIOTl79QY1IXilhJlHoSVQZZ4PhaW
-         D9OXcNqZ7u2r2fLQuUcye+vxsmXoAymXUbMnHD09ckvtLsJOYSI6QM3dowXVagnsqMA5
-         j2salkFYAseq+U4At1ayVPMhIRRvo+Bn1qMR32iJ1kA0Vec6FihMEBiNrruwER2tZmIT
-         fSuLByZ+4aeXLz9Fkg4tz4X3AWMzFqILWqnoMUhcW1FgWG+SdvEE8JzxnX6Y/NbWAloP
-         mS2A==
-X-Gm-Message-State: AO0yUKWJUaLNsa28jx0cWQe0XB/l+n1/419ysrPhZ2qguXY62/q8Bpsk
-        7r2Bus43+ZZFICnYbRI3x0+WYZ1hciM=
-X-Google-Smtp-Source: AK7set8k6KJcWyyC8FuI6gCgwXuHPYBhPz/DMopMYVeI3LW9KzQU1VQ4rnzrXj0fWLs0o/Htpj/lXw==
-X-Received: by 2002:a05:6402:34d5:b0:4ae:e548:1222 with SMTP id w21-20020a05640234d500b004aee5481222mr456057edc.15.1676734216067;
-        Sat, 18 Feb 2023 07:30:16 -0800 (PST)
+        bh=j+7Oq4TPhe/bGdXGLEkYt4uVs6oTPzxKjeEpllAxDeY=;
+        b=32fEiSAq7AaWrCMJAOLRYM0UbP5Eg/F5O9tOIkaO5Hy7IlGwpNw7cPeueAibLRtg6X
+         cpOMaopcvXJUybYvFbPhEq+LADwaU4afmy3Ef0tUdkc2VkOtVHaahC7e2TCpCZCcGAqs
+         4KeNN5L6KeTYSBhWJscKtFD39aKPrKADAya+SQi/QRcj2A0AlknPheHXv5KToYDEJCDo
+         Sv7lOjPzUHqqlbgz0RMuihd27JAQ0Jhe1zGNtjVYiJe6EG+kdoxj5Rlc3P/GZMkl+0WS
+         9+VYdbCYD/cVWURMVOXj2iYE6ETg5q+Tjhs6Ngv4XCEuhiKeV19YrsaVnBF+0EtlXvXp
+         cxiQ==
+X-Gm-Message-State: AO0yUKWb9BXh6p/PMfTBKjjwjGVrb23cUM/4MByWUS6ezwM4WKIuqbH7
+        DqRPfP9YKVWplaAhRksA3XQ4rDDGHNE=
+X-Google-Smtp-Source: AK7set8up7sj90ZjCWw4rMHFUCaxQpyb4KV+9rGyRG766UFC94UPSb3v+bOSHyJEyWl0drcPcByHQQ==
+X-Received: by 2002:aa7:cb53:0:b0:4ad:8fc5:3d2a with SMTP id w19-20020aa7cb53000000b004ad8fc53d2amr4914639edt.11.1676734217799;
+        Sat, 18 Feb 2023 07:30:17 -0800 (PST)
 Received: from localhost.localdomain (dynamic-2a01-0c23-b8cf-1500-0000-0000-0000-0e63.c23.pool.telefonica.de. [2a01:c23:b8cf:1500::e63])
-        by smtp.googlemail.com with ESMTPSA id a65-20020a509ec7000000b004acc5077026sm3742554edf.79.2023.02.18.07.30.15
+        by smtp.googlemail.com with ESMTPSA id a65-20020a509ec7000000b004acc5077026sm3742554edf.79.2023.02.18.07.30.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Feb 2023 07:30:15 -0800 (PST)
+        Sat, 18 Feb 2023 07:30:17 -0800 (PST)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     tony0620emma@gmail.com, kvalo@kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Neo Jou <neojou@gmail.com>,
         Jernej Skrabec <jernej.skrabec@gmail.com>, pkshih@realtek.com,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2 1/5] wifi: rtw88: mac: Add support for the SDIO HCI in rtw_pwr_seq_parser()
-Date:   Sat, 18 Feb 2023 16:29:40 +0100
-Message-Id: <20230218152944.48842-2-martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 3/5] wifi: rtw88: rtw8821c: Implement RTL8821CS (SDIO) efuse parsing
+Date:   Sat, 18 Feb 2023 16:29:42 +0100
+Message-Id: <20230218152944.48842-4-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230218152944.48842-1-martin.blumenstingl@googlemail.com>
 References: <20230218152944.48842-1-martin.blumenstingl@googlemail.com>
@@ -69,28 +69,71 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-rtw_pwr_seq_parser() needs to know about the HCI bus interface mask for
-the SDIO bus so it can parse the chip state change sequences.
+The efuse of the SDIO RTL8821CS chip has only one known member: the mac
+address is at offset 0x11a. Add a struct rtw8821cs_efuse describing this
+and use it for copying the mac address when the SDIO bus is used.
 
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac.c | 3 +++
- 1 file changed, 3 insertions(+)
+changes from v1 -> v2:
+- add the new function/union member/case statement last (after USB)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index 4e5c194aac29..3ed88d38f1b4 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -222,6 +222,9 @@ static int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
+
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 9 +++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8821c.h | 6 ++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 17f800f6efbd..7ae0541d7b99 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -32,6 +32,12 @@ static void rtw8821cu_efuse_parsing(struct rtw_efuse *efuse,
+ 	ether_addr_copy(efuse->addr, map->u.mac_addr);
+ }
+ 
++static void rtw8821cs_efuse_parsing(struct rtw_efuse *efuse,
++				    struct rtw8821c_efuse *map)
++{
++	ether_addr_copy(efuse->addr, map->s.mac_addr);
++}
++
+ enum rtw8821ce_rf_set {
+ 	SWITCH_TO_BTG,
+ 	SWITCH_TO_WLG,
+@@ -77,6 +83,9 @@ static int rtw8821c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
  	case RTW_HCI_TYPE_USB:
- 		intf_mask = RTW_PWR_INTF_USB_MSK;
+ 		rtw8821cu_efuse_parsing(efuse, map);
  		break;
 +	case RTW_HCI_TYPE_SDIO:
-+		intf_mask = RTW_PWR_INTF_SDIO_MSK;
++		rtw8821cs_efuse_parsing(efuse, map);
 +		break;
  	default:
- 		return -EINVAL;
- 	}
+ 		/* unsupported now */
+ 		return -ENOTSUPP;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+index 1c81260f3a54..fcff31688c45 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+@@ -65,6 +65,11 @@ struct rtw8821ce_efuse {
+ 	u8 res7;
+ };
+ 
++struct rtw8821cs_efuse {
++	u8 res4[0x4a];			/* 0xd0 */
++	u8 mac_addr[ETH_ALEN];		/* 0x11a */
++} __packed;
++
+ struct rtw8821c_efuse {
+ 	__le16 rtl_id;
+ 	u8 res0[0x0e];
+@@ -94,6 +99,7 @@ struct rtw8821c_efuse {
+ 	union {
+ 		struct rtw8821ce_efuse e;
+ 		struct rtw8821cu_efuse u;
++		struct rtw8821cs_efuse s;
+ 	};
+ };
+ 
 -- 
 2.39.2
 
