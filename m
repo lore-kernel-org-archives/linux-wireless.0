@@ -2,64 +2,64 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE21C64ED9
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Feb 2023 15:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDA4C64ED8
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Feb 2023 15:30:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229751AbjBRPaV (ORCPT
+        id S229797AbjBRPah (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Feb 2023 10:30:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56964 "EHLO
+        Sat, 18 Feb 2023 10:30:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229736AbjBRPaU (ORCPT
+        with ESMTP id S229752AbjBRPaV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Feb 2023 10:30:20 -0500
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42D80166F7;
-        Sat, 18 Feb 2023 07:30:19 -0800 (PST)
-Received: by mail-ed1-x52f.google.com with SMTP id ek11so3751995edb.9;
-        Sat, 18 Feb 2023 07:30:19 -0800 (PST)
+        Sat, 18 Feb 2023 10:30:21 -0500
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AEC416AC8;
+        Sat, 18 Feb 2023 07:30:20 -0800 (PST)
+Received: by mail-ed1-x532.google.com with SMTP id ec30so3549302edb.10;
+        Sat, 18 Feb 2023 07:30:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=googlemail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lAX2N6AbPGFaXeQ/ovhQE8jiqNbqXdojdWHTF/rY/eM=;
-        b=PtzeIhjC1ZIl+el5rAE5SO9jgu6i5CMiyrTNKiC11SATiM2IaeoZoH10VTqM0Pd87R
-         NjGNzwojd7oDMC0PDoHxn4P/D5tDcw0tSGTFeFySvQKFAlArwStUL0tj5UwwpzYjNQJJ
-         jyZsHidTIs41U8DzcFbZZQa3pMnyvmscU6civdekkIWg7b6zRpB0QB1MSm1zn1dezCRp
-         NkaOgwajaxVt5mSTFzS3ahNVPRFFiOk4IvaXb3BjnSkYxyym4ohPYTWBopDSOSnmXsTu
-         NUGqT6WY5n41S5xB1ijS/14uES5mkcrY7x+Bo76FZqyF0uEhwSw4zE1sIoh6vtUpi+Rl
-         K0vA==
+        bh=oE7zFa3zY/saVOKDiXgo1nSrjJBFbOP4MGfXZYfHkSM=;
+        b=d9hnyTd/NMz+BqGb3NBhRUtX7bo+aN98O/C6/oNOiA7nRJh+lptJyyYH92goCvFMeS
+         pLD+9GXJA7F8z3sTcu8cjApn4Hss5jLFyYYyS2RHacGf5YIfaK/lUF5JBMCzGj68i97H
+         rHpkFHIYgszhJmVtzNNfluKpB3Gt8SzOUPc6k/CC6Tgyp2KEPgBD/0Z3Rr8G6kEDJSz9
+         OG2rsg5zJjd2L13EbTwCj97CdjAt61Nq7eAx4LJ160clohuktFiHslHqXep8FzqFOwQ6
+         CldDwHhfdTs6QFqY5CSNd4JbvUKE9+jPtdvw2nQOCHkUdWbEuHZSdvPtVlVKWscU4rln
+         m9Ew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=lAX2N6AbPGFaXeQ/ovhQE8jiqNbqXdojdWHTF/rY/eM=;
-        b=3lzRBzvL/mEDDakSgoPxE8AHfz8GpLWGhgFZ9d6tiWsYAxVMQUgOWzCBMLzHqamplb
-         arM8vZs6c9v3eGIHp4VG6ZvyYSfEdiw9ZxggpPmlGU8PnmMYOxEleatXvvAk33DQML76
-         rDE3W624oVmRWC3zbJIcO1JtKmyoQrylQwD2UmlAxX/ghNWbMZME6rOgrltai0B8NALt
-         HIOIbbDej60+gaXvhJgjDUDHDI/iMIq1GYsFEACUAospmw2oBkQG8MsvgiEEYl/wbMSz
-         X5n8tmf3nqiIgf+bnGSRnrynmSZfChwqPrES7CS4ivy0I9VgCe2NLtWI99H4jtA0FTei
-         HxIQ==
-X-Gm-Message-State: AO0yUKWVvpnkHv5pJgMYtrJJwmp8iptsLkcks7P4PBcASjVD3YKMC6Ru
-        JlQdkVAkxIL3nSMJDLodQ7NIptK94as=
-X-Google-Smtp-Source: AK7set+NuC0A8Oew/bYh6372+JpMtkhPa/2UXxN52lGuNh1/+Z5IFABcd++LRmXiifx1YGSBHQlDEA==
-X-Received: by 2002:a05:6402:d2:b0:4ab:4ad1:a37e with SMTP id i18-20020a05640200d200b004ab4ad1a37emr817334edu.16.1676734217077;
-        Sat, 18 Feb 2023 07:30:17 -0800 (PST)
+        bh=oE7zFa3zY/saVOKDiXgo1nSrjJBFbOP4MGfXZYfHkSM=;
+        b=QIknLSaxW3gVfrHzj0QktBa7fJgHDz2NsTwJQY94F0mLIzozCt8Y1xBxSBUxA1bxD4
+         zOQoe3Whpyw0aMyeFMgfew829OSQ+tGuFAdNIAYCQQaOnPbWFpYEkaL/yiOpZg/+4c09
+         yWqeGKlkwvQbAs5ptQ8V4Xt8otYRzzzPNljHphaJmy5Zo6pVy8Crbbul2OD9bwrqztL4
+         NHZD0ClGyZLFa8LLcdjMyzun8jNewSgc97y1w274pjEtJvgKoRO++kdMF0Iz5sfLKaJJ
+         6ToMDATDGABm8hioxAF2fQK3jNLfqhul1XlDuNNu+n479eJKVwG0ymAXhbdQUvbMSDx9
+         SKdg==
+X-Gm-Message-State: AO0yUKWWiHQ7FKJBZc5ylgzNnqLo5u764veKBAL8/+OtT0rb+9+3ppQs
+        dTVb+bEhDYTGg9O+yZnbtZ5Stm8dqlA=
+X-Google-Smtp-Source: AK7set9NPHs2R627B6yMhW/ilaSeJrppJP4lXzJ4lM++p8kDhMt9ssQkDdFOm0ED6EOTMZspSo0RMA==
+X-Received: by 2002:a05:6402:3d8:b0:4ab:b0d5:6bb0 with SMTP id t24-20020a05640203d800b004abb0d56bb0mr4181332edw.18.1676734218668;
+        Sat, 18 Feb 2023 07:30:18 -0800 (PST)
 Received: from localhost.localdomain (dynamic-2a01-0c23-b8cf-1500-0000-0000-0000-0e63.c23.pool.telefonica.de. [2a01:c23:b8cf:1500::e63])
-        by smtp.googlemail.com with ESMTPSA id a65-20020a509ec7000000b004acc5077026sm3742554edf.79.2023.02.18.07.30.16
+        by smtp.googlemail.com with ESMTPSA id a65-20020a509ec7000000b004acc5077026sm3742554edf.79.2023.02.18.07.30.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Feb 2023 07:30:16 -0800 (PST)
+        Sat, 18 Feb 2023 07:30:18 -0800 (PST)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     tony0620emma@gmail.com, kvalo@kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Neo Jou <neojou@gmail.com>,
         Jernej Skrabec <jernej.skrabec@gmail.com>, pkshih@realtek.com,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2 2/5] wifi: rtw88: mac: Add SDIO HCI support in the TX/page table setup
-Date:   Sat, 18 Feb 2023 16:29:41 +0100
-Message-Id: <20230218152944.48842-3-martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 4/5] wifi: rtw88: rtw8822b: Implement RTL8822BS (SDIO) efuse parsing
+Date:   Sat, 18 Feb 2023 16:29:43 +0100
+Message-Id: <20230218152944.48842-5-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230218152944.48842-1-martin.blumenstingl@googlemail.com>
 References: <20230218152944.48842-1-martin.blumenstingl@googlemail.com>
@@ -69,39 +69,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-txdma_queue_mapping() and priority_queue_cfg() can use the first entry
-of each chip's rqpn_table and page_table. Add this mapping so data
-transmission is possible on SDIO based chipsets.
+The efuse of the SDIO RTL8822BS chip has only one known member: the mac
+address is at offset 0x11a. Add a struct rtw8822bs_efuse describing this
+and use it for copying the mac address when the SDIO bus is used.
 
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+changes from v1 -> v2:
+- remove extra newline which was added by accident in the USB function
+- add the new function/union member/case statement last (after USB)
+- while here, also sort the union members to be consistent with
+  the switch case (PCIe first, USB second, SDIO last)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index 3ed88d38f1b4..6a234eec09ff 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -1033,6 +1033,9 @@ static int txdma_queue_mapping(struct rtw_dev *rtwdev)
- 		else
- 			return -EINVAL;
+
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 9 +++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h | 8 +++++++-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index 74dfb89b2c94..531b67787e2e 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -32,6 +32,12 @@ static void rtw8822bu_efuse_parsing(struct rtw_efuse *efuse,
+ 	ether_addr_copy(efuse->addr, map->u.mac_addr);
+ }
+ 
++static void rtw8822bs_efuse_parsing(struct rtw_efuse *efuse,
++				    struct rtw8822b_efuse *map)
++{
++	ether_addr_copy(efuse->addr, map->s.mac_addr);
++}
++
+ static int rtw8822b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+@@ -65,6 +71,9 @@ static int rtw8822b_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ 	case RTW_HCI_TYPE_USB:
+ 		rtw8822bu_efuse_parsing(efuse, map);
  		break;
 +	case RTW_HCI_TYPE_SDIO:
-+		rqpn = &chip->rqpn_table[0];
++		rtw8822bs_efuse_parsing(efuse, map);
 +		break;
  	default:
- 		return -EINVAL;
- 	}
-@@ -1195,6 +1198,9 @@ static int priority_queue_cfg(struct rtw_dev *rtwdev)
- 		else
- 			return -EINVAL;
- 		break;
-+	case RTW_HCI_TYPE_SDIO:
-+		pg_tbl = &chip->page_table[0];
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
+ 		/* unsupported now */
+ 		return -ENOTSUPP;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+index 01d3644e0c94..2dc3a6660f06 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+@@ -65,6 +65,11 @@ struct rtw8822be_efuse {
+ 	u8 res7;
+ };
+ 
++struct rtw8822bs_efuse {
++	u8 res4[0x4a];			/* 0xd0 */
++	u8 mac_addr[ETH_ALEN];		/* 0x11a */
++} __packed;
++
+ struct rtw8822b_efuse {
+ 	__le16 rtl_id;
+ 	u8 res0[0x0e];
+@@ -92,8 +97,9 @@ struct rtw8822b_efuse {
+ 	u8 country_code[2];
+ 	u8 res[3];
+ 	union {
+-		struct rtw8822bu_efuse u;
+ 		struct rtw8822be_efuse e;
++		struct rtw8822bu_efuse u;
++		struct rtw8822bs_efuse s;
+ 	};
+ };
+ 
 -- 
 2.39.2
 
