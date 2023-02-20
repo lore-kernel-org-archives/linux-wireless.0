@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 137A0C05027
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Feb 2023 07:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 835C1C05027
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Feb 2023 07:29:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230305AbjBTH3W (ORCPT
+        id S230299AbjBTH30 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Feb 2023 02:29:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38292 "EHLO
+        Mon, 20 Feb 2023 02:29:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230265AbjBTH3V (ORCPT
+        with ESMTP id S230265AbjBTH3Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Feb 2023 02:29:21 -0500
+        Mon, 20 Feb 2023 02:29:25 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0266EC5E
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2023 23:29:19 -0800 (PST)
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 31K72oRnA025248, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 31K72oRnA025248
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F54CE3AA
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2023 23:29:23 -0800 (PST)
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 31K72l112025234, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 31K72l112025234
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Mon, 20 Feb 2023 15:02:50 +0800
+        Mon, 20 Feb 2023 15:02:47 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Mon, 20 Feb 2023 15:02:54 +0800
+ 15.1.2375.32; Mon, 20 Feb 2023 15:02:51 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 20 Feb
- 2023 15:02:53 +0800
+ 2023 15:02:50 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <timlee@realtek.com>, <phhuang@realtek.com>,
         <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/6] wifi: rtw89: refine FW feature judgement on packet drop
-Date:   Mon, 20 Feb 2023 15:02:02 +0800
-Message-ID: <20230220070202.29868-7-pkshih@realtek.com>
+Subject: [PATCH 3/6] wifi: rtw89: adjust channel encoding to common function
+Date:   Mon, 20 Feb 2023 15:01:59 +0800
+Message-ID: <20230220070202.29868-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230220070202.29868-1-pkshih@realtek.com>
 References: <20230220070202.29868-1-pkshih@realtek.com>
@@ -49,102 +49,221 @@ X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Po-Hao Huang <phhuang@realtek.com>
 
-The newer chips use the newer firmware branches, e.g. v027, v029.
-And, those firmware branches are supposed to support packet drop
-when they are just branched out.
+Since the range of channel table is identical among ICs. Make channel
+encode/decode function common and not IC dependent. So all ICs with
+matching firmware that needs this kind of coding can use it directly.
+This patch doesn't change logic at all.
 
-The initial firmware branch used by each chip is as below.
-* 8852A: v009
-* 8852C: v027
-* 8852B: v027
-
-So, only 8852A may use firmware which doesn't support packet drop at
-runtime. To save trivial positive listing in firmware feature table,
-we change to reverse judgment.
-
-Besides, rtw89_mac_ptk_drop_by_band_and_wait() missed to check firmware
-feature before calling rtw89_fw_h2c_pkt_drop(). We also fix it.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h     | 2 +-
- drivers/net/wireless/realtek/rtw89/fw.c       | 4 ++--
- drivers/net/wireless/realtek/rtw89/mac.c      | 2 +-
- drivers/net/wireless/realtek/rtw89/mac80211.c | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtw89/phy.c      | 72 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/phy.h      |  3 +
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 74 +------------------
+ 3 files changed, 77 insertions(+), 72 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 41365ffb7e5ea..b1a886898c5a0 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -3023,7 +3023,7 @@ enum rtw89_fw_feature {
- 	RTW89_FW_FEATURE_SCAN_OFFLOAD,
- 	RTW89_FW_FEATURE_TX_WAKE,
- 	RTW89_FW_FEATURE_CRASH_TRIGGER,
--	RTW89_FW_FEATURE_PACKET_DROP,
-+	RTW89_FW_FEATURE_NO_PACKET_DROP,
- 	RTW89_FW_FEATURE_NO_DEEP_PS,
- 	RTW89_FW_FEATURE_NO_LPS_PG,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index b99cb611597c6..f9089a7668b7d 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -235,6 +235,7 @@ static bool __fw_feat_cond_ ## __cond(u32 suit_ver_code, u32 comp_ver_code) \
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index d9f61ba3d1765..d8b035972dd48 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -4294,3 +4294,75 @@ void rtw89_phy_tssi_ctrl_set_bandedge_cfg(struct rtw89_dev *rtwdev,
+ 					      data[RTW89_TSSI_SBW20]);
+ }
+ EXPORT_SYMBOL(rtw89_phy_tssi_ctrl_set_bandedge_cfg);
++
++static
++const u8 rtw89_ch_base_table[16] = {1, 0xff,
++				    36, 100, 132, 149, 0xff,
++				    1, 33, 65, 97, 129, 161, 193, 225, 0xff};
++#define RTW89_CH_BASE_IDX_2G		0
++#define RTW89_CH_BASE_IDX_5G_FIRST	2
++#define RTW89_CH_BASE_IDX_5G_LAST	5
++#define RTW89_CH_BASE_IDX_6G_FIRST	7
++#define RTW89_CH_BASE_IDX_6G_LAST	14
++
++#define RTW89_CH_BASE_IDX_MASK		GENMASK(7, 4)
++#define RTW89_CH_OFFSET_MASK		GENMASK(3, 0)
++
++u8 rtw89_encode_chan_idx(struct rtw89_dev *rtwdev, u8 central_ch, u8 band)
++{
++	u8 chan_idx;
++	u8 last, first;
++	u8 idx;
++
++	switch (band) {
++	case RTW89_BAND_2G:
++		chan_idx = FIELD_PREP(RTW89_CH_BASE_IDX_MASK, RTW89_CH_BASE_IDX_2G) |
++			   FIELD_PREP(RTW89_CH_OFFSET_MASK, central_ch);
++		return chan_idx;
++	case RTW89_BAND_5G:
++		first = RTW89_CH_BASE_IDX_5G_FIRST;
++		last = RTW89_CH_BASE_IDX_5G_LAST;
++		break;
++	case RTW89_BAND_6G:
++		first = RTW89_CH_BASE_IDX_6G_FIRST;
++		last = RTW89_CH_BASE_IDX_6G_LAST;
++		break;
++	default:
++		rtw89_warn(rtwdev, "Unsupported band %d\n", band);
++		return 0;
++	}
++
++	for (idx = last; idx >= first; idx--)
++		if (central_ch >= rtw89_ch_base_table[idx])
++			break;
++
++	if (idx < first) {
++		rtw89_warn(rtwdev, "Unknown band %d channel %d\n", band, central_ch);
++		return 0;
++	}
++
++	chan_idx = FIELD_PREP(RTW89_CH_BASE_IDX_MASK, idx) |
++		   FIELD_PREP(RTW89_CH_OFFSET_MASK,
++			      (central_ch - rtw89_ch_base_table[idx]) >> 1);
++	return chan_idx;
++}
++EXPORT_SYMBOL(rtw89_encode_chan_idx);
++
++void rtw89_decode_chan_idx(struct rtw89_dev *rtwdev, u8 chan_idx,
++			   u8 *ch, enum nl80211_band *band)
++{
++	u8 idx, offset;
++
++	idx = FIELD_GET(RTW89_CH_BASE_IDX_MASK, chan_idx);
++	offset = FIELD_GET(RTW89_CH_OFFSET_MASK, chan_idx);
++
++	if (idx == RTW89_CH_BASE_IDX_2G) {
++		*band = NL80211_BAND_2GHZ;
++		*ch = offset;
++		return;
++	}
++
++	*band = idx <= RTW89_CH_BASE_IDX_5G_LAST ? NL80211_BAND_5GHZ : NL80211_BAND_6GHZ;
++	*ch = rtw89_ch_base_table[idx] + (offset << 1);
++}
++EXPORT_SYMBOL(rtw89_decode_chan_idx);
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
+index 21233f094644b..de0a9abf646e3 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.h
++++ b/drivers/net/wireless/realtek/rtw89/phy.h
+@@ -555,5 +555,8 @@ void rtw89_phy_tssi_ctrl_set_bandedge_cfg(struct rtw89_dev *rtwdev,
+ 					  enum rtw89_tssi_bandedge_cfg bandedge_cfg);
+ void rtw89_phy_ul_tb_assoc(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif);
+ void rtw89_phy_ul_tb_ctrl_track(struct rtw89_dev *rtwdev);
++u8 rtw89_encode_chan_idx(struct rtw89_dev *rtwdev, u8 central_ch, u8 band);
++void rtw89_decode_chan_idx(struct rtw89_dev *rtwdev, u8 chan_idx,
++			   u8 *ch, enum nl80211_band *band);
  
- __DEF_FW_FEAT_COND(ge, >=); /* greater or equal */
- __DEF_FW_FEAT_COND(le, <=); /* less or equal */
-+__DEF_FW_FEAT_COND(lt, <); /* less than */
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index d2dde21d3daf5..8af813132f71d 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -852,76 +852,6 @@ static void rtw8852c_set_gain_error(struct rtw89_dev *rtwdev,
+ 	}
+ }
  
- struct __fw_feat_cfg {
- 	enum rtw89_core_chip_id chip_id;
-@@ -256,12 +257,11 @@ static const struct __fw_feat_cfg fw_feat_tbl[] = {
- 	__CFG_FW_FEAT(RTL8852A, ge, 0, 13, 35, 0, SCAN_OFFLOAD),
- 	__CFG_FW_FEAT(RTL8852A, ge, 0, 13, 35, 0, TX_WAKE),
- 	__CFG_FW_FEAT(RTL8852A, ge, 0, 13, 36, 0, CRASH_TRIGGER),
--	__CFG_FW_FEAT(RTL8852A, ge, 0, 13, 38, 0, PACKET_DROP),
-+	__CFG_FW_FEAT(RTL8852A, lt, 0, 13, 38, 0, NO_PACKET_DROP),
- 	__CFG_FW_FEAT(RTL8852B, ge, 0, 29, 26, 0, NO_LPS_PG),
- 	__CFG_FW_FEAT(RTL8852B, ge, 0, 29, 26, 0, TX_WAKE),
- 	__CFG_FW_FEAT(RTL8852B, ge, 0, 29, 29, 0, CRASH_TRIGGER),
- 	__CFG_FW_FEAT(RTL8852B, ge, 0, 29, 29, 0, SCAN_OFFLOAD),
--	__CFG_FW_FEAT(RTL8852C, ge, 0, 27, 20, 0, PACKET_DROP),
- 	__CFG_FW_FEAT(RTL8852C, le, 0, 27, 33, 0, NO_DEEP_PS),
- 	__CFG_FW_FEAT(RTL8852C, ge, 0, 27, 34, 0, TX_WAKE),
- 	__CFG_FW_FEAT(RTL8852C, ge, 0, 27, 36, 0, SCAN_OFFLOAD),
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 2e2a2b6eab09d..3d1e4ffef1b16 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -5426,7 +5426,7 @@ int rtw89_mac_ptk_drop_by_band_and_wait(struct rtw89_dev *rtwdev,
- 	for (i = 0; i < try_cnt; i++) {
- 		ret = read_poll_timeout(mac_is_txq_empty, empty, empty, 50,
- 					50000, false, rtwdev);
--		if (ret)
-+		if (ret && !RTW89_CHK_FW_FEATURE(NO_PACKET_DROP, &rtwdev->fw))
- 			rtw89_fw_h2c_pkt_drop(rtwdev, &params);
- 		else
- 			return 0;
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index d43281f7335b1..367a7bf319dae 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -676,7 +676,7 @@ static void rtw89_ops_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	rtw89_leave_lps(rtwdev);
- 	rtw89_hci_flush_queues(rtwdev, queues, drop);
+-static
+-const u8 rtw8852c_ch_base_table[16] = {1, 0xff,
+-				       36, 100, 132, 149, 0xff,
+-				       1, 33, 65, 97, 129, 161, 193, 225, 0xff};
+-#define RTW8852C_CH_BASE_IDX_2G		0
+-#define RTW8852C_CH_BASE_IDX_5G_FIRST	2
+-#define RTW8852C_CH_BASE_IDX_5G_LAST	5
+-#define RTW8852C_CH_BASE_IDX_6G_FIRST	7
+-#define RTW8852C_CH_BASE_IDX_6G_LAST	14
+-
+-#define RTW8852C_CH_BASE_IDX_MASK	GENMASK(7, 4)
+-#define RTW8852C_CH_OFFSET_MASK		GENMASK(3, 0)
+-
+-static u8 rtw8852c_encode_chan_idx(struct rtw89_dev *rtwdev, u8 central_ch, u8 band)
+-{
+-	u8 chan_idx;
+-	u8 last, first;
+-	u8 idx;
+-
+-	switch (band) {
+-	case RTW89_BAND_2G:
+-		chan_idx = FIELD_PREP(RTW8852C_CH_BASE_IDX_MASK, RTW8852C_CH_BASE_IDX_2G) |
+-			   FIELD_PREP(RTW8852C_CH_OFFSET_MASK, central_ch);
+-		return chan_idx;
+-	case RTW89_BAND_5G:
+-		first = RTW8852C_CH_BASE_IDX_5G_FIRST;
+-		last = RTW8852C_CH_BASE_IDX_5G_LAST;
+-		break;
+-	case RTW89_BAND_6G:
+-		first = RTW8852C_CH_BASE_IDX_6G_FIRST;
+-		last = RTW8852C_CH_BASE_IDX_6G_LAST;
+-		break;
+-	default:
+-		rtw89_warn(rtwdev, "Unsupported band %d\n", band);
+-		return 0;
+-	}
+-
+-	for (idx = last; idx >= first; idx--)
+-		if (central_ch >= rtw8852c_ch_base_table[idx])
+-			break;
+-
+-	if (idx < first) {
+-		rtw89_warn(rtwdev, "Unknown band %d channel %d\n", band, central_ch);
+-		return 0;
+-	}
+-
+-	chan_idx = FIELD_PREP(RTW8852C_CH_BASE_IDX_MASK, idx) |
+-		   FIELD_PREP(RTW8852C_CH_OFFSET_MASK,
+-			      (central_ch - rtw8852c_ch_base_table[idx]) >> 1);
+-	return chan_idx;
+-}
+-
+-static void rtw8852c_decode_chan_idx(struct rtw89_dev *rtwdev, u8 chan_idx,
+-				     u8 *ch, enum nl80211_band *band)
+-{
+-	u8 idx, offset;
+-
+-	idx = FIELD_GET(RTW8852C_CH_BASE_IDX_MASK, chan_idx);
+-	offset = FIELD_GET(RTW8852C_CH_OFFSET_MASK, chan_idx);
+-
+-	if (idx == RTW8852C_CH_BASE_IDX_2G) {
+-		*band = NL80211_BAND_2GHZ;
+-		*ch = offset;
+-		return;
+-	}
+-
+-	*band = idx <= RTW8852C_CH_BASE_IDX_5G_LAST ? NL80211_BAND_5GHZ : NL80211_BAND_6GHZ;
+-	*ch = rtw8852c_ch_base_table[idx] + (offset << 1);
+-}
+-
+ static void rtw8852c_set_gain_offset(struct rtw89_dev *rtwdev,
+ 				     const struct rtw89_chan *chan,
+ 				     enum rtw89_phy_idx phy_idx,
+@@ -1084,7 +1014,7 @@ static void rtw8852c_ctrl_ch(struct rtw89_dev *rtwdev,
+ 		}
+ 	}
  
--	if (drop && RTW89_CHK_FW_FEATURE(PACKET_DROP, &rtwdev->fw))
-+	if (drop && !RTW89_CHK_FW_FEATURE(NO_PACKET_DROP, &rtwdev->fw))
- 		__rtw89_drop_packets(rtwdev, vif);
- 	else
- 		rtw89_mac_flush_txq(rtwdev, queues, drop);
+-	chan_idx = rtw8852c_encode_chan_idx(rtwdev, chan->primary_channel, band);
++	chan_idx = rtw89_encode_chan_idx(rtwdev, chan->primary_channel, band);
+ 	rtw89_phy_write32_idx(rtwdev, R_MAC_PIN_SEL, B_CH_IDX_SEG0, chan_idx, phy_idx);
+ }
+ 
+@@ -2730,7 +2660,7 @@ static void rtw8852c_fill_freq_with_ppdu(struct rtw89_dev *rtwdev,
+ 	if (chan_idx == 0)
+ 		return;
+ 
+-	rtw8852c_decode_chan_idx(rtwdev, chan_idx, &ch, &band);
++	rtw89_decode_chan_idx(rtwdev, chan_idx, &ch, &band);
+ 	status->freq = ieee80211_channel_to_frequency(ch, band);
+ 	status->band = band;
+ }
 -- 
 2.25.1
 
