@@ -2,51 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 106D5C61DA4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CDFC64ED8
 	for <linux-wireless@archiver.kernel.org>; Thu, 23 Feb 2023 10:12:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234083AbjBWKM0 (ORCPT
+        id S234073AbjBWKM1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Feb 2023 05:12:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46180 "EHLO
+        Thu, 23 Feb 2023 05:12:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233478AbjBWKMS (ORCPT
+        with ESMTP id S233836AbjBWKMS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 23 Feb 2023 05:12:18 -0500
 Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8BDD51930
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2023 02:12:16 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95F0251905
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2023 02:12:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677147136; x=1708683136;
+  t=1677147137; x=1708683137;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=2a+35iGuEv9EdfKoWr4lTWaf2kGgez/r07CwsNrdxb0=;
-  b=GLg2orlkeJGW7i9uBXG0r7jy8hfRn/1S/lmFTLisOscQQaUKc82bEZFY
-   pKJmMPT4LY/53R0ROLm0YUeXdeTOhRTGJ+56wv7mUqIwJwKzC/6rQfF/x
-   Znj5qPOALckdNqsYoJalpyvDVSKCtjS1l7X8x01hgJ582cy5+P/BIFbU0
-   t+0OpInJBzUw+TILvJKQ/RaIu1tUW+18i9u+aRyHwviLEhPW5kbb1G72F
-   m/Kx6NsxKcEL5NQpPzty3CDI3wWJXq+8k9L5OWee1ApPZZ2PyUwKNSZ2z
-   p4sYhywj2Ie53cXge+0vgVrv+y7J3MIDLjxJRz8VsINff8aruvr7KNLv3
+  bh=+hXY5qTtZq3b2PfxHMP+0NvIkKw8kRfAzTzrnagwivw=;
+  b=ZiVgMyDlYhOvVVHlv9mGj/dzQ+WAs4lkzcq8mGpVYBI6TPdIjgK3nrwx
+   sPw77b0xj1ceoPHPJVjiUJysTEeHhUN4DsOeP2n/V/Kx/4fknQUStb3vo
+   vebMJaAgiM9q/5xmtOYrZQxbPPmlBvX14kb/JgqMcBeucU56YFN+Uil+R
+   7noHIxOlBty4+xWS4d8Yn6pKC6KJxSrS6Cz2UnXFu1FphhfIVm7JYRguj
+   VdHvufV1dm+TgdByHMORa6Vn04XuGAgur/MHeJA6OGbz5RWpcojWaRNe5
+   RkLhlvpSkK0oSFaUyzAsVoe3+WhUjdPt9qFI63nrWCJCY/jsF4awV9+rI
    w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10629"; a="419396414"
+X-IronPort-AV: E=McAfee;i="6500,9779,10629"; a="419396445"
 X-IronPort-AV: E=Sophos;i="5.97,320,1669104000"; 
-   d="scan'208";a="419396414"
+   d="scan'208";a="419396445"
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2023 02:10:59 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10629"; a="796245518"
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2023 02:11:04 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10629"; a="796245575"
 X-IronPort-AV: E=Sophos;i="5.97,320,1669104000"; 
-   d="scan'208";a="796245518"
+   d="scan'208";a="796245575"
 Received: from bkalend-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.227.25])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2023 02:10:56 -0800
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Feb 2023 02:11:02 -0800
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Benjamin Berg <benjamin.berg@intel.com>,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 14/21] wifi: mac80211: remove SMPS from AP debugfs
-Date:   Thu, 23 Feb 2023 12:09:35 +0200
-Message-Id: <20230223114629.cf060e45b8de.Iee69f2e4df98581f259ef2c76309b940b20174be@changeid>
+Subject: [PATCH 16/21] wifi: mac80211_hwsim: Indicate support for NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT
+Date:   Thu, 23 Feb 2023 12:09:37 +0200
+Message-Id: <20230223114629.c4c16196e4ea.I908b68c5127525da3388c0d61a3d5d221ba451f6@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230223100942.767589-1-gregory.greenman@intel.com>
 References: <20230223100942.767589-1-gregory.greenman@intel.com>
@@ -56,29 +55,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-The spatial multiplexing power save feature does not apply to
-AP mode. Remove it from debugfs in this case.
+mac80211_hwsim always uses the probe request coming from mac80211,
+which has support for minimal probe request content.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/debugfs_netdev.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 0bac9af3ca96..187bb22c0bbd 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -698,7 +698,6 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
- static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD(num_mcast_sta);
--	DEBUGFS_ADD_MODE(smps, 0600);
- 	DEBUGFS_ADD(num_sta_ps);
- 	DEBUGFS_ADD(dtim_count);
- 	DEBUGFS_ADD(num_buffered_multicast);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4cc4eaf80b14..e9b9340a97dc 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -4446,6 +4446,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	wiphy_ext_feature_set(hw->wiphy,
+ 			      NL80211_EXT_FEATURE_BEACON_RATE_LEGACY);
+ 
++	wiphy_ext_feature_set(hw->wiphy,
++			      NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT);
++
+ 	hw->wiphy->interface_modes = param->iftypes;
+ 
+ 	/* ask mac80211 to reserve space for magic */
 -- 
 2.38.1
 
