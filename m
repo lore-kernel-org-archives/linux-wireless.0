@@ -2,111 +2,136 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B45C678DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Feb 2023 12:46:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E345BC61DA4
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Feb 2023 12:59:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229816AbjBXMqB (ORCPT
+        id S229950AbjBXM7W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Feb 2023 07:46:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43512 "EHLO
+        Fri, 24 Feb 2023 07:59:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbjBXMqA (ORCPT
+        with ESMTP id S229606AbjBXM7V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Feb 2023 07:46:00 -0500
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7415B42BED;
-        Fri, 24 Feb 2023 04:45:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=Z1svfh4p8q2jZu1lBbyg+kHr3WJV+oeeQaEoeKU2KdU=;
-        t=1677242759; x=1678452359; b=LIm1Aojy7V3UsMlXc3xTCJOZ7Ge0a2/0r2zjKofKsIfy4dV
-        a8zqXBfdossww6j2WJivVn2JiTpxOfhN4+CtaR9RBF60BPj8uVAbWAx2FcrKUE/a48H4U5fAkCrjh
-        czdhM8vs53vjBcJ3CA6vDg5wh6uALMrY+Ft9QR1+DpOKXM1dWmkB6GAn38JE2y813MVddG0mQ03YZ
-        tPXet1CDe9H5XXIARGaX9gaTsK5jYz+UGJ+oC2P/v0YBSGPM6KvpQbkLFPA272jX9OdIuZQi7oFwm
-        JVajjkOUdNup0fQitt8wV433iKXE5b8zLOvDT2WQfH98ItyJ1vlB2pOJy1EVCIYQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1pVXSX-004CAe-16;
-        Fri, 24 Feb 2023 13:45:57 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 1/2] net: netlink: make full range policy macros nicer
-Date:   Fri, 24 Feb 2023 13:45:52 +0100
-Message-Id: <20230224134441.791ae90f2939.Ic85e4e5fac77de8dedfa97ee1ad749b8ff8eb7a3@changeid>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230224124553.94730-1-johannes@sipsolutions.net>
-References: <20230224124553.94730-1-johannes@sipsolutions.net>
+        Fri, 24 Feb 2023 07:59:21 -0500
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36905166EA
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2023 04:59:20 -0800 (PST)
+Received: by mail-lf1-x131.google.com with SMTP id m6so17875790lfq.5
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2023 04:59:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1677243558;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wPG+Qu6q3RgNUlyYFOzyQce/Gn7mCKiLFXWosGD/Kpw=;
+        b=Qd1lGW9KedyZEyAKTe4qdwitU0RlltalSkvez+gCBlMtrH6GE0qvZ6N9degexwDUt5
+         dNdu/oVOBfqfI/0nPxjkhgVxa7sXKwkS5f+FHxoKEOvRzW4q2klU98/or9Jw9EWhKccG
+         YlvGp9/Q0lrEj0twzDQzqEMGDA64qhLB9g1sGJUN7fftCaDxxGZOQaLxvZrTeJfJN1Oa
+         pg9hzsnoBOOHk6xywdhAXFvF705SK4k8DYMm5UWruhN0PuRAptn9DiRNmibfihWd+gcq
+         Yc+2ZJ32i9cjW4mg1vJlTH7u5AFJlh9UQkZnMgjptUaUqJYLI7BbP6+tDP7E6gslVGpr
+         789A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1677243558;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wPG+Qu6q3RgNUlyYFOzyQce/Gn7mCKiLFXWosGD/Kpw=;
+        b=SLpDTpU2eAc8qG37jHJ0z+/uBXCoRa/47yp04mifX7yMmVIUZN7VDCSr3UgzoeCWTf
+         LWe4mfORlV+62mNqWPWbwzLnh1Ro0QU2vGZP6SotvHy730e63w5ldJGdASZo+Nl8Dm/8
+         hWnKGbLO54+Yp84Cz4O2VmhDsBu8JEF92H2B7AqYPkc9xoH9j5d/J4ZjytWBOG27Ah8A
+         Rpvzxz48bi/SVnxVmlNeD6e7WBhcAdxEpdFvpxJWK8hX+0GTr5zjCPwgh5sT7rnULJuB
+         kEzuS5HeJ7CuVQIFclwrhYrkNUk/cb77B72cgeUEc43vAup8LegszaukN7hPyHbhSb1d
+         ge3g==
+X-Gm-Message-State: AO0yUKWW1GGBV7b3Z5GxPB9StD38T4P1cmUQEGV5wfQPIXjKJug8qHgh
+        FbUxVcIa3pD3LVgCT+yFAZlIHg==
+X-Google-Smtp-Source: AK7set8n74zszsjnxxtFsyIXECuG5SuVuGozOMkL0pV5tL1ZnT+NrhMVipNk0UIgPRZ9uO5w+srZGQ==
+X-Received: by 2002:a19:f514:0:b0:4d5:ae35:b220 with SMTP id j20-20020a19f514000000b004d5ae35b220mr5224038lfb.8.1677243558481;
+        Fri, 24 Feb 2023 04:59:18 -0800 (PST)
+Received: from [192.168.1.101] (abym99.neoplus.adsl.tpnet.pl. [83.9.32.99])
+        by smtp.gmail.com with ESMTPSA id m28-20020a056512015c00b004d7d13387b5sm1705890lfo.116.2023.02.24.04.59.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Feb 2023 04:59:18 -0800 (PST)
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+Date:   Fri, 24 Feb 2023 13:59:17 +0100
+Subject: [PATCH] brcmfmac: pcie: Add 4359C0 firmware definition
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20230224-topic-brcm_tone-v1-1-333b0ac67934@linaro.org>
+X-B4-Tracking: v=1; b=H4sIAKS0+GMC/x2N0QqDMAxFf0XybCGrQtl+ZQyJNWrApdK6IYj/b
+ vDxnMvhHlA4Cxd4VQdk/kuRpAaPuoI4k07sZDAGj75B71u3pVWi63P8dltSdhjaJ2IIhNSAVT0
+ Vtpk0ztbpb1lMrplH2e+b9+c8L/hAKNZ2AAAA
+To:     Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>
+X-Mailer: b4 0.12.1
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1677243557; l=2308;
+ i=konrad.dybcio@linaro.org; s=20230215; h=from:subject:message-id;
+ bh=7y7YEc5odYv03bixlDUyCS4eYv4iVkxtgs1PEzbckmE=;
+ b=CMqJrDCCa6ffqZ9RJPFUNUfgU6DD7V/B3DBJHMVo81dr4UONMpGMvOsRpqcd3UGBlYKd+Y70fi3M
+ nT9QnkaNCmr1xVBXfVXJSSLLIXuPlcmd9TesLNVc1B238uTl32Pz
+X-Developer-Key: i=konrad.dybcio@linaro.org; a=ed25519;
+ pk=iclgkYvtl2w05SSXO5EjjSYlhFKsJ+5OSZBjOkQuEms=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Some phones from around 2016, as well as other random devices have
+this chip called 43956 or 4359C0 or 43596A0, which is more or less
+just a rev bump (v9) of the already-supported 4359. Add a corresponding
+firmware definition to allow for choosing the correct blob.
 
-Since these macros are used for variable initializers
-there's really no way to have a non-constant pointer,
-so move the required & into the macros.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 ---
- include/net/netlink.h     | 4 ++--
- net/ipv6/ioam6_iptunnel.c | 4 ++--
- net/wireless/nl80211.c    | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+Follow up on https://lore.kernel.org/netdev/20220921001630.56765-1-konrad.dybcio@somainline.org/
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index b12cd957abb4..52dedc8bfedd 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -415,13 +415,13 @@ struct nla_policy {
- #define NLA_POLICY_FULL_RANGE(tp, _range) {		\
- 	.type = NLA_ENSURE_UINT_OR_BINARY_TYPE(tp),	\
- 	.validation_type = NLA_VALIDATE_RANGE_PTR,	\
--	.range = _range,				\
-+	.range = &(_range),				\
- }
- 
- #define NLA_POLICY_FULL_RANGE_SIGNED(tp, _range) {	\
- 	.type = NLA_ENSURE_SINT_TYPE(tp),		\
- 	.validation_type = NLA_VALIDATE_RANGE_PTR,	\
--	.range_signed = _range,				\
-+	.range_signed = &(_range),			\
- }
- 
- #define NLA_POLICY_MIN(tp, _min) {			\
-diff --git a/net/ipv6/ioam6_iptunnel.c b/net/ipv6/ioam6_iptunnel.c
-index f6f5b83dd954..790a40e2497d 100644
---- a/net/ipv6/ioam6_iptunnel.c
-+++ b/net/ipv6/ioam6_iptunnel.c
-@@ -67,8 +67,8 @@ static struct ioam6_trace_hdr *ioam6_lwt_trace(struct lwtunnel_state *lwt)
- }
- 
- static const struct nla_policy ioam6_iptunnel_policy[IOAM6_IPTUNNEL_MAX + 1] = {
--	[IOAM6_IPTUNNEL_FREQ_K] = NLA_POLICY_FULL_RANGE(NLA_U32, &freq_range),
--	[IOAM6_IPTUNNEL_FREQ_N] = NLA_POLICY_FULL_RANGE(NLA_U32, &freq_range),
-+	[IOAM6_IPTUNNEL_FREQ_K] = NLA_POLICY_FULL_RANGE(NLA_U32, freq_range),
-+	[IOAM6_IPTUNNEL_FREQ_N] = NLA_POLICY_FULL_RANGE(NLA_U32, freq_range),
- 	[IOAM6_IPTUNNEL_MODE]	= NLA_POLICY_RANGE(NLA_U8,
- 						   IOAM6_IPTUNNEL_MODE_MIN,
- 						   IOAM6_IPTUNNEL_MODE_MAX),
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1c3b9a305f42..fbea0e786b21 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -811,7 +811,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_MLO_SUPPORT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_MAX_NUM_AKM_SUITES] = { .type = NLA_REJECT },
- 	[NL80211_ATTR_PUNCT_BITMAP] =
--		NLA_POLICY_FULL_RANGE(NLA_U32, &nl80211_punct_bitmap_range),
-+		NLA_POLICY_FULL_RANGE(NLA_U32, nl80211_punct_bitmap_range),
- };
- 
- /* policy for the key attributes */
+Other changes were dropped, as it turned out in the mailing thread
+that the chipid was 4359, which is already taken care of.
+
+Also, I'm sorry that my "soon" turned into months..
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index a9b9b2dc62d4..96c059377a2a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -57,6 +57,7 @@ BRCMF_FW_CLM_DEF(4356, "brcmfmac4356-pcie");
+ BRCMF_FW_CLM_DEF(43570, "brcmfmac43570-pcie");
+ BRCMF_FW_DEF(4358, "brcmfmac4358-pcie");
+ BRCMF_FW_DEF(4359, "brcmfmac4359-pcie");
++BRCMF_FW_DEF(4359C, "brcmfmac4359c-pcie");
+ BRCMF_FW_CLM_DEF(4364B2, "brcmfmac4364b2-pcie");
+ BRCMF_FW_CLM_DEF(4364B3, "brcmfmac4364b3-pcie");
+ BRCMF_FW_DEF(4365B, "brcmfmac4365b-pcie");
+@@ -88,7 +89,8 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ 	BRCMF_FW_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43570),
+ 	BRCMF_FW_ENTRY(BRCM_CC_43570_CHIP_ID, 0xFFFFFFFF, 43570),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4358_CHIP_ID, 0xFFFFFFFF, 4358),
+-	BRCMF_FW_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
++	BRCMF_FW_ENTRY(BRCM_CC_4359_CHIP_ID, 0x000001FF, 4359),
++	BRCMF_FW_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFE00, 4359C),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4364_CHIP_ID, 0x0000000F, 4364B2), /* 3 */
+ 	BRCMF_FW_ENTRY(BRCM_CC_4364_CHIP_ID, 0xFFFFFFF0, 4364B3), /* 4 */
+ 	BRCMF_FW_ENTRY(BRCM_CC_4365_CHIP_ID, 0x0000000F, 4365B),
+
+---
+base-commit: aaf70d5ad5e2b06a8050c51e278b0c3a14fabef5
+change-id: 20230224-topic-brcm_tone-07490077a0a3
+
+Best regards,
 -- 
-2.39.2
+Konrad Dybcio <konrad.dybcio@linaro.org>
 
