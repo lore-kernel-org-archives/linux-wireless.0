@@ -2,55 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E4A3C7EE2F
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 15:02:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7710C7EE2F
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 15:02:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231704AbjBZPCg (ORCPT
+        id S231679AbjBZPC4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Feb 2023 10:02:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36500 "EHLO
+        Sun, 26 Feb 2023 10:02:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229906AbjBZPCM (ORCPT
+        with ESMTP id S231680AbjBZPCY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Feb 2023 10:02:12 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1507125BE;
-        Sun, 26 Feb 2023 06:53:14 -0800 (PST)
+        Sun, 26 Feb 2023 10:02:24 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42ED219F18;
+        Sun, 26 Feb 2023 06:53:23 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 5C2E3CE0E9B;
-        Sun, 26 Feb 2023 14:51:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ACF4C433EF;
-        Sun, 26 Feb 2023 14:51:25 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B8926B80C82;
+        Sun, 26 Feb 2023 14:51:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D44DC433A0;
+        Sun, 26 Feb 2023 14:51:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677423087;
-        bh=YJ1A0xmYwfYZGLDDB3Aj6djY9x1Ymh0hFFMcfVWRpOA=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ANDxno79Ebgm5XhW4XuBgJAKepOWVqaEBzyy4C3XGucEV/R3/pKulaKASpMZM5amR
-         oZ6wQWZcQdvILY5EnOD4VkOO7ImF1W0kzrzc8rfYe6z1VvFMVf8T7zKa6AzUMPbF2h
-         m0Up9w8LXNItl2RF8qAfhkRjDb+vpQEuGTtzv8MZz11xvptU4H90s19HN49BcRhITf
-         1LVb3VbJPRMV8VhyORQrN8gGWTINXvIKyLxfsbDYlPzVxxxFvbtN9Y4igbmnKJMRKm
-         tBaCOJZY1XPxggi+OJR8RXaH2uOegQFCYXHpoEcPl46zIcNs4zsnVozoznob5NvfwU
-         zHVUBHeqipjWw==
+        s=k20201202; t=1677423106;
+        bh=KPCyFstw9exQqQKr55mQv4a0MH+XQcDbin9adazcQOY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UkQZxIVW7ppF75PJ5Pbjt430pRfor45r2LTB+004hWrT2gLa7vQBDFmXd6Q/aC4Nu
+         E69UW3iw8JoR1c0c3eptZdBInFojY6/cyOoJG5aainy6JtWnAbkFY9objSUGOvVtbG
+         0DtDjxTBje70FeP0PXjB3avo8CIMiQ9+A+4zJzmahSx8F3lOHy/dgQuCP/hleYpwlL
+         Zhk8JhBCUL0RVm43crg4RVTohM6zf3ng6xcrDQWsw7geONVs14in3+xWrZr+DRKtnD
+         fDNwVk9ydJU5qQzoXw7INg96Wkw3G9AaRqeqgw3F0D/Iy7kIjjGtwgvLRAKgQwpi3y
+         a2zQWOYup8rDw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jisoo Jang <jisoo.jang@yonsei.ac.kr>,
-        Dokyung Song <dokyungs@yonsei.ac.kr>,
-        Minsuk Kang <linuxlovemin@yonsei.ac.kr>,
+        Jakub Kicinski <kuba@kernel.org>,
         Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        aspriel@gmail.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        hdegoede@redhat.com, gustavoars@kernel.org,
-        wsa+renesas@sang-engineering.com, pavel@loebl.cz, marcan@marcan.st,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 01/19] wifi: brcmfmac: Fix potential stack-out-of-bounds in brcmf_c_preinit_dcmds()
-Date:   Sun, 26 Feb 2023 09:51:03 -0500
-Message-Id: <20230226145123.829229-1-sashal@kernel.org>
+        davem@davemloft.net, edumazet@google.com, pabeni@redhat.com,
+        matthias.bgg@gmail.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 07/19] wifi: mt7601u: fix an integer underflow
+Date:   Sun, 26 Feb 2023 09:51:09 -0500
+Message-Id: <20230226145123.829229-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230226145123.829229-1-sashal@kernel.org>
+References: <20230226145123.829229-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,155 +58,98 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Jisoo Jang <jisoo.jang@yonsei.ac.kr>
 
-[ Upstream commit 0a06cadcc2a0044e4a117cc0e61436fc3a0dad69 ]
+[ Upstream commit 803f3176c5df3b5582c27ea690f204abb60b19b9 ]
 
-This patch fixes a stack-out-of-bounds read in brcmfmac that occurs
-when 'buf' that is not null-terminated is passed as an argument of
-strsep() in brcmf_c_preinit_dcmds(). This buffer is filled with a firmware
-version string by memcpy() in brcmf_fil_iovar_data_get().
-The patch ensures buf is null-terminated.
+Fix an integer underflow that leads to a null pointer dereference in
+'mt7601u_rx_skb_from_seg()'. The variable 'dma_len' in the URB packet
+could be manipulated, which could trigger an integer underflow of
+'seg_len' in 'mt7601u_rx_process_seg()'. This underflow subsequently
+causes the 'bad_frame' checks in 'mt7601u_rx_skb_from_seg()' to be
+bypassed, eventually leading to a dereference of the pointer 'p', which
+is a null pointer.
+
+Ensure that 'dma_len' is greater than 'min_seg_len'.
 
 Found by a modified version of syzkaller.
 
-[   47.569679][ T1897] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac43236b for chip BCM43236/3
-[   47.582839][ T1897] brcmfmac: brcmf_c_process_clm_blob: no clm_blob available (err=-2), device may have limited channels available
-[   47.601565][ T1897] ==================================================================
-[   47.602574][ T1897] BUG: KASAN: stack-out-of-bounds in strsep+0x1b2/0x1f0
-[   47.603447][ T1897] Read of size 1 at addr ffffc90001f6f000 by task kworker/0:2/1897
-[   47.604336][ T1897]
-[   47.604621][ T1897] CPU: 0 PID: 1897 Comm: kworker/0:2 Tainted: G           O      5.14.0+ #131
-[   47.605617][ T1897] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
-[   47.606907][ T1897] Workqueue: usb_hub_wq hub_event
-[   47.607453][ T1897] Call Trace:
-[   47.607801][ T1897]  dump_stack_lvl+0x8e/0xd1
-[   47.608295][ T1897]  print_address_description.constprop.0.cold+0xf/0x334
-[   47.609009][ T1897]  ? strsep+0x1b2/0x1f0
-[   47.609434][ T1897]  ? strsep+0x1b2/0x1f0
-[   47.609863][ T1897]  kasan_report.cold+0x83/0xdf
-[   47.610366][ T1897]  ? strsep+0x1b2/0x1f0
-[   47.610882][ T1897]  strsep+0x1b2/0x1f0
-[   47.611300][ T1897]  ? brcmf_fil_iovar_data_get+0x3a/0xf0
-[   47.611883][ T1897]  brcmf_c_preinit_dcmds+0x995/0xc40
-[   47.612434][ T1897]  ? brcmf_c_set_joinpref_default+0x100/0x100
-[   47.613078][ T1897]  ? rcu_read_lock_sched_held+0xa1/0xd0
-[   47.613662][ T1897]  ? rcu_read_lock_bh_held+0xb0/0xb0
-[   47.614208][ T1897]  ? lock_acquire+0x19d/0x4e0
-[   47.614704][ T1897]  ? find_held_lock+0x2d/0x110
-[   47.615236][ T1897]  ? brcmf_usb_deq+0x1a7/0x260
-[   47.615741][ T1897]  ? brcmf_usb_rx_fill_all+0x5a/0xf0
-[   47.616288][ T1897]  brcmf_attach+0x246/0xd40
-[   47.616758][ T1897]  ? wiphy_new_nm+0x1703/0x1dd0
-[   47.617280][ T1897]  ? kmemdup+0x43/0x50
-[   47.617720][ T1897]  brcmf_usb_probe+0x12de/0x1690
-[   47.618244][ T1897]  ? brcmf_usbdev_qinit.constprop.0+0x470/0x470
-[   47.618901][ T1897]  usb_probe_interface+0x2aa/0x760
-[   47.619429][ T1897]  ? usb_probe_device+0x250/0x250
-[   47.619950][ T1897]  really_probe+0x205/0xb70
-[   47.620435][ T1897]  ? driver_allows_async_probing+0x130/0x130
-[   47.621048][ T1897]  __driver_probe_device+0x311/0x4b0
-[   47.621595][ T1897]  ? driver_allows_async_probing+0x130/0x130
-[   47.622209][ T1897]  driver_probe_device+0x4e/0x150
-[   47.622739][ T1897]  __device_attach_driver+0x1cc/0x2a0
-[   47.623287][ T1897]  bus_for_each_drv+0x156/0x1d0
-[   47.623796][ T1897]  ? bus_rescan_devices+0x30/0x30
-[   47.624309][ T1897]  ? lockdep_hardirqs_on_prepare+0x273/0x3e0
-[   47.624907][ T1897]  ? trace_hardirqs_on+0x46/0x160
-[   47.625437][ T1897]  __device_attach+0x23f/0x3a0
-[   47.625924][ T1897]  ? device_bind_driver+0xd0/0xd0
-[   47.626433][ T1897]  ? kobject_uevent_env+0x287/0x14b0
-[   47.627057][ T1897]  bus_probe_device+0x1da/0x290
-[   47.627557][ T1897]  device_add+0xb7b/0x1eb0
-[   47.628027][ T1897]  ? wait_for_completion+0x290/0x290
-[   47.628593][ T1897]  ? __fw_devlink_link_to_suppliers+0x5a0/0x5a0
-[   47.629249][ T1897]  usb_set_configuration+0xf59/0x16f0
-[   47.629829][ T1897]  usb_generic_driver_probe+0x82/0xa0
-[   47.630385][ T1897]  usb_probe_device+0xbb/0x250
-[   47.630927][ T1897]  ? usb_suspend+0x590/0x590
-[   47.631397][ T1897]  really_probe+0x205/0xb70
-[   47.631855][ T1897]  ? driver_allows_async_probing+0x130/0x130
-[   47.632469][ T1897]  __driver_probe_device+0x311/0x4b0
-[   47.633002][ T1897]  ? usb_generic_driver_match+0x75/0x90
-[   47.633573][ T1897]  ? driver_allows_async_probing+0x130/0x130
-[   47.634170][ T1897]  driver_probe_device+0x4e/0x150
-[   47.634703][ T1897]  __device_attach_driver+0x1cc/0x2a0
-[   47.635248][ T1897]  bus_for_each_drv+0x156/0x1d0
-[   47.635748][ T1897]  ? bus_rescan_devices+0x30/0x30
-[   47.636271][ T1897]  ? lockdep_hardirqs_on_prepare+0x273/0x3e0
-[   47.636881][ T1897]  ? trace_hardirqs_on+0x46/0x160
-[   47.637396][ T1897]  __device_attach+0x23f/0x3a0
-[   47.637904][ T1897]  ? device_bind_driver+0xd0/0xd0
-[   47.638426][ T1897]  ? kobject_uevent_env+0x287/0x14b0
-[   47.638985][ T1897]  bus_probe_device+0x1da/0x290
-[   47.639512][ T1897]  device_add+0xb7b/0x1eb0
-[   47.639977][ T1897]  ? __fw_devlink_link_to_suppliers+0x5a0/0x5a0
-[   47.640612][ T1897]  ? kfree+0x14a/0x6b0
-[   47.641055][ T1897]  ? __usb_get_extra_descriptor+0x116/0x160
-[   47.641679][ T1897]  usb_new_device.cold+0x49c/0x1029
-[   47.642245][ T1897]  ? hub_disconnect+0x450/0x450
-[   47.642756][ T1897]  ? rwlock_bug.part.0+0x90/0x90
-[   47.643273][ T1897]  ? _raw_spin_unlock_irq+0x24/0x30
-[   47.643822][ T1897]  ? lockdep_hardirqs_on_prepare+0x273/0x3e0
-[   47.644445][ T1897]  hub_event+0x1c98/0x3950
-[   47.644939][ T1897]  ? hub_port_debounce+0x2e0/0x2e0
-[   47.645467][ T1897]  ? check_irq_usage+0x861/0xf20
-[   47.645975][ T1897]  ? drain_workqueue+0x280/0x360
-[   47.646506][ T1897]  ? lock_release+0x640/0x640
-[   47.646994][ T1897]  ? rcu_read_lock_sched_held+0xa1/0xd0
-[   47.647572][ T1897]  ? rcu_read_lock_bh_held+0xb0/0xb0
-[   47.648111][ T1897]  ? lockdep_hardirqs_on_prepare+0x273/0x3e0
-[   47.648735][ T1897]  process_one_work+0x92b/0x1460
-[   47.649262][ T1897]  ? pwq_dec_nr_in_flight+0x330/0x330
-[   47.649816][ T1897]  ? rwlock_bug.part.0+0x90/0x90
-[   47.650336][ T1897]  worker_thread+0x95/0xe00
-[   47.650830][ T1897]  ? __kthread_parkme+0x115/0x1e0
-[   47.651361][ T1897]  ? process_one_work+0x1460/0x1460
-[   47.651904][ T1897]  kthread+0x3a1/0x480
-[   47.652329][ T1897]  ? set_kthread_struct+0x120/0x120
-[   47.652878][ T1897]  ret_from_fork+0x1f/0x30
-[   47.653370][ T1897]
-[   47.653608][ T1897]
-[   47.653848][ T1897] addr ffffc90001f6f000 is located in stack of task kworker/0:2/1897 at offset 512 in frame:
-[   47.654891][ T1897]  brcmf_c_preinit_dcmds+0x0/0xc40
-[   47.655442][ T1897]
-[   47.655690][ T1897] this frame has 4 objects:
-[   47.656151][ T1897]  [48, 56) 'ptr'
-[   47.656159][ T1897]  [80, 148) 'revinfo'
-[   47.656534][ T1897]  [192, 210) 'eventmask'
-[   47.656953][ T1897]  [256, 512) 'buf'
-[   47.657410][ T1897]
-[   47.658035][ T1897] Memory state around the buggy address:
-[   47.658743][ T1897]  ffffc90001f6ef00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-[   47.659577][ T1897]  ffffc90001f6ef80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-[   47.660394][ T1897] >ffffc90001f6f000: f3 f3 f3 f3 f3 f3 f3 f3 00 00 00 00 00 00 00 00
-[   47.661199][ T1897]                    ^
-[   47.661625][ T1897]  ffffc90001f6f080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-[   47.662455][ T1897]  ffffc90001f6f100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 f1 f1
-[   47.663318][ T1897] ==================================================================
-[   47.664147][ T1897] Disabling lock debugging due to kernel taint
+KASAN: null-ptr-deref in range [0x0000000000000008-0x000000000000000f]
+CPU: 0 PID: 12 Comm: ksoftirqd/0 Tainted: G        W  O      5.14.0+
+#139
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
+RIP: 0010:skb_add_rx_frag+0x143/0x370
+Code: e2 07 83 c2 03 38 ca 7c 08 84 c9 0f 85 86 01 00 00 4c 8d 7d 08 44
+89 68 08 48 b8 00 00 00 00 00 fc ff df 4c 89 fa 48 c1 ea 03 <80> 3c 02
+00 0f 85 cd 01 00 00 48 8b 45 08 a8 01 0f 85 3d 01 00 00
+RSP: 0018:ffffc900000cfc90 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: ffff888115520dc0 RCX: 0000000000000000
+RDX: 0000000000000001 RSI: ffff8881118430c0 RDI: ffff8881118430f8
+RBP: 0000000000000000 R08: 0000000000000e09 R09: 0000000000000010
+R10: ffff888111843017 R11: ffffed1022308602 R12: 0000000000000000
+R13: 0000000000000e09 R14: 0000000000000010 R15: 0000000000000008
+FS:  0000000000000000(0000) GS:ffff88811a800000(0000)
+knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000004035af40 CR3: 00000001157f2000 CR4: 0000000000750ef0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+PKRU: 55555554
+Call Trace:
+ mt7601u_rx_tasklet+0xc73/0x1270
+ ? mt7601u_submit_rx_buf.isra.0+0x510/0x510
+ ? tasklet_action_common.isra.0+0x79/0x2f0
+ tasklet_action_common.isra.0+0x206/0x2f0
+ __do_softirq+0x1b5/0x880
+ ? tasklet_unlock+0x30/0x30
+ run_ksoftirqd+0x26/0x50
+ smpboot_thread_fn+0x34f/0x7d0
+ ? smpboot_register_percpu_thread+0x370/0x370
+ kthread+0x3a1/0x480
+ ? set_kthread_struct+0x120/0x120
+ ret_from_fork+0x1f/0x30
+Modules linked in: 88XXau(O) 88x2bu(O)
+---[ end trace 57f34f93b4da0f9b ]---
+RIP: 0010:skb_add_rx_frag+0x143/0x370
+Code: e2 07 83 c2 03 38 ca 7c 08 84 c9 0f 85 86 01 00 00 4c 8d 7d 08 44
+89 68 08 48 b8 00 00 00 00 00 fc ff df 4c 89 fa 48 c1 ea 03 <80> 3c 02
+00 0f 85 cd 01 00 00 48 8b 45 08 a8 01 0f 85 3d 01 00 00
+RSP: 0018:ffffc900000cfc90 EFLAGS: 00010202
+RAX: dffffc0000000000 RBX: ffff888115520dc0 RCX: 0000000000000000
+RDX: 0000000000000001 RSI: ffff8881118430c0 RDI: ffff8881118430f8
+RBP: 0000000000000000 R08: 0000000000000e09 R09: 0000000000000010
+R10: ffff888111843017 R11: ffffed1022308602 R12: 0000000000000000
+R13: 0000000000000e09 R14: 0000000000000010 R15: 0000000000000008
+FS:  0000000000000000(0000) GS:ffff88811a800000(0000)
+knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000004035af40 CR3: 00000001157f2000 CR4: 0000000000750ef0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+PKRU: 55555554
 
-Reported-by: Dokyung Song <dokyungs@yonsei.ac.kr>
-Reported-by: Jisoo Jang <jisoo.jang@yonsei.ac.kr>
-Reported-by: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
 Signed-off-by: Jisoo Jang <jisoo.jang@yonsei.ac.kr>
+Acked-by: Jakub Kicinski <kuba@kernel.org>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20221115043458.37562-1-jisoo.jang@yonsei.ac.kr
+Link: https://lore.kernel.org/r/20221229092906.2328282-1-jisoo.jang@yonsei.ac.kr
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt7601u/dma.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index dec25e4156199..0c967b45f76f7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -264,6 +264,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 			 err);
- 		goto done;
- 	}
-+	buf[sizeof(buf) - 1] = '\0';
- 	ptr = (char *)buf;
- 	strsep(&ptr, "\n");
+diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
+index 6f2172be7b66a..072888072b0db 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/dma.c
++++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
+@@ -118,7 +118,8 @@ static u16 mt7601u_rx_next_seg_len(u8 *data, u32 data_len)
+ 	if (data_len < min_seg_len ||
+ 	    WARN_ON_ONCE(!dma_len) ||
+ 	    WARN_ON_ONCE(dma_len + MT_DMA_HDRS > data_len) ||
+-	    WARN_ON_ONCE(dma_len & 0x3))
++	    WARN_ON_ONCE(dma_len & 0x3) ||
++	    WARN_ON_ONCE(dma_len < min_seg_len))
+ 		return 0;
  
+ 	return MT_DMA_HDRS + dma_len;
 -- 
 2.39.0
 
