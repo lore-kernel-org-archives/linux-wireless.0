@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37060C7EE33
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 15:15:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCFB0C64ED6
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 15:15:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230085AbjBZPPE (ORCPT
+        id S231877AbjBZPPu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Feb 2023 10:15:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33514 "EHLO
+        Sun, 26 Feb 2023 10:15:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231868AbjBZPOB (ORCPT
+        with ESMTP id S232193AbjBZPPB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Feb 2023 10:14:01 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 370157ED0;
-        Sun, 26 Feb 2023 07:04:25 -0800 (PST)
+        Sun, 26 Feb 2023 10:15:01 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E83C121295;
+        Sun, 26 Feb 2023 07:05:45 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2438F60C49;
-        Sun, 26 Feb 2023 14:52:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DD90C433D2;
-        Sun, 26 Feb 2023 14:52:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 160D460C4F;
+        Sun, 26 Feb 2023 14:52:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DFEDC433EF;
+        Sun, 26 Feb 2023 14:52:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677423141;
-        bh=+yaI5KvXQ+J1Xbf7LwKAJOFij69plcltlYPvsXBeiPE=;
+        s=k20201202; t=1677423179;
+        bh=VmoIHrr+mNyw64ERdqNUNTwZFv34ATyY20xAM7lpFdw=;
         h=From:To:Cc:Subject:Date:From;
-        b=HAI/+Firh5BjEGbAiA5XOQ6pmDiJXMEzKoa+GVY5bjmkiwswFPF4PDLmOyr5ecE0H
-         NhyS//AeBBne12Y92kRy6hSjCvtCAe7Wepoq1CEJjrIuzerBccJ5uKo39bqp4Hup6o
-         fODtE4NvGHENMC5zq59bN0SYivotCK1jB/sIehatUcrDaxf69u4CXZA25fKFcBJcav
-         ZnA+DNexa420/uUT+uvLiXbfddaXG4LUDQ8hrYlbKJHcz0Tg1ZA/u8dJhdw+OpJpP5
-         zIWHzsmn03I8yiSzqDqNQ76AUkjrG0H4aGnDCVT359eDEu05EkwsQYa3VBVQv6ztcV
-         aUXJm5C/0V0zQ==
+        b=LjZnrhyEsZEpam0YgWsu9RU8eNLvksGFs5q+SJbioiyWcmFJPlEheeLtzDea2vS4s
+         9bQSL2+dmF90p0V1gxHNjXVoGNnL9jLORWS4PchASrmPXZPwqBaMLK941zNhCF8Qyh
+         9im31PjN2gnBXy42eKkNx7pGqVD5n80QOz9wSm1JzT1t8wuX/0Jwbt/HpbEYEueJnE
+         3IqPtvnGzrrLnsjbjMOZSdVVAXzj1VgOZvs4MtcIXjZ7OWarVbBwP2Allj6unqOdeb
+         iGIpG57g41Omd/8PmbLjkSgfj/Hizu7FH9/NE5RNb5FtXmBR37Jkvg0coTIwqBORWb
+         m4GdfTklCCJzQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jisoo Jang <jisoo.jang@yonsei.ac.kr>,
@@ -42,14 +42,14 @@ Cc:     Jisoo Jang <jisoo.jang@yonsei.ac.kr>,
         aspriel@gmail.com, franky.lin@broadcom.com,
         hante.meuleman@broadcom.com, davem@davemloft.net,
         edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        hdegoede@redhat.com, gustavoars@kernel.org, marcan@marcan.st,
-        pavel@loebl.cz, wsa+renesas@sang-engineering.com,
+        hdegoede@redhat.com, gustavoars@kernel.org, pavel@loebl.cz,
+        wsa+renesas@sang-engineering.com, marcan@marcan.st,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 01/13] wifi: brcmfmac: Fix potential stack-out-of-bounds in brcmf_c_preinit_dcmds()
-Date:   Sun, 26 Feb 2023 09:52:03 -0500
-Message-Id: <20230226145217.829485-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 01/11] wifi: brcmfmac: Fix potential stack-out-of-bounds in brcmf_c_preinit_dcmds()
+Date:   Sun, 26 Feb 2023 09:52:43 -0500
+Message-Id: <20230226145255.829660-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
 X-stable: review
@@ -199,10 +199,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 8510d207ee87d..b4e8957840020 100644
+index 7a2b49587b4d3..b2f46685391c2 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -273,6 +273,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+@@ -157,6 +157,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
  			  err);
  		goto done;
  	}
