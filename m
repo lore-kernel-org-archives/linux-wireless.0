@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB5A4C6FA8E
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3A1BC7EE23
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:55:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230274AbjBZOzz (ORCPT
+        id S230342AbjBZOz4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Feb 2023 09:55:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56126 "EHLO
+        Sun, 26 Feb 2023 09:55:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231348AbjBZOzV (ORCPT
+        with ESMTP id S230390AbjBZOxw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Feb 2023 09:55:21 -0500
+        Sun, 26 Feb 2023 09:53:52 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B08E31B310;
-        Sun, 26 Feb 2023 06:51:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB0281ACEB;
+        Sun, 26 Feb 2023 06:50:11 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1A94760C5E;
-        Sun, 26 Feb 2023 14:48:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62801C433D2;
-        Sun, 26 Feb 2023 14:48:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6AE0F60C49;
+        Sun, 26 Feb 2023 14:46:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5291C433EF;
+        Sun, 26 Feb 2023 14:46:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677422907;
-        bh=YUGhHv54G1+XRv+xazR/2/VBbiQRmwCCo5vKPzJsHYQ=;
+        s=k20201202; t=1677422795;
+        bh=+14XCMTWc3gY7mt1/8x0nU+oBB/YTuN02xrNh9fKVpY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DAjHSzKmIseAuCDgem45S0WENXvpmHvNk5+UfhKFgp7QbDLE/z97k+DbzS10gdXSS
-         cjaex2secqg/O9AVTcRb3yNnpkQOXcNFwH6Lshv2BVqbWjUKVBmFS4L7khBVHcrj0K
-         5MWLfAYGp6i2HsdCdL52dbuCx1WZedtmA4wJXMNs/a+7WFfAgqzNzOtmky0LFLrzBA
-         RekjaDHQ9qlBjmLvcr3p5ytLqwBQR2FeILEeinCvmyb7ofZLovbwIIqblx6i/vKZkA
-         O9R9zdgZRAgrcdNZK4N6DxGEofmZ/Ay5MvQzS4lfUBTv2PgHxtumlkOwXnJ7ev8VFz
-         Js/+dQI+jYrgA==
+        b=kdqg9RVCWDgmFbPckE6rkFwIw5ZhWjg/eSMJC5GuKeUw63oYNGYC6IoAUuRup+gje
+         +ETbU2D4vpO5v4AH//nQlV87iRiE3IM0cpfPdLjzzdOi7lVfnbXvC7mrO5CbtdSa5K
+         b58YVHARvopPROF+Oml4IPYAS67QAY0GVch6czOogGPrri5/7FjqTa5YRCFnVA1rz1
+         Ie/d/aNkrVyPx/vz7yFJ+eeYNAgCv+Mq1y2gh5TMri+pUDm+H7ZIsBKfDQIo6CNmvx
+         r3EBVma1LRPpc0LB89oIUA4/q3vus2ktTbm5r0yqRQp04+n3XeJaqbj/1Y7jBFUMOf
+         s4wyS/GgyeUMw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
@@ -41,12 +41,12 @@ Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 44/49] wifi: rtw89: debug: avoid invalid access on RTW89_DBG_SEL_MAC_30
-Date:   Sun, 26 Feb 2023 09:46:44 -0500
-Message-Id: <20230226144650.826470-44-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 48/53] wifi: rtw89: debug: avoid invalid access on RTW89_DBG_SEL_MAC_30
+Date:   Sun, 26 Feb 2023 09:44:40 -0500
+Message-Id: <20230226144446.824580-48-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230226144650.826470-1-sashal@kernel.org>
-References: <20230226144650.826470-1-sashal@kernel.org>
+In-Reply-To: <20230226144446.824580-1-sashal@kernel.org>
+References: <20230226144446.824580-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 7 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
-index 730e83d54257f..50701c55ed602 100644
+index 8297e35bfa52b..6730eea930ece 100644
 --- a/drivers/net/wireless/realtek/rtw89/debug.c
 +++ b/drivers/net/wireless/realtek/rtw89/debug.c
-@@ -594,6 +594,7 @@ rtw89_debug_priv_mac_reg_dump_select(struct file *filp,
+@@ -615,6 +615,7 @@ rtw89_debug_priv_mac_reg_dump_select(struct file *filp,
  	struct seq_file *m = (struct seq_file *)filp->private_data;
  	struct rtw89_debugfs_priv *debugfs_priv = m->private;
  	struct rtw89_dev *rtwdev = debugfs_priv->rtwdev;
@@ -84,7 +84,7 @@ index 730e83d54257f..50701c55ed602 100644
  	char buf[32];
  	size_t buf_size;
  	int sel;
-@@ -613,6 +614,12 @@ rtw89_debug_priv_mac_reg_dump_select(struct file *filp,
+@@ -634,6 +635,12 @@ rtw89_debug_priv_mac_reg_dump_select(struct file *filp,
  		return -EINVAL;
  	}
  
