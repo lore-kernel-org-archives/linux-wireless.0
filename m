@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC564C6FA8E
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19EDCC7EE2F
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:46:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229760AbjBZOpp (ORCPT
+        id S229814AbjBZOqO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Feb 2023 09:45:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40024 "EHLO
+        Sun, 26 Feb 2023 09:46:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229643AbjBZOp2 (ORCPT
+        with ESMTP id S229793AbjBZOqB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Feb 2023 09:45:28 -0500
+        Sun, 26 Feb 2023 09:46:01 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54E7513DC9;
-        Sun, 26 Feb 2023 06:45:08 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C7E212F10;
+        Sun, 26 Feb 2023 06:45:28 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DDE97B80BE9;
-        Sun, 26 Feb 2023 14:45:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53922C4339E;
-        Sun, 26 Feb 2023 14:45:04 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B399BB80BAA;
+        Sun, 26 Feb 2023 14:45:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4666BC4339B;
+        Sun, 26 Feb 2023 14:45:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677422705;
-        bh=iHCjk8zL0JXwsFlanSXQ/+uDgS83Gl8uIHKMFQIHQtE=;
+        s=k20201202; t=1677422725;
+        bh=x7sdm3iU1dJ2vJSPlk7zJ6Ctuyc9lXKp2dS9RwD/CNA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o6OiPCLS0Snhz9xuyCVwn1shUgKdMYUdp29uRQDxyJN8+OcTbrBQagBrSVZDddegm
-         Zux8FkMtr+96RW4bsAXDiHT35rIHqjKm2fEK8zZGkZ1/fn2bskJ+izZwPBUffoeG16
-         Rd/rgUt0zVTAmEpC+2PYmP9RahhKnDlE/nKL9F18sjbYcCIYgJRvo30ioJohql4xAc
-         DjXFQ+cf82mAXdO2YEavc6YCUpl7n3wy4O003J2vL/octLYeUQ7/Iok7YOJSQd7U9k
-         Xbq1XPp5CrDS+wNlvlOjwucibSBlJ0y0zz2VZfibXQGHH7r59sJzjHmGwUW2q7dXVg
-         HK4Mn6emdN5mA==
+        b=ut27tR11Sq6NtIl2BlesIxbT9Rd3phM+ZpxU1Z5PEJScqxitoJsmVfOOTt/+elJg2
+         YX7wGBhqC/is3/veC4J8xmUkT+CV8cYyNtKqD1cAmu8+BvfFu12OANp97+JZl0JKt6
+         wiOSbCkG9gc630PrXEmVXTkleAM2Zjq9m+fdNbNXsqnJclGys1RLR+PjTbd6VpRFvl
+         YftPhyfzXXkf4KyzFvdszsNfp+Rw3PGTL/ga/l8M945Q+y6ZoeUW5Hv2C74+mQzN9w
+         YaHTq2piQ+KzvLAB8HyVGoREJdfRJ6+XJC2g+MHc+YxC59nJfDZwqSWN/lX4hJitx9
+         Vz+f7agsXCERw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kalle Valo <quic_kvalo@quicinc.com>,
-        Robert Marko <robert.marko@sartura.hr>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+Cc:     Zong-Zhe Yang <kevin_yang@realtek.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 09/53] wifi: ath11k: debugfs: fix to work with multiple PCI devices
-Date:   Sun, 26 Feb 2023 09:44:01 -0500
-Message-Id: <20230226144446.824580-9-sashal@kernel.org>
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 15/53] wifi: rtw89: fix assignation of TX BD RAM table
+Date:   Sun, 26 Feb 2023 09:44:07 -0500
+Message-Id: <20230226144446.824580-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230226144446.824580-1-sashal@kernel.org>
 References: <20230226144446.824580-1-sashal@kernel.org>
@@ -55,149 +55,155 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <quic_kvalo@quicinc.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-[ Upstream commit 323d91d4684d238f6bc3693fed93caf795378fe0 ]
+[ Upstream commit 7f495de6ae7d31f098970fb45a038c9f69b1bf75 ]
 
-ath11k fails to load if there are multiple ath11k PCI devices with same name:
+TX BD's RAM table describes how HW allocates usable buffer section
+for each TX channel at fetch time. The total RAM size for TX BD is
+chip-dependent. For 8852BE, it has only half size (32) for TX channels
+of single band. Original table arrange total size (64) for dual band.
+It will overflow on 8852BE circuit and cause section conflicts between
+different TX channels.
 
- ath11k_pci 0000:01:00.0: Hardware name qcn9074 hw1.0
- debugfs: Directory 'ath11k' with parent '/' already present!
- ath11k_pci 0000:01:00.0: failed to create ath11k debugfs
- ath11k_pci 0000:01:00.0: failed to create soc core: -17
- ath11k_pci 0000:01:00.0: failed to init core: -17
- ath11k_pci: probe of 0000:01:00.0 failed with error -17
+So, we do the changes below.
+* add another table for single band chip and export both kind of tables
+* point to the expected one in rtw89_pci_info by chip
 
-Fix this by creating a directory for each ath11k device using schema
-<bus>-<devname>, for example "pci-0000:06:00.0". This directory created under
-the top-level ath11k directory, for example /sys/kernel/debug/ath11k.
-
-The reference to the toplevel ath11k directory is not stored anymore within ath11k, instead
-it's retrieved using debugfs_lookup(). If the directory does not exist it will
-be created. After the last directory from the ath11k directory is removed, for
-example when doing rmmod ath11k, the empty ath11k directory is left in place,
-it's a minor cosmetic issue anyway.
-
-Here's an example hierarchy with one WCN6855:
-
-ath11k
-`-- pci-0000:06:00.0
-    |-- mac0
-    |   |-- dfs_block_radar_events
-    |   |-- dfs_simulate_radar
-    |   |-- ext_rx_stats
-    |   |-- ext_tx_stats
-    |   |-- fw_dbglog_config
-    |   |-- fw_stats
-    |   |   |-- beacon_stats
-    |   |   |-- pdev_stats
-    |   |   `-- vdev_stats
-    |   |-- htt_stats
-    |   |-- htt_stats_reset
-    |   |-- htt_stats_type
-    |   `-- pktlog_filter
-    |-- simulate_fw_crash
-    `-- soc_dp_stats
-
-I didn't have a test setup where I could connect multiple ath11k devices to the
-same the host, so I have only tested this with one device.
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.9
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-01208-QCAHKSWPL_SILICONZ-1
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01208-QCAHKSWPL_SILICONZ-1
-
-Tested-by: Robert Marko <robert.marko@sartura.hr>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20221220121231.20120-1-kvalo@kernel.org
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230113090632.60957-4-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/core.h    |  1 -
- drivers/net/wireless/ath/ath11k/debugfs.c | 48 +++++++++++++++++++----
- 2 files changed, 40 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtw89/pci.c       | 15 ++++++++++++++-
+ drivers/net/wireless/realtek/rtw89/pci.h       | 15 +++++++++------
+ drivers/net/wireless/realtek/rtw89/rtw8852ae.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852be.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852ce.c |  1 +
+ 5 files changed, 26 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 22460b0abf037..ac34c57e4bc69 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -912,7 +912,6 @@ struct ath11k_base {
- 	enum ath11k_dfs_region dfs_region;
- #ifdef CONFIG_ATH11K_DEBUGFS
- 	struct dentry *debugfs_soc;
--	struct dentry *debugfs_ath11k;
- #endif
- 	struct ath11k_soc_dp_stats soc_stats;
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index 1c4500ba777c6..0ea734c81b4f0 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -1384,7 +1384,7 @@ static int rtw89_pci_ops_tx_write(struct rtw89_dev *rtwdev, struct rtw89_core_tx
+ 	return 0;
+ }
  
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
-index ccdf3d5ba1ab6..5bb6fd17fdf6f 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs.c
-@@ -976,10 +976,6 @@ int ath11k_debugfs_pdev_create(struct ath11k_base *ab)
- 	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
- 		return 0;
+-static const struct rtw89_pci_bd_ram bd_ram_table[RTW89_TXCH_NUM] = {
++const struct rtw89_pci_bd_ram rtw89_bd_ram_table_dual[RTW89_TXCH_NUM] = {
+ 	[RTW89_TXCH_ACH0] = {.start_idx = 0,  .max_num = 5, .min_num = 2},
+ 	[RTW89_TXCH_ACH1] = {.start_idx = 5,  .max_num = 5, .min_num = 2},
+ 	[RTW89_TXCH_ACH2] = {.start_idx = 10, .max_num = 5, .min_num = 2},
+@@ -1399,11 +1399,24 @@ static const struct rtw89_pci_bd_ram bd_ram_table[RTW89_TXCH_NUM] = {
+ 	[RTW89_TXCH_CH11] = {.start_idx = 55, .max_num = 5, .min_num = 1},
+ 	[RTW89_TXCH_CH12] = {.start_idx = 60, .max_num = 4, .min_num = 1},
+ };
++EXPORT_SYMBOL(rtw89_bd_ram_table_dual);
++
++const struct rtw89_pci_bd_ram rtw89_bd_ram_table_single[RTW89_TXCH_NUM] = {
++	[RTW89_TXCH_ACH0] = {.start_idx = 0,  .max_num = 5, .min_num = 2},
++	[RTW89_TXCH_ACH1] = {.start_idx = 5,  .max_num = 5, .min_num = 2},
++	[RTW89_TXCH_ACH2] = {.start_idx = 10, .max_num = 5, .min_num = 2},
++	[RTW89_TXCH_ACH3] = {.start_idx = 15, .max_num = 5, .min_num = 2},
++	[RTW89_TXCH_CH8]  = {.start_idx = 20, .max_num = 4, .min_num = 1},
++	[RTW89_TXCH_CH9]  = {.start_idx = 24, .max_num = 4, .min_num = 1},
++	[RTW89_TXCH_CH12] = {.start_idx = 28, .max_num = 4, .min_num = 1},
++};
++EXPORT_SYMBOL(rtw89_bd_ram_table_single);
  
--	ab->debugfs_soc = debugfs_create_dir(ab->hw_params.name, ab->debugfs_ath11k);
--	if (IS_ERR(ab->debugfs_soc))
--		return PTR_ERR(ab->debugfs_soc);
+ static void rtw89_pci_reset_trx_rings(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
+ 	const struct rtw89_pci_info *info = rtwdev->pci_info;
++	const struct rtw89_pci_bd_ram *bd_ram_table = *info->bd_ram_table;
+ 	struct rtw89_pci_tx_ring *tx_ring;
+ 	struct rtw89_pci_rx_ring *rx_ring;
+ 	struct rtw89_pci_dma_ring *bd_ring;
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
+index 7d033501d4d95..1e19740db8c54 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.h
++++ b/drivers/net/wireless/realtek/rtw89/pci.h
+@@ -750,6 +750,12 @@ struct rtw89_pci_ch_dma_addr_set {
+ 	struct rtw89_pci_ch_dma_addr rx[RTW89_RXCH_NUM];
+ };
+ 
++struct rtw89_pci_bd_ram {
++	u8 start_idx;
++	u8 max_num;
++	u8 min_num;
++};
++
+ struct rtw89_pci_info {
+ 	enum mac_ax_bd_trunc_mode txbd_trunc_mode;
+ 	enum mac_ax_bd_trunc_mode rxbd_trunc_mode;
+@@ -785,6 +791,7 @@ struct rtw89_pci_info {
+ 	u32 tx_dma_ch_mask;
+ 	const struct rtw89_pci_bd_idx_addr *bd_idx_addr_low_power;
+ 	const struct rtw89_pci_ch_dma_addr_set *dma_addr_set;
++	const struct rtw89_pci_bd_ram (*bd_ram_table)[RTW89_TXCH_NUM];
+ 
+ 	int (*ltr_set)(struct rtw89_dev *rtwdev, bool en);
+ 	u32 (*fill_txaddr_info)(struct rtw89_dev *rtwdev,
+@@ -798,12 +805,6 @@ struct rtw89_pci_info {
+ 				struct rtw89_pci_isrs *isrs);
+ };
+ 
+-struct rtw89_pci_bd_ram {
+-	u8 start_idx;
+-	u8 max_num;
+-	u8 min_num;
+-};
 -
- 	debugfs_create_file("simulate_fw_crash", 0600, ab->debugfs_soc, ab,
- 			    &fops_simulate_fw_crash);
+ struct rtw89_pci_tx_data {
+ 	dma_addr_t dma;
+ };
+@@ -1057,6 +1058,8 @@ static inline bool rtw89_pci_ltr_is_err_reg_val(u32 val)
+ extern const struct dev_pm_ops rtw89_pm_ops;
+ extern const struct rtw89_pci_ch_dma_addr_set rtw89_pci_ch_dma_addr_set;
+ extern const struct rtw89_pci_ch_dma_addr_set rtw89_pci_ch_dma_addr_set_v1;
++extern const struct rtw89_pci_bd_ram rtw89_bd_ram_table_dual[RTW89_TXCH_NUM];
++extern const struct rtw89_pci_bd_ram rtw89_bd_ram_table_single[RTW89_TXCH_NUM];
  
-@@ -1001,15 +997,51 @@ void ath11k_debugfs_pdev_destroy(struct ath11k_base *ab)
+ struct pci_device_id;
  
- int ath11k_debugfs_soc_create(struct ath11k_base *ab)
- {
--	ab->debugfs_ath11k = debugfs_create_dir("ath11k", NULL);
-+	struct dentry *root;
-+	bool dput_needed;
-+	char name[64];
-+	int ret;
-+
-+	root = debugfs_lookup("ath11k", NULL);
-+	if (!root) {
-+		root = debugfs_create_dir("ath11k", NULL);
-+		if (IS_ERR_OR_NULL(root))
-+			return PTR_ERR(root);
-+
-+		dput_needed = false;
-+	} else {
-+		/* a dentry from lookup() needs dput() after we don't use it */
-+		dput_needed = true;
-+	}
-+
-+	scnprintf(name, sizeof(name), "%s-%s", ath11k_bus_str(ab->hif.bus),
-+		  dev_name(ab->dev));
-+
-+	ab->debugfs_soc = debugfs_create_dir(name, root);
-+	if (IS_ERR_OR_NULL(ab->debugfs_soc)) {
-+		ret = PTR_ERR(ab->debugfs_soc);
-+		goto out;
-+	}
-+
-+	ret = 0;
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
+index 0cd8c0c44d19d..d835a44a1d0d0 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
+@@ -44,6 +44,7 @@ static const struct rtw89_pci_info rtw8852a_pci_info = {
+ 	.tx_dma_ch_mask		= 0,
+ 	.bd_idx_addr_low_power	= NULL,
+ 	.dma_addr_set		= &rtw89_pci_ch_dma_addr_set,
++	.bd_ram_table		= &rtw89_bd_ram_table_dual,
  
--	return PTR_ERR_OR_ZERO(ab->debugfs_ath11k);
-+out:
-+	if (dput_needed)
-+		dput(root);
-+
-+	return ret;
- }
+ 	.ltr_set		= rtw89_pci_ltr_set,
+ 	.fill_txaddr_info	= rtw89_pci_fill_txaddr_info,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852be.c b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
+index 0ef2ca8efeb0e..ecf39d2d9f81f 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852be.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
+@@ -46,6 +46,7 @@ static const struct rtw89_pci_info rtw8852b_pci_info = {
+ 				  BIT(RTW89_TXCH_CH10) | BIT(RTW89_TXCH_CH11),
+ 	.bd_idx_addr_low_power	= NULL,
+ 	.dma_addr_set		= &rtw89_pci_ch_dma_addr_set,
++	.bd_ram_table		= &rtw89_bd_ram_table_single,
  
- void ath11k_debugfs_soc_destroy(struct ath11k_base *ab)
- {
--	debugfs_remove_recursive(ab->debugfs_ath11k);
--	ab->debugfs_ath11k = NULL;
-+	debugfs_remove_recursive(ab->debugfs_soc);
-+	ab->debugfs_soc = NULL;
-+
-+	/* We are not removing ath11k directory on purpose, even if it
-+	 * would be empty. This simplifies the directory handling and it's
-+	 * a minor cosmetic issue to leave an empty ath11k directory to
-+	 * debugfs.
-+	 */
- }
- EXPORT_SYMBOL(ath11k_debugfs_soc_destroy);
+ 	.ltr_set		= rtw89_pci_ltr_set,
+ 	.fill_txaddr_info	= rtw89_pci_fill_txaddr_info,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+index 35901f64d17de..80490a5437df6 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+@@ -53,6 +53,7 @@ static const struct rtw89_pci_info rtw8852c_pci_info = {
+ 	.tx_dma_ch_mask		= 0,
+ 	.bd_idx_addr_low_power	= &rtw8852c_bd_idx_addr_low_power,
+ 	.dma_addr_set		= &rtw89_pci_ch_dma_addr_set_v1,
++	.bd_ram_table		= &rtw89_bd_ram_table_dual,
  
+ 	.ltr_set		= rtw89_pci_ltr_set_v1,
+ 	.fill_txaddr_info	= rtw89_pci_fill_txaddr_info_v1,
 -- 
 2.39.0
 
