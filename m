@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 265D5C64ED6
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 748E8C64ED6
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:53:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230351AbjBZOxW (ORCPT
+        id S230264AbjBZOxx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Feb 2023 09:53:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45334 "EHLO
+        Sun, 26 Feb 2023 09:53:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230152AbjBZOwr (ORCPT
+        with ESMTP id S230331AbjBZOxR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Feb 2023 09:52:47 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADF0A13D52;
-        Sun, 26 Feb 2023 06:49:32 -0800 (PST)
+        Sun, 26 Feb 2023 09:53:17 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA73F7293;
+        Sun, 26 Feb 2023 06:49:50 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id BD64DCE0E7A;
-        Sun, 26 Feb 2023 14:48:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EF41C4339B;
-        Sun, 26 Feb 2023 14:48:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BA53E60C48;
+        Sun, 26 Feb 2023 14:46:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB2BCC4339C;
+        Sun, 26 Feb 2023 14:46:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677422882;
-        bh=H0IFMJcZ+k7Xt/8vWDHG/3NQCkegbKGyVZsMGOknc2Q=;
+        s=k20201202; t=1677422771;
+        bh=++Dve21aH/Fdi7PtK/V++Z7RPLfB4XMp3I03VOVGCmo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SmZMU0jSAz8fW+xT7wPppZ+PnZ+KtPfP9N2crUbtJJxZJkPgG2u0rliKETgctSCB+
-         P4zQ1ng68RSTf+QZFeI3K3gORmkexGVg+CNTeddlY1X6OWC1ktrww3F0MH0XKaba+C
-         Pau9nKHY55JSsh6QAJk6rdYOPoPcID36oR/I9lm/kLVqx/kx92nRmRylqQKMpst3i0
-         Vzp5gT7IhUBL5FJc22cvezQoQO9P7fwZZ3YckaochI9ofKUQd1goCWtHutSrRY3Yuy
-         gbaIEZClhTsb5nGBHdR/qHRZ9xomdlGoj7PBITDAj+1syBBy50mV0mhjF7+FfP9OsX
-         lTSpTvdK7cE4g==
+        b=IkllopnbcKZxtMF4I7HAQ4XQeyx/3rKbeQyaYq0Fdo71jrFIYLbkCX12StkV3+7mD
+         hLZShoFb96nAFRkLFjqSnoqCh8WZhrmTgoOalZyeVhgoCBAgf/HOpNa8dqZK3bj8hk
+         OoBmX95ARRuqVKQzJ7DoKJieJifIFi0j5WR1VQn8Kyou+n9e3TnKHCgZHo0amW7MhV
+         DWJDYvavPJU3/5nYYcykTny6rOpwc7vp/7hW5Bb8Fpt5q2RSmzAM9AopAhWKmJ3Jwh
+         cAT3orKYKltOGxOUofGmqcEX/DasL8r2Ypnj+xehem5aaKDqLMRC/mSFvDt5MusN1L
+         nUaqErmoZAO9A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
@@ -42,12 +42,12 @@ Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
         matthias.bgg@gmail.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.1 32/49] wifi: mt76: dma: free rx_head in mt76_dma_rx_cleanup
-Date:   Sun, 26 Feb 2023 09:46:32 -0500
-Message-Id: <20230226144650.826470-32-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 36/53] wifi: mt76: dma: free rx_head in mt76_dma_rx_cleanup
+Date:   Sun, 26 Feb 2023 09:44:28 -0500
+Message-Id: <20230226144446.824580-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230226144650.826470-1-sashal@kernel.org>
-References: <20230226144650.826470-1-sashal@kernel.org>
+In-Reply-To: <20230226144446.824580-1-sashal@kernel.org>
+References: <20230226144446.824580-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,18 +71,18 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 7378c4d1e1567..478bffb7418d9 100644
+index 06161815c180e..03b484b0473e4 100644
 --- a/drivers/net/wireless/mediatek/mt76/dma.c
 +++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -573,6 +573,7 @@ mt76_dma_rx_cleanup(struct mt76_dev *dev, struct mt76_queue *q)
+@@ -737,6 +737,7 @@ mt76_dma_rx_cleanup(struct mt76_dev *dev, struct mt76_queue *q)
  		return;
  
  	spin_lock_bh(&q->lock);
 +
  	do {
- 		buf = mt76_dma_dequeue(dev, q, true, NULL, NULL, &more);
+ 		buf = mt76_dma_dequeue(dev, q, true, NULL, NULL, &more, NULL);
  		if (!buf)
-@@ -580,6 +581,12 @@ mt76_dma_rx_cleanup(struct mt76_dev *dev, struct mt76_queue *q)
+@@ -744,6 +745,12 @@ mt76_dma_rx_cleanup(struct mt76_dev *dev, struct mt76_queue *q)
  
  		skb_free_frag(buf);
  	} while (1);
@@ -95,7 +95,7 @@ index 7378c4d1e1567..478bffb7418d9 100644
  	spin_unlock_bh(&q->lock);
  
  	if (!q->rx_page.va)
-@@ -605,12 +612,6 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
+@@ -769,12 +776,6 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
  	mt76_dma_rx_cleanup(dev, q);
  	mt76_dma_sync_idx(dev, q);
  	mt76_dma_rx_fill(dev, q);
