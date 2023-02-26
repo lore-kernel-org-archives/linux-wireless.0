@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3ED3C7EE23
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 15:09:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86AFAC64ED6
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 15:15:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231614AbjBZPJ2 (ORCPT
+        id S229598AbjBZPPD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Feb 2023 10:09:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53610 "EHLO
+        Sun, 26 Feb 2023 10:15:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231814AbjBZPJO (ORCPT
+        with ESMTP id S232013AbjBZPOl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Feb 2023 10:09:14 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFC3C1C333;
-        Sun, 26 Feb 2023 06:59:31 -0800 (PST)
+        Sun, 26 Feb 2023 10:14:41 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49EE21423E;
+        Sun, 26 Feb 2023 07:05:11 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1589EB80B48;
-        Sun, 26 Feb 2023 14:52:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0F78C4339B;
-        Sun, 26 Feb 2023 14:52:34 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DFD52B80BA7;
+        Sun, 26 Feb 2023 14:49:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72443C433EF;
+        Sun, 26 Feb 2023 14:49:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677423156;
-        bh=tXF1ojF0NnK3iM+B/31cH/34zahf9v9UjRTpOCw3QKM=;
+        s=k20201202; t=1677422957;
+        bh=jEg5uyJ3P8dvjD7VwSye5XLWG4dXMBuOnih2x80k9ZU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qdEnNIHhGoPRIsIVznOWk9Yn9pv8Qe3qJSs3UUnNmTAowf+bPXtaBgl3aiGnYYIQ6
-         5CT5UXU2J4jaiMp+jbGC3ljlgJX2SndE5RMnVGZBcIHtyC+Atc8+pPipVpY9HIfdIg
-         BKpWfxdZcgguStHSM5lTNeff9D5YMKHgI+r1fAZHDxs5weCN3/qr9XdMFB1m/meR6d
-         S4mpweS58Tne3LKPWwM7pFQUWKd2ZQu0pzCwZGrSnhvprmEjVkSNMwe2lDlQuFSByz
-         ZXa5yoN96fdGFqbiS6bY2B0HZR04Z0LKcv8oYN4kAZpHWP1cf+y0MT1YWCSZV4h6W4
-         /fvlHa998Dryg==
+        b=FN+/FmNm4ny0WGykM+HTDxTap1PhAdz0uvtkIKMryFlgWDa9Kvq8aZTSVR5TGtl7W
+         Tpip5D4OiSzxEJkTVwdBeGFuZxvJu1P3defIm1vBRMpudWU/r2KqGrqdN6LpjEkoBk
+         ozuVmb3/OpJxf+Mq6/NdSo3ZHc46TUpRgl36XdHY1eqNZzjcMj74Q21IoL8pYqVbhR
+         KjmsGxwUkboDZI5QJ0JnYbIEPfOJVZ63EVXqh2fZ7QCU4b/rYXn2I5sqvuyr3+VQE+
+         8MeGo7/61J/+KLWl08hGvyFenuY6TyjuGTUyHEBmd7/PFewjXtBN76ePypMncYHtdp
+         GPxefQUeAS0Sg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jisoo Jang <jisoo.jang@yonsei.ac.kr>,
@@ -41,17 +41,17 @@ Cc:     Jisoo Jang <jisoo.jang@yonsei.ac.kr>,
         aspriel@gmail.com, franky.lin@broadcom.com,
         hante.meuleman@broadcom.com, davem@davemloft.net,
         edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        keescook@chromium.org, gustavoars@kernel.org, hdegoede@redhat.com,
-        pavel@loebl.cz, wsa+renesas@sang-engineering.com, marcan@marcan.st,
+        keescook@chromium.org, hdegoede@redhat.com, gustavoars@kernel.org,
+        wsa+renesas@sang-engineering.com, pavel@loebl.cz, marcan@marcan.st,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/13] wifi: brcmfmac: ensure CLM version is null-terminated to prevent stack-out-of-bounds
-Date:   Sun, 26 Feb 2023 09:52:08 -0500
-Message-Id: <20230226145217.829485-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 10/36] wifi: brcmfmac: ensure CLM version is null-terminated to prevent stack-out-of-bounds
+Date:   Sun, 26 Feb 2023 09:48:18 -0500
+Message-Id: <20230226144845.827893-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230226145217.829485-1-sashal@kernel.org>
-References: <20230226145217.829485-1-sashal@kernel.org>
+In-Reply-To: <20230226144845.827893-1-sashal@kernel.org>
+References: <20230226144845.827893-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -193,10 +193,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index b4e8957840020..3626ea9be92af 100644
+index 57bb1fbedaa87..f29de630908d7 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -290,15 +290,17 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+@@ -281,15 +281,17 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
  	if (err) {
  		brcmf_dbg(TRACE, "retrieving clmver failed, %d\n", err);
  	} else {
