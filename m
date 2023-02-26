@@ -2,52 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73360C7EE37
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48231C7EE2F
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Feb 2023 14:56:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231255AbjBZO4C (ORCPT
+        id S231171AbjBZO4B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Feb 2023 09:56:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55078 "EHLO
+        Sun, 26 Feb 2023 09:56:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231392AbjBZOzZ (ORCPT
+        with ESMTP id S231274AbjBZOzO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Feb 2023 09:55:25 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCBA516889;
-        Sun, 26 Feb 2023 06:51:18 -0800 (PST)
+        Sun, 26 Feb 2023 09:55:14 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A77D1B578;
+        Sun, 26 Feb 2023 06:50:56 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CB961B80C0A;
-        Sun, 26 Feb 2023 14:50:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F1DFC433D2;
-        Sun, 26 Feb 2023 14:50:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3D4C860C55;
+        Sun, 26 Feb 2023 14:47:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6173BC433D2;
+        Sun, 26 Feb 2023 14:47:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677423046;
-        bh=UU1JdocsMEIdIGvCjtL3qb09dozppL/WGcmq/AVHJhc=;
+        s=k20201202; t=1677422828;
+        bh=+IZm/Y9Q8YaKVptA90+UMpRMxDZL6vo0jghGN5xXlHw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=t6qxsLnMAJAdOigbH5qezLKpDGLJxWF7voCIXw4NCytIsfZZqMluPZ7s0uChN/8EW
-         jbR7ZyyBFLVE+n9L+kNuCkNegfPMhOT9q65Jqc0sZqkpN4aYx/z77KiVUJSPOk0PXk
-         eX3WWqK1UPDhOasZsvFNmNCXzDbxL8yH1V8MSh1Quz31F6NVhU8suNbkQiDVWeTHEz
-         UskVwCuJ9+NOO68einQRktMMC9DD1kFyeOp1HTS/7HoNpN8hJlst31k6K4iSVy7Xia
-         5RdGc/cxbpDkMEVAq7jiMmw+EfihWkQadJSrSfm4bxv9F9olIFfpanhzNbWeT5pQV9
-         rVzb99mR3bFDw==
+        b=cOBB9O3JOATPdHbglICmKp5Kwfwp4wh+fg4NSzGkU/vwBg2x0HVo5NHe+VR9oOR3I
+         cxiDvdTguXstGk/sHEQ9M4dcEPRTBb7UyHsrZfP1Ij0izpsarl7/84e2zBebJCC7pw
+         93nE6lWLz+1mZqFd5oYqytagMPRKoEzwmV3CogZODWlXdkL8zob7NVmDtYMBmYmTNW
+         EceIwAcT/nRMjiLv6Q3wxOLIQLNsGLRLGtgs+O7ng1v5fd/o8jsPz4y2FqY7LzRB3a
+         wjzVTB92gxhSDUDY9QE9G4rCJ5MB5MYfzBJ0oiCTA0WWfdL2HGhDHlGw1kBjpB6IaE
+         7iZjPdN2ug1hQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jisoo Jang <jisoo.jang@yonsei.ac.kr>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        davem@davemloft.net, edumazet@google.com, pabeni@redhat.com,
-        matthias.bgg@gmail.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.10 11/27] wifi: mt7601u: fix an integer underflow
-Date:   Sun, 26 Feb 2023 09:49:58 -0500
-Message-Id: <20230226145014.828855-11-sashal@kernel.org>
+Cc:     Kalle Valo <quic_kvalo@quicinc.com>,
+        Robert Marko <robert.marko@sartura.hr>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 09/49] wifi: ath11k: debugfs: fix to work with multiple PCI devices
+Date:   Sun, 26 Feb 2023 09:46:09 -0500
+Message-Id: <20230226144650.826470-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230226145014.828855-1-sashal@kernel.org>
-References: <20230226145014.828855-1-sashal@kernel.org>
+In-Reply-To: <20230226144650.826470-1-sashal@kernel.org>
+References: <20230226144650.826470-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,100 +55,149 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jisoo Jang <jisoo.jang@yonsei.ac.kr>
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-[ Upstream commit 803f3176c5df3b5582c27ea690f204abb60b19b9 ]
+[ Upstream commit 323d91d4684d238f6bc3693fed93caf795378fe0 ]
 
-Fix an integer underflow that leads to a null pointer dereference in
-'mt7601u_rx_skb_from_seg()'. The variable 'dma_len' in the URB packet
-could be manipulated, which could trigger an integer underflow of
-'seg_len' in 'mt7601u_rx_process_seg()'. This underflow subsequently
-causes the 'bad_frame' checks in 'mt7601u_rx_skb_from_seg()' to be
-bypassed, eventually leading to a dereference of the pointer 'p', which
-is a null pointer.
+ath11k fails to load if there are multiple ath11k PCI devices with same name:
 
-Ensure that 'dma_len' is greater than 'min_seg_len'.
+ ath11k_pci 0000:01:00.0: Hardware name qcn9074 hw1.0
+ debugfs: Directory 'ath11k' with parent '/' already present!
+ ath11k_pci 0000:01:00.0: failed to create ath11k debugfs
+ ath11k_pci 0000:01:00.0: failed to create soc core: -17
+ ath11k_pci 0000:01:00.0: failed to init core: -17
+ ath11k_pci: probe of 0000:01:00.0 failed with error -17
 
-Found by a modified version of syzkaller.
+Fix this by creating a directory for each ath11k device using schema
+<bus>-<devname>, for example "pci-0000:06:00.0". This directory created under
+the top-level ath11k directory, for example /sys/kernel/debug/ath11k.
 
-KASAN: null-ptr-deref in range [0x0000000000000008-0x000000000000000f]
-CPU: 0 PID: 12 Comm: ksoftirqd/0 Tainted: G        W  O      5.14.0+
-#139
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
-RIP: 0010:skb_add_rx_frag+0x143/0x370
-Code: e2 07 83 c2 03 38 ca 7c 08 84 c9 0f 85 86 01 00 00 4c 8d 7d 08 44
-89 68 08 48 b8 00 00 00 00 00 fc ff df 4c 89 fa 48 c1 ea 03 <80> 3c 02
-00 0f 85 cd 01 00 00 48 8b 45 08 a8 01 0f 85 3d 01 00 00
-RSP: 0018:ffffc900000cfc90 EFLAGS: 00010202
-RAX: dffffc0000000000 RBX: ffff888115520dc0 RCX: 0000000000000000
-RDX: 0000000000000001 RSI: ffff8881118430c0 RDI: ffff8881118430f8
-RBP: 0000000000000000 R08: 0000000000000e09 R09: 0000000000000010
-R10: ffff888111843017 R11: ffffed1022308602 R12: 0000000000000000
-R13: 0000000000000e09 R14: 0000000000000010 R15: 0000000000000008
-FS:  0000000000000000(0000) GS:ffff88811a800000(0000)
-knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000000004035af40 CR3: 00000001157f2000 CR4: 0000000000750ef0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-PKRU: 55555554
-Call Trace:
- mt7601u_rx_tasklet+0xc73/0x1270
- ? mt7601u_submit_rx_buf.isra.0+0x510/0x510
- ? tasklet_action_common.isra.0+0x79/0x2f0
- tasklet_action_common.isra.0+0x206/0x2f0
- __do_softirq+0x1b5/0x880
- ? tasklet_unlock+0x30/0x30
- run_ksoftirqd+0x26/0x50
- smpboot_thread_fn+0x34f/0x7d0
- ? smpboot_register_percpu_thread+0x370/0x370
- kthread+0x3a1/0x480
- ? set_kthread_struct+0x120/0x120
- ret_from_fork+0x1f/0x30
-Modules linked in: 88XXau(O) 88x2bu(O)
----[ end trace 57f34f93b4da0f9b ]---
-RIP: 0010:skb_add_rx_frag+0x143/0x370
-Code: e2 07 83 c2 03 38 ca 7c 08 84 c9 0f 85 86 01 00 00 4c 8d 7d 08 44
-89 68 08 48 b8 00 00 00 00 00 fc ff df 4c 89 fa 48 c1 ea 03 <80> 3c 02
-00 0f 85 cd 01 00 00 48 8b 45 08 a8 01 0f 85 3d 01 00 00
-RSP: 0018:ffffc900000cfc90 EFLAGS: 00010202
-RAX: dffffc0000000000 RBX: ffff888115520dc0 RCX: 0000000000000000
-RDX: 0000000000000001 RSI: ffff8881118430c0 RDI: ffff8881118430f8
-RBP: 0000000000000000 R08: 0000000000000e09 R09: 0000000000000010
-R10: ffff888111843017 R11: ffffed1022308602 R12: 0000000000000000
-R13: 0000000000000e09 R14: 0000000000000010 R15: 0000000000000008
-FS:  0000000000000000(0000) GS:ffff88811a800000(0000)
-knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000000004035af40 CR3: 00000001157f2000 CR4: 0000000000750ef0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-PKRU: 55555554
+The reference to the toplevel ath11k directory is not stored anymore within ath11k, instead
+it's retrieved using debugfs_lookup(). If the directory does not exist it will
+be created. After the last directory from the ath11k directory is removed, for
+example when doing rmmod ath11k, the empty ath11k directory is left in place,
+it's a minor cosmetic issue anyway.
 
-Signed-off-by: Jisoo Jang <jisoo.jang@yonsei.ac.kr>
-Acked-by: Jakub Kicinski <kuba@kernel.org>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20221229092906.2328282-1-jisoo.jang@yonsei.ac.kr
+Here's an example hierarchy with one WCN6855:
+
+ath11k
+`-- pci-0000:06:00.0
+    |-- mac0
+    |   |-- dfs_block_radar_events
+    |   |-- dfs_simulate_radar
+    |   |-- ext_rx_stats
+    |   |-- ext_tx_stats
+    |   |-- fw_dbglog_config
+    |   |-- fw_stats
+    |   |   |-- beacon_stats
+    |   |   |-- pdev_stats
+    |   |   `-- vdev_stats
+    |   |-- htt_stats
+    |   |-- htt_stats_reset
+    |   |-- htt_stats_type
+    |   `-- pktlog_filter
+    |-- simulate_fw_crash
+    `-- soc_dp_stats
+
+I didn't have a test setup where I could connect multiple ath11k devices to the
+same the host, so I have only tested this with one device.
+
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.9
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.5.0.1-01208-QCAHKSWPL_SILICONZ-1
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.5.0.1-01208-QCAHKSWPL_SILICONZ-1
+
+Tested-by: Robert Marko <robert.marko@sartura.hr>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20221220121231.20120-1-kvalo@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/dma.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/core.h    |  1 -
+ drivers/net/wireless/ath/ath11k/debugfs.c | 48 +++++++++++++++++++----
+ 2 files changed, 40 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
-index 11071519fce81..8ba291abecff8 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
-@@ -118,7 +118,8 @@ static u16 mt7601u_rx_next_seg_len(u8 *data, u32 data_len)
- 	if (data_len < min_seg_len ||
- 	    WARN_ON_ONCE(!dma_len) ||
- 	    WARN_ON_ONCE(dma_len + MT_DMA_HDRS > data_len) ||
--	    WARN_ON_ONCE(dma_len & 0x3))
-+	    WARN_ON_ONCE(dma_len & 0x3) ||
-+	    WARN_ON_ONCE(dma_len < min_seg_len))
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index c20e84e031fad..bd06536f82a64 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -912,7 +912,6 @@ struct ath11k_base {
+ 	enum ath11k_dfs_region dfs_region;
+ #ifdef CONFIG_ATH11K_DEBUGFS
+ 	struct dentry *debugfs_soc;
+-	struct dentry *debugfs_ath11k;
+ #endif
+ 	struct ath11k_soc_dp_stats soc_stats;
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
+index ccdf3d5ba1ab6..5bb6fd17fdf6f 100644
+--- a/drivers/net/wireless/ath/ath11k/debugfs.c
++++ b/drivers/net/wireless/ath/ath11k/debugfs.c
+@@ -976,10 +976,6 @@ int ath11k_debugfs_pdev_create(struct ath11k_base *ab)
+ 	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
  		return 0;
  
- 	return MT_DMA_HDRS + dma_len;
+-	ab->debugfs_soc = debugfs_create_dir(ab->hw_params.name, ab->debugfs_ath11k);
+-	if (IS_ERR(ab->debugfs_soc))
+-		return PTR_ERR(ab->debugfs_soc);
+-
+ 	debugfs_create_file("simulate_fw_crash", 0600, ab->debugfs_soc, ab,
+ 			    &fops_simulate_fw_crash);
+ 
+@@ -1001,15 +997,51 @@ void ath11k_debugfs_pdev_destroy(struct ath11k_base *ab)
+ 
+ int ath11k_debugfs_soc_create(struct ath11k_base *ab)
+ {
+-	ab->debugfs_ath11k = debugfs_create_dir("ath11k", NULL);
++	struct dentry *root;
++	bool dput_needed;
++	char name[64];
++	int ret;
++
++	root = debugfs_lookup("ath11k", NULL);
++	if (!root) {
++		root = debugfs_create_dir("ath11k", NULL);
++		if (IS_ERR_OR_NULL(root))
++			return PTR_ERR(root);
++
++		dput_needed = false;
++	} else {
++		/* a dentry from lookup() needs dput() after we don't use it */
++		dput_needed = true;
++	}
++
++	scnprintf(name, sizeof(name), "%s-%s", ath11k_bus_str(ab->hif.bus),
++		  dev_name(ab->dev));
++
++	ab->debugfs_soc = debugfs_create_dir(name, root);
++	if (IS_ERR_OR_NULL(ab->debugfs_soc)) {
++		ret = PTR_ERR(ab->debugfs_soc);
++		goto out;
++	}
++
++	ret = 0;
+ 
+-	return PTR_ERR_OR_ZERO(ab->debugfs_ath11k);
++out:
++	if (dput_needed)
++		dput(root);
++
++	return ret;
+ }
+ 
+ void ath11k_debugfs_soc_destroy(struct ath11k_base *ab)
+ {
+-	debugfs_remove_recursive(ab->debugfs_ath11k);
+-	ab->debugfs_ath11k = NULL;
++	debugfs_remove_recursive(ab->debugfs_soc);
++	ab->debugfs_soc = NULL;
++
++	/* We are not removing ath11k directory on purpose, even if it
++	 * would be empty. This simplifies the directory handling and it's
++	 * a minor cosmetic issue to leave an empty ath11k directory to
++	 * debugfs.
++	 */
+ }
+ EXPORT_SYMBOL(ath11k_debugfs_soc_destroy);
+ 
 -- 
 2.39.0
 
