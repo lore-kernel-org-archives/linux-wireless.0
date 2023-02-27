@@ -2,171 +2,82 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67AEEC64ED8
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Feb 2023 12:17:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 929BFC64ED6
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Feb 2023 12:20:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229813AbjB0MRp (ORCPT
+        id S229880AbjB0MUE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Feb 2023 07:17:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37752 "EHLO
+        Mon, 27 Feb 2023 07:20:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229788AbjB0MRn (ORCPT
+        with ESMTP id S229850AbjB0MUC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2023 07:17:43 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A5D51E9D2
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2023 04:17:40 -0800 (PST)
+        Mon, 27 Feb 2023 07:20:02 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F09919F3F;
+        Mon, 27 Feb 2023 04:19:49 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 12065B80C98
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2023 12:17:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FAD5C4339B
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2023 12:17:37 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BF811B80D17;
+        Mon, 27 Feb 2023 12:19:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80A9BC433D2;
+        Mon, 27 Feb 2023 12:19:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677500257;
-        bh=3FVFXaPV8BgtNhBA9ahDYZj4U3BsQvhjLLNUoLcE1PA=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=LnOKVtCgxSFRzXFj3qNu5QTRcmkjQoTXBN6Zq8C+svXUBSqPuSRGrKCu42ayQQ5sF
-         LOxhlf/qjnlFADMmcQ1vP+eNHnc1WB1fZUGMhzlDKGQKcc4aa3+LoY3aqIkUPPhuiw
-         SrgHKO9UCxvBUcpiHHL2VfBsHQw5EPFKYkRp49mJTuKhu1QIUXl1qr0NRu3cW+9E3Y
-         Zcgh82Rpke4OUNYcFqQO03gn6TCxlC78ZPGib4SdKCZ0DyBW+2fSr3lenOCX6qTl1I
-         GlubHmaV28vvE981k8yuNyV2LkF/b07FoqbqPEqNPoiwQUjd5vLO92FXnatDRIbkTD
-         jJqihYGapQ0RA==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] wifi: move mac80211_hwsim and virt_wifi to virtual directory
-Date:   Mon, 27 Feb 2023 14:17:31 +0200
-Message-Id: <20230227121732.8967-2-kvalo@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230227121732.8967-1-kvalo@kernel.org>
-References: <20230227121732.8967-1-kvalo@kernel.org>
+        s=k20201202; t=1677500386;
+        bh=vVnZnm8G66BSDTc5sTj7XTjPa2+eT0iZSUxP75tWAWg=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=PRdXXUaEOzYrqi//hZexYHq92BnZL3IDLb/J++VPlBTkaRAPvAx9B4wCTXcFUHQ/H
+         i65mVv/RqXF6isvh7IR1Szo58Bz1BVeWpYYuesxvbyMDB/+mGZSaIxShnG4tx1hw4q
+         OH8FM34duMCOAxSuXP0aCx8UPxP2rfxahBS369NsG0QjETTlzoCsudCryCU7SsmpBG
+         7i18RMDsC9bC59awupMJgD+WPAcL/IeMJmH4i6PjzXRSWrBYM29wPECbdXoQmuDeRZ
+         p9cMw50LRee77sW9Elgju20NvozS7lOYS+EsChVN2UVSRJ2V25RlYBFTeeczx3WP6f
+         VuqK3rYfks0LA==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] wifi: ath6kl: reduce WARN to dev_dbg() in callback
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230126182431.867984-1-pchelkin@ispras.ru>
+References: <20230126182431.867984-1-pchelkin@ispras.ru>
+To:     Fedor Pchelkin <pchelkin@ispras.ru>
+Cc:     Fedor Pchelkin <pchelkin@ispras.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        Oliver Neukum <oneukum@suse.com>,
+        Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org,
+        syzbot+555908813b2ea35dae9a@syzkaller.appspotmail.com
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <167750038173.9069.13927854450311352461.kvalo@kernel.org>
+Date:   Mon, 27 Feb 2023 12:19:43 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To clean up drivers/net/wireless move the virtual drivers to a new virtual
-directory. I did consider adding CONFIG_WLAN_VENDOR_VIRTUAL like other vendors
-have but then dropped the idea as we are not real drivers.
+Fedor Pchelkin <pchelkin@ispras.ru> wrote:
 
-There should be no changes in compilation or in Kconfig options, merely moving
-files. The order in menuconfig is slightly changed, the virtual drivers are now
-last in the list.
+> The warn is triggered on a known race condition, documented in the code above
+> the test, that is correctly handled.  Using WARN() hinders automated testing.
+> Reducing severity.
+> 
+> Fixes: de2070fc4aa7 ("ath6kl: Fix kernel panic on continuous driver load/unload")
+> Reported-and-tested-by: syzbot+555908813b2ea35dae9a@syzkaller.appspotmail.com
+> Signed-off-by: Oliver Neukum <oneukum@suse.com>
+> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
----
- drivers/net/wireless/Kconfig                  | 20 +------------------
- drivers/net/wireless/Makefile                 |  4 +---
- drivers/net/wireless/virtual/Kconfig          | 20 +++++++++++++++++++
- drivers/net/wireless/virtual/Makefile         |  3 +++
- .../wireless/{ => virtual}/mac80211_hwsim.c   |  0
- .../wireless/{ => virtual}/mac80211_hwsim.h   |  0
- .../net/wireless/{ => virtual}/virt_wifi.c    |  0
- 7 files changed, 25 insertions(+), 22 deletions(-)
- create mode 100644 drivers/net/wireless/virtual/Kconfig
- create mode 100644 drivers/net/wireless/virtual/Makefile
- rename drivers/net/wireless/{ => virtual}/mac80211_hwsim.c (100%)
- rename drivers/net/wireless/{ => virtual}/mac80211_hwsim.h (100%)
- rename drivers/net/wireless/{ => virtual}/virt_wifi.c (100%)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index cb1c15012dd0..42b40cc96b21 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -64,19 +64,6 @@ config PCMCIA_WL3501
- 	  It has basic support for Linux wireless extensions and initial
- 	  micro support for ethtool.
- 
--config MAC80211_HWSIM
--	tristate "Simulated radio testing tool for mac80211"
--	depends on MAC80211
--	help
--	  This driver is a developer testing tool that can be used to test
--	  IEEE 802.11 networking stack (mac80211) functionality. This is not
--	  needed for normal wireless LAN usage and is only for testing. See
--	  Documentation/networking/mac80211_hwsim for more information on how
--	  to use this tool.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called mac80211_hwsim.  If unsure, say N.
--
- config USB_NET_RNDIS_WLAN
- 	tristate "Wireless RNDIS USB support"
- 	depends on USB
-@@ -106,11 +93,6 @@ config USB_NET_RNDIS_WLAN
- 
- 	  If you choose to build a module, it'll be called rndis_wlan.
- 
--config VIRT_WIFI
--	tristate "Wifi wrapper for ethernet drivers"
--	depends on CFG80211
--	help
--	  This option adds support for ethernet connections to appear as if they
--	  are wifi connections through a special rtnetlink device.
-+source "drivers/net/wireless/virtual/Kconfig"
- 
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index a61cf6c90343..1b697cfe0a13 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -29,6 +29,4 @@ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
- 
- obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
- 
--obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
--
--obj-$(CONFIG_VIRT_WIFI)	+= virt_wifi.o
-+obj-$(CONFIG_WLAN) += virtual/
-diff --git a/drivers/net/wireless/virtual/Kconfig b/drivers/net/wireless/virtual/Kconfig
-new file mode 100644
-index 000000000000..fb3b4b69f26b
---- /dev/null
-+++ b/drivers/net/wireless/virtual/Kconfig
-@@ -0,0 +1,20 @@
-+config MAC80211_HWSIM
-+	tristate "Simulated radio testing tool for mac80211"
-+	depends on MAC80211
-+	help
-+	  This driver is a developer testing tool that can be used to test
-+	  IEEE 802.11 networking stack (mac80211) functionality. This is not
-+	  needed for normal wireless LAN usage and is only for testing. See
-+	  Documentation/networking/mac80211_hwsim for more information on how
-+	  to use this tool.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called mac80211_hwsim.  If unsure, say N.
-+
-+config VIRT_WIFI
-+	tristate "Wifi wrapper for ethernet drivers"
-+	depends on CFG80211
-+	help
-+	  This option adds support for ethernet connections to appear as if they
-+	  are wifi connections through a special rtnetlink device.
-+
-diff --git a/drivers/net/wireless/virtual/Makefile b/drivers/net/wireless/virtual/Makefile
-new file mode 100644
-index 000000000000..5773cc6d643e
---- /dev/null
-+++ b/drivers/net/wireless/virtual/Makefile
-@@ -0,0 +1,3 @@
-+obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-+
-+obj-$(CONFIG_VIRT_WIFI)	+= virt_wifi.o
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-similarity index 100%
-rename from drivers/net/wireless/mac80211_hwsim.c
-rename to drivers/net/wireless/virtual/mac80211_hwsim.c
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/virtual/mac80211_hwsim.h
-similarity index 100%
-rename from drivers/net/wireless/mac80211_hwsim.h
-rename to drivers/net/wireless/virtual/mac80211_hwsim.h
-diff --git a/drivers/net/wireless/virt_wifi.c b/drivers/net/wireless/virtual/virt_wifi.c
-similarity index 100%
-rename from drivers/net/wireless/virt_wifi.c
-rename to drivers/net/wireless/virtual/virt_wifi.c
+75c4a8154cb6 wifi: ath6kl: reduce WARN to dev_dbg() in callback
+
 -- 
-2.30.2
+https://patchwork.kernel.org/project/linux-wireless/patch/20230126182431.867984-1-pchelkin@ispras.ru/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
