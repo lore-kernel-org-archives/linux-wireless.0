@@ -2,104 +2,129 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ECEDC64ED8
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Feb 2023 19:14:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A6F6C7EE2D
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Feb 2023 19:59:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229812AbjB0TOh (ORCPT
+        id S229929AbjB0T7i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Feb 2023 14:14:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51404 "EHLO
+        Mon, 27 Feb 2023 14:59:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229542AbjB0TOg (ORCPT
+        with ESMTP id S229712AbjB0T7h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Feb 2023 14:14:36 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 483D21D926
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2023 11:14:35 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A690FB80BAA
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2023 19:14:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A53A7C433D2;
-        Mon, 27 Feb 2023 19:14:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677525272;
-        bh=VX2VuMRMcYU+sCKC3Bhwt0H8AwElPXXvqd/EP4NKAtk=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=qOaMuMRsbL9xN4UkSudQMHOImT09niGJI0ZdbvVdB+D36ggJH4VBurpp9ZGAa0KKj
-         b71lgTEaqOthbX25QLU3tMY+EVzNoixsMSuSOAH9kN7Bkj/zaEuYut/ff8p/ES249L
-         dL11nk+8faylP+AyV6OJDNx9lLHwhYPhKDIGO9UJv80GP7bc//UyAelQknsWNgo2UD
-         y9gKxHW+OGsQbitRKU4n3/L+rLcLiBxPYbMXj617rkW80l1/jPZ//cRcwF9l1KeJyG
-         e/9Kk3Rqo/cl8pCcQlCVyRz0NoJN65jf02R6UycMrx/hd9UPzHXGB0HseSllNwqMhF
-         rBpqpVTrgwisw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     kernel test robot <lkp@intel.com>
-Cc:     linux-wireless@vger.kernel.org, oe-kbuild-all@lists.linux.dev
-Subject: Re: [PATCH 2/2] wifi: move raycs, wl3501 and rndis_wlan to legacy directory
-References: <20230227121732.8967-3-kvalo@kernel.org>
-        <202302280135.b1uG3bwe-lkp@intel.com>
-Date:   Mon, 27 Feb 2023 21:14:29 +0200
-In-Reply-To: <202302280135.b1uG3bwe-lkp@intel.com> (kernel test robot's
-        message of "Tue, 28 Feb 2023 01:50:16 +0800")
-Message-ID: <87edqarkdm.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Mon, 27 Feb 2023 14:59:37 -0500
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB8BD2748E
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2023 11:59:29 -0800 (PST)
+Received: by mail-ed1-x52a.google.com with SMTP id i34so30590706eda.7
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2023 11:59:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FCUXuXRGkZYhDuDkwhujplgwxkshtVWtdbwS+60Jyi4=;
+        b=XYa06zGERt1jknn6HDKjrIZngdVvGjGQmNZXaY98O4Do070NWxo10EB50D3y8bmNu3
+         WbqViVi9Z+9ZaZ0iYeor2gyssBN7DYfno639aybhRpO/nWAO1OZae8inei+SekispSbg
+         T6yCjSM/8LVf29WnZeB13UZHgvmIrxXA8925FizylMYmjx+SiKcY9VC83BQLPISnYidg
+         NJhedfjfe15h4ot1tdw9SIzApW7hfpvEXM5mRNTLPGpjQNGVItD9ea0fxXojcOi8GVG1
+         hRig9MH0GkRu5M8zLtPKVLxTQI3hi1YJf+CLpwkdWXCJSaSm1lpdg73bcREFtv9aEO0+
+         aRyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=FCUXuXRGkZYhDuDkwhujplgwxkshtVWtdbwS+60Jyi4=;
+        b=fJaAMfCvrPd3hjsgnu/DESaCsUnnDI71fJnRrBmb1i1ALkbXOLe8NOlbMuD4RhzyyC
+         RGGUCd1Rkp2eBsKkfU4u+X16UhmmJSji6EU3dg/Aqrdowgtx/gHTybNZZR/xbJod7lCS
+         9qSDYGSAoCc4ncYgFg43Pl7SstJ/Umf9RMRsZd0PqRHz3YrH/zgUssDOlyNp6cpnuYQC
+         I1mH3l+oxpmkWqWni510S6MtDvnB2+qqlwyeus1o/Dk4Qi5qdKWqFMbZvCoRaBFkFofO
+         Vbec3rXYfFvC7GPNIF28pO8maRRuFSd1IGIKCZbLHDeXjacxALDMZCVV8BJK5KFK10YO
+         +7+g==
+X-Gm-Message-State: AO0yUKXw7+wUHjEJgHuJfvKeK3JofSbFFymjAGlZwGSHfUJ0FGd9i8Ys
+        aSFqAutZxkZUaCw4BZd9tpI=
+X-Google-Smtp-Source: AK7set8GEI3c09Drwa3E4oxx/22rr3nhu0i6380dAAoUkCSeTAZQ3Khjt47yBwAOxqQMw7ZJA/8WBg==
+X-Received: by 2002:a17:906:2446:b0:8af:a53a:189d with SMTP id a6-20020a170906244600b008afa53a189dmr34919696ejb.44.1677527968122;
+        Mon, 27 Feb 2023 11:59:28 -0800 (PST)
+Received: from [192.168.178.136] (f215227.upc-f.chello.nl. [80.56.215.227])
+        by smtp.gmail.com with ESMTPSA id r30-20020a50d69e000000b004acc5077026sm3541233edi.79.2023.02.27.11.59.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Feb 2023 11:59:27 -0800 (PST)
+Message-ID: <63f72045-e51d-d9a4-a0ed-c221bcdcee03@gmail.com>
+Date:   Mon, 27 Feb 2023 20:59:26 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.2
+Subject: Re: [PATCH v2] wifi: brcmfmac: Fix potential slab-out-of-bounds read
+ in brcmf_inform_single_bss()
+To:     Minsuk Kang <linuxlovemin@yonsei.ac.kr>,
+        linux-wireless@vger.kernel.org
+Cc:     arend.vanspriel@broadcom.com, dokyungs@yonsei.ac.kr,
+        jisoo.jang@yonsei.ac.kr, kernel test robot <lkp@intel.com>
+References: <20221116145821.544266-1-linuxlovemin@yonsei.ac.kr>
+Content-Language: en-US
+From:   Arend Van Spriel <aspriel@gmail.com>
+In-Reply-To: <20221116145821.544266-1-linuxlovemin@yonsei.ac.kr>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-kernel test robot <lkp@intel.com> writes:
+On 11/16/2022 3:58 PM, Minsuk Kang wrote:
+> This patch fixes a slab-out-of-bounds read in brcmfmac that occurs in
+> cfg80211_find_elem_match() called from brcmf_inform_single_bss() when
+> the offset and length values of information elements provided by the
+> device exceed the boundary of the escan buffer that contains information
+> elements. The patch adds a check that makes the function return -EINVAL
+> if that is the case. Note that the negative return is handled by the
+> caller, brcmf_inform_bss().
 
-> Hi Kalle,
->
-> I love your patch! Perhaps something to improve:
->
-> [auto build test WARNING on ec52d77d077529f198fd874c550a26b9cc86a331]
->
-> url:
-> https://github.com/intel-lab-lkp/linux/commits/Kalle-Valo/wifi-move-mac80211_hwsim-and-virt_wifi-to-virtual-directory/20230227-201848
-> base:   ec52d77d077529f198fd874c550a26b9cc86a331
-> patch link:    https://lore.kernel.org/r/20230227121732.8967-3-kvalo%40kernel.org
-> patch subject: [PATCH 2/2] wifi: move raycs, wl3501 and rndis_wlan to legacy directory
-> config: sparc-allyesconfig
-> (https://download.01.org/0day-ci/archive/20230228/202302280135.b1uG3bwe-lkp@intel.com/config)
-> compiler: sparc64-linux-gcc (GCC) 12.1.0
-> reproduce (this is a W=1 build):
->         wget
-> https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross
-> -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         #
-> https://github.com/intel-lab-lkp/linux/commit/b3643ed46f437156c43b21bfc61dd622a6d53191
->         git remote add linux-review https://github.com/intel-lab-lkp/linux
->         git fetch --no-tags linux-review
-> Kalle-Valo/wifi-move-mac80211_hwsim-and-virt_wifi-to-virtual-directory/20230227-201848
->         git checkout b3643ed46f437156c43b21bfc61dd622a6d53191
->         # save the config file
->         mkdir build_dir && cp config build_dir/.config
->         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0
-> make.cross W=1 O=build_dir ARCH=sparc olddefconfig
->         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0
-> make.cross W=1 O=build_dir ARCH=sparc SHELL=/bin/bash drivers/net/
->
-> If you fix the issue, kindly add following tag where applicable
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Link: https://lore.kernel.org/oe-kbuild-all/202302280135.b1uG3bwe-lkp@intel.com/
->
-> All warnings (new ones prefixed by >>):
->
->    In function 'init_startup_params',
->        inlined from 'ray_init' at drivers/net/wireless/legacy/ray_cs.c:506:2:
->>> drivers/net/wireless/legacy/ray_cs.c:628:17: warning: 'strncpy' specified bound 32 equals destination size [-Wstringop-truncation]
->      628 |                 strncpy(local->sparm.b4.a_current_ess_id, essid, ESSID_SIZE);
->          |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[...]
 
-I didn't make any changes in the code, just moved files around, so
-this is an old issue.
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Reported-by: Dokyung Song <dokyungs@yonsei.ac.kr>
+> Reported-by: Jisoo Jang <jisoo.jang@yonsei.ac.kr>
+> Reported-by: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
+> ---
+> v1->v2: Use the correct format for size_t in bphy_err()
+> 
+>   .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 7 +++++++
+>   1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index ae9507dec74a..2148027eb42b 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -3298,6 +3298,13 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+>   	notify_ielen = le32_to_cpu(bi->ie_length);
+>   	bss_data.signal = (s16)le16_to_cpu(bi->RSSI) * 100;
+>   
+> +	if ((unsigned long)notify_ie + notify_ielen -
+> +		(unsigned long)cfg->escan_info.escan_buf > BRCMF_ESCAN_BUF_SIZE) {
+> +		bphy_err(drvr, "Invalid information element offset: %u, length: %zu\n",
+> +			 le16_to_cpu(bi->ie_offset), notify_ielen);
+> +		return -EINVAL;
+> +	}
+> +
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+Maybe this works, but it was not immediately obvious to me. Also this 
+seems late in processing the scan results. Better catch it early and 
+check the ie_offset and ie_length values in 
+brcmf_cfg80211_escan_handler() when processing the partial result event. 
+It already checks bi->length there so add a check there:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+	bss_ie_offset = le16_to_cpu(bi->ie_offset);
+	bss_ie_length = le16_to_cpu(bi->ie_length);
+	if (bi->ie_offset + bi->ie_length > bi->length) {
+		bphy_err(drvr, "Ignoring invalid information element offset: %u, 
+length: %zu\n"
+			 bss_ie_offset, bss_ie_length);
+		goto exit;
+	}
+
+Regards,
+Arend
