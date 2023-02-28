@@ -2,188 +2,1472 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B86DC64ED6
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Feb 2023 17:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F8A1C7EE39
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Feb 2023 21:54:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbjB1RtA (ORCPT
+        id S229734AbjB1Vyq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Feb 2023 12:49:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36678 "EHLO
+        Tue, 28 Feb 2023 16:54:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229493AbjB1Rs7 (ORCPT
+        with ESMTP id S229722AbjB1Vyo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2023 12:48:59 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B4FB1DB91
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2023 09:48:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677606538; x=1709142538;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=Q12KwNfsRVFHymujUo65mAY3lDDKCHHV9hpX2a/mKoQ=;
-  b=KgN/2wkxeEXs+9aDjh8gk6P5vNqOIUkrdjgO7GV88DMKE5vQ1omI7X86
-   9IPTcPK+JRnUudq/ZSAAX0fyl0idIa7cFs6x/Y72d1PUcBa6Vk0xFuDY0
-   /253ryh0RlKrRNVn0/VSAimgSngbpjbdE6eNFwownH4SiXTI4UZAFHEIC
-   HPGrfEDWRvgiE36cRxf9NjrR6qmw0JovlBuuvrIjyDlzYTicQBtab4n0E
-   OcT9KZb3ei+kfOsKLkUIqhOd9FrVfnDx8u5Ak5gEBV9bJxd8aPyeJgVIx
-   iIrslGhAHT96fyGahLUUbCrpMx9zUTmMoJUH68bFk/Q98WMgdbi03kubX
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="322456773"
-X-IronPort-AV: E=Sophos;i="5.98,222,1673942400"; 
-   d="scan'208";a="322456773"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Feb 2023 09:48:56 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="783953764"
-X-IronPort-AV: E=Sophos;i="5.98,222,1673942400"; 
-   d="scan'208";a="783953764"
-Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
-  by fmsmga002.fm.intel.com with ESMTP; 28 Feb 2023 09:48:55 -0800
-Received: from orsmsx611.amr.corp.intel.com (10.22.229.24) by
- ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.16; Tue, 28 Feb 2023 09:48:55 -0800
-Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
- ORSMSX611.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.16; Tue, 28 Feb 2023 09:48:55 -0800
-Received: from ORSEDG601.ED.cps.intel.com (10.7.248.6) by
- orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21 via Frontend Transport; Tue, 28 Feb 2023 09:48:55 -0800
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (104.47.66.42) by
- edgegateway.intel.com (134.134.137.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.16; Tue, 28 Feb 2023 09:48:54 -0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=H9MIUORpm+v9FZR+eS0ctPj8wXeu3qt49XPjG55fmSx6wFXN7RydFlEYYgcTkKaTQLeMdaHP7o+PZ6RytN8yb+wO93QwPC0Ynq3rj+iMDMbBvDJospG3RM2c3u27CaZdhLsNVU6MDhzkr+woEIZ2ZzyrvEhW9plB6KGD8AMdiMJWfR1V8rINMQcCq7eszVNDmb+dPWlmv/+7tLSNOvTnGOusCKhqNPlxkfcqwmtGpVPtR4XM1Hl0/6Y+2B4ffYm0iUll76f2vFAN6Wibq4i/aaF7t9u8+y9Lz9DGjLgU7eWdU8nVH1iVZTPU5pvSowgQGpO1Mp+71N8/NMOo1Lf4XA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=k63XzYfefgWQVroA3wMQ60qQ/BMeu7mOK3vSDUBazEo=;
- b=lseHNbA1cvDCDctxM0xkwaCzXh9/QmtdD720WWAbFpgG9224Xyck/VY7lSurIobhl9mYYP5qJGt3DvNFIeM00gJtzFJYJ7k/1EzXye6fzLotiP/8eeL3iseGRYlcxw4zs08ru/jzLlROF4OeV5HBEgBvzxxT5gU8gbgTuU9yDavUjPWWvNdCHTwcf7sB7/zQHgAj1Stakui1H/5hI/u521EWH6lPkp8cJcXcBp4zgDIgCgUKppRD6wgksDk3BaRPQjh6/J12bJNmvfPGwxgz7WpmEjHTshttJdQmDOk+nROJdh4uygHVuylMEn3uPvcjN07B+kMh88fKwAik7uFt5g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from CO1PR11MB5089.namprd11.prod.outlook.com (2603:10b6:303:9b::16)
- by DS7PR11MB7859.namprd11.prod.outlook.com (2603:10b6:8:da::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6134.30; Tue, 28 Feb
- 2023 17:48:53 +0000
-Received: from CO1PR11MB5089.namprd11.prod.outlook.com
- ([fe80::5697:a11e:691e:6acf]) by CO1PR11MB5089.namprd11.prod.outlook.com
- ([fe80::5697:a11e:691e:6acf%6]) with mapi id 15.20.6134.030; Tue, 28 Feb 2023
- 17:48:53 +0000
-Message-ID: <43543fd7-1cd0-ee33-5a8e-d9d3c7d0e257@intel.com>
-Date:   Tue, 28 Feb 2023 09:48:50 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH 1/3] wifi: ipw2x00: convert ipw_fw_error->elem to flexible
- array[]
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>
-CC:     Kalle Valo <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>
-References: <20230228162827.3876606-1-jacob.e.keller@intel.com>
- <a8798dce4ae87aee64dfd56721b1668f8c969951.camel@sipsolutions.net>
- <d393ba90-ecdd-ffea-540b-d6db15571d5b@intel.com>
- <7f996d2efd23cefd17074edaeed0a6bbbd9f1a99.camel@sipsolutions.net>
-From:   Jacob Keller <jacob.e.keller@intel.com>
-In-Reply-To: <7f996d2efd23cefd17074edaeed0a6bbbd9f1a99.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR03CA0032.namprd03.prod.outlook.com
- (2603:10b6:a03:33e::7) To CO1PR11MB5089.namprd11.prod.outlook.com
- (2603:10b6:303:9b::16)
+        Tue, 28 Feb 2023 16:54:44 -0500
+Received: from mail-oo1-f53.google.com (mail-oo1-f53.google.com [209.85.161.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3543CF;
+        Tue, 28 Feb 2023 13:54:36 -0800 (PST)
+Received: by mail-oo1-f53.google.com with SMTP id x19-20020a4a3953000000b00525191358b6so1790461oog.12;
+        Tue, 28 Feb 2023 13:54:36 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jKfNGlZp+r4J9eRssW5hTItNYGqPOs4HzskpLKN7BH4=;
+        b=Q0AX4yUFgzCGqAfvtKxoKxgeFVTZXJqlCVQMsscJ58dTvjYSGfpQ3bRmx9ZMU5qNdi
+         Docm6ikiewYRB+HAi4AbI8w5JvZPIl7E88T3rIByRrw9dvUm0KdwWBUaFc3uZQRPxViQ
+         b8LKgVgLCduOe9mw4sfPcRfAFXTA2ir5cBz3KlIvUEV+LNJQXPAwcnZO2qnhQKJJ8FMN
+         iqUbQaFu6ac7YZDVcLXSj7+9GXrlnZPt4xHZh2pt/f6F2XlenZeUjyyHDKAxVi6yPoNH
+         nppwvN4h1SbhvS4gbL4l3KAymG9UTD81uJSqV5DUjdY2MmTDkbrMlkgwK14y+XOrBhKw
+         c7dg==
+X-Gm-Message-State: AO0yUKX/JA4CTye5yC09Fm9/rIOJ3OSBICsyvchwX9h3tr2+2/O57FIk
+        1Jl0CJMO5h1so3YtseqKBA==
+X-Google-Smtp-Source: AK7set9hWdO75jbVFAClD12UniJR30hewUR6rBL3OAAsbzLqTsU2Nbd758BLMUeTHpXXKqvZAqc8PQ==
+X-Received: by 2002:a4a:b645:0:b0:51f:955a:ca37 with SMTP id f5-20020a4ab645000000b0051f955aca37mr1839395ooo.8.1677621275710;
+        Tue, 28 Feb 2023 13:54:35 -0800 (PST)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id f8-20020a4aa688000000b0051fce47fd1bsm4167552oom.25.2023.02.28.13.54.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Feb 2023 13:54:35 -0800 (PST)
+Received: (nullmailer pid 3944521 invoked by uid 1000);
+        Tue, 28 Feb 2023 21:54:33 -0000
+From:   Rob Herring <robh@kernel.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc:     devicetree@vger.kernel.org, Miguel Ojeda <ojeda@kernel.org>,
+        Benson Leung <bleung@chromium.org>,
+        Guenter Roeck <groeck@chromium.org>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Andrzej Hajda <andrzej.hajda@intel.com>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Robert Foss <rfoss@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Sam Ravnborg <sam@ravnborg.org>,
+        MyungJoo Ham <myungjoo.ham@samsung.com>,
+        Chanwoo Choi <cw00.choi@samsung.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Pavel Machek <pavel@ucw.cz>, Lee Jones <lee@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Mark Brown <broonie@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+        netdev@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-pm@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-usb@vger.kernel.org
+Subject: [PATCH] dt-bindings: Fix SPI and I2C bus node names in examples
+Date:   Tue, 28 Feb 2023 15:54:33 -0600
+Message-Id: <20230228215433.3944508-1-robh@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PR11MB5089:EE_|DS7PR11MB7859:EE_
-X-MS-Office365-Filtering-Correlation-Id: 67e319a3-280b-42ed-7d82-08db19b40e48
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: hT4Lw1vHDrLMMMQcAKA7XiN8dcH/oMPyRw6OohIweY2wsE7iMAKAPgr47XYMuuH6scAjZilXi4XBN347jqwjt25UokF4X6n4kJ5nhiY9D5oHXmPUd5wU0il7X72tO4/OebA0kVFfc97FWKyipGUeKJSP/5keQqULhSYl1ObiKO4z3kKY9zuX1+YyTus8VJTJXfeeOSoQuk2ZEk5NyYRheNhpIOqJyUiUJc+Rm7jH3Vk1/KFq0rymeI1NKnuEJKF470kSKLsGu743pE1KC2QOXC0RTrlzObzGBu9v7tFNs3vSIxfzC5QqwdR2e6JBKRR9IxcJ78JXLr9G3qxg8P2MjhsDPUg8xYmB+e4EhN7qFF7DgtigR0wD7rK2uwqX6nw8k2IUn3x1vXUA6ppxJpJLXI1uA1IMmfYt4CYgHk6VFKwYwoy8N0KNukhINL6H7LAUrYYLOasi3fjgNk8zP/YCkQt0+rXufk/9az7MAfs0xCJJPL6uwnOnPJqzK2iN4B2vhhUw7Zpp4cdFxAgrX9NBit6jzdiObWh677HkCosZeCVnbCq+kG9EQYUO9NTkb48u98TtQoV2qku845S4ZBN+SLu9EK2mam1jqBvzriKdJuyRa/J+pQWuVRn9h6njQAr0FNHeFOTZwKCbqdu+qflfZd3047qHfv0HL5m9qvKApqZmebhfE88EWqr/92Mc1/ZkAI0TiiaelsOmU5iGbBjDWRqYBCm0J0qwu1zixt9refk=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO1PR11MB5089.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(39860400002)(396003)(346002)(376002)(136003)(366004)(451199018)(36756003)(4326008)(31696002)(86362001)(66476007)(66946007)(66556008)(8676002)(5660300002)(2906002)(41300700001)(8936002)(6916009)(82960400001)(38100700002)(6486002)(478600001)(316002)(31686004)(54906003)(186003)(2616005)(6512007)(26005)(53546011)(6506007)(45980500001)(43740500002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?QUIrZzBBQXR3YW9qSDA3RmhqL2hjNERqK090MEhZZlhMWEM0RGVPbDJwZWUy?=
- =?utf-8?B?T3Y3M0RlK2o1b1ZIa3NPVTRicldRQVFpeDRuYnVxVVV6Nk5TVFhVSTBCSWF1?=
- =?utf-8?B?eVUwaG8zcWJuMzdtb3U1VVd0ZzZDWXhLMkVpNytJdHkxSFhwRlM2VUU5emEx?=
- =?utf-8?B?NU81SDRPTXNOb3pRYWFBNzllSHpvTmxnRWUrUVNUdnZXN1R4WGF0L1VXSVE0?=
- =?utf-8?B?ZjFLUFhnQ3JRWXZSem9CbzBVTUg0NTJNZ0FlWmg5NTROY0N6ODBWY3dpa3Fv?=
- =?utf-8?B?OCtEdTNVYzJ0V2dJckgwakpndENMbUxNWGo3RkVaeDNPRDd2VGN3eHhyL2xX?=
- =?utf-8?B?NDRwVE1iS2pWb1JvRUFtMzRpcktlQzNEdkZNeEhueG5KMVltYWt1aHdvMUlu?=
- =?utf-8?B?a1lXZEJPaS92b2t6czViUlZKQkpDdndrRU9CTVM4bHgwSHZJZXRIa2I5T1dL?=
- =?utf-8?B?TEwwbWU2K1E3Z1Bmb2haUjQ2K2tpS0k4YXRyZnlNeHNwa2JsWWhZNTBhdm8x?=
- =?utf-8?B?QWdtcTJ2S0ZxU0dYdUhreDlTK1Z6M2xmZ2tIc3Fvd0J0YnVVd1FGSFZ1YnFS?=
- =?utf-8?B?SE5Jbld0YVQ2SU5NZHZITDZpMUdmYWlOSEphSk1BSnZrazVMVmRueXc0Yk1O?=
- =?utf-8?B?SE1qUVViZkxBQkFES1ZjUGhoRUNoWmpVSFJ4RUxya1NyK1BQWWVEZmZESS9n?=
- =?utf-8?B?Y1ZjM3VXNFFna0gxQUdIaVNhZXNuOE0vZG10amdnZVR1ellVSGxsbXdZREtr?=
- =?utf-8?B?c2p3bkp2SytOMVc0QThmUUpYWjE3WjZrVXZIaHZBd0VoUFVsbjZsdWkwNlRB?=
- =?utf-8?B?S0xYanIyS25jdnRqLzloUUNCek93dGtObDgrWm9rSHEzZUwzWEw4VCtPUDVH?=
- =?utf-8?B?RXZDWlFuVnZnWVpYTzBNQm1ITEhtL05UUlF3eUhMSk0wdUJ5N2xmUzFaNHZt?=
- =?utf-8?B?ZkkwQ3FOQXk4NjQwOTdsVWNxa212aXZ3QXdZMWpDYzFTU2Z2Z3YzTU9uR3R4?=
- =?utf-8?B?TXAvcHJhaDNYWXlDbUMwK3hIL0l1Sk9wRGo3dDFUZXRtSU5pY3ozN0ZoZXhr?=
- =?utf-8?B?eXdROTRVV2JYQ3VMVUlWUEQxZHc2ZFRqT0JWeFlXWjMrOXN1M2JJTjVJODIw?=
- =?utf-8?B?cUdqdzg3dUJJRCs3cWROa0lJdmF3R1I4YVNaUm0zU2RRZ2FpUG1JL2Z0SUNF?=
- =?utf-8?B?TjFORkpsQVowc3V4UmhQcElTZlJOTkFLZ2tnZTdZSUw4NDJkVDVPUEpKbW1M?=
- =?utf-8?B?SE9tcmU5WFlwZ3NIaFFuVisyN2hXSWppbjllL3lha0VSMDh3dTdydXU5Ulcy?=
- =?utf-8?B?S3RSWjVjdGV2OFYxckV3Z21iaG9wc29nRmVNUndvY3RmNUU1VVB3RnJYNFc0?=
- =?utf-8?B?MHRPQTA5Q3drb3YxbU9jWlRpWmVEc3NiTGlUeE04SmlNR0t3TEJ1bnFMZjhH?=
- =?utf-8?B?T2NIK3pPb0dEUmtEdnNJTE5mL01OcHhZU3hLekJxNG5Pd0FuNXdhemgva2RF?=
- =?utf-8?B?YzRYd1JIYXZNK0lqZ3RxSXhObTR3R09ua2l4bGZ3cERENzUybUJBZGtvT2ta?=
- =?utf-8?B?dktQV25GUXVmeVI0d1BFSHJ3TityWnBFL1dGcVI1YVpFVEIrUXFTYU93TURE?=
- =?utf-8?B?RWxRQlczN1NBc2VNamZKREVCVkN2SnorWlUzWitrU3FETDZiVmZjVm9ZdXp6?=
- =?utf-8?B?R3hwZzNuNVVrZTJ3U0tjSzZmT013Nk1sc01ORzNqRUw4cmtLWTJ5Ty9RR28x?=
- =?utf-8?B?UEVtSE1lYUhyVkU1YTVTNUJCZ1B4QVFiKy8xK1BEN1pnWGxjcmxlVWxZbit1?=
- =?utf-8?B?YWpPcHNZR2ZxTkxqTUJoRlNBZy9PTGtiVndGTzlYVk9hSGROMW9DVWNLQUhI?=
- =?utf-8?B?TGM2UHZaUjZlMVFWb1cxVDJNRXBTTDc4aVFOUFRvUERwZ08vQ1pwUHJ3SWgy?=
- =?utf-8?B?L3d3RHR1Mk00RTlXRUFWS2tnZUIzcmM3NDNRYlNyTGlUUUEyK0tib1RRSGxr?=
- =?utf-8?B?Nk9mUWIrV1pqaDlrSStEQjdnZkpsaWRZb1EyUGlEWklqL0tQeEtzbUlnMTgz?=
- =?utf-8?B?TEFWZWZmWGE1aE04NkFmdTd2STdzb290ZFJMN1R2dllDQ1ZmdzdNRUFTVHd4?=
- =?utf-8?B?OWVUQit5aitkbndQZFJQeXJkZnVjSG55UlNQVFJXQ1BzRkRsREZqZ1p3MkRH?=
- =?utf-8?B?SEE9PQ==?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67e319a3-280b-42ed-7d82-08db19b40e48
-X-MS-Exchange-CrossTenant-AuthSource: CO1PR11MB5089.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2023 17:48:53.0152
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: KiH3OnUX0KIep84gXDrX+HgQjadatzRAWxG1CbFKGRTf++vlwgy+k7AIDg6QPVk2OXgAV1963b5oSgRTr/fi0K9eZ3pNjiSxp4PO8fYG//8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR11MB7859
-X-OriginatorOrg: intel.com
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+SPI and I2C bus node names are expected to be "spi" or "i2c",
+respectively, with nothing else, a unit-address, or a '-N' index. A
+pattern of 'spi0' or 'i2c0' or similar has crept in. Fix all these
+cases. Mostly scripted with the following commands:
 
+git grep -l '\si2c[0-9] {' Documentation/devicetree/ | xargs sed -i -e 's/i2c[0-9] {/i2c {/'
+git grep -l '\sspi[0-9] {' Documentation/devicetree/ | xargs sed -i -e 's/spi[0-9] {/spi {/'
 
-On 2/28/2023 9:46 AM, Johannes Berg wrote:
-> On Tue, 2023-02-28 at 09:44 -0800, Jacob Keller wrote:
->>
->> Previous to this change, error struct has two pointers to sections of
->> memory allocated at the end of the buffer.
->>
->> The code used to be:
->>
->> -	error = kmalloc(sizeof(*error) +
->> -			sizeof(*error->elem) * elem_len +
->> -			sizeof(*error->log) * log_len, GFP_ATOMIC);
->>
->> i.e. the elem_len is multiplying sizeof(*error->elem).
->>
->> The code is essentially trying to get two flexible arrays in the same
->> allocation, and its a bit messy to do that. I don't see how elem_len
->> could be anything other than "number of elems" given this code I removed.
-> 
-> Yeah, you're right. I was thinking of more modern HW/FW too much I
-> guess, I see now even in the driver we have an array walk here (and it
-> trusts the elem_len from firmware... ahrg!)
-> 
+With this, a few errors in examples were exposed and fixed.
 
-Ouch.. that makes me feel better about using struct_size/size_add here
-since it would help protect against an overflow with a large element size...
+Signed-off-by: Rob Herring <robh@kernel.org>
+---
+Cc: Miguel Ojeda <ojeda@kernel.org>
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc: Benson Leung <bleung@chromium.org>
+Cc: Guenter Roeck <groeck@chromium.org>
+Cc: Stephen Boyd <sboyd@kernel.org>
+Cc: Andrzej Hajda <andrzej.hajda@intel.com>
+Cc: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Robert Foss <rfoss@kernel.org>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Sam Ravnborg <sam@ravnborg.org>
+Cc: MyungJoo Ham <myungjoo.ham@samsung.com>
+Cc: Chanwoo Choi <cw00.choi@samsung.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Lee Jones <lee@kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: Wolfgang Grandegger <wg@grandegger.com>
+Cc: Kalle Valo <kvalo@kernel.org>
+Cc: Sebastian Reichel <sre@kernel.org>
+Cc: Mark Brown <broonie@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-clk@vger.kernel.org
+Cc: dri-devel@lists.freedesktop.org
+Cc: linux-gpio@vger.kernel.org
+Cc: linux-i2c@vger.kernel.org
+Cc: linux-leds@vger.kernel.org
+Cc: linux-media@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-can@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-pm@vger.kernel.org
+Cc: alsa-devel@alsa-project.org
+Cc: linux-usb@vger.kernel.org
+---
+ .../bindings/auxdisplay/holtek,ht16k33.yaml       |  2 +-
+ .../bindings/chrome/google,cros-ec-typec.yaml     |  2 +-
+ .../chrome/google,cros-kbd-led-backlight.yaml     |  2 +-
+ .../devicetree/bindings/clock/ti,lmk04832.yaml    |  2 +-
+ .../bindings/display/bridge/analogix,anx7625.yaml |  2 +-
+ .../bindings/display/bridge/anx6345.yaml          |  2 +-
+ .../bindings/display/bridge/lontium,lt8912b.yaml  |  2 +-
+ .../bindings/display/bridge/nxp,ptn3460.yaml      |  2 +-
+ .../bindings/display/bridge/ps8640.yaml           |  2 +-
+ .../bindings/display/bridge/sil,sii9234.yaml      |  2 +-
+ .../bindings/display/bridge/ti,dlpc3433.yaml      |  2 +-
+ .../bindings/display/bridge/toshiba,tc358762.yaml |  2 +-
+ .../bindings/display/bridge/toshiba,tc358768.yaml |  2 +-
+ .../bindings/display/panel/nec,nl8048hl11.yaml    |  2 +-
+ .../bindings/display/solomon,ssd1307fb.yaml       |  4 ++--
+ .../devicetree/bindings/eeprom/at25.yaml          |  2 +-
+ .../bindings/extcon/extcon-usbc-cros-ec.yaml      |  2 +-
+ .../bindings/extcon/extcon-usbc-tusb320.yaml      |  2 +-
+ .../devicetree/bindings/gpio/gpio-pca9570.yaml    |  2 +-
+ .../devicetree/bindings/gpio/gpio-pca95xx.yaml    |  8 ++++----
+ .../bindings/i2c/google,cros-ec-i2c-tunnel.yaml   |  2 +-
+ .../bindings/leds/cznic,turris-omnia-leds.yaml    |  2 +-
+ .../devicetree/bindings/leds/issi,is31fl319x.yaml |  2 +-
+ .../devicetree/bindings/leds/leds-aw2013.yaml     |  2 +-
+ .../devicetree/bindings/leds/leds-rt4505.yaml     |  2 +-
+ .../devicetree/bindings/leds/ti,tca6507.yaml      |  2 +-
+ .../bindings/media/i2c/aptina,mt9p031.yaml        |  2 +-
+ .../bindings/media/i2c/aptina,mt9v111.yaml        |  2 +-
+ .../devicetree/bindings/media/i2c/imx219.yaml     |  2 +-
+ .../devicetree/bindings/media/i2c/imx258.yaml     |  4 ++--
+ .../devicetree/bindings/media/i2c/mipi-ccs.yaml   |  2 +-
+ .../bindings/media/i2c/ovti,ov5648.yaml           |  2 +-
+ .../bindings/media/i2c/ovti,ov772x.yaml           |  2 +-
+ .../bindings/media/i2c/ovti,ov8865.yaml           |  2 +-
+ .../bindings/media/i2c/ovti,ov9282.yaml           |  2 +-
+ .../bindings/media/i2c/rda,rda5807.yaml           |  2 +-
+ .../bindings/media/i2c/sony,imx214.yaml           |  2 +-
+ .../bindings/media/i2c/sony,imx274.yaml           |  2 +-
+ .../bindings/media/i2c/sony,imx334.yaml           |  2 +-
+ .../bindings/media/i2c/sony,imx335.yaml           |  2 +-
+ .../bindings/media/i2c/sony,imx412.yaml           |  2 +-
+ .../devicetree/bindings/mfd/actions,atc260x.yaml  |  2 +-
+ .../devicetree/bindings/mfd/google,cros-ec.yaml   |  6 +++---
+ .../devicetree/bindings/mfd/ti,tps65086.yaml      |  2 +-
+ .../devicetree/bindings/mfd/x-powers,axp152.yaml  |  4 ++--
+ .../devicetree/bindings/net/asix,ax88796c.yaml    |  2 +-
+ .../bindings/net/can/microchip,mcp251xfd.yaml     |  2 +-
+ .../bindings/net/dsa/microchip,ksz.yaml           |  2 +-
+ .../bindings/net/nfc/samsung,s3fwrn5.yaml         |  2 +-
+ .../bindings/net/vertexcom-mse102x.yaml           |  2 +-
+ .../bindings/net/wireless/ti,wlcore.yaml          | 10 ++++++++--
+ .../devicetree/bindings/pinctrl/pinmux-node.yaml  |  2 +-
+ .../bindings/pinctrl/starfive,jh7100-pinctrl.yaml |  2 +-
+ .../devicetree/bindings/power/supply/bq2415x.yaml |  2 +-
+ .../devicetree/bindings/power/supply/bq24190.yaml |  2 +-
+ .../devicetree/bindings/power/supply/bq24257.yaml |  4 ++--
+ .../devicetree/bindings/power/supply/bq24735.yaml |  2 +-
+ .../devicetree/bindings/power/supply/bq2515x.yaml |  2 +-
+ .../devicetree/bindings/power/supply/bq25890.yaml |  2 +-
+ .../devicetree/bindings/power/supply/bq25980.yaml |  2 +-
+ .../devicetree/bindings/power/supply/bq27xxx.yaml | 15 ++++++++-------
+ .../bindings/power/supply/lltc,ltc294x.yaml       |  2 +-
+ .../bindings/power/supply/ltc4162-l.yaml          |  2 +-
+ .../bindings/power/supply/maxim,max14656.yaml     |  2 +-
+ .../bindings/power/supply/maxim,max17040.yaml     |  4 ++--
+ .../bindings/power/supply/maxim,max17042.yaml     |  2 +-
+ .../bindings/power/supply/richtek,rt9455.yaml     |  2 +-
+ .../bindings/power/supply/ti,lp8727.yaml          |  2 +-
+ .../bindings/regulator/active-semi,act8865.yaml   |  2 +-
+ .../regulator/google,cros-ec-regulator.yaml       |  2 +-
+ .../bindings/regulator/nxp,pf8x00-regulator.yaml  |  2 +-
+ .../devicetree/bindings/sound/everest,es8316.yaml |  2 +-
+ .../devicetree/bindings/sound/tas2562.yaml        |  2 +-
+ .../devicetree/bindings/sound/tas2770.yaml        |  2 +-
+ .../devicetree/bindings/sound/tas27xx.yaml        |  2 +-
+ .../devicetree/bindings/sound/tas5805m.yaml       |  2 +-
+ .../devicetree/bindings/sound/tlv320adcx140.yaml  |  2 +-
+ .../devicetree/bindings/sound/zl38060.yaml        |  2 +-
+ .../devicetree/bindings/usb/maxim,max33359.yaml   |  2 +-
+ .../bindings/usb/maxim,max3420-udc.yaml           |  2 +-
+ .../bindings/usb/mediatek,mt6360-tcpc.yaml        |  2 +-
+ .../devicetree/bindings/usb/richtek,rt1711h.yaml  |  2 +-
+ .../devicetree/bindings/usb/richtek,rt1719.yaml   |  2 +-
+ .../devicetree/bindings/usb/st,stusb160x.yaml     |  2 +-
+ .../devicetree/bindings/usb/ti,hd3ss3220.yaml     |  2 +-
+ .../devicetree/bindings/usb/ti,tps6598x.yaml      |  2 +-
+ 86 files changed, 110 insertions(+), 103 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/auxdisplay/holtek,ht16k33.yaml b/Documentation/devicetree/bindings/auxdisplay/holtek,ht16k33.yaml
+index fc4873deb76f..286e726cd052 100644
+--- a/Documentation/devicetree/bindings/auxdisplay/holtek,ht16k33.yaml
++++ b/Documentation/devicetree/bindings/auxdisplay/holtek,ht16k33.yaml
+@@ -72,7 +72,7 @@ examples:
+     #include <dt-bindings/interrupt-controller/irq.h>
+     #include <dt-bindings/input/input.h>
+     #include <dt-bindings/leds/common.h>
+-    i2c1 {
++    i2c {
+             #address-cells = <1>;
+             #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/chrome/google,cros-ec-typec.yaml b/Documentation/devicetree/bindings/chrome/google,cros-ec-typec.yaml
+index defcf1e12aa1..3b0548c34791 100644
+--- a/Documentation/devicetree/bindings/chrome/google,cros-ec-typec.yaml
++++ b/Documentation/devicetree/bindings/chrome/google,cros-ec-typec.yaml
+@@ -41,7 +41,7 @@ additionalProperties: false
+ 
+ examples:
+   - |+
+-    spi0 {
++    spi {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/chrome/google,cros-kbd-led-backlight.yaml b/Documentation/devicetree/bindings/chrome/google,cros-kbd-led-backlight.yaml
+index 40244d003c32..c94ab8f9e0b8 100644
+--- a/Documentation/devicetree/bindings/chrome/google,cros-kbd-led-backlight.yaml
++++ b/Documentation/devicetree/bindings/chrome/google,cros-kbd-led-backlight.yaml
+@@ -20,7 +20,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    spi0 {
++    spi {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/clock/ti,lmk04832.yaml b/Documentation/devicetree/bindings/clock/ti,lmk04832.yaml
+index 73d17830f165..13d7b3d03d84 100644
+--- a/Documentation/devicetree/bindings/clock/ti,lmk04832.yaml
++++ b/Documentation/devicetree/bindings/clock/ti,lmk04832.yaml
+@@ -160,7 +160,7 @@ examples:
+         };
+     };
+ 
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/analogix,anx7625.yaml b/Documentation/devicetree/bindings/display/bridge/analogix,anx7625.yaml
+index 4590186c4a0b..27026c78cd9b 100644
+--- a/Documentation/devicetree/bindings/display/bridge/analogix,anx7625.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/analogix,anx7625.yaml
+@@ -134,7 +134,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/anx6345.yaml b/Documentation/devicetree/bindings/display/bridge/anx6345.yaml
+index 9bf2cbcea69f..514f58852990 100644
+--- a/Documentation/devicetree/bindings/display/bridge/anx6345.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/anx6345.yaml
+@@ -61,7 +61,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/lontium,lt8912b.yaml b/Documentation/devicetree/bindings/display/bridge/lontium,lt8912b.yaml
+index 674891ee2f8e..f201ae4af4fb 100644
+--- a/Documentation/devicetree/bindings/display/bridge/lontium,lt8912b.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/lontium,lt8912b.yaml
+@@ -67,7 +67,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c4 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/nxp,ptn3460.yaml b/Documentation/devicetree/bindings/display/bridge/nxp,ptn3460.yaml
+index 107dd138e6c6..0f61291d4268 100644
+--- a/Documentation/devicetree/bindings/display/bridge/nxp,ptn3460.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/nxp,ptn3460.yaml
+@@ -71,7 +71,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c1 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/ps8640.yaml b/Documentation/devicetree/bindings/display/bridge/ps8640.yaml
+index 28811aff2c5a..5856450c5da7 100644
+--- a/Documentation/devicetree/bindings/display/bridge/ps8640.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/ps8640.yaml
+@@ -73,7 +73,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/sil,sii9234.yaml b/Documentation/devicetree/bindings/display/bridge/sil,sii9234.yaml
+index f88ddfe4818b..176181d25530 100644
+--- a/Documentation/devicetree/bindings/display/bridge/sil,sii9234.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/sil,sii9234.yaml
+@@ -71,7 +71,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    i2c1 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/ti,dlpc3433.yaml b/Documentation/devicetree/bindings/display/bridge/ti,dlpc3433.yaml
+index 542193d77cdf..d3f84d220723 100644
+--- a/Documentation/devicetree/bindings/display/bridge/ti,dlpc3433.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/ti,dlpc3433.yaml
+@@ -83,7 +83,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c1 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/toshiba,tc358762.yaml b/Documentation/devicetree/bindings/display/bridge/toshiba,tc358762.yaml
+index a412a1da950f..81ca3cbc7abe 100644
+--- a/Documentation/devicetree/bindings/display/bridge/toshiba,tc358762.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/toshiba,tc358762.yaml
+@@ -51,7 +51,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c1 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/bridge/toshiba,tc358768.yaml b/Documentation/devicetree/bindings/display/bridge/toshiba,tc358768.yaml
+index 0b6f5bef120f..779d8c57f854 100644
+--- a/Documentation/devicetree/bindings/display/bridge/toshiba,tc358768.yaml
++++ b/Documentation/devicetree/bindings/display/bridge/toshiba,tc358768.yaml
+@@ -87,7 +87,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c1 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/panel/nec,nl8048hl11.yaml b/Documentation/devicetree/bindings/display/panel/nec,nl8048hl11.yaml
+index 3b09b359023e..accf933d6e46 100644
+--- a/Documentation/devicetree/bindings/display/panel/nec,nl8048hl11.yaml
++++ b/Documentation/devicetree/bindings/display/panel/nec,nl8048hl11.yaml
+@@ -41,7 +41,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    spi0 {
++    spi {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/display/solomon,ssd1307fb.yaml b/Documentation/devicetree/bindings/display/solomon,ssd1307fb.yaml
+index 669f70b1b4c4..8bd58913804a 100644
+--- a/Documentation/devicetree/bindings/display/solomon,ssd1307fb.yaml
++++ b/Documentation/devicetree/bindings/display/solomon,ssd1307fb.yaml
+@@ -226,7 +226,7 @@ unevaluatedProperties: false
+ 
+ examples:
+   - |
+-    i2c1 {
++    i2c {
+             #address-cells = <1>;
+             #size-cells = <0>;
+ 
+@@ -239,7 +239,7 @@ examples:
+ 
+             ssd1306_i2c: oled@3d {
+                     compatible = "solomon,ssd1306";
+-                    reg = <0x3c>;
++                    reg = <0x3d>;
+                     pwms = <&pwm 4 3000>;
+                     reset-gpios = <&gpio2 7>;
+                     solomon,com-lrremap;
+diff --git a/Documentation/devicetree/bindings/eeprom/at25.yaml b/Documentation/devicetree/bindings/eeprom/at25.yaml
+index 0f5a8ef996d3..11e2a95a7bcb 100644
+--- a/Documentation/devicetree/bindings/eeprom/at25.yaml
++++ b/Documentation/devicetree/bindings/eeprom/at25.yaml
+@@ -122,7 +122,7 @@ unevaluatedProperties: false
+ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/extcon/extcon-usbc-cros-ec.yaml b/Documentation/devicetree/bindings/extcon/extcon-usbc-cros-ec.yaml
+index 2e5b39881449..e00c8072bae9 100644
+--- a/Documentation/devicetree/bindings/extcon/extcon-usbc-cros-ec.yaml
++++ b/Documentation/devicetree/bindings/extcon/extcon-usbc-cros-ec.yaml
+@@ -34,7 +34,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+         cros-ec@0 {
+diff --git a/Documentation/devicetree/bindings/extcon/extcon-usbc-tusb320.yaml b/Documentation/devicetree/bindings/extcon/extcon-usbc-tusb320.yaml
+index 71a9f2e5d0dc..126107dd57b1 100644
+--- a/Documentation/devicetree/bindings/extcon/extcon-usbc-tusb320.yaml
++++ b/Documentation/devicetree/bindings/extcon/extcon-usbc-tusb320.yaml
+@@ -30,7 +30,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+         tusb320@61 {
+diff --git a/Documentation/devicetree/bindings/gpio/gpio-pca9570.yaml b/Documentation/devicetree/bindings/gpio/gpio-pca9570.yaml
+index 48bf414aa50e..5b0134304e51 100644
+--- a/Documentation/devicetree/bindings/gpio/gpio-pca9570.yaml
++++ b/Documentation/devicetree/bindings/gpio/gpio-pca9570.yaml
+@@ -34,7 +34,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml b/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml
+index 1b70e9f308f3..fa116148ee90 100644
+--- a/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml
++++ b/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml
+@@ -151,7 +151,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -177,7 +177,7 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    i2c1 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -203,7 +203,7 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    i2c2 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -221,7 +221,7 @@ examples:
+     };
+ 
+   - |
+-    i2c3 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/i2c/google,cros-ec-i2c-tunnel.yaml b/Documentation/devicetree/bindings/i2c/google,cros-ec-i2c-tunnel.yaml
+index cf523615f5e3..ab151c9db219 100644
+--- a/Documentation/devicetree/bindings/i2c/google,cros-ec-i2c-tunnel.yaml
++++ b/Documentation/devicetree/bindings/i2c/google,cros-ec-i2c-tunnel.yaml
+@@ -39,7 +39,7 @@ unevaluatedProperties: false
+ 
+ examples:
+   - |
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/leds/cznic,turris-omnia-leds.yaml b/Documentation/devicetree/bindings/leds/cznic,turris-omnia-leds.yaml
+index 14bebe1ad8f8..34ef5215c150 100644
+--- a/Documentation/devicetree/bindings/leds/cznic,turris-omnia-leds.yaml
++++ b/Documentation/devicetree/bindings/leds/cznic,turris-omnia-leds.yaml
+@@ -58,7 +58,7 @@ examples:
+ 
+     #include <dt-bindings/leds/common.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/leds/issi,is31fl319x.yaml b/Documentation/devicetree/bindings/leds/issi,is31fl319x.yaml
+index d1b01bae9f63..3c0431c51159 100644
+--- a/Documentation/devicetree/bindings/leds/issi,is31fl319x.yaml
++++ b/Documentation/devicetree/bindings/leds/issi,is31fl319x.yaml
+@@ -165,7 +165,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/leds/common.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/leds/leds-aw2013.yaml b/Documentation/devicetree/bindings/leds/leds-aw2013.yaml
+index 6c3ea0f06cef..08f3e1cfc1b1 100644
+--- a/Documentation/devicetree/bindings/leds/leds-aw2013.yaml
++++ b/Documentation/devicetree/bindings/leds/leds-aw2013.yaml
+@@ -54,7 +54,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/leds/common.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/leds/leds-rt4505.yaml b/Documentation/devicetree/bindings/leds/leds-rt4505.yaml
+index cb71fec173c1..bfd0e240f7d6 100644
+--- a/Documentation/devicetree/bindings/leds/leds-rt4505.yaml
++++ b/Documentation/devicetree/bindings/leds/leds-rt4505.yaml
+@@ -39,7 +39,7 @@ examples:
+   - |
+     #include <dt-bindings/leds/common.h>
+ 
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/leds/ti,tca6507.yaml b/Documentation/devicetree/bindings/leds/ti,tca6507.yaml
+index 9ce5c0f16e17..4b1575e4f180 100644
+--- a/Documentation/devicetree/bindings/leds/ti,tca6507.yaml
++++ b/Documentation/devicetree/bindings/leds/ti,tca6507.yaml
+@@ -87,7 +87,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/leds/common.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/aptina,mt9p031.yaml b/Documentation/devicetree/bindings/media/i2c/aptina,mt9p031.yaml
+index 1d6af1bf9a6b..be00de2f2d58 100644
+--- a/Documentation/devicetree/bindings/media/i2c/aptina,mt9p031.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/aptina,mt9p031.yaml
+@@ -82,7 +82,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/aptina,mt9v111.yaml b/Documentation/devicetree/bindings/media/i2c/aptina,mt9v111.yaml
+index e53b8d65f381..088022f88010 100644
+--- a/Documentation/devicetree/bindings/media/i2c/aptina,mt9v111.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/aptina,mt9v111.yaml
+@@ -55,7 +55,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/imx219.yaml b/Documentation/devicetree/bindings/media/i2c/imx219.yaml
+index 5fc96944b448..07d088cf66e0 100644
+--- a/Documentation/devicetree/bindings/media/i2c/imx219.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/imx219.yaml
+@@ -83,7 +83,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/imx258.yaml b/Documentation/devicetree/bindings/media/i2c/imx258.yaml
+index cde0f7383b2a..80d24220baa0 100644
+--- a/Documentation/devicetree/bindings/media/i2c/imx258.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/imx258.yaml
+@@ -84,7 +84,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -111,7 +111,7 @@ examples:
+     };
+ 
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/mipi-ccs.yaml b/Documentation/devicetree/bindings/media/i2c/mipi-ccs.yaml
+index edde4201116f..f8ace8cbccdb 100644
+--- a/Documentation/devicetree/bindings/media/i2c/mipi-ccs.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/mipi-ccs.yaml
+@@ -106,7 +106,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/media/video-interfaces.h>
+ 
+-    i2c2 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/ovti,ov5648.yaml b/Documentation/devicetree/bindings/media/i2c/ovti,ov5648.yaml
+index 61e4e9cf8783..1f497679168c 100644
+--- a/Documentation/devicetree/bindings/media/i2c/ovti,ov5648.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/ovti,ov5648.yaml
+@@ -81,7 +81,7 @@ examples:
+     #include <dt-bindings/clock/sun8i-v3s-ccu.h>
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/ovti,ov772x.yaml b/Documentation/devicetree/bindings/media/i2c/ovti,ov772x.yaml
+index 161e6d598e1c..5d24edba8f99 100644
+--- a/Documentation/devicetree/bindings/media/i2c/ovti,ov772x.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/ovti,ov772x.yaml
+@@ -107,7 +107,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/media/video-interfaces.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+         ov772x: camera@21 {
+diff --git a/Documentation/devicetree/bindings/media/i2c/ovti,ov8865.yaml b/Documentation/devicetree/bindings/media/i2c/ovti,ov8865.yaml
+index 6bac326dceaf..8a70e23ba6ab 100644
+--- a/Documentation/devicetree/bindings/media/i2c/ovti,ov8865.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/ovti,ov8865.yaml
+@@ -82,7 +82,7 @@ examples:
+     #include <dt-bindings/clock/sun8i-a83t-ccu.h>
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c2 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/ovti,ov9282.yaml b/Documentation/devicetree/bindings/media/i2c/ovti,ov9282.yaml
+index 0c4654e70d46..79a7658f6d05 100644
+--- a/Documentation/devicetree/bindings/media/i2c/ovti,ov9282.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/ovti,ov9282.yaml
+@@ -78,7 +78,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/rda,rda5807.yaml b/Documentation/devicetree/bindings/media/i2c/rda,rda5807.yaml
+index f50e54a722eb..34a05df786ce 100644
+--- a/Documentation/devicetree/bindings/media/i2c/rda,rda5807.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/rda,rda5807.yaml
+@@ -50,7 +50,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/sony,imx214.yaml b/Documentation/devicetree/bindings/media/i2c/sony,imx214.yaml
+index c9760f895b3e..e2470dd5920c 100644
+--- a/Documentation/devicetree/bindings/media/i2c/sony,imx214.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/sony,imx214.yaml
+@@ -97,7 +97,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/sony,imx274.yaml b/Documentation/devicetree/bindings/media/i2c/sony,imx274.yaml
+index 4271fc3cc623..b397a730ee94 100644
+--- a/Documentation/devicetree/bindings/media/i2c/sony,imx274.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/sony,imx274.yaml
+@@ -52,7 +52,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/sony,imx334.yaml b/Documentation/devicetree/bindings/media/i2c/sony,imx334.yaml
+index f5055b9db693..592cbcebc8ea 100644
+--- a/Documentation/devicetree/bindings/media/i2c/sony,imx334.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/sony,imx334.yaml
+@@ -65,7 +65,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/sony,imx335.yaml b/Documentation/devicetree/bindings/media/i2c/sony,imx335.yaml
+index cf2ca2702cc9..a167dcdb3a32 100644
+--- a/Documentation/devicetree/bindings/media/i2c/sony,imx335.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/sony,imx335.yaml
+@@ -66,7 +66,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/media/i2c/sony,imx412.yaml b/Documentation/devicetree/bindings/media/i2c/sony,imx412.yaml
+index 60dc25ff2b9e..d9b7815650fd 100644
+--- a/Documentation/devicetree/bindings/media/i2c/sony,imx412.yaml
++++ b/Documentation/devicetree/bindings/media/i2c/sony,imx412.yaml
+@@ -77,7 +77,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/mfd/actions,atc260x.yaml b/Documentation/devicetree/bindings/mfd/actions,atc260x.yaml
+index c3a368a0fe93..6811246c5771 100644
+--- a/Documentation/devicetree/bindings/mfd/actions,atc260x.yaml
++++ b/Documentation/devicetree/bindings/mfd/actions,atc260x.yaml
+@@ -129,7 +129,7 @@ required:
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/arm-gic.h>
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/mfd/google,cros-ec.yaml b/Documentation/devicetree/bindings/mfd/google,cros-ec.yaml
+index cdf1d719efe9..8caa48f4570e 100644
+--- a/Documentation/devicetree/bindings/mfd/google,cros-ec.yaml
++++ b/Documentation/devicetree/bindings/mfd/google,cros-ec.yaml
+@@ -246,7 +246,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -263,7 +263,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -296,7 +296,7 @@ examples:
+ 
+   # Example for FPMCU
+   - |
+-    spi0 {
++    spi {
+       #address-cells = <0x1>;
+       #size-cells = <0x0>;
+ 
+diff --git a/Documentation/devicetree/bindings/mfd/ti,tps65086.yaml b/Documentation/devicetree/bindings/mfd/ti,tps65086.yaml
+index 3fdd9cb5b347..bd36a07c1721 100644
+--- a/Documentation/devicetree/bindings/mfd/ti,tps65086.yaml
++++ b/Documentation/devicetree/bindings/mfd/ti,tps65086.yaml
+@@ -95,7 +95,7 @@ required:
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/mfd/x-powers,axp152.yaml b/Documentation/devicetree/bindings/mfd/x-powers,axp152.yaml
+index b7a8747d5fa0..24d03996b93a 100644
+--- a/Documentation/devicetree/bindings/mfd/x-powers,axp152.yaml
++++ b/Documentation/devicetree/bindings/mfd/x-powers,axp152.yaml
+@@ -299,7 +299,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-      i2c0 {
++      i2c {
+           #address-cells = <1>;
+           #size-cells = <0>;
+ 
+@@ -315,7 +315,7 @@ examples:
+   - |
+       #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-      i2c0 {
++      i2c {
+           #address-cells = <1>;
+           #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/net/asix,ax88796c.yaml b/Documentation/devicetree/bindings/net/asix,ax88796c.yaml
+index 164d1ff9e83c..6b849a4349c0 100644
+--- a/Documentation/devicetree/bindings/net/asix,ax88796c.yaml
++++ b/Documentation/devicetree/bindings/net/asix,ax88796c.yaml
+@@ -58,7 +58,7 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+     #include <dt-bindings/gpio/gpio.h>
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml b/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml
+index fce84aecae77..2a98b26630cb 100644
+--- a/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml
++++ b/Documentation/devicetree/bindings/net/can/microchip,mcp251xfd.yaml
+@@ -62,7 +62,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/net/dsa/microchip,ksz.yaml b/Documentation/devicetree/bindings/net/dsa/microchip,ksz.yaml
+index a4b53434c85c..e51be1ac0362 100644
+--- a/Documentation/devicetree/bindings/net/dsa/microchip,ksz.yaml
++++ b/Documentation/devicetree/bindings/net/dsa/microchip,ksz.yaml
+@@ -67,7 +67,7 @@ examples:
+         };
+     };
+ 
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/net/nfc/samsung,s3fwrn5.yaml b/Documentation/devicetree/bindings/net/nfc/samsung,s3fwrn5.yaml
+index 41c9760227cd..12baee45752c 100644
+--- a/Documentation/devicetree/bindings/net/nfc/samsung,s3fwrn5.yaml
++++ b/Documentation/devicetree/bindings/net/nfc/samsung,s3fwrn5.yaml
+@@ -69,7 +69,7 @@ examples:
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    i2c4 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/net/vertexcom-mse102x.yaml b/Documentation/devicetree/bindings/net/vertexcom-mse102x.yaml
+index 6a71f694cb55..1a2fec4857f5 100644
+--- a/Documentation/devicetree/bindings/net/vertexcom-mse102x.yaml
++++ b/Documentation/devicetree/bindings/net/vertexcom-mse102x.yaml
+@@ -55,7 +55,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.yaml b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.yaml
+index f799a1e52173..75c9489f319b 100644
+--- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.yaml
+@@ -89,7 +89,7 @@ examples:
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+     // For wl12xx family:
+-    spi1 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -104,8 +104,11 @@ examples:
+         };
+     };
+ 
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++
+     // For wl18xx family:
+-    spi2 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+@@ -118,6 +121,9 @@ examples:
+         };
+     };
+ 
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++
+     // SDIO example:
+     mmc3 {
+         vmmc-supply = <&wlan_en_reg>;
+diff --git a/Documentation/devicetree/bindings/pinctrl/pinmux-node.yaml b/Documentation/devicetree/bindings/pinctrl/pinmux-node.yaml
+index 008c3ab7f1bb..ca9d246d46fe 100644
+--- a/Documentation/devicetree/bindings/pinctrl/pinmux-node.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/pinmux-node.yaml
+@@ -31,7 +31,7 @@ description: |
+     };
+   };
+   state_1_node_a {
+-    spi0 {
++    spi {
+       function = "spi0";
+       groups = "spi0pins";
+     };
+diff --git a/Documentation/devicetree/bindings/pinctrl/starfive,jh7100-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/starfive,jh7100-pinctrl.yaml
+index 69c0dd9998ea..d78c3cd0c295 100644
+--- a/Documentation/devicetree/bindings/pinctrl/starfive,jh7100-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/starfive,jh7100-pinctrl.yaml
+@@ -293,7 +293,7 @@ examples:
+             pinctrl-names = "default";
+         };
+ 
+-        i2c0 {
++        i2c {
+             pinctrl-0 = <&i2c0_pins_default>;
+             pinctrl-names = "default";
+         };
+diff --git a/Documentation/devicetree/bindings/power/supply/bq2415x.yaml b/Documentation/devicetree/bindings/power/supply/bq2415x.yaml
+index f7287ffd4b12..13822346e708 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq2415x.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq2415x.yaml
+@@ -77,7 +77,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/bq24190.yaml b/Documentation/devicetree/bindings/power/supply/bq24190.yaml
+index 001c0ffb408d..d3ebc9de8c0b 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq24190.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq24190.yaml
+@@ -75,7 +75,7 @@ examples:
+       charge-term-current-microamp = <128000>;
+     };
+ 
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/bq24257.yaml b/Documentation/devicetree/bindings/power/supply/bq24257.yaml
+index cc45939d385b..eb064bbf876c 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq24257.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq24257.yaml
+@@ -84,7 +84,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+@@ -104,7 +104,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/bq24735.yaml b/Documentation/devicetree/bindings/power/supply/bq24735.yaml
+index 388ee16f8a1e..af41e7ccd784 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq24735.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq24735.yaml
+@@ -77,7 +77,7 @@ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+ 
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/bq2515x.yaml b/Documentation/devicetree/bindings/power/supply/bq2515x.yaml
+index 1a1b240034ef..845822c87f2a 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq2515x.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq2515x.yaml
+@@ -73,7 +73,7 @@ examples:
+       constant-charge-voltage-max-microvolt = <4000000>;
+     };
+     #include <dt-bindings/gpio/gpio.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/bq25890.yaml b/Documentation/devicetree/bindings/power/supply/bq25890.yaml
+index dae27e93af09..0ad302ab2bcc 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq25890.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq25890.yaml
+@@ -102,7 +102,7 @@ unevaluatedProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/bq25980.yaml b/Documentation/devicetree/bindings/power/supply/bq25980.yaml
+index b687b8bcd705..b70ce8d7f86c 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq25980.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq25980.yaml
+@@ -95,7 +95,7 @@ examples:
+     };
+     #include <dt-bindings/gpio/gpio.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/bq27xxx.yaml b/Documentation/devicetree/bindings/power/supply/bq27xxx.yaml
+index 347d4433adc5..309ea33b5b25 100644
+--- a/Documentation/devicetree/bindings/power/supply/bq27xxx.yaml
++++ b/Documentation/devicetree/bindings/power/supply/bq27xxx.yaml
+@@ -75,15 +75,16 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    bat: battery {
++      compatible = "simple-battery";
++      voltage-min-design-microvolt = <3200000>;
++      energy-full-design-microwatt-hours = <5290000>;
++      charge-full-design-microamp-hours = <1430000>;
++    };
++
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+-      bat: battery {
+-        compatible = "simple-battery";
+-        voltage-min-design-microvolt = <3200000>;
+-        energy-full-design-microwatt-hours = <5290000>;
+-        charge-full-design-microamp-hours = <1430000>;
+-      };
+ 
+       bq27510g3: fuel-gauge@55 {
+         compatible = "ti,bq27510g3";
+diff --git a/Documentation/devicetree/bindings/power/supply/lltc,ltc294x.yaml b/Documentation/devicetree/bindings/power/supply/lltc,ltc294x.yaml
+index 774582cd3a2c..e68a97cb49fe 100644
+--- a/Documentation/devicetree/bindings/power/supply/lltc,ltc294x.yaml
++++ b/Documentation/devicetree/bindings/power/supply/lltc,ltc294x.yaml
+@@ -54,7 +54,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+       battery@64 {
+diff --git a/Documentation/devicetree/bindings/power/supply/ltc4162-l.yaml b/Documentation/devicetree/bindings/power/supply/ltc4162-l.yaml
+index cfffaeef8b09..29d536541152 100644
+--- a/Documentation/devicetree/bindings/power/supply/ltc4162-l.yaml
++++ b/Documentation/devicetree/bindings/power/supply/ltc4162-l.yaml
+@@ -54,7 +54,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+       charger: battery-charger@68 {
+diff --git a/Documentation/devicetree/bindings/power/supply/maxim,max14656.yaml b/Documentation/devicetree/bindings/power/supply/maxim,max14656.yaml
+index 711066b8cdb9..b444b799848e 100644
+--- a/Documentation/devicetree/bindings/power/supply/maxim,max14656.yaml
++++ b/Documentation/devicetree/bindings/power/supply/maxim,max14656.yaml
+@@ -32,7 +32,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/maxim,max17040.yaml b/Documentation/devicetree/bindings/power/supply/maxim,max17040.yaml
+index 3a529326ecbd..2627cd3eed83 100644
+--- a/Documentation/devicetree/bindings/power/supply/maxim,max17040.yaml
++++ b/Documentation/devicetree/bindings/power/supply/maxim,max17040.yaml
+@@ -68,7 +68,7 @@ unevaluatedProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+@@ -82,7 +82,7 @@ examples:
+     };
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/maxim,max17042.yaml b/Documentation/devicetree/bindings/power/supply/maxim,max17042.yaml
+index 64a0edb7bc47..085e2504d0dc 100644
+--- a/Documentation/devicetree/bindings/power/supply/maxim,max17042.yaml
++++ b/Documentation/devicetree/bindings/power/supply/maxim,max17042.yaml
+@@ -69,7 +69,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/richtek,rt9455.yaml b/Documentation/devicetree/bindings/power/supply/richtek,rt9455.yaml
+index 27bebc1757ba..07e38be39f1b 100644
+--- a/Documentation/devicetree/bindings/power/supply/richtek,rt9455.yaml
++++ b/Documentation/devicetree/bindings/power/supply/richtek,rt9455.yaml
+@@ -68,7 +68,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/power/supply/ti,lp8727.yaml b/Documentation/devicetree/bindings/power/supply/ti,lp8727.yaml
+index ce6fbdba8f6b..3a9e4310b433 100644
+--- a/Documentation/devicetree/bindings/power/supply/ti,lp8727.yaml
++++ b/Documentation/devicetree/bindings/power/supply/ti,lp8727.yaml
+@@ -61,7 +61,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/regulator/active-semi,act8865.yaml b/Documentation/devicetree/bindings/regulator/active-semi,act8865.yaml
+index e8bf09faafb8..afe1abc2d727 100644
+--- a/Documentation/devicetree/bindings/regulator/active-semi,act8865.yaml
++++ b/Documentation/devicetree/bindings/regulator/active-semi,act8865.yaml
+@@ -90,7 +90,7 @@ examples:
+   - |
+     #include <dt-bindings/regulator/active-semi,8865-regulator.h>
+ 
+-    i2c1 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/regulator/google,cros-ec-regulator.yaml b/Documentation/devicetree/bindings/regulator/google,cros-ec-regulator.yaml
+index 0921f012c901..0c6032de593a 100644
+--- a/Documentation/devicetree/bindings/regulator/google,cros-ec-regulator.yaml
++++ b/Documentation/devicetree/bindings/regulator/google,cros-ec-regulator.yaml
+@@ -32,7 +32,7 @@ unevaluatedProperties: false
+ 
+ examples:
+   - |
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/regulator/nxp,pf8x00-regulator.yaml b/Documentation/devicetree/bindings/regulator/nxp,pf8x00-regulator.yaml
+index aabf50f5b39e..e094c40a7072 100644
+--- a/Documentation/devicetree/bindings/regulator/nxp,pf8x00-regulator.yaml
++++ b/Documentation/devicetree/bindings/regulator/nxp,pf8x00-regulator.yaml
+@@ -109,7 +109,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c1 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/sound/everest,es8316.yaml b/Documentation/devicetree/bindings/sound/everest,es8316.yaml
+index d9f8f0c7f6bb..9f2b111818ea 100644
+--- a/Documentation/devicetree/bindings/sound/everest,es8316.yaml
++++ b/Documentation/devicetree/bindings/sound/everest,es8316.yaml
+@@ -40,7 +40,7 @@ unevaluatedProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+       es8316: codec@11 {
+diff --git a/Documentation/devicetree/bindings/sound/tas2562.yaml b/Documentation/devicetree/bindings/sound/tas2562.yaml
+index 1085592cefcc..a5bb561bfcfb 100644
+--- a/Documentation/devicetree/bindings/sound/tas2562.yaml
++++ b/Documentation/devicetree/bindings/sound/tas2562.yaml
+@@ -66,7 +66,7 @@ unevaluatedProperties: false
+ examples:
+   - |
+    #include <dt-bindings/gpio/gpio.h>
+-   i2c0 {
++   i2c {
+      #address-cells = <1>;
+      #size-cells = <0>;
+      codec: codec@4c {
+diff --git a/Documentation/devicetree/bindings/sound/tas2770.yaml b/Documentation/devicetree/bindings/sound/tas2770.yaml
+index 982949ba8a4b..26088adb9dc2 100644
+--- a/Documentation/devicetree/bindings/sound/tas2770.yaml
++++ b/Documentation/devicetree/bindings/sound/tas2770.yaml
+@@ -68,7 +68,7 @@ unevaluatedProperties: false
+ examples:
+   - |
+    #include <dt-bindings/gpio/gpio.h>
+-   i2c0 {
++   i2c {
+      #address-cells = <1>;
+      #size-cells = <0>;
+      codec: codec@41 {
+diff --git a/Documentation/devicetree/bindings/sound/tas27xx.yaml b/Documentation/devicetree/bindings/sound/tas27xx.yaml
+index 0957dd435bb4..8cba01316855 100644
+--- a/Documentation/devicetree/bindings/sound/tas27xx.yaml
++++ b/Documentation/devicetree/bindings/sound/tas27xx.yaml
+@@ -61,7 +61,7 @@ unevaluatedProperties: false
+ examples:
+   - |
+    #include <dt-bindings/gpio/gpio.h>
+-   i2c0 {
++   i2c {
+      #address-cells = <1>;
+      #size-cells = <0>;
+      codec: codec@38 {
+diff --git a/Documentation/devicetree/bindings/sound/tas5805m.yaml b/Documentation/devicetree/bindings/sound/tas5805m.yaml
+index 3aade02d8a96..63edf52f061c 100644
+--- a/Documentation/devicetree/bindings/sound/tas5805m.yaml
++++ b/Documentation/devicetree/bindings/sound/tas5805m.yaml
+@@ -39,7 +39,7 @@ properties:
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+         tas5805m: tas5805m@2c {
+diff --git a/Documentation/devicetree/bindings/sound/tlv320adcx140.yaml b/Documentation/devicetree/bindings/sound/tlv320adcx140.yaml
+index 6b8214071115..c16e1760cf85 100644
+--- a/Documentation/devicetree/bindings/sound/tlv320adcx140.yaml
++++ b/Documentation/devicetree/bindings/sound/tlv320adcx140.yaml
+@@ -192,7 +192,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+       codec: codec@4c {
+diff --git a/Documentation/devicetree/bindings/sound/zl38060.yaml b/Documentation/devicetree/bindings/sound/zl38060.yaml
+index 2c5c02e34573..8bd201e573aa 100644
+--- a/Documentation/devicetree/bindings/sound/zl38060.yaml
++++ b/Documentation/devicetree/bindings/sound/zl38060.yaml
+@@ -56,7 +56,7 @@ unevaluatedProperties: false
+ examples:
+   - |
+     #include <dt-bindings/gpio/gpio.h>
+-    spi0 {
++    spi {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/maxim,max33359.yaml b/Documentation/devicetree/bindings/usb/maxim,max33359.yaml
+index 8e513a6af378..3cb631ea7079 100644
+--- a/Documentation/devicetree/bindings/usb/maxim,max33359.yaml
++++ b/Documentation/devicetree/bindings/usb/maxim,max33359.yaml
+@@ -40,7 +40,7 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+     #include <dt-bindings/usb/pd.h>
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/maxim,max3420-udc.yaml b/Documentation/devicetree/bindings/usb/maxim,max3420-udc.yaml
+index 1d893d3d3432..8e0f4ecc010d 100644
+--- a/Documentation/devicetree/bindings/usb/maxim,max3420-udc.yaml
++++ b/Documentation/devicetree/bindings/usb/maxim,max3420-udc.yaml
+@@ -52,7 +52,7 @@ examples:
+   - |
+       #include <dt-bindings/gpio/gpio.h>
+       #include <dt-bindings/interrupt-controller/irq.h>
+-      spi0 {
++      spi {
+             #address-cells = <1>;
+             #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/mediatek,mt6360-tcpc.yaml b/Documentation/devicetree/bindings/usb/mediatek,mt6360-tcpc.yaml
+index c72257c19220..6cad7ae2c70d 100644
+--- a/Documentation/devicetree/bindings/usb/mediatek,mt6360-tcpc.yaml
++++ b/Documentation/devicetree/bindings/usb/mediatek,mt6360-tcpc.yaml
+@@ -43,7 +43,7 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+     #include <dt-bindings/usb/pd.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/richtek,rt1711h.yaml b/Documentation/devicetree/bindings/usb/richtek,rt1711h.yaml
+index 1999f614c89b..dd864b25a148 100644
+--- a/Documentation/devicetree/bindings/usb/richtek,rt1711h.yaml
++++ b/Documentation/devicetree/bindings/usb/richtek,rt1711h.yaml
+@@ -51,7 +51,7 @@ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+     #include <dt-bindings/usb/pd.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/richtek,rt1719.yaml b/Documentation/devicetree/bindings/usb/richtek,rt1719.yaml
+index e3e87e4d3292..8b9bd2cc58e9 100644
+--- a/Documentation/devicetree/bindings/usb/richtek,rt1719.yaml
++++ b/Documentation/devicetree/bindings/usb/richtek,rt1719.yaml
+@@ -48,7 +48,7 @@ required:
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+       #address-cells = <1>;
+       #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/st,stusb160x.yaml b/Documentation/devicetree/bindings/usb/st,stusb160x.yaml
+index ffcd9897ea38..f6840cd5750d 100644
+--- a/Documentation/devicetree/bindings/usb/st,stusb160x.yaml
++++ b/Documentation/devicetree/bindings/usb/st,stusb160x.yaml
+@@ -56,7 +56,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c4 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/ti,hd3ss3220.yaml b/Documentation/devicetree/bindings/usb/ti,hd3ss3220.yaml
+index a1cffb70c621..54c6586cb56d 100644
+--- a/Documentation/devicetree/bindings/usb/ti,hd3ss3220.yaml
++++ b/Documentation/devicetree/bindings/usb/ti,hd3ss3220.yaml
+@@ -51,7 +51,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+diff --git a/Documentation/devicetree/bindings/usb/ti,tps6598x.yaml b/Documentation/devicetree/bindings/usb/ti,tps6598x.yaml
+index 348a715d61f4..7dfa34d11b0e 100644
+--- a/Documentation/devicetree/bindings/usb/ti,tps6598x.yaml
++++ b/Documentation/devicetree/bindings/usb/ti,tps6598x.yaml
+@@ -43,7 +43,7 @@ additionalProperties: true
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/irq.h>
+-    i2c0 {
++    i2c {
+         #address-cells = <1>;
+         #size-cells = <0>;
+ 
+-- 
+2.39.2
+
