@@ -2,108 +2,114 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 824EFC7EE31
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Feb 2023 22:03:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A256C64EC7
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Feb 2023 22:45:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229845AbjB1WDV (ORCPT
+        id S229662AbjB1WpM convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Feb 2023 17:03:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54542 "EHLO
+        Tue, 28 Feb 2023 17:45:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbjB1WDU (ORCPT
+        with ESMTP id S229618AbjB1WpJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Feb 2023 17:03:20 -0500
-X-Greylist: delayed 1676 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 28 Feb 2023 14:03:18 PST
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CBCDAC15F;
-        Tue, 28 Feb 2023 14:03:18 -0800 (PST)
-Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id E622C7A0205;
-        Tue, 28 Feb 2023 22:35:20 +0100 (CET)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Arnd Bergmann <arnd@kernel.org>
-Subject: Re: [RFC 0/6] pcmcia: separate 16-bit support from cardbus
-Date:   Tue, 28 Feb 2023 22:35:12 +0100
-User-Agent: KMail/1.9.10
-Cc:     Dominik Brodowski <linux@dominikbrodowski.net>,
-        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Tue, 28 Feb 2023 17:45:09 -0500
+Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CD6730B02
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2023 14:45:06 -0800 (PST)
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-71-ecQdmCC0MlGQuDzZDzZ6eg-1; Tue, 28 Feb 2023 22:45:02 +0000
+X-MC-Unique: ecQdmCC0MlGQuDzZDzZ6eg-1
+Received: from AcuMS.Aculab.com (10.202.163.6) by AcuMS.aculab.com
+ (10.202.163.6) with Microsoft SMTP Server (TLS) id 15.0.1497.47; Tue, 28 Feb
+ 2023 22:45:00 +0000
+Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
+ id 15.00.1497.047; Tue, 28 Feb 2023 22:45:00 +0000
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Russell King' <linux@armlinux.org.uk>,
+        Arnd Bergmann <arnd@kernel.org>
+CC:     Dominik Brodowski <linux@dominikbrodowski.net>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Florian Fainelli <f.fainelli@gmail.com>,
         H Hartley Sweeten <hsweeten@visionengravers.com>,
-        Ian Abbott <abbotti@mev.co.uk>,
-        Jakub Kicinski <kuba@kernel.org>,
+        "Ian Abbott" <abbotti@mev.co.uk>, Jakub Kicinski <kuba@kernel.org>,
         Kevin Cernekee <cernekee@gmail.com>,
         Lukas Wunner <lukas@wunner.de>,
         Manuel Lauss <manuel.lauss@gmail.com>,
         Oliver Hartkopp <socketcan@hartkopp.net>,
-        Olof Johansson <olof@lixom.net>,
+        "Olof Johansson" <olof@lixom.net>,
         Robert Jarzmik <robert.jarzmik@free.fr>,
-        YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
-        bcm-kernel-feedback-list@broadcom.com,
-        linux-arm-kernel@lists.infradead.org, linux-can@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+        "YOKOTA Hiroshi" <yokota@netlab.is.tsukuba.ac.jp>,
+        "bcm-kernel-feedback-list@broadcom.com" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-can@vger.kernel.org" <linux-can@vger.kernel.org>,
+        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [RFC 0/6] pcmcia: separate 16-bit support from cardbus
+Thread-Topic: [RFC 0/6] pcmcia: separate 16-bit support from cardbus
+Thread-Index: AQHZSuhWwIxyEez/qUesuC2XWPglYq7k9JKQ
+Date:   Tue, 28 Feb 2023 22:45:00 +0000
+Message-ID: <b75b24146c114e948bb2d325a8d27fda@AcuMS.aculab.com>
 References: <20230227133457.431729-1-arnd@kernel.org>
-In-Reply-To: <20230227133457.431729-1-arnd@kernel.org>
-X-KMail-QuotePrefix: > 
+ <Y/0PbJzvrzpvLbcW@shell.armlinux.org.uk>
+In-Reply-To: <Y/0PbJzvrzpvLbcW@shell.armlinux.org.uk>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <202302282235.12508.linux@zary.sk>
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Monday 27 February 2023 14:34:51 Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
+From: Russell King
+> Sent: 27 February 2023 20:16
 > 
-> Based on some recent discussions [1][2][3], I experimented wtih what
-> drivers/pcmcia would look like if we completely removed 16-bit support,
-> which was one of the options that Dominik suggested for winding down
-> pcmcia maintenance.
+> On Mon, Feb 27, 2023 at 02:34:51PM +0100, Arnd Bergmann wrote:
+> > I don't expect this to be a problem normal laptop support, as the last
+> > PC models that predate Cardbus support (e.g. 1997 ThinkPad 380ED) are
+> > all limited to i586MMX CPUs and 80MB of RAM. This is barely enough to
+> > boot Tiny Core Linux but not a regular distro.
 > 
-> The remaining cardbus/yenta support is essentially a PCI hotplug driver
-> with a slightly unusual sysfs interface, and it would still support all
-> 32-bit cardbus hosts and cards, but no longer work with the even older
-> 16-bit cards that require the pcmcia_driver infrastructure.
+> Am I understanding that the argument you're putting forward here is
+> "cardbus started in year X, so from year X we can ignore 16-bit
+> PCMCIA support" ?
 > 
-> I don't expect this to be a problem normal laptop support, as the last
-> PC models that predate Cardbus support (e.g. 1997 ThinkPad 380ED) are
-> all limited to i586MMX CPUs and 80MB of RAM. This is barely enough to
-> boot Tiny Core Linux but not a regular distro.
+> Given that PCMCIA support has been present in x86 hardware at least
+> up to 2010, I don't see how that is any basis for making a decision
+> about 16-bit PCMCIA support.
 > 
-> Support for device drivers is somewhat less clear. Losing support for
-> 16-bit cards in cardbus sockets is obviously a limiting factor for
-> anyone who still has those cards, but there is also a good chance that
-> the only reason to keep the cards around is for using them in pre-cardbus
-> machines that cannot be upgrade to 32-bit devices.
+> Isn't the relevant factor here whether 16-bit PCMCIA cards are still
+> in use on hardware that can run a modern distro? (And yes, x86
+> machines that have 16-bit PCMCIA can still run Debian Stable today.)
 
-I think that most users are using CardBus controllers, either in laptops (from Pentium MMX up to Core 2, e.g. DELL Latitude E6400) or as PCI (or even PCIe) adapters for desktop machines.
-Users generally treat all the cards as PCMCIA and don't know that there are two kinds of them (16-bit PCMCIA and 32-bit CardBus).
+Or, more specifically, are any people using 16-bit PCMCIA cards
+in cardbus-capable sockets with a current kernel.
+They might be using unusual cards that aren't available as
+cardbus - perhaps 56k modems (does anyone still use those?).
 
-> Completely removing the 16-bit PCMCIA support would however break some
-> 20+ year old embedded machines that rely on CompactFlash cards as their
-> mass-storage device (extension), this notably includes early PocketPC
-> models and the reference implementations for OMAP1, StrongARM1100,
-> Alchemy and PA-Semi. All of these are still maintained, though most
-> of the PocketPC machines got removed in the 6.3 merge window and the
-> PA-Semi Electra board is the only one that was introduced after
-> 2003.
-> 
-> The approach that I take in this series is to split drivers/pcmcia
-> into two mutually incompatible parts: the Cardbus support contains
-> all the code that is relevant for post-1997 laptops and gets moved
-> to drivers/pci/hotplug, while the drivers/pcmcia/ subsystem is
-> retained for both the older laptops and the embedded systems but no
-> longer works with the yenta socket host driver. The BCM63xx
-> PCMCIA/Cardbus host driver appears to be unused and conflicts with
-> this series, so it is removed in the process.
+I'm pretty sure I've used sparc systems that had slots that
+would take both pcmcia and cardbus cards.
+Would have been 20 years ago - but they were 64MHz PCI so wouldn't
+have been that slow (I can't remember which cpu it was).
+They ran Solaris, but weren't made by Sun.
 
-This is bad. The drivers remain but could not be used by most machines :(
+	David
 
--- 
-Ondrej Zary
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
+
