@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D4B1C64ED6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2285C7EE2D
 	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:10:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229649AbjCAKK2 (ORCPT
+        id S229740AbjCAKK3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Mar 2023 05:10:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59614 "EHLO
+        Wed, 1 Mar 2023 05:10:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229953AbjCAKKO (ORCPT
+        with ESMTP id S229966AbjCAKKU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2023 05:10:14 -0500
+        Wed, 1 Mar 2023 05:10:20 -0500
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53B7C2A6E2
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:13 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F45D3647D
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677665413; x=1709201413;
+  t=1677665419; x=1709201419;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=SvBC3/Rm8mNRk9jWC2gAp/TMN8i7LBgRRjk3X2Tpf0E=;
-  b=P7jf0m5G+JPRZ1DbjGNq8URV89sl6tP+8PjJlK5sb6cEIwrc6fVecU4R
-   fhhyeoSjioiximbE8BGEWeoBujUIG8PV8TPcX731PckKt/nwyPDgw+Bx/
-   8WQhJ0gzTnTlq+/80yIdhmQs8JoTPmUFZjLqPUZqv3ccCari7UdYJIX6m
-   44TXStrtRnuhKS2T4qs2Soa9wIshq1V1U6KFr0/89Fgg55MddXPeyNPIF
-   HzJMhZb1CFPDpgn5S9ryM4KVV7z+wsRGD4RbpOlyiA+P7bZ++Bw7l1pKD
-   ZbwlJY5hyWq8GNLLnHv1HaOj3zzARWXWOH1zB4H6F066JL9k2uJ/L8n2J
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662795"
+  bh=R8pjKKSkSqAbZuBVupWApr555qBD+BgHrcSC4TCSTx8=;
+  b=nKKOmdWETWShO7sE/190tKH8Qj4nf7DGzjggBV8iI8sTaQrXCxyYPif1
+   0UKvAH8hwLrUTYODcrearGEY1QaXV2jyy7mx2OyKXa58Y0iJvbFYOJ+Ox
+   JNTs4E8uCl3niON6XTpwRq9u9X0lOavR3dpjhDl/yahgj/xqt7zv/DQLS
+   4bJdnTaxwQz7zi+6O03hMbzGITC4xajqJ3DLzZdTri1jUnrKwUwY5nzXS
+   hlkL4qT8oupbr66/cVeiaYeX7KorYWp58QH9EYWyEmVQE/MiElPBKwElx
+   WLMeH3Uyc1I1ok3XrY+6XBkBqWALQd+sVOIvPSlg1dYdk6XCKaQw6rcdD
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662846"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="336662795"
+   d="scan'208";a="336662846"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:05 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589027"
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:18 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589062"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="738589027"
+   d="scan'208";a="738589062"
 Received: from omimran-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.171])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:03 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:17 -0800
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Avraham Stern <avraham.stern@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH v2 04/23] wifi: mac80211: check key taint for beacon protection
-Date:   Wed,  1 Mar 2023 12:09:16 +0200
-Message-Id: <20230301115906.cf2c3fee6f1f.I2f19b3e04e31c99bed3c9dc71935bf513b2cd177@changeid>
+Subject: [PATCH v2 10/23] wifi: mac80211: add support for set_hw_timestamp command
+Date:   Wed,  1 Mar 2023 12:09:22 +0200
+Message-Id: <20230301115906.700ded7badde.Ib2f7c228256ce313a04d3d9f9ecc6c7b9aa602bb@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230301100935.170922-1-gregory.greenman@intel.com>
 References: <20230301100935.170922-1-gregory.greenman@intel.com>
@@ -56,34 +56,75 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-This will likely never happen, but for completeness check
-the key taint flag before using a key for beacon protection.
+Support the set_hw_timestamp callback for enabling and disabling HW
+timestamping if the low level driver supports it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/tx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ include/net/mac80211.h |  6 ++++++
+ net/mac80211/cfg.c     | 17 +++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7699fb410670..1f9294f5baa4 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -5115,6 +5115,12 @@ static int ieee80211_beacon_protect(struct sk_buff *skb,
- 	tx.key = rcu_dereference(link->default_beacon_key);
- 	if (!tx.key)
- 		return 0;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 219fd15893b0..6946c9d95aec 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4230,6 +4230,9 @@ struct ieee80211_prep_tx_info {
+  *	Note that a sta can also be inserted or removed with valid links,
+  *	i.e. passed to @sta_add/@sta_state with sta->valid_links not zero.
+  *	In fact, cannot change from having valid_links and not having them.
++ * @set_hw_timestamp: Enable/disable HW timestamping of TM/FTM frames. This is
++ *	not restored at HW reset by mac80211 so drivers need to take care of
++ *	that.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -4589,6 +4592,9 @@ struct ieee80211_ops {
+ 				struct ieee80211_vif *vif,
+ 				struct ieee80211_sta *sta,
+ 				u16 old_links, u16 new_links);
++	int (*set_hw_timestamp)(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct cfg80211_set_hw_timestamp *hwts);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8eb342300868..7e90f4a81962 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -4904,6 +4904,22 @@ ieee80211_del_link_station(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ }
+ 
++static int ieee80211_set_hw_timestamp(struct wiphy *wiphy,
++				      struct net_device *dev,
++				      struct cfg80211_set_hw_timestamp *hwts)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
 +
-+	if (unlikely(tx.key->flags & KEY_FLAG_TAINTED)) {
-+		tx.key = NULL;
-+		return -EINVAL;
-+	}
++	if (!local->ops->set_hw_timestamp)
++		return -EOPNOTSUPP;
 +
- 	tx.local = local;
- 	tx.sdata = sdata;
- 	__skb_queue_head_init(&tx.skbs);
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
++
++	return local->ops->set_hw_timestamp(&local->hw, &sdata->vif, hwts);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -5014,4 +5030,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_link_station = ieee80211_add_link_station,
+ 	.mod_link_station = ieee80211_mod_link_station,
+ 	.del_link_station = ieee80211_del_link_station,
++	.set_hw_timestamp = ieee80211_set_hw_timestamp,
+ };
 -- 
 2.38.1
 
