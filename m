@@ -2,65 +2,88 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D98DC64EC7
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 09:36:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFCFC7EE2D
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:10:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229703AbjCAJg1 (ORCPT
+        id S229518AbjCAKKZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Mar 2023 04:36:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52858 "EHLO
+        Wed, 1 Mar 2023 05:10:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbjCAJgY (ORCPT
+        with ESMTP id S229956AbjCAKKO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2023 04:36:24 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D7D536FE3
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 01:36:23 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2755461284
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 09:36:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9ED20C433EF;
-        Wed,  1 Mar 2023 09:36:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677663382;
-        bh=Ob1sgIo2WEsYui26uhBFf4kfhpK0M5p479GyQPcI43I=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Qu+iuCmCYY87FPCZ5hpZ/MQvogTyzTzuhd3NxhNX6lu4hNQL4giYU7CMkEpmWedDZ
-         EK+uEhec5DJUsKTJT5POlCBbPpzUrmiZ/XfzTx794VfR7E3RBivL8HdP39hKgeJmjP
-         pgQwm8uxwPOpyF4xm7iijT/+20JEU9oVykbEWBP26ePIePd5o1mBaAWYCplnceNtrA
-         BK5G7QHrudJy+33Ijk1Yg6009PJseQbeebAO6bssgEYXU6uB2eA4CV6iMW15dxtu0H
-         iD8Tz82UKEv7wpy+U5GgIOAhQRnDnk1r0/vDf+C0QcwWsB2LKR+0bwAzUMGzU2OAkT
-         DHkj7b5MHyQ5w==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     gregory.greenman@intel.com
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        Ilan Peer <ilan.peer@intel.com>
-Subject: Re: [PATCH 01/21] wifi: nl80211: Update the documentation of NL80211_SCAN_FLAG_COLOCATED_6GHZ
-References: <20230223100942.767589-1-gregory.greenman@intel.com>
-        <20230223114629.92bcd37b0ba6.I5129fd61841332474693046241586f057b134c3c@changeid>
-Date:   Wed, 01 Mar 2023 11:36:19 +0200
-In-Reply-To: <20230223114629.92bcd37b0ba6.I5129fd61841332474693046241586f057b134c3c@changeid>
-        (gregory greenman's message of "Thu, 23 Feb 2023 12:09:22 +0200")
-Message-ID: <87356o24q4.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Wed, 1 Mar 2023 05:10:14 -0500
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 157E13647D
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1677665414; x=1709201414;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=iOzXP8LomyHd700l2Fo775pz3JgmHbSNQy1oTDWNjUM=;
+  b=QYIX03tvSJ4HrWZygos6Hbd5BRC2zPd/gHGOdON1m5DuCprIeHri7jc2
+   F9k7dPmaqVJms/ueGpSKxbXON26zr5wa1+vEMujrMTKEkFiIOjyQsM8ZG
+   YNa/sQ67gU29JmctDY1TojAmCiJBm+pyK4QYuFIBLAk0OuReA4MR+fmzG
+   o1kH4QRNclquZFwUg6n4XJnXCntvAzUs4ZvtOj7PV1husvvur+22aca6q
+   ju+zx+ztihqNs+TkCtf4nd6p/mY6OwuUnRkXlhgMuQC9Lm7C3CXjtSzhz
+   eRXAKk35MSIVlozbMzSenbBiyS2pLxw154mrVyD4BCN2n7u6GajMQXWRs
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662805"
+X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
+   d="scan'208";a="336662805"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:06 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589032"
+X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
+   d="scan'208";a="738589032"
+Received: from omimran-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.171])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:05 -0800
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH v2 05/23] wifi: mac80211: allow beacon protection HW offload
+Date:   Wed,  1 Mar 2023 12:09:17 +0200
+Message-Id: <20230301115906.b2becd9a22fb.I6c0b9c50c6a481128ba912a11cb7afc92c4b6da7@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230301100935.170922-1-gregory.greenman@intel.com>
+References: <20230301100935.170922-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-gregory.greenman@intel.com writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Ilan Peer <ilan.peer@intel.com>
->
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+In case of beacon protection, check if the key was offloaded
+to the hardware and in that case set control.hw_key so that
+the encryption function will see it and only do the needed
+steps that aren't done in hardware.
 
-Empty commmit logs are not nice.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ net/mac80211/tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1f9294f5baa4..628d60f3db2a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -5121,6 +5121,10 @@ static int ieee80211_beacon_protect(struct sk_buff *skb,
+ 		return -EINVAL;
+ 	}
+ 
++	if (!(tx.key->conf.flags & IEEE80211_KEY_FLAG_SW_MGMT_TX) &&
++	    tx.key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
++		IEEE80211_SKB_CB(skb)->control.hw_key = &tx.key->conf;
++
+ 	tx.local = local;
+ 	tx.sdata = sdata;
+ 	__skb_queue_head_init(&tx.skbs);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.38.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
