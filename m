@@ -2,51 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFCFC7EE2D
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:10:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D017DC64EC7
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:10:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229518AbjCAKKZ (ORCPT
+        id S229617AbjCAKK0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Mar 2023 05:10:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59642 "EHLO
+        Wed, 1 Mar 2023 05:10:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229956AbjCAKKO (ORCPT
+        with ESMTP id S229941AbjCAKKK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2023 05:10:14 -0500
+        Wed, 1 Mar 2023 05:10:10 -0500
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 157E13647D
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:14 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B912FCCD
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677665414; x=1709201414;
+  t=1677665410; x=1709201410;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=iOzXP8LomyHd700l2Fo775pz3JgmHbSNQy1oTDWNjUM=;
-  b=QYIX03tvSJ4HrWZygos6Hbd5BRC2zPd/gHGOdON1m5DuCprIeHri7jc2
-   F9k7dPmaqVJms/ueGpSKxbXON26zr5wa1+vEMujrMTKEkFiIOjyQsM8ZG
-   YNa/sQ67gU29JmctDY1TojAmCiJBm+pyK4QYuFIBLAk0OuReA4MR+fmzG
-   o1kH4QRNclquZFwUg6n4XJnXCntvAzUs4ZvtOj7PV1husvvur+22aca6q
-   ju+zx+ztihqNs+TkCtf4nd6p/mY6OwuUnRkXlhgMuQC9Lm7C3CXjtSzhz
-   eRXAKk35MSIVlozbMzSenbBiyS2pLxw154mrVyD4BCN2n7u6GajMQXWRs
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662805"
+  bh=KlLTnpUOR0dxMq76x71MDS3Pz6dQjIRjjcGVqlH4yJM=;
+  b=GdsMs1z/W/eHvQMC6ig51HsMdpIPYDQd/GVJD5oFvs0GbcAoyta1uXnj
+   L10tUavE9Tclh75HxcSeu/ltYOZU5ziiC/2Jsx8eqX8ZKlONWzwaQBQlK
+   ElMee7SJvZKb0KrUerRkp05Be3ACX1m2BdNFos3Od+at0meHH0vmw9d0w
+   vXygi/DECXsOMmj0neYqsiFE09TVGU3JBbvM63p51uo+pOqT2ioaP2fAp
+   RxsY/q22tuyoqznFbyng/sAJFfvCxkKSJJ2cI2DHUTI7URVX4/Fw4Elsx
+   bvBWjNl+0MRGnb1UJTEKzvS8MP0f56WM29+pH4pmlmOaVGtD542FCJaB9
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662762"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="336662805"
+   d="scan'208";a="336662762"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:06 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589032"
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:09:57 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738588999"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="738589032"
+   d="scan'208";a="738588999"
 Received: from omimran-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.171])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:05 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:09:56 -0800
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH v2 05/23] wifi: mac80211: allow beacon protection HW offload
-Date:   Wed,  1 Mar 2023 12:09:17 +0200
-Message-Id: <20230301115906.b2becd9a22fb.I6c0b9c50c6a481128ba912a11cb7afc92c4b6da7@changeid>
+Subject: [PATCH v2 01/23] wifi: nl80211: Update the documentation of NL80211_SCAN_FLAG_COLOCATED_6GHZ
+Date:   Wed,  1 Mar 2023 12:09:13 +0200
+Message-Id: <20230301115906.487ab04feb39.I5129fd61841332474693046241586f057b134c3c@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230301100935.170922-1-gregory.greenman@intel.com>
 References: <20230301100935.170922-1-gregory.greenman@intel.com>
@@ -56,34 +55,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-In case of beacon protection, check if the key was offloaded
-to the hardware and in that case set control.hw_key so that
-the encryption function will see it and only do the needed
-steps that aren't done in hardware.
+Add a detailed description of NL80211_SCAN_FLAG_COLOCATED_6GHZ
+flag.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/tx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ include/uapi/linux/nl80211.h | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1f9294f5baa4..628d60f3db2a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -5121,6 +5121,10 @@ static int ieee80211_beacon_protect(struct sk_buff *skb,
- 		return -EINVAL;
- 	}
- 
-+	if (!(tx.key->conf.flags & IEEE80211_KEY_FLAG_SW_MGMT_TX) &&
-+	    tx.key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-+		IEEE80211_SKB_CB(skb)->control.hw_key = &tx.key->conf;
-+
- 	tx.local = local;
- 	tx.sdata = sdata;
- 	__skb_queue_head_init(&tx.skbs);
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f14621a954e1..c22eeb18b996 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -6510,8 +6510,14 @@ enum nl80211_timeout_reason {
+  * @NL80211_SCAN_FLAG_FREQ_KHZ: report scan results with
+  *	%NL80211_ATTR_SCAN_FREQ_KHZ. This also means
+  *	%NL80211_ATTR_SCAN_FREQUENCIES will not be included.
+- * @NL80211_SCAN_FLAG_COLOCATED_6GHZ: scan for colocated APs reported by
+- *	2.4/5 GHz APs
++ * @NL80211_SCAN_FLAG_COLOCATED_6GHZ: scan for collocated APs reported by
++ *	2.4/5 GHz APs. When the flag is set, the scan logic will use the
++ *	information from the RNR element found in beacons/probe responses
++ *	received on the 2.4/5 GHz channels to actively scan only the 6GHz
++ *	channels on which APs are expected to be found. Note that when not set,
++ *	the scan logic would scan all 6GHz channels, but since transmission of
++ *	probe requests on non PSC channels is limited, it is highly likely that
++ *	these channels would passively be scanned.
+  */
+ enum nl80211_scan_flags {
+ 	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
 -- 
 2.38.1
 
