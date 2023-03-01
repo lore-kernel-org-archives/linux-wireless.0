@@ -2,76 +2,144 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B22C0C6FA9D
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 14:10:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C04CC7EE3A
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 14:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229963AbjCAOKl (ORCPT
+        id S229825AbjCAOqL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Mar 2023 09:10:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60032 "EHLO
+        Wed, 1 Mar 2023 09:46:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229969AbjCAOKj (ORCPT
+        with ESMTP id S230055AbjCAOqJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2023 09:10:39 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B178A19A1
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 06:10:38 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3D7CFB80EFA
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 14:10:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9A34C433EF;
-        Wed,  1 Mar 2023 14:10:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677679836;
-        bh=95EbawGRJarKXNkGR0ibN/sMlYLi0RfOACr+KSxrnII=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=W5KzF3D4Thu27h5oOem2tHY+4u2WMkFqwWuaspa5STMkDwjNvkrFJ0djCuR3G91y3
-         TbdXkHsV1a17ZY8eF/fKgp9hdyd37eB/3JR9QR0WMmFJjFeydQMgnrieIrDIn0RSTJ
-         R38ss6PXeckNNhQf436b234nf6wp25RfZQ+GUwzJVv2RSj4oUTdR2IIa2eD51F3Cpb
-         /lZ8q5b8fIWMHY14TyM1YMmgzVe7Dk9CerWLq1VDMoIg2ZpoMuxj6h0TndesVIjwVK
-         K0V8Co7WMOcZZCrVmhMZp8DL7RTDUXffYo2JFpkzrwCbg7AmLFCn83VDlUSCmkYNTl
-         jo/C08qy0Mt1Q==
-Content-Type: text/plain; charset="utf-8"
+        Wed, 1 Mar 2023 09:46:09 -0500
+Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD200457C5
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 06:45:39 -0800 (PST)
+Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-53916ab0c6bso367774427b3.7
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Mar 2023 06:45:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=c5fRwh/q88qnR4rLODR5aN06oeaTsbFFIXqxWtKoAdA=;
+        b=Skkgc1pJVdMg4lM3S/QvC70xPPr5jlTmvz4EOn+Pc6rF3VpQhVc4iGugen9Q06wzaW
+         YU5vBuwqleOCYoFdAyxRZHQORMrJn2alOT/fjacfQLA291X6YhVykyxziMNBllMvYuaY
+         rKWSJgX2G7dhiWsfoI33lKF5ZUW3nVjhcxCb4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=c5fRwh/q88qnR4rLODR5aN06oeaTsbFFIXqxWtKoAdA=;
+        b=HEZSt7fTtgl24oYH8x8J9rMNN8CURlsDEcD/OAb8JRnPFDiyTSp15KQ2XKnHZ0Iovl
+         xJ3OJ9QIxi/yzaCc730XDDVMoKIdT7lEEG9uUyiS51rfnJWf01ir5OIFurTA6Uf+z+ni
+         ZwFnWHLzrOa6QTwYEQ/vk3Yqtm0JsU6SUDoJOXZlKE5mXRdZUZaoxbCt+CW2s6Oi7lqn
+         MlODY8Mp4VZ0QpeN5rFMqYkc5hcYdddmxDWerxhNWCJ8nJTi00a+EpH48hXPI9xf5UMp
+         2q9DFM59n5BJuLygfyoZtVirDMk69jb+SgN5ZxBVhcQTPUR2BRimBzeti8FWWbcPSxdD
+         mO6g==
+X-Gm-Message-State: AO0yUKWk3vfAdGqUNhLrbYEFwra7CB8HAC1yEVO818mtP2TfK0iDuv3R
+        DGHDOqlpn2nw1mQFjZc0CnUTGK3vS+vR3vBqsqr7jw==
+X-Google-Smtp-Source: AK7set/9RgMm3XRu83JsW4Wbbsi1f43oJuRNJ4GJnMD9Ynj6+QG8QTN/H949zZF90kB3oY5EYLAgq26FWAoCc+/6F5A=
+X-Received: by 2002:a81:ae0e:0:b0:53c:7c33:9d25 with SMTP id
+ m14-20020a81ae0e000000b0053c7c339d25mr726867ywh.8.1677681938671; Wed, 01 Mar
+ 2023 06:45:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: ath11k: Add tx ack signal support for mgmt packets
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20221219053844.4084486-1-quic_mkenna@quicinc.com>
-References: <20221219053844.4084486-1-quic_mkenna@quicinc.com>
-To:     Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Abinaya Kalaiselvan <quic_akalaise@quicinc.com>,
-        Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <167767983108.16862.568764684446801499.kvalo@kernel.org>
-Date:   Wed,  1 Mar 2023 14:10:34 +0000 (UTC)
+References: <20230228215433.3944508-1-robh@kernel.org>
+In-Reply-To: <20230228215433.3944508-1-robh@kernel.org>
+From:   Simon Glass <sjg@chromium.org>
+Date:   Wed, 1 Mar 2023 07:45:19 -0700
+Message-ID: <CAPnjgZ1=UPMf72JjejpdSvss5+d1tnMv=efYUgJcH6T09YAKTw@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: Fix SPI and I2C bus node names in examples
+To:     Rob Herring <robh@kernel.org>
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        devicetree@vger.kernel.org, Miguel Ojeda <ojeda@kernel.org>,
+        Benson Leung <bleung@chromium.org>,
+        Guenter Roeck <groeck@chromium.org>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Andrzej Hajda <andrzej.hajda@intel.com>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Robert Foss <rfoss@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Sam Ravnborg <sam@ravnborg.org>,
+        MyungJoo Ham <myungjoo.ham@samsung.com>,
+        Chanwoo Choi <cw00.choi@samsung.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Pavel Machek <pavel@ucw.cz>, Lee Jones <lee@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Mark Brown <broonie@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
+        netdev@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-pm@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Maharaja Kennadyrajan <quic_mkenna@quicinc.com> wrote:
+On Tue, 28 Feb 2023 at 14:54, Rob Herring <robh@kernel.org> wrote:
+>
+> SPI and I2C bus node names are expected to be "spi" or "i2c",
+> respectively, with nothing else, a unit-address, or a '-N' index. A
+> pattern of 'spi0' or 'i2c0' or similar has crept in. Fix all these
+> cases. Mostly scripted with the following commands:
+>
+> git grep -l '\si2c[0-9] {' Documentation/devicetree/ | xargs sed -i -e 's/i2c[0-9] {/i2c {/'
+> git grep -l '\sspi[0-9] {' Documentation/devicetree/ | xargs sed -i -e 's/spi[0-9] {/spi {/'
+>
+> With this, a few errors in examples were exposed and fixed.
+>
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+> Cc: Miguel Ojeda <ojeda@kernel.org>
+> Cc: Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+> Cc: Benson Leung <bleung@chromium.org>
+> Cc: Guenter Roeck <groeck@chromium.org>
+> Cc: Stephen Boyd <sboyd@kernel.org>
+> Cc: Andrzej Hajda <andrzej.hajda@intel.com>
+> Cc: Neil Armstrong <neil.armstrong@linaro.org>
+> Cc: Robert Foss <rfoss@kernel.org>
+> Cc: Thierry Reding <thierry.reding@gmail.com>
+> Cc: Sam Ravnborg <sam@ravnborg.org>
+> Cc: MyungJoo Ham <myungjoo.ham@samsung.com>
+> Cc: Chanwoo Choi <cw00.choi@samsung.com>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: Bartosz Golaszewski <brgl@bgdev.pl>
+> Cc: Pavel Machek <pavel@ucw.cz>
+> Cc: Lee Jones <lee@kernel.org>
+> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Eric Dumazet <edumazet@google.com>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Paolo Abeni <pabeni@redhat.com>
+> Cc: Wolfgang Grandegger <wg@grandegger.com>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: Sebastian Reichel <sre@kernel.org>
+> Cc: Mark Brown <broonie@kernel.org>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: linux-clk@vger.kernel.org
+> Cc: dri-devel@lists.freedesktop.org
+> Cc: linux-gpio@vger.kernel.org
+> Cc: linux-i2c@vger.kernel.org
+> Cc: linux-leds@vger.kernel.org
+> Cc: linux-media@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Cc: linux-can@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: linux-pm@vger.kernel.org
+> Cc: alsa-devel@alsa-project.org
+> Cc: linux-usb@vger.kernel.org
+> ---
 
-> Add support to notify tx ack signal values for management
-> packets to userspace through nl80211 interface.
-> 
-> Advertise NL80211_EXT_FEATURE_ACK_SIGNAL_SUPPORT flag
-> to enable this feature and it will be used for data
-> packets as well.
-> 
-> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Abinaya Kalaiselvan <quic_akalaise@quicinc.com>
-> Signed-off-by: Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-
-Patch applied to ath-next branch of ath.git, thanks.
-
-01c6c9fccbd5 wifi: ath11k: Add tx ack signal support for management packets
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20221219053844.4084486-1-quic_mkenna@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Reviewed-by: Simon Glass <sjg@chromium.org>
