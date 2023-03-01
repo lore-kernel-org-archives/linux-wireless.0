@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13F38C7EE37
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:10:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C81F1C7EE31
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:10:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229953AbjCAKKe (ORCPT
+        id S229825AbjCAKKb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Mar 2023 05:10:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59582 "EHLO
+        Wed, 1 Mar 2023 05:10:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229952AbjCAKKL (ORCPT
+        with ESMTP id S229964AbjCAKKS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2023 05:10:11 -0500
+        Wed, 1 Mar 2023 05:10:18 -0500
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10F2A2A6E2
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B8EC3647D
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677665411; x=1709201411;
+  t=1677665417; x=1709201417;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=LZuXV+m3i2eMmrtC1PDbIBCPg61VsyqbOHwpglQ6DN0=;
-  b=Hu35B24/d8AIHcKZFgYqjxLn2tOta0VLS8eUx4BO6xaLrEhi1gp6yJzm
-   ylWqT13PP2jnGqyKZroURTHY6Mwe+bXrDkHd7e6jrO4Jb+Zn9hRxUT3KO
-   gCnJ3IptvpUwSU+uGKWBbqEunse178hfxHNvSv01xXmUzTmd7w1MTSW75
-   ezfMk7sawFoYUaIv989iuX36okLoq22GHNIJWqWmz5AqwggZurBYQFCcC
-   z3aZ9+HknWs7Fu/hHVU0OFiZahrNMpoCXp/YX96KYICqZXqkEDy/lKXB2
-   KrW1K7OTR/T5YCu1P0Cj2XXr/WQfEEgvbepbDdyJZLWGv3gdilCcAuUdc
+  bh=iq/wJaw8sQ5ZOg+yqg8pftXHH2ZFUCrUeVPOD67TcfI=;
+  b=oCv39y7a7a0DIUYNMPFVQ5XwK8b+AcJifbGNcFtqQ9zHmkHnq9uqkjRB
+   u0iT5PiaHuohR4tdD5E35TI8PFGH5oV+eAMtjkB/77YDYDWcr+ptYzVCy
+   U9xkKzSVFm9iROtqmcPIq/SsS5Q4RRjxBvVzbzDUS41xwGsTEIP5jqgo+
+   tvIhYu6xFRhgxZmB98qKuzikFkuTYSdKgyY6rMSyzfWlA8Bp9Gjyv8bfF
+   1vfygn6cbblH4JkI87m2GB7cNgO5t0VQyFCe6zMd/afmQVrHqjHCD7l+1
+   njKilV79WH5nYSqyDg2LacvJxRniqXZ4vQGAho//VV6TXb5C1ebMLb21s
    g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662777"
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662842"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="336662777"
+   d="scan'208";a="336662842"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:02 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589013"
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:16 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589056"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="738589013"
+   d="scan'208";a="738589056"
 Received: from omimran-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.171])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:01 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:15 -0800
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Avraham Stern <avraham.stern@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH v2 03/23] wifi: mac80211: clear all bits that relate rtap fields on skb
-Date:   Wed,  1 Mar 2023 12:09:15 +0200
-Message-Id: <20230301115906.74d3efe19eae.Ie17a35864d2e120f9858516a2e3d3047d83cf805@changeid>
+Subject: [PATCH v2 09/23] wifi: nl80211/cfg80211: add command to enable/disable HW timestamping
+Date:   Wed,  1 Mar 2023 12:09:21 +0200
+Message-Id: <20230301115906.05678d7b1c17.Iccc08869ea8156f1c71a3111a47f86dd56234bd0@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230301100935.170922-1-gregory.greenman@intel.com>
 References: <20230301100935.170922-1-gregory.greenman@intel.com>
@@ -56,55 +56,283 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-Since we remove radiotap from skb data, clear all RX_FLAG_X related
-info that indicate info on the skb data.
+Add a command to enable and disable HW timestamping of TM and FTM
+frames. HW timestamping can be enabled for a specific mac address
+or for all addresses.
+The low level driver will indicate for how many peers HW timestamping
+can be enabled concurrently, and this information will be passed to
+userspace.
 
-Also we need to do it only once so remove the clear from cooked_monitor.
-
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/rx.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h       | 27 +++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h | 21 ++++++++++++++++++++
+ net/wireless/nl80211.c       | 38 ++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 17 ++++++++++++++++
+ net/wireless/trace.h         | 25 ++++++++++++++++++++++++
+ 5 files changed, 128 insertions(+)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index f7fdfe710951..f131df282d0b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -43,6 +43,7 @@ static struct sk_buff *ieee80211_clean_skb(struct sk_buff *skb,
- 					   unsigned int present_fcs_len,
- 					   unsigned int rtap_space)
- {
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr;
- 	unsigned int hdrlen;
- 	__le16 fc;
-@@ -51,6 +52,14 @@ static struct sk_buff *ieee80211_clean_skb(struct sk_buff *skb,
- 		__pskb_trim(skb, skb->len - present_fcs_len);
- 	pskb_pull(skb, rtap_space);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 03b911abd772..f0da61c6ec4b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -827,6 +827,18 @@ struct cfg80211_fils_aad {
+ 	const u8 *anonce;
+ };
  
-+	/* After pulling radiotap header, clear all flags that indicate
-+	 * info on skb->data.
-+	 */
-+	status->flag &= ~(RX_FLAG_RADIOTAP_VENDOR_DATA |
-+			  RX_FLAG_RADIOTAP_LSIG |
-+			  RX_FLAG_RADIOTAP_HE_MU |
-+			  RX_FLAG_RADIOTAP_HE);
++/**
++ * struct cfg80211_set_hw_timestamp - enable/disable HW timestamping
++ * @macaddr: peer MAC address. NULL to enable/disable HW timestamping for all
++ *	addresses.
++ * @enable: if set, enable HW timestamping for the specified MAC address.
++ *	Otherwise disable HW timestamping for the specified MAC address.
++ */
++struct cfg80211_set_hw_timestamp {
++	const u8 *macaddr;
++	bool enable;
++};
 +
- 	hdr = (void *)skb->data;
- 	fc = hdr->frame_control;
+ /**
+  * cfg80211_get_chandef_type - return old channel type from chandef
+  * @chandef: the channel definition
+@@ -4330,6 +4342,8 @@ struct mgmt_frame_regs {
+  * @add_link_station: Add a link to a station.
+  * @mod_link_station: Modify a link of a station.
+  * @del_link_station: Remove a link of a station.
++ *
++ * @set_hw_timestamp: Enable/disable HW timestamping of TM/FTM frames.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -4683,6 +4697,8 @@ struct cfg80211_ops {
+ 				    struct link_station_parameters *params);
+ 	int	(*del_link_station)(struct wiphy *wiphy, struct net_device *dev,
+ 				    struct link_station_del_parameters *params);
++	int	(*set_hw_timestamp)(struct wiphy *wiphy, struct net_device *dev,
++				    struct cfg80211_set_hw_timestamp *hwts);
+ };
  
-@@ -3916,8 +3925,6 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
- 	if (!local->cooked_mntrs)
- 		goto out_free_skb;
+ /*
+@@ -5139,6 +5155,8 @@ struct wiphy_iftype_akm_suites {
+ 	int n_akm_suites;
+ };
  
--	/* vendor data is long removed here */
--	status->flag &= ~RX_FLAG_RADIOTAP_VENDOR_DATA;
- 	/* room for the radiotap header based on driver features */
- 	needed_headroom = ieee80211_rx_radiotap_hdrlen(local, status, skb);
++#define CFG80211_HW_TIMESTAMP_ALL_PEERS	0xffff
++
+ /**
+  * struct wiphy - wireless hardware description
+  * @mtx: mutex for the data (structures) of this device
+@@ -5348,6 +5366,13 @@ struct wiphy_iftype_akm_suites {
+  *	NL80211_MAX_NR_AKM_SUITES in order to avoid compatibility issues with
+  *	legacy userspace and maximum allowed value is
+  *	CFG80211_MAX_NUM_AKM_SUITES.
++ *
++ * @hw_timestamp_max_peers: maximum number of peers that the driver supports
++ *	enabling HW timestamping for concurrently. Setting this field to a
++ *	non-zero value indicates that the driver supports HW timestamping.
++ *	A value of %CFG80211_HW_TIMESTAMP_ALL_PEERS indicates the driver
++ *	supports enabling HW timestamping for all peers (i.e. no need to
++ *	specify a mac address).
+  */
+ struct wiphy {
+ 	struct mutex mtx;
+@@ -5496,6 +5521,8 @@ struct wiphy {
+ 	u8 ema_max_profile_periodicity;
+ 	u16 max_num_akm_suites;
  
++	u16 hw_timestamp_max_peers;
++
+ 	char priv[] __aligned(NETDEV_ALIGN);
+ };
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c22eeb18b996..8655aa324ce7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1299,6 +1299,16 @@
+  * @NL80211_CMD_MODIFY_LINK_STA: Modify a link of an MLD station
+  * @NL80211_CMD_REMOVE_LINK_STA: Remove a link of an MLD station
+  *
++ * @NL80211_CMD_SET_HW_TIMESTAMP: Enable/disable HW timestamping of Timing
++ *	measurement and Fine timing measurement frames. If %NL80211_ATTR_MAC
++ *	is included, enable/disable HW timestamping only for frames to/from the
++ *	specified MAC address. Otherwise enable/disable HW timestamping for
++ *	all TM/FTM frames (including ones that were enabled with specific MAC
++ *	address). If %NL80211_ATTR_HW_TIMESTAMP_ENABLED is not included, disable
++ *	HW timestamping.
++ *	The number of peers that HW timestamping can be enabled for concurrently
++ *	is indicated by %NL80211_ATTR_MAX_HW_TIMESTAMP_PEERS.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1550,6 +1560,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_MODIFY_LINK_STA,
+ 	NL80211_CMD_REMOVE_LINK_STA,
+ 
++	NL80211_CMD_SET_HW_TIMESTAMP,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -2775,6 +2787,12 @@ enum nl80211_commands {
+  *	indicates that the sub-channel is punctured. Higher 16 bits are
+  *	reserved.
+  *
++ * @NL80211_ATTR_MAX_HW_TIMESTAMP_PEERS: Maximum number of peers that HW
++ *	timestamping can be enabled for concurrently (u16), a wiphy attribute.
++ *	A value of 0xffff indicates setting for all peers (i.e. not specifying
++ *	an address with %NL80211_CMD_SET_HW_TIMESTAMP) is supported.
++ * @NL80211_ATTR_HW_TIMESTAMP_ENABLED: Indicates whether HW timestamping should
++ *	be enabled or not (flag attribute).
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3306,6 +3324,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PUNCT_BITMAP,
+ 
++	NL80211_ATTR_MAX_HW_TIMESTAMP_PEERS,
++	NL80211_ATTR_HW_TIMESTAMP_ENABLED,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 112b4bb009c8..f687df8e20f9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -806,6 +806,9 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_MLO_SUPPORT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_MAX_NUM_AKM_SUITES] = { .type = NLA_REJECT },
+ 	[NL80211_ATTR_PUNCT_BITMAP] = NLA_POLICY_RANGE(NLA_U8, 0, 0xffff),
++
++	[NL80211_ATTR_MAX_HW_TIMESTAMP_PEERS] = { .type = NLA_U16 },
++	[NL80211_ATTR_HW_TIMESTAMP_ENABLED] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2964,6 +2967,11 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_MLO)
+ 			nla_put_flag(msg, NL80211_ATTR_MLO_SUPPORT);
+ 
++		if (rdev->wiphy.hw_timestamp_max_peers &&
++		    nla_put_u16(msg, NL80211_ATTR_MAX_HW_TIMESTAMP_PEERS,
++				rdev->wiphy.hw_timestamp_max_peers))
++			goto nla_put_failure;
++
+ 		/* done */
+ 		state->split_start = 0;
+ 		break;
+@@ -16162,6 +16170,30 @@ nl80211_remove_link_station(struct sk_buff *skb, struct genl_info *info)
+ 	return ret;
+ }
+ 
++static int nl80211_set_hw_timestamp(struct sk_buff *skb,
++				    struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct cfg80211_set_hw_timestamp hwts = {};
++
++	if (!rdev->wiphy.hw_timestamp_max_peers)
++		return -EOPNOTSUPP;
++
++	if (rdev->wiphy.hw_timestamp_max_peers !=
++	    CFG80211_HW_TIMESTAMP_ALL_PEERS &&
++	    !info->attrs[NL80211_ATTR_MAC])
++		return -EOPNOTSUPP;
++
++	if (info->attrs[NL80211_ATTR_MAC])
++		hwts.macaddr = nla_data(info->attrs[NL80211_ATTR_MAC]);
++
++	hwts.enable =
++		nla_get_flag(info->attrs[NL80211_ATTR_HW_TIMESTAMP_ENABLED]);
++
++	return rdev_set_hw_timestamp(rdev, dev, &hwts);
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -17336,6 +17368,12 @@ static const struct genl_small_ops nl80211_small_ops[] = {
+ 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
+ 					 NL80211_FLAG_MLO_VALID_LINK_ID),
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_HW_TIMESTAMP,
++		.doit = nl80211_set_hw_timestamp,
++		.flags = GENL_UNS_ADMIN_PERM,
++		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV),
++	},
+ };
+ 
+ static struct genl_family nl80211_fam __ro_after_init = {
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 13b209a8db28..2e497cf26ef2 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1494,4 +1494,21 @@ rdev_del_link_station(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+ 
++static inline int
++rdev_set_hw_timestamp(struct cfg80211_registered_device *rdev,
++		      struct net_device *dev,
++		      struct cfg80211_set_hw_timestamp *hwts)
++{
++	struct wiphy *wiphy = &rdev->wiphy;
++	int ret;
++
++	if (!rdev->ops->set_hw_timestamp)
++		return -EOPNOTSUPP;
++
++	trace_rdev_set_hw_timestamp(wiphy, dev, hwts);
++	ret = rdev->ops->set_hw_timestamp(wiphy, dev, hwts);
++	trace_rdev_return_int(wiphy, ret);
++
++	return ret;
++}
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index ca7474eec723..f3fcfc4fcce5 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -3918,6 +3918,31 @@ TRACE_EVENT(rdev_del_link_station,
+ 		  __entry->link_id)
+ );
+ 
++TRACE_EVENT(rdev_set_hw_timestamp,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 struct cfg80211_set_hw_timestamp *hwts),
++
++	TP_ARGS(wiphy, netdev, hwts),
++
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		MAC_ENTRY(macaddr)
++		__field(bool, enable)
++	),
++
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		MAC_ASSIGN(macaddr, hwts->macaddr);
++		__entry->enable = hwts->enable;
++	),
++
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", mac %pM, enable: %u",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->macaddr,
++		  __entry->enable)
++);
++
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
 -- 
 2.38.1
 
