@@ -2,51 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B1AC64ED6
-	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:11:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 115E8C7EE32
+	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229852AbjCAKLA (ORCPT
+        id S229966AbjCAKLE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Mar 2023 05:11:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60236 "EHLO
+        Wed, 1 Mar 2023 05:11:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230013AbjCAKKk (ORCPT
+        with ESMTP id S230099AbjCAKKx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2023 05:10:40 -0500
+        Wed, 1 Mar 2023 05:10:53 -0500
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66AD03BD82
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:31 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22EDB3B0F0
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677665431; x=1709201431;
+  t=1677665445; x=1709201445;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=NiDJIkmFGjTheilq3ovcDExJFtjt8VzuNSCGqI6/VEs=;
-  b=a1+xIWNcTQSa9I6kBEqZ5So+Id6hC3RICsocZscZuCQY8cm5Q3IuYRPo
-   FLn9Bke/5Ix0+3qPJpOcUsKYKyR+BbZDzWVF96JbTvVYWqI1OTQE/EXPp
-   y1s/llheu1zBqgeMSUB+RSHBpEzrhCBnZ0JlvaI4aRmhy7B73XfFCV4Q2
-   07p/403LPjbO1q9Zc0FibmM/ku7/BKrbD/Kjo96ZY+ynE4umi10wR0cEk
-   Jv7Kb4ZBIPu9VCeDYVGBXw9fzF0HocO4W11q0EqTlbDPib7CJtNb5mvyU
-   BDB/pDIKyWuz8ZeRWD4rZ3mMvd/sDymp6aPiQ1jZfsvpgMgBlELcZy+4K
+  bh=+hXY5qTtZq3b2PfxHMP+0NvIkKw8kRfAzTzrnagwivw=;
+  b=W4oqmMG8IQp1FkP430qmwSrOXMNaF2kXCi+/85fwT3kaP+FLY2GYCkeM
+   4x408j/FzR+090gpOYxZDvMg0nLrx7NeY/gGnSbugZh6dfzxkE31/V8kp
+   +S8ns24JbtcIbMPuqE3eYAqGvqOr64ligwSILlTGH3IfSUvjKb3pBAZ4d
+   D6u6ETPQVlJAKBA3jrsjNOyQAH79RI4QV+K+5yj/9nEQpcrPEDaGaqYYg
+   JCsFv7FsQqXWWKzJo0gGuRMTD0DjRbzKjXeejOuN9cBcf1oFWUSpnGaaD
+   D2FkbuAfs5SKsQThbF9jTAz6cRyVp6XjgV7rpXXOw6zdrJc0YAUOhTLMC
    Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662880"
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662921"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="336662880"
+   d="scan'208";a="336662921"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:30 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589111"
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:42 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589201"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="738589111"
+   d="scan'208";a="738589201"
 Received: from omimran-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.171])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:28 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:40 -0800
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH v2 11/23] wifi: cfg80211/mac80211: report link ID on control port RX
-Date:   Wed,  1 Mar 2023 12:09:23 +0200
-Message-Id: <20230301115906.fe06dfc3791b.Iddcab94789cafe336417be406072ce8a6312fc2d@changeid>
+Subject: [PATCH v2 16/23] wifi: mac80211_hwsim: Indicate support for NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT
+Date:   Wed,  1 Mar 2023 12:09:28 +0200
+Message-Id: <20230301115906.67d31166ffd1.I908b68c5127525da3388c0d61a3d5d221ba451f6@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230301100935.170922-1-gregory.greenman@intel.com>
 References: <20230301100935.170922-1-gregory.greenman@intel.com>
@@ -56,135 +55,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-For control port RX, report the link ID for MLO.
+mac80211_hwsim always uses the probe request coming from mac80211,
+which has support for minimal probe request content.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- include/net/cfg80211.h |  5 +++--
- net/mac80211/rx.c      |  2 +-
- net/wireless/nl80211.c | 15 ++++++++++-----
- net/wireless/trace.h   | 11 +++++++----
- 4 files changed, 21 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f0da61c6ec4b..7cebba1c4135 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -8126,6 +8126,7 @@ void cfg80211_control_port_tx_status(struct wireless_dev *wdev, u64 cookie,
-  *	responsible for any cleanup.  The caller must also ensure that
-  *	skb->protocol is set appropriately.
-  * @unencrypted: Whether the frame was received unencrypted
-+ * @link_id: the link the frame was received on, -1 if not applicable or unknown
-  *
-  * This function is used to inform userspace about a received control port
-  * frame.  It should only be used if userspace indicated it wants to receive
-@@ -8136,8 +8137,8 @@ void cfg80211_control_port_tx_status(struct wireless_dev *wdev, u64 cookie,
-  *
-  * Return: %true if the frame was passed to userspace
-  */
--bool cfg80211_rx_control_port(struct net_device *dev,
--			      struct sk_buff *skb, bool unencrypted);
-+bool cfg80211_rx_control_port(struct net_device *dev, struct sk_buff *skb,
-+			      bool unencrypted, int link_id);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4cc4eaf80b14..e9b9340a97dc 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -4446,6 +4446,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	wiphy_ext_feature_set(hw->wiphy,
+ 			      NL80211_EXT_FEATURE_BEACON_RATE_LEGACY);
  
- /**
-  * cfg80211_cqm_rssi_notify - connection quality monitoring rssi event
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index f131df282d0b..c7e44bc8ed5a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2591,7 +2591,7 @@ static void ieee80211_deliver_skb_to_local_stack(struct sk_buff *skb,
- 		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 		bool noencrypt = !(status->flag & RX_FLAG_DECRYPTED);
++	wiphy_ext_feature_set(hw->wiphy,
++			      NL80211_EXT_FEATURE_SCAN_MIN_PREQ_CONTENT);
++
+ 	hw->wiphy->interface_modes = param->iftypes;
  
--		cfg80211_rx_control_port(dev, skb, noencrypt);
-+		cfg80211_rx_control_port(dev, skb, noencrypt, rx->link_id);
- 		dev_kfree_skb(skb);
- 	} else {
- 		struct ethhdr *ehdr = (void *)skb_mac_header(skb);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f687df8e20f9..22dbc30096b2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -18755,7 +18755,9 @@ EXPORT_SYMBOL(cfg80211_mgmt_tx_status_ext);
- 
- static int __nl80211_rx_control_port(struct net_device *dev,
- 				     struct sk_buff *skb,
--				     bool unencrypted, gfp_t gfp)
-+				     bool unencrypted,
-+				     int link_id,
-+				     gfp_t gfp)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-@@ -18787,6 +18789,8 @@ static int __nl80211_rx_control_port(struct net_device *dev,
- 			      NL80211_ATTR_PAD) ||
- 	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
- 	    nla_put_u16(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE, proto) ||
-+	    (link_id >= 0 &&
-+	     nla_put_u8(msg, NL80211_ATTR_MLO_LINK_ID, link_id)) ||
- 	    (unencrypted && nla_put_flag(msg,
- 					 NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT)))
- 		goto nla_put_failure;
-@@ -18805,13 +18809,14 @@ static int __nl80211_rx_control_port(struct net_device *dev,
- 	return -ENOBUFS;
- }
- 
--bool cfg80211_rx_control_port(struct net_device *dev,
--			      struct sk_buff *skb, bool unencrypted)
-+bool cfg80211_rx_control_port(struct net_device *dev, struct sk_buff *skb,
-+			      bool unencrypted, int link_id)
- {
- 	int ret;
- 
--	trace_cfg80211_rx_control_port(dev, skb, unencrypted);
--	ret = __nl80211_rx_control_port(dev, skb, unencrypted, GFP_ATOMIC);
-+	trace_cfg80211_rx_control_port(dev, skb, unencrypted, link_id);
-+	ret = __nl80211_rx_control_port(dev, skb, unencrypted, link_id,
-+					GFP_ATOMIC);
- 	trace_cfg80211_return_bool(ret == 0);
- 	return ret == 0;
- }
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index f3fcfc4fcce5..716a1fa70069 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3165,14 +3165,15 @@ TRACE_EVENT(cfg80211_control_port_tx_status,
- 
- TRACE_EVENT(cfg80211_rx_control_port,
- 	TP_PROTO(struct net_device *netdev, struct sk_buff *skb,
--		 bool unencrypted),
--	TP_ARGS(netdev, skb, unencrypted),
-+		 bool unencrypted, int link_id),
-+	TP_ARGS(netdev, skb, unencrypted, link_id),
- 	TP_STRUCT__entry(
- 		NETDEV_ENTRY
- 		__field(int, len)
- 		MAC_ENTRY(from)
- 		__field(u16, proto)
- 		__field(bool, unencrypted)
-+		__field(int, link_id)
- 	),
- 	TP_fast_assign(
- 		NETDEV_ASSIGN;
-@@ -3180,10 +3181,12 @@ TRACE_EVENT(cfg80211_rx_control_port,
- 		MAC_ASSIGN(from, eth_hdr(skb)->h_source);
- 		__entry->proto = be16_to_cpu(skb->protocol);
- 		__entry->unencrypted = unencrypted;
-+		__entry->link_id = link_id;
- 	),
--	TP_printk(NETDEV_PR_FMT ", len=%d, %pM, proto: 0x%x, unencrypted: %s",
-+	TP_printk(NETDEV_PR_FMT ", len=%d, %pM, proto: 0x%x, unencrypted: %s, link: %d",
- 		  NETDEV_PR_ARG, __entry->len, __entry->from,
--		  __entry->proto, BOOL_TO_STR(__entry->unencrypted))
-+		  __entry->proto, BOOL_TO_STR(__entry->unencrypted),
-+		  __entry->link_id)
- );
- 
- TRACE_EVENT(cfg80211_cqm_rssi_notify,
+ 	/* ask mac80211 to reserve space for magic */
 -- 
 2.38.1
 
