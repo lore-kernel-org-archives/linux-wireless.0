@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2285C7EE2D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F2FC7EE32
 	for <linux-wireless@archiver.kernel.org>; Wed,  1 Mar 2023 10:10:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229740AbjCAKK3 (ORCPT
+        id S229881AbjCAKKc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Mar 2023 05:10:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59692 "EHLO
+        Wed, 1 Mar 2023 05:10:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229966AbjCAKKU (ORCPT
+        with ESMTP id S229958AbjCAKKO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Mar 2023 05:10:20 -0500
+        Wed, 1 Mar 2023 05:10:14 -0500
 Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F45D3647D
-        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:19 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1848F36FE3
+        for <linux-wireless@vger.kernel.org>; Wed,  1 Mar 2023 02:10:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677665419; x=1709201419;
+  t=1677665414; x=1709201414;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=R8pjKKSkSqAbZuBVupWApr555qBD+BgHrcSC4TCSTx8=;
-  b=nKKOmdWETWShO7sE/190tKH8Qj4nf7DGzjggBV8iI8sTaQrXCxyYPif1
-   0UKvAH8hwLrUTYODcrearGEY1QaXV2jyy7mx2OyKXa58Y0iJvbFYOJ+Ox
-   JNTs4E8uCl3niON6XTpwRq9u9X0lOavR3dpjhDl/yahgj/xqt7zv/DQLS
-   4bJdnTaxwQz7zi+6O03hMbzGITC4xajqJ3DLzZdTri1jUnrKwUwY5nzXS
-   hlkL4qT8oupbr66/cVeiaYeX7KorYWp58QH9EYWyEmVQE/MiElPBKwElx
-   WLMeH3Uyc1I1ok3XrY+6XBkBqWALQd+sVOIvPSlg1dYdk6XCKaQw6rcdD
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662846"
+  bh=My9Fqvg66rpR/nMzOmPdqh1Vi9L15vgnhhoKkkfZhYI=;
+  b=aVEai99P9uJn3UMd7VOnMfcPtvAPEN0lwKW1MkPJ/L1sOgFj60sE6+/+
+   Ki1lq7aNaRqGujWFfa2P9/KUa9lcjZplrnCZLfx1qr3JKGHsrceeFsTyW
+   04cvio38S1kWWNcEZT8sD4oPR6w7HfhCmm4psclR/33UUDb7gaavuhQf3
+   Jns0SydGQEh6/ZCOtZwzIW3xH8cg1J48DiZYI2eiuP04e/caPX4Hh599i
+   wE7hFct0oV1C20pHabc5AW5SgxujdllJl7Npqy3IHEPE15v8FLifinwm0
+   RHCS7+h6h2+Cfeluh/+nte/arkDwcAGN81X4dQpaoK+myYIdfijyMsl9g
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="336662813"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="336662846"
+   d="scan'208";a="336662813"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:18 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589062"
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:09 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10635"; a="738589036"
 X-IronPort-AV: E=Sophos;i="5.98,224,1673942400"; 
-   d="scan'208";a="738589062"
+   d="scan'208";a="738589036"
 Received: from omimran-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.171])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:17 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Mar 2023 02:10:07 -0800
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
+        Mordechay Goodstein <mordechay.goodstein@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH v2 10/23] wifi: mac80211: add support for set_hw_timestamp command
-Date:   Wed,  1 Mar 2023 12:09:22 +0200
-Message-Id: <20230301115906.700ded7badde.Ib2f7c228256ce313a04d3d9f9ecc6c7b9aa602bb@changeid>
+Subject: [PATCH v2 06/23] wifi: wireless: return primary channel regardless of DUP
+Date:   Wed,  1 Mar 2023 12:09:18 +0200
+Message-Id: <20230301115906.66d7f05f7d11.I5e0add054f72ede95611391b99804c61c40cc959@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230301100935.170922-1-gregory.greenman@intel.com>
 References: <20230301100935.170922-1-gregory.greenman@intel.com>
@@ -56,75 +56,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Support the set_hw_timestamp callback for enabling and disabling HW
-timestamping if the low level driver supports it.
+Currently in case DUP bit is not set we don't return the primary
+channel for 6Ghz Band (UHB), but from spec seems that
+DUP has no affect on primary channel for UHB,
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+9.4.2.249 HE Operation element:
+The Duplicate Beacon subfield is set to 1 if the AP transmits
+Beacon frames in non-HT duplicate PPDU with a TXVECTOR parameter
+CH_BANDWIDTH value that is up to the BSS bandwidth and is set to
+0 otherwise.
+
+So remove the condition for returning primary channel based on DUP.
+
+About RSSI for DUP beacon no need to mark it as invalid, due to the
+code calling the function check marks signal invalid in case beacon
+freq is not the freq we received it on, which is the case for DUP beacon
+on non primary channels.
+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- include/net/mac80211.h |  6 ++++++
- net/mac80211/cfg.c     | 17 +++++++++++++++++
- 2 files changed, 23 insertions(+)
+ net/wireless/scan.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 219fd15893b0..6946c9d95aec 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4230,6 +4230,9 @@ struct ieee80211_prep_tx_info {
-  *	Note that a sta can also be inserted or removed with valid links,
-  *	i.e. passed to @sta_add/@sta_state with sta->valid_links not zero.
-  *	In fact, cannot change from having valid_links and not having them.
-+ * @set_hw_timestamp: Enable/disable HW timestamping of TM/FTM frames. This is
-+ *	not restored at HW reset by mac80211 so drivers need to take care of
-+ *	that.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -4589,6 +4592,9 @@ struct ieee80211_ops {
- 				struct ieee80211_vif *vif,
- 				struct ieee80211_sta *sta,
- 				u16 old_links, u16 new_links);
-+	int (*set_hw_timestamp)(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct cfg80211_set_hw_timestamp *hwts);
- };
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 790bc31cf82e..72e9af6158ef 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1830,9 +1830,7 @@ int cfg80211_get_ies_channel_number(const u8 *ie, size_t ielen,
+ 			if (!he_6ghz_oper)
+ 				return -1;
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8eb342300868..7e90f4a81962 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -4904,6 +4904,22 @@ ieee80211_del_link_station(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
- 
-+static int ieee80211_set_hw_timestamp(struct wiphy *wiphy,
-+				      struct net_device *dev,
-+				      struct cfg80211_set_hw_timestamp *hwts)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+
-+	if (!local->ops->set_hw_timestamp)
-+		return -EOPNOTSUPP;
-+
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
-+
-+	return local->ops->set_hw_timestamp(&local->hw, &sdata->vif, hwts);
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -5014,4 +5030,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.add_link_station = ieee80211_add_link_station,
- 	.mod_link_station = ieee80211_mod_link_station,
- 	.del_link_station = ieee80211_del_link_station,
-+	.set_hw_timestamp = ieee80211_set_hw_timestamp,
- };
+-			if (ftype != CFG80211_BSS_FTYPE_BEACON ||
+-			    he_6ghz_oper->control & IEEE80211_HE_6GHZ_OPER_CTRL_DUP_BEACON)
+-				return he_6ghz_oper->primary;
++			return he_6ghz_oper->primary;
+ 		}
+ 	} else if (band == NL80211_BAND_S1GHZ) {
+ 		tmp = cfg80211_find_elem(WLAN_EID_S1G_OPERATION, ie, ielen);
 -- 
 2.38.1
 
