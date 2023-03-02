@@ -2,141 +2,114 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 552BAC87FE4
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Mar 2023 09:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 970F5C6FA8E
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Mar 2023 16:03:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230401AbjCBJ5N (ORCPT
+        id S229557AbjCBQDU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Mar 2023 04:57:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39894 "EHLO
+        Thu, 2 Mar 2023 11:03:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230443AbjCBJ4b (ORCPT
+        with ESMTP id S229457AbjCBQDT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2023 04:56:31 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFB062B62C;
-        Thu,  2 Mar 2023 01:56:30 -0800 (PST)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3229Y9L0007938;
-        Thu, 2 Mar 2023 09:56:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=MTsgqO7xP3p9rwDXfqj5sodizXPDanLo7GrBOLQSl88=;
- b=hpO0dG81ZQdeRzaI/JymlVYxAeq2oxjSsfZ2s6VTt1bsox6PqFKdeteJFJtICZsxdLTP
- fUCetmjOohctHequfh0mvYXjLGetBlTw85UwxCyw2wEg6rrN9LGGXMzotoB1aBXrhRy7
- dRHVs7ewAIWAjAgZA0gP9OB8WX/XVHnbOzKU1Rop5JZQ/vvd40gpIWUP2Q90zCicshwI
- 3A3HXU/nzbYadGJFun8GzY2SG4vtCEjIBz5ldhNu4DxNBCAdFsVNLuhGtIhH2VCOTSNU
- eCDi5CGrk+zAAnW3kM5nj0ry+Dwx+oU/fRJiVKOROAB5NvMrk5Npz3yILTPcbFwQ9H2W GQ== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p2rbg86ut-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 02 Mar 2023 09:56:28 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3229uSXI004698
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 2 Mar 2023 09:56:28 GMT
-Received: from youghand-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Thu, 2 Mar 2023 01:56:25 -0800
-From:   Youghandhar Chintala <quic_youghand@quicinc.com>
-To:     <ath10k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <mpubbise@qti.qualcomm.com>,
-        Youghandhar Chintala <quic_youghand@quicinc.com>
-Subject: [PATCH v2 1/2] wifi: cfg80211: Add beacon hint notifier support
-Date:   Thu, 2 Mar 2023 15:25:50 +0530
-Message-ID: <20230302095551.5510-2-quic_youghand@quicinc.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20230302095551.5510-1-quic_youghand@quicinc.com>
-References: <20230302095551.5510-1-quic_youghand@quicinc.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: khrtZ2QWnlU6W8nzttTmPGbLgJ-54qY5
-X-Proofpoint-ORIG-GUID: khrtZ2QWnlU6W8nzttTmPGbLgJ-54qY5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-02_04,2023-03-02_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=999
- lowpriorityscore=0 suspectscore=0 priorityscore=1501 impostorscore=0
- mlxscore=0 spamscore=0 malwarescore=0 adultscore=0 bulkscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303020086
+        Thu, 2 Mar 2023 11:03:19 -0500
+Received: from mail-yw1-x1149.google.com (mail-yw1-x1149.google.com [IPv6:2607:f8b0:4864:20::1149])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 427DA1514E
+        for <linux-wireless@vger.kernel.org>; Thu,  2 Mar 2023 08:03:18 -0800 (PST)
+Received: by mail-yw1-x1149.google.com with SMTP id 00721157ae682-536be78056eso315679787b3.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Mar 2023 08:03:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1677772997;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=OCOfjy9wgPSJAfIMwhSliKQPfrgPuk24lq60Zc+oJ3w=;
+        b=poLVNQzg/V7jkO67c4aASSzpvoGIK0gxkS2bCETcVWgmsT1SoOu1KyXcmTe/jJ9Apv
+         4v3pWgK+1h9/PSOj9MYztO9Wy5RNZETDBo85HyMxBg593Oh8Zze4FVv44iALm8ReNcY4
+         Kb2/cegSrGCJINxZL5I3MNuSrEi/RTK7+T4GAo7Y+F0V+psZg9lsNxwcTIUY7jqtl6tW
+         eCQma7ysc55iZrBKsVKQZIn+Bkvi5zGGfSW8bp5QtMYys31wYT3cvEk4IctWNmgulTI2
+         oqatWSDxGEVCpcSXuNqSj+hSX3Mx8Rja9VKfy4wgFjJvW2S+pd093IdPr1K5FKdXl4Rm
+         9dsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1677772997;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=OCOfjy9wgPSJAfIMwhSliKQPfrgPuk24lq60Zc+oJ3w=;
+        b=7nkmQbCDbn0lfl6hcf+TI8GHtp12fInKV320R5WAaT5h5xhlbkkgkluJnsBivc1E9d
+         MErsbjMhtCpfoQfql0Prbwg7RUDGgE/OsWySgFvV3vqcXGp23kYL+/V3LIx+qIK65GMY
+         AzYXF2wJH5oCKpf0gqcj9WuKTNKh1UtIcPYbbU+rHCdwGXlEj0WEiDfJEGijKdiPEqke
+         ccNWgBn+RQvd69wH5kOBd14axugPEQtg2GSRFPml1/iuc6j6s5d+qiwHrUXBARktm0e5
+         h7WgGdyFWzAau+nTRB6yO73jXfDXDkNtk0dsnUjp4J7XdFQCLM+R91VxYfyGAqg6aDUq
+         8IBg==
+X-Gm-Message-State: AO0yUKWNvGnfGrL616VgEjCQvh9E6NP34rIjLXnnZ58u4e8Oo3FtM5Ey
+        yBOUVN8FzdeHKg4Gh6Fi10SeubsM9aA=
+X-Google-Smtp-Source: AK7set8XZeCs3Ju2LfDDbQxdv8YUdLKNoKygQ79DzdYX7f/D+n66RB6DxvZr7mGXaMUbKUr/OImEvfuwGCo=
+X-Received: from jaewan1.c.googlers.com ([fda3:e722:ac3:cc00:3:22c1:c0a8:e59])
+ (user=jaewan job=sendgmr) by 2002:a81:a783:0:b0:533:cf4e:9a80 with SMTP id
+ e125-20020a81a783000000b00533cf4e9a80mr4044211ywh.6.1677772997559; Thu, 02
+ Mar 2023 08:03:17 -0800 (PST)
+Date:   Thu,  2 Mar 2023 16:03:05 +0000
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.39.2.722.g9855ee24e9-goog
+Message-ID: <20230302160310.923349-1-jaewan@google.com>
+Subject: [PATCH v8 0/5] mac80211_hwsim: Add PMSR support
+From:   Jaewan Kim <jaewan@google.com>
+To:     gregkh@linuxfoundation.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-team@android.com, adelva@google.com,
+        Jaewan Kim <jaewan@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There are connection failures in hidden SSID case when the device is
-with default reg domain WW.
-For WW reg domain most of the 5 GHz channels are passive. When device
-listens to the beacon on that channel, the driver is updating its
-channel flag but firmware is not aware of it and firmware is not
-sending probes on that channels.
-Due to this, we are seeing connection failures when the device is trying
-to connect with hidden SSID AP.
+Dear Kernel maintainers,
 
-In the case of devices using the ath10k driver, it is required to update
-the change in channel flags to firmware as well. Therefore, we need a
-mechanism to notify the driver from the regulatory core regarding the
-channel flag changes.
-Adding a beacon hint notifier logic, so that drivers can register
-callbacks to get notified whenever there is a change in channel flags.
+First of all, thank you for spending your precious time for reviewing
+my changes, and also sorry for my mistakes in previous patchsets.
 
-Signed-off-by: Youghandhar Chintala <quic_youghand@quicinc.com>
----
- include/net/cfg80211.h | 7 +++++++
- net/wireless/reg.c     | 5 ++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
+Let me propose series of CLs for adding PMSR support in the mac80211_hwsim.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 11a370e64143..7a00f5317e1f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5096,6 +5096,10 @@ struct wiphy_iftype_akm_suites {
-  * @reg_notifier: the driver's regulatory notification callback,
-  *	note that if your driver uses wiphy_apply_custom_regulatory()
-  *	the reg_notifier's request can be passed as NULL
-+ * @beacon_hint_notifier: the driver's beacon hint notification callback,
-+ *	which will trigger when there is channel flag updates seen in
-+ *	beacon hints. The beacon_hint_notifier's request can be passed
-+ *	with chan context.
-  * @regd: the driver's regulatory domain, if one was requested via
-  *	the regulatory_hint() API. This can be used by the driver
-  *	on the reg_notifier() if it chooses to ignore future
-@@ -5386,6 +5390,9 @@ struct wiphy {
- 	void (*reg_notifier)(struct wiphy *wiphy,
- 			     struct regulatory_request *request);
- 
-+	void (*beacon_hint_notifier)(struct wiphy *wiphy,
-+				     struct ieee80211_channel *chan);
-+
- 	/* fields below are read-only, assigned by cfg80211 */
- 
- 	const struct ieee80211_regdomain __rcu *regd;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c3d950d29432..2dc6880a28c5 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2219,8 +2219,11 @@ static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
- 		channel_changed = true;
- 	}
- 
--	if (channel_changed)
-+	if (channel_changed) {
- 		nl80211_send_beacon_hint_event(wiphy, &chan_before, chan);
-+		if (wiphy->beacon_hint_notifier)
-+			wiphy->beacon_hint_notifier(wiphy, chan);
-+	}
- }
- 
- /*
+PMSR (peer measurement) is generalized measurement between STAs,
+and currently FTM (fine time measurement or flight time measurement)
+is the one and only measurement.
+
+FTM measures the RTT (round trip time) and FTM can be used to measure
+distances between two STAs. RTT is often referred as 'measuring distance'
+as well.
+
+Kernel had already defined protocols for PMSR in the
+include/uapi/linux/nl80211.h and relevant parsing/sending code are in the
+net/wireless/pmsr.c, but they are only used in intel's iwlwifi driver.
+
+CLs are tested with iw tool on Virtual Android device (a.k.a. Cuttlefish).
+Hope this explains my CLs.
+
+Many Thanks,
+
+--
+V7 -> V8: Separated CL for exporting nl80211_send_chandef
+V6 -> V7: Split 'mac80211_hwsim: handle FTM requests with virtio'
+          with three pieces
+V5 -> V6: Added per CL change history.
+V4 -> V5: Fixed style
+V3 -> V4: Added detailed explanation to cover letter and per CL commit
+          messages, includes explanation of PMSR and FTM.
+          Also fixed memory leak.
+V1 -> V3: Initial commits (include resends)
+
+Jaewan Kim (5):
+  mac80211_hwsim: add PMSR capability support
+  wifi: nl80211: make nl80211_send_chandef non-static
+  mac80211_hwsim: add PMSR request support via virtio
+  mac80211_hwsim: add PMSR abort support via virtio
+  mac80211_hwsim: add PMSR report support via virtio
+
+ drivers/net/wireless/mac80211_hwsim.c | 775 +++++++++++++++++++++++++-
+ drivers/net/wireless/mac80211_hwsim.h |  58 ++
+ include/net/cfg80211.h                |   9 +
+ net/wireless/nl80211.c                |   4 +-
+ 4 files changed, 834 insertions(+), 12 deletions(-)
+
 -- 
-2.38.0
+2.39.2.722.g9855ee24e9-goog
 
