@@ -2,138 +2,94 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B27A2C678D4
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Mar 2023 07:47:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBE4C7EE30
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Mar 2023 08:37:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229879AbjCCHrn (ORCPT
+        id S230167AbjCCIhz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Mar 2023 02:47:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45786 "EHLO
+        Fri, 3 Mar 2023 03:37:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229659AbjCCHri (ORCPT
+        with ESMTP id S229868AbjCCIhy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Mar 2023 02:47:38 -0500
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EDB1559F0
-        for <linux-wireless@vger.kernel.org>; Thu,  2 Mar 2023 23:47:22 -0800 (PST)
-Received: by mail-ed1-x530.google.com with SMTP id u9so6945648edd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Mar 2023 23:47:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=P2GCLvOfV3o1z4+cPjzFkU7PaPl/lTR6YLqHM5Ks0Ng=;
-        b=E4zlY7DmkdS2lX1Qjsf3I4UvU56f509peiw7WXLHMGF53RKMAR8w5AtaEPH5vhaJWq
-         C2qb5kVSY9VSQyLFRnrp3zz4ULbV9UpYAn7rozWHaR1V5sXyA0EOSHsRkIyoN0955qZp
-         NleGcIObW5LIGOOYSv6ejwZDsXmleCBrwd3m5qv6JS6yvnu6UMzZ2couOSl+c3FAh0FZ
-         4+ETAXp8t0bCVH5KxabofYc/NcTcNp/EDgbEgnWFzDONfNHKMusJDzCZn/2VxwlVj2UU
-         gsGR9dr6EQCe1hXQSV6tGXnaYUvSLQ4sIranAKx9X6lswRxnj6PVDL3+1P4oL2eBaMsS
-         0W7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=P2GCLvOfV3o1z4+cPjzFkU7PaPl/lTR6YLqHM5Ks0Ng=;
-        b=034M9xlQ5YQGW5dAddE+fhp7OQUiwYnK9QLYwGkgqcNYwr90CoIsEmy2OHsOFLwoEd
-         j42HqzNxF2ojB4mTMLWNp1aC0HjKRv15UeB+MPmgeY584VVzhzfWfUxXSp8ipNT3waI/
-         vHVpyr6EiNnO3Ve0lzCU4OJRkFiT+W278hyomVxOhnDa5LLkiP+zJ+GBP+/23+0KEH6x
-         u6A87U8ZfmHGDfYHvwwzoMQkCHojSwX0zciezBiTnZGxrXf2HnQxtN8FSW6vD/yvRtZG
-         P8mDD63Lp7wxeLsBMeKLyfljyoUxV0tM5fEDL3p6Fso1baUd+vIfEkT7BRZh8FM4kouo
-         xW5w==
-X-Gm-Message-State: AO0yUKUXh1xZmGaO7cvrF44kkMS1KjTosCvns57X/66uzq1wIUHjVZpx
-        WqAKGQotYGfd/VFiznL/Kqk=
-X-Google-Smtp-Source: AK7set+7l/LyTQClpKdoT/NEfne0kGeOEXw+UA243WhIO7Y34Hds1oKQSLKurx0ugdgE21CAxlnzNA==
-X-Received: by 2002:a17:907:20aa:b0:878:814d:bc99 with SMTP id pw10-20020a17090720aa00b00878814dbc99mr669907ejb.66.1677829640200;
-        Thu, 02 Mar 2023 23:47:20 -0800 (PST)
-Received: from smtpclient.apple ([2001:9e8:f12d:d100:5541:da85:4cc7:7df9])
-        by smtp.gmail.com with ESMTPSA id hy3-20020a1709068a6300b008e57b5e0ce9sm651269ejc.108.2023.03.02.23.47.19
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 02 Mar 2023 23:47:19 -0800 (PST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.400.51.1.1\))
-Subject: Re: [RFC v2 5/6] mac80211_hwsim: add TPC per packet support
-From:   Jonas Jelonek <jelonek.jonas@gmail.com>
-In-Reply-To: <12fce295c582793e662ca322b0d3ae3b461ddb24.camel@sipsolutions.net>
-Date:   Fri, 3 Mar 2023 08:46:49 +0100
-Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <BE583386-CD66-4A60-B0AC-6E88968288D7@gmail.com>
-References: <20220920104032.496697-1-jelonek.jonas@gmail.com>
- <20220920104032.496697-6-jelonek.jonas@gmail.com>
- <5d15d193c76dcc2cbd59b26912973e3bce34c776.camel@sipsolutions.net>
- <03B7A24C-D6E2-4DBB-B52D-6174539BB781@gmail.com>
- <12fce295c582793e662ca322b0d3ae3b461ddb24.camel@sipsolutions.net>
-To:     Johannes Berg <johannes@sipsolutions.net>
-X-Mailer: Apple Mail (2.3731.400.51.1.1)
+        Fri, 3 Mar 2023 03:37:54 -0500
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E661259E46
+        for <linux-wireless@vger.kernel.org>; Fri,  3 Mar 2023 00:37:27 -0800 (PST)
+X-UUID: 7f4dd5b6b99e11ed945fc101203acc17-20230303
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=nRFlMhkoG6wNYvXezvChiUeEPZjzrug90jBjW2mbSWs=;
+        b=JkP+QqCPi0DiYeM1btqY2iMAc/5bMg2yY9xhVDE1tGL32SsnU7B+bHOuCy+NO+Bg6Q9BDyQqzep/XvK7Ym8joRiThsDmr5tu+JsfGN4klq0CsmXt3NsLnedctlK6LuYTFjuKyWX8mohRmBe212RPR/dhrcw2dyZJj2LxVmW/PpU=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.20,REQID:c8af1ded-8fe4-47a6-867e-7831e383ea0a,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:25b5999,CLOUDID:ad4c3b27-564d-42d9-9875-7c868ee415ec,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0
+X-UUID: 7f4dd5b6b99e11ed945fc101203acc17-20230303
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
+        (envelope-from <shayne.chen@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 361732425; Fri, 03 Mar 2023 16:36:31 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.25; Fri, 3 Mar 2023 16:36:30 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.25 via Frontend Transport; Fri, 3 Mar 2023 16:36:30 +0800
+From:   Shayne Chen <shayne.chen@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>
+CC:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Bo Jiao <Bo.Jiao@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Peter Chiu <chui-hao.chiu@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 4/7] wifi: mt76: mt7996: fix pointer calculation in ie countdown event
+Date:   Fri, 3 Mar 2023 16:35:55 +0800
+Message-ID: <20230303083558.3586-4-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20230303083558.3586-1-shayne.chen@mediatek.com>
+References: <20230303083558.3586-1-shayne.chen@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Peter Chiu <chui-hao.chiu@mediatek.com>
 
-> On 28. Feb 2023, at 18:44, Johannes Berg <johannes@sipsolutions.net> =
-wrote:
->=20
-> On Thu, 2023-01-26 at 17:53 +0100, Jonas Jelonek wrote:
->>>=20
->>> On Tue, 2022-09-20 at 12:40 +0200, Jonas Jelonek wrote:
->>>> @@ -4846,16 +4989,32 @@ static int
->>>> hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
->>>>=20
->>>> tx_attempts =3D (struct hwsim_tx_rate *)nla_data(
->>>>     info->attrs[HWSIM_ATTR_TX_INFO]);
->>>> + tx_attempts_flags =3D (struct hwsim_tx_rate_flag *)nla_data(
->>>> +     info->attrs[HWSIM_ATTR_TX_INFO_FLAGS]);
->>>> + sta =3D (struct ieee80211_sta *)txi->rate_driver_data[1];
->>>=20
->>> That seems dangerous - what if the STA was freed already? You don't
->>> walk
->>> the pending list or something if the STA goes away.
->>=20
->> Yes, I see. Is it in general a bad idea to take the sta reference =
-from
->> ieee80211_control, put
->> it in rate_driver_data and use it for tx-status? I guess I should =
-pass
->> sta to tx_status_ext whenever
->> possible because it is used for several statistics.
->=20
-> Well you have to think about the lifetime. In most cases you do a =
-lookup
-> of the STA (under RCU) etc. but=20
->=20
->> I could think of two ways:
->> - add NULL checks for the case that the sta pointer might be freed as
->> you said
->=20
-> How would that pointer even go NULL though? The pointer would remain,
-> but the STA can be freed, no?
+Fix the tail and data pointers. The rxd->len in mt7996_mcu_rxd does not
+include the length of general rxd. It only includes the length of
+firmware event rxd. Use skb->length to get the correct length.
 
-Yes, you=E2=80=99re right. Sorry, I mixed that up somehow.
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
->=20
->> - get sta by using, e.g., sta_info_get_by_addrs to get the sta if it
->> is available. However, this always
->> loops through the sta list. Might be a performance issue?
->=20
-> It should use the hashtable?
->=20
->> Or do you suggest something different?
->=20
-> Well you could keep it here and walk the list of queued skbs (?) when =
-a
-> STA is removed, and kill them all at that point, or something. Not =
-sure
-> it's worth it vs. the hash table lookup, this is just hwsim after all.
->=20
-> johannes
-
-That=E2=80=99s also correct. Sorry, I didn=E2=80=99t have a deeper look =
-into this function at the
-time of writing. So I guess I will stick to this for now.
-
-Jonas
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 90d8135a649a..c11e92db5f07 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -422,7 +422,8 @@ mt7996_mcu_ie_countdown(struct mt7996_dev *dev, struct sk_buff *skb)
+ 	if (hdr->band && dev->mt76.phys[hdr->band])
+ 		mphy = dev->mt76.phys[hdr->band];
+ 
+-	tail = skb->data + le16_to_cpu(rxd->len);
++	tail = skb->data + skb->len;
++	data += sizeof(struct header);
+ 	while (data + sizeof(struct tlv) < tail && le16_to_cpu(tlv->len)) {
+ 		switch (le16_to_cpu(tlv->tag)) {
+ 		case UNI_EVENT_IE_COUNTDOWN_CSA:
+-- 
+2.39.2
 
