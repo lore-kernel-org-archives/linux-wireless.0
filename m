@@ -2,158 +2,99 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1BD1C6FA8E
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Mar 2023 20:44:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37E63C7EE2F
+	for <linux-wireless@archiver.kernel.org>; Fri,  3 Mar 2023 02:42:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbjCBUoI (ORCPT
+        id S229817AbjCCCmy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Mar 2023 15:44:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43000 "EHLO
+        Thu, 2 Mar 2023 21:42:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229864AbjCBUoH (ORCPT
+        with ESMTP id S229596AbjCCCmx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Mar 2023 15:44:07 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABBBB48E26
-        for <linux-wireless@vger.kernel.org>; Thu,  2 Mar 2023 12:43:57 -0800 (PST)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 322KQdfg002191;
-        Thu, 2 Mar 2023 20:43:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=Aifn6ARSjyfkyKqyOyXpFjg1FACmm2jdiBH5C2tb8bs=;
- b=gDWvlVRVrCd228vclIdRRwQMkY9ghVoJNDdYBGX7VLnmipNmLUu/orAJ1Et2tLbNsTeW
- sw10iQJqUAph2czt3iY1D8Gs0qkK6QDSQkJcnGHmGPUpGR5VEvnD+l5eaKm5mwSevEd7
- edy7YTSaVw6w1MZzSj7iiovvJdop2UpcYcCqc/c0L8tcv5bTLCLw0+m1O8knPWt9uvO2
- 26h+x/7qiiEdqOXCnxVurEqtV4dFS7l+T0k8H7pqpYxKbtwe9dvgyj9xUfDqtDrKDu44
- 8bEzkaJfajNUzxfHD/0KzzBEsZrBDXcujaGOt/gWpzqjlMFQo+1pQfWYZEUwtqRmFxBa DA== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p288r4cv4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 02 Mar 2023 20:43:53 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 322Khhhh026153
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 2 Mar 2023 20:43:43 GMT
-Received: from [10.111.183.21] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Thu, 2 Mar 2023
- 12:43:43 -0800
-Message-ID: <742e0bdf-8208-3190-f5cc-a2438aeaf813@quicinc.com>
-Date:   Thu, 2 Mar 2023 12:43:42 -0800
+        Thu, 2 Mar 2023 21:42:53 -0500
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96AAE1FE4
+        for <linux-wireless@vger.kernel.org>; Thu,  2 Mar 2023 18:42:51 -0800 (PST)
+Received: by mail-lf1-x136.google.com with SMTP id j11so1790011lfg.13
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Mar 2023 18:42:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1677811370;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=iDNEXw8teYXC1RePAZhjBh/dGMalMHP9Lg4fn2iWwxc=;
+        b=dbiBVX/9NCg6BYhGh8+LSwc0ol2iHOSJAG4s5qAC8SSKGGXFnOadO4zhO2ClOZxR+T
+         h57Xi6/m6alMV2KeoMcOwLJA60xhg5m6RjAK6+BoJZ4dx7z96UaS52+hN+DkPCwJQBJm
+         RHNHTKlIH4lcldJhSyQYjwdaAHxB/ubgYt5BqbeBSM8sSAnaw20m5OcPsoiABIHqU/JK
+         +fj74GC4nkL+uA3QG61opD2K90/6c6crSgwyJ9VnKZ1NguTDCU4irPdKTbOjJGFruvtB
+         SsgVDZ5RTYAneDGzXiT4gt+sDQ9u9pf7mqs7XGld37ce1IvRjhktTGktDeKxdJF8dZSJ
+         nE6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1677811370;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=iDNEXw8teYXC1RePAZhjBh/dGMalMHP9Lg4fn2iWwxc=;
+        b=JYrfMPOul8ZWENj52i/0Y1nXXA1lfNNLhngo3ZQ4Z/18IPNHNKz0FQWTtoDpG+mztk
+         YX7fQJHg8lpZipEFVACiQcQ1RK00+cvwQHtQ16x+WpvgZf7YxMlSN/0JklO+V1008Zxr
+         elzrNEOxrP/4QqYqTZ5tAmpfB7PSwaPcoHLBj+bsV0kDd2ac37/2USQUnj/xyz00MR8F
+         e78gtmDXkWQh3bImQaKlZFY1EvQ5lTRTJjTgoj/nh5OD+HkFe2i18lc3Gz0FZLdKCipR
+         7sW2iIL2D7m4XRKXGJzh41wa1vO9LBrIi40th0lTiIy5czUm7lZ5mj15hnmWbCYTA/Xf
+         Djzw==
+X-Gm-Message-State: AO0yUKX4IY/5iyifFYuKeXRHDukTHqY1riETlG7H78H1b1XaGr+5Oj7T
+        gjYO2Rja6rGMaZFmPnfW3BwrMQ==
+X-Google-Smtp-Source: AK7set/6zMdHJiXD7PXCcw4098kJJxCA5Cq9XHtnY3BVqas1Stg1PK/SfGNLLtpNEMiO4rTo9aUbOw==
+X-Received: by 2002:ac2:548d:0:b0:4e0:ff8e:bbfc with SMTP id t13-20020ac2548d000000b004e0ff8ebbfcmr98941lfk.31.1677811369885;
+        Thu, 02 Mar 2023 18:42:49 -0800 (PST)
+Received: from localhost.localdomain (abym99.neoplus.adsl.tpnet.pl. [83.9.32.99])
+        by smtp.gmail.com with ESMTPSA id x19-20020a19f613000000b004db1cd5efcesm181379lfe.241.2023.03.02.18.42.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Mar 2023 18:42:49 -0800 (PST)
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+To:     linux-arm-msm@vger.kernel.org, andersson@kernel.org,
+        agross@kernel.org
+Cc:     marijn.suijten@somainline.org,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] dt-bindings: ath10k: Add vdd-smps supply
+Date:   Fri,  3 Mar 2023 03:42:45 +0100
+Message-Id: <20230303024246.2175382-1-konrad.dybcio@linaro.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH v2 07/23] wifi: wireless: correct validation 6G Band for
- primary channel
-Content-Language: en-US
-To:     <gregory.greenman@intel.com>, <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>
-References: <20230301100935.170922-1-gregory.greenman@intel.com>
- <20230301115906.314faf725255.I5e27251ac558297553b590d3917a7b6d1aae0e74@changeid>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230301115906.314faf725255.I5e27251ac558297553b590d3917a7b6d1aae0e74@changeid>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Ww8szHchbsW_k0-91JWaFie0ElLYvQyv
-X-Proofpoint-ORIG-GUID: Ww8szHchbsW_k0-91JWaFie0ElLYvQyv
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-02_14,2023-03-02_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- adultscore=0 phishscore=0 impostorscore=0 mlxlogscore=999 malwarescore=0
- clxscore=1011 mlxscore=0 priorityscore=1501 suspectscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303020179
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/1/2023 2:09 AM, gregory.greenman@intel.com wrote:
-> From: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> 
-> Current check that beacon primary channel is in the range of 80Mhz
-> (abs < 80) is invalid for EHT 320Mhz due to 6G DUP beacon means that
+Mention the newly added vdd-smps supply.
 
-s/Mhz/MHz/g
+Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+---
+ Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-also suggest separating the magnitude from the units to align with SI 
-nomenclature.
-
-> AP transmits on all the sub 20Mhz channels the beacon.
-> 
-> 9.4.2.249 HE Operation element - ... AP transmits Beacon frames in
-> non-HT duplicate PPDU with a TXVECTOR parameter CH_BANDWIDTH value
-> that is up to the BSS bandwidth.
-> 
-> So in case of 320Mhz the DUP beacon can be in upper 160 for primary
-> channel in the lower 160 giving possibly a absolute range of over
-
-s/a absolute/an absolute/
-
-> 80Mhz.
-> 
-> Also this check is redundant all together, if AP has a wrong primary
-> channel in the beacon it's a fluty AP, and we would fail in next
-> steps to connect.
-> 
-> Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-> ---
->   net/wireless/scan.c | 14 ++++++--------
->   1 file changed, 6 insertions(+), 8 deletions(-)
-> 
-> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> index 72e9af6158ef..0cdfbb104b80 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -1885,23 +1885,21 @@ cfg80211_get_bss_channel(struct wiphy *wiphy, const u8 *ie, size_t ielen,
->   
->   	freq = ieee80211_channel_to_freq_khz(channel_number, channel->band);
->   
-> -	/*
-> -	 * In 6GHz, duplicated beacon indication is relevant for
-> -	 * beacons only.
-> +	/* Frame info (beacon/prob res) is the same as resieved channel, no need
-
-s/resieved/received/
-
-> +	 * for forther process.
-
-s/forther/further/
-
->   	 */
-> -	if (channel->band == NL80211_BAND_6GHZ &&
-> -	    (freq == channel->center_freq ||
-> -	     abs(freq - channel->center_freq) > 80))
-> +	if (freq == channel->center_freq)
->   		return channel;
->   
->   	alt_channel = ieee80211_get_channel_khz(wiphy, freq);
->   	if (!alt_channel) {
-> -		if (channel->band == NL80211_BAND_2GHZ) {
-> +		if (channel->band == NL80211_BAND_2GHZ ||
-> +		    channel->band == NL80211_BAND_60GHZ) {
->   			/*
->   			 * Better not allow unexpected channels when that could
->   			 * be going beyond the 1-11 range (e.g., discovering
->   			 * BSS on channel 12 when radio is configured for
-> -			 * channel 11.
-> +			 * channel 11) or beyond the 6G channel range.
-
-both in subject and here can we change 6G to 6 GHz to avoid confusion 
-with cellular use of "6G" and potentially WFA use of "Wi-Fi 6" where 6 
-is a generation and not a frequency?
-
-
->   			 */
->   			return NULL;
->   		}
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index b61c2d5a0ff7..8697e63aeffa 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -66,7 +66,7 @@ Optional properties:
+ - <supply-name>-supply: handle to the regulator device tree node
+ 			   optional "supply-name" are "vdd-0.8-cx-mx",
+ 			   "vdd-1.8-xo", "vdd-1.3-rfa", "vdd-3.3-ch0",
+-			   and "vdd-3.3-ch1".
++			   "vdd-3.3-ch1" and "vdd-smps".
+ - memory-region:
+ 	Usage: optional
+ 	Value type: <phandle>
+-- 
+2.39.2
 
