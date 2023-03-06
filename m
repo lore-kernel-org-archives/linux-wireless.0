@@ -2,211 +2,248 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 873D1C64EC4
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Mar 2023 17:36:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 320CDC64EC4
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Mar 2023 17:39:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230511AbjCFRgM (ORCPT
+        id S229925AbjCFRjb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Mar 2023 12:36:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44236 "EHLO
+        Mon, 6 Mar 2023 12:39:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230496AbjCFRgC (ORCPT
+        with ESMTP id S229493AbjCFRj3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Mar 2023 12:36:02 -0500
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on20611.outbound.protection.outlook.com [IPv6:2a01:111:f400:7e89::611])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E4B937569;
-        Mon,  6 Mar 2023 09:35:34 -0800 (PST)
+        Mon, 6 Mar 2023 12:39:29 -0500
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on20707.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe59::707])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9F683250D;
+        Mon,  6 Mar 2023 09:38:54 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AIN69o9oBiVAT3VNV3ZHy8Sx8JTGTGBWrhhUUbatp0K+QWxGmn1imFd5PRFQvubiZhDlDwzhfK5Hsn6xut34uiX9EvTkc4XhbzmlHRZ+oi+N5nVMDIooXTCiSE8jOBCtDORhE93re7FX2GfsdwX0JfftfjaPoVIIi0uOwtLMy+iX3KkULg7LaM3fKCRJAJ6xHpeZZuRXKom3z3p0t7luRCPZuZvseYAaJdUe6F9PbrVPG/PXszdd4SJKHlmyemw7u0WbDwdOL4BiQ56MhKXLsbUBuyKbAEdUX2GjAomLrGTIl+f/wTDzvI1N7LBvGwFcOAb3KtV66cnfKEs/oynHFQ==
+ b=D3IJHlvYc5sKxkB3RlMRdQEXdtA5HAHb/YWlTx0oBRbwa4xcxS/0zGRc6bNdTjcuEzbtQDzhtStbcIHCiMtWuKJmXXVguoZO82x1GOhd3Nwx85W8+E7bcnb34Z2etStYLjqHjNKz5bG0lc3rStJEL7N3eA41FCRnEFG90+JPI+eF6z0ApArh/LDbWZYd0AjARnIT/1yDNOrTi6Cso6ZRYOmZvAkzbkSGcHQtKS+d/dVdWo8a95eD2Y2fbQ+n5abs7/mEogZlBlmP0y/EV8F7C0w0sABzHgVdh92770t9AB21ZtVI8CKF7LXH2yAWZbYzK15DpuUOjz7Ype5UmJTztQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SAhIOHKu4HJGlav21Dv/GMi46fbF1Mnp5ITBekjHuvY=;
- b=Tfk95eLD00TMfzdxkjXbbuGX97NZUQ/qVp9F4flB9JBQ0YawHkcUlXMTxeQ0o1/ViiZKX31iSiF8YYGYN4GEfNXQai/WhaK34GCAb76OAeoubwGt7EVbO1xx4jsSx3HwNvqo2UBhcl6VeLx67A2kfvFvKjHxl3Z+vo0hwIxDV9xqn9u55A7YzB8PfhlqXommTK7CY7Y4sAfQOG0XkkJJDPyuDZhh6RZjDjMSi76RaUrVls1kwt/DOj7eJcyVcWSxJkP+B9+XD1HylAcFWwFIx/eFyD2ddHjKTrFwiBLFFFh7IF///TfB7wV0A6VQmUKq6AgsZcIgKVorJq+pg3xXzQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ bh=91MRoPwjf0hD00gJa0vkmTWSlGEh0e9j9DQdscgW6Vc=;
+ b=kBJZoyznrFjCV/8uiFPJJLQ8/abebmCL8y1sRXU7VF/LHRHA94OVccMNEOmfa9ME4pTeyftxWdIo5440xgJicXEyMN+MeMnKOyy67dkqTYmh1Yb72btT5IIPqudul45A5OInW0N4+s8S9pP92qor33nYt/hGh2PgGR617C49+2PHpIDS/XeyXehnlTasEVR5PAY1LhziC5QdN3W0PdFU+u/vR/bvnPgbJ1I61JJODyyFd4cIZiM4wa0P3WOCvfxMJLwfWlfNeKFPyfs7i0pmWlF1Bgo1t7qER76Evufu+ZT/bMvYA7nVbt1PizD6bj8jfASd8ARUHdVDQFCVDtkY3A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=corigine.com; dmarc=pass action=none header.from=corigine.com;
+ dkim=pass header.d=corigine.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=corigine.onmicrosoft.com; s=selector2-corigine-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SAhIOHKu4HJGlav21Dv/GMi46fbF1Mnp5ITBekjHuvY=;
- b=FF+PhqyQct0vzVRiLc7t9NZ/76RfrsygXf9klSr1SWz62z3pEYTfaSWwCB4oBNA1I9nHwzA/EtIPrqPbP5YJU6JeaKDJ8jEQyum0kXZMDyhxrVauyI7z6QZNMv7vXcxrH2lUt/95IiC8JGXpfhkS9vrLKGR7ZMJSW2Afzjwjs94=
-Received: from BN1PR13CA0012.namprd13.prod.outlook.com (2603:10b6:408:e2::17)
- by DM6PR12MB4529.namprd12.prod.outlook.com (2603:10b6:5:2ab::16) with
+ bh=91MRoPwjf0hD00gJa0vkmTWSlGEh0e9j9DQdscgW6Vc=;
+ b=EZXFrEFpKKnorD+uHuIlScfLyyt6mw4+SLwQMI0ys8NI3DvDkMYu501GIdLewsNkj2RGP5gIQbgdb1+YbgTfphujTMHYuUF02uKn0dNBJl73qEKmcpRGOcEsnlySKBptvgFrcneS96sM3wdCHd8bwd+SFvJfV1sg+LHxoqmpnCs=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=corigine.com;
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com (2603:10b6:510:78::6)
+ by BY5PR13MB3699.namprd13.prod.outlook.com (2603:10b6:a03:219::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6156.28; Mon, 6 Mar
- 2023 17:28:48 +0000
-Received: from BN8NAM11FT098.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:e2:cafe::ca) by BN1PR13CA0012.outlook.office365.com
- (2603:10b6:408:e2::17) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.15 via Frontend
- Transport; Mon, 6 Mar 2023 17:28:47 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
-Received: from SATLEXMB03.amd.com (165.204.84.17) by
- BN8NAM11FT098.mail.protection.outlook.com (10.13.177.196) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6178.15 via Frontend Transport; Mon, 6 Mar 2023 17:28:47 +0000
-Received: from SATLEXMB08.amd.com (10.181.40.132) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Mon, 6 Mar
- 2023 11:28:45 -0600
-Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB08.amd.com
- (10.181.40.132) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Mon, 6 Mar
- 2023 09:28:44 -0800
-Received: from xhdsneeli40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server id 15.1.2375.34 via Frontend
- Transport; Mon, 6 Mar 2023 11:28:17 -0600
-From:   Amit Kumar Mahapatra <amit.kumar-mahapatra@amd.com>
-To:     <broonie@kernel.org>, <miquel.raynal@bootlin.com>,
-        <richard@nod.at>, <vigneshr@ti.com>, <jic23@kernel.org>,
-        <tudor.ambarus@microchip.com>, <pratyush@kernel.org>,
-        <Sanju.Mehta@amd.com>, <chin-ting_kuo@aspeedtech.com>,
-        <clg@kaod.org>, <kdasu.kdev@gmail.com>, <f.fainelli@gmail.com>,
-        <rjui@broadcom.com>, <sbranden@broadcom.com>,
-        <eajames@linux.ibm.com>, <olteanv@gmail.com>, <han.xu@nxp.com>,
-        <john.garry@huawei.com>, <shawnguo@kernel.org>,
-        <s.hauer@pengutronix.de>, <narmstrong@baylibre.com>,
-        <khilman@baylibre.com>, <matthias.bgg@gmail.com>,
-        <haibo.chen@nxp.com>, <linus.walleij@linaro.org>,
-        <daniel@zonque.org>, <haojian.zhuang@gmail.com>,
-        <robert.jarzmik@free.fr>, <agross@kernel.org>,
-        <bjorn.andersson@linaro.org>, <heiko@sntech.de>,
-        <krzysztof.kozlowski@linaro.org>, <andi@etezian.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <wens@csie.org>, <jernej.skrabec@gmail.com>, <samuel@sholland.org>,
-        <masahisa.kojima@linaro.org>, <jaswinder.singh@linaro.org>,
-        <rostedt@goodmis.org>, <mingo@redhat.com>,
-        <l.stelmach@samsung.com>, <davem@davemloft.net>,
-        <edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
-        <alex.aring@gmail.com>, <stefan@datenfreihafen.org>,
-        <kvalo@kernel.org>, <james.schulman@cirrus.com>,
-        <david.rhodes@cirrus.com>, <tanureal@opensource.cirrus.com>,
-        <rf@opensource.cirrus.com>, <perex@perex.cz>, <tiwai@suse.com>,
-        <npiggin@gmail.com>, <christophe.leroy@csgroup.eu>,
-        <mpe@ellerman.id.au>, <oss@buserror.net>, <windhl@126.com>,
-        <yangyingliang@huawei.com>, <william.zhang@broadcom.com>,
-        <kursad.oney@broadcom.com>, <jonas.gorski@gmail.com>,
-        <anand.gore@broadcom.com>, <rafal@milecki.pl>
-CC:     <git@amd.com>, <linux-spi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <joel@jms.id.au>,
-        <andrew@aj.id.au>, <radu_nicolae.pirea@upb.ro>,
-        <nicolas.ferre@microchip.com>, <alexandre.belloni@bootlin.com>,
-        <claudiu.beznea@microchip.com>,
-        <bcm-kernel-feedback-list@broadcom.com>, <fancer.lancer@gmail.com>,
-        <kernel@pengutronix.de>, <festevam@gmail.com>, <linux-imx@nxp.com>,
-        <jbrunet@baylibre.com>, <martin.blumenstingl@googlemail.com>,
-        <avifishman70@gmail.com>, <tmaimon77@gmail.com>,
-        <tali.perry1@gmail.com>, <venture@google.com>, <yuenn@google.com>,
-        <benjaminfair@google.com>, <yogeshgaur.83@gmail.com>,
-        <konrad.dybcio@somainline.org>, <alim.akhtar@samsung.com>,
-        <ldewangan@nvidia.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>, <michal.simek@amd.com>,
-        <linux-aspeed@lists.ozlabs.org>, <openbmc@lists.ozlabs.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-rpi-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>,
-        <linux-rockchip@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-sunxi@lists.linux.dev>, <linux-tegra@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-wpan@vger.kernel.org>,
-        <libertas-dev@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
-        <lars@metafoo.de>, <Michael.Hennerich@analog.com>,
-        <linux-iio@vger.kernel.org>, <michael@walle.cc>,
-        <palmer@dabbelt.com>, <linux-riscv@lists.infradead.org>,
-        <alsa-devel@alsa-project.org>, <patches@opensource.cirrus.com>,
-        <linuxppc-dev@lists.ozlabs.org>, <amitrkcian2002@gmail.com>,
-        <amit.kumar-mahapatra@amd.com>
-Subject: [PATCH V5 13/15] spi: spi-zynqmp-gqspi: Add stacked memories support in GQSPI driver
-Date:   Mon, 6 Mar 2023 22:51:07 +0530
-Message-ID: <20230306172109.595464-14-amit.kumar-mahapatra@amd.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230306172109.595464-1-amit.kumar-mahapatra@amd.com>
-References: <20230306172109.595464-1-amit.kumar-mahapatra@amd.com>
+ 2023 17:37:20 +0000
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c]) by PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c%3]) with mapi id 15.20.6156.028; Mon, 6 Mar 2023
+ 17:37:20 +0000
+Date:   Mon, 6 Mar 2023 18:37:14 +0100
+From:   Simon Horman <simon.horman@corigine.com>
+To:     Jaewan Kim <jaewan@google.com>
+Cc:     gregkh@linuxfoundation.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-team@android.com, adelva@google.com
+Subject: Re: [PATCH v8 4/5] mac80211_hwsim: add PMSR abort support via virtio
+Message-ID: <ZAYkypRT+mIdQr/v@corigine.com>
+References: <20230302160310.923349-1-jaewan@google.com>
+ <20230302160310.923349-5-jaewan@google.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230302160310.923349-5-jaewan@google.com>
+X-ClientProxiedBy: AM8P189CA0023.EURP189.PROD.OUTLOOK.COM
+ (2603:10a6:20b:218::28) To PH0PR13MB4842.namprd13.prod.outlook.com
+ (2603:10b6:510:78::6)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT098:EE_|DM6PR12MB4529:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3e543323-77a1-40d0-fe52-08db1e683e99
+X-MS-TrafficTypeDiagnostic: PH0PR13MB4842:EE_|BY5PR13MB3699:EE_
+X-MS-Office365-Filtering-Correlation-Id: 45d3cbf4-2747-48f1-9fc7-08db1e696ff4
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wNN0f5aBHSJGYW/4EONAHS2DiM1o/bERWIV1enovAdVhAjbae1kdi6cjrWFS7OoCNEJryfmS+5M3XWOgyRrqX1IdVb3zeHXZIUqLiS6B86hV1K2chC0ViKQrhM9fTPb9DHoR1PXz6rZfFX+jq07oC/lF7FKiXPLtG1UtuQg3YRYKNiK/H3oaOIzBNskUUQuTc5p8iIjoSEwMxFzIhWm2TtXjXOr8zuGAG53jhZNQ6AnjDlY72hRbBBhCnYrRU+FIVZ+xDQtyo93Rn/ECCSf/jbFFtLR3uI/obIpcRWvpSLMZu0zMoNqxRpaoPfhYy08ROrWQ+1FjOhfcfHm/bocuq61pozOIjAmO6R85Zhd3xHxLNJrX2CUB0zDB04mWCiOocFxOurk7bk7ZpyNqgBCKDfdiLoYOd/HtE4HAgujsmTQqHy8q82Y84Gp4SdNVQIzrQOCg9yIB5/Tkpj56cjyOW9g6WwZKHnR9GGC3o/4xO/mPuwsI/ywAWdg3OntATl34XMr0TWRsN95p/OHN0a+rXfjSA6Bn8TmEgWAgY1F6dofX94uxI9uMuZW5rVQxAeroQefZIx4OnlUcCY7TR0AL+fO9G+CK4ARdzkUxMONDAS/OdKm2ac4tDyo25U+J9mz6+hBvBwyfJ1C4NqG+mUh88NmPmF6NyFqYRMkYrcrheNfMIYTRq1SDSDVEVC/oAyphefcvdXJK2fQ0XV0mtqP5vg1lXSASSUz5/9UBosLBd3+Jf23Ruj4dzxWGPDx9MzoSzM4TAoKODIPaIGg40B0yc60mb8uLPHE8AVxBEo6p4bGrb8LT1yKaTAggyzaziUuvIRy4ng7ddqMOSN5YFt4LLuH4rKCxvfEe4F4WmkvLu6c=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230025)(4636009)(396003)(376002)(136003)(346002)(39860400002)(451199018)(36840700001)(46966006)(40470700004)(36860700001)(86362001)(356005)(82740400003)(81166007)(921005)(36756003)(7336002)(7276002)(5660300002)(7366002)(7406005)(2906002)(70206006)(40480700001)(4326008)(70586007)(8936002)(8676002)(7416002)(41300700001)(82310400005)(1191002)(336012)(2616005)(186003)(26005)(83380400001)(47076005)(426003)(40460700003)(110136005)(54906003)(478600001)(316002)(1076003)(6666004)(84006005)(41080700001)(2101003)(83996005)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2023 17:28:47.7362
+X-Microsoft-Antispam-Message-Info: QVnrMmB3JgBJKQr3zo8RVbdGHGk3FIQ9FUhBF2+rgVh3sKIWrCjaR2xYmenXq+rH/sUVVQS40XXN0r+DiUyLY5AaHiIClQkikqnwSKYmQS1zmcyU3b6UHYlmJSTKWKGotG6SCtsjxcft4p3tXF+lGiD6yq3d0VJfIHm8ZPy/AKQ68TzRa6QqoNp5TcLu5ZEWg5HXfY5YqzQtVWwX3cPa0kLzw8yv0ETJFa+zaIb6CNBjEA1RR7k19tVsQ4qRzxELQMv8Mqvp4GxsV9JqV0JvmA3ABjlIGNRL3SCV3RHd19XiOVNCNo3xUIaZmk7Vs9gbZa7cl8rAmJUX+fMcTAyWrvl399w+LBJ85BYeGJtCqtPPaGvs9qf8b7T7eqDhGd/KRKDmkqPalv8XpH7hYVeKZ+ki/ixLLPmNsWaOrZg5T5AsL7+GcYk4065aJse3xoKweFBk+4BpTIdks4gpqYI/Lfb5toGY4tfZmZMUjnYzlTps6BuC9+jCw0Y+oScVeClamiLQF9zKKoCl+W5PoPYzFN6YHsPOQSgvt4yFpAXgQWgL1lJoZ85i+bRFjAI3qNZszXgxxbPSjakqZnGRzaaPD4mexgIy2GU2KE5i5PXcvEtRZEeVpXxK4lB0A+tkeg559YOGDOalbLH2wspDaiIJkQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR13MB4842.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(366004)(376002)(136003)(346002)(39830400003)(396003)(451199018)(186003)(38100700002)(8936002)(66556008)(6916009)(66476007)(4326008)(8676002)(41300700001)(66946007)(44832011)(5660300002)(2906002)(478600001)(2616005)(6512007)(6506007)(6666004)(6486002)(316002)(36756003)(86362001)(83380400001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ut48Q/va7swmRzILxiZR/0nAQBRaV5v8llrBmkIZbCQo8nzJa4s0OxH3e8Gb?=
+ =?us-ascii?Q?Vv6JfGVPYcibYB/KpnVSktIInqQ7DBGerBGfIYj6CI/SbHYHWqnDsqUQKRSv?=
+ =?us-ascii?Q?+J99ZsCu0Y2bUxPrnmzOOtzZgeKGKqUv1xrk6Tota3X4l/IMzETALblPyKFr?=
+ =?us-ascii?Q?y3HGRZZqyuMMCHoTwzkH01N4lhtM5rtjJq6zaw+Or8MDW5tq6i8IpsQa5rBN?=
+ =?us-ascii?Q?n/+A9maNlOMvMY5wqeJY8sJjMZrJg2koCnoFDWzeP95EYuPczD2X0pOL/XO4?=
+ =?us-ascii?Q?JBSpWdpA8aGBGqCDsdGWqCWer8F2fh4Of20JZOaTkVPONsSyPWlpxJRlxu2/?=
+ =?us-ascii?Q?n80V9o7biurpkCzogSfE/NYhcxB1u1Ag1jpLyxes3DqCey3NiDKDr5W9MJ5y?=
+ =?us-ascii?Q?jLp1T/7YuaWZasao+Mm8vZDIHfdUM6XwRe4a3C00XNgz3d/l7mkhVh0J6Km1?=
+ =?us-ascii?Q?uV4ezxQ5YMVtS8IcSRq5ugD4Es4fzm+My6mz5fIYFrMYjRyUN8+BgmRXNg7S?=
+ =?us-ascii?Q?1JeZ6vmD6sQdFS659cVr8PhFteTJF86kKWavBcaSLLZUkqs9FF/vAFkEsC17?=
+ =?us-ascii?Q?4oOevgLOFUFSkfE+lPJTwZ0q7V667r2mnt0f7UEVV5wzAUIEn6knj7U88iLa?=
+ =?us-ascii?Q?5Ob16MdV2S+0Sng0kp0YyUj1U02KqJkL9VMuazI2R0eCoPQffBG88RdzjuBe?=
+ =?us-ascii?Q?D0Z7xQLbGRkuBPKcnEQwVhZnurWS/k6V6Wlv1WKnO5TjmSeV6YeO8Gdxawzr?=
+ =?us-ascii?Q?VUn8A4H68anhqVs7ENvpyPo9MfsUirzzZii7TFJ5zQc2ogJS2oRTMWfrLC8h?=
+ =?us-ascii?Q?Jn/rrNL0f/NOHexUSiCiMiyy2K0KP+80AyY+ZOGNfUjG3DgXq1k8uI9zJfoW?=
+ =?us-ascii?Q?cHZUlOZqViuncHL3P8WCY7NXS5cokTfn71pEwIno21FOTzfAnO4qnRj1kqbE?=
+ =?us-ascii?Q?8bBb6XQf/BAbvKhYf6NV9cPxnx0C2Lmp/OfIO4CMFnDbDHAILuOmEdTSNv0P?=
+ =?us-ascii?Q?3niSggpykvRcAMm7Tv4gyXrmhgY+3FNHu+SlBUZL884SEkVH9//j0NU9G5H8?=
+ =?us-ascii?Q?+ZNAlSi9vuLBquMuFS3UkyZaWyBUB8UrA2XtZ7g4MkBKUP7Rm7MY0ziA7t6f?=
+ =?us-ascii?Q?Ue5A/wx8EL3Z37h5ZUcsFuQOV2pedyMAFFx2Nr41KPmV63Z9p84soC/Szrs/?=
+ =?us-ascii?Q?rEiCzoKUtm4o8i9H2aUZWFO6tivyv6FrDq18WY6S5FyQFVTpDCunjvkZnfof?=
+ =?us-ascii?Q?65FTZmkiBhElRJHQ2QWTPvRDvSuMiMKvVjSfuiFERyEN3M8iLgrguJJVxBHt?=
+ =?us-ascii?Q?DIw3LRrI7K9gXRX5sAUpcQRgb7XaD63c49sFe4UZGfo4LpPFKkbZT210oxuc?=
+ =?us-ascii?Q?vFdOR8PeKqnolps0z7aOV6Bklf2log0f/ndYrxLOvo1YDsvNaiAq5YT2PV1A?=
+ =?us-ascii?Q?xRneTZ/IepR7T13tw9Z8grvajxwKW+koLrORsLJd8HXTa4H6kNDNYYEXY+6j?=
+ =?us-ascii?Q?5AT5dGiRDKu4bCaY7twU20ok1YvmCSTuvfMHqmp7EUQtNYKD2IAiWqAV+8jk?=
+ =?us-ascii?Q?Y2dYJaZzopi1wqMQVk03CKlqQtMh0pIDoOygRfqUHT+G4xk9neuBK9vTLDTJ?=
+ =?us-ascii?Q?uitutxJVXcBkYNL4qjOtI9zJGYMy3P26ZfZsEJyBS2sfsaQn4OPB+WP+Jqp6?=
+ =?us-ascii?Q?lxLAVQ=3D=3D?=
+X-OriginatorOrg: corigine.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 45d3cbf4-2747-48f1-9fc7-08db1e696ff4
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR13MB4842.namprd13.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2023 17:37:20.3790
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3e543323-77a1-40d0-fe52-08db1e683e99
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT098.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4529
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: fe128f2c-073b-4c20-818e-7246a585940c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YbqAVUM6pv4A3GlQlBClZ7GVqBgRZJSZ7lf9tGWUo+j+JHC3a2r9I9xKGQx2osr0zuZQ93u7IRLTIWHokD755PyTnCCO++VllXjWnS7CdFg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR13MB3699
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-GQSPI supports two chip select CS0 & CS1. Update the driver to
-assert/de-assert the appropriate chip select as per the bits set in
-qspi->cs_index_mask.
+On Thu, Mar 02, 2023 at 04:03:09PM +0000, Jaewan Kim wrote:
+> PMSR (a.k.a. peer measurement) is generalized measurement between two
+> devices with Wi-Fi support. And currently FTM (a.k.a. fine time
+> measurement or flight time measurement) is the one and only measurement.
+> 
+> Add necessary functionalities for mac80211_hwsim to abort previous PMSR
+> request. The abortion request is sent to the wmedium where the PMSR request
+> is actually handled.
+> 
+> In detail, add new mac80211_hwsim command HWSIM_CMD_ABORT_PMSR. When
+> mac80211_hwsim receives the PMSR abortion request via
+> ieee80211_ops.abort_pmsr, the received cfg80211_pmsr_request is resent to
+> the wmediumd with command HWSIM_CMD_ABORT_PMSR and attribute
+> HWSIM_ATTR_PMSR_REQUEST. The attribute is formatted as the same way as
+> nl80211_pmsr_start() expects.
+> 
+> Signed-off-by: Jaewan Kim <jaewan@google.com>
+> ---
+> V7->V8: Rewrote commit msg
+> V7: Initial commit (split from previously large patch)
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c | 61 +++++++++++++++++++++++++++
+>  drivers/net/wireless/mac80211_hwsim.h |  2 +
+>  2 files changed, 63 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index 691b83140d57..0d92a7e51057 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -3343,6 +3343,66 @@ static int mac80211_hwsim_start_pmsr(struct ieee80211_hw *hw,
+>  	return err;
+>  }
+>  
+> +static void mac80211_hwsim_abort_pmsr(struct ieee80211_hw *hw,
+> +				      struct ieee80211_vif *vif,
+> +				      struct cfg80211_pmsr_request *request)
+> +{
+> +	struct mac80211_hwsim_data *data = hw->priv;
+> +	u32 _portid = READ_ONCE(data->wmediumd);
+> +	struct sk_buff *skb = NULL;
+> +	int err = 0;
+> +	void *msg_head;
+> +	struct nlattr *pmsr;
+> +
+> +	if (!_portid && !hwsim_virtio_enabled)
+> +		return;
+> +
+> +	mutex_lock(&data->mutex);
+> +
+> +	if (data->pmsr_request != request) {
+> +		err = -EINVAL;
+> +		goto out_err;
+> +	}
+> +
+> +	if (err)
+> +		return;
 
-Signed-off-by: Amit Kumar Mahapatra <amit.kumar-mahapatra@amd.com>
----
- drivers/spi/spi-zynqmp-gqspi.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+How can this occur?
+And if it does, isn't the lock leaked?
 
-diff --git a/drivers/spi/spi-zynqmp-gqspi.c b/drivers/spi/spi-zynqmp-gqspi.c
-index 319cdd5a0bdc..4759f704bf5c 100644
---- a/drivers/spi/spi-zynqmp-gqspi.c
-+++ b/drivers/spi/spi-zynqmp-gqspi.c
-@@ -156,6 +156,9 @@
- #define GQSPI_FREQ_100MHZ	100000000
- #define GQSPI_FREQ_150MHZ	150000000
- 
-+#define GQSPI_SELECT_LOWER_CS  BIT(0)
-+#define GQSPI_SELECT_UPPER_CS  BIT(1)
-+
- #define SPI_AUTOSUSPEND_TIMEOUT		3000
- enum mode_type {GQSPI_MODE_IO, GQSPI_MODE_DMA};
- 
-@@ -467,15 +470,17 @@ static void zynqmp_qspi_chipselect(struct spi_device *qspi, bool is_high)
- 
- 	genfifoentry |= GQSPI_GENFIFO_MODE_SPI;
- 
-+	if (qspi->cs_index_mask & GQSPI_SELECT_UPPER_CS) {
-+		zynqmp_gqspi_selectslave(xqspi,
-+					 GQSPI_SELECT_FLASH_CS_UPPER,
-+					 GQSPI_SELECT_FLASH_BUS_LOWER);
-+	} else if (qspi->cs_index_mask & GQSPI_SELECT_LOWER_CS) {
-+		zynqmp_gqspi_selectslave(xqspi,
-+					 GQSPI_SELECT_FLASH_CS_LOWER,
-+					 GQSPI_SELECT_FLASH_BUS_LOWER);
-+	}
-+	genfifoentry |= xqspi->genfifobus;
- 	if (!is_high) {
--		if (!spi_get_chipselect(qspi, 0)) {
--			xqspi->genfifobus = GQSPI_GENFIFO_BUS_LOWER;
--			xqspi->genfifocs = GQSPI_GENFIFO_CS_LOWER;
--		} else {
--			xqspi->genfifobus = GQSPI_GENFIFO_BUS_UPPER;
--			xqspi->genfifocs = GQSPI_GENFIFO_CS_UPPER;
--		}
--		genfifoentry |= xqspi->genfifobus;
- 		genfifoentry |= xqspi->genfifocs;
- 		genfifoentry |= GQSPI_GENFIFO_CS_SETUP;
- 	} else {
--- 
-2.25.1
+> +
+> +	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
+> +	if (!skb)
+> +		return;
 
+I think the mutex needs to be unlocked here in this error path.
+
+> +
+> +	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0, HWSIM_CMD_ABORT_PMSR);
+> +
+> +	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER, ETH_ALEN, data->addresses[1].addr))
+
+In the current scheme, I think err needs to be set here.
+
+> +		goto out_err;
+> +
+> +	pmsr = nla_nest_start(skb, HWSIM_ATTR_PMSR_REQUEST);
+> +	if (!pmsr) {
+> +		err = -ENOMEM;
+> +		goto out_err;
+> +	}
+> +
+> +	err = mac80211_hwsim_send_pmsr_request(skb, request);
+> +	if (err)
+
+I think this error path needs to call nla_nest_cancel().
+
+> +		goto out_err;
+> +
+> +	err = nla_nest_end(skb, pmsr);
+> +	if (err)
+
+I don't think is an error condition.
+
+> +		goto out_err;
+> +
+> +	genlmsg_end(skb, msg_head);
+> +	if (hwsim_virtio_enabled)
+> +		hwsim_tx_virtio(data, skb);
+> +	else
+> +		hwsim_unicast_netgroup(data, skb, _portid);
+> +
+> +out_err:
+> +	if (err && skb)
+> +		nlmsg_free(skb);
+> +
+> +	mutex_unlock(&data->mutex);
+
+I think it might be nicer to arrange this as:
+
+	goto out_unlock;
+
+err_nest_cancel:
+	nla_nest_cancel(...);
+err_free:
+	nlmsg_free(skb);
+out_unlock:
+	mutex_unlock(&data->mutex);
+}
+
+> +}
+> +
+>  #define HWSIM_COMMON_OPS					\
+>  	.tx = mac80211_hwsim_tx,				\
+>  	.wake_tx_queue = ieee80211_handle_wake_tx_queue,	\
+> @@ -3367,6 +3427,7 @@ static int mac80211_hwsim_start_pmsr(struct ieee80211_hw *hw,
+>  	.get_et_stats = mac80211_hwsim_get_et_stats,		\
+>  	.get_et_strings = mac80211_hwsim_get_et_strings,	\
+>  	.start_pmsr = mac80211_hwsim_start_pmsr,		\
+> +	.abort_pmsr = mac80211_hwsim_abort_pmsr,
+>  
+>  #define HWSIM_NON_MLO_OPS					\
+>  	.sta_add = mac80211_hwsim_sta_add,			\
+
+...
