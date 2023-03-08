@@ -2,43 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76360C6FD20
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Mar 2023 05:33:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28A5AC6FD20
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Mar 2023 05:33:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229702AbjCHFdo (ORCPT
+        id S229706AbjCHFds (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Mar 2023 00:33:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46198 "EHLO
+        Wed, 8 Mar 2023 00:33:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229586AbjCHFdl (ORCPT
+        with ESMTP id S229456AbjCHFdq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2023 00:33:41 -0500
+        Wed, 8 Mar 2023 00:33:46 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1A488C0F3
-        for <linux-wireless@vger.kernel.org>; Tue,  7 Mar 2023 21:33:37 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AE1E8E3C0
+        for <linux-wireless@vger.kernel.org>; Tue,  7 Mar 2023 21:33:44 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3285XLcD4016238, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3285XLcD4016238
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3285XU4S0016699, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3285XU4S0016699
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Wed, 8 Mar 2023 13:33:21 +0800
+        Wed, 8 Mar 2023 13:33:30 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 8 Mar 2023 13:33:31 +0800
+ 15.1.2375.32; Wed, 8 Mar 2023 13:33:25 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 8 Mar 2023
- 13:33:30 +0800
+ 13:33:25 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] wifi: rtw89: coex: Fix wrong structure assignment at null data report
-Date:   Wed, 8 Mar 2023 13:32:23 +0800
-Message-ID: <20230308053225.24377-6-pkshih@realtek.com>
+Subject: [PATCH 0/7] wifi: rtw89: coex: add new firmware commands and report handlers for 8852b
+Date:   Wed, 8 Mar 2023 13:32:18 +0800
+Message-ID: <20230308053225.24377-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230308053225.24377-1-pkshih@realtek.com>
-References: <20230308053225.24377-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -49,34 +47,35 @@ X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ching-Te Ku <ku920601@realtek.com>
+8852B use newer firmware that uses some newer commands and report formats.
+So, add them along with firmware's update. These commands and handlers can
+be shared to other chips if they also update firmware to the same version
+or newer.
 
-Correct pointer assignment of v1 null data report. It doesn't really
-change logic at all, but it looks more readable.
+Ching-Te Ku (7):
+  wifi: rtw89: coex: Add more error_map and counter to log
+  wifi: rtw89: coex: Add WiFi role info v2
+  wifi: rtw89: coex: Add traffic TX/RX info and its H2C
+  wifi: rtw89: coex: Add register monitor report v2 format
+  wifi: rtw89: coex: Fix wrong structure assignment at null data report
+  wifi: rtw89: coex: Add v2 Bluetooth scan info
+  wifi: rtw89: coex: Add v5 firmware cycle status report
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/coex.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 1033 +++++++++++++++++----
+ drivers/net/wireless/realtek/rtw89/coex.h |    5 +
+ drivers/net/wireless/realtek/rtw89/core.h |  238 ++++-
+ drivers/net/wireless/realtek/rtw89/fw.c   |  142 +++
+ drivers/net/wireless/realtek/rtw89/fw.h   |  138 +++
+ 5 files changed, 1362 insertions(+), 194 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 436d5e35ae49b..0ca621a9f80a1 100644
---- a/drivers/net/wireless/realtek/rtw89/coex.c
-+++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -1065,7 +1065,7 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 	case BTC_RPT_TYPE_NULLSTA:
- 		pcinfo = &pfwinfo->rpt_fbtc_nullsta.cinfo;
- 		if (ver->fcxnullsta == 1) {
--			pfinfo = &pfwinfo->rpt_fbtc_nullsta.finfo;
-+			pfinfo = &pfwinfo->rpt_fbtc_nullsta.finfo.v1;
- 			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_nullsta.finfo.v1);
- 		} else if (ver->fcxnullsta == 2) {
- 			pfinfo = &pfwinfo->rpt_fbtc_nullsta.finfo.v2;
 -- 
 2.25.1
 
