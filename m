@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E317AC742A7
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Mar 2023 05:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF51EC64EC4
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Mar 2023 05:33:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229720AbjCHFdt (ORCPT
+        id S229729AbjCHFdu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Mar 2023 00:33:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46308 "EHLO
+        Wed, 8 Mar 2023 00:33:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbjCHFds (ORCPT
+        with ESMTP id S229456AbjCHFds (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 8 Mar 2023 00:33:48 -0500
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E58B93E28
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8776695E01
         for <linux-wireless@vger.kernel.org>; Tue,  7 Mar 2023 21:33:46 -0800 (PST)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3285XU4V0016699, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3285XU4U0016699, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3285XU4V0016699
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3285XU4U0016699
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
         Wed, 8 Mar 2023 13:33:30 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Wed, 8 Mar 2023 13:33:32 +0800
+ 15.1.2375.32; Wed, 8 Mar 2023 13:33:30 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 8 Mar 2023
- 13:33:31 +0800
+ 13:33:29 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/7] wifi: rtw89: coex: Add v2 Bluetooth scan info
-Date:   Wed, 8 Mar 2023 13:32:24 +0800
-Message-ID: <20230308053225.24377-7-pkshih@realtek.com>
+Subject: [PATCH 4/7] wifi: rtw89: coex: Add register monitor report v2 format
+Date:   Wed, 8 Mar 2023 13:32:22 +0800
+Message-ID: <20230308053225.24377-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230308053225.24377-1-pkshih@realtek.com>
 References: <20230308053225.24377-1-pkshih@realtek.com>
@@ -59,229 +59,285 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-Compare to v1 and v2 removed some not usable parameters. Save firmware
-code size. The information can show how frequent and how long the
-Bluetooth scan do. It will help to debug coexistence issue.
+The v2 firmware report reduce its maximum register numbers from 30 to 20,
+it can help to save firmware code size.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 67 +++++++++++++++++++++--
- drivers/net/wireless/realtek/rtw89/core.h | 63 +++++++++++++++------
- 2 files changed, 106 insertions(+), 24 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 148 ++++++++++++++++++++--
+ drivers/net/wireless/realtek/rtw89/core.h |  17 ++-
+ 2 files changed, 151 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 0ca621a9f80a1..b867e54feb896 100644
+index 908ef8bb149a0..436d5e35ae49b 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -890,13 +890,15 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
- 	struct rtw89_btc_bt_link_info *bt_linfo = &bt->link_info;
- 	struct rtw89_btc_bt_a2dp_desc *a2dp = &bt_linfo->a2dp_desc;
- 	struct rtw89_btc_fbtc_btver *pver = NULL;
--	struct rtw89_btc_fbtc_btscan *pscan = NULL;
-+	struct rtw89_btc_fbtc_btscan_v1 *pscan_v1;
-+	struct rtw89_btc_fbtc_btscan_v2 *pscan_v2;
- 	struct rtw89_btc_fbtc_btafh *pafh_v1 = NULL;
- 	struct rtw89_btc_fbtc_btafh_v2 *pafh_v2 = NULL;
- 	struct rtw89_btc_fbtc_btdevinfo *pdev = NULL;
-+	bool scan_update = true;
-+	int i;
- 
- 	pver = (struct rtw89_btc_fbtc_btver *)pfinfo;
--	pscan = (struct rtw89_btc_fbtc_btscan *)pfinfo;
- 	pdev = (struct rtw89_btc_fbtc_btdevinfo *)pfinfo;
- 
- 	rtw89_debug(rtwdev, RTW89_DBG_BTC,
-@@ -910,7 +912,26 @@ static void _update_bt_report(struct rtw89_dev *rtwdev, u8 rpt_type, u8 *pfinfo)
- 		bt->feature = le32_to_cpu(pver->feature);
- 		break;
- 	case BTC_RPT_TYPE_BT_SCAN:
--		memcpy(bt->scan_info, pscan->scan, BTC_SCAN_MAX1);
-+		if (ver->fcxbtscan == 1) {
-+			pscan_v1 = (struct rtw89_btc_fbtc_btscan_v1 *)pfinfo;
-+			for (i = 0; i < BTC_SCAN_MAX1; i++) {
-+				bt->scan_info_v1[i] = pscan_v1->scan[i];
-+				if (bt->scan_info_v1[i].win == 0 &&
-+				    bt->scan_info_v1[i].intvl == 0)
-+					scan_update = false;
-+			}
-+		} else if (ver->fcxbtscan == 2) {
-+			pscan_v2 = (struct rtw89_btc_fbtc_btscan_v2 *)pfinfo;
-+			for (i = 0; i < CXSCAN_MAX; i++) {
-+				bt->scan_info_v2[i] = pscan_v2->para[i];
-+				if ((pscan_v2->type & BIT(i)) &&
-+				    pscan_v2->para[i].win == 0 &&
-+				    pscan_v2->para[i].intvl == 0)
-+					scan_update = false;
-+			}
-+		}
-+		if (scan_update)
-+			bt->scan_info_update = 1;
- 		break;
- 	case BTC_RPT_TYPE_BT_AFH:
- 		if (ver->fcxbtafh == 2) {
-@@ -1102,8 +1123,13 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 		break;
- 	case BTC_RPT_TYPE_BT_SCAN:
- 		pcinfo = &pfwinfo->rpt_fbtc_btscan.cinfo;
--		pfinfo = &pfwinfo->rpt_fbtc_btscan.finfo;
--		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_btscan.finfo);
-+		if (ver->fcxbtscan == 1) {
-+			pfinfo = &pfwinfo->rpt_fbtc_btscan.finfo.v1;
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_btscan.finfo.v1);
-+		} else if (ver->fcxbtscan == 2) {
-+			pfinfo = &pfwinfo->rpt_fbtc_btscan.finfo.v2;
-+			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_btscan.finfo.v2);
-+		}
- 		pcinfo->req_fver = ver->fcxbtscan;
- 		break;
- 	case BTC_RPT_TYPE_BT_AFH:
-@@ -6346,11 +6372,40 @@ static void _show_bt_info(struct rtw89_dev *rtwdev, struct seq_file *m)
- 		   cx->cnt_bt[BTC_BCNT_INFOSAME]);
- 
- 	seq_printf(m,
--		   " %-15s : Hi-rx = %d, Hi-tx = %d, Lo-rx = %d, Lo-tx = %d (bt_polut_wl_tx = %d)\n",
-+		   " %-15s : Hi-rx = %d, Hi-tx = %d, Lo-rx = %d, Lo-tx = %d (bt_polut_wl_tx = %d)",
- 		   "[trx_req_cnt]", cx->cnt_bt[BTC_BCNT_HIPRI_RX],
- 		   cx->cnt_bt[BTC_BCNT_HIPRI_TX], cx->cnt_bt[BTC_BCNT_LOPRI_RX],
- 		   cx->cnt_bt[BTC_BCNT_LOPRI_TX], cx->cnt_bt[BTC_BCNT_POLUT]);
- 
-+	if (!bt->scan_info_update) {
-+		rtw89_btc_fw_en_rpt(rtwdev, RPT_EN_BT_SCAN_INFO, true);
-+		seq_puts(m, "\n");
-+	} else {
-+		rtw89_btc_fw_en_rpt(rtwdev, RPT_EN_BT_SCAN_INFO, false);
-+		if (ver->fcxbtscan == 1) {
-+			seq_printf(m,
-+				   "(INQ:%d-%d/PAGE:%d-%d/LE:%d-%d/INIT:%d-%d)",
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_INQ].win),
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_INQ].intvl),
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_PAGE].win),
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_PAGE].intvl),
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_BLE].win),
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_BLE].intvl),
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_INIT].win),
-+				   le16_to_cpu(bt->scan_info_v1[BTC_SCAN_INIT].intvl));
-+		} else if (ver->fcxbtscan == 2) {
-+			seq_printf(m,
-+				   "(BG:%d-%d/INIT:%d-%d/LE:%d-%d)",
-+				   le16_to_cpu(bt->scan_info_v2[CXSCAN_BG].win),
-+				   le16_to_cpu(bt->scan_info_v2[CXSCAN_BG].intvl),
-+				   le16_to_cpu(bt->scan_info_v2[CXSCAN_INIT].win),
-+				   le16_to_cpu(bt->scan_info_v2[CXSCAN_INIT].intvl),
-+				   le16_to_cpu(bt->scan_info_v2[CXSCAN_LE].win),
-+				   le16_to_cpu(bt->scan_info_v2[CXSCAN_LE].intvl));
-+		}
-+		seq_puts(m, "\n");
-+	}
-+
- 	if (bt->enable.now && bt->ver_info.fw == 0)
- 		rtw89_btc_fw_en_rpt(rtwdev, RPT_EN_BT_VER_INFO, true);
- 	else
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index b021366f960d4..d785d1326e498 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -1445,14 +1445,6 @@ struct rtw89_btc_wl_tx_limit_para {
- 	u16 tx_retry;
- };
- 
--struct rtw89_btc_bt_scan_info {
--	u16 win;
--	u16 intvl;
--	u32 enable: 1;
--	u32 interlace: 1;
--	u32 rsvd: 30;
--};
--
- enum rtw89_btc_bt_scan_type {
- 	BTC_SCAN_INQ	= 0,
- 	BTC_SCAN_PAGE,
-@@ -1463,9 +1455,50 @@ enum rtw89_btc_bt_scan_type {
- 	BTC_SCAN_MAX1,
- };
- 
-+enum rtw89_btc_ble_scan_type {
-+	CXSCAN_BG = 0,
-+	CXSCAN_INIT,
-+	CXSCAN_LE,
-+	CXSCAN_MAX
-+};
-+
-+#define RTW89_BTC_BTC_SCAN_V1_FLAG_ENABLE BIT(0)
-+#define RTW89_BTC_BTC_SCAN_V1_FLAG_INTERLACE BIT(1)
-+
-+struct rtw89_btc_bt_scan_info_v1 {
-+	__le16 win;
-+	__le16 intvl;
-+	__le32 flags;
-+} __packed;
-+
-+struct rtw89_btc_bt_scan_info_v2 {
-+	__le16 win;
-+	__le16 intvl;
-+} __packed;
-+
-+struct rtw89_btc_fbtc_btscan_v1 {
-+	u8 fver; /* btc_ver::fcxbtscan */
-+	u8 rsvd;
-+	__le16 rsvd2;
-+	struct rtw89_btc_bt_scan_info_v1 scan[BTC_SCAN_MAX1];
-+} __packed;
-+
-+struct rtw89_btc_fbtc_btscan_v2 {
-+	u8 fver; /* btc_ver::fcxbtscan */
-+	u8 type;
-+	__le16 rsvd2;
-+	struct rtw89_btc_bt_scan_info_v2 para[CXSCAN_MAX];
-+} __packed;
-+
-+union rtw89_btc_fbtc_btscan {
-+	struct rtw89_btc_fbtc_btscan_v1 v1;
-+	struct rtw89_btc_fbtc_btscan_v2 v2;
-+};
-+
- struct rtw89_btc_bt_info {
- 	struct rtw89_btc_bt_link_info link_info;
--	struct rtw89_btc_bt_scan_info scan_info[BTC_SCAN_MAX1];
-+	struct rtw89_btc_bt_scan_info_v1 scan_info_v1[BTC_SCAN_MAX1];
-+	struct rtw89_btc_bt_scan_info_v2 scan_info_v2[CXSCAN_MAX];
- 	struct rtw89_btc_bt_ver_info ver_info;
- 	struct rtw89_btc_bool_sta_chg enable;
- 	struct rtw89_btc_bool_sta_chg inq_pag;
-@@ -1488,7 +1521,8 @@ struct rtw89_btc_bt_info {
- 	u32 run_patch_code: 1;
- 	u32 hi_lna_rx: 1;
- 	u32 scan_rx_low_pri: 1;
--	u32 rsvd: 21;
-+	u32 scan_info_update: 1;
-+	u32 rsvd: 20;
- };
- 
- struct rtw89_btc_cx {
-@@ -2006,13 +2040,6 @@ struct rtw89_btc_fbtc_btver {
- 	__le32 feature;
+@@ -226,7 +226,6 @@ struct rtw89_btc_btf_set_slot_table {
+ 	u8 buf[];
  } __packed;
  
--struct rtw89_btc_fbtc_btscan {
--	u8 fver; /* btc_ver::fcxbtscan */
--	u8 rsvd;
--	__le16 rsvd2;
--	u8 scan[6];
--} __packed;
--
- struct rtw89_btc_fbtc_btafh {
- 	u8 fver; /* btc_ver::fcxbtafh */
- 	u8 rsvd;
-@@ -2231,7 +2258,7 @@ struct rtw89_btc_rpt_fbtc_btver {
+-#define BTF_SET_MON_REG_VER 1
+ struct rtw89_btc_btf_set_mon_reg {
+ 	u8 fver;
+ 	u8 reg_num;
+@@ -1078,8 +1077,15 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
+ 		break;
+ 	case BTC_RPT_TYPE_MREG:
+ 		pcinfo = &pfwinfo->rpt_fbtc_mregval.cinfo;
+-		pfinfo = &pfwinfo->rpt_fbtc_mregval.finfo;
+-		pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_mregval.finfo);
++		if (ver->fcxmreg == 1) {
++			pfinfo = &pfwinfo->rpt_fbtc_mregval.finfo.v1;
++			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_mregval.finfo.v1);
++		} else if (ver->fcxmreg == 2) {
++			pfinfo = &pfwinfo->rpt_fbtc_mregval.finfo.v2;
++			pcinfo->req_len = sizeof(pfwinfo->rpt_fbtc_mregval.finfo.v2);
++		} else {
++			goto err;
++		}
+ 		pcinfo->req_fver = ver->fcxmreg;
+ 		break;
+ 	case BTC_RPT_TYPE_GPIO_DBG:
+@@ -1709,18 +1715,26 @@ static void rtw89_btc_fw_set_slots(struct rtw89_dev *rtwdev, u8 num,
+ static void btc_fw_set_monreg(struct rtw89_dev *rtwdev)
+ {
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
++	const struct rtw89_btc_ver *ver = rtwdev->btc.ver;
+ 	struct rtw89_btc_btf_set_mon_reg *monreg = NULL;
+-	u8 n, *ptr = NULL, ulen;
++	u8 n, *ptr = NULL, ulen, cxmreg_max;
+ 	u16 sz = 0;
  
- struct rtw89_btc_rpt_fbtc_btscan {
- 	struct rtw89_btc_rpt_cmn_info cinfo; /* common info, by driver */
--	struct rtw89_btc_fbtc_btscan finfo; /* info from fw */
-+	union rtw89_btc_fbtc_btscan finfo; /* info from fw */
+ 	n = chip->mon_reg_num;
+-
+ 	rtw89_debug(rtwdev, RTW89_DBG_BTC,
+ 		    "[BTC], %s(): mon_reg_num=%d\n", __func__, n);
+-	if (n > CXMREG_MAX) {
++
++	if (ver->fcxmreg == 1)
++		cxmreg_max = CXMREG_MAX;
++	else if (ver->fcxmreg == 2)
++		cxmreg_max = CXMREG_MAX_V2;
++	else
++		return;
++
++	if (n > cxmreg_max) {
+ 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
+ 			    "[BTC], %s(): mon reg count %d > %d\n",
+-			    __func__, n, CXMREG_MAX);
++			    __func__, n, cxmreg_max);
+ 		return;
+ 	}
+ 
+@@ -1730,7 +1744,7 @@ static void btc_fw_set_monreg(struct rtw89_dev *rtwdev)
+ 	if (!monreg)
+ 		return;
+ 
+-	monreg->fver = BTF_SET_MON_REG_VER;
++	monreg->fver = ver->fcxmreg;
+ 	monreg->reg_num = n;
+ 	ptr = &monreg->buf[0];
+ 	memcpy(ptr, chip->mon_reg, n * ulen);
+@@ -7401,13 +7415,13 @@ static void _get_gnt(struct rtw89_dev *rtwdev, struct rtw89_mac_ax_coex_gnt *gnt
+ 	}
+ }
+ 
+-static void _show_mreg(struct rtw89_dev *rtwdev, struct seq_file *m)
++static void _show_mreg_v1(struct rtw89_dev *rtwdev, struct seq_file *m)
+ {
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_btc *btc = &rtwdev->btc;
+ 	struct rtw89_btc_btf_fwinfo *pfwinfo = &btc->fwinfo;
+ 	struct rtw89_btc_rpt_cmn_info *pcinfo = NULL;
+-	struct rtw89_btc_fbtc_mreg_val *pmreg = NULL;
++	struct rtw89_btc_fbtc_mreg_val_v1 *pmreg = NULL;
+ 	struct rtw89_btc_fbtc_gpio_dbg *gdbg = NULL;
+ 	struct rtw89_btc_cx *cx = &btc->cx;
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+@@ -7457,7 +7471,7 @@ static void _show_mreg(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 		return;
+ 	}
+ 
+-	pmreg = &pfwinfo->rpt_fbtc_mregval.finfo;
++	pmreg = &pfwinfo->rpt_fbtc_mregval.finfo.v1;
+ 	rtw89_debug(rtwdev, RTW89_DBG_BTC,
+ 		    "[BTC], %s(): rpt_fbtc_mregval reg_num = %d\n",
+ 		    __func__, pmreg->reg_num);
+@@ -7486,6 +7500,111 @@ static void _show_mreg(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 		rtw89_debug(rtwdev, RTW89_DBG_BTC,
+ 			    "[BTC], %s(): stop due rpt_fbtc_gpio_dbg.cinfo\n",
+ 			    __func__);
++		seq_puts(m, "\n");
++		return;
++	}
++
++	gdbg = &pfwinfo->rpt_fbtc_gpio_dbg.finfo;
++	if (!gdbg->en_map)
++		return;
++
++	seq_printf(m, " %-15s : enable_map:0x%08x",
++		   "[gpio_dbg]", gdbg->en_map);
++
++	for (i = 0; i < BTC_DBG_MAX1; i++) {
++		if (!(gdbg->en_map & BIT(i)))
++			continue;
++		seq_printf(m, ", %d->GPIO%d", (u32)i, gdbg->gpio_map[i]);
++	}
++	seq_puts(m, "\n");
++}
++
++static void _show_mreg_v2(struct rtw89_dev *rtwdev, struct seq_file *m)
++{
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_btf_fwinfo *pfwinfo = &btc->fwinfo;
++	struct rtw89_btc_rpt_cmn_info *pcinfo = NULL;
++	struct rtw89_btc_fbtc_mreg_val_v2 *pmreg = NULL;
++	struct rtw89_btc_fbtc_gpio_dbg *gdbg = NULL;
++	struct rtw89_btc_cx *cx = &btc->cx;
++	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
++	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
++	struct rtw89_mac_ax_coex_gnt gnt_cfg = {};
++	struct rtw89_mac_ax_gnt gnt;
++	u8 i = 0, type = 0, cnt = 0;
++	u32 val, offset;
++
++	if (!(btc->dm.coex_info_map & BTC_COEX_INFO_MREG))
++		return;
++
++	seq_puts(m, "========== [HW Status] ==========\n");
++
++	seq_printf(m,
++		   " %-15s : WL->BT:0x%08x(cnt:%d), BT->WL:0x%08x(total:%d, bt_update:%d)\n",
++		   "[scoreboard]", wl->scbd, cx->cnt_wl[BTC_WCNT_SCBDUPDATE],
++		   bt->scbd, cx->cnt_bt[BTC_BCNT_SCBDREAD],
++		   cx->cnt_bt[BTC_BCNT_SCBDUPDATE]);
++
++	/* To avoid I/O if WL LPS or power-off  */
++	if (!wl->status.map.lps && !wl->status.map.rf_off) {
++		btc->dm.pta_owner = rtw89_mac_get_ctrl_path(rtwdev);
++
++		_get_gnt(rtwdev, &gnt_cfg);
++		gnt = gnt_cfg.band[0];
++		seq_printf(m,
++			   " %-15s : pta_owner:%s, phy-0[gnt_wl:%s-%d/gnt_bt:%s-%d], ",
++			   "[gnt_status]",
++			   chip->chip_id == RTL8852C ? "HW" :
++			   btc->dm.pta_owner == BTC_CTRL_BY_WL ? "WL" : "BT",
++			   gnt.gnt_wl_sw_en ? "SW" : "HW", gnt.gnt_wl,
++			   gnt.gnt_bt_sw_en ? "SW" : "HW", gnt.gnt_bt);
++
++		gnt = gnt_cfg.band[1];
++		seq_printf(m, "phy-1[gnt_wl:%s-%d/gnt_bt:%s-%d]\n",
++			   gnt.gnt_wl_sw_en ? "SW" : "HW",
++			   gnt.gnt_wl,
++			   gnt.gnt_bt_sw_en ? "SW" : "HW",
++			   gnt.gnt_bt);
++	}
++	pcinfo = &pfwinfo->rpt_fbtc_mregval.cinfo;
++	if (!pcinfo->valid) {
++		rtw89_debug(rtwdev, RTW89_DBG_BTC,
++			    "[BTC], %s(): stop due rpt_fbtc_mregval.cinfo\n",
++			    __func__);
++		return;
++	}
++
++	pmreg = &pfwinfo->rpt_fbtc_mregval.finfo.v2;
++	rtw89_debug(rtwdev, RTW89_DBG_BTC,
++		    "[BTC], %s(): rpt_fbtc_mregval reg_num = %d\n",
++		    __func__, pmreg->reg_num);
++
++	for (i = 0; i < pmreg->reg_num; i++) {
++		type = (u8)le16_to_cpu(chip->mon_reg[i].type);
++		offset = le32_to_cpu(chip->mon_reg[i].offset);
++		val = le32_to_cpu(pmreg->mreg_val[i]);
++
++		if (cnt % 6 == 0)
++			seq_printf(m, " %-15s : %d_0x%04x=0x%08x",
++				   "[reg]", (u32)type, offset, val);
++		else
++			seq_printf(m, ", %d_0x%04x=0x%08x", (u32)type,
++				   offset, val);
++		if (cnt % 6 == 5)
++			seq_puts(m, "\n");
++		cnt++;
++
++		if (i >= pmreg->reg_num)
++			seq_puts(m, "\n");
++	}
++
++	pcinfo = &pfwinfo->rpt_fbtc_gpio_dbg.cinfo;
++	if (!pcinfo->valid) {
++		rtw89_debug(rtwdev, RTW89_DBG_BTC,
++			    "[BTC], %s(): stop due rpt_fbtc_gpio_dbg.cinfo\n",
++			    __func__);
++		seq_puts(m, "\n");
+ 		return;
+ 	}
+ 
+@@ -7868,7 +7987,12 @@ void rtw89_btc_dump_info(struct rtw89_dev *rtwdev, struct seq_file *m)
+ 	_show_bt_info(rtwdev, m);
+ 	_show_dm_info(rtwdev, m);
+ 	_show_fw_dm_msg(rtwdev, m);
+-	_show_mreg(rtwdev, m);
++
++	if (ver->fcxmreg == 1)
++		_show_mreg_v1(rtwdev, m);
++	else if (ver->fcxmreg == 2)
++		_show_mreg_v2(rtwdev, m);
++
+ 	if (ver->fcxbtcrpt == 1)
+ 		_show_summary_v1(rtwdev, m);
+ 	else if (ver->fcxbtcrpt == 4)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 1d3614f5b2a2b..b021366f960d4 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -1524,6 +1524,7 @@ union rtw89_btc_fbtc_tdma_le32 {
  };
  
- struct rtw89_btc_rpt_fbtc_btafh {
+ #define CXMREG_MAX 30
++#define CXMREG_MAX_V2 20
+ #define FCXMAX_STEP 255 /*STEP trace record cnt, Max:65535, default:255*/
+ #define BTC_CYCLE_SLOT_MAX 48 /* must be even number, non-zero */
+ 
+@@ -1750,13 +1751,25 @@ struct rtw89_btc_fbtc_gpio_dbg {
+ 	u8 gpio_map[BTC_DBG_MAX1]; /*the debug signals to GPIO-Position */
+ } __packed;
+ 
+-struct rtw89_btc_fbtc_mreg_val {
++struct rtw89_btc_fbtc_mreg_val_v1 {
+ 	u8 fver; /* btc_ver::fcxmreg */
+ 	u8 reg_num;
+ 	__le16 rsvd;
+ 	__le32 mreg_val[CXMREG_MAX];
+ } __packed;
+ 
++struct rtw89_btc_fbtc_mreg_val_v2 {
++	u8 fver; /* btc_ver::fcxmreg */
++	u8 reg_num;
++	__le16 rsvd;
++	__le32 mreg_val[CXMREG_MAX_V2];
++} __packed;
++
++union rtw89_btc_fbtc_mreg_val {
++	struct rtw89_btc_fbtc_mreg_val_v1 v1;
++	struct rtw89_btc_fbtc_mreg_val_v2 v2;
++};
++
+ #define RTW89_DEF_FBTC_MREG(__type, __bytes, __offset) \
+ 	{ .type = cpu_to_le16(__type), .bytes = cpu_to_le16(__bytes), \
+ 	  .offset = cpu_to_le32(__offset), }
+@@ -2203,7 +2216,7 @@ struct rtw89_btc_rpt_fbtc_nullsta {
+ 
+ struct rtw89_btc_rpt_fbtc_mreg {
+ 	struct rtw89_btc_rpt_cmn_info cinfo; /* common info, by driver */
+-	struct rtw89_btc_fbtc_mreg_val finfo; /* info from fw */
++	union rtw89_btc_fbtc_mreg_val finfo; /* info from fw */
+ };
+ 
+ struct rtw89_btc_rpt_fbtc_gpio_dbg {
 -- 
 2.25.1
 
