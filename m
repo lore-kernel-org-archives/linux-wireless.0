@@ -2,159 +2,160 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C658C678D5
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Mar 2023 17:38:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FFFDC64EC4
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Mar 2023 17:47:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229621AbjCHRiA (ORCPT
+        id S229747AbjCHRrY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Mar 2023 12:38:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35084 "EHLO
+        Wed, 8 Mar 2023 12:47:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229613AbjCHRh6 (ORCPT
+        with ESMTP id S229544AbjCHRrX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Mar 2023 12:37:58 -0500
-Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A3F6C083C
-        for <linux-wireless@vger.kernel.org>; Wed,  8 Mar 2023 09:37:52 -0800 (PST)
-Received: by mail-wm1-x329.google.com with SMTP id d41-20020a05600c4c2900b003e9e066550fso1635911wmp.4
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Mar 2023 09:37:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678297070;
-        h=content-transfer-encoding:in-reply-to:organization:references:cc:to
-         :content-language:subject:reply-to:from:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=skIGdbpVmMRPb/941SzbmTy9IEdDKFk95x2yttIkbCs=;
-        b=gLbkbJvQ2YNc9skI238CxF3azuVfi6CnqdjFUgi3WHqNMS9PdlHRUBSjDi5jRGijPX
-         W3sjdPenu/8Ezh+s3KGjcUtGdsfm3HEHIQUxP6AO243ZJRQqzq2gewCG4hHaxuHVSXiS
-         evZL9rd+VlnqGPq4a4ASjay2s/HMJ4hLesdCaPySck/ApFuwDuV8WaFya8oXieJKn6PM
-         tYis72tFHro4o2enQZob9si73lwjrnH1P2RXSlup5J5E4xyum5I7chNqmjZQhxIzxDjQ
-         bqT4A7ePLkqMwbeW8ZTjY5rf1XAzWpxGVYVHewwIvnWakegeauGGE8E+WN87ZWJF5bcp
-         o48g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678297070;
-        h=content-transfer-encoding:in-reply-to:organization:references:cc:to
-         :content-language:subject:reply-to:from:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=skIGdbpVmMRPb/941SzbmTy9IEdDKFk95x2yttIkbCs=;
-        b=HraF4mBaZtGQH7FlOXVx3JmdsVRPiEvJC3t+mxApfqnRvhHAnhPmdE1werBSaA3LwI
-         7xi2491CZwU2dhTLD/cLkCjAADCBHTD9oqTZe8r9cO3yO0ARoSo1xDBfDL9T9fVMNAL/
-         P0R7AE8AUQzt+CrRS2tovlyONWuGC38qlYZPN1DK3A6+H/1Zg1zshogBivkhZ9x4YYye
-         rTEdpWbaJQEJ+lzvT9AJqEi93E5rvo5YnaHNcXaRUMl6cAFZOPqwJUFWKnL/THGdxmwf
-         XM1sXB26BcaFTpWe4QYI/qzrhF1hAIVIuMEXwhw/igQh6fEBEEINH18tq5NuIatcKGs6
-         OW9Q==
-X-Gm-Message-State: AO0yUKXyulPPzPAdEAmrGgR2zs3E5v9tqM2IhXl+x0g8D7y3CNHbJuls
-        umdEJ1vtK24XjtZLcKSvfeLJZw==
-X-Google-Smtp-Source: AK7set88DVG9CWAtTspajqrUjWpjJ01hMHVoibkhTu1MDm2Om+vXV1B+witcqffqp8E4eiiXeCGQLw==
-X-Received: by 2002:a05:600c:a49:b0:3e2:6ec:61ea with SMTP id c9-20020a05600c0a4900b003e206ec61eamr16323844wmq.28.1678297070469;
-        Wed, 08 Mar 2023 09:37:50 -0800 (PST)
-Received: from ?IPV6:2a01:e0a:982:cbb0:b029:83b9:1fb8:7c34? ([2a01:e0a:982:cbb0:b029:83b9:1fb8:7c34])
-        by smtp.gmail.com with ESMTPSA id m8-20020a05600c3b0800b003eae73ee4a1sm108749wms.17.2023.03.08.09.37.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Mar 2023 09:37:50 -0800 (PST)
-Message-ID: <629435a5-fb47-2cb5-78b6-e42c943aa397@linaro.org>
-Date:   Wed, 8 Mar 2023 18:37:48 +0100
+        Wed, 8 Mar 2023 12:47:23 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE73F58B59
+        for <linux-wireless@vger.kernel.org>; Wed,  8 Mar 2023 09:47:21 -0800 (PST)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 328CnafP032435;
+        Wed, 8 Mar 2023 17:47:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=6yOdiSpX/dZRLoYLd7e/zHruj9GhBiWPoEGQ1XKslbs=;
+ b=dLR2ndGfr/RxUP7fqnC+fZDq1+IEx4AXKoRL3K+r0AkXozzBnvSowxtPRKQvLCvlbVOE
+ ALp1re5+MJ+vLzusqQzIGgbZblPjsHZxsn9CS2Rm0TSSH3586ps1pph7a9n9sNY2wc2T
+ K072AMk8BkkP3Nx/Q0esh2QLg7GkL/MqRFMJijsyJDQd6FpD79u9C/MmoY66vYpRMQ/J
+ reXy3R0jTMo/CdS6lwqd54igLaDdaL0VK4qByuRyDQ6PyAjZLuqDI4tQnvWL0qbDogZX
+ IVysCs67f6VoCtld90YQDFZGzqTLGb6ak9gm2qjKfIIy+ZwTtf2vvOF7sbsK37xO70Bg 4Q== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6femjasu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 08 Mar 2023 17:47:14 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 328HlD4c012133
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 8 Mar 2023 17:47:14 GMT
+Received: from pradeepc2-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.41; Wed, 8 Mar 2023 09:47:13 -0800
+From:   Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+Subject: [PATCH 1/2] wifi: ath11k: fix null ptr dereference when tx offload is enabled
+Date:   Wed, 8 Mar 2023 09:47:02 -0800
+Message-ID: <20230308174703.12270-2-quic_pradeepc@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230308174703.12270-1-quic_pradeepc@quicinc.com>
+References: <20230308174703.12270-1-quic_pradeepc@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.2
-From:   Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: neil.armstrong@linaro.org
-Subject: Re: [RFC PATCH] brcmfmac: add 43751 SDIO ids and initialization
-Content-Language: en-US
-To:     Franky Lin <franky.lin@broadcom.com>,
-        Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc:     Arend van Spriel <aspriel@gmail.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Eric Dumazet <edumazet@google.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Alexander Prutskov <alep@cypress.com>,
-        Joseph chuang <jiac@cypress.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Angus Ainslie <angus@akkea.ca>, linux-wireless@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-amlogic@lists.infradead.org
-References: <05977cbb-8a8f-0a67-b4bd-b265dbb83280@free.fr>
- <895a3812-e490-cc40-0f8e-a88e166e8f24@linaro.org>
- <c1a215cf-94be-871b-2a8a-3cc381588f83@free.fr>
- <6be2c348-b343-876a-a77f-a8297676de6a@free.fr>
- <a215e398-2c49-19d2-0730-5e8c51df1ed9@free.fr>
- <CA+8PC_du5dMwkmAshG2mM9TdeJft5aeAbEdDp0_q3Rxdvpq4MQ@mail.gmail.com>
- <f14407f1-e16f-0074-6e29-c597754ae617@free.fr>
- <CA+8PC_dFTvv9VtY9jBWLLwSoQzGxQd57zWMsnN6amddop4Yw-g@mail.gmail.com>
-Organization: Linaro Developer Services
-In-Reply-To: <CA+8PC_dFTvv9VtY9jBWLLwSoQzGxQd57zWMsnN6amddop4Yw-g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: x2KJJlAePzDCc6qpgtCfhvmGljMRfzbN
+X-Proofpoint-ORIG-GUID: x2KJJlAePzDCc6qpgtCfhvmGljMRfzbN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-08_11,2023-03-08_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
+ bulkscore=0 clxscore=1015 malwarescore=0 priorityscore=1501
+ impostorscore=0 adultscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0
+ mlxlogscore=962 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303080152
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 08/03/2023 18:21, Franky Lin wrote:
-> On Wed, Mar 8, 2023 at 4:48 AM Marc Gonzalez <marc.w.gonzalez@free.fr> wrote:
->>
->> On 08/03/2023 00:15, Franky Lin wrote:
->>
->>> On Tue, Mar 7, 2023 at 6:40 AM Marc Gonzalez wrote:
->>>
->>>> Through the SDIO bus, the WiFi chip reports 0xaae7 (i.e. 43751)
->>>> hence the /sys/bus/sdio/devices output above.
->>>>
->>>> sdio_read_func_cis() -> sdio_read_cis() which sets
->>>> func->vendor/func->device to 2d0/aae7
->>>>
->>>>
->>>> But when brcmf_chip_recognition() calls ci->ops->read32()
->>>> i.e. brcmf_sdio_buscore_read32()
->>>> [ vs brcmf_sdiod_readl() in brcmf_sdio_probe_attach() ]
->>>>
->>>> [    1.177283] brcmfmac: F1 signature read @0x18000000=0x1042aae8
->>>> [    1.182912] found AXI chip: BCM43752/2
->>>> [    1.186384] BCM43752/2: chip=aae8 rev=2 type=1
->>>>
->>>> Here it reports 0xaae8 (i.e. 43752)
->>>>
->>>> Why the discrepancy?
->>>> Can it cause issues?
->>>> (Sometimes, the whole SDIO bus doesn't probe at boot.
->>>> I am still investigating these intermittent problems.)
->>>>
->>>> Should I use 43751 or 43752 firmware...?
->>>
->>> This question should be answered by the Cypress/Infineon folks but
->>> unfortunately they have been quiet for a long time. In general we use
->>> the id read from 0x18000000 to decide which firmware to load. But be
->>> aware that the rev also matters. There are some examples in
->>> brcmf_sdio_fwnames table that the different firmware name can be
->>> derived from the same chip common id but different rev.
->>>
->>> However sdio device enumeration happens before firmware download so
->>> the intermittent problem you are facing probably is not related to
->>> firmware version.
->>
->> Disclosure: My knowledge of SDIO device enumeration is 0.
->>
->> When the host sends the equivalent of an "identify yourself" message
->> on the SDIO bus, doesn't the reply come from the WiFi device?
->> Why would the device reply 0xaae7 instead of 0xaae8?
->>
->> In other words, who is replying 0xaae7?
-> 
-> The enumeration response is done by the HW sdio core on the chip.  No
-> software involved.
+When tx offload is enabled, info->band from skb cb is 0. This
+causes null pointer access at mac80211 when sband is accessed.
 
-Mark,
+In offload case, ndo_hard_start will bypass mac80211 tx and no
+function will set info->band in skb cb to correct value.
 
-This would be the:
-	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_43751, CYW),
-which is returned by the SDIO bus and associated the SDIO device with the brcmf driver.
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1-01725-QCAHKSWPL_SILICONZ-1
 
-All the other IDs are returned by reading registers/send commands to the SDIO device.
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 26 ++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
 
-Neil
-> 
-> Regards,
-> - Franky
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 8afbba236935..0f3a32434970 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -320,6 +320,8 @@ ath11k_dp_tx_htt_tx_complete_buf(struct ath11k_base *ab,
+ 	struct ieee80211_tx_info *info;
+ 	struct ath11k_skb_cb *skb_cb;
+ 	struct ath11k *ar;
++	struct ieee80211_vif *vif;
++	u8 flags = 0;
+ 
+ 	spin_lock(&tx_ring->tx_idr_lock);
+ 	msdu = idr_remove(&tx_ring->txbuf_idr, ts->msdu_id);
+@@ -341,6 +343,14 @@ ath11k_dp_tx_htt_tx_complete_buf(struct ath11k_base *ab,
+ 
+ 	dma_unmap_single(ab->dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ 
++	if (!skb_cb->vif) {
++		dev_kfree_skb_any(msdu);
++		return;
++	}
++
++	flags = skb_cb->flags;
++	vif = skb_cb->vif;
++
+ 	memset(&info->status, 0, sizeof(info->status));
+ 
+ 	if (ts->acked) {
+@@ -354,8 +364,10 @@ ath11k_dp_tx_htt_tx_complete_buf(struct ath11k_base *ab,
+ 			info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
+ 		}
+ 	}
+-
+-	ieee80211_tx_status(ar->hw, msdu);
++	if (flags & ATH11K_SKB_HW_80211_ENCAP)
++		ieee80211_tx_status_8023(ar->hw, vif, msdu);
++	else
++		ieee80211_tx_status(ar->hw, msdu);
+ }
+ 
+ static void
+@@ -524,6 +536,8 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
+ 	struct ath11k_peer *peer;
+ 	struct ath11k_sta *arsta;
+ 	struct rate_info rate;
++	struct ieee80211_vif *vif;
++	u8 flags = 0;
+ 
+ 	if (WARN_ON_ONCE(ts->buf_rel_source != HAL_WBM_REL_SRC_MODULE_TQM)) {
+ 		/* Must not happen */
+@@ -544,6 +558,9 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
+ 		return;
+ 	}
+ 
++	flags = skb_cb->flags;
++	vif = skb_cb->vif;
++
+ 	info = IEEE80211_SKB_CB(msdu);
+ 	memset(&info->status, 0, sizeof(info->status));
+ 
+@@ -610,7 +627,10 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
+ 
+ 	spin_unlock_bh(&ab->base_lock);
+ 
+-	ieee80211_tx_status_ext(ar->hw, &status);
++	if (flags & ATH11K_SKB_HW_80211_ENCAP)
++		ieee80211_tx_status_8023(ar->hw, vif, msdu);
++	else
++		ieee80211_tx_status_ext(ar->hw, &status);
+ }
+ 
+ static inline void ath11k_dp_tx_status_parse(struct ath11k_base *ab,
+-- 
+2.17.1
 
