@@ -2,104 +2,115 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C656C64EC4
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Mar 2023 22:13:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E76BCC64EC4
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Mar 2023 00:50:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230383AbjCIWNb (ORCPT
+        id S229708AbjCJAuf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Mar 2023 17:13:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47970 "EHLO
+        Thu, 9 Mar 2023 19:50:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229823AbjCIWNa (ORCPT
+        with ESMTP id S229521AbjCJAue (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Mar 2023 17:13:30 -0500
-Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2351999C2F;
-        Thu,  9 Mar 2023 14:13:27 -0800 (PST)
-Message-ID: <b4427052-9e94-bce7-b745-2473be5686fa@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1678400003;
-        bh=jek5obCUz0PG/txARSS67XWDgInyk7/o7PGoSvmWT+g=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=YUx5bulNZ3tgiJCaK11hT9J4fERH379GAxhPy+Mi1YY2bDwSQo/5vFWkVOOox1PyC
-         2HI1B3e8TJi12q0lqz1NasGzcD2tq5FM9z1GHpyaxEFCtHs4k04E97L8vPFX/vDW7Y
-         BsjO6P5wXqWq2JxSK31gGZK0a7PfcYl2rSMlup9o=
-Date:   Thu, 9 Mar 2023 23:13:21 +0100
+        Thu, 9 Mar 2023 19:50:34 -0500
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EF92125B5
+        for <linux-wireless@vger.kernel.org>; Thu,  9 Mar 2023 16:50:32 -0800 (PST)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id B66FEAC007F;
+        Fri, 10 Mar 2023 00:50:29 +0000 (UTC)
+Received: from [192.168.100.159] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id E9B5213C2B0;
+        Thu,  9 Mar 2023 16:50:28 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E9B5213C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1678409429;
+        bh=EJVz+TdW6NbIT299nfmymNsW/oWJlLvv8nx9PWrZf5o=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=IHYTV6jHESZccrd7gdQoaK0DYMFw/Cr8XtLPj8b0gyBT6dJJ5kwmHLp+tUQ1dda4v
+         +jFE16DHevvR1Zr738s1dStf9LuB7vRu8PwHqWY3YkUtgNXHOwwl0YFwVFOw1DTOzK
+         kPU+49zzlEOLcF2UIhbCA1y9f0J+i0/b0fadi6yo=
+Message-ID: <79728d21-400d-d294-f48e-a2ee091869bf@candelatech.com>
+Date:   Thu, 9 Mar 2023 16:50:28 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [Regression] rt2800usb - Wifi performance issues and connection
- drops
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v2] wifi: mt76: mt7921: use driver flags rather than
+ mac80211 flags to mcu
 Content-Language: en-US
-To:     Felix Fietkau <nbd@nbd.name>,
-        Linux regressions mailing list <regressions@lists.linux.dev>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Thomas Mann <rauchwolke@gmx.net>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Johannes Berg <johannes.berg@intel.com>
-References: <b8efebc6-4399-d0b8-b2a0-66843314616b@leemhuis.info>
- <5a7cd098-1d83-6297-e802-ce998c8ec116@leemhuis.info>
- <6025e17e-4c29-6d36-6b9c-2fec543b21c4@wetzel-home.de>
- <debc7fe9-204d-63a7-aa61-91b20a46f385@wetzel-home.de>
- <4a02173f-3a60-0a7e-8962-3778e6c55bf3@nbd.name>
- <cfa5cc30-bf5a-bffd-4c2f-eec8a6522dd5@wetzel-home.de>
- <42185fa2-4191-fcf5-9c0f-fd7098bb856b@nbd.name>
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-In-Reply-To: <42185fa2-4191-fcf5-9c0f-fd7098bb856b@nbd.name>
+To:     Deren Wu <deren.wu@mediatek.com>, Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     Sean Wang <sean.wang@mediatek.com>,
+        Soul Huang <Soul.Huang@mediatek.com>,
+        YN Chen <YN.Chen@mediatek.com>,
+        Leon Yen <Leon.Yen@mediatek.com>,
+        Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+        KM Lin <km.lin@mediatek.com>,
+        Robin Chiu <robin.chiu@mediatek.com>,
+        CH Yeh <ch.yeh@mediatek.com>, Posh Sun <posh.sun@mediatek.com>,
+        Stella Chang <Stella.Chang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>
+References: <0c2eed5226aef8e7e219c748b9d20cb234cf9f8f.1678186986.git.deren.wu@mediatek.com>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+In-Reply-To: <0c2eed5226aef8e7e219c748b9d20cb234cf9f8f.1678186986.git.deren.wu@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-MDID: 1678409431-Xzc1GRKUxN6I
+X-MDID-O: us5;ut7;1678409431;Xzc1GRKUxN6I;<greearb@candelatech.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 08.03.23 12:57, Felix Fietkau wrote:
-> On 08.03.23 12:41, Alexander Wetzel wrote:
->> On 08.03.23 08:52, Felix Fietkau wrote:
->>
->>>> I'm also planning to provide some more debug patches, to figuring out
->>>> which part of commit 4444bc2116ae ("wifi: mac80211: Proper mark iTXQs
->>>> for resumption") fixes the issue for you. Assuming my understanding
->>>> above is correct the patch should not really fix/break anything for
->>>> you...With the findings above I would have expected your git bisec to
->>>> identify commit a790cc3a4fad ("wifi: mac80211: add wake_tx_queue
->>>> callback to drivers") as the first broken commit...
->>> I can't point to any specific series of events where it would go 
->>> wrong, but I suspect that the problem might be the fact that you're 
->>> doing tx scheduling from within ieee80211_handle_wake_tx_queue. I 
->>> don't see how it's properly protected from potentially being called 
->>> on different CPUs concurrently.
->>>
->>> Back when I was debugging some iTXQ issues in mt76, I also had 
->>> problems when tx scheduling could happen from multiple places. My 
->>> solution was to have a single worker thread that handles tx, which is 
->>> scheduled from the wake_tx_queue op.
->>> Maybe you could do something similar in mac80211 for non-iTXQ drivers.
->>>
->>
->> I think it's already doing all of that:
->> ieee80211_handle_wake_tx_queue() is the mac80211 implementation for the
->> wake_tx_queue op. The drivers without native iTXQ support simply link it
->> to this handler.
-> I know. The problem I see is that I can't find anything that guarantees 
-> that .wake_tx_queue_op is not being called concurrently from multiple 
-> different places. ieee80211_handle_wake_tx_queue is doing the scheduling 
-> directly, instead of deferring it to a single workqueue/tasklet/thread, 
-> and multiple concurrent calls to it could potentially cause issues.
+On 3/7/23 03:22, Deren Wu wrote:
+> From: Neil Chen <yn.chen@mediatek.com>
+> 
+> FIF_* flags from mac80211 is not ABI. mt7921 should not pass it into mcu
+> directly. Remap FIF_* to driver defined flags as mcu command input.
+> 
+> Fixes: c222f77fd421 ("wifi: mt76: mt7921: fix rx filter incorrect by drv/fw inconsistent")
+> Signed-off-by: Neil Chen <yn.chen@mediatek.com> > Signed-off-by: Deren Wu <deren.wu@mediatek.com>
 
-Good hint, thanks.
-According to the latest debug log exactly that seems to be happening:
+I tried this plus the patch it is fixing on 6.2.2+ kernel with 7922 radios,
+and behaviour seems worse than before the two patches were applied.
 
-ieee80211_wake_queue() is called by the driver and wake_txqs_tasklet 
-tasklet is started. But during execution of the drv_wake_tx_queue() from 
-the tasklet userspace queues a new skb and also calls into 
-drv_wake_tx_queue(), which is then run overlapping...
+Original problem I was trying to fix is that my STAs will connect fine on 5Ghz,
+but then when I try to move them to 2.4Ghz, most will not scan anything.
+Packet sniff shows probe responses and requests, so I suspected firmware is
+filtering when it should not.
 
-Not sure yet how that could cause the problem. But this breaks the 
-assumption that drv_wake_tx_queue() are not overlapping. And TX fails 
-directly after such an overlapping TX...
+With the two patches applied, even 5Ghz is showing failure, with lots of
+beacon loss messages (I am disabling beacon filtering, which previously worked
+fine on 7921 nic in 5.19 kernel).
 
-I'll probably just serialize the calls and then we verify if that helps...
+Are there other patches that I should consider to get 7922 to work better in 6.2.2+
+kernel?
 
-Alexander
+[root@ct523c-3b7f ~]# cat /debug/ieee80211/wiphy0/mt76/version
+chipset:       7922
+ASIC-Revision: 0x79220010
+hw_sw_ver:     0x8a108a10
+build_date:    20221227123154a
+bus:           0000:04:00.0
+fwcfg:         fwcfg-mmio-0000:04:00.0.txt
+WM-hw_sw_ver:  ____000000
+WM-build_date: 20221227123243
+WA-hw_sw_ver:
+WA-build_date:
+
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
+
