@@ -2,84 +2,74 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6098C61DA4
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Mar 2023 13:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 453FEC6FD19
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Mar 2023 13:43:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229743AbjCMNnP (ORCPT
+        id S230028AbjCMNnd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Mar 2023 09:43:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40722 "EHLO
+        Mon, 13 Mar 2023 09:43:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229674AbjCMNnO (ORCPT
+        with ESMTP id S229617AbjCMNnc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2023 09:43:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87509166CB
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Mar 2023 06:43:13 -0700 (PDT)
+        Mon, 13 Mar 2023 09:43:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBE7339BA1;
+        Mon, 13 Mar 2023 06:43:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 335BDB8106E
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Mar 2023 13:43:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24B9BC433EF;
-        Mon, 13 Mar 2023 13:43:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B7BF612C5;
+        Mon, 13 Mar 2023 13:43:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6D5AC433D2;
+        Mon, 13 Mar 2023 13:43:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678714990;
-        bh=3wGAch4m9QD4iKpbIzC4U0INYvqVPMdl25jpt3loXts=;
+        s=k20201202; t=1678715010;
+        bh=PLQfFPy+Iw5Op8bdtfn7ENrUngfLUPWLiqLzLgGXt0c=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=kUMIiKGsBFuvK6oVyKx2Yew3FcduCTpP2YAMgmxP+pVWs1pEcnCvBbieTHye+Gt5S
-         el+nyKL6HWxOqH0/4aikILcMrWKN8llmoGihYgeN1LGDHZs7FEnBksuUZksVFwbUfw
-         e87QLpVTKpaUrN4m0r0tc70zvxOFhvsTEaiPJ6GaEEOFlrEW0WHkVr1IpZyhB7uITM
-         LDgDA3DnV3cBd/xBEEfcBF0JQc5aqWnzwZQpFVdhlKZ9MO3Yr5TK0McxVptZQi0j6d
-         wCnhJu94Mcm0qc1EAnH7pzfN9ECoyczBczlscP3ZApEateTw0Ykk+jrqSieQR82TUX
-         Zbom1vAZW7tSg==
+        b=WTTL/itEVCMfHOhhMc94fNLXYDl+nvYq/7yS/FqahZJHx+tAjHUKpjnTHx9NYx2+x
+         aTn9Yck+LFVZabEikZMYQZ4ZtRyUlEwR/E7FRPkW9o9VA98TxfBi+FhedYbMdcwNKQ
+         1RCKYfyCx6fAeNtnhjqHEQzH82Hs6KcM41Nd6fX+Q/qVWVo7Yu3PX5CnsIlNiWHRJ+
+         S6Lekj5OZvZ2Nj5PIXqXc619X1vjAzR451T1epUe2JXu2cfdnUP26mHkvLaDzc0a5x
+         bPiURyaQh/2ue8p5ZYy6A3xSN0Ump+YES4TX+qgBcPBcyZfmlqnS4lEqKhvOGMnfkT
+         QxUNl/xvhU9Sw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: brcmfmac: Use ISO3166 country code and rev 0 as
- fallback on 4356
+Subject: Re: [PATCH] wifi: rtl8xxxu: mark Edimax EW-7811Un V2 as tested
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230303222331.285663-1-hdegoede@redhat.com>
-References: <20230303222331.285663-1-hdegoede@redhat.com>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
+In-Reply-To: <20230305175932.719103-1-martin@kaiser.cx>
+References: <20230305175932.719103-1-martin@kaiser.cx>
+To:     Martin Kaiser <martin@kaiser.cx>
+Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Martin Kaiser <martin@kaiser.cx>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <167871498723.31347.9611885110540011157.kvalo@kernel.org>
-Date:   Mon, 13 Mar 2023 13:43:08 +0000 (UTC)
+Message-ID: <167871500696.31347.4588985384577653508.kvalo@kernel.org>
+Date:   Mon, 13 Mar 2023 13:43:28 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hans de Goede <hdegoede@redhat.com> wrote:
+Martin Kaiser <martin@kaiser.cx> wrote:
 
-> Many devices ship with a nvram ccode value of X2/XT/XU/XV/ALL which are
-> all special world-wide compatibility ccode-s. Most of these world-wide
-> ccode-s allow passive scan mode only for 2.4GHz channels 12-14,
-> only enabling them when an AP is seen on them.
+> The Edimax V2 (vid 0x7392, pid 0xb811) works well with the rtl8xxxu driver
+> since rtl8188eu support has been added. Remove the untested flag for this
+> device.
 > 
-> Since linux-firmware has moved to the new cyfmac4356-pci.bin +
-> cyfmac4356-pci.clm_blob firmware files this no longer works and
-> 4356 devices using e.g. an X2 ccode fail to connect to an AP on
-> channel 13.
-> 
-> Add the 4356 chip-id to the list of chips for which to use the ISO3166
-> country code + rev 0 as fallback in brcmf_translate_country_code() to
-> fix this.
-> 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> Signed-off-by: Martin Kaiser <martin@kaiser.cx>
 
 Patch applied to wireless-next.git, thanks.
 
-659fda7f35f0 wifi: brcmfmac: Use ISO3166 country code and rev 0 as fallback on 4356
+df259fc12b36 wifi: rtl8xxxu: mark Edimax EW-7811Un V2 as tested
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230303222331.285663-1-hdegoede@redhat.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230305175932.719103-1-martin@kaiser.cx/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
