@@ -2,116 +2,77 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A66D3C7618B
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Mar 2023 06:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB4DC6FD19
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Mar 2023 07:01:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229847AbjCMG5w (ORCPT
+        id S229704AbjCMHBw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Mar 2023 02:57:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60266 "EHLO
+        Mon, 13 Mar 2023 03:01:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229583AbjCMG5v (ORCPT
+        with ESMTP id S229553AbjCMHBu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Mar 2023 02:57:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 106224D62C;
-        Sun, 12 Mar 2023 23:57:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A023D610E7;
-        Mon, 13 Mar 2023 06:57:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF9A8C433EF;
-        Mon, 13 Mar 2023 06:57:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678690661;
-        bh=yXZd505XmCeN942UNqXIjHQ5Kwm2nMyuVli34Flsl0k=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=OV3Qmz/IfYFypeHG/KN765o4V5OmR9wF58a5r9sl82BrhzjL6RJ0t2BMCNGpw1ntM
-         KjslQkVZ0JESUZldaRATa7IiEt8tChEUY7aZGOsKDbNPnUsdLkk50GUTNcHuQt8uwu
-         /nvJPmC0zq/U3J3CkrwQSJOg3YVsyp9NHgqDbR+vvwKY5uHZfopN5Xhlfq4vRJqL5K
-         2lcLp4KOgNNKzHrc3lBCwzRTQhSEaT9H270FVzm0fOR5LBxNIFif2HMZyuJyMpJZPr
-         JZdom+77L9fbpCIolgn8UTraemz7xWvoDX9JRXWvn+mO+3wAXa1vcYQvfqy6DaFU28
-         H00x/o9omaPFw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Mon, 13 Mar 2023 03:01:50 -0400
+Received: from hust.edu.cn (mail.hust.edu.cn [202.114.0.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 298F7305EE;
+        Mon, 13 Mar 2023 00:01:48 -0700 (PDT)
+Received: from localhost.localdomain ([172.16.0.254])
+        (user=dzm91@hust.edu.cn mech=LOGIN bits=0)
+        by mx1.hust.edu.cn  with ESMTP id 32D7107A005037-32D7107E005037
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Mon, 13 Mar 2023 15:01:07 +0800
+From:   Dongliang Mu <dzm91@hust.edu.cn>
+To:     Kalle Valo <kvalo@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Nicolas Ferre <nicolas.ferre@microchip.com>,
-        Claudiu Beznea <claudiu.beznea@microchip.com>,
-        Wei Fang <wei.fang@nxp.com>,
-        Shenwei Wang <shenwei.wang@nxp.com>,
-        Clark Wang <xiaoning.wang@nxp.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Claudiu Manoil <claudiu.manoil@nxp.com>,
-        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Alexandre Torgue <alexandre.torgue@foss.st.com>,
-        Jose Abreu <joabreu@synopsys.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Grygorii Strashko <grygorii.strashko@ti.com>,
-        Francois Romieu <romieu@fr.zoreil.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Zhao Qiang <qiang.zhao@nxp.com>,
-        Samuel Mendoza-Jonas <sam@mendozajonas.com>,
-        devicetree@vger.kernel.org, linux-can@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net: Use of_property_read_bool() for boolean properties
-References: <20230310144718.1544169-1-robh@kernel.org>
-Date:   Mon, 13 Mar 2023 08:57:31 +0200
-In-Reply-To: <20230310144718.1544169-1-robh@kernel.org> (Rob Herring's message
-        of "Fri, 10 Mar 2023 08:47:16 -0600")
-Message-ID: <87ttypnnok.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     Dongliang Mu <dzm91@hust.edu.cn>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] wifi: ray_cs: add sanity check on local->sram/rmem/amem
+Date:   Mon, 13 Mar 2023 14:58:23 +0800
+Message-Id: <20230313065823.256731-2-dzm91@hust.edu.cn>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230313065823.256731-1-dzm91@hust.edu.cn>
+References: <20230313065823.256731-1-dzm91@hust.edu.cn>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-FEAS-AUTH-USER: dzm91@hust.edu.cn
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rob Herring <robh@kernel.org> writes:
+The ray_config uses ray_release as its unified error handling function.
+However, it does not know if local->sram/rmem/amem succeeds or not.
 
-> It is preferred to use typed property access functions (i.e.
-> of_property_read_<type> functions) rather than low-level
-> of_get_property/of_find_property functions for reading properties.
-> Convert reading boolean properties to to of_property_read_bool().
->
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
->  drivers/net/can/cc770/cc770_platform.c          | 12 ++++++------
->  drivers/net/ethernet/cadence/macb_main.c        |  2 +-
->  drivers/net/ethernet/davicom/dm9000.c           |  4 ++--
->  drivers/net/ethernet/freescale/fec_main.c       |  2 +-
->  drivers/net/ethernet/freescale/fec_mpc52xx.c    |  2 +-
->  drivers/net/ethernet/freescale/gianfar.c        |  4 ++--
->  drivers/net/ethernet/ibm/emac/core.c            |  8 ++++----
->  drivers/net/ethernet/ibm/emac/rgmii.c           |  2 +-
->  drivers/net/ethernet/stmicro/stmmac/dwmac-imx.c |  3 +--
->  drivers/net/ethernet/sun/niu.c                  |  2 +-
->  drivers/net/ethernet/ti/cpsw-phy-sel.c          |  3 +--
->  drivers/net/ethernet/ti/netcp_ethss.c           |  8 +++-----
->  drivers/net/ethernet/via/via-velocity.c         |  3 +--
->  drivers/net/ethernet/xilinx/ll_temac_main.c     |  9 ++++-----
->  drivers/net/wan/fsl_ucc_hdlc.c                  | 11 +++--------
->  drivers/net/wireless/ti/wlcore/spi.c            |  3 +--
->  net/ncsi/ncsi-manage.c                          |  4 ++--
->  17 files changed, 35 insertions(+), 47 deletions(-)
+Fix this by adding sanity check on local->sram/rmem/amem in the
+ray_relase.
 
-For wireless:
+Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
+---
+ drivers/net/wireless/ray_cs.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Acked-by: Kalle Valo <kvalo@kernel.org>
-
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 785a5be72b2b..47d9c71b63b5 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -733,9 +733,12 @@ static void ray_release(struct pcmcia_device *link)
+ 
+ 	del_timer_sync(&local->timer);
+ 
+-	iounmap(local->sram);
+-	iounmap(local->rmem);
+-	iounmap(local->amem);
++	if (local->sram)
++		iounmap(local->sram);
++	if (local->rmem)
++		iounmap(local->rmem);
++	if (local->amem)
++		iounmap(local->amem);
+ 	pcmcia_disable_device(link);
+ 
+ 	dev_dbg(&link->dev, "ray_release ending\n");
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.39.2
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
