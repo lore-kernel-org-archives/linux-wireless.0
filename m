@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88D15C05027
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Mar 2023 17:51:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0437C6FD1F
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Mar 2023 17:51:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230394AbjCNRvX (ORCPT
+        id S230408AbjCNRvY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Mar 2023 13:51:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51886 "EHLO
+        Tue, 14 Mar 2023 13:51:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231173AbjCNRvK (ORCPT
+        with ESMTP id S230198AbjCNRvM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2023 13:51:10 -0400
+        Tue, 14 Mar 2023 13:51:12 -0400
 Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49504B0B9D
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2023 10:50:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3047CB1A41
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2023 10:50:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678816243; x=1710352243;
+  t=1678816245; x=1710352245;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=akgXdz8kV+bZhrHdB29VUferdFN0rblF4BViRblg1mc=;
-  b=E2GOIp4rMYHwxdBUGiUJ+zbwZY4l37ByhqaxvnIIpbYKVwTb3tyBzL2m
-   RS6g7cA4kOsb5IOGUOkP6PXlVY7fjuqq9KCx6SMtecM0WcQZeYz4id6dL
-   RCpzZEHM3RIuo4k3kbta1EhWCp6YAgYtopRRkFRJz9SYmeJyeqirNsLYw
-   SamanU8hRSE7FAH3DUQtXbKvjY4FPVwlos48V2R1Z7XbZVLRBpa+/WsHA
-   jy9fY+JZ2MioPSZHXdmoN7QlTdgVHa2ncpSKcdR9j1Kvlush4gfSMzSzs
-   8alogcu7aJvkYHlUsPaoi/+Cy5kbpp7Ks6KfZISUvQfs3hU1CM+zL/Hqv
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="317149531"
+  bh=qABz0e4YrXsyPLRRCqH5Z8jqjsHE4Wzj15QWBYWHlJE=;
+  b=GlANenfefBMmH3UjK5SWF9suZUFFdTHZMd5KdRT3CnrnKqvyjsNKAyTK
+   A3SciNQgLqz+qQwPIfW8l7OVGOjWPhLeEUrX9WV5uMxtkAWKuYQQSjMaE
+   2arvvKZNnr+fmx1imEt7Oq+pHXj6GfcO3+ld4MGbXT5HXLGyDNN6+4y5a
+   diRBdF4MV/CHrbHqWBM79B9EyP1m5DfnEJaaE27yXwoQdK8JBB++keb0O
+   FNS8h5C4DNULhwQQ5T6+6pXe2ummksId3f2YMD26jIGaVTtMg1U3g4dzl
+   Vs0W6oIipUAPP2bGwjQheFK13NYimtI7KfBTKEZj/n3+HPME8XL51fgq9
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="317149548"
 X-IronPort-AV: E=Sophos;i="5.98,260,1673942400"; 
-   d="scan'208";a="317149531"
+   d="scan'208";a="317149548"
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 10:50:11 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 10:50:12 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="768200460"
+X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="768200507"
 X-IronPort-AV: E=Sophos;i="5.98,260,1673942400"; 
-   d="scan'208";a="768200460"
+   d="scan'208";a="768200507"
 Received: from litalcoh-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.192.4])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 10:49:57 -0700
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 10:50:04 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 03/22] wifi: iwlwifi: yoyo: Add driver defined dump file name
-Date:   Tue, 14 Mar 2023 19:49:15 +0200
-Message-Id: <20230314194113.2a2ee92995e9.I38fff588e32276796cd757309fc811241f827c7a@changeid>
+Subject: [PATCH 06/22] wifi: iwlwifi: mvm: add support for the new MAC CTXT command
+Date:   Tue, 14 Mar 2023 19:49:18 +0200
+Message-Id: <20230314194113.99a41a5bc55f.I310312c829f5f2f69b64fcddce487b1eab80165b@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230314174934.893149-1-gregory.greenman@intel.com>
 References: <20230314174934.893149-1-gregory.greenman@intel.com>
@@ -57,295 +57,578 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-Add driver defined dump file name extension for beacon loss
-and FW Assert case.
+As a part of the new MLD FW API changes, we have a new MAC CTXT command.
+Add structures and enum definitions, along with the functions that
+sends this command (i.e. add, remove and change mac ctxt).
+This functions will be in used in the next patches.
 
-Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  2 +-
- drivers/net/wireless/intel/iwlwifi/fw/dump.c  | 58 +++++++++++++++++-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  4 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  5 +-
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 61 ++++++++++++-------
- 5 files changed, 101 insertions(+), 29 deletions(-)
+ .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   | 109 ++++++-
+ .../net/wireless/intel/iwlwifi/mvm/Makefile   |   2 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  24 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   3 +-
+ .../net/wireless/intel/iwlwifi/mvm/mld-mac.c  | 271 ++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  18 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   1 +
+ 7 files changed, 411 insertions(+), 17 deletions(-)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 05720352e49f..43fb5cf85f05 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -281,7 +281,7 @@ static const struct iwl_ht_params iwl_gl_a_ht_params = {
- 	.trans.gen2 = true,						\
- 	.nvm_type = IWL_NVM_EXT,					\
- 	.dbgc_supported = true,						\
--	.min_umac_error_event_table = 0x400000,				\
-+	.min_umac_error_event_table = 0xD0000,				\
- 	.d3_debug_data_base_addr = 0x401000,				\
- 	.d3_debug_data_length = 60 * 1024,				\
- 	.mon_smem_regs = {						\
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dump.c b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-index 792f7fee1840..59ed321bcc27 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-@@ -14,6 +14,13 @@
- #include "iwl-csr.h"
- #include "pnvm.h"
- 
-+#define FW_ASSERT_LMAC_FATAL			0x70
-+#define FW_ASSERT_LMAC2_FATAL			0x72
-+#define FW_ASSERT_UMAC_FATAL			0x71
-+#define UMAC_RT_NMI_LMAC2_FATAL			0x72
-+#define RT_NMI_INTERRUPT_OTHER_LMAC_FATAL	0x73
-+#define FW_ASSERT_NMI_UNKNOWN			0x84
-+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
+index 712532f17630..f12b2a25cd3d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
+@@ -1,12 +1,14 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
  /*
-  * Note: This structure is read from the device with IO accesses,
-  * and the reading already does the endian conversion. As it is
-@@ -96,6 +103,17 @@ struct iwl_umac_error_event_table {
- #define ERROR_START_OFFSET  (1 * sizeof(u32))
- #define ERROR_ELEM_SIZE     (7 * sizeof(u32))
+- * Copyright (C) 2012-2014, 2018-2019, 2021 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2019, 2021-2022 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+ #ifndef __iwl_fw_api_mac_cfg_h__
+ #define __iwl_fw_api_mac_cfg_h__
  
-+static bool iwl_fwrt_if_errorid_other_cpu(u32 err_id)
-+{
-+	err_id &= 0xFF;
++#include "mac.h"
 +
-+	if ((err_id >= FW_ASSERT_LMAC_FATAL &&
-+	     err_id <= RT_NMI_INTERRUPT_OTHER_LMAC_FATAL) ||
-+	    err_id == FW_ASSERT_NMI_UNKNOWN)
-+		return  true;
-+	return false;
-+}
+ /**
+  * enum iwl_mac_conf_subcmd_ids - mac configuration command IDs
+  */
+@@ -31,7 +33,10 @@ enum iwl_mac_conf_subcmd_ids {
+ 	 * @CANCEL_CHANNEL_SWITCH_CMD: &struct iwl_cancel_channel_switch_cmd
+ 	 */
+ 	CANCEL_CHANNEL_SWITCH_CMD = 0x6,
+-
++	/**
++	 * @MAC_CONFIG_CMD: &struct iwl_mac_config_cmd
++	 */
++	MAC_CONFIG_CMD = 0x8,
+ 	/**
+ 	 * @SESSION_PROTECTION_NOTIF: &struct iwl_mvm_session_prot_notif
+ 	 */
+@@ -182,4 +187,104 @@ struct iwl_mac_low_latency_cmd {
+ 	__le16 reserved;
+ } __packed; /* MAC_LOW_LATENCY_API_S_VER_1 */
+ 
++/**
++ * struct iwl_mac_client_data - configuration data for client MAC context
++ *
++ * @is_assoc: 1 for associated state, 0 otherwise
++ * @assoc_id: unique ID assigned by the AP during association
++ * @data_policy: see &enum iwl_mac_data_policy
++ * @ctwin: client traffic window in TU (period after TBTT when GO is present).
++ *	0 indicates that there is no CT window.
++ */
++struct iwl_mac_client_data {
++	__le32 is_assoc;
++	__le32 assoc_id;
++	__le32 data_policy;
++	__le32 ctwin;
++} __packed; /* MAC_CONTEXT_CONFIG_CLIENT_DATA_API_S_VER_1 */
 +
- static void iwl_fwrt_dump_umac_error_log(struct iwl_fw_runtime *fwrt)
- {
- 	struct iwl_trans *trans = fwrt->trans;
-@@ -113,6 +131,13 @@ static void iwl_fwrt_dump_umac_error_log(struct iwl_fw_runtime *fwrt)
- 	if (table.valid)
- 		fwrt->dump.umac_err_id = table.error_id;
- 
-+	if (!iwl_fwrt_if_errorid_other_cpu(fwrt->dump.umac_err_id) &&
-+	    !fwrt->trans->dbg.dump_file_name_ext_valid) {
-+		fwrt->trans->dbg.dump_file_name_ext_valid = true;
-+		snprintf(fwrt->trans->dbg.dump_file_name_ext, IWL_FW_INI_MAX_NAME,
-+			 "0x%x", fwrt->dump.umac_err_id);
-+	}
++/**
++ * struct iwl_mac_go_ibss_data - configuration data for GO and IBSS MAC context
++ *
++ * @beacon_template: beacon template ID
++ */
++struct iwl_mac_go_ibss_data {
++	__le32 beacon_template;
++} __packed; /* MAC_CONTEXT_CONFIG_GO_IBSS_DATA_API_S_VER_1 */
 +
- 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
- 		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
- 		IWL_ERR(trans, "Transport status: 0x%08lX, valid: %d\n",
-@@ -189,6 +214,13 @@ static void iwl_fwrt_dump_lmac_error_log(struct iwl_fw_runtime *fwrt, u8 lmac_nu
- 	if (table.valid)
- 		fwrt->dump.lmac_err_id[lmac_num] = table.error_id;
- 
-+	if (!iwl_fwrt_if_errorid_other_cpu(fwrt->dump.lmac_err_id[lmac_num]) &&
-+	    !fwrt->trans->dbg.dump_file_name_ext_valid) {
-+		fwrt->trans->dbg.dump_file_name_ext_valid = true;
-+		snprintf(fwrt->trans->dbg.dump_file_name_ext, IWL_FW_INI_MAX_NAME,
-+			 "0x%x", fwrt->dump.lmac_err_id[lmac_num]);
-+	}
++/**
++ * struct iwl_mac_p2p_dev_data  - configuration data for P2P device MAC context
++ *
++ * @is_disc_extended: if set to true, P2P Device discoverability is enabled on
++ *	other channels as well. This should be to true only in case that the
++ *	device is discoverable and there is an active GO. Note that setting this
++ *	field when not needed, will increase the number of interrupts and have
++ *	effect on the platform power, as this setting opens the Rx filters on
++ *	all macs.
++ */
++struct iwl_mac_p2p_dev_data {
++	__le32 is_disc_extended;
++} __packed; /* MAC_CONTEXT_CONFIG_P2P_DEV_DATA_API_S_VER_1 */
 +
- 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
- 		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
- 		IWL_ERR(trans, "Transport status: 0x%08lX, valid: %d\n",
-@@ -274,6 +306,16 @@ static void iwl_fwrt_dump_tcm_error_log(struct iwl_fw_runtime *fwrt, int idx)
- 
- 	iwl_trans_read_mem_bytes(trans, base, &table, sizeof(table));
- 
-+	if (table.valid)
-+		fwrt->dump.tcm_err_id[idx] = table.error_id;
++/**
++ * enum iwl_mac_config_filter_flags - MAC context configuration filter flags
++ *
++ * @MAC_CFG_FILTER_PROMISC: accept all data frames
++ * @MAC_CFG_FILTER_ACCEPT_CONTROL_AND_MGMT: pass all management and
++ *	control frames to the host
++ * @MAC_CFG_FILTER_ACCEPT_GRP: accept multicast frames
++ * @MAC_CFG_FILTER_ACCEPT_BEACON: accept beacon frames
++ * @MAC_CFG_FILTER_ACCEPT_BCAST_PROBE_RESP: accept broadcast probe response
++ * @MAC_CFG_FILTER_ACCEPT_PROBE_REQ: accept probe requests
++ */
++enum iwl_mac_config_filter_flags {
++	MAC_CFG_FILTER_PROMISC			= BIT(0),
++	MAC_CFG_FILTER_ACCEPT_CONTROL_AND_MGMT	= BIT(1),
++	MAC_CFG_FILTER_ACCEPT_GRP		= BIT(2),
++	MAC_CFG_FILTER_ACCEPT_BEACON		= BIT(3),
++	MAC_CFG_FILTER_ACCEPT_BCAST_PROBE_RESP	= BIT(4),
++	MAC_CFG_FILTER_ACCEPT_PROBE_REQ		= BIT(5),
++}; /* MAC_FILTER_FLAGS_MASK_E_VER_1 */
 +
-+	if (!iwl_fwrt_if_errorid_other_cpu(fwrt->dump.tcm_err_id[idx]) &&
-+	    !fwrt->trans->dbg.dump_file_name_ext_valid) {
-+		fwrt->trans->dbg.dump_file_name_ext_valid = true;
-+		snprintf(fwrt->trans->dbg.dump_file_name_ext, IWL_FW_INI_MAX_NAME,
-+			 "0x%x", fwrt->dump.tcm_err_id[idx]);
-+	}
++/**
++ * struct iwl_mac_config_cmd - command structure to configure MAC contexts in
++ *	MLD API
++ * ( MAC_CONTEXT_CONFIG_CMD = 0x8 )
++ *
++ * @id_and_color: ID and color of the MAC
++ * @action: action to perform, one of FW_CTXT_ACTION_*
++ * @mac_type: one of &enum iwl_mac_types
++ * @local_mld_addr: mld address
++ * @reserved_for_local_mld_addr: reserved
++ * @filter_flags: combination of &enum iwl_mac_config_filter_flags
++ * @he_support: does this MAC support HE
++ * @eht_support: does this MAC support EHT. Requires he_support
++ * @nic_not_ack_enabled: mark that the NIC doesn't support receiving
++ *	ACK-enabled AGG, (i.e. both BACK and non-BACK frames in single AGG).
++ *	If the NIC is not ACK_ENABLED it may use the EOF-bit in first non-0
++ *	len delim to determine if AGG or single.
++ * @client: client mac data
++ * @go_ibss: mac data for go or ibss
++ * @p2p_dev: mac data for p2p device
++ */
++struct iwl_mac_config_cmd {
++	/* COMMON_INDEX_HDR_API_S_VER_1 */
++	__le32 id_and_color;
++	__le32 action;
++	/* MAC_CONTEXT_TYPE_API_E */
++	__le32 mac_type;
++	u8 local_mld_addr[6];
++	__le16 reserved_for_local_mld_addr;
++	__le32 filter_flags;
++	__le32 he_support;
++	__le32 eht_support;
++	__le32 nic_not_ack_enabled;
++	/* MAC_CONTEXT_CONFIG_SPECIFIC_DATA_API_U_VER_1 */
++	union {
++		struct iwl_mac_client_data client;
++		struct iwl_mac_go_ibss_data go_ibss;
++		struct iwl_mac_p2p_dev_data p2p_dev;
++	};
++} __packed; /* MAC_CONTEXT_CONFIG_CMD_API_S_VER_1 */
 +
- 	IWL_ERR(fwrt, "TCM%d status:\n", idx + 1);
- 	IWL_ERR(fwrt, "0x%08X | error ID\n", table.error_id);
- 	IWL_ERR(fwrt, "0x%08X | tcm branchlink2\n", table.blink2);
-@@ -337,6 +379,16 @@ static void iwl_fwrt_dump_rcm_error_log(struct iwl_fw_runtime *fwrt, int idx)
- 
- 	iwl_trans_read_mem_bytes(trans, base, &table, sizeof(table));
- 
-+	if (table.valid)
-+		fwrt->dump.rcm_err_id[idx] = table.error_id;
-+
-+	if (!iwl_fwrt_if_errorid_other_cpu(fwrt->dump.rcm_err_id[idx]) &&
-+	    !fwrt->trans->dbg.dump_file_name_ext_valid) {
-+		fwrt->trans->dbg.dump_file_name_ext_valid = true;
-+		snprintf(fwrt->trans->dbg.dump_file_name_ext, IWL_FW_INI_MAX_NAME,
-+			 "0x%x", fwrt->dump.rcm_err_id[idx]);
-+	}
-+
- 	IWL_ERR(fwrt, "RCM%d status:\n", idx + 1);
- 	IWL_ERR(fwrt, "0x%08X | error ID\n", table.error_id);
- 	IWL_ERR(fwrt, "0x%08X | rcm branchlink2\n", table.blink2);
-@@ -444,8 +496,10 @@ void iwl_fwrt_dump_error_logs(struct iwl_fw_runtime *fwrt)
- 	iwl_fwrt_dump_umac_error_log(fwrt);
- 	iwl_fwrt_dump_tcm_error_log(fwrt, 0);
- 	iwl_fwrt_dump_rcm_error_log(fwrt, 0);
--	iwl_fwrt_dump_tcm_error_log(fwrt, 1);
--	iwl_fwrt_dump_rcm_error_log(fwrt, 1);
-+	if (fwrt->trans->dbg.tcm_error_event_table[1])
-+		iwl_fwrt_dump_tcm_error_log(fwrt, 1);
-+	if (fwrt->trans->dbg.rcm_error_event_table[1])
-+		iwl_fwrt_dump_rcm_error_log(fwrt, 1);
- 	iwl_fwrt_dump_iml_error_log(fwrt);
- 	iwl_fwrt_dump_fseq_regs(fwrt);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index d3cb1ae68a96..a59cf4d9567c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -24,6 +24,8 @@ struct iwl_fw_runtime_ops {
- };
- 
- #define MAX_NUM_LMAC 2
-+#define MAX_NUM_TCM 2
-+#define MAX_NUM_RCM 2
- struct iwl_fwrt_shared_mem_cfg {
- 	int num_lmacs;
- 	int num_txfifo_entries;
-@@ -129,6 +131,8 @@ struct iwl_fw_runtime {
- 		unsigned long non_collect_ts_start[IWL_FW_INI_TIME_POINT_NUM];
- 		u32 *d3_debug_data;
- 		u32 lmac_err_id[MAX_NUM_LMAC];
-+		u32 tcm_err_id[MAX_NUM_TCM];
-+		u32 rcm_err_id[MAX_NUM_RCM];
- 		u32 umac_err_id;
- 
- 		struct iwl_txf_iter_data txf_iter_data;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 45981e22b2db..3e9e9f13506b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -122,8 +122,6 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 	u32 version = iwl_fw_lookup_notif_ver(mvm->fw, LEGACY_GROUP,
- 					      UCODE_ALIVE_NTFY, 0);
- 	u32 i;
--	struct iwl_trans *trans = mvm->trans;
--	enum iwl_device_family device_family = trans->trans_cfg->device_family;
- 
- 
- 	if (version == 6) {
-@@ -233,8 +231,7 @@ static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
- 
- 	if (umac_error_table) {
- 		if (umac_error_table >=
--		    mvm->trans->cfg->min_umac_error_event_table ||
--		    device_family >= IWL_DEVICE_FAMILY_BZ) {
-+		    mvm->trans->cfg->min_umac_error_event_table) {
- 			iwl_fw_umac_set_alive_err_table(mvm->trans,
- 							umac_error_table);
- 		} else {
+ #endif /* __iwl_fw_api_mac_cfg_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
+index b28fcf0cf9cf..d71f0a99b7c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
+@@ -7,7 +7,7 @@ iwlmvm-y += power.o coex.o
+ iwlmvm-y += tt.o offloading.o tdls.o
+ iwlmvm-y += ftm-responder.o ftm-initiator.o
+ iwlmvm-y += rfi.o
+-iwlmvm-y += mld-key.o
++iwlmvm-y += mld-key.o mld-mac.o
+ iwlmvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o debugfs-vif.o
+ iwlmvm-$(CONFIG_IWLWIFI_LEDS) += led.o
+ iwlmvm-$(CONFIG_PM) += d3.o
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 114c96ba39ee..422550e31bc6 100644
+index a30385b85a60..b21327ec4401 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -430,47 +430,55 @@ static void iwl_mvm_mac_ctxt_set_ht_flags(struct iwl_mvm *mvm,
- 	}
+@@ -488,7 +488,7 @@ static void iwl_mvm_set_fw_qos_params(struct iwl_mvm *mvm,
+ 		*qos_flags |= cpu_to_le32(MAC_QOS_FLG_TGN);
  }
  
--static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
--					struct ieee80211_vif *vif,
--					struct iwl_mac_ctx_cmd *cmd,
--					const u8 *bssid_override,
--					u32 action)
-+static int iwl_mvm_get_mac_type(struct ieee80211_vif *vif)
+-static int iwl_mvm_get_mac_type(struct ieee80211_vif *vif)
++int iwl_mvm_get_mac_type(struct ieee80211_vif *vif)
  {
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	struct ieee80211_chanctx_conf *chanctx;
--	bool ht_enabled = !!(vif->bss_conf.ht_operation_mode &
--			     IEEE80211_HT_OP_MODE_PROTECTION);
--	u8 cck_ack_rates, ofdm_ack_rates;
--	const u8 *bssid = bssid_override ?: vif->bss_conf.bssid;
--	int i;
--
--	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
--							    mvmvif->color));
--	cmd->action = cpu_to_le32(action);
-+	u32 mac_type = FW_MAC_TYPE_BSS_STA;
+ 	u32 mac_type = FW_MAC_TYPE_BSS_STA;
  
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
- 		if (vif->p2p)
--			cmd->mac_type = cpu_to_le32(FW_MAC_TYPE_P2P_STA);
-+			mac_type = FW_MAC_TYPE_P2P_STA;
- 		else
--			cmd->mac_type = cpu_to_le32(FW_MAC_TYPE_BSS_STA);
-+			mac_type = FW_MAC_TYPE_BSS_STA;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		cmd->mac_type = cpu_to_le32(FW_MAC_TYPE_GO);
-+		mac_type = FW_MAC_TYPE_GO;
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
--		cmd->mac_type = cpu_to_le32(FW_MAC_TYPE_LISTENER);
-+		mac_type = FW_MAC_TYPE_LISTENER;
- 		break;
- 	case NL80211_IFTYPE_P2P_DEVICE:
--		cmd->mac_type = cpu_to_le32(FW_MAC_TYPE_P2P_DEVICE);
-+		mac_type = FW_MAC_TYPE_P2P_DEVICE;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		cmd->mac_type = cpu_to_le32(FW_MAC_TYPE_IBSS);
-+		mac_type = FW_MAC_TYPE_IBSS;
- 		break;
- 	default:
- 		WARN_ON_ONCE(1);
- 	}
+@@ -612,8 +612,8 @@ static void iwl_mvm_set_fw_dtim_tbtt(struct iwl_mvm *mvm,
+ 		       dtim_offs);
+ }
  
-+	return mac_type;
-+}
+-static __le32 iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(struct iwl_mvm *mvm,
+-							   struct ieee80211_vif *vif)
++__le32 iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(struct iwl_mvm *mvm,
++						    struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_p2p_noa_attr *noa =
+ 		&vif->bss_conf.p2p_noa_attr;
+@@ -622,8 +622,8 @@ static __le32 iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(struct iwl_mvm *mvm,
+ 			IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
+ }
+ 
+-static __le32 iwl_mvm_mac_ctxt_cmd_sta_get_twt_policy(struct iwl_mvm *mvm,
+-						      struct ieee80211_vif *vif)
++__le32 iwl_mvm_mac_ctxt_cmd_sta_get_twt_policy(struct iwl_mvm *mvm,
++					       struct ieee80211_vif *vif)
+ {
+ 	__le32 twt_policy = cpu_to_le32(0);
+ 
+@@ -785,8 +785,8 @@ static void iwl_mvm_go_iterator(void *_data, u8 *mac, struct ieee80211_vif *vif)
+ 		data->go_active = true;
+ }
+ 
+-static __le32 iwl_mac_ctxt_p2p_dev_has_extended_disc(struct iwl_mvm *mvm,
+-						     struct ieee80211_vif *vif)
++__le32 iwl_mac_ctxt_p2p_dev_has_extended_disc(struct iwl_mvm *mvm,
++					      struct ieee80211_vif *vif)
+ {
+ 	struct iwl_mvm_go_iterator_data data = {};
+ 
+@@ -1167,11 +1167,11 @@ static void iwl_mvm_mac_ap_iterator(void *_data, u8 *mac,
+ /*
+  * Fill the filter flags for mac context of type AP or P2P GO.
+  */
+-static void iwl_mvm_mac_ctxt_cmd_ap_set_filter_flags(struct iwl_mvm *mvm,
+-						     struct iwl_mvm_vif *mvmvif,
+-						     __le32 *filter_flags,
+-						     int accept_probe_req_flag,
+-						     int accept_beacon_flag)
++void iwl_mvm_mac_ctxt_cmd_ap_set_filter_flags(struct iwl_mvm *mvm,
++					      struct iwl_mvm_vif *mvmvif,
++					      __le32 *filter_flags,
++					      int accept_probe_req_flag,
++					      int accept_beacon_flag)
+ {
+ 	/*
+ 	 * in AP mode, pass probe requests and beacons from other APs
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index b1f638af4b2c..210b134c735f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2032,8 +2032,7 @@ static bool iwl_mvm_set_fw_mu_edca_params(struct iwl_mvm *mvm,
+ 	return mu_edca_enabled;
+ }
+ 
+-static bool iwl_mvm_is_nic_ack_enabled(struct iwl_mvm *mvm,
+-				       struct ieee80211_vif *vif)
++bool iwl_mvm_is_nic_ack_enabled(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ {
+ 	const struct ieee80211_supported_band *sband;
+ 	const struct ieee80211_sta_he_cap *own_he_cap = NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c
+new file mode 100644
+index 000000000000..240f51d2fd53
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c
+@@ -0,0 +1,271 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/*
++ * Copyright (C) 2022 Intel Corporation
++ */
++#include "mvm.h"
 +
-+static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
-+					struct ieee80211_vif *vif,
-+					struct iwl_mac_ctx_cmd *cmd,
-+					const u8 *bssid_override,
-+					u32 action)
++static void iwl_mvm_mld_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
++					    struct ieee80211_vif *vif,
++					    struct iwl_mac_config_cmd *cmd,
++					    u32 action)
 +{
 +	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct ieee80211_chanctx_conf *chanctx;
-+	bool ht_enabled = !!(vif->bss_conf.ht_operation_mode &
-+			     IEEE80211_HT_OP_MODE_PROTECTION);
-+	u8 cck_ack_rates, ofdm_ack_rates;
-+	const u8 *bssid = bssid_override ?: vif->bss_conf.bssid;
-+	int i;
 +
-+	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
-+							    mvmvif->color));
++	cmd->id_and_color = cpu_to_le32(mvmvif->id);
 +	cmd->action = cpu_to_le32(action);
++
 +	cmd->mac_type = cpu_to_le32(iwl_mvm_get_mac_type(vif));
 +
- 	cmd->tsf_id = cpu_to_le32(mvmvif->tsf_id);
- 
- 	memcpy(cmd->node_addr, vif->addr, ETH_ALEN);
-@@ -1428,6 +1436,7 @@ void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
- 	struct ieee80211_vif *vif;
- 	u32 id = le32_to_cpu(mb->mac_id);
- 	union iwl_dbg_tlv_tp_data tp_data = { .fw_pkt = pkt };
-+	u32 mac_type;
- 
- 	IWL_DEBUG_INFO(mvm,
- 		       "missed bcn mac_id=%u, consecutive=%u (%u, %u, %u)\n",
-@@ -1443,6 +1452,14 @@ void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
- 	if (!vif)
- 		goto out;
- 
-+	mac_type = iwl_mvm_get_mac_type(vif);
++	memcpy(cmd->local_mld_addr, vif->addr, ETH_ALEN);
 +
-+	IWL_DEBUG_INFO(mvm, "missed beacon mac_type=%u,\n", mac_type);
++	cmd->filter_flags = cpu_to_le32(0);
++	cmd->he_support = cpu_to_le32(0);
++	cmd->eht_support = cpu_to_le32(0);
 +
-+	mvm->trans->dbg.dump_file_name_ext_valid = true;
-+	snprintf(mvm->trans->dbg.dump_file_name_ext, IWL_FW_INI_MAX_NAME,
-+		 "MacId_%d_MacType_%d", id, mac_type);
++	cmd->nic_not_ack_enabled =
++		cpu_to_le32(!iwl_mvm_is_nic_ack_enabled(mvm, vif));
 +
- 	rx_missed_bcon = le32_to_cpu(mb->consec_missed_beacons);
- 	rx_missed_bcon_since_rx =
- 		le32_to_cpu(mb->consec_missed_beacons_since_last_rx);
++	if (iwlwifi_mod_params.disable_11ax)
++		return;
++	cmd->he_support = cpu_to_le32(vif->bss_conf.he_support);
++
++	if (!iwlwifi_mod_params.disable_11be && cmd->he_support)
++		cmd->eht_support = cpu_to_le32(vif->bss_conf.eht_support);
++}
++
++static int iwl_mvm_mld_mac_ctxt_send_cmd(struct iwl_mvm *mvm,
++					 struct iwl_mac_config_cmd *cmd)
++{
++	int ret = iwl_mvm_send_cmd_pdu(mvm,
++				       WIDE_ID(MAC_CONF_GROUP, MAC_CONFIG_CMD),
++				       0, sizeof(*cmd), cmd);
++	if (ret)
++		IWL_ERR(mvm, "Failed to send MAC_CONFIG_CMD (action:%d): %d\n",
++			le32_to_cpu(cmd->action), ret);
++	return ret;
++}
++
++static int iwl_mvm_mld_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
++					struct ieee80211_vif *vif,
++					u32 action, bool force_assoc_off)
++{
++	struct iwl_mac_config_cmd cmd = {};
++
++	WARN_ON(vif->type != NL80211_IFTYPE_STATION);
++
++	/* Fill the common data for all mac context types */
++	iwl_mvm_mld_mac_ctxt_cmd_common(mvm, vif, &cmd, action);
++
++	/*
++	 * We always want to hear MCAST frames, if we're not authorized yet,
++	 * we'll drop them.
++	 */
++	cmd.filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_GRP);
++
++	if (vif->p2p)
++		cmd.client.ctwin =
++			iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(mvm, vif);
++
++	if (vif->cfg.assoc && vif->bss_conf.dtim_period &&
++	    !force_assoc_off) {
++		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++
++		cmd.client.is_assoc = cpu_to_le32(1);
++
++		if (!mvmvif->authorized &&
++		    fw_has_capa(&mvm->fw->ucode_capa,
++				IWL_UCODE_TLV_CAPA_COEX_HIGH_PRIO))
++			cmd.client.data_policy |=
++				cpu_to_le32(COEX_HIGH_PRIORITY_ENABLE);
++
++	} else {
++		cmd.client.is_assoc = cpu_to_le32(0);
++
++		/* Allow beacons to pass through as long as we are not
++		 * associated, or we do not have dtim period information.
++		 */
++		cmd.filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_BEACON);
++	}
++
++	cmd.client.assoc_id = cpu_to_le32(vif->cfg.aid);
++
++	if (vif->probe_req_reg && vif->cfg.assoc && vif->p2p)
++		cmd.filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_PROBE_REQ);
++
++	if (vif->bss_conf.he_support && !iwlwifi_mod_params.disable_11ax)
++		cmd.client.data_policy |=
++			iwl_mvm_mac_ctxt_cmd_sta_get_twt_policy(mvm, vif);
++
++	return iwl_mvm_mld_mac_ctxt_send_cmd(mvm, &cmd);
++}
++
++static int iwl_mvm_mld_mac_ctxt_cmd_listener(struct iwl_mvm *mvm,
++					     struct ieee80211_vif *vif,
++					     u32 action)
++{
++	struct iwl_mac_config_cmd cmd = {};
++
++	WARN_ON(vif->type != NL80211_IFTYPE_MONITOR);
++
++	iwl_mvm_mld_mac_ctxt_cmd_common(mvm, vif, &cmd, action);
++
++	cmd.filter_flags = cpu_to_le32(MAC_CFG_FILTER_PROMISC |
++				       MAC_FILTER_IN_CONTROL_AND_MGMT |
++				       MAC_CFG_FILTER_ACCEPT_BEACON |
++				       MAC_CFG_FILTER_ACCEPT_PROBE_REQ |
++				       MAC_CFG_FILTER_ACCEPT_GRP);
++
++	return iwl_mvm_mld_mac_ctxt_send_cmd(mvm, &cmd);
++}
++
++static int iwl_mvm_mld_mac_ctxt_cmd_ibss(struct iwl_mvm *mvm,
++					 struct ieee80211_vif *vif,
++					 u32 action)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mac_config_cmd cmd = {};
++
++	WARN_ON(vif->type != NL80211_IFTYPE_ADHOC);
++
++	iwl_mvm_mld_mac_ctxt_cmd_common(mvm, vif, &cmd, action);
++
++	cmd.filter_flags = cpu_to_le32(MAC_CFG_FILTER_ACCEPT_BEACON |
++				       MAC_CFG_FILTER_ACCEPT_PROBE_REQ |
++				       MAC_CFG_FILTER_ACCEPT_GRP);
++
++	/* TODO: Assumes that the beacon id == mac context id */
++	cmd.go_ibss.beacon_template = cpu_to_le32(mvmvif->id);
++
++	return iwl_mvm_mld_mac_ctxt_send_cmd(mvm, &cmd);
++}
++
++static int iwl_mvm_mld_mac_ctxt_cmd_p2p_device(struct iwl_mvm *mvm,
++					       struct ieee80211_vif *vif,
++					       u32 action)
++{
++	struct iwl_mac_config_cmd cmd = {};
++
++	WARN_ON(vif->type != NL80211_IFTYPE_P2P_DEVICE);
++
++	iwl_mvm_mld_mac_ctxt_cmd_common(mvm, vif, &cmd, action);
++
++	cmd.p2p_dev.is_disc_extended =
++		iwl_mac_ctxt_p2p_dev_has_extended_disc(mvm, vif);
++
++	/* Override the filter flags to accept only probe requests */
++	cmd.filter_flags = cpu_to_le32(MAC_CFG_FILTER_ACCEPT_PROBE_REQ);
++
++	return iwl_mvm_mld_mac_ctxt_send_cmd(mvm, &cmd);
++}
++
++static int iwl_mvm_mld_mac_ctxt_cmd_ap_go(struct iwl_mvm *mvm,
++					  struct ieee80211_vif *vif,
++					  u32 action)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mac_config_cmd cmd = {};
++
++	WARN_ON(vif->type != NL80211_IFTYPE_AP);
++
++	/* Fill the common data for all mac context types */
++	iwl_mvm_mld_mac_ctxt_cmd_common(mvm, vif, &cmd, action);
++
++	iwl_mvm_mac_ctxt_cmd_ap_set_filter_flags(mvm, mvmvif,
++						 &cmd.filter_flags,
++						 MAC_CFG_FILTER_ACCEPT_PROBE_REQ,
++						 MAC_CFG_FILTER_ACCEPT_BEACON);
++
++	/* TODO: Assume that the beacon id == mac context id */
++	cmd.go_ibss.beacon_template = cpu_to_le32(mvmvif->id);
++
++	return iwl_mvm_mld_mac_ctxt_send_cmd(mvm, &cmd);
++}
++
++static int iwl_mvm_mld_mac_ctx_send(struct iwl_mvm *mvm,
++				    struct ieee80211_vif *vif,
++				    u32 action, bool force_assoc_off)
++{
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		return iwl_mvm_mld_mac_ctxt_cmd_sta(mvm, vif, action,
++						    force_assoc_off);
++	case NL80211_IFTYPE_AP:
++		return iwl_mvm_mld_mac_ctxt_cmd_ap_go(mvm, vif, action);
++	case NL80211_IFTYPE_MONITOR:
++		return iwl_mvm_mld_mac_ctxt_cmd_listener(mvm, vif, action);
++	case NL80211_IFTYPE_P2P_DEVICE:
++		return iwl_mvm_mld_mac_ctxt_cmd_p2p_device(mvm, vif, action);
++	case NL80211_IFTYPE_ADHOC:
++		return iwl_mvm_mld_mac_ctxt_cmd_ibss(mvm, vif, action);
++	default:
++		break;
++	}
++
++	return -EOPNOTSUPP;
++}
++
++int iwl_mvm_mld_mac_ctxt_add(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	int ret;
++
++	if (WARN_ON_ONCE(vif->type == NL80211_IFTYPE_NAN))
++		return -EOPNOTSUPP;
++
++	if (WARN_ONCE(mvmvif->uploaded, "Adding active MAC %pM/%d\n",
++		      vif->addr, ieee80211_vif_type_p2p(vif)))
++		return -EIO;
++
++	ret = iwl_mvm_mld_mac_ctx_send(mvm, vif, FW_CTXT_ACTION_ADD,
++				       true);
++	if (ret)
++		return ret;
++
++	/* will only do anything at resume from D3 time */
++	iwl_mvm_set_last_nonqos_seq(mvm, vif);
++
++	mvmvif->uploaded = true;
++	return 0;
++}
++
++int iwl_mvm_mld_mac_ctxt_changed(struct iwl_mvm *mvm,
++				 struct ieee80211_vif *vif,
++				 bool force_assoc_off)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++
++	if (WARN_ON_ONCE(vif->type == NL80211_IFTYPE_NAN))
++		return -EOPNOTSUPP;
++
++	if (WARN_ONCE(!mvmvif->uploaded, "Changing inactive MAC %pM/%d\n",
++		      vif->addr, ieee80211_vif_type_p2p(vif)))
++		return -EIO;
++
++	return iwl_mvm_mld_mac_ctx_send(mvm, vif, FW_CTXT_ACTION_MODIFY,
++					force_assoc_off);
++}
++
++int iwl_mvm_mld_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mac_config_cmd cmd = {
++		.action = cpu_to_le32(FW_CTXT_ACTION_REMOVE),
++		.id_and_color = cpu_to_le32(mvmvif->id),
++	};
++	int ret;
++
++	if (WARN_ON_ONCE(vif->type == NL80211_IFTYPE_NAN))
++		return -EOPNOTSUPP;
++
++	if (WARN_ONCE(!mvmvif->uploaded, "Removing inactive MAC %pM/%d\n",
++		      vif->addr, ieee80211_vif_type_p2p(vif)))
++		return -EIO;
++
++	ret = iwl_mvm_mld_mac_ctxt_send_cmd(mvm, &cmd);
++	if (ret)
++		return ret;
++
++	mvmvif->uploaded = false;
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 301f39d9efe7..72f429537572 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1477,6 +1477,7 @@ void iwl_mvm_hwrate_to_tx_rate_v1(u32 rate_n_flags,
+ 				  struct ieee80211_tx_rate *r);
+ u8 iwl_mvm_mac80211_idx_to_hwrate(const struct iwl_fw *fw, int rate_idx);
+ u8 iwl_mvm_mac80211_ac_to_ucode_ac(enum ieee80211_ac_numbers ac);
++bool iwl_mvm_is_nic_ack_enabled(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ 
+ static inline void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ {
+@@ -1638,6 +1639,23 @@ u8 iwl_mvm_get_channel_width(struct cfg80211_chan_def *chandef);
+ u8 iwl_mvm_get_ctrl_pos(struct cfg80211_chan_def *chandef);
+ 
+ /* MAC (virtual interface) programming */
++
++__le32 iwl_mac_ctxt_p2p_dev_has_extended_disc(struct iwl_mvm *mvm,
++					      struct ieee80211_vif *vif);
++void iwl_mvm_mac_ctxt_cmd_ap_set_filter_flags(struct iwl_mvm *mvm,
++					      struct iwl_mvm_vif *mvmvif,
++					      __le32 *filter_flags,
++					      int accept_probe_req_flag,
++					      int accept_beacon_flag);
++int iwl_mvm_get_mac_type(struct ieee80211_vif *vif);
++__le32 iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(struct iwl_mvm *mvm,
++						    struct ieee80211_vif *vif);
++__le32 iwl_mvm_mac_ctxt_cmd_sta_get_twt_policy(struct iwl_mvm *mvm,
++					       struct ieee80211_vif *vif);
++int iwl_mvm_mld_mac_ctxt_add(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++int iwl_mvm_mld_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++				 bool force_assoc_off);
++int iwl_mvm_mld_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_mac_ctxt_init(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_mac_ctxt_add(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index f4e9446d9dc2..69c390ff2745 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -521,6 +521,7 @@ static const struct iwl_hcmd_names iwl_mvm_system_names[] = {
+ static const struct iwl_hcmd_names iwl_mvm_mac_conf_names[] = {
+ 	HCMD_NAME(CHANNEL_SWITCH_TIME_EVENT_CMD),
+ 	HCMD_NAME(SESSION_PROTECTION_CMD),
++	HCMD_NAME(MAC_CONFIG_CMD),
+ 	HCMD_NAME(SESSION_PROTECTION_NOTIF),
+ 	HCMD_NAME(CHANNEL_SWITCH_START_NOTIF),
+ };
 -- 
 2.38.1
 
