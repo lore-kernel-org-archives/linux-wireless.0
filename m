@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42F37C74A44
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D59AFC6FD1C
 	for <linux-wireless@archiver.kernel.org>; Tue, 14 Mar 2023 10:00:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229811AbjCNKAW (ORCPT
+        id S229783AbjCNKAX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Mar 2023 06:00:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38842 "EHLO
+        Tue, 14 Mar 2023 06:00:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbjCNKAN (ORCPT
+        with ESMTP id S229749AbjCNKAO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2023 06:00:13 -0400
+        Tue, 14 Mar 2023 06:00:14 -0400
 Received: from nbd.name (nbd.name [46.4.11.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FC327B9B1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2023 03:00:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA6947040E
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2023 03:00:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=S9mXz92IwANo9W6BvEX/MTA4bi1YvEKDLzEk/JqHTe4=; b=YcZJfI9PrIdos9ryNJj2OYmoJg
-        lpNjk3abXlE5cN56glk/HYYxsOr2BccBoMmZ17PlH1kImkC4jZ3GGOTGIpJkLc/yFa1hMXlhmm8/V
-        guOKcwExRCZvIHxR2WXwsz4Jaao1+9VvpR8NCkLKTM+yFrJ6L5fqcqSbfzZ7x1KoZdJg=;
+        bh=tbKE/nYJ+7Lun0DwdA+0fm889JkIwEA4/XvzMJWgXUc=; b=M+qu3+/tP67Dw85Q+w08A54FkZ
+        9X91gN6gvhCsExyq/OkfUJpiQ4nV0s/hP45ABZsUKXL4xUy80un1LXa2GQRrCtSvBRBl+1SJtxWI+
+        NYJDcCIwrxITPepFvX0+iqgVja9T+6Y0Ie6EYI4Uqkwoyc6gw/KIK5to7whr7qfo9/gg=;
 Received: from p54ae9730.dip0.t-ipconnect.de ([84.174.151.48] helo=Maecks.lan)
         by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
         (Exim 4.94.2)
         (envelope-from <nbd@nbd.name>)
-        id 1pc1Ro-001pV5-3C; Tue, 14 Mar 2023 11:00:00 +0100
+        id 1pc1Ro-001pV5-RQ; Tue, 14 Mar 2023 11:00:00 +0100
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 5/7] wifi: mac80211: use mesh header cache to speed up mesh forwarding
-Date:   Tue, 14 Mar 2023 10:59:54 +0100
-Message-Id: <20230314095956.62085-5-nbd@nbd.name>
+Subject: [PATCH 7/7] mac80211: implement support for yet another mesh A-MSDU format
+Date:   Tue, 14 Mar 2023 10:59:56 +0100
+Message-Id: <20230314095956.62085-7-nbd@nbd.name>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230314095956.62085-1-nbd@nbd.name>
 References: <20230314095956.62085-1-nbd@nbd.name>
@@ -45,144 +45,172 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Significantly reduces mesh forwarding path CPU usage and enables the
-direct use of iTXQ.
+MT7996 hardware supports mesh A-MSDU subframes in hardware, but uses a
+big-endian length field
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/rx.c          | 65 +++++++++++++++++++++++++++++++++++++-
- net/mac80211/tx.c          |  6 ++--
- 3 files changed, 68 insertions(+), 5 deletions(-)
+ include/net/cfg80211.h  | 11 +++++++----
+ net/mac80211/rx.c       | 22 ++++++++++++++++------
+ net/mac80211/sta_info.h |  5 ++++-
+ net/wireless/util.c     | 36 +++++++++++++++++++++++-------------
+ 4 files changed, 50 insertions(+), 24 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 54e69c6447c0..a897275f7a0d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2037,6 +2037,8 @@ void __ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 			   struct ieee80211_fast_tx *fast_tx,
- 			   struct sk_buff *skb, bool ampdu,
- 			   const u8 *da, const u8 *sa);
-+void ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
-+			  struct sta_info *sta, struct sk_buff *skb);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7cebba1c4135..86cb048dc924 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -6274,10 +6274,13 @@ static inline int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+  * mesh control field.
+  *
+  * @skb: The input A-MSDU frame without any headers.
+- * @mesh_hdr: use standard compliant mesh A-MSDU subframe header
++ * @mesh_hdr: the type of mesh header to test
++ *	0: non-mesh A-MSDU length field
++ *	1: big-endian mesh A-MSDU length field
++ *	2: little-endian mesh A-MSDU length field
+  * Returns: true if subframe header lengths are valid for the @mesh_hdr mode
+  */
+-bool ieee80211_is_valid_amsdu(struct sk_buff *skb, bool mesh_hdr);
++bool ieee80211_is_valid_amsdu(struct sk_buff *skb, u8 mesh_hdr);
  
- /* HT */
- void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
+ /**
+  * ieee80211_amsdu_to_8023s - decode an IEEE 802.11n A-MSDU frame
+@@ -6294,13 +6297,13 @@ bool ieee80211_is_valid_amsdu(struct sk_buff *skb, bool mesh_hdr);
+  * @extra_headroom: The hardware extra headroom for SKBs in the @list.
+  * @check_da: DA to check in the inner ethernet header, or NULL
+  * @check_sa: SA to check in the inner ethernet header, or NULL
+- * @mesh_control: A-MSDU subframe header includes the mesh control field
++ * @mesh_control: see mesh_hdr in ieee80211_is_valid_amsdu
+  */
+ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 			      const u8 *addr, enum nl80211_iftype iftype,
+ 			      const unsigned int extra_headroom,
+ 			      const u8 *check_da, const u8 *check_sa,
+-			      bool mesh_control);
++			      u8 mesh_control);
+ 
+ /**
+  * ieee80211_get_8023_tunnel_proto - get RFC1042 or bridge tunnel encap protocol
 diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0553ccf4831a..cdad8a081cf1 100644
+index 2a883d956260..3635d036375a 100644
 --- a/net/mac80211/rx.c
 +++ b/net/mac80211/rx.c
-@@ -2701,6 +2701,65 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+@@ -2983,13 +2983,23 @@ __ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx, u8 data_offset)
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	if (rx->sta && rx->sta->amsdu_mesh_control < 0) {
+-		bool valid_std = ieee80211_is_valid_amsdu(skb, true);
+-		bool valid_nonstd = ieee80211_is_valid_amsdu(skb, false);
++		s8 valid = -1;
++		int i;
++
++		for (i = 0; i <= 2; i++) {
++			if (!ieee80211_is_valid_amsdu(skb, i))
++				continue;
++
++			if (valid >= 0) {
++				/* ambiguous */
++				valid = -1;
++				break;
++			}
++
++			valid = i;
++		}
+ 
+-		if (valid_std && !valid_nonstd)
+-			rx->sta->amsdu_mesh_control = 1;
+-		else if (valid_nonstd && !valid_std)
+-			rx->sta->amsdu_mesh_control = 0;
++		rx->sta->amsdu_mesh_control = valid;
  	}
+ 
+ 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index e8e482a82d77..f354d470e174 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -623,7 +623,10 @@ struct link_sta_info {
+  * @cparams: CoDel parameters for this station.
+  * @reserved_tid: reserved TID (if any, otherwise IEEE80211_TID_UNRESERVED)
+  * @amsdu_mesh_control: track the mesh A-MSDU format used by the peer
+- *	(-1: not yet known, 0: non-standard [without mesh header], 1: standard)
++ *	(-1: not yet known,
++ *	  0: non-mesh A-MSDU length field
++ *	  1: big-endian mesh A-MSDU length field
++ *	  2: little-endian mesh A-MSDU length field)
+  * @fast_tx: TX fastpath information
+  * @fast_rx: RX fastpath information
+  * @tdls_chandef: a TDLS peer can have a wider chandef that is compatible to
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index d1a89e82ead0..3bc0c3072e78 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -776,7 +776,24 @@ __ieee80211_amsdu_copy(struct sk_buff *skb, unsigned int hlen,
+ 	return frame;
  }
  
-+#ifdef CONFIG_MAC80211_MESH
-+static bool
-+ieee80211_rx_mesh_fast_forward(struct ieee80211_sub_if_data *sdata,
-+			       struct sk_buff *skb, int hdrlen)
+-bool ieee80211_is_valid_amsdu(struct sk_buff *skb, bool mesh_hdr)
++static u16
++ieee80211_amsdu_subframe_length(void *field, u8 mesh_flags, u8 hdr_type)
 +{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee80211_mesh_fast_tx *entry = NULL;
-+	struct ieee80211s_hdr *mesh_hdr;
-+	struct tid_ampdu_tx *tid_tx;
-+	struct sta_info *sta;
-+	struct ethhdr eth;
-+	u8 tid;
++	__le16 *field_le = field;
++	__be16 *field_be = field;
++	u16 len;
 +
-+	mesh_hdr = (struct ieee80211s_hdr *)(skb->data + sizeof(eth));
-+	if ((mesh_hdr->flags & MESH_FLAGS_AE) == MESH_FLAGS_AE_A5_A6)
-+		entry = mesh_fast_tx_get(sdata, mesh_hdr->eaddr1);
-+	else if (!(mesh_hdr->flags & MESH_FLAGS_AE))
-+		entry = mesh_fast_tx_get(sdata, skb->data);
-+	if (!entry)
-+		return false;
-+
-+	sta = rcu_dereference(entry->mpath->next_hop);
-+	if (!sta)
-+		return false;
-+
-+	if (skb_linearize(skb))
-+		return false;
-+
-+	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-+	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
-+	if (tid_tx) {
-+		if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state))
-+			return false;
-+
-+		if (tid_tx->timeout)
-+			tid_tx->last_tx = jiffies;
-+	}
-+
-+	ieee80211_aggr_check(sdata, sta, skb);
-+
-+	if (ieee80211_get_8023_tunnel_proto(skb->data + hdrlen,
-+					    &skb->protocol))
-+		hdrlen += ETH_ALEN;
++	if (hdr_type >= 2)
++		len = le16_to_cpu(*field_le);
 +	else
-+		skb->protocol = htons(skb->len - hdrlen);
-+	skb_set_network_header(skb, hdrlen + 2);
++		len = be16_to_cpu(*field_be);
++	if (hdr_type)
++		len += __ieee80211_get_mesh_hdrlen(mesh_flags);
 +
-+	skb->dev = sdata->dev;
-+	memcpy(&eth, skb->data, ETH_HLEN - 2);
-+	skb_pull(skb, 2);
-+	__ieee80211_xmit_fast(sdata, sta, &entry->fast_tx, skb, tid_tx,
-+			      eth.h_dest, eth.h_source);
-+	IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_unicast);
-+	IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_frames);
-+
-+	return true;
++	return len;
 +}
-+#endif
 +
- static ieee80211_rx_result
- ieee80211_rx_mesh_data(struct ieee80211_sub_if_data *sdata, struct sta_info *sta,
- 		       struct sk_buff *skb)
-@@ -2805,6 +2864,10 @@ ieee80211_rx_mesh_data(struct ieee80211_sub_if_data *sdata, struct sta_info *sta
- 
- 	skb_set_queue_mapping(skb, ieee802_1d_to_ac[skb->priority]);
- 
-+	if (!multicast &&
-+	    ieee80211_rx_mesh_fast_forward(sdata, skb, mesh_hdrlen))
-+		return RX_QUEUED;
-+
- 	ieee80211_fill_mesh_addresses(&hdr, &hdr.frame_control,
- 				      eth->h_dest, eth->h_source);
- 	hdrlen = ieee80211_hdrlen(hdr.frame_control);
-@@ -2843,6 +2906,7 @@ ieee80211_rx_mesh_data(struct ieee80211_sub_if_data *sdata, struct sta_info *sta
- 	info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
- 	info->control.vif = &sdata->vif;
- 	info->control.jiffies = jiffies;
-+	fwd_skb->dev = sdata->dev;
- 	if (multicast) {
- 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_mcast);
- 		memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
-@@ -2864,7 +2928,6 @@ ieee80211_rx_mesh_data(struct ieee80211_sub_if_data *sdata, struct sta_info *sta
- 	}
- 
- 	IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_frames);
--	fwd_skb->dev = sdata->dev;
- 	ieee80211_add_pending_skb(local, fwd_skb);
- 
- rx_accept:
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ad6193693363..de17926484bd 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1189,10 +1189,8 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
- 	return queued;
- }
- 
--static void
--ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
--		     struct sta_info *sta,
--		     struct sk_buff *skb)
-+void ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
-+			  struct sta_info *sta, struct sk_buff *skb)
++bool ieee80211_is_valid_amsdu(struct sk_buff *skb, u8 mesh_hdr)
  {
- 	struct rate_control_ref *ref = sdata->local->rate_ctrl;
- 	u16 tid;
+ 	int offset = 0, remaining, subframe_len, padding;
+ 
+@@ -790,12 +807,8 @@ bool ieee80211_is_valid_amsdu(struct sk_buff *skb, bool mesh_hdr)
+ 		if (skb_copy_bits(skb, offset + 2 * ETH_ALEN, &hdr, sizeof(hdr)) < 0)
+ 			return false;
+ 
+-		if (mesh_hdr)
+-			len = le16_to_cpu(*(__le16 *)&hdr.len) +
+-			      __ieee80211_get_mesh_hdrlen(hdr.mesh_flags);
+-		else
+-			len = ntohs(hdr.len);
+-
++		len = ieee80211_amsdu_subframe_length(&hdr.len, hdr.mesh_flags,
++						      mesh_hdr);
+ 		subframe_len = sizeof(struct ethhdr) + len;
+ 		padding = (4 - subframe_len) & 0x3;
+ 		remaining = skb->len - offset;
+@@ -812,7 +825,7 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 			      const u8 *addr, enum nl80211_iftype iftype,
+ 			      const unsigned int extra_headroom,
+ 			      const u8 *check_da, const u8 *check_sa,
+-			      bool mesh_control)
++			      u8 mesh_control)
+ {
+ 	unsigned int hlen = ALIGN(extra_headroom, 4);
+ 	struct sk_buff *frame = NULL;
+@@ -837,11 +850,8 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 		skb_copy_bits(skb, offset, &hdr, copy_len);
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT)
+ 			mesh_len = __ieee80211_get_mesh_hdrlen(hdr.flags);
+-		if (mesh_control)
+-			len = le16_to_cpu(*(__le16 *)&hdr.eth.h_proto) + mesh_len;
+-		else
+-			len = ntohs(hdr.eth.h_proto);
+-
++		len = ieee80211_amsdu_subframe_length(&hdr.eth.h_proto, hdr.flags,
++						      mesh_control);
+ 		subframe_len = sizeof(struct ethhdr) + len;
+ 		padding = (4 - subframe_len) & 0x3;
+ 
 -- 
 2.39.0
 
