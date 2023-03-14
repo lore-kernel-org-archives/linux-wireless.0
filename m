@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CABEC05027
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EE3C7618A
 	for <linux-wireless@archiver.kernel.org>; Tue, 14 Mar 2023 17:51:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230045AbjCNRv5 (ORCPT
+        id S230077AbjCNRv6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Mar 2023 13:51:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53128 "EHLO
+        Tue, 14 Mar 2023 13:51:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230215AbjCNRvy (ORCPT
+        with ESMTP id S230282AbjCNRvy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 14 Mar 2023 13:51:54 -0400
 Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 386C8B4234
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2023 10:51:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDCF29F214
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Mar 2023 10:51:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678816270; x=1710352270;
+  t=1678816272; x=1710352272;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=T3NPFHfwdQWJFjZVYouh5gmPU+KyhL/wQROcog3CMAc=;
-  b=KhLcT+TJBfLjU4bVRZlV965UMN68ydD9ALMHehYQzBLnqh/DSeDQ00b7
-   fdw3jbKl9tz9R23HoAqagwyfSICqsRsaQJzOQjTrhSlaJmtpq77t6OUW1
-   6Gu+vEZ0JHfK+6rRftgTrVjTL9K7DmydfEQky/f5r6f0beoZjhSCHVpgD
-   Mp4N7A6OTDIzjCSaokkETjZMbYPgeFonfLAIxV+MHc+aO6Y3V4TO6zrOP
-   Begsl+0gTehsFzPIhYpPoAXB3MITvrYotNnLOSHbT3lSXxZFVmteV5xkK
-   KuC4N9i0H7tpOuzqu8xDoSXNXrRNZpzoAWUFydF6OSV94M7+dbtNAu/SR
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="317149551"
+  bh=h8wWMRGZjEwPTKXiRFADjrdMIez0yemQIuQeW5jNPXE=;
+  b=A3S1/L7vx7f40BdPzIQuMu9OgxXeBdYZxagsvL7IdNGo7CA5hB8oIUBw
+   9sSRoRBbNA7Uasi2mb80zpBIzCRREv4tnjR1prYSG9w3ihpLEK5Lrieyg
+   3rZ3Q0CbNSPc5mOWRx1Zrv2vsty3i+Kh6QltSWVCFRgQtWt0gG+V2pUmw
+   fDuZyM3YL+uCvYcXr+GYW/OZjToLiV5MAMuoGetWsB+PCjmiWecsj/c00
+   ETki5Big2ZqoFnwZIkaYqPUk/6SENtoVgW/8qpB4ZLVdTzv/U/7iFDAjh
+   r192dPsA7tzdOLLdaFE3sArJsx5RfpkFIpZksuUp3RTWVY/1e6DLncT8a
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="317149543"
 X-IronPort-AV: E=Sophos;i="5.98,260,1673942400"; 
-   d="scan'208";a="317149551"
+   d="scan'208";a="317149543"
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
   by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 10:50:12 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="768200517"
+X-IronPort-AV: E=McAfee;i="6500,9779,10649"; a="768200498"
 X-IronPort-AV: E=Sophos;i="5.98,260,1673942400"; 
-   d="scan'208";a="768200517"
+   d="scan'208";a="768200498"
 Received: from litalcoh-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.192.4])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 10:50:06 -0700
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 10:50:01 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Miri Korenblit <miriam.rachel.korenblit@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 07/22] wifi: iwlwifi: mvm: add support for the new LINK command
-Date:   Tue, 14 Mar 2023 19:49:19 +0200
-Message-Id: <20230314194113.d7808329effb.I13bea2db206b78540bc866bc3ab755ad5be78c53@changeid>
+Subject: [PATCH 05/22] wifi: iwlwifi: mvm: Refactor MAC_CONTEXT_CMD sending flow
+Date:   Tue, 14 Mar 2023 19:49:17 +0200
+Message-Id: <20230314194113.3ab62700db4e.I2e353b308667c215aa456c160e0d90de2b9b85cc@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230314174934.893149-1-gregory.greenman@intel.com>
 References: <20230314174934.893149-1-gregory.greenman@intel.com>
@@ -59,540 +59,483 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-As a part of the new MLD FW API changes, we have a new LINK command
-to add/remove/configure a link.
-Add structures and enum definitions, along with the functions that
-sends this command (i.e. add, remove and change mac ctxt).
-These functions will be in used in the next patches.
+Refactor MAC_CONTEXT_CMD sending flow:
+
+1. As the new MLD API is introduced, there are some common fields in
+both the old and new APIs. The MAC_CONTEXT_CMD of the non-MLD API
+has common fields with the link and mac commands of the new MLD API.
+Put this common parts in functions so it can be used later by the
+new MLD API.
+
+2. Use iwl_mvm_mac_ctxt_send_cmd when removing a mac instead of
+implementing the same functionality once again.
+
+3. Change the debug print when sending the command to be more specific,
+so it will be easy to distinguish later if the old or new mac command
+was sent.
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   | 179 ++++++++++++++++++
- .../net/wireless/intel/iwlwifi/mvm/Makefile   |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/link.c | 175 +++++++++++++++++
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  26 ++-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   7 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  20 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   1 +
- 7 files changed, 390 insertions(+), 20 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mvm/link.c
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 320 +++++++++++-------
+ 1 file changed, 197 insertions(+), 123 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-index f12b2a25cd3d..301f34f13523 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-@@ -37,6 +37,10 @@ enum iwl_mac_conf_subcmd_ids {
- 	 * @MAC_CONFIG_CMD: &struct iwl_mac_config_cmd
- 	 */
- 	MAC_CONFIG_CMD = 0x8,
-+	/**
-+	 * @LINK_CONFIG_CMD: &struct iwl_link_config_cmd
-+	 */
-+	LINK_CONFIG_CMD = 0x9,
- 	/**
- 	 * @SESSION_PROTECTION_NOTIF: &struct iwl_mvm_session_prot_notif
- 	 */
-@@ -287,4 +291,179 @@ struct iwl_mac_config_cmd {
- 	};
- } __packed; /* MAC_CONTEXT_CONFIG_CMD_API_S_VER_1 */
- 
-+/**
-+ * enum iwl_link_ctx_modify_flags - indicate to the fw what fields are being
-+ *	modified in &iwl_link_ctx_cfg_cmd
-+ *
-+ * @LINK_CONTEXT_MODIFY_ACTIVE: covers iwl_link_ctx_cfg_cmd::active
-+ * @LINK_CONTEXT_MODIFY_RATES_INFO: covers iwl_link_ctx_cfg_cmd::cck_rates,
-+ *	iwl_link_ctx_cfg_cmd::ofdm_rates,
-+ *	iwl_link_ctx_cfg_cmd::cck_short_preamble,
-+ *	iwl_link_ctx_cfg_cmd::short_slot
-+ * @LINK_CONTEXT_MODIFY_PROTECT_FLAGS: covers
-+ *	iwl_link_ctx_cfg_cmd::protection_flags
-+ * @LINK_CONTEXT_MODIFY_QOS_PARAMS: covers iwl_link_ctx_cfg_cmd::qos_flags,
-+ *	iwl_link_ctx_cfg_cmd::ac,
-+ * @LINK_CONTEXT_MODIFY_BEACON_TIMING: covers iwl_link_ctx_cfg_cmd::bi,
-+ *	iwl_link_ctx_cfg_cmd::dtim_interval,
-+ *	iwl_link_ctx_cfg_cmd::dtim_time,
-+ *	iwl_link_ctx_cfg_cmd::dtim_tsf,
-+ *	iwl_link_ctx_cfg_cmd::assoc_beacon_arrive_time.
-+ *	This flag can be set only once after assoc.
-+ * @LINK_CONTEXT_MODIFY_HE_PARAMS: covers
-+ *	iwl_link_ctx_cfg_cmd::htc_trig_based_pkt_ext
-+ *	iwl_link_ctx_cfg_cmd::rand_alloc_ecwmin,
-+ *	iwl_link_ctx_cfg_cmd::rand_alloc_ecwmax,
-+ *	iwl_link_ctx_cfg_cmd::trig_based_txf,
-+ *	iwl_link_ctx_cfg_cmd::bss_color,
-+ *	iwl_link_ctx_cfg_cmd::ndp_fdbk_buff_th_exp,
-+ *	iwl_link_ctx_cfg_cmd::ref_bssid_addr
-+ *	iwl_link_ctx_cfg_cmd::bssid_index,
-+ *	iwl_link_ctx_cfg_cmd::frame_time_rts_th.
-+ *	This flag can be set any time.
-+ * @LINK_CONTEXT_MODIFY_BSS_COLOR_DISABLE: covers
-+ *	iwl_link_ctx_cfg_cmd::bss_color_disable
-+ * @LINK_CONTEXT_MODIFY_EHT_PARAMS: covers iwl_link_ctx_cfg_cmd::puncture_mask.
-+ *	This flag can be set only if the MAC that this link relates to has
-+ *	eht_support set to true.
-+ * @LINK_CONTEXT_MODIFY_ALL: set all above flags
-+ */
-+enum iwl_link_ctx_modify_flags {
-+	LINK_CONTEXT_MODIFY_ACTIVE		= BIT(0),
-+	LINK_CONTEXT_MODIFY_RATES_INFO		= BIT(1),
-+	LINK_CONTEXT_MODIFY_PROTECT_FLAGS	= BIT(2),
-+	LINK_CONTEXT_MODIFY_QOS_PARAMS		= BIT(3),
-+	LINK_CONTEXT_MODIFY_BEACON_TIMING	= BIT(4),
-+	LINK_CONTEXT_MODIFY_HE_PARAMS		= BIT(5),
-+	LINK_CONTEXT_MODIFY_BSS_COLOR_DISABLE	= BIT(6),
-+	LINK_CONTEXT_MODIFY_EHT_PARAMS		= BIT(7),
-+	LINK_CONTEXT_MODIFY_ALL			= 0xff,
-+}; /* LINK_CONTEXT_MODIFY_MASK_E_VER_1 */
-+
-+/**
-+ * enum iwl_link_ctx_protection_flags - link protection flags
-+ * @LINK_PROT_FLG_TGG_PROTECT: 11g protection when transmitting OFDM frames,
-+ *	this will require CCK RTS/CTS2self.
-+ *	RTS/CTS will protect full burst time.
-+ * @LINK_PROT_FLG_HT_PROT: enable HT protection
-+ * @LINK_PROT_FLG_FAT_PROT: protect 40 MHz transmissions
-+ * @LINK_PROT_FLG_SELF_CTS_EN: allow CTS2self
-+ */
-+enum iwl_link_ctx_protection_flags {
-+	LINK_PROT_FLG_TGG_PROTECT	= BIT(0),
-+	LINK_PROT_FLG_HT_PROT		= BIT(1),
-+	LINK_PROT_FLG_FAT_PROT		= BIT(2),
-+	LINK_PROT_FLG_SELF_CTS_EN	= BIT(3),
-+}; /* LINK_PROTECT_FLAGS_E_VER_1 */
-+
-+/**
-+ * enum iwl_link_ctx_flags - link context flags
-+ *
-+ * @LINK_FLG_BSS_COLOR_DIS: BSS color disable, don't use the BSS
-+ *	color for RX filter but use MAC header
-+ *	enabled AGG, i.e. both BACK and non-BACK frames in a single AGG
-+ * @LINK_FLG_MU_EDCA_CW: indicates that there is an element of MU EDCA
-+ *	parameter set, i.e. the backoff counters for trig-based ACs
-+ * @LINK_FLG_RU_2MHZ_BLOCK: indicates that 26-tone RU OFDMA transmission are
-+ *      not allowed (as there are OBSS that might classify such transmissions as
-+ *      radar pulses).
-+ */
-+enum iwl_link_ctx_flags {
-+	LINK_FLG_BSS_COLOR_DIS		= BIT(0),
-+	LINK_FLG_MU_EDCA_CW		= BIT(1),
-+	LINK_FLG_RU_2MHZ_BLOCK		= BIT(2),
-+}; /* LINK_CONTEXT_FLAG_E_VER_1 */
-+
-+/**
-+ * struct iwl_link_config_cmd - command structure to configure the LINK context
-+ *	in MLD API
-+ * ( LINK_CONFIG_CMD =0x9 )
-+ *
-+ * @action: action to perform, one of FW_CTXT_ACTION_*
-+ * @link_id: the id of the link that this cmd configures
-+ * @mac_id: interface ID. Relevant only if action is FW_CTXT_ACTION_ADD
-+ * @phy_id: PHY index. Can be changed only if the link was inactive
-+ *	(and stays inactive). If the link is active (or becomes active),
-+ *	this field is ignored.
-+ * @local_link_addr: the links MAC address. Can be changed only if the link was
-+ *	inactive (and stays inactive). If the link is active
-+ *	(or becomes active), this field is ignored.
-+ * @reserved_for_local_link_addr: reserved
-+ * @modify_mask: from &enum iwl_link_ctx_modify_flags, selects what to change.
-+ *	Relevant only if action is FW_CTXT_ACTION_MODIFY
-+ * @active: indicates whether the link is active or not
-+ * @listen_lmac: indicates whether the link should be allocated on the Listen
-+ *	Lmac or on the Main Lmac. Cannot be changed on an active Link.
-+ *	Relevant only for eSR.
-+ * @cck_rates: basic rates available for CCK
-+ * @ofdm_rates: basic rates available for OFDM
-+ * @cck_short_preamble: 1 for enabling short preamble, 0 otherwise
-+ * @short_slot: 1 for enabling short slots, 0 otherwise
-+ * @protection_flags: combination of &enum iwl_link_ctx_protection_flags
-+ * @qos_flags: from &enum iwl_mac_qos_flags
-+ * @ac: one iwl_mac_qos configuration for each AC
-+ * @htc_trig_based_pkt_ext: default PE in 4us units
-+ * @rand_alloc_ecwmin: random CWmin = 2**ECWmin-1
-+ * @rand_alloc_ecwmax: random CWmax = 2**ECWmax-1
-+ * @ndp_fdbk_buff_th_exp: set exponent for the NDP feedback buffered threshold
-+ * @trig_based_txf: MU EDCA Parameter set for the trigger based traffic queues
-+ * @dtim_time: DTIM arrival time in system time
-+ * @dtim_tsf: DTIM arrival time in TSF
-+ * @assoc_beacon_arrive_time: TSF of first beacon after association
-+ * @bi: beacon interval in TU, applicable only when associated
-+ * @dtim_interval: DTIM interval in TU.
-+ *	Relevant only for GO, otherwise this is offloaded.
-+ * @beacon_template: beacon template ID. For GO only
-+ * @puncture_mask: puncture mask for EHT
-+ * @frame_time_rts_th: HE duration RTS threshold, in units of 32us
-+ * @flags: a combination from &enum iwl_link_ctx_flags
-+ * @flags_mask: what of %flags have changed. Also &enum iwl_link_ctx_flags
-+ * Below fields are for multi-bssid:
-+ * @ref_bssid_addr: reference BSSID used by the AP
-+ * @reserved_for_ref_bssid_addr: reserved
-+ * @bssid_index: index of the associated VAP
-+ * @bss_color: 11ax AP ID that is used in the HE SIG-A to mark inter BSS frame
-+ * @reserved: alignment
-+ */
-+struct iwl_link_config_cmd {
-+	__le32 action;
-+	__le32 link_id;
-+	__le32 mac_id;
-+	__le32 phy_id;
-+	u8 local_link_addr[6];
-+	__le16 reserved_for_local_link_addr;
-+	__le32 modify_mask;
-+	__le32 active;
-+	__le32 listen_lmac;
-+	__le32 cck_rates;
-+	__le32 ofdm_rates;
-+	__le32 cck_short_preamble;
-+	__le32 short_slot;
-+	__le32 protection_flags;
-+	/* MAC_QOS_PARAM_API_S_VER_1 */
-+	__le32 qos_flags;
-+	struct iwl_ac_qos ac[AC_NUM + 1];
-+	u8 htc_trig_based_pkt_ext;
-+	u8 rand_alloc_ecwmin;
-+	u8 rand_alloc_ecwmax;
-+	u8 ndp_fdbk_buff_th_exp;
-+	struct iwl_he_backoff_conf trig_based_txf[AC_NUM];
-+	__le32 dtim_time;
-+	__le64 dtim_tsf;
-+	__le32 assoc_beacon_arrive_time;
-+	__le32 bi;
-+	__le32 dtim_interval;
-+	__le32 beacon_template;
-+	__le16 puncture_mask;
-+	__le16 frame_time_rts_th;
-+	__le32 flags;
-+	__le32 flags_mask;
-+	/* The below fields are for multi-bssid */
-+	u8 ref_bssid_addr[6];
-+	__le16 reserved_for_ref_bssid_addr;
-+	u8 bssid_index;
-+	u8 bss_color;
-+	u8 reserved[2];
-+} __packed; /* LINK_CONTEXT_CONFIG_CMD_API_S_VER_1 */
-+
- #endif /* __iwl_fw_api_mac_cfg_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-index d71f0a99b7c4..ec6346c6c8e4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
-@@ -7,7 +7,7 @@ iwlmvm-y += power.o coex.o
- iwlmvm-y += tt.o offloading.o tdls.o
- iwlmvm-y += ftm-responder.o ftm-initiator.o
- iwlmvm-y += rfi.o
--iwlmvm-y += mld-key.o mld-mac.o
-+iwlmvm-y += mld-key.o mld-mac.o link.o
- iwlmvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o debugfs-vif.o
- iwlmvm-$(CONFIG_IWLWIFI_LEDS) += led.o
- iwlmvm-$(CONFIG_PM) += d3.o
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/link.c b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-new file mode 100644
-index 000000000000..2688cb49c951
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-@@ -0,0 +1,175 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/*
-+ * Copyright (C) 2022 Intel Corporation
-+ */
-+#include "mvm.h"
-+
-+static int iwl_mvm_link_cmd_send(struct iwl_mvm *mvm,
-+				 struct iwl_link_config_cmd *cmd,
-+				 enum iwl_ctxt_action action)
-+{
-+	int ret;
-+
-+	cmd->action = cpu_to_le32(action);
-+	ret = iwl_mvm_send_cmd_pdu(mvm,
-+				   WIDE_ID(MAC_CONF_GROUP, LINK_CONFIG_CMD), 0,
-+				   sizeof(*cmd), cmd);
-+	if (ret)
-+		IWL_ERR(mvm, "Failed to send LINK_CONFIG_CMD (action:%d): %d\n",
-+			action, ret);
-+	return ret;
-+}
-+
-+int iwl_mvm_add_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_link_config_cmd cmd = {};
-+
-+	if (WARN_ON_ONCE(!mvmvif->phy_ctxt))
-+		return -EINVAL;
-+
-+	/* Update SF - Disable if needed. if this fails, SF might still be on
-+	 * while many macs are bound, which is forbidden - so fail the binding.
-+	 */
-+	if (iwl_mvm_sf_update(mvm, vif, false))
-+		return -EINVAL;
-+
-+	cmd.link_id = cpu_to_le32(mvmvif->phy_ctxt->id);
-+	cmd.mac_id = cpu_to_le32(mvmvif->id);
-+	cmd.phy_id = cpu_to_le32(mvmvif->phy_ctxt->id);
-+
-+	memcpy(cmd.local_link_addr, vif->addr, ETH_ALEN);
-+
-+	return iwl_mvm_link_cmd_send(mvm, &cmd, FW_CTXT_ACTION_ADD);
-+}
-+
-+int iwl_mvm_link_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			 u32 changes, bool active)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mvm_phy_ctxt *phyctxt = mvmvif->phy_ctxt;
-+	struct iwl_link_config_cmd cmd = {};
-+	u32 ht_flag, flags = 0, flags_mask = 0;
-+
-+	if (!phyctxt)
-+		return -EINVAL;
-+
-+	cmd.link_id = cpu_to_le32(phyctxt->id);
-+
-+	/* The phy_id, link address and listen_lmac can be modified only until
-+	 * the link becomes active, otherwise they will be ignored.
-+	 */
-+	cmd.phy_id = cpu_to_le32(phyctxt->id);
-+	cmd.mac_id = cpu_to_le32(mvmvif->id);
-+
-+	memcpy(cmd.local_link_addr, vif->addr, ETH_ALEN);
-+
-+	cmd.active = cpu_to_le32(active);
-+
-+	/* TODO: set a value to cmd.listen_lmac when system requiremens
-+	 * will define it
-+	 */
-+
-+	iwl_mvm_set_fw_basic_rates(mvm, vif, &cmd.cck_rates, &cmd.ofdm_rates);
-+
-+	cmd.cck_short_preamble = cpu_to_le32(vif->bss_conf.use_short_preamble);
-+	cmd.short_slot = cpu_to_le32(vif->bss_conf.use_short_slot);
-+
-+	/* The fw does not distinguish between ht and fat */
-+	ht_flag = LINK_PROT_FLG_HT_PROT | LINK_PROT_FLG_FAT_PROT;
-+	iwl_mvm_set_fw_protection_flags(mvm, vif, &cmd.protection_flags,
-+					ht_flag, LINK_PROT_FLG_TGG_PROTECT);
-+
-+	iwl_mvm_set_fw_qos_params(mvm, vif, &cmd.ac[0], &cmd.qos_flags);
-+
-+	/* We need the dtim_period to set the MAC as associated */
-+	if (vif->cfg.assoc && vif->bss_conf.dtim_period)
-+		iwl_mvm_set_fw_dtim_tbtt(mvm, vif, &cmd.dtim_tsf,
-+					 &cmd.dtim_time,
-+					 &cmd.assoc_beacon_arrive_time);
-+	else
-+		changes &= ~LINK_CONTEXT_MODIFY_BEACON_TIMING;
-+
-+	cmd.bi = cpu_to_le32(vif->bss_conf.beacon_int);
-+	cmd.dtim_interval = cpu_to_le32(vif->bss_conf.beacon_int *
-+					vif->bss_conf.dtim_period);
-+
-+	/* TODO: Assumes that the beacon id == mac context id */
-+	cmd.beacon_template = cpu_to_le32(mvmvif->id);
-+
-+	if (!vif->bss_conf.he_support || iwlwifi_mod_params.disable_11ax ||
-+	    !vif->cfg.assoc) {
-+		changes &= ~LINK_CONTEXT_MODIFY_HE_PARAMS;
-+		goto send_cmd;
-+	}
-+
-+	cmd.htc_trig_based_pkt_ext = vif->bss_conf.htc_trig_based_pkt_ext;
-+
-+	if (vif->bss_conf.uora_exists) {
-+		cmd.rand_alloc_ecwmin =
-+			vif->bss_conf.uora_ocw_range & 0x7;
-+		cmd.rand_alloc_ecwmax =
-+			(vif->bss_conf.uora_ocw_range >> 3) & 0x7;
-+	}
-+
-+	/* TODO  how to set ndp_fdbk_buff_th_exp? */
-+
-+	if (iwl_mvm_set_fw_mu_edca_params(mvm, mvmvif,
-+					  &cmd.trig_based_txf[0])) {
-+		flags |= LINK_FLG_MU_EDCA_CW;
-+		flags_mask |= LINK_FLG_MU_EDCA_CW;
-+	}
-+
-+	if (vif->bss_conf.eht_puncturing && !iwlwifi_mod_params.disable_11be)
-+		cmd.puncture_mask = cpu_to_le16(vif->bss_conf.eht_puncturing);
-+	else
-+		/* This flag can be set only if the MAC has eht support */
-+		changes &= ~LINK_CONTEXT_MODIFY_EHT_PARAMS;
-+
-+	cmd.bss_color = vif->bss_conf.he_bss_color.color;
-+
-+	if (!vif->bss_conf.he_bss_color.enabled) {
-+		flags |= LINK_FLG_BSS_COLOR_DIS;
-+		flags_mask |= LINK_FLG_BSS_COLOR_DIS;
-+	}
-+
-+	cmd.frame_time_rts_th = cpu_to_le16(vif->bss_conf.frame_time_rts_th);
-+
-+	/* Block 26-tone RU OFDMA transmissions */
-+	if (mvmvif->he_ru_2mhz_block) {
-+		flags |= LINK_FLG_RU_2MHZ_BLOCK;
-+		flags_mask |= LINK_FLG_RU_2MHZ_BLOCK;
-+	}
-+
-+	if (vif->bss_conf.nontransmitted) {
-+		ether_addr_copy(cmd.ref_bssid_addr,
-+				vif->bss_conf.transmitter_bssid);
-+		cmd.bssid_index = vif->bss_conf.bssid_index;
-+	}
-+
-+send_cmd:
-+	cmd.modify_mask = cpu_to_le32(changes);
-+	cmd.flags = cpu_to_le32(flags);
-+	cmd.flags_mask = cpu_to_le32(flags_mask);
-+
-+	return iwl_mvm_link_cmd_send(mvm, &cmd, FW_CTXT_ACTION_MODIFY);
-+}
-+
-+int iwl_mvm_remove_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_link_config_cmd cmd = {};
-+	int ret;
-+
-+	if (WARN_ON_ONCE(!mvmvif->phy_ctxt))
-+		return -EINVAL;
-+
-+	cmd.link_id = cpu_to_le32(mvmvif->phy_ctxt->id);
-+	ret = iwl_mvm_link_cmd_send(mvm, &cmd, FW_CTXT_ACTION_REMOVE);
-+
-+	if (!ret)
-+		if (iwl_mvm_sf_update(mvm, vif, true))
-+			IWL_ERR(mvm, "Failed to update SF state\n");
-+
-+	return ret;
-+}
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index b21327ec4401..4d7ad91c53d4 100644
+index 422550e31bc6..a30385b85a60 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -396,9 +396,8 @@ static void iwl_mvm_ack_rates(struct iwl_mvm *mvm,
+@@ -396,15 +396,45 @@ static void iwl_mvm_ack_rates(struct iwl_mvm *mvm,
  	*ofdm_rates = ofdm;
  }
  
--static void iwl_mvm_set_fw_basic_rates(struct iwl_mvm *mvm,
--				       struct ieee80211_vif *vif,
--				       __le32 *cck_rates, __le32 *ofdm_rates)
-+void iwl_mvm_set_fw_basic_rates(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+				__le32 *cck_rates, __le32 *ofdm_rates)
- {
- 	struct ieee80211_chanctx_conf *chanctx;
- 	u8 cck_ack_rates, ofdm_ack_rates;
-@@ -414,11 +413,10 @@ static void iwl_mvm_set_fw_basic_rates(struct iwl_mvm *mvm,
- 	*ofdm_rates = cpu_to_le32((u32)ofdm_ack_rates);
- }
- 
--static void iwl_mvm_set_fw_protection_flags(struct iwl_mvm *mvm,
--					    struct ieee80211_vif *vif,
--					    __le32 *protection_flags,
--					    u32 ht_flag,
--					    u32 tgg_flag)
-+void iwl_mvm_set_fw_protection_flags(struct iwl_mvm *mvm,
-+				     struct ieee80211_vif *vif,
-+				     __le32 *protection_flags, u32 ht_flag,
-+				     u32 tgg_flag)
+-static void iwl_mvm_mac_ctxt_set_ht_flags(struct iwl_mvm *mvm,
+-					 struct ieee80211_vif *vif,
+-					 struct iwl_mac_ctx_cmd *cmd)
++static void iwl_mvm_set_fw_basic_rates(struct iwl_mvm *mvm,
++				       struct ieee80211_vif *vif,
++				       __le32 *cck_rates, __le32 *ofdm_rates)
++{
++	struct ieee80211_chanctx_conf *chanctx;
++	u8 cck_ack_rates, ofdm_ack_rates;
++
++	rcu_read_lock();
++	chanctx = rcu_dereference(vif->bss_conf.chanctx_conf);
++	iwl_mvm_ack_rates(mvm, vif, chanctx ? chanctx->def.chan->band
++					    : NL80211_BAND_2GHZ,
++			  &cck_ack_rates, &ofdm_ack_rates);
++	rcu_read_unlock();
++
++	*cck_rates = cpu_to_le32((u32)cck_ack_rates);
++	*ofdm_rates = cpu_to_le32((u32)ofdm_ack_rates);
++}
++
++static void iwl_mvm_set_fw_protection_flags(struct iwl_mvm *mvm,
++					    struct ieee80211_vif *vif,
++					    __le32 *protection_flags,
++					    u32 ht_flag,
++					    u32 tgg_flag)
  {
  	/* for both sta and ap, ht_operation_mode hold the protection_mode */
  	u8 protection_mode = vif->bss_conf.ht_operation_mode &
-@@ -460,9 +458,8 @@ static void iwl_mvm_set_fw_protection_flags(struct iwl_mvm *mvm,
+ 				 IEEE80211_HT_OP_MODE_PROTECTION;
+-	/* The fw does not distinguish between ht and fat */
+-	u32 ht_flag = MAC_PROT_FLG_HT_PROT | MAC_PROT_FLG_FAT_PROT;
++	bool ht_enabled = !!(vif->bss_conf.ht_operation_mode &
++			     IEEE80211_HT_OP_MODE_PROTECTION);
++
++	if (vif->bss_conf.use_cts_prot)
++		*protection_flags |= cpu_to_le32(tgg_flag);
++
++	IWL_DEBUG_RATE(mvm, "use_cts_prot %d, ht_operation_mode %d\n",
++		       vif->bss_conf.use_cts_prot,
++		       vif->bss_conf.ht_operation_mode);
++
++	if (!ht_enabled)
++		return;
+ 
+ 	IWL_DEBUG_RATE(mvm, "protection mode set to %d\n", protection_mode);
+ 	/*
+@@ -416,12 +446,12 @@ static void iwl_mvm_mac_ctxt_set_ht_flags(struct iwl_mvm *mvm,
+ 		break;
+ 	case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
+ 	case IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED:
+-		cmd->protection_flags |= cpu_to_le32(ht_flag);
++		*protection_flags |= cpu_to_le32(ht_flag);
+ 		break;
+ 	case IEEE80211_HT_OP_MODE_PROTECTION_20MHZ:
+ 		/* Protect when channel wider than 20MHz */
+ 		if (vif->bss_conf.chandef.width > NL80211_CHAN_WIDTH_20)
+-			cmd->protection_flags |= cpu_to_le32(ht_flag);
++			*protection_flags |= cpu_to_le32(ht_flag);
+ 		break;
+ 	default:
+ 		IWL_ERR(mvm, "Illegal protection mode %d\n",
+@@ -430,6 +460,34 @@ static void iwl_mvm_mac_ctxt_set_ht_flags(struct iwl_mvm *mvm,
  	}
  }
  
--static void iwl_mvm_set_fw_qos_params(struct iwl_mvm *mvm,
--				      struct ieee80211_vif *vif,
--				      struct iwl_ac_qos *ac, __le32 *qos_flags)
-+void iwl_mvm_set_fw_qos_params(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			       struct iwl_ac_qos *ac, __le32 *qos_flags)
++static void iwl_mvm_set_fw_qos_params(struct iwl_mvm *mvm,
++				      struct ieee80211_vif *vif,
++				      struct iwl_ac_qos *ac, __le32 *qos_flags)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	int i;
++
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		u8 txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, i);
++		u8 ucode_ac = iwl_mvm_mac80211_ac_to_ucode_ac(i);
++
++		ac[ucode_ac].cw_min =
++			cpu_to_le16(mvmvif->queue_params[i].cw_min);
++		ac[ucode_ac].cw_max =
++			cpu_to_le16(mvmvif->queue_params[i].cw_max);
++		ac[ucode_ac].edca_txop =
++			cpu_to_le16(mvmvif->queue_params[i].txop * 32);
++		ac[ucode_ac].aifsn = mvmvif->queue_params[i].aifs;
++		ac[ucode_ac].fifos_mask = BIT(txf);
++	}
++
++	if (vif->bss_conf.qos)
++		*qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
++
++	if (vif->bss_conf.chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
++		*qos_flags |= cpu_to_le32(MAC_QOS_FLG_TGN);
++}
++
+ static int iwl_mvm_get_mac_type(struct ieee80211_vif *vif)
+ {
+ 	u32 mac_type = FW_MAC_TYPE_BSS_STA;
+@@ -456,7 +514,6 @@ static int iwl_mvm_get_mac_type(struct ieee80211_vif *vif)
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 	}
+-
+ 	return mac_type;
+ }
+ 
+@@ -467,12 +524,8 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 					u32 action)
  {
  	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int i;
-@@ -572,10 +569,9 @@ static int iwl_mvm_mac_ctxt_send_cmd(struct iwl_mvm *mvm,
+-	struct ieee80211_chanctx_conf *chanctx;
+-	bool ht_enabled = !!(vif->bss_conf.ht_operation_mode &
+-			     IEEE80211_HT_OP_MODE_PROTECTION);
+-	u8 cck_ack_rates, ofdm_ack_rates;
+ 	const u8 *bssid = bssid_override ?: vif->bss_conf.bssid;
+-	int i;
++	u32 ht_flag;
+ 
+ 	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
+ 							    mvmvif->color));
+@@ -488,15 +541,8 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 	else
+ 		eth_broadcast_addr(cmd->bssid_addr);
+ 
+-	rcu_read_lock();
+-	chanctx = rcu_dereference(vif->bss_conf.chanctx_conf);
+-	iwl_mvm_ack_rates(mvm, vif, chanctx ? chanctx->def.chan->band
+-					    : NL80211_BAND_2GHZ,
+-			  &cck_ack_rates, &ofdm_ack_rates);
+-	rcu_read_unlock();
+-
+-	cmd->cck_rates = cpu_to_le32((u32)cck_ack_rates);
+-	cmd->ofdm_rates = cpu_to_le32((u32)ofdm_ack_rates);
++	iwl_mvm_set_fw_basic_rates(mvm, vif, &cmd->cck_rates,
++				   &cmd->ofdm_rates);
+ 
+ 	cmd->cck_short_preamble =
+ 		cpu_to_le32(vif->bss_conf.use_short_preamble ?
+@@ -507,33 +553,12 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 
+ 	cmd->filter_flags = 0;
+ 
+-	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+-		u8 txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, i);
+-		u8 ucode_ac = iwl_mvm_mac80211_ac_to_ucode_ac(i);
+-
+-		cmd->ac[ucode_ac].cw_min =
+-			cpu_to_le16(mvmvif->queue_params[i].cw_min);
+-		cmd->ac[ucode_ac].cw_max =
+-			cpu_to_le16(mvmvif->queue_params[i].cw_max);
+-		cmd->ac[ucode_ac].edca_txop =
+-			cpu_to_le16(mvmvif->queue_params[i].txop * 32);
+-		cmd->ac[ucode_ac].aifsn = mvmvif->queue_params[i].aifs;
+-		cmd->ac[ucode_ac].fifos_mask = BIT(txf);
+-	}
+-
+-	if (vif->bss_conf.qos)
+-		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
++	iwl_mvm_set_fw_qos_params(mvm, vif, &cmd->ac[0], &cmd->qos_flags);
+ 
+-	if (vif->bss_conf.use_cts_prot)
+-		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_TGG_PROTECT);
+-
+-	IWL_DEBUG_RATE(mvm, "use_cts_prot %d, ht_operation_mode %d\n",
+-		       vif->bss_conf.use_cts_prot,
+-		       vif->bss_conf.ht_operation_mode);
+-	if (vif->bss_conf.chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
+-		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_TGN);
+-	if (ht_enabled)
+-		iwl_mvm_mac_ctxt_set_ht_flags(mvm, vif, cmd);
++	/* The fw does not distinguish between ht and fat */
++	ht_flag = MAC_PROT_FLG_HT_PROT | MAC_PROT_FLG_FAT_PROT;
++	iwl_mvm_set_fw_protection_flags(mvm, vif, &cmd->protection_flags,
++					ht_flag, MAC_PROT_FLG_TGG_PROTECT);
+ }
+ 
+ static int iwl_mvm_mac_ctxt_send_cmd(struct iwl_mvm *mvm,
+@@ -542,11 +567,76 @@ static int iwl_mvm_mac_ctxt_send_cmd(struct iwl_mvm *mvm,
+ 	int ret = iwl_mvm_send_cmd_pdu(mvm, MAC_CONTEXT_CMD, 0,
+ 				       sizeof(*cmd), cmd);
+ 	if (ret)
+-		IWL_ERR(mvm, "Failed to send MAC context (action:%d): %d\n",
++		IWL_ERR(mvm, "Failed to send MAC_CONTEXT_CMD (action:%d): %d\n",
+ 			le32_to_cpu(cmd->action), ret);
  	return ret;
  }
  
--static void iwl_mvm_set_fw_dtim_tbtt(struct iwl_mvm *mvm,
--				     struct ieee80211_vif *vif,
--				     __le64 *dtim_tsf, __le32 *dtim_time,
--				     __le32 *assoc_beacon_arrive_time)
-+void iwl_mvm_set_fw_dtim_tbtt(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			      __le64 *dtim_tsf, __le32 *dtim_time,
-+			      __le32 *assoc_beacon_arrive_time)
- {
- 	u32 dtim_offs;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 210b134c735f..cf08cb834cc4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2000,10 +2000,9 @@ static void iwl_mvm_get_optimal_ppe_info(struct iwl_he_pkt_ext_v2 *pkt_ext,
-  * This function sets the MU EDCA parameters ans returns whether MU EDCA
-  * is enabled or not
-  */
--static bool iwl_mvm_set_fw_mu_edca_params(struct iwl_mvm *mvm,
--					  struct iwl_mvm_vif *mvmvif,
--					  struct iwl_he_backoff_conf
--					  *trig_based_txf)
-+bool iwl_mvm_set_fw_mu_edca_params(struct iwl_mvm *mvm,
-+				   struct iwl_mvm_vif *mvmvif,
-+				   struct iwl_he_backoff_conf *trig_based_txf)
- {
- 	int i;
- 	/* Mark MU EDCA as enabled, unless none detected on some AC */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 72f429537572..fd32eea9459b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1640,6 +1640,20 @@ u8 iwl_mvm_get_ctrl_pos(struct cfg80211_chan_def *chandef);
- 
- /* MAC (virtual interface) programming */
- 
-+void iwl_mvm_set_fw_basic_rates(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+				__le32 *cck_rates, __le32 *ofdm_rates);
-+void iwl_mvm_set_fw_protection_flags(struct iwl_mvm *mvm,
++static void iwl_mvm_set_fw_dtim_tbtt(struct iwl_mvm *mvm,
 +				     struct ieee80211_vif *vif,
-+				     __le32 *protection_flags, u32 ht_flag,
-+				  u32 tgg_flag);
-+void iwl_mvm_set_fw_qos_params(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			       struct iwl_ac_qos *ac, __le32 *qos_flags);
-+bool iwl_mvm_set_fw_mu_edca_params(struct iwl_mvm *mvm,
-+				   struct iwl_mvm_vif *mvmvif,
-+				   struct iwl_he_backoff_conf *trig_based_txf);
-+void iwl_mvm_set_fw_dtim_tbtt(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			      __le64 *dtim_tsf, __le32 *dtim_time,
-+			      __le32 *assoc_beacon_arrive_time);
- __le32 iwl_mac_ctxt_p2p_dev_has_extended_disc(struct iwl_mvm *mvm,
- 					      struct ieee80211_vif *vif);
- void iwl_mvm_mac_ctxt_cmd_ap_set_filter_flags(struct iwl_mvm *mvm,
-@@ -1702,6 +1716,12 @@ void iwl_mvm_channel_switch_error_notif(struct iwl_mvm *mvm,
- int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_binding_remove_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- 
-+/* Links */
-+int iwl_mvm_add_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+int iwl_mvm_link_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			 u32 changes, bool active);
-+int iwl_mvm_remove_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
++				     __le64 *dtim_tsf, __le32 *dtim_time,
++				     __le32 *assoc_beacon_arrive_time)
++{
++	u32 dtim_offs;
 +
- /* Quota management */
- static inline size_t iwl_mvm_quota_cmd_size(struct iwl_mvm *mvm)
++	/*
++	 * The DTIM count counts down, so when it is N that means N
++	 * more beacon intervals happen until the DTIM TBTT. Therefore
++	 * add this to the current time. If that ends up being in the
++	 * future, the firmware will handle it.
++	 *
++	 * Also note that the system_timestamp (which we get here as
++	 * "sync_device_ts") and TSF timestamp aren't at exactly the
++	 * same offset in the frame -- the TSF is at the first symbol
++	 * of the TSF, the system timestamp is at signal acquisition
++	 * time. This means there's an offset between them of at most
++	 * a few hundred microseconds (24 * 8 bits + PLCP time gives
++	 * 384us in the longest case), this is currently not relevant
++	 * as the firmware wakes up around 2ms before the TBTT.
++	 */
++	dtim_offs = vif->bss_conf.sync_dtim_count *
++			vif->bss_conf.beacon_int;
++	/* convert TU to usecs */
++	dtim_offs *= 1024;
++
++	*dtim_tsf =
++		cpu_to_le64(vif->bss_conf.sync_tsf + dtim_offs);
++	*dtim_time =
++		cpu_to_le32(vif->bss_conf.sync_device_ts + dtim_offs);
++	*assoc_beacon_arrive_time =
++		cpu_to_le32(vif->bss_conf.sync_device_ts);
++
++	IWL_DEBUG_INFO(mvm, "DTIM TBTT is 0x%llx/0x%x, offset %d\n",
++		       le64_to_cpu(*dtim_tsf),
++		       le32_to_cpu(*dtim_time),
++		       dtim_offs);
++}
++
++static __le32 iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(struct iwl_mvm *mvm,
++							   struct ieee80211_vif *vif)
++{
++	struct ieee80211_p2p_noa_attr *noa =
++		&vif->bss_conf.p2p_noa_attr;
++
++	return cpu_to_le32(noa->oppps_ctwindow &
++			IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
++}
++
++static __le32 iwl_mvm_mac_ctxt_cmd_sta_get_twt_policy(struct iwl_mvm *mvm,
++						      struct ieee80211_vif *vif)
++{
++	__le32 twt_policy = cpu_to_le32(0);
++
++	if (vif->bss_conf.twt_requester && IWL_MVM_USE_TWT)
++		twt_policy |= cpu_to_le32(TWT_SUPPORTED);
++	if (vif->bss_conf.twt_protected)
++		twt_policy |= cpu_to_le32(PROTECTED_TWT_SUPPORTED);
++	if (vif->bss_conf.twt_broadcast)
++		twt_policy |= cpu_to_le32(BROADCAST_TWT_SUPPORTED);
++
++	return twt_policy;
++}
++
+ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif,
+ 				    u32 action, bool force_assoc_off,
+@@ -567,11 +657,9 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
+ 	cmd.filter_flags |= cpu_to_le32(MAC_FILTER_ACCEPT_GRP);
+ 
+ 	if (vif->p2p) {
+-		struct ieee80211_p2p_noa_attr *noa =
+-			&vif->bss_conf.p2p_noa_attr;
++		cmd.p2p_sta.ctwin =
++			iwl_mvm_mac_ctxt_cmd_p2p_sta_get_oppps_ctwin(mvm, vif);
+ 
+-		cmd.p2p_sta.ctwin = cpu_to_le32(noa->oppps_ctwindow &
+-					IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
+ 		ctxt_sta = &cmd.p2p_sta.sta;
+ 	} else {
+ 		ctxt_sta = &cmd.sta;
+@@ -581,39 +669,10 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
+ 	if (vif->cfg.assoc && vif->bss_conf.dtim_period &&
+ 	    !force_assoc_off) {
+ 		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-		u32 dtim_offs;
+ 
+-		/*
+-		 * The DTIM count counts down, so when it is N that means N
+-		 * more beacon intervals happen until the DTIM TBTT. Therefore
+-		 * add this to the current time. If that ends up being in the
+-		 * future, the firmware will handle it.
+-		 *
+-		 * Also note that the system_timestamp (which we get here as
+-		 * "sync_device_ts") and TSF timestamp aren't at exactly the
+-		 * same offset in the frame -- the TSF is at the first symbol
+-		 * of the TSF, the system timestamp is at signal acquisition
+-		 * time. This means there's an offset between them of at most
+-		 * a few hundred microseconds (24 * 8 bits + PLCP time gives
+-		 * 384us in the longest case), this is currently not relevant
+-		 * as the firmware wakes up around 2ms before the TBTT.
+-		 */
+-		dtim_offs = vif->bss_conf.sync_dtim_count *
+-				vif->bss_conf.beacon_int;
+-		/* convert TU to usecs */
+-		dtim_offs *= 1024;
+-
+-		ctxt_sta->dtim_tsf =
+-			cpu_to_le64(vif->bss_conf.sync_tsf + dtim_offs);
+-		ctxt_sta->dtim_time =
+-			cpu_to_le32(vif->bss_conf.sync_device_ts + dtim_offs);
+-		ctxt_sta->assoc_beacon_arrive_time =
+-			cpu_to_le32(vif->bss_conf.sync_device_ts);
+-
+-		IWL_DEBUG_INFO(mvm, "DTIM TBTT is 0x%llx/0x%x, offset %d\n",
+-			       le64_to_cpu(ctxt_sta->dtim_tsf),
+-			       le32_to_cpu(ctxt_sta->dtim_time),
+-			       dtim_offs);
++		iwl_mvm_set_fw_dtim_tbtt(mvm, vif, &ctxt_sta->dtim_tsf,
++					 &ctxt_sta->dtim_time,
++					 &ctxt_sta->assoc_beacon_arrive_time);
+ 
+ 		ctxt_sta->is_assoc = cpu_to_le32(1);
+ 
+@@ -643,14 +702,8 @@ static int iwl_mvm_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
+ 
+ 	if (vif->bss_conf.he_support && !iwlwifi_mod_params.disable_11ax) {
+ 		cmd.filter_flags |= cpu_to_le32(MAC_FILTER_IN_11AX);
+-		if (vif->bss_conf.twt_requester && IWL_MVM_USE_TWT)
+-			ctxt_sta->data_policy |= cpu_to_le32(TWT_SUPPORTED);
+-		if (vif->bss_conf.twt_protected)
+-			ctxt_sta->data_policy |=
+-				cpu_to_le32(PROTECTED_TWT_SUPPORTED);
+-		if (vif->bss_conf.twt_broadcast)
+-			ctxt_sta->data_policy |=
+-				cpu_to_le32(BROADCAST_TWT_SUPPORTED);
++		ctxt_sta->data_policy |=
++			iwl_mvm_mac_ctxt_cmd_sta_get_twt_policy(mvm, vif);
+ 	}
+ 
+ 
+@@ -732,20 +785,11 @@ static void iwl_mvm_go_iterator(void *_data, u8 *mac, struct ieee80211_vif *vif)
+ 		data->go_active = true;
+ }
+ 
+-static int iwl_mvm_mac_ctxt_cmd_p2p_device(struct iwl_mvm *mvm,
+-					   struct ieee80211_vif *vif,
+-					   u32 action)
++static __le32 iwl_mac_ctxt_p2p_dev_has_extended_disc(struct iwl_mvm *mvm,
++						     struct ieee80211_vif *vif)
  {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 69c390ff2745..c3767f62026a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -522,6 +522,7 @@ static const struct iwl_hcmd_names iwl_mvm_mac_conf_names[] = {
- 	HCMD_NAME(CHANNEL_SWITCH_TIME_EVENT_CMD),
- 	HCMD_NAME(SESSION_PROTECTION_CMD),
- 	HCMD_NAME(MAC_CONFIG_CMD),
-+	HCMD_NAME(LINK_CONFIG_CMD),
- 	HCMD_NAME(SESSION_PROTECTION_NOTIF),
- 	HCMD_NAME(CHANNEL_SWITCH_START_NOTIF),
- };
+-	struct iwl_mac_ctx_cmd cmd = {};
+ 	struct iwl_mvm_go_iterator_data data = {};
+ 
+-	WARN_ON(vif->type != NL80211_IFTYPE_P2P_DEVICE);
+-
+-	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
+-
+-	/* Override the filter flags to accept only probe requests */
+-	cmd.filter_flags = cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
+-
+ 	/*
+ 	 * This flag should be set to true when the P2P Device is
+ 	 * discoverable and there is at least another active P2P GO. Settings
+@@ -758,7 +802,25 @@ static int iwl_mvm_mac_ctxt_cmd_p2p_device(struct iwl_mvm *mvm,
+ 		mvm->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
+ 		iwl_mvm_go_iterator, &data);
+ 
+-	cmd.p2p_dev.is_disc_extended = cpu_to_le32(data.go_active ? 1 : 0);
++	return cpu_to_le32(data.go_active ? 1 : 0);
++}
++
++static int iwl_mvm_mac_ctxt_cmd_p2p_device(struct iwl_mvm *mvm,
++					   struct ieee80211_vif *vif,
++					   u32 action)
++{
++	struct iwl_mac_ctx_cmd cmd = {};
++
++	WARN_ON(vif->type != NL80211_IFTYPE_P2P_DEVICE);
++
++	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
++
++	cmd.p2p_dev.is_disc_extended =
++		iwl_mac_ctxt_p2p_dev_has_extended_disc(mvm, vif);
++
++	/* Override the filter flags to accept only probe requests */
++	cmd.filter_flags = cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
++
+ 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+ }
+ 
+@@ -1102,6 +1164,30 @@ static void iwl_mvm_mac_ap_iterator(void *_data, u8 *mac,
+ 	data->beacon_int = vif->bss_conf.beacon_int;
+ }
+ 
++/*
++ * Fill the filter flags for mac context of type AP or P2P GO.
++ */
++static void iwl_mvm_mac_ctxt_cmd_ap_set_filter_flags(struct iwl_mvm *mvm,
++						     struct iwl_mvm_vif *mvmvif,
++						     __le32 *filter_flags,
++						     int accept_probe_req_flag,
++						     int accept_beacon_flag)
++{
++	/*
++	 * in AP mode, pass probe requests and beacons from other APs
++	 * (needed for ht protection); when there're no any associated
++	 * station don't ask FW to pass beacons to prevent unnecessary
++	 * wake-ups.
++	 */
++	*filter_flags |= cpu_to_le32(accept_probe_req_flag);
++	if (mvmvif->ap_assoc_sta_count || !mvm->drop_bcn_ap_mode) {
++		*filter_flags |= cpu_to_le32(accept_beacon_flag);
++		IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
++	} else {
++		IWL_DEBUG_HC(mvm, "No need to receive beacons\n");
++	}
++}
++
+ /*
+  * Fill the specific data for mac context of type AP of P2P GO
+  */
+@@ -1121,19 +1207,10 @@ static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
+ 	/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
+ 	cmd->ac[IWL_MVM_TX_FIFO_VO].fifos_mask |= BIT(IWL_MVM_TX_FIFO_MCAST);
+ 
+-	/*
+-	 * in AP mode, pass probe requests and beacons from other APs
+-	 * (needed for ht protection); when there're no any associated
+-	 * station don't ask FW to pass beacons to prevent unnecessary
+-	 * wake-ups.
+-	 */
+-	cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
+-	if (mvmvif->ap_assoc_sta_count || !mvm->drop_bcn_ap_mode) {
+-		cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
+-		IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
+-	} else {
+-		IWL_DEBUG_HC(mvm, "No need to receive beacons\n");
+-	}
++	iwl_mvm_mac_ctxt_cmd_ap_set_filter_flags(mvm, mvmvif,
++						 &cmd->filter_flags,
++						 MAC_FILTER_IN_PROBE_REQUEST,
++						 MAC_FILTER_IN_BEACON);
+ 
+ 	ctxt_ap->bi = cpu_to_le32(vif->bss_conf.beacon_int);
+ 	ctxt_ap->dtim_interval = cpu_to_le32(vif->bss_conf.beacon_int *
+@@ -1295,12 +1372,9 @@ int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 							   mvmvif->color));
+ 	cmd.action = cpu_to_le32(FW_CTXT_ACTION_REMOVE);
+ 
+-	ret = iwl_mvm_send_cmd_pdu(mvm, MAC_CONTEXT_CMD, 0,
+-				   sizeof(cmd), &cmd);
+-	if (ret) {
+-		IWL_ERR(mvm, "Failed to remove MAC context: %d\n", ret);
++	ret = iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
++	if (ret)
+ 		return ret;
+-	}
+ 
+ 	mvmvif->uploaded = false;
+ 
 -- 
 2.38.1
 
