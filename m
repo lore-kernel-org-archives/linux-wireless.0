@@ -2,143 +2,114 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F5CDC77B7D
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Mar 2023 12:16:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D489C74A5B
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Mar 2023 12:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231915AbjCNMPt (ORCPT
+        id S231130AbjCNMbK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Mar 2023 08:15:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55046 "EHLO
+        Tue, 14 Mar 2023 08:31:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231936AbjCNMOu (ORCPT
+        with ESMTP id S231540AbjCNMao (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Mar 2023 08:14:50 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B8B492BFA;
-        Tue, 14 Mar 2023 05:13:41 -0700 (PDT)
-Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EC01Os030125;
-        Tue, 14 Mar 2023 12:13:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=NpbZpIXcEiB6KX21yJypQYyMIi/8WOWrHa9p5niq72s=;
- b=JTfmETCIN9yZ00k5BBD+1EV9ePih4F0tRF77tXaZwmKHEOrptbD2Idx3ip5xfQ+qC5Jj
- zf1caJvskEjjJhGXDs8JKXLxlnVU0Q8HfN0oiSRDOEukCrDMgV2ScAzs2e2W4GIZXwxI
- JWP5GhWFf+Sfp1kzZBhoBVHWDSxNWSw5FGkdkS/w//uDu38dK+evZIs/Q4C2DVevqvMY
- WLUEWpAnHc1N2zZQa3b9vs1RiYX1ILh3DB9DySoeJ0p3Wje/+pcZyIIRjyTLpooyYbT1
- Qp4oEMb4BiPRNf4eMvyUf8wQFFrme9Ju3xx4t3GiAfWc3WhVCO+mqpaV4vLgXFxBt9J1 xg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pampuq6tj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:13:02 +0000
-Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EBrksc012319;
-        Tue, 14 Mar 2023 12:13:01 GMT
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pampuq6sh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:13:01 +0000
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32DMh3Lc001838;
-        Tue, 14 Mar 2023 12:12:59 GMT
-Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
-        by ppma05fra.de.ibm.com (PPS) with ESMTPS id 3p8h96kscv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:59 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECCuJa28180848
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Mar 2023 12:12:56 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 839512007C;
-        Tue, 14 Mar 2023 12:12:56 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id ED6262007A;
-        Tue, 14 Mar 2023 12:12:55 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 14 Mar 2023 12:12:55 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Jouni Malinen <j@w1.fi>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v3 37/38] wireless: add HAS_IOPORT dependencies
-Date:   Tue, 14 Mar 2023 13:12:15 +0100
-Message-Id: <20230314121216.413434-38-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.37.2
-In-Reply-To: <20230314121216.413434-1-schnelle@linux.ibm.com>
-References: <20230314121216.413434-1-schnelle@linux.ibm.com>
+        Tue, 14 Mar 2023 08:30:44 -0400
+Received: from nbd.name (nbd.name [46.4.11.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89C1974A4F;
+        Tue, 14 Mar 2023 05:29:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+        s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:Subject:From
+        :References:Cc:To:MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=T7AdpE3kF45Ahs5PgnL6KmsAScwyT077PLll9xZ5w0Q=; b=KfG5JminPgVX72tE/xsbcPH199
+        DAt+sP+QEMiv4NBh5HE4BA1EjqCbDYGSSgnvDKbSRZGOv0K3WHupckZKxfbqOVeEMpTgxaC0axKyj
+        V5FQl0ZKbKqsq2uHrdFmMZ644YkvtTEzIoyVrUyzlfFwyEgcHrp7zVhfvhW+b0dkVSxI=;
+Received: from p54ae9730.dip0.t-ipconnect.de ([84.174.151.48] helo=nf.local)
+        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <nbd@nbd.name>)
+        id 1pc3l8-001rqH-2X; Tue, 14 Mar 2023 13:28:06 +0100
+Message-ID: <519b5bb9-8899-ae7c-4eff-f3116cdfdb56@nbd.name>
+Date:   Tue, 14 Mar 2023 13:28:04 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: quXzx21nxib29bozcGJ-SNj6I_hm2fkT
-X-Proofpoint-GUID: iw3ZarVQfr8KU1Y5qun1Gw0t6IIDWNjz
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-14_04,2023-03-14_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- malwarescore=0 impostorscore=0 suspectscore=0 mlxscore=0 clxscore=1011
- priorityscore=1501 bulkscore=0 mlxlogscore=926 spamscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303140103
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.8.0
+Content-Language: en-US
+To:     Alexander Wetzel <alexander@wetzel-home.de>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, Thomas Mann <rauchwolke@gmx.net>,
+        stable@vger.kernel.org,
+        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
+References: <20230313201542.72325-1-alexander@wetzel-home.de>
+ <130d44bccb317cc82d57caf5b8ca1471fe0faed4.camel@sipsolutions.net>
+ <55ede120-b055-e834-e617-fe3069227652@wetzel-home.de>
+From:   Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] wifi: mac80211: Serialize calls to drv_wake_tx_queue()
+In-Reply-To: <55ede120-b055-e834-e617-fe3069227652@wetzel-home.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+On 14.03.23 12:20, Alexander Wetzel wrote:
+>> assuming that TXQ drivers actually still call
+>> ieee80211_txq_schedule_end() which says it's deprecated.
+>> 
+>> That even has _bh() so the tasklet can't be running anyway ...
+>> 
+>> So if the concurrency really is only TX vs. tasklet, then you could even
+>> just keep the BHs disabled (in _start spin_unlock only and then in _end
+>> local_bh_disable)?
+>> 
+>>> Which may also be the solution for the regression in 6.2:
+>>> Do it now for ieee80211_handle_wake_tx_queue() and apply this patch
+>>> to the development tree only.
+>> 
+>> I'd argue the other way around - do it for all to fix these issues, and
+>> then audit drivers such as iwlwifi or even make concurrency here opt-in.
+>> 
+>> Felix did see some benefits of the concurrency I think though, so he
+>> might have a different opinion.
+> 
+> What about handling it that way:
+> 
+> Keep serializing drv_wake_tx_queue(). But use a new spinlock the drivers
+> can opt out from.
+>    1) No flag set:
+>       drv_wake_tx_queue() can be running only once at any time
+> 
+>    2) IEEE80211_HW_CONCURRENT_AC_TX
+>       drv_wake_tx_queue() can be running once per AC at any time
+> 
+>    3) IEEE80211_HW_CONCURRENT
+>       current behavior.
 
-Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- drivers/net/wireless/atmel/Kconfig           | 2 +-
- drivers/net/wireless/intersil/hostap/Kconfig | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+I think if you really insist on handling this through drv_wake_tx_queue 
+locking, it really shouldn't be done through extra hw flags, because the 
+locking requirements are too different.
 
-diff --git a/drivers/net/wireless/atmel/Kconfig b/drivers/net/wireless/atmel/Kconfig
-index ca45a1021cf4..bafdd57b049a 100644
---- a/drivers/net/wireless/atmel/Kconfig
-+++ b/drivers/net/wireless/atmel/Kconfig
-@@ -14,7 +14,7 @@ if WLAN_VENDOR_ATMEL
- 
- config ATMEL
- 	tristate "Atmel at76c50x chipset  802.11b support"
--	depends on CFG80211 && (PCI || PCMCIA)
-+	depends on CFG80211 && (PCI || PCMCIA) && HAS_IOPORT
- 	select WIRELESS_EXT
- 	select WEXT_PRIV
- 	select FW_LOADER
-diff --git a/drivers/net/wireless/intersil/hostap/Kconfig b/drivers/net/wireless/intersil/hostap/Kconfig
-index c865d3156cea..2edff8efbcbb 100644
---- a/drivers/net/wireless/intersil/hostap/Kconfig
-+++ b/drivers/net/wireless/intersil/hostap/Kconfig
-@@ -56,7 +56,7 @@ config HOSTAP_FIRMWARE_NVRAM
- 
- config HOSTAP_PLX
- 	tristate "Host AP driver for Prism2/2.5/3 in PLX9052 PCI adaptors"
--	depends on PCI && HOSTAP
-+	depends on PCI && HOSTAP && HAS_IOPORT
- 	help
- 	Host AP driver's version for Prism2/2.5/3 PC Cards in PLX9052 based
- 	PCI adaptors.
--- 
-2.37.2
+I took a quick look at all the drivers that implement iTXQ themselves 
+and what their requirements are.
 
+Only two drivers need changes:
+- ath10k: needs a per-AC lock, because it does a scheduling round in the 
+wake_tx_queue call.
+- iwlwifi: needs a global lock, since it touches a common list. None of 
+your proposed locking types are enough for this one.
+
+The rest seem fine to me:
+- ath9k has a per-hw-queue lock
+- mt76 only schedules a kthread
+- rtw88 uses a global lock + workqueue for scheduling
+- rtw89 uses a (potentially unnecessary) ieee80211_schedule_txq call + 
+workqueue for scheduling
+
+If you want to address this in the least invasive way, add a per-AC lock 
+to ath10k's wake_tx_queue handler, a global lock to iwlwifi, and a 
+per-AC lock inside ieee80211_handle_wake_tx_queue().
+
+That way no locking is needed around the drv_wake_tx_queue calls.
+
+- Felix
