@@ -2,152 +2,108 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E61B7C61DA4
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Mar 2023 08:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60867C61DA4
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Mar 2023 09:08:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231416AbjCOI5y convert rfc822-to-8bit (ORCPT
+        id S232019AbjCOJIw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Mar 2023 04:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38276 "EHLO
+        Wed, 15 Mar 2023 05:08:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230324AbjCOI5x (ORCPT
+        with ESMTP id S231995AbjCOJIY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Mar 2023 04:57:53 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E51396230C
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Mar 2023 01:57:51 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32F8vQHM1008892, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32F8vQHM1008892
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Wed, 15 Mar 2023 16:57:26 +0800
-Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 15 Mar 2023 16:57:38 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Wed, 15 Mar 2023 16:57:37 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::b4a2:2bcc:48d1:8b02]) by
- RTEXMBS04.realtek.com.tw ([fe80::b4a2:2bcc:48d1:8b02%5]) with mapi id
- 15.01.2375.007; Wed, 15 Mar 2023 16:57:37 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Kalle Valo <kvalo@kernel.org>
-CC:     Bernie Huang <phhuang@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 1/5] wifi: rtw89: 8852c: add beacon filter and CQM support
-Thread-Topic: [PATCH 1/5] wifi: rtw89: 8852c: add beacon filter and CQM
- support
-Thread-Index: AQHZUwM9emcfit61BUyDIkN8d0SOjK77iydZgAAFchA=
-Date:   Wed, 15 Mar 2023 08:57:37 +0000
-Message-ID: <e3670d1075f54c69ba3971067b3d06b7@realtek.com>
-References: <20230310034631.45299-1-pkshih@realtek.com>
-        <20230310034631.45299-2-pkshih@realtek.com> <87zg8emn4i.fsf@kernel.org>
-In-Reply-To: <87zg8emn4i.fsf@kernel.org>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS06.realtek.com.tw, 9
-x-kse-attachmentfiltering-interceptor-info: no applicable attachment filtering
- rules found
-x-kse-antivirus-interceptor-info: scan successful
-x-kse-antivirus-info: =?us-ascii?Q?Clean,_bases:_2023/3/15_=3F=3F_06:36:00?=
-x-kse-bulkmessagesfiltering-scan-result: protection disabled
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Wed, 15 Mar 2023 05:08:24 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E47077B9B6
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Mar 2023 02:07:48 -0700 (PDT)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32F6CVbi031070;
+        Wed, 15 Mar 2023 09:07:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=+HAYdprAXADx6oWeuYZM1bSTfuwFc7QgFqEhugCHaOg=;
+ b=BKzCCqx5Vj9kq6cgqjKwChmVVuTY147OSWhzZgO1t1JqboN5TKlzt6z7H8oeLdE7qGbA
+ 7d/EjluWOsAVPm2EsDCX71A77P1w6wIFV0Y0/1sniWa8tWicXA3LQvG0ieUKIuDfDgr8
+ M1G9xpPctY0g8ykjMtf9RmUo+6ESnGUEUIRd2mG+p1JnmCrTua4Kk6yWh0YmAL0Y0paj
+ Y41suB6X4QW0vq500K9VkmjJsFKcToZp0vKxyHTlsYvcjTZomQwiqVtu9dh2a4gRl1gz
+ UMZGlrOAI6ma3nHFcfkvDuSWlxpS3bhcVKuBaQQ1W/3/z2dhQr/gtrd90eWHKoqAX2wC qw== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pb2crh2q4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 09:07:40 +0000
+Received: from nasanex01a.na.qualcomm.com ([10.52.223.231])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32F97dgA027477
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 15 Mar 2023 09:07:40 GMT
+Received: from rajson-linux.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.41; Wed, 15 Mar 2023 02:07:38 -0700
+From:   Rajat Soni <quic_rajson@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Rajat Soni <quic_rajson@quicinc.com>
+Subject: [PATCH] wifi: ath12k: fix memory leak in ath12k_qmi_driver_event_work()
+Date:   Wed, 15 Mar 2023 14:36:32 +0530
+Message-ID: <20230315090632.15065-1-quic_rajson@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: MHZ1LfykRlekh_ygDfCrTfIzsy4Hj_-7
+X-Proofpoint-ORIG-GUID: MHZ1LfykRlekh_ygDfCrTfIzsy4Hj_-7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-15_04,2023-03-14_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxscore=0
+ adultscore=0 mlxlogscore=942 lowpriorityscore=0 malwarescore=0 bulkscore=0
+ clxscore=1011 priorityscore=1501 suspectscore=0 phishscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2302240000 definitions=main-2303150076
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Currently the buffer pointed by event is not freed in case
+ATH12K_FLAG_UNREGISTERING bit is set, this causes memory leak.
 
+Add a goto skip instead of return, to ensure event and all the
+list entries are freed properly.
 
-> -----Original Message-----
-> From: Kalle Valo <kvalo@kernel.org>
-> Sent: Wednesday, March 15, 2023 4:32 PM
-> To: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Bernie Huang <phhuang@realtek.com>; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH 1/5] wifi: rtw89: 8852c: add beacon filter and CQM support
-> 
-> Ping-Ke Shih <pkshih@realtek.com> writes:
-> 
-> > From: Po-Hao Huang <phhuang@realtek.com>
-> >
-> > Adding this supports beacon filter and connection quality monitor.
-> > To make host CPU wake up less, let firmware perform signal
-> > monitoring and beacon processing, then notify driver upon signal
-> > changes or beacon loss.
-> >
-> > This feature needs firmware 0.27.56 or newer to support it.
-> >
-> > Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> [...]
-> 
-> > --- a/drivers/net/wireless/realtek/rtw89/core.c
-> > +++ b/drivers/net/wireless/realtek/rtw89/core.c
-> > @@ -1438,6 +1438,8 @@ static void rtw89_vif_rx_stats_iter(void *data, u8 *mac,
-> >       struct rtw89_rx_desc_info *desc_info = iter_data->desc_info;
-> >       struct sk_buff *skb = iter_data->skb;
-> >       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> > +     struct rtw89_rx_phy_ppdu *phy_ppdu =
-> > +             (struct rtw89_rx_phy_ppdu *)iter_data->phy_ppdu;
-> 
-> Why the cast? I don't think it's needed.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Will fix it by next version.
+Signed-off-by: Rajat Soni <quic_rajson@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/qmi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> 
-> > @@ -3181,6 +3204,15 @@ static inline struct rtw89_fw_c2h_attr *RTW89_SKB_C2H_CB(struct sk_buff *skb)
-> >  #define RTW89_GET_MAC_C2H_REV_ACK_H2C_SEQ(c2h) \
-> >       le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(23, 16))
-> >
-> > +#define RTW89_GET_MAC_BCNFLTR_RPT_MACID(c2h) \
-> > +     le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(7, 0))
-> > +#define RTW89_GET_MAC_BCNFLTR_RPT_TYPE(c2h) \
-> > +     le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(9, 8))
-> > +#define RTW89_GET_MAC_BCNFLTR_RPT_EVENT(c2h) \
-> > +     le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(11, 10))
-> > +#define RTW89_GET_MAC_BCNFLTR_RPT_MA(c2h) \
-> > +     le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(23, 16))
-> 
-> I have to admit that I every time I see this code pattern it makes me
-> regret it. Something like what Arnd proposed back in the day would look
-> so much cleaner:
-> 
-> https://lore.kernel.org/all/CAK8P3a1rsKZZKMKFTDWgE3usX9gYKJqUvTMxSdEuZrp8BaKdaA@mail.gmail.com/
-> 
-> Of course this is just a generic comment about rtw89, and has nothing to
-> do with this patchset, but it would be great if someone could take a
-> look and try out Arnd's proposal. It would be good to start with just
-> one or two commands and send that as an RFC to see how it looks like.
-> 
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
+index 979a63f2e2ab..4beb9ef23d08 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.c
++++ b/drivers/net/wireless/ath/ath12k/qmi.c
+@@ -2991,7 +2991,7 @@ static void ath12k_qmi_driver_event_work(struct work_struct *work)
+ 		spin_unlock(&qmi->event_lock);
+ 
+ 		if (test_bit(ATH12K_FLAG_UNREGISTERING, &ab->dev_flags))
+-			return;
++			goto skip;
+ 
+ 		switch (event->type) {
+ 		case ATH12K_QMI_EVENT_SERVER_ARRIVE:
+@@ -3032,6 +3032,7 @@ static void ath12k_qmi_driver_event_work(struct work_struct *work)
+ 			ath12k_warn(ab, "invalid event type: %d", event->type);
+ 			break;
+ 		}
++skip:
+ 		kfree(event);
+ 		spin_lock(&qmi->event_lock);
+ 	}
 
-I write a draft RFC here. Please see if it's in expectation. If so, I can
-change all of them by another patch or RFC.
-
-In header file:
-
-#define RTW89_C2H_MAC_BCNFLTR_RPT_W2_MACID_MASK GENMASK(7, 0)
-#define RTW89_C2H_MAC_BCNFLTR_RPT_W2_TYPE_MASK GENMASK(9, 8)
-#define RTW89_C2H_MAC_BCNFLTR_RPT_W2_EVENT_MASK GENMASK(11, 10)
-#define RTW89_C2H_MAC_BCNFLTR_RPT_W2_MA_MASK GENMASK(23, 16)
-
-
-Access the values via le32_get_bits() in functions somewhere:
-
-	const __le32 *c2h = skb->data;
-
-	type =   le32_get_bits(c2h[2], RTW89_C2H_MAC_BCNFLTR_RPT_W2_MACID_MASK);
-	sig =    le32_get_bits(c2h[2], RTW89_C2H_MAC_BCNFLTR_RPT_W2_MA_MASK) - MAX_RSSI;
-	event =  le32_get_bits(c2h[2], RTW89_C2H_MAC_BCNFLTR_RPT_W2_EVENT_MASK);
-	mac_id = le32_get_bits(c2h[2], RTW89_C2H_MAC_BCNFLTR_RPT_W2_MACID_MASK);
-
-
-Ping-Ke
+base-commit: 3fa9da4001890def44801dd56d5fbc134689be28
+-- 
+2.17.1
 
