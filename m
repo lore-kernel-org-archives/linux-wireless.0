@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A55C6FD19
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Mar 2023 12:14:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A922BC6FD19
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Mar 2023 12:19:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230198AbjCPMOM (ORCPT
+        id S229950AbjCPMTw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Mar 2023 08:14:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57034 "EHLO
+        Thu, 16 Mar 2023 08:19:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230187AbjCPMOK (ORCPT
+        with ESMTP id S229892AbjCPMTv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2023 08:14:10 -0400
+        Thu, 16 Mar 2023 08:19:51 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E9657AB2
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 05:14:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D2BE69CEC
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 05:19:38 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32GCDlzhE023040, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32GCDlzhE023040
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32GCJJ6M0016822, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32GCJJ6M0016822
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Thu, 16 Mar 2023 20:13:47 +0800
+        Thu, 16 Mar 2023 20:19:19 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Thu, 16 Mar 2023 20:13:15 +0800
+ 15.1.2507.17; Thu, 16 Mar 2023 20:19:31 +0800
 Received: from localhost (172.16.16.31) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 16 Mar
- 2023 20:13:15 +0800
+ 2023 20:19:30 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 3/5] wifi: rtw89: add ieee80211::remain_on_channel ops
-Date:   Thu, 16 Mar 2023 20:12:04 +0800
-Message-ID: <20230316121206.11479-5-pkshih@realtek.com>
+Subject: [PATCH v3 3/5] wifi: rtw89: add ieee80211::remain_on_channel ops
+Date:   Thu, 16 Mar 2023 20:18:20 +0800
+Message-ID: <20230316121822.12178-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230316121206.11479-1-pkshih@realtek.com>
-References: <20230316121206.11479-1-pkshih@realtek.com>
+In-Reply-To: <20230316121822.12178-1-pkshih@realtek.com>
+References: <20230316121822.12178-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -46,10 +46,6 @@ X-Originating-IP: [172.16.16.31]
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
