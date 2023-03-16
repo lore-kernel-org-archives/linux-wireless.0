@@ -2,186 +2,287 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8DBDC6FD19
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Mar 2023 09:40:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7A00C6FD1F
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Mar 2023 12:14:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230197AbjCPJk2 (ORCPT
+        id S230136AbjCPMOB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Mar 2023 05:40:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39094 "EHLO
+        Thu, 16 Mar 2023 08:14:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229938AbjCPJk1 (ORCPT
+        with ESMTP id S230205AbjCPMNz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2023 05:40:27 -0400
-Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B444234C0
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 02:40:25 -0700 (PDT)
-Received: by mail-wm1-x332.google.com with SMTP id c8-20020a05600c0ac800b003ed2f97a63eso2721916wmr.3
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 02:40:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1678959624;
-        h=in-reply-to:subject:from:references:cc:to:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=b/tWRTX3Lo4prZmfIy5zmmUr58w7uTGflnb3TBty39Y=;
-        b=A5DNO9uyKpAZlx3JuM9oijNDHUjGR3vqcve92wNAEb0BoIvOLOlHoThfrPnGOxctnQ
-         dlKx4fKHmOJvrwOHLY5wlZx7v1WtBa98pd/69epSe0WnWhvbUtuKqfTI17Ac7wqGoj8x
-         v+Q/r+RR6n07C1VjWpRremOfeAUglue07Ka2I=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678959624;
-        h=in-reply-to:subject:from:references:cc:to:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=b/tWRTX3Lo4prZmfIy5zmmUr58w7uTGflnb3TBty39Y=;
-        b=2HQTSKP3xLStf6y94ELw8wnDzwKXd1HlgnBpL5rP7JiiMVOHr/8bxPcRBLhsxstxqW
-         c8pU0CczM3pj3aQq9XXz8t5eq7K4SSEYbn+/dS73NaPbXTHCCwo/JkqKH3x7ikQrMUu8
-         Y6HstUdpWEcrMpU2LmUEn9fIBXeUJW/ILMcXpSXy4LbuoS4y5Ku0xVFL5oHvTOM+3uvJ
-         dNuwXPMCDKQRzDLl5yJvflqYPawErVHfPNsVUdWDh66eCsBGpqTCy4mNRrEcKKISf/p2
-         tHgLbanwyjWjkbDVH7z2npFQIHoMOTuX+54Y2Ht+ZyedZeb2a+Xlsj6QN7R7DRJNiopt
-         sCag==
-X-Gm-Message-State: AO0yUKVRFqcOCrzOBD3JoUMXzXk/0Nbon1ZnMNYRKAzS9X6RSnY6Wxtc
-        pL/1gXx0l29E80WXCNHWNF0UEA==
-X-Google-Smtp-Source: AK7set8dQOG0MxqICIOnhG6v6bnezIbWI0oYeybW7KKFkc4gqyOY4de9fItRoQCQJpHh6bp13FA7mQ==
-X-Received: by 2002:a05:600c:19cf:b0:3eb:2da4:f304 with SMTP id u15-20020a05600c19cf00b003eb2da4f304mr19379540wmq.17.1678959623921;
-        Thu, 16 Mar 2023 02:40:23 -0700 (PDT)
-Received: from [10.176.68.61] ([192.19.148.250])
-        by smtp.gmail.com with ESMTPSA id 4-20020a05600c024400b003eb966d39desm4489284wmj.2.2023.03.16.02.40.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Mar 2023 02:40:23 -0700 (PDT)
-Message-ID: <20fc4c19-6f39-d3bf-b873-ea26a26175cd@broadcom.com>
-Date:   Thu, 16 Mar 2023 10:40:22 +0100
+        Thu, 16 Mar 2023 08:13:55 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BC7F5A194
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 05:13:44 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32GCDO5o8022859, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32GCDO5o8022859
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+        Thu, 16 Mar 2023 20:13:24 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Thu, 16 Mar 2023 20:13:14 +0800
+Received: from localhost (172.16.16.31) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 16 Mar
+ 2023 20:13:14 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/5] wifi: rtw89: add function to wait for completion of tx skbs
+Date:   Thu, 16 Mar 2023 20:12:03 +0800
+Message-ID: <20230316121206.11479-4-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230316121206.11479-1-pkshih@realtek.com>
+References: <20230316121206.11479-1-pkshih@realtek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.2
-To:     Michael Stapelberg <michael+lkml@stapelberg.ch>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org
-References: <CANnVG6=a3etRagG+RaSEH-b4_nfzxpEKffQtuMWrttrbgjunZQ@mail.gmail.com>
- <186e23b5668.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <CANnVG6kjWj02eEFv_OeLiRtjrJ6yn4EsELz_BtrzFHH15GNMLw@mail.gmail.com>
- <186e26dc0a8.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <CANnVG6n-eqKUQnX_6wncmjG1kyVfhxqs2L82xYQpDmGq89eVAQ@mail.gmail.com>
- <186e4673718.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <CANnVG6kaGj1SVCqf2y3=Xj_N2G9j+-VhLDN4_WY_ywDswNkO3g@mail.gmail.com>
- <89262772-7358-77e8-8913-c459819d544a@broadcom.com>
- <a459b9adc5eb7b67a432bd947d47d1df08718762.camel@sipsolutions.net>
- <f430c376-5992-d394-ce55-5994c793c7c7@broadcom.com>
- <CANnVG6neOX+Bgc3zWA8k=hwrifmXb=xBN95aMUEyJ=orz3+Wkg@mail.gmail.com>
- <186e9109ae8.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <CANnVG6kvP78+WADH+Z4Yk4k9m-rjwRw0qMprHNsngNaj-jpqJQ@mail.gmail.com>
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: wifi breakage due to commit "wifi: brcmfmac: add support for
- vendor-specific firmware api"
-In-Reply-To: <CANnVG6kvP78+WADH+Z4Yk4k9m-rjwRw0qMprHNsngNaj-jpqJQ@mail.gmail.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000fee91005f7013f82"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.16.31]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---000000000000fee91005f7013f82
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Po-Hao Huang <phhuang@realtek.com>
 
-On 3/16/2023 8:54 AM, Michael Stapelberg wrote:
-> Hmm, I’m not sure either.
+Allocate a per-skb completion to track those skbs we are interested in
+and wait for them to complete transmission with tx status. To avoid
+race condition between process and softirq without addtional locking,
+we use a work to free the tx_wait struct later when waiter is finished
+referencing it. This must be called in process context and with a
+timeout value greater than zero since it might sleep.
 
-Actually, the check I referred to only bails out when 
-CONFIG_MODPROBE_PATH is unset. In your case it is set but it is not 
-existing. I dived into request_module() and it ends up scheduling a work 
-to call the modprobe which will fail. However, brcmfmac will wait for 
-brcmfmac-wcc to register itself so doing the insmod of brcmfmac-wcc will 
-do the trick. However, now I am back at saying this can be racy. It 
-would be better to come up with a modprobe.go for your user-space 
-environment and put that in kernel config.
+We use another workqueue so works can be processed concurrently and
+when the PCI device is removed unexpectedly, all pending works can be
+flushed. This prevents some works that were scheduled but never processed
+leads to memory leak.
 
-Regards,
-Arend
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.c | 58 +++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/core.h | 33 +++++++++++++
+ drivers/net/wireless/realtek/rtw89/pci.c  |  6 +++
+ drivers/net/wireless/realtek/rtw89/pci.h  |  4 +-
+ 4 files changed, 99 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 0e32bb58bade3..ea697dd9cb176 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -849,6 +849,60 @@ void rtw89_core_tx_kick_off(struct rtw89_dev *rtwdev, u8 qsel)
+ 	rtw89_hci_tx_kick_off(rtwdev, ch_dma);
+ }
+ 
++static void rtw89_core_free_tx_wait_work(struct work_struct *work)
++{
++	struct rtw89_tx_wait_info *wait =
++			container_of(work, struct rtw89_tx_wait_info, work);
++	struct rtw89_dev *rtwdev = wait->rtwdev;
++	int done, ret;
++
++	/* Wait rtw89_core_tx_kick_off_and_wait() increase 'wait_done' to
++	 * ensure it doesn't use 'wait' anymore. The polling period is larger
++	 * than execution time between wait_for_completion_timeout() and
++	 * atomic_inc() in rtw89_core_tx_kick_off_and_wait().
++	 */
++	ret = read_poll_timeout(atomic_read, done, done, 1000, 100000, false,
++				&wait->wait_done);
++
++	if (ret)
++		rtw89_err(rtwdev, "tx wait timed out, stop polling\n");
++	else
++		kfree(wait);
++}
++
++int rtw89_core_tx_kick_off_and_wait(struct rtw89_dev *rtwdev, struct sk_buff *skb,
++				    int qsel, unsigned int timeout)
++{
++	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
++	struct rtw89_tx_wait_info *wait;
++	unsigned long time_left;
++	int ret = 0;
++
++	skb_data->wait = kzalloc(sizeof(*wait), GFP_KERNEL);
++	wait = skb_data->wait;
++	if (!wait) {
++		rtw89_warn(rtwdev, "alloc tx wait info failed\n");
++		rtw89_core_tx_kick_off(rtwdev, qsel);
++		return 0;
++	}
++
++	init_completion(&wait->completion);
++	INIT_WORK(&wait->work, rtw89_core_free_tx_wait_work);
++	wait->rtwdev = rtwdev;
++
++	rtw89_core_tx_kick_off(rtwdev, qsel);
++	time_left = wait_for_completion_timeout(&wait->completion,
++						msecs_to_jiffies(timeout));
++	if (time_left == 0)
++		ret = -ETIMEDOUT;
++	else if (!wait->tx_done)
++		ret = -EAGAIN;
++
++	atomic_inc(&wait->wait_done);
++
++	return ret;
++}
++
+ int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
+ 		 struct sk_buff *skb, bool fwdl)
+ {
+@@ -3192,6 +3246,9 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
+ 	rtwdev->txq_wq = alloc_workqueue("rtw89_tx_wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
+ 	if (!rtwdev->txq_wq)
+ 		return -ENOMEM;
++	rtwdev->gc_wq = alloc_workqueue("rtw89_gc_wq", WQ_UNBOUND | WQ_MEM_RECLAIM, 0);
++	if (!rtwdev->gc_wq)
++		return -ENOMEM;
+ 	spin_lock_init(&rtwdev->ba_lock);
+ 	spin_lock_init(&rtwdev->rpwm_lock);
+ 	mutex_init(&rtwdev->mutex);
+@@ -3233,6 +3290,7 @@ void rtw89_core_deinit(struct rtw89_dev *rtwdev)
+ 	rtw89_fw_free_all_early_h2c(rtwdev);
+ 
+ 	destroy_workqueue(rtwdev->txq_wq);
++	destroy_workqueue(rtwdev->gc_wq);
+ 	mutex_destroy(&rtwdev->rf_mutex);
+ 	mutex_destroy(&rtwdev->mutex);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 622fd991a1f94..c1d966fc75b7a 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2599,6 +2599,19 @@ struct rtw89_phy_rate_pattern {
+ 	bool enable;
+ };
+ 
++struct rtw89_tx_wait_info {
++	struct rtw89_dev *rtwdev;
++	struct completion completion;
++	struct work_struct work;
++	atomic_t wait_done;
++	bool tx_done;
++};
++
++struct rtw89_tx_skb_data {
++	struct rtw89_tx_wait_info *wait;
++	u8 hci_priv[];
++};
++
+ #define RTW89_P2P_MAX_NOA_NUM 2
+ 
+ struct rtw89_vif {
+@@ -3937,6 +3950,7 @@ struct rtw89_dev {
+ 	/* used to protect rf read write */
+ 	struct mutex rf_mutex;
+ 	struct workqueue_struct *txq_wq;
++	struct workqueue_struct *gc_wq;
+ 	struct work_struct txq_work;
+ 	struct delayed_work txq_reinvoke_work;
+ 	/* used to protect ba_list and forbid_ba_list */
+@@ -4148,6 +4162,14 @@ static inline void rtw89_hci_clear(struct rtw89_dev *rtwdev, struct pci_dev *pde
+ 		rtwdev->hci.ops->clear(rtwdev, pdev);
+ }
+ 
++static inline
++struct rtw89_tx_skb_data *RTW89_TX_SKB_CB(struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	return (struct rtw89_tx_skb_data *)info->status.status_driver_data;
++}
++
+ static inline u8 rtw89_read8(struct rtw89_dev *rtwdev, u32 addr)
+ {
+ 	return rtwdev->hci.ops->read8(rtwdev, addr);
+@@ -4791,11 +4813,22 @@ static inline struct sk_buff *rtw89_alloc_skb_for_rx(struct rtw89_dev *rtwdev,
+ 	return dev_alloc_skb(length);
+ }
+ 
++static inline void rtw89_core_tx_wait_complete(struct rtw89_dev *rtwdev,
++					       struct rtw89_tx_wait_info *wait,
++					       bool tx_done)
++{
++	wait->tx_done = tx_done;
++	complete(&wait->completion);
++	queue_work(rtwdev->gc_wq, &wait->work);
++}
++
+ int rtw89_core_tx_write(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif,
+ 			struct ieee80211_sta *sta, struct sk_buff *skb, int *qsel);
+ int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
+ 		 struct sk_buff *skb, bool fwdl);
+ void rtw89_core_tx_kick_off(struct rtw89_dev *rtwdev, u8 qsel);
++int rtw89_core_tx_kick_off_and_wait(struct rtw89_dev *rtwdev, struct sk_buff *skb,
++				    int qsel, unsigned int timeout);
+ void rtw89_core_fill_txdesc(struct rtw89_dev *rtwdev,
+ 			    struct rtw89_tx_desc_info *desc_info,
+ 			    void *txdesc);
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index ec8bb5f10482e..ca6b63944ee99 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -364,6 +364,8 @@ static void rtw89_pci_tx_status(struct rtw89_dev *rtwdev,
+ 				struct rtw89_pci_tx_ring *tx_ring,
+ 				struct sk_buff *skb, u8 tx_status)
+ {
++	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
++	struct rtw89_tx_wait_info *wait = skb_data->wait;
+ 	struct ieee80211_tx_info *info;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+@@ -394,6 +396,8 @@ static void rtw89_pci_tx_status(struct rtw89_dev *rtwdev,
+ 		}
+ 	}
+ 
++	if (wait)
++		rtw89_core_tx_wait_complete(rtwdev, wait, tx_status == RTW89_TX_DONE);
+ 	ieee80211_tx_status_ni(rtwdev->hw, skb);
+ }
+ 
+@@ -1203,6 +1207,7 @@ static int rtw89_pci_txwd_submit(struct rtw89_dev *rtwdev,
+ 	struct pci_dev *pdev = rtwpci->pdev;
+ 	struct sk_buff *skb = tx_req->skb;
+ 	struct rtw89_pci_tx_data *tx_data = RTW89_PCI_TX_SKB_CB(skb);
++	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
+ 	bool en_wd_info = desc_info->en_wd_info;
+ 	u32 txwd_len;
+ 	u32 txwp_len;
+@@ -1218,6 +1223,7 @@ static int rtw89_pci_txwd_submit(struct rtw89_dev *rtwdev,
+ 	}
+ 
+ 	tx_data->dma = dma;
++	skb_data->wait = NULL;
+ 
+ 	txwp_len = sizeof(*txwp_info);
+ 	txwd_len = chip->txwd_body_size;
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
+index 1e19740db8c54..0e4bd210b100f 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.h
++++ b/drivers/net/wireless/realtek/rtw89/pci.h
+@@ -1004,9 +1004,9 @@ rtw89_pci_rxbd_increase(struct rtw89_pci_rx_ring *rx_ring, u32 cnt)
+ 
+ static inline struct rtw89_pci_tx_data *RTW89_PCI_TX_SKB_CB(struct sk_buff *skb)
+ {
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct rtw89_tx_skb_data *data = RTW89_TX_SKB_CB(skb);
+ 
+-	return (struct rtw89_pci_tx_data *)info->status.status_driver_data;
++	return (struct rtw89_pci_tx_data *)data->hci_priv;
+ }
+ 
+ static inline struct rtw89_pci_tx_bd_32 *
+-- 
+2.25.1
 
---000000000000fee91005f7013f82
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-2Gzj3QNJRLsZu1TLyOyBBIr/BE7UiY3RabgRzknBGAPmzhS+fmyM8OtM5BYBsFBrSUFtZZO2p/tf
-Nbc24J2zf2peoZ8MK+7WQqummYlOnz+FyDkA9EybeNMcS5C+xi/PAgMBAAGjggHdMIIB2TAOBgNV
-HQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRwOi8vc2VjdXJl
-Lmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcnQwQQYI
-KwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24y
-Y2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3
-dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRCMEAwPqA8oDqG
-OGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3Js
-MCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYDVR0lBAwwCgYIKwYB
-BQUHAwQwHwYDVR0jBBgwFoAUljPR5lgXWzR1ioFWZNW+SN6hj88wHQYDVR0OBBYEFIikAXd8CEtv
-ZbDflDRnf3tuStPuMA0GCSqGSIb3DQEBCwUAA4IBAQCdS5XCYx6k2GGZui9DlFsFm75khkqAU7rT
-zBX04sJU1+B1wtgmWTVIzW7ugdtDZ4gzaV0S9xRhpDErjJaltxPbCylb1DEsLj+AIvBR34caW6ZG
-sQk444t0HPb29HnWYj+OllIGMbdJWr0/P95ZrKk2bP24ub3ZP/8SyzrohfIba9WZKMq6g2nTLZE3
-BtkeSGJx/8dy0h8YmRn+adOrxKXHxhSL8BNn8wsmIZyYWe6fRcBtO3Ks2DOLyHCdkoFlN8x9VUQF
-N2ulEgqCbRKkx+qNirW86eF138lr1gRxzclu/38ko//MmkAYR/+hP3WnBll7zbpIt0jc9wyFkSqH
-p8a1MYICbTCCAmkCAQEwazBbMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1z
-YTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMgUGVyc29uYWxTaWduIDIgQ0EgMjAyMAIMTv1t
-bpIzNUky46LXMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCDsOljAMwCTVkZzwmKx
-yQNoyar87TRRM8CeZTCWqdmMaTAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
-BTEPFw0yMzAzMTYwOTQwMjRaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
-AwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzAL
-BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAED+pZKYVFxqc5vqC1VbV6bVtGMdlLJO/F5Ug
-vt7UdysR0TRL4t/NLETiK0g/Np+Mk7ESwqwCcL3dFQPYcd7V6YYQ4MmtfJ9Nsvaf9SKotXMN6hMi
-gMk+BJRvGjV6sDh+Olc3JC9RjHPWGt7O9QeYIEs4FrZchzoqEzozTCRPyw9K1DTujZ4eJBWacOpY
-q1SSgd/+ENmovJpEHPULoKqwH1jYM92tLyudf+ewTl89gYN3eOpiBGnXZIecNv5OcVOkY/Cu9I0v
-rsf25GOud+0z+WK5cZNRkYR3lmUFsuF4JumP/PqRzYyosI1VdJXlV/FwkLfE1wXP+7uJQEr0V/+Q
-og==
---000000000000fee91005f7013f82--
