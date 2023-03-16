@@ -2,66 +2,77 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7520C6FD19
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Mar 2023 13:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C609C6FD19
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Mar 2023 13:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230290AbjCPN1I (ORCPT
+        id S230374AbjCPNgK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Mar 2023 09:27:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46714 "EHLO
+        Thu, 16 Mar 2023 09:36:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230268AbjCPN1H (ORCPT
+        with ESMTP id S229506AbjCPNgH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Mar 2023 09:27:07 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B19A2ED51
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 06:26:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678973177;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=G0GjSNp14sgLvsRbIO2AGErzNaT8G3GbrNu8G+re4js=;
-        b=EVqugp7ds14vfLclvX20KAs0QlvxaP923ARvWb+ciWUasbQJPAF0YAas6663yJeDSJbyLa
-        eAhEt1gRXK95mx5R6JakcmtScJru3x64lY1qec1drOPOGDlHs06pAD8YL42JF6C9YLzrj/
-        CpYBfd/mtDkfUjX0ZcfHapxN65rxRDw=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-654-wQTMRmwWPAuq9cqMLyh5qw-1; Thu, 16 Mar 2023 09:26:14 -0400
-X-MC-Unique: wQTMRmwWPAuq9cqMLyh5qw-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C462885A588;
-        Thu, 16 Mar 2023 13:26:13 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.39.192.224])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8995C492B00;
-        Thu, 16 Mar 2023 13:26:12 +0000 (UTC)
-From:   Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To:     johannes.berg@intel.com
-Cc:     gregory.greenman@intel.com, kvalo@kernel.org,
-        linux-wireless@vger.kernel.org, pstourac@redhat.com,
-        jtornosm@redhat.com
-Subject: Re: [PATCH] iwlwifi: mvm: fix double list_add at iwl_mvm_mac_wake_tx_queue (roaming)
-Date:   Thu, 16 Mar 2023 14:25:43 +0100
-Message-Id: <20230316132543.37092-1-jtornosm@redhat.com>
-In-Reply-To: <18728c67cffad35f827d9a32af34044592254093.camel@sipsolutions.net>
-References: <18728c67cffad35f827d9a32af34044592254093.camel@sipsolutions.net>
+        Thu, 16 Mar 2023 09:36:07 -0400
+Received: from hust.edu.cn (mail.hust.edu.cn [202.114.0.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C127A8EA37;
+        Thu, 16 Mar 2023 06:36:01 -0700 (PDT)
+Received: from localhost.localdomain ([172.16.0.254])
+        (user=dzm91@hust.edu.cn mech=LOGIN bits=0)
+        by mx1.hust.edu.cn  with ESMTP id 32GDZEVW013709-32GDZEVb013709
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Thu, 16 Mar 2023 21:35:22 +0800
+From:   Dongliang Mu <dzm91@hust.edu.cn>
+To:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     Dongliang Mu <dzm91@hust.edu.cn>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/2] wifi: ray_cs: add sanity check on local->sram/rmem/amem
+Date:   Thu, 16 Mar 2023 21:32:36 +0800
+Message-Id: <20230316133236.556198-3-dzm91@hust.edu.cn>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230316133236.556198-1-dzm91@hust.edu.cn>
+References: <20230316133236.556198-1-dzm91@hust.edu.cn>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+X-FEAS-AUTH-USER: dzm91@hust.edu.cn
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-My previous solution was working with my test during one week with no problem
-and now your more complete solution has been working during 2 days with no 
-problem as well. I was able to reproduce in less time with my test, so your
-solution is successfully verified and I can say: 
+The ray_config uses ray_release as its unified error handling function.
+However, it does not know if local->sram/rmem/amem succeeds or not.
 
-Tested-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Fix this by adding sanity check on local->sram/rmem/amem in the
+ray_relase.
 
-Thanks
+Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
+---
+ drivers/net/wireless/ray_cs.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index ce7911137014..808b37352f39 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -732,9 +732,12 @@ static void ray_release(struct pcmcia_device *link)
+ 
+ 	del_timer_sync(&local->timer);
+ 
+-	iounmap(local->sram);
+-	iounmap(local->rmem);
+-	iounmap(local->amem);
++	if (local->sram)
++		iounmap(local->sram);
++	if (local->rmem)
++		iounmap(local->rmem);
++	if (local->amem)
++		iounmap(local->amem);
+ 	pcmcia_disable_device(link);
+ 
+ 	dev_dbg(&link->dev, "ray_release ending\n");
+-- 
+2.39.2
 
