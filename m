@@ -2,143 +2,115 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B97B5C7618B
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Mar 2023 20:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3EECC76195
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Mar 2023 21:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230321AbjCQU4R (ORCPT
+        id S229959AbjCQVQ2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Mar 2023 16:56:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46122 "EHLO
+        Fri, 17 Mar 2023 17:16:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230310AbjCQU4P (ORCPT
+        with ESMTP id S229734AbjCQVQ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2023 16:56:15 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 321575F6DD;
-        Fri, 17 Mar 2023 13:56:13 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CB22DB825DA;
-        Fri, 17 Mar 2023 20:56:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AE28C4339B;
-        Fri, 17 Mar 2023 20:56:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679086570;
-        bh=VzXlHxYNFbUcVstTyt9EJfj+teDRoE31sK1fPAn46Oc=;
-        h=Date:From:To:Cc:Subject:From;
-        b=BaWU4SPzIsEjzmEUwROAS+A0XupSs9pAyKe6SsluWorDLlQLQ48c/R4PXMIjUoedc
-         l6OqnAFh9uO30POohnzH1oJgyTxZ+f/Hqmxf7TTBIbB1INTdvPH5ykgGPIRQUFM0M6
-         /BPC2XuqpbKgsrSyVHiKQpPrFv3l4mhFidDd7VyrpyK86bvhFkoftJsZVJu/vVEDIT
-         tBeZaCGmCb+uokVSbHxAJB1Is5v9mVVkDLuAUoezD8pLhBuHxs1nvpGNQQQAo5xLHq
-         4Y6JbrC9reKmg13EYFaXLK/HYGfy8PdYc4yuwIfSXuhppR2Sv38Y6n2qwZ7nNYnT4I
-         r5R2eub3YFFyA==
-Date:   Fri, 17 Mar 2023 14:56:39 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
+        Fri, 17 Mar 2023 17:16:27 -0400
+Received: from mail-il1-f175.google.com (mail-il1-f175.google.com [209.85.166.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AD1469CFB;
+        Fri, 17 Mar 2023 14:16:26 -0700 (PDT)
+Received: by mail-il1-f175.google.com with SMTP id i19so3409878ila.10;
+        Fri, 17 Mar 2023 14:16:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679087785;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=E8EReBm37JWyJO8L1kIPOgKUl1U5FCQclLtDZ/qXfAs=;
+        b=T9OD8EDmmspN5qP6O0f9aqn23exd9IXa16FNFPu9CWKpEB6ZJdDN2SZYeKENQQG5Ef
+         fWY9t1SLe/M/Z9CZAAnsfuUSOSp7Oqquo7QN8gsMKC1U1BPWnun6YWISwZMWrRAyAoPW
+         mTW3MBSi6+9pZFblEhNr39Q672Uq9tn9FiIx1+XK1kbXENjlVrDX7WV1UcC0TilOPZF8
+         qqOrikKJnz8uyFGtl9f74h5ZcphO5DVL6kc6u4PcK6Yd4Q9/J+a5x98oqimeXLEeX23p
+         ubUZ6cloyeRehh8OJ9jKEWSTMsR4XvQkX8VSejJH11HjBrZp9cOzv9cA85blkSoMBB8N
+         N8gw==
+X-Gm-Message-State: AO0yUKWiwyBiUE9fqyYObhX5SfGwCBqeLxjAVE9YReg2bSWzqA07UcoL
+        bqLPWKVPzdczxfVfYTLtksl5rKLPBA==
+X-Google-Smtp-Source: AK7set+44jDdZQnQ5gK5eSj07BZtp0lA+8sBDtriRGbUAZiENzi39wMOmMGgf61Ip66/ii32uJBABg==
+X-Received: by 2002:a92:cc08:0:b0:317:99b9:3d1c with SMTP id s8-20020a92cc08000000b0031799b93d1cmr12777ilp.26.1679087785257;
+        Fri, 17 Mar 2023 14:16:25 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.249])
+        by smtp.gmail.com with ESMTPSA id c7-20020a929407000000b003232362a4c2sm879970ili.8.2023.03.17.14.16.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Mar 2023 14:16:23 -0700 (PDT)
+Received: (nullmailer pid 2819364 invoked by uid 1000);
+        Fri, 17 Mar 2023 21:16:21 -0000
+Date:   Fri, 17 Mar 2023 16:16:21 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Christian Lamparter <chunkeey@googlemail.com>,
         Kalle Valo <kvalo@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        linux-gpio@vger.kernel.org, linux-omap@vger.kernel.org,
+        Tony Lindgren <tony@atomide.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Felipe Balbi <balbi@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
         "David S. Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] wifi: mt76: mt7921: Replace fake flex-arrays with
- flexible-array members
-Message-ID: <ZBTUB/kJYQxq/6Cj@work>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        =?iso-8859-1?Q?Beno=EEt?= Cousson <bcousson@baylibre.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] p54spi: convert to devicetree
+Message-ID: <20230317211621.GA2814846-robh@kernel.org>
+References: <20230314163201.955689-1-arnd@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230314163201.955689-1-arnd@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Zero-length arrays as fake flexible arrays are deprecated and we are
-moving towards adopting C99 flexible-array members instead.
+On Tue, Mar 14, 2023 at 05:30:56PM +0100, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> The Prism54 SPI driver hardcodes GPIO numbers and expects users to
+> pass them as module parameters, apparently a relic from its life as a
+> staging driver. This works because there is only one user, the Nokia
+> N8x0 tablet.
+> 
+> Convert this to the gpio descriptor interface and move the gpio
+> line information into devicetree to improve this and simplify the
+> code at the same time.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> As I don't have an N8x0, this is completely untested.
+> 
+> I listed the driver authors (Johannes and Christian) as the maintainers
+> of the binding document, but I don't know if they actually have this
+> hardware. It might be better to list someone who is actually using it.
+> 
+> Among the various chip identifications, I wasn't sure which one to
+> use for the compatible string and the name of the binding document.
+> I picked st,stlc4560 as that was cited as the version in the N800
+> on multiple websites.
+> ---
+>  .../bindings/net/wireless/st,stlc45xx.yaml    | 64 +++++++++++++++++
+>  MAINTAINERS                                   |  1 +
+>  arch/arm/boot/dts/omap2.dtsi                  |  4 ++
+>  arch/arm/boot/dts/omap2420-n8x0-common.dtsi   | 12 ++++
+>  arch/arm/mach-omap2/board-n8x0.c              | 18 -----
+>  drivers/net/wireless/intersil/p54/p54spi.c    | 69 +++++++------------
+>  drivers/net/wireless/intersil/p54/p54spi.h    |  3 +
+>  7 files changed, 109 insertions(+), 62 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/st,stlc45xx.yaml
 
-Address the following warnings found with GCC-13 and
--fstrict-flex-arrays=3 enabled:
-drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:266:25: warning: array subscript 0 is outside array bounds of ‘struct mt7921_asar_dyn_limit_v2[0]’ [-Warray-bounds=]
-drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:263:25: warning: array subscript 0 is outside array bounds of ‘struct mt7921_asar_dyn_limit[0]’ [-Warray-bounds=]
-drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:223:28: warning: array subscript <unknown> is outside array bounds of ‘struct mt7921_asar_geo_limit_v2[0]’ [-Warray-bounds=]
-drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:220:28: warning: array subscript <unknown> is outside array bounds of ‘struct mt7921_asar_geo_limit[0]’ [-Warray-bounds=]
-drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:334:37: warning: array subscript i is outside array bounds of ‘u8[0]’ {aka ‘unsigned char[]’} [-Warray-bounds=]
+Binding looks fine, but I assume you'll split this into at least 3 
+patches?
 
-Notice that the DECLARE_FLEX_ARRAY() helper allows for flexible-array
-members in unions.
-
-This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
-routines on memcpy() and help us make progress towards globally
-enabling -fstrict-flex-arrays=3 [1].
-
-Link: https://github.com/KSPP/linux/issues/21
-Link: https://github.com/KSPP/linux/issues/272
-Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h b/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
-index 35268b0890ad..6f2c4a572572 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
-@@ -24,7 +24,7 @@ struct mt7921_asar_dyn {
- 	u8 names[4];
- 	u8 enable;
- 	u8 nr_tbl;
--	struct mt7921_asar_dyn_limit tbl[0];
-+	DECLARE_FLEX_ARRAY(struct mt7921_asar_dyn_limit, tbl);
- } __packed;
- 
- struct mt7921_asar_dyn_limit_v2 {
-@@ -37,7 +37,7 @@ struct mt7921_asar_dyn_v2 {
- 	u8 enable;
- 	u8 rsvd;
- 	u8 nr_tbl;
--	struct mt7921_asar_dyn_limit_v2 tbl[0];
-+	DECLARE_FLEX_ARRAY(struct mt7921_asar_dyn_limit_v2, tbl);
- } __packed;
- 
- struct mt7921_asar_geo_band {
-@@ -55,7 +55,7 @@ struct mt7921_asar_geo {
- 	u8 names[4];
- 	u8 version;
- 	u8 nr_tbl;
--	struct mt7921_asar_geo_limit tbl[0];
-+	DECLARE_FLEX_ARRAY(struct mt7921_asar_geo_limit, tbl);
- } __packed;
- 
- struct mt7921_asar_geo_limit_v2 {
-@@ -69,7 +69,7 @@ struct mt7921_asar_geo_v2 {
- 	u8 version;
- 	u8 rsvd;
- 	u8 nr_tbl;
--	struct mt7921_asar_geo_limit_v2 tbl[0];
-+	DECLARE_FLEX_ARRAY(struct mt7921_asar_geo_limit_v2, tbl);
- } __packed;
- 
- struct mt7921_asar_cl {
-@@ -85,7 +85,7 @@ struct mt7921_asar_fg {
- 	u8 rsvd;
- 	u8 nr_flag;
- 	u8 rsvd1;
--	u8 flag[0];
-+	u8 flag[];
- } __packed;
- 
- struct mt7921_acpi_sar {
--- 
-2.34.1
-
+Rob
