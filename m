@@ -2,113 +2,102 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D0A6C7618E
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Mar 2023 04:10:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86FADC74A5B
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Mar 2023 05:13:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjCQEK6 (ORCPT
+        id S229599AbjCQFM6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Mar 2023 00:10:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54836 "EHLO
+        Fri, 17 Mar 2023 01:12:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230037AbjCQEKq (ORCPT
+        with ESMTP id S229542AbjCQFM5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Mar 2023 00:10:46 -0400
-Received: from mail-ua1-x932.google.com (mail-ua1-x932.google.com [IPv6:2607:f8b0:4864:20::932])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13CD1C66F
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 21:10:45 -0700 (PDT)
-Received: by mail-ua1-x932.google.com with SMTP id m5so2547749uae.11
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 21:10:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679026244;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=PkMQ5wHIGZcuAOofyhWRmm0uU6+B5cY9SowoxLh++1U=;
-        b=cZlOP6okNbExmWpCzllzyaLZNvHH7d0WQKk5Tu5dB3xvjOqpp8N21e8e5faAG3TS3P
-         g4MZ7Jb1ShuFDyon4+Ykw8fBnjU13fK2BvQIhTJzh2K5bSrW/nXn/Cp4oeDwVPrIaqQT
-         yAFj87tU/N3ZMlwccZ6YyjVVIqoTHmJSRX1F0vA9k3KBE06Isr94LeA+fH5MEM9f+9l9
-         ZJX9a+D08fR4ljLyxaVCfxjMw5xELqElV2dcJ3KarOA1S1ss7Yikb01FLo4I5ryAzrHX
-         oy2bSGvYJIINhk423FvVwjWbtGxmEbxBO114C9qTruHOUkZ5HgQdBrJsqwhhx/XDMVCg
-         VlJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679026244;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=PkMQ5wHIGZcuAOofyhWRmm0uU6+B5cY9SowoxLh++1U=;
-        b=D3aoxBN3ZIponZvbYIvHHZQluO0jkEAx4jwlnkfbUz4ncEJL36mNHBhcQJdru2qxGH
-         8cmjoQ5skgKbY+O7WMz51y2B8TDkjMUhA9+QrxKEZaPu48sJqOBLZAjvILJAhly7lu2/
-         SWnYXwg1mLcA67KsulB32wXrwPz9U2Z51RfOy3mAaGlPAxgtAN9RgkczbzSITkT8Skjm
-         2wTqM9J4TNNWy34xtknSquOvYfTMc5CQ9FxdsTQx35Hscwd+ENDPjW3xmU+ceZRHn/5g
-         GIP9ObxgkM6AvSxXHyIBK0OL2cFDvY6uU2fHx5kZBpNh1AhOA5u1WHm3G+LXTnYRdf+c
-         EAsA==
-X-Gm-Message-State: AO0yUKXQNiiXn7wPq8Ex3Fl4PBkSbQ/c9rAnYzG2p3gJ4EFavisnafC7
-        bif1gSOhyCFKYXWK/goPSkYnJ+zNtGoOad7h8xssZ9Lf5g==
-X-Google-Smtp-Source: AK7set+dX/ZkSAdStsQ7sm6gKVrXWPFCHH/WsezwCcnFmmiaqbmCub1vnV6nd38kMGB32g6zfwWQOzKtHsJyReaY2UU=
-X-Received: by 2002:a1f:a9c7:0:b0:401:73f4:dfe with SMTP id
- s190-20020a1fa9c7000000b0040173f40dfemr29438961vke.3.1679026244005; Thu, 16
- Mar 2023 21:10:44 -0700 (PDT)
+        Fri, 17 Mar 2023 01:12:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB9BB06D5
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Mar 2023 22:12:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 73E5D62189
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Mar 2023 05:12:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11DDFC433EF;
+        Fri, 17 Mar 2023 05:12:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679029975;
+        bh=LmCiF47VSTwDZ4RwGffaCKzU9QGlrNQZ718BiwbXuXE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=f2QCLC672kHbA6o+EGPDSQG9Cw2HKEY7i9bH20F4IIOjOFCUQ9WNbc+9Ft8ORMprN
+         UshfGkYLYxoqQ0LDBPyzJRK7FXF7kuxlu+nDx88/NaBAqxCECdG/Zwo8mIrCgAAxNf
+         xvLsgCOdtIRcsA74s543TH+udqO001+INPX+0nybrrTW/69ZdyDUvz8KlwS8VUYj8D
+         puXSV7elayoRxG10Ig4+T158tyvt7BJQHRP2/UZDJRaDWNZTAdI5ynxhMvGEnupNrR
+         Hp29fKndw4n6WCyytNr9us0gTR5RGPAfgeBjF1E7ZB/VXCT4EqRfrLJsYmJ9IswRv9
+         l1B099CgyYpGw==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     rb <rb0171610@gmail.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: New binary rtw8852b_fw.bin not loading firmware not recognized
+References: <df1ce994-3368-a57e-7078-8bdcccf4a1fd@gmail.com>
+        <386367223a2547669c60f7d1dcb42b40@realtek.com>
+Date:   Fri, 17 Mar 2023 07:12:52 +0200
+In-Reply-To: <386367223a2547669c60f7d1dcb42b40@realtek.com> (Ping-Ke Shih's
+        message of "Fri, 17 Mar 2023 00:35:27 +0000")
+Message-ID: <87a60cvu3v.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-From:   Sudeep R K <a0p0p0u@gmail.com>
-Date:   Fri, 17 Mar 2023 00:10:33 -0400
-Message-ID: <CANA1Jzc=A1RNRkX7VRdgEn7nywokyG3=jJfA_LNbXygOZEwJaQ@mail.gmail.com>
-Subject: 64bit Support for QCA6174 in Linux
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello, Good day to you!
+Ping-Ke Shih <pkshih@realtek.com> writes:
 
-I have a problem with one of my legacy patches
+>> -----Original Message-----
+>> From: rb <rb0171610@gmail.com>
+>> Sent: Friday, March 17, 2023 6:48 AM
+>> To: linux-wireless@vger.kernel.org
+>> Subject: New binary rtw8852b_fw.bin not loading firmware not recognized
+>> 
+>> Briefly,
+>> 
+>> I use rtw89_8852be in kernel driver
+>> 
+>> HARDWARE:
+>> Network controller [0280]: Realtek Semiconductor Co., Ltd. Device [10ec:b852]
+>> 
+>> Lenovo Ideapad 1i
+>> 
+>> ISSUE:
+>> Newest version of binary firmware 2023_03_10,
+>> rtw89/rtw8852b_fw.bin, will not load/firmware not recognized on Linux Kernel 6.2.5 (and others):
+>> 
+>> [] loading firmare: rwt89/rtw8852b_fw.bin
+>> [] rtw89_8852be 0000:03:00.0: no suitable firmware found
+>> [] rtw89_8852be 0000:03:00.0: failed to recognize firmware
+>> 
+>> Issue persists regardless of which 6.2 series kernel is used.
+>> 
+>> All previous rwt89/rtw8852b_fw.bin firmware from linux-firmware 2023_02_10 and earlier loads and works
+>> correctly.
+>> 
+>> I did file a bug report with the details:
+>> 
+>> https://bugzilla.kernel.org/show_bug.cgi?id=217207
+>> 
+>
+> The firmware format is changed, and wireless-next tree or upcoming 6.3 will
+> support it. I will also post this information on the bug.
 
-shared/arrisxi6/kernel-source/drivers/net/wireless/ath/ath10k/pmem.c:165:16:
-error: 'PAGE_KERNEL_NOCACHE' undeclared (first use in this function);
-did you mean 'PAGE_KERNEL_ROX'?
-15:06:24 |   165 |        VM_MAP, PAGE_KERNEL_NOCACHE)
+We cannot break user space like that, linux-firmware needs to be
+backwards compatible. In other words, anything you submit to
+linux-firmware needs to work with old kernels. Should this new firmware
+be reverted from linux-firmware?
 
-After fixing the build issue,  started seeing runtime issues.
-2023 Mar 08 14:21:48.093818 kernel:  ath10k_pci 0000:01:00.0: Failed
-to get pcie state addr: -16
-2023 Mar 08 14:21:48.094193 kernel:  ath10k_pci 0000:01:00.0: failed
-to setup init config: -16
-2023 Mar 08 14:21:48.094535 kernel:  ath10k_pci 0000:01:00.0: could
-not power on hif bus (-16)
-2023 Mar 08 14:21:48.094875 kernel:  ath10k_pci 0000:01:00.0: could
-not probe fw (-16)
+What about changes in the rtw89 driver? Do they still work with old
+firmware?
 
-When I checked the source of the problem, it is from the following lines of code
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-int ath10k_pci_init_config(struct ath10k *ar)
-{
-struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-u32 interconnect_targ_addr;
-u32 pcie_state_targ_addr = 0;
-u32 pipe_cfg_targ_addr = 0;
-u32 svc_to_pipe_map = 0;
-u32 pcie_config_flags = 0;
-u32 ealloc_value;
-u32 ealloc_targ_addr;
-u32 flag2_value;
-u32 flag2_targ_addr;
-int ret = 0;
-
-/* Download to Target the CE Config and the service-to-CE map */
-interconnect_targ_addr =
-host_interest_item_address(HI_ITEM(hi_interconnect_state));
-
-/* Supply Target-side CE configuration */
-ret = ath10k_pci_diag_read32(ar, interconnect_targ_addr,
-     &pcie_state_targ_addr);
-if (ret != 0) {
-ath10k_err(ar, "Failed to get pcie state addr: %d\n", ret);
-return ret;
-}
-
-Looks like  ath10k_pci_diag_read32 may be limited to 32 bit
-mode(please correct me if I am wrong).
-1) Will this code work under 64 bit mode?
-2)Does ath10k support 64 bit in general?  Is there any documented
-support for 64 bit in ath10k for QCA6174?
-
-Thanks a lot for your responses
-Sudeep R K
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
