@@ -2,113 +2,64 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38356C7619A
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 11:10:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFAFFC7618A
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 11:13:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230091AbjCTLKk (ORCPT
+        id S230113AbjCTLM7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 07:10:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53374 "EHLO
+        Mon, 20 Mar 2023 07:12:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231310AbjCTLKM (ORCPT
+        with ESMTP id S230317AbjCTLMg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 07:10:12 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACC301ACF6;
-        Mon, 20 Mar 2023 04:06:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3E2C1B80DFA;
-        Mon, 20 Mar 2023 11:06:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAF8EC433EF;
-        Mon, 20 Mar 2023 11:06:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679310394;
-        bh=7lVnvE+H0LwnZCwFqsBcASGQoZnp+CUIfRj+cb1hIhs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Tz/Iz9YFfmM0IQVgiLRwTXb7wqQyEO2uBYER6CiPDFY/5jedne251UlD1TJSNJa/+
-         ApO+2CvcyiS+pH85bzk6JWcUkkOTPPZK6R/FnCZ617K0jmueUTN6V0RrDTunMrntMr
-         LNp9/Zwsl/ur/u+GCYDJxBC/mM+eDXr+UcKOwAIA/JwW+RgOiE251ktt9sO6rE0kSz
-         9IeqQorb2/yNdpTPf18aj3pFwmDGb60W6GmEJItWdbl0ZHKNUbPp8p91zNhc4QyioQ
-         uQH/bT6pphC9NDX4yn1KylptAUf/GcVY4F90cDRk2G1q/p6iPwytP/HY5YTUhlSYjo
-         GW2tLfCJyD1gg==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1peDMp-0005yt-Hh; Mon, 20 Mar 2023 12:07:55 +0100
-Date:   Mon, 20 Mar 2023 12:07:55 +0100
-From:   Johan Hovold <johan@kernel.org>
-To:     Konrad Dybcio <konrad.dybcio@linaro.org>
-Cc:     Johan Hovold <johan+linaro@kernel.org>,
-        Kalle Valo <kvalo@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] arm64: dts: qcom: sc8280xp-crd: add wifi calibration
- variant
-Message-ID: <ZBg+ixekH+Ou7jMd@hovoldconsulting.com>
-References: <20230320104658.22186-1-johan+linaro@kernel.org>
- <20230320104658.22186-4-johan+linaro@kernel.org>
- <244a59c6-2dc0-83c7-07d2-6bae04022605@linaro.org>
- <ZBg7tA8NLDnjPp+k@hovoldconsulting.com>
+        Mon, 20 Mar 2023 07:12:36 -0400
+X-Greylist: delayed 897 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 20 Mar 2023 04:09:32 PDT
+Received: from smtp-190b.mail.infomaniak.ch (smtp-190b.mail.infomaniak.ch [IPv6:2001:1600:3:17::190b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 096377687
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 04:09:32 -0700 (PDT)
+Received: from smtp-2-0000.mail.infomaniak.ch (unknown [10.5.36.107])
+        by smtp-2-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4PgBCR3RSXzMqwmD
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 11:42:59 +0100 (CET)
+Received: from unknown by smtp-2-0000.mail.infomaniak.ch (Postfix) with ESMTPA id 4PgBCR0mDgzN4g2L
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 11:42:59 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fls.name; s=20200831;
+        t=1679308979; bh=Lma60nXP550+UCP16rUELrA4V1sjOi8lkzUxK/7yYG0=;
+        h=Date:Subject:From:Reply-To:To:References:In-Reply-To:From;
+        b=eDJib/alrrnifYe/cvmZ6dNCT34n5T4pJpKWKZraqLSlRptuO+fc6O4bhV7VZzcFY
+         JYyqsJowEPCjCDW/E65sEwPif6kLsDIShR0JmR1rp9APRyR6JDBJJYOtpI4Zx7zFgF
+         PibNCP411WYFcn7CgqV+XfzMq31wL7apndOZguB0=
+Message-ID: <2f3ea768bc27a26918a4e8a4363b8c97@mail.infomaniak.com>
+Date:   Mon, 20 Mar 2023 11:42:59 +0100
+Subject: wifi: mt76: mt7915e: mt7916 monitor ampdu id is invalid
+From:   Florian Schmidt <florian@fls.name>
+Reply-To: Florian Schmidt <florian@fls.name>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZBg7tA8NLDnjPp+k@hovoldconsulting.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-WS-User-Origin: eyJpdiI6IksvZXEyYlpXWGRHSWNHcWZzVUd3T3c9PSIsInZhbHVlIjoiekFlVnk3S3c1VDVhaFIzanljR0tXUT09IiwibWFjIjoiYjc5NWI2YzQzYjczYzUyNjdiNWNlMWRjMWJlZTYyY2RhYjU0ODQ1NzlhOGFlYWM1MWIwZDQxNjdmMjZkYTExOCIsInRhZyI6IiJ9
+X-WS-User-Mbox: eyJpdiI6Ik5xUFNqbTdhVnRLcU5XRWtzYlhWaHc9PSIsInZhbHVlIjoiU0VRQVl5Nnh5Z1FqQnZTUHpCa3F5UT09IiwibWFjIjoiY2E2Y2U1YzgwOTI5ZWQ0Mzg0MDY2ZTBlOWRlMWI0OTEwYTc1ZWUyYTcxODk5MWNlMTA4ODI3NWFhMTg3ODM5YiIsInRhZyI6IiJ9
+X-WS-Location: eJxzKUpMKykGAAfpAmU-
+X-Mailer: Infomaniak Workspace (1.3.465)
+References: <c7fc198f2a4ed9c1345a05c0397a9fc5@mail.infomaniak.com>
+In-Reply-To: <c7fc198f2a4ed9c1345a05c0397a9fc5@mail.infomaniak.com>
+X-Infomaniak-Routing: alpha
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Mar 20, 2023 at 11:55:48AM +0100, Johan Hovold wrote:
-> On Mon, Mar 20, 2023 at 11:50:30AM +0100, Konrad Dybcio wrote:
-> > 
-> > 
-> > On 20.03.2023 11:46, Johan Hovold wrote:
-> > > Describe the bus topology for PCIe domain 6 and add the ath11k
-> > > calibration variant so that the board file (calibration data) can be
-> > > loaded.
-> > > 
-> > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=216036
-> > > Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> > > ---
-> > >  arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 17 +++++++++++++++++
-> > >  1 file changed, 17 insertions(+)
-> > > 
-> > > diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-> > > index 90a5df9c7a24..5dfda12f669b 100644
-> > > --- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-> > 
-> > 
-> > Was mixing
-> > > +++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-> > 
-> > this /\
-> > 
-> > [...]
-> > 
-> > and this \/
-> > > +			qcom,ath11k-calibration-variant = "LE_X13S";
-> > Intentional? Especially given Kalle's comment on bugzilla?
-> 
-> Yes, it is intentional. The corresponding calibration data allows the
-> wifi to be used on the CRD. I measure 150 MBits/s which may a bit lower
-> than expected, but it's better than having no wifi at all.
+Hi all,
 
-I was going back and forth about mentioning this in the commit message
-and we could off on this one until someone confirms that the
-corresponding calibration data can (or should) be used for the X13s.
+Using a mt7916 in monitor mode, I see that the AMPDU reference number is in=
+cremented for each part of a single AMPDU. Instead it should be constant, a=
+nd ideally, the last subframe field should be set on the last part of the A=
+MPDU. Capturing the same traffic with an intel AX200 show each parts of the=
+ AMPDU with the same id as expected.
 
-Note that there is no other match for
+This issue is still present using kernel from tag wireless-testing-2023-03-=
+16.
 
-	'bus=pci,vendor=17cb,device=1103,subsystem-vendor=17cb,subsystem-device=0108,qmi-chip-id=2,qmi-board-id=140'
+How can I be of any assist investigating and fixing this issue?
 
-in the new board-2.bin.
-
-Johan
+Thanks,
+Florian
