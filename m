@@ -2,271 +2,195 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5552DC6FD1D
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 14:29:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BC2C7618A
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 15:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231751AbjCTO3T (ORCPT
+        id S231826AbjCTPAr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 10:29:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57884 "EHLO
+        Mon, 20 Mar 2023 11:00:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231431AbjCTO3R (ORCPT
+        with ESMTP id S232203AbjCTPAH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 10:29:17 -0400
-X-Greylist: delayed 1200 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 20 Mar 2023 07:29:11 PDT
-Received: from buaa.edu.cn (unknown [202.112.128.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4626012BCC;
-        Mon, 20 Mar 2023 07:29:10 -0700 (PDT)
+        Mon, 20 Mar 2023 11:00:07 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2139.outbound.protection.outlook.com [40.107.220.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01C9D2B9F8;
+        Mon, 20 Mar 2023 07:57:05 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Uq55xxL+xJ/otuAysw0825ASUC/4Y+gUQNRdw9MPZ1LigOKG5JCMm5DVy/506zEnmgOzaoMw/+1xV3s9U/in3HLZYwJzdsxS/r8qTY9PZQjx7ix2e/x/RRwOAbPF0H6wik0KAX9mRpJzSdsGdGPdIN5x2CJMmD1PZ1PJY2KuNB9mXrU41nhbwifIkbZrqnB0nV3b4CidXdlYXtRgK4WUCe0c03wFdw2QGIDtAqmvpPJAHVaaq6f3okWAafCqkPVY1jFEC51YkkEGnYit9E7Cn7a4UnR0+9Hll7VUPk9nqkXbVywWDr0y1XK7BIAr5IshqkaYrvcfGdUrNfSiomg1UA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=44cKe/+yenJfWqy6NchSiELiuf3Kujkz1QEtKHZntMk=;
+ b=KTNSRW4a8oOUK11fntACJ2fxZJ/QNqrVd6McDQixlbxlHqIaKZ9P4duAfZGh+zB5R96zdYu3CacRCCwjgxJJW8y4ZWApF48oFrPa1R/O9E701we9xBLybTA8zjYaPEGOsxfS74ndGw2fs7FgOP8A1UDRf5dmyBoD6o2ERG0CWJMrFPFS2mbtzEaFEIBJRuciN89kq4Pw4DCde2mGZbU2o5wjZR0YGuJr7n/Z/VSHauDoHUx4F+ffiOc2rudcLd2G0eDPjUcOYrqbEks21zgreA3ezXVRuG0rqQep5+KLtP7EaZQwIGE2dnyiBaa1m3HyH8Ism3aaktN11Az4dAhG1w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=corigine.com; dmarc=pass action=none header.from=corigine.com;
+ dkim=pass header.d=corigine.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=buaa.edu.cn; s=buaa; h=Received:From:To:Cc:Subject:Date:
-        Message-Id:MIME-Version:Content-Transfer-Encoding; bh=VBC6BWDafS
-        HfjyzoV6cHwPAjGgkRCr3db1I2JTKKf5w=; b=orIHebXJe/iKbG1DWFmwatTmCp
-        fvuHtnukFjnY3PutrWsEVw0Fgb7oYk9VOOt4B/shPLP60ldorXvGPCarYnMOlRsK
-        jhfO4nOztyzbRdtnFpeXGExL8/Y7GQi1l26N/55rGf3IqkPyt3QPzPL124skSP+U
-        8RvqQIzJ4Emqsrjtw=
-Received: from oslab.. (unknown [10.130.159.144])
-        by coremail-app1 (Coremail) with SMTP id OCz+CgCHaZbRYRhkWn+vAg--.34204S4;
-        Mon, 20 Mar 2023 21:38:25 +0800 (CST)
-From:   Jia-Ju Bai <baijiaju@buaa.edu.cn>
-To:     johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju@buaa.edu.cn>
-Subject: [PATCH] net: mac80211: Add NULL checks for sta->sdata
-Date:   Mon, 20 Mar 2023 21:38:09 +0800
-Message-Id: <20230320133809.2448047-1-baijiaju@buaa.edu.cn>
-X-Mailer: git-send-email 2.34.1
-MIME-Version: 1.0
+ d=corigine.onmicrosoft.com; s=selector2-corigine-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=44cKe/+yenJfWqy6NchSiELiuf3Kujkz1QEtKHZntMk=;
+ b=UWdW/rlB3uizlDUJKLFcEckPogAIRKjBHHdjPzcpGZJtpmFtepxTM+41nyHFrzNJAvt0QnBDUgHWJPi0IsR/KCX7F9tBjEHX9FYE33uyuWeNlEXR7/rHNqkB1bSTsGO5ZfAeZwkL+KQVYBUFtaRjCaaD3DzJl8IMUPE1yOj4Z9U=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=corigine.com;
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com (2603:10b6:510:78::6)
+ by DM6PR13MB4448.namprd13.prod.outlook.com (2603:10b6:5:1bb::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37; Mon, 20 Mar
+ 2023 14:57:02 +0000
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c]) by PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c%2]) with mapi id 15.20.6178.037; Mon, 20 Mar 2023
+ 14:57:02 +0000
+Date:   Mon, 20 Mar 2023 15:56:54 +0100
+From:   Simon Horman <simon.horman@corigine.com>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] wifi: mt76: mt7921: Replace fake flex-arrays with
+ flexible-array members
+Message-ID: <ZBh0NhaNFnttWRz8@corigine.com>
+References: <ZBTUB/kJYQxq/6Cj@work>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: OCz+CgCHaZbRYRhkWn+vAg--.34204S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxtF4fZw4rZry7KFWrAF4UXFb_yoWxKr1Upr
-        WrGw12qF4UJa4xZrn7Jr1F93y0kr10gF48ur1fC3W8u3ZY9wnYkr1Dury8ZF9YyryxJw1Y
-        qF4Uu398Ca1DC37anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUkC1xkIjI8I6I8E6xAIw20EY4v20xvaj40_JrC_JFWl1IIY67AE
-        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
-        IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E
-        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
-        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
-        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
-        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK6svPMxAIw28IcxkI7VAKI48JMxAI
-        w28IcVCjz48v1sIEY20_Aw1UJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-        AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCI
-        c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
-        AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
-        Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UU
-        UUU
-X-CM-SenderInfo: yrruji46exttoohg3hdfq/
+In-Reply-To: <ZBTUB/kJYQxq/6Cj@work>
+X-ClientProxiedBy: AS4P192CA0024.EURP192.PROD.OUTLOOK.COM
+ (2603:10a6:20b:5e1::16) To PH0PR13MB4842.namprd13.prod.outlook.com
+ (2603:10b6:510:78::6)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR13MB4842:EE_|DM6PR13MB4448:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4dc995e2-d954-459c-755c-08db29535d22
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 83Im7+8uA/81lOyT918m7iXUZBwYxohnBrvLlNsfcAZUVouq5VmLS2ABnBgp9YgVOzVS16QaFQUy0UlW+u7E8hyA4pkOjz9fYloOdCV4+idL/zlNrOrG2MyLBnTmdgzrC1uZbaZcwM2JXA2US4O9vsAk/6BzeD3UY5u4Sq711ShJnstSmCe0cUxEcPTypTtGhPAF1auHrkK4IGqyTbFBa5gr7BJcdkauluITMTGiVq4rW3mLNkySqMwVIt9m5eFTE9qX/TVBp3Bi8GpbPVEwloXVtGsQufNNV3XBjE9DJmLKqoJRnpN1virWro00B6Kmv9TaiFV1mjmN/mITud8TKIqniqF33mRP8/eF7t2YZam2UM0wPCh6t8J3O6V7vhiQoL7TQU6lhimWtxrfngxS9UQAiHkOadaVWY5WDni6fmpqjW8RbEIi7zPruecz6Tgo0u0jW+aBE7ppvetKc0P7k4xyDg+hclbhgpbPf4OcGOIHmt/jOvjsc+tSg33bb29RCv+pwMYrHn77IaXT1P8XlrbMNABgRlYoQsjNsHf99tJpzRolGR/ET2PlPAlG06/NgWBXd8WOXH5JSnfhPzEFRIhytbunWYMnD9AZdWGuaMhKgO1qYv0mvwDPFFxi74HkF8r5ueXKRmUneybipaLVz8AHmjpzNwuZKPgZboBCfrc=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR13MB4842.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(346002)(136003)(376002)(366004)(39830400003)(396003)(451199018)(6666004)(186003)(478600001)(8676002)(966005)(6486002)(83380400001)(6506007)(54906003)(6512007)(2616005)(316002)(66556008)(66476007)(6916009)(66946007)(4326008)(8936002)(44832011)(7416002)(41300700001)(5660300002)(38100700002)(2906002)(86362001)(36756003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Z2kvcXB2a056ZVA3VW5BOHZha1ZKcnF1QTVXRTJNYWE0QUVrZzZwUW50Sksy?=
+ =?utf-8?B?dk1UbWt6MDlLNjdWL05MUXVKZCtxR1E3dmxmVXFWYS8yallieThCZEFKZVFW?=
+ =?utf-8?B?ZTJPbFpvMlRLQkdpMWtTMkI5OG96V1p0VXFGOHFvdUFPTkx6Yi8ySC94dXBR?=
+ =?utf-8?B?NzJPdkQvSjM2MFJUOE5ZMDYzK005NXY3eUtML1BobWp6clJOZHNFR1Vkbkov?=
+ =?utf-8?B?M2tzMVZlc041YzhPK2lpQ1JhYnRFb1RlRmdMU0pYSWFEK3VPdlNZQmowcFBx?=
+ =?utf-8?B?M1ZIaTlaMjgwbXRuTTNmNGtSUTJ5WW5jNmRKK3loV0ovTG1rcElhSVExbnlS?=
+ =?utf-8?B?ZVRrSFB2VHZoSHhGcmRVaEluWXZjTjZlaGxhTjY5cFZIN0k1ZjZLQWF6ZnZK?=
+ =?utf-8?B?R1hLU3Y5bkp5QVpiRG5NZkdESk96dHVITFdZM09YdWNWYzlXZEpKVC9QUGNR?=
+ =?utf-8?B?OVd6OHZvWVVaejVTNXVLTzcva0NFV2xBcWtrOUdueTd5NkQ4TEVRNE9jV1NF?=
+ =?utf-8?B?WmFVQmlxeUpDbHVWNnZPSi8zZm5DNnhzMzB5ZWxuLzY1SElSeXRrVDVZNU1x?=
+ =?utf-8?B?amZ3Q0dNVUtiTlhFVXVEV1pxNkJ4anptNnlNRVJNK3AyWkVKNENIVzVGeVRO?=
+ =?utf-8?B?RUtUeGVKb01MRmxwOHl4OEk2ZHA2alF1OCtqVDc5NVprVXRhRUk3QWM3Si84?=
+ =?utf-8?B?L1NXYWRNSjBraGNpVk5BTkRiMHZsMW44WWRDdGROZjhYcTRhUnlvdFNOeWZl?=
+ =?utf-8?B?NGgyN01TRXZrL3lCTUhGdm1qU2prYi84TTdZeExhUmlzS0FNbklPaG8wZ3JX?=
+ =?utf-8?B?YTFjN2Faa08ra2dCVEQ0a2RESUF4RGZJZnYvUWFyMW82emJTQkJ4eGlBRTM4?=
+ =?utf-8?B?Kzk2MWI0azRuR0ZqaUFYN0tIbHJuenRnNjRKZWh3eFJFRnlrYWtVdEdyNElY?=
+ =?utf-8?B?R2hLMlFNT25Pc0t2dm1KSHRoVUEyNVBmbEp2Q21SbDlzd3ZuNjVEdEtpelpR?=
+ =?utf-8?B?MXBhM2taSE0zMjVqTi9VUmFRTkQ0S2Q4WmczTG5Kdkpxd0xzMFlrZkdxbFBT?=
+ =?utf-8?B?OTZ4VUNSM0wyS2NMTkkzVXQ3R0xnSXpOWXZCZ0tJblhocEF0UFB6UnRpSGdr?=
+ =?utf-8?B?R0wrNlRZM3FPWTdOWVhBeGcrVWwvcHFiZHdXUWFZbWJ4cnduaUdKRGI4NkVE?=
+ =?utf-8?B?MDNvZ21FTURuWlVoL3ZJMEhPRW9GS01DZ3ZyMDIzcEp3aFdxeTJmaHZqL2ZY?=
+ =?utf-8?B?SnpxdEZHcERwV1RGSXV0WXVlQTNOdDJtUGs1akVaaUt5dS85T3JHcG56Sncw?=
+ =?utf-8?B?dlBWZnVqSlczRXphZGRDTTV3Z21nRW0rNWYrYjdZWGorNXEvd2pFMVZ2M0dM?=
+ =?utf-8?B?bEpEOTNseUttUEhiZUNKUTJLOUMwOU9kdjNPQUVEeGNLYXlXaG5yM1lxYTh1?=
+ =?utf-8?B?cS96Ui80V2w4UERBM2k1WHlKRFhNNWlmTHJLOG5NaUttcnNmSFhmQUhaSFRO?=
+ =?utf-8?B?SmJucVZsMHNockR5YUdKTzNjRm0yRVgzQSt1bmU4ejE3YWRRTDJ6TE1uYWdv?=
+ =?utf-8?B?VU1EdnJKdk9USDhVR1JKZVRqKzQ2WmFYM3BDRW5MWk0xQk8wN3ErdFdmRHhh?=
+ =?utf-8?B?NXdXVDVZVUpKZkZMUUFBUlRUYmI4YWMzamRTN1N2cENvR3VNU3Z2dHFGejgv?=
+ =?utf-8?B?K3c2TGxFSE1QNThhOXRkVzBSb1VZQ0tXSkJadE9sRWZhYTJrSlhQK2F4bkh3?=
+ =?utf-8?B?UlNoWTlSRkVrS0JSTlpqZHZWTHRzdWJaaFJqQk5abjE5ZWxobWRvb0E4S041?=
+ =?utf-8?B?RjlSNld5emtyakl3dng1aHpSd1pBT3RsTVdyR21vYUprQjlrSUJ2czFzWjE5?=
+ =?utf-8?B?VGFBYlE5NTNtVHJEeStwWTN3RjR4alJTU1duRERBVmRkM29rN1BFWnd2bmFv?=
+ =?utf-8?B?Y0JBSUlMUUhSOEx6YTNoU0NYOVF2ZmpxSGxYa2gzRWN6ZXdiQnVXdnFZU1F0?=
+ =?utf-8?B?ejNId0ZHcFE1MDZqR29RVnJ4bGxwTHY5djhXS1cvOVYzWFZhMkxXbWFnaWxX?=
+ =?utf-8?B?NXBLNDZBVWcwbUw5WkF5Z0ZUMG9JZXlPNURNSTd2N2pJSjB3TVhlRXJTNEV0?=
+ =?utf-8?B?Q21BZkxvbkhubE53Wk5PQm8xc2k2dGxSWisvL2pBcVNCRThSNlQ2U2pFemZC?=
+ =?utf-8?B?NExkOFp3K0tsVDBOSk9PNGtPOFlxT05KVmlreHJUdDd3d2RwMjhpNWVoQzJY?=
+ =?utf-8?B?S2pwbE5lcWZoWGc3TUpka0dZQWp3PT0=?=
+X-OriginatorOrg: corigine.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4dc995e2-d954-459c-755c-08db29535d22
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR13MB4842.namprd13.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2023 14:57:02.7601
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: fe128f2c-073b-4c20-818e-7246a585940c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: EX4cpQy2+XYyBygqlGdau7Yre9Wfdec1CJSHS5tEZqvQslHOIzZSgR2G197LlPZmE2hWKIDWGRpMcr8A6B2hDikAzRIVsagddoell+pBaTg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR13MB4448
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In a previous commit 69403bad97aa, sta->sdata can be NULL, and thus it
-should be checked before being used.
+On Fri, Mar 17, 2023 at 02:56:39PM -0600, Gustavo A. R. Silva wrote:
+> Zero-length arrays as fake flexible arrays are deprecated and we are
+> moving towards adopting C99 flexible-array members instead.
+> 
+> Address the following warnings found with GCC-13 and
+> -fstrict-flex-arrays=3 enabled:
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:266:25: warning: array subscript 0 is outside array bounds of ‘struct mt7921_asar_dyn_limit_v2[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:263:25: warning: array subscript 0 is outside array bounds of ‘struct mt7921_asar_dyn_limit[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:223:28: warning: array subscript <unknown> is outside array bounds of ‘struct mt7921_asar_geo_limit_v2[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:220:28: warning: array subscript <unknown> is outside array bounds of ‘struct mt7921_asar_geo_limit[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:334:37: warning: array subscript i is outside array bounds of ‘u8[0]’ {aka ‘unsigned char[]’} [-Warray-bounds=]
+> 
+> Notice that the DECLARE_FLEX_ARRAY() helper allows for flexible-array
+> members in unions.
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/21
+> Link: https://github.com/KSPP/linux/issues/272
+> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h b/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
+> index 35268b0890ad..6f2c4a572572 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
 
-However, in the same call stack, sta->sdata is also used in the
-following functions:
+...
 
-ieee80211_ba_session_work()
-  ___ieee80211_stop_rx_ba_session(sta)
-    ht_dbg(sta->sdata, ...); -> No check
-    sdata_info(sta->sdata, ...); -> No check
-    ieee80211_send_delba(sta->sdata, ...) -> No check
-  ___ieee80211_start_rx_ba_session(sta)
-    ht_dbg(sta->sdata, ...); -> No check
-    ht_dbg_ratelimited(sta->sdata, ...); -> No check
-  ieee80211_tx_ba_session_handle_start(sta)
-    sdata = sta->sdata; if (!sdata) -> Add check by previous commit
-  ___ieee80211_stop_tx_ba_session(sdata)
-    ht_dbg(sta->sdata, ...); -> No check
-  ieee80211_start_tx_ba_cb(sdata)
-    sdata = sta->sdata; local = sdata->local -> No check
-  ieee80211_stop_tx_ba_cb(sdata)
-    ht_dbg(sta->sdata, ...); -> No check
+> @@ -69,7 +69,7 @@ struct mt7921_asar_geo_v2 {
+>  	u8 version;
+>  	u8 rsvd;
+>  	u8 nr_tbl;
+> -	struct mt7921_asar_geo_limit_v2 tbl[0];
+> +	DECLARE_FLEX_ARRAY(struct mt7921_asar_geo_limit_v2, tbl);
+>  } __packed;
+>  
+>  struct mt7921_asar_cl {
+> @@ -85,7 +85,7 @@ struct mt7921_asar_fg {
+>  	u8 rsvd;
+>  	u8 nr_flag;
+>  	u8 rsvd1;
+> -	u8 flag[0];
+> +	u8 flag[];
 
-Thus, to avoid possible null-pointer dereferences, the related checks
-should be added.
+I am curious to know why DECLARE_FLEX_ARRAY isn't used here.
 
-These results are reported by a static tool designed by myself.
 
-Signed-off-by: Jia-Ju Bai <baijiaju@buaa.edu.cn>
----
- net/mac80211/agg-rx.c | 68 ++++++++++++++++++++++++++-----------------
- net/mac80211/agg-tx.c | 16 ++++++++--
- 2 files changed, 55 insertions(+), 29 deletions(-)
-
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index c6fa53230450..6616970785a2 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -80,19 +80,21 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 	RCU_INIT_POINTER(sta->ampdu_mlme.tid_rx[tid], NULL);
- 	__clear_bit(tid, sta->ampdu_mlme.agg_session_valid);
- 
--	ht_dbg(sta->sdata,
--	       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
--	       sta->sta.addr, tid,
--	       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
--	       (int)reason);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata,
-+		       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
-+		       sta->sta.addr, tid,
-+		       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
-+		       (int)reason);
-+	}
- 
--	if (drv_ampdu_action(local, sta->sdata, &params))
-+	if (sta->sdata && drv_ampdu_action(local, sta->sdata, &params))
- 		sdata_info(sta->sdata,
- 			   "HW problem - can not stop rx aggregation for %pM tid %d\n",
- 			   sta->sta.addr, tid);
- 
- 	/* check if this is a self generated aggregation halt */
--	if (initiator == WLAN_BACK_RECIPIENT && tx)
-+	if (initiator == WLAN_BACK_RECIPIENT && tx && sta->sdata)
- 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
- 				     tid, WLAN_BACK_RECIPIENT, reason);
- 
-@@ -279,17 +281,21 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 
- 	if (!sta->sta.deflink.ht_cap.ht_supported &&
- 	    !sta->sta.deflink.he_cap.has_he) {
--		ht_dbg(sta->sdata,
--		       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
--		       sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
-+			       sta->sta.addr, tid);
-+		}
- 		/* send a response anyway, it's an error case if we get here */
- 		goto end;
- 	}
- 
- 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
--		ht_dbg(sta->sdata,
--		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
--		       sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
-+			       sta->sta.addr, tid);
-+		}
- 		goto end;
- 	}
- 
-@@ -322,8 +328,10 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		buf_size = sta->sta.max_rx_aggregation_subframes;
- 	params.buf_size = buf_size;
- 
--	ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
--	       buf_size, sta->sta.addr);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
-+		       buf_size, sta->sta.addr);
-+	}
- 
- 	/* examine state machine */
- 	lockdep_assert_held(&sta->ampdu_mlme.mtx);
-@@ -332,9 +340,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
- 			struct tid_ampdu_rx *tid_rx;
- 
--			ht_dbg_ratelimited(sta->sdata,
--					   "updated AddBA Req from %pM on tid %u\n",
--					   sta->sta.addr, tid);
-+			if (sta->sdata) {
-+				ht_dbg_ratelimited(sta->sdata,
-+						   "updated AddBA Req from %pM on tid %u\n",
-+						   sta->sta.addr, tid);
-+			}
- 			/* We have no API to update the timeout value in the
- 			 * driver so reject the timeout update if the timeout
- 			 * changed. If it did not change, i.e., no real update,
-@@ -350,9 +360,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 			goto end;
- 		}
- 
--		ht_dbg_ratelimited(sta->sdata,
--				   "unexpected AddBA Req from %pM on tid %u\n",
--				   sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg_ratelimited(sta->sdata,
-+					   "unexpected AddBA Req from %pM on tid %u\n",
-+					   sta->sta.addr, tid);
-+		}
- 
- 		/* delete existing Rx BA session on the same tid */
- 		___ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
-@@ -362,9 +374,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 
- 	if (ieee80211_hw_check(&local->hw, SUPPORTS_REORDERING_BUFFER)) {
- 		ret = drv_ampdu_action(local, sta->sdata, &params);
--		ht_dbg(sta->sdata,
--		       "Rx A-MPDU request on %pM tid %d result %d\n",
--		       sta->sta.addr, tid, ret);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "Rx A-MPDU request on %pM tid %d result %d\n",
-+			       sta->sta.addr, tid, ret);
-+		}
- 		if (!ret)
- 			status = WLAN_STATUS_SUCCESS;
- 		goto end;
-@@ -401,8 +415,10 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		__skb_queue_head_init(&tid_agg_rx->reorder_buf[i]);
- 
- 	ret = drv_ampdu_action(local, sta->sdata, &params);
--	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
--	       sta->sta.addr, tid, ret);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
-+		       sta->sta.addr, tid, ret);
-+	}
- 	if (ret) {
- 		kfree(tid_agg_rx->reorder_buf);
- 		kfree(tid_agg_rx->reorder_time);
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index f9514bacbd4a..03b31b6e7ac7 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -368,8 +368,10 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 
- 	spin_unlock_bh(&sta->lock);
- 
--	ht_dbg(sta->sdata, "Tx BA session stop requested for %pM tid %u\n",
--	       sta->sta.addr, tid);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "Tx BA session stop requested for %pM tid %u\n",
-+		       sta->sta.addr, tid);
-+	}
- 
- 	del_timer_sync(&tid_tx->addba_resp_timer);
- 	del_timer_sync(&tid_tx->session_timer);
-@@ -776,7 +778,12 @@ void ieee80211_start_tx_ba_cb(struct sta_info *sta, int tid,
- 			      struct tid_ampdu_tx *tid_tx)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local;
-+
-+	if (!sdata)
-+		return;
-+
-+	local = sdata->local;
- 
- 	if (WARN_ON(test_and_set_bit(HT_AGG_STATE_DRV_READY, &tid_tx->state)))
- 		return;
-@@ -902,6 +909,9 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
- 	bool send_delba = false;
- 	bool start_txq = false;
- 
-+	if (!sdata)
-+		return;
-+
- 	ht_dbg(sdata, "Stopping Tx BA session for %pM tid %d\n",
- 	       sta->sta.addr, tid);
- 
--- 
-2.34.1
-
+>  } __packed;
+>  
+>  struct mt7921_acpi_sar {
+> -- 
+> 2.34.1
+> 
