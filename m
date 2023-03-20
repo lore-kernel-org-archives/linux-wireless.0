@@ -2,64 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFAFFC7618A
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 11:13:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B77EC6FD1D
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 11:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230113AbjCTLM7 (ORCPT
+        id S230173AbjCTL3d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 07:12:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60924 "EHLO
+        Mon, 20 Mar 2023 07:29:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230317AbjCTLMg (ORCPT
+        with ESMTP id S229737AbjCTL3b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 07:12:36 -0400
-X-Greylist: delayed 897 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 20 Mar 2023 04:09:32 PDT
-Received: from smtp-190b.mail.infomaniak.ch (smtp-190b.mail.infomaniak.ch [IPv6:2001:1600:3:17::190b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 096377687
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 04:09:32 -0700 (PDT)
-Received: from smtp-2-0000.mail.infomaniak.ch (unknown [10.5.36.107])
-        by smtp-2-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4PgBCR3RSXzMqwmD
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 11:42:59 +0100 (CET)
-Received: from unknown by smtp-2-0000.mail.infomaniak.ch (Postfix) with ESMTPA id 4PgBCR0mDgzN4g2L
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 11:42:59 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=fls.name; s=20200831;
-        t=1679308979; bh=Lma60nXP550+UCP16rUELrA4V1sjOi8lkzUxK/7yYG0=;
-        h=Date:Subject:From:Reply-To:To:References:In-Reply-To:From;
-        b=eDJib/alrrnifYe/cvmZ6dNCT34n5T4pJpKWKZraqLSlRptuO+fc6O4bhV7VZzcFY
-         JYyqsJowEPCjCDW/E65sEwPif6kLsDIShR0JmR1rp9APRyR6JDBJJYOtpI4Zx7zFgF
-         PibNCP411WYFcn7CgqV+XfzMq31wL7apndOZguB0=
-Message-ID: <2f3ea768bc27a26918a4e8a4363b8c97@mail.infomaniak.com>
-Date:   Mon, 20 Mar 2023 11:42:59 +0100
-Subject: wifi: mt76: mt7915e: mt7916 monitor ampdu id is invalid
-From:   Florian Schmidt <florian@fls.name>
-Reply-To: Florian Schmidt <florian@fls.name>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+        Mon, 20 Mar 2023 07:29:31 -0400
+Received: from mail-ot1-x32c.google.com (mail-ot1-x32c.google.com [IPv6:2607:f8b0:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E19A449FB
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 04:29:29 -0700 (PDT)
+Received: by mail-ot1-x32c.google.com with SMTP id f17-20020a9d7b51000000b00697349ab7e7so6524207oto.9
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 04:29:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessos.org; s=google; t=1679311769;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LIOaYo/BoAvvf3IBOhm5utFpJRVaCdlr5z1ikSk990Y=;
+        b=eP9VMpuL+RKnHLRak4H/3R5FZpdufTw+xFVfLQruIk+8kzqQvyRiJXB1zfwomeueOV
+         IUmdm6O9ijka0+HtYH2FFAqhWurHh9jRX7YtDOSVmTPvkiPmyiAjhKD3vEc8QJX/ftM6
+         Nb0rnTY0My3a3ofp8FIq+hFGtaZu9uePjvpgblq5rd21Ezd6/oiEHcMsxxhxZEiB6u7B
+         wBPOQC+uQ/5qrjcG3mRvt4SUd4qfoflb79g1dMqgSWIKhsusdlIwaNB8DflAqaK8WQ9y
+         JBJh3u2KkCagPK6gp6bZKF/drGtOCqXP5VYLbnPYMkkvQM9JwajbRxP44gfpGoHdquIy
+         PWZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679311769;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=LIOaYo/BoAvvf3IBOhm5utFpJRVaCdlr5z1ikSk990Y=;
+        b=aXnQUesZ9/PQR3N+rWqrB5jZ595sOQItyV20yoVkWUIdumquZJMAYG9vJh2TOWsFaS
+         hicZl9nzhNfp/ZpFQ96MVkyyOVgLTzwo9MNlkik+teZdr467tp79YgBASbv32FjhHc36
+         UdAPJBMWmXe9vMUnL0I+NjHk34NlrCKYS/1jG4eemZxlVn6WVv5ow5nDj1+SRWU7Gmtn
+         3CO9BmTlLrFCI+jkNKmyTlzsLNVRg4Q2X7u3f1uvAT/Gv8702eA1hd757effVM5bC3ZT
+         3Mmc+7DQ+FgpzEwZwtxlQW0BhdX6ImZs/YZ7zpw+ZWHJdFItdfzkL5rY03evlCIOn5EE
+         IhSA==
+X-Gm-Message-State: AO0yUKUgNMHdpyHMZwN6+kKSAiSNUd+jbmKgBjtArmhEU/vTOi6lNmkL
+        AEI/O35qgOtnNaU4WUS8NHRD/oxGT2OHmkwitysFSQ==
+X-Google-Smtp-Source: AK7set+epEP3sgQtbfzun6NTPr1IVv2gwUa9AtL4egLS195bxNyBbm/pCGqh+yqgh8OXdpgmODmKfv7TY94R/sfnlYk=
+X-Received: by 2002:a9d:4b0b:0:b0:699:199a:1223 with SMTP id
+ q11-20020a9d4b0b000000b00699199a1223mr2754770otf.5.1679311769199; Mon, 20 Mar
+ 2023 04:29:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+References: <CAJ+vNU0TuNA26F+hFwTRGc2pVvW34-7Sc7oQ9EW8V+2cVFgcag@mail.gmail.com>
+In-Reply-To: <CAJ+vNU0TuNA26F+hFwTRGc2pVvW34-7Sc7oQ9EW8V+2cVFgcag@mail.gmail.com>
+From:   Daniel Drake <drake@endlessos.org>
+Date:   Mon, 20 Mar 2023 19:29:18 +0800
+Message-ID: <CAD8Lp44c1k-xP1U9X8PR_kw=8joMY8RUwcKVBvuWaV7faNhWZg@mail.gmail.com>
+Subject: Re: ath9k legacy vs MSI interrupt issue on imx8mm soc
+To:     Tim Harvey <tharvey@gateworks.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        rhu@qti.qualcomm.com, ryanhsu@qti.qualcomm.com,
+        rwchang@qti.qualcomm.com, aeolus@qti.qualcomm.com,
+        "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>, linux@endlessm.com,
+        rafael.j.wysocki@intel.com, andy@infradead.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-WS-User-Origin: eyJpdiI6IksvZXEyYlpXWGRHSWNHcWZzVUd3T3c9PSIsInZhbHVlIjoiekFlVnk3S3c1VDVhaFIzanljR0tXUT09IiwibWFjIjoiYjc5NWI2YzQzYjczYzUyNjdiNWNlMWRjMWJlZTYyY2RhYjU0ODQ1NzlhOGFlYWM1MWIwZDQxNjdmMjZkYTExOCIsInRhZyI6IiJ9
-X-WS-User-Mbox: eyJpdiI6Ik5xUFNqbTdhVnRLcU5XRWtzYlhWaHc9PSIsInZhbHVlIjoiU0VRQVl5Nnh5Z1FqQnZTUHpCa3F5UT09IiwibWFjIjoiY2E2Y2U1YzgwOTI5ZWQ0Mzg0MDY2ZTBlOWRlMWI0OTEwYTc1ZWUyYTcxODk5MWNlMTA4ODI3NWFhMTg3ODM5YiIsInRhZyI6IiJ9
-X-WS-Location: eJxzKUpMKykGAAfpAmU-
-X-Mailer: Infomaniak Workspace (1.3.465)
-References: <c7fc198f2a4ed9c1345a05c0397a9fc5@mail.infomaniak.com>
-In-Reply-To: <c7fc198f2a4ed9c1345a05c0397a9fc5@mail.infomaniak.com>
-X-Infomaniak-Routing: alpha
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+On Sat, Mar 18, 2023 at 8:17=E2=80=AFAM Tim Harvey <tharvey@gateworks.com> =
+wrote:
+> It seems that Daniel may have been running into something similar back
+> when commit 7368160f0ab0 ("ath9k: add MSI support") was merged
+> [1][2][3]
+>
+> Does anyone have any advice here about what can be going on?
 
-Using a mt7916 in monitor mode, I see that the AMPDU reference number is in=
-cremented for each part of a single AMPDU. Instead it should be constant, a=
-nd ideally, the last subframe field should be set on the last part of the A=
-MPDU. Capturing the same traffic with an intel AX200 show each parts of the=
- AMPDU with the same id as expected.
+The issue we found earlier was that ath9k MSI is broken unless the MSI
+IRQ number coincidentally is aligned to 4.
 
-This issue is still present using kernel from tag wireless-testing-2023-03-=
-16.
+Worked around with:
+https://github.com/endlessm/linux/commit/0a2d86a2b9da8f936d873addf0a97e3411=
+77fe8a
+https://github.com/endlessm/linux/commit/970d2b4b59465cd926e5213e0feb633f6b=
+623447
 
-How can I be of any assist investigating and fixing this issue?
+IIRC the PCI patch wasn't accepted upstream at the time and I never
+got any response from Atheros/Qualcomm about this device
+hardware/firmware bug.
 
-Thanks,
-Florian
+Daniel
