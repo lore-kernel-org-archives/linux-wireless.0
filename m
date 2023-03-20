@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 215EDC7618A
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 12:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C4B6C6FD1D
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 12:43:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231444AbjCTMnf (ORCPT
+        id S231437AbjCTMnh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 08:43:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47558 "EHLO
+        Mon, 20 Mar 2023 08:43:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231433AbjCTMnd (ORCPT
+        with ESMTP id S231443AbjCTMne (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 08:43:33 -0400
+        Mon, 20 Mar 2023 08:43:34 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 232A51165C
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 05:43:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CDDD55B8
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 05:43:25 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32KCh43y9023859, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32KCh4401023859, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32KCh43y9023859
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32KCh4401023859
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
         Mon, 20 Mar 2023 20:43:04 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Mon, 20 Mar 2023 20:42:34 +0800
+ 15.1.2375.32; Mon, 20 Mar 2023 20:42:38 +0800
 Received: from localhost (172.16.16.31) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 20 Mar
- 2023 20:42:33 +0800
+ 2023 20:42:38 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v4 0/5] wifi: rtw89: preparation of multiple interface concurrency support
-Date:   Mon, 20 Mar 2023 20:41:20 +0800
-Message-ID: <20230320124125.15873-1-pkshih@realtek.com>
+Subject: [PATCH v4 4/5] wifi: rtw89: add flag check for power state
+Date:   Mon, 20 Mar 2023 20:41:24 +0800
+Message-ID: <20230320124125.15873-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230320124125.15873-1-pkshih@realtek.com>
+References: <20230320124125.15873-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -55,68 +57,70 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To support concurrency, we implement beacon filter, CQM and
-ieee80211::remain_on_channel ops. Since our firmware doesn't support to TX
-null packet while doing remain-on-channel, driver does this instead. To
-ensure null packet send out before switching channel, patch 2/5 adds a
-waiting mechanism.
+From: Po-Hao Huang <phhuang@realtek.com>
 
-The patches 4/5 and 5/5 refine things we found during developing.
+Use POWER_ON flag to make sure power on/off is symmetric. Since both
+remain_on_channel and hw_scan both alter the power state, this makes
+sure that we don't enter/leave IPS mode twice.
+Also, replace IPS related functions with inline function that does
+similar logic so we can track it more easily.
 
-v4:
-  - patch 1/5
-    - define h2c/c2h struct to set/get skb->data,
-      for example
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.c | 7 +++----
+ drivers/net/wireless/realtek/rtw89/ps.c   | 6 ++++++
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-      * h2c = (__le32 *)skb->data; -->
-        h2c = (struct rtw89_h2c_bcnfltr *)skb->data;
-
-      * #define H2C_CFG_BCN_FLTR_LEN 4 (remove) --> sizeof(*h2c)
-
-      * h2c[0] = le32_encode_bits(connect, RTW89_H2C_BCNFLTR_W0_MON_RSSI) -->
-        h2c->w0 = le32_encode_bits(connect, RTW89_H2C_BCNFLTR_W0_MON_RSSI)
-
-    - I think this could improve a little more. If anyone have more ideas
-      in the future, I will open mind to change them again to make them
-      look better.
-
-  - others
-    - no change
-
-v3:
-  - patch 1/5
-    - remove unnecessary type casting
-    - use clear style of mask definition for H2C/C2H
-  - patch 2/5
-    - add comment to describe why polling can help freeing
-  - others
-    - no change
-
-v2:
-  - messed up, please ignore.
-
-Po-Hao Huang (5):
-  wifi: rtw89: 8852c: add beacon filter and CQM support
-  wifi: rtw89: add function to wait for completion of TX skbs
-  wifi: rtw89: add ieee80211::remain_on_channel ops
-  wifi: rtw89: add flag check for power state
-  wifi: rtw89: fix authentication fail during scan
-
- drivers/net/wireless/realtek/rtw89/chan.c     |  35 +++
- drivers/net/wireless/realtek/rtw89/chan.h     |   3 +
- drivers/net/wireless/realtek/rtw89/core.c     | 288 +++++++++++++++++-
- drivers/net/wireless/realtek/rtw89/core.h     |  64 ++++
- drivers/net/wireless/realtek/rtw89/fw.c       | 116 ++++++-
- drivers/net/wireless/realtek/rtw89/fw.h       |  63 ++++
- drivers/net/wireless/realtek/rtw89/mac.c      |  62 ++++
- drivers/net/wireless/realtek/rtw89/mac.h      |   1 +
- drivers/net/wireless/realtek/rtw89/mac80211.c |  88 +++++-
- drivers/net/wireless/realtek/rtw89/pci.c      |   6 +
- drivers/net/wireless/realtek/rtw89/pci.h      |   4 +-
- drivers/net/wireless/realtek/rtw89/ps.c       |   6 +
- drivers/net/wireless/realtek/rtw89/ps.h       |  16 +
- 13 files changed, 737 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 0bcfc995f0ab6..bed1d9f045a4d 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -2211,8 +2211,7 @@ static void rtw89_ips_work(struct work_struct *work)
+ 	struct rtw89_dev *rtwdev = container_of(work, struct rtw89_dev,
+ 						ips_work);
+ 	mutex_lock(&rtwdev->mutex);
+-	if (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE)
+-		rtw89_enter_ips(rtwdev);
++	rtw89_enter_ips_by_hwflags(rtwdev);
+ 	mutex_unlock(&rtwdev->mutex);
+ }
+ 
+@@ -3509,8 +3508,8 @@ void rtw89_core_scan_start(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
+ 
+ 	rtwdev->scanning = true;
+ 	rtw89_leave_lps(rtwdev);
+-	if (hw_scan && (rtwdev->hw->conf.flags & IEEE80211_CONF_IDLE))
+-		rtw89_leave_ips(rtwdev);
++	if (hw_scan)
++		rtw89_leave_ips_by_hwflags(rtwdev);
+ 
+ 	ether_addr_copy(rtwvif->mac_addr, mac_addr);
+ 	rtw89_btc_ntfy_scan_start(rtwdev, RTW89_PHY_0, chan->band_type);
+diff --git a/drivers/net/wireless/realtek/rtw89/ps.c b/drivers/net/wireless/realtek/rtw89/ps.c
+index 40498812205ea..cf72861c7adcd 100644
+--- a/drivers/net/wireless/realtek/rtw89/ps.c
++++ b/drivers/net/wireless/realtek/rtw89/ps.c
+@@ -155,6 +155,9 @@ void rtw89_enter_ips(struct rtw89_dev *rtwdev)
+ 
+ 	set_bit(RTW89_FLAG_INACTIVE_PS, rtwdev->flags);
+ 
++	if (!test_bit(RTW89_FLAG_POWERON, rtwdev->flags))
++		return;
++
+ 	rtw89_for_each_rtwvif(rtwdev, rtwvif)
+ 		rtw89_mac_vif_deinit(rtwdev, rtwvif);
+ 
+@@ -166,6 +169,9 @@ void rtw89_leave_ips(struct rtw89_dev *rtwdev)
+ 	struct rtw89_vif *rtwvif;
+ 	int ret;
+ 
++	if (test_bit(RTW89_FLAG_POWERON, rtwdev->flags))
++		return;
++
+ 	ret = rtw89_core_start(rtwdev);
+ 	if (ret)
+ 		rtw89_err(rtwdev, "failed to leave idle state\n");
 -- 
 2.25.1
 
