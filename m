@@ -2,113 +2,105 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF076C7619A
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 10:38:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99BD9C7619A
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 10:52:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230515AbjCTKis (ORCPT
+        id S231180AbjCTKwC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 06:38:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50768 "EHLO
+        Mon, 20 Mar 2023 06:52:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230500AbjCTKiZ (ORCPT
+        with ESMTP id S230042AbjCTKvg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 06:38:25 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1220C64E
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 03:37:45 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32K9n9Av020901;
-        Mon, 20 Mar 2023 10:37:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=UyDSjOWUMAhgGku56xvpXeQrm7OSwHaBu4Pr/xi8Juo=;
- b=LJ9SAy5hME9QztezQE7a2wvdG3TUv1Sv3BxV/yNap7Mx5SaRLP0zeozTl6143fzWZSEi
- jjlfMxMBiyG/TM3IG3DXrqjPelp9M5VG6bUOdJFqENjyekm0lrYfsra8x622PI+gcdoU
- /7MZ5wwv+ZFBkd/zenDE6IKtEOWziTOFmIhL/IK7bxWknk54a53D1F+V/SiDZyypk8Mb
- O5NMEZbx+oKYQKZfrCWzRlEbU8pHFdtyvBEMnRP0NoW6c/KHBhb9g9Kyg2HYPKoFmZ6J
- XTaI9Bfe0K95e2nac2Zt5PpdhInxLqnmxavGStiNsw1l8JgKmO7F2CoIPEx5PSubCtIq 4g== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pen6hr3nd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 20 Mar 2023 10:37:33 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32KAbWAg023801
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 20 Mar 2023 10:37:32 GMT
-Received: from ppranees-linux.qualcomm.com (10.80.80.8) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Mon, 20 Mar 2023 03:37:30 -0700
-From:   P Praneesh <quic_ppranees@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        P Praneesh <quic_ppranees@quicinc.com>
-Subject: [PATCH] wifi: ath11k: fix writing to unintended memory region
-Date:   Mon, 20 Mar 2023 16:07:12 +0530
-Message-ID: <20230320103712.4949-1-quic_ppranees@quicinc.com>
-X-Mailer: git-send-email 2.17.1
+        Mon, 20 Mar 2023 06:51:36 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DA4E22CB4;
+        Mon, 20 Mar 2023 03:49:06 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B6BFCB80E11;
+        Mon, 20 Mar 2023 10:48:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A262C433D2;
+        Mon, 20 Mar 2023 10:48:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679309288;
+        bh=b6zSPC09M9ZFRFcNsTQuVCwj8XUEUaZcN2PuExL6Ogc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=TNgKIwiA7uJYk6mLX54BKkXEKUbGOUt/FrJHJwmbmbzCvazeQYyqRChwp4ajdUK4N
+         1d2lpGBZXb8FViDYJ2T8XpqeJKSd1Dtz7uXC0DatdQLLP11tx30DZ4y2yJGjS9Mz0D
+         KeLQpprQT42HNtyGC2ma1YNwLiiakJjSL8lGHUgANsXD40hEfv6GKVHmPzF117K65l
+         fNbxK6o6vejnoszhYnjhRCnL76E11Xq76WaFkYXUqsZFtP79GfAr/pmZjuwNIWL6XQ
+         q0UIhdyzpYchQxNjnuN+WN2lV0O+FMDfp24OE/kefdj9AURDnfS7NFwSZE6TdxIdXa
+         78QY17ZtzZn+A==
+Received: from johan by xi.lan with local (Exim 4.94.2)
+        (envelope-from <johan+linaro@kernel.org>)
+        id 1peD4z-0005nX-5D; Mon, 20 Mar 2023 11:49:29 +0100
+From:   Johan Hovold <johan+linaro@kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Johan Hovold <johan+linaro@kernel.org>
+Subject: [PATCH 2/3] arm64: dts: qcom: sc8280xp-x13s: add wifi calibration variant
+Date:   Mon, 20 Mar 2023 11:46:57 +0100
+Message-Id: <20230320104658.22186-3-johan+linaro@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230320104658.22186-1-johan+linaro@kernel.org>
+References: <20230320104658.22186-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: ufK-UGKApSt-xZ3Hn4lPe-ZXc9dOcFzM
-X-Proofpoint-GUID: ufK-UGKApSt-xZ3Hn4lPe-ZXc9dOcFzM
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-20_06,2023-03-20_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=764
- malwarescore=0 priorityscore=1501 mlxscore=0 bulkscore=0 adultscore=0
- spamscore=0 impostorscore=0 phishscore=0 clxscore=1011 suspectscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303150002 definitions=main-2303200090
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-While initializing spectral, the magic value is getting written to the
-invalid memory address leading to random boot-up crash. This occurs
-due to the incorrect index increment in ath11k_dbring_fill_magic_value
-function. Fix it by replacing the existing logic with memset32 to ensure
-there is no invalid memory access.
+Describe the bus topology for PCIe domain 6 and add the ath11k
+calibration variant so that the board file (calibration data) can be
+loaded.
 
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.4.0.1-01838-QCAHKSWPL_SILICONZ-1
-
-Fixes: d3d358efc553 ("ath11k: add spectral/CFR buffer validation support")
-
-Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=216246
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/dbring.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ .../dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts  | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dbring.c b/drivers/net/wireless/ath/ath11k/dbring.c
-index 2107ec05d14f..f072067a75e4 100644
---- a/drivers/net/wireless/ath/ath11k/dbring.c
-+++ b/drivers/net/wireless/ath/ath11k/dbring.c
-@@ -26,13 +26,14 @@ int ath11k_dbring_validate_buffer(struct ath11k *ar, void *buffer, u32 size)
- static void ath11k_dbring_fill_magic_value(struct ath11k *ar,
- 					   void *buffer, u32 size)
- {
--	u32 *temp;
--	int idx;
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 150f51f1db37..0051025e0aa8 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -711,6 +711,23 @@ &pcie4 {
+ 	pinctrl-0 = <&pcie4_default>;
  
--	size = size >> 2;
-+	/* memset32 function fills buffer payload with the ATH11K_DB_MAGIC_VALUE
-+	 * and the variable size is expected to be the number of u32 values
-+	 * to be stored, not the number of bytes.
-+	 */
-+	size = size / sizeof(u32);
+ 	status = "okay";
++
++	pcie@0 {
++		device_type = "pci";
++		reg = <0x0 0x0 0x0 0x0 0x0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		bus-range = <0x01 0xff>;
++
++		wifi@0 {
++			compatible = "pci17cb,1103";
++			reg = <0x10000 0x0 0x0 0x0 0x0>;
++
++			qcom,ath11k-calibration-variant = "LE_X13S";
++		};
++	};
+ };
  
--	for (idx = 0, temp = buffer; idx < size; idx++, temp++)
--		*temp++ = ATH11K_DB_MAGIC_VALUE;
-+	memset32(buffer, ATH11K_DB_MAGIC_VALUE, size);
- }
- 
- static int ath11k_dbring_bufs_replenish(struct ath11k *ar,
-
-base-commit: 3df3715e556027e94246b2cb30986563362a65f4
+ &pcie4_phy {
 -- 
-2.17.1
+2.39.2
 
