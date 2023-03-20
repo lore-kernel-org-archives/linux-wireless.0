@@ -2,151 +2,142 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A52C6FD1C
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 21:29:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C02ECC7619A
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 21:36:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230308AbjCTV3f (ORCPT
+        id S231131AbjCTVgF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 17:29:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55570 "EHLO
+        Mon, 20 Mar 2023 17:36:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229861AbjCTV3e (ORCPT
+        with ESMTP id S230452AbjCTVgD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 17:29:34 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AA4A2F05E
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 14:28:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679347737; x=1710883737;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=qWvGcJxfxezaK4N0yLtrCjGJPC+PMOQwCjGBYdSrhh4=;
-  b=Q8yWrFOYSzQZOkppg25ihgW3fDsd+L3KDfOT8s32BmVFVgY2xNK8HPQu
-   meKdq7XC2Fe0UVcAR1tH6SQLfmI5jF8mjFG1N8i3czxMd2pe3w8CgUqMG
-   LGKDkweNlcniLBqhxgQQ8UymmVdfJJhY0EZdcpZvfssHL1E4xZZbMV0us
-   f+1vxEZEK8lOlrJGrq8WB3iR1aPQowU+km4p7FHrVX4+G5WPqQvNmrvpJ
-   5y3eGMNCdUf7IUcFCIYwFITIJdCGaJfsVlX8uxeKpSpZYmj1ELo71imau
-   fIxLhU8Ks7ykcDOzFGQGA6ESLgsOoefNkQ/e3DR+Av8NBpyPdxkweecCR
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10655"; a="336286437"
-X-IronPort-AV: E=Sophos;i="5.98,276,1673942400"; 
-   d="scan'208";a="336286437"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2023 14:27:59 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10655"; a="824648586"
-X-IronPort-AV: E=Sophos;i="5.98,276,1673942400"; 
-   d="scan'208";a="824648586"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 20 Mar 2023 14:27:58 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1peN2r-000BKk-2D;
-        Mon, 20 Mar 2023 21:27:57 +0000
-Date:   Tue, 21 Mar 2023 05:27:00 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        johannes@sipsolutions.net
-Subject: Re: [PATCH] wifi: mac80211: add support for letting drivers register
- tc offload support
-Message-ID: <202303210554.s6YrvLdj-lkp@intel.com>
-References: <20230320133103.40724-1-nbd@nbd.name>
+        Mon, 20 Mar 2023 17:36:03 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4331B6A4E;
+        Mon, 20 Mar 2023 14:35:25 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id h8so52326011ede.8;
+        Mon, 20 Mar 2023 14:35:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20210112; t=1679348123;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iaA7NBVMrZmsPW6yrPvN7sDVRCh1/pGYAWSc+tho3oc=;
+        b=JP6xNb6/aBRNMVW7z1+GlK+izHX4lvOr8FQRzh/hI0CWbCmCUVkvTPgpybGFYhOw2s
+         WE8m4UsjMN4+3Y7UNtTX8laGbE88Lo5xXGJE0ZAA3mYnKT7HTafvw0gSyWL6GUEYscm7
+         qyQY+45cHQsJBQ9pVEXjVWfbima9fkz8qnfBCBYRE5kJb2F11JXh7g1CJsPJFYIFy95O
+         dlsiGtBGipO59fs1Iaep4NX27CPI3icbEsjuYiPLpaRIfD3wY/NDo+ULJph288FwUOQB
+         Q/pSaeQTjJYsRpTxaMFnIYGIgMwOqQ/aPtNpjNQ3N4ipE6KO7sraJSQUg7i8uncG4NnJ
+         hH/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679348123;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=iaA7NBVMrZmsPW6yrPvN7sDVRCh1/pGYAWSc+tho3oc=;
+        b=bDaUeRHfQiU+X3xzb3s2j9ZP6qkj8UmnOpxp4ctzNxQcxmzxXPW2SmPYip1534Rqkk
+         n5odr8XY85PtBaoLNI4bBWk9RZHzC+9w7uMusHvZSJTyOG4zi4Nt2r0lt1kNz983MZEY
+         fvcq4rXrvaa1ev4NsgtXNyRt7+CqLSB9dtDyx5RrZRaePrq3CSvcm03dCNTHwGrl1IQv
+         +jsTnUZMD7atIlNBOuURVw4MwMdueYEdRJHRFjRV/1vepsW90RK7M5V2bEIw6YfTmVvz
+         12spYnSJEJkNMjhyGfUVIrbOJmcvZP8KUsuGXYZSuCVs7yEManYvpxx2IgIH+IC2IQ5J
+         IwTg==
+X-Gm-Message-State: AO0yUKUFVIbHzNOax25bzFrUh/cdYr+SxH1Ov5B+LjX5bnEqk19qOCgH
+        AStHja2N+9edoUH0da+YA9Dg+IJA5ls=
+X-Google-Smtp-Source: AK7set91d0bsoDvXTT2gvnpK4a+8W6sDh86jOXRmRaTj8ONhwFSLkl28UlNXas3+qHr2gcY7/MBSiw==
+X-Received: by 2002:a17:906:578d:b0:92c:138e:ff1f with SMTP id k13-20020a170906578d00b0092c138eff1fmr532251ejq.18.1679348123144;
+        Mon, 20 Mar 2023 14:35:23 -0700 (PDT)
+Received: from localhost.localdomain (dynamic-2a01-0c22-73dd-8200-0000-0000-0000-0e63.c22.pool.telefonica.de. [2a01:c22:73dd:8200::e63])
+        by smtp.googlemail.com with ESMTPSA id z17-20020a5096d1000000b004aee4e2a56esm5413201eda.0.2023.03.20.14.35.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Mar 2023 14:35:22 -0700 (PDT)
+From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-mmc@vger.kernel.org, Chris Morgan <macroalpha82@gmail.com>,
+        Nitin Gupta <nitin.gupta981@gmail.com>,
+        Neo Jou <neojou@gmail.com>, Pkshih <pkshih@realtek.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v3 1/9] wifi: rtw88: Clear RTW_FLAG_POWERON early in rtw_mac_power_switch()
+Date:   Mon, 20 Mar 2023 22:35:00 +0100
+Message-Id: <20230320213508.2358213-2-martin.blumenstingl@googlemail.com>
+X-Mailer: git-send-email 2.40.0
+In-Reply-To: <20230320213508.2358213-1-martin.blumenstingl@googlemail.com>
+References: <20230320213508.2358213-1-martin.blumenstingl@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230320133103.40724-1-nbd@nbd.name>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Felix,
+The SDIO HCI implementation needs to know when the MAC is powered on.
+This is needed because 32-bit register access has to be split into 4x
+8-bit register access when the MAC is not fully powered on or while
+powering off. When the MAC is powered on 32-bit register access can be
+used to reduce the number of transfers but splitting into 4x 8-bit
+register access still works in that case.
 
-I love your patch! Yet something to improve:
+During the power on sequence is how RTW_FLAG_POWERON is only set when
+the power on sequence has completed successfully. During power off
+however RTW_FLAG_POWERON is set. This means that the upcoming SDIO HCI
+implementation does not know that it has to use 4x 8-bit register
+accessors. Clear the RTW_FLAG_POWERON flag early when powering off the
+MAC so the whole power off sequence is processed with RTW_FLAG_POWERON
+unset. This will make it possible to use the RTW_FLAG_POWERON flag in
+the upcoming SDIO HCI implementation.
 
-[auto build test ERROR on wireless-next/main]
-[also build test ERROR on next-20230320]
-[cannot apply to wireless/main linus/master v6.3-rc3]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Note that a failure in rtw_pwr_seq_parser() while applying
+chip->pwr_off_seq can theoretically result in the RTW_FLAG_POWERON
+flag being cleared while the chip is still powered on. However,
+depending on when the failure occurs in the power off sequence the
+chip may be on or off. Even the original approach of clearing
+RTW_FLAG_POWERON only when the power off sequence has been applied
+successfully could end up in some corner case where the chip is
+powered off but RTW_FLAG_POWERON was not cleared.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Felix-Fietkau/wifi-mac80211-add-support-for-letting-drivers-register-tc-offload-support/20230320-213243
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20230320133103.40724-1-nbd%40nbd.name
-patch subject: [PATCH] wifi: mac80211: add support for letting drivers register tc offload support
-config: x86_64-buildonly-randconfig-r005-20230320 (https://download.01.org/0day-ci/archive/20230321/202303210554.s6YrvLdj-lkp@intel.com/config)
-compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/462e7ebc43a4631d478861a9027e7940462c2e4b
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Felix-Fietkau/wifi-mac80211-add-support-for-letting-drivers-register-tc-offload-support/20230320-213243
-        git checkout 462e7ebc43a4631d478861a9027e7940462c2e4b
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash net/mac80211/
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+Changes since v2:
+- improve patch description about corner cases when clearing
+  RTW_FLAG_POWERON
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303210554.s6YrvLdj-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from net/mac80211/trace.c:11:
-   In file included from net/mac80211/./trace.h:3060:
-   In file included from include/trace/define_trace.h:102:
-   In file included from include/trace/trace_events.h:237:
->> net/mac80211/./trace.h:2502:53: error: no member named 'new_links' in 'struct trace_event_raw_drv_net_setup_tc'
-                   LOCAL_PR_ARG, VIF_PR_ARG, __entry->type, __entry->new_links
-                                                            ~~~~~~~  ^
-   include/trace/stages/stage3_trace_output.h:9:43: note: expanded from macro 'TP_printk'
-   #define TP_printk(fmt, args...) fmt "\n", args
-                                             ^~~~
-   include/trace/trace_events.h:45:16: note: expanded from macro 'TRACE_EVENT'
-                                PARAMS(print));                   \
-                                       ^~~~~
-   include/linux/tracepoint.h:107:25: note: expanded from macro 'PARAMS'
-   #define PARAMS(args...) args
-                           ^~~~
-   include/trace/trace_events.h:203:27: note: expanded from macro 'DECLARE_EVENT_CLASS'
-           trace_event_printf(iter, print);                                \
-                                    ^~~~~
-   1 error generated.
+Changes since v1:
+- This replaces a previous patch called "rtw88: hci: Add an optional
+  power_switch() callback to rtw_hci_ops" which added a new callback
+  to the HCI ops.
 
 
-vim +2502 net/mac80211/./trace.h
+ drivers/net/wireless/realtek/rtw88/mac.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-  2480	
-  2481	TRACE_EVENT(drv_net_setup_tc,
-  2482		TP_PROTO(struct ieee80211_local *local,
-  2483			 struct ieee80211_sub_if_data *sdata,
-  2484			 u8 type),
-  2485	
-  2486		TP_ARGS(local, sdata, type),
-  2487	
-  2488		TP_STRUCT__entry(
-  2489			LOCAL_ENTRY
-  2490			VIF_ENTRY
-  2491			__field(u8, type)
-  2492		),
-  2493	
-  2494		TP_fast_assign(
-  2495			LOCAL_ASSIGN;
-  2496			VIF_ASSIGN;
-  2497			__entry->type = type;
-  2498		),
-  2499	
-  2500		TP_printk(
-  2501			LOCAL_PR_FMT VIF_PR_FMT " type:%d\n",
-> 2502			LOCAL_PR_ARG, VIF_PR_ARG, __entry->type, __entry->new_links
-  2503		)
-  2504	);
-  2505	
-
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index f3a566cf979b..cfdfc8a2c836 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -273,6 +273,9 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ 	if (pwr_on == cur_pwr)
+ 		return -EALREADY;
+ 
++	if (!pwr_on)
++		clear_bit(RTW_FLAG_POWERON, rtwdev->flags);
++
+ 	pwr_seq = pwr_on ? chip->pwr_on_seq : chip->pwr_off_seq;
+ 	ret = rtw_pwr_seq_parser(rtwdev, pwr_seq);
+ 	if (ret)
+@@ -280,8 +283,6 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ 
+ 	if (pwr_on)
+ 		set_bit(RTW_FLAG_POWERON, rtwdev->flags);
+-	else
+-		clear_bit(RTW_FLAG_POWERON, rtwdev->flags);
+ 
+ 	return 0;
+ }
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+2.40.0
+
