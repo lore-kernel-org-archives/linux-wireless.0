@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB15BC7618A
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 12:43:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8602AC7618A
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 13:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231440AbjCTMni (ORCPT
+        id S230035AbjCTNH3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 08:43:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47826 "EHLO
+        Mon, 20 Mar 2023 09:07:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230267AbjCTMnf (ORCPT
+        with ESMTP id S229901AbjCTNH1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 08:43:35 -0400
+        Mon, 20 Mar 2023 09:07:27 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4E5C14E98
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 05:43:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 576B71B561
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 06:07:26 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32KCh43z9023859, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32KD74l44025612, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32KCh43z9023859
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32KD74l44025612
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Mon, 20 Mar 2023 20:43:04 +0800
+        Mon, 20 Mar 2023 21:07:04 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Mon, 20 Mar 2023 20:42:36 +0800
+ 15.1.2375.32; Mon, 20 Mar 2023 21:07:17 +0800
 Received: from localhost (172.16.16.31) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 20 Mar
- 2023 20:42:36 +0800
+ 2023 21:07:17 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
-CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v4 2/5] wifi: rtw89: add function to wait for completion of TX skbs
-Date:   Mon, 20 Mar 2023 20:41:22 +0800
-Message-ID: <20230320124125.15873-3-pkshih@realtek.com>
+CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/3] wifi: rtw89: fw: use generic flow to set/check features
+Date:   Mon, 20 Mar 2023 21:06:04 +0800
+Message-ID: <20230320130606.20777-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230320124125.15873-1-pkshih@realtek.com>
-References: <20230320124125.15873-1-pkshih@realtek.com>
+In-Reply-To: <20230320130606.20777-1-pkshih@realtek.com>
+References: <20230320130606.20777-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -57,236 +57,146 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Allocate a per-skb completion to track those skbs we are interested in
-and wait for them to complete transmission with TX status. To avoid
-race condition between process and softirq without additional locking,
-we use a work to free the tx_wait struct later when waiter is finished
-referencing it. This must be called in process context and with a
-timeout value greater than zero since it might sleep.
+In early feature bitmap obtained from rtw89_early_fw_feature_recognize(),
+the bits needed to check get increased. It's more friendly to work with
+RTW89_CHK_FW_FEATURE(). So, we concentrate the flow of iterating FW feature
+configures and calling RTW89_SET_FW_FEATURE() for various uses. And then,
+we adjust rtw89_early_fw_feature_recognize() for RTW89_CHK_FW_FEATURE().
 
-We use another workqueue so works can be processed concurrently and
-when the PCI device is removed unexpectedly, all pending works can be
-flushed. This prevents some works that were scheduled but never processed
-leads to memory leak.
-
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 58 +++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/core.h | 33 +++++++++++++
- drivers/net/wireless/realtek/rtw89/pci.c  |  6 +++
- drivers/net/wireless/realtek/rtw89/pci.h  |  4 +-
- 4 files changed, 99 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c |  8 ++---
+ drivers/net/wireless/realtek/rtw89/fw.c   | 41 +++++++++++------------
+ drivers/net/wireless/realtek/rtw89/fw.h   |  2 +-
+ 3 files changed, 25 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 0e32bb58bade3..ea697dd9cb176 100644
+index bed1d9f045a4d..0c722c52c9fce 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -849,6 +849,60 @@ void rtw89_core_tx_kick_off(struct rtw89_dev *rtwdev, u8 qsel)
- 	rtw89_hci_tx_kick_off(rtwdev, ch_dma);
- }
- 
-+static void rtw89_core_free_tx_wait_work(struct work_struct *work)
-+{
-+	struct rtw89_tx_wait_info *wait =
-+			container_of(work, struct rtw89_tx_wait_info, work);
-+	struct rtw89_dev *rtwdev = wait->rtwdev;
-+	int done, ret;
-+
-+	/* Wait rtw89_core_tx_kick_off_and_wait() increase 'wait_done' to
-+	 * ensure it doesn't use 'wait' anymore. The polling period is larger
-+	 * than execution time between wait_for_completion_timeout() and
-+	 * atomic_inc() in rtw89_core_tx_kick_off_and_wait().
-+	 */
-+	ret = read_poll_timeout(atomic_read, done, done, 1000, 100000, false,
-+				&wait->wait_done);
-+
-+	if (ret)
-+		rtw89_err(rtwdev, "tx wait timed out, stop polling\n");
-+	else
-+		kfree(wait);
-+}
-+
-+int rtw89_core_tx_kick_off_and_wait(struct rtw89_dev *rtwdev, struct sk_buff *skb,
-+				    int qsel, unsigned int timeout)
-+{
-+	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
-+	struct rtw89_tx_wait_info *wait;
-+	unsigned long time_left;
-+	int ret = 0;
-+
-+	skb_data->wait = kzalloc(sizeof(*wait), GFP_KERNEL);
-+	wait = skb_data->wait;
-+	if (!wait) {
-+		rtw89_warn(rtwdev, "alloc tx wait info failed\n");
-+		rtw89_core_tx_kick_off(rtwdev, qsel);
-+		return 0;
-+	}
-+
-+	init_completion(&wait->completion);
-+	INIT_WORK(&wait->work, rtw89_core_free_tx_wait_work);
-+	wait->rtwdev = rtwdev;
-+
-+	rtw89_core_tx_kick_off(rtwdev, qsel);
-+	time_left = wait_for_completion_timeout(&wait->completion,
-+						msecs_to_jiffies(timeout));
-+	if (time_left == 0)
-+		ret = -ETIMEDOUT;
-+	else if (!wait->tx_done)
-+		ret = -EAGAIN;
-+
-+	atomic_inc(&wait->wait_done);
-+
-+	return ret;
-+}
-+
- int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
- 		 struct sk_buff *skb, bool fwdl)
+@@ -3756,23 +3756,23 @@ struct rtw89_dev *rtw89_alloc_ieee80211_hw(struct device *device,
+ 					   u32 bus_data_size,
+ 					   const struct rtw89_chip_info *chip)
  {
-@@ -3192,6 +3246,9 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
- 	rtwdev->txq_wq = alloc_workqueue("rtw89_tx_wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
- 	if (!rtwdev->txq_wq)
- 		return -ENOMEM;
-+	rtwdev->gc_wq = alloc_workqueue("rtw89_gc_wq", WQ_UNBOUND | WQ_MEM_RECLAIM, 0);
-+	if (!rtwdev->gc_wq)
-+		return -ENOMEM;
- 	spin_lock_init(&rtwdev->ba_lock);
- 	spin_lock_init(&rtwdev->rpwm_lock);
- 	mutex_init(&rtwdev->mutex);
-@@ -3233,6 +3290,7 @@ void rtw89_core_deinit(struct rtw89_dev *rtwdev)
- 	rtw89_fw_free_all_early_h2c(rtwdev);
++	struct rtw89_fw_info early_fw = {};
+ 	const struct firmware *firmware;
+ 	struct ieee80211_hw *hw;
+ 	struct rtw89_dev *rtwdev;
+ 	struct ieee80211_ops *ops;
+ 	u32 driver_data_size;
+-	u32 early_feat_map = 0;
+ 	bool no_chanctx;
  
- 	destroy_workqueue(rtwdev->txq_wq);
-+	destroy_workqueue(rtwdev->gc_wq);
- 	mutex_destroy(&rtwdev->rf_mutex);
- 	mutex_destroy(&rtwdev->mutex);
- }
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 622fd991a1f94..c1d966fc75b7a 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2599,6 +2599,19 @@ struct rtw89_phy_rate_pattern {
- 	bool enable;
+-	firmware = rtw89_early_fw_feature_recognize(device, chip, &early_feat_map);
++	firmware = rtw89_early_fw_feature_recognize(device, chip, &early_fw);
+ 
+ 	ops = kmemdup(&rtw89_ops, sizeof(rtw89_ops), GFP_KERNEL);
+ 	if (!ops)
+ 		goto err;
+ 
+ 	no_chanctx = chip->support_chanctx_num == 0 ||
+-		     !(early_feat_map & BIT(RTW89_FW_FEATURE_SCAN_OFFLOAD)) ||
+-		     !(early_feat_map & BIT(RTW89_FW_FEATURE_BEACON_FILTER));
++		     !RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD, &early_fw) ||
++		     !RTW89_CHK_FW_FEATURE(BEACON_FILTER, &early_fw);
+ 
+ 	if (no_chanctx) {
+ 		ops->add_chanctx = NULL;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index d3348f9bcc2a7..d9bd4339a59e5 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -269,38 +269,45 @@ static const struct __fw_feat_cfg fw_feat_tbl[] = {
+ 	__CFG_FW_FEAT(RTL8852C, ge, 0, 27, 56, 10, BEACON_FILTER),
  };
  
-+struct rtw89_tx_wait_info {
-+	struct rtw89_dev *rtwdev;
-+	struct completion completion;
-+	struct work_struct work;
-+	atomic_t wait_done;
-+	bool tx_done;
-+};
-+
-+struct rtw89_tx_skb_data {
-+	struct rtw89_tx_wait_info *wait;
-+	u8 hci_priv[];
-+};
-+
- #define RTW89_P2P_MAX_NOA_NUM 2
- 
- struct rtw89_vif {
-@@ -3937,6 +3950,7 @@ struct rtw89_dev {
- 	/* used to protect rf read write */
- 	struct mutex rf_mutex;
- 	struct workqueue_struct *txq_wq;
-+	struct workqueue_struct *gc_wq;
- 	struct work_struct txq_work;
- 	struct delayed_work txq_reinvoke_work;
- 	/* used to protect ba_list and forbid_ba_list */
-@@ -4148,6 +4162,14 @@ static inline void rtw89_hci_clear(struct rtw89_dev *rtwdev, struct pci_dev *pde
- 		rtwdev->hci.ops->clear(rtwdev, pdev);
- }
- 
-+static inline
-+struct rtw89_tx_skb_data *RTW89_TX_SKB_CB(struct sk_buff *skb)
++static void rtw89_fw_iterate_feature_cfg(struct rtw89_fw_info *fw,
++					 const struct rtw89_chip_info *chip,
++					 u32 ver_code)
 +{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	int i;
 +
-+	return (struct rtw89_tx_skb_data *)info->status.status_driver_data;
++	for (i = 0; i < ARRAY_SIZE(fw_feat_tbl); i++) {
++		const struct __fw_feat_cfg *ent = &fw_feat_tbl[i];
++
++		if (chip->chip_id != ent->chip_id)
++			continue;
++
++		if (ent->cond(ver_code, ent->ver_code))
++			RTW89_SET_FW_FEATURE(ent->feature, fw);
++	}
 +}
 +
- static inline u8 rtw89_read8(struct rtw89_dev *rtwdev, u32 addr)
+ static void rtw89_fw_recognize_features(struct rtw89_dev *rtwdev)
  {
- 	return rtwdev->hci.ops->read8(rtwdev, addr);
-@@ -4791,11 +4813,22 @@ static inline struct sk_buff *rtw89_alloc_skb_for_rx(struct rtw89_dev *rtwdev,
- 	return dev_alloc_skb(length);
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+-	const struct __fw_feat_cfg *ent;
+ 	const struct rtw89_fw_suit *fw_suit;
+ 	u32 suit_ver_code;
+-	int i;
+ 
+ 	fw_suit = rtw89_fw_suit_get(rtwdev, RTW89_FW_NORMAL);
+ 	suit_ver_code = RTW89_FW_SUIT_VER_CODE(fw_suit);
+ 
+-	for (i = 0; i < ARRAY_SIZE(fw_feat_tbl); i++) {
+-		ent = &fw_feat_tbl[i];
+-		if (chip->chip_id != ent->chip_id)
+-			continue;
+-
+-		if (ent->cond(suit_ver_code, ent->ver_code))
+-			RTW89_SET_FW_FEATURE(ent->feature, &rtwdev->fw);
+-	}
++	rtw89_fw_iterate_feature_cfg(&rtwdev->fw, chip, suit_ver_code);
  }
  
-+static inline void rtw89_core_tx_wait_complete(struct rtw89_dev *rtwdev,
-+					       struct rtw89_tx_wait_info *wait,
-+					       bool tx_done)
-+{
-+	wait->tx_done = tx_done;
-+	complete(&wait->completion);
-+	queue_work(rtwdev->gc_wq, &wait->work);
-+}
-+
- int rtw89_core_tx_write(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta, struct sk_buff *skb, int *qsel);
- int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
- 		 struct sk_buff *skb, bool fwdl);
- void rtw89_core_tx_kick_off(struct rtw89_dev *rtwdev, u8 qsel);
-+int rtw89_core_tx_kick_off_and_wait(struct rtw89_dev *rtwdev, struct sk_buff *skb,
-+				    int qsel, unsigned int timeout);
- void rtw89_core_fill_txdesc(struct rtw89_dev *rtwdev,
- 			    struct rtw89_tx_desc_info *desc_info,
- 			    void *txdesc);
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index ec8bb5f10482e..ca6b63944ee99 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -364,6 +364,8 @@ static void rtw89_pci_tx_status(struct rtw89_dev *rtwdev,
- 				struct rtw89_pci_tx_ring *tx_ring,
- 				struct sk_buff *skb, u8 tx_status)
+ const struct firmware *
+ rtw89_early_fw_feature_recognize(struct device *device,
+ 				 const struct rtw89_chip_info *chip,
+-				 u32 *early_feat_map)
++				 struct rtw89_fw_info *early_fw)
  {
-+	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
-+	struct rtw89_tx_wait_info *wait = skb_data->wait;
- 	struct ieee80211_tx_info *info;
+ 	union rtw89_compat_fw_hdr buf = {};
+ 	const struct firmware *firmware;
+ 	bool full_req = false;
+ 	u32 ver_code;
+ 	int ret;
+-	int i;
  
- 	info = IEEE80211_SKB_CB(skb);
-@@ -394,6 +396,8 @@ static void rtw89_pci_tx_status(struct rtw89_dev *rtwdev,
- 		}
- 	}
+ 	/* If SECURITY_LOADPIN_ENFORCE is enabled, reading partial files will
+ 	 * be denied (-EPERM). Then, we don't get right firmware things as
+@@ -329,15 +336,7 @@ rtw89_early_fw_feature_recognize(struct device *device,
+ 	if (!ver_code)
+ 		goto out;
  
-+	if (wait)
-+		rtw89_core_tx_wait_complete(rtwdev, wait, tx_status == RTW89_TX_DONE);
- 	ieee80211_tx_status_ni(rtwdev->hw, skb);
- }
+-	for (i = 0; i < ARRAY_SIZE(fw_feat_tbl); i++) {
+-		const struct __fw_feat_cfg *ent = &fw_feat_tbl[i];
+-
+-		if (chip->chip_id != ent->chip_id)
+-			continue;
+-
+-		if (ent->cond(ver_code, ent->ver_code))
+-			*early_feat_map |= BIT(ent->feature);
+-	}
++	rtw89_fw_iterate_feature_cfg(early_fw, chip, ver_code);
  
-@@ -1203,6 +1207,7 @@ static int rtw89_pci_txwd_submit(struct rtw89_dev *rtwdev,
- 	struct pci_dev *pdev = rtwpci->pdev;
- 	struct sk_buff *skb = tx_req->skb;
- 	struct rtw89_pci_tx_data *tx_data = RTW89_PCI_TX_SKB_CB(skb);
-+	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
- 	bool en_wd_info = desc_info->en_wd_info;
- 	u32 txwd_len;
- 	u32 txwp_len;
-@@ -1218,6 +1223,7 @@ static int rtw89_pci_txwd_submit(struct rtw89_dev *rtwdev,
- 	}
- 
- 	tx_data->dma = dma;
-+	skb_data->wait = NULL;
- 
- 	txwp_len = sizeof(*txwp_info);
- 	txwd_len = chip->txwd_body_size;
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
-index 1e19740db8c54..0e4bd210b100f 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.h
-+++ b/drivers/net/wireless/realtek/rtw89/pci.h
-@@ -1004,9 +1004,9 @@ rtw89_pci_rxbd_increase(struct rtw89_pci_rx_ring *rx_ring, u32 cnt)
- 
- static inline struct rtw89_pci_tx_data *RTW89_PCI_TX_SKB_CB(struct sk_buff *skb)
- {
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct rtw89_tx_skb_data *data = RTW89_TX_SKB_CB(skb);
- 
--	return (struct rtw89_pci_tx_data *)info->status.status_driver_data;
-+	return (struct rtw89_pci_tx_data *)data->hci_priv;
- }
- 
- static inline struct rtw89_pci_tx_bd_32 *
+ out:
+ 	if (full_req)
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 4d8d961f7b236..c5c7279ccc23a 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -3658,7 +3658,7 @@ int rtw89_fw_recognize(struct rtw89_dev *rtwdev);
+ const struct firmware *
+ rtw89_early_fw_feature_recognize(struct device *device,
+ 				 const struct rtw89_chip_info *chip,
+-				 u32 *early_feat_map);
++				 struct rtw89_fw_info *early_fw);
+ int rtw89_fw_download(struct rtw89_dev *rtwdev, enum rtw89_fw_type type);
+ int rtw89_load_firmware(struct rtw89_dev *rtwdev);
+ void rtw89_unload_firmware(struct rtw89_dev *rtwdev);
 -- 
 2.25.1
 
