@@ -2,278 +2,188 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25EDBC6FD1D
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 13:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F899C6FD1D
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 13:39:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231737AbjCTNhh (ORCPT
+        id S231824AbjCTNjm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 09:37:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41860 "EHLO
+        Mon, 20 Mar 2023 09:39:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231443AbjCTNhY (ORCPT
+        with ESMTP id S231795AbjCTNjT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 09:37:24 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D15DE2470B;
-        Mon, 20 Mar 2023 06:37:18 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id fy10-20020a17090b020a00b0023b4bcf0727so12445423pjb.0;
-        Mon, 20 Mar 2023 06:37:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679319438;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=MdCkHnCKj4WxKKgtdRV6cXLUY/SN5CblWEdzRCWbv3w=;
-        b=aCsQBItgL7rYZVVavtmZ8FLX0aD4pxV16VYWD7jGIUvCioofzSwPG7YiYhvMlpJTTS
-         K3LXrXhXlX3kpyPzmCkX364nCde0xwhP+awzvB4EHIqsMkURmxmf4NHx58xSq2bIxMum
-         ooEVR7pnA8jUjJbiQhf/R+7PBDgebXtzUiqLCZ99APu4Qd8jilD8FlPM5uKHOkD4azIH
-         bPIfcx+civh2qo/iEPQ9V1A88m1oyDBgCCyYv3t0c9QYC2IKYzqQSdF88ytx8fJgtfuw
-         yhppThyuBX/16hkIU/mnMlGBGPhefNklXtQTqP+YWtLU1obJsD/YmfkK/2EMMJ7lstRQ
-         a1mg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679319438;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=MdCkHnCKj4WxKKgtdRV6cXLUY/SN5CblWEdzRCWbv3w=;
-        b=1fVBR6fy6BeuHkWGWIa+70TLSbNdBjm2HsmZ2iUQbfBkpCWh4Xf0X9KP/JqMFLnejT
-         M+V7bwSHtu/4S0SLnBYNTD7msGPUADW9cjPq7FUTJad1WsHRhIMsVljqp1New+f3gB72
-         GPUo14XxAmP1fIG53TZDfdFU913ljViSuu1I9JWllMOfkwxsmru2ENOqJ0oB4qnSHQcQ
-         3AFbzhvsAkwQ9Zbps+YDWZ/goIxNXa2iyFXL2vmRDh1PVGOVYWa8ukWJemttRACo9vnN
-         SJF/LpUshrCoE2TlMjQhVYEdjIbVt86elAMJu5QqmTwgK19Tb5XY3TGRV9c4Tpne+Vfn
-         eMTQ==
-X-Gm-Message-State: AO0yUKVLDexgm2TpJOD/i3u8vkaGnMAUsIBToWuDA0PHSmFF5bLIXiZC
-        nAyMnGccSBcsnDctr2BfJGw=
-X-Google-Smtp-Source: AK7set+SfniZ1Jc6b7s2Hh/s9rzwZ8Mj5ijFU92/DCT+En5Dw+qToJpmpnvZW7Hkc5IP2UlA6nKN9w==
-X-Received: by 2002:a17:90a:1a49:b0:23f:10ee:feef with SMTP id 9-20020a17090a1a4900b0023f10eefeefmr19528672pjl.19.1679319438369;
-        Mon, 20 Mar 2023 06:37:18 -0700 (PDT)
-Received: from oslab.. ([106.39.42.159])
-        by smtp.gmail.com with ESMTPSA id n4-20020a17090ac68400b0023d1b9e17e2sm6118592pjt.31.2023.03.20.06.36.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Mar 2023 06:36:54 -0700 (PDT)
-From:   Jia-Ju Bai <baijiaju1990@gmail.com>
-To:     johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju@buaa.edu.cn>
-Subject: [PATCH] net: mac80211: Add NULL checks for sta->sdata
-Date:   Mon, 20 Mar 2023 21:36:44 +0800
-Message-Id: <20230320133644.2445321-1-baijiaju1990@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        Mon, 20 Mar 2023 09:39:19 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD4CC1A66C
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 06:39:10 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32KBvFZ2004731;
+        Mon, 20 Mar 2023 13:39:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=jMz2u2+gyjJJcj5tuRPYVv0di+sn1S5ni8sqhMu/9Kg=;
+ b=BNz+KGi99iSZhDkes9KWF52w7CzSYjHOAYXTfBPlCQk7pM1ZZAIsxB8H3zGnapUkas/r
+ 1FfSr/9GpQ+5F6LsOEhJ4KF4Us8wsGi/jZnw25FoCqH4jPqhHPQzcC4jaVzVtNdjiA/0
+ PlEKhMhP6ULKuRkpbM7RDNigSEYSRmhgqbWkVUL69mwPEJi2oHbhQgxFGFO75Rmfk+Gt
+ 8w4fd4JPJXA1PNOxL3X8nGYxxzxTsUvQi80R1Tm683dJg7fwBKlNOyD/BlmnrBGBeIqv
+ CMVmf/KTnEUEFt7WWsvQInmEBZG+JH8TvwUAZ9ndRKqA4kCNXqS5+79KGzUuBP80f3yv ow== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pen6hrh12-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Mar 2023 13:39:05 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32KDd4H6010152
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Mar 2023 13:39:04 GMT
+Received: from nmaran-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.41; Mon, 20 Mar 2023 06:39:02 -0700
+From:   Nagarajan Maran <quic_nmaran@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Bhagavathi Perumal S <quic_bperumal@quicinc.com>,
+        Nagarajan Maran <quic_nmaran@quicinc.com>
+Subject: [PATCH] wifi: ath11k: Fix invalid management rx frame length issue
+Date:   Mon, 20 Mar 2023 19:08:40 +0530
+Message-ID: <20230320133840.30162-1-quic_nmaran@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 8NkXcGNm6eXVpjTaeMT1e0VxZ9FeT59R
+X-Proofpoint-GUID: 8NkXcGNm6eXVpjTaeMT1e0VxZ9FeT59R
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-20_09,2023-03-20_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ malwarescore=0 priorityscore=1501 mlxscore=0 bulkscore=0 adultscore=0
+ spamscore=0 impostorscore=0 phishscore=0 clxscore=1011 suspectscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303150002 definitions=main-2303200115
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jia-Ju Bai <baijiaju@buaa.edu.cn>
+From: Bhagavathi Perumal S <quic_bperumal@quicinc.com>
 
-In a previous commit 69403bad97aa, sta->sdata can be NULL, and thus it
-should be checked before being used.
+The WMI management rx event has multiple arrays of TLVs, however the common
+WMI TLV parser won't handle multiple TLV tags of same type.
+So the multiple array tags of WMI management rx TLV is parsed incorrectly
+and the length calculated becomes wrong when the target sends multiple
+array tags.
 
-However, in the same call stack, sta->sdata is also used in the
-following functions:
+Add separate TLV parser to handle multiple arrays for WMI management rx
+TLV. This fixes invalid length issue when the target sends multiple array
+tags.
 
-ieee80211_ba_session_work()
-  ___ieee80211_stop_rx_ba_session(sta)
-    ht_dbg(sta->sdata, ...); -> No check
-    sdata_info(sta->sdata, ...); -> No check
-    ieee80211_send_delba(sta->sdata, ...) -> No check
-  ___ieee80211_start_rx_ba_session(sta)
-    ht_dbg(sta->sdata, ...); -> No check
-    ht_dbg_ratelimited(sta->sdata, ...); -> No check
-  ieee80211_tx_ba_session_handle_start(sta)
-    sdata = sta->sdata; if (!sdata) -> Add check by previous commit
-  ___ieee80211_stop_tx_ba_session(sdata)
-    ht_dbg(sta->sdata, ...); -> No check
-  ieee80211_start_tx_ba_cb(sdata)
-    sdata = sta->sdata; local = sdata->local -> No check
-  ieee80211_stop_tx_ba_cb(sdata)
-    ht_dbg(sta->sdata, ...); -> No check
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
-Thus, to avoid possible null-pointer dereferences, the related checks
-should be added.
+Signed-off-by: Bhagavathi Perumal S <quic_bperumal@quicinc.com>
+Co-developed-by: Nagarajan Maran <quic_nmaran@quicinc.com>
+Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
 
-These results are reported by a static tool designed by myself.
-
-Signed-off-by: Jia-Ju Bai <baijiaju@buaa.edu.cn>
 ---
- net/mac80211/agg-rx.c | 68 ++++++++++++++++++++++++++-----------------
- net/mac80211/agg-tx.c | 16 ++++++++--
- 2 files changed, 55 insertions(+), 29 deletions(-)
+ drivers/net/wireless/ath/ath11k/wmi.c | 45 +++++++++++++++++++++------
+ 1 file changed, 35 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index c6fa53230450..6616970785a2 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -80,19 +80,21 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 	RCU_INIT_POINTER(sta->ampdu_mlme.tid_rx[tid], NULL);
- 	__clear_bit(tid, sta->ampdu_mlme.agg_session_valid);
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 27f3fceb33c5..f338d4447f11 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -82,6 +82,12 @@ struct wmi_tlv_fw_stats_parse {
+ 	bool chain_rssi_done;
+ };
  
--	ht_dbg(sta->sdata,
--	       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
--	       sta->sta.addr, tid,
--	       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
--	       (int)reason);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata,
-+		       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
-+		       sta->sta.addr, tid,
-+		       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
-+		       (int)reason);
-+	}
++struct wmi_tlv_mgmt_rx_parse {
++	const struct wmi_mgmt_rx_hdr *fixed;
++	const u8 *frame_buf;
++	bool frame_buf_done;
++};
++
+ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
+ 	[WMI_TAG_ARRAY_BYTE]
+ 		= { .min_len = 0 },
+@@ -5633,28 +5639,49 @@ static int ath11k_pull_vdev_stopped_param_tlv(struct ath11k_base *ab, struct sk_
+ 	return 0;
+ }
  
--	if (drv_ampdu_action(local, sta->sdata, &params))
-+	if (sta->sdata && drv_ampdu_action(local, sta->sdata, &params))
- 		sdata_info(sta->sdata,
- 			   "HW problem - can not stop rx aggregation for %pM tid %d\n",
- 			   sta->sta.addr, tid);
- 
- 	/* check if this is a self generated aggregation halt */
--	if (initiator == WLAN_BACK_RECIPIENT && tx)
-+	if (initiator == WLAN_BACK_RECIPIENT && tx && sta->sdata)
- 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
- 				     tid, WLAN_BACK_RECIPIENT, reason);
- 
-@@ -279,17 +281,21 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 
- 	if (!sta->sta.deflink.ht_cap.ht_supported &&
- 	    !sta->sta.deflink.he_cap.has_he) {
--		ht_dbg(sta->sdata,
--		       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
--		       sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
-+			       sta->sta.addr, tid);
++static int ath11k_wmi_tlv_mgmt_rx_parse(struct ath11k_base *ab,
++					u16 tag, u16 len,
++					const void *ptr, void *data)
++{
++	struct wmi_tlv_mgmt_rx_parse *parse = data;
++
++	switch (tag) {
++	case WMI_TAG_MGMT_RX_HDR:
++		parse->fixed = ptr;
++		break;
++	case WMI_TAG_ARRAY_BYTE:
++		if (!parse->frame_buf_done) {
++			parse->frame_buf = ptr;
++			parse->frame_buf_done = true;
 +		}
- 		/* send a response anyway, it's an error case if we get here */
- 		goto end;
- 	}
- 
- 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
--		ht_dbg(sta->sdata,
--		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
--		       sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
-+			       sta->sta.addr, tid);
-+		}
- 		goto end;
- 	}
- 
-@@ -322,8 +328,10 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		buf_size = sta->sta.max_rx_aggregation_subframes;
- 	params.buf_size = buf_size;
- 
--	ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
--	       buf_size, sta->sta.addr);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
-+		       buf_size, sta->sta.addr);
++		break;
 +	}
- 
- 	/* examine state machine */
- 	lockdep_assert_held(&sta->ampdu_mlme.mtx);
-@@ -332,9 +340,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
- 			struct tid_ampdu_rx *tid_rx;
- 
--			ht_dbg_ratelimited(sta->sdata,
--					   "updated AddBA Req from %pM on tid %u\n",
--					   sta->sta.addr, tid);
-+			if (sta->sdata) {
-+				ht_dbg_ratelimited(sta->sdata,
-+						   "updated AddBA Req from %pM on tid %u\n",
-+						   sta->sta.addr, tid);
-+			}
- 			/* We have no API to update the timeout value in the
- 			 * driver so reject the timeout update if the timeout
- 			 * changed. If it did not change, i.e., no real update,
-@@ -350,9 +360,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 			goto end;
- 		}
- 
--		ht_dbg_ratelimited(sta->sdata,
--				   "unexpected AddBA Req from %pM on tid %u\n",
--				   sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg_ratelimited(sta->sdata,
-+					   "unexpected AddBA Req from %pM on tid %u\n",
-+					   sta->sta.addr, tid);
-+		}
- 
- 		/* delete existing Rx BA session on the same tid */
- 		___ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
-@@ -362,9 +374,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 
- 	if (ieee80211_hw_check(&local->hw, SUPPORTS_REORDERING_BUFFER)) {
- 		ret = drv_ampdu_action(local, sta->sdata, &params);
--		ht_dbg(sta->sdata,
--		       "Rx A-MPDU request on %pM tid %d result %d\n",
--		       sta->sta.addr, tid, ret);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "Rx A-MPDU request on %pM tid %d result %d\n",
-+			       sta->sta.addr, tid, ret);
-+		}
- 		if (!ret)
- 			status = WLAN_STATUS_SUCCESS;
- 		goto end;
-@@ -401,8 +415,10 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		__skb_queue_head_init(&tid_agg_rx->reorder_buf[i]);
- 
- 	ret = drv_ampdu_action(local, sta->sdata, &params);
--	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
--	       sta->sta.addr, tid, ret);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
-+		       sta->sta.addr, tid, ret);
-+	}
- 	if (ret) {
- 		kfree(tid_agg_rx->reorder_buf);
- 		kfree(tid_agg_rx->reorder_time);
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index f9514bacbd4a..03b31b6e7ac7 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -368,8 +368,10 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 
- 	spin_unlock_bh(&sta->lock);
- 
--	ht_dbg(sta->sdata, "Tx BA session stop requested for %pM tid %u\n",
--	       sta->sta.addr, tid);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "Tx BA session stop requested for %pM tid %u\n",
-+		       sta->sta.addr, tid);
-+	}
- 
- 	del_timer_sync(&tid_tx->addba_resp_timer);
- 	del_timer_sync(&tid_tx->session_timer);
-@@ -776,7 +778,12 @@ void ieee80211_start_tx_ba_cb(struct sta_info *sta, int tid,
- 			      struct tid_ampdu_tx *tid_tx)
++	return 0;
++}
++
+ static int ath11k_pull_mgmt_rx_params_tlv(struct ath11k_base *ab,
+ 					  struct sk_buff *skb,
+ 					  struct mgmt_rx_event_params *hdr)
  {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local;
-+
-+	if (!sdata)
-+		return;
-+
-+	local = sdata->local;
+-	const void **tb;
++	struct wmi_tlv_mgmt_rx_parse parse = { };
+ 	const struct wmi_mgmt_rx_hdr *ev;
+ 	const u8 *frame;
+ 	int ret;
  
- 	if (WARN_ON(test_and_set_bit(HT_AGG_STATE_DRV_READY, &tid_tx->state)))
- 		return;
-@@ -902,6 +909,9 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
- 	bool send_delba = false;
- 	bool start_txq = false;
+-	tb = ath11k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
+-	if (IS_ERR(tb)) {
+-		ret = PTR_ERR(tb);
+-		ath11k_warn(ab, "failed to parse tlv: %d\n", ret);
++	ret = ath11k_wmi_tlv_iter(ab, skb->data, skb->len,
++				  ath11k_wmi_tlv_mgmt_rx_parse,
++				  &parse);
++	if (ret) {
++		ath11k_warn(ab, "failed to parse mgmt rx tlv %d\n",
++			    ret);
+ 		return ret;
+ 	}
  
-+	if (!sdata)
-+		return;
-+
- 	ht_dbg(sdata, "Stopping Tx BA session for %pM tid %d\n",
- 	       sta->sta.addr, tid);
+-	ev = tb[WMI_TAG_MGMT_RX_HDR];
+-	frame = tb[WMI_TAG_ARRAY_BYTE];
++	ev = parse.fixed;
++	frame = parse.frame_buf;
  
+ 	if (!ev || !frame) {
+ 		ath11k_warn(ab, "failed to fetch mgmt rx hdr");
+-		kfree(tb);
+ 		return -EPROTO;
+ 	}
+ 
+@@ -5673,7 +5700,6 @@ static int ath11k_pull_mgmt_rx_params_tlv(struct ath11k_base *ab,
+ 
+ 	if (skb->len < (frame - skb->data) + hdr->buf_len) {
+ 		ath11k_warn(ab, "invalid length in mgmt rx hdr ev");
+-		kfree(tb);
+ 		return -EPROTO;
+ 	}
+ 
+@@ -5685,7 +5711,6 @@ static int ath11k_pull_mgmt_rx_params_tlv(struct ath11k_base *ab,
+ 
+ 	ath11k_ce_byte_swap(skb->data, hdr->buf_len);
+ 
+-	kfree(tb);
+ 	return 0;
+ }
+ 
+
+base-commit: 3df3715e556027e94246b2cb30986563362a65f4
 -- 
-2.34.1
+2.17.1
 
