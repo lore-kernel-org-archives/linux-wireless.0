@@ -2,711 +2,168 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 191E6C7618A
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 16:53:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C08CC6FD1D
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Mar 2023 17:05:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232852AbjCTQxP (ORCPT
+        id S233256AbjCTRFY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Mar 2023 12:53:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55584 "EHLO
+        Mon, 20 Mar 2023 13:05:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232865AbjCTQww (ORCPT
+        with ESMTP id S233410AbjCTRFF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Mar 2023 12:52:52 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C27AD9EE3
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Mar 2023 09:44:41 -0700 (PDT)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32KDR1Op001514;
-        Mon, 20 Mar 2023 16:44:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=0pOxAshrO8MW+ZuVucdQMuKT5rrUjP9qJpZO2ARR2iQ=;
- b=RdRcjUXfSTQLrbCDJC7Qu+HnVNWGDmd9NfJjhhdcdrapOtxFaBHTQMPOAh1rYiXwF3dT
- AzblROigf2PAmmb0G9/xUCieoGEyFuku70o93R/EfprklYGwRWCxaiE/0fwl6a7lOY4M
- bLhoUHcG/DlOJiT5NaXsd1Y1/9Y6ALJU3D8I/lJ24s9iwxCyKlMpK1BM0iAqvJKAJvRG
- gAkbRMhLlR8UIOcHUUrifMGey2fahYJlicItaptXhspkUCpsnS7TVP6owk7RvGQoQjP6
- Djbywt7LSwgKzS7ReVxvKfRVnXSgIf1mgVCHARtwWy8+5AraYZR3woIq+zEDQ2B4XgGg Dw== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3perc38hp7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 20 Mar 2023 16:44:04 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32KGi3mA031845
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 20 Mar 2023 16:44:03 GMT
-Received: from che-siroccolnx03.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.41; Mon, 20 Mar 2023 09:44:01 -0700
-From:   Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
-        Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
-Subject: [PATCH v2 1/4] wifi: nl80211: rename NL80211_CMD_SET_BEACON to NL80211_CMD_UDPATE_AP
-Date:   Mon, 20 Mar 2023 22:13:31 +0530
-Message-ID: <20230320164334.3325886-2-quic_mkenna@quicinc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230320164334.3325886-1-quic_mkenna@quicinc.com>
-References: <20230320164334.3325886-1-quic_mkenna@quicinc.com>
+        Mon, 20 Mar 2023 13:05:05 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on20711.outbound.protection.outlook.com [IPv6:2a01:111:f400:7eab::711])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FBE22E80A;
+        Mon, 20 Mar 2023 09:59:13 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lbYH2ihsTSmIFe7WmpGemfJnEP+xGifzSU2Fimsd+FJ5U599CQuhl+OyEVhzMGkcOVy/gESyh4cYergKWT9RD2MMiiqr6AOSDt5X6VKgsC9CGV02jus8x7PXmIDqXkph8p7UcB8F2CxUtUsgEivYwl67Ze/4nMqqgRuiMasHJipf8KRI6ExQvZVY4nzexxswPoYwAEYDPDD20OGYmXGp9GRgQtespDS/wlauopbRyvf66XJTlzIHxunB1n71Myv7M4whxLMIbU0yul6vRQd9/OPfPLe4mWA2R0H4d/FA8y+faFXizSXcgUo3uw/5v0AHOIyxyI0GxH08UHJ/PIIygA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xJGKaXs5KM35c/K7WivJBL+maK8RKWUKpvckDoFP1no=;
+ b=ZmCa1+yAKXH+BUH9/3KFo59NYasdKRvYLXpUm7rgG9Y7uBjB89VxO006JXjpEY23rMyYqggSGxzTgv2/euHHwOvSdLW8QAEfp74PhH68zw9q+TgRkbW4/0xmXqMG7RxIGrl/5xEpKA3wXf/3BUO4uklL57EyBM6qcNsP7qQ0c6u+k7xq8aMr8m9Wp584v5AWLPCwD+/u4MA1lXbtrn5qaQ6C/XjKT7P2XtDblvwkcV11fJsxAS3EguRDHEmpBEkSKerBy3U8yVb0E+PYgqBsHgWcpAr0WVAwUm/xiPwMFFJacUlFShcpDDkbayJ8yEvBa4TIlllU4YFyjZ3JA13HuQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=corigine.com; dmarc=pass action=none header.from=corigine.com;
+ dkim=pass header.d=corigine.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=corigine.onmicrosoft.com; s=selector2-corigine-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xJGKaXs5KM35c/K7WivJBL+maK8RKWUKpvckDoFP1no=;
+ b=hptFlP+lIi/+nWNqfTQqi+tSTgJpIimiSpO/ipJz42OpwfCoWrTdGNeE2eQFjXL9dowd7wo/NiYjcYyLRm6E/XIVJErrbHHjvsxWBTNw2STxbWGI+nlHtOxo+k2g6P0s0USoRWTlosstaYxvewmMi6utzabgxGHGLLixfLSDUBc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=corigine.com;
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com (2603:10b6:510:78::6)
+ by PH0PR13MB5543.namprd13.prod.outlook.com (2603:10b6:510:12a::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37; Mon, 20 Mar
+ 2023 16:49:27 +0000
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c]) by PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c%2]) with mapi id 15.20.6178.037; Mon, 20 Mar 2023
+ 16:49:27 +0000
+Date:   Mon, 20 Mar 2023 17:49:08 +0100
+From:   Simon Horman <simon.horman@corigine.com>
+To:     Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Jia-Ju Bai <baijiaju@buaa.edu.cn>
+Cc:     johannes@sipsolutions.net, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: mac80211: Add NULL checks for sta->sdata
+Message-ID: <ZBiOhAJswYcAo8kv@corigine.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230320133809.2448047-1-baijiaju@buaa.edu.cn>
+ <20230320133601.2443821-1-baijiaju1990@gmail.com>
+ <20230320133644.2445321-1-baijiaju1990@gmail.com>
+ <20230320133533.2442889-1-baijiaju1990@gmail.com>
+X-ClientProxiedBy: AM4PR07CA0003.eurprd07.prod.outlook.com
+ (2603:10a6:205:1::16) To PH0PR13MB4842.namprd13.prod.outlook.com
+ (2603:10b6:510:78::6)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ui4aKfUm3lujx3wovKppe7Usf7lwyIFL
-X-Proofpoint-ORIG-GUID: ui4aKfUm3lujx3wovKppe7Usf7lwyIFL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-20_13,2023-03-20_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxscore=0
- adultscore=0 priorityscore=1501 bulkscore=0 clxscore=1015 mlxlogscore=999
- phishscore=0 suspectscore=0 lowpriorityscore=0 malwarescore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303150002 definitions=main-2303200141
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR13MB4842:EE_|PH0PR13MB5543:EE_
+X-MS-Office365-Filtering-Correlation-Id: 10baa27f-eb4b-4cbf-eff8-08db296310fb
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: T8+CnEoMaIf56dczmO/d0ou0p6/cPuJwfXGiWGubUjs1yP94c1t3uOqWipeUXvP1PMP9Jslv2JVhvw3/hSD25JNGZmxaxk30HTpWgbcl6QE0YfsaQoy9+pWLN7WfyGn1ylAriFgviXQ52Os6Hkur+oHG7d9/lW0eHNeDZBTYPoLc9usJmwrIsw6bP0nPwMyPjOT4KEV41vY5IdMLRmk5hvWWGPGqrpx9y27OxZqlaWIQ9ovG8/yEAyCfIDgUIcc3ad7/fhUneffAJmIb+RVFSOeGqvWYwPJE3aIG/L8u0KgPrar+e5c0LlvKzg383JAkfPKBwJsaEOBMdDDdcGSmBkkskD96z1WXknUj06FIs8GhfvU2gZH5fRMDzxjIq59gaM8PI2WnIflL5szT5X5YmK0e0uV8qyQEY953soFIcmNQxjCHmABtsvvrdetkbCJ6HrN0xRM+L55Ef20tMvBfCtCUNtiRn0MyvfEh6FURa3pRS6BF/o0WWdX4hRZXUFvjLKl8WKxSc8zaQKfvJE6yGha8vYNpRJjbbdwWB7lmrVEXAgvu/O93yTA22WhDaqgOpMVW85leZ3yPBY7pwbxo/SZp2jZ9HUXuXa9yEar7Nmif0MLE0vyOX1ToBil3ciAtfED/zdVHwe4M4FkOXKZy3iwfcf6czsnuYAY3NyPUHqt5nIl8KkiM3xkZFN1ispXT
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR13MB4842.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(39830400003)(136003)(366004)(396003)(376002)(346002)(451199018)(38100700002)(2906002)(2616005)(478600001)(316002)(110136005)(66476007)(186003)(66556008)(8676002)(66946007)(6506007)(83380400001)(36756003)(86362001)(6512007)(4326008)(7416002)(44832011)(41300700001)(6666004)(5660300002)(8936002)(966005)(6486002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Ij+JXBpRgs1M/smaYRoianOK8vcMBO4GUyMH0qoHiMQISme8wrru5BnFtl8w?=
+ =?us-ascii?Q?JJtK5j0uW3x2J3DAa641QAVqtQEqFJYVg6Z0s4aPr22WwzVD1dEfcvsFPsiv?=
+ =?us-ascii?Q?M5gqz5jOLvlIDmPzN4oev5crjTym3AXTlsxQNW3zWScjvoCZdIGWs2EP526F?=
+ =?us-ascii?Q?LREyCeavy6M/XeJdq+qU6bMnK4cXZlMkz+TjkZ4H5xYKwAXGKfhbcAYT3rW2?=
+ =?us-ascii?Q?/hYlJeWeF+pLae4QstqLosl0jseR+oRKJrw7QUaq51VJ8X4bb+wMmgR1izKo?=
+ =?us-ascii?Q?M1WA+odHVaKTeTy2HDyRH9qgBOg9qB/oicQjgRg/PZGBEIr1HJxiMNP8gBj5?=
+ =?us-ascii?Q?4o1xONbTrmRFqrYv8O0fy/x2b01DPZ3ocFDjJBwTBcTwt6/54PzT4Okx3anC?=
+ =?us-ascii?Q?yTlPdFSjI+WyQgtd3SXC06w2LrOVNOsb99JAacTcgZOjh+bHH7Zbri7VcHK9?=
+ =?us-ascii?Q?6xdzaoIidjOIJl8/hXu4JMfucIxxt/uWOHNeIaiy1L1Z2ACwS/vJ64HzVpcn?=
+ =?us-ascii?Q?UHCMfjw2zQFr+4+fhIiAgkfFEQUZzW9S2ozzBG5aRdlvLd7Do1yP4pEg7rCC?=
+ =?us-ascii?Q?au/iOG4e3+W1ek6YJDFF0scv5dHnE2x+1txfFn8J1dJWzGHtZnfTxO8X6Phc?=
+ =?us-ascii?Q?EbR3+a7DoNuMOcsZ8xeCB3ILyELADPxapkYDRiedrPaUHUIpV9km/7zRuUdS?=
+ =?us-ascii?Q?IFM65gEjuRgS8C4tSeYLVrRB4Hffr2SoYc7b8Af+iQ1p5RL7Vi1zuKRZO/b6?=
+ =?us-ascii?Q?6E5U2P9YprHz13ug8GB/AIaC/isLQkX7jqnJ3lc9c6rwe+ksI8gSVVnJsWeF?=
+ =?us-ascii?Q?AJADQB2Jc9MlxBcLV8r5zj/lyjfqrzzv8D2KYMQJAZ1i2hDDL215h76a05f/?=
+ =?us-ascii?Q?vLyW4Gx0LPK4trqsz6bQ9vnOyGG/IQttTVHAZV3sJtbd6T7wlemEIH5Pqhfw?=
+ =?us-ascii?Q?hVOTV5doWclcCndZm6Bp2GKWKeRRZd9xI36hdHy5PHLHGejx51z5Sa7HzjqX?=
+ =?us-ascii?Q?BLlGJQoXMg4QXbqLjJOSMWjAplF7k5HwyeDw4VAtMiXr2PwKDdHo/csppZvw?=
+ =?us-ascii?Q?aIkSfvc+MtBLNS8DS8J4nBcqO3RhHV0uSdWJ0hQOQ5u/FkmXBs1Aq9TWwE/o?=
+ =?us-ascii?Q?oQtJPMlHUA7c1A4dYexc0Q/+mmlmSW6tWErDbLQl39ss5osEuq0sIQgDHMNc?=
+ =?us-ascii?Q?Tx+wGlUbw236XU8ymspwfAfhhFlVNcQSwKwS3TnuHqi6jW75IAkh49kp81Bf?=
+ =?us-ascii?Q?xnlIrm9mL2gugIkM/oAhqAQIRGdkElS8x81UjKL0lXzVNPzlJ0PaIMRSLXgQ?=
+ =?us-ascii?Q?Zgd77t81pMPuf+2sPA/yFS4oNfK1NOtcghfEKFJww2HQu64U8/WTBNChJbEl?=
+ =?us-ascii?Q?IId/7k2iyrdrHVDgcT+kxUQq/+fUDbWF3va8VaXQUYHg86lV3M1sFvKHbdrj?=
+ =?us-ascii?Q?ppm9wS+UubMgrnd/MXH/6Ohns5FjSpwyw9OIimQtJcwZgOho2z659gf9+rJ2?=
+ =?us-ascii?Q?5rPw39gPPpDav4gtRajsei1Fci2s9X4BKZnV0rFEaIR7eCd05UxJ3BuFkC5d?=
+ =?us-ascii?Q?yBWfQ+J4eccPn0FoZ9GCSG+6Yon1ljgg/IHvBDxZYe7oDRZp37l+5Jrh1p0p?=
+ =?us-ascii?Q?V/KKj3iFdFIEKjupinNwgKdA6Dq5GohD5qrdlIu9doVV2tly96Xz36FIsk50?=
+ =?us-ascii?Q?N0kzow=3D=3D?=
+X-OriginatorOrg: corigine.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 10baa27f-eb4b-4cbf-eff8-08db296310fb
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR13MB4842.namprd13.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2023 16:49:27.3066
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: fe128f2c-073b-4c20-818e-7246a585940c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: /taM2GhzdJp6e6ZWebV5r9cy/XrjT+SBx63gQv+Rt3XbImI1VpklU+NKH1yR4Y1V+0P+f6Pa34Sf50kICNp3jq5FjxBZakud67AqJCumESA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR13MB5543
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+On Mon, Mar 20, 2023 at 09:35:33PM +0800, Jia-Ju Bai wrote:
+> In a previous commit 69403bad97aa, sta->sdata can be NULL, and thus it
+> should be checked before being used.
 
-Currently NL80211_CMD_SET_BEACON is limited to set only few AP
-parameters. Renaming NL80211_CMD_SET_BEACON to NL80211_UPDATE_AP
-would help users to configure more AP parameters which can vary
-at the runtime of the BSS.
+Please run checkpatch on this patch, and correct the commit description
+style.
 
-Replacing the argument 'struct cfg80211_beacon_data' parameter
-with 'struct cfg80211_ap_settings' in the callback function for
-this command, which has more information about AP parameters
-along with the struct cfg80211_beacon_data.
+./scripts/checkpatch.pl -g HEAD
+ERROR: Please use git commit description style 'commit <12+ chars of sha1> ("<title line>")' - ie: 'commit 69403bad97aa ("wifi: mac80211: sdata can be NULL during AMPDU start")'
+#6:
+In a previous commit 69403bad97aa, sta->sdata can be NULL, and thus it
 
-Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
-Signed-off-by: Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c    | 11 +--
- drivers/net/wireless/ath/wil6210/cfg80211.c   | 14 ++--
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 11 +--
- .../net/wireless/marvell/mwifiex/cfg80211.c   | 15 ++--
- .../wireless/microchip/wilc1000/cfg80211.c    | 11 +--
- .../net/wireless/quantenna/qtnfmac/cfg80211.c | 11 +--
- .../staging/rtl8723bs/os_dep/ioctl_cfg80211.c | 12 +++-
- include/net/cfg80211.h                        | 36 ++++++++--
- include/uapi/linux/nl80211.h                  | 19 ++---
- net/mac80211/cfg.c                            | 20 +++---
- net/wireless/nl80211.c                        | 21 +++---
- net/wireless/rdev-ops.h                       | 10 +--
- net/wireless/trace.h                          | 70 ++++++++++---------
- 13 files changed, 165 insertions(+), 96 deletions(-)
+> 
+> However, in the same call stack, sta->sdata is also used in the
+> following functions:
+> 
+> ieee80211_ba_session_work()
+>   ___ieee80211_stop_rx_ba_session(sta)
+>     ht_dbg(sta->sdata, ...); -> No check
+>     sdata_info(sta->sdata, ...); -> No check
+>     ieee80211_send_delba(sta->sdata, ...) -> No check
+>   ___ieee80211_start_rx_ba_session(sta)
+>     ht_dbg(sta->sdata, ...); -> No check
+>     ht_dbg_ratelimited(sta->sdata, ...); -> No check
+>   ieee80211_tx_ba_session_handle_start(sta)
+>     sdata = sta->sdata; if (!sdata) -> Add check by previous commit
+>   ___ieee80211_stop_tx_ba_session(sdata)
+>     ht_dbg(sta->sdata, ...); -> No check
+>   ieee80211_start_tx_ba_cb(sdata)
+>     sdata = sta->sdata; local = sdata->local -> No check
+>   ieee80211_stop_tx_ba_cb(sdata)
+>     ht_dbg(sta->sdata, ...); -> No check
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 0c2b8b1a10d5..126c0c156e77 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2953,8 +2953,8 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
--static int ath6kl_change_beacon(struct wiphy *wiphy, struct net_device *dev,
--				struct cfg80211_beacon_data *beacon)
-+static int ath6kl_update_ap(struct wiphy *wiphy, struct net_device *dev,
-+			    struct cfg80211_ap_update *params)
- {
- 	struct ath6kl_vif *vif = netdev_priv(dev);
- 
-@@ -2964,7 +2964,10 @@ static int ath6kl_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 	if (vif->next_mode != AP_NETWORK)
- 		return -EOPNOTSUPP;
- 
--	return ath6kl_set_ies(vif, beacon);
-+	if (!test_bit(BEACON_VALID, params->valid))
-+		return 0;
-+
-+	return ath6kl_set_ies(vif, &params->settings.beacon);
- }
- 
- static int ath6kl_stop_ap(struct wiphy *wiphy, struct net_device *dev,
-@@ -3456,7 +3459,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.resume = __ath6kl_cfg80211_resume,
- #endif
- 	.start_ap = ath6kl_start_ap,
--	.change_beacon = ath6kl_change_beacon,
-+	.update_ap = ath6kl_update_ap,
- 	.stop_ap = ath6kl_stop_ap,
- 	.del_station = ath6kl_del_station,
- 	.change_station = ath6kl_change_station,
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 40f9a7ef8980..01838d7ccfe6 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -2080,17 +2080,21 @@ void wil_cfg80211_ap_recovery(struct wil6210_priv *wil)
- 	}
- }
- 
--static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
--				      struct net_device *ndev,
--				      struct cfg80211_beacon_data *bcon)
-+static int wil_cfg80211_update_ap(struct wiphy *wiphy,
-+				  struct net_device *ndev,
-+				  struct cfg80211_ap_update *params)
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 	struct wireless_dev *wdev = ndev->ieee80211_ptr;
- 	struct wil6210_vif *vif = ndev_to_vif(ndev);
-+	struct cfg80211_beacon_data *bcon = &params->settings.beacon;
- 	int rc;
- 	u32 privacy = 0;
- 
--	wil_dbg_misc(wil, "change_beacon, mid=%d\n", vif->mid);
-+	if (!test_bit(BEACON_VALID, params->valid))
-+		return 0;
-+
-+	wil_dbg_misc(wil, "update_ap, mid=%d\n", vif->mid);
- 	wil_print_bcon_data(bcon);
- 
- 	if (bcon->tail &&
-@@ -2654,7 +2658,7 @@ static const struct cfg80211_ops wil_cfg80211_ops = {
- 	.del_key = wil_cfg80211_del_key,
- 	.set_default_key = wil_cfg80211_set_default_key,
- 	/* AP mode */
--	.change_beacon = wil_cfg80211_change_beacon,
-+	.update_ap = wil_cfg80211_update_ap,
- 	.start_ap = wil_cfg80211_start_ap,
- 	.stop_ap = wil_cfg80211_stop_ap,
- 	.add_station = wil_cfg80211_add_station,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index e0a70a671550..6375f188a879 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5410,14 +5410,17 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev,
- }
- 
- static s32
--brcmf_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *ndev,
--			     struct cfg80211_beacon_data *info)
-+brcmf_cfg80211_update_ap(struct wiphy *wiphy, struct net_device *ndev,
-+			 struct cfg80211_ap_update *params)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 
-+	if (!test_bit(BEACON_VALID, params->valid))
-+		return 0;
-+
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	return brcmf_config_ap_mgmt_ie(ifp->vif, info);
-+	return brcmf_config_ap_mgmt_ie(ifp->vif, &params->settings.beacon);
- }
- 
- static int
-@@ -5945,7 +5948,7 @@ static struct cfg80211_ops brcmf_cfg80211_ops = {
- 	.flush_pmksa = brcmf_cfg80211_flush_pmksa,
- 	.start_ap = brcmf_cfg80211_start_ap,
- 	.stop_ap = brcmf_cfg80211_stop_ap,
--	.change_beacon = brcmf_cfg80211_change_beacon,
-+	.update_ap = brcmf_cfg80211_update_ap,
- 	.del_station = brcmf_cfg80211_del_station,
- 	.change_station = brcmf_cfg80211_change_station,
- 	.sched_scan_start = brcmf_cfg80211_sched_scan_start,
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index bcd564dc3554..1d70c5c5ee6a 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1830,12 +1830,12 @@ static int mwifiex_cfg80211_set_cqm_rssi_config(struct wiphy *wiphy,
- 	return 0;
- }
- 
--/* cfg80211 operation handler for change_beacon.
-+/* cfg80211 operation handler for update_ap.
-  * Function retrieves and sets modified management IEs to FW.
-  */
--static int mwifiex_cfg80211_change_beacon(struct wiphy *wiphy,
--					  struct net_device *dev,
--					  struct cfg80211_beacon_data *data)
-+static int mwifiex_cfg80211_update_ap(struct wiphy *wiphy,
-+				      struct net_device *dev,
-+				      struct cfg80211_ap_update *params)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 	struct mwifiex_adapter *adapter = priv->adapter;
-@@ -1854,7 +1854,10 @@ static int mwifiex_cfg80211_change_beacon(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
--	if (mwifiex_set_mgmt_ies(priv, data)) {
-+	if (!test_bit(BEACON_VALID, params->valid))
-+		return 0;
-+
-+	if (mwifiex_set_mgmt_ies(priv, &params->settings.beacon)) {
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "%s: setting mgmt ies failed\n", __func__);
- 		return -EFAULT;
-@@ -4230,7 +4233,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.set_bitrate_mask = mwifiex_cfg80211_set_bitrate_mask,
- 	.start_ap = mwifiex_cfg80211_start_ap,
- 	.stop_ap = mwifiex_cfg80211_stop_ap,
--	.change_beacon = mwifiex_cfg80211_change_beacon,
-+	.update_ap = mwifiex_cfg80211_update_ap,
- 	.set_cqm_rssi_config = mwifiex_cfg80211_set_cqm_rssi_config,
- 	.set_antenna = mwifiex_cfg80211_set_antenna,
- 	.get_antenna = mwifiex_cfg80211_get_antenna,
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index b545d93c6e37..c475e874c200 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -1440,12 +1440,15 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 				   settings->dtim_period, &settings->beacon);
- }
- 
--static int change_beacon(struct wiphy *wiphy, struct net_device *dev,
--			 struct cfg80211_beacon_data *beacon)
-+static int update_ap(struct wiphy *wiphy, struct net_device *dev,
-+		     struct cfg80211_ap_update *params)
- {
- 	struct wilc_vif *vif = netdev_priv(dev);
- 
--	return wilc_add_beacon(vif, 0, 0, beacon);
-+	if (!test_bit(BEACON_VALID, params->valid))
-+		return 0;
-+
-+	return wilc_add_beacon(vif, 0, 0, &params->settings.beacon);
- }
- 
- static int stop_ap(struct wiphy *wiphy, struct net_device *dev,
-@@ -1724,7 +1727,7 @@ static const struct cfg80211_ops wilc_cfg80211_ops = {
- 	.change_virtual_intf = change_virtual_intf,
- 
- 	.start_ap = start_ap,
--	.change_beacon = change_beacon,
-+	.update_ap = update_ap,
- 	.stop_ap = stop_ap,
- 	.add_station = add_station,
- 	.del_station = del_station,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 73e6f9408b51..ad2140849c12 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -330,12 +330,15 @@ static int qtnf_mgmt_set_appie(struct qtnf_vif *vif,
- 	return ret;
- }
- 
--static int qtnf_change_beacon(struct wiphy *wiphy, struct net_device *dev,
--			      struct cfg80211_beacon_data *info)
-+static int qtnf_update_ap(struct wiphy *wiphy, struct net_device *dev,
-+			  struct cfg80211_ap_update *params)
- {
- 	struct qtnf_vif *vif = qtnf_netdev_get_priv(dev);
- 
--	return qtnf_mgmt_set_appie(vif, info);
-+	if (!test_bit(BEACON_VALID, params->valid))
-+		return 0;
-+
-+	return qtnf_mgmt_set_appie(vif, &params->settings.beacon);
- }
- 
- static int qtnf_start_ap(struct wiphy *wiphy, struct net_device *dev,
-@@ -1003,7 +1006,7 @@ static struct cfg80211_ops qtn_cfg80211_ops = {
- 	.change_virtual_intf	= qtnf_change_virtual_intf,
- 	.del_virtual_intf	= qtnf_del_virtual_intf,
- 	.start_ap		= qtnf_start_ap,
--	.change_beacon		= qtnf_change_beacon,
-+	.update_ap              = qtnf_update_ap,
- 	.stop_ap		= qtnf_stop_ap,
- 	.set_wiphy_params	= qtnf_set_wiphy_params,
- 	.update_mgmt_frame_registrations =
-diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-index 54004f846cf0..0b76063bd399 100644
---- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-+++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
-@@ -2350,10 +2350,16 @@ static int cfg80211_rtw_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	return ret;
- }
- 
--static int cfg80211_rtw_change_beacon(struct wiphy *wiphy, struct net_device *ndev,
--		struct cfg80211_beacon_data *info)
-+static int cfg80211_rtw_update_ap(struct wiphy *wiphy,
-+				  struct net_device *ndev,
-+				  struct cfg80211_ap_update *params)
-+
- {
- 	struct adapter *adapter = rtw_netdev_priv(ndev);
-+	struct cfg80211_beacon_data *info = &params->settings.beacon;
-+
-+	if (!test_bit(BEACON_VALID, params->valid))
-+		return 0;
- 
- 	return rtw_add_beacon(adapter, info->head, info->head_len, info->tail, info->tail_len);
- }
-@@ -2759,7 +2765,7 @@ static struct cfg80211_ops rtw_cfg80211_ops = {
- 	.del_virtual_intf = cfg80211_rtw_del_virtual_intf,
- 
- 	.start_ap = cfg80211_rtw_start_ap,
--	.change_beacon = cfg80211_rtw_change_beacon,
-+	.update_ap = cfg80211_rtw_update_ap,
- 	.stop_ap = cfg80211_rtw_stop_ap,
- 
- 	.add_station = cfg80211_rtw_add_station,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7cebba1c4135..0d62b5853929 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1368,6 +1368,34 @@ struct cfg80211_ap_settings {
- 	u16 punct_bitmap;
- };
- 
-+/**
-+ * enum cfg80211_ap_settings_valid - struct cfg80211_ap_settings
-+validation flags
-+ *
-+ * These flags are used with the nl80211_update_ap() callback
-+ * to indicate the valid settings in struct cfg80211_ap_settings.
-+ *
-+ * @BEACON_VALID: beacon setting is valid.
-+ */
-+enum cfg80211_ap_settings_valid {
-+	BEACON_VALID,
-+	LAST_VALID,
-+};
-+
-+/**
-+ * struct cfg80211_ap_update - updated AP configuration
-+ *
-+ * Used to update the AP parameters in run time.
-+ *
-+ * @changed: Indicate the valid parameters in struct
-+cfg80211_ap_settings
-+ * @settings: updated AP settings
-+ */
-+struct cfg80211_ap_update {
-+	DECLARE_BITMAP(valid, LAST_VALID);
-+	struct cfg80211_ap_settings settings;
-+};
-+
- /**
-  * struct cfg80211_csa_settings - channel switch settings
-  *
-@@ -4024,8 +4052,8 @@ struct mgmt_frame_regs {
-  * @set_rekey_data: give the data necessary for GTK rekeying to the driver
-  *
-  * @start_ap: Start acting in AP mode defined by the parameters.
-- * @change_beacon: Change the beacon parameters for an access point mode
-- *	interface. This should reject the call when AP mode wasn't started.
-+ * @update_ap: Update parameters for an access point mode interface.
-+ * This should reject the call when AP mode wasn't started.
-  * @stop_ap: Stop being an AP, including stopping beaconing.
-  *
-  * @add_station: Add a new station.
-@@ -4392,8 +4420,8 @@ struct cfg80211_ops {
- 
- 	int	(*start_ap)(struct wiphy *wiphy, struct net_device *dev,
- 			    struct cfg80211_ap_settings *settings);
--	int	(*change_beacon)(struct wiphy *wiphy, struct net_device *dev,
--				 struct cfg80211_beacon_data *info);
-+	int     (*update_ap)(struct wiphy *wiphy, struct net_device *dev,
-+			     struct cfg80211_ap_update *params);
- 	int	(*stop_ap)(struct wiphy *wiphy, struct net_device *dev,
- 			   unsigned int link_id);
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 9a0ac0363f1f..e7b7d8031582 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -395,13 +395,15 @@
-  *	%NL80211_ATTR_MLO_LINK_ID.
-  *
-  * @NL80211_CMD_GET_BEACON: (not used)
-- * @NL80211_CMD_SET_BEACON: change the beacon on an access point interface
-+ * @NL80211_CMD_UPDATE_AP: Update AP parameters which can vary at the
-+ *	runtime of BSS. change the beacon on an access point interface
-  *	using the %NL80211_ATTR_BEACON_HEAD and %NL80211_ATTR_BEACON_TAIL
-  *	attributes. For drivers that generate the beacon and probe responses
-- *	internally, the following attributes must be provided: %NL80211_ATTR_IE,
-- *	%NL80211_ATTR_IE_PROBE_RESP and %NL80211_ATTR_IE_ASSOC_RESP.
-+ *	internally, the following attributes must be provided for the
-+ *	beacon update: %NL80211_ATTR_IE, %NL80211_ATTR_IE_PROBE_RESP and
-+ *	%NL80211_ATTR_IE_ASSOC_RESP.
-  * @NL80211_CMD_START_AP: Start AP operation on an AP interface, parameters
-- *	are like for %NL80211_CMD_SET_BEACON, and additionally parameters that
-+ *	are like for %NL80211_CMD_UPDATE_AP, and additionally parameters that
-  *	do not change are used, these include %NL80211_ATTR_BEACON_INTERVAL,
-  *	%NL80211_ATTR_DTIM_PERIOD, %NL80211_ATTR_SSID,
-  *	%NL80211_ATTR_HIDDEN_SSID, %NL80211_ATTR_CIPHERS_PAIRWISE,
-@@ -1332,7 +1334,8 @@ enum nl80211_commands {
- 	NL80211_CMD_DEL_KEY,
- 
- 	NL80211_CMD_GET_BEACON,
--	NL80211_CMD_SET_BEACON,
-+	NL80211_CMD_UPDATE_AP,
-+	NL80211_CMD_SET_BEACON = NL80211_CMD_UPDATE_AP,
- 	NL80211_CMD_START_AP,
- 	NL80211_CMD_NEW_BEACON = NL80211_CMD_START_AP,
- 	NL80211_CMD_STOP_AP,
-@@ -2050,12 +2053,12 @@ enum nl80211_commands {
-  *	&enum nl80211_hidden_ssid, represented as a u32
-  *
-  * @NL80211_ATTR_IE_PROBE_RESP: Information element(s) for Probe Response frame.
-- *	This is used with %NL80211_CMD_NEW_BEACON and %NL80211_CMD_SET_BEACON to
-+ *	This is used with %NL80211_CMD_NEW_BEACON and %NL80211_CMD_UPDATE_AP to
-  *	provide extra IEs (e.g., WPS/P2P IE) into Probe Response frames when the
-  *	driver (or firmware) replies to Probe Request frames.
-  * @NL80211_ATTR_IE_ASSOC_RESP: Information element(s) for (Re)Association
-  *	Response frames. This is used with %NL80211_CMD_NEW_BEACON and
-- *	%NL80211_CMD_SET_BEACON to provide extra IEs (e.g., WPS/P2P IE) into
-+ *	%NL80211_CMD_UPDATE_AP to provide extra IEs (e.g., WPS/P2P IE) into
-  *	(Re)Association Response frames when the driver (or firmware) replies to
-  *	(Re)Association Request frames.
-  *
-@@ -2581,7 +2584,7 @@ enum nl80211_commands {
-  *	only if %NL80211_STA_FLAG_WME is set.
-  *
-  * @NL80211_ATTR_FTM_RESPONDER: nested attribute which user-space can include
-- *	in %NL80211_CMD_START_AP or %NL80211_CMD_SET_BEACON for fine timing
-+ *	in %NL80211_CMD_START_AP or %NL80211_CMD_UPDATE_AP for fine timing
-  *	measurement (FTM) responder functionality and containing parameters as
-  *	possible, see &enum nl80211_ftm_responder_attr
-  *
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 760ad934f9e1..657be3d4dfcd 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1460,8 +1460,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	return err;
- }
- 
--static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
--				   struct cfg80211_beacon_data *params)
-+static int ieee80211_update_ap(struct wiphy *wiphy, struct net_device *dev,
-+			       struct cfg80211_ap_update *params)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_link_data *link;
-@@ -1471,7 +1471,8 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 
- 	sdata_assert_lock(sdata);
- 
--	link = sdata_dereference(sdata->link[params->link_id], sdata);
-+	link = sdata_dereference(sdata->link[params->settings.beacon.link_id],
-+				 sdata);
- 	if (!link)
- 		return -ENOLINK;
- 
-@@ -1487,13 +1488,16 @@ static int ieee80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
- 	if (!old)
- 		return -ENOENT;
- 
--	err = ieee80211_assign_beacon(sdata, link, params, NULL, NULL);
-+	err = ieee80211_assign_beacon(sdata, link, &params->settings.beacon,
-+				      NULL, NULL);
- 	if (err < 0)
- 		return err;
- 
--	if (params->he_bss_color_valid &&
--	    params->he_bss_color.enabled != link_conf->he_bss_color.enabled) {
--		link_conf->he_bss_color.enabled = params->he_bss_color.enabled;
-+	if (params->settings.beacon.he_bss_color_valid &&
-+	    params->settings.beacon.he_bss_color.enabled !=
-+	    link_conf->he_bss_color.enabled) {
-+		link_conf->he_bss_color.enabled =
-+			params->settings.beacon.he_bss_color.enabled;
- 		err |= BSS_CHANGED_HE_BSS_COLOR;
- 	}
- 
-@@ -4960,7 +4964,7 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.set_default_mgmt_key = ieee80211_config_default_mgmt_key,
- 	.set_default_beacon_key = ieee80211_config_default_beacon_key,
- 	.start_ap = ieee80211_start_ap,
--	.change_beacon = ieee80211_change_beacon,
-+	.update_ap = ieee80211_update_ap,
- 	.stop_ap = ieee80211_stop_ap,
- 	.add_station = ieee80211_add_station,
- 	.del_station = ieee80211_del_station,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0a31b1d2845d..a45bda39d8ab 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6142,35 +6142,40 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
--static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
-+static int nl80211_update_ap(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	unsigned int link_id = nl80211_link_id(info->attrs);
- 	struct net_device *dev = info->user_ptr[1];
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	struct cfg80211_beacon_data params;
-+	struct cfg80211_ap_update params;
- 	int err;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
- 		return -EOPNOTSUPP;
- 
--	if (!rdev->ops->change_beacon)
-+	if (!rdev->ops->update_ap)
- 		return -EOPNOTSUPP;
- 
- 	if (!wdev->links[link_id].ap.beacon_interval)
- 		return -EINVAL;
- 
--	err = nl80211_parse_beacon(rdev, info->attrs, &params);
-+	memset(&params, 0, sizeof(params));
-+
-+	err = nl80211_parse_beacon(rdev, info->attrs,
-+				   &params.settings.beacon);
- 	if (err)
- 		goto out;
- 
-+	set_bit(BEACON_VALID, params.valid);
-+
- 	wdev_lock(wdev);
--	err = rdev_change_beacon(rdev, dev, &params);
-+	err = rdev_update_ap(rdev, dev, &params);
- 	wdev_unlock(wdev);
- 
- out:
--	kfree(params.mbssid_ies);
-+	kfree(params.settings.beacon.mbssid_ies);
- 	return err;
- }
- 
-@@ -16619,10 +16624,10 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
- 	},
- 	{
--		.cmd = NL80211_CMD_SET_BEACON,
-+		.cmd = NL80211_CMD_UPDATE_AP,
- 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
- 		.flags = GENL_UNS_ADMIN_PERM,
--		.doit = nl80211_set_beacon,
-+		.doit = nl80211_update_ap,
- 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
- 					 NL80211_FLAG_MLO_VALID_LINK_ID),
- 	},
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 2e497cf26ef2..ac6bdf3434a1 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -171,13 +171,13 @@ static inline int rdev_start_ap(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
--static inline int rdev_change_beacon(struct cfg80211_registered_device *rdev,
--				     struct net_device *dev,
--				     struct cfg80211_beacon_data *info)
-+static inline int rdev_update_ap(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev,
-+				 struct cfg80211_ap_update *info)
- {
- 	int ret;
--	trace_rdev_change_beacon(&rdev->wiphy, dev, info);
--	ret = rdev->ops->change_beacon(&rdev->wiphy, dev, info);
-+	trace_rdev_update_ap(&rdev->wiphy, dev, &info->settings);
-+	ret = rdev->ops->update_ap(&rdev->wiphy, dev, info);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 716a1fa70069..34f517ab2068 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -613,54 +613,58 @@ TRACE_EVENT(rdev_start_ap,
- 		  __entry->inactivity_timeout, __entry->link_id)
- );
- 
--TRACE_EVENT(rdev_change_beacon,
--	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
--		 struct cfg80211_beacon_data *info),
--	TP_ARGS(wiphy, netdev, info),
--	TP_STRUCT__entry(
-+TRACE_EVENT(rdev_update_ap,
-+	    TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
-+		     struct cfg80211_ap_settings *info),
-+	    TP_ARGS(wiphy, netdev, info),
-+	    TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		NETDEV_ENTRY
- 		__field(int, link_id)
--		__dynamic_array(u8, head, info ? info->head_len : 0)
--		__dynamic_array(u8, tail, info ? info->tail_len : 0)
--		__dynamic_array(u8, beacon_ies, info ? info->beacon_ies_len : 0)
-+		__dynamic_array(u8, head, info ? info->beacon.head_len : 0)
-+		__dynamic_array(u8, tail, info ? info->beacon.tail_len : 0)
-+		__dynamic_array(u8, beacon_ies,
-+				info ? info->beacon.beacon_ies_len : 0)
- 		__dynamic_array(u8, proberesp_ies,
--				info ? info->proberesp_ies_len : 0)
-+				info ? info->beacon.proberesp_ies_len : 0)
- 		__dynamic_array(u8, assocresp_ies,
--				info ? info->assocresp_ies_len : 0)
--		__dynamic_array(u8, probe_resp, info ? info->probe_resp_len : 0)
--	),
--	TP_fast_assign(
-+				info ? info->beacon.assocresp_ies_len : 0)
-+		__dynamic_array(u8, probe_resp,
-+				info ? info->beacon.probe_resp_len : 0)
-+	    ),
-+	    TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		NETDEV_ASSIGN;
- 		if (info) {
--			__entry->link_id = info->link_id;
--			if (info->head)
--				memcpy(__get_dynamic_array(head), info->head,
--				       info->head_len);
--			if (info->tail)
--				memcpy(__get_dynamic_array(tail), info->tail,
--				       info->tail_len);
--			if (info->beacon_ies)
-+			__entry->link_id = info->beacon.link_id;
-+			if (info->beacon.head)
-+				memcpy(__get_dynamic_array(head), info->beacon.head,
-+				       info->beacon.head_len);
-+			if (info->beacon.tail)
-+				memcpy(__get_dynamic_array(tail), info->beacon.tail,
-+				       info->beacon.tail_len);
-+			if (info->beacon.beacon_ies)
- 				memcpy(__get_dynamic_array(beacon_ies),
--				       info->beacon_ies, info->beacon_ies_len);
--			if (info->proberesp_ies)
-+				       info->beacon.beacon_ies,
-+				       info->beacon.beacon_ies_len);
-+			if (info->beacon.proberesp_ies)
- 				memcpy(__get_dynamic_array(proberesp_ies),
--				       info->proberesp_ies,
--				       info->proberesp_ies_len);
--			if (info->assocresp_ies)
-+				       info->beacon.proberesp_ies,
-+				       info->beacon.proberesp_ies_len);
-+			if (info->beacon.assocresp_ies)
- 				memcpy(__get_dynamic_array(assocresp_ies),
--				       info->assocresp_ies,
--				       info->assocresp_ies_len);
--			if (info->probe_resp)
-+				       info->beacon.assocresp_ies,
-+				       info->beacon.assocresp_ies_len);
-+			if (info->beacon.probe_resp)
- 				memcpy(__get_dynamic_array(probe_resp),
--				       info->probe_resp, info->probe_resp_len);
-+				       info->beacon.probe_resp,
-+				       info->beacon.probe_resp_len);
- 		} else {
- 			__entry->link_id = -1;
- 		}
--	),
--	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", link_id:%d",
--		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->link_id)
-+	    ),
-+	    TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", link_id:%d",
-+		      WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->link_id)
- );
- 
- TRACE_EVENT(rdev_stop_ap,
--- 
-2.25.1
+I wonder if it would be better to teach ht_* do do nothing
+if the first argument is NULL.
 
+Also, are these theoretical bugs?
+Or something that has been observed?
+And has a reproducer?
+
+> Thus, to avoid possible null-pointer dereferences, the related checks
+> should be added.
+> 
+> These results are reported by a static tool designed by myself.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> Reported-by: TOTE Robot <baijiaju@buaa.edu.cn>
+
+I see 4 copies of this patch in a few minutes.
+As per the FAQ [1], please leave at least 24h between posts of a patch.
+
+[1] https://www.kernel.org/doc/html/latest/process/maintainer-netdev.html
