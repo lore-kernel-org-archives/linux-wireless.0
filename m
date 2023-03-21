@@ -2,278 +2,87 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15FABC761A6
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Mar 2023 09:37:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD9F4C6FD1D
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Mar 2023 09:38:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230200AbjCUJhr (ORCPT
+        id S229668AbjCUJie (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Mar 2023 05:37:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41136 "EHLO
+        Tue, 21 Mar 2023 05:38:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230214AbjCUJhk (ORCPT
+        with ESMTP id S229675AbjCUJid (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Mar 2023 05:37:40 -0400
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [20.232.28.96])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3713F2FCCF;
-        Tue, 21 Mar 2023 02:37:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=buaa.edu.cn; s=buaa; h=Received:From:To:Cc:Subject:Date:
-        Message-Id:MIME-Version:Content-Transfer-Encoding; bh=VxlKtmtI4M
-        Yzuv9XChprrpz83EpEpy3HSQHqnASaJn4=; b=qzVvjmsDwzkpb3d4pcXWljl8Mh
-        0AskS7s6LnUZN5Vbt1ncVINyXDAEUBw8OOL3s4m+XlroFNPilAAJrhHQ5fmIXOFm
-        /CSe5eWIOWrdh78SvklgpuHTE5bLYHpKLPoaw3GImuvAG9vrSF/37663HwAWvPUa
-        dUxV/cNaq/3646qrw=
-Received: from oslab.. (unknown [10.130.159.144])
-        by coremail-app1 (Coremail) with SMTP id OCz+CgBXCJXBehlk1WW4Ag--.39745S4;
-        Tue, 21 Mar 2023 17:37:05 +0800 (CST)
-From:   Jia-Ju Bai <baijiaju@buaa.edu.cn>
-To:     johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        simon.horman@corigine.com
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju@buaa.edu.cn>
-Subject: [PATCH v2] net: mac80211: Add NULL checks for sta->sdata
-Date:   Tue, 21 Mar 2023 17:31:22 +0800
-Message-Id: <20230321093122.2652111-1-baijiaju@buaa.edu.cn>
-X-Mailer: git-send-email 2.34.1
+        Tue, 21 Mar 2023 05:38:33 -0400
+Received: from mail-0301.mail-europe.com (mail-0301.mail-europe.com [188.165.51.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EF4E19D
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Mar 2023 02:38:24 -0700 (PDT)
+Date:   Tue, 21 Mar 2023 09:38:04 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail3; t=1679391499; x=1679650699;
+        bh=cGs/2ax0jo6aH+q0d6bG0F/mUvzV+W2Tzjt7cOKzfH0=;
+        h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+         Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+        b=tZ9dIQjJm9Ys6qwH3rXIMuV9dhfP7i5XfKreTvBK+ZB4soY6GKCvEJNK68AJrW8Ev
+         PgPU+McAL4ZypgNHYrHw84UhKQyRNnp/0vwFYj/b62Bv6nGyTiLgu1eQI6DXHw/i3+
+         gA0Yrn8j2ISK3mKU1/S0Zh+ZtLbtphvCB1Z5nGkZWxBLDH7Rd1V6/o8Atdo8bRoE2o
+         y8vMMPkTPyoJka9kdkg8I1JsZO2cFiftaAz+N0TuAxp+PIOBkqqtHmRZg+smvCWTHR
+         Mj4uMuMeoOA1iWAFS8L8ix2fRVOupgEOp5J4tFs1HDMDwicEjOjyP/7ZPCxW9+b8lM
+         TVYavwtTm/UqQ==
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Turritopsis Dohrnii Teo En Ming <teo.en.ming@protonmail.com>
+Cc:     "ceo@teo-en-ming-corp.com" <ceo@teo-en-ming-corp.com>
+Subject: [UPDATE 1] My TP-Link EX510 AX3000 Dual-Band Gigabit Wi-Fi 6 Router has a paper notice on GNU General Public License
+Message-ID: <mOgCviHEICGnhcs-E4-bjujNqa-zCiAgIi5y0m52zJVaibD44ThQI3p4Minav8Tn1ENtVQt18DONTovuxdUJk6O68q0QRNIUwD582gRwxns=@protonmail.com>
+Feedback-ID: 39510961:user:proton
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: OCz+CgBXCJXBehlk1WW4Ag--.39745S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxtF4fZw4rZry7KFWrur1Dtrb_yoW3GFyxpr
-        WrGw1jqF4UJa4xZrn3Jr1F93yF9r10gF48Cr1fC3W8u3ZY9wnYkr1v9ry8ZF9YyryxJw1Y
-        qF4Du398Ca1DC37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU921xkIjI8I6I8E6xAIw20EY4v20xvaj40_JFC_Wr1l1IIY67AE
-        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
-        IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2
-        z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcV
-        Aq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y
-        6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64
-        vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7MxkIecxE
-        wVCm-wCF04k20xvY0x0EwIxGrwCF04k20xvE74AGY7Cv6cx26F1DJr1UJwCFx2IqxVCFs4
-        IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
-        MI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
-        WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-        6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-        BIdaVFxhVjvjDU0xZFpf9x0JUp6wZUUUUU=
-X-CM-SenderInfo: yrruji46exttoohg3hdfq/
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In a previous commit 69403bad97aa ("wifi: mac80211: sdata can be NULL
-during AMPDU start"), sta->sdata can be NULL, and thus it should be 
-checked before being used.
+Subject: [UPDATE 1] My TP-Link EX510 AX3000 Dual-Band Gigabit Wi-Fi 6 Route=
+r has a paper notice on GNU General Public License
 
-However, in the same call stack, sta->sdata is also used in the
-following functions:
+Good day from Singapore,
 
-ieee80211_ba_session_work()
-  ___ieee80211_stop_rx_ba_session(sta)
-    ht_dbg(sta->sdata, ...); -> No check
-    sdata_info(sta->sdata, ...); -> No check
-    ieee80211_send_delba(sta->sdata, ...) -> No check
-  ___ieee80211_start_rx_ba_session(sta)
-    ht_dbg(sta->sdata, ...); -> No check
-    ht_dbg_ratelimited(sta->sdata, ...); -> No check
-  ieee80211_tx_ba_session_handle_start(sta)
-    sdata = sta->sdata; if (!sdata) -> Add check by previous commit
-  ___ieee80211_stop_tx_ba_session(sdata)
-    ht_dbg(sta->sdata, ...); -> No check
-  ieee80211_start_tx_ba_cb(sdata)
-    sdata = sta->sdata; local = sdata->local -> No check
-  ieee80211_stop_tx_ba_cb(sdata)
-    ht_dbg(sta->sdata, ...); -> No check
+I have terminated my M1 ISP fiber home broadband with effect from 11 Mar 20=
+23 Saturday because I need to pay about SGD$42 per month. My M1 fiber broad=
+band contract ends on 11 Mar 2023.
 
-Thus, to avoid possible null-pointer dereferences, the related checks
-should be added.
+Instead I have subscribed to Infocomm Media Development Authority (IMDA) Ho=
+me Access program. This program is for EXTREMELY POOR FAMILIES in Singapore=
+ who are living in HDB PUBLIC RENTAL HOUSING PROGRAM. People who live in HD=
+B Public Rental Flats (like myself) have very little money in their bank ac=
+counts and cannot afford to buy even the smallest HDB BTO 2-room apartment =
+in Singapore. Because even the monies in our Central Provident Fund (CPF) a=
+ccounts are mediocre/super low.
 
-These bugs are reported by a static analysis tool implemented by myself, 
-and they are found by extending a known bug fixed in the previous commit. 
-Thus, they could be theoretical bugs.
+The participating ISP in the IMDA Home Access Program is MyRepublic. Under =
+the IMDA Home Access program, I only need to pay SGD$14 per month for my fi=
+ber home broadband.
 
-Signed-off-by: Jia-Ju Bai <baijiaju@buaa.edu.cn>
----
-v2:
-* Fix an error reported by checkpatch.pl, and make the bug finding
-  process more clear in the description. Thanks for Simon's advice.
----
- net/mac80211/agg-rx.c | 68 ++++++++++++++++++++++++++-----------------
- net/mac80211/agg-tx.c | 16 ++++++++--
- 2 files changed, 55 insertions(+), 29 deletions(-)
+MyRepublic ISP has also given me a *FREE* TP-Link EX510 AX3000 Dual-Band Gi=
+gabit Wi-Fi 6 Router on 10 Mar 2023 Friday. MyRepublic fiber broadband line=
+ was also activated on the same day. Inside the packaging box there is a pa=
+per notice on GNU General Public License.
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index c6fa53230450..6616970785a2 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -80,19 +80,21 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 	RCU_INIT_POINTER(sta->ampdu_mlme.tid_rx[tid], NULL);
- 	__clear_bit(tid, sta->ampdu_mlme.agg_session_valid);
- 
--	ht_dbg(sta->sdata,
--	       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
--	       sta->sta.addr, tid,
--	       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
--	       (int)reason);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata,
-+		       "Rx BA session stop requested for %pM tid %u %s reason: %d\n",
-+		       sta->sta.addr, tid,
-+		       initiator == WLAN_BACK_RECIPIENT ? "recipient" : "initiator",
-+		       (int)reason);
-+	}
- 
--	if (drv_ampdu_action(local, sta->sdata, &params))
-+	if (sta->sdata && drv_ampdu_action(local, sta->sdata, &params))
- 		sdata_info(sta->sdata,
- 			   "HW problem - can not stop rx aggregation for %pM tid %d\n",
- 			   sta->sta.addr, tid);
- 
- 	/* check if this is a self generated aggregation halt */
--	if (initiator == WLAN_BACK_RECIPIENT && tx)
-+	if (initiator == WLAN_BACK_RECIPIENT && tx && sta->sdata)
- 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
- 				     tid, WLAN_BACK_RECIPIENT, reason);
- 
-@@ -279,17 +281,21 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 
- 	if (!sta->sta.deflink.ht_cap.ht_supported &&
- 	    !sta->sta.deflink.he_cap.has_he) {
--		ht_dbg(sta->sdata,
--		       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
--		       sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
-+			       sta->sta.addr, tid);
-+		}
- 		/* send a response anyway, it's an error case if we get here */
- 		goto end;
- 	}
- 
- 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
--		ht_dbg(sta->sdata,
--		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
--		       sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
-+			       sta->sta.addr, tid);
-+		}
- 		goto end;
- 	}
- 
-@@ -322,8 +328,10 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		buf_size = sta->sta.max_rx_aggregation_subframes;
- 	params.buf_size = buf_size;
- 
--	ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
--	       buf_size, sta->sta.addr);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
-+		       buf_size, sta->sta.addr);
-+	}
- 
- 	/* examine state machine */
- 	lockdep_assert_held(&sta->ampdu_mlme.mtx);
-@@ -332,9 +340,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
- 			struct tid_ampdu_rx *tid_rx;
- 
--			ht_dbg_ratelimited(sta->sdata,
--					   "updated AddBA Req from %pM on tid %u\n",
--					   sta->sta.addr, tid);
-+			if (sta->sdata) {
-+				ht_dbg_ratelimited(sta->sdata,
-+						   "updated AddBA Req from %pM on tid %u\n",
-+						   sta->sta.addr, tid);
-+			}
- 			/* We have no API to update the timeout value in the
- 			 * driver so reject the timeout update if the timeout
- 			 * changed. If it did not change, i.e., no real update,
-@@ -350,9 +360,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 			goto end;
- 		}
- 
--		ht_dbg_ratelimited(sta->sdata,
--				   "unexpected AddBA Req from %pM on tid %u\n",
--				   sta->sta.addr, tid);
-+		if (sta->sdata) {
-+			ht_dbg_ratelimited(sta->sdata,
-+					   "unexpected AddBA Req from %pM on tid %u\n",
-+					   sta->sta.addr, tid);
-+		}
- 
- 		/* delete existing Rx BA session on the same tid */
- 		___ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
-@@ -362,9 +374,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 
- 	if (ieee80211_hw_check(&local->hw, SUPPORTS_REORDERING_BUFFER)) {
- 		ret = drv_ampdu_action(local, sta->sdata, &params);
--		ht_dbg(sta->sdata,
--		       "Rx A-MPDU request on %pM tid %d result %d\n",
--		       sta->sta.addr, tid, ret);
-+		if (sta->sdata) {
-+			ht_dbg(sta->sdata,
-+			       "Rx A-MPDU request on %pM tid %d result %d\n",
-+			       sta->sta.addr, tid, ret);
-+		}
- 		if (!ret)
- 			status = WLAN_STATUS_SUCCESS;
- 		goto end;
-@@ -401,8 +415,10 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		__skb_queue_head_init(&tid_agg_rx->reorder_buf[i]);
- 
- 	ret = drv_ampdu_action(local, sta->sdata, &params);
--	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
--	       sta->sta.addr, tid, ret);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
-+		       sta->sta.addr, tid, ret);
-+	}
- 	if (ret) {
- 		kfree(tid_agg_rx->reorder_buf);
- 		kfree(tid_agg_rx->reorder_time);
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index f9514bacbd4a..03b31b6e7ac7 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -368,8 +368,10 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 
- 	spin_unlock_bh(&sta->lock);
- 
--	ht_dbg(sta->sdata, "Tx BA session stop requested for %pM tid %u\n",
--	       sta->sta.addr, tid);
-+	if (sta->sdata) {
-+		ht_dbg(sta->sdata, "Tx BA session stop requested for %pM tid %u\n",
-+		       sta->sta.addr, tid);
-+	}
- 
- 	del_timer_sync(&tid_tx->addba_resp_timer);
- 	del_timer_sync(&tid_tx->session_timer);
-@@ -776,7 +778,12 @@ void ieee80211_start_tx_ba_cb(struct sta_info *sta, int tid,
- 			      struct tid_ampdu_tx *tid_tx)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local;
-+
-+	if (!sdata)
-+		return;
-+
-+	local = sdata->local;
- 
- 	if (WARN_ON(test_and_set_bit(HT_AGG_STATE_DRV_READY, &tid_tx->state)))
- 		return;
-@@ -902,6 +909,9 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
- 	bool send_delba = false;
- 	bool start_txq = false;
- 
-+	if (!sdata)
-+		return;
-+
- 	ht_dbg(sdata, "Stopping Tx BA session for %pM tid %d\n",
- 	       sta->sta.addr, tid);
- 
--- 
-2.34.1
+I believe my tp-link Wi-Fi 6 wireless router is most likely running on an o=
+pen source Linux operating system.=20
 
+How can I find out what version of the Linux Kernel it is running on? I thi=
+nk only Linux kernel 6.x support Wi-Fi 6. Am I right?
+
+By the way, I live in a HDB 2-room RENTAL apartment in Ang Mo Kio Singapore=
+.
+
+Thank you.
+
+Regards,
+
+Mr. Turritopsis Dohrnii Teo En Ming
+Targeted Individual in Singapore
+Blogs:
+https://tdtemcerts.blogspot.com
+https://tdtemcerts.wordpress.com
+GIMP also stands for Government-Induced Medical Problems
