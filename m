@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64300C761A6
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Mar 2023 09:39:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE45C77B62
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Mar 2023 09:39:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229869AbjCUJjO (ORCPT
+        id S229768AbjCUJjP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Mar 2023 05:39:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43750 "EHLO
+        Tue, 21 Mar 2023 05:39:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229527AbjCUJjN (ORCPT
+        with ESMTP id S229634AbjCUJjN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 21 Mar 2023 05:39:13 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98D3410A99;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0D433668D;
         Tue, 21 Mar 2023 02:39:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 366EDB81339;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 59BADB8133B;
         Tue, 21 Mar 2023 09:39:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D06C0C433EF;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5B11C4339B;
         Tue, 21 Mar 2023 09:39:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1679391548;
-        bh=V6kdOKfFIbHI/ykoqHBq8eQrNQHaxHZhhUL4P5DUTFY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=j2AKqO47VVWmdswohU3B1RKEjSLYMkMWntcy9Ry2AahnAgp27+zOoUIMUgxrene5F
-         JrlfHDyK+jOifH3JfbSLWZzBJxfOCGMyZdcUyPjxXzyev/FzZg3/XtBwkzPgolN5gl
-         prdlH669lMSNT2gw55uBfdWivYtkKdaIEK7S8F9KgXrErOvJywdZp/eQum3sBG1wsU
-         jI6ZcNWsol5VGD8jPVAwRizLojwDFmC+y8AYumopQUJ3cCDZjOfHrePHsks57/XtIt
-         SpOLheIp3gz68lW/CBu36sNpbg/jcWEBIPJZkXqJvGWfIGDULJE7wTlRBbHlxieeMu
-         llSkuKOO7e6CQ==
+        bh=y4DQQgqTeIOp+QSV53CC0j5id0oCyBXkdp89zbwqiMA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=R5Z9G5RhRob13EVQTljJZCAmCEYyyM9fYBf+rNjtCNqM+iL+MxJ1+MujMcRZjZTjr
+         xhhPd4QD5t4ElLlkVFsDLYb7I341Y4aXnl3zQvTDyUxVTQn5l92Y9fk8AW2n4qMHDQ
+         Ejjc8Y8rkqkOYZsNTJ3BN2Lt69j6rVDwMCO3gMNdcsdg5wzs54qUT/56B6ywxM3nLo
+         TLHeUenQTUE6+PBT1FfrIBbc1OMamsmaFeq1zx24yEkc1KAKMs0xkOZyrmycKQIOZO
+         xPSi/PbZuEset6GkJzTHqUw90m8nOr0CIcWhxYqZFU1Y7yDsPu3hFFto6M9ADEy2dg
+         Ymd2iQIXqNicg==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1peYTo-0002Xw-6q; Tue, 21 Mar 2023 10:40:32 +0100
+        id 1peYTo-0002Y0-DN; Tue, 21 Mar 2023 10:40:32 +0100
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Kalle Valo <kvalo@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>
@@ -52,43 +52,58 @@ Cc:     "David S. Miller" <davem@davemloft.net>,
         devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         ath11k@lists.infradead.org, linux-kernel@vger.kernel.org,
         Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH v2 0/2] arm64: dts: qcom: sc8280xp-x13s: add wifi calibration variant
-Date:   Tue, 21 Mar 2023 10:40:09 +0100
-Message-Id: <20230321094011.9759-1-johan+linaro@kernel.org>
+Subject: [PATCH v2 2/2] arm64: dts: qcom: sc8280xp-x13s: add wifi calibration variant
+Date:   Tue, 21 Mar 2023 10:40:11 +0100
+Message-Id: <20230321094011.9759-3-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230321094011.9759-1-johan+linaro@kernel.org>
+References: <20230321094011.9759-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series adds the missing calibration variant devicetree property
-which is needed to load the (just released) calibration data and use the
-ath11k wifi on the Lenovo Thinkpad X13s.
+Describe the bus topology for PCIe domain 6 and add the ath11k
+calibration variant so that the board file (calibration data) can be
+loaded.
 
-Kalle, can you take the binding through your tree and then Bjorn can
-take the devicetree update through the qcom tree?
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=216246
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Tested-by: Steev Klimaszewski <steev@kali.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ .../dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts  | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-Johan
-
-
-Changes in v2
- - rename DT schema file
- - fix model name typo in binding comment
- - amend calibration variant description
- - drop the corresponding change for the sc8280xp-crd which will need
-   its own set of calibration data
-
-
-Johan Hovold (2):
-  dt-bindings: wireless: add ath11k pcie bindings
-  arm64: dts: qcom: sc8280xp-x13s: add wifi calibration variant
-
- .../net/wireless/qcom,ath11k-pci.yaml         | 58 +++++++++++++++++++
- .../qcom/sc8280xp-lenovo-thinkpad-x13s.dts    | 17 ++++++
- 2 files changed, 75 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,ath11k-pci.yaml
-
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 150f51f1db37..0051025e0aa8 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -711,6 +711,23 @@ &pcie4 {
+ 	pinctrl-0 = <&pcie4_default>;
+ 
+ 	status = "okay";
++
++	pcie@0 {
++		device_type = "pci";
++		reg = <0x0 0x0 0x0 0x0 0x0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		bus-range = <0x01 0xff>;
++
++		wifi@0 {
++			compatible = "pci17cb,1103";
++			reg = <0x10000 0x0 0x0 0x0 0x0>;
++
++			qcom,ath11k-calibration-variant = "LE_X13S";
++		};
++	};
+ };
+ 
+ &pcie4_phy {
 -- 
 2.39.2
 
