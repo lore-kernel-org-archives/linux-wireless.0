@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDCF5C6FD1C
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Mar 2023 17:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD9EC76195
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Mar 2023 17:20:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229802AbjCVRU0 (ORCPT
+        id S231335AbjCVRU1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Mar 2023 13:20:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40726 "EHLO
+        Wed, 22 Mar 2023 13:20:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230479AbjCVRUL (ORCPT
+        with ESMTP id S231181AbjCVRUM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2023 13:20:11 -0400
+        Wed, 22 Mar 2023 13:20:12 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BED06702F
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 10:19:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBE6F1DBBC
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 10:19:52 -0700 (PDT)
 From:   Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1679505552;
+        s=2020; t=1679505553;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=MLV4RQbIkU/Wg79QJg4gHVRQdhYOT1muX8xdwhYFYAg=;
-        b=jlIDJsJrmCHgnvyZIm4rbmaIA2Ey6HQnCIZS4xJFcPxEREp1Z2LLO/RcfA4j7OE6g8w3VH
-        IhkuLdmsCa/eoqsKLdv9Iy2CVlGr8Gaj56vW3NCiXKMFeSPa/FB0ab5SY9N6tqvlZkAfcI
-        HiaJZRKHoPMBdoNFdOGt8btU7By6tTTBnTF0z2IVgtdM0F3tgFHxzfKUalZugOI8QaPXT4
-        hQHQbdxqMPbpBdltR0b/6B+CPmjeUg6i6fmbDVJXO+Oxo7bvbnpg4wO+RErLT3ffTdVa05
-        A3xmWJoob72Z/VbKGl5vM2t+JvqT6BrGe8ADGTfQasOVSVHApMY6lqZi64aLIg==
+        bh=Wsqe9w4nA31DicGlQraPVRYrPRMRMTJXbliLyuM6miU=;
+        b=jrMA+0cJCyY4ptgVRgi8gJTRgGf2HYDQODOcdNDJR1pLOo6KVGmoKUSfC5dJRCuLi6Thbe
+        HXCxDnTyhEJM5jMZtpCa919zMrGG3dwWG7ZQQJwspXQ6i/hhYT3/KEXGgJHldCteU09rEG
+        ChsPgzTFl3LXoau2soPux/5pfEYCkHL0ndij0Wijq7/TrvS11b8oAkD4ypOzVWMD43JzPG
+        0X3jALU7lmXUF852Q6pqvSe5508J6Shp/oDxCoissyKWm+eFfKsdCddwYefuGQpaMI3E3i
+        a9zUq3KAL0SqskLLUGkn7K0TS3qyUiIfbl6VnUXSaxcHaV74UlKU7NupL04iaA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1679505552;
+        s=2020e; t=1679505553;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=MLV4RQbIkU/Wg79QJg4gHVRQdhYOT1muX8xdwhYFYAg=;
-        b=pUHlSNixVa0hlyz+aeemS4oU8wD7z3kBc/MomDPSoOKu0QaOClHTJiyfWLDRpzf5gl+OVP
-        zlxLO20wDs2jloAQ==
+        bh=Wsqe9w4nA31DicGlQraPVRYrPRMRMTJXbliLyuM6miU=;
+        b=rQH9zCDdXN9G+V1rBRR2hnFzp2y4IIjWvxWi3nUUfrjNzeG6XIbH6OjHu1T9qkl7VDgS28
+        TTulX6ABx12ecdBw==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
         Kalle Valo <kvalo@kernel.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Bitterblue Smith <rtl8821cerfe2@gmail.com>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [RFC PATCH 06/14] wifi: rtl8xxxu: Allow creating interface in AP mode
-Date:   Wed, 22 Mar 2023 18:18:57 +0100
-Message-Id: <20230322171905.492855-7-martin.kaistra@linutronix.de>
+Subject: [RFC PATCH 10/14] wifi: rtl8xxxu: Add sta_add() callback
+Date:   Wed, 22 Mar 2023 18:19:01 +0100
+Message-Id: <20230322171905.492855-11-martin.kaistra@linutronix.de>
 In-Reply-To: <20230322171905.492855-1-martin.kaistra@linutronix.de>
 References: <20230322171905.492855-1-martin.kaistra@linutronix.de>
 MIME-Version: 1.0
@@ -55,86 +55,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use the sequence from the vendor driver for setting up the beacon
-related registers.
-Also set the MAC address register.
+This function gets called in AP mode, when a new STA gets associated to
+us. Call rtl8xxxu_refresh_rate_mask() to set a rate mask for the newly
+connected STA (referenced by the macid) and then send a media connnect
+report.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 31 ++++++++++++++++---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h |  2 ++
- 2 files changed, 29 insertions(+), 4 deletions(-)
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index b233c66a7a5a8..b20ff8bc40870 100644
+index 5e36fddbbb488..d74a3c6452507 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6408,18 +6408,39 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
- 	int ret;
- 	u8 val8;
- 
-+	if (!priv->vif)
-+		priv->vif = vif;
-+	else
-+		return -EOPNOTSUPP;
-+
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		if (!priv->vif)
--			priv->vif = vif;
--		else
--			return -EOPNOTSUPP;
- 		rtl8xxxu_stop_tx_beacon(priv);
- 
- 		val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
- 		val8 |= BEACON_ATIM | BEACON_FUNCTION_ENABLE |
- 			BEACON_DISABLE_TSF_UPDATE;
- 		rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
-+		ret = 0;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		rtl8xxxu_write8(priv, REG_BEACON_CTRL,
-+				BEACON_DISABLE_TSF_UPDATE | BEACON_CTRL_MBSSID);
-+		rtl8xxxu_write8(priv, REG_ATIMWND, 0x0c); /* 12ms */
-+		rtl8xxxu_write16(priv, REG_TSFTR_SYN_OFFSET, 0x7fff); /* ~32ms */
-+		rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, DUAL_TSF_RESET_TSF0);
-+
-+		/* enable BCN0 function */
-+		rtl8xxxu_write8(priv, REG_BEACON_CTRL,
-+				BEACON_DISABLE_TSF_UPDATE |
-+				BEACON_FUNCTION_ENABLE | BEACON_CTRL_MBSSID |
-+				BEACON_CTRL_TX_BEACON_RPT);
-+
-+		/* select BCN on port 0 */
-+		val8 = rtl8xxxu_read8(priv, REG_CCK_CHECK);
-+		val8 &= ~BIT_BCN_PORT_SEL;
-+		rtl8xxxu_write8(priv, REG_CCK_CHECK, val8);
-+
- 		ret = 0;
- 		break;
- 	default:
-@@ -6427,6 +6448,8 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	rtl8xxxu_set_linktype(priv, vif->type);
-+	ether_addr_copy(priv->mac_addr, vif->addr);
-+	rtl8xxxu_set_mac(priv);
- 
- 	return ret;
+@@ -7159,6 +7159,19 @@ static void rtl8xxxu_stop(struct ieee80211_hw *hw)
+ 	rtl8xxxu_free_tx_resources(priv);
  }
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index 4dffbab494c3b..83e7f8fd82c0a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -572,6 +572,8 @@
- #define REG_ARFR1			0x0448
- #define REG_ARFR2			0x044c
- #define REG_ARFR3			0x0450
-+#define REG_CCK_CHECK			0x0454
-+#define BIT_BCN_PORT_SEL		BIT(5)
- #define REG_AMPDU_MAX_TIME_8723B	0x0456
- #define REG_AGGLEN_LMT			0x0458
- #define REG_AMPDU_MIN_SPACE		0x045c
+ 
++static int rtl8xxxu_sta_add(struct ieee80211_hw *hw,
++			    struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta)
++{
++	struct rtl8xxxu_priv *priv = hw->priv;
++
++	if (sta) {
++		rtl8xxxu_refresh_rate_mask(priv, 0, sta);
++		priv->fops->report_connect(priv, sta->aid + 1, H2C_ROLE_STA, true);
++	}
++	return 0;
++}
++
+ static const struct ieee80211_ops rtl8xxxu_ops = {
+ 	.tx = rtl8xxxu_tx,
+ 	.wake_tx_queue = ieee80211_handle_wake_tx_queue,
+@@ -7179,6 +7192,7 @@ static const struct ieee80211_ops rtl8xxxu_ops = {
+ 	.sta_statistics = rtl8xxxu_sta_statistics,
+ 	.get_antenna = rtl8xxxu_get_antenna,
+ 	.set_tim = rtl8xxxu_set_tim,
++	.sta_add = rtl8xxxu_sta_add,
+ };
+ 
+ static int rtl8xxxu_parse_usb(struct rtl8xxxu_priv *priv,
 -- 
 2.30.2
 
