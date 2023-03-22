@@ -2,92 +2,139 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8ACC6FD1C
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Mar 2023 18:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E1DC6FD1C
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Mar 2023 19:58:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231146AbjCVS0b (ORCPT
+        id S231180AbjCVT6U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Mar 2023 14:26:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55408 "EHLO
+        Wed, 22 Mar 2023 15:58:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230496AbjCVS00 (ORCPT
+        with ESMTP id S230479AbjCVT5n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2023 14:26:26 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1865C1ACFD;
-        Wed, 22 Mar 2023 11:26:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BABD1B81D85;
-        Wed, 22 Mar 2023 18:26:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40A43C4339E;
-        Wed, 22 Mar 2023 18:26:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679509582;
-        bh=Gj//SU+GqNJVcAvg1NerL5+h1QTTjvjmzdALEMxq4XE=;
-        h=Date:From:To:Cc:Subject:From;
-        b=VSoBQS5iyxCUOUFLpB0RDnus8HHV4Lq8N7ODEhvT0HqT8ClGw3b8RlxNcRZEtvKdh
-         So+6vuad2V0nVQmVgFvnUoGXBwKQXOtACLrjaqsy6ccQSvukwYmZvUwx98aF2xby9M
-         ossP6QBJ5Vc0Eu7XF2f9UBjZ/JBz4AR8nVpWkZtJrdCDxD6V6YAg6rQ4VGWoHYtvsc
-         QLgreyQZgFc3F8AU9Al5sKDSSwWzyU9s/y2lE/7CHsWHdjhCqyX5HAyT8uy4O3Kjng
-         PJzNbFRSQb15jFtjtvdvyZpBKvquMal4eNmUvScyQr34UiNxLXvjPhIBpOxTmXCZfY
-         X1foNftxqlxXA==
-Date:   Wed, 22 Mar 2023 12:26:53 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Jussi Kivilinna <jussi.kivilinna@iki.fi>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] wifi: rndis_wlan: Replace fake flex-array with
- flexible-array member
-Message-ID: <ZBtIbU77L9eXqa4j@work>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+        Wed, 22 Mar 2023 15:57:43 -0400
+Received: from mail-oi1-x22e.google.com (mail-oi1-x22e.google.com [IPv6:2607:f8b0:4864:20::22e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9F976A1CB
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 12:57:21 -0700 (PDT)
+Received: by mail-oi1-x22e.google.com with SMTP id bf30so8006592oib.12
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 12:57:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=seqtechllc.com; s=google; t=1679515041;
+        h=to:date:message-id:subject:mime-version:content-transfer-encoding
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kid2Fz7Dt6NAcPGgmC4LQVvf2cElSfG482FZDB3kJ9o=;
+        b=ELcMANS4NhoY5rDZWIzrLstp6WvVg4K17Obe2LcBvkwYDQZXqRXmFNFG72YqniK3Rl
+         PP8KPPgpV90bkzz1/ZdNFw8M0/RLfBd1AKbFv+167zxLiWBQobauzdpaM9HbkBy0523b
+         4x0W9Bh4kXKfZ78ywhdQehvdOMWo+9EZawWEsWdlxWn6ArvIElvaGJWNvHs+0bohLUr4
+         UD2mV76soUVWPtmzGjA+mnGqwOmq6bEiM/ckFfEwi5jG14tPl7Ola/6K9u1G399VDHpe
+         kEG612oyvUVWBEvF/xaQGjDtx4kFViKjdViYMLM63jhQeVS83zWgMJEOpIfU4J995kpp
+         zqtw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679515041;
+        h=to:date:message-id:subject:mime-version:content-transfer-encoding
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kid2Fz7Dt6NAcPGgmC4LQVvf2cElSfG482FZDB3kJ9o=;
+        b=1whm7MilJpVk/+ISlY7GIfulr8fB9p3ff9QgxZvBoHqo2ZOTkzrz8tgoiZq+tLg97v
+         O4Z47Tru8yYFIvwWm7ssoTLhhmerNj0K2O0n5fWjAdRNs3slH8pw2cGI/GuMVZv7HrIa
+         HKlsYqoo3+bcEb9QACBxTmiE765Nbh73Jp4ZQxpg7mrmOIvPtr2BmglpvJZwQQgPIDqz
+         jhrOsWmWZ1gOhbS4uhL2uWNqEHwq4ZxSFB9gn46JdtG5ZCw5qG09UnJU7zZj+KazhRFN
+         YeZ3mTsDkXH/yZesbjs3Exp0TQf2dxmMPwYkePkxkWakfiAdbVr2Zo1nkqRTWUDpF85B
+         /5VA==
+X-Gm-Message-State: AO0yUKXZerXDbpbspLn3e1wb1aPMqQTe4WaM/zdo0K3BCdm+u3e4swLq
+        xYRIGLKS2JVVYkMo9cxGSjN0vTsDSjlXqhmXWh02QeIwuzwhfng4am3rezbAgu7ysPIma2ATS0g
+        Yd9KHKUfIKSWwHKIG+SZnOAksgWObmtkq2wRWWiTh0Ifz/9aa5Bo9p3cJvyjNTn7KsB/HMnNgvI
+        ApXHsRPugilJZdYrm30I+UefVRSJprmsan9z3kh0yc/AzNmuWEX107fHXqy7mYacULL6DAZA==
+X-Google-Smtp-Source: AK7set/iQ9BDIE0j223HwlBlerjVekWPL+P7BBpCx9FKQI+LK2fw8EworfzXD2X2fN+YIDiHo/ZCWA==
+X-Received: by 2002:a05:6808:616:b0:384:167d:736b with SMTP id y22-20020a056808061600b00384167d736bmr1669079oih.15.1679515040784;
+        Wed, 22 Mar 2023 12:57:20 -0700 (PDT)
+Received: from smtpclient.apple ([67.202.189.242])
+        by smtp.gmail.com with ESMTPSA id n13-20020a4ad62d000000b00517a7ac36c8sm6406947oon.24.2023.03.22.12.57.20
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 22 Mar 2023 12:57:20 -0700 (PDT)
+From:   Gregg Wonderly <greggwonderly@seqtechllc.com>
+Content-Type: text/plain;
+        charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.400.51.1.1\))
+Subject: shift exponent 35 is too large @ ath/ath9k/ar9003_hw.c:1147 
+Message-Id: <E3A9C354-0CB7-420C-ADEF-F0177FB722F4@seqtechllc.com>
+Date:   Wed, 22 Mar 2023 14:57:06 -0500
+To:     linux-wireless@vger.kernel.org
+X-Mailer: Apple Mail (2.3731.400.51.1.1)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Zero-length arrays as fake flexible arrays are deprecated and we are
-moving towards adopting C99 flexible-array members instead.
+I am receiving a console error message from this driver that appears to =
+be in the following function.  In this function, the chk_dbg variable is =
+32bits and there is logic that seems to attempt to select from 1 of 2 =
+different 32bit values to get a 64bit wide mask value into chk_dbg from =
+dma_dbg_4 or dmc_dbg_5.
 
-Address the following warning found with GCC-13 and
--fstrict-flex-array=3 enabled:
-drivers/net/wireless/rndis_wlan.c:2902:23: warning: array subscript 0 is outside array bounds of ‘struct ndis_80211_auth_request[0]’ [-Warray-bounds=]
+The problem is that the (5*i) shift count should be have i adjusted by =
+the 6 limit used to make the check for which dma_dbg_[45] value =
+selected.
 
-This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
-routines on memcpy() and help us make progress towards globally
-enabling -fstrict-flex-arrays=3 [1].
 
-Link: https://github.com/KSPP/linux/issues/21
-Link: https://github.com/KSPP/linux/issues/274
-Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/net/wireless/legacy/rndis_wlan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+static bool ar9003_hw_detect_mac_hang(struct ath_hw *ah)
+{
+	u32 dma_dbg_4, dma_dbg_5, dma_dbg_6, chk_dbg;
+	u8 dcu_chain_state, dcu_complete_state;
+	bool dcu_wait_frdone =3D false;
+	unsigned long chk_dcu =3D 0;
+	unsigned int i =3D 0;
+	dma_dbg_4 =3D REG_READ(ah, AR_DMADBG_4);
+	dma_dbg_5 =3D REG_READ(ah, AR_DMADBG_5);
+	dma_dbg_6 =3D REG_READ(ah, AR_DMADBG_6);
+	dcu_complete_state =3D dma_dbg_6 & 0x3;
+	if (dcu_complete_state !=3D 0x1)
+		goto exit;
+	for (i =3D 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+		if (i < 6)
+			chk_dbg =3D dma_dbg_4;
+		else
+			chk_dbg =3D dma_dbg_5;
+		dcu_chain_state =3D (chk_dbg >> (5 * i)) & 0x1f;
+		if (dcu_chain_state =3D=3D 0x6) {
+			dcu_wait_frdone =3D true;
+			chk_dcu |=3D BIT(i);
+		}
+	}
+	if ((dcu_complete_state =3D=3D 0x1) && dcu_wait_frdone) {
+		for_each_set_bit(i, &chk_dcu, ATH9K_NUM_TX_QUEUES) {
+			if (ath9k_hw_verify_hang(ah, i))
+				return true;
+		}
+	}
+exit:
+	return false;
+}
 
-diff --git a/drivers/net/wireless/legacy/rndis_wlan.c b/drivers/net/wireless/legacy/rndis_wlan.c
-index bf72e5fd39cf..54c347fa54c4 100644
---- a/drivers/net/wireless/legacy/rndis_wlan.c
-+++ b/drivers/net/wireless/legacy/rndis_wlan.c
-@@ -209,7 +209,7 @@ struct ndis_80211_status_indication {
- 	union {
- 		__le32					media_stream_mode;
- 		__le32					radio_status;
--		struct ndis_80211_auth_request		auth_request[0];
-+		DECLARE_FLEX_ARRAY(struct ndis_80211_auth_request, auth_request);
- 		struct ndis_80211_pmkid_cand_list	cand_list;
- 	} u;
- } __packed;
--- 
-2.34.1
+The for loop seems to need to look like the following:
 
+	for (i =3D 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+               int off=3Di;
+		if (i < 6) {
+			chk_dbg =3D dma_dbg_4;
+		} else {
+			chk_dbg =3D dma_dbg_5;
+                       off =3D i - 6;
+               }
+		dcu_chain_state =3D (chk_dbg >> (5 * off)) & 0x1f;
+		if (dcu_chain_state =3D=3D 0x6) {
+			dcu_wait_frdone =3D true;
+			chk_dcu |=3D BIT(i);
+		}
+	}
+
+it would be best to have a constant declared that would be based on =
+ATH9K_NUM_TX_QUEUES and the magical 32bits of space the declarations =
+limit the calculations to.
+it seem that the mask of 0x1f suggests that there are 5 bits per queue.  =
+So there would be 2 bits left in dma_dbg_4 potentially, but the logic =
+suggests that there are simply 6 groups of 5 bits in each of the =
+registers without there being a split of the value across the 32-bit =
+boundary.
+
+Gregg Wonderly=
