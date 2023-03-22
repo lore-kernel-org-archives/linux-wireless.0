@@ -2,118 +2,239 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46893C761A6
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Mar 2023 13:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B083BC6FD1C
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Mar 2023 13:19:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230519AbjCVNT2 (ORCPT
+        id S229786AbjCVNTk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Mar 2023 09:19:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52118 "EHLO
+        Wed, 22 Mar 2023 09:19:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230503AbjCVNTR (ORCPT
+        with ESMTP id S229782AbjCVNTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Mar 2023 09:19:17 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58D9C5C12E
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 06:19:13 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id 185-20020a250ac2000000b00b6d0cdc8e3bso8297116ybk.4
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 06:19:13 -0700 (PDT)
+        Wed, 22 Mar 2023 09:19:21 -0400
+Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DB6B5D742
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 06:19:16 -0700 (PDT)
+Received: by mail-qt1-x835.google.com with SMTP id d75a77b69052e-3e389670718so67161cf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Mar 2023 06:19:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1679491152;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Yb81hp7ZlCpX7Yr6wz12GTlDZ40WK1rINM0mAGZ5OpM=;
-        b=KBNKtldMVauP0c3qFAYy0easJJXbtNYVy4U/IesleLkFYfKKbALxTxCH7Inv4oVyLT
-         qYLwRhvBHmwfG+4YVOXvTFnS/DbxB69WjXLSPA2NmYGFKEvAIDDTZMiZ2j37eBYEK15+
-         ltVmLrHobkqo8LIrLNlH/L65MWb2X/Dy/y1b3yPNotkUunTUt3TFOg6FvXQhTk11u/j7
-         ZyXr5rj/vDOccu30NhJZvxCXpjNDvMXNzN0znRYYT6l7SjuEkk6a7TKsb919eu38Q5sz
-         vM1VWaIRLvTMldqJj8vlRptxFLqN1mT4bYK/JvBXxJc9NGbYQwNY0tQ8R/8DM2/qri6u
-         DXww==
+        d=google.com; s=20210112; t=1679491155;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4DEfB60tdIGGHy+2AD41Cg2wp32c/s2a8XTIzsgGUAQ=;
+        b=UxSJSCCNXrFgKtq8kpb93OBDWEx0IWm+tUbJ0bi0Sl8gP6lYCGwg4IVRxAKKnOnAKZ
+         9arXjYn3sKID1ITSRqhEdPb8G4VL2Z6AxUzVqoONQYW8hOJHE7FfgvzBDJhsg2pWfnyS
+         yeyD+KYmAU433QQ7HDEi0oowPhI7njFpYM4mXTmnWREUpIyvQYhhQ+YhTHLxDkxNe2Xt
+         sUDwP3gz1FpFiNyVnthOoUuxucrgllPWQTkR6RLP1ivns6y2ya8cO9EOEErk0/vvGWnf
+         /0TYRxT8cdiU1C99tkyt2kgugv7CR3rEHbdUmZAkYFcLWK5JYYg9Qpll5NiBkxwnwXqW
+         +bqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679491152;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Yb81hp7ZlCpX7Yr6wz12GTlDZ40WK1rINM0mAGZ5OpM=;
-        b=ULknIcLXXTLEgxx4z6QPJgCw7ctbqhsf0Q8zYPlIzlMQB+Lplu5ZTWVb+vx2cLvxgJ
-         vSA/6sfXEQKmO3kKfopzJaUl3HeUJvSI2QjImZGDxjgteEhRGEx0s7riK72MaQqyRxxe
-         IgAK/rkVk4FsgIg1NxS69Y6x2B6yWnf0ELv6CJeovXqSttJ7OaSs7eLb3KDPLurmf3rV
-         f6f66vL+w+JwcV7E9y+DXKVEMAmqrpxrKeFWmbWHqihrSLuZ2lYlMeUb3K38uHPQuCde
-         2+ufQHV3SGnYQvunoO6/44Ykc4rGwfn/GrOfhCxL32/KqqcMN6WgPFGpjuIoNv0EKUTp
-         wClA==
-X-Gm-Message-State: AAQBX9eMiMdBDSi7pm1xHX1dB1d2+YNNmPq/Wer31QUYb8glrYhA8Jlr
-        6T7f/lgHQ38qHX4GFcoRc+al0ODskVA=
-X-Google-Smtp-Source: AKy350aspfgHB1gDVWJthbqNoLqeIswB1rcjtYlr4D89NRndFfZREPvg7ka5TcVt7NpUkmh1ZsQMUOU9HBI=
-X-Received: from jaewan1.c.googlers.com ([fda3:e722:ac3:cc00:3:22c1:c0a8:e59])
- (user=jaewan job=sendgmr) by 2002:a05:6902:1003:b0:b3c:637f:ad00 with SMTP id
- w3-20020a056902100300b00b3c637fad00mr4107795ybt.5.1679491152591; Wed, 22 Mar
- 2023 06:19:12 -0700 (PDT)
-Date:   Wed, 22 Mar 2023 13:16:32 +0000
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.40.0.rc1.284.g88254d51c5-goog
-Message-ID: <20230322131637.2633968-1-jaewan@google.com>
-Subject: [PATCH v10 0/5] mac80211_hwsim: Add PMSR support
+        d=1e100.net; s=20210112; t=1679491155;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4DEfB60tdIGGHy+2AD41Cg2wp32c/s2a8XTIzsgGUAQ=;
+        b=jfVngAnILMi5AHXzf8O4L34FKYJn77GAG0bbfe6zAxpQf+udmA7HmCGxmCkfJakZQS
+         87BUwAAMH9P+pMXKaRc5FYR7PNtG+8EEhb8et6YUhztRisWcIcEMRr+d3VOAFyhwy922
+         Ea8gU41+zL18Sm9hhIBCajbMCvrjdL7McDqDR2Qw11p72O/40VPdK5UA3oASkXpPPH4E
+         92mA4eSJJAtUDGuSIXSr+T+QJzWwCkAqXAzIDfzH3CSLcgxjjqyJKST5eVdYLXi7Rt+/
+         EnjqsO1ZUf94x1nD1QOJ3dsoav+2LqJURJMmq10BTS/hrehp6XHEWt1q5lzZy4sdKbcQ
+         5Zmw==
+X-Gm-Message-State: AO0yUKVSfJuW1aFfI0durCzy/mWMtneaJFSY4nGvTYyVy7IMKPe2FOUa
+        5duIIIi5vvVAZykMgf+Kpya34wWMmq20xgfYW3jYHg==
+X-Google-Smtp-Source: AK7set91FotVwi1kCv9D/MGvwz4WXHIYVIYJBiyhMUlfbhKJ25Z45cJ8kvXJVWDSiPyoEmKvtuCzNUTryUm0qHKv3es=
+X-Received: by 2002:a05:622a:188f:b0:3df:6cbb:c76 with SMTP id
+ v15-20020a05622a188f00b003df6cbb0c76mr316575qtc.13.1679491155326; Wed, 22 Mar
+ 2023 06:19:15 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230313075326.3594869-1-jaewan@google.com> <20230313075326.3594869-5-jaewan@google.com>
+ <ZA99U1TMrUfZhk4G@localhost.localdomain>
+In-Reply-To: <ZA99U1TMrUfZhk4G@localhost.localdomain>
 From:   Jaewan Kim <jaewan@google.com>
-To:     michal.kubiak@intel.com, gregkh@linuxfoundation.org,
-        johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Cc:     kernel-team@android.com, adelva@google.com,
-        Jaewan Kim <jaewan@google.com>
+Date:   Wed, 22 Mar 2023 22:19:00 +0900
+Message-ID: <CABZjns5OUoBO46EY8Li9RNZ9rDMnN_Uq2euAYZMchddu6m42ww@mail.gmail.com>
+Subject: Re: [PATCH v9 4/5] mac80211_hwsim: add PMSR abort support via virtio
+To:     Michal Kubiak <michal.kubiak@intel.com>
+Cc:     gregkh@linuxfoundation.org, johannes@sipsolutions.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kernel-team@android.com, adelva@google.com
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dear Kernel maintainers,
+On Tue, Mar 14, 2023 at 4:45=E2=80=AFAM Michal Kubiak <michal.kubiak@intel.=
+com> wrote:
+>
+> On Mon, Mar 13, 2023 at 07:53:25AM +0000, Jaewan Kim wrote:
+> > PMSR (a.k.a. peer measurement) is generalized measurement between two
+> > devices with Wi-Fi support. And currently FTM (a.k.a. fine time
+> > measurement or flight time measurement) is the one and only measurement=
+.
+> >
+> > Add necessary functionalities for mac80211_hwsim to abort previous PMSR
+> > request. The abortion request is sent to the wmedium where the PMSR req=
+uest
+> > is actually handled.
+> >
+> > In detail, add new mac80211_hwsim command HWSIM_CMD_ABORT_PMSR. When
+> > mac80211_hwsim receives the PMSR abortion request via
+> > ieee80211_ops.abort_pmsr, the received cfg80211_pmsr_request is resent =
+to
+> > the wmediumd with command HWSIM_CMD_ABORT_PMSR and attribute
+> > HWSIM_ATTR_PMSR_REQUEST. The attribute is formatted as the same way as
+> > nl80211_pmsr_start() expects.
+> >
+> > Signed-off-by: Jaewan Kim <jaewan@google.com>
+> > ---
+> > V7 -> V8: Rewrote commit msg
+> > V7: Initial commit (split from previously large patch)
+> > ---
+> >  drivers/net/wireless/mac80211_hwsim.c | 61 +++++++++++++++++++++++++++
+> >  drivers/net/wireless/mac80211_hwsim.h |  2 +
+> >  2 files changed, 63 insertions(+)
+> >
+> > diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wirele=
+ss/mac80211_hwsim.c
+> > index a692d9c95566..8f699dfab77a 100644
+> > --- a/drivers/net/wireless/mac80211_hwsim.c
+> > +++ b/drivers/net/wireless/mac80211_hwsim.c
+> > @@ -3343,6 +3343,66 @@ static int mac80211_hwsim_start_pmsr(struct ieee=
+80211_hw *hw,
+> >       return err;
+> >  }
+> >
+> > +static void mac80211_hwsim_abort_pmsr(struct ieee80211_hw *hw,
+> > +                                   struct ieee80211_vif *vif,
+> > +                                   struct cfg80211_pmsr_request *reque=
+st)
+> > +{
+> > +     struct mac80211_hwsim_data *data =3D hw->priv;
+> > +     u32 _portid =3D READ_ONCE(data->wmediumd);
+> > +     struct sk_buff *skb =3D NULL;
+> > +     int err =3D 0;
+> > +     void *msg_head;
+> > +     struct nlattr *pmsr;
+>
+> Please use RCT style.
+>
+> > +
+> > +     if (!_portid && !hwsim_virtio_enabled)
+> > +             return;
+> > +
+> > +     mutex_lock(&data->mutex);
+> > +
+> > +     if (data->pmsr_request !=3D request) {
+> > +             err =3D -EINVAL;
+> > +             goto out_err;
+> > +     }
+> > +
+> > +     if (err)
+> > +             return;
+>
+> Redundant code - err is always zero in this place, isn't it?
 
-First of all, thank you for spending your precious time for reviewing
-my changes.
+removed.
 
-Let me propose series of patches for adding PMSR support in the
-mac80211_hwsim.
+>
+> > +
+> > +     skb =3D genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_KERNEL);
+> > +     if (!skb)
+> > +             return;
+>
+> Return from the function while the mutex is still locked.
+> I guess 'goto' should be used here like for other checks in this
+> function.
 
-PMSR (peer measurement) is generalized measurement between STAs,
-and currently FTM (fine time measurement or flight time measurement)
-is the one and only measurement.
+great catch. Thank you so much.
 
-FTM measures the RTT (round trip time) and FTM can be used to measure
-distances between two STAs. RTT is often referred as 'measuring distance'
-as well.
+>
+> > +
+> > +     msg_head =3D genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0, HWSIM_=
+CMD_ABORT_PMSR);
+> > +
+> > +     if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER, ETH_ALEN, data->add=
+resses[1].addr))
+> > +             goto out_err;
+> > +
+> > +     pmsr =3D nla_nest_start(skb, HWSIM_ATTR_PMSR_REQUEST);
+> > +     if (!pmsr) {
+> > +             err =3D -ENOMEM;
+> > +             goto out_err;
+> > +     }
+> > +
+> > +     err =3D mac80211_hwsim_send_pmsr_request(skb, request);
+> > +     if (err)
+> > +             goto out_err;
+> > +
+> > +     err =3D nla_nest_end(skb, pmsr);
+> > +     if (err)
+> > +             goto out_err;
+> > +
+> > +     genlmsg_end(skb, msg_head);
+> > +     if (hwsim_virtio_enabled)
+> > +             hwsim_tx_virtio(data, skb);
+> > +     else
+> > +             hwsim_unicast_netgroup(data, skb, _portid);
+> > +
+> > +out_err:
+> > +     if (err && skb)
+> > +             nlmsg_free(skb);
+>
+> I suggest to reorganize that code (or at least rename the label "out_err"
+> to "out" maybe?) to separate error path and normal path more clearly.
 
-Kernel had already defined protocols for PMSR in the
-include/uapi/linux/nl80211.h and relevant parsing/sending code are in the
-net/wireless/pmsr.c, but they are only used in intel's iwlwifi driver.
+renamed to out.
 
-Patchset is tested with iw tool on Virtual Android device (a.k.a.
-Cuttlefish). Hope this explains my changes.
+>
+> > +
+> > +     mutex_unlock(&data->mutex);
+> > +}
+> > +
+> >  #define HWSIM_COMMON_OPS                                     \
+> >       .tx =3D mac80211_hwsim_tx,                                \
+> >       .wake_tx_queue =3D ieee80211_handle_wake_tx_queue,        \
+> > @@ -3367,6 +3427,7 @@ static int mac80211_hwsim_start_pmsr(struct ieee8=
+0211_hw *hw,
+> >       .get_et_stats =3D mac80211_hwsim_get_et_stats,            \
+> >       .get_et_strings =3D mac80211_hwsim_get_et_strings,        \
+> >       .start_pmsr =3D mac80211_hwsim_start_pmsr,                \
+> > +     .abort_pmsr =3D mac80211_hwsim_abort_pmsr,
+> >
+> >  #define HWSIM_NON_MLO_OPS                                    \
+> >       .sta_add =3D mac80211_hwsim_sta_add,                      \
+> > diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wirele=
+ss/mac80211_hwsim.h
+> > index 98e586a56582..383f3e39c911 100644
+> > --- a/drivers/net/wireless/mac80211_hwsim.h
+> > +++ b/drivers/net/wireless/mac80211_hwsim.h
+> > @@ -83,6 +83,7 @@ enum hwsim_tx_control_flags {
+> >   *   are the same as to @HWSIM_CMD_ADD_MAC_ADDR.
+> >   * @HWSIM_CMD_START_PMSR: request to start peer measurement with the
+> >   *   %HWSIM_ATTR_PMSR_REQUEST.
+> > + * @HWSIM_CMD_ABORT_PMSR: abort previously sent peer measurement
+> >   * @__HWSIM_CMD_MAX: enum limit
+> >   */
+> >  enum {
+> > @@ -96,6 +97,7 @@ enum {
+> >       HWSIM_CMD_ADD_MAC_ADDR,
+> >       HWSIM_CMD_DEL_MAC_ADDR,
+> >       HWSIM_CMD_START_PMSR,
+> > +     HWSIM_CMD_ABORT_PMSR,
+> >       __HWSIM_CMD_MAX,
+> >  };
+> >  #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
+> > --
+> > 2.40.0.rc1.284.g88254d51c5-goog
+> >
 
-Many Thanks,
+Done for reverse christmas tree style.
+
+
 --
-V9 -> V10: Applied reverse xmas tree style (a.k.a. RCS).
-V8 -> V9: Removed any wrong words for patch. Changed to reject unknown
-          PMSR types.
-V7 -> V8: Separated patch for exporting nl80211_send_chandef
-V6 -> V7: Split 'mac80211_hwsim: handle FTM requests with virtio'
-          with three pieces
-V5 -> V6: Added per patch change history.
-V4 -> V5: Fixed style
-V3 -> V4: Added detailed explanation to cover letter and per patch commit
-          messages, includes explanation of PMSR and FTM.
-          Also fixed memory leak.
-V1 -> V3: Initial commits (include resends)
-
-Jaewan Kim (5):
-  mac80211_hwsim: add PMSR capability support
-  wifi: nl80211: make nl80211_send_chandef non-static
-  mac80211_hwsim: add PMSR request support via virtio
-  mac80211_hwsim: add PMSR abort support via virtio
-  mac80211_hwsim: add PMSR report support via virtio
-
- drivers/net/wireless/mac80211_hwsim.c | 785 +++++++++++++++++++++++++-
- drivers/net/wireless/mac80211_hwsim.h |  58 ++
- include/net/cfg80211.h                |   9 +
- net/wireless/nl80211.c                |   4 +-
- 4 files changed, 845 insertions(+), 11 deletions(-)
-
--- 
-2.40.0.rc1.284.g88254d51c5-goog
-
+Jaewan Kim (=EA=B9=80=EC=9E=AC=EC=99=84) | Software Engineer in Google Kore=
+a |
+jaewan@google.com | +82-10-2781-5078
