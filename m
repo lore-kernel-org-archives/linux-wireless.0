@@ -2,90 +2,106 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC0B0C77B60
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Mar 2023 11:32:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7010EC6FD1C
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Mar 2023 11:38:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230016AbjCWLcY (ORCPT
+        id S231501AbjCWLiZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Mar 2023 07:32:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50406 "EHLO
+        Thu, 23 Mar 2023 07:38:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230196AbjCWLcU (ORCPT
+        with ESMTP id S231237AbjCWLiX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Mar 2023 07:32:20 -0400
-Received: from out-44.mta0.migadu.com (out-44.mta0.migadu.com [IPv6:2001:41d0:1004:224b::2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D071B325
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Mar 2023 04:32:18 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1679570800;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZdgDBuT4R3jYSxR7mPDt2s0ue0mJFKZNVR81FCp1IBk=;
-        b=fqAbpCsaP3fQqEmQ3WmwcgxofDhbTR9Foo+kABFooB5SEWA51oOArpWXh3+E22u+OvTuzl
-        4kB3mh11+EjwMt/cdDd8+Pd067J8e6UHBti+IDAsg28/AE1lDzENAJz/wauJWfkWbMKTQ+
-        TCjgMya52bHugLpy5CUatBZ8jTkvmz0=
-From:   Cai Huoqing <cai.huoqing@linux.dev>
-To:     cai.huoqing@linux.dev
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Ping-Ke Shih <pkshih@realtek.com>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
-        ath12k@lists.infradead.org
-Subject: [PATCH 4/5] wifi: rtw88: Remove redundant pci_clear_master
-Date:   Thu, 23 Mar 2023 19:26:12 +0800
-Message-Id: <20230323112613.7550-4-cai.huoqing@linux.dev>
-In-Reply-To: <20230323112613.7550-1-cai.huoqing@linux.dev>
-References: <20230323112613.7550-1-cai.huoqing@linux.dev>
+        Thu, 23 Mar 2023 07:38:23 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCE66305D6
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Mar 2023 04:38:16 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32N8wxcW010913;
+        Thu, 23 Mar 2023 11:38:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=qcppdkim1;
+ bh=AxmzIU7zUKoMT0Wbd99EUpKr2TiQ4BZq6sCDCRBpQR0=;
+ b=LiIcCprODcoPfaG27Q/GibgInaDmwk8S8oRXCrjFs0nBLhTcj4pmJrQo6XSpfnUNJZBY
+ CA/Y2P0Oc6oe8RgB1gn+6CTAAkVcoyk3qrdmuggsZk88HS3jPU+8p0Hy3dmSsjkVWIPg
+ APwB6/L1SbUW/h9kYMpDvsw2UqKmfn0VnE/su3KOD2UG41Eeb8d3kEQ32MvJlmqtxbFa
+ W2Vmd8JV4QAEX8joFGu5adUOhuXWGHec12gmDFnqEN4XA7i/P2gU/pjLm/XTzqctsm0S
+ 9qM/oO/h09Z7neGPlsBf1JTwwqmS5tIjXQTdJre5WJaYh6j4W1xV/6ZXPHit+5lugkde EA== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pg64k251y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 23 Mar 2023 11:38:13 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32NBcCGb025943
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 23 Mar 2023 11:38:12 GMT
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.41; Thu, 23 Mar 2023 04:38:11 -0700
+From:   Aloka Dixit <quic_alokad@quicinc.com>
+To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+CC:     Aloka Dixit <quic_alokad@quicinc.com>
+Subject: [PATCH v2 0/2] RNR for EMA AP
+Date:   Thu, 23 Mar 2023 04:37:59 -0700
+Message-ID: <20230323113801.6903-1-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: HHCOhMe7TIENtG-qX_7OfzLPVZvN7jMe
+X-Proofpoint-ORIG-GUID: HHCOhMe7TIENtG-qX_7OfzLPVZvN7jMe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-22_21,2023-03-22_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxscore=0
+ clxscore=1011 priorityscore=1501 adultscore=0 mlxlogscore=677 phishscore=0
+ malwarescore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303150002 definitions=main-2303230088
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove pci_clear_master to simplify the code,
-the bus-mastering is also cleared in do_pci_disable_device,
-like this:
-./drivers/pci/pci.c:2197
-static void do_pci_disable_device(struct pci_dev *dev)
-{
-	u16 pci_command;
+As per IEEE Std 802.11ax-2021, 11.1.3.8.3 Discovery of a nontransmitted
+BSSID profile, an EMA AP that transmits a Beacon frame carrying
+a partial list of nontransmitted BSSID profiles should include in
+the frame a Reduced Neighbor Report element carrying information for
+at least the nontransmitted BSSIDs that are not present in
+the Multiple BSSID element carried in that frame.
 
-	pci_read_config_word(dev, PCI_COMMAND, &pci_command);
-	if (pci_command & PCI_COMMAND_MASTER) {
-		pci_command &= ~PCI_COMMAND_MASTER;
-		pci_write_config_word(dev, PCI_COMMAND, pci_command);
-	}
+Add new attribute NL80211_ATTR_EMA_RNR_ELEMS to support the above.
+Number of RNR elements must be more than or equal to the number of
+MBSSID elements. This attribute can be used only when EMA is enabled.
+Userspace is responsible for splitting the RNR into multiple elements
+such that each element excludes the non-transmitting profiles already
+included in the MBSSID element (%NL80211_ATTR_MBSSID_ELEMS) at
+the same index.
 
-	pcibios_disable_device(dev);
-}.
-And dev->is_busmaster is set to 0 in pci_disable_device.
+MAC80211 will generate EMA beacons by adding MBSSID and RNR elements
+at the same index. If the userspace provides more RNR elements than the
+number of MBSSID elements then these will be added in every EMA beacon.
 
-Signed-off-by: Cai Huoqing <cai.huoqing@linux.dev>
----
- drivers/net/wireless/realtek/rtw88/pci.c | 1 -
- 1 file changed, 1 deletion(-)
+Aloka Dixit (2):
+  cfg80211: support RNR for EMA AP
+  mac80211: support RNR for EMA AP
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index b4bd831c9845..60145d2f3e5a 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -1552,7 +1552,6 @@ static int rtw_pci_claim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
- 
- static void rtw_pci_declaim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
- {
--	pci_clear_master(pdev);
- 	pci_disable_device(pdev);
- }
- 
+ include/net/cfg80211.h       | 19 +++++++++++
+ include/uapi/linux/nl80211.h | 13 ++++++++
+ net/mac80211/cfg.c           | 63 +++++++++++++++++++++++++++++++++---
+ net/mac80211/ieee80211_i.h   | 21 ++++++++++--
+ net/mac80211/tx.c            | 10 ++++++
+ net/wireless/nl80211.c       | 50 ++++++++++++++++++++++++++++
+ 6 files changed, 168 insertions(+), 8 deletions(-)
+
+
+base-commit: 0dd45ebc08de2449efe1a0908147796856a5f824
 -- 
-2.34.1
+2.39.0
 
