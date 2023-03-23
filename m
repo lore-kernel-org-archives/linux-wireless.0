@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36446C6FD1D
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Mar 2023 11:32:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E99AC76195
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Mar 2023 11:32:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230259AbjCWLcV (ORCPT
+        id S230495AbjCWLcX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Mar 2023 07:32:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50400 "EHLO
+        Thu, 23 Mar 2023 07:32:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbjCWLcU (ORCPT
+        with ESMTP id S230016AbjCWLcU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 23 Mar 2023 07:32:20 -0400
-X-Greylist: delayed 352 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 23 Mar 2023 04:32:18 PDT
-Received: from out-27.mta1.migadu.com (out-27.mta1.migadu.com [IPv6:2001:41d0:203:375::1b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D78A6A58
+X-Greylist: delayed 345 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 23 Mar 2023 04:32:19 PDT
+Received: from out-13.mta0.migadu.com (out-13.mta0.migadu.com [91.218.175.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 319DA12046
         for <linux-wireless@vger.kernel.org>; Thu, 23 Mar 2023 04:32:18 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1679570795;
+        t=1679570808;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=OTUWX3aTLswoFCHtkP0zXcRP9Ge0kmAhVIeOjF5/rGc=;
-        b=tGiiSgjvr0b+Z7aAWVjX2r/RSBTRbfF/dareLKLdicHxsBVQ+Zgy38C5/P8Iap3KDd/lpi
-        etzTUrtxWpnsW2G4MBYbkdgMdil/d8miyjYW4eFjJCqX6Xr0L3JGtvmgwYf67neCzmGbMe
-        PGsYNpHJG7jSQRcfAuPzg0tb3MaqB9w=
+        bh=rGX1VskIO2esd5iCrlayQqCszF4VgpeWWivrdPxtbg4=;
+        b=DEC0eNYJuul660lvjxaoeqUvLhH6GgzbdTk1AxcCx2Kj5x96BZHZ6aIIUJVK+sncVZDQbr
+        L9l0JBXZZCm4W/vQB+sibYpvqmQhuHR7E+rRTEisdt4Tig3SaANUsw7ODwTgZtri/miSV/
+        x9vbQkNC/yn23vno5LmkGylhSwUG/RI=
 From:   Cai Huoqing <cai.huoqing@linux.dev>
 To:     cai.huoqing@linux.dev
 Cc:     Kalle Valo <kvalo@kernel.org>,
@@ -40,9 +40,9 @@ Cc:     Kalle Valo <kvalo@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
         ath12k@lists.infradead.org
-Subject: [PATCH 3/5] wifi: ath12k: Remove redundant pci_clear_master
-Date:   Thu, 23 Mar 2023 19:26:11 +0800
-Message-Id: <20230323112613.7550-3-cai.huoqing@linux.dev>
+Subject: [PATCH 5/5] wifi: rtw89: Remove redundant pci_clear_master
+Date:   Thu, 23 Mar 2023 19:26:13 +0800
+Message-Id: <20230323112613.7550-5-cai.huoqing@linux.dev>
 In-Reply-To: <20230323112613.7550-1-cai.huoqing@linux.dev>
 References: <20230323112613.7550-1-cai.huoqing@linux.dev>
 MIME-Version: 1.0
@@ -72,37 +72,21 @@ And dev->is_busmaster is set to 0 in pci_disable_device.
 
 Signed-off-by: Cai Huoqing <cai.huoqing@linux.dev>
 ---
- drivers/net/wireless/ath/ath12k/pci.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/pci.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index d32637b0113d..9ee47caf8485 100644
---- a/drivers/net/wireless/ath/ath12k/pci.c
-+++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -755,14 +755,12 @@ static int ath12k_pci_claim(struct ath12k_pci *ab_pci, struct pci_dev *pdev)
- 	if (!ab->mem) {
- 		ath12k_err(ab, "failed to map pci bar %d\n", ATH12K_PCI_BAR_NUM);
- 		ret = -EIO;
--		goto clear_master;
-+		goto release_region;
- 	}
- 
- 	ath12k_dbg(ab, ATH12K_DBG_BOOT, "boot pci_mem 0x%pK\n", ab->mem);
- 	return 0;
- 
--clear_master:
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index ec8bb5f10482..75bd3ac4dd71 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -2694,7 +2694,6 @@ static int rtw89_pci_claim_device(struct rtw89_dev *rtwdev,
+ static void rtw89_pci_declaim_device(struct rtw89_dev *rtwdev,
+ 				     struct pci_dev *pdev)
+ {
 -	pci_clear_master(pdev);
- release_region:
- 	pci_release_region(pdev, ATH12K_PCI_BAR_NUM);
- disable_device:
-@@ -778,7 +776,6 @@ static void ath12k_pci_free_region(struct ath12k_pci *ab_pci)
+ 	pci_disable_device(pdev);
+ }
  
- 	pci_iounmap(pci_dev, ab->mem);
- 	ab->mem = NULL;
--	pci_clear_master(pci_dev);
- 	pci_release_region(pci_dev, ATH12K_PCI_BAR_NUM);
- 	if (pci_is_enabled(pci_dev))
- 		pci_disable_device(pci_dev);
 -- 
 2.34.1
 
