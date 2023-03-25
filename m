@@ -2,232 +2,131 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5246C6FD1F
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Mar 2023 14:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB931C761AF
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Mar 2023 15:59:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230192AbjCYOeH (ORCPT
+        id S231941AbjCYP7F (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Mar 2023 10:34:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50162 "EHLO
+        Sat, 25 Mar 2023 11:59:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbjCYOeG (ORCPT
+        with ESMTP id S229446AbjCYP7E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Mar 2023 10:34:06 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C9F2FF34
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Mar 2023 07:34:05 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32PEB3ri021076;
-        Sat, 25 Mar 2023 14:33:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=WASG4cmFJyzzNH4fhRfxhgn8SsEhYoYGlby18+FOxCI=;
- b=h9GDRWDRb6BURjljVyV8KHlbcF3rXS7DQXO7Pi1C798LyWR/PmdscQDfmkcyYHJEpuCh
- UtPs1Cb5fZybflJzZ5AcsEM1fd89TTMDwRzED4qBlELrM/z1MBnF+7p45htof5+eR6jQ
- AAI1PbV0i8SKTX2TlzN73H/vQ/TKB4cZAMp+flrEgYriQPtyiB+kAZoHduPjNkzdNuGs
- SHobab7Olxael9qbP2hkjgFFH7VcqfjRORLtaRJur3ld4862AHxbA3+nHEx179CB9bne
- HbTse5vVw1b8QGneZJ66kY4sn9btBROJiTY9LaLEJGzwMMfP82trKBMoAO9mEXreDMJr lQ== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3phsvj0rwt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 25 Mar 2023 14:33:49 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 32PEXm0Z001104
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 25 Mar 2023 14:33:48 GMT
-Received: from [10.253.37.221] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.41; Sat, 25 Mar
- 2023 07:33:46 -0700
-Message-ID: <ca5177fe-3b9f-2309-9afd-1d5e827540f7@quicinc.com>
-Date:   Sat, 25 Mar 2023 22:33:44 +0800
+        Sat, 25 Mar 2023 11:59:04 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2123.outbound.protection.outlook.com [40.107.220.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C78293F1;
+        Sat, 25 Mar 2023 08:59:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=keMz2gSxPCuFKUSxGg0wNNsaavnBORV+iAVjKfk2LyEe6fIwlBc0qKIUfuvvtzuPjjJKLaKc0ipZFer8H5gVOSZ+fVIvKKFfFhFU5SuudBy0JpMMwB/tcy6B9T4O4UViYa9Khft/V+2AppY39oo8YbZykqT9aavH4w12OPKzOp6rK6eyYIHl0BAUoacl6uzabKmflzn+sCbVujOHrcXClG9O11WyWcME+h9AxMqWP7x+EAh39wFBt6HdoMfSRDZpmzjgD7DBAoX1saPVRr71ZDPIM0UUpblW+LC5l0DJpOiEB60PMpfZlVj0blwoZ6O25hioIKvu9IiBU3/WNlTswA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nFfOc6F/srpvQpa5wJiwvUdCjzi4ShQWTiKS2h2bZWk=;
+ b=F+RRK69P48kMOA0FRBCcliZK5VUfYs8NkhXHqKAdNi3vWvKHO/flN2nzsqHLcl82+calhYHNcZtocBXdY08//7zDyDX3SXm4zroieSPALzbpwuUbxWxau8gaC7FGkPXbsEJ6HIYTSfT95cFq4S70ckfRJJDHHtKuREJTFP2s4HquWeOEHNF8hMSZTCt5dMiatm4axbJ9eYWoIDAFzqPmP7t7aMwa9F4eArv9hqJq8cEBfo2VeR0yv6bNchG09ZVC+8IgZn24369KkkAug/9PNQXkm2OCOwsbd7UDCGOzABcBd9dJgMsBCnbvDTDEgwFL4iNni4lTjH8kBlXg0CxNNQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=corigine.com; dmarc=pass action=none header.from=corigine.com;
+ dkim=pass header.d=corigine.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=corigine.onmicrosoft.com; s=selector2-corigine-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nFfOc6F/srpvQpa5wJiwvUdCjzi4ShQWTiKS2h2bZWk=;
+ b=QhPWA/VJxryoQGjj3gNZeML8pycB6J8usJHYsl0/czJpGAldrgoTp5ZI8Hnach2lj45hLnPgpXnRQy8ihDAvccX+PooYwVFAQ2LhjcOd+S2HPyHZMvEG94anuKUlzZBl7k5rms+rNUYM6Hii2zkt6G+2FgSl563uroULHhcH+hU=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=corigine.com;
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com (2603:10b6:510:78::6)
+ by DS7PR13MB4621.namprd13.prod.outlook.com (2603:10b6:5:3b0::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.41; Sat, 25 Mar
+ 2023 15:59:00 +0000
+Received: from PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c]) by PH0PR13MB4842.namprd13.prod.outlook.com
+ ([fe80::85f5:bdb:fb9e:294c%2]) with mapi id 15.20.6178.041; Sat, 25 Mar 2023
+ 15:58:59 +0000
+Date:   Sat, 25 Mar 2023 16:58:49 +0100
+From:   Simon Horman <simon.horman@corigine.com>
+To:     Tom Rix <trix@redhat.com>
+Cc:     aspriel@gmail.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, kvalo@kernel.org, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        nathan@kernel.org, ndesaulniers@google.com,
+        johannes.berg@intel.com, quic_srirrama@quicinc.com,
+        alexander@wetzel-home.de, shaul.triebitz@intel.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Subject: Re: [PATCH] wifi: mac80211: remove unused has_5g variable
+Message-ID: <ZB8aOahMb4PQoGQK@corigine.com>
+References: <20230325130343.1334209-1-trix@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230325130343.1334209-1-trix@redhat.com>
+X-ClientProxiedBy: AM3PR04CA0134.eurprd04.prod.outlook.com (2603:10a6:207::18)
+ To PH0PR13MB4842.namprd13.prod.outlook.com (2603:10b6:510:78::6)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH 24/27] wifi: mac80211: implement link switching
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-CC:     Johannes Berg <johannes.berg@intel.com>,
-        <ath11k@lists.infradead.org>, <ath12k@lists.infradead.org>,
-        <quic_wgong@quicinc.com>
-References: <20220902141259.377789-1-johannes@sipsolutions.net>
- <20220902161143.d99dfbe65c90.I92385ba882ec984a9a2ad18293173436657e82aa@changeid>
-From:   Wen Gong <quic_wgong@quicinc.com>
-In-Reply-To: <20220902161143.d99dfbe65c90.I92385ba882ec984a9a2ad18293173436657e82aa@changeid>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: fsRLthm7BdeFa06CMS4v0TiAMJVzncqv
-X-Proofpoint-ORIG-GUID: fsRLthm7BdeFa06CMS4v0TiAMJVzncqv
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-24_11,2023-03-24_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 adultscore=0 mlxscore=0 clxscore=1011 phishscore=0
- priorityscore=1501 malwarescore=0 mlxlogscore=999 impostorscore=0
- bulkscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2303250120
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR13MB4842:EE_|DS7PR13MB4621:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1a20e63d-aa00-4c38-e55d-08db2d49d883
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 50QDB8HuVOdBr9mR7J+HrOLsyJmbj9CpJW7D0+l4rP5vev/8fQF28oOiSAdBzYhCXUIb4lYm1xbORzbYJDMuZU6y35y/m+ONRbHbAUDEExj66DSYwe9+t8bXMl9HTmLpEJ8heLms1GMYD3tYKQOWYX7xkHCZRgHJMOWXyTAgxJTE29HDMgEmJcLnp51bfkAM9Sz2NOlKtDzHb9mq7OElWOVHui9mtYt2+sfZt9IXdATH4Oy4E3Jtvi0XEv9nO3ROlOY5O6WSSGdKAb6DFFEqGtB4maCMh3mZVw5veExj4OmT2dPi1sI6zVX++sv6rCqrt1aj2qdHXLQiGkiQGZCMXIXO4pZeFDSwAQW5X5Ce4N0UOUDCYNMGSTWe3Is1Wo0TsreE56X5mAGG9j8FQ36wLIfFKXNR7OVsgINuJmqKGzoEQhFvfPhF/qitc9sve8oa0e+vTNMuszMG4uJv4XzDYyTmW65u6cg08vItrGmUtBgSI9pCN/9cKN3RS3yungAg7jJzJg3ZZK+ocZNEIQNoROnnXX3fdjd1ikFl7ktkcmkYlxD0nwZat8rmRAKhFyKEBOdvuzhaZ2N2+QaI5GF158vEzARBs0feGROuYvBUiHc=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR13MB4842.namprd13.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39830400003)(136003)(366004)(396003)(346002)(376002)(451199021)(36756003)(86362001)(6666004)(186003)(2616005)(6506007)(6512007)(5660300002)(7416002)(8936002)(66556008)(66476007)(6916009)(4326008)(8676002)(66946007)(41300700001)(2906002)(4744005)(38100700002)(44832011)(6486002)(478600001)(316002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?q2CLgUT4dlrZzKSN4zStrcedvIwxwYjb8IYHBaLpwBQOaTlzmDKAK/4sD3MJ?=
+ =?us-ascii?Q?aupH7v66XxTHfuLd1OAuOplZeDzg1/dbGhy0E1e+cYYcv3YKPa3lHzd0r3yl?=
+ =?us-ascii?Q?DavZN367Q00WMg7lgZwge6GxG6+3CAfCc7hL+8YdcZjeXqoLvXuGNSFkoMg8?=
+ =?us-ascii?Q?1NCkqdcSA6w7MkNJvXiA/TXk6s2ev9Ed50x96+i8Jt/jh+52fI3UdRcCHzDw?=
+ =?us-ascii?Q?fVoJwEeDQvDUZRvmmAO0zPT+UIK7MskjRrvtL/ndDy3+7D6Gr/4EDVl8WM84?=
+ =?us-ascii?Q?h22KQFBHaGYSnOQ6i6INI1U4iXAse0RXwY516dDs0MXzpIkgdV5fIb94ClxI?=
+ =?us-ascii?Q?g2cea+ziqriaEHX0Nh8cQGX/FHyuBuE7+uCbMLaA7nHaDIBJJXhAS2wZbi7K?=
+ =?us-ascii?Q?8p4C2nAkJg5Rm7auEiYPTZEd+JAtgS8EFzO3F+0a0ex90BUFw2E+rk+CU/Py?=
+ =?us-ascii?Q?R/usz3aCOnkuQhKH5jyraNVH00q3jZBN+3NKfzI90qCRIWnT/Hyt7WukRgU3?=
+ =?us-ascii?Q?EzPrYsn0qMeF0j9NzQlK8jv+X2jFCZ+L9J7D9oH0WF7WkTNEA02KdPxox98e?=
+ =?us-ascii?Q?PI3Hm9xk7+aL+10IIY1Ndv9RxqG4XayzlguRoAaRJb59ePWDE/54X5H632B3?=
+ =?us-ascii?Q?ZqHhauViXvQjxC5fD2cpPII7nvg1+It6Tz0dswMEAWraF5I73JIeGQb4+3jh?=
+ =?us-ascii?Q?IksU3PJOM/DFESVRB2hdQ1nDo5frfmmA8n0xfeq3loaeFHNbqDfsw+EACEQu?=
+ =?us-ascii?Q?t0++G1MZ6mR8Ccbu6vfJYGwjbjm6WwKQ8rTmCV5ydA41KkIUIO+48SWHR10e?=
+ =?us-ascii?Q?Vppzjv3u3Bssb+2Yjt4x6ZHI4lZhIwa8/ut0Zzv+4ok8E2o1nzzYfHeB4CUa?=
+ =?us-ascii?Q?MXfNmDN3P+fnFF7HfhRcYIWT7w5l0IPdNVoeZnWBE/ACkEDil9U2L3kpzeg8?=
+ =?us-ascii?Q?KtI/lBgQaeIAB2Jl4o9Nyi0/eVwoz92saJE0F+fiad4W9JZpLROFbbWddcOY?=
+ =?us-ascii?Q?tn6LT4L5zCcqoEH2YTGBCxcsMnT4QNX7WePsfZnlDvWMH8E/kHoAYPH9Q9La?=
+ =?us-ascii?Q?bV4yXdBIqeOfRyJgQHm1OmR+irNgt4J0AAfJbvRTi4LglLtUs9qyVDeFlfYg?=
+ =?us-ascii?Q?L+hY6O0+3y3EH74DCM9sTWTe5Zyf9E6wFWUwvRPn8eIe/p4BejvMbCw0IZmm?=
+ =?us-ascii?Q?1e1EpSv8YlIOui3mt7pyCFVCBQAWzrSVBxxe5mbrXdvBu8PYMraJw/RBq5+r?=
+ =?us-ascii?Q?v2eNqKXPIuBZlJQHl61G7I4wnKZtvOFTA1XcYN/pjQ5dG6+anji6Q4pQUrD6?=
+ =?us-ascii?Q?FmRHK4/WWOHeuVk6QfFH6vkRju8VJ+BnWiNauuFluUlTJTK2boYO3C1ULbcd?=
+ =?us-ascii?Q?zbM81KEjshIo+tqnT+dkWt5QIgdxU2H7Q1RrCfkhIxakz4ijG/t/gQrxTTRZ?=
+ =?us-ascii?Q?FFIGvebBV/2SNGXfq0iA9IWor3Wmpg9OpQMnAR+hOFMb9A1D0PhMBqb4U84O?=
+ =?us-ascii?Q?e9LjKAd5DQ/9nRP3qZgJIhTHQ02gE9UPTW8dWKWMJAmevoRe8xzaT9toonbM?=
+ =?us-ascii?Q?XpZG+uc8qo2pw+07CPfBhu3EhRDt+ZrBqXMZ0JDg9vWB6CA1aPPmdsAs+6bN?=
+ =?us-ascii?Q?XzdQ2t0YIelaVN9kKid2MpQh23ObflWQkmDXuB3DT3O2EqnV1x8pcK7tzJcV?=
+ =?us-ascii?Q?HiQRHw=3D=3D?=
+X-OriginatorOrg: corigine.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1a20e63d-aa00-4c38-e55d-08db2d49d883
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR13MB4842.namprd13.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2023 15:58:59.4254
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: fe128f2c-073b-4c20-818e-7246a585940c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: kMNIb0f0kXw88K+amuM0gYgMY/7RYURzgpaSiGOiGwXqYeSa41nheLMS6/EnAaXkRHyxqA+1/k9ZtESsgIJCcKUgWp8qDUPUo40KZMvXr0g=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR13MB4621
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/2/2022 10:12 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Implement an API function and debugfs file to switch
-> active links.
->
-> Also provide an async version of the API so drivers
-> can call it in arbitrary contexts, e.g. while in the
-> authorized callback.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->   include/net/mac80211.h        |  41 ++++++++
->   net/mac80211/debugfs_netdev.c |  26 ++++++
->   net/mac80211/ieee80211_i.h    |   4 +
->   net/mac80211/iface.c          |  12 +++
->   net/mac80211/key.c            |  34 +++++++
->   net/mac80211/key.h            |   3 +
->   net/mac80211/link.c           | 171 ++++++++++++++++++++++++++++++++++
->   7 files changed, 291 insertions(+)
->
-> ...
-> +static int _ieee80211_set_active_links(struct ieee80211_sub_if_data *sdata,
-> +				       u16 active_links)
-> +{
-> +	struct ieee80211_bss_conf *link_confs[IEEE80211_MLD_MAX_NUM_LINKS];
-> +	struct ieee80211_local *local = sdata->local;
-> +	u16 old_active = sdata->vif.active_links;
-> +	unsigned long rem = old_active & ~active_links;
-> +	unsigned long add = active_links & ~old_active;
-> +	struct sta_info *sta;
-> +	unsigned int link_id;
-> +	int ret, i;
-> +
-> +	if (!ieee80211_sdata_running(sdata))
-> +		return -ENETDOWN;
-> +
-> +	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-> +		return -EINVAL;
-> +
-> +	/* cannot activate links that don't exist */
-> +	if (active_links & ~sdata->vif.valid_links)
-> +		return -EINVAL;
-> +
-> +	/* nothing to do */
-> +	if (old_active == active_links)
-> +		return 0;
-> +
-> +	for (i = 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++)
-> +		link_confs[i] = sdata_dereference(sdata->vif.link_conf[i],
-> +						  sdata);
-> +
-> +	if (add) {
-> +		sdata->vif.active_links |= active_links;
-> +		ret = drv_change_vif_links(local, sdata,
-> +					   old_active,
-> +					   sdata->vif.active_links,
-> +					   link_confs);
-> +		if (ret) {
-> +			sdata->vif.active_links = old_active;
-> +			return ret;
-> +		}
-> +	}
-> +
-> +	for_each_set_bit(link_id, &rem, IEEE80211_MLD_MAX_NUM_LINKS) {
-> +		struct ieee80211_link_data *link;
-> +
-> +		link = sdata_dereference(sdata->link[link_id], sdata);
-> +
-> +		/* FIXME: kill TDLS connections on the link */
-> +
-> +		ieee80211_link_release_channel(link);
-> +	}
-> +
-> +	list_for_each_entry(sta, &local->sta_list, list) {
-> +		if (sdata != sta->sdata)
-> +			continue;
-> +		ret = drv_change_sta_links(local, sdata, &sta->sta,
-> +					   old_active,
-> +					   old_active | active_links);
-> +		WARN_ON_ONCE(ret);
-> +	}
-> +
-> +	ret = ieee80211_key_switch_links(sdata, rem, add);
+On Sat, Mar 25, 2023 at 09:03:43AM -0400, Tom Rix wrote:
+> clang with W=1 reports
+> drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c:1051:6: error:
+>   variable 'has_5g' set but not used [-Werror,-Wunused-but-set-variable]
+>         int has_5g = 0;
+>             ^
+> This variable is not used so remove it.
+> 
+> Signed-off-by: Tom Rix <trix@redhat.com>
 
-I see ieee80211_key_switch_link() only handler the per-link(link_id >= 
-0) keys,
+Reviewed-by: Simon Horman <simon.horman@corigine.com>
 
-So I think lower driver also install the pairwise keys(link_id = -1) for 
-the added links at this moment?
 
-> +	WARN_ON_ONCE(ret);
-> +
-> +	list_for_each_entry(sta, &local->sta_list, list) {
-> +		if (sdata != sta->sdata)
-> +			continue;
-> +		ret = drv_change_sta_links(local, sdata, &sta->sta,
-> +					   old_active | active_links,
-> +					   active_links);
-> +		WARN_ON_ONCE(ret);
-> +	}
-> +
-
-I see 2 times to call drv_change_sta_link() above, and with sequence  
-old_active->old_active | active_links->active_links
-
-May I know is it has some design here?
-
-> +	for_each_set_bit(link_id, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
-> +		struct ieee80211_link_data *link;
-> +
-> +		link = sdata_dereference(sdata->link[link_id], sdata);
-> +
-> +		ret = ieee80211_link_use_channel(link, &link->conf->chandef,
-> +						 IEEE80211_CHANCTX_SHARED);
-
-For the 1st link of MLO connection/NON-MLO connetion, ieee80211_link_use_channel() is called before drv_change_sta_link(),
-And now it is after drv_change_sta_link(), May I know is it also has some design here?
-
-Also I see commit(8fb7e2ef4bab mac80211_hwsim: always activate all links) and ieee80211_if_parse_active_links()
-will use ieee80211_set_active_links(), so I think ieee80211_set_active_links() has passed test case with some type lower driver/chip?
-
-> +		WARN_ON_ONCE(ret);
-> +
-> +		ieee80211_link_info_change_notify(sdata, link,
-> +						  BSS_CHANGED_ERP_CTS_PROT |
-> +						  BSS_CHANGED_ERP_PREAMBLE |
-> +						  BSS_CHANGED_ERP_SLOT |
-> +						  BSS_CHANGED_HT |
-> +						  BSS_CHANGED_BASIC_RATES |
-> +						  BSS_CHANGED_BSSID |
-> +						  BSS_CHANGED_CQM |
-> +						  BSS_CHANGED_QOS |
-> +						  BSS_CHANGED_TXPOWER |
-> +						  BSS_CHANGED_BANDWIDTH |
-> +						  BSS_CHANGED_TWT |
-> +						  BSS_CHANGED_HE_OBSS_PD |
-> +						  BSS_CHANGED_HE_BSS_COLOR);
-> +		ieee80211_mgd_set_link_qos_params(link);
-> +	}
-> +
-> +	old_active = sdata->vif.active_links;
-> +	sdata->vif.active_links = active_links;
-> +
-> +	if (rem) {
-> +		ret = drv_change_vif_links(local, sdata, old_active,
-> +					   active_links, link_confs);
-> +		WARN_ON_ONCE(ret);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-...
