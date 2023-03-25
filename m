@@ -2,76 +2,106 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46FF9C76195
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Mar 2023 01:10:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0048CC6FD1F
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Mar 2023 08:16:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231418AbjCYBKB (ORCPT
+        id S232098AbjCYIQQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Mar 2023 21:10:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53974 "EHLO
+        Sat, 25 Mar 2023 04:16:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbjCYBKA (ORCPT
+        with ESMTP id S231961AbjCYIPz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Mar 2023 21:10:00 -0400
-X-Greylist: delayed 313 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 24 Mar 2023 18:09:58 PDT
-Received: from forward103o.mail.yandex.net (forward103o.mail.yandex.net [IPv6:2a02:6b8:0:1a2d::606])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03A77271F
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Mar 2023 18:09:57 -0700 (PDT)
-Received: from forward204a.mail.yandex.net (forward204a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d204])
-        by forward103o.mail.yandex.net (Yandex) with ESMTP id C2B3210A8982
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Mar 2023 04:04:42 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net [IPv6:2a02:6b8:c0f:170e:0:640:d60c:0])
-        by forward204a.mail.yandex.net (Yandex) with ESMTP id E270C42322;
-        Sat, 25 Mar 2023 04:04:38 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id b429bIKDdGk0-UgqGVDXw;
-        Sat, 25 Mar 2023 04:04:38 +0300
-X-Yandex-Fwd: 1
-Authentication-Results: mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net; dkim=pass
-Message-ID: <411a77cb-47f1-2f97-76c6-939c024654b4@16depo.xyz>
-Date:   Sat, 25 Mar 2023 04:04:37 +0300
+        Sat, 25 Mar 2023 04:15:55 -0400
+Received: from mail-oi1-x231.google.com (mail-oi1-x231.google.com [IPv6:2607:f8b0:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 462EF19F07;
+        Sat, 25 Mar 2023 01:14:51 -0700 (PDT)
+Received: by mail-oi1-x231.google.com with SMTP id f17so2910078oiw.10;
+        Sat, 25 Mar 2023 01:14:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1679732089;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=UNEJO+btUHDVv8kAHfbox96db3jjTTQ4tn8tm1TepCE=;
+        b=l3/Bc6LbfBxhPAE6W9T1hqH74mCbAYSIPSk+g4PM+ZC5xxtxwhuPzMctI1TOFnSncJ
+         gfV3iaeMHghACeP3fPbu35I5/rRznJbEGDA7LAVy4KbYak3nBlPrczln18PhiOJc6lwi
+         v4iM7KXLz5AH3tpHtS+ZVe87UO5J/8F3vVM+l2HzoRlx73R+YTofdcqow6MEBLNNl+nG
+         Jzv+/c8YT74szh5uXFMKSPmuwdD6Gfh1mGBv5CVuKqatpGIvvEJRLBWR5qX7GU00W3Gc
+         hDbH6SwTXQ5orTVX+vQZzZ908FmxYZpq80AcSBPUHd7enfkKujSNgruIys8CHUGvIau4
+         heKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679732089;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=UNEJO+btUHDVv8kAHfbox96db3jjTTQ4tn8tm1TepCE=;
+        b=gW7PLi7mH58wgolGaWnFCazBI0SdzEMxkST7d0wztIzAcZ+g+IrySI968vqE1NkOS0
+         6YoF+W4j9ia8s2LZlAkoL02NRCDhpoU7UVSI8QEAEyoVEeOKZKUPMSu4aNl38dgbb5nA
+         rmbPv+k3f5jWS6BMM1LYlBcJfooEY/wn0XKr/o3eSPKPe0xw8CQQS07gMByEYd9uBpJA
+         +OiHJMmoZtvQurr5LGvAixzbE7EC88zn1c3WkYrH9DEc+xxTu39PSE0jqqOMpM0pPAcf
+         rF+dIYBRSGCvsDtKLr60EOiZNvpdbP13cUMymP87JtpzD/jk1bA/E0C63brhiVjyPNbi
+         n5Gg==
+X-Gm-Message-State: AO0yUKXCyvg//R+f/Q5/zcBT/S6syrFXxH+D5rpvOF78qYNgE9jPHdlR
+        GxG3eLmVxwtni2gUSJGTYJY=
+X-Google-Smtp-Source: AK7set8Nm1tQ9MdjKOZ7l1fhSklIp1/yLsjpfGTiaNvbBY5NzHhhKdDwS3+cfJOC/YO87bB6sWlhVA==
+X-Received: by 2002:a05:6808:118c:b0:386:fb78:a4cb with SMTP id j12-20020a056808118c00b00386fb78a4cbmr3099127oil.43.1679732089398;
+        Sat, 25 Mar 2023 01:14:49 -0700 (PDT)
+Received: from chcpu13.cse.ust.hk (191host119.mobilenet.cse.ust.hk. [143.89.191.119])
+        by smtp.gmail.com with ESMTPSA id x81-20020acae054000000b0038779c9e6a1sm1935469oig.41.2023.03.25.01.14.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 25 Mar 2023 01:14:49 -0700 (PDT)
+From:   Wei Chen <harperchen1110@gmail.com>
+To:     pkshih@realtek.com
+Cc:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Wei Chen <harperchen1110@gmail.com>
+Subject: [PATCH] wireless: rtlwifi: fix incorrect error codes in rtl_debugfs_set_write_reg()
+Date:   Sat, 25 Mar 2023 08:14:29 +0000
+Message-Id: <20230325081429.3567671-1-harperchen1110@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Content-Language: en-US
-From:   Kirill <me@16depo.xyz>
-Subject: [wireless-regdb] [PATCH] Update regulatory info for Russia (RU) on
- 6GHz
-To:     sforshee@kernel.org
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Update regulatory info for Russia on 6GHz in
-  accordance with current regulatory rules.
+If there is a failure during copy_from_user or user-provided data buffer 
+is invalid, rtl_debugfs_set_write_reg should return negative error code 
+instead of a positive value count.
 
-Source: https://docs.cntd.ru/document/1300597464?section=text
+Fix this bug by returning correct error code. Moreover, the check of buffer
+against null is removed since it will be handled by copy_from_user.
 
-Signed-off-by: Kirill Matvienko <me@16depo.xyz>
+Signed-off-by: Wei Chen <harperchen1110@gmail.com>
 ---
-  db.txt | 3 ++-
-  1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/debug.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 915a3b9..7f338b2 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1500,11 +1500,12 @@ country RS: DFS-ETSI
-  	# 60 GHz band channels 1-4, ref: Etsi En 302 567
-  	(57000 - 66000 @ 2160), (40)
-
--# Source: https://docs.cntd.ru/document/902048009?section=text
-+# Source: https://docs.cntd.ru/document/1300597464?section=text
-  country RU: DFS-ETSI
-  	(2400 - 2483.5 @ 40), (20)
-  	(5150 - 5350 @ 160), (100 mW), NO-OUTDOOR, DFS
-  	(5650 - 5850 @ 160), (100 mW), NO-OUTDOOR, DFS
-+	(5925 - 6425 @ 160), (100 mW), NO-OUTDOOR
-  	# 60 GHz band channels 1-4, ref: Changes to NLA 124_Order 
-№129_22042015.pdf
-  	(57000 - 66000 @ 2160), (40), NO-OUTDOOR
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
+index 0b1bc04cb6ad..3e7f9b4f1f19 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.c
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
+@@ -278,8 +278,8 @@ static ssize_t rtl_debugfs_set_write_reg(struct file *filp,
+ 
+ 	tmp_len = (count > sizeof(tmp) - 1 ? sizeof(tmp) - 1 : count);
+ 
+-	if (!buffer || copy_from_user(tmp, buffer, tmp_len))
+-		return count;
++	if (copy_from_user(tmp, buffer, tmp_len))
++		return -EFAULT;
+ 
+ 	tmp[tmp_len] = '\0';
+ 
+@@ -287,7 +287,7 @@ static ssize_t rtl_debugfs_set_write_reg(struct file *filp,
+ 	num = sscanf(tmp, "%x %x %x", &addr, &val, &len);
+ 
+ 	if (num !=  3)
+-		return count;
++		return -EINVAL;
+ 
+ 	switch (len) {
+ 	case 1:
 -- 
-2.34.1
+2.25.1
+
