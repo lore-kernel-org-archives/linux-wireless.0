@@ -2,68 +2,65 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D1A2C76195
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Mar 2023 09:51:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CCB6C7619A
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Mar 2023 10:48:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbjC0JvN (ORCPT
+        id S232391AbjC0KsA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Mar 2023 05:51:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47278 "EHLO
+        Mon, 27 Mar 2023 06:48:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231893AbjC0JvL (ORCPT
+        with ESMTP id S230135AbjC0Kr7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Mar 2023 05:51:11 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBE3249DC
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2023 02:51:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=kr3eZdhWRPlRHk5Q1eR2+2zifEAi9CmH+3+FELJP+rU=;
-        t=1679910670; x=1681120270; b=p67nv5DbujY+ltFsM/CsNsnYwNbECNXvCdfxwTPrzHujEKm
-        fAXHPGiKqnUDA8dJj5c0XXApl16M2MTBx6RfSF1GWGPYyFBt4YtqLUHKC474e2xBaGv1GRXwEX9nI
-        H8kNq6OkGmQIS5C5D2xs/M0Idj/SsQsvrLyKxlQoD7KsRzGIqny03kLbqi54uti8X4QRJRWyMwBLi
-        KNpJpBkuG9N3aTb7mdvLjGdxnjUN43wXiMXMRv2zDhfjh04atSGYn9arad5KEsECjrc5eWVul/1ck
-        tuFPdqhL1j58ll1Vxx9Xg93dJfOKsLsF78OFbOWb0dU3kYTqghhQz6f7M0CU1BVg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1pgjVE-00Fdx5-0O;
-        Mon, 27 Mar 2023 11:51:00 +0200
-Message-ID: <569b7058d6a9807a98777bf7a0cfc4b3846477d8.camel@sipsolutions.net>
-Subject: Re: iwlwifi "memcpy: detected field-spanning write" kernel oops
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Hans de Goede <hdegoede@redhat.com>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Benjamin Berg <benjamin.berg@intel.com>
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Kees Cook <keescook@chromium.org>
-Date:   Mon, 27 Mar 2023 11:50:59 +0200
-In-Reply-To: <68760035-7f75-1b23-e355-bfb758a87d83@redhat.com>
-References: <68760035-7f75-1b23-e355-bfb758a87d83@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+        Mon, 27 Mar 2023 06:47:59 -0400
+Received: from nbd.name (nbd.name [46.4.11.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2770AB5
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Mar 2023 03:47:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+        s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+        References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=JJpWt9s21SkDzN868Ycl9scKYBZabhvtSuX4N4znx2I=; b=idn/xQ8Tep2xKzfY9XGvXOygkX
+        W/SF2/UmHZOvnurQK09hDdpGrIEcrmgAxQjh4bNL1nVrm15g3NwCKZvkoHGRiYXObHIrKNi94T1g+
+        LW5K92tB4qafZxRWPCM72gwmkgBKyAy+eVXvTST9xABzeTenVozQLPayktwJRcCm5qIM=;
+Received: from p54ae9730.dip0.t-ipconnect.de ([84.174.151.48] helo=nf.local)
+        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <nbd@nbd.name>)
+        id 1pgkOH-007LUO-7z; Mon, 27 Mar 2023 12:47:53 +0200
+Message-ID: <1da4680e-d7b9-dc17-0bff-3edfa046a357@nbd.name>
+Date:   Mon, 27 Mar 2023 12:47:52 +0200
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.9.0
+Subject: Re: [PATCH] wifi: mac80211: enable EHT mesh support
+Content-Language: en-US
+To:     Ryder Lee <ryder.lee@mediatek.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc:     Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
+References: <6088d99492ce29f1075b3a22b2c2e5d010196e51.1679891359.git.ryder.lee@mediatek.com>
+From:   Felix Fietkau <nbd@nbd.name>
+In-Reply-To: <6088d99492ce29f1075b3a22b2c2e5d010196e51.1679891359.git.ryder.lee@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2023-03-27 at 11:12 +0200, Hans de Goede wrote:
-> Hi All,
->=20
-> I have noticed the following iwlwifi oops with kernel 6.2.0 and newer (1)=
-:
+On 27.03.23 06:37, Ryder Lee wrote:
+> @@ -4903,7 +4974,7 @@ u8 ieee80211_ie_len_eht_cap(struct ieee80211_sub_if_data *sdata, u8 iftype)
+>   				       &eht_cap->eht_cap_elem,
+>   				       is_ap);
+>   	return 2 + 1 +
+> -	       sizeof(he_cap->he_cap_elem) + n +
+> +	       sizeof(eht_cap->eht_cap_elem) + n +
+>   	       ieee80211_eht_ppe_size(eht_cap->eht_ppe_thres[0],
+>   				      eht_cap->eht_cap_elem.phy_cap_info);
+>   	return 0;
+This looks like it should be a separate fix, right?
 
-Yes, this was noted before and Kees was working on a fix:
-
-https://lore.kernel.org/linux-wireless/20230218191056.never.374-kees@kernel=
-.org/
-
-but the discussion was still ongoing and I don't think he posted a final
-version yet.
-
-johannes
+- Felix
