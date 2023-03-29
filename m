@@ -2,62 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A406C74A5B
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Mar 2023 21:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6569C77B6D
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Mar 2023 21:27:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230296AbjC2VWI (ORCPT
+        id S229909AbjC2V1b (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Mar 2023 17:22:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47288 "EHLO
+        Wed, 29 Mar 2023 17:27:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230072AbjC2VVu (ORCPT
+        with ESMTP id S229462AbjC2V13 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Mar 2023 17:21:50 -0400
-Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2D4E558E;
-        Wed, 29 Mar 2023 14:21:49 -0700 (PDT)
-Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-17ac5ee3f9cso17681114fac.12;
-        Wed, 29 Mar 2023 14:21:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680124909;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=D6kdJkdEvlZGQb1vCK3qYJWmWN2WbnFemR8/3BecZeY=;
-        b=BGL1+h1zAA/NzWp+Iuw9NVD9jKTcIMeSSZQQD3ZbfGKfmYl9V7C7vgotO06xfttpr+
-         Pphta7ltgRoylNsGK7+kTRhVm+pS86phvGxDXFUXwW/ZnI7qYgzXERXs/WVPY5QbJKXE
-         vVbkt9bdn8ktBKeVC9E/weQG0zoyRULcSTwpEIbRvdQxSAJ9WjOyqZAzxqsv9joViwPR
-         S0szwF+2K+Z7gIuixA0KZSTOo0PwdUyJYDSdii3IH7fpnMYDH1Ga7vyjVypEZsOTLk/R
-         bOYB2U9el6aoZ8cA5Cg461g4GrC9fibm9DyQ0f6Q0GwjWTWo6Tgp5E3nzecDfaU1KuQs
-         qkJA==
-X-Gm-Message-State: AAQBX9fbSR/sTM0Cevx2TrB341C+mw/YidKEQQO0UC3VIGv0WiMhGUYi
-        srHNV0g4vozD6Kt9VR91LQ==
-X-Google-Smtp-Source: AKy350Yz8wBQUIa2vxnrxVjt+nPqC1UmY+M1RkG0ncdyC4Riz1moWMsQ9Ah3S0EOekgAOjxhUNzThA==
-X-Received: by 2002:a05:6870:3284:b0:17a:f8b1:8bae with SMTP id q4-20020a056870328400b0017af8b18baemr11963271oac.37.1680124908972;
-        Wed, 29 Mar 2023 14:21:48 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id z26-20020a056830129a00b006a1508d348dsm2892795otp.22.2023.03.29.14.21.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Mar 2023 14:21:48 -0700 (PDT)
-Received: (nullmailer pid 86895 invoked by uid 1000);
-        Wed, 29 Mar 2023 21:21:39 -0000
-From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 29 Mar 2023 16:20:44 -0500
-Subject: [PATCH 3/5] net: rfkill-gpio: Add explicit include for of.h
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20230329-acpi-header-cleanup-v1-3-8dc5cd3c610e@kernel.org>
-References: <20230329-acpi-header-cleanup-v1-0-8dc5cd3c610e@kernel.org>
-In-Reply-To: <20230329-acpi-header-cleanup-v1-0-8dc5cd3c610e@kernel.org>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Wed, 29 Mar 2023 17:27:29 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 365AC2681;
+        Wed, 29 Mar 2023 14:27:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=vTEx1qGiRwHQqbRWZ0F0YVEXYMez6RiJLOH+5aThdgE=;
+        t=1680125246; x=1681334846; b=spE3Mu/tZJZwbguWhNkhb04F/VyzKMs5S+EnC7HG/oatr8H
+        Q1q+8HkkN1+FqeaVED8hlbN6/oYYLNep3P7v6UjYf0aQk6j34UzBQC2Ta6PF3PDP5Pj9y+rWUCsJH
+        TxuD/FFgojsMo0V90ZL2wB5TIplvpE0rrKHEYW5HB9jnlShnNIGqxHMoIX74EhGwQPUb0Q5Bix4dR
+        9KvWWFRQW8D8DcRU7JILoU62inBy57SWX+T6vyISIYskWAdKSxgpIrRc8y2HzgEEb6sJHO+PIe+qO
+        ZfJkxJ9lyVP2HcNWY5JdtLw55pt1Yy19tWE5Qnf1LmXMmzRKUXCOvQySu29Qh0Yw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1phdJz-000F4W-1q;
+        Wed, 29 Mar 2023 23:27:07 +0200
+Message-ID: <fbad112793615840745195e54eed98634233c415.camel@sipsolutions.net>
+Subject: Re: [PATCH 3/5] net: rfkill-gpio: Add explicit include for of.h
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Rob Herring <robh@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
         Len Brown <lenb@kernel.org>,
         Marcelo Schmitt <marcelo.schmitt1@gmail.com>,
         Lars-Peter Clausen <lars@metafoo.de>,
         Michael Hennerich <Michael.Hennerich@analog.com>,
         Jonathan Cameron <jic23@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
         "David S. Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
@@ -71,34 +55,34 @@ Cc:     linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org,
         netdev@vger.kernel.org, linux-serial@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-acpi@vger.kernel.org,
         devicetree@vger.kernel.org
-X-Mailer: b4 0.13-dev
+Date:   Wed, 29 Mar 2023 23:27:05 +0200
+In-Reply-To: <20230329-acpi-header-cleanup-v1-3-8dc5cd3c610e@kernel.org>
+References: <20230329-acpi-header-cleanup-v1-0-8dc5cd3c610e@kernel.org>
+         <20230329-acpi-header-cleanup-v1-3-8dc5cd3c610e@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With linux/acpi.h no longer implicitly including of.h, add an explicit
-include of of.h to fix the following error:
+On Wed, 2023-03-29 at 16:20 -0500, Rob Herring wrote:
+> With linux/acpi.h no longer implicitly including of.h, add an explicit
+> include of of.h to fix the following error:
+>=20
+> net/rfkill/rfkill-gpio.c:181:21: error: implicit declaration of function =
+'of_match_ptr' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+>=20
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-net/rfkill/rfkill-gpio.c:181:21: error: implicit declaration of function 'of_match_ptr' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+Sounds good!
 
-Signed-off-by: Rob Herring <robh@kernel.org>
----
- net/rfkill/rfkill-gpio.c | 1 +
- 1 file changed, 1 insertion(+)
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 786dbfdad772..e9d1b2f2ff0a 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -8,6 +8,7 @@
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
- #include <linux/rfkill.h>
-+#include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/clk.h>
- #include <linux/slab.h>
+I'm happy with Rafael taking the entire series, there's nothing here
+that I expect to conflict, and anyway it'd be trivial.
 
--- 
-2.39.2
-
+Thanks,
+johannes
