@@ -2,186 +2,136 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A91D6C76196
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Mar 2023 09:07:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EA50C6FD18
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Mar 2023 09:09:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232062AbjCaJHf (ORCPT
+        id S231263AbjCaJJa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Mar 2023 05:07:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56464 "EHLO
+        Fri, 31 Mar 2023 05:09:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232052AbjCaJHJ (ORCPT
+        with ESMTP id S230239AbjCaJJU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2023 05:07:09 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 948921EFD6
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2023 02:06:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1680253609; x=1711789609;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=+ZmTWCBvOLEMN3y2EwBeoNfjavvclKBrbwNTE/VYaJc=;
-  b=TLKpMuX+DDzJphRg4zeDLebYweFcAmzMfvUBRfWMjtEfWMJiXm7cJcBh
-   FlTuiw8xwqUuPkIPFwt7oHyZ2mUMDqZDOiYo8531xzyGySP3qgMN7DF2c
-   176hEq+YPZuEbksM5z5d3xvr5LQILN6hOKX6aRlOzwm9HaP9A3o1bAgUR
-   +2j/RIVYOV7t7isAEFo+AZGHnxEHGMj5gCY6dFhmAC8SwAfOAW6IO+cJx
-   inf8DBw3dKodSPg7HuEp96qpu1UEd2BO3MC9uy4csRcufvOS1JwLvWIaD
-   /YX2s3z0+mOqDy64fMIHn1F8+lJD6QMBlN7rIxVrlclm9kjqGaYw3YmWF
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10665"; a="427683184"
-X-IronPort-AV: E=Sophos;i="5.98,307,1673942400"; 
-   d="scan'208";a="427683184"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Mar 2023 02:05:32 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10665"; a="715385339"
-X-IronPort-AV: E=Sophos;i="5.98,307,1673942400"; 
-   d="scan'208";a="715385339"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga008.jf.intel.com with ESMTP; 31 Mar 2023 02:05:30 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1piAhN-000Ld8-28;
-        Fri, 31 Mar 2023 09:05:29 +0000
-Date:   Fri, 31 Mar 2023 17:05:09 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>
-Subject: [wireless-next:main] BUILD SUCCESS
- aa2aa818cd1198cfa2498116d57cd9f13fea80e4
-Message-ID: <6426a245.xFhIC1ng708M37zd%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Fri, 31 Mar 2023 05:09:20 -0400
+Received: from omta037.useast.a.cloudfilter.net (omta037.useast.a.cloudfilter.net [44.202.169.36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51E0EF77B;
+        Fri, 31 Mar 2023 02:09:19 -0700 (PDT)
+Received: from eig-obgw-6004a.ext.cloudfilter.net ([10.0.30.197])
+        by cmsmtp with ESMTP
+        id i0wmp51qxElIgiAl3p9ZK1; Fri, 31 Mar 2023 09:09:18 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTP
+        id iAl2p9L7X1O1NiAl2ps9Ay; Fri, 31 Mar 2023 09:09:17 +0000
+X-Authority-Analysis: v=2.4 cv=NsHCzuRJ c=1 sm=1 tr=0 ts=6426a33d
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
+ a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=k__wU0fu6RkA:10
+ a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8 a=mDV3o1hIAAAA:8 a=VwQbUJbxAAAA:8
+ a=9ic7p0EMSS3MKrTfbvcA:9 a=QEXdDO2ut3YA:10 a=3IOs8h2EC4YA:10
+ a=_FVE-zBwftR9WsbkzFJk:22 a=AjGcO6oz07-iQ99wixmX:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=QYBk0OPmCB6p8kOb/XVyJI7inLkUJjeV0vKcdLVXoPM=; b=Lf3+WC2x3Wbp3hXFbidKhgntw4
+        wwL1Apr+wOS9AnVSyg2qMwVZ9S4nByhAtC5urYdc5RUvQRjUk1qruCzdqBC/LXOJ9Dyj+iazWA7pN
+        2cqZFxcPrfW6qZKcCunoHBFRASPeOlejYSJwJh2AvUFG+sGFeC4qgrnMkOorw/3iSXBPJNwlwKtJE
+        yS5dwOdsiwRWGJqrr3pZo80Q8g+OX9XB5oYArXpTpQDdgJ3ghhLXNtiChrM1EJmzYj8nvxmuVXiuc
+        wezx1mznuADHn3pA0pWiUp63ZJjDV4AyzqsdgUJqi2LVDdr4oRt6SLXCWZa194jM54KUz14znoiMj
+        Xy+GZzmQ==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:48012 helo=[192.168.15.7])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.95)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1phyZh-002gVr-HQ;
+        Thu, 30 Mar 2023 15:08:45 -0500
+Message-ID: <cfd01e87-6edc-2547-894a-72e7cd5ba9ef@embeddedor.com>
+Date:   Thu, 30 Mar 2023 14:09:20 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH][next] wifi: rndis_wlan: Replace fake flex-array with
+ flexible-array member
+Content-Language: en-US
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jussi Kivilinna <jussi.kivilinna@iki.fi>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+References: <ZBtIbU77L9eXqa4j@work>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <ZBtIbU77L9eXqa4j@work>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1phyZh-002gVr-HQ
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:48012
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 0
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfC3oJgzMAK1i4Dizj7Hh56BS73gmpDXb9iDKgZAv5SMl6nhjVIuANcuUZZQkZ0hzm0SLAy3tIAAS1nNEnhil6kycbSJjq6mQHC5LHbujFcVgcYUBE6Gx
+ BcWEQlETfv7ZOn1xQTo7VJgYuQTY5ZZ+PwXV+1IWf2upc3AAG1JzcWFPRmEtIv+BoD842HndB+pGhoW7dZ+wzV/PaqhQS9Y6X20KISV2RS+iUddiH+qfmj97
+ WbUe+picvSkMlLoj1IqMP0U7ej0wgHR6xMT+APth+OlPYdUwB17Jo+ZvGE0fZaazTk7icYzSqhUgF6n92B7Yyrr+bZ505T2zdw6KCMWocO3FkCN+dXg2H4+o
+ y/onHFCB
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-branch HEAD: aa2aa818cd1198cfa2498116d57cd9f13fea80e4  wifi: clean up erroneously introduced file
+Hi all,
 
-elapsed time: 726m
+Friendly ping: who can take this, please? 😄
 
-configs tested: 110
-configs skipped: 11
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r036-20230329   gcc  
-arc                              allyesconfig   gcc  
-arc          buildonly-randconfig-r002-20230329   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r015-20230329   gcc  
-arc                  randconfig-r033-20230329   gcc  
-arc                  randconfig-r043-20230329   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm          buildonly-randconfig-r006-20230329   gcc  
-arm                                 defconfig   gcc  
-arm                  randconfig-r001-20230329   clang
-arm                  randconfig-r003-20230329   clang
-arm                  randconfig-r024-20230329   gcc  
-arm                  randconfig-r034-20230329   clang
-arm                  randconfig-r035-20230329   clang
-arm                  randconfig-r046-20230329   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r013-20230329   clang
-csky                                defconfig   gcc  
-csky                 randconfig-r015-20230329   gcc  
-csky                 randconfig-r026-20230329   gcc  
-csky                 randconfig-r034-20230329   gcc  
-hexagon              randconfig-r016-20230329   clang
-hexagon              randconfig-r041-20230329   clang
-hexagon              randconfig-r045-20230329   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                          randconfig-a006   clang
-i386                          randconfig-a016   gcc  
-ia64                             allmodconfig   gcc  
-ia64         buildonly-randconfig-r003-20230329   gcc  
-ia64         buildonly-randconfig-r005-20230329   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r005-20230329   gcc  
-ia64                 randconfig-r033-20230329   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r002-20230330   gcc  
-loongarch            randconfig-r005-20230330   gcc  
-loongarch            randconfig-r006-20230329   gcc  
-loongarch            randconfig-r023-20230329   gcc  
-loongarch            randconfig-r025-20230329   gcc  
-loongarch            randconfig-r026-20230329   gcc  
-m68k                             allmodconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r001-20230330   gcc  
-m68k                 randconfig-r004-20230329   gcc  
-microblaze           randconfig-r024-20230329   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r036-20230329   clang
-nios2                               defconfig   gcc  
-nios2                randconfig-r004-20230330   gcc  
-nios2                randconfig-r031-20230329   gcc  
-openrisc     buildonly-randconfig-r001-20230329   gcc  
-openrisc             randconfig-r006-20230330   gcc  
-parisc       buildonly-randconfig-r005-20230329   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r003-20230330   gcc  
-parisc               randconfig-r006-20230329   gcc  
-parisc               randconfig-r021-20230329   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r011-20230329   clang
-powerpc              randconfig-r032-20230329   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r011-20230329   clang
-riscv                randconfig-r021-20230329   clang
-riscv                randconfig-r022-20230329   clang
-riscv                randconfig-r032-20230329   gcc  
-riscv                randconfig-r035-20230329   gcc  
-riscv                randconfig-r042-20230329   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r005-20230329   gcc  
-s390                 randconfig-r012-20230329   clang
-s390                 randconfig-r023-20230329   clang
-s390                 randconfig-r044-20230329   clang
-sh                               allmodconfig   gcc  
-sparc        buildonly-randconfig-r003-20230329   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r004-20230329   gcc  
-sparc                randconfig-r016-20230329   gcc  
-sparc64      buildonly-randconfig-r004-20230329   gcc  
-sparc64              randconfig-r002-20230329   gcc  
-sparc64              randconfig-r014-20230329   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                        randconfig-a005   clang
-x86_64                        randconfig-a006   gcc  
-x86_64                               rhel-8.3   gcc  
-xtensa       buildonly-randconfig-r004-20230329   gcc  
-xtensa               randconfig-r014-20230329   gcc  
-xtensa               randconfig-r025-20230329   gcc  
-xtensa               randconfig-r031-20230329   gcc  
-
+Thanks
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Gustavo
+
+On 3/22/23 12:26, Gustavo A. R. Silva wrote:
+> Zero-length arrays as fake flexible arrays are deprecated and we are
+> moving towards adopting C99 flexible-array members instead.
+> 
+> Address the following warning found with GCC-13 and
+> -fstrict-flex-array=3 enabled:
+> drivers/net/wireless/rndis_wlan.c:2902:23: warning: array subscript 0 is outside array bounds of ‘struct ndis_80211_auth_request[0]’ [-Warray-bounds=]
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/21
+> Link: https://github.com/KSPP/linux/issues/274
+> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+>   drivers/net/wireless/legacy/rndis_wlan.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/legacy/rndis_wlan.c b/drivers/net/wireless/legacy/rndis_wlan.c
+> index bf72e5fd39cf..54c347fa54c4 100644
+> --- a/drivers/net/wireless/legacy/rndis_wlan.c
+> +++ b/drivers/net/wireless/legacy/rndis_wlan.c
+> @@ -209,7 +209,7 @@ struct ndis_80211_status_indication {
+>   	union {
+>   		__le32					media_stream_mode;
+>   		__le32					radio_status;
+> -		struct ndis_80211_auth_request		auth_request[0];
+> +		DECLARE_FLEX_ARRAY(struct ndis_80211_auth_request, auth_request);
+>   		struct ndis_80211_pmkid_cand_list	cand_list;
+>   	} u;
+>   } __packed;
