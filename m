@@ -2,119 +2,188 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0A7EC6FD1D
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Mar 2023 23:55:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3F1DC6FD1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Mar 2023 01:18:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231773AbjC3Xzc (ORCPT
+        id S229570AbjCaBSo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Mar 2023 19:55:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50918 "EHLO
+        Thu, 30 Mar 2023 21:18:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231772AbjC3Xzb (ORCPT
+        with ESMTP id S229452AbjCaBSm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2023 19:55:31 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F302CA2E
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2023 16:55:25 -0700 (PDT)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id AF01D34005E;
-        Thu, 30 Mar 2023 23:55:23 +0000 (UTC)
-Received: from [192.168.100.159] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id 1A40013C2B0;
-        Thu, 30 Mar 2023 16:55:23 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 1A40013C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1680220523;
-        bh=ywHUaUbuwgP4wrE9pYhMTZA+mviSzcybWECklGAgqnQ=;
-        h=Date:To:From:Subject:From;
-        b=d9K8v2WKAwJ7zsPtklGp4dhfL0j86GJ5Wvf7NKq/qk8+I4O4km4MbrKDWiOxvH6WL
-         n/4BFuTx9kxlnwmodLgWCknqocufacX8iWkvJ4cOBb+FViG3YLmLV2Xh+b+4zbUzu6
-         4VpNkEDy4BoZ3ksho6Ug5nGZ7cMRN1mzXexZjnO4=
-Message-ID: <451c423b-4d0b-c2e6-7f39-0dc7da3e8080@candelatech.com>
-Date:   Thu, 30 Mar 2023 16:55:22 -0700
+        Thu, 30 Mar 2023 21:18:42 -0400
+X-Greylist: delayed 91 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 30 Mar 2023 18:18:40 PDT
+Received: from omta039.useast.a.cloudfilter.net (omta039.useast.a.cloudfilter.net [44.202.169.38])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7F9BCDD1;
+        Thu, 30 Mar 2023 18:18:39 -0700 (PDT)
+Received: from eig-obgw-6009a.ext.cloudfilter.net ([10.0.30.184])
+        by cmsmtp with ESMTP
+        id i39LpLj64JlHBi3O7peZb3; Fri, 31 Mar 2023 01:17:07 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTP
+        id i3O6pU8UuaJ3Di3O6pFfpG; Fri, 31 Mar 2023 01:17:07 +0000
+X-Authority-Analysis: v=2.4 cv=RqfWkQqK c=1 sm=1 tr=0 ts=64263493
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
+ a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=k__wU0fu6RkA:10
+ a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8 a=mDV3o1hIAAAA:8 a=VwQbUJbxAAAA:8
+ a=lQcIFfJ85XhUBIXePCYA:9 a=QEXdDO2ut3YA:10 a=3IOs8h2EC4YA:10
+ a=_FVE-zBwftR9WsbkzFJk:22 a=AjGcO6oz07-iQ99wixmX:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=lc2/TazxozdDnvZb/b7lHdWwz27nbeuJ3CQk1i0zndI=; b=so+gIOLSJXjWDiSsnEL8KJlMhE
+        y9LJZejzwGh2PreEOGl57Bttp0lH8Q/Y+0knuhUG4cclvC8vMslE92OKvDN4xlt5casFi1b6fn7Qm
+        DGk3KcLdTm1kJHvcYXc5ia8zYZLk5OxDJs7X9EtjkR1umhli04I+TJy5FSTdZWe61OuK13kgwLjYs
+        1edRDqmBeKAWhc+zM+RSFNvy4nsTz0Zs9XBt3afdWSaNhjeehwlTypw3sK8YTlsPxOahDtCD+HdYS
+        vNrsVJI/knYLNAXwCncEjYf7K/F5kX4qDvURjbv9DXMO6Lg0x3FNB9+hC+6SR2mXtCKrk8WR235zJ
+        H7mBzkpQ==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:59296 helo=[192.168.15.7])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.95)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1phycM-002lrn-Qy;
+        Thu, 30 Mar 2023 15:11:31 -0500
+Message-ID: <2f207323-9daf-e9ee-153b-d790429d0adf@embeddedor.com>
+Date:   Thu, 30 Mar 2023 14:11:55 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
+ Thunderbird/102.8.0
+Subject: Re: [PATCH][next] wifi: mt76: mt7921: Replace fake flex-arrays with
+ flexible-array members
 Content-Language: en-US
-To:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-From:   Ben Greear <greearb@candelatech.com>
-Subject: Question on why ieee80211_prep_channel clears the
- IEEE80211_CONN_DISABLE_160MHZ flag.
-Organization: Candela Technologies
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-hardening@vger.kernel.org
+References: <ZBTUB/kJYQxq/6Cj@work>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <ZBTUB/kJYQxq/6Cj@work>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MDID: 1680220524-0TGbN52qV2Tg
-X-MDID-O: us5;ut7;1680220524;0TGbN52qV2Tg;<greearb@candelatech.com>;b42792dba290a1257c3f0aaf1c60b0ff
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1phycM-002lrn-Qy
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:59296
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 0
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfNMV2MDrhgpYxh1v5u9Z2tOCdKDG1mhxa5FbD/2zSKDSh/w4BLe9GQX2FJGBexQUTEXj6GJQ8acLdLNXeCESl5J6kxFFp8byH1a8pDXaXO13i7I53wc7
+ dOlEzfzCmGb2+Hw9lEjCEOzsamfE9km2gRsRr5P4FIWCtQDu9z37G5TvXFDhiHi3bu0Jb6Mjhj2NL/Or/KORF6N+6tCPCSND1jqvoEGk7j+XH4vm/ETKWKJH
+ E7dE7+6e0yHveylJ1bqqPLd8z8dcG2prW2oWmXe5Mw6KADsn5bU4sMJMjOkV2WBe9GJVDPCDO7vEQpPPpyQrZfwfN4xBA86chLRUh3JkohEHHYKRsGBDmMN6
+ HlOiDLvH
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Hi all,
 
-I'm trying to have supplicant tell the STA to not allow 160Mhz.
+Friendly ping: who can take this, please? 😄
 
-In the method below, in my setup, *conn_flags has IEEE80211_CONN_DISABLE_160MHZ
-set when entering the method, but this method clears that and some related flags.
-The clear logic dates back to 2012, effectively, but I guess in 5.19 kernel era somehow my hacks worked.
-
-So question is, should it still be clearing the flags here?  I can add more
-hack-around logic, but possibly those lines should just be removed for everyone?
-
-static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
-				  struct ieee80211_link_data *link,
-				  struct cfg80211_bss *cbss,
-				  ieee80211_conn_flags_t *conn_flags)
-{
-	struct ieee80211_local *local = sdata->local;
-	const struct ieee80211_ht_cap *ht_cap = NULL;
-	const struct ieee80211_ht_operation *ht_oper = NULL;
-	const struct ieee80211_vht_operation *vht_oper = NULL;
-	const struct ieee80211_he_operation *he_oper = NULL;
-	const struct ieee80211_eht_operation *eht_oper = NULL;
-	const struct ieee80211_s1g_oper_ie *s1g_oper = NULL;
-	struct ieee80211_supported_band *sband;
-	struct cfg80211_chan_def chandef;
-	bool is_6ghz = cbss->channel->band == NL80211_BAND_6GHZ;
-	bool is_5ghz = cbss->channel->band == NL80211_BAND_5GHZ;
-	struct ieee80211_bss *bss = (void *)cbss->priv;
-	struct ieee80211_elems_parse_params parse_params = {
-		.bss = cbss,
-		.link_id = -1,
-		.from_ap = true,
-	};
-	struct ieee802_11_elems *elems;
-	const struct cfg80211_bss_ies *ies;
-	int ret;
-	u32 i;
-
-	pr_info("prep-channel-0, CONN_DISABLE_160MHZ: %d\n",
-		!!(*conn_flags & IEEE80211_CONN_DISABLE_160MHZ));
-
-	rcu_read_lock();
-
-	ies = rcu_dereference(cbss->ies);
-	parse_params.start = ies->data;
-	parse_params.len = ies->len;
-	elems = ieee802_11_parse_elems_full(&parse_params);
-	if (!elems) {
-		rcu_read_unlock();
-		return -ENOMEM;
-	}
-
-	sband = local->hw.wiphy->bands[cbss->channel->band];
-
-	*conn_flags &= ~(IEEE80211_CONN_DISABLE_40MHZ |
-			 IEEE80211_CONN_DISABLE_80P80MHZ |
-			 IEEE80211_CONN_DISABLE_160MHZ);
-
-Thanks,
-Ben
-
+Thanks
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Gustavo
 
+On 3/17/23 14:56, Gustavo A. R. Silva wrote:
+> Zero-length arrays as fake flexible arrays are deprecated and we are
+> moving towards adopting C99 flexible-array members instead.
+> 
+> Address the following warnings found with GCC-13 and
+> -fstrict-flex-arrays=3 enabled:
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:266:25: warning: array subscript 0 is outside array bounds of ‘struct mt7921_asar_dyn_limit_v2[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:263:25: warning: array subscript 0 is outside array bounds of ‘struct mt7921_asar_dyn_limit[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:223:28: warning: array subscript <unknown> is outside array bounds of ‘struct mt7921_asar_geo_limit_v2[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:220:28: warning: array subscript <unknown> is outside array bounds of ‘struct mt7921_asar_geo_limit[0]’ [-Warray-bounds=]
+> drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.c:334:37: warning: array subscript i is outside array bounds of ‘u8[0]’ {aka ‘unsigned char[]’} [-Warray-bounds=]
+> 
+> Notice that the DECLARE_FLEX_ARRAY() helper allows for flexible-array
+> members in unions.
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/21
+> Link: https://github.com/KSPP/linux/issues/272
+> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+>   drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h | 10 +++++-----
+>   1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h b/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
+> index 35268b0890ad..6f2c4a572572 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7921/acpi_sar.h
+> @@ -24,7 +24,7 @@ struct mt7921_asar_dyn {
+>   	u8 names[4];
+>   	u8 enable;
+>   	u8 nr_tbl;
+> -	struct mt7921_asar_dyn_limit tbl[0];
+> +	DECLARE_FLEX_ARRAY(struct mt7921_asar_dyn_limit, tbl);
+>   } __packed;
+>   
+>   struct mt7921_asar_dyn_limit_v2 {
+> @@ -37,7 +37,7 @@ struct mt7921_asar_dyn_v2 {
+>   	u8 enable;
+>   	u8 rsvd;
+>   	u8 nr_tbl;
+> -	struct mt7921_asar_dyn_limit_v2 tbl[0];
+> +	DECLARE_FLEX_ARRAY(struct mt7921_asar_dyn_limit_v2, tbl);
+>   } __packed;
+>   
+>   struct mt7921_asar_geo_band {
+> @@ -55,7 +55,7 @@ struct mt7921_asar_geo {
+>   	u8 names[4];
+>   	u8 version;
+>   	u8 nr_tbl;
+> -	struct mt7921_asar_geo_limit tbl[0];
+> +	DECLARE_FLEX_ARRAY(struct mt7921_asar_geo_limit, tbl);
+>   } __packed;
+>   
+>   struct mt7921_asar_geo_limit_v2 {
+> @@ -69,7 +69,7 @@ struct mt7921_asar_geo_v2 {
+>   	u8 version;
+>   	u8 rsvd;
+>   	u8 nr_tbl;
+> -	struct mt7921_asar_geo_limit_v2 tbl[0];
+> +	DECLARE_FLEX_ARRAY(struct mt7921_asar_geo_limit_v2, tbl);
+>   } __packed;
+>   
+>   struct mt7921_asar_cl {
+> @@ -85,7 +85,7 @@ struct mt7921_asar_fg {
+>   	u8 rsvd;
+>   	u8 nr_flag;
+>   	u8 rsvd1;
+> -	u8 flag[0];
+> +	u8 flag[];
+>   } __packed;
+>   
+>   struct mt7921_acpi_sar {
