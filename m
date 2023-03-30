@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60118C6FD1D
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Mar 2023 13:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67EFAC6FD1D
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Mar 2023 13:35:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232035AbjC3Nex (ORCPT
+        id S232069AbjC3NfE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Mar 2023 09:34:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43422 "EHLO
+        Thu, 30 Mar 2023 09:35:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232063AbjC3Ner (ORCPT
+        with ESMTP id S232064AbjC3Nez (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Mar 2023 09:34:47 -0400
+        Thu, 30 Mar 2023 09:34:55 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 944B9A245
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2023 06:34:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19020BB99
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Mar 2023 06:34:43 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32UDYGbF4015755, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 32UDYK0t8015764, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32UDYGbF4015755
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 32UDYK0t8015764
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Thu, 30 Mar 2023 21:34:16 +0800
+        Thu, 30 Mar 2023 21:34:20 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Thu, 30 Mar 2023 21:34:33 +0800
+ 15.1.2507.17; Thu, 30 Mar 2023 21:34:36 +0800
 Received: from localhost (172.16.16.62) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 30 Mar
- 2023 21:34:32 +0800
+ 2023 21:34:36 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/4] wifi: rtw89: 8851b: adjust shared code to support 8851B
-Date:   Thu, 30 Mar 2023 21:33:20 +0800
-Message-ID: <20230330133324.19538-1-pkshih@realtek.com>
+Subject: [PATCH 2/4] wifi: rtw89: 8851b: fix TX path to path A for one RF path chip
+Date:   Thu, 30 Mar 2023 21:33:22 +0800
+Message-ID: <20230330133324.19538-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230330133324.19538-1-pkshih@realtek.com>
+References: <20230330133324.19538-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -51,25 +53,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-8851B is 802.11ax 1x1 80 MHz working on 2/5 GHz. Many settings are
-similar to existing chips 8852A and 8852B, so add 8851B expressions to
-do the same thing as other chips.
+For two RF paths chips, we normally set path B as main path by default.
+8851B has single one RF path, so set TX path to A and set mapping of
+path B to 0.
 
-Ping-Ke Shih (4):
-  wifi: rtw89: read version of analog hardware
-  wifi: rtw89: 8851b: fix TX path to path A for one RF path chip
-  wifi: rtw89: mac: update MAC settings to support 8851b
-  wifi: rtw89: pci: update PCI related settings to support 8851B
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/fw.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/realtek/rtw89/core.c | 10 ++++++
- drivers/net/wireless/realtek/rtw89/core.h |  2 ++
- drivers/net/wireless/realtek/rtw89/fw.c   | 13 +++++--
- drivers/net/wireless/realtek/rtw89/mac.c  | 44 ++++++++++++++++-------
- drivers/net/wireless/realtek/rtw89/mac.h  |  1 +
- drivers/net/wireless/realtek/rtw89/pci.c  | 33 ++++++++++-------
- drivers/net/wireless/realtek/rtw89/reg.h  |  2 ++
- 7 files changed, 78 insertions(+), 27 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 713aefd0cf8dd..7f69a8ee86bb2 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -1150,9 +1150,18 @@ int rtw89_fw_h2c_p2p_act(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif,
+ static void __rtw89_fw_h2c_set_tx_path(struct rtw89_dev *rtwdev,
+ 				       struct sk_buff *skb)
+ {
++	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+-	u8 ntx_path = hal->antenna_tx ? hal->antenna_tx : RF_B;
+-	u8 map_b = hal->antenna_tx == RF_AB ? 1 : 0;
++	u8 ntx_path;
++	u8 map_b;
++
++	if (chip->rf_path_num == 1) {
++		ntx_path = RF_A;
++		map_b = 0;
++	} else {
++		ntx_path = hal->antenna_tx ? hal->antenna_tx : RF_B;
++		map_b = hal->antenna_tx == RF_AB ? 1 : 0;
++	}
+ 
+ 	SET_CMC_TBL_NTX_PATH_EN(skb->data, ntx_path);
+ 	SET_CMC_TBL_PATH_MAP_A(skb->data, 0);
 -- 
 2.25.1
 
