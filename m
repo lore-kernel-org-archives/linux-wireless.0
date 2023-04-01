@@ -2,43 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE78FC761AF
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 12:46:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB92BC761AF
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 14:27:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229780AbjDAMpx (ORCPT
+        id S229811AbjDAO1V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 1 Apr 2023 08:45:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42914 "EHLO
+        Sat, 1 Apr 2023 10:27:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229600AbjDAMps (ORCPT
+        with ESMTP id S229795AbjDAO1S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Apr 2023 08:45:48 -0400
+        Sat, 1 Apr 2023 10:27:18 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 076E520C22
-        for <linux-wireless@vger.kernel.org>; Sat,  1 Apr 2023 05:45:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 067B3DBC8
+        for <linux-wireless@vger.kernel.org>; Sat,  1 Apr 2023 07:27:15 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 331CjHtaD021677, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 331EQnU02013306, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 331CjHtaD021677
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 331EQnU02013306
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Sat, 1 Apr 2023 20:45:17 +0800
+        Sat, 1 Apr 2023 22:26:49 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Sat, 1 Apr 2023 20:45:35 +0800
+ 15.1.2507.17; Sat, 1 Apr 2023 22:27:07 +0800
 Received: from localhost (172.16.16.15) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Sat, 1 Apr 2023
- 20:45:34 +0800
+ 22:27:06 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
-CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] wifi: rtw88: refine reserved page flow for AP mode
-Date:   Sat, 1 Apr 2023 20:44:08 +0800
-Message-ID: <20230401124410.33221-6-pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/3] wifi: rtw89: 8851b: add tables of parameters
+Date:   Sat, 1 Apr 2023 22:25:45 +0800
+Message-ID: <20230401142548.55466-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230401124410.33221-1-pkshih@realtek.com>
-References: <20230401124410.33221-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -53,55 +51,24 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+Prepare parameter tables for 8851B. They are used to configure a lot of
+hardware parameters and assist to complete RF calibration.
 
-Only gather reserved pages from AP interface after it has started. Or
-else ieee80211_beacon_get_*() returns NULL and causes other VIFs'
-reserved pages fail to download. Update location of current reserved page
-after beacon renews so offsets changed by beacon can be recognized.
+Ping-Ke Shih (3):
+  wifi: rtw89: 8851b: add BB and RF tables (1 of 2)
+  wifi: rtw89: 8851b: add BB and RF tables (2 of 2)
+  wifi: rtw89: 8851b: add tables for RFK
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/fw.c       | 5 +++++
- drivers/net/wireless/realtek/rtw88/mac80211.c | 1 +
- 2 files changed, 6 insertions(+)
+ .../realtek/rtw89/rtw8851b_rfk_table.c        |   534 +
+ .../realtek/rtw89/rtw8851b_rfk_table.h        |    38 +
+ .../wireless/realtek/rtw89/rtw8851b_table.c   | 14824 ++++++++++++++++
+ .../wireless/realtek/rtw89/rtw8851b_table.h   |    21 +
+ 4 files changed, 15417 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8851b_rfk_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8851b_rfk_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8851b_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw89/rtw8851b_table.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 82295ac6402ee..049473accdb97 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -1393,6 +1393,10 @@ static void rtw_build_rsvd_page_iter(void *data, u8 *mac,
- 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
- 	struct rtw_rsvd_page *rsvd_pkt;
- 
-+	/* AP not yet started, don't gather its rsvd pages */
-+	if (vif->type == NL80211_IFTYPE_AP && !rtwdev->ap_active)
-+		return;
-+
- 	list_for_each_entry(rsvd_pkt, &rtwvif->rsvd_page_list, vif_list) {
- 		if (rsvd_pkt->type == RSVD_BEACON)
- 			list_add(&rsvd_pkt->build_list,
-@@ -1614,6 +1618,7 @@ void rtw_fw_update_beacon_work(struct work_struct *work)
- 
- 	mutex_lock(&rtwdev->mutex);
- 	rtw_fw_download_rsvd_page(rtwdev);
-+	rtw_send_rsvd_page_h2c(rtwdev);
- 	mutex_unlock(&rtwdev->mutex);
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index 37a3146a2910c..1c2213957f449 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -417,6 +417,7 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BEACON) {
- 		rtw_set_dtim_period(rtwdev, conf->dtim_period);
- 		rtw_fw_download_rsvd_page(rtwdev);
-+		rtw_send_rsvd_page_h2c(rtwdev);
- 	}
- 
- 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
 -- 
 2.25.1
 
