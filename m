@@ -2,124 +2,121 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED7FC761A6
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 02:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DC59C76196
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 02:11:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233592AbjDACFy (ORCPT
+        id S233271AbjDACLL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Mar 2023 22:05:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37750 "EHLO
+        Fri, 31 Mar 2023 22:11:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229909AbjDACFw (ORCPT
+        with ESMTP id S229988AbjDACLK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2023 22:05:52 -0400
-Received: from mail-oi1-x235.google.com (mail-oi1-x235.google.com [IPv6:2607:f8b0:4864:20::235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F41AEFA;
-        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
-Received: by mail-oi1-x235.google.com with SMTP id r16so17983448oij.5;
-        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680314751;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=ftkFRlydY5j9a8m5plIM/f4/vr6ozLid81af03S9j0o=;
-        b=DR8REL8hzbCG1CFq0ozyUcgzrYkWCTOft8KUrNDGWOy1zpXJsDl7isUXf3q2fA8AdF
-         ZLiF0MAgAeVkEacAO9xYO+QgDN59PQA99gfEYAI7hpYqplYwrNUr6AGNeQAoGJmmp+rB
-         z0MnDQMAIc+7PDyALkNr0C3p82XJqI/yYJIB8q3XrPtMjzVVrjqXBswGMBUZ7+YuE472
-         TIdtHXs9G4eMe3LOGwiqk0DM0iS91qFcwPUG00lb5sVn0oqNhQR0JB7wFLND4DmU8cbu
-         IMM9EpwzYb2GM857AH/upY8DIMxmcYqNnWANEpQI9iR1eEvd049VxHLC8vw8mT1/+1wD
-         ozqw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680314751;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ftkFRlydY5j9a8m5plIM/f4/vr6ozLid81af03S9j0o=;
-        b=KTzKDvnOiV84KgPtXae1GMYsUw3r7DlyeOir/oMjqrNOSFQBMMNqaRrtQKqj01p8re
-         KTXRXX1HzEYDSHE7wvhWNO6hVr8Qt0VFJCpMZ0T8dV6xtKT+FxibzNBtUepvzXpuQNtx
-         /YhIueR/YpB3IGvFNcqSxlx1v0fOSTUJ+mYCl6c4bhJ8KmVWl9AsaJRr/ZAIkJuUFZxE
-         zD/H4M2DJAggkiAuX3oV6RrEDgsAPU7TYZTO3D+NeqX2M7GoR6r0JClGuU19i9B0kf5g
-         7wjvOq7Gkxxvhor3YB7f0RP0DC8ix0rO64txkjxkE04fh3gHwEVRiYjhVcf2nOqy4kCw
-         ugOw==
-X-Gm-Message-State: AO0yUKUKRAIAKbH/Oqrt/CcZ0adPEu0zAaOA52dV9lBCrk1r4kvKslRu
-        Gub6mN8+U1/flHlmFgI0hAX3i6gKJJ0=
-X-Google-Smtp-Source: AK7set+7Qk16TsLMKrHNg/hT4yagB1I0GcCD4zhUKtXGOZkYXqKNEhoxTo60nQSgnQG9/O6O+6QuqA==
-X-Received: by 2002:a05:6808:5ca:b0:386:9dc5:2cc0 with SMTP id d10-20020a05680805ca00b003869dc52cc0mr12226101oij.25.1680314751260;
-        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
-Received: from [192.168.0.116] ([216.130.59.33])
-        by smtp.gmail.com with ESMTPSA id h38-20020a4a9429000000b0051a6cb524b6sm1525190ooi.2.2023.03.31.19.05.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-Message-ID: <4a76b5fe-c3d6-de44-c627-3f48fafdd905@lwfinger.net>
-Date:   Fri, 31 Mar 2023 21:05:49 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH 0/2] RTW88 USB bug fixes
+        Fri, 31 Mar 2023 22:11:10 -0400
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12olkn2077.outbound.protection.outlook.com [40.92.21.77])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6A991025E
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2023 19:11:06 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QhHqPFly6XdsnnBSi1QzVHr2nWsCWq0ubqZH09jCBTEU2ppSS2RaNVumyM8amsmXJP8mkQN7XX76ZWeIToqq24BNpFhCuT4RawEQ8r8o6h097bkAOu/Hz8rSuBgBMECNsztAvbpqoBuHC9nmyO7PULCKo/Oqbw9qvQoG/tuJb62wHqj2lW4uq++hA0RGHQk9WlZiSFWBUwald/0PbGR7zXEvPISvNcZcG8408bqPPior7XEp/RdmV+yCSYn0lXmcX3AvPfcIZkniclWAL2iWNdYGdbA/K7XhIL5V/LqZCHzFRlEENgeO7X9c3/9sdpTZGNJgI/bQr35zBnYsCLZmzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RORkSRvfnScOtJWgo3H8wMM6n4sL7l8ZWbmIcRuDuHo=;
+ b=KSOl4CrADoIY7JSppnfJ5klojFcmySHt7LyDEETKwXAHG9vOoqcIxJTebWZhlr6FlHrhj/UOqa7pJE1TrgC648G+3R4clwcEEohle38+Du9gIu+2kJHip+ykvwBFJXjGmc9bE+cxpmE/bpngK7j/FJEaKoULHUGIRSId4f1urOv03bY8kRri2G8hP+wMv1hZs9fonOXDoGJSkz/KCapCceZWUuv85wvYsI1eVTzM4r4XwarUXdCaeXbHOO81EGzoq8CWTDxDYh84RCZTvENQ0yQmIF/4iwSix4hwpIxCSH8h5DoCg6aFvaJmCDglzva5tfdwLUWsR1uvQaLh70388w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=live.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RORkSRvfnScOtJWgo3H8wMM6n4sL7l8ZWbmIcRuDuHo=;
+ b=BwkPgJT1oX9m9WcZBllNkk5BQPV62QsQcNCeqlyglP2a6uOQqmGS5hulsyndtmwx40u0AUebRAsBRTx6Ika8spYszByvd6CLpTaw8UPXFu/GlInBd1elyjU5cfbjBVI/J2YmkMZlHnKuTHu+/reTSgxrdWDH5yk2E1GshHjrlqihGOrqs5YnRnpSjKAaj+MxJZ3/qS6LKYSgxMqYdo34+vhP+/nbGcFu9NTxSXTiHJkVHpOciAYWZEReTmEP4RgZQWRa0y/Ov66BeTGyS54Lat8NRki3Dy28BdpP7Wx8ArOT02x3LAXxgfD9Blk89O5xjTINeyuaTNN7zVJC/019jA==
+Received: from SJ0PR22MB2495.namprd22.prod.outlook.com (2603:10b6:a03:328::13)
+ by PH0PR22MB4008.namprd22.prod.outlook.com (2603:10b6:510:2a1::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.41; Sat, 1 Apr
+ 2023 02:11:05 +0000
+Received: from SJ0PR22MB2495.namprd22.prod.outlook.com
+ ([fe80::f3de:f07b:7676:239]) by SJ0PR22MB2495.namprd22.prod.outlook.com
+ ([fe80::f3de:f07b:7676:239%8]) with mapi id 15.20.6254.026; Sat, 1 Apr 2023
+ 02:11:04 +0000
+From:   Eric Sellman <GAK_ACTION@live.com>
+To:     "sforshee@kernel.org" <sforshee@kernel.org>
+CC:     "wireless-regdb@lists.infradead.org" 
+        <wireless-regdb@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: wireless-regdb: Update regulatory rules for canada on 5GHz
+Thread-Topic: wireless-regdb: Update regulatory rules for canada on 5GHz
+Thread-Index: AQHZZD4WXRyFZKmuLUmT9dLETqAkMg==
+Date:   Sat, 1 Apr 2023 02:11:04 +0000
+Message-ID: <SJ0PR22MB2495707E5FC7EF2334A699BC8F8C9@SJ0PR22MB2495.namprd22.prod.outlook.com>
+Accept-Language: en-US
 Content-Language: en-US
-To:     "Alex G." <mr.nuke.me@gmail.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>, Pkshih <pkshih@realtek.com>,
-        Tim K <tpkuester@gmail.com>, Nick Morrow <morrownr@gmail.com>,
-        Viktor Petrenko <g0000ga@gmail.com>,
-        Andreas Henriksson <andreas@fatal.se>,
-        ValdikSS <iam@valdikss.org.ru>, kernel@pengutronix.de,
-        stable@vger.kernel.org
-References: <20230331121054.112758-1-s.hauer@pengutronix.de>
- <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: 
+x-tmn:  [DoIGZse1C4MjtCN32cbU7fNs5+0TI3AQHVgSFDiDszk=]
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SJ0PR22MB2495:EE_|PH0PR22MB4008:EE_
+x-ms-office365-filtering-correlation-id: 2fc1f9ac-ba61-4ee6-6d5a-08db32565949
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: MaCPLLdxr2ou6edc5/pkWbkVBT/ZdN6UVCmW5XvD9Bh/uQN/c7ms+VovrsK8TBC4AbgjcIDpoNUaknVaxriUKyZQ2mgFUYFncg4n9Bf8ufyF7Easd5JiGzjO9piFgBWxf9EiBwJbWGS28DUlWFIDF6mu3TC1xwnq7oMxsOc3k6ulRtVyE32GTOmdWzEQNnWvHYgXzpNqMkQ5hj/8Z8TgsRDDv9kZGO5MzOZGIDHnwHzLnQ6q6S+Yfn3rlTg2NbOM4j3WB+t3wtEENJom5W1W5dbGsgmNZreMhh4+2XF66ooHDIUUJr/MDzOFXashriSu7Tte/IMtHMBNRLymOf3zvWw4IKNgGyd7dx70lHcRiht/u3RW0NsNxrgn5x2yJFZeBsHlEwz1QzD+tBk8WVS7rKf81pW7/So2GpaPo5xgB9DrC1PuCU7wwOuGtNQ3wZX5w/d2Oht0l+4qW61xbr6BEmuE7nO+DoW3WmhRAP9QadrmFSEEdtWQMbrO//aJyyTLqtgLNm/MNAE8dMiuNmcfU3iw1rivZjLRVHYEkxPwR0pYJcea78UJqVkOItyzCl+8
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?Windows-1252?Q?sYNhwU3KBB0bEwRMgbfjH3onu2CG3UkNymhu73dgfywVyfR3g8ipOQnM?=
+ =?Windows-1252?Q?3OGOE80yGrry7DpXWA+L21Ffq95Lsarxjx9JwN45dhsJK8M7SDjW6Ia+?=
+ =?Windows-1252?Q?nPtfKlITf8V9UR8loeqoAgAq1xYqw3jXSSYpJGxH5saS3fRyzFATrgul?=
+ =?Windows-1252?Q?Y2Xv9ne9g3247zB6vfpzHIEI9kji507HTRPoeqFOvlcOe9zxMKTdzbkt?=
+ =?Windows-1252?Q?6qXTvHuUo2L0+qj1grvNDlmZVeLuSQoIqZZgafH2Q6Q0Is5o5Of6iL9z?=
+ =?Windows-1252?Q?AsS2vnzgL58+KLBN+dCKkf2IqxwW2k/rd6AwJcnxwfz4WJnhDb49MvoU?=
+ =?Windows-1252?Q?dmJQUM+SSUDAqhxNTAySV7NfBcwss7vqEb5dxFzAbsNiQG4NY62udjk1?=
+ =?Windows-1252?Q?UkNinboRJ3BTMabXFiU2CK3m/CuN7wUOumxD2kqZNHrNq2rXeJXFKuS/?=
+ =?Windows-1252?Q?lsghJCz3T1g+td8tiJKvxvyxWpKGz0yTJErQcBD+veD0DJ7Fuueshz0Q?=
+ =?Windows-1252?Q?CGSuNKIeca6zhNUcWWoeyPB2i8EUJbR39EinJxljCrDVh3dJKm7GsweB?=
+ =?Windows-1252?Q?BYDj2ZkfNvlUWQdWDHh30ZTMVMQumBE3VR9+8bTHI/KYd2eoLPCBqkxH?=
+ =?Windows-1252?Q?GrgW65LaHJA/44HTmKhZuslOuqp52kWKrnxnJ+DjIox3CQ/pkv0WYfFR?=
+ =?Windows-1252?Q?dWqrusXkVL2AturT+nWLoF5KwWFts92g+Ggzgj/2haSk1L8kzpzJgnek?=
+ =?Windows-1252?Q?gSrT1SXOsvlXtlUkF2OXg8keMIjW8Y4KNfGpijKLovaIYaAaKcBIlk7g?=
+ =?Windows-1252?Q?o9stDkZS9mUKz3k9L2ON7NkAlEJEsGOHcnd9Hv6D8XPy11nsw+crD/pD?=
+ =?Windows-1252?Q?Ybk1M4Vn+YHwG6VfzHZRGJiJ/QUsPDQbgr43ZhkmeoJlqIU2Xc8sIo4Z?=
+ =?Windows-1252?Q?n92oMqrzb9E88nL/G8IkoyVi+pLrlwHV/k0dYfNR9hsUBm1BWaLlNMH3?=
+ =?Windows-1252?Q?jaUPg9Kr35tW189IqPg6rDck4n+BY8oNCpMPb6KRd11+Teo3Jq7ei4Qk?=
+ =?Windows-1252?Q?Sm4U4Ui08WwYNM0Mq0xy3+j5oQSv3oOynuqZYRAehoQs9IQs9mY7d7c6?=
+ =?Windows-1252?Q?tPgAHt2X5eFHhdeuelJW/iSVsXmm1WsiJ2ZJ8UtzbgmC8SnmdZOAd3Fp?=
+ =?Windows-1252?Q?QOKtwuiDAsVn3sIusbtTHDwkxpfkjEa3RHAUtVhYjIZdbU3NG32qG/EN?=
+ =?Windows-1252?Q?Hka39HhW5uPQ0v8zadkfc10iEKQRfgl4S39u/sjG4SSTPXyi3dJLMjAb?=
+ =?Windows-1252?Q?lCXElA=3D=3D?=
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: sct-15-20-4755-11-msonline-outlook-c3c87.templateTenant
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR22MB2495.namprd22.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2fc1f9ac-ba61-4ee6-6d5a-08db32565949
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Apr 2023 02:11:04.9391
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR22MB4008
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 3/31/23 15:34, Alex G. wrote:
-> On 3/31/23 07:10, Sascha Hauer wrote:
->> This series fixes two bugs in the RTW88 USB driver I was reported from
->> several people and that I also encountered myself.
->>
->> The first one resulted in "timed out to flush queue 3" messages from the
->> driver and sometimes a complete stall of the TX queues.
->>
->> The second one is specific to the RTW8821CU chipset. Here 2GHz networks
->> were hardly seen and impossible to connect to. This goes down to
->> misinterpreting the rfe_option field in the efuse.
-> 
-> I applied both these patches, tested an 8821CU, and the news are good:
-> 
-> The number of kernel warnings and adapter hangs has gone down considerably.
-> 
-> The signal levels on 2.4GHz bands have improved noticeably. There is the 
-> occasional station coming in 30dB lower than on nearby adapters. I wasn't able 
-> to find a pattern here.
-> 
-> I can now run these adapters in IBSS and 802.11s modes on the 2.4 GHz band. That 
-> was not possible before.
-> 
-> I am impressed with the improvements in these patches. For the series:
-> 
-> Tested-by: Alexandru gagniuc <mr.nuke.me@gmail.com>
->>
->> Sascha Hauer (2):
->>    wifi: rtw88: usb: fix priority queue to endpoint mapping
->>    wifi: rtw88: rtw8821c: Fix rfe_option field width
->>
->>   drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +- >>   drivers/net/wireless/realtek/rtw88/usb.c      | 70 +++++++++++++------
->>   2 files changed, 48 insertions(+), 25 deletions(-)
-
-I can confirm that these changes cleared up my problems with the "timed out to 
-flush queue" warnings that caused a problem before with my rtw8822bu.
-
-Tested-by: Larry Finger <Larry,Finger@lwfinger.net>
-
-Thanks,
-
-Larry
-
-
+I would like to submit a correction to the wireless regulatory database for=
+ canada. =0A=
+=0A=
+https://ised-isde.canada.ca/site/spectrum-management-telecommunications/en/=
+devices-and-equipment/radio-equipment-standards/radio-standards-specificati=
+ons-rss/rss-247-digital-transmission-systems-dtss-frequency-hopping-systems=
+-fhss-and-licence-exempt-local#s6=0A=
+=0A=
+"6.2.3 Frequency bands 5470-5600 MHz and5650-5725 MHz=0A=
+=0A=
+Until further notice, devices subject to this section shall not be capable =
+of transmitting in the band 5600-5650 MHz. This restriction is for the prot=
+ection of Environment Canada=92s weather radars operating in this band."=0A=
+=0A=
+https://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git=
+/tree/db.txt#n326=0A=
+=0A=
+Lines 330 and 331 have frequencies 5600mhz to 5650mhz and therefore need to=
+ be modified to have those frequencies removed.=
