@@ -2,120 +2,90 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE4C0C761A6
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 02:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC41C77B6E
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 02:50:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233738AbjDACRu (ORCPT
+        id S233315AbjDACuK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Mar 2023 22:17:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47546 "EHLO
+        Fri, 31 Mar 2023 22:50:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233368AbjDACRt (ORCPT
+        with ESMTP id S233224AbjDACuJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2023 22:17:49 -0400
-X-Greylist: delayed 511 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 31 Mar 2023 19:17:48 PDT
-Received: from mail.valdk.tel (mail.valdk.tel [IPv6:2a02:e00:ffe7:c::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FC18173F
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2023 19:17:47 -0700 (PDT)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 029EFA06B70;
-        Sat,  1 Apr 2023 05:09:02 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valdikss.org.ru;
-        s=msrv; t=1680314949;
-        h=from:subject:date:message-id:to:cc:mime-version:content-type:
-         content-language:in-reply-to:references;
-        bh=kps8MWry5MwGXQOY36Td8YfcSJbDESOL6s6xM+uSojk=;
-        b=hiy7/n+cM+XJm0XAnrSPhuAsTgHwC/8FyFh2rSzCCXx/M+JBIv5OTqCFUaUC77mcijwrz7
-        GZiDGfbb/GYr34lzpYADvGNGQlKw5iEQd2btcz4E9KHPavUvb/nSQc1Sn411juCHYl/ebq
-        +N3VXjjY4c6rtS9LALDWrzBX7PX4S58ls2np8z5sbbRo1o78BgEyQmZUHAnwZ7dRiLy7vG
-        iUq/HUrbna789XfCwHcYdNm33DRmfD8rlk6qpBj6iASQIZoMdZJ5L0SDJXkG7NCjp82VIx
-        PV98PBl5E1n844KiPA1sDO8esAv1v8vfMmRLynB9G7fC96vL9ab4URgY1q0LGg==
-Message-ID: <57d3052f-a38f-c45b-bc3f-aa8ebfd7188e@valdikss.org.ru>
-Date:   Sat, 1 Apr 2023 05:08:59 +0300
+        Fri, 31 Mar 2023 22:50:09 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBEBF11E82
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Mar 2023 19:50:08 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3312NK1U021598;
+        Sat, 1 Apr 2023 02:50:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=5W3MYYqKTnUUsN/LGdJR8AHOs2iU7R0OVx/q3OmrBxw=;
+ b=f+n1G1UccSWjATuk9f/Wm7kP1nWWs1FOWd40tMtVDOVIYVk5gQDLbz8DIrEB+Wb1vc/s
+ Q128VqCCi4ZKZCRJ0ajdlsUBf1pgkbAMtgIkcjAsdAkuStwQLguhWhelXt4Wivg0/4Ae
+ 3+oNvOZzvnZ7+qRWO/795rknl1tVSzrJjrpVBuQ1nltCcJBljiFoPYXlgWxkEtLh/+07
+ xpEFM8PY9GMh39wXwj3SOeWPPvLOlouYHfwJK6+Mp3noTB+BdB3Y4sU0gkhzsfnFeqVs
+ zP/EtTrc6x9tqvLJEOolfkqijNSFsV7HvB5Wty7uGsoFaxSiL3QcdeNzMuPwl2VGxMb3 Mw== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pp29sseyx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 01 Apr 2023 02:50:02 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3312o13X019396
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 1 Apr 2023 02:50:01 GMT
+Received: from pradeepc2-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Fri, 31 Mar 2023 19:50:00 -0700
+From:   Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+Subject: [PATCH V2 0/2] wifi: ath11k: bug fixes in tx encap offload and ppdu stats
+Date:   Fri, 31 Mar 2023 19:49:30 -0700
+Message-ID: <20230401024932.11722-1-quic_pradeepc@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:78.5.0) Gecko/20100101,
- Thunderbird/78.5.0
-Subject: Re: [PATCH 0/2] RTW88 USB bug fixes
-Content-Language: en-US, ru-RU
-To:     Sascha Hauer <s.hauer@pengutronix.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Tim K <tpkuester@gmail.com>,
-        Nick Morrow <morrownr@gmail.com>,
-        Viktor Petrenko <g0000ga@gmail.com>,
-        Andreas Henriksson <andreas@fatal.se>, kernel@pengutronix.de,
-        stable@vger.kernel.org, "Alex G." <mr.nuke.me@gmail.com>
-References: <20230331121054.112758-1-s.hauer@pengutronix.de>
- <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
-From:   ValdikSS <iam@valdikss.org.ru>
-In-Reply-To: <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------GM80ZT0493C1GmToVnA9BtnF"
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 6Q0KJM8QizWnKg3kVJkOpxhEQdbeF1FI
+X-Proofpoint-ORIG-GUID: 6Q0KJM8QizWnKg3kVJkOpxhEQdbeF1FI
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-31_07,2023-03-31_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
+ adultscore=0 lowpriorityscore=0 mlxlogscore=621 spamscore=0 malwarescore=0
+ mlxscore=0 clxscore=1015 bulkscore=0 priorityscore=1501 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
+ definitions=main-2304010023
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------GM80ZT0493C1GmToVnA9BtnF
-Content-Type: multipart/mixed; boundary="------------ATvweMDPt9nm92os43zcNLy8";
- protected-headers="v1"
-From: ValdikSS <iam@valdikss.org.ru>
-To: Sascha Hauer <s.hauer@pengutronix.de>,
- linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Hans Ulli Kroll <linux@ulli-kroll.de>,
- Larry Finger <Larry.Finger@lwfinger.net>, Pkshih <pkshih@realtek.com>,
- Tim K <tpkuester@gmail.com>, Nick Morrow <morrownr@gmail.com>,
- Viktor Petrenko <g0000ga@gmail.com>, Andreas Henriksson <andreas@fatal.se>,
- kernel@pengutronix.de, stable@vger.kernel.org, "Alex G."
- <mr.nuke.me@gmail.com>
-Message-ID: <57d3052f-a38f-c45b-bc3f-aa8ebfd7188e@valdikss.org.ru>
-Subject: Re: [PATCH 0/2] RTW88 USB bug fixes
-References: <20230331121054.112758-1-s.hauer@pengutronix.de>
- <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
-In-Reply-To: <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
+Fixes bugs in radiotap fields and tx status reporting in TX
+encapsulation offload cases.
 
---------------ATvweMDPt9nm92os43zcNLy8
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
-T24gMzEuMDMuMjAyMyAyMzozNCwgQWxleCBHLiB3cm90ZToNCj4gT24gMy8zMS8yMyAwNzox
-MCwgU2FzY2hhIEhhdWVyIHdyb3RlOg0KPj4gVGhpcyBzZXJpZXMgZml4ZXMgdHdvIGJ1Z3Mg
-aW4gdGhlIFJUVzg4IFVTQiBkcml2ZXIgSSB3YXMgcmVwb3J0ZWQgZnJvbQ0KPj4gc2V2ZXJh
-bCBwZW9wbGUgYW5kIHRoYXQgSSBhbHNvIGVuY291bnRlcmVkIG15c2VsZi4NCj4+DQo+PiBU
-aGUgZmlyc3Qgb25lIHJlc3VsdGVkIGluICJ0aW1lZCBvdXQgdG8gZmx1c2ggcXVldWUgMyIg
-bWVzc2FnZXMgZnJvbSB0aGUNCj4+IGRyaXZlciBhbmQgc29tZXRpbWVzIGEgY29tcGxldGUg
-c3RhbGwgb2YgdGhlIFRYIHF1ZXVlcy4NCj4+DQo+PiBUaGUgc2Vjb25kIG9uZSBpcyBzcGVj
-aWZpYyB0byB0aGUgUlRXODgyMUNVIGNoaXBzZXQuIEhlcmUgMkdIeiBuZXR3b3Jrcw0KPj4g
-d2VyZSBoYXJkbHkgc2VlbiBhbmQgaW1wb3NzaWJsZSB0byBjb25uZWN0IHRvLiBUaGlzIGdv
-ZXMgZG93biB0bw0KPj4gbWlzaW50ZXJwcmV0aW5nIHRoZSByZmVfb3B0aW9uIGZpZWxkIGlu
-IHRoZSBlZnVzZS4NCg0KVGVzdGVkIG9uIFJUTDg4MTFDVSwgdGhlc2UgdHdvIHBhdGNoZXMg
-Zml4IGJvdGggaXNzdWVzLiAyLjQgR0h6IG5ldHdvcmtzIA0Kbm93IHdvcmsgcGVyZmVjdGx5
-IGZpbmUuDQoNClRlc3RlZC1ieTogVmFsZGlrU1MgPGlhbUB2YWxkaWtzcy5vcmcucnU+DQo=
+Pradeep Kumar Chitrapu (2):
+  wifi: ath11k: fix tx status reporting in encap offload mode
+  wifi: ath11k: Fix incorrect update of radiotap fields
+
+ drivers/net/wireless/ath/ath11k/dp.h     |  3 +++
+ drivers/net/wireless/ath/ath11k/dp_tx.c  | 29 +++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath11k/dp_tx.h  |  1 +
+ drivers/net/wireless/ath/ath11k/hal_rx.c |  4 ++--
+ drivers/net/wireless/ath/ath11k/hal_rx.h |  2 +-
+ 5 files changed, 35 insertions(+), 4 deletions(-)
 
 
---------------ATvweMDPt9nm92os43zcNLy8--
+base-commit: bea046575a2e6d7d1cf63cc7ab032647a3585de5
+-- 
+2.17.1
 
---------------GM80ZT0493C1GmToVnA9BtnF
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEMiogvXcpmS32v71gXNcgLu+I93IFAmQnkjsFAwAAAAAACgkQXNcgLu+I93JW
-YhAAyt31UScowu6VmI/qXRaNbSYypjkQHFO06zp2r2wJyDZI50yGRz6VqupTXCQLaFc6W5EAeB9c
-CI/CdRDIjtrM56fuerkArpJWoJkNyx/KyetCL4FD1A1Uxfu1ZTbR65+yNlZwKiM+aiWl9buan8Cr
-AlIoQ10tztXU3ga3HQ9dsOq+tR+b0l+kccvLCb2BxD/DwjlXvKtm58so07Zz9Fv6golSgonfC31r
-K/CvlyFaN+2PP+qPISqW5eF6rGQfspj3qrr5/54n3k1W21oTyEYAD/KPHO1erC9MSubIepa802j1
-qBK/V/bnKmXE6ZQPZw5PnTghf6n+agbjnh5sOSdCD/CMf0ydOsQQAAEW9tVwy3DtsCA7akXQKSjn
-s3rvH81XVNDWrjM3p28ntDuNHwfjAbd8Mbb74ZXfKz3d7W0xyaDx+T29wlWIfdSbgkoepIGX9t3D
-scA2pAV6MwkIv/oeN94CSv2ms/Lavmdbykt4m6byofaOfejLMADPTx0BGtl7MmwBUdIyyGmO4JlL
-emWmfN4YPltAd/HPgC+OZbGbC8Y9w8cslWSnyGPNX/STSVm1kykMS385U13V7xNQOYrIxBZHeTFm
-4of7xKbVeW3htGezngicFlxK+chrJQzBe3pXZ2rURV76gOG8VOwOd98Mhph9a6D9iY++auxTyx41
-oGY=
-=6GZ/
------END PGP SIGNATURE-----
-
---------------GM80ZT0493C1GmToVnA9BtnF--
