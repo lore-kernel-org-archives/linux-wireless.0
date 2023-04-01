@@ -2,155 +2,124 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 607D6C761AF
-	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 01:47:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED7FC761A6
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Apr 2023 02:05:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233961AbjDABrq (ORCPT
+        id S233592AbjDACFy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Mar 2023 21:47:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48066 "EHLO
+        Fri, 31 Mar 2023 22:05:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233710AbjDABrN (ORCPT
+        with ESMTP id S229909AbjDACFw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Mar 2023 21:47:13 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75EA91BD6;
-        Fri, 31 Mar 2023 18:45:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4D97562CEE;
-        Sat,  1 Apr 2023 01:44:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53218C433D2;
-        Sat,  1 Apr 2023 01:44:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680313455;
-        bh=kQy34DEL3CbeSrP9sGPT9ua3j4jiQy/DOa34hpftVfc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OT40FkHzPrpQvUwXkBDuKZHtTv7U9ZsX5bHzAoog3EGbyimuOsRQ4luEiYlaT9TlH
-         +X0UgzqsaKUAUS0AX+IRQZ1d9MaNNof5sUv70SCvJtSwX54GQx9IVcGF0AciNzerBY
-         Tyeg476TKG2WvmG7sgkQuaaO/6uwbo3rYCephHkpo4N98V9dzrgCOLa4vGtbbohJAS
-         5Ywj8m+xvesydQWXwn4tPcWI1iBp/mid3XiP/qykpEazjH4flkrhuh/Joq8K72jhnq
-         tcYKjGlRk+sD9RbRCnDsNBwAOplET80I8lDK1EPBSUXqOI0n3fPxITB1T1rL891Oeh
-         sx2DkZMO3sOrQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Benjamin Berg <benjamin.berg@intel.com>,
-        Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
-        Sasha Levin <sashal@kernel.org>, gregory.greenman@intel.com,
-        kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, avraham.stern@intel.com,
-        miriam.rachel.korenblit@intel.com, shaul.triebitz@intel.com,
-        quic_srirrama@quicinc.com, haim.dreyfuss@intel.com,
-        daniel.lezcano@linaro.org, keescook@chromium.org,
-        ilan.peer@intel.com, yedidya.ben.shimol@intel.com,
-        ayala.barazani@intel.com, mordechay.goodstein@intel.com,
-        rostedt@goodmis.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 10/11] wifi: iwlwifi: mvm: fix mvmtxq->stopped handling
-Date:   Fri, 31 Mar 2023 21:43:48 -0400
-Message-Id: <20230401014350.3357107-10-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230401014350.3357107-1-sashal@kernel.org>
-References: <20230401014350.3357107-1-sashal@kernel.org>
+        Fri, 31 Mar 2023 22:05:52 -0400
+Received: from mail-oi1-x235.google.com (mail-oi1-x235.google.com [IPv6:2607:f8b0:4864:20::235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F41AEFA;
+        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
+Received: by mail-oi1-x235.google.com with SMTP id r16so17983448oij.5;
+        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680314751;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=ftkFRlydY5j9a8m5plIM/f4/vr6ozLid81af03S9j0o=;
+        b=DR8REL8hzbCG1CFq0ozyUcgzrYkWCTOft8KUrNDGWOy1zpXJsDl7isUXf3q2fA8AdF
+         ZLiF0MAgAeVkEacAO9xYO+QgDN59PQA99gfEYAI7hpYqplYwrNUr6AGNeQAoGJmmp+rB
+         z0MnDQMAIc+7PDyALkNr0C3p82XJqI/yYJIB8q3XrPtMjzVVrjqXBswGMBUZ7+YuE472
+         TIdtHXs9G4eMe3LOGwiqk0DM0iS91qFcwPUG00lb5sVn0oqNhQR0JB7wFLND4DmU8cbu
+         IMM9EpwzYb2GM857AH/upY8DIMxmcYqNnWANEpQI9iR1eEvd049VxHLC8vw8mT1/+1wD
+         ozqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680314751;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ftkFRlydY5j9a8m5plIM/f4/vr6ozLid81af03S9j0o=;
+        b=KTzKDvnOiV84KgPtXae1GMYsUw3r7DlyeOir/oMjqrNOSFQBMMNqaRrtQKqj01p8re
+         KTXRXX1HzEYDSHE7wvhWNO6hVr8Qt0VFJCpMZ0T8dV6xtKT+FxibzNBtUepvzXpuQNtx
+         /YhIueR/YpB3IGvFNcqSxlx1v0fOSTUJ+mYCl6c4bhJ8KmVWl9AsaJRr/ZAIkJuUFZxE
+         zD/H4M2DJAggkiAuX3oV6RrEDgsAPU7TYZTO3D+NeqX2M7GoR6r0JClGuU19i9B0kf5g
+         7wjvOq7Gkxxvhor3YB7f0RP0DC8ix0rO64txkjxkE04fh3gHwEVRiYjhVcf2nOqy4kCw
+         ugOw==
+X-Gm-Message-State: AO0yUKUKRAIAKbH/Oqrt/CcZ0adPEu0zAaOA52dV9lBCrk1r4kvKslRu
+        Gub6mN8+U1/flHlmFgI0hAX3i6gKJJ0=
+X-Google-Smtp-Source: AK7set+7Qk16TsLMKrHNg/hT4yagB1I0GcCD4zhUKtXGOZkYXqKNEhoxTo60nQSgnQG9/O6O+6QuqA==
+X-Received: by 2002:a05:6808:5ca:b0:386:9dc5:2cc0 with SMTP id d10-20020a05680805ca00b003869dc52cc0mr12226101oij.25.1680314751260;
+        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
+Received: from [192.168.0.116] ([216.130.59.33])
+        by smtp.gmail.com with ESMTPSA id h38-20020a4a9429000000b0051a6cb524b6sm1525190ooi.2.2023.03.31.19.05.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 31 Mar 2023 19:05:51 -0700 (PDT)
+Sender: Larry Finger <larry.finger@gmail.com>
+Message-ID: <4a76b5fe-c3d6-de44-c627-3f48fafdd905@lwfinger.net>
+Date:   Fri, 31 Mar 2023 21:05:49 -0500
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH 0/2] RTW88 USB bug fixes
+Content-Language: en-US
+To:     "Alex G." <mr.nuke.me@gmail.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>, Pkshih <pkshih@realtek.com>,
+        Tim K <tpkuester@gmail.com>, Nick Morrow <morrownr@gmail.com>,
+        Viktor Petrenko <g0000ga@gmail.com>,
+        Andreas Henriksson <andreas@fatal.se>,
+        ValdikSS <iam@valdikss.org.ru>, kernel@pengutronix.de,
+        stable@vger.kernel.org
+References: <20230331121054.112758-1-s.hauer@pengutronix.de>
+ <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <317782bf-b12a-b6b8-8f08-5e4e19f3b309@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 3/31/23 15:34, Alex G. wrote:
+> On 3/31/23 07:10, Sascha Hauer wrote:
+>> This series fixes two bugs in the RTW88 USB driver I was reported from
+>> several people and that I also encountered myself.
+>>
+>> The first one resulted in "timed out to flush queue 3" messages from the
+>> driver and sometimes a complete stall of the TX queues.
+>>
+>> The second one is specific to the RTW8821CU chipset. Here 2GHz networks
+>> were hardly seen and impossible to connect to. This goes down to
+>> misinterpreting the rfe_option field in the efuse.
+> 
+> I applied both these patches, tested an 8821CU, and the news are good:
+> 
+> The number of kernel warnings and adapter hangs has gone down considerably.
+> 
+> The signal levels on 2.4GHz bands have improved noticeably. There is the 
+> occasional station coming in 30dB lower than on nearby adapters. I wasn't able 
+> to find a pattern here.
+> 
+> I can now run these adapters in IBSS and 802.11s modes on the 2.4 GHz band. That 
+> was not possible before.
+> 
+> I am impressed with the improvements in these patches. For the series:
+> 
+> Tested-by: Alexandru gagniuc <mr.nuke.me@gmail.com>
+>>
+>> Sascha Hauer (2):
+>>    wifi: rtw88: usb: fix priority queue to endpoint mapping
+>>    wifi: rtw88: rtw8821c: Fix rfe_option field width
+>>
+>>   drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +- >>   drivers/net/wireless/realtek/rtw88/usb.c      | 70 +++++++++++++------
+>>   2 files changed, 48 insertions(+), 25 deletions(-)
 
-[ Upstream commit b58e3d4311b54b6dd0e37165277965da0c9eb21d ]
+I can confirm that these changes cleared up my problems with the "timed out to 
+flush queue" warnings that caused a problem before with my rtw8822bu.
 
-This could race if the queue is redirected while full, then
-the flushing internally would start it while it's not yet
-usable again. Fix it by using two state bits instead of just
-one.
+Tested-by: Larry Finger <Larry,Finger@lwfinger.net>
 
-Reviewed-by: Benjamin Berg <benjamin.berg@intel.com>
-Tested-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 5 ++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 5 ++++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 4 ++--
- 4 files changed, 13 insertions(+), 5 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 56c7a68a6491c..fa7de3e47b8cc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -820,7 +820,10 @@ void iwl_mvm_mac_itxq_xmit(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
- 
- 	rcu_read_lock();
- 	do {
--		while (likely(!mvmtxq->stopped &&
-+		while (likely(!test_bit(IWL_MVM_TXQ_STATE_STOP_FULL,
-+					&mvmtxq->state) &&
-+			      !test_bit(IWL_MVM_TXQ_STATE_STOP_REDIRECT,
-+					&mvmtxq->state) &&
- 			      !test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status))) {
- 			skb = ieee80211_tx_dequeue(hw, txq);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 46af8dd2dc930..6b59425dbdb19 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -727,7 +727,9 @@ struct iwl_mvm_txq {
- 	struct list_head list;
- 	u16 txq_id;
- 	atomic_t tx_request;
--	bool stopped;
-+#define IWL_MVM_TXQ_STATE_STOP_FULL	0
-+#define IWL_MVM_TXQ_STATE_STOP_REDIRECT	1
-+	unsigned long state;
- };
- 
- static inline struct iwl_mvm_txq *
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index eeb81808db088..3ee4b3ecd0c82 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1304,7 +1304,10 @@ static void iwl_mvm_queue_state_change(struct iwl_op_mode *op_mode,
- 
- 		txq = sta->txq[tid];
- 		mvmtxq = iwl_mvm_txq_from_mac80211(txq);
--		mvmtxq->stopped = !start;
-+		if (start)
-+			clear_bit(IWL_MVM_TXQ_STATE_STOP_FULL, &mvmtxq->state);
-+		else
-+			set_bit(IWL_MVM_TXQ_STATE_STOP_FULL, &mvmtxq->state);
- 
- 		if (start && mvmsta->sta_state != IEEE80211_STA_NOTEXIST)
- 			iwl_mvm_mac_itxq_xmit(mvm->hw, txq);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 1bb456daff9e9..45dfee3ad8c60 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -640,7 +640,7 @@ static int iwl_mvm_redirect_queue(struct iwl_mvm *mvm, int queue, int tid,
- 			    queue, iwl_mvm_ac_to_tx_fifo[ac]);
- 
- 	/* Stop the queue and wait for it to empty */
--	txq->stopped = true;
-+	set_bit(IWL_MVM_TXQ_STATE_STOP_REDIRECT, &txq->state);
- 
- 	ret = iwl_trans_wait_tx_queues_empty(mvm->trans, BIT(queue));
- 	if (ret) {
-@@ -683,7 +683,7 @@ static int iwl_mvm_redirect_queue(struct iwl_mvm *mvm, int queue, int tid,
- 
- out:
- 	/* Continue using the queue */
--	txq->stopped = false;
-+	clear_bit(IWL_MVM_TXQ_STATE_STOP_REDIRECT, &txq->state);
- 
- 	return ret;
- }
--- 
-2.39.2
+Larry
+
 
