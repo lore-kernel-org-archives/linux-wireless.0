@@ -2,55 +2,55 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B348C76188
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Apr 2023 20:25:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9439DC761AF
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Apr 2023 20:25:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233268AbjDCUZi (ORCPT
+        id S233293AbjDCUZj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Apr 2023 16:25:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37128 "EHLO
+        Mon, 3 Apr 2023 16:25:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231623AbjDCUZa (ORCPT
+        with ESMTP id S232429AbjDCUZ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2023 16:25:30 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42D2F35AB;
-        Mon,  3 Apr 2023 13:25:01 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id r19-20020a05600c459300b003eb3e2a5e7bso18822226wmo.0;
-        Mon, 03 Apr 2023 13:25:01 -0700 (PDT)
+        Mon, 3 Apr 2023 16:25:29 -0400
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7FD835A9;
+        Mon,  3 Apr 2023 13:24:56 -0700 (PDT)
+Received: by mail-wm1-x32a.google.com with SMTP id l37so17795488wms.2;
+        Mon, 03 Apr 2023 13:24:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20210112; t=1680553498;
+        d=googlemail.com; s=20210112; t=1680553494;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KDHdMGLPoHCKVsAutbZQAivZfIzDcGEn0BhV76bkKq8=;
-        b=ZBhdvjJKsHmKDygOHjfLZpJD3ebBLl2DLDJNznWbjz8GX5TjVmYtLkLGHmxhgrIPJo
-         YPGSij9J56wKGc8oUdCfrDW6ApXASp4OkNlBqsOR3ZCeWeSuTN+i0QzIR/Ig/Khve7Mi
-         7CKaxnWvarDOraXaFIODmkkne7jHdyBOeOevRpK3KjnExWT5wQB4bWjD/r7iINYyAOmx
-         DNRWirs9RIQDyF6hewTEU6D6hZgBb8lAK0Q59SNYU/N81tN+E9Qw9lEaxNDpnOpT3i8d
-         Yt5NIjQW13MvhJHUs15qSRT5UqzMFHyCPJdeMFukLz/Bz4DZvc/i6aXvy8ouOVDYqrDO
-         tZxg==
+        bh=KQ+60A8XCWlvtT1qOzVKT5c/Do/fHJEKL+FyN+sj3M8=;
+        b=Gnfk6ZQ+Q+abkUPd89x7HyrN6jBJzIZRdv8Eu6oHm/Zorr/Lr6FOeMnVsljB7PWZns
+         D6mAm0w8bWVVbFRFZKlNuohBdVSTw6QWsy1FgGi+z6WZtC5/cCzinSN39ZYizmjomFfJ
+         qevnIRbANhue1mx8AMpUn5s1fakEkNk9Ah+DtpTa9BaZBmAxED6svuklEtqPd6SN3HLD
+         fQtrungFtWCXJ4Z1yKZjOIINMU4ueSYxvKv1WJVxBgXoYVhr63Hgy1VuCH8mQxAerBZv
+         NbGUxCcM+hmdDUQVq8w2joEMrR/6f0Uy07z3DvBz/BbfyH/whq4kACMl0Vv3Mf45Vy5O
+         Z/CQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680553498;
+        d=1e100.net; s=20210112; t=1680553494;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=KDHdMGLPoHCKVsAutbZQAivZfIzDcGEn0BhV76bkKq8=;
-        b=ycHn5HMMdzzIbqZAS9Fx7rOTbYsB5gsHRWvXdz/Xx2jqx72ZSki6DR+cX0n0aFXPIw
-         zSoCK3ukq7cYRfl1GnY9oU7MNL73SGrj43db9F1799Jf8xRZ/Q+gGyPGUoquC44RaNfw
-         faaCAL4384RQm0iGcySA1D4NyYZ2jHl2/uflSTmHZnLVIZKMzeyokNTAwW/8TJX0Rx1/
-         LJrKgldgilOylz3ZOJrNcNf370PaVqPzXHKOaJ88PCErEvdRbF8drcFqsQ7hcthJEvBy
-         GwB4UzqbQ06GcFrM66jPGsKWlzNNtCRHajLyqpnsGNnDrRKFh7iiLoWj8lFcaqlUSigx
-         IV7g==
-X-Gm-Message-State: AAQBX9fbZOm/mk+MR59bpWMFr7qdQ0nqxY7n+B6Vi9VhXV1zMKjn3muF
-        6aaC541lrJ+4LMf7p+5AVSVLR8mv3go=
-X-Google-Smtp-Source: AKy350YZa21TNC+4SWylVtGOE5EBxtSicSVx/C1R9QrN3IpPuYH0xPcJqX+IUyI+X2ooHXZHytUIXg==
-X-Received: by 2002:a05:600c:211:b0:3ee:4bd1:39ca with SMTP id 17-20020a05600c021100b003ee4bd139camr478216wmi.13.1680553498463;
-        Mon, 03 Apr 2023 13:24:58 -0700 (PDT)
+        bh=KQ+60A8XCWlvtT1qOzVKT5c/Do/fHJEKL+FyN+sj3M8=;
+        b=FD7g96Exmp3DAwLCoziqsVaz+XGOgnhQSJ9AzkVX3AeTWrlrMFEj2Pf0lbb+8YtUuG
+         rox7+NU9w3ajSP5+NLFRCy37dpgUVtY4NcLxq9otz1oaOSMIZlBnyaRQhGfafhqPQrdG
+         /UFm1QOEtx1ly66jguTmbvKLN1TMsBvjXw7NlXfN+hnw1+vWczZh+QSH+tBp3ITD47w/
+         QfQsNb+oXH4uKYTWLUubfkz/HbdMHe/80DHaf1AIe1Ez3gxTFohw0b99qofyWB4mUkzk
+         mqK/JrAGymL8YSzvgh85t5rVG9ichzKm5HCAAxfU0zKKJIWqGgpZrrQ4a8Y7H/k/SW6O
+         eMIw==
+X-Gm-Message-State: AAQBX9eqKyadxZ/eXgN0ni9f7SbO12o53rC+dd4Z+2fwc0CbRNZKkC7I
+        73yhH5pB02uXQxShIj9Ib6VDwwOS6DY=
+X-Google-Smtp-Source: AKy350aqt1k3SgCOQGOAslm7LKUhptEerjeUBV9lR2vcWgghufxaG7SZYleg3zlSve63X1ke4TD8+g==
+X-Received: by 2002:a05:600c:214:b0:3eb:2e27:2d0c with SMTP id 20-20020a05600c021400b003eb2e272d0cmr231996wmi.1.1680553493976;
+        Mon, 03 Apr 2023 13:24:53 -0700 (PDT)
 Received: from localhost.localdomain (dynamic-2a01-0c22-7651-4500-0000-0000-0000-0e63.c22.pool.telefonica.de. [2a01:c22:7651:4500::e63])
-        by smtp.googlemail.com with ESMTPSA id 24-20020a05600c021800b003ee1acdb036sm12845895wmi.17.2023.04.03.13.24.57
+        by smtp.googlemail.com with ESMTPSA id 24-20020a05600c021800b003ee1acdb036sm12845895wmi.17.2023.04.03.13.24.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Apr 2023 13:24:58 -0700 (PDT)
+        Mon, 03 Apr 2023 13:24:53 -0700 (PDT)
 From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
@@ -64,9 +64,9 @@ Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
         Larry Finger <Larry.Finger@lwfinger.net>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v4 6/9] mmc: sdio: add Realtek SDIO vendor ID and various wifi device IDs
-Date:   Mon,  3 Apr 2023 22:24:37 +0200
-Message-Id: <20230403202440.276757-7-martin.blumenstingl@googlemail.com>
+Subject: [PATCH v4 1/9] wifi: rtw88: Clear RTW_FLAG_POWERON early in rtw_mac_power_switch()
+Date:   Mon,  3 Apr 2023 22:24:32 +0200
+Message-Id: <20230403202440.276757-2-martin.blumenstingl@googlemail.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230403202440.276757-1-martin.blumenstingl@googlemail.com>
 References: <20230403202440.276757-1-martin.blumenstingl@googlemail.com>
@@ -76,48 +76,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add the SDIO vendor ID for Realtek and some device IDs extracted from
-their GPL vendor driver. This will be useful in the future when the
-rtw88 driver gains support for these chips.
+The SDIO HCI implementation needs to know when the MAC is powered on.
+This is needed because 32-bit register access has to be split into 4x
+8-bit register access when the MAC is not fully powered on or while
+powering off. When the MAC is powered on 32-bit register access can be
+used to reduce the number of transfers but splitting into 4x 8-bit
+register access still works in that case.
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+During the power on sequence is how RTW_FLAG_POWERON is only set when
+the power on sequence has completed successfully. During power off
+however RTW_FLAG_POWERON is set. This means that the upcoming SDIO HCI
+implementation does not know that it has to use 4x 8-bit register
+accessors. Clear the RTW_FLAG_POWERON flag early when powering off the
+MAC so the whole power off sequence is processed with RTW_FLAG_POWERON
+unset. This will make it possible to use the RTW_FLAG_POWERON flag in
+the upcoming SDIO HCI implementation.
+
+Note that a failure in rtw_pwr_seq_parser() while applying
+chip->pwr_off_seq can theoretically result in the RTW_FLAG_POWERON
+flag being cleared while the chip is still powered on. However,
+depending on when the failure occurs in the power off sequence the
+chip may be on or off. Even the original approach of clearing
+RTW_FLAG_POWERON only when the power off sequence has been applied
+successfully could end up in some corner case where the chip is
+powered off but RTW_FLAG_POWERON was not cleared.
+
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
 Changes since v3:
-- sort entries by their value for consistency as suggested by Pali
-- add Ping-Ke's reviewed-by
+- added Ping-Ke's reviewed-by (thank you!)
 
 Changes since v2:
-- none
+- improve patch description about corner cases when clearing
+  RTW_FLAG_POWERON
 
 Changes since v1:
-- none
+- This replaces a previous patch called "rtw88: hci: Add an optional
+  power_switch() callback to rtw_hci_ops" which added a new callback
+  to the HCI ops.
 
 
- include/linux/mmc/sdio_ids.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 0e4ef9c5127a..66f503ed2448 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -112,6 +112,15 @@
- #define SDIO_VENDOR_ID_MICROCHIP_WILC		0x0296
- #define SDIO_DEVICE_ID_MICROCHIP_WILC1000	0x5347
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index f3a566cf979b..cfdfc8a2c836 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -273,6 +273,9 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ 	if (pwr_on == cur_pwr)
+ 		return -EALREADY;
  
-+#define SDIO_VENDOR_ID_REALTEK			0x024c
-+#define SDIO_DEVICE_ID_REALTEK_RTW8723BS	0xb723
-+#define SDIO_DEVICE_ID_REALTEK_RTW8821BS	0xb821
-+#define SDIO_DEVICE_ID_REALTEK_RTW8822BS	0xb822
-+#define SDIO_DEVICE_ID_REALTEK_RTW8821CS	0xc821
-+#define SDIO_DEVICE_ID_REALTEK_RTW8822CS	0xc822
-+#define SDIO_DEVICE_ID_REALTEK_RTW8723DS	0xd723
-+#define SDIO_DEVICE_ID_REALTEK_RTW8821DS	0xd821
++	if (!pwr_on)
++		clear_bit(RTW_FLAG_POWERON, rtwdev->flags);
 +
- #define SDIO_VENDOR_ID_SIANO			0x039a
- #define SDIO_DEVICE_ID_SIANO_NOVA_B0		0x0201
- #define SDIO_DEVICE_ID_SIANO_NICE		0x0202
+ 	pwr_seq = pwr_on ? chip->pwr_on_seq : chip->pwr_off_seq;
+ 	ret = rtw_pwr_seq_parser(rtwdev, pwr_seq);
+ 	if (ret)
+@@ -280,8 +283,6 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ 
+ 	if (pwr_on)
+ 		set_bit(RTW_FLAG_POWERON, rtwdev->flags);
+-	else
+-		clear_bit(RTW_FLAG_POWERON, rtwdev->flags);
+ 
+ 	return 0;
+ }
 -- 
 2.40.0
 
