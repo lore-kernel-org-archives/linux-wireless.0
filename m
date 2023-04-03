@@ -2,81 +2,119 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23853C76188
-	for <linux-wireless@archiver.kernel.org>; Mon,  3 Apr 2023 18:07:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E502C76188
+	for <linux-wireless@archiver.kernel.org>; Mon,  3 Apr 2023 18:25:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232560AbjDCSHI (ORCPT
+        id S233035AbjDCSZA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Apr 2023 14:07:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34172 "EHLO
+        Mon, 3 Apr 2023 14:25:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232564AbjDCSG5 (ORCPT
+        with ESMTP id S233070AbjDCSYx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2023 14:06:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B084A358E
-        for <linux-wireless@vger.kernel.org>; Mon,  3 Apr 2023 11:06:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3895262447
-        for <linux-wireless@vger.kernel.org>; Mon,  3 Apr 2023 18:06:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A376EC433EF;
-        Mon,  3 Apr 2023 18:06:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680545211;
-        bh=C0jeJzYSg+7BaH8JhWlX6pjE/fzFELNGkqiQ29PPBZo=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=HsjeXKwa8i47X7mJp2jctTv/2pxF8ualDrv9Mgoj2yp4EXZCaHBW9bRk0emzWsyum
-         B9wZqA06UWW2AFvPjzuaE57PqAuqyL9wP5c7sDW57eD/Zhgz76hUjqHVEjqR32/nt8
-         4imiLWNlA754pmCiWTl3uyTMAU7dTvluTTtSASZp3NJtSo7okoxRhrStXUkATMY3rC
-         ZzGe16aXTj63KDpetsQS9nY3kN3Td2w49RKuVg7Zn7cjSTcikEQJuM5ea3Z5rO+8Bz
-         RRUUBL6w8asJBLy5d0YPpLT+aZGgBoqbcOZtezHVbly6AmphjxnPtWQqoEzxY3flJW
-         GS1ijf7i54hYg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Bernie Huang" <phhuang@realtek.com>,
-        "arnd\@arndb.de" <arnd@arndb.de>
-Subject: Re: rtw88/rtw89: command/event structure handling
-References: <20230310034631.45299-1-pkshih@realtek.com>
-        <20230310034631.45299-2-pkshih@realtek.com>
-        <87zg8emn4i.fsf@kernel.org>
-        <e3670d1075f54c69ba3971067b3d06b7@realtek.com>
-        <87a5zpb71j.fsf_-_@kernel.org> <871ql1aym9.fsf@kernel.org>
-        <84e5fadd204807a6de84376f76d405a63198e055.camel@realtek.com>
-Date:   Mon, 03 Apr 2023 21:06:46 +0300
-In-Reply-To: <84e5fadd204807a6de84376f76d405a63198e055.camel@realtek.com>
-        (Ping-Ke Shih's message of "Mon, 3 Apr 2023 14:09:51 +0000")
-Message-ID: <87ttxwalhl.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 3 Apr 2023 14:24:53 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE6C630E1
+        for <linux-wireless@vger.kernel.org>; Mon,  3 Apr 2023 11:24:37 -0700 (PDT)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 333BljHN014926;
+        Mon, 3 Apr 2023 18:24:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=A5APZ+Xhfly3fRRj86i2YSPpoV7OZRDxHqxy76ekAzY=;
+ b=fJ/5zIxgoocay255V1HxSVLmyr+hBQoHb2oVqVqr0QAyCe3IRqEDzY9nw8zZ9Ttn8K5Y
+ dsHJFvgscSoHuJqRR83hL62EhG3TjsAWUCYuLyrqVJkhS0rsUjIqfyGvkUoQ1q9PEm5R
+ cVT9irgpxnyI37aN5DhdnOFZSR+0d8C9T8z9x7sOI0Evg4KbTRjrPVUd3VSb5Pn9FxpB
+ VGRncXXrCj9rnwqYrZ5MipHMWk6i5bjQzPZYcYOfhc3e5kERdpTFd1vXD97EuVUHseB/
+ i7HzPo98UqLzp+ZUqnYahXiqzY82BIn7BEHNZcVqD8hj53T1Sd+hlOEZFUuIEg6VOPd6 jw== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pqw36s5ae-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 03 Apr 2023 18:24:29 +0000
+Received: from pps.filterd (NASANPPMTA04.qualcomm.com [127.0.0.1])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 333ILFSw029565;
+        Mon, 3 Apr 2023 18:24:28 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 3pr09uajn4-1;
+        Mon, 03 Apr 2023 18:24:28 +0000
+Received: from NASANPPMTA04.qualcomm.com (NASANPPMTA04.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 333INHIm000475;
+        Mon, 3 Apr 2023 18:24:28 GMT
+Received: from hprem-linux.qualcomm.com (hprem-linux.qualcomm.com [10.201.162.248])
+        by NASANPPMTA04.qualcomm.com (PPS) with ESMTP id 333IORl4002480;
+        Mon, 03 Apr 2023 18:24:28 +0000
+Received: by hprem-linux.qualcomm.com (Postfix, from userid 4146166)
+        id 7F31BB003D4; Mon,  3 Apr 2023 23:54:26 +0530 (IST)
+From:   Harshitha Prem <quic_hprem@quicinc.com>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Harshitha Prem <quic_hprem@quicinc.com>,
+        Sathishkumar Muruganandam <quic_murugana@quicinc.com>
+Subject: [PATCH 2/3] wifi: ath11k: Prevent REO cmd failures
+Date:   Mon,  3 Apr 2023 23:54:19 +0530
+Message-Id: <20230403182420.23375-3-quic_hprem@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230403182420.23375-1-quic_hprem@quicinc.com>
+References: <20230403182420.23375-1-quic_hprem@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: B8wiHBQVMUedvF4CQjAUXXtk27yEkRw3
+X-Proofpoint-GUID: B8wiHBQVMUedvF4CQjAUXXtk27yEkRw3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-03_15,2023-04-03_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 impostorscore=0
+ lowpriorityscore=0 priorityscore=1501 bulkscore=0 suspectscore=0
+ phishscore=0 clxscore=1015 malwarescore=0 adultscore=0 mlxscore=0
+ mlxlogscore=648 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304030141
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> writes:
+Prevent REO cmd failures causing double free by increasing REO cmd
+ring size and moving REO status ring mask to IRQ group 3 from group
+0 to separate from tx completion ring on IRQ group 0 which may delay
+reo status processing.
 
->> > Downside of course is that there's quite a lot of boilerplate code but I
->> > still consider that positives outweight the negatives. Thoughts?
->> > 
->> > And I'll emphasise that this is not a blocker for anything but it would
->> > be nice to clean this up both in rtw88 and rtw89 at some point, if we
->> > can.
->
-> Since they will be a lot of works and I have a lot of local patches on
-> hand, can I apply these rules to the patches and submit them ahead? 
-> Until all things or a bunch of conversion are completed (maybe weeks or
-> one or two months later), I can submit patches that only convert
-> these H2C/C2H with new rules.
->
-> Does it work to you?
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
-Yes, that's totally fine. No rush with this cleanup. Thanks for working
-on this.
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
+Signed-off-by: Sathishkumar Muruganandam <quic_murugana@quicinc.com>
+Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/dp.h | 2 +-
+ drivers/net/wireless/ath/ath11k/hw.c | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index be9eafc872b3..6022e27ba91d 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -214,7 +214,7 @@ struct ath11k_pdev_dp {
+ #define DP_REO_REINJECT_RING_SIZE	32
+ #define DP_RX_RELEASE_RING_SIZE		1024
+ #define DP_REO_EXCEPTION_RING_SIZE	128
+-#define DP_REO_CMD_RING_SIZE		128
++#define DP_REO_CMD_RING_SIZE		256
+ #define DP_REO_STATUS_RING_SIZE		2048
+ #define DP_RXDMA_BUF_RING_SIZE		4096
+ #define DP_RXDMA_REFILL_RING_SIZE	2048
+diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
+index 60ac215e0678..9a12cc955fa1 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.c
++++ b/drivers/net/wireless/ath/ath11k/hw.c
+@@ -1224,6 +1224,7 @@ const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_ipq8074 = {
+ 		ATH11K_RX_WBM_REL_RING_MASK_0,
+ 	},
+ 	.reo_status = {
++		0, 0, 0,
+ 		ATH11K_REO_STATUS_RING_MASK_0,
+ 	},
+ 	.rxdma2host = {
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.17.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
