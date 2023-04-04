@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA33CC7618D
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 07:25:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94DB0C7618D
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 07:25:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230038AbjDDHZ2 (ORCPT
+        id S233385AbjDDHZc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 4 Apr 2023 03:25:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55504 "EHLO
+        Tue, 4 Apr 2023 03:25:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233873AbjDDHZS (ORCPT
+        with ESMTP id S233926AbjDDHZU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2023 03:25:18 -0400
+        Tue, 4 Apr 2023 03:25:20 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F55D2D4B
-        for <linux-wireless@vger.kernel.org>; Tue,  4 Apr 2023 00:25:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08CEF170C
+        for <linux-wireless@vger.kernel.org>; Tue,  4 Apr 2023 00:25:19 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1pjb2U-00073q-OK; Tue, 04 Apr 2023 09:25:10 +0200
+        id 1pjb2V-000749-15; Tue, 04 Apr 2023 09:25:11 +0200
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1pjb2U-008rci-2g; Tue, 04 Apr 2023 09:25:10 +0200
+        id 1pjb2U-008rco-D6; Tue, 04 Apr 2023 09:25:10 +0200
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1pjb2T-002UPS-FU; Tue, 04 Apr 2023 09:25:09 +0200
+        id 1pjb2T-002UPq-HU; Tue, 04 Apr 2023 09:25:09 +0200
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless <linux-wireless@vger.kernel.org>
 Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -38,11 +38,13 @@ Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>,
         Viktor Petrenko <g0000ga@gmail.com>,
         Andreas Henriksson <andreas@fatal.se>,
         ValdikSS <iam@valdikss.org.ru>, kernel@pengutronix.de,
-        Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v2 0/2] RTW88 USB bug fixes
-Date:   Tue,  4 Apr 2023 09:25:06 +0200
-Message-Id: <20230404072508.578056-1-s.hauer@pengutronix.de>
+        Sascha Hauer <s.hauer@pengutronix.de>, stable@vger.kernel.org
+Subject: [PATCH v2 2/2] wifi: rtw88: rtw8821c: Fix rfe_option field width
+Date:   Tue,  4 Apr 2023 09:25:08 +0200
+Message-Id: <20230404072508.578056-3-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230404072508.578056-1-s.hauer@pengutronix.de>
+References: <20230404072508.578056-1-s.hauer@pengutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -53,29 +55,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series fixes two bugs in the RTW88 USB driver I was reported from
-several people and that I also encountered myself.
+On my RTW8821CU chipset rfe_option reads as 0x22. Looking at the
+downstream driver suggests that the field width of rfe_option is 5 bit,
+so rfe_option should be masked with 0x1f.
 
-The first one resulted in "timed out to flush queue 3" messages from the
-driver and sometimes a complete stall of the TX queues.
+Without this the rfe_option comparisons with 2 further down the
+driver evaluate as false when they should really evaluate as true.
+The effect is that 2G channels do not work.
 
-The second one is specific to the RTW8821CU chipset. Here 2GHz networks
-were hardly seen and impossible to connect to. This goes down to
-misinterpreting the rfe_option field in the efuse.
+rfe_option is also used as an array index into rtw8821c_rfe_defs[].
+rtw8821c_rfe_defs[34] (0x22) was added as part of adding USB support,
+likely because rfe_option reads as 0x22. As this now becomes 0x2,
+rtw8821c_rfe_defs[34] is no longer used and can be removed.
 
-Changes since v1:
-- Add Cc: stable@vger.kernel.org tag to the patches rather than Cc'ing
-  stable@ directly
-- Add Tested-by: tags
+Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Tested-by: ValdikSS <iam@valdikss.org.ru>
+Tested-by: Alexandru gagniuc <mr.nuke.me@gmail.com>
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: stable@vger.kernel.org
+---
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Sascha Hauer (2):
-  wifi: rtw88: usb: fix priority queue to endpoint mapping
-  wifi: rtw88: rtw8821c: Fix rfe_option field width
-
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +-
- drivers/net/wireless/realtek/rtw88/usb.c      | 70 +++++++++++++------
- 2 files changed, 48 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 17f800f6efbd0..67efa58dd78ee 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -47,7 +47,7 @@ static int rtw8821c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ 
+ 	map = (struct rtw8821c_efuse *)log_map;
+ 
+-	efuse->rfe_option = map->rfe_option;
++	efuse->rfe_option = map->rfe_option & 0x1f;
+ 	efuse->rf_board_option = map->rf_board_option;
+ 	efuse->crystal_cap = map->xtal_k;
+ 	efuse->pa_type_2g = map->pa_type;
+@@ -1537,7 +1537,6 @@ static const struct rtw_rfe_def rtw8821c_rfe_defs[] = {
+ 	[2] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
+ 	[4] = RTW_DEF_RFE_EXT(8821c, 0, 0, 2),
+ 	[6] = RTW_DEF_RFE(8821c, 0, 0),
+-	[34] = RTW_DEF_RFE(8821c, 0, 0),
+ };
+ 
+ static struct rtw_hw_reg rtw8821c_dig[] = {
 -- 
 2.39.2
 
