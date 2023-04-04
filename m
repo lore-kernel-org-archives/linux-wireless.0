@@ -2,121 +2,128 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A73FC761A6
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 02:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 381BAC76196
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 02:54:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232550AbjDDCyT (ORCPT
+        id S232850AbjDDCyb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 3 Apr 2023 22:54:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51352 "EHLO
+        Mon, 3 Apr 2023 22:54:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbjDDCyR (ORCPT
+        with ESMTP id S229446AbjDDCya (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Apr 2023 22:54:17 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C9101BE5
-        for <linux-wireless@vger.kernel.org>; Mon,  3 Apr 2023 19:54:16 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3342nAIi012868;
-        Tue, 4 Apr 2023 02:54:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=YO8xpiiFRkM7ohelTiAjHSXvuPCQhgmTSseP61xd34g=;
- b=k8eoRsbhK5z3D/5bBqJD7qcx6wwXvKcSQImV8iDwZFHC4MtsuqlxzzDLH62AvSNw9v3/
- W/GZeNXd4BVwt1rm66YOYpuWmBeoMSoU+qvqg9DyDLjThOEf8lTGYCno4Z0NaCo32cYL
- +M+XKYtuwY60ooONa6+jmwGshs904Yg26RoZpRezNyH2jvVFi48VN+VFKJxE+5hG1qvY
- jqWubu9HDu1eOBPNn/XzGiRLpgqW/5LaCaIqGqH2YqkR+T3iNRgsVNtKLL16WU7f0Nk2
- uXcHav0AbTXnxyYMfmH9c/UwStWE1yp9nuCqnLgTpv650fCmnpReeO1H4wJ4TTAGDC6p HQ== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pqus5a919-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 04 Apr 2023 02:54:09 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3342s8p3014952
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 4 Apr 2023 02:54:08 GMT
-Received: from [10.231.195.204] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Mon, 3 Apr 2023
- 19:54:07 -0700
-Message-ID: <b9c6d022-12c3-a696-c4b9-cb14a6d30a45@quicinc.com>
-Date:   Tue, 4 Apr 2023 10:54:04 +0800
+        Mon, 3 Apr 2023 22:54:30 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 869DE1BE5
+        for <linux-wireless@vger.kernel.org>; Mon,  3 Apr 2023 19:54:29 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3342s27s9014588, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3342s27s9014588
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+        Tue, 4 Apr 2023 10:54:02 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Tue, 4 Apr 2023 10:54:21 +0800
+Received: from localhost (172.16.18.209) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 4 Apr 2023
+ 10:54:20 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v5 0/5] wifi: rtw89: preparation of multiple interface concurrency support
+Date:   Tue, 4 Apr 2023 10:52:54 +0800
+Message-ID: <20230404025259.15503-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH 10/27] wifi: mac80211: isolate driver from inactive links
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-CC:     <ath11k@lists.infradead.org>
-References: <20220902141259.377789-1-johannes@sipsolutions.net>
- <20220902161143.5ce3dad3be7c.I92e9f7a6c120cd4a3631baf486ad8b6aafcd796f@changeid>
- <5d82e564-86bf-c26b-077a-d0bc14e2d3c3@quicinc.com>
- <74f3eb848326607b15336c31a02bdd861ccafb47.camel@sipsolutions.net>
- <2de44394-cb93-7be4-481f-2d92788b8d28@quicinc.com>
- <351f74e0e1cd6e9724f97dbd042bdc5e04c44842.camel@sipsolutions.net>
- <c05780bc-864c-9323-499d-a8b1ba1c2ef2@quicinc.com>
- <545227cf18baac94ea8aa24dc08b250c47949541.camel@sipsolutions.net>
- <c7fd18fa-531f-a90d-a8fb-442a5aa66d7d@quicinc.com>
- <d1fda46a-2481-8e05-e0a5-9f2bd3850ff4@quicinc.com>
- <868131d13ed7c4c8b5d4938adcd71cf1ff8e9677.camel@sipsolutions.net>
- <5765e3c5-46d4-e92b-a93b-4a2649acff2a@quicinc.com>
- <37958ca93039114b98909d730ff57dd1d10bb68d.camel@sipsolutions.net>
-From:   Wen Gong <quic_wgong@quicinc.com>
-In-Reply-To: <37958ca93039114b98909d730ff57dd1d10bb68d.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: lnsgSqN0jOsGDySGRdk1atThTXzp55E5
-X-Proofpoint-GUID: lnsgSqN0jOsGDySGRdk1atThTXzp55E5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-03_19,2023-04-03_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
- lowpriorityscore=0 suspectscore=0 bulkscore=0 spamscore=0 mlxlogscore=808
- adultscore=0 impostorscore=0 mlxscore=0 priorityscore=1501 clxscore=1015
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304040024
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.18.209]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/11/2022 3:26 PM, Johannes Berg wrote:
-> On Tue, 2022-10-11 at 12:07 +0800, Wen Gong wrote:
->> On 9/28/2022 11:28 PM, Johannes Berg wrote:
->> ...
->>>> May I know some more info/status about the "incoming  new method to let
->>>> drivers set the link address"?
->>>>
->>> I wasn't actually planning to work on that myself, FWIW.
->>>
->>> johannes
->> OK. So has some body will work for that now?😁
->>
-> Yes, I don't personally have a need for anything other than what we have
-> right now.
+To support concurrency, we implement beacon filter, CQM and
+ieee80211::remain_on_channel ops. Since our firmware doesn't support to TX
+null packet while doing remain-on-channel, driver does this instead. To
+ensure null packet send out before switching channel, patch 2/5 adds a
+waiting mechanism.
 
-May I add method to let low-drivers set the primay link address like below?
+The patches 4/5 and 5/5 refine things we found during developing.
 
-I add a field in struct wiphy_iftype_ext_capab, if it is valid, then it 
-will be used as
+v5:
+  - patch 2/5
+    - use owner with spin_lock to replace original third work to make
+      code simpler.
+  - others
+    - no change
 
-local primary/assoc link addr in function ieee80211_mgd_setup_link() for 
-station.
+v4:
+  - patch 1/5
+    - define h2c/c2h struct to set/get skb->data,
+      for example
 
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5079,6 +5079,7 @@ struct wiphy_iftype_ext_capab {
-         u8 extended_capabilities_len;
-         u16 eml_capabilities;
-         u16 mld_capa_and_ops;
-+       struct mac_address assoc_link_addr;
-  };
+      * h2c = (__le32 *)skb->data; -->
+        h2c = (struct rtw89_h2c_bcnfltr *)skb->data;
 
-...
+      * #define H2C_CFG_BCN_FLTR_LEN 4 (remove) --> sizeof(*h2c)
+
+      * h2c[0] = le32_encode_bits(connect, RTW89_H2C_BCNFLTR_W0_MON_RSSI) -->
+        h2c->w0 = le32_encode_bits(connect, RTW89_H2C_BCNFLTR_W0_MON_RSSI)
+
+    - I think this could improve a little more. If anyone have more ideas
+      in the future, I will open mind to change them again to make them
+      look better.
+
+  - others
+    - no change
+
+v3:
+  - patch 1/5
+    - remove unnecessary type casting
+    - use clear style of mask definition for H2C/C2H
+  - patch 2/5
+    - add comment to describe why polling can help freeing
+  - others
+    - no change
+
+v2:
+  - messed up, please ignore.
+
+Po-Hao Huang (5):
+  wifi: rtw89: 8852c: add beacon filter and CQM support
+  wifi: rtw89: add function to wait for completion of TX skbs
+  wifi: rtw89: add ieee80211::remain_on_channel ops
+  wifi: rtw89: add flag check for power state
+  wifi: rtw89: fix authentication fail during scan
+
+ drivers/net/wireless/realtek/rtw89/chan.c     |  35 +++
+ drivers/net/wireless/realtek/rtw89/chan.h     |   3 +
+ drivers/net/wireless/realtek/rtw89/core.c     | 272 +++++++++++++++++-
+ drivers/net/wireless/realtek/rtw89/core.h     |  80 ++++++
+ drivers/net/wireless/realtek/rtw89/fw.c       | 116 +++++++-
+ drivers/net/wireless/realtek/rtw89/fw.h       |  63 ++++
+ drivers/net/wireless/realtek/rtw89/mac.c      |  62 ++++
+ drivers/net/wireless/realtek/rtw89/mac.h      |   1 +
+ drivers/net/wireless/realtek/rtw89/mac80211.c |  88 +++++-
+ drivers/net/wireless/realtek/rtw89/pci.c      |   6 +
+ drivers/net/wireless/realtek/rtw89/pci.h      |   4 +-
+ drivers/net/wireless/realtek/rtw89/ps.c       |   6 +
+ drivers/net/wireless/realtek/rtw89/ps.h       |  16 ++
+ 13 files changed, 737 insertions(+), 15 deletions(-)
+
+-- 
+2.25.1
 
