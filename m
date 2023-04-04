@@ -2,49 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC642C6FD1D
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 20:03:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7753C761A6
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 20:46:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235615AbjDDUDy (ORCPT
+        id S236145AbjDDUqD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 4 Apr 2023 16:03:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52156 "EHLO
+        Tue, 4 Apr 2023 16:46:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234808AbjDDUDx (ORCPT
+        with ESMTP id S236087AbjDDUqC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2023 16:03:53 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED1DB10D3
-        for <linux-wireless@vger.kernel.org>; Tue,  4 Apr 2023 13:03:47 -0700 (PDT)
-X-UUID: c923be6ed32311edb6b9f13eb10bd0fe-20230405
+        Tue, 4 Apr 2023 16:46:02 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B62F24C25
+        for <linux-wireless@vger.kernel.org>; Tue,  4 Apr 2023 13:45:51 -0700 (PDT)
+X-UUID: ad501ef2d32911eda9a90f0bb45854f4-20230405
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=lbEvmoMG8DcwrAyp3RK9DAGflVMVCOWNVtqH207Fk0I=;
-        b=UM5xNjNffriGdtzbRqwlnDpct9BLo32l040lfhph3z6IgnJRT90OsRFl7+sLEHcrZncUKRc0fHq/XbcltW4oedmnZiK5CCVgwrK0W4c3vQMNxBTk1ULb76CV4qBT7n70gcsOcklS8M8Lg4UBQNsLMsdFZwbzM9Mgc/J/7wLus0Q=;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=LCM1e4qZf5qY7M8fopnoi/OUhBK3VGpPfKIWZpfL12k=;
+        b=ex2Bxf4KmuV76YxaWhltfiHW/vZZTDhYa+Rr2ysygWNbfO8ACTHfXPu45kds7MhR4G+P3froazwIl+GZG6/R/Beqvx5AYUOEm+FQMANtJPTPEndRFK+nfGeiE1TLtp4AroEdbK5ZB8dOxxKyUFBZ4boGSjjMEy6zoindwExYeRQ=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.22,REQID:846d7e58-078a-4cf2-be5a-48eacd441ab9,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-        ON:release,TS:70
-X-CID-INFO: VERSION:1.1.22,REQID:846d7e58-078a-4cf2-be5a-48eacd441ab9,IP:0,URL
-        :0,TC:0,Content:-25,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTI
-        ON:quarantine,TS:70
-X-CID-META: VersionHash:120426c,CLOUDID:56fa5d2a-564d-42d9-9875-7c868ee415ec,B
-        ulkID:2304050403399ZUFOB58,BulkQuantity:0,Recheck:0,SF:38|29|28|17|19|48,T
-        C:nil,Content:0,EDM:-3,IP:nil,URL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,CO
-        L:0,OSI:0,OSA:0,AV:0
+X-CID-O-INFO: VERSION:1.1.22,REQID:8774992a-c817-48b0-b6c3-8ee73774de19,IP:0,U
+        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:-25
+X-CID-META: VersionHash:120426c,CLOUDID:464e5e2a-564d-42d9-9875-7c868ee415ec,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
-X-UUID: c923be6ed32311edb6b9f13eb10bd0fe-20230405
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
+X-UUID: ad501ef2d32911eda9a90f0bb45854f4-20230405
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
         (envelope-from <ryder.lee@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1837330661; Wed, 05 Apr 2023 04:03:37 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+        with ESMTP id 1970824162; Wed, 05 Apr 2023 04:45:47 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.25; Wed, 5 Apr 2023 04:03:35 +0800
+ 15.2.1118.25; Wed, 5 Apr 2023 04:45:46 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.25 via Frontend Transport; Wed, 5 Apr 2023 04:03:35 +0800
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.25 via Frontend Transport; Wed, 5 Apr 2023 04:45:46 +0800
 From:   Ryder Lee <ryder.lee@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
 CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
@@ -53,11 +49,11 @@ CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
         <linux-mediatek@lists.infradead.org>,
         Ryder Lee <ryder.lee@mediatek.com>
 Subject: [PATCH 3/3] wifi: mt76: mt7996: enable coredump support
-Date:   Wed, 5 Apr 2023 04:03:32 +0800
-Message-ID: <ab93849a56836e0aeafffb2f5b4dc2e7bc54fbf1.1680638324.git.ryder.lee@mediatek.com>
+Date:   Wed, 5 Apr 2023 04:45:45 +0800
+Message-ID: <68a756796d10589836ecc1e7a09229030fa72224.1680640205.git.ryder.lee@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <6756ddde5aaaf29db4f62264bab7f28bb539b26f.1680638324.git.ryder.lee@mediatek.com>
-References: <6756ddde5aaaf29db4f62264bab7f28bb539b26f.1680638324.git.ryder.lee@mediatek.com>
+In-Reply-To: <6756ddde5aaaf29db4f62264bab7f28bb539b26f.1680640205.git.ryder.lee@mediatek.com>
+References: <6756ddde5aaaf29db4f62264bab7f28bb539b26f.1680640205.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
@@ -109,7 +105,7 @@ index bcb9a3c53149..07c8b555c1ac 100644
 +mt7996e-$(CONFIG_DEV_COREDUMP) += coredump.o
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/coredump.c b/drivers/net/wireless/mediatek/mt76/mt7996/coredump.c
 new file mode 100644
-index 000000000000..d58024f50fdb
+index 000000000000..ccab0d7b9be4
 --- /dev/null
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/coredump.c
 @@ -0,0 +1,268 @@
@@ -251,20 +247,20 @@ index 000000000000..d58024f50fdb
 +		mt76_clear(dev, MT_MCU_WM_EXCP_LR_CTRL, BIT(0));
 +	}
 +
-+	oldest = (u32)mt76_get_field(dev, MT_MCU_WM_EXCP_LR_CTRL,
-+				     GENMASK(20, 16)) + 2;
-+	for (i = 0; i < 16; i++) {
-+		idx = ((oldest + 2 * i + 1) % 32);
-+		dump->pc_stack[i + 1] =
-+			mt76_rr(dev, MT_MCU_WM_EXCP_LR_LOG + idx * 4);
-+	}
-+
 +	oldest = (u32)mt76_get_field(dev, MT_MCU_WM_EXCP_PC_CTRL,
 +				     GENMASK(20, 16)) + 2;
 +	for (i = 0; i < 16; i++) {
 +		idx = ((oldest + 2 * i + 1) % 32);
-+		dump->lr_stack[i] =
++		dump->pc_stack[i + 1] =
 +			mt76_rr(dev, MT_MCU_WM_EXCP_PC_LOG + idx * 4);
++	}
++
++	oldest = (u32)mt76_get_field(dev, MT_MCU_WM_EXCP_LR_CTRL,
++				     GENMASK(20, 16)) + 2;
++	for (i = 0; i < 16; i++) {
++		idx = ((oldest + 2 * i + 1) % 32);
++		dump->lr_stack[i] =
++			mt76_rr(dev, MT_MCU_WM_EXCP_LR_LOG + idx * 4);
 +	}
 +
 +	/* start call stack record */
