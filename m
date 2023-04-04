@@ -2,80 +2,105 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B2ECC7618D
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 07:22:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79CB4C761A6
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Apr 2023 07:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233862AbjDDHWj (ORCPT
+        id S233870AbjDDHXW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 4 Apr 2023 03:22:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50868 "EHLO
+        Tue, 4 Apr 2023 03:23:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233873AbjDDHW3 (ORCPT
+        with ESMTP id S233893AbjDDHXT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Apr 2023 03:22:29 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57CF510CA
-        for <linux-wireless@vger.kernel.org>; Tue,  4 Apr 2023 00:22:25 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1pjazn-0006g1-LV; Tue, 04 Apr 2023 09:22:23 +0200
-Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1pjazm-008rc9-Fy; Tue, 04 Apr 2023 09:22:22 +0200
-Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1pjazl-002EcV-G6; Tue, 04 Apr 2023 09:22:21 +0200
-From:   Sascha Hauer <s.hauer@pengutronix.de>
-To:     linux-wireless <linux-wireless@vger.kernel.org>
-Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Pkshih <pkshih@realtek.com>, Tim K <tpkuester@gmail.com>,
-        "Alex G ." <mr.nuke.me@gmail.com>,
-        Nick Morrow <morrownr@gmail.com>,
-        Viktor Petrenko <g0000ga@gmail.com>,
-        Andreas Henriksson <andreas@fatal.se>,
-        ValdikSS <iam@valdikss.org.ru>, kernel@pengutronix.de,
-        Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v2 0/2] RTW88 USB bug fixes
-Date:   Tue,  4 Apr 2023 09:22:12 +0200
-Message-Id: <20230404072214.462777-1-s.hauer@pengutronix.de>
-X-Mailer: git-send-email 2.39.2
+        Tue, 4 Apr 2023 03:23:19 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C1FD2726;
+        Tue,  4 Apr 2023 00:23:15 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3345fKv8004992;
+        Tue, 4 Apr 2023 07:23:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=yoO9hOORUgp4tejOSXtitoR4zpiwg+9WL5jAsVzw0/k=;
+ b=JNIONuEFJiL+Yg/q8wZnn54KhxzKqOtlKUxE6HdrRH/u4akwBiNLoQnCPgTIOCzOPNCo
+ 8GaJbPRJpIdss0F/wy/r4fIC6aVsnvWMeYI6MPidJGVSwy8aGiQkzCZZDhYHRlUF6gco
+ 2+Sp03AUJ3hU55igCw+pzGAUUuVDcNHQKPie29yjNzRokzeLSWV5XgJMFSui+vKKk6MY
+ OJN/D5crEKQJTImPgrN3P6lgeE6+NRf/JI/4gnrBCkQ791vnYINTJO8TgwZ07j5yl+Yb
+ PfHSLppp5JYrqJ9xlC1Ar5DZSt7Ycy8ZMAqcU9PHmfNEIjmTaNCxw/QB0VLcotrrF5EJ NQ== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pquxtjr16-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 04 Apr 2023 07:23:13 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3347NCHr019809
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 4 Apr 2023 07:23:13 GMT
+Received: from youghand-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Tue, 4 Apr 2023 00:23:10 -0700
+From:   Youghandhar Chintala <quic_youghand@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_mpubbise@quicinc.com>,
+        Youghandhar Chintala <quic_youghand@quicinc.com>
+Subject: [PATCH 1/3] wifi: ath11k: Use proper API to get peer id for WCN6750
+Date:   Tue, 4 Apr 2023 12:52:32 +0530
+Message-ID: <20230404072234.18503-2-quic_youghand@quicinc.com>
+X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20230404072234.18503-1-quic_youghand@quicinc.com>
+References: <20230404072234.18503-1-quic_youghand@quicinc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: JD2p7Oc9xWhAIZBfuJQb54shoYu7SoNC
+X-Proofpoint-ORIG-GUID: JD2p7Oc9xWhAIZBfuJQb54shoYu7SoNC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-04_01,2023-04-03_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ malwarescore=0 spamscore=0 mlxlogscore=942 priorityscore=1501
+ impostorscore=0 mlxscore=0 adultscore=0 suspectscore=0 bulkscore=0
+ phishscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304040066
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series fixes two bugs in the RTW88 USB driver I was reported from
-several people and that I also encountered myself.
+Currently on WCN6750, we are seeing an issue where signal average field
+value in station dump is incorrect. This is because of registering an
+incorrect mpdu_info_get_peerid() API for WCN6750. Due to this, we get an
+invalid peer id while processing the peer stats, and the signal average
+field will have invalid values in station dump.
 
-The first one resulted in "timed out to flush queue 3" messages from the
-driver and sometimes a complete stall of the TX queues.
+Fix this by registering correct mpdu_info_get_peerid() API for WCN6750.
 
-The second one is specific to the RTW8821CU chipset. Here 2GHz networks
-were hardly seen and impossible to connect to. This goes down to
-misinterpreting the rfe_option field in the efuse.
+Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
 
-Changes since v1:
-- Add Cc: stable@vger.kernel.org tag to the patches rather than Cc'ing
-  stable@ directly
-- Add Tested-by: tags
+Signed-off-by: Youghandhar Chintala <quic_youghand@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Sascha Hauer (2):
-  wifi: rtw88: usb: fix priority queue to endpoint mapping
-  wifi: rtw88: rtw8821c: Fix rfe_option field width
-
- drivers/net/wireless/realtek/rtw88/rtw8821c.c |  3 +-
- drivers/net/wireless/realtek/rtw88/usb.c      | 70 +++++++++++++------
- 2 files changed, 48 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
+index 60ac215e0678..9321613721a0 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.c
++++ b/drivers/net/wireless/ath/ath11k/hw.c
+@@ -1122,7 +1122,7 @@ const struct ath11k_hw_ops wcn6750_ops = {
+ 	.rx_desc_get_attention = ath11k_hw_qcn9074_rx_desc_get_attention,
+ 	.rx_desc_get_msdu_payload = ath11k_hw_qcn9074_rx_desc_get_msdu_payload,
+ 	.reo_setup = ath11k_hw_wcn6855_reo_setup,
+-	.mpdu_info_get_peerid = ath11k_hw_ipq8074_mpdu_info_get_peerid,
++	.mpdu_info_get_peerid = ath11k_hw_wcn6855_mpdu_info_get_peerid,
+ 	.rx_desc_mac_addr2_valid = ath11k_hw_ipq9074_rx_desc_mac_addr2_valid,
+ 	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq9074_rx_desc_mpdu_start_addr2,
+ 	.get_ring_selector = ath11k_hw_wcn6750_get_tcl_ring_selector,
 -- 
-2.39.2
+2.38.0
 
