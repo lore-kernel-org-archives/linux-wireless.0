@@ -2,49 +2,49 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D0E5C77B71
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 22:17:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CCE4C77B74
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 22:17:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231906AbjDEWRJ (ORCPT
+        id S231880AbjDEWRK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Apr 2023 18:17:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51470 "EHLO
+        Wed, 5 Apr 2023 18:17:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231311AbjDEWRI (ORCPT
+        with ESMTP id S229907AbjDEWRJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2023 18:17:08 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3A4B59DA
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Apr 2023 15:17:06 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 335MAfsE015969;
+        Wed, 5 Apr 2023 18:17:09 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B43B75FE6
+        for <linux-wireless@vger.kernel.org>; Wed,  5 Apr 2023 15:17:07 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 335LgDNI032645;
         Wed, 5 Apr 2023 22:16:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=qcppdkim1;
- bh=um5EGkcw2CgtiSi18U1NlpdztWBskNaEKEBYO/sV9j4=;
- b=h556WPU0U3H7SzjT3Y7q6Uz1wIcLJecWfDenAPo0TLVLvVe+M4fVB8G5geyTw/LpGOuC
- n8GP0ehtS9LQsJOatSBLvOJSKRNcH49PjRQRO9d+NjWbmdDamqIcM0mMYNw3NQraGlap
- g/4q8u2jKhvMzDpvOjNhq0fZd/l0GQI5NWLsP4zI+Id6QVRtlGR26An3HTrWgC4ULiN/
- cOm6FNKYF1wNbvwtRPxfFMM6gZb9yMm0v0Ry3gWSDQ3u11ABU79AJzg/NvBmHrf+IIZ5
- YNq671sC9/47CVnyUiBVOk+dkKgyhI9XYaFH03KKk5TfpeS0wKwAMDcmd8prdhcntE1J Ww== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3prpg23sf6-1
+ bh=VUrmZ8iNVhObkylQJA5sRL2S24wzaGgF4noADZzpd3M=;
+ b=gXLV+pJ/PKdp4LLCaXcjE9T2jaAXSkjiyOslkaU0WMZInkU+vIvppEXUolHHGKQLO4er
+ 4opA1AdXP0ao8E9D/95n+fC6Z+wGzw/7X3EweWU6TjON6/920vZpWKCXwtNvDQOzVDIN
+ bksDxoRDSW5igaD6KW06AsSnrNN9tNv4g8u7H7KvWBCapMAYxoC+FapQffC7iBpM/X4J
+ qcbW3yutXrHIm5dIGTN5ce8CAwIGv0grHVCFyCVH2ZZC4WL+Q4akm7mv47+0wGsCL5w1
+ u7vXgcDGM2CJvG8ywdazItGuK2MARI1Qx2XCdKFhbOlYjzshwmyZNemy53vjaUVlSctm 7Q== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3prn8b457t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 05 Apr 2023 22:16:59 +0000
+        Wed, 05 Apr 2023 22:16:58 +0000
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 335MGw2m002081
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 335MGvLO007681
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 5 Apr 2023 22:16:58 GMT
+        Wed, 5 Apr 2023 22:16:57 GMT
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Wed, 5 Apr 2023 15:16:58 -0700
+ 15.2.986.42; Wed, 5 Apr 2023 15:16:57 -0700
 From:   Aloka Dixit <quic_alokad@quicinc.com>
 To:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 5/7] wifi: ath11k: refactor vif parameter configurations
-Date:   Wed, 5 Apr 2023 15:16:46 -0700
-Message-ID: <20230405221648.17950-6-quic_alokad@quicinc.com>
+Subject: [PATCH v3 3/7] wifi: ath11k: rename MBSSID fields in wmi_vdev_up_cmd
+Date:   Wed, 5 Apr 2023 15:16:44 -0700
+Message-ID: <20230405221648.17950-4-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230405221648.17950-1-quic_alokad@quicinc.com>
 References: <20230405221648.17950-1-quic_alokad@quicinc.com>
@@ -56,107 +56,71 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: iKfbudPUzVZKqVtuS391pe1MkMAF4aVr
-X-Proofpoint-ORIG-GUID: iKfbudPUzVZKqVtuS391pe1MkMAF4aVr
+X-Proofpoint-GUID: EpwYRC4xBeh_9a6ssUX_Jj6XGv_5iHFr
+X-Proofpoint-ORIG-GUID: EpwYRC4xBeh_9a6ssUX_Jj6XGv_5iHFr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-05_15,2023-04-05_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 adultscore=0
- bulkscore=0 impostorscore=0 clxscore=1015 priorityscore=1501
- suspectscore=0 mlxscore=0 spamscore=0 mlxlogscore=999 lowpriorityscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 adultscore=0 phishscore=0 spamscore=0 bulkscore=0
+ mlxlogscore=832 impostorscore=0 malwarescore=0 lowpriorityscore=0
+ mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2303200000 definitions=main-2304050199
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Security parameters for each non-transmitting profile can be
-different when MBSSID is enabled and this information is included
-in the MBSSID element in the Beacon frame. Current implementation
-to set rsnie_present and wpaie_present does not parse this element
-hence it applies only to the transmitting interface.
+Rename trans_bssid to tx_vdev_bssid to make it similar to vdev_bssid.
 
-Move the code to a separate function to make additions for
-non-transmitting interfaces cleaner.
+Rename profile_num to nontx_profile_cnt, and profile_idx to
+nontx_profile_idx which makes it clear that these store configurations
+related to MBSSID non-transmitting profiles.
 
 Tested-on : IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
 ---
-v3: Renamed ath11k_mac_setup_bcn_tmpl_vif_params(0 as
-    ath11k_mac_set_vif_params() as the parameters are not actually
-    set in the Beacon frame. MLO link ID change is not required
-    anymore.
+v3: Added 'nontx_' before the renamed members compared to v2.
+v2: New patch in this version. Code moved from patch 5/9 in v1.
 
-v2: Changed calls to mac80211 APIs to include MLO link ID.
+ drivers/net/wireless/ath/ath11k/wmi.c | 6 +++---
+ drivers/net/wireless/ath/ath11k/wmi.h | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/ath/ath11k/mac.c | 41 ++++++++++++++++-----------
- 1 file changed, 24 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 87f21a3f0ac6..a10f4a6a1120 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1351,28 +1351,14 @@ static int ath11k_mac_op_config(struct ieee80211_hw *hw, u32 changed)
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 362e2e95d8a6..1265f4c98860 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -1022,10 +1022,10 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 		bss_conf = &arvif->vif->bss_conf;
  
--static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
-+static void ath11k_mac_set_vif_params(struct ath11k_vif *arvif,
-+				      struct sk_buff *bcn)
- {
--	struct ath11k *ar = arvif->ar;
--	struct ath11k_base *ab = ar->ab;
--	struct ieee80211_hw *hw = ar->hw;
--	struct ieee80211_vif *vif = arvif->vif;
--	struct ieee80211_mutable_offsets offs = {};
--	struct sk_buff *bcn;
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *ies;
--	int ret;
--
--	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
--		return 0;
--
--	bcn = ieee80211_beacon_get_template(hw, vif, &offs, 0);
--	if (!bcn) {
--		ath11k_warn(ab, "failed to get beacon template from mac80211\n");
--		return -EPERM;
--	}
+ 		if (bss_conf->nontransmitted) {
+-			ether_addr_copy(cmd->trans_bssid.addr,
++			ether_addr_copy(cmd->tx_vdev_bssid.addr,
+ 					bss_conf->transmitter_bssid);
+-			cmd->profile_idx = bss_conf->bssid_index;
+-			cmd->profile_num = bss_conf->bssid_indicator;
++			cmd->nontx_profile_idx = bss_conf->bssid_index;
++			cmd->nontx_profile_cnt = bss_conf->bssid_indicator;
+ 		}
+ 	}
  
- 	ies = bcn->data + ieee80211_get_hdrlen_from_skb(bcn);
-+	mgmt = (struct ieee80211_mgmt *)bcn->data;
- 	ies += sizeof(mgmt->u.beacon);
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index b4940c1de9e8..cc695318ab7c 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -2623,9 +2623,9 @@ struct wmi_vdev_up_cmd {
+ 	u32 vdev_id;
+ 	u32 vdev_assoc_id;
+ 	struct wmi_mac_addr vdev_bssid;
+-	struct wmi_mac_addr trans_bssid;
+-	u32 profile_idx;
+-	u32 profile_num;
++	struct wmi_mac_addr tx_vdev_bssid;
++	u32 nontx_profile_idx;
++	u32 nontx_profile_cnt;
+ } __packed;
  
- 	if (cfg80211_find_ie(WLAN_EID_RSN, ies, (skb_tail_pointer(bcn) - ies)))
-@@ -1386,7 +1372,28 @@ static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
- 		arvif->wpaie_present = true;
- 	else
- 		arvif->wpaie_present = false;
-+}
-+
-+static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ieee80211_hw *hw = ar->hw;
-+	struct ieee80211_vif *vif = arvif->vif;
-+	struct ieee80211_mutable_offsets offs = {};
-+	struct sk_buff *bcn;
-+	int ret;
-+
-+	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
-+		return 0;
-+
-+	bcn = ieee80211_beacon_get_template(hw, vif, &offs, 0);
-+	if (!bcn) {
-+		ath11k_warn(ab, "failed to get beacon template from mac80211\n");
-+		return -EPERM;
-+	}
- 
-+	ath11k_mac_set_vif_params(arvif, bcn);
- 	ret = ath11k_wmi_bcn_tmpl(ar, arvif->vdev_id, &offs, bcn);
- 
- 	kfree_skb(bcn);
+ struct wmi_vdev_stop_cmd {
 -- 
 2.39.0
 
