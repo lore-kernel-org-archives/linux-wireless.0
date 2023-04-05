@@ -2,52 +2,53 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABBB3C77B6C
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04848C77B73
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:28:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234302AbjDEU2O (ORCPT
+        id S234678AbjDEU2z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Apr 2023 16:28:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40670 "EHLO
+        Wed, 5 Apr 2023 16:28:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234305AbjDEU1i (ORCPT
+        with ESMTP id S233419AbjDEU1z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2023 16:27:38 -0400
-Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B113A7A9F;
-        Wed,  5 Apr 2023 13:27:31 -0700 (PDT)
-Received: by mail-ot1-f43.google.com with SMTP id x8-20020a9d3788000000b0069f922cd5ceso19685632otb.12;
-        Wed, 05 Apr 2023 13:27:31 -0700 (PDT)
+        Wed, 5 Apr 2023 16:27:55 -0400
+Received: from mail-oa1-f43.google.com (mail-oa1-f43.google.com [209.85.160.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F0FA7DAD;
+        Wed,  5 Apr 2023 13:27:33 -0700 (PDT)
+Received: by mail-oa1-f43.google.com with SMTP id 586e51a60fabf-17997ccf711so39964032fac.0;
+        Wed, 05 Apr 2023 13:27:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680726451;
+        d=1e100.net; s=20210112; t=1680726452;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=JEWSD1fDMkPcJVVJWl/niMBCZ1+LVTX0zVxuNNm1m3A=;
-        b=tgYmdyf87EhXuCw4Afkrg7PNPyMg7GFktqIz9RZg1IW3rOH669LTmUSIn5RZpIzRA+
-         I0r6bF0er6vzx8fcElarE6rcbaXNxx/WMFUcXgvYVR7lTCyUmXqLfIeaNE6mNBo3NTco
-         qFkllL8XZjKOyf1xy0Zf/XtxXxvwtQUDPHHLoIODWZwzMmSXhakfi6GWSP4vU7BA1J+g
-         /ueQp0R5i/SspKNMCgund8pubr5lD+0rz6L9zNIl3+fGOedircuxFJ0FKUD5XyeTRCLD
-         zRZDG11/rl5Xiq3iUH8dLPl1S/TGodneMYEH7ie3y8ge/n8Nh6YQ/qEupw5ZRxY4NPEg
-         6+Ag==
-X-Gm-Message-State: AAQBX9e/rOe3/XGRW9kKPygOyeSGcR7ZDUrgmf9Esu5J3Gbjq3dKo+4J
-        OLf+nTXXvaw/SbubFDLnNA==
-X-Google-Smtp-Source: AKy350ZaKRbNw5BVz8JUbstjxm9/rqgC8dw7YeQcDPRMSjLceOYL23HZjUhfc7B3LKhXZbj89AVs5g==
-X-Received: by 2002:a9d:1b4d:0:b0:6a1:6a4b:bbb3 with SMTP id l71-20020a9d1b4d000000b006a16a4bbbb3mr1662878otl.14.1680726450887;
-        Wed, 05 Apr 2023 13:27:30 -0700 (PDT)
+        bh=6TsRE4TQ/f8Cdh7WoRAUoCQ/ygs9RmxZbH2hBLQ+0B0=;
+        b=IQE5xp2kvQOjiP7FAHC7Tj9VaUqF1SmKgt17RCjAMh9+Tm0JRZttIg1MQ+DWFKLMMz
+         8eqNtUsC8OXnZHbvRcBULv4ivxLdQIGVd/dvD+HapSKOCu0ygG3fYs3atcSUqafWvwWG
+         P+NsXeSJZmN2xSlRd/At5JhRU2hJLKuecewUq9k2YG7V7dsLMB8Vst7RZ2sFBzysxxcl
+         dOsViVDINsayhP+/PGgow64vHaGVV4yYnFYROLKi8XGBR/L4S3NjBYcqrujCfKUUKmij
+         S3RMRwi1ElMALgo0y9tqjwYRJHEkFa/fEpu82UfJw56dJYre7L7P4PNtnWtY5bEt8lcx
+         eoMA==
+X-Gm-Message-State: AAQBX9engr+t3DjVPop6nFWWQeISv2i5yqqVyrd1KZpKpxLoI/DH08ST
+        fzoODIVKKeWnq/GFSkn5Pw==
+X-Google-Smtp-Source: AKy350YpAV4Ot9iJZkIzmYiWr5uOjLPTxFWn3uKDFPsohB5jBkFe6vSXLe2T2ZW1wyGq+/LUiLg3xw==
+X-Received: by 2002:a05:6870:d389:b0:17a:c2be:33c with SMTP id k9-20020a056870d38900b0017ac2be033cmr4333581oag.4.1680726452615;
+        Wed, 05 Apr 2023 13:27:32 -0700 (PDT)
 Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id x9-20020a05683000c900b006a30260ccfdsm5958075oto.11.2023.04.05.13.27.29
+        by smtp.gmail.com with ESMTPSA id yx16-20020a056871251000b001762d1bf6a9sm6184930oab.45.2023.04.05.13.27.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Apr 2023 13:27:30 -0700 (PDT)
-Received: (nullmailer pid 425884 invoked by uid 1000);
+        Wed, 05 Apr 2023 13:27:32 -0700 (PDT)
+Received: (nullmailer pid 425896 invoked by uid 1000);
         Wed, 05 Apr 2023 20:27:17 -0000
 From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 05 Apr 2023 15:27:17 -0500
-Subject: [PATCH v2 03/10] net: rfkill-gpio: Add explicit include for of.h
+Date:   Wed, 05 Apr 2023 15:27:23 -0500
+Subject: [PATCH v2 09/10] fpga: lattice-sysconfig-spi: Add explicit include
+ for of.h
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230329-acpi-header-cleanup-v2-3-c902e581923b@kernel.org>
+Message-Id: <20230329-acpi-header-cleanup-v2-9-c902e581923b@kernel.org>
 References: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 In-Reply-To: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 To:     "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -78,31 +79,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With linux/acpi.h no longer implicitly including of.h, add an explicit
-include of of.h to fix the following error:
+With linux/acpi.h (in spi/spi.h) no longer implicitly including of.h,
+add an explicit include of of.h to fix the following errors:
 
-net/rfkill/rfkill-gpio.c:181:21: error: implicit declaration of function 'of_match_ptr' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+drivers/fpga/lattice-sysconfig-spi.c:146:35: error: implicit declaration of function 'of_match_ptr' [-Werror=implicit-function-declaration]
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Jacob Keller <jacob.e.keller@intel.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- net/rfkill/rfkill-gpio.c | 1 +
+v2: New patch
+---
+ drivers/fpga/lattice-sysconfig-spi.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 786dbfdad772..e9d1b2f2ff0a 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -8,6 +8,7 @@
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
- #include <linux/rfkill.h>
+diff --git a/drivers/fpga/lattice-sysconfig-spi.c b/drivers/fpga/lattice-sysconfig-spi.c
+index 2702b26b7f55..44691cfcf50a 100644
+--- a/drivers/fpga/lattice-sysconfig-spi.c
++++ b/drivers/fpga/lattice-sysconfig-spi.c
+@@ -3,6 +3,7 @@
+  * Lattice FPGA programming over slave SPI sysCONFIG interface.
+  */
+ 
 +#include <linux/of.h>
- #include <linux/platform_device.h>
- #include <linux/clk.h>
- #include <linux/slab.h>
+ #include <linux/spi/spi.h>
+ 
+ #include "lattice-sysconfig.h"
 
 -- 
 2.39.2
