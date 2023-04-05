@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D57A4C76188
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:27:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D220C77B70
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229731AbjDEU1s (ORCPT
+        id S232850AbjDEU2A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Apr 2023 16:27:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39876 "EHLO
+        Wed, 5 Apr 2023 16:28:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231804AbjDEU1Z (ORCPT
+        with ESMTP id S234149AbjDEU1c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2023 16:27:25 -0400
-Received: from mail-oa1-f54.google.com (mail-oa1-f54.google.com [209.85.160.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9087F6A4E;
-        Wed,  5 Apr 2023 13:27:24 -0700 (PDT)
-Received: by mail-oa1-f54.google.com with SMTP id 586e51a60fabf-17e140619fdso39908039fac.11;
-        Wed, 05 Apr 2023 13:27:24 -0700 (PDT)
+        Wed, 5 Apr 2023 16:27:32 -0400
+Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 626FB7AB3;
+        Wed,  5 Apr 2023 13:27:29 -0700 (PDT)
+Received: by mail-oo1-f46.google.com with SMTP id n7-20020a4ae1c7000000b0053b61145406so5856494oot.11;
+        Wed, 05 Apr 2023 13:27:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680726444;
+        d=1e100.net; s=20210112; t=1680726449;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=yg1K4foqDaidaPo4/5C6TY3pSXqX5fHqLYuPmpMmEgg=;
-        b=BYa0WEarrsDeVoxsCZAbMJe53T4FjZgjm7/eseO9AduGQyxtKk1kk83suhMUUpDsEV
-         IUW7EqrNdikKRDGKMz8tQmAKiURxg1SP34d19kQTPLHELHHb7AlzlgpLbTMBs71l2bB+
-         pOf4dPAFgHEZB9kgDjWc7IOUorbz2AZXswFXjpWrS1dzsWnK7rqEQ04a4sGjlaUbWDYe
-         nva86QTMH+EEWzDOC4g4WxVUdABCj3xeooC5DgKYDkqaS4VFZCnNnFkua51CjYBqeyiq
-         gXgMkPAUufe0XdbhJIP6bzqKtsiGLvL+HR4dk7if26FJHcmODsoWfyslLvra7ovTO/id
-         mOEw==
-X-Gm-Message-State: AAQBX9dx6yOuPhIf/Jv2OJNiXlcceGH4Vu1ifGxDErSgsbhUk5LMppbb
-        gNrsssk0WWJSVHFSslhynw==
-X-Google-Smtp-Source: AKy350bTANSJNYjcjMqwec2FcT3JaHREFNy2cg8JiUp8B+fT5fTAH8S+FermWNwrA9+XTX/0poqDFg==
-X-Received: by 2002:a05:6870:9614:b0:177:9ece:6b32 with SMTP id d20-20020a056870961400b001779ece6b32mr4080421oaq.34.1680726443848;
-        Wed, 05 Apr 2023 13:27:23 -0700 (PDT)
+        bh=GAqWU+48WoaNwVsMQUW3yn78CcKWsUQ7YyWgh3fTfc8=;
+        b=lul/71MgwuOto4d7ig/tFKcvDoW/R6QYfbMVYITcvk398F3bnpsNtrfVqNbOgwa6Mu
+         rbORTxRWdZQWPusXaFzsTdxonDPBQihl+cNXkZjgKDxlWx+XHxJ9Op/M7m+2V5cevP06
+         +GRhXNoVwVuqaT7egMpunJ+bqnJbNuE++q/LVik7WgHafMKE5Y1RRHpaUE2ixmi8eWNf
+         +LHJ+0ZWcEmiKRiSQxHwXw3HkdXJpG4FJszFxPcmtSswRhYmQuEW6r2os4jJjDMkzBSU
+         ix8pVm17GtGQJQkHubsDsoUvAl4Sp0IYWXcIeGVAZkzNcYV3MjaHCq4oD7jFT841Kg9g
+         7YNA==
+X-Gm-Message-State: AAQBX9c83hhfltEWHJvoDmpV0YOZjclHmtWf9gQCkZoDsT1hKJUfbKjq
+        K3yWc9avb9a7bn5jeBLh4rQbIl7pmg==
+X-Google-Smtp-Source: AKy350YDcJ1CZzHlV2kqdYr697ExgpShFdyPyAcvheTe5bMbxgbese/Ryv3UqrMfOdlmbR/018pfjA==
+X-Received: by 2002:a4a:abca:0:b0:53b:77e0:b7f4 with SMTP id o10-20020a4aabca000000b0053b77e0b7f4mr3417660oon.2.1680726448953;
+        Wed, 05 Apr 2023 13:27:28 -0700 (PDT)
 Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id us16-20020a056870df9000b00177b33ce85bsm6324810oab.30.2023.04.05.13.27.22
+        by smtp.gmail.com with ESMTPSA id 64-20020a4a0943000000b005315e8ca468sm7021809ooa.17.2023.04.05.13.27.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Apr 2023 13:27:23 -0700 (PDT)
-Received: (nullmailer pid 425880 invoked by uid 1000);
+        Wed, 05 Apr 2023 13:27:28 -0700 (PDT)
+Received: (nullmailer pid 425892 invoked by uid 1000);
         Wed, 05 Apr 2023 20:27:17 -0000
 From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 05 Apr 2023 15:27:15 -0500
-Subject: [PATCH v2 01/10] iio: adc: ad7292: Add explicit include for of.h
+Date:   Wed, 05 Apr 2023 15:27:21 -0500
+Subject: [PATCH v2 07/10] virtio-mmio: Add explicit include for of.h
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230329-acpi-header-cleanup-v2-1-c902e581923b@kernel.org>
+Message-Id: <20230329-acpi-header-cleanup-v2-7-c902e581923b@kernel.org>
 References: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 In-Reply-To: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 To:     "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -72,8 +72,7 @@ Cc:     linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-acpi@vger.kernel.org,
         devicetree@vger.kernel.org,
         Stephen Rothwell <sfr@canb.auug.org.au>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>
+        Jacob Keller <jacob.e.keller@intel.com>
 X-Mailer: b4 0.13-dev
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -82,29 +81,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 With linux/acpi.h no longer implicitly including of.h, add an explicit
 include of of.h to fix the following error:
 
-drivers/iio/adc/ad7292.c:307:9: error: implicit declaration of function 'for_each_available_child_of_node'; did you mean 'fwnode_for_each_available_child_node'? [-Werror=implicit-function-declaration]
+drivers/virtio/virtio_mmio.c:492:13: error: implicit declaration of function 'of_property_read_bool'; did you mean 'fwnode_property_read_bool'? [-Werror=implicit-function-declaration]
 
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Acked-by: Marcelo Schmitt <marcelo.schmitt1@gmail.com>
-Reviewed-by: Jacob Keller <jacob.e.keller@intel.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/iio/adc/ad7292.c | 1 +
+v2: New patch
+---
+ drivers/virtio/virtio_mmio.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/iio/adc/ad7292.c b/drivers/iio/adc/ad7292.c
-index a2f9fda25ff3..cccacec5db6d 100644
---- a/drivers/iio/adc/ad7292.c
-+++ b/drivers/iio/adc/ad7292.c
-@@ -8,6 +8,7 @@
- #include <linux/bitfield.h>
- #include <linux/device.h>
+diff --git a/drivers/virtio/virtio_mmio.c b/drivers/virtio/virtio_mmio.c
+index 3ff746e3f24a..4b5e883055ee 100644
+--- a/drivers/virtio/virtio_mmio.c
++++ b/drivers/virtio/virtio_mmio.c
+@@ -61,6 +61,7 @@
+ #include <linux/io.h>
+ #include <linux/list.h>
  #include <linux/module.h>
 +#include <linux/of.h>
- #include <linux/regulator/consumer.h>
- #include <linux/spi/spi.h>
- 
+ #include <linux/platform_device.h>
+ #include <linux/pm.h>
+ #include <linux/slab.h>
 
 -- 
 2.39.2
