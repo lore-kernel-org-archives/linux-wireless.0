@@ -2,216 +2,135 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68D3CC77B62
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:08:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D51C77B71
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:27:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234135AbjDEUIG (ORCPT
+        id S233583AbjDEU1X (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Apr 2023 16:08:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44698 "EHLO
+        Wed, 5 Apr 2023 16:27:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233282AbjDEUHn (ORCPT
+        with ESMTP id S229520AbjDEU1U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2023 16:07:43 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43DF94ECD;
-        Wed,  5 Apr 2023 13:07:41 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id b20so144000331edd.1;
-        Wed, 05 Apr 2023 13:07:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20210112; t=1680725259;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KXZeyshZs3mev0CJJsOjbPtdAx/wMGwoGWSp2mfwNFk=;
-        b=lqLy9j3WKSdn6q0oj2u6i4m+DQeF0/X9yZDqc/KWjS9BBPnCUEAPHnYte7UYko8Swf
-         t/2QGv5mS36uBZKYZFfUz+YeI3lj1YzsyutEbhGe67S6Hw6gFlo/2VN74utPIZ8+HpY9
-         mRqsIB5tLKMnAsvm/F5GoGwwhTxbO2gH9WoP3deHuIxJ8NvPkCIaTwPvth6sFVg3yV/B
-         3sQ5S5lmH/BT1M+DxofLcsMkNwWK349LFOCL8Qkjx3ZZkGlyhYqmdxXseJuZrbaub+Vb
-         p/mjjMUwaIgPeeHJDnqym4OCOrq/rbyEFi3NffZyuajIpuoBYI2GvJWczUzuWfvF1TkZ
-         cPbA==
+        Wed, 5 Apr 2023 16:27:20 -0400
+Received: from mail-ot1-f50.google.com (mail-ot1-f50.google.com [209.85.210.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E77C14C31;
+        Wed,  5 Apr 2023 13:27:19 -0700 (PDT)
+Received: by mail-ot1-f50.google.com with SMTP id cm7-20020a056830650700b006a11f365d13so18377957otb.0;
+        Wed, 05 Apr 2023 13:27:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680725259;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KXZeyshZs3mev0CJJsOjbPtdAx/wMGwoGWSp2mfwNFk=;
-        b=c/70xqzIqOAgsR7KeMSVdYq8ez2MUMJ8KdW8uZPuiebWF/RRbDWDHfzV6vIcgnnpPl
-         21M0FCrHmVsXN68QPK+j9JdaCvUWEPi5h99gjhrqVdQxKX26Y65KV3z+61kmsZPR2G7m
-         PEYiicoTsVCKJ/Al9y/4f0EwlF4PCOQeb5iJDSCTn4AZEepyrGmsKezt6jx01sG/AjxR
-         PjPGqWFIbSA7gvQKWQFHuYP+b9IEjd5ZrfwKFGPdSNjeGY1SLSnJLaqUutMLj5DI5Ng/
-         xXyvL7IBOOK14IR9+aRXLFCU23kMjrOZLaFf/UhZTXNx/C+zu7oB2OdPnY9LxDUAkmZs
-         5lOQ==
-X-Gm-Message-State: AAQBX9cg5tJRLC20CkoHKOezvN3hNYyqlcuYTip0hzfs5IZPE0+/Q/YR
-        RPpfuXVEzBOUO8+nUKu6u1XTLCWzVss4Ag==
-X-Google-Smtp-Source: AKy350b+Xu/ZmRNGWn/8ATyjF16sBBzhaVbIoRa+Sj6PCVtSGkaRjnwKCK09mHdM/rvkFGb9xUWtXg==
-X-Received: by 2002:a17:906:eca8:b0:8b1:fc1a:7d21 with SMTP id qh8-20020a170906eca800b008b1fc1a7d21mr3996011ejb.5.1680725259360;
-        Wed, 05 Apr 2023 13:07:39 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-2a01-0c22-7a4e-3100-0000-0000-0000-0e63.c22.pool.telefonica.de. [2a01:c22:7a4e:3100::e63])
-        by smtp.googlemail.com with ESMTPSA id a23-20020a170906369700b0092a59ee224csm7724873ejc.185.2023.04.05.13.07.38
+        d=1e100.net; s=20210112; t=1680726439;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jhywZUom6FVbbnxuIEEwYSdDwpixbUY1lehHpDBSgWw=;
+        b=5pNzdKM5+3J7NdFyI3ogXXEVkfTncpWchTsVGkAav5LKsJu28NHmPnneFHfX6N5CCf
+         msI7zdmn4NCtQegC3tlH0/1XImQ92vBZBaY8Y3tGQac9Cn7BL15HoauI6EFcFqbLe88w
+         /YASGBI7JEj5xK9R7fu1t7DzVkZTcQmGOM/448k2TkNblccIsAEQsRURth7Uc3AaTfG0
+         /XU2XeJR5fO7JLkiAJEVJtofDdOdbExnB0wC5kyaMRAo/8vqBE4CYmryDNwpgbbLZdf2
+         FoXKWapPHdTerBFSLMsybNf9ZYIoX7z8EEXmXOOnHAsCS+FhJIxwqOyW7V/RJrLCs389
+         BoKg==
+X-Gm-Message-State: AAQBX9eL5suZAC1issydy/PT24GSbh+SDtMVrGRTH2VKfFCH6vi12ls+
+        7QDHkiGVv+5w2KtTXIE49A==
+X-Google-Smtp-Source: AKy350Y6PkxJ1TeFc3rYqzBfJAZxJAKrftIpgaCSmMTQOsLNxNqW3HlLQ0Djx2CJiGesOvR3DIQFAA==
+X-Received: by 2002:a9d:4f16:0:b0:697:3da3:e404 with SMTP id d22-20020a9d4f16000000b006973da3e404mr3621048otl.38.1680726439129;
+        Wed, 05 Apr 2023 13:27:19 -0700 (PDT)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id w3-20020a9d6383000000b006a11c15a097sm7271960otk.4.2023.04.05.13.27.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Apr 2023 13:07:39 -0700 (PDT)
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Yan-Hsuan Chuang <tony0620emma@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-mmc@vger.kernel.org, Chris Morgan <macromorgan@hotmail.com>,
-        Nitin Gupta <nitin.gupta981@gmail.com>,
-        Neo Jou <neojou@gmail.com>, Pkshih <pkshih@realtek.com>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Simon Horman <simon.horman@corigine.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v5 3/9] wifi: rtw88: mac: Support SDIO specific bits in the power on sequence
-Date:   Wed,  5 Apr 2023 22:07:23 +0200
-Message-Id: <20230405200729.632435-4-martin.blumenstingl@googlemail.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230405200729.632435-1-martin.blumenstingl@googlemail.com>
-References: <20230405200729.632435-1-martin.blumenstingl@googlemail.com>
+        Wed, 05 Apr 2023 13:27:18 -0700 (PDT)
+Received: (nullmailer pid 425877 invoked by uid 1000);
+        Wed, 05 Apr 2023 20:27:17 -0000
+From:   Rob Herring <robh@kernel.org>
+Subject: [PATCH v2 00/10] Remove acpi.h implicit include of of.h
+Date:   Wed, 05 Apr 2023 15:27:14 -0500
+Message-Id: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAKLZLWQC/32NSwrCMBQAryJZ+yQfG6or7yFdpC/PJhjS8mKLU
+ np3Yw/gcgaGWUUhjlTE9bAKpiWWOOYK+ngQGFweCKKvLLTURhp9AYdThEDOEwMmcnmewNrGGNX
+ q9mysqGXvCkHPLmOobZ5TqnJiesT3vrp3lUMsr5E/+3lRP/t/siiQ0Hps0Bu0StLtSZwpnUYeR
+ Ldt2xfkJNhrzAAAAA==
+To:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Marcelo Schmitt <marcelo.schmitt1@gmail.com>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Michael Hennerich <Michael.Hennerich@analog.com>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Marc Zyngier <maz@kernel.org>
+Cc:     linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-staging@lists.linux.dev, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-tegra@vger.kernel.org, linux-acpi@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>
+X-Mailer: b4 0.13-dev
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add the code specific to SDIO HCI in the MAC power on sequence. This is
-based on the RTL8822BS and RTL8822CS vendor drivers.
+In the process of cleaning up DT includes, I found that some drivers 
+using DT functions could build without any explicit DT include. I traced 
+the include to be coming from acpi.h via irqdomain.h.
 
-Co-developed-by: Jernej Skrabec <jernej.skrabec@gmail.com>
-Signed-off-by: Jernej Skrabec <jernej.skrabec@gmail.com>
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+I was pleasantly surprised that there were not 100s or even 10s of 
+warnings when breaking the include chain. So here's the resulting 
+series.
+
+I'd suggest Rafael take the whole series. Alternatively,the fixes can be 
+applied in 6.4 and then the last patch either after rc1 or the 
+following cycle.
+
+Compile tested on x86 and powerpc allmodconfig and arm64 allmodconfig 
+minus CONFIG_ACPI.
+
+Signed-off-by: Rob Herring <robh@kernel.org>
 ---
-Changes since v4:
-- none
+Changes in v2:
+- More explicit include fixes reported by Stephen
+- Link to v1: https://lore.kernel.org/r/20230329-acpi-header-cleanup-v1-0-8dc5cd3c610e@kernel.org
 
-Changes since v3:
-- add Ping-Ke's reviewed-by (again, thank you!)
+---
+Rob Herring (10):
+      iio: adc: ad7292: Add explicit include for of.h
+      staging: iio: resolver: ad2s1210: Add explicit include for of.h
+      net: rfkill-gpio: Add explicit include for of.h
+      serial: 8250_tegra: Add explicit include for of.h
+      ata: pata_macio: Add explicit include of irqdomain.h
+      pata: ixp4xx: Add explicit include for of.h
+      virtio-mmio: Add explicit include for of.h
+      tpm: atmel: Add explicit include for of.h
+      fpga: lattice-sysconfig-spi: Add explicit include for of.h
+      ACPI: Replace irqdomain.h include with struct declarations
 
-Changes since v2:
-- add sdio.h include in patch 2 already (instead of patch 3) as
-  suggested by Larry Finger (thank you!) so the build doesn't break
-  during bisect
-- only set RTW_FLAG_POWERON when applying the power on sequence was
-  successful (thanks for the suggestion Ping-Ke!)
-- fix smatch false positive "uninitialized symbol 'imr'" in
-  rtw_mac_power_switch() by initializing imr to 0. Thanks for spotting
-  this and for the suggestion Ping-Ke!
+ drivers/ata/pata_ixp4xx_cf.c            | 1 +
+ drivers/ata/pata_macio.c                | 1 +
+ drivers/char/tpm/tpm_atmel.h            | 2 +-
+ drivers/fpga/lattice-sysconfig-spi.c    | 1 +
+ drivers/iio/adc/ad7292.c                | 1 +
+ drivers/staging/iio/resolver/ad2s1210.c | 1 +
+ drivers/tty/serial/8250/8250_tegra.c    | 1 +
+ drivers/virtio/virtio_mmio.c            | 1 +
+ include/linux/acpi.h                    | 6 ++++--
+ net/rfkill/rfkill-gpio.c                | 1 +
+ 10 files changed, 13 insertions(+), 3 deletions(-)
+---
+base-commit: fe15c26ee26efa11741a7b632e9f23b01aca4cc6
+change-id: 20230329-acpi-header-cleanup-665331828436
 
-Changes since v1:
-- only access REG_SDIO_HIMR for RTW_HCI_TYPE_SDIO
-- use proper BIT_HCI_SUS_REQ, BIT_HCI_RESUME_RDY and BIT_SDIO_PAD_E5
-  macros as suggested by Ping-Ke
-
-
- drivers/net/wireless/realtek/rtw88/mac.c | 47 +++++++++++++++++++++---
- 1 file changed, 42 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index 2fcba43a6f72..44e07b61b9b9 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -61,6 +61,7 @@ EXPORT_SYMBOL(rtw_set_channel_mac);
- 
- static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
- {
-+	unsigned int retry;
- 	u32 value32;
- 	u8 value8;
- 
-@@ -78,6 +79,28 @@ static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
- 	case RTW_HCI_TYPE_PCIE:
- 		rtw_write32_set(rtwdev, REG_HCI_OPT_CTRL, BIT_USB_SUS_DIS);
- 		break;
-+	case RTW_HCI_TYPE_SDIO:
-+		rtw_write8_clr(rtwdev, REG_SDIO_HSUS_CTRL, BIT_HCI_SUS_REQ);
-+
-+		for (retry = 0; retry < RTW_PWR_POLLING_CNT; retry++) {
-+			if (rtw_read8(rtwdev, REG_SDIO_HSUS_CTRL) & BIT_HCI_RESUME_RDY)
-+				break;
-+
-+			usleep_range(10, 50);
-+		}
-+
-+		if (retry == RTW_PWR_POLLING_CNT) {
-+			rtw_err(rtwdev, "failed to poll REG_SDIO_HSUS_CTRL[1]");
-+			return -ETIMEDOUT;
-+		}
-+
-+		if (rtw_sdio_is_sdio30_supported(rtwdev))
-+			rtw_write8_set(rtwdev, REG_HCI_OPT_CTRL + 2,
-+				       BIT_SDIO_PAD_E5 >> 16);
-+		else
-+			rtw_write8_clr(rtwdev, REG_HCI_OPT_CTRL + 2,
-+				       BIT_SDIO_PAD_E5 >> 16);
-+		break;
- 	case RTW_HCI_TYPE_USB:
- 		break;
- 	default:
-@@ -249,6 +272,7 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 	const struct rtw_pwr_seq_cmd **pwr_seq;
-+	u32 imr = 0;
- 	u8 rpwm;
- 	bool cur_pwr;
- 	int ret;
-@@ -274,18 +298,24 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
- 	if (pwr_on == cur_pwr)
- 		return -EALREADY;
- 
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO) {
-+		imr = rtw_read32(rtwdev, REG_SDIO_HIMR);
-+		rtw_write32(rtwdev, REG_SDIO_HIMR, 0);
-+	}
-+
- 	if (!pwr_on)
- 		clear_bit(RTW_FLAG_POWERON, rtwdev->flags);
- 
- 	pwr_seq = pwr_on ? chip->pwr_on_seq : chip->pwr_off_seq;
- 	ret = rtw_pwr_seq_parser(rtwdev, pwr_seq);
--	if (ret)
--		return ret;
- 
--	if (pwr_on)
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO)
-+		rtw_write32(rtwdev, REG_SDIO_HIMR, imr);
-+
-+	if (!ret && pwr_on)
- 		set_bit(RTW_FLAG_POWERON, rtwdev->flags);
- 
--	return 0;
-+	return ret;
- }
- 
- static int __rtw_mac_init_system_cfg(struct rtw_dev *rtwdev)
-@@ -456,6 +486,9 @@ static void download_firmware_reg_backup(struct rtw_dev *rtwdev,
- 	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, 0x200);
- 	rtw_write32(rtwdev, REG_RQPN_CTRL_2, bckp[bckp_idx - 1].val);
- 
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO)
-+		rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
-+
- 	/* Disable beacon related functions */
- 	tmp = rtw_read8(rtwdev, REG_BCN_CTRL);
- 	bckp[bckp_idx].len = 1;
-@@ -1068,8 +1101,12 @@ static int txdma_queue_mapping(struct rtw_dev *rtwdev)
- 	if (rtw_chip_wcpu_11ac(rtwdev))
- 		rtw_write32(rtwdev, REG_H2CQ_CSR, BIT_H2CQ_FULL);
- 
--	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB)
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO) {
-+		rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
-+		rtw_write32(rtwdev, REG_SDIO_TX_CTRL, 0);
-+	} else if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB) {
- 		rtw_write8_set(rtwdev, REG_TXDMA_PQ_MAP, BIT_RXDMA_ARBBW_EN);
-+	}
- 
- 	return 0;
- }
+Best regards,
 -- 
-2.40.0
+Rob Herring <robh@kernel.org>
 
