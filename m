@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D220C77B70
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:28:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABBB3C77B6C
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232850AbjDEU2A (ORCPT
+        id S234302AbjDEU2O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Apr 2023 16:28:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40242 "EHLO
+        Wed, 5 Apr 2023 16:28:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234149AbjDEU1c (ORCPT
+        with ESMTP id S234305AbjDEU1i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2023 16:27:32 -0400
-Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 626FB7AB3;
-        Wed,  5 Apr 2023 13:27:29 -0700 (PDT)
-Received: by mail-oo1-f46.google.com with SMTP id n7-20020a4ae1c7000000b0053b61145406so5856494oot.11;
-        Wed, 05 Apr 2023 13:27:29 -0700 (PDT)
+        Wed, 5 Apr 2023 16:27:38 -0400
+Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B113A7A9F;
+        Wed,  5 Apr 2023 13:27:31 -0700 (PDT)
+Received: by mail-ot1-f43.google.com with SMTP id x8-20020a9d3788000000b0069f922cd5ceso19685632otb.12;
+        Wed, 05 Apr 2023 13:27:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680726449;
+        d=1e100.net; s=20210112; t=1680726451;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=GAqWU+48WoaNwVsMQUW3yn78CcKWsUQ7YyWgh3fTfc8=;
-        b=lul/71MgwuOto4d7ig/tFKcvDoW/R6QYfbMVYITcvk398F3bnpsNtrfVqNbOgwa6Mu
-         rbORTxRWdZQWPusXaFzsTdxonDPBQihl+cNXkZjgKDxlWx+XHxJ9Op/M7m+2V5cevP06
-         +GRhXNoVwVuqaT7egMpunJ+bqnJbNuE++q/LVik7WgHafMKE5Y1RRHpaUE2ixmi8eWNf
-         +LHJ+0ZWcEmiKRiSQxHwXw3HkdXJpG4FJszFxPcmtSswRhYmQuEW6r2os4jJjDMkzBSU
-         ix8pVm17GtGQJQkHubsDsoUvAl4Sp0IYWXcIeGVAZkzNcYV3MjaHCq4oD7jFT841Kg9g
-         7YNA==
-X-Gm-Message-State: AAQBX9c83hhfltEWHJvoDmpV0YOZjclHmtWf9gQCkZoDsT1hKJUfbKjq
-        K3yWc9avb9a7bn5jeBLh4rQbIl7pmg==
-X-Google-Smtp-Source: AKy350YDcJ1CZzHlV2kqdYr697ExgpShFdyPyAcvheTe5bMbxgbese/Ryv3UqrMfOdlmbR/018pfjA==
-X-Received: by 2002:a4a:abca:0:b0:53b:77e0:b7f4 with SMTP id o10-20020a4aabca000000b0053b77e0b7f4mr3417660oon.2.1680726448953;
-        Wed, 05 Apr 2023 13:27:28 -0700 (PDT)
+        bh=JEWSD1fDMkPcJVVJWl/niMBCZ1+LVTX0zVxuNNm1m3A=;
+        b=tgYmdyf87EhXuCw4Afkrg7PNPyMg7GFktqIz9RZg1IW3rOH669LTmUSIn5RZpIzRA+
+         I0r6bF0er6vzx8fcElarE6rcbaXNxx/WMFUcXgvYVR7lTCyUmXqLfIeaNE6mNBo3NTco
+         qFkllL8XZjKOyf1xy0Zf/XtxXxvwtQUDPHHLoIODWZwzMmSXhakfi6GWSP4vU7BA1J+g
+         /ueQp0R5i/SspKNMCgund8pubr5lD+0rz6L9zNIl3+fGOedircuxFJ0FKUD5XyeTRCLD
+         zRZDG11/rl5Xiq3iUH8dLPl1S/TGodneMYEH7ie3y8ge/n8Nh6YQ/qEupw5ZRxY4NPEg
+         6+Ag==
+X-Gm-Message-State: AAQBX9e/rOe3/XGRW9kKPygOyeSGcR7ZDUrgmf9Esu5J3Gbjq3dKo+4J
+        OLf+nTXXvaw/SbubFDLnNA==
+X-Google-Smtp-Source: AKy350ZaKRbNw5BVz8JUbstjxm9/rqgC8dw7YeQcDPRMSjLceOYL23HZjUhfc7B3LKhXZbj89AVs5g==
+X-Received: by 2002:a9d:1b4d:0:b0:6a1:6a4b:bbb3 with SMTP id l71-20020a9d1b4d000000b006a16a4bbbb3mr1662878otl.14.1680726450887;
+        Wed, 05 Apr 2023 13:27:30 -0700 (PDT)
 Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id 64-20020a4a0943000000b005315e8ca468sm7021809ooa.17.2023.04.05.13.27.27
+        by smtp.gmail.com with ESMTPSA id x9-20020a05683000c900b006a30260ccfdsm5958075oto.11.2023.04.05.13.27.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Apr 2023 13:27:28 -0700 (PDT)
-Received: (nullmailer pid 425892 invoked by uid 1000);
+        Wed, 05 Apr 2023 13:27:30 -0700 (PDT)
+Received: (nullmailer pid 425884 invoked by uid 1000);
         Wed, 05 Apr 2023 20:27:17 -0000
 From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 05 Apr 2023 15:27:21 -0500
-Subject: [PATCH v2 07/10] virtio-mmio: Add explicit include for of.h
+Date:   Wed, 05 Apr 2023 15:27:17 -0500
+Subject: [PATCH v2 03/10] net: rfkill-gpio: Add explicit include for of.h
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230329-acpi-header-cleanup-v2-7-c902e581923b@kernel.org>
+Message-Id: <20230329-acpi-header-cleanup-v2-3-c902e581923b@kernel.org>
 References: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 In-Reply-To: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 To:     "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -81,27 +81,27 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 With linux/acpi.h no longer implicitly including of.h, add an explicit
 include of of.h to fix the following error:
 
-drivers/virtio/virtio_mmio.c:492:13: error: implicit declaration of function 'of_property_read_bool'; did you mean 'fwnode_property_read_bool'? [-Werror=implicit-function-declaration]
+net/rfkill/rfkill-gpio.c:181:21: error: implicit declaration of function 'of_match_ptr' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Jacob Keller <jacob.e.keller@intel.com>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
-v2: New patch
----
- drivers/virtio/virtio_mmio.c | 1 +
+ net/rfkill/rfkill-gpio.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/virtio/virtio_mmio.c b/drivers/virtio/virtio_mmio.c
-index 3ff746e3f24a..4b5e883055ee 100644
---- a/drivers/virtio/virtio_mmio.c
-+++ b/drivers/virtio/virtio_mmio.c
-@@ -61,6 +61,7 @@
- #include <linux/io.h>
- #include <linux/list.h>
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 786dbfdad772..e9d1b2f2ff0a 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -8,6 +8,7 @@
  #include <linux/module.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/rfkill.h>
 +#include <linux/of.h>
  #include <linux/platform_device.h>
- #include <linux/pm.h>
+ #include <linux/clk.h>
  #include <linux/slab.h>
 
 -- 
