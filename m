@@ -2,53 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B5C1C77B76
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B4D1C77B6E
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Apr 2023 20:29:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234703AbjDEU27 (ORCPT
+        id S234713AbjDEU31 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Apr 2023 16:28:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40242 "EHLO
+        Wed, 5 Apr 2023 16:29:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234484AbjDEU14 (ORCPT
+        with ESMTP id S234366AbjDEU2b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Apr 2023 16:27:56 -0400
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 113177D86;
-        Wed,  5 Apr 2023 13:27:35 -0700 (PDT)
-Received: by mail-oi1-f178.google.com with SMTP id w13so16192369oik.2;
-        Wed, 05 Apr 2023 13:27:35 -0700 (PDT)
+        Wed, 5 Apr 2023 16:28:31 -0400
+Received: from mail-oa1-f49.google.com (mail-oa1-f49.google.com [209.85.160.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F28F7EF4;
+        Wed,  5 Apr 2023 13:27:36 -0700 (PDT)
+Received: by mail-oa1-f49.google.com with SMTP id 586e51a60fabf-177b78067ffso39945997fac.7;
+        Wed, 05 Apr 2023 13:27:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680726454;
+        d=1e100.net; s=20210112; t=1680726456;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=M3RPX6uXfMIMJJoqXF0tDH6hb5w2/i4ololX+IM3luY=;
-        b=eRvPGSDPk0eYcbCBoUZioqpkzlgwsr9Gd9JlALmAh7TsefW2MY4+6RERgH5Ws3hBfm
-         xkIRDHB75IQvmeX4AnYf8Fo5nOvRGyAieYph0NNMVCnoI2Sd/UPS4TC1AFssr6V+NDei
-         cGZRdtHSUlar65kQWvPyTGmz8Ooia2zZ3uHEbi8yg1k/v6uWvDAbVxcv/yi9zjCM/On+
-         y+ZJ830tDbrnPbFN2c/BoTEW2IgA18NOUvFXXtzVF8AqMETDMRR+x69S/nFXH+YENVPo
-         DHA3x3OGzvG91rr6nqyH99OaACBYUl+gzGytuLG27EigBW4bc6BjnbQVVsCKlJ1OfON5
-         0iYQ==
-X-Gm-Message-State: AAQBX9fA3UAvWtYnYG4XJJlNIzOa2mA7Pp43kzHKJpnNJ4smSNaPnjoO
-        HWQjDfyueCwLs2imZtAacw==
-X-Google-Smtp-Source: AKy350bI8AMWkdrGldN0+D8908pDqGR1ET11ahdL00A7ibOfslvb7UH0SkDNaAc8yDfybKU8oRjiXg==
-X-Received: by 2002:aca:bf05:0:b0:389:7fcc:75f0 with SMTP id p5-20020acabf05000000b003897fcc75f0mr1690469oif.25.1680726454290;
-        Wed, 05 Apr 2023 13:27:34 -0700 (PDT)
+        bh=+WBV14RF3ai1fds2jyNkKU2Kc0Or0jrKGIWjLAOfy4c=;
+        b=KnDQD5LCkx1ndilaK1qw7VY/YkSs1RLsCALysFaxM+9xmSO72ZICfnCF0ZUdJrsf0+
+         LtDf9zZ0uGx6hO+7TU/6aydM1KGVCp0YFWx4acvnbvJFaOUmaN6FpVZAoC0s3n81PNtf
+         sdUYeu7Nw1dJsIFOKoKNSR+NjczfYYuk5t8dxORNz6s+i0AuD53ytf9CjzF4cEFLjcAu
+         l/XQmsdeKV1byw5D0S9DMEXFJv9pfn98pN6e8rJAHzGmQQlvbAJNG98X0Wocku45vmn4
+         l9laLk0TMMyzvGl26Dfbn8Bc+bgYn1Bpb/LDoS2Oo4jf0sNx+lYaYu8Go8DWLR6uT0v2
+         x9Sw==
+X-Gm-Message-State: AAQBX9c1VuQIcuYpwSJGtE9VHep8obRme42okfGTr6SrAChykug3tSpl
+        SBAiCDagjSnjkM2+ixQfpg==
+X-Google-Smtp-Source: AKy350aiKxsG+dePauZBrcR87GqsUUk+nMQbPX4th5YujgeuvnV5mcO/3hIgE2jvhfcX3KA3u1DgQg==
+X-Received: by 2002:a05:6870:ac07:b0:17a:ae34:12e6 with SMTP id kw7-20020a056870ac0700b0017aae3412e6mr2034130oab.10.1680726456030;
+        Wed, 05 Apr 2023 13:27:36 -0700 (PDT)
 Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id u1-20020a4a9e81000000b0053b909a5229sm7112025ook.4.2023.04.05.13.27.32
+        by smtp.gmail.com with ESMTPSA id an1-20020a056871b18100b00177c314a358sm6332319oac.22.2023.04.05.13.27.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Apr 2023 13:27:33 -0700 (PDT)
-Received: (nullmailer pid 425882 invoked by uid 1000);
+        Wed, 05 Apr 2023 13:27:35 -0700 (PDT)
+Received: (nullmailer pid 425894 invoked by uid 1000);
         Wed, 05 Apr 2023 20:27:17 -0000
 From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 05 Apr 2023 15:27:16 -0500
-Subject: [PATCH v2 02/10] staging: iio: resolver: ad2s1210: Add explicit
- include for of.h
+Date:   Wed, 05 Apr 2023 15:27:22 -0500
+Subject: [PATCH v2 08/10] tpm: atmel: Add explicit include for of.h
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230329-acpi-header-cleanup-v2-2-c902e581923b@kernel.org>
+Message-Id: <20230329-acpi-header-cleanup-v2-8-c902e581923b@kernel.org>
 References: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 In-Reply-To: <20230329-acpi-header-cleanup-v2-0-c902e581923b@kernel.org>
 To:     "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -73,38 +72,41 @@ Cc:     linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-acpi@vger.kernel.org,
         devicetree@vger.kernel.org,
         Stephen Rothwell <sfr@canb.auug.org.au>,
-        Jacob Keller <jacob.e.keller@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>
+        Jacob Keller <jacob.e.keller@intel.com>
 X-Mailer: b4 0.13-dev
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With linux/acpi.h no longer implicitly including of.h, add an explicit
-include of of.h to fix the following error:
+With linux/acpi.h (in linux/tpm.h) no longer implicitly including of.h,
+add an explicit include of of.h to fix the following errors:
 
-drivers/staging/iio/resolver/ad2s1210.c:706:21: error: implicit declaration of function 'of_match_ptr' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+drivers/char/tpm/tpm_atmel.h:50:14: error: implicit declaration of function 'of_find_node_by_name'; did you mean 'bus_find_device_by_name'? [-Werror=implicit-function-declaration]
+drivers/char/tpm/tpm_atmel.h:50:12: error: assignment to 'struct device_node *' from 'int' makes pointer from integer without a cast [-Werror=int-conversion]
+drivers/char/tpm/tpm_atmel.h:55:14: error: implicit declaration of function 'of_device_is_compatible'; did you mean 'fwnode_device_is_compatible'? [-Werror=implicit-function-declaration]
+...
 
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Jacob Keller <jacob.e.keller@intel.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/staging/iio/resolver/ad2s1210.c | 1 +
- 1 file changed, 1 insertion(+)
+v2: New patch
+---
+ drivers/char/tpm/tpm_atmel.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/iio/resolver/ad2s1210.c b/drivers/staging/iio/resolver/ad2s1210.c
-index e4cf42438487..eb364639fa58 100644
---- a/drivers/staging/iio/resolver/ad2s1210.c
-+++ b/drivers/staging/iio/resolver/ad2s1210.c
-@@ -7,6 +7,7 @@
- #include <linux/types.h>
- #include <linux/mutex.h>
- #include <linux/device.h>
+diff --git a/drivers/char/tpm/tpm_atmel.h b/drivers/char/tpm/tpm_atmel.h
+index ba37e77e8af3..7ac3f69dcf0f 100644
+--- a/drivers/char/tpm/tpm_atmel.h
++++ b/drivers/char/tpm/tpm_atmel.h
+@@ -26,7 +26,7 @@ struct tpm_atmel_priv {
+ 
+ #ifdef CONFIG_PPC64
+ 
+-#include <asm/prom.h>
 +#include <linux/of.h>
- #include <linux/spi/spi.h>
- #include <linux/slab.h>
- #include <linux/sysfs.h>
+ 
+ #define atmel_getb(priv, offset) readb(priv->iobase + offset)
+ #define atmel_putb(val, priv, offset) writeb(val, priv->iobase + offset)
 
 -- 
 2.39.2
