@@ -2,68 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF8BC77B6C
-	for <linux-wireless@archiver.kernel.org>; Fri,  7 Apr 2023 23:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E100C77B70
+	for <linux-wireless@archiver.kernel.org>; Sat,  8 Apr 2023 01:07:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229610AbjDGXkh (ORCPT
+        id S229459AbjDHBHW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 7 Apr 2023 19:40:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39772 "EHLO
+        Fri, 7 Apr 2023 21:07:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjDGXkg (ORCPT
+        with ESMTP id S229437AbjDHBHW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Apr 2023 19:40:36 -0400
-Received: from titan.fastwww.net (titan10.fastwww.net [198.27.78.195])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9DC359C7
-        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2023 16:40:35 -0700 (PDT)
-Comment: DomainKeys? See http://domainkeys.sourceforge.net/
-DomainKey-Signature: a=rsa-sha1; q=dns; c=nofws;
-  s=default; d=lockie.ca;
-  b=0NxtahNy4Jul/Z7lhnhnoAB4yJVVs8YHhIL2FQq29nYzxt4dNRzXSTFiJUr1S9JHCu0d7gSrJe3ygbdgN4yrE2IvJCaSdsLVEflEGBRpebxZOU8SaqhRRZxOK6lNC3sJ5E9pvspXGB3Y+c/YkT3HbKetROut/lbunwd7eqIK7Abj3FuY4o0KXnEGPW9a64vL1YgeITGsb3b7dUzqUNvDIlwPUVEDZklKPzd4Y/wJooMsTnDtgDAkYVe91ZyzXIoqPn7WJLxGOb8KLfl9difnls/0/ig/SYp0USyJ9A2dmRjy7FdSzZmkyMq7o/TLdG4FpUqSg5yobFkimb0V5n6khg==;
-  h=Received:Received:Received:Message-ID:Date:MIME-Version:User-Agent:Subject:Content-Language:To:Cc:References:From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-DKIM-Signature: v=1; a=rsa-sha1; c=relaxed; d=lockie.ca; h=message-id
-        :date:mime-version:subject:to:cc:references:from:in-reply-to
-        :content-type:content-transfer-encoding; s=default; bh=0dQEQ2LgR
-        7YIkr9qgxepUH94QLA=; b=ScmK0VrcXWS2thnWsxeQPbnRRSkX45dA0OuuTlbVY
-        IT66cJ/sQxHOtpjBJfMZ8i+pCh9X8it7OF62Fv5O5olxXPV9gU34cA62woLvS3vA
-        vKVQtBJpwrx33s9VNOl+fTPcs7BGsJZOj5lVSQeoiylGJNd/vYHXN+qEHNtyivJC
-        U8ApJ08E9zPyaklF6Rp+OkXiBtpCKQ1PeoMbPbQy9DKX2wwDU6t47Vzc4WgOew4B
-        uFGsUwN7cdnsqUpnoFkj44cCCU5IlOIRIWUcHmv/a6GlXYqD+dpUUKgzI3HKz4LP
-        zoE5x1r7ouaLdswtv4G7jITCSFs7wwVDxPqqsDn9rNk2w==
-Received: (qmail 26196 invoked by uid 108); 7 Apr 2023 23:40:34 +0000
-Received: from unknown (HELO titan.fastwww.net) (127.0.0.1)
-  by titan.fastwww.net with SMTP; 7 Apr 2023 23:40:34 +0000
-Received: from [192.168.68.73] ([98.124.53.137])
-        by titan.fastwww.net with ESMTPSA
-        id tPkyCvKpMGRQZgAApSktOw
-        (envelope-from <bjlockie@lockie.ca>); Fri, 07 Apr 2023 23:40:34 +0000
-Message-ID: <76605abc-17a6-61cd-23e9-23a7274f00d1@lockie.ca>
-Date:   Fri, 7 Apr 2023 19:40:33 -0400
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
+        Fri, 7 Apr 2023 21:07:22 -0400
+Received: from stone.woods.net (stone.woods.net [74.50.54.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6655FBB80
+        for <linux-wireless@vger.kernel.org>; Fri,  7 Apr 2023 18:07:18 -0700 (PDT)
+Received: from sneaky (66.29.179.130.static.utbb.net [66.29.179.130])
+        by stone.woods.net (Postfix) with ESMTPSA id A77F580F7;
+        Sat,  8 Apr 2023 01:07:16 +0000 (UTC)
+Date:   Fri, 7 Apr 2023 19:07:15 -0600
+From:   Aaron Dewell <acd@woods.net>
+To:     James <bjlockie@lockie.ca>
+Cc:     "=?utf-8?Q?linux-wireless=40vger.kernel.org?=" 
+        <linux-wireless@vger.kernel.org>
+Message-ID: <9AEF6A8A-44F0-4863-9467-44C137D7430A@getmailspring.com>
+In-Reply-To: <76605abc-17a6-61cd-23e9-23a7274f00d1@lockie.ca>
+References: <76605abc-17a6-61cd-23e9-23a7274f00d1@lockie.ca>
 Subject: Re: ax204/Intel NUC13 i9
-Content-Language: en-US
-To:     Aaron Dewell <aaron.dewell@woods.net>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <13DCAA8A-77E2-4BB1-94C8-9E57B382D60A@getmailspring.com>
- <E582DF8E-7FC2-4E6D-B076-A0A5F75308E0@getmailspring.com>
-From:   James <bjlockie@lockie.ca>
-In-Reply-To: <E582DF8E-7FC2-4E6D-B076-A0A5F75308E0@getmailspring.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+X-Mailer: Mailspring
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-https://www.google.com/search?client=firefox-b-d&q=iwlwifi%3A+No+config+found
 
+On Apr 7 2023, at 5:40 pm, James <bjlockie@lockie.ca> wrote:
+> https://www.google.com/search?client=firefox-b-d&q=iwlwifi%3A+No+config+found
+> 
+> 
+> I suspect a firmware problem.
+> 
+> Do you know how to install the latest firmware from git?
+> 
+> I would copy it to /lib/firmware if that is your distro keeps it:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
 
-I suspect a firmware problem.
-
-Do you know how to install the latest firmware from git?
-
-I would copy it to /lib/firmware if that is your distro keeps it:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-
+Did that first thing.
