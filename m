@@ -2,87 +2,105 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A34C76196
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Apr 2023 16:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60216C76196
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Apr 2023 20:03:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229776AbjDJQ23 (ORCPT
+        id S229789AbjDJUDu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Apr 2023 12:28:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39636 "EHLO
+        Mon, 10 Apr 2023 16:03:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230244AbjDJQ2R (ORCPT
+        with ESMTP id S229702AbjDJUDt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Apr 2023 12:28:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42B67184
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2023 09:28:17 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CD7BE60FF9
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2023 16:28:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04833C433EF;
-        Mon, 10 Apr 2023 16:28:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681144096;
-        bh=ONDMXYVLseUOmNf1DtjPRcvusrOIHPyOQzISf4oCBEo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YzcApbIOXsgBaF6Kf0skEntuwNs4rU6pDh3WwW9evfYLtA6EDdwoJaIUblj0lOXqU
-         SUiMnsvHnno/kevjjXBOmGLmrNOGPFzypKtvpL3gP+wdxQIvVm/zskr5yWoM/NhHfl
-         dhyaU7DmzTzrlCnkftZVx+TocEqD93t7GLfNYd5kTeHWA1Fm+GgNx0qivPFp0TUUmQ
-         crEL0i7AIK51hBiTmFP93F0gUWcpjitnEqtbWH9efC0B/NnnsJRHqgMYpx0CqOJkGw
-         IsL2bC4sJAtm2F/EUqPa/rA9kzHpSWKPLRlnCuTxWrOeRe7eBX3vACGHIdGiLwC7nh
-         QN0r3Qj+nqbZw==
-Date:   Mon, 10 Apr 2023 09:28:14 -0700
-From:   Nathan Chancellor <nathan@kernel.org>
-To:     gregory.greenman@intel.com
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] wifi: iwlwifi: mvm: fix the order of
- TIMING_MEASUREMENT notifications
-Message-ID: <20230410162814.GA2775@dev-arch.thelio-3990X>
-References: <20230410140721.897683-1-gregory.greenman@intel.com>
+        Mon, 10 Apr 2023 16:03:49 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E5AF9C
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Apr 2023 13:03:48 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33AJK2vA015471;
+        Mon, 10 Apr 2023 20:03:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=qcppdkim1;
+ bh=YT1Q1+rPL+NgFO6Xug3AcFu5qXusdthn0jWzcEd4TXE=;
+ b=mcBybXwnfRh8kp0XZyw0u/rzSXzb41DzfiWBu1VdMTffWjKkzNnP3dqJNdhOfGw8BhRx
+ DIgKTZYrbhtEctjSPTYkhjjyhGVnUxyWLeWHDutC9DEX8v5Zap9s9T8rIqd0yphFKvXW
+ 3bzuvq4wyjEGo3w4h/9XkpNYoakCS/BPB2RgNOZSz7N2XovMO6xewHiStYPhiJKnpiOF
+ xMdjTxQeLLp4pwu5Qe3BhDSwPCrdRFgcZMB/PLA380KtgGlhj+v9WqJZMfVNv3Dv3byb
+ afkmF2UBSGto/YjptRYVkNscgjRd0X4xRYgNAB/ZZZvL6fpK1OBSW03v7VyDYHoqFPH4 hA== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pvgmes6x3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 10 Apr 2023 20:03:44 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33AK3iuO007838
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 10 Apr 2023 20:03:44 GMT
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Mon, 10 Apr 2023 13:03:43 -0700
+From:   Aloka Dixit <quic_alokad@quicinc.com>
+To:     <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+CC:     Aloka Dixit <quic_alokad@quicinc.com>
+Subject: [PATCH v3] mac80211: set EHT support flag
+Date:   Mon, 10 Apr 2023 13:03:32 -0700
+Message-ID: <20230410200332.32265-1-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230410140721.897683-1-gregory.greenman@intel.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: p9FYmdm-wRPZj9evGoyIOCmvApVI1e-V
+X-Proofpoint-ORIG-GUID: p9FYmdm-wRPZj9evGoyIOCmvApVI1e-V
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-10_14,2023-04-06_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 phishscore=0 priorityscore=1501 mlxlogscore=961
+ impostorscore=0 adultscore=0 mlxscore=0 malwarescore=0 clxscore=1015
+ bulkscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304100173
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Apr 10, 2023 at 05:07:20PM +0300, gregory.greenman@intel.com wrote:
-> From: Gregory Greenman <gregory.greenman@intel.com>
-> 
-> Host commands and notifications are expected to be ordered in
-> iwl_mvm_groups array. Fix the order of two new TIMING_MEASUREMENT
-> notifications.
-> 
-> Fixes: c7eca79def44 ("wifi: iwlwifi: mvm: report hardware timestamps in RX/TX status")
-> Reported-by: Nathan Chancellor <nathan@kernel.org>
-> Link: https://lore.kernel.org/linux-wireless/20230331175121.GA3127046@dev-arch.thelio-3990X/
-> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Set 'eht_support' flag if EHT capabilities are present.
 
-Thanks for the quick fix! It appears to work for me.
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
 
-Tested-by: Nathan Chancellor <nathan@kernel.org>
+v3: This is the next version for the following patch,
+https://patchwork.kernel.org/project/linux-wireless/patch/20220323225443.13947-3-quic_alokad@quicinc.com/
+Retained only the must-have changes in this version from cfg.c.
+Rebasing v2 added modifications from bss_conf to link_conf.
 
-> ---
->  drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-> index 56a4e9d6ae33..6f082059025a 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-> @@ -472,8 +472,8 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
->  	HCMD_NAME(SCAN_OFFLOAD_PROFILES_QUERY_CMD),
->  	HCMD_NAME(BT_COEX_UPDATE_REDUCED_TXP),
->  	HCMD_NAME(BT_COEX_CI),
-> -	HCMD_NAME(WNM_80211V_TIMING_MEASUREMENT_CONFIRM_NOTIFICATION),
->  	HCMD_NAME(WNM_80211V_TIMING_MEASUREMENT_NOTIFICATION),
-> +	HCMD_NAME(WNM_80211V_TIMING_MEASUREMENT_CONFIRM_NOTIFICATION),
->  	HCMD_NAME(PHY_CONFIGURATION_CMD),
->  	HCMD_NAME(CALIB_RES_NOTIF_PHY_DB),
->  	HCMD_NAME(PHY_DB_CMD),
-> -- 
-> 2.38.1
-> 
+v2: Rebased on top of wireless-next git repository
+
+ net/mac80211/cfg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 473915606715..7317e4a5d1ff 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1342,6 +1342,10 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	if (params->eht_cap) {
++		if (!link_conf->he_support)
++			return -EOPNOTSUPP;
++
++		link_conf->eht_support = true;
+ 		link_conf->eht_puncturing = params->punct_bitmap;
+ 		changed |= BSS_CHANGED_EHT_PUNCTURING;
+ 
+
+base-commit: b536f32b5b034f592df0f0ba129ad59fa0f3e532
+-- 
+2.39.0
+
