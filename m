@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D0B6C77B75
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D674AC77B73
 	for <linux-wireless@archiver.kernel.org>; Wed, 12 Apr 2023 01:28:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbjDLB2z (ORCPT
+        id S229602AbjDLB24 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Apr 2023 21:28:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44478 "EHLO
+        Tue, 11 Apr 2023 21:28:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229490AbjDLB2x (ORCPT
+        with ESMTP id S229456AbjDLB2x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 11 Apr 2023 21:28:53 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58F213A9E
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2023 18:28:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D29D63C2F
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Apr 2023 18:28:52 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 33C1SMf64009253, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 33C1SOZT0009283, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 33C1SMf64009253
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 33C1SOZT0009283
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Wed, 12 Apr 2023 09:28:22 +0800
+        Wed, 12 Apr 2023 09:28:24 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Wed, 12 Apr 2023 09:28:44 +0800
+ 15.1.2375.32; Wed, 12 Apr 2023 09:28:46 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 12 Apr
- 2023 09:28:43 +0800
+ 2023 09:28:46 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] wifi: rtw89: coex: Enable Wi-Fi RX gain control for free run solution
-Date:   Wed, 12 Apr 2023 09:28:28 +0800
-Message-ID: <20230412012831.10519-2-pkshih@realtek.com>
+Subject: [PATCH 3/4] wifi: rtw89: coex: Update function to get BT RSSI and hardware counter
+Date:   Wed, 12 Apr 2023 09:28:30 +0800
+Message-ID: <20230412012831.10519-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230412012831.10519-1-pkshih@realtek.com>
 References: <20230412012831.10519-1-pkshih@realtek.com>
@@ -59,61 +59,59 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-When Wi-Fi & Bluetooth are both busy at the same time, Wi-Fi need to
-enable RX gain to protect Wi-Fi RX RF ability. Without this configure
-the interference from Bluetooth will bring a big impact to Wi-Fi RX.
+Correct Bluetooth RSSI count method. The 6dB is the gap between hardware
+packet sampled value and real RSSI value.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/rtw8852b.c | 4 ++--
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c | 3 ++-
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c | 3 ++-
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c | 3 ++-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index 46907748778bd..a0c02ff39e750 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -1827,7 +1827,8 @@ rtw8852a_btc_set_wl_txpwr_ctrl(struct rtw89_dev *rtwdev, u32 txpwr_val)
+ static
+ s8 rtw8852a_btc_get_bt_rssi(struct rtw89_dev *rtwdev, s8 val)
+ {
+-	return clamp_t(s8, val, -100, 0) + 100;
++	/* +6 for compensate offset */
++	return clamp_t(s8, val + 6, -100, 0) + 100;
+ }
+ 
+ static struct rtw89_btc_rf_trx_para rtw89_btc_8852a_rf_ul[] = {
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-index bae80984cfd51..ed12f72301be7 100644
+index a7f69d105fbbc..4cbe4c277a73f 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-@@ -323,7 +323,7 @@ static const struct rtw89_btc_rf_trx_para rtw89_btc_8852b_rf_ul[] = {
- 	{255, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 3- >reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
--	{255, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
-+	{255, 1, 0, 7}, /* the below id is for non-shared-antenna free-run */
- 	{6, 1, 0, 7},
- 	{13, 1, 0, 7},
- 	{13, 1, 0, 7}
-@@ -335,7 +335,7 @@ static const struct rtw89_btc_rf_trx_para rtw89_btc_8852b_rf_dl[] = {
- 	{255, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 3- >reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
--	{255, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
-+	{255, 1, 0, 7}, /* the below id is for non-shared-antenna free-run */
- 	{255, 1, 0, 7},
- 	{255, 1, 0, 7},
- 	{255, 1, 0, 7}
+@@ -2269,7 +2269,8 @@ do {								\
+ static
+ s8 rtw8852b_btc_get_bt_rssi(struct rtw89_dev *rtwdev, s8 val)
+ {
+-	return clamp_t(s8, val, -100, 0) + 100;
++	/* +6 for compensate offset */
++	return clamp_t(s8, val + 6, -100, 0) + 100;
+ }
+ 
+ static
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index ba728fca91881..78d618dd714c0 100644
+index 1db1298ca9863..4b66ed0cb3bbe 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -2536,7 +2536,7 @@ static const struct rtw89_btc_rf_trx_para rtw89_btc_8852c_rf_ul[] = {
- 	{255, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 3- >reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
--	{255, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
-+	{255, 1, 0, 7}, /* the below id is for non-shared-antenna free-run */
- 	{6, 1, 0, 7},
- 	{13, 1, 0, 7},
- 	{13, 1, 0, 7}
-@@ -2548,7 +2548,7 @@ static const struct rtw89_btc_rf_trx_para rtw89_btc_8852c_rf_dl[] = {
- 	{255, 0, 0, 7}, /* 2 ->reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 3- >reserved for shared-antenna */
- 	{255, 0, 0, 7}, /* 4 ->reserved for shared-antenna */
--	{255, 0, 0, 7}, /* the below id is for non-shared-antenna free-run */
-+	{255, 1, 0, 7}, /* the below id is for non-shared-antenna free-run */
- 	{255, 1, 0, 7},
- 	{255, 1, 0, 7},
- 	{255, 1, 0, 7}
+@@ -2527,7 +2527,8 @@ do {								\
+ static
+ s8 rtw8852c_btc_get_bt_rssi(struct rtw89_dev *rtwdev, s8 val)
+ {
+-	return clamp_t(s8, val, -100, 0) + 100;
++	/* +6 for compensate offset */
++	return clamp_t(s8, val + 6, -100, 0) + 100;
+ }
+ 
+ static const struct rtw89_btc_rf_trx_para rtw89_btc_8852c_rf_ul[] = {
 -- 
 2.25.1
 
