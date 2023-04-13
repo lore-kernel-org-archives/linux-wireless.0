@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D3EC77B61
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 18:41:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF0DFC77B71
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 18:41:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbjDMSlk (ORCPT
+        id S229835AbjDMSll (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Apr 2023 14:41:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59310 "EHLO
+        Thu, 13 Apr 2023 14:41:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229703AbjDMSlj (ORCPT
+        with ESMTP id S229791AbjDMSlk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2023 14:41:39 -0400
+        Thu, 13 Apr 2023 14:41:40 -0400
 Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 122FD40E7
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2023 11:41:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EAD56199
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2023 11:41:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681411296; x=1712947296;
+  t=1681411299; x=1712947299;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=MUf+GIAZAeu5JmH4aWMqsM7I8R5C1/W3YiUzeCnA8ME=;
-  b=T9LZhp3hWMlGCgrvSp8dlf6rg25FlQTWcWBG7OdyfLuwDPdOpIUTf/on
-   0xrnPdWfCmcik5Hkcv3YughpVr/cmwChLT1+liylgUh0k0ovFbdpDj6/X
-   4QOtZBQHqOgolmKrSExfuUPQXAZYBi2AZv93fQ3h0RveOPdUujSgPIG3B
-   8Nt6Nw/C0AhwpHQiqlFShVr08Joqn8c3pNeK2poX/a1Pc7xr6O9yUtHrf
-   q/h3lFyb0Ojl0YeMFcgy1MKWAO+60SOki3v63Rd+XzT+DXfva28D5FG6j
-   GLRt/ANG9cszQuWCuywWsHbbtWGbOE0K+dM1FxyBU1ZRz8/nEKTWEuqRl
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="372126982"
+  bh=HdYWPxgHKd9L8HjnUEj3mbU80YzILmeCO99FEfVQ1ps=;
+  b=Zv1RJSPBoOjig8bKj0d7y5BBPjExyPOeil7oJXeh1rX7QHdKZxeIG+Se
+   /7lENWQJxi+wfAxNX0vbtSc7I6Wwd63Nh+fkV6VjGQD5biKdKjhIsGzpa
+   is5PIvFE6GMDRHPdESu7NVgzGZIi8a9gXViCjK4eZUUSaT31M0KYu4+dL
+   1eM54+HsdrjqRGMyxb+EWdUaq0q09HKc76ZknLXUOkfeXw+bDbgOVYc6H
+   QMEYzErAXpiQ3RkGgEh2V5x5y9zyJodD5lRXZDPy0WSP5FdiwzO8lInO2
+   XUyjpCOVll74LdDYrNC1yV/lg6M5/gGAewHcyl7s13x/R6LrbXx+4I4uW
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="372127015"
 X-IronPort-AV: E=Sophos;i="5.99,194,1677571200"; 
-   d="scan'208";a="372126982"
+   d="scan'208";a="372127015"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:00 -0700
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:04 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="719984339"
+X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="719984349"
 X-IronPort-AV: E=Sophos;i="5.99,194,1677571200"; 
-   d="scan'208";a="719984339"
+   d="scan'208";a="719984349"
 Received: from apeled2-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.251.184.75])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:40:58 -0700
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:03 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Avraham Stern <avraham.stern@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 04/15] wifi: iwlwifi: mvm: fix shift-out-of-bounds
-Date:   Thu, 13 Apr 2023 21:40:24 +0300
-Message-Id: <20230413213309.c41a33c32898.Idc15f9eed005345a4137c28ef62efd80a405fad0@changeid>
+Subject: [PATCH 06/15] wifi: iwlwifi: mvm: make HLTK configuration for PASN station optional
+Date:   Thu, 13 Apr 2023 21:40:26 +0300
+Message-Id: <20230413213309.a57f7f3b59bd.Ifa88afb51a2516156153ac321d81556e295036c2@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230413184035.1140892-1-gregory.greenman@intel.com>
 References: <20230413184035.1140892-1-gregory.greenman@intel.com>
@@ -59,36 +59,126 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Avraham Stern <avraham.stern@intel.com>
 
-The aux queue is initialized to IWL_MVM_INVALID_QUEUE. This is
-later used for a bitmask of the queue, which results in a
-shift-out-of-bounds. Fix it.
+When secure LTF is not used, the HLTK is not derived during the PASN
+authentication. Make the HLTK optional when adding a PASN station.
 
-Fixes: b85f7ebb2497 ("wifi: iwlwifi: mvm: avoid UB shift of snif_queue")
 Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ .../intel/iwlwifi/mvm/ftm-initiator.c         | 25 ++++++++++++++++---
+ .../intel/iwlwifi/mvm/ftm-responder.c         | 19 +++++++++++---
+ 2 files changed, 37 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 6b2690534f59..3e5bed885bd9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2231,11 +2231,13 @@ static int iwl_mvm_add_int_sta_with_queue(struct iwl_mvm *mvm, int macidx,
- int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm, u32 lmac_id)
- {
- 	int ret;
-+	u32 qmask = mvm->aux_queue == IWL_MVM_INVALID_QUEUE ? 0 :
-+		BIT(mvm->aux_queue);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+index 379da4bec5dd..3963a0d4ed04 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
+@@ -25,6 +25,10 @@ struct iwl_mvm_smooth_entry {
+ 	u64 host_time;
+ };
  
- 	lockdep_assert_held(&mvm->mutex);
++enum iwl_mvm_pasn_flags {
++	IWL_MVM_PASN_FLAG_HAS_HLTK = BIT(0),
++};
++
+ struct iwl_mvm_ftm_pasn_entry {
+ 	struct list_head list;
+ 	u8 addr[ETH_ALEN];
+@@ -33,6 +37,7 @@ struct iwl_mvm_ftm_pasn_entry {
+ 	u8 cipher;
+ 	u8 tx_pn[IEEE80211_CCMP_PN_LEN];
+ 	u8 rx_pn[IEEE80211_CCMP_PN_LEN];
++	u32 flags;
+ };
  
- 	/* Allocate aux station and assign to it the aux queue */
--	ret = iwl_mvm_allocate_int_sta(mvm, &mvm->aux_sta, BIT(mvm->aux_queue),
-+	ret = iwl_mvm_allocate_int_sta(mvm, &mvm->aux_sta, qmask,
- 				       NL80211_IFTYPE_UNSPECIFIED,
- 				       IWL_STA_AUX_ACTIVITY);
- 	if (ret)
+ int iwl_mvm_ftm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+@@ -79,14 +84,24 @@ int iwl_mvm_ftm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		rcu_read_unlock();
+ 	}
+ 
+-	if (tk_len != expected_tk_len || hltk_len != sizeof(pasn->hltk)) {
++	if (tk_len != expected_tk_len ||
++	    (hltk_len && hltk_len != sizeof(pasn->hltk))) {
+ 		IWL_ERR(mvm, "Invalid key length: tk_len=%u hltk_len=%u\n",
+ 			tk_len, hltk_len);
+ 		goto out;
+ 	}
+ 
++	if (!expected_tk_len && !hltk_len) {
++		IWL_ERR(mvm, "TK and HLTK not set\n");
++		goto out;
++	}
++
+ 	memcpy(pasn->addr, addr, sizeof(pasn->addr));
+-	memcpy(pasn->hltk, hltk, sizeof(pasn->hltk));
++
++	if (hltk_len) {
++		memcpy(pasn->hltk, hltk, sizeof(pasn->hltk));
++		pasn->flags |= IWL_MVM_PASN_FLAG_HAS_HLTK;
++	}
+ 
+ 	if (tk && tk_len)
+ 		memcpy(pasn->tk, tk, sizeof(pasn->tk));
+@@ -691,7 +706,11 @@ iwl_mvm_ftm_set_secured_ranging(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			continue;
+ 
+ 		target->cipher = entry->cipher;
+-		memcpy(target->hltk, entry->hltk, sizeof(target->hltk));
++
++		if (entry->flags & IWL_MVM_PASN_FLAG_HAS_HLTK)
++			memcpy(target->hltk, entry->hltk, sizeof(target->hltk));
++		else
++			memset(target->hltk, 0, sizeof(target->hltk));
+ 
+ 		if (vif->cfg.assoc &&
+ 		    !memcmp(vif->bss_conf.bssid, target->bssid,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
+index c37d793d6a4a..1b6fb73ddfc7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
+@@ -317,6 +317,8 @@ int iwl_mvm_ftm_respoder_add_pasn_sta(struct iwl_mvm *mvm,
+ 		.addr = addr,
+ 		.hltk = hltk,
+ 	};
++	struct iwl_mvm_pasn_hltk_data *hltk_data_ptr = NULL;
++
+ 	u8 cmd_ver = iwl_fw_lookup_cmd_ver(mvm->fw,
+ 					   WIDE_ID(LOCATION_GROUP, TOF_RESPONDER_DYN_CONFIG_CMD),
+ 					   2);
+@@ -328,12 +330,21 @@ int iwl_mvm_ftm_respoder_add_pasn_sta(struct iwl_mvm *mvm,
+ 		return -ENOTSUPP;
+ 	}
+ 
+-	hltk_data.cipher = iwl_mvm_cipher_to_location_cipher(cipher);
+-	if (hltk_data.cipher == IWL_LOCATION_CIPHER_INVALID) {
+-		IWL_ERR(mvm, "invalid cipher: %u\n", cipher);
++	if ((!hltk || !hltk_len) && (!tk || !tk_len)) {
++		IWL_ERR(mvm, "TK and HLTK not set\n");
+ 		return -EINVAL;
+ 	}
+ 
++	if (hltk && hltk_len) {
++		hltk_data.cipher = iwl_mvm_cipher_to_location_cipher(cipher);
++		if (hltk_data.cipher == IWL_LOCATION_CIPHER_INVALID) {
++			IWL_ERR(mvm, "invalid cipher: %u\n", cipher);
++			return -EINVAL;
++		}
++
++		hltk_data_ptr = &hltk_data;
++	}
++
+ 	if (tk && tk_len) {
+ 		sta = kzalloc(sizeof(*sta), GFP_KERNEL);
+ 		if (!sta)
+@@ -350,7 +361,7 @@ int iwl_mvm_ftm_respoder_add_pasn_sta(struct iwl_mvm *mvm,
+ 		list_add_tail(&sta->list, &mvm->resp_pasn_list);
+ 	}
+ 
+-	ret = iwl_mvm_ftm_responder_dyn_cfg_v3(mvm, vif, NULL, &hltk_data);
++	ret = iwl_mvm_ftm_responder_dyn_cfg_v3(mvm, vif, NULL, hltk_data_ptr);
+ 	if (ret && sta)
+ 		iwl_mvm_resp_del_pasn_sta(mvm, vif, sta);
+ 
 -- 
 2.38.1
 
