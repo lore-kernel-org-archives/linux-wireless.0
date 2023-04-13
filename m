@@ -2,50 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3904C77B7D
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 21:52:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E000C77B6E
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 21:52:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230192AbjDMVwS (ORCPT
+        id S230223AbjDMVwU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Apr 2023 17:52:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59568 "EHLO
+        Thu, 13 Apr 2023 17:52:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229671AbjDMVwQ (ORCPT
+        with ESMTP id S230073AbjDMVwR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2023 17:52:16 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D458F59C9
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2023 14:52:14 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33DLprmP011575;
-        Thu, 13 Apr 2023 21:52:09 GMT
+        Thu, 13 Apr 2023 17:52:17 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57F286584
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2023 14:52:16 -0700 (PDT)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33DLlj1d032354;
+        Thu, 13 Apr 2023 21:52:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=qcppdkim1;
- bh=qK5BffHwalBH1mZF4foeoPBUSfBTezlPBH/whUSXrYo=;
- b=ExFY9joG5xJtswhnFTneOsPvdovc25XuXdXN0tHC5QaI4GFjyylRAXC9evqMeiRTXO5l
- 6QGRQpfCVMMMJpi1WcrqTJgPEbQRzK/Dm7dQn7uaYbag3ld+Lx6fSfAS/PiDYn8G86Yd
- hspt6AeC61Y/sjcXZZRgYrz+RKffleRIxmlBfvVAV/TcSN6Fnrh8HK+e7SXUuUmxtXfz
- G4ndkCF3PIjJzwPaP0jmY8ipnGSiiPqPiu8GvysOrkFj6d5w0H9PJb6epEQJtMIR/yRq
- igVngSmIStnCagQcrs+3eZMxQyLkAc/+BuvCH1KeS2T9dVpvrx/5Yjuf6M7X3C7+HyTO ew== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pxbx5swjc-1
+ bh=u5WL8v+40UpXZlKogSPZzaSxdQojL4ZJym6pU9qVGRM=;
+ b=Jtv+LsYK+f8b2umhMBM+ZHsyy3i/S1jNFIbHpVD8tQS7yiHv7+h4ieLqoy1Z6X4E/7/r
+ hteqRRdfhRDq5hax0eiaH/QPcLKSp2s7zUm+sJcynzPmR1VInmSeeE9dJDjj9VwijYIu
+ Mbv0eI2uebUCbz1CnOO039f2ETN9hG6XlNOl5DOq1KgKfH5cKembZ4uNYHO5TmeIIDB5
+ VRqAtGDzNVZ5oU6soyoeDFOXPfb2bm3GmgaDj5Xu/EogiyOOeU7dRti0w1kLctFZ2MFx
+ umT/A0DtzF9a8lYdQ9CMt7Nm7Octf0yVSUxdghlQS3NH1vTjVJH+l+E4HWv0M/nDJ2hk 5Q== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3px3retmu5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Apr 2023 21:52:09 +0000
+        Thu, 13 Apr 2023 21:52:10 +0000
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33DLq8AJ026607
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33DLq9Kf006400
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Apr 2023 21:52:08 GMT
+        Thu, 13 Apr 2023 21:52:09 GMT
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.986.42; Thu, 13 Apr 2023 14:52:08 -0700
 From:   Aloka Dixit <quic_alokad@quicinc.com>
 To:     <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC:     Aloka Dixit <quic_alokad@quicinc.com>
-Subject: [PATCH v3 02/11] wifi: ath12k: move HE capabilities processing to a new function
-Date:   Thu, 13 Apr 2023 14:51:47 -0700
-Message-ID: <20230413215156.2649-3-quic_alokad@quicinc.com>
+CC:     Aloka Dixit <quic_alokad@quicinc.com>,
+        Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+Subject: [PATCH v3 04/11] wifi: ath12k: propagate EHT capabilities to userspace
+Date:   Thu, 13 Apr 2023 14:51:49 -0700
+Message-ID: <20230413215156.2649-5-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230413215156.2649-1-quic_alokad@quicinc.com>
 References: <20230413215156.2649-1-quic_alokad@quicinc.com>
@@ -57,173 +58,201 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: XVpOxQHRv1mH53PwtjoB_8s9hSbQyXzP
-X-Proofpoint-GUID: XVpOxQHRv1mH53PwtjoB_8s9hSbQyXzP
+X-Proofpoint-ORIG-GUID: j0-zdNhsoNqE7bIx59Vw1tKpf9QXP4GL
+X-Proofpoint-GUID: j0-zdNhsoNqE7bIx59Vw1tKpf9QXP4GL
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-13_16,2023-04-13_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
- lowpriorityscore=0 adultscore=0 mlxlogscore=999 malwarescore=0 bulkscore=0
- spamscore=0 suspectscore=0 priorityscore=1501 clxscore=1015
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 spamscore=0
+ impostorscore=0 mlxscore=0 adultscore=0 malwarescore=0 bulkscore=0
+ priorityscore=1501 lowpriorityscore=0 phishscore=0 mlxlogscore=999
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2303200000 definitions=main-2304130194
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The function ath12k_mac_copy_sband_iftype_data() is currently
-used HE capabilities propagation but it can be extended to
-include EHT data. Move the HE specific functionality from to
-ath12k_mac_copy_he_cap() to make EHT additions easier.
+Propagate EHT capabilities to the userspace using a new member
+'eht_cap' in structure ieee80211_sband_iftype_data.
+
+MCS-NSS capabilities are copied depending on the supported bandwidths
+for the given band.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+Signed-off-by: Pradeep Kumar Chitrapu<quic_pradeepc@quicinc.com>
 ---
 v3: No change from v2.
 v2: No change from v1.
 
- drivers/net/wireless/ath/ath12k/mac.c | 111 +++++++++++++-------------
- 1 file changed, 55 insertions(+), 56 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 128 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/wmi.c |   7 +-
+ 2 files changed, 132 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index ab718585411e..e5ba7a01d571 100644
+index e5ba7a01d571..7e6fc6b941e8 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -4206,18 +4206,69 @@ static __le16 ath12k_mac_setup_he_6ghz_cap(struct ath12k_pdev_cap *pcap,
- 	return cpu_to_le16(bcap->he_6ghz_capa);
+@@ -4259,6 +4259,132 @@ static void ath12k_mac_copy_he_cap(struct ath12k_band_cap *band_cap,
+ 		ath12k_gen_ppe_thresh(&band_cap->he_ppet, he_cap->ppe_thres);
  }
  
-+static void ath12k_mac_copy_he_cap(struct ath12k_band_cap *band_cap,
-+				   int iftype, u8 num_tx_chains,
-+				   struct ieee80211_sta_he_cap *he_cap)
++static void
++ath12k_mac_copy_eht_mcs_nss(struct ath12k_band_cap *band_cap,
++			    struct ieee80211_eht_mcs_nss_supp *mcs_nss,
++			    const struct ieee80211_he_cap_elem *he_cap,
++			    const struct ieee80211_eht_cap_elem_fixed *eht_cap)
 +{
-+	struct ieee80211_he_cap_elem *he_cap_elem = &he_cap->he_cap_elem;
-+	struct ieee80211_he_mcs_nss_supp *mcs_nss = &he_cap->he_mcs_nss_supp;
++	if ((he_cap->phy_cap_info[0] &
++	     (IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G |
++	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
++	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
++	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G)) == 0)
++		memcpy(&mcs_nss->only_20mhz, &band_cap->eht_mcs_20_only,
++		       sizeof(struct ieee80211_eht_mcs_nss_supp_20mhz_only));
 +
-+	he_cap->has_he = true;
-+	memcpy(he_cap_elem->mac_cap_info, band_cap->he_cap_info,
-+	       sizeof(he_cap_elem->mac_cap_info));
-+	memcpy(he_cap_elem->phy_cap_info, band_cap->he_cap_phy_info,
-+	       sizeof(he_cap_elem->phy_cap_info));
++	if (he_cap->phy_cap_info[0] &
++	    (IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G |
++	     IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G))
++		memcpy(&mcs_nss->bw._80, &band_cap->eht_mcs_80,
++		       sizeof(struct ieee80211_eht_mcs_nss_supp_bw));
 +
-+	he_cap_elem->mac_cap_info[1] &=
-+		IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_MASK;
++	if (he_cap->phy_cap_info[0] &
++	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G)
++		memcpy(&mcs_nss->bw._160, &band_cap->eht_mcs_160,
++		       sizeof(struct ieee80211_eht_mcs_nss_supp_bw));
 +
-+	he_cap_elem->phy_cap_info[5] &=
-+		~IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK;
-+	he_cap_elem->phy_cap_info[5] &=
-+		~IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK;
-+	he_cap_elem->phy_cap_info[5] |= num_tx_chains - 1;
++	if (eht_cap->phy_cap_info[0] & IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ)
++		memcpy(&mcs_nss->bw._320, &band_cap->eht_mcs_320,
++		       sizeof(struct ieee80211_eht_mcs_nss_supp_bw));
++}
++
++static void ath12k_mac_copy_eht_ppet_ru(u32 ppet, u8 ppe_thres[], int ru)
++{
++	int i;
++	u32 val = 0;
++	u8 ppet_size_ru = IEEE80211_EHT_PPE_THRES_INFO_PPET_SIZE * 2;
++	u8 bit = IEEE80211_EHT_PPE_THRES_INFO_HEADER_SIZE;
++
++	u32p_replace_bits(&val, ppet >> (ru * ppet_size_ru),
++			  GENMASK(ppet_size_ru - 1, 0));
++
++	val = ((val >> IEEE80211_EHT_PPE_THRES_INFO_PPET_SIZE) & GENMASK(2, 0)) |
++	      ((val & GENMASK(2, 0)) << IEEE80211_EHT_PPE_THRES_INFO_PPET_SIZE);
++
++	for (i = ppet_size_ru - 1; i >= 0; i--) {
++		ppe_thres[bit / 8] |= (((val >> i) & 0x1) << ((bit % 8)));
++		bit++;
++	}
++}
++
++static void ath12k_mac_copy_eht_ppe_thresh(struct ath12k_wmi_ppe_threshold_arg *fw_ppet,
++					   struct ieee80211_sta_eht_cap *cap)
++{
++	int nss, ru;
++	u8 len = 0;
++
++	len = hweight8(fw_ppet->ru_bit_mask);
++	len *= (1 + fw_ppet->numss_m1);
++
++	len = (len * IEEE80211_EHT_PPE_THRES_INFO_PPET_SIZE) +
++	      IEEE80211_EHT_PPE_THRES_INFO_HEADER_SIZE;
++	len = DIV_ROUND_UP(len, 8);
++
++	u8p_replace_bits(&cap->eht_ppe_thres[0], fw_ppet->numss_m1,
++			 IEEE80211_EHT_PPE_THRES_NSS_MASK);
++
++	u16p_replace_bits((u16 *)&cap->eht_ppe_thres[0], fw_ppet->ru_bit_mask,
++			  IEEE80211_EHT_PPE_THRES_RU_INDEX_BITMASK_MASK);
++
++	for (nss = 0; nss <= fw_ppet->numss_m1; nss++) {
++		for (ru = 0;
++		     ru < hweight8(IEEE80211_EHT_PPE_THRES_RU_INDEX_BITMASK_MASK);
++		     ru++) {
++			if ((fw_ppet->ru_bit_mask & BIT(ru)) == 0)
++				continue;
++
++			ath12k_mac_copy_eht_ppet_ru(fw_ppet->ppet16_ppet8_ru3_ru0[nss],
++						    cap->eht_ppe_thres, ru);
++		}
++	}
++}
++
++static void ath12k_mac_copy_eht_cap(struct ath12k_band_cap *band_cap,
++				    struct ieee80211_he_cap_elem *he_cap_elem,
++				    int iftype,
++				    struct ieee80211_sta_eht_cap *eht_cap)
++{
++	struct ieee80211_eht_cap_elem_fixed *eht_cap_elem = &eht_cap->eht_cap_elem;
++
++	memset(eht_cap, 0, sizeof(struct ieee80211_sta_eht_cap));
++	eht_cap->has_eht = true;
++	memcpy(eht_cap_elem->mac_cap_info, band_cap->eht_cap_mac_info,
++	       sizeof(eht_cap_elem->mac_cap_info));
++	memcpy(eht_cap_elem->phy_cap_info, band_cap->eht_cap_phy_info,
++	       sizeof(eht_cap_elem->phy_cap_info));
 +
 +	switch (iftype) {
 +	case NL80211_IFTYPE_AP:
-+		he_cap_elem->phy_cap_info[3] &=
-+			~IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_TX_MASK;
-+		he_cap_elem->phy_cap_info[9] |=
-+			IEEE80211_HE_PHY_CAP9_RX_1024_QAM_LESS_THAN_242_TONE_RU;
++		eht_cap_elem->phy_cap_info[0] &=
++			~IEEE80211_EHT_PHY_CAP0_242_TONE_RU_GT20MHZ;
++		eht_cap_elem->phy_cap_info[4] &=
++			~IEEE80211_EHT_PHY_CAP4_PART_BW_DL_MU_MIMO;
++		eht_cap_elem->phy_cap_info[5] &=
++			~IEEE80211_EHT_PHY_CAP5_TX_LESS_242_TONE_RU_SUPP;
 +		break;
 +	case NL80211_IFTYPE_STATION:
-+		he_cap_elem->mac_cap_info[0] &= ~IEEE80211_HE_MAC_CAP0_TWT_RES;
-+		he_cap_elem->mac_cap_info[0] |= IEEE80211_HE_MAC_CAP0_TWT_REQ;
-+		he_cap_elem->phy_cap_info[9] |=
-+			IEEE80211_HE_PHY_CAP9_TX_1024_QAM_LESS_THAN_242_TONE_RU;
++		eht_cap_elem->phy_cap_info[7] &=
++			~(IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_80MHZ |
++			  IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_160MHZ |
++			  IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_320MHZ);
++		eht_cap_elem->phy_cap_info[7] &=
++			~(IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_80MHZ |
++			  IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_160MHZ |
++			  IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_320MHZ);
 +		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		ath12k_mac_filter_he_cap_mesh(he_cap_elem);
++	default:
 +		break;
 +	}
 +
-+	mcs_nss->rx_mcs_80 = cpu_to_le16(band_cap->he_mcs & 0xffff);
-+	mcs_nss->tx_mcs_80 = cpu_to_le16(band_cap->he_mcs & 0xffff);
-+	mcs_nss->rx_mcs_160 = cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
-+	mcs_nss->tx_mcs_160 = cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
-+	mcs_nss->rx_mcs_80p80 = cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
-+	mcs_nss->tx_mcs_80p80 = cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
++	ath12k_mac_copy_eht_mcs_nss(band_cap, &eht_cap->eht_mcs_nss_supp,
++				    he_cap_elem, eht_cap_elem);
 +
-+	memset(he_cap->ppe_thres, 0, sizeof(he_cap->ppe_thres));
-+	if (he_cap_elem->phy_cap_info[6] &
-+	    IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT)
-+		ath12k_gen_ppe_thresh(&band_cap->he_ppet, he_cap->ppe_thres);
++	if (eht_cap_elem->phy_cap_info[5] &
++	    IEEE80211_EHT_PHY_CAP5_PPE_THRESHOLD_PRESENT)
++		ath12k_mac_copy_eht_ppe_thresh(&band_cap->eht_ppet, eht_cap);
 +}
 +
  static int ath12k_mac_copy_sband_iftype_data(struct ath12k *ar,
  					     struct ath12k_pdev_cap *cap,
  					     struct ieee80211_sband_iftype_data *data,
- 					     int band)
- {
-+	struct ath12k_band_cap *band_cap = &cap->band[band];
- 	int i, idx = 0;
- 
- 	for (i = 0; i < NUM_NL80211_IFTYPES; i++) {
- 		struct ieee80211_sta_he_cap *he_cap = &data[idx].he_cap;
--		struct ath12k_band_cap *band_cap = &cap->band[band];
--		struct ieee80211_he_cap_elem *he_cap_elem =
--				&he_cap->he_cap_elem;
- 
- 		switch (i) {
- 		case NL80211_IFTYPE_STATION:
-@@ -4230,60 +4281,8 @@ static int ath12k_mac_copy_sband_iftype_data(struct ath12k *ar,
- 		}
- 
- 		data[idx].types_mask = BIT(i);
--		he_cap->has_he = true;
--		memcpy(he_cap_elem->mac_cap_info, band_cap->he_cap_info,
--		       sizeof(he_cap_elem->mac_cap_info));
--		memcpy(he_cap_elem->phy_cap_info, band_cap->he_cap_phy_info,
--		       sizeof(he_cap_elem->phy_cap_info));
--
--		he_cap_elem->mac_cap_info[1] &=
--			IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_MASK;
--
--		he_cap_elem->phy_cap_info[5] &=
--			~IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK;
--		he_cap_elem->phy_cap_info[5] &=
--			~IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_ABOVE_80MHZ_MASK;
--		he_cap_elem->phy_cap_info[5] |= ar->num_tx_chains - 1;
--
--		switch (i) {
--		case NL80211_IFTYPE_AP:
--			he_cap_elem->phy_cap_info[3] &=
--				~IEEE80211_HE_PHY_CAP3_DCM_MAX_CONST_TX_MASK;
--			he_cap_elem->phy_cap_info[9] |=
--				IEEE80211_HE_PHY_CAP9_RX_1024_QAM_LESS_THAN_242_TONE_RU;
--			break;
--		case NL80211_IFTYPE_STATION:
--			he_cap_elem->mac_cap_info[0] &=
--				~IEEE80211_HE_MAC_CAP0_TWT_RES;
--			he_cap_elem->mac_cap_info[0] |=
--				IEEE80211_HE_MAC_CAP0_TWT_REQ;
--			he_cap_elem->phy_cap_info[9] |=
--				IEEE80211_HE_PHY_CAP9_TX_1024_QAM_LESS_THAN_242_TONE_RU;
--			break;
--		case NL80211_IFTYPE_MESH_POINT:
--			ath12k_mac_filter_he_cap_mesh(he_cap_elem);
--			break;
--		}
--
--		he_cap->he_mcs_nss_supp.rx_mcs_80 =
--			cpu_to_le16(band_cap->he_mcs & 0xffff);
--		he_cap->he_mcs_nss_supp.tx_mcs_80 =
--			cpu_to_le16(band_cap->he_mcs & 0xffff);
--		he_cap->he_mcs_nss_supp.rx_mcs_160 =
--			cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
--		he_cap->he_mcs_nss_supp.tx_mcs_160 =
--			cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
--		he_cap->he_mcs_nss_supp.rx_mcs_80p80 =
--			cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
--		he_cap->he_mcs_nss_supp.tx_mcs_80p80 =
--			cpu_to_le16((band_cap->he_mcs >> 16) & 0xffff);
--
--		memset(he_cap->ppe_thres, 0, sizeof(he_cap->ppe_thres));
--		if (he_cap_elem->phy_cap_info[6] &
--		    IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT)
--			ath12k_gen_ppe_thresh(&band_cap->he_ppet,
--					      he_cap->ppe_thres);
- 
-+		ath12k_mac_copy_he_cap(band_cap, i, ar->num_tx_chains, he_cap);
- 		if (band == NL80211_BAND_6GHZ) {
+@@ -4287,6 +4413,8 @@ static int ath12k_mac_copy_sband_iftype_data(struct ath12k *ar,
  			data[idx].he_6ghz_capa.capa =
  				ath12k_mac_setup_he_6ghz_cap(cap, band_cap);
+ 		}
++		ath12k_mac_copy_eht_cap(band_cap, &he_cap->he_cap_elem, i,
++					&data[idx].eht_cap);
+ 		idx++;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 89c3bf759bd4..2d3094ec19c0 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -4068,9 +4068,10 @@ static void ath12k_wmi_eht_caps_parse(struct ath12k_pdev *pdev, u32 band,
+ 	cap_band->eht_cap_info_internal = le32_to_cpu(cap_info_internal);
+ }
+ 
+-static int ath12k_wmi_tlv_mac_phy_caps_ext_parse(struct ath12k_base *ab,
+-						 struct ath12k_wmi_mac_phy_caps_ext_params *caps,
+-						 struct ath12k_pdev *pdev)
++static int
++ath12k_wmi_tlv_mac_phy_caps_ext_parse(struct ath12k_base *ab,
++				      struct ath12k_wmi_mac_phy_caps_ext_params *caps,
++				      struct ath12k_pdev *pdev)
+ {
+ 	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) {
+ 		ath12k_wmi_eht_caps_parse(pdev, NL80211_BAND_2GHZ,
 -- 
 2.39.0
 
