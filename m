@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8431CC77B71
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 18:42:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C22FFC77B61
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 18:42:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229922AbjDMSmo (ORCPT
+        id S229910AbjDMSmp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Apr 2023 14:42:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60634 "EHLO
+        Thu, 13 Apr 2023 14:42:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229910AbjDMSmn (ORCPT
+        with ESMTP id S229893AbjDMSmn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 13 Apr 2023 14:42:43 -0400
 Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7762A83F5
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CB096E86
         for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2023 11:42:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1681411343; x=1712947343;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=yhR5YMhFEHD/3i6I88f26DmRxUOrdW9fnYIcHq+mDJY=;
-  b=l1hgvBB5coahGhOv/+7uaovxn+4lbhvwCUyOtIYnV6i6UM8h//waVbz+
-   nj5nmnpJ5x9lWwlLpBpKybQV0w2XpABrWJ/8bVgIg8okAGSMXu0QBLWPj
-   palnZE4bUVrsBQLcA5NZNDcNK6mAo6SivqIN6/j2SSYwZIYrtp23JjkhU
-   r6u8/XRt39/QLKeDTVCpZFpi7tW93tupvJ3WFKHRNUB30mr9kmGr0+mYT
-   w3UhFmk20N2xNnhIoFZCLVOS8uRM/DrLfx6fGW/JohFyB6G5QOvSS0yxQ
-   VdO5+Py8mK5ftOSv45ldC/+IuriD9q/y1fG/voDPYBgfJXHqhTi9BvwOy
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="372127126"
+  bh=S6kuJZBzTChw4SZ7hh3qCTvVQL4SCAnv44wphRY+n/E=;
+  b=BcGYjHvCnCWNJm2kjySMe98eHoY52hxSSGo9ePdmZ9nm7+hupNrGnbGV
+   +f4qslfSB4nDsB/6pMhRbMrgNd4RmPaie/FW4Unp2rnbbNq2gK//qfv4r
+   QrpMqUv0HfWtY7xVuN47oCpXHxQ/BIQLRsHC1NYJMBaxKa1p2tSpIzIvk
+   ijoGi5J39gC7PhDVUmbInGn0ylXvoU2iTfGI+gG5/16mtL4phPyz1QwOJ
+   xkn+anBb0ljrm8r3bkbL6iRYdueVDWySpB6tW/S004I0I/dR/oPQlk7nE
+   LCHHkQ700vtuKnrx/ZawCRlYmXQ1vQ0lTHST0HpRrikmMM72ztYzMXhRb
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="372127111"
 X-IronPort-AV: E=Sophos;i="5.99,194,1677571200"; 
-   d="scan'208";a="372127126"
+   d="scan'208";a="372127111"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:24 -0700
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:21 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="719984510"
+X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="719984483"
 X-IronPort-AV: E=Sophos;i="5.99,194,1677571200"; 
-   d="scan'208";a="719984510"
+   d="scan'208";a="719984483"
 Received: from apeled2-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.251.184.75])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:22 -0700
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:20 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Ayala Beker <ayala.beker@intel.com>,
+        Daniel Gabay <daniel.gabay@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 15/15] wifi: iwlwifi: mvm: scan legacy bands and UHB channels with same antenna
-Date:   Thu, 13 Apr 2023 21:40:35 +0300
-Message-Id: <20230413213309.fd582c423ad8.I35239f94cb3ee1642d16936199c336a07ec2df8f@changeid>
+Subject: [PATCH 14/15] wifi: iwlwifi: yoyo: Fix possible division by zero
+Date:   Thu, 13 Apr 2023 21:40:34 +0300
+Message-Id: <20230413213309.5d6688ed74d8.I5c2f3a882b50698b708d54f4524dc5bdf11e3d32@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230413184035.1140892-1-gregory.greenman@intel.com>
 References: <20230413184035.1140892-1-gregory.greenman@intel.com>
@@ -57,66 +57,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Daniel Gabay <daniel.gabay@intel.com>
 
-In case of UHB scan that follows a scan on legacy bands,
-consider both scan commands as part of the same scan cycle,
-and thus configure them to use the same antenna configuration.
+Don't allow buffer allocation TLV with zero req_size since it
+leads later to division by zero in iwl_dbg_tlv_alloc_fragments().
+Also, NPK/SRAM locations are allowed to have zero buffer req_size,
+don't discard them.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Fixes: a9248de42464 ("iwlwifi: dbg_ini: add TLV allocation new API support")
+Signed-off-by: Daniel Gabay <daniel.gabay@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/scan.h | 3 +++
- drivers/net/wireless/intel/iwlwifi/fw/file.h     | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c    | 5 +++++
- 3 files changed, 9 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 7ba0e3409199..ec96ba053a5c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -709,10 +709,13 @@ enum iwl_umac_scan_general_flags_v2 {
-  *     should be aware of a P2P GO operation on the 2GHz band.
-  * @IWL_UMAC_SCAN_GEN_PARAMS_FLAGS2_RESPECT_P2P_GO_HB: scan event scheduling
-  *     should be aware of a P2P GO operation on the 5GHz or 6GHz band.
-+ * @IWL_UMAC_SCAN_GEN_PARAMS_FLAGS2_DONT_TOGGLE_ANT: don't toggle between
-+ *     valid antennas, and use the same antenna as in previous scan
-  */
- enum iwl_umac_scan_general_params_flags2 {
- 	IWL_UMAC_SCAN_GEN_PARAMS_FLAGS2_RESPECT_P2P_GO_LB = BIT(0),
- 	IWL_UMAC_SCAN_GEN_PARAMS_FLAGS2_RESPECT_P2P_GO_HB = BIT(1),
-+	IWL_UMAC_SCAN_GEN_PARAMS_FLAGS2_DONT_TOGGLE_ANT   = BIT(2),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index 87366b70b17f..546737320a57 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -138,6 +138,12 @@ static int iwl_dbg_tlv_alloc_buf_alloc(struct iwl_trans *trans,
+ 	    alloc_id != IWL_FW_INI_ALLOCATION_ID_DBGC1)
+ 		goto err;
  
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index a0260a1fa099..34ef106a2274 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -459,6 +459,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_SYNCED_TIME			= (__force iwl_ucode_tlv_capa_t)106,
- 	IWL_UCODE_TLV_CAPA_TIME_SYNC_BOTH_FTM_TM        = (__force iwl_ucode_tlv_capa_t)108,
- 	IWL_UCODE_TLV_CAPA_BIGTK_TX_SUPPORT		= (__force iwl_ucode_tlv_capa_t)109,
-+	IWL_UCODE_TLV_CAPA_SCAN_DONT_TOGGLE_ANT         = (__force iwl_ucode_tlv_capa_t)111,
- 
- #ifdef __CHECKER__
- 	/* sparse says it cannot increment the previous enum member */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 07045092c717..7749f15b7f14 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -2081,6 +2081,11 @@ static u8 iwl_mvm_scan_umac_flags2(struct iwl_mvm *mvm,
- 				IWL_UMAC_SCAN_GEN_PARAMS_FLAGS2_RESPECT_P2P_GO_HB;
- 	}
- 
-+	if (params->scan_6ghz &&
-+	    fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_SCAN_DONT_TOGGLE_ANT))
-+		flags |= IWL_UMAC_SCAN_GEN_PARAMS_FLAGS2_DONT_TOGGLE_ANT;
++	if (buf_location == IWL_FW_INI_LOCATION_DRAM_PATH &&
++	    alloc->req_size == 0) {
++		IWL_ERR(trans, "WRT: Invalid DRAM buffer allocation requested size (0)\n");
++		return -EINVAL;
++	}
 +
- 	return flags;
- }
+ 	trans->dbg.fw_mon_cfg[alloc_id] = *alloc;
  
+ 	return 0;
 -- 
 2.38.1
 
