@@ -2,92 +2,86 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C22FFC77B61
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 18:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED1CDC77B61
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 20:23:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229910AbjDMSmp (ORCPT
+        id S230209AbjDMUXv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Apr 2023 14:42:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60632 "EHLO
+        Thu, 13 Apr 2023 16:23:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229893AbjDMSmn (ORCPT
+        with ESMTP id S230148AbjDMUXq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Apr 2023 14:42:43 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CB096E86
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2023 11:42:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681411343; x=1712947343;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=S6kuJZBzTChw4SZ7hh3qCTvVQL4SCAnv44wphRY+n/E=;
-  b=BcGYjHvCnCWNJm2kjySMe98eHoY52hxSSGo9ePdmZ9nm7+hupNrGnbGV
-   +f4qslfSB4nDsB/6pMhRbMrgNd4RmPaie/FW4Unp2rnbbNq2gK//qfv4r
-   QrpMqUv0HfWtY7xVuN47oCpXHxQ/BIQLRsHC1NYJMBaxKa1p2tSpIzIvk
-   ijoGi5J39gC7PhDVUmbInGn0ylXvoU2iTfGI+gG5/16mtL4phPyz1QwOJ
-   xkn+anBb0ljrm8r3bkbL6iRYdueVDWySpB6tW/S004I0I/dR/oPQlk7nE
-   LCHHkQ700vtuKnrx/ZawCRlYmXQ1vQ0lTHST0HpRrikmMM72ztYzMXhRb
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="372127111"
-X-IronPort-AV: E=Sophos;i="5.99,194,1677571200"; 
-   d="scan'208";a="372127111"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:21 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="719984483"
-X-IronPort-AV: E=Sophos;i="5.99,194,1677571200"; 
-   d="scan'208";a="719984483"
-Received: from apeled2-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.251.184.75])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2023 11:41:20 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Daniel Gabay <daniel.gabay@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 14/15] wifi: iwlwifi: yoyo: Fix possible division by zero
-Date:   Thu, 13 Apr 2023 21:40:34 +0300
-Message-Id: <20230413213309.5d6688ed74d8.I5c2f3a882b50698b708d54f4524dc5bdf11e3d32@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230413184035.1140892-1-gregory.greenman@intel.com>
-References: <20230413184035.1140892-1-gregory.greenman@intel.com>
+        Thu, 13 Apr 2023 16:23:46 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B7807D96
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Apr 2023 13:23:41 -0700 (PDT)
+X-UUID: 1270bdeeda3911eda9a90f0bb45854f4-20230414
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=ziSkhf/HPCL6gzDTvT3hjMVmbmw5JT9p7h3wgw4xuLg=;
+        b=smbeFu8FKUfQ5kIl5BtYgeSh/iKiGHP2Y6ZRi3jVcXPN5wMTnFXvVe8IroC3R77qixTu7HsLe06Jb0GiStVu46Ir1MQDOf8rC351lkM/BRj76oO4NjvXzctH6hvJiN7Xx4gAMfnPX/GTpvcY+lLrVVzTFQAe9C4aRohsgizBx+s=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.22,REQID:40de1c12-5da1-4d28-a5b2-1fb65e012ac5,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:120426c,CLOUDID:3b8840a1-8fcb-430b-954a-ba3f00fa94a5,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-UUID: 1270bdeeda3911eda9a90f0bb45854f4-20230414
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 885456796; Fri, 14 Apr 2023 04:23:37 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.25; Fri, 14 Apr 2023 04:23:36 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.25 via Frontend Transport; Fri, 14 Apr 2023 04:23:36 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
+CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 1/5] wifi: mt76: connac: fix txd multicast rate setting
+Date:   Fri, 14 Apr 2023 04:23:29 +0800
+Message-ID: <f5d216bcd79cc444b7f7039dd3898e08aff70286.1681416097.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Daniel Gabay <daniel.gabay@intel.com>
+The vif->bss_conf.mcast_rate should be applied to multicast data frame
+only.
 
-Don't allow buffer allocation TLV with zero req_size since it
-leads later to division by zero in iwl_dbg_tlv_alloc_fragments().
-Also, NPK/SRAM locations are allowed to have zero buffer req_size,
-don't discard them.
-
-Fixes: a9248de42464 ("iwlwifi: dbg_ini: add TLV allocation new API support")
-Signed-off-by: Daniel Gabay <daniel.gabay@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Fixes: 182071cdd594 ("mt76: connac: move connac2_mac_write_txwi in mt76_connac module")
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 87366b70b17f..546737320a57 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -138,6 +138,12 @@ static int iwl_dbg_tlv_alloc_buf_alloc(struct iwl_trans *trans,
- 	    alloc_id != IWL_FW_INI_ALLOCATION_ID_DBGC1)
- 		goto err;
- 
-+	if (buf_location == IWL_FW_INI_LOCATION_DRAM_PATH &&
-+	    alloc->req_size == 0) {
-+		IWL_ERR(trans, "WRT: Invalid DRAM buffer allocation requested size (0)\n");
-+		return -EINVAL;
-+	}
-+
- 	trans->dbg.fw_mon_cfg[alloc_id] = *alloc;
- 
- 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+index aed4ee95fb2e..82aac0a04655 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+@@ -537,7 +537,8 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 	if (txwi[2] & cpu_to_le32(MT_TXD2_FIX_RATE)) {
+ 		/* Fixed rata is available just for 802.11 txd */
+ 		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-		bool multicast = is_multicast_ether_addr(hdr->addr1);
++		bool multicast = ieee80211_is_data(hdr->frame_control) &&
++				 is_multicast_ether_addr(hdr->addr1);
+ 		u16 rate = mt76_connac2_mac_tx_rate_val(mphy, vif, beacon,
+ 							multicast);
+ 		u32 val = MT_TXD6_FIXED_BW;
 -- 
-2.38.1
+2.18.0
 
