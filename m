@@ -2,119 +2,102 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A4C7C7619A
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 01:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF080C77B73
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Apr 2023 02:37:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229705AbjDMBJe (ORCPT
+        id S230178AbjDMChT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Apr 2023 21:09:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54688 "EHLO
+        Wed, 12 Apr 2023 22:37:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229553AbjDMBJd (ORCPT
+        with ESMTP id S230007AbjDMCgy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Apr 2023 21:09:33 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49BC961B6
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Apr 2023 18:09:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681348172; x=1712884172;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=DV2/u8tdTMucqyHBAnGZ0UTD4sjtYvnh6UTO4CORWhE=;
-  b=HvFj7S3Lr1Gv1sO0j4axEvR/v2WWX/k8x69o6epZV4bYBI7iENRY8NOD
-   NnGW6aVIQEtxP6+5qjyNijamqnG3nKbrBEKUvm63r3YCopn4APZ0jukw2
-   0RxTzNAx0CktYUdTY3zizuufXkk+r+iX8jm7kIFe4KwfzT0AVdTzGlTnB
-   aU5pbrtCRtB8WyPskzKZ3gYuDHGoINM2CYPRAwn2PbFrvEbINUxWrvZky
-   uNy3SgFVwVvTu/7fNkh+0PDBEkZKtmLLiW5FZsBwpjvYVXdqLpwAkOabl
-   gShdeIQhyLaDAAJfYlt6WU5hBQ0vpN3vNmqZCpWRM2UCm8pciq3xOFwXO
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10678"; a="409207916"
-X-IronPort-AV: E=Sophos;i="5.98,339,1673942400"; 
-   d="scan'208";a="409207916"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Apr 2023 18:09:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10678"; a="666557707"
-X-IronPort-AV: E=Sophos;i="5.98,339,1673942400"; 
-   d="scan'208";a="666557707"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga006.jf.intel.com with ESMTP; 12 Apr 2023 18:09:30 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pmlSr-000YCM-0y;
-        Thu, 13 Apr 2023 01:09:29 +0000
-Date:   Thu, 13 Apr 2023 09:08:39 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: [wireless-next:main] BUILD SUCCESS
- b2a777d68434375dc05a6fda5fec34a474bbf21f
-Message-ID: <64375617.7kA/dXo0f2REQQvy%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Wed, 12 Apr 2023 22:36:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECAB183EA;
+        Wed, 12 Apr 2023 19:36:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0D6BF63A88;
+        Thu, 13 Apr 2023 02:36:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C858C4339E;
+        Thu, 13 Apr 2023 02:36:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681353398;
+        bh=jpupAkuoIR9JZhgmPqEtxcQHV2WSoE1rm0Idsw6o3cc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=eXlUkrc3hX+KavuWDGCFeYvlSEFPybslCUy9DcI+YWqTVRhXJTg6XkMV/tzrHO2C0
+         EIt9l43oeHML/Kavf3Go8nT+9mHcAWCH1IRElSQE3KKOTOdgVQLJG40h6Aq/Kzxrws
+         RAqlMfUbFPc7udsRuCxVGQJ3oxq1YpzxHknBxRnUlUpMWHCrn827Fm8NJmUK0NEGti
+         u3ABV5eSiNScEIlfy3Czk/7WZzJxAeM9BKRCgszTOEGD5Pu8Aw3hGgtPsAcAzVkiCY
+         Dp/0gKgHgDrE/2sl/GE95KrzTYGmryjhyYKTOWha8qr9HUP1wVVXWYXICLEl7HBucT
+         92t509mh/UCfw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Kalle Valo <quic_kvalo@quicinc.com>, Kalle Valo <kvalo@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 16/20] wifi: ath11k: reduce the MHI timeout to 20s
+Date:   Wed, 12 Apr 2023 22:35:54 -0400
+Message-Id: <20230413023601.74410-16-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230413023601.74410-1-sashal@kernel.org>
+References: <20230413023601.74410-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-branch HEAD: b2a777d68434375dc05a6fda5fec34a474bbf21f  wifi: rtw88: Add support for the SDIO based RTL8821CS chipset
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-elapsed time: 723m
+[ Upstream commit cf5fa3ca0552f1b7ba8490de40700bbfb6979b17 ]
 
-configs tested: 42
-configs skipped: 3
+Currently ath11k breaks after hibernation, the reason being that ath11k expects
+that the wireless device will have power during suspend and the firmware will
+continue running. But of course during hibernation the power from the device is
+cut off and firmware is not running when resuming, so ath11k will fail.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+(The reason why ath11k needs the firmware running is the interaction between
+mac80211 and MHI stack, it's a long story and more info in the bugzilla report.)
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                                defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                               defconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-sh                               allmodconfig   gcc  
-sparc                               defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                               rhel-8.3   gcc  
+In SUSE kernels the watchdog timeout is reduced from the default 120 to 60 seconds:
 
+CONFIG_DPM_WATCHDOG_TIMEOUT=60
+
+But as the ath11k MHI timeout is 90 seconds the kernel will crash before will
+ath11k will recover in resume callback. To avoid the crash reduce the MHI
+timeout to just 20 seconds.
+
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.9
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=214649
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230329162038.8637-1-kvalo@kernel.org
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/ath/ath11k/mhi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index 86995e8dc9135..a62ee05c54097 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -16,7 +16,7 @@
+ #include "pci.h"
+ #include "pcic.h"
+ 
+-#define MHI_TIMEOUT_DEFAULT_MS	90000
++#define MHI_TIMEOUT_DEFAULT_MS	20000
+ #define RDDM_DUMP_SIZE	0x420000
+ 
+ static struct mhi_channel_config ath11k_mhi_channels_qca6390[] = {
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+2.39.2
+
