@@ -2,54 +2,55 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FA4C77B73
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Apr 2023 21:24:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DA0C77B78
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Apr 2023 21:24:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230102AbjDNVYL (ORCPT
+        id S229513AbjDNVYY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Apr 2023 17:24:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34336 "EHLO
+        Fri, 14 Apr 2023 17:24:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229513AbjDNVYI (ORCPT
+        with ESMTP id S230147AbjDNVYN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2023 17:24:08 -0400
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3318992;
-        Fri, 14 Apr 2023 14:24:07 -0700 (PDT)
-Received: by mail-lf1-x12f.google.com with SMTP id 2adb3069b0e04-4ec8149907aso59172e87.1;
-        Fri, 14 Apr 2023 14:24:07 -0700 (PDT)
+        Fri, 14 Apr 2023 17:24:13 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B285D6A70;
+        Fri, 14 Apr 2023 14:24:11 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id 2adb3069b0e04-4ec81245ae1so62156e87.0;
+        Fri, 14 Apr 2023 14:24:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681507445; x=1684099445;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=gDb9suLeMmDXYkFPInhtMzdY2pA7Y5KvvTt2BcPxE3I=;
-        b=awJPcKfBAXLyWGxTwZm6y9UX+aY2BzjtCmOBus1CqQSkyNeQmmz8nRUGk+jPEazoAI
-         g3KuRBvU5rrAsXmDGBmFuO9pSpLWu3Sm03rSo3UPUmfIHIJnSUU9y3hshLAkfUbvumH2
-         OWt2PigY/fd2XyBxf/0M6sj9sTVe4GW/XeE3/t94C+fWs7OuF0p5XScS7R0L+m+88Du6
-         o9mRM59+CUVTQlvxmZ9f4Z7KQ5H3s7UuCcHHqOiX5AXt4MnR7vRWX232seX7WMKZpxQJ
-         dF8ddCCxGe0MT0L7YRZjfTzeBU+wM1JXNBSLC9ih/4ZSbUeekZwq8JsBZorCJrdqXvaK
-         fImg==
+        d=gmail.com; s=20221208; t=1681507449; x=1684099449;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2EiDytvabdYN54DIeMJTMZ/ViwsZyEhMHyZ0a9MJx4o=;
+        b=f4bXWIVQdBvGSTrlBLVpdjpmOpLlf/2zdUUYvWsYmqr1oM2sa0uOWGdPjMUDAYU19/
+         9FRa/pjk5Bh3ItGibXEqYg/jPR8uXoOme2v5qsFilkyI+hJuLgtAaAP9vRbRD8YPJ9TP
+         TpQqaHKYS5JmhzpF/ivSf9LXQccZOYBd1u4hUxOGwpamErBL0Cep+J/a0+Wzl1LRhsXm
+         jWv/tCmWNbN8VVWD7Zo+g7mvIMoZqGYJgXlSuc4an0E+nlmGC6kqB1X3Cnjq0IEAEZvq
+         IRQerQ4SWmll4wSfdfNPParLM5LNk7Abli51mYfUvneX2An3VzgOyeQvd75oQzfsFTTK
+         9e7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681507445; x=1684099445;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=gDb9suLeMmDXYkFPInhtMzdY2pA7Y5KvvTt2BcPxE3I=;
-        b=LDpn4cFnSqjlrAHIdEgddpfojU6CZQabXnNdXqRXbBcipvX5VjDKw/2KOiZN8zPou1
-         oTTA5A2Nmb26KuNevkGINZO1mOBBkGvYlNw+8bIN4OWzLeFlDwUJq8VrHwpbuu3/RlNy
-         honJQPUxF0IbYhRD73/MVSfi2ZB+H9X3r+tfw+OUrEPe0pDyNVc7xmFcf0SFtDdIUGLL
-         Pw35f0o7iBrOPnAyLgNqhydnEFf2qOOSjnkcbLUwKxn9uDzHOn7Ky7+5WW1OH4nwMqTS
-         ksBjv4dFPrvGQ3QmRSK0+CE33pyQBbKURHykHqnEd+DwSjPL8SY4CSyShzEY8ZwYHtPL
-         HRVw==
-X-Gm-Message-State: AAQBX9fnsv2ALfv91+sTgrSfXGFQV1KMWnNkwVxThfLCBy4ukITFdVCX
-        QGU1P8tW2bnRVASvnS6rt1U=
-X-Google-Smtp-Source: AKy350ar4o6C12qHdo/3lHnjJ1p/y0xMDLyWJ0mQBOVvayVlRK4Gx9xII2Txxl0wFlnvqyYKcHOAxA==
-X-Received: by 2002:ac2:554a:0:b0:4ec:89d3:a8ae with SMTP id l10-20020ac2554a000000b004ec89d3a8aemr60754lfk.47.1681507445270;
-        Fri, 14 Apr 2023 14:24:05 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1681507449; x=1684099449;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=2EiDytvabdYN54DIeMJTMZ/ViwsZyEhMHyZ0a9MJx4o=;
+        b=L33sktSagTnIN+jS7RSlkaqsQtjDUMBQ2Tl+55arRAgqWxdLlU6jhFCBy5vAgNqHwy
+         pNbvLKHZ4X0z2qc7CbKw4bUmMWPa5njqLUjKwLItstX0H0+u3lVZDbg8+fA7etXyA9Of
+         cc6zDflrl37qBvS4zZIF9cPvl9hnesTVSDG6F5oLuta0LBqTmY6aUat6CX4jssn4jXC/
+         cWKI2k376nF8/obV5XjjhpiJAJyeyCUED9pV7gsqowIlOPBe4dqPB3dYubGMytWeeVQt
+         m1Uljdkupr5PXM/+tJFt1pfA5PQCBn8pR8AiIz3kEPU8WZZT65OOaSSdagChZswEoAeS
+         EUXg==
+X-Gm-Message-State: AAQBX9fd/SXRr/o8na+YSqZ1tp8AGv8jPGpr/XFjDytM7pPkOVqKx9lz
+        +4jYsaYNh5m+NUFBrSYV+Z8=
+X-Google-Smtp-Source: AKy350ZI1VywWQcvXG6FwGA8wlIsDCE6CZLzEI5r5l8KCp0+nQsf0jYJpptE+LEBb49w6SKevH1t1w==
+X-Received: by 2002:a19:7003:0:b0:4db:3605:9bd3 with SMTP id h3-20020a197003000000b004db36059bd3mr55621lfc.17.1681507449498;
+        Fri, 14 Apr 2023 14:24:09 -0700 (PDT)
 Received: from localhost.lan (031011218106.poznan.vectranet.pl. [31.11.218.106])
-        by smtp.gmail.com with ESMTPSA id m11-20020a056512014b00b004ecad67a925sm961263lfo.66.2023.04.14.14.24.03
+        by smtp.gmail.com with ESMTPSA id m11-20020a056512014b00b004ecad67a925sm961263lfo.66.2023.04.14.14.24.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Apr 2023 14:24:04 -0700 (PDT)
+        Fri, 14 Apr 2023 14:24:09 -0700 (PDT)
 From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To:     Kalle Valo <kvalo@kernel.org>, Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
@@ -61,10 +62,12 @@ Cc:     "David S . Miller" <davem@davemloft.net>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Robert Marko <robimarko@gmail.com>,
         =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 1/3] dt-bindings: net: wireless: qcom,ath11k: allow describing radios
-Date:   Fri, 14 Apr 2023 23:23:54 +0200
-Message-Id: <20230414212356.9326-1-zajec5@gmail.com>
+Subject: [PATCH 3/3] wifi: ath11k: support reading radio MAC from DT
+Date:   Fri, 14 Apr 2023 23:23:56 +0200
+Message-Id: <20230414212356.9326-3-zajec5@gmail.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230414212356.9326-1-zajec5@gmail.com>
+References: <20230414212356.9326-1-zajec5@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -74,59 +77,62 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Rafał Miłecki <rafal@milecki.pl>
 
-Qualcomm ath11k chipsets can have up to 3 radios. Each radio may need to
-be additionally described by including its MAC or available frequency
-ranges.
+On some devices (most routers) MAC is stored in an NVMEM cell. Support
+reading it.
 
 Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- .../bindings/net/wireless/qcom,ath11k.yaml    | 26 +++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ drivers/net/wireless/ath/ath11k/mac.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-index 7d5f982a3d09..ed660d563e09 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-@@ -78,6 +78,24 @@ properties:
-     items:
-       - const: wlan-smp2p-out
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index ad5a22d12bd3..6550bb5b2ece 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -8,6 +8,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/bitfield.h>
+ #include <linux/inetdevice.h>
++#include <linux/of_net.h>
+ #include <net/if_inet6.h>
+ #include <net/ipv6.h>
  
-+patternProperties:
-+  "^radio@[0-2]$":
-+    type: object
-+
-+    allOf:
-+      - $ref: ieee80211.yaml#
-+
-+    properties:
-+      nvmem-cells:
-+        items:
-+          - description: NVMEM cell with the MAC address
-+
-+      nvmem-cell-names:
-+        items:
-+          - const: mac-address
-+
-+    unevaluatedProperties: false
-+
- required:
-   - compatible
-   - reg
-@@ -378,6 +396,14 @@ examples:
-                           "wbm2host-tx-completions-ring1",
-                           "tcl2host-status-ring";
-         qcom,rproc = <&q6v5_wcss>;
-+        #address-cells = <1>;
-+        #size-cells = <0>;
-+
-+        radio@0 {
-+            reg = <0x0>;
-+            nvmem-cells = <&mac>;
-+            nvmem-cell-names = "mac-address";
-+        };
-     };
+@@ -9292,7 +9293,7 @@ int ath11k_mac_register(struct ath11k_base *ab)
+ 	struct ath11k_pdev *pdev;
+ 	int i;
+ 	int ret;
+-	u8 mac_addr[ETH_ALEN] = {0};
++	u8 device_mac_addr[ETH_ALEN] = {0};
  
-   - |
+ 	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
+ 		return 0;
+@@ -9305,18 +9306,22 @@ int ath11k_mac_register(struct ath11k_base *ab)
+ 	if (ret)
+ 		return ret;
+ 
+-	device_get_mac_address(ab->dev, mac_addr);
++	device_get_mac_address(ab->dev, device_mac_addr);
+ 
+ 	for (i = 0; i < ab->num_radios; i++) {
++		u8 radio_mac_addr[ETH_ALEN];
++
+ 		pdev = &ab->pdevs[i];
+ 		ar = pdev->ar;
+-		if (ab->pdevs_macaddr_valid) {
++		if (!of_get_mac_address(ar->np, radio_mac_addr)) {
++			ether_addr_copy(ar->mac_addr, radio_mac_addr);
++		} else if (ab->pdevs_macaddr_valid) {
+ 			ether_addr_copy(ar->mac_addr, pdev->mac_addr);
+ 		} else {
+-			if (is_zero_ether_addr(mac_addr))
++			if (is_zero_ether_addr(device_mac_addr))
+ 				ether_addr_copy(ar->mac_addr, ab->mac_addr);
+ 			else
+-				ether_addr_copy(ar->mac_addr, mac_addr);
++				ether_addr_copy(ar->mac_addr, device_mac_addr);
+ 			ar->mac_addr[4] += i;
+ 		}
+ 
 -- 
 2.34.1
 
