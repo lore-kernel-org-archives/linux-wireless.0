@@ -2,118 +2,83 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7D7C77B6F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Apr 2023 10:12:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CC9BC77B79
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Apr 2023 10:12:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229828AbjDNKMU (ORCPT
+        id S230241AbjDNKMd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Apr 2023 06:12:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49360 "EHLO
+        Fri, 14 Apr 2023 06:12:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229764AbjDNKMT (ORCPT
+        with ESMTP id S230115AbjDNKM1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2023 06:12:19 -0400
+        Fri, 14 Apr 2023 06:12:27 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58C58198D
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2023 03:12:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC3801FFD
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2023 03:12:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681467138; x=1713003138;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=opIZTxk0/1YtqqykBfqA1bnL7410rQflN+QQMBGP5lw=;
-  b=KoKOKEEm6YPEX0NG2hs64y6F4u/t5H6iyhrMuhfcWWc0vda+vUde595R
-   ipZgY2yLrLhzdRsQf0aTJlSDdd0VTsrJnnZRqPneG/xHH3MScGXqrZEJ/
-   Id2PyWCzDtfYlNwyyqLTNIOHHlgk9MQncl5zK05zdSgi/Hj6aTtDP08JJ
-   DWFfok3QdwfB3USueI3oNKR9sw9qmNjjWf4OQeDXUmroxW2jmcLJlMlcr
-   4gIcB1PgrEKz5U5QAIEp8k3il/rPKAcVzGu7kYJw4QnPtu8PohLxz3IMr
-   qpi5QeheUvilnwfIg2kVwFUK7JhALLuRv5SWI2likPnVfYwrefmc/ECRM
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="346263533"
+  t=1681467143; x=1713003143;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=MA67ytfhR0K3GVI5vrawlY1nmiZWsS555uk6f2KWCbE=;
+  b=XBtgevxDfooDs38KcPlyrctQP71ApiKTc15nfpr+ylMQayjWMxVoAXfK
+   0DAu7Mpnt2+w1UzEfY7AHcEk4f0RtCM+rebiwgnNS2RqYc2lXMlQvoqvs
+   cH7+dF93KsWBUCmxu78uXH0N7IySA//wHkoJPNz0b0+5VS7LXVZN+9cLJ
+   5mHoXzUvsIbN57gBxt+OxYIAEdmhE8FUJowOL+YB6+rUpbsyePijIB7Wn
+   vfCmKXQ+sCoG51JAQaIb3HC8nvn7SJpJKnTL+iXylZlwu+IBPQZ6XMg71
+   hzXqL6EZjlAZP1Ni3UZYPOHVcnyrXIWghWffcm93WL3lJH7qq3Tb/OWGn
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="346263546"
 X-IronPort-AV: E=Sophos;i="5.99,195,1677571200"; 
-   d="scan'208";a="346263533"
+   d="scan'208";a="346263546"
 Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2023 03:12:17 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2023 03:12:23 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="692351514"
+X-IronPort-AV: E=McAfee;i="6600,9927,10679"; a="692351594"
 X-IronPort-AV: E=Sophos;i="5.99,195,1677571200"; 
-   d="scan'208";a="692351514"
+   d="scan'208";a="692351594"
 Received: from yalankry-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.233.156])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2023 03:12:16 -0700
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2023 03:12:21 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
+        Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 00/15] wifi: iwlwifi: updates intended for v6.4 2023-04-14
-Date:   Fri, 14 Apr 2023 13:11:51 +0300
-Message-Id: <20230414101206.1170180-1-gregory.greenman@intel.com>
+Subject: [PATCH 02/15] wifi: iwlwifi: add a new PCI device ID for BZ device
+Date:   Fri, 14 Apr 2023 13:11:53 +0300
+Message-Id: <20230414130637.56342664110d.I5aa6f2858fdcf69fdea4f1a873115a48bd43764e@changeid>
 X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230414101206.1170180-1-gregory.greenman@intel.com>
+References: <20230414101206.1170180-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 
-Hi,
+Add support for a new PCI device ID 0x272b once registering with PCIe.
 
-Here's the next set of iwlwifi patches for v6.4.
-Same as the previous one, this set contains the
-ususal developement, small improvements, cleanups and
-bugfixes. It also enables the new MLO FW API.
+Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Gregory
-
-Colin Ian King (2):
-  wifi: iwlwifi: Fix spelling mistake "upto" -> "up to"
-  wifi: iwlwifi: mvm: Fix spelling mistake "Gerenal" -> "General"
-
-Hyunwoo Kim (1):
-  wifi: iwlwifi: pcie: Fix integer overflow in iwl_write_to_user_buf
-
-Ilan Peer (1):
-  wifi: iwlwifi: mvm: Fix setting the rate for non station cases
-
-Johannes Berg (6):
-  wifi: iwlwifi: mvm: track AP STA pointer and use it for MFP
-  wifi: iwlwifi: mvm: make iwl_mvm_mac_ctxt_send_beacon() static
-  wifi: iwlwifi: mvm: fix ptk_pn memory leak
-  wifi: iwlwifi: mvm: set STA mask for keys in MLO
-  wifi: iwlwifi: mvm: validate station properly in flush
-  wifi: iwlwifi: mvm: tx: remove misleading if statement
-
-Miri Korenblit (1):
-  wifi: iwlwifi: mvm: enable new MLD FW API
-
-Mukesh Sisodiya (2):
-  wifi: iwlwifi: Add RF Step Type for BZ device
-  wifi: iwlwifi: add a new PCI device ID for BZ device
-
-Tom Rix (2):
-  wifi: iwlwifi: mvm: initialize seq variable
-  wifi: iwlwifi: fw: move memset before early return
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  47 ++-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |   4 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |   1 +
- .../net/wireless/intel/iwlwifi/iwl-config.h   |   4 +
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |   2 +
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |   7 +
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |   5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   1 +
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  18 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  23 +-
- .../net/wireless/intel/iwlwifi/mvm/mld-key.c  |  82 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  29 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |  29 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 376 +++++++++---------
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |   2 +-
- 17 files changed, 378 insertions(+), 256 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index fb0c2c0f236f..31b575f35410 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -504,6 +504,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 
+ /* Bz devices */
+ 	{IWL_PCI_DEVICE(0x2727, PCI_ANY_ID, iwl_bz_trans_cfg)},
++	{IWL_PCI_DEVICE(0x272b, PCI_ANY_ID, iwl_bz_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0xA840, PCI_ANY_ID, iwl_bz_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x7740, PCI_ANY_ID, iwl_bz_trans_cfg)},
+ #endif /* CONFIG_IWLMVM */
 -- 
 2.38.1
 
