@@ -2,70 +2,79 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 724FBC77B76
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Apr 2023 12:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88D91C77B72
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Apr 2023 12:11:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230305AbjDNMGV (ORCPT
+        id S230294AbjDNML6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Apr 2023 08:06:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58156 "EHLO
+        Fri, 14 Apr 2023 08:11:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230344AbjDNMGQ (ORCPT
+        with ESMTP id S230268AbjDNML5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Apr 2023 08:06:16 -0400
+        Fri, 14 Apr 2023 08:11:57 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73CF4127
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2023 05:05:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C46A29EDC
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2023 05:11:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EB48061601
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2023 12:05:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62D62C433D2;
-        Fri, 14 Apr 2023 12:05:55 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5193264717
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Apr 2023 12:11:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C88E2C433EF;
+        Fri, 14 Apr 2023 12:11:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681473956;
-        bh=FwNrvNe4VWH+lWbrqNpkKbPN7HxJu0u/3f/Jb+iLL8k=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=hcfhiXtpWrB3GceYpwIAZOvXgvInJqn9serexzBJLck6shITnU8Pe5BHL1LzRxWwM
-         weJERWfzYweZj2KRwuLn7qPJAYWyx9kd3AziU/z5hXG3mrytg9EcUmDhG4Flp0UhNq
-         LrZcR2bqm6EA9MnkB7tQehXm6Tm+P12ZhVy+OlFfwVdWn6ePT/Fzh11W/IDuSN56nL
-         RH7Zbl7HEpCNUVEvJIfS65E+G8ELjAQeVNWS0aNc28q1QMKHZsPZ80Xcx6OaI4dSal
-         qW2eebNUiI7EGO0CnKPX+sS+kY6yUjX+2bv5JCq7j4rmIAeeKNcbbRwZEj2W3EZg9l
-         DW4lAKgrPwpzw==
+        s=k20201202; t=1681474309;
+        bh=zMPeIY0kqAtYEBPYCzbb1y6SR0gfRiq8sdxWR35CDZI=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=ZNDsHgToIV7KjLuWgvf0gVLG+Y64iJJDKmknuQdG+BcYZNNkXqx/q2q4H/VhV7Z8m
+         c50Bd0cnZHGHp58rM863JqZ3QHjyYh2byD6T2bXQHoJyDF3FsSttlDdu9OQAjDN0IG
+         2usepbvLNuU7Z8vgyG7y9vOxzoKMJ6fog5WuKNpFMEL/MhRVNtuLhHWYjplcQrwQQV
+         f/Mx9hbBN/8cSBffCFTD1fUWr73Gbohs36781L9fpf3E1G0d+K3wAzId5yUUE/KES9
+         z5MPkzleL9OuDkWp154Ei/kuE4I+GWKsYa/wistciEDItuIenWleXMU5OZcaL6K5r4
+         xBFs4YVVcZ7pQ==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v6 1/5] wifi: rtw89: 8852c: add beacon filter and CQM
+ support
 From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230411124832.14965-2-pkshih@realtek.com>
+References: <20230411124832.14965-2-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
 Cc:     <phhuang@realtek.com>, <kevin_yang@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v6 2/5] wifi: rtw89: add function to wait for completion of TX skbs
-References: <20230411124832.14965-1-pkshih@realtek.com>
-        <20230411124832.14965-3-pkshih@realtek.com>
-Date:   Fri, 14 Apr 2023 15:05:50 +0300
-In-Reply-To: <20230411124832.14965-3-pkshih@realtek.com> (Ping-Ke Shih's
-        message of "Tue, 11 Apr 2023 20:48:29 +0800")
-Message-ID: <87ildy7joh.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <168147430584.16522.8827637833204761088.kvalo@kernel.org>
+Date:   Fri, 14 Apr 2023 12:11:48 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> writes:
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
 > From: Po-Hao Huang <phhuang@realtek.com>
->
-> Allocate a per-skb completion to track those skbs we are interested in
-> and wait for them to complete transmission with TX status.
->
-> Normally, the completion object is freed by wait side, but it could be
-> timeout result that complete side should free the object instead. Add a
-> owner field with a spin_lock to determine which side should free the
-> object.
+> 
+> Adding this supports beacon filter and connection quality monitor.
+> To make host CPU wake up less, let firmware perform signal
+> monitoring and beacon processing, then notify driver upon signal
+> changes or beacon loss.
+> 
+> This feature needs firmware 0.27.56 or newer to support it.
+> 
+> Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-I'll change the last sentence to mention RCU so that it matches the code.
+5 patches applied to wireless-next.git, thanks.
+
+d2b6da242454 wifi: rtw89: 8852c: add beacon filter and CQM support
+1ae5ca615285 wifi: rtw89: add function to wait for completion of TX skbs
+a0e97ae3f332 wifi: rtw89: add ieee80211::remain_on_channel ops
+6cfb6cc20a61 wifi: rtw89: add flag check for power state
+c5280e5f6763 wifi: rtw89: fix authentication fail during scan
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230411124832.14965-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
