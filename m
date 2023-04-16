@@ -2,93 +2,87 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6384AC77B77
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Apr 2023 12:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FDFEC77B73
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Apr 2023 12:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230397AbjDPMrZ (ORCPT
+        id S230312AbjDPMsE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Apr 2023 08:47:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60002 "EHLO
+        Sun, 16 Apr 2023 08:48:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230321AbjDPMrT (ORCPT
+        with ESMTP id S230231AbjDPMsA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2023 08:47:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13C873A80;
-        Sun, 16 Apr 2023 05:46:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 72AC261A97;
-        Sun, 16 Apr 2023 12:46:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56356C433EF;
-        Sun, 16 Apr 2023 12:46:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1681649210;
-        bh=CdIev8G31Xv1hKEqnZUIMkMixH8yp6bb7bSl5j0YXB0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LSCcjN31JrEW2iG+zJBkq0AMcsIhhub3YGI/HxGNk/d3EqX/2WAOy4WzAhkWBHCVQ
-         NANU98O1TUREO7sXeEybh0aSuXF6PfPnI9qaVzV6IrOoXO44TZIb21+erHQNlDHufa
-         uU2tCX1JKbEfT4Zs922KvysYQQ8qU2mTGYpilii0=
-Date:   Sun, 16 Apr 2023 14:46:48 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Hector Martin <marcan@marcan.st>
-Cc:     Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, asahi@lists.linux.dev,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] wifi: brcmfmac: Demote vendor-specific attach/detach
- messages to info
-Message-ID: <2023041631-crying-contour-5e11@gregkh>
-References: <20230416-brcmfmac-noise-v1-0-f0624e408761@marcan.st>
- <20230416-brcmfmac-noise-v1-1-f0624e408761@marcan.st>
+        Sun, 16 Apr 2023 08:48:00 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E8A43580
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2023 05:47:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681649275; x=1713185275;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=ASiI5mcKVNRfguIkWIYcG9htqDIj8KRP57PO2eZxomg=;
+  b=XT9g82p0KBD2h20pDSNT/rzZBklsliGPZlr/Hq39u3bfaInKe8mQdmla
+   4Ww7F49uB0c3pnyTaHblbPl+Bh2dX04/2NvezhrMrJQTF6sBVEZXteMgN
+   DtOvf3IT0YXusVh1k2Wj7xCrJDU9cxoAVnq+d2SukOFX0s/OUvjAONGGn
+   GxI9ODDudSRvEinJ7gMq/RKfsRIe5JzsJ/hKIed+Vu93RRkEzaCnjm2x/
+   JGeS5CcQEjHlRpbk+GrX0x8i4oQFquikptUeCWdxEA4HH0hClmXs190nb
+   WWbckpJdtBTzhsbX/ExYgHyvvLeczv1xh+/JUCl4ITOQtaXj4WkrKgfdK
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10682"; a="333520545"
+X-IronPort-AV: E=Sophos;i="5.99,202,1677571200"; 
+   d="scan'208";a="333520545"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2023 05:47:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10682"; a="640670412"
+X-IronPort-AV: E=Sophos;i="5.99,202,1677571200"; 
+   d="scan'208";a="640670412"
+Received: from lavnon-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.99])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2023 05:47:53 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 01/15] wifi: iwlwifi: nvm-parse: add full BW UL MU-MIMO support
+Date:   Sun, 16 Apr 2023 15:47:25 +0300
+Message-Id: <20230416154301.88b6aac6c876.Ibf2a7a38d7a172c371c347c9d4441e8c656cefe3@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230416124739.1260800-1-gregory.greenman@intel.com>
+References: <20230416124739.1260800-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230416-brcmfmac-noise-v1-1-f0624e408761@marcan.st>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, Apr 16, 2023 at 09:42:17PM +0900, Hector Martin wrote:
-> People are getting spooked by brcmfmac errors on their boot console.
-> There's no reason for these messages to be errors.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: d6a5c562214f ("wifi: brcmfmac: add support for vendor-specific firmware api")
-> Signed-off-by: Hector Martin <marcan@marcan.st>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c | 4 ++--
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c | 4 ++--
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/wcc/core.c | 4 ++--
->  3 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c
-> index ac3a36fa3640..c83bc435b257 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bca/core.c
-> @@ -12,13 +12,13 @@
->  
->  static int brcmf_bca_attach(struct brcmf_pub *drvr)
->  {
-> -	pr_err("%s: executing\n", __func__);
-> +	pr_info("%s: executing\n", __func__);
+From: Johannes Berg <johannes.berg@intel.com>
 
-Why are these here at all?  Please just remove these entirely, you can
-get this information normally with ftrace.
+For some devices, in client mode, we support full bandwidth
+uplink multi-user MIMO. Add the necessary capability.
 
-Or, just delete these functions, why have empty ones at all?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-thanks,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 92a79df3e6d2..7dcb1c3ab728 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -938,6 +938,10 @@ iwl_nvm_fixup_sband_iftd(struct iwl_trans *trans,
+ 		}
+ 	}
+ 
++	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210 && !is_ap)
++		iftype_data->he_cap.he_cap_elem.phy_cap_info[2] |=
++			IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO;
++
+ 	switch (CSR_HW_RFID_TYPE(trans->hw_rf_id)) {
+ 	case IWL_CFG_RF_TYPE_GF:
+ 	case IWL_CFG_RF_TYPE_MR:
+-- 
+2.38.1
 
-greg k-h
