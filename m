@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38F82C77B61
-	for <linux-wireless@archiver.kernel.org>; Sun, 16 Apr 2023 12:48:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02839C77B73
+	for <linux-wireless@archiver.kernel.org>; Sun, 16 Apr 2023 12:48:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230362AbjDPMsK (ORCPT
+        id S230399AbjDPMsL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Apr 2023 08:48:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60990 "EHLO
+        Sun, 16 Apr 2023 08:48:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229648AbjDPMsH (ORCPT
+        with ESMTP id S230367AbjDPMsK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2023 08:48:07 -0400
+        Sun, 16 Apr 2023 08:48:10 -0400
 Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F7C026B5
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2023 05:48:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D988B30ED
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2023 05:48:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681649286; x=1713185286;
+  t=1681649289; x=1713185289;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=HKZX1IlKMQ+HXoDbTXIyiK9FBTddpb+c5rBvJKbO7aw=;
-  b=ljuMyhQOv9AcFhS8OIgitzjqxqeWZY4TWRmF+VmlYymey/lRlY14NOSS
-   NYG0llTudqRSGJ9r0qql0LJhIu6d3KMz2GqYQK3tCiUsuTezV6+oH/P4n
-   xk+qtw8V5g5DuXwf3Bg2d+NYa9Axl1GqfnKVHINnnkoqKCciam9lskuma
-   Au4wJ1gyfOmtxSQWLvBMC5QNaOvt1YBnwHzKZchqx3F8v047uyT9pMZrl
-   a8imxE78aZqD7u0Butv25Ce74cSoD3AU1wwXIh1iREMC50rIQR8KU8HDB
-   I0EuM1/y/TOFk5bobF0rDv4PXVOPWlROBTBoHSBOO5kr2oWkqjUeDMANA
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10682"; a="333520557"
+  bh=CQC52OM/e18+hTX7adsfQYfb2ZIBhQx5WfJ62JFKtlM=;
+  b=MI+cBgeOdeB49dlqH+pGdyK+uA7GnjX9vGlIrtp2A/HoMboCS7OHlSXi
+   e1372R6OOM3zKqyfBU9IVIygnRkunfreR55em6L2+p9RydECRNAUO+K2j
+   Wya0ja8IPawsokG3R/o/+nrLlbBem04rHgzL0JlQT93xwTuQIR/zDiUBt
+   8pCQ4gFUdQ2dCH6OYIsZPrW8YL1gopKJ2DsAeMR8wKId9c4t3r5T+9r+X
+   RHhTgdmUzvKMsOCRaaen9EojvtN0jpzQmxm1CCFWXs9USR6xRCOB+2S/j
+   oq7jxWsfJiMoxdEJ/y5rKo1uvs2nmRYWSXPaKaoU5o4GCYVbcDgI6Op0m
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10682"; a="333520563"
 X-IronPort-AV: E=Sophos;i="5.99,202,1677571200"; 
-   d="scan'208";a="333520557"
+   d="scan'208";a="333520563"
 Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2023 05:48:05 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2023 05:48:09 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10682"; a="640670427"
+X-IronPort-AV: E=McAfee;i="6600,9927,10682"; a="640670434"
 X-IronPort-AV: E=Sophos;i="5.99,202,1677571200"; 
-   d="scan'208";a="640670427"
+   d="scan'208";a="640670434"
 Received: from lavnon-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.99])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2023 05:48:03 -0700
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2023 05:48:08 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 06/15] wifi: iwlwifi: mvm: factor out iwl_mvm_sta_fw_id_mask()
-Date:   Sun, 16 Apr 2023 15:47:30 +0300
-Message-Id: <20230416154301.eff92b93025d.I2c50290a0537d5db3d3460f4d57c78a4712ffb75@changeid>
+Subject: [PATCH 08/15] wifi: iwlwifi: mvm: use correct sta mask to remove queue
+Date:   Sun, 16 Apr 2023 15:47:32 +0300
+Message-Id: <20230416154301.01cdd2153418.I176d54f2d869f51b3707d056adb96455cf885f93@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230416124739.1260800-1-gregory.greenman@intel.com>
 References: <20230416124739.1260800-1-gregory.greenman@intel.com>
@@ -59,133 +59,63 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We are going to need this in more places than just the
-key code, so factor out the functionality of getting
-the FW station ID mask (filtered to a specific link if
-needed) to a separate function that can now be called
-both under RCU and mvm->mutex protection.
+When we remove a queue we need to use the currently active
+firmware stations in the mask, not the deflink one. Fix that.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mld-key.c  | 33 ++---------------
- .../net/wireless/intel/iwlwifi/mvm/mld-sta.c  | 37 +++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |  2 +
- 3 files changed, 42 insertions(+), 30 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-index 7c417b39aca4..a8ab35473924 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-@@ -15,10 +15,6 @@ static u32 iwl_mvm_get_sec_sta_mask(struct iwl_mvm *mvm,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm_vif_link_info *link_info = &mvmvif->deflink;
--	struct iwl_mvm_link_sta *link_sta;
--	struct iwl_mvm_sta *mvmsta;
--	u32 result = 0;
--	int link_id;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -49,33 +45,10 @@ static u32 iwl_mvm_get_sec_sta_mask(struct iwl_mvm *mvm,
- 	if (!sta && (keyconf->link_id >= 0 || !vif->valid_links))
- 		return BIT(link_info->ap_sta_id);
- 
--	/* this shouldn't happen now */
--	if (!sta)
--		return 0;
-+	/* STA should be non-NULL now, but iwl_mvm_sta_fw_id_mask() checks */
- 
--	mvmsta = iwl_mvm_sta_from_mac80211(sta);
--
--	/* it's easy when the STA is not an MLD */
--	if (!sta->valid_links)
--		return BIT(mvmsta->deflink.sta_id);
--
--	/* but if it is an MLD, get the mask of all the FW STAs it has ... */
--	for (link_id = 0; link_id < ARRAY_SIZE(mvmsta->link); link_id++) {
--		/* unless we have a specific link in mind (GTK on client) */
--		if (keyconf->link_id >= 0 &&
--		    keyconf->link_id != link_id)
--			continue;
--
--		link_sta =
--			rcu_dereference_protected(mvmsta->link[link_id],
--						  lockdep_is_held(&mvm->mutex));
--		if (!link_sta)
--			continue;
--
--		result |= BIT(link_sta->sta_id);
--	}
--
--	return result;
-+	/* pass link_id to filter by it if not -1 (GTK on client) */
-+	return iwl_mvm_sta_fw_id_mask(mvm, sta, keyconf->link_id);
- }
- 
- static u32 iwl_mvm_get_sec_flags(struct iwl_mvm *mvm,
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index ad71233a2299..c5d25772159b 100644
+index c5d25772159b..819e05a6f651 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -4,6 +4,43 @@
-  */
- #include "mvm.h"
- #include "time-sync.h"
-+#include "sta.h"
-+
-+u32 iwl_mvm_sta_fw_id_mask(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-+			   int filter_link_id)
-+{
-+	struct iwl_mvm_sta *mvmsta;
-+	unsigned int link_id;
-+	u32 result = 0;
-+
-+	if (!sta)
-+		return 0;
-+
-+	mvmsta = iwl_mvm_sta_from_mac80211(sta);
-+
-+	/* it's easy when the STA is not an MLD */
-+	if (!sta->valid_links)
-+		return BIT(mvmsta->deflink.sta_id);
-+
-+	/* but if it is an MLD, get the mask of all the FW STAs it has ... */
-+	for (link_id = 0; link_id < ARRAY_SIZE(mvmsta->link); link_id++) {
-+		struct iwl_mvm_link_sta *link_sta;
-+
-+		/* unless we have a specific link in mind */
-+		if (filter_link_id >= 0 && link_id != filter_link_id)
-+			continue;
-+
-+		link_sta =
-+			rcu_dereference_check(mvmsta->link[link_id],
-+					      lockdep_is_held(&mvm->mutex));
-+		if (!link_sta)
-+			continue;
-+
-+		result |= BIT(link_sta->sta_id);
-+	}
-+
-+	return result;
-+}
+@@ -299,7 +299,7 @@ int iwl_mvm_mld_add_aux_sta(struct iwl_mvm *mvm, u32 lmac_id)
+ 				       IWL_MAX_TID_COUNT, NULL);
+ }
  
- static int iwl_mvm_mld_send_sta_cmd(struct iwl_mvm *mvm,
- 				    struct iwl_mvm_sta_cfg_cmd *cmd)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 7b9e91935aa0..698b9c014cd3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -642,6 +642,8 @@ int iwl_mvm_mld_update_sta_links(struct iwl_mvm *mvm,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_sta *sta,
- 				 u16 old_links, u16 new_links);
-+u32 iwl_mvm_sta_fw_id_mask(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-+			   int filter_link_id);
+-static int iwl_mvm_mld_disable_txq(struct iwl_mvm *mvm, int sta_id,
++static int iwl_mvm_mld_disable_txq(struct iwl_mvm *mvm, u32 sta_mask,
+ 				   u16 *queueptr, u8 tid)
+ {
+ 	int queue = *queueptr;
+@@ -314,7 +314,7 @@ static int iwl_mvm_mld_disable_txq(struct iwl_mvm *mvm, int sta_id,
+ 		struct iwl_scd_queue_cfg_cmd remove_cmd = {
+ 			.operation = cpu_to_le32(IWL_SCD_QUEUE_REMOVE),
+ 			.u.remove.tid = cpu_to_le32(tid),
+-			.u.remove.sta_mask = cpu_to_le32(BIT(sta_id)),
++			.u.remove.sta_mask = cpu_to_le32(sta_mask),
+ 		};
  
- /* Queues */
- void iwl_mvm_mld_modify_all_sta_disable_tx(struct iwl_mvm *mvm,
+ 		ret = iwl_mvm_send_cmd_pdu(mvm, cmd_id, 0,
+@@ -344,7 +344,7 @@ static int iwl_mvm_mld_rm_int_sta(struct iwl_mvm *mvm,
+ 	if (flush)
+ 		iwl_mvm_flush_sta(mvm, int_sta, true);
+ 
+-	iwl_mvm_mld_disable_txq(mvm, int_sta->sta_id, queuptr, tid);
++	iwl_mvm_mld_disable_txq(mvm, BIT(int_sta->sta_id), queuptr, tid);
+ 
+ 	ret = iwl_mvm_mld_rm_sta_from_fw(mvm, int_sta->sta_id);
+ 	if (ret)
+@@ -760,6 +760,7 @@ static void iwl_mvm_mld_disable_sta_queues(struct iwl_mvm *mvm,
+ 					   struct ieee80211_sta *sta)
+ {
+ 	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
++	u32 sta_mask = iwl_mvm_sta_fw_id_mask(mvm, sta, -1);
+ 	int i;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -768,7 +769,7 @@ static void iwl_mvm_mld_disable_sta_queues(struct iwl_mvm *mvm,
+ 		if (mvm_sta->tid_data[i].txq_id == IWL_MVM_INVALID_QUEUE)
+ 			continue;
+ 
+-		iwl_mvm_mld_disable_txq(mvm, mvm_sta->deflink.sta_id,
++		iwl_mvm_mld_disable_txq(mvm, sta_mask,
+ 					&mvm_sta->tid_data[i].txq_id, i);
+ 		mvm_sta->tid_data[i].txq_id = IWL_MVM_INVALID_QUEUE;
+ 	}
 -- 
 2.38.1
 
