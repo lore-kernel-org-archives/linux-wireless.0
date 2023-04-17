@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3598C77B73
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 02:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FB01C77B61
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 02:19:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229763AbjDQCTB (ORCPT
+        id S229866AbjDQCTi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 16 Apr 2023 22:19:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44956 "EHLO
+        Sun, 16 Apr 2023 22:19:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbjDQCTA (ORCPT
+        with ESMTP id S229851AbjDQCTf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Apr 2023 22:19:00 -0400
+        Sun, 16 Apr 2023 22:19:35 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B98223593
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2023 19:18:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4878E30F5
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2023 19:19:02 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 33H2IMeiC031096, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 33H2IMeiC031096
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 33H2IYnZ4031126, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 33H2IYnZ4031126
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Mon, 17 Apr 2023 10:18:22 +0800
+        Mon, 17 Apr 2023 10:18:34 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Mon, 17 Apr 2023 10:18:46 +0800
+ 15.1.2375.32; Mon, 17 Apr 2023 10:18:01 +0800
 Received: from localhost (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 17 Apr
- 2023 10:18:45 +0800
+ 2023 10:18:00 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <echuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] wifi: rtw89: initialize antenna for antenna diveristy
-Date:   Mon, 17 Apr 2023 10:17:05 +0800
-Message-ID: <20230417021707.16369-6-pkshih@realtek.com>
+Subject: [PATCH 2/7] wifi: rtw89: set capability of TX antenna diversity
+Date:   Mon, 17 Apr 2023 10:17:02 +0800
+Message-ID: <20230417021707.16369-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230417021707.16369-1-pkshih@realtek.com>
 References: <20230417021707.16369-1-pkshih@realtek.com>
@@ -49,158 +49,128 @@ X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Eric Huang <echuang@realtek.com>
+TX antenna diversity is a mechanism to select a proper antenna from two
+antenna for single one hardware PHY chip. It chooses antenna with better
+EVM or RSSI, and use GPIO to control SPDT to switch selected antenna.
 
-Initialize basic antenna switch settings according to hardware module
-design, and set to default antenna A. The set antenna function will be
-called dynamically to switch antenna according to EVM and RSSI.
+RFE type from efuse is used to define if a module can support TX antenna
+diversity when (type % 3) is 2.
 
-Signed-off-by: Eric Huang <echuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/phy.c | 69 ++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/reg.h | 21 +++++++-
- 2 files changed, 88 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c     | 10 ++++++++--
+ drivers/net/wireless/realtek/rtw89/core.h     |  2 ++
+ drivers/net/wireless/realtek/rtw89/mac.c      |  9 +++++++++
+ drivers/net/wireless/realtek/rtw89/mac80211.c |  7 ++++++-
+ 4 files changed, 25 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index c7e9061234169..3f9755c58e6c3 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -2946,6 +2946,44 @@ static void rtw89_phy_ul_tb_info_init(struct rtw89_dev *rtwdev)
- 		rtw89_phy_read32_mask(rtwdev, R_BANDEDGE, B_BANDEDGE_EN);
- }
- 
-+static void rtw89_phy_antdiv_reg_init(struct rtw89_dev *rtwdev)
-+{
-+	rtw89_phy_write32_idx(rtwdev, R_P0_TRSW, B_P0_ANT_TRAIN_EN,
-+			      0x0, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_TRSW, B_P0_TX_ANT_SEL,
-+			      0x0, RTW89_PHY_0);
-+
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANT_SW, B_P0_TRSW_TX_EXTEND,
-+			      0x0, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANT_SW, B_P0_HW_ANTSW_DIS_BY_GNT_BT,
-+			      0x0, RTW89_PHY_0);
-+
-+	rtw89_phy_write32_idx(rtwdev, R_P0_TRSW, B_P0_BT_FORCE_ANTIDX_EN,
-+			      0x0, RTW89_PHY_0);
-+
-+	rtw89_phy_write32_idx(rtwdev, R_RFSW_CTRL_ANT0_BASE, B_RFSW_CTRL_ANT_MAPPING,
-+			      0x0100, RTW89_PHY_0);
-+
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_BTG_TRX,
-+			      0x1, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_HW_CTRL,
-+			      0x0, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_SW_2G,
-+			      0x0, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_SW_5G,
-+			      0x0, RTW89_PHY_0);
-+}
-+
-+static void rtw89_phy_antdiv_init(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_hal *hal = &rtwdev->hal;
-+
-+	if (!hal->ant_diversity)
-+		return;
-+
-+	rtw89_phy_antdiv_reg_init(rtwdev);
-+}
-+
- static void rtw89_phy_stat_thermal_update(struct rtw89_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 157287ea86b46..44190f9843400 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -3665,6 +3665,7 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
  {
- 	struct rtw89_phy_stat *phystat = &rtwdev->phystat;
-@@ -4114,6 +4152,35 @@ void rtw89_phy_tx_path_div_track(struct rtw89_dev *rtwdev)
- 					  &done);
- }
- 
-+#define ANTDIV_MAIN 0
-+#define ANTDIV_AUX 1
-+
-+static void rtw89_phy_antdiv_set_ant(struct rtw89_dev *rtwdev)
-+{
+ 	struct ieee80211_hw *hw = rtwdev->hw;
+ 	struct rtw89_efuse *efuse = &rtwdev->efuse;
 +	struct rtw89_hal *hal = &rtwdev->hal;
-+	u8 default_ant, optional_ant;
-+
-+	if (!hal->ant_diversity || hal->antenna_tx == 0)
-+		return;
-+
-+	if (hal->antenna_tx == RF_B) {
-+		default_ant = ANTDIV_AUX;
-+		optional_ant = ANTDIV_MAIN;
+ 	int ret;
+ 	int tx_headroom = IEEE80211_HT_CTL_LEN;
+ 
+@@ -3703,8 +3704,13 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
+ 				     BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 				     BIT(NL80211_IFTYPE_P2P_GO);
+ 
+-	hw->wiphy->available_antennas_tx = BIT(rtwdev->chip->rf_path_num) - 1;
+-	hw->wiphy->available_antennas_rx = BIT(rtwdev->chip->rf_path_num) - 1;
++	if (hal->ant_diversity) {
++		hw->wiphy->available_antennas_tx = 0x3;
++		hw->wiphy->available_antennas_rx = 0x3;
 +	} else {
-+		default_ant = ANTDIV_MAIN;
-+		optional_ant = ANTDIV_AUX;
++		hw->wiphy->available_antennas_tx = BIT(rtwdev->chip->rf_path_num) - 1;
++		hw->wiphy->available_antennas_rx = BIT(rtwdev->chip->rf_path_num) - 1;
++	}
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 			    WIPHY_FLAG_TDLS_EXTERNAL_SETUP |
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index eab0abb9d213c..35413101a15ef 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -3420,6 +3420,8 @@ struct rtw89_hal {
+ 	u8 tx_nss;
+ 	u8 rx_nss;
+ 	bool tx_path_diversity;
++	bool ant_diversity;
++	bool ant_diversity_fixed;
+ 	bool support_cckpd;
+ 	bool support_igi;
+ 	atomic_t roc_entity_idx;
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 385e2a0dfea58..19aaa4a6dde94 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -2596,6 +2596,7 @@ static int rtw89_mac_read_phycap(struct rtw89_dev *rtwdev,
+ 
+ int rtw89_mac_setup_phycap(struct rtw89_dev *rtwdev)
+ {
++	struct rtw89_efuse *efuse = &rtwdev->efuse;
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	struct rtw89_mac_c2h_info c2h_info = {0};
+@@ -2627,6 +2628,13 @@ int rtw89_mac_setup_phycap(struct rtw89_dev *rtwdev)
+ 		hal->tx_path_diversity = true;
+ 	}
+ 
++	if (chip->rf_path_num == 1) {
++		hal->antenna_tx = RF_A;
++		hal->antenna_rx = RF_A;
++		if ((efuse->rfe_type % 3) == 2)
++			hal->ant_diversity = true;
 +	}
 +
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_CGCS_CTRL,
-+			      default_ant, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_RX_ORI,
-+			      default_ant, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_RX_ALT,
-+			      optional_ant, RTW89_PHY_0);
-+	rtw89_phy_write32_idx(rtwdev, R_P0_ANTSEL, B_P0_ANTSEL_TX_ORI,
-+			      default_ant, RTW89_PHY_0);
-+}
-+
- static void rtw89_phy_env_monitor_init(struct rtw89_dev *rtwdev)
- {
- 	rtw89_phy_ccx_top_setting_init(rtwdev);
-@@ -4133,6 +4200,8 @@ void rtw89_phy_dm_init(struct rtw89_dev *rtwdev)
- 	rtw89_phy_dig_init(rtwdev);
- 	rtw89_phy_cfo_init(rtwdev);
- 	rtw89_phy_ul_tb_info_init(rtwdev);
-+	rtw89_phy_antdiv_init(rtwdev);
-+	rtw89_phy_antdiv_set_ant(rtwdev);
+ 	rtw89_debug(rtwdev, RTW89_DBG_FW,
+ 		    "phycap hal/phy/chip: tx_nss=0x%x/0x%x/0x%x rx_nss=0x%x/0x%x/0x%x\n",
+ 		    hal->tx_nss, tx_nss, chip->tx_nss,
+@@ -2635,6 +2643,7 @@ int rtw89_mac_setup_phycap(struct rtw89_dev *rtwdev)
+ 		    "ant num/bitmap: tx=%d/0x%x rx=%d/0x%x\n",
+ 		    tx_ant, hal->antenna_tx, rx_ant, hal->antenna_rx);
+ 	rtw89_debug(rtwdev, RTW89_DBG_FW, "TX path diversity=%d\n", hal->tx_path_diversity);
++	rtw89_debug(rtwdev, RTW89_DBG_FW, "Antenna diversity=%d\n", hal->ant_diversity);
  
- 	rtw89_phy_init_rf_nctl(rtwdev);
- 	rtw89_chip_rfk_init(rtwdev);
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 7e466ebaec2c4..c1c4591337872 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3851,6 +3851,9 @@
- #define B_ENABLE_CCK BIT(5)
- #define R_RSTB_ASYNC 0x0704
- #define B_RSTB_ASYNC_ALL BIT(1)
-+#define R_P0_ANT_SW 0x0728
-+#define B_P0_HW_ANTSW_DIS_BY_GNT_BT BIT(12)
-+#define B_P0_TRSW_TX_EXTEND GENMASK(3, 0)
- #define R_MAC_PIN_SEL 0x0734
- #define B_CH_IDX_SEG0 GENMASK(23, 16)
- #define R_PLCP_HISTOGRAM 0x0738
-@@ -4454,10 +4457,24 @@
- #define B_P0_RFCTM_VAL GENMASK(25, 20)
- #define R_P0_RFCTM_RDY BIT(26)
- #define R_P0_TRSW 0x5868
--#define B_P0_TRSW_B BIT(0)
--#define B_P0_TRSW_A BIT(1)
-+#define B_P0_BT_FORCE_ANTIDX_EN BIT(12)
- #define B_P0_TRSW_X BIT(2)
-+#define B_P0_TRSW_A BIT(1)
-+#define B_P0_TX_ANT_SEL BIT(1)
-+#define B_P0_TRSW_B BIT(0)
-+#define B_P0_ANT_TRAIN_EN BIT(0)
- #define B_P0_TRSW_SO_A2 GENMASK(7, 5)
-+#define R_P0_ANTSEL 0x586C
-+#define B_P0_ANTSEL_SW_5G BIT(25)
-+#define B_P0_ANTSEL_SW_2G BIT(23)
-+#define B_P0_ANTSEL_BTG_TRX BIT(21)
-+#define B_P0_ANTSEL_CGCS_CTRL BIT(17)
-+#define B_P0_ANTSEL_HW_CTRL BIT(16)
-+#define B_P0_ANTSEL_TX_ORI GENMASK(15, 12)
-+#define B_P0_ANTSEL_RX_ALT GENMASK(11, 8)
-+#define B_P0_ANTSEL_RX_ORI GENMASK(7, 4)
-+#define R_RFSW_CTRL_ANT0_BASE 0x5870
-+#define B_RFSW_CTRL_ANT_MAPPING GENMASK(15, 0)
- #define R_P0_RFM 0x5894
- #define B_P0_RFM_DIS_WL BIT(7)
- #define B_P0_RFM_TX_OPT BIT(6)
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
+index b059aa8d88dbf..163a046d5cfa1 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
+@@ -762,13 +762,18 @@ int rtw89_ops_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+ 	struct rtw89_dev *rtwdev = hw->priv;
+ 	struct rtw89_hal *hal = &rtwdev->hal;
+ 
+-	if (rx_ant != hw->wiphy->available_antennas_rx && rx_ant != hal->antenna_rx)
++	if (hal->ant_diversity) {
++		if (tx_ant != rx_ant || hweight32(tx_ant) != 1)
++			return -EINVAL;
++	} else if (rx_ant != hw->wiphy->available_antennas_rx && rx_ant != hal->antenna_rx) {
+ 		return -EINVAL;
++	}
+ 
+ 	mutex_lock(&rtwdev->mutex);
+ 	hal->antenna_tx = tx_ant;
+ 	hal->antenna_rx = rx_ant;
+ 	hal->tx_path_diversity = false;
++	hal->ant_diversity_fixed = true;
+ 	mutex_unlock(&rtwdev->mutex);
+ 
+ 	return 0;
 -- 
 2.25.1
 
