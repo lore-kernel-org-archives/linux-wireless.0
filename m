@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B709C77B70
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 14:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3038C77B76
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 14:04:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230117AbjDQOEh (ORCPT
+        id S230098AbjDQOEi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Apr 2023 10:04:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56072 "EHLO
+        Mon, 17 Apr 2023 10:04:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230280AbjDQOEe (ORCPT
+        with ESMTP id S230305AbjDQOEf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2023 10:04:34 -0400
+        Mon, 17 Apr 2023 10:04:35 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71E6F5B9B
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 07:04:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6C1F86BE
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 07:04:04 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <sha@pengutronix.de>)
-        id 1poPSb-000482-ET; Mon, 17 Apr 2023 16:04:01 +0200
+        id 1poPSb-000484-IY; Mon, 17 Apr 2023 16:04:01 +0200
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1poPSa-00BtJv-On; Mon, 17 Apr 2023 16:04:00 +0200
+        id 1poPSa-00BtJy-UT; Mon, 17 Apr 2023 16:04:00 +0200
 Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <sha@pengutronix.de>)
-        id 1poPSZ-009Or6-Ka; Mon, 17 Apr 2023 16:03:59 +0200
+        id 1poPSZ-009OrL-Nf; Mon, 17 Apr 2023 16:03:59 +0200
 From:   Sascha Hauer <s.hauer@pengutronix.de>
 To:     linux-wireless <linux-wireless@vger.kernel.org>
 Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>,
@@ -39,10 +39,12 @@ Cc:     Hans Ulli Kroll <linux@ulli-kroll.de>,
         Andreas Henriksson <andreas@fatal.se>,
         ValdikSS <iam@valdikss.org.ru>, kernel@pengutronix.de,
         Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v3 0/4] RTW88 USB bug fixes
-Date:   Mon, 17 Apr 2023 16:03:54 +0200
-Message-Id: <20230417140358.2240429-1-s.hauer@pengutronix.de>
+Subject: [PATCH v3 4/4] wifi: rtw88: call rtw8821c_switch_rf_set() according to chip variant
+Date:   Mon, 17 Apr 2023 16:03:58 +0200
+Message-Id: <20230417140358.2240429-5-s.hauer@pengutronix.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230417140358.2240429-1-s.hauer@pengutronix.de>
+References: <20230417140358.2240429-1-s.hauer@pengutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -53,44 +55,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Third round of the RTW88 USB bug fixes.
+We have to call rtw8821c_switch_rf_set() with SWITCH_TO_WLG or
+SWITCH_TO_BTG according to the chip variant as denoted in rfe_option.
+The information which argument to use for which variant has been
+taken from the vendor driver.
 
-After some discussion and thinking I came to the conclusion that the
-v1 variant of "wifi: rtw88: rtw8821c: Fix rfe_option field width" is
-better than the one posted in v2, so I reverted back to this version,
-but added a note to the commit message why this might not be entirely
-correct for all chip variants (though for all variants currently
-supported in the driver).
+Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+---
+ drivers/net/wireless/realtek/rtw88/main.h     |  1 +
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 19 +++++++++++++++----
+ 2 files changed, 16 insertions(+), 4 deletions(-)
 
-The patches are sorted in order of importance. 1/4 hasn't seen any
-negative comments and I think it should be applied right now.
-As stated above I think 2/4 should be applied as well. 3/4 fixes
-something I stumbled upon while reading in the vendor driver, but
-I don't what effect it actually has, I didn't notice any change
-in behaviour of the driver. 4/4 straightens the logic how
-rtw8821c_switch_rf_set() is called for different variants of the
-rtw8821c. This is taken from the vendor driver. From the supported
-chip variants this should only have an effect on the ones with
-rfe_option = 6, but I don't have that one available here for
-testing.
-
-I would be glad if at least 1/4 and 2/4 could be applied as these
-fix real issues in the driver.
-
-Sascha
-
-Sascha Hauer (4):
-  wifi: rtw88: usb: fix priority queue to endpoint mapping
-  wifi: rtw88: rtw8821c: Fix rfe_option field width
-  wifi: rtw88: set pkg_type correctly for specific rtw8821c variants
-  wifi: rtw88: call rtw8821c_switch_rf_set() according to chip variant
-
- drivers/net/wireless/realtek/rtw88/main.c     |  2 +-
- drivers/net/wireless/realtek/rtw88/main.h     |  2 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.c | 25 +++++--
- drivers/net/wireless/realtek/rtw88/usb.c      | 70 +++++++++++++------
- 4 files changed, 69 insertions(+), 30 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 9946aca7a72ce..462f69547be03 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1892,6 +1892,7 @@ struct rtw_hal {
+ 	u8 oem_id;
+ 	u8 pkg_type;
+ 	struct rtw_phy_cond phy_cond;
++	bool rfe_btg;
+ 
+ 	u8 ps_mode;
+ 	u8 current_channel;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 94c582a27b9ff..a50753ae235b5 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -67,6 +67,17 @@ static int rtw8821c_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ 
+ 	hal->pkg_type = map->rfe_option & BIT(5) ? 1 : 0;
+ 
++	switch (efuse->rfe_option) {
++	case 0x2:
++	case 0x4:
++	case 0x7:
++	case 0xa:
++	case 0xc:
++	case 0xf:
++		hal->rfe_btg = true;
++		break;
++	}
++
+ 	for (i = 0; i < 4; i++)
+ 		efuse->txpwr_idx_table[i] = map->txpwr_idx_table[i];
+ 
+@@ -289,6 +300,7 @@ static void rtw8821c_switch_rf_set(struct rtw_dev *rtwdev, u8 rf_set)
+ 
+ static void rtw8821c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ {
++	struct rtw_hal *hal = &rtwdev->hal;
+ 	u32 rf_reg18;
+ 
+ 	rf_reg18 = rtw_read_rf(rtwdev, RF_PATH_A, 0x18, RFREG_MASK);
+@@ -320,11 +332,10 @@ static void rtw8821c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ 	}
+ 
+ 	if (channel <= 14) {
+-		if (rtwdev->efuse.rfe_option == 0)
+-			rtw8821c_switch_rf_set(rtwdev, SWITCH_TO_WLG);
+-		else if (rtwdev->efuse.rfe_option == 2 ||
+-			 rtwdev->efuse.rfe_option == 4)
++		if (hal->rfe_btg)
+ 			rtw8821c_switch_rf_set(rtwdev, SWITCH_TO_BTG);
++		else
++			rtw8821c_switch_rf_set(rtwdev, SWITCH_TO_WLG);
+ 		rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTDBG, BIT(6), 0x1);
+ 		rtw_write_rf(rtwdev, RF_PATH_A, 0x64, 0xf, 0xf);
+ 	} else {
 -- 
 2.39.2
 
