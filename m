@@ -2,136 +2,132 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 502E2C77B77
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 05:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE7D6C77B72
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 06:08:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230075AbjDQFm1 (ORCPT
+        id S230061AbjDQGIq convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Apr 2023 01:42:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34224 "EHLO
+        Mon, 17 Apr 2023 02:08:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229754AbjDQFmW (ORCPT
+        with ESMTP id S230070AbjDQGIo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2023 01:42:22 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 251AF40C3
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2023 22:42:14 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33H4llJG024526;
-        Mon, 17 Apr 2023 05:42:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=0jKU9Mlm0ZKVHHJzbLmwZazaMsFq2HbOvPOZWngHFQY=;
- b=Da4Gdg+BBNKRw5BZCBN1xOVwWK+AAbklunk/VrEd0w59ppfygSJCQWq+a4JwrsDM7P/l
- IvkOAXEmhrkIRdX23XtlfmjMWSiucttoe+QPktWHs7HUKGVrEFECJh7m9hN/bl/EaJEm
- +DCRCVaKEyK5BPypoA1bGYy5hqMjmqMlZnoFNk+ETPu/ovBcHsu1t/eDPA7Jcd6clxPT
- MPmReY+0ev0LZcspq913qsVzUDOunQeOB2F0MUBIqV9liqsDsmZM5VxK9xwKr+vovRFB
- xHL+WOS6jW+PI81OyiE35nHr1lu5FKZHIEA7o1ut3L37I5QESyrfPBNi1gaMpjB4k9bP UQ== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pymp4ap4q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 17 Apr 2023 05:42:03 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33H5g1kc004995
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 17 Apr 2023 05:42:01 GMT
-Received: from hu-mpubbise-hyd.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Sun, 16 Apr 2023 22:41:59 -0700
-From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-Subject: [PATCH v5 0/3] wifi: ath11k: Enable low power mode when WLAN is not active on WCN6750
-Date:   Mon, 17 Apr 2023 11:11:42 +0530
-Message-ID: <20230417054145.12359-1-quic_mpubbise@quicinc.com>
-X-Mailer: git-send-email 2.17.1
+        Mon, 17 Apr 2023 02:08:44 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1842A1FE1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Apr 2023 23:08:42 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 33H67nz86001805, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 33H67nz86001805
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+        Mon, 17 Apr 2023 14:07:49 +0800
+Received: from RTEXMBS01.realtek.com.tw (172.21.6.94) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Mon, 17 Apr 2023 14:08:12 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Mon, 17 Apr 2023 14:08:12 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
+ RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
+ 15.01.2375.007; Mon, 17 Apr 2023 14:08:12 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@kernel.org>
+CC:     Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Sascha Hauer" <s.hauer@pengutronix.de>
+Subject: RE: [PATCH] wifi: rtw88: Fix memory leak in rtw88_usb
+Thread-Topic: [PATCH] wifi: rtw88: Fix memory leak in rtw88_usb
+Thread-Index: AQHZbzesjaETNjjjhUGpyEIsOiNIha8vBpzw
+Date:   Mon, 17 Apr 2023 06:08:12 +0000
+Message-ID: <085f8fe9ec9749689e9f3fc51bfe1cce@realtek.com>
+References: <20230415011422.11162-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <20230415011422.11162-1-Larry.Finger@lwfinger.net>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXMBS01.realtek.com.tw, 9
+x-kse-antispam-interceptor-info: fallback
+x-kse-antivirus-interceptor-info: fallback
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: bz-md0TBXOM8ok0B3GDp410a7P5qIy5n
-X-Proofpoint-ORIG-GUID: bz-md0TBXOM8ok0B3GDp410a7P5qIy5n
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-17_02,2023-04-14_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
- impostorscore=0 spamscore=0 mlxlogscore=999 lowpriorityscore=0
- phishscore=0 priorityscore=1501 bulkscore=0 adultscore=0 suspectscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304170051
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, WLAN chip is powered once during driver probe and is kept
-ON (powered) always even when WLAN is not active; keeping the chip
-powered ON all the time will consume extra power which is not
-desirable for battery operated devices. Same is the case with non-WoW
-suspend, chip will not be put into low power mode when the system is
-suspended resulting in higher battery drain.
-
-Send QMI MODE OFF command to firmware during WiFi OFF to put WCN6750
-into low power mode.
-
-Following command is used to suspend the device,
-echo mem > /sys/power/state
-
-On WCN6750, it has been verified that the power from the firmware is
-complete turned off when the device is suspended.
-
-Although the changes are specific to WCN6750, these changes act as a
-framework and can be used to bring in the support on other ath11k
-devices with a future patch.
-
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-00887-QCAMSLSWPLZ-1
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.16
-Tested-on: IPQ5018 hw1.0 AHB WLAN.HK.2.6.0.1-00861-QCAHKSWPL_SILICONZ-1
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-
-Manikanta Pubbisetty (3):
-  wifi: ath11k: Fix double free issue during SRNG deinit
-  wifi: ath11k: Move hardware initialization logic to start()
-  wifi: ath11k: Enable low power mode when WLAN is not active
----
-V5:
- - Thorough testing of the changes on other supported ath11k hardware
- - rmmod path of other supported devices is kept unchanged; only WCN6750
-   will make use of the changes
- - Code has been refactored in a way so that the changes are easier to review
- - Commit message changes to include the command used for testing
-
-V4:
- - Code changes in ath11k_core_stop_device()
-
-V3:
- - Removed patch "ath11k: Fix failed to parse regulatory event print" as it is not needed anymore
- - Fixed a potential deadlock scenario reported by lockdep around ab->core_lock with V2 changes
- - Fixed other minor issues that were found during code review
- - Spelling corrections in the commit messages
-
-V2:
- - "Enable low power mode when WLAN is not active" has been enabled only for WCN6750
-   as the device shutdown and turn-on changes are not same for all chipsets in ath11k.
-   A future patch will be sent to enable the logic for other devices.
- - Rebased on ToT
-
- drivers/net/wireless/ath/ath11k/ahb.c  |  42 +++
- drivers/net/wireless/ath/ath11k/core.c | 497 +++++++++++++++++--------
- drivers/net/wireless/ath/ath11k/core.h |  10 +-
- drivers/net/wireless/ath/ath11k/hal.c  |   1 +
- drivers/net/wireless/ath/ath11k/hif.h  |  11 +
- drivers/net/wireless/ath/ath11k/mac.c  |  33 +-
- drivers/net/wireless/ath/ath11k/pci.c  |  23 ++
- drivers/net/wireless/ath/ath11k/qmi.c  |   3 +-
- 8 files changed, 429 insertions(+), 191 deletions(-)
 
 
-base-commit: 177555b57ca0a0519c12a2bdb64309ddbb363e11
--- 
-2.17.1
+> -----Original Message-----
+> From: Larry Finger <larry.finger@gmail.com> On Behalf Of Larry Finger
+> Sent: Saturday, April 15, 2023 9:14 AM
+> To: Kalle Valo <kvalo@kernel.org>
+> Cc: Johannes Berg <johannes@sipsolutions.net>; linux-wireless@vger.kernel.org; Larry Finger
+> <Larry.Finger@lwfinger.net>; Sascha Hauer <s.hauer@pengutronix.de>; Ping-Ke Shih <pkshih@realtek.com>
+> Subject: [PATCH] wifi: rtw88: Fix memory leak in rtw88_usb
+> 
+> Kmemleak shows the following leak arising from routine in the usb
+> probe routine:
+> 
+> unreferenced object 0xffff895cb29bba00 (size 512):
+>   comm "(udev-worker)", pid 534, jiffies 4294903932 (age 102751.088s)
+>   hex dump (first 32 bytes):
+>     77 30 30 30 00 00 00 00 02 2f 2d 2b 30 00 00 00  w000...../-+0...
+>     02 00 2a 28 00 00 00 00 ff 55 ff ff ff 00 00 00  ..*(.....U......
+>   backtrace:
+>     [<ffffffff9265fa36>] kmalloc_trace+0x26/0x90
+>     [<ffffffffc17eec41>] rtw_usb_probe+0x2f1/0x680 [rtw_usb]
+>     [<ffffffffc03e19fd>] usb_probe_interface+0xdd/0x2e0 [usbcore]
+>     [<ffffffff92b4f2fe>] really_probe+0x18e/0x3d0
+>     [<ffffffff92b4f5b8>] __driver_probe_device+0x78/0x160
+>     [<ffffffff92b4f6bf>] driver_probe_device+0x1f/0x90
+>     [<ffffffff92b4f8df>] __driver_attach+0xbf/0x1b0
+>     [<ffffffff92b4d350>] bus_for_each_dev+0x70/0xc0
+>     [<ffffffff92b4e51e>] bus_add_driver+0x10e/0x210
+>     [<ffffffff92b50935>] driver_register+0x55/0xf0
+>     [<ffffffffc03e0708>] usb_register_driver+0x88/0x140 [usbcore]
+>     [<ffffffff92401153>] do_one_initcall+0x43/0x210
+>     [<ffffffff9254f42a>] do_init_module+0x4a/0x200
+>     [<ffffffff92551d1c>] __do_sys_finit_module+0xac/0x120
+>     [<ffffffff92ee6626>] do_syscall_64+0x56/0x80
+>     [<ffffffff9300006a>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
+> 
+> The leak was verified to be real by unloading the driver, which resulted
+> in a dangling pointer to the allocation.
+> 
+> The allocated memory is freed in rtw_usb_disconnect().
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Sascha Hauer <s.hauer@pengutronix.de>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>  drivers/net/wireless/realtek/rtw88/usb.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+> index 68e1b782d199..d28493a8f16c 100644
+> --- a/drivers/net/wireless/realtek/rtw88/usb.c
+> +++ b/drivers/net/wireless/realtek/rtw88/usb.c
+> @@ -882,6 +882,7 @@ void rtw_usb_disconnect(struct usb_interface *intf)
+>         rtw_unregister_hw(rtwdev, hw);
+>         rtw_usb_deinit_tx(rtwdev);
+>         rtw_usb_deinit_rx(rtwdev);
+> +       kfree(rtwusb->usb_data);
+
+I suggest to do this in rtw_usb_intf_deinit() instead, because rtwusb->usb_data is
+allocated by rtw_usb_intf_init(). Not only make the code symmetric also can handle
+error cases properly of rtw_usb_probe().
+
+Ping-Ke
+
 
