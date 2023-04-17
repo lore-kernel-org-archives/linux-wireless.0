@@ -2,75 +2,76 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33842C77B70
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 09:59:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B0BCC77B70
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 10:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229598AbjDQJ7U (ORCPT
+        id S229926AbjDQKQJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Apr 2023 05:59:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32812 "EHLO
+        Mon, 17 Apr 2023 06:16:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229681AbjDQJ7P (ORCPT
+        with ESMTP id S231139AbjDQKQG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2023 05:59:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 689D74C28
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 02:58:17 -0700 (PDT)
+        Mon, 17 Apr 2023 06:16:06 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F110BE4A
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 03:15:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BB1A62127
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 09:49:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABBBCC433EF;
-        Mon, 17 Apr 2023 09:49:38 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ED06062114
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 10:14:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70C2AC433D2;
+        Mon, 17 Apr 2023 10:14:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681724979;
-        bh=9kxcbFixCrk9HrMiNJbo98NVNm6NQP+IkdBvHArm8x0=;
+        s=k20201202; t=1681726442;
+        bh=SJ8Cjrcif9Zvy5yUgdgzzrInVemuGtS1n7KSjHiLBSs=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=eVxhCxbkzSvJ/Mhx//frMH1Ukq/grjLtkoWG8zsKdaAeH6iw9WSVoeDJmN1HaVwkr
-         YBwWFNXNbIIed567PWMa/lLfpTBTvOp+DRFQjYbHdkmhc6QkMD37wtVNnpdttIYhqJ
-         f8JFQGXB2njGTK46KBzEeLLPP/MpcVw9IxVu8iIulTCihS32Q+T35KQa7SLKAjxzVH
-         7fUUQSPg8gxoT/a3ViUQzWtfm/r85BFcYsqAnNdItehSD2MVQcoqqzL3lDD9Zl1QLj
-         2gixfaZfxH8JJAwR8NbnfV+fPKDwMVwDa3jKRCGxBIqtWLIZ0Lo2wEBwtTJ9+Hy5oB
-         nFDAIxnNFN2Lw==
+        b=Jz/8dNNN4qiIFAvn9NdY5cvBhSERTyXR6xVXHIqAqXaya52hUcod9ticnARpPscmH
+         q2Tpxwh8KemQ73AtgtRwovcfck20bLNDsRbM65KPBqr2t66kQY64iuE8AraqnHqYjI
+         DVwb2I26Ozyyh3kUdRJ5uDa/Lvs35kUShpj+pEMg0+LU7j9FmXhA5RNEbi8IZfCqBM
+         B6q6TBiumu7YWf/2p0EpVxn63PNyjAqlyDN9vPuA/ynhq5i/bWAYBok9w4GhVQgY0N
+         soSbRGGEEjBbJSKvWG7BbWyWs6VbtvZlRIeIgKhgwxeVdzeRFF8NGqSoDyN0xqGgsr
+         YM7ctWpTym/cw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/4] wifi: rtw89: coex: Enable Wi-Fi RX gain control for
- free
- run solution
+Subject: Re: [PATCH] wifi: ath11k: Disable Spectral scan upon removing
+ interface
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230412012831.10519-2-pkshih@realtek.com>
-References: <20230412012831.10519-2-pkshih@realtek.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
+In-Reply-To: <20230328071150.29645-1-quic_tamizhr@quicinc.com>
+References: <20230328071150.29645-1-quic_tamizhr@quicinc.com>
+To:     Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168172497498.26465.2182950609938766680.kvalo@kernel.org>
-Date:   Mon, 17 Apr 2023 09:49:38 +0000 (UTC)
+Message-ID: <168172643941.9486.9756032017777540721.kvalo@kernel.org>
+Date:   Mon, 17 Apr 2023 10:14:01 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+Tamizh Chelvam Raja <quic_tamizhr@quicinc.com> wrote:
 
-> From: Ching-Te Ku <ku920601@realtek.com>
+> Host might receive spectral events during interface
+> down sequence and this might create below errors.
 > 
-> When Wi-Fi & Bluetooth are both busy at the same time, Wi-Fi need to
-> enable RX gain to protect Wi-Fi RX RF ability. Without this configure
-> the interference from Bluetooth will bring a big impact to Wi-Fi RX.
+> failed to handle dma buf release event -22
+> failed to handle dma buf release event -22
 > 
-> Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Fix this by disabling spectral config during remove interface.
+> 
+> Tested-on: IPQ5018 hw1.0 AHB WLAN.HK.2.6.0.1-00861-QCAHKSWPL_SILICONZ-1
+> 
+> Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-4 patches applied to wireless-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-36ef71db559f wifi: rtw89: coex: Enable Wi-Fi RX gain control for free run solution
-9fde30562840 wifi: rtw89: coex: Add path control register to monitor list
-2380a220316f wifi: rtw89: coex: Update function to get BT RSSI and hardware counter
-c0fea064b264 wifi: rtw89: coex: send more hardware module info to firmware for 8851B
+5c690db63b45 wifi: ath11k: Disable Spectral scan upon removing interface
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230412012831.10519-2-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230328071150.29645-1-quic_tamizhr@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
