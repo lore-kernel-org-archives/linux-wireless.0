@@ -2,77 +2,75 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE22C77B72
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 09:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33842C77B70
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 09:59:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229555AbjDQJwy (ORCPT
+        id S229598AbjDQJ7U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Apr 2023 05:52:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54374 "EHLO
+        Mon, 17 Apr 2023 05:59:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbjDQJwx (ORCPT
+        with ESMTP id S229681AbjDQJ7P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2023 05:52:53 -0400
+        Mon, 17 Apr 2023 05:59:15 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EF3A5B90
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 02:52:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 689D74C28
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 02:58:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D6F6D6210A
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 09:50:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 564DBC433D2;
-        Mon, 17 Apr 2023 09:50:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BB1A62127
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 09:49:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABBBCC433EF;
+        Mon, 17 Apr 2023 09:49:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681725010;
-        bh=GloDY9RSY+FdUnWarKopN7KTCMWWSAwggxQviXh0CUI=;
+        s=k20201202; t=1681724979;
+        bh=9kxcbFixCrk9HrMiNJbo98NVNm6NQP+IkdBvHArm8x0=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=bjvm6ghpGPRe3aUEmTiiFHYV2k+SxNOC5ElSgE0Th31MIL+bMd8UMsSrf0GNnvmFj
-         HcFm4jYa858P0AUzryNGGlS7mTI40P4wl8hHo7lzPP9yRMJczWGVloE8xpqt2ycK+3
-         2oPKuWWVaN/RJQ8D5mBBxnjy3spsU58mjSGTMzTg1aLNH9flDbYY5JB7iaN0smp4QR
-         hzMbjtZQR86yKPhGoX7QYrV+h5Z7tEukE6HNVZ7JV30JBWuvIS4r5R9fU/TquZKSZi
-         1z+ZjhQq6evlerHGLfGmixcj+Wd7aBTSjxOK2eDrn572Ca4zLeZp2NEjLY72p/57Nk
-         dpTmmqe6LENsQ==
+        b=eVxhCxbkzSvJ/Mhx//frMH1Ukq/grjLtkoWG8zsKdaAeH6iw9WSVoeDJmN1HaVwkr
+         YBwWFNXNbIIed567PWMa/lLfpTBTvOp+DRFQjYbHdkmhc6QkMD37wtVNnpdttIYhqJ
+         f8JFQGXB2njGTK46KBzEeLLPP/MpcVw9IxVu8iIulTCihS32Q+T35KQa7SLKAjxzVH
+         7fUUQSPg8gxoT/a3ViUQzWtfm/r85BFcYsqAnNdItehSD2MVQcoqqzL3lDD9Zl1QLj
+         2gixfaZfxH8JJAwR8NbnfV+fPKDwMVwDa3jKRCGxBIqtWLIZ0Lo2wEBwtTJ9+Hy5oB
+         nFDAIxnNFN2Lw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2 1/6] wifi: rtw89: prohibit enter IPS during HW scan
+Subject: Re: [PATCH 1/4] wifi: rtw89: coex: Enable Wi-Fi RX gain control for
+ free
+ run solution
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230415034900.15679-2-pkshih@realtek.com>
-References: <20230415034900.15679-2-pkshih@realtek.com>
+In-Reply-To: <20230412012831.10519-2-pkshih@realtek.com>
+References: <20230412012831.10519-2-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <gary.chang@realtek.com>, <phhuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
+Cc:     <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168172500723.26465.14719731055543157237.kvalo@kernel.org>
-Date:   Mon, 17 Apr 2023 09:50:09 +0000 (UTC)
+Message-ID: <168172497498.26465.2182950609938766680.kvalo@kernel.org>
+Date:   Mon, 17 Apr 2023 09:49:38 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Chih-Kang Chang <gary.chang@realtek.com>
+> From: Ching-Te Ku <ku920601@realtek.com>
 > 
-> Mac80211 core may ask driver to change to idle mode during HW scan,
-> then H2C command for HW scan will send failed since chip is in idle
-> mode. Therefore, We check the SCANNING flag before entering IPS to
-> prevent this behavior.
+> When Wi-Fi & Bluetooth are both busy at the same time, Wi-Fi need to
+> enable RX gain to protect Wi-Fi RX RF ability. Without this configure
+> the interference from Bluetooth will bring a big impact to Wi-Fi RX.
 > 
-> Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
+> Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-6 patches applied to wireless-next.git, thanks.
+4 patches applied to wireless-next.git, thanks.
 
-e579e943bac3 wifi: rtw89: prohibit enter IPS during HW scan
-e7399db231d0 wifi: rtw89: refine scan function after chanctx
-8b048bd5ddf7 wifi: rtw89: use struct instead of macros to set H2C command of hardware scan
-ac83f3809055 wifi: rtw89: update statistics to FW for fine-tuning performance
-982a91642708 wifi: rtw89: Disallow power save with multiple stations
-f22c0bffe8d9 wifi: rtw89: add support of concurrent mode
+36ef71db559f wifi: rtw89: coex: Enable Wi-Fi RX gain control for free run solution
+9fde30562840 wifi: rtw89: coex: Add path control register to monitor list
+2380a220316f wifi: rtw89: coex: Update function to get BT RSSI and hardware counter
+c0fea064b264 wifi: rtw89: coex: send more hardware module info to firmware for 8851B
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230415034900.15679-2-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230412012831.10519-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
