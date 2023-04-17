@@ -2,104 +2,118 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FC44C77B72
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 10:30:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77912C77B72
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 10:32:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230002AbjDQKaH (ORCPT
+        id S230363AbjDQKc3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Apr 2023 06:30:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33016 "EHLO
+        Mon, 17 Apr 2023 06:32:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230363AbjDQK3m (ORCPT
+        with ESMTP id S229573AbjDQKc2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2023 06:29:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 115337AB3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 03:28:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C20B661B65
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 10:28:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AB38C433D2;
-        Mon, 17 Apr 2023 10:28:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681727331;
-        bh=3Iz5JePtM9cvykU/DcFaEXo6Tdj+TUSbHIg+gJXgJtM=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=jSRVAnegX0WNeUdqlH1s5pwjPZYfZg4DuSQXPevNIV0N/2vrliryZAJ3fPeKSKTd3
-         lX3pKD2hJbO9kK6Naugv6xidXxYNIHLIhU2ZpmYdQcD1XOWmOdeehw8PHfcsmJmEgZ
-         wkM2i8FBHN3nJIcSUfAVVgDV1QD+JXqW2MZYGi+zrCMSqO/+LIQ3Y5XHITpjMgnRLB
-         fKaUszztHQ/ZgEuMLAU/4bleKVRA0MaVl3gjpBtL3/c6cN/vMH/nckOS329RHxIAJD
-         5wHI4kjZsjhEkou4u/zAqFMo+mIHbLpBk3lQfLfDwjLLViX+XADh8aeg7veKOE2AFl
-         L5inedWQjnXpw==
-Content-Type: text/plain; charset="utf-8"
+        Mon, 17 Apr 2023 06:32:28 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BA9683F7
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Apr 2023 03:31:30 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33H9W3rj029823;
+        Mon, 17 Apr 2023 10:03:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=6ILMAxn2X9XASMKxX1f9QOUcK7H08mCJWvLaMaR6t70=;
+ b=ngaP4ViOTG55TQGWHE5nRcjI+6TUVdeCCMtQEZfsPbDwtDeLXFQRAZJo+7aDgz2ATJbe
+ FbZBLSC5dEivLQfrRukG4l+wP97/GhHlWg2L5wmcDUjzxiixUv/xnL3Nz/kC9z2PA48c
+ JeVq5RGvjZGR+VU49Obj3XXJ0JSJL3kuKaFPFArPZ/k73vNIF9Z3mpiCqzo5QqXX3fbQ
+ aUdxNXO/QMyXKpIivSEqey4eumEBjhs/rO+zIJIQg8xVmHYY7UWNZlfkotQcisLgG6Of
+ rUSBPgWdaHVoX5E8G7ZNcaJWHwNQQu5cHyyOkzIodiMz1b38dTAHRxobGmAwoZPVKTuJ 1Q== 
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3q12ut86px-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 17 Apr 2023 10:03:11 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33HA3AdE017163
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 17 Apr 2023 10:03:10 GMT
+Received: from karm-linux.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Mon, 17 Apr 2023 03:03:08 -0700
+From:   Karthik M <quic_karm@quicinc.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>,
+        Karthik M <quic_karm@quicinc.com>,
+        Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Subject: [PATCH v1] wifi: mac80211: Initialize EWMA fail avg to 1
+Date:   Mon, 17 Apr 2023 15:32:58 +0530
+Message-ID: <20230417100258.22965-1-quic_karm@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/2] wifi: ath11k: Ignore frags from uninitialized peer in
- dp.
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230403184155.8670-2-quic_nmaran@quicinc.com>
-References: <20230403184155.8670-2-quic_nmaran@quicinc.com>
-To:     Nagarajan Maran <quic_nmaran@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        Harshitha Prem <quic_hprem@quicinc.com>,
-        Nagarajan Maran <quic_nmaran@quicinc.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168172732519.21228.13363006785669066948.kvalo@kernel.org>
-Date:   Mon, 17 Apr 2023 10:28:49 +0000 (UTC)
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: c8h5C5AED0p8aj-cESSVHy0SoHx701mj
+X-Proofpoint-ORIG-GUID: c8h5C5AED0p8aj-cESSVHy0SoHx701mj
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-17_06,2023-04-14_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 spamscore=0
+ priorityscore=1501 mlxlogscore=999 lowpriorityscore=0 adultscore=0
+ phishscore=0 mlxscore=0 clxscore=1011 suspectscore=0 impostorscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304170089
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Nagarajan Maran <quic_nmaran@quicinc.com> wrote:
+If the average value in mesh metrics calculation
+has been rounded to 0 (success), this resets it to
+the smallest nonzero value (similarly to the initialization)
+to avoid a case where a single failure would result in
+an average value that goes beyond the value
+of 95 (Link Failure Threshold).
 
-> When max virtual ap interfaces are configured in all the bands with
-> ACS and hostapd restart is done every 60s, a crash is observed at
-> random times.
-> In this certain scenario, a fragmented packet is received for
-> self peer, for which rx_tid and rx_frags are not initialized in
-> datapath. While handling this fragment, crash is observed as the
-> rx_frag list is uninitialised and when we walk in
-> ath11k_dp_rx_h_sort_frags, skb null leads to exception.
-> 
-> To address this, before processing received fragments we check
-> dp_setup_done flag is set to ensure that peer has completed its
-> dp peer setup for fragment queue, else ignore processing the
-> fragments.
-> 
-> Call trace:
->   ath11k_dp_process_rx_err+0x550/0x1084 [ath11k]
->   ath11k_dp_service_srng+0x70/0x370 [ath11k]
->   0xffffffc009693a04
->   __napi_poll+0x30/0xa4
->   net_rx_action+0x118/0x270
->   __do_softirq+0x10c/0x244
->   irq_exit+0x64/0xb4
->   __handle_domain_irq+0x88/0xac
->   gic_handle_irq+0x74/0xbc
->   el1_irq+0xf0/0x1c0
->   arch_cpu_idle+0x10/0x18
->   do_idle+0x104/0x248
->   cpu_startup_entry+0x20/0x64
->   rest_init+0xd0/0xdc
->   arch_call_rest_init+0xc/0x14
->   start_kernel+0x480/0x4b8
->   Code: f9400281 f94066a2 91405021 b94a0023 (f9406401)
-> 
-> Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
-> Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Signed-off-by: Karthik M <quic_karm@quicinc.com>
+---
+Changes since v1:
+ - Altered the comment to mention "mesh" and thershold value.
+ - Checkpatch done
+---
+ net/mac80211/mesh_hwmp.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-2 patches applied to ath-next branch of ath.git, thanks.
-
-a06bfb3c9f69 wifi: ath11k: Ignore frags from uninitialized peer in dp.
-41e02bf4ae32 wifi: ath11k: fix undefined behavior with __fls in dp
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 9b1ce7c3925a..f89cbcf212d5 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -298,10 +298,23 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ {
+ 	struct ieee80211_tx_info *txinfo = st->info;
+ 	int failed;
++	u32 fail_avg;
+ 	struct rate_info rinfo;
+ 
+ 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
+ 
++	fail_avg = ewma_mesh_fail_avg_read(&sta->mesh->fail_avg);
++	if (!fail_avg) {
++		/* If the average value in mesh metrics calculation
++		 * has been rounded to 0 (success), this resets it to
++		 * the smallest nonzero value (similarly to the initialization)
++		 * to avoid a case where a single failure would result in
++		 * an average value that goes beyond the value
++		 * of 95 (Link Failure Threshold)
++		 */
++		ewma_mesh_fail_avg_add(&sta->mesh->fail_avg, 1);
++	}
++
+ 	/* moving average, scaled to 100.
+ 	 * feed failure as 100 and success as 0
+ 	 */
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230403184155.8670-2-quic_nmaran@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.1
 
