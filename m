@@ -2,109 +2,128 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8141C77B72
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 10:52:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D76C77B77
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Apr 2023 11:27:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231163AbjDQKwm (ORCPT
+        id S230093AbjDQL1n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Apr 2023 06:52:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51250 "EHLO
+        Mon, 17 Apr 2023 07:27:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230245AbjDQKwG (ORCPT
+        with ESMTP id S229583AbjDQL1m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Apr 2023 06:52:06 -0400
+        Mon, 17 Apr 2023 07:27:42 -0400
 Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D9318699;
-        Mon, 17 Apr 2023 03:51:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 756E24C1C;
+        Mon, 17 Apr 2023 04:26:51 -0700 (PDT)
 Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
         by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1poLUs-0000V0-CC; Mon, 17 Apr 2023 11:50:06 +0200
-Message-ID: <afa92c35-b17a-49de-ac4c-6d60237a2dca@leemhuis.info>
-Date:   Mon, 17 Apr 2023 11:50:05 +0200
+        id 1poMyw-0000Lo-Iw; Mon, 17 Apr 2023 13:25:14 +0200
+Message-ID: <69602f1b-4afa-d864-b6d3-d8237f81a51d@leemhuis.info>
+Date:   Mon, 17 Apr 2023 13:25:13 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.1
-Subject: Re: [regression] Bug 217286 - ath11k:deny assoc request, Invalid
- supported ch width and ext nss combination
+Subject: Re: kernel error at led trigger "phy0tpt"
 Content-Language: en-US, de-DE
+To:     AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Tobias Dahms <dahms.tobias@web.de>,
+        Sean Wang <sean.wang@mediatek.com>
+Cc:     stable@vger.kernel.org, Pavel Machek <pavel@ucw.cz>,
+        Lee Jones <lee@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, linux-leds@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Linux regressions mailing list <regressions@lists.linux.dev>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+References: <91feceb2-0df4-19b9-5ffa-d37e3d344fdf@web.de>
+ <3fcc707b-f757-e74b-2800-3b6314217868@leemhuis.info>
+ <fcecf6fc-bf18-73a0-9fc1-6850e183323a@web.de>
+ <d14fb08c-70e3-4cc7-caf9-87e73eab9194@gmail.com>
+ <8b07ead5-f105-da86-e7da-ee49616f7c1d@collabora.com>
 From:   "Linux regression tracking (Thorsten Leemhuis)" 
         <regressions@leemhuis.info>
-To:     P Praneesh <quic_ppranees@quicinc.com>
-Cc:     ath11k <ath11k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux kernel regressions list <regressions@lists.linux.dev>,
-        Kalle Valo <kvalo@kernel.org>,
-        Jouni Malinen <jouni@codeaurora.org>, Jouni Malinen <j@w1.fi>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>,
-          Linux regressions mailing list 
-          <regressions@lists.linux.dev>
-References: <ed31b6fe-e73d-34af-445b-81c5c644d615@leemhuis.info>
- <f84c39ed-b8d8-7d0c-0eff-c90feaf5ab4f@leemhuis.info>
-In-Reply-To: <f84c39ed-b8d8-7d0c-0eff-c90feaf5ab4f@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <8b07ead5-f105-da86-e7da-ee49616f7c1d@collabora.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1681728666;9bab99fe;
-X-HE-SMSGID: 1poLUs-0000V0-CC
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1681730811;1bf629c5;
+X-HE-SMSGID: 1poMyw-0000Lo-Iw
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-[resending with the current email addresses for P Praneesh and Jouni
-Malinen; didn't find one on lore for Ganesh Sesetti, and Sathishkumar
-Muruganandam]
+[adding Matthias to the list of recipients, who back then applied to
+culprit]
 
-Please see quoted text below, as there is a kernel regression that is
-caused by a patch you authored or passed on.
+Hi, Thorsten here, the Linux kernel's regression tracker. Top-posting
+for once, to make this easily accessible to everyone.
 
-On 17.04.23 11:33, Thorsten Leemhuis wrote:
-> On 08.04.23 13:52, Linux regression tracking (Thorsten Leemhuis) wrote:
->> Hi, Thorsten here, the Linux kernel's regression tracker.
->>
->> I noticed a regression report in bugzilla.kernel.org. As many (most?)
->> kernel developers don't keep an eye on it, I decided to forward it by mail.
->>
->> Note, you have to use bugzilla to reach the reporter, as I sadly[1] can
->> not CCed them in mails like this.
->>
->> Quoting from https://bugzilla.kernel.org/show_bug.cgi?id=217286 :
->>
->>> Built and installed v6.2 kernel (with ath11k_pci) on arm64 hardware
->>> running Ubuntu22.04. Hardware has both Atheros QCN9074 module and Intel
->>> AX210 module. Running each (separately) in station mode and try to
->>> connect to Synology router with WiFi Access Point based on QCN9074.
->>> AX210 has no problem connecting to AP but Atheros is successfully
->>> authenticating but association is rejected by AP with this error message:
+AngeloGioacchino, Has any progress been made to fix below regression? It
+doesn't look like it from here, hence I wondered if it fall through the
+cracks.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
+
+#regzbot poke
+
+On 27.03.23 10:23, AngeloGioacchino Del Regno wrote:
+> Il 26/03/23 15:23, Bagas Sanjaya ha scritto:
+>> On 3/26/23 02:20, Tobias Dahms wrote:
+>>> Hello,
 >>>
+>>> the bisection gives following result:
+>>> --------------------------------------------------------------------
+>>> 18c7deca2b812537aa4d928900e208710f1300aa is the first bad commit
+>>> commit 18c7deca2b812537aa4d928900e208710f1300aa
+>>> Author: AngeloGioacchino Del Regno
+>>> <angelogioacchino.delregno@collabora.com>
+>>> Date:   Tue May 17 12:47:08 2022 +0200
 >>>
->>> wlan: [0:I:ANY] [UNSPECIFIED] vap-0(wlan100): [04:f0:21:a1:7c:3e]deny assoc request, Invalid supported ch width and ext nss combination
+>>>      soc: mediatek: pwrap: Use readx_poll_timeout() instead of custom
+>>> function
 >>>
->>> Please note that when running v5.15.5 kernel (with ath11k_pci), I am
->>> able to connect to the same AP without problems.
+>>>      Function pwrap_wait_for_state() is a function that polls an address
+>>>      through a helper function, but this is the very same operation that
+>>>      the readx_poll_timeout macro means to do.
+>>>      Convert all instances of calling pwrap_wait_for_state() to instead
+>>>      use the read_poll_timeout macro.
 >>>
->>> Detailed logs follow:
->>> [...]
+>>>      Signed-off-by: AngeloGioacchino Del Regno
+>>> <angelogioacchino.delregno@collabora.com>
+>>>      Reviewed-by: Nícolas F. R. A. Prado <nfraprado@collabora.com>
+>>>      Tested-by: Nícolas F. R. A. Prado <nfraprado@collabora.com>
+>>>      Link:
+>>> https://lore.kernel.org/r/20220517104712.24579-2-angelogioacchino.delregno@collabora.com
+>>>      Signed-off-by: Matthias Brugger <matthias.bgg@gmail.com>
+>>>
+>>>   drivers/soc/mediatek/mtk-pmic-wrap.c | 60
+>>> ++++++++++++++++++++----------------
+>>>   1 file changed, 33 insertions(+), 27 deletions(-)
+>>> --------------------------------------------------------------------
+>>>
 >>
->> See the ticket for more details.
+>> OK, I'm updating the regression status:
+>>
+>> #regzbot introduced: 18c7deca2b8125
+>>
+>> And for replying, don't top-post, but rather reply inline with
+>> appropriate context instead; hence I cut the replied context.
+>>
 > 
-> FWIW, the reporter bisected the regression down to
+> There are two possible solutions to that, specifically, either:
+>  1. Change readx_poll_timeout() to readx_poll_timeout_atomic(); or
+>  2. Fix the mt6323-led driver so that this operation gets done
+>     out of atomic context, which is IMO the option to prefer.
 > 
-> 552d6fd2f2 ("ath11k: add support for 80P80 and 160 MHz bandwidth")
+> Ideas?
 > 
-> Authored by P Praneesh, Ganesh Sesetti, and Sathishkumar Muruganandam,.
-> all of which I added to the list of recipients (just like Jouni Malinen,
-> who handled the patch). Could one of you please look into this?
-> 
-> While at it, let me update the tracking status:
-> 
-> #regzbot introduced: 552d6fd2f2
-> #regzbot ignore-activity
-> 
-> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
-> --
-> Everything you wanna know about Linux kernel regression tracking:
-> https://linux-regtracking.leemhuis.info/about/#tldr
-> If I did something stupid, please tell me, as explained on that page.
+> Regards,
+> Angelo
 > 
 > 
