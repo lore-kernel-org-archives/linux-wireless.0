@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E652CC77B7C
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Apr 2023 10:02:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4238CC6FD18
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Apr 2023 10:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232748AbjDSKCo (ORCPT
+        id S232558AbjDSKCo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 19 Apr 2023 06:02:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56200 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232920AbjDSKCT (ORCPT
+        with ESMTP id S232937AbjDSKCU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2023 06:02:19 -0400
+        Wed, 19 Apr 2023 06:02:20 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52541AF2A
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Apr 2023 03:02:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EF377DBA
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Apr 2023 03:02:18 -0700 (PDT)
 From:   Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1681898533;
+        s=2020; t=1681898534;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=EL/hQrBU1J3AnBilD9aGI5UduLscs6bMKX/YjQcXFzM=;
-        b=XyjTBiPL3JjPTqt06Wx2sFTJJlFYtgVTQLNRfsx9O+HJ/Ot3zUOrxJg5WhxxQkvDtj8Bpi
-        MTgWZ/sLjpMPBrvjSzWYfCwhXxARoxl1OOxZANNCUVsVf2s9hzRJkSoN1azrg6DV7OnO48
-        zo3dvqTaobYchY4ltnzKYEfsBhCz8BH/YMXt+S/g+t1mzsGGlpP2BLu0Rs+r2A9yIuqcjq
-        KywcGPGdt7lzM5HtXbbN4YrJqIt6DkUB1QXkQBHN4ehGPmsihmZwjT/Y+7pxhWFrw/R2uF
-        BXLc3OK0zBLpRxn4wQcU39OoDKwzhC9qZVB/pG85zSo1J7id3jyzn/W0bjFUEQ==
+        bh=lq4n9Kh3SxjZHY31tRrdB8wgv2WOgaXBNyjQ/yvaZvA=;
+        b=HJH7Mfegv5n87rT09RPnbjmOYPn0/gNkgHuhn1nvQz8L20K+NILtAP6nDaGwE4Q4az4Pua
+        vFufB0I29c9y4GPb5dLTuGmnz3Gm862hokZMpptbTSyhmraFxpPRxYFuuUHcqsgx1pSTOw
+        cUJx+3fiHClUdkhl9KZDDcqUuAcjVlsPWt/rdenHbizTRjaV9xbP65Ee+kHt3aBCRM8i4b
+        Ff1SpOd6+RwT9MKdfYn9GZcnQR0LZ6AJZyowU+Y1Y9eV+M+Ib/bOs6i9uldA5vlYholcME
+        P/bRrcPUqbfwJ+XDgmSv2j0Kv7ziDlAsCdbYVtyJ/4OeJJ+HVaOMlpiFPDOqGg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1681898533;
+        s=2020e; t=1681898534;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=EL/hQrBU1J3AnBilD9aGI5UduLscs6bMKX/YjQcXFzM=;
-        b=BRy8adwA/u6PWfirFe/2YUEOOhQ00TgD6nGF6//MjPNMK5uahTaunsYW/JrpFU0zYiji7V
-        PfgwVQs1p94k/4AA==
+        bh=lq4n9Kh3SxjZHY31tRrdB8wgv2WOgaXBNyjQ/yvaZvA=;
+        b=KgyTJZ2luQQcwpJShJIXiPTsuxOi9e3FQDXB5Ctcph3cKZ8zOP/9ucYVBPnZHkQFSqtM+f
+        82geszazbU3u6WDw==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
         Kalle Valo <kvalo@kernel.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Bitterblue Smith <rtl8821cerfe2@gmail.com>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v2 11/18] wifi: rtl8xxxu: Put the macid in txdesc
-Date:   Wed, 19 Apr 2023 12:01:38 +0200
-Message-Id: <20230419100145.159191-12-martin.kaistra@linutronix.de>
+Subject: [PATCH v2 16/18] wifi: rtl8xxxu: Remove usage of tx_info->control.rates[0].flags
+Date:   Wed, 19 Apr 2023 12:01:43 +0200
+Message-Id: <20230419100145.159191-17-martin.kaistra@linutronix.de>
 In-Reply-To: <20230419100145.159191-1-martin.kaistra@linutronix.de>
 References: <20230419100145.159191-1-martin.kaistra@linutronix.de>
 MIME-Version: 1.0
@@ -55,132 +55,133 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add a parameter macid to fill_txdesc(), implement setting it for the
-gen2 version.
-This is used to tell the HW who the recipient of the packet is, so that
-the appropriate data rate can be selected.
+As this driver uses HAS_RATE_CONTROL, rate_flags will not be provided by
+mac80211.
+
+Stop using tx_info->control.rates[0].flags and ieee80211_get_rts_cts_rate()
+and use rts_threshold and bss_conf.use_cts_prot instead to determine
+when to use RTS and CTS.
+
+Send RTS with 24M rate like the vendor drivers. Also set this RTS rate
+for ampdu_enable = true, because we also enable RTS for these frames.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |  8 +++---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 28 +++++++++++++++----
- 2 files changed, 27 insertions(+), 9 deletions(-)
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 40 +++++++++----------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index fb8ba97566c23..88ce369d33808 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1926,7 +1926,7 @@ struct rtl8xxxu_fileops {
- 			     struct ieee80211_tx_info *tx_info,
- 			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
- 			     bool short_preamble, bool ampdu_enable,
--			     u32 rts_rate);
-+			     u32 rts_rate, u8 macid);
- 	void (*set_crystal_cap) (struct rtl8xxxu_priv *priv, u8 crystal_cap);
- 	s8 (*cck_rssi) (struct rtl8xxxu_priv *priv, struct rtl8723au_phy_stats *phy_stats);
- 	int (*led_classdev_brightness_set) (struct led_classdev *led_cdev,
-@@ -2060,17 +2060,17 @@ void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 			     struct ieee80211_tx_info *tx_info,
- 			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
- 			     bool short_preamble, bool ampdu_enable,
--			     u32 rts_rate);
-+			     u32 rts_rate, u8 macid);
- void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 			     struct ieee80211_tx_info *tx_info,
- 			     struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
- 			     bool short_preamble, bool ampdu_enable,
--			     u32 rts_rate);
-+			     u32 rts_rate, u8 macid);
- void rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 			     struct ieee80211_tx_info *tx_info,
- 			     struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
- 			     bool short_preamble, bool ampdu_enable,
--			     u32 rts_rate);
-+			     u32 rts_rate, u8 macid);
- void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
- 			   u8 arg1, u8 arg2, u8 arg3, u8 arg4, u8 arg5);
- void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv);
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index d0c7d3a191f1a..4a41e1e3cdeaa 100644
+index b60f90ea5187b..7ff6f4e6a0ff5 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -3918,6 +3918,18 @@ static void rtl8xxxu_release_macid(struct rtl8xxxu_priv *priv, u8 macid)
- 	clear_bit(macid, priv->mac_id_map);
- }
+@@ -5185,7 +5185,6 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 	u8 *qc = ieee80211_get_qos_ctl(hdr);
+ 	u8 tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
+ 	u32 rate = 0;
+-	u16 rate_flags = tx_info->control.rates[0].flags;
+ 	u16 seq_number;
  
-+static inline u8 rtl8xxxu_get_macid(struct rtl8xxxu_priv *priv,
-+				    struct ieee80211_sta *sta)
-+{
-+	struct rtl8xxxu_sta_info *sta_info;
-+
-+	if (!priv->vif || priv->vif->type == NL80211_IFTYPE_STATION || !sta)
-+		return 0;
-+
-+	sta_info = (struct rtl8xxxu_sta_info *)sta->drv_priv;
-+	return sta_info->macid;
-+}
-+
- static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- {
- 	struct rtl8xxxu_priv *priv = hw->priv;
-@@ -5161,7 +5173,8 @@ void
- rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 			struct ieee80211_tx_info *tx_info,
- 			struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
--			bool short_preamble, bool ampdu_enable, u32 rts_rate)
-+			bool short_preamble, bool ampdu_enable, u32 rts_rate,
-+			u8 macid)
- {
- 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
- 	struct rtl8xxxu_priv *priv = hw->priv;
-@@ -5233,7 +5246,8 @@ void
- rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 			struct ieee80211_tx_info *tx_info,
- 			struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
--			bool short_preamble, bool ampdu_enable, u32 rts_rate)
-+			bool short_preamble, bool ampdu_enable, u32 rts_rate,
-+			u8 macid)
- {
- 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
- 	struct rtl8xxxu_priv *priv = hw->priv;
-@@ -5257,6 +5271,8 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 		dev_info(dev, "%s: TX rate: %d, pkt size %u\n",
- 			 __func__, rate, le16_to_cpu(tx_desc40->pkt_size));
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
+@@ -5226,10 +5225,10 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
+ 	 */
+ 	tx_desc->txdw4 |= cpu_to_le32(rts_rate << TXDESC32_RTS_RATE_SHIFT);
+-	if (ampdu_enable || (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS)) {
++	if (ampdu_enable || tx_info->control.use_rts) {
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+-	} else if (rate_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++	} else if (tx_info->control.use_cts_prot) {
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_CTS_SELF_ENABLE);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+ 	}
+@@ -5252,7 +5251,6 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 	u8 *qc = ieee80211_get_qos_ctl(hdr);
+ 	u8 tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
+ 	u32 rate = 0;
+-	u16 rate_flags = tx_info->control.rates[0].flags;
+ 	u16 seq_number;
  
-+	tx_desc40->txdw1 |= cpu_to_le32(macid << TXDESC40_MACID_SHIFT);
+ 	tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc32;
+@@ -5293,13 +5291,14 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 		tx_desc40->txdw5 |= cpu_to_le32(TXDESC40_SHORT_PREAMBLE);
+ 
+ 	tx_desc40->txdw4 |= cpu_to_le32(rts_rate << TXDESC40_RTS_RATE_SHIFT);
 +
+ 	/*
+ 	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
+ 	 */
+-	if (ampdu_enable || (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS)) {
++	if (ampdu_enable || tx_info->control.use_rts) {
+ 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_RTS_CTS_ENABLE);
+ 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_HW_RTS_ENABLE);
+-	} else if (rate_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++	} else if (tx_info->control.use_cts_prot) {
+ 		/*
+ 		 * For some reason the vendor driver doesn't set
+ 		 * TXDESC40_HW_RTS_ENABLE for CTS to SELF
+@@ -5326,7 +5325,6 @@ rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 	u8 *qc = ieee80211_get_qos_ctl(hdr);
+ 	u8 tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
+ 	u32 rate = 0;
+-	u16 rate_flags = tx_info->control.rates[0].flags;
+ 	u16 seq_number;
+ 
  	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
- 
- 	tx_desc40->txdw4 = cpu_to_le32(rate);
-@@ -5308,7 +5324,8 @@ void
- rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 			struct ieee80211_tx_info *tx_info,
- 			struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
--			bool short_preamble, bool ampdu_enable, u32 rts_rate)
-+			bool short_preamble, bool ampdu_enable, u32 rts_rate,
-+			u8 macid)
- {
- 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
- 	struct rtl8xxxu_priv *priv = hw->priv;
-@@ -5407,6 +5424,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+@@ -5381,10 +5379,10 @@ rtl8xxxu_fill_txdesc_v3(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
+ 	 */
+ 	tx_desc->txdw4 |= cpu_to_le32(rts_rate << TXDESC32_RTS_RATE_SHIFT);
+-	if (ampdu_enable || (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS)) {
++	if (ampdu_enable || tx_info->control.use_rts) {
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+-	} else if (rate_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++	} else if (tx_info->control.use_cts_prot) {
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_CTS_SELF_ENABLE);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+ 	}
+@@ -5408,7 +5406,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	struct device *dev = &priv->udev->dev;
+ 	u32 queue, rts_rate;
  	u16 pktlen = skb->len;
- 	u16 rate_flag = tx_info->control.rates[0].flags;
+-	u16 rate_flag = tx_info->control.rates[0].flags;
  	int tx_desc_size = priv->fops->tx_desc_size;
-+	u8 macid;
+ 	u8 macid;
  	int ret;
- 	bool ampdu_enable, sgi = false, short_preamble = false;
+@@ -5493,20 +5490,23 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 		}
+ 	}
  
-@@ -5506,9 +5524,9 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+-	if (rate_flag & IEEE80211_TX_RC_SHORT_GI ||
+-	    (ieee80211_is_data_qos(hdr->frame_control) &&
+-	     sta && sta->deflink.ht_cap.cap &
+-	     (IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_SGI_20)))
++	if (ieee80211_is_data_qos(hdr->frame_control) &&
++	    sta && sta->deflink.ht_cap.cap &
++	    (IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_SGI_20))
+ 		sgi = true;
+ 
+-	if (rate_flag & IEEE80211_TX_RC_USE_SHORT_PREAMBLE ||
+-	    (sta && vif && vif->bss_conf.use_short_preamble))
++	if (sta && vif && vif->bss_conf.use_short_preamble)
+ 		short_preamble = true;
+ 
+-	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS)
+-		rts_rate = ieee80211_get_rts_cts_rate(hw, tx_info)->hw_value;
+-	else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT)
+-		rts_rate = ieee80211_get_rts_cts_rate(hw, tx_info)->hw_value;
++	if (skb->len > hw->wiphy->rts_threshold)
++		tx_info->control.use_rts = true;
++
++	if (sta && vif && vif->bss_conf.use_cts_prot)
++		tx_info->control.use_cts_prot = true;
++
++	if (ampdu_enable || tx_info->control.use_rts ||
++	    tx_info->control.use_cts_prot)
++		rts_rate = DESC_RATE_24M;
  	else
  		rts_rate = 0;
- 
--
-+	macid = rtl8xxxu_get_macid(priv, sta);
- 	priv->fops->fill_txdesc(hw, hdr, tx_info, tx_desc, sgi, short_preamble,
--				ampdu_enable, rts_rate);
-+				ampdu_enable, rts_rate, macid);
- 
- 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
  
 -- 
 2.30.2
