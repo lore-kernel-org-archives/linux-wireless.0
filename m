@@ -2,108 +2,74 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBF63C77B75
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Apr 2023 10:02:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A757AC77B73
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Apr 2023 10:49:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232920AbjDSKCs (ORCPT
+        id S231963AbjDSKtw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Apr 2023 06:02:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55810 "EHLO
+        Wed, 19 Apr 2023 06:49:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231186AbjDSKCU (ORCPT
+        with ESMTP id S230492AbjDSKtt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Apr 2023 06:02:20 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99714D331
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Apr 2023 03:02:18 -0700 (PDT)
-From:   Martin Kaistra <martin.kaistra@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1681898534;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=69WL1itCQ1I5JUrgS5XfICw/J+GFoSpRGmZlkli1sIE=;
-        b=futpHay2wAZo8F4iczHIjsO7OEe4ffcI5oJFMwKWJ7McaBmMSKTAEwrmvVz1ppMN4P94ul
-        Bib3NvVj5Pu0ZqnfZ72lKXWm3KpJMHgzTwu+RUM5pk1BqM34NTtBGuKrzszPaIz3mQI6Jt
-        xvItqLir574Qg1VMKredU5eVy2k74ur986HlWchflN5YMGrkDv1msKdGQiNVJgNtuggE3w
-        NAR+J4ViIFZNcKN1U4iTM4kouvsz/QMaqRZFI9FFbj6Nsbry5oCSmSKlIVH3SZLtWw952x
-        zx1fTgOdRf8Z2n6NCQ/SIUcVLIQaX7LhDh+oQdfHSzh28z6SKAQ+3utxydSVhw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1681898534;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=69WL1itCQ1I5JUrgS5XfICw/J+GFoSpRGmZlkli1sIE=;
-        b=l7xTFxHg6zUUnZCSmdR1JgNrdZHkPX304/+sfCe663uZxrWaHD8zmhq7UhFcKGcn021xvn
-        z9WVvpakLaYA5/Dw==
-To:     linux-wireless@vger.kernel.org
-Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v2 17/18] wifi: rtl8xxxu: Declare AP mode support for 8188f
-Date:   Wed, 19 Apr 2023 12:01:44 +0200
-Message-Id: <20230419100145.159191-18-martin.kaistra@linutronix.de>
-In-Reply-To: <20230419100145.159191-1-martin.kaistra@linutronix.de>
-References: <20230419100145.159191-1-martin.kaistra@linutronix.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Wed, 19 Apr 2023 06:49:49 -0400
+Received: from hust.edu.cn (mail.hust.edu.cn [202.114.0.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB8C36A4E;
+        Wed, 19 Apr 2023 03:49:44 -0700 (PDT)
+Received: from localhost.localdomain ([222.20.126.128])
+        (user=ysxu@hust.edu.cn mech=LOGIN bits=0)
+        by mx1.hust.edu.cn  with ESMTP id 33JAk3vV011645-33JAk3vW011645
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
+        Wed, 19 Apr 2023 18:46:07 +0800
+From:   Yingsha Xu <ysxu@hust.edu.cn>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     Yingsha Xu <ysxu@hust.edu.cn>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mac80211: remove return value check of debugfs_create_dir()
+Date:   Wed, 19 Apr 2023 18:45:47 +0800
+Message-Id: <20230419104548.30124-1-ysxu@hust.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-FEAS-AUTH-USER: ysxu@hust.edu.cn
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Everything is in place now for AP mode, we can tell the system that we
-support it. Put the feature behind a flag in priv->fops, because it is
-not (yet) implemented for all chips.
+Smatch complains that:
+debugfs_hw_add() warn: 'statsd' is an error pointer or valid
 
-Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+Debugfs checks are generally not supposed to be checked for errors
+and it is not necessary here.
+
+Just delete the dead code.
+
+Signed-off-by: Yingsha Xu <ysxu@hust.edu.cn>
+Reviewed-by: Dongliang Mu <dzm91@hust.edu.cn>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 2 ++
- 3 files changed, 4 insertions(+)
+NOTES: The issue is found by static analysis and remains untested.
+---
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 0610ab57f132d..64e823f216967 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1945,6 +1945,7 @@ struct rtl8xxxu_fileops {
- 	u8 init_reg_hmtfr:1;
- 	u8 ampdu_max_time;
- 	u8 ustime_tsf_edca;
-+	u8 supports_ap:1;
- 	u32 adda_1t_init;
- 	u32 adda_1t_path_on;
- 	u32 adda_2t_path_on_a;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
-index dfb250adb1689..7dc2fd8aa5317 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
-@@ -1751,6 +1751,7 @@ struct rtl8xxxu_fileops rtl8188fu_fops = {
- 	.init_reg_hmtfr = 1,
- 	.ampdu_max_time = 0x70,
- 	.ustime_tsf_edca = 0x28,
-+	.supports_ap = 1,
- 	.adda_1t_init = 0x03c00014,
- 	.adda_1t_path_on = 0x03c00014,
- 	.trxff_boundary = 0x3f7f,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 7ff6f4e6a0ff5..bf471c3f98b86 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -7465,6 +7465,8 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 	hw->wiphy->max_scan_ssids = 1;
- 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-+	if (priv->fops->supports_ap)
-+		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
- 	hw->queues = 4;
+ net/mac80211/debugfs.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index dfb9f55e2685..207f772bd8ce 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -673,10 +673,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
  
- 	sband = &rtl8xxxu_supported_band;
+ 	statsd = debugfs_create_dir("statistics", phyd);
+ 
+-	/* if the dir failed, don't put all the other things into the root! */
+-	if (!statsd)
+-		return;
+-
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+ 	DEBUGFS_STATS_ADD(dot11TransmittedFragmentCount);
+ 	DEBUGFS_STATS_ADD(dot11MulticastTransmittedFrameCount);
 -- 
-2.30.2
+2.17.1
 
