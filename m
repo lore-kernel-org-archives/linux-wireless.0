@@ -2,55 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27A2BC77B72
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Apr 2023 11:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2492BC77B7E
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Apr 2023 11:07:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235160AbjDTLFW (ORCPT
+        id S235351AbjDTLHY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Apr 2023 07:05:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54612 "EHLO
+        Thu, 20 Apr 2023 07:07:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235116AbjDTLEd (ORCPT
+        with ESMTP id S234063AbjDTLFR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2023 07:04:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A81776BB;
-        Thu, 20 Apr 2023 04:03:14 -0700 (PDT)
+        Thu, 20 Apr 2023 07:05:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC5526EA5;
+        Thu, 20 Apr 2023 04:03:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 190D6647C3;
-        Thu, 20 Apr 2023 11:02:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 850AFC433D2;
-        Thu, 20 Apr 2023 11:02:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A0041647A6;
+        Thu, 20 Apr 2023 11:03:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E22CAC4339B;
+        Thu, 20 Apr 2023 11:03:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681988539;
-        bh=hw4xNWiwp8slyxeG+kC8WnPTYTvoQBMrOBS9+9t7ozY=;
+        s=k20201202; t=1681988585;
+        bh=jpupAkuoIR9JZhgmPqEtxcQHV2WSoE1rm0Idsw6o3cc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e0J8tkYUjcx9zrUeI+yQC7z7JQ00pXcrF7kWoBo9EyUIAmFRSpyJHaQrpSiFET/eE
-         b9OeOlABXdPQLrh7HVA+mkCuGBzHJmqd7kR9TQW7lCavtgOC6nifgjMjbnZW+4407t
-         3oqG1kT/dZoqqvh1hTLoZZlhlnigmZurkFfynfJIfs5FJOpLTxs9D3LOetofozcGDD
-         S+1+enaNoYiC0YnU95M85DdvxB7PCwU/T22kLYR0L3xtSGcB9qpUSNvMcBx6V6qL/z
-         Rb5ueq50DcD4orp2f6fTMgpn1OsqAbjXX8o9U1E3Lh1gGIPJzcNtSRzOaMy1QNHp42
-         MYSlPY7SeZ8MA==
+        b=MWk+tGb5SNwaYu2dCnSFjN6Zw8QyUEXjboVKhxmv5GiOhbxhv7AMtbLQmlqwIlbal
+         +KZbrrL1II042orlvzRDZ/eI4wOAex+d/90L/7ayvIR03dM9xM+S1jUvY4epzBd0XU
+         CBex9yzgecOTcyqbDEQmRONlqGfYLWfVyMVvtvf9YZOtxXl4YJAs4ZUs2LWVCwTWbE
+         a7gMaDI3+gU8BAavznsTblzs21MTHyCpZAFinsWH4FaX2GkezonI7qkm9dEwb9cA7n
+         oOna4vS1A31/Ah8a8GzolhFmLe6zMc9ylPTXJwpfHxY0m2jCMDSve4FMbAn+mkPrS/
+         q7/WuIvsFlH6A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, ryder.lee@mediatek.com,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, matthias.bgg@gmail.com, deren.wu@mediatek.com,
-        sean.wang@mediatek.com, mingyen.hsieh@mediatek.com,
-        yn.chen@mediatek.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.2 11/17] wifi: mt76: mt7921: Fix use-after-free in fw features query.
-Date:   Thu, 20 Apr 2023 07:01:40 -0400
-Message-Id: <20230420110148.505779-11-sashal@kernel.org>
+Cc:     Kalle Valo <quic_kvalo@quicinc.com>, Kalle Valo <kvalo@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 14/15] wifi: ath11k: reduce the MHI timeout to 20s
+Date:   Thu, 20 Apr 2023 07:02:28 -0400
+Message-Id: <20230420110231.505992-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230420110148.505779-1-sashal@kernel.org>
-References: <20230420110148.505779-1-sashal@kernel.org>
+In-Reply-To: <20230420110231.505992-1-sashal@kernel.org>
+References: <20230420110231.505992-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,66 +54,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-[ Upstream commit 2ceb76f734e37833824b7fab6af17c999eb48d2b ]
+[ Upstream commit cf5fa3ca0552f1b7ba8490de40700bbfb6979b17 ]
 
-Stop referencing 'features' memory after release_firmware is called.
+Currently ath11k breaks after hibernation, the reason being that ath11k expects
+that the wireless device will have power during suspend and the firmware will
+continue running. But of course during hibernation the power from the device is
+cut off and firmware is not running when resuming, so ath11k will fail.
 
-Fixes this crash:
+(The reason why ath11k needs the firmware running is the interaction between
+mac80211 and MHI stack, it's a long story and more info in the bugzilla report.)
 
-RIP: 0010:mt7921_check_offload_capability+0x17d
-mt7921_pci_probe+0xca/0x4b0
-...
+In SUSE kernels the watchdog timeout is reduced from the default 120 to 60 seconds:
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Acked-by: Felix Fietkau <nbd@nbd.name>
+CONFIG_DPM_WATCHDOG_TIMEOUT=60
+
+But as the ath11k MHI timeout is 90 seconds the kernel will crash before will
+ath11k will recover in resume callback. To avoid the crash reduce the MHI
+timeout to just 20 seconds.
+
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.9
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=214649
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/51fd8f76494348aa9ecbf0abc471ebe47a983dfd.1679502607.git.lorenzo@kernel.org
+Link: https://lore.kernel.org/r/20230329162038.8637-1-kvalo@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/init.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/mhi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index d4b681d7e1d22..f2c6ec4d8e2ee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -162,12 +162,12 @@ mt7921_mac_init_band(struct mt7921_dev *dev, u8 band)
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index 86995e8dc9135..a62ee05c54097 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -16,7 +16,7 @@
+ #include "pci.h"
+ #include "pcic.h"
  
- u8 mt7921_check_offload_capability(struct device *dev, const char *fw_wm)
- {
--	struct mt7921_fw_features *features = NULL;
- 	const struct mt76_connac2_fw_trailer *hdr;
- 	struct mt7921_realease_info *rel_info;
- 	const struct firmware *fw;
- 	int ret, i, offset = 0;
- 	const u8 *data, *end;
-+	u8 offload_caps = 0;
+-#define MHI_TIMEOUT_DEFAULT_MS	90000
++#define MHI_TIMEOUT_DEFAULT_MS	20000
+ #define RDDM_DUMP_SIZE	0x420000
  
- 	ret = request_firmware(&fw, fw_wm, dev);
- 	if (ret)
-@@ -199,7 +199,10 @@ u8 mt7921_check_offload_capability(struct device *dev, const char *fw_wm)
- 		data += sizeof(*rel_info);
- 
- 		if (rel_info->tag == MT7921_FW_TAG_FEATURE) {
-+			struct mt7921_fw_features *features;
-+
- 			features = (struct mt7921_fw_features *)data;
-+			offload_caps = features->data;
- 			break;
- 		}
- 
-@@ -209,7 +212,7 @@ u8 mt7921_check_offload_capability(struct device *dev, const char *fw_wm)
- out:
- 	release_firmware(fw);
- 
--	return features ? features->data : 0;
-+	return offload_caps;
- }
- EXPORT_SYMBOL_GPL(mt7921_check_offload_capability);
- 
+ static struct mhi_channel_config ath11k_mhi_channels_qca6390[] = {
 -- 
 2.39.2
 
