@@ -2,117 +2,182 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8ACEC77B75
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Apr 2023 12:17:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF549C7618E
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Apr 2023 13:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231788AbjDUMRx (ORCPT
+        id S232197AbjDUNAz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Apr 2023 08:17:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57088 "EHLO
+        Fri, 21 Apr 2023 09:00:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231910AbjDUMRv (ORCPT
+        with ESMTP id S232228AbjDUNAw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2023 08:17:51 -0400
-Received: from mail-io1-f77.google.com (mail-io1-f77.google.com [209.85.166.77])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE1B3902B
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Apr 2023 05:17:49 -0700 (PDT)
-Received: by mail-io1-f77.google.com with SMTP id ca18e2360f4ac-760b58bcc0aso326484439f.3
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Apr 2023 05:17:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682079469; x=1684671469;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=czyz4jPXZl6oM7+PF3+JFt1DVnlTxkTrAGRzEaB5Bgk=;
-        b=HMmuLw4IE0Sy1N8mMTRBk5FiRUo7R4nqIf0LYOVsiiY7nJ1R1g+F/6QjsmuYrUFeIp
-         EFyUJ8zk1wpaiiAP3y7dgjBBoL52Um6NhS/R/enhr8cS4ywNYSJkX6HN719oG//EYQMd
-         ZZDL54tzKlctmrSX8IjzHTejyNwCCPJCeobt9kYpHz/1iUqacbwPIxH8N/ZgKB0bF3KQ
-         lAMhYEHrUWqpk3rPBcORd5iB9gRbLWi5N722u2asKamMuFezugOvR3SYyZtXmmb4L7VC
-         eEagcN4hplPQ98OZ0hWZACyczJF5Xx51t2lwWem9aJ887rjWjHD07yJ3pks7183CZG96
-         LXOA==
-X-Gm-Message-State: AAQBX9dXN+xTv0fqoS+L5WK6AOPQMo7XFS4NkWfORUnIwf6Bdw6dy9VF
-        jyeArNF9vtbAmns/SYHSEVyXsDA8cM1NHC21gPpDQ+XCezC5
-X-Google-Smtp-Source: AKy350Z5L9F4MKiEFyqwzMO/3b69TKAPFK23KWq1pLXa3RrBpmt6Op3F0GyqDOTiThXXlsToK2BvgsLZYKFPH37pwP6WSpwcsuqJ
+        Fri, 21 Apr 2023 09:00:52 -0400
+Received: from mx1.uni-rostock.de (mx1.uni-rostock.de [139.30.22.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D6114EDF
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Apr 2023 06:00:49 -0700 (PDT)
+DKIM-Signature: v=1; c=relaxed/relaxed; d=uni-rostock.de; s=itmze; 
+ t=1682082047; bh=Jwld6ktGsz1PJI6Rjkx9rxgYSgS80Vcju0qbNaGrn9k=; h=
+ Subject:Subject:From:From:Date:Date:ReplyTo:ReplyTo:Cc:Cc:Message-Id:Message-Id; 
+ a=ed25519-sha256; b=
+ RFeFlYi1zwlwXUfXjfB0kjmRezWo4ibOhW/Bsw3PlYoPAwiry3uRaSTB3T2Ilrfl4S15MmjJy0G9wWziYaJsDQ==
+DKIM-Signature: v=1; c=relaxed/relaxed; d=uni-rostock.de; s=itmz; 
+ t=1682082047; bh=Jwld6ktGsz1PJI6Rjkx9rxgYSgS80Vcju0qbNaGrn9k=; h=
+ Subject:Subject:From:From:Date:Date:ReplyTo:ReplyTo:Cc:Cc:Message-Id:Message-Id; 
+ a=rsa-sha256; b=
+ RGCaGgZSTTWwCzl/CxgqDGXW3LYIShT4qQu4GS6VZx3cBPPTY5aX8PJCmfUgqq5Te8nKtri+XVSmE2p5nXPKj83seGAZhPKRFhoYeCGtoWEnIcLfoGm3VJEMtNhB6+0TzkOZadyetZh+cTVCDHfIFVBGBk8LIA6cG6+lvEXx9DU=
+Received: from 139.30.22.84 by mx1.uni-rostock.de (Tls12, Aes256, Sha384,
+ DiffieHellmanEllipticKey384); Fri, 21 Apr 2023 13:00:46 GMT
+Received: from meshdev.amd.e-technik.uni-rostock.de (139.30.202.188) by
+ mail1.uni-rostock.de (139.30.22.84) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Fri, 21 Apr 2023 15:00:46 +0200
+From:   Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+To:     <nbd@nbd.name>, <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>
+CC:     Benjamin Beichler <benjamin.beichler@uni-rostock.de>
+Subject: [RFC] average: rewrite for clearity
+Date:   Fri, 21 Apr 2023 13:00:22 +0000
+Message-ID: <20230421130022.191045-1-benjamin.beichler@uni-rostock.de>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-Received: by 2002:a5e:a90b:0:b0:760:efd4:9582 with SMTP id
- c11-20020a5ea90b000000b00760efd49582mr2460102iod.2.1682079469260; Fri, 21 Apr
- 2023 05:17:49 -0700 (PDT)
-Date:   Fri, 21 Apr 2023 05:17:49 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000003fd60705f9d7a53b@google.com>
-Subject: [syzbot] [wireless?] WARNING in cfg80211_bss_update (3)
-From:   syzbot <syzbot+9d593239580fe3639301@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, edumazet@google.com,
-        johannes@sipsolutions.net, kuba@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, pabeni@redhat.com,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [139.30.202.188]
+X-ClientProxiedBy: EMAIL2.uni-rostock.de (139.30.22.82) To
+ mail1.uni-rostock.de (139.30.22.84)
+X-TM-SNTS-SMTP: 54F5355A9B928E5FDAED1ED04C9F44CB533D5AE36DE41E79D97F83CFFFF173102000:8
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Move the former *_add function with its implicit initialization into a
+separate function, when the user explicitly wants to init with the first
+added value, altough this creates issues, when 0 is a expected value for
+the internal value.
 
-syzbot found the following issue on:
+Add a separate init function with value parameter to allow init with
+distinct value, which was formerly done by the implicit init of old
+*_add function.
 
-HEAD commit:    6a8f57ae2eb0 Linux 6.3-rc7
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=1716e35bc80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=11869c60f54496a7
-dashboard link: https://syzkaller.appspot.com/bug?extid=9d593239580fe3639301
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+Move the compile time checks into a separate macro, as they are used
+multiple times and noise up the functions.
 
-Unfortunately, I don't have any reproducer for this issue yet.
+Also fix some formatting issues.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/beced60615bb/disk-6a8f57ae.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/9ba2bd636062/vmlinux-6a8f57ae.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/1f235faaf4bc/bzImage-6a8f57ae.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+9d593239580fe3639301@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 15587 at net/wireless/scan.c:1584 cfg80211_combine_bsses net/wireless/scan.c:1584 [inline]
-WARNING: CPU: 1 PID: 15587 at net/wireless/scan.c:1584 cfg80211_bss_update+0x197d/0x21f0 net/wireless/scan.c:1778
-Modules linked in:
-CPU: 1 PID: 15587 Comm: kworker/u4:21 Not tainted 6.3.0-rc7-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/30/2023
-Workqueue: phy15 ieee80211_iface_work
-RIP: 0010:cfg80211_combine_bsses net/wireless/scan.c:1584 [inline]
-RIP: 0010:cfg80211_bss_update+0x197d/0x21f0 net/wireless/scan.c:1778
-Code: df 48 c1 ea 03 80 3c 02 00 0f 85 15 06 00 00 49 c7 47 48 00 00 00 00 31 f6 31 ff e8 dd 1e 24 f8 e9 5c f1 ff ff e8 63 22 24 f8 <0f> 0b e9 8a f3 ff ff e8 57 22 24 f8 0f 0b 4c 89 f7 e8 6d 4d b5 fa
-RSP: 0018:ffffc9000637f598 EFLAGS: 00010293
-RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
-RDX: ffff88803b8cd7c0 RSI: ffffffff895ec8fd RDI: 0000000000000000
-RBP: ffff88807d2a8000 R08: 0000000000000000 R09: 0000000000000006
-R10: 0000000000000006 R11: 0000000000094001 R12: ffff8880762a0068
-R13: 0000000000000005 R14: 0000000000000006 R15: ffff8880762a0000
-FS:  0000000000000000(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f1f57b2eff8 CR3: 000000007df78000 CR4: 0000000000350ee0
-Call Trace:
- <TASK>
- cfg80211_inform_single_bss_frame_data+0x72c/0x1020 net/wireless/scan.c:2492
- cfg80211_inform_bss_frame_data+0xc3/0xca0 net/wireless/scan.c:2525
- ieee80211_bss_info_update+0x35c/0xb50 net/mac80211/scan.c:190
- ieee80211_rx_bss_info net/mac80211/ibss.c:1120 [inline]
- ieee80211_rx_mgmt_probe_beacon net/mac80211/ibss.c:1609 [inline]
- ieee80211_ibss_rx_queued_mgmt+0x19c9/0x3030 net/mac80211/ibss.c:1638
- ieee80211_iface_process_skb net/mac80211/iface.c:1583 [inline]
- ieee80211_iface_work+0xa4d/0xd70 net/mac80211/iface.c:1637
- process_one_work+0x991/0x15c0 kernel/workqueue.c:2390
- worker_thread+0x669/0x1090 kernel/workqueue.c:2537
- kthread+0x2e8/0x3a0 kernel/kthread.c:376
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
- </TASK>
-
-
+Signed-off-by: Benjamin Beichler <benjamin.beichler@uni-rostock.de>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ include/linux/average.h | 98 ++++++++++++++++++++++++-----------------
+ 1 file changed, 57 insertions(+), 41 deletions(-)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+diff --git a/include/linux/average.h b/include/linux/average.h
+index a1a8f09631ce..2e70224b84a8 100644
+--- a/include/linux/average.h
++++ b/include/linux/average.h
+@@ -25,47 +25,63 @@
+  * that this parameter must be a power of two for efficiency.
+  */
+ 
+-#define DECLARE_EWMA(name, _precision, _weight_rcp)			\
+-	struct ewma_##name {						\
+-		unsigned long internal;					\
+-	};								\
+-	static inline void ewma_##name##_init(struct ewma_##name *e)	\
+-	{								\
+-		BUILD_BUG_ON(!__builtin_constant_p(_precision));	\
+-		BUILD_BUG_ON(!__builtin_constant_p(_weight_rcp));	\
+-		/*							\
+-		 * Even if you want to feed it just 0/1 you should have	\
+-		 * some bits for the non-fractional part...		\
+-		 */							\
+-		BUILD_BUG_ON((_precision) > 30);			\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_weight_rcp);		\
+-		e->internal = 0;					\
+-	}								\
+-	static inline unsigned long					\
+-	ewma_##name##_read(struct ewma_##name *e)			\
+-	{								\
+-		BUILD_BUG_ON(!__builtin_constant_p(_precision));	\
+-		BUILD_BUG_ON(!__builtin_constant_p(_weight_rcp));	\
+-		BUILD_BUG_ON((_precision) > 30);			\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_weight_rcp);		\
+-		return e->internal >> (_precision);			\
+-	}								\
+-	static inline void ewma_##name##_add(struct ewma_##name *e,	\
+-					     unsigned long val)		\
+-	{								\
+-		unsigned long internal = READ_ONCE(e->internal);	\
+-		unsigned long weight_rcp = ilog2(_weight_rcp);		\
+-		unsigned long precision = _precision;			\
+-									\
+-		BUILD_BUG_ON(!__builtin_constant_p(_precision));	\
+-		BUILD_BUG_ON(!__builtin_constant_p(_weight_rcp));	\
+-		BUILD_BUG_ON((_precision) > 30);			\
+-		BUILD_BUG_ON_NOT_POWER_OF_2(_weight_rcp);		\
+-									\
+-		WRITE_ONCE(e->internal, internal ?			\
+-			(((internal << weight_rcp) - internal) +	\
+-				(val << precision)) >> weight_rcp :	\
+-			(val << precision));				\
++#define EWMA_BUILD_TIME_CHECKS(_precision, _weight_rcp)                        \
++		BUILD_BUG_ON(!__builtin_constant_p(_precision));					   \
++		BUILD_BUG_ON(!__builtin_constant_p(_weight_rcp));	                   \
++		/*							                                           \
++		 * Even if you want to feed it just 0/1 you should have	               \
++		 * some bits for the non-fractional part...		                       \
++		 */																	   \
++		BUILD_BUG_ON((_precision) > 30);									   \
++		BUILD_BUG_ON_NOT_POWER_OF_2(_weight_rcp);		
++
++
++#define DECLARE_EWMA(name, _precision, _weight_rcp)			                   \
++	struct ewma_##name {						                               \
++		unsigned long internal;					                               \
++	};								                                           \
++	static inline void ewma_##name##_init_val(struct ewma_##name *e,           \
++										  unsigned long init)	               \
++	{								                                           \
++		EWMA_BUILD_TIME_CHECKS(_precision, _weight_rcp)                        \
++		e->internal = init << _precision;					                   \
++	}								                                           \
++	static inline void ewma_##name##_init(struct ewma_##name *e)               \
++	{	                                                                       \
++			ewma_##name##_init_val(e, 0);						               \
++	}                                                                          \
++	static inline unsigned long					                               \
++	ewma_##name##_read(struct ewma_##name *e)			                       \
++	{								                                           \
++		EWMA_BUILD_TIME_CHECKS(_precision, _weight_rcp)                        \
++		return e->internal >> (_precision);			                           \
++	}								                                           \
++	static inline void ewma_##name##_add(struct ewma_##name *e,	               \
++					     unsigned long val)		                               \
++	{								                                           \
++		unsigned long internal = READ_ONCE(e->internal);	                   \
++		unsigned long weight_rcp = ilog2(_weight_rcp);		                   \
++		unsigned long precision = _precision;			                       \
++									                                           \
++		EWMA_BUILD_TIME_CHECKS(_precision, _weight_rcp)                        \
++									                                           \
++		WRITE_ONCE(e->internal,			                                       \
++			(((internal << weight_rcp) - internal) +	                       \
++				(val << precision)) >> weight_rcp);		                       \
++	}                                                                          \
++	static inline void ewma_##name##_add_or_init(struct ewma_##name *e,	       \
++					     unsigned long val)		                               \
++	{								                                           \
++		unsigned long internal = READ_ONCE(e->internal);	                   \
++		unsigned long weight_rcp = ilog2(_weight_rcp);		                   \
++		unsigned long precision = _precision;			                       \
++									                                           \
++		EWMA_BUILD_TIME_CHECKS(_precision, _weight_rcp)                        \
++									                                           \
++		WRITE_ONCE(e->internal, internal ?									   \
++			(((internal << weight_rcp) - internal) +	                       \
++				(val << precision)) >> weight_rcp :	                           \
++			(val << precision));				                               \
+ 	}
+ 
+ #endif /* _LINUX_AVERAGE_H */
+-- 
+2.25.1
