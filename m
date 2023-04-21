@@ -2,24 +2,24 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F10C77B7F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B7E3C77B78
 	for <linux-wireless@archiver.kernel.org>; Fri, 21 Apr 2023 02:46:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233614AbjDUCqN (ORCPT
+        id S233631AbjDUCqO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Apr 2023 22:46:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39954 "EHLO
+        Thu, 20 Apr 2023 22:46:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233380AbjDUCqL (ORCPT
+        with ESMTP id S232790AbjDUCqM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Apr 2023 22:46:11 -0400
+        Thu, 20 Apr 2023 22:46:12 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0779C49C2
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2023 19:46:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E0174C01
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Apr 2023 19:46:10 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 33L2k2oC5015999, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 33L2k2wQ5016009, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 33L2k2oC5015999
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 33L2k2wQ5016009
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
         Fri, 21 Apr 2023 10:46:02 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
@@ -29,14 +29,14 @@ Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
 Received: from localhost.localdomain (172.21.69.188) by
  RTEXMBS04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Fri, 21 Apr 2023 10:46:01 +0800
+ 15.1.2375.7; Fri, 21 Apr 2023 10:46:02 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <leo.li@realtek.com>, <gary.chang@realtek.com>,
         <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/8] wifi: rtw89: 8851b: add NCTL post table
-Date:   Fri, 21 Apr 2023 10:45:46 +0800
-Message-ID: <20230421024551.29994-4-pkshih@realtek.com>
+Subject: [PATCH 6/8] wifi: rtw89: change naming of BA CAM from V1 to V0_EXT
+Date:   Fri, 21 Apr 2023 10:45:49 +0800
+Message-ID: <20230421024551.29994-7-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230421024551.29994-1-pkshih@realtek.com>
 References: <20230421024551.29994-1-pkshih@realtek.com>
@@ -54,112 +54,176 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-NCTL (nano-controller) is used to assist RF calibration that sends
-commands to NCTL so it can reduce IO from driver. 8851B needs additional
-settings, so add a table to do things.
+BA CAM of 8852C has more entries and more fields of H2C, and needs
+initialization before using. Due to differences from 8852A/8852B, we name
+it as V1 before. However, real V1 of BA CAM is introduced now, so change
+it to V0_EXT to avoid confusing with firmware design.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h     | 1 +
- drivers/net/wireless/realtek/rtw89/phy.c      | 6 +++++-
- drivers/net/wireless/realtek/rtw89/rtw8851b.c | 2 ++
- drivers/net/wireless/realtek/rtw89/rtw8852a.c | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852b.c | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 1 +
- 6 files changed, 11 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/core.h     |  9 ++++++++-
+ drivers/net/wireless/realtek/rtw89/fw.c       | 12 ++++++------
+ drivers/net/wireless/realtek/rtw89/fw.h       |  6 +++---
+ drivers/net/wireless/realtek/rtw89/rtw8851b.c |  2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |  2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  2 +-
+ 7 files changed, 21 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 6df386a38fb41..890ecb533372c 100644
+index 0d7b056c77fbd..2000812de27e2 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -3162,6 +3162,7 @@ struct rtw89_chip_info {
- 	const struct rtw89_phy_table *bb_gain_table;
- 	const struct rtw89_phy_table *rf_table[RF_PATH_MAX];
- 	const struct rtw89_phy_table *nctl_table;
-+	const struct rtw89_rfk_tbl *nctl_post_table;
- 	const struct rtw89_txpwr_table *byr_table;
- 	const struct rtw89_phy_dig_gain_table *dig_table;
- 	const struct rtw89_dig_regs *dig_regs;
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index c7e9061234169..96fa9f159d0ce 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -1400,7 +1400,8 @@ static void rtw89_phy_init_rf_nctl(struct rtw89_dev *rtwdev)
- 	rtw89_phy_write32_set(rtwdev, R_IOQ_IQK_DPK, 0x3);
- 	rtw89_phy_write32_set(rtwdev, R_GNT_BT_WGT_EN, 0x1);
- 	rtw89_phy_write32_set(rtwdev, R_P0_PATH_RST, 0x8000000);
--	rtw89_phy_write32_set(rtwdev, R_P1_PATH_RST, 0x8000000);
-+	if (chip->chip_id != RTL8851B)
-+		rtw89_phy_write32_set(rtwdev, R_P1_PATH_RST, 0x8000000);
- 	if (chip->chip_id == RTL8852B)
- 		rtw89_phy_write32_set(rtwdev, R_IOQ_IQK_DPK, 0x2);
+@@ -122,6 +122,13 @@ enum rtw89_cv {
+ 	CHIP_CV_INVALID = CHIP_CV_MAX,
+ };
  
-@@ -1414,6 +1415,9 @@ static void rtw89_phy_init_rf_nctl(struct rtw89_dev *rtwdev)
- 
- 	nctl_table = chip->nctl_table;
- 	rtw89_phy_init_reg(rtwdev, nctl_table, rtw89_phy_config_bb_reg, NULL);
++enum rtw89_bacam_ver {
++	RTW89_BACAM_V0,
++	RTW89_BACAM_V1,
 +
-+	if (chip->nctl_post_table)
-+		rtw89_rfk_parser(rtwdev, chip->nctl_post_table);
++	RTW89_BACAM_V0_EXT = 99,
++};
++
+ enum rtw89_core_tx_type {
+ 	RTW89_CORE_TX_TYPE_DATA,
+ 	RTW89_CORE_TX_TYPE_MGMT,
+@@ -3152,7 +3159,7 @@ struct rtw89_chip_info {
+ 	u8 scam_num;
+ 	u8 bacam_num;
+ 	u8 bacam_dynamic_num;
+-	bool bacam_v1;
++	enum rtw89_bacam_ver bacam_ver;
+ 
+ 	u8 sec_ctrl_efuse_size;
+ 	u32 physical_efuse_size;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index b9b675bf9d050..aeac2c6116d14 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -807,7 +807,7 @@ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
+ 	}
+ 	skb_put(skb, H2C_BA_CAM_LEN);
+ 	SET_BA_CAM_MACID(skb->data, macid);
+-	if (chip->bacam_v1)
++	if (chip->bacam_ver == RTW89_BACAM_V0_EXT)
+ 		SET_BA_CAM_ENTRY_IDX_V1(skb->data, entry_idx);
+ 	else
+ 		SET_BA_CAM_ENTRY_IDX(skb->data, entry_idx);
+@@ -823,7 +823,7 @@ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
+ 	SET_BA_CAM_INIT_REQ(skb->data, 1);
+ 	SET_BA_CAM_SSN(skb->data, params->ssn);
+ 
+-	if (chip->bacam_v1) {
++	if (chip->bacam_ver == RTW89_BACAM_V0_EXT) {
+ 		SET_BA_CAM_STD_EN(skb->data, 1);
+ 		SET_BA_CAM_BAND(skb->data, rtwvif->mac_idx);
+ 	}
+@@ -848,8 +848,8 @@ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
+ 	return ret;
  }
  
- static u32 rtw89_phy0_phy1_offset(struct rtw89_dev *rtwdev, u32 addr)
+-static int rtw89_fw_h2c_init_dynamic_ba_cam_v1(struct rtw89_dev *rtwdev,
+-					       u8 entry_idx, u8 uid)
++static int rtw89_fw_h2c_init_ba_cam_v0_ext(struct rtw89_dev *rtwdev,
++					   u8 entry_idx, u8 uid)
+ {
+ 	struct sk_buff *skb;
+ 	int ret;
+@@ -886,7 +886,7 @@ static int rtw89_fw_h2c_init_dynamic_ba_cam_v1(struct rtw89_dev *rtwdev,
+ 	return ret;
+ }
+ 
+-void rtw89_fw_h2c_init_ba_cam_v1(struct rtw89_dev *rtwdev)
++void rtw89_fw_h2c_init_dynamic_ba_cam_v0_ext(struct rtw89_dev *rtwdev)
+ {
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 	u8 entry_idx = chip->bacam_num;
+@@ -894,7 +894,7 @@ void rtw89_fw_h2c_init_ba_cam_v1(struct rtw89_dev *rtwdev)
+ 	int i;
+ 
+ 	for (i = 0; i < chip->bacam_dynamic_num; i++) {
+-		rtw89_fw_h2c_init_dynamic_ba_cam_v1(rtwdev, entry_idx, uid);
++		rtw89_fw_h2c_init_ba_cam_v0_ext(rtwdev, entry_idx, uid);
+ 		entry_idx++;
+ 		uid++;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 675f85c41471b..3a25efc1f3762 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -3648,7 +3648,7 @@ void rtw89_fw_release_general_pkt_list_vif(struct rtw89_dev *rtwdev,
+ void rtw89_fw_release_general_pkt_list(struct rtw89_dev *rtwdev, bool notify_fw);
+ int rtw89_fw_h2c_ba_cam(struct rtw89_dev *rtwdev, struct rtw89_sta *rtwsta,
+ 			bool valid, struct ieee80211_ampdu_params *params);
+-void rtw89_fw_h2c_init_ba_cam_v1(struct rtw89_dev *rtwdev);
++void rtw89_fw_h2c_init_dynamic_ba_cam_v0_ext(struct rtw89_dev *rtwdev);
+ 
+ int rtw89_fw_h2c_lps_parm(struct rtw89_dev *rtwdev,
+ 			  struct rtw89_lps_parm *lps_param);
+@@ -3711,8 +3711,8 @@ static inline void rtw89_fw_h2c_init_ba_cam(struct rtw89_dev *rtwdev)
+ {
+ 	const struct rtw89_chip_info *chip = rtwdev->chip;
+ 
+-	if (chip->bacam_v1)
+-		rtw89_fw_h2c_init_ba_cam_v1(rtwdev);
++	if (chip->bacam_ver == RTW89_BACAM_V0_EXT)
++		rtw89_fw_h2c_init_dynamic_ba_cam_v0_ext(rtwdev);
+ }
+ 
+ #endif
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851b.c b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-index a0aaac74b0ec8..a67a43303592c 100644
+index 2c3db08b68310..5ed699ab75a40 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8851b.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-@@ -8,6 +8,7 @@
- #include "phy.h"
- #include "reg.h"
- #include "rtw8851b.h"
-+#include "rtw8851b_rfk_table.h"
- #include "rtw8851b_table.h"
- #include "txrx.h"
- #include "util.h"
-@@ -44,6 +45,7 @@ const struct rtw89_chip_info rtw8851b_chip_info = {
- 	.bb_gain_table		= &rtw89_8851b_phy_bb_gain_table,
- 	.rf_table		= {&rtw89_8851b_phy_radioa_table,},
- 	.nctl_table		= &rtw89_8851b_phy_nctl_table,
-+	.nctl_post_table	= &rtw8851b_nctl_post_defs_tbl,
- 	.byr_table		= &rtw89_8851b_byr_table,
- 	.dflt_parms		= &rtw89_8851b_dflt_parms,
- 	.rfe_parms_conf		= rtw89_8851b_rfe_parms_conf,
+@@ -74,7 +74,7 @@ const struct rtw89_chip_info rtw8851b_chip_info = {
+ 	.scam_num		= 128,
+ 	.bacam_num		= 2,
+ 	.bacam_dynamic_num	= 4,
+-	.bacam_v1		= false,
++	.bacam_ver		= RTW89_BACAM_V0,
+ 	.sec_ctrl_efuse_size	= 4,
+ 	.physical_efuse_size	= 1216,
+ 	.logical_efuse_size	= 2048,
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index d7930efd89b72..1e1e6d0af5517 100644
+index 58cb99003be94..a8a58ff36e95f 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -2085,6 +2085,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
- 	.rf_table		= {&rtw89_8852a_phy_radioa_table,
- 				   &rtw89_8852a_phy_radiob_table,},
- 	.nctl_table		= &rtw89_8852a_phy_nctl_table,
-+	.nctl_post_table	= NULL,
- 	.byr_table		= &rtw89_8852a_byr_table,
- 	.dflt_parms		= &rtw89_8852a_dflt_parms,
- 	.rfe_parms_conf		= NULL,
+@@ -2115,7 +2115,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.scam_num		= 128,
+ 	.bacam_num		= 2,
+ 	.bacam_dynamic_num	= 4,
+-	.bacam_v1		= false,
++	.bacam_ver		= RTW89_BACAM_V0,
+ 	.sec_ctrl_efuse_size	= 4,
+ 	.physical_efuse_size	= 1216,
+ 	.logical_efuse_size	= 1536,
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-index eaa2ea0586bc6..f12d250f03127 100644
+index 5a67f02557ee7..fa12d4a7f79f9 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-@@ -2522,6 +2522,7 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
- 	.rf_table		= {&rtw89_8852b_phy_radioa_table,
- 				   &rtw89_8852b_phy_radiob_table,},
- 	.nctl_table		= &rtw89_8852b_phy_nctl_table,
-+	.nctl_post_table	= NULL,
- 	.byr_table		= &rtw89_8852b_byr_table,
- 	.dflt_parms		= &rtw89_8852b_dflt_parms,
- 	.rfe_parms_conf		= NULL,
+@@ -2546,7 +2546,7 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
+ 	.scam_num		= 128,
+ 	.bacam_num		= 2,
+ 	.bacam_dynamic_num	= 4,
+-	.bacam_v1		= false,
++	.bacam_ver		= RTW89_BACAM_V0,
+ 	.sec_ctrl_efuse_size	= 4,
+ 	.physical_efuse_size	= 1216,
+ 	.logical_efuse_size	= 2048,
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index ceb819a62efc9..347a19b8eaa05 100644
+index 35ba30f040c71..d9272bce03256 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -2821,6 +2821,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
- 	.rf_table		= {&rtw89_8852c_phy_radiob_table,
- 				   &rtw89_8852c_phy_radioa_table,},
- 	.nctl_table		= &rtw89_8852c_phy_nctl_table,
-+	.nctl_post_table	= NULL,
- 	.byr_table		= &rtw89_8852c_byr_table,
- 	.dflt_parms		= &rtw89_8852c_dflt_parms,
- 	.rfe_parms_conf		= NULL,
+@@ -2846,7 +2846,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.scam_num		= 128,
+ 	.bacam_num		= 8,
+ 	.bacam_dynamic_num	= 8,
+-	.bacam_v1		= true,
++	.bacam_ver		= RTW89_BACAM_V0_EXT,
+ 	.sec_ctrl_efuse_size	= 4,
+ 	.physical_efuse_size	= 1216,
+ 	.logical_efuse_size	= 2048,
 -- 
 2.25.1
 
