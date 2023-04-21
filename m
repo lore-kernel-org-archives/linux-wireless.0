@@ -2,105 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA378C7618E
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 17:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5833C77B78
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 19:48:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229797AbjDVR3d (ORCPT
+        id S229508AbjDVTsq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Apr 2023 13:29:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39350 "EHLO
+        Sat, 22 Apr 2023 15:48:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbjDVR3d (ORCPT
+        with ESMTP id S229751AbjDVTsp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2023 13:29:33 -0400
-Received: from bues.ch (bues.ch [IPv6:2a01:138:9005::1:4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 842E01BF7;
-        Sat, 22 Apr 2023 10:29:30 -0700 (PDT)
-Received: by bues.ch with esmtpsa (Exim 4.94.2)
-        (envelope-from <m@bues.ch>)
-        id 1pqH2e-0008h1-Tl; Sat, 22 Apr 2023 19:28:54 +0200
-Date:   Sat, 22 Apr 2023 19:28:20 +0200
-From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     Nikita Zhandarovich <n.zhandarovich@fintech.ru>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org,
-        Natalia Petrova <n.petrova@fintech.ru>
-Subject: Re: [PATCH v2] b43legacy: Add checking for null for
- ssb_get_devtypedata(dev)
-Message-ID: <20230422192820.59e8e423@barney>
-In-Reply-To: <95cff855-cb12-cf66-888f-b296a712d37d@lwfinger.net>
-References: <20230418142918.70510-1-n.zhandarovich@fintech.ru>
- <95cff855-cb12-cf66-888f-b296a712d37d@lwfinger.net>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.37; x86_64-pc-linux-gnu)
+        Sat, 22 Apr 2023 15:48:45 -0400
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCA321BD5
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Apr 2023 12:48:43 -0700 (PDT)
+Received: by mail-wr1-x42b.google.com with SMTP id ffacd0b85a97d-3010889c6ebso1740731f8f.2
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Apr 2023 12:48:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1682192922; x=1684784922;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=UQMSHOEXy4dd32S1UV0ZhNWB6VKkhN22gnwR9IMusl0=;
+        b=nHmMObR7x3FiUkaAPIlaQyocvvgn5cZjZnvZUAlj19vRreiBRr0OrjVYcp34NcAoNu
+         9cdqrSazGuGiOA7k/p+EN9YMJFHSFkLxHLQH2DwgDlnX4sM6jZa3oJyPytw1Mwy05Nto
+         d5dQO1GKskQ4xoRCKnZaysBDP4R17bnTwmnNFBcoMesrDyLesbWmpJIsImdGvku+Hp3X
+         2wtM6bY/iq7tieTgsAPDLaFtxkcbUyqtyThPb1eNAPyowHojVgKL9R3TP3oUvIeVy/Cq
+         JS/jFKMN/GdYACkctrawwhLvQrne6MhmV7qhNGmqQ9/+7qwGfUWEj9PSm0JxNLaFWXYH
+         Zgrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682192922; x=1684784922;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UQMSHOEXy4dd32S1UV0ZhNWB6VKkhN22gnwR9IMusl0=;
+        b=SCuRpeBigq7UOFzjLx7kXXKQdEFsiVKe9Fm23AFYInUmZwkLCcWTUhNAOzki6OWjRZ
+         kS6Q0fMUizyq3YLD/i/6XzGvjq6D84pN1fhIoyosX9mils+XtXnJosGptPvEkEEAFYbY
+         7gjfmTCc1eAYwT5i2q80nTceLdI5Kojuf6n58x5aasK9sl/eFxInR+H6EcZI4HTnNnX7
+         tr8uEUN2KRJbwi6kljWY91+S2e9rXR6ftMD5SO3R5C41R7PQXjdkIQKwArZGENjYKJ09
+         DQVsIuvp2Urbstcqv2sOAfgzr0qvR/7+fMZFdpaxzzThsqzFP6fCkEdFm2S7TAuLbRFC
+         mXPA==
+X-Gm-Message-State: AAQBX9eUC92yDhwtjT4epiIM/MM4RjCopQbs6I3yprtMOumPMiqIHLOy
+        4sZU2EQcb/Rk1fotLsV4/RtzMQ==
+X-Google-Smtp-Source: AKy350aLYJew3ugaktSPtVTFee5OZkYC67M5r+9LtUdpkJB3mKDc49tydAixWUKxvVGhL43y2CuajQ==
+X-Received: by 2002:adf:f3cb:0:b0:2f2:7adf:3c67 with SMTP id g11-20020adff3cb000000b002f27adf3c67mr6362132wrp.61.1682192922260;
+        Sat, 22 Apr 2023 12:48:42 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id u6-20020adff886000000b002f28de9f73bsm7159089wrp.55.2023.04.22.12.48.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 22 Apr 2023 12:48:41 -0700 (PDT)
+Date:   Fri, 21 Apr 2023 15:39:45 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     "kvalo@kernel.org" <kvalo@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH] wifi: rtw89: fix rtw89_read_chip_ver() for RTL8852B and
+ RTL8851B
+Message-ID: <3b1ed718-ce01-4a98-ae8b-3c042851c3f5@kili.mountain>
+References: <e4d912a2-37f8-4068-8861-7b9494ae731b@kili.mountain>
+ <7475bff70fd50c7e8527e66080e126b4eff440bb.camel@realtek.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/2UmYtPuo=8I_Omt_ytOLG9A";
- protocol="application/pgp-signature"; micalg=pgp-sha512
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7475bff70fd50c7e8527e66080e126b4eff440bb.camel@realtek.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/2UmYtPuo=8I_Omt_ytOLG9A
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Fri, Apr 21, 2023 at 11:48:43AM +0000, Ping-Ke Shih wrote:
+> On Fri, 2023-04-21 at 13:44 +0300, Dan Carpenter wrote:
+> > 
+> > The if statement is reversed so it will not record the chip version.
+> > This was detected using Smatch:
+> > 
+> >     drivers/net/wireless/realtek/rtw89/core.c:3593 rtw89_read_chip_ver()
+> >     error: uninitialized symbol 'val'.
+> 
+> I use smatch to check our driver regularly, but I can't find this error.
+> With the latest version v0.5.0-8321-g556064ca, I still can't find it.
+> Do I need to specify additional arguments? Thanks. 
+> 
 
-On Fri, 21 Apr 2023 17:14:18 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > (err) goto out;
-> >   		wl =3D ssb_get_devtypedata(dev);
-> > -		B43legacy_WARN_ON(!wl);
-> > +		if (!wl) {
-> > +			B43legacy_WARN_ON(!wl);
-> > +			err =3D -ENODEV;
-> > +			goto out;
-> > +		}
-> >   	}
-> >   	err =3D b43legacy_one_core_attach(dev, wl);
-> >   	if (err) =20
->=20
-> I do not recall seeing v1. One additional nitpick: The latest
-> convention would have the subject as "wifi: b43legacy:...". Kalle may
-> be able to fix this on merging, but it not, a v3 might be required.
-> Otherwise, the patch is good.
->=20
-> Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
+You need the cross function database (which takes like 9 hours to build).
 
-No, it's not good. It's wrong. I already replied to it.
-wl can never be NULL here and the goto-out path is wrong (if there
-was a chance for it to trigger).
+~/smatch/smatch_scripts/build_kernel_data.sh
 
-Please drop this patch, Kalle.
+regards,
+dan carpenter
 
---=20
-Michael B=C3=BCsch
-https://bues.ch/
-
---Sig_/2UmYtPuo=8I_Omt_ytOLG9A
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmREGTUACgkQ9TK+HZCN
-iw5QnxAAsP4FHvqBSFyCpRPrOwj512Kwf4RtO4TYNO/FC3zv09UAgjzILHDVJFDD
-nPmFfNaPsGiVqDUHTIfuPzBYFMdvDsZyibynDU4Fv24YFNXx9YkrytMAZH+Rzh6t
-4cID7MG82odxIJJP3ERs7vA0MX1HhD2cKR2BA2g6470gf1M1+EEqGt+xiu8Q09ja
-rJNpcZB616jmOd3kCxRtSmEVuksPZfVYFFm3Nj77MIUiO/DlIcn2abkFPDMGYpOf
-9GGCHTLc0DSTlZ2vTxmmnYQW/Jqhe6DAjjdY2v7OAN8Ma87VCKVWsCdjIKEhUSyf
-vKY8uxLK9mG5wE8NSD7MqKNALqBewpEcHJy9FyVsxPdq92FpbqfkQh8sWRZFPDC0
-kOT+Y9YqFaec9Ffe+jrISqN/lflkspnvCv4DJn2616NoaFa97zVMv43Oz+o5DYps
-H5TcuwMr/xGlXxHOTRYlxZUFPNMlarkkv6ZoXrhBJncjgZROTRvwjbzgsEeRSO1+
-OPUzTIIobbScYn3XNmNz85Ag8uBx/LrXqSW7F+N4dKyEhXs/EGXKjx/PnZIxSDNF
-s05UhkHRz6N624hRVSEIOS7R4HuZQxIg83usyAkhTT/o58UsHd9sjrK1Tv63m+wE
-XqbKdiC5cKgaN4Mhoeil2Cz6AZsSizVV4PYsAN7zGuk/iGOhC1Q=
-=vx0A
------END PGP SIGNATURE-----
-
---Sig_/2UmYtPuo=8I_Omt_ytOLG9A--
