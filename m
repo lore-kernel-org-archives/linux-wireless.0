@@ -2,100 +2,150 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8ADEC6FD18
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 10:19:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62B13C7618E
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 13:23:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229775AbjDVKTa (ORCPT
+        id S229879AbjDVNXb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Apr 2023 06:19:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48984 "EHLO
+        Sat, 22 Apr 2023 09:23:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229907AbjDVKTV (ORCPT
+        with ESMTP id S229479AbjDVNXa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2023 06:19:21 -0400
-Received: from out203-205-221-249.mail.qq.com (out203-205-221-249.mail.qq.com [203.205.221.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37FEA1FC0;
-        Sat, 22 Apr 2023 03:19:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1682158739;
-        bh=z8S0DFiFjCmjZMlMnT7AsuASmakTQv+zP2mNvAbhkDI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=DQDIlvGj+k291zGMDr/BTa6A+qH4C6wKfS4EkpINPNVquKfvHMdMuMg5t18SWdnpN
-         HWb/J87/+ObFVhO9dGlfNK7W1kYswTHn6iQtnlgzMzBICGNfGCpXWOqLbFlPqG+EoI
-         sY+cRI3PLhH39ELnm6X22MxSgSmyntEjE3G8oQAc=
-Received: from localhost.localdomain ([49.7.199.72])
-        by newxmesmtplogicsvrszb6-0.qq.com (NewEsmtp) with SMTP
-        id 1402C0F4; Sat, 22 Apr 2023 18:05:00 +0800
-X-QQ-mid: xmsmtpt1682157928tfv627lfy
-Message-ID: <tencent_588107D54A02EA06A1D67C6B118CC3A35805@qq.com>
-X-QQ-XMAILINFO: MpSLeT6aCErC+jUWDBvMxzccUdI/jjD4NwtJ4TEOo9iC1GERxc1SIoBgPLOzb1
-         eYZVK8tjnJcAtnFGp+jh71Ub6LDEAue2FU69fnC1yHEnSiPkV3diI4bgrnAW00snShYC3ahuBegP
-         Jgd8avl24nIYPPpMNYy5c/Tys0+qNAUdnNKZXRD69IBfbH8DQnUeHu43m3gH5/mPNwoZkXB75b/H
-         bL1d0gL4lbXbKvqiGBF+lZNL77hsk35BAJsNHdMbcwK7E5T7XHt+W4vuLQaMEZaWQjZ1S/22iGpe
-         ocX5Qvyfi3sf9EA3KbljpcgTxn3MOLx4trU+urrlivq+8tyzQO5j+hNKpFp4m9vdEckHLIoGtUH6
-         679lUgq7gs1c43NVoI7jE+34yvtiDZLK0zNO7mWXC/GVTjV9czGM8sQWutr9M5YAzYCxCjcoB+ze
-         78zIrhj7mzNsgTx2OXOuFDOJLX8V1KC6nUu/mVsAu2B+HglqwpXTr38NNbAxgyRYS+L1yprfb/IR
-         3NzkP4JWOgVkbuxLjebKItwbRMuerQz3WtIUJYMrtpGRNYSiAwnail9afXkss4H+UC7amCod4Y0C
-         60waM7134L98FOzSL6TH5t8QiqcbDUzhac6xo0ApMNCpref6AF/4K/9Q2AnGty7n//hszOpCDFfY
-         ma1Gg9hp9WPMV0KwdAcXXi61qc3QOldIdDk9+LtzvdYdnTdgDReDQHG3Dgu1DkSp5SKN64VYQsOv
-         KJJrbodvI8O9Jf7s+sy7NeXv4LdTiypYuLDaPUXpspknbuB3i4eIiyyvci2pgHBQbxMXm3K+2Aa0
-         eRIiDhz/K+FFN3zj3zJ3bUwmIuSjX44SK1BMDZjaWgcwqwJTaj7A/UnwL2a9SFkyt/99HwRFdLua
-         SKzMLzwlgdBnWpRcLq7EjqGPwF5ovi2fR74fnXsTflEpKPekaK9ZveoMxYX5NvsWrMlZup6lVtjQ
-         uBoyLBCA0gL+dQl6lL3gN+Vmt64E1mnX/J7lVZzjMSZuD+LymUR8AsW9ECDyYguoT6FU1hUUYTj5
-         9q6a5Gylu/qxrlh76haqSaEfyt1jGiCNJRWJBI2w==
-From:   Zhang Shurong <zhang_shurong@foxmail.com>
-To:     tony0620emma@gmail.com
-Cc:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        Sat, 22 Apr 2023 09:23:30 -0400
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA8A510E2;
+        Sat, 22 Apr 2023 06:23:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net; s=s31663417;
+        t=1682169756; i=ps.report@gmx.net;
+        bh=cmUFT4OfIbNytno9emWfQm3hzQNoxBDM3Z5o7EEjaYU=;
+        h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
+        b=QVXfltavTUdwOJ8zoLJGRSvD+g1HuJMOYmwwuaIbdNp1C1fo+dCNo8fkXuQQTT6tf
+         0onnoPIh17nQ1et5efnxJp/AjdMcW8fTItCpjYwEkIwkKfHASSY2ozMJU0JQWiZqDu
+         o8umVdhX81GkHqHKwBjhN+yZ1dS/ua8HlQKTnBHWW0fCNFnkCgR+cNyezhaFgXgidA
+         30h5hVoNHlTDYde2koC2c35wJM0Uwj1Sn1bUjxwU23ABsEWsG71jDfqGXDjryqdOwJ
+         HLZd2v29aQJisu/Goa0m89cG7V2MUxOJ8CqmEoobp+wJXx6nTjSsS4xBz8raMR0UG/
+         3eMZjXcF302lQ==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from localhost ([62.216.209.208]) by mail.gmx.net (mrgmx005
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MvbFs-1q89Dm31WQ-00shQn; Sat, 22
+ Apr 2023 15:22:36 +0200
+Date:   Sat, 22 Apr 2023 15:22:34 +0200
+From:   Peter Seiderer <ps.report@gmx.net>
+To:     Toke =?UTF-8?B?SMO4aWxhbmQtSsO4cmdlbnNlbg==?= <toke@toke.dk>
+Cc:     Simon Horman <simon.horman@corigine.com>,
+        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+        "John W . Linville" <linville@tuxdriver.com>,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zhang Shurong <zhang_shurong@foxmail.com>
-Subject: [PATCH 06/10] wifi: rtw88: fix incorrect error codes in rtw_debugfs_set_rf_write
-Date:   Sat, 22 Apr 2023 18:04:50 +0800
-X-OQ-MSGID: <f2fc025197b5643beee3f7e5fc04ddaa07edcc97.1682156784.git.zhang_shurong@foxmail.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <cover.1682156784.git.zhang_shurong@foxmail.com>
-References: <cover.1682156784.git.zhang_shurong@foxmail.com>
+        Gregg Wonderly <greggwonderly@seqtechllc.com>
+Subject: Re: [PATCH v1] wifi: ath9k: fix AR9003 mac hardware hang check
+ register offset calculation
+Message-ID: <20230422152234.639fc98e@gmx.net>
+In-Reply-To: <87bkjgmd9g.fsf@toke.dk>
+References: <20230420204316.30475-1-ps.report@gmx.net>
+        <ZEOf7LXAkdLR0yFI@corigine.com>
+        <87bkjgmd9g.fsf@toke.dk>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.37; x86_64-suse-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:/ZyPIhRP+ObOUX2XEzdAFS2huyTpaovE4UqGK62OivzVnICqXrH
+ QEHeIqQZiSGwFHtrxnaS0wUxCDa/OazTe2/iF+nE5NP1XQjsnLU78eUYcf2OL3CdM+ilIM8
+ CgkLTKWtPDqtvQwPd1kzVN6kXa05cxArkeaGzd9S0AmFgRQP5EjSD0+LD45xPBPyhVifomt
+ 4JRD5JQ7jXc23H9W2c+MA==
+UI-OutboundReport: notjunk:1;M01:P0:40teIWQTOuk=;jcWNxkWtqXD+SAJ2lHoSMEIiOfe
+ 0pxeOtQZLLEA9fzQT3m9bUrRFmGDSiyKYpfad5cbna7tv0ezi6gE2PMXuGmRZkl222gOEH9fk
+ JIUgNSr0/rxYVZLjqFkNBLx6uW8cXJNpqkAoA32971CjQSw6rW/PPyLjPEntjzxJOK3TWkHyr
+ vsOPEdcSYhE6430Xq6DEWYCnVNuG1BwnXKAgNh6joz6lbC8fWS9vxISg4Dz1GGjd2CrVi/8mp
+ de3GLqHBGflz37QMQ1cGyKg9GleTmwIgR5udCG3wo2lOegFhzKy9F73KafMSET34lf326FUhl
+ DEN8CZDoPeoRw11UnvuY41Ir33Kn/1bUow5qebjPpbJw9nP7pnbZs63//jPU4N3Ft8Ik3gW2l
+ 6vZx+5eJUFi8wLG9s8msEhNBQfl2EBC64gZt70oi3nUO7SsZcpi0MuLRoSrMAjxrH7BDpWRE0
+ rD38t39hA6pbTsCoEYiYAb/ZgIgPPDpqTSgrXIiPmaKyNcUdPisn05CJvXvtGztfX92A51tRq
+ lr8Aj6dhdE30CuK7Xrfwumb/DEwLSIB3WNJ3/dHrxwhXQkbvebVMnLu71gXzGCAjIeGPQhGIv
+ 5qVkz+whFtneGILJIsbVhTtvZhTeBbEO4L+k3Ol0y+bBhPuFD6FRJJWhi4Bcpnfn26wmBiF2o
+ RJm06gCwUM8OrrRGn/LAzkXhkYDbN/LtYnmR/XYI9bh4xfMoxks9h7X4O29kOdyWc5ZUuforF
+ AUCxNgowFa77Z5iqQwWDSehmJ7gbEcLBOIyZtxfBm7SNw9FEMbMm1K223p1jmUxo5P4NuBXlK
+ J6t7Y0/d+m06ve7iSIZPwlSm0hURkW0EWICA4SCUaqu9nrvRch/w2hkDDqSr2AP2wijdByiYc
+ 5IBLPbGDWWh1CSyk8+pSLsVeoyapRYj7gvxIdnmTXeeQinrIbnOjYxPTbwXrU4rRkCmylRPlg
+ kQ629PdCNLKs8OcgZdtkj1hUmzE=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If there is a failure during copy_from_user or user-provided data
-buffer is invalid, rtw_debugfs_set_rf_write should return negative
-error code instead of a positive value count.
+On Sat, 22 Apr 2023 12:18:03 +0200, Toke H=C3=B8iland-J=C3=B8rgensen <toke@=
+toke.dk> wrote:
 
-Fix this bug by returning correct error code.
+> Simon Horman <simon.horman@corigine.com> writes:
+>=20
+> > On Thu, Apr 20, 2023 at 10:43:16PM +0200, Peter Seiderer wrote: =20
+> >> Fix ath9k_hw_verify_hang()/ar9003_hw_detect_mac_hang() register offset
+> >> calculation (do not overflow the shift for the second register/queues
+> >> above five, use the register layout described in the comments above
+> >> ath9k_hw_verify_hang() instead).
+> >>=20
+> >> Fixes: 222e04830ff0 ("ath9k: Fix MAC HW hang check for AR9003")
+> >>=20
+> >> Reported-by: Gregg Wonderly <greggwonderly@seqtechllc.com>
+> >> Link: https://lore.kernel.org/linux-wireless/E3A9C354-0CB7-420C-ADEF-F=
+0177FB722F4@seqtechllc.com/
+> >> Signed-off-by: Peter Seiderer <ps.report@gmx.net>
+> >> ---
+> >> Notes:
+> >>   - tested with MikroTik R11e-5HnD/Atheros AR9300 Rev:4 (lspci: 168c:0=
+033
+> >>     Qualcomm Atheros AR958x 802.11abgn Wireless Network Adapter (rev 0=
+1))
+> >>     card
+> >> ---
+> >>  drivers/net/wireless/ath/ath9k/ar9003_hw.c | 27 ++++++++++++++--------
+> >>  1 file changed, 18 insertions(+), 9 deletions(-)
+> >>=20
+> >> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/=
+wireless/ath/ath9k/ar9003_hw.c
+> >> index 4f27a9fb1482..0ccf13a35fb4 100644
+> >> --- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+> >> +++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+> >> @@ -1099,17 +1099,22 @@ static bool ath9k_hw_verify_hang(struct ath_hw=
+ *ah, unsigned int queue)
+> >>  {
+> >>  	u32 dma_dbg_chain, dma_dbg_complete;
+> >>  	u8 dcu_chain_state, dcu_complete_state;
+> >> +	unsigned int dbg_reg, reg_offset;
+> >>  	int i;
+> >> =20
+> >> -	for (i =3D 0; i < NUM_STATUS_READS; i++) {
+> >> -		if (queue < 6)
+> >> -			dma_dbg_chain =3D REG_READ(ah, AR_DMADBG_4);
+> >> -		else
+> >> -			dma_dbg_chain =3D REG_READ(ah, AR_DMADBG_5);
+> >> +	if (queue < 6) {
+> >> +		dbg_reg =3D AR_DMADBG_4;
+> >> +		reg_offset =3D i * 5; =20
+> >
+> > Hi Peter,
+> >
+> > unless my eyes are deceiving me, i is not initialised here. =20
+>=20
+> Nice catch! Hmm, I wonder why my test compile didn't complain about
+> that? Or maybe it did and I overlooked it? Anyway, Kalle, I already
+> delegated this patch to you in patchwork, so please drop it and I'll try
+> to do better on reviewing the next one :)
 
-Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
----
- drivers/net/wireless/realtek/rtw88/debug.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+No warning reported because of Makefile:
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 911f0514c497..259e6c15bc78 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -423,14 +423,17 @@ static ssize_t rtw_debugfs_set_rf_write(struct file *filp,
- 	char tmp[32 + 1];
- 	u32 path, addr, mask, val;
- 	int num;
-+	int ret;
- 
--	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 4);
-+	ret = rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 4);
-+	if (ret < 0)
-+		return ret;
- 
- 	num = sscanf(tmp, "%x %x %x %x", &path, &addr, &mask, &val);
- 
- 	if (num !=  4) {
- 		rtw_warn(rtwdev, "invalid args, [path] [addr] [mask] [val]\n");
--		return count;
-+		return -EINVAL;
- 	}
- 
- 	mutex_lock(&rtwdev->mutex);
--- 
-2.40.0
+  1038 # Enabled with W=3D2, disabled by default as noisy
+  1039 ifdef CONFIG_CC_IS_GCC
+  1040 KBUILD_CFLAGS +=3D -Wno-maybe-uninitialized
+  1041 endif
+
+Regards,
+Peter
+
+>=20
+> -Toke
 
