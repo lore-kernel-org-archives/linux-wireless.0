@@ -2,90 +2,104 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F501C7618E
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 10:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 771AAC6FD18
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 10:18:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229684AbjDVKRM (ORCPT
+        id S229847AbjDVKSY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Apr 2023 06:17:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46234 "EHLO
+        Sat, 22 Apr 2023 06:18:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbjDVKRH (ORCPT
+        with ESMTP id S229868AbjDVKSQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2023 06:17:07 -0400
-Received: from out203-205-251-85.mail.qq.com (out203-205-251-85.mail.qq.com [203.205.251.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69071E70;
-        Sat, 22 Apr 2023 03:17:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1682158320;
-        bh=S1YnfUryk0L2ZsYdhjekcoTp3feYwxUkk3NnwN11E5U=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=z0zMRTcVXte0BGrwzwElt40Jtg/TF0YfxVEB7KytNXRJlVTRWWh4mC8LPAWhD/eUv
-         RDxMcmfPI8cN8LNuknx3VSCn7FHOzPIMUe2Ee33Di6NN2l46/s+8ham6vuc39wxAW+
-         NJIjFEjoVwXbBcAkmg5Wziv1RlBJqifOHYnXZt2U=
-Received: from localhost.localdomain ([49.7.199.72])
-        by newxmesmtplogicsvrszb6-0.qq.com (NewEsmtp) with SMTP
-        id 1402C0F4; Sat, 22 Apr 2023 18:05:00 +0800
-X-QQ-mid: xmsmtpt1682157937to9uve8j0
-Message-ID: <tencent_60D59E6EE9816978182B3CA30E4B48DD000A@qq.com>
-X-QQ-XMAILINFO: NkHKfw09D6j8DzDFrl8OZ8DLAowJ2S27fJ6TyiQednlgwnWrGZ7po7Z1NK7DM2
-         1gB15xje0WgS3HC8cyXMDnzwd+xfnkdHWxX0XeAfCR5TXfV8ymB2ZSvBGuSImdd8tlzoM92UEPqY
-         P60PuepCEDQsKAcMzQl20IFWMEkdWHwqBrsult5Uga+qtfZtAFEyORgaCtnOpg6uEJH/6yfdNl+f
-         C9x/jIodWfAnRpljF5wfSPO8i1MCgHCtkfqGHWZMzW23/JxKxJm9GFRHm6Awdr2QdgOdTloi9VIJ
-         nY8eD0/NYBW3ETa3U8IZbmWYa+nO9Cw62j/cDhm3ECkB2WUrVnUoy9YYYi2n2FE6KLs5I4wLnndy
-         dUW9q1NCYSR1W7Qqx6AfNOliqCnkntQ5sVZzMVQs4TZt8Y3JuEPNWGqSlN14nCFWmibi0WUVBUjk
-         55AE2XuAtf2EYn9baNYf1SxPIUbTeMfwyaq25ywekxZqBmiNq56zqM5YI3qKpnrTydKTNr2TO+mo
-         LnOAm2EDNdJ9JbhhkikOnk0Fvb/AilsKjGOoMniBgnJNrMsUB3vkmzfP8MZXuIEZjoBSPwMjVFbK
-         Y0f4Ll+6HDzgRm0E5S3NWYgcR1kSeeXRCDN61KI0m5wv0BnFQNPPkZC5sLsbQHKofIkuq/0S+TYI
-         lZM7UJS5qNYf9I0vQZHtD8s0vfHzos9AcuDY/1RLOHt1fVTsD6lzYHjPnAGBIAnaTYR8BRkaSDs6
-         kKnaLuUN4qPDmLUug6lmliKJU26oqjnrK9YWEpZT9ixbQBsQpyaVoT7ImCab29j0LOoaM4ZfeiS+
-         dyAM1hMT9k2M0bjurm9CNfdUkqUMa7YFYvyg+59/bhdaBXed+yDqWFql5F/+c809BTCgOR0G9cO2
-         ZoEfyr3dj4c1NIGJc8ZE7e/PT3xBo02U1A6j7vhO6kTVfYErMjfBQh20Gc5XExqsc/Bny9iFCfdy
-         528BABRkuwWI4QSyQv1ueRYj7zFZItJwQ3XSuYkX9uJx13MsLIJXLi7rRikexO0vNd8nLTlXZCy2
-         ETbQWJEL5wwcTLiBWLMjv/NkfmN8aiVBc1OnGAoNqJ5erPzIOe
-From:   Zhang Shurong <zhang_shurong@foxmail.com>
-To:     tony0620emma@gmail.com
-Cc:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        Sat, 22 Apr 2023 06:18:16 -0400
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9056B1FD6;
+        Sat, 22 Apr 2023 03:18:08 -0700 (PDT)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1682158685; bh=yqiaxdewJrN1/O7q8yubLYta1s4c/hqngkUF7U3apls=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=ohwAnfUVFQ6rIhKYei+EWGQuqNFD18sVNEM43Qdn4/7vF+eWx1RIyso7InCLDuira
+         HLd2lRvqx4S/pfYE3adERhu4yk4GwCo0oeML+/363WG9c949KXTCrCQZm611tb3Zrs
+         an59cJDKIYeH5WoYLaJxIkqAGz6UvV41SE50h6WLaO1KDPcMuRRDtVkBnoqgtM985n
+         6GKNqvGPmKNDu/Z+3IbUx0WNpaCy0LHCdtOVVZvahII3k1gVMLs2r94IvUUgYkF2B/
+         YGLGjCrWLjlfZoPyU2mAyEOZohPZiWMXOhH4wTM94jKEdUvLbe2dS72UNA4saOimGO
+         iwqHAOj7TpoIA==
+To:     Simon Horman <simon.horman@corigine.com>,
+        Peter Seiderer <ps.report@gmx.net>
+Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+        "John W . Linville" <linville@tuxdriver.com>,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zhang Shurong <zhang_shurong@foxmail.com>
-Subject: [PATCH 10/10] wifi: rtw88: fix incorrect error codes in rtw_debugfs_set_fw_crash
-Date:   Sat, 22 Apr 2023 18:04:54 +0800
-X-OQ-MSGID: <e5c786a4f5594388b4af17f545f072121316a410.1682156784.git.zhang_shurong@foxmail.com>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <cover.1682156784.git.zhang_shurong@foxmail.com>
-References: <cover.1682156784.git.zhang_shurong@foxmail.com>
+        Gregg Wonderly <greggwonderly@seqtechllc.com>
+Subject: Re: [PATCH v1] wifi: ath9k: fix AR9003 mac hardware hang check
+ register offset calculation
+In-Reply-To: <ZEOf7LXAkdLR0yFI@corigine.com>
+References: <20230420204316.30475-1-ps.report@gmx.net>
+ <ZEOf7LXAkdLR0yFI@corigine.com>
+Date:   Sat, 22 Apr 2023 12:18:03 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87bkjgmd9g.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If there is a failure during copy_from_user, rtw_debugfs_set_fw_crash
-should return negative error code instead of a positive value count.
+Simon Horman <simon.horman@corigine.com> writes:
 
-Fix this bug by returning correct error code.
+> On Thu, Apr 20, 2023 at 10:43:16PM +0200, Peter Seiderer wrote:
+>> Fix ath9k_hw_verify_hang()/ar9003_hw_detect_mac_hang() register offset
+>> calculation (do not overflow the shift for the second register/queues
+>> above five, use the register layout described in the comments above
+>> ath9k_hw_verify_hang() instead).
+>> 
+>> Fixes: 222e04830ff0 ("ath9k: Fix MAC HW hang check for AR9003")
+>> 
+>> Reported-by: Gregg Wonderly <greggwonderly@seqtechllc.com>
+>> Link: https://lore.kernel.org/linux-wireless/E3A9C354-0CB7-420C-ADEF-F0177FB722F4@seqtechllc.com/
+>> Signed-off-by: Peter Seiderer <ps.report@gmx.net>
+>> ---
+>> Notes:
+>>   - tested with MikroTik R11e-5HnD/Atheros AR9300 Rev:4 (lspci: 168c:0033
+>>     Qualcomm Atheros AR958x 802.11abgn Wireless Network Adapter (rev 01))
+>>     card
+>> ---
+>>  drivers/net/wireless/ath/ath9k/ar9003_hw.c | 27 ++++++++++++++--------
+>>  1 file changed, 18 insertions(+), 9 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+>> index 4f27a9fb1482..0ccf13a35fb4 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+>> @@ -1099,17 +1099,22 @@ static bool ath9k_hw_verify_hang(struct ath_hw *ah, unsigned int queue)
+>>  {
+>>  	u32 dma_dbg_chain, dma_dbg_complete;
+>>  	u8 dcu_chain_state, dcu_complete_state;
+>> +	unsigned int dbg_reg, reg_offset;
+>>  	int i;
+>>  
+>> -	for (i = 0; i < NUM_STATUS_READS; i++) {
+>> -		if (queue < 6)
+>> -			dma_dbg_chain = REG_READ(ah, AR_DMADBG_4);
+>> -		else
+>> -			dma_dbg_chain = REG_READ(ah, AR_DMADBG_5);
+>> +	if (queue < 6) {
+>> +		dbg_reg = AR_DMADBG_4;
+>> +		reg_offset = i * 5;
+>
+> Hi Peter,
+>
+> unless my eyes are deceiving me, i is not initialised here.
 
-Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
----
- drivers/net/wireless/realtek/rtw88/debug.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Nice catch! Hmm, I wonder why my test compile didn't complain about
+that? Or maybe it did and I overlooked it? Anyway, Kalle, I already
+delegated this patch to you in patchwork, so please drop it and I'll try
+to do better on reviewing the next one :)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index f9bcb44b42ac..700d5183d62a 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -955,7 +955,9 @@ static ssize_t rtw_debugfs_set_fw_crash(struct file *filp,
- 	bool input;
- 	int ret;
- 
--	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
-+	ret = rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
-+	if (ret < 0)
-+		return ret;
- 
- 	ret = kstrtobool(tmp, &input);
- 	if (ret)
--- 
-2.40.0
-
+-Toke
