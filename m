@@ -2,57 +2,56 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3622DC6FD18
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 10:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E84C6FD18
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 10:11:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229720AbjDVKHK (ORCPT
+        id S229587AbjDVKLj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Apr 2023 06:07:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39996 "EHLO
+        Sat, 22 Apr 2023 06:11:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229669AbjDVKHJ (ORCPT
+        with ESMTP id S229488AbjDVKLh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2023 06:07:09 -0400
-Received: from out203-205-221-249.mail.qq.com (out203-205-221-249.mail.qq.com [203.205.221.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41D721BCD;
-        Sat, 22 Apr 2023 03:07:07 -0700 (PDT)
+        Sat, 22 Apr 2023 06:11:37 -0400
+Received: from out203-205-221-247.mail.qq.com (out203-205-221-247.mail.qq.com [203.205.221.247])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0644D1719;
+        Sat, 22 Apr 2023 03:11:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1682158025;
-        bh=SnfImROfHHS8oLIFhAcHzEgotoQ5IZ5awfUwJVXBhm0=;
+        s=s201512; t=1682158293;
+        bh=EQcI1oQzOcwyIUTiPaU4z5ZWBJcC45jiOUD5qZyZ8qQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=WmKYODdefrAXogqZ2E1TDxf8x+7ivr587ESi2J6qIzBaW2XNpZy0ADm1lpX2t3cYK
-         Q3Q7WqNebdfuDc+I6z9wNN1xRcYuO+dAR37eDX5j4QKpmJNvzWrlzYbImfsOIoH5aE
-         Fei4Fl9EUx6BnDHNdwHnRP5Sv90sh7HzDbACrx3k=
+        b=ZFKHFL0x2jt7a8fqABJRiRcZDSx2+zUCH3cVwk/nZK1TFhL1j22FeDLlYGBkB6Nox
+         YHK0QjANRG2hehWxAR5NWL4bz4n5x5bwHdgN04KjpYNg25xR+F1EIWB1+cukr5pqKV
+         dKlYn/s9ATTacozbqN9PA0qw71CC4zXZr36ptAK4=
 Received: from localhost.localdomain ([49.7.199.72])
         by newxmesmtplogicsvrszb6-0.qq.com (NewEsmtp) with SMTP
         id 1402C0F4; Sat, 22 Apr 2023 18:05:00 +0800
-X-QQ-mid: xmsmtpt1682157935tafy4oywe
-Message-ID: <tencent_226E4B142CC7835E6109554EE2E0C6A01605@qq.com>
-X-QQ-XMAILINFO: N346zIWbcZWrh6GwbAB/RhXbRnBNeGy8D4mcWDU5A0oWJTNGp3xQRbWDyHXAne
-         NkemPljTmnWGdUj5dlybke3PwNcM78HgNAiapyNHkJu/5EjxuceHvvHxQe24rcsb7QH0EGbriNdc
-         +9r9GMPOMBLpKKZXDR6rvrYct0ZoLyyMZV+MhSDEpQBQJ9k4THjt51qxhcfCV/4i+ejs9YM3cqUq
-         xiu6TneNeV6rNq/uUFREWsK2JChyI/xyR+ZXgfxix/TtWHWxD8p5z3pNNdrIL9hOK3SQyxXXVVBQ
-         Rh/gOF6zUFK65ll8UwrOQKrLk2E/VNlWjaL/Ixt7ToqRGqxwunaMEYZZ1VebHJfNV02WWPtzsFfo
-         OZu+F5XirtD4z7wapB5fTqiMa9a2TIWMUmpY+8l0b/FuRh9lrEqJXHIgO3kvLFkkGWPZ09C4H6GW
-         Vd2U+yzCyfWuRM/L194BpMl8oVMUKJnNLpCFCDxF3t1ftxsuCOpzXRSO1HFDi9/8PLnba5QlSePr
-         zzhto8k27kwXRZDEAGVHkW445Gvq52QHNkUc71HR+kauUqRSq0xGfCudFHzPeWeUSVVB2hWIovpe
-         L1VVeHQ5plnA5W7mip2oFHgRXLv29qWcVF2Rd9iQbzsMWZVx6+43LCONcJEnLIHjGmKbnUNGfABT
-         AF82Y7E1ZY2V5/6PALonCvynHmh4j10QFWqMAN/q4mJEO0Fepy1I2JBLvoH8q2nd0HP+sIZ0vLeb
-         cRFZjuC2uB0Aaq2ZPB9pYYoIN9Dzl3W9iEPnpmMEvCenIFqeuVyR9WG0hIfvICkHgIhOxv996qDi
-         6nuRgIjmzQcAC+Qlil/HTKxs3U/4ASXtFCHB0ox/tLkjiWpzDyyFuoeb50e4mOy87hf0LHj2bXTU
-         2tfKJYPkGHC4MDJngYvSGiGjgSweEwBYBj/wMh5cBhCcRR7B2R0gBDfQqt2Zr4aocBT+dg6fiz5F
-         A4qkph9G4GAW6wascsrqMi0H6LjnmndXEOhFVXsiXxzKJlKTRUEU9dTnAwd0iyCdHBEUFr9Uki+5
-         M0AfDuMxyOTTgV26MX2Z2v3AZIGoQPGvkegiKWrUNcgiFYhvf80L532EeSUL2arWCWE+0IgstU3C
-         kGebNQDQTIN+c6Z/vk+tDVDVAhJQ==
+X-QQ-mid: xmsmtpt1682157904txdh4nayd
+Message-ID: <tencent_6E21370EB57D5B7060611EB60A96A88B1208@qq.com>
+X-QQ-XMAILINFO: MBevfmvnd9Bm7qkJHv82gkUqkDXzB26eRF0RU1XiyOd/jpJbPsMPcUL3t3Hl81
+         8id8ZTbMA1hzi+/LU/z2h7C3v6IVQnhhVKcgNW5hDuMXvVTZI1AxBWEqOT3WKIWPEwjsBV6ueaPy
+         8cG3k9ULMKL2iL4BP5Ul3YhfPo6FHVjLyFM38VAt6cJ8Sp7LZ6WheoAqjlW2oM1hCRupCsljOMqA
+         Ixb92uqJT1eFS2A96gcTXCl1KrmFY5KQAB4NO+Kn9a/ZmdvnJrnhDYx2A2ViJxNvL7zeEuWwHXuM
+         HITLYX4Fwo8NuErT0ThQe2cv80qDt8lPIm/Vp66ef3/Jn1g1x2un6SdCrUABHu+8Tfk8opobXjhE
+         llO8asMkexg8Pu7nOFNICIQY975J//WJPx3yP5y8KnS8Bvmf3CUTlEvKqQ3e+RnEwfzF2VzsnvFq
+         lu2W9+oOoh+HcbZsZoaqUavWIIbR2KN9Ma93ZQqtILLyfVA99hYbcd5dHIQREbmVv77YiMDiMhD4
+         wZ6Ua6shffJTC5wNVS9y+0Ob1NyxQd5SRgcJCncLNZfzEJDrTcnNUOTONMrkrVe+BLmu0h1eBJXG
+         GtmAh7OoBOsxrRkZ7UUnmizW1NcYVvCSNZ8MyIXBuIolPw4A75ZpBRCNcyuZ0wmfh7uUerCyGZUe
+         zw6YZWB5K9mJczanebWFjHSEbDDWV6MVtwbSPazPiTsQI87kM2zVk45FQvR6rp1McZmCJj79IQ0S
+         jDxglGVIQ1cbG0Z0BGV46bh+PxtCKq4bai/5M5Cm2aCQsJbT+6f20u/GKSJi2oMtlB0Wo2nkIDlt
+         yTUOHsE6y4eCF2inr2vKYVDCLL6/oQZmU0xE9hqCgJc14sCFgb+TXb1kTaMgFdhGx8iHKtYOyCXn
+         XtRvOV4oP/fvyLLsgZN1YfLraY2FsFmyOTZMi5Q5ocKnIZwYetB/PasYc7SaR/3HwjFPsiFW5rK7
+         vS+fAjZSYXJbR6VIS9RoEAzRfFWdNrqAKLAjMuFFWoVlocLMW96FQgHWzP2R3sZTcCAuqtsDqgJH
+         OotENqAvUX2EtlBOh2nOPdmllnx2Y=
 From:   Zhang Shurong <zhang_shurong@foxmail.com>
 To:     tony0620emma@gmail.com
 Cc:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
         kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         Zhang Shurong <zhang_shurong@foxmail.com>
-Subject: [PATCH 09/10] wifi: rtw88: fix incorrect error codes in rtw_debugfs_set_coex_enable
-Date:   Sat, 22 Apr 2023 18:04:53 +0800
-X-OQ-MSGID: <4948f7c2aca708649f1acccbce71dae00e18b2a7.1682156784.git.zhang_shurong@foxmail.com>
+Subject: [PATCH 01/10] wifi: rtw88: fix incorrect error codes in rtw_debugfs_set_write_reg
+Date:   Sat, 22 Apr 2023 18:04:45 +0800
+X-OQ-MSGID: <77cd82492eeb02a587a3da903a3824228ee21ab9.1682156784.git.zhang_shurong@foxmail.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <cover.1682156784.git.zhang_shurong@foxmail.com>
 References: <cover.1682156784.git.zhang_shurong@foxmail.com>
@@ -62,31 +61,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If there is a failure during copy_from_user, rtw_debugfs_set_coex_enable
-should return negative error code instead of a positive value count.
+If there is a failure during copy_from_user or user-provided data
+buffer is invalid, rtw_debugfs_set_write_reg should return negative
+error code instead of a positive value count.
 
-Fix this bug by returning correct error code.
+Fix this bug by returning correct error code. Moreover, the check
+of buffer against null is removed since it will be handled by
+copy_from_user.
 
 Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/debug.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index aef43f3ca364..f9bcb44b42ac 100644
+index fa3d73b333ba..bc41c5a7acaf 100644
 --- a/drivers/net/wireless/realtek/rtw88/debug.c
 +++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -883,7 +883,9 @@ static ssize_t rtw_debugfs_set_coex_enable(struct file *filp,
- 	bool enable;
- 	int ret;
+@@ -183,8 +183,8 @@ static int rtw_debugfs_copy_from_user(char tmp[], int size,
  
--	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
-+	ret = rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
+ 	tmp_len = (count > size - 1 ? size - 1 : count);
+ 
+-	if (!buffer || copy_from_user(tmp, buffer, tmp_len))
+-		return count;
++	if (copy_from_user(tmp, buffer, tmp_len))
++		return -EFAULT;
+ 
+ 	tmp[tmp_len] = '\0';
+ 
+@@ -338,14 +338,17 @@ static ssize_t rtw_debugfs_set_write_reg(struct file *filp,
+ 	char tmp[32 + 1];
+ 	u32 addr, val, len;
+ 	int num;
++	int ret;
+ 
+-	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
++	ret = rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 3);
 +	if (ret < 0)
 +		return ret;
  
- 	ret = kstrtobool(tmp, &enable);
- 	if (ret) {
+ 	/* write BB/MAC register */
+ 	num = sscanf(tmp, "%x %x %x", &addr, &val, &len);
+ 
+ 	if (num !=  3)
+-		return count;
++		return -EINVAL;
+ 
+ 	switch (len) {
+ 	case 1:
 -- 
 2.40.0
 
