@@ -2,132 +2,99 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 651FDC77B78
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Apr 2023 22:15:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB0BC7618E
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 00:05:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233742AbjDUWPA (ORCPT
+        id S233554AbjDVAFT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Apr 2023 18:15:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53232 "EHLO
+        Fri, 21 Apr 2023 20:05:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233839AbjDUWOx (ORCPT
+        with ESMTP id S233533AbjDVAFR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Apr 2023 18:14:53 -0400
-Received: from mail-oo1-xc30.google.com (mail-oo1-xc30.google.com [IPv6:2607:f8b0:4864:20::c30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 384B8198B;
-        Fri, 21 Apr 2023 15:14:22 -0700 (PDT)
-Received: by mail-oo1-xc30.google.com with SMTP id 006d021491bc7-545d82e1a1bso775317eaf.2;
-        Fri, 21 Apr 2023 15:14:22 -0700 (PDT)
+        Fri, 21 Apr 2023 20:05:17 -0400
+Received: from mail-oa1-x2c.google.com (mail-oa1-x2c.google.com [IPv6:2001:4860:4864:20::2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB802212F
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Apr 2023 17:05:16 -0700 (PDT)
+Received: by mail-oa1-x2c.google.com with SMTP id 586e51a60fabf-18777914805so13860518fac.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Apr 2023 17:05:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1682115261; x=1684707261;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=gmail.com; s=20221208; t=1682121915; x=1684713915;
+        h=content-transfer-encoding:in-reply-to:from:cc:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=43vS9Y9SxuHB8qIZkacOVEQ5kGycu1Gw9o9cTnjmisU=;
-        b=blXUUO2nxUafWxpOZPEJusnDdC3YW964eDPfNn0gIkagxyQbHT6GIMQtTPtRmomCRU
-         amm4THGe+EZubWQdzCjqG/2alIA6aSHe/aGhBb49AW8KH78Yni+E67bDG71j2HVpez0P
-         OWKYKarqGQJya12oiVoj0aSRQODWPx5glSQAVrwrmiUF2sQr1YOFoLQI80pTEPiYw6mI
-         3lR4l2lplibt7ZsAyU4IlYRG6ddbBMEzV8vVoB7nPVUaseA1dIyly6F5KRRt1t2UomyZ
-         5sledeO6WnTuFGbjKbrRwyzU5rxJbknM8KJdCzp26VIpw+2MyFb9kFxRxkTDvMjsEXQ+
-         is4A==
+        bh=YL1SLPo3YbLuC2v47HggCAKWIJ5vWc/sJO+qhAWyFjM=;
+        b=dE/B9Ve4nBwkCh1JxClTx/CKcIxG/7Ir89bTziXDezaJG2q70U4FCAwGGiS3Fzx5Mt
+         DCTpgkIetc/w/+D6CYxrgMFtxbWv0bHzRZQugwc/250RUV2CtRZMLBpXbRJF/S5dXzJD
+         XTtJU9v6yHKglfdghUxKJEw5K+GkJEcjvTpr7Dvv2Xmhcr53gTn8PBt8hI/ovtIDSMhe
+         RDunTCvKNzYLqJysEAwtMb1+MEZt1AuCfQMQsHqBjY1ZSAIoZ/44UdkX4IdnBSZE7dTD
+         GG2OMO5o5a0wmhZuCTnRK/tAH8Wge4WfAKmucmqml7UlJGUkxRgMeH143XKqT3Gw2GdA
+         o7cg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682115261; x=1684707261;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20221208; t=1682121915; x=1684713915;
+        h=content-transfer-encoding:in-reply-to:from:cc:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :sender:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=43vS9Y9SxuHB8qIZkacOVEQ5kGycu1Gw9o9cTnjmisU=;
-        b=XMo+uNdVWYT5NAA/Sz0cTdVs08nzkh8RELw90eKkya9U/ABg+LXNT8xh1f366PmLc0
-         k9KnzwQXFV3/G2WQHFTRLaEAiKduBCnoc3E8Py+vP9iAyKpamnPKb4UZnqG3DX+O4mU0
-         osK7I/KQt2qOXy3HwfwMGNftXG0x1f7EOLOK8481gs86DhGwOgEjbIYNLlU3GxpKjOs7
-         nelp8J7f+mEbMtnD9dkbHt9MuU+O/HdoL5zE/hUZeBSaLbv1Q29vweK6HH2TBg8GmK8v
-         XkBO8VsqHazX/g2nOqMJHfCjjx3xQLXQ9x6nrFL/cl8rN3V7NUZYbBMuhXovmtNORYZV
-         WhYg==
-X-Gm-Message-State: AAQBX9db0+Oro6Cc97b2eXCIMt+zHYqjLMN3iEcvYW3IzxZDoLA3+4ef
-        wPJPh+YlbHxtv+UXVvorBHM=
-X-Google-Smtp-Source: AKy350aFIbs8T0WhQr+wXwjG2BRSCFKbA93BIe1GzhEkniAo+/ROudi5dT+Up1bYUDAOpw7Fgw13GQ==
-X-Received: by 2002:a05:6870:8308:b0:16e:92d2:e810 with SMTP id p8-20020a056870830800b0016e92d2e810mr4628550oae.53.1682115261049;
-        Fri, 21 Apr 2023 15:14:21 -0700 (PDT)
+        bh=YL1SLPo3YbLuC2v47HggCAKWIJ5vWc/sJO+qhAWyFjM=;
+        b=ivRYHIL3ZsjfGwuyfTIyYwEE1ns1QDqsrLJvBGd5e7TJYIfRiztZ25TmdMtt6bVEKX
+         ntbTptnpOEEGVtBRVJXdK7QLET8rXgOo8H3N61tY5wxoqhtL8MhkqLfYcbVssYgYyulS
+         S8kAicfpxnjmRDdp4Kd6MDikLe/gybm4ij3Ru9EPqqS5XZvyZ4Q9LIewDtlcQx+hRceB
+         kc/AyD/SxJJHDubvtX3F8RIJ1rEQ1HMpHkykDa9aiGCt+AG+/aKxCwQPfaJDRGQET3/B
+         lhZwy/nmlgU5rriTI+hwprNlCQx5N7hf5+4Ye4ACv3Pc0j3Q0x76aCUIWYaM57X6lq2t
+         ac8Q==
+X-Gm-Message-State: AAQBX9e4NAxZ3b6gtIb8rf8B7K9H55069/yMBCmiex9c+5+I7rQ2CLKE
+        bdLJu2gOC7jFP+grOViTkF3m7xKnFzs=
+X-Google-Smtp-Source: AKy350Z8KaQO7x8wUJqYDgWg0kgleMNYgJ8rjKcLyKAX8cJNaWCXGkl21VtZlQK4QoKl+QYfl4+fSQ==
+X-Received: by 2002:a05:6870:659e:b0:188:1b8:33ee with SMTP id fp30-20020a056870659e00b0018801b833eemr5535533oab.21.1682121915651;
+        Fri, 21 Apr 2023 17:05:15 -0700 (PDT)
 Received: from [192.168.0.162] ([216.130.59.33])
-        by smtp.gmail.com with ESMTPSA id ec8-20020a0568708c0800b00183f77dcdadsm2181557oab.33.2023.04.21.15.14.19
+        by smtp.gmail.com with ESMTPSA id v20-20020a056870365400b0016e8726f0d4sm2291160oak.3.2023.04.21.17.05.14
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 21 Apr 2023 15:14:20 -0700 (PDT)
+        Fri, 21 Apr 2023 17:05:15 -0700 (PDT)
 Sender: Larry Finger <larry.finger@gmail.com>
-Message-ID: <95cff855-cb12-cf66-888f-b296a712d37d@lwfinger.net>
-Date:   Fri, 21 Apr 2023 17:14:18 -0500
+Message-ID: <19d8ea51-d37a-5446-fd7c-716e7e8b1aef@lwfinger.net>
+Date:   Fri, 21 Apr 2023 19:05:13 -0500
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v2] b43legacy: Add checking for null for
- ssb_get_devtypedata(dev)
+Subject: Re: NetworkManager cant connect on Macbook Pro7,1
 Content-Language: en-US
-To:     Nikita Zhandarovich <n.zhandarovich@fintech.ru>
-Cc:     Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org,
-        Natalia Petrova <n.petrova@fintech.ru>
-References: <20230418142918.70510-1-n.zhandarovich@fintech.ru>
+To:     Pogprogrammer <spikey@rslp.org>
+References: <50BB827E-7437-4E25-9F5F-636115EF2D20@rslp.org>
+Cc:     b43-dev <b43-dev@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
 From:   Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <20230418142918.70510-1-n.zhandarovich@fintech.ru>
+In-Reply-To: <50BB827E-7437-4E25-9F5F-636115EF2D20@rslp.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 4/18/23 09:29, Nikita Zhandarovich wrote:
-> Since second call of ssb_get_devtypedata() may fail as well as the
-> first one, the NULL return value in 'wl' will be later dereferenced in
-> calls to b43legacy_one_core_attach() and schedule_work().
+On 4/21/23 18:11, Pogprogrammer wrote:
+> Hello, I installed b43 and I get the error that DMA is not supported and it will be switched to PIO. This was a bug on kernel 2.6, but I am using 6.1+. My mac is partially supported according to http://linuxwireless.sipsolutions.net/en/users/Drivers/b43/ and that may be part of the problem, but:
+> I am on void linux and networkmanager can identify all the networks but if I connect I get errors like "not found network" or maybe "bad password".
+> This is a fresh install and sometimes certain daemons just arent running, so here is my list:
+> Dbus, dhcpcd, NetworkManager, udevd, wpa_supplicant as well as the agetty-tty[1-6].
 > 
-> Instead of merely warning about this failure with
-> B43legacy_WARN_ON(), properly return with error to avoid any further
-> NULL pointer dereferences.
-> 
-> Found by Linux Verification Center (linuxtesting.org) with static
-> analysis tool SVACE.
-> 
-> Fixes: 75388acd0cd8 ("[B43LEGACY]: add mac80211-based driver for legacy BCM43xx devices")
-> Co-developed-by: Natalia Petrova <n.petrova@fintech.ru>
-> Signed-off-by: Nikita Zhandarovich <n.zhandarovich@fintech.ru>
-> ---
-> v2: fix issues with overlooked null-ptr-dereferences pointed out by
-> Simon Horman <simon.horman@corigine.com>
-> Link: https://lore.kernel.org/all/Y+eb9mZntfe6rO3v@corigine.com/
-> 
->   drivers/net/wireless/broadcom/b43legacy/main.c | 6 +++++-
->   1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
-> index 760136638a95..5a706dd0b1a4 100644
-> --- a/drivers/net/wireless/broadcom/b43legacy/main.c
-> +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-> @@ -3857,7 +3857,11 @@ static int b43legacy_probe(struct ssb_device *dev,
->   		if (err)
->   			goto out;
->   		wl = ssb_get_devtypedata(dev);
-> -		B43legacy_WARN_ON(!wl);
-> +		if (!wl) {
-> +			B43legacy_WARN_ON(!wl);
-> +			err = -ENODEV;
-> +			goto out;
-> +		}
->   	}
->   	err = b43legacy_one_core_attach(dev, wl);
->   	if (err)
+> _______________________________________________
+> b43-dev mailing list
+> b43-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/b43-dev
 
-I do not recall seeing v1. One additional nitpick: The latest convention would 
-have the subject as "wifi: b43legacy:...". Kalle may be able to fix this on 
-merging, but it not, a v3 might be required. Otherwise, the patch is good.
+Your description of the problem is not terribly coherent, thus I will be 
+requesting some more information.
 
-Reviewed-by: Larry Finger <Larry.Finger@lwfinger.net>
+DMA should be supported. It certainly works on my PowerBook G4 with a ppc32 
+processor. I expect that a MacBook 7.1 has an Intel processor. If not, please 
+enlighted me.
 
-Thanks,
+I would like you to run the command 'dmesg > dmesg.txt' and post dmesg.txt on 
+some site where I can read it.
+
+The b43 devices are certainly slow as compared to modern devices, but the one on 
+my PowerBook certainly works.
 
 Larry
+
