@@ -2,58 +2,56 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BD01C77B78
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 10:11:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C522C7EE21
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 10:11:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229753AbjDVKLl (ORCPT
+        id S229797AbjDVKLr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Apr 2023 06:11:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41352 "EHLO
+        Sat, 22 Apr 2023 06:11:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229704AbjDVKLj (ORCPT
+        with ESMTP id S229780AbjDVKLn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2023 06:11:39 -0400
-X-Greylist: delayed 380 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 22 Apr 2023 03:11:37 PDT
-Received: from out203-205-251-88.mail.qq.com (out203-205-251-88.mail.qq.com [203.205.251.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8277E1729;
-        Sat, 22 Apr 2023 03:11:36 -0700 (PDT)
+        Sat, 22 Apr 2023 06:11:43 -0400
+Received: from out203-205-221-250.mail.qq.com (out203-205-221-250.mail.qq.com [203.205.221.250])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADA7F1BFD;
+        Sat, 22 Apr 2023 03:11:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1682158295;
-        bh=XE+xW4zcJKwa46DVTbWJWKZcEJQ/Q3+YX0ZLl0C0gvE=;
+        s=s201512; t=1682158299;
+        bh=+zF5ZlaKbkUYHZkMcIxweuJFjgybfbIGNceQyR/6yOo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=KaEvBaLQvIkgQVKMWMyZZG98KAUvh8BEuHoQdRZH13v+SqlJhVzBITnKTfUJHs0qs
-         ehc4Ro9CxMhHkG3JshAChRCSfqOrHrrlXtYhqEwyZdRrsbbY1QophbfNh4oyE+tz+D
-         ZKGjX3EC95ceolg11b4vSnPdpEtP6DN/K7EdxjDo=
+        b=JqamWBG9qFXnGhfDexZn6fhgbtx8eB4mAhNiER0WfO1eS3o0zD7ry6lHbDmgbHcd0
+         AAPhAFf0syu0My3qXof4XFMoLGphWJwpWydWU+TlELWfBW4K6TDxZVQCFwgvxNl0R7
+         thql9OAw7rzNpZTsZe/RKFliPsTZT/mUv2R7Dqr0=
 Received: from localhost.localdomain ([49.7.199.72])
         by newxmesmtplogicsvrszb6-0.qq.com (NewEsmtp) with SMTP
         id 1402C0F4; Sat, 22 Apr 2023 18:05:00 +0800
-X-QQ-mid: xmsmtpt1682157923tnl23habh
-Message-ID: <tencent_4D24DA6FF46A2DB766C0483DD0143A51F309@qq.com>
-X-QQ-XMAILINFO: MxcclqldyJbqxsleZ8/LdlokQ5tJqfinINGxg8sGGglaHQpKf+07EBR5uVeGzg
-         ZtCrhYt7Q8zCgBKC0YPbuwbqoVYBgiY0e6zWMXbuCxpxwImp8iExx6jKA66qPkNxcaJVfofgG3dK
-         5qjdyfn3WohMMI+spz9/oeyOs7OP3rZER7nL++Cx9QbHri1LejmV6MPPwJ9bNDz8qL3L30ZTrlVg
-         5/HpOs0VDY1Mfh1vTgO1uhYAdoeOYPT0Li0wTPAf+C3NcT2yvMBiZkPbiZ5VVw9+v1d9gRC/3yb6
-         q+ZyBcvcEHa6I6bwuVtSmT+FhdbD3+w+QU3/45F7S7eJO/QgRnjZ+Q+c5lTqIcdd60Tc15iju9zH
-         z6dLSzgWBvEJ/4xuR8BXG03H2jRKvwazYrTZOmYQUUqH7L7mzbGV8sdgpR+n61TQdHNjiPX+rfW9
-         xgjEr+xrm6J2MkdAfDsYFFIqfGgnvjWiuw2ezjqPV6f8aFG1wC/gszkGWzM4w0rFUgYgkQ/ClPz+
-         rNujGIizELzfOSzO6EywXnCQshKqHWl1pRB363Pbd9XtSd4UYzf7kzVhaibovx3yA+US0YvfiiFQ
-         +wR0Y6fHaZWyz9wmYAbR/w/H90stjf7osdFPCgZasFleWgax2C//CKVE9XHr1yc9tbqF5200xdK3
-         2tIDt3KKbakNYPJzGL5cnQHTAwTb9B9IAjb1RJ8tnir8+wbi1EcSnw47Liia9AoKwvJl2NiGcF4o
-         fcexnA0qgXCnikYOqWH+kXL2x7OeDiapj/wa/QLkNTWIafp19lWpdSL6wABDZ9YmAwG3sQxOgebP
-         f8vU0o+M+QmCMTCkLgH0pBEnO77G0ZQoJqbb+hLMRFFfUMZ9MPUCvn7XFroDOUVy7BXUKbAOjKKq
-         0z7fDK7d1wrs3TUoJQXG7Zc0Qtt237y3xhYetqsVBke2+cFm6muTPE2DuyQgjJzQolm58EM9I47F
-         s1t6cnLbqKZs1EzwQYeA4H65+ojcfUzDDLIZRFV3jD8PANnhEioGUDPM6AhJtF+nhOKHmgJKoEzs
-         ViqEoJe5lxt9u1aM7/1k3Irh9CxNqWuBX/7SFxLiZUhSa9HlmBb12xSbLuPCDBqGFLHOU43VrLBn
-         pGz9QWX5iGlpcnX8o=
+X-QQ-mid: xmsmtpt1682157914tdf7je7xz
+Message-ID: <tencent_C77B782B54A36A4930DC5CD7666E19801D0A@qq.com>
+X-QQ-XMAILINFO: MinfFaxlAYcM0RJte8UTAwCpK8CHhwh1mVhAx1PxW7IeQK9fn0LNG49yG6nzl+
+         oBXdg5m3bIygJYj566WC1R2u9MQpfNqOKs1payC/ZShXEnf+2KXQMn8P9XLpHfVa62covOljfJT/
+         7wrEBuGALruX/XSGPkA5+kA8m9Bt69YnvSlgC5oI/BO5LikNmy2+HT+WZL35SqCmHVcWeB+fR7k3
+         6yFSxtWr4CMImmBB7lZjyDvcWSDJsKJ08lmasCdY+/lGLeRTMw9Af4DHnhBFiG5l9JPf/Ezbicbj
+         EGh0iSQ1Ai1NS0PMkApBhp7rejIUkEQ0cNl5WCfxUsGMLAiN2LZn65Xz1QG65ObVZNRpcwswZhjQ
+         lzZpvg8LYa3wywvAbhef/LvSkKASbVvS/ZdTG1VJ7/05CbjUBK+IoglW5f81BFfIP2R9+/x/E4XD
+         twBeLlA+si3OmNubg73/lDY37qXY2aM+rqKZtH20W8ksUHIdnCuV8JkOSRiyMS7vOrYPI+mZZKgt
+         4HxU7lRgLiajjRsayl5gOiuTCR4m7AXdZ+F+lf8UhWmadNc8IcGp/cQarSJ5J/2UEaluaNEEDgPz
+         qDX/rgHAbGK1FlwxGM/bPVZtEU9gLVW4YbgVUMqae9/lQc9984TIrrGL/Ppn8rJG9N9mv6/s2WMf
+         o1Vo2MrJjLZGKoAUCXfdT1XXfJuKFEYGPjZQVNuQ9IMBGk5TGMyYm77JMChGZy51Ii7nI0ljQjHx
+         tYLVMZDtrxhCayusX4SobIXzdaCG2cjsungpi0H75NxSphvSLZkTpOINN3L4shUS2+mBcI3wFGK5
+         xZ3EodWEc/c4Op9qPzsCBeE64wqUJGJzybGyWLDY3zO/kDqL+LyPpoF7F45Y4IK2IcimQLJKqPEv
+         FxUCyZv/dMRr8C4Rp9AJJnlqv1Gor8UWmUAINTEZlOfyRpqeqZqoW3bLQveRUP7AnA82W6Zdqn64
+         SGWZLHFrPEn17DU7Q1RbU5zuqmtXh/+Oa/VWxekH0b4es3/PiDZW0iG5Ld0tsvhwv4bBL2CZFpmU
+         M03t2kdeiuspZJZ2OPkk2fwXuKcKBvgxjPNn/ZqFInh0gIMDzb4oIjdJ0P3dA=
 From:   Zhang Shurong <zhang_shurong@foxmail.com>
 To:     tony0620emma@gmail.com
 Cc:     kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
         kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         Zhang Shurong <zhang_shurong@foxmail.com>
-Subject: [PATCH 04/10] wifi: rtw88: fix incorrect error codes in rtw_debugfs_set_single_input
-Date:   Sat, 22 Apr 2023 18:04:48 +0800
-X-OQ-MSGID: <5c743fefab84f1d490a73c61fe0a3cb0310a5677.1682156784.git.zhang_shurong@foxmail.com>
+Subject: [PATCH 02/10] wifi: rtw88: fix incorrect error codes in rtw_debugfs_set_read_reg
+Date:   Sat, 22 Apr 2023 18:04:46 +0800
+X-OQ-MSGID: <502797e3be90fce642692156898586dc93e7755e.1682156784.git.zhang_shurong@foxmail.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <cover.1682156784.git.zhang_shurong@foxmail.com>
 References: <cover.1682156784.git.zhang_shurong@foxmail.com>
@@ -63,33 +61,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If there is a failure during copy_from_user, rtw_debugfs_set_single_input
-should return negative error code instead of a positive value count.
+If there is a failure during copy_from_user or user-provided data
+buffer is invalid, rtw_debugfs_set_read_reg should return negative
+error code instead of a positive value count.
 
 Fix this bug by returning correct error code.
 
 Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/debug.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index d8e872ae4dda..f721205185cf 100644
+index bc41c5a7acaf..3c3350bb2855 100644
 --- a/drivers/net/wireless/realtek/rtw88/debug.c
 +++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -320,8 +320,11 @@ static ssize_t rtw_debugfs_set_single_input(struct file *filp,
+@@ -201,13 +201,16 @@ static ssize_t rtw_debugfs_set_read_reg(struct file *filp,
  	char tmp[32 + 1];
- 	u32 input;
+ 	u32 addr, len;
  	int num;
 +	int ret;
  
--	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
-+	ret = rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
+-	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
++	ret = rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 2);
 +	if (ret < 0)
 +		return ret;
  
- 	num = kstrtoint(tmp, 0, &input);
+ 	num = sscanf(tmp, "%x %x", &addr, &len);
  
+ 	if (num !=  2)
+-		return count;
++		return -EINVAL;
+ 
+ 	if (len != 1 && len != 2 && len != 4) {
+ 		rtw_warn(rtwdev, "read reg setting wrong len\n");
 -- 
 2.40.0
 
