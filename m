@@ -2,91 +2,124 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5833C77B78
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 19:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 466E4C7618E
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Apr 2023 21:25:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229508AbjDVTsq (ORCPT
+        id S229834AbjDVVZX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Apr 2023 15:48:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33118 "EHLO
+        Sat, 22 Apr 2023 17:25:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229751AbjDVTsp (ORCPT
+        with ESMTP id S229551AbjDVVZW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Apr 2023 15:48:45 -0400
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCA321BD5
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Apr 2023 12:48:43 -0700 (PDT)
-Received: by mail-wr1-x42b.google.com with SMTP id ffacd0b85a97d-3010889c6ebso1740731f8f.2
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Apr 2023 12:48:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1682192922; x=1684784922;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=UQMSHOEXy4dd32S1UV0ZhNWB6VKkhN22gnwR9IMusl0=;
-        b=nHmMObR7x3FiUkaAPIlaQyocvvgn5cZjZnvZUAlj19vRreiBRr0OrjVYcp34NcAoNu
-         9cdqrSazGuGiOA7k/p+EN9YMJFHSFkLxHLQH2DwgDlnX4sM6jZa3oJyPytw1Mwy05Nto
-         d5dQO1GKskQ4xoRCKnZaysBDP4R17bnTwmnNFBcoMesrDyLesbWmpJIsImdGvku+Hp3X
-         2wtM6bY/iq7tieTgsAPDLaFtxkcbUyqtyThPb1eNAPyowHojVgKL9R3TP3oUvIeVy/Cq
-         JS/jFKMN/GdYACkctrawwhLvQrne6MhmV7qhNGmqQ9/+7qwGfUWEj9PSm0JxNLaFWXYH
-         Zgrg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682192922; x=1684784922;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UQMSHOEXy4dd32S1UV0ZhNWB6VKkhN22gnwR9IMusl0=;
-        b=SCuRpeBigq7UOFzjLx7kXXKQdEFsiVKe9Fm23AFYInUmZwkLCcWTUhNAOzki6OWjRZ
-         kS6Q0fMUizyq3YLD/i/6XzGvjq6D84pN1fhIoyosX9mils+XtXnJosGptPvEkEEAFYbY
-         7gjfmTCc1eAYwT5i2q80nTceLdI5Kojuf6n58x5aasK9sl/eFxInR+H6EcZI4HTnNnX7
-         tr8uEUN2KRJbwi6kljWY91+S2e9rXR6ftMD5SO3R5C41R7PQXjdkIQKwArZGENjYKJ09
-         DQVsIuvp2Urbstcqv2sOAfgzr0qvR/7+fMZFdpaxzzThsqzFP6fCkEdFm2S7TAuLbRFC
-         mXPA==
-X-Gm-Message-State: AAQBX9eUC92yDhwtjT4epiIM/MM4RjCopQbs6I3yprtMOumPMiqIHLOy
-        4sZU2EQcb/Rk1fotLsV4/RtzMQ==
-X-Google-Smtp-Source: AKy350aLYJew3ugaktSPtVTFee5OZkYC67M5r+9LtUdpkJB3mKDc49tydAixWUKxvVGhL43y2CuajQ==
-X-Received: by 2002:adf:f3cb:0:b0:2f2:7adf:3c67 with SMTP id g11-20020adff3cb000000b002f27adf3c67mr6362132wrp.61.1682192922260;
-        Sat, 22 Apr 2023 12:48:42 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id u6-20020adff886000000b002f28de9f73bsm7159089wrp.55.2023.04.22.12.48.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 22 Apr 2023 12:48:41 -0700 (PDT)
-Date:   Fri, 21 Apr 2023 15:39:45 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     "kvalo@kernel.org" <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH] wifi: rtw89: fix rtw89_read_chip_ver() for RTL8852B and
- RTL8851B
-Message-ID: <3b1ed718-ce01-4a98-ae8b-3c042851c3f5@kili.mountain>
-References: <e4d912a2-37f8-4068-8861-7b9494ae731b@kili.mountain>
- <7475bff70fd50c7e8527e66080e126b4eff440bb.camel@realtek.com>
+        Sat, 22 Apr 2023 17:25:22 -0400
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D58B19BD;
+        Sat, 22 Apr 2023 14:25:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net; s=s31663417;
+        t=1682198669; i=ps.report@gmx.net;
+        bh=CKleXDjojnUys/EN2562bwv+uQ9gPgoHRl6X6zTBatI=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
+        b=Ikt9vyDBnkMF3kOLCA2mBfIh4qNPWurVhq1wy2Y61A9fpfNXeojEc3jEcXFsapCTr
+         c6dOnVyWkbCQ9emiEsbsa9i8af30jeDlC7q9z93ckoOyc2KH98cJqm0d1ItqfDCCmf
+         e6yTejnsc0mn3RIzghcDopivSr4jqQnIh4Dq546KacFPAdPCya9UsIS8kDG1iz8ozv
+         Zt3HnekTT7deFxuFEJfBDKkYntbMAnOQNHz1uH0wr+lex+ejSGX9I7mRGabe5vEEmr
+         WHwf6rIeJKZj/8wg9FHYp3j2So/0nJwAsInqVMY9JLxvkissfPzfD9p0F5OjT0quPS
+         8IjUkVeKKDpAg==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from localhost.fritz.box ([62.216.209.208]) by mail.gmx.net
+ (mrgmx104 [212.227.17.168]) with ESMTPSA (Nemesis) id
+ 1MQ5rU-1pd341049I-00M0eA; Sat, 22 Apr 2023 23:24:29 +0200
+From:   Peter Seiderer <ps.report@gmx.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+        "John W . Linville" <linville@tuxdriver.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Gregg Wonderly <greggwonderly@seqtechllc.com>,
+        Simon Horman <simon.horman@corigine.com>,
+        Peter Seiderer <ps.report@gmx.net>
+Subject: [PATCH v2] wifi: ath9k: fix AR9003 mac hardware hang check register offset calculation
+Date:   Sat, 22 Apr 2023 23:24:23 +0200
+Message-Id: <20230422212423.26065-1-ps.report@gmx.net>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7475bff70fd50c7e8527e66080e126b4eff440bb.camel@realtek.com>
+Content-Transfer-Encoding: base64
+X-Provags-ID: V03:K1:MWRn4Naaur756elw6S7aPNR3FXkqQmr1CmWuvHm3qoLXSoDxiwQ
+ NUr9zv4ex4UpY0z6ePltBP0qqQQXQZ9NJDq4xDuaHqp47hwzSZuvvkp5a8aJhzw6FfT1do8
+ Gx9/kmyhenxhNaKlxvcRUlACPwa+abOWwG8gPJxyiWDvfZMVct70w9GX5Vrp7FuXXDvKLE/
+ mS1LHkG4FY5tUhb+eESbw==
+UI-OutboundReport: notjunk:1;M01:P0:h7xOhIpkgCs=;txeLScRw9U49r2KaX2fX75E6MWC
+ 7d9DRRbUOktExE9V2Y5x3BEpX/gi7EI/OAZfIiN/nihj20OQCUUc3udnWPk0Iq1ryGFt0ObJ7
+ vYPUkdiarBGni8zfqBHPDzGz+l9tUp8rKvqbq3CLhH/mAQmIYDC7S8wWocYc5dnXcHvuRPHMT
+ eAtB58h5e/I5welvFkhvAZ3GK74e1/BZzOfXzvrojCj0Bp8Ff5jQ37tvEKAONE3QVJHD7zd+Y
+ f7FV83Qo6qxdDvj310Z6ZI4gvLXKNzqYG1Fc39z3zPPr8B96hS5AI+dKuqS5WJ5IkMAKPXR72
+ XKxzb5zY27eOLzPV/jzvtet6MiOVo/7NE5eYIsnMQDggcrBSMTwGv/Wpms/eTUOlJb9BIhW9F
+ cPmD+lner8vd33WfSLID6w2Nqqlo3sZMrgzlbFTjvmYE8RQHlD22b1GqO1Gf0imqkIgWtyhsp
+ mrIQRwmeSp5r7f0Wea4Gf1z6qDFE1hF8q38FnjFD5wdPJ2LFt4Mi9bGLNKUcQSARnFfqk1KPe
+ /KOQyYqL9AEiEjftOtsQ5j7Zu4Vj4348UogPvAJuOBzMWSJnUNXoPfZ697wSMbSFXzHLjuT1h
+ 1bvwuv922jUTjcpEaiHnbfY7xshhdNo1N+NSPrlxL5ITnY1NpqvvGOCp47PVabqWVdmp/s9lD
+ diHB8/AbqBjhW4lW/GmqYdq74PZWu4+1e1tPll+6UPqJyEKAJJ95TnqnN5HMGrOnYAy+cZuCm
+ lNAUA0cLFkkvKGllVl6/van+o+KyCcgDq3mUV4RnpyHpF5g2U4Nl/ukZS8ruKNyn904tS8Ooe
+ M0IAQBo9s2mOLRwQT5UDZA/FwTVJeIx5JEQhcAxYT89hnbAm9cjIYYFLPOO8y/X/2TuTWVz9c
+ fA+sS4jFK9PjQbSnXMldAxGsOfnCgLgedh6d9BO7NkKa/rh5dCzWO5i2EKERUW5nKW49w5PHo
+ l/2LuZPTS3wjd9BYfHyEiSFAohw=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Apr 21, 2023 at 11:48:43AM +0000, Ping-Ke Shih wrote:
-> On Fri, 2023-04-21 at 13:44 +0300, Dan Carpenter wrote:
-> > 
-> > The if statement is reversed so it will not record the chip version.
-> > This was detected using Smatch:
-> > 
-> >     drivers/net/wireless/realtek/rtw89/core.c:3593 rtw89_read_chip_ver()
-> >     error: uninitialized symbol 'val'.
-> 
-> I use smatch to check our driver regularly, but I can't find this error.
-> With the latest version v0.5.0-8321-g556064ca, I still can't find it.
-> Do I need to specify additional arguments? Thanks. 
-> 
-
-You need the cross function database (which takes like 9 hours to build).
-
-~/smatch/smatch_scripts/build_kernel_data.sh
-
-regards,
-dan carpenter
-
+Rml4IGF0aDlrX2h3X3ZlcmlmeV9oYW5nKCkvYXI5MDAzX2h3X2RldGVjdF9tYWNfaGFuZygpIHJl
+Z2lzdGVyIG9mZnNldApjYWxjdWxhdGlvbiAoZG8gbm90IG92ZXJmbG93IHRoZSBzaGlmdCBmb3Ig
+dGhlIHNlY29uZCByZWdpc3Rlci9xdWV1ZXMKYWJvdmUgZml2ZSwgdXNlIHRoZSByZWdpc3RlciBs
+YXlvdXQgZGVzY3JpYmVkIGluIHRoZSBjb21tZW50cyBhYm92ZQphdGg5a19od192ZXJpZnlfaGFu
+ZygpIGluc3RlYWQpLgoKRml4ZXM6IDIyMmUwNDgzMGZmMCAoImF0aDlrOiBGaXggTUFDIEhXIGhh
+bmcgY2hlY2sgZm9yIEFSOTAwMyIpCgpSZXBvcnRlZC1ieTogR3JlZ2cgV29uZGVybHkgPGdyZWdn
+d29uZGVybHlAc2VxdGVjaGxsYy5jb20+Ckxpbms6IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xp
+bnV4LXdpcmVsZXNzL0UzQTlDMzU0LTBDQjctNDIwQy1BREVGLUYwMTc3RkI3MjJGNEBzZXF0ZWNo
+bGxjLmNvbS8KU2lnbmVkLW9mZi1ieTogUGV0ZXIgU2VpZGVyZXIgPHBzLnJlcG9ydEBnbXgubmV0
+PgotLS0KQ2hhbmdlcyB2MSAtPiB2MjoKICAtIGZpeCBjJnAgZXJyb3IgaW4gYXRoOWtfaHdfdmVy
+aWZ5X2hhbmcgKGkgdnMuIHF1ZXVlKSwgdGhhbmtzCiAgICB0byBTaW1vbiBIb3JtYW4gZm9yIHJl
+dmlldwoKTm90ZXM6CiAgLSB0ZXN0ZWQgd2l0aCBNaWtyb1RpayBSMTFlLTVIbkQvQXRoZXJvcyBB
+UjkzMDAgUmV2OjQgKGxzcGNpOiAxNjhjOjAwMzMKICAgIFF1YWxjb21tIEF0aGVyb3MgQVI5NTh4
+IDgwMi4xMWFiZ24gV2lyZWxlc3MgTmV0d29yayBBZGFwdGVyIChyZXYgMDEpKQogICAgY2FyZAot
+LS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9hcjkwMDNfaHcuYyB8IDI3ICsrKysr
+KysrKysrKysrLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxOCBpbnNlcnRpb25zKCspLCA5IGRl
+bGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9h
+cjkwMDNfaHcuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9hcjkwMDNfaHcuYwpp
+bmRleCA0ZjI3YTlmYjE0ODIuLmU5YmQxM2VlZWU5MiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvYXRoL2F0aDlrL2FyOTAwM19ody5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L2F0aC9hdGg5ay9hcjkwMDNfaHcuYwpAQCAtMTA5OSwxNyArMTA5OSwyMiBAQCBzdGF0aWMgYm9v
+bCBhdGg5a19od192ZXJpZnlfaGFuZyhzdHJ1Y3QgYXRoX2h3ICphaCwgdW5zaWduZWQgaW50IHF1
+ZXVlKQogewogCXUzMiBkbWFfZGJnX2NoYWluLCBkbWFfZGJnX2NvbXBsZXRlOwogCXU4IGRjdV9j
+aGFpbl9zdGF0ZSwgZGN1X2NvbXBsZXRlX3N0YXRlOworCXVuc2lnbmVkIGludCBkYmdfcmVnLCBy
+ZWdfb2Zmc2V0OwogCWludCBpOwogCi0JZm9yIChpID0gMDsgaSA8IE5VTV9TVEFUVVNfUkVBRFM7
+IGkrKykgewotCQlpZiAocXVldWUgPCA2KQotCQkJZG1hX2RiZ19jaGFpbiA9IFJFR19SRUFEKGFo
+LCBBUl9ETUFEQkdfNCk7Ci0JCWVsc2UKLQkJCWRtYV9kYmdfY2hhaW4gPSBSRUdfUkVBRChhaCwg
+QVJfRE1BREJHXzUpOworCWlmIChxdWV1ZSA8IDYpIHsKKwkJZGJnX3JlZyA9IEFSX0RNQURCR180
+OworCQlyZWdfb2Zmc2V0ID0gcXVldWUgKiA1OworCX0gZWxzZSB7CisJCWRiZ19yZWcgPSBBUl9E
+TUFEQkdfNTsKKwkJcmVnX29mZnNldCA9IChxdWV1ZSAtIDYpICogNTsKKwl9CiAKKwlmb3IgKGkg
+PSAwOyBpIDwgTlVNX1NUQVRVU19SRUFEUzsgaSsrKSB7CisJCWRtYV9kYmdfY2hhaW4gPSBSRUdf
+UkVBRChhaCwgZGJnX3JlZyk7CiAJCWRtYV9kYmdfY29tcGxldGUgPSBSRUdfUkVBRChhaCwgQVJf
+RE1BREJHXzYpOwogCi0JCWRjdV9jaGFpbl9zdGF0ZSA9IChkbWFfZGJnX2NoYWluID4+ICg1ICog
+cXVldWUpKSAmIDB4MWY7CisJCWRjdV9jaGFpbl9zdGF0ZSA9IChkbWFfZGJnX2NoYWluID4+IHJl
+Z19vZmZzZXQpICYgMHgxZjsKIAkJZGN1X2NvbXBsZXRlX3N0YXRlID0gZG1hX2RiZ19jb21wbGV0
+ZSAmIDB4MzsKIAogCQlpZiAoKGRjdV9jaGFpbl9zdGF0ZSAhPSAweDYpIHx8IChkY3VfY29tcGxl
+dGVfc3RhdGUgIT0gMHgxKSkKQEAgLTExMjgsNiArMTEzMyw3IEBAIHN0YXRpYyBib29sIGFyOTAw
+M19od19kZXRlY3RfbWFjX2hhbmcoc3RydWN0IGF0aF9odyAqYWgpCiAJdTggZGN1X2NoYWluX3N0
+YXRlLCBkY3VfY29tcGxldGVfc3RhdGU7CiAJYm9vbCBkY3Vfd2FpdF9mcmRvbmUgPSBmYWxzZTsK
+IAl1bnNpZ25lZCBsb25nIGNoa19kY3UgPSAwOworCXVuc2lnbmVkIGludCByZWdfb2Zmc2V0Owog
+CXVuc2lnbmVkIGludCBpID0gMDsKIAogCWRtYV9kYmdfNCA9IFJFR19SRUFEKGFoLCBBUl9ETUFE
+QkdfNCk7CkBAIC0xMTM5LDEyICsxMTQ1LDE1IEBAIHN0YXRpYyBib29sIGFyOTAwM19od19kZXRl
+Y3RfbWFjX2hhbmcoc3RydWN0IGF0aF9odyAqYWgpCiAJCWdvdG8gZXhpdDsKIAogCWZvciAoaSA9
+IDA7IGkgPCBBVEg5S19OVU1fVFhfUVVFVUVTOyBpKyspIHsKLQkJaWYgKGkgPCA2KQorCQlpZiAo
+aSA8IDYpIHsKIAkJCWNoa19kYmcgPSBkbWFfZGJnXzQ7Ci0JCWVsc2UKKwkJCXJlZ19vZmZzZXQg
+PSBpICogNTsKKwkJfSBlbHNlIHsKIAkJCWNoa19kYmcgPSBkbWFfZGJnXzU7CisJCQlyZWdfb2Zm
+c2V0ID0gKGkgLSA2KSAqIDU7CisJCX0KIAotCQlkY3VfY2hhaW5fc3RhdGUgPSAoY2hrX2RiZyA+
+PiAoNSAqIGkpKSAmIDB4MWY7CisJCWRjdV9jaGFpbl9zdGF0ZSA9IChjaGtfZGJnID4+IHJlZ19v
+ZmZzZXQpICYgMHgxZjsKIAkJaWYgKGRjdV9jaGFpbl9zdGF0ZSA9PSAweDYpIHsKIAkJCWRjdV93
+YWl0X2ZyZG9uZSA9IHRydWU7CiAJCQljaGtfZGN1IHw9IEJJVChpKTsKLS0gCjIuNDAuMAoK
