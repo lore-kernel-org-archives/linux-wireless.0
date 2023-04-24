@@ -2,139 +2,94 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F05C77B61
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Apr 2023 06:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25839C77B61
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Apr 2023 07:33:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230311AbjDXG71 (ORCPT
+        id S229641AbjDXHdh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Apr 2023 02:59:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60608 "EHLO
+        Mon, 24 Apr 2023 03:33:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229603AbjDXG7Z (ORCPT
+        with ESMTP id S230260AbjDXHdg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Apr 2023 02:59:25 -0400
-Received: from domac.alu.hr (domac.alu.unizg.hr [161.53.235.3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8490A10C;
-        Sun, 23 Apr 2023 23:59:23 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by domac.alu.hr (Postfix) with ESMTP id 2BEFA6015E;
-        Mon, 24 Apr 2023 08:59:20 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=alu.unizg.hr; s=mail;
-        t=1682319560; bh=3tO6EbVQ8z0eptUMkn2/s5yOHPojDse+yfFlAtWzSHk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=FgKxJXCqkW1O6MaQ9mOkf4fXsDK9sZvESxDfHqsE86G2edqmRxGMdNoRo/Ww1Zi3n
-         1cPgFnejWV55P6EEKDk/6jytmh72sJzaAnpNXg+JUePBJRef7ajxv7r0qcDCsj+wzk
-         dmAf4321PPMLARQpOtxgxEFh+nBIqjzq/ByIkdpbZAbraAbkEra4EW4ka2YqyxxcJZ
-         HCYkKPohQ1gCd+we0IB025648EKcgENuEUwFM1rAbZQqWmQ/1EGC7NYuhEjwjVAeor
-         HA3CN8QtVH2N4UQFhg22iVWCWyb6BIRS1kyi3nz2a0JFYTIIKs6YZrhQhyknQexPRj
-         17O0w/9ZPmrzQ==
-X-Virus-Scanned: Debian amavisd-new at domac.alu.hr
-Received: from domac.alu.hr ([127.0.0.1])
-        by localhost (domac.alu.hr [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id VDsNyFfa392k; Mon, 24 Apr 2023 08:59:17 +0200 (CEST)
-Received: by domac.alu.hr (Postfix, from userid 1014)
-        id 998B86015F; Mon, 24 Apr 2023 08:59:17 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=alu.unizg.hr; s=mail;
-        t=1682319557; bh=3tO6EbVQ8z0eptUMkn2/s5yOHPojDse+yfFlAtWzSHk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=jt3vC/JeoOa4aKnvVNMGQ7v6xDQIlMRJb7LF8NLKu6L+x8YbIrnKKitxKew5iJ39q
-         fQmdjVueQTVFADdgESxNkzgvPb1sTWouH7CzwiKnneCzpoh8x9sHUXFeH6J9QHAiz5
-         6+ZLofUskV6UvMzj4gLFblNqlUDF8zJ/a2z0XXN+8eSyvQAbbw1/K16OlEdvJY8AJh
-         Jub0zMblyHjgDRI/1SYNN8GVKHPoDzuc4EH8BPEYvcHc7gLA5CMOLR6O9wNARXw8hb
-         hB32HL0GZJsZNJ/FDJz00JbhTKiWllXtiKu3QTtcgi1gjATpWcU0js3c5pAu2pknOq
-         uo5LGrn/kq+kg==
-From:   Mirsad Goran Todorovac <mirsad.todorovac@alu.unizg.hr>
-To:     Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Mirsad Goran Todorovac <mirsad.todorovac@alu.unizg.hr>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH RFC v2 1/1] net: mac80211: fortify the spinlock against deadlock by interrupt
-Date:   Mon, 24 Apr 2023 08:44:01 +0200
-Message-Id: <20230424064359.45219-1-mirsad.todorovac@alu.unizg.hr>
-X-Mailer: git-send-email 2.30.2
+        Mon, 24 Apr 2023 03:33:36 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D29E6C
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Apr 2023 00:33:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1682321604; x=1713857604;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=eUSQAa9Njfa1cb+oZo0gO6rc+BBWy9j3tC9W/CNRj+I=;
+  b=SRn/h/m4cjBrU+yFx/1O+5Uw8OFHrg91k9DG1eT+N7rpEB3fuYnJ8rfW
+   fVfFvLyy7DD35r4Cb93sMv6M8/8RTPfpghaYJim72t7jFe9Sb6qUdJ8Bc
+   VlhtVH6ODpNCypivO7wB9+G0o88BB7QZx1LekIWUByfP2DHsB63+I9pdk
+   TaqvPnfyDa6UEv8/IlY5kwtlkv8kKUDF5T05oI5osaqRb3d6itbm2Qhms
+   TmczodAperaJtMimos5zm1OvKV/QoeoUv28BYNNvEpz78wj6BsN7+joUk
+   cJzHf/jRyWY+6IGMRVIghZ19yObffojFt/hoUMNwl8UAxGvhWbiLqTJVe
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10689"; a="326703988"
+X-IronPort-AV: E=Sophos;i="5.99,222,1677571200"; 
+   d="scan'208";a="326703988"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2023 00:33:24 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10689"; a="643263145"
+X-IronPort-AV: E=Sophos;i="5.99,222,1677571200"; 
+   d="scan'208";a="643263145"
+Received: from ynever-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.234.99])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2023 00:33:22 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH] wifi: cfg80211: Drop entries with invalid BSSIDs in RNR
+Date:   Mon, 24 Apr 2023 10:32:24 +0300
+Message-Id: <20230424103224.5e65d04d1448.Ic10c8577ae4a85272c407106c9d0a2ecb5372743@changeid>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In the function ieee80211_tx_dequeue() there is a particular locking
-sequence:
+From: Ilan Peer <ilan.peer@intel.com>
 
-begin:
-	spin_lock(&local->queue_stop_reason_lock);
-	q_stopped = local->queue_stop_reasons[q];
-	spin_unlock(&local->queue_stop_reason_lock);
+Ignore AP information for entries that include an invalid
+BSSID in the TBTT information field, e.g., all zeros BSSIDs.
 
-However small the chance (increased by ftracetest), an asynchronous
-interrupt can occur in between of spin_lock() and spin_unlock(),
-and the interrupt routine will attempt to lock the same
-&local->queue_stop_reason_lock again.
-
-This will cause a costly reset of the CPU and the wifi device or an
-altogether hang in the single CPU and single core scenario.
-
-This is the probable trace of the deadlock:
-
-Apr 10 00:58:33 marvin-IdeaPad-3-15ITL6 kernel:  Possible unsafe locking scenario:
-Apr 10 00:58:33 marvin-IdeaPad-3-15ITL6 kernel:        CPU0
-Apr 10 00:58:33 marvin-IdeaPad-3-15ITL6 kernel:        ----
-Apr 10 00:58:33 marvin-IdeaPad-3-15ITL6 kernel:   lock(&local->queue_stop_reason_lock);
-Apr 10 00:58:33 marvin-IdeaPad-3-15ITL6 kernel:   <Interrupt>
-Apr 10 00:58:33 marvin-IdeaPad-3-15ITL6 kernel:     lock(&local->queue_stop_reason_lock);
-Apr 10 00:58:33 marvin-IdeaPad-3-15ITL6 kernel:
-                                                 *** DEADLOCK ***
-
-Fixes: 4444bc2116ae
-Link: https://lore.kernel.org/all/1f58a0d1-d2b9-d851-73c3-93fcc607501c@alu.unizg.hr/
-Reported-by: Mirsad Goran Todorovac <mirsad.todorovac@alu.unizg.hr>
-Cc: Gregory Greenman <gregory.greenman@intel.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: Alexander Wetzel <alexander@wetzel-home.de>
-Signed-off-by: Mirsad Goran Todorovac <mirsad.todorovac@alu.unizg.hr>
+Fixes: c8cb5b854b40 ("nl80211/cfg80211: support 6 GHz scanning")
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
-v2:
-Minor rewording and clarification.
-Cc:-ed people that replied to the original bug report (forgot in v1 by omission).
+ net/wireless/scan.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
- net/mac80211/tx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7699fb410670..45cb8e7bcc61 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3781,6 +3781,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	ieee80211_tx_result r;
- 	struct ieee80211_vif *vif = txq->vif;
- 	int q = vif->hw_queue[txq->ac];
-+	unsigned long flags;
- 	bool q_stopped;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index a1382255fab3..c501db7bbdb3 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -5,7 +5,7 @@
+  * Copyright 2008 Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright 2016	Intel Deutschland GmbH
+- * Copyright (C) 2018-2022 Intel Corporation
++ * Copyright (C) 2018-2023 Intel Corporation
+  */
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+@@ -540,6 +540,10 @@ static int cfg80211_parse_ap_info(struct cfg80211_colocated_ap *entry,
+ 	/* skip the TBTT offset */
+ 	pos++;
  
- 	WARN_ON_ONCE(softirq_count() == 0);
-@@ -3789,9 +3790,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 		return NULL;
++	/* ignore entries with invalid BSSID */
++	if (!is_valid_ether_addr(pos))
++		return -EINVAL;
++
+ 	memcpy(entry->bssid, pos, ETH_ALEN);
+ 	pos += ETH_ALEN;
  
- begin:
--	spin_lock(&local->queue_stop_reason_lock);
-+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	q_stopped = local->queue_stop_reasons[q];
--	spin_unlock(&local->queue_stop_reason_lock);
-+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
- 	if (unlikely(q_stopped)) {
- 		/* mark for waking later */
 -- 
-2.30.2
+2.38.1
 
