@@ -2,81 +2,103 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD608C77B78
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Apr 2023 17:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE27C7618E
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Apr 2023 17:53:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234631AbjDZRNm (ORCPT
+        id S239160AbjDZRxM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Apr 2023 13:13:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38082 "EHLO
+        Wed, 26 Apr 2023 13:53:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233954AbjDZRNl (ORCPT
+        with ESMTP id S233428AbjDZRxL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2023 13:13:41 -0400
-Received: from out203-205-221-235.mail.qq.com (out203-205-221-235.mail.qq.com [203.205.221.235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7BEF194;
-        Wed, 26 Apr 2023 10:13:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-        s=s201512; t=1682528918;
-        bh=o4udH8OtqEoEDrOP/aTcDA81yzBb2ltJxkP46cbFh5c=;
-        h=From:To:Cc:Subject:Date;
-        b=juYhBBtayxtuIEglDGpYtnMn1Yo2+GoJLV+2HWEXQvlNFlG1rVAudJ2AwTCs8RsQr
-         /CSTwa/e828C7Nfh7R+WkSLHD9hxmtx0FxMf1rM/ci9K5rKh85P207+PvjkTDFvKnq
-         8GqUzAm/xOZzXdx4dDmo/mnZbXSFbYfcw7BQzmco=
-Received: from localhost.localdomain ([220.243.191.11])
-        by newxmesmtplogicsvrsza10-0.qq.com (NewEsmtp) with SMTP
-        id 9828290; Thu, 27 Apr 2023 01:02:24 +0800
-X-QQ-mid: xmsmtpt1682528544th5jveq67
-Message-ID: <tencent_1BB7243C6EDA6B2BB6E2C1563C1614D45009@qq.com>
-X-QQ-XMAILINFO: MyIXMys/8kCtWl9GEkWfk7hP4f0VtV8+04aQymT3xHvU/k9TTahy9VKkPLTZh5
-         io2CmzhrX4cceDZ4N2WgF/3ovWk18EE0wqMuvpvRwH5obr5nms3Q/5ESB3vwADixLKudkx4p2LuD
-         pb9UaO/BlXQO2ikEufIf3a8lg0/v3gHJrTO2jWf0iytxddhI8pKPBtLW5uY/7tYiKcm9R4ntfCR9
-         4Cgw+fek5uN+bqMrhoPPHhSNXbkhUNj+PwId7N5M4IVJ+WrPZBla+cxttjEL+QWGbGc/14NnqWol
-         EcuPtlw+zLMf2bErM2Z3FSu562Btc9EXwAO8MgmGGG1HYdUhjneGYT0IpXhzZe4UgEzdM8J1RO9l
-         2LSb/RYImejWvvayVWY2lwwppzv3lP01v4Izus6klBQAkfoaE4KTT2X38u9JB9LHJdQQ9rE0sLqi
-         3vD0UOye0N2SUj30JItjV/IokQ3hQ0LEiyaSR7GD76baekW2SxHERHXfIL7CZmwDty2R3H5HE5qE
-         l3WHhBYkY7Hh1VJBDIyZdoVuoYfa/f0dlrOs5evtx48Vzc9yEkFNXQgtS07THzeSZm+xIAcpYD/n
-         rUJXRShMObCcgvdmH6KN7JzAjaAm2UaxbA7tEKMB5ILlJWWs0PUZpWLkVAT4B7oo0/eqb6x3xVFb
-         f5UlRSh33XlUdp3KG3zEjOVlLkcsh3fQqHaRLCZ1hBX53IB0+N3avaCP9j005HMEt4Nc/VIZHtD5
-         a7BmXZpx+UXd52yPmYCAt8o2Pfy7yv3pervDd4KNEs/506byGSaP+TgHEWJX9PxeSVJFZGseD8Uy
-         dQnBJnmJ23G3jaeP0Fq1iOY/8ZH6UnewlZW0SR8uCCBmtJzFhkKirHw4JQ6oOqI1rFRh6QR1H2HD
-         g12zkHKui5E9nbRK8dA9dqRuLfk1RauAE6SDdFgEEETt7TgIhGOEzCIJOgxa0os/Dd00xwE84oEj
-         IPD5C5IXqi11/mddotZhP4h0J+4+QcEQ9ZQz+pS4N4/aBDZI45qA==
-From:   Zhang Shurong <zhang_shurong@foxmail.com>
-To:     pkshih@realtek.com
-Cc:     tony0620emma@gmail.com, kvalo@kernel.org, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Zhang Shurong <zhang_shurong@foxmail.com>
-Subject: [PATCH v3 0/2] wifi: rtw88: error codes fix patches
-Date:   Thu, 27 Apr 2023 01:02:19 +0800
-X-OQ-MSGID: <cover.1682526135.git.zhang_shurong@foxmail.com>
-X-Mailer: git-send-email 2.40.0
+        Wed, 26 Apr 2023 13:53:11 -0400
+Received: from domac.alu.hr (domac.alu.unizg.hr [161.53.235.3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 887CB61AB;
+        Wed, 26 Apr 2023 10:53:05 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by domac.alu.hr (Postfix) with ESMTP id 63E196017E;
+        Wed, 26 Apr 2023 19:53:03 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=alu.unizg.hr; s=mail;
+        t=1682531583; bh=ix3yZfX9qAGGSCgGBfddgoc3bJRhu281Z1JgEWmvIZQ=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=E8C8VEInskBWRChFkZ4Vz+TJY2EBceb+E1AZgguFg42BRujK74/XKdmuKbD/fp54A
+         uLEGaQh13KalmQ4k54AvDMC0MKmpbhdaumc6TTNlUSpmfkg1Q0rtDuAgmbtZmI0RZP
+         J8Mnan9OaMw7b4ejwDeHcPVkSrmQBSZMP6Zk8oGGjGetdiYCF4SukB4vmQy66vWvF9
+         KHQJd48ou/TTwAP5CDQBo8UabFO8OSu4gRiZW4V60+coPrLfDzVMt0B8joYwBWM5WT
+         NzPoJ347+fNK31vc/4RzDVFOgW3Uv/Erx5ByOfqnV+w06xFx3/HbQPFZi2lM5E9YvH
+         RvO2Ys3jVnm6A==
+X-Virus-Scanned: Debian amavisd-new at domac.alu.hr
+Received: from domac.alu.hr ([127.0.0.1])
+        by localhost (domac.alu.hr [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id nsmIIG9q5Hnn; Wed, 26 Apr 2023 19:53:01 +0200 (CEST)
+Received: from [192.168.1.4] (unknown [94.250.188.177])
+        by domac.alu.hr (Postfix) with ESMTPSA id ADFF16017C;
+        Wed, 26 Apr 2023 19:52:46 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=alu.unizg.hr; s=mail;
+        t=1682531581; bh=ix3yZfX9qAGGSCgGBfddgoc3bJRhu281Z1JgEWmvIZQ=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=lqhmVaopu7TtdZ3rBlQR6ffhkNbIlIDzcOoATDn25HmXEsTsAZAHPqvrpZ+cKHgxy
+         RSijHFO+c2PfdtBBF1VP+GlB0wiqb+rDOrnURqUjp6Hm/ydagtzjejuGL2+QiWP+gf
+         IvN83FycjwQkDe0ZijHG1LI2rfscvT6LuEQI+Xj1jacqwzzTjwkZFCUjC6i90OZKsT
+         DsnaGc+Jl3hoMceEFxhrnBhVRzhI8lvr0EhEePwoJxoxtBY5gpgdCl46S1CExHkdUh
+         7RBqOwXnzr/I8cGZKg3BZ8F/UGb9pt51LgoYrWVYd5hph9y1nXh5LOmTi8h7O0Huv0
+         O8xfhiU3h092w==
+Message-ID: <e6f97703-58a2-befb-d09b-cee7e946a8a4@alu.unizg.hr>
+Date:   Wed, 26 Apr 2023 19:52:45 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v4 1/1] wifi: mac80211: fortify the spinlock against
+ deadlock by interrupt
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Leon Romanovsky <leon@kernel.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Alexander Wetzel <alexander@wetzel-home.de>
+References: <20230425164005.25272-1-mirsad.todorovac@alu.unizg.hr>
+ <20230426064145.GE27649@unreal>
+ <074cf5ed-c39d-1c16-12e7-4b14bbe0cac4@alu.unizg.hr>
+ <d1e8fff25b49f8ee8d3e38f7b072d6e1911759bb.camel@sipsolutions.net>
+Content-Language: en-US, hr
+From:   Mirsad Goran Todorovac <mirsad.todorovac@alu.unizg.hr>
+In-Reply-To: <d1e8fff25b49f8ee8d3e38f7b072d6e1911759bb.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-rtw88 does not handle the failure during copy_from_user or invalid
-user-provided data. We fix such problems by first modifying the return
-value of customized function rtw_debugfs_copy_from_user. Then for all 
-the callers rtw_debugfs_set_*, we receive the returned error code. 
-Moreover, negative code is returned if the user-provided data is invalid
-instead of a positive value count.
+On 26. 04. 2023. 17:05, Johannes Berg wrote:
+> On Wed, 2023-04-26 at 16:02 +0200, Mirsad Todorovac wrote:
+>>
+>> That's awesome! Just to ask, do I need to send the PATCH v5 with the
+>> Reviewed-by: tag, or it goes automatically?
+>>
+> 
+> Patchwork will be pick it up automatically.
+> 
+> johannes
 
-The changes in this version:
-- check by if (ret) instead of check by if (ret < 0)
+That's awesome, thank you for the update.
 
-Zhang Shurong (2):
-  wifi: rtw88: fix incorrect error codes in rtw_debugfs_copy_from_user
-  wifi: rtw88: fix incorrect error codes in rtw_debugfs_set_*
-
- drivers/net/wireless/realtek/rtw88/debug.c | 59 ++++++++++++++++------
- 1 file changed, 43 insertions(+), 16 deletions(-)
+Mirsad
 
 -- 
-2.40.0
+Mirsad Goran Todorovac
+Sistem inženjer
+Grafički fakultet | Akademija likovnih umjetnosti
+Sveučilište u Zagrebu
+ 
+System engineer
+Faculty of Graphic Arts | Academy of Fine Arts
+University of Zagreb, Republic of Croatia
+The European Union
 
+"I see something approaching fast ... Will it be friends with me?"
 
