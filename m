@@ -2,104 +2,94 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49D7AC7618E
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Apr 2023 16:49:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 483B2C77B7C
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Apr 2023 17:02:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233327AbjDZQtn (ORCPT
+        id S233655AbjDZRCg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Apr 2023 12:49:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50664 "EHLO
+        Wed, 26 Apr 2023 13:02:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229758AbjDZQtl (ORCPT
+        with ESMTP id S231222AbjDZRCf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Apr 2023 12:49:41 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B4365FF4
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Apr 2023 09:49:39 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33QG4XYH025015;
-        Wed, 26 Apr 2023 16:49:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=OGFCBSk9Ao2wgRC4CQBkJE67+vbisEmpOdkqP44I7UI=;
- b=R/wF55uO4Xg6cf5yblw3Iv7d0+fvlOEmEF5rFQYnMQfcURLY4PVLdq3kaNvmMn1/Hfh+
- 1+iOaTR9dkE+VCi2xJOmIOi3YWG/Bv84rSYlX8lV12uQ6Y6XuWqLuy0T2smpx5wn8Sfi
- zZRkFS7xilUfaer7FFjc15AlI3qf8fePa83tik0mH7s2yCzBmdRUNcI808/QMmQ437Os
- CV4cFlX9rlEp3tNVueKYTwXhho8HAQ5TkQMXDll27mYsz1QU5rknBL83OQeqoQxHYOOi
- +cxv2w0m+/hZ1ZS2SpzK630IkNgRy2lHsKxQok8OcjLUyq4bDsawDLpanyxJjyHtnigA rA== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3q6uprst0w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 26 Apr 2023 16:49:30 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 33QGnT3i007847
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 26 Apr 2023 16:49:29 GMT
-Received: from [10.110.11.241] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Wed, 26 Apr
- 2023 09:49:29 -0700
-Message-ID: <759bf2e8-ce51-b882-7d26-7ae57b8cf571@quicinc.com>
-Date:   Wed, 26 Apr 2023 09:49:28 -0700
+        Wed, 26 Apr 2023 13:02:35 -0400
+Received: from out203-205-221-149.mail.qq.com (out203-205-221-149.mail.qq.com [203.205.221.149])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54A566181;
+        Wed, 26 Apr 2023 10:02:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+        s=s201512; t=1682528551;
+        bh=0jtZ1tJWTi2inp5S8B+o1APzbV/sG+j39aLHY3E4ric=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=cXxzB61hg6oujYZnM6uf+lwJdE4topBp/2bWZCWPhT6kqhTcNOK222NsyHF7KUemH
+         ggjFon6uxwc3pLujaQgRH9y/2pCanKv/p1BgrmZqS3rdLTnG3ZKA9Duf/ebZ/kUYRS
+         yvvTfjTVOIGz9teErxobZKxlXl7jat4YG2q/w9XM=
+Received: from localhost.localdomain ([220.243.191.11])
+        by newxmesmtplogicsvrsza10-0.qq.com (NewEsmtp) with SMTP
+        id 9828290; Thu, 27 Apr 2023 01:02:24 +0800
+X-QQ-mid: xmsmtpt1682528547tel9oph6f
+Message-ID: <tencent_D2EB102CC7435C0110154E62ECA6A7D67505@qq.com>
+X-QQ-XMAILINFO: NkHKfw09D6j8LSj8UwFeu2OCk7A8oQLwa8gZrIgcoSEVCTIOSzx9v+Y5eP3oy7
+         ivYq7fa0whH/f020W39Mawe33y6+oug8Qys190X7BXddYTI1PRBMLoZOAdXwTfbbhJEShW0vFEoM
+         kk0KnZNR+AqTvRXDv5dFjwXWyZtxFJWW1+Z9I88G3oSqK/+WTOubCS3I6q0fqYAA/eS52YeOdNn2
+         hZpmONjXpJi9G2jZCHIMhHUbVqCqkT3V0KuGCrhbHMeBlJ0KplM6MbbAAObUTPChGsAI1IOn9fsf
+         HobtfAubBDLABTa93HsOt+q0PqDH2siBA6S7FI+a/Pt37W/lgx7e1eJd1Y1ykbbUbGc92lyuzIWq
+         94YMLTby7My0FYv6Wxxe9qXdNwwq7LJrrYMugJ267S89G6bUyuWSeu1eS5r9r+GEzijkASH6fLNA
+         o45TTGmFrSe9l40Cm8vNd8CczYBSyxk95Apo16KKBfYqpNGxubvxvYlIpF3MixeKFlrLSLVAxrxW
+         Qg8Y/pAKHPK9ZcO/Q1LkiDkCIc6EPRvhxw8pU1zgYAWMM5Tl1QLH+5waVl4crHTWM2rfHVqCs8AH
+         d6a2oTmrgYOgFOFBNRXippbM2mXvl9lAi7shQvNNTqPL9PRN4yv0rtUQPmwlQUG8TYKEdwC+eYwi
+         p8iLgxmqRrAKzi9wo14LmcCb0KPrW0J/h7iq5Gl+Iba6eInqkoh3VQXidNY3cm/PGpu/nDBGGOF7
+         zQy0RIjfRj49Z5LsWWUlRhQEtUbAKt0hXOM/bE0RGhXSpAPe8VEPmsSJkQMPtd8/WANJYztEjkQ2
+         IvFRoPKKTl0AQ/vHxqgS979JYhcHrf6+FfaTJ/ekWdEuuKTF/dpHp7sS1Jwb/m1LBWqw21le0JOT
+         +nc4vuEnk47N1cJHn0ZiHTwoWqi6m69iV+WV5Z7u9jKphBr2D/TtWEmH/v2nlby5cP3UqiPd57nM
+         ZyJm/ft26ZKT4aEZryeOKTYbHVEpKdBbK5cu2x1ewT6/qz1jXg8U9m6gh0OAtXydswpaD8Cn8Yrw
+         rXEpwdmPQA/gnDVPScE2acrWCzCgs=
+From:   Zhang Shurong <zhang_shurong@foxmail.com>
+To:     pkshih@realtek.com
+Cc:     tony0620emma@gmail.com, kvalo@kernel.org, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Zhang Shurong <zhang_shurong@foxmail.com>
+Subject: [PATCH v3 1/2] wifi: rtw88: fix incorrect error codes in rtw_debugfs_copy_from_user
+Date:   Thu, 27 Apr 2023 01:02:20 +0800
+X-OQ-MSGID: <d4e504c99f23ae18ff831939f56846b0878acb23.1682526135.git.zhang_shurong@foxmail.com>
+X-Mailer: git-send-email 2.40.0
+In-Reply-To: <cover.1682526135.git.zhang_shurong@foxmail.com>
+References: <cover.1682526135.git.zhang_shurong@foxmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH v3 00/11] wifi: ath12k: (v3) EHT support
-To:     Kalle Valo <kvalo@kernel.org>
-CC:     <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-References: <20230413215156.2649-1-quic_alokad@quicinc.com>
- <87ildjtc1c.fsf@kernel.org>
-Content-Language: en-US
-From:   Aloka Dixit <quic_alokad@quicinc.com>
-In-Reply-To: <87ildjtc1c.fsf@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 8Ua1JzCLdsQzG9TIEPwsyCC_wqqpXbmD
-X-Proofpoint-GUID: 8Ua1JzCLdsQzG9TIEPwsyCC_wqqpXbmD
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-26_08,2023-04-26_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
- mlxscore=0 clxscore=1011 priorityscore=1501 mlxlogscore=999
- lowpriorityscore=0 adultscore=0 impostorscore=0 spamscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304260148
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 4/25/2023 11:03 PM, Kalle Valo wrote:
-> Aloka Dixit <quic_alokad@quicinc.com> writes:
-> 
->> Add driver support to bring AP up in EHT mode, configure a preamble
->> puncturing bitmap and associate with an EHT client.
->>
->> v3: Modified patches 6 and 9 to fix some issues,
->> changelog included in the respective patches.
->> v2: This version modifies only few commit descriptions,
->> changelog included in the respective patches.
->>
-> This breaks WCN7850 support:
-> 
-> [  144.039164] ath12k_pci 0000:06:00.0: BAR 0: assigned [mem 0xda200000-0xda3fffff 64bit]
-> [  144.039315] ath12k_pci 0000:06:00.0: enabling device (0000 -> 0002)
-> [  144.046220] ath12k_pci 0000:06:00.0: Hardware name: wcn7850 hw2.0
-> [  144.118539] mhi mhi0: Requested to power ON
-> [  144.118716] mhi mhi0: Power on setup success
-> [  144.222303] mhi mhi0: Wait for device to enter SBL or Mission mode
-> [  144.627712] ath12k_pci 0000:06:00.0: chip_id 0x2 chip_family 0x4 board_id 0x104 soc_id 0x40170200
-> [  144.627945] ath12k_pci 0000:06:00.0: fw_version 0x1005bc12 fw_build_timestamp 2022-10-11 12:13 fw_build_id QC_IMAGE_VERSION_STRING=WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
-> [  144.959196] ath12k_pci 0000:06:00.0: failed to parse tlv -22
-> [  144.959317] ath12k_pci 0000:06:00.0: failed to parse ext2 event tlv -22
-> [  150.263567] ath12k_pci 0000:06:00.0: failed to receive wmi service ready event: -110
-> [  150.276547] ath12k_pci 0000:06:00.0: failed to start core: -110
-> 
+If there is a failure during copy_from_user or user-provided data
+buffer is invalid, rtw_debugfs_copy_from_user should return negative
+error code instead of a positive value count.
 
-I have started seeing ETIMEDOUT on QCN9274 as well, AP bring up fails in 
-vdev sync. It works if the sync timeout is increased.
+Fix this bug by returning correct error code. Moreover, the check
+of buffer against null is removed since it will be handled by
+copy_from_user.
+
+Signed-off-by: Zhang Shurong <zhang_shurong@foxmail.com>
+---
+ drivers/net/wireless/realtek/rtw88/debug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index fa3d73b333ba..3da477e1ebd3 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -183,8 +183,8 @@ static int rtw_debugfs_copy_from_user(char tmp[], int size,
+ 
+ 	tmp_len = (count > size - 1 ? size - 1 : count);
+ 
+-	if (!buffer || copy_from_user(tmp, buffer, tmp_len))
+-		return count;
++	if (copy_from_user(tmp, buffer, tmp_len))
++		return -EFAULT;
+ 
+ 	tmp[tmp_len] = '\0';
+ 
+-- 
+2.40.0
+
