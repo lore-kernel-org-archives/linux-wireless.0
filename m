@@ -2,100 +2,114 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D96C77B61
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Apr 2023 08:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A0DC77B61
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Apr 2023 09:10:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243010AbjD0IO3 (ORCPT
+        id S243246AbjD0JJ6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Apr 2023 04:14:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38770 "EHLO
+        Thu, 27 Apr 2023 05:09:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242966AbjD0IO2 (ORCPT
+        with ESMTP id S243354AbjD0JJv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2023 04:14:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F7A540E7;
-        Thu, 27 Apr 2023 01:14:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EDFAD63AED;
-        Thu, 27 Apr 2023 08:14:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11CB0C433EF;
-        Thu, 27 Apr 2023 08:14:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682583266;
-        bh=+LHYB0sYWaFSs3sPC1o7x7SZX0M3xmiNs6aa7zLUrE4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=RobXXTHtw4mF1N1taXMj3fApFuJruM49jiGKtK/M841vMC4hKq81KCjJFtmKo91nu
-         Jr2ED18m/xtO8Tz1+U3gEA5tZ18HpYAcZBjImpet/ohjgbKDU5+CWD/FcwUzHmyvDW
-         dJXcmn/QaH/zIS5HivkiFzckZaiI19IFHtkmTO7GQOoCHuEkQ+wpYTvoGo0ffyY/b3
-         j1p+ZI2fHtcmCesWeYtCIcB/cGYkprKdQb49jw8OGpDk1T1A0WoUrkTOZrOqfHJEPg
-         WI15VqXP0SjmuVjf/C/QaKCcpaVWQ1UJFFjckWL6W3IQCubeP890zKGJV4fJcE+3xw
-         FaO87TRNSB5LA==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Paolo Abeni <pabeni@redhat.com>
-Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH net-next] wifi: ath11k: Use list_count_nodes()
-References: <941484caae24b89d20524b1a5661dd1fd7025492.1682542084.git.christophe.jaillet@wanadoo.fr>
-        <87v8hiosci.fsf@kernel.org>
-        <e05d4d4d33a2c50973d139752b4fcfad5dbdf056.camel@redhat.com>
-Date:   Thu, 27 Apr 2023 11:14:19 +0300
-In-Reply-To: <e05d4d4d33a2c50973d139752b4fcfad5dbdf056.camel@redhat.com>
-        (Paolo Abeni's message of "Thu, 27 Apr 2023 09:07:34 +0200")
-Message-ID: <87y1mdspwk.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Thu, 27 Apr 2023 05:09:51 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 848DD30FC
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2023 02:09:46 -0700 (PDT)
+From:   Martin Kaistra <martin.kaistra@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1682586584;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YHLQndD8+02gH+3IgdO6pIZSW7YIjRMlN8iFKSxa69A=;
+        b=QucGN90vGZmqgwu3j30OfTng6MhpaPWSDeWHytWEsDWCvLZ7+oOw9uDQmfKsRPsys+sNx3
+        fIVDRA4sCaiFDxSzIbwvroj7EKd0HWlgkxyMmsioByHgdZ6Sz+a1gF+ENWvsGOlIkePbtE
+        jtwhCv9HPjmaRf6hWSK6voOwr69VJvCMcPbw8GEKTtkirw21nqUoUJfwuz4ujOZs8osjo/
+        u+lSvi/Z4G9nOr65WBh1LEYinA3Tvip0XaDIEiHiHnXLBbyo15jjGeyzrLlghANeNywRdC
+        6KTwa9FXQ/1rdfpxn+PrAbf2whbEvss4HJcNlOymWThkP54SYG0Bru4sT9ydyQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1682586584;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YHLQndD8+02gH+3IgdO6pIZSW7YIjRMlN8iFKSxa69A=;
+        b=SkKxSAGy01yhpP6YlX816mx/BpT0RXmjnir648ms8m6oyhAEfITopTxTVETtO4QUeXusZv
+        P4ZE6WwWsQFTx2Bg==
+To:     linux-wireless@vger.kernel.org
+Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH v3 01/18] wifi: rtl8xxxu: Add start_ap() callback
+Date:   Thu, 27 Apr 2023 11:09:05 +0200
+Message-Id: <20230427090922.165088-2-martin.kaistra@linutronix.de>
+In-Reply-To: <20230427090922.165088-1-martin.kaistra@linutronix.de>
+References: <20230427090922.165088-1-martin.kaistra@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Paolo Abeni <pabeni@redhat.com> writes:
+This gets called at the start of AP mode operation. Set bssid, beacon
+interval and send a connect report to the HW.
 
-> On Thu, 2023-04-27 at 07:35 +0300, Kalle Valo wrote:
->
->> Christophe JAILLET <christophe.jaillet@wanadoo.fr> writes:
->> 
->> > ath11k_wmi_fw_stats_num_vdevs() and ath11k_wmi_fw_stats_num_bcn() really
->> > look the same as list_count_nodes(), so use the latter instead of hand
->> > writing it.
->> > 
->> > The first ones use list_for_each_entry() and the other list_for_each(), but
->> > they both count the number of nodes in the list.
->> > 
->> > While at it, also remove to prototypes of non-existent functions.
->> > Based on the names and prototypes, it is likely that they should be
->> > equivalent to list_count_nodes().
->> > 
->> > Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
->> > ---
->> > Un-tested
->> 
->> I'll run sanity tests on ath11k patches. I'll also add "Compile tested
->> only" to the commit log.
->> 
->> Oh, and ath11k patches go to ath tree, not net-next.
->
-> Just for awareness, there are 2 additional patches apparently targeting
-> net-next but being instead for the WiFi tree:
->
-> https://lore.kernel.org/all/e77ed7f719787cb8836a93b6a6972f4147e40bc6.1682537509.git.christophe.jaillet@wanadoo.fr/
-> https://lore.kernel.org/all/e6ec525c0c5057e97e33a63f8a4aa482e5c2da7f.1682541872.git.christophe.jaillet@wanadoo.fr/
+Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |  1 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 15 +++++++++++++++
+ 2 files changed, 16 insertions(+)
 
-Thanks, these are on our wireless patchwork so you can drop them on your
-end:
-
-https://patchwork.kernel.org/project/linux-wireless/patch/e6ec525c0c5057e97e33a63f8a4aa482e5c2da7f.1682541872.git.christophe.jaillet@wanadoo.fr/
-
-https://patchwork.kernel.org/project/linux-wireless/patch/e77ed7f719787cb8836a93b6a6972f4147e40bc6.1682537509.git.christophe.jaillet@wanadoo.fr/
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 8eafbf1cee718..9cd6d171e9933 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1727,6 +1727,7 @@ struct rtl8xxxu_cfo_tracking {
+ };
+ 
+ #define RTL8XXXU_HW_LED_CONTROL	2
++#define RTL8XXXU_BC_MC_MACID	0
+ 
+ struct rtl8xxxu_priv {
+ 	struct ieee80211_hw *hw;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index fd8c8c6d53d60..b8fcf911c072e 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4968,6 +4968,20 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	return;
+ }
+ 
++static int rtl8xxxu_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			     struct ieee80211_bss_conf *link_conf)
++{
++	struct rtl8xxxu_priv *priv = hw->priv;
++	struct device *dev = &priv->udev->dev;
++
++	dev_dbg(dev, "Start AP mode\n");
++	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid);
++	rtl8xxxu_write16(priv, REG_BCN_INTERVAL, vif->bss_conf.beacon_int);
++	priv->fops->report_connect(priv, RTL8XXXU_BC_MC_MACID, true);
++
++	return 0;
++}
++
+ static u32 rtl8xxxu_80211_to_rtl_queue(u32 queue)
+ {
+ 	u32 rtlqueue;
+@@ -7093,6 +7107,7 @@ static const struct ieee80211_ops rtl8xxxu_ops = {
+ 	.config = rtl8xxxu_config,
+ 	.conf_tx = rtl8xxxu_conf_tx,
+ 	.bss_info_changed = rtl8xxxu_bss_info_changed,
++	.start_ap = rtl8xxxu_start_ap,
+ 	.configure_filter = rtl8xxxu_configure_filter,
+ 	.set_rts_threshold = rtl8xxxu_set_rts_threshold,
+ 	.start = rtl8xxxu_start,
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.30.2
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
