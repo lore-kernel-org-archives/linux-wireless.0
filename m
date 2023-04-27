@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 714B7C77B73
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 295F7C77B7F
 	for <linux-wireless@archiver.kernel.org>; Thu, 27 Apr 2023 09:10:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243329AbjD0JKP (ORCPT
+        id S243294AbjD0JKK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Apr 2023 05:10:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37612 "EHLO
+        Thu, 27 Apr 2023 05:10:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243366AbjD0JJx (ORCPT
+        with ESMTP id S243379AbjD0JJy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2023 05:09:53 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C5C6E50
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2023 02:09:52 -0700 (PDT)
+        Thu, 27 Apr 2023 05:09:54 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33CF02120
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2023 02:09:53 -0700 (PDT)
 From:   Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1682586585;
+        s=2020; t=1682586586;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=/qEIdZgEWODvORA5x7w7raVhWzerggi1+VYTX8qIa1A=;
-        b=hek1MPHFIe16pN1x2pDh7LL8JYkq5krsrIAkFLjUdiJSrmU4H9qs8duZf+b10Fk7zhfJ15
-        BBxU7NIWSQHf35ry/XDa+DQCA98uj7KLf0WMfBZybLz+KGI+HJFsKeMDw2zGzVleKUKVvE
-        vetsJJoC4IN3BH0u10SSH/AqdLYsOe80H1KhAwB5uxUpBNxa1zEIWlp51X01K1iPBmzcBU
-        Pl3eV7RtMVyA7PttHHrxAR6otSidxGlgbMuKK0IwszApgQUHkwe7jYn+GdehKF0NvQ3Sez
-        8YlzShupLbUlj+xLJTcCDAm/8oXcG4aL1OIVzRCA9rpB7Oz0ILl69f9W0r5vtQ==
+        bh=y3VCne1HeKL1oLNsS7YEfA7+Q2fI/jmvUfc0Ixzjb5Y=;
+        b=osBVUTQ+Lh2ruZVGBXgOMI68zegersrZttkVJATnyvg8O4JeYYDEH1EPoRnBtcFh88LvuH
+        +uSogMcVa+ZsfNxhPmV0asNZH5qtLqFp2Pmfkkrhz2URIUmZxYPDWWFbkSBkDwj1LWIkhV
+        OktaylGaphc2vcbLw3T6tjHpLSKbxKQ38DrjxifWdwbn0YgMrwY1DLRiZNOd4TRS8XHMHK
+        Kq2erw8hlEwaWzJxfm6FQaBoYGhk9tvIlrv/xOIL96AAQ7ldUX8EO9MVJuu5ksEduR8GIX
+        r2aboOcXkOjaULMIIYgoEw+EgBTZWJJ45F/13CVk2EnIOu7K8CP9dMXw0vlVEA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1682586585;
+        s=2020e; t=1682586586;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=/qEIdZgEWODvORA5x7w7raVhWzerggi1+VYTX8qIa1A=;
-        b=daRCIEpU8OHwH/Zqu9Jc6F+iaZaoLk1YdGcjPdoe1s0URtE9Ot+MrRCc0pZAzNHltAIpVh
-        8qkIYz9bOAQu+yAQ==
+        bh=y3VCne1HeKL1oLNsS7YEfA7+Q2fI/jmvUfc0Ixzjb5Y=;
+        b=8nOh3oiHBJ9Uxl+32FlKOM3gSgVhzvgbNdyWshG/t9SZcHj5q5GxRtwmYMM8ZI1AbM5Nzh
+        9TmrO39kYxzqbdAQ==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
         Kalle Valo <kvalo@kernel.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Bitterblue Smith <rtl8821cerfe2@gmail.com>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v3 06/18] wifi: rtl8xxxu: Allow creating interface in AP mode
-Date:   Thu, 27 Apr 2023 11:09:10 +0200
-Message-Id: <20230427090922.165088-7-martin.kaistra@linutronix.de>
+Subject: [PATCH v3 12/18] wifi: rtl8xxxu: Add parameter macid to update_rate_mask
+Date:   Thu, 27 Apr 2023 11:09:16 +0200
+Message-Id: <20230427090922.165088-13-martin.kaistra@linutronix.de>
 In-Reply-To: <20230427090922.165088-1-martin.kaistra@linutronix.de>
 References: <20230427090922.165088-1-martin.kaistra@linutronix.de>
 MIME-Version: 1.0
@@ -55,90 +55,119 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use the sequence from the vendor driver for setting up the beacon
-related registers.
-Also set the MAC address register here, in case the MAC address for the
-new interface should be different from what was set in
-rtl8xxxu_init_device(). This happens for example with the hostapd config
-option "bssid".
+The HW maintains a rate_mask for each connection, referenced by the
+macid. Add a parameter to update_rate_mask and add the macid to the
+h2c call in the gen2 implementation.
+
+Also extend refresh_rate_mask to get the macid from sta_info.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 31 ++++++++++++++++---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h |  2 ++
- 2 files changed, 29 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h    |  7 ++++---
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c  |  3 ++-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c   | 13 +++++++++----
+ 3 files changed, 15 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 688168e0723c0..1cf2ea4b02655 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1916,7 +1916,8 @@ struct rtl8xxxu_fileops {
+ 	void (*set_tx_power) (struct rtl8xxxu_priv *priv, int channel,
+ 			      bool ht40);
+ 	void (*update_rate_mask) (struct rtl8xxxu_priv *priv,
+-				  u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
++				  u32 ramask, u8 rateid, int sgi, int txbw_40mhz,
++				  u8 macid);
+ 	void (*report_connect) (struct rtl8xxxu_priv *priv,
+ 				u8 macid, u8 role, bool connect);
+ 	void (*report_rssi) (struct rtl8xxxu_priv *priv, u8 macid, u8 rssi);
+@@ -2035,9 +2036,9 @@ void rtl8xxxu_gen2_config_channel(struct ieee80211_hw *hw);
+ void rtl8xxxu_gen1_usb_quirks(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_gen2_usb_quirks(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv,
+-			       u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
++			       u32 ramask, u8 rateid, int sgi, int txbw_40mhz, u8 macid);
+ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
+-				    u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
++				    u32 ramask, u8 rateid, int sgi, int txbw_40mhz, u8 macid);
+ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
+ 				  u8 macid, u8 role, bool connect);
+ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c
+index 8986783ae8fa7..6d0f975f891b7 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c
+@@ -1794,7 +1794,8 @@ static void rtl8188e_arfb_refresh(struct rtl8xxxu_ra_info *ra)
+ 
+ static void
+ rtl8188e_update_rate_mask(struct rtl8xxxu_priv *priv,
+-			  u32 ramask, u8 rateid, int sgi, int txbw_40mhz)
++			  u32 ramask, u8 rateid, int sgi, int txbw_40mhz,
++			  u8 macid)
+ {
+ 	struct rtl8xxxu_ra_info *ra = &priv->ra_info;
+ 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index a44bd5038ad24..b8e5003c55e9e 100644
+index 55f935a851c57..bd01a61a83036 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6470,18 +6470,39 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
- 	int ret;
- 	u8 val8;
- 
-+	if (!priv->vif)
-+		priv->vif = vif;
-+	else
-+		return -EOPNOTSUPP;
-+
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		if (!priv->vif)
--			priv->vif = vif;
--		else
--			return -EOPNOTSUPP;
- 		rtl8xxxu_stop_tx_beacon(priv);
- 
- 		val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
- 		val8 |= BEACON_ATIM | BEACON_FUNCTION_ENABLE |
- 			BEACON_DISABLE_TSF_UPDATE;
- 		rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
-+		ret = 0;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		rtl8xxxu_write8(priv, REG_BEACON_CTRL,
-+				BEACON_DISABLE_TSF_UPDATE | BEACON_CTRL_MBSSID);
-+		rtl8xxxu_write8(priv, REG_ATIMWND, 0x0c); /* 12ms */
-+		rtl8xxxu_write16(priv, REG_TSFTR_SYN_OFFSET, 0x7fff); /* ~32ms */
-+		rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, DUAL_TSF_RESET_TSF0);
-+
-+		/* enable BCN0 function */
-+		rtl8xxxu_write8(priv, REG_BEACON_CTRL,
-+				BEACON_DISABLE_TSF_UPDATE |
-+				BEACON_FUNCTION_ENABLE | BEACON_CTRL_MBSSID |
-+				BEACON_CTRL_TX_BEACON_RPT);
-+
-+		/* select BCN on port 0 */
-+		val8 = rtl8xxxu_read8(priv, REG_CCK_CHECK);
-+		val8 &= ~BIT_BCN_PORT_SEL;
-+		rtl8xxxu_write8(priv, REG_CCK_CHECK, val8);
-+
- 		ret = 0;
- 		break;
- 	default:
-@@ -6489,6 +6510,8 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	rtl8xxxu_set_linktype(priv, vif->type);
-+	ether_addr_copy(priv->mac_addr, vif->addr);
-+	rtl8xxxu_set_mac(priv);
- 
- 	return ret;
+@@ -4566,7 +4566,8 @@ static void rtl8xxxu_sw_scan_complete(struct ieee80211_hw *hw,
  }
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index ad285e4ac0ec4..8571d5129f327 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -575,6 +575,8 @@
- #define REG_ARFR1			0x0448
- #define REG_ARFR2			0x044c
- #define REG_ARFR3			0x0450
-+#define REG_CCK_CHECK			0x0454
-+#define BIT_BCN_PORT_SEL		BIT(5)
- #define REG_AMPDU_MAX_TIME_8723B	0x0456
- #define REG_AGGLEN_LMT			0x0458
- #define REG_AMPDU_MIN_SPACE		0x045c
+ 
+ void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv,
+-			       u32 ramask, u8 rateid, int sgi, int txbw_40mhz)
++			       u32 ramask, u8 rateid, int sgi, int txbw_40mhz,
++			       u8 macid)
+ {
+ 	struct h2c_cmd h2c;
+ 
+@@ -4586,7 +4587,8 @@ void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv,
+ }
+ 
+ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
+-				    u32 ramask, u8 rateid, int sgi, int txbw_40mhz)
++				    u32 ramask, u8 rateid, int sgi, int txbw_40mhz,
++				    u8 macid)
+ {
+ 	struct h2c_cmd h2c;
+ 	u8 bw;
+@@ -4603,6 +4605,7 @@ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
+ 	h2c.b_macid_cfg.ramask1 = (ramask >> 8) & 0xff;
+ 	h2c.b_macid_cfg.ramask2 = (ramask >> 16) & 0xff;
+ 	h2c.b_macid_cfg.ramask3 = (ramask >> 24) & 0xff;
++	h2c.b_macid_cfg.macid = macid;
+ 
+ 	h2c.b_macid_cfg.data1 = rateid;
+ 	if (sgi)
+@@ -4968,7 +4971,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			priv->vif = vif;
+ 			priv->rssi_level = RTL8XXXU_RATR_STA_INIT;
+ 
+-			priv->fops->update_rate_mask(priv, ramask, 0, sgi, bw == RATE_INFO_BW_40);
++			priv->fops->update_rate_mask(priv, ramask, 0, sgi,
++						     bw == RATE_INFO_BW_40, 0);
+ 
+ 			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
+ 
+@@ -6874,6 +6878,7 @@ static void rtl8xxxu_refresh_rate_mask(struct rtl8xxxu_priv *priv,
+ 	u8 txbw_40mhz;
+ 	u8 snr, snr_thresh_high, snr_thresh_low;
+ 	u8 go_up_gap = 5;
++	u8 macid = rtl8xxxu_get_macid(priv, sta);
+ 
+ 	rssi_level = priv->rssi_level;
+ 	snr = rtl8xxxu_signal_to_snr(signal);
+@@ -6993,7 +6998,7 @@ static void rtl8xxxu_refresh_rate_mask(struct rtl8xxxu_priv *priv,
+ 		}
+ 
+ 		priv->rssi_level = rssi_level;
+-		priv->fops->update_rate_mask(priv, rate_bitmap, ratr_idx, sgi, txbw_40mhz);
++		priv->fops->update_rate_mask(priv, rate_bitmap, ratr_idx, sgi, txbw_40mhz, macid);
+ 	}
+ }
+ 
 -- 
 2.30.2
 
