@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F236C7EE24
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B40C7EE23
 	for <linux-wireless@archiver.kernel.org>; Thu, 27 Apr 2023 09:10:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243300AbjD0JKL (ORCPT
+        id S243284AbjD0JKI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Apr 2023 05:10:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37636 "EHLO
+        Thu, 27 Apr 2023 05:10:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243374AbjD0JJy (ORCPT
+        with ESMTP id S243343AbjD0JJv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Apr 2023 05:09:54 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71D2E1FCE
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2023 02:09:52 -0700 (PDT)
+        Thu, 27 Apr 2023 05:09:51 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28ED32120
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Apr 2023 02:09:46 -0700 (PDT)
 From:   Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1682586585;
+        s=2020; t=1682586584;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=OT3lYd7tnDIywUkFnZblBZMqjee9vTYaQEIggPby7fQ=;
-        b=HYKutk8eH6cAPNiMoNlHd0SI35vmIyPa2B5KYo4xu9N3PvKGdfWbkygX2jmU+X0EJa5CUp
-        13JNF334fIJtQGBfRkUl1wTNOSuNvMrkr/iFOBq5uIlBFjOaDvvJ1RbzMr44I6Rf6LNp79
-        1JizSpfct5HxI+AVCyq0q/k6+nkdmBDWM5CDQ6h7ZynkrVrvifvaIddQBJvH7L5Gf0hSoU
-        s2I+9vuvf+9o53uWWdiOFtY261AuYe1idOaM2OYHTltZb9wYBZctEhoYLF3tZMz+8O42yS
-        vHrHk/j7yM/5CE0DG3O0PvHmLjS88eCgLlD3ng1hza23wbbfi+L/2oRDrrJ4Ug==
+        bh=503AmHFJCUNZ9ebANqBvvtynjVKTNuo7BsluOwvOddA=;
+        b=Z1LrZENTfYO31Ezgm7/7Ev4t8HUQ8SfaGOq95lYCKj2N5jyqQxVTnwHmjrYj0ssuBoL2gi
+        SM7SeI+I1C4VY4qk2qV81uEUYhldvFEDhvaNyYg5uX7UnweJPV0xlGgfCIgMThakT/Rl74
+        nFyL5wY2mY6U12NHf3/2/a/quuCF9nYwTKv/FIb/J6/6aksE7uZW1PagOEvCEZUY4nKNtc
+        4/m0XcvED3d4U8K4f8nSGyTQ8cPKXXIYwQK/pXmz/lmjA96IoOG74iekNwKN1Hsx3e4mIp
+        eCul9h00fk1Y18JxjAo4blfwJdcGGjl1iWbPcWjdAvEul1sc9nXOFvC9ZHndlg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1682586585;
+        s=2020e; t=1682586584;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=OT3lYd7tnDIywUkFnZblBZMqjee9vTYaQEIggPby7fQ=;
-        b=O3eBXNy1phx95W1qTAkOtP8oowjmNQsfFqgbV8+0XuFkrtvxCrz8HgxPmV9YQ941JgHGv4
-        CR7AWN++1/oBvaCg==
+        bh=503AmHFJCUNZ9ebANqBvvtynjVKTNuo7BsluOwvOddA=;
+        b=QHKRwA2CksRnZdI4B3WYH7ImZKKZ43nIrFEbRzzsMpf+GNM6upfxKvLeM71qnbN0eC1ira
+        hSCGsOm6Li7lpTBA==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
         Kalle Valo <kvalo@kernel.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Bitterblue Smith <rtl8821cerfe2@gmail.com>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v3 08/18] wifi: rtl8xxxu: Add parameter role to report_connect
-Date:   Thu, 27 Apr 2023 11:09:12 +0200
-Message-Id: <20230427090922.165088-9-martin.kaistra@linutronix.de>
+Subject: [PATCH v3 02/18] wifi: rtl8xxxu: Select correct queue for beacon frames
+Date:   Thu, 27 Apr 2023 11:09:06 +0200
+Message-Id: <20230427090922.165088-3-martin.kaistra@linutronix.de>
 In-Reply-To: <20230427090922.165088-1-martin.kaistra@linutronix.de>
 References: <20230427090922.165088-1-martin.kaistra@linutronix.de>
 MIME-Version: 1.0
@@ -55,106 +55,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This allows to tell the HW if a connection is made to a STA or an AP.
-Add the implementation for the gen2 version.
+Use the special beacon queue for beacon frames instead of the management
+frame queue. They will be put in a special area called reserved page and
+send out periodically when in AP mode.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      |  9 ++++++---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 11 ++++++-----
- 2 files changed, 12 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 971f1cc38d323..2dc9b205f08c0 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1280,6 +1280,9 @@ struct rtl8xxxu_rfregs {
- #define  H2C_JOIN_BSS_DISCONNECT	0
- #define  H2C_JOIN_BSS_CONNECT		1
- 
-+#define H2C_MACID_ROLE_STA		1
-+#define H2C_MACID_ROLE_AP		2
-+
- /*
-  * H2C (firmware) commands differ between the older generation chips
-  * 8188[cr]u, 819[12]cu, and 8723au, and the more recent chips 8723bu,
-@@ -1906,7 +1909,7 @@ struct rtl8xxxu_fileops {
- 	void (*update_rate_mask) (struct rtl8xxxu_priv *priv,
- 				  u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
- 	void (*report_connect) (struct rtl8xxxu_priv *priv,
--				u8 macid, bool connect);
-+				u8 macid, u8 role, bool connect);
- 	void (*report_rssi) (struct rtl8xxxu_priv *priv, u8 macid, u8 rssi);
- 	void (*fill_txdesc) (struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
- 			     struct ieee80211_tx_info *tx_info,
-@@ -2027,9 +2030,9 @@ void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv,
- void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
- 				    u32 ramask, u8 rateid, int sgi, int txbw_40mhz);
- void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
--				  u8 macid, bool connect);
-+				  u8 macid, u8 role, bool connect);
- void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
--				  u8 macid, bool connect);
-+				  u8 macid, u8 role, bool connect);
- void rtl8xxxu_gen1_report_rssi(struct rtl8xxxu_priv *priv, u8 macid, u8 rssi);
- void rtl8xxxu_gen2_report_rssi(struct rtl8xxxu_priv *priv, u8 macid, u8 rssi);
- void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv);
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 10f2e18abb49a..2101d107b7d50 100644
+index b8fcf911c072e..9dc6f3ec7a305 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4586,7 +4586,7 @@ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
- }
- 
- void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
--				  u8 macid, bool connect)
-+				  u8 macid, u8 role, bool connect)
+@@ -5010,7 +5010,9 @@ static u32 rtl8xxxu_queue_select(struct ieee80211_hdr *hdr, struct sk_buff *skb)
  {
- 	struct h2c_cmd h2c;
+ 	u32 queue;
  
-@@ -4603,7 +4603,7 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
- }
- 
- void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
--				  u8 macid, bool connect)
-+				  u8 macid, u8 role, bool connect)
- {
- 	/*
- 	 * The firmware turns on the rate control when it knows it's
-@@ -4619,6 +4619,7 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+-	if (ieee80211_is_mgmt(hdr->frame_control))
++	if (unlikely(ieee80211_is_beacon(hdr->frame_control)))
++		queue = TXDESC_QUEUE_BEACON;
++	else if (ieee80211_is_mgmt(hdr->frame_control))
+ 		queue = TXDESC_QUEUE_MGNT;
  	else
- 		h2c.media_status_rpt.parm &= ~BIT(0);
- 
-+	h2c.media_status_rpt.parm |= ((role << 4) & 0xf0);
- 	h2c.media_status_rpt.macid = macid;
- 
- 	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
-@@ -4947,13 +4948,13 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			rtl8xxxu_write16(priv, REG_BCN_PSR_RPT,
- 					 0xc000 | vif->cfg.aid);
- 
--			priv->fops->report_connect(priv, 0, true);
-+			priv->fops->report_connect(priv, 0, H2C_MACID_ROLE_AP, true);
- 		} else {
- 			val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
- 			val8 |= BEACON_DISABLE_TSF_UPDATE;
- 			rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
- 
--			priv->fops->report_connect(priv, 0, false);
-+			priv->fops->report_connect(priv, 0, H2C_MACID_ROLE_AP, false);
- 		}
- 	}
- 
-@@ -5013,7 +5014,7 @@ static int rtl8xxxu_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	dev_dbg(dev, "Start AP mode\n");
- 	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid);
- 	rtl8xxxu_write16(priv, REG_BCN_INTERVAL, vif->bss_conf.beacon_int);
--	priv->fops->report_connect(priv, RTL8XXXU_BC_MC_MACID, true);
-+	priv->fops->report_connect(priv, RTL8XXXU_BC_MC_MACID, 0, true);
- 
- 	return 0;
- }
+ 		queue = rtl8xxxu_80211_to_rtl_queue(skb_get_queue_mapping(skb));
 -- 
 2.30.2
 
