@@ -2,124 +2,96 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E88C77B61
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 13:56:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D3FFC77B61
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 15:08:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346173AbjD1N4P (ORCPT
+        id S1346147AbjD1PIt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Apr 2023 09:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54652 "EHLO
+        Fri, 28 Apr 2023 11:08:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbjD1N4O (ORCPT
+        with ESMTP id S1346252AbjD1PIs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2023 09:56:14 -0400
-Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E01A171E
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 06:56:14 -0700 (PDT)
-Received: by mail-wm1-x333.google.com with SMTP id 5b1f17b1804b1-3f19b9d5358so76895585e9.1
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 06:56:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1682690172; x=1685282172;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=lN6ZH6CIrNE0KT/OlcPAHKY4iybPDBrxjoMtRJOd8aA=;
-        b=qBWVLAmUcc9MtObvn/Do+I6SJZEFBwNY95NjNlwbxxroVPupqJ7NFM5ZoAL7PHOHpI
-         6Khezn1peuKFD45XW9oYFLABXMhXbdQ08Gqd12aByOSSlMX3/eZHBS4iQB84ssWLgccL
-         x5nWE6hln2pLx6OFpNtIUu7My5Qp/eSjbl0MZEId1SxSghzGyZy6T0r4oiDZNeriQu/M
-         L2JN1DBVTdTsy5k6uJAXrjYNFCNsIjvnDeLqVRB1NbSSmO6P+/6sxiLf2Vqn3s+FvHmy
-         3THBKl/AiCmz1tlh+YAc8PnyNEBPpLqqNXafwUg3BkdTlwPUQrs9HeFIWsIwr1aseOsW
-         FenQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682690172; x=1685282172;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lN6ZH6CIrNE0KT/OlcPAHKY4iybPDBrxjoMtRJOd8aA=;
-        b=foW71Xufs+lmAJDD31zxgaQxaTQR+Pptc4ghp5NjCI3gx7uDv6IDH0vFeztoH9/JSM
-         oiNz0sgBfrC2EaOSTaJ7XKCF+h95sVmd2AiqJLpKS8r8Wwr+x1TCTYlZrolw4Fasgpha
-         grqUFIin7T++oWx5pvqXKHc3HFH7tAsvSsQtV51aJKOkzL9nK6XcwWPTJmSuJmEt/AKn
-         zuUYH/mXfRrK6kNwATC+FvEdBsQHtbnlhzc2r/pssxquipKiwhlaF9rz/Zu/yPrkrW0e
-         P0F78BFQ/hSMt7+Sfpot5J9VNugBM0vgCN/851uEkNjudbrjPLbzsZsPStLr3t2anJts
-         A7BQ==
-X-Gm-Message-State: AC+VfDytccNHtiBWtZj2R7Bo6owIb4dYGC5hK0OVsKbGrm3jDHVEn8lC
-        /vjeotWbmfQl/ZXeLtGu9CFHO4rq2woKM3VgzsnkRnrHJDo=
-X-Google-Smtp-Source: ACHHUZ54LtRtYYF0r3gbczenbxKnBqoKoGswsCoIplEcoTorJe8pFPFTVx9JXDe2mLHwd3TnMX/TsvnfR8mZhB+ako0=
-X-Received: by 2002:a1c:6a05:0:b0:3f1:95af:172c with SMTP id
- f5-20020a1c6a05000000b003f195af172cmr3851405wmc.41.1682690172417; Fri, 28 Apr
- 2023 06:56:12 -0700 (PDT)
-MIME-Version: 1.0
-From:   Gabriel Tisan <gabriel.tisan@gmail.com>
-Date:   Fri, 28 Apr 2023 15:56:01 +0200
-Message-ID: <CAD9ZU8BcYM_zZqFzTBFDQOoF0Jd3vNj4OWODOy+UZbWXCUwA7A@mail.gmail.com>
-Subject: rtw88: 8822cu (LM842) --> LOWER_UP link messages
+        Fri, 28 Apr 2023 11:08:48 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAD42270C
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 08:08:40 -0700 (PDT)
+From:   Martin Kaistra <martin.kaistra@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1682694519;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=S+IA/8VUrfEjUysOG8nS+DCO56j+blJgNtEnXdUDo74=;
+        b=JiBM4Tnmk2T2r0L/ojFx7vlxkKG888KobY1EsErX7uj2e1cCDcW1uwrY8ug664OFAlUHMw
+        G4SMOvQP4UM9xbJ2mZ/DVf9klKw0W8a7fKf9QAl0sCRgeJJAt465st2M3taSNP17YvzoEv
+        mFWLOVVMbY8RE/5aEKDZkpr7M4GfUSyFKv0J6pwaGuMDpZuh1jTIDii6GwItCeyKnZqWP4
+        gQMi/dq16F/XRBse+B8EAJ0Yj2fbrvmjBRhpt/8r13jFaUn3/J2YFfARdjVun8o+GDC+fQ
+        Q7663e4i9B1cQqV6RWxl4qC/ReCeg+PcSL8bkoywTOLNOHCQC58pGS8JgQKrPw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1682694519;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=S+IA/8VUrfEjUysOG8nS+DCO56j+blJgNtEnXdUDo74=;
+        b=FPsUHHiPMZkb1s1DQXSuf7Z2pkrDwSEZ6I0fLj+Tb52IBLfGhqTTSPDTA2mrdVeco5LGil
+        o6v4UZHdy6EmHCDg==
 To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH v4 04/18] wifi: rtl8xxxu: Add set_tim() callback
+Date:   Fri, 28 Apr 2023 17:08:19 +0200
+Message-Id: <20230428150833.218605-5-martin.kaistra@linutronix.de>
+In-Reply-To: <20230428150833.218605-1-martin.kaistra@linutronix.de>
+References: <20230428150833.218605-1-martin.kaistra@linutronix.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi !
+Update beacon content if TIM bitmap maintained by mac80211 is changed.
 
-I use a LM842 wifi stick on a Linux kernel 5.15 with last patches for
-rtw88 from linux-next applied.
-Firmware version is 9.9.15
+Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-When I connect LM842 as a station to an AP, after the link is up first
-time, it comes from time to time more LOWER_UP message.
-The stick is plugged and the connection to AP is still valid.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index a152e5c9ea691..37794739c71c8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4503,6 +4503,16 @@ int rtl8xxxu_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ 	return 0;
+ }
+ 
++static int rtl8xxxu_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
++			    bool set)
++{
++	struct rtl8xxxu_priv *priv = hw->priv;
++
++	schedule_work(&priv->update_beacon_work);
++
++	return 0;
++}
++
+ static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif, const u8 *mac)
+ {
+@@ -7194,6 +7204,7 @@ static const struct ieee80211_ops rtl8xxxu_ops = {
+ 	.ampdu_action = rtl8xxxu_ampdu_action,
+ 	.sta_statistics = rtl8xxxu_sta_statistics,
+ 	.get_antenna = rtl8xxxu_get_antenna,
++	.set_tim = rtl8xxxu_set_tim,
+ };
+ 
+ static int rtl8xxxu_parse_usb(struct rtl8xxxu_priv *priv,
+-- 
+2.30.2
 
-# ip -oneline -family inet monitor link
-
-5: wlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noqueue state DOWN
-group default \    link/ether 34:c9:f0:99:b6:a1 brd ff:ff:ff:ff:ff:ff
-
-5: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue
-state DOWN group default \    link/ether 34:c9:f0:99:b6:a1 brd
-ff:ff:ff:ff:ff:ff
-
-5: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue
-state DOWN group default \    link/ether 34:c9:f0:99:b6:a1 brd
-ff:ff:ff:ff:ff:ff
-
-5: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> \    link/ether
-
-5: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc
-noqueue state DORMANT group default \    link/ether 34:c9:f0:99:b6:a1
-brd ff:ff:ff:ff:ff:ff
-
-5: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue
-state UP group default \    link/ether 34:c9:f0:99:b6:a1 brd
-ff:ff:ff:ff:ff:ff
-
-
-
-5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> \    link/ether
-
-
-
-
-
-Any idea what I can do ?
-
-Did someone also reproduce that problem ?
-
-
-
-Regards,
-
-Gabriel
