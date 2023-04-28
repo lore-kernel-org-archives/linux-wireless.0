@@ -2,129 +2,75 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD6FAC7EE22
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 20:50:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C32A9C77B61
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 20:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346746AbjD1UuP (ORCPT
+        id S1346750AbjD1Uui (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Apr 2023 16:50:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35186 "EHLO
+        Fri, 28 Apr 2023 16:50:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346739AbjD1UuL (ORCPT
+        with ESMTP id S1346739AbjD1Uuh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2023 16:50:11 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43938422C
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 13:50:10 -0700 (PDT)
+        Fri, 28 Apr 2023 16:50:37 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D3964EF5
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 13:50:26 -0700 (PDT)
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 95D2B10006E
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 20:50:07 +0000 (UTC)
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 3D0F0B8006C
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 20:50:25 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 2663413C2B4;
-        Fri, 28 Apr 2023 13:50:07 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 2663413C2B4
+        by mail3.candelatech.com (Postfix) with ESMTP id C481513C2B0;
+        Fri, 28 Apr 2023 13:50:24 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C481513C2B0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1682715007;
-        bh=FHmGUQZAyB2eVrcYTkl622ztuQ6UFsn9zy3AvPM4VtI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=T1Qu8B7PTv9o6pTPCVZFcZ2wCdRNZ6rB8J4bDIl+VX1VqmFikZe4xHHlckh4hElqb
-         ZG+i3IjC9GrE51i1sGJ63hv2BNoW7ie+XwluwfGsz/M6U0cc3WV+dWWvmNjUZ9Lg5A
-         D5NQjyTnQXJgmtFmMpkBR7+G0B1ruYzjxcq2coLc=
+        s=default; t=1682715024;
+        bh=rA2hCKKOHgiwq3nDs+pVKcFEG4UCAYtmNrsPh3FmQBA=;
+        h=From:To:Cc:Subject:Date:From;
+        b=by8jxLGJgkg951fST53yBe8NuIla3RBNSVoKuThf5PqzzExiDHMNemEBvA6KUDRbv
+         yKA6oxRlUlq9CfdQZnE98neeIbWk2QYZpZ/RxUYFBEGm3r8p3nP+xU5xlfNBRg7hVu
+         tVnP4J5oxGP3ne5CqV5VZNHlY8ohPby5Uz1uKfdM=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 4/6] wifi: mt76: mt7915: Adjust MDP_RCFR1 in monitor mode.
-Date:   Fri, 28 Apr 2023 13:49:58 -0700
-Message-Id: <20230428205000.2647945-4-greearb@candelatech.com>
+Subject: [PATCH] wifi: mac80211: Do not clear bw restriction flags in ieee80211_prep_channel
+Date:   Fri, 28 Apr 2023 13:50:22 -0700
+Message-Id: <20230428205022.2648031-1-greearb@candelatech.com>
 X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230428205000.2647945-1-greearb@candelatech.com>
-References: <20230428205000.2647945-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1682715008-gL8F3DMtOtOl
-X-MDID-O: us5;ut7;1682715008;gL8F3DMtOtOl;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+X-MDID: 1682715025-KI76OcAxYjlv
+X-MDID-O: us5;ut7;1682715025;KI76OcAxYjlv;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Request to pass some otherwise dropped frames to host when in
-monitor mode.  Change initialization logic to use a better name
-(but values actually set in the register during init does not change)
+This code was messing up my attempt to restrict bandwidth options,
+and appears to not be needed.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 9 +++++++++
- drivers/net/wireless/mediatek/mt76/mt7915/regs.h | 6 ++++++
- 3 files changed, 17 insertions(+), 2 deletions(-)
+ net/mac80211/mlme.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index bea75615872f..cd98a1e1e63c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -469,8 +469,8 @@ mt7915_mac_init_band(struct mt7915_dev *dev, u8 band)
- 	       MT_MDP_RCFR1_RX_DROPPED_UCAST |
- 	       MT_MDP_RCFR1_RX_DROPPED_MCAST;
- 	set = FIELD_PREP(MT_MDP_RCFR1_MCU_RX_BYPASS, MT_MDP_TO_HIF) |
--	      FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_UCAST, MT_MDP_TO_HIF) |
--	      FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_MCAST, MT_MDP_TO_HIF);
-+	      FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_UCAST, MT_MDP_PFD_DROP) |
-+	      FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_MCAST, MT_MDP_PFD_DROP);
- 	mt76_rmw(dev, MT_MDP_BNRCFR1(band), mask, set);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e13a0354c397..2c606d9fc5b3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4732,10 +4732,6 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
  
- 	mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_MAX_RX_LEN, 0x680);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index fec30cf26855..64c14fc303a2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -566,6 +566,9 @@ static void __mt7915_configure_filter(struct ieee80211_hw *hw,
- 	u32 flags = 0;
- 	bool is_promisc = *total_flags & FIF_CONTROL || phy->monitor_vif ||
- 		phy->monitor_enabled;
-+	u32 mdp_rcfr1_mask = MT_MDP_RCFR1_RX_DROPPED_UCAST |
-+		MT_MDP_RCFR1_RX_DROPPED_MCAST;
-+	u32 mdp_rcfr1_set;
+ 	sband = local->hw.wiphy->bands[cbss->channel->band];
  
- #define MT76_FILTER(_flag, _hw) do {					\
- 		flags |= *total_flags & FIF_##_flag;			\
-@@ -610,11 +613,17 @@ static void __mt7915_configure_filter(struct ieee80211_hw *hw,
- 		mt76_set(dev, MT_WF_RMAC_TOP_TF_PARSER(band),
- 			 MT_WF_RMAC_TOP_TF_SNIFFER);
- 		mt7915_check_apply_monitor_config(phy);
-+
-+		mdp_rcfr1_set = FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_UCAST, MT_MDP_PFD_TO_HIF) |
-+			FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_MCAST, MT_MDP_PFD_TO_HIF);
- 	} else {
- 		mt76_set(dev, MT_WF_RFCR1(band), ctl_flags);
- 		mt76_clear(dev, MT_WF_RMAC_TOP_TF_PARSER(band),
- 			   MT_WF_RMAC_TOP_TF_SNIFFER);
-+		mdp_rcfr1_set = FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_UCAST, MT_MDP_PFD_DROP) |
-+			FIELD_PREP(MT_MDP_RCFR1_RX_DROPPED_MCAST, MT_MDP_PFD_DROP);
- 	}
-+	mt76_rmw(dev, MT_MDP_BNRCFR1(band), mdp_rcfr1_mask, mdp_rcfr1_set);
- }
- 
- static void mt7915_configure_filter(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-index 252e5f1405cf..db81c9902832 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
-@@ -189,6 +189,12 @@ enum offs_rev {
- #define MT_MDP_RCFR1_RX_DROPPED_MCAST	GENMASK(30, 29)
- #define MT_MDP_TO_HIF			0
- #define MT_MDP_TO_WM			1
-+/* For UCDP2MH, BMCDP2MH in RCFR1 */
-+#define MT_MDP_PFD_DROP			0
-+#define MT_MDP_PFD_TO_MCU		1
-+#define MT_MDP_PFD_TO_HIF		2
-+#define MT_MDP_PFD_TO_HIF2		3
-+
- 
- /* TRB: band 0(0x820e1000), band 1(0x820f1000) */
- #define MT_WF_TRB_BASE(_band)		((_band) ? 0x820f1000 : 0x820e1000)
+-	*conn_flags &= ~(IEEE80211_CONN_DISABLE_40MHZ |
+-			 IEEE80211_CONN_DISABLE_80P80MHZ |
+-			 IEEE80211_CONN_DISABLE_160MHZ);
+-
+ 	/* disable HT/VHT/HE if we don't support them */
+ 	if (!sband->ht_cap.ht_supported && !is_6ghz) {
+ 		mlme_dbg(sdata, "HT not supported, disabling HT/VHT/HE/EHT\n");
 -- 
 2.40.0
 
