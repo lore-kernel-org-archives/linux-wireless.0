@@ -2,160 +2,208 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 201E0C7EE23
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 20:50:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 687ABC77B7E
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 20:50:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346735AbjD1UuO (ORCPT
+        id S1346743AbjD1UuN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Apr 2023 16:50:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35184 "EHLO
+        Fri, 28 Apr 2023 16:50:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346738AbjD1UuL (ORCPT
+        with ESMTP id S1346735AbjD1UuK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2023 16:50:11 -0400
+        Fri, 28 Apr 2023 16:50:10 -0400
 Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1177240CB
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 13:50:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2292426AF
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 13:50:09 -0700 (PDT)
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 5C342C00085
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 70E253C006D
         for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 20:50:07 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 7B2DE13C2B0;
-        Fri, 28 Apr 2023 13:50:07 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7B2DE13C2B0
+        by mail3.candelatech.com (Postfix) with ESMTP id C683A13C2B1;
+        Fri, 28 Apr 2023 13:50:06 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C683A13C2B1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1682715007;
-        bh=e11/gnVChue1BujwM6BEcZi03d9GKv2rCZfp1q0DbnA=;
+        s=default; t=1682715006;
+        bh=okpTzhGyjXSE0viv7hybvNEp4Hs5VVeEAUGSd7oVDiY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jiK+5EFAVmZ1E2cVjx2QG+JQQtrS9F0/NIM8s+fsAaeNj/XBDiuwwYWAxr23m0gY0
-         q+y4U0I1rvYImLDDY6UT6/6H9llc1hvGto/NRlDta/9+8EE0WhJlMTYGY0D9nx8BO9
-         ciHxbPQhwcjtP1Mup2J9dDh0IHSL7zGpxqV5qHoI=
+        b=EewEXS8RDCvXPnmipoH+37yUJjMTXZ64bM3UCQFvDq+IRZBPn573fwpz/JmEH4RvO
+         eoQbEidz8P7aU6n1v1cIZckxdn1lXyC5eshO1aPU2/c2EkktAtcwK9BdvMUh7TpZPz
+         za4k8kWuTcxRhS6+W0B4wzQDw4jWh7AOUWA+mGFc=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 6/6] wifi: mt76: mt7915: support enabling rx group-5 status
-Date:   Fri, 28 Apr 2023 13:50:00 -0700
-Message-Id: <20230428205000.2647945-6-greearb@candelatech.com>
+Subject: [PATCH 2/6] wifi: mt76: mt7915: Move rxfilter logic into central location.
+Date:   Fri, 28 Apr 2023 13:49:56 -0700
+Message-Id: <20230428205000.2647945-2-greearb@candelatech.com>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230428205000.2647945-1-greearb@candelatech.com>
 References: <20230428205000.2647945-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1682715009-DQG2JuvyfGlv
-X-MDID-O: us5;at1;1682715009;DQG2JuvyfGlv;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+X-MDID: 1682715008-WpvlsfnULbd3
+X-MDID-O: us5;at1;1682715008;WpvlsfnULbd3;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-When enabled, this allows per-skb rx rate reporting.
-Enabling this may degrade RX performance, so it remains
-disabled by default.
+And ensure monitor mode is taken into account when calculating the
+filter.
+
+Enable RMAC_TOP_TF_SNIFFER when in promisc mode.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../wireless/mediatek/mt76/mt7915/debugfs.c   | 33 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7915/init.c  |  3 +-
- .../net/wireless/mediatek/mt76/mt7915/main.c  |  2 +-
- .../wireless/mediatek/mt76/mt7915/mt7915.h    |  5 +++
- 4 files changed, 41 insertions(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/main.c  | 51 ++++++++++++++-----
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  2 +
+ .../net/wireless/mediatek/mt76/mt7915/regs.h  |  3 ++
+ 3 files changed, 44 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index f836754103dc..cb01f7f72d85 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -743,6 +743,38 @@ mt7915_fw_util_wa_show(struct seq_file *file, void *data)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 7566db0cf523..7ec9f45cfa15 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -8,6 +8,11 @@
+ #include "mt7915.h"
+ #include "mcu.h"
  
- DEFINE_SHOW_ATTRIBUTE(mt7915_fw_util_wa);
++static void __mt7915_configure_filter(struct ieee80211_hw *hw,
++				      unsigned int changed_flags,
++				      unsigned int *total_flags,
++				      u64 multicast);
++
+ static bool mt7915_dev_running(struct mt7915_dev *dev)
+ {
+ 	struct mt7915_phy *phy;
+@@ -481,16 +486,15 @@ static int mt7915_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
+ 		bool enabled = !!(hw->conf.flags & IEEE80211_CONF_MONITOR);
+ 		bool band = phy->mt76->band_idx;
++		u32 total_flags = phy->mac80211_rxfilter_flags;
++		u64 multicast = 0; /* not used by this driver currently. */
  
-+static int
-+mt7915_rx_group_5_enable_set(void *data, u64 val)
+-		if (!enabled)
+-			phy->rxfilter |= MT_WF_RFCR_DROP_OTHER_UC;
+-		else
+-			phy->rxfilter &= ~MT_WF_RFCR_DROP_OTHER_UC;
++		phy->monitor_enabled = enabled;
+ 
+ 		mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_RXD_G5_EN,
+ 			       enabled);
+ 		mt76_testmode_reset(phy->mt76, true);
+-		mt76_wr(dev, MT_WF_RFCR(band), phy->rxfilter);
++		__mt7915_configure_filter(hw, 0, &total_flags, multicast);
+ 	}
+ 
+ 	mutex_unlock(&dev->mt76.mutex);
+@@ -512,10 +516,10 @@ mt7915_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	return 0;
+ }
+ 
+-static void mt7915_configure_filter(struct ieee80211_hw *hw,
+-				    unsigned int changed_flags,
+-				    unsigned int *total_flags,
+-				    u64 multicast)
++static void __mt7915_configure_filter(struct ieee80211_hw *hw,
++				      unsigned int changed_flags,
++				      unsigned int *total_flags,
++				      u64 multicast)
+ {
+ 	struct mt7915_dev *dev = mt7915_hw_dev(hw);
+ 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
+@@ -526,6 +530,8 @@ static void mt7915_configure_filter(struct ieee80211_hw *hw,
+ 			MT_WF_RFCR1_DROP_CFEND |
+ 			MT_WF_RFCR1_DROP_CFACK;
+ 	u32 flags = 0;
++	bool is_promisc = *total_flags & FIF_CONTROL || phy->monitor_vif ||
++		phy->monitor_enabled;
+ 
+ #define MT76_FILTER(_flag, _hw) do {					\
+ 		flags |= *total_flags & FIF_##_flag;			\
+@@ -533,7 +539,7 @@ static void mt7915_configure_filter(struct ieee80211_hw *hw,
+ 		phy->rxfilter |= !(flags & FIF_##_flag) * (_hw);	\
+ 	} while (0)
+ 
+-	mutex_lock(&dev->mt76.mutex);
++	phy->mac80211_rxfilter_flags = *total_flags; /* save requested flags for later */
+ 
+ 	phy->rxfilter &= ~(MT_WF_RFCR_DROP_OTHER_BSS |
+ 			   MT_WF_RFCR_DROP_OTHER_BEACON |
+@@ -547,6 +553,8 @@ static void mt7915_configure_filter(struct ieee80211_hw *hw,
+ 			   MT_WF_RFCR_DROP_UNWANTED_CTL |
+ 			   MT_WF_RFCR_DROP_STBC_MULTI);
+ 
++	phy->rxfilter |= MT_WF_RFCR_DROP_OTHER_UC;
++
+ 	MT76_FILTER(OTHER_BSS, MT_WF_RFCR_DROP_OTHER_TIM |
+ 			       MT_WF_RFCR_DROP_A3_MAC |
+ 			       MT_WF_RFCR_DROP_A3_BSSID);
+@@ -557,14 +565,33 @@ static void mt7915_configure_filter(struct ieee80211_hw *hw,
+ 			     MT_WF_RFCR_DROP_RTS |
+ 			     MT_WF_RFCR_DROP_CTL_RSV |
+ 			     MT_WF_RFCR_DROP_NDPA);
++	if (is_promisc)
++		phy->rxfilter &= ~MT_WF_RFCR_DROP_OTHER_UC;
+ 
+ 	*total_flags = flags;
+ 	mt76_wr(dev, MT_WF_RFCR(band), phy->rxfilter);
+ 
+-	if (*total_flags & FIF_CONTROL)
++	if (is_promisc) {
+ 		mt76_clear(dev, MT_WF_RFCR1(band), ctl_flags);
+-	else
++		mt76_set(dev, MT_WF_RMAC_TOP_TF_PARSER(band),
++			 MT_WF_RMAC_TOP_TF_SNIFFER);
++	} else {
+ 		mt76_set(dev, MT_WF_RFCR1(band), ctl_flags);
++		mt76_clear(dev, MT_WF_RMAC_TOP_TF_PARSER(band),
++			   MT_WF_RMAC_TOP_TF_SNIFFER);
++	}
++}
++
++static void mt7915_configure_filter(struct ieee80211_hw *hw,
++				    unsigned int changed_flags,
++				    unsigned int *total_flags,
++				    u64 multicast)
 +{
-+	struct mt7915_dev *dev = data;
++	struct mt7915_dev *dev = mt7915_hw_dev(hw);
 +
 +	mutex_lock(&dev->mt76.mutex);
 +
-+	dev->rx_group_5_enable = !!val;
-+
-+	/* Enabled if we requested enabled OR if monitor mode is enabled. */
-+	mt76_rmw_field(dev, MT_DMA_DCR0(0), MT_DMA_DCR0_RXD_G5_EN,
-+		       dev->rx_group_5_enable);
-+	mt76_testmode_reset(dev->phy.mt76, true);
-+
-+	mutex_unlock(&dev->mt76.mutex);
-+
-+	return 0;
-+}
-+
-+static int
-+mt7915_rx_group_5_enable_get(void *data, u64 *val)
-+{
-+	struct mt7915_dev *dev = data;
-+
-+	*val = dev->rx_group_5_enable;
-+
-+	return 0;
-+}
-+
-+DEFINE_DEBUGFS_ATTRIBUTE(fops_rx_group_5_enable, mt7915_rx_group_5_enable_get,
-+			 mt7915_rx_group_5_enable_set, "%lld\n");
-+
- static void
- mt7915_ampdu_stat_read_phy(struct mt7915_phy *phy,
- 			   struct seq_file *file)
-@@ -1297,6 +1329,7 @@ int mt7915_init_debugfs(struct mt7915_phy *phy)
- 			    &mt7915_fw_util_wm_fops);
- 	debugfs_create_file("fw_util_wa", 0400, dir, dev,
- 			    &mt7915_fw_util_wa_fops);
-+	debugfs_create_file("rx_group_5_enable", 0600, dir, dev, &fops_rx_group_5_enable);
- 	debugfs_create_file("implicit_txbf", 0600, dir, dev,
- 			    &fops_implicit_txbf);
- 	debugfs_create_file("txpower_sku", 0400, dir, phy,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index cd98a1e1e63c..75571566430e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -476,7 +476,8 @@ mt7915_mac_init_band(struct mt7915_dev *dev, u8 band)
- 	mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_MAX_RX_LEN, 0x680);
++	__mt7915_configure_filter(hw, changed_flags, total_flags, multicast);
  
- 	/* mt7915: disable rx rate report by default due to hw issues */
--	mt76_clear(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_RXD_G5_EN);
-+	mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_RXD_G5_EN,
-+		       dev->rx_group_5_enable);
- 
- 	/* clear estimated value of EIFS for Rx duration & OBSS time */
- 	mt76_wr(dev, MT_WF_RMAC_RSVD0(band), MT_WF_RMAC_RSVD0_EIFS_CLR);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 55aed3c6d3be..dd73b12cea61 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -492,7 +492,7 @@ static int mt7915_config(struct ieee80211_hw *hw, u32 changed)
- 		phy->monitor_enabled = enabled;
- 
- 		mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_RXD_G5_EN,
--			       enabled);
-+			       dev->rx_group_5_enable);
- 		mt76_testmode_reset(phy->mt76, true);
- 		__mt7915_configure_filter(hw, 0, &total_flags, multicast);
- 	}
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-index 084001647aaa..03459c6d94cd 100644
+index b3ead3530740..06f98e5cd95e 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
-@@ -313,6 +313,11 @@ struct mt7915_dev {
- 	u16 chainshift;
- 	u32 hif_idx;
+@@ -244,6 +244,8 @@ struct mt7915_phy {
+ 	struct ieee80211_vif *monitor_vif;
  
-+	/* Should we enable group-5 rx descriptor logic?  This may decrease RX
-+	 * throughput, but will give per skb rx rate information..
-+	 */
-+	bool rx_group_5_enable;
+ 	struct thermal_cooling_device *cdev;
++	u32 mac80211_rxfilter_flags;
++	u8 monitor_enabled;
+ 	u8 cdev_state;
+ 	u8 throttle_state;
+ 	u32 throttle_temp[2]; /* 0: critical high, 1: maximum */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+index 5e057cce5c9f..0118fdaa96b3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/regs.h
+@@ -566,6 +566,9 @@ enum offs_rev {
+ #define MT_WF_RMAC_MIB_AIRTIME4(_band)	MT_WF_RMAC(_band, 0x0390)
+ #define MT_WF_RMAC_MIB_QOS23_BACKOFF	GENMASK(31, 0)
+ 
++#define MT_WF_RMAC_TOP_TF_PARSER(_band) MT_WF_RMAC(_band, 0x0604)
++#define MT_WF_RMAC_TOP_TF_SNIFFER       (BIT(10) | BIT(12))
 +
- 	struct work_struct init_work;
- 	struct work_struct rc_work;
- 	struct work_struct dump_work;
+ /* WFDMA0 */
+ #define MT_WFDMA0_BASE			__REG(WFDMA0_ADDR)
+ #define MT_WFDMA0(ofs)			(MT_WFDMA0_BASE + (ofs))
 -- 
 2.40.0
 
