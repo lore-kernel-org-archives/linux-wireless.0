@@ -2,130 +2,84 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 785B3C77B7C
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 15:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8793EC77B7F
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Apr 2023 15:08:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346279AbjD1PIw (ORCPT
+        id S1346264AbjD1PIv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Apr 2023 11:08:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58090 "EHLO
+        Fri, 28 Apr 2023 11:08:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346254AbjD1PIu (ORCPT
+        with ESMTP id S1346253AbjD1PIs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Apr 2023 11:08:50 -0400
+        Fri, 28 Apr 2023 11:08:48 -0400
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C25704EF5
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0DC23C33
         for <linux-wireless@vger.kernel.org>; Fri, 28 Apr 2023 08:08:40 -0700 (PDT)
 From:   Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
         s=2020; t=1682694518;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=vLfXhzKGUBGpqhKrM2KQdtZ6pveXyiOStB3HCLc5shU=;
-        b=jvTJSdNJeLr0clNnN/BuluPxnznEH6xTrvqLfqZCjzrhMuxj7N+kOgN6JCP7d55xxXDKSv
-        Nj56ljJQLgRxdheXkFTY43xC5cYLCp0MHxjrXDX98OHCfkjua57f/UIdMqAYC2rewoQKNT
-        2WuXXMlGobK8E9cRXgsMuJTbFTTkSckodGa04ry7QILVMcsJ1LaxwPaK50v0kvFHS9AKxN
-        t/tnWON1TxirnCMSlvKOb3fShYwGl7d7XdbI1btHtK2ZskFjXfIUAjw7YoqtkDjsOnqJKf
-        YMMr4XiGfeOylMDYeUQZTtyw+Tq4VWIoPvQTze1dDr4PbaAsnVE61WYR2gJzBQ==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=503AmHFJCUNZ9ebANqBvvtynjVKTNuo7BsluOwvOddA=;
+        b=q8qxz4xhaHdHusvRDjXuhCv6BnC3TEkVJQ6Vp/fJ5bqU378e5z2nRnPHDlDgKfZYIPrLG5
+        p/ku+LDIao0uEsY+7mVWqe8dlZFVqnrQr66yXBKPrG7Q0ekTksMknsgajpztje2KmAA2ZP
+        7qaqzUqqJzpalakCq+dub74W+8Yi7D5Z9rxTuGXE+wmPMR+BSrGXrzFeq1yhOkZP6r6mgy
+        lSQDa1mQfgSpY+eNLF0euhn3hHDs4axd+QJPwvFX76wWKKeSL1HMv5U3vUJu5P+qcKAbts
+        Vna45mQAUo9JVSZ/M9VFtHAazwaH1goXCPdu7SJbFriWSrk0OgcbLwBFkeFy/A==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
         s=2020e; t=1682694518;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=vLfXhzKGUBGpqhKrM2KQdtZ6pveXyiOStB3HCLc5shU=;
-        b=/SrfjLSb/jk37bemX6FNbyQII4dWFmmF90ju8Gc0RKVprcRw2AUVwhXItkxwcMwkZNJbhY
-        L/+MO45t8WaSnACQ==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=503AmHFJCUNZ9ebANqBvvtynjVKTNuo7BsluOwvOddA=;
+        b=u+8nFtlXma8NSLtzzHr1kITgRoK4xwD2G989S28g4ay2yZfSxUaUnd3u/1gRlNwVprTdUL
+        gWoBP6x+EGSTV8AA==
 To:     linux-wireless@vger.kernel.org
 Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
         Kalle Valo <kvalo@kernel.org>,
         Ping-Ke Shih <pkshih@realtek.com>,
         Bitterblue Smith <rtl8821cerfe2@gmail.com>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v4 00/18] wifi: rtl8xxxu: Add AP mode support for 8188f
-Date:   Fri, 28 Apr 2023 17:08:15 +0200
-Message-Id: <20230428150833.218605-1-martin.kaistra@linutronix.de>
+Subject: [PATCH v4 02/18] wifi: rtl8xxxu: Select correct queue for beacon frames
+Date:   Fri, 28 Apr 2023 17:08:17 +0200
+Message-Id: <20230428150833.218605-3-martin.kaistra@linutronix.de>
+In-Reply-To: <20230428150833.218605-1-martin.kaistra@linutronix.de>
+References: <20230428150833.218605-1-martin.kaistra@linutronix.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series intends to bring AP mode support to the rtl8xxxu driver,
-more specifically for the 8188f, because this is the HW I have.
-The work is based on the vendor driver as I do not have access to
-datasheets.
+Use the special beacon queue for beacon frames instead of the management
+frame queue. They will be put in a special area called reserved page and
+send out periodically when in AP mode.
 
-The iperf3 measurements for TCP in AP mode still look slower in the
-AP->STA direction compared to the vendor driver, UDP looks fine. I still
-hope, this can be fixed by future patches.
+Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Thanks,
-  Martin
-
-v4 changelog:
-- restructured beacon enable code in bss_info_changed 
-v3 changelog:
-- add some R-bs
-- remove priv->beacon_enabled
-- rename max_sta_num to max_macid_num
-v2 changelog:
-- dropped RFC prefix
-- rebase patches to newest wireless-next
-- add some R-bs
-- new patch: "Add parameter force to rtl8xxxu_refresh_rate_mask"
-- new patch: "Remove usage of ieee80211_get_tx_rate()"
-- new patch: "Remove usage of tx_info->control.rates[0].flags"
-- new patch: "Set maximum number of supported stations"
-- add macro for broadcast/multicast frames macid
-- add more explanation about beacon queue in commit message of patch 2
-- add macros for bit definitions for beacon functions
-- implement enable_beacon = false case
-- fix beacon valid loop so that error condition is actually reached
-- add more explanation about setting mac address register in add_interface
-  in commit message of patch 6
-- rename role macros for connect report h2c
-- use bitmap for assigning macids
-- add helper function for looking up assigned macids
-- move patch 7 so we can use rtl8xxxu_get_macid helper
-- add sta_remove callback
-- do things in sta_add only in AP mode
-- use IEEE80211_TX_CTL_ASSIGN_SEQ flag to determine when to use HW sequence
-  numbers
-- add priv->vif null pointer check in configure_filter, rework setting
-  BSSID_BEACON/BSSID_MATCH in RCR
-
-v1: https://lore.kernel.org/linux-wireless/20230322171905.492855-1-martin.kaistra@linutronix.de/
-v2: https://lore.kernel.org/linux-wireless/20230419100145.159191-1-martin.kaistra@linutronix.de/
-v3: https://lore.kernel.org/linux-wireless/20230427090922.165088-1-martin.kaistra@linutronix.de/
-
-Martin Kaistra (18):
-  wifi: rtl8xxxu: Add start_ap() callback
-  wifi: rtl8xxxu: Select correct queue for beacon frames
-  wifi: rtl8xxxu: Add beacon functions
-  wifi: rtl8xxxu: Add set_tim() callback
-  wifi: rtl8xxxu: Allow setting rts threshold to -1
-  wifi: rtl8xxxu: Allow creating interface in AP mode
-  wifi: rtl8xxxu: Actually use macid in rtl8xxxu_gen2_report_connect
-  wifi: rtl8xxxu: Add parameter role to report_connect
-  wifi: rtl8xxxu: Add parameter force to rtl8xxxu_refresh_rate_mask
-  wifi: rtl8xxxu: Add sta_add() and sta_remove() callbacks
-  wifi: rtl8xxxu: Put the macid in txdesc
-  wifi: rtl8xxxu: Add parameter macid to update_rate_mask
-  wifi: rtl8xxxu: Enable hw seq for mgmt/non-QoS data frames
-  wifi: rtl8xxxu: Clean up filter configuration
-  wifi: rtl8xxxu: Remove usage of ieee80211_get_tx_rate()
-  wifi: rtl8xxxu: Remove usage of tx_info->control.rates[0].flags
-  wifi: rtl8xxxu: Declare AP mode support for 8188f
-  wifi: rtl8xxxu: Set maximum number of supported stations
-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |  37 +-
- .../realtek/rtl8xxxu/rtl8xxxu_8188e.c         |   3 +-
- .../realtek/rtl8xxxu/rtl8xxxu_8188f.c         |   2 +
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 337 ++++++++++++++----
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h |   5 +
- 5 files changed, 300 insertions(+), 84 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index b8fcf911c072e..9dc6f3ec7a305 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5010,7 +5010,9 @@ static u32 rtl8xxxu_queue_select(struct ieee80211_hdr *hdr, struct sk_buff *skb)
+ {
+ 	u32 queue;
+ 
+-	if (ieee80211_is_mgmt(hdr->frame_control))
++	if (unlikely(ieee80211_is_beacon(hdr->frame_control)))
++		queue = TXDESC_QUEUE_BEACON;
++	else if (ieee80211_is_mgmt(hdr->frame_control))
+ 		queue = TXDESC_QUEUE_MGNT;
+ 	else
+ 		queue = rtl8xxxu_80211_to_rtl_queue(skb_get_queue_mapping(skb));
 -- 
 2.30.2
 
