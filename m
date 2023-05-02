@@ -2,90 +2,165 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25618C77B73
-	for <linux-wireless@archiver.kernel.org>; Tue,  2 May 2023 01:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A63B4C77B73
+	for <linux-wireless@archiver.kernel.org>; Tue,  2 May 2023 03:10:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230202AbjEBBZD convert rfc822-to-8bit (ORCPT
+        id S233434AbjEBDKb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 1 May 2023 21:25:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60446 "EHLO
+        Mon, 1 May 2023 23:10:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229863AbjEBBZC (ORCPT
+        with ESMTP id S233482AbjEBDKW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 1 May 2023 21:25:02 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB33E1728
-        for <linux-wireless@vger.kernel.org>; Mon,  1 May 2023 18:24:59 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3421OOTn8032730, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3421OOTn8032730
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Tue, 2 May 2023 09:24:24 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Tue, 2 May 2023 09:24:28 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 2 May 2023 09:24:28 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
- RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
- 15.01.2375.007; Tue, 2 May 2023 09:24:27 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Martin Kaistra <martin.kaistra@linutronix.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     Jes Sorensen <Jes.Sorensen@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: RE: [PATCH v4 03/18] wifi: rtl8xxxu: Add beacon functions
-Thread-Topic: [PATCH v4 03/18] wifi: rtl8xxxu: Add beacon functions
-Thread-Index: AQHZeeNUI8kBsEl2NkO0pSWi5C5CSa9GNbQQ
-Date:   Tue, 2 May 2023 01:24:27 +0000
-Message-ID: <0b4c036c0341468fa28119d686f4f3ca@realtek.com>
-References: <20230428150833.218605-1-martin.kaistra@linutronix.de>
- <20230428150833.218605-4-martin.kaistra@linutronix.de>
-In-Reply-To: <20230428150833.218605-4-martin.kaistra@linutronix.de>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXMBS04.realtek.com.tw, 9
-x-kse-antispam-interceptor-info: fallback
-x-kse-antivirus-interceptor-info: fallback
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Mon, 1 May 2023 23:10:22 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C91340FC
+        for <linux-wireless@vger.kernel.org>; Mon,  1 May 2023 20:10:16 -0700 (PDT)
+X-UUID: d9311bc0e89611ed9cb5633481061a41-20230502
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=ct8qeOqaCbl07nxC74X68VbEEBx8z8hIwt1tsyJaVB8=;
+        b=vG3WUa8IuvZ4r6j3LSziPt6CtDUd2bU6+Nw97Ax+rMm06UNfQEqQS46lgsodU+goamrn638FWpqUQA1Ogwj46qtjossE58QrbrbnfW2Xrjkmt6Dz7QluenXnEmHExhcYCTh78I9+SiEcMVm0i8H6eOjElsfVV1PqPepMuVdazEA=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.22,REQID:94c4ac74-0003-4ae2-8a4c-d0b347cb1206,IP:0,U
+        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:-25
+X-CID-META: VersionHash:120426c,CLOUDID:14df7230-6935-4eab-a959-f84f8da15543,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-UUID: d9311bc0e89611ed9cb5633481061a41-20230502
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 40859370; Tue, 02 May 2023 11:10:10 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Tue, 2 May 2023 11:10:09 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Tue, 2 May 2023 11:10:09 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
+CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH v3 2/2] wifi: mt76: mt7615: enable BSS_CHANGED_MU_GROUPS support
+Date:   Tue, 2 May 2023 11:10:06 +0800
+Message-ID: <3ca2a7a8154d0a661eef6ef0b172b6ae73735780.1682971025.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <0a7809914a0c480ed4761158142e3c7d2f41ca76.1682971025.git.ryder.lee@mediatek.com>
+References: <0a7809914a0c480ed4761158142e3c7d2f41ca76.1682971025.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+The Group ID Management frame is an Action frame of category VHT.
+It is transmitted by the AP to assign or change the user position
+of a STA for one or more group IDs.
 
+Also, sniffer can use a given group id to monitor STA that belongs
+to that group.
 
-> -----Original Message-----
-> From: Martin Kaistra <martin.kaistra@linutronix.de>
-> Sent: Friday, April 28, 2023 11:08 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Jes Sorensen <Jes.Sorensen@gmail.com>; Kalle Valo <kvalo@kernel.org>; Ping-Ke Shih
-> <pkshih@realtek.com>; Bitterblue Smith <rtl8821cerfe2@gmail.com>; Sebastian Andrzej Siewior
-> <bigeasy@linutronix.de>
-> Subject: [PATCH v4 03/18] wifi: rtl8xxxu: Add beacon functions
-> 
-> Add a workqueue to update the beacon contents asynchronously and
-> implement downloading the beacon to the HW and starting beacon tx like
-> the vendor driver.
-> 
-> Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
+Notify underlying driver of changes via BSS_CHANGED_MU_GROUPS.
 
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |  5 +++-
+ .../net/wireless/mediatek/mt76/mt7615/main.c  | 29 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7615/regs.h  |  9 ++++++
+ 3 files changed, 42 insertions(+), 1 deletion(-)
 
-[...]
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index 621e69f07e3c..2dbc17de780f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -395,8 +395,11 @@ mt7615_init_wiphy(struct ieee80211_hw *hw)
+ 	wiphy->max_scan_ssids = 4;
+ 
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_SET_SCAN_DWELL);
+-	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CAN_REPLACE_PTK0);
++	if (!is_mt7622(&phy->dev->mt76)) {
++		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
++		wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER);
++	}
+ 
+ 	ieee80211_hw_set(hw, SINGLE_SCAN_ON_ALL_BANDS);
+ 	ieee80211_hw_set(hw, TX_STATUS_NO_AMPDU_LEN);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index ab4c1b4478aa..ea84615d2a9f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -553,6 +553,32 @@ static void mt7615_configure_filter(struct ieee80211_hw *hw,
+ 	mt7615_mutex_release(dev);
+ }
+ 
++static void
++mt7615_update_mu_group(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		       struct ieee80211_bss_conf *info)
++{
++	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
++	struct mt7615_dev *dev = mt7615_hw_dev(hw);
++	u8 i, band = mvif->mt76.band_idx;
++	u32 *mu;
++
++	mu = (u32 *)info->mu_group.membership;
++	for (i = 0; i < WLAN_MEMBERSHIP_LEN / sizeof(*mu); i++) {
++		if (is_mt7663(&dev->mt76))
++			mt76_wr(dev, MT7663_WF_PHY_GID_TAB_VLD(band, i), mu[i]);
++		else
++			mt76_wr(dev, MT_WF_PHY_GID_TAB_VLD(band, i), mu[i]);
++	}
++
++	mu = (u32 *)info->mu_group.position;
++	for (i = 0; i < WLAN_USER_POSITION_LEN / sizeof(*mu); i++) {
++		if (is_mt7663(&dev->mt76))
++			mt76_wr(dev, MT7663_WF_PHY_GID_TAB_POS(band, i), mu[i]);
++		else
++			mt76_wr(dev, MT_WF_PHY_GID_TAB_POS(band, i), mu[i]);
++	}
++}
++
+ static void mt7615_bss_info_changed(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif,
+ 				    struct ieee80211_bss_conf *info,
+@@ -601,6 +627,9 @@ static void mt7615_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_ASSOC)
+ 		mt7615_mac_set_beacon_filter(phy, vif, vif->cfg.assoc);
+ 
++	if (changed & BSS_CHANGED_MU_GROUPS)
++		 mt7615_update_mu_group(hw, vif, info);
++
+ 	mt7615_mutex_release(dev);
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+index 7cecb22c569e..806b3887c541 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+@@ -212,6 +212,15 @@ enum mt7615_reg_base {
+ 
+ #define MT7663_WF_PHY_R0_PHYCTRL_STS5(_phy)	MT_WF_PHY(0x0224 + ((_phy) << 12))
+ 
++#define MT_WF_PHY_GID_TAB_VLD(_phy, i)		MT_WF_PHY(0x0254 + (i) * 4 + \
++							  ((_phy) << 9))
++#define MT7663_WF_PHY_GID_TAB_VLD(_phy, i)	MT_WF_PHY(0x0254 + (i) * 4 + \
++							  ((_phy) << 12))
++#define MT_WF_PHY_GID_TAB_POS(_phy, i)		MT_WF_PHY(0x025c + (i) * 4 + \
++							  ((_phy) << 9))
++#define MT7663_WF_PHY_GID_TAB_POS(_phy, i)	MT_WF_PHY(0x025c + (i) * 4 + \
++							  ((_phy) << 12))
++
+ #define MT_WF_PHY_MIN_PRI_PWR(_phy)	MT_WF_PHY((_phy) ? 0x084 : 0x229c)
+ #define MT_WF_PHY_PD_OFDM_MASK(_phy)	((_phy) ? GENMASK(24, 16) : \
+ 					 GENMASK(28, 20))
+-- 
+2.18.0
 
