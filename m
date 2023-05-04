@@ -2,56 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12754C7EE25
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:11:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B69C2C7EE29
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232623AbjEDULL (ORCPT
+        id S232677AbjEDULN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 16:11:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34408 "EHLO
+        Thu, 4 May 2023 16:11:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233011AbjEDUJ5 (ORCPT
+        with ESMTP id S233019AbjEDUJ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 16:09:57 -0400
+        Thu, 4 May 2023 16:09:59 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7DE717DFD;
-        Thu,  4 May 2023 12:55:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93092901D;
+        Thu,  4 May 2023 12:55:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 009FE637AD;
-        Thu,  4 May 2023 19:46:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34D6BC433EF;
-        Thu,  4 May 2023 19:46:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0924363722;
+        Thu,  4 May 2023 19:43:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9D3EC4339B;
+        Thu,  4 May 2023 19:43:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229596;
-        bh=3QH53IQtww9nt86bc9hdI+wiVvbXzlxNO28UbUg+ho8=;
+        s=k20201202; t=1683229411;
+        bh=mmm9lHBhX+OdRGdo5vBJXE3H0w3wBS8JU5CFAfWiQKQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KcdZuzp9w8ftbIF0DEK68KJoRyEpX3DQhaMVgyPelLe681tVLsTOND5jmptwCLKuj
-         ImRo2dKWbnVKK6yZNMoHaGvCTWEYidmV3NQl94i0Hv7QbQWKbMStSkCzpFmV8+w2rX
-         bnpUJlIkU2S9jkVJqarwgH2utnCkavn5q3eX/IixDjY0xX//z9Fyo57U6craB4mHAG
-         UCBBpxBQrPXCJISKsh9PBWGyX7jq+oGL5/tg6XPab0fmpCYQtPAG6CHrGGO7WSpEaz
-         TeVohQeB46tN+TWbRtmD/hF3s9RwzpVOlTquzs2TQArUIVUrPTkWcavoOXo//kyjYY
-         vMZI4ypcoJAag==
+        b=t3pcpCBU/WpdrG39q5JpugdmYwQchm+lNWenGxJS9+Ofg3IXEppStTAVRW6SZL00U
+         uUQwYy7lIhYR94wxiAWzWKhfINc1G/hynX69A/9ngT1XJkVA1Q6oFhA2JOMRBqJPxM
+         cYemZmYrc73dfLJjpK+KDDzzu8bojW9KGcgHlEzf0LH9mmB2nIi9Mx4V2Tr9n4maLS
+         uHveRn6E4dSfWLwyIX2VyaCAkaOwvk67sjL3DB4JgbHokWnHqXIZhwr57QAnV/Ojb3
+         vb9C3EyeKJuTKEsetNGqN2+6hcRou55nbzeYnhucmR+b6gOeW24h9fpWqjY2xMRsUj
+         LP3UkGwsmYDRw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hector Martin <marcan@marcan.st>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Julian Calaby <julian.calaby@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        aspriel@gmail.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        rmk+kernel@armlinux.org.uk, wright.feng@cypress.com,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 03/49] wifi: brcmfmac: pcie: Provide a buffer of random bytes to the device
-Date:   Thu,  4 May 2023 15:45:40 -0400
-Message-Id: <20230504194626.3807438-3-sashal@kernel.org>
+Cc:     Harshitha Prem <quic_hprem@quicinc.com>,
+        Nagarajan Maran <quic_nmaran@quicinc.com>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, ath11k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.3 40/59] wifi: ath11k: Ignore frags from uninitialized peer in dp.
+Date:   Thu,  4 May 2023 15:41:23 -0400
+Message-Id: <20230504194142.3805425-40-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194626.3807438-1-sashal@kernel.org>
-References: <20230504194626.3807438-1-sashal@kernel.org>
+In-Reply-To: <20230504194142.3805425-1-sashal@kernel.org>
+References: <20230504194142.3805425-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,85 +56,116 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Hector Martin <marcan@marcan.st>
+From: Harshitha Prem <quic_hprem@quicinc.com>
 
-[ Upstream commit 91918ce88d9fef408bb12c46a27c73d79b604c20 ]
+[ Upstream commit a06bfb3c9f69f303692cdae87bc0899d2ae8b2a6 ]
 
-Newer Apple firmwares on chipsets without a hardware RNG require the
-host to provide a buffer of 256 random bytes to the device on
-initialization. This buffer is present immediately before NVRAM,
-suffixed by a footer containing a magic number and the buffer length.
+When max virtual ap interfaces are configured in all the bands with
+ACS and hostapd restart is done every 60s, a crash is observed at
+random times.
+In this certain scenario, a fragmented packet is received for
+self peer, for which rx_tid and rx_frags are not initialized in
+datapath. While handling this fragment, crash is observed as the
+rx_frag list is uninitialised and when we walk in
+ath11k_dp_rx_h_sort_frags, skb null leads to exception.
 
-This won't affect chips/firmwares that do not use this feature, so do it
-unconditionally for all Apple platforms (those with an Apple OTP).
+To address this, before processing received fragments we check
+dp_setup_done flag is set to ensure that peer has completed its
+dp peer setup for fragment queue, else ignore processing the
+fragments.
 
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Hector Martin <marcan@marcan.st>
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20230214080034.3828-3-marcan@marcan.st
+Call trace:
+  ath11k_dp_process_rx_err+0x550/0x1084 [ath11k]
+  ath11k_dp_service_srng+0x70/0x370 [ath11k]
+  0xffffffc009693a04
+  __napi_poll+0x30/0xa4
+  net_rx_action+0x118/0x270
+  __do_softirq+0x10c/0x244
+  irq_exit+0x64/0xb4
+  __handle_domain_irq+0x88/0xac
+  gic_handle_irq+0x74/0xbc
+  el1_irq+0xf0/0x1c0
+  arch_cpu_idle+0x10/0x18
+  do_idle+0x104/0x248
+  cpu_startup_entry+0x20/0x64
+  rest_init+0xd0/0xdc
+  arch_call_rest_init+0xc/0x14
+  start_kernel+0x480/0x4b8
+  Code: f9400281 f94066a2 91405021 b94a0023 (f9406401)
+
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
+Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20230403184155.8670-2-quic_nmaran@quicinc.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../broadcom/brcm80211/brcmfmac/pcie.c        | 32 +++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp.c    | 4 +++-
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 8 ++++++++
+ drivers/net/wireless/ath/ath11k/peer.h  | 1 +
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 067ea019b110a..3b1277a8bd617 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -13,6 +13,7 @@
- #include <linux/bcma/bcma.h>
- #include <linux/sched.h>
- #include <linux/io.h>
-+#include <linux/random.h>
- #include <asm/unaligned.h>
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index f5156a7fbdd7a..d070bcb3fe247 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -36,6 +36,7 @@ void ath11k_dp_peer_cleanup(struct ath11k *ar, int vdev_id, const u8 *addr)
+ 	}
  
- #include <soc.h>
-@@ -1631,6 +1632,13 @@ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
- 	return 0;
+ 	ath11k_peer_rx_tid_cleanup(ar, peer);
++	peer->dp_setup_done = false;
+ 	crypto_free_shash(peer->tfm_mmic);
+ 	spin_unlock_bh(&ab->base_lock);
  }
+@@ -72,7 +73,8 @@ int ath11k_dp_peer_setup(struct ath11k *ar, int vdev_id, const u8 *addr)
+ 	ret = ath11k_peer_rx_frag_setup(ar, addr, vdev_id);
+ 	if (ret) {
+ 		ath11k_warn(ab, "failed to setup rx defrag context\n");
+-		return ret;
++		tid--;
++		goto peer_clean;
+ 	}
  
-+struct brcmf_random_seed_footer {
-+	__le32 length;
-+	__le32 magic;
-+};
-+
-+#define BRCMF_RANDOM_SEED_MAGIC		0xfeedc0de
-+#define BRCMF_RANDOM_SEED_LENGTH	0x100
+ 	/* TODO: Setup other peer specific resource used in data path */
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index b65a84a882641..294c6fcfa1aa8 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -3138,6 +3138,7 @@ int ath11k_peer_rx_frag_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id
+ 	}
  
- static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
- 					const struct firmware *fw, void *nvram,
-@@ -1667,6 +1675,30 @@ static int brcmf_pcie_download_fw_nvram(struct brcmf_pciedev_info *devinfo,
- 			  nvram_len;
- 		memcpy_toio(devinfo->tcm + address, nvram, nvram_len);
- 		brcmf_fw_nvram_free(nvram);
+ 	peer->tfm_mmic = tfm;
++	peer->dp_setup_done = true;
+ 	spin_unlock_bh(&ab->base_lock);
+ 
+ 	return 0;
+@@ -3583,6 +3584,13 @@ static int ath11k_dp_rx_frag_h_mpdu(struct ath11k *ar,
+ 		ret = -ENOENT;
+ 		goto out_unlock;
+ 	}
++	if (!peer->dp_setup_done) {
++		ath11k_warn(ab, "The peer %pM [%d] has uninitialized datapath\n",
++			    peer->addr, peer_id);
++		ret = -ENOENT;
++		goto out_unlock;
++	}
 +
-+		if (devinfo->otp.valid) {
-+			size_t rand_len = BRCMF_RANDOM_SEED_LENGTH;
-+			struct brcmf_random_seed_footer footer = {
-+				.length = cpu_to_le32(rand_len),
-+				.magic = cpu_to_le32(BRCMF_RANDOM_SEED_MAGIC),
-+			};
-+			void *randbuf;
-+
-+			/* Some Apple chips/firmwares expect a buffer of random
-+			 * data to be present before NVRAM
-+			 */
-+			brcmf_dbg(PCIE, "Download random seed\n");
-+
-+			address -= sizeof(footer);
-+			memcpy_toio(devinfo->tcm + address, &footer,
-+				    sizeof(footer));
-+
-+			address -= rand_len;
-+			randbuf = kzalloc(rand_len, GFP_KERNEL);
-+			get_random_bytes(randbuf, rand_len);
-+			memcpy_toio(devinfo->tcm + address, randbuf, rand_len);
-+			kfree(randbuf);
-+		}
- 	} else {
- 		brcmf_dbg(PCIE, "No matching NVRAM file found %s\n",
- 			  devinfo->nvram_name);
+ 	rx_tid = &peer->rx_tid[tid];
+ 
+ 	if ((!skb_queue_empty(&rx_tid->rx_frags) && seqno != rx_tid->cur_sn) ||
+diff --git a/drivers/net/wireless/ath/ath11k/peer.h b/drivers/net/wireless/ath/ath11k/peer.h
+index 6dd17bafe3a0c..9bd385d0a38c9 100644
+--- a/drivers/net/wireless/ath/ath11k/peer.h
++++ b/drivers/net/wireless/ath/ath11k/peer.h
+@@ -35,6 +35,7 @@ struct ath11k_peer {
+ 	u16 sec_type;
+ 	u16 sec_type_grp;
+ 	bool is_authorized;
++	bool dp_setup_done;
+ };
+ 
+ void ath11k_peer_unmap_event(struct ath11k_base *ab, u16 peer_id);
 -- 
 2.39.2
 
