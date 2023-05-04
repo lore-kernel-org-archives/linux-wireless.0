@@ -2,120 +2,137 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C6D5C77B78
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:29:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73ADAC7EE22
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:33:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231623AbjEDU3M (ORCPT
+        id S231189AbjEDUdf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 16:29:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40066 "EHLO
+        Thu, 4 May 2023 16:33:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231585AbjEDU25 (ORCPT
+        with ESMTP id S231180AbjEDUdO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 16:28:57 -0400
-Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A08F113C18
-        for <linux-wireless@vger.kernel.org>; Thu,  4 May 2023 13:15:45 -0700 (PDT)
-Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-50bcc565280so1433814a12.2
-        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2023 13:15:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683231231; x=1685823231;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Pp4DKZ5YAHesHhUbviZuPUNlVLjAOKynr2fJjbSlD+Y=;
-        b=S0ZppC27z5h47LvSYVUt5y4L+dSGVekzWAXdzmlRZ9a4c6kwHa4bDqzlT6qc8ilArO
-         UjQCXnKIr7jNIY8A/dt7P1+VRvtoiIdgmMzQosugO8IJxvzaLVhunGp1RIAk4q8vf9Av
-         cmT64G3IqFwt8YbGgPcCyXRBOIpc5nJeJWjD/uq9diHkUDkrVD1KU/zJRTk+F3HSVh2m
-         QXGx3y+92NX0U+FdRMuhp3t9H74bBrM1MRoMkUj4E0NvLqs3H3cOT1p4JK/dGjtIfYAd
-         jsHM4F45RedaH6uhPOJlJePVXEJrvekgHZwRNI7krp/4+vcp5XDo8TIXMFysMMZdfY6c
-         6j+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683231231; x=1685823231;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Pp4DKZ5YAHesHhUbviZuPUNlVLjAOKynr2fJjbSlD+Y=;
-        b=Tw0MVKx8XQp5PBzvbUHizS5dtHUlUqeTAYvAThHlLF9ZPoClrIwmx31rThKoYQAH5S
-         oxTxyIgBhxZpnrbbmJwfbPz79Zc7yW5BhXjiJHMrOHA4/3gGL5QAAFHnCe3T+x9yRmEA
-         0drIIYGTwpaWW8aR7Krm+cUIvWAKi7sSaeHY9Rzb1by5M8GR8Uh3uNxlCO5vPGcZMfGz
-         CLmFkh0stG0mMIoeK6yMymku9pUtU65kuU8ZcEPzBUHeycn1p4JGgMmDbZdWTgPyDmnG
-         h3kyboXak3631mXBDCTJJsJaraqyN1PMMAMlMsAGlZn01x16xKgz2fcTHhKqkUn2e7fu
-         agJQ==
-X-Gm-Message-State: AC+VfDyUtnQxySGnomNZ4+wlBOtxQvNPFLfv7WIpgZlRzvL+EPPefQVo
-        j8pkmyg9keTvsZfV9MpLsmU=
-X-Google-Smtp-Source: ACHHUZ4g7oXpcQsaKBaibLepspzWl07Ez4gjkoqyg3I1Y+u6Sg/W8y4K3c5i3jNaS7SI3CvgRiFO2A==
-X-Received: by 2002:a17:907:d09:b0:95e:de82:3895 with SMTP id gn9-20020a1709070d0900b0095ede823895mr96055ejc.22.1683231231127;
-        Thu, 04 May 2023 13:13:51 -0700 (PDT)
-Received: from jernej-laptop.localnet (82-149-1-233.dynamic.telemach.net. [82.149.1.233])
-        by smtp.gmail.com with ESMTPSA id jx27-20020a170907761b00b0096347ef816dsm3873175ejc.64.2023.05.04.13.13.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 May 2023 13:13:50 -0700 (PDT)
-From:   Jernej =?utf-8?B?xaBrcmFiZWM=?= <jernej.skrabec@gmail.com>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Driver for rtw8723ds
-Date:   Thu, 04 May 2023 22:13:49 +0200
-Message-ID: <2282070.ElGaqSPkdT@jernej-laptop>
-In-Reply-To: <CAFBinCB3xnCrLvEvqsFMQuDxL+xC9tkxnwubfC+xEMP3-ZXqSg@mail.gmail.com>
-References: <72a8eeb1-c91c-80a7-5a09-1b7963e0996b@lwfinger.net>
- <813d74b8-6d9f-c7b0-40b4-c661fca13002@lwfinger.net>
- <CAFBinCB3xnCrLvEvqsFMQuDxL+xC9tkxnwubfC+xEMP3-ZXqSg@mail.gmail.com>
+        Thu, 4 May 2023 16:33:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B4C119D4C;
+        Thu,  4 May 2023 13:23:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 61878637FD;
+        Thu,  4 May 2023 19:47:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25CC5C4339E;
+        Thu,  4 May 2023 19:47:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683229673;
+        bh=JAPuOxWhBsan5hPSxnWhnAjp48qyhtSOWi8YeO40rHU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Cu1od6yiYl6+QhM4w1/uF1a9KVAn6x4jflQZmyuwKLDyyIm/6+u16vBgXWQxFY9C5
+         RmuIQlm71lBKFjECZXsRwanYkLR7wpHCBosERwP4PRajfg85f9ryKAHKwksTaXKYpy
+         o+mcKOdKqzYBrE4eCnGoEdzf3jOJjXMTwfF5ogfn38/mSSkBFBmdrcp+UGZWfWakop
+         YWoyRSzrUdWb6I3Z+diIWZQpP1Bn5GudsiDPyiLIge0Jd22sXd/sogEzdqMJm13os0
+         q36LsixosTRKG30pmsPHi9nSDfCxCp6vJUpRHbYntIR3aeUzePcsBq3doPTpEZwEy2
+         cB2ydHDjHy6Yw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, avraham.stern@intel.com,
+        shaul.triebitz@intel.com, ilan.peer@intel.com,
+        greearb@candelatech.com, mordechay.goodstein@intel.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 34/49] wifi: iwlwifi: fix iwl_mvm_max_amsdu_size() for MLO
+Date:   Thu,  4 May 2023 15:46:11 -0400
+Message-Id: <20230504194626.3807438-34-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230504194626.3807438-1-sashal@kernel.org>
+References: <20230504194626.3807438-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="UTF-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dne =C4=8Detrtek, 04. maj 2023 ob 21:45:31 CEST je Martin Blumenstingl napi=
-sal(a):
-> Hi Larry,
->=20
-> On Thu, May 4, 2023 at 9:25=E2=80=AFPM Larry Finger <Larry.Finger@lwfinge=
-r.net>
-> wrote: [...]
->=20
-> > > Can you ask that user to test following commits?
-> > > https://github.com/xdarklight/linux/commit/
-> > > 3866a7a3702f7f24557f2c065b7d4088f7027466
-> > > https://github.com/xdarklight/linux/commit/
-> > > 66fd078556a6bf246337270b2e91d73c079fce2d
-> > >=20
-> > > Patches are trivial, but some testing needs to be done to confirm the
-> > > driver actually works as intended.
-> >=20
-> > Jernej,
-> >=20
-> > The user needs the rtw8723ds driver - the SDIO equivalent of rtw8723du.c
-> > that is used by the USB device. The riscv changes may be needed, but we
-> > are not quite that far yet.
->=20
-> Strange, can you please elaborate what you are seeing in terms of riscv?
-> The two commits that Jernej shared are for an update to rtw8723d.c [0]
-> and the addition of a rtw8723ds driver [1]. None of these mentions
-> riscv (at least that's what my tired eyes are seeing today).
->=20
->=20
-> Best regards,
-> Martin
->=20
->=20
-> [0]
-> https://github.com/xdarklight/linux/commit/3866a7a3702f7f24557f2c065b7d40=
-88
-> f7027466 [1]
-> https://github.com/xdarklight/linux/commit/66fd078556a6bf246337270b2e91d7=
-3c
-> 079fce2d
+From: Johannes Berg <johannes.berg@intel.com>
 
-Problem is that my e-mail client split commit links in two parts. If you=20
-combine hashes with rest it opens correct commits. Currently, it opens head=
- of=20
-your master branch, which is by chance risc-v merge commit.
+[ Upstream commit b2bc600cced23762d4e97db8989b18772145604f ]
 
-Best regards,
-Jernej
+For MLO, we cannot use vif->bss_conf.chandef.chan->band, since
+that will lead to a NULL-ptr dereference as bss_conf isn't used.
+However, in case of real MLO, we also need to take both LMACs
+into account if they exist, since the station might be active
+on both LMACs at the same time.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Link: https://lore.kernel.org/r/20230417113648.3588afc85d79.I11592893bbc191b9548518b8bd782de568a9f848@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 37 +++++++++++++++++++--
+ 1 file changed, 34 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index ba944175546d4..542cfcad6e0e6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -788,10 +788,11 @@ unsigned int iwl_mvm_max_amsdu_size(struct iwl_mvm *mvm,
+ 				    struct ieee80211_sta *sta, unsigned int tid)
+ {
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	enum nl80211_band band = mvmsta->vif->bss_conf.chandef.chan->band;
+ 	u8 ac = tid_to_mac80211_ac[tid];
++	enum nl80211_band band;
+ 	unsigned int txf;
+-	int lmac = iwl_mvm_get_lmac_id(mvm->fw, band);
++	unsigned int val;
++	int lmac;
+ 
+ 	/* For HE redirect to trigger based fifos */
+ 	if (sta->deflink.he_cap.has_he && !WARN_ON(!iwl_mvm_has_new_tx_api(mvm)))
+@@ -805,7 +806,37 @@ unsigned int iwl_mvm_max_amsdu_size(struct iwl_mvm *mvm,
+ 	 * We also want to have the start of the next packet inside the
+ 	 * fifo to be able to send bursts.
+ 	 */
+-	return min_t(unsigned int, mvmsta->max_amsdu_len,
++	val = mvmsta->max_amsdu_len;
++
++	if (hweight16(sta->valid_links) <= 1) {
++		if (sta->valid_links) {
++			struct ieee80211_bss_conf *link_conf;
++			unsigned int link = ffs(sta->valid_links) - 1;
++
++			rcu_read_lock();
++			link_conf = rcu_dereference(mvmsta->vif->link_conf[link]);
++			if (WARN_ON(!link_conf))
++				band = NL80211_BAND_2GHZ;
++			else
++				band = link_conf->chandef.chan->band;
++			rcu_read_unlock();
++		} else {
++			band = mvmsta->vif->bss_conf.chandef.chan->band;
++		}
++
++		lmac = iwl_mvm_get_lmac_id(mvm->fw, band);
++	} else if (fw_has_capa(&mvm->fw->ucode_capa,
++			       IWL_UCODE_TLV_CAPA_CDB_SUPPORT)) {
++		/* for real MLO restrict to both LMACs if they exist */
++		lmac = IWL_LMAC_5G_INDEX;
++		val = min_t(unsigned int, val,
++			    mvm->fwrt.smem_cfg.lmac[lmac].txfifo_size[txf] - 256);
++		lmac = IWL_LMAC_24G_INDEX;
++	} else {
++		lmac = IWL_LMAC_24G_INDEX;
++	}
++
++	return min_t(unsigned int, val,
+ 		     mvm->fwrt.smem_cfg.lmac[lmac].txfifo_size[txf] - 256);
+ }
+ 
+-- 
+2.39.2
 
