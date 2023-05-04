@@ -2,53 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 883DDC7EE22
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFF0AC7EE21
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:47:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230322AbjEDTrV (ORCPT
+        id S230410AbjEDTrZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 15:47:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48498 "EHLO
+        Thu, 4 May 2023 15:47:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230493AbjEDTqf (ORCPT
+        with ESMTP id S230413AbjEDTqq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 15:46:35 -0400
+        Thu, 4 May 2023 15:46:46 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9082AD32;
-        Thu,  4 May 2023 12:44:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71BB9AD2F;
+        Thu,  4 May 2023 12:44:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 75D7063736;
-        Thu,  4 May 2023 19:43:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BC88C4339C;
-        Thu,  4 May 2023 19:43:18 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 96E9962EB8;
+        Thu,  4 May 2023 19:44:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B97FBC433D2;
+        Thu,  4 May 2023 19:44:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229399;
-        bh=6Thi17hL8roMyNQJzudQ2qZmGi6oGj6AasmEqj7NteU=;
+        s=k20201202; t=1683229484;
+        bh=X7FKrMlibVA+cIy6xm4u67ib08PyLcz/1lFg2G+n3PI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=A/4DPN9yJkbuXL9c2hLVF9NFPiTbisGqY1v4zXuOhTYX7RCzk5/jq4srpd1GkLZC3
-         W3eq8pI6k9y9DbiBahDAQMGcnJ33J7o2yl/zxIyvcEbBowdgisUU4xhzuS9UztLnla
-         H0nFNwr9jYVmtubMkc+0OgkhgIX8Lbq3GzhlrTnIza4G4jq20gVJCzUDNhKrbYPsk6
-         9EDdtB4XlPi/8x8tGfsX91nuv8vSGNx8MpRG6YJCEvSVAcSPU41a7gTW6rJuOpFK78
-         8UMW2W0Hbcd3/ri0TxRvqOjasNnegfoo50QB6ycZxay16KAklm2H4L1ezpBZcq/vD2
-         6gbx63Yu2QpMA==
+        b=LHPfjddm/TmVO21yYQ9V0D7P79g3KkFDcpOz8mLzCKw38Et02Q3DS4QRVzvPPKAEY
+         3xV9wZ+FmuAw14Lygrl5W8jl5+HtCq48nhGcPH+DM8Hb1CWQw1oRgAKzpwehh+6GE4
+         gleZ76QvxBzDT9WgSshdBMQfCJVO8u80Zf2uKJxxg1j9rueU9cdmsDbYujHAZhHrQW
+         6FUDwN3X6/p1DvWpBAEntrMxTyqBLQTm+JmEdWND2XEgJULukI+WZ4Ejr+jyMGmtkL
+         SoGFGSMLPeki3DActBWkNOQM0paGxh1UH0mkHpwORc46p1d+5koPHLxObvi2lzB7+2
+         YZQ2ATjokxFIg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, daniel.gabay@intel.com, yaara.baruch@intel.com,
-        golan.ben.ami@intel.com, linux-wireless@vger.kernel.org,
+Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        tony0620emma@gmail.com, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 36/59] wifi: iwlwifi: add a new PCI device ID for BZ device
-Date:   Thu,  4 May 2023 15:41:19 -0400
-Message-Id: <20230504194142.3805425-36-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 10/53] wifi: rtw88: fix memory leak in rtw_usb_probe()
+Date:   Thu,  4 May 2023 15:43:30 -0400
+Message-Id: <20230504194413.3806354-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194142.3805425-1-sashal@kernel.org>
-References: <20230504194142.3805425-1-sashal@kernel.org>
+In-Reply-To: <20230504194413.3806354-1-sashal@kernel.org>
+References: <20230504194413.3806354-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,33 +55,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+From: Dongliang Mu <dzm91@hust.edu.cn>
 
-[ Upstream commit c30a2a64788b3d617a9c5d96adb76c68b0862e5f ]
+[ Upstream commit 48181d285623198c33bb9698992502687b258efa ]
 
-Add support for a new PCI device ID 0x272b once registering with PCIe.
+drivers/net/wireless/realtek/rtw88/usb.c:876 rtw_usb_probe()
+warn: 'hw' from ieee80211_alloc_hw() not released on lines: 811
 
-Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Link: https://lore.kernel.org/r/20230414130637.56342664110d.I5aa6f2858fdcf69fdea4f1a873115a48bd43764e@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fix this by modifying return to a goto statement.
+
+Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230309021636.528601-1-dzm91@hust.edu.cn
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/realtek/rtw88/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 49e8a27ecce54..26e5ef944ecb9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -504,6 +504,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+index 2a8336b1847a5..68e1b782d1992 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -808,7 +808,7 @@ int rtw_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
  
- /* Bz devices */
- 	{IWL_PCI_DEVICE(0x2727, PCI_ANY_ID, iwl_bz_trans_cfg)},
-+	{IWL_PCI_DEVICE(0x272b, PCI_ANY_ID, iwl_bz_trans_cfg)},
- 	{IWL_PCI_DEVICE(0xA840, PCI_ANY_ID, iwl_bz_trans_cfg)},
- 	{IWL_PCI_DEVICE(0x7740, PCI_ANY_ID, iwl_bz_trans_cfg)},
- #endif /* CONFIG_IWLMVM */
+ 	ret = rtw_usb_alloc_rx_bufs(rtwusb);
+ 	if (ret)
+-		return ret;
++		goto err_release_hw;
+ 
+ 	ret = rtw_core_init(rtwdev);
+ 	if (ret)
 -- 
 2.39.2
 
