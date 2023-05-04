@@ -2,53 +2,58 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 366A7C7EE29
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:06:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C80C7EE2A
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:06:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232314AbjEDUGC (ORCPT
+        id S232398AbjEDUGE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 16:06:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52422 "EHLO
+        Thu, 4 May 2023 16:06:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232509AbjEDUEa (ORCPT
+        with ESMTP id S232678AbjEDUE6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 16:04:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5579A23A09;
-        Thu,  4 May 2023 12:52:30 -0700 (PDT)
+        Thu, 4 May 2023 16:04:58 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8019A14E4E;
+        Thu,  4 May 2023 12:52:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4B86263834;
-        Thu,  4 May 2023 19:51:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09D4BC433EF;
-        Thu,  4 May 2023 19:51:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6482863839;
+        Thu,  4 May 2023 19:51:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92C03C433A4;
+        Thu,  4 May 2023 19:51:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229883;
-        bh=rzjeKeowCbGPllUR3q0na0HaHnncPDtdCVcd0//OS6U=;
+        s=k20201202; t=1683229900;
+        bh=nlAzl+QjPe6vIaEMNRkNBWxk5HmpBMb0t8KQPrpGh/8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FthwCjwkLc7Ye6P4nhDhD70FCrpo+ywrNqkcAh/PGqbn/J9Gb+prxEddijqzMbd/t
-         MikiuB/N1y3qpKJdCEefEwKyg2nAIO57uuWFWz4iCbg8AP8LjE0rdw+irB7+4pn62C
-         2d4DXvwX9nCk/h/JI7FVUeen/FxLzzYr2QLQ5gineYe7jW85w4MrAUpj0yMZ5sPW3d
-         HAbd8Tyz6NRSBE97nOZpMgAoObIuFhOg6RQ1qkoFPlhJnLvD5KqnCmvpTkqMbgTijn
-         //AoO5tJDxt3DH1f7o+bmYQ5svpLf3R3eps8YAOiMFp2OkmN40o6+QthrqTsOy4p70
-         VNgg4Rh4TIuzA==
+        b=gnC4xVNXZ1E7RDmdWMlCF74V2mh6C4JKCAtBK12APscJyKUzZPvtnSKdH8J2sfqr8
+         G/Z7cHWYO66ighyWHADHE6YRCvfA334Yxt6476fk/TsBkMqE/dEzhrie9Lcg1wnKrp
+         9nNgxSIpUxqUgg6+AGj8KUWvMaiscC4L9VuR5UlCu1Fr7YaolxGIQ1EBLZl5EhUwCo
+         Df+DkuSDzQbXOB9AhOOMm8so5tmnaPxodhlzlaGMwdOXpK+xpxsq0vjzvIpsoB8yly
+         SPk6iu5SFfeI6YlKRSDFC0nPyWcEG1Jva5rS0HqyjNnK7aFGa/sO9whrvFO0cphRpD
+         bi78C4K0hZsyQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hyunwoo Kim <imv4bel@gmail.com>,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, avraham.stern@intel.com,
-        benjamin.berg@intel.com, emmanuel.grumbach@intel.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 16/18] wifi: iwlwifi: pcie: Fix integer overflow in iwl_write_to_user_buf
-Date:   Thu,  4 May 2023 15:50:38 -0400
-Message-Id: <20230504195042.3808716-16-sashal@kernel.org>
+Cc:     Hector Martin <marcan@marcan.st>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        aspriel@gmail.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        chi-hsien.lin@infineon.com, ian.lin@infineon.com,
+        wright.feng@cypress.com, wataru.gohda@cypress.com,
+        ramesh.rangavittal@infineon.com, prasanna.kerekoppa@cypress.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 02/13] wifi: brcmfmac: cfg80211: Pass the PMK in binary instead of hex
+Date:   Thu,  4 May 2023 15:51:19 -0400
+Message-Id: <20230504195132.3808946-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504195042.3808716-1-sashal@kernel.org>
-References: <20230504195042.3808716-1-sashal@kernel.org>
+In-Reply-To: <20230504195132.3808946-1-sashal@kernel.org>
+References: <20230504195132.3808946-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,54 +62,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Hyunwoo Kim <imv4bel@gmail.com>
+From: Hector Martin <marcan@marcan.st>
 
-[ Upstream commit 58d1b717879bfeabe09b35e41ad667c79933eb2e ]
+[ Upstream commit 89b89e52153fda2733562776c7c9d9d3ebf8dd6d ]
 
-An integer overflow occurs in the iwl_write_to_user_buf() function,
-which is called by the iwl_dbgfs_monitor_data_read() function.
+Apparently the hex passphrase mechanism does not work on newer
+chips/firmware (e.g. BCM4387). It seems there was a simple way of
+passing it in binary all along, so use that and avoid the hexification.
 
-static bool iwl_write_to_user_buf(char __user *user_buf, ssize_t count,
-				  void *buf, ssize_t *size,
-				  ssize_t *bytes_copied)
-{
-	int buf_size_left = count - *bytes_copied;
+OpenBSD has been doing it like this from the beginning, so this should
+work on all chips.
 
-	buf_size_left = buf_size_left - (buf_size_left % sizeof(u32));
-	if (*size > buf_size_left)
-		*size = buf_size_left;
+Also clear the structure before setting the PMK. This was leaking
+uninitialized stack contents to the device.
 
-If the user passes a SIZE_MAX value to the "ssize_t count" parameter,
-the ssize_t count parameter is assigned to "int buf_size_left".
-Then compare "*size" with "buf_size_left" . Here, "buf_size_left" is a
-negative number, so "*size" is assigned "buf_size_left" and goes into
-the third argument of the copy_to_user function, causing a heap overflow.
-
-This is not a security vulnerability because iwl_dbgfs_monitor_data_read()
-is a debugfs operation with 0400 privileges.
-
-Signed-off-by: Hyunwoo Kim <imv4bel@gmail.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Link: https://lore.kernel.org/r/20230414130637.2d80ace81532.Iecfba549e0e0be21bbb0324675392e42e75bd5ad@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Hector Martin <marcan@marcan.st>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230214092423.15175-6-marcan@marcan.st
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 8915030030c4c..2f6bcf5e5ac0c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2831,7 +2831,7 @@ static bool iwl_write_to_user_buf(char __user *user_buf, ssize_t count,
- 				  void *buf, ssize_t *size,
- 				  ssize_t *bytes_copied)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 75790b13c9621..22fdc92fd6f88 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1238,13 +1238,14 @@ static u16 brcmf_map_fw_linkdown_reason(const struct brcmf_event_msg *e)
+ static int brcmf_set_pmk(struct brcmf_if *ifp, const u8 *pmk_data, u16 pmk_len)
  {
--	int buf_size_left = count - *bytes_copied;
-+	ssize_t buf_size_left = count - *bytes_copied;
+ 	struct brcmf_wsec_pmk_le pmk;
+-	int i, err;
++	int err;
++
++	memset(&pmk, 0, sizeof(pmk));
  
- 	buf_size_left = buf_size_left - (buf_size_left % sizeof(u32));
- 	if (*size > buf_size_left)
+-	/* convert to firmware key format */
+-	pmk.key_len = cpu_to_le16(pmk_len << 1);
+-	pmk.flags = cpu_to_le16(BRCMF_WSEC_PASSPHRASE);
+-	for (i = 0; i < pmk_len; i++)
+-		snprintf(&pmk.key[2 * i], 3, "%02x", pmk_data[i]);
++	/* pass pmk directly */
++	pmk.key_len = cpu_to_le16(pmk_len);
++	pmk.flags = cpu_to_le16(0);
++	memcpy(pmk.key, pmk_data, pmk_len);
+ 
+ 	/* store psk in firmware */
+ 	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_WSEC_PMK,
 -- 
 2.39.2
 
