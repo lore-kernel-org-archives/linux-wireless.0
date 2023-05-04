@@ -2,49 +2,54 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C3B8C7EE21
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D65A5C7EE2F
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231365AbjEDTud (ORCPT
+        id S230481AbjEDTu3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 15:50:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59182 "EHLO
+        Thu, 4 May 2023 15:50:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230516AbjEDTtX (ORCPT
+        with ESMTP id S231310AbjEDTte (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 15:49:23 -0400
+        Thu, 4 May 2023 15:49:34 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B84CA13297;
-        Thu,  4 May 2023 12:45:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D0EF15EC5;
+        Thu,  4 May 2023 12:45:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 745F263792;
-        Thu,  4 May 2023 19:45:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CFFAC4339B;
-        Thu,  4 May 2023 19:45:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3662863758;
+        Thu,  4 May 2023 19:44:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5511BC4339B;
+        Thu,  4 May 2023 19:44:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229549;
-        bh=DZKU6XSyyuM1gByFJC0vIm3uimmnBCy1jTXJ/4/A0vE=;
+        s=k20201202; t=1683229476;
+        bh=eVObgVYGaBUCFFfzDGHorAtyuHFPD6PGbq0l1GO/YfI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Fj9IioaQ+yfIYw1iF/IkH6gVV9//TJQ9u0sAajytfZuzIZikhMt0vS3azh0y6Ns3W
-         98ivIz2unBVsaL8xhtXp0yco0/B4DmawdyfhDSdZS11qAnVlMeQuMdW9SLuGi8ju0V
-         63xjhnzi6HNLhnUnupRxPM12BwPLu4FX3czi9L/BKbesIgvXWcGuRQtD5leD3Sg24h
-         YkZvZNjtL/oEJLOOVKks0FvCfrKwXwW2gDRtogK6DFC7wYyXkmeQ+eEDOo5kocxt+Z
-         pllHz/GS+5fqScCbAsvaM/f+D2yz1yQA15P5CXJZlfK1iMZjqQ98pj6qR4UrCydMdZ
-         wZgxE8FQ+UkDQ==
+        b=gkXK6u4n4i90XgTSl89kyRQ+Eyre7wn7pu88TmMUAOT5cHvIadxdn4xDTE3Cx3oUo
+         3bx7Q8qMAQIzGT0TFMsiPZTyhuRZ7EWce28ptcBAitPwdrP3yBWgH/WNtnupw/Gfae
+         4hXUvSgS7docCQ8FYbIhJWrN1cut+10h2Dpr8ONPh15w3JYrxwxKFDbpjC6ufIbLnv
+         bAL/oUUH9PB5Jda6TCz6i9zrv2EgPf+aJ8Zl5+UkME+K2X97FNuoapQr00gQCZCh9w
+         ewt7+hlqPP3tQuwL9Sn1mQsiFfhp8w0r88iriqMUGStx96686gmK2nx9n7OADnnrms
+         mOGy6Vp+6YM+Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Harshitha Prem <quic_hprem@quicinc.com>,
-        Nagarajan Maran <quic_nmaran@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 36/53] wifi: ath11k: Ignore frags from uninitialized peer in dp.
-Date:   Thu,  4 May 2023 15:43:56 -0400
-Message-Id: <20230504194413.3806354-36-sashal@kernel.org>
+Cc:     Hector Martin <marcan@marcan.st>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        aspriel@gmail.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        jiac@cypress.com, marex@denx.de, alep@cypress.com,
+        rmk+kernel@armlinux.org.uk, wright.feng@cypress.com,
+        alsi@bang-olufsen.dk, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 05/53] wifi: brcmfmac: pcie: Add IDs/properties for BCM4387
+Date:   Thu,  4 May 2023 15:43:25 -0400
+Message-Id: <20230504194413.3806354-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230504194413.3806354-1-sashal@kernel.org>
 References: <20230504194413.3806354-1-sashal@kernel.org>
@@ -56,116 +61,102 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Harshitha Prem <quic_hprem@quicinc.com>
+From: Hector Martin <marcan@marcan.st>
 
-[ Upstream commit a06bfb3c9f69f303692cdae87bc0899d2ae8b2a6 ]
+[ Upstream commit 117ace4014cce3fb78b40eb8028bb0f4fc37dd6f ]
 
-When max virtual ap interfaces are configured in all the bands with
-ACS and hostapd restart is done every 60s, a crash is observed at
-random times.
-In this certain scenario, a fragmented packet is received for
-self peer, for which rx_tid and rx_frags are not initialized in
-datapath. While handling this fragment, crash is observed as the
-rx_frag list is uninitialised and when we walk in
-ath11k_dp_rx_h_sort_frags, skb null leads to exception.
+This chip is present on Apple M1 Pro/Max (t600x) platforms:
 
-To address this, before processing received fragments we check
-dp_setup_done flag is set to ensure that peer has completed its
-dp peer setup for fragment queue, else ignore processing the
-fragments.
+* maldives   (apple,j314s): MacBook Pro (14-inch, M1 Pro, 2021)
+* maldives   (apple,j314c): MacBook Pro (14-inch, M1 Max, 2021)
+* madagascar (apple,j316s): MacBook Pro (16-inch, M1 Pro, 2021)
+* madagascar (apple,j316c): MacBook Pro (16-inch, M1 Max, 2021)
 
-Call trace:
-  ath11k_dp_process_rx_err+0x550/0x1084 [ath11k]
-  ath11k_dp_service_srng+0x70/0x370 [ath11k]
-  0xffffffc009693a04
-  __napi_poll+0x30/0xa4
-  net_rx_action+0x118/0x270
-  __do_softirq+0x10c/0x244
-  irq_exit+0x64/0xb4
-  __handle_domain_irq+0x88/0xac
-  gic_handle_irq+0x74/0xbc
-  el1_irq+0xf0/0x1c0
-  arch_cpu_idle+0x10/0x18
-  do_idle+0x104/0x248
-  cpu_startup_entry+0x20/0x64
-  rest_init+0xd0/0xdc
-  arch_call_rest_init+0xc/0x14
-  start_kernel+0x480/0x4b8
-  Code: f9400281 f94066a2 91405021 b94a0023 (f9406401)
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
-Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230403184155.8670-2-quic_nmaran@quicinc.com
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Hector Martin <marcan@marcan.st>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230214092423.15175-7-marcan@marcan.st
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/dp.c    | 4 +++-
- drivers/net/wireless/ath/ath11k/dp_rx.c | 8 ++++++++
- drivers/net/wireless/ath/ath11k/peer.h  | 1 +
- 3 files changed, 12 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c   | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c   | 8 ++++++++
+ .../net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
+ 3 files changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
-index f5156a7fbdd7a..d070bcb3fe247 100644
---- a/drivers/net/wireless/ath/ath11k/dp.c
-+++ b/drivers/net/wireless/ath/ath11k/dp.c
-@@ -36,6 +36,7 @@ void ath11k_dp_peer_cleanup(struct ath11k *ar, int vdev_id, const u8 *addr)
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 8073f31be27d9..9cdbd8d438439 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -737,6 +737,8 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
+ 		return 0x170000;
+ 	case BRCM_CC_4378_CHIP_ID:
+ 		return 0x352000;
++	case BRCM_CC_4387_CHIP_ID:
++		return 0x740000;
+ 	default:
+ 		brcmf_err("unknown chip: %s\n", ci->pub.name);
+ 		break;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 2835ef4edb18f..d2dad5414f396 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -67,6 +67,7 @@ BRCMF_FW_DEF(4366C, "brcmfmac4366c-pcie");
+ BRCMF_FW_DEF(4371, "brcmfmac4371-pcie");
+ BRCMF_FW_CLM_DEF(4377B3, "brcmfmac4377b3-pcie");
+ BRCMF_FW_CLM_DEF(4378B1, "brcmfmac4378b1-pcie");
++BRCMF_FW_CLM_DEF(4387C2, "brcmfmac4387c2-pcie");
  
- 	ath11k_peer_rx_tid_cleanup(ar, peer);
-+	peer->dp_setup_done = false;
- 	crypto_free_shash(peer->tfm_mmic);
- 	spin_unlock_bh(&ab->base_lock);
- }
-@@ -72,7 +73,8 @@ int ath11k_dp_peer_setup(struct ath11k *ar, int vdev_id, const u8 *addr)
- 	ret = ath11k_peer_rx_frag_setup(ar, addr, vdev_id);
- 	if (ret) {
- 		ath11k_warn(ab, "failed to setup rx defrag context\n");
--		return ret;
-+		tid--;
-+		goto peer_clean;
- 	}
- 
- 	/* TODO: Setup other peer specific resource used in data path */
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index e964e1b722871..1786d83f8f2ed 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -3138,6 +3138,7 @@ int ath11k_peer_rx_frag_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id
- 	}
- 
- 	peer->tfm_mmic = tfm;
-+	peer->dp_setup_done = true;
- 	spin_unlock_bh(&ab->base_lock);
- 
- 	return 0;
-@@ -3583,6 +3584,13 @@ static int ath11k_dp_rx_frag_h_mpdu(struct ath11k *ar,
- 		ret = -ENOENT;
- 		goto out_unlock;
- 	}
-+	if (!peer->dp_setup_done) {
-+		ath11k_warn(ab, "The peer %pM [%d] has uninitialized datapath\n",
-+			    peer->addr, peer_id);
-+		ret = -ENOENT;
-+		goto out_unlock;
-+	}
-+
- 	rx_tid = &peer->rx_tid[tid];
- 
- 	if ((!skb_queue_empty(&rx_tid->rx_frags) && seqno != rx_tid->cur_sn) ||
-diff --git a/drivers/net/wireless/ath/ath11k/peer.h b/drivers/net/wireless/ath/ath11k/peer.h
-index 6dd17bafe3a0c..9bd385d0a38c9 100644
---- a/drivers/net/wireless/ath/ath11k/peer.h
-+++ b/drivers/net/wireless/ath/ath11k/peer.h
-@@ -35,6 +35,7 @@ struct ath11k_peer {
- 	u16 sec_type;
- 	u16 sec_type_grp;
- 	bool is_authorized;
-+	bool dp_setup_done;
+ /* firmware config files */
+ MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH "brcmfmac*-pcie.txt");
+@@ -101,6 +102,7 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ 	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
+ 	BRCMF_FW_ENTRY(BRCM_CC_4377_CHIP_ID, 0xFFFFFFFF, 4377B3), /* revision ID 4 */
+ 	BRCMF_FW_ENTRY(BRCM_CC_4378_CHIP_ID, 0xFFFFFFFF, 4378B1), /* revision ID 3 */
++	BRCMF_FW_ENTRY(BRCM_CC_4387_CHIP_ID, 0xFFFFFFFF, 4387C2), /* revision ID 7 */
  };
  
- void ath11k_peer_unmap_event(struct ath11k_base *ab, u16 peer_id);
+ #define BRCMF_PCIE_FW_UP_TIMEOUT		5000 /* msec */
+@@ -2048,6 +2050,11 @@ static int brcmf_pcie_read_otp(struct brcmf_pciedev_info *devinfo)
+ 		base = 0x1120;
+ 		words = 0x170;
+ 		break;
++	case BRCM_CC_4387_CHIP_ID:
++		coreid = BCMA_CORE_GCI;
++		base = 0x113c;
++		words = 0x170;
++		break;
+ 	default:
+ 		/* OTP not supported on this chip */
+ 		return 0;
+@@ -2662,6 +2669,7 @@ static const struct pci_device_id brcmf_pcie_devid_table[] = {
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43596_DEVICE_ID, CYW),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4377_DEVICE_ID, WCC),
+ 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4378_DEVICE_ID, WCC),
++	BRCMF_PCIE_DEVICE(BRCM_PCIE_4387_DEVICE_ID, WCC),
+ 
+ 	{ /* end: all zeroes */ }
+ };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+index 896615f579522..44684bf1b9acc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+@@ -54,6 +54,7 @@
+ #define BRCM_CC_4371_CHIP_ID		0x4371
+ #define BRCM_CC_4377_CHIP_ID		0x4377
+ #define BRCM_CC_4378_CHIP_ID		0x4378
++#define BRCM_CC_4387_CHIP_ID		0x4387
+ #define CY_CC_4373_CHIP_ID		0x4373
+ #define CY_CC_43012_CHIP_ID		43012
+ #define CY_CC_43439_CHIP_ID		43439
+@@ -95,6 +96,7 @@
+ #define BRCM_PCIE_43596_DEVICE_ID	0x4415
+ #define BRCM_PCIE_4377_DEVICE_ID	0x4488
+ #define BRCM_PCIE_4378_DEVICE_ID	0x4425
++#define BRCM_PCIE_4387_DEVICE_ID	0x4433
+ 
+ /* brcmsmac IDs */
+ #define BCM4313_D11N2G_ID	0x4727	/* 4313 802.11n 2.4G device */
 -- 
 2.39.2
 
