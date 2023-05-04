@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 990E9C7EE25
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:06:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E2AC7EE37
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:06:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232538AbjEDUGH (ORCPT
+        id S232434AbjEDUGF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 16:06:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33878 "EHLO
+        Thu, 4 May 2023 16:06:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232833AbjEDUFS (ORCPT
+        with ESMTP id S232643AbjEDUEz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 16:05:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0254191CD;
-        Thu,  4 May 2023 12:53:07 -0700 (PDT)
+        Thu, 4 May 2023 16:04:55 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEF8B18DCB;
+        Thu,  4 May 2023 12:52:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 79D9363879;
-        Thu,  4 May 2023 19:52:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5092FC433EF;
-        Thu,  4 May 2023 19:52:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 483F16372C;
+        Thu,  4 May 2023 19:51:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C4C5C433EF;
+        Thu,  4 May 2023 19:51:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229922;
-        bh=pzrIXfi7gV7ykgOMQStKn2hAyn6kw7nxxYZ9R2tI8qY=;
+        s=k20201202; t=1683229887;
+        bh=x670GCtcgZJKoB+/WZpEHqBF1Uh/MnZWqDC73vAnBto=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eeL4X/gEBdoJCQZpeYTBW5h+0NOhKhWF69LbJqwQmpl8Z9NavEtDi2rBHjc2TAzzA
-         SZ8ZyGwX0X17NmrodquEHSveBZ/On9Sx87qg8uCLM1L9QlBwFYrCtz2UDgnwtNtHg8
-         fQriZvjgnp2i7+mropV3yk4SO8ae4lQspn2zH1AFqA576k1saJLG/A5mUDBEIVQ5Xn
-         dVtKLQNH3XpOw8NuaQaOeXwoWmCrZTJmeSpaZEJUNdrUnZe/inFZb43uorZHC0mTTH
-         WoEpEXQp1R3Hn/cvWCD1AOY5bOM5hhQFMP0fxzq5ADqiIP89WkS1eHBSTqBBsl7Sjs
-         FrYJGi507y7Cg==
+        b=O0VlfEL6wkCWsSN4bdLgigH/LDVOvY0gfwpy1+di+dq7ZwE3xdooKf1vZLBPVH3cT
+         qQ1ndXjjoCOMCn+UAU47WUyDwQvUbCReFGimexv9135m0QBz/9oblP6r0etixCYp/e
+         Z6TuH0Cq5S3BBrM0gKhUzScNKGy2vtT7rjs/6FE9cUUz69ohXJFEUpRQG5Gy0km+2U
+         ltdjXdfBFtPR3s8iQZ9wcNhN1a4Qp0ZFjPbg3wiMBppTvcAjdFS3f8flYh5Yc+5Yu2
+         R9vzJ2yn5eDI9LsaSnWueHxqlacTaLiez8GWnJ8S5/uoxCSYWSW93FLCi0/g7zIug5
+         uFM/j5Olkfjuw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hans de Goede <hdegoede@redhat.com>,
@@ -43,12 +43,12 @@ Cc:     Hans de Goede <hdegoede@redhat.com>,
         kvalo@kernel.org, davem@davemloft.net, edumazet@google.com,
         kuba@kernel.org, pabeni@redhat.com, benjamin.berg@intel.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 12/13] wifi: iwlwifi: dvm: Fix memcpy: detected field-spanning write backtrace
-Date:   Thu,  4 May 2023 15:51:29 -0400
-Message-Id: <20230504195132.3808946-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 17/18] wifi: iwlwifi: dvm: Fix memcpy: detected field-spanning write backtrace
+Date:   Thu,  4 May 2023 15:50:39 -0400
+Message-Id: <20230504195042.3808716-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504195132.3808946-1-sashal@kernel.org>
-References: <20230504195132.3808946-1-sashal@kernel.org>
+In-Reply-To: <20230504195042.3808716-1-sashal@kernel.org>
+References: <20230504195042.3808716-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -98,10 +98,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/sta.c b/drivers/net/wireless/intel/iwlwifi/dvm/sta.c
-index de6ec9b7ace45..f30bac02d32ce 100644
+index 51158edce15b0..f30fdbedd7172 100644
 --- a/drivers/net/wireless/intel/iwlwifi/dvm/sta.c
 +++ b/drivers/net/wireless/intel/iwlwifi/dvm/sta.c
-@@ -1101,6 +1101,7 @@ static int iwlagn_send_sta_key(struct iwl_priv *priv,
+@@ -1086,6 +1086,7 @@ static int iwlagn_send_sta_key(struct iwl_priv *priv,
  {
  	__le16 key_flags;
  	struct iwl_addsta_cmd sta_cmd;
@@ -109,7 +109,7 @@ index de6ec9b7ace45..f30bac02d32ce 100644
  	int i;
  
  	spin_lock_bh(&priv->sta_lock);
-@@ -1120,7 +1121,9 @@ static int iwlagn_send_sta_key(struct iwl_priv *priv,
+@@ -1105,7 +1106,9 @@ static int iwlagn_send_sta_key(struct iwl_priv *priv,
  		sta_cmd.key.tkip_rx_tsc_byte2 = tkip_iv32;
  		for (i = 0; i < 5; i++)
  			sta_cmd.key.tkip_rx_ttak[i] = cpu_to_le16(tkip_p1k[i]);
