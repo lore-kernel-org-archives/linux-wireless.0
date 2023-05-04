@@ -2,102 +2,115 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3F28C7EE21
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:51:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BCCBC7EE2A
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:51:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231570AbjEDTvN (ORCPT
+        id S231678AbjEDTvh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 15:51:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58414 "EHLO
+        Thu, 4 May 2023 15:51:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231651AbjEDTuW (ORCPT
+        with ESMTP id S231689AbjEDTuZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 15:50:22 -0400
-Received: from mail-ej1-x630.google.com (mail-ej1-x630.google.com [IPv6:2a00:1450:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14551150C5
-        for <linux-wireless@vger.kernel.org>; Thu,  4 May 2023 12:46:41 -0700 (PDT)
-Received: by mail-ej1-x630.google.com with SMTP id a640c23a62f3a-965ab8ed1fcso159718266b.2
-        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2023 12:46:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20221208; t=1683229543; x=1685821543;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eyTt7tGov3iBmFi/kzGDUemFQGYK+SpkwEhsD2aEmi8=;
-        b=gpq2ciqVx8BSdPLw5JYIFMR5xyKVU2T0OpoSV1meZuIwNxp0A71GNHyqkmz6aQTruM
-         cR4XpcLsBzFm6+2laIVTivInHfwAgcTYzomzSSXUg3ZlsF3V1yQ9sco9x7JXKPQRbXFW
-         ul5orePYQy5eNhaDjfa7ztld38+QLhBB1nc2PLKYoOMAe1nhVLWmkWHlWYXYJrbaQFAn
-         bWP32gi6i+5cQGfMv3StlnYzqbu++M1c7WdLj/qHPU2d1eGz54RKr5rai1SEQK3zGsBf
-         tC0VRraulEsU0SYpqoFcgl/eQJOabISeFa6KW6Zqo7a+ty1gLh6i4cmF+dWj00vln1Io
-         9qmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683229543; x=1685821543;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eyTt7tGov3iBmFi/kzGDUemFQGYK+SpkwEhsD2aEmi8=;
-        b=Y/19IWa841/+gCCYk8RBJB5HUH2Q4+2b5KCYXYGlAasuaiSxgabwqo4uA2652f9vwT
-         PhgpPbLEVE2W8w0CSNPXq264yARpkschnWm+MWRONgiRT9yMVdpNrvf4arjf16z+r0gg
-         Ig76EErHJAkvSEJOazqHdEB9Nw+gUm8FW0TxzabUkaUZMX8cTZhGkFlYgPSFbqVM7uV5
-         L+iPa8cFmvX+bYs16mztr2lt/SIMembrO1qvVWeo2gCHfSui4SibQw7hxYifEV2pa46x
-         6KrK3+jmYRN3ftUoHg0AfsLKldnT8r8ELh9KCrM7xHgum8nrstLIp8jbePs8/kz5c+vC
-         KRmQ==
-X-Gm-Message-State: AC+VfDzALSTqOF3ctyOiPZMYyUJyTB4p3KIKbXhV1Xns0tt9yhP7kZ8Z
-        FUrkLoHtTeCF+tnURVdGASNrPVCUXI759CXvEPl86dEioUk=
-X-Google-Smtp-Source: ACHHUZ6mBoHkh+nEEksxOImtonU0rw1s8jW9oaV7pdGgVDhXzYwdVIhAnZGQd/8EVx8Rv3qsZRWrRAQjNeAWamGkdfo=
-X-Received: by 2002:a17:907:6d0e:b0:94b:4a4:2836 with SMTP id
- sa14-20020a1709076d0e00b0094b04a42836mr7087927ejc.69.1683229542539; Thu, 04
- May 2023 12:45:42 -0700 (PDT)
+        Thu, 4 May 2023 15:50:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63EA4E9;
+        Thu,  4 May 2023 12:46:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C6D9A63784;
+        Thu,  4 May 2023 19:46:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F17FEC4339C;
+        Thu,  4 May 2023 19:46:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683229601;
+        bh=E09OPDJakFHUoshra7yx3X6CHK/D1rA9n/PZPQs5DXk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Kjs33T3QYMt+XSi4jmt4uQbnWjc28vfwzJPI6auyB8kgbX+xfiS9f/57u63F5PCF8
+         7WebQ0C55RgXKoM0pDtP7zcR4NfkPOwtgBU1DfAjqSjp4AwZaIfuYEcPUzuXtsnl6s
+         K83c0Q4EjsPY2lkAX9ZSEU0rTnh4tvCUMqoV1+h2+M7fabBt2UofUCaWvohL+PyZnH
+         58HVgoBtl4qGrg1t+TJA2MsDNOZV/o928H22xjqQqHBjHq4Pw4kQUTkfkW2haJussd
+         jxlvwhV93qhZVVj13bCxTT+UoS7mCya9JY1rzVFW5DCAXAxLyPtYIqqyeCRpV4FtN5
+         JVXrEGJQG/Atw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Hector Martin <marcan@marcan.st>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
+        aspriel@gmail.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        ian.lin@infineon.com, chi-hsien.lin@infineon.com,
+        wright.feng@cypress.com, hdegoede@redhat.com,
+        prasanna.kerekoppa@cypress.com, ramesh.rangavittal@infineon.com,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 04/49] wifi: brcmfmac: cfg80211: Pass the PMK in binary instead of hex
+Date:   Thu,  4 May 2023 15:45:41 -0400
+Message-Id: <20230504194626.3807438-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230504194626.3807438-1-sashal@kernel.org>
+References: <20230504194626.3807438-1-sashal@kernel.org>
 MIME-Version: 1.0
-References: <72a8eeb1-c91c-80a7-5a09-1b7963e0996b@lwfinger.net>
- <5930608.lOV4Wx5bFT@jernej-laptop> <813d74b8-6d9f-c7b0-40b4-c661fca13002@lwfinger.net>
-In-Reply-To: <813d74b8-6d9f-c7b0-40b4-c661fca13002@lwfinger.net>
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date:   Thu, 4 May 2023 21:45:31 +0200
-Message-ID: <CAFBinCB3xnCrLvEvqsFMQuDxL+xC9tkxnwubfC+xEMP3-ZXqSg@mail.gmail.com>
-Subject: Re: Driver for rtw8723ds
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     =?UTF-8?Q?Jernej_=C5=A0krabec?= <jernej.skrabec@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Larry,
+From: Hector Martin <marcan@marcan.st>
 
-On Thu, May 4, 2023 at 9:25=E2=80=AFPM Larry Finger <Larry.Finger@lwfinger.=
-net> wrote:
-[...]
-> > Can you ask that user to test following commits?
-> > https://github.com/xdarklight/linux/commit/
-> > 3866a7a3702f7f24557f2c065b7d4088f7027466
-> > https://github.com/xdarklight/linux/commit/
-> > 66fd078556a6bf246337270b2e91d73c079fce2d
-> >
-> > Patches are trivial, but some testing needs to be done to confirm the d=
-river
-> > actually works as intended.
->
-> Jernej,
->
-> The user needs the rtw8723ds driver - the SDIO equivalent of rtw8723du.c =
-that is
-> used by the USB device. The riscv changes may be needed, but we are not q=
-uite
-> that far yet.
-Strange, can you please elaborate what you are seeing in terms of riscv?
-The two commits that Jernej shared are for an update to rtw8723d.c [0]
-and the addition of a rtw8723ds driver [1]. None of these mentions
-riscv (at least that's what my tired eyes are seeing today).
+[ Upstream commit 89b89e52153fda2733562776c7c9d9d3ebf8dd6d ]
 
+Apparently the hex passphrase mechanism does not work on newer
+chips/firmware (e.g. BCM4387). It seems there was a simple way of
+passing it in binary all along, so use that and avoid the hexification.
 
-Best regards,
-Martin
+OpenBSD has been doing it like this from the beginning, so this should
+work on all chips.
 
+Also clear the structure before setting the PMK. This was leaking
+uninitialized stack contents to the device.
 
-[0] https://github.com/xdarklight/linux/commit/3866a7a3702f7f24557f2c065b7d=
-4088f7027466
-[1] https://github.com/xdarklight/linux/commit/66fd078556a6bf246337270b2e91=
-d73c079fce2d
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Hector Martin <marcan@marcan.st>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230214092423.15175-6-marcan@marcan.st
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ea8409e0e70e7..28e3fbd09fed9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1351,13 +1351,14 @@ static int brcmf_set_pmk(struct brcmf_if *ifp, const u8 *pmk_data, u16 pmk_len)
+ {
+ 	struct brcmf_pub *drvr = ifp->drvr;
+ 	struct brcmf_wsec_pmk_le pmk;
+-	int i, err;
++	int err;
++
++	memset(&pmk, 0, sizeof(pmk));
+ 
+-	/* convert to firmware key format */
+-	pmk.key_len = cpu_to_le16(pmk_len << 1);
+-	pmk.flags = cpu_to_le16(BRCMF_WSEC_PASSPHRASE);
+-	for (i = 0; i < pmk_len; i++)
+-		snprintf(&pmk.key[2 * i], 3, "%02x", pmk_data[i]);
++	/* pass pmk directly */
++	pmk.key_len = cpu_to_le16(pmk_len);
++	pmk.flags = cpu_to_le16(0);
++	memcpy(pmk.key, pmk_data, pmk_len);
+ 
+ 	/* store psk in firmware */
+ 	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_WSEC_PMK,
+-- 
+2.39.2
+
