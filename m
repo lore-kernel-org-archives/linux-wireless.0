@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8712DC7EE2A
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:37:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6D0AC7EE21
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:46:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229918AbjEDUg7 (ORCPT
+        id S230322AbjEDUqY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 16:36:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53666 "EHLO
+        Thu, 4 May 2023 16:46:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229830AbjEDUg2 (ORCPT
+        with ESMTP id S229649AbjEDUqD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 16:36:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C628A265;
-        Thu,  4 May 2023 13:29:07 -0700 (PDT)
+        Thu, 4 May 2023 16:46:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2CF31634F;
+        Thu,  4 May 2023 13:44:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 591856384A;
-        Thu,  4 May 2023 19:50:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86230C433EF;
-        Thu,  4 May 2023 19:50:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 63137637BC;
+        Thu,  4 May 2023 19:48:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76662C433D2;
+        Thu,  4 May 2023 19:48:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229846;
-        bh=jg+151UE/GjhHGoYwe4MeGB71DMERPIQxroVZJItYtU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=kX1afn/gP3VQqZFw1hNLDafTVK4x1qS28IenUBc6U/wervOPzMgqQ/rLN0U2d02Pc
-         qhdWUfifCU7Xkq0C+dNWqa3pUAwGfaawaqwPWIKdUHXX++3HRH3BwS/MhepAExedrE
-         3KwIc4+wLXHUy0lhXg5zupM7k3bdNUcuTUVCSFd0iT3DbLjoC+Mx7Pz/Zq7yCUQrRo
-         KDizzb/0LcYXZeDvKiFcY1wUEQ013U+syRwkLo/Fr+vdEsF3GctV9HsgK9FAUSECcd
-         nCYDD+O+HL6YmEWx7LkcjUQnvipBp/ZuxJ+AeGtPPDOCLjyUGhEKZF5ToIgCO+uSaY
-         TF2F+cyqJzyrw==
+        s=k20201202; t=1683229713;
+        bh=C2j/AT/nP4s4wQkqsrksdlFglKDmaSdw3XqGBuSGaZY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=CfCgddr9Dk5kdNpAHO6Hiw1Lww9nDbIAgnItVf+D4aVk5afiUjL535ZHfestWC3bW
+         HBwW0XfViD316m33waWZuASpFBmxvUX9oBfh7w9TGkuil42mhyfuVmweNzyNao7cVu
+         0hjNR1vYzZYQrEgSomMo/JYDD8peMX1RXCpmJssLiSqFIIKBhoJ1Am7RROyo4Yvg6J
+         EwS6eca/MuJR/FzeTnKU8pvgHAQ/g1CH89zbBTrdXK+XFqajOg2V+soD5hBfZoy2g2
+         1XKqUbCLm4R2I8Flih+xO1hFuNT/TRClw4ujuNFilbtUQTmOWXDCJa1GiEKfoBjm1w
+         8mUD1hp3iPGYg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hector Martin <marcan@marcan.st>,
@@ -42,15 +42,18 @@ Cc:     Hector Martin <marcan@marcan.st>,
         aspriel@gmail.com, franky.lin@broadcom.com,
         hante.meuleman@broadcom.com, davem@davemloft.net,
         edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        chi-hsien.lin@infineon.com, ian.lin@infineon.com,
-        wright.feng@cypress.com, prasanna.kerekoppa@cypress.com,
+        ian.lin@infineon.com, chi-hsien.lin@infineon.com,
+        wright.feng@cypress.com, hdegoede@redhat.com,
+        wataru.gohda@cypress.com, prasanna.kerekoppa@cypress.com,
         ramesh.rangavittal@infineon.com, linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         SHA-cyfmac-dev-list@infineon.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 01/18] wifi: brcmfmac: cfg80211: Pass the PMK in binary instead of hex
-Date:   Thu,  4 May 2023 15:50:23 -0400
-Message-Id: <20230504195042.3808716-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 03/30] wifi: brcmfmac: cfg80211: Pass the PMK in binary instead of hex
+Date:   Thu,  4 May 2023 15:47:56 -0400
+Message-Id: <20230504194824.3808028-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230504194824.3808028-1-sashal@kernel.org>
+References: <20230504194824.3808028-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -84,10 +87,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index cd146bbca670b..b5320fa2c22c3 100644
+index fc622e6b329a3..5f55abf3bb6df 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1269,13 +1269,14 @@ static int brcmf_set_pmk(struct brcmf_if *ifp, const u8 *pmk_data, u16 pmk_len)
+@@ -1350,13 +1350,14 @@ static int brcmf_set_pmk(struct brcmf_if *ifp, const u8 *pmk_data, u16 pmk_len)
  {
  	struct brcmf_pub *drvr = ifp->drvr;
  	struct brcmf_wsec_pmk_le pmk;
