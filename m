@@ -2,48 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2298AC7EE2C
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:57:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF985C7EE22
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:57:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232065AbjEDT5K (ORCPT
+        id S232064AbjEDT5M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 15:57:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43534 "EHLO
+        Thu, 4 May 2023 15:57:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232635AbjEDT4Z (ORCPT
+        with ESMTP id S232578AbjEDT4S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 15:56:25 -0400
+        Thu, 4 May 2023 15:56:18 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1819132A0;
-        Thu,  4 May 2023 12:49:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C50CD1CFFA;
+        Thu,  4 May 2023 12:49:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 645AE63819;
-        Thu,  4 May 2023 19:49:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 753F6C433A0;
-        Thu,  4 May 2023 19:49:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 07493637DA;
+        Thu,  4 May 2023 19:49:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2509C433EF;
+        Thu,  4 May 2023 19:49:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229767;
-        bh=v/QX8/J2LMzBPmGWzpe+0L0cIhMGU8UepbOnexClgAQ=;
+        s=k20201202; t=1683229754;
+        bh=Sfz53hAfpRP2p9DUZCQilqFtWnht+i6DAGLC3TT+rd0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iAoYV35FRvOu5/ICGWsMQ9KvhXvi4fGE7e4WgvDKvASR2ETb+nbWH0G24aYdRBaK3
-         DYA3DiAAQmTjzYa4dz6gZuQjzsFSjawfgm8GxjUvZ32X+RwgHEccNUFp1ezJljihZB
-         /HCIAttd1X5hDUuF1a4Y+GJNFCdnf0i5t08eyQIFaB7h8gDNmY5KYTSXrFyh9t6JjK
-         UQJjQ3IHOR8ZXPMCRqFg5ioHFDBP5hug+J0U98lA9wBi2d5ogMNavaybmr9nmu9Mnc
-         Kz3Q/TEAISYC7O9wOc++m8BxB9Aaky82Zg68HuSKAV3jdp6syOl/kCYpnAfC0bdw0f
-         +Mm5EInbxc/lQ==
+        b=Pa8uWVJcPTIyEKPGszxSxtLU1rfvItpgPdW1O4NDvlaKhPHG75P+Vxy/7fWtsziXL
+         CgyACHsB+j5FSxaMI5dq8UxeV2VlMNuzd98wXW78YNX6FlGn5MLghigGNYGp1y0/FZ
+         9C+znqn0jZVK9c0ybYVcxDcVTHIHIXDPxjyDmuJbpkXvt568L89A9rUQdI3CJb0jjv
+         XqNmETRXvniKmYb0SJ0vWoqGeOlH0Wq+I5OtJbOO9RvbhA+HPNjU8cVvfVxMfMVYRO
+         6ZbA3XwQE4gaFabgX2JIvH6ejMZATXgaNV4UIeKftYDNdzQYl9cwi1f0wPxsNe0VNb
+         Ay533lD7oIDhg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nagarajan Maran <quic_nmaran@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
+Cc:     Daniel Gabay <daniel.gabay@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, ath11k@lists.infradead.org,
+        pabeni@redhat.com, mukesh.sisodiya@intel.com,
+        yaara.baruch@intel.com, golan.ben.ami@intel.com,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 25/30] wifi: ath11k: Fix SKB corruption in REO destination ring
-Date:   Thu,  4 May 2023 15:48:18 -0400
-Message-Id: <20230504194824.3808028-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 21/30] wifi: iwlwifi: pcie: fix possible NULL pointer dereference
+Date:   Thu,  4 May 2023 15:48:14 -0400
+Message-Id: <20230504194824.3808028-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230504194824.3808028-1-sashal@kernel.org>
 References: <20230504194824.3808028-1-sashal@kernel.org>
@@ -55,78 +57,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nagarajan Maran <quic_nmaran@quicinc.com>
+From: Daniel Gabay <daniel.gabay@intel.com>
 
-[ Upstream commit f9fff67d2d7ca6fa8066132003a3deef654c55b1 ]
+[ Upstream commit b655b9a9f8467684cfa8906713d33b71ea8c8f54 ]
 
-While running traffics for a long time, randomly an RX descriptor
-filled with value "0" from REO destination ring is received.
-This descriptor which is invalid causes the wrong SKB (SKB stored in
-the IDR lookup with buffer id "0") to be fetched which in turn
-causes SKB memory corruption issue and the same leads to crash
-after some time.
+It is possible that iwl_pci_probe() will fail and free the trans,
+then afterwards iwl_pci_remove() will be called and crash by trying
+to access trans which is already freed, fix it.
 
-Changed the start id for idr allocation to "1" and the buffer id "0"
-is reserved for error validation. Introduced Sanity check to validate
-the descriptor, before processing the SKB.
+iwlwifi 0000:01:00.0: Detected crf-id 0xa5a5a5a2, cnv-id 0xa5a5a5a2
+		      wfpm id 0xa5a5a5a2
+iwlwifi 0000:01:00.0: Can't find a correct rfid for crf id 0x5a2
+...
+BUG: kernel NULL pointer dereference, address: 0000000000000028
+...
+RIP: 0010:iwl_pci_remove+0x12/0x30 [iwlwifi]
+pci_device_remove+0x3e/0xb0
+device_release_driver_internal+0x103/0x1f0
+driver_detach+0x4c/0x90
+bus_remove_driver+0x5c/0xd0
+driver_unregister+0x31/0x50
+pci_unregister_driver+0x40/0x90
+iwl_pci_unregister_driver+0x15/0x20 [iwlwifi]
+__exit_compat+0x9/0x98 [iwlwifi]
+__x64_sys_delete_module+0x147/0x260
 
-Crash Signature :
-
-Unable to handle kernel paging request at virtual address 3f004900
-PC points to "b15_dma_inv_range+0x30/0x50"
-LR points to "dma_cache_maint_page+0x8c/0x128".
-The Backtrace obtained is as follows:
-[<8031716c>] (b15_dma_inv_range) from [<80313a4c>] (dma_cache_maint_page+0x8c/0x128)
-[<80313a4c>] (dma_cache_maint_page) from [<80313b90>] (__dma_page_dev_to_cpu+0x28/0xcc)
-[<80313b90>] (__dma_page_dev_to_cpu) from [<7fb5dd68>] (ath11k_dp_process_rx+0x1e8/0x4a4 [ath11k])
-[<7fb5dd68>] (ath11k_dp_process_rx [ath11k]) from [<7fb53c20>] (ath11k_dp_service_srng+0xb0/0x2ac [ath11k])
-[<7fb53c20>] (ath11k_dp_service_srng [ath11k]) from [<7f67bba4>] (ath11k_pci_ext_grp_napi_poll+0x1c/0x78 [ath11k_pci])
-[<7f67bba4>] (ath11k_pci_ext_grp_napi_poll [ath11k_pci]) from [<807d5cf4>] (__napi_poll+0x28/0xb8)
-[<807d5cf4>] (__napi_poll) from [<807d5f28>] (net_rx_action+0xf0/0x280)
-[<807d5f28>] (net_rx_action) from [<80302148>] (__do_softirq+0xd0/0x280)
-[<80302148>] (__do_softirq) from [<80320408>] (irq_exit+0x74/0xd4)
-[<80320408>] (irq_exit) from [<803638a4>] (__handle_domain_irq+0x90/0xb4)
-[<803638a4>] (__handle_domain_irq) from [<805bedec>] (gic_handle_irq+0x58/0x90)
-[<805bedec>] (gic_handle_irq) from [<80301a78>] (__irq_svc+0x58/0x8c)
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230403191533.28114-1-quic_nmaran@quicinc.com
+Signed-off-by: Daniel Gabay <daniel.gabay@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Link: https://lore.kernel.org/r/20230413213309.082f6e21341b.I0db21d7fa9a828d571ca886713bd0b5d0b6e1e5c@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/dp_rx.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 3c64d33d0133b..357abd87d5491 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -354,10 +354,10 @@ int ath11k_dp_rxbufs_replenish(struct ath11k_base *ab, int mac_id,
- 			goto fail_free_skb;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 3b974388d834d..5d324d64c8799 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1380,6 +1380,9 @@ static void iwl_pci_remove(struct pci_dev *pdev)
+ {
+ 	struct iwl_trans *trans = pci_get_drvdata(pdev);
  
- 		spin_lock_bh(&rx_ring->idr_lock);
--		buf_id = idr_alloc(&rx_ring->bufs_idr, skb, 0,
--				   rx_ring->bufs_max * 3, GFP_ATOMIC);
-+		buf_id = idr_alloc(&rx_ring->bufs_idr, skb, 1,
-+				   (rx_ring->bufs_max * 3) + 1, GFP_ATOMIC);
- 		spin_unlock_bh(&rx_ring->idr_lock);
--		if (buf_id < 0)
-+		if (buf_id <= 0)
- 			goto fail_dma_unmap;
- 
- 		desc = ath11k_hal_srng_src_get_next_entry(ab, srng);
-@@ -2602,6 +2602,9 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
- 				   cookie);
- 		mac_id = FIELD_GET(DP_RXDMA_BUF_COOKIE_PDEV_ID, cookie);
- 
-+		if (unlikely(buf_id == 0))
-+			continue;
++	if (!trans)
++		return;
 +
- 		ar = ab->pdevs[mac_id].ar;
- 		rx_ring = &ar->dp.rx_refill_buf_ring;
- 		spin_lock_bh(&rx_ring->idr_lock);
+ 	iwl_drv_stop(trans->drv);
+ 
+ 	iwl_trans_pcie_free(trans);
 -- 
 2.39.2
 
