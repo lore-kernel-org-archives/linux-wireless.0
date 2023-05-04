@@ -2,52 +2,53 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47888C7EE22
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A2BC7EE21
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:49:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231316AbjEDTs7 (ORCPT
+        id S231298AbjEDTtU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 15:48:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48512 "EHLO
+        Thu, 4 May 2023 15:49:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231272AbjEDTsC (ORCPT
+        with ESMTP id S231224AbjEDTsW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 15:48:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1669511DB3;
-        Thu,  4 May 2023 12:45:27 -0700 (PDT)
+        Thu, 4 May 2023 15:48:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B2A711601;
+        Thu,  4 May 2023 12:45:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 981AA63733;
-        Thu,  4 May 2023 19:43:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D8FFC4331E;
-        Thu,  4 May 2023 19:43:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D557663774;
+        Thu,  4 May 2023 19:45:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCFB7C433EF;
+        Thu,  4 May 2023 19:45:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229433;
-        bh=xU5+GS7Z0ZOvuzry9gq4roNZWabzqWYxzl3qKvzYpew=;
+        s=k20201202; t=1683229534;
+        bh=HuACdH04/SnLKjru+SlGem+Rq1yUiRQJ7uVm4GqiOps=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=a7b4sj4xXhZ5+eYZPEJQz6+D1isnmoaGm2xsUtumGSaB2kkGz3RM2PovuEtDFctgo
-         N1HM3eVfAc0vJOkZxT3RF39s2CwxSt1M7V29kSMOZB+PDh99plSTDKFKvuzoV0D82r
-         n1EZh7QfGGLxJuHH7W5fGAgAoc/Kba1fJ//lUK07WPjvP6OcvtAOCenZjAmj5oTCYS
-         9CLV+VSnnfH7gFyp0Vg8HYdLgh0+xzvoloLIOcdcjfWG+8Z1OZ8lXUlZsLhJuLT0pc
-         XoRP2k4MvVOHVzcSVCo/iqNVixy5a0p4xBQbKJG7NzhWHuWqFQPPm6bL8e6OEK715L
-         IhlPYvmEN+4qA==
+        b=SXd7j9cV1/kKTVQTKpCjPCitBeCZzmrSMm9awBoGKw9HYL1eEsAFmpJ8wWGQsWVsj
+         pi+TphSnuZKIFaLBgMmkX1ynQHrVegJ9KcL+M+Lw0ESzvoHhdMMCJvkFw8Tfg2wxht
+         T1Me6VDFrgpigFQnekeGYHkNHUxwiBsOLbTLvkPECW7Sv5SJubpmXp8lfg50vlz/Ue
+         B71PkLrYJ9oyscjanhSA+Xxl9co6zO+RzoiwcRpdCrY5dtmzc14s5HcR/HgV7le/wC
+         BNaIXlZLwcAppDWpBjNlgxi4tZt97IcJAFK+eyYNv/HL4bI3ina8iUasOW3yRxWjjI
+         qZvX1/fav4HMg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        tony0620emma@gmail.com, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 47/59] wifi: rtw88: Fix memory leak in rtw88_usb
-Date:   Thu,  4 May 2023 15:41:30 -0400
-Message-Id: <20230504194142.3805425-47-sashal@kernel.org>
+Cc:     Daniel Gabay <daniel.gabay@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, mukesh.sisodiya@intel.com,
+        yaara.baruch@intel.com, golan.ben.ami@intel.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 31/53] wifi: iwlwifi: pcie: fix possible NULL pointer dereference
+Date:   Thu,  4 May 2023 15:43:51 -0400
+Message-Id: <20230504194413.3806354-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194142.3805425-1-sashal@kernel.org>
-References: <20230504194142.3805425-1-sashal@kernel.org>
+In-Reply-To: <20230504194413.3806354-1-sashal@kernel.org>
+References: <20230504194413.3806354-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -56,64 +57,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+From: Daniel Gabay <daniel.gabay@intel.com>
 
-[ Upstream commit 59a3a312009723e3e5082899655fdcc420e2b47a ]
+[ Upstream commit b655b9a9f8467684cfa8906713d33b71ea8c8f54 ]
 
-Kmemleak shows the following leak arising from routine in the usb
-probe routine:
+It is possible that iwl_pci_probe() will fail and free the trans,
+then afterwards iwl_pci_remove() will be called and crash by trying
+to access trans which is already freed, fix it.
 
-unreferenced object 0xffff895cb29bba00 (size 512):
-  comm "(udev-worker)", pid 534, jiffies 4294903932 (age 102751.088s)
-  hex dump (first 32 bytes):
-    77 30 30 30 00 00 00 00 02 2f 2d 2b 30 00 00 00  w000...../-+0...
-    02 00 2a 28 00 00 00 00 ff 55 ff ff ff 00 00 00  ..*(.....U......
-  backtrace:
-    [<ffffffff9265fa36>] kmalloc_trace+0x26/0x90
-    [<ffffffffc17eec41>] rtw_usb_probe+0x2f1/0x680 [rtw_usb]
-    [<ffffffffc03e19fd>] usb_probe_interface+0xdd/0x2e0 [usbcore]
-    [<ffffffff92b4f2fe>] really_probe+0x18e/0x3d0
-    [<ffffffff92b4f5b8>] __driver_probe_device+0x78/0x160
-    [<ffffffff92b4f6bf>] driver_probe_device+0x1f/0x90
-    [<ffffffff92b4f8df>] __driver_attach+0xbf/0x1b0
-    [<ffffffff92b4d350>] bus_for_each_dev+0x70/0xc0
-    [<ffffffff92b4e51e>] bus_add_driver+0x10e/0x210
-    [<ffffffff92b50935>] driver_register+0x55/0xf0
-    [<ffffffffc03e0708>] usb_register_driver+0x88/0x140 [usbcore]
-    [<ffffffff92401153>] do_one_initcall+0x43/0x210
-    [<ffffffff9254f42a>] do_init_module+0x4a/0x200
-    [<ffffffff92551d1c>] __do_sys_finit_module+0xac/0x120
-    [<ffffffff92ee6626>] do_syscall_64+0x56/0x80
-    [<ffffffff9300006a>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
+iwlwifi 0000:01:00.0: Detected crf-id 0xa5a5a5a2, cnv-id 0xa5a5a5a2
+		      wfpm id 0xa5a5a5a2
+iwlwifi 0000:01:00.0: Can't find a correct rfid for crf id 0x5a2
+...
+BUG: kernel NULL pointer dereference, address: 0000000000000028
+...
+RIP: 0010:iwl_pci_remove+0x12/0x30 [iwlwifi]
+pci_device_remove+0x3e/0xb0
+device_release_driver_internal+0x103/0x1f0
+driver_detach+0x4c/0x90
+bus_remove_driver+0x5c/0xd0
+driver_unregister+0x31/0x50
+pci_unregister_driver+0x40/0x90
+iwl_pci_unregister_driver+0x15/0x20 [iwlwifi]
+__exit_compat+0x9/0x98 [iwlwifi]
+__x64_sys_delete_module+0x147/0x260
 
-The leak was verified to be real by unloading the driver, which resulted
-in a dangling pointer to the allocation.
-
-The allocated memory is freed in rtw_usb_intf_deinit().
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20230417160331.23071-1-Larry.Finger@lwfinger.net
+Signed-off-by: Daniel Gabay <daniel.gabay@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Link: https://lore.kernel.org/r/20230413213309.082f6e21341b.I0db21d7fa9a828d571ca886713bd0b5d0b6e1e5c@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/usb.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 68e1b782d1992..05c7326443614 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -780,6 +780,7 @@ static void rtw_usb_intf_deinit(struct rtw_dev *rtwdev,
- 	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 99768d6a60322..49e8a27ecce54 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1699,6 +1699,9 @@ static void iwl_pci_remove(struct pci_dev *pdev)
+ {
+ 	struct iwl_trans *trans = pci_get_drvdata(pdev);
  
- 	usb_put_dev(rtwusb->udev);
-+	kfree(rtwusb->usb_data);
- 	usb_set_intfdata(intf, NULL);
- }
++	if (!trans)
++		return;
++
+ 	iwl_drv_stop(trans->drv);
  
+ 	iwl_trans_pcie_free(trans);
 -- 
 2.39.2
 
