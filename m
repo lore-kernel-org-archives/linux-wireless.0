@@ -2,170 +2,120 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B69C2C7EE29
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:11:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C6D5C77B78
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 20:29:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232677AbjEDULN (ORCPT
+        id S231623AbjEDU3M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 16:11:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33950 "EHLO
+        Thu, 4 May 2023 16:29:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233019AbjEDUJ7 (ORCPT
+        with ESMTP id S231585AbjEDU25 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 16:09:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93092901D;
-        Thu,  4 May 2023 12:55:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0924363722;
-        Thu,  4 May 2023 19:43:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9D3EC4339B;
-        Thu,  4 May 2023 19:43:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229411;
-        bh=mmm9lHBhX+OdRGdo5vBJXE3H0w3wBS8JU5CFAfWiQKQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=t3pcpCBU/WpdrG39q5JpugdmYwQchm+lNWenGxJS9+Ofg3IXEppStTAVRW6SZL00U
-         uUQwYy7lIhYR94wxiAWzWKhfINc1G/hynX69A/9ngT1XJkVA1Q6oFhA2JOMRBqJPxM
-         cYemZmYrc73dfLJjpK+KDDzzu8bojW9KGcgHlEzf0LH9mmB2nIi9Mx4V2Tr9n4maLS
-         uHveRn6E4dSfWLwyIX2VyaCAkaOwvk67sjL3DB4JgbHokWnHqXIZhwr57QAnV/Ojb3
-         vb9C3EyeKJuTKEsetNGqN2+6hcRou55nbzeYnhucmR+b6gOeW24h9fpWqjY2xMRsUj
-         LP3UkGwsmYDRw==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Harshitha Prem <quic_hprem@quicinc.com>,
-        Nagarajan Maran <quic_nmaran@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 40/59] wifi: ath11k: Ignore frags from uninitialized peer in dp.
-Date:   Thu,  4 May 2023 15:41:23 -0400
-Message-Id: <20230504194142.3805425-40-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194142.3805425-1-sashal@kernel.org>
-References: <20230504194142.3805425-1-sashal@kernel.org>
+        Thu, 4 May 2023 16:28:57 -0400
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A08F113C18
+        for <linux-wireless@vger.kernel.org>; Thu,  4 May 2023 13:15:45 -0700 (PDT)
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-50bcc565280so1433814a12.2
+        for <linux-wireless@vger.kernel.org>; Thu, 04 May 2023 13:15:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683231231; x=1685823231;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Pp4DKZ5YAHesHhUbviZuPUNlVLjAOKynr2fJjbSlD+Y=;
+        b=S0ZppC27z5h47LvSYVUt5y4L+dSGVekzWAXdzmlRZ9a4c6kwHa4bDqzlT6qc8ilArO
+         UjQCXnKIr7jNIY8A/dt7P1+VRvtoiIdgmMzQosugO8IJxvzaLVhunGp1RIAk4q8vf9Av
+         cmT64G3IqFwt8YbGgPcCyXRBOIpc5nJeJWjD/uq9diHkUDkrVD1KU/zJRTk+F3HSVh2m
+         QXGx3y+92NX0U+FdRMuhp3t9H74bBrM1MRoMkUj4E0NvLqs3H3cOT1p4JK/dGjtIfYAd
+         jsHM4F45RedaH6uhPOJlJePVXEJrvekgHZwRNI7krp/4+vcp5XDo8TIXMFysMMZdfY6c
+         6j+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683231231; x=1685823231;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Pp4DKZ5YAHesHhUbviZuPUNlVLjAOKynr2fJjbSlD+Y=;
+        b=Tw0MVKx8XQp5PBzvbUHizS5dtHUlUqeTAYvAThHlLF9ZPoClrIwmx31rThKoYQAH5S
+         oxTxyIgBhxZpnrbbmJwfbPz79Zc7yW5BhXjiJHMrOHA4/3gGL5QAAFHnCe3T+x9yRmEA
+         0drIIYGTwpaWW8aR7Krm+cUIvWAKi7sSaeHY9Rzb1by5M8GR8Uh3uNxlCO5vPGcZMfGz
+         CLmFkh0stG0mMIoeK6yMymku9pUtU65kuU8ZcEPzBUHeycn1p4JGgMmDbZdWTgPyDmnG
+         h3kyboXak3631mXBDCTJJsJaraqyN1PMMAMlMsAGlZn01x16xKgz2fcTHhKqkUn2e7fu
+         agJQ==
+X-Gm-Message-State: AC+VfDyUtnQxySGnomNZ4+wlBOtxQvNPFLfv7WIpgZlRzvL+EPPefQVo
+        j8pkmyg9keTvsZfV9MpLsmU=
+X-Google-Smtp-Source: ACHHUZ4g7oXpcQsaKBaibLepspzWl07Ez4gjkoqyg3I1Y+u6Sg/W8y4K3c5i3jNaS7SI3CvgRiFO2A==
+X-Received: by 2002:a17:907:d09:b0:95e:de82:3895 with SMTP id gn9-20020a1709070d0900b0095ede823895mr96055ejc.22.1683231231127;
+        Thu, 04 May 2023 13:13:51 -0700 (PDT)
+Received: from jernej-laptop.localnet (82-149-1-233.dynamic.telemach.net. [82.149.1.233])
+        by smtp.gmail.com with ESMTPSA id jx27-20020a170907761b00b0096347ef816dsm3873175ejc.64.2023.05.04.13.13.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 May 2023 13:13:50 -0700 (PDT)
+From:   Jernej =?utf-8?B?xaBrcmFiZWM=?= <jernej.skrabec@gmail.com>
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Driver for rtw8723ds
+Date:   Thu, 04 May 2023 22:13:49 +0200
+Message-ID: <2282070.ElGaqSPkdT@jernej-laptop>
+In-Reply-To: <CAFBinCB3xnCrLvEvqsFMQuDxL+xC9tkxnwubfC+xEMP3-ZXqSg@mail.gmail.com>
+References: <72a8eeb1-c91c-80a7-5a09-1b7963e0996b@lwfinger.net>
+ <813d74b8-6d9f-c7b0-40b4-c661fca13002@lwfinger.net>
+ <CAFBinCB3xnCrLvEvqsFMQuDxL+xC9tkxnwubfC+xEMP3-ZXqSg@mail.gmail.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Harshitha Prem <quic_hprem@quicinc.com>
+Dne =C4=8Detrtek, 04. maj 2023 ob 21:45:31 CEST je Martin Blumenstingl napi=
+sal(a):
+> Hi Larry,
+>=20
+> On Thu, May 4, 2023 at 9:25=E2=80=AFPM Larry Finger <Larry.Finger@lwfinge=
+r.net>
+> wrote: [...]
+>=20
+> > > Can you ask that user to test following commits?
+> > > https://github.com/xdarklight/linux/commit/
+> > > 3866a7a3702f7f24557f2c065b7d4088f7027466
+> > > https://github.com/xdarklight/linux/commit/
+> > > 66fd078556a6bf246337270b2e91d73c079fce2d
+> > >=20
+> > > Patches are trivial, but some testing needs to be done to confirm the
+> > > driver actually works as intended.
+> >=20
+> > Jernej,
+> >=20
+> > The user needs the rtw8723ds driver - the SDIO equivalent of rtw8723du.c
+> > that is used by the USB device. The riscv changes may be needed, but we
+> > are not quite that far yet.
+>=20
+> Strange, can you please elaborate what you are seeing in terms of riscv?
+> The two commits that Jernej shared are for an update to rtw8723d.c [0]
+> and the addition of a rtw8723ds driver [1]. None of these mentions
+> riscv (at least that's what my tired eyes are seeing today).
+>=20
+>=20
+> Best regards,
+> Martin
+>=20
+>=20
+> [0]
+> https://github.com/xdarklight/linux/commit/3866a7a3702f7f24557f2c065b7d40=
+88
+> f7027466 [1]
+> https://github.com/xdarklight/linux/commit/66fd078556a6bf246337270b2e91d7=
+3c
+> 079fce2d
 
-[ Upstream commit a06bfb3c9f69f303692cdae87bc0899d2ae8b2a6 ]
+Problem is that my e-mail client split commit links in two parts. If you=20
+combine hashes with rest it opens correct commits. Currently, it opens head=
+ of=20
+your master branch, which is by chance risc-v merge commit.
 
-When max virtual ap interfaces are configured in all the bands with
-ACS and hostapd restart is done every 60s, a crash is observed at
-random times.
-In this certain scenario, a fragmented packet is received for
-self peer, for which rx_tid and rx_frags are not initialized in
-datapath. While handling this fragment, crash is observed as the
-rx_frag list is uninitialised and when we walk in
-ath11k_dp_rx_h_sort_frags, skb null leads to exception.
+Best regards,
+Jernej
 
-To address this, before processing received fragments we check
-dp_setup_done flag is set to ensure that peer has completed its
-dp peer setup for fragment queue, else ignore processing the
-fragments.
-
-Call trace:
-  ath11k_dp_process_rx_err+0x550/0x1084 [ath11k]
-  ath11k_dp_service_srng+0x70/0x370 [ath11k]
-  0xffffffc009693a04
-  __napi_poll+0x30/0xa4
-  net_rx_action+0x118/0x270
-  __do_softirq+0x10c/0x244
-  irq_exit+0x64/0xb4
-  __handle_domain_irq+0x88/0xac
-  gic_handle_irq+0x74/0xbc
-  el1_irq+0xf0/0x1c0
-  arch_cpu_idle+0x10/0x18
-  do_idle+0x104/0x248
-  cpu_startup_entry+0x20/0x64
-  rest_init+0xd0/0xdc
-  arch_call_rest_init+0xc/0x14
-  start_kernel+0x480/0x4b8
-  Code: f9400281 f94066a2 91405021 b94a0023 (f9406401)
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
-Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230403184155.8670-2-quic_nmaran@quicinc.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/ath/ath11k/dp.c    | 4 +++-
- drivers/net/wireless/ath/ath11k/dp_rx.c | 8 ++++++++
- drivers/net/wireless/ath/ath11k/peer.h  | 1 +
- 3 files changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
-index f5156a7fbdd7a..d070bcb3fe247 100644
---- a/drivers/net/wireless/ath/ath11k/dp.c
-+++ b/drivers/net/wireless/ath/ath11k/dp.c
-@@ -36,6 +36,7 @@ void ath11k_dp_peer_cleanup(struct ath11k *ar, int vdev_id, const u8 *addr)
- 	}
- 
- 	ath11k_peer_rx_tid_cleanup(ar, peer);
-+	peer->dp_setup_done = false;
- 	crypto_free_shash(peer->tfm_mmic);
- 	spin_unlock_bh(&ab->base_lock);
- }
-@@ -72,7 +73,8 @@ int ath11k_dp_peer_setup(struct ath11k *ar, int vdev_id, const u8 *addr)
- 	ret = ath11k_peer_rx_frag_setup(ar, addr, vdev_id);
- 	if (ret) {
- 		ath11k_warn(ab, "failed to setup rx defrag context\n");
--		return ret;
-+		tid--;
-+		goto peer_clean;
- 	}
- 
- 	/* TODO: Setup other peer specific resource used in data path */
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index b65a84a882641..294c6fcfa1aa8 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -3138,6 +3138,7 @@ int ath11k_peer_rx_frag_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id
- 	}
- 
- 	peer->tfm_mmic = tfm;
-+	peer->dp_setup_done = true;
- 	spin_unlock_bh(&ab->base_lock);
- 
- 	return 0;
-@@ -3583,6 +3584,13 @@ static int ath11k_dp_rx_frag_h_mpdu(struct ath11k *ar,
- 		ret = -ENOENT;
- 		goto out_unlock;
- 	}
-+	if (!peer->dp_setup_done) {
-+		ath11k_warn(ab, "The peer %pM [%d] has uninitialized datapath\n",
-+			    peer->addr, peer_id);
-+		ret = -ENOENT;
-+		goto out_unlock;
-+	}
-+
- 	rx_tid = &peer->rx_tid[tid];
- 
- 	if ((!skb_queue_empty(&rx_tid->rx_frags) && seqno != rx_tid->cur_sn) ||
-diff --git a/drivers/net/wireless/ath/ath11k/peer.h b/drivers/net/wireless/ath/ath11k/peer.h
-index 6dd17bafe3a0c..9bd385d0a38c9 100644
---- a/drivers/net/wireless/ath/ath11k/peer.h
-+++ b/drivers/net/wireless/ath/ath11k/peer.h
-@@ -35,6 +35,7 @@ struct ath11k_peer {
- 	u16 sec_type;
- 	u16 sec_type_grp;
- 	bool is_authorized;
-+	bool dp_setup_done;
- };
- 
- void ath11k_peer_unmap_event(struct ath11k_base *ab, u16 peer_id);
--- 
-2.39.2
 
