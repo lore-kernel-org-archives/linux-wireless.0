@@ -2,55 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F0A5C7EE21
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 216DDC77B78
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:46:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229945AbjEDTqY (ORCPT
+        id S230506AbjEDTqs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 15:46:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49402 "EHLO
+        Thu, 4 May 2023 15:46:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229916AbjEDTpw (ORCPT
+        with ESMTP id S230179AbjEDTqH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 15:45:52 -0400
+        Thu, 4 May 2023 15:46:07 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6D451492E;
-        Thu,  4 May 2023 12:44:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 655FC17DD0;
+        Thu,  4 May 2023 12:44:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C474A6373E;
-        Thu,  4 May 2023 19:43:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 118F5C4339B;
-        Thu,  4 May 2023 19:43:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6B8276374C;
+        Thu,  4 May 2023 19:44:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5DFBC4339B;
+        Thu,  4 May 2023 19:44:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229416;
-        bh=MJS4dzAVZY1D72hkrMes3j6B2EDrslbNlLubS/o/zaQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BLlQjG263BsbE6scllCxPBc+WPhqR6fw9OU5nUVmQH6+tSJLNj+Hnj34dkZjyy+Ag
-         ZDuq2/OTKoFecYEIIuT9fiQjx1wzarJbT4e/FY0J3pUMzQvQseZutHcp/j8haNRkGu
-         xhbH4v/9RhzFSgkf/oprxrZX2wldcDJUY7THDr5fglcicNDBoZ7gYjoB+j1fN1NuTZ
-         WoZizABj6LFktxYIr9N+DvS7MgfBhANGzzBo3kjjkMId+EkJhS6hQVQfijWbXMYD62
-         50hdYhPfHoRMhgsMEPkUsNs3P+F9P5DyQA04stEc3Ya+1TZhnl+VvsXpg6UIrzQbHR
-         JOYW8SibsbRkg==
+        s=k20201202; t=1683229456;
+        bh=Wn4gTbf57LwpDRCHeR+QJZofpS9uoSncq21OSvW/Kd4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=XI7k44749+yD2bQs49JSEGgUjbXsqsEABh5kA7ASK9VTF5kvgylv3XmRkLM4IZoeb
+         T3xmIxzg21/obfQwcevn7dEQ5AtgunHswFQMrkXf05PO3aj0F5fdoBOr0mLi6mOkfi
+         azE1Pxq+ST4V8Sv6IfXjf8y5Y5hgaXhGXsosfb9Jhfc1tcGFb28iBMnxAS796fuj/3
+         NUUHmZayB6daroyscD3Wep2wfcnEGDPbtXe2MRVoJgt/rj5hMArvC2fcfQCaqkl11x
+         /K0gZAGRORWi5zfJNameqbdX+ATlpuP6COSf491RilRhYjI9l5g87U9P2p0s1M8mGP
+         OGb4SxF332A/Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Reese Russell <git@qrsnap.io>, Felix Fietkau <nbd@nbd.name>,
-        Sasha Levin <sashal@kernel.org>, lorenzo@kernel.org,
-        ryder.lee@mediatek.com, kvalo@kernel.org, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        matthias.bgg@gmail.com, sean.wang@mediatek.com,
-        deren.wu@mediatek.com, sridhar.samudrala@intel.com,
-        gch981213@gmail.com, greearb@candelatech.com,
+Cc:     Kees Cook <keescook@chromium.org>, Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.3 41/59] wifi: mt76: mt7921: add Netgear AXE3000 (A8000) support
-Date:   Thu,  4 May 2023 15:41:24 -0400
-Message-Id: <20230504194142.3805425-41-sashal@kernel.org>
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 01/53] wifi: ath: Silence memcpy run-time false positive warning
+Date:   Thu,  4 May 2023 15:43:21 -0400
+Message-Id: <20230504194413.3806354-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230504194142.3805425-1-sashal@kernel.org>
-References: <20230504194142.3805425-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,43 +55,71 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Reese Russell <git@qrsnap.io>
+From: Kees Cook <keescook@chromium.org>
 
-[ Upstream commit 03eb52dd78cab08f13925aeec8315fbdbcba3253 ]
+[ Upstream commit bfcc8ba45eb87bfaaff900bbad2b87b204899d41 ]
 
-Issue: Though the Netgear AXE3000 (A8000) is based on the mt7921
-chipset because of the unique USB VID:PID combination this device
-does not initialize/register. Thus making it not plug and play.
+The memcpy() in ath_key_config() was attempting to write across
+neighboring struct members in struct ath_keyval. Introduce a wrapping
+struct_group, kv_values, to be the addressable target of the memcpy
+without overflowing an individual member. Silences the false positive
+run-time warning:
 
-Fix: Adds support for the Netgear AXE3000 (A8000) based on the Mediatek
-mt7921au chipset. The method of action is adding the USD VID/PID
-pair to the mt7921u_device_table[] array.
+  memcpy: detected field-spanning write (size 32) of single field "hk.kv_val" at drivers/net/wireless/ath/key.c:506 (size 16)
 
-Notes: A retail sample of the Netgear AXE3000 (A8000) yeilds the following
-from lsusb D 0846:9060 NetGear, Inc. Wireless_Device. This pair
-0846:9060 VID:PID has been reported by other users on Github.
-
-Signed-off-by: Reese Russell <git@qrsnap.io>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Link: https://bbs.archlinux.org/viewtopic.php?id=282254
+Cc: Kalle Valo <kvalo@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20230210054310.never.554-kees@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/usb.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath.h | 12 +++++++-----
+ drivers/net/wireless/ath/key.c |  2 +-
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/usb.c b/drivers/net/wireless/mediatek/mt76/mt7921/usb.c
-index 8fef09ed29c91..a95ec388653c5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/usb.c
-@@ -18,6 +18,9 @@ static const struct usb_device_id mt7921u_device_table[] = {
- 	/* Comfast CF-952AX */
- 	{ USB_DEVICE_AND_INTERFACE_INFO(0x3574, 0x6211, 0xff, 0xff, 0xff),
- 		.driver_info = (kernel_ulong_t)MT7921_FIRMWARE_WM },
-+	/* Netgear, Inc. [A8000,AXE3000] */
-+	{ USB_DEVICE_AND_INTERFACE_INFO(0x0846, 0x9060, 0xff, 0xff, 0xff),
-+		.driver_info = (kernel_ulong_t)MT7921_FIRMWARE_WM },
- 	{ },
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index f083fb9038c36..f02a308a9ffc5 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -96,11 +96,13 @@ struct ath_keyval {
+ 	u8 kv_type;
+ 	u8 kv_pad;
+ 	u16 kv_len;
+-	u8 kv_val[16]; /* TK */
+-	u8 kv_mic[8]; /* Michael MIC key */
+-	u8 kv_txmic[8]; /* Michael MIC TX key (used only if the hardware
+-			 * supports both MIC keys in the same key cache entry;
+-			 * in that case, kv_mic is the RX key) */
++	struct_group(kv_values,
++		u8 kv_val[16]; /* TK */
++		u8 kv_mic[8]; /* Michael MIC key */
++		u8 kv_txmic[8]; /* Michael MIC TX key (used only if the hardware
++				 * supports both MIC keys in the same key cache entry;
++				 * in that case, kv_mic is the RX key) */
++	);
  };
  
+ enum ath_cipher {
+diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
+index 61b59a804e308..b7b61d4f02bae 100644
+--- a/drivers/net/wireless/ath/key.c
++++ b/drivers/net/wireless/ath/key.c
+@@ -503,7 +503,7 @@ int ath_key_config(struct ath_common *common,
+ 
+ 	hk.kv_len = key->keylen;
+ 	if (key->keylen)
+-		memcpy(hk.kv_val, key->key, key->keylen);
++		memcpy(&hk.kv_values, key->key, key->keylen);
+ 
+ 	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+ 		switch (vif->type) {
 -- 
 2.39.2
 
