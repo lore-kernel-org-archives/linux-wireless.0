@@ -2,48 +2,49 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15DB5C7EE3A
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:50:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C3B8C7EE21
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 May 2023 19:50:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231313AbjEDTuc (ORCPT
+        id S231365AbjEDTud (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 May 2023 15:50:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58390 "EHLO
+        Thu, 4 May 2023 15:50:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230185AbjEDTtq (ORCPT
+        with ESMTP id S230516AbjEDTtX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 May 2023 15:49:46 -0400
+        Thu, 4 May 2023 15:49:23 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFBD215EDD;
-        Thu,  4 May 2023 12:46:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B84CA13297;
+        Thu,  4 May 2023 12:45:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 865C46379E;
-        Thu,  4 May 2023 19:46:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4022C433A0;
-        Thu,  4 May 2023 19:46:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 745F263792;
+        Thu,  4 May 2023 19:45:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CFFAC4339B;
+        Thu,  4 May 2023 19:45:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683229563;
-        bh=ANj1/Mdt11UKjqOjZLYLvGkukMF6iBUj/697rQNawaA=;
+        s=k20201202; t=1683229549;
+        bh=DZKU6XSyyuM1gByFJC0vIm3uimmnBCy1jTXJ/4/A0vE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CvkuNqXX5kpWuYgERI1/yvsbFdlCM2eZ6QhRYnn5INWMb8gZ0zGXYpn/HFfgC3afE
-         3KWNepofn1o7WcWBhVFCc9k+LM6aIbKM3qmQWRo5zofbEaMKDdVfyovZnyEK2meQRS
-         WI1Q3962EkqOOXJ6sCJGzyjEqJil2n5O3HpB2FTDioOmhJn/KZKtxlk1kPtZm+4lsD
-         x0Qtr4GRDdVkeY/BKkAdlN7UMBs9OVfE863hp/J67sjCTx6Xiflabdr8+AcOBiLwkE
-         2FgY7i/6DyuedXqH3pH6HnTqPtf3rhw2acqpFku4yQ6W5LqLfMTgzpiZWjs467ijhT
-         sm7hgaRNJmR4g==
+        b=Fj9IioaQ+yfIYw1iF/IkH6gVV9//TJQ9u0sAajytfZuzIZikhMt0vS3azh0y6Ns3W
+         98ivIz2unBVsaL8xhtXp0yco0/B4DmawdyfhDSdZS11qAnVlMeQuMdW9SLuGi8ju0V
+         63xjhnzi6HNLhnUnupRxPM12BwPLu4FX3czi9L/BKbesIgvXWcGuRQtD5leD3Sg24h
+         YkZvZNjtL/oEJLOOVKks0FvCfrKwXwW2gDRtogK6DFC7wYyXkmeQ+eEDOo5kocxt+Z
+         pllHz/GS+5fqScCbAsvaM/f+D2yz1yQA15P5CXJZlfK1iMZjqQ98pj6qR4UrCydMdZ
+         wZgxE8FQ+UkDQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nagarajan Maran <quic_nmaran@quicinc.com>,
+Cc:     Harshitha Prem <quic_hprem@quicinc.com>,
+        Nagarajan Maran <quic_nmaran@quicinc.com>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, ath11k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 40/53] wifi: ath11k: Fix SKB corruption in REO destination ring
-Date:   Thu,  4 May 2023 15:44:00 -0400
-Message-Id: <20230504194413.3806354-40-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.2 36/53] wifi: ath11k: Ignore frags from uninitialized peer in dp.
+Date:   Thu,  4 May 2023 15:43:56 -0400
+Message-Id: <20230504194413.3806354-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230504194413.3806354-1-sashal@kernel.org>
 References: <20230504194413.3806354-1-sashal@kernel.org>
@@ -55,78 +56,116 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nagarajan Maran <quic_nmaran@quicinc.com>
+From: Harshitha Prem <quic_hprem@quicinc.com>
 
-[ Upstream commit f9fff67d2d7ca6fa8066132003a3deef654c55b1 ]
+[ Upstream commit a06bfb3c9f69f303692cdae87bc0899d2ae8b2a6 ]
 
-While running traffics for a long time, randomly an RX descriptor
-filled with value "0" from REO destination ring is received.
-This descriptor which is invalid causes the wrong SKB (SKB stored in
-the IDR lookup with buffer id "0") to be fetched which in turn
-causes SKB memory corruption issue and the same leads to crash
-after some time.
+When max virtual ap interfaces are configured in all the bands with
+ACS and hostapd restart is done every 60s, a crash is observed at
+random times.
+In this certain scenario, a fragmented packet is received for
+self peer, for which rx_tid and rx_frags are not initialized in
+datapath. While handling this fragment, crash is observed as the
+rx_frag list is uninitialised and when we walk in
+ath11k_dp_rx_h_sort_frags, skb null leads to exception.
 
-Changed the start id for idr allocation to "1" and the buffer id "0"
-is reserved for error validation. Introduced Sanity check to validate
-the descriptor, before processing the SKB.
+To address this, before processing received fragments we check
+dp_setup_done flag is set to ensure that peer has completed its
+dp peer setup for fragment queue, else ignore processing the
+fragments.
 
-Crash Signature :
-
-Unable to handle kernel paging request at virtual address 3f004900
-PC points to "b15_dma_inv_range+0x30/0x50"
-LR points to "dma_cache_maint_page+0x8c/0x128".
-The Backtrace obtained is as follows:
-[<8031716c>] (b15_dma_inv_range) from [<80313a4c>] (dma_cache_maint_page+0x8c/0x128)
-[<80313a4c>] (dma_cache_maint_page) from [<80313b90>] (__dma_page_dev_to_cpu+0x28/0xcc)
-[<80313b90>] (__dma_page_dev_to_cpu) from [<7fb5dd68>] (ath11k_dp_process_rx+0x1e8/0x4a4 [ath11k])
-[<7fb5dd68>] (ath11k_dp_process_rx [ath11k]) from [<7fb53c20>] (ath11k_dp_service_srng+0xb0/0x2ac [ath11k])
-[<7fb53c20>] (ath11k_dp_service_srng [ath11k]) from [<7f67bba4>] (ath11k_pci_ext_grp_napi_poll+0x1c/0x78 [ath11k_pci])
-[<7f67bba4>] (ath11k_pci_ext_grp_napi_poll [ath11k_pci]) from [<807d5cf4>] (__napi_poll+0x28/0xb8)
-[<807d5cf4>] (__napi_poll) from [<807d5f28>] (net_rx_action+0xf0/0x280)
-[<807d5f28>] (net_rx_action) from [<80302148>] (__do_softirq+0xd0/0x280)
-[<80302148>] (__do_softirq) from [<80320408>] (irq_exit+0x74/0xd4)
-[<80320408>] (irq_exit) from [<803638a4>] (__handle_domain_irq+0x90/0xb4)
-[<803638a4>] (__handle_domain_irq) from [<805bedec>] (gic_handle_irq+0x58/0x90)
-[<805bedec>] (gic_handle_irq) from [<80301a78>] (__irq_svc+0x58/0x8c)
+Call trace:
+  ath11k_dp_process_rx_err+0x550/0x1084 [ath11k]
+  ath11k_dp_service_srng+0x70/0x370 [ath11k]
+  0xffffffc009693a04
+  __napi_poll+0x30/0xa4
+  net_rx_action+0x118/0x270
+  __do_softirq+0x10c/0x244
+  irq_exit+0x64/0xb4
+  __handle_domain_irq+0x88/0xac
+  gic_handle_irq+0x74/0xbc
+  el1_irq+0xf0/0x1c0
+  arch_cpu_idle+0x10/0x18
+  do_idle+0x104/0x248
+  cpu_startup_entry+0x20/0x64
+  rest_init+0xd0/0xdc
+  arch_call_rest_init+0xc/0x14
+  start_kernel+0x480/0x4b8
+  Code: f9400281 f94066a2 91405021 b94a0023 (f9406401)
 
 Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
+Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
 Signed-off-by: Nagarajan Maran <quic_nmaran@quicinc.com>
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230403191533.28114-1-quic_nmaran@quicinc.com
+Link: https://lore.kernel.org/r/20230403184155.8670-2-quic_nmaran@quicinc.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/dp_rx.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp.c    | 4 +++-
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 8 ++++++++
+ drivers/net/wireless/ath/ath11k/peer.h  | 1 +
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index f5156a7fbdd7a..d070bcb3fe247 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -36,6 +36,7 @@ void ath11k_dp_peer_cleanup(struct ath11k *ar, int vdev_id, const u8 *addr)
+ 	}
+ 
+ 	ath11k_peer_rx_tid_cleanup(ar, peer);
++	peer->dp_setup_done = false;
+ 	crypto_free_shash(peer->tfm_mmic);
+ 	spin_unlock_bh(&ab->base_lock);
+ }
+@@ -72,7 +73,8 @@ int ath11k_dp_peer_setup(struct ath11k *ar, int vdev_id, const u8 *addr)
+ 	ret = ath11k_peer_rx_frag_setup(ar, addr, vdev_id);
+ 	if (ret) {
+ 		ath11k_warn(ab, "failed to setup rx defrag context\n");
+-		return ret;
++		tid--;
++		goto peer_clean;
+ 	}
+ 
+ 	/* TODO: Setup other peer specific resource used in data path */
 diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 1786d83f8f2ed..38be646bc0214 100644
+index e964e1b722871..1786d83f8f2ed 100644
 --- a/drivers/net/wireless/ath/ath11k/dp_rx.c
 +++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -389,10 +389,10 @@ int ath11k_dp_rxbufs_replenish(struct ath11k_base *ab, int mac_id,
- 			goto fail_free_skb;
+@@ -3138,6 +3138,7 @@ int ath11k_peer_rx_frag_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id
+ 	}
  
- 		spin_lock_bh(&rx_ring->idr_lock);
--		buf_id = idr_alloc(&rx_ring->bufs_idr, skb, 0,
--				   rx_ring->bufs_max * 3, GFP_ATOMIC);
-+		buf_id = idr_alloc(&rx_ring->bufs_idr, skb, 1,
-+				   (rx_ring->bufs_max * 3) + 1, GFP_ATOMIC);
- 		spin_unlock_bh(&rx_ring->idr_lock);
--		if (buf_id < 0)
-+		if (buf_id <= 0)
- 			goto fail_dma_unmap;
+ 	peer->tfm_mmic = tfm;
++	peer->dp_setup_done = true;
+ 	spin_unlock_bh(&ab->base_lock);
  
- 		desc = ath11k_hal_srng_src_get_next_entry(ab, srng);
-@@ -2665,6 +2665,9 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
- 				   cookie);
- 		mac_id = FIELD_GET(DP_RXDMA_BUF_COOKIE_PDEV_ID, cookie);
- 
-+		if (unlikely(buf_id == 0))
-+			continue;
+ 	return 0;
+@@ -3583,6 +3584,13 @@ static int ath11k_dp_rx_frag_h_mpdu(struct ath11k *ar,
+ 		ret = -ENOENT;
+ 		goto out_unlock;
+ 	}
++	if (!peer->dp_setup_done) {
++		ath11k_warn(ab, "The peer %pM [%d] has uninitialized datapath\n",
++			    peer->addr, peer_id);
++		ret = -ENOENT;
++		goto out_unlock;
++	}
 +
- 		ar = ab->pdevs[mac_id].ar;
- 		rx_ring = &ar->dp.rx_refill_buf_ring;
- 		spin_lock_bh(&rx_ring->idr_lock);
+ 	rx_tid = &peer->rx_tid[tid];
+ 
+ 	if ((!skb_queue_empty(&rx_tid->rx_frags) && seqno != rx_tid->cur_sn) ||
+diff --git a/drivers/net/wireless/ath/ath11k/peer.h b/drivers/net/wireless/ath/ath11k/peer.h
+index 6dd17bafe3a0c..9bd385d0a38c9 100644
+--- a/drivers/net/wireless/ath/ath11k/peer.h
++++ b/drivers/net/wireless/ath/ath11k/peer.h
+@@ -35,6 +35,7 @@ struct ath11k_peer {
+ 	u16 sec_type;
+ 	u16 sec_type_grp;
+ 	bool is_authorized;
++	bool dp_setup_done;
+ };
+ 
+ void ath11k_peer_unmap_event(struct ath11k_base *ab, u16 peer_id);
 -- 
 2.39.2
 
