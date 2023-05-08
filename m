@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6ADCC7EE32
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 May 2023 08:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF22C77B7F
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 May 2023 08:26:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233687AbjEHIZi (ORCPT
+        id S233765AbjEHIZ5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 May 2023 04:25:38 -0400
+        Mon, 8 May 2023 04:25:57 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233761AbjEHIZT (ORCPT
+        with ESMTP id S233769AbjEHIZX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2023 04:25:19 -0400
+        Mon, 8 May 2023 04:25:23 -0400
 Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 623F81FA98
-        for <linux-wireless@vger.kernel.org>; Mon,  8 May 2023 01:25:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 433F619D5C
+        for <linux-wireless@vger.kernel.org>; Mon,  8 May 2023 01:25:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683534311; x=1715070311;
+  t=1683534319; x=1715070319;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=6Jtaic8REm+deO+U/fDQp+CbQ1yOAQRM0AJVR4jFpPk=;
-  b=lDtnE/gzPC5AjaO2PXp6u2wZdZL/eIQz0tc268C0m7LnzuF+UFiy+ALh
-   ZtNdMWHxWP+aOrkCMGNycsZNgeWh4VUs+XZKeSs2NZjJsG5C3CbDcxyNc
-   nU1qtiEvB94joofbbKAFmknahy3827cUcKtLR+XExQeMVErdv47vES5Px
-   2HRZYS/EvvtteVWTdCPEklN1FHO81+qfc2qcdQcQYyHBmqoO774ozteuM
-   34iQwwxCoQGOTEXbB0uBAQigdynaVpk8GdiyfpFHYm/ozE5mLKezf4yUX
-   cVLlhu2CJicCFBsrLU4DRYov/7qtW0V1yV4W/fkL4zc2mqoMYawJQS+5b
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="329949911"
+  bh=cMwx1kn3P5ygp/EMddgaSnCrovvvDEhJtvgZP5XBy4Y=;
+  b=hYqc2vRPBkwV2tIXgctCqdHnGZdQb542PnzwlvfEy5m1fNXVouzeCyGq
+   pg0/ibmCfunkHtA96ohtW6fIz0g2655BBxlBAQoQRExVuED8KXtbOiz1C
+   oHJX4gi+6XG814u1Uyq126n+tbNJ3DkayzD7j9ivGz+LQgPq5gCYH1oO8
+   QqETdb2YkLpfAYQeitoQtQYAvAM1D3cL9/biaJuuY7FkjSKjyJU+Q9qQI
+   KDL8/OAQarPUaE/hbOaM2AOuQe/ajofukrozBJPZUa14km9jheqvYLWrv
+   63GIJLwR5ol5hTHcykNLhMMuKOTGzFsZIBXnELjo22/5+oCJUCN1mNcsI
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="329949935"
 X-IronPort-AV: E=Sophos;i="5.99,258,1677571200"; 
-   d="scan'208";a="329949911"
+   d="scan'208";a="329949935"
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:09 -0700
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:13 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="767982675"
+X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="767982691"
 X-IronPort-AV: E=Sophos;i="5.99,258,1677571200"; 
-   d="scan'208";a="767982675"
+   d="scan'208";a="767982691"
 Received: from shemert-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.224.248])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:07 -0700
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:11 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 12/14] wifi: iwlwifi: mvm: adjust csa notifications and commands to MLO
-Date:   Mon,  8 May 2023 11:24:31 +0300
-Message-Id: <20230508082433.1349733-13-gregory.greenman@intel.com>
+Subject: [PATCH 14/14] wifi: iwlwifi: pass the esr_transition_timeout to the firmware
+Date:   Mon,  8 May 2023 11:24:33 +0300
+Message-Id: <20230508082433.1349733-15-gregory.greenman@intel.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230508082433.1349733-1-gregory.greenman@intel.com>
 References: <20230508082433.1349733-1-gregory.greenman@intel.com>
@@ -56,208 +57,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-In the following notifications and commands mac_id was replaced
-with link_id:
-* CANCEL_CHANNEL_SWITCH_CMD
-* CHANNEL_SWITCH_START_NOTIF
-* CHANNEL_SWITCH_ERROR_NOTIF
+The firmware needs to know the esr_transtition_timeout to time the
+transition between EMLSR and single radio with the AP.
+Add the EMLSR support bit to the wiphy extended capabilities so that
+it'll be sent in our association request frame.
+We can set this field unconditionally since it'll be used only if the
+MLO is supported.
 
-The logic around was not changed, so only adjust handling
-mac/link id.
-
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   | 28 ++++++++--
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 51 ++++++++++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |  2 +-
- 4 files changed, 65 insertions(+), 20 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c  | 3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-index edf9ac52a681..f68edbff0d29 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-@@ -140,10 +140,19 @@ struct iwl_missed_vap_notif {
-  *
-  * @id_and_color: ID and color of the MAC
-  */
--struct iwl_channel_switch_start_notif {
-+struct iwl_channel_switch_start_notif_v1 {
- 	__le32 id_and_color;
- } __packed; /* CHANNEL_SWITCH_START_NTFY_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_channel_switch_start_notif - Channel switch start notification
-+ *
-+ * @link_id: FW link id
-+ */
-+struct iwl_channel_switch_start_notif {
-+	__le32 link_id;
-+} __packed; /* CHANNEL_SWITCH_START_NTFY_API_S_VER_3 */
-+
- #define CS_ERR_COUNT_ERROR BIT(0)
- #define CS_ERR_LONG_DELAY_AFTER_CS BIT(1)
- #define CS_ERR_LONG_TX_BLOCK BIT(2)
-@@ -155,18 +164,29 @@ struct iwl_channel_switch_start_notif {
-  * @mac_id: the mac for which the ucode sends the notification for
-  * @csa_err_mask: mask of channel switch error that can occur
-  */
--struct iwl_channel_switch_error_notif {
-+struct iwl_channel_switch_error_notif_v1 {
- 	__le32 mac_id;
- 	__le32 csa_err_mask;
- } __packed; /* CHANNEL_SWITCH_ERROR_NTFY_API_S_VER_1 */
- 
-+/**
-+ * struct iwl_channel_switch_error_notif - Channel switch error notification
-+ *
-+ * @link_id: FW link id
-+ * @csa_err_mask: mask of channel switch error that can occur
-+ */
-+struct iwl_channel_switch_error_notif {
-+	__le32 link_id;
-+	__le32 csa_err_mask;
-+} __packed; /* CHANNEL_SWITCH_ERROR_NTFY_API_S_VER_2 */
-+
- /**
-  * struct iwl_cancel_channel_switch_cmd - Cancel Channel Switch command
-  *
-- * @mac_id: the mac that should cancel the channel switch
-+ * @id: the id of the link or mac that should cancel the channel switch
-  */
- struct iwl_cancel_channel_switch_cmd {
--	__le32 mac_id;
-+	__le32 id;
- } __packed; /* MAC_CANCEL_CHANNEL_SWITCH_S_VER_1 */
- 
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index f049ef6a8707..059ede6f7b65 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1747,20 +1747,44 @@ void iwl_mvm_channel_switch_start_notif(struct iwl_mvm *mvm,
- 					struct iwl_rx_cmd_buffer *rxb)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	struct iwl_channel_switch_start_notif *notif = (void *)pkt->data;
- 	struct ieee80211_vif *csa_vif, *vif;
--	struct iwl_mvm_vif *mvmvif;
--	u32 id_n_color, csa_id, mac_id;
-+	struct iwl_mvm_vif *mvmvif, *csa_mvmvif;
-+	u32 id_n_color, csa_id;
-+	/* save mac_id or link_id to use later to cancel csa if needed */
-+	u32 id;
-+	u8 notif_ver = iwl_fw_lookup_notif_ver(mvm->fw, MAC_CONF_GROUP,
-+					       CHANNEL_SWITCH_START_NOTIF, 0);
- 
--	id_n_color = le32_to_cpu(notif->id_and_color);
--	mac_id = id_n_color & FW_CTXT_ID_MSK;
-+	rcu_read_lock();
- 
--	if (WARN_ON_ONCE(mac_id >= NUM_MAC_INDEX_DRIVER))
--		return;
-+	if (notif_ver < 3) {
-+		struct iwl_channel_switch_start_notif_v1 *notif = (void *)pkt->data;
-+		u32 mac_id;
-+
-+		id_n_color = le32_to_cpu(notif->id_and_color);
-+		mac_id = id_n_color & FW_CTXT_ID_MSK;
-+
-+		vif = iwl_mvm_rcu_dereference_vif_id(mvm, mac_id, true);
-+		if (!vif)
-+			goto out_unlock;
-+
-+		id = mac_id;
-+	} else {
-+		struct iwl_channel_switch_start_notif *notif = (void *)pkt->data;
-+		u32 link_id = le32_to_cpu(notif->link_id);
-+		struct ieee80211_bss_conf *bss_conf =
-+			iwl_mvm_rcu_fw_link_id_to_link_conf(mvm, link_id, true);
-+
-+		if (!bss_conf)
-+			goto out_unlock;
-+
-+		id = link_id;
-+		vif = bss_conf->vif;
-+	}
- 
--	rcu_read_lock();
--	vif = rcu_dereference(mvm->vif_id_to_mac[mac_id]);
- 	mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	if (notif_ver >= 3)
-+		id_n_color = FW_CMD_ID_AND_COLOR(mvmvif->id, mvmvif->color);
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
-@@ -1769,7 +1793,8 @@ void iwl_mvm_channel_switch_start_notif(struct iwl_mvm *mvm,
- 			    csa_vif != vif))
- 			goto out_unlock;
- 
--		csa_id = FW_CMD_ID_AND_COLOR(mvmvif->id, mvmvif->color);
-+		csa_mvmvif = iwl_mvm_vif_from_mac80211(csa_vif);
-+		csa_id = FW_CMD_ID_AND_COLOR(csa_mvmvif->id, csa_mvmvif->color);
- 		if (WARN(csa_id != id_n_color,
- 			 "channel switch noa notification on unexpected vif (csa_vif=%d, notif=%d)",
- 			 csa_id, id_n_color))
-@@ -1796,7 +1821,7 @@ void iwl_mvm_channel_switch_start_notif(struct iwl_mvm *mvm,
- 					    CHANNEL_SWITCH_ERROR_NOTIF,
- 					    0) && !vif->bss_conf.csa_active) {
- 			IWL_DEBUG_INFO(mvm, "Channel Switch was canceled\n");
--			iwl_mvm_cancel_channel_switch(mvm, vif, mac_id);
-+			iwl_mvm_cancel_channel_switch(mvm, vif, id);
- 			break;
- 		}
- 
-@@ -1819,7 +1844,7 @@ void iwl_mvm_channel_switch_error_notif(struct iwl_mvm *mvm,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_channel_switch_error_notif *notif = (void *)pkt->data;
- 	struct ieee80211_vif *vif;
--	u32 id = le32_to_cpu(notif->mac_id);
-+	u32 id = le32_to_cpu(notif->link_id);
- 	u32 csa_err_mask = le32_to_cpu(notif->csa_err_mask);
- 
- 	rcu_read_lock();
-@@ -1829,7 +1854,7 @@ void iwl_mvm_channel_switch_error_notif(struct iwl_mvm *mvm,
- 		return;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 2ae665ba2ac9..c9c072a3c832 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -251,6 +251,8 @@ static const struct wiphy_iftype_ext_capab add_iftypes_ext_capa[] = {
+ 		.extended_capabilities = he_if_types_ext_capa_sta,
+ 		.extended_capabilities_mask = he_if_types_ext_capa_sta,
+ 		.extended_capabilities_len = sizeof(he_if_types_ext_capa_sta),
++		/* relevant only if EHT is supported */
++		.eml_capabilities = IEEE80211_EML_CAP_EMLSR_SUPP,
+ 	},
+ 	{
+ 		.iftype = NL80211_IFTYPE_STATION,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c
+index 99bf71a2b690..f55b08d9642f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.c
+@@ -133,6 +133,9 @@ static int iwl_mvm_mld_mac_ctxt_cmd_sta(struct iwl_mvm *mvm,
  	}
  
--	IWL_DEBUG_INFO(mvm, "FW reports CSA error: mac_id=%u, csa_err_mask=%u\n",
-+	IWL_DEBUG_INFO(mvm, "FW reports CSA error: id=%u, csa_err_mask=%u\n",
- 		       id, csa_err_mask);
- 	if (csa_err_mask & (CS_ERR_COUNT_ERROR |
- 			    CS_ERR_LONG_DELAY_AFTER_CS |
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 54bcd65cde2d..e0917ee6f436 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -4357,10 +4357,10 @@ int iwl_mvm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	cmd.client.assoc_id = cpu_to_le16(vif->cfg.aid);
++	cmd.client.esr_transition_timeout =
++		u16_get_bits(vif->cfg.eml_cap,
++			     IEEE80211_EML_CAP_TRANSITION_TIMEOUT);
  
- void iwl_mvm_cancel_channel_switch(struct iwl_mvm *mvm,
- 				   struct ieee80211_vif *vif,
--				   u32 mac_id)
-+				   u32 id)
- {
- 	struct iwl_cancel_channel_switch_cmd cancel_channel_switch_cmd = {
--		.mac_id = cpu_to_le32(mac_id),
-+		.id = cpu_to_le32(id),
- 	};
- 	int ret;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index e396034b8795..e8f79f6e07b1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -580,7 +580,7 @@ int iwl_mvm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			 u8 *key, u32 key_len);
- void iwl_mvm_cancel_channel_switch(struct iwl_mvm *mvm,
- 				   struct ieee80211_vif *vif,
--				   u32 mac_id);
-+				   u32 id);
- /* Queues */
- int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm,
- 			    struct ieee80211_sta *sta,
+ 	if (vif->probe_req_reg && vif->cfg.assoc && vif->p2p)
+ 		cmd.filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_PROBE_REQ);
 -- 
 2.38.1
 
