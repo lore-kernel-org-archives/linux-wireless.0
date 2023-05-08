@@ -2,117 +2,118 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3AB2C7EE2A
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 May 2023 08:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46A52C77B75
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 May 2023 08:44:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232478AbjEHIZ6 (ORCPT
+        id S232185AbjEHIoF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 May 2023 04:25:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48802 "EHLO
+        Mon, 8 May 2023 04:44:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233768AbjEHIZW (ORCPT
+        with ESMTP id S233297AbjEHIoB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2023 04:25:22 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DC121940E
-        for <linux-wireless@vger.kernel.org>; Mon,  8 May 2023 01:25:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683534318; x=1715070318;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=WNNmq6hQQ8WX3i9H7Gz9k6QPIKcpJCZ+Yk3vH9TLWOs=;
-  b=WvyWkt0/heeWfCZNCXTfQlY5ksJoKLYhGIC0g/9NsGazPXgLCWU1SIvi
-   AGL+AZZHUgsAwvPl3zXef5mme6Cab26leLnggdGOzgidwqVKjCZPBRneT
-   elh+U48q54PPRb5qn0o2uRsBPwWfaBkYuE9uWBcwVkJfHD6+CjzKYIkDz
-   8UZzOjmeyvhFx37EoXeETKBB4hSdLsvELNKT+BpLm+L+qFQiQcVTFMnUb
-   DoDeKhtEE1rrRqqgsvob9kDAJhTK1baYkH2lXsWvMPS/yUsmKGdc85aws
-   kNp5LzUeC2jUOM2mOraiq7CsZM+QmigxRmR2jxuIGrvZ6/KxPW81n2DRx
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="329949924"
-X-IronPort-AV: E=Sophos;i="5.99,258,1677571200"; 
-   d="scan'208";a="329949924"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:11 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="767982683"
-X-IronPort-AV: E=Sophos;i="5.99,258,1677571200"; 
-   d="scan'208";a="767982683"
-Received: from shemert-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.224.248])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:09 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 13/14] wifi: iwlwifi: mvm: fix number of concurrent link checks
-Date:   Mon,  8 May 2023 11:24:32 +0300
-Message-Id: <20230508082433.1349733-14-gregory.greenman@intel.com>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230508082433.1349733-1-gregory.greenman@intel.com>
-References: <20230508082433.1349733-1-gregory.greenman@intel.com>
+        Mon, 8 May 2023 04:44:01 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E06FE1AEF6
+        for <linux-wireless@vger.kernel.org>; Mon,  8 May 2023 01:43:58 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3488hk353007928, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3488hk353007928
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+        Mon, 8 May 2023 16:43:46 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Mon, 8 May 2023 16:43:52 +0800
+Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 8 May 2023
+ 16:43:51 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <timlee@realtek.com>, <kevin_yang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/3] wifi: rtw89: pci: fix interrupt enable mask for HALT C2H of RTL8851B
+Date:   Mon, 8 May 2023 16:43:33 +0800
+Message-ID: <20230508084335.42953-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230508084335.42953-1-pkshih@realtek.com>
+References: <20230508084335.42953-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-The concurrent link checks need to correctly differentiate
-between AP and non-AP, fix that.
+RTL8851B keeps almost the same interrupt flow as RTL8852A and RTL8852B.
+But, it uses a different bitmask for interrupt indicator of FW HALT C2H.
+So, we make a chip judgement in pci when configuring interrupt mask.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/link.c        | 12 +++++++-----
- .../net/wireless/intel/iwlwifi/mvm/mld-mac80211.c    |  9 +++++----
- 2 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtw89/pci.c | 9 +++++++--
+ drivers/net/wireless/realtek/rtw89/pci.h | 1 +
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/link.c b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-index a1d31c6eab2c..dc31f8de7d1d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-@@ -127,11 +127,13 @@ int iwl_mvm_link_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				if (mvmvif->link[i]->phy_ctxt)
- 					count++;
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index b53f346fef979..92bfef942d3a9 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -3216,11 +3216,16 @@ static void rtw89_pci_clear_resource(struct rtw89_dev *rtwdev,
+ void rtw89_pci_config_intr_mask(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	u32 hs0isr_ind_int_en = B_AX_HS0ISR_IND_INT_EN;
++
++	if (chip->chip_id == RTL8851B)
++		hs0isr_ind_int_en = B_AX_HS0ISR_IND_INT_EN_WKARND;
  
--			/* FIXME: IWL_MVM_FW_MAX_ACTIVE_LINKS_NUM should be
--			 * defined per HW
--			 */
--			if (count >= IWL_MVM_FW_MAX_ACTIVE_LINKS_NUM)
--				return -EINVAL;
-+			if (vif->type == NL80211_IFTYPE_AP) {
-+				if (count > mvm->fw->ucode_capa.num_beacons)
-+					return -EOPNOTSUPP;
-+			/* this should be per HW or such */
-+			} else if (count >= IWL_MVM_FW_MAX_ACTIVE_LINKS_NUM) {
-+				return -EOPNOTSUPP;
-+			}
- 		}
+ 	rtwpci->halt_c2h_intrs = B_AX_HALT_C2H_INT_EN | 0;
  
- 		/* Catch early if driver tries to activate or deactivate a link
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-index 9dfb07db396e..fb06cf94fcc3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-@@ -906,11 +906,12 @@ iwl_mvm_mld_change_vif_links(struct ieee80211_hw *hw,
- 				n_active++;
- 		}
+ 	if (rtwpci->under_recovery) {
+-		rtwpci->intrs[0] = B_AX_HS0ISR_IND_INT_EN;
++		rtwpci->intrs[0] = hs0isr_ind_int_en;
+ 		rtwpci->intrs[1] = 0;
+ 	} else {
+ 		rtwpci->intrs[0] = B_AX_TXDMA_STUCK_INT_EN |
+@@ -3230,7 +3235,7 @@ void rtw89_pci_config_intr_mask(struct rtw89_dev *rtwdev)
+ 				   B_AX_RXDMA_STUCK_INT_EN |
+ 				   B_AX_RDU_INT_EN |
+ 				   B_AX_RPQBD_FULL_INT_EN |
+-				   B_AX_HS0ISR_IND_INT_EN;
++				   hs0isr_ind_int_en;
  
--		if (vif->type == NL80211_IFTYPE_AP &&
--		    n_active > mvm->fw->ucode_capa.num_beacons)
--			return -EOPNOTSUPP;
--		else if (n_active > 1)
-+		if (vif->type == NL80211_IFTYPE_AP) {
-+			if (n_active > mvm->fw->ucode_capa.num_beacons)
-+				return -EOPNOTSUPP;
-+		} else if (n_active > 1) {
- 			return -EOPNOTSUPP;
-+		}
+ 		rtwpci->intrs[1] = B_AX_HC10ISR_IND_INT_EN;
  	}
- 
- 	for (i = 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++) {
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
+index 0e4bd210b100f..2f3d1ad3b0f7d 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.h
++++ b/drivers/net/wireless/realtek/rtw89/pci.h
+@@ -150,6 +150,7 @@
+ #define B_AX_HD1ISR_IND_INT_EN		BIT(26)
+ #define B_AX_HD0ISR_IND_INT_EN		BIT(25)
+ #define B_AX_HS0ISR_IND_INT_EN		BIT(24)
++#define B_AX_HS0ISR_IND_INT_EN_WKARND	BIT(23)
+ #define B_AX_RETRAIN_INT_EN		BIT(21)
+ #define B_AX_RPQBD_FULL_INT_EN		BIT(20)
+ #define B_AX_RDU_INT_EN			BIT(19)
 -- 
-2.38.1
+2.25.1
 
