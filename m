@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CCA2C7EE2C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B08EFC7EE2D
 	for <linux-wireless@archiver.kernel.org>; Mon,  8 May 2023 08:25:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233380AbjEHIZb (ORCPT
+        id S233630AbjEHIZe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 May 2023 04:25:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48298 "EHLO
+        Mon, 8 May 2023 04:25:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233361AbjEHIY7 (ORCPT
+        with ESMTP id S233694AbjEHIZG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2023 04:24:59 -0400
+        Mon, 8 May 2023 04:25:06 -0400
 Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F02E91C0F4
-        for <linux-wireless@vger.kernel.org>; Mon,  8 May 2023 01:24:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 868DD1FAA0
+        for <linux-wireless@vger.kernel.org>; Mon,  8 May 2023 01:25:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683534297; x=1715070297;
+  t=1683534303; x=1715070303;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+JkSkfvkv1cXhhzvR1efj36ToSOCv287MVFFsp3NKOQ=;
-  b=LmhDWH3dl0PuZnj8FMZWGFAeh6xQkifKbRidDVocuC9MLt1VIRt2lUwd
-   +rXzbnNEbt4q9DDVmgnma2B9sMJFlCy7+qOHBzXi/CJjbjIz6ZkZXbBb7
-   edwyXIQqyusT1HnvuLHAPeYrx2TZL3CAVo8bxeWxTKqq4xhOiMW4F226h
-   D6gwJOTz1Cr3yGAomu5TAshgJOc1swAkMz1kmmeyHKr0bPYWsckB6ILf+
-   44X7o8CfnjXcuPil54/e09gTkpWtpydpbCLPqODQD/Ypl3eZ+AGcJi5HT
-   An5zNT0UfmWF6ycXec7lLg56oy411JxxRq/yXtnv7jOXA4WJoLm3LsOtQ
+  bh=GdnDifGCq605v24mSJbVHN2idq5dUI+5r+hWnGkWoXQ=;
+  b=Z58za41y6eORjs+enwdxrEe+ejONwQdeyMeV9nxJ7AcDNvzX0yyabHbK
+   tZGVZZWYLDsVDn4MdMmc6V1NQJIUAjpyB3yx8eqd8KReY2dKPZQkj6T28
+   KVIVlSn9fzfQIOKNOMEIx1UyCZ5r7tnT/Nx3ViqEsMkAOGVjDR5UQVJxP
+   ZtZ4hX0nL+jbFjhFHqwhOahJIT+T4pG15Jgs3r/of5ASdfB1bd0VHCJmt
+   pC+rcqo5Hv5h/Pa8VtTMIcl+JZSxasifDVC0i5nzOIfEFvTWJ4vm7j/NZ
+   9aH0XwPrXHHxNEPEarpzPFsjNQ7994WLoy33e6SxYi2SRmO9cKTHNVsOC
    g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="329949879"
+X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="329949894"
 X-IronPort-AV: E=Sophos;i="5.99,258,1677571200"; 
-   d="scan'208";a="329949879"
+   d="scan'208";a="329949894"
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:24:57 -0700
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:03 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="767982623"
+X-IronPort-AV: E=McAfee;i="6600,9927,10703"; a="767982660"
 X-IronPort-AV: E=Sophos;i="5.99,258,1677571200"; 
-   d="scan'208";a="767982623"
+   d="scan'208";a="767982660"
 Received: from shemert-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.224.248])
-  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:24:56 -0700
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2023 01:25:01 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 06/14] wifi: iwlwifi: mvm: don't double-init spinlock
-Date:   Mon,  8 May 2023 11:24:25 +0300
-Message-Id: <20230508082433.1349733-7-gregory.greenman@intel.com>
+Subject: [PATCH 09/14] wifi: iwlwifi: don't silently ignore missing suspend or resume ops
+Date:   Mon,  8 May 2023 11:24:28 +0300
+Message-Id: <20230508082433.1349733-10-gregory.greenman@intel.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230508082433.1349733-1-gregory.greenman@intel.com>
 References: <20230508082433.1349733-1-gregory.greenman@intel.com>
@@ -57,45 +57,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-We don't need to (and shouldn't) initialize the spinlock
-during HW restart that was already initialized, so move
-that into the correct if block. Since then we have two
-consecutive if statements with the same (though inverted)
-condition, unify those as well.
+In case the driver doesn't implement suspend or resume operations
+on the transport layer, notify the driver's upper layer.
+Otherwise, we might access d3_status uninitialized.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index f877be850589..19f1545b3c7e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -667,15 +667,15 @@ int iwl_mvm_mld_add_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		ret = iwl_mvm_mld_alloc_sta_links(mvm, vif, sta);
- 		if (ret)
- 			return ret;
--	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 9f1228b5a384..885581e636c7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1160,7 +1160,7 @@ static inline int iwl_trans_d3_suspend(struct iwl_trans *trans, bool test,
+ {
+ 	might_sleep();
+ 	if (!trans->ops->d3_suspend)
+-		return 0;
++		return -EOPNOTSUPP;
  
--	spin_lock_init(&mvm_sta->lock);
-+		spin_lock_init(&mvm_sta->lock);
+ 	return trans->ops->d3_suspend(trans, test, reset);
+ }
+@@ -1171,7 +1171,7 @@ static inline int iwl_trans_d3_resume(struct iwl_trans *trans,
+ {
+ 	might_sleep();
+ 	if (!trans->ops->d3_resume)
+-		return 0;
++		return -EOPNOTSUPP;
  
--	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
--		ret = iwl_mvm_alloc_sta_after_restart(mvm, vif, sta);
--	else
- 		ret = iwl_mvm_sta_init(mvm, vif, sta, IWL_MVM_INVALID_STA,
- 				       STATION_TYPE_PEER);
-+	} else {
-+		ret = iwl_mvm_alloc_sta_after_restart(mvm, vif, sta);
-+	}
-+
- 	if (ret)
- 		goto err;
- 
+ 	return trans->ops->d3_resume(trans, status, test, reset);
+ }
 -- 
 2.38.1
 
