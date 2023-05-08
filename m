@@ -2,268 +2,99 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF0CC7EE22
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 May 2023 08:44:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82EEDC7EE22
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 May 2023 08:44:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232525AbjEHIoK (ORCPT
+        id S232854AbjEHIo4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 May 2023 04:44:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33220 "EHLO
+        Mon, 8 May 2023 04:44:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233277AbjEHIoH (ORCPT
+        with ESMTP id S233297AbjEHIoy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 May 2023 04:44:07 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAEB76582
-        for <linux-wireless@vger.kernel.org>; Mon,  8 May 2023 01:44:00 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3488hlNU3007945, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3488hlNU3007945
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Mon, 8 May 2023 16:43:47 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Mon, 8 May 2023 16:43:53 +0800
-Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 8 May 2023
- 16:43:53 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <timlee@realtek.com>, <kevin_yang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] wifi: rtw89: ser: L1 add pre-M0 and post-M0 states
-Date:   Mon, 8 May 2023 16:43:34 +0800
-Message-ID: <20230508084335.42953-3-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230508084335.42953-1-pkshih@realtek.com>
-References: <20230508084335.42953-1-pkshih@realtek.com>
+        Mon, 8 May 2023 04:44:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB14A4ED3;
+        Mon,  8 May 2023 01:44:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 604B162099;
+        Mon,  8 May 2023 08:44:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DC5FC433EF;
+        Mon,  8 May 2023 08:44:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683535492;
+        bh=4r3I/p321L24aAx0oFkvVjKBy4Ysck/E+5s0WPzJpB4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Idi0uxdhC0IAIqdFhRDaGnjKm6BtsAeoZxde4HBaCAGj0spmTGStkmr7e8SPNw8rp
+         Nu3QMcgKRSvP1m4fTcff+oBGfiROJfCLvCF27uuKlSHDOjPB0A4pKZqhWCbmunFJMb
+         eTmXv+aOLEvT0SLoNxKYjChy9TaxfsZXlIpTN1SeIDxO4OKSk3xASB0H1FeBzVxKLa
+         Wuk7qx5qIQ8otkjmAUrArGp0Bhz71uBjmHEbG+SPtFR5g+YEyp5fbBgTfteLOxSg+e
+         JwQYSksPZCHm3jVUueeJJeprPuDHMim7rJONUbR+kSr6rK7McAE1OfM4B0POrZ/xeW
+         /QUr6qcr0r/WA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Arnd Bergmann <arnd@arndb.de>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
+        Wen Gong <quic_wgong@quicinc.com>,
+        Baochen Qiang <quic_bqiang@quicinc.com>,
+        Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath12k@lists.infradead.org
+Subject: Re: [PATCH] wireless: ath: work around false-positive stringop-overread warning
+References: <20230417205447.1800912-1-arnd@kernel.org>
+Date:   Mon, 08 May 2023 11:44:44 +0300
+In-Reply-To: <20230417205447.1800912-1-arnd@kernel.org> (Arnd Bergmann's
+        message of "Mon, 17 Apr 2023 22:54:20 +0200")
+Message-ID: <87ttwnnrer.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.188]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+Arnd Bergmann <arnd@kernel.org> writes:
 
-Newer FW re-design SER (syetem error recovery) L1 (level 1) flow.
-New L1 flow will expect two extra states before original L1 flow.
+> From: Arnd Bergmann <arnd@arndb.de>
+>
+> In a rare arm64 randconfig build, I got multiple warnings for ath11k
+> and ath12k:
+>
+> In function 'ath11k_peer_assoc_h_ht',
+>     inlined from 'ath11k_peer_assoc_prepare' at drivers/net/wireless/ath/ath11k/mac.c:2665:2:
+> drivers/net/wireless/ath/ath11k/mac.c:1709:13: error: 'ath11k_peer_assoc_h_ht_masked' reading 10 bytes from a region of size 0 [-Werror=stringop-overread]
+>  1709 |         if (ath11k_peer_assoc_h_ht_masked(ht_mcs_mask))
+>       |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>
+> This happens whenever gcc-13 fails to inline one of the functions
+> that take a fixed-length array argument but gets passed a pointer.
+>
+> Change these functions to all take a regular pointer argument
+> instead.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-* Before:
-fw --- M1 --> driver
-fw <-- M2 --- driver
-fw --- M3 --> driver
-fw <-- M4 --- driver
-fw --- M5 --> driver
+s/wireless:/wifi:/ but I can fix that.
 
-* After:
-fw --- pre-M0  --> driver
-fw <-- post-M0 --- driver
-fw --- M1 --> driver
-fw <-- M2 --- driver
-fw --- M3 --> driver
-fw <-- M4 --- driver
-fw --- M5 --> driver
+In a awat it's a shame to lose the explicit length but I guess there's
+no other way to fix this?
 
-Then before M1, FW gets one more interval to deal with things that FW
-should have handled well. To consider backward/forward compatibility,
-FW and driver won't change flow from M1 to M5. (only except that halt
-trigger control will change a little bit.) So, there will be two differnt
-starting points of SER L1.
-* old FW: SER L1 starts from M1
-* new FW: SER L1 starts from pre-M0
-Then, driver adds the new SER L1 entry and also keep the original one
-instead of changing it.
+Also I hope you find the time to add GCC 13 to crosstool :) Related to
+this, last year we had a similar warning with GCC 11 for which I added this
+not-so-pretty workaround:
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/core.h |  1 +
- drivers/net/wireless/realtek/rtw89/mac.c  |  6 ++++
- drivers/net/wireless/realtek/rtw89/mac.h  |  2 ++
- drivers/net/wireless/realtek/rtw89/ser.c  | 43 ++++++++++++++++++++++-
- 4 files changed, 51 insertions(+), 1 deletion(-)
+abf93f369419 wifi: ath11k: mac: fix reading 16 bytes from a region of size 0 warning
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index f697902706acc..b71827751848a 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -3945,6 +3945,7 @@ enum rtw89_ser_rcvy_step {
- struct rtw89_ser {
- 	u8 state;
- 	u8 alarm_event;
-+	bool prehandle_l1;
- 
- 	struct work_struct ser_hdl_work;
- 	struct delayed_work ser_alarm_work;
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 64dc36470840c..e5996a94c0def 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -676,6 +676,7 @@ EXPORT_SYMBOL(rtw89_mac_get_err_status);
- 
- int rtw89_mac_set_err_status(struct rtw89_dev *rtwdev, u32 err)
- {
-+	struct rtw89_ser *ser = &rtwdev->ser;
- 	u32 halt;
- 	int ret = 0;
- 
-@@ -692,6 +693,11 @@ int rtw89_mac_set_err_status(struct rtw89_dev *rtwdev, u32 err)
- 	}
- 
- 	rtw89_write32(rtwdev, R_AX_HALT_H2C, err);
-+
-+	if (ser->prehandle_l1 &&
-+	    (err == MAC_AX_ERR_L1_DISABLE_EN || err == MAC_AX_ERR_L1_RCVY_EN))
-+		return 0;
-+
- 	rtw89_write32(rtwdev, R_AX_HALT_H2C_CTRL, B_AX_HALT_H2C_TRIGGER);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-index d3922d4fe288a..e340720bbb889 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.h
-+++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -642,6 +642,7 @@ enum mac_ax_err_info {
- 	MAC_AX_ERR_L0_PROMOTE_TO_L1 = 0x0010,
- 
- 	/* L1 */
-+	MAC_AX_ERR_L1_PREERR_DMAC = 0x999,
- 	MAC_AX_ERR_L1_ERR_DMAC = 0x1000,
- 	MAC_AX_ERR_L1_RESET_DISABLE_DMAC_DONE = 0x1001,
- 	MAC_AX_ERR_L1_RESET_RECOVERY_DONE = 0x1002,
-@@ -780,6 +781,7 @@ enum mac_ax_err_info {
- 	MAC_AX_ERR_L1_RCVY_EN = 0x0002,
- 	MAC_AX_ERR_L1_RCVY_STOP_REQ = 0x0003,
- 	MAC_AX_ERR_L1_RCVY_START_REQ = 0x0004,
-+	MAC_AX_ERR_L1_RESET_START_DMAC = 0x000A,
- 	MAC_AX_ERR_L0_CFG_NOTIFY = 0x0010,
- 	MAC_AX_ERR_L0_CFG_DIS_NOTIFY = 0x0011,
- 	MAC_AX_ERR_L0_CFG_HANDSHAKE = 0x0012,
-diff --git a/drivers/net/wireless/realtek/rtw89/ser.c b/drivers/net/wireless/realtek/rtw89/ser.c
-index 9e9f6947e7f14..9ba99f3764e7e 100644
---- a/drivers/net/wireless/realtek/rtw89/ser.c
-+++ b/drivers/net/wireless/realtek/rtw89/ser.c
-@@ -20,12 +20,14 @@ enum ser_evt {
- 	SER_EV_NONE,
- 	SER_EV_STATE_IN,
- 	SER_EV_STATE_OUT,
-+	SER_EV_L1_RESET_PREPARE, /* pre-M0 */
- 	SER_EV_L1_RESET, /* M1 */
- 	SER_EV_DO_RECOVERY, /* M3 */
- 	SER_EV_MAC_RESET_DONE, /* M5 */
- 	SER_EV_L2_RESET,
- 	SER_EV_L2_RECFG_DONE,
- 	SER_EV_L2_RECFG_TIMEOUT,
-+	SER_EV_M1_TIMEOUT,
- 	SER_EV_M3_TIMEOUT,
- 	SER_EV_FW_M5_TIMEOUT,
- 	SER_EV_L0_RESET,
-@@ -34,6 +36,7 @@ enum ser_evt {
- 
- enum ser_state {
- 	SER_IDLE_ST,
-+	SER_L1_RESET_PRE_ST,
- 	SER_RESET_TRX_ST,
- 	SER_DO_HCI_ST,
- 	SER_L2_RESET_ST,
-@@ -374,6 +377,13 @@ static int hal_stop_dma(struct rtw89_ser *ser)
- 	return ret;
- }
- 
-+static void hal_send_post_m0_event(struct rtw89_ser *ser)
-+{
-+	struct rtw89_dev *rtwdev = container_of(ser, struct rtw89_dev, ser);
-+
-+	rtw89_mac_set_err_status(rtwdev, MAC_AX_ERR_L1_RESET_START_DMAC);
-+}
-+
- static void hal_send_m2_event(struct rtw89_ser *ser)
- {
- 	struct rtw89_dev *rtwdev = container_of(ser, struct rtw89_dev, ser);
-@@ -398,6 +408,9 @@ static void ser_idle_st_hdl(struct rtw89_ser *ser, u8 evt)
- 		rtw89_hci_recovery_complete(rtwdev);
- 		clear_bit(RTW89_FLAG_CRASH_SIMULATING, rtwdev->flags);
- 		break;
-+	case SER_EV_L1_RESET_PREPARE:
-+		ser_state_goto(ser, SER_L1_RESET_PRE_ST);
-+		break;
- 	case SER_EV_L1_RESET:
- 		ser_state_goto(ser, SER_RESET_TRX_ST);
- 		break;
-@@ -412,6 +425,28 @@ static void ser_idle_st_hdl(struct rtw89_ser *ser, u8 evt)
- 	}
- }
- 
-+static void ser_l1_reset_pre_st_hdl(struct rtw89_ser *ser, u8 evt)
-+{
-+	switch (evt) {
-+	case SER_EV_STATE_IN:
-+		ser->prehandle_l1 = true;
-+		hal_send_post_m0_event(ser);
-+		ser_set_alarm(ser, 1000, SER_EV_M1_TIMEOUT);
-+		break;
-+	case SER_EV_L1_RESET:
-+		ser_state_goto(ser, SER_RESET_TRX_ST);
-+		break;
-+	case SER_EV_M1_TIMEOUT:
-+		ser_state_goto(ser, SER_L2_RESET_ST);
-+		break;
-+	case SER_EV_STATE_OUT:
-+		ser_del_alarm(ser);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
- static void ser_reset_trx_st_hdl(struct rtw89_ser *ser, u8 evt)
- {
- 	struct rtw89_dev *rtwdev = container_of(ser, struct rtw89_dev, ser);
-@@ -654,12 +689,14 @@ static const struct event_ent ser_ev_tbl[] = {
- 	{SER_EV_NONE, "SER_EV_NONE"},
- 	{SER_EV_STATE_IN, "SER_EV_STATE_IN"},
- 	{SER_EV_STATE_OUT, "SER_EV_STATE_OUT"},
--	{SER_EV_L1_RESET, "SER_EV_L1_RESET"},
-+	{SER_EV_L1_RESET_PREPARE, "SER_EV_L1_RESET_PREPARE pre-m0"},
-+	{SER_EV_L1_RESET, "SER_EV_L1_RESET m1"},
- 	{SER_EV_DO_RECOVERY, "SER_EV_DO_RECOVERY m3"},
- 	{SER_EV_MAC_RESET_DONE, "SER_EV_MAC_RESET_DONE m5"},
- 	{SER_EV_L2_RESET, "SER_EV_L2_RESET"},
- 	{SER_EV_L2_RECFG_DONE, "SER_EV_L2_RECFG_DONE"},
- 	{SER_EV_L2_RECFG_TIMEOUT, "SER_EV_L2_RECFG_TIMEOUT"},
-+	{SER_EV_M1_TIMEOUT, "SER_EV_M1_TIMEOUT"},
- 	{SER_EV_M3_TIMEOUT, "SER_EV_M3_TIMEOUT"},
- 	{SER_EV_FW_M5_TIMEOUT, "SER_EV_FW_M5_TIMEOUT"},
- 	{SER_EV_L0_RESET, "SER_EV_L0_RESET"},
-@@ -668,6 +705,7 @@ static const struct event_ent ser_ev_tbl[] = {
- 
- static const struct state_ent ser_st_tbl[] = {
- 	{SER_IDLE_ST, "SER_IDLE_ST", ser_idle_st_hdl},
-+	{SER_L1_RESET_PRE_ST, "SER_L1_RESET_PRE_ST", ser_l1_reset_pre_st_hdl},
- 	{SER_RESET_TRX_ST, "SER_RESET_TRX_ST", ser_reset_trx_st_hdl},
- 	{SER_DO_HCI_ST, "SER_DO_HCI_ST", ser_do_hci_st_hdl},
- 	{SER_L2_RESET_ST, "SER_L2_RESET_ST", ser_l2_reset_st_hdl}
-@@ -713,6 +751,9 @@ int rtw89_ser_notify(struct rtw89_dev *rtwdev, u32 err)
- 	rtw89_info(rtwdev, "SER catches error: 0x%x\n", err);
- 
- 	switch (err) {
-+	case MAC_AX_ERR_L1_PREERR_DMAC: /* pre-M0 */
-+		event = SER_EV_L1_RESET_PREPARE;
-+		break;
- 	case MAC_AX_ERR_L1_ERR_DMAC:
- 	case MAC_AX_ERR_L0_PROMOTE_TO_L1:
- 		event = SER_EV_L1_RESET; /* M1 */
+https://git.kernel.org/linus/abf93f369419
+
 -- 
-2.25.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
