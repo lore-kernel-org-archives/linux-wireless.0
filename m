@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 056DDC7EE26
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 May 2023 16:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 984DBC7EE23
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 May 2023 16:04:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230014AbjEJQEk (ORCPT
+        id S230112AbjEJQEm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 May 2023 12:04:40 -0400
+        Wed, 10 May 2023 12:04:42 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229617AbjEJQEg (ORCPT
+        with ESMTP id S229871AbjEJQEj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2023 12:04:36 -0400
+        Wed, 10 May 2023 12:04:39 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B5A4728A;
-        Wed, 10 May 2023 09:04:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6D576E9D;
+        Wed, 10 May 2023 09:04:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=jfWx+0ys4mZjxClgqZp/Lr7IqJWa58C+dJ/FHK6DvTU=;
-        t=1683734675; x=1684944275; b=alGQT65LiTCEJS6qK8FOkRkVJhCoLaCzguyz0SoTGdqgZCz
-        KgNjEHeoSIvVPnqHOYggW1USsffJwqsg9j/DaC6PT8dA1HkgyrwaF+c2kXFQ3S51+0nFX5nLVvdDI
-        ALViarWHhkEFC9nz9FMJa/DCkmfC8gQC94k+53gPC4UoTHv+VWl6VSOoFNNXiKEiLfUjYYzYH6juo
-        vv0qIyrzCvBR3+sLMRFC4R6Y2rcCqZCKd3+eRF0THUl0UugIqBQ4dYWobiibAnfYZfRLacaqhuWYd
-        /gtJfaWBlunt4bSqg2plmeJusRc6WJZCfFvCU8Lah/dasV5P/tQp0/jjk/iJJfDA==;
+        Resent-Cc:Resent-Message-ID; bh=5XfE4JNclIHmpwhrJ15TSeRVDHpVnChETNrW3yr8eYM=;
+        t=1683734677; x=1684944277; b=O5Tqm6cdp/2ovMYDlfJ42I34O+1znt5PCExvp4pkOD2SKhg
+        2m4A/aPbTRwRz4WbBiYBJat3gNusoflmTpiHMoOv/NDXpPvouNke4v9Q7c2dPCcEdB+9rg1QxOQkB
+        9f8vERnj86Nfdad8vUq4Qia8lI1ok6+nikbTCMcFKU1dTvZ6vu7lcoHpYLoBtrDG/9hRoyoFC74JQ
+        QmiQrirmi4SZCYAo2VN8k/jzd/jtjkEEW7XMFNl5f/66rPaSful533wUdur/4ZUrHep8rywgt9CDa
+        ubv8AxYCd/YJKKLDUMG/pFoTvRUOIlzCseF8GYKa/T1S6qz2E2bAl+3wAprt17pw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1pwmIq-005Uq9-2e;
-        Wed, 10 May 2023 18:04:32 +0200
+        id 1pwmIr-005Uq9-1U;
+        Wed, 10 May 2023 18:04:33 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-kernel@vger.kernel.org
 Cc:     linux-wireless@vger.kernel.org, Tejun Heo <tj@kernel.org>,
         Lai Jiangshan <jiangshanlai@gmail.com>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 1/4] workqueue: support pausing ordered workqueues
-Date:   Wed, 10 May 2023 18:04:25 +0200
-Message-Id: <20230510175846.85cb30389c22.Ia49f779e11c2814294ea7f8bb29f825fb840be51@changeid>
+Subject: [RFC PATCH 3/4] wifi: cfg80211: add a workqueue with special semantics
+Date:   Wed, 10 May 2023 18:04:27 +0200
+Message-Id: <20230510175846.831b26b9978f.I28a06f59bf647db6dea519e6fca1894f94227d73@changeid>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230510160428.175409-1-johannes@sipsolutions.net>
 References: <20230510160428.175409-1-johannes@sipsolutions.net>
@@ -50,114 +50,284 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add some infrastructure to support pausing ordered
-workqueues, so that no work items are executing nor
-can execute while the workqueue is paused.
-
-This can be used to simplify locking between work
-structs and other processes (e.g. userspace calls)
-when the workqueue is paused while other code is
-running, where we can then more easily avoid issues
-in code paths needing to cancel works.
+The special semantics are that it's paused during wiphy_lock()
+and nothing can run or even start running on it while that is
+locked.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/workqueue.h | 26 ++++++++++++++++++++++++++
- kernel/workqueue.c        | 27 ++++++++++++++++++++++++++-
- 2 files changed, 52 insertions(+), 1 deletion(-)
+ include/net/cfg80211.h | 93 +++++++++++++++++++++++++++++++++++-------
+ net/wireless/core.c    | 68 ++++++++++++++++++++++++++++++
+ net/wireless/core.h    |  2 +
+ net/wireless/nl80211.c |  8 +++-
+ 4 files changed, 155 insertions(+), 16 deletions(-)
 
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index ac551b8ee7d9..5e2413017a89 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -340,6 +340,7 @@ enum {
- 	__WQ_ORDERED		= 1 << 17, /* internal: workqueue is ordered */
- 	__WQ_LEGACY		= 1 << 18, /* internal: create*_workqueue() */
- 	__WQ_ORDERED_EXPLICIT	= 1 << 19, /* internal: alloc_ordered_workqueue() */
-+	__WQ_PAUSED		= 1 << 20, /* internal: workqueue_pause() */
- 
- 	WQ_MAX_ACTIVE		= 512,	  /* I like 512, better ideas? */
- 	WQ_MAX_UNBOUND_PER_CPU	= 4,	  /* 4 * #cpus for unbound wq */
-@@ -474,6 +475,31 @@ extern void print_worker_info(const char *log_lvl, struct task_struct *task);
- extern void show_all_workqueues(void);
- extern void show_one_workqueue(struct workqueue_struct *wq);
- extern void wq_worker_comm(char *buf, size_t size, struct task_struct *task);
-+extern void __workqueue_pause_resume(struct workqueue_struct *wq, bool pause);
-+
-+/**
-+ * workqueue_pause - pause a workqueue
-+ * @wq: workqueue to pause
-+ *
-+ * Pause (and flush) the given workqueue so it's not executing any
-+ * work structs and won't until workqueue_resume() is called.
-+ */
-+static inline void workqueue_pause(struct workqueue_struct *wq)
-+{
-+	__workqueue_pause_resume(wq, true);
-+}
-+
-+/**
-+ * workqueue_resume - resume a paused workqueue
-+ * @wq: workqueue to resume
-+ *
-+ * Resume the given workqueue that was paused previously to
-+ * make it run work structs again.
-+ */
-+static inline void workqueue_resume(struct workqueue_struct *wq)
-+{
-+	__workqueue_pause_resume(wq, false);
-+}
- 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f115b2550309..f30ecbac7490 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5142,6 +5142,7 @@ struct wiphy_iftype_akm_suites {
  /**
-  * queue_work - queue work on a workqueue
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index b8b541caed48..418d99ff8325 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -3863,10 +3863,16 @@ static void pwq_adjust_max_active(struct pool_workqueue *pwq)
- 	struct workqueue_struct *wq = pwq->wq;
- 	bool freezable = wq->flags & WQ_FREEZABLE;
- 	unsigned long flags;
-+	int new_max_active;
+  * struct wiphy - wireless hardware description
+  * @mtx: mutex for the data (structures) of this device
++ * @mtx_fully_held: the mutex was held with workqueue pause/flush
+  * @reg_notifier: the driver's regulatory notification callback,
+  *	note that if your driver uses wiphy_apply_custom_regulatory()
+  *	the reg_notifier's request can be passed as NULL
+@@ -5351,6 +5352,9 @@ struct wiphy_iftype_akm_suites {
+  */
+ struct wiphy {
+ 	struct mutex mtx;
++#ifdef CONFIG_LOCKDEP
++	bool mtx_fully_held;
++#endif
  
--	/* for @wq->saved_max_active */
-+	/* for @wq->saved_max_active and @wq->flags */
- 	lockdep_assert_held(&wq->mutex);
+ 	/* assign these fields before you register the wiphy */
  
-+	if (wq->flags & __WQ_PAUSED)
-+		new_max_active = 0;
-+	else
-+		new_max_active = wq->saved_max_active;
-+
- 	/* fast exit for non-freezable wqs */
- 	if (!freezable && pwq->max_active == wq->saved_max_active)
- 		return;
-@@ -4642,6 +4648,25 @@ void workqueue_set_max_active(struct workqueue_struct *wq, int max_active)
- }
- EXPORT_SYMBOL_GPL(workqueue_set_max_active);
- 
-+void __workqueue_pause_resume(struct workqueue_struct *wq, bool pause)
-+{
-+	struct pool_workqueue *pwq;
-+
-+	mutex_lock(&wq->mutex);
-+	if (pause)
-+		wq->flags |= __WQ_PAUSED;
-+	else
-+		wq->flags &= ~__WQ_PAUSED;
-+
-+	for_each_pwq(pwq, wq)
-+		pwq_adjust_max_active(pwq);
-+	mutex_unlock(&wq->mutex);
-+
-+	if (pause)
-+		flush_workqueue(wq);
-+}
-+EXPORT_SYMBOL_GPL(__workqueue_pause_resume);
-+
- /**
-  * current_work - retrieve %current task's work struct
+@@ -5669,29 +5673,90 @@ struct cfg80211_cqm_config;
+  * wiphy_lock - lock the wiphy
+  * @wiphy: the wiphy to lock
   *
+- * This is mostly exposed so it can be done around registering and
+- * unregistering netdevs that aren't created through cfg80211 calls,
+- * since that requires locking in cfg80211 when the notifiers is
+- * called, but that cannot differentiate which way it's called.
++ * This is needed around registering and unregistering netdevs that
++ * aren't created through cfg80211 calls, since that requires locking
++ * in cfg80211 when the notifiers is called, but that cannot
++ * differentiate which way it's called.
++ *
++ * It can also be used by drivers for their own purposes.
+  *
+  * When cfg80211 ops are called, the wiphy is already locked.
++ *
++ * Note that this makes sure that no workers that have been queued
++ * with wiphy_queue_work() are running.
+  */
+-static inline void wiphy_lock(struct wiphy *wiphy)
+-	__acquires(&wiphy->mtx)
+-{
+-	mutex_lock(&wiphy->mtx);
+-	__acquire(&wiphy->mtx);
+-}
++void wiphy_lock(struct wiphy *wiphy) __acquires(&wiphy->mtx);
+ 
+ /**
+  * wiphy_unlock - unlock the wiphy again
+  * @wiphy: the wiphy to unlock
+  */
+-static inline void wiphy_unlock(struct wiphy *wiphy)
+-	__releases(&wiphy->mtx)
++void wiphy_unlock(struct wiphy *wiphy) __releases(&wiphy->mtx);
++
++/**
++ * wiphy_queue_work - queue work for the wiphy
++ * @wiphy: the wiphy to queue for
++ * @work: the worker
++ *
++ * This is useful for work that must be done asynchronously, and work
++ * queued here has the special property that the wiphy mutex will be
++ * held as if wiphy_lock() was called, and that it cannot be running
++ * after wiphy_lock() was called. Therefore, wiphy_cancel_work() can
++ * use just cancel_work() instead of cancel_work_sync(), it requires
++ * being in a section protected by wiphy_lock().
++ */
++void wiphy_queue_work(struct wiphy *wiphy, struct work_struct *work);
++
++/**
++ * wiphy_cancel_work - cancel previously queued work
++ * @wiphy: the wiphy, for debug purposes
++ * @work: the work to cancel
++ *
++ * Cancel the work *without* waiting for it, this assumes being
++ * called under the wiphy mutex acquired by wiphy_lock().
++ */
++static inline void wiphy_cancel_work(struct wiphy *wiphy, struct work_struct *work)
+ {
+-	__release(&wiphy->mtx);
+-	mutex_unlock(&wiphy->mtx);
++#ifdef CONFIG_LOCKDEP
++	lockdep_assert_held(&wiphy->mtx);
++	WARN_ON_ONCE(!wiphy->mtx_fully_held);
++#endif
++	cancel_work(work);
++}
++
++/**
++ * wiphy_queue_delayed_work - queue delayed work for the wiphy
++ * @wiphy: the wiphy to queue for
++ * @dwork: the delayable worker
++ * @delay: number of jiffies to wait before queueing
++ *
++ * This is useful for work that must be done asynchronously, and work
++ * queued here has the special property that the wiphy mutex will be
++ * held as if wiphy_lock() was called, and that it cannot be running
++ * after wiphy_lock() was called. Therefore, wiphy_cancel_work() can
++ * use just cancel_work() instead of cancel_work_sync(), it requires
++ * being in a section protected by wiphy_lock().
++ */
++void wiphy_queue_delayed_work(struct wiphy *wiphy,
++			      struct delayed_work *dwork,
++			      unsigned long delay);
++
++/**
++ * wiphy_cancel_delayed_work - cancel previously queued delayed work
++ * @wiphy: the wiphy, for debug purposes
++ * @dwork: the delayed work to cancel
++ *
++ * Cancel the work *without* waiting for it, this assumes being
++ * called under the wiphy mutex acquired by wiphy_lock().
++ */
++static inline void wiphy_cancel_delayed_work(struct wiphy *wiphy,
++					     struct delayed_work *dwork)
++{
++#ifdef CONFIG_LOCKDEP
++	lockdep_assert_held(&wiphy->mtx);
++	WARN_ON_ONCE(!wiphy->mtx_fully_held);
++#endif
++	cancel_delayed_work(dwork);
+ }
+ 
+ /**
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 5b0c4d5b80cf..11e600c71fb6 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -533,6 +533,13 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+ 		return NULL;
+ 	}
+ 
++	rdev->wq = alloc_ordered_workqueue_mtx("%s", 0, &rdev->wiphy.mtx,
++					       dev_name(&rdev->wiphy.dev));
++	if (!rdev->wq) {
++		wiphy_free(&rdev->wiphy);
++		return NULL;
++	}
++
+ 	INIT_WORK(&rdev->rfkill_block, cfg80211_rfkill_block_work);
+ 	INIT_WORK(&rdev->conn_work, cfg80211_conn_work);
+ 	INIT_WORK(&rdev->event_work, cfg80211_event_work);
+@@ -1068,6 +1075,13 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	wiphy_unlock(&rdev->wiphy);
+ 	rtnl_unlock();
+ 
++	/*
++	 * flush again, even if wiphy_lock() did above, something might
++	 * have been reaching it still while the code above was running,
++	 * e.g. via debugfs.
++	 */
++	flush_workqueue(rdev->wq);
++
+ 	flush_work(&rdev->scan_done_wk);
+ 	cancel_work_sync(&rdev->conn_work);
+ 	flush_work(&rdev->event_work);
+@@ -1093,6 +1107,10 @@ void cfg80211_dev_free(struct cfg80211_registered_device *rdev)
+ {
+ 	struct cfg80211_internal_bss *scan, *tmp;
+ 	struct cfg80211_beacon_registration *reg, *treg;
++
++	if (rdev->wq) /* might be NULL in error cases */
++		destroy_workqueue(rdev->wq);
++
+ 	rfkill_destroy(rdev->wiphy.rfkill);
+ 	list_for_each_entry_safe(reg, treg, &rdev->beacon_registrations, list) {
+ 		list_del(&reg->list);
+@@ -1564,6 +1582,56 @@ static struct pernet_operations cfg80211_pernet_ops = {
+ 	.exit = cfg80211_pernet_exit,
+ };
+ 
++void wiphy_lock(struct wiphy *wiphy)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++
++	workqueue_pause(rdev->wq);
++
++	mutex_lock(&wiphy->mtx);
++
++#ifdef CONFIG_LOCKDEP
++	wiphy->mtx_fully_held = true;
++#endif
++}
++EXPORT_SYMBOL(wiphy_lock);
++
++void wiphy_unlock(struct wiphy *wiphy)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++
++#ifdef CONFIG_LOCKDEP
++	WARN_ON_ONCE(!wiphy->mtx_fully_held);
++#endif
++
++	workqueue_resume(rdev->wq);
++
++#ifdef CONFIG_LOCKDEP
++	wiphy->mtx_fully_held = false;
++#endif
++
++	mutex_unlock(&wiphy->mtx);
++}
++EXPORT_SYMBOL(wiphy_unlock);
++
++void wiphy_queue_work(struct wiphy *wiphy, struct work_struct *work)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++
++	queue_work(rdev->wq, work);
++}
++EXPORT_SYMBOL(wiphy_queue_work);
++
++void wiphy_queue_delayed_work(struct wiphy *wiphy,
++			      struct delayed_work *dwork,
++			      unsigned long delay)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++
++	queue_delayed_work(rdev->wq, dwork, delay);
++}
++EXPORT_SYMBOL(wiphy_queue_delayed_work);
++
+ static int __init cfg80211_init(void)
+ {
+ 	int err;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 7c61752f6d83..0ab79cc28adb 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -108,6 +108,8 @@ struct cfg80211_registered_device {
+ 	/* lock for all wdev lists */
+ 	spinlock_t mgmt_registrations_lock;
+ 
++	struct workqueue_struct *wq;
++
+ 	/* must be last because of the way we do wiphy_priv(),
+ 	 * and it should at least be aligned to NETDEV_ALIGN */
+ 	struct wiphy wiphy __aligned(NETDEV_ALIGN);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 112b4bb009c8..1fb4978f7649 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1002,7 +1002,9 @@ static int nl80211_prepare_wdev_dump(struct netlink_callback *cb,
+ 			return PTR_ERR(*wdev);
+ 		}
+ 		*rdev = wiphy_to_rdev((*wdev)->wiphy);
+-		mutex_lock(&(*rdev)->wiphy.mtx);
++		wiphy_lock(&(*rdev)->wiphy);
++		/* the conditional locking is too hard for sparse */
++		__release(&(*rdev)->wiphy.mtx);
+ 		rtnl_unlock();
+ 		/* 0 is the first index - add 1 to parse only once */
+ 		cb->args[0] = (*rdev)->wiphy_idx + 1;
+@@ -1032,7 +1034,9 @@ static int nl80211_prepare_wdev_dump(struct netlink_callback *cb,
+ 			rtnl_unlock();
+ 			return -ENODEV;
+ 		}
+-		mutex_lock(&(*rdev)->wiphy.mtx);
++		wiphy_lock(&(*rdev)->wiphy);
++		/* the conditional locking is too hard for sparse */
++		__release(&(*rdev)->wiphy.mtx);
+ 		rtnl_unlock();
+ 	}
+ 
 -- 
 2.40.1
 
