@@ -2,181 +2,92 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D024FC7EE2A
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 May 2023 20:12:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E18C77B7C
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 May 2023 20:14:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236281AbjEJUMS (ORCPT
+        id S229745AbjEJUOE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 May 2023 16:12:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44332 "EHLO
+        Wed, 10 May 2023 16:14:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236175AbjEJUMP (ORCPT
+        with ESMTP id S235931AbjEJUN7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 May 2023 16:12:15 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C9FE10C3;
-        Wed, 10 May 2023 13:12:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=1eItkrSnBXDxwAy/pbcSMdyZKnv054ktdoQQCOFc/k0=;
-        t=1683749533; x=1684959133; b=PrntjE60vMfUngjv6eSjAfhwfFxtup2Qrxk37uYUhspoLiD
-        FiTXzmEDo96wSQgbNAKH6OR/Km/AbVMWNulQxnxEWlgq6vQr9Jm3+lfagjV/8HCZbrjKcwgDb/SoA
-        64EF5GkB53jfNwu6jS09AjEOf2ZhRk/Klowr55QeS2imJDxvnyIsb74LqVc0w2oyg5RFywpNpzKYJ
-        Z0BNCX7fUh9TAJ1a4yObnsFilBKuEl0u45tJhbtbufhf8u40PzbxXuEJrFFFtzkfAcmQ/vPSEe5uY
-        GFO1Hzfhf+97Ritgpw57nZr/Gcz70RPX9dzQ36W90uHRiFOvvhV/bD3/bZaGACNg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1pwqAS-005aH5-2u;
-        Wed, 10 May 2023 22:12:09 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-kernel@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+        Wed, 10 May 2023 16:13:59 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0428B6A78;
+        Wed, 10 May 2023 13:13:54 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-643b60855c8so5585399b3a.2;
+        Wed, 10 May 2023 13:13:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683749633; x=1686341633;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bhjamj7N/hY3TKIMtd4AQuu2hFu84G2lwr7mPIcX/EA=;
+        b=jZjE5mZtEgIAKq4X5yfdYzQKtK6OCg4F8Nt3Yv9eDn251RHu1WFYhnFtLmPNr/TmNA
+         AhRHgzS2TJXnisk+4J7kyCs2kYc7xXUEgV0+0kS/npvj+5/Ln+vnZOjoWiep/PRXFtah
+         K56iB81DfIJNhee9Np7mdKkCaM7xUIX9MbwOXKNMBZy7DnT0zz2QGNwW+ELfRWqiOUaJ
+         gB136fFKj7Areoa9FgWsMhMMTyxlOE7A+eT2JnVZ+WsGgdCAHHN4bCz3xGnugPlD4Qd3
+         8qDZ+4znuFO/cGbOFZYYZzFE7u9K9BirdjJhgvnTsezxUIYnsxcbX6DvwZwHeWZd6SCl
+         spRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683749633; x=1686341633;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=bhjamj7N/hY3TKIMtd4AQuu2hFu84G2lwr7mPIcX/EA=;
+        b=c9zw9IykRPsG2jGQ+TMdxAbfXh+ICpx7mZLzjX2OvrAJSunUhiLOBaklP3x8CCOoud
+         lPWmZHymCaGuxbXmoO/GznDRizH1WquVHGBFZ75t7EZZ5aiiz5Uva0Mdd/u/cE7ANvzL
+         jVUFsQlipokCXbjrQ5j0BvUhgiSKTBAFkFwrvEoIUeI6BGm0p5IEBzlozNch7ivsVL/A
+         ahBL59RAQYCKeTP/N98brEDUuIeAMWHOibIHSCIIgfEcoR7PMHaiExvTTxweKaevkWbr
+         /c9h1f3KZkbOT9BHNoVZ2d9umlXykJTwqJzWzDzlco9NvwOvqVW2JG0QO8G3z4BrqN24
+         xsxg==
+X-Gm-Message-State: AC+VfDxL2YEWZNjolXU8BgE2pIBKkvBghrGhMbJLuvIQb5hOM13yjTfN
+        pWzuRCEcbxBeRitv3sLtCAA=
+X-Google-Smtp-Source: ACHHUZ4SwUbwsrVJ88mTjXH07dQxZ4tcYYPQFUqFY4wXD21RIUSyoWWeyoFhDX/g5wlKID35aBKF5A==
+X-Received: by 2002:a05:6a20:7d8c:b0:ef:e240:b552 with SMTP id v12-20020a056a207d8c00b000efe240b552mr25118752pzj.46.1683749632988;
+        Wed, 10 May 2023 13:13:52 -0700 (PDT)
+Received: from localhost (2603-800c-1a02-1bae-a7fa-157f-969a-4cde.res6.spectrum.com. [2603:800c:1a02:1bae:a7fa:157f:969a:4cde])
+        by smtp.gmail.com with ESMTPSA id q18-20020a62ae12000000b005e0699464e3sm3855909pff.206.2023.05.10.13.13.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 May 2023 13:13:52 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Wed, 10 May 2023 10:13:51 -1000
+From:   Tejun Heo <tj@kernel.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         Lai Jiangshan <jiangshanlai@gmail.com>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH v2 1/3] workqueue: support pausing ordered workqueues
-Date:   Wed, 10 May 2023 22:12:03 +0200
-Message-Id: <20230510220918.1dc654070530.Ia49f779e11c2814294ea7f8bb29f825fb840be51@changeid>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230510201205.308542-1-johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH v2 1/3] workqueue: support pausing ordered workqueues
+Message-ID: <ZFv6_8rJxPid0gdd@slm.duckdns.org>
 References: <20230510201205.308542-1-johannes@sipsolutions.net>
+ <20230510220918.1dc654070530.Ia49f779e11c2814294ea7f8bb29f825fb840be51@changeid>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230510220918.1dc654070530.Ia49f779e11c2814294ea7f8bb29f825fb840be51@changeid>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, May 10, 2023 at 10:12:03PM +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Add some infrastructure to support pausing ordered
+> workqueues, so that no work items are executing nor
+> can execute while the workqueue is paused.
+> 
+> This can be used to simplify locking between work
+> structs and other processes (e.g. userspace calls)
+> when the workqueue is paused while other code is
+> running, where we can then more easily avoid issues
+> in code paths needing to cancel works.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Add some infrastructure to support pausing ordered
-workqueues, so that no work items are executing nor
-can execute while the workqueue is paused.
+I'd be happy to apply this once the rest of the patchset is ready.
 
-This can be used to simplify locking between work
-structs and other processes (e.g. userspace calls)
-when the workqueue is paused while other code is
-running, where we can then more easily avoid issues
-in code paths needing to cancel works.
+Thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-v2:
- - fix bug with new_max_active no being used
- - don't unify pause/resume
- - looked at unifying pause/freeze, but the conditions
-   are very different so I didn't find a plausible way
----
- include/linux/workqueue.h |  4 +++
- kernel/workqueue.c        | 54 ++++++++++++++++++++++++++++++++++++---
- 2 files changed, 55 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index ac551b8ee7d9..7a76d27d325f 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -340,6 +340,7 @@ enum {
- 	__WQ_ORDERED		= 1 << 17, /* internal: workqueue is ordered */
- 	__WQ_LEGACY		= 1 << 18, /* internal: create*_workqueue() */
- 	__WQ_ORDERED_EXPLICIT	= 1 << 19, /* internal: alloc_ordered_workqueue() */
-+	__WQ_PAUSED		= 1 << 20, /* internal: workqueue_pause() */
- 
- 	WQ_MAX_ACTIVE		= 512,	  /* I like 512, better ideas? */
- 	WQ_MAX_UNBOUND_PER_CPU	= 4,	  /* 4 * #cpus for unbound wq */
-@@ -475,6 +476,9 @@ extern void show_all_workqueues(void);
- extern void show_one_workqueue(struct workqueue_struct *wq);
- extern void wq_worker_comm(char *buf, size_t size, struct task_struct *task);
- 
-+void workqueue_pause(struct workqueue_struct *wq);
-+void workqueue_resume(struct workqueue_struct *wq);
-+
- /**
-  * queue_work - queue work on a workqueue
-  * @wq: workqueue to use
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index b8b541caed48..12e8b003568f 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -3863,12 +3863,18 @@ static void pwq_adjust_max_active(struct pool_workqueue *pwq)
- 	struct workqueue_struct *wq = pwq->wq;
- 	bool freezable = wq->flags & WQ_FREEZABLE;
- 	unsigned long flags;
-+	int new_max_active;
- 
--	/* for @wq->saved_max_active */
-+	/* for @wq->saved_max_active and @wq->flags */
- 	lockdep_assert_held(&wq->mutex);
- 
-+	if (wq->flags & __WQ_PAUSED)
-+		new_max_active = 0;
-+	else
-+		new_max_active = wq->saved_max_active;
-+
- 	/* fast exit for non-freezable wqs */
--	if (!freezable && pwq->max_active == wq->saved_max_active)
-+	if (!freezable && pwq->max_active == new_max_active)
- 		return;
- 
- 	/* this function can be called during early boot w/ irq disabled */
-@@ -3882,7 +3888,7 @@ static void pwq_adjust_max_active(struct pool_workqueue *pwq)
- 	if (!freezable || !workqueue_freezing) {
- 		bool kick = false;
- 
--		pwq->max_active = wq->saved_max_active;
-+		pwq->max_active = new_max_active;
- 
- 		while (!list_empty(&pwq->inactive_works) &&
- 		       pwq->nr_active < pwq->max_active) {
-@@ -4642,6 +4648,48 @@ void workqueue_set_max_active(struct workqueue_struct *wq, int max_active)
- }
- EXPORT_SYMBOL_GPL(workqueue_set_max_active);
- 
-+/**
-+ * workqueue_pause - pause a workqueue
-+ * @wq: workqueue to pause
-+ *
-+ * Pause (and flush) the given workqueue so it's not executing any
-+ * work structs and won't until workqueue_resume() is called.
-+ */
-+void workqueue_pause(struct workqueue_struct *wq)
-+{
-+	struct pool_workqueue *pwq;
-+
-+	mutex_lock(&wq->mutex);
-+	wq->flags |= __WQ_PAUSED;
-+
-+	for_each_pwq(pwq, wq)
-+		pwq_adjust_max_active(pwq);
-+	mutex_unlock(&wq->mutex);
-+
-+	flush_workqueue(wq);
-+}
-+EXPORT_SYMBOL_GPL(workqueue_pause);
-+
-+/**
-+ * workqueue_resume - resume a paused workqueue
-+ * @wq: workqueue to resume
-+ *
-+ * Resume the given workqueue that was paused previously to
-+ * make it run work structs again.
-+ */
-+void workqueue_resume(struct workqueue_struct *wq)
-+{
-+	struct pool_workqueue *pwq;
-+
-+	mutex_lock(&wq->mutex);
-+	wq->flags &= ~__WQ_PAUSED;
-+
-+	for_each_pwq(pwq, wq)
-+		pwq_adjust_max_active(pwq);
-+	mutex_unlock(&wq->mutex);
-+}
-+EXPORT_SYMBOL_GPL(workqueue_resume);
-+
- /**
-  * current_work - retrieve %current task's work struct
-  *
 -- 
-2.40.1
-
+tejun
