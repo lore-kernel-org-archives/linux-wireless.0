@@ -2,49 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA684C7EE22
-	for <linux-wireless@archiver.kernel.org>; Thu, 11 May 2023 13:22:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F16BFC77B7F
+	for <linux-wireless@archiver.kernel.org>; Thu, 11 May 2023 13:22:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238269AbjEKNW2 (ORCPT
+        id S238132AbjEKNWk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 11 May 2023 09:22:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42144 "EHLO
+        Thu, 11 May 2023 09:22:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238165AbjEKNWC (ORCPT
+        with ESMTP id S238130AbjEKNWV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 11 May 2023 09:22:02 -0400
+        Thu, 11 May 2023 09:22:21 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96685106F4
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2023 06:20:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3172E72E
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2023 06:20:57 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D9E74616C2
-        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2023 13:19:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E197C433EF;
-        Thu, 11 May 2023 13:19:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DF88D61652
+        for <linux-wireless@vger.kernel.org>; Thu, 11 May 2023 13:20:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F34CC433D2;
+        Thu, 11 May 2023 13:20:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683811174;
-        bh=HnR7J0td/9sxLYMhvqEvrWZwL8cU9KkZCye8KJ/0zb4=;
+        s=k20201202; t=1683811204;
+        bh=+PXguMHyEjAIA8CTgKdTp7rt9JR3pTKHwsxE2CBaOKY=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=n5aBTnSYDJB3PwnDdJ6+fdJ2wKO08YYw25ojfzx8BNrqf0kbmJebQLA2UpJpPvhzD
-         U9JCYRK4DRS3qmqgTXKrnIU6r0vqVmqHpscJC62HiOjKN5rYn1wAVAkydkRYWqqWrD
-         DzzjCjSrkJrt9mAbxOUCa8n81jfQ7adZdxJElSPbQ3NYkEXkhRlpHQYbRi2Sx3dsf6
-         dCfZuyu9Y5suEvR9NesGmQ8987eb8rwvufARrpaEzi5vbTK8sxfb0PQlbPSgh+T9Ui
-         uagTrLei7/3qJ6l0ZvqoYZF7u+C9IpR4klkQJi0RybnoxAxMV4xyUgRajNifPn1R/Z
-         89PM2zt7L2jBQ==
+        b=ZX5189eognoruEEzurlU0KvL1YuOFlkPSMQXHnjuPUfmaq2nnkKFvUWKmNLL+6NY9
+         YTOYx2pPLAKqMke156JFY3rfYGTghmtlxKMnD56eSTybg9+ioWXXew/a8VtJ36Rz2P
+         i30YOEZLArzU3JSHE+QhR+Egu+sb32abj6RFq1mMQyi2nXCNVCgKE9I2lTxH52Po6i
+         X+Besy4TrUERxRRoCa9jUXDTtJAIA3gaQ2e3iRW0STgeWRc8T+Up0/bPl4e14BMZes
+         gauAPb5r6c92agvXtkSp9vyekIaLliMstwbvhkxHolwBa+aTWa6/x1yX68uvSlz+5s
+         W+o/gBCnJU3BA==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/3] wifi: rtw89: introduce realtek ACPI DSM method
+Subject: Re: [PATCH 1/3] wifi: rtw89: pci: fix interrupt enable mask for HALT
+ C2H
+ of RTL8851B
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230508081211.38760-2-pkshih@realtek.com>
-References: <20230508081211.38760-2-pkshih@realtek.com>
+In-Reply-To: <20230508084335.42953-2-pkshih@realtek.com>
+References: <20230508084335.42953-2-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Cc:     <timlee@realtek.com>, <kevin_yang@realtek.com>,
+        <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168381117136.27145.12859433715801863138.kvalo@kernel.org>
-Date:   Thu, 11 May 2023 13:19:33 +0000 (UTC)
+Message-ID: <168381120166.27145.17125146250902121389.kvalo@kernel.org>
+Date:   Thu, 11 May 2023 13:20:03 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -53,23 +56,21 @@ Ping-Ke Shih <pkshih@realtek.com> wrote:
 
 > From: Zong-Zhe Yang <kevin_yang@realtek.com>
 > 
-> Introduce realtek ACPI DSM method to get required BIOS
-> configurations. It will be used in the following commits.
-> 
-> And, enum rtw89_acpi_dsm_func is added for listing the functions
-> which are currently recognized.
+> RTL8851B keeps almost the same interrupt flow as RTL8852A and RTL8852B.
+> But, it uses a different bitmask for interrupt indicator of FW HALT C2H.
+> So, we make a chip judgement in pci when configuring interrupt mask.
 > 
 > Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
 3 patches applied to wireless-next.git, thanks.
 
-e897b0bef38a wifi: rtw89: introduce realtek ACPI DSM method
-a002f98123dd wifi: rtw89: regd: judge UNII-4 according to BIOS and chip
-e3b77c06c886 wifi: rtw89: support U-NII-4 channels on 5GHz band
+aa70fa4f7dd8 wifi: rtw89: pci: fix interrupt enable mask for HALT C2H of RTL8851B
+56617fd02adb wifi: rtw89: ser: L1 add pre-M0 and post-M0 states
+8130e94e888b wifi: rtw89: suppress the log for specific SER called CMDPSR_FRZTO
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230508081211.38760-2-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230508084335.42953-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
