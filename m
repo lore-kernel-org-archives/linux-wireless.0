@@ -2,116 +2,130 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB6AC77B7C
-	for <linux-wireless@archiver.kernel.org>; Sat, 13 May 2023 06:13:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F8EC77B7D
+	for <linux-wireless@archiver.kernel.org>; Sat, 13 May 2023 10:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232477AbjEMGN0 (ORCPT
+        id S237357AbjEMKXh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 13 May 2023 02:13:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60378 "EHLO
+        Sat, 13 May 2023 06:23:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbjEMGNZ (ORCPT
+        with ESMTP id S238057AbjEMKXZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 13 May 2023 02:13:25 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF97F1987
-        for <linux-wireless@vger.kernel.org>; Fri, 12 May 2023 23:13:24 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 34D6DC5w8029823, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 34D6DC5w8029823
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Sat, 13 May 2023 14:13:12 +0800
-Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Sat, 13 May 2023 14:13:20 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Sat, 13 May 2023 14:13:19 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
- RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
- 15.01.2375.007; Sat, 13 May 2023 14:13:19 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>
-CC:     "Jes.Sorensen@gmail.com" <Jes.Sorensen@gmail.com>
-Subject: Re: [PATCH v3 1/2] wifi: rtl8xxxu: Support new chip RTL8192FU
-Thread-Topic: [PATCH v3 1/2] wifi: rtl8xxxu: Support new chip RTL8192FU
-Thread-Index: AQHZhPRIWxnMPupUf0aw0RcUAAXWra9XM/QA
-Date:   Sat, 13 May 2023 06:13:19 +0000
-Message-ID: <094340810bbcbb7d85dd9c9c06b48d3a19aadd85.camel@realtek.com>
-References: <98eff876-bb91-f51a-ffe9-b37d27518f9d@gmail.com>
-In-Reply-To: <98eff876-bb91-f51a-ffe9-b37d27518f9d@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.36.1-2 
-x-originating-ip: [172.16.17.85]
-x-kse-serverinfo: RTEXMBS06.realtek.com.tw, 9
-x-kse-antispam-interceptor-info: fallback
-x-kse-antivirus-interceptor-info: fallback
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <70F4AD6CDA7F9C49983E8E5BB7EABBA1@realtek.com>
-Content-Transfer-Encoding: base64
+        Sat, 13 May 2023 06:23:25 -0400
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38804868D
+        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2023 03:23:21 -0700 (PDT)
+Received: by mail-ej1-x62f.google.com with SMTP id a640c23a62f3a-965ac4dd11bso2163689166b.2
+        for <linux-wireless@vger.kernel.org>; Sat, 13 May 2023 03:23:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683973399; x=1686565399;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=J22Q5H27WmcmWSXLvWXXEDseF5qQQ4t6t/II9V1keG0=;
+        b=EUXTvSjC1CvDfnB/0Cf6ubHy8POd3W8Xh9FNOdhUKrHDCE2ycWOv/0EbCmAdxfNhEQ
+         mfELGkxBqJvY2hbJBq4pewu7bKJZADAY6S9llr0HvL5CG4HT0r0p/n5Z1dzGXPTKtnqc
+         T/HJn1J3hN8JBU2zwbp2r2x+FeLUAeQihs4Woj7VCuM9klbkF7qb3lou9DX2nnBXNNl7
+         khWy8M/yNLpdjufTrUcy/ZBengZsaGUi86QQlL3qZSnZRKBILtRkuaxcrYvRFf2coAPz
+         bmxhncGnjpwFYmdt71lsBaBMSMjEA4y5AhCrtqq9BpCXVfiunoFmwNhL8pMGnUSFz7vH
+         8vBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683973399; x=1686565399;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=J22Q5H27WmcmWSXLvWXXEDseF5qQQ4t6t/II9V1keG0=;
+        b=A5loBR3GeAPjgFsVlH8ExUa70WfECfzYz6T9ozlDbT1w57Ii4JCNrEVDllx4OsMsd5
+         x48X+2wLxxVGcZcMb+XajxabsoX1+hI2jSQWgZyCUYvRwMD9hbfLAVAyhTXCxibYrKo9
+         4Czg27UD4bu+knTCQPIS63vl7XF/ZeiuYL/wqwEdKo45JJZQ3BOu/FslSLVQQp2S5DG6
+         qFFKyNb/tQt0hoNoaWJPfAmnUuMIEQNQ9onTM8iTRsR1RgqrH7KvyPf2JGK3SsQM/f1K
+         gcuBIM11RyTMNi4xHudz1iM2lhyvy8H6ZsbylJC7i6Ch5mFjgjIE5zl81nD9BnQoYZ2e
+         FmNQ==
+X-Gm-Message-State: AC+VfDzA9tVjmobdANJFh3CzqFZK0T2rvfHrPdAM9IcEHXBRND1Lk2mt
+        MTYOkhsLTLxcivtxYabvGlM=
+X-Google-Smtp-Source: ACHHUZ625T+d7YPvGMxIwRX/D2cgwsyYzZvSm9QamwpaOqeh7VCRVMZcW5dLitTS4skacXLVUBB0HA==
+X-Received: by 2002:a17:907:1c01:b0:966:335a:5b0b with SMTP id nc1-20020a1709071c0100b00966335a5b0bmr22701935ejc.18.1683973399440;
+        Sat, 13 May 2023 03:23:19 -0700 (PDT)
+Received: from jernej-laptop.localnet (89-212-118-115.static.t-2.net. [89.212.118.115])
+        by smtp.gmail.com with ESMTPSA id jy11-20020a170907762b00b0094f3b18044bsm6621624ejc.218.2023.05.13.03.23.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 13 May 2023 03:23:18 -0700 (PDT)
+From:   Jernej =?utf-8?B?xaBrcmFiZWM=?= <jernej.skrabec@gmail.com>
+To:     Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Driver for rtw8723ds
+Date:   Sat, 13 May 2023 12:23:17 +0200
+Message-ID: <13262218.uLZWGnKmhe@jernej-laptop>
+In-Reply-To: <880bb4ed-f3a5-2d7f-db10-fec65087dd05@lwfinger.net>
+References: <72a8eeb1-c91c-80a7-5a09-1b7963e0996b@lwfinger.net>
+ <CAFBinCAA2CXZBRO7yb4Hjg6Cos4JFQiCMWZLGVh8DCOYWg7HhA@mail.gmail.com>
+ <880bb4ed-f3a5-2d7f-db10-fec65087dd05@lwfinger.net>
 MIME-Version: 1.0
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gRnJpLCAyMDIzLTA1LTEyIGF0IDIwOjA3ICswMzAwLCBCaXR0ZXJibHVlIFNtaXRoIHdyb3Rl
-Og0KPiBFeHRlcm5hbCBtYWlsLg0KPiANCj4gDQo+IA0KPiBUaGlzIGlzIGEgbmV3ZXIgY2hpcCwg
-c2ltaWxhciB0byB0aGUgUlRMODcxMEJVIGluIHRoYXQgaXQgdXNlcyB0aGUgc2FtZQ0KPiBQSFkg
-c3RhdHVzIHN0cnVjdHMuDQo+IA0KPiBGZWF0dXJlczogMi40IEdIeiwgYi9nL24gbW9kZSwgMlQy
-UiwgMzAwIE1icHMuDQo+IA0KPiBJdCBjYW4gYWxsZWdlZGx5IGhhdmUgQmx1ZXRvb3RoLCBidXQg
-dGhhdCdzIG5vdCBpbXBsZW1lbnRlZCBoZXJlLg0KPiANCj4gVGhpcyBjaGlwIGNhbiBoYXZlIG1h
-bnkgUkZFIChSRiBmcm9udCBlbmQpIHR5cGVzLCBvZiB3aGljaCB0eXBlcyAxDQo+IGFuZCA1IGFy
-ZSB0aGUgb25seSBvbmVzIHRlc3RlZC4gTWFueSBvZiB0aGUgb3RoZXIgdHlwZXMgbmVlZCBkaWZm
-ZXJlbnQNCj4gaW5pdGlhbGlzYXRpb24gdGFibGVzLiBUaGV5IGNhbiBiZSBhZGRlZCBpZiBzb21l
-b25lIHdhbnRzIHRoZW0uDQo+IA0KPiBUaGUgdmVuZG9yIGRyaXZlciB2NS44LjYuMl8zNTUzOC4y
-MDE5MTAyOF9DT0VYMjAxOTA5MTAtMGQwMiBmcm9tDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS9Ccmln
-aHRYL3J0bDgxOTJmdSB3YXMgdXNlZCBhcyByZWZlcmVuY2UsIHdpdGgNCj4gYWRkaXRpb25hbCBk
-ZXZpY2UgSURzIHRha2VuIGZyb20NCj4gaHR0cHM6Ly9naXRodWIuY29tL2tlbGViZWszMzMvcnRs
-ODE5MmZ1LWRrbXMuDQo+IA0KPiBUaGUgdmVuZG9yIGRyaXZlciBhbHNvIGNsYWltcyB0byBzdXBw
-b3J0IGRldmljZXMgd2l0aCBJRCAwYmRhOmE3MjUsDQo+IGJ1dCB0aGF0IGlzIGZvdW5kIGluIHNv
-bWUgYmx1ZXRvb3RoLW9ubHkgZGV2aWNlcywgc28gaXQncyBub3Qgc3VwcG9ydGVkDQo+IGhlcmUu
-DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBCaXR0ZXJibHVlIFNtaXRoIDxydGw4ODIxY2VyZmUyQGdt
-YWlsLmNvbT4NCj4gLS0tDQo+IHYzOg0KPiAgLSBSZWJhc2Ugb24gdG9wIG9mIHdpcmVsZXNzLW5l
-eHQuDQo+ICAtIE1hcmsgZGV2aWNlIDBiMDU6MThiMSBhbmQgUkZFIHR5cGUgMSAoQVNVUyBVU0It
-TjEzIEMxKSBhcyB0ZXN0ZWQuDQo+IA0KPiB2MjoNCj4gIC0gRmVlZGJhY2sgZnJvbSBQaW5nLUtl
-IFNoaWg6DQo+ICAgIC0gQWRkIHJ0bDh4eHh1XzgxOTJmLm8gdG8gTWFrZWZpbGUuDQo+ICAgIC0g
-SW5pdGlhbGlzZSB2YXJpYWJsZSBjaGFubmVsX2lkeCBpbiBydGw4MTkyZnVfY29uZmlnX2tmcmVl
-KCkgYW5kDQo+ICAgICAgdmFyaWFibGUgbGVkY2ZnIGluIHJ0bDgxOTJmdV9sZWRfYnJpZ2h0bmVz
-c19zZXQoKSB0byBhdm9pZA0KPiAgICAgIHdhcm5pbmdzLg0KPiAgICAtIEdpdmUgbmFtZXMgdG8g
-YSBsb3Qgb2YgcmVnaXN0ZXJzLg0KPiAgICAtIEluaXRpYWxpc2UgYmJfZ2Fpbl9mb3JfcGF0aCBp
-biBydGw4MTkyZnVfY29uZmlnX2tmcmVlKCkgaW4gdHdvDQo+ICAgICAgc3RlcHMuDQo+ICAgIC0g
-RG9uJ3QgYXNzaWduIHRoZSByZXR1cm4gdmFsdWUgb2YgcnRsOHh4eHVfd3JpdGUzMl9tYXNrKCkg
-dG8NCj4gICAgICB2YXJpYWJsZSB2YWwzMiBpbiBydGw4eHh4dV9maWxsX2lxa19tYXRyaXhfYigp
-Lg0KPiAgLSBBZGQgbW9yZSBpbmZvcm1hdGlvbiBhYm91dCBkZXZpY2UgSURzIHRvIHRoZSBjb21t
-aXQgbWVzc2FnZS4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bDh4
-eHh1L0tjb25maWcgfCAgICAzICstDQo+ICAuLi4vbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsOHh4
-eHUvTWFrZWZpbGUgICAgfCAgICAyICstDQo+ICAuLi4vbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRs
-OHh4eHUvcnRsOHh4eHUuaCAgfCAgIDQ3ICsNCj4gIC4uLi9yZWFsdGVrL3J0bDh4eHh1L3J0bDh4
-eHh1XzgxODhmLmMgICAgICAgICB8ICAgIDMgKy0NCj4gIC4uLi9yZWFsdGVrL3J0bDh4eHh1L3J0
-bDh4eHh1XzgxOTJmLmMgICAgICAgICB8IDIwOTAgKysrKysrKysrKysrKysrKysNCj4gIC4uLi9y
-ZWFsdGVrL3J0bDh4eHh1L3J0bDh4eHh1Xzg3MTBiLmMgICAgICAgICB8ICAgIDEgKw0KPiAgLi4u
-L3JlYWx0ZWsvcnRsOHh4eHUvcnRsOHh4eHVfODcyM2IuYyAgICAgICAgIHwgICAgMSArDQo+ICAu
-Li4vd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9ydGw4eHh4dV9jb3JlLmMgfCAgMTA3ICstDQo+
-ICAuLi4vd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9ydGw4eHh4dV9yZWdzLmggfCAgIDM5ICsN
-Cj4gIDkgZmlsZXMgY2hhbmdlZCwgMjI2MiBpbnNlcnRpb25zKCspLCAzMSBkZWxldGlvbnMoLSkN
-Cj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bDh4
-eHh1L3J0bDh4eHh1XzgxOTJmLmMNCj4gDQo+IA0KDQpbLi4uXQ0KDQo+IEBAIC03NDg0LDYgKzc1
-MjIsOSBAQCBzdGF0aWMgaW50IHJ0bDh4eHh1X3Byb2JlKHN0cnVjdCB1c2JfaW50ZXJmYWNlICpp
-bnRlcmZhY2UsDQo+ICAgICAgICAgICAgICAgICBpZiAoaWQtPmlkUHJvZHVjdCA9PSAweDAxMDkp
-DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIHVudGVzdGVkID0gMDsNCj4gICAgICAgICAgICAg
-ICAgIGJyZWFrOw0KPiArICAgICAgIGNhc2UgMHgwYjA1Og0KPiArICAgICAgICAgICAgICAgaWYg
-KGlkLT5pZFByb2R1Y3QgPT0gMHgxOGYxKQ0KPiArICAgICAgICAgICAgICAgICAgICAgICB1bnRl
-c3RlZCA9IDA7DQoNCidicmVhazsnIGlzIG1pc3NpbmcuIA0KDQo+ICAgICAgICAgZGVmYXVsdDoN
-Cj4gICAgICAgICAgICAgICAgIGJyZWFrOw0KPiAgICAgICAgIH0NCj4gDQoNClsuLi5dDQoNCg==
+Larry,
+
+Dne sreda, 10. maj 2023 ob 23:47:24 CEST je Larry Finger napisal(a):
+> On 5/10/23 16:07, Martin Blumenstingl wrote:
+> > On Wed, May 10, 2023 at 12:02=E2=80=AFAM Larry Finger <Larry.Finger@lwf=
+inger.net> wrote:
+> > [...]
+> >> I added that patch to the driver. The user reports that he was able to=
+ do a ping
+> >> and an nslookup before it crashed with the following in the log:
+> > That's some positive news alongside the crash log: it seems that a
+> > part of the driver works! :-)
+> >=20
+> >> [    8.700626] skbuff: skb_over_panic: text:ffff8000011924ac len:3341 =
+put:3341
+> >> head:ffff000003b3c000 data:ffff000003b3c040 tail:0xd4d end:0x2c0 dev:<=
+NULL>
+> > [...]
+> >> Somehow skb->tail was greater than skb->end. Unfortunately I do not ha=
+ve access
+> >> to gdb to tell you what line corresponds to rtw_sdio_rx_skb+0x50 on th=
+e MangoPi
+> >> MQ Quad.
+> > I need to have a closer look at the pkg_offset and struct
+> > rtw_rx_pkt_stat which we receive.
+> > Recently my own MangoPI MQ-Quad arrived but I did not have the time to
+> > set it up yet. I'll try to do so during the weekend so I can debug
+> > this on my own.
+> >=20
+> > Please ping me next week in case I haven't provided any update until th=
+en.
+>=20
+> I have some test prints in to check for skb overrun. My initial indicatio=
+n is=20
+> that the problem was in the c2h branch of rtw_sdio_rx_skb(), but my next =
+run=20
+> should verify that. My changes will do a pr_warn_once() when the problem=
+=20
+> happens, and then drop the skb.
+>=20
+> My contact reported that he had one run of 3 minutes before the problem=20
+> happened, which is good news for most of the driver.
+
+I may have discovered something interesting. rtl8723ds vendor driver has
+following checks in RX data parsing code:
+https://github.com/lwfinger/rtl8723ds/blob/master/hal/rtl8723d/sdio/rtl8723=
+ds_recv.c#L83-L99
+
+Those checks are absent in rtl8822bs vendor driver, which was my original
+development platform for SDIO. This may indicate some kind of bug in FW
+and/or HW.
+
+I think that at least second check, which checks for exactly the case your
+client experience, can be easily added and tested.
+
+Best regards,
+Jernej
+
+
+
