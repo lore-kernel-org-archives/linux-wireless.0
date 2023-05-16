@@ -2,148 +2,195 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11360C7EE2C
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 May 2023 11:09:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A76C7EE23
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 May 2023 11:50:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232591AbjEPLJW (ORCPT
+        id S233178AbjEPLu3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 May 2023 07:09:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59840 "EHLO
+        Tue, 16 May 2023 07:50:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232786AbjEPLJB (ORCPT
+        with ESMTP id S233196AbjEPLt6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2023 07:09:01 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03D427696;
-        Tue, 16 May 2023 04:08:30 -0700 (PDT)
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GB45IY006515;
-        Tue, 16 May 2023 11:07:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=8hiZ9JbF34R9RC3GTi14AhS0XmFDs03a8j1pLNXYbs8=;
- b=RIcJ5ZDC1A079INP59M0L3AYND5GOXcUmHwDzKbhNH49B+KK47n77ImMdSNivJLVhZKs
- LPOwCOtlJeZ1BiupFBRu0Ecqb/7QKv62ibOosYi7l9UN38XNkxtytcLG+E+1UxaAJW1I
- czf+Qrlk8UUyz3zzhOqxUVQ/dxeJa1kn8h5ibY4iOZGNM8Riysb8w07luivT18AmeiAQ
- lwuiHnM+/FsUJlLOskf9DZXtajVQSnKSHVECm9b4eaHBBbiTggYTjcpK2TKTAL1WKCEA
- kLZdPKD8ewvdlejeLoZBJbGSQVOfSt08UFdiud5bTZErQ92Vn2DHtTav/oJHjDKdqcLN gQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrr8wc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:07:23 +0000
-Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GB4Wf3008467;
-        Tue, 16 May 2023 11:06:25 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrr88n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:06:25 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G5iarA019416;
-        Tue, 16 May 2023 11:01:18 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-        by ppma04ams.nl.ibm.com (PPS) with ESMTPS id 3qj264sk9d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:01:18 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB1FtX46137720
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 May 2023 11:01:15 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AE29E20043;
-        Tue, 16 May 2023 11:01:15 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 409C320040;
-        Tue, 16 May 2023 11:01:15 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 16 May 2023 11:01:15 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Jouni Malinen <j@w1.fi>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v4 40/41] wireless: add HAS_IOPORT dependencies
-Date:   Tue, 16 May 2023 13:00:36 +0200
-Message-Id: <20230516110038.2413224-41-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230516110038.2413224-1-schnelle@linux.ibm.com>
-References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: -AXyIouq8jC1cPpj9pJ3WiafnsqTUYgR
-X-Proofpoint-GUID: vWpcmIAtZTmCCgxhes2zMAqi_Nskfmgk
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-16_04,2023-05-16_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 spamscore=0 impostorscore=0 mlxscore=0 mlxlogscore=999
- lowpriorityscore=0 suspectscore=0 adultscore=0 phishscore=0 bulkscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2305160094
+        Tue, 16 May 2023 07:49:58 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFEE2469D
+        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2023 04:49:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1684237781; x=1715773781;
+  h=date:from:to:cc:subject:message-id;
+  bh=Yu3um0789SWRPRmHe+ayN3NeIBprdypPtQvKY3Z9mys=;
+  b=YoEnu85HAxFC1qb8XdLEdCLkBLyAM3CnnLnV54eUZsadhbQkpQWCeYb8
+   zm3jtiPyuZLg7PHiMw4cY0jXMwvlwua58sDLYpzD95pwQ14POoY/Bp6+T
+   q52/9kbxv2kQtG/okM/qbrjpwXTXgDdd8hxv4pmMrovtVX8SrigUghpyf
+   teaW2VDEDFLncGM7c3U479fkwge6VlK+XhhIySW8oBtjvKg58sJNOvu6q
+   9U7Qu+MlKAwn7XiuKXZ2v3S0jz4NQlUhE6Bj84sAw/UBSsk5JgqNiVkSo
+   1trWIZZOfFA+Oqk+JsfuXcaIx2+8wjGW/RWtbCshkPEwJWSTXDyM97EKQ
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10711"; a="335999023"
+X-IronPort-AV: E=Sophos;i="5.99,278,1677571200"; 
+   d="scan'208";a="335999023"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2023 04:49:19 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10711"; a="1031257473"
+X-IronPort-AV: E=Sophos;i="5.99,278,1677571200"; 
+   d="scan'208";a="1031257473"
+Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
+  by fmsmga005.fm.intel.com with ESMTP; 16 May 2023 04:49:13 -0700
+Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pytB2-0007PO-2L;
+        Tue, 16 May 2023 11:49:12 +0000
+Date:   Tue, 16 May 2023 19:48:33 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: [wireless-next:main] BUILD SUCCESS
+ 103d6e9d61e012d9f7d0aae33529924f9a3d78d9
+Message-ID: <20230516114833.xpIR3%lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+tree/branch: INFO setup_repo_specs: /db/releases/20230516180935/lkp-src/repo/*/wireless-next
+https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+branch HEAD: 103d6e9d61e012d9f7d0aae33529924f9a3d78d9  wifi: rtl8xxxu: Rename some registers
 
-Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-Acked-by: Kalle Valo <kvalo@kernel.org>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
-Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
-      per-subsystem patches may be applied independently
+elapsed time: 811m
 
- drivers/net/wireless/atmel/Kconfig           | 2 +-
- drivers/net/wireless/intersil/hostap/Kconfig | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+configs tested: 121
+configs skipped: 8
 
-diff --git a/drivers/net/wireless/atmel/Kconfig b/drivers/net/wireless/atmel/Kconfig
-index ca45a1021cf4..bafdd57b049a 100644
---- a/drivers/net/wireless/atmel/Kconfig
-+++ b/drivers/net/wireless/atmel/Kconfig
-@@ -14,7 +14,7 @@ if WLAN_VENDOR_ATMEL
- 
- config ATMEL
- 	tristate "Atmel at76c50x chipset  802.11b support"
--	depends on CFG80211 && (PCI || PCMCIA)
-+	depends on CFG80211 && (PCI || PCMCIA) && HAS_IOPORT
- 	select WIRELESS_EXT
- 	select WEXT_PRIV
- 	select FW_LOADER
-diff --git a/drivers/net/wireless/intersil/hostap/Kconfig b/drivers/net/wireless/intersil/hostap/Kconfig
-index c865d3156cea..2edff8efbcbb 100644
---- a/drivers/net/wireless/intersil/hostap/Kconfig
-+++ b/drivers/net/wireless/intersil/hostap/Kconfig
-@@ -56,7 +56,7 @@ config HOSTAP_FIRMWARE_NVRAM
- 
- config HOSTAP_PLX
- 	tristate "Host AP driver for Prism2/2.5/3 in PLX9052 PCI adaptors"
--	depends on PCI && HOSTAP
-+	depends on PCI && HOSTAP && HAS_IOPORT
- 	help
- 	Host AP driver's version for Prism2/2.5/3 PC Cards in PLX9052 based
- 	PCI adaptors.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r015-20230516   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r002-20230515   gcc  
+arm                  randconfig-r004-20230515   gcc  
+arm64                            allyesconfig   gcc  
+arm64        buildonly-randconfig-r003-20230515   clang
+arm64                               defconfig   gcc  
+arm64                randconfig-r005-20230516   gcc  
+arm64                randconfig-r022-20230515   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r004-20230515   gcc  
+csky                 randconfig-r012-20230516   gcc  
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-a001-20230515   clang
+i386                 randconfig-a002-20230515   clang
+i386                 randconfig-a003-20230515   clang
+i386                 randconfig-a004-20230515   clang
+i386                 randconfig-a005-20230515   clang
+i386                 randconfig-a006-20230515   clang
+i386                 randconfig-a011-20230515   gcc  
+i386                 randconfig-a012-20230515   gcc  
+i386                 randconfig-a013-20230515   gcc  
+i386                 randconfig-a014-20230515   gcc  
+i386                 randconfig-a015-20230515   gcc  
+i386                 randconfig-a016-20230515   gcc  
+i386                          randconfig-i062   clang
+i386                          randconfig-i064   clang
+i386                          randconfig-i066   clang
+i386                 randconfig-i071-20230515   gcc  
+i386                 randconfig-i072-20230515   gcc  
+i386                 randconfig-i073-20230515   gcc  
+i386                 randconfig-i074-20230515   gcc  
+i386                 randconfig-i075-20230515   gcc  
+i386                 randconfig-i076-20230515   gcc  
+i386                 randconfig-i081-20230515   gcc  
+i386                 randconfig-i082-20230515   gcc  
+i386                 randconfig-i083-20230515   gcc  
+i386                 randconfig-i084-20230515   gcc  
+i386                 randconfig-i085-20230515   gcc  
+i386                 randconfig-i086-20230515   gcc  
+ia64                             allmodconfig   gcc  
+ia64                                defconfig   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r002-20230515   gcc  
+m68k                             allmodconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r005-20230515   gcc  
+microblaze           randconfig-r004-20230516   gcc  
+microblaze           randconfig-r006-20230515   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r006-20230515   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r026-20230515   gcc  
+openrisc             randconfig-r006-20230516   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r023-20230515   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r003-20230515   clang
+riscv                randconfig-r004-20230515   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390         buildonly-randconfig-r004-20230516   clang
+s390                                defconfig   gcc  
+s390                 randconfig-r001-20230516   gcc  
+sh                               allmodconfig   gcc  
+sh                   randconfig-r001-20230515   gcc  
+sh                   randconfig-r011-20230516   gcc  
+sh                   randconfig-r013-20230516   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r001-20230515   gcc  
+sparc                randconfig-r025-20230515   gcc  
+sparc64              randconfig-r024-20230515   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                        randconfig-a001   clang
+x86_64                        randconfig-a003   clang
+x86_64                        randconfig-a005   clang
+x86_64                        randconfig-a011   gcc  
+x86_64                        randconfig-a013   gcc  
+x86_64                        randconfig-a015   gcc  
+x86_64               randconfig-x051-20230515   gcc  
+x86_64               randconfig-x052-20230515   gcc  
+x86_64               randconfig-x053-20230515   gcc  
+x86_64               randconfig-x054-20230515   gcc  
+x86_64               randconfig-x055-20230515   gcc  
+x86_64               randconfig-x056-20230515   gcc  
+x86_64               randconfig-x081-20230515   clang
+x86_64               randconfig-x082-20230515   clang
+x86_64               randconfig-x083-20230515   clang
+x86_64               randconfig-x084-20230515   clang
+x86_64               randconfig-x085-20230515   clang
+x86_64               randconfig-x086-20230515   clang
+x86_64               randconfig-x091-20230515   gcc  
+x86_64               randconfig-x092-20230515   gcc  
+x86_64               randconfig-x093-20230515   gcc  
+x86_64               randconfig-x094-20230515   gcc  
+x86_64               randconfig-x095-20230515   gcc  
+x86_64               randconfig-x096-20230515   gcc  
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r003-20230515   gcc  
+
 -- 
-2.39.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
