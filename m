@@ -2,97 +2,92 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F3DC77B75
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 May 2023 16:40:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68131C77B7A
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 May 2023 17:14:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229678AbjEPQkH (ORCPT
+        id S230238AbjEPROI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 May 2023 12:40:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43048 "EHLO
+        Tue, 16 May 2023 13:14:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231806AbjEPQjw (ORCPT
+        with ESMTP id S229644AbjEPROH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 May 2023 12:39:52 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5F4B19C
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2023 09:39:44 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id a640c23a62f3a-965c3f9af2aso2205489066b.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 May 2023 09:39:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20221208; t=1684255183; x=1686847183;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=TTErjYm0YU/D0XaSqiHAs0XifIDzBMEoij1eY6eHmxo=;
-        b=GgEW0lp3ZwlmEvRVGAJJxxi2ib2aDMulEPdQ5yPyR8ownpLrIt1L2nycvUNIpfUzV5
-         6DaewNVX/nTFtEZIS4FVconnMA7unC7QhbDNM38CGlWpvzjf+uPgnQWGo5LZRE70MCjc
-         aiCUMu7hEu2FL0pQgTgqI0wVuM7FLVj8ApoJ55Rx0hiC/C0KBrw1tRB+i6d0iLa/qccM
-         VH4gHxpkY9gRsOyXWelkiwm2eRKi7owPzNYx/fKfbBSj+PzhZDiJx1r7V23OFXa77q6K
-         IKbV1x9z67/AmR57fD8VkCoPJBgiT1nfUJtPTaYSVQ2zVUZJUE+qqIygog12PP03BTjc
-         +ecA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684255183; x=1686847183;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=TTErjYm0YU/D0XaSqiHAs0XifIDzBMEoij1eY6eHmxo=;
-        b=eY+RgRphOEAMLZQiZ4dIBByh3vw1QG0YVowl2V5zx/BJWJsJKuQcwUJ84hHgzgZyl1
-         iw0NOZh46Ki9VuX7/BB1ys5HjQy74m82kj1/2qco3+dEjSIuhHa5fn2/rU22cmIPnK2T
-         ckBIbmU7vGjEKgDWh1RiagOI7Ez3GVzkxgeXjgm3jQDh4TsuEksXN74IqyfCdSTxEPYJ
-         IFy1bWiuNB0uLb4ejxorjcA2YY1G1xQx/z/E0M1E7q80FPm14NwWLnsu0wDDos+VrFq8
-         9nsKNlZpboCL7Rz9aCFqM8EjSVdqd4hms74RYCZRRiUdALjABK837g1GMUjlQW3VA0bj
-         jIiw==
-X-Gm-Message-State: AC+VfDyTpCCcSzzkOf6fkEB7LeEuNDiDiBhgScji+zJEBhvAALfyRvBc
-        ulgA+wgZgYP5w3DHdSsBQPDhR+wm3dmfaX8PBj0=
-X-Google-Smtp-Source: ACHHUZ6KE3vDBkS6VW69jQzYi/F2uvTObbro3w2ez2bEorun15jGSliPu5XB8J4K8JzlssskEB0ioxmSoD4f53SylJk=
-X-Received: by 2002:a17:907:868f:b0:969:f9e8:a77c with SMTP id
- qa15-20020a170907868f00b00969f9e8a77cmr27195437ejc.64.1684255182708; Tue, 16
- May 2023 09:39:42 -0700 (PDT)
+        Tue, 16 May 2023 13:14:07 -0400
+Received: from bues.ch (bues.ch [IPv6:2a01:138:9005::1:4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB6C47EC0;
+        Tue, 16 May 2023 10:13:57 -0700 (PDT)
+Received: by bues.ch with esmtpsa (Exim 4.94.2)
+        (envelope-from <m@bues.ch>)
+        id 1pyyEo-000LBs-4Q; Tue, 16 May 2023 19:13:25 +0200
+Date:   Tue, 16 May 2023 19:12:45 +0200
+From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Kalle Valo <kvalo@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, llvm@lists.linux.dev
+Subject: Re: [PATCH] wifi: b43: fix incorrect __packed annotation
+Message-ID: <20230516191245.4149c51a@barney>
+In-Reply-To: <20230516074554.1674536-1-arnd@kernel.org>
+References: <20230516074554.1674536-1-arnd@kernel.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.37; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date:   Tue, 16 May 2023 18:39:31 +0200
-Message-ID: <CAFBinCD=HVyedXpqRfAC=m3A=wstDbtQfLDZqjHufSawdLKwiw@mail.gmail.com>
-Subject: wifi: rtw88: questions about adding support for RTL8723DS/RTL8723BS
-To:     Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
-Cc:     Larry Finger <Larry.Finger@lwfinger.net>, tony0620emma@gmail.com,
-        jernej.skrabec@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; boundary="Sig_/h3eF.NMb8zN_PF_aekVVTvG";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Ping-Ke,
+--Sig_/h3eF.NMb8zN_PF_aekVVTvG
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-as a next step I want to add support for RTW_WCPU_11N SDIO cards to
-the rtw88 driver.
-Currently only one RTW_WCPU_11N chip is supported: RTL8723D by the
-rtw88 (PCIe and USB HCIs).
+On Tue, 16 May 2023 09:45:42 +0200
+Arnd Bergmann <arnd@kernel.org> wrote:
 
-My first question is very hopefully a simple one:
-It seems that RTL8723DS has two SDIO IDs: 0xd723 and 0xd724.
-Do these have the same name or is there some kind of "revision" (like
-rev 2, revision B, ...) internally?
+> b43_iv { union {
+>  		__be16 d16;
+>  		__be32 d32;
+> -	} data __packed;
+> +	} __packed data;
+>  } __packed;
+> =20
+> =20
 
-My second question is more abstract:
-Based on my understanding of the vendor drivers for RTL8723BS and
-RTL8723DS both seem very close in terms of registers. initialization
-sequence, ...
-So I am hoping that it's possible to add RTL8723BS support to the rtw88 driver.
-There's two main differences that I found so far:
-- rtw_dump_hw_feature() doesn't work because REG_C2HEVT has an
-incorrect value (C2H_HW_FEATURE_REPORT is expected but it still
-contains C2H_HW_FEATURE_DUMP). It seems that this is a firmware issue.
-- The whole ltecoex support (my understanding is: this is part of the
-Bluetooth 4.2 spec but RTL8723BS was originally developed for the
-Bluetooth 4.0 spec) seems missing in terms of all required registers.
-I'm not sure if this is a hardware or firmware topic.
+Oh, interesting. This has probably been there forever.
+Did you check if the b43legacy driver has the same issue?
 
-Have you considered adding RTW8723B support to the rtw88 driver?
-Do you have some initial suggestions on what would be needed to do so
-(is my list from above complete, what do do about these points, ...)?
+Acked-by: Michael B=C3=BCsch <m@bues.ch>
 
-There's a huge number of boards with RTL8723BS out there and I think
-they could benefit from the rtw88 driver (and so we can finally get
-rid of drivers/staging/rtl8723bs/).
+--=20
+Michael B=C3=BCsch
+https://bues.ch/
 
+--Sig_/h3eF.NMb8zN_PF_aekVVTvG
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Best regards,
-Martin
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmRjuY4ACgkQ9TK+HZCN
+iw45gw//YtREyc0Ll9Z5mUYuRQuRvClsfk1NDerPQUm2m7byxHpwFBpMxNxvp234
+ywnZHxD5RDFM2XjhYW1SpU1ewr2z8ElvbNMERX5ZoXDLwo5sxuYDz6bAEwd4Ka69
+VdQ3aXYm2xexI+s68fhZQuKKMSLI0zd6/IPs0pJidFnPM+Q4xhtkGlEr3gXQwbfL
+cPnvN1plCaxsndV0gkaulfKdfRgO7i6H7jfLpqgQx1PLrgDLsdycW4AXURTn7N1K
+XZbgXBdR62fJxxKhGddYOd+bVBIkQ0al2GPHQZ+YSYf+N9XR7tUxCnfRU7inQlDE
+d9cH949KJBeoUz/Fz9ulnAadtvh10+81Kdtc00X3OL+NWtU24NFUmqdiOM9PfDBT
+j30mny47L6o1GlwaY3/narr4nNHGuHnHEljFDsMJa4RC8gmRpOR2x6FemD7CU5+Y
+ZYcgShzbYVmfsIE5XGO9LNBOciIZpyzaMlPIaOSb2hnrvwKZRQSYlj7I+tRsdvnE
+OEZxEzM8PE5M1jaw5YR+3dxbXbjLBRMm/F5IaEjoxWPymMt0V1AWGtkA2bPw06sz
+WUDMN3c4UecHrOUBFiU7GdVO8M9pjIWuZVOyv2dTCXCqpALusWSie3AcOLrrw+kS
+TGPi0uYmKg/Td+5vTwRVuqZ8Z5Z11VqZXxI79xVUR3wV0WSXUPI=
+=kQU1
+-----END PGP SIGNATURE-----
+
+--Sig_/h3eF.NMb8zN_PF_aekVVTvG--
