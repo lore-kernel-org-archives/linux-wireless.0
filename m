@@ -2,114 +2,118 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 024E3C77B7A
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 May 2023 13:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C75B0C7EE23
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 May 2023 14:00:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229623AbjEQN75 (ORCPT
+        id S229780AbjEQOAE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 May 2023 09:59:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56592 "EHLO
+        Wed, 17 May 2023 10:00:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231720AbjEQN7y (ORCPT
+        with ESMTP id S229957AbjEQOAC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2023 09:59:54 -0400
+        Wed, 17 May 2023 10:00:02 -0400
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F61330C2
-        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2023 06:59:53 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34H95XoT008242;
-        Wed, 17 May 2023 13:59:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=5GyuLDnwVsozuR8eAsgE2Ab7PK+ksn54/ioU486uZVQ=;
- b=U/FXRKU32PJyIxhHJGoZNlM6SX2j3eB1LtAATcru+YatbWeyuBfUPlZG/pP1cRSYpe1+
- sxOV3JEFRpwSWw6ZRs0N4THHWAb1P84Zd2I4xEzBE8PzmAqhyBw8X6UgerXmCNsaMOSt
- V7HHrvJcZSRZsw2pkYRuEBkXWKPPCtZsTeMujg5esJb9rMyDXT1svY3LaktDO060qxoS
- gVl+0a6RQTZ4gCH8XMXAjQ6YQuzoIkISRLFKFdE6zRLBx69yTRSwihjkTAaoyaUVQRWj
- 6bAZE1/yMTljLxq3iCRmm2pIqcYnPOuFkYK5BRE+k3OGKgwaHZFjowk53IjwFOztnggq Sg== 
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qme0ma78d-1
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 010C53C30
+        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2023 07:00:01 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34HAOHlH016339;
+        Wed, 17 May 2023 13:59:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=Wu3P6bt1l+ytrSVClzTyytbsCDgT7/IV3/48siddHdM=;
+ b=jVEBgFOHVC2m/tjudC7w8G/YdCznm+Fjb8SkEZhG5DfEDvSTVNHvxfyJ1QrQ6b60B++V
+ W+C65SfXakQtAwC/5KNjCAiemYx7XNo6hz/Neg+8KBzJ+O91Xtei0Sqpqk4fN0d92MMO
+ QZN9naUxx9Ob448zxD9HnxePN6nTKFSZNE3keDp78JMR1YTyq+jI94FRUClBAPfQAlA7
+ XC+jOJJ6nG71pg63I5x9XEfMQdFDHF1aCmu7KI3TgVfVUEl5/ltl3/L+W6pXc/Ns16zO
+ wdJdYacQdakEXmDsjl7x0+Zm9LQkByKP6kakPyO2ZXsXMRkn3GSp8O8yqHGnwYotczc6 8w== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qmcc62e9p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 17 May 2023 13:59:41 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34HDxeiB002901
+        Wed, 17 May 2023 13:59:59 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34HDxx9D026683
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 17 May 2023 13:59:40 GMT
-Received: from [10.201.164.214] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Wed, 17 May
- 2023 06:59:38 -0700
-Message-ID: <351be742-6b4d-c9fd-5583-2a8b2b296d98@quicinc.com>
-Date:   Wed, 17 May 2023 19:29:34 +0530
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.1
-Subject: Re: [PATCH] wifi: ath11k: Add rx histogram stats
-To:     Ben Greear <greearb@candelatech.com>, <ath11k@lists.infradead.org>
+        Wed, 17 May 2023 13:59:59 GMT
+Received: from rajkbhag-linux.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Wed, 17 May 2023 06:59:57 -0700
+From:   Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+To:     <ath11k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
-        Abinaya Kalaiselvan <quic_akalaise@quicinc.com>
-References: <20230405132804.226681-1-quic_mkenna@quicinc.com>
- <1e0de6cd-4e43-273f-2222-1c52d2b6d95e@candelatech.com>
-Content-Language: en-US
-From:   Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
-In-Reply-To: <1e0de6cd-4e43-273f-2222-1c52d2b6d95e@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+        Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+Subject: [PATCH v4 0/4] ath11k: factory test mode support
+Date:   Wed, 17 May 2023 19:29:30 +0530
+Message-ID: <20230517135934.16408-1-quic_rajkbhag@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+MIME-Version: 1.0
+Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: gSCAhwQhmW5wRa0eVElYx-yd4tdNXt5P
-X-Proofpoint-ORIG-GUID: gSCAhwQhmW5wRa0eVElYx-yd4tdNXt5P
+X-Proofpoint-GUID: VZcZWKr-9iGahiI_uPV_nprAHcJSsRhu
+X-Proofpoint-ORIG-GUID: VZcZWKr-9iGahiI_uPV_nprAHcJSsRhu
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-17_02,2023-05-17_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- impostorscore=0 suspectscore=0 phishscore=0 malwarescore=0 bulkscore=0
- spamscore=0 adultscore=0 mlxlogscore=740 mlxscore=0 lowpriorityscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 impostorscore=0
+ phishscore=0 suspectscore=0 mlxscore=0 bulkscore=0 adultscore=0
+ mlxlogscore=666 malwarescore=0 lowpriorityscore=0 clxscore=1015
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2305170114
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Device is booted in factory test mode to calibrate the board.
+The commands are sent from a userspace application, which is
+sent to firmware using wmi commands. Firmware will send the
+response back to the application which stores the calibration
+data in caldata.bin file. This file will be loaded when the
+device boots up normally next time.
 
-On 4/5/2023 7:05 PM, Ben Greear wrote:
-> On 4/5/23 6:28 AM, Maharaja Kennadyrajan wrote:
->> Add peer specific debugfs support to store and
->> display peer rx stats info like HE, VHT, HT,
->> legacy and NSS.
->> Also, add a debugfs knob to reset rx stats
->> specific to the peer.
->>
->> This helps  to debug the throughput related
->> issues in the UL traffic(STA to AP) by getting
->> the segregated rx_stats info like HE, VHT, HT etc,.
->>
->> There is no addition of new debugfs_file here to get
->> these segregated stats. The exising rx_stats is enhanced
->> to get these stats.
->
-> I'm a big fan of stats, so nice to see you adding this.
->
-> I'd also suggest adding histogram for ampdu length if you can,
-> as a sta sending series of 2 frames in ampdu vs sta sending a series
-> of 64 frames in ampdu will get significantly different throughput.
->
-> Thanks,
-> Ben
->
-Hi Ben,
+Govindaraj Saminathan (3):
+  wifi: ath11k: remove unused function ath11k_tm_event_wmi
+  wifi: ath11k: optimize ath11k_tm_cmd_get_version
+  wifi: ath11k: factory test mode support
 
-Thanks for your feedback and we take your request.
+Sowmiya Sree Elavalagan (1):
+  wifi: ath11k: Allow ath11k to boot without caldata in ftm mode
 
-We will send the patch later on your requirement.
+---
+v4:
+- used pending branch commit as baseline for v4.
+
+v3:
+- added Tested-on tag in patch 1/4 and 2/4.
+
+v2:
+- added separate patch for removal of ath11k_tm_event_wmi()
+- added separate patch for changes in ath11k_tm_cmd_get_version()
+- removed unused cmd and updated documentation for enum ath11k_tm_cmd
+- changed warning print to debug print
+---
+
+ drivers/net/wireless/ath/ath11k/ahb.c        |   3 +-
+ drivers/net/wireless/ath/ath11k/core.c       |  21 +-
+ drivers/net/wireless/ath/ath11k/core.h       |  16 +-
+ drivers/net/wireless/ath/ath11k/debug.h      |   1 +
+ drivers/net/wireless/ath/ath11k/mac.c        |  11 +-
+ drivers/net/wireless/ath/ath11k/pci.c        |   3 +-
+ drivers/net/wireless/ath/ath11k/qmi.c        |  10 +-
+ drivers/net/wireless/ath/ath11k/testmode.c   | 363 ++++++++++++++++---
+ drivers/net/wireless/ath/ath11k/testmode.h   |   7 +-
+ drivers/net/wireless/ath/ath11k/testmode_i.h |  18 +-
+ drivers/net/wireless/ath/ath11k/wmi.c        |  11 +-
+ drivers/net/wireless/ath/ath11k/wmi.h        |  22 ++
+ drivers/net/wireless/ath/ath11k/wow.c        |   3 +-
+ 13 files changed, 422 insertions(+), 67 deletions(-)
 
 
-Regards,
-
-Maharaja
+base-commit: 610b78b97bad8f3e77c27a15e9a03cbbb4109697
+-- 
+2.17.1
 
