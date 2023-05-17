@@ -2,77 +2,76 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF852C77B75
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 May 2023 08:15:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77CF9C77B75
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 May 2023 08:19:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229695AbjEQIPw (ORCPT
+        id S229802AbjEQITN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 May 2023 04:15:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38572 "EHLO
+        Wed, 17 May 2023 04:19:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230013AbjEQIPt (ORCPT
+        with ESMTP id S229895AbjEQITK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2023 04:15:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4F7D55A8
-        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2023 01:15:39 -0700 (PDT)
+        Wed, 17 May 2023 04:19:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98EEE10EF
+        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2023 01:19:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 627A160F01
-        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2023 08:15:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADEDDC433EF;
-        Wed, 17 May 2023 08:15:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2E4AE61774
+        for <linux-wireless@vger.kernel.org>; Wed, 17 May 2023 08:19:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DFBFC433D2;
+        Wed, 17 May 2023 08:19:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684311338;
-        bh=5ChUSQwcuXz2s8bngl3k5z0Fzx1B8kCa+r5+BP3DRpQ=;
+        s=k20201202; t=1684311548;
+        bh=La1MuPZ/2qVLr9ylXbwJw83v1motV4uLHA32QcWjphE=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=UsMA7L6DxgVwWa0P+9O6f3Odc09hEsbft+sCZSTFnPI6FJ3D8VB48uI7WbUh8kTQF
-         CwbY5+sDO+pcrw24JhPE8vieblJCWD2XEFXp9X9jEDaQTUC4mBeCjlY/IQDw2xK2zx
-         DCHL0BPPunhizZuvoKm0C7J6Q+On0DSTcAUefgi5b5uREGmMdU+JdtgoDQ/xzSGkZx
-         7zQtOo7l8VbqEuGF3pon/Zd4/5kZXG0/eT/bA30w0iM8l+2T4ZtoGUoluJPRs4niDz
-         +2yHtNmnQUMHXpl4aL78rb7pMB99986aP8eYuvwyJJ780rKqyusP0gGtJlxhcFGteK
-         BD+LyD+Cp899Q==
+        b=pjkOMK8mjdsHwGQyCnyWrhd6uJXdle0Ld1hUetsbd/kNIZ881yzN6OuiwIHCyaWk2
+         mbkXyp1+NgjXhq7V9ckLvkWgF5BPzHs3LTT0E+1Q2PkVYhFgDySdLOSBxOo2l0MwgU
+         l6TOwXmCURxKIGmGeNGffpW9GJGmThPImp8GEldf7DhZ5wrwKCm23KSp8Io28+YmpV
+         OwXAkd5v+TvtboC7cjYDolOzFLSQMQG1532WpOvbLOjf4YO2le1esNXvxxD2UOgkBk
+         Bc6RMwja1WLZ6pvSXlRBbxse4TS18T9d4b52m4pDNDK2iEqHp+VgQwj297WBY/fR+0
+         H5wBFCYSOu8NQ==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: ath12k: increase vdev setup timeout
+Subject: Re: [PATCH 1/2] ath11k: Relocate the func
+ ath11k_mac_bitrate_mask_num_ht_rates() and change hweight16 to hweight8
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230428091041.20033-1-quic_rgnanase@quicinc.com>
-References: <20230428091041.20033-1-quic_rgnanase@quicinc.com>
-To:     Ramya Gnanasekar <quic_rgnanase@quicinc.com>
-Cc:     ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Aishwarya R <quic_aisr@quicinc.com>,
-        Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+In-Reply-To: <20230504092033.3542456-2-quic_mkenna@quicinc.com>
+References: <20230504092033.3542456-2-quic_mkenna@quicinc.com>
+To:     Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
+Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168431133246.15787.4737554911874210134.kvalo@kernel.org>
-Date:   Wed, 17 May 2023 08:15:37 +0000 (UTC)
+Message-ID: <168431154238.15787.9973143615337740761.kvalo@kernel.org>
+Date:   Wed, 17 May 2023 08:19:07 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ramya Gnanasekar <quic_rgnanase@quicinc.com> wrote:
+Maharaja Kennadyrajan <quic_mkenna@quicinc.com> wrote:
 
-> When vdev start/stop happens, response from firmware is received with delay
-> and hence there is a timeout before VDEV can be up/down.
-> Also, with maximum peers connected and when vdev stop occurs, firmware
-> will take time to clean up all the peers and vap queues.
-> In such cases as well, vdev start/stop response is sent by firmware with delay.
+> Relocate the function ath11k_mac_bitrate_mask_num_ht_rates() definition
+> to call this function from other functions which helps to avoid the
+> compilation error (function not defined).
 > 
-> Increase the vdev setup timeout as recommended by firmware team.
+> ht_mcs[] is 1 byte array and it is enough to use hweight8() instead
+> of hweight16(). Hence, fixed the same.
 > 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0-02903-QCAHKSWPL_SILICONZ-1
+> Tested on: Compile tested only.
 > 
-> Signed-off-by: Aishwarya R <quic_aisr@quicinc.com>
-> Signed-off-by: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+> Signed-off-by: Maharaja Kennadyrajan <quic_mkenna@quicinc.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+2 patches applied to ath-next branch of ath.git, thanks.
 
-1fd2c3f93c3e wifi: ath12k: increase vdev setup timeout
+570eec3d4050 wifi: ath11k: Relocate the func ath11k_mac_bitrate_mask_num_ht_rates() and change hweight16 to hweight8
+df8e3729ffc0 wifi: ath11k: Send HT fixed rate in WMI peer fixed param
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230428091041.20033-1-quic_rgnanase@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230504092033.3542456-2-quic_mkenna@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
