@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4F57C77B75
-	for <linux-wireless@archiver.kernel.org>; Wed, 17 May 2023 11:05:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 523F5C77B75
+	for <linux-wireless@archiver.kernel.org>; Wed, 17 May 2023 11:06:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231172AbjEQLFY (ORCPT
+        id S229545AbjEQLG1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 17 May 2023 07:05:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51058 "EHLO
+        Wed, 17 May 2023 07:06:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231136AbjEQLFV (ORCPT
+        with ESMTP id S230522AbjEQLGK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 17 May 2023 07:05:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CFB65BA9;
-        Wed, 17 May 2023 04:05:05 -0700 (PDT)
+        Wed, 17 May 2023 07:06:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 491457A98;
+        Wed, 17 May 2023 04:05:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0C85D61B39;
-        Wed, 17 May 2023 11:05:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0D99C43321;
-        Wed, 17 May 2023 11:04:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 968976457B;
+        Wed, 17 May 2023 11:05:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25507C4339C;
+        Wed, 17 May 2023 11:05:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684321504;
-        bh=dP7yShpUMKY1hlEFVakjZvlEQOr+IanDVhIYO9CmG5w=;
+        s=k20201202; t=1684321540;
+        bh=Q72kVKGAqEzTgRn6ZNEGuvKnBS2ZxckUN41TA3GqR84=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=sYVd5TaLHaPo10KrzLin9+p+UZcAoZKhIB0zTnfJM7/tDjj2vQxqPnfkbpkAM5XRF
-         yvmTLmdAv72F8B2Y+gjCAO1XYQNSTXHJN3QiMpNZqi7oqOkGx2+RSze+BxiWbydQBL
-         rYlmk8K+8VlkuNP5OXxRxbYvyXQAHsQDGI/L3zhw/CpJL09omAQBBP3DQWyytuPbOn
-         OVNkVLBvBe6n+fPagVJiSoAFJlfbV5i09g10Fku9u5aU59aSs+zx+yxdlbnGxrfJYI
-         o+CDHbWACrq+ubGB54hIIudG4ITIKhR3Vi7MlyWQxuPjEAoXVZtc3t2rI4URVE3pL4
-         F7QEZsJf6fO/w==
+        b=FmP3GEO7SWi+Pb2HwSw3Wz2raaGTlyrfSH8A+80cKRGdWYw8WYLO309ufoiUT38tQ
+         /SpSlpmEcAerb0UVvwmmi72UnBVO+Bi+u7H2rVQRl9D1Ourxu7gj/YLsSu8KtCy+YM
+         kezchvkccrzPk0lUlDFHtotlzRuxOqYcNRQymdJlL6WodoLvz34fLJuCzuEdmedMh6
+         NneC3fSVpvXBVlrFwCdlP7uAR8PMfNr6RWwYEOVz+CT8gg0Ws1dAihLyQ8zLRavbta
+         +42Cse/M6+Xfb1KigOW65c4jcsHk1+qEJrd47jAJIyVQxX5+DrHbuVzu5yHGK4Micy
+         VG8eZZ0piI9PA==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     Ilpo =?utf-8?Q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
@@ -47,20 +47,21 @@ Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
-        Carl Huang <cjhuang@codeaurora.org>,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         Dean Luick <dean.luick@cornelisnetworks.com>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         stable@vger.kernel.org
-Subject: Re: [PATCH v2 7/9] wifi: ath11k: Use RMW accessors for changing LNKCTL
+Subject: Re: [PATCH v2 9/9] wifi: ath10k: Use RMW accessors for changing LNKCTL
 References: <20230517105235.29176-1-ilpo.jarvinen@linux.intel.com>
-        <20230517105235.29176-8-ilpo.jarvinen@linux.intel.com>
-Date:   Wed, 17 May 2023 14:04:57 +0300
-In-Reply-To: <20230517105235.29176-8-ilpo.jarvinen@linux.intel.com> ("Ilpo
-        \=\?utf-8\?Q\?J\=C3\=A4rvinen\=22's\?\= message of "Wed, 17 May 2023 13:52:33
+        <20230517105235.29176-10-ilpo.jarvinen@linux.intel.com>
+Date:   Wed, 17 May 2023 14:05:33 +0300
+In-Reply-To: <20230517105235.29176-10-ilpo.jarvinen@linux.intel.com> ("Ilpo
+        \=\?utf-8\?Q\?J\=C3\=A4rvinen\=22's\?\= message of "Wed, 17 May 2023 13:52:35
  +0300")
-Message-ID: <87wn17kyli.fsf@kernel.org>
+Message-ID: <87sfbvkyki.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -74,12 +75,11 @@ Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com> writes:
 > Don't assume that only the driver would be accessing LNKCTL. ASPM
 > policy changes can trigger write to LNKCTL outside of driver's control.
 >
-> Use RMW capability accessors which do proper locking to avoid losing
+> Use RMW capability accessors which does proper locking to avoid losing
 > concurrent updates to the register value. On restore, clear the ASPMC
 > field properly.
 >
-> Fixes: e9603f4bdcc0 ("ath11k: pci: disable ASPM L0sLs before downloading =
-firmware")
+> Fixes: 76d870ed09ab ("ath10k: enable ASPM")
 > Suggested-by: Lukas Wunner <lukas@wunner.de>
 > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
 > Cc: stable@vger.kernel.org
