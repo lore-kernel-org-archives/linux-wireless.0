@@ -2,85 +2,73 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AF87C7EE2A
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 May 2023 15:05:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD0EC77B7D
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 May 2023 15:06:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230031AbjERPFs (ORCPT
+        id S231975AbjERPGh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 May 2023 11:05:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43992 "EHLO
+        Thu, 18 May 2023 11:06:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232006AbjERPEz (ORCPT
+        with ESMTP id S231980AbjERPGQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2023 11:04:55 -0400
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1007912E
-        for <linux-wireless@vger.kernel.org>; Thu, 18 May 2023 08:04:30 -0700 (PDT)
-Received: by mail-ed1-x52d.google.com with SMTP id 4fb4d7f45d1cf-510b4e488e4so3842293a12.3
-        for <linux-wireless@vger.kernel.org>; Thu, 18 May 2023 08:04:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684422258; x=1687014258;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=vgyyCi8tJLPzAHMcTGzr1hdEUMqdZmekNUwmKIEbLWw=;
-        b=pl6rsy9PE8JWvUgxE0R7I5wWECkhXspBpSKWo2vcbiiKDJLttP+XMN/PLUgceCVy2n
-         Dw5gP1JW20kdpIJpg5hVsM1GK/5XRXmIEG4ybJybxt8MCl/SVN5wq9wVImh+Fsgh4yYe
-         hG23RN/3UjE8DBYRoXvfyuw7izqNYSekMlSPZYFPDCssPGc+mqPJFXFfXFhbu8Ven2Qv
-         SddLVJoCNbwTqgBjNr07Np0sWSYxcrESe5Kx4Yl/2piE+590iirPns7MW5ZvpznwAl4m
-         /4brl/STXYhLadAfMeSrUpw8B/NLRFeBZaH7c5sK61cNRXyb9DJm9SlhFydG4lFBDO06
-         skMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684422258; x=1687014258;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vgyyCi8tJLPzAHMcTGzr1hdEUMqdZmekNUwmKIEbLWw=;
-        b=Vj5pnGIOh6x1kJUhc8vFLLIHJe4f/7wPQ0SAAHXMlPKY09wyhcEKI+JFan4Od5rQfu
-         wMlQca3r/CN2tdbYxYMF1nyIi8EOPB+2QWSs3SyQJq3nE6Srz032YHdI5wlWLwzqdQ6W
-         gFx41gTYLjrpXPtKX003hXyTlx0FrbCoabnIEdPR9AV5PHaVL0wsGz63j/+yDA+0gZTD
-         kUJhIJzUhhxoLIy0o0Se5uWpzAyACCUcGSFfl3y5W7V1ac9eioYVDBbcwgtEKmS+DDi3
-         SjjSmnmnbMDp9QW/QDfX5xjE4PHNqrCm898FsMaLzau9t9ZLaUYxpDGJDzZ5LsTBAmwU
-         cB7w==
-X-Gm-Message-State: AC+VfDzXQG4UXl8j1No9q+ZFCP6Dk2AcJGORxd6UVD/hNIShpuEageD5
-        cmeG/DJBDbg0QFd4V4zOF4febC0V6KknIcOD4Ui9k/k0W60=
-X-Google-Smtp-Source: ACHHUZ4IYFt0uz8+tza/aIHhSCeywECUwa1/9uJMB4LSAzXKH9mhtpzGUr+u8B8sdTa/mQ3oYUcUhYHHWfqvrih+ezs=
-X-Received: by 2002:aa7:c710:0:b0:506:fcd5:6159 with SMTP id
- i16-20020aa7c710000000b00506fcd56159mr5683003edq.21.1684422258413; Thu, 18
- May 2023 08:04:18 -0700 (PDT)
+        Thu, 18 May 2023 11:06:16 -0400
+X-Greylist: delayed 1568 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 18 May 2023 08:05:44 PDT
+Received: from durkon.wrar.name (wrar.name [116.203.248.210])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD05619B1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 May 2023 08:05:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=wrar.name;
+        s=20160710; h=Content-Disposition:Content-Type:MIME-Version:Message-ID:
+        Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:
+        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Content-Disposition:In-Reply-To:References;
+        bh=IUDXPaR3HByrD+Ua2T6+WJzRwIqYMPKFgDK2Bw3UsHo=; b=p1hFnED046Hq2gyfPxfFFyI2fN
+        /ZdoOtzhf0bGJLBcIJrbyOeowp0761zWfNEVkuXifxfRLRuALNQneixrojNwJxK3K+zZYso5U1+0t
+        2+te3QmBYr/WBFOPdlqy1/ZsXnt3xpqt/6KToCHlhRqd/u9p6LrhEZV0w+nu929A60eY=;
+Received: from wrar by durkon.wrar.name with local (Exim 4.96)
+        (envelope-from <wrar@wrar.name>)
+        id 1pzemz-002Aqs-2t;
+        Thu, 18 May 2023 16:39:33 +0200
+Date:   Thu, 18 May 2023 16:39:33 +0200
+From:   Andrey Rakhmatullin <wrar@wrar.name>
+To:     linux-wireless@vger.kernel.org, Neil Chen <yn.chen@mediatek.com>,
+        Deren Wu <deren.wu@mediatek.com>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
+Subject: MT7922 problem with "fix rx filter incorrect by drv/fw inconsistent"
+Message-ID: <ZGY4peApQnPAmDkY@durkon.wrar.name>
 MIME-Version: 1.0
-From:   Fabrizio del Tin <devotedmystic@gmail.com>
-Date:   Thu, 18 May 2023 17:04:05 +0200
-Message-ID: <CAMzNfvPpi9GiFHf0UcBpS8oozg6o_s3wwzOAPJ0FzGy7LaC4pw@mail.gmail.com>
-Subject: Realtek RTL8832CU compatibility
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
-I got a recent RTL8832CU
-(https://es.aliexpress.com/item/1005005544770386.html?spm=3Da2g0o.productli=
-st.main.1.78ff96c6qceFKn&algo_pvid=3D9ee2eb8d-9883-4709-90f5-0dc6d98c40da&a=
-lgo_exp_id=3D9ee2eb8d-9883-4709-90f5-0dc6d98c40da-0&pdp_npi=3D3%40dis%21EUR=
-%2161.26%2130.62%21%21%21%21%21%402145277316844042289821012d07b5%2112000033=
-481930568%21sea%21IT%211918944861&curPageLogUid=3DOMcZ7AW58cDB).
-It's a very affordable tri band usb wifi 6 card, which is sold as AXE3000.
+Hello. I have a "MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless
+Network Adapter" (14c3:0616) and when the commit c222f77fd4 ("wifi: mt76:
+mt7921: fix rx filter incorrect by drv/fw inconsistent") is applied (found
+by bisecting, checked by reverting it on v6.3) I have the following
+problem on my machine: when I connect to my router no DHCPv4 exchange
+happens, I don't see responses in tcpdump. My network setup is non-trivial
+though, and it looks like the problem is specific to it, but I still
+wonder if it's some bug in the aforementioned patch as my setup works with
+all other devices and I would expect it to work as long as the network
+packets sent by the device are the same.
 
-I tested it on Arch Linux, kernel 6.3.2, to no avail.
+My setup is as follows: I have an ISP router which provides a 2.4GHz
+network and another router (Xiaomi R4AC with OpenWRT) connected by
+Ethernet to it that provides a 5GHz network and is configured as a "Relay
+bridge" (using relayd) to forward packets to the ISP router and back. This
+includes DHCPv4 packets, which are handled by the ISP router. tcpdump on
+the machine with MT7922 shows that the DHCP requests are sent while the
+responses are not received, while tcpdump on the bridge router shows both
+requests and responses.
 
-Once inserted, it gives:
-0bda:1a2b Realtek Semiconductor Corp. RTL8188GU 802.11n WLAN Adapter
-(Driver CDROM Mode)
+I've tried connecting the machine to the ISP router network directly and
+also to another AP (one on my phone) and those work correctly on all
+kernels.
 
-After an eject cdrom, it gives:
-0bda:c832 Realtek Semiconductor Corp. 802.11ax WLAN Adapter
-
-I wonder if there will be any plan to make a Linux driver for it. The
-only tri band in kernel solution seems to be the Netgear A8000, which
-is widely available, but very expensive. The ALFA AWUS036AXML cannot
-be found in my country. And there is no other option.
-
-Thank you,
-Fabrizio Lanza
+Please let me know if I need to do any other debugging or troubleshooting
+steps. Thank you.
