@@ -2,73 +2,159 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD0EC77B7D
-	for <linux-wireless@archiver.kernel.org>; Thu, 18 May 2023 15:06:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2307DC77B7D
+	for <linux-wireless@archiver.kernel.org>; Thu, 18 May 2023 15:44:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231975AbjERPGh (ORCPT
+        id S231343AbjERPoe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 18 May 2023 11:06:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45572 "EHLO
+        Thu, 18 May 2023 11:44:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231980AbjERPGQ (ORCPT
+        with ESMTP id S230257AbjERPod (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 May 2023 11:06:16 -0400
-X-Greylist: delayed 1568 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 18 May 2023 08:05:44 PDT
-Received: from durkon.wrar.name (wrar.name [116.203.248.210])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD05619B1
-        for <linux-wireless@vger.kernel.org>; Thu, 18 May 2023 08:05:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=wrar.name;
-        s=20160710; h=Content-Disposition:Content-Type:MIME-Version:Message-ID:
-        Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Content-Disposition:In-Reply-To:References;
-        bh=IUDXPaR3HByrD+Ua2T6+WJzRwIqYMPKFgDK2Bw3UsHo=; b=p1hFnED046Hq2gyfPxfFFyI2fN
-        /ZdoOtzhf0bGJLBcIJrbyOeowp0761zWfNEVkuXifxfRLRuALNQneixrojNwJxK3K+zZYso5U1+0t
-        2+te3QmBYr/WBFOPdlqy1/ZsXnt3xpqt/6KToCHlhRqd/u9p6LrhEZV0w+nu929A60eY=;
-Received: from wrar by durkon.wrar.name with local (Exim 4.96)
-        (envelope-from <wrar@wrar.name>)
-        id 1pzemz-002Aqs-2t;
-        Thu, 18 May 2023 16:39:33 +0200
-Date:   Thu, 18 May 2023 16:39:33 +0200
-From:   Andrey Rakhmatullin <wrar@wrar.name>
-To:     linux-wireless@vger.kernel.org, Neil Chen <yn.chen@mediatek.com>,
-        Deren Wu <deren.wu@mediatek.com>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-Subject: MT7922 problem with "fix rx filter incorrect by drv/fw inconsistent"
-Message-ID: <ZGY4peApQnPAmDkY@durkon.wrar.name>
+        Thu, 18 May 2023 11:44:33 -0400
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3482993;
+        Thu, 18 May 2023 08:44:32 -0700 (PDT)
+Received: from fpc (unknown [46.242.14.200])
+        by mail.ispras.ru (Postfix) with ESMTPSA id E431444C1015;
+        Thu, 18 May 2023 15:44:28 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru E431444C1015
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+        s=default; t=1684424669;
+        bh=4UYZ2IcmL1KklQiEztNjChNplhlI6pOuen+vw5gYh7c=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kx2tqMuCqGe7yKU3/GeQZ06VhdriXeA/5nKMyfZ2/eRm8uC60sAgVtUeAfHXwW0bl
+         uLmfY2sEIfZHLxCKrYXbet5anJxGPxhak2PVLtNFYkCynQ2+zmmprL3OScahQwfarS
+         MwHq+3s0EmwsYfyqSfBy7O8XR0VN4ScmK87UtPuc=
+Date:   Thu, 18 May 2023 18:44:24 +0300
+From:   Fedor Pchelkin <pchelkin@ispras.ru>
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Kalle Vallo <kvalo@kernel.org>,
+        syzbot+f2cb6e0ffdb961921e4d@syzkaller.appspotmail.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        lvc-project@linuxtesting.org
+Subject: Re: [PATCH v3 1/2] wifi: ath9k: fix races between ath9k_wmi_cmd and
+ ath9k_wmi_ctrl_rx
+Message-ID: <20230518154424.62urbguy4rxetkty@fpc>
+References: <20230425192607.18015-1-pchelkin@ispras.ru>
+ <20230425230708.2132-1-hdanton@sina.com>
+ <20230426190206.ni2au5mpjc5oty67@fpc>
+ <20230518102437.4443-1-hdanton@sina.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230518102437.4443-1-hdanton@sina.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello. I have a "MEDIATEK Corp. MT7922 802.11ax PCI Express Wireless
-Network Adapter" (14c3:0616) and when the commit c222f77fd4 ("wifi: mt76:
-mt7921: fix rx filter incorrect by drv/fw inconsistent") is applied (found
-by bisecting, checked by reverting it on v6.3) I have the following
-problem on my machine: when I connect to my router no DHCPv4 exchange
-happens, I don't see responses in tcpdump. My network setup is non-trivial
-though, and it looks like the problem is specific to it, but I still
-wonder if it's some bug in the aforementioned patch as my setup works with
-all other devices and I would expect it to work as long as the network
-packets sent by the device are the same.
+On Thu, May 18, 2023 at 06:24:37PM +0800, Hillf Danton wrote:
+> Fedor Pchelkin <pchelkin@ispras.ru> writes:
+> 
+> > On Wed, Apr 26, 2023 at 07:07:08AM +0800, Hillf Danton wrote: 
+> >> Given similar wait timeout[1], just taking lock on the waiter side is not
+> >> enough wrt fixing the race, because in case job done on the waker side,
+> >> waiter needs to wait again after timeout.
+> >> 
+> >
+> > As I understand you correctly, you mean the case when a timeout occurs
+> > during ath9k_wmi_ctrl_rx() callback execution. I suppose if a timeout has
+> > occurred on a waiter's side, it should return immediately and doesn't have
+> > to care in which state the callback has been at that moment.
+> >
+> > AFAICS, this is controlled properly with taking a wmi_lock on waiter and
+> > waker sides, and there is no data corruption.
+> >
+> > If a callback has not managed to do its work entirely (performing a
+> > completion and subsequently waking waiting thread is included here), then,
+> > well, it is considered a timeout, in my opinion.
+> >
+> > Your suggestion makes a wmi_cmd call to give a little more chance for the
+> > belated callback to complete (although timeout has actually expired). That
+> > is probably good, but increasing a timeout value makes that job, too. I
+> > don't think it makes any sense on real hardware.
+> >
+> > Or do you mean there is data corruption that is properly fixed with your patch?
+> 
+> Given complete() not paired with wait_for_completion(), what is the
+> difference after this patch?
 
-My setup is as follows: I have an ISP router which provides a 2.4GHz
-network and another router (Xiaomi R4AC with OpenWRT) connected by
-Ethernet to it that provides a 5GHz network and is configured as a "Relay
-bridge" (using relayd) to forward packets to the ISP router and back. This
-includes DHCPv4 packets, which are handled by the ISP router. tcpdump on
-the machine with MT7922 shows that the DHCP requests are sent while the
-responses are not received, while tcpdump on the bridge router shows both
-requests and responses.
+The main thing in the patch is making ath9k_wmi_ctrl_rx() release wmi_lock
+after calling ath9k_wmi_rsp_callback() which does copying data into the
+shared wmi->cmd_rsp_buf buffer. Otherwise there can occur a data
+corrupting scenario outlined in the patch description (added it here,
+too).
 
-I've tried connecting the machine to the ISP router network directly and
-also to another AP (one on my phone) and those work correctly on all
-kernels.
+On Tue, 25 Apr 2023 22:26:06 +0300, Fedor Pchelkin wrote:
+> CPU0					CPU1
+> 
+> ath9k_wmi_cmd(...)
+>   mutex_lock(&wmi->op_mutex)
+>   ath9k_wmi_cmd_issue(...)
+>   wait_for_completion_timeout(...)
+>   ---
+>   timeout
+>   ---
+> 					/* the callback is being processed
+> 					 * before last_seq_id became zero
+> 					 */
+> 					ath9k_wmi_ctrl_rx(...)
+> 					  spin_lock_irqsave(...)
+> 					  /* wmi->last_seq_id check here
+> 					   * doesn't detect timeout yet
+> 					   */
+> 					  spin_unlock_irqrestore(...)
+>   /* last_seq_id is zeroed to
+>    * indicate there was a timeout
+>    */
+>   wmi->last_seq_id = 0
+>   mutex_unlock(&wmi->op_mutex)
+>   return -ETIMEDOUT
+> 
+> ath9k_wmi_cmd(...)
+>   mutex_lock(&wmi->op_mutex)
+>   /* the buffer is replaced with
+>    * another one
+>    */
+>   wmi->cmd_rsp_buf = rsp_buf
+>   wmi->cmd_rsp_len = rsp_len
+>   ath9k_wmi_cmd_issue(...)
+>     spin_lock_irqsave(...)
+>     spin_unlock_irqrestore(...)
+>   wait_for_completion_timeout(...)
+> 					/* the continuation of the
+> 					 * callback left after the first
+> 					 * ath9k_wmi_cmd call
+> 					 */
+> 					  ath9k_wmi_rsp_callback(...)
+> 					    /* copying data designated
+> 					     * to already timeouted
+> 					     * WMI command into an
+> 					     * inappropriate wmi_cmd_buf
+> 					     */
+> 					    memcpy(...)
+> 					    complete(&wmi->cmd_wait)
+>   /* awakened by the bogus callback
+>    * => invalid return result
+>    */
+>   mutex_unlock(&wmi->op_mutex)
+>   return 0
 
-Please let me know if I need to do any other debugging or troubleshooting
-steps. Thank you.
+So before the patch the wmi->last_seq_id check in ath9k_wmi_ctrl_rx()
+wasn't helpful in case wmi->last_seq_id value was changed during
+ath9k_wmi_rsp_callback() execution because of the next ath9k_wmi_cmd()
+call.
+
+With the proposed patch the wmi->last_seq_id check in ath9k_wmi_ctrl_rx()
+accomplishes its job as:
+ - the next ath9k_wmi_cmd call changes last_seq_id value under lock so
+   it either waits for a belated ath9k_wmi_ctrl_rx() to finish or updates
+   last_seq_id value so that the timeout check in ath9k_wmi_ctrl_rx()
+   indicates that the waiter side has timeouted and we shouldn't further
+   process the callback.
+ - memcopying in ath9k_wmi_rsp_callback() is made to a valid place if
+   the last_seq_id check was successful under the lock.
