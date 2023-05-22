@@ -2,94 +2,167 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 221BEC77B7C
-	for <linux-wireless@archiver.kernel.org>; Sun, 21 May 2023 18:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FC5C77B7C
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 May 2023 01:43:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229511AbjEUScB (ORCPT
+        id S231386AbjEVBnZ convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 21 May 2023 14:32:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46148 "EHLO
+        Sun, 21 May 2023 21:43:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231721AbjEUR4V (ORCPT
+        with ESMTP id S229533AbjEVBnY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 May 2023 13:56:21 -0400
-Received: from mail-yb1-xb2f.google.com (mail-yb1-xb2f.google.com [IPv6:2607:f8b0:4864:20::b2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F125D1715
-        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2023 10:49:03 -0700 (PDT)
-Received: by mail-yb1-xb2f.google.com with SMTP id 3f1490d57ef6-b9e6ec482b3so7519836276.3
-        for <linux-wireless@vger.kernel.org>; Sun, 21 May 2023 10:49:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684691343; x=1687283343;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=HA5i5d/MKnlZtzhCD2oMZslei4xU+OAXwtdVXosID+k=;
-        b=KsHJq9IMlQxSn1ymymDeONWRIBQ9QbDA+Vo5XChJkLsc/JeR0m+9onAFQopkmaRU8t
-         UwAxopzCuCp6G4CBDWhbxNOtxib28QT2C/Gkj7ageBjZQAfFdH3TK2P/lDYiRqYmJlI2
-         EoeX7ZbEXnTN9N+dDfnxvfctzgir/hIZEBBraYg+iVfleOMU59U9NHZeNT2+O5tRFSPG
-         DGVk9Oo6JOJdnCPsmkb6rUw5IUyySqAth59rpsSDZKLdz9Yo2eyVPIhhEoQQuIk3md3o
-         8Ul18TO9wcppcKna1BP5MU/OWqPd6WuAQVeuuOWHphmTPAb0TnJIppoI7KFmHLE2urOM
-         HkfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684691343; x=1687283343;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=HA5i5d/MKnlZtzhCD2oMZslei4xU+OAXwtdVXosID+k=;
-        b=AIEFIT2UGGQDSk1wRclhLHix6tEjkzIBgYQgvh8gYnHDo5DUr1by/FuafLZij4++vm
-         qx8P98qIPsPdebL0xgkTuonT97zVx5vdtQepzl3Zj0VNzFjJoGv5bUNxUtc+B7T9+RUP
-         CElNVYyL58LVxuOD/+0x8Tp83+q7q6vuTJKC+YCtEDgMLKcyUqOqMCLBE22F/2TfzX2K
-         5E0mi42ChbG9ky9VU+wM+cUYbXX7TBNqn+KEln8JJak5YacCX9sbJWiuwDxvA/fG7MVy
-         LCIAeXdMmK+oB0cEJeVCIZPpd5iMpHCdhusdp1duM41nX6E9Bz3S2KG+IUjP95qjIXgh
-         cHKw==
-X-Gm-Message-State: AC+VfDytOkSvL2w4kE9YyBCWYrVas6CVMdIz+fo5gxFsouHGHMr5G7tY
-        DFKmx+Y46MgMMlmkCe+BBWKmzFpxnTE49bTB9euXB3gCHFk=
-X-Google-Smtp-Source: ACHHUZ4vcfMyrkgGbEHgDaQ10EfDI+cPB7yCHp/bqpiX/PQH3ZIp0cLjwBYevD29UC76dHgsg09G0ag/APneTi4aBT0=
-X-Received: by 2002:a25:71d4:0:b0:ba8:3a86:15ca with SMTP id
- m203-20020a2571d4000000b00ba83a8615camr8005285ybc.60.1684691343083; Sun, 21
- May 2023 10:49:03 -0700 (PDT)
+        Sun, 21 May 2023 21:43:24 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24182AF;
+        Sun, 21 May 2023 18:43:20 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 34M1go4iB030448, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 34M1go4iB030448
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+        Mon, 22 May 2023 09:42:50 +0800
+Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Mon, 22 May 2023 09:43:01 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Mon, 22 May 2023 09:43:00 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
+ RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
+ 15.01.2375.007; Mon, 22 May 2023 09:43:00 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>,
+        "kvalo@kernel.org" <kvalo@kernel.org>,
+        "tony0620emma@gmail.com" <tony0620emma@gmail.com>,
+        "Peter Robinson" <pbrobinson@gmail.com>,
+        "jernej.skrabec@gmail.com" <jernej.skrabec@gmail.com>
+Subject: RE: [PATCH wireless-next v1 1/4] wifi: rtw88: sdio: Check the HISR RX_REQUEST bit in rtw_sdio_rx_isr()
+Thread-Topic: [PATCH wireless-next v1 1/4] wifi: rtw88: sdio: Check the HISR
+ RX_REQUEST bit in rtw_sdio_rx_isr()
+Thread-Index: AQHZiaRUyNopi6TOU06ASkVQiZhTKq9liWyA
+Date:   Mon, 22 May 2023 01:43:00 +0000
+Message-ID: <d6a5555d13ed467db8c181962c2adb85@realtek.com>
+References: <20230518161749.1311949-1-martin.blumenstingl@googlemail.com>
+ <20230518161749.1311949-2-martin.blumenstingl@googlemail.com>
+In-Reply-To: <20230518161749.1311949-2-martin.blumenstingl@googlemail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXMBS05.realtek.com.tw, 9
+x-kse-antispam-interceptor-info: fallback
+x-kse-antivirus-interceptor-info: fallback
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-From:   Tyler Stachecki <stachecki.tyler@gmail.com>
-Date:   Sun, 21 May 2023 13:51:33 -0400
-Message-ID: <CAC6wqPVvke=Gy59yvYcaps2dwVzO=wfwdSTGNxFzAOWc5OpoDw@mail.gmail.com>
-Subject: Re: [PATCH v3] wifi: ath11k: Add rx histogram stats
-To:     quic_mkenna@quicinc.com
-Cc:     "open list:QUALCOMM ATHEROS ATH11K WIRELESS DRIVER" 
-        <ath11k@lists.infradead.org>,
-        "open list:NETWORKING DRIVERS (WIRELESS)" 
-        <linux-wireless@vger.kernel.org>, quic_akalaise@quicinc.com,
-        quic_mpubbise@quicinc.com
-Content-Type: text/plain; charset="UTF-8"
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Was this really tested on QCN9074 as the commit text suggests...?
 
-> const struct ath11k_hw_ops ipq6018_ops = {
-> @@ -1132,6 +1147,7 @@ const struct ath11k_hw_ops wcn6750_ops = {
->  .rx_desc_get_msdu_payload = ath11k_hw_qcn9074_rx_desc_get_msdu_payload,
->  .reo_setup = ath11k_hw_wcn6855_reo_setup,
->  .mpdu_info_get_peerid = ath11k_hw_ipq8074_mpdu_info_get_peerid,
-> + .mpdu_info_get_mpdu_len = ath11k_hw_qcn9074_mpdu_info_get_mpdu_len,
 
-...
+> -----Original Message-----
+> From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> Sent: Friday, May 19, 2023 12:18 AM
+> To: linux-wireless@vger.kernel.org
+> Cc: linux-mmc@vger.kernel.org; linux-kernel@vger.kernel.org; ulf.hansson@linaro.org; kvalo@kernel.org;
+> tony0620emma@gmail.com; Peter Robinson <pbrobinson@gmail.com>; Ping-Ke Shih <pkshih@realtek.com>;
+> jernej.skrabec@gmail.com; Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> Subject: [PATCH wireless-next v1 1/4] wifi: rtw88: sdio: Check the HISR RX_REQUEST bit in rtw_sdio_rx_isr()
+> 
+> rtw_sdio_rx_isr() is responsible for receiving data from the wifi chip
+> and is called from the SDIO interrupt handler when the interrupt status
+> register (HISR) has the RX_REQUEST bit set. After the first batch of
+> data has been processed by the driver the wifi chip may have more data
+> ready to be read, which is managed by a loop in rtw_sdio_rx_isr().
+> 
+> It turns out that there are cases where the RX buffer length (from the
+> REG_SDIO_RX0_REQ_LEN register) does not match the data we receive. The
+> following two cases were observed with a RTL8723DS card:
+> - RX length is smaller than the total packet length including overhead
+>   and actual data bytes (whose length is part of the buffer we read from
+>   the wifi chip and is stored in rtw_rx_pkt_stat.pkt_len). This can
+>   result in errors like:
+>     skbuff: skb_over_panic: text:ffff8000011924ac len:3341 put:3341
+>   (one case observed was: RX buffer length = 1536 bytes but
+>    rtw_rx_pkt_stat.pkt_len = 1546 bytes, this is not valid as it means
+>    we need to read beyond the end of the buffer)
+> - RX length looks valid but rtw_rx_pkt_stat.pkt_len is zero
+> 
+> Check if the RX_REQUEST is set in the HISR register for each iteration
+> inside rtw_sdio_rx_isr(). This mimics what the RTL8723DS vendor driver
+> does and makes the driver only read more data if the RX_REQUEST bit is
+> set (which seems to be a way for the card's hardware or firmware to
+> tell the host that data is ready to be processed).
+> 
+> For RTW_WCPU_11AC chips this check is not needed. The RTL8822BS vendor
+> driver for example states that this check is unnecessary (but still uses
+> it) and the RTL8822CS drops this check entirely.
+> 
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> ---
+>  drivers/net/wireless/realtek/rtw88/sdio.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+> index 06fce7c3adda..32b8c9194b2c 100644
+> --- a/drivers/net/wireless/realtek/rtw88/sdio.c
+> +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+> @@ -998,9 +998,9 @@ static void rtw_sdio_rxfifo_recv(struct rtw_dev *rtwdev, u32 rx_len)
+> 
+>  static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
+>  {
+> -       u32 rx_len, total_rx_bytes = 0;
+> +       u32 rx_len, hisr, total_rx_bytes = 0;
+> 
+> -       while (total_rx_bytes < SZ_64K) {
+> +       do {
+>                 if (rtw_chip_wcpu_11n(rtwdev))
+>                         rx_len = rtw_read16(rtwdev, REG_SDIO_RX0_REQ_LEN);
+>                 else
+> @@ -1012,7 +1012,24 @@ static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev)
+>                 rtw_sdio_rxfifo_recv(rtwdev, rx_len);
+> 
+>                 total_rx_bytes += rx_len;
+> -       }
+> +
+> +               if (rtw_chip_wcpu_11n(rtwdev))
+> +                       /* Stop if no more RX requests are pending, even if
+> +                        * rx_len could be greater than zero in the next
+> +                        * iteration. This is needed because the RX buffer may
+> +                        * already contain data while either HW or FW are not
+> +                        * done filling that buffer yet. Still reading the
+> +                        * buffer can result in packets where
+> +                        * rtw_rx_pkt_stat.pkt_len is zero or points beyond the
+> +                        * end of the buffer.
+> +                        */
+> +                       hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
+> +               else
+> +                       /* RTW_WCPU_11AC chips have improved hardware or
+> +                        * firmware and can use rx_len unconditionally.
+> +                        */
+> +                       hisr = REG_SDIO_HISR_RX_REQUEST;
 
-> +static u32 ath11k_hal_rx_mpduinfo_get_mpdu_len(struct ath11k_base *ab,
-> +       struct hal_rx_mpdu_info *mpdu_info)
-> +{
-> + return ab->hw_params.hw_ops->mpdu_info_get_mpdu_len(mpdu_info);
-> +}
+nit: adding braces to these branches would be clearer. 
 
-I think you want to put this under qcn9074_ops. As of now, when
-QCN9074 is present, it attempts to jump to a NULL pointer as
-mpdu_info_get_mpdu_len remains uninitialized for qcn9074_ops.
+If not, this patch still looks good to me, so
 
-And, do you not need to define mpdu_info_get_mpdu_len for all the
-other hw_ops? If so, please be careful about defining it for
-WCN6855/WCN6750 as there was a recent regression due to how the RX
-MPDU info is provided by those firmwares as it differed from
-IPQ8074/QCN9074. I personally do not have the appropriate literature
-to determine whether or not this is consequential or not here as well,
-though it seems like it would be:
-https://lore.kernel.org/linux-wireless/20230404072234.18503-3-quic_youghand@quicinc.com/
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Tyler
+
+> +       } while (total_rx_bytes < SZ_64K && hisr & REG_SDIO_HISR_RX_REQUEST);
+>  }
+> 
+>  static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
+> --
+> 2.40.1
+
