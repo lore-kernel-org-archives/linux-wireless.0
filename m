@@ -2,49 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A828C77B7C
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 May 2023 07:39:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D4ACC77B7A
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 May 2023 07:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239748AbjEXHjr (ORCPT
+        id S239946AbjEXHlw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 May 2023 03:39:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40752 "EHLO
+        Wed, 24 May 2023 03:41:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239476AbjEXHjq (ORCPT
+        with ESMTP id S231346AbjEXHlv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 May 2023 03:39:46 -0400
+        Wed, 24 May 2023 03:41:51 -0400
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58F478F
-        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2023 00:39:45 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34O5nqPc021003;
-        Wed, 24 May 2023 07:39:34 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5E0490
+        for <linux-wireless@vger.kernel.org>; Wed, 24 May 2023 00:41:50 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34O6gYrx027785;
+        Wed, 24 May 2023 07:41:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
+ mime-version : from : subject : to : cc : references : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=CgT0p0n5Ta12gb6kqsmYR9CbA+Jcv69Q0WyCPyHwvjA=;
- b=kqo81PthXfN7VmabueNrjbtRzD0OO+Bo52l8OUfoEk/vP8mdd6Un8y5WVkHR8x/lexU+
- qwhVLMyJaBAIgTBDlP3HJFNSRK+1kBgFVmORnpA4baO4YtKsNdk9KZDG9tvCDymyYlu2
- Tbn7uSYZJxS2cBiLH49QDB7QJuf3JTpDiwEdHR5MWTMuVT27vORF/QrvFXbaxBredEdp
- Tvbr96uTVtdd/f2JH37eQ09s5HfEUy72XtKRg/ePF4YbCuZOal+IEkaBkGEn7UW+0KPh
- 2W//CVdwGPXAbI2G/4nEz/ctm0bRNfSysjbka/Uv5TBI7tO+G9X/zjXc1i0xnVnF7q2g pQ== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qrsx0txfg-1
+ bh=1mLltmsqCXNuYXpzbOzHFlhw7yJ3lEAE35ie30vSUT4=;
+ b=GuGA7MWseFYkPQo778AtI3jBk/lVewr/byQdt+xJAB3BS768K2Rc/ZiFicNCbcGQqamO
+ JCkxILwkJmwlT8kFwtJM6W/CYvzwODnWMi2tZZueRNrTnONuA2eplHK5YI6sffkIWM4f
+ aHsG82secaTT+6FLtbX9ioGUoFkL7j9q6k77fQ9p4FbfnpfGB3tJzNcbeK6zIj033/mU
+ ETJ4cs1g9PZAlHeU2Mc4akeZRI8ciT2VliELePoBRApoaG65Dkh/6crwVHAmbgQ3kIYk
+ tXzvHmGbZoCNONg8PbwHbgjAVXXbM9KLSZL6rlXg/XH8ZfFLvWnsV+lKJ4Bw5px1NDuL Qw== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qsdhh03r6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 24 May 2023 07:39:34 +0000
+        Wed, 24 May 2023 07:41:46 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34O7d59U027310
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 34O7fjtT030994
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 24 May 2023 07:39:05 GMT
+        Wed, 24 May 2023 07:41:45 GMT
 Received: from [10.231.195.204] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.42; Wed, 24 May
- 2023 00:39:04 -0700
-Message-ID: <02c7d3f8-2486-cc59-4503-52326e12a76d@quicinc.com>
-Date:   Wed, 24 May 2023 15:39:02 +0800
+ 2023 00:41:44 -0700
+Message-ID: <1c26c205-0240-7670-117d-02a7af068724@quicinc.com>
+Date:   Wed, 24 May 2023 15:41:42 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
  Thunderbird/102.11.0
+From:   Wen Gong <quic_wgong@quicinc.com>
 Subject: Re: [PATCH 10/27] wifi: mac80211: isolate driver from inactive links
 To:     Johannes Berg <johannes@sipsolutions.net>,
         <linux-wireless@vger.kernel.org>
@@ -60,24 +61,23 @@ References: <20220902141259.377789-1-johannes@sipsolutions.net>
  <76863dec-1b2f-b933-7c5e-21c732de4bc6@quicinc.com>
  <2cc79101249548f2a92c14af6aff6121143907d6.camel@sipsolutions.net>
 Content-Language: en-US
-From:   Wen Gong <quic_wgong@quicinc.com>
 In-Reply-To: <2cc79101249548f2a92c14af6aff6121143907d6.camel@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: b2YeXSwRSFkEW01lQ5dvifFsQERfP7B9
-X-Proofpoint-GUID: b2YeXSwRSFkEW01lQ5dvifFsQERfP7B9
+X-Proofpoint-GUID: w0f-wzaX2AXrDU-ObN-6xAHOEr8aCVN8
+X-Proofpoint-ORIG-GUID: w0f-wzaX2AXrDU-ObN-6xAHOEr8aCVN8
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
  definitions=2023-05-24_03,2023-05-23_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0
- lowpriorityscore=0 phishscore=0 suspectscore=0 mlxscore=0 mlxlogscore=940
- clxscore=1015 priorityscore=1501 spamscore=0 adultscore=0 impostorscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ suspectscore=0 clxscore=1015 malwarescore=0 bulkscore=0 spamscore=0
+ mlxscore=0 lowpriorityscore=0 adultscore=0 phishscore=0 impostorscore=0
+ mlxlogscore=937 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2305240065
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -113,11 +113,7 @@ On 4/18/2023 5:34 PM, Johannes Berg wrote:
 >> after assoc.
 >>
 > Sure.
-
-Hi Johannes,
-
 May I add a new ops in struct ieee80211_ops? like this:
-
 
 u16 active_links(struct ieee80211_hw *hw, struct ieee80211_vif vif, u16 
 new_links)"
@@ -128,5 +124,4 @@ lower driver,
 it means lower driver will dynamic select the links count at this moment.
 
 If lower driver not register ops active_links, then keep current logic.
->
 > johannes
