@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A6C2C7EE2C
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 18:36:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6829C7EE31
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 18:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241893AbjEYSg0 (ORCPT
+        id S241982AbjEYSgl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 May 2023 14:36:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51980 "EHLO
+        Thu, 25 May 2023 14:36:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241835AbjEYSgC (ORCPT
+        with ESMTP id S241929AbjEYSgM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2023 14:36:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80CD01704;
-        Thu, 25 May 2023 11:34:37 -0700 (PDT)
+        Thu, 25 May 2023 14:36:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B87AB1715;
+        Thu, 25 May 2023 11:34:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 60431648C8;
-        Thu, 25 May 2023 18:34:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99FA1C4339E;
-        Thu, 25 May 2023 18:34:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 99623648D3;
+        Thu, 25 May 2023 18:34:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBD64C433AC;
+        Thu, 25 May 2023 18:34:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685039676;
-        bh=jsPeEoMdfnjG3yq1yn0CpvtwxmBvoB4aCIMwlK9t67A=;
+        s=k20201202; t=1685039685;
+        bh=H2VwrVzS+U9B6jNfgMZ8PZWDi0r+a9pquf7BqrvT6iU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nnqMNlztjD3l4AFnKmlCMDtXT/9dQDw/YAVM6BMh+guRZGOPfcMye0P21vwbJJ4qY
-         YzbPM9lepGRdjSqJpE2Pp5+2cuawxNZ1Sgp8+5dvsTHgOs5T8kWglOI1r5T69Q0IPp
-         UQVCBjnJYLPJuCUlW7mEkR4TEQyPpCruORdW63uDXLz08WidnqXa3FoC36qyn2/kX1
-         DFL1V55T7+aW5MmnNDLS/XCHbYcGCVqZNUMQqFM0j+0CDFMieI5TxruDcUP9yzpPtD
-         4Jy1xWyz+bbx396+r8GYlmBCZKC2JQrfhcY0TA6Pr6VMxKPRF7ARUM7QepsXpFkgYW
-         1nLnaKOzw6opw==
+        b=JHiuUBeK822+cO2K7Su+WBYxSYXj0WNhBznNlnmPUew6UD6bxnNQdRHXM1Mx5nqgr
+         hAdgMlV1CQd7XFhTB9207THRyFoH7LTBiN8WT4uGY3LdUDe72zH+3iQiVTjcGkLd6P
+         YrLia3uHiGQJEzLM8WAmVu9YXkvueo9jIl0tre5eGRsD1NTjrpcJqwFx2xX8SJglid
+         leT2/FyB95xNyOuMuSgWnAZsK1s+ULx0xQf/PAer7UvmAuEEEn5JCLMxkWpXiATbb1
+         VI9UhEHgW6EW/fit4FBAAkWSCIii71WSkfbKnFVygq69zvE+krUCmVDI4DpgIT2IM3
+         3My1yX9YeYRqA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Ariel Malamud <ariel.malamud@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 45/67] wifi: mac80211: simplify chanctx allocation
-Date:   Thu, 25 May 2023 14:31:22 -0400
-Message-Id: <20230525183144.1717540-45-sashal@kernel.org>
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        benjamin.berg@intel.com, trix@redhat.com,
+        mordechay.goodstein@intel.com, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.3 48/67] wifi: iwlwifi: mvm: Add locking to the rate read flow
+Date:   Thu, 25 May 2023 14:31:25 -0400
+Message-Id: <20230525183144.1717540-48-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230525183144.1717540-1-sashal@kernel.org>
 References: <20230525183144.1717540-1-sashal@kernel.org>
@@ -55,36 +55,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ariel Malamud <ariel.malamud@intel.com>
 
-[ Upstream commit 860e1b43da94551cd1e73adc36b3c64cc3e5dc01 ]
+[ Upstream commit a8938bc881d2a03f9b77f19fae924fe798a01285 ]
 
-There's no need to call ieee80211_recalc_chanctx_min_def()
-since it cannot and won't call the driver anyway; just use
-_ieee80211_recalc_chanctx_min_def() instead.
+The rs_drv_get_rate flow reads the lq_sta to return the optimal rate
+for tx frames. This read flow is not protected thereby leaving
+a small window, a few instructions wide, open to contention by an
+asynchronous rate update. Indeed this race condition was hit and the
+update occurred in the middle of the read.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fix this by locking the lq_sta struct during read.
+
+Signed-off-by: Ariel Malamud <ariel.malamud@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Link: https://lore.kernel.org/r/20230504134511.828474-3-gregory.greenman@intel.com
+Link: https://lore.kernel.org/r/20230514120631.b52c9ed5c379.I15290b78e0d966c1b68278263776ca9de841d5fe@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/chan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index dbc34fbe7c8f4..d23d1a7b4cc39 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -638,7 +638,7 @@ ieee80211_alloc_chanctx(struct ieee80211_local *local,
- 	ctx->conf.rx_chains_dynamic = 1;
- 	ctx->mode = mode;
- 	ctx->conf.radar_enabled = false;
--	ieee80211_recalc_chanctx_min_def(local, ctx);
-+	_ieee80211_recalc_chanctx_min_def(local, ctx);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 0b50b816684a0..2be6801d48aca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -2692,6 +2692,8 @@ static void rs_drv_get_rate(void *mvm_r, struct ieee80211_sta *sta,
+ 		return;
  
- 	return ctx;
+ 	lq_sta = mvm_sta;
++
++	spin_lock(&lq_sta->pers.lock);
+ 	iwl_mvm_hwrate_to_tx_rate_v1(lq_sta->last_rate_n_flags,
+ 				     info->band, &info->control.rates[0]);
+ 	info->control.rates[0].count = 1;
+@@ -2706,6 +2708,7 @@ static void rs_drv_get_rate(void *mvm_r, struct ieee80211_sta *sta,
+ 		iwl_mvm_hwrate_to_tx_rate_v1(last_ucode_rate, info->band,
+ 					     &txrc->reported_rate);
+ 	}
++	spin_unlock(&lq_sta->pers.lock);
  }
+ 
+ static void *rs_drv_alloc_sta(void *mvm_rate, struct ieee80211_sta *sta,
 -- 
 2.39.2
 
