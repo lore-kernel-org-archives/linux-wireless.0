@@ -2,75 +2,72 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4BAFC77B7A
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 16:11:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEE51C7EE2D
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 16:12:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233178AbjEYQLr (ORCPT
+        id S233181AbjEYQM1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 May 2023 12:11:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55764 "EHLO
+        Thu, 25 May 2023 12:12:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233104AbjEYQLq (ORCPT
+        with ESMTP id S232918AbjEYQM0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2023 12:11:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09DF21B6
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2023 09:11:15 -0700 (PDT)
+        Thu, 25 May 2023 12:12:26 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FA3FE7B
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2023 09:11:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2657164751
-        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2023 16:11:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF111C433EF;
-        Thu, 25 May 2023 16:11:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B9FF60B01
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2023 16:11:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 417E2C433D2;
+        Thu, 25 May 2023 16:11:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685031073;
-        bh=dKI1coD7ah1DWH/RjD8YoJ1O3N0Fb39DzbMKepdNzlU=;
+        s=k20201202; t=1685031115;
+        bh=Uq2yuGi1Suk3LZ6vqr+srEB4z525oFO8xf9SNJRxaac=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=i5bVwC86FBXCGKMIijeVtd1HQz6NPZQhoIpkWR3C6wRGki/SRPyXsWbsRO8/yV4qZ
-         aPahPm2elaCHzBGRgTLtAP4g8O9MbF20PqR/zXPNApxeSAvUJ2XXit9r8eQ7vy9WMh
-         /1aPym7q0Tba08TlYA6FOjIimyHo9vZxzWg54fC3J2rl2iij8vO2JAQ3e2BWFIpeKA
-         j3WEEaGokxxlv0I0rF38FYD2wwelzyol8dpOL0sGfEJLO0bh51qiHw3+eb2oXPf00P
-         WZ4QNufxVchXZ1AWGOUlwV/GyBKLwNeL4lyd9aLvcht8onedHUv+wud8WaNLJ5wKH2
-         9J5ouDYhav29g==
+        b=gh9bysinn0FJ/qyercjhSP2XYdB8vEDo0ufemZInheanwiEzBnQhuOifrKI90yIDy
+         PoCTkiyvyo76wtGoW7nLTO/gfVTU/4lb8fKUl/6OwoJBztL9WKsoEP4y4Gkqw6yqee
+         tZiudVUvbhBQgEGp7Y7oky1+mVmxgrGaN0gqLyMVidAHfotWxyBGDDlpiA6JGWW2xE
+         oOl/6uFZC/HRCPGRFgtdEHXbhJeCbsNnizZ8EJWof1tJAm/aLOYAmgI5uh+OK1m4CL
+         NWmeaf9otBx3LeCLXjJx+wBkKYwmyoCnZNMruDyZK9xzXMV6fS637osrPY4xt94dZc
+         FcJvHriHyeisw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/3] wifi: rtw89: ser: reset total_sta_assoc and tdls_peer
- when L2
+Subject: Re: [PATCH 1/7] wifi: rtw89: 8851b: add TX power related functions
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230516082441.11154-2-pkshih@realtek.com>
-References: <20230516082441.11154-2-pkshih@realtek.com>
+In-Reply-To: <20230519031500.21087-2-pkshih@realtek.com>
+References: <20230519031500.21087-2-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Cc:     <timlee@realtek.com>, <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168503107072.22756.9472067177641035272.kvalo@kernel.org>
-Date:   Thu, 25 May 2023 16:11:12 +0000 (UTC)
+Message-ID: <168503111204.22756.3771727071281469277.kvalo@kernel.org>
+Date:   Thu, 25 May 2023 16:11:54 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Zong-Zhe Yang <kevin_yang@realtek.com>
+> Get TX power value from tables according to selected country and channel,
+> and set proper power to registers.
 > 
-> The total_sta_assoc and the tdls_peer are used for statistics accodring
-> to stations' information. L2 (Level 2) SER (system error recovery) will
-> call ieee80211_restart_hw() which re-invokes sta_state ops. And then,
-> the total_sta_assoc and tdls_peer will be re-increased. In case wrong
-> statistics results, we reset them in SER L2 handling.
-> 
-> Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-3 patches applied to wireless-next.git, thanks.
+7 patches applied to wireless-next.git, thanks.
 
-cda66049bab5 wifi: rtw89: ser: reset total_sta_assoc and tdls_peer when L2
-b79a84fbbdb0 wifi: rtw89: tweak H2C TX waiting function for SER
-8b21c08ef7df wifi: rtw89: refine packet offload handling under SER
+76f2516f7937 wifi: rtw89: 8851b: add TX power related functions
+68a2cb6b0669 wifi: rtw89: 8851b: fill BB related capabilities to chip_info
+92aa2643235d wifi: rtw89: 8851b: add MAC configurations to chip_info
+791af3fb2dec wifi: rtw89: 8851b: add RF configurations
+4cfad52a5df7 wifi: rtw89: enlarge supported length of read_reg debugfs entry
+c4ff50149885 wifi: rtw89: add tx_wake notify for 8851B
+14820388aafb wifi: rtw89: 8851b: add 8851be to Makefile and Kconfig
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230516082441.11154-2-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230519031500.21087-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
