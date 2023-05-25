@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D12C8C77B7E
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 18:41:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0D4C7EE31
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 18:42:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242302AbjEYSl4 (ORCPT
+        id S242333AbjEYSmO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 May 2023 14:41:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56740 "EHLO
+        Thu, 25 May 2023 14:42:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242606AbjEYSkv (ORCPT
+        with ESMTP id S242281AbjEYSlr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2023 14:40:51 -0400
+        Thu, 25 May 2023 14:41:47 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE4210D3;
-        Thu, 25 May 2023 11:38:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAD381BE4;
+        Thu, 25 May 2023 11:38:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 28301647B7;
-        Thu, 25 May 2023 18:38:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36534C433EF;
-        Thu, 25 May 2023 18:38:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EF1276492A;
+        Thu, 25 May 2023 18:38:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F0F7C4339C;
+        Thu, 25 May 2023 18:38:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685039891;
-        bh=W/6Qg65vvP61F0aFPDgy3bGh/YjgdCuTLST4/q/WBH4=;
+        s=k20201202; t=1685039895;
+        bh=EA7EnyBO8cmCNPcf02dhIWL9dadcEv0qdxkRF7doZKc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Mww+yOCIbxI9ZHm/7Bj2ks3azqjFRKUJffUHw3J/CbXi/H0UBOa9/XQbK6gmf9bKq
-         f5Rdz6aKHZI3fsDu3XtxGfZGYnD/REok+FYDJoDwIPHlv08utAil702wVvRLNDzQ+e
-         yUfV5GaiVu2i1dCujz5YYKh5/lCyovig0aNxDgmlmHWgBDUuKMMTruD33Ha0iQmAam
-         wE+zg7o2uVhn/dKlo0vTE+nakpgqiWaBYZoKlp4uly8YIW+Le+I36YSaWuuPM399+K
-         G24jdfvVk5QcblWbf3ZWkMdeiIeEUj2FJgyuMtz9VWrGrFXHbmu+r1wInYz8+VO+Zf
-         Cv5bfvcINMPCA==
+        b=JAqVzC2HAGhcfAxE2MW5GyrQmArqWiXHiOrxlsvjCLzxj+tXVMpbsAxS1d/E1qU+I
+         8JaCb5hhgrdB/4Nf3oouNFbBxQXhSCODAK5hKZ+6Xj6fj2gEsjdBgO2GIVzrIPJdN4
+         zy80wLyGhi6xzEkkhlvBLigszqvsKK+FPIi6ndINT73o4KDxls1LL471lASFUnYohy
+         Hp2Tjg+pjNjOpit1kmKl4KzqbFnoYy9YTCQHxG2dGMOfNSMuyhBt9Vt6FzcV6qkas8
+         ueohZvjZtYfWcMXh+NV1Vevct4hwZGqrx/5rUnpUdB9DE7sEfYX0qK8bMyscNExCGl
+         LbFfJBqez9PJQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
@@ -41,9 +41,9 @@ Cc:     Johannes Berg <johannes.berg@intel.com>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 39/57] wifi: mac80211: simplify chanctx allocation
-Date:   Thu, 25 May 2023 14:35:49 -0400
-Message-Id: <20230525183607.1793983-39-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 41/57] wifi: mac80211: recalc chanctx mindef before assigning
+Date:   Thu, 25 May 2023 14:35:51 -0400
+Message-Id: <20230525183607.1793983-41-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230525183607.1793983-1-sashal@kernel.org>
 References: <20230525183607.1793983-1-sashal@kernel.org>
@@ -57,34 +57,48 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 860e1b43da94551cd1e73adc36b3c64cc3e5dc01 ]
+[ Upstream commit 04312de4ced4b152749614e8179f3978a20a992f ]
 
-There's no need to call ieee80211_recalc_chanctx_min_def()
-since it cannot and won't call the driver anyway; just use
-_ieee80211_recalc_chanctx_min_def() instead.
+When we allocate a new channel context, or find an existing one
+that is compatible, we currently assign it to a link before its
+mindef is updated. This leads to strange situations, especially
+in link switching where you switch to an 80 MHz link and expect
+it to be active immediately, but the mindef is still configured
+to 20 MHz while assigning.  Also, it's strange that the chandef
+passed to the assign method's argument is wider than the one in
+the context.
+
+Fix this by calculating the mindef with the new link considered
+before calling the driver.
+
+In particular, this fixes an iwlwifi problem during link switch
+where the firmware would assert because the (link) station that
+was added for the AP is configured to transmit at a bandwidth
+that's wider than the channel context that it's configured on.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Link: https://lore.kernel.org/r/20230504134511.828474-3-gregory.greenman@intel.com
+Link: https://lore.kernel.org/r/20230504134511.828474-5-gregory.greenman@intel.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/chan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/chan.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index e72cf0749d492..76c6decb0762c 100644
+index c5d345e53056a..f07e34bed8f3a 100644
 --- a/net/mac80211/chan.c
 +++ b/net/mac80211/chan.c
-@@ -638,7 +638,7 @@ ieee80211_alloc_chanctx(struct ieee80211_local *local,
- 	ctx->conf.rx_chains_dynamic = 1;
- 	ctx->mode = mode;
- 	ctx->conf.radar_enabled = false;
--	ieee80211_recalc_chanctx_min_def(local, ctx);
-+	_ieee80211_recalc_chanctx_min_def(local, ctx);
+@@ -871,6 +871,9 @@ static int ieee80211_assign_link_chanctx(struct ieee80211_link_data *link,
+ 	}
  
- 	return ctx;
- }
+ 	if (new_ctx) {
++		/* recalc considering the link we'll use it for now */
++		ieee80211_recalc_chanctx_min_def(local, new_ctx, link);
++
+ 		ret = drv_assign_vif_chanctx(local, sdata, link->conf, new_ctx);
+ 		if (ret)
+ 			goto out;
 -- 
 2.39.2
 
