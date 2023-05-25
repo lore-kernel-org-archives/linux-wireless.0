@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE943C77B7A
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 17:03:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9284FC77B7A
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 17:04:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235070AbjEYRDW (ORCPT
+        id S239983AbjEYREA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 May 2023 13:03:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55984 "EHLO
+        Thu, 25 May 2023 13:04:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233274AbjEYRDV (ORCPT
+        with ESMTP id S231451AbjEYRD7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2023 13:03:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F796C0;
-        Thu, 25 May 2023 10:03:20 -0700 (PDT)
+        Thu, 25 May 2023 13:03:59 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 076D1189;
+        Thu, 25 May 2023 10:03:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 14B0863FFB;
-        Thu, 25 May 2023 17:03:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69D09C433D2;
-        Thu, 25 May 2023 17:03:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 78D1B61489;
+        Thu, 25 May 2023 17:03:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD71EC433EF;
+        Thu, 25 May 2023 17:03:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685034199;
-        bh=K9n01kiiSt4kRO6VRK0U3IaunCH/mjPmCGWushqaFCE=;
+        s=k20201202; t=1685034237;
+        bh=TPlPKAj0p+zEqi9z0wS9kwH6FfheU3xhHZLDGA9HSMI=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=BW+9I/AXFnxNseELZ+15IxLElvl0zyNLVlnJWYcHRu0IrlpC7jiZkWiUGQ8ZvhK3q
-         HDr4fK4ssieD0qGC5k2Q/3YYQNbFKR078nRvsLNTW20nEiWjqcyMrEojIfYlTdzgtx
-         9UDH0sEMDZuKXC15O/yHOmcO8CKMQKKE8yGFosNNsLr4xOQ6S/Ds2T7MHWC5xzNTmv
-         6AWxobC8SwwDD3AnHlwIvELVJjS0nezwg0M2RHeKo83dd9PcITpL+SR9FKuut3eAV4
-         9iGLND/JSCEJTLidzJQUP1YWvPU7jpz0dFv/C1NyhzUzsIEx3BhSJHKrQmzJ93fuVl
-         PNGocxeBKbxDg==
+        b=WulJw5conWhP1Dnf+r2lYH3dRz1hcS/L7rpxgSyv16nh8X3+iYKTxP70dPDmOzojR
+         2GHX+1oVGYrIqKu1JFz07eKVxqPse+fqem4POSGVurzyMgcY0j8RhH/0utl01k7WDb
+         +aSbKnhEELRwjJ7lOHvMHLjzthAUb17SjlVzSpLb1bpXx1oz7hE0/bB3Ty98OecFjP
+         n4arCtcvZhXXxTtroxeDwI0jZBK36e3cBOUSzo/QnU/CJ8LAE08EG0vCmB/eSfFYUs
+         OYzfPvUabl9HwQrJesUFxJZXqu8A5p26immo0He1XiaVrxx38rTxnCu7BNUzAotaa3
+         8QqrRnsqcE1yw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH][next] wifi: wil6210: fw: Replace zero-length arrays with
+Subject: Re: [PATCH][next] wifi: wil6210: wmi: Replace zero-length array with
  DECLARE_FLEX_ARRAY() helper
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <ZGKHByxujJoygK+l@work>
-References: <ZGKHByxujJoygK+l@work>
+In-Reply-To: <ZGKHM+MWFsuqzTjm@work>
+References: <ZGKHM+MWFsuqzTjm@work>
 To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
 Cc:     "David S. Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>,
@@ -51,8 +51,8 @@ Cc:     "David S. Miller" <davem@davemloft.net>,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         linux-hardening@vger.kernel.org
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168503419448.19957.18092228078896033455.kvalo@kernel.org>
-Date:   Thu, 25 May 2023 17:03:17 +0000 (UTC)
+Message-ID: <168503423402.19957.8400109691029717015.kvalo@kernel.org>
+Date:   Thu, 25 May 2023 17:03:55 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -67,7 +67,7 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 > This helper allows for flexible-array members alone in structs.
 > 
 > Link: https://github.com/KSPP/linux/issues/193
-> Link: https://github.com/KSPP/linux/issues/287
+> Link: https://github.com/KSPP/linux/issues/288
 > Link: https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
 > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 > Reviewed-by: Simon Horman <simon.horman@corigine.com>
@@ -76,10 +76,10 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-cbb3debbb163 wifi: wil6210: fw: Replace zero-length arrays with DECLARE_FLEX_ARRAY() helper
+27044b57f8a5 wifi: wil6210: wmi: Replace zero-length array with DECLARE_FLEX_ARRAY() helper
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/ZGKHByxujJoygK+l@work/
+https://patchwork.kernel.org/project/linux-wireless/patch/ZGKHM+MWFsuqzTjm@work/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
