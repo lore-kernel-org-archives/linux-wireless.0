@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6028C7EE32
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 18:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98530C7EE29
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 18:57:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243214AbjEYS4S (ORCPT
+        id S243461AbjEYS5V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 May 2023 14:56:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40232 "EHLO
+        Thu, 25 May 2023 14:57:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243172AbjEYSyq (ORCPT
+        with ESMTP id S243709AbjEYSzy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2023 14:54:46 -0400
+        Thu, 25 May 2023 14:55:54 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2E623C2A;
-        Thu, 25 May 2023 11:46:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB45C2D5A;
+        Thu, 25 May 2023 11:47:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E24364974;
-        Thu, 25 May 2023 18:43:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B69D6C433EF;
-        Thu, 25 May 2023 18:43:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 773F360FD1;
+        Thu, 25 May 2023 18:46:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E11BC433D2;
+        Thu, 25 May 2023 18:46:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685040223;
-        bh=ODzEe5MTMPERDf+zXbuLdOTQOBegDNhuK6ZJ0a/0Ze4=;
+        s=k20201202; t=1685040366;
+        bh=aql5NXzheAYQGdrzLD5fzib1YS8adfuPpeMQmFo/SR4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UGFYXzNfBZtr9YlhBRqOMkscEE0JLRZmtuLWWgKjNIsO6hIqfBEqucoEoVWVZa5b1
-         fZycht2qRt4hl0x7zyMsuKUwzDPA/vaEAe6Q4glA069gDzYkmVm1UAhaV1wX/a+PZ4
-         kcfdjkmdK6pklfOW+h27JIhqiv77ugxp5+WeT5fyG1+dP3ttN3xvHOsT+B4zc4CjMc
-         Xmm87kAiBcW6Mj8r0ORKp/2ZTonsMDtqnf8JlLgW7yohoSA2GKRGzo4dRE05PUyg+x
-         oRRTbfRCpfIZyodGCSj9ZNPEgcmLlqpyIJP/KbQEtwnd3X61eUREbBrsxOO193qb6E
-         GLdlwGtJqi9hw==
+        b=ONrmJeql4sFdZVFWtmVLsIdlm29JEHADG1VdTb/dc8HiZPEP8XodJbnMih6BBD9uC
+         QcaNIj85rZcK1ryKVCRStNBn0k3RnFETT7FgIylVUgJqCcjjSJeFiIfgp7DfOE73VH
+         wxYRCmF6KtvBafPSeq8UUn0ke/94gh50y4uSafAgycA0b2RMBL8i3NLVF1W1aHuyqC
+         7kpX1a6loddmVvuHzmea0rLxDmcBGjUUlYjoPGhy45+K9tdzDHufMcWpX1rpvd79Az
+         vbvJee6Y3nnTMWN1YcNGaIwLl6MfTEXtEslh+xQjax4zAEXj0vXpMy9RymxsBwYB2n
+         bXebrrN7TV/vw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>,
@@ -44,12 +44,12 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         nathan@kernel.org, ndesaulniers@google.com,
         linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
         llvm@lists.linux.dev
-Subject: [PATCH AUTOSEL 5.4 23/27] wifi: b43: fix incorrect __packed annotation
-Date:   Thu, 25 May 2023 14:42:32 -0400
-Message-Id: <20230525184238.1943072-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 16/20] wifi: b43: fix incorrect __packed annotation
+Date:   Thu, 25 May 2023 14:45:12 -0400
+Message-Id: <20230525184520.2004878-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230525184238.1943072-1-sashal@kernel.org>
-References: <20230525184238.1943072-1-sashal@kernel.org>
+In-Reply-To: <20230525184520.2004878-1-sashal@kernel.org>
+References: <20230525184520.2004878-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -92,7 +92,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/b43/b43.h b/drivers/net/wireless/broadcom/b43/b43.h
-index 9fc7c088a539e..67b4bac048e58 100644
+index b77d1a904f7e6..a449561fccf28 100644
 --- a/drivers/net/wireless/broadcom/b43/b43.h
 +++ b/drivers/net/wireless/broadcom/b43/b43.h
 @@ -651,7 +651,7 @@ struct b43_iv {
