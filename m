@@ -2,121 +2,122 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25489C7EE2C
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 May 2023 19:01:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0103AC77B7C
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 May 2023 05:56:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243252AbjEYTBc (ORCPT
+        id S230058AbjEZF4B (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 May 2023 15:01:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45340 "EHLO
+        Fri, 26 May 2023 01:56:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243658AbjEYS7l (ORCPT
+        with ESMTP id S229479AbjEZF4A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 May 2023 14:59:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 012D559FE;
-        Thu, 25 May 2023 11:49:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B69364914;
-        Thu, 25 May 2023 18:45:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9460C4339C;
-        Thu, 25 May 2023 18:45:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685040356;
-        bh=K0DHSQSZVAT8N8ouP5wZ7sV+pKaXBbvB5JzNzqtza14=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EyPbOm1ZW8q9BfDUXvNVfPoFPgEgR6XQeVjZoJMjuitWJVz0VWV8oYd1XAZJBNBk+
-         OlGhvkxe2f8UL38OjgtxqprkVMSQ5QNSj+MXZ6xZshz+nvMPrAF77waoEOQiYCjyhN
-         ViXNvmOMVn2f7Oc/PF88KCeK6kyuo90AzequT9c/qU7UW2sZIFb9EhcP2BKjX12RT7
-         ZXecXGkqszXHKxm2q7Bom8mqZD1qqpb/kyUytDBK43fZbdwQRZgkVRJSpADsixWsF5
-         TfO3nj0dQ0TzfUWbPutoK9NLF5DQKXECwvnVvwgeKPNcrEPZv/3nueaT2zlo84NP7x
-         PqIirsoTgYGyg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yun Lu <luyun@kylinos.cn>, Kalle Valo <kvalo@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, Jes.Sorensen@gmail.com,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 13/20] wifi: rtl8xxxu: fix authentication timeout due to incorrect RCR value
-Date:   Thu, 25 May 2023 14:45:09 -0400
-Message-Id: <20230525184520.2004878-13-sashal@kernel.org>
+        Fri, 26 May 2023 01:56:00 -0400
+Received: from bin-mail-out-05.binero.net (bin-mail-out-05.binero.net [195.74.38.228])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FE1BE7
+        for <linux-wireless@vger.kernel.org>; Thu, 25 May 2023 22:55:58 -0700 (PDT)
+X-Halon-ID: f8928910-fb89-11ed-b7d6-cf458ee68324
+Authorized-sender: petter@technux.se
+Received: from localhost.localdomain (user33.85-195-12.netatonce.net [85.195.12.33])
+        by bin-vsp-out-03.atm.binero.net (Halon) with ESMTPSA
+        id f8928910-fb89-11ed-b7d6-cf458ee68324;
+        Fri, 26 May 2023 07:55:54 +0200 (CEST)
+From:   Petter Mabacker <petter@technux.se>
+To:     s.hauer@pengutronix.de
+Cc:     linux-wireless@vger.kernel.org, petter@technux.se,
+        pkshih@realtek.com, tony0620emma@gmail.com
+Subject: Re: rtw88: rtw8822cu (LM842) -> failed to get tx report from firmware
+Date:   Fri, 26 May 2023 07:55:51 +0200
+Message-Id: <20230526055551.1823094-1-petter@technux.se>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230525184520.2004878-1-sashal@kernel.org>
-References: <20230525184520.2004878-1-sashal@kernel.org>
+In-Reply-To: <20230524104510.GV15436@pengutronix.de>
+References: <20230524104510.GV15436@pengutronix.de>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yun Lu <luyun@kylinos.cn>
+>Hi Petter,
 
-[ Upstream commit 20429444e653ee8242dfbf815c0c37866beb371b ]
+>On Thu, Apr 06, 2023 at 10:41:20AM +0000, petter@technux.se wrote:
+>> Hi,
+>> 
+>> I have seen a very similar issue as Andreas. It was found when streaming a mender file (using mender install <url> from my arm device. But I have also managed to reproduce a similar issue by flooding the interface using iperf. 
+>> 
+>> on target:
+>> $ sudo iperf -s -u
+>> 
+>> On host:
+>> $ iperf -c <ip> -u -b 200M -t 300
+>> 
+>> Then it will almost instantly get problems causing the lm842 dongle to stop working.
 
-When using rtl8192cu with rtl8xxxu driver to connect wifi, there is a
-probability of failure, which shows "authentication with ... timed out".
-Through debugging, it was found that the RCR register has been inexplicably
-modified to an incorrect value, resulting in the nic not being able to
-receive authenticated frames.
+>I could finally reproduce this problem by placing an access point close
+>enough to my device. Only then the incoming packet rate is high enough
+>that the "failed to get rx_queue, overflow" message triggers.
 
-To fix this problem, add regrcr in rtl8xxxu_priv struct, and store
-the RCR value every time the register is written, and use it the next
-time the register need to be modified.
+>In my case the time it takes to print this message many times is enough
+>to confuse the device so that it finally responds with:
 
-Signed-off-by: Yun Lu <luyun@kylinos.cn>
-Link: https://lore.kernel.org/all/20230427020512.1221062-1-luyun_611@163.com
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20230512012055.2990472-1-luyun_611@163.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+>[  126.449305] rtw_8822cu 1-1:1.2: failed to get tx report from firmware
+>[  142.081419] rtw_8822cu 1-1:1.2: firmware failed to report density after scan
+>[  175.929407] rtw_8822cu 1-1:1.2: firmware failed to report density after scan
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index c1163f2a09251..1913b51c1e809 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1268,6 +1268,7 @@ struct rtl8xxxu_priv {
- 	u32 rege9c;
- 	u32 regeb4;
- 	u32 regebc;
-+	u32 regrcr;
- 	int next_mbox;
- 	int nr_out_eps;
- 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 1c9f7e1f63cfd..bfd704b17a447 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4051,6 +4051,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		RCR_ACCEPT_MGMT_FRAME | RCR_HTC_LOC_CTRL |
- 		RCR_APPEND_PHYSTAT | RCR_APPEND_ICV | RCR_APPEND_MIC;
- 	rtl8xxxu_write32(priv, REG_RCR, val32);
-+	priv->regrcr = val32;
- 
- 	/*
- 	 * Accept all multicast
-@@ -5591,7 +5592,7 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
- 				      unsigned int *total_flags, u64 multicast)
- {
- 	struct rtl8xxxu_priv *priv = hw->priv;
--	u32 rcr = rtl8xxxu_read32(priv, REG_RCR);
-+	u32 rcr = priv->regrcr;
- 
- 	dev_dbg(&priv->udev->dev, "%s: changed_flags %08x, total_flags %08x\n",
- 		__func__, changed_flags, *total_flags);
-@@ -5637,6 +5638,7 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
- 	 */
- 
- 	rtl8xxxu_write32(priv, REG_RCR, rcr);
-+	priv->regrcr = rcr;
- 
- 	*total_flags &= (FIF_ALLMULTI | FIF_FCSFAIL | FIF_BCN_PRBRESP_PROMISC |
- 			 FIF_CONTROL | FIF_OTHER_BSS | FIF_PSPOLL |
--- 
-2.39.2
+>I just sent a patch printing the message with dev_dbg_ratelimited
+>instead which fixes that problem for me, you're on Cc.
+
+>It likely won't fix Andreas' problem though, as I don't see this message
+>in his bug report.
+
+>Sascha
+
+Nice work. I have tested your patch v1 for the flooding at it solves my
+iperf issue. Also when you describe above, its the
+very same situation for me, I have been using a board that is very close
+to the access point, so this is likely why I could reproduce it quite
+easy.
+
+I have however finally manage to make some break-through about the
+original issue Andreas described, that so far has only been seen when
+running mender install. A similar behaviour is to download large amount
+of data combined with writing to the disk. So for me I can reproduce the
+issue on my i.MX6 SoloX (single cpu board) by doing.
+
+$ sudo dd if=/dev/urandom of=/path/to/bigfile bs=4M count=500
+
+and in parallell download a large file such as:
+
+$ wget -O /dev/null http://speedtest.tele2.net/10GB.zip
+
+This will trigger the problem quite fast (within 5-15 min at least):
+[  374.763424] rtw_8822cu 1-1.2:1.2: failed to get tx report from firmware
+[  377.771790] rtw_8822cu 1-1.2:1.2: failed to send h2c command
+[  407.813460] rtw_8822cu 1-1.2:1.2: firmware failed to report density after scan
+[  414.965826] rtw_8822cu 1-1.2:1.2: failed to send h2c command
+[  444.993462] rtw_8822cu 1-1.2:1.2: firmware failed to report density after scan
+[  452.144551] rtw_8822cu 1-1.2:1.2: failed to send h2c command
+[  482.183445] rtw_8822cu 1-1.2:1.2: firmware failed to report density after scan
+
+However one very interesting thing is that I can not reproduce this on a
+more powerful device, such as i.MX8 or RPi4 etc.. But when I tried this
+on another less powerful old single core device (BCM2835), I was able to
+reproduce it quite easily again..
+
+So from my understanding it seems to be a bit related to how the driver
+behaves when the network queue/buffer etc are a bit stretch and the
+system occupied with high I/O and/or system load. By increasing buffer sizes and
+priorities for network queues, the system can handle it a bit better,
+but still enough stress of the system seems to trigger the driver to
+bail out completely..
+
+Any suggestions or ideas around this is most welcome..
+
+BR Petter
+
+>-- 
+>Pengutronix e.K.                           |                             |
+>Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
+>31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
+>Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
