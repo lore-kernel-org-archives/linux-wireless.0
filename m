@@ -2,101 +2,82 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C63C8C77B7A
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 May 2023 09:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9EBC7EE2F
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 May 2023 09:40:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243268AbjEZJei (ORCPT
+        id S242160AbjEZJkP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 May 2023 05:34:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41874 "EHLO
+        Fri, 26 May 2023 05:40:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243249AbjEZJeP (ORCPT
+        with ESMTP id S242782AbjEZJjl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2023 05:34:15 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49E9110F3
-        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2023 02:33:39 -0700 (PDT)
-Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1q2Tp5-0007HF-QH; Fri, 26 May 2023 11:33:23 +0200
-Received: from sha by ptx.hi.pengutronix.de with local (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1q2Tp1-0007tg-Pm; Fri, 26 May 2023 11:33:19 +0200
-Date:   Fri, 26 May 2023 11:33:19 +0200
-From:   Sascha Hauer <s.hauer@pengutronix.de>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Hans Ulli Kroll <linux@ulli-kroll.de>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Tim K <tpkuester@gmail.com>, "Alex G ." <mr.nuke.me@gmail.com>,
-        Nick Morrow <morrownr@gmail.com>,
-        Viktor Petrenko <g0000ga@gmail.com>,
-        Andreas Henriksson <andreas@fatal.se>,
-        ValdikSS <iam@valdikss.org.ru>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        "petter@technux.se" <petter@technux.se>
-Subject: Re: [PATCH] wifi: rtw88: usb: silence log flooding error message
-Message-ID: <20230526093319.GR17518@pengutronix.de>
-References: <20230524103934.1019096-1-s.hauer@pengutronix.de>
- <290b05447cc542a9b35c25ff89ba8ff3@realtek.com>
+        Fri, 26 May 2023 05:39:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5788CE4E
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2023 02:39:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C1CB564E8D
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2023 09:39:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCB4DC4339C;
+        Fri, 26 May 2023 09:38:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685093941;
+        bh=1jvDYFDddIWiMkiwRme9di50H0U0k1tYRF66A/E0T+I=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=r5m9jmtI9Zkkmvbd+aQ9MJlZOEoXSn7NdimYdX7dU4n7nSbFPJJDOwT1u3pgWUtcB
+         +VXFnJy8DAzBFIGNv6hd7LrdvlzbsnsCwEq6+vpGIadP3KD2PweUlJAqumh0Q+bRuG
+         34l3mTTiwv/+PuqtlAasgJVLetRX9DbVVI6cMqlSHN7iQbqJMkb4JgXVAHWzPW+uQo
+         RRqLZfXIBiagk28tgOQl5woSVKT60UTUvow5B/pJGFB9OWUE/cC8UrAGCVYVBkam62
+         NGLoJa3M0CVbZrUx1KaZyP4slooQ1067t69vtw/nfW0jwUIkwhljIKw+q4nnXGyn5D
+         Vsf1lBa7Dar8w==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <290b05447cc542a9b35c25ff89ba8ff3@realtek.com>
-X-Sent-From: Pengutronix Hildesheim
-X-URL:  http://www.pengutronix.de/
-X-Accept-Language: de,en
-X-Accept-Content-Type: text/plain
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] wifi: ath12k: Add support to parse new WMI event for 6
+ GHz
+ regulatory
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230502142018.20301-1-quic_rgnanase@quicinc.com>
+References: <20230502142018.20301-1-quic_rgnanase@quicinc.com>
+To:     Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+Cc:     ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        P Praneesh <quic_ppranees@quicinc.com>,
+        Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
+Message-ID: <168509393704.23037.3611388693586746214.kvalo@kernel.org>
+Date:   Fri, 26 May 2023 09:38:59 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, May 25, 2023 at 12:45:23AM +0000, Ping-Ke Shih wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Sascha Hauer <s.hauer@pengutronix.de>
-> > Sent: Wednesday, May 24, 2023 6:40 PM
-> > To: linux-wireless <linux-wireless@vger.kernel.org>
-> > Cc: Hans Ulli Kroll <linux@ulli-kroll.de>; Larry Finger <Larry.Finger@lwfinger.net>; Ping-Ke Shih
-> > <pkshih@realtek.com>; Tim K <tpkuester@gmail.com>; Alex G . <mr.nuke.me@gmail.com>; Nick Morrow
-> > <morrownr@gmail.com>; Viktor Petrenko <g0000ga@gmail.com>; Andreas Henriksson <andreas@fatal.se>;
-> > ValdikSS <iam@valdikss.org.ru>; kernel@pengutronix.de; petter@technux.se; Sascha Hauer
-> > <s.hauer@pengutronix.de>
-> > Subject: [PATCH] wifi: rtw88: usb: silence log flooding error message
-> > 
-> > When receiving more rx packets than the kernel can handle the driver
-> > drops the packets and issues an error message.
-> 
-> The workqueue rtw88_usb is using is:
-> 
-> 	rtwusb->rxwq = create_singlethread_workqueue("rtw88_usb: rx wq");
-> 
-> Have you tried workqueue with flags WQ_UNBOUND and WQ_HIGHPRI? Like,
-> 
-> 	rtwusb->rxwq = alloc_workqueue("rtw88_usb: rx wq", WQ_UNBOUND | WQ_HIGHPRI, 0);
-> or
-> 	rtwusb->rxwq = alloc_ordered_workqueue("rtw88_usb: rx wq", WQ_HIGHPRI);
-> 
-> Then, driver get more time to process RX, so it could ease flooding messages. 
+Ramya Gnanasekar <quic_rgnanase@quicinc.com> wrote:
 
-No, I haven't tried this. Regardless of that, I think it still makes
-sense to rate limit the messages. There will always be a slower system
-that can't cope with the number of packets even with a higher priority
-workqueue.
+> In order to support different power levels of 6 GHz AP and client, new WMI
+> event for regulatory (WMI_REG_CHAN_LIST_CC_EXT_EVENTID) has been added in
+> firmware to provide new parameters required for 6 GHz regulatory rules.
+> 
+> Firmware advertises its capability of handling new event in WMI service ready
+> event. Based on that, host needs to set host_service_flags in WMI init command
+> to indicate that host supports processing of this WMI event. Based on
+> advertised host capability, firmware sends event WMI_REG_CHAN_LIST_CC_EXT_EVENTID.
+> This new event contains 2G/5G/6G reg rules with additional power value fields
+> for 6GHz and regd is built accordingly.
+> 
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0-02903-QCAHKSWPL_SILICONZ-1
+> 
+> Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+> Signed-off-by: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-Sascha
+Patch applied to ath-next branch of ath.git, thanks.
 
+342527f35338 wifi: ath12k: Add support to parse new WMI event for 6 GHz regulatory
 
 -- 
-Pengutronix e.K.                           |                             |
-Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
-31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+https://patchwork.kernel.org/project/linux-wireless/patch/20230502142018.20301-1-quic_rgnanase@quicinc.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
