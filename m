@@ -2,95 +2,110 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C306DC7EE2D
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 May 2023 09:40:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 973EFC77B7C
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 May 2023 10:17:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230268AbjEZJkO (ORCPT
+        id S236842AbjEZKRt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 May 2023 05:40:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45102 "EHLO
+        Fri, 26 May 2023 06:17:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242995AbjEZJj2 (ORCPT
+        with ESMTP id S236577AbjEZKRt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 May 2023 05:39:28 -0400
-Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63441170B
-        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2023 02:38:56 -0700 (PDT)
-Received: by mail-io1-f71.google.com with SMTP id ca18e2360f4ac-77481baed40so257679639f.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2023 02:38:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685093935; x=1687685935;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=HZDBnsdsW0y73fGsliM6Bx8oo1s3VdarCwOTBqSzGCc=;
-        b=kYPCvfVxaSvXvo/RMpHgD5HagxTcGG/4C6r75zsAtJE6s7frMG7YvPcDk6+0MQ/g3E
-         UMt6nPcGeE2AqH4j9hKU/IxJmlXCHeclTLW9P9jrzG34lav5L4muNvEqpR59q9MHhRFn
-         ih6ewVCHdooY/EDIpJ2mzn9V/L1A8hrrod7g1G7QZFXX52oPtaBv60gZxJqR0LUBnsId
-         w1JMjk8eXFr8Nx18QrRNFBCCIbTgjqelFrfm6BhK2O0yEXWE9+tjt826qtWVg9MDe9KN
-         qQlglYtMWoIONBQFMN73GIZ336Txw6rObn7dhMZ1WARSgPW/Fl7yuacAhSvs450FELe6
-         Aung==
-X-Gm-Message-State: AC+VfDyE6iwjJPBTAb9KDrzKxXs9m/VYm5A3FnL5RVSy5xdjHhPTx/LU
-        lJTMaubGkzScxKdlPP5ODBV1DxICK0B2OEtF9gbRGIkrNZMT
-X-Google-Smtp-Source: ACHHUZ6t1Y3iFCF2npLfihazO9ZT5NgGe7L9XEVUDso+2xdttDxLQyGeEKhxr8sGfwtCbfbidzc9r8MsAPP34lifzG+mi5e2N8+x
+        Fri, 26 May 2023 06:17:49 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8E23A9
+        for <linux-wireless@vger.kernel.org>; Fri, 26 May 2023 03:17:47 -0700 (PDT)
+Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <sha@pengutronix.de>)
+        id 1q2UVv-0005lp-2T; Fri, 26 May 2023 12:17:39 +0200
+Received: from sha by ptx.hi.pengutronix.de with local (Exim 4.92)
+        (envelope-from <sha@pengutronix.de>)
+        id 1q2UVs-0001xx-Mr; Fri, 26 May 2023 12:17:36 +0200
+Date:   Fri, 26 May 2023 12:17:36 +0200
+From:   Sascha Hauer <s.hauer@pengutronix.de>
+To:     Simon Horman <simon.horman@corigine.com>
+Cc:     Pkshih <pkshih@realtek.com>, Hans Ulli Kroll <linux@ulli-kroll.de>,
+        ValdikSS <iam@valdikss.org.ru>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Tim K <tpkuester@gmail.com>, Nick Morrow <morrownr@gmail.com>,
+        Viktor Petrenko <g0000ga@gmail.com>,
+        "Alex G ." <mr.nuke.me@gmail.com>, kernel@pengutronix.de,
+        petter@technux.se, Andreas Henriksson <andreas@fatal.se>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] wifi: rtw88: usb: silence log flooding error message
+Message-ID: <20230526101736.GS17518@pengutronix.de>
+References: <20230524103934.1019096-1-s.hauer@pengutronix.de>
+ <ZG32XKBsAub+Y+bO@corigine.com>
 MIME-Version: 1.0
-X-Received: by 2002:a02:2983:0:b0:411:b866:8345 with SMTP id
- p125-20020a022983000000b00411b8668345mr430480jap.0.1685093935718; Fri, 26 May
- 2023 02:38:55 -0700 (PDT)
-Date:   Fri, 26 May 2023 02:38:55 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000073a88805fc95817f@google.com>
-Subject: [syzbot] Monthly wireless report (May 2023)
-From:   syzbot <syzbot+list132aa227160b7dc530f8@syzkaller.appspotmail.com>
-To:     linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZG32XKBsAub+Y+bO@corigine.com>
+X-Sent-From: Pengutronix Hildesheim
+X-URL:  http://www.pengutronix.de/
+X-Accept-Language: de,en
+X-Accept-Content-Type: text/plain
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
+X-SA-Exim-Mail-From: sha@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello wireless maintainers/developers,
+On Wed, May 24, 2023 at 01:34:52PM +0200, Simon Horman wrote:
+> On Wed, May 24, 2023 at 12:39:34PM +0200, Sascha Hauer wrote:
+> > When receiving more rx packets than the kernel can handle the driver
+> > drops the packets and issues an error message. This is bad for two
+> > reasons. The logs are flooded with myriads of messages, but then time
+> > consumed for printing messages in that critical code path brings down
+> > the device. After some time of excessive rx load the driver responds
+> > with:
+> > 
+> > rtw_8822cu 1-1:1.2: failed to get tx report from firmware
+> > rtw_8822cu 1-1:1.2: firmware failed to report density after scan
+> > rtw_8822cu 1-1:1.2: firmware failed to report density after scan
+> > 
+> > The device stops working until being replugged.
+> > 
+> > Fix this by lowering the priority to debug level and also by
+> > ratelimiting it.
+> > 
+> > Fixes: a82dfd33d1237 ("wifi: rtw88: Add common USB chip support")
+> > Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+> > ---
+> >  drivers/net/wireless/realtek/rtw88/usb.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+> > index 44a5fafb99055..976eafa739a2d 100644
+> > --- a/drivers/net/wireless/realtek/rtw88/usb.c
+> > +++ b/drivers/net/wireless/realtek/rtw88/usb.c
+> > @@ -535,7 +535,7 @@ static void rtw_usb_rx_handler(struct work_struct *work)
+> >  		}
+> >  
+> >  		if (skb_queue_len(&rtwusb->rx_queue) >= RTW_USB_MAX_RXQ_LEN) {
+> > -			rtw_err(rtwdev, "failed to get rx_queue, overflow\n");
+> > +			dev_dbg_ratelimited(rtwdev->dev, "failed to get rx_queue, overflow\n");
+> 
+> This is certainly an improvement. But as I understand things
+> it is still somewhat verbose if the condition persists.
+> Did you consider dev_dbg_once()?
 
-This is a 31-day syzbot report for the wireless subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/wireless
+My rationale was that dev_dbg() is normally disabled anyway. With
+CONFIG_DYNAMIC_PRINTK you would still have fine grained control if you
+want to see this message or not.
 
-During the period, 0 new issues were detected and 1 were fixed.
-In total, 33 issues are still open and 105 have been fixed so far.
+Personally I don't care that much, I would switch to dev_dbg_once() if
+that's preferred.
 
-Some of the still happening issues:
+Sascha
 
-Ref  Crashes Repro Title
-<1>  7256    Yes   KMSAN: uninit-value in hwsim_cloned_frame_received_nl
-                   https://syzkaller.appspot.com/bug?extid=b2645b5bf1512b81fa22
-<2>  5107    Yes   WARNING in ieee80211_bss_info_change_notify
-                   https://syzkaller.appspot.com/bug?extid=09d1cd2f71e6dd3bfd2c
-<3>  4172    Yes   WARNING in __cfg80211_ibss_joined (2)
-                   https://syzkaller.appspot.com/bug?extid=7f064ba1704c2466e36d
-<4>  3892    Yes   WARNING in __ieee80211_beacon_get
-                   https://syzkaller.appspot.com/bug?extid=18c783c5cf6a781e3e2c
-<5>  905     No    WARNING in ieee80211_ibss_csa_beacon (2)
-                   https://syzkaller.appspot.com/bug?extid=b10a54cb0355d83fd75c
-<6>  802     Yes   WARNING in ar5523_submit_rx_cmd/usb_submit_urb
-                   https://syzkaller.appspot.com/bug?extid=6101b0c732dea13ea55b
-<7>  721     Yes   WARNING in ieee80211_link_info_change_notify (2)
-                   https://syzkaller.appspot.com/bug?extid=de87c09cc7b964ea2e23
-<8>  597     Yes   WARNING in ieee80211_start_next_roc
-                   https://syzkaller.appspot.com/bug?extid=c3a167b5615df4ccd7fb
-<9>  362     Yes   INFO: task hung in rfkill_global_led_trigger_worker (2)
-                   https://syzkaller.appspot.com/bug?extid=2e39bc6569d281acbcfb
-<10> 240     No    INFO: task hung in ath9k_hif_usb_firmware_cb (2)
-                   https://syzkaller.appspot.com/bug?extid=d5635158fb0281b27bff
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
-
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
+-- 
+Pengutronix e.K.                           |                             |
+Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
+31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
