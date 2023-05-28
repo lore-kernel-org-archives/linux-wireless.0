@@ -2,92 +2,108 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2BD7C77B7C
-	for <linux-wireless@archiver.kernel.org>; Sat, 27 May 2023 22:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E77B2C77B7C
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 May 2023 10:29:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229506AbjE0W3K (ORCPT
+        id S229485AbjE1K3D (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 27 May 2023 18:29:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38180 "EHLO
+        Sun, 28 May 2023 06:29:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbjE0W3I (ORCPT
+        with ESMTP id S229483AbjE1K3C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 May 2023 18:29:08 -0400
-Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1021BEC;
-        Sat, 27 May 2023 15:29:04 -0700 (PDT)
-Received: from tr.lan (ip-86-49-120-218.bb.vodafone.cz [86.49.120.218])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        Sun, 28 May 2023 06:29:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57FC3BD
+        for <linux-wireless@vger.kernel.org>; Sun, 28 May 2023 03:29:01 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: marex@denx.de)
-        by phobos.denx.de (Postfix) with ESMTPSA id F1C05846E3;
-        Sun, 28 May 2023 00:29:01 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-        s=phobos-20191101; t=1685226542;
-        bh=wnP21VChaBTxAaPJsoZYssejkrEL9X+Q26Zlv5EAZx0=;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E100660919
+        for <linux-wireless@vger.kernel.org>; Sun, 28 May 2023 10:29:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 093B7C433EF;
+        Sun, 28 May 2023 10:28:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685269740;
+        bh=8Hn+PyOhSn26dTziuGvswTgBnLsjvuNXsFUT8YkYeDU=;
         h=From:To:Cc:Subject:Date:From;
-        b=yKYA2QxAd/MUR/OdurN1xNOEJ9qHzJ5mi2kV2JTXs6jMB2QpwfcXUKhbQ6xLw+Oca
-         9J6MdTX62lNQ7tJKqrQjHXoLuJ9MfoSoZK9//FG36GnNNPJrErN5VBepwA7vfmlQuo
-         FJbMj6cijY38OAT++2GsEYJC02fvZWyURlLzNn0OWqFoDnA7dUjvgiKSxVQRfk1l8P
-         tvyIRL0NCCZqDsRWulhKYXD7ZWteoW0HfR73XI45VDvCpdTOj3neq+FXIfTZTfu3EH
-         nMML6Un3c23G5tsoQLd+IGwwypQcr9Dh1ogrS1Z7AIu23VOStTrr9+chOYngGPnU8H
-         pUxnMz5flADhg==
-From:   Marek Vasut <marex@denx.de>
-To:     linux-wireless@vger.kernel.org
-Cc:     Marek Vasut <marex@denx.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jilin Yuan <yuanjilin@cdjrlc.com>,
-        Kalle Valo <kvalo@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-        netdev@vger.kernel.org
-Subject: [PATCH] wifi: rsi: Do not set MMC_PM_KEEP_POWER in shutdown
-Date:   Sun, 28 May 2023 00:28:59 +0200
-Message-Id: <20230527222859.273768-1-marex@denx.de>
-X-Mailer: git-send-email 2.39.2
+        b=rlVKu3IsI+C9cvIH/dP6oCwBPksvzq+y5EHfgkYFznQn1B3GEFMfTcCHh43fr3Mde
+         wGD/SYfd1Uzh6IEy7wOtqvqE1/tFyIcawMRRCZLGuyPWa65I5Wwu2XeFBACR0pEcuj
+         Fe7jWjNXjuDw43/mq4vKLFQzAgPAmvUNavDLA2+u87tVqKoxxy8orBtz0yrzPe1S0r
+         ts/tmINNpW1Jw4XLTgI+BgoPwCDi4qmdAQy1kif05ldhe7E29cDhTkdfE2shmvFs/4
+         D6/rcnE6bAGwRHk/rXJInG9ILyDeZ2cSfrVe5V24XTfvmLcIaCUmwpTDcKDJu+5+lp
+         4JhFCQb6LIC5A==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     kvalo@kernel.org
+Cc:     nbd@nbd.name, lorenzo.bianconi@redhat.com,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH wireless] wifi: mt76: mt7996: fix possible NULL pointer dereference in mt7996_mac_write_txwi()
+Date:   Sun, 28 May 2023 12:28:49 +0200
+Message-Id: <2637628a84f42ad6d7b774e706f041d5b45c8cb5.1685269638.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
-X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It makes no sense to set MMC_PM_KEEP_POWER in shutdown. The flag
-indicates to the MMC subsystem to keep the slot powered on during
-suspend, but in shutdown the slot should actually be powered off.
-Drop this call.
+Fix possible NULL pointer dereference on mvif pointer in
+mt7996_mac_write_txwi routine.
 
-Fixes: 063848c3e155 ("rsi: sdio: Add WOWLAN support for S5 shutdown state")
-Signed-off-by: Marek Vasut <marex@denx.de>
+Fixes: 15ee62e73705 ("wifi: mt76: mt7996: enable BSS_CHANGED_BASIC_RATES support")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Jilin Yuan <yuanjilin@cdjrlc.com>
-Cc: Kalle Valo <kvalo@kernel.org>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 3 ---
- 1 file changed, 3 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 6e33a2563fdbd..1911fef3bbad6 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -1479,9 +1479,6 @@ static void rsi_shutdown(struct device *dev)
- 	if (sdev->write_fail)
- 		rsi_dbg(INFO_ZONE, "###### Device is not ready #######\n");
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index 39a4a73ef8e6..9b0f6053e0fa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -1004,10 +1004,10 @@ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_vif *vif = info->control.vif;
+-	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
+ 	u8 band_idx = (info->hw_queue & MT_TX_HW_QUEUE_PHY) >> 2;
+ 	u8 p_fmt, q_idx, omac_idx = 0, wmm_idx = 0;
+ 	bool is_8023 = info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP;
++	struct mt7996_vif *mvif;
+ 	u16 tx_count = 15;
+ 	u32 val;
+ 	bool beacon = !!(changed & (BSS_CHANGED_BEACON |
+@@ -1015,7 +1015,8 @@ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
+ 	bool inband_disc = !!(changed & (BSS_CHANGED_UNSOL_BCAST_PROBE_RESP |
+ 					 BSS_CHANGED_FILS_DISCOVERY));
  
--	if (rsi_set_sdio_pm_caps(adapter))
--		rsi_dbg(INFO_ZONE, "Setting power management caps failed\n");
--
- 	rsi_dbg(INFO_ZONE, "***** RSI module shut down *****\n");
- }
+-	if (vif) {
++	mvif = vif ? (struct mt7996_vif *)vif->drv_priv : NULL;
++	if (mvif) {
+ 		omac_idx = mvif->mt76.omac_idx;
+ 		wmm_idx = mvif->mt76.wmm_idx;
+ 		band_idx = mvif->mt76.band_idx;
+@@ -1081,12 +1082,16 @@ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
+ 		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 		bool mcast = ieee80211_is_data(hdr->frame_control) &&
+ 			     is_multicast_ether_addr(hdr->addr1);
+-		u8 idx = mvif->basic_rates_idx;
++		u8 idx = MT7996_BASIC_RATES_TBL;
  
+-		if (mcast && mvif->mcast_rates_idx)
+-			idx = mvif->mcast_rates_idx;
+-		else if (beacon && mvif->beacon_rates_idx)
+-			idx = mvif->beacon_rates_idx;
++		if (mvif) {
++			if (mcast && mvif->mcast_rates_idx)
++				idx = mvif->mcast_rates_idx;
++			else if (beacon && mvif->beacon_rates_idx)
++				idx = mvif->beacon_rates_idx;
++			else
++				idx = mvif->basic_rates_idx;
++		}
+ 
+ 		txwi[6] |= cpu_to_le32(FIELD_PREP(MT_TXD6_TX_RATE, idx));
+ 		txwi[3] |= cpu_to_le32(MT_TXD3_BA_DISABLE);
 -- 
-2.39.2
+2.40.1
 
