@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 098D9C77B7A
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DC96C77B73
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:51:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229949AbjEaQvu (ORCPT
+        id S229951AbjEaQv6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 May 2023 12:51:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37836 "EHLO
+        Wed, 31 May 2023 12:51:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229952AbjEaQvq (ORCPT
+        with ESMTP id S229622AbjEaQv5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2023 12:51:46 -0400
+        Wed, 31 May 2023 12:51:57 -0400
 Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F51F180
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 09:51:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DC0E139
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 09:51:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685551903; x=1717087903;
+  t=1685551912; x=1717087912;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=tVgq69gjBaAqPagEMU1s/hP7X3PJInqebO1MGuzJ2V8=;
-  b=OKWQo+tMTx78X1pFIh1g13Xs/iIrFsaMjZrghoNHaHTeAC/rhmLNvyD9
-   WyiuONwvwBv+DXBe769rjdk5BFZw5peh0ORjjxHq+60LkkbcNpwnnVtro
-   kTwRLdcr6lPYyvv1Xem81XPXguR5XjmUaTeYN6tH+B0DbJz5g8GkjkpFP
-   JlFDbrm25XZikbgYRknk3fJlCvqQSrhD2r/HexqQyniv9K6EeThKbnbn8
-   CSNFQ+IVIL4YCXkoUaStIIAmB3EBhyQa/zm80H7fRCildvOCj/5ss+dWn
-   3kVsJ9cVxSPJEo46Y3m6y8Bs7NUvl2LhT9sV9X/p2LyOboAC74xCP05wM
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890668"
+  bh=+gMOB+o3qmEVKajS3pT324vOkwe86BonMBM3vf6l+WI=;
+  b=LmcFRV+l+rFAAkFr+I3OFAXOriP59wHQOVHs39s2hqlAUp8f11JXD/K7
+   bl0u96TUU13ucj5XpW7/Xf6cH9pn+tuwbsJxLYDIajGWQ0uNEefhqx2hQ
+   LxVppH9CsBxp4wvhALa2sSr2OfMPg7bW12xH7nzsjX+Cof1XjfHSuxBPU
+   F9wY8p9CpzSfbV+CtrP3n08KonKEcsDqYR+GUIrskQhxOFFM9o7c5hg+E
+   YQRD/zmxaVaJm04wq1rpRmexCYdknEWetJSen75sMNDIU7mAox1aqoP+E
+   FtiV/5fE3K/LBZyqMLXGCdeZfzISy8X+yREsIvcNfC0KOQR7UIxLwSCko
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890757"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="339890668"
+   d="scan'208";a="339890757"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:49 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:54 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706987989"
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706988003"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="706987989"
+   d="scan'208";a="706988003"
 Received: from amilman1-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.102])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:47 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:52 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Alon Giladi <alon.giladi@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/14] wifi: iwlwifi: Add Dell to ppag approved list
-Date:   Wed, 31 May 2023 19:50:03 +0300
-Message-Id: <20230531194630.a2696f0538ef.I324e4a0cc4696c27830a490b79c42dfeff8ba074@changeid>
+Subject: [PATCH 13/14] wifi: iwlwifi: mvm: remove warning for beacon filtering error
+Date:   Wed, 31 May 2023 19:50:05 +0300
+Message-Id: <20230531194630.29fe6990d372.I00ff5dc7bfb4025a609f380a0a3911d842b72449@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230531165006.273284-1-gregory.greenman@intel.com>
 References: <20230531165006.273284-1-gregory.greenman@intel.com>
@@ -57,37 +57,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alon Giladi <alon.giladi@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add 2 new entries for Dell in PPAG approved list.
+This warning is sometimes happening if we force a FW error
+while disconnecting, which is annoying but harmless.
 
-Signed-off-by: Alon Giladi <alon.giladi@intel.com>
+However, it's also pointless to throw a warning here, since
+the stack and driver state doesn't really help, so just
+remove that so the driver will ignore the error if any.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index 9ee9e0cb722c..ba94f6e6be62 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -59,6 +59,16 @@ static const struct dmi_system_id dmi_ppag_approved_list[] = {
- 			DMI_MATCH(DMI_BOARD_VENDOR, "SAMSUNG ELECTRONICS CO., LTD"),
- 		},
- 	},
-+	{ .ident = "DELL",
-+	  .matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc."),
-+		},
-+	},
-+	{ .ident = "DELL",
-+	  .matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Alienware"),
-+		},
-+	},
- 	{}
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 7ea200c85cac..6a712e519bac 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3801,7 +3801,6 @@ iwl_mvm_sta_state_authorized_to_assoc(struct iwl_mvm *mvm,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	int ret;
  
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+@@ -3820,10 +3819,7 @@ iwl_mvm_sta_state_authorized_to_assoc(struct iwl_mvm *mvm,
+ 		mvmvif->authorized = 0;
+ 
+ 		/* disable beacon filtering */
+-		ret = iwl_mvm_disable_beacon_filter(mvm, vif, 0);
+-		WARN_ON(ret &&
+-			!test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
+-				  &mvm->status));
++		iwl_mvm_disable_beacon_filter(mvm, vif, 0);
+ 	}
+ 
+ 	return 0;
 -- 
 2.38.1
 
