@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16166C77B73
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2EA3C7EE31
 	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:51:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229645AbjEaQvQ (ORCPT
+        id S229898AbjEaQvR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 May 2023 12:51:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
+        Wed, 31 May 2023 12:51:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229639AbjEaQvM (ORCPT
+        with ESMTP id S229754AbjEaQvM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 31 May 2023 12:51:12 -0400
 Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 393E4132
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74062133
         for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 09:51:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1685551871; x=1717087871;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=5ipDvFP0bss/pIkb/lfULH7/Q0damxzXHQu2P1ipBHg=;
-  b=QD1dF/Hpw30ZXzYweHWx6m/bH/nVhKADIHWFHqjVxBHchZWfBwVHQbwv
-   U79L4APSD3/DMqVHTLzqoEKlduycXYfaxr6ADWmiuSNzPz+W+DWjpxzvg
-   K+JZby7/nXYAfK2zA5Y9HZ3Daga9CJEg5FLep9HS5zohacAHwHA2MXO4K
-   SdoDxMaCtQSEUkyuoCqEJrZrne28b8+kH+g1rvriePtJpKsgsx5zo1fK6
-   rpzmBv/EuzyDUZ2YHSijRgjAe6sHMhYGe6+9H6SDenucZe+DlwcS/WOQe
-   9bez2csMumMFjvtJnanybC+Sw8BqW+NKwN2JrvCYLMqxarqAiUNrDpoK/
+  bh=zt7utCpCqcuX0OLH97efmmvZWFmUpoQJbrxZ/y5OUxc=;
+  b=Alr9J3V4rfg8TUxnFoUamgLu2TGOMUROYGp+XXkOepAcFoI7HpagvvEc
+   Z9RZGS4FXwlyQFIxeEGc6tZofYoMF5PeMHI3F4yG2shpw4K+CAEztSw9X
+   JfSyA5acm6E3vr4vwlMr4zdocKYO6pCxcq7NCUYvJtVjaBXC+Z+KmMhzn
+   /dEORChWyr4npDJNYWTiv2/BXO5SueuH+9J6Xrz2XfFDhJWTdh3cU0N/1
+   bYerxftMtKtt2V+TmXWq7/CWie6/CT/wIQFZOg7Zc0KNjh6xY4LPcBJ9U
+   iMiLvjr4zAeT3DdKNVYP3QGR3DYWAn1Gwo+TWEakqVSKzq5M8BUaRMZi4
    g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890376"
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890393"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="339890376"
+   d="scan'208";a="339890393"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:33 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:34 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706987947"
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706987954"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="706987947"
+   d="scan'208";a="706987954"
 Received: from amilman1-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.102])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:23 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:30 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 01/14] wifi: iwlwifi: fix Bz checksum start/result offset
-Date:   Wed, 31 May 2023 19:49:53 +0300
-Message-Id: <20230531194629.d3afbc073f74.I925d15b41c7c87bc2b44432ac7cd4ec03b43b8b1@changeid>
+Subject: [PATCH 04/14] wifi: iwlwifi: mvm: clarify EHT RU allocation bits
+Date:   Wed, 31 May 2023 19:49:56 +0300
+Message-Id: <20230531194629.824edb28c0eb.Ia9f74573e3ac771911b679558984f1bfb36de674@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230531165006.273284-1-gregory.greenman@intel.com>
 References: <20230531165006.273284-1-gregory.greenman@intel.com>
@@ -59,32 +59,48 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The checksum start/result offset should never be longer
-than the bits we have in the mask now (nothing should put
-the checksum at the end of a frame), but we should really
-match the hardware definition for these bits.
+Calling this IWL_RX_PHY_DATA1_EHT_B0 is just confusing,
+it's the RU allocation bit 0. Also then align the name
+for B1-B7 accordingly.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/rx.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c  | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 97edf5477ba7..c2fd467bb987 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -178,8 +178,8 @@ enum iwl_tx_offload_assist_flags_pos {
- #define IWL_TX_CMD_OFFLD_IP_HDR_MASK	0x3f
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index fdd8b01f09e4..67af922fd3ba 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -367,8 +367,8 @@ enum iwl_rx_phy_eht_data1 {
+ 	/* number of EHT-LTF symbols 0 - 1 EHT-LTF, 1 - 2 EHT-LTFs, 2 - 4 EHT-LTFs,
+ 	 * 3 - 6 EHT-LTFs, 4 - 8 EHT-LTFs */
+ 	IWL_RX_PHY_DATA1_EHT_SIG_LTF_NUM		= 0x000000e0,
+-	IWL_RX_PHY_DATA1_EHT_B0				= 0x00000100,
+-	IWL_RX_PHY_DATA1_EHT_RU_B1_B7_ALLOC		= 0x0000fe00,
++	IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B0		= 0x00000100,
++	IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B1_B7		= 0x0000fe00,
+ };
  
- enum iwl_tx_offload_assist_bz {
--	IWL_TX_CMD_OFFLD_BZ_RESULT_OFFS		= 0x000003ff,
--	IWL_TX_CMD_OFFLD_BZ_START_OFFS		= 0x001ff800,
-+	IWL_TX_CMD_OFFLD_BZ_RESULT_OFFS		= 0x000007ff,
-+	IWL_TX_CMD_OFFLD_BZ_START_OFFS		= 0x003ff800,
- 	IWL_TX_CMD_OFFLD_BZ_MH_LEN		= 0x07c00000,
- 	IWL_TX_CMD_OFFLD_BZ_MH_PAD		= 0x08000000,
- 	IWL_TX_CMD_OFFLD_BZ_AMSDU		= 0x10000000,
+ /* goes into Metadata DW 7 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index e1d02c260e69..82ac0ef1c31b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1775,9 +1775,9 @@ static void iwl_mvm_decode_eht_phy_data(struct iwl_mvm *mvm,
+ 	eht->known |= cpu_to_le32(IEEE80211_RADIOTAP_EHT_KNOWN_RU_ALLOC_TB_FMT);
+ 	eht->data[8] |= LE32_DEC_ENC(data0, IWL_RX_PHY_DATA0_EHT_PS160,
+ 				     IEEE80211_RADIOTAP_EHT_DATA8_RU_ALLOC_TB_FMT_PS_160);
+-	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_B0,
++	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B0,
+ 				     IEEE80211_RADIOTAP_EHT_DATA8_RU_ALLOC_TB_FMT_B0);
+-	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_RU_B1_B7_ALLOC,
++	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B1_B7,
+ 				     IEEE80211_RADIOTAP_EHT_DATA8_RU_ALLOC_TB_FMT_B7_B1);
+ 
+ 	iwl_mvm_decode_eht_ru(mvm, rx_status, eht);
 -- 
 2.38.1
 
