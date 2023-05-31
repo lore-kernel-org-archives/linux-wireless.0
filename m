@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2EA3C7EE31
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:51:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A98EAC77B7A
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:51:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229898AbjEaQvR (ORCPT
+        id S229633AbjEaQvU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 May 2023 12:51:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37484 "EHLO
+        Wed, 31 May 2023 12:51:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229754AbjEaQvM (ORCPT
+        with ESMTP id S229473AbjEaQvT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2023 12:51:12 -0400
+        Wed, 31 May 2023 12:51:19 -0400
 Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74062133
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 09:51:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5CA598
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 09:51:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685551871; x=1717087871;
+  t=1685551878; x=1717087878;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=zt7utCpCqcuX0OLH97efmmvZWFmUpoQJbrxZ/y5OUxc=;
-  b=Alr9J3V4rfg8TUxnFoUamgLu2TGOMUROYGp+XXkOepAcFoI7HpagvvEc
-   Z9RZGS4FXwlyQFIxeEGc6tZofYoMF5PeMHI3F4yG2shpw4K+CAEztSw9X
-   JfSyA5acm6E3vr4vwlMr4zdocKYO6pCxcq7NCUYvJtVjaBXC+Z+KmMhzn
-   /dEORChWyr4npDJNYWTiv2/BXO5SueuH+9J6Xrz2XfFDhJWTdh3cU0N/1
-   bYerxftMtKtt2V+TmXWq7/CWie6/CT/wIQFZOg7Zc0KNjh6xY4LPcBJ9U
-   iMiLvjr4zAeT3DdKNVYP3QGR3DYWAn1Gwo+TWEakqVSKzq5M8BUaRMZi4
+  bh=8+8KzMpUs6UOC7OEksZw+brEUTDs/YtMFaL3qv3CT4g=;
+  b=UASvLBoaK/9P3aeG5TI0SOhr72E9l2S4o52bz3BNu7ZDd9epYE/yy5nc
+   W78uQ5pDC366mu49M0or3GZgY/uevLOV69d2hRBTkSmAyeVGJx1H1JyFN
+   1uNjg0Y9STjZDcoyqFbBnCTQssrmnhmuXBsehdDdogza81Z9YFFC1l5Uw
+   +rbJ5CDaU5RYZucau54y7z0WiP65Q9SYvecRpe4KblcpK+2//6dcpy3nF
+   BGb63jmiEk48Arxx7pK9K39cHf3kDuFwbBAWMvuaqv7J7n8kLg5kMK2G5
+   a7uuMKl4WG75lDCj7UW9SYA7IVaN26gExjvdBz1PAvFKMI1ajPdi1BVee
    g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890393"
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890457"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="339890393"
+   d="scan'208";a="339890457"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:34 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:37 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706987954"
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706987963"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="706987954"
+   d="scan'208";a="706987963"
 Received: from amilman1-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.102])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:30 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:34 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Benjamin Berg <benjamin.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 04/14] wifi: iwlwifi: mvm: clarify EHT RU allocation bits
-Date:   Wed, 31 May 2023 19:49:56 +0300
-Message-Id: <20230531194629.824edb28c0eb.Ia9f74573e3ac771911b679558984f1bfb36de674@changeid>
+Subject: [PATCH 06/14] wifi: iwlwifi: do not log undefined DRAM buffers unnecessarily
+Date:   Wed, 31 May 2023 19:49:58 +0300
+Message-Id: <20230531194629.ecae60cf2d7f.Ib44a94d4aeb55dbb2e52edea8b69a09bc0f722c3@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230531165006.273284-1-gregory.greenman@intel.com>
 References: <20230531165006.273284-1-gregory.greenman@intel.com>
@@ -57,50 +57,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Benjamin Berg <benjamin.berg@intel.com>
 
-Calling this IWL_RX_PHY_DATA1_EHT_B0 is just confusing,
-it's the RU allocation bit 0. Also then align the name
-for B1-B7 accordingly.
+DRAM buffers that are not defined in the TLVs (or are unused in the
+preset) would cause a log message. To avoid confusion, skip processing
+buffers with an invalid (i.e. uninitialized) DRAM path.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This further reduces the noise of the message in cases where it is
+unlikely to be helpful. Also update a related debug log string to better
+describe what is happening.
+
+Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/rx.h | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c  | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-index fdd8b01f09e4..67af922fd3ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-@@ -367,8 +367,8 @@ enum iwl_rx_phy_eht_data1 {
- 	/* number of EHT-LTF symbols 0 - 1 EHT-LTF, 1 - 2 EHT-LTFs, 2 - 4 EHT-LTFs,
- 	 * 3 - 6 EHT-LTFs, 4 - 8 EHT-LTFs */
- 	IWL_RX_PHY_DATA1_EHT_SIG_LTF_NUM		= 0x000000e0,
--	IWL_RX_PHY_DATA1_EHT_B0				= 0x00000100,
--	IWL_RX_PHY_DATA1_EHT_RU_B1_B7_ALLOC		= 0x0000fe00,
-+	IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B0		= 0x00000100,
-+	IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B1_B7		= 0x0000fe00,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index 898d5dcf1012..fb0277bd12cf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -738,7 +738,8 @@ static int iwl_dbg_tlv_update_dram(struct iwl_fw_runtime *fwrt,
  
- /* goes into Metadata DW 7 */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index e1d02c260e69..82ac0ef1c31b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1775,9 +1775,9 @@ static void iwl_mvm_decode_eht_phy_data(struct iwl_mvm *mvm,
- 	eht->known |= cpu_to_le32(IEEE80211_RADIOTAP_EHT_KNOWN_RU_ALLOC_TB_FMT);
- 	eht->data[8] |= LE32_DEC_ENC(data0, IWL_RX_PHY_DATA0_EHT_PS160,
- 				     IEEE80211_RADIOTAP_EHT_DATA8_RU_ALLOC_TB_FMT_PS_160);
--	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_B0,
-+	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B0,
- 				     IEEE80211_RADIOTAP_EHT_DATA8_RU_ALLOC_TB_FMT_B0);
--	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_RU_B1_B7_ALLOC,
-+	eht->data[8] |= LE32_DEC_ENC(data1, IWL_RX_PHY_DATA1_EHT_RU_ALLOC_B1_B7,
- 				     IEEE80211_RADIOTAP_EHT_DATA8_RU_ALLOC_TB_FMT_B7_B1);
+ 	if (le32_to_cpu(fwrt->trans->dbg.fw_mon_cfg[alloc_id].buf_location) !=
+ 			IWL_FW_INI_LOCATION_DRAM_PATH) {
+-		IWL_DEBUG_FW(fwrt, "DRAM_PATH is not supported alloc_id %u\n", alloc_id);
++		IWL_DEBUG_FW(fwrt, "WRT: alloc_id %u location is not in DRAM_PATH\n",
++			     alloc_id);
+ 		return -1;
+ 	}
  
- 	iwl_mvm_decode_eht_ru(mvm, rx_status, eht);
+@@ -799,6 +800,10 @@ static void iwl_dbg_tlv_update_drams(struct iwl_fw_runtime *fwrt)
+ 
+ 	for (i = IWL_FW_INI_ALLOCATION_ID_DBGC1;
+ 	     i < IWL_FW_INI_ALLOCATION_NUM; i++) {
++		if (fwrt->trans->dbg.fw_mon_cfg[i].buf_location ==
++				IWL_FW_INI_LOCATION_INVALID)
++			continue;
++
+ 		ret = iwl_dbg_tlv_update_dram(fwrt, i, dram_info);
+ 		if (!ret)
+ 			dram_alloc = true;
 -- 
 2.38.1
 
