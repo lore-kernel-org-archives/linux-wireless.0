@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AD36C77B7A
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16166C77B73
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:51:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229890AbjEaQvQ (ORCPT
+        id S229645AbjEaQvQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 31 May 2023 12:51:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37482 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229607AbjEaQvM (ORCPT
+        with ESMTP id S229639AbjEaQvM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 31 May 2023 12:51:12 -0400
 Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6901ABE
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 393E4132
         for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 09:51:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1685551871; x=1717087871;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=H3UqSP8OvEC+LdtHiAvQ7gfe6udIHc7u10myhXdx1bQ=;
-  b=Xq8PQbhHW9yO8igicCEYJ/z/4LG+8Gs3Hxg7l+xh0d+EdyY9MVySQ+jD
-   7AaHESK8fHO40wNw7eih22XO1Y81I8GUs8D1FmO83ikxNLHvmP1W9Ta4i
-   Imf0AZuHq8VH9lt2cmjxcLLrcb2k1I7tiVUBJWHbRwaRMfLCa8vp/2iQ0
-   h/lDZOAcIYLD86eaoa26inFaPyQMRZUAcIlqvzYsUmF3h//BHaSxIG+1Y
-   s5DdP8IEoMepkxmZyYx9m5XSrBvAwMqD5qV9wAjImLQ5FxhDYF//yRXJP
-   tVM9gUQUcZDcj75GEQ2CZqcp/SPizamykThENZ2biSlIfZc9GubrlIQx1
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890397"
+  bh=5ipDvFP0bss/pIkb/lfULH7/Q0damxzXHQu2P1ipBHg=;
+  b=QD1dF/Hpw30ZXzYweHWx6m/bH/nVhKADIHWFHqjVxBHchZWfBwVHQbwv
+   U79L4APSD3/DMqVHTLzqoEKlduycXYfaxr6ADWmiuSNzPz+W+DWjpxzvg
+   K+JZby7/nXYAfK2zA5Y9HZ3Daga9CJEg5FLep9HS5zohacAHwHA2MXO4K
+   SdoDxMaCtQSEUkyuoCqEJrZrne28b8+kH+g1rvriePtJpKsgsx5zo1fK6
+   rpzmBv/EuzyDUZ2YHSijRgjAe6sHMhYGe6+9H6SDenucZe+DlwcS/WOQe
+   9bez2csMumMFjvtJnanybC+Sw8BqW+NKwN2JrvCYLMqxarqAiUNrDpoK/
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890376"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="339890397"
+   d="scan'208";a="339890376"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:34 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:33 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706987957"
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706987947"
 X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="706987957"
+   d="scan'208";a="706987947"
 Received: from amilman1-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.102])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:32 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:23 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Golan Ben Ami <golan.ben.ami@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 05/14] wifi: iwlwifi: acpi: add other Google OEMs to the ppag approved list
-Date:   Wed, 31 May 2023 19:49:57 +0300
-Message-Id: <20230531194629.b89a3f9e3ae0.Iab1e13285c58ef1fee2a8bad8429eda4547b0b74@changeid>
+Subject: [PATCH 01/14] wifi: iwlwifi: fix Bz checksum start/result offset
+Date:   Wed, 31 May 2023 19:49:53 +0300
+Message-Id: <20230531194629.d3afbc073f74.I925d15b41c7c87bc2b44432ac7cd4ec03b43b8b1@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230531165006.273284-1-gregory.greenman@intel.com>
 References: <20230531165006.273284-1-gregory.greenman@intel.com>
@@ -57,40 +57,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Golan Ben Ami <golan.ben.ami@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add two new vendors to the PPAG approved vendor list
-as Google OEMs.
+The checksum start/result offset should never be longer
+than the bits we have in the mask now (nothing should put
+the checksum at the end of a frame), but we should really
+match the hardware definition for these bits.
 
-Signed-off-by: Golan Ben Ami <golan.ben.ami@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index e6abd16f8677..9ee9e0cb722c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -47,6 +47,18 @@ static const struct dmi_system_id dmi_ppag_approved_list[] = {
- 			DMI_MATCH(DMI_BOARD_VENDOR, "HP"),
- 		},
- 	},
-+	{ .ident = "GOOGLE-ASUS",
-+	  .matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Google"),
-+			DMI_MATCH(DMI_BOARD_VENDOR, "ASUSTek COMPUTER INC."),
-+		},
-+	},
-+	{ .ident = "GOOGLE-SAMSUNG",
-+	  .matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Google"),
-+			DMI_MATCH(DMI_BOARD_VENDOR, "SAMSUNG ELECTRONICS CO., LTD"),
-+		},
-+	},
- 	{}
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 97edf5477ba7..c2fd467bb987 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -178,8 +178,8 @@ enum iwl_tx_offload_assist_flags_pos {
+ #define IWL_TX_CMD_OFFLD_IP_HDR_MASK	0x3f
  
+ enum iwl_tx_offload_assist_bz {
+-	IWL_TX_CMD_OFFLD_BZ_RESULT_OFFS		= 0x000003ff,
+-	IWL_TX_CMD_OFFLD_BZ_START_OFFS		= 0x001ff800,
++	IWL_TX_CMD_OFFLD_BZ_RESULT_OFFS		= 0x000007ff,
++	IWL_TX_CMD_OFFLD_BZ_START_OFFS		= 0x003ff800,
+ 	IWL_TX_CMD_OFFLD_BZ_MH_LEN		= 0x07c00000,
+ 	IWL_TX_CMD_OFFLD_BZ_MH_PAD		= 0x08000000,
+ 	IWL_TX_CMD_OFFLD_BZ_AMSDU		= 0x10000000,
 -- 
 2.38.1
 
