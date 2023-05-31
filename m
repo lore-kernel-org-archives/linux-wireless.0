@@ -2,92 +2,451 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5BC1C77B73
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 16:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44F00C7EE23
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 May 2023 23:12:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229952AbjEaQwF (ORCPT
+        id S230074AbjEaXMi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 May 2023 12:52:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38108 "EHLO
+        Wed, 31 May 2023 19:12:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229961AbjEaQwE (ORCPT
+        with ESMTP id S230423AbjEaXMh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 May 2023 12:52:04 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6189E18F
-        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 09:51:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685551918; x=1717087918;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=sR+E+LLzKeE4jgOe8GFhOvwLo20YE6gk5BYR3BIH9TU=;
-  b=Tq5ErLbLTgBlCRs8GeIrgFQNHobOKM+aawA2htue0/fjxjp4Lde0Ugau
-   04Lck3Gfv4338ISPsdH8c71prTKKUnCi4cf5UZud8UnbmV8YYn1wAzFKR
-   ZMkA+jnqvtmbuGx3p3APdhb99FS8N8klFt0XrCF4gPO7L6lZFKhKai0Ri
-   khI661RA+/3tY4kG0BXmckOLN03VVeb881fV4zrFas+PBCD29ajrvizlo
-   zstMF84mWGJkcxUSTnWDK2dkozxrDLiyd3jDkJRlR6k0oKTSvLvnBLSvJ
-   6FqMoN59z0oalXWj2CqnV+Fdgu9Xf93uhQcR45hGXk/3eFpz5gIICOTXY
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="339890805"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="339890805"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:56 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="706988009"
-X-IronPort-AV: E=Sophos;i="6.00,207,1681196400"; 
-   d="scan'208";a="706988009"
-Received: from amilman1-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.102])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 09:50:54 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 14/14] wifi: iwlwifi: mvm: send time sync only if needed
-Date:   Wed, 31 May 2023 19:50:06 +0300
-Message-Id: <20230531194630.0fb9f81f1852.Idcc41b67d1fbb421e5ed9bac2177b948b7b4d1c9@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230531165006.273284-1-gregory.greenman@intel.com>
-References: <20230531165006.273284-1-gregory.greenman@intel.com>
+        Wed, 31 May 2023 19:12:37 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57BF7133
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 16:12:28 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 1C884C00068
+        for <linux-wireless@vger.kernel.org>; Wed, 31 May 2023 23:12:26 +0000 (UTC)
+Received: from ben-dt5.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 9888313C2B7;
+        Wed, 31 May 2023 16:12:25 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 9888313C2B7
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1685574745;
+        bh=zmxMVs5hlnm6SOI3jecrgEOYJ/u8HWhz7+P7kv172ro=;
+        h=From:To:Cc:Subject:Date:From;
+        b=EXcZc9cS7hTk/BgIxujfxnG/oXBVWh4igc/ua8eiIPCYqtYI5jxOR9W6JG+9fDAVK
+         rJdCw4jIYaiNIHI2hAm5jWNAcX5ER8RJwnthHwquQG/EtgSAJfjowlV36qF9/26Ml4
+         j8VruNrsxibF0BynETBvUNJsJnjack/WIt2EmIxg=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] wifi: iwlwifi:  Add support for tx-override feature.
+Date:   Wed, 31 May 2023 16:12:14 -0700
+Message-Id: <20230531231214.2694997-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-MDID: 1685574746-LJ7kczS3grdP
+X-MDID-O: us5;at1;1685574746;LJ7kczS3grdP;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-If there's no peer configured then there's no point in sending
-the command down to the firmware with an invalid peer address.
+This lets user-space request specific rates for 400+ byte dataframes,
+used for testing tx and rx sensitivity and correctness.
 
-Fixes: cf85123a210f ("wifi: iwlwifi: mvm: support enabling and disabling HW timestamping")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 3546638779c4..a97969075b7b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1725,9 +1725,11 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+Patch is against recent iwlwifi backports, and on top of other patches
+I've posted recently.
+
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 139 ++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  16 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 131 +++++++++++++++--
+ 3 files changed, 276 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 26ff8e234ff2..2ff315baf96b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -2546,6 +2546,142 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(he_sniffer_params, 32);
+ MVM_DEBUGFS_WRITE_FILE_OPS(ltr_config, 512);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(rfi_freq_table, 16);
  
- 	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
- 		iwl_mvm_send_recovery_cmd(mvm, ERROR_RECOVERY_UPDATE_DB);
--		iwl_mvm_time_sync_config(mvm, mvm->time_sync.peer_addr,
--					 IWL_TIME_SYNC_PROTOCOL_TM |
--					 IWL_TIME_SYNC_PROTOCOL_FTM);
++static ssize_t iwl_dbgfs_read_set_rate_override(struct file *file,
++						char __user *user_buf,
++						size_t count, loff_t *ppos)
++{
++	struct iwl_mvm *mvm = file->private_data;
++	struct iwl_txo_data *td = &mvm->txo_data;
++	char *buf2;
++	int size = 8000;
++	int rv, sofar;
++	const char buf[] =
++		"This allows specifying tx rate parameters for larger DATA"
++		" frames.  TPC is ignored for now.  Dev-name is ignored, settings\n"
++		" apply radio wide for now.\n"
++		"To set a value, you specify the dev-name and key-value pairs:\n"
++		"tpc=10 sgi=1 mcs=x nss=x pream=x retries=x bw=x enable=0|1\n"
++		"pream: 0=cck, 1=ofdm, 2=HT, 3=VHT, 4=HE_SU, 5=EHT\n"
++		"cck-mcs: 0=1Mbps, 1=2Mbps, 3=5.5Mbps, 3=11Mbps\n"
++		"ofdm-mcs: 0=6Mbps, 1=9Mbps, 2=12Mbps, 3=18Mbps, 4=24Mbps, 5=36Mbps,"
++		" 6=48Mbps, 7=54Mbps\n"
++		"tpc: adjust power from defaults, in 1/2 db units 0 - 31, 16 is default\n"
++		"sgi: VHT and lower: 0 off, 1 on\n"
++		"sgi: HE-SU: 0 1xLTF+0.8us, 1 2xLTF+0.8us, 2 2xLTF+1.6us, 3 4xLTF+3.2us, 4 4xLTF+0.8us\n"
++		"bw is 0-4 for 20-320\n"
++		" For example, wlan0:\n"
++		"echo \"wlan0 tpc=255 sgi=1 mcs=0 nss=1 pream=3 retries=1 bw=0"
++		" active=1\" > ...iwlwifi/set_rate_override\n";
 +
-+		if (mvm->time_sync.active)
-+			iwl_mvm_time_sync_config(mvm, mvm->time_sync.peer_addr,
-+						 IWL_TIME_SYNC_PROTOCOL_TM |
-+						 IWL_TIME_SYNC_PROTOCOL_FTM);
- 	}
++	buf2 = kzalloc(size, GFP_KERNEL);
++	if (!buf2)
++		return -ENOMEM;
++	strcpy(buf2, buf);
++	sofar = strlen(buf2);
++
++	sofar += scnprintf(buf2 + sofar, size - sofar,
++			   "vdev (%s) active=%d tpc=%d sgi=%d mcs=%d nss=%d"
++			   " pream=%d retries=%d bw=%d\n",
++			   "all",
++			   td->txo_active, td->tx_power,
++			   td->tx_rate_sgi, td->tx_rate_idx,
++			   td->tx_rate_nss, td->tx_rate_mode,
++			   td->tx_xmit_count, td->txbw);
++
++	rv = simple_read_from_buffer(user_buf, count, ppos, buf2, sofar);
++	kfree(buf2);
++	return rv;
++}
++
++/* Set the rate overrides for data frames.
++ */
++static ssize_t iwl_dbgfs_write_set_rate_override(struct file *file,
++						 const char __user *user_buf,
++						 size_t count, loff_t *ppos)
++{
++	struct iwl_mvm *mvm = file->private_data;
++	struct iwl_txo_data *td = &mvm->txo_data;
++	char buf[180];
++	char tmp[20];
++	char *tok;
++	int ret;
++	char *bufptr = buf;
++	long rc;
++
++	memset(buf, 0, sizeof(buf));
++
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++
++	/* make sure that buf is null terminated */
++	buf[sizeof(buf) - 1] = 0;
++
++	/* drop the possible '\n' from the end */
++	if (buf[count - 1] == '\n')
++		buf[count - 1] = 0;
++
++	/* Ignore empty lines, 'echo' appends them sometimes at least. */
++	if (buf[0] == 0) {
++		ret = count;
++		goto exit;
++	}
++
++	/* String starts with vdev name, ie 'wlan0'  Find the proper vif that
++	 * matches the name. (Well, ignore that for now actually.)
++	 */
++	bufptr = strstr(buf, " ");
++	if (bufptr)
++		bufptr++; /* move past space */
++
++#define IWLWIFI_PARSE_LTOK(a, b)						\
++	do {								\
++		tok = strstr(bufptr, " " #a "=");			\
++		if (tok) {						\
++			char *tspace;					\
++			tok += 1; /* move past initial space */		\
++			strncpy(tmp, tok + strlen(#a "="), sizeof(tmp) - 1); \
++			tmp[sizeof(tmp) - 1] = 0;			\
++			tspace = strstr(tmp, " ");			\
++			if (tspace)					\
++				*tspace = 0;				\
++			if (kstrtol(tmp, 0, &rc) != 0)			\
++				pr_info(				\
++					"mt7915: set-rate-override: " #a \
++					"= could not be parsed, tmp: %s\n", \
++					tmp);				\
++			else						\
++				td->b = rc;				\
++		}							\
++	} while (0)
++
++	IWLWIFI_PARSE_LTOK(tpc, tx_power);
++	IWLWIFI_PARSE_LTOK(sgi, tx_rate_sgi);
++	IWLWIFI_PARSE_LTOK(mcs, tx_rate_idx);
++	IWLWIFI_PARSE_LTOK(nss, tx_rate_nss);
++	IWLWIFI_PARSE_LTOK(pream, tx_rate_mode);
++	IWLWIFI_PARSE_LTOK(retries, tx_xmit_count);
++	IWLWIFI_PARSE_LTOK(bw, txbw);
++	IWLWIFI_PARSE_LTOK(active, txo_active);
++
++	pr_info("iwlwifi: set-rate-overrides, active=%d tpc=%d sgi=%d mcs=%d"
++		" nss=%d pream=%d retries=%d bw=%d\n",
++		td->txo_active, td->tx_power, td->tx_rate_sgi, td->tx_rate_idx,
++		td->tx_rate_nss, td->tx_rate_mode, td->tx_xmit_count,
++		td->txbw);
++
++	ret = count;
++
++exit:
++	return ret;
++}
++
++static const struct file_operations fops_set_rate_override = {
++	.read = iwl_dbgfs_read_set_rate_override,
++	.write = iwl_dbgfs_write_set_rate_override,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
+ 				  size_t count, loff_t *ppos)
+ {
+@@ -2842,6 +2978,9 @@ void iwl_mvm_dbgfs_register(struct iwl_mvm *mvm)
+ 	debugfs_create_file("mem", 0600, mvm->debugfs_dir, mvm,
+ 			    &iwl_dbgfs_mem_ops);
  
- 	if (!mvm->ptp_data.ptp_clock)
++	debugfs_create_file("set_rate_override", 0600, mvm->debugfs_dir,
++			    mvm, &fops_set_rate_override);
++
+ 	/*
+ 	 * Create a symlink with mac80211. It will be removed when mac80211
+ 	 * exists (before the opmode exists which removes the target.)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 463bcb852b58..c8f21eaf4843 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -902,6 +902,21 @@ struct iwl_time_sync_data {
+ 	bool active;
+ };
+ 
++struct iwl_txo_data {
++	u8 txo_active; /* tx overrides are active */
++	u8 txbw; /* specify TX bandwidth: 0 20Mhz, 1 40Mhz, 2 80Mhz, 3 160Mhz, 4 320Mhz */
++	/* SGI:  VHT and lower: 0 off, 1 on
++	 * HE-SU: 0 1xLTF+0.8us, 1 2xLTF+0.8us, 2 2xLTF+1.6us, 3 4xLTF+3.2us, 4 4xLTF+0.8us
++	 */
++	u8 tx_rate_sgi;
++	u8 tx_rate_mode; /* 0=cck, 1=ofdm, 2=HT, 3=VHT, 4=HE_SU, 5=EHT */
++	u8 tx_rate_idx;
++	u8 tx_rate_nss;
++
++	u8 tx_power;
++	u8 tx_xmit_count; /* 0 means no-ack, 1 means one transmit, etc */
++};
++
+ struct iwl_mvm {
+ 	/* for logger access */
+ 	struct device *dev;
+@@ -947,6 +962,7 @@ struct iwl_mvm {
+ 		struct mvm_statistics_rx rx_stats;
+ 	};
+ 	struct iwl_mvm_ethtool_stats ethtool_stats;
++	struct iwl_txo_data txo_data;
+ 
+ 	struct {
+ 		u64 rx_time;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index aee8501e5ace..fd2f1d938aba 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -308,6 +308,112 @@ static u32 iwl_mvm_get_tx_ant(struct iwl_mvm *mvm,
+ 	return BIT(mvm->mgmt_last_antenna_idx) << RATE_MCS_ANT_POS;
+ }
+ 
++static u32 iwl_mvm_get_txo_rate_n_flags(struct iwl_mvm *mvm)
++{
++	struct iwl_txo_data *td = &mvm->txo_data;
++	u32 result;
++
++	if (td->tx_rate_mode == 0) { /* cck */
++		result = RATE_MCS_CCK_MSK_V1;
++		switch (td->tx_rate_idx) {
++		case 0: result |= IWL_RATE_1M_PLCP; break;
++		case 1: result |= IWL_RATE_2M_PLCP; break;
++		case 2: result |= IWL_RATE_5M_PLCP; break;
++		default: result |= IWL_RATE_11M_PLCP; break;
++		}
++		goto check_v1;
++	} else if (td->tx_rate_mode == 1) { /* ofdm */
++		result = 0;
++		switch (td->tx_rate_idx) {
++		case 0: result |= IWL_RATE_6M_PLCP; break;
++		case 1: result |= IWL_RATE_9M_PLCP; break;
++		case 2: result |= IWL_RATE_12M_PLCP; break;
++		case 3: result |= IWL_RATE_18M_PLCP; break;
++		case 4: result |= IWL_RATE_24M_PLCP; break;
++		case 5: result |= IWL_RATE_36M_PLCP; break;
++		case 6: result |= IWL_RATE_48M_PLCP; break;
++		default: result |= IWL_RATE_54M_PLCP; break;
++		}
++		goto check_v1;
++	} else if (td->tx_rate_mode == 2) { /* ht */
++		result = RATE_MCS_HT_MSK_V1;
++		result |= u32_encode_bits(td->tx_rate_nss * 8 + td->tx_rate_idx,
++					  RATE_HT_MCS_RATE_CODE_MSK_V1 |
++					  RATE_HT_MCS_NSS_MSK_V1);
++		if (td->tx_rate_sgi)
++			result |= RATE_MCS_SGI_MSK_V1;
++		if (td->txbw == 1)
++			result |= u32_encode_bits(1, RATE_MCS_CHAN_WIDTH_MSK_V1);
++		/* TODO:  Support forcing ldpc and stbc?
++		   if (info->flags & IEEE80211_TX_CTL_LDPC)
++		   result |= RATE_MCS_LDPC_MSK_V1;
++		   if (u32_get_bits(info->flags, IEEE80211_TX_CTL_STBC))
++		   result |= RATE_MCS_STBC_MSK;
++		*/
++		goto check_v1;
++	} else if (td->tx_rate_mode == 3) { /* vht */
++		u8 mcs = td->tx_rate_idx;
++		u8 nss = td->tx_rate_nss;
++
++		result = RATE_MCS_VHT_MSK_V1;
++		result |= u32_encode_bits(mcs, RATE_VHT_MCS_RATE_CODE_MSK);
++		result |= u32_encode_bits(nss, RATE_MCS_NSS_MSK);
++		if (td->tx_rate_sgi)
++			result |= RATE_MCS_SGI_MSK_V1;
++		if (td->txbw == 1)
++			result |= u32_encode_bits(1, RATE_MCS_CHAN_WIDTH_MSK_V1);
++		else if (td->txbw == 2)
++			result |= u32_encode_bits(2, RATE_MCS_CHAN_WIDTH_MSK_V1);
++		else if (td->txbw == 3)
++			result |= u32_encode_bits(3, RATE_MCS_CHAN_WIDTH_MSK_V1);
++		goto check_v1;
++	} else if (td->tx_rate_mode == 4) { /* HE-SU */
++		/* V2 format */
++		u8 mcs = td->tx_rate_idx;
++		u8 nss = td->tx_rate_nss;
++
++		result = RATE_MCS_HE_MSK; /* HE-SU by default, others possible */
++		result |= RATE_HT_MCS_INDEX(mcs);
++		result |= nss << RATE_MCS_NSS_POS;
++
++		if (td->txbw == 1)
++			result |= RATE_MCS_CHAN_WIDTH_40;
++		else if (td->txbw == 2)
++			result |= RATE_MCS_CHAN_WIDTH_80;
++		else if (td->txbw == 3)
++			result |= RATE_MCS_CHAN_WIDTH_160;
++
++		result |= ((u32)(td->tx_rate_sgi)) << RATE_MCS_HE_GI_LTF_POS;
++	} else if (td->tx_rate_mode == 5) { /* EHT */
++		/* V2 format */
++		u8 mcs = td->tx_rate_idx;
++		u8 nss = td->tx_rate_nss;
++
++		result = RATE_MCS_EHT_MSK; /* HE-SU by default, others possible */
++		result |= RATE_HT_MCS_INDEX(mcs);
++		result |= nss << RATE_MCS_NSS_POS;
++
++		if (td->txbw == 1)
++			result |= RATE_MCS_CHAN_WIDTH_40;
++		else if (td->txbw == 2)
++			result |= RATE_MCS_CHAN_WIDTH_80;
++		else if (td->txbw == 3)
++			result |= RATE_MCS_CHAN_WIDTH_160;
++		else if (td->txbw == 4)
++			result |= RATE_MCS_CHAN_WIDTH_320;
++
++		result |= ((u32)(td->tx_rate_sgi)) << RATE_MCS_HE_GI_LTF_POS;
++	}
++	return result;
++
++check_v1:
++	result |= RATE_MCS_ANT_AB_MSK; /* enable both antennas */
++
++	if (iwl_fw_lookup_notif_ver(mvm->fw, LONG_GROUP, TX_CMD, 0) > 6)
++		return iwl_new_rate_from_v1(result);
++	return result;
++}
++
+ static u32 iwl_mvm_get_inject_tx_rate(struct iwl_mvm *mvm,
+ 				      struct ieee80211_tx_info *info)
+ {
+@@ -437,8 +543,8 @@ static u32 iwl_mvm_get_tx_rate_n_flags(struct iwl_mvm *mvm,
+  * Sets the fields in the Tx cmd that are rate related
+  */
+ void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm, struct iwl_tx_cmd *tx_cmd,
+-			    struct ieee80211_tx_info *info,
+-			    struct ieee80211_sta *sta, __le16 fc)
++			     struct ieee80211_tx_info *info,
++			     struct ieee80211_sta *sta, __le16 fc)
+ {
+ 	/* Set retry limit on RTS packets */
+ 	tx_cmd->rts_retry_limit = IWL_RTS_DFAULT_RETRY_LIMIT;
+@@ -475,8 +581,8 @@ void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm, struct iwl_tx_cmd *tx_cmd,
+ 	}
+ #else
+ 	if (ieee80211_is_back_req(fc))
+-			tx_cmd->tx_flags |=
+-				cpu_to_le32(TX_CMD_FLG_ACK | TX_CMD_FLG_BAR);
++		tx_cmd->tx_flags |=
++			cpu_to_le32(TX_CMD_FLG_ACK | TX_CMD_FLG_BAR);
+ #endif
+ 
+ 	/* Set the rate in the TX cmd */
+@@ -534,7 +640,7 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 		tx_cmd->sec_ctl |= TX_CMD_SEC_WEP |
+ 			((keyconf->keyidx << TX_CMD_SEC_WEP_KEY_IDX_POS) &
+-			  TX_CMD_SEC_WEP_KEY_IDX_MSK);
++			 TX_CMD_SEC_WEP_KEY_IDX_MSK);
+ 
+ 		memcpy(&tx_cmd->key[3], keyconf->key, keyconf->keylen);
+ 		break;
+@@ -569,6 +675,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct iwl_device_tx_cmd *dev_cmd;
+ 	struct iwl_tx_cmd *tx_cmd;
++	__le16 fc = hdr->frame_control;
+ 
+ 	dev_cmd = iwl_trans_alloc_tx_cmd(mvm->trans);
+ 
+@@ -584,7 +691,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			iwl_mvm_sta_from_mac80211(sta) : NULL;
+ 		bool amsdu = false;
+ 
+-		if (ieee80211_is_data_qos(hdr->frame_control)) {
++		if (ieee80211_is_data_qos(fc)) {
+ 			u8 *qc = ieee80211_get_qos_ctl(hdr);
+ 
+ 			amsdu = *qc & IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+@@ -598,12 +705,16 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		 * set rate/antenna during connection establishment or in case
+ 		 * no station is given.
+ 		 */
+-		if (!sta || !ieee80211_is_data(hdr->frame_control) ||
++		if (!sta || !ieee80211_is_data(fc) ||
+ 		    mvmsta->sta_state < IEEE80211_STA_AUTHORIZED) {
+ 			flags |= IWL_TX_FLAGS_CMD_RATE;
+ 			rate_n_flags =
+-				iwl_mvm_get_tx_rate_n_flags(mvm, info, sta,
+-							    hdr->frame_control);
++				iwl_mvm_get_tx_rate_n_flags(mvm, info, sta, fc);
++		} else if (mvm->txo_data.txo_active && skb->len >= 400 &&
++			   (ieee80211_is_data(fc) || ieee80211_is_data_qos(fc)) &&
++			   (!(ieee80211_is_qos_nullfunc(fc) || ieee80211_is_nullfunc(fc)))) {
++			flags |= IWL_TX_FLAGS_CMD_RATE;
++			rate_n_flags = iwl_mvm_get_txo_rate_n_flags(mvm);
+ 		}
+ 
+ 		if (mvm->trans->trans_cfg->device_family >=
+@@ -649,7 +760,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	iwl_mvm_set_tx_cmd(mvm, skb, tx_cmd, info, sta_id);
+ 
+-	iwl_mvm_set_tx_cmd_rate(mvm, tx_cmd, info, sta, hdr->frame_control);
++	iwl_mvm_set_tx_cmd_rate(mvm, tx_cmd, info, sta, fc);
+ 
+ 	/* Copy MAC header from skb into command buffer */
+ 	memcpy(tx_cmd->hdr, hdr, hdrlen);
 -- 
-2.38.1
+2.40.0
 
