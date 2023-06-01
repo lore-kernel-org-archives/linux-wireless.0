@@ -2,97 +2,81 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BDB9C77B7E
-	for <linux-wireless@archiver.kernel.org>; Thu,  1 Jun 2023 08:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E4D8C77B7E
+	for <linux-wireless@archiver.kernel.org>; Thu,  1 Jun 2023 08:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231298AbjFAIXd convert rfc822-to-8bit (ORCPT
+        id S231493AbjFAI0R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 1 Jun 2023 04:23:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38104 "EHLO
+        Thu, 1 Jun 2023 04:26:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229927AbjFAIXc (ORCPT
+        with ESMTP id S229882AbjFAI0P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Jun 2023 04:23:32 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC82C9F
-        for <linux-wireless@vger.kernel.org>; Thu,  1 Jun 2023 01:23:31 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3518N8meC021670, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3518N8meC021670
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Thu, 1 Jun 2023 16:23:08 +0800
-Received: from RTEXDAG02.realtek.com.tw (172.21.6.101) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Thu, 1 Jun 2023 16:23:22 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXDAG02.realtek.com.tw (172.21.6.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Thu, 1 Jun 2023 16:23:21 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
- RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
- 15.01.2375.007; Thu, 1 Jun 2023 16:23:21 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-CC:     Kalle Valo <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] [v3] wifi: rtlwifi: remove unused timer and related code
-Thread-Topic: [PATCH] [v3] wifi: rtlwifi: remove unused timer and related code
-Thread-Index: AQHZlGGXyVzacUwTC0CodhPhiDe4jK91mrrg
-Date:   Thu, 1 Jun 2023 08:23:21 +0000
-Message-ID: <afaf8b2cb4fe4c4688620e126d26edbb@realtek.com>
-References: <6c9982b9f48e41c4ba4f3528cb5489fd@realtek.com>
- <20230601081715.44739-1-dmantipov@yandex.ru>
-In-Reply-To: <20230601081715.44739-1-dmantipov@yandex.ru>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.69.188]
-x-kse-serverinfo: RTEXDAG02.realtek.com.tw, 9
-x-kse-antispam-interceptor-info: fallback
-x-kse-antivirus-interceptor-info: fallback
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        Thu, 1 Jun 2023 04:26:15 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B976D11F
+        for <linux-wireless@vger.kernel.org>; Thu,  1 Jun 2023 01:26:14 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1q4ddE-0002uE-GT; Thu, 01 Jun 2023 10:26:04 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1q4ddD-004JKk-Kn; Thu, 01 Jun 2023 10:26:03 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1q4ddC-00A5yf-KJ; Thu, 01 Jun 2023 10:26:02 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, kernel@pengutronix.de
+Subject: [PATCH net-next 4/4] atk10k: Don't opencode ath10k_pci_priv() in ath10k_ahb_priv()
+Date:   Thu,  1 Jun 2023 10:25:56 +0200
+Message-Id: <20230601082556.2738446-5-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230601082556.2738446-1-u.kleine-koenig@pengutronix.de>
+References: <20230601082556.2738446-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=824; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=mB84wW1K4jc1xLTUjLQHhA/td0xttZYqfcR4I36/mvA=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBkeFYQL7s14DdzYELR1Cx2HAvAJ61K34lTqhuXN Yq/CSdxCiOJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZHhWEAAKCRCPgPtYfRL+ Tio+B/4hk7D3EVxU+bfB+uzq0dJigX32SKnyzzrImpCpKSo5DIu/Cwrm2CPNSpRyoxsJA9EG/Db rqDhS1JCk4QrSgjoYWVMOJ35wLdxVEQYKBxN8QcvtTz5+Ng88zEnXV06eoK7m3X7A6yPfdRiALT 4rpj5oY8Jis7gIyjEXXMi0/1evYR6wVFLcUOSX9mdc3cFwlKWa3u8Kd7Cvr0O/0vdWHbktCOn3G Esc9RYWUxaMLW0aC3c0dYxqV50Bthr17alGpMQvFJxxQUc4pNNShI0J+zDxNrp1NgjO9Mh3jPeR Ryk307k+z6X1zimvOzeOrKgvT3fiMqDI5/pj9O8Cf/4qXfLL
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+This introduces no changes in the compiled result (tested for an
+ARCH=arm allmodconfig build).
 
-
-> -----Original Message-----
-> From: Dmitry Antipov <dmantipov@yandex.ru>
-> Sent: Thursday, June 1, 2023 4:17 PM
-> To: Ping-Ke Shih <pkshih@realtek.com>
-> Cc: Kalle Valo <kvalo@kernel.org>; linux-wireless@vger.kernel.org; Dmitry Antipov <dmantipov@yandex.ru>
-> Subject: [PATCH] [v3] wifi: rtlwifi: remove unused timer and related code
-> 
-> Drop unused 'dualmac_easyconcurrent_retrytimer' of 'struct rtl_works',
-> corresponding 'rtl_easy_concurrent_retrytimer_callback()' handler,
-> 'dualmac_easy_concurrent' function pointer of 'struct rtl_hal_ops'
-> and related call to 'timer_setup()' in '_rtl_init_deferred_work()'.
-> 
-> [v2] fix title (Ping-Ke Shih)
-> 
-> [v3] make Signed-off-by: to match From: (Kalle Vallo)
-> 
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-
-move changelog here starting with '---' that will be discarded when getting merged.
-
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
-v3: make Signed-off-by: to match From: (Kalle Vallo)
-v2: fix title (Ping-Ke Shih)
+ drivers/net/wireless/ath/ath10k/ahb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->  drivers/net/wireless/realtek/rtlwifi/base.c | 16 +---------------
->  drivers/net/wireless/realtek/rtlwifi/base.h |  1 -
->  drivers/net/wireless/realtek/rtlwifi/wifi.h |  2 --
->  3 files changed, 1 insertion(+), 18 deletions(-)
-> 
-
-[...]
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 632da4c5e5da..4a006fb4d424 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -27,7 +27,7 @@ MODULE_DEVICE_TABLE(of, ath10k_ahb_of_match);
+ 
+ static inline struct ath10k_ahb *ath10k_ahb_priv(struct ath10k *ar)
+ {
+-	return &((struct ath10k_pci *)ar->drv_priv)->ahb[0];
++	return &ath10k_pci_priv(ar)->ahb[0];
+ }
+ 
+ static void ath10k_ahb_write32(struct ath10k *ar, u32 offset, u32 value)
+-- 
+2.39.2
 
