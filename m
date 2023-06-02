@@ -2,81 +2,65 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8C7AC77B73
-	for <linux-wireless@archiver.kernel.org>; Sat,  3 Jun 2023 06:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 752BEC7EE2E
+	for <linux-wireless@archiver.kernel.org>; Sat,  3 Jun 2023 10:44:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbjFCGHn (ORCPT
+        id S229539AbjFCKoz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 3 Jun 2023 02:07:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34350 "EHLO
+        Sat, 3 Jun 2023 06:44:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjFCGHl (ORCPT
+        with ESMTP id S237135AbjFCKox (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Jun 2023 02:07:41 -0400
-Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA4C1E58
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Jun 2023 23:07:40 -0700 (PDT)
-Received: by mail-ot1-x32d.google.com with SMTP id 46e09a7af769-6af896f0908so2044228a34.0
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2023 23:07:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685772460; x=1688364460;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=q0OiChVWQd79cihyrYsJS8Wpx3DInpcPihNV8fH8Ysg=;
-        b=lmd7tJVvhk1eS2pbacK/xvdxd3viS18mRj0Z9d3/nV87mIXCYeD3qZF+Y2Wr/pWtBY
-         /fFFkOZbxd3tnd++8kjTlogFvpp18sVVd/C1mqFxp6Z+A2NcNzF+xRyTFzQlXndlVzIP
-         1g5DyDPt9MDAhaPGOg9OtT0bDVQWpx5Etg7W60RNrLLu4J4bYBu6UP5Y8gQDKrMsL036
-         XPUxLTq+JfmM3mPvvIWxBVHXeiJB4JO43dmnGAoLVUnYIzcxtSdvoaMiFson01izIc8p
-         mX+ICXIzqiwlcAVihJUiU2/yUwaVE2iFrr9CuvY22esE2vblVtG72Rimv22GmVuMCgyB
-         HSeA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685772460; x=1688364460;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=q0OiChVWQd79cihyrYsJS8Wpx3DInpcPihNV8fH8Ysg=;
-        b=iGl0EZJUIPPrglVsHytdbtICXDn/igDCYNUQqUkFZj3oD9zwv466cobqQ9rnaqVrak
-         YXPBl9lHYK7LlD3/rjiGYfYVPA+kczbb5k9gMxKeBMTxCDHSErmH87yarlu/uO8V9KYn
-         WYULhkPOHyKpTc/p7Dp9Rd1NgBC5/hB5xe08SODHfzpysfDdfAg8pLzM6muEcxLQoJCD
-         xg81DE12VfUyPlltVlNLrM/l1QlywmnU7t5aibRv7Q4rimi6Kl9mR3SkW9vZKc6OS8pF
-         u1rnYKVSr1z0KumW92+595NrHpfPeeEKa6wdkRj/VUGbBFtV7lFh9IX9nJkLE7BCYDFI
-         TEAQ==
-X-Gm-Message-State: AC+VfDzRS6Vix2e2fwgCX2ivDHGZ5e8wMXHdwh954eBKO44bRIgBDe0/
-        tNOOuhZcuBuuMxKMwqb+KMncd7EpMmO29YvVr4ilsEP+
-X-Google-Smtp-Source: ACHHUZ7A9ujBPKz9XirdTnjA/1BOdVPSBlN/nY/bVCxFowTtr3Pp0J2zKOaDuvUhuBa2M2GJuNoq8LbV9O/36hmOqlY=
-X-Received: by 2002:a9d:6a87:0:b0:6b1:5672:b290 with SMTP id
- l7-20020a9d6a87000000b006b15672b290mr51474otq.23.1685772459945; Fri, 02 Jun
- 2023 23:07:39 -0700 (PDT)
+        Sat, 3 Jun 2023 06:44:53 -0400
+X-Greylist: delayed 4200 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 03 Jun 2023 03:44:52 PDT
+Received: from mail.webtopbits.pl (mail.webtopbits.pl [195.231.64.176])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11E3DF5
+        for <linux-wireless@vger.kernel.org>; Sat,  3 Jun 2023 03:44:51 -0700 (PDT)
+Received: by mail.webtopbits.pl (Postfix, from userid 1001)
+        id 79FB9A3887; Fri,  2 Jun 2023 09:55:50 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=webtopbits.pl;
+        s=mail; t=1685696159;
+        bh=Eh8ECMiYd4baGAwPAzhz8mhJACXX7NSRkYjh+plaY18=;
+        h=Date:From:To:Subject:From;
+        b=obHs3PdIlL4lIolhIXVZIK9CYHknOcbR/zGLnKfh1YrarL9K1L2EANKdKOyuUIjjO
+         6OZOxjQqSQyvJ6V4AKa5wTp8yOtZYp+L5cCSnBu77DgrnqBkb+vnOszawlofPol869
+         DGr9Ot6lvxqxEktmktVezx25mF6XGyWGa0MBv8rEmUxzDzSDoCXbd6vVYonu2gIKTo
+         XZjQ4HhpAC2YaZAUtSdUU57twN0kk/n496zTZzx5p3E1fV6Ue5l9GvfTJdkmnon/zN
+         O786oyb50XrlmlNs8GUz+9RL3natpMo/+jVCRZXbg7edMl2rCYppIDxkZfRhYbMwon
+         q2yIX1Lfw7bYw==
+Received: by mail.webtopbits.pl for <linux-wireless@vger.kernel.org>; Fri,  2 Jun 2023 08:55:46 GMT
+Message-ID: <20230602085530-0.1.8w.5l28.0.u8jv2pk0v9@webtopbits.pl>
+Date:   Fri,  2 Jun 2023 08:55:46 GMT
+From:   "Kamil Durjasz" <kamil.durjasz@webtopbits.pl>
+To:     <linux-wireless@vger.kernel.org>
+Subject: =?UTF-8?Q?Wy=C5=BCsza_konwersja_w_e-sklepie_?=
+X-Mailer: mail.webtopbits.pl
 MIME-Version: 1.0
-References: <20230601054034.43692-1-nealsid@gmail.com> <878rd2jup4.fsf@kernel.org>
-In-Reply-To: <878rd2jup4.fsf@kernel.org>
-From:   Neal Sidhwaney <nealsid@gmail.com>
-Date:   Sat, 3 Jun 2023 02:07:03 -0400
-Message-ID: <CAJ4cxaRAvaVqu6n2x-Oq2Y=QZ8ry1WMczikKhj+8D0mde9=3fg@mail.gmail.com>
-Subject: Re: [PATCH v2] wifi: brcmfmac: Detect corner error case earlier with log
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Jun 2, 2023 at 1:32=E2=80=AFAM Kalle Valo <kvalo@kernel.org> wrote:
-> But the commit log should always answer to the question "why?". Is there
-> a specific reason why you want to do it earlier?
+Dzie=C5=84 dobry,
 
-Added context & motivation to the commit log.
+w jaki spos=C3=B3b docieraj=C4=85 Pa=C5=84stwo do odbiorc=C3=B3w?
 
->
-> Indentation here does not look correct, did you run checkpatch?
+Tworzymy pot=C4=99=C5=BCne narz=C4=99dzia sprzeda=C5=BCy, kt=C3=B3re pozw=
+alaj=C4=85 kompleksowo rozwi=C4=85za=C4=87 problemy potencjalnych klient=C3=
+=B3w i skutecznie wp=C5=82yn=C4=85=C4=87 na ich decyzje zakupowe.=20
 
-Sorry, my mistake again.  I ran checkpatch for this version of the
-patch, but missed it in the docs the first time because it's in the
-"large patches" paragraph, which is very much not the case with this
-patch ;)
+Skupiamy si=C4=99 na Pa=C5=84stwa potrzebach zwi=C4=85zanych z obs=C5=82u=
+g=C4=85 sklepu, oczekiwaniach i planach sprzeda=C5=BCowych. Szczeg=C3=B3=C5=
+=82owo dopasowujemy grafik=C4=99, funkcjonalno=C5=9Bci, struktur=C4=99 i =
+mikrointerakcje do Pa=C5=84stwa grupy docelowej, co przek=C5=82ada si=C4=99=
+ na oczekiwane rezultaty.
 
-Thank you,
+Ch=C4=99tnie przedstawi=C4=99 dotychczasowe realizacje, aby mogli Pa=C5=84=
+stwo przekona=C4=87 si=C4=99 o naszych mo=C5=BCliwo=C5=9Bciach. Mog=C4=99=
+ si=C4=99 skontaktowa=C4=87?
 
-Neal
+
+Pozdrawiam
+Kamil Durjasz
