@@ -2,168 +2,105 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26533C7EE24
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Jun 2023 15:22:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B416C7EE29
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Jun 2023 17:04:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236595AbjFBPWK (ORCPT
+        id S235563AbjFBREf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Jun 2023 11:22:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39660 "EHLO
+        Fri, 2 Jun 2023 13:04:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236431AbjFBPWD (ORCPT
+        with ESMTP id S234584AbjFBREe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Jun 2023 11:22:03 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 742A018C
-        for <linux-wireless@vger.kernel.org>; Fri,  2 Jun 2023 08:22:02 -0700 (PDT)
-X-UUID: 33b9cbde015911eeb20a276fd37b9834-20230602
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=NQw3tj6Sxrj75MWr1uIcOoFYLt64m76Khs1O013gQGQ=;
-        b=WU/z+qXbCb8PHGU7o3XxfrcvyxHl2AzdAackOQBUKebWeMSuYDKs4xJLZsIG9OCVdnUahgHeX/wWxIamnlc1SODC9rPoF+S2hj73P1U6HmHN3PPVJa8Y4wNpAXAhvM3HT8X2wloiCkjUdUTA3wOblUH6QXv4vH0lM9hS8XKE7tY=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.25,REQID:4ca7c24b-3f77-480a-8cba-8a9e28ee82f7,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:d5b0ae3,CLOUDID:381c363d-de1e-4348-bc35-c96f92f1dcbb,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-UUID: 33b9cbde015911eeb20a276fd37b9834-20230602
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 2094208446; Fri, 02 Jun 2023 23:21:52 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.194) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 2 Jun 2023 23:21:52 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 2 Jun 2023 23:21:52 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Bo Jiao <Bo.Jiao@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        MeiChia Chiu <MeiChia.Chiu@mediatek.com>,
-        MeiChia Chiu <meichia.chiu@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 11/12] wifi: mt76: mt7996: add muru support
-Date:   Fri, 2 Jun 2023 23:21:07 +0800
-Message-ID: <20230602152108.26860-11-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20230602152108.26860-1-shayne.chen@mediatek.com>
-References: <20230602152108.26860-1-shayne.chen@mediatek.com>
+        Fri, 2 Jun 2023 13:04:34 -0400
+Received: from mail-ot1-x329.google.com (mail-ot1-x329.google.com [IPv6:2607:f8b0:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEEA51A5
+        for <linux-wireless@vger.kernel.org>; Fri,  2 Jun 2023 10:04:30 -0700 (PDT)
+Received: by mail-ot1-x329.google.com with SMTP id 46e09a7af769-6af7fef214cso1704950a34.0
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jun 2023 10:04:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685725470; x=1688317470;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=cKrHYet6llFnEg6Amewt06yqKX1PqZs4gfohiQb1qXQ=;
+        b=oJno2wNcmD2LZmRJdlevSHvGI8+Dqo2332JQK9r2/YB7MmLe4OCfFTGVs1hDYKtVdA
+         prE0rp4r/brEDg8aOZ1itpUgIt3VmXOLZxcQE0+3QNsgzatg9Q/qVxJ3tzEWE5zLhTg6
+         MMkpAu/pKU8kmLMUss8njoi1jGVZIvN+3l+Ygiruo4yud/8czONVKv+sEEXle9eIXYqi
+         Lftc6fzuzTLwMl8shrPZC45nbEFqRxRHGGN6CcNsg2qRXTAC6Sgne/LWLNJ7VZLymL5c
+         OViJ9Aa9mC8o/M/+0X65tG5wGgYwvzFgljLa1FYgxBCONWfBcOWVQzfAylExAPZJ1bbN
+         r3bQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685725470; x=1688317470;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cKrHYet6llFnEg6Amewt06yqKX1PqZs4gfohiQb1qXQ=;
+        b=Qk24c6sfbSbPQXjmddKFalOhtcbG7+dYB/XEMJ2yoK+6CpCYJWVwTw0Ln5HQadBN2Q
+         Q1JM69PD2rbumGCC0wcPp6zz8cT3z/DR+tUn+gc6gbhI9a1QdjRi8yu4Wv5w8swRiet4
+         7Nk5dsmluPjLdiGPwXANgNcVT8t3HX0fAK91iL/eOexFCapyJG9jQ6WpXbmxbhAG8tea
+         8lXkfrePUuDIhf5VAoFjf8Ksq7+IeJ+sKMDkTGy5XKXfwDCLO5aX1BlILY/xoslwXCAe
+         ukbRCmZMlpf6jGaodBEGdYPrvPlSuPMHfc2nMrd2ZZVOlgiMDAFk+2ObHLFeJEfuFjgd
+         4rTg==
+X-Gm-Message-State: AC+VfDyyQpRV5WxteeVBCRDhCU8jU8waWGm5vUmXezG71sAAvj005thL
+        n82UWNhVS/plOnVSAwOtvnND07JaGtgzFQ==
+X-Google-Smtp-Source: ACHHUZ73127aT8Fj3DmTriIe3tuwlSkoMlNtnHK6j7bI6KVJSa9SH1/xBmaSqEihmWqdCmdIeWOrzg==
+X-Received: by 2002:a9d:728d:0:b0:6af:9d11:1342 with SMTP id t13-20020a9d728d000000b006af9d111342mr1467747otj.4.1685725470077;
+        Fri, 02 Jun 2023 10:04:30 -0700 (PDT)
+Received: from [192.168.0.200] ([216.130.59.33])
+        by smtp.gmail.com with ESMTPSA id b3-20020a05687051c300b0019a291d1672sm809018oaj.26.2023.06.02.10.04.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 02 Jun 2023 10:04:29 -0700 (PDT)
+Sender: Larry Finger <larry.finger@gmail.com>
+Message-ID: <1bafa8c6-fc0f-2928-712d-c24dc0a6d18a@lwfinger.net>
+Date:   Fri, 2 Jun 2023 12:04:25 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.2
+Subject: Re: RTL8822BE not working after suspend
+Content-Language: en-US
+To:     Utkarsh Verma <utkarsh.naveen@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, James <bjlockie@lockie.ca>
+References: <CALKa4bRo2DxK56pxDhqMJtr8C08OVsJ7KpVFyaELnttZaxgguQ@mail.gmail.com>
+ <CALKa4bQ6quTd6PoHCt9wQ-x6LznzmSz3Vbw1aOTc21USgdnctQ@mail.gmail.com>
+ <f622ae86-eead-b22c-10d1-c098754c34db@lockie.ca>
+ <CALKa4bRr8z7FowCtZ-rSR0XMNEyoRbYsDu+Mswc-gs+s9Z0U=w@mail.gmail.com>
+ <d443a746-106f-4626-85a8-deefe318b46a@lockie.ca>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <d443a746-106f-4626-85a8-deefe318b46a@lockie.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: MeiChia Chiu <MeiChia.Chiu@mediatek.com>
+On 6/2/23 08:59, James wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216386
+> 
+> You could try https://github.com/lwfinger/rtw88
+> 
+> Jun. 2, 2023 00:19:28 Utkarsh Verma <utkarsh.naveen@gmail.com>:
+> 
+>> I had been using Linux v6.3.5 for a while and switched to v6.1.31-lts
+>> only yesterday, hoping it might work. The same issue happens on newer
+>> kernels like Linux v6.3.5 as well.
 
-Add sta_rec_muru() fw command to support MU-MIMO and OFDMA features.
+Utkarsh,
 
-Signed-off-by: MeiChia Chiu <meichia.chiu@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  3 +-
- .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 56 ++++++++++++++++++-
- 2 files changed, 57 insertions(+), 2 deletions(-)
+Although James top posting made it difficult to send this properly, he is 
+correct to suggest using the rtw88 repo at GitHub.com. It contains code that 
+will not be in released kernels until v6.5.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 3790d68525e5..48bced4e2e5d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -519,7 +519,8 @@ struct sta_rec_muru {
- 		u8 uo_ra;
- 		u8 he_2x996_tone;
- 		u8 rx_t_frame_11ac;
--		u8 rsv[3];
-+		u8 rx_ctrl_frame_to_mbss;
-+		u8 rsv[2];
- 	} ofdma_ul;
- 
- 	struct {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 48782b53f5d4..c50dcce21315 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -1102,6 +1102,59 @@ mt7996_mcu_sta_amsdu_tlv(struct mt7996_dev *dev, struct sk_buff *skb,
- 	}
- }
- 
-+static void
-+mt7996_mcu_sta_muru_tlv(struct mt7996_dev *dev, struct sk_buff *skb,
-+			struct ieee80211_vif *vif, struct ieee80211_sta *sta)
-+{
-+	struct ieee80211_he_cap_elem *elem = &sta->deflink.he_cap.he_cap_elem;
-+	struct sta_rec_muru *muru;
-+	struct tlv *tlv;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION &&
-+	    vif->type != NL80211_IFTYPE_AP)
-+		return;
-+
-+	tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_MURU, sizeof(*muru));
-+
-+	muru = (struct sta_rec_muru *)tlv;
-+	muru->cfg.mimo_dl_en = vif->bss_conf.eht_mu_beamformer ||
-+			       vif->bss_conf.he_mu_beamformer ||
-+			       vif->bss_conf.vht_mu_beamformer ||
-+			       vif->bss_conf.vht_mu_beamformee;
-+	muru->cfg.ofdma_dl_en = true;
-+
-+	if (sta->deflink.vht_cap.vht_supported)
-+		muru->mimo_dl.vht_mu_bfee =
-+			!!(sta->deflink.vht_cap.cap & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE);
-+
-+	if (!sta->deflink.he_cap.has_he)
-+		return;
-+
-+	muru->mimo_dl.partial_bw_dl_mimo =
-+		HE_PHY(CAP6_PARTIAL_BANDWIDTH_DL_MUMIMO, elem->phy_cap_info[6]);
-+
-+	muru->mimo_ul.full_ul_mimo =
-+		HE_PHY(CAP2_UL_MU_FULL_MU_MIMO, elem->phy_cap_info[2]);
-+	muru->mimo_ul.partial_ul_mimo =
-+		HE_PHY(CAP2_UL_MU_PARTIAL_MU_MIMO, elem->phy_cap_info[2]);
-+
-+	muru->ofdma_dl.punc_pream_rx =
-+		HE_PHY(CAP1_PREAMBLE_PUNC_RX_MASK, elem->phy_cap_info[1]);
-+	muru->ofdma_dl.he_20m_in_40m_2g =
-+		HE_PHY(CAP8_20MHZ_IN_40MHZ_HE_PPDU_IN_2G, elem->phy_cap_info[8]);
-+	muru->ofdma_dl.he_20m_in_160m =
-+		HE_PHY(CAP8_20MHZ_IN_160MHZ_HE_PPDU, elem->phy_cap_info[8]);
-+	muru->ofdma_dl.he_80m_in_160m =
-+		HE_PHY(CAP8_80MHZ_IN_160MHZ_HE_PPDU, elem->phy_cap_info[8]);
-+
-+	muru->ofdma_ul.t_frame_dur =
-+		HE_MAC(CAP1_TF_MAC_PAD_DUR_MASK, elem->mac_cap_info[1]);
-+	muru->ofdma_ul.mu_cascading =
-+		HE_MAC(CAP2_MU_CASCADING, elem->mac_cap_info[2]);
-+	muru->ofdma_ul.uo_ra =
-+		HE_MAC(CAP3_OFDMA_RA, elem->mac_cap_info[3]);
-+}
-+
- static inline bool
- mt7996_is_ebf_supported(struct mt7996_phy *phy, struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta, bool bfee)
-@@ -1779,7 +1832,8 @@ int mt7996_mcu_add_sta(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 		mt7996_mcu_sta_he_6g_tlv(skb, sta);
- 		/* starec eht */
- 		mt7996_mcu_sta_eht_tlv(skb, sta);
--		/* TODO: starec muru */
-+		/* starec muru */
-+		mt7996_mcu_sta_muru_tlv(dev, skb, vif, sta);
- 		/* starec bfee */
- 		mt7996_mcu_sta_bfee_tlv(dev, skb, vif, sta);
- 		/* starec hdr trans */
--- 
-2.39.2
+Most systems handle suspend or hibernation correctly, there are some that do 
+not. To my knowledge, all of these have been recent HP or Lenovo laptops where 
+the BIOS does not handle D3HOT to D0 transitions.
+
+If using rtw88 does not help your system, your best resolution is to install a 
+script in /usr/lib/systemd/system-sleep/ that will unload the driver before 
+sleep/hibernation, and restore it on resume. Repo rtw88 has scripts for all of 
+the PCI drivers, and README.md tells you what to do.
+
+Larry
+
 
