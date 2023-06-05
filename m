@@ -2,134 +2,147 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E4D9C7EE23
-	for <linux-wireless@archiver.kernel.org>; Mon,  5 Jun 2023 12:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D312CC77B73
+	for <linux-wireless@archiver.kernel.org>; Mon,  5 Jun 2023 12:17:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233167AbjFEMAU (ORCPT
+        id S232948AbjFEMRx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 5 Jun 2023 08:00:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39112 "EHLO
+        Mon, 5 Jun 2023 08:17:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231661AbjFEMAQ (ORCPT
+        with ESMTP id S232506AbjFEMRw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Jun 2023 08:00:16 -0400
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0B87114
-        for <linux-wireless@vger.kernel.org>; Mon,  5 Jun 2023 05:00:13 -0700 (PDT)
-Received: by mail-lf1-x12a.google.com with SMTP id 2adb3069b0e04-4f624daccd1so1612607e87.0
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jun 2023 05:00:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=flowbird.group; s=google; t=1685966412; x=1688558412;
-        h=cc:to:subject:message-id:date:from:reply-to:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=thzSH8V+nZGLdDe/+tQbOyX8rabWsuWIkl957hX7v7Q=;
-        b=RUa4tbD/sPD6sWa3AdagabOEWCHU6V/CtzVoJOCo2sGOvsG30PMX7PLhTIGKOuTIyo
-         XxfBAHXXoFGTlaYi6QUY80VJOnuhFraFASG7j75K79ZrkALR1xiI9JrtwKkuRsBveqXG
-         /TuwuzgKu+ef1U+eBw3T0lcRpZ+taPBziEjLtXdV1gjigdL6zqg74hNLLv2H2PoQLVwz
-         4ls2nwGepYtah2YXZhlgeAjQt/tGF7g5uBbZGFLXZZW/uGV1pUeyGngRkBFG6eZMRpPu
-         4xuKACGw0ns/y+puCfW+ms/zrjfKCGg5BweaS2bJAggEyLa03T/UiK+qrQ6/hZtJHxGq
-         ZSow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685966412; x=1688558412;
-        h=cc:to:subject:message-id:date:from:reply-to:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=thzSH8V+nZGLdDe/+tQbOyX8rabWsuWIkl957hX7v7Q=;
-        b=EAtuP77iIAv5zM9qbTSddp4kaRSfJgFvAYD3CX7ZFBbKOhUnythQ8ZcC/IpGTeTwCH
-         T6fXU2PiwcsZV8optCXX9DIfeAJC2IogEj7s2VJQa/llHG8RQINsihT0XgVwpwPRh0zL
-         qCYcmktmKlw+4LNA7mXTjZdKVwYJTZvPbfB5+vh/FXz7+gTDlnodHFEbbf3JmvOQGtxr
-         uMVMtMg2/L2AtuelvMehTiby5VUjRAZZIdjTK9xN/Sbzp39WB8senaVXv/41yL7nBXpk
-         hRKs/IwD3o/J3g0LKB3/F0+RUxEPT1zDzJq6/CbMgrheiPNvK4un0+5wlcQMTyq2v7WQ
-         SXaA==
-X-Gm-Message-State: AC+VfDxVwwSgI/Ra+1XT7shrKZ7dwYxvqbtjyRCrRUdNsBwO1H6AfsHy
-        fSvhTcrupyRDcJ9cRVMfozsvRjdiAENepnnxAXmkeg==
-X-Google-Smtp-Source: ACHHUZ7MSFXuPm9koNZLkoYBZda/IAEnTR32LE4oAkc+Uxi5KLrzWrxz8SP1xYmUtdUlzgzEDuPLfxFtyWlpO9O4NVg=
-X-Received: by 2002:a2e:8746:0:b0:2ac:8486:e318 with SMTP id
- q6-20020a2e8746000000b002ac8486e318mr3802494ljj.35.1685966411960; Mon, 05 Jun
- 2023 05:00:11 -0700 (PDT)
+        Mon, 5 Jun 2023 08:17:52 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D3BFA1
+        for <linux-wireless@vger.kernel.org>; Mon,  5 Jun 2023 05:17:51 -0700 (PDT)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 355AWF6I002952;
+        Mon, 5 Jun 2023 12:17:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=etSRraY+YlwDG1Jy9nTdUcmr3fLuE/bD49cuaIRm+Xo=;
+ b=gq4m0dcnEt/h1xGeNbGMP19inDV6PKmcCXv78yooMMShTm9ZQEwX0ktL1Aw0nNcckT+U
+ 0rVQhb216LXDePoDvFa5UIeuqu+MUzs0NjlrD1PxpdiPDbJpMwZWsxLpWkQ9FEBch7y3
+ s7Si496QwCrsAgQDlR0eJzoHGSMcepWRR0SdeSXzMYH5ZEaU+w5PWw1y7M0+HzVd05lT
+ /HH0Ov7jHwMMcP4JbfWiJ9H0a8JLhtRim1Bxt+0KkJEqaWRuVMkOInuUQ5oBgJVyMvUb
+ 3Z5z2mtvDW3NY4EpfDCtM9q/pQA0uebmPPoVPIRMnyZYFVPXyfDF96jSrci7jeiFdzTY rQ== 
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qyw46bjrk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 05 Jun 2023 12:17:47 +0000
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 355CHk42015706
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 5 Jun 2023 12:17:46 GMT
+Received: from aarasahu-linux.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.42; Mon, 5 Jun 2023 05:17:44 -0700
+From:   Aaradhana Sahu <quic_aarasahu@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Thiraviyam Mariyappan <quic_tmariyap@quicinc.com>,
+        Aaradhana Sahu <quic_aarasahu@quicinc.com>
+Subject: [PATCH 2/3] wifi: ath11k: Fix tkip encryption traffic failure
+Date:   Mon, 5 Jun 2023 17:47:21 +0530
+Message-ID: <20230605121722.20797-3-quic_aarasahu@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230605121722.20797-1-quic_aarasahu@quicinc.com>
+References: <20230605121722.20797-1-quic_aarasahu@quicinc.com>
 MIME-Version: 1.0
-References: <1675433281-6132-1-git-send-email-ganapathi.kondraju@silabs.com>
- <87lekj1jx2.fsf@kernel.org> <8eb3f1fc-0dee-3e5d-b309-e62349820be8@denx.de>
- <112376890.nniJfEyVGO@pc-42> <dd9a86af-e41a-3450-5e52-6473561a3e18@denx.de>
-In-Reply-To: <dd9a86af-e41a-3450-5e52-6473561a3e18@denx.de>
-Reply-To: martin.fuzzey@flowbird.group
-From:   "Fuzzey, Martin" <martin.fuzzey@flowbird.group>
-Date:   Mon, 5 Jun 2023 14:00:00 +0200
-Message-ID: <CANh8Qzzzg775T87UvoTywj-ByuP4=_9KpHkCgP4TqZW5CBY=pg@mail.gmail.com>
-Subject: Re: [PATCH v3] MAINTAINERS: Add new maintainers to Redpine driver
-To:     Marek Vasut <marex@denx.de>
-Cc:     =?UTF-8?B?SsOpcsO0bWUgUG91aWxsZXI=?= <jerome.pouiller@silabs.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Ganapathi Kondraju <ganapathi.kondraju@silabs.com>,
-        linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Amol Hanwate <amol.hanwate@silabs.com>,
-        Angus Ainslie <angus@akkea.ca>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Martin Kepplinger <martink@posteo.de>,
-        Narasimha Anumolu <narasimha.anumolu@silabs.com>,
-        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
-        Shivanadam Gude <shivanadam.gude@silabs.com>,
-        Siva Rebbagondla <siva8118@gmail.com>,
-        Srinivas Chappidi <srinivas.chappidi@silabs.com>,
-        netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: eDz2ibQvLeqanXmnCfzSHXZ3nIgJmxA8
+X-Proofpoint-GUID: eDz2ibQvLeqanXmnCfzSHXZ3nIgJmxA8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-06-03_08,2023-06-02_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ impostorscore=0 mlxlogscore=999 mlxscore=0 phishscore=0 priorityscore=1501
+ lowpriorityscore=0 spamscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2306050109
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 5 Jun 2023 at 11:59, Marek Vasut <marex@denx.de> wrote:
-> I have to admit, the aforementioned paragraph is quite disturbing,
-> considering that this patch adds 6 maintainers, is already in V3, and so
-> far it is not even clear to silabs how much effort it would be to
-> maintain driver for their own hardware, worse, silabs didn't even check.
-> What is the point of adding those maintainers then ?
->
-Totally agree.
+From: Thiraviyam Mariyappan <quic_tmariyap@quicinc.com>
 
-IMHO (very humble, I'm not a maintainer, just a guy who has submitted
-and had merged a few patches to this driver) people shouldn't be added
-to MAINTAINERS
-*just* because they work for the company making the hardware and have
-been assigned to do driver work for it.
-Rather I think they should demonstrate, over a couple of development
-cycles, their ability and availability, preferably both submitting
-patches themselves and reviewing other patches.
-(This is not in any way a judgement of the proposed maintainers as I
-have seen nothing from them).
+Currently, we are getting NULL value for fast_rx because
+fast_rx is not assigned in case of TKIP cipher and hence
+packets are dropped in fast path.
 
-And starting with one or two people doing that part time would be a
-way for Silabs to get a better idea of the effort needed.
+Fix this issue by handling the rx decap for TKIP so frames
+will be handled in normal rx path.
 
-> This driver is basically unusable and I am tempted to send a patch to
-> move it to staging and possibly remove it altogether.
->
-I do think this is a little harsh though. It certainly still has bugs
-but I think it is usable, at least for some use cases.
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
 
->
-> Multiple people tried to fix at least a couple of basic problems, so the
-> driver can be used at all, but there is no documentation and getting
-> support regarding anything from RSI is a total waste of time. Sadly, the
-> only reference material I could find and work with is some downstream
-> goo, which is released in enormous single-commit code dumps with +/-
-> thousands of lines of changes and with zero explanation what each change
-> means.
->
-Yes absolutely and this is a huge problem for this type of driver.
+Signed-off-by: Thiraviyam Mariyappan <quic_tmariyap@quicinc.com>
+Signed-off-by: Aaradhana Sahu <quic_aarasahu@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/core.h  |  2 +-
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 15 ++++++++++-----
+ 2 files changed, 11 insertions(+), 6 deletions(-)
 
-For simpler hardware (like most I2C, SPI chips) anyone who has
-reasonable knowledge of the Linux kernel and the hardware datasheet
-can write a driver.
-Here the hardware datasheet isn't enough you really need the firmware
-interface documentation (which isn't available publicly) because
-the actual *hardware* isn't that important from a driver perspective.
-The driver is an interface between the Kernel 802.11 stack and the
-*firmware*.
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 0830276e5028..bb9acdda5aa8 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -122,7 +122,7 @@ struct ath11k_skb_rxcb {
+ 	bool is_last_msdu;
+ 	bool is_continuation;
+ 	bool is_mcbc;
+-	bool is_eapol;
++	bool skip_decap;
+ 	struct hal_rx_desc *rx_desc;
+ 	u8 err_rel_src;
+ 	u8 err_code;
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 99859b59138e..03eeb3dfbb15 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -2168,9 +2168,14 @@ static void ath11k_dp_rx_h_undecap(struct ath11k *ar, struct sk_buff *msdu,
+ 	case DP_RX_DECAP_TYPE_ETHERNET2_DIX:
+ 		ehdr = (struct ethhdr *)msdu->data;
+ 
+-		/* mac80211 allows fast path only for authorized STA */
+-		if (ehdr->h_proto == cpu_to_be16(ETH_P_PAE)) {
+-			ATH11K_SKB_RXCB(msdu)->is_eapol = true;
++		/* Fast_rx expects the STA to be authorized and
++		 * its not assigned for TKIP cipher. Hence, set
++		 * this flag to handle the EAPOL and TKIP packets
++		 * in the normal path.
++		 */
++		if (ehdr->h_proto == cpu_to_be16(ETH_P_PAE) ||
++		    enctype == HAL_ENCRYPT_TYPE_TKIP_MIC) {
++			ATH11K_SKB_RXCB(msdu)->skip_decap = true;
+ 			ath11k_dp_rx_h_undecap_eth(ar, msdu, first_hdr,
+ 						   enctype, status);
+ 			break;
+@@ -2423,7 +2428,7 @@ static void ath11k_dp_rx_deliver_msdu(struct ath11k *ar, struct napi_struct *nap
+ 	struct ath11k_skb_rxcb *rxcb = ATH11K_SKB_RXCB(msdu);
+ 	u8 decap = DP_RX_DECAP_TYPE_RAW;
+ 	bool is_mcbc = rxcb->is_mcbc;
+-	bool is_eapol = rxcb->is_eapol;
++	bool skip_decap = rxcb->skip_decap;
+ 
+ 	if (status->encoding == RX_ENC_HE &&
+ 	    !(status->flag & RX_FLAG_RADIOTAP_HE) &&
+@@ -2479,7 +2484,7 @@ static void ath11k_dp_rx_deliver_msdu(struct ath11k *ar, struct napi_struct *nap
+ 	 * Also, fast_rx expects the STA to be authorized, hence
+ 	 * eapol packets are sent in slow path.
+ 	 */
+-	if (decap == DP_RX_DECAP_TYPE_ETHERNET2_DIX && !is_eapol &&
++	if (decap == DP_RX_DECAP_TYPE_ETHERNET2_DIX && !skip_decap &&
+ 	    !(is_mcbc && rx_status->flag & RX_FLAG_DECRYPTED))
+ 		rx_status->flag |= RX_FLAG_8023;
+ 
+-- 
+2.17.1
 
-Actually I would rather have public interface documentation than
-official maintainers working for the vendor (though both would be
-great).
-
-Martin
