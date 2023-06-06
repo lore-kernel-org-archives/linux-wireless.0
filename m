@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB99C7EE2F
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20246C7EE2E
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236734AbjFFHvk (ORCPT
+        id S231715AbjFFHvm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:51:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54622 "EHLO
+        Tue, 6 Jun 2023 03:51:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236780AbjFFHtB (ORCPT
+        with ESMTP id S237022AbjFFHt4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2023 03:49:01 -0400
+        Tue, 6 Jun 2023 03:49:56 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 104901BC7
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 00:44:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87CC91BE9
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 00:45:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686037488; x=1717573488;
+  t=1686037524; x=1717573524;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=kyRpmBiiMWrkwLuMS6i7Hnzk7BoASTnPXaE/Vmi195M=;
-  b=mHE8ZEjw8nJU8U/hyqw5ccuEM2t2Gucd9YOAnUBJ1j2/66N/TH3lmobr
-   +xiUIoSwdmH28seJR5G5z+KO5ZWhEr2fKa+dkAbwv3XQ3XTt9pNHLwj9+
-   8mDzX9Lf1cCxHPtY5s3I8gcJmiRJhfTEEpuE6KURmIqANrpeO3hAbWgCz
-   GR35DSnlATyyvmTPlro1hhJeBms/uywfGU7Kpu6z790rbd/vWL2MR/4MA
-   ZkQeLE4tRolgbErBvv2ysDvThfFeolhWDIYDJdINZHoDMO5xyzRRD4NaD
-   F0G+VfIxrKoWgjKukZlXPP7f9x2UpFWUYej5OqQwMMjxjvHfEJHDfuzET
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="422419085"
+  bh=kuH8rLnOHBn7IHbQNFuQSC7SM8D0GVZDJVNZTiQY8M0=;
+  b=b8KK13rcpyDuG6QtwxrPX1kOTep3ZGQU0OmmKStGHT3dhY5LA920lp8x
+   irxkG9oGCk2yEGrDCEKESyEkgR9Jpd7xEqPQiWBe2f9gL9cjf0n0mXLVn
+   93cPaYHPAjOKVAv1wMvWjIaFHAb5fAodrvOQIq4T+mMNhMmaQFARkYST9
+   tvbNlDTAeUJY7isizI5mvei8Cb1GrG3QVRPCnysd9XT5vMCA3ou+ULrn1
+   WVwbWXJz98lyIqszFYA6zXZrkiTjcqOtOKFI8+koxX8HyLiRxvCtO9+Yw
+   eJKCMA5iafrZZt85wJnNA69kDMZPTKH3VE+J1G67Yg8WmlvQ3VNaalOTW
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="422419117"
 X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="422419085"
+   d="scan'208";a="422419117"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:38 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:46 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="821516324"
+X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="821516413"
 X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="821516324"
+   d="scan'208";a="821516413"
 Received: from oniamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.217.62])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:36 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:45 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Alon Giladi <alon.giladi@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 07/13] wifi: iwlwifi: Separate loading and setting of power reduce tables
-Date:   Tue,  6 Jun 2023 10:43:04 +0300
-Message-Id: <20230606103519.7695684dc848.I13626cd318e5d68efec9618b2045f52788bff114@changeid>
+Subject: [PATCH 11/13] wifi: iwlwifi: fw: clean up PNVM loading code
+Date:   Tue,  6 Jun 2023 10:43:08 +0300
+Message-Id: <20230606103519.51fb5ee63f21.I20f270b2d47612e84643dc235c2940b8d9ed9930@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230606074310.889520-1-gregory.greenman@intel.com>
 References: <20230606074310.889520-1-gregory.greenman@intel.com>
@@ -57,171 +57,199 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alon Giladi <alon.giladi@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Take the part that copies the tables into DRAM, out of the method
-that sets the prph_scratch to make the code cleaner. Each of the
-operations will get more complex in the future when it will also
-support larger power-reduce tables images.
+This code is a bit of a maze of gotos etc. Clean up the
+code a bit to make the intent clearer.
 
-Signed-off-by: Alon Giladi <alon.giladi@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.c  |  9 ++++--
- .../intel/iwlwifi/iwl-context-info-gen3.h     |  5 ++--
- .../net/wireless/intel/iwlwifi/iwl-trans.h    | 28 +++++++++++--------
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 18 +++++++++---
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  1 +
- 5 files changed, 40 insertions(+), 21 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/pnvm.c | 155 +++++++++++--------
+ 1 file changed, 89 insertions(+), 66 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-index 91e1faef76f6..bb6300469f4a 100644
+index 3b5a3c89fedf..82eb32e67a2c 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-@@ -329,14 +329,17 @@ int iwl_pnvm_load(struct iwl_trans *trans,
- 			 */
- 			trans->reduce_power_loaded = true;
- 		} else {
--			ret = iwl_trans_set_reduce_power(trans, data, length);
--			if (ret)
-+			ret = iwl_trans_load_reduce_power(trans, data, length);
-+			if (ret) {
- 				IWL_DEBUG_FW(trans,
--					     "Failed to set reduce power table %d\n",
-+					     "Failed to load reduce power table %d\n",
- 					     ret);
-+				trans->reduce_power_loaded = true;
-+			}
- 			kfree(data);
- 		}
- 	}
-+	iwl_trans_set_reduce_power(trans);
- 
- 	iwl_init_notification_wait(notif_wait, &pnvm_wait,
- 				   ntf_cmds, ARRAY_SIZE(ntf_cmds),
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-index bbf4b18cd9de..e019aec027d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-@@ -292,8 +292,9 @@ int iwl_trans_pcie_ctx_info_gen3_load_pnvm(struct iwl_trans *trans,
- 					   const struct iwl_ucode_capabilities *capa);
- void iwl_trans_pcie_ctx_info_gen3_set_pnvm(struct iwl_trans *trans,
- 					   const struct iwl_ucode_capabilities *capa);
--int iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
--						  const void *data, u32 len);
-+int iwl_trans_pcie_ctx_info_gen3_load_reduce_power(struct iwl_trans *trans,
-+						   const void *data, u32 len);
-+void iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans);
- int iwl_trans_pcie_ctx_info_gen3_set_step(struct iwl_trans *trans,
- 					  u32 mbx_addr_0_step, u32 mbx_addr_1_step);
- #endif /* __iwl_context_info_file_gen3_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 541841bc8f21..888869d9c94a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -562,6 +562,8 @@ struct iwl_pnvm_image {
-  * @load_pnvm: save the pnvm data in DRAM
-  * @set_pnvm: set the pnvm data in the prph scratch buffer, inside the
-  *	context info.
-+ * @load_reduce_power: copy reduce power table to the corresponding DRAM memory
-+ * @set_reduce_power: set reduce power table addresses in the sratch buffer
-  * @interrupts: disable/enable interrupts to transport
-  */
- struct iwl_trans_ops {
-@@ -638,8 +640,11 @@ struct iwl_trans_ops {
- 			 const struct iwl_ucode_capabilities *capa);
- 	void (*set_pnvm)(struct iwl_trans *trans,
- 			 const struct iwl_ucode_capabilities *capa);
--	int (*set_reduce_power)(struct iwl_trans *trans,
--				const void *data, u32 len);
-+	int (*load_reduce_power)(struct iwl_trans *trans,
-+				 const void *data,
-+				 u32 len);
-+	void (*set_reduce_power)(struct iwl_trans *trans);
-+
- 	void (*interrupts)(struct iwl_trans *trans, bool enable);
- 	int (*imr_dma_data)(struct iwl_trans *trans,
- 			    u32 dst_addr, u64 src_addr,
-@@ -1554,18 +1559,17 @@ static inline void iwl_trans_set_pnvm(struct iwl_trans *trans,
- 		trans->ops->set_pnvm(trans, capa);
+@@ -270,88 +270,111 @@ static u8 *iwl_get_pnvm_image(struct iwl_trans *trans_p, size_t *len)
+ 	return image;
  }
  
--static inline int iwl_trans_set_reduce_power(struct iwl_trans *trans,
--					     const void *data, u32 len)
-+static inline int iwl_trans_load_reduce_power(struct iwl_trans *trans,
-+					      const void *data,
-+					      u32 len)
+-int iwl_pnvm_load(struct iwl_trans *trans,
+-		  struct iwl_notif_wait_data *notif_wait,
+-		  const struct iwl_ucode_capabilities *capa)
++static void iwl_pnvm_load_pnvm_to_trans(struct iwl_trans *trans,
++					const struct iwl_ucode_capabilities *capa)
  {
--	if (trans->ops->set_reduce_power) {
--		int ret = trans->ops->set_reduce_power(trans, data, len);
+-	u8 *data;
++	struct iwl_pnvm_image *pnvm_data = NULL;
++	u8 *data = NULL;
+ 	size_t length;
+-	struct iwl_notification_wait pnvm_wait;
+-	static const u16 ntf_cmds[] = { WIDE_ID(REGULATORY_AND_NVM_GROUP,
+-						PNVM_INIT_COMPLETE_NTFY) };
+-	struct iwl_pnvm_image pnvm_data;
+ 	int ret;
+ 
+-	/* if the SKU_ID is empty, there's nothing to do */
+-	if (!trans->sku_id[0] && !trans->sku_id[1] && !trans->sku_id[2])
+-		return 0;
 -
+-	/* failed to get/parse the image in the past, no use to try again */
++	/* failed to get/parse the image in the past, no use trying again */
+ 	if (trans->fail_to_parse_pnvm_image)
+-		goto reduce_tables;
+-
+-	/* get the image, parse and load it, if not loaded yet */
+-	if (!trans->pnvm_loaded) {
+-		data = iwl_get_pnvm_image(trans, &length);
+-		if (!data) {
+-			trans->fail_to_parse_pnvm_image = true;
+-			goto reduce_tables;
+-		}
+-		ret = iwl_pnvm_parse(trans, data, length, &pnvm_data);
+-		if (ret) {
+-			trans->fail_to_parse_pnvm_image = true;
+-			kfree(data);
+-			goto reduce_tables;
+-		}
++		return;
++
++	if (trans->pnvm_loaded)
++		goto set;
+ 
+-		ret = iwl_trans_load_pnvm(trans, &pnvm_data, capa);
+-		/* can only free data after pvnm_data use, but
+-		 * pnvm_data.version used below is not a pointer
+-		 */
+-		kfree(data);
 -		if (ret)
--			return ret;
--	}
-+	return trans->ops->load_reduce_power(trans, data, len);
-+}
- 
--	trans->reduce_power_loaded = true;
--	return 0;
-+static inline void iwl_trans_set_reduce_power(struct iwl_trans *trans)
-+{
-+	if (trans->ops->set_reduce_power)
-+		trans->ops->set_reduce_power(trans);
- }
- 
- static inline bool iwl_trans_dbg_ini_valid(struct iwl_trans *trans)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index e0477ca4ccc3..2619c868b51f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -442,8 +442,9 @@ void iwl_trans_pcie_ctx_info_gen3_set_pnvm(struct iwl_trans *trans,
- 		iwl_pcie_set_continuous_pnvm(trans);
- }
- 
--int iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
--						  const void *data, u32 len)
-+int iwl_trans_pcie_ctx_info_gen3_load_reduce_power(struct iwl_trans *trans,
-+						   const void *data,
-+						   u32 len)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
-@@ -467,12 +468,21 @@ int iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
- 			return ret;
- 		}
+-			goto reduce_tables;
+-		IWL_INFO(trans, "loaded PNVM version %08x\n",
+-			 pnvm_data.version);
++	data = iwl_get_pnvm_image(trans, &length);
++	if (!data) {
++		trans->fail_to_parse_pnvm_image = true;
++		return;
  	}
-+	return 0;
+ 
++	pnvm_data = kzalloc(sizeof(*pnvm_data), GFP_KERNEL);
++	if (!pnvm_data)
++		goto free;
++
++	ret = iwl_pnvm_parse(trans, data, length, pnvm_data);
++	if (ret) {
++		trans->fail_to_parse_pnvm_image = true;
++		goto free;
++	}
++
++	ret = iwl_trans_load_pnvm(trans, pnvm_data, capa);
++	if (ret)
++		goto free;
++	IWL_INFO(trans, "loaded PNVM version %08x\n", pnvm_data->version);
++
++set:
+ 	iwl_trans_set_pnvm(trans, capa);
++free:
++	kfree(data);
++	kfree(pnvm_data);
 +}
 +
-+void iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans)
++static void
++iwl_pnvm_load_reduce_power_to_trans(struct iwl_trans *trans,
++				    const struct iwl_ucode_capabilities *capa)
 +{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
-+		&trans_pcie->prph_scratch->ctrl_cfg;
-+
-+	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
++	struct iwl_pnvm_image *pnvm_data = NULL;
++	u8 *data = NULL;
++	size_t length;
++	int ret;
+ 
+-reduce_tables:
+-	/* now try to get the reduce power table, if not loaded yet */
+ 	if (trans->failed_to_load_reduce_power_image)
+-		goto notification;
+-
+-	if (!trans->reduce_power_loaded) {
+-		memset(&pnvm_data, 0, sizeof(pnvm_data));
+-		data = iwl_uefi_get_reduced_power(trans, &length);
+-		if (IS_ERR(data)) {
+-			ret = PTR_ERR(data);
+-			trans->failed_to_load_reduce_power_image = true;
+-			goto notification;
+-		}
 +		return;
  
- 	prph_sc_ctrl->reduce_power_cfg.base_addr =
- 		cpu_to_le64(trans_pcie->reduce_power_dram.physical);
- 	prph_sc_ctrl->reduce_power_cfg.size =
- 		cpu_to_le32(trans_pcie->reduce_power_dram.size);
--
--	return 0;
- }
+-		ret = iwl_uefi_reduce_power_parse(trans, data, length,
+-						  &pnvm_data);
+-		if (ret) {
+-			trans->failed_to_load_reduce_power_image = true;
+-			kfree(data);
+-			goto notification;
+-		}
++	if (trans->reduce_power_loaded)
++		goto set;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 5235a7517c53..55541c1be5d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3554,6 +3554,7 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
- 	.rxq_dma_data = iwl_trans_pcie_rxq_dma_data,
- 	.load_pnvm = iwl_trans_pcie_ctx_info_gen3_load_pnvm,
- 	.set_pnvm = iwl_trans_pcie_ctx_info_gen3_set_pnvm,
-+	.load_reduce_power = iwl_trans_pcie_ctx_info_gen3_load_reduce_power,
- 	.set_reduce_power = iwl_trans_pcie_ctx_info_gen3_set_reduce_power,
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	.debugfs_cleanup = iwl_trans_pcie_debugfs_cleanup,
+-		ret = iwl_trans_load_reduce_power(trans, &pnvm_data, capa);
+-		kfree(data);
+-		if (ret) {
+-			IWL_DEBUG_FW(trans,
+-				     "Failed to load reduce power table %d\n",
+-				     ret);
+-			trans->failed_to_load_reduce_power_image = true;
+-			goto notification;
+-		}
++	data = iwl_uefi_get_reduced_power(trans, &length);
++	if (IS_ERR(data)) {
++		trans->failed_to_load_reduce_power_image = true;
++		return;
+ 	}
++
++	pnvm_data = kzalloc(sizeof(*pnvm_data), GFP_KERNEL);
++	if (!pnvm_data)
++		goto free;
++
++	ret = iwl_uefi_reduce_power_parse(trans, data, length, pnvm_data);
++	if (ret) {
++		trans->failed_to_load_reduce_power_image = true;
++		goto free;
++	}
++
++	ret = iwl_trans_load_reduce_power(trans, pnvm_data, capa);
++	if (ret) {
++		IWL_DEBUG_FW(trans,
++			     "Failed to load reduce power table %d\n",
++			     ret);
++		trans->failed_to_load_reduce_power_image = true;
++		goto free;
++	}
++
++set:
+ 	iwl_trans_set_reduce_power(trans, capa);
++free:
++	kfree(data);
++	kfree(pnvm_data);
++}
++
++int iwl_pnvm_load(struct iwl_trans *trans,
++		  struct iwl_notif_wait_data *notif_wait,
++		  const struct iwl_ucode_capabilities *capa)
++{
++	struct iwl_notification_wait pnvm_wait;
++	static const u16 ntf_cmds[] = { WIDE_ID(REGULATORY_AND_NVM_GROUP,
++						PNVM_INIT_COMPLETE_NTFY) };
++
++	/* if the SKU_ID is empty, there's nothing to do */
++	if (!trans->sku_id[0] && !trans->sku_id[1] && !trans->sku_id[2])
++		return 0;
++
++	iwl_pnvm_load_pnvm_to_trans(trans, capa);
++	iwl_pnvm_load_reduce_power_to_trans(trans, capa);
+ 
+-notification:
+ 	iwl_init_notification_wait(notif_wait, &pnvm_wait,
+ 				   ntf_cmds, ARRAY_SIZE(ntf_cmds),
+ 				   iwl_pnvm_complete_fn, trans);
 -- 
 2.38.1
 
