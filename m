@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 729E6C7EE24
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB99C7EE2F
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236719AbjFFHvi (ORCPT
+        id S236734AbjFFHvk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:51:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54842 "EHLO
+        Tue, 6 Jun 2023 03:51:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237071AbjFFHuA (ORCPT
+        with ESMTP id S236780AbjFFHtB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2023 03:50:00 -0400
+        Tue, 6 Jun 2023 03:49:01 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CFE31BF8
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 00:45:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 104901BC7
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 00:44:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686037529; x=1717573529;
+  t=1686037488; x=1717573488;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=E0vVIprFZFV4HTvZZYkUvhFxZrg/Ng0i3k5AfN760ec=;
-  b=dUnhxPYpr+WzNj0gkR3sgAih7pQY+QPJQP3Jbe7eO1FgrQ3c1Y82/ynT
-   slYTtGbYxOtjiE2RpX5M7g6u9pppV3EquaXGDYhDA7kQI8pdbp8pRf4TX
-   F43pPw6OK5g4fgcLrBVGg8zCgW2Gg9rY2YZ6VoDNJZmaRXm9NAcA1BUsJ
-   48S8LnVLKDP51laaEkPvCEf6rP+6IbS8uzbOwqoynhyQkl/rn9K2mKPCc
-   Qsj34Bn7DE5SCsauNdaMGrHGluLqS7I6dRVzk2dXUAavGPtwshIWIEN9b
-   3m8DTOk/kMKf7o/BGvOqW5ixsCWVmD2WtoTxWR8WCHqQ+hamSyuexKYCJ
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="422419131"
+  bh=kyRpmBiiMWrkwLuMS6i7Hnzk7BoASTnPXaE/Vmi195M=;
+  b=mHE8ZEjw8nJU8U/hyqw5ccuEM2t2Gucd9YOAnUBJ1j2/66N/TH3lmobr
+   +xiUIoSwdmH28seJR5G5z+KO5ZWhEr2fKa+dkAbwv3XQ3XTt9pNHLwj9+
+   8mDzX9Lf1cCxHPtY5s3I8gcJmiRJhfTEEpuE6KURmIqANrpeO3hAbWgCz
+   GR35DSnlATyyvmTPlro1hhJeBms/uywfGU7Kpu6z790rbd/vWL2MR/4MA
+   ZkQeLE4tRolgbErBvv2ysDvThfFeolhWDIYDJdINZHoDMO5xyzRRD4NaD
+   F0G+VfIxrKoWgjKukZlXPP7f9x2UpFWUYej5OqQwMMjxjvHfEJHDfuzET
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="422419085"
 X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="422419131"
+   d="scan'208";a="422419085"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:51 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:38 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="821516458"
+X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="821516324"
 X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="821516458"
+   d="scan'208";a="821516324"
 Received: from oniamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.217.62])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:49 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:36 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
+        Alon Giladi <alon.giladi@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 13/13] wifi: iwlwifi: pnvm: handle memory descriptor tlv
-Date:   Tue,  6 Jun 2023 10:43:10 +0300
-Message-Id: <20230606103519.8c5f5ee8e30b.Id1893c9dec140b5ba4abe8a121c2e1a1d121d2d7@changeid>
+Subject: [PATCH 07/13] wifi: iwlwifi: Separate loading and setting of power reduce tables
+Date:   Tue,  6 Jun 2023 10:43:04 +0300
+Message-Id: <20230606103519.7695684dc848.I13626cd318e5d68efec9618b2045f52788bff114@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230606074310.889520-1-gregory.greenman@intel.com>
 References: <20230606074310.889520-1-gregory.greenman@intel.com>
@@ -56,153 +57,171 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Alon Giladi <alon.giladi@intel.com>
 
-When PNVM is obtained from UEFI, there's an additional memory
-descriptor TLV that has to be handled. It is the same TLV that
-holds data in the reduced power tables. Also, in this TLV, the
-actual data is located after address and size, so add the
-corresponding offset.
+Take the part that copies the tables into DRAM, out of the method
+that sets the prph_scratch to make the code cleaner. Each of the
+operations will get more complex in the future when it will also
+support larger power-reduce tables images.
 
+Signed-off-by: Alon Giladi <alon.giladi@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.c |  5 ++
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c | 62 ++++++++++++++------
- drivers/net/wireless/intel/iwlwifi/fw/uefi.h |  9 +++
- 3 files changed, 59 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/pnvm.c  |  9 ++++--
+ .../intel/iwlwifi/iwl-context-info-gen3.h     |  5 ++--
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    | 28 +++++++++++--------
+ .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 18 +++++++++---
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  1 +
+ 5 files changed, 40 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-index 82eb32e67a2c..650e4bde9c17 100644
+index 91e1faef76f6..bb6300469f4a 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-@@ -127,6 +127,11 @@ static int iwl_pnvm_handle_section(struct iwl_trans *trans, const u8 *data,
- 
- 			break;
+@@ -329,14 +329,17 @@ int iwl_pnvm_load(struct iwl_trans *trans,
+ 			 */
+ 			trans->reduce_power_loaded = true;
+ 		} else {
+-			ret = iwl_trans_set_reduce_power(trans, data, length);
+-			if (ret)
++			ret = iwl_trans_load_reduce_power(trans, data, length);
++			if (ret) {
+ 				IWL_DEBUG_FW(trans,
+-					     "Failed to set reduce power table %d\n",
++					     "Failed to load reduce power table %d\n",
+ 					     ret);
++				trans->reduce_power_loaded = true;
++			}
+ 			kfree(data);
  		}
-+		case IWL_UCODE_TLV_MEM_DESC:
-+			if (iwl_uefi_handle_tlv_mem_desc(trans, data, tlv_len,
-+							 pnvm_data))
-+				return -EINVAL;
-+			break;
- 		case IWL_UCODE_TLV_PNVM_SKU:
- 			IWL_DEBUG_FW(trans,
- 				     "New PNVM section started, stop parsing.\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-index 488b9fb79743..9877988db0d2 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-@@ -17,6 +17,12 @@
- 				  0xb2, 0xec, 0xf5, 0xa3,	\
- 				  0x59, 0x4f, 0x4a, 0xea)
+ 	}
++	iwl_trans_set_reduce_power(trans);
  
-+struct iwl_uefi_pnvm_mem_desc {
-+	__le32 addr;
-+	__le32 size;
-+	const u8 data[];
-+} __packed;
+ 	iwl_init_notification_wait(notif_wait, &pnvm_wait,
+ 				   ntf_cmds, ARRAY_SIZE(ntf_cmds),
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+index bbf4b18cd9de..e019aec027d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+@@ -292,8 +292,9 @@ int iwl_trans_pcie_ctx_info_gen3_load_pnvm(struct iwl_trans *trans,
+ 					   const struct iwl_ucode_capabilities *capa);
+ void iwl_trans_pcie_ctx_info_gen3_set_pnvm(struct iwl_trans *trans,
+ 					   const struct iwl_ucode_capabilities *capa);
+-int iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
+-						  const void *data, u32 len);
++int iwl_trans_pcie_ctx_info_gen3_load_reduce_power(struct iwl_trans *trans,
++						   const void *data, u32 len);
++void iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans);
+ int iwl_trans_pcie_ctx_info_gen3_set_step(struct iwl_trans *trans,
+ 					  u32 mbx_addr_0_step, u32 mbx_addr_1_step);
+ #endif /* __iwl_context_info_file_gen3_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 541841bc8f21..888869d9c94a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -562,6 +562,8 @@ struct iwl_pnvm_image {
+  * @load_pnvm: save the pnvm data in DRAM
+  * @set_pnvm: set the pnvm data in the prph scratch buffer, inside the
+  *	context info.
++ * @load_reduce_power: copy reduce power table to the corresponding DRAM memory
++ * @set_reduce_power: set reduce power table addresses in the sratch buffer
+  * @interrupts: disable/enable interrupts to transport
+  */
+ struct iwl_trans_ops {
+@@ -638,8 +640,11 @@ struct iwl_trans_ops {
+ 			 const struct iwl_ucode_capabilities *capa);
+ 	void (*set_pnvm)(struct iwl_trans *trans,
+ 			 const struct iwl_ucode_capabilities *capa);
+-	int (*set_reduce_power)(struct iwl_trans *trans,
+-				const void *data, u32 len);
++	int (*load_reduce_power)(struct iwl_trans *trans,
++				 const void *data,
++				 u32 len);
++	void (*set_reduce_power)(struct iwl_trans *trans);
 +
- static void *iwl_uefi_get_variable(efi_char16_t *name, efi_guid_t *guid,
- 				   unsigned long *data_size)
- {
-@@ -70,6 +76,42 @@ void *iwl_uefi_get_pnvm(struct iwl_trans *trans, size_t *len)
- 	return data;
+ 	void (*interrupts)(struct iwl_trans *trans, bool enable);
+ 	int (*imr_dma_data)(struct iwl_trans *trans,
+ 			    u32 dst_addr, u64 src_addr,
+@@ -1554,18 +1559,17 @@ static inline void iwl_trans_set_pnvm(struct iwl_trans *trans,
+ 		trans->ops->set_pnvm(trans, capa);
  }
  
-+int iwl_uefi_handle_tlv_mem_desc(struct iwl_trans *trans, const u8 *data,
-+				 u32 tlv_len, struct iwl_pnvm_image *pnvm_data)
+-static inline int iwl_trans_set_reduce_power(struct iwl_trans *trans,
+-					     const void *data, u32 len)
++static inline int iwl_trans_load_reduce_power(struct iwl_trans *trans,
++					      const void *data,
++					      u32 len)
+ {
+-	if (trans->ops->set_reduce_power) {
+-		int ret = trans->ops->set_reduce_power(trans, data, len);
+-
+-		if (ret)
+-			return ret;
+-	}
++	return trans->ops->load_reduce_power(trans, data, len);
++}
+ 
+-	trans->reduce_power_loaded = true;
+-	return 0;
++static inline void iwl_trans_set_reduce_power(struct iwl_trans *trans)
 +{
-+	const struct iwl_uefi_pnvm_mem_desc *desc = (const void *)data;
-+	u32 data_len;
-+
-+	if (tlv_len < sizeof(*desc)) {
-+		IWL_DEBUG_FW(trans, "TLV len (%d) is too small\n", tlv_len);
-+		return -EINVAL;
-+	}
-+
-+	data_len = tlv_len - sizeof(*desc);
-+
-+	IWL_DEBUG_FW(trans,
-+		     "Handle IWL_UCODE_TLV_MEM_DESC, len %d data_len %d\n",
-+		     tlv_len, data_len);
-+
-+	if (le32_to_cpu(desc->size) != data_len) {
-+		IWL_DEBUG_FW(trans, "invalid mem desc size %d\n", desc->size);
-+		return -EINVAL;
-+	}
-+
-+	if (pnvm_data->n_chunks == IPC_DRAM_MAP_ENTRY_NUM_MAX) {
-+		IWL_DEBUG_FW(trans, "too many payloads to allocate in DRAM.\n");
-+		return -EINVAL;
-+	}
-+
-+	IWL_DEBUG_FW(trans, "Adding data (size %d)\n", data_len);
-+
-+	pnvm_data->chunks[pnvm_data->n_chunks].data = desc->data;
-+	pnvm_data->chunks[pnvm_data->n_chunks].len = data_len;
-+	pnvm_data->n_chunks++;
-+
++	if (trans->ops->set_reduce_power)
++		trans->ops->set_reduce_power(trans);
+ }
+ 
+ static inline bool iwl_trans_dbg_ini_valid(struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index e0477ca4ccc3..2619c868b51f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -442,8 +442,9 @@ void iwl_trans_pcie_ctx_info_gen3_set_pnvm(struct iwl_trans *trans,
+ 		iwl_pcie_set_continuous_pnvm(trans);
+ }
+ 
+-int iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
+-						  const void *data, u32 len)
++int iwl_trans_pcie_ctx_info_gen3_load_reduce_power(struct iwl_trans *trans,
++						   const void *data,
++						   u32 len)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
+@@ -467,12 +468,21 @@ int iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
+ 			return ret;
+ 		}
+ 	}
 +	return 0;
 +}
 +
- static int iwl_uefi_reduce_power_section(struct iwl_trans *trans,
- 					 const u8 *data, size_t len,
- 					 struct iwl_pnvm_image *pnvm_data)
-@@ -97,25 +139,11 @@ static int iwl_uefi_reduce_power_section(struct iwl_trans *trans,
- 		data += sizeof(*tlv);
- 
- 		switch (tlv_type) {
--		case IWL_UCODE_TLV_MEM_DESC: {
--			IWL_DEBUG_FW(trans,
--				     "Got IWL_UCODE_TLV_MEM_DESC len %d\n",
--				     tlv_len);
--
--			if (pnvm_data->n_chunks == IPC_DRAM_MAP_ENTRY_NUM_MAX) {
--				IWL_DEBUG_FW(trans,
--				"too many payloads to allocate in DRAM.\n");
-+		case IWL_UCODE_TLV_MEM_DESC:
-+			if (iwl_uefi_handle_tlv_mem_desc(trans, data, tlv_len,
-+							 pnvm_data))
- 				return -EINVAL;
--			}
--
--			IWL_DEBUG_FW(trans, "Adding data (size %d)\n", tlv_len);
--
--			pnvm_data->chunks[pnvm_data->n_chunks].data = data;
--			pnvm_data->chunks[pnvm_data->n_chunks].len = tlv_len;
--			pnvm_data->n_chunks++;
--
- 			break;
--		}
- 		case IWL_UCODE_TLV_PNVM_SKU:
- 			IWL_DEBUG_FW(trans,
- 				     "New REDUCE_POWER section started, stop parsing.\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-index dc7ccf49d92d..1369cc4855c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-@@ -46,6 +46,8 @@ int iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
- 				const u8 *data, size_t len,
- 				struct iwl_pnvm_image *pnvm_data);
- void iwl_uefi_get_step_table(struct iwl_trans *trans);
-+int iwl_uefi_handle_tlv_mem_desc(struct iwl_trans *trans, const u8 *data,
-+				 u32 tlv_len, struct iwl_pnvm_image *pnvm_data);
- #else /* CONFIG_EFI */
- static inline void *iwl_uefi_get_pnvm(struct iwl_trans *trans, size_t *len)
- {
-@@ -69,6 +71,13 @@ iwl_uefi_get_reduced_power(struct iwl_trans *trans, size_t *len)
- static inline void iwl_uefi_get_step_table(struct iwl_trans *trans)
- {
- }
-+
-+static inline int
-+iwl_uefi_handle_tlv_mem_desc(struct iwl_trans *trans, const u8 *data,
-+			     u32 tlv_len, struct iwl_pnvm_image *pnvm_data)
++void iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans)
 +{
-+	return 0;
-+}
- #endif /* CONFIG_EFI */
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
++		&trans_pcie->prph_scratch->ctrl_cfg;
++
++	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
++		return;
  
- #if defined(CONFIG_EFI) && defined(CONFIG_ACPI)
+ 	prph_sc_ctrl->reduce_power_cfg.base_addr =
+ 		cpu_to_le64(trans_pcie->reduce_power_dram.physical);
+ 	prph_sc_ctrl->reduce_power_cfg.size =
+ 		cpu_to_le32(trans_pcie->reduce_power_dram.size);
+-
+-	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 5235a7517c53..55541c1be5d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3554,6 +3554,7 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
+ 	.rxq_dma_data = iwl_trans_pcie_rxq_dma_data,
+ 	.load_pnvm = iwl_trans_pcie_ctx_info_gen3_load_pnvm,
+ 	.set_pnvm = iwl_trans_pcie_ctx_info_gen3_set_pnvm,
++	.load_reduce_power = iwl_trans_pcie_ctx_info_gen3_load_reduce_power,
+ 	.set_reduce_power = iwl_trans_pcie_ctx_info_gen3_set_reduce_power,
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	.debugfs_cleanup = iwl_trans_pcie_debugfs_cleanup,
 -- 
 2.38.1
 
