@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0575DC7EE2F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C74CCC7EE31
 	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 12:50:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237763AbjFFMuL (ORCPT
+        id S237462AbjFFMuM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 08:50:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48884 "EHLO
+        Tue, 6 Jun 2023 08:50:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237679AbjFFMuG (ORCPT
+        with ESMTP id S236368AbjFFMuG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 6 Jun 2023 08:50:06 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC2961715
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 05:49:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16B511717
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 05:49:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=4k4XuKR3EBRR8WpMNiPncB3yO0aC5enUZr4e25hByng=;
-        t=1686055782; x=1687265382; b=REwMU34PMPVeUmPIHVFfxiagg/71OUIY1lvdq46OuVebil6
-        nCnyXAW5W8FhUaQE/Y9RjcmnzJXMMZQT/zGsNKkOEldlYedQXDYZSEFwlOwoz2Yjs6hKSfFSRBAt3
-        vdO43NNy45w5D3ynWRdAbbekNeVgF01P82Sj8R2vIQy3QYkSZCSG2yaKVx/xmCA4cjZKIQ1h/o3bO
-        PlumNEi0RACHmOOopObkzD0MZBNlWNRvyQrFcxJGEuQr9/8OPNdjCExJJvTMFVXCaBujqZ30czWLr
-        leSh07JvFKB5JCZLD3o5/XYWk9y+QAu/6G5vU8meXZ5gG1RIKkQ766G2cHH9Fjhg==;
+        Resent-Cc:Resent-Message-ID; bh=uMKTJnagN6NVEX/K3sla8M4Bl9Fj+7qLrOKbuKEfdz4=;
+        t=1686055783; x=1687265383; b=jKVM1inRGBuyHIu2UnsZN4dNOm/ZyoAT9dR74II5uroS58D
+        mfpTwt6ImTDkuMQBDzpGFhYY9i6IohEs1j06lyb+LLeBqLg1bEnEpENpX1dIhnDRxHXulbrr/FnUg
+        HCjobnzHyOg5wGCzfH+keRUA1ml/E5hQ3/5re+hxXLU0PbXPlkyVkXnN7Pg3tZaRoLGUtToGYNvCN
+        hl0z+bVhDLyoq6SBeHbexci4wFAoGgJDkcUQt5YF4ezHyZ9UmA8MIKsHfCEu22MM73hA+HjCDKao/
+        18HfqF7w4boxXPInauOwZUhcDuACtb55cu0ZZjcCokiHI8X5BBsWYBSF40cPL++g==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1q6W83-00FZDP-1m;
-        Tue, 06 Jun 2023 14:49:39 +0200
+        id 1q6W82-00FZDP-23;
+        Tue, 06 Jun 2023 14:49:38 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 08/14] wifi: mac80211: unregister netdevs through cfg80211
-Date:   Tue,  6 Jun 2023 14:49:27 +0200
-Message-Id: <20230606144753.1bc1e1c1187c.I61968a8fdb9e61873c459f87398e95e5f006fb83@changeid>
+Subject: [PATCH 04/14] wifi: cfg80211: wext: hold wiphy lock in siwgenie
+Date:   Tue,  6 Jun 2023 14:49:23 +0200
+Message-Id: <20230606144753.82cc542296a6.I2d480428b7314ab4407fa55e73c0e289692e59b8@changeid>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230606124933.181107-1-johannes@sipsolutions.net>
 References: <20230606124933.181107-1-johannes@sipsolutions.net>
@@ -48,58 +48,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since we want to have wiphy_lock() for the unregistration
-in the future, unregister also netdevs via cfg80211 now
-to be able to hold the wiphy_lock() for it.
+Missed this ioctl since it's in wext-sme.c where we
+usually get via a front-level ioctl handler in the
+other files, but it should also hold the wiphy lock
+to align the locking contract towards the driver.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/iface.c | 20 +++++++-------------
- 1 file changed, 7 insertions(+), 13 deletions(-)
+ net/wireless/wext-sme.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f820098e6a70..5b67b44e3f89 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -2258,7 +2258,6 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata, *tmp;
- 	LIST_HEAD(unreg_list);
--	LIST_HEAD(wdev_list);
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index f231207ca210..f3eaa3388694 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -3,7 +3,7 @@
+  * cfg80211 wext compat for managed mode.
+  *
+  * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
+- * Copyright (C) 2009, 2020-2022 Intel Corporation
++ * Copyright (C) 2009, 2020-2023 Intel Corporation
+  */
  
- 	ASSERT_RTNL();
+ #include <linux/export.h>
+@@ -338,6 +338,7 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
+ 	if (!ie_len)
+ 		ie = NULL;
  
-@@ -2281,23 +2280,18 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
- 	ieee80211_txq_teardown_flows(local);
++	wiphy_lock(wdev->wiphy);
+ 	wdev_lock(wdev);
  
- 	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
--		list_del(&sdata->list);
--
--		if (sdata->dev)
--			unregister_netdevice_queue(sdata->dev, &unreg_list);
--		else
--			list_add(&sdata->list, &wdev_list);
--	}
-+	list_splice_init(&local->interfaces, &unreg_list);
- 	mutex_unlock(&local->iflist_mtx);
- 
--	unregister_netdevice_many(&unreg_list);
--
- 	wiphy_lock(local->hw.wiphy);
--	list_for_each_entry_safe(sdata, tmp, &wdev_list, list) {
-+	list_for_each_entry_safe(sdata, tmp, &unreg_list, list) {
-+		bool netdev = sdata->dev;
-+
- 		list_del(&sdata->list);
- 		cfg80211_unregister_wdev(&sdata->wdev);
--		kfree(sdata);
-+
-+		if (!netdev)
-+			kfree(sdata);
- 	}
- 	wiphy_unlock(local->hw.wiphy);
+ 	/* no change */
+@@ -370,6 +371,7 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
+ 	err = 0;
+  out:
+ 	wdev_unlock(wdev);
++	wiphy_unlock(wdev->wiphy);
+ 	return err;
  }
+ 
 -- 
 2.40.1
 
