@@ -2,52 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F35EEC7EE2E
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 729E6C7EE24
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236671AbjFFHvg (ORCPT
+        id S236719AbjFFHvi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:51:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54604 "EHLO
+        Tue, 6 Jun 2023 03:51:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236896AbjFFHtx (ORCPT
+        with ESMTP id S237071AbjFFHuA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2023 03:49:53 -0400
+        Tue, 6 Jun 2023 03:50:00 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 159971BE3
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 00:45:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CFE31BF8
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 00:45:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686037520; x=1717573520;
+  t=1686037529; x=1717573529;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=SgNUsrKxEtgXO8noR/wQu57Z4ker2Rj26F2Spk+qLMo=;
-  b=TzZvHpkDzrRoS20dgGhkIFrracFxj+9UMiuBK+fKjnRSLRegxsdQ2NW1
-   VEw6yBKp3CH0oyXwbg9uZcm4i2AMBGRO7qru9XFVhgbeLusdnKwfWZ3RN
-   DDV5F61BgSCJ7vZN8LmCnjLf5qppTIBWLVkVhv6ZjMaX6L4pmAXPvCCaw
-   yqgU05Rx6Oja/fHUSjtrYzyORNOEPU+LbkmNSt0JJnuoJAR85gKr6cFQW
-   AwYU53ST/l4mtQlDSUeGmeL+h1nGX4guyLtlzCjBPxtlTw3D2RTqsNrxc
-   0Y2UNicxGbiDgaS0N4ksMql18nr6O4EzItEJ0Bfw0YTYTQvKOoWfzu6ve
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="422419108"
+  bh=E0vVIprFZFV4HTvZZYkUvhFxZrg/Ng0i3k5AfN760ec=;
+  b=dUnhxPYpr+WzNj0gkR3sgAih7pQY+QPJQP3Jbe7eO1FgrQ3c1Y82/ynT
+   slYTtGbYxOtjiE2RpX5M7g6u9pppV3EquaXGDYhDA7kQI8pdbp8pRf4TX
+   F43pPw6OK5g4fgcLrBVGg8zCgW2Gg9rY2YZ6VoDNJZmaRXm9NAcA1BUsJ
+   48S8LnVLKDP51laaEkPvCEf6rP+6IbS8uzbOwqoynhyQkl/rn9K2mKPCc
+   Qsj34Bn7DE5SCsauNdaMGrHGluLqS7I6dRVzk2dXUAavGPtwshIWIEN9b
+   3m8DTOk/kMKf7o/BGvOqW5ixsCWVmD2WtoTxWR8WCHqQ+hamSyuexKYCJ
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="422419131"
 X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="422419108"
+   d="scan'208";a="422419131"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:44 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:51 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="821516390"
+X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="821516458"
 X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="821516390"
+   d="scan'208";a="821516458"
 Received: from oniamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.217.62])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:43 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:49 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Alon Giladi <alon.giladi@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 10/13] wifi: iwlwifi: Separate reading and parsing of reduce power table
-Date:   Tue,  6 Jun 2023 10:43:07 +0300
-Message-Id: <20230606103519.71e3b3e0e794.Ifbe69ad99a7e805eb70e09280365821eb146b1c9@changeid>
+Subject: [PATCH 13/13] wifi: iwlwifi: pnvm: handle memory descriptor tlv
+Date:   Tue,  6 Jun 2023 10:43:10 +0300
+Message-Id: <20230606103519.8c5f5ee8e30b.Id1893c9dec140b5ba4abe8a121c2e1a1d121d2d7@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230606074310.889520-1-gregory.greenman@intel.com>
 References: <20230606074310.889520-1-gregory.greenman@intel.com>
@@ -57,238 +56,153 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alon Giladi <alon.giladi@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-It enables to better handle error cases. Also save the image till the
-end of the loading and only then free it.
+When PNVM is obtained from UEFI, there's an additional memory
+descriptor TLV that has to be handled. It is the same TLV that
+holds data in the reduced power tables. Also, in this TLV, the
+actual data is located after address and size, so add the
+corresponding offset.
 
-Signed-off-by: Alon Giladi <alon.giladi@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.c  | 40 ++++++++++++-------
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c  | 31 +++++++-------
- drivers/net/wireless/intel/iwlwifi/fw/uefi.h  | 27 ++++++++-----
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  2 +
- 4 files changed, 58 insertions(+), 42 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/pnvm.c |  5 ++
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.c | 62 ++++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.h |  9 +++
+ 3 files changed, 59 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-index b556abece896..3b5a3c89fedf 100644
+index 82eb32e67a2c..650e4bde9c17 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-@@ -319,29 +319,39 @@ int iwl_pnvm_load(struct iwl_trans *trans,
+@@ -127,6 +127,11 @@ static int iwl_pnvm_handle_section(struct iwl_trans *trans, const u8 *data,
  
- reduce_tables:
- 	/* now try to get the reduce power table, if not loaded yet */
-+	if (trans->failed_to_load_reduce_power_image)
-+		goto notification;
-+
- 	if (!trans->reduce_power_loaded) {
- 		memset(&pnvm_data, 0, sizeof(pnvm_data));
--		ret = iwl_uefi_get_reduced_power(trans, &pnvm_data);
-+		data = iwl_uefi_get_reduced_power(trans, &length);
-+		if (IS_ERR(data)) {
-+			ret = PTR_ERR(data);
-+			trans->failed_to_load_reduce_power_image = true;
-+			goto notification;
-+		}
-+
-+		ret = iwl_uefi_reduce_power_parse(trans, data, length,
-+						  &pnvm_data);
- 		if (ret) {
--			/*
--			 * Pretend we've loaded it - at least we've tried and
--			 * couldn't load it at all, so there's no point in
--			 * trying again over and over.
--			 */
--			trans->reduce_power_loaded = true;
--		} else {
--			ret = iwl_trans_load_reduce_power(trans, &pnvm_data, capa);
--			if (ret) {
--				IWL_DEBUG_FW(trans,
--					     "Failed to load reduce power table %d\n",
--					     ret);
--				trans->reduce_power_loaded = true;
--			}
-+			trans->failed_to_load_reduce_power_image = true;
- 			kfree(data);
-+			goto notification;
-+		}
-+
-+		ret = iwl_trans_load_reduce_power(trans, &pnvm_data, capa);
-+		kfree(data);
-+		if (ret) {
-+			IWL_DEBUG_FW(trans,
-+				     "Failed to load reduce power table %d\n",
-+				     ret);
-+			trans->failed_to_load_reduce_power_image = true;
-+			goto notification;
+ 			break;
  		}
- 	}
- 	iwl_trans_set_reduce_power(trans, capa);
- 
-+notification:
- 	iwl_init_notification_wait(notif_wait, &pnvm_wait,
- 				   ntf_cmds, ARRAY_SIZE(ntf_cmds),
- 				   iwl_pnvm_complete_fn, trans);
++		case IWL_UCODE_TLV_MEM_DESC:
++			if (iwl_uefi_handle_tlv_mem_desc(trans, data, tlv_len,
++							 pnvm_data))
++				return -EINVAL;
++			break;
+ 		case IWL_UCODE_TLV_PNVM_SKU:
+ 			IWL_DEBUG_FW(trans,
+ 				     "New PNVM section started, stop parsing.\n");
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-index 64b45a5b767e..1666ef3a482e 100644
+index 488b9fb79743..9877988db0d2 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright(c) 2021-2022 Intel Corporation
-+ * Copyright(c) 2021-2023 Intel Corporation
-  */
+@@ -17,6 +17,12 @@
+ 				  0xb2, 0xec, 0xf5, 0xa3,	\
+ 				  0x59, 0x4f, 0x4a, 0xea)
  
- #include "iwl-drv.h"
-@@ -123,9 +123,9 @@ static int iwl_uefi_reduce_power_section(struct iwl_trans *trans,
- 	return 0;
- }
- 
--static int iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
--				       const u8 *data, size_t len,
--				       struct iwl_pnvm_image *pnvm_data)
-+int iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
-+				const u8 *data, size_t len,
-+				struct iwl_pnvm_image *pnvm_data)
++struct iwl_uefi_pnvm_mem_desc {
++	__le32 addr;
++	__le32 size;
++	const u8 data[];
++} __packed;
++
+ static void *iwl_uefi_get_variable(efi_char16_t *name, efi_guid_t *guid,
+ 				   unsigned long *data_size)
  {
- 	const struct iwl_ucode_tlv *tlv;
- 
-@@ -181,17 +181,15 @@ static int iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
- 	return -ENOENT;
+@@ -70,6 +76,42 @@ void *iwl_uefi_get_pnvm(struct iwl_trans *trans, size_t *len)
+ 	return data;
  }
  
--int iwl_uefi_get_reduced_power(struct iwl_trans *trans,
--			       struct iwl_pnvm_image *pnvm_data)
-+u8 *iwl_uefi_get_reduced_power(struct iwl_trans *trans, size_t *len)
- {
- 	struct pnvm_sku_package *package;
- 	unsigned long package_size;
- 	efi_status_t status;
--	int ret;
--	size_t len = 0;
-+	u8 *data;
- 
- 	if (!efi_rt_services_supported(EFI_RT_SUPPORTED_GET_VARIABLE))
--		return -ENODEV;
-+		return ERR_PTR(-ENODEV);
- 
- 	/*
- 	 * TODO: we hardcode a maximum length here, because reading
-@@ -202,7 +200,7 @@ int iwl_uefi_get_reduced_power(struct iwl_trans *trans,
- 
- 	package = kmalloc(package_size, GFP_KERNEL);
- 	if (!package)
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
- 
- 	status = efi.get_variable(IWL_UEFI_REDUCED_POWER_NAME, &IWL_EFI_VAR_GUID,
- 				  NULL, &package_size, package);
-@@ -211,23 +209,22 @@ int iwl_uefi_get_reduced_power(struct iwl_trans *trans,
- 			     "Reduced Power UEFI variable not found 0x%lx (len %lu)\n",
- 			     status, package_size);
- 		kfree(package);
--		return -ENOENT;
-+		return ERR_PTR(-ENOENT);
- 	}
- 
- 	IWL_DEBUG_FW(trans, "Read reduced power from UEFI with size %lu\n",
- 		     package_size);
--	len = package_size;
- 
- 	IWL_DEBUG_FW(trans, "rev %d, total_size %d, n_skus %d\n",
- 		     package->rev, package->total_size, package->n_skus);
- 
--	ret = iwl_uefi_reduce_power_parse(trans, package->data,
--					  len - sizeof(*package),
--					  pnvm_data);
--
-+	*len = package_size - sizeof(*package);
-+	data = kmemdup(package->data, *len, GFP_KERNEL);
-+	if (!data)
-+		return ERR_PTR(-ENOMEM);
- 	kfree(package);
- 
--	return ret;
-+	return data;
- }
- 
- static int iwl_uefi_step_parse(struct uefi_cnv_common_step_data *common_step_data,
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-index 03176f73151a..10bed372e67c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright(c) 2021-2022 Intel Corporation
-+ * Copyright(c) 2021-2023 Intel Corporation
-  */
- #ifndef __iwl_fw_uefi__
- #define __iwl_fw_uefi__
-@@ -50,25 +50,32 @@ struct uefi_cnv_common_step_data {
-  */
- #ifdef CONFIG_EFI
- void *iwl_uefi_get_pnvm(struct iwl_trans *trans, size_t *len);
--int iwl_uefi_get_reduced_power(struct iwl_trans *trans,
--			       struct iwl_pnvm_image *pnvm_data);
-+u8 *iwl_uefi_get_reduced_power(struct iwl_trans *trans, size_t *len);
-+int iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
-+				const u8 *data, size_t len,
-+				struct iwl_pnvm_image *pnvm_data);
- void iwl_uefi_get_step_table(struct iwl_trans *trans);
- #else /* CONFIG_EFI */
--static inline
--void *iwl_uefi_get_pnvm(struct iwl_trans *trans, size_t *len)
-+static inline void *iwl_uefi_get_pnvm(struct iwl_trans *trans, size_t *len)
- {
- 	return ERR_PTR(-EOPNOTSUPP);
- }
- 
--static inline
--int iwl_uefi_get_reduced_power(struct iwl_trans *trans,
--			       struct iwl_pnvm_image *pnvm_data)
-+static inline int
-+iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
-+			    const u8 *data, size_t len,
-+			    struct iwl_pnvm_image *pnvm_data)
- {
- 	return -EOPNOTSUPP;
- }
- 
--static inline
--void iwl_uefi_get_step_table(struct iwl_trans *trans)
-+static inline u8 *
-+iwl_uefi_get_reduced_power(struct iwl_trans *trans, size_t *len)
++int iwl_uefi_handle_tlv_mem_desc(struct iwl_trans *trans, const u8 *data,
++				 u32 tlv_len, struct iwl_pnvm_image *pnvm_data)
 +{
-+	return ERR_PTR(-EOPNOTSUPP);
++	const struct iwl_uefi_pnvm_mem_desc *desc = (const void *)data;
++	u32 data_len;
++
++	if (tlv_len < sizeof(*desc)) {
++		IWL_DEBUG_FW(trans, "TLV len (%d) is too small\n", tlv_len);
++		return -EINVAL;
++	}
++
++	data_len = tlv_len - sizeof(*desc);
++
++	IWL_DEBUG_FW(trans,
++		     "Handle IWL_UCODE_TLV_MEM_DESC, len %d data_len %d\n",
++		     tlv_len, data_len);
++
++	if (le32_to_cpu(desc->size) != data_len) {
++		IWL_DEBUG_FW(trans, "invalid mem desc size %d\n", desc->size);
++		return -EINVAL;
++	}
++
++	if (pnvm_data->n_chunks == IPC_DRAM_MAP_ENTRY_NUM_MAX) {
++		IWL_DEBUG_FW(trans, "too many payloads to allocate in DRAM.\n");
++		return -EINVAL;
++	}
++
++	IWL_DEBUG_FW(trans, "Adding data (size %d)\n", data_len);
++
++	pnvm_data->chunks[pnvm_data->n_chunks].data = desc->data;
++	pnvm_data->chunks[pnvm_data->n_chunks].len = data_len;
++	pnvm_data->n_chunks++;
++
++	return 0;
 +}
 +
-+static inline void iwl_uefi_get_step_table(struct iwl_trans *trans)
+ static int iwl_uefi_reduce_power_section(struct iwl_trans *trans,
+ 					 const u8 *data, size_t len,
+ 					 struct iwl_pnvm_image *pnvm_data)
+@@ -97,25 +139,11 @@ static int iwl_uefi_reduce_power_section(struct iwl_trans *trans,
+ 		data += sizeof(*tlv);
+ 
+ 		switch (tlv_type) {
+-		case IWL_UCODE_TLV_MEM_DESC: {
+-			IWL_DEBUG_FW(trans,
+-				     "Got IWL_UCODE_TLV_MEM_DESC len %d\n",
+-				     tlv_len);
+-
+-			if (pnvm_data->n_chunks == IPC_DRAM_MAP_ENTRY_NUM_MAX) {
+-				IWL_DEBUG_FW(trans,
+-				"too many payloads to allocate in DRAM.\n");
++		case IWL_UCODE_TLV_MEM_DESC:
++			if (iwl_uefi_handle_tlv_mem_desc(trans, data, tlv_len,
++							 pnvm_data))
+ 				return -EINVAL;
+-			}
+-
+-			IWL_DEBUG_FW(trans, "Adding data (size %d)\n", tlv_len);
+-
+-			pnvm_data->chunks[pnvm_data->n_chunks].data = data;
+-			pnvm_data->chunks[pnvm_data->n_chunks].len = tlv_len;
+-			pnvm_data->n_chunks++;
+-
+ 			break;
+-		}
+ 		case IWL_UCODE_TLV_PNVM_SKU:
+ 			IWL_DEBUG_FW(trans,
+ 				     "New REDUCE_POWER section started, stop parsing.\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+index dc7ccf49d92d..1369cc4855c3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+@@ -46,6 +46,8 @@ int iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
+ 				const u8 *data, size_t len,
+ 				struct iwl_pnvm_image *pnvm_data);
+ void iwl_uefi_get_step_table(struct iwl_trans *trans);
++int iwl_uefi_handle_tlv_mem_desc(struct iwl_trans *trans, const u8 *data,
++				 u32 tlv_len, struct iwl_pnvm_image *pnvm_data);
+ #else /* CONFIG_EFI */
+ static inline void *iwl_uefi_get_pnvm(struct iwl_trans *trans, size_t *len)
+ {
+@@ -69,6 +71,13 @@ iwl_uefi_get_reduced_power(struct iwl_trans *trans, size_t *len)
+ static inline void iwl_uefi_get_step_table(struct iwl_trans *trans)
  {
  }
++
++static inline int
++iwl_uefi_handle_tlv_mem_desc(struct iwl_trans *trans, const u8 *data,
++			     u32 tlv_len, struct iwl_pnvm_image *pnvm_data)
++{
++	return 0;
++}
  #endif /* CONFIG_EFI */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 61ee6c1f4a1e..2915f9b2534c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -1047,6 +1047,7 @@ struct iwl_trans_txqs {
-  * @pm_support: set to true in start_hw if link pm is supported
-  * @ltr_enabled: set to true if the LTR is enabled
-  * @fail_to_parse_pnvm_image: set to true if pnvm parsing failed
-+ * @failed_to_load_reduce_power_image: set to true if pnvm loading failed
-  * @wide_cmd_header: true when ucode supports wide command header format
-  * @wait_command_queue: wait queue for sync commands
-  * @num_rx_queues: number of RX queues allocated by the transport;
-@@ -1096,6 +1097,7 @@ struct iwl_trans {
- 	u8 pnvm_loaded:1;
- 	u8 fail_to_parse_pnvm_image:1;
- 	u8 reduce_power_loaded:1;
-+	u8 failed_to_load_reduce_power_image:1;
  
- 	const struct iwl_hcmd_arr *command_groups;
- 	int command_groups_size;
+ #if defined(CONFIG_EFI) && defined(CONFIG_ACPI)
 -- 
 2.38.1
 
