@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B4DEC77B73
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 12:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3166FC77B7A
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 12:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237746AbjFFMuT (ORCPT
+        id S237774AbjFFMuU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 08:50:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48898 "EHLO
+        Tue, 6 Jun 2023 08:50:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237704AbjFFMuH (ORCPT
+        with ESMTP id S237754AbjFFMuK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2023 08:50:07 -0400
+        Tue, 6 Jun 2023 08:50:10 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C241F1718
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 05:49:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A97E21721
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 05:49:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=iKdTnkrj73RUHaYW2kgUcm20ZjyZ5BolrROQU/RjcbE=;
-        t=1686055783; x=1687265383; b=FnBFFFVc1p7bBRwxMZ/YaCMTlasqPnDuMr37qmIcIdHLqfR
-        T+aRVmi5nhNB5Tp0Xuwsiffw1vNDfAkPxg7Jmzwt4v63cmB1JAEAd2LlMCh0AnozNUqX+mGoGZluR
-        4ytdLDbXr4PR4ZvTEgS+Cn3YvvJKVqO3ULujK40Sq3XD6YOkgJYRiSxoWsR4DxKXrCETSNeOm/pTD
-        qr52CHHgmGZtPGk0wOw6Tt0MCOLI3q2LPJVk1idq0jRP299LzmqS2uLEZM2eLVfdu3NlyU2uA4BSg
-        nLSzxJSqea3ajpdr7GZTAhttAUmDkuE+MtkwBh/TxpjvioBavtOUsCiDB1sc4OvQ==;
+        Resent-Cc:Resent-Message-ID; bh=MAe3Y+yRSHtDQjn24fzXaUuWHRK8xfPBVXRHo3tHgfw=;
+        t=1686055786; x=1687265386; b=ZesoHCL3J7mNEoTbI2mtJzgXkIuJ0Bql3luHhWCz++v7sBI
+        f1nT5GOqfl/stb8wwR+gIc/7XNnLHRQzGEZaKNpAuIOtyvd/xn5QnTtF/5fTAhWFArWjNFVse+lCP
+        fkpYBAMkcoo5Tu/ZRqRmFvfAbFbnxpy3y8fShkGD4+12VOXX2kYBdLsk287dle3TVnQ19yLDmMrjn
+        3jSoVdMtN5zVWPd6OtkMZtVssY3Bp1Tu11y6pi5D6KMFsQeybRhgx246xNAS0iwO5SnD++pdueyh6
+        xpieY17LX8tW3CI1b/ylWClfoKOogH/VNepLfY2gCQiQ82G4DYWywaHPCEjE44bQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1q6W82-00FZDP-2l;
-        Tue, 06 Jun 2023 14:49:38 +0200
+        id 1q6W84-00FZDP-3D;
+        Tue, 06 Jun 2023 14:49:41 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 05/14] wifi: cfg80211: hold wiphy lock when sending wiphy
-Date:   Tue,  6 Jun 2023 14:49:24 +0200
-Message-Id: <20230606144753.dc23fb31e3dd.I63a5fd1779625b2c430bd7c4a0b017c338ec3d44@changeid>
+Subject: [PATCH 12/14] wifi: mac80211: mlme: move disconnects to wiphy work
+Date:   Tue,  6 Jun 2023 14:49:31 +0200
+Message-Id: <20230606144753.8af18dca8e2d.Id33ac6523806473156562bde3c91f2348e16db1f@changeid>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230606124933.181107-1-johannes@sipsolutions.net>
 References: <20230606124933.181107-1-johannes@sipsolutions.net>
@@ -48,96 +48,204 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Sending the wiphy out might cause calls to the driver,
-notably get_txq_stats() and get_antenna(). These aren't
-very important, since the normally have their own locks
-and/or just send out static data, but if the contract
-should be that the wiphy lock is always held, these are
-also affected. Fix that.
+Move the beacon loss work that might cause a disconnect
+and the CSA disconnect work to be wiphy work, so we hold
+the wiphy lock for them.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/core.c    | 8 ++++++++
- net/wireless/nl80211.c | 3 +++
- 2 files changed, 11 insertions(+)
+ net/mac80211/cfg.c         |  2 +-
+ net/mac80211/ieee80211_i.h |  4 ++--
+ net/mac80211/main.c        |  3 ++-
+ net/mac80211/mlme.c        | 49 +++++++++++++++++++++-----------------
+ 4 files changed, 32 insertions(+), 26 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 0ae36653c49c..97f01b94c3e2 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -129,6 +129,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 	int result;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 801aaa62b68f..027c58d23f07 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3589,7 +3589,7 @@ void ieee80211_channel_switch_disconnect(struct ieee80211_vif *vif, bool block_t
  
- 	ASSERT_RTNL();
-+	lockdep_assert_wiphy(&rdev->wiphy);
+ 	sdata->deflink.csa_block_tx = block_tx;
+ 	sdata_info(sdata, "channel switch failed, disconnecting\n");
+-	ieee80211_queue_work(&local->hw, &ifmgd->csa_connection_drop_work);
++	wiphy_work_queue(local->hw.wiphy, &ifmgd->csa_connection_drop_work);
+ }
+ EXPORT_SYMBOL(ieee80211_channel_switch_disconnect);
  
- 	/* Ignore nop renames */
- 	if (strcmp(newname, wiphy_name(&rdev->wiphy)) == 0)
-@@ -195,6 +196,8 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 			continue;
- 		nl80211_notify_iface(rdev, wdev, NL80211_CMD_DEL_INTERFACE);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b4b765eb09e8..6219c33bda31 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -466,8 +466,8 @@ struct ieee80211_if_managed {
+ 	struct timer_list conn_mon_timer;
+ 	struct timer_list bcn_mon_timer;
+ 	struct work_struct monitor_work;
+-	struct work_struct beacon_connection_loss_work;
+-	struct work_struct csa_connection_drop_work;
++	struct wiphy_work beacon_connection_loss_work;
++	struct wiphy_work csa_connection_drop_work;
+ 
+ 	unsigned long beacon_timeout;
+ 	unsigned long probe_timeout;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 3db178b1d50c..24315d7b3126 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -364,7 +364,8 @@ static void ieee80211_restart_work(struct work_struct *work)
+ 			 * The exception is ieee80211_chswitch_done.
+ 			 * Then we can have a race...
+ 			 */
+-			cancel_work_sync(&sdata->u.mgd.csa_connection_drop_work);
++			wiphy_work_cancel(local->hw.wiphy,
++					  &sdata->u.mgd.csa_connection_drop_work);
+ 			if (sdata->vif.bss_conf.csa_active) {
+ 				sdata_lock(sdata);
+ 				ieee80211_sta_connection_lost(sdata,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c00ae04df276..351fdaf2096e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1718,8 +1718,8 @@ static void ieee80211_chswitch_work(struct wiphy *wiphy,
+ 			sdata_info(sdata,
+ 				   "failed to use reserved channel context, disconnecting (err=%d)\n",
+ 				   ret);
+-			ieee80211_queue_work(&sdata->local->hw,
+-					     &ifmgd->csa_connection_drop_work);
++			wiphy_work_queue(sdata->local->hw.wiphy,
++					 &ifmgd->csa_connection_drop_work);
+ 			goto out;
+ 		}
+ 
+@@ -1730,8 +1730,8 @@ static void ieee80211_chswitch_work(struct wiphy *wiphy,
+ 					&link->csa_chandef)) {
+ 		sdata_info(sdata,
+ 			   "failed to finalize channel switch, disconnecting\n");
+-		ieee80211_queue_work(&sdata->local->hw,
+-				     &ifmgd->csa_connection_drop_work);
++		wiphy_work_queue(sdata->local->hw.wiphy,
++				 &ifmgd->csa_connection_drop_work);
+ 		goto out;
  	}
-+
-+	wiphy_lock(&rdev->wiphy);
- 	nl80211_notify_wiphy(rdev, NL80211_CMD_DEL_WIPHY);
  
- 	wiphy_net_set(&rdev->wiphy, net);
-@@ -203,6 +206,8 @@ int cfg80211_switch_netns(struct cfg80211_registered_device *rdev,
- 	WARN_ON(err);
- 
- 	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
-+	wiphy_unlock(&rdev->wiphy);
-+
- 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
- 		if (!wdev->netdev)
- 			continue;
-@@ -941,8 +946,10 @@ int wiphy_register(struct wiphy *wiphy)
- 	rdev->wiphy.features |= NL80211_FEATURE_SCAN_FLUSH;
- 
- 	rtnl_lock();
-+	wiphy_lock(&rdev->wiphy);
- 	res = device_add(&rdev->wiphy.dev);
- 	if (res) {
-+		wiphy_unlock(&rdev->wiphy);
- 		rtnl_unlock();
- 		return res;
+@@ -1775,8 +1775,8 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_link_data *link)
+ 	if (ret) {
+ 		sdata_info(sdata,
+ 			   "driver post channel switch failed, disconnecting\n");
+-		ieee80211_queue_work(&local->hw,
+-				     &ifmgd->csa_connection_drop_work);
++		wiphy_work_queue(sdata->local->hw.wiphy,
++				 &ifmgd->csa_connection_drop_work);
+ 		return;
  	}
-@@ -956,6 +963,7 @@ int wiphy_register(struct wiphy *wiphy)
  
- 	cfg80211_debugfs_rdev_add(rdev);
- 	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
-+	wiphy_unlock(&rdev->wiphy);
+@@ -1795,8 +1795,8 @@ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
+ 	if (!success) {
+ 		sdata_info(sdata,
+ 			   "driver channel switch failed, disconnecting\n");
+-		ieee80211_queue_work(&sdata->local->hw,
+-				     &ifmgd->csa_connection_drop_work);
++		wiphy_work_queue(sdata->local->hw.wiphy,
++				 &ifmgd->csa_connection_drop_work);
+ 	} else {
+ 		wiphy_delayed_work_queue(sdata->local->hw.wiphy,
+ 					 &sdata->deflink.u.mgd.chswitch_work,
+@@ -2012,7 +2012,8 @@ ieee80211_sta_process_chanswitch(struct ieee80211_link_data *link,
+ 	link->conf->csa_active = true;
+ 	link->csa_block_tx = csa_ie.mode;
  
- 	/* set up regulatory info */
- 	wiphy_regulatory_register(wiphy);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d95f8053020d..b74092efa6f0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3081,6 +3081,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
- 		if (state->filter_wiphy != -1 &&
- 		    state->filter_wiphy != rdev->wiphy_idx)
- 			continue;
-+		wiphy_lock(&rdev->wiphy);
- 		/* attempt to fit multiple wiphy data chunks into the skb */
- 		do {
- 			ret = nl80211_send_wiphy(rdev, NL80211_CMD_NEW_WIPHY,
-@@ -3107,6 +3108,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
- 				    cb->min_dump_alloc < 4096) {
- 					cb->min_dump_alloc = 4096;
- 					state->split_start = 0;
-+					wiphy_unlock(&rdev->wiphy);
- 					rtnl_unlock();
- 					return 1;
- 				}
-@@ -3114,6 +3116,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
- 				break;
- 			}
- 		} while (state->split_start > 0);
-+		wiphy_unlock(&rdev->wiphy);
- 		break;
+-	ieee80211_queue_work(&local->hw, &ifmgd->csa_connection_drop_work);
++	wiphy_work_queue(sdata->local->hw.wiphy,
++			 &ifmgd->csa_connection_drop_work);
+ 	mutex_unlock(&local->chanctx_mtx);
+ 	mutex_unlock(&local->mtx);
+ }
+@@ -3409,7 +3410,8 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	sdata_unlock(sdata);
+ }
+ 
+-static void ieee80211_beacon_connection_loss_work(struct work_struct *work)
++static void ieee80211_beacon_connection_loss_work(struct wiphy *wiphy,
++						  struct wiphy_work *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		container_of(work, struct ieee80211_sub_if_data,
+@@ -3434,7 +3436,8 @@ static void ieee80211_beacon_connection_loss_work(struct work_struct *work)
  	}
- 	rtnl_unlock();
+ }
+ 
+-static void ieee80211_csa_connection_drop_work(struct work_struct *work)
++static void ieee80211_csa_connection_drop_work(struct wiphy *wiphy,
++					       struct wiphy_work *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		container_of(work, struct ieee80211_sub_if_data,
+@@ -3451,7 +3454,7 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
+ 	trace_api_beacon_loss(sdata);
+ 
+ 	sdata->u.mgd.connection_loss = false;
+-	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
++	wiphy_work_queue(hw->wiphy, &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ EXPORT_SYMBOL(ieee80211_beacon_loss);
+ 
+@@ -3463,7 +3466,7 @@ void ieee80211_connection_loss(struct ieee80211_vif *vif)
+ 	trace_api_connection_loss(sdata);
+ 
+ 	sdata->u.mgd.connection_loss = true;
+-	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
++	wiphy_work_queue(hw->wiphy, &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ EXPORT_SYMBOL(ieee80211_connection_loss);
+ 
+@@ -3479,7 +3482,7 @@ void ieee80211_disconnect(struct ieee80211_vif *vif, bool reconnect)
+ 
+ 	sdata->u.mgd.driver_disconnect = true;
+ 	sdata->u.mgd.reconnect = reconnect;
+-	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
++	wiphy_work_queue(hw->wiphy, &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ EXPORT_SYMBOL(ieee80211_disconnect);
+ 
+@@ -6368,8 +6371,8 @@ static void ieee80211_sta_bcn_mon_timer(struct timer_list *t)
+ 		return;
+ 
+ 	sdata->u.mgd.connection_loss = false;
+-	ieee80211_queue_work(&sdata->local->hw,
+-			     &sdata->u.mgd.beacon_connection_loss_work);
++	wiphy_work_queue(sdata->local->hw.wiphy,
++			 &sdata->u.mgd.beacon_connection_loss_work);
+ }
+ 
+ static void ieee80211_sta_conn_mon_timer(struct timer_list *t)
+@@ -6544,10 +6547,10 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+ 	INIT_WORK(&ifmgd->monitor_work, ieee80211_sta_monitor_work);
+-	INIT_WORK(&ifmgd->beacon_connection_loss_work,
+-		  ieee80211_beacon_connection_loss_work);
+-	INIT_WORK(&ifmgd->csa_connection_drop_work,
+-		  ieee80211_csa_connection_drop_work);
++	wiphy_work_init(&ifmgd->beacon_connection_loss_work,
++			ieee80211_beacon_connection_loss_work);
++	wiphy_work_init(&ifmgd->csa_connection_drop_work,
++			ieee80211_csa_connection_drop_work);
+ 	INIT_DELAYED_WORK(&ifmgd->tdls_peer_del_work,
+ 			  ieee80211_tdls_peer_del_work);
+ 	timer_setup(&ifmgd->timer, ieee80211_sta_timer, 0);
+@@ -7556,8 +7559,10 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 	 * cancelled when disconnecting.
+ 	 */
+ 	cancel_work_sync(&ifmgd->monitor_work);
+-	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
+-	cancel_work_sync(&ifmgd->csa_connection_drop_work);
++	wiphy_work_cancel(sdata->local->hw.wiphy,
++			  &ifmgd->beacon_connection_loss_work);
++	wiphy_work_cancel(sdata->local->hw.wiphy,
++			  &ifmgd->csa_connection_drop_work);
+ 	cancel_delayed_work_sync(&ifmgd->tdls_peer_del_work);
+ 
+ 	sdata_lock(sdata);
 -- 
 2.40.1
 
