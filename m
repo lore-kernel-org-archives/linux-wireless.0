@@ -2,557 +2,204 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E017C7EE24
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77A80C7EE24
+	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 08:35:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235864AbjFFHvo (ORCPT
+        id S236807AbjFFIfk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:51:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54660 "EHLO
+        Tue, 6 Jun 2023 04:35:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235767AbjFFHtj (ORCPT
+        with ESMTP id S231398AbjFFIel (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2023 03:49:39 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39E1D10EC
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 00:44:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686037494; x=1717573494;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=w6J84X0QQa8sXPtRC20lIBhZFALAmGqYfvnN66SejRI=;
-  b=d+cP7rMymm4htmBGj3aFSVEeXYf++lsAFUBYBpqzD7uryOTgX+qUdOGm
-   9/mxCthTakIxiT+tbwK1mclNJw1d/zdQVBBtGEPw2PCr0Nl4wzRek2YkL
-   IuAoS+MQjubNXeJrG+knLO6tP+lfqk+RdF2R5NDa6gEwQnL53+ovZbJRV
-   o4opq689bc0xq7dyHKXBiYtgf9vOOm+p2V63qI2LrlEo5967v/JeLsxWl
-   wYdV+U+a3C+SfO5SGE4ri4IhWTP+E3BGnztgIUbHIQ0+BzPlS/GcyCKgc
-   pQWkCAzWGUuL71ScOMNIjchZEbec5Z+LALIuWaXxXxtY9fe0ESFwmxNZA
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="422419102"
-X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="422419102"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:42 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10732"; a="821516369"
-X-IronPort-AV: E=Sophos;i="6.00,219,1681196400"; 
-   d="scan'208";a="821516369"
-Received: from oniamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.217.62])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 00:43:40 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Alon Giladi <alon.giladi@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 09/13] wifi: iwlwifi: Enable loading of reduce-power tables into several segments
-Date:   Tue,  6 Jun 2023 10:43:06 +0300
-Message-Id: <20230606103519.6fe66958f049.I85d80682229fc02fe354462cc9da40937558f30c@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230606074310.889520-1-gregory.greenman@intel.com>
-References: <20230606074310.889520-1-gregory.greenman@intel.com>
+        Tue, 6 Jun 2023 04:34:41 -0400
+Received: from forward103b.mail.yandex.net (forward103b.mail.yandex.net [178.154.239.150])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D337E4B
+        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 01:34:21 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:4884:0:640:bcbe:0])
+        by forward103b.mail.yandex.net (Yandex) with ESMTP id 8E4E260125;
+        Tue,  6 Jun 2023 11:34:07 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id tXOl2FEBdCg0-3zmDyrGX;
+        Tue, 06 Jun 2023 11:34:07 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1686040447;
+        bh=3OLzStt28o1u4LkACepsopOvoUrUzVVsIfBHjgxkndI=;
+        h=Message-Id:Date:Cc:Subject:To:From;
+        b=gev1BJrHIi6WjKIJNLXhfLaxJ9BZicDWXb46uHwZXLqs9RCFCtZAOTazmQa8/4m4B
+         KZpIWuzM2jaxUgFeec3d4VxjNYtA3D5QYk8ANh/Xy4EeVB5/513AN0aE8OuIP8vR+P
+         yOPz9ybixtydaXzTFrqdJ+wqwN96CLufvGJ8+p5o=
+Authentication-Results: mail-nwsmtp-smtp-production-main-90.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From:   Dmitry Antipov <dmantipov@yandex.ru>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] wifi: rtw89: cleanup private data structures
+Date:   Tue,  6 Jun 2023 11:33:54 +0300
+Message-Id: <20230606083354.375287-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alon Giladi <alon.giladi@intel.com>
+Remove a bunch of unused (and set but unused) fields
+from 'struct rtw89_btc_wl_nhm', 'struct rtw89_dle_info',
+'struct rtw89_hal' and 'struct rtw89_env_monitor_info'
+driver-specific data structures, adjust related bits.
 
-Replace the field reduce_power_dram with a struct that holds data about
-the reduced-power tables drams regions. Generalize load_payloads_segments()
-to work for both pnvm tables and reduction power tables.
-Make required adjustments in the data structures.
-
-Signed-off-by: Alon Giladi <alon.giladi@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.c  |   4 +-
- .../intel/iwlwifi/iwl-context-info-gen3.h     |  17 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  30 +++-
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 150 +++++++++++++-----
- .../wireless/intel/iwlwifi/pcie/internal.h    |  17 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  31 ++--
- 6 files changed, 169 insertions(+), 80 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.h | 40 +----------------------
+ drivers/net/wireless/realtek/rtw89/mac.c  |  6 +---
+ drivers/net/wireless/realtek/rtw89/phy.c  |  4 ---
+ 3 files changed, 2 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-index 42d994240b31..b556abece896 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-@@ -330,7 +330,7 @@ int iwl_pnvm_load(struct iwl_trans *trans,
- 			 */
- 			trans->reduce_power_loaded = true;
- 		} else {
--			ret = iwl_trans_load_reduce_power(trans, &pnvm_data);
-+			ret = iwl_trans_load_reduce_power(trans, &pnvm_data, capa);
- 			if (ret) {
- 				IWL_DEBUG_FW(trans,
- 					     "Failed to load reduce power table %d\n",
-@@ -340,7 +340,7 @@ int iwl_pnvm_load(struct iwl_trans *trans,
- 			kfree(data);
- 		}
- 	}
--	iwl_trans_set_reduce_power(trans);
-+	iwl_trans_set_reduce_power(trans, capa);
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 6df386a38fb4..60378908caa4 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -1382,7 +1382,6 @@ struct rtw89_btc_wl_nhm {
+ 	u8 current_status;
+ 	u8 refresh;
+ 	bool start_flag;
+-	u8 last_ccx_rpt_stamp;
+ 	s8 pwr_max;
+ 	s8 pwr_min;
+ };
+@@ -3237,7 +3236,6 @@ enum rtw89_hcifc_mode {
  
- 	iwl_init_notification_wait(notif_wait, &pnvm_wait,
- 				   ntf_cmds, ARRAY_SIZE(ntf_cmds),
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-index 7e7d135e85b1..96bf353469b8 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-@@ -98,9 +98,9 @@ struct iwl_prph_scratch_control {
- } __packed; /* PERIPH_SCRATCH_CONTROL_S */
- 
- /*
-- * struct iwl_prph_scratch_pnvm_cfg - ror config
-+ * struct iwl_prph_scratch_pnvm_cfg - PNVM scratch
-  * @pnvm_base_addr: PNVM start address
-- * @pnvm_size: PNVM size in DWs
-+ * @pnvm_size: the size of the PNVM image in bytes
-  * @reserved: reserved
-  */
- struct iwl_prph_scratch_pnvm_cfg {
-@@ -142,7 +142,7 @@ struct iwl_prph_scratch_rbd_cfg {
- /*
-  * struct iwl_prph_scratch_uefi_cfg - prph scratch reduce power table
-  * @base_addr: reduce power table address
-- * @size: table size in dwords
-+ * @size: the size of the entire power table image
-  */
- struct iwl_prph_scratch_uefi_cfg {
- 	__le64 base_addr;
-@@ -292,10 +292,13 @@ int iwl_trans_pcie_ctx_info_gen3_load_pnvm(struct iwl_trans *trans,
- 					   const struct iwl_ucode_capabilities *capa);
- void iwl_trans_pcie_ctx_info_gen3_set_pnvm(struct iwl_trans *trans,
- 					   const struct iwl_ucode_capabilities *capa);
--int iwl_trans_pcie_ctx_info_gen3_load_reduce_power
--				(struct iwl_trans *trans,
--				 const struct iwl_pnvm_image *payloads);
--void iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans);
-+int
-+iwl_trans_pcie_ctx_info_gen3_load_reduce_power(struct iwl_trans *trans,
-+					       const struct iwl_pnvm_image *payloads,
-+					       const struct iwl_ucode_capabilities *capa);
-+void
-+iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
-+					      const struct iwl_ucode_capabilities *capa);
- int iwl_trans_pcie_ctx_info_gen3_set_step(struct iwl_trans *trans,
- 					  u32 mbx_addr_0_step, u32 mbx_addr_1_step);
- #endif /* __iwl_context_info_file_gen3_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 8e9585d3a0ee..61ee6c1f4a1e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -641,8 +641,10 @@ struct iwl_trans_ops {
- 	void (*set_pnvm)(struct iwl_trans *trans,
- 			 const struct iwl_ucode_capabilities *capa);
- 	int (*load_reduce_power)(struct iwl_trans *trans,
--				 const struct iwl_pnvm_image *payloads);
--	void (*set_reduce_power)(struct iwl_trans *trans);
-+				 const struct iwl_pnvm_image *payloads,
-+				 const struct iwl_ucode_capabilities *capa);
-+	void (*set_reduce_power)(struct iwl_trans *trans,
-+				 const struct iwl_ucode_capabilities *capa);
- 
- 	void (*interrupts)(struct iwl_trans *trans, bool enable);
- 	int (*imr_dma_data)(struct iwl_trans *trans,
-@@ -731,6 +733,19 @@ struct iwl_dram_data {
- 	int size;
+ struct rtw89_dle_info {
+ 	enum rtw89_qta_mode qta_mode;
+-	u16 wde_pg_size;
+ 	u16 ple_pg_size;
+ 	u16 c0_rx_qta;
+ 	u16 c1_rx_qta;
+@@ -3417,7 +3415,6 @@ struct rtw89_hal {
+ 	u32 rx_fltr;
+ 	u8 cv;
+ 	u8 acv;
+-	u32 sw_amsdu_max_size;
+ 	u32 antenna_tx;
+ 	u32 antenna_rx;
+ 	u8 tx_nss;
+@@ -3815,35 +3812,17 @@ enum rtw89_ccx_edcca_opt_bw_idx {
+ #define RTW89_FAHM_RPT_NUM 12
+ #define RTW89_IFS_CLM_NUM 4
+ struct rtw89_env_monitor_info {
+-	u32 ccx_trigger_time;
+-	u64 start_time;
+-	u8 ccx_rpt_stamp;
+ 	u8 ccx_watchdog_result;
+ 	bool ccx_ongoing;
+ 	u8 ccx_rac_lv;
+ 	bool ccx_manual_ctrl;
+-	u8 ccx_pre_rssi;
+-	u16 clm_mntr_time;
+-	u16 nhm_mntr_time;
+ 	u16 ifs_clm_mntr_time;
+ 	enum rtw89_ifs_clm_application ifs_clm_app;
+-	u16 fahm_mntr_time;
+-	u16 edcca_clm_mntr_time;
+ 	u16 ccx_period;
+ 	u8 ccx_unit_idx;
+-	enum rtw89_ccx_edcca_opt_bw_idx ccx_edcca_opt_bw_idx;
+-	u8 nhm_th[RTW89_NHM_TH_NUM];
++
+ 	u16 ifs_clm_th_l[RTW89_IFS_CLM_NUM];
+ 	u16 ifs_clm_th_h[RTW89_IFS_CLM_NUM];
+-	u8 fahm_numer_opt;
+-	u8 fahm_denom_opt;
+-	u8 fahm_th[RTW89_FAHM_TH_NUM];
+-	u16 clm_result;
+-	u16 nhm_result[RTW89_NHM_RPT_NUM];
+-	u8 nhm_wgt[RTW89_NHM_RPT_NUM];
+-	u16 nhm_tx_cnt;
+-	u16 nhm_cca_cnt;
+-	u16 nhm_idle_cnt;
+ 	u16 ifs_clm_tx;
+ 	u16 ifs_clm_edcca_excl_cca;
+ 	u16 ifs_clm_ofdmfa;
+@@ -3854,17 +3833,6 @@ struct rtw89_env_monitor_info {
+ 	u8 ifs_clm_his[RTW89_IFS_CLM_NUM];
+ 	u16 ifs_clm_avg[RTW89_IFS_CLM_NUM];
+ 	u16 ifs_clm_cca[RTW89_IFS_CLM_NUM];
+-	u16 fahm_result[RTW89_FAHM_RPT_NUM];
+-	u16 fahm_denom_result;
+-	u16 edcca_clm_result;
+-	u8 clm_ratio;
+-	u8 nhm_rpt[RTW89_NHM_RPT_NUM];
+-	u8 nhm_tx_ratio;
+-	u8 nhm_cca_ratio;
+-	u8 nhm_idle_ratio;
+-	u8 nhm_ratio;
+-	u16 nhm_result_sum;
+-	u8 nhm_pwr;
+ 	u8 ifs_clm_tx_ratio;
+ 	u8 ifs_clm_edcca_excl_cca_ratio;
+ 	u8 ifs_clm_cck_fa_ratio;
+@@ -3875,12 +3843,6 @@ struct rtw89_env_monitor_info {
+ 	u16 ifs_clm_ofdm_fa_permil;
+ 	u32 ifs_clm_ifs_avg[RTW89_IFS_CLM_NUM];
+ 	u32 ifs_clm_cca_avg[RTW89_IFS_CLM_NUM];
+-	u8 fahm_rpt[RTW89_FAHM_RPT_NUM];
+-	u16 fahm_result_sum;
+-	u8 fahm_ratio;
+-	u8 fahm_denom_ratio;
+-	u8 fahm_pwr;
+-	u8 edcca_clm_ratio;
  };
  
-+/**
-+ * @drams: array of several DRAM areas that contains the pnvm and power
-+ *	reduction table payloads.
-+ * @n_regions: number of DRAM regions that were allocated
-+ * @prph_scratch_mem_desc: points to a structure allocated in dram,
-+ *	designed to show FW where all the payloads are.
-+ */
-+struct iwl_dram_regions {
-+	struct iwl_dram_data drams[IPC_DRAM_MAP_ENTRY_NUM_MAX];
-+	struct iwl_dram_data prph_scratch_mem_desc;
-+	u8 n_regions;
-+};
-+
- /**
-  * struct iwl_fw_mon - fw monitor per allocation id
-  * @num_frags: number of fragments
-@@ -1560,15 +1575,18 @@ static inline void iwl_trans_set_pnvm(struct iwl_trans *trans,
+ enum rtw89_ser_rcvy_step {
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 512de491a064..8c9471ece05a 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -716,11 +716,8 @@ static int hfc_reset_param(struct rtw89_dev *rtwdev)
+ 	if (param_ini.pub_cfg)
+ 		param->pub_cfg = *param_ini.pub_cfg;
  
- static inline int iwl_trans_load_reduce_power
- 				(struct iwl_trans *trans,
--				 const struct iwl_pnvm_image *payloads)
-+				 const struct iwl_pnvm_image *payloads,
-+				 const struct iwl_ucode_capabilities *capa)
- {
--	return trans->ops->load_reduce_power(trans, payloads);
-+	return trans->ops->load_reduce_power(trans, payloads, capa);
- }
+-	if (param_ini.prec_cfg) {
++	if (param_ini.prec_cfg)
+ 		param->prec_cfg = *param_ini.prec_cfg;
+-		rtwdev->hal.sw_amsdu_max_size =
+-				param->prec_cfg.wp_ch07_prec * HFC_PAGE_UNIT;
+-	}
  
--static inline void iwl_trans_set_reduce_power(struct iwl_trans *trans)
-+static inline void
-+iwl_trans_set_reduce_power(struct iwl_trans *trans,
-+			   const struct iwl_ucode_capabilities *capa)
- {
- 	if (trans->ops->set_reduce_power)
--		trans->ops->set_reduce_power(trans);
-+		trans->ops->set_reduce_power(trans, capa);
- }
- 
- static inline bool iwl_trans_dbg_ini_valid(struct iwl_trans *trans)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-index 26d5ba777d24..fa4a14546860 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2018-2022 Intel Corporation
-+ * Copyright (C) 2018-2023 Intel Corporation
-  */
- #include "iwl-trans.h"
- #include "iwl-fh.h"
-@@ -317,11 +317,11 @@ static int iwl_pcie_load_payloads_continuously(struct iwl_trans *trans,
- 
- static int iwl_pcie_load_payloads_segments
- 				(struct iwl_trans *trans,
-+				 struct iwl_dram_regions *dram_regions,
- 				 const struct iwl_pnvm_image *pnvm_data)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	struct iwl_dram_data *cur_pnvm_dram = &trans_pcie->pnvm_dram[0],
--			     *desc_dram = &trans_pcie->pnvm_regions_desc_array;
-+	struct iwl_dram_data *cur_payload_dram = &dram_regions->drams[0];
-+	struct iwl_dram_data *desc_dram = &dram_regions->prph_scratch_mem_desc;
- 	struct iwl_prph_scrath_mem_desc_addr_array *addresses;
- 	const void *data;
- 	u32 len;
-@@ -341,30 +341,31 @@ static int iwl_pcie_load_payloads_segments
- 	memset(desc_dram->block, 0, len);
- 
- 	/* allocate DRAM region for each payload */
--	trans_pcie->n_pnvm_regions = 0;
-+	dram_regions->n_regions = 0;
- 	for (i = 0; i < pnvm_data->n_chunks; i++) {
- 		len = pnvm_data->chunks[i].len;
- 		data = pnvm_data->chunks[i].data;
- 
--		if (iwl_pcie_ctxt_info_alloc_dma(trans, data, len,
--						 cur_pnvm_dram)) {
--			iwl_trans_pcie_free_pnvm_dram(trans_pcie, trans->dev);
-+		if (iwl_pcie_ctxt_info_alloc_dma(trans,
-+						 data,
-+						 len,
-+						 cur_payload_dram)) {
-+			iwl_trans_pcie_free_pnvm_dram_regions(dram_regions,
-+							      trans->dev);
- 			return -ENOMEM;
- 		}
- 
--		trans_pcie->n_pnvm_regions++;
--		cur_pnvm_dram++;
-+		dram_regions->n_regions++;
-+		cur_payload_dram++;
+ 	if (param_ini.ch_cfg)
+ 		param->ch_cfg = param_ini.ch_cfg;
+@@ -1497,7 +1494,6 @@ static const struct rtw89_dle_mem *get_dle_mem_cfg(struct rtw89_dev *rtwdev,
+ 		return NULL;
  	}
  
- 	/* fill desc with the DRAM payloads addresses */
- 	addresses = desc_dram->block;
--
- 	for (i = 0; i < pnvm_data->n_chunks; i++) {
- 		addresses->mem_descs[i] =
--			cpu_to_le64(trans_pcie->pnvm_dram[i].physical);
-+			cpu_to_le64(dram_regions->drams[i].physical);
- 	}
+-	mac->dle_info.wde_pg_size = cfg->wde_size->pge_size;
+ 	mac->dle_info.ple_pg_size = cfg->ple_size->pge_size;
+ 	mac->dle_info.qta_mode = mode;
+ 	mac->dle_info.c0_rx_qta = cfg->ple_min_qt->cma0_dma;
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index c7e906123416..9ebc6e2a467f 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -3053,11 +3053,8 @@ static void rtw89_phy_ccx_top_setting_init(struct rtw89_dev *rtwdev)
+ 	env->ccx_manual_ctrl = false;
+ 	env->ccx_ongoing = false;
+ 	env->ccx_rac_lv = RTW89_RAC_RELEASE;
+-	env->ccx_rpt_stamp = 0;
+ 	env->ccx_period = 0;
+ 	env->ccx_unit_idx = RTW89_CCX_32_US;
+-	env->ccx_trigger_time = 0;
+-	env->ccx_edcca_opt_bw_idx = RTW89_CCX_EDCCA_BW20_0;
  
--	trans->pnvm_loaded = true;
- 	return 0;
+ 	rtw89_phy_set_phy_regs(rtwdev, R_CCX, B_CCX_EN_MSK, 1);
+ 	rtw89_phy_set_phy_regs(rtwdev, R_CCX, B_CCX_TRIG_OPT_MSK, 1);
+@@ -3265,7 +3262,6 @@ static void rtw89_phy_ccx_trigger(struct rtw89_dev *rtwdev)
+ 	rtw89_phy_set_phy_regs(rtwdev, R_IFS_COUNTER, B_IFS_COUNTER_CLR_MSK, 1);
+ 	rtw89_phy_set_phy_regs(rtwdev, R_CCX, B_MEASUREMENT_TRIG_MSK, 1);
  
- }
-@@ -376,7 +377,7 @@ int iwl_trans_pcie_ctx_info_gen3_load_pnvm(struct iwl_trans *trans,
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
- 		&trans_pcie->prph_scratch->ctrl_cfg;
--	struct iwl_dram_data *dram = &trans_pcie->pnvm_dram[0];
-+	struct iwl_dram_regions *dram_regions = &trans_pcie->pnvm_data;
- 	int ret = 0;
- 
- 	/* only allocate the DRAM if not allocated yet */
-@@ -394,28 +395,51 @@ int iwl_trans_pcie_ctx_info_gen3_load_pnvm(struct iwl_trans *trans,
- 		return -EINVAL;
- 	}
- 
--	/* allocate several DRAM sections */
--	if (fw_has_capa(capa, IWL_UCODE_TLV_CAPA_FRAGMENTED_PNVM_IMG))
--		return iwl_pcie_load_payloads_segments(trans, pnvm_payloads);
--
--	/* allocate one DRAM section */
--	ret = iwl_pcie_load_payloads_continuously(trans, pnvm_payloads, dram);
--	if (!ret) {
--		trans_pcie->n_pnvm_regions = 1;
--		trans->pnvm_loaded = true;
-+	/* save payloads in several DRAM sections */
-+	if (fw_has_capa(capa, IWL_UCODE_TLV_CAPA_FRAGMENTED_PNVM_IMG)) {
-+		ret = iwl_pcie_load_payloads_segments(trans,
-+						      dram_regions,
-+						      pnvm_payloads);
-+		if (!ret)
-+			trans->pnvm_loaded = true;
-+	} else {
-+		/* save only in one DRAM section */
-+		ret = iwl_pcie_load_payloads_continuously
-+						(trans,
-+						 pnvm_payloads,
-+						 &dram_regions->drams[0]);
-+		if (!ret) {
-+			dram_regions->n_regions = 1;
-+			trans->pnvm_loaded = true;
-+		}
- 	}
- 
- 	return ret;
+-	env->ccx_rpt_stamp++;
+ 	env->ccx_ongoing = true;
  }
  
-+static inline size_t
-+iwl_dram_regions_size(const struct iwl_dram_regions *dram_regions)
-+{
-+	size_t total_size = 0;
-+	int i;
-+
-+	for (i = 0; i < dram_regions->n_regions; i++)
-+		total_size += dram_regions->drams[i].size;
-+
-+	return total_size;
-+}
-+
- static void iwl_pcie_set_pnvm_segments(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
- 		&trans_pcie->prph_scratch->ctrl_cfg;
-+	struct iwl_dram_regions *dram_regions = &trans_pcie->pnvm_data;
- 
- 	prph_sc_ctrl->pnvm_cfg.pnvm_base_addr =
--		cpu_to_le64(trans_pcie->pnvm_regions_desc_array.physical);
-+		cpu_to_le64(dram_regions->prph_scratch_mem_desc.physical);
-+	prph_sc_ctrl->pnvm_cfg.pnvm_size =
-+		cpu_to_le32(iwl_dram_regions_size(dram_regions));
- }
- 
- static void iwl_pcie_set_continuous_pnvm(struct iwl_trans *trans)
-@@ -425,9 +449,9 @@ static void iwl_pcie_set_continuous_pnvm(struct iwl_trans *trans)
- 		&trans_pcie->prph_scratch->ctrl_cfg;
- 
- 	prph_sc_ctrl->pnvm_cfg.pnvm_base_addr =
--		cpu_to_le64(trans_pcie->pnvm_dram[0].physical);
-+		cpu_to_le64(trans_pcie->pnvm_data.drams[0].physical);
- 	prph_sc_ctrl->pnvm_cfg.pnvm_size =
--		cpu_to_le32(trans_pcie->pnvm_dram[0].size);
-+		cpu_to_le32(trans_pcie->pnvm_data.drams[0].size);
- }
- 
- void iwl_trans_pcie_ctx_info_gen3_set_pnvm(struct iwl_trans *trans,
-@@ -443,12 +467,18 @@ void iwl_trans_pcie_ctx_info_gen3_set_pnvm(struct iwl_trans *trans,
- }
- 
- int iwl_trans_pcie_ctx_info_gen3_load_reduce_power(struct iwl_trans *trans,
--						   const struct iwl_pnvm_image *payloads)
-+						   const struct iwl_pnvm_image *payloads,
-+						   const struct iwl_ucode_capabilities *capa)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
- 		&trans_pcie->prph_scratch->ctrl_cfg;
--	struct iwl_dram_data *dram = &trans_pcie->reduce_power_dram;
-+	struct iwl_dram_regions *dram_regions = &trans_pcie->reduced_tables_data;
-+	int ret = 0;
-+
-+	/* only allocate the DRAM if not allocated yet */
-+	if (trans->reduce_power_loaded)
-+		return 0;
- 
- 	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
- 		return 0;
-@@ -456,26 +486,68 @@ int iwl_trans_pcie_ctx_info_gen3_load_reduce_power(struct iwl_trans *trans,
- 	if (WARN_ON(prph_sc_ctrl->reduce_power_cfg.size))
- 		return -EBUSY;
- 
--	/* only allocate the DRAM if not allocated yet */
--	if (!trans->reduce_power_loaded)
--		return iwl_pcie_load_payloads_continuously(trans,
--							   payloads,
--							   dram);
--	return 0;
-+	if (!payloads->n_chunks) {
-+		IWL_DEBUG_FW(trans, "no payloads\n");
-+		return -EINVAL;
-+	}
-+
-+	/* save payloads in several DRAM sections */
-+	if (fw_has_capa(capa, IWL_UCODE_TLV_CAPA_FRAGMENTED_PNVM_IMG)) {
-+		ret = iwl_pcie_load_payloads_segments(trans,
-+						      dram_regions,
-+						      payloads);
-+		if (!ret)
-+			trans->reduce_power_loaded = true;
-+	} else {
-+		/* save only in one DRAM section */
-+		ret = iwl_pcie_load_payloads_continuously
-+						(trans,
-+						 payloads,
-+						 &dram_regions->drams[0]);
-+		if (!ret) {
-+			dram_regions->n_regions = 1;
-+			trans->reduce_power_loaded = true;
-+		}
-+	}
-+
-+	return ret;
- }
- 
--void iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans)
-+static void iwl_pcie_set_reduce_power_segments(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
- 		&trans_pcie->prph_scratch->ctrl_cfg;
-+	struct iwl_dram_regions *dram_regions = &trans_pcie->reduced_tables_data;
- 
--	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
--		return;
-+	prph_sc_ctrl->reduce_power_cfg.base_addr =
-+		cpu_to_le64(dram_regions->prph_scratch_mem_desc.physical);
-+	prph_sc_ctrl->reduce_power_cfg.size =
-+		cpu_to_le32(iwl_dram_regions_size(dram_regions));
-+}
-+
-+static void iwl_pcie_set_continuous_reduce_power(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct iwl_prph_scratch_ctrl_cfg *prph_sc_ctrl =
-+		&trans_pcie->prph_scratch->ctrl_cfg;
- 
- 	prph_sc_ctrl->reduce_power_cfg.base_addr =
--		cpu_to_le64(trans_pcie->reduce_power_dram.physical);
-+		cpu_to_le64(trans_pcie->reduced_tables_data.drams[0].physical);
- 	prph_sc_ctrl->reduce_power_cfg.size =
--		cpu_to_le32(trans_pcie->reduce_power_dram.size);
-+		cpu_to_le32(trans_pcie->reduced_tables_data.drams[0].size);
-+}
-+
-+void
-+iwl_trans_pcie_ctx_info_gen3_set_reduce_power(struct iwl_trans *trans,
-+					      const struct iwl_ucode_capabilities *capa)
-+{
-+	if (trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
-+		return;
-+
-+	if (fw_has_capa(capa, IWL_UCODE_TLV_CAPA_FRAGMENTED_PNVM_IMG))
-+		iwl_pcie_set_reduce_power_segments(trans);
-+	else
-+		iwl_pcie_set_continuous_reduce_power(trans);
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index d10f25da0eec..0adcf0e13e85 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -307,10 +307,9 @@ enum iwl_pcie_imr_status {
-  * @trans: pointer to the generic transport area
-  * @scd_base_addr: scheduler sram base address in SRAM
-  * @kw: keep warm address
-- * @pnvm_dram: array of several DRAM areas that contains the PNVM data
-- * @n_pnvm_regions: number of DRAM regions that were allocated for the pnvm
-- * @pnvm_regions_desc_array: array of PNVM payloads addresses.
-- *	allocated in DRAM and sent to FW.
-+ * @pnvm_data: holds info about pnvm payloads allocated in DRAM
-+ * @reduced_tables_data: holds info about power reduced tablse
-+ *	payloads allocated in DRAM
-  * @pci_dev: basic pci-network driver stuff
-  * @hw_base: pci hardware address support
-  * @ucode_write_complete: indicates that the ucode has been copied.
-@@ -385,10 +384,8 @@ struct iwl_trans_pcie {
- 	struct iwl_dma_ptr kw;
- 
- 	/* pnvm data */
--	struct iwl_dram_data pnvm_dram[IPC_DRAM_MAP_ENTRY_NUM_MAX];
--	u8 n_pnvm_regions;
--	struct iwl_dram_data pnvm_regions_desc_array;
--	struct iwl_dram_data reduce_power_dram;
-+	struct iwl_dram_regions pnvm_data;
-+	struct iwl_dram_regions reduced_tables_data;
- 
- 	struct iwl_txq *txq_memory;
- 
-@@ -485,8 +482,8 @@ struct iwl_trans
- 		      const struct pci_device_id *ent,
- 		      const struct iwl_cfg_trans_params *cfg_trans);
- void iwl_trans_pcie_free(struct iwl_trans *trans);
--void iwl_trans_pcie_free_pnvm_dram(struct iwl_trans_pcie *trans_pcie,
--				   struct device *dev);
-+void iwl_trans_pcie_free_pnvm_dram_regions(struct iwl_dram_regions *dram_regions,
-+					   struct device *dev);
- 
- bool __iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans);
- #define _iwl_trans_pcie_grab_nic_access(trans)			\
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 55541c1be5d6..70e8c20fb9b9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1993,25 +1993,27 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
- 	trans_pcie->fw_reset_handshake = trans_cfg->fw_reset_handshake;
- }
- 
--void iwl_trans_pcie_free_pnvm_dram(struct iwl_trans_pcie *trans_pcie,
--				   struct device *dev)
-+void iwl_trans_pcie_free_pnvm_dram_regions(struct iwl_dram_regions *dram_regions,
-+					   struct device *dev)
- {
- 	u8 i;
--	struct iwl_dram_data *desc_dram = &trans_pcie->pnvm_regions_desc_array;
-+	struct iwl_dram_data *desc_dram = &dram_regions->prph_scratch_mem_desc;
- 
--	for (i = 0; i < trans_pcie->n_pnvm_regions; i++) {
--		dma_free_coherent(dev, trans_pcie->pnvm_dram[i].size,
--				  trans_pcie->pnvm_dram[i].block,
--				  trans_pcie->pnvm_dram[i].physical);
-+	/* free DRAM payloads */
-+	for (i = 0; i < dram_regions->n_regions; i++) {
-+		dma_free_coherent(dev, dram_regions->drams[i].size,
-+				  dram_regions->drams[i].block,
-+				  dram_regions->drams[i].physical);
- 	}
--	trans_pcie->n_pnvm_regions = 0;
-+	dram_regions->n_regions = 0;
- 
-+	/* free DRAM addresses array */
- 	if (desc_dram->block) {
- 		dma_free_coherent(dev, desc_dram->size,
- 				  desc_dram->block,
- 				  desc_dram->physical);
- 	}
--	desc_dram->block = NULL;
-+	memset(desc_dram, 0, sizeof(*desc_dram));
- }
- 
- void iwl_trans_pcie_free(struct iwl_trans *trans)
-@@ -2046,13 +2048,10 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 
- 	iwl_pcie_free_fw_monitor(trans);
- 
--	iwl_trans_pcie_free_pnvm_dram(trans_pcie, trans->dev);
--
--	if (trans_pcie->reduce_power_dram.size)
--		dma_free_coherent(trans->dev,
--				  trans_pcie->reduce_power_dram.size,
--				  trans_pcie->reduce_power_dram.block,
--				  trans_pcie->reduce_power_dram.physical);
-+	iwl_trans_pcie_free_pnvm_dram_regions(&trans_pcie->pnvm_data,
-+					      trans->dev);
-+	iwl_trans_pcie_free_pnvm_dram_regions(&trans_pcie->reduced_tables_data,
-+					      trans->dev);
- 
- 	mutex_destroy(&trans_pcie->mutex);
- 	iwl_trans_free(trans);
 -- 
-2.38.1
+2.40.1
 
