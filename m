@@ -2,269 +2,108 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB90C77B7A
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Jun 2023 02:39:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E63BC83003
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Jun 2023 07:58:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240606AbjFGCjf (ORCPT
+        id S238041AbjFGH63 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 22:39:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50490 "EHLO
+        Wed, 7 Jun 2023 03:58:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240544AbjFGCjd (ORCPT
+        with ESMTP id S237934AbjFGH61 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2023 22:39:33 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F4F71731
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 19:39:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686105572; x=1717641572;
-  h=date:from:to:cc:subject:message-id;
-  bh=zfXaQq+Dkvx5J+DkTivJy4rqdk8DKTCdbsqgYlzKby8=;
-  b=glgWhxiZhx4J9Ya8nz+RMCrKL1Xrb/85SCsvZNzYhZ6VPMhPyAIHNQ6F
-   diiUSX34XAGTvlE4vNBa8qDiATJj4aStfWsFXAVvvWLuk/fvrYXAHpkBW
-   ozXekJCi1ATxI0TPOZQ1+lQ9N4VNLDNl2Nfv7+OVh6QQxZajLiUtJl8hM
-   ivbIbh3AKD9+oHzt/y4SpR1eRivxgGE7mV1AGhIs9WM8t9merIx0bDn+W
-   7moUtHDWvYOyDBhn/H03EmathFF49rr+TLS5VD82RYn52JH1t+fwa3qP8
-   0bwUYRmksay83kiJvunqOZJh+uW3XmF2A7ssz/BKCZB7hBQlevv5rav2t
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10733"; a="422699872"
-X-IronPort-AV: E=Sophos;i="6.00,222,1681196400"; 
-   d="scan'208";a="422699872"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jun 2023 19:39:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10733"; a="709317956"
-X-IronPort-AV: E=Sophos;i="6.00,222,1681196400"; 
-   d="scan'208";a="709317956"
-Received: from lkp-server01.sh.intel.com (HELO 15ab08e44a81) ([10.239.97.150])
-  by orsmga002.jf.intel.com with ESMTP; 06 Jun 2023 19:39:30 -0700
-Received: from kbuild by 15ab08e44a81 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q6j57-00061X-2q;
-        Wed, 07 Jun 2023 02:39:29 +0000
-Date:   Wed, 07 Jun 2023 10:38:43 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [wireless-next:main] BUILD SUCCESS
- 7d528eafc5290bed18551a22ff25ce8587b603e0
-Message-ID: <20230607023843.gR0bj%lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        Wed, 7 Jun 2023 03:58:27 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48C8C8E;
+        Wed,  7 Jun 2023 00:58:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=axps5vikobkT1mRFE9fglAhCSO+MMypFTxN72eeUtO0=;
+        t=1686124705; x=1687334305; b=kMfyNLOfrR5GeXbEHt9nEXTdQvySSOfXW53hCo+aMiOCKFZ
+        VjaTOmJclP54w5xMxgHhnKHy6ts2JJewj1niaIPBQ8SOsMuDz8mbFEMpgeBciSkaI2sT1FploU07s
+        y398ttaaB2g1e8t0THF45Y05YWT4icEApqNyb7P9i2xcbEa2geG6Ub1ZuwtLiQ1hQZB5aDgp+lqab
+        oujC9r3HMmF9HviLoM6bB9XDBgRFFkes0+9c2LuFWqkPYsUOY/MdpxwjmBJyv29ikkAyd4KTIXL/m
+        nlWw1iby6ECx8WfgFsOv8G/zBljBBagagaXrRSXpkSbv9mjrWHElYcSYIrr/JhUA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1q6o3i-00GSjD-27;
+        Wed, 07 Jun 2023 09:58:22 +0200
+Message-ID: <c2b6599182b2f543da2d5fee17dce4b3a094535a.camel@sipsolutions.net>
+Subject: Re: [PATCH v2] PCI/PM: enable runtime PM later during device
+ scanning
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Lukas Wunner <lukas@wunner.de>
+Cc:     linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, rafael@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed, 07 Jun 2023 09:58:21 +0200
+In-Reply-To: <20230607074939.GA17700@wunner.de>
+References: <20230605121621.4259f1be6cd2.Idbaa55b93f780838af44ebccb84c36f60716df04@changeid>
+         <20230605203519.bc4232207449.Idbaa55b93f780838af44ebccb84c36f60716df04@changeid>
+         <20230607074939.GA17700@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.2 (3.48.2-1.fc38) 
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-branch HEAD: 7d528eafc5290bed18551a22ff25ce8587b603e0  Revert "wifi: iwlwifi: update response for mcc_update command"
+On Wed, 2023-06-07 at 09:49 +0200, Lukas Wunner wrote:
+> On Mon, Jun 05, 2023 at 08:35:45PM +0200, Johannes Berg wrote:
+> > @@ -3139,6 +3139,7 @@ void pci_pm_init(struct pci_dev *dev)
+> >  	u16 pmc;
+> > =20
+> >  	pm_runtime_forbid(&dev->dev);
+> > +	pm_runtime_get_noresume(&dev->dev);
+> >  	pm_runtime_set_active(&dev->dev);
+> >  	pm_runtime_enable(&dev->dev);
+> >  	device_enable_async_suspend(&dev->dev);
+> > @@ -335,9 +336,12 @@ void pci_bus_add_device(struct pci_dev *dev)
+> >  	int retval;
+> > =20
+> >  	/*
+> > -	 * Can not put in pci_device_add yet because resources
+> > -	 * are not assigned yet for some devices.
+> > +	 * Allow runtime PM only here, since otherwise we may
+> > +	 * try to suspend a device that isn't fully configured
+> > +	 * yet, which causes problems.
+> >  	 */
+> > +	pm_runtime_put_noidle(&dev->dev);
+> > +
+> >  	pcibios_bus_add_device(dev);
+> >  	pci_fixup_device(pci_fixup_final, dev);
+> >  	pci_create_sysfs_dev_files(dev);
+>=20
+> There seem to be many different callers that end up in pci_pm_init()
+> and pci_bus_add_device().
+>=20
+> Is it guaranteed that the two functions are always called in order?
+> Do callers exist which only invoke the former but not the latter or
+> vice-versa?  Can it happen that a caller of the former errors out,
+> so the latter is never called, leading to a runtime PM ref imbalance?
 
-elapsed time: 724m
+I did ask myself that too, and honestly, I'm not entirely sure - need
+somebody more familiar to really understand that, I think.
 
-configs tested: 197
-configs skipped: 13
+Most places elsewhere _do_ call both, and it feels like you have to call
+both if you want to do something with the device.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+However there are a few places that seem to call the first part and then
+remove the device again immediately after. That also seems harmless
+though.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r004-20230606   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r001-20230606   gcc  
-alpha                randconfig-r026-20230606   gcc  
-arc                              allyesconfig   gcc  
-arc                          axs101_defconfig   gcc  
-arc          buildonly-randconfig-r002-20230606   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r012-20230606   gcc  
-arc                  randconfig-r016-20230606   gcc  
-arc                  randconfig-r022-20230606   gcc  
-arc                  randconfig-r025-20230606   gcc  
-arc                  randconfig-r043-20230606   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm          buildonly-randconfig-r001-20230606   gcc  
-arm          buildonly-randconfig-r004-20230606   gcc  
-arm          buildonly-randconfig-r006-20230606   gcc  
-arm                                 defconfig   gcc  
-arm                          gemini_defconfig   gcc  
-arm                           imxrt_defconfig   gcc  
-arm                  randconfig-r013-20230606   gcc  
-arm                  randconfig-r046-20230606   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r025-20230606   clang
-csky         buildonly-randconfig-r006-20230606   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r004-20230606   gcc  
-csky                 randconfig-r006-20230606   gcc  
-csky                 randconfig-r022-20230606   gcc  
-csky                 randconfig-r033-20230606   gcc  
-csky                 randconfig-r035-20230606   gcc  
-hexagon              randconfig-r012-20230606   clang
-hexagon              randconfig-r022-20230606   clang
-hexagon              randconfig-r036-20230606   clang
-hexagon              randconfig-r041-20230606   clang
-hexagon              randconfig-r045-20230606   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r005-20230606   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230606   gcc  
-i386                 randconfig-i002-20230606   gcc  
-i386                 randconfig-i003-20230606   gcc  
-i386                 randconfig-i004-20230606   gcc  
-i386                 randconfig-i005-20230606   gcc  
-i386                 randconfig-i006-20230606   gcc  
-i386                 randconfig-i011-20230606   clang
-i386                 randconfig-i012-20230606   clang
-i386                 randconfig-i013-20230606   clang
-i386                 randconfig-i014-20230606   clang
-i386                 randconfig-i015-20230606   clang
-i386                 randconfig-i016-20230606   clang
-i386                 randconfig-i051-20230606   gcc  
-i386                 randconfig-i052-20230606   gcc  
-i386                 randconfig-i053-20230606   gcc  
-i386                 randconfig-i054-20230606   gcc  
-i386                 randconfig-i055-20230606   gcc  
-i386                 randconfig-i056-20230606   gcc  
-i386                 randconfig-i061-20230606   gcc  
-i386                 randconfig-i062-20230606   gcc  
-i386                 randconfig-i063-20230606   gcc  
-i386                 randconfig-i064-20230606   gcc  
-i386                 randconfig-i065-20230606   gcc  
-i386                 randconfig-i066-20230606   gcc  
-i386                 randconfig-r001-20230606   gcc  
-i386                 randconfig-r024-20230606   clang
-i386                 randconfig-r034-20230606   gcc  
-i386                 randconfig-r036-20230606   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch    buildonly-randconfig-r003-20230606   gcc  
-loongarch    buildonly-randconfig-r006-20230606   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r003-20230606   gcc  
-loongarch            randconfig-r032-20230606   gcc  
-loongarch            randconfig-r033-20230606   gcc  
-m68k                             alldefconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                         amcore_defconfig   gcc  
-m68k         buildonly-randconfig-r001-20230606   gcc  
-m68k                                defconfig   gcc  
-m68k                        m5307c3_defconfig   gcc  
-m68k                 randconfig-r004-20230606   gcc  
-m68k                 randconfig-r022-20230606   gcc  
-m68k                 randconfig-r026-20230606   gcc  
-m68k                 randconfig-r031-20230606   gcc  
-microblaze   buildonly-randconfig-r002-20230606   gcc  
-microblaze           randconfig-r015-20230606   gcc  
-microblaze           randconfig-r025-20230606   gcc  
-microblaze           randconfig-r032-20230606   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips         buildonly-randconfig-r002-20230606   clang
-mips                       lemote2f_defconfig   clang
-mips                 randconfig-r001-20230606   clang
-mips                 randconfig-r021-20230606   gcc  
-mips                 randconfig-r023-20230606   gcc  
-nios2        buildonly-randconfig-r003-20230606   gcc  
-nios2        buildonly-randconfig-r004-20230606   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r002-20230606   gcc  
-nios2                randconfig-r011-20230606   gcc  
-nios2                randconfig-r014-20230606   gcc  
-nios2                randconfig-r034-20230606   gcc  
-openrisc     buildonly-randconfig-r002-20230606   gcc  
-openrisc             randconfig-r003-20230606   gcc  
-openrisc             randconfig-r012-20230606   gcc  
-openrisc             randconfig-r021-20230606   gcc  
-openrisc             randconfig-r024-20230606   gcc  
-openrisc             randconfig-r026-20230606   gcc  
-openrisc             randconfig-r035-20230606   gcc  
-parisc       buildonly-randconfig-r005-20230606   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                       holly_defconfig   gcc  
-powerpc                 mpc8313_rdb_defconfig   clang
-powerpc                      ppc40x_defconfig   gcc  
-powerpc              randconfig-r012-20230606   clang
-powerpc              randconfig-r021-20230606   clang
-powerpc              randconfig-r033-20230606   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv        buildonly-randconfig-r003-20230606   clang
-riscv                               defconfig   gcc  
-riscv                randconfig-r005-20230606   gcc  
-riscv                randconfig-r011-20230606   clang
-riscv                randconfig-r015-20230606   clang
-riscv                randconfig-r021-20230606   clang
-riscv                randconfig-r032-20230606   gcc  
-riscv                randconfig-r036-20230606   gcc  
-riscv                randconfig-r042-20230606   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r014-20230606   clang
-s390                 randconfig-r035-20230606   gcc  
-s390                 randconfig-r044-20230606   clang
-sh                               allmodconfig   gcc  
-sh                        edosk7705_defconfig   gcc  
-sh                   randconfig-r006-20230606   gcc  
-sh                   randconfig-r016-20230606   gcc  
-sh                   randconfig-r035-20230606   gcc  
-sh                           sh2007_defconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r011-20230606   gcc  
-sparc                randconfig-r012-20230606   gcc  
-sparc                randconfig-r014-20230606   gcc  
-sparc                randconfig-r024-20230606   gcc  
-sparc                randconfig-r036-20230606   gcc  
-sparc64      buildonly-randconfig-r002-20230606   gcc  
-sparc64              randconfig-r023-20230606   gcc  
-sparc64              randconfig-r031-20230606   gcc  
-sparc64              randconfig-r033-20230606   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230606   gcc  
-x86_64               randconfig-a002-20230606   gcc  
-x86_64               randconfig-a003-20230606   gcc  
-x86_64               randconfig-a004-20230606   gcc  
-x86_64               randconfig-a005-20230606   gcc  
-x86_64               randconfig-a006-20230606   gcc  
-x86_64               randconfig-a011-20230606   clang
-x86_64               randconfig-a012-20230606   clang
-x86_64               randconfig-a013-20230606   clang
-x86_64               randconfig-a014-20230606   clang
-x86_64               randconfig-a015-20230606   clang
-x86_64               randconfig-a016-20230606   clang
-x86_64               randconfig-r005-20230606   gcc  
-x86_64               randconfig-r006-20230606   gcc  
-x86_64               randconfig-r021-20230606   clang
-x86_64               randconfig-r023-20230606   clang
-x86_64               randconfig-x051-20230606   clang
-x86_64               randconfig-x052-20230606   clang
-x86_64               randconfig-x053-20230606   clang
-x86_64               randconfig-x054-20230606   clang
-x86_64               randconfig-x055-20230606   clang
-x86_64               randconfig-x056-20230606   clang
-x86_64               randconfig-x061-20230606   clang
-x86_64               randconfig-x062-20230606   clang
-x86_64               randconfig-x063-20230606   clang
-x86_64               randconfig-x064-20230606   clang
-x86_64               randconfig-x065-20230606   clang
-x86_64               randconfig-x066-20230606   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                  audio_kc705_defconfig   gcc  
-xtensa               randconfig-r002-20230606   gcc  
-xtensa               randconfig-r032-20230606   gcc  
-xtensa               randconfig-r034-20230606   gcc  
+> It would be easier to ascertain correctness if you could find a
+> function at a higher level which (indirectly) calls both pci_pm_init()
+> and pci_bus_add_device() so that you can acquire and release the
+> runtimw PM ref in that single function.
+>=20
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Unfortunately, there isn't such a place, since the scanning is done by
+various bus walks.
+
+johannes
