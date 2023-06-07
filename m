@@ -2,132 +2,353 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B4FC77B7A
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Jun 2023 09:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 392CEC7EE2F
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Jun 2023 09:59:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239354AbjFGJs7 (ORCPT
+        id S239729AbjFGJ7H (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Jun 2023 05:48:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34420 "EHLO
+        Wed, 7 Jun 2023 05:59:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238949AbjFGJs5 (ORCPT
+        with ESMTP id S239742AbjFGJ7F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Jun 2023 05:48:57 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A80D2E49
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Jun 2023 02:48:54 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3576696F005271;
-        Wed, 7 Jun 2023 09:48:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding :
- content-type; s=qcppdkim1;
- bh=/nI7CUzaIcSsaCUjTTzxiqtpVi7uGvWztGJLNE6bl4k=;
- b=JL6k97WgUGhpOvUrAGpwi0GOwKNFdh1qLcTpwu79zlLkfiDgkdee8oQ9dWjxoOscWZ/w
- vGdvYKbm1+ZtaAvD9rG9SBERX2Vqc1AZnRALh6nqLHnQBBYB4kbQuudyYjCOeboPL9bI
- 1FGIHSR2PD5MGV2j03QqJYbHiYIKLi6pWHY4PQQpq2VtmQIXlyMkS+O75MyeatLwxd9i
- kY5xJ2TiUpREXZScx0ClAbcOFya7UNikr5OXmxjiEyg1Iwno1RHJM+l/iCsvxvye7SYI
- 8CjFUbXxY3ZOFIRAwsWrq2B4d01qCYGpTS+/acf11qEz7jBKoGgyQf2doQCVB++vqav4 1A== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3r2a7k1h6v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 07 Jun 2023 09:48:51 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3579moQN031420
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 7 Jun 2023 09:48:50 GMT
-Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Wed, 7 Jun 2023 02:48:34 -0700
-From:   Wen Gong <quic_wgong@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, Wen Gong <quic_wgong@quicinc.com>
-Subject: [PATCH v4 0/5] fix wrong TX power and frequency in regdomain by dynamic switch 6 GHz reg rules of LPI/SP/VLP for station mode
-Date:   Wed, 7 Jun 2023 05:48:05 -0400
-Message-ID: <20230607094810.26707-1-quic_wgong@quicinc.com>
-X-Mailer: git-send-email 2.40.1
+        Wed, 7 Jun 2023 05:59:05 -0400
+Received: from mail-io1-f79.google.com (mail-io1-f79.google.com [209.85.166.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 925DC19BD
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Jun 2023 02:59:00 -0700 (PDT)
+Received: by mail-io1-f79.google.com with SMTP id ca18e2360f4ac-77760439873so573353539f.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jun 2023 02:59:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686131940; x=1688723940;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=3nAtUlqqyNSQfK2vcFJTrG6EgxtQq5kMPK7n0iQSKk4=;
+        b=eKaILoshhqO9e64JHTV5JfciNflohw5l657Hi3JT6Txsw3a00B5lH9sNhv4g513SJL
+         /MLcIk10TvvWirh4ZWrF5nSxuvwIp4vnozY/PZ1n19Mk1gGqg2BG4ZIOx3D65xI0xZtN
+         yCK2UJyJu/O6rxvuYa13HCNUALDYBaNulqDvl9YQ4vkOY7UBq3o1jJxCuZw/sUwW3X1q
+         q536AzePB2uBqcdX90YJPK3nAae+8QHCNwq9wzFW2+14wdd026UpAlVNp1R7/dpT8KXd
+         G9iQrDb7C60oTnL/Md28kETU9RIzh9uwWCtIcvfHA68b+H1yz/qMiP1+e7Q2KR3hre3y
+         o9Eg==
+X-Gm-Message-State: AC+VfDwdcDh79ToNUtp4hmIHjvsXHqRnJGKGWJ3q+1zlq7N5jseYwuqC
+        JtRbH1fH8NS21TB/sQghb5MoUDgkMQGFG6fzwSj+S7nUamQG
+X-Google-Smtp-Source: ACHHUZ52Iaf7mMXCOBui7J4lzvOzb1wGdh0dnQFJtQC3L+pLvKQBKyWY926lUP90wUwOJLx5oNJlvzsXLhfmrmQzCYsHahEt9Eee
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: r9cSM7-N8IT6eIb29f44UOTkF8kbf7ki
-X-Proofpoint-ORIG-GUID: r9cSM7-N8IT6eIb29f44UOTkF8kbf7ki
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
- definitions=2023-06-07_06,2023-06-06_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 impostorscore=0 suspectscore=0 malwarescore=0 phishscore=0
- mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0 priorityscore=1501
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2305260000 definitions=main-2306070079
+X-Received: by 2002:a02:94c4:0:b0:41a:dd1b:23ca with SMTP id
+ x62-20020a0294c4000000b0041add1b23camr2175711jah.4.1686131939896; Wed, 07 Jun
+ 2023 02:58:59 -0700 (PDT)
+Date:   Wed, 07 Jun 2023 02:58:59 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000052748d05fd872fb0@google.com>
+Subject: [syzbot] [wireless?] INFO: task hung in rfkill_unregister (3)
+From:   syzbot <syzbot+bb540a4bbfb4ae3b425d@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, edumazet@google.com,
+        johannes@sipsolutions.net, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, pabeni@redhat.com,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently when wlan load up, station always use the 6 GHz reg rules of
-AP mode by commit 91fa00fa6922 ("wifi: ath11k: add support to parse new
-WMI event for 6 GHz"), then the tx power and frequency are not correct,
-so fix it by dynamic switch to client mode LPI/SP/VLP for station after
-interface added and connected for station.
+Hello,
 
-v4: (NOT depends to any patch now).
-   1. removed patches which depends on
-      wifi: cfg80211: save Power Spectral Density (PSD) of the regulatory rule
-      https://lore.kernel.org/linux-wireless/20230315132904.31779-3-quic_adisi@quicinc.com/
-      removed:
-      [v3,08/15] wifi: ath11k: save power spectral density(psd) of regulatory rule
-      [v3,09/15] wifi: ath11k: add parse of transmit power envelope element
-      [v3,10/15] wifi: ath11k: save max tx power in vdev start response event from firmware
-      [v3,11/15] wifi: ath11k: fill parameters for vdev_set_tpc_power wmi command
-      [v3,12/15] wifi: ath11k: add WMI_TLV_SERVICE_EXT_TPC_REG_SUPPORT service bit
-      [v3,13/15] wifi: ath11k: discard BSS_CHANGED_TXPOWER when EXT_TPC_REG_SUPPORT for 6 GHz
-      [v3,14/15] wifi: ath11k: add handler for WMI_VDEV_SET_TPC_POWER_CMDID
-      [v3,15/15] wifi: ath11k: send TPC power to firmware for 6 GHz station
+syzbot found the following issue on:
 
-   2. rebased to ath.git ath-202304281700
+HEAD commit:    eb0f1697d729 Merge branch 'for-next/core', remote-tracking..
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
+console output: https://syzkaller.appspot.com/x/log.txt?x=17b656a5280000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8860074b9a9d6c45
+dashboard link: https://syzkaller.appspot.com/bug?extid=bb540a4bbfb4ae3b425d
+compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+userspace arch: arm64
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=122665a3280000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=13dc1c59280000
 
-   3. deleted "wifi: ath11k: Add support to parse new wmi event for 6 GHz regulatory" which is alreay upstream.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/034232da7cff/disk-eb0f1697.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/b11411bec33e/vmlinux-eb0f1697.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/a53c52e170dd/Image-eb0f1697.gz.xz
 
-link of v3: 
-   [v3,00/15] wifi: ath11k: add support for 6 GHz station for various modes : LPI, SP and VLP
-   https://patchwork.kernel.org/project/linux-wireless/cover/20220913051518.23051-1-quic_wgong@quicinc.com/
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+bb540a4bbfb4ae3b425d@syzkaller.appspotmail.com
 
-v3:
-   1. added "ath11k: fix a possible dead lock caused by ab->base_lock".
-   3. deleted "ath11k: add support for extended wmi service bit" which is alreay upstream.
+INFO: task syz-executor410:6034 blocked for more than 143 seconds.
+      Not tainted 6.4.0-rc3-syzkaller-geb0f1697d729 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor410 state:D stack:0     pid:6034  ppid:5996   flags:0x0000000c
+Call trace:
+ __switch_to+0x320/0x754 arch/arm64/kernel/process.c:556
+ context_switch kernel/sched/core.c:5343 [inline]
+ __schedule+0x1368/0x23b8 kernel/sched/core.c:6669
+ schedule+0xc4/0x170 kernel/sched/core.c:6745
+ schedule_preempt_disabled+0x18/0x2c kernel/sched/core.c:6804
+ __mutex_lock_common+0xbd8/0x21a0 kernel/locking/mutex.c:679
+ __mutex_lock kernel/locking/mutex.c:747 [inline]
+ mutex_lock_nested+0x2c/0x38 kernel/locking/mutex.c:799
+ rfkill_unregister+0xb8/0x210 net/rfkill/core.c:1130
+ nfc_unregister_device+0x98/0x290 net/nfc/core.c:1167
+ nci_unregister_device+0x1dc/0x21c net/nfc/nci/core.c:1303
+ virtual_ncidev_close+0x5c/0xa0 drivers/nfc/virtual_ncidev.c:163
+ __fput+0x30c/0x7bc fs/file_table.c:321
+ ____fput+0x20/0x30 fs/file_table.c:349
+ task_work_run+0x230/0x2e0 kernel/task_work.c:179
+ exit_task_work include/linux/task_work.h:38 [inline]
+ do_exit+0x63c/0x1f58 kernel/exit.c:871
+ do_group_exit+0x194/0x22c kernel/exit.c:1021
+ __do_sys_exit_group kernel/exit.c:1032 [inline]
+ __se_sys_exit_group kernel/exit.c:1030 [inline]
+ __wake_up_parent+0x0/0x60 kernel/exit.c:1030
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall+0x98/0x2c0 arch/arm64/kernel/syscall.c:52
+ el0_svc_common+0x138/0x258 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x64/0x198 arch/arm64/kernel/syscall.c:193
+ el0_svc+0x4c/0x15c arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:591
+INFO: task syz-executor410:6057 blocked for more than 143 seconds.
+      Not tainted 6.4.0-rc3-syzkaller-geb0f1697d729 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor410 state:D stack:0     pid:6057  ppid:5997   flags:0x00000009
+Call trace:
+ __switch_to+0x320/0x754 arch/arm64/kernel/process.c:556
+ context_switch kernel/sched/core.c:5343 [inline]
+ __schedule+0x1368/0x23b8 kernel/sched/core.c:6669
+ schedule+0xc4/0x170 kernel/sched/core.c:6745
+ schedule_preempt_disabled+0x18/0x2c kernel/sched/core.c:6804
+ __mutex_lock_common+0xbd8/0x21a0 kernel/locking/mutex.c:679
+ __mutex_lock kernel/locking/mutex.c:747 [inline]
+ mutex_lock_nested+0x2c/0x38 kernel/locking/mutex.c:799
+ device_lock include/linux/device.h:837 [inline]
+ nfc_dev_down net/nfc/core.c:143 [inline]
+ nfc_rfkill_set_block+0x50/0x2d0 net/nfc/core.c:179
+ rfkill_set_block+0x18c/0x37c net/rfkill/core.c:345
+ rfkill_fop_write+0x578/0x734 net/rfkill/core.c:1286
+ vfs_write+0x2a0/0x918 fs/read_write.c:582
+ ksys_write+0x15c/0x26c fs/read_write.c:637
+ __do_sys_write fs/read_write.c:649 [inline]
+ __se_sys_write fs/read_write.c:646 [inline]
+ __arm64_sys_write+0x7c/0x90 fs/read_write.c:646
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall+0x98/0x2c0 arch/arm64/kernel/syscall.c:52
+ el0_svc_common+0x138/0x258 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x64/0x198 arch/arm64/kernel/syscall.c:193
+ el0_svc+0x4c/0x15c arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:591
+INFO: task syz-executor410:6061 blocked for more than 143 seconds.
+      Not tainted 6.4.0-rc3-syzkaller-geb0f1697d729 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor410 state:D stack:0     pid:6061  ppid:5992   flags:0x00000009
+Call trace:
+ __switch_to+0x320/0x754 arch/arm64/kernel/process.c:556
+ context_switch kernel/sched/core.c:5343 [inline]
+ __schedule+0x1368/0x23b8 kernel/sched/core.c:6669
+ schedule+0xc4/0x170 kernel/sched/core.c:6745
+ schedule_preempt_disabled+0x18/0x2c kernel/sched/core.c:6804
+ __mutex_lock_common+0xbd8/0x21a0 kernel/locking/mutex.c:679
+ __mutex_lock kernel/locking/mutex.c:747 [inline]
+ mutex_lock_nested+0x2c/0x38 kernel/locking/mutex.c:799
+ rfkill_register+0x44/0x7a4 net/rfkill/core.c:1057
+ nfc_register_device+0x148/0x310 net/nfc/core.c:1132
+ nci_register_device+0x6ac/0x7c4 net/nfc/nci/core.c:1257
+ virtual_ncidev_open+0x13c/0x1bc drivers/nfc/virtual_ncidev.c:148
+ misc_open+0x2f0/0x368 drivers/char/misc.c:165
+ chrdev_open+0x3e8/0x4fc fs/char_dev.c:414
+ do_dentry_open+0x724/0xf90 fs/open.c:920
+ vfs_open+0x7c/0x90 fs/open.c:1051
+ do_open fs/namei.c:3636 [inline]
+ path_openat+0x1f2c/0x27f8 fs/namei.c:3791
+ do_filp_open+0x1bc/0x3cc fs/namei.c:3818
+ do_sys_openat2+0x128/0x3d8 fs/open.c:1356
+ do_sys_open fs/open.c:1372 [inline]
+ __do_sys_openat fs/open.c:1388 [inline]
+ __se_sys_openat fs/open.c:1383 [inline]
+ __arm64_sys_openat+0x1f0/0x240 fs/open.c:1383
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall+0x98/0x2c0 arch/arm64/kernel/syscall.c:52
+ el0_svc_common+0x138/0x258 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x64/0x198 arch/arm64/kernel/syscall.c:193
+ el0_svc+0x4c/0x15c arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:591
+INFO: task syz-executor410:6066 blocked for more than 143 seconds.
+      Not tainted 6.4.0-rc3-syzkaller-geb0f1697d729 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor410 state:D stack:0     pid:6066  ppid:5994   flags:0x00000001
+Call trace:
+ __switch_to+0x320/0x754 arch/arm64/kernel/process.c:556
+ context_switch kernel/sched/core.c:5343 [inline]
+ __schedule+0x1368/0x23b8 kernel/sched/core.c:6669
+ schedule+0xc4/0x170 kernel/sched/core.c:6745
+ schedule_preempt_disabled+0x18/0x2c kernel/sched/core.c:6804
+ __mutex_lock_common+0xbd8/0x21a0 kernel/locking/mutex.c:679
+ __mutex_lock kernel/locking/mutex.c:747 [inline]
+ mutex_lock_nested+0x2c/0x38 kernel/locking/mutex.c:799
+ misc_open+0x6c/0x368 drivers/char/misc.c:129
+ chrdev_open+0x3e8/0x4fc fs/char_dev.c:414
+ do_dentry_open+0x724/0xf90 fs/open.c:920
+ vfs_open+0x7c/0x90 fs/open.c:1051
+ do_open fs/namei.c:3636 [inline]
+ path_openat+0x1f2c/0x27f8 fs/namei.c:3791
+ do_filp_open+0x1bc/0x3cc fs/namei.c:3818
+ do_sys_openat2+0x128/0x3d8 fs/open.c:1356
+ do_sys_open fs/open.c:1372 [inline]
+ __do_sys_openat fs/open.c:1388 [inline]
+ __se_sys_openat fs/open.c:1383 [inline]
+ __arm64_sys_openat+0x1f0/0x240 fs/open.c:1383
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall+0x98/0x2c0 arch/arm64/kernel/syscall.c:52
+ el0_svc_common+0x138/0x258 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x64/0x198 arch/arm64/kernel/syscall.c:193
+ el0_svc+0x4c/0x15c arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:591
+INFO: task syz-executor410:6071 blocked for more than 143 seconds.
+      Not tainted 6.4.0-rc3-syzkaller-geb0f1697d729 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor410 state:D stack:0     pid:6071  ppid:5995   flags:0x00000001
+Call trace:
+ __switch_to+0x320/0x754 arch/arm64/kernel/process.c:556
+ context_switch kernel/sched/core.c:5343 [inline]
+ __schedule+0x1368/0x23b8 kernel/sched/core.c:6669
+ schedule+0xc4/0x170 kernel/sched/core.c:6745
+ schedule_preempt_disabled+0x18/0x2c kernel/sched/core.c:6804
+ __mutex_lock_common+0xbd8/0x21a0 kernel/locking/mutex.c:679
+ __mutex_lock kernel/locking/mutex.c:747 [inline]
+ mutex_lock_nested+0x2c/0x38 kernel/locking/mutex.c:799
+ misc_open+0x6c/0x368 drivers/char/misc.c:129
+ chrdev_open+0x3e8/0x4fc fs/char_dev.c:414
+ do_dentry_open+0x724/0xf90 fs/open.c:920
+ vfs_open+0x7c/0x90 fs/open.c:1051
+ do_open fs/namei.c:3636 [inline]
+ path_openat+0x1f2c/0x27f8 fs/namei.c:3791
+ do_filp_open+0x1bc/0x3cc fs/namei.c:3818
+ do_sys_openat2+0x128/0x3d8 fs/open.c:1356
+ do_sys_open fs/open.c:1372 [inline]
+ __do_sys_openat fs/open.c:1388 [inline]
+ __se_sys_openat fs/open.c:1383 [inline]
+ __arm64_sys_openat+0x1f0/0x240 fs/open.c:1383
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall+0x98/0x2c0 arch/arm64/kernel/syscall.c:52
+ el0_svc_common+0x138/0x258 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x64/0x198 arch/arm64/kernel/syscall.c:193
+ el0_svc+0x4c/0x15c arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:591
+INFO: task kworker/1:9:6072 blocked for more than 143 seconds.
+      Not tainted 6.4.0-rc3-syzkaller-geb0f1697d729 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:kworker/1:9     state:D stack:0     pid:6072  ppid:2      flags:0x00000008
+Workqueue: events rfkill_global_led_trigger_worker
+Call trace:
+ __switch_to+0x320/0x754 arch/arm64/kernel/process.c:556
+ context_switch kernel/sched/core.c:5343 [inline]
+ __schedule+0x1368/0x23b8 kernel/sched/core.c:6669
+ schedule+0xc4/0x170 kernel/sched/core.c:6745
+ schedule_preempt_disabled+0x18/0x2c kernel/sched/core.c:6804
+ __mutex_lock_common+0xbd8/0x21a0 kernel/locking/mutex.c:679
+ __mutex_lock kernel/locking/mutex.c:747 [inline]
+ mutex_lock_nested+0x2c/0x38 kernel/locking/mutex.c:799
+ rfkill_global_led_trigger_worker+0x30/0xe4 net/rfkill/core.c:181
+ process_one_work+0x788/0x12d4 kernel/workqueue.c:2405
+ worker_thread+0x8e0/0xfe8 kernel/workqueue.c:2552
+ kthread+0x288/0x310 kernel/kthread.c:379
+ ret_from_fork+0x10/0x20 arch/arm64/kernel/entry.S:853
+INFO: task syz-executor410:6076 blocked for more than 143 seconds.
+      Not tainted 6.4.0-rc3-syzkaller-geb0f1697d729 #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz-executor410 state:D stack:0     pid:6076  ppid:5991   flags:0x00000001
+Call trace:
+ __switch_to+0x320/0x754 arch/arm64/kernel/process.c:556
+ context_switch kernel/sched/core.c:5343 [inline]
+ __schedule+0x1368/0x23b8 kernel/sched/core.c:6669
+ schedule+0xc4/0x170 kernel/sched/core.c:6745
+ schedule_preempt_disabled+0x18/0x2c kernel/sched/core.c:6804
+ __mutex_lock_common+0xbd8/0x21a0 kernel/locking/mutex.c:679
+ __mutex_lock kernel/locking/mutex.c:747 [inline]
+ mutex_lock_nested+0x2c/0x38 kernel/locking/mutex.c:799
+ misc_open+0x6c/0x368 drivers/char/misc.c:129
+ chrdev_open+0x3e8/0x4fc fs/char_dev.c:414
+ do_dentry_open+0x724/0xf90 fs/open.c:920
+ vfs_open+0x7c/0x90 fs/open.c:1051
+ do_open fs/namei.c:3636 [inline]
+ path_openat+0x1f2c/0x27f8 fs/namei.c:3791
+ do_filp_open+0x1bc/0x3cc fs/namei.c:3818
+ do_sys_openat2+0x128/0x3d8 fs/open.c:1356
+ do_sys_open fs/open.c:1372 [inline]
+ __do_sys_openat fs/open.c:1388 [inline]
+ __se_sys_openat fs/open.c:1383 [inline]
+ __arm64_sys_openat+0x1f0/0x240 fs/open.c:1383
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall+0x98/0x2c0 arch/arm64/kernel/syscall.c:52
+ el0_svc_common+0x138/0x258 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x64/0x198 arch/arm64/kernel/syscall.c:193
+ el0_svc+0x4c/0x15c arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:591
 
-v2:
-   1. change some minor comments by Kalle.
-   2. rebased to ath.git ath-202112220603
+Showing all locks held in the system:
+1 lock held by rcu_tasks_kthre/13:
+ #0: ffff800016091050 (rcu_tasks.tasks_gp_mutex){+.+.}-{3:3}, at: rcu_tasks_one_gp+0x44/0xcf4 kernel/rcu/tasks.h:518
+1 lock held by rcu_tasks_trace/14:
+ #0: ffff800016091410 (rcu_tasks_trace.tasks_gp_mutex){+.+.}-{3:3}, at: rcu_tasks_one_gp+0x44/0xcf4 kernel/rcu/tasks.h:518
+1 lock held by khungtaskd/28:
+ #0: ffff800016090e80 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire+0xc/0x44 include/linux/rcupdate.h:326
+2 locks held by getty/5732:
+ #0: ffff0000cfe85098 (&tty->ldisc_sem){++++}-{0:0}, at: ldsem_down_read+0x3c/0x4c drivers/tty/tty_ldsem.c:340
+ #1: ffff80001ae102f0 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0x414/0x1210 drivers/tty/n_tty.c:2176
+2 locks held by syz-executor410/6034:
+ #0: ffff0000c9cad100 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:837 [inline]
+ #0: ffff0000c9cad100 (&dev->mutex){....}-{3:3}, at: nfc_unregister_device+0x6c/0x290 net/nfc/core.c:1165
+ #1: ffff800018a57008 (rfkill_global_mutex){+.+.}-{3:3}, at: rfkill_unregister+0xb8/0x210 net/rfkill/core.c:1130
+2 locks held by syz-executor410/6057:
+ #0: ffff800018a57008 (rfkill_global_mutex){+.+.}-{3:3}, at: rfkill_fop_write+0x234/0x734 net/rfkill/core.c:1278
+ #1: ffff0000c9cad100 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:837 [inline]
+ #1: ffff0000c9cad100 (&dev->mutex){....}-{3:3}, at: nfc_dev_down net/nfc/core.c:143 [inline]
+ #1: ffff0000c9cad100 (&dev->mutex){....}-{3:3}, at: nfc_rfkill_set_block+0x50/0x2d0 net/nfc/core.c:179
+3 locks held by syz-executor410/6061:
+ #0: ffff800017499f48 (misc_mtx){+.+.}-{3:3}, at: misc_open+0x6c/0x368 drivers/char/misc.c:129
+ #1: ffff0000dcd19100 (&dev->mutex){....}-{3:3}, at: device_lock include/linux/device.h:837 [inline]
+ #1: ffff0000dcd19100 (&dev->mutex){....}-{3:3}, at: nfc_register_device+0xb4/0x310 net/nfc/core.c:1128
+ #2: ffff800018a57008 (rfkill_global_mutex){+.+.}-{3:3}, at: rfkill_register+0x44/0x7a4 net/rfkill/core.c:1057
+1 lock held by syz-executor410/6066:
+ #0: ffff800017499f48 (misc_mtx){+.+.}-{3:3}, at: misc_open+0x6c/0x368 drivers/char/misc.c:129
+1 lock held by syz-executor410/6071:
+ #0: ffff800017499f48 (misc_mtx){+.+.}-{3:3}, at: misc_open+0x6c/0x368 drivers/char/misc.c:129
+3 locks held by kworker/1:9/6072:
+ #0: ffff0000c0020d38 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x664/0x12d4 kernel/workqueue.c:2378
+ #1: ffff80001f037c20 ((work_completion)(&rfkill_global_led_trigger_work)){+.+.}-{0:0}, at: process_one_work+0x6a8/0x12d4 kernel/workqueue.c:2380
+ #2: ffff800018a57008 (rfkill_global_mutex){+.+.}-{3:3}, at: rfkill_global_led_trigger_worker+0x30/0xe4 net/rfkill/core.c:181
+1 lock held by syz-executor410/6076:
+ #0: ffff800017499f48 (misc_mtx){+.+.}-{3:3}, at: misc_open+0x6c/0x368 drivers/char/misc.c:129
 
-Baochen Qiang (1):
-  wifi: ath11k: fix a possible dead lock caused by ab->base_lock
-
-Wen Gong (4):
-  wifi: ath11k: add support to select 6 GHz Regulatory type
-  wifi: ath11k: store cur_regulatory_info for each radio
-  wifi: ath11k: update regulatory rules when interface added
-  wifi: ath11k: update regulatory rules when connect to AP on 6 GHz band
-    for station
-
- drivers/net/wireless/ath/ath11k/core.h |   1 +
- drivers/net/wireless/ath/ath11k/hw.c   |   6 ++
- drivers/net/wireless/ath/ath11k/hw.h   |   2 +
- drivers/net/wireless/ath/ath11k/mac.c  |  33 +++++++
- drivers/net/wireless/ath/ath11k/mac.h  |   2 +-
- drivers/net/wireless/ath/ath11k/reg.c  |  72 +++++++++++---
- drivers/net/wireless/ath/ath11k/reg.h  |   6 +-
- drivers/net/wireless/ath/ath11k/wmi.c  | 131 +++++++++++++++++--------
- drivers/net/wireless/ath/ath11k/wmi.h  |   5 +
- 9 files changed, 198 insertions(+), 60 deletions(-)
+=============================================
 
 
-base-commit: 0a00db612b6df1fad80485e3642529d1f28ea084
--- 
-2.40.1
 
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the bug is already fixed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to change bug's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the bug is a duplicate of another bug, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
