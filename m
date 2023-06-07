@@ -2,131 +2,163 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D130C77B73
-	for <linux-wireless@archiver.kernel.org>; Tue,  6 Jun 2023 17:35:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BD93C7EE29
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Jun 2023 00:40:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237454AbjFFRf5 (ORCPT
+        id S234662AbjFGAj6 convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 6 Jun 2023 13:35:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42252 "EHLO
+        Tue, 6 Jun 2023 20:39:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237936AbjFFRfd (ORCPT
+        with ESMTP id S239789AbjFGAjw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Jun 2023 13:35:33 -0400
-Received: from omta038.useast.a.cloudfilter.net (omta038.useast.a.cloudfilter.net [44.202.169.37])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1326170B
-        for <linux-wireless@vger.kernel.org>; Tue,  6 Jun 2023 10:35:29 -0700 (PDT)
-Received: from eig-obgw-5010a.ext.cloudfilter.net ([10.0.29.199])
-        by cmsmtp with ESMTP
-        id 6VXBqyPFaWU1c6aaeqAUes; Tue, 06 Jun 2023 17:35:28 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTPS
-        id 6aadqgqwPovBq6aadqyi95; Tue, 06 Jun 2023 17:35:27 +0000
-X-Authority-Analysis: v=2.4 cv=E6reGIRl c=1 sm=1 tr=0 ts=647f6e5f
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=WzbPXH4gqzPVN0x6HrNMNA==:17
- a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=of4jigFt-DYA:10
- a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8 a=VwQbUJbxAAAA:8 a=iZmTPvbfiRjpTRcFDqwA:9
- a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=TNXHp03C81TzQxB0Nx0rxgtRLz59GHTTR4umt/LIWNo=; b=NxOdtAjzBHaNvBAX0bwt8CK5fx
-        eAHVuF623LHiCAO4VnUdF8riD1BkF2qokDqyzi43LRcavkTkM27k85P5DhATttNrCEO2wvgMDdb28
-        AYvIuJksnUGe3HykASrKRLdQUQq4RSNwsTxTSvZFswHPvFUR3bd6qeC/zSY2+caFeOrbGYoAE3sy+
-        BnFQopPjHsKZWncQlluFwLYO2fQrPL1jWmRoR3Mcv+JpmpEQOzaAb9btOwtKu5UfRpWZb4lKrF3rO
-        508y5pinHs98XJK6TkH29d7b5tHKYednZ4pE+LiVV0v69NNfvCBQmqqRs0H/MVhs6tPvpOFfvQtoC
-        lipxXAhg==;
-Received: from 187-162-21-192.static.axtel.net ([187.162.21.192]:39590 helo=[192.168.15.8])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1q6aac-002w4x-H5;
-        Tue, 06 Jun 2023 12:35:26 -0500
-Message-ID: <62ed7ac9-71bf-1fa5-1ae3-9c2060393b4b@embeddedor.com>
-Date:   Tue, 6 Jun 2023 11:36:14 -0600
+        Tue, 6 Jun 2023 20:39:52 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CF841732;
+        Tue,  6 Jun 2023 17:39:47 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3570ctqE7023305, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3570ctqE7023305
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+        Wed, 7 Jun 2023 08:38:56 +0800
+Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Wed, 7 Jun 2023 08:39:11 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Wed, 7 Jun 2023 08:39:11 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
+ RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
+ 15.01.2375.007; Wed, 7 Jun 2023 08:39:11 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     Kalle Valo <kvalo@kernel.org>,
+        Dan Carpenter <dan.carpenter@linaro.org>
+CC:     "oe-kbuild@lists.linux.dev" <oe-kbuild@lists.linux.dev>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        "lkp@intel.com" <lkp@intel.com>,
+        "oe-kbuild-all@lists.linux.dev" <oe-kbuild-all@lists.linux.dev>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: drivers/net/wireless/realtek/rtw88/mac.c:748 __rtw_download_firmware() warn: missing unwind goto?
+Thread-Topic: drivers/net/wireless/realtek/rtw88/mac.c:748
+ __rtw_download_firmware() warn: missing unwind goto?
+Thread-Index: AQHZmHuag55w+g5GcEOE/p9zkxvpX69+fBZQ
+Date:   Wed, 7 Jun 2023 00:39:11 +0000
+Message-ID: <585222e490c34494b80474059207b788@realtek.com>
+References: <291c3208-39c1-4eb5-bbca-b1331c346782@kadam.mountain>
+ <87r0qoiuk1.fsf@kernel.org>
+In-Reply-To: <87r0qoiuk1.fsf@kernel.org>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXMBS05.realtek.com.tw, 9
+x-kse-antispam-interceptor-info: fallback
+x-kse-antivirus-interceptor-info: fallback
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH v2] wifi: iwlwifi: mvm: Fix -Warray-bounds bug in
- iwl_mvm_wait_d3_notif()
-Content-Language: en-US
-To:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     Gregory Greenman <gregory.greenman@intel.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <ZHpGN555FwAKGduH@work> <202306051758.CD86F1E638@keescook>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <202306051758.CD86F1E638@keescook>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.21.192
-X-Source-L: No
-X-Exim-ID: 1q6aac-002w4x-H5
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-21-192.static.axtel.net ([192.168.15.8]) [187.162.21.192]:39590
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfDcrCetOB8ixZt0hp2R+0Pwc7qagQKoiFjb0xGZcNpxcGR0puO5MVXCmJbzrZDqv/JcxzgQ2IE4o6OPBv/OLNwWYfHNHl/FmaFWCywJvYwLiQIFPWpxq
- rUSvjmiIrlzR02KgDzaq4X4L7lS1JuFt50XV497DgyAXqaE4RJvH+Khr6UN+iQ73WQdHgkWqgwFn7b48HFs84SSxDXTzC4Ep1dkiYqZtRNrs1Ci57CvzyvcQ
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 6/5/23 19:03, Kees Cook wrote:
-
->>
->> Link: https://github.com/KSPP/linux/issues/306
->> Fixes: 905d50ddbc83 ("wifi: iwlwifi: mvm: support wowlan info notification version 2")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> -----Original Message-----
+> From: Kalle Valo <kvalo@kernel.org>
+> Sent: Tuesday, June 6, 2023 9:34 PM
+> To: Dan Carpenter <dan.carpenter@linaro.org>
+> Cc: oe-kbuild@lists.linux.dev; Sascha Hauer <s.hauer@pengutronix.de>; lkp@intel.com;
+> oe-kbuild-all@lists.linux.dev; linux-kernel@vger.kernel.org; linux-wireless@vger.kernel.org
+> Subject: Re: drivers/net/wireless/realtek/rtw88/mac.c:748 __rtw_download_firmware() warn: missing unwind
+> goto?
 > 
-> Nice catch!
-
-(dancy-dance):D
-
-,
->>   		if (wowlan_info_ver < 2) {
->>   			struct iwl_wowlan_info_notif_v1 *notif_v1 = (void *)pkt->data;
->>   
->> -			notif = kmemdup(notif_v1,
->> -					offsetofend(struct iwl_wowlan_info_notif,
->> -						    received_beacons),
->> -					GFP_ATOMIC);
->> -
->> +			notif = kmemdup(notif_v1, sizeof(*notif), GFP_ATOMIC);
+> Adding linux-wireless, top posting so that the whole report is included.
 > 
-> The only question I have here is whether or not pkt->data actually
-> contains sizeof(*notif)-many bytes? It seems the length isn't checked
-> until after this area:
+> Dan Carpenter <dan.carpenter@linaro.org> writes:
 > 
->                  len = iwl_rx_packet_payload_len(pkt);
-> 
-> So, perhaps this needs to be changed instead, and the length
-> double-checked, etc. Perhaps a regular kzalloc + memcpy is needed to
-> handle pkt->data not being large enough?
+> > Hi Sascha,
+> >
+> > First bad commit (maybe != root cause):
+> >
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
+> > head:   9561de3a55bed6bdd44a12820ba81ec416e705a7
+> > commit: 45794099f5e1d7abc5eb07e6eec7e1e5c6cb540d wifi: rtw88: Add
+> > rtw8822bu chipset support
+> > config: riscv-randconfig-m031-20230605
+> > (https://download.01.org/0day-ci/archive/20230605/202306052310.OVhcUjZ3-lkp@intel.com/config)
+> > compiler: riscv64-linux-gcc (GCC) 12.3.0
+> >
+> > If you fix the issue, kindly add following tag where applicable
+> > | Reported-by: kernel test robot <lkp@intel.com>
+> > | Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+> > | Closes: https://lore.kernel.org/r/202306052310.OVhcUjZ3-lkp@intel.com/
+> >
+> > smatch warnings:
+> > drivers/net/wireless/realtek/rtw88/mac.c:748 __rtw_download_firmware()
+> > warn: missing unwind goto?
+> >
+> > vim +748 drivers/net/wireless/realtek/rtw88/mac.c
+> >
+> > 3d8bf50860c7de Yan-Hsuan Chuang 2020-04-24 717 static int
+> > __rtw_download_firmware(struct rtw_dev *rtwdev,
+> > 3d8bf50860c7de Yan-Hsuan Chuang 2020-04-24 718 struct rtw_fw_state
+> > *fw)
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  719  {
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 720 struct rtw_backup_info
+> > bckp[DLFW_RESTORE_REG_NUM];
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 721 const u8 *data =
+> > fw->firmware->data;
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  722       u32 size = fw->firmware->size;
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  723       u32 ltecoex_bckp;
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  724       int ret;
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  725
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 726 if
+> > (!check_firmware_size(data, size))
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  727               return -EINVAL;
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  728
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 729 if
+> > (!ltecoex_read_reg(rtwdev, 0x38, &ltecoex_bckp))
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  730               return -EBUSY;
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  731
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 732 wlan_cpu_enable(rtwdev,
+> > false);
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  733
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 734
+> > download_firmware_reg_backup(rtwdev, bckp);
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 735
+> > download_firmware_reset_platform(rtwdev);
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  736
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 737 ret =
+> > start_download_firmware(rtwdev, data, size);
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  738       if (ret)
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  739               goto dlfw_fail;
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  740
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 741
+> > download_firmware_reg_restore(rtwdev, bckp, DLFW_RESTORE_REG_NUM);
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  742
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 743
+> > download_firmware_end_flow(rtwdev);
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  744
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  745       wlan_cpu_enable(rtwdev, true);
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26  746
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 747 if
+> > (!ltecoex_reg_write(rtwdev, 0x38, ltecoex_bckp))
+> > e3037485c68ec1 Yan-Hsuan Chuang 2019-04-26 @748               return -EBUSY;
+> >
+> > All the other error paths goto dlfw_fail;
 
-As per Gregory's reply, it seems that the length is just fine.
+At this point, the things of 'dlfw_fail:' have been done by
+download_firmware_end_flow() and wlan_cpu_enable() at L743 and L745 normally. 
+An exception is download_firmware_end_flow() clear BIT_MCUFWDL_EN bit conditionally,
+so I think it would be better to goto dlfw_fail. 
 
-Thanks
---
-Gustavo
+I can make a patch for this.
+
+Ping-Ke
+
