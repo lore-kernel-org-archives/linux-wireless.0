@@ -2,148 +2,119 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64E9FC7EE23
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Jun 2023 12:48:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24740C7EE23
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Jun 2023 14:16:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241069AbjFGMsS (ORCPT
+        id S240111AbjFGOQQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Jun 2023 08:48:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55372 "EHLO
+        Wed, 7 Jun 2023 10:16:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240934AbjFGMrm (ORCPT
+        with ESMTP id S241078AbjFGOQN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Jun 2023 08:47:42 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9CFA212B
-        for <linux-wireless@vger.kernel.org>; Wed,  7 Jun 2023 05:47:19 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 357Cjm54000899;
-        Wed, 7 Jun 2023 12:47:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=wOJGWV0UDCN2iFJY+i2EopWC0m+jFuX9gIBjJHdCpzE=;
- b=VS/P4GbaT7WcXK1amvSHc3aY6JAT3Yw5Wu6aoZkxQeZpPRif/2tpgwEMnls83Feig07a
- muVaQ9vvdStydz4lrwjZsQVLQnqF+1CAzQzU+Viwt75CvyhVhGT+dics3iAh6KmRlyb6
- agbyEOlj3FrrIpv5Uys3uOUP4Ea7y5kTtmK4Qler/ugp9AkrZOH7SQAfDtRv7basiaxY
- +zrklf9goJpiuym2eyqEAkI9gp5AEuY3NvJyeFjpkBoCMKuhSmQGnh28OGeOVUKv+6sq
- 0fwi5LY43V3Wal9IZjiMMNg9AQdsCkZw68By95b60IawBsu3M4etA4p3UKcNqa8vo8uC OQ== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3r2a9u9tg7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 07 Jun 2023 12:47:08 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 357Cl7vW022452
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 7 Jun 2023 12:47:07 GMT
-Received: from adisi-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Wed, 7 Jun 2023 05:47:05 -0700
-From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-        "Aditya Kumar Singh" <quic_adisi@quicinc.com>
-Subject: [PATCH 2/3] wifi: ath11k: fix CAC running state during virtual interface start
-Date:   Wed, 7 Jun 2023 18:16:46 +0530
-Message-ID: <20230607124647.27682-3-quic_adisi@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230607124647.27682-1-quic_adisi@quicinc.com>
-References: <20230607124647.27682-1-quic_adisi@quicinc.com>
+        Wed, 7 Jun 2023 10:16:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CE321BEC
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Jun 2023 07:16:11 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E70496253B
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Jun 2023 14:16:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81762C433D2;
+        Wed,  7 Jun 2023 14:16:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686147370;
+        bh=TDiiOgK7sBmAEfQQeEI924x7a7GyjNXOecc1L8fD9z0=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=EGd4uHceFjuebE56IEXuCGODpqk194ImMVlaDURGuVVYbKKkIwj7i4yeaEtDWpfQx
+         eM//WsrmRJq5ViU1iIEJRKMFLaQEz1Nn1ruZUk/VnKbE9NmfLe+A0vPB3CcmOeuq7W
+         LK9TukO5EIM/ACfPwF7yDsZXp5pPQcCrhfLDuriQ+HPg+HrLPOxjQ0s9P4/Fp+vsRy
+         DpWdm40t1XpMBak0trJ+ak5dmdzILBlQGLUAloNJ0ffG+H22WiCRSgoTWDCByrpu7R
+         EdLa0IEcH/3hnKjmmg3MfXEdDggPcYHeN62Vh5/urCXGZS7Okt3L2fzXza3uClmCGr
+         f3nAlY3fO010A==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     Shayne Chen <shayne.chen@mediatek.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Bo Jiao <Bo.Jiao@mediatek.com>,
+        linux-mediatek <linux-mediatek@lists.infradead.org>,
+        Peter Chiu <chui-hao.chiu@mediatek.com>
+Subject: Re: [PATCH 03/12] wifi: mt76: mt7996: add dsp firmware download
+References: <20230602152108.26860-1-shayne.chen@mediatek.com>
+        <20230602152108.26860-3-shayne.chen@mediatek.com>
+        <ZHotQTUHbWOt/ibt@lore-desk>
+Date:   Wed, 07 Jun 2023 17:16:02 +0300
+In-Reply-To: <ZHotQTUHbWOt/ibt@lore-desk> (Lorenzo Bianconi's message of "Fri,
+        2 Jun 2023 19:56:17 +0200")
+Message-ID: <878rcvgxy5.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: ZFzjnFsROrNqx0Uq56UHkLiWiQTdnbI0
-X-Proofpoint-GUID: ZFzjnFsROrNqx0Uq56UHkLiWiQTdnbI0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
- definitions=2023-06-07_06,2023-06-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- suspectscore=0 impostorscore=0 adultscore=0 clxscore=1015 bulkscore=0
- priorityscore=1501 phishscore=0 mlxscore=0 mlxlogscore=999 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2305260000 definitions=main-2306070107
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently channel definition's primary channel's DFS CAC time
-as well as primary channel's state i.e usable are used to set
-the CAC_RUNNING flag for the ath11k radio structure. However,
-this is wrong since certain channel definition are possbile
-where primary channel may not be a DFS channel but, secondary
-channel is a DFS channel. For example - channel 36 with 160 MHz
-bandwidth.
-In such cases, the flag will not be set which is wrong.
+(I moved Lorenzo's comment to better see the macro)
 
-Fix this issue by using cfg80211_chandef_dfs_usable() function
-from cfg80211 which return trues if at least one channel is in
-usable state.
+Lorenzo Bianconi <lorenzo@kernel.org> writes:
 
-While at it, modify the CAC running debug log message to print
-the CAC time as well in milli-seconds.
+>> From: Peter Chiu <chui-hao.chiu@mediatek.com>
+>> 
+>> Add DSP firmware for phy-related control. The firmware is transparent to
+>> driver, but it's necessary for the firmware download process.
+>> 
+>> Reviewed-by: Shayne Chen <shayne.chen@mediatek.com>
+>> Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+>> Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
+[...]
 
-Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/mac.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+>> +#define LOAD_RAM(_type) \
+>> +	do {									\
+>> +		ret = request_firmware(&fw, MT7996_FIRMWARE_##_type, dev->mt76.dev);\
+>> +		if (ret)							\
+>> +			return ret;						\
+>> +										\
+>> +		if (!fw || !fw->data || fw->size < sizeof(*hdr)) {		\
+>> +			dev_err(dev->mt76.dev, "Invalid firmware\n");		\
+>> +			release_firmware(fw);					\
+>> +			return -EINVAL;						\
+>> +		}								\
+>> +										\
+>> +		hdr = (const struct mt7996_fw_trailer *)			\
+>> +				(fw->data + fw->size - sizeof(*hdr));		\
+>> +										\
+>> +		dev_info(dev->mt76.dev,						\
+>> +			 "%s Firmware Version: %.10s, Build Time: %.15s\n",	\
+>> +			 #_type, hdr->fw_ver, hdr->build_date);			\
+>> +										\
+>> +		ret = mt7996_mcu_send_ram_firmware(dev, hdr, fw->data,		\
+>> +						   MT7996_RAM_TYPE_##_type);    \
+>> +		if (ret) {							\
+>> +			dev_err(dev->mt76.dev, "Failed to start %s firmware\n", #_type);\
+>> +			release_firmware(fw);					\
+>> +			return ret;						\
+>> +		}								\
+>> +										\
+>> +		release_firmware(fw);						\
+>> +	} while (0)
+>> +
+>> +	LOAD_RAM(WM);
+>> +	LOAD_RAM(DSP);
+>> +	LOAD_RAM(WA);
+>> +#undef LOAD_RAM
+>
+> I think it would be better to used a regular function instead of a macro, the
+> code would be much easier to read.
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index a31b8e89684b..31982545266b 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -5,6 +5,7 @@
-  */
- 
- #include <net/mac80211.h>
-+#include <net/cfg80211.h>
- #include <linux/etherdevice.h>
- #include <linux/bitfield.h>
- #include <linux/inetdevice.h>
-@@ -7193,6 +7194,7 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
- 	struct wmi_vdev_start_req_arg arg = {};
- 	const struct cfg80211_chan_def *chandef = &ctx->def;
- 	int ret = 0;
-+	unsigned int dfs_cac_time;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -7272,20 +7274,21 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
- 	ath11k_dbg(ab, ATH11K_DBG_MAC,  "vdev %pM started, vdev_id %d\n",
- 		   arvif->vif->addr, arvif->vdev_id);
- 
--	/* Enable CAC Flag in the driver by checking the channel DFS cac time,
--	 * i.e dfs_cac_ms value which will be valid only for radar channels
--	 * and state as NL80211_DFS_USABLE which indicates CAC needs to be
-+	/* Enable CAC Flag in the driver by checking the all sub-channel's DFS
-+	 * state as NL80211_DFS_USABLE which indicates CAC needs to be
- 	 * done before channel usage. This flags is used to drop rx packets.
- 	 * during CAC.
- 	 */
- 	/* TODO Set the flag for other interface types as required */
--	if (arvif->vdev_type == WMI_VDEV_TYPE_AP &&
--	    chandef->chan->dfs_cac_ms &&
--	    chandef->chan->dfs_state == NL80211_DFS_USABLE) {
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP && ctx->radar_enabled &&
-+	    cfg80211_chandef_dfs_usable(ar->hw->wiphy, chandef)) {
- 		set_bit(ATH11K_CAC_RUNNING, &ar->dev_flags);
-+		dfs_cac_time = cfg80211_chandef_dfs_cac_time(ar->hw->wiphy,
-+							     chandef);
- 		ath11k_dbg(ab, ATH11K_DBG_MAC,
--			   "CAC Started in chan_freq %d for vdev %d\n",
--			   arg.channel.freq, arg.vdev_id);
-+			   "CAC (for %u ms) Started in center_freq %d center_freq1 %d for vdev %d\n",
-+			   dfs_cac_time, arg.channel.freq, chandef->center_freq1,
-+			   arg.vdev_id);
- 	}
- 
- 	ret = ath11k_mac_set_txbf_conf(arvif);
+Yeah, a function is preferred. I think Andrew Morton says: prefer C over
+CPP
+
 -- 
-2.17.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
