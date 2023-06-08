@@ -2,52 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F800C7EE23
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC5FFC7EE25
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236839AbjFHOH0 (ORCPT
+        id S236884AbjFHOH2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Jun 2023 10:07:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45174 "EHLO
+        Thu, 8 Jun 2023 10:07:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236841AbjFHOHQ (ORCPT
+        with ESMTP id S236879AbjFHOHT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2023 10:07:16 -0400
+        Thu, 8 Jun 2023 10:07:19 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 124052726
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19E5A2D48
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686233235; x=1717769235;
+  t=1686233238; x=1717769238;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=orgMaRnvG4azastAsyl2CS0eCcfX1KbsbSyhwgWZmoA=;
-  b=lpu68yiBJPBVGSiBY8upVyxVTApCY9FyNdy9brsZ+nJ+/DWgEEA0k3uO
-   ZF/uRQR9HgFKv3Dv7f94WpUFBZ1ZHhq3BBuW1/T2Sq6EXeIEKUEwcFnuj
-   UW+k6locp912/xzvRxLYAPC8Bb82YnHEKPDLcv8PsdwjoHN01SquTV4ML
-   HoN0hPnjqPqZ7ODU9cR737prOsMY1QrgBeLKDxlEt2/DvTAI3tCSw8bxR
-   dNJDOnwpGX0JGndlsh5it62BDtjXg84/stCw6Qof4v7Y3loN8N3girzf9
-   1uvE27n+l2c6zDSR3zcYygQGzhYcdVkzZJqwFt/lJF3ulRMEUeLcq4VUJ
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176246"
+  bh=SqtDcCwwTpIJROydmrh15+R8hdfBeaMUaSKcQo13a4M=;
+  b=eUFs/RRqOp3aEasMw0qcYztQlZ0q6kv+e17lDWfrHXm99wU1d804R1Qp
+   6Wt9xa3VZPiUkDmLZN2JqnGIOYy6MaQpZaOCTk88kYgFeFn7JC7k5Gsiu
+   ef5sQEEUcYjvJ/WXOJMbGhlWqaGwAMrQhyEznrd9E2ar0TgehNsxPS7rI
+   nu10MoBKtLT2UAg1URbWuUXy+l+CC2jX+7XCw52CgSUGsRHeqz9/WoHMz
+   CS2R8dcZpo14/yoBlu9pTiYkX66PUcf/sryNaelbrEN6aDP+i1PtmMNRq
+   Gqn5XK4molEWjkoi7hgYenKfTFzkyE1ltqK9ZPje5f6x6XQlwe1kwTBku
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176267"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="423176246"
+   d="scan'208";a="423176267"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:43 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:47 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706268"
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706315"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="956706268"
+   d="scan'208";a="956706315"
 Received: from unknown (HELO ggreenma-mobl2.intel.com) ([10.249.94.100])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:41 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:45 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 09/15] wifi: mac80211: don't update rx_stats.last_rate for NDP
-Date:   Thu,  8 Jun 2023 16:36:05 +0300
-Message-Id: <20230608163202.8af46c4ac094.I13d9d5019addeaa4aff3c8a05f56c9f5a86b1ebd@changeid>
+Subject: [PATCH 11/15] wifi: mac80211: Use active_links instead of valid_links in Tx
+Date:   Thu,  8 Jun 2023 16:36:07 +0300
+Message-Id: <20230608163202.e24832691fc8.I9ac10dc246d7798a8d26b1a94933df5668df63fc@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230608133611.1303724-1-gregory.greenman@intel.com>
 References: <20230608133611.1303724-1-gregory.greenman@intel.com>
@@ -57,50 +56,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-If we get an NDP (null data packet), there's reason to
-believe the peer is just sending it to probe, and that
-would happen at a low rate. Don't track this packet for
-purposes of last RX rate reporting.
+Fix few places on the Tx path where the valid_links were used instead
+of active links.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/rx.c | 6 +++---
+ net/mac80211/tx.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ed9939466198..77c7dac760ba 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -6,7 +6,7 @@
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2022 Intel Corporation
-+ * Copyright (C) 2018-2023 Intel Corporation
-  */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 148a0e2aa740..7972de64e779 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4429,7 +4429,7 @@ static void ieee80211_mlo_multicast_tx(struct net_device *dev,
+ 				       struct sk_buff *skb)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	unsigned long links = sdata->vif.valid_links;
++	unsigned long links = sdata->vif.active_links;
+ 	unsigned int link;
+ 	u32 ctrl_flags = IEEE80211_TX_CTRL_MCAST_MLO_FIRST_TX;
  
- #include <linux/jiffies.h>
-@@ -1732,7 +1732,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		if (ether_addr_equal(bssid, rx->sdata->u.ibss.bssid) &&
- 		    test_sta_flag(sta, WLAN_STA_AUTHORIZED)) {
- 			link_sta->rx_stats.last_rx = jiffies;
--			if (ieee80211_is_data(hdr->frame_control) &&
-+			if (ieee80211_is_data_present(hdr->frame_control) &&
- 			    !is_multicast_ether_addr(hdr->addr1))
- 				link_sta->rx_stats.last_rate =
- 					sta_stats_encode_rate(status);
-@@ -1746,7 +1746,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		 * match the current local configuration when processed.
- 		 */
- 		link_sta->rx_stats.last_rx = jiffies;
--		if (ieee80211_is_data(hdr->frame_control))
-+		if (ieee80211_is_data_present(hdr->frame_control))
- 			link_sta->rx_stats.last_rate = sta_stats_encode_rate(status);
+@@ -6024,7 +6024,7 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 		rcu_read_unlock();
+ 
+ 		if (WARN_ON_ONCE(link == ARRAY_SIZE(sdata->vif.link_conf)))
+-			link = ffs(sdata->vif.valid_links) - 1;
++			link = ffs(sdata->vif.active_links) - 1;
  	}
  
+ 	IEEE80211_SKB_CB(skb)->control.flags |=
+@@ -6060,7 +6060,7 @@ void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
+ 		band = chanctx_conf->def.chan->band;
+ 	} else {
+ 		WARN_ON(link_id >= 0 &&
+-			!(sdata->vif.valid_links & BIT(link_id)));
++			!(sdata->vif.active_links & BIT(link_id)));
+ 		/* MLD transmissions must not rely on the band */
+ 		band = 0;
+ 	}
 -- 
 2.38.1
 
