@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38CEEC7EE37
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29627C7EE45
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236843AbjFHOHW (ORCPT
+        id S236852AbjFHOHY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Jun 2023 10:07:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45214 "EHLO
+        Thu, 8 Jun 2023 10:07:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236831AbjFHOHP (ORCPT
+        with ESMTP id S236870AbjFHOHO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2023 10:07:15 -0400
+        Thu, 8 Jun 2023 10:07:14 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D3A830C0
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23BF62D76
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686233234; x=1717769234;
+  t=1686233233; x=1717769233;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=TgT4wsb6c7Es+Urk5Tdw4BuJ+a/TJjwpyFe774/LmQ0=;
-  b=fS6reJJnpTLk94VpoSdM3DOPvX0ytiYBma9pDkDbI8jvxa1g3dS1E0Vr
-   60PQab8lrFENNYuVIHs+HU+F7zc4elpfE6UiOcQx2xefgQKy2AP+O/dk9
-   u2mLitPMBzPsYo+En0jXwCMIWwn2mlVvkc8R2pDVaGtZ7+z43YpAywxip
-   tU5VZG4YSLMqHbZl6iceYj+No7wGFFSdIKZybjv1/7aGnnaAuaeEN9vYm
-   1BbKUtx+lLcLXkgBecNuBqE8HwgK+dzyLbTP4zoYUjKCTaaOyQgx4KCyk
-   5oCat4Do7vxsbU2P9vKnEJwM9Za25QVuzuLHDSkQgENM9wQtsiu9R0S/9
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176230"
+  bh=2/7nb2cQ7Hniq+3nBlE2/lCePJJQb5qGKE5M1Dca+pM=;
+  b=DPBhp78xdO/t4y9zBDQzn8iBoQa7mI7iTNgTlXfE1REVMqBowpJ+q6Nq
+   /+goyF2WbSBU1KNuwJAUD9ZVGh3MDc+xsWDihuTdznyMOoasGavmszIwq
+   E13LC1jRMZsrOOflpJRD8LKv5A7ZgrHhuvDW9F51EZwQF1998W0NiMWR0
+   TZnkEIksEis5SWOXvg5IQSYlddspF38SAnjoS+0wryiQIMa5XO6T+Zr5e
+   Xio6U4jmnoReZ+W1mD/bu+SXxIXCaiy63c27ljLkBiXZAxi28qV7o9PzF
+   +aqolsyCG9PW7TpIt52gySYNw9yq5gLgmYqgXvECDXvbWNIOcQW7CjSSp
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176215"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="423176230"
+   d="scan'208";a="423176215"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:39 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:35 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706226"
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706189"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="956706226"
+   d="scan'208";a="956706189"
 Received: from unknown (HELO ggreenma-mobl2.intel.com) ([10.249.94.100])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:37 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:33 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Benjamin Berg <benjamin.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 07/15] wifi: mac80211: fix CSA processing while scanning
-Date:   Thu,  8 Jun 2023 16:36:03 +0300
-Message-Id: <20230608163202.3366e9302468.I6c7e0b58c33b7fb4c675374cfe8c3a5cddcec416@changeid>
+Subject: [PATCH 05/15] wifi: cfg80211: fix link del callback to call correct handler
+Date:   Thu,  8 Jun 2023 16:36:01 +0300
+Message-Id: <20230608163202.ebd00e000459.Iaff7dc8d1cdecf77f53ea47a0e5080caa36ea02a@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230608133611.1303724-1-gregory.greenman@intel.com>
 References: <20230608133611.1303724-1-gregory.greenman@intel.com>
@@ -59,46 +59,40 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-The channel switch parsing code would simply return if a scan is
-in-progress. Supposedly, this was because channel switch announcements
-from other APs should be ignored.
+The wrapper function was incorrectly calling the add handler instead of
+the del handler. This had no negative side effect as the default
+handlers are essentially identical.
 
-For the beacon case, the function is already only called if we are
-associated with the sender. For the action frame cases, add the
-appropriate check whether the frame is coming from the AP we are
-associated with. Finally, drop the scanning check from
-ieee80211_sta_process_chanswitch.
-
+Fixes: f2a0290b2df2 ("wifi: cfg80211: add optional link add/remove callbacks")
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/mlme.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ net/wireless/rdev-ops.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f13792994b4f..d1e30ff54c1f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1857,9 +1857,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_link_data *link,
- 	if (!cbss)
- 		return;
- 
--	if (local->scanning)
--		return;
--
- 	current_band = cbss->channel->band;
- 	bss = (void *)cbss->priv;
- 	res = ieee80211_parse_ch_switch_ie(sdata, elems, current_band,
-@@ -5997,6 +5994,10 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_rx_mgmt_assoc_resp(sdata, mgmt, skb->len);
- 		break;
- 	case IEEE80211_STYPE_ACTION:
-+		if (!sdata->u.mgd.associated ||
-+		    !ether_addr_equal(mgmt->bssid, sdata->vif.cfg.ap_addr))
-+			break;
-+
- 		if (mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT) {
- 			struct ieee802_11_elems *elems;
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 2e497cf26ef2..69b508743e57 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -2,7 +2,7 @@
+ /*
+  * Portions of this file
+  * Copyright(c) 2016-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018, 2021-2022 Intel Corporation
++ * Copyright (C) 2018, 2021-2023 Intel Corporation
+  */
+ #ifndef __CFG80211_RDEV_OPS
+ #define __CFG80211_RDEV_OPS
+@@ -1441,8 +1441,8 @@ rdev_del_intf_link(struct cfg80211_registered_device *rdev,
+ 		   unsigned int link_id)
+ {
+ 	trace_rdev_del_intf_link(&rdev->wiphy, wdev, link_id);
+-	if (rdev->ops->add_intf_link)
+-		rdev->ops->add_intf_link(&rdev->wiphy, wdev, link_id);
++	if (rdev->ops->del_intf_link)
++		rdev->ops->del_intf_link(&rdev->wiphy, wdev, link_id);
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
  
 -- 
 2.38.1
