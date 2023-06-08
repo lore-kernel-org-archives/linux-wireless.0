@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC5FFC7EE25
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99DE2C7EE23
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236884AbjFHOH2 (ORCPT
+        id S236830AbjFHOH3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Jun 2023 10:07:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45320 "EHLO
+        Thu, 8 Jun 2023 10:07:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236879AbjFHOHT (ORCPT
+        with ESMTP id S236826AbjFHOHO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2023 10:07:19 -0400
+        Thu, 8 Jun 2023 10:07:14 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19E5A2D48
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACB932D64
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686233238; x=1717769238;
+  t=1686233232; x=1717769232;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=SqtDcCwwTpIJROydmrh15+R8hdfBeaMUaSKcQo13a4M=;
-  b=eUFs/RRqOp3aEasMw0qcYztQlZ0q6kv+e17lDWfrHXm99wU1d804R1Qp
-   6Wt9xa3VZPiUkDmLZN2JqnGIOYy6MaQpZaOCTk88kYgFeFn7JC7k5Gsiu
-   ef5sQEEUcYjvJ/WXOJMbGhlWqaGwAMrQhyEznrd9E2ar0TgehNsxPS7rI
-   nu10MoBKtLT2UAg1URbWuUXy+l+CC2jX+7XCw52CgSUGsRHeqz9/WoHMz
-   CS2R8dcZpo14/yoBlu9pTiYkX66PUcf/sryNaelbrEN6aDP+i1PtmMNRq
-   Gqn5XK4molEWjkoi7hgYenKfTFzkyE1ltqK9ZPje5f6x6XQlwe1kwTBku
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176267"
+  bh=9WoqU1wGmiI+HRItiC0Pgw/JHfZUdhOLcaV2absBjyE=;
+  b=YSi3iTIpLpcHsG/6muqKTjYLju6tUjWV3p5lHLpACEyysYrOKE6Khp31
+   YERI3/OKwcmgSCe87ASY0Nm2e0hXcsPAdhA8SuGDUxwyWIGnF+c2I3UtP
+   aRRJuw4N2g9dZ/BnLOxPYg9mB4G3a8mw19nDl1owaS54wNAI7eEscTrzW
+   M3lagChPweA5lZyYKjDUpwmsmFKfLnL9heCGoGz+V1vo/S445eICQe3qq
+   EdHUaHkDHcI1tvOBSDiJQVPJwBFQISZxWFsM+W5NnSpoiqi5zOa5FVkaW
+   ZcpbhF8fq9/5/5AJz0Fjf1VTlWYkgxQhq3kjOOxqf9TQX0Ag2znPBpWko
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176209"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="423176267"
+   d="scan'208";a="423176209"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:47 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:33 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706315"
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706165"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="956706315"
+   d="scan'208";a="956706165"
 Received: from unknown (HELO ggreenma-mobl2.intel.com) ([10.249.94.100])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:45 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:31 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/15] wifi: mac80211: Use active_links instead of valid_links in Tx
-Date:   Thu,  8 Jun 2023 16:36:07 +0300
-Message-Id: <20230608163202.e24832691fc8.I9ac10dc246d7798a8d26b1a94933df5668df63fc@changeid>
+Subject: [PATCH 04/15] wifi: mac80211: mlme: clarify WMM messages
+Date:   Thu,  8 Jun 2023 16:36:00 +0300
+Message-Id: <20230608163202.21a6bece4313.I08118e5e851fae2f9e43f8a58d3b6217709bf578@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230608133611.1303724-1-gregory.greenman@intel.com>
 References: <20230608133611.1303724-1-gregory.greenman@intel.com>
@@ -56,47 +57,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fix few places on the Tx path where the valid_links were used instead
-of active links.
+These messages apply to a single link only, use link_info()
+to indicate that.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/tx.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/mlme.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 148a0e2aa740..7972de64e779 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4429,7 +4429,7 @@ static void ieee80211_mlo_multicast_tx(struct net_device *dev,
- 				       struct sk_buff *skb)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	unsigned long links = sdata->vif.valid_links;
-+	unsigned long links = sdata->vif.active_links;
- 	unsigned int link;
- 	u32 ctrl_flags = IEEE80211_TX_CTRL_MCAST_MLO_FIRST_TX;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 270133883882..f13792994b4f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2639,9 +2639,9 @@ ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 		params[ac].aifs = pos[0] & 0x0f;
  
-@@ -6024,7 +6024,7 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
+ 		if (params[ac].aifs < 2) {
+-			sdata_info(sdata,
+-				   "AP has invalid WMM params (AIFSN=%d for ACI %d), will use 2\n",
+-				   params[ac].aifs, aci);
++			link_info(link,
++				  "AP has invalid WMM params (AIFSN=%d for ACI %d), will use 2\n",
++				  params[ac].aifs, aci);
+ 			params[ac].aifs = 2;
+ 		}
+ 		params[ac].cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
+@@ -2652,9 +2652,9 @@ ieee80211_sta_wmm_params(struct ieee80211_local *local,
  
- 		if (WARN_ON_ONCE(link == ARRAY_SIZE(sdata->vif.link_conf)))
--			link = ffs(sdata->vif.valid_links) - 1;
-+			link = ffs(sdata->vif.active_links) - 1;
- 	}
- 
- 	IEEE80211_SKB_CB(skb)->control.flags |=
-@@ -6060,7 +6060,7 @@ void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
- 		band = chanctx_conf->def.chan->band;
- 	} else {
- 		WARN_ON(link_id >= 0 &&
--			!(sdata->vif.valid_links & BIT(link_id)));
-+			!(sdata->vif.active_links & BIT(link_id)));
- 		/* MLD transmissions must not rely on the band */
- 		band = 0;
+ 		if (params[ac].cw_min == 0 ||
+ 		    params[ac].cw_min > params[ac].cw_max) {
+-			sdata_info(sdata,
+-				   "AP has invalid WMM params (CWmin/max=%d/%d for ACI %d), using defaults\n",
+-				   params[ac].cw_min, params[ac].cw_max, aci);
++			link_info(link,
++				  "AP has invalid WMM params (CWmin/max=%d/%d for ACI %d), using defaults\n",
++				  params[ac].cw_min, params[ac].cw_max, aci);
+ 			return false;
+ 		}
+ 		ieee80211_regulatory_limit_wmm_params(sdata, &params[ac], ac);
+@@ -2663,9 +2663,9 @@ ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	/* WMM specification requires all 4 ACIs. */
+ 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 		if (params[ac].cw_min == 0) {
+-			sdata_info(sdata,
+-				   "AP has invalid WMM params (missing AC %d), using defaults\n",
+-				   ac);
++			link_info(link,
++				  "AP has invalid WMM params (missing AC %d), using defaults\n",
++				  ac);
+ 			return false;
+ 		}
  	}
 -- 
 2.38.1
