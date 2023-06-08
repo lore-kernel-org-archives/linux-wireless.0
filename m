@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99DE2C7EE23
-	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D688C7EE25
+	for <linux-wireless@archiver.kernel.org>; Thu,  8 Jun 2023 14:07:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236830AbjFHOH3 (ORCPT
+        id S236879AbjFHOHa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 8 Jun 2023 10:07:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45200 "EHLO
+        Thu, 8 Jun 2023 10:07:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236826AbjFHOHO (ORCPT
+        with ESMTP id S236846AbjFHOHN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Jun 2023 10:07:14 -0400
+        Thu, 8 Jun 2023 10:07:13 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACB932D64
-        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8E3C2D48
+        for <linux-wireless@vger.kernel.org>; Thu,  8 Jun 2023 07:07:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686233232; x=1717769232;
+  t=1686233231; x=1717769231;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9WoqU1wGmiI+HRItiC0Pgw/JHfZUdhOLcaV2absBjyE=;
-  b=YSi3iTIpLpcHsG/6muqKTjYLju6tUjWV3p5lHLpACEyysYrOKE6Khp31
-   YERI3/OKwcmgSCe87ASY0Nm2e0hXcsPAdhA8SuGDUxwyWIGnF+c2I3UtP
-   aRRJuw4N2g9dZ/BnLOxPYg9mB4G3a8mw19nDl1owaS54wNAI7eEscTrzW
-   M3lagChPweA5lZyYKjDUpwmsmFKfLnL9heCGoGz+V1vo/S445eICQe3qq
-   EdHUaHkDHcI1tvOBSDiJQVPJwBFQISZxWFsM+W5NnSpoiqi5zOa5FVkaW
-   ZcpbhF8fq9/5/5AJz0Fjf1VTlWYkgxQhq3kjOOxqf9TQX0Ag2znPBpWko
+  bh=alwB3U2WLQjWPdapBArGYccV+1O1Roar0zTX1iEAFbA=;
+  b=V9lJapmUpDS7Uu8qjHI7lsnH228ZHNtl1QYRs77G3WepqX8v4lomfC9q
+   LtLUBpCvEoq25ef4edrt0V8kj44vUfShdxsaCCxvgGxGMHiTV/nLKk1Dy
+   IrgHu3/TvSRxcHI6ds+mGdl+zNCKUVgf85CWJWS5UU1w7OW/N+lvGy+a6
+   sGI71pvF2Co/WCWleXBZ0q274xSseXbBQYZGc1ukdCBhJ0JlbhzaDeaOa
+   EegOlRAviua6PEz+p5IG5U5P2JLGgrWt2sVdRFSAV6iDoT1cZFFW2DQIP
+   U7oRHIAxNttauoy5e3vbwh18AjjwE00tTy1vtSIaSRpgB2+2plzGZluWg
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176209"
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="423176197"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="423176209"
+   d="scan'208";a="423176197"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:33 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:29 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706165"
+X-IronPort-AV: E=McAfee;i="6600,9927,10734"; a="956706130"
 X-IronPort-AV: E=Sophos;i="6.00,226,1681196400"; 
-   d="scan'208";a="956706165"
+   d="scan'208";a="956706130"
 Received: from unknown (HELO ggreenma-mobl2.intel.com) ([10.249.94.100])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:31 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2023 06:36:28 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 04/15] wifi: mac80211: mlme: clarify WMM messages
-Date:   Thu,  8 Jun 2023 16:36:00 +0300
-Message-Id: <20230608163202.21a6bece4313.I08118e5e851fae2f9e43f8a58d3b6217709bf578@changeid>
+Subject: [PATCH 02/15] wifi: mac80211: pass roc->sdata to drv_cancel_remain_on_channel()
+Date:   Thu,  8 Jun 2023 16:35:58 +0300
+Message-Id: <20230608163202.c678187a308c.Ic11578778655e273931efc5355d570a16465d1be@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230608133611.1303724-1-gregory.greenman@intel.com>
 References: <20230608133611.1303724-1-gregory.greenman@intel.com>
@@ -57,60 +57,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-These messages apply to a single link only, use link_info()
-to indicate that.
+In suspend flow "sdata" is NULL, destroy all roc's which are started.
+pass "roc->sdata" to drv_cancel_remain_on_channel() to avoid NULL
+dereference and destroy that roc
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/mlme.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ net/mac80211/offchannel.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 270133883882..f13792994b4f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2639,9 +2639,9 @@ ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 		params[ac].aifs = pos[0] & 0x0f;
- 
- 		if (params[ac].aifs < 2) {
--			sdata_info(sdata,
--				   "AP has invalid WMM params (AIFSN=%d for ACI %d), will use 2\n",
--				   params[ac].aifs, aci);
-+			link_info(link,
-+				  "AP has invalid WMM params (AIFSN=%d for ACI %d), will use 2\n",
-+				  params[ac].aifs, aci);
- 			params[ac].aifs = 2;
- 		}
- 		params[ac].cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
-@@ -2652,9 +2652,9 @@ ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 
- 		if (params[ac].cw_min == 0 ||
- 		    params[ac].cw_min > params[ac].cw_max) {
--			sdata_info(sdata,
--				   "AP has invalid WMM params (CWmin/max=%d/%d for ACI %d), using defaults\n",
--				   params[ac].cw_min, params[ac].cw_max, aci);
-+			link_info(link,
-+				  "AP has invalid WMM params (CWmin/max=%d/%d for ACI %d), using defaults\n",
-+				  params[ac].cw_min, params[ac].cw_max, aci);
- 			return false;
- 		}
- 		ieee80211_regulatory_limit_wmm_params(sdata, &params[ac], ac);
-@@ -2663,9 +2663,9 @@ ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 	/* WMM specification requires all 4 ACIs. */
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		if (params[ac].cw_min == 0) {
--			sdata_info(sdata,
--				   "AP has invalid WMM params (missing AC %d), using defaults\n",
--				   ac);
-+			link_info(link,
-+				  "AP has invalid WMM params (missing AC %d), using defaults\n",
-+				  ac);
- 			return false;
- 		}
- 	}
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index d78c82d6b696..cdf991e74ab9 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -8,7 +8,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
+- * Copyright (C) 2019, 2022 Intel Corporation
++ * Copyright (C) 2019, 2022-2023 Intel Corporation
+  */
+ #include <linux/export.h>
+ #include <net/mac80211.h>
+@@ -1014,7 +1014,7 @@ void ieee80211_roc_purge(struct ieee80211_local *local,
+ 		if (roc->started) {
+ 			if (local->ops->remain_on_channel) {
+ 				/* can race, so ignore return value */
+-				drv_cancel_remain_on_channel(local, sdata);
++				drv_cancel_remain_on_channel(local, roc->sdata);
+ 				ieee80211_roc_notify_destroy(roc);
+ 			} else {
+ 				roc->abort = true;
 -- 
 2.38.1
 
