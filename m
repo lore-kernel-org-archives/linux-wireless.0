@@ -2,140 +2,68 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0412EC7EE25
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 21:29:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B5E3C7EE25
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Jun 2023 00:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230015AbjFIV3w (ORCPT
+        id S232647AbjFJAak convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Jun 2023 17:29:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57404 "EHLO
+        Fri, 9 Jun 2023 20:30:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232498AbjFIV3v (ORCPT
+        with ESMTP id S232462AbjFJAaj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2023 17:29:51 -0400
-Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6616B35BE
-        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 14:29:50 -0700 (PDT)
-Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-568ba7abc11so20473967b3.3
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jun 2023 14:29:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1686346189; x=1688938189;
-        h=mime-version:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=oQDHQv5QQ7F49jvnNaX5O624EPUVQF/yKUfjfHQuFnc=;
-        b=LePNwit0ABp1ENxorce8Sa7Bd4LjKtNLwa/pG6o1QxykmRLbH0P/yLOw/MmeYRuxBU
-         q6Jrud4gYRsmAksqaqXcQmg5APEXk5xOkWEcVkUt+7+I+m9sjJ/lfi3LTs2oaDj9qGtq
-         FqAAM5W7r38V/bKGdhcIRGRwyQYNBQJrUKdVY+GeNDUQUcUrQqxa+0OHKBldHawIOPw7
-         5UVSaZlkQwYT5bOtcT9zG3ykVFoXtoJMwxzBJABVSh98ICXyKXC30TEVoan1/9xKPduX
-         MeEUqzMSUINxKI7NBNQ1qRWak6K2y3wGJJpJOugPT1YrBnuhxTy/dMD/BQ0o3MPkCm45
-         NNIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686346189; x=1688938189;
-        h=mime-version:message-id:subject:cc:to:from:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=oQDHQv5QQ7F49jvnNaX5O624EPUVQF/yKUfjfHQuFnc=;
-        b=YuI2qm6qlBukknqE2Ohq1MKWQdHS7Mg/fNLrGwSJzN12CujCd03QkJo1ziR0xz/WCQ
-         hxH+AQuCuZiIhcu72p9bpSRA5nEMtXGgsjaXCZZWLl5aA57hWG2n0R6QXwTWW3dLe8SB
-         UF/ByxUuHC5wF6x1N9UguyfeWQOWcnDWegPRHfJYj4F3+w5VEJRQNsQGwKSKGjp4cxJX
-         4vaiwF5oBeeKBrjXDdIJkBCttCJbfIeYZR8OuCLlnuiWSTTUuSeIlz2eV93xnhzCNE7G
-         uwCUtZvwntBAcLyoQLy3mus+bVhqEZr0MaOLtRALVa3g65biVEVAKg8LKT3eCpFnygSg
-         spBg==
-X-Gm-Message-State: AC+VfDyQM9HookFEKCrU87VVMr1XIvF/Xtic3dpc0C1LPS/OzJbtNjL4
-        X3Qr0LVCD+XFZrO9d3dJSxriOw==
-X-Google-Smtp-Source: ACHHUZ6zVT6zy2xPQU6h6zNxSgG3a9+hAx3/LLoy1GtDkJTTgoju5XlmXUOBA28ACU3lez+R9dzHTA==
-X-Received: by 2002:a25:c78b:0:b0:ba8:f70:1eb9 with SMTP id w133-20020a25c78b000000b00ba80f701eb9mr2046657ybe.57.1686346189501;
-        Fri, 09 Jun 2023 14:29:49 -0700 (PDT)
-Received: from ripple.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
-        by smtp.gmail.com with ESMTPSA id f6-20020a5b0d46000000b00bc41075297fsm7249ybr.23.2023.06.09.14.29.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jun 2023 14:29:49 -0700 (PDT)
-Date:   Fri, 9 Jun 2023 14:29:39 -0700 (PDT)
-From:   Hugh Dickins <hughd@google.com>
-X-X-Sender: hugh@ripple.attlocal.net
-To:     Gregory Greenman <gregory.greenman@intel.com>
-cc:     Ariel Malamud <ariel.malamud@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        regressions@lists.linux.dev
-Subject: [PATCH] wifi: iwlwifi: mvm: spin_lock_bh() to fix lockdep
- regression
-Message-ID: <79ffcc22-9775-cb6d-3ffd-1a517c40beef@google.com>
+        Fri, 9 Jun 2023 20:30:39 -0400
+X-Greylist: delayed 954 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 09 Jun 2023 17:30:38 PDT
+Received: from es.pcb.gov.my (es.pcb.gov.my [202.75.7.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 32E203A89
+        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 17:30:38 -0700 (PDT)
+X-ASG-Debug-ID: 1686355966-1488a971bf06c40002-9xRsGE
+Received: from mail.pcb.gov.my (mail.pcb.gov.my [10.28.173.47]) by es.pcb.gov.my with ESMTP id guoQw61C1IWDFSSQ for <linux-wireless@vger.kernel.org>; Sat, 10 Jun 2023 08:13:42 +0800 (+08)
+X-Barracuda-Envelope-From: herdayu@pcb.gov.my
+Received: from [193.169.254.61] (193.169.254.61) by EXCHANGE01.BPA.pcb.gov.my
+ (10.28.173.47) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.721.2; Fri, 9 Jun 2023
+ 01:18:56 +0800
+Reply-To: <alicewalt63@gmail.com>
+X-Barracuda-Effective-Source-IP: UNKNOWN[193.169.254.61]
+X-Barracuda-Apparent-Source-IP: 193.169.254.61
+From:   Alice Walton <herdayu@pcb.gov.my>
+To:     <linux-wireless@vger.kernel.org>
+Subject: =?UTF-8?B?xI1lc3RpdGFt?=
+Date:   Thu, 8 Jun 2023 10:18:48 -0700
+X-ASG-Orig-Subj: =?UTF-8?B?xI1lc3RpdGFt?=
+Message-ID: <20230608101847.8F55B2595D395F86@pcb.gov.my>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+X-ClientProxiedBy: EXCHANGE01.BPA.pcb.gov.my (10.28.173.47) To
+ EXCHANGE01.BPA.pcb.gov.my (10.28.173.47)
+X-Barracuda-Connect: mail.pcb.gov.my[10.28.173.47]
+X-Barracuda-Start-Time: 1686356002
+X-Barracuda-URL: https://10.28.173.25:443/cgi-mod/mark.cgi
+X-Barracuda-License: Expired
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at pcb.gov.my
+X-Barracuda-Scan-Msg-Size: 570
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lockdep on 6.4-rc on ThinkPad X1 Carbon 5th says
-=====================================================
-WARNING: SOFTIRQ-safe -> SOFTIRQ-unsafe lock order detected
-6.4.0-rc5 #1 Not tainted
------------------------------------------------------
-kworker/3:1/49 [HC0[0]:SC0[4]:HE1:SE0] is trying to acquire:
-ffff8881066fa368 (&mvm_sta->deflink.lq_sta.rs_drv.pers.lock){+.+.}-{2:2}, at: rs_drv_get_rate+0x46/0xe7
+čestitam,
 
-and this task is already holding:
-ffff8881066f80a8 (&sta->rate_ctrl_lock){+.-.}-{2:2}, at: rate_control_get_rate+0xbd/0x126
-which would create a new lock dependency:
- (&sta->rate_ctrl_lock){+.-.}-{2:2} -> (&mvm_sta->deflink.lq_sta.rs_drv.pers.lock){+.+.}-{2:2}
+      Vaša e-pošta osvojila je 5.000.000,00 USD od strane Alice 
+Walton 2023 humanitarnog programa podrške donacijama. 
+Kontaktirajte nas za više pojedinosti o tome kako možete 
+zatražiti svoj donacijski fond.
 
-but this new dependency connects a SOFTIRQ-irq-safe lock:
- (&sta->rate_ctrl_lock){+.-.}-{2:2}
-etc. etc. etc.
+Hvala i Bog blagoslovio
+Zaklada Alice Walton
+=========================================
+Congratulation,
 
-Changing the spin_lock() in rs_drv_get_rate() to spin_lock_bh() was not
-enough to pacify lockdep, but changing them all on pers.lock has worked.
+     Your email has won $5,000,000.00 USD by Alice Walton 2023 
+humanitarian donation support program. Contact us for more 
+details on how you can claim your donation fund.
 
-Fixes: a8938bc881d2 ("wifi: iwlwifi: mvm: Add locking to the rate read flow")
-Signed-off-by: Hugh Dickins <hughd@google.com>
----
-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
---- 6.4-rc5/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ linux/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -2692,7 +2692,7 @@ static void rs_drv_get_rate(void *mvm_r,
- 
- 	lq_sta = mvm_sta;
- 
--	spin_lock(&lq_sta->pers.lock);
-+	spin_lock_bh(&lq_sta->pers.lock);
- 	iwl_mvm_hwrate_to_tx_rate_v1(lq_sta->last_rate_n_flags,
- 				     info->band, &info->control.rates[0]);
- 	info->control.rates[0].count = 1;
-@@ -2707,7 +2707,7 @@ static void rs_drv_get_rate(void *mvm_r,
- 		iwl_mvm_hwrate_to_tx_rate_v1(last_ucode_rate, info->band,
- 					     &txrc->reported_rate);
- 	}
--	spin_unlock(&lq_sta->pers.lock);
-+	spin_unlock_bh(&lq_sta->pers.lock);
- }
- 
- static void *rs_drv_alloc_sta(void *mvm_rate, struct ieee80211_sta *sta,
-@@ -3264,11 +3264,11 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm
- 	/* If it's locked we are in middle of init flow
- 	 * just wait for next tx status to update the lq_sta data
- 	 */
--	if (!spin_trylock(&mvmsta->deflink.lq_sta.rs_drv.pers.lock))
-+	if (!spin_trylock_bh(&mvmsta->deflink.lq_sta.rs_drv.pers.lock))
- 		return;
- 
- 	__iwl_mvm_rs_tx_status(mvm, sta, tid, info, ndp);
--	spin_unlock(&mvmsta->deflink.lq_sta.rs_drv.pers.lock);
-+	spin_unlock_bh(&mvmsta->deflink.lq_sta.rs_drv.pers.lock);
- }
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
-@@ -4117,9 +4117,9 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm
- 	} else {
- 		struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 
--		spin_lock(&mvmsta->deflink.lq_sta.rs_drv.pers.lock);
-+		spin_lock_bh(&mvmsta->deflink.lq_sta.rs_drv.pers.lock);
- 		rs_drv_rate_init(mvm, sta, band);
--		spin_unlock(&mvmsta->deflink.lq_sta.rs_drv.pers.lock);
-+		spin_unlock_bh(&mvmsta->deflink.lq_sta.rs_drv.pers.lock);
- 	}
- }
- 
+Thanks And God Bless
+Alice Walton Foundation
