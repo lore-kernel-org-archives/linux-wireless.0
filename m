@@ -2,231 +2,99 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92151C7EE2F
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 08:24:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53741C7EE29
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 08:45:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240733AbjFIIYc (ORCPT
+        id S239725AbjFIIpN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Jun 2023 04:24:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57830 "EHLO
+        Fri, 9 Jun 2023 04:45:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240624AbjFIIYL (ORCPT
+        with ESMTP id S241143AbjFIIpC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2023 04:24:11 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1126549E2;
-        Fri,  9 Jun 2023 01:22:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=ioJP5/nPwkDScpLmhYFsFtpoICiOH9A6AqZVomfCoCQ=;
-        t=1686298978; x=1687508578; b=Fj2Omoqt3ZL/OswKsngO9jty2eDHEr6OYDwKzdWyP++5bdz
-        U1kYjyWW53KyYKLVbsg8eYBuLLMva5CIxuMx+Sl3/XgMVbA+ayed/21ugPgYQCeYzGM4uo84Yt81R
-        eHTpu0fpTL+0lUQJn1fFHnYynZ+xE1y/cuYOKjPMrm8UtJjhM48dKYfKw6mpQAw7IeYdhp/5GOSaO
-        SyExcKrqR6i2VZ+b/jvQAvvG9ezu14wSjUwK4h5j2CwCa80IR1F/Hh/H0K2szp0/MdtfjVu1/v6G0
-        gaSzqJhZgENjEuOR9IUIsGY9lAjFw67VBq3E7vHp17fluQTwrUoECdVBJaSseaAA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1q7XMw-000rrZ-1g;
-        Fri, 09 Jun 2023 10:21:14 +0200
-Message-ID: <ccbaf80adb305ea59eb1a457460b99dc920bb65d.camel@sipsolutions.net>
-Subject: Re: [PATCH V2 2/7] wifi: mac80211: Add support for ACPI WBRF
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Evan Quan <evan.quan@amd.com>, rafael@kernel.org, lenb@kernel.org,
-        Alexander.Deucher@amd.com, Christian.Koenig@amd.com,
-        Xinhui.Pan@amd.com, airlied@gmail.com, daniel@ffwll.ch,
-        kvalo@kernel.org, nbd@nbd.name, lorenzo@kernel.org,
-        ryder.lee@mediatek.com, shayne.chen@mediatek.com,
-        sean.wang@mediatek.com, matthias.bgg@gmail.com,
-        angelogioacchino.delregno@collabora.com, Mario.Limonciello@amd.com,
-        Lijo.Lazar@amd.com
-Cc:     linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-wireless@vger.kernel.org
-Date:   Fri, 09 Jun 2023 10:21:12 +0200
-In-Reply-To: <20230609072846.1552238-3-evan.quan@amd.com>
-References: <20230609072846.1552238-1-evan.quan@amd.com>
-         <20230609072846.1552238-3-evan.quan@amd.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
+        Fri, 9 Jun 2023 04:45:02 -0400
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 814491B9;
+        Fri,  9 Jun 2023 01:44:58 -0700 (PDT)
+Received: by mail-ej1-x632.google.com with SMTP id a640c23a62f3a-977d4a1cf0eso233377766b.1;
+        Fri, 09 Jun 2023 01:44:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686300297; x=1688892297;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sV5kS4uFTylsIKBTpLATpLjmqF+bm2uJbZFR1pKIFFU=;
+        b=ev/gO9W54hYaCq9ean5DupK1uYMYJe2cw12AnKy5KCgHrVvXscqgta6p77dUi9PpD0
+         SQ/8RR5w1cKmN9AKkuezoVkYeu8oxjL1GovQ4Th659JBhce999+AcsmOkaqYQRkfCm1B
+         XRWej+p7auDkDaBPPqeKDPymHRTSJ/6iIV6W0Dy2kd0/SlXCXuwYrgaWzMSURucXRWye
+         DtfnyXC6hIDfEHOf0t09TwpMGqxWhV9Mf2oBVG2Q8AiLCiT+jxjU4rGtWrajThtnCXqq
+         2PEDII6gwra9FL/ixUsC2wZaUb+0bKHxfjioOC4g5KRZd2t7PvGuy9u83kxaIzbUAFma
+         oMKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686300297; x=1688892297;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sV5kS4uFTylsIKBTpLATpLjmqF+bm2uJbZFR1pKIFFU=;
+        b=EMc0SkIwX3CsWxHP+aC/Wm7Evj4NeaiQz/YR606uPmwMgfaM9QWcYWtnuYWa2e409L
+         uYeIVdoH7Y6HAGbfKwVpXZZsdBRdo5+GbNc33ZE6hJqxabsLizZgUSjKYCCwFnzrbiF2
+         MQ1XMg37jOyDxJ0SXWDrExTMZb6RdAYJYktbvijXTWYrpY3ZYrUn9TQELAx3Bi0I2Uy+
+         3rvmaTfwPAjUK1AXi4/0kja/HwnwsUJpHavH7HRGSdhUF0Y+mLRiK6CbtAQlfJwzfm6u
+         2pJCdzJHbvKQZFR1Oh/0OWPZhq8WhgM6ldVtw21UAhiEtklQzJie5v1jzXJFFnftp22R
+         QwnA==
+X-Gm-Message-State: AC+VfDx81B2TxGYYR2TTXzBikuQxZmOF7w3sW6OBB8mx3RZsdxc/PBuH
+        QJiA12BjEVmuYQTvVRC36pufcLFfXuM=
+X-Google-Smtp-Source: ACHHUZ6BRxs/pXjmvDXY/Ix/M6PsYGHPtG5nSO4nq825Yv/jpYmkLikZjzLYUPDhzmiNY3syp+zKHg==
+X-Received: by 2002:a17:907:9349:b0:973:e4c2:2bcd with SMTP id bv9-20020a170907934900b00973e4c22bcdmr1042732ejc.18.1686300296517;
+        Fri, 09 Jun 2023 01:44:56 -0700 (PDT)
+Received: from shift.daheim (pd9e2959c.dip0.t-ipconnect.de. [217.226.149.156])
+        by smtp.gmail.com with ESMTPSA id jw19-20020a17090776b300b00973fac6065esm974199ejc.223.2023.06.09.01.44.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Jun 2023 01:44:56 -0700 (PDT)
+Received: from chuck by shift.daheim with local (Exim 4.96)
+        (envelope-from <chuck@shift.daheim>)
+        id 1q7Xjr-0004fR-1N;
+        Fri, 09 Jun 2023 10:44:55 +0200
+From:   Christian Lamparter <chunkeey@gmail.com>
+To:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org
+Cc:     kvalo@kernel.org, conor+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org
+Subject: [PATCH v1 2/2] wifi: ath11k: add support DT ieee80211-freq-limit
+Date:   Fri,  9 Jun 2023 10:44:55 +0200
+Message-Id: <a57a3e1e23b5ac4a18d772e3b82527498ac85bb5.1686300243.git.chunkeey@gmail.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <a3075482150d342f71ec235badacec32cdd6c553.1686300243.git.chunkeey@gmail.com>
+References: <a3075482150d342f71ec235badacec32cdd6c553.1686300243.git.chunkeey@gmail.com>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2023-06-09 at 15:28 +0800, Evan Quan wrote:
+The common DT property can be used to limit the available
+channels/frequencies. But ath11k has to manually call
+wiphy_read_of_freq_limits().
 
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -5551,6 +5551,10 @@ struct wiphy {
-> =20
->  	u16 hw_timestamp_max_peers;
-> =20
-> +#ifdef CONFIG_ACPI_WBRF
-> +	bool wbrf_supported;
-> +#endif
+Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+---
+compile-tested only.
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-This should be in some private struct in mac80211, ieee80211_local I
-think.
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index c947d1c8d8c1..7e43f2770f27 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -9414,6 +9414,7 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 	if (ret)
+ 		goto err;
+ 
++	wiphy_read_of_freq_limits(ar->hw->wiphy);
+ 	ath11k_mac_setup_ht_vht_cap(ar, cap, &ht_cap);
+ 	ath11k_mac_setup_he_cap(ar, cap);
+ 
+-- 
+2.40.1
 
->  	char priv[] __aligned(NETDEV_ALIGN);
->  };
-> =20
-> @@ -9067,4 +9071,18 @@ static inline int cfg80211_color_change_notify(str=
-uct net_device *dev)
->  bool cfg80211_valid_disable_subchannel_bitmap(u16 *bitmap,
->  					      const struct cfg80211_chan_def *chandef);
-> =20
-> +#ifdef CONFIG_ACPI_WBRF
-> +void ieee80211_check_wbrf_support(struct wiphy *wiphy);
-> +int ieee80211_add_wbrf(struct wiphy *wiphy,
-> +		       struct cfg80211_chan_def *chandef);
-> +void ieee80211_remove_wbrf(struct wiphy *wiphy,
-> +			   struct cfg80211_chan_def *chandef);
-> +#else
-> +static inline void ieee80211_check_wbrf_support(struct wiphy *wiphy) { }
-> +static inline int ieee80211_add_wbrf(struct wiphy *wiphy,
-> +				     struct cfg80211_chan_def *chandef) { return 0; }
-> +static inline void ieee80211_remove_wbrf(struct wiphy *wiphy,
-> +					 struct cfg80211_chan_def *chandef) { }
-> +#endif /* CONFIG_ACPI_WBRF */
-
-Same here, not the right place. This should even be in an internal
-mac80211 header (such as net/mac80211/ieee80211_i.h or create a new
-net/mac80211/wrbf.h or so if you prefer.)
-
-
-> --- a/net/mac80211/chan.c
-> +++ b/net/mac80211/chan.c
-> @@ -668,6 +668,10 @@ static int ieee80211_add_chanctx(struct ieee80211_lo=
-cal *local,
->  	lockdep_assert_held(&local->mtx);
->  	lockdep_assert_held(&local->chanctx_mtx);
-> =20
-> +	err =3D ieee80211_add_wbrf(local->hw.wiphy, &ctx->conf.def);
-> +	if (err)
-> +		return err;
-> +
->  	if (!local->use_chanctx)
->  		local->hw.conf.radar_enabled =3D ctx->conf.radar_enabled;
-> =20
-> @@ -748,6 +752,8 @@ static void ieee80211_del_chanctx(struct ieee80211_lo=
-cal *local,
->  	}
-> =20
->  	ieee80211_recalc_idle(local);
-> +
-> +	ieee80211_remove_wbrf(local->hw.wiphy, &ctx->conf.def);
->  }
-> =20
->  static void ieee80211_free_chanctx(struct ieee80211_local *local,
->=20
-
-This is tricky, and quite likely incorrect.
-
-First of all, chandefs can actually _change_, see
-_ieee80211_change_chanctx(). You'd probably have to call this add/remove
-(or have modify) whenever we call drv_change_chanctx() to change the
-width (not if radar/rx chains change).
-
-Secondly, you don't know if the driver will actually use ctx->conf.def,
-or ctx->conf.mindef. For client mode that doesn't matter, but for AP
-mode if the AP is configured to say 160 MHz, it might actually configure
-down to 20 MHz when no stations are connected (or only 20 MHz stations
-are). I don't know if you really care about taking that into account, I
-also don't know how dynamic this really should be. Stations can connect
-and disconnect quickly, so perhaps the WBRF should actually take the
-full potential bandwidth into account all the time, in which case taking
-ctx->conf.def would be correct.
-
-I'll note that your previous in-driver approach had all the same
-problems the way you had implemented it, though I don't know if that
-driver ever can use mindef or not.
-
-
-> +void ieee80211_check_wbrf_support(struct wiphy *wiphy)
-> +{
-> +	struct device *dev =3D wiphy->dev.parent;
-> +	struct acpi_device *acpi_dev;
-> +
-> +	acpi_dev =3D ACPI_COMPANION(dev);
-
-Can this cope with 'dev' being NULL? Just not sure nothing like hwsim or
-so always even has a parent. I guess it should, but ...
-
-> +static int chan_width_to_mhz(enum nl80211_chan_width chan_width)
-> +{
-> +	int mhz;
-> +
-> +	switch (chan_width) {
-> +	case NL80211_CHAN_WIDTH_1:
-> +		mhz =3D 1;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_2:
-> +		mhz =3D 2;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_4:
-> +		mhz =3D 4;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_8:
-> +		mhz =3D 8;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_16:
-> +		mhz =3D 16;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_5:
-> +		mhz =3D 5;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_10:
-> +		mhz =3D 10;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_20:
-> +	case NL80211_CHAN_WIDTH_20_NOHT:
-> +		mhz =3D 20;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_40:
-> +		mhz =3D 40;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_80P80:
-> +	case NL80211_CHAN_WIDTH_80:
-> +		mhz =3D 80;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_160:
-> +		mhz =3D 160;
-> +		break;
-> +	case NL80211_CHAN_WIDTH_320:
-> +		mhz =3D 320;
-> +		break;
-> +	default:
-> +		WARN_ON_ONCE(1);
-> +		return -1;
-> +	}
-> +	return mhz;
-
-This might be more generally useful as a function in cfg80211 that's
-exported - hwsim has exactly the same function today, for example.
-
-> +static void get_chan_freq_boundary(u32 center_freq,
-> +				   u32 bandwidth,
-> +				   u64 *start,
-> +				   u64 *end)
-> +{
-> +	bandwidth =3D MHZ_TO_KHZ(bandwidth);
-> +	center_freq =3D MHZ_TO_KHZ(center_freq);
-> +
-> +	*start =3D center_freq - bandwidth / 2;
-> +	*end =3D center_freq + bandwidth / 2;
-> +
-> +	/* Frequency in HZ is expected */
-> +	*start =3D KHZ_TO_HZ(*start);
-> +	*end =3D KHZ_TO_HZ(*end);
-> +}
-
-Similar patterns are probably elsewhere too for this, but I guess we can
-always refactor later too.
-
-johannes
