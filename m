@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2832BC7EE25
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 14:25:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08800C8300C
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 14:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241332AbjFIOZM (ORCPT
+        id S241379AbjFIOZO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Jun 2023 10:25:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49026 "EHLO
+        Fri, 9 Jun 2023 10:25:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241238AbjFIOYv (ORCPT
+        with ESMTP id S241241AbjFIOYv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 9 Jun 2023 10:24:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CF9930CB
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4A8530E7
         for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 07:24:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B278C612DC
-        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 14:24:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D91FC4339B;
-        Fri,  9 Jun 2023 14:24:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B4BCC6588A
+        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 14:24:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97C7EC433EF;
+        Fri,  9 Jun 2023 14:24:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686320689;
-        bh=w9jTiH5RnEdZVrbY21BlNuf+p+Weoy31ragwGttVmC8=;
+        s=k20201202; t=1686320690;
+        bh=bIXOhkdYQhSQR8JZ30iIBHwinCo/evyXgSHTlkstMps=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TBlh3kZOaR8fe+jV7yi4wtiAivSjWbFfdPS6WuYUaleuAIyy5RJt4tV5PE/5/Eik6
-         QxtMCqxlT1JE3he7EuvRsJKu4pnYkYNan6kowY+UpQOcL+XdO+nFC9XlRUbEs3ZVMF
-         iamZdBNeYuttJ9nvSRhaGoAHvwspIlli1OjF5tEC8WXsbSExzUfp2xIRr4pCg2trk+
-         WmWmLS0GihVwQgh+0lVGw+787hGY4SbGQXIVd70DOsy1Gj9JpYUYu6xpeTzMPQzTgO
-         iv1YPmKn+PABV18QPkfmPNxzPu3CHeUvrWSIjQIhfNaztjd/KA0EwKLLVrkqbj7M2f
-         bDh5RTrxWdYAg==
+        b=ClblRSdF8vJkfKZWMrdoLmUohHlT3uySzpTv/CfUiqyxp1n2Eg3aAwn7Eyz1vjZd7
+         hlWkGo6pqTZJq2r7FrDf83JXm6p4+nOLSge0yA3GVVutjmraWf8pVbm2G8f9aV5ePc
+         mMwpPBMV6MSJjDrXwy/yC+svwVZ88dzRkAJ5NelEq/6Q/w1EJka7Oa5i948CFTXSGN
+         APES1I0VhoWePVnwGH5UX4GgDATuDR/v5kmbQ/uF9iESxpNNBg3xhPv5PnCcux7aFS
+         39LuSkybmoJeeWFkz7bl4AbeEU7VPrTmfXPrJy0Y9BDvywBBnrMV/4ifEyoHR3+7Aa
+         BM6a43nSNC9Dw==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 05/15] wifi: ath11k: remove unsupported event handlers
-Date:   Fri,  9 Jun 2023 17:24:30 +0300
-Message-Id: <20230609142440.24643-6-kvalo@kernel.org>
+Subject: [PATCH 06/15] wifi: ath11k: wmi: cleanup error handling in ath11k_wmi_send_init_country_cmd()
+Date:   Fri,  9 Jun 2023 17:24:31 +0300
+Message-Id: <20230609142440.24643-7-kvalo@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20230609142440.24643-1-kvalo@kernel.org>
 References: <20230609142440.24643-1-kvalo@kernel.org>
@@ -50,53 +50,48 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Kalle Valo <quic_kvalo@quicinc.com>
 
-Now that we have a default handler there's no need anymore to list every
-unsupported event id anymore, so remove that to clean this up.
-
-While at it remove the pointless todo comment and change the debug message to
-follow the preferred style.
+The error handling doesn't follow the preferred style so fix that.
 
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
 
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 16 +---------------
- 1 file changed, 1 insertion(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath11k/wmi.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 99beb7636835..6ce36879a503 100644
+index 6ce36879a503..3b26e227e80c 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -8663,19 +8663,6 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
- 	case WMI_TWT_ADD_DIALOG_EVENTID:
- 		ath11k_wmi_twt_add_dialog_event(ab, skb);
+@@ -2866,21 +2866,25 @@ ath11k_wmi_send_init_country_cmd(struct ath11k *ar,
+ 		cmd->cc_info.regdom_id = init_cc_params.cc_info.regdom_id;
  		break;
--	/* add Unsupported events here */
--	case WMI_TBTTOFFSET_EXT_UPDATE_EVENTID:
--	case WMI_PEER_OPER_MODE_CHANGE_EVENTID:
--	case WMI_TWT_ENABLE_EVENTID:
--	case WMI_TWT_DISABLE_EVENTID:
--	case WMI_TWT_DEL_DIALOG_EVENTID:
--	case WMI_TWT_PAUSE_DIALOG_EVENTID:
--	case WMI_TWT_RESUME_DIALOG_EVENTID:
--	case WMI_PDEV_DMA_RING_CFG_RSP_EVENTID:
--	case WMI_PEER_CREATE_CONF_EVENTID:
--		ath11k_dbg(ab, ATH11K_DBG_WMI,
--			   "ignoring unsupported event 0x%x\n", id);
--		break;
- 	case WMI_PDEV_DFS_RADAR_DETECTION_EVENTID:
- 		ath11k_wmi_pdev_dfs_radar_detected_event(ab, skb);
- 		break;
-@@ -8697,9 +8684,8 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
- 	case WMI_GTK_OFFLOAD_STATUS_EVENTID:
- 		ath11k_wmi_gtk_offload_status_event(ab, skb);
- 		break;
--	/* TODO: Add remaining events */
  	default:
--		ath11k_dbg(ab, ATH11K_DBG_WMI, "Unknown eventid: 0x%x\n", id);
-+		ath11k_dbg(ab, ATH11K_DBG_WMI, "unsupported event id 0x%x\n", id);
- 		break;
++		ath11k_warn(ar->ab, "unknown cc params flags: 0x%x",
++			    init_cc_params.flags);
+ 		ret = -EINVAL;
+-		goto out;
++		goto err;
  	}
+ 
+ 	ret = ath11k_wmi_cmd_send(wmi, skb,
+ 				  WMI_SET_INIT_COUNTRY_CMDID);
+-
+-out:
+ 	if (ret) {
+ 		ath11k_warn(ar->ab,
+ 			    "failed to send WMI_SET_INIT_COUNTRY CMD :%d\n",
+ 			    ret);
+-		dev_kfree_skb(skb);
++		goto err;
+ 	}
+ 
++	return 0;
++
++err:
++	dev_kfree_skb(skb);
+ 	return ret;
+ }
  
 -- 
 2.30.2
