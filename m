@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F306C7EE43
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E439FC7EE45
 	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 14:25:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241307AbjFIOZR (ORCPT
+        id S241410AbjFIOZS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Jun 2023 10:25:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49052 "EHLO
+        Fri, 9 Jun 2023 10:25:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241269AbjFIOYx (ORCPT
+        with ESMTP id S241293AbjFIOYz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2023 10:24:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB4A130CB
-        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 07:24:51 -0700 (PDT)
+        Fri, 9 Jun 2023 10:24:55 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06A8030CB
+        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 07:24:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BBA2F612DC
-        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 14:24:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AA87C4339B;
-        Fri,  9 Jun 2023 14:24:50 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D95DB612E3
+        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 14:24:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1ACEC4339B;
+        Fri,  9 Jun 2023 14:24:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686320691;
-        bh=Fl2pPLBw28hP0W9JqhqkFKCzbiCQMgAgej6YusvbAV4=;
+        s=k20201202; t=1686320693;
+        bh=XJM4efbDN9/nsy1quLg+hU/zIBHiE+i02mW42DmLAtY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bo2HmS6EOv7M1EL297mr0zkGkEfUDXl2OOZJHccThy/0w1ZjgLJ1Wqo4wTsw3bZoS
-         Mt1P9pC9A4poo/MaEy0/K1MWYuxGCu++wJkkR4HqvRdjul5C89wPT86+iP3WpNwgtN
-         K13flDaA5NM3I511qvPbUQ8FGs62ko8X41yamslp6TSZsmk4XsUkaNyl6XR5ulEw8B
-         hDw7LFOY85CqvlGnZ19CV26zHiRjjAfp7mEkOgoIGz1HCORl5LfTrPraIM6WrL9X4F
-         u94E6zmgrAiCgLfkBsvyG3o4TU01quReBZcadgcSw3bziJOmmPHseNuUnNMtiIrn2A
-         elwYw/n2VmF+A==
+        b=aj09FfOaAdDTmX8+oRCeGbr1u6/gOXT/M7TZd74w3//wIvOLv5NxlKYhyrugJ+Kze
+         bagLj7t4EtpH8ZNIc4BaM81KFSycf9FHDWrBQ1auWpTvpJOX4vboQELtmxtUX9vuJG
+         PCWKDxtv+mgwcI3vP2nTl6lmRk6ucIhCV7sK/zEge9hkI/s+WppdW1C7drEUqxLq/T
+         G3XzL6BihHyOy6XLrOvKKIczAdHC6r3lXp13U8vrjg/PXieKwfDQYBhQ9dlEmVZcy7
+         uU1GB5WpHVtT51Ul1UF7d06xPsnn/P+8vvVBFTHVvQJm8FgecBrtSXy5GyVgeB4ohQ
+         RRwA8FtHuTqeg==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 07/15] wifi: ath11k: wmi: use common error handling style
-Date:   Fri,  9 Jun 2023 17:24:32 +0300
-Message-Id: <20230609142440.24643-8-kvalo@kernel.org>
+Subject: [PATCH 09/15] wifi: ath11k: pci: cleanup debug logging
+Date:   Fri,  9 Jun 2023 17:24:34 +0300
+Message-Id: <20230609142440.24643-10-kvalo@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20230609142440.24643-1-kvalo@kernel.org>
 References: <20230609142440.24643-1-kvalo@kernel.org>
@@ -50,267 +50,112 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Kalle Valo <quic_kvalo@quicinc.com>
 
-Also these functions don't follow the preferred style so fix those.
+For better readability fix PCI debug messages to follow the preferred style.
 
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
 
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 80 +++++++++++++++++++--------
- 1 file changed, 56 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath11k/mhi.c  |  4 ++--
+ drivers/net/wireless/ath/ath11k/pci.c  | 10 +++++-----
+ drivers/net/wireless/ath/ath11k/pcic.c |  6 +++---
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 3b26e227e80c..972f282a3032 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -3181,10 +3181,12 @@ int ath11k_wmi_send_twt_enable_cmd(struct ath11k *ar, u32 pdev_id,
- 	if (ret) {
- 		ath11k_warn(ab, "Failed to send WMI_TWT_ENABLE_CMDID");
- 		dev_kfree_skb(skb);
--	} else {
--		ar->twt_enabled = 1;
-+		return ret;
- 	}
--	return ret;
-+
-+	ar->twt_enabled = 1;
-+
-+	return 0;
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index d5f25e708bdc..3ac689f1def4 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -211,7 +211,7 @@ void ath11k_mhi_set_mhictrl_reset(struct ath11k_base *ab)
+ 
+ 	val = ath11k_pcic_read32(ab, MHISTATUS);
+ 
+-	ath11k_dbg(ab, ATH11K_DBG_PCI, "MHISTATUS 0x%x\n", val);
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "mhistatus 0x%x\n", val);
+ 
+ 	/* Observed on QCA6390 that after SOC_GLOBAL_RESET, MHISTATUS
+ 	 * has SYSERR bit set and thus need to set MHICTRL_RESET
+@@ -263,7 +263,7 @@ static int ath11k_mhi_get_msi(struct ath11k_pci *ab_pci)
+ 	if (ret)
+ 		return ret;
+ 
+-	ath11k_dbg(ab, ATH11K_DBG_PCI, "Number of assigned MSI for MHI is %d, base vector is %d\n",
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "num_vectors %d base_vector %d\n",
+ 		   num_vectors, base_vector);
+ 
+ 	irq = kcalloc(num_vectors, sizeof(int), GFP_KERNEL);
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index 75157e6be632..ee67bfd90abe 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -203,10 +203,10 @@ static void ath11k_pci_clear_dbg_registers(struct ath11k_base *ab)
+ 
+ 	/* read cookie */
+ 	val = ath11k_pcic_read32(ab, PCIE_Q6_COOKIE_ADDR);
+-	ath11k_dbg(ab, ATH11K_DBG_PCI, "cookie:0x%x\n", val);
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "pcie_q6_cookie_addr 0x%x\n", val);
+ 
+ 	val = ath11k_pcic_read32(ab, WLAON_WARM_SW_ENTRY);
+-	ath11k_dbg(ab, ATH11K_DBG_PCI, "WLAON_WARM_SW_ENTRY 0x%x\n", val);
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "wlaon_warm_sw_entry 0x%x\n", val);
+ 
+ 	/* TODO: exact time to sleep is uncertain */
+ 	mdelay(10);
+@@ -218,13 +218,13 @@ static void ath11k_pci_clear_dbg_registers(struct ath11k_base *ab)
+ 	mdelay(10);
+ 
+ 	val = ath11k_pcic_read32(ab, WLAON_WARM_SW_ENTRY);
+-	ath11k_dbg(ab, ATH11K_DBG_PCI, "WLAON_WARM_SW_ENTRY 0x%x\n", val);
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "wlaon_warm_sw_entry 0x%x\n", val);
+ 
+ 	/* A read clear register. clear the register to prevent
+ 	 * Q6 from entering wrong code path.
+ 	 */
+ 	val = ath11k_pcic_read32(ab, WLAON_SOC_RESET_CAUSE_REG);
+-	ath11k_dbg(ab, ATH11K_DBG_PCI, "soc reset cause:%d\n", val);
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "soc reset cause %d\n", val);
  }
  
- int
-@@ -3211,10 +3213,12 @@ ath11k_wmi_send_twt_disable_cmd(struct ath11k *ar, u32 pdev_id)
- 	if (ret) {
- 		ath11k_warn(ab, "Failed to send WMI_TWT_DISABLE_CMDID");
- 		dev_kfree_skb(skb);
--	} else {
--		ar->twt_enabled = 0;
-+		return ret;
+ static int ath11k_pci_set_link_reg(struct ath11k_base *ab,
+@@ -433,7 +433,7 @@ static int ath11k_pci_alloc_msi(struct ath11k_pci *ab_pci)
+ 		}
+ 		clear_bit(ATH11K_FLAG_MULTI_MSI_VECTORS, &ab->dev_flags);
+ 		ab->pci.msi.config = &msi_config_one_msi;
+-		ath11k_dbg(ab, ATH11K_DBG_PCI, "request MSI one vector\n");
++		ath11k_dbg(ab, ATH11K_DBG_PCI, "request one msi vector\n");
  	}
--	return ret;
-+
-+	ar->twt_enabled = 0;
-+
-+	return 0;
- }
+ 	ath11k_info(ab, "MSI vectors: %d\n", num_vectors);
  
- int ath11k_wmi_send_twt_add_dialog_cmd(struct ath11k *ar,
-@@ -3266,8 +3270,10 @@ int ath11k_wmi_send_twt_add_dialog_cmd(struct ath11k *ar,
- 			    "failed to send wmi command to add twt dialog: %d",
- 			    ret);
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath11k/pcic.c b/drivers/net/wireless/ath/ath11k/pcic.c
+index 30d66147223f..c899616fbee4 100644
+--- a/drivers/net/wireless/ath/ath11k/pcic.c
++++ b/drivers/net/wireless/ath/ath11k/pcic.c
+@@ -263,7 +263,7 @@ int ath11k_pcic_get_user_msi_assignment(struct ath11k_base *ab, char *user_name,
+ 			*user_base_data = *base_vector + ab->pci.msi.ep_base_data;
  
- int ath11k_wmi_send_twt_del_dialog_cmd(struct ath11k *ar,
-@@ -3303,8 +3309,10 @@ int ath11k_wmi_send_twt_del_dialog_cmd(struct ath11k *ar,
- 			    "failed to send wmi command to delete twt dialog: %d",
- 			    ret);
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
+ 			ath11k_dbg(ab, ATH11K_DBG_PCI,
+-				   "Assign MSI to user: %s, num_vectors: %d, user_base_data: %u, base_vector: %u\n",
++				   "msi assignment %s num_vectors %d user_base_data %u base_vector %u\n",
+ 				   user_name, *num_vectors, *user_base_data,
+ 				   *base_vector);
  
- int ath11k_wmi_send_twt_pause_dialog_cmd(struct ath11k *ar,
-@@ -3341,8 +3349,10 @@ int ath11k_wmi_send_twt_pause_dialog_cmd(struct ath11k *ar,
- 			    "failed to send wmi command to pause twt dialog: %d",
- 			    ret);
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
+@@ -527,7 +527,7 @@ static irqreturn_t ath11k_pcic_ext_interrupt_handler(int irq, void *arg)
+ 	if (!test_bit(ATH11K_FLAG_EXT_IRQ_ENABLED, &ab->dev_flags))
+ 		return IRQ_HANDLED;
  
- int ath11k_wmi_send_twt_resume_dialog_cmd(struct ath11k *ar,
-@@ -3382,8 +3392,10 @@ int ath11k_wmi_send_twt_resume_dialog_cmd(struct ath11k *ar,
- 			    "failed to send wmi command to resume twt dialog: %d",
- 			    ret);
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
+-	ath11k_dbg(irq_grp->ab, ATH11K_DBG_PCI, "ext irq:%d\n", irq);
++	ath11k_dbg(irq_grp->ab, ATH11K_DBG_PCI, "ext irq %d\n", irq);
  
- int
-@@ -3417,8 +3429,10 @@ ath11k_wmi_send_obss_spr_cmd(struct ath11k *ar, u32 vdev_id,
- 		ath11k_warn(ab,
- 			    "Failed to send WMI_PDEV_OBSS_PD_SPATIAL_REUSE_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
+ 	/* last interrupt received for this group */
+ 	irq_grp->timestamp = jiffies;
+@@ -597,7 +597,7 @@ static int ath11k_pcic_ext_irq_config(struct ath11k_base *ab)
+ 			ab->irq_num[irq_idx] = irq;
  
- int
-@@ -3453,9 +3467,10 @@ ath11k_wmi_pdev_set_srg_bss_color_bitmap(struct ath11k *ar, u32 *bitmap)
- 		ath11k_warn(ab,
- 			    "failed to send WMI_PDEV_SET_SRG_BSS_COLOR_BITMAP_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
+ 			ath11k_dbg(ab, ATH11K_DBG_PCI,
+-				   "irq:%d group:%d\n", irq, i);
++				   "irq %d group %d\n", irq, i);
  
--	return ret;
-+	return 0;
- }
- 
- int
-@@ -3491,9 +3506,10 @@ ath11k_wmi_pdev_set_srg_patial_bssid_bitmap(struct ath11k *ar, u32 *bitmap)
- 		ath11k_warn(ab,
- 			    "failed to send WMI_PDEV_SET_SRG_PARTIAL_BSSID_BITMAP_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int
-@@ -3529,9 +3545,10 @@ ath11k_wmi_pdev_srg_obss_color_enable_bitmap(struct ath11k *ar, u32 *bitmap)
- 		ath11k_warn(ab,
- 			    "failed to send WMI_PDEV_SET_SRG_OBSS_COLOR_ENABLE_BITMAP_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int
-@@ -3567,9 +3584,10 @@ ath11k_wmi_pdev_srg_obss_bssid_enable_bitmap(struct ath11k *ar, u32 *bitmap)
- 		ath11k_warn(ab,
- 			    "failed to send WMI_PDEV_SET_SRG_OBSS_BSSID_ENABLE_BITMAP_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int
-@@ -3605,9 +3623,10 @@ ath11k_wmi_pdev_non_srg_obss_color_enable_bitmap(struct ath11k *ar, u32 *bitmap)
- 		ath11k_warn(ab,
- 			    "failed to send WMI_PDEV_SET_NON_SRG_OBSS_COLOR_ENABLE_BITMAP_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int
-@@ -3643,9 +3662,10 @@ ath11k_wmi_pdev_non_srg_obss_bssid_enable_bitmap(struct ath11k *ar, u32 *bitmap)
- 		ath11k_warn(ab,
- 			    "failed to send WMI_PDEV_SET_NON_SRG_OBSS_BSSID_ENABLE_BITMAP_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int
-@@ -3688,8 +3708,10 @@ ath11k_wmi_send_obss_color_collision_cfg_cmd(struct ath11k *ar, u32 vdev_id,
- 	if (ret) {
- 		ath11k_warn(ab, "Failed to send WMI_OBSS_COLOR_COLLISION_DET_CONFIG_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
- 
- int ath11k_wmi_send_bss_color_change_enable_cmd(struct ath11k *ar, u32 vdev_id,
-@@ -3722,8 +3744,10 @@ int ath11k_wmi_send_bss_color_change_enable_cmd(struct ath11k *ar, u32 vdev_id,
- 	if (ret) {
- 		ath11k_warn(ab, "Failed to send WMI_BSS_COLOR_CHANGE_ENABLE_CMDID");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
- 
- int ath11k_wmi_fils_discovery_tmpl(struct ath11k *ar, u32 vdev_id,
-@@ -3765,8 +3789,10 @@ int ath11k_wmi_fils_discovery_tmpl(struct ath11k *ar, u32 vdev_id,
- 			    "WMI vdev %i failed to send FILS discovery template command\n",
- 			    vdev_id);
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
- 
- int ath11k_wmi_probe_resp_tmpl(struct ath11k *ar, u32 vdev_id,
-@@ -3818,8 +3844,10 @@ int ath11k_wmi_probe_resp_tmpl(struct ath11k *ar, u32 vdev_id,
- 			    "WMI vdev %i failed to send probe response template command\n",
- 			    vdev_id);
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
- 
- int ath11k_wmi_fils_discovery(struct ath11k *ar, u32 vdev_id, u32 interval,
-@@ -3853,8 +3881,10 @@ int ath11k_wmi_fils_discovery(struct ath11k *ar, u32 vdev_id, u32 interval,
- 			    "WMI vdev %i failed to send FILS discovery enable/disable command\n",
- 			    vdev_id);
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
--	return ret;
-+
-+	return 0;
- }
- 
- static void
-@@ -4122,9 +4152,10 @@ static int ath11k_init_cmd_send(struct ath11k_pdev_wmi *wmi,
- 	if (ret) {
- 		ath11k_warn(ab, "failed to send WMI_INIT_CMDID\n");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int ath11k_wmi_pdev_lro_cfg(struct ath11k *ar,
-@@ -4213,9 +4244,10 @@ int ath11k_wmi_set_hw_mode(struct ath11k_base *ab,
- 	if (ret) {
- 		ath11k_warn(ab, "failed to send WMI_PDEV_SET_HW_MODE_CMDID\n");
- 		dev_kfree_skb(skb);
-+		return ret;
- 	}
- 
--	return ret;
-+	return 0;
- }
- 
- int ath11k_wmi_cmd_init(struct ath11k_base *ab)
+ 			irq_set_status_flags(irq, IRQ_DISABLE_UNLAZY);
+ 			ret = request_irq(irq, ath11k_pcic_ext_interrupt_handler,
 -- 
 2.30.2
 
