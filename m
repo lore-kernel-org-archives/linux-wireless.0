@@ -2,200 +2,198 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E830AC7EE43
-	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 14:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CF58C7EE25
+	for <linux-wireless@archiver.kernel.org>; Fri,  9 Jun 2023 15:10:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241325AbjFIOZ0 (ORCPT
+        id S232169AbjFIPKw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 9 Jun 2023 10:25:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49194 "EHLO
+        Fri, 9 Jun 2023 11:10:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241426AbjFIOZB (ORCPT
+        with ESMTP id S231479AbjFIPKu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Jun 2023 10:25:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 673F630FA
-        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 07:24:59 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 069AB6173E
-        for <linux-wireless@vger.kernel.org>; Fri,  9 Jun 2023 14:24:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D74E2C4339B;
-        Fri,  9 Jun 2023 14:24:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686320698;
-        bh=GMDcx3Ui6MfcwriDfeTNh70csPJBCOa3YpkhYfNWWLo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LQDk+fbRfqXPUUrFBlo8kqucX0eRD6OgcpFlKYqggzM3IEM+WLNobqjLay1Eb5R/K
-         MmjR5cCFRg5JWd1YJ1zQhjXPXPwlc299Rj5RSaQ5OMbSfdfjU//oXD1mWnBEWNPwVU
-         Ypp+aSaJISKJLGwmyUxhY/aQymfs4Lby23dO72sQPHU1KKwoKnvAi54Tok1WXi5eEW
-         wpLtRUuhv+FUF8V1fZik20Cl7Kt0bNe6x0x0avlpE3b06qzGdO0Rq2XHo7F6/D7O72
-         E+biTHKfGb5FlOHabmDg613JUgDFLDb0Cd5UM5aMgpwi+A21+vygeHXbBsoJHOctXg
-         gDbM895yDNVrQ==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 14/15] wifi: ath11k: htc: cleanup debug messages
-Date:   Fri,  9 Jun 2023 17:24:39 +0300
-Message-Id: <20230609142440.24643-15-kvalo@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230609142440.24643-1-kvalo@kernel.org>
-References: <20230609142440.24643-1-kvalo@kernel.org>
+        Fri, 9 Jun 2023 11:10:50 -0400
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2043.outbound.protection.outlook.com [40.107.94.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1620DB6;
+        Fri,  9 Jun 2023 08:10:44 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gwlqF+3WBfJ9370KnTE1SaB1+WRFTNTSAqqPfCkchDqy5vV+Hxj1nKNtoXv55AODwKN2FISEH537mqqyWIZpgsV6r4DLmy/zGAy3w6h0v7Rh0TgfHQVdEeEUQQDviW1Tn/8sK5VDccYM/sp8sFkXbS7usqb7CKCSY155Vh5nM4+aGGEQcXY5L8KmavavvVlF4NG6+1BsEwMyTJjY1j5bmdSbVCpMoBTqFRB79GXyZfM3xTDHn7649dG4YA3ZzpLOCahEerBGpQWQZR5QeJjXPhoWeH/3hPStGxUo9nLGgD+NdHh8dIrXhCrbL9ezqQFuE+2IFADSPCbtclBcH28tvQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=MhY0AMMxbm3qeJiginSoqBWdwA2wSDalwRbRc98BkoI=;
+ b=X06XKpshsxalbjEGZKDaJJnuAYs6wIgvcZ3P48zTuc5h4+qMA4MmfzuCvFOk3ijuvQe00czJTVDK1t4wxB5XsiR/7LmqXub/a3WpAv4sKyHEaFaV7KXXIluijvP42PZ9e2EFTiEwdoeyj6NwD01l6TD/B6LfxsA+lc1RfvoQkGj6xQSFzrg+fvhaHRXQJBeI0J+iCKnLBXUvlqzhGyr7nj2OQTt6v1SBC7x7ANP3zrIaQDF/75/us4yX2x4++5BZcg32zL9gE5ymOtUfTgqOmS6fsWT8JKIHM1JZnfsokqGMkz6m5SM+9DlXwmYVIuusV/72Ka/49AMbTWIzXudBrg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=MhY0AMMxbm3qeJiginSoqBWdwA2wSDalwRbRc98BkoI=;
+ b=Db4CVmA8ggkf2NsGrBYc7lLIuW/hPMWCApnRMgd1sfjiSb4Uhb3Qw2yAYvZBWrl8CgQZi0AeFd9gM76aJBnSyBa/Od34X9Wqab0hxLyCoTQzg74W/JKluP4XWiIvvao+Vr4HzamLdTCp/Y4nY5A1iujqxkhTZAXSQ/z0F90tcRg=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=silabs.com;
+Received: from DS7PR11MB6038.namprd11.prod.outlook.com (2603:10b6:8:75::8) by
+ SA1PR11MB5899.namprd11.prod.outlook.com (2603:10b6:806:22a::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.32; Fri, 9 Jun
+ 2023 15:10:42 +0000
+Received: from DS7PR11MB6038.namprd11.prod.outlook.com
+ ([fe80::9d8:6538:9dc0:17f9]) by DS7PR11MB6038.namprd11.prod.outlook.com
+ ([fe80::9d8:6538:9dc0:17f9%4]) with mapi id 15.20.6477.016; Fri, 9 Jun 2023
+ 15:10:39 +0000
+From:   =?ISO-8859-1?Q?J=E9r=F4me?= Pouiller <jerome.pouiller@silabs.com>
+To:     Kalle Valo <kvalo@kernel.org>,
+        Ganapathi Kondraju <ganapathi.kondraju@silabs.com>,
+        Marek Vasut <marex@denx.de>
+Cc:     linux-wireless@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Amol Hanwate <amol.hanwate@silabs.com>,
+        Angus Ainslie <angus@akkea.ca>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Martin Fuzzey <martin.fuzzey@flowbird.group>,
+        Martin Kepplinger <martink@posteo.de>,
+        Narasimha Anumolu <narasimha.anumolu@silabs.com>,
+        Sebastian Krzyszkowiak <sebastian.krzyszkowiak@puri.sm>,
+        Shivanadam Gude <shivanadam.gude@silabs.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        Srinivas Chappidi <srinivas.chappidi@silabs.com>,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH v3] MAINTAINERS: Add new maintainers to Redpine driver
+Date:   Fri, 09 Jun 2023 17:10:27 +0200
+Message-ID: <3166282.5fSG56mABF@pc-42>
+Organization: Silicon Labs
+In-Reply-To: <dd9a86af-e41a-3450-5e52-6473561a3e18@denx.de>
+References: <1675433281-6132-1-git-send-email-ganapathi.kondraju@silabs.com>
+ <112376890.nniJfEyVGO@pc-42> <dd9a86af-e41a-3450-5e52-6473561a3e18@denx.de>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+X-ClientProxiedBy: MR1P264CA0090.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:501:3f::14) To DS7PR11MB6038.namprd11.prod.outlook.com
+ (2603:10b6:8:75::8)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS7PR11MB6038:EE_|SA1PR11MB5899:EE_
+X-MS-Office365-Filtering-Correlation-Id: cd69b98c-9067-4af6-3664-08db68fbaf74
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: QSuVirXuHAHBqbPvvDevqTqMDc38WWy8/eB53YWelG7TdBK4/WyN7d4IO+LK25kRe5T/pRg3HXL03sZIAYjnLQoNPZJx80P/3j+/AHKW3ZS4G0+AUldWONpA7a8KG0elNT4QIre2Vs2/MSYByhB0Ct8WEg0dp4M/32h52lKhC/tra74Q8Wyi3vCL3vb2Dpsf8c0OSuOghnnM8QQRnpEfvCpRIO7giUG+iSX2c9TlnujHIlI2wUukxptwtgRqVckiJhUE89o9+JfbuGyQ26MY6HoURVkTaGGgGUPT/bIY61W6Ks/tmkI4ZzBITzOip91HtcQYkLKpfiHKsDYZXVCsHr/c8w9rCkTsLVPHlrerFF9wWYO90pl1PHnVmAdG0AdQMCxgi7w3f0U+eAjKAIOC5L1Q/pyBBOwnBj2yLSf+Vn2ySHxizh9GX6dzvW2f2hQ69A4aXeV0qsZ7PRYnMO5dGocZtrGocjeeA28oEh4w8QEh/A+GtU1z3hzQjsozq6SC3zMa5DJK5kDg0iZr+mldJyhGWhjQSTRrD8em8YfX3TuqaBg1tGkzvb7PwjVKl0PV4dw4gIuHtN1Jnoqcu2gN80AwPBPB1I5BVrt9xjbtxqACpL3Idxsk1qDbgZRIKn2R
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR11MB6038.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(39850400004)(376002)(346002)(136003)(396003)(366004)(451199021)(66946007)(66476007)(2906002)(478600001)(54906003)(4326008)(8936002)(8676002)(110136005)(316002)(41300700001)(5660300002)(36916002)(66556008)(6666004)(7416002)(6486002)(52116002)(6506007)(26005)(9686003)(53546011)(6512007)(966005)(186003)(38100700002)(33716001)(83380400001)(38350700002)(86362001)(39026012);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?iso-8859-1?Q?MOUzVe2+aR7wRN06mYf5Q2nrm0dtNTuDSuKrXetjNLlJEGJVM+qQ7ApoBj?=
+ =?iso-8859-1?Q?Ms3QY11/SB2Gv4lQuRVRD7Pc2/Y3GEMfAySAoGEsoPqTjHxH9dS4oSmP40?=
+ =?iso-8859-1?Q?SkIe7wSVY1ILlSPzXJNoUAAJjmcMPRa2wgXfdaIgLwi1L1YzjznNJSLgji?=
+ =?iso-8859-1?Q?NifA9f8SxkNYGHLeu81r9BnJ4dlZst+cQLUB/BmpZVfAQqtyPNUrjZ3a0n?=
+ =?iso-8859-1?Q?GthWFnQgUcoIL8aY3WpqytkhP7CGPyhbCi/bUt209SNcOoC2N9LbhQNB8M?=
+ =?iso-8859-1?Q?XMfP0x/iDbxaWXl29Qs13khvBvyCOQzHa1Iy6A+yZEGC+8EjCJ0KbxR/31?=
+ =?iso-8859-1?Q?TTjkNIG7tbF++EjKxHpFfxfgGfSb8kHajxsylP/0JUUnkq27levsqA9gsj?=
+ =?iso-8859-1?Q?dfdGjHKtAqYYFqDXziTPhVpiPbJJ79DmC5bu6kTbKYiel11cHpUVVNbycE?=
+ =?iso-8859-1?Q?EWv/Wb780uh/cUgwIIiCITQpHCcrUkR1CjOlNtlTLKF5t+GGisPTJegswW?=
+ =?iso-8859-1?Q?LK78rriPBHEUDpQ+3Oz+5VzmPiTeRppUPFjYAxsoaGYvsZY+rIZtGQV2vb?=
+ =?iso-8859-1?Q?C1yXuuR2wg4r33nSumuX6BnZWs1/PqBkwBVq6V7n7uRGqI/yUMKQKy+gYp?=
+ =?iso-8859-1?Q?tQIkCEyeFnSoLL/ba2tCRUqFUsS1Tv3K/f9iR50unA4XJ7exqet4ZJsmf6?=
+ =?iso-8859-1?Q?ICZ3ZGVqrnpxfGt9z3Dv6QYvjt7PSY/9/xOi12tO7+tnrNFxcI0Z00GKDi?=
+ =?iso-8859-1?Q?PGHrond4LZwl0vegjP3jpR/NBMLnaIJR3bszz+7SEFChWi4Qfg4RYsel/B?=
+ =?iso-8859-1?Q?HejUwEUnT6CyaO+FekLFRPyn1BdHyYRPy2WSiWotT8Cc9Wosi4Wbxm7JMs?=
+ =?iso-8859-1?Q?y6brEbV0R7S9CewMP7DMVG/liJkVn5pNeWqTA/PIVjd1UfoVPEKKWGnOBC?=
+ =?iso-8859-1?Q?kF9s/SLcrz16EIi3uzlUB3W19fscM7lgdtp4isY4UyWE+wpEA+mOw0kaMR?=
+ =?iso-8859-1?Q?BFLjyFvKjkgbDCsWBC3wCp3qOFeKHEZ9FdPhZp3P16mfLaNBHAgAKFQT5X?=
+ =?iso-8859-1?Q?gpe1gPjFkCJf3210L9619nG0jv/KMYZ1t4K4KtuTzOz55JL/QlmRi0cqsB?=
+ =?iso-8859-1?Q?5Bt2kkEdC86lXntmxJipHbV5TKXgUwep4SH6Juq9/MJDHVQ0H29+yeOkNz?=
+ =?iso-8859-1?Q?NN3FXotGyZ5u2qddzXOJsPe5pCGWrvR86mpLD2oaccIZmfUBZ3oJGi0aLo?=
+ =?iso-8859-1?Q?0PUvTVW7oIIMTOrl6rGeZNQXPj8TqnIcK3Lq69AyM+LciS1KHlPAFP+jzu?=
+ =?iso-8859-1?Q?zts4/ffwknZY+Cleh6OcG2i77tX9YYLA7rqW5P7x69WIU/XZRZCwiruEjz?=
+ =?iso-8859-1?Q?z6IEzZxa71i05yGXpdzNN1iIQGLBuaotlrcoOIlLUYmnLu3gfdbPYtAdbd?=
+ =?iso-8859-1?Q?kwTMqtPFx4V9m36k5xzaWK3RHdFITXNz7w+bcOyJ/0nKS00i/vzoA3Qxs1?=
+ =?iso-8859-1?Q?tPVaHQjFObolMEh7tjtKrYU9nG7vZXs6tOQcvHtljKxb1W/7iqPeLIXcmG?=
+ =?iso-8859-1?Q?JxfvAoy9OfC1I09hQDoOI2B+7gsJSN6Cel0kVqnzSpTZKC/0aPSh4eFK5P?=
+ =?iso-8859-1?Q?ycGWpPqjX+aM8vqzb+IRZoQUyNyn9P7DyN?=
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cd69b98c-9067-4af6-3664-08db68fbaf74
+X-MS-Exchange-CrossTenant-AuthSource: DS7PR11MB6038.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jun 2023 15:10:39.5194
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: M15T2t+HYsn6xUs/3UE55qSypzM8XiUR90J3udxdrWDd982UPz4rLP4ezijw9C4Iz28h4AkS5mNcRjrzMMTktA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR11MB5899
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <quic_kvalo@quicinc.com>
+Hi Marek,
 
-Cleanup HTC debug messages to follow the preferred style and try to make them
-more readable. Also add a few more and remove unnecessary.
+On Monday 5 June 2023 11:59:41 CEST Marek Vasut wrote:
+> On 6/1/23 12:47, J=E9r=F4me Pouiller wrote:
+> > On Saturday 27 May 2023 23:12:16 CEST Marek Vasut wrote:
+> >> On 2/27/23 11:28, Kalle Valo wrote:
+> >>> Ganapathi Kondraju <ganapathi.kondraju@silabs.com> writes:
+[...]
+> >> Has there been any progress on improving this driver maintainership
+> >> since this patch ?
+> >
+> > Hello Marek,
+> >
+> > The situation is still blurry. There is a willing to maintain this driv=
+er
+> > (and several people would like I take care of that). However, the effor=
+t
+> > to properly support this driver is still unknown (in fact, I have not y=
+et
+> > started to really look at the situation).
+>=20
+> I have to admit, the aforementioned paragraph is quite disturbing,
+> considering that this patch adds 6 maintainers, is already in V3, and so
+> far it is not even clear to silabs how much effort it would be to
+> maintain driver for their own hardware, worse, silabs didn't even check.
+> What is the point of adding those maintainers then ?
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
 
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/htc.c | 34 +++++++++++++++++----------
- 1 file changed, 21 insertions(+), 13 deletions(-)
+I think Ganapathi just wanted to give a list of people to keep in Cc in
+case there were some discussions about this driver. The status change was
+probably not what he wanted to do.
 
-diff --git a/drivers/net/wireless/ath/ath11k/htc.c b/drivers/net/wireless/ath/ath11k/htc.c
-index deace873da85..2c2e425c8665 100644
---- a/drivers/net/wireless/ath/ath11k/htc.c
-+++ b/drivers/net/wireless/ath/ath11k/htc.c
-@@ -46,7 +46,6 @@ static struct sk_buff *ath11k_htc_build_tx_ctrl_skb(void *ab)
- 	skb_cb = ATH11K_SKB_CB(skb);
- 	memset(skb_cb, 0, sizeof(*skb_cb));
- 
--	ath11k_dbg(ab, ATH11K_DBG_HTC, "%s: skb %p\n", __func__, skb);
- 	return skb;
- }
- 
-@@ -96,7 +95,7 @@ int ath11k_htc_send(struct ath11k_htc *htc,
- 		spin_lock_bh(&htc->tx_lock);
- 		if (ep->tx_credits < credits) {
- 			ath11k_dbg(ab, ATH11K_DBG_HTC,
--				   "insufficient credits ep %d required %d available %d\n",
-+				   "ep %d insufficient credits required %d total %d\n",
- 				   eid, credits, ep->tx_credits);
- 			spin_unlock_bh(&htc->tx_lock);
- 			ret = -EAGAIN;
-@@ -104,7 +103,7 @@ int ath11k_htc_send(struct ath11k_htc *htc,
- 		}
- 		ep->tx_credits -= credits;
- 		ath11k_dbg(ab, ATH11K_DBG_HTC,
--			   "ep %d consumed %d credits (total %d)\n",
-+			   "ep %d credits consumed %d total %d\n",
- 			   eid, credits, ep->tx_credits);
- 		spin_unlock_bh(&htc->tx_lock);
- 	}
-@@ -119,6 +118,9 @@ int ath11k_htc_send(struct ath11k_htc *htc,
- 		goto err_credits;
- 	}
- 
-+	ath11k_dbg(ab, ATH11K_DBG_HTC, "tx skb %p eid %d paddr %pad\n",
-+		   skb, skb_cb->eid, &skb_cb->paddr);
-+
- 	ret = ath11k_ce_send(htc->ab, skb, ep->ul_pipe_id, ep->eid);
- 	if (ret)
- 		goto err_unmap;
-@@ -132,7 +134,7 @@ int ath11k_htc_send(struct ath11k_htc *htc,
- 		spin_lock_bh(&htc->tx_lock);
- 		ep->tx_credits += credits;
- 		ath11k_dbg(ab, ATH11K_DBG_HTC,
--			   "ep %d reverted %d credits back (total %d)\n",
-+			   "ep %d credits reverted %d total %d\n",
- 			   eid, credits, ep->tx_credits);
- 		spin_unlock_bh(&htc->tx_lock);
- 
-@@ -167,7 +169,7 @@ ath11k_htc_process_credit_report(struct ath11k_htc *htc,
- 		ep = &htc->endpoint[report->eid];
- 		ep->tx_credits += report->credits;
- 
--		ath11k_dbg(ab, ATH11K_DBG_HTC, "ep %d got %d credits (total %d)\n",
-+		ath11k_dbg(ab, ATH11K_DBG_HTC, "ep %d credits got %d total %d\n",
- 			   report->eid, report->credits, ep->tx_credits);
- 
- 		if (ep->ep_ops.ep_tx_credits) {
-@@ -287,7 +289,7 @@ void ath11k_htc_rx_completion_handler(struct ath11k_base *ab,
- 	struct ath11k_htc_hdr *hdr;
- 	struct ath11k_htc_ep *ep;
- 	u16 payload_len;
--	u32 trailer_len = 0;
-+	u32 message_id, trailer_len = 0;
- 	size_t min_len;
- 	u8 eid;
- 	bool trailer_present;
-@@ -322,6 +324,9 @@ void ath11k_htc_rx_completion_handler(struct ath11k_base *ab,
- 	trailer_present = (FIELD_GET(HTC_HDR_FLAGS, hdr->htc_info)) &
- 			  ATH11K_HTC_FLAG_TRAILER_PRESENT;
- 
-+	ath11k_dbg(ab, ATH11K_DBG_HTC, "rx ep %d skb %p trailer_present %d\n",
-+		   eid, skb, trailer_present);
-+
- 	if (trailer_present) {
- 		u8 *trailer;
- 
-@@ -354,7 +359,12 @@ void ath11k_htc_rx_completion_handler(struct ath11k_base *ab,
- 	if (eid == ATH11K_HTC_EP_0) {
- 		struct ath11k_htc_msg *msg = (struct ath11k_htc_msg *)skb->data;
- 
--		switch (FIELD_GET(HTC_MSG_MESSAGEID, msg->msg_svc_id)) {
-+		message_id = FIELD_GET(HTC_MSG_MESSAGEID, msg->msg_svc_id);
-+
-+		ath11k_dbg(ab, ATH11K_DBG_HTC, "rx ep %d skb %p message_id %d\n",
-+			   eid, skb, message_id);
-+
-+		switch (message_id) {
- 		case ATH11K_HTC_MSG_READY_ID:
- 		case ATH11K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
- 			/* handle HTC control message */
-@@ -393,8 +403,6 @@ void ath11k_htc_rx_completion_handler(struct ath11k_base *ab,
- 		goto out;
- 	}
- 
--	ath11k_dbg(ab, ATH11K_DBG_HTC, "rx completion ep %d skb %p\n",
--		   eid, skb);
- 	ep->ep_ops.ep_rx_complete(ab, skb);
- 
- 	/* poll tx completion for interrupt disabled CE's */
-@@ -564,7 +572,7 @@ int ath11k_htc_wait_target(struct ath11k_htc *htc)
- 	htc->target_credit_size = credit_size;
- 
- 	ath11k_dbg(ab, ATH11K_DBG_HTC,
--		   "Target ready! transmit resources: %d size:%d\n",
-+		   "target ready total_transmit_credits %d target_credit_size %d\n",
- 		   htc->total_transmit_credits, htc->target_credit_size);
- 
- 	if ((htc->total_transmit_credits == 0) ||
-@@ -680,7 +688,7 @@ int ath11k_htc_connect_service(struct ath11k_htc *htc,
- 	}
- 
- 	ath11k_dbg(ab, ATH11K_DBG_HTC,
--		   "HTC Service %s connect response: status: 0x%lx, assigned ep: 0x%lx\n",
-+		   "service %s connect response status 0x%lx assigned ep 0x%lx\n",
- 		   htc_service_name(service_id),
- 		   FIELD_GET(HTC_SVC_RESP_MSG_STATUS, resp_msg->flags_len),
- 		   FIELD_GET(HTC_SVC_RESP_MSG_ENDPOINTID, resp_msg->flags_len));
-@@ -747,7 +755,7 @@ int ath11k_htc_connect_service(struct ath11k_htc *htc,
- 	if (disable_credit_flow_ctrl && ep->tx_credit_flow_enabled) {
- 		ep->tx_credit_flow_enabled = false;
- 		ath11k_dbg(ab, ATH11K_DBG_BOOT,
--			   "htc service '%s' eid %d TX flow control disabled\n",
-+			   "htc service '%s' eid %d tx flow control disabled\n",
- 			   htc_service_name(ep->service_id), assigned_eid);
- 	}
- 
-@@ -773,7 +781,7 @@ int ath11k_htc_start(struct ath11k_htc *htc)
- 				 ATH11K_HTC_MSG_SETUP_COMPLETE_EX_ID);
- 
- 	if (ab->hw_params.credit_flow)
--		ath11k_dbg(ab, ATH11K_DBG_HTC, "HTC is using TX credit flow control\n");
-+		ath11k_dbg(ab, ATH11K_DBG_HTC, "using tx credit flow control\n");
- 	else
- 		msg->flags |= ATH11K_GLOBAL_DISABLE_CREDIT_FLOW;
- 
--- 
-2.30.2
+
+> > Is this driver blocking some architectural changes? Kalle is talking ab=
+out
+> > patches to review. Can you point me on them?
+>=20
+> You can look up patches at patchwork.kernel.org or lore.kernel.org and
+> search for "rsi:" or "wifi: rsi:" tags.
+>=20
+> This driver is basically unusable and I am tempted to send a patch to
+> move it to staging and possibly remove it altogether.
+>=20
+> WiFi/BT coex is broken, WiFi stability is flaky at best, BT often
+> crashes the firmware. There are very iffy design decisions in the driver
+> and other weird defects I keep finding.
+>=20
+> Multiple people tried to fix at least a couple of basic problems, so the
+> driver can be used at all, but there is no documentation and getting
+> support regarding anything from RSI is a total waste of time. Sadly, the
+> only reference material I could find and work with is some downstream
+> goo, which is released in enormous single-commit code dumps with +/-
+> thousands of lines of changes and with zero explanation what each change
+> means.
+
+You are talking about this driver[1] I assume?
+
+[1]: https://github.com/SiliconLabs/RS911X-nLink-OSD
+
+[...]
+> In the meantime, since RSI neglected this driver for years, what would
+> be the suggestion for people who are stuck with the RSI WiFi hardware?
+
+Unfortunately, my only suggestion is to use the downstream driver we
+mentioned above.
+
+
+--=20
+J=E9r=F4me Pouiller
+
+
 
