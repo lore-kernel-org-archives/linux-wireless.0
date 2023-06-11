@@ -2,68 +2,71 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09584C7EE45
-	for <linux-wireless@archiver.kernel.org>; Sun, 11 Jun 2023 12:37:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C502C87FDC
+	for <linux-wireless@archiver.kernel.org>; Sun, 11 Jun 2023 12:37:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233234AbjFKMhi (ORCPT
+        id S233383AbjFKMhl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 11 Jun 2023 08:37:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48916 "EHLO
+        Sun, 11 Jun 2023 08:37:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229562AbjFKMhh (ORCPT
+        with ESMTP id S232975AbjFKMhi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Jun 2023 08:37:37 -0400
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15559E63;
+        Sun, 11 Jun 2023 08:37:38 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFB8610D8;
         Sun, 11 Jun 2023 05:37:36 -0700 (PDT)
-Received: by mail-ej1-x634.google.com with SMTP id a640c23a62f3a-977d55ac17bso619311966b.3;
+Received: by mail-ej1-x62d.google.com with SMTP id a640c23a62f3a-977cf86aae5so509169366b.0;
         Sun, 11 Jun 2023 05:37:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686487054; x=1689079054;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=aKDEqVBNJxLHyWcpWhxYEDcaagbwl62DkbQPgzzJEqQ=;
-        b=E0p+bg1sj7/jjAdpQm12mb9yfZuRaSIHsKURrMBsPg2Qc+YYVpDKF3tnuveUOXhcDO
-         o30y4uhNOG0sjjRyMlJD7MiHeodHxRZCTohRQTZMH6m5VU5kTwg9/lXTADcRaY0yPERL
-         10SAWyArRExkxSaZZFJxKQQjxS4tjW06bvz34CD4njybQrP0DkX2k3/mNIW/KW9DrFTL
-         Kji3fG3WNgGwd8rb5Tx8z/RAZlYnL2ReY28lTqeXANbbY9PLgROnGD3/NlM0jVsdzsIc
-         9k1mxxnrsMvhRvvihBwwEgCKY6coxlnrYf9GyRISExPu4Fa6hDe+E5pTFavMV1UH9sAM
-         51QA==
+        d=gmail.com; s=20221208; t=1686487055; x=1689079055;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=o6QgzW966aN6BIIkzy3cK1mL47MJ4CEEdefvvAf/lCw=;
+        b=QPs6ouJjMCKQWdtUgc3dgU1lUCNHVR3UNV4yaE3ZyXXxeW1SW0/XVCSDuFmvbueEq+
+         y7qD6g+gE/84Yzourvtzc+qvWiDGSYV6uREOmHdrKwQ0+yOpQhyR/5zIMkKwDzzg7kra
+         n9GTPEDLgiU1qafi5A2zHPzYbdNuIWsXlAAzFA4ZOwHyPi29XCsFNe37aBxmF3zBRq8y
+         16166iKIKVtbocYQFzl1N5bZ704luL4tF0AH17A6aGBguhfCt87aU+uxQ2T6Ugc3qIIC
+         ib/t68fZifu+gWf4VtaQWf44SB4w7lAEYbsgeKNiiBfBjPjsqtGzyPJiLsJlEwH3IbqV
+         CG2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686487054; x=1689079054;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=aKDEqVBNJxLHyWcpWhxYEDcaagbwl62DkbQPgzzJEqQ=;
-        b=USp3do78CWGhpY08EOo+xtdbadEFlQgZ7K2/laKRxantm/WcQIAsik/ehZ1iVdZe58
-         TI02EaohV3eUQT1hJQU0VPuIn/0Wpk31Rq1knXyIsrnv7Jmt0YpALi0ynKISegm5/jRZ
-         dVKvlB/DMOFQK8XBuNacRJtnfzYi5pkd5fUQP/v1hwkUmADFJcL4jQLG3PJC2MuMihgI
-         lhd8hvab3KX3iDt8vSW6ZjioR3gCrc4thB0/Xdpe59zqy0KCjPYCpDEjtG5LD+J6gptj
-         eVV70Ew4n+nM1HCVUVGW+4NZymzazZjrTmGQ/j78HWAbCV5LLn7NxJyBIkHV53uybC0n
-         HomA==
-X-Gm-Message-State: AC+VfDy0JxDIXOhfVwwFql/A5+2P5x8ae4MIOBTMj4CjhLI8EzZUb1Lm
-        DGNpk+jjPWysKx7wkZ0gClZQ7uuPDFE=
-X-Google-Smtp-Source: ACHHUZ4kwduvkYS33AizAyoJQ6d6KJtRYPJOcLthUw+LV4CKh7RnIjj1QFaMFbRCtPkVbhDpaSri8Q==
-X-Received: by 2002:a17:907:16a4:b0:974:216f:dc36 with SMTP id hc36-20020a17090716a400b00974216fdc36mr6680424ejc.17.1686487054314;
-        Sun, 11 Jun 2023 05:37:34 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1686487055; x=1689079055;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=o6QgzW966aN6BIIkzy3cK1mL47MJ4CEEdefvvAf/lCw=;
+        b=aiM9PMEWNlcQuT5w8R851siZa5A/1sdL8h4NJXVAuPnJfaLw4m0B2xhLaApmfxVtxs
+         KP11tSNVgW0gzF6yRZ4QB/IZZo2O7nCzKkSj6GOI+0MTXyiZtCmnbKeG4kjbFlAgMJcu
+         2jDqryXtgxMGxnr1LGBbHeYnFCk6CwPjNpQkLV38Oc2CMmTw9pyNuT2mN/hBNnPTT6bk
+         PRrJRARfdb4Iu+I+DuGdWeIcDx/NHeLr/uY31JAxjkGlJq717m6p4+35zQrgVCpDygqC
+         gWJX+OQnVFETf9AhPx/5IKLXsfcfzP0QEDJntzkkk6Dn+ChsaYcUx7QlL1tyoUVmBnDK
+         nvmg==
+X-Gm-Message-State: AC+VfDxe+Pr1ODWrCr0/6zOtC9S0d3sEZI4wFRyi5KElvuVNoMzap3IB
+        wsig7IDaIiX9s0CzJismIxpfHHGQFJ8=
+X-Google-Smtp-Source: ACHHUZ5+L9bsKXky3I4zLev4ZT9LXDiJ8TXQja3KgzbdHNiaAdJAR1wnAzg9Ywpu1jzg+q/yLhNobQ==
+X-Received: by 2002:a17:907:3f20:b0:978:82fd:758b with SMTP id hq32-20020a1709073f2000b0097882fd758bmr6423965ejc.29.1686487055192;
+        Sun, 11 Jun 2023 05:37:35 -0700 (PDT)
 Received: from shift.daheim (p4fd09ff6.dip0.t-ipconnect.de. [79.208.159.246])
-        by smtp.gmail.com with ESMTPSA id p17-20020a1709060dd100b0094f282fc29asm3709170eji.207.2023.06.11.05.37.33
+        by smtp.gmail.com with ESMTPSA id k14-20020a1709061c0e00b0096f6e2f4d9esm3759194ejg.83.2023.06.11.05.37.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Sun, 11 Jun 2023 05:37:33 -0700 (PDT)
 Received: from chuck by shift.daheim with local (Exim 4.96)
         (envelope-from <chuck@shift.daheim>)
-        id 1q8KK4-000LMu-2R;
+        id 1q8KK4-000LN0-2X;
         Sun, 11 Jun 2023 14:37:32 +0200
 From:   Christian Lamparter <chunkeey@gmail.com>
 To:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com
-Cc:     rafal@milecki.pl, kvalo@kernel.org, f.fainelli@gmail.com,
-        conor+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        robh+dt@kernel.org
-Subject: [PATCH v1] dt-bindings: net: wireless: bcm4329-fmac: add ieee80211-freq-limit property
-Date:   Sun, 11 Jun 2023 14:37:29 +0200
-Message-Id: <288fc9a0db6c292bc132e828611c41785b075078.1686486461.git.chunkeey@gmail.com>
+        ath11k@lists.infradead.org
+Cc:     kvalo@kernel.org, conor+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org,
+        Conor Dooley <conor.dooley@microchip.com>
+Subject: [PATCH v2 1/2] dt-bindings: net: wireless: ath11k: add ieee80211-freq-limit property
+Date:   Sun, 11 Jun 2023 14:37:31 +0200
+Message-Id: <fc606d2550d047a53b4289235dd3c0fe23d5daac.1686486468.git.chunkeey@gmail.com>
 X-Mailer: git-send-email 2.40.1
+In-Reply-To: <288fc9a0db6c292bc132e828611c41785b075078.1686486461.git.chunkeey@gmail.com>
+References: <288fc9a0db6c292bc132e828611c41785b075078.1686486461.git.chunkeey@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -74,40 +77,35 @@ This is an existing optional property that ieee80211.yaml/cfg80211
 provides. It's useful to further restrict supported frequencies
 for a specified device through device-tree.
 
-The driver supported this since ~2017 by
-commit 0f83ff697356 ("brcmfmac: use wiphy_read_of_freq_limits to respect limits from DT")
-
-This property is already being used by:
-arch/arm/dts/bcm4709-netgear-r8000.dts
-
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
 ---
- .../devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml  | 5 +++++
- 1 file changed, 5 insertions(+)
+v1->v2: make dtbs_check dt_binding_check (moved to existing allOf: seems to be fine)
+---
+ .../devicetree/bindings/net/wireless/qcom,ath11k.yaml          | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-index fec1cc9b9a08..44e5f6677289 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-@@ -15,6 +15,9 @@ description:
-   These chips also have a Bluetooth portion described in a separate
-   binding.
- 
-+allOf:
-+  - $ref: ieee80211.yaml#
-+
- properties:
-   compatible:
-     oneOf:
-@@ -63,6 +66,8 @@ properties:
-     description: Name for the OOB IRQ, this must be set to "host-wake".
-     const: host-wake
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+index 7d5f982a3d09..521dc71d5e97 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+@@ -58,6 +58,8 @@ properties:
+     minItems: 1
+     maxItems: 2
  
 +  ieee80211-freq-limit: true
 +
-   brcm,drive-strength:
-     $ref: /schemas/types.yaml#/definitions/uint32
-     description: Drive strength used for the SDIO pins on the device in mA.
+   wifi-firmware:
+     type: object
+     description: |
+@@ -87,6 +89,7 @@ required:
+ additionalProperties: false
+ 
+ allOf:
++  - $ref: ieee80211.yaml#
+   - if:
+       properties:
+         compatible:
 -- 
 2.40.1
 
