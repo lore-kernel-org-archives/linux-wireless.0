@@ -2,52 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E939C88CB2
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Jun 2023 15:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A71C7EE2E
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Jun 2023 15:51:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237964AbjFLPvm (ORCPT
+        id S236140AbjFLPvq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Jun 2023 11:51:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41156 "EHLO
+        Mon, 12 Jun 2023 11:51:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232538AbjFLPvk (ORCPT
+        with ESMTP id S238033AbjFLPvp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2023 11:51:40 -0400
+        Mon, 12 Jun 2023 11:51:45 -0400
 Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F2C810D3
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2023 08:51:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E61DCA
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2023 08:51:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686585099; x=1718121099;
+  t=1686585103; x=1718121103;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=guqWNB0QKB5WbTINImrnRco9EM2qDPXO02THsRhu9bo=;
-  b=emTesBiIoYf1yVTH3CyuuN3KQf30xj2+Gp4bReX7gmhf+9Fm68MRQ420
-   Rmwv8aGQHOpj+QPJnUTgIp5fxAQBMvKlNWEBtlnZHQY8UxqRmRZAwERkQ
-   tdGOM1dS2fgupzvgwO0H/YqQZ7vpk/FZ52m47vfT67g1EPRPNyBNkMvQt
-   LF/HLViItJYyOaQpl7XzpS7e7akuV8qWPniW/p2eNzASXwEtWZFLpqJ7C
-   YS9lazJmfeESQUqJGZG4SEtW7cmJsGhRxIgRF8D4s6IxCqZ6p7k3GPwEg
-   JGNAzkuBMf1SUcU+6sK6WrrMYSIAh4hX+A0kL7VRuUp+ndn96FROgUCJg
+  bh=lbZ4zv6gCWP8gk0cXx+2dJA0BhOi/x79Ldxgt9y6Hac=;
+  b=Gr4oUfrouXN9QFZ9FuLyYvvuiPTg2CKfBjna3y9pQJtDXSdcocRsndBY
+   ZE0WojpSDMOz8aw34CgIx9q5/HuaIkE/0CgCkpkFUFmWV0JGX3V7DIy9s
+   frI7mfy+tzYobEwqkiWhOzhgbXZToncUzqnAWY7now49aWQO3+iG7gGR/
+   JbDs+Cqbb56A0kv902s5JnhtNzmu4vnK0qhyGR2FLuiq+sw6C13S0F+F9
+   R/DHXC9xOSBNLvlnEtZ5DVZpIjsUkAB1xbo0HOBnLItSaWaBMxJ2VL2YW
+   nJ+D3ZeblOHJ+aUL0BuICuen+6MdTZ5ILyBfPT0d6127uYwxl/6hXB0m7
    g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="421674193"
+X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="421674212"
 X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
-   d="scan'208";a="421674193"
+   d="scan'208";a="421674212"
 Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 08:51:38 -0700
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 08:51:43 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="885499281"
+X-IronPort-AV: E=McAfee;i="6600,9927,10739"; a="885499310"
 X-IronPort-AV: E=Sophos;i="6.00,236,1681196400"; 
-   d="scan'208";a="885499281"
+   d="scan'208";a="885499310"
 Received: from azvuluno-mobl2.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.202.109])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 08:51:37 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2023 08:51:41 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Avraham Stern <avraham.stern@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 04/15] wifi: iwlwifi: mvm: FTM initiator MLO support
-Date:   Mon, 12 Jun 2023 18:51:05 +0300
-Message-Id: <20230612184434.1737f26e9cf7.I8f140ca55094da1d73c387fc036394fb2c148c85@changeid>
+Subject: [PATCH 06/15] wifi: iwlwifi: bump FW API to 79 for AX devices
+Date:   Mon, 12 Jun 2023 18:51:07 +0300
+Message-Id: <20230612184434.c54013425732.I4df33c68ee3ef6b6a330f1cbef7f5bbf4f54b269@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230612155116.168000-1-gregory.greenman@intel.com>
 References: <20230612155116.168000-1-gregory.greenman@intel.com>
@@ -57,94 +56,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-When checking if the initiator is associated to the responder,
-iterate over all active links.
+Start supporting API version 79 for AX devices.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../intel/iwlwifi/mvm/ftm-initiator.c         | 48 ++++++++++++-------
- 1 file changed, 31 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index 652a603c4500..233ae81884a0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -72,15 +72,24 @@ int iwl_mvm_ftm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	 * the TK is already configured for this station, so it
- 	 * shouldn't be set again here.
- 	 */
--	if (vif->cfg.assoc &&
--	    !memcmp(addr, vif->bss_conf.bssid, ETH_ALEN)) {
-+	if (vif->cfg.assoc) {
- 		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+		struct ieee80211_bss_conf *link_conf;
-+		unsigned int link_id;
- 		struct ieee80211_sta *sta;
-+		u8 sta_id;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 2cf3af284680..fce4fcdc4dfb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -10,7 +10,7 @@
+ #include "fw/api/txq.h"
  
- 		rcu_read_lock();
--		sta = rcu_dereference(mvm->fw_id_to_mac_id[mvmvif->deflink.ap_sta_id]);
--		if (!IS_ERR_OR_NULL(sta) && sta->mfp)
--			expected_tk_len = 0;
-+		for_each_vif_active_link(vif, link_conf, link_id) {
-+			if (memcmp(addr, link_conf->bssid, ETH_ALEN))
-+				continue;
-+
-+			sta_id = mvmvif->link[link_id]->ap_sta_id;
-+			sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
-+			if (!IS_ERR_OR_NULL(sta) && sta->mfp)
-+				expected_tk_len = 0;
-+			break;
-+		}
- 		rcu_read_unlock();
- 	}
+ /* Highest firmware API version supported */
+-#define IWL_22000_UCODE_API_MAX	78
++#define IWL_22000_UCODE_API_MAX	79
+ #define IWL_22500_UCODE_API_MAX	77
  
-@@ -518,25 +527,30 @@ iwl_mvm_ftm_put_target(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	iwl_mvm_ftm_put_target_common(mvm, peer, target);
- 
--	if (vif->cfg.assoc &&
--	    !memcmp(peer->addr, vif->bss_conf.bssid, ETH_ALEN)) {
-+	if (vif->cfg.assoc) {
- 		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 		struct ieee80211_sta *sta;
-+		struct ieee80211_bss_conf *link_conf;
-+		unsigned int link_id;
- 
- 		rcu_read_lock();
-+		for_each_vif_active_link(vif, link_conf, link_id) {
-+			if (memcmp(peer->addr, link_conf->bssid, ETH_ALEN))
-+				continue;
-+
-+			target->sta_id = mvmvif->link[link_id]->ap_sta_id;
-+			sta = rcu_dereference(mvm->fw_id_to_mac_id[target->sta_id]);
-+			if (WARN_ON_ONCE(IS_ERR_OR_NULL(sta))) {
-+				rcu_read_unlock();
-+				return PTR_ERR_OR_ZERO(sta);
-+			}
- 
--		sta = rcu_dereference(mvm->fw_id_to_mac_id[mvmvif->deflink.ap_sta_id]);
--		if (WARN_ON_ONCE(IS_ERR_OR_NULL(sta))) {
--			rcu_read_unlock();
--			return PTR_ERR_OR_ZERO(sta);
-+			if (sta->mfp && (peer->ftm.trigger_based ||
-+					 peer->ftm.non_trigger_based))
-+				FTM_PUT_FLAG(PMF);
-+			break;
- 		}
--
--		if (sta->mfp && (peer->ftm.trigger_based || peer->ftm.non_trigger_based))
--			FTM_PUT_FLAG(PMF);
--
- 		rcu_read_unlock();
--
--		target->sta_id = mvmvif->deflink.ap_sta_id;
- 	} else {
- 		target->sta_id = IWL_MVM_INVALID_STA;
- 	}
+ /* Lowest firmware API version supported */
 -- 
 2.38.1
 
