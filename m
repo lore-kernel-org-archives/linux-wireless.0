@@ -2,118 +2,105 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E98C7EE2F
-	for <linux-wireless@archiver.kernel.org>; Mon, 12 Jun 2023 22:22:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24339C7EE43
+	for <linux-wireless@archiver.kernel.org>; Mon, 12 Jun 2023 23:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237126AbjFLWWC (ORCPT
+        id S235251AbjFLXXV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 12 Jun 2023 18:22:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43278 "EHLO
+        Mon, 12 Jun 2023 19:23:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232956AbjFLWWB (ORCPT
+        with ESMTP id S229552AbjFLXXV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Jun 2023 18:22:01 -0400
-X-Greylist: delayed 13747 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 12 Jun 2023 15:21:58 PDT
-Received: from 10.mo581.mail-out.ovh.net (10.mo581.mail-out.ovh.net [178.33.250.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA0410B
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2023 15:21:58 -0700 (PDT)
-Received: from director8.ghost.mail-out.ovh.net (unknown [10.108.4.98])
-        by mo581.mail-out.ovh.net (Postfix) with ESMTP id 5A2FC2504B
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jun 2023 18:23:27 +0000 (UTC)
-Received: from ghost-submission-6684bf9d7b-7pw2s (unknown [10.110.115.83])
-        by director8.ghost.mail-out.ovh.net (Postfix) with ESMTPS id 1950F1FDC7;
-        Mon, 12 Jun 2023 18:23:27 +0000 (UTC)
-Received: from RCM-web3.webmail.mail.ovh.net ([178.33.236.78])
-        by ghost-submission-6684bf9d7b-7pw2s with ESMTPSA
-        id U53TBZ9ih2ThsQEAYGFhMA
-        (envelope-from <rafal@milecki.pl>); Mon, 12 Jun 2023 18:23:27 +0000
+        Mon, 12 Jun 2023 19:23:21 -0400
+Received: from mail-io1-xd31.google.com (mail-io1-xd31.google.com [IPv6:2607:f8b0:4864:20::d31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEB93E6B;
+        Mon, 12 Jun 2023 16:23:18 -0700 (PDT)
+Received: by mail-io1-xd31.google.com with SMTP id ca18e2360f4ac-77af28802c7so91892339f.1;
+        Mon, 12 Jun 2023 16:23:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686612198; x=1689204198;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=dxVyUY0dadSws9d1S/zE7Uf1J0Kd9LG7pWJtcUQbE5U=;
+        b=l7zrUKkhBHjs07Y20WY28bXIbFYRxRmVByeXNT1FoOAcaH2hF87Pmye9lTtnd1LCXQ
+         vr8F6/xf4hgNG99WU8q1wSdDTpDJh1Itk/A0xCvtdo8tsAa9Pz6TAaSn8Eg30j3r6nzP
+         OgjaQfQ8KRP9kNlQuehcIgCAiWSjBOzcg+IYHJN7/El1Za01CG4b/I7GoURkuoziMVNY
+         BtdNw41jZeew+f1JZt60uEHet+SlSQcfqVfTfTF4uQRwRsJI6ZAU7UW2ICTT1V+1yYKy
+         YuHlMRZd+UHSP5xpgssX2rW0QAuQJzCOptjrlRpGjoPRyWlkvE3bvSY8lvFyIvE6ebNQ
+         KTHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686612198; x=1689204198;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=dxVyUY0dadSws9d1S/zE7Uf1J0Kd9LG7pWJtcUQbE5U=;
+        b=SZ3mijSlYLaALP0xloE3g9FQ2mQxl3XsHpaJzH4eXAV2q4CGJqWxhi+f1e0eOOfL1+
+         2p+J1pvDjmAZC7EmFDUKdajb3V6lRhggwYFYdjZt1FxwEFAVgR/8iL2HlJOICciZC12G
+         aIh8GnS7XqB0/RiSJifcpLgiZEMNTJiEGv38gzQ0pa+33Ow7ykseXM16wRNgW/zu9IUS
+         edXRgDK9RV34XizjDGo6GEAopa/ovsWEJQ1E7Z9Jplx17ZjrDBuaxl8iKmsjDDboMpHH
+         jkHlMmBTyBtauRsb6YWnXCPLE1HeiRr2Eg5HOSLIkchqrvULPsprwyk+3R9UDc/7Z5CI
+         ZdAQ==
+X-Gm-Message-State: AC+VfDx1uG1cqjNN0CSbNO7Iz/Cc63F7wDG2WeOieTbQC5FK9mpMnTuJ
+        ULw51EvzXjypNrJll6kJ8Yg=
+X-Google-Smtp-Source: ACHHUZ78gkSUJOE5H6qbc7XJeTrq7lUqGE/Oj6psX6SiVlRtTaSfcOciouo6J+BQ8MOrQ1OKichmxA==
+X-Received: by 2002:a6b:7614:0:b0:777:91d5:c198 with SMTP id g20-20020a6b7614000000b0077791d5c198mr8178574iom.15.1686612198179;
+        Mon, 12 Jun 2023 16:23:18 -0700 (PDT)
+Received: from azeems-kspp.c.googlers.com.com (54.70.188.35.bc.googleusercontent.com. [35.188.70.54])
+        by smtp.gmail.com with ESMTPSA id t8-20020a05663801e800b0041f4d47722csm3099563jaq.126.2023.06.12.16.23.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Jun 2023 16:23:17 -0700 (PDT)
+From:   Azeem Shaikh <azeemshaikh38@gmail.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-hardening@vger.kernel.org,
+        Azeem Shaikh <azeemshaikh38@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org
+Subject: [PATCH] cfg80211: cfg80211: strlcpy withreturn
+Date:   Mon, 12 Jun 2023 23:23:01 +0000
+Message-ID: <20230612232301.2572316-1-azeemshaikh38@gmail.com>
+X-Mailer: git-send-email 2.41.0.162.gfafddb0af9-goog
 MIME-Version: 1.0
-Date:   Mon, 12 Jun 2023 20:23:26 +0200
-From:   =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-To:     Christian Lamparter <chunkeey@gmail.com>
-Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com, kvalo@kernel.org,
-        f.fainelli@gmail.com, conor+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, robh+dt@kernel.org
-Subject: Re: [PATCH v1] dt-bindings: net: wireless: bcm4329-fmac: add
- ieee80211-freq-limit property
-In-Reply-To: <288fc9a0db6c292bc132e828611c41785b075078.1686486461.git.chunkeey@gmail.com>
-References: <288fc9a0db6c292bc132e828611c41785b075078.1686486461.git.chunkeey@gmail.com>
-User-Agent: Roundcube Webmail/1.4.13
-Message-ID: <f19c93cc90d6fa92e7e0430a12ec838b@milecki.pl>
-X-Sender: rafal@milecki.pl
-X-Originating-IP: 93.159.183.33
-X-Webmail-UserID: rafal@milecki.pl
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 7106398739039759254
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvhedrgeduhedguddvfecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecunecujfgurhepggffhffvvefujghffgfkgihitgfgsehtjehjtddtredvnecuhfhrohhmpeftrghfrghlucfoihhlvggtkhhiuceorhgrfhgrlhesmhhilhgvtghkihdrphhlqeenucggtffrrghtthgvrhhnpefgueelueetteefueehhffhgfetvdegjeefleffuedvhfeuffdvheegueevuefhleenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeduvdejrddtrddtrddupdelfedrudehledrudekfedrfeefpddujeekrdeffedrvdefiedrjeeknecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepuddvjedrtddrtddruddpmhgrihhlfhhrohhmpeeorhgrfhgrlhesmhhilhgvtghkihdrphhlqedpnhgspghrtghpthhtohepuddprhgtphhtthhopehlihhnuhigqdifihhrvghlvghsshesvhhgvghrrdhkvghrnhgvlhdrohhrghdpoffvtefjohhsthepmhhoheekuddpmhhouggvpehsmhhtphhouhht
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2023-06-11 14:37, Christian Lamparter wrote:
-> This is an existing optional property that ieee80211.yaml/cfg80211
-> provides. It's useful to further restrict supported frequencies
-> for a specified device through device-tree.
-> 
-> The driver supported this since ~2017 by
-> commit 0f83ff697356 ("brcmfmac: use wiphy_read_of_freq_limits to
-> respect limits from DT")
-> 
-> This property is already being used by:
-> arch/arm/dts/bcm4709-netgear-r8000.dts
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+strlcpy() reads the entire source buffer first.
+This read may exceed the destination size limit.
+This is both inefficient and can lead to linear read
+overflows if a source string is not NUL-terminated [1].
+In an effort to remove strlcpy() completely [2], replace
+strlcpy() here with strscpy().
 
-I've already submitted patch for that:
-https://patchwork.kernel.org/project/linux-wireless/patch/20230602135925.14143-2-zajec5@gmail.com/
+Direct replacement is safe here since WIPHY_ASSIGN is only used by
+TRACE macros and the return values are ignored.
 
-This patch isn't needed anymore.
+[1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
+[2] https://github.com/KSPP/linux/issues/89
 
+Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
+---
+ net/wireless/trace.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->  .../devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml  | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git
-> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-> index fec1cc9b9a08..44e5f6677289 100644
-> --- 
-> a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-> +++ 
-> b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-> @@ -15,6 +15,9 @@ description:
->    These chips also have a Bluetooth portion described in a separate
->    binding.
-> 
-> +allOf:
-> +  - $ref: ieee80211.yaml#
-
-FWIW:
-This isn't enough without changing additionalProperties to 
-unevaluatedProperties.
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 716a1fa70069..a00da3ebfed5 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -22,7 +22,7 @@
+ 
+ #define MAXNAME		32
+ #define WIPHY_ENTRY	__array(char, wiphy_name, 32)
+-#define WIPHY_ASSIGN	strlcpy(__entry->wiphy_name, wiphy_name(wiphy), MAXNAME)
++#define WIPHY_ASSIGN	strscpy(__entry->wiphy_name, wiphy_name(wiphy), MAXNAME)
+ #define WIPHY_PR_FMT	"%s"
+ #define WIPHY_PR_ARG	__entry->wiphy_name
+ 
+-- 
+2.41.0.162.gfafddb0af9-goog
 
 
->  properties:
->    compatible:
->      oneOf:
-> @@ -63,6 +66,8 @@ properties:
->      description: Name for the OOB IRQ, this must be set to 
-> "host-wake".
->      const: host-wake
-> 
-> +  ieee80211-freq-limit: true
-
-FWIW:
-You don't need it here with allOf.
-
-
->    brcm,drive-strength:
->      $ref: /schemas/types.yaml#/definitions/uint32
->      description: Drive strength used for the SDIO pins on the device 
-> in mA.
