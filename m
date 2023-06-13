@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19747EB64D0
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 14:34:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 337ADEB64D7
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 14:34:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242570AbjFMOdi (ORCPT
+        id S242720AbjFMOeI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Jun 2023 10:33:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49652 "EHLO
+        Tue, 13 Jun 2023 10:34:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242928AbjFMOda (ORCPT
+        with ESMTP id S242949AbjFMOdt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2023 10:33:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDEAA10E6
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 07:33:28 -0700 (PDT)
+        Tue, 13 Jun 2023 10:33:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F2AA1726
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 07:33:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0FC6363726
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:33:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C5DBC433F1;
-        Tue, 13 Jun 2023 14:33:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5F96663130
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:33:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FDFBC433D9;
+        Tue, 13 Jun 2023 14:33:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686666807;
-        bh=APZV41sSLKhwHB92+tLxSCoRN4r+Oh/gMwVm8Ug7ON8=;
+        s=k20201202; t=1686666818;
+        bh=OPmrK71qMy64vPoT6d4Tw4lBQQAA/BuLCxPBEPnPOzs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BOTWfPWhmMeNZXfGcTJ7MxxdGsY+xf1719pHk7Zbmvik+K9hPF3vdan53mEg44B2b
-         FoV9qtQdV5I/1QAlIqgVUSQScoYLK5zu/x33MVemb0p+zY+58k2PGyQ62b0HDAFjmR
-         aZkp3mNc6yM13ygTnX6hM3AxXRes2lPjk67YcH1MThge2HbCuATr9wO2UEX2gvB+JW
-         jxn26kpVpQ7ROrEIGsa1G7Mal7oXEtkpIPeF1CGJ6Fg83qiaa8JGEXwuZQasMv/p0O
-         CMt+fhlJemIm18qmh/XSqlnoI569Ravc0o3jt6G6n/YMV2lsBB0k6IDwCB4O26fsTm
-         8IIZbvZxYGRqg==
+        b=MAJrmCuRP+P5azozVYvbOAHQBFfkGDNrPDXqlHBK1vnrwOe+gd/DstCdYJe0iTTJj
+         +JmEPympIX24AwZdYS1ccB3O31z4RmjB7L9xMNuy7E8GecjIlwFvz0n5gOo2zAjAgS
+         1C/7fBBl5zE4wowV2QpE8aCLP06yPs7pfJOektURLZ6nLPmz4N8wE/2Bit8KjXVUKq
+         ZDwWTdVv5Qs1i4Uh9HOvQKizt11oP4kYyrEBAaMosnionQrUpIaY2iBnHca/rfbUkO
+         N2EU48jIov5r9Ndi3XAnWXXF6jkr+XJfWWgjYNfsxGfqRnWtCmVVqeq9y5a7b8Wi96
+         z1QTW5HhkYHLw==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         shayne.chen@mediatek.com, ryder.lee@mediatek.com,
         deren.wu@mediatek.com
-Subject: [PATCH v3 02/15] wifi: mt76: mt7603: rely on shared sta_poll_list and sta_poll_lock
-Date:   Tue, 13 Jun 2023 16:32:30 +0200
-Message-Id: <1a6233c7bca8c5c98d7efa3d4dd866eb579f6df4.1686664917.git.lorenzo@kernel.org>
+Subject: [PATCH v3 05/15] wifi: mt76: mt7921: rely on shared sta_poll_list and sta_poll_lock
+Date:   Tue, 13 Jun 2023 16:32:33 +0200
+Message-Id: <9a3a8b5b5631ca876ae3798d65b73b62d9d113e2.1686664917.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <cover.1686664917.git.lorenzo@kernel.org>
 References: <cover.1686664917.git.lorenzo@kernel.org>
@@ -55,72 +55,112 @@ and get rid of private copies.
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7603/init.c   |  2 --
- .../net/wireless/mediatek/mt76/mt7603/mac.c    | 18 +++++++++---------
- .../net/wireless/mediatek/mt76/mt7603/main.c   |  8 ++++----
- .../net/wireless/mediatek/mt76/mt7603/mt7603.h |  3 ---
- 4 files changed, 13 insertions(+), 18 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |  2 --
+ .../net/wireless/mediatek/mt76/mt7921/mac.c   | 32 ++++++++++---------
+ .../net/wireless/mediatek/mt76/mt7921/main.c  |  8 ++---
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  3 --
+ 4 files changed, 21 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-index 9a2e632d577a..0762de3ce5ac 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-@@ -500,8 +500,6 @@ int mt7603_register_device(struct mt7603_dev *dev)
- 	bus_ops->rmw = mt7603_rmw;
- 	dev->mt76.bus = bus_ops;
- 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index e929f6eb65ce..cdb4478f04d0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -392,8 +392,6 @@ int mt7921_register_device(struct mt7921_dev *dev)
+ #endif
+ 	skb_queue_head_init(&dev->phy.scan_event_list);
+ 	skb_queue_head_init(&dev->coredump.msg_list);
 -	INIT_LIST_HEAD(&dev->sta_poll_list);
 -	spin_lock_init(&dev->sta_poll_lock);
- 	spin_lock_init(&dev->ps_lock);
  
- 	INIT_DELAYED_WORK(&dev->mphy.mac_work, mt7603_mac_work);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 12e0af52082a..ac8a67e10a4d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -412,16 +412,16 @@ void mt7603_mac_sta_poll(struct mt7603_dev *dev)
- 	while (1) {
+ 	INIT_WORK(&dev->reset_work, mt7921_mac_reset_work);
+ 	INIT_WORK(&dev->init_work, mt7921_init_work);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index bde73859b5da..d81d78ac5c91 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -68,9 +68,9 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
+ 	s8 rssi[4];
+ 	int i;
+ 
+-	spin_lock_bh(&dev->sta_poll_lock);
+-	list_splice_init(&dev->sta_poll_list, &sta_poll_list);
+-	spin_unlock_bh(&dev->sta_poll_lock);
++	spin_lock_bh(&dev->mt76.sta_poll_lock);
++	list_splice_init(&dev->mt76.sta_poll_list, &sta_poll_list);
++	spin_unlock_bh(&dev->mt76.sta_poll_lock);
+ 
+ 	while (true) {
  		bool clear = false;
+@@ -78,15 +78,15 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
+ 		u16 idx;
+ 		u8 bw;
  
 -		spin_lock_bh(&dev->sta_poll_lock);
--		if (list_empty(&dev->sta_poll_list)) {
--			spin_unlock_bh(&dev->sta_poll_lock);
 +		spin_lock_bh(&dev->mt76.sta_poll_lock);
-+		if (list_empty(&dev->mt76.sta_poll_list)) {
+ 		if (list_empty(&sta_poll_list)) {
+-			spin_unlock_bh(&dev->sta_poll_lock);
 +			spin_unlock_bh(&dev->mt76.sta_poll_lock);
  			break;
  		}
- 
--		msta = list_first_entry(&dev->sta_poll_list, struct mt7603_sta,
--					poll_list);
-+		msta = list_first_entry(&dev->mt76.sta_poll_list,
-+					struct mt7603_sta, poll_list);
+ 		msta = list_first_entry(&sta_poll_list,
+ 					struct mt7921_sta, poll_list);
  		list_del_init(&msta->poll_list);
 -		spin_unlock_bh(&dev->sta_poll_lock);
 +		spin_unlock_bh(&dev->mt76.sta_poll_lock);
  
- 		addr = mt7603_wtbl4_addr(msta->wcid.idx);
- 		for (i = 0; i < 4; i++) {
-@@ -1268,9 +1268,9 @@ void mt7603_mac_add_txs(struct mt7603_dev *dev, void *data)
- 	sta = wcid_to_sta(wcid);
+ 		idx = msta->wcid.idx;
+ 		addr = mt7921_mac_wtbl_lmac_addr(idx, MT_WTBL_AC0_CTT_OFFSET);
+@@ -280,10 +280,11 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
  
- 	if (list_empty(&msta->poll_list)) {
+ 	if (status->wcid) {
+ 		msta = container_of(status->wcid, struct mt7921_sta, wcid);
 -		spin_lock_bh(&dev->sta_poll_lock);
--		list_add_tail(&msta->poll_list, &dev->sta_poll_list);
--		spin_unlock_bh(&dev->sta_poll_lock);
 +		spin_lock_bh(&dev->mt76.sta_poll_lock);
-+		list_add_tail(&msta->poll_list, &dev->mt76.sta_poll_list);
+ 		if (list_empty(&msta->poll_list))
+-			list_add_tail(&msta->poll_list, &dev->sta_poll_list);
+-		spin_unlock_bh(&dev->sta_poll_lock);
++			list_add_tail(&msta->poll_list,
++				      &dev->mt76.sta_poll_list);
 +		spin_unlock_bh(&dev->mt76.sta_poll_lock);
  	}
  
- 	if (mt7603_mac_add_txs_skb(dev, msta, pid, txs_data))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-index ca50feb0b3a9..2affa62caf2b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-@@ -100,10 +100,10 @@ mt7603_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	mt7921_get_status_freq_info(dev, mphy, status, chfreq);
+@@ -566,10 +567,10 @@ void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data)
+ 	if (!wcid->sta)
+ 		goto out;
  
- 	rcu_assign_pointer(dev->mt76.wcid[idx], NULL);
+-	spin_lock_bh(&dev->sta_poll_lock);
++	spin_lock_bh(&dev->mt76.sta_poll_lock);
+ 	if (list_empty(&msta->poll_list))
+-		list_add_tail(&msta->poll_list, &dev->sta_poll_list);
+-	spin_unlock_bh(&dev->sta_poll_lock);
++		list_add_tail(&msta->poll_list, &dev->mt76.sta_poll_list);
++	spin_unlock_bh(&dev->mt76.sta_poll_lock);
+ 
+ out:
+ 	rcu_read_unlock();
+@@ -647,10 +648,11 @@ static void mt7921_mac_tx_free(struct mt7921_dev *dev, void *data, int len)
+ 				continue;
+ 
+ 			msta = container_of(wcid, struct mt7921_sta, wcid);
+-			spin_lock_bh(&dev->sta_poll_lock);
++			spin_lock_bh(&mdev->sta_poll_lock);
+ 			if (list_empty(&msta->poll_list))
+-				list_add_tail(&msta->poll_list, &dev->sta_poll_list);
+-			spin_unlock_bh(&dev->sta_poll_lock);
++				list_add_tail(&msta->poll_list,
++					      &mdev->sta_poll_list);
++			spin_unlock_bh(&mdev->sta_poll_lock);
+ 			continue;
+ 		}
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 0c9a472bc81a..ffbe48f33d49 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -357,10 +357,10 @@ static void mt7921_remove_interface(struct ieee80211_hw *hw,
+ 	phy->omac_mask &= ~BIT_ULL(mvif->mt76.omac_idx);
+ 	mt7921_mutex_release(dev);
  
 -	spin_lock_bh(&dev->sta_poll_lock);
 +	spin_lock_bh(&dev->mt76.sta_poll_lock);
@@ -129,35 +169,35 @@ index ca50feb0b3a9..2affa62caf2b 100644
 -	spin_unlock_bh(&dev->sta_poll_lock);
 +	spin_unlock_bh(&dev->mt76.sta_poll_lock);
  
- 	mutex_lock(&dev->mt76.mutex);
- 	dev->mt76.vif_mask &= ~BIT_ULL(mvif->idx);
-@@ -388,10 +388,10 @@ mt7603_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	mt7603_filter_tx(dev, wcid->idx, true);
- 	spin_unlock_bh(&dev->ps_lock);
+ 	mt76_packet_id_flush(&dev->mt76, &msta->wcid);
+ }
+@@ -843,10 +843,10 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 						    mvif->ctx);
+ 	}
  
 -	spin_lock_bh(&dev->sta_poll_lock);
-+	spin_lock_bh(&mdev->sta_poll_lock);
++	spin_lock_bh(&dev->mt76.sta_poll_lock);
  	if (!list_empty(&msta->poll_list))
  		list_del_init(&msta->poll_list);
 -	spin_unlock_bh(&dev->sta_poll_lock);
-+	spin_unlock_bh(&mdev->sta_poll_lock);
++	spin_unlock_bh(&dev->mt76.sta_poll_lock);
  
- 	mt7603_wtbl_clear(dev, wcid->idx);
+ 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-index 7c3be596da09..689922d133e7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
-@@ -110,9 +110,6 @@ struct mt7603_dev {
- 
- 	u32 rxfilter;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index 9640cc033300..ef1fe4d9ab99 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -303,9 +303,6 @@ struct mt7921_dev {
+ 	bool hw_init_done:1;
+ 	bool fw_assert:1;
  
 -	struct list_head sta_poll_list;
 -	spinlock_t sta_poll_lock;
 -
- 	struct mt7603_sta global_sta;
+ 	struct work_struct init_work;
  
- 	u32 agc0, agc3;
+ 	u8 fw_debug;
 -- 
 2.40.1
 
