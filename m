@@ -2,130 +2,81 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9771FC7EE2E
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 09:10:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B38C6C88CB6
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 09:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240748AbjFMJJo (ORCPT
+        id S241801AbjFMJLc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Jun 2023 05:09:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38338 "EHLO
+        Tue, 13 Jun 2023 05:11:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238454AbjFMJJa (ORCPT
+        with ESMTP id S239535AbjFMJLa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2023 05:09:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2235CE56;
-        Tue, 13 Jun 2023 02:09:29 -0700 (PDT)
+        Tue, 13 Jun 2023 05:11:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51AC51A1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 02:11:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8615462A54;
-        Tue, 13 Jun 2023 09:09:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78A86C433A4;
-        Tue, 13 Jun 2023 09:09:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DBC9C62A60
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 09:11:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FE1EC433D2;
+        Tue, 13 Jun 2023 09:11:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686647367;
-        bh=lmsdLZ4+NmJAHzquqp88g7379ja7uZr6WmrjfGsBGaY=;
+        s=k20201202; t=1686647488;
+        bh=4J/691CsI7iG+Ig8jeZXas086ObQ/IY7YU1DUEGxjZQ=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=VxK1UOwMSki02GoK5Q2zQL4RLiT6eWHT44ODg7TG8RfKQYtpb6FctPCNfh5kccQPs
-         38g5zxQiX8pZEt+tDKtf4WB/2PR+a3oeK3rY20HV+7X0zQqg+iMS2Uhy+bT8nRlLBL
-         vdYB+7YQPpSiWx0nItT7QYWVOfi/ETpDq24fa8CpK5u6AAPTlkZ7Z6gFadj7UzscZF
-         DHqHguU181ar9pFDQoDHlhdWEYdcuxvq1Xr0aVhO3Pgssob59KzGv9TPhsx8o+XP+G
-         TIZ/P9UUSZfEVx1zbiNoa4nbIQylk/VkZ7+wP7ilNQcf0vgwbxSeRl/p3JdBTeOhri
-         jFcEPfE5ZjSBQ==
+        b=Xc6Nv1O2wrWHsWQhHoTVrImB1W11pXFuuGRl5wPOVK8tsZYtAe3w4du/hNHsn+NRP
+         VabKRc0IQpaxpM4tF6q8MRSVQnEFFjF8luBBe9jbSK4JQpabVZiqb9a49cDZDh9X9s
+         ygqVNBG9lIzraN0zBJBZ5Y/fOJP++hT17a6zv9+WmZTwhK5yFnBSpLKruX7B0V1cxX
+         n9DLRYQnABk0wbIBnTbHv5GFJGY6COKybnWEfZrG9AZLGL6Bmj9HyKSPOBJVGrH2pV
+         8Ub/ycw9qfFK2I0CvD2d5j5+8tYWpDTbVhZxl/oeoTp+m8puGzZESZjMGdITl1Gp6J
+         niaJnHkSNe1Ig==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] ath9k: Fix possible stall on ath9k_txq_list_has_key()
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 01/15] wifi: ath11k: debug: remove unused ATH11K_DBG_ANY
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230609093744.1985-1-repk@triplefau.lt>
-References: <20230609093744.1985-1-repk@triplefau.lt>
-To:     Remi Pommarel <repk@triplefau.lt>
-Cc:     =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Jouni Malinen <jouni@codeaurora.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Remi Pommarel <repk@triplefau.lt>
+In-Reply-To: <20230609142440.24643-2-kvalo@kernel.org>
+References: <20230609142440.24643-2-kvalo@kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168664736276.2274.6813770604730278810.kvalo@kernel.org>
-Date:   Tue, 13 Jun 2023 09:09:26 +0000 (UTC)
+Message-ID: <168664748569.2274.11917166268138935303.kvalo@kernel.org>
+Date:   Tue, 13 Jun 2023 09:11:27 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remi Pommarel <repk@triplefau.lt> wrote:
+Kalle Valo <kvalo@kernel.org> wrote:
 
-> On EDMA capable hardware, ath9k_txq_list_has_key() can enter infinite
-> loop if it is called while all txq_fifos have packets that use different
-> key that the one we are looking for. Fix it by exiting the loop if all
-> txq_fifos have been checked already.
+> It's not used anywhere so can be easily removed.
 > 
-> Because this loop is called under spin_lock_bh() (see ath_txq_lock) it
-> causes the following rcu stall:
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
 > 
-> rcu: INFO: rcu_sched self-detected stall on CPU
-> ath10k_pci 0000:01:00.0: failed to read temperature -11
-> rcu:    1-....: (5254 ticks this GP) idle=189/1/0x4000000000000002 softirq=8442983/8442984 fqs=2579
->         (t=5257 jiffies g=17983297 q=334)
-> Task dump for CPU 1:
-> task:hostapd         state:R  running task     stack:    0 pid:  297 ppid:   289 flags:0x0000000a
-> Call trace:
->  dump_backtrace+0x0/0x170
->  show_stack+0x1c/0x24
->  sched_show_task+0x140/0x170
->  dump_cpu_task+0x48/0x54
->  rcu_dump_cpu_stacks+0xf0/0x134
->  rcu_sched_clock_irq+0x8d8/0x9fc
->  update_process_times+0xa0/0xec
->  tick_sched_timer+0x5c/0xd0
->  __hrtimer_run_queues+0x154/0x320
->  hrtimer_interrupt+0x120/0x2f0
->  arch_timer_handler_virt+0x38/0x44
->  handle_percpu_devid_irq+0x9c/0x1e0
->  handle_domain_irq+0x64/0x90
->  gic_handle_irq+0x78/0xb0
->  call_on_irq_stack+0x28/0x38
->  do_interrupt_handler+0x54/0x5c
->  el1_interrupt+0x2c/0x4c
->  el1h_64_irq_handler+0x14/0x1c
->  el1h_64_irq+0x74/0x78
->  ath9k_txq_has_key+0x1bc/0x250 [ath9k]
->  ath9k_set_key+0x1cc/0x3dc [ath9k]
->  drv_set_key+0x78/0x170
->  ieee80211_key_replace+0x564/0x6cc
->  ieee80211_key_link+0x174/0x220
->  ieee80211_add_key+0x11c/0x300
->  nl80211_new_key+0x12c/0x330
->  genl_family_rcv_msg_doit+0xbc/0x11c
->  genl_rcv_msg+0xd8/0x1c4
->  netlink_rcv_skb+0x40/0x100
->  genl_rcv+0x3c/0x50
->  netlink_unicast+0x1ec/0x2c0
->  netlink_sendmsg+0x198/0x3c0
->  ____sys_sendmsg+0x210/0x250
->  ___sys_sendmsg+0x78/0xc4
->  __sys_sendmsg+0x4c/0x90
->  __arm64_sys_sendmsg+0x28/0x30
->  invoke_syscall.constprop.0+0x60/0x100
->  do_el0_svc+0x48/0xd0
->  el0_svc+0x14/0x50
->  el0t_64_sync_handler+0xa8/0xb0
->  el0t_64_sync+0x158/0x15c
-> 
-> This rcu stall is hard to reproduce as is, but changing ATH_TXFIFO_DEPTH
-> from 8 to 2 makes it reasonably easy to reproduce.
-> 
-> Fixes: ca2848022c12 ("ath9k: Postpone key cache entry deletion for TXQ frames reference it")
-> Signed-off-by: Remi Pommarel <repk@triplefau.lt>
-> Tested-by: Nicolas Escande <nico.escande@gmail.com>
-> Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+15 patches applied to ath-next branch of ath.git, thanks.
 
-75086cc6dee0 wifi: ath9k: Fix possible stall on ath9k_txq_list_has_key()
+d13936d57927 wifi: ath11k: debug: remove unused ATH11K_DBG_ANY
+9a599e968f02 wifi: ath11k: print debug level in debug messages
+fc3b984a7d99 wifi: ath11k: remove manual mask names from debug messages
+e5df15773d8d wifi: ath11k: add WMI event debug messages
+8fbeaca7a001 wifi: ath11k: remove unsupported event handlers
+90a9fb5b6618 wifi: ath11k: wmi: cleanup error handling in ath11k_wmi_send_init_country_cmd()
+afba35d7d125 wifi: ath11k: wmi: use common error handling style
+00608b40ae1a wifi: ath11k: wmi: add unified command debug messages
+332c65628938 wifi: ath11k: pci: cleanup debug logging
+947b5e224818 wifi: ath11k: dp: cleanup debug message
+06819e471f28 wifi: ath11k: debug: use all upper case in ATH11k_DBG_HAL
+ac483942616a wifi: ath11k: hal: cleanup debug message
+cf036c416e9a wifi: ath11k: don't use %pK
+3512593884b3 wifi: ath11k: htc: cleanup debug messages
+4f52ec65a9ae wifi: ath11k: debug: add ATH11K_DBG_CE
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230609093744.1985-1-repk@triplefau.lt/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230609142440.24643-2-kvalo@kernel.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
