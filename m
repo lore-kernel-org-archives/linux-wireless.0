@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27936EB64D9
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 14:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52977EB64D7
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 14:11:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240907AbjFMOLC (ORCPT
+        id S242674AbjFMOLD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Jun 2023 10:11:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34848 "EHLO
+        Tue, 13 Jun 2023 10:11:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242897AbjFMOJx (ORCPT
+        with ESMTP id S242738AbjFMOJn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2023 10:09:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 111B6F4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 07:09:29 -0700 (PDT)
+        Tue, 13 Jun 2023 10:09:43 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F6DC1BC3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 07:09:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B6AD56369C
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:09:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D4F1C433F1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:09:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3EE9962DCF
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:09:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49B7FC433D9
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:09:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686665365;
-        bh=UWviLmUQtcOm7LzTkSJw98/7WABHY5pbWNAmzo5BxxI=;
+        s=k20201202; t=1686665361;
+        bh=NFbjDPlRqQu+fn9/WqwxeIA8pjAggPFRDv1uv5ut/so=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=HHPscYgjiFynln4B7eHkS9jFtXArrNMn+Rj2UmPZmiKGa9F7HpYz6MYXAlPvEPwt4
-         dSeXUGmuufEynKxdEGC2tVB/T3+zAl5NvdHvj23q+Tjld/yryqhhsFYw2eHSvPv6bv
-         /9VUNk+m9xluyxE0KgGw2pw2scMXI3aHCNftI+d0lWCV+7REr1O39fcHK3MvJA1bu/
-         5kuCLMLkLi7Wd0H2aHrzZisUa7Xo5snQmYzhYMOmPEiW79QJvHg8LAikbO/TJcQ+y4
-         /vCOWTXlF5yy205RedbEM7itqTzJBMGE8qqMiM3DNTpGsMFUm5kbk/2YGF2Lt7U/Wc
-         PYhxDGIFtAYfw==
+        b=ZkKe7pBhOhsITcWoW6ESgjLBchu3M6YrizPpBNcm4KnU7CV2lh68TZ01GfmZqJJvy
+         81lYgeGY10P64J95rag9GZTmzufvp6Orftm+hDvr7QiM3EHP5Tx/PhrCNIjtFnQ4rp
+         C3YqrJBbUM3Zqiu/usbdljFUl+gQJtKmKkavNFleyoY0HvpnP7j/8lTY7ILThSy1nN
+         0XQly28lbO9bPx+6ab0hBduH0FHzdOnnnAH12FsDjsKEJL6Q41CuSR+JlrTSxfxFaf
+         +2+AitTuu1A/jTQXgBA5/nbA0EbPOMndPHSyZ2h8zrnL9ZK0ICj8J7epnfLtp16IOb
+         7MtftWrn5+Tig==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] wifi: ray_cs: fix stringop-truncation GCC warning
-Date:   Tue, 13 Jun 2023 17:09:18 +0300
-Message-Id: <20230613140918.389690-5-kvalo@kernel.org>
+Subject: [PATCH 1/4] wifi: brcmfmac: fix gnu_printf warnings
+Date:   Tue, 13 Jun 2023 17:09:15 +0300
+Message-Id: <20230613140918.389690-2-kvalo@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20230613140918.389690-1-kvalo@kernel.org>
 References: <20230613140918.389690-1-kvalo@kernel.org>
@@ -47,33 +47,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-GCC 12.2 with W=1 warns:
+With GCC 13.1 and W=1 brcmfmac has warnings like this:
 
-drivers/net/wireless/legacy/ray_cs.c:630:17: warning: 'strncpy' specified bound 32 equals destination size [-Wstringop-truncation]
+./include/trace/perf.h:26:16: warning: function 'perf_trace_brcmf_dbg' might be a candidate for 'gnu_printf' format attribute [-Wsuggest-attribute=format]
 
-The driver uses SSID as a string which is just wrong, it should be treated as a
-byte array instead. But as the driver is ancient and most likely there are no
-users so convert it to use strscpy(). This makes sure that the string is
-NUL-terminated and also the warning is fixed.
+Add a workaround which disables -Wsuggest-attribute=format in tracepoint.h. I
+see similar workarounds in other drivers as well.
+
+Compile tested only.
 
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
 ---
- drivers/net/wireless/legacy/ray_cs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h  | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/legacy/ray_cs.c b/drivers/net/wireless/legacy/ray_cs.c
-index 4b53a9c70e7e..8ace797ce951 100644
---- a/drivers/net/wireless/legacy/ray_cs.c
-+++ b/drivers/net/wireless/legacy/ray_cs.c
-@@ -627,7 +627,7 @@ static void init_startup_params(ray_dev_t *local)
- 	local->sparm.b4.a_acting_as_ap_status = TYPE_STA;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h
+index 5a139d7ed47a..5d66e94c806d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h
+@@ -28,6 +28,11 @@ static inline void trace_ ## name(proto) {}
  
- 	if (essid != NULL)
--		strncpy(local->sparm.b4.a_current_ess_id, essid, ESSID_SIZE);
-+		strscpy(local->sparm.b4.a_current_ess_id, essid, ESSID_SIZE);
- } /* init_startup_params */
+ #define MAX_MSG_LEN		100
  
- /*===========================================================================*/
++#pragma GCC diagnostic push
++#ifndef __clang__
++#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
++#endif
++
+ TRACE_EVENT(brcmf_err,
+ 	TP_PROTO(const char *func, struct va_format *vaf),
+ 	TP_ARGS(func, vaf),
+@@ -123,6 +128,8 @@ TRACE_EVENT(brcmf_sdpcm_hdr,
+ 		  __entry->len, ((u8 *)__get_dynamic_array(hdr))[4])
+ );
+ 
++#pragma GCC diagnostic pop
++
+ #ifdef CONFIG_BRCM_TRACING
+ 
+ #undef TRACE_INCLUDE_PATH
 -- 
 2.30.2
 
