@@ -2,78 +2,78 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1257BEB64D7
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 13:47:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E7E8EB64D0
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Jun 2023 14:11:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239169AbjFMNrR (ORCPT
+        id S242773AbjFMOKx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Jun 2023 09:47:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49896 "EHLO
+        Tue, 13 Jun 2023 10:10:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240124AbjFMNrP (ORCPT
+        with ESMTP id S242895AbjFMOJx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Jun 2023 09:47:15 -0400
-Received: from forward100b.mail.yandex.net (forward100b.mail.yandex.net [178.154.239.147])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6BD110DA
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 06:47:14 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:1e2b:0:640:94b5:0])
-        by forward100b.mail.yandex.net (Yandex) with ESMTP id CEBC4600DE;
-        Tue, 13 Jun 2023 16:47:12 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id wka7QGsDTW20-aokR6FWz;
-        Tue, 13 Jun 2023 16:47:12 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1686664032;
-        bh=PUVPnEcSBpXHviFcoMikLWFZsHJISsWRrJCZqe/yfSw=;
-        h=Message-Id:Date:Cc:Subject:To:From;
-        b=tmAl7ygg3o0pw0fyHWwOFGsmL0+Ar+u+fYMqoAhw+2HMWR7tChRh6anttS3KEJC1I
-         uksEGL6kCiFo8C/TDfiPk+6t8Kev5xAEYE1dLo13tHB/aDo9b/YJmTVIC8x896/lSu
-         zuT2FH5wWIexJSYUyd5Q6XENxpTseod4/H/rh2Ac=
-Authentication-Results: mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH] wifi: ath9k: convert msecs to jiffies where needed
-Date:   Tue, 13 Jun 2023 16:46:55 +0300
-Message-Id: <20230613134655.248728-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.40.1
+        Tue, 13 Jun 2023 10:09:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB6021BE5
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 07:09:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 78CBC635E7
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:09:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 558A2C433F0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jun 2023 14:09:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686665363;
+        bh=uqczZrDZXEPNGEqebmyy1y70gdSr30LkBaW8pslQQVg=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=BW0Q/kgWBltboi+xnIJPTdZc7j0ew2E+VxY5tFpI96WKE4XwkhvyPGv5rxMuz5Gmh
+         ny1bkH/mmVlER4G3vFO+kSnNWLGb+BVDsVwpuB+9uxQVrE4jLNyaWrmDo3WPm4veYR
+         3SMDwrvVmWE/eEAUKCd1q86pG7LxVI4R+7mlITfzg+AU59Ab7+qSmezTAYk+cZoEx7
+         CkXBylPkEqH5yi7VXu9V/c3rZDAruZdIB0asceHbzBzWfnP/KlYMnCPIChBeKRLZni
+         EsRtgM1kto7+P6BG0sNeqVAmJnT15kbywO2Vda7O/LSFf5ne+ig2sqnhA8lo6mUdcL
+         H1xu16mkcyIqg==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] wifi: hostap: fix stringop-truncations GCC warning
+Date:   Tue, 13 Jun 2023 17:09:17 +0300
+Message-Id: <20230613140918.389690-4-kvalo@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230613140918.389690-1-kvalo@kernel.org>
+References: <20230613140918.389690-1-kvalo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since 'ieee80211_queue_delayed_work()' expects timeout in
-jiffies and not milliseconds, 'msecs_to_jiffies()' should
-be used in 'ath_restart_work()' and '__ath9k_flush()'.
+With GCC 13.1 and W=1 hostap has a warning:
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+drivers/net/wireless/intersil/hostap/hostap_ioctl.c:3633:17: warning: 'strncpy' specified bound 16 equals destination size [-Wstringop-truncation]
+
+fortify-string.h recommends not to use strncpy() so use strscpy() which fixes
+the warning. Also now it's guarenteed that the string is NUL-terminated.
+
+Compile tested only.
+
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intersil/hostap/hostap_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a4197c14f0a9..8311a45c5ea8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -203,7 +203,7 @@ void ath_cancel_work(struct ath_softc *sc)
- void ath_restart_work(struct ath_softc *sc)
- {
- 	ieee80211_queue_delayed_work(sc->hw, &sc->hw_check_work,
--				     ATH_HW_CHECK_POLL_INT);
-+				     msecs_to_jiffies(ATH_HW_CHECK_POLL_INT));
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
+index 26287b129d18..b4adfc190ae8 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
+@@ -3630,7 +3630,7 @@ static int prism2_ioctl_get_encryption(local_info_t *local,
+ 		param->u.crypt.key_len = 0;
+ 		param->u.crypt.idx = 0xff;
+ 	} else {
+-		strncpy(param->u.crypt.alg, (*crypt)->ops->name,
++		strscpy(param->u.crypt.alg, (*crypt)->ops->name,
+ 			HOSTAP_CRYPT_ALG_NAME_LEN);
+ 		param->u.crypt.key_len = 0;
  
- 	if (AR_SREV_9340(sc->sc_ah) || AR_SREV_9330(sc->sc_ah))
- 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work,
-@@ -2239,7 +2239,7 @@ void __ath9k_flush(struct ieee80211_hw *hw, u32 queues, bool drop,
- 	}
- 
- 	ieee80211_queue_delayed_work(hw, &sc->hw_check_work,
--				     ATH_HW_CHECK_POLL_INT);
-+				     msecs_to_jiffies(ATH_HW_CHECK_POLL_INT));
- }
- 
- static bool ath9k_tx_frames_pending(struct ieee80211_hw *hw)
 -- 
-2.40.1
+2.30.2
 
