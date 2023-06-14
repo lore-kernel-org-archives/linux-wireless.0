@@ -2,126 +2,130 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEAB4EB64DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B318EB64DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:46:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244277AbjFNJpz (ORCPT
+        id S244285AbjFNJp5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:45:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45762 "EHLO
+        Wed, 14 Jun 2023 05:45:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244190AbjFNJo1 (ORCPT
+        with ESMTP id S244329AbjFNJow (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 05:44:27 -0400
+        Wed, 14 Jun 2023 05:44:52 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F62B294F
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:42:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA8682718
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686735762; x=1718271762;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=F8i6ngU3V0afFCAoBN36JVI876C1xlJ5U3ElbMoPXKk=;
-  b=HaENZw1mc0X1d5PJ+OdMAR8FDxzt5WdJU9mZTQGbX5FKKEcyjVXzgZMu
-   4yKuA0NVQgfk+T7E4/NfNtyw4IoQUg0/DbAP0LMxQnCe1JSd4nJUDFjKw
-   6U8jKeKPjYKeOOgzyKDarZERY/SlkX91En7q0gsAaEGpS+0EFAC1gnQmq
-   71V64MY7AYKEgqQDOzXHY6Z03J/SSqpmSjka7gpne15+eeODIXGnx7AsV
-   2YFYrIay5O8d4dHTvMgAZdZvgviPjsgWm2ceE4vr3WABI/0Ge/NM8LcPg
-   kRl3PpTmbBmD4yV+nrsrDeHGEXYfjQyTsj3ghXn3b2NFWIXUsrJH9CjKo
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049788"
+  t=1686735838; x=1718271838;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=nhvN+EHxnhNwPjf53yuSu39kH5ShuTGUixrptlcxMuA=;
+  b=Sl1PO//jCbvmWmes2dxXKjnMBVcggUIwrHM+QKVOg9TmgWnqBOan4GxK
+   hVdn4I5KUhSNlPyygVAwH5R8szn/iu+UbvpufdILyPVufvhSHj1wsO0qe
+   b2DcrTNeqQRxAa0b2J8Uu7IcbHGyhO5XuhULPfdgiymIdOLCcV4pE0M+E
+   sCckT5uFRb9tS0im4Un3jvxW8royf7+NC/Tb4iNtcDTvo01Bj/bR7n8Lc
+   rPQtj4lRSP4CGgeo3dHXBmqywTR74xeTauvngn1G+F4XuFkx05Ugxpvx7
+   LR3qvVVyJQTAjVFosUEHe817O5SEYdnedH+ZvXKAtrN4H6j2T56CbZqcW
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049920"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="361049788"
+   d="scan'208";a="361049920"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:41:53 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:35 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989766"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989913"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="711989766"
+   d="scan'208";a="711989913"
 Received: from basharil-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.203.45])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:41:51 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:33 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
+        Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 00/20] wifi: iwlwifi: updates intended for v6.5 2023-06-14 
-Date:   Wed, 14 Jun 2023 12:41:17 +0300
-Message-Id: <20230614094137.379897-1-gregory.greenman@intel.com>
+Subject: [PATCH 18/20] wifi: iwlwifi: mvm: Validate tid is in valid range before using it
+Date:   Wed, 14 Jun 2023 12:41:35 +0300
+Message-Id: <20230614123447.cea75e1f57e7.I03bc0a81d2c1bdbf4784c12c4c62b8538892ccba@changeid>
 X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230614094137.379897-1-gregory.greenman@intel.com>
+References: <20230614094137.379897-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-Hi,
+Validate tid is less then MAX TID when it is used to access
+corresponding arrays.
 
-This patch set includes iwlwifi patches intended for v6.5.
+Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 10 +++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  9 ++++++---
+ 2 files changed, 13 insertions(+), 6 deletions(-)
 
-It contains normal developement, cleanups and bugfixes.
-It depends on the previous patch sets I've sent.  
-
-Thanks,
-Gregory
-
-Anjaneyulu (4):
-  wifi: iwlwifi: pcie: fix NULL pointer dereference in iwl_pcie_irq_rx_msix_handler()
-  wifi: iwlwifi: mvm: Validate tid is in valid range before using it
-  wifi: iwlwifi: Validate slots_num before allocating memory
-  wifi: iwlwifi: add a few rate index validity checks
-
-Ariel Malamud (1):
-  wifi: iwlwifi: fw: Add new FSEQ defines to fw dump
-
-Ilan Peer (1):
-  wifi: iwlwifi: Correctly indicate support for VHT TX STBC
-
-Johannes Berg (14):
-  wifi: iwlwifi: mvm: correctly access HE/EHT sband capa
-  wifi: iwlwifi: fw: make some ACPI functions static
-  wifi: iwlwifi: mvm: use iwl_mvm_is_vendor_in_approved_list()
-  wifi: iwlwifi: pull from TXQs with softirqs disabled
-  wifi: iwlwifi: pcie: double-check ACK interrupt after timeout
-  wifi: iwlwifi: mvm: add a few NULL pointer checks
-  wifi: iwlwifi: mvm: check link during TX
-  wifi: iwlwifi: mvm: disable new TX csum mode completely
-  wifi: iwlwifi: mvm: store WMM params per link
-  wifi: iwlwifi: use array as array argument
-  wifi: iwlwifi: mvm: always send spec link ID in link commands
-  wifi: iwlwifi: add some FW misbehaviour check infrastructure
-  wifi: iwlwifi: implement WPFC ACPI table loading
-  wifi: iwlwifi: mvm: track u-APSD misbehaving AP by AP address
-
- drivers/net/wireless/intel/iwlwifi/dvm/rs.c   |  9 ++-
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 64 ++++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h  | 41 ++++--------
- .../wireless/intel/iwlwifi/fw/api/config.h    | 15 ++---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 16 ++++-
- drivers/net/wireless/intel/iwlwifi/fw/dump.c  |  6 +-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  6 +-
- .../wireless/intel/iwlwifi/mvm/constants.h    |  6 +-
- .../wireless/intel/iwlwifi/mvm/debugfs-vif.c  |  6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 45 +++----------
- drivers/net/wireless/intel/iwlwifi/mvm/link.c |  4 +-
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 21 ++++--
- .../wireless/intel/iwlwifi/mvm/mld-mac80211.c |  8 ++-
- .../net/wireless/intel/iwlwifi/mvm/mld-sta.c  |  8 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 16 ++---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  9 ++-
- .../net/wireless/intel/iwlwifi/mvm/power.c    | 35 ++++++----
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 46 +++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c   | 11 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 10 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 19 ++++--
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 19 ++++--
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  5 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 13 ++--
- drivers/net/wireless/intel/iwlwifi/queue/tx.c |  5 +-
- 26 files changed, 265 insertions(+), 182 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index b38b24246675..542c192698a4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2023 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -213,8 +213,12 @@ static void iwl_mvm_rx_handle_tcm(struct iwl_mvm *mvm,
+ 	};
+ 	u16 thr;
+ 
+-	if (ieee80211_is_data_qos(hdr->frame_control))
+-		ac = tid_to_mac80211_ac[ieee80211_get_tid(hdr)];
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		u8 tid = ieee80211_get_tid(hdr);
++
++		if (tid < IWL_MAX_TID_COUNT)
++			ac = tid_to_mac80211_ac[tid];
++	}
+ 
+ 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	mac = mvmsta->mac_id_n_color & FW_CTXT_ID_MSK;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 5c06839b87c2..9dbe71d299ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -484,7 +484,7 @@ static void iwl_mvm_rx_csum(struct iwl_mvm *mvm,
+ }
+ 
+ /*
+- * returns true if a packet is a duplicate and should be dropped.
++ * returns true if a packet is a duplicate or invalid tid and should be dropped.
+  * Updates AMSDU PN tracking info
+  */
+ static bool iwl_mvm_is_dup(struct ieee80211_sta *sta, int queue,
+@@ -513,11 +513,14 @@ static bool iwl_mvm_is_dup(struct ieee80211_sta *sta, int queue,
+ 		return false;
+ 	}
+ 
+-	if (ieee80211_is_data_qos(hdr->frame_control))
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 		/* frame has qos control */
+ 		tid = ieee80211_get_tid(hdr);
+-	else
++		if (tid >= IWL_MAX_TID_COUNT)
++			return true;
++	} else {
+ 		tid = IWL_MAX_TID_COUNT;
++	}
+ 
+ 	/* If this wasn't a part of an A-MSDU the sub-frame index will be 0 */
+ 	sub_frame_idx = desc->amsdu_info &
 -- 
 2.38.1
 
