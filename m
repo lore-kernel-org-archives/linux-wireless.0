@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 372ACEB64DC
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32769EB64DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244174AbjFNJpc (ORCPT
+        id S235955AbjFNJpd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:45:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45788 "EHLO
+        Wed, 14 Jun 2023 05:45:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244268AbjFNJon (ORCPT
+        with ESMTP id S244332AbjFNJow (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 05:44:43 -0400
+        Wed, 14 Jun 2023 05:44:52 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2CBB1FF5
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63322210A
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:44:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686735813; x=1718271813;
+  t=1686735840; x=1718271840;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=69mwLCnksy5tNztA863iiRxvL63vI714m4MtHAH93B8=;
-  b=fmOmSIoKqRDVK0Veuf19x7mquWng/DFfqW/6Jwh0tqZM/Iw6B5GzfX1/
-   TnvrUBKTQKWaI4aSEVKM7z1IBtjdmiYkt0wXyy+d+CYCtIFnYBL+JXhOD
-   w1LONcEJDKrjn+DC+Yh51mqPqEAApUWBbwEd23f2an54t+ZJiQNF3PtF7
-   nqy4pMyOLHrDsPxT78VieO+5af+Wyj5cElwwDGxKGZXF5kW2mMClcG9cA
-   A6W3EyHAq1jYVsS0EKovCyZ1YcG5PR0Vok0hlX0nfVynbiGT1OGXi8Anj
-   Ccinr0KGjysNI21Fhw9JQHLFLkVj9U/f+z5dsyTbB0071ge+E0lnnyf/G
+  bh=8q9707cVDXua91kBBhuFJhXIcCmDI4MLuotMj/Gu2iw=;
+  b=DAo91xqTtg0DCxp58xalSnbQCalsjdXfNo/kvRBcdVkwkC5w5tZJ3HhY
+   M1ps90OSo8moEBzwcRvCItzrKgx9DE+82ZDayZGcfmzSsHI/ZddHTfC/m
+   Aj5y1NLvro17TAB3A9N0c/wRrSQaAzWf3HAaChjd0Whg/UJN2tjwb+O/l
+   zNJE+cCdgDwO4DKsOG1zVwDoXHpGbD6P+N+1fBKee5r8OsKSejv+/1Wi2
+   OyRToQI6RvJW7wRE7FzRndNQkGoG7xtdNSwPRIRVLpExZafxOd8BfHO0X
+   Iyg5+vbdwAfqRMq4/DpmfCvA2D0YnuLoYWFtIBkL0q54NtUATWMr/2p0h
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049839"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049937"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="361049839"
+   d="scan'208";a="361049937"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:08 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:40 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989825"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989930"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="711989825"
+   d="scan'208";a="711989930"
 Received: from basharil-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.203.45])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:06 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:39 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 06/20] wifi: iwlwifi: pcie: double-check ACK interrupt after timeout
-Date:   Wed, 14 Jun 2023 12:41:23 +0300
-Message-Id: <20230614123446.00cc2d9b88c3.I429bfe800f17c624e50c0b0c10dd2cd7d885f199@changeid>
+Subject: [PATCH 20/20] wifi: iwlwifi: add a few rate index validity checks
+Date:   Wed, 14 Jun 2023 12:41:37 +0300
+Message-Id: <20230614123447.79f16b3aef32.If1137f894775d6d07b78cbf3a6163ffce6399507@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230614094137.379897-1-gregory.greenman@intel.com>
 References: <20230614094137.379897-1-gregory.greenman@intel.com>
@@ -57,50 +57,84 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-There are evidently cases where the firmware completes the
-reset but the interrupt isn't received correctly, so check
-for the interrupt again after the timeout, and don't dump
-the firmware error log if the right bit is set.
+Validate index before access iwl_rate_mcs to keep rate->index
+inside the valid boundaries. Use MCS_0_INDEX if index is less
+than MCS_0_INDEX and MCS_9_INDEX if index is greater then
+MCS_9_INDEX.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c    | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c |  9 ++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 11 +++++++----
+ 2 files changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 73b395841ca8..fa46dad5fd68 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-  * Copyright (C) 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2022 Intel Corporation
-+ * Copyright (C) 2018-2023 Intel Corporation
-  */
- #include "iwl-trans.h"
- #include "iwl-prph.h"
-@@ -117,9 +117,14 @@ static void iwl_trans_pcie_fw_reset_handshake(struct iwl_trans *trans)
- 				 trans_pcie->fw_reset_state != FW_RESET_REQUESTED,
- 				 FW_RESET_TIMEOUT);
- 	if (!ret || trans_pcie->fw_reset_state == FW_RESET_ERROR) {
--		IWL_INFO(trans,
--			 "firmware didn't ACK the reset - continue anyway\n");
--		iwl_trans_fw_error(trans, true);
-+		u32 inta_hw = iwl_read32(trans, CSR_MSIX_HW_INT_CAUSES_AD);
-+
-+		IWL_ERR(trans,
-+			"timeout waiting for FW reset ACK (inta_hw=0x%x)\n",
-+			inta_hw);
-+
-+		if (!(inta_hw & MSIX_HW_INT_CAUSES_REG_RESET_DONE))
-+			iwl_trans_fw_error(trans, true);
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+index 687c906a9d72..4b1f006c105b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+@@ -2,7 +2,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+- * Copyright (C) 2019 - 2020, 2022 Intel Corporation
++ * Copyright (C) 2019 - 2020, 2022 - 2023 Intel Corporation
+  *****************************************************************************/
+ #include <linux/kernel.h>
+ #include <linux/skbuff.h>
+@@ -125,7 +125,7 @@ static int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
+ 				return idx;
  	}
  
- 	trans_pcie->fw_reset_state = FW_RESET_IDLE;
+-	return -1;
++	return IWL_RATE_INVALID;
+ }
+ 
+ static void rs_rate_scale_perform(struct iwl_priv *priv,
+@@ -3146,7 +3146,10 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
+ 		index = iwl_hwrate_to_plcp_idx(
+ 			le32_to_cpu(lq_sta->lq.rs_table[i].rate_n_flags));
+-		if (is_legacy(tbl->lq_type)) {
++		if (index == IWL_RATE_INVALID) {
++			desc += sprintf(buff + desc, " rate[%d] 0x%X invalid rate\n",
++				i, le32_to_cpu(lq_sta->lq.rs_table[i].rate_n_flags));
++		} else if (is_legacy(tbl->lq_type)) {
+ 			desc += sprintf(buff+desc, " rate[%d] 0x%X %smbps\n",
+ 				i, le32_to_cpu(lq_sta->lq.rs_table[i].rate_n_flags),
+ 				iwl_rate_mcs[index].mbps);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 23266d0c9ce4..74fbc4582453 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /******************************************************************************
+  *
+- * Copyright(c) 2005 - 2014, 2018 - 2022 Intel Corporation. All rights reserved.
++ * Copyright(c) 2005 - 2014, 2018 - 2023 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+  *****************************************************************************/
+@@ -1070,10 +1070,13 @@ static void rs_get_lower_rate_down_column(struct iwl_lq_sta *lq_sta,
+ 
+ 		rate->bw = RATE_MCS_CHAN_WIDTH_20;
+ 
+-		WARN_ON_ONCE(rate->index < IWL_RATE_MCS_0_INDEX ||
+-			     rate->index > IWL_RATE_MCS_9_INDEX);
++		if (WARN_ON_ONCE(rate->index < IWL_RATE_MCS_0_INDEX))
++			rate->index = rs_ht_to_legacy[IWL_RATE_MCS_0_INDEX];
++		else if (WARN_ON_ONCE(rate->index > IWL_RATE_MCS_9_INDEX))
++			rate->index = rs_ht_to_legacy[IWL_RATE_MCS_9_INDEX];
++		else
++			rate->index = rs_ht_to_legacy[rate->index];
+ 
+-		rate->index = rs_ht_to_legacy[rate->index];
+ 		rate->ldpc = false;
+ 	} else {
+ 		/* Downgrade to SISO with same MCS if in MIMO  */
 -- 
 2.38.1
 
