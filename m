@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46BECEB64DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3601EB64DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244216AbjFNJpk (ORCPT
+        id S244185AbjFNJpl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:45:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45828 "EHLO
+        Wed, 14 Jun 2023 05:45:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235995AbjFNJoe (ORCPT
+        with ESMTP id S244321AbjFNJou (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 05:44:34 -0400
+        Wed, 14 Jun 2023 05:44:50 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A653D2962
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D20902723
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686735787; x=1718271787;
+  t=1686735835; x=1718271835;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=r/OFzp6H6DaurPne6LXrcFZrgYlAF+loDzSXiCigTew=;
-  b=TNpiiekvj0M7rO4EnU6km7+zdIbVDzh+jcNSux7uX0KIDTDDj+RvvKZ2
-   sQ8KRzy/kanY6o/AAXmNsDuxjvYv8GmQV1m68gHV0G8YhP0unHkQ9t1M9
-   l8aeWKbur4MOOiZrBOSG6R+akbd3Hi8lb9ZcIpaEZ0z9lMvxWJzEuLuYJ
-   xCYul/Ik2AD2+d0TYjrfNE34qN2wbaOPYO3vOwuI6G1PlbPuyKDsDhYG3
-   p/e9SRgGQtSaSm/2xOajSmdKkuPITx/ZqrtRfJxrgguZdPFbht7vxnGDj
-   t+JhjXUinKrAnyYs4Yoojt+9IZPq86GKFDzUGGrXwd8pZFeU5QSaIfqVd
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049805"
+  bh=NlcAj/sfb++wMa9QOjH86EhMcnCKswW7vniAtGATU+k=;
+  b=QODE+VnDvM5EaQFuJWLc5MK54tkhPSLel6qMDGZy/YMyjliZjheNVQ5m
+   C1Mff7fYDLYAB5VBnb6N1CFlW+JCdhg8zxeiqgp+UX/Czv72KjM3L4B0G
+   QSxAuA7ajhVVt9PPMx8GKYzJU3RS1GFEjQdnGnGh+5bdKWDbSbSfqHTpu
+   Wb8ApkeLqXiqvGCSf2s97uiWExdoqFeKNlA0Gp9SWeo970oar4E1lEOxM
+   JG1IQg/Tmz7svApADQ8jPMqpl1XAHosHRdv+TYnLuKkFUoeVSdQsyubtu
+   pBxryhtM+oPgq2E4f4Rj+MPS7WuyNxiTo0A/hBj0edIzdYqbmyt6NdkhT
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049886"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="361049805"
+   d="scan'208";a="361049886"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:41:59 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:28 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989779"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989894"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="711989779"
+   d="scan'208";a="711989894"
 Received: from basharil-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.203.45])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:41:57 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:27 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+Cc:     linux-wireless@vger.kernel.org,
+        Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 02/20] wifi: iwlwifi: Correctly indicate support for VHT TX STBC
-Date:   Wed, 14 Jun 2023 12:41:19 +0300
-Message-Id: <20230614123446.b24b5fba6fab.I116617875eb4a9d520df23a8c49a6594f9d8b2c6@changeid>
+Subject: [PATCH 15/20] wifi: iwlwifi: pcie: fix NULL pointer dereference in iwl_pcie_irq_rx_msix_handler()
+Date:   Wed, 14 Jun 2023 12:41:32 +0300
+Message-Id: <20230614123446.5a5eb3889a4a.I375a1d58f16b48cd2044e7b7caddae512d7c86fd@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230614094137.379897-1-gregory.greenman@intel.com>
 References: <20230614094137.379897-1-gregory.greenman@intel.com>
@@ -56,38 +57,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-If HT STBC is not supported, do not indicate support for VHT TX
-STBC.
+rxq can be NULL only when trans_pcie->rxq is NULL and entry->entry
+is zero. For the case when entry->entry is not equal to 0, rxq
+won't be NULL even if trans_pcie->rxq is NULL. Modify checker to
+check for trans_pcie->rxq.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Fixes: abc599efa67b ("iwlwifi: pcie: don't crash when rx queues aren't allocated in interrupt")
+Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index fad71f490313..d79d5453c2dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2005-2014, 2018-2022 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2023 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -516,7 +516,7 @@ static void iwl_init_vht_hw_capab(struct iwl_trans *trans,
- 		num_tx_ants = 1;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 4ee4886babcb..da1a27b1d8b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1636,14 +1636,14 @@ irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id)
+ 	struct msix_entry *entry = dev_id;
+ 	struct iwl_trans_pcie *trans_pcie = iwl_pcie_get_trans_pcie(entry);
+ 	struct iwl_trans *trans = trans_pcie->trans;
+-	struct iwl_rxq *rxq = &trans_pcie->rxq[entry->entry];
++	struct iwl_rxq *rxq;
+ 
+ 	trace_iwlwifi_dev_irq_msix(trans->dev, entry, false, 0, 0);
+ 
+ 	if (WARN_ON(entry->entry >= trans->num_rx_queues))
+ 		return IRQ_NONE;
+ 
+-	if (!rxq) {
++	if (!trans_pcie->rxq) {
+ 		if (net_ratelimit())
+ 			IWL_ERR(trans,
+ 				"[%d] Got MSI-X interrupt before we have Rx queues\n",
+@@ -1651,6 +1651,7 @@ irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id)
+ 		return IRQ_NONE;
  	}
  
--	if (num_tx_ants > 1)
-+	if (trans->cfg->ht_params->stbc && num_tx_ants > 1)
- 		vht_cap->cap |= IEEE80211_VHT_CAP_TXSTBC;
- 	else
- 		vht_cap->cap |= IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
++	rxq = &trans_pcie->rxq[entry->entry];
+ 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
+ 	IWL_DEBUG_ISR(trans, "[%d] Got interrupt\n", entry->entry);
+ 
 -- 
 2.38.1
 
