@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6723EB64D9
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D6DEB64D9
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244247AbjFNJps (ORCPT
+        id S243730AbjFNJpt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:45:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45528 "EHLO
+        Wed, 14 Jun 2023 05:45:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244330AbjFNJow (ORCPT
+        with ESMTP id S244310AbjFNJot (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 05:44:52 -0400
+        Wed, 14 Jun 2023 05:44:49 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EA322102
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7240E2712
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686735839; x=1718271839;
+  t=1686735833; x=1718271833;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=QAwYQKWF2HjpFh5e3CWrraoI9sISzIU5JismLwvJGCQ=;
-  b=LXdYx+wiZ9xEmZp+eD9UDeB6X+c9BAuEj3W3GlL2asrGP0NHpgvcasUw
-   bTi1ba0Vooz1UvAM19Xe+jyaUKjQPBkPu047O+L5HcmZCtavVeeMpLr43
-   0ixMdZ4W6NKBKLv+ODsJo8IDLE0yRm7kXMZrsCGt2gE+mjvuO1kFoksU4
-   y6Ym2MZi6uUoZxCsuByDANIXXg3e2zjS7NBjNBFrJ9y/doFyGo0Q5YTLR
-   k5D2alpjxE36vvYQz7CeZCHP7N9nqs6aMY4bLvutJKD1ob/XM+4rjciyZ
-   AgBhaV4g/LY2QYBTW+VE79QgbOu+uP58VoWg/YyjB3ICZQNNMNbNpC/DH
+  bh=hL+OGXLwo2Va+5yYsooSBGEKMXV3AfpcFsayzF+ssj4=;
+  b=RmOIB+xeFefBvi6i5A4RxHwkmlOnuShwxM+vysDDptkMVwTV72LTEeaI
+   o6TRhyYKQ5regrOH++wKn77VWN7OHkTHJqy9DAuIIrZbEAOkZZdZWDici
+   1OwgiBXIjuhmcToAade6Stuy2Ainb8STS518ggUShVF/JYk15jzJhYRO/
+   aUwWscjBArspWx6yukhooDL92HUf7sO3osCJhAOb1dncpnYY0PT6XWVuU
+   vdB6yQ+BpkCLcZRVvb+cNVaUFv5yDX6ZDtatJXXFUlRWMSdvjzX4K66Xv
+   zrsZsia8dAY1agcfjBVsGLzr9P40Iz4qNqh+inWZu76NiDOIGjFr388YU
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049928"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049869"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="361049928"
+   d="scan'208";a="361049869"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:37 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:21 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989920"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989879"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="711989920"
+   d="scan'208";a="711989879"
 Received: from basharil-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.203.45])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:36 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:20 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 19/20] wifi: iwlwifi: Validate slots_num before allocating memory
-Date:   Wed, 14 Jun 2023 12:41:36 +0300
-Message-Id: <20230614123447.90be48017c1b.I880e451e137c5cd688d5f38b573b0dbf352762b3@changeid>
+Subject: [PATCH 12/20] wifi: iwlwifi: use array as array argument
+Date:   Wed, 14 Jun 2023 12:41:29 +0300
+Message-Id: <20230614123446.6fb4a9743b1b.I801007d207f6539a9e0996366ec593e2038b1f90@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230614094137.379897-1-gregory.greenman@intel.com>
 References: <20230614094137.379897-1-gregory.greenman@intel.com>
@@ -57,38 +57,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Verify slots_num is valid in iwl_txq_alloc()
+When calling iwl_mvm_set_fw_qos_params() we explicitly pass
+a pointer to the first array element, but the function will
+treat it as an array. Simplify and clarify the code and pass
+the array instead.
 
-Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/queue/tx.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/link.c     | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-index d1c39c214f95..245bff01b4f8 100644
---- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2020-2022 Intel Corporation
-+ * Copyright (C) 2020-2023 Intel Corporation
-  */
- #include <net/tso.h>
- #include <linux/tcp.h>
-@@ -1027,6 +1027,9 @@ int iwl_txq_alloc(struct iwl_trans *trans, struct iwl_txq *txq, int slots_num,
- 	size_t tb0_buf_sz;
- 	int i;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/link.c b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
+index dc31f8de7d1d..af9ace787ec5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/link.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
+@@ -183,7 +183,7 @@ int iwl_mvm_link_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 					&cmd.protection_flags,
+ 					ht_flag, LINK_PROT_FLG_TGG_PROTECT);
  
-+	if (WARN_ONCE(slots_num <= 0, "Invalid slots num:%d\n", slots_num))
-+		return -EINVAL;
-+
- 	if (WARN_ON(txq->entries || txq->tfds))
- 		return -EINVAL;
+-	iwl_mvm_set_fw_qos_params(mvm, vif, link_conf, &cmd.ac[0],
++	iwl_mvm_set_fw_qos_params(mvm, vif, link_conf, cmd.ac,
+ 				  &cmd.qos_flags);
  
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 61c1ec46a2fb..a2583d045525 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -563,7 +563,7 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 
+ 	cmd->filter_flags = 0;
+ 
+-	iwl_mvm_set_fw_qos_params(mvm, vif, &vif->bss_conf, &cmd->ac[0],
++	iwl_mvm_set_fw_qos_params(mvm, vif, &vif->bss_conf, cmd->ac,
+ 				  &cmd->qos_flags);
+ 
+ 	/* The fw does not distinguish between ht and fat */
 -- 
 2.38.1
 
