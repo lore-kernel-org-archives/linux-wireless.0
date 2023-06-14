@@ -2,131 +2,126 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F15C0EB64DA
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEAB4EB64DB
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244268AbjFNJpx (ORCPT
+        id S244277AbjFNJpz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:45:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45374 "EHLO
+        Wed, 14 Jun 2023 05:45:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244286AbjFNJoq (ORCPT
+        with ESMTP id S244190AbjFNJo1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 05:44:46 -0400
+        Wed, 14 Jun 2023 05:44:27 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6FCA2695
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F62B294F
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:42:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686735824; x=1718271824;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=BAUMMwRzRIyIyHt69qxq4Ty6e2cDqBpe7qGybjuo7Ds=;
-  b=I/G5E+UpUqm66XXBIoX8lN87a69gW32lnYL+nSZLsIAVUpNZEJK0kRYM
-   ynh3mnfprewHkvtqNzTUJPTa7Ej5JeWLBDWmdJhRdD/8XIwmYi99PYj9z
-   5GIWC4pIRXKDYL5tq5Hf8OOG0c1XVMvLUVIiH4+OapNpBrPdJCsrR23Lg
-   Q6v8H6tKSJd7IPcxTJDH2PancrBVgP2XzskWWQn0ufFbVuHcbzrOARFyX
-   EY9X9mqfdYzhZleooL7Oh63q3TS5IadTrg8UcwApod9DTjXW5OZHoj93g
-   wy7tdqRNZD8+BFMJ7OjprPPHtBPCIrb24b+fYLJR4Ny1qJ3UhV0euxr3m
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049853"
+  t=1686735762; x=1718271762;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=F8i6ngU3V0afFCAoBN36JVI876C1xlJ5U3ElbMoPXKk=;
+  b=HaENZw1mc0X1d5PJ+OdMAR8FDxzt5WdJU9mZTQGbX5FKKEcyjVXzgZMu
+   4yKuA0NVQgfk+T7E4/NfNtyw4IoQUg0/DbAP0LMxQnCe1JSd4nJUDFjKw
+   6U8jKeKPjYKeOOgzyKDarZERY/SlkX91En7q0gsAaEGpS+0EFAC1gnQmq
+   71V64MY7AYKEgqQDOzXHY6Z03J/SSqpmSjka7gpne15+eeODIXGnx7AsV
+   2YFYrIay5O8d4dHTvMgAZdZvgviPjsgWm2ceE4vr3WABI/0Ge/NM8LcPg
+   kRl3PpTmbBmD4yV+nrsrDeHGEXYfjQyTsj3ghXn3b2NFWIXUsrJH9CjKo
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049788"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="361049853"
+   d="scan'208";a="361049788"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:13 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:41:53 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989848"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989766"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="711989848"
+   d="scan'208";a="711989766"
 Received: from basharil-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.203.45])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:11 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:41:51 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 08/20] wifi: iwlwifi: mvm: add a few NULL pointer checks
-Date:   Wed, 14 Jun 2023 12:41:25 +0300
-Message-Id: <20230614123446.e47b0192c78f.I67fa9f07cd1c8b3bdc8db25f5e31c1c680c49745@changeid>
+Subject: [PATCH 00/20] wifi: iwlwifi: updates intended for v6.5 2023-06-14 
+Date:   Wed, 14 Jun 2023 12:41:17 +0300
+Message-Id: <20230614094137.379897-1-gregory.greenman@intel.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230614094137.379897-1-gregory.greenman@intel.com>
-References: <20230614094137.379897-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-We've observed that in some botched firmware restart scenarios
-when the firmware crashes again while we're reconfiguring, we
-can hit NULL pointer crashes here. The underlying issue is the
-botched restart which we need to fix separately, but until we
-can do that, don't crash hard here.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 6 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c  | 8 +++++++-
- 2 files changed, 12 insertions(+), 2 deletions(-)
+This patch set includes iwlwifi patches intended for v6.5.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 059ede6f7b65..954ea9ac8e5b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2023 Intel Corporation
-  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-  */
-@@ -1111,6 +1111,10 @@ static int iwl_mvm_mac_ctxt_send_beacon_v9(struct iwl_mvm *mvm,
- 
- 	beacon_cmd.flags = cpu_to_le16(flags);
- 	beacon_cmd.byte_cnt = cpu_to_le16((u16)beacon->len);
-+
-+	if (WARN_ON(!mvmvif->link[link_conf->link_id]))
-+		return -EINVAL;
-+
- 	if (iwl_fw_lookup_cmd_ver(mvm->fw, BEACON_TEMPLATE_CMD, 0) > 12)
- 		beacon_cmd.link_id =
- 			cpu_to_le32(mvmvif->link[link_conf->link_id]->fw_link_id);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index bb8868cd4396..524852cf5cd2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2022 Intel Corporation
-+ * Copyright (C) 2022-2023 Intel Corporation
-  */
- #include "mvm.h"
- #include "time-sync.h"
-@@ -369,6 +369,9 @@ int iwl_mvm_mld_rm_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (WARN_ON(!link))
-+		return -EIO;
-+
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-@@ -398,6 +401,9 @@ int iwl_mvm_mld_rm_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (WARN_ON(!link))
-+		return -EIO;
-+
- 	return iwl_mvm_mld_rm_int_sta(mvm, &link->mcast_sta, true, 0,
- 				      &link->cab_queue);
- }
+It contains normal developement, cleanups and bugfixes.
+It depends on the previous patch sets I've sent.  
+
+Thanks,
+Gregory
+
+Anjaneyulu (4):
+  wifi: iwlwifi: pcie: fix NULL pointer dereference in iwl_pcie_irq_rx_msix_handler()
+  wifi: iwlwifi: mvm: Validate tid is in valid range before using it
+  wifi: iwlwifi: Validate slots_num before allocating memory
+  wifi: iwlwifi: add a few rate index validity checks
+
+Ariel Malamud (1):
+  wifi: iwlwifi: fw: Add new FSEQ defines to fw dump
+
+Ilan Peer (1):
+  wifi: iwlwifi: Correctly indicate support for VHT TX STBC
+
+Johannes Berg (14):
+  wifi: iwlwifi: mvm: correctly access HE/EHT sband capa
+  wifi: iwlwifi: fw: make some ACPI functions static
+  wifi: iwlwifi: mvm: use iwl_mvm_is_vendor_in_approved_list()
+  wifi: iwlwifi: pull from TXQs with softirqs disabled
+  wifi: iwlwifi: pcie: double-check ACK interrupt after timeout
+  wifi: iwlwifi: mvm: add a few NULL pointer checks
+  wifi: iwlwifi: mvm: check link during TX
+  wifi: iwlwifi: mvm: disable new TX csum mode completely
+  wifi: iwlwifi: mvm: store WMM params per link
+  wifi: iwlwifi: use array as array argument
+  wifi: iwlwifi: mvm: always send spec link ID in link commands
+  wifi: iwlwifi: add some FW misbehaviour check infrastructure
+  wifi: iwlwifi: implement WPFC ACPI table loading
+  wifi: iwlwifi: mvm: track u-APSD misbehaving AP by AP address
+
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c   |  9 ++-
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 64 ++++++++++++++++---
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h  | 41 ++++--------
+ .../wireless/intel/iwlwifi/fw/api/config.h    | 15 ++---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   | 16 ++++-
+ drivers/net/wireless/intel/iwlwifi/fw/dump.c  |  6 +-
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  6 +-
+ .../wireless/intel/iwlwifi/mvm/constants.h    |  6 +-
+ .../wireless/intel/iwlwifi/mvm/debugfs-vif.c  |  6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 45 +++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/link.c |  4 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 21 ++++--
+ .../wireless/intel/iwlwifi/mvm/mld-mac80211.c |  8 ++-
+ .../net/wireless/intel/iwlwifi/mvm/mld-sta.c  |  8 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 16 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  9 ++-
+ .../net/wireless/intel/iwlwifi/mvm/power.c    | 35 ++++++----
+ .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 46 +++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   | 11 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 10 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 19 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   | 19 ++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  5 +-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 13 ++--
+ drivers/net/wireless/intel/iwlwifi/queue/tx.c |  5 +-
+ 26 files changed, 265 insertions(+), 182 deletions(-)
+
 -- 
 2.38.1
 
