@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 470A4EB64DC
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F96C001B0
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236084AbjFNJp0 (ORCPT
+        id S240888AbjFNJp1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:45:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45182 "EHLO
+        Wed, 14 Jun 2023 05:45:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244275AbjFNJoo (ORCPT
+        with ESMTP id S244295AbjFNJoq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 05:44:44 -0400
+        Wed, 14 Jun 2023 05:44:46 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E74BC1FF9
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19C6C1FDD
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686735813; x=1718271813;
+  t=1686735827; x=1718271827;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=mYKrV3Ei0OiHHG99fjlvjcdu6yrfQw65jF4g95FJFRg=;
-  b=T/PbmdbkfAHU++GPMgq8kNDkD0h7F5JHbrFQiyVBOZ7/iqVl9lRplZLt
-   ILhqY3IXFIKuAvqZm0GhO0rXW3ni4ADrz3VReQg2tFvXO+oPIIYmM1m88
-   lPEuQSAQowcZqYnF1IJYsTqJ+gpfXo9OEAjhAH09RTlz+09mIwme4w+F3
-   24uteXE84+yJEmg5CAKiI1jSlCHZZYzCA9EXOaZ2B5aJvRNdD5RiUzYPj
-   Q8J3ohaxTwwjYkgFKGu1BhaxQC9mZtfNe5QUrPA+pNdLv/DA9KwFlJ+e1
-   DJQcdvooB+81U9z4/pkveoq9Qa47lUAg0ZWAvkRjy2sLxS5NUZLDVUc5F
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049849"
+  bh=+t9IOG/SEHehcfbdbe8npsEo1sjRSjqTZUkR5nHErDU=;
+  b=gY1njajXzqWpWBnnXfcaMTs5Flv0CucF6R7bHMkaw8fuwug8yHxDCjhg
+   zRU9Kt2otOx9JA8enWApmzFu/O79j3eQUbYmlBUZrpBlP/SZLoSKDkcQf
+   KdXYzXcWmE3pl1T5wTth8Ldj+WD5myQoA/SWQBtpRdVAzZFYTwwa3xy1/
+   YpsEPuhPMiRqy8xOWTpUashY/93yCwFuD5XjcO0ibKVjzOOWAZ6auzpF7
+   0bdsDgDpAW4jyv9MgmXmZl8nG6l5L9xVH0XXTZe5E7w4RVucSG7EJlpK3
+   YZrG4I/8klcs2TOXBzfzr2YGAmciS9/9fVTuwOk1l3MjnmI+KyTrcok6r
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049855"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="361049849"
+   d="scan'208";a="361049855"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:10 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:15 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989838"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989860"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="711989838"
+   d="scan'208";a="711989860"
 Received: from basharil-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.203.45])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:09 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:13 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Ariel Malamud <ariel.malamud@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 07/20] wifi: iwlwifi: fw: Add new FSEQ defines to fw dump
-Date:   Wed, 14 Jun 2023 12:41:24 +0300
-Message-Id: <20230614123446.f40dc9c810a8.I26227900d0b7e9a71fefe5cbf57cf6b46ee44413@changeid>
+Subject: [PATCH 09/20] wifi: iwlwifi: mvm: check link during TX
+Date:   Wed, 14 Jun 2023 12:41:26 +0300
+Message-Id: <20230614123446.cee48479deec.I4eef58f7b67afafb7b3294adbeb6e0067b68419d@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230614094137.379897-1-gregory.greenman@intel.com>
 References: <20230614094137.379897-1-gregory.greenman@intel.com>
@@ -57,66 +57,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ariel Malamud <ariel.malamud@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-On fw error dump, dmesg prints FSEQ register data. Add 4
-additional prints in order to match those being dumped
-by Windows driver. Allows fw infra to correctly detect
-version mismatch.
+Again, during some (botched) FW restart scenarios we can end
+up with a NULL link in the driver but mac80211 thinking all
+is still going OK. If we try to TX at the same time, we can
+crash there. Fix that by checking for a NULL link during TX.
 
-Signed-off-by: Ariel Malamud <ariel.malamud@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dump.c  | 6 +++++-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 6 +++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dump.c b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-index 23388261e97f..5876f917e536 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index bacc3045ea16..06fb4b72ee9b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
 @@ -1,6 +1,6 @@
  // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
 - * Copyright (C) 2012-2014, 2018-2022 Intel Corporation
 + * Copyright (C) 2012-2014, 2018-2023 Intel Corporation
-  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-  */
-@@ -467,6 +467,10 @@ static void iwl_fwrt_dump_fseq_regs(struct iwl_fw_runtime *fwrt)
- 		FSEQ_REG(CNVR_AUX_MISC_CHIP),
- 		FSEQ_REG(CNVR_SCU_SD_REGS_SD_REG_DIG_DCDC_VTRIM),
- 		FSEQ_REG(CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR),
-+		FSEQ_REG(FSEQ_PREV_CNVIO_INIT_VERSION),
-+		FSEQ_REG(FSEQ_WIFI_FSEQ_VERSION),
-+		FSEQ_REG(FSEQ_BT_FSEQ_VERSION),
-+		FSEQ_REG(FSEQ_CLASS_TP_VERSION),
- 	};
- 
- 	if (!iwl_trans_grab_nic_access(trans))
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 0dfe00eae05d..6dd381ff0f9e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2005-2014, 2018-2022 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2023 Intel Corporation
   * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016 Intel Deutschland GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
   */
-@@ -486,6 +486,10 @@ enum {
- #define FSEQ_ALIVE_TOKEN		0xA340F0
- #define FSEQ_CNVI_ID			0xA3408C
- #define FSEQ_CNVR_ID			0xA34090
-+#define FSEQ_PREV_CNVIO_INIT_VERSION	0xA34084
-+#define FSEQ_WIFI_FSEQ_VERSION		0xA34040
-+#define FSEQ_BT_FSEQ_VERSION		0xA34044
-+#define FSEQ_CLASS_TP_VERSION		0xA34078
+@@ -805,6 +805,8 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 			}
  
- #define IWL_D3_SLEEP_STATUS_SUSPEND	0xD3
- #define IWL_D3_SLEEP_STATUS_RESUME	0xD0
+ 			link = mvmvif->link[link_id];
++			if (WARN_ON(!link))
++				return -1;
+ 
+ 			if (!ieee80211_is_data(hdr->frame_control))
+ 				sta_id = link->bcast_sta.sta_id;
 -- 
 2.38.1
 
