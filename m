@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA3EEB64DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 372ACEB64DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 09:45:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237322AbjFNJpb (ORCPT
+        id S244174AbjFNJpc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:45:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45822 "EHLO
+        Wed, 14 Jun 2023 05:45:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244306AbjFNJos (ORCPT
+        with ESMTP id S244268AbjFNJon (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 05:44:48 -0400
+        Wed, 14 Jun 2023 05:44:43 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E8F12709
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2CBB1FF5
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 02:43:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686735831; x=1718271831;
+  t=1686735813; x=1718271813;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=xjZ3DuTADVkP/z+VaKdesRTGe6LdrHm/wZ5DT7S0g3I=;
-  b=LK/6oeHKClTdU1pc7HZQKdJMxyAVv5SIOXNOHn2uSa2xLYTRXifT1i+R
-   MMk1k+fBqAPwXXFbIaS6m9dRs/3juG8v24HBXr14ZpmBq0xWlOfaauvgb
-   x9N3IO9WyRx7mpKHM0luieNhCHcX0imZhRSeHodMY6ygPkyWIsoP67z2e
-   WqzncM6usdnEW1cJKZi1UomMplxRmu63aaBeMWST+yXwXd7mx+xFp8Ixj
-   CGBhEU6AhnNl4RYxQlluLAlNFKid6giFozP0pkxsAsNwJKvv+WZtsvo+N
-   Fqm8do8Q1tafqqr0YBx4myEGLS/XNPSpKBU6luOa0M4LeY0gpVUnlcbi/
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049866"
+  bh=69mwLCnksy5tNztA863iiRxvL63vI714m4MtHAH93B8=;
+  b=fmOmSIoKqRDVK0Veuf19x7mquWng/DFfqW/6Jwh0tqZM/Iw6B5GzfX1/
+   TnvrUBKTQKWaI4aSEVKM7z1IBtjdmiYkt0wXyy+d+CYCtIFnYBL+JXhOD
+   w1LONcEJDKrjn+DC+Yh51mqPqEAApUWBbwEd23f2an54t+ZJiQNF3PtF7
+   nqy4pMyOLHrDsPxT78VieO+5af+Wyj5cElwwDGxKGZXF5kW2mMClcG9cA
+   A6W3EyHAq1jYVsS0EKovCyZ1YcG5PR0Vok0hlX0nfVynbiGT1OGXi8Anj
+   Ccinr0KGjysNI21Fhw9JQHLFLkVj9U/f+z5dsyTbB0071ge+E0lnnyf/G
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="361049839"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="361049866"
+   d="scan'208";a="361049839"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:19 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:08 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989874"
+X-IronPort-AV: E=McAfee;i="6600,9927,10740"; a="711989825"
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="711989874"
+   d="scan'208";a="711989825"
 Received: from basharil-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.203.45])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:17 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jun 2023 02:42:06 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/20] wifi: iwlwifi: mvm: store WMM params per link
-Date:   Wed, 14 Jun 2023 12:41:28 +0300
-Message-Id: <20230614123446.332c4949a1be.Icae03975d578b0cc82279911a1ea7cbc313046d6@changeid>
+Subject: [PATCH 06/20] wifi: iwlwifi: pcie: double-check ACK interrupt after timeout
+Date:   Wed, 14 Jun 2023 12:41:23 +0300
+Message-Id: <20230614123446.00cc2d9b88c3.I429bfe800f17c624e50c0b0c10dd2cd7d885f199@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230614094137.379897-1-gregory.greenman@intel.com>
 References: <20230614094137.379897-1-gregory.greenman@intel.com>
@@ -59,76 +59,48 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We have the data structure set up to store the parameters
-per link, but weren't using them. Fix that and store them
-in the right link.
+There are evidently cases where the firmware completes the
+reset but the interrupt isn't received correctly, so check
+for the interrupt again after the timeout, and don't dump
+the firmware error log if the right bit is set.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c   | 13 +++++++++----
- .../net/wireless/intel/iwlwifi/mvm/mld-mac80211.c   |  8 ++++++--
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c    | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 954ea9ac8e5b..61c1ec46a2fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -470,19 +470,24 @@ void iwl_mvm_set_fw_qos_params(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			       struct iwl_ac_qos *ac, __le32 *qos_flags)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mvm_vif_link_info *mvm_link =
-+		mvmvif->link[link_conf->link_id];
- 	int i;
- 
-+	if (!mvm_link)
-+		return;
-+
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
- 		u8 txf = iwl_mvm_mac_ac_to_tx_fifo(mvm, i);
- 		u8 ucode_ac = iwl_mvm_mac80211_ac_to_ucode_ac(i);
- 
- 		ac[ucode_ac].cw_min =
--			cpu_to_le16(mvmvif->deflink.queue_params[i].cw_min);
-+			cpu_to_le16(mvm_link->queue_params[i].cw_min);
- 		ac[ucode_ac].cw_max =
--			cpu_to_le16(mvmvif->deflink.queue_params[i].cw_max);
-+			cpu_to_le16(mvm_link->queue_params[i].cw_max);
- 		ac[ucode_ac].edca_txop =
--			cpu_to_le16(mvmvif->deflink.queue_params[i].txop * 32);
--		ac[ucode_ac].aifsn = mvmvif->deflink.queue_params[i].aifs;
-+			cpu_to_le16(mvm_link->queue_params[i].txop * 32);
-+		ac[ucode_ac].aifsn = mvm_link->queue_params[i].aifs;
- 		ac[ucode_ac].fifos_mask = BIT(txf);
- 	}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-index cb4df8c6f9de..8cd03357ce79 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-@@ -1,6 +1,6 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index 73b395841ca8..fa46dad5fd68 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -1,7 +1,7 @@
  // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
-- * Copyright (C) 2022 Intel Corporation
-+ * Copyright (C) 2022-2023 Intel Corporation
+  * Copyright (C) 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2022 Intel Corporation
++ * Copyright (C) 2018-2023 Intel Corporation
   */
- #include "mvm.h"
- 
-@@ -820,8 +820,12 @@ iwl_mvm_mld_mac_conf_tx(struct ieee80211_hw *hw,
- {
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mvm_vif_link_info *mvm_link = mvmvif->link[link_id];
- 
--	mvmvif->deflink.queue_params[ac] = *params;
-+	if (!mvm_link)
-+		return -EINVAL;
+ #include "iwl-trans.h"
+ #include "iwl-prph.h"
+@@ -117,9 +117,14 @@ static void iwl_trans_pcie_fw_reset_handshake(struct iwl_trans *trans)
+ 				 trans_pcie->fw_reset_state != FW_RESET_REQUESTED,
+ 				 FW_RESET_TIMEOUT);
+ 	if (!ret || trans_pcie->fw_reset_state == FW_RESET_ERROR) {
+-		IWL_INFO(trans,
+-			 "firmware didn't ACK the reset - continue anyway\n");
+-		iwl_trans_fw_error(trans, true);
++		u32 inta_hw = iwl_read32(trans, CSR_MSIX_HW_INT_CAUSES_AD);
 +
-+	mvm_link->queue_params[ac] = *params;
++		IWL_ERR(trans,
++			"timeout waiting for FW reset ACK (inta_hw=0x%x)\n",
++			inta_hw);
++
++		if (!(inta_hw & MSIX_HW_INT_CAUSES_REG_RESET_DONE))
++			iwl_trans_fw_error(trans, true);
+ 	}
  
- 	/* No need to update right away, we'll get BSS_CHANGED_QOS
- 	 * The exception is P2P_DEVICE interface which needs immediate update.
+ 	trans_pcie->fw_reset_state = FW_RESET_IDLE;
 -- 
 2.38.1
 
