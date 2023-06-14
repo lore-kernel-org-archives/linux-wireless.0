@@ -2,87 +2,87 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71E09EB64D8
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 14:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCB57EB64DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Jun 2023 14:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245547AbjFNOWF (ORCPT
+        id S245581AbjFNOY1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Jun 2023 10:22:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48084 "EHLO
+        Wed, 14 Jun 2023 10:24:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245544AbjFNOWD (ORCPT
+        with ESMTP id S236151AbjFNOY0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Jun 2023 10:22:03 -0400
+        Wed, 14 Jun 2023 10:24:26 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF9FC10CB
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 07:22:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 003F71721;
+        Wed, 14 Jun 2023 07:24:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4463A6366A
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jun 2023 14:22:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47A2C433C8;
-        Wed, 14 Jun 2023 14:22:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 89100642ED;
+        Wed, 14 Jun 2023 14:24:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 101D4C433C0;
+        Wed, 14 Jun 2023 14:24:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686752521;
-        bh=GfQJxl85hzKrEjkYhXQ3HB9Y5yFJayBpHrbM0fIs25E=;
+        s=k20201202; t=1686752664;
+        bh=FqUvtv9fuBbOa2cF0stc7Ubtd7EhOO9sRUnWlgEUXAQ=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=tPKRIBRjYs+mehBhz3KfiPFDcNxPcjHuJg5tHglpb5qU9TocepAuSuHt2yIfZNaNz
-         peHoTGYOVfrauooqK1I2rzr6GyKbandGK2FrBMMl3+uwCKoZpQ67TCBXRFOwxaFzNC
-         iODbtPU7R84UN/CE0fz7grfkdmNnjHTsCly2rUo81L9LTkZYgJDVNPzPL4QA0pdQfl
-         zxc6pQioHDu0zgZT+1ab3R2ZcKunitTIdi7C1e5mDLm3Q9qG+Ft2hqr+lU1SoMobnZ
-         d4WNMU0LIjbU9HKW4yzlHYiST9VpCWjwE7EJ2HWZjqGOY0puHapoJ/4SkxSWZUrgMt
-         sjMe3ptBf6+Gw==
+        b=LiBeaZK8BUyAEjBrPaLbVcm91bl8Yb5AL+52JlAkAMN9cHgJZQ/RoxtPXQWvLZJxU
+         pL0men2FEq1b51j9taoqaMWFzz/KYrPxexiVI8VlVVqFlQAwcOA7+HAeIvcQh4hQ6a
+         K61OZ8DNdl+cLehJPmoXz9F6pB75znxKlvyppP8knd2zE4b9B5t6BASD0hLGvJPGbY
+         Zv93cyUotdQ8zCG7i2DA14XmNfwhaVNtPaGHO6JzJ/o28HoEkhAFtNCIbakz/ZwM20
+         IZM3sew8V4B8QPEuveh7AoqxEXpdaDkPWiCvk6+HbIjpf9LGWi8lhhocfHykjS9NvC
+         yEj1kv5BqbmUA==
 From:   Kalle Valo <kvalo@kernel.org>
-To:     Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath9k: convert msecs to jiffies where needed
-References: <20230613134655.248728-1-dmantipov@yandex.ru>
-        <87y1knw7ng.fsf@toke.dk> <87pm5yd3rz.fsf@kernel.org>
-        <87a5x2l1bt.fsf@toke.dk>
-Date:   Wed, 14 Jun 2023 17:21:58 +0300
-In-Reply-To: <87a5x2l1bt.fsf@toke.dk> ("Toke \=\?utf-8\?Q\?H\=C3\=B8iland-J\?\=
- \=\?utf-8\?Q\?\=C3\=B8rgensen\=22's\?\= message of
-        "Wed, 14 Jun 2023 13:39:50 +0200")
-Message-ID: <878rcmf7jt.fsf@kernel.org>
+To:     Azeem Shaikh <azeemshaikh38@gmail.com>
+Cc:     linux-hardening@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v3] wifi: cfg80211: replace strlcpy() with strscpy()
+References: <20230614134956.2109252-1-azeemshaikh38@gmail.com>
+Date:   Wed, 14 Jun 2023 17:24:20 +0300
+In-Reply-To: <20230614134956.2109252-1-azeemshaikh38@gmail.com> (Azeem
+        Shaikh's message of "Wed, 14 Jun 2023 13:49:56 +0000")
+Message-ID: <874jnaf7fv.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+Azeem Shaikh <azeemshaikh38@gmail.com> writes:
 
-> Kalle Valo <kvalo@kernel.org> writes:
+> strlcpy() reads the entire source buffer first.
+> This read may exceed the destination size limit.
+> This is both inefficient and can lead to linear read
+> overflows if a source string is not NUL-terminated [1].
+> In an effort to remove strlcpy() completely [2], replace
+> strlcpy() here with strscpy().
 >
->> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>
->>> Dmitry Antipov <dmantipov@yandex.ru> writes:
->>>
->>>> Since 'ieee80211_queue_delayed_work()' expects timeout in
->>>> jiffies and not milliseconds, 'msecs_to_jiffies()' should
->>>> be used in 'ath_restart_work()' and '__ath9k_flush()'.
->>>>
->>>> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
->>>
->>> I believe this warrants a:
->>>
->>> Fixes: d63ffc45c5d3 ("ath9k: rename tx_complete_work to hw_check_work")
->>
->> I can add that.
+> Direct replacement is safe here since WIPHY_ASSIGN is only used by
+> TRACE macros and the return values are ignored.
 >
-> I was hoping you'd say that - thanks :)
+> [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy
+> [2] https://github.com/KSPP/linux/issues/89
+>
+> Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
+> ---
+> v1: https://lore.kernel.org/all/20230612232301.2572316-1-azeemshaikh38@gmail.com/
+> v2: https://lore.kernel.org/all/20230614134552.2108471-1-azeemshaikh38@gmail.com/
 
-BTW you can always assume that I can change or fix the commit messages.
-Just let me know exactly what to change, being able to copy paste is
-best :)
+In the change log (after the "---" line) you should also describe what
+changes you made, more info in the wiki below. In this case it's clear
+as the patch is simple but please keep this in mind for future patches.
 
---=20
+No need to resend because of this.
+
+-- 
 https://patchwork.kernel.org/project/linux-wireless/list/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
