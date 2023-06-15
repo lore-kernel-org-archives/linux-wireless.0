@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BCF5EB64D9
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jun 2023 13:05:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC40DEB64DD
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jun 2023 13:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241312AbjFONFg (ORCPT
+        id S241277AbjFONFi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Jun 2023 09:05:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57642 "EHLO
+        Thu, 15 Jun 2023 09:05:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241248AbjFONFe (ORCPT
+        with ESMTP id S240673AbjFONFg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2023 09:05:34 -0400
+        Thu, 15 Jun 2023 09:05:36 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFD9F1FFF
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jun 2023 06:05:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1A4E269A
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jun 2023 06:05:33 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35FD53130032319, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35FD53130032319
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35FD57arC032339, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35FD57arC032339
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Thu, 15 Jun 2023 21:05:03 +0800
+        Thu, 15 Jun 2023 21:05:07 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Thu, 15 Jun 2023 21:05:22 +0800
+ 15.1.2507.17; Thu, 15 Jun 2023 21:05:26 +0800
 Received: from [127.0.1.1] (172.16.16.227) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 15 Jun
- 2023 21:05:21 +0800
+ 2023 21:05:25 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/5] wifi: rtw89: 8851b: update TX power tables to R28
-Date:   Thu, 15 Jun 2023 21:04:39 +0800
-Message-ID: <20230615130442.18116-3-pkshih@realtek.com>
+Subject: [PATCH 4/5] wifi: rtw89: 8851b: rfk: update IQK to version 0x8
+Date:   Thu, 15 Jun 2023 21:04:41 +0800
+Message-ID: <20230615130442.18116-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230615130442.18116-1-pkshih@realtek.com>
 References: <20230615130442.18116-1-pkshih@realtek.com>
@@ -49,751 +49,259 @@ X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+The main change is to adjust RX calibration groups from {0,1,2,3} to {0,2}
+in 5 GHz, so reduce elements from 4 to 2, and use index to iterate them.
+Meanwhile, always do RX narrowband calibration (ID_NBRXK) for each group.
+NCTL is used to assist IQK, so also update NCTL to 0x6 along with internal
+tag HALRF_029_00_103.
 
-Update 8851B TX power tables to RF version R28.
-
-TX power tables' changes:
-* TX power limit and TX power shape:
-	update 5 GHz configurations for FCC and IC
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../wireless/realtek/rtw89/rtw8851b_table.c   | 220 +++++++++---------
- 1 file changed, 110 insertions(+), 110 deletions(-)
+ .../net/wireless/realtek/rtw89/rtw8851b_rfk.c | 115 ++++++++++--------
+ .../wireless/realtek/rtw89/rtw8851b_table.c   |   2 +-
+ 2 files changed, 63 insertions(+), 54 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c
+index 25dda3ee27a6a..a221f94627f5b 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c
+@@ -17,6 +17,7 @@
+ #define DPK_RF_REG_NUM_8851B 4
+ #define DPK_KSET_NUM 4
+ #define RTW8851B_RXK_GROUP_NR 4
++#define RTW8851B_RXK_GROUP_IDX_NR 2
+ #define RTW8851B_TXK_GROUP_NR 1
+ #define RTW8851B_IQK_VER 0x2a
+ #define RTW8851B_IQK_SS 1
+@@ -95,9 +96,9 @@ static const u32 _tssi_de_mcs_10m[RF_PATH_NUM_8851B] = {0x5830};
+ static const u32 g_idxrxgain[RTW8851B_RXK_GROUP_NR] = {0x10e, 0x116, 0x28e, 0x296};
+ static const u32 g_idxattc2[RTW8851B_RXK_GROUP_NR] = {0x0, 0xf, 0x0, 0xf};
+ static const u32 g_idxrxagc[RTW8851B_RXK_GROUP_NR] = {0x0, 0x1, 0x2, 0x3};
+-static const u32 a_idxrxgain[RTW8851B_RXK_GROUP_NR] = {0x10C, 0x112, 0x28c, 0x292};
+-static const u32 a_idxattc2[RTW8851B_RXK_GROUP_NR] = {0xf, 0xf, 0xf, 0xf};
+-static const u32 a_idxrxagc[RTW8851B_RXK_GROUP_NR] = {0x4, 0x5, 0x6, 0x7};
++static const u32 a_idxrxgain[RTW8851B_RXK_GROUP_IDX_NR] = {0x10C, 0x28c};
++static const u32 a_idxattc2[RTW8851B_RXK_GROUP_IDX_NR] = {0xf, 0xf};
++static const u32 a_idxrxagc[RTW8851B_RXK_GROUP_IDX_NR] = {0x4, 0x6};
+ static const u32 a_power_range[RTW8851B_TXK_GROUP_NR] = {0x0};
+ static const u32 a_track_range[RTW8851B_TXK_GROUP_NR] = {0x6};
+ static const u32 a_gain_bb[RTW8851B_TXK_GROUP_NR] = {0x0a};
+@@ -107,7 +108,7 @@ static const u32 g_track_range[RTW8851B_TXK_GROUP_NR] = {0x6};
+ static const u32 g_gain_bb[RTW8851B_TXK_GROUP_NR] = {0x10};
+ static const u32 g_itqt[RTW8851B_TXK_GROUP_NR] = {0x12};
+ 
+-static const u32 rtw8851b_backup_bb_regs[] = {0xc0ec, 0xc0e8};
++static const u32 rtw8851b_backup_bb_regs[] = {0xc0d4, 0xc0d8, 0xc0c4, 0xc0ec, 0xc0e8};
+ static const u32 rtw8851b_backup_rf_regs[] = {
+ 	0xef, 0xde, 0x0, 0x1e, 0x2, 0x85, 0x90, 0x5};
+ 
+@@ -120,6 +121,17 @@ static const u32 dpk_rf_reg[DPK_RF_REG_NUM_8851B] = {0xde, 0x8f, 0x5, 0x10005};
+ 
+ static void _set_ch(struct rtw89_dev *rtwdev, u32 val);
+ 
++static u8 _rxk_5ghz_group_from_idx(u8 idx)
++{
++	/* There are four RXK groups (RTW8851B_RXK_GROUP_NR), but only group 0
++	 * and 2 are used in 5 GHz band, so reduce elements to 2.
++	 */
++	if (idx < RTW8851B_RXK_GROUP_IDX_NR)
++		return idx * 2;
++
++	return 0;
++}
++
+ static u8 _kpath(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx)
+ {
+ 	return RF_A;
+@@ -786,17 +798,11 @@ static bool _rxk_2g_group_sel(struct rtw89_dev *rtwdev,
+ 			    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD),
+ 			    rtw89_read_rf(rtwdev, path, RR_MOD, 0x003e0));
+ 
+-		if (gp == 0x3) {
+-			rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
+-			rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
+-			notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
+-			iqk_info->nb_rxcfir[path] =
+-				rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
+-
+-			rtw89_debug(rtwdev, RTW89_DBG_RFK,
+-				    "[IQK]S%x, NBRXK 0x8008 = 0x%x\n", path,
+-				    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+-		}
++		rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
++		rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
++		notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
++		iqk_info->nb_rxcfir[path] =
++			rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
+ 
+ 		notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_RXK);
+ 
+@@ -834,15 +840,18 @@ static bool _rxk_5g_group_sel(struct rtw89_dev *rtwdev,
+ 	bool kfail = false;
+ 	bool notready;
+ 	u32 rf_0;
++	u8 idx;
+ 	u8 gp;
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK]===>%s\n", __func__);
+ 
+-	for (gp = 0; gp < RTW8851B_RXK_GROUP_NR; gp++) {
++	for (idx = 0; idx < RTW8851B_RXK_GROUP_IDX_NR; idx++) {
++		gp = _rxk_5ghz_group_from_idx(idx);
++
+ 		rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK]S%x, gp = %x\n", path, gp);
+ 
+-		rtw89_write_rf(rtwdev, RF_PATH_A, RR_MOD, 0x03ff0, a_idxrxgain[gp]);
+-		rtw89_write_rf(rtwdev, RF_PATH_A, RR_RXA2, RR_RXA2_ATT, a_idxattc2[gp]);
++		rtw89_write_rf(rtwdev, RF_PATH_A, RR_MOD, RR_MOD_RGM, a_idxrxgain[idx]);
++		rtw89_write_rf(rtwdev, RF_PATH_A, RR_RXA2, RR_RXA2_ATT, a_idxattc2[idx]);
+ 
+ 		rtw89_phy_write32_mask(rtwdev, R_CFIR_LUT, B_CFIR_LUT_SEL, 0x1);
+ 		rtw89_phy_write32_mask(rtwdev, R_CFIR_LUT, B_CFIR_LUT_G3, 0x0);
+@@ -852,7 +861,7 @@ static bool _rxk_5g_group_sel(struct rtw89_dev *rtwdev,
+ 		fsleep(100);
+ 		rf_0 = rtw89_read_rf(rtwdev, path, RR_MOD, RFREG_MASK);
+ 		rtw89_phy_write32_mask(rtwdev, R_IQK_DIF2, B_IQK_DIF2_RXPI, rf_0);
+-		rtw89_phy_write32_mask(rtwdev, R_IQK_RXA, B_IQK_RXAGC, a_idxrxagc[gp]);
++		rtw89_phy_write32_mask(rtwdev, R_IQK_RXA, B_IQK_RXAGC, a_idxrxagc[idx]);
+ 		rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x11);
+ 		notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_RXAGC);
+ 
+@@ -861,17 +870,15 @@ static bool _rxk_5g_group_sel(struct rtw89_dev *rtwdev,
+ 			    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD),
+ 			    rtw89_read_rf(rtwdev, path, RR_MOD, RR_MOD_RXB));
+ 
+-		if (gp == 0x3) {
+-			rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
+-			rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
+-			notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
+-			iqk_info->nb_rxcfir[path] =
+-				rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
++		rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
++		rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
++		notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
++		iqk_info->nb_rxcfir[path] =
++			rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
+ 
+-			rtw89_debug(rtwdev, RTW89_DBG_RFK,
+-				    "[IQK]S%x, NBRXK 0x8008 = 0x%x\n", path,
+-				    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+-		}
++		rtw89_debug(rtwdev, RTW89_DBG_RFK,
++			    "[IQK]S%x, NBRXK 0x8008 = 0x%x\n", path,
++			    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+ 
+ 		notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_RXK);
+ 
+@@ -908,14 +915,17 @@ static bool _iqk_5g_nbrxk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx,
+ 	struct rtw89_iqk_info *iqk_info = &rtwdev->iqk;
+ 	bool kfail = false;
+ 	bool notready;
+-	u8 gp = 0x3;
++	u8 idx = 0x1;
+ 	u32 rf_0;
++	u8 gp;
++
++	gp = _rxk_5ghz_group_from_idx(idx);
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK]===>%s\n", __func__);
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK]S%x, gp = %x\n", path, gp);
+ 
+-	rtw89_write_rf(rtwdev, RF_PATH_A, RR_MOD, RR_MOD_RGM, a_idxrxgain[gp]);
+-	rtw89_write_rf(rtwdev, RF_PATH_A, RR_RXA2, RR_RXA2_ATT, a_idxattc2[gp]);
++	rtw89_write_rf(rtwdev, RF_PATH_A, RR_MOD, RR_MOD_RGM, a_idxrxgain[idx]);
++	rtw89_write_rf(rtwdev, RF_PATH_A, RR_RXA2, RR_RXA2_ATT, a_idxattc2[idx]);
+ 
+ 	rtw89_phy_write32_mask(rtwdev, R_CFIR_LUT, B_CFIR_LUT_SEL, 0x1);
+ 	rtw89_phy_write32_mask(rtwdev, R_CFIR_LUT, B_CFIR_LUT_G3, 0x0);
+@@ -925,7 +935,7 @@ static bool _iqk_5g_nbrxk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx,
+ 	fsleep(100);
+ 	rf_0 = rtw89_read_rf(rtwdev, path, RR_MOD, RFREG_MASK);
+ 	rtw89_phy_write32_mask(rtwdev, R_IQK_DIF2, B_IQK_DIF2_RXPI, rf_0);
+-	rtw89_phy_write32_mask(rtwdev, R_IQK_RXA, B_IQK_RXAGC, a_idxrxagc[gp]);
++	rtw89_phy_write32_mask(rtwdev, R_IQK_RXA, B_IQK_RXAGC, a_idxrxagc[idx]);
+ 	rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x11);
+ 	notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_RXAGC);
+ 
+@@ -934,17 +944,15 @@ static bool _iqk_5g_nbrxk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx,
+ 		    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD),
+ 		    rtw89_read_rf(rtwdev, path, RR_MOD, 0x003e0));
+ 
+-	if (gp == 0x3) {
+-		rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
+-		rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
+-		notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
+-		iqk_info->nb_rxcfir[path] =
+-			rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
++	rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
++	rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
++	notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
++	iqk_info->nb_rxcfir[path] =
++		rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
+ 
+-		rtw89_debug(rtwdev, RTW89_DBG_RFK,
+-			    "[IQK]S%x, NBRXK 0x8008 = 0x%x\n", path,
+-			    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+-	}
++	rtw89_debug(rtwdev, RTW89_DBG_RFK,
++		    "[IQK]S%x, NBRXK 0x8008 = 0x%x\n", path,
++		    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK]S%x, WBRXK 0x8008 = 0x%x\n",
+ 		    path, rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+@@ -998,17 +1006,15 @@ static bool _iqk_2g_nbrxk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx,
+ 		    path, rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD),
+ 		    rtw89_read_rf(rtwdev, path, RR_MOD, 0x003e0));
+ 
+-	if (gp == 0x3) {
+-		rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
+-		rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
+-		notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
+-		iqk_info->nb_rxcfir[path] =
+-			rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
++	rtw89_write_rf(rtwdev, path, RR_RXKPLL, RR_RXKPLL_OFF, 0x13);
++	rtw89_phy_write32_mask(rtwdev, R_IQK_DIF4, B_IQK_DIF4_RXT, 0x011);
++	notready = _iqk_one_shot(rtwdev, phy_idx, path, ID_NBRXK);
++	iqk_info->nb_rxcfir[path] =
++		rtw89_phy_read32_mask(rtwdev, R_RXIQC, MASKDWORD) | 0x2;
+ 
+-		rtw89_debug(rtwdev, RTW89_DBG_RFK,
+-			    "[IQK]S%x, NBRXK 0x8008 = 0x%x\n", path,
+-			    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+-	}
++	rtw89_debug(rtwdev, RTW89_DBG_RFK,
++		    "[IQK]S%x, NBRXK 0x8008 = 0x%x\n", path,
++		    rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK]S%x, WBRXK 0x8008 = 0x%x\n",
+ 		    path, rtw89_phy_read32_mask(rtwdev, R_NCTL_RPT, MASKDWORD));
+@@ -1516,6 +1522,9 @@ static void _iqk_restore(struct rtw89_dev *rtwdev, u8 path)
+ 	fail = _iqk_check_cal(rtwdev, path);
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK, "[IQK] restore fail=%d\n", fail);
+ 
++	rtw89_write_rf(rtwdev, RF_PATH_A, RR_LUTWE, RR_LUTWE_LOK, 0x0);
++	rtw89_write_rf(rtwdev, RF_PATH_A, RR_LUTDBG, RR_LUTDBG_TIA, 0x0);
++
+ 	rtw89_phy_write32_mask(rtwdev, R_NCTL_N1, B_NCTL_N1_CIP, 0x00);
+ 	rtw89_phy_write32_mask(rtwdev, R_NCTL_RPT, MASKDWORD, 0x00000000);
+ 	rtw89_phy_write32_mask(rtwdev, R_KIP_SYSCFG, MASKDWORD, 0x80000000);
 diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851b_table.c b/drivers/net/wireless/realtek/rtw89/rtw8851b_table.c
-index aeee246baba9c..bda68dbc8b7b4 100644
+index bda68dbc8b7b4..828beb0e5f7e6 100644
 --- a/drivers/net/wireless/realtek/rtw89/rtw8851b_table.c
 +++ b/drivers/net/wireless/realtek/rtw89/rtw8851b_table.c
-@@ -3342,8 +3342,8 @@ const u8 rtw89_8851b_tx_shape[RTW89_BAND_MAX][RTW89_RS_TX_SHAPE_NUM]
- 	[1][1][RTW89_ACMA] = 0,
- 	[1][1][RTW89_CN] = 0,
- 	[1][1][RTW89_ETSI] = 0,
--	[1][1][RTW89_FCC] = 3,
--	[1][1][RTW89_IC] = 3,
-+	[1][1][RTW89_FCC] = 1,
-+	[1][1][RTW89_IC] = 1,
- 	[1][1][RTW89_KCC] = 0,
- 	[1][1][RTW89_MKK] = 0,
- 	[1][1][RTW89_UK] = 0,
-@@ -4896,9 +4896,9 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_WW][42] = 30,
- 	[0][0][1][0][RTW89_WW][44] = 30,
- 	[0][0][1][0][RTW89_WW][46] = 30,
--	[0][0][1][0][RTW89_WW][48] = 72,
--	[0][0][1][0][RTW89_WW][50] = 72,
--	[0][0][1][0][RTW89_WW][52] = 72,
-+	[0][0][1][0][RTW89_WW][48] = 68,
-+	[0][0][1][0][RTW89_WW][50] = 68,
-+	[0][0][1][0][RTW89_WW][52] = 68,
- 	[0][1][1][0][RTW89_WW][0] = 0,
- 	[0][1][1][0][RTW89_WW][2] = 0,
- 	[0][1][1][0][RTW89_WW][4] = 0,
-@@ -4952,9 +4952,9 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_WW][42] = 30,
- 	[0][0][2][0][RTW89_WW][44] = 30,
- 	[0][0][2][0][RTW89_WW][46] = 30,
--	[0][0][2][0][RTW89_WW][48] = 74,
--	[0][0][2][0][RTW89_WW][50] = 76,
--	[0][0][2][0][RTW89_WW][52] = 76,
-+	[0][0][2][0][RTW89_WW][48] = 70,
-+	[0][0][2][0][RTW89_WW][50] = 72,
-+	[0][0][2][0][RTW89_WW][52] = 72,
- 	[0][1][2][0][RTW89_WW][0] = 0,
- 	[0][1][2][0][RTW89_WW][2] = 0,
- 	[0][1][2][0][RTW89_WW][4] = 0,
-@@ -5011,11 +5011,11 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][1][2][1][RTW89_WW][48] = 0,
- 	[0][1][2][1][RTW89_WW][50] = 0,
- 	[0][1][2][1][RTW89_WW][52] = 0,
--	[1][0][2][0][RTW89_WW][1] = 64,
-+	[1][0][2][0][RTW89_WW][1] = 60,
- 	[1][0][2][0][RTW89_WW][5] = 62,
- 	[1][0][2][0][RTW89_WW][9] = 64,
--	[1][0][2][0][RTW89_WW][13] = 64,
--	[1][0][2][0][RTW89_WW][16] = 66,
-+	[1][0][2][0][RTW89_WW][13] = 60,
-+	[1][0][2][0][RTW89_WW][16] = 62,
- 	[1][0][2][0][RTW89_WW][20] = 66,
- 	[1][0][2][0][RTW89_WW][24] = 66,
- 	[1][0][2][0][RTW89_WW][28] = 66,
-@@ -5023,8 +5023,8 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_WW][36] = 76,
- 	[1][0][2][0][RTW89_WW][39] = 30,
- 	[1][0][2][0][RTW89_WW][43] = 30,
--	[1][0][2][0][RTW89_WW][47] = 84,
--	[1][0][2][0][RTW89_WW][51] = 84,
-+	[1][0][2][0][RTW89_WW][47] = 80,
-+	[1][0][2][0][RTW89_WW][51] = 80,
- 	[1][1][2][0][RTW89_WW][1] = 0,
- 	[1][1][2][0][RTW89_WW][5] = 0,
- 	[1][1][2][0][RTW89_WW][9] = 0,
-@@ -5053,13 +5053,13 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][1][2][1][RTW89_WW][43] = 0,
- 	[1][1][2][1][RTW89_WW][47] = 0,
- 	[1][1][2][1][RTW89_WW][51] = 0,
--	[2][0][2][0][RTW89_WW][3] = 62,
--	[2][0][2][0][RTW89_WW][11] = 62,
--	[2][0][2][0][RTW89_WW][18] = 64,
-+	[2][0][2][0][RTW89_WW][3] = 60,
-+	[2][0][2][0][RTW89_WW][11] = 58,
-+	[2][0][2][0][RTW89_WW][18] = 62,
- 	[2][0][2][0][RTW89_WW][26] = 64,
- 	[2][0][2][0][RTW89_WW][34] = 72,
- 	[2][0][2][0][RTW89_WW][41] = 30,
--	[2][0][2][0][RTW89_WW][49] = 74,
-+	[2][0][2][0][RTW89_WW][49] = 70,
- 	[2][1][2][0][RTW89_WW][3] = 0,
- 	[2][1][2][0][RTW89_WW][11] = 0,
- 	[2][1][2][0][RTW89_WW][18] = 0,
-@@ -5083,7 +5083,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[3][1][2][1][RTW89_WW][7] = 0,
- 	[3][1][2][1][RTW89_WW][22] = 0,
- 	[3][1][2][1][RTW89_WW][45] = 0,
--	[0][0][1][0][RTW89_FCC][0] = 80,
-+	[0][0][1][0][RTW89_FCC][0] = 76,
- 	[0][0][1][0][RTW89_ETSI][0] = 58,
- 	[0][0][1][0][RTW89_MKK][0] = 60,
- 	[0][0][1][0][RTW89_IC][0] = 62,
-@@ -5139,7 +5139,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][12] = 58,
- 	[0][0][1][0][RTW89_CN][12] = 60,
- 	[0][0][1][0][RTW89_UK][12] = 58,
--	[0][0][1][0][RTW89_FCC][14] = 78,
-+	[0][0][1][0][RTW89_FCC][14] = 74,
- 	[0][0][1][0][RTW89_ETSI][14] = 58,
- 	[0][0][1][0][RTW89_MKK][14] = 60,
- 	[0][0][1][0][RTW89_IC][14] = 64,
-@@ -5147,10 +5147,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][14] = 58,
- 	[0][0][1][0][RTW89_CN][14] = 60,
- 	[0][0][1][0][RTW89_UK][14] = 58,
--	[0][0][1][0][RTW89_FCC][15] = 78,
-+	[0][0][1][0][RTW89_FCC][15] = 74,
- 	[0][0][1][0][RTW89_ETSI][15] = 58,
- 	[0][0][1][0][RTW89_MKK][15] = 78,
--	[0][0][1][0][RTW89_IC][15] = 78,
-+	[0][0][1][0][RTW89_IC][15] = 74,
- 	[0][0][1][0][RTW89_KCC][15] = 78,
- 	[0][0][1][0][RTW89_ACMA][15] = 58,
- 	[0][0][1][0][RTW89_CN][15] = 127,
-@@ -5227,10 +5227,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][33] = 60,
- 	[0][0][1][0][RTW89_CN][33] = 127,
- 	[0][0][1][0][RTW89_UK][33] = 60,
--	[0][0][1][0][RTW89_FCC][35] = 72,
-+	[0][0][1][0][RTW89_FCC][35] = 68,
- 	[0][0][1][0][RTW89_ETSI][35] = 60,
- 	[0][0][1][0][RTW89_MKK][35] = 78,
--	[0][0][1][0][RTW89_IC][35] = 72,
-+	[0][0][1][0][RTW89_IC][35] = 68,
- 	[0][0][1][0][RTW89_KCC][35] = 74,
- 	[0][0][1][0][RTW89_ACMA][35] = 60,
- 	[0][0][1][0][RTW89_CN][35] = 127,
-@@ -5283,7 +5283,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][46] = 78,
- 	[0][0][1][0][RTW89_CN][46] = 78,
- 	[0][0][1][0][RTW89_UK][46] = 58,
--	[0][0][1][0][RTW89_FCC][48] = 72,
-+	[0][0][1][0][RTW89_FCC][48] = 68,
- 	[0][0][1][0][RTW89_ETSI][48] = 127,
- 	[0][0][1][0][RTW89_MKK][48] = 127,
- 	[0][0][1][0][RTW89_IC][48] = 127,
-@@ -5291,7 +5291,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][48] = 127,
- 	[0][0][1][0][RTW89_CN][48] = 127,
- 	[0][0][1][0][RTW89_UK][48] = 127,
--	[0][0][1][0][RTW89_FCC][50] = 72,
-+	[0][0][1][0][RTW89_FCC][50] = 68,
- 	[0][0][1][0][RTW89_ETSI][50] = 127,
- 	[0][0][1][0][RTW89_MKK][50] = 127,
- 	[0][0][1][0][RTW89_IC][50] = 127,
-@@ -5299,7 +5299,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][50] = 127,
- 	[0][0][1][0][RTW89_CN][50] = 127,
- 	[0][0][1][0][RTW89_UK][50] = 127,
--	[0][0][1][0][RTW89_FCC][52] = 72,
-+	[0][0][1][0][RTW89_FCC][52] = 68,
- 	[0][0][1][0][RTW89_ETSI][52] = 127,
- 	[0][0][1][0][RTW89_MKK][52] = 127,
- 	[0][0][1][0][RTW89_IC][52] = 127,
-@@ -5531,7 +5531,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][1][1][0][RTW89_ACMA][52] = 127,
- 	[0][1][1][0][RTW89_CN][52] = 127,
- 	[0][1][1][0][RTW89_UK][52] = 127,
--	[0][0][2][0][RTW89_FCC][0] = 78,
-+	[0][0][2][0][RTW89_FCC][0] = 74,
- 	[0][0][2][0][RTW89_ETSI][0] = 62,
- 	[0][0][2][0][RTW89_MKK][0] = 62,
- 	[0][0][2][0][RTW89_IC][0] = 64,
-@@ -5587,7 +5587,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][12] = 62,
- 	[0][0][2][0][RTW89_CN][12] = 62,
- 	[0][0][2][0][RTW89_UK][12] = 62,
--	[0][0][2][0][RTW89_FCC][14] = 76,
-+	[0][0][2][0][RTW89_FCC][14] = 72,
- 	[0][0][2][0][RTW89_ETSI][14] = 62,
- 	[0][0][2][0][RTW89_MKK][14] = 62,
- 	[0][0][2][0][RTW89_IC][14] = 64,
-@@ -5595,10 +5595,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][14] = 62,
- 	[0][0][2][0][RTW89_CN][14] = 62,
- 	[0][0][2][0][RTW89_UK][14] = 62,
--	[0][0][2][0][RTW89_FCC][15] = 76,
-+	[0][0][2][0][RTW89_FCC][15] = 72,
- 	[0][0][2][0][RTW89_ETSI][15] = 60,
- 	[0][0][2][0][RTW89_MKK][15] = 78,
--	[0][0][2][0][RTW89_IC][15] = 76,
-+	[0][0][2][0][RTW89_IC][15] = 72,
- 	[0][0][2][0][RTW89_KCC][15] = 78,
- 	[0][0][2][0][RTW89_ACMA][15] = 60,
- 	[0][0][2][0][RTW89_CN][15] = 127,
-@@ -5675,10 +5675,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][33] = 62,
- 	[0][0][2][0][RTW89_CN][33] = 127,
- 	[0][0][2][0][RTW89_UK][33] = 62,
--	[0][0][2][0][RTW89_FCC][35] = 72,
-+	[0][0][2][0][RTW89_FCC][35] = 68,
- 	[0][0][2][0][RTW89_ETSI][35] = 62,
- 	[0][0][2][0][RTW89_MKK][35] = 78,
--	[0][0][2][0][RTW89_IC][35] = 72,
-+	[0][0][2][0][RTW89_IC][35] = 68,
- 	[0][0][2][0][RTW89_KCC][35] = 74,
- 	[0][0][2][0][RTW89_ACMA][35] = 62,
- 	[0][0][2][0][RTW89_CN][35] = 127,
-@@ -5731,7 +5731,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][46] = 78,
- 	[0][0][2][0][RTW89_CN][46] = 78,
- 	[0][0][2][0][RTW89_UK][46] = 60,
--	[0][0][2][0][RTW89_FCC][48] = 74,
-+	[0][0][2][0][RTW89_FCC][48] = 70,
- 	[0][0][2][0][RTW89_ETSI][48] = 127,
- 	[0][0][2][0][RTW89_MKK][48] = 127,
- 	[0][0][2][0][RTW89_IC][48] = 127,
-@@ -5739,7 +5739,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][48] = 127,
- 	[0][0][2][0][RTW89_CN][48] = 127,
- 	[0][0][2][0][RTW89_UK][48] = 127,
--	[0][0][2][0][RTW89_FCC][50] = 76,
-+	[0][0][2][0][RTW89_FCC][50] = 72,
- 	[0][0][2][0][RTW89_ETSI][50] = 127,
- 	[0][0][2][0][RTW89_MKK][50] = 127,
- 	[0][0][2][0][RTW89_IC][50] = 127,
-@@ -5747,7 +5747,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][50] = 127,
- 	[0][0][2][0][RTW89_CN][50] = 127,
- 	[0][0][2][0][RTW89_UK][50] = 127,
--	[0][0][2][0][RTW89_FCC][52] = 76,
-+	[0][0][2][0][RTW89_FCC][52] = 72,
- 	[0][0][2][0][RTW89_ETSI][52] = 127,
- 	[0][0][2][0][RTW89_MKK][52] = 127,
- 	[0][0][2][0][RTW89_IC][52] = 127,
-@@ -6203,10 +6203,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][1][2][1][RTW89_ACMA][52] = 127,
- 	[0][1][2][1][RTW89_CN][52] = 127,
- 	[0][1][2][1][RTW89_UK][52] = 127,
--	[1][0][2][0][RTW89_FCC][1] = 68,
-+	[1][0][2][0][RTW89_FCC][1] = 64,
- 	[1][0][2][0][RTW89_ETSI][1] = 64,
- 	[1][0][2][0][RTW89_MKK][1] = 64,
--	[1][0][2][0][RTW89_IC][1] = 64,
-+	[1][0][2][0][RTW89_IC][1] = 60,
- 	[1][0][2][0][RTW89_KCC][1] = 74,
- 	[1][0][2][0][RTW89_ACMA][1] = 64,
- 	[1][0][2][0][RTW89_CN][1] = 64,
-@@ -6227,18 +6227,18 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][9] = 64,
- 	[1][0][2][0][RTW89_CN][9] = 64,
- 	[1][0][2][0][RTW89_UK][9] = 64,
--	[1][0][2][0][RTW89_FCC][13] = 66,
-+	[1][0][2][0][RTW89_FCC][13] = 62,
- 	[1][0][2][0][RTW89_ETSI][13] = 64,
- 	[1][0][2][0][RTW89_MKK][13] = 64,
--	[1][0][2][0][RTW89_IC][13] = 64,
-+	[1][0][2][0][RTW89_IC][13] = 60,
- 	[1][0][2][0][RTW89_KCC][13] = 72,
- 	[1][0][2][0][RTW89_ACMA][13] = 64,
- 	[1][0][2][0][RTW89_CN][13] = 64,
- 	[1][0][2][0][RTW89_UK][13] = 64,
--	[1][0][2][0][RTW89_FCC][16] = 66,
-+	[1][0][2][0][RTW89_FCC][16] = 62,
- 	[1][0][2][0][RTW89_ETSI][16] = 66,
- 	[1][0][2][0][RTW89_MKK][16] = 80,
--	[1][0][2][0][RTW89_IC][16] = 66,
-+	[1][0][2][0][RTW89_IC][16] = 62,
- 	[1][0][2][0][RTW89_KCC][16] = 74,
- 	[1][0][2][0][RTW89_ACMA][16] = 66,
- 	[1][0][2][0][RTW89_CN][16] = 127,
-@@ -6246,7 +6246,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_FCC][20] = 80,
- 	[1][0][2][0][RTW89_ETSI][20] = 66,
- 	[1][0][2][0][RTW89_MKK][20] = 80,
--	[1][0][2][0][RTW89_IC][20] = 80,
-+	[1][0][2][0][RTW89_IC][20] = 76,
- 	[1][0][2][0][RTW89_KCC][20] = 74,
- 	[1][0][2][0][RTW89_ACMA][20] = 66,
- 	[1][0][2][0][RTW89_CN][20] = 127,
-@@ -6267,10 +6267,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][28] = 127,
- 	[1][0][2][0][RTW89_CN][28] = 127,
- 	[1][0][2][0][RTW89_UK][28] = 66,
--	[1][0][2][0][RTW89_FCC][32] = 76,
-+	[1][0][2][0][RTW89_FCC][32] = 72,
- 	[1][0][2][0][RTW89_ETSI][32] = 66,
- 	[1][0][2][0][RTW89_MKK][32] = 80,
--	[1][0][2][0][RTW89_IC][32] = 76,
-+	[1][0][2][0][RTW89_IC][32] = 72,
- 	[1][0][2][0][RTW89_KCC][32] = 78,
- 	[1][0][2][0][RTW89_ACMA][32] = 66,
- 	[1][0][2][0][RTW89_CN][32] = 127,
-@@ -6286,7 +6286,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_FCC][39] = 84,
- 	[1][0][2][0][RTW89_ETSI][39] = 30,
- 	[1][0][2][0][RTW89_MKK][39] = 127,
--	[1][0][2][0][RTW89_IC][39] = 84,
-+	[1][0][2][0][RTW89_IC][39] = 80,
- 	[1][0][2][0][RTW89_KCC][39] = 68,
- 	[1][0][2][0][RTW89_ACMA][39] = 80,
- 	[1][0][2][0][RTW89_CN][39] = 70,
-@@ -6299,7 +6299,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][43] = 80,
- 	[1][0][2][0][RTW89_CN][43] = 80,
- 	[1][0][2][0][RTW89_UK][43] = 64,
--	[1][0][2][0][RTW89_FCC][47] = 84,
-+	[1][0][2][0][RTW89_FCC][47] = 80,
- 	[1][0][2][0][RTW89_ETSI][47] = 127,
- 	[1][0][2][0][RTW89_MKK][47] = 127,
- 	[1][0][2][0][RTW89_IC][47] = 127,
-@@ -6307,7 +6307,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][47] = 127,
- 	[1][0][2][0][RTW89_CN][47] = 127,
- 	[1][0][2][0][RTW89_UK][47] = 127,
--	[1][0][2][0][RTW89_FCC][51] = 84,
-+	[1][0][2][0][RTW89_FCC][51] = 80,
- 	[1][0][2][0][RTW89_ETSI][51] = 127,
- 	[1][0][2][0][RTW89_MKK][51] = 127,
- 	[1][0][2][0][RTW89_IC][51] = 127,
-@@ -6539,26 +6539,26 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][1][2][1][RTW89_ACMA][51] = 127,
- 	[1][1][2][1][RTW89_CN][51] = 127,
- 	[1][1][2][1][RTW89_UK][51] = 127,
--	[2][0][2][0][RTW89_FCC][3] = 76,
-+	[2][0][2][0][RTW89_FCC][3] = 72,
- 	[2][0][2][0][RTW89_ETSI][3] = 64,
- 	[2][0][2][0][RTW89_MKK][3] = 62,
--	[2][0][2][0][RTW89_IC][3] = 64,
-+	[2][0][2][0][RTW89_IC][3] = 60,
- 	[2][0][2][0][RTW89_KCC][3] = 72,
- 	[2][0][2][0][RTW89_ACMA][3] = 64,
- 	[2][0][2][0][RTW89_CN][3] = 64,
- 	[2][0][2][0][RTW89_UK][3] = 64,
--	[2][0][2][0][RTW89_FCC][11] = 64,
-+	[2][0][2][0][RTW89_FCC][11] = 60,
- 	[2][0][2][0][RTW89_ETSI][11] = 64,
- 	[2][0][2][0][RTW89_MKK][11] = 64,
--	[2][0][2][0][RTW89_IC][11] = 62,
-+	[2][0][2][0][RTW89_IC][11] = 58,
- 	[2][0][2][0][RTW89_KCC][11] = 72,
- 	[2][0][2][0][RTW89_ACMA][11] = 64,
- 	[2][0][2][0][RTW89_CN][11] = 64,
- 	[2][0][2][0][RTW89_UK][11] = 64,
--	[2][0][2][0][RTW89_FCC][18] = 66,
-+	[2][0][2][0][RTW89_FCC][18] = 62,
- 	[2][0][2][0][RTW89_ETSI][18] = 64,
- 	[2][0][2][0][RTW89_MKK][18] = 72,
--	[2][0][2][0][RTW89_IC][18] = 66,
-+	[2][0][2][0][RTW89_IC][18] = 62,
- 	[2][0][2][0][RTW89_KCC][18] = 72,
- 	[2][0][2][0][RTW89_ACMA][18] = 64,
- 	[2][0][2][0][RTW89_CN][18] = 127,
-@@ -6574,7 +6574,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[2][0][2][0][RTW89_FCC][34] = 76,
- 	[2][0][2][0][RTW89_ETSI][34] = 127,
- 	[2][0][2][0][RTW89_MKK][34] = 72,
--	[2][0][2][0][RTW89_IC][34] = 76,
-+	[2][0][2][0][RTW89_IC][34] = 72,
- 	[2][0][2][0][RTW89_KCC][34] = 72,
- 	[2][0][2][0][RTW89_ACMA][34] = 72,
- 	[2][0][2][0][RTW89_CN][34] = 127,
-@@ -6582,12 +6582,12 @@ const s8 rtw89_8851b_txpwr_lmt_5g[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[2][0][2][0][RTW89_FCC][41] = 76,
- 	[2][0][2][0][RTW89_ETSI][41] = 30,
- 	[2][0][2][0][RTW89_MKK][41] = 127,
--	[2][0][2][0][RTW89_IC][41] = 76,
-+	[2][0][2][0][RTW89_IC][41] = 72,
- 	[2][0][2][0][RTW89_KCC][41] = 64,
- 	[2][0][2][0][RTW89_ACMA][41] = 72,
- 	[2][0][2][0][RTW89_CN][41] = 72,
- 	[2][0][2][0][RTW89_UK][41] = 64,
--	[2][0][2][0][RTW89_FCC][49] = 74,
-+	[2][0][2][0][RTW89_FCC][49] = 70,
- 	[2][0][2][0][RTW89_ETSI][49] = 127,
- 	[2][0][2][0][RTW89_MKK][49] = 127,
- 	[2][0][2][0][RTW89_IC][49] = 127,
-@@ -10606,9 +10606,9 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_WW][42] = 30,
- 	[0][0][1][0][RTW89_WW][44] = 30,
- 	[0][0][1][0][RTW89_WW][46] = 30,
--	[0][0][1][0][RTW89_WW][48] = 72,
--	[0][0][1][0][RTW89_WW][50] = 72,
--	[0][0][1][0][RTW89_WW][52] = 72,
-+	[0][0][1][0][RTW89_WW][48] = 68,
-+	[0][0][1][0][RTW89_WW][50] = 68,
-+	[0][0][1][0][RTW89_WW][52] = 68,
- 	[0][1][1][0][RTW89_WW][0] = 0,
- 	[0][1][1][0][RTW89_WW][2] = 0,
- 	[0][1][1][0][RTW89_WW][4] = 0,
-@@ -10662,9 +10662,9 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_WW][42] = 30,
- 	[0][0][2][0][RTW89_WW][44] = 30,
- 	[0][0][2][0][RTW89_WW][46] = 30,
--	[0][0][2][0][RTW89_WW][48] = 74,
--	[0][0][2][0][RTW89_WW][50] = 74,
--	[0][0][2][0][RTW89_WW][52] = 74,
-+	[0][0][2][0][RTW89_WW][48] = 70,
-+	[0][0][2][0][RTW89_WW][50] = 70,
-+	[0][0][2][0][RTW89_WW][52] = 70,
- 	[0][1][2][0][RTW89_WW][0] = 0,
- 	[0][1][2][0][RTW89_WW][2] = 0,
- 	[0][1][2][0][RTW89_WW][4] = 0,
-@@ -10721,11 +10721,11 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][1][2][1][RTW89_WW][48] = 0,
- 	[0][1][2][1][RTW89_WW][50] = 0,
- 	[0][1][2][1][RTW89_WW][52] = 0,
--	[1][0][2][0][RTW89_WW][1] = 64,
-+	[1][0][2][0][RTW89_WW][1] = 60,
- 	[1][0][2][0][RTW89_WW][5] = 62,
- 	[1][0][2][0][RTW89_WW][9] = 64,
--	[1][0][2][0][RTW89_WW][13] = 64,
--	[1][0][2][0][RTW89_WW][16] = 66,
-+	[1][0][2][0][RTW89_WW][13] = 60,
-+	[1][0][2][0][RTW89_WW][16] = 62,
- 	[1][0][2][0][RTW89_WW][20] = 66,
- 	[1][0][2][0][RTW89_WW][24] = 66,
- 	[1][0][2][0][RTW89_WW][28] = 66,
-@@ -10733,8 +10733,8 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_WW][36] = 76,
- 	[1][0][2][0][RTW89_WW][39] = 30,
- 	[1][0][2][0][RTW89_WW][43] = 30,
--	[1][0][2][0][RTW89_WW][47] = 80,
--	[1][0][2][0][RTW89_WW][51] = 80,
-+	[1][0][2][0][RTW89_WW][47] = 76,
-+	[1][0][2][0][RTW89_WW][51] = 76,
- 	[1][1][2][0][RTW89_WW][1] = 0,
- 	[1][1][2][0][RTW89_WW][5] = 0,
- 	[1][1][2][0][RTW89_WW][9] = 0,
-@@ -10763,13 +10763,13 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][1][2][1][RTW89_WW][43] = 0,
- 	[1][1][2][1][RTW89_WW][47] = 0,
- 	[1][1][2][1][RTW89_WW][51] = 0,
--	[2][0][2][0][RTW89_WW][3] = 62,
--	[2][0][2][0][RTW89_WW][11] = 62,
--	[2][0][2][0][RTW89_WW][18] = 64,
-+	[2][0][2][0][RTW89_WW][3] = 60,
-+	[2][0][2][0][RTW89_WW][11] = 58,
-+	[2][0][2][0][RTW89_WW][18] = 62,
- 	[2][0][2][0][RTW89_WW][26] = 64,
- 	[2][0][2][0][RTW89_WW][34] = 68,
- 	[2][0][2][0][RTW89_WW][41] = 30,
--	[2][0][2][0][RTW89_WW][49] = 72,
-+	[2][0][2][0][RTW89_WW][49] = 68,
- 	[2][1][2][0][RTW89_WW][3] = 0,
- 	[2][1][2][0][RTW89_WW][11] = 0,
- 	[2][1][2][0][RTW89_WW][18] = 0,
-@@ -10793,7 +10793,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[3][1][2][1][RTW89_WW][7] = 0,
- 	[3][1][2][1][RTW89_WW][22] = 0,
- 	[3][1][2][1][RTW89_WW][45] = 0,
--	[0][0][1][0][RTW89_FCC][0] = 78,
-+	[0][0][1][0][RTW89_FCC][0] = 74,
- 	[0][0][1][0][RTW89_ETSI][0] = 58,
- 	[0][0][1][0][RTW89_MKK][0] = 60,
- 	[0][0][1][0][RTW89_IC][0] = 62,
-@@ -10849,7 +10849,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][12] = 58,
- 	[0][0][1][0][RTW89_CN][12] = 60,
- 	[0][0][1][0][RTW89_UK][12] = 58,
--	[0][0][1][0][RTW89_FCC][14] = 76,
-+	[0][0][1][0][RTW89_FCC][14] = 72,
- 	[0][0][1][0][RTW89_ETSI][14] = 58,
- 	[0][0][1][0][RTW89_MKK][14] = 60,
- 	[0][0][1][0][RTW89_IC][14] = 62,
-@@ -10857,10 +10857,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][14] = 58,
- 	[0][0][1][0][RTW89_CN][14] = 60,
- 	[0][0][1][0][RTW89_UK][14] = 58,
--	[0][0][1][0][RTW89_FCC][15] = 76,
-+	[0][0][1][0][RTW89_FCC][15] = 72,
- 	[0][0][1][0][RTW89_ETSI][15] = 58,
- 	[0][0][1][0][RTW89_MKK][15] = 74,
--	[0][0][1][0][RTW89_IC][15] = 76,
-+	[0][0][1][0][RTW89_IC][15] = 72,
- 	[0][0][1][0][RTW89_KCC][15] = 74,
- 	[0][0][1][0][RTW89_ACMA][15] = 58,
- 	[0][0][1][0][RTW89_CN][15] = 127,
-@@ -10937,10 +10937,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][33] = 60,
- 	[0][0][1][0][RTW89_CN][33] = 127,
- 	[0][0][1][0][RTW89_UK][33] = 60,
--	[0][0][1][0][RTW89_FCC][35] = 70,
-+	[0][0][1][0][RTW89_FCC][35] = 66,
- 	[0][0][1][0][RTW89_ETSI][35] = 60,
- 	[0][0][1][0][RTW89_MKK][35] = 74,
--	[0][0][1][0][RTW89_IC][35] = 70,
-+	[0][0][1][0][RTW89_IC][35] = 66,
- 	[0][0][1][0][RTW89_KCC][35] = 74,
- 	[0][0][1][0][RTW89_ACMA][35] = 60,
- 	[0][0][1][0][RTW89_CN][35] = 127,
-@@ -10993,7 +10993,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][46] = 74,
- 	[0][0][1][0][RTW89_CN][46] = 74,
- 	[0][0][1][0][RTW89_UK][46] = 58,
--	[0][0][1][0][RTW89_FCC][48] = 72,
-+	[0][0][1][0][RTW89_FCC][48] = 68,
- 	[0][0][1][0][RTW89_ETSI][48] = 127,
- 	[0][0][1][0][RTW89_MKK][48] = 127,
- 	[0][0][1][0][RTW89_IC][48] = 127,
-@@ -11001,7 +11001,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][48] = 127,
- 	[0][0][1][0][RTW89_CN][48] = 127,
- 	[0][0][1][0][RTW89_UK][48] = 127,
--	[0][0][1][0][RTW89_FCC][50] = 72,
-+	[0][0][1][0][RTW89_FCC][50] = 68,
- 	[0][0][1][0][RTW89_ETSI][50] = 127,
- 	[0][0][1][0][RTW89_MKK][50] = 127,
- 	[0][0][1][0][RTW89_IC][50] = 127,
-@@ -11009,7 +11009,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][1][0][RTW89_ACMA][50] = 127,
- 	[0][0][1][0][RTW89_CN][50] = 127,
- 	[0][0][1][0][RTW89_UK][50] = 127,
--	[0][0][1][0][RTW89_FCC][52] = 72,
-+	[0][0][1][0][RTW89_FCC][52] = 68,
- 	[0][0][1][0][RTW89_ETSI][52] = 127,
- 	[0][0][1][0][RTW89_MKK][52] = 127,
- 	[0][0][1][0][RTW89_IC][52] = 127,
-@@ -11241,7 +11241,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][1][1][0][RTW89_ACMA][52] = 127,
- 	[0][1][1][0][RTW89_CN][52] = 127,
- 	[0][1][1][0][RTW89_UK][52] = 127,
--	[0][0][2][0][RTW89_FCC][0] = 76,
-+	[0][0][2][0][RTW89_FCC][0] = 72,
- 	[0][0][2][0][RTW89_ETSI][0] = 62,
- 	[0][0][2][0][RTW89_MKK][0] = 62,
- 	[0][0][2][0][RTW89_IC][0] = 64,
-@@ -11297,7 +11297,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][12] = 62,
- 	[0][0][2][0][RTW89_CN][12] = 62,
- 	[0][0][2][0][RTW89_UK][12] = 62,
--	[0][0][2][0][RTW89_FCC][14] = 74,
-+	[0][0][2][0][RTW89_FCC][14] = 70,
- 	[0][0][2][0][RTW89_ETSI][14] = 62,
- 	[0][0][2][0][RTW89_MKK][14] = 62,
- 	[0][0][2][0][RTW89_IC][14] = 64,
-@@ -11305,10 +11305,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][14] = 62,
- 	[0][0][2][0][RTW89_CN][14] = 62,
- 	[0][0][2][0][RTW89_UK][14] = 62,
--	[0][0][2][0][RTW89_FCC][15] = 74,
-+	[0][0][2][0][RTW89_FCC][15] = 70,
- 	[0][0][2][0][RTW89_ETSI][15] = 60,
- 	[0][0][2][0][RTW89_MKK][15] = 74,
--	[0][0][2][0][RTW89_IC][15] = 74,
-+	[0][0][2][0][RTW89_IC][15] = 70,
- 	[0][0][2][0][RTW89_KCC][15] = 74,
- 	[0][0][2][0][RTW89_ACMA][15] = 60,
- 	[0][0][2][0][RTW89_CN][15] = 127,
-@@ -11385,10 +11385,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][33] = 62,
- 	[0][0][2][0][RTW89_CN][33] = 127,
- 	[0][0][2][0][RTW89_UK][33] = 62,
--	[0][0][2][0][RTW89_FCC][35] = 72,
-+	[0][0][2][0][RTW89_FCC][35] = 68,
- 	[0][0][2][0][RTW89_ETSI][35] = 62,
- 	[0][0][2][0][RTW89_MKK][35] = 74,
--	[0][0][2][0][RTW89_IC][35] = 72,
-+	[0][0][2][0][RTW89_IC][35] = 68,
- 	[0][0][2][0][RTW89_KCC][35] = 74,
- 	[0][0][2][0][RTW89_ACMA][35] = 62,
- 	[0][0][2][0][RTW89_CN][35] = 127,
-@@ -11441,7 +11441,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][46] = 74,
- 	[0][0][2][0][RTW89_CN][46] = 74,
- 	[0][0][2][0][RTW89_UK][46] = 60,
--	[0][0][2][0][RTW89_FCC][48] = 74,
-+	[0][0][2][0][RTW89_FCC][48] = 70,
- 	[0][0][2][0][RTW89_ETSI][48] = 127,
- 	[0][0][2][0][RTW89_MKK][48] = 127,
- 	[0][0][2][0][RTW89_IC][48] = 127,
-@@ -11449,7 +11449,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][48] = 127,
- 	[0][0][2][0][RTW89_CN][48] = 127,
- 	[0][0][2][0][RTW89_UK][48] = 127,
--	[0][0][2][0][RTW89_FCC][50] = 74,
-+	[0][0][2][0][RTW89_FCC][50] = 70,
- 	[0][0][2][0][RTW89_ETSI][50] = 127,
- 	[0][0][2][0][RTW89_MKK][50] = 127,
- 	[0][0][2][0][RTW89_IC][50] = 127,
-@@ -11457,7 +11457,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][0][2][0][RTW89_ACMA][50] = 127,
- 	[0][0][2][0][RTW89_CN][50] = 127,
- 	[0][0][2][0][RTW89_UK][50] = 127,
--	[0][0][2][0][RTW89_FCC][52] = 74,
-+	[0][0][2][0][RTW89_FCC][52] = 70,
- 	[0][0][2][0][RTW89_ETSI][52] = 127,
- 	[0][0][2][0][RTW89_MKK][52] = 127,
- 	[0][0][2][0][RTW89_IC][52] = 127,
-@@ -11913,10 +11913,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[0][1][2][1][RTW89_ACMA][52] = 127,
- 	[0][1][2][1][RTW89_CN][52] = 127,
- 	[0][1][2][1][RTW89_UK][52] = 127,
--	[1][0][2][0][RTW89_FCC][1] = 66,
-+	[1][0][2][0][RTW89_FCC][1] = 62,
- 	[1][0][2][0][RTW89_ETSI][1] = 64,
- 	[1][0][2][0][RTW89_MKK][1] = 64,
--	[1][0][2][0][RTW89_IC][1] = 64,
-+	[1][0][2][0][RTW89_IC][1] = 60,
- 	[1][0][2][0][RTW89_KCC][1] = 74,
- 	[1][0][2][0][RTW89_ACMA][1] = 64,
- 	[1][0][2][0][RTW89_CN][1] = 64,
-@@ -11937,18 +11937,18 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][9] = 64,
- 	[1][0][2][0][RTW89_CN][9] = 64,
- 	[1][0][2][0][RTW89_UK][9] = 64,
--	[1][0][2][0][RTW89_FCC][13] = 64,
-+	[1][0][2][0][RTW89_FCC][13] = 60,
- 	[1][0][2][0][RTW89_ETSI][13] = 64,
- 	[1][0][2][0][RTW89_MKK][13] = 64,
--	[1][0][2][0][RTW89_IC][13] = 64,
-+	[1][0][2][0][RTW89_IC][13] = 60,
- 	[1][0][2][0][RTW89_KCC][13] = 72,
- 	[1][0][2][0][RTW89_ACMA][13] = 64,
- 	[1][0][2][0][RTW89_CN][13] = 64,
- 	[1][0][2][0][RTW89_UK][13] = 64,
--	[1][0][2][0][RTW89_FCC][16] = 66,
-+	[1][0][2][0][RTW89_FCC][16] = 62,
- 	[1][0][2][0][RTW89_ETSI][16] = 66,
- 	[1][0][2][0][RTW89_MKK][16] = 76,
--	[1][0][2][0][RTW89_IC][16] = 66,
-+	[1][0][2][0][RTW89_IC][16] = 62,
- 	[1][0][2][0][RTW89_KCC][16] = 74,
- 	[1][0][2][0][RTW89_ACMA][16] = 66,
- 	[1][0][2][0][RTW89_CN][16] = 127,
-@@ -11956,7 +11956,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_FCC][20] = 80,
- 	[1][0][2][0][RTW89_ETSI][20] = 66,
- 	[1][0][2][0][RTW89_MKK][20] = 76,
--	[1][0][2][0][RTW89_IC][20] = 80,
-+	[1][0][2][0][RTW89_IC][20] = 76,
- 	[1][0][2][0][RTW89_KCC][20] = 74,
- 	[1][0][2][0][RTW89_ACMA][20] = 66,
- 	[1][0][2][0][RTW89_CN][20] = 127,
-@@ -11977,10 +11977,10 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][28] = 127,
- 	[1][0][2][0][RTW89_CN][28] = 127,
- 	[1][0][2][0][RTW89_UK][28] = 66,
--	[1][0][2][0][RTW89_FCC][32] = 74,
-+	[1][0][2][0][RTW89_FCC][32] = 70,
- 	[1][0][2][0][RTW89_ETSI][32] = 66,
- 	[1][0][2][0][RTW89_MKK][32] = 76,
--	[1][0][2][0][RTW89_IC][32] = 74,
-+	[1][0][2][0][RTW89_IC][32] = 70,
- 	[1][0][2][0][RTW89_KCC][32] = 76,
- 	[1][0][2][0][RTW89_ACMA][32] = 66,
- 	[1][0][2][0][RTW89_CN][32] = 127,
-@@ -11996,7 +11996,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_FCC][39] = 80,
- 	[1][0][2][0][RTW89_ETSI][39] = 30,
- 	[1][0][2][0][RTW89_MKK][39] = 127,
--	[1][0][2][0][RTW89_IC][39] = 80,
-+	[1][0][2][0][RTW89_IC][39] = 76,
- 	[1][0][2][0][RTW89_KCC][39] = 68,
- 	[1][0][2][0][RTW89_ACMA][39] = 76,
- 	[1][0][2][0][RTW89_CN][39] = 70,
-@@ -12009,7 +12009,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][43] = 76,
- 	[1][0][2][0][RTW89_CN][43] = 76,
- 	[1][0][2][0][RTW89_UK][43] = 64,
--	[1][0][2][0][RTW89_FCC][47] = 80,
-+	[1][0][2][0][RTW89_FCC][47] = 76,
- 	[1][0][2][0][RTW89_ETSI][47] = 127,
- 	[1][0][2][0][RTW89_MKK][47] = 127,
- 	[1][0][2][0][RTW89_IC][47] = 127,
-@@ -12017,7 +12017,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][0][2][0][RTW89_ACMA][47] = 127,
- 	[1][0][2][0][RTW89_CN][47] = 127,
- 	[1][0][2][0][RTW89_UK][47] = 127,
--	[1][0][2][0][RTW89_FCC][51] = 80,
-+	[1][0][2][0][RTW89_FCC][51] = 76,
- 	[1][0][2][0][RTW89_ETSI][51] = 127,
- 	[1][0][2][0][RTW89_MKK][51] = 127,
- 	[1][0][2][0][RTW89_IC][51] = 127,
-@@ -12249,26 +12249,26 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[1][1][2][1][RTW89_ACMA][51] = 127,
- 	[1][1][2][1][RTW89_CN][51] = 127,
- 	[1][1][2][1][RTW89_UK][51] = 127,
--	[2][0][2][0][RTW89_FCC][3] = 72,
-+	[2][0][2][0][RTW89_FCC][3] = 68,
- 	[2][0][2][0][RTW89_ETSI][3] = 64,
- 	[2][0][2][0][RTW89_MKK][3] = 62,
--	[2][0][2][0][RTW89_IC][3] = 64,
-+	[2][0][2][0][RTW89_IC][3] = 60,
- 	[2][0][2][0][RTW89_KCC][3] = 68,
- 	[2][0][2][0][RTW89_ACMA][3] = 64,
- 	[2][0][2][0][RTW89_CN][3] = 64,
- 	[2][0][2][0][RTW89_UK][3] = 64,
--	[2][0][2][0][RTW89_FCC][11] = 62,
-+	[2][0][2][0][RTW89_FCC][11] = 58,
- 	[2][0][2][0][RTW89_ETSI][11] = 64,
- 	[2][0][2][0][RTW89_MKK][11] = 64,
--	[2][0][2][0][RTW89_IC][11] = 62,
-+	[2][0][2][0][RTW89_IC][11] = 58,
- 	[2][0][2][0][RTW89_KCC][11] = 68,
- 	[2][0][2][0][RTW89_ACMA][11] = 64,
- 	[2][0][2][0][RTW89_CN][11] = 64,
- 	[2][0][2][0][RTW89_UK][11] = 64,
--	[2][0][2][0][RTW89_FCC][18] = 66,
-+	[2][0][2][0][RTW89_FCC][18] = 62,
- 	[2][0][2][0][RTW89_ETSI][18] = 64,
- 	[2][0][2][0][RTW89_MKK][18] = 68,
--	[2][0][2][0][RTW89_IC][18] = 66,
-+	[2][0][2][0][RTW89_IC][18] = 62,
- 	[2][0][2][0][RTW89_KCC][18] = 68,
- 	[2][0][2][0][RTW89_ACMA][18] = 64,
- 	[2][0][2][0][RTW89_CN][18] = 127,
-@@ -12284,7 +12284,7 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[2][0][2][0][RTW89_FCC][34] = 72,
- 	[2][0][2][0][RTW89_ETSI][34] = 127,
- 	[2][0][2][0][RTW89_MKK][34] = 68,
--	[2][0][2][0][RTW89_IC][34] = 72,
-+	[2][0][2][0][RTW89_IC][34] = 68,
- 	[2][0][2][0][RTW89_KCC][34] = 68,
- 	[2][0][2][0][RTW89_ACMA][34] = 68,
- 	[2][0][2][0][RTW89_CN][34] = 127,
-@@ -12292,12 +12292,12 @@ const s8 rtw89_8851b_txpwr_lmt_5g_type2[RTW89_5G_BW_NUM][RTW89_NTX_NUM]
- 	[2][0][2][0][RTW89_FCC][41] = 72,
- 	[2][0][2][0][RTW89_ETSI][41] = 30,
- 	[2][0][2][0][RTW89_MKK][41] = 127,
--	[2][0][2][0][RTW89_IC][41] = 72,
-+	[2][0][2][0][RTW89_IC][41] = 68,
- 	[2][0][2][0][RTW89_KCC][41] = 64,
- 	[2][0][2][0][RTW89_ACMA][41] = 68,
- 	[2][0][2][0][RTW89_CN][41] = 68,
- 	[2][0][2][0][RTW89_UK][41] = 64,
--	[2][0][2][0][RTW89_FCC][49] = 72,
-+	[2][0][2][0][RTW89_FCC][49] = 68,
- 	[2][0][2][0][RTW89_ETSI][49] = 127,
- 	[2][0][2][0][RTW89_MKK][49] = 127,
- 	[2][0][2][0][RTW89_IC][49] = 127,
+@@ -2322,7 +2322,7 @@ static const struct rtw89_reg2_def rtw89_8851b_phy_nctl_regs[] = {
+ 	{0x8144, 0x0b040b03},
+ 	{0x8148, 0x07020b04},
+ 	{0x814c, 0x07020b04},
+-	{0x8150, 0xe4e40000},
++	{0x8150, 0xa0a00000},
+ 	{0x8158, 0xffffffff},
+ 	{0x815c, 0xffffffff},
+ 	{0x8160, 0xffffffff},
 -- 
 2.25.1
 
