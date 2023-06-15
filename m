@@ -2,75 +2,69 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 426D7EB64D9
-	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jun 2023 07:33:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05DBEEB64D9
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Jun 2023 07:46:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245010AbjFOHdp (ORCPT
+        id S238896AbjFOHqY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 15 Jun 2023 03:33:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49278 "EHLO
+        Thu, 15 Jun 2023 03:46:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244856AbjFOHdT (ORCPT
+        with ESMTP id S238157AbjFOHqV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Jun 2023 03:33:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8CE81BD4
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jun 2023 00:33:00 -0700 (PDT)
+        Thu, 15 Jun 2023 03:46:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF96AC5;
+        Thu, 15 Jun 2023 00:46:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3BF1563274
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jun 2023 07:33:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58719C433C0;
-        Thu, 15 Jun 2023 07:32:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8CFAC611D1;
+        Thu, 15 Jun 2023 07:46:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A369CC433C0;
+        Thu, 15 Jun 2023 07:46:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686814379;
-        bh=+54sRTulTDcQyrmLFvPzrEc5jKHyclMpBX1rU9atwg4=;
+        s=k20201202; t=1686815180;
+        bh=a6v+mcKiV2fdjJuioCgykVoWUW8Y6YLR1j9eu6QBcGw=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=BnpG3PLRW5SNuX8lAhh+1OUFs53WuXGEUDzfNOqFEucl4BQWETByWPyVimz8Dgi9w
-         awG0sOVyeCnWfi0OQIaNWjXHd8gsT/peNj0H1oWyTPR3QHchGE9HST8l7BT882TqMn
-         UGLdHhjrZdv8GlXR1GXaY2b1vm2tHpvECajfS9dohxXj0wzhSNZAwoQOE6ZMXf4zCP
-         FPCAQL8reL0cKD+xKILo9dfVcR0yxL/QbjKevQ2EL9naam4RhRSUWQNRnCJUQ+9Cnj
-         aFbVtHfn0E4KpHXe7jXq1xKO6RNwtfNjq4+PnNVO2ZAvXlHQeP5AVspT36qMw7nknO
-         bGmoH3uRaKlkw==
+        b=B6Ri01bQH0iNmkDI6LIAUk7aiVwheDcAxJzIP2E0IFyUA9YW9Elxmi6ESZSHkl23K
+         G++hoDc2SrRlSHJcKbG3EXKnKsYcvJ8ClAHciy2Qak+LAL1MryGc0nd9/X1YuRABwR
+         KpkNxbevdgPF563+yljrZwuLGdGOJO7388Hm6kRsQ3GC/YJ93W1csCQejBahs/6LqY
+         L9PTzxsGc0uNjMRzno6So26jhTR0HYnRnGTwSThC0AayhVG4pBPBX3O5H5VTL5+rOI
+         HgKLLTtB2weJg1DUOUP4vgdC3BZrLFcMOLcDR416KHURKCf6ME1hF2kej3Mov0vDwr
+         +gjcIIsXMJDrQ==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/3] wifi: brcmfmac: handle possible WOWL configuration
- error
+Subject: Re: wifi: rt2x00: fix the typo in comments
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230607161611.85106-1-dmantipov@yandex.ru>
-References: <20230607161611.85106-1-dmantipov@yandex.ru>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Franky Lin <franky.lin@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
-        Dmitry Antipov <dmantipov@yandex.ru>
+In-Reply-To: <20230612114612.1640-1-wangdeming@inspur.com>
+References: <20230612114612.1640-1-wangdeming@inspur.com>
+To:     Deming Wang <wangdeming@inspur.com>
+Cc:     <stf_xl@wp.pl>, <helmut.schaa@googlemail.com>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Deming Wang <wangdeming@inspur.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-ID: <168681437386.8111.5132863492672751351.kvalo@kernel.org>
-Date:   Thu, 15 Jun 2023 07:32:58 +0000 (UTC)
+Message-ID: <168681517414.8111.17808792357346522826.kvalo@kernel.org>
+Date:   Thu, 15 Jun 2023 07:46:18 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dmitry Antipov <dmantipov@yandex.ru> wrote:
+Deming Wang <wangdeming@inspur.com> wrote:
 
-> Convert 'brcmf_configure_wowl()' to return 's32' which may be
-> an error raised by 'brcmf_fil_iovar_data_set()', pass the
-> value to 'brcmf_cfg80211_suspend()' and adjust related code.
+> Fix typo in the description of 'non-succesfull'.
 > 
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
-> 
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+> Signed-off-by: Deming Wang <wangdeming@inspur.com>
+> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-Using s32 for an error value is strange for me, usually we use int.
+Patch applied to wireless-next.git, thanks.
 
-This patchset feels like random cleanup which makes me wary. How are these 3
-patches tested? 
+52818fce28b2 wifi: rt2x00: fix the typo in comments
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230607161611.85106-1-dmantipov@yandex.ru/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230612114612.1640-1-wangdeming@inspur.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
