@@ -2,52 +2,66 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D501AC0015E
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 12:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D27B8EB64D8
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 13:00:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345506AbjFPM4h (ORCPT
+        id S1344924AbjFPNAw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Jun 2023 08:56:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48442 "EHLO
+        Fri, 16 Jun 2023 09:00:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345494AbjFPM4e (ORCPT
+        with ESMTP id S1344396AbjFPNAu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2023 08:56:34 -0400
+        Fri, 16 Jun 2023 09:00:50 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EEA9358E
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 05:56:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CFBC26BA
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 06:00:49 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35GCu0AW1024343, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35GD0MZZ0006768, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35GCu0AW1024343
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35GD0MZZ0006768
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Fri, 16 Jun 2023 20:56:00 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+        Fri, 16 Jun 2023 21:00:22 +0800
+Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 16 Jun 2023 20:56:19 +0800
-Received: from [127.0.1.1] (172.16.16.227) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 16 Jun
- 2023 20:56:19 +0800
+ 15.1.2375.32; Fri, 16 Jun 2023 21:00:41 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.34; Fri, 16 Jun 2023 21:00:40 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
+ RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
+ 15.01.2375.007; Fri, 16 Jun 2023 21:00:40 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
-CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 3/6] wifi: rtw88: Skip high queue in hci_flush
-Date:   Fri, 16 Jun 2023 20:55:37 +0800
-Message-ID: <20230616125540.36877-4-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230616125540.36877-1-pkshih@realtek.com>
-References: <20230616125540.36877-1-pkshih@realtek.com>
+To:     "kvalo@kernel.org" <kvalo@kernel.org>,
+        "rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>,
+        "tony0620emma@gmail.com" <tony0620emma@gmail.com>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Bernie Huang" <phhuang@realtek.com>
+Subject: Re: [PATCH 1/6] wifi: rtw88: use struct instead of macros to set TX desc
+Thread-Topic: [PATCH 1/6] wifi: rtw88: use struct instead of macros to set TX
+ desc
+Thread-Index: AQHZoAUAEQ2VIIe9zkKO5UM2Bxf9Oa+MwDMAgAAeo4A=
+Date:   Fri, 16 Jun 2023 13:00:40 +0000
+Message-ID: <40b50cf9b3b22a850a16e232b2592926b46e8991.camel@realtek.com>
+References: <20230616034431.17403-1-pkshih@realtek.com>
+         <20230616034431.17403-2-pkshih@realtek.com>
+         <0ce62044-b6a1-ca14-899d-47f7aa807df9@gmail.com>
+In-Reply-To: <0ce62044-b6a1-ca14-899d-47f7aa807df9@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.36.1-2 
+x-originating-ip: [172.16.16.227]
+x-kse-serverinfo: RTEXMBS06.realtek.com.tw, 9
+x-kse-antispam-interceptor-info: fallback
+x-kse-antivirus-interceptor-info: fallback
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <1756D045E301644292864B3E3C03FB44@realtek.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.16.16.227]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
@@ -57,37 +71,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
-
-The flush period may not always intersect with DTIM and when that
-happens, an error log "timed out to flush pci TX ring[6]" is shown.
-Bypass this since hardware will do proper transmission on the next
-DTIM period for broadcast/multicast packets in high queue.
-
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
-v2: no change
----
- drivers/net/wireless/realtek/rtw88/pci.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 672ddde808160..44a8fff34cddf 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -738,8 +738,9 @@ static void __rtw_pci_flush_queues(struct rtw_dev *rtwdev, u32 pci_queues,
- 	u8 q;
- 
- 	for (q = 0; q < RTK_MAX_TX_QUEUE_NUM; q++) {
--		/* It may be not necessary to flush BCN and H2C tx queues. */
--		if (q == RTW_TX_QUEUE_BCN || q == RTW_TX_QUEUE_H2C)
-+		/* Unnecessary to flush BCN, H2C and HI tx queues. */
-+		if (q == RTW_TX_QUEUE_BCN || q == RTW_TX_QUEUE_H2C ||
-+		    q == RTW_TX_QUEUE_HI0)
- 			continue;
- 
- 		if (pci_queues & BIT(q))
--- 
-2.25.1
-
+T24gRnJpLCAyMDIzLTA2LTE2IGF0IDE0OjEwICswMzAwLCBCaXR0ZXJibHVlIFNtaXRoIHdyb3Rl
+Og0KPiANCj4gT24gMTYvMDYvMjAyMyAwNjo0NCwgUGluZy1LZSBTaGloIHdyb3RlOg0KPiA+IEZy
+b206IFBvLUhhbyBIdWFuZyA8cGhodWFuZ0ByZWFsdGVrLmNvbT4NCj4gPiANCj4gPiBSZW1vdmUg
+bWFjcm9zIHRoYXQgc2V0IFRYIGRlc2NyaXB0b3JzLiBVc2Ugc3RydWN0IGFuZA0KPiA+IGxlMzJf
+ZW5jb2RlX2JpdHMoKSB3aXRoIG1hc2sgZGVmaW5pdGlvbnMuDQo+ID4gDQo+ID4gU2lnbmVkLW9m
+Zi1ieTogUG8tSGFvIEh1YW5nIDxwaGh1YW5nQHJlYWx0ZWsuY29tPg0KPiA+IFNpZ25lZC1vZmYt
+Ynk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2
+ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3J0dzg3MjNkLmMgfCAgIDUgKy0NCj4gPiAg
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC90eC5jICAgICAgIHwgIDc5ICsrKysr
+KystLS0tLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3R4LmggICAg
+ICAgfCAxMjEgKysrKysrKy0tLS0tLS0tLS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
+YWx0ZWsvcnR3ODgvdXNiLmMgICAgICB8ICAxMiArLQ0KPiA+ICA0IGZpbGVzIGNoYW5nZWQsIDEw
+NCBpbnNlcnRpb25zKCspLCAxMTMgZGVsZXRpb25zKC0pDQo+ID4gDQo+IA0KPiBbLi4uXQ0KPiAN
+Cj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC91c2Iu
+YyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvdXNiLmMNCj4gPiBpbmRleCA5
+NzZlYWZhNzM5YTJkLi5kYmZkNTU3NmNjMTIwIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvdXNiLmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJl
+bGVzcy9yZWFsdGVrL3J0dzg4L3VzYi5jDQo+ID4gQEAgLTI0LDExICsyNCwxMiBAQCBzdHJ1Y3Qg
+cnR3X3VzYl90eGNiIHsNCj4gPiAgc3RhdGljIHZvaWQgcnR3X3VzYl9maWxsX3R4X2NoZWNrc3Vt
+KHN0cnVjdCBydHdfdXNiICpydHd1c2IsDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLCBpbnQgYWdnX251bSkNCj4gPiAgew0KPiA+ICsg
+ICAgIHN0cnVjdCBydHdfdHhfZGVzYyAqdHhfZGVzYyA9IChzdHJ1Y3QgcnR3X3R4X2Rlc2MgKilz
+a2ItPmRhdGE7DQo+ID4gICAgICAgc3RydWN0IHJ0d19kZXYgKnJ0d2RldiA9IHJ0d3VzYi0+cnR3
+ZGV2Ow0KPiA+ICAgICAgIHN0cnVjdCBydHdfdHhfcGt0X2luZm8gcGt0X2luZm87DQo+ID4gDQo+
+ID4gLSAgICAgU0VUX1RYX0RFU0NfRE1BX1RYQUdHX05VTShza2ItPmRhdGEsIGFnZ19udW0pOw0K
+PiA+IC0gICAgIHBrdF9pbmZvLnBrdF9vZmZzZXQgPSBHRVRfVFhfREVTQ19QS1RfT0ZGU0VUKHNr
+Yi0+ZGF0YSk7DQo+ID4gKyAgICAgbGUzMl9yZXBsYWNlX2JpdHModHhfZGVzYy0+dzcsIGFnZ19u
+dW0sIFJUV19UWF9ERVNDX1c3X1RYREVTQ19DSEVDS1NVTSk7DQo+IA0KPiBUaGlzIGxvb2tzIGxp
+a2UgdGhlIHdyb25nIG1hc2suIFNob3VsZCBpdCBiZSBSVFdfVFhfREVTQ19XN19ETUFfVFhBR0df
+TlVNID8NCg0KVGhhdCBpcyB3cm9uZyBpbmRlZWQuIEFsc28sIHNob3VsZCB1c2UgbGUzMnBfcmVw
+bGFjZV9iaXRzKCkgaW5zdGVhZC4gDQpXZSBoYXZlIHNlbnQgdjIgdG8gY29ycmVjdCB0aGVtLiAN
+ClRoYW5rcyBmb3IgcG9pbnRpbmcgb3V0IHRoaXMuIA0KDQo+IA0KPiA+ICsgICAgIHBrdF9pbmZv
+LnBrdF9vZmZzZXQgPSBsZTMyX2dldF9iaXRzKHR4X2Rlc2MtPncxLCBSVFdfVFhfREVTQ19XMV9Q
+S1RfT0ZGU0VUKTsNCj4gPiAgICAgICBydHdfdHhfZmlsbF90eGRlc2NfY2hlY2tzdW0ocnR3ZGV2
+LCAmcGt0X2luZm8sIHNrYi0+ZGF0YSk7DQo+ID4gIH0NCj4gPiANCj4gDQo+IC0tLS0tLVBsZWFz
+ZSBjb25zaWRlciB0aGUgZW52aXJvbm1lbnQgYmVmb3JlIHByaW50aW5nIHRoaXMgZS1tYWlsLg0K
