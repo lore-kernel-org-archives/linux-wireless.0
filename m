@@ -2,52 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE77EB64D8
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 06:55:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B69AC0015E
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 06:55:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243313AbjFPGzP (ORCPT
+        id S231332AbjFPGzR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Jun 2023 02:55:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45416 "EHLO
+        Fri, 16 Jun 2023 02:55:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242529AbjFPGzB (ORCPT
+        with ESMTP id S243186AbjFPGzH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2023 02:55:01 -0400
+        Fri, 16 Jun 2023 02:55:07 -0400
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFF6F1FE8
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jun 2023 23:55:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 481E21FE8
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jun 2023 23:55:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686898500; x=1718434500;
+  t=1686898505; x=1718434505;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=kmp5EIRQzTCqKBhpTa9jvpn+OZ84Sr4hexgAlaGRKvk=;
-  b=hkt0CFKzb+9TECVXW4dy7clgdH+vcsETGi6p8eYrcFmHXZ9Y/5tOfDeT
-   L1yQLv040v9KLSf4Y45gnaR7NAtEZ9ouJaRRghrh1QA1dEzISdpoUBoH4
-   lrfR0ZTUGuikdvWEi0bZzvGbYmnleWBNaTcw3pTJ0v2UJIXEDhJ+CKxS/
-   moDR6LixOiBlFKxL5VxvCxMKo0Xx0VKmr4uhh9fJdQXD/2MEh9oSt/Uq7
-   ThOFGcocLHjZV1p+tDXRcjjX0/Vk9lyrOCW+sZ8hFUvle6pSNCk/DMMpU
-   tczNFKsUtAvR6VRHhbnaVtT2JYzJfSwe2/P+5vk/j2Uxg2KD1lTnC2n+W
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10742"; a="425078910"
+  bh=uY4zcMH/bjWULtd9Ek31fGfLPC+P0QkZW10T3FH31nQ=;
+  b=J6Ed5CB/nWhtAVSGa7TolZMjQqqJZ79w3Ric3OZU/Y/rPgle2S4ZgEwk
+   YBnknXGzfNePugXHKoHaopOxY8kStCMiZjOWO9zynFstW5jELs1jnQV6s
+   xtGAvfSz7xR/1pUndfla9CVY6aqzIcAYH+EVKrRR/tQUEy31BwCNp3xSd
+   aZGyzk1eZ3MVB78XwsYWcnk49bLm2CpNzAmoNTrAbTFgCN1AmMyyyZAOn
+   LgevG1AVwFXLceWQoCzWw3H6tUEu41UiabpqqyMC0HkPwY9dX7ylAvEyP
+   hhS6eWCvVrl+5HU+uUf329+06ntnZt9mfmmOfj6XsjfjdBFDbycDHb11q
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10742"; a="425078921"
 X-IronPort-AV: E=Sophos;i="6.00,246,1681196400"; 
-   d="scan'208";a="425078910"
+   d="scan'208";a="425078921"
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2023 23:55:00 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2023 23:55:04 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10742"; a="802720186"
+X-IronPort-AV: E=McAfee;i="6600,9927,10742"; a="802720356"
 X-IronPort-AV: E=Sophos;i="6.00,246,1681196400"; 
-   d="scan'208";a="802720186"
+   d="scan'208";a="802720356"
 Received: from ereznaim-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.237.118])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2023 23:54:59 -0700
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2023 23:55:03 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Benjamin Berg <benjamin.berg@intel.com>,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 16/20] wifi: cfg80211: add element defragmentation helper
-Date:   Fri, 16 Jun 2023 09:54:05 +0300
-Message-Id: <20230616094949.29c3ebeed10d.I009c049289dd0162c2e858ed8b68d2875a672ed6@changeid>
+Subject: [PATCH 18/20] wifi: mac80211: Rename multi_link
+Date:   Fri, 16 Jun 2023 09:54:07 +0300
+Message-Id: <20230616094949.b11370d3066a.I34280ae3728597056a6a2f313063962206c0d581@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230616065409.633290-1-gregory.greenman@intel.com>
 References: <20230616065409.633290-1-gregory.greenman@intel.com>
@@ -57,122 +56,137 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-This is already needed within mac80211 and support is also needed by
-cfg80211 to parse ML elements.
+As a preparation to support Reconfiguration Multi Link
+element, rename 'multi_link' and 'multi_link_len' fields
+in 'struct ieee802_11_elems' to 'ml_basic' and 'ml_basic_len'.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- include/net/cfg80211.h | 22 ++++++++++++++++
- net/wireless/scan.c    | 60 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+)
+ net/mac80211/ieee80211_i.h |  9 +++++----
+ net/mac80211/mlme.c        |  8 ++++----
+ net/mac80211/util.c        | 19 +++++++++----------
+ 3 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 94ca5cb340f6..cf14a93e61eb 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -6664,6 +6664,28 @@ cfg80211_find_vendor_ie(unsigned int oui, int oui_type,
- 	return (const void *)cfg80211_find_vendor_elem(oui, oui_type, ies, len);
- }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4ae9c58d6a12..554aeb2e20d9 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1726,7 +1726,7 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_aid_response_ie *aid_resp;
+ 	const struct ieee80211_eht_cap_elem *eht_cap;
+ 	const struct ieee80211_eht_operation *eht_operation;
+-	const struct ieee80211_multi_link_elem *multi_link;
++	const struct ieee80211_multi_link_elem *ml_basic;
  
-+/**
-+ * cfg80211_defragment_element - Defrag the given element data into a buffer
-+ *
-+ * @elem: the element to defragment
-+ * @ies: elements where @elem is contained
-+ * @ieslen: length of @ies
-+ * @data: buffer to store element data
-+ * @data_len: length of @data
-+ * @frag_id: the element ID of fragments
-+ *
-+ * Return: length of @data, or -EINVAL on error
-+ *
-+ * Copy out all data from an element that may be fragmented into @data, while
-+ * skipping all headers.
-+ *
-+ * The function uses memmove() internally. It is acceptable to defragment an
-+ * element in-place.
-+ */
-+ssize_t cfg80211_defragment_element(const struct element *elem, const u8 *ies,
-+				    size_t ieslen, u8 *data, size_t data_len,
-+				    u8 frag_id);
-+
- /**
-  * cfg80211_send_layer2_update - send layer 2 update frame
-  *
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 75e6e032bb3a..dc71c6ac5bf5 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -2288,6 +2288,66 @@ static void cfg80211_parse_mbssid_data(struct wiphy *wiphy,
- 	kfree(profile);
- }
+ 	/* length of them, respectively */
+ 	u8 ext_capab_len;
+@@ -1751,9 +1751,10 @@ struct ieee802_11_elems {
+ 	u8 eht_cap_len;
  
-+ssize_t cfg80211_defragment_element(const struct element *elem, const u8 *ies,
-+				    size_t ieslen, u8 *data, size_t data_len,
-+				    u8 frag_id)
-+{
-+	const struct element *next;
-+	ssize_t copied;
-+	u8 elem_datalen;
+ 	/* mult-link element can be de-fragmented and thus u8 is not sufficient */
+-	size_t multi_link_len;
+-	/* The element in the original IEs */
+-	const struct element *multi_link_elem;
++	size_t ml_basic_len;
 +
-+	if (!elem)
-+		return -EINVAL;
-+
-+	/* elem might be invalid after the memmove */
-+	next = (void *)(elem->data + elem->datalen);
-+
-+	elem_datalen = elem->datalen;
-+	if (elem->id == WLAN_EID_EXTENSION) {
-+		copied = elem->datalen - 1;
-+		if (copied > data_len)
-+			return -ENOSPC;
-+
-+		memmove(data, elem->data + 1, copied);
-+	} else {
-+		copied = elem->datalen;
-+		if (copied > data_len)
-+			return -ENOSPC;
-+
-+		memmove(data, elem->data, copied);
-+	}
-+
-+	/* Fragmented elements must have 255 bytes */
-+	if (elem_datalen < 255)
-+		return copied;
-+
-+	for (elem = next;
-+	     elem->data < ies + ieslen &&
-+		elem->data + elem->datalen < ies + ieslen;
-+	     elem = next) {
-+		/* elem might be invalid after the memmove */
-+		next = (void *)(elem->data + elem->datalen);
-+
-+		if (elem->id != frag_id)
-+			break;
-+
-+		elem_datalen = elem->datalen;
-+
-+		if (copied + elem_datalen > data_len)
-+			return -ENOSPC;
-+
-+		memmove(data + copied, elem->data, elem_datalen);
-+		copied += elem_datalen;
-+
-+		/* Only the last fragment may be short */
-+		if (elem_datalen != 255)
-+			break;
-+	}
-+
-+	return copied;
-+}
-+EXPORT_SYMBOL(cfg80211_defragment_element);
-+
- struct cfg80211_bss *
- cfg80211_inform_bss_data(struct wiphy *wiphy,
- 			 struct cfg80211_inform_bss *data,
++	/* The basic Multi-Link element in the original IEs */
++	const struct element *ml_basic_elem;
+ 
+ 	/*
+ 	 * store the per station profile pointer and length in case that the
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1fc66f09cbb8..b8f8220cd9ff 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5277,24 +5277,24 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 
+ 		if (ieee80211_vif_is_mld(&sdata->vif)) {
+-			if (!elems->multi_link) {
++			if (!elems->ml_basic) {
+ 				sdata_info(sdata,
+ 					   "MLO association with %pM but no multi-link element in response!\n",
+ 					   assoc_data->ap_addr);
+ 				goto abandon_assoc;
+ 			}
+ 
+-			if (le16_get_bits(elems->multi_link->control,
++			if (le16_get_bits(elems->ml_basic->control,
+ 					  IEEE80211_ML_CONTROL_TYPE) !=
+ 					IEEE80211_ML_CONTROL_TYPE_BASIC) {
+ 				sdata_info(sdata,
+ 					   "bad multi-link element (control=0x%x)\n",
+-					   le16_to_cpu(elems->multi_link->control));
++					   le16_to_cpu(elems->ml_basic->control));
+ 				goto abandon_assoc;
+ 			} else {
+ 				struct ieee80211_mle_basic_common_info *common;
+ 
+-				common = (void *)elems->multi_link->variable;
++				common = (void *)elems->ml_basic->variable;
+ 
+ 				if (memcmp(assoc_data->ap_addr,
+ 					   common->mld_mac_addr, ETH_ALEN)) {
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 2e3270dc4d05..473c77dd3137 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -984,9 +984,9 @@ ieee80211_parse_extension_element(u32 *crc,
+ 		break;
+ 	case WLAN_EID_EXT_EHT_MULTI_LINK:
+ 		if (ieee80211_mle_size_ok(data, len)) {
+-			elems->multi_link_elem = (void *)elem;
+-			elems->multi_link = (void *)data;
+-			elems->multi_link_len = len;
++			elems->ml_basic_elem = (void *)elem;
++			elems->ml_basic = (void *)data;
++			elems->ml_basic_len = len;
+ 		}
+ 		break;
+ 	}
+@@ -1462,8 +1462,8 @@ static size_t ieee802_11_find_bssid_profile(const u8 *start, size_t len,
+ static void ieee80211_mle_get_sta_prof(struct ieee802_11_elems *elems,
+ 				       u8 link_id)
+ {
+-	const struct ieee80211_multi_link_elem *ml = elems->multi_link;
+-	ssize_t ml_len = elems->multi_link_len;
++	const struct ieee80211_multi_link_elem *ml = elems->ml_basic;
++	ssize_t ml_len = elems->ml_basic_len;
+ 	const struct element *sub;
+ 
+ 	if (!ml || !ml_len)
+@@ -1523,14 +1523,14 @@ static void ieee80211_mle_parse_link(struct ieee802_11_elems *elems,
+ 		.from_ap = params->from_ap,
+ 		.link_id = -1,
+ 	};
+-	ssize_t ml_len = elems->multi_link_len;
++	ssize_t ml_len = elems->ml_basic_len;
+ 	const struct element *non_inherit = NULL;
+ 	const u8 *end;
+ 
+ 	if (params->link_id == -1)
+ 		return;
+ 
+-	ml_len = cfg80211_defragment_element(elems->multi_link_elem,
++	ml_len = cfg80211_defragment_element(elems->ml_basic_elem,
+ 					     elems->ie_start,
+ 					     elems->total_len,
+ 					     elems->scratch_pos,
+@@ -1542,9 +1542,8 @@ static void ieee80211_mle_parse_link(struct ieee802_11_elems *elems,
+ 	if (ml_len < 0)
+ 		return;
+ 
+-	elems->multi_link = (const void *)elems->scratch_pos;
+-	elems->multi_link_len = ml_len;
+-	elems->scratch_pos += ml_len;
++	elems->ml_basic = (const void *)elems->scratch_pos;
++	elems->ml_basic_len = ml_len;
+ 
+ 	ieee80211_mle_get_sta_prof(elems, params->link_id);
+ 	prof = elems->prof;
 -- 
 2.38.1
 
