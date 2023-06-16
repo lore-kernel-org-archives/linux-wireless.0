@@ -2,85 +2,104 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E840EB64DA
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 12:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D5FEB64D7
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 12:56:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231367AbjFPMdO (ORCPT
+        id S1345482AbjFPM4c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Jun 2023 08:33:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36870 "EHLO
+        Fri, 16 Jun 2023 08:56:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229952AbjFPMdN (ORCPT
+        with ESMTP id S229705AbjFPM4b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2023 08:33:13 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3788D268A
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 05:33:11 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1qA8dV-00074Q-OF; Fri, 16 Jun 2023 14:33:05 +0200
-Message-ID: <b7c6a794-8d6f-c380-7f39-0c9f60e6642c@leemhuis.info>
-Date:   Fri, 16 Jun 2023 14:33:04 +0200
+        Fri, 16 Jun 2023 08:56:31 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97AE30FE
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 05:56:29 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35GCu2tqD024348, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35GCu2tqD024348
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
+        Fri, 16 Jun 2023 20:56:02 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Fri, 16 Jun 2023 20:56:21 +0800
+Received: from [127.0.1.1] (172.16.16.227) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 16 Jun
+ 2023 20:56:20 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
+CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 4/6] wifi: rtw88: Stop high queue during scan
+Date:   Fri, 16 Jun 2023 20:55:38 +0800
+Message-ID: <20230616125540.36877-5-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230616125540.36877-1-pkshih@realtek.com>
+References: <20230616125540.36877-1-pkshih@realtek.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [regression] STP on 80211s is broken in 6.4-rc4
-Content-Language: en-US, de-DE
-To:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Linux regressions mailing list <regressions@lists.linux.dev>,
-        Nicolas Escande <nico.escande@gmail.com>, nbd@nbd.name,
-        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Kalle Valo <kvalo@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-References: <CT5GNZSK28AI.2K6M69OXM9RW5@syracuse> <ZIQbs0wqdRh7c0Kx@debian.me>
- <a9d02800-2cd6-a27b-7998-4c97cf2eb692@leemhuis.info>
- <CTDWJJDKSYYD.XBG1CAZB3A5W@syracuse>
- <50f7f64c-fe32-4362-fd4e-89ee99c4f581@leemhuis.info>
- <b33d3dd1-9765-c90e-4408-941e7d8025cf@gmail.com>
-From:   "Linux regression tracking (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <b33d3dd1-9765-c90e-4408-941e7d8025cf@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1686918791;a2fece5f;
-X-HE-SMSGID: 1qA8dV-00074Q-OF
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.16.227]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 16.06.23 14:17, Bagas Sanjaya wrote:
-> On 6/16/23 16:25, Linux regression tracking (Thorsten Leemhuis) wrote:
->> On 16.06.23 09:45, Nicolas Escande wrote:
->>> On Thu Jun 15, 2023 at 2:54 PM CEST, Linux regression tracking (Thorsten Leemhuis) wrote:
->>>> On 10.06.23 08:44, Bagas Sanjaya wrote:
->>>>> On Tue, Jun 06, 2023 at 12:55:57PM +0200, Nicolas Escande wrote:
->>
->>>> Hmmm, Felix did not reply. But let's ignore that for now.
->>> I haven't seen mails from felix on the list for a few days, I'm guessing he's
->>> unavailable for now but I'll hapilly wait.
->>
->> Okay.
->>
->>>> Nicolas, I noticed there are a few patches in next that refer to the
->>>> culprit. Might be worth giving this series a try:
->>>> https://lore.kernel.org/all/20230314095956.62085-1-nbd@nbd.name/
->>> Well this series already landed in 6.4 and that is the version I did my initial
->>> testing with. So no luck there.
->>
->> What? Ohh, sorry for the noise, I had missed that they were in mainline
->> already.
-> 
-> Should this be removed from tracking as inconclusive?
+From: Po-Hao Huang <phhuang@realtek.com>
 
-Ehh, why? Afaics this is still a regression, just not one the reporter
-considers urgent; that is fine for me, unless more people start to
-report the problem.
+When traversing channel list, TX in high queue should be disabled
+along with beacon function, so packets won't be sent to incorrect
+channels.
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2: no change
+---
+ drivers/net/wireless/realtek/rtw88/main.c | 7 +++++--
+ drivers/net/wireless/realtek/rtw88/reg.h  | 1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 9447a3aae3b5e..d55b041a6bb93 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -2403,10 +2403,13 @@ void rtw_core_enable_beacon(struct rtw_dev *rtwdev, bool enable)
+ 	if (!rtwdev->ap_active)
+ 		return;
+ 
+-	if (enable)
++	if (enable) {
+ 		rtw_write32_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
+-	else
++		rtw_write32_clr(rtwdev, REG_TXPAUSE, BIT_HIGH_QUEUE);
++	} else {
+ 		rtw_write32_clr(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
++		rtw_write32_set(rtwdev, REG_TXPAUSE, BIT_HIGH_QUEUE);
++	}
+ }
+ 
+ MODULE_AUTHOR("Realtek Corporation");
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index 60de9de1cc7a8..7c6c11d50ff30 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -378,6 +378,7 @@
+ #define BIT_SIFS_BK_EN		BIT(12)
+ #define REG_TXPAUSE		0x0522
+ #define BIT_AC_QUEUE		GENMASK(7, 0)
++#define BIT_HIGH_QUEUE		BIT(5)
+ #define REG_RD_CTRL		0x0524
+ #define BIT_EDCCA_MSK_CNTDOWN_EN BIT(11)
+ #define BIT_DIS_TXOP_CFE	BIT(10)
+-- 
+2.25.1
 
