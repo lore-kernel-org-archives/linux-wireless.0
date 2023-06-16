@@ -2,200 +2,152 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 547E1EB64DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 07:00:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 123F0EB64D7
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 07:46:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243792AbjFPHAp (ORCPT
+        id S241507AbjFPHqY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 16 Jun 2023 03:00:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48156 "EHLO
+        Fri, 16 Jun 2023 03:46:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244119AbjFPG7w (ORCPT
+        with ESMTP id S244744AbjFPHqL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2023 02:59:52 -0400
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2048.outbound.protection.outlook.com [40.107.95.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 533ED3589;
-        Thu, 15 Jun 2023 23:59:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kM0ton+zF8dFNeDKRhZY6EU2ltMFCtYrpAN7/9K2fHgW7kbzhJ0Bi2HxvRQ7Lnyneoa3YWxJztoMwD0ZzOwaVl5qg7qtPv3SZiQFViHzHiv032bwmp25m1pRIhlf+z51mAaF+I6wdKQwi5yhIrHdMrxookinzFykK46GxARmqmEKTHFAPyoXDgARPjtjhD3L10DVo3npeOkJzup5sPhxTg6Ar2YTqdPsQB+IUkFPn2kJG0ZDbov6sFG5uPU1mue1D3NuMn+4c0cm+ssLMDGIWL4V2BxHDtyp58g2oN8pVKya8FNW4KTFK83gBNCydHwLBWA7vIPkEoJPPimrNCBahg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=w2vAmDKr5lEouUGHRYcDaTacr7hNBq+6N/BBGVsYBsE=;
- b=Wa3YCEjeP0ag2CXeueV1N/zTVycSgHzotUPxbwW8dwTBwVg/Iu5VXYm8114zJoww8eXInFPwxMdUN74/o1HSEPhnlk7IoXi6yhDW33FnsPNtwCcpAMZdkTRAFKsI1vnlOeNYkTpNiSRGzeqYh1HogOQt2LmYlm+VcjEAx1LpsjD/KYhP/cXiQkXInb3ctS4SqhwmMA28y6fL+Zeb770qQ7slRMHJZGYFeKTSxwgG+QhhunUjJH9934M7g83CcgVwR33s6IzCuqoSOvKudcxnAHoNd9V9eFV5TfzKoZzCAbZNGw1ZKcYv3kFAfEYtbE/GOT9kCHQpJBqALMXDoNo7fA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w2vAmDKr5lEouUGHRYcDaTacr7hNBq+6N/BBGVsYBsE=;
- b=NB0ExcSTxAnPmCqhfJPBrzhz6ncpCcNoheRhcFKillw417ikbCRbuBvCYqubvRfksC+T6DKqih7XebMGvsLc7k3OFVMgW0l4+fM3X1b53KdmggyCJZ4NlVWklL9KeoY7VJIGXZm+O3TpXBjYHCoXqdk746ohG3Hfw8ebVyD+aLo=
-Received: from BN9P223CA0019.NAMP223.PROD.OUTLOOK.COM (2603:10b6:408:10b::24)
- by CY8PR12MB8361.namprd12.prod.outlook.com (2603:10b6:930:7b::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6500.27; Fri, 16 Jun
- 2023 06:59:23 +0000
-Received: from BN8NAM11FT003.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:10b:cafe::88) by BN9P223CA0019.outlook.office365.com
- (2603:10b6:408:10b::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6500.27 via Frontend
- Transport; Fri, 16 Jun 2023 06:59:22 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BN8NAM11FT003.mail.protection.outlook.com (10.13.177.90) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6500.29 via Frontend Transport; Fri, 16 Jun 2023 06:59:22 +0000
-Received: from equan-buildpc.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Fri, 16 Jun
- 2023 01:59:16 -0500
-From:   Evan Quan <evan.quan@amd.com>
-To:     <rafael@kernel.org>, <lenb@kernel.org>,
-        <Alexander.Deucher@amd.com>, <Christian.Koenig@amd.com>,
-        <Xinhui.Pan@amd.com>, <airlied@gmail.com>, <daniel@ffwll.ch>,
-        <kvalo@kernel.org>, <nbd@nbd.name>, <lorenzo@kernel.org>,
-        <ryder.lee@mediatek.com>, <shayne.chen@mediatek.com>,
-        <sean.wang@mediatek.com>, <matthias.bgg@gmail.com>,
-        <angelogioacchino.delregno@collabora.com>,
-        <Mario.Limonciello@amd.com>, <Lijo.Lazar@amd.com>
-CC:     <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-        <linux-wireless@vger.kernel.org>, Evan Quan <evan.quan@amd.com>
-Subject: [PATCH V3 5/7] drm/amd/pm: add flood detection for wbrf events
-Date:   Fri, 16 Jun 2023 14:57:55 +0800
-Message-ID: <20230616065757.1054422-6-evan.quan@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230616065757.1054422-1-evan.quan@amd.com>
-References: <20230616065757.1054422-1-evan.quan@amd.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT003:EE_|CY8PR12MB8361:EE_
-X-MS-Office365-Filtering-Correlation-Id: c4befece-993d-4af1-2633-08db6e3736ef
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ld13y2Xr9KvvTE0ZNHxyQtYyE1E6mEcd9zMXbNueFL5Iu3C+YUU/7EEZ4zPqp/LzCUvgnVzDfgruJ4z/ofZ/fqrGg3XDfjMo6sNnBljmsB02SMxQAiib/xeIBSGyqJrvpbFA21EkGJftyuPkYwsljEWRc8g3izerLRMXb2iwKwDFE65UIKDkPIofwJ/VHTnn1wKLy9/Skh1ffwLGzGms8EyoAhykHZihXfMHQse8aETIpK5Cl3GTBvhwE7JiNfOlQdBjFbEs4l8zO4fw70mnzAIATgqLPInpaDKyVRw6/rKyZM7IfO4CxIcal8GkW193x5f4DQ7TK+6SbCxSOkkQhnp6V/4yCjZABhsnzz5gm+wFzIJ9cZf5SSzxDzpnhRmIInTJtFbXy0VwS4WU8C9vNhSHMnb3eWKHOUpAvnqwO3SrdDR5TTFnCHNIDnMJtDd45kg5af0L100fwD/q1qkC6ui0tYsABDdKu7II0yl+vpbN/cyYTd89LdrjQVyNp5bHL9sngjFsfhBbCTHPKkZTWL1gl6eYFCDQUzRGWXNGTSTe1TZ6KzJy3kVh6snTm4rG+SVpYWpSca1sc+AROVgEDp7P1cRjUYiGNlNe6Rq0tuHNqGsAYAn8RfIF1x869niIq5WTTesSAzl8YwVdReBY0pvUG3mtwF88bxN5hkCWPzo4lRf4HNqoXCSNwB/4CxmXqS7rMXyRyNia6Nf7TbSeStAMSTu9KF9WamglKrd46UMtAGBABDE5lo5iI49dFwPxFLryF5at4268ThBy7KBYmy9qKm1p36UXCKbIZCq5E1A=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(346002)(136003)(396003)(39860400002)(376002)(451199021)(36840700001)(40470700004)(46966006)(5660300002)(478600001)(54906003)(8936002)(40480700001)(41300700001)(316002)(8676002)(7696005)(1076003)(110136005)(7416002)(16526019)(44832011)(186003)(4326008)(6636002)(70586007)(70206006)(6666004)(26005)(2616005)(47076005)(83380400001)(40460700003)(36860700001)(336012)(426003)(2906002)(81166007)(921005)(356005)(82740400003)(82310400005)(86362001)(36756003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jun 2023 06:59:22.6487
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c4befece-993d-4af1-2633-08db6e3736ef
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT003.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB8361
+        Fri, 16 Jun 2023 03:46:11 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A07B2D61
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 00:46:00 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-4f640e48bc3so432649e87.2
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 00:46:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686901558; x=1689493558;
+        h=in-reply-to:references:message-id:subject:cc:to:from:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=EU0qxCzPl20kJKOqOVSGY+gianqgCNGR85w4fJS8dg4=;
+        b=SBE/iYM4gopO1FtPL2J1JAyCWy8jhpYjMK9ORY5/b7SfWeUDekB7wAzikYTfmnqqNu
+         marqrD0/+uA95OE3t0XraKg1Sn30TlOQ6xxCKlwKnD2z9FNrzRfTjQmEa5WsXGdLEglc
+         MVw3CpftDEXWmndc1c0Cmn/SLMuTePww6X/wfeaidcPKVfhUdoY5Qm02SMhwyy5b5Z8U
+         TtuhAH1/Y0rLFRLOImHscfiuWS5c/5e6LIn2reaZmwFklJKgvHV7PrMC9PNL71WojEXi
+         MSttrBPgciQWOvFNHBfzES135vQZe48pGEyKpSY8ujn9TP4I2lvLbVJQleAQj8JDXdjB
+         EifQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686901558; x=1689493558;
+        h=in-reply-to:references:message-id:subject:cc:to:from:date
+         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=EU0qxCzPl20kJKOqOVSGY+gianqgCNGR85w4fJS8dg4=;
+        b=gv0BXx+O8CbuxugugbZg2ZsGd/ZeaLMzjykmw6YEFgI0Pk7BUa91CInt+Dy6WKqMlN
+         Nw784E1LT2SiDEMsEe3UvZofn8a00rlzKZtj9v196pj3olPcSTWHb8ktFKtei1OXFzXT
+         sQGFXcVMfjYaTcPSnuyU6Od7kNNHiLiYcnTtSwf0TuIBcZvbSspTYk1WUB7kbFa74ayJ
+         dpHwEfg+eY8b1nouIX+EBZeXhx01VNe4USy1IlV3sV1m1uiqwQiixFIvdaWJJtiFGF43
+         AodrcgdaiijAHg8yRpvwi++qpalP5nWxyD4fWj2s8sClFtn7kE2+AhphvKZxGcawb7VC
+         qIUQ==
+X-Gm-Message-State: AC+VfDysHfRjyP7cpeh8XxznawBqC7Qd3DBGfaNhPv2oPgDvbXn0j3SK
+        b+l9P/LN6phftPT0TmpWSLU=
+X-Google-Smtp-Source: ACHHUZ4JlwEt9VjsDLTTnFYd85ySoaH+5kHFYr3jQQ/GMigh263c6y/0Gm5Ft7nktkzB4VSfuDoPlQ==
+X-Received: by 2002:a19:e30e:0:b0:4f6:116d:6d26 with SMTP id a14-20020a19e30e000000b004f6116d6d26mr607146lfh.42.1686901558119;
+        Fri, 16 Jun 2023 00:45:58 -0700 (PDT)
+Received: from localhost (freebox.vlq16.iliad.fr. [213.36.7.13])
+        by smtp.gmail.com with ESMTPSA id u14-20020a7bcb0e000000b003f42314832fsm1425490wmj.18.2023.06.16.00.45.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 16 Jun 2023 00:45:57 -0700 (PDT)
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date:   Fri, 16 Jun 2023 09:45:57 +0200
+From:   "Nicolas Escande" <nico.escande@gmail.com>
+To:     "Linux regressions mailing list" <regressions@lists.linux.dev>,
+        "Bagas Sanjaya" <bagasdotme@gmail.com>, <nbd@nbd.name>,
+        =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        "Kalle Valo" <kvalo@kernel.org>,
+        "Johannes Berg" <johannes.berg@intel.com>
+Cc:     <linux-wireless@vger.kernel.org>
+Subject: Re: [regression] STP on 80211s is broken in 6.4-rc4
+Message-Id: <CTDWJJDKSYYD.XBG1CAZB3A5W@syracuse>
+X-Mailer: aerc 0.15.1
+References: <CT5GNZSK28AI.2K6M69OXM9RW5@syracuse>
+ <ZIQbs0wqdRh7c0Kx@debian.me>
+ <a9d02800-2cd6-a27b-7998-4c97cf2eb692@leemhuis.info>
+In-Reply-To: <a9d02800-2cd6-a27b-7998-4c97cf2eb692@leemhuis.info>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To protect PMFW from being overloaded.
+On Thu Jun 15, 2023 at 2:54 PM CEST, Linux regression tracking (Thorsten Le=
+emhuis) wrote:
+> On 10.06.23 08:44, Bagas Sanjaya wrote:
+> > On Tue, Jun 06, 2023 at 12:55:57PM +0200, Nicolas Escande wrote:
+> >> Hello Felix,
+> >>
+> >> As user of the mesh part of mac80211 on multiple products at work let =
+me say
+> >> thank you for all the work you do on wifi, especially on 80211s, and e=
+specially
+> >> the recent improvements you made for mesh fast RX/TX & cross vendor AM=
+SDU compat
+> >>
+> >> We upgraded our kernel from an older (5.15) to a newer 6.4. The proble=
+m is STP=20
+> >> doesn't work anymore and alas we use it for now (for the better or wor=
+se).
+> >>
+> >> What I gathered so far from my setup:
+> >>  - we use ath9k & ath10k
+> >>  - in my case STP frames are received as regular packet and not as ams=
+du
+> >>  - the received packets have a wrong length of 44 in tcpdump
+> >>    (instead of 38 with our previous kernel)
+> >>  - llc_fixup_skb() tries to pull some 41 bytes out of a 35 bytes packe=
+t
+> >>    this makes llc_rcv() discard the frames & breaks STP
+> >>
+> >> >From bisecting the culprit seems to be 986e43b19ae9176093da35e0a844e6=
+5c8bf9ede7
+> >> (wifi: mac80211: fix receiving A-MSDU frames on mesh interfaces)
+> >>
+> >> I guess that your changes to handle both ampdu subframes & normal fram=
+es in the
+> >> same datapath ends up putting a wrong skb->len for STP (multicast) fra=
+mes ?
+> >> Honestly I don't understand enough of the 80211 internals & spec to pi=
+npoint the
+> >> exact problem.
+> >>
+> >> It seems this change was already in the 6.3 kernel so I guess someone =
+should
+> >> have seen it before (but I didn't find anything..) ? Maybe I missed so=
+mething...
+> >>
+> >> Anyway I'm happy to provide more info or try anything you throw at me.
+> >>
+> >=20
+> > Thanks for the regression report. I'm adding it to regzbot:
+> >=20
+> > (Felix: it looks like this regression is introcued by a commit authored=
+ by you.
+> > Would you like to take a look on it?)
+> >=20
+> > #regzbot ^introduced: 986e43b19ae917
+>
+> Hmmm, Felix did not reply. But let's ignore that for now.
 
-Signed-off-by: Evan Quan <evan.quan@amd.com>
----
- drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     | 28 ++++++++++++++++---
- drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h |  7 +++++
- 2 files changed, 31 insertions(+), 4 deletions(-)
+I haven't seen mails from felix on the list for a few days, I'm guessing he=
+'s
+unavailable for now but I'll hapilly wait.
 
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index 89f876cc60e6..2619e310ef54 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -1272,6 +1272,22 @@ static void smu_wbrf_event_handler(struct amdgpu_device *adev)
- {
- 	struct smu_context *smu = adev->powerplay.pp_handle;
- 
-+	schedule_delayed_work(&smu->wbrf_delayed_work,
-+			      msecs_to_jiffies(SMU_WBRF_EVENT_HANDLING_PACE));
-+}
-+
-+/**
-+ * smu_wbrf_delayed_work_handler - callback on delayed work timer expired
-+ *
-+ * @work: struct work_struct pointer
-+ *
-+ * Flood is over and driver will consume the latest exclusion ranges.
-+ */
-+static void smu_wbrf_delayed_work_handler(struct work_struct *work)
-+{
-+	struct smu_context *smu =
-+		container_of(work, struct smu_context, wbrf_delayed_work.work);
-+
- 	smu_wbrf_handle_exclusion_ranges(smu);
- }
- 
-@@ -1311,6 +1327,9 @@ static int smu_wbrf_init(struct smu_context *smu)
- 	if (!smu->wbrf_supported)
- 		return 0;
- 
-+	INIT_DELAYED_WORK(&smu->wbrf_delayed_work,
-+			  smu_wbrf_delayed_work_handler);
-+
- 	ret = amdgpu_acpi_register_wbrf_notify_handler(adev,
- 						       smu_wbrf_event_handler);
- 	if (ret)
-@@ -1321,11 +1340,10 @@ static int smu_wbrf_init(struct smu_context *smu)
- 	 * before our driver loaded. To make sure our driver
- 	 * is awared of those exclusion ranges.
- 	 */
--	ret = smu_wbrf_handle_exclusion_ranges(smu);
--	if (ret)
--		dev_err(adev->dev, "Failed to handle wbrf exclusion ranges\n");
-+	schedule_delayed_work(&smu->wbrf_delayed_work,
-+			      msecs_to_jiffies(SMU_WBRF_EVENT_HANDLING_PACE));
- 
--	return ret;
-+	return 0;
- }
- 
- /**
-@@ -1343,6 +1361,8 @@ static void smu_wbrf_fini(struct smu_context *smu)
- 		return;
- 
- 	amdgpu_acpi_unregister_wbrf_notify_handler(adev);
-+
-+	cancel_delayed_work_sync(&smu->wbrf_delayed_work);
- }
- 
- static int smu_smc_hw_setup(struct smu_context *smu)
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-index ff0af3da0be2..aa63cc43d41c 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-+++ b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-@@ -478,6 +478,12 @@ struct stb_context {
- 
- #define WORKLOAD_POLICY_MAX 7
- 
-+/*
-+ * Configure wbrf event handling pace as there can be only one
-+ * event processed every SMU_WBRF_EVENT_HANDLING_PACE ms.
-+ */
-+#define SMU_WBRF_EVENT_HANDLING_PACE	10
-+
- struct smu_context
- {
- 	struct amdgpu_device            *adev;
-@@ -576,6 +582,7 @@ struct smu_context
- 
- 	/* data structures for wbrf feature support */
- 	bool				wbrf_supported;
-+	struct delayed_work		wbrf_delayed_work;
- };
- 
- struct i2c_adapter;
--- 
-2.34.1
+>
+> Nicolas, I noticed there are a few patches in next that refer to the
+> culprit. Might be worth giving this series a try:
+>
+> https://lore.kernel.org/all/20230314095956.62085-1-nbd@nbd.name/
 
+Well this series already landed in 6.4 and that is the version I did my ini=
+tial
+testing with. So no luck there.
+
+>
+> Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+> --
+> Everything you wanna know about Linux kernel regression tracking:
+> https://linux-regtracking.leemhuis.info/about/#tldr
+> If I did something stupid, please tell me, as explained on that page.
