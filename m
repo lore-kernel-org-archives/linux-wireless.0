@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54758EB64DC
-	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 12:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E23EB64D8
+	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 12:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345500AbjFPM4e (ORCPT
+        id S1345493AbjFPM4e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 16 Jun 2023 08:56:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48436 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345486AbjFPM4d (ORCPT
+        with ESMTP id S234696AbjFPM4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 16 Jun 2023 08:56:33 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B48630F7
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 369C03581
         for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 05:56:32 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35GCu46X1024423, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35GCu46X1024423
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35GCtxa47024339, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35GCtxa47024339
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Fri, 16 Jun 2023 20:56:04 +0800
+        Fri, 16 Jun 2023 20:55:59 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 16 Jun 2023 20:56:23 +0800
+ 15.1.2507.17; Fri, 16 Jun 2023 20:56:18 +0800
 Received: from [127.0.1.1] (172.16.16.227) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 16 Jun
- 2023 20:56:22 +0800
+ 2023 20:56:17 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
 CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 5/6] wifi: rtw88: refine register based H2C command
-Date:   Fri, 16 Jun 2023 20:55:39 +0800
-Message-ID: <20230616125540.36877-6-pkshih@realtek.com>
+Subject: [PATCH v2 2/6] wifi: rtw88: Fix AP mode incorrect DTIM behavior
+Date:   Fri, 16 Jun 2023 20:55:36 +0800
+Message-ID: <20230616125540.36877-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230616125540.36877-1-pkshih@realtek.com>
 References: <20230616125540.36877-1-pkshih@realtek.com>
@@ -49,108 +49,113 @@ X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Po-Hao Huang <phhuang@realtek.com>
 
-Since register based H2C commands don't need endian conversion.
-Introduce a new API that don't do conversion and send it directly.
-New caller are expected to encode with cpu order and gradually
-replace the old ones.
+Broadcast and multicast packets in high queue should be transmitted
+all at once during DTIM. But without proper settings, hardware fails
+to recognize that there are multiple packets and fetches only one.
+Fix this by signaling hardware with more data bit set when there are
+packets in the high queue.
 
 Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
 v2: no change
 ---
- drivers/net/wireless/realtek/rtw88/fw.c | 51 +++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/fw.h |  5 +++
- 2 files changed, 56 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 2 ++
+ drivers/net/wireless/realtek/rtw88/reg.h      | 1 +
+ drivers/net/wireless/realtek/rtw88/tx.c       | 7 ++++++-
+ drivers/net/wireless/realtek/rtw88/tx.h       | 1 +
+ drivers/net/wireless/realtek/rtw88/usb.c      | 3 +++
+ 5 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 2a8ccc8a7f60d..5e329bb95bb89 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -308,6 +308,57 @@ void rtw_fw_c2h_cmd_isr(struct rtw_dev *rtwdev)
- }
- EXPORT_SYMBOL(rtw_fw_c2h_cmd_isr);
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 09bcc2345bb05..0dc83c2f420da 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -449,6 +449,7 @@ static int rtw_ops_start_ap(struct ieee80211_hw *hw,
+ 	const struct rtw_chip_info *chip = rtwdev->chip;
  
-+static void rtw_fw_send_h2c_command_register(struct rtw_dev *rtwdev,
-+					     struct rtw_h2c_register *h2c)
-+{
-+	u32 box_reg, box_ex_reg;
-+	u8 box_state, box;
-+	int ret;
-+
-+	rtw_dbg(rtwdev, RTW_DBG_FW, "send H2C content %08x %08x\n", h2c->w0,
-+		h2c->w1);
-+
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	box = rtwdev->h2c.last_box_num;
-+	switch (box) {
-+	case 0:
-+		box_reg = REG_HMEBOX0;
-+		box_ex_reg = REG_HMEBOX0_EX;
-+		break;
-+	case 1:
-+		box_reg = REG_HMEBOX1;
-+		box_ex_reg = REG_HMEBOX1_EX;
-+		break;
-+	case 2:
-+		box_reg = REG_HMEBOX2;
-+		box_ex_reg = REG_HMEBOX2_EX;
-+		break;
-+	case 3:
-+		box_reg = REG_HMEBOX3;
-+		box_ex_reg = REG_HMEBOX3_EX;
-+		break;
-+	default:
-+		WARN(1, "invalid h2c mail box number\n");
-+		return;
-+	}
-+
-+	ret = read_poll_timeout_atomic(rtw_read8, box_state,
-+				       !((box_state >> box) & 0x1), 100, 3000,
-+				       false, rtwdev, REG_HMETFR);
-+
-+	if (ret) {
-+		rtw_err(rtwdev, "failed to send h2c command\n");
-+		return;
-+	}
-+
-+	rtw_write32(rtwdev, box_ex_reg, h2c->w1);
-+	rtw_write32(rtwdev, box_reg, h2c->w0);
-+
-+	if (++rtwdev->h2c.last_box_num >= 4)
-+		rtwdev->h2c.last_box_num = 0;
-+}
-+
- static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 				    u8 *h2c)
+ 	mutex_lock(&rtwdev->mutex);
++	rtw_write32_set(rtwdev, REG_TCR, BIT_TCR_UPDATE_HGQMD);
+ 	rtwdev->ap_active = true;
+ 	rtw_store_op_chan(rtwdev, true);
+ 	chip->ops->phy_calibration(rtwdev);
+@@ -464,6 +465,7 @@ static void rtw_ops_stop_ap(struct ieee80211_hw *hw,
+ 	struct rtw_dev *rtwdev = hw->priv;
+ 
+ 	mutex_lock(&rtwdev->mutex);
++	rtw_write32_clr(rtwdev, REG_TCR, BIT_TCR_UPDATE_HGQMD);
+ 	rtwdev->ap_active = false;
+ 	if (!rtw_core_check_sta_active(rtwdev))
+ 		rtw_clear_op_chan(rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index 2a2ae2081f347..60de9de1cc7a8 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -410,6 +410,7 @@
+ #define REG_TCR			0x0604
+ #define BIT_PWRMGT_HWDATA_EN	BIT(7)
+ #define BIT_TCR_UPDATE_TIMIE	BIT(5)
++#define BIT_TCR_UPDATE_HGQMD	BIT(4)
+ #define REG_RCR			0x0608
+ #define BIT_APP_FCS		BIT(31)
+ #define BIT_APP_MIC		BIT(30)
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index edf351102f6a9..702e1fbc2ca62 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -35,6 +35,10 @@ void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
  {
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index 397cbc3f6af6e..11a77d86cd144 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -81,6 +81,11 @@ struct rtw_c2h_adaptivity {
- 	u8 option;
- } __packed;
- 
-+struct rtw_h2c_register {
-+	u32 w0;
-+	u32 w1;
-+} __packed;
+ 	struct rtw_tx_desc *tx_desc = (struct rtw_tx_desc *)skb->data;
++	bool more_data = false;
 +
- struct rtw_h2c_cmd {
- 	__le32 msg;
- 	__le32 msg_ext;
++	if (pkt_info->qsel == TX_DESC_QSEL_HIGH)
++		more_data = true;
+ 
+ 	tx_desc->w0 = le32_encode_bits(pkt_info->tx_pkt_size, RTW_TX_DESC_W0_TXPKTSIZE) |
+ 		      le32_encode_bits(pkt_info->offset, RTW_TX_DESC_W0_OFFSET) |
+@@ -45,7 +49,8 @@ void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb)
+ 	tx_desc->w1 = le32_encode_bits(pkt_info->qsel, RTW_TX_DESC_W1_QSEL) |
+ 		      le32_encode_bits(pkt_info->rate_id, RTW_TX_DESC_W1_RATE_ID) |
+ 		      le32_encode_bits(pkt_info->sec_type, RTW_TX_DESC_W1_SEC_TYPE) |
+-		      le32_encode_bits(pkt_info->pkt_offset, RTW_TX_DESC_W1_PKT_OFFSET);
++		      le32_encode_bits(pkt_info->pkt_offset, RTW_TX_DESC_W1_PKT_OFFSET) |
++		      le32_encode_bits(more_data, RTW_TX_DESC_W1_MORE_DATA);
+ 
+ 	tx_desc->w2 = le32_encode_bits(pkt_info->ampdu_en, RTW_TX_DESC_W2_AGG_EN) |
+ 		      le32_encode_bits(pkt_info->report, RTW_TX_DESC_W2_SPE_RPT) |
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+index 607c51b90dad1..b126e3c2dcb5f 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.h
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -31,6 +31,7 @@ struct rtw_tx_desc {
+ #define RTW_TX_DESC_W1_RATE_ID GENMASK(20, 16)
+ #define RTW_TX_DESC_W1_SEC_TYPE GENMASK(23, 22)
+ #define RTW_TX_DESC_W1_PKT_OFFSET GENMASK(28, 24)
++#define RTW_TX_DESC_W1_MORE_DATA BIT(29)
+ #define RTW_TX_DESC_W2_AGG_EN BIT(12)
+ #define RTW_TX_DESC_W2_SPE_RPT BIT(19)
+ #define RTW_TX_DESC_W2_AMPDU_DEN GENMASK(22, 20)
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+index 0529ae24f53b0..4a57efdba97bb 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -469,6 +469,9 @@ static u8 rtw_usb_tx_queue_mapping_to_qsel(struct sk_buff *skb)
+ 
+ 	if (unlikely(ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)))
+ 		qsel = TX_DESC_QSEL_MGMT;
++	else if (is_broadcast_ether_addr(hdr->addr1) ||
++		 is_multicast_ether_addr(hdr->addr1))
++		qsel = TX_DESC_QSEL_HIGH;
+ 	else if (skb_get_queue_mapping(skb) <= IEEE80211_AC_BK)
+ 		qsel = skb->priority;
+ 	else
 -- 
 2.25.1
 
