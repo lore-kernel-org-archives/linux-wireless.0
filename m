@@ -2,43 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D5FEB64D7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5323EB64DA
 	for <linux-wireless@archiver.kernel.org>; Fri, 16 Jun 2023 12:56:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345482AbjFPM4c (ORCPT
+        id S1345485AbjFPM4c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 16 Jun 2023 08:56:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48404 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229705AbjFPM4b (ORCPT
+        with ESMTP id S234696AbjFPM4c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Jun 2023 08:56:31 -0400
+        Fri, 16 Jun 2023 08:56:32 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97AE30FE
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 05:56:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C1D830F7
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jun 2023 05:56:30 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35GCu2tqD024348, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35GCtuvS7024330, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35GCu2tqD024348
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35GCtuvS7024330
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=OK);
-        Fri, 16 Jun 2023 20:56:02 +0800
+        Fri, 16 Jun 2023 20:55:56 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Fri, 16 Jun 2023 20:56:21 +0800
+ 15.1.2507.17; Fri, 16 Jun 2023 20:56:15 +0800
 Received: from [127.0.1.1] (172.16.16.227) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 16 Jun
- 2023 20:56:20 +0800
+ 2023 20:56:14 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <tony0620emma@gmail.com>, <kvalo@kernel.org>
 CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 4/6] wifi: rtw88: Stop high queue during scan
-Date:   Fri, 16 Jun 2023 20:55:38 +0800
-Message-ID: <20230616125540.36877-5-pkshih@realtek.com>
+Subject: [PATCH v2 0/6] wifi: rtw88: correct AP and PS mode behaviors
+Date:   Fri, 16 Jun 2023 20:55:34 +0800
+Message-ID: <20230616125540.36877-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230616125540.36877-1-pkshih@realtek.com>
-References: <20230616125540.36877-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -53,53 +51,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Po-Hao Huang <phhuang@realtek.com>
+In AP mode, HI queue is used to transmit broadcast/multicast right after
+issuing beacon, and we need set MORE_DATA in TX description to make
+hardware transmits all packets in one go. Also, have special deal with
+this queue when doing scan and flush.
 
-When traversing channel list, TX in high queue should be disabled
-along with beacon function, so packets won't be sent to incorrect
-channels.
+After stopping AP from SCC (AP + STA), only one STA is working, so PS mode
+is expected to enable. However, firmware checks the MAC port used by AP
+mode before, and then can't enter PS mode. We add the last patch to set
+"default port" to the port used by STA. Then, firmware will check correct
+port to enter PS mode in expectation.
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
-v2: no change
----
- drivers/net/wireless/realtek/rtw88/main.c | 7 +++++--
- drivers/net/wireless/realtek/rtw88/reg.h  | 1 +
- 2 files changed, 6 insertions(+), 2 deletions(-)
+Note: The patch 5/6 ("wifi: rtw88: refine register based H2C command")
+adds new static function that is used by patch 6/6, so compiler will
+warn unused function if we build this path.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 9447a3aae3b5e..d55b041a6bb93 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -2403,10 +2403,13 @@ void rtw_core_enable_beacon(struct rtw_dev *rtwdev, bool enable)
- 	if (!rtwdev->ap_active)
- 		return;
- 
--	if (enable)
-+	if (enable) {
- 		rtw_write32_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
--	else
-+		rtw_write32_clr(rtwdev, REG_TXPAUSE, BIT_HIGH_QUEUE);
-+	} else {
- 		rtw_write32_clr(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
-+		rtw_write32_set(rtwdev, REG_TXPAUSE, BIT_HIGH_QUEUE);
-+	}
- }
- 
- MODULE_AUTHOR("Realtek Corporation");
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 60de9de1cc7a8..7c6c11d50ff30 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -378,6 +378,7 @@
- #define BIT_SIFS_BK_EN		BIT(12)
- #define REG_TXPAUSE		0x0522
- #define BIT_AC_QUEUE		GENMASK(7, 0)
-+#define BIT_HIGH_QUEUE		BIT(5)
- #define REG_RD_CTRL		0x0524
- #define BIT_EDCCA_MSK_CNTDOWN_EN BIT(11)
- #define BIT_DIS_TXOP_CFE	BIT(10)
+v2:
+  - fix patch 1/6 problems
+    * correct to use RTW_TX_DESC_W7_DMA_TXAGG_NUM to set agg_num
+    * use correct le32p_replace_bits() to set value instead
+
+Po-Hao Huang (6):
+  wifi: rtw88: use struct instead of macros to set TX desc
+  wifi: rtw88: Fix AP mode incorrect DTIM behavior
+  wifi: rtw88: Skip high queue in hci_flush
+  wifi: rtw88: Stop high queue during scan
+  wifi: rtw88: refine register based H2C command
+  wifi: rtw88: fix not entering PS mode after AP stops
+
+ drivers/net/wireless/realtek/rtw88/fw.c       |  68 ++++++++++
+ drivers/net/wireless/realtek/rtw88/fw.h       |  13 ++
+ drivers/net/wireless/realtek/rtw88/mac80211.c |   3 +
+ drivers/net/wireless/realtek/rtw88/main.c     |  15 ++-
+ drivers/net/wireless/realtek/rtw88/main.h     |   1 +
+ drivers/net/wireless/realtek/rtw88/pci.c      |   5 +-
+ drivers/net/wireless/realtek/rtw88/reg.h      |   2 +
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c |   6 +-
+ drivers/net/wireless/realtek/rtw88/tx.c       |  84 +++++++-----
+ drivers/net/wireless/realtek/rtw88/tx.h       | 123 ++++++++----------
+ drivers/net/wireless/realtek/rtw88/usb.c      |  15 ++-
+ 11 files changed, 218 insertions(+), 117 deletions(-)
+
 -- 
 2.25.1
 
