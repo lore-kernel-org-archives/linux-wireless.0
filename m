@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F06A1EB64DA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D222BEB64D8
 	for <linux-wireless@archiver.kernel.org>; Sun, 18 Jun 2023 18:50:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229671AbjFRSuz (ORCPT
+        id S229632AbjFRSux (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Jun 2023 14:50:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34630 "EHLO
+        Sun, 18 Jun 2023 14:50:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229602AbjFRSuy (ORCPT
+        with ESMTP id S229664AbjFRSuv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Jun 2023 14:50:54 -0400
+        Sun, 18 Jun 2023 14:50:51 -0400
 Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E808E51
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2023 11:50:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8853C1B4
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jun 2023 11:50:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687114250; x=1718650250;
+  t=1687114245; x=1718650245;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=aYbssBODr05moZq26emV/XshR6vJNeEPNs13tWhCXRg=;
-  b=a6Aj55XPS6hzWGYKAlSQE2GjSOEt5sK8+2VUoDklXyNF5qCWUTqQZVGB
-   z7gDbBaRfklVJndsrrWUJzrxXvftbiB8XFny6v9oEDfkTU+a7IYa1fo21
-   8pd5wbMVGaUjm/7E6RcW4dK5WvytaykHlFHMcbvS6QkFALxcG30886hvo
-   wS2bPZ23MEOEYb6J3bgpoOnJOrlZY+ZKwyJUr+tvJFAMBgp27GPNoPGMQ
-   oi0hsu6VIgCb+vog9KwZPNjJWvcQkORGy1jYAOTdHXGYYywykQOcCPwFY
-   gnT4unh5zZ7/jzvXYt6EGdSXlXMmjQfx1Lo4pt1vph6F5X17gMhpsrLIz
+  bh=cyzQNaQVOvPw8BlNvCP05w9HpuLfECh6xXiYqQlqhAQ=;
+  b=aJUr0Glyu97ap/PcRKZxEu9kNFhqM+kkNRIoGvVfX1oVnpp4yzhjlBXe
+   Nvy2jWY0zqmtUIlGHY1K8vRnqjNlkvYcr6+50CjfH2LLnhhKNxHzauaXf
+   8MkLqgjLhh5fuD/gbTMonDKOTU8yChvj5HBjJ3rOpByCZkwR5d8YwCsnn
+   26X+mMFVvc70ASa+tlXrettZnXyRu99r2CrrKigF35ZPODDyXsY7r78YJ
+   YZ5k+3bmWYso2kX8C04APpngZ8DlQ51XHb+xj8UNdBLfbM6A5jtut8fhP
+   iRtScB6GZMDsEFOmQMJgoP0G6fCivWaXldoTtpusPudTn06QiD8IKqbDQ
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10745"; a="339116662"
+X-IronPort-AV: E=McAfee;i="6600,9927,10745"; a="339116658"
 X-IronPort-AV: E=Sophos;i="6.00,253,1681196400"; 
-   d="scan'208";a="339116662"
+   d="scan'208";a="339116658"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jun 2023 11:50:50 -0700
-X-IronPort-AV: E=McAfee;i="6600,9927,10745"; a="747234056"
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jun 2023 11:50:45 -0700
+X-IronPort-AV: E=McAfee;i="6600,9927,10745"; a="747234037"
 X-IronPort-AV: E=Sophos;i="6.00,253,1681196400"; 
-   d="scan'208";a="747234056"
+   d="scan'208";a="747234037"
 Received: from aflumen-mobl2.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.251.178.161])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jun 2023 11:50:48 -0700
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jun 2023 11:50:43 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Benjamin Berg <benjamin.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 14/20] wifi: ieee80211: reorder presence checks in MLE per-STA profile
-Date:   Sun, 18 Jun 2023 21:49:56 +0300
-Message-Id: <20230618214436.fdbf17320a37.I517cf27fdc3f6e5d6a2615182da47ba4bdf14039@changeid>
+Subject: [PATCH 12/20] wifi: cfg80211: do not scan disabled links on 6GHz
+Date:   Sun, 18 Jun 2023 21:49:54 +0300
+Message-Id: <20230618214436.4f7384006471.Iff8f1081e76a298bd25f9468abb3a586372cddaa@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230618185002.817236-1-gregory.greenman@intel.com>
 References: <20230618185002.817236-1-gregory.greenman@intel.com>
@@ -56,41 +56,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Benjamin Berg <benjamin.berg@intel.com>
 
-In ieee80211_mle_sta_prof_size_ok(), the presence
-checks aren't ordered by field order, so that's a
-bit confusing. Reorder them.
+If a link is disabled on 6GHz, we should not send a probe request on the
+channel to resolve it. Simply skip such RNR entries so that the link is
+ignored.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Userspace can still see the link in the RNR and may generate an ML probe
+request in order to associate to the (currently) disabled link.
+
+Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- include/linux/ieee80211.h | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ net/wireless/scan.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 98223b665456..fc3c26f1b718 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -4876,9 +4876,6 @@ static inline bool ieee80211_mle_basic_sta_prof_size_ok(const u8 *data,
- 		info_len += 8;
- 	if (control & IEEE80211_MLE_STA_CONTROL_DTIM_INFO_PRESENT)
- 		info_len += 2;
--	if (control & IEEE80211_MLE_STA_CONTROL_BSS_PARAM_CHANGE_CNT_PRESENT)
--		info_len += 1;
--
- 	if (control & IEEE80211_MLE_STA_CONTROL_COMPLETE_PROFILE &&
- 	    control & IEEE80211_MLE_STA_CONTROL_NSTR_BITMAP_SIZE) {
- 		if (control & IEEE80211_MLE_STA_CONTROL_NSTR_BITMAP_SIZE)
-@@ -4886,6 +4883,8 @@ static inline bool ieee80211_mle_basic_sta_prof_size_ok(const u8 *data,
- 		else
- 			info_len += 1;
- 	}
-+	if (control & IEEE80211_MLE_STA_CONTROL_BSS_PARAM_CHANGE_CNT_PRESENT)
-+		info_len += 1;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 46488650ecbc..cf0ad544cb99 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -587,6 +587,13 @@ static int cfg80211_parse_ap_info(struct cfg80211_colocated_ap *entry,
+ 		entry->short_ssid_valid = true;
  
- 	return prof->sta_info_len >= info_len &&
- 	       fixed + prof->sta_info_len <= len;
+ 		bss_params = tbtt_info->bss_params;
++
++		/* Ignore disabled links */
++		if (length >= offsetofend(typeof(*tbtt_info), mld_params)) {
++			if (le16_get_bits(tbtt_info->mld_params.params,
++					  IEEE80211_RNR_MLD_PARAMS_DISABLED_LINK))
++				return -EINVAL;
++		}
+ 	} else {
+ 		struct ieee80211_tbtt_info_7_8_9 *tbtt_info = (void *)pos;
+ 
 -- 
 2.38.1
 
