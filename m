@@ -2,96 +2,85 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BE5EB64D7
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Jun 2023 10:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42ABFEB64D7
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Jun 2023 11:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231540AbjFTKKe (ORCPT
+        id S231747AbjFTLV5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Jun 2023 06:10:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42550 "EHLO
+        Tue, 20 Jun 2023 07:21:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231574AbjFTKKc (ORCPT
+        with ESMTP id S231294AbjFTLVy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Jun 2023 06:10:32 -0400
-Received: from forward101c.mail.yandex.net (forward101c.mail.yandex.net [178.154.239.212])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7CA1A3
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jun 2023 03:10:28 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net [IPv6:2a02:6b8:c14:c83:0:640:84f9:0])
-        by forward101c.mail.yandex.net (Yandex) with ESMTP id 18E2A600DC;
-        Tue, 20 Jun 2023 13:09:48 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id d9eIllrDZ0U0-P5L736Pz;
-        Tue, 20 Jun 2023 13:09:47 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1687255787;
-        bh=HkCFXEEnrmStviwzT132w8G9XgVYgvZO3eEETWC5ipQ=;
-        h=Message-ID:Date:Cc:Subject:To:From;
-        b=KVuth/lCRErk4FPsqJuxEAuy6OZ+fRivkSS/1zCaqu4XarCGstj71mxwelX+1brLR
-         26AJ1FslZw89VAVRK+wMOwh9Xws+ZLU5FpPXL5dc3Zj0kTS3qnZ/CMixOO25MLyqdZ
-         6I+RtbVWfnQACHF0Drwe1NgXupimWxM7isdQRb7g=
-Authentication-Results: mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-To:     Christophe Jaillet <christophe.jaillet@wanadoo.fr>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH 1/2] [v2] wifi: mwifiex: avoid strlcpy() and use strscpy() where appropriate
-Date:   Tue, 20 Jun 2023 13:07:36 +0300
-Message-ID: <20230620100803.519926-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.41.0
+        Tue, 20 Jun 2023 07:21:54 -0400
+Received: from mail-yw1-x112d.google.com (mail-yw1-x112d.google.com [IPv6:2607:f8b0:4864:20::112d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CC6710C
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jun 2023 04:21:53 -0700 (PDT)
+Received: by mail-yw1-x112d.google.com with SMTP id 00721157ae682-56d304e5f83so51339247b3.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jun 2023 04:21:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mojatatu-com.20221208.gappssmtp.com; s=20221208; t=1687260112; x=1689852112;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=dfQ3niVaGcWe3CQjn+06HwWkagYAmvQ0PFrIW9MH5sY=;
+        b=dkZagKoNk7qH5HItxayVJ/GdY8MxAM1NWs2uOqaIEU0KBEA4ZvG02Iyzb4jdgA1Ymh
+         tRvjCK5fN8vMVJreaWUK+oUanOhNaeJWvZQQJ/E1JG9mJCT64BX936ZXD3JmQnh26UI9
+         fSad1kK7noc1ZRymZ6XGpRFZVB9wgdSsG4jLocnQ8AAlkgTvKGI/cVk/Ur4A0ARCJGXY
+         /RR/EDpz6f3ESTHM/vH/FGVC89W65hHxFC8i37WAkxpKDaEMViAmrrxPdtw2hpote2uj
+         wjJ2/gBzCFFZZJvDTcaEQBhavPfAuElJA8+oaUN81Qdkkh6RasH6aFadI2b3CymoqXIh
+         9cBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687260112; x=1689852112;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=dfQ3niVaGcWe3CQjn+06HwWkagYAmvQ0PFrIW9MH5sY=;
+        b=hLPdo8nkpIbHMLe67XERqxD84XbdGYB1zzaDB06AeAlOJ+7IKcAMbymHvtMxT3OfKN
+         okX2z5K188UeQMuXe0ux2ZKdtkebkRgAEoKZMsF8my2zZ6hAb6ZvINtQJAGXljZFvw/h
+         Z33JVrQJUB8U+eGBy0JnMWxsvSZW6Eq47qLJ6kjKxnw5ToFFruzwGoc5bCwURBvD00q9
+         q0sivYYmj/uIpXlX4m7N3HqB9My6/SUPfklBcBsl5z3YyZrVm5o7kfxsnXZQMqjMWFdr
+         7bN44JiwTaqTaayEqP6MPo0DkBS6nd0Aitftbmdke4hAzZAwV1vmvnATqkUvat70vWN8
+         4dLg==
+X-Gm-Message-State: AC+VfDwk6N4DG1M/vE4WxnHCS2tj1+wHIJX9hkAA7mDqCb47HWh0HMMd
+        ZBt7Uy9dXqaL1ndJQAIkU2awuQHoiK5sqMADHvpo0g==
+X-Google-Smtp-Source: ACHHUZ6TCTiLciePb3TWcbuXpNxVdq9lpTes2TguKKkhNfh9aJZUMfKfX2271vdu+AWYQFS5WibYMmGGFZ3+CKKmj3Q=
+X-Received: by 2002:a81:c201:0:b0:569:e7cb:cd4e with SMTP id
+ z1-20020a81c201000000b00569e7cbcd4emr12722225ywc.48.1687260112492; Tue, 20
+ Jun 2023 04:21:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   Jamal Hadi Salim <jhs@mojatatu.com>
+Date:   Tue, 20 Jun 2023 07:21:41 -0400
+Message-ID: <CAM0EoMkRZE2XQcgzxt63jke1q4RVqrHBuw5rc5Pu0rGtW+Vz3A@mail.gmail.com>
+Subject: CFS for Netdev 0x17 open!    
+To:     people <people@netdevconf.info>
+Cc:     "board@netdevconf.org" <board@netdevconf.info>,
+        Christie Geldart <christie@ambedia.com>,
+        Kimberley Jeffries <kimberleyjeffries@gmail.com>,
+        Jeremy Carter <jeremy@jeremycarter.ca>,
+        Linux Kernel Network Developers <netdev@vger.kernel.org>,
+        lwn@lwn.net, netfilter-devel@vger.kernel.org,
+        Lael Santos <lael.santos@expertisesolutions.com.br>,
+        Felipe Magno de Almeida <felipe@expertise.dev>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Prefer 'strscpy()' over unsafe 'strlcpy()' and 'strcpy()' in
-'mwifiex_init_hw_fw()' and 'mwifiex_register_dev()', respectively.
-All other calls to 'strcpy(adapter->name, ...)' should be safe
-because the firmware name is a compile-time constant of known
-length and so guaranteed to fit into a destination buffer.
+We are pleased to announce the opening of Call For Submissions(CFS)
+for Netdev 0x17.
+This session will happen in beautiful Vancouver, British Columbia
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
- drivers/net/wireless/marvell/mwifiex/main.c | 11 +++--------
- drivers/net/wireless/marvell/mwifiex/sdio.c |  4 +++-
- 2 files changed, 6 insertions(+), 9 deletions(-)
+For overview of topics, submissions and requirements please visit:
+https://netdevconf.info/0x17/pages/submit-proposal.html
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index ea22a08e6c08..64512b00e8b5 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -724,14 +724,9 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter,
- 	/* Override default firmware with manufacturing one if
- 	 * manufacturing mode is enabled
- 	 */
--	if (mfg_mode) {
--		if (strlcpy(adapter->fw_name, MFG_FIRMWARE,
--			    sizeof(adapter->fw_name)) >=
--			    sizeof(adapter->fw_name)) {
--			pr_err("%s: fw_name too long!\n", __func__);
--			return -1;
--		}
--	}
-+	if (mfg_mode)
-+		strscpy(adapter->fw_name, MFG_FIRMWARE,
-+			sizeof(adapter->fw_name));
- 
- 	if (req_fw_nowait) {
- 		ret = request_firmware_nowait(THIS_MODULE, 1, adapter->fw_name,
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index a24bd40dd41a..a5d3128d7922 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2483,7 +2483,9 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 		if ((val & card->reg->host_strap_mask) == card->reg->host_strap_value)
- 			firmware = card->firmware_sdiouart;
- 	}
--	strcpy(adapter->fw_name, firmware);
-+	ret = strscpy(adapter->fw_name, firmware, sizeof(adapter->fw_name));
-+	if (ret < 0)
-+		return ret;
- 
- 	if (card->fw_dump_enh) {
- 		adapter->mem_type_mapping_tbl = generic_mem_type_map;
--- 
-2.41.0
+For all submitted sessions, we employ a blind review process carried
+out by the Program Committee. Please refer to:
+https://netdevconf.info/0x17/pages/about-us.html#committees
 
+Important dates:
+Closing of CFS Sunday, August 27, 2023
+Notification by Friday, Sept. 15, 2023
+Conference dates Oct 30th - Nov, 2023
+
+cheers,
+jamal (on behalf of the Netdev Society)
