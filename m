@@ -2,80 +2,121 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFC5EB64DC
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 09:23:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 900DCEB64D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 09:24:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230361AbjFUJXy (ORCPT
+        id S231182AbjFUJYG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 05:23:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57308 "EHLO
+        Wed, 21 Jun 2023 05:24:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230296AbjFUJXx (ORCPT
+        with ESMTP id S230338AbjFUJYF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 05:23:53 -0400
-Received: from forward103a.mail.yandex.net (forward103a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5744419B3
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 02:23:21 -0700 (PDT)
+        Wed, 21 Jun 2023 05:24:05 -0400
+Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [178.154.239.83])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30D611BD3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 02:23:35 -0700 (PDT)
 Received: from mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:f15:0:640:e80a:0])
-        by forward103a.mail.yandex.net (Yandex) with ESMTP id 98FFB46D2A;
-        Wed, 21 Jun 2023 12:23:16 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id FNeUOg7DXeA0-qmIzZr1i;
-        Wed, 21 Jun 2023 12:23:16 +0300
+        by forward100a.mail.yandex.net (Yandex) with ESMTP id 2460F463C4;
+        Wed, 21 Jun 2023 12:23:20 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id FNeUOg7DXeA0-DzzDE45m;
+        Wed, 21 Jun 2023 12:23:19 +0300
 X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1687339396;
-        bh=oDvZXCvxpLuuDDgHCVXgl5cE7EXMbEjEY77S7+sNfJE=;
-        h=Message-ID:Date:Cc:Subject:To:From;
-        b=t8Rl9MECBKHOSAANG80zI9dLuvcrRqLP63coq24QdD25npsThnGawGFmC46qDeqHh
-         Rue9zJXm2mGn/d9mgnloZeUzOBSi25dMsydBgg3LjjQ2yXRhLqQk1qHZ8yNy1Q4e4p
-         MLjeeowQgmaK3+yvHkx/WpdoG75Xet06cKAvvPag=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1687339399;
+        bh=hQJotLizViI1WdSL8GrapSTqZyQoIhJYM90Cxw2O1e4=;
+        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+        b=PN4Spa5pFMz2M9aOKMl8dvLccvA0/2bem4Y0/vCiZ/D582npTdZEH1HpPst+M4zcX
+         5NdgC4gLsOC6+Qc8EsBhULp2ye+busR2Z8pl7a+0Z6zYhFM/zlBAkoSHxYLVu/TNDM
+         3Qdepl4XLirZPLv8f/GlwSPq9aek4wXPUdzOrUO4=
 Authentication-Results: mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
 From:   Dmitry Antipov <dmantipov@yandex.ru>
 To:     Ping-Ke Shih <pkshih@realtek.com>
 Cc:     Sascha Hauer <s.hauer@pengutronix.de>,
         Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
         Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH 1/3] [v4] wifi: rtw88: delete timer and free skb queue when unloading
-Date:   Wed, 21 Jun 2023 12:22:13 +0300
-Message-ID: <20230621092313.65965-1-dmantipov@yandex.ru>
+Subject: [PATCH 3/3] [v4] wifi: rtw88: remove unused USB bulkout size set
+Date:   Wed, 21 Jun 2023 12:22:15 +0300
+Message-ID: <20230621092313.65965-3-dmantipov@yandex.ru>
 X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230621092313.65965-1-dmantipov@yandex.ru>
+References: <20230621092313.65965-1-dmantipov@yandex.ru>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix possible crash and memory leak on driver unload by deleting
-TX purge timer and freeing C2H queue in 'rtw_core_deinit()',
-shrink critical section in the latter by freeing COEX queue
-out of TX report lock scope.
+Drop no longer used 'bulkout_size' of 'struct rtw_usb' as well
+as related macros from usb.h and leftovers in 'rtw_usb_parse()'.
+This follows commit 462c8db6a011 ("wifi: rtw88: usb: drop
+now unnecessary URB size check").
 
 Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
-v4: adjust to match series
-v3: shrink critical section in rtw_core_deinit() (Ping-Ke Shih)
-v2: fix title and commit message (Kalle Valo)
+v4: remove all bulkout size leftovers (Ping-Ke Shih, Sascha Hauer)
 ---
- drivers/net/wireless/realtek/rtw88/main.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/usb.c | 17 -----------------
+ drivers/net/wireless/realtek/rtw88/usb.h |  5 -----
+ 2 files changed, 22 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 9447a3aae3b5..c190598c47c3 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -2180,10 +2180,12 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
- 		release_firmware(wow_fw->firmware);
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+index 6862338b1d51..6423140c6005 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -141,7 +141,6 @@ static int rtw_usb_parse(struct rtw_dev *rtwdev,
+ 	struct usb_host_interface *host_interface = &interface->altsetting[0];
+ 	struct usb_interface_descriptor *interface_desc = &host_interface->desc;
+ 	struct usb_endpoint_descriptor *endpoint;
+-	struct usb_device *usbd = interface_to_usbdev(interface);
+ 	int num_out_pipes = 0;
+ 	int i;
+ 	u8 num;
+@@ -183,22 +182,6 @@ static int rtw_usb_parse(struct rtw_dev *rtwdev,
+ 		}
+ 	}
  
- 	destroy_workqueue(rtwdev->tx_wq);
-+	timer_delete_sync(&rtwdev->tx_report.purge_timer);
- 	spin_lock_irqsave(&rtwdev->tx_report.q_lock, flags);
- 	skb_queue_purge(&rtwdev->tx_report.queue);
--	skb_queue_purge(&rtwdev->coex.queue);
- 	spin_unlock_irqrestore(&rtwdev->tx_report.q_lock, flags);
-+	skb_queue_purge(&rtwdev->coex.queue);
-+	skb_queue_purge(&rtwdev->c2h_queue);
+-	switch (usbd->speed) {
+-	case USB_SPEED_LOW:
+-	case USB_SPEED_FULL:
+-		rtwusb->bulkout_size = RTW_USB_FULL_SPEED_BULK_SIZE;
+-		break;
+-	case USB_SPEED_HIGH:
+-		rtwusb->bulkout_size = RTW_USB_HIGH_SPEED_BULK_SIZE;
+-		break;
+-	case USB_SPEED_SUPER:
+-		rtwusb->bulkout_size = RTW_USB_SUPER_SPEED_BULK_SIZE;
+-		break;
+-	default:
+-		rtw_err(rtwdev, "failed to detect usb speed\n");
+-		return -EINVAL;
+-	}
+-
+ 	rtwdev->hci.bulkout_num = num_out_pipes;
  
- 	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list,
- 				 build_list) {
+ 	if (num_out_pipes < 1 || num_out_pipes > 4) {
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
+index fad998005ec8..86697a5c0103 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.h
++++ b/drivers/net/wireless/realtek/rtw88/usb.h
+@@ -18,10 +18,6 @@
+ 
+ #define RTW_USB_VENQT_CMD_IDX		0x00
+ 
+-#define RTW_USB_SUPER_SPEED_BULK_SIZE	1024
+-#define RTW_USB_HIGH_SPEED_BULK_SIZE	512
+-#define RTW_USB_FULL_SPEED_BULK_SIZE	64
+-
+ #define RTW_USB_TX_SEL_HQ		BIT(0)
+ #define RTW_USB_TX_SEL_LQ		BIT(1)
+ #define RTW_USB_TX_SEL_NQ		BIT(2)
+@@ -73,7 +69,6 @@ struct rtw_usb {
+ 	__le32 *usb_data;
+ 	unsigned int usb_data_index;
+ 
+-	u32 bulkout_size;
+ 	u8 pipe_interrupt;
+ 	u8 pipe_in;
+ 	u8 out_ep[RTW_USB_EP_MAX];
 -- 
 2.41.0
 
