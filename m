@@ -2,690 +2,146 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BDABEB64D8
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 10:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0AD4EB64DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 10:23:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231144AbjFUKOp (ORCPT
+        id S231578AbjFUKXU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 06:14:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33930 "EHLO
+        Wed, 21 Jun 2023 06:23:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232227AbjFUKOD (ORCPT
+        with ESMTP id S231450AbjFUKXQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 06:14:03 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45C941721
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 03:13:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687342432; x=1718878432;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=YVF7bYTDGnIzEHa4eNQJIo5LiPjinjYM51KKs819J4I=;
-  b=VKFFfmWj6wv7PEbSxRmOZzim9Ky37I7LMKmlTUJjsQdYKtvNuXjAfl2q
-   3SYnt5HoUrbFo2LkZ4vhkpPq6xudfM0piv5uulvrtsM0vk8kERliWNu+v
-   JRR36GEIgW67gZvLXQE10kp/LneYwvjsnLJGibL9+S+b88u4r+RK3l6/N
-   al4qGcNRXAk/rP1uFtATEZoz/1H2Tdu6CYFokCuyM3Kdsv6oDq3CKdrjg
-   Tn7DWuJbYkQmqHpJQK/huHif33KV2WfOnmbW6ZpI8bJ67wfaCBoa9PemS
-   +db1FLIU17S1+sCMNWwGD2SY7IoW8wi3n1N2jsmdPfovBUOHHY1v68qLq
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="446506489"
-X-IronPort-AV: E=Sophos;i="6.00,260,1681196400"; 
-   d="scan'208";a="446506489"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 03:13:21 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="664599287"
-X-IronPort-AV: E=Sophos;i="6.00,260,1681196400"; 
-   d="scan'208";a="664599287"
-Received: from ggreenma-mobl2.jer.intel.com ([10.13.17.65])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 03:13:19 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 14/18] wifi: iwlwifi: cfg: remove trailing dash from FW_PRE constants
-Date:   Wed, 21 Jun 2023 13:12:18 +0300
-Message-Id: <20230621130443.72240ca13b83.I1f4ed547f0964719ed98a3ef928080462d594491@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230621101222.218083-1-gregory.greenman@intel.com>
-References: <20230621101222.218083-1-gregory.greenman@intel.com>
+        Wed, 21 Jun 2023 06:23:16 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D8ED197;
+        Wed, 21 Jun 2023 03:23:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=E5J3XlE1FsUIlBpFkRpwctJVhjB2FlOiEwVbSdNHhcE=;
+        t=1687342994; x=1688552594; b=RWtUxkjg4xYJmfKtMvXoXY9u+ktdikFpu3EU1sEVWoOMMT8
+        yRPhfqWwcpIRVq2h6WbdY9kJCvIzY9xs8/Qr6cZfqCHenSBeZLYwBgO77nmZ6gf4WvSYn0FyE8mHP
+        51bLL5TzE65XoYEAS6u4PLvWulm7ONYEtwqRvaVuaQTo20BMVnj6onpPUlYOSLqS3GbMnWne6qqMK
+        +0mehziktlLvAymbu56uiTIU0buVLRi2HfzI15d6sNYtAahLoQkxL1Z1lEMJgeFO1vEWAK8YWPq7C
+        CLnZFUcHwp7PjPGPHrrcyA3K52ALg/sg+96X9HEfYrQuZd8rVewPngW3ff6+fHqw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qBuym-00DagI-0V;
+        Wed, 21 Jun 2023 12:22:24 +0200
+Message-ID: <3eb2c16cb0692c8d6b03bd57cb049b1fb3457e92.camel@sipsolutions.net>
+Subject: Re: [PATCH V4 3/8] wifi: mac80211: Add support for ACPI WBRF
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Evan Quan <evan.quan@amd.com>, rafael@kernel.org, lenb@kernel.org,
+        alexander.deucher@amd.com, christian.koenig@amd.com,
+        Xinhui.Pan@amd.com, airlied@gmail.com, daniel@ffwll.ch,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, mario.limonciello@amd.com, mdaenzer@redhat.com,
+        maarten.lankhorst@linux.intel.com, tzimmermann@suse.de,
+        hdegoede@redhat.com, jingyuwang_vip@163.com, lijo.lazar@amd.com,
+        jim.cromie@gmail.com, bellosilicio@gmail.com,
+        andrealmeid@igalia.com, trix@redhat.com, jsg@jsg.id.au,
+        arnd@arndb.de
+Cc:     linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date:   Wed, 21 Jun 2023 12:22:21 +0200
+In-Reply-To: <20230621054603.1262299-4-evan.quan@amd.com>
+References: <20230621054603.1262299-1-evan.quan@amd.com>
+         <20230621054603.1262299-4-evan.quan@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2023-06-21 at 13:45 +0800, Evan Quan wrote:
+> To support AMD's WBRF interference mitigation mechanism, Wifi adapters
+> utilized in the system must register the frequencies in use(or unregister
+> those frequencies no longer used) via the dedicated APCI calls. So that,
+> other drivers responding to the frequencies can take proper actions to
+> mitigate possible interference.
+>=20
+> To make WBRF feature functional, the kernel needs to be configured with
+> CONFIG_ACPI_WBRF and the platform is equipped with WBRF support(from
+> BIOS and drivers).
+>=20
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> Co-developed-by: Evan Quan <evan.quan@amd.com>
+> Signed-off-by: Evan Quan <evan.quan@amd.com>
 
-We have the trailing dash here, but that complicates all
-the code. Simplify this by removing the dashes, adding
-them to the *_MODULE_FIRMWARE macros, and adjusting the
-code using this accordingly.
+I was going to say this looks good ... but still have a few nits, sorry.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/cfg/1000.c | 10 +--
- drivers/net/wireless/intel/iwlwifi/cfg/2000.c | 18 ++---
- .../net/wireless/intel/iwlwifi/cfg/22000.c    | 26 +++----
- drivers/net/wireless/intel/iwlwifi/cfg/5000.c | 10 +--
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c | 18 ++---
- drivers/net/wireless/intel/iwlwifi/cfg/7000.c | 22 +++---
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c | 10 +--
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c | 10 +--
- .../net/wireless/intel/iwlwifi/cfg/ax210.c    | 60 ++++++++--------
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c   | 70 +++++++++----------
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c   | 28 ++++----
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.h  | 16 +----
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  | 12 ++--
- 14 files changed, 150 insertions(+), 162 deletions(-)
+But then the next question anyway is how we merge this? The wifi parts
+sort of depend on the first patch, although technically I guess I could
+merge them since it's all hidden behind the CONFIG_ symbol, assuming you
+get that in via some other tree it can combine upstream.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/1000.c b/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
-index 116defb15afb..f172ffd2a841 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/1000.c
-@@ -2,7 +2,7 @@
- /******************************************************************************
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2018 - 2020 Intel Corporation
-+ * Copyright(c) 2018 - 2020, 2023 Intel Corporation
-  *****************************************************************************/
- 
- #include <linux/module.h>
-@@ -22,11 +22,11 @@
- #define EEPROM_1000_TX_POWER_VERSION	(4)
- #define EEPROM_1000_EEPROM_VERSION	(0x15C)
- 
--#define IWL1000_FW_PRE "iwlwifi-1000-"
--#define IWL1000_MODULE_FIRMWARE(api) IWL1000_FW_PRE __stringify(api) ".ucode"
-+#define IWL1000_FW_PRE "iwlwifi-1000"
-+#define IWL1000_MODULE_FIRMWARE(api) IWL1000_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL100_FW_PRE "iwlwifi-100-"
--#define IWL100_MODULE_FIRMWARE(api) IWL100_FW_PRE __stringify(api) ".ucode"
-+#define IWL100_FW_PRE "iwlwifi-100"
-+#define IWL100_MODULE_FIRMWARE(api) IWL100_FW_PRE "-" __stringify(api) ".ucode"
- 
- 
- static const struct iwl_base_params iwl1000_base_params = {
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/2000.c b/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
-index ab2038a3fbe2..6f3f26da0ad5 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/2000.c
-@@ -2,7 +2,7 @@
- /******************************************************************************
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2018 - 2020 Intel Corporation
-+ * Copyright(c) 2018 - 2020, 2023 Intel Corporation
-  *****************************************************************************/
- 
- #include <linux/module.h>
-@@ -28,17 +28,17 @@
- #define EEPROM_2000_EEPROM_VERSION	(0x805)
- 
- 
--#define IWL2030_FW_PRE "iwlwifi-2030-"
--#define IWL2030_MODULE_FIRMWARE(api) IWL2030_FW_PRE __stringify(api) ".ucode"
-+#define IWL2030_FW_PRE "iwlwifi-2030"
-+#define IWL2030_MODULE_FIRMWARE(api) IWL2030_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL2000_FW_PRE "iwlwifi-2000-"
--#define IWL2000_MODULE_FIRMWARE(api) IWL2000_FW_PRE __stringify(api) ".ucode"
-+#define IWL2000_FW_PRE "iwlwifi-2000"
-+#define IWL2000_MODULE_FIRMWARE(api) IWL2000_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL105_FW_PRE "iwlwifi-105-"
--#define IWL105_MODULE_FIRMWARE(api) IWL105_FW_PRE __stringify(api) ".ucode"
-+#define IWL105_FW_PRE "iwlwifi-105"
-+#define IWL105_MODULE_FIRMWARE(api) IWL105_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL135_FW_PRE "iwlwifi-135-"
--#define IWL135_MODULE_FIRMWARE(api) IWL135_FW_PRE __stringify(api) ".ucode"
-+#define IWL135_FW_PRE "iwlwifi-135"
-+#define IWL135_MODULE_FIRMWARE(api) IWL135_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl2000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_2K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 8acbbed6eb1f..aa4320ca4c30 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -26,26 +26,26 @@
- #define IWL_22000_SMEM_OFFSET		0x400000
- #define IWL_22000_SMEM_LEN		0xD0000
- 
--#define IWL_QU_B_HR_B_FW_PRE		"iwlwifi-Qu-b0-hr-b0-"
--#define IWL_QU_C_HR_B_FW_PRE		"iwlwifi-Qu-c0-hr-b0-"
--#define IWL_QU_B_JF_B_FW_PRE		"iwlwifi-Qu-b0-jf-b0-"
--#define IWL_QU_C_JF_B_FW_PRE		"iwlwifi-Qu-c0-jf-b0-"
--#define IWL_QUZ_A_HR_B_FW_PRE		"iwlwifi-QuZ-a0-hr-b0-"
--#define IWL_QUZ_A_JF_B_FW_PRE		"iwlwifi-QuZ-a0-jf-b0-"
--#define IWL_CC_A_FW_PRE			"iwlwifi-cc-a0-"
-+#define IWL_QU_B_HR_B_FW_PRE		"iwlwifi-Qu-b0-hr-b0"
-+#define IWL_QU_C_HR_B_FW_PRE		"iwlwifi-Qu-c0-hr-b0"
-+#define IWL_QU_B_JF_B_FW_PRE		"iwlwifi-Qu-b0-jf-b0"
-+#define IWL_QU_C_JF_B_FW_PRE		"iwlwifi-Qu-c0-jf-b0"
-+#define IWL_QUZ_A_HR_B_FW_PRE		"iwlwifi-QuZ-a0-hr-b0"
-+#define IWL_QUZ_A_JF_B_FW_PRE		"iwlwifi-QuZ-a0-jf-b0"
-+#define IWL_CC_A_FW_PRE			"iwlwifi-cc-a0"
- 
- #define IWL_QU_B_HR_B_MODULE_FIRMWARE(api) \
--	IWL_QU_B_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_QU_B_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_QUZ_A_HR_B_MODULE_FIRMWARE(api) \
--	IWL_QUZ_A_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_QUZ_A_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_QUZ_A_JF_B_MODULE_FIRMWARE(api) \
--	IWL_QUZ_A_JF_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_QUZ_A_JF_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_QU_C_HR_B_MODULE_FIRMWARE(api) \
--	IWL_QU_C_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_QU_C_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_QU_B_JF_B_MODULE_FIRMWARE(api) \
--	IWL_QU_B_JF_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_QU_B_JF_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_CC_A_MODULE_FIRMWARE(api)			\
--	IWL_CC_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_CC_A_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl_22000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/5000.c b/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
-index e2e23d2bc1fe..de7ede59a994 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/5000.c
-@@ -2,7 +2,7 @@
- /******************************************************************************
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2018 - 2020 Intel Corporation
-+ * Copyright(c) 2018 - 2020, 2023 Intel Corporation
-  *****************************************************************************/
- 
- #include <linux/module.h>
-@@ -24,11 +24,11 @@
- #define EEPROM_5050_TX_POWER_VERSION	(4)
- #define EEPROM_5050_EEPROM_VERSION	(0x21E)
- 
--#define IWL5000_FW_PRE "iwlwifi-5000-"
--#define IWL5000_MODULE_FIRMWARE(api) IWL5000_FW_PRE __stringify(api) ".ucode"
-+#define IWL5000_FW_PRE "iwlwifi-5000"
-+#define IWL5000_MODULE_FIRMWARE(api) IWL5000_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL5150_FW_PRE "iwlwifi-5150-"
--#define IWL5150_MODULE_FIRMWARE(api) IWL5150_FW_PRE __stringify(api) ".ucode"
-+#define IWL5150_FW_PRE "iwlwifi-5150"
-+#define IWL5150_MODULE_FIRMWARE(api) IWL5150_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl5000_base_params = {
- 	.eeprom_size = IWLAGN_EEPROM_IMG_SIZE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/6000.c b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-index 20929e59c2f4..f013cf420569 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/6000.c
-@@ -2,7 +2,7 @@
- /******************************************************************************
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2018 - 2020 Intel Corporation
-+ * Copyright(c) 2018 - 2020, 2023 Intel Corporation
-  *****************************************************************************/
- 
- #include <linux/module.h>
-@@ -37,17 +37,17 @@
- #define EEPROM_6035_TX_POWER_VERSION	(6)
- #define EEPROM_6035_EEPROM_VERSION	(0x753)
- 
--#define IWL6000_FW_PRE "iwlwifi-6000-"
--#define IWL6000_MODULE_FIRMWARE(api) IWL6000_FW_PRE __stringify(api) ".ucode"
-+#define IWL6000_FW_PRE "iwlwifi-6000"
-+#define IWL6000_MODULE_FIRMWARE(api) IWL6000_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL6050_FW_PRE "iwlwifi-6050-"
--#define IWL6050_MODULE_FIRMWARE(api) IWL6050_FW_PRE __stringify(api) ".ucode"
-+#define IWL6050_FW_PRE "iwlwifi-6050"
-+#define IWL6050_MODULE_FIRMWARE(api) IWL6050_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL6005_FW_PRE "iwlwifi-6000g2a-"
--#define IWL6005_MODULE_FIRMWARE(api) IWL6005_FW_PRE __stringify(api) ".ucode"
-+#define IWL6005_FW_PRE "iwlwifi-6000g2a"
-+#define IWL6005_MODULE_FIRMWARE(api) IWL6005_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL6030_FW_PRE "iwlwifi-6000g2b-"
--#define IWL6030_MODULE_FIRMWARE(api) IWL6030_FW_PRE __stringify(api) ".ucode"
-+#define IWL6030_FW_PRE "iwlwifi-6000g2b"
-+#define IWL6030_MODULE_FIRMWARE(api) IWL6030_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl6000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_2K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/7000.c b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
-index b24dc5523a52..4e2afdedf4c6 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/7000.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2012-2014, 2018-2020 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2020, 2023 Intel Corporation
-  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
-  * Copyright (C) 2015 Intel Deutschland GmbH
-  */
-@@ -34,20 +34,20 @@
- #define IWL3160_DCCM_LEN		0x10000
- #define IWL7265_DCCM_LEN		0x17A00
- 
--#define IWL7260_FW_PRE "iwlwifi-7260-"
--#define IWL7260_MODULE_FIRMWARE(api) IWL7260_FW_PRE __stringify(api) ".ucode"
-+#define IWL7260_FW_PRE "iwlwifi-7260"
-+#define IWL7260_MODULE_FIRMWARE(api) IWL7260_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL3160_FW_PRE "iwlwifi-3160-"
--#define IWL3160_MODULE_FIRMWARE(api) IWL3160_FW_PRE __stringify(api) ".ucode"
-+#define IWL3160_FW_PRE "iwlwifi-3160"
-+#define IWL3160_MODULE_FIRMWARE(api) IWL3160_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL3168_FW_PRE "iwlwifi-3168-"
--#define IWL3168_MODULE_FIRMWARE(api) IWL3168_FW_PRE __stringify(api) ".ucode"
-+#define IWL3168_FW_PRE "iwlwifi-3168"
-+#define IWL3168_MODULE_FIRMWARE(api) IWL3168_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL7265_FW_PRE "iwlwifi-7265-"
--#define IWL7265_MODULE_FIRMWARE(api) IWL7265_FW_PRE __stringify(api) ".ucode"
-+#define IWL7265_FW_PRE "iwlwifi-7265"
-+#define IWL7265_MODULE_FIRMWARE(api) IWL7265_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL7265D_FW_PRE "iwlwifi-7265D-"
--#define IWL7265D_MODULE_FIRMWARE(api) IWL7265D_FW_PRE __stringify(api) ".ucode"
-+#define IWL7265D_FW_PRE "iwlwifi-7265D"
-+#define IWL7265D_MODULE_FIRMWARE(api) IWL7265D_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl7000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_16K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-index a6454287d506..d09cf8d7dc01 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/8000.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2014, 2018-2020 Intel Corporation
-+ * Copyright (C) 2014, 2018-2020, 2023 Intel Corporation
-  * Copyright (C) 2014-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016 Intel Deutschland GmbH
-  */
-@@ -27,13 +27,13 @@
- #define IWL8260_SMEM_OFFSET		0x400000
- #define IWL8260_SMEM_LEN		0x68000
- 
--#define IWL8000_FW_PRE "iwlwifi-8000C-"
-+#define IWL8000_FW_PRE "iwlwifi-8000C"
- #define IWL8000_MODULE_FIRMWARE(api) \
--	IWL8000_FW_PRE __stringify(api) ".ucode"
-+	IWL8000_FW_PRE "-" __stringify(api) ".ucode"
- 
--#define IWL8265_FW_PRE "iwlwifi-8265-"
-+#define IWL8265_FW_PRE "iwlwifi-8265"
- #define IWL8265_MODULE_FIRMWARE(api) \
--	IWL8265_FW_PRE __stringify(api) ".ucode"
-+	IWL8265_FW_PRE "-" __stringify(api) ".ucode"
- 
- #define DEFAULT_NVM_FILE_FAMILY_8000C		"nvmData-8000C"
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index 7a7ca06d46c1..0130d9a9b78b 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2021 Intel Corporation
-+ * Copyright (C) 2018-2021, 2023 Intel Corporation
-  */
- #include <linux/module.h>
- #include <linux/stringify.h>
-@@ -26,12 +26,12 @@
- #define IWL9000_SMEM_OFFSET		0x400000
- #define IWL9000_SMEM_LEN		0x68000
- 
--#define  IWL9000_FW_PRE "iwlwifi-9000-pu-b0-jf-b0-"
--#define  IWL9260_FW_PRE "iwlwifi-9260-th-b0-jf-b0-"
-+#define  IWL9000_FW_PRE "iwlwifi-9000-pu-b0-jf-b0"
-+#define  IWL9260_FW_PRE "iwlwifi-9260-th-b0-jf-b0"
- #define IWL9000_MODULE_FIRMWARE(api) \
--	IWL9000_FW_PRE __stringify(api) ".ucode"
-+	IWL9000_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL9260_MODULE_FIRMWARE(api) \
--	IWL9260_FW_PRE __stringify(api) ".ucode"
-+	IWL9260_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl9000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c b/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
-index a484cae3f784..1821e569e9b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
-@@ -26,51 +26,51 @@
- #define IWL_AX210_SMEM_OFFSET		0x400000
- #define IWL_AX210_SMEM_LEN		0xD0000
- 
--#define IWL_SO_A_JF_B_FW_PRE		"iwlwifi-so-a0-jf-b0-"
--#define IWL_SO_A_HR_B_FW_PRE		"iwlwifi-so-a0-hr-b0-"
--#define IWL_SO_A_GF_A_FW_PRE		"iwlwifi-so-a0-gf-a0-"
--#define IWL_TY_A_GF_A_FW_PRE		"iwlwifi-ty-a0-gf-a0-"
--#define IWL_SO_A_GF4_A_FW_PRE		"iwlwifi-so-a0-gf4-a0-"
--#define IWL_SO_A_MR_A_FW_PRE		"iwlwifi-so-a0-mr-a0-"
--#define IWL_MA_A_HR_B_FW_PRE		"iwlwifi-ma-a0-hr-b0-"
--#define IWL_MA_A_GF_A_FW_PRE		"iwlwifi-ma-a0-gf-a0-"
--#define IWL_MA_A_GF4_A_FW_PRE		"iwlwifi-ma-a0-gf4-a0-"
--#define IWL_MA_A_MR_A_FW_PRE		"iwlwifi-ma-a0-mr-a0-"
--#define IWL_MA_A_FM_A_FW_PRE		"iwlwifi-ma-a0-fm-a0-"
--#define IWL_MA_B_HR_B_FW_PRE		"iwlwifi-ma-b0-hr-b0-"
--#define IWL_MA_B_GF_A_FW_PRE		"iwlwifi-ma-b0-gf-a0-"
--#define IWL_MA_B_GF4_A_FW_PRE		"iwlwifi-ma-b0-gf4-a0-"
--#define IWL_MA_B_MR_A_FW_PRE		"iwlwifi-ma-b0-mr-a0-"
--#define IWL_MA_B_FM_A_FW_PRE		"iwlwifi-ma-b0-fm-a0-"
-+#define IWL_SO_A_JF_B_FW_PRE		"iwlwifi-so-a0-jf-b0"
-+#define IWL_SO_A_HR_B_FW_PRE		"iwlwifi-so-a0-hr-b0"
-+#define IWL_SO_A_GF_A_FW_PRE		"iwlwifi-so-a0-gf-a0"
-+#define IWL_TY_A_GF_A_FW_PRE		"iwlwifi-ty-a0-gf-a0"
-+#define IWL_SO_A_GF4_A_FW_PRE		"iwlwifi-so-a0-gf4-a0"
-+#define IWL_SO_A_MR_A_FW_PRE		"iwlwifi-so-a0-mr-a0"
-+#define IWL_MA_A_HR_B_FW_PRE		"iwlwifi-ma-a0-hr-b0"
-+#define IWL_MA_A_GF_A_FW_PRE		"iwlwifi-ma-a0-gf-a0"
-+#define IWL_MA_A_GF4_A_FW_PRE		"iwlwifi-ma-a0-gf4-a0"
-+#define IWL_MA_A_MR_A_FW_PRE		"iwlwifi-ma-a0-mr-a0"
-+#define IWL_MA_A_FM_A_FW_PRE		"iwlwifi-ma-a0-fm-a0"
-+#define IWL_MA_B_HR_B_FW_PRE		"iwlwifi-ma-b0-hr-b0"
-+#define IWL_MA_B_GF_A_FW_PRE		"iwlwifi-ma-b0-gf-a0"
-+#define IWL_MA_B_GF4_A_FW_PRE		"iwlwifi-ma-b0-gf4-a0"
-+#define IWL_MA_B_MR_A_FW_PRE		"iwlwifi-ma-b0-mr-a0"
-+#define IWL_MA_B_FM_A_FW_PRE		"iwlwifi-ma-b0-fm-a0"
- 
- #define IWL_SO_A_JF_B_MODULE_FIRMWARE(api) \
--	IWL_SO_A_JF_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_SO_A_JF_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SO_A_HR_B_MODULE_FIRMWARE(api) \
--	IWL_SO_A_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_SO_A_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SO_A_GF_A_MODULE_FIRMWARE(api) \
--	IWL_SO_A_GF_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_SO_A_GF_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_TY_A_GF_A_MODULE_FIRMWARE(api) \
--	IWL_TY_A_GF_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_TY_A_GF_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_A_HR_B_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_A_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_A_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_A_GF_A_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_A_GF_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_A_GF_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_A_GF4_A_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_A_GF4_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_A_GF4_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_A_MR_A_FW_MODULE_FIRMWARE(api) \
--	IWL_MA_A_MR_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_A_MR_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_A_FM_A_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_A_FM_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_A_FM_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_B_HR_B_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_B_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_B_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_B_GF_A_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_B_GF_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_B_GF_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_B_GF4_A_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_B_GF4_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_B_GF4_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_B_MR_A_FW_MODULE_FIRMWARE(api) \
--	IWL_MA_B_MR_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_B_MR_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_MA_B_FM_A_FW_MODULE_FIRMWARE(api)		\
--	IWL_MA_B_FM_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_MA_B_FM_A_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl_ax210_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-index fe6166d364cf..4f0bc6924111 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-@@ -26,59 +26,59 @@
- #define IWL_BZ_SMEM_OFFSET		0x400000
- #define IWL_BZ_SMEM_LEN			0xD0000
- 
--#define IWL_BZ_A_HR_A_FW_PRE		"iwlwifi-bz-a0-hr-b0-"
--#define IWL_BZ_A_HR_B_FW_PRE		"iwlwifi-bz-a0-hr-b0-"
--#define IWL_BZ_A_GF_A_FW_PRE		"iwlwifi-bz-a0-gf-a0-"
--#define IWL_BZ_A_GF4_A_FW_PRE		"iwlwifi-bz-a0-gf4-a0-"
--#define IWL_BZ_A_MR_A_FW_PRE		"iwlwifi-bz-a0-mr-a0-"
--#define IWL_BZ_A_FM_A_FW_PRE		"iwlwifi-bz-a0-fm-a0-"
--#define IWL_BZ_A_FM4_A_FW_PRE		"iwlwifi-bz-a0-fm4-a0-"
--#define IWL_BZ_A_FM_B_FW_PRE		"iwlwifi-bz-a0-fm-b0-"
--#define IWL_BZ_A_FM_C_FW_PRE		"iwlwifi-bz-a0-fm-c0-"
--#define IWL_BZ_A_FM4_B_FW_PRE		"iwlwifi-bz-a0-fm4-b0-"
--#define IWL_BZ_B_GF_A_FW_PRE		"iwlwifi-bz-b0-gf-a0-"
--#define IWL_BZ_B_GF4_A_FW_PRE		"iwlwifi-bz-b0-gf4-a0-"
--#define IWL_BZ_B_FM_B_FW_PRE		"iwlwifi-bz-b0-fm-b0-"
--#define IWL_BZ_B_FM4_B_FW_PRE		"iwlwifi-bz-b0-fm4-b0-"
--#define IWL_GL_A_FM_A_FW_PRE		"iwlwifi-gl-a0-fm-a0-"
--#define IWL_GL_B_FM_B_FW_PRE		"iwlwifi-gl-b0-fm-b0-"
--#define IWL_GL_C_FM_C_FW_PRE		"iwlwifi-gl-c0-fm-c0-"
--#define IWL_BZ_Z_GF_A_FW_PRE		"iwlwifi-bz-z0-gf-a0-"
-+#define IWL_BZ_A_HR_A_FW_PRE		"iwlwifi-bz-a0-hr-b0"
-+#define IWL_BZ_A_HR_B_FW_PRE		"iwlwifi-bz-a0-hr-b0"
-+#define IWL_BZ_A_GF_A_FW_PRE		"iwlwifi-bz-a0-gf-a0"
-+#define IWL_BZ_A_GF4_A_FW_PRE		"iwlwifi-bz-a0-gf4-a0"
-+#define IWL_BZ_A_MR_A_FW_PRE		"iwlwifi-bz-a0-mr-a0"
-+#define IWL_BZ_A_FM_A_FW_PRE		"iwlwifi-bz-a0-fm-a0"
-+#define IWL_BZ_A_FM4_A_FW_PRE		"iwlwifi-bz-a0-fm4-a0"
-+#define IWL_BZ_A_FM_B_FW_PRE		"iwlwifi-bz-a0-fm-b0"
-+#define IWL_BZ_A_FM_C_FW_PRE		"iwlwifi-bz-a0-fm-c0"
-+#define IWL_BZ_A_FM4_B_FW_PRE		"iwlwifi-bz-a0-fm4-b0"
-+#define IWL_BZ_B_GF_A_FW_PRE		"iwlwifi-bz-b0-gf-a0"
-+#define IWL_BZ_B_GF4_A_FW_PRE		"iwlwifi-bz-b0-gf4-a0"
-+#define IWL_BZ_B_FM_B_FW_PRE		"iwlwifi-bz-b0-fm-b0"
-+#define IWL_BZ_B_FM4_B_FW_PRE		"iwlwifi-bz-b0-fm4-b0"
-+#define IWL_GL_A_FM_A_FW_PRE		"iwlwifi-gl-a0-fm-a0"
-+#define IWL_GL_B_FM_B_FW_PRE		"iwlwifi-gl-b0-fm-b0"
-+#define IWL_GL_C_FM_C_FW_PRE		"iwlwifi-gl-c0-fm-c0"
-+#define IWL_BZ_Z_GF_A_FW_PRE		"iwlwifi-bz-z0-gf-a0"
- 
- #define IWL_BZ_A_HR_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_HR_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_HR_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_HR_B_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_GF_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_GF_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_GF_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_GF4_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_GF4_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_GF4_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_MR_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_MR_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_MR_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_FM_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_FM_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_FM_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_FM4_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_FM4_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_FM4_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_FM_B_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_FM_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_FM_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_FM_C_MODULE_FIRMWARE(api) \
--		IWL_BZ_A_FM_C_FW_PRE __stringify(api) ".ucode"
-+		IWL_BZ_A_FM_C_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_A_FM4_B_MODULE_FIRMWARE(api) \
--	IWL_BZ_A_FM4_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_A_FM4_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_B_GF_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_B_GF_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_B_GF_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_B_GF4_A_MODULE_FIRMWARE(api) \
--	IWL_BZ_B_GF4_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_B_GF4_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_B_FM_B_MODULE_FIRMWARE(api) \
--	IWL_BZ_B_FM_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_B_FM_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_BZ_B_FM4_B_MODULE_FIRMWARE(api) \
--	IWL_BZ_B_FM4_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_BZ_B_FM4_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_GL_A_FM_A_MODULE_FIRMWARE(api) \
--	IWL_GL_A_FM_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_GL_A_FM_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_GL_B_FM_B_MODULE_FIRMWARE(api) \
--	IWL_GL_B_FM_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_GL_B_FM_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_GL_C_FM_C_MODULE_FIRMWARE(api) \
--	IWL_GL_C_FM_C_FW_PRE __stringify(api) ".ucode"
-+	IWL_GL_C_FM_C_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl_bz_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-index 679cb53ae18a..6e487a83ee24 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-@@ -26,28 +26,28 @@
- #define IWL_SC_SMEM_OFFSET		0x400000
- #define IWL_SC_SMEM_LEN			0xD0000
- 
--#define IWL_SC_A_FM_B_FW_PRE		"iwlwifi-sc-a0-fm-b0-"
--#define IWL_SC_A_FM_C_FW_PRE		"iwlwifi-sc-a0-fm-c0-"
--#define IWL_SC_A_HR_A_FW_PRE		"iwlwifi-sc-a0-hr-b0-"
--#define IWL_SC_A_HR_B_FW_PRE		"iwlwifi-sc-a0-hr-b0-"
--#define IWL_SC_A_GF_A_FW_PRE		"iwlwifi-sc-a0-gf-a0-"
--#define IWL_SC_A_GF4_A_FW_PRE		"iwlwifi-sc-a0-gf4-a0-"
--#define IWL_SC_A_WH_A_FW_PRE		"iwlwifi-sc-a0-wh-a0-"
-+#define IWL_SC_A_FM_B_FW_PRE		"iwlwifi-sc-a0-fm-b0"
-+#define IWL_SC_A_FM_C_FW_PRE		"iwlwifi-sc-a0-fm-c0"
-+#define IWL_SC_A_HR_A_FW_PRE		"iwlwifi-sc-a0-hr-b0"
-+#define IWL_SC_A_HR_B_FW_PRE		"iwlwifi-sc-a0-hr-b0"
-+#define IWL_SC_A_GF_A_FW_PRE		"iwlwifi-sc-a0-gf-a0"
-+#define IWL_SC_A_GF4_A_FW_PRE		"iwlwifi-sc-a0-gf4-a0"
-+#define IWL_SC_A_WH_A_FW_PRE		"iwlwifi-sc-a0-wh-a0"
- 
- #define IWL_SC_A_FM_B_FW_MODULE_FIRMWARE(api) \
--	IWL_SC_A_FM_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_SC_A_FM_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SC_A_FM_C_FW_MODULE_FIRMWARE(api) \
--	IWL_SC_A_FM_C_FW_PRE __stringify(api) ".ucode"
-+	IWL_SC_A_FM_C_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SC_A_HR_A_FW_MODULE_FIRMWARE(api) \
--	IWL_SC_A_HR_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_SC_A_HR_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SC_A_HR_B_FW_MODULE_FIRMWARE(api) \
--	IWL_SC_A_HR_B_FW_PRE __stringify(api) ".ucode"
-+	IWL_SC_A_HR_B_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SC_A_GF_A_FW_MODULE_FIRMWARE(api) \
--	IWL_SC_A_GF_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_SC_A_GF_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SC_A_GF4_A_FW_MODULE_FIRMWARE(api) \
--	IWL_SC_A_GF4_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_SC_A_GF4_A_FW_PRE "-" __stringify(api) ".ucode"
- #define IWL_SC_A_WH_A_FW_MODULE_FIRMWARE(api) \
--	IWL_SC_A_WH_A_FW_PRE __stringify(api) ".ucode"
-+	IWL_SC_A_WH_A_FW_PRE "-" __stringify(api) ".ucode"
- 
- static const struct iwl_base_params iwl_sc_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.h b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.h
-index 32fba08b7db1..1bac3466154c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.h
-@@ -21,21 +21,9 @@ void iwl_pnvm_get_fs_name(struct iwl_trans *trans,
- 			  u8 *pnvm_name, size_t max_len)
- {
- 	char _fw_name_pre[FW_NAME_PRE_BUFSIZE];
--	const char *fw_name_pre;
--	int pre_len;
- 
--	fw_name_pre = iwl_drv_get_fwname_pre(trans, _fw_name_pre);
--
--	/*
--	 * The prefix unfortunately includes a hyphen at the end, so
--	 * don't add the dot here...
--	 */
--	snprintf(pnvm_name, max_len, "%spnvm", fw_name_pre);
--
--	/* ...but replace the hyphen with the dot here. */
--	pre_len = strlen(fw_name_pre);
--	if (pre_len < max_len && pre_len > 0)
--		pnvm_name[pre_len - 1] = '.';
-+	snprintf(pnvm_name, max_len, "%s.pnvm",
-+		 iwl_drv_get_fwname_pre(trans, _fw_name_pre));
- }
- 
- #endif /* __IWL_PNVM_H__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 4cc0285f287e..1c0cfbb6c427 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -309,7 +309,7 @@ struct iwl_fw_mon_regs {
-  * @name: Official name of the device
-  * @fw_name_pre: Firmware filename prefix. The api version and extension
-  *	(.ucode) will be added to filename before loading from disk. The
-- *	filename is constructed as fw_name_pre<api>.ucode.
-+ *	filename is constructed as <fw_name_pre>-<api>.ucode.
-  * @fw_name_mac: MAC name for this config, the remaining pieces of the
-  *	name will be generated dynamically
-  * @ucode_api_max: Highest version of uCode API supported by driver.
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index a7cf73d67371..3d87d26845e7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -174,7 +174,7 @@ const char *iwl_drv_get_fwname_pre(struct iwl_trans *trans, char *buf)
- 		return trans->cfg->fw_name_pre;
- 
- 	if (WARN_ON(!trans->cfg->fw_name_mac))
--		return "unconfigured-";
-+		return "unconfigured";
- 
- 	mac_step = iwl_drv_get_step(trans->hw_rev_step);
- 
-@@ -199,7 +199,7 @@ const char *iwl_drv_get_fwname_pre(struct iwl_trans *trans, char *buf)
- 		rf = "wh";
- 		break;
- 	default:
--		return "unknown-rf-";
-+		return "unknown-rf";
- 	}
- 
- 	cdb = CSR_HW_RFID_IS_CDB(trans->hw_rf_id) ? "4" : "";
-@@ -244,12 +244,12 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
- 		IWL_ERR(drv, "no suitable firmware found!\n");
- 
- 		if (cfg->ucode_api_min == cfg->ucode_api_max) {
--			IWL_ERR(drv, "%s%d is required\n", fw_name_pre,
-+			IWL_ERR(drv, "%s-%d is required\n", fw_name_pre,
- 				cfg->ucode_api_max);
- 		} else {
--			IWL_ERR(drv, "minimum version required: %s%d\n",
-+			IWL_ERR(drv, "minimum version required: %s-%d\n",
- 				fw_name_pre, cfg->ucode_api_min);
--			IWL_ERR(drv, "maximum version supported: %s%d\n",
-+			IWL_ERR(drv, "maximum version supported: %s-%d\n",
- 				fw_name_pre, cfg->ucode_api_max);
- 		}
- 
-@@ -258,7 +258,7 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
- 		return -ENOENT;
- 	}
- 
--	snprintf(drv->firmware_name, sizeof(drv->firmware_name), "%s%d.ucode",
-+	snprintf(drv->firmware_name, sizeof(drv->firmware_name), "%s-%d.ucode",
- 		 fw_name_pre, drv->fw_index);
- 
- 	IWL_DEBUG_FW_INFO(drv, "attempting to load firmware '%s'\n",
--- 
-2.38.1
+I'd also say you can merge those parts elsewhere but I'm planning to
+also land some locking rework that I've been working on, so it will
+probably conflict somewhere.
 
+> +++ b/net/mac80211/chan.c
+> @@ -506,11 +506,16 @@ static void _ieee80211_change_chanctx(struct ieee80=
+211_local *local,
+> =20
+>  	WARN_ON(!cfg80211_chandef_compatible(&ctx->conf.def, chandef));
+> =20
+> +	ieee80211_remove_wbrf(local, &ctx->conf.def);
+> +
+>  	ctx->conf.def =3D *chandef;
+> =20
+>  	/* check if min chanctx also changed */
+>  	changed =3D IEEE80211_CHANCTX_CHANGE_WIDTH |
+>  		  _ieee80211_recalc_chanctx_min_def(local, ctx, rsvd_for);
+> +
+> +	ieee80211_add_wbrf(local, &ctx->conf.def);
+
+You ignore the return value here.
+
+
+> @@ -668,6 +673,10 @@ static int ieee80211_add_chanctx(struct ieee80211_lo=
+cal *local,
+>  	lockdep_assert_held(&local->mtx);
+>  	lockdep_assert_held(&local->chanctx_mtx);
+> =20
+> +	err =3D ieee80211_add_wbrf(local, &ctx->conf.def);
+> +	if (err)
+> +		return err;
+
+But not here.
+
+In the code, there are basically two error paths:
+
+> +int ieee80211_add_wbrf(struct ieee80211_local *local,
+> +		       struct cfg80211_chan_def *chandef)
+> +{
+> +	struct device *dev =3D local->hw.wiphy->dev.parent;
+> +	struct wbrf_ranges_in ranges_in =3D {0};
+> +	int ret;
+> +
+> +	if (!local->wbrf_supported)
+> +		return 0;
+> +
+> +	ret =3D wbrf_get_ranges_from_chandef(chandef, &ranges_in);
+> +	if (ret)
+> +		return ret;
+
+This really won't fail, just if the bandwidth calculation was bad, but
+that's an internal error that WARNs anyway and we can ignore it.
+
+> +	return wbrf_add_exclusion(ACPI_COMPANION(dev), &ranges_in);
+
+This I find a bit confusing, why do we even propagate the error? If the
+platform has some issue with it, should we really fail the connection?
+
+
+I think it seems better to me to just make this void, and have it be
+only a notification interface?
+
+johannes
