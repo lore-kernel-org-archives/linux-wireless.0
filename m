@@ -2,109 +2,213 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CF0EB64D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 15:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B000EB64D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 16:15:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232254AbjFUPrh (ORCPT
+        id S229602AbjFUQPQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 11:47:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54504 "EHLO
+        Wed, 21 Jun 2023 12:15:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229645AbjFUPrg (ORCPT
+        with ESMTP id S232666AbjFUQPJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 11:47:36 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B32D0C2
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 08:47:35 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6687446eaccso3172631b3a.3
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 08:47:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1687362455; x=1689954455;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=yyICK4Grh5eQSb5+l1W72v1ZtWzYkP88D3f/vUEv1+c=;
-        b=Icow9X5/qqi7Mef62VwiI44ALoVFFCQb0WzRmtLHJWSFCMEAbczVVhF5MgwYNOyj6H
-         k30XYSvhg9v2s808Y1TQpIDckZz1GXrXqR1u747ODhEQN2cTNHGRihOouP3GWRE5xvsy
-         EC9NGZplM/1DAJKAm7DYOBmSPk+JrsENo210Y=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687362455; x=1689954455;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yyICK4Grh5eQSb5+l1W72v1ZtWzYkP88D3f/vUEv1+c=;
-        b=fGJgbhA3al96Ya8p7p2uvI4C/rOswdhuqBI04FqVXvbAaSou3IowuNcP8Zz/8l+Ibk
-         3y6XkkektMFmk02vMUaXqAov4dSU/ILLs9cLYM8Dft2xHe6eMpvMsvSpbOmzruMG+q6j
-         fglFOSA08sAv/sJnXIdixN2e8iRA26BzbFu6iEmI2C2fR6Gf9U4oYZar+EGYaM4itr/A
-         zzdotdX8xXsIBtjw3WNzNIYXMYjhOnNNP3lQproJFnEr5xAzhfLBwc11JpeWjGIn+JHK
-         jzQA2AAu4Qx9wctlyOxEvIt4hmroEkFx00vv0Q3na413E1lchZ8qDKwe3ZgBuDFOOyP8
-         EByQ==
-X-Gm-Message-State: AC+VfDx4IP3nrQPCmdu0Bhc006k5h5ODNBb98tQM/iJ4nQkRoKQyUTZM
-        PEF3Fi/2a5z4//CfskFwJmKQFQ==
-X-Google-Smtp-Source: ACHHUZ5qn06rNwVkGAt+8IejIMsYjjaop+zDacA9ACfbUuEy24y4a2BKLdy2mFP2+39IOe7gFpJhDg==
-X-Received: by 2002:a05:6a00:1798:b0:66a:2771:6c42 with SMTP id s24-20020a056a00179800b0066a27716c42mr5423370pfg.0.1687362455200;
-        Wed, 21 Jun 2023 08:47:35 -0700 (PDT)
-Received: from google.com ([2620:15c:9d:2:566c:67e8:1803:3438])
-        by smtp.gmail.com with ESMTPSA id j17-20020aa79291000000b0065dd1e7c3c2sm3063820pfa.184.2023.06.21.08.47.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 08:47:34 -0700 (PDT)
-Date:   Wed, 21 Jun 2023 08:47:32 -0700
-From:   Brian Norris <briannorris@chromium.org>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Christophe Jaillet <christophe.jaillet@wanadoo.fr>,
-        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] [v2] wifi: mwifiex: fix fortify warningg
-Message-ID: <ZJMblMdEOQ6/ps2J@google.com>
-References: <20230620100803.519926-1-dmantipov@yandex.ru>
- <20230620100803.519926-2-dmantipov@yandex.ru>
- <ZJHTLhQNM4oj40Zn@google.com>
- <a1f55197-6138-68d0-9e4f-8e53840d5d90@yandex.ru>
+        Wed, 21 Jun 2023 12:15:09 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2053.outbound.protection.outlook.com [40.107.223.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C1BF186;
+        Wed, 21 Jun 2023 09:15:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=E1xmLpc+1ef5weZFgu6kVmIkGRPu/NsuOH9Ttd8AAVy5ZFHULy7Ctr2SXqBn0hJhaY8Z9sQiVspGd6duGWDqtEvVvtQOpw2Jiq7RgqfJcrCVzKRGAHGnfJByw3tsm3HHJKx/G4pO47OGegOfHRbUKCGGXH8nxWFXzzNjJy8b7VITEyINiTe1tizQMaNLXfXf1dJcMqB1g+PjZJOhntRSvnjuA51221buVpX8aBZQTCI+IfvBkLiXBvi4rKF8VHCTEElE8cuD9OAcAIYssNRz943Y9ZtkRdQ3CiE8y4Q5OCJZtp7xBWwxCxmFDnRDHk/B0wS4aHK14MBJ11FEN4lYmA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=2XuIkuVB09s2z0EXoibkagIFTtxAv4WP2pPDyyxrThI=;
+ b=WoRnwhqT2Esd8RNktcLsIpNARcs/Jm23ypTAMlfqGRJ5pmKK+cna8MzCm+muOYQ/NqYPvdg0x2J40mc+eJKR6fqc2MiT+B2z2e26BtKpOIGq9DwGGgqL+fS/SnYlWUZl4gRUgd5mBrgfGgICw7rrFpuvov2zkoq8RUWQ3+z4QPLnl79LEMZ6qBV4XPjP1V04Q0Ep3/d9ZxYcpypwKpEDWq9Nr7rHUEkvwvE09p7iJnr//MjS5GyhM+EZh10qW3OqTX32UfVb9CN36zBPZUjENXwHVXStDok93l0EFsDNfbPC0+ZF25P7JnvmeZ8RqSWY9z1bphjtdOCI3W78YCZj4A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2XuIkuVB09s2z0EXoibkagIFTtxAv4WP2pPDyyxrThI=;
+ b=wSwpo+F0gqG87cDBUm4gI5LwnqC2UYoCbiq+XapIEpYXslzegdcBThn/OVeYMXEBBSiv9VgrmNEArJgC9CYgfRqjUk/TzQDU4nOX/+of/y/YVdvTCiHA8C+cPhL4HjcoF1GEADgAkochIqP7WBBViPxhauRl30PSq9OaNhaU6jU=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from MN0PR12MB6101.namprd12.prod.outlook.com (2603:10b6:208:3cb::10)
+ by MW4PR12MB5602.namprd12.prod.outlook.com (2603:10b6:303:169::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.23; Wed, 21 Jun
+ 2023 16:15:05 +0000
+Received: from MN0PR12MB6101.namprd12.prod.outlook.com
+ ([fe80::dfcf:f53c:c778:6f70]) by MN0PR12MB6101.namprd12.prod.outlook.com
+ ([fe80::dfcf:f53c:c778:6f70%5]) with mapi id 15.20.6521.020; Wed, 21 Jun 2023
+ 16:15:05 +0000
+Message-ID: <b1abec47-04df-4481-d680-43c5ff3cbb48@amd.com>
+Date:   Wed, 21 Jun 2023 11:15:00 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.2
+Subject: Re: [PATCH V4 1/8] drivers/acpi: Add support for Wifi band RF
+ mitigations
+Content-Language: en-US
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Lunn <andrew@lunn.ch>, Evan Quan <evan.quan@amd.com>
+Cc:     rafael@kernel.org, lenb@kernel.org, alexander.deucher@amd.com,
+        christian.koenig@amd.com, Xinhui.Pan@amd.com, airlied@gmail.com,
+        daniel@ffwll.ch, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, mdaenzer@redhat.com,
+        maarten.lankhorst@linux.intel.com, tzimmermann@suse.de,
+        hdegoede@redhat.com, jingyuwang_vip@163.com, lijo.lazar@amd.com,
+        jim.cromie@gmail.com, bellosilicio@gmail.com,
+        andrealmeid@igalia.com, trix@redhat.com, jsg@jsg.id.au,
+        arnd@arndb.de, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+References: <20230621054603.1262299-1-evan.quan@amd.com>
+ <20230621054603.1262299-2-evan.quan@amd.com>
+ <3a7c8ffa-de43-4795-ae76-5cd9b00c52b5@lunn.ch>
+ <216f3c5aa1299100a0009ddf4e95b019855a32be.camel@sipsolutions.net>
+From:   "Limonciello, Mario" <mario.limonciello@amd.com>
+In-Reply-To: <216f3c5aa1299100a0009ddf4e95b019855a32be.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SA0PR11CA0193.namprd11.prod.outlook.com
+ (2603:10b6:806:1bc::18) To MN0PR12MB6101.namprd12.prod.outlook.com
+ (2603:10b6:208:3cb::10)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a1f55197-6138-68d0-9e4f-8e53840d5d90@yandex.ru>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN0PR12MB6101:EE_|MW4PR12MB5602:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8c70935e-48eb-4e8f-026f-08db7272ac8d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: kNj8/xhpnNQTd3MFZcv99BwPIF296qlnDlLXS5NC+GIqnb0HE9pjgTc1jBVIh+gUvCSIHsiuDMYuZKSmXmE/P+XGJBzk6rHKIVigotKDAcd7yQWi/Tw5YuvLbhmuMcWCpsqwB02x0PKuNAd9zZoqeAyjGhqwZYESvSyO6gbHSF1EfqO15JF6BqMVzb2vpHfvXPCYhUz8lgb7qtH1YHIxCmwRqrUBMTr1Vl2VKNt1cuMuS4+vfSmT1kqOrJ8MVPYVLJcyEeRQR+4llXHmiECTdu2d598YZcXM0me6Xk433xUqCL+A/mwTXwvCsk1sYwIgQpqaLsiDjPL/LR4w6rsax15r1ubbP4DCEotqO6XW9akaIJ55BJxs/d7mgZbBvxTOMK/3UXxO+ll+7KL/ReyDiOqZkSl/VpzNU9SUJK/8oJZx4BxymzHWoUqRFi/Ao5CEbmsKXXpRjSgrVHkqtO8OHgJfwt1uulPL9QR0dVnmjn4zTPRLcdsOMDHrSBL+/qrXyBTSo7ILk6aTZ/xOdlpUWh2i+UPZQzLJUjaHwV9VuAkMFDmKSxcaUMNBhulclbeu8DOdh73Eul6ihJSFxkWvhfA5iKyYmdYHuYDFnebx8bvud28A4ogmfqzlhTzmzK47hmzdqwz2xovv3Ke060aU+A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN0PR12MB6101.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(366004)(346002)(136003)(39860400002)(396003)(376002)(451199021)(38100700002)(5660300002)(53546011)(26005)(6512007)(6506007)(83380400001)(186003)(2616005)(7416002)(41300700001)(2906002)(8676002)(8936002)(36756003)(6666004)(478600001)(6486002)(4326008)(6636002)(66476007)(66556008)(66946007)(316002)(31696002)(86362001)(110136005)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Y2plNGpaeUxlRmNrOGFVcFVKYWNoeWJyZHJGay83eVYxNXNQaFV0aVRhd05K?=
+ =?utf-8?B?ak9jY2preXg4Vm9UMVUxSWVtUkdtbFV2d29DVm01cTlJZnVoREdWY3pjSUVT?=
+ =?utf-8?B?c0Z4dmRacnkyQnIzcHVLc2I5K1V1US8xb1NXK3czZUxtSUx3bk55eStadmN5?=
+ =?utf-8?B?Nnlub3NlK1NDTkp0L1o5cHIyU3lvQUFHU1Q5dEEyeWFxNXJ5ZnMwbDBtUjFh?=
+ =?utf-8?B?Z1Y3UUNwRU1FUnRFYWtZdWJHVTZjVHlsQURydG5GQjgreCtobS8xMmpBd2Rw?=
+ =?utf-8?B?KzRJNjF5d1hvZDJjWVpRTnVqRnN6VFJ2SThXNmhHaHJwL1J5elBwRktnTDhN?=
+ =?utf-8?B?KytjK0s2QnA1bGQ4MjNIaytYdTZuUHB5MjQvL3QxbmtPSldRbFhnRW5sdzN5?=
+ =?utf-8?B?VDJmU284NHh5SGVCdEdGTVd4MDdFZDF5L2d4UWx5eldXVmRLd2p1QWZnNWUr?=
+ =?utf-8?B?dXJ1OWpMRWc4OW5TTkxRQ04zc01XVzhkOWRHaWJHdzJacTB1WVBYeXp5Qkxa?=
+ =?utf-8?B?NTZuUlR0b0tjNzkzY1lIMWUrMU12MzNrcVcvSDRLcGg5RTJyVFRRUjBNNkY1?=
+ =?utf-8?B?MXlkL3NpMURzWERHUjJIZkViazQzTlRCZ01wRnE4NCs5d2ZsdUFiUEhjWlZm?=
+ =?utf-8?B?ZUxXdmZvYnZ6K2xjVmVQYjZENGdLdFFmQWwyVjdjZzcybzZSOW1kV0Q2Z0Rt?=
+ =?utf-8?B?eDRqcmlPbUNibCtlVU1OVUtDa1RaTDFZTFdhYklQamw0dWVXWWxHbDZtWisz?=
+ =?utf-8?B?c2pHOTFFT1E5YmdtdHZKbTRkclJpQUhiblEyL2hYWTd4cEhiWTJWYjlaQW1Y?=
+ =?utf-8?B?NUJEV1ArMnBIQ0QrWG5yV0o3aTNHS3AyL25GMThrMVR5UE9nN2tGcEEwM3Vo?=
+ =?utf-8?B?SXl0MHYxZldCWFdBR1RSbTFoZWc0dEdidXU2dy9JSGNXUWcrSEZDZ21XRCtt?=
+ =?utf-8?B?bDJCN2RnNnYzc21MMk8wN05ZUnZoU0JCempLTWVpZThjZlRxRmthaXl2MG9F?=
+ =?utf-8?B?YWtSUExlUDlLVG5pOW8vZVRLTExjbXhhOGZEekV6UytZczlmeXAvU2o3YnYr?=
+ =?utf-8?B?aS9JTjRrT2xJT2VVRUhFdmgya0EzMGJoeVdtdlNVSVZjalFGS25zZUp5bmhh?=
+ =?utf-8?B?bW1xUGQvZ3BpaFVVWk55eVVzNkVRcktBTzhuVGdNSnUyZWFkYjkyVTR2YUJG?=
+ =?utf-8?B?MGhuZzNLTjlFUmpJQlU5bkc2UG1lT0tScVArRGE3N2gwSjFwMjcwVXNwRk5D?=
+ =?utf-8?B?R21XT0JsWG9sQkJ2T2xxUWh1cTAya2RDejVjbzFGL21EREpiamd0bzZ4OU5D?=
+ =?utf-8?B?andyNmNTeEw5cTQvQkRuZ0t2ZTc3STVLS0xxc1pnZnFnRHhOL2lsN29BWllZ?=
+ =?utf-8?B?QjBHQ0NCcWpLVUp0WGpPOTE0LzdDdi9DZk05WFZmUUpIN1JNS3ZjOU9CeWJm?=
+ =?utf-8?B?ZXVOM2g2YXJtK3ZweWdFYlQwY1NvUWtnS1BQZm5yREttcnU1c2VPSWo5T0Np?=
+ =?utf-8?B?bEhWK0hocGlSdEtJbTJUdGs3M2dqRGN2VTg1aTMyd0Z5UEVRNHpwUkFvRzls?=
+ =?utf-8?B?NGNBRmJYUS9iM1Y5THlia0pKKzZqclEyUU5aNTRBOFl6dmthWnR3emxZSTcy?=
+ =?utf-8?B?THg4ZzhYSms3MFp1dExCWEJRZGdlbU1vZXV0Y2U0SFEzV1pQaE92L2U3cU8z?=
+ =?utf-8?B?WHJyUHU5UzFPNjVEcmNkeTFrZ05pRFVYNVlvWGo0MnR3KzRiZk1XVXNicWVB?=
+ =?utf-8?B?UnRleEZNdDE1TnU2dy8xSXZQTmxFU0RyRTRXc2NzTFBXYkNjbFMyT0crU1Vp?=
+ =?utf-8?B?RVpwV1NROXJUcXpMaVdGaTN4eWNPb3J0MHpRSHVsZWhHTDhPRUZMOU9FeGVD?=
+ =?utf-8?B?dEhLWSsrTXh0U1JPMnZkY3VscmZrRzY3MmFqMnMyc1ZWaVRCT2tNOHRIVzBp?=
+ =?utf-8?B?cHFLT3ArTi9IMUhHTGpUY0hnajBZc3VGMEZvbWtiY3p6WkFWT2Jla1RpSERZ?=
+ =?utf-8?B?MG1QMDJpSk9sbkxPNG83S21RQk1neStFZTNnY014TlhBWjQzVzQrSFNuVWhH?=
+ =?utf-8?B?cDNyNUhOOVZHTzJBV0ZsN3loL2MzTmNUNUhMWDBBU0h4T0w5VlJNSytrTnJr?=
+ =?utf-8?Q?3k+8C/2FQKzWb5hwJlMrWKC/q?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8c70935e-48eb-4e8f-026f-08db7272ac8d
+X-MS-Exchange-CrossTenant-AuthSource: MN0PR12MB6101.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jun 2023 16:15:05.1658
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: aCcOnNKscodZcJZ3WJUzqWYGQI1IEtArbgmYSfl+Uf0qqlHf1iyRsMTcNs4PSfXqWv6fCVGaH9RcZhE4WeZbDA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB5602
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jun 21, 2023 at 11:32:25AM +0300, Dmitry Antipov wrote:
-> On 6/20/23 19:26, Brian Norris wrote:
-> 
-> > This invocation seems a bit suspect, as it uses a 'sizeof' of a field
-> > that doesn't match the actual pointer (it's off by 1 byte), but that's
-> > not your fault. I suppose it's no wonder we had so many problems with
-> > TDLS support on mwifiex...
-> 
-> Hm, ieee80211_prep_tdls_direct() seems takes this byte into account.
 
-Presumably it's part of the standard packet format. (I haven't
-checked.) But in this case, we're talking about the firmware format that
-Marvell firmware expects -- which isn't documented at all. Usually it's
-at least related to the IEEE spec, but it isn't guaranteed to be laid
-out exactly the same.
+On 6/21/2023 10:39 AM, Johannes Berg wrote:
+> On Wed, 2023-06-21 at 17:36 +0200, Andrew Lunn wrote:
+>> On Wed, Jun 21, 2023 at 01:45:56PM +0800, Evan Quan wrote:
+>>> From: Mario Limonciello <mario.limonciello@amd.com>
+>>>
+>>> Due to electrical and mechanical constraints in certain platform designs
+>>> there may be likely interference of relatively high-powered harmonics of
+>>> the (G-)DDR memory clocks with local radio module frequency bands used
+>>> by Wifi 6/6e/7.
+>>>
+>>> To mitigate this, AMD has introduced an ACPI based mechanism that
+>>> devices can use to notify active use of particular frequencies so
+>>> that devices can make relative internal adjustments as necessary
+>>> to avoid this resonance.
+>> Do only ACPI based systems have:
+>>
+>>     interference of relatively high-powered harmonics of the (G-)DDR
+>>     memory clocks with local radio module frequency bands used by
+>>     Wifi 6/6e/7."
+>>
+>> Could Device Tree based systems not experience this problem?
+> They could, of course, but they'd need some other driver to change
+> _something_ in the system? I don't even know what this is doing
+> precisely under the hood in the ACPI BIOS, perhaps it adjusts the DDR
+> memory clock frequency in response to WiFi using a frequency that will
+> cause interference with harmonics.
 
-BTW, mwifiex doesn't actually use those ieee8021_*() functions for the
-most part, because it's not a mac80211 driver.
+The way that WBRF has been architected, it's intended to be able
+to scale to any type of device pair that has harmonic issues.
 
-> But
-> do you know why 'u.action.u.tdls_discover_resp' is ended with a flexible
-> array, e.g.:
-> 
-> struct {
-> 	u8 action_code;
-> 	u8 dialog_token;
-> 	__le16 capability;
-> 	u8 variable[0];
-> } __packed tdls_discover_resp;
+In the first use (Wifi 6e + specific AMD dGPUs) that matches this
+series BIOS has the following purposes:
 
-Not without more guess-based investigation. My poking around this driver
-is more often based on code reading and problem investigation, not based
-on any private knowledge of the mwifiex firmware or hardware.
+1) The existence of _DSM indicates that the system may not have
+adequate shielding and should be using these mitigations.
 
-But my guess is that it's supposed to reflect the dynamic amount of
-additional IEs appended to this frame, before the body -- such as what
-is copied in mwifiex_tdls_append_rates_ie() (or
-ieee80211_tdls_add_ies() if we're talking about a mac80211 driver?). The
-field itself doesn't actually matter, because it isn't used in the
-driver AFAICT.
+2) Notification mechanism of frequency use.
 
-Brian
+For the first problematic devices we *could* have done notifications
+entirely in native Linux kernel code with notifier chains.
+However that still means you need a hint from the platform that the
+functionality is needed like a _DSD bit.
+
+It's also done this way so that AML could do some of the notifications
+directly to applicable devices in the future without needing "consumer"
+driver participation.
+
+>>> +/**
+>>> + * APIs needed by drivers/subsystems for contributing frequencies:
+>>> + * During probe, check `wbrf_supported_producer` to see if WBRF is supported.
+>>> + * If adding frequencies, then call `wbrf_add_exclusion` with the
+>>> + * start and end points specified for the frequency ranges added.
+>>> + * If removing frequencies, then call `wbrf_remove_exclusion` with
+>>> + * start and end points specified for the frequency ranges added.
+>>> + */
+>>> +bool wbrf_supported_producer(struct acpi_device *adev);
+>>> +int wbrf_add_exclusion(struct acpi_device *adev,
+>>> +		       struct wbrf_ranges_in *in);
+>>> +int wbrf_remove_exclusion(struct acpi_device *adev,
+>>> +			  struct wbrf_ranges_in *in);
+>> Could struct device be used here, to make the API agnostic to where
+>> the information is coming from? That would then allow somebody in the
+>> future to implement a device tree based information provider.
+> That does make sense, and it wouldn't even be that much harder if we
+> assume in a given platform there's only one provider - but once you go
+> beyond that these would need to call function pointers I guess? Though
+> that could be left for "future improvement" too.
+>
+> johannes
+
+There's more to it than just sending in the frequency that is
+added or removed.  The notification path comes from ACPI as well.
+
+This first implementation only has one provider and consumer
+but yes, we envision that there could be multiple of each party
+and that AML may be the mechanism for some consumers to react.
+
