@@ -2,119 +2,109 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D14EEB64D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 15:41:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CF0EB64D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 15:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233718AbjFUPlR (ORCPT
+        id S232254AbjFUPrh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 11:41:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45470 "EHLO
+        Wed, 21 Jun 2023 11:47:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233714AbjFUPlC (ORCPT
+        with ESMTP id S229645AbjFUPrg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 11:41:02 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6DBF1730;
-        Wed, 21 Jun 2023 08:40:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=OhDuVypSV/dK9LdiPPdtSdnbSPSPgh1jOUoeh6hEOp4=;
-        t=1687362033; x=1688571633; b=qK4AD1Xxn32jlrmMMB/HAIreFL9d5b/h5egkCbFHFNG0ruz
-        kmByeOsdqBcP3BzUnTSa+0icEutndYkWgktqVdsjEsUEz4bktmkzShIhgPBqMjr+r2NHEPWiqlHxW
-        NJ+0KYQbWpoi9PoOLBfgYGXMATVGDlpVtrINoBkEbDnanItI6CLlMbY3Y5nIqWf08gIEzGPfgrNEw
-        2LThYmPQcbQa5fW+9CNxDap9Yen7ugHYXCo6w3sY3pktGHfFV3z43aJq9PTn+QNbsCtsgS1rbyfUh
-        Obvw1EYFDXaJ9IXId95QTyUwQF5zTrmGXZ3DM3hS2csrGa8wOPXyvv4zM1DQYhkA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qBzvq-00DkED-2Q;
-        Wed, 21 Jun 2023 17:39:42 +0200
-Message-ID: <216f3c5aa1299100a0009ddf4e95b019855a32be.camel@sipsolutions.net>
-Subject: Re: [PATCH V4 1/8] drivers/acpi: Add support for Wifi band RF
- mitigations
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Andrew Lunn <andrew@lunn.ch>, Evan Quan <evan.quan@amd.com>
-Cc:     rafael@kernel.org, lenb@kernel.org, alexander.deucher@amd.com,
-        christian.koenig@amd.com, Xinhui.Pan@amd.com, airlied@gmail.com,
-        daniel@ffwll.ch, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, mario.limonciello@amd.com,
-        mdaenzer@redhat.com, maarten.lankhorst@linux.intel.com,
-        tzimmermann@suse.de, hdegoede@redhat.com, jingyuwang_vip@163.com,
-        lijo.lazar@amd.com, jim.cromie@gmail.com, bellosilicio@gmail.com,
-        andrealmeid@igalia.com, trix@redhat.com, jsg@jsg.id.au,
-        arnd@arndb.de, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Date:   Wed, 21 Jun 2023 17:39:41 +0200
-In-Reply-To: <3a7c8ffa-de43-4795-ae76-5cd9b00c52b5@lunn.ch>
-References: <20230621054603.1262299-1-evan.quan@amd.com>
-         <20230621054603.1262299-2-evan.quan@amd.com>
-         <3a7c8ffa-de43-4795-ae76-5cd9b00c52b5@lunn.ch>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
+        Wed, 21 Jun 2023 11:47:36 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B32D0C2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 08:47:35 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6687446eaccso3172631b3a.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 08:47:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1687362455; x=1689954455;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=yyICK4Grh5eQSb5+l1W72v1ZtWzYkP88D3f/vUEv1+c=;
+        b=Icow9X5/qqi7Mef62VwiI44ALoVFFCQb0WzRmtLHJWSFCMEAbczVVhF5MgwYNOyj6H
+         k30XYSvhg9v2s808Y1TQpIDckZz1GXrXqR1u747ODhEQN2cTNHGRihOouP3GWRE5xvsy
+         EC9NGZplM/1DAJKAm7DYOBmSPk+JrsENo210Y=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687362455; x=1689954455;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yyICK4Grh5eQSb5+l1W72v1ZtWzYkP88D3f/vUEv1+c=;
+        b=fGJgbhA3al96Ya8p7p2uvI4C/rOswdhuqBI04FqVXvbAaSou3IowuNcP8Zz/8l+Ibk
+         3y6XkkektMFmk02vMUaXqAov4dSU/ILLs9cLYM8Dft2xHe6eMpvMsvSpbOmzruMG+q6j
+         fglFOSA08sAv/sJnXIdixN2e8iRA26BzbFu6iEmI2C2fR6Gf9U4oYZar+EGYaM4itr/A
+         zzdotdX8xXsIBtjw3WNzNIYXMYjhOnNNP3lQproJFnEr5xAzhfLBwc11JpeWjGIn+JHK
+         jzQA2AAu4Qx9wctlyOxEvIt4hmroEkFx00vv0Q3na413E1lchZ8qDKwe3ZgBuDFOOyP8
+         EByQ==
+X-Gm-Message-State: AC+VfDx4IP3nrQPCmdu0Bhc006k5h5ODNBb98tQM/iJ4nQkRoKQyUTZM
+        PEF3Fi/2a5z4//CfskFwJmKQFQ==
+X-Google-Smtp-Source: ACHHUZ5qn06rNwVkGAt+8IejIMsYjjaop+zDacA9ACfbUuEy24y4a2BKLdy2mFP2+39IOe7gFpJhDg==
+X-Received: by 2002:a05:6a00:1798:b0:66a:2771:6c42 with SMTP id s24-20020a056a00179800b0066a27716c42mr5423370pfg.0.1687362455200;
+        Wed, 21 Jun 2023 08:47:35 -0700 (PDT)
+Received: from google.com ([2620:15c:9d:2:566c:67e8:1803:3438])
+        by smtp.gmail.com with ESMTPSA id j17-20020aa79291000000b0065dd1e7c3c2sm3063820pfa.184.2023.06.21.08.47.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Jun 2023 08:47:34 -0700 (PDT)
+Date:   Wed, 21 Jun 2023 08:47:32 -0700
+From:   Brian Norris <briannorris@chromium.org>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Christophe Jaillet <christophe.jaillet@wanadoo.fr>,
+        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] [v2] wifi: mwifiex: fix fortify warningg
+Message-ID: <ZJMblMdEOQ6/ps2J@google.com>
+References: <20230620100803.519926-1-dmantipov@yandex.ru>
+ <20230620100803.519926-2-dmantipov@yandex.ru>
+ <ZJHTLhQNM4oj40Zn@google.com>
+ <a1f55197-6138-68d0-9e4f-8e53840d5d90@yandex.ru>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a1f55197-6138-68d0-9e4f-8e53840d5d90@yandex.ru>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2023-06-21 at 17:36 +0200, Andrew Lunn wrote:
-> On Wed, Jun 21, 2023 at 01:45:56PM +0800, Evan Quan wrote:
-> > From: Mario Limonciello <mario.limonciello@amd.com>
-> >=20
-> > Due to electrical and mechanical constraints in certain platform design=
-s
-> > there may be likely interference of relatively high-powered harmonics o=
-f
-> > the (G-)DDR memory clocks with local radio module frequency bands used
-> > by Wifi 6/6e/7.
-> >=20
-> > To mitigate this, AMD has introduced an ACPI based mechanism that
-> > devices can use to notify active use of particular frequencies so
-> > that devices can make relative internal adjustments as necessary
-> > to avoid this resonance.
->=20
-> Do only ACPI based systems have:
->=20
->    interference of relatively high-powered harmonics of the (G-)DDR
->    memory clocks with local radio module frequency bands used by
->    Wifi 6/6e/7."
->=20
-> Could Device Tree based systems not experience this problem?
+On Wed, Jun 21, 2023 at 11:32:25AM +0300, Dmitry Antipov wrote:
+> On 6/20/23 19:26, Brian Norris wrote:
+> 
+> > This invocation seems a bit suspect, as it uses a 'sizeof' of a field
+> > that doesn't match the actual pointer (it's off by 1 byte), but that's
+> > not your fault. I suppose it's no wonder we had so many problems with
+> > TDLS support on mwifiex...
+> 
+> Hm, ieee80211_prep_tdls_direct() seems takes this byte into account.
 
-They could, of course, but they'd need some other driver to change
-_something_ in the system? I don't even know what this is doing
-precisely under the hood in the ACPI BIOS, perhaps it adjusts the DDR
-memory clock frequency in response to WiFi using a frequency that will
-cause interference with harmonics.
+Presumably it's part of the standard packet format. (I haven't
+checked.) But in this case, we're talking about the firmware format that
+Marvell firmware expects -- which isn't documented at all. Usually it's
+at least related to the IEEE spec, but it isn't guaranteed to be laid
+out exactly the same.
 
+BTW, mwifiex doesn't actually use those ieee8021_*() functions for the
+most part, because it's not a mac80211 driver.
 
-> > +/**
-> > + * APIs needed by drivers/subsystems for contributing frequencies:
-> > + * During probe, check `wbrf_supported_producer` to see if WBRF is sup=
-ported.
-> > + * If adding frequencies, then call `wbrf_add_exclusion` with the
-> > + * start and end points specified for the frequency ranges added.
-> > + * If removing frequencies, then call `wbrf_remove_exclusion` with
-> > + * start and end points specified for the frequency ranges added.
-> > + */
-> > +bool wbrf_supported_producer(struct acpi_device *adev);
-> > +int wbrf_add_exclusion(struct acpi_device *adev,
-> > +		       struct wbrf_ranges_in *in);
-> > +int wbrf_remove_exclusion(struct acpi_device *adev,
-> > +			  struct wbrf_ranges_in *in);
->=20
-> Could struct device be used here, to make the API agnostic to where
-> the information is coming from? That would then allow somebody in the
-> future to implement a device tree based information provider.
+> But
+> do you know why 'u.action.u.tdls_discover_resp' is ended with a flexible
+> array, e.g.:
+> 
+> struct {
+> 	u8 action_code;
+> 	u8 dialog_token;
+> 	__le16 capability;
+> 	u8 variable[0];
+> } __packed tdls_discover_resp;
 
-That does make sense, and it wouldn't even be that much harder if we
-assume in a given platform there's only one provider - but once you go
-beyond that these would need to call function pointers I guess? Though
-that could be left for "future improvement" too.
+Not without more guess-based investigation. My poking around this driver
+is more often based on code reading and problem investigation, not based
+on any private knowledge of the mwifiex firmware or hardware.
 
-johannes
+But my guess is that it's supposed to reflect the dynamic amount of
+additional IEs appended to this frame, before the body -- such as what
+is copied in mwifiex_tdls_append_rates_ie() (or
+ieee80211_tdls_add_ies() if we're talking about a mac80211 driver?). The
+field itself doesn't actually matter, because it isn't used in the
+driver AFAICT.
+
+Brian
