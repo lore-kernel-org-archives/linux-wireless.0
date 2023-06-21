@@ -2,104 +2,97 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BA9EB64D8
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 15:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5371EB64DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 15:39:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232487AbjFUPL6 (ORCPT
+        id S233664AbjFUPjZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 11:11:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51282 "EHLO
+        Wed, 21 Jun 2023 11:39:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233242AbjFUPLh (ORCPT
+        with ESMTP id S233545AbjFUPiz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 11:11:37 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89C8159C7
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 08:07:05 -0700 (PDT)
-Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
-        by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 3808B5C43F2
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 14:48:51 +0000 (UTC)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 8D1D024005D;
-        Wed, 21 Jun 2023 14:48:39 +0000 (UTC)
-Received: from [192.168.1.115] (unknown [98.97.112.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id 7A7BE13C2B0;
-        Wed, 21 Jun 2023 07:48:38 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7A7BE13C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1687358918;
-        bh=SzAlpnHZecZa3N2uhe/a8AbUZuAh1g1+ys6diEISfn8=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=CsJD1QcLHhgGEG36ngd3J6EWh/uXOtISwsMlwStvFXu9LLSS4Pm+XSI2qdcb90H9P
-         X4aIZSxKFLLGnDYJU0JbYEVmKAidKV7oslMURH1gi7B9uTdjGlA1hNZmeqWLDWQUHS
-         um2v2brkFQOOpS2fnVguimQ0Kmk/vxI9YDuaqGaw=
-Subject: Re: [PATCH 10/19] wifi: iwlwifi: limit EHT capabilities based on PCIe
- link speed
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        gregory.greenman@intel.com
-Cc:     linux-wireless@vger.kernel.org
-References: <20230620100405.45117-1-gregory.greenman@intel.com>
- <20230620125813.b77a1574a0a7.Id4120c161fb7df6dedc70d5f3e3829e9117b8cb1@changeid>
- <d220c5b6-7c8f-19cd-12d0-ceb484e29e48@candelatech.com>
- <53612acba151d031f636626db20c1c60db09fdd0.camel@sipsolutions.net>
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <9f4c589a-2160-cedb-d79a-1f57ea5244da@candelatech.com>
-Date:   Wed, 21 Jun 2023 07:48:38 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        Wed, 21 Jun 2023 11:38:55 -0400
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08D731BC6;
+        Wed, 21 Jun 2023 08:38:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+        s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
+        Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
+        Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
+        bh=UNTcJ7CGT1Lez3ibsb1q0hENK9CgDCucVIYKxGl3TOA=; b=kX5Xr6VI87reS7/GA49etmzzJa
+        8UkZZawMQsboaJaBH0eNpIzk1bR3EcbBbU0KF6jAsbQhofPO8pHw+ovgkoxLGGJjfHxE1vVFC+buE
+        dyHRIxHy1ZMVaryyek2UvdEHqUuLiwmWXnN8UhABnjwmxx9ilAZZaPSduE0A55vaKMZ8=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+        (envelope-from <andrew@lunn.ch>)
+        id 1qBzsX-00H9mp-GK; Wed, 21 Jun 2023 17:36:17 +0200
+Date:   Wed, 21 Jun 2023 17:36:17 +0200
+From:   Andrew Lunn <andrew@lunn.ch>
+To:     Evan Quan <evan.quan@amd.com>
+Cc:     rafael@kernel.org, lenb@kernel.org, alexander.deucher@amd.com,
+        christian.koenig@amd.com, Xinhui.Pan@amd.com, airlied@gmail.com,
+        daniel@ffwll.ch, johannes@sipsolutions.net, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        mario.limonciello@amd.com, mdaenzer@redhat.com,
+        maarten.lankhorst@linux.intel.com, tzimmermann@suse.de,
+        hdegoede@redhat.com, jingyuwang_vip@163.com, lijo.lazar@amd.com,
+        jim.cromie@gmail.com, bellosilicio@gmail.com,
+        andrealmeid@igalia.com, trix@redhat.com, jsg@jsg.id.au,
+        arnd@arndb.de, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH V4 1/8] drivers/acpi: Add support for Wifi band RF
+ mitigations
+Message-ID: <3a7c8ffa-de43-4795-ae76-5cd9b00c52b5@lunn.ch>
+References: <20230621054603.1262299-1-evan.quan@amd.com>
+ <20230621054603.1262299-2-evan.quan@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <53612acba151d031f636626db20c1c60db09fdd0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-MW
-Content-Transfer-Encoding: 7bit
-X-MDID: 1687358920-6ZfSgWMvdibv
-X-MDID-O: us5;at1;1687358920;6ZfSgWMvdibv;<greearb@candelatech.com>;21a4e426aab50b16d8e6565b1650ef6d
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230621054603.1262299-2-evan.quan@amd.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 6/21/23 4:57 AM, Johannes Berg wrote:
-> On Tue, 2023-06-20 at 06:19 -0700, Ben Greear wrote:
->> On 6/20/23 3:03 AM, gregory.greenman@intel.com wrote:
->>> From: Johannes Berg <johannes.berg@intel.com>
->>>
->>> If a discrete NIC is connected to a PCIe link hat isn't at least
->>> Gen3 (8.0 GT/s), then we cannot sustain 320 MHz traffic, so remove
->>> that from EHT capabilities in that case.
->>>
->>> While at it, also move setting 320 MHz beamformee to the right
->>> place in the code so it's not set while not supporting 320 MHz.
->>
->> Is there not an advantage to allowing 320Mhz for longer distance connections
->> where signal is relatively weak, so over-all tput would easily fit in lesser
->> pcie bus?  Especially on 6E band where the US regdom allows more over-all power
->> when using wider bandwidths?
->>
+On Wed, Jun 21, 2023 at 01:45:56PM +0800, Evan Quan wrote:
+> From: Mario Limonciello <mario.limonciello@amd.com>
 > 
-> I actually don't know. This surely isn't ideal, but it's the only way to
-> really force the AP to not send too much than the NIC can pass out, and
-> it gets unhappy if it can't.
-
-So this is to work around hardware/firmware bug in NIC?  If so, that should
-be mentioned.
-
-I have heard in the past that higher bandwidth works better than higher NSS
-in a lot of cases, so if HW/FW can be made to deal with floods in unlikely
-case that the RF is perfect enough to saturate the PCI bus, then I think you
-should allow 320Mhz even on slower PCI bus configurations.
-
-Thanks,
-Ben
-
+> Due to electrical and mechanical constraints in certain platform designs
+> there may be likely interference of relatively high-powered harmonics of
+> the (G-)DDR memory clocks with local radio module frequency bands used
+> by Wifi 6/6e/7.
 > 
-> johannes
-> 
+> To mitigate this, AMD has introduced an ACPI based mechanism that
+> devices can use to notify active use of particular frequencies so
+> that devices can make relative internal adjustments as necessary
+> to avoid this resonance.
 
+Do only ACPI based systems have:
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+   interference of relatively high-powered harmonics of the (G-)DDR
+   memory clocks with local radio module frequency bands used by
+   Wifi 6/6e/7."
+
+Could Device Tree based systems not experience this problem?
+
+> +/**
+> + * APIs needed by drivers/subsystems for contributing frequencies:
+> + * During probe, check `wbrf_supported_producer` to see if WBRF is supported.
+> + * If adding frequencies, then call `wbrf_add_exclusion` with the
+> + * start and end points specified for the frequency ranges added.
+> + * If removing frequencies, then call `wbrf_remove_exclusion` with
+> + * start and end points specified for the frequency ranges added.
+> + */
+> +bool wbrf_supported_producer(struct acpi_device *adev);
+> +int wbrf_add_exclusion(struct acpi_device *adev,
+> +		       struct wbrf_ranges_in *in);
+> +int wbrf_remove_exclusion(struct acpi_device *adev,
+> +			  struct wbrf_ranges_in *in);
+
+Could struct device be used here, to make the API agnostic to where
+the information is coming from? That would then allow somebody in the
+future to implement a device tree based information provider.
+
+       Andrew
