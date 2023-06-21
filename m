@@ -2,77 +2,99 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A02DEB64D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 11:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 694ADEB64D8
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 11:45:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230098AbjFULZz (ORCPT
+        id S230094AbjFULpS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 07:25:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49764 "EHLO
+        Wed, 21 Jun 2023 07:45:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229898AbjFULZy (ORCPT
+        with ESMTP id S230182AbjFULpM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 07:25:54 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 20029135
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 04:25:53 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 35LBPN9A0027196, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 35LBPN9A0027196
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Wed, 21 Jun 2023 19:25:23 +0800
-Received: from RTEXMBS01.realtek.com.tw (172.21.6.94) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 21 Jun 2023 19:25:43 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Wed, 21 Jun 2023 19:25:43 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
- RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
- 15.01.2375.007; Wed, 21 Jun 2023 19:25:43 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     "dmantipov@yandex.ru" <dmantipov@yandex.ru>
-CC:     "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-        "kvalo@kernel.org" <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] [v4] wifi: rtw88: delete timer and free skb queue when unloading
-Thread-Topic: [PATCH 1/3] [v4] wifi: rtw88: delete timer and free skb queue
- when unloading
-Thread-Index: AQHZpCIHrL40d7wEp02hNp6w9+wjQ6+UlviAgAAA4IA=
-Date:   Wed, 21 Jun 2023 11:25:43 +0000
-Message-ID: <375301a4de81b1059429824ea694e224d3c67d19.camel@realtek.com>
-References: <20230621092313.65965-1-dmantipov@yandex.ru>
-         <9fdea7c3c26ede8e744b50dba008cef8da866d09.camel@realtek.com>
-In-Reply-To: <9fdea7c3c26ede8e744b50dba008cef8da866d09.camel@realtek.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.36.1-2 
-x-originating-ip: [172.16.16.25]
-x-kse-serverinfo: RTEXMBS01.realtek.com.tw, 9
-x-kse-antispam-interceptor-info: fallback
-x-kse-antivirus-interceptor-info: fallback
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <056CE3D0E98615438C6F0410E2BDE08F@realtek.com>
-Content-Transfer-Encoding: base64
+        Wed, 21 Jun 2023 07:45:12 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EE8D10D5
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 04:45:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1687347911; x=1718883911;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=foOonq4Mj9Nx6Rl5TACRTaKBpxe1iLcuu2r1wpvcRzM=;
+  b=E7hweK2HzH4QeJ9iQ+91t+HlDffLIJmiX1eSBuu9PIXBL9O74D24MRi7
+   umkog/xOHuFH05LZWkKzROcySeqA9lX3wID6oHNE3DVV897b/kcKWCxH1
+   DWB9rhJIpFUHGslwHKMHLQ8lJUKxqJD4yTnK3IGeJpYQD/izy7MW2Vz5w
+   kmULgrAYClfLWMymVoU2DSW3eSLCP94XfUBH/nyvkdBrHYZ62FXIwo0LC
+   /BgeY/vcz7AQrFS/0VLNugeGIZ84rOVtSERtqdhesU6S01xWvoMPM5V+j
+   6er0U1lKDgBCcYMYQfwSn1PaSVPQ+qGBP69+5+/KVSjOW8pCeLZoQ60/r
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="363566088"
+X-IronPort-AV: E=Sophos;i="6.00,260,1681196400"; 
+   d="scan'208";a="363566088"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 04:44:51 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="691821144"
+X-IronPort-AV: E=Sophos;i="6.00,260,1681196400"; 
+   d="scan'208";a="691821144"
+Received: from ggreenma-mobl2.jer.intel.com ([10.13.17.65])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 04:44:49 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Yedidya Benshimol <yedidya.ben.shimol@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH] wifi: mac80211: mark keys as uploaded when added by the driver
+Date:   Wed, 21 Jun 2023 14:44:36 +0300
+Message-Id: <20230621144414.bc78c7ff2a3d.I5e313d69e2b6a7a4766ef82d0faa122dd4c1c46d@changeid>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gV2VkLCAyMDIzLTA2LTIxIGF0IDExOjIyICswMDAwLCBQaW5nLUtlIFNoaWggd3JvdGU6DQo+
-IE9uIFdlZCwgMjAyMy0wNi0yMSBhdCAxMjoyMiArMDMwMCwgRG1pdHJ5IEFudGlwb3Ygd3JvdGU6
-DQo+ID4gRml4IHBvc3NpYmxlIGNyYXNoIGFuZCBtZW1vcnkgbGVhayBvbiBkcml2ZXIgdW5sb2Fk
-IGJ5IGRlbGV0aW5nDQo+ID4gVFggcHVyZ2UgdGltZXIgYW5kIGZyZWVpbmcgQzJIIHF1ZXVlIGlu
-ICdydHdfY29yZV9kZWluaXQoKScsDQo+ID4gc2hyaW5rIGNyaXRpY2FsIHNlY3Rpb24gaW4gdGhl
-IGxhdHRlciBieSBmcmVlaW5nIENPRVggcXVldWUNCj4gPiBvdXQgb2YgVFggcmVwb3J0IGxvY2sg
-c2NvcGUuDQo+ID4gDQo+ID4gU2lnbmVkLW9mZi1ieTogRG1pdHJ5IEFudGlwb3YgPGRtYW50aXBv
-dkB5YW5kZXgucnU+DQo+IA0KPiBBY2tlZC1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRl
-ay5jb20+DQo+IA0KDQpTb3JyeSwgSSdtIG5vdCBtYWludGFpbmVyIG9mIHJ0dzg4LCBzbyBJIHNo
-b3VsZCBhZGQgcmV2aWV3ZWQtYnkuDQoNClJldmlld2VkLWJ5OiBQaW5nLUtlIFNoaWggPHBrc2hp
-aEByZWFsdGVrLmNvbT4NCg0KDQo=
+From: Yedidya Benshimol <yedidya.ben.shimol@intel.com>
+
+When the driver has some form of GTK rekeying offload, e.g. during
+WoWLAN, mac80211 can assume that keys that the driver adds for
+that are already present in the hardware acceleration. Mark them
+accordingly.
+
+Signed-off-by: Yedidya Benshimol <yedidya.ben.shimol@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ net/mac80211/key.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index e8f6c1e5eabf..0c2245eaa08e 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -6,7 +6,7 @@
+  * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright 2015-2017	Intel Deutschland GmbH
+- * Copyright 2018-2020, 2022  Intel Corporation
++ * Copyright 2018-2020, 2022 -2023  Intel Corporation
+  */
+ 
+ #include <linux/if_ether.h>
+@@ -510,8 +510,12 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 				ret = ieee80211_key_enable_hw_accel(new);
+ 		}
+ 	} else {
+-		if (!new->local->wowlan)
++		if (!new->local->wowlan) {
+ 			ret = ieee80211_key_enable_hw_accel(new);
++		} else {
++			assert_key_lock(new->local);
++			new->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
++		}
+ 	}
+ 
+ 	if (ret)
+-- 
+2.38.1
+
