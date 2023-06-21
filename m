@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 158ECEB64D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 10:14:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6CC3EB64D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 10:14:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231704AbjFUKO0 (ORCPT
+        id S232383AbjFUKOa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 06:14:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32914 "EHLO
+        Wed, 21 Jun 2023 06:14:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230146AbjFUKOB (ORCPT
+        with ESMTP id S232088AbjFUKOB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 21 Jun 2023 06:14:01 -0400
 Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2E981FCB
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 03:13:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A667F1FD0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 03:13:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687342430; x=1718878430;
+  t=1687342431; x=1718878431;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=uCiCRBnMAL7/52Wkvx743vZylqvqUH1xWEUyEK9Wrr4=;
-  b=GmXyb07jsLdMSTdinVv8UkVwbqCmVl92g+VE87G2BBH1qqxkU6nFCWNa
-   bbTrPljiImIgmpX6BJSqSaEawx9HFVw3XBzAA9tY7wiTmB/eopmpArIeo
-   ZvZn8oftMBt1Diitn+6DiFyet6wcVHZMblZI359crXo/8x6WJSrxSGer0
-   ojejJClrGu75MECmh+VeW6zKL40hcecQl8iPE0eUmtc3pF2o5YKosEU4E
-   Dm9/kEHsL9dFtMhvaTCfVruLuHqPjBIJ87lYARpagcqYpBw7QSlODQ7xf
-   nzFjpiQC35WUoJDporDsJqKE5eHf/Lx5v5kO9Bbv5wARlXAGS/mKyA9C1
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="446506403"
+  bh=YIXfUm3+9YvEYJRuinJCV3WiWxPLmUan4LebmcGb3ss=;
+  b=LLIOOL9qUF6dPJL2myWbynQWKcfFIwd9g0iwsWcH/nB0DNBn2VB0zqhP
+   CLa7Q4bfiWGonSdXEkhAo+UA9xY+GUwTC34Gyt6V4l9nlg4zw7o963KQZ
+   H0mXQfkqyoKO98m9gQOTGPTxM5nILTkDu4R8QgjNwwzE8pXoXmcQMERgc
+   Sctj4Xfgxs2TDmWEaOgmK2nCsBEmU1tQyBsP8ob25y6ABezzw5L+aLLTq
+   OizZhhqaWvuAb75FnZQO+l/+ZvrTYRAnkP10UY8/QDBeKrefparoYEUQ/
+   yadhxwwWDUOOpdH2E6ZZB60uBAs3E+Wvge3m+Eb+RG6X99mvgJZJwyova
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="446506468"
 X-IronPort-AV: E=Sophos;i="6.00,260,1681196400"; 
-   d="scan'208";a="446506403"
+   d="scan'208";a="446506468"
 Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 03:12:59 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 03:13:15 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="664599165"
+X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="664599257"
 X-IronPort-AV: E=Sophos;i="6.00,260,1681196400"; 
-   d="scan'208";a="664599165"
+   d="scan'208";a="664599257"
 Received: from ggreenma-mobl2.jer.intel.com ([10.13.17.65])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 03:12:57 -0700
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2023 03:13:13 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 08/18] wifi: iwlwifi: don't load old firmware for 22000
-Date:   Wed, 21 Jun 2023 13:12:12 +0300
-Message-Id: <20230621130443.768186c0475d.I7de717072221712176a3085d71c8018ae0348db8@changeid>
+Subject: [PATCH 12/18] wifi: iwlwifi: also unify Sc device configurations
+Date:   Wed, 21 Jun 2023 13:12:16 +0300
+Message-Id: <20230621130443.3bc1191f883f.If1e6f73a164b0794ac65372b72673ce8ddf9e571@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230621101222.218083-1-gregory.greenman@intel.com>
 References: <20230621101222.218083-1-gregory.greenman@intel.com>
@@ -59,29 +59,148 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The earliest firmware released for these products is with
-API version 50, so there's no point in trying to load any
-versions before that.
+Again, they're all the same except for the radio and
+steps, so use the new logic to unify them.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/sc.c   | 52 +------------------
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  8 +--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 38 ++------------
+ 3 files changed, 7 insertions(+), 91 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 12e809b715f4..c496d0d19de4 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -13,7 +13,7 @@
- #define IWL_22000_UCODE_API_MAX	77
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+index 53b2a5969db6..679cb53ae18a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+@@ -149,56 +149,8 @@ const struct iwl_cfg_trans_params iwl_sc_trans_cfg = {
  
- /* Lowest firmware API version supported */
--#define IWL_22000_UCODE_API_MIN	39
-+#define IWL_22000_UCODE_API_MIN	50
+ const char iwl_sc_name[] = "Intel(R) TBD Sc device";
  
- /* NVM versions */
- #define IWL_22000_NVM_VERSION		0x0a1d
+-const struct iwl_cfg iwl_cfg_sc_a0_fm_b0 = {
+-	.fw_name_pre = IWL_SC_A_FM_B_FW_PRE,
+-	.uhb_supported = true,
+-	IWL_DEVICE_SC,
+-	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_SC_HE,
+-};
+-
+-const struct iwl_cfg iwl_cfg_sc_a0_fm_c0 = {
+-	.fw_name_pre = IWL_SC_A_FM_C_FW_PRE,
+-	.uhb_supported = true,
+-	IWL_DEVICE_SC,
+-	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_SC_HE,
+-};
+-
+-const struct iwl_cfg iwl_cfg_sc_a0_hr_a0 = {
+-	.fw_name_pre = IWL_SC_A_HR_A_FW_PRE,
+-	.uhb_supported = true,
+-	IWL_DEVICE_SC,
+-	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_SC_HE,
+-};
+-
+-const struct iwl_cfg iwl_cfg_sc_a0_hr_b0 = {
+-	.fw_name_pre = IWL_SC_A_HR_B_FW_PRE,
+-	.uhb_supported = true,
+-	IWL_DEVICE_SC,
+-	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_SC_HE,
+-};
+-
+-const struct iwl_cfg iwl_cfg_sc_a0_gf_a0 = {
+-	.fw_name_pre = IWL_SC_A_GF_A_FW_PRE,
+-	.uhb_supported = true,
+-	IWL_DEVICE_SC,
+-	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_SC_HE,
+-};
+-
+-const struct iwl_cfg iwl_cfg_sc_a0_gf4_a0 = {
+-	.fw_name_pre = IWL_SC_A_GF4_A_FW_PRE,
+-	.uhb_supported = true,
+-	IWL_DEVICE_SC,
+-	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_SC_HE,
+-};
+-
+-const struct iwl_cfg iwl_cfg_sc_a0_wh_a0 = {
+-	.fw_name_pre = IWL_SC_A_WH_A_FW_PRE,
++const struct iwl_cfg iwl_cfg_sc = {
++	.fw_name_mac = "sc",
+ 	.uhb_supported = true,
+ 	IWL_DEVICE_SC,
+ 	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 47e164beda29..49a66951c5bc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -651,13 +651,7 @@ extern const struct iwl_cfg iwl_cfg_bz;
+ extern const struct iwl_cfg iwl_cfg_gl_a0_fm_a0;
+ extern const struct iwl_cfg iwl_cfg_gl;
+ 
+-extern const struct iwl_cfg iwl_cfg_sc_a0_fm_b0;
+-extern const struct iwl_cfg iwl_cfg_sc_a0_fm_c0;
+-extern const struct iwl_cfg iwl_cfg_sc_a0_hr_a0;
+-extern const struct iwl_cfg iwl_cfg_sc_a0_hr_b0;
+-extern const struct iwl_cfg iwl_cfg_sc_a0_gf_a0;
+-extern const struct iwl_cfg iwl_cfg_sc_a0_gf4_a0;
+-extern const struct iwl_cfg iwl_cfg_sc_a0_wh_a0;
++extern const struct iwl_cfg iwl_cfg_sc;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 33827441803b..1944e621dbef 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1142,40 +1142,10 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 
+ /* Sc */
+ 	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_SC, SILICON_A_STEP,
+-		      IWL_CFG_RF_TYPE_FM, IWL_CFG_ANY, SILICON_B_STEP,
+-		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+-		      iwl_cfg_sc_a0_fm_b0, iwl_sc_name),
+-	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_SC, SILICON_A_STEP,
+-		      IWL_CFG_RF_TYPE_FM, IWL_CFG_ANY, SILICON_C_STEP,
+-		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+-		      iwl_cfg_sc_a0_fm_c0, iwl_sc_name),
+-	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_SC, SILICON_A_STEP,
+-		      IWL_CFG_RF_TYPE_HR1, IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+-		      iwl_cfg_sc_a0_hr_a0, iwl_sc_name),
+-	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_SC, SILICON_A_STEP,
+-		      IWL_CFG_RF_TYPE_HR2, IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+-		      iwl_cfg_sc_a0_hr_b0, iwl_sc_name),
+-	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_SC, SILICON_A_STEP,
+-		      IWL_CFG_RF_TYPE_GF, IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+-		      iwl_cfg_sc_a0_gf_a0, iwl_sc_name),
+-	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_SC, SILICON_A_STEP,
+-		      IWL_CFG_RF_TYPE_GF, IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_CDB,
+-		      iwl_cfg_sc_a0_gf4_a0, iwl_sc_name),
+-	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_SC, SILICON_A_STEP,
+-		      IWL_CFG_RF_TYPE_WH, IWL_CFG_ANY, IWL_CFG_ANY,
+-		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_NO_CDB,
+-		      iwl_cfg_sc_a0_wh_a0, iwl_sc_name),
++		      IWL_CFG_MAC_TYPE_SC, IWL_CFG_ANY,
++		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_ANY,
++		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_ANY,
++		      iwl_cfg_sc, iwl_sc_name),
+ #endif /* CONFIG_IWLMVM */
+ };
+ 
 -- 
 2.38.1
 
