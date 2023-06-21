@@ -2,97 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5371EB64DC
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 15:39:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 697C0EB64D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 15:41:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233664AbjFUPjZ (ORCPT
+        id S233764AbjFUPlJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 11:39:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45448 "EHLO
+        Wed, 21 Jun 2023 11:41:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233545AbjFUPiz (ORCPT
+        with ESMTP id S233771AbjFUPkp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 11:38:55 -0400
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08D731BC6;
-        Wed, 21 Jun 2023 08:38:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-        s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-        Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-        Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-        bh=UNTcJ7CGT1Lez3ibsb1q0hENK9CgDCucVIYKxGl3TOA=; b=kX5Xr6VI87reS7/GA49etmzzJa
-        8UkZZawMQsboaJaBH0eNpIzk1bR3EcbBbU0KF6jAsbQhofPO8pHw+ovgkoxLGGJjfHxE1vVFC+buE
-        dyHRIxHy1ZMVaryyek2UvdEHqUuLiwmWXnN8UhABnjwmxx9ilAZZaPSduE0A55vaKMZ8=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-        (envelope-from <andrew@lunn.ch>)
-        id 1qBzsX-00H9mp-GK; Wed, 21 Jun 2023 17:36:17 +0200
-Date:   Wed, 21 Jun 2023 17:36:17 +0200
-From:   Andrew Lunn <andrew@lunn.ch>
-To:     Evan Quan <evan.quan@amd.com>
-Cc:     rafael@kernel.org, lenb@kernel.org, alexander.deucher@amd.com,
-        christian.koenig@amd.com, Xinhui.Pan@amd.com, airlied@gmail.com,
-        daniel@ffwll.ch, johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        mario.limonciello@amd.com, mdaenzer@redhat.com,
-        maarten.lankhorst@linux.intel.com, tzimmermann@suse.de,
-        hdegoede@redhat.com, jingyuwang_vip@163.com, lijo.lazar@amd.com,
-        jim.cromie@gmail.com, bellosilicio@gmail.com,
-        andrealmeid@igalia.com, trix@redhat.com, jsg@jsg.id.au,
-        arnd@arndb.de, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH V4 1/8] drivers/acpi: Add support for Wifi band RF
- mitigations
-Message-ID: <3a7c8ffa-de43-4795-ae76-5cd9b00c52b5@lunn.ch>
-References: <20230621054603.1262299-1-evan.quan@amd.com>
- <20230621054603.1262299-2-evan.quan@amd.com>
+        Wed, 21 Jun 2023 11:40:45 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B41ABC
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 08:40:26 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id 41be03b00d2f7-553a998bca3so3210862a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 08:40:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1687361994; x=1689953994;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=J+yCyBwF3XR3hDGNb43rreQVhJvrloK5Tk0QghMWh+U=;
+        b=E23yA51ZwSOW7vdFOZ2qK+jb8TTRlCmJxB2+QOHpPJ0LWRwlkz2Z90HHpizqEYUXjc
+         i8Ykh5vT1cb1yOnWGuXTv2aK9h/gIJMR2kxXUk579xiDkYnTuLuNarCCnxHNiPDOX6oU
+         zQ3O4Et/LUZpIw/zmVo+PSnGM1E1LsymHLgv8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687361994; x=1689953994;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=J+yCyBwF3XR3hDGNb43rreQVhJvrloK5Tk0QghMWh+U=;
+        b=hdpYhM/QqrNSdj5CboutVjFDzfzEG/4/NX3qZcN4OWo75zR/GjE7rFd1sWIuTwtmco
+         925KCbuOGE0jkInfBTzCDr75rBdhMgyS49r0yJ4yI1Bn/cXcP6SUHeYk2K6aFNTj8tKW
+         8Wk6h2TKn9Xe+wqD1VZVgWADA5TmPA6S+7DZZ3ETRNpxpZkpMPXfhg2SnyJN5i5vp9Xg
+         YbdR6DK0RPoJsMyKPAPpeGSA74Ma+VyMdntZafREpER37H2CRZAah1z5OMuQJVuKQuKZ
+         zBW9L/fvjVgqqZAekAgCoQyklZRjFEAEH8yPCfAY1DCyYmDlyhQwFPSAysjbOWXvvI5u
+         ozHQ==
+X-Gm-Message-State: AC+VfDzuCM/qDdCqJP6XQWnfbbe1QReVCfk5ukr7RcLJ4L/v1ZMPKlr7
+        LbDn7nFoMuToG+AqNjDfUaT4fBrSpraEA+X1ONU=
+X-Google-Smtp-Source: ACHHUZ4OQyUkQ6geaxRGO+Kp4PmaUpzPH0MRDby6T+5sIEc30qwvz4I+/d0WeLBlbLKnayFSyY0XkQ==
+X-Received: by 2002:a05:6a20:428b:b0:122:2bc1:8857 with SMTP id o11-20020a056a20428b00b001222bc18857mr8608698pzj.52.1687361993949;
+        Wed, 21 Jun 2023 08:39:53 -0700 (PDT)
+Received: from google.com ([2620:15c:9d:2:566c:67e8:1803:3438])
+        by smtp.gmail.com with ESMTPSA id m26-20020a056a00165a00b0065992d334f4sm2466486pfc.177.2023.06.21.08.39.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Jun 2023 08:39:53 -0700 (PDT)
+Date:   Wed, 21 Jun 2023 08:39:51 -0700
+From:   Brian Norris <briannorris@chromium.org>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Christophe Jaillet <christophe.jaillet@wanadoo.fr>,
+        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] [v2] wifi: mwifiex: avoid strlcpy() and use
+ strscpy() where appropriate
+Message-ID: <ZJMZx2E1irSNVOEl@google.com>
+References: <20230620100803.519926-1-dmantipov@yandex.ru>
+ <ZJHO/pa7JB49j3rN@google.com>
+ <ee69ac82-bc62-a288-d7c9-bb432a1b5959@yandex.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230621054603.1262299-2-evan.quan@amd.com>
+In-Reply-To: <ee69ac82-bc62-a288-d7c9-bb432a1b5959@yandex.ru>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jun 21, 2023 at 01:45:56PM +0800, Evan Quan wrote:
-> From: Mario Limonciello <mario.limonciello@amd.com>
+On Wed, Jun 21, 2023 at 11:08:46AM +0300, Dmitry Antipov wrote:
+> On 6/20/23 19:08, Brian Norris wrote:
 > 
-> Due to electrical and mechanical constraints in certain platform designs
-> there may be likely interference of relatively high-powered harmonics of
-> the (G-)DDR memory clocks with local radio module frequency bands used
-> by Wifi 6/6e/7.
+> > I'm not sure how a compile-time constant makes this "unsafe" at all, but
+> > if you feel the need to change this, then sure, this works too.
 > 
-> To mitigate this, AMD has introduced an ACPI based mechanism that
-> devices can use to notify active use of particular frequencies so
-> that devices can make relative internal adjustments as necessary
-> to avoid this resonance.
+> The only reason is to avoid strlcpy() which is now considered deprecated.
 
-Do only ACPI based systems have:
+Sure, OK.
 
-   interference of relatively high-powered harmonics of the (G-)DDR
-   memory clocks with local radio module frequency bands used by
-   Wifi 6/6e/7."
+> > FWIW, this 'firmware' pointer is all derived from compile-time constants
+> > too. So the commit messages seems misleading ("all other calls [...]
+> > should be safe" --> well, *all* calls are safe).
+> 
+> Indeed. So I think we can stay with strcpy() everywhere except strlcpy() to strscpy() replacement
+> (just to follow https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy rather than
+> to fix something).
 
-Could Device Tree based systems not experience this problem?
+That works too. It's cool to drop stcrpy() anyway though, since it's
+really just a feature of a poor language (C) that we have to reason
+about whether any given string operation is "safe" or not. I was just
+noting that your commit message reasoning was slightly off.
 
-> +/**
-> + * APIs needed by drivers/subsystems for contributing frequencies:
-> + * During probe, check `wbrf_supported_producer` to see if WBRF is supported.
-> + * If adding frequencies, then call `wbrf_add_exclusion` with the
-> + * start and end points specified for the frequency ranges added.
-> + * If removing frequencies, then call `wbrf_remove_exclusion` with
-> + * start and end points specified for the frequency ranges added.
-> + */
-> +bool wbrf_supported_producer(struct acpi_device *adev);
-> +int wbrf_add_exclusion(struct acpi_device *adev,
-> +		       struct wbrf_ranges_in *in);
-> +int wbrf_remove_exclusion(struct acpi_device *adev,
-> +			  struct wbrf_ranges_in *in);
-
-Could struct device be used here, to make the API agnostic to where
-the information is coming from? That would then allow somebody in the
-future to implement a device tree based information provider.
-
-       Andrew
+Brian
