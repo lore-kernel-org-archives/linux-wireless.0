@@ -2,67 +2,145 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D52BEB64D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 09:21:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08805EB64D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 09:23:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231262AbjFUJV3 (ORCPT
+        id S230409AbjFUJXy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 05:21:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55584 "EHLO
+        Wed, 21 Jun 2023 05:23:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231218AbjFUJV0 (ORCPT
+        with ESMTP id S230011AbjFUJXx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 05:21:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5D8B1B4
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 02:21:20 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F04CF614C7
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 09:21:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E157C433C8;
-        Wed, 21 Jun 2023 09:21:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687339279;
-        bh=nsVwiMkVL0ODjNvgmiZTSWnr0tfEycFYv1F01wZoxPc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=gkMvHoNmph3INS0Snn7Xf9+ONo66zes9q7k/pYzOI82XzDW+Mc3vyT3ua3mbbmsPi
-         CnXYj8CeIgqSXtNlsSDz4zXzNB5t8zT/3oRp/On46cEx6cUfE9whpYZuAXQcOoxFXu
-         LA3M6HyN9EWqdKgGV5699+SVOWm6dUcSJbv9pNJPOln2YrrTotrJS4BxzX4zEy5sqZ
-         VT9jTxcM1BfNwaCxnpKjWecA6tUkUwEddaYgB8OW0JD9BwMM7oAWPmyBEwC6AJoyaD
-         b7RyaQK6GitdccsJXMoH2X5s6c1seDkEPYvlpvPgRqkGUEGYJSuthPB7NgkW/Tw98q
-         w0l4QGEO71kPw==
-From:   Kalle Valo <kvalo@kernel.org>
+        Wed, 21 Jun 2023 05:23:53 -0400
+Received: from forward101a.mail.yandex.net (forward101a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d101])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DB8119AC
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 02:23:21 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:f15:0:640:e80a:0])
+        by forward101a.mail.yandex.net (Yandex) with ESMTP id ADB7846D06;
+        Wed, 21 Jun 2023 12:23:18 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id FNeUOg7DXeA0-MawOopcL;
+        Wed, 21 Jun 2023 12:23:18 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1687339398;
+        bh=8IjgY5bD/ModHaUfxvgtvns6gPoDEdZ2Uq559mzN9E0=;
+        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+        b=JA+AXyXWBqfaemtyg7MxLWHJSy36UOJOAuFhZ6Uy56XT6KrBBOjoH01iBJi1EYUJf
+         57DfmX+kbvdMoaeoNAJOia2qneYfboGLzg4y0cuWcFfuhz0ZvKnwQHGY2ujn6CKFGu
+         CqlQ9s+FJWBIND+CcpdoV3TAzP3oaVBuLLxfuKWc=
+Authentication-Results: mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From:   Dmitry Antipov <dmantipov@yandex.ru>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <tony0620emma@gmail.com>, <phhuang@realtek.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/6] wifi: rtw88: correct AP and PS mode behaviors
-References: <20230616125540.36877-1-pkshih@realtek.com>
-Date:   Wed, 21 Jun 2023 12:21:14 +0300
-In-Reply-To: <20230616125540.36877-1-pkshih@realtek.com> (Ping-Ke Shih's
-        message of "Fri, 16 Jun 2023 20:55:34 +0800")
-Message-ID: <87edm59nn9.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+Cc:     Sascha Hauer <s.hauer@pengutronix.de>,
+        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH 2/3] [v4] wifi: rtw88: remove unused and set but unused leftovers
+Date:   Wed, 21 Jun 2023 12:22:14 +0300
+Message-ID: <20230621092313.65965-2-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230621092313.65965-1-dmantipov@yandex.ru>
+References: <20230621092313.65965-1-dmantipov@yandex.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> writes:
+Drop unused and set but unused 'last_push' of 'struct rtw_txq',
+'wireless_set' of 'struct rtw_sta_info', 'usb_txagg_num' of
+'struct rtw_usb' and 'n' of 'struct rx_usb_ctrl_block', adjust
+related code.
 
-> Note: The patch 5/6 ("wifi: rtw88: refine register based H2C command")
-> adds new static function that is used by patch 6/6, so compiler will
-> warn unused function if we build this path.
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+v4: adjust to match series
+---
+ drivers/net/wireless/realtek/rtw88/main.c | 1 -
+ drivers/net/wireless/realtek/rtw88/main.h | 3 ---
+ drivers/net/wireless/realtek/rtw88/tx.c   | 2 --
+ drivers/net/wireless/realtek/rtw88/usb.c  | 1 -
+ drivers/net/wireless/realtek/rtw88/usb.h  | 2 --
+ 5 files changed, 9 deletions(-)
 
-Thanks for the note, this is always good to know. In general it would be
-better to avoid having the warning at all, for example in this case one
-solution would have been to merge patches 5 and 6 into one patch. But no
-need to resend because of this.
-
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index c190598c47c3..64fd527286e1 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1300,7 +1300,6 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si,
+ 	si->stbc_en = stbc_en;
+ 	si->ldpc_en = ldpc_en;
+ 	si->rf_type = rf_type;
+-	si->wireless_set = wireless_set;
+ 	si->sgi_enable = is_support_sgi;
+ 	si->vht_enable = is_vht_enable;
+ 	si->ra_mask = ra_mask;
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 9e841f6991a9..265ae9456f06 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -734,9 +734,7 @@ struct rtw_ra_report {
+ 
+ struct rtw_txq {
+ 	struct list_head list;
+-
+ 	unsigned long flags;
+-	unsigned long last_push;
+ };
+ 
+ #define RTW_BC_MC_MACID 1
+@@ -754,7 +752,6 @@ struct rtw_sta_info {
+ 	u8 rate_id;
+ 	enum rtw_bandwidth bw_mode;
+ 	enum rtw_rf_type rf_type;
+-	enum rtw_wireless_set wireless_set;
+ 	u8 stbc_en:2;
+ 	u8 ldpc_en:2;
+ 	bool sgi_enable;
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index bb5c7492c98b..3a4c37fdfeb1 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -592,8 +592,6 @@ static int rtw_txq_push_skb(struct rtw_dev *rtwdev,
+ 		rtw_err(rtwdev, "failed to write TX skb to HCI\n");
+ 		return ret;
+ 	}
+-	rtwtxq->last_push = jiffies;
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+index 976eafa739a2..6862338b1d51 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -647,7 +647,6 @@ static int rtw_usb_alloc_rx_bufs(struct rtw_usb *rtwusb)
+ 	for (i = 0; i < RTW_USB_RXCB_NUM; i++) {
+ 		struct rx_usb_ctrl_block *rxcb = &rtwusb->rx_cb[i];
+ 
+-		rxcb->n = i;
+ 		rxcb->rtwdev = rtwusb->rtwdev;
+ 		rxcb->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
+ 		if (!rxcb->rx_urb)
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
+index ad1d7955c6a5..fad998005ec8 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.h
++++ b/drivers/net/wireless/realtek/rtw88/usb.h
+@@ -58,7 +58,6 @@ struct rx_usb_ctrl_block {
+ 	struct rtw_dev *rtwdev;
+ 	struct urb *rx_urb;
+ 	struct sk_buff *rx_skb;
+-	int n;
+ };
+ 
+ struct rtw_usb_tx_data {
+@@ -79,7 +78,6 @@ struct rtw_usb {
+ 	u8 pipe_in;
+ 	u8 out_ep[RTW_USB_EP_MAX];
+ 	int qsel_to_ep[TX_DESC_QSEL_MAX];
+-	u8 usb_txagg_num;
+ 
+ 	struct workqueue_struct *txwq, *rxwq;
+ 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.41.0
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
