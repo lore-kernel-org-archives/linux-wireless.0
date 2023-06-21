@@ -2,87 +2,78 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7A3EB64D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 09:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F22FEB64D8
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Jun 2023 09:42:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231889AbjFUJm3 (ORCPT
+        id S231923AbjFUJmp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Jun 2023 05:42:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43878 "EHLO
+        Wed, 21 Jun 2023 05:42:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231923AbjFUJls (ORCPT
+        with ESMTP id S231978AbjFUJmc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Jun 2023 05:41:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C51F1BC6
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 02:41:32 -0700 (PDT)
+        Wed, 21 Jun 2023 05:42:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59D331FF2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 02:42:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CF050614DE
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 09:41:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49291C433B9;
-        Wed, 21 Jun 2023 09:41:30 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E1404614D6
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jun 2023 09:42:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66FDAC433C8;
+        Wed, 21 Jun 2023 09:42:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687340491;
-        bh=Am9NL8L9eEag9mpNcdUvp8YnrDJy7hNusrhJfo2GqhI=;
+        s=k20201202; t=1687340531;
+        bh=8+trVGJ54v2ZaztaEFTK/xsahHxjUByviYzrQhq5p7U=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=LS76cS7BsA5/uFMe/r+nt4tpgVB8lJvHfnrbcmntckvg/f3MMRzGot8+CidSd7m7I
-         12xhEJKgHgJqwYMTMWnVyqYhJGaYb4wffRGxFcNhVlJW1WYXIkmqb0CQn9juliq+MB
-         tB4CKs1K2UYUqfvovaHxuLdYT/nkED85Ojwal+U4CIyjWUS88PlKHa85+HgNcbxglx
-         B1MZvcJL1qbHyrbFVtC0205skE4fEj4DU1ov3SdYZFvWdUGLrAzzyhyZhfBFBSShDP
-         Gyq0M3qpeapzHxp/HqkBzHm6D1l3hxcxI8GRIJJpF/IUOXRA0w8L2mtJzi7T+gYXlJ
-         Xeg7mEQtRmbyQ==
+        b=p9a6W2GZTmhR3SZomzEfghvCQxO98tAQ584Svd7wmEG1Ct4RMna889s0EYhgbj+v5
+         wZDi/OcHbL+ZyGrN88ARFE8gFmfnsOtsuQT3L2LWObhDFUlwYVjZ6qHt5IZobSeHvw
+         jv76V9BKx+TCbpB1X4HqEvAudtd4E5t4pZmEGQKdPu8RRrTsoLxgZGt5kWwaSZbzwj
+         SYRmvrCwjf8Q2woTbYiug7OP26zfoH0xUmBa4PckND+99MRK80AOzjVZcwvP67bt4b
+         neGteWjL6WEqr89cxznLQT0HR6W9mFJdAxWgzz4+fK/ylElsMrOkTrYL78hBsD3UJR
+         nHm03XBvY3aOA==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: rtw88: process VO packets without workqueue to
- avoid
- PTK rekey failed
+Subject: Re: [PATCH v2 1/6] wifi: rtw88: use struct instead of macros to set
+ TX
+ desc
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230616031713.16769-1-pkshih@realtek.com>
-References: <20230616031713.16769-1-pkshih@realtek.com>
+In-Reply-To: <20230616125540.36877-2-pkshih@realtek.com>
+References: <20230616125540.36877-2-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <tony0620emma@gmail.com>, <gary.chang@realtek.com>,
+Cc:     <tony0620emma@gmail.com>, <phhuang@realtek.com>,
         <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <168734048798.380100.11902910174609581862.kvalo@kernel.org>
-Date:   Wed, 21 Jun 2023 09:41:30 +0000 (UTC)
+Message-ID: <168734052871.380100.18093697722965903577.kvalo@kernel.org>
+Date:   Wed, 21 Jun 2023 09:42:10 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Chih-Kang Chang <gary.chang@realtek.com>
+> From: Po-Hao Huang <phhuang@realtek.com>
 > 
-> In the wpa_supplicant rekey flow, it sends an EAPOL packet 4/4 through
-> nl80211_tx_control_port() and triggers wake_tx_queue() in the driver.
-> Then, it sends nl80211_new_key() to configure a new key in mac80211.
-> However, in wake_tx_queue(), a workqueue is used to process the tx packet,
-> which might cause the driver to process the EAPOL packet later than
-> nl80211_new_key(). As a result, the EAPOL 4/4 packet is dropped by mac80211
-> due to the rekey configuration being finished. The EAPOL packets belongs to
-> VO packets that need high priority. Therefore, we process VO packets
-> directly without workqueue to ensure that packets can process immediately.
+> Remove macros that set TX descriptors. Use struct and
+> le32_encode_bits() with mask definitions.
 > 
-> VO is normally used by voice application that is low traffic load and low
-> latency, that doesn't affect user experience.
-> We test iperf with VO packets(iperf3 -P4 -u -b 10000M -S 0xdf)
->                           before       after
-> TX throughput             162M         162M
-> ping RTT                  3.8ms        3.7ms
-> 
-> Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
+> Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Patch applied to wireless-next.git, thanks.
+6 patches applied to wireless-next.git, thanks.
 
-67d7f24b194e wifi: rtw88: process VO packets without workqueue to avoid PTK rekey failed
+88b9d8e6cf9c wifi: rtw88: use struct instead of macros to set TX desc
+076f786a0ae1 wifi: rtw88: Fix AP mode incorrect DTIM behavior
+9e09fbc5e902 wifi: rtw88: Skip high queue in hci_flush
+ad6741b1e044 wifi: rtw88: Stop high queue during scan
+455afa45edb3 wifi: rtw88: refine register based H2C command
+28c11c29494f wifi: rtw88: fix not entering PS mode after AP stops
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230616031713.16769-1-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230616125540.36877-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
