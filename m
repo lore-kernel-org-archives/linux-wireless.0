@@ -2,486 +2,115 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E02E7EB64DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jun 2023 16:52:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CB22EB64D8
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jun 2023 16:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231262AbjFVQwN (ORCPT
+        id S229765AbjFVQw1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Jun 2023 12:52:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41334 "EHLO
+        Thu, 22 Jun 2023 12:52:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231402AbjFVQwL (ORCPT
+        with ESMTP id S231279AbjFVQw0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2023 12:52:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FAAC129
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2023 09:52:09 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F21A6189F
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2023 16:52:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32DD4C433C8;
-        Thu, 22 Jun 2023 16:52:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687452728;
-        bh=jEY5J5ICMLkity2CNnhymj4088kUQthOmPadweW2PeQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jpjSdra3bZthpV8pyJL0lmMllFBT/OpeNncz0iYixzuyk9EqfElZ0HoKjKhwFtsH7
-         pIbkgfHLFBZTEY7hynG0+qwqvjrA1J6qpIEweU/a+gjpZUuGPYa9FgWgRVYvfnpFYt
-         Oolg6SpUMVmWz7wLyKnHPiwnzswU2og8BsWgjDixwjppMkkcXI+rAz2TCfSuo+ujxN
-         PiDON4yrjLEq863bW75hmxsjAnbMZY7ru0aJi93eXH5J7No1j2b5QW9NE+0GcNZtw9
-         6/+J0VHud/KMQ4axnUPIEdAs3AbQMLvCeWwA37z6MeiGyPQI8CJL+ejc8tBw0vzdQl
-         PdyrzaWTa2YAA==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        ryder.lee@mediatek.com, deren.wu@mediatek.com,
-        shayne.chen@mediatek.com
-Subject: [PATCH v4 15/15] wifi: mt76: connac: add connac3 mac library
-Date:   Thu, 22 Jun 2023 18:50:32 +0200
-Message-ID: <e3fe845331ec00723f8e1e8eb7d65c9e035b474b.1687452202.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <cover.1687452202.git.lorenzo@kernel.org>
-References: <cover.1687452202.git.lorenzo@kernel.org>
+        Thu, 22 Jun 2023 12:52:26 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D5F710A
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2023 09:52:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=1g6hYCNiNYmwPnQqbFbrbNpEP2N/g5kds1WiiOQ5moE=;
+        t=1687452745; x=1688662345; b=Rq2tTvg0/N9VLiX3EJBBNkor3VLb4B6oEGQmuFV46uf5+qh
+        qJFMUa4/5hW6UMggCSj2prR75E/nSoADahK4mteMyB7gxUOrJD47a+ABpz/L0GjCNOZInVG7W1sbU
+        1qOf36ugKHWjdJPftDPjKz6tRaDMOJXpZitsYpyY3SgHrmrqtc6vygQd7K+MG+d6KQwor2L1ywtVW
+        N5rDx65sqbChk0ssJzXWXzDVE0erTouD3IvCydq25mgv66cJTwBx9DcIPQGDpLxsg5ekoDrMHSzoZ
+        8fHPUDVBESQD3mFUgI5mSsskxs2+fby+Gn13q5YAWtJeYXxLk3tnnK8auyI6dZag==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qCNXj-00EpJl-2W;
+        Thu, 22 Jun 2023 18:52:23 +0200
+Message-ID: <588e079b244f302615cbb07741973035a0c9d42b.camel@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: fix sband iftype data lookup for AP_VLAN
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Date:   Thu, 22 Jun 2023 18:52:23 +0200
+In-Reply-To: <14bd0b06-d8c1-5c02-42a6-0c8d045b93ff@nbd.name>
+References: <20230622160501.40666-1-nbd@nbd.name>
+         <adf8c1b8ea96c0c6ddc12579eacb8d9948440dcf.camel@sipsolutions.net>
+         <2815ff55-5b5d-1412-5694-7692337bc473@nbd.name>
+         <f717c60c24bf3dcec7cd3b0308c6bd804683276a.camel@sipsolutions.net>
+         <14bd0b06-d8c1-5c02-42a6-0c8d045b93ff@nbd.name>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce connac3_mac in mt76_connac library to reuse mac code shared
-between WiFi7 chipsets. So far connac3 library contains just radiotap
-parsing code.
+On Thu, 2023-06-22 at 18:50 +0200, Felix Fietkau wrote:
+> On 22.06.23 18:41, Johannes Berg wrote:
+> > On Thu, 2023-06-22 at 18:25 +0200, Felix Fietkau wrote:
+> > > On 22.06.23 18:07, Johannes Berg wrote:
+> > > > On Thu, 2023-06-22 at 18:05 +0200, Felix Fietkau wrote:
+> > > > > Since AP_VLAN interfaces are not pushed to the driver,=20
+> > > > >=20
+> > > > That's a mac80211 thing though.
+> > > >=20
+> > > > > the driver should not
+> > > > > be expected to register iftype data for them.
+> > > > > Map them to the regular AP iftype on lookup.
+> > > >=20
+> > > > And this is in cfg80211 - not sure that seems right?
+> > > >=20
+> > > > OTOH I'd expect no callers with VLAN here, it doesn't really make s=
+ense
+> > > > since they're not a standalone mode that actually has HE/EHT, but s=
+till,
+> > > > seems odd this way?
+> > > >=20
+> > > > What's actually calling it? I'm guessing somewhere in mac80211?
+> > >=20
+> > > Yes, I guess only mac80211 is affected. I put in the cfg80211 prefix
+> > > because that's what the header file belongs to.
+> > >=20
+> > > I made the patch in response to this:
+> > > https://patchwork.kernel.org/project/linux-wireless/patch/20230605152=
+141.17434-4-shayne.chen@mediatek.com/
+> >=20
+> > OK, sure, that also doesn't really make sense.
+> >=20
+> > > I found that there are several calls to ieee80211_get_he_iftype_cap a=
+nd
+> > > ieee80211_get_eht_iftype_cap, which could be affected by this issue.
+> > > I thought dealing with this in a single place would be better than pl=
+aying
+> > > whac-a-mole by fixing it at the call sites.
+> > >=20
+> >=20
+> > I replaced almost all of them with ieee80211_get_he_iftype_cap_vif() so
+> > it shouldn't be that bad? Looks like I forgot some though.
+>=20
+> I guess one advantage in using my fix would be that it's way easier to=
+=20
+> backport.
+> How about using my fix initially (with a changed prefix if you prefer),=
+=20
+> and then replace it once the call sites have been switched over to=20
+> ieee80211_get_he_iftype_cap_vif?
+>=20
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/Makefile   |   2 +-
- .../net/wireless/mediatek/mt76/mt76_connac.h  |   3 +
- .../wireless/mediatek/mt76/mt76_connac3_mac.c | 182 ++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7996/mac.c   | 180 +----------------
- 4 files changed, 187 insertions(+), 180 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.c
+Actually, I don't even mind the fix itself that much, I just think the
+description is a bit misleading :-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
-index 84c99b7e57f9..d8e8079c8b54 100644
---- a/drivers/net/wireless/mediatek/mt76/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/Makefile
-@@ -27,7 +27,7 @@ mt76x02-lib-y := mt76x02_util.o mt76x02_mac.o mt76x02_mcu.o \
- 
- mt76x02-usb-y := mt76x02_usb_mcu.o mt76x02_usb_core.o
- 
--mt76-connac-lib-y := mt76_connac_mcu.o mt76_connac_mac.o
-+mt76-connac-lib-y := mt76_connac_mcu.o mt76_connac_mac.o mt76_connac3_mac.o
- 
- obj-$(CONFIG_MT76x0_COMMON) += mt76x0/
- obj-$(CONFIG_MT76x2_COMMON) += mt76x2/
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-index d3bb9114160f..22878f088804 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
-@@ -425,4 +425,7 @@ void mt76_connac2_txwi_free(struct mt76_dev *dev, struct mt76_txwi_cache *t,
- 			    struct list_head *free_list);
- void mt76_connac2_tx_token_put(struct mt76_dev *dev);
- 
-+/* connac3 */
-+void mt76_connac3_mac_decode_he_radiotap(struct sk_buff *skb, __le32 *rxv,
-+					 u8 mode);
- #endif /* __MT76_CONNAC_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.c
-new file mode 100644
-index 000000000000..73e9f283d0ae
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.c
-@@ -0,0 +1,182 @@
-+// SPDX-License-Identifier: ISC
-+/* Copyright (C) 2023 MediaTek Inc. */
-+
-+#include "mt76_connac.h"
-+#include "mt76_connac3_mac.h"
-+#include "dma.h"
-+
-+#define HE_BITS(f)		cpu_to_le16(IEEE80211_RADIOTAP_HE_##f)
-+#define HE_PREP(f, m, v)	le16_encode_bits(le32_get_bits(v, MT_CRXV_HE_##m),\
-+						 IEEE80211_RADIOTAP_HE_##f)
-+
-+static void
-+mt76_connac3_mac_decode_he_radiotap_ru(struct mt76_rx_status *status,
-+				       struct ieee80211_radiotap_he *he,
-+				       __le32 *rxv)
-+{
-+	u32 ru = le32_get_bits(rxv[0], MT_PRXV_HE_RU_ALLOC), offs = 0;
-+
-+	status->bw = RATE_INFO_BW_HE_RU;
-+
-+	switch (ru) {
-+	case 0 ... 36:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_26;
-+		offs = ru;
-+		break;
-+	case 37 ... 52:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_52;
-+		offs = ru - 37;
-+		break;
-+	case 53 ... 60:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_106;
-+		offs = ru - 53;
-+		break;
-+	case 61 ... 64:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_242;
-+		offs = ru - 61;
-+		break;
-+	case 65 ... 66:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_484;
-+		offs = ru - 65;
-+		break;
-+	case 67:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_996;
-+		break;
-+	case 68:
-+		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_2x996;
-+		break;
-+	}
-+
-+	he->data1 |= HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
-+	he->data2 |= HE_BITS(DATA2_RU_OFFSET_KNOWN) |
-+		     le16_encode_bits(offs,
-+				      IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
-+}
-+
-+#define MU_PREP(f, v)	le16_encode_bits(v, IEEE80211_RADIOTAP_HE_MU_##f)
-+static void
-+mt76_connac3_mac_decode_he_mu_radiotap(struct sk_buff *skb, __le32 *rxv)
-+{
-+	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
-+	static const struct ieee80211_radiotap_he_mu mu_known = {
-+		.flags1 = HE_BITS(MU_FLAGS1_SIG_B_MCS_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_DCM_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_CH1_RU_KNOWN) |
-+			  HE_BITS(MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN),
-+		.flags2 = HE_BITS(MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN),
-+	};
-+	struct ieee80211_radiotap_he_mu *he_mu;
-+
-+	status->flag |= RX_FLAG_RADIOTAP_HE_MU;
-+
-+	he_mu = skb_push(skb, sizeof(mu_known));
-+	memcpy(he_mu, &mu_known, sizeof(mu_known));
-+
-+	he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_MCS, status->rate_idx);
-+	if (status->he_dcm)
-+		he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_DCM, status->he_dcm);
-+
-+	he_mu->flags2 |= MU_PREP(FLAGS2_BW_FROM_SIG_A_BW, status->bw) |
-+			 MU_PREP(FLAGS2_SIG_B_SYMS_USERS,
-+				 le32_get_bits(rxv[4], MT_CRXV_HE_NUM_USER));
-+
-+	he_mu->ru_ch1[0] = le32_get_bits(rxv[16], MT_CRXV_HE_RU0) & 0xff;
-+
-+	if (status->bw >= RATE_INFO_BW_40) {
-+		he_mu->flags1 |= HE_BITS(MU_FLAGS1_CH2_RU_KNOWN);
-+		he_mu->ru_ch2[0] = le32_get_bits(rxv[16], MT_CRXV_HE_RU1) & 0xff;
-+	}
-+
-+	if (status->bw >= RATE_INFO_BW_80) {
-+		u32 ru_h, ru_l;
-+
-+		he_mu->ru_ch1[1] = le32_get_bits(rxv[16], MT_CRXV_HE_RU2) & 0xff;
-+
-+		ru_l = le32_get_bits(rxv[16], MT_CRXV_HE_RU3_L);
-+		ru_h = le32_get_bits(rxv[17], MT_CRXV_HE_RU3_H) & 0x7;
-+		he_mu->ru_ch2[1] = (u8)(ru_l | ru_h << 4);
-+	}
-+}
-+
-+void mt76_connac3_mac_decode_he_radiotap(struct sk_buff *skb, __le32 *rxv,
-+					 u8 mode)
-+{
-+	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
-+	static const struct ieee80211_radiotap_he known = {
-+		.data1 = HE_BITS(DATA1_DATA_MCS_KNOWN) |
-+			 HE_BITS(DATA1_DATA_DCM_KNOWN) |
-+			 HE_BITS(DATA1_STBC_KNOWN) |
-+			 HE_BITS(DATA1_CODING_KNOWN) |
-+			 HE_BITS(DATA1_LDPC_XSYMSEG_KNOWN) |
-+			 HE_BITS(DATA1_DOPPLER_KNOWN) |
-+			 HE_BITS(DATA1_SPTL_REUSE_KNOWN) |
-+			 HE_BITS(DATA1_BSS_COLOR_KNOWN),
-+		.data2 = HE_BITS(DATA2_GI_KNOWN) |
-+			 HE_BITS(DATA2_TXBF_KNOWN) |
-+			 HE_BITS(DATA2_PE_DISAMBIG_KNOWN) |
-+			 HE_BITS(DATA2_TXOP_KNOWN),
-+	};
-+	u32 ltf_size = le32_get_bits(rxv[4], MT_CRXV_HE_LTF_SIZE) + 1;
-+	struct ieee80211_radiotap_he *he;
-+
-+	status->flag |= RX_FLAG_RADIOTAP_HE;
-+
-+	he = skb_push(skb, sizeof(known));
-+	memcpy(he, &known, sizeof(known));
-+
-+	he->data3 = HE_PREP(DATA3_BSS_COLOR, BSS_COLOR, rxv[9]) |
-+		    HE_PREP(DATA3_LDPC_XSYMSEG, LDPC_EXT_SYM, rxv[4]);
-+	he->data4 = HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[13]);
-+	he->data5 = HE_PREP(DATA5_PE_DISAMBIG, PE_DISAMBIG, rxv[5]) |
-+		    le16_encode_bits(ltf_size,
-+				     IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
-+	if (le32_to_cpu(rxv[0]) & MT_PRXV_TXBF)
-+		he->data5 |= HE_BITS(DATA5_TXBF);
-+	he->data6 = HE_PREP(DATA6_TXOP, TXOP_DUR, rxv[9]) |
-+		    HE_PREP(DATA6_DOPPLER, DOPPLER, rxv[9]);
-+
-+	switch (mode) {
-+	case MT_PHY_TYPE_HE_SU:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_SU) |
-+			     HE_BITS(DATA1_UL_DL_KNOWN) |
-+			     HE_BITS(DATA1_BEAM_CHANGE_KNOWN) |
-+			     HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
-+
-+		he->data3 |= HE_PREP(DATA3_BEAM_CHANGE, BEAM_CHNG, rxv[8]) |
-+			     HE_PREP(DATA3_UL_DL, UPLINK, rxv[5]);
-+		break;
-+	case MT_PHY_TYPE_HE_EXT_SU:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_EXT_SU) |
-+			     HE_BITS(DATA1_UL_DL_KNOWN) |
-+			     HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
-+
-+		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[5]);
-+		break;
-+	case MT_PHY_TYPE_HE_MU:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_MU) |
-+			     HE_BITS(DATA1_UL_DL_KNOWN);
-+
-+		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[5]);
-+		he->data4 |= HE_PREP(DATA4_MU_STA_ID, MU_AID, rxv[8]);
-+
-+		mt76_connac3_mac_decode_he_radiotap_ru(status, he, rxv);
-+		mt76_connac3_mac_decode_he_mu_radiotap(skb, rxv);
-+		break;
-+	case MT_PHY_TYPE_HE_TB:
-+		he->data1 |= HE_BITS(DATA1_FORMAT_TRIG) |
-+			     HE_BITS(DATA1_SPTL_REUSE2_KNOWN) |
-+			     HE_BITS(DATA1_SPTL_REUSE3_KNOWN) |
-+			     HE_BITS(DATA1_SPTL_REUSE4_KNOWN);
-+
-+		he->data4 |= HE_PREP(DATA4_TB_SPTL_REUSE1, SR_MASK, rxv[13]) |
-+			     HE_PREP(DATA4_TB_SPTL_REUSE2, SR1_MASK, rxv[13]) |
-+			     HE_PREP(DATA4_TB_SPTL_REUSE3, SR2_MASK, rxv[13]) |
-+			     HE_PREP(DATA4_TB_SPTL_REUSE4, SR3_MASK, rxv[13]);
-+
-+		mt76_connac3_mac_decode_he_radiotap_ru(status, he, rxv);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mt76_connac3_mac_decode_he_radiotap);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 6fc9260a2e92..ac8759febe48 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -13,10 +13,6 @@
- 
- #define to_rssi(field, rcpi)	((FIELD_GET(field, rcpi) - 220) / 2)
- 
--#define HE_BITS(f)		cpu_to_le16(IEEE80211_RADIOTAP_HE_##f)
--#define HE_PREP(f, m, v)	le16_encode_bits(le32_get_bits(v, MT_CRXV_HE_##m),\
--						 IEEE80211_RADIOTAP_HE_##f)
--
- static const struct mt7996_dfs_radar_spec etsi_radar_specs = {
- 	.pulse_th = { 110, -10, -80, 40, 5200, 128, 5200 },
- 	.radar_pattern = {
-@@ -263,180 +259,6 @@ void mt7996_mac_set_fixed_rate_table(struct mt7996_dev *dev,
- 	mt76_wr(dev, MT_WTBL_ITCR, ctrl);
- }
- 
--static void
--mt7996_mac_decode_he_radiotap_ru(struct mt76_rx_status *status,
--				 struct ieee80211_radiotap_he *he,
--				 __le32 *rxv)
--{
--	u32 ru, offs = 0;
--
--	ru = le32_get_bits(rxv[0], MT_PRXV_HE_RU_ALLOC);
--
--	status->bw = RATE_INFO_BW_HE_RU;
--
--	switch (ru) {
--	case 0 ... 36:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_26;
--		offs = ru;
--		break;
--	case 37 ... 52:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_52;
--		offs = ru - 37;
--		break;
--	case 53 ... 60:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_106;
--		offs = ru - 53;
--		break;
--	case 61 ... 64:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_242;
--		offs = ru - 61;
--		break;
--	case 65 ... 66:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_484;
--		offs = ru - 65;
--		break;
--	case 67:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_996;
--		break;
--	case 68:
--		status->he_ru = NL80211_RATE_INFO_HE_RU_ALLOC_2x996;
--		break;
--	}
--
--	he->data1 |= HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
--	he->data2 |= HE_BITS(DATA2_RU_OFFSET_KNOWN) |
--		     le16_encode_bits(offs,
--				      IEEE80211_RADIOTAP_HE_DATA2_RU_OFFSET);
--}
--
--static void
--mt7996_mac_decode_he_mu_radiotap(struct sk_buff *skb, __le32 *rxv)
--{
--	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
--	static const struct ieee80211_radiotap_he_mu mu_known = {
--		.flags1 = HE_BITS(MU_FLAGS1_SIG_B_MCS_KNOWN) |
--			  HE_BITS(MU_FLAGS1_SIG_B_DCM_KNOWN) |
--			  HE_BITS(MU_FLAGS1_CH1_RU_KNOWN) |
--			  HE_BITS(MU_FLAGS1_SIG_B_SYMS_USERS_KNOWN),
--		.flags2 = HE_BITS(MU_FLAGS2_BW_FROM_SIG_A_BW_KNOWN),
--	};
--	struct ieee80211_radiotap_he_mu *he_mu = NULL;
--
--	status->flag |= RX_FLAG_RADIOTAP_HE_MU;
--
--	he_mu = skb_push(skb, sizeof(mu_known));
--	memcpy(he_mu, &mu_known, sizeof(mu_known));
--
--#define MU_PREP(f, v)	le16_encode_bits(v, IEEE80211_RADIOTAP_HE_MU_##f)
--
--	he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_MCS, status->rate_idx);
--	if (status->he_dcm)
--		he_mu->flags1 |= MU_PREP(FLAGS1_SIG_B_DCM, status->he_dcm);
--
--	he_mu->flags2 |= MU_PREP(FLAGS2_BW_FROM_SIG_A_BW, status->bw) |
--			 MU_PREP(FLAGS2_SIG_B_SYMS_USERS,
--				 le32_get_bits(rxv[4], MT_CRXV_HE_NUM_USER));
--
--	he_mu->ru_ch1[0] = le32_get_bits(rxv[16], MT_CRXV_HE_RU0) & 0xff;
--
--	if (status->bw >= RATE_INFO_BW_40) {
--		he_mu->flags1 |= HE_BITS(MU_FLAGS1_CH2_RU_KNOWN);
--		he_mu->ru_ch2[0] = le32_get_bits(rxv[16], MT_CRXV_HE_RU1) & 0xff;
--	}
--
--	if (status->bw >= RATE_INFO_BW_80) {
--		u32 ru_h, ru_l;
--
--		he_mu->ru_ch1[1] = le32_get_bits(rxv[16], MT_CRXV_HE_RU2) & 0xff;
--
--		ru_l = le32_get_bits(rxv[16], MT_CRXV_HE_RU3_L);
--		ru_h = le32_get_bits(rxv[17], MT_CRXV_HE_RU3_H) & 0x7;
--		he_mu->ru_ch2[1] = (u8)(ru_l | ru_h << 4);
--	}
--}
--
--static void
--mt7996_mac_decode_he_radiotap(struct sk_buff *skb, __le32 *rxv, u8 mode)
--{
--	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
--	static const struct ieee80211_radiotap_he known = {
--		.data1 = HE_BITS(DATA1_DATA_MCS_KNOWN) |
--			 HE_BITS(DATA1_DATA_DCM_KNOWN) |
--			 HE_BITS(DATA1_STBC_KNOWN) |
--			 HE_BITS(DATA1_CODING_KNOWN) |
--			 HE_BITS(DATA1_LDPC_XSYMSEG_KNOWN) |
--			 HE_BITS(DATA1_DOPPLER_KNOWN) |
--			 HE_BITS(DATA1_SPTL_REUSE_KNOWN) |
--			 HE_BITS(DATA1_BSS_COLOR_KNOWN),
--		.data2 = HE_BITS(DATA2_GI_KNOWN) |
--			 HE_BITS(DATA2_TXBF_KNOWN) |
--			 HE_BITS(DATA2_PE_DISAMBIG_KNOWN) |
--			 HE_BITS(DATA2_TXOP_KNOWN),
--	};
--	struct ieee80211_radiotap_he *he = NULL;
--	u32 ltf_size = le32_get_bits(rxv[4], MT_CRXV_HE_LTF_SIZE) + 1;
--
--	status->flag |= RX_FLAG_RADIOTAP_HE;
--
--	he = skb_push(skb, sizeof(known));
--	memcpy(he, &known, sizeof(known));
--
--	he->data3 = HE_PREP(DATA3_BSS_COLOR, BSS_COLOR, rxv[9]) |
--		    HE_PREP(DATA3_LDPC_XSYMSEG, LDPC_EXT_SYM, rxv[4]);
--	he->data4 = HE_PREP(DATA4_SU_MU_SPTL_REUSE, SR_MASK, rxv[13]);
--	he->data5 = HE_PREP(DATA5_PE_DISAMBIG, PE_DISAMBIG, rxv[5]) |
--		    le16_encode_bits(ltf_size,
--				     IEEE80211_RADIOTAP_HE_DATA5_LTF_SIZE);
--	if (le32_to_cpu(rxv[0]) & MT_PRXV_TXBF)
--		he->data5 |= HE_BITS(DATA5_TXBF);
--	he->data6 = HE_PREP(DATA6_TXOP, TXOP_DUR, rxv[9]) |
--		    HE_PREP(DATA6_DOPPLER, DOPPLER, rxv[9]);
--
--	switch (mode) {
--	case MT_PHY_TYPE_HE_SU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_SU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN) |
--			     HE_BITS(DATA1_BEAM_CHANGE_KNOWN) |
--			     HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_BEAM_CHANGE, BEAM_CHNG, rxv[8]) |
--			     HE_PREP(DATA3_UL_DL, UPLINK, rxv[5]);
--		break;
--	case MT_PHY_TYPE_HE_EXT_SU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_EXT_SU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN) |
--			     HE_BITS(DATA1_BW_RU_ALLOC_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[5]);
--		break;
--	case MT_PHY_TYPE_HE_MU:
--		he->data1 |= HE_BITS(DATA1_FORMAT_MU) |
--			     HE_BITS(DATA1_UL_DL_KNOWN);
--
--		he->data3 |= HE_PREP(DATA3_UL_DL, UPLINK, rxv[5]);
--		he->data4 |= HE_PREP(DATA4_MU_STA_ID, MU_AID, rxv[8]);
--
--		mt7996_mac_decode_he_radiotap_ru(status, he, rxv);
--		mt7996_mac_decode_he_mu_radiotap(skb, rxv);
--		break;
--	case MT_PHY_TYPE_HE_TB:
--		he->data1 |= HE_BITS(DATA1_FORMAT_TRIG) |
--			     HE_BITS(DATA1_SPTL_REUSE2_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE3_KNOWN) |
--			     HE_BITS(DATA1_SPTL_REUSE4_KNOWN);
--
--		he->data4 |= HE_PREP(DATA4_TB_SPTL_REUSE1, SR_MASK, rxv[13]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE2, SR1_MASK, rxv[13]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE3, SR2_MASK, rxv[13]) |
--			     HE_PREP(DATA4_TB_SPTL_REUSE4, SR3_MASK, rxv[13]);
--
--		mt7996_mac_decode_he_radiotap_ru(status, he, rxv);
--		break;
--	default:
--		break;
--	}
--}
--
- /* The HW does not translate the mac header to 802.3 for mesh point */
- static int mt7996_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_gap)
- {
-@@ -887,7 +709,7 @@ mt7996_mac_fill_rx(struct mt7996_dev *dev, struct sk_buff *skb)
- 	}
- 
- 	if (rxv && mode >= MT_PHY_TYPE_HE_SU && !(status->flag & RX_FLAG_8023))
--		mt7996_mac_decode_he_radiotap(skb, rxv, mode);
-+		mt76_connac3_mac_decode_he_radiotap(skb, rxv, mode);
- 
- 	if (!status->wcid || !ieee80211_is_data_qos(fc))
- 		return 0;
--- 
-2.41.0
+How about just describing it as something like "AP_VLAN is virtual so it
+doesn't really exist as a type for capabilities; surely AP was
+intended"?
 
+I can kind of see how this might happen too, you have a STA, check the
+interface, etc.
+
+johannes
