@@ -2,70 +2,77 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76ACCEB64D8
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jun 2023 16:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E18AEEB64DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Jun 2023 17:43:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229973AbjFVQ7c (ORCPT
+        id S229673AbjFVRnt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Jun 2023 12:59:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45728 "EHLO
+        Thu, 22 Jun 2023 13:43:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229830AbjFVQ7b (ORCPT
+        with ESMTP id S229483AbjFVRnr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Jun 2023 12:59:31 -0400
-Received: from nbd.name (nbd.name [46.4.11.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7D7510D2
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2023 09:59:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-        s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-        Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=6lPPTXKNuK0A3ipUtZV+OfIVeN9gMtbJflb30agGopI=; b=jDCF8Xu9u8VuMBv0edsFfpwCrQ
-        9bkz3HdSHpwqKT/pGdr7CWlxqANVPQEesCN9wd5z9+vg07znjvV7oSb4O1cfwiemMTZiQz2IFPhCl
-        HRurfHeKgyGm8tgkIvsapA71B2kWMsUl1FCzsBgmFOCXCEr3Yt7yON8ywszDcjl64s4E=;
-Received: from p4ff133b9.dip0.t-ipconnect.de ([79.241.51.185] helo=Maecks.lan)
-        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-        (Exim 4.94.2)
-        (envelope-from <nbd@nbd.name>)
-        id 1qCNeZ-008w5m-NX; Thu, 22 Jun 2023 18:59:27 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH v2] mac80211: fix sband iftype data lookup for AP_VLAN
-Date:   Thu, 22 Jun 2023 18:59:19 +0200
-Message-ID: <20230622165919.46841-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.41.0
+        Thu, 22 Jun 2023 13:43:47 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC4F41BD6
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jun 2023 10:43:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=m+oF7eVgolTuMYcbjtdkwjdRRUAjVsIgW8iaSlkFAu4=;
+        t=1687455826; x=1688665426; b=kR0QOAmGwbjmFMz48FtZtioktjEpn8d/gy8zyMVT223ngxZ
+        kPOsxk36yM2EcGKR7//fVqEcWfqwf2qHchmL+n2vVn9C/ijZfEZLpGTonNEAT+yoX8UL90/dCUJa/
+        sIBxmHEDByXAvgLj3W3xKPUJ1gCicv72B22znnmJiWItgwnbstxsG2jVt3kYJAPnvZYYdD/aUUjqN
+        0mS30NNql4FqPfjm8W6xA8MMyr+RB7rX2VoOUdlkPO5EZnazCFh6nLBhhmEja7Y52nSwn3CqkOuuw
+        6vP/xBVcGQfIoDidEb14qgqPswaLML5+MTsF90QfggnGoWfmIi80LemLLPuAn13g==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qCOLQ-00EqOW-1K;
+        Thu, 22 Jun 2023 19:43:44 +0200
+Message-ID: <139908050c1c5941d791c228ef06fdfd55615d32.camel@sipsolutions.net>
+Subject: Re: [bug report] wifi: mac80211: store BSS param change count from
+ assoc response
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Dan Carpenter <dan.carpenter@linaro.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Thu, 22 Jun 2023 19:43:43 +0200
+In-Reply-To: <1c031edf-a2ab-4548-a181-16b8c641d786@moroto.mountain>
+References: <1c031edf-a2ab-4548-a181-16b8c641d786@moroto.mountain>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-AP_VLAN interfaces are virtual, so doesn't really exist as a type for
-capabilities. When passed in as a type, AP is the one that's really intended.
+On Thu, 2023-06-22 at 17:47 +0300, Dan Carpenter wrote:
+>=20
+>     4922         if (control & IEEE80211_MLE_STA_CONTROL_COMPLETE_PROFILE=
+ &&
+>                                                                          =
+ ^^
+> Should this be ||?
+>=20
+>     4923             control & IEEE80211_MLE_STA_CONTROL_NSTR_BITMAP_SIZE=
+) {
+>     4924                 if (control & IEEE80211_MLE_STA_CONTROL_NSTR_BIT=
+MAP_SIZE)
+>=20
+> This is always true because it's checked on the previous line.
+>=20
 
-Fixes: c4cbaf7973a7 ("cfg80211: Add support for HE")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- include/net/cfg80211.h | 3 +++
- 1 file changed, 3 insertions(+)
+Oops. There are actually two places doing this, I think I copy/pasted
+it.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7c7d03aa9d06..d6fa7c8767ad 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -562,6 +562,9 @@ ieee80211_get_sband_iftype_data(const struct ieee80211_supported_band *sband,
- 	if (WARN_ON(iftype >= NL80211_IFTYPE_MAX))
- 		return NULL;
- 
-+	if (iftype == NL80211_IFTYPE_AP_VLAN)
-+		iftype = NL80211_IFTYPE_AP;
-+
- 	for (i = 0; i < sband->n_iftype_data; i++)  {
- 		const struct ieee80211_sband_iftype_data *data =
- 			&sband->iftype_data[i];
--- 
-2.41.0
+But the second part of the if statement should simply be removed. The
+COMPLETE_PROFILE bit indicates whether or not the NSTR bitmap is
+present, and the NSTR_BITMAP_SIZE bit indicates how it's encoded (8 or
+16 bits).
 
+Thanks!
+
+johannes
