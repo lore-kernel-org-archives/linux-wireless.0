@@ -2,89 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFED4EB64DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jun 2023 15:20:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19754EB64D9
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Jun 2023 16:04:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232335AbjF0PUp (ORCPT
+        id S232005AbjF0QEb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Jun 2023 11:20:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42490 "EHLO
+        Tue, 27 Jun 2023 12:04:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230444AbjF0PUo (ORCPT
+        with ESMTP id S231206AbjF0QEa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Jun 2023 11:20:44 -0400
-X-Greylist: delayed 378 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 27 Jun 2023 08:20:42 PDT
-Received: from forward205b.mail.yandex.net (forward205b.mail.yandex.net [178.154.239.152])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3AD81735;
-        Tue, 27 Jun 2023 08:20:42 -0700 (PDT)
-Received: from forward103c.mail.yandex.net (forward103c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d103])
-        by forward205b.mail.yandex.net (Yandex) with ESMTP id 5D6E96751F;
-        Tue, 27 Jun 2023 18:14:27 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-23.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-23.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:2929:0:640:5f6e:0])
-        by forward103c.mail.yandex.net (Yandex) with ESMTP id B861460024;
-        Tue, 27 Jun 2023 18:14:21 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-23.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id KENE8w0DV4Y0-RAocMuF0;
-        Tue, 27 Jun 2023 18:14:21 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1687878861;
-        bh=6YvjUD6AxvMQ0iz8tQiHRTDEHNd8AITV9R1JP2bRykM=;
-        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
-        b=Tfhs9+qQH5DrHNkLDKTBBZAj5ntTJZ8dcXLAalkffxlN4bAL4VY0jAMF1iuAfOehR
-         kx5HiDCKVTtpqfVgyKtOTClIMj1UOK/MloWibK7mVqRhkLkjZ39F1CaVpuGXTUq6fT
-         gRHJ8/7uVoY99Y25Y57YwxA4d6dLrSW56zYB5hlA=
-Authentication-Results: mail-nwsmtp-smtp-production-main-23.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
-        Jonas Gorski <jonas.gorski@gmail.com>,
-        lvc-project@linuxtesting.org, Dmitry Antipov <dmantipov@yandex.ru>,
-        stable@vger.kernel.org
-Subject: [PATCH] [v2] wifi: b43: fix cordic arithmetic
-Date:   Tue, 27 Jun 2023 18:13:53 +0300
-Message-ID: <20230627151411.92749-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <ef4750f8-8de5-dbfc-2c0b-3400d30d83e5@lwfinger.net>
-References: <ef4750f8-8de5-dbfc-2c0b-3400d30d83e5@lwfinger.net>
+        Tue, 27 Jun 2023 12:04:30 -0400
+Received: from titan.fastwww.net (titan2.fastwww.net [198.27.78.195])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 439DB2D5E
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jun 2023 09:04:29 -0700 (PDT)
+Comment: DomainKeys? See http://domainkeys.sourceforge.net/
+DomainKey-Signature: a=rsa-sha1; q=dns; c=nofws;
+  s=default; d=lockie.ca;
+  b=EWkRb6ilIElQXJs5gR6UQsSoG/rcPawJVzA+dH7zMvZQtEpAzu/Mif67VjfsUimiAAZpenez4k/mEXZQdcN2L+/8XmE+SEDynyOPKOtyJtRJYQv5RJpYoLynmMOXP3v//2Y63QpoKMiQs69c7OZvCCZFE3oiYDaM1Ocn7dDiFhRxIhJMS0FYC6xKvszSXQ2zB+PpABlb3Hw6WNYAq3Ip1fWpZHv4Hz6Gn9tS3qabsxy9IicQQhZpYYeSrw8fxUmX1FAOBw7QimVF46CrHQiG0f1DtNwpJwj2uE2oIAwwlmVkRIAry3InIi6l2IxSmGQq1ueKLwiW4WiEqcEkKzNgPw==;
+  h=Received:Received:Received:Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:X-Correlation-ID;
+Received: (qmail 4090494 invoked by uid 108); 27 Jun 2023 16:04:27 +0000
+Received: from unknown (HELO titan.fastwww.net) (127.0.0.1)
+  by titan.fastwww.net with SMTP; 27 Jun 2023 16:04:27 +0000
+Received: from dummy.faircode.eu ([76.75.107.155])
+        by titan.fastwww.net with ESMTPSA
+        id BqSPKIsIm2R6aj4ApSktOw
+        (envelope-from <bjlockie@lockie.ca>); Tue, 27 Jun 2023 16:04:27 +0000
+Date:   Tue, 27 Jun 2023 12:04:26 -0400 (EDT)
+From:   James <bjlockie@lockie.ca>
+To:     Giulio Paci <giuliopaci@gmail.com>
+Cc:     linux-wireless@vger.kernel.org
+Message-ID: <e02fe1f4-d837-4124-b53e-cf8b28105a17@lockie.ca>
+In-Reply-To: <CA+zRt5HKvOQihOwoSj_G1eKFQ5ap9L4uRK2hvtV_SxOqwn-2Dw@mail.gmail.com>
+References: <CA+zRt5HKvOQihOwoSj_G1eKFQ5ap9L4uRK2hvtV_SxOqwn-2Dw@mail.gmail.com>
+Subject: Re: Realtek 8822ce connection is very unstable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Correlation-ID: <e02fe1f4-d837-4124-b53e-cf8b28105a17@lockie.ca>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In 'lpphy_start_tx_tone()', 'CORDIC_FLOAT((sample.i * max) & 0xFF)'
-is invalid because it is (<32-bit> & 0xff) shifted right by 15 bits
-and so always evaluates to zero. Looking through brcmsmac's
-'wlc_lcnphy_start_tx_tone()', the result should be masked instead,
-i. e. 'CORDIC_FLOAT(sample[i].max) & 0xFF'.
-
-Fixes: 6f98e62a9f1b ("b43: update cordic code to match current specs")
-
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Cc: stable@vger.kernel.org
-Suggested-by: Jonas Gorski <jonas.gorski@gmail.com>
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
-v2: add Cc: stable and Fixes: (Larry Finger)
----
- drivers/net/wireless/broadcom/b43/phy_lp.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/b43/phy_lp.c b/drivers/net/wireless/broadcom/b43/phy_lp.c
-index 0e5c076e7544..e8ef04e509aa 100644
---- a/drivers/net/wireless/broadcom/b43/phy_lp.c
-+++ b/drivers/net/wireless/broadcom/b43/phy_lp.c
-@@ -1788,8 +1788,8 @@ static void lpphy_start_tx_tone(struct b43_wldev *dev, s32 freq, u16 max)
- 	for (i = 0; i < samples; i++) {
- 		sample = cordic_calc_iq(CORDIC_FIXED(theta));
- 		theta += rotation;
--		buf[i] = CORDIC_FLOAT((sample.i * max) & 0xFF) << 8;
--		buf[i] |= CORDIC_FLOAT((sample.q * max) & 0xFF);
-+		buf[i] = (u16)((CORDIC_FLOAT(sample.i * max) & 0xFF) << 8);
-+		buf[i] |= (u16)(CORDIC_FLOAT(sample.q * max) & 0xFF);
- 	}
- 
- 	b43_lptab_write_bulk(dev, B43_LPTAB16(5, 0), samples, buf);
--- 
-2.41.0
-
+I would try a different distro.
