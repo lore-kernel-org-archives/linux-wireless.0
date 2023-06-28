@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02FFDEB64D7
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jun 2023 07:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A807C001B0
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jun 2023 07:52:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230137AbjF1Hw2 (ORCPT
+        id S231131AbjF1Hwd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Jun 2023 03:52:28 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:38820 "EHLO
+        Wed, 28 Jun 2023 03:52:33 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:38880 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230108AbjF1HwZ (ORCPT
+        with ESMTP id S230093AbjF1Hw2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2023 03:52:25 -0400
-X-UUID: 69395d96158211ee9cb5633481061a41-20230628
+        Wed, 28 Jun 2023 03:52:28 -0400
+X-UUID: 68f279d0158211ee9cb5633481061a41-20230628
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=w38f/fRMxmxiegKROlzCwh4aOcow11qLMppJ2oFzKco=;
-        b=BuLVNrxf570y6rQMPsVxbAc4uyUHmqB3BO6i82Lo7kDYMUi0ihWp/xB+1gEx71B1ADKPCzBDZk6eDgAXSXIvtYE5k/YfqSlTQDpgeCThAGlfc4Ad/NC9UIazo6kEy0qCptGRGuVixzN41IzspkCRo87F7j7y82j1FHjkd/kZ2Ds=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=6PDqreba8OPai+PIacZji7W6uuUKmIkJ+VvFQSiME2A=;
+        b=G1cYTcOcUAARSE1Ff+rvkgQLjiMFpK31lhuH3iPsy7+fdubNKwLPhkRr9YlWCq5Cl8LUz2h11rKeCok4ikDH39cHs25jHy3Q84pqn2ZNt5XN3U4okU2/ZiDFARZyCb1Nvg6f/w3F/nGlTaDA8k2zoq9yn/wgkpBeHjG+yUeT2IY=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.27,REQID:b7073ac7-6bc1-46f5-97c4-e3935535af5a,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-        ON:release,TS:70
-X-CID-INFO: VERSION:1.1.27,REQID:b7073ac7-6bc1-46f5-97c4-e3935535af5a,IP:0,URL
-        :0,TC:0,Content:-25,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTI
-        ON:quarantine,TS:70
-X-CID-META: VersionHash:01c9525,CLOUDID:9c7b9b0d-c22b-45ab-8a43-3004e9216b56,B
-        ulkID:230628150716R3EPWWF3,BulkQuantity:1,Recheck:0,SF:29|28|17|19|48|38,T
-        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:43,QS:nil,BEC:nil,COL:0,
-        OSI:0,OSA:0,AV:0,LES:1,SPR:NO
+X-CID-O-INFO: VERSION:1.1.27,REQID:840a0f70-0c37-46a3-b6cd-63dc0ebc18ed,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:95
+X-CID-INFO: VERSION:1.1.27,REQID:840a0f70-0c37-46a3-b6cd-63dc0ebc18ed,IP:0,URL
+        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
+        :quarantine,TS:95
+X-CID-META: VersionHash:01c9525,CLOUDID:4c694f0d-26a8-467f-b838-f99719a9c083,B
+        ulkID:230628150716YS40BVMD,BulkQuantity:0,Recheck:0,SF:28|17|19|48|38|29,T
+        C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+        ,OSI:0,OSA:0,AV:0,LES:1,SPR:NO
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_ASC,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_SNR,
-        TF_CID_SPAM_SDM
-X-UUID: 69395d96158211ee9cb5633481061a41-20230628
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_SDM,TF_CID_SPAM_ASC,TF_CID_SPAM_FAS,
+        TF_CID_SPAM_FSD
+X-UUID: 68f279d0158211ee9cb5633481061a41-20230628
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
         (envelope-from <deren.wu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 691345480; Wed, 28 Jun 2023 15:07:15 +0800
+        with ESMTP id 504911790; Wed, 28 Jun 2023 15:07:14 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 28 Jun 2023 15:07:13 +0800
+ 15.2.1118.26; Wed, 28 Jun 2023 15:07:14 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 28 Jun 2023 15:07:13 +0800
+ 15.2.1118.26 via Frontend Transport; Wed, 28 Jun 2023 15:07:14 +0800
 From:   Deren Wu <deren.wu@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
 CC:     Sean Wang <sean.wang@mediatek.com>,
@@ -52,9 +52,9 @@ CC:     Sean Wang <sean.wang@mediatek.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Deren Wu <deren.wu@mediatek.com>
-Subject: [PATCH 01/16] wifi: mt76: mt7921: move common register definition in mt792x_regs.h
-Date:   Wed, 28 Jun 2023 15:05:47 +0800
-Message-ID: <5b48528a224d9cbb3835612f10982b350f150d89.1687919628.git.deren.wu@mediatek.com>
+Subject: [PATCH 04/16] wifi: mt76: mt7921: rename mt7921_sta in mt792x_sta
+Date:   Wed, 28 Jun 2023 15:05:50 +0800
+Message-ID: <cf4a3db00340bcc1ae447b1a0eb2d50ed341a1b1.1687919628.git.deren.wu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <cover.1687919628.git.deren.wu@mediatek.com>
 References: <cover.1687919628.git.deren.wu@mediatek.com>
@@ -67,962 +67,312 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-This is a preliminary patch in order to support new WiFi7 chips.
+This is a preliminary patch to introduce WiFi7 chipset support
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Deren Wu <deren.wu@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/regs.h  | 443 +----------------
- .../net/wireless/mediatek/mt76/mt792x_regs.h  | 460 ++++++++++++++++++
- 2 files changed, 463 insertions(+), 440 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt792x_regs.h
+ .../net/wireless/mediatek/mt76/mt7921/init.c  |  2 +-
+ .../net/wireless/mediatek/mt76/mt7921/mac.c   | 22 +++++++++----------
+ .../net/wireless/mediatek/mt76/mt7921/main.c  | 22 +++++++++----------
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   |  8 +++----
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  8 +++----
+ .../wireless/mediatek/mt76/mt7921/pci_mac.c   |  2 +-
+ 6 files changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-index b180142562a2..fefc10539586 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
-@@ -4,26 +4,7 @@
- #ifndef __MT7921_REGS_H
- #define __MT7921_REGS_H
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index f2a6fd61863b..df32f4f1b636 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -140,7 +140,7 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
  
--/* MCU WFDMA1 */
--#define MT_MCU_WFDMA1_BASE		0x3000
--#define MT_MCU_WFDMA1(ofs)		(MT_MCU_WFDMA1_BASE + (ofs))
--
--#define MT_MCU_INT_EVENT		MT_MCU_WFDMA1(0x108)
--#define MT_MCU_INT_EVENT_DMA_STOPPED	BIT(0)
--#define MT_MCU_INT_EVENT_DMA_INIT	BIT(1)
--#define MT_MCU_INT_EVENT_SER_TRIGGER	BIT(2)
--#define MT_MCU_INT_EVENT_RESET_DONE	BIT(3)
--
--#define MT_PLE_BASE			0x820c0000
--#define MT_PLE(ofs)			(MT_PLE_BASE + (ofs))
--
--#define MT_PLE_FL_Q0_CTRL		MT_PLE(0x3e0)
--#define MT_PLE_FL_Q1_CTRL		MT_PLE(0x3e4)
--#define MT_PLE_FL_Q2_CTRL		MT_PLE(0x3e8)
--#define MT_PLE_FL_Q3_CTRL		MT_PLE(0x3ec)
--
--#define MT_PLE_AC_QEMPTY(_n)		MT_PLE(0x500 + 0x40 * (_n))
--#define MT_PLE_AMSDU_PACK_MSDU_CNT(n)	MT_PLE(0x10e0 + ((n) << 2))
-+#include "../mt792x_regs.h"
+ 	phy->slottime = 9;
  
- #define MT_MDP_BASE			0x820cd000
- #define MT_MDP(ofs)			(MT_MDP_BASE + (ofs))
-@@ -47,266 +28,6 @@
- #define MT_MDP_TO_HIF			0
- #define MT_MDP_TO_WM			1
+-	hw->sta_data_size = sizeof(struct mt7921_sta);
++	hw->sta_data_size = sizeof(struct mt792x_sta);
+ 	hw->vif_data_size = sizeof(struct mt792x_vif);
  
--/* TMAC: band 0(0x21000), band 1(0xa1000) */
--#define MT_WF_TMAC_BASE(_band)		((_band) ? 0x820f4000 : 0x820e4000)
--#define MT_WF_TMAC(_band, ofs)		(MT_WF_TMAC_BASE(_band) + (ofs))
--
--#define MT_TMAC_TCR0(_band)		MT_WF_TMAC(_band, 0)
--#define MT_TMAC_TCR0_TBTT_STOP_CTRL	BIT(25)
--
--#define MT_TMAC_CDTR(_band)		MT_WF_TMAC(_band, 0x090)
--#define MT_TMAC_ODTR(_band)		MT_WF_TMAC(_band, 0x094)
--#define MT_TIMEOUT_VAL_PLCP		GENMASK(15, 0)
--#define MT_TIMEOUT_VAL_CCA		GENMASK(31, 16)
--
--#define MT_TMAC_ICR0(_band)		MT_WF_TMAC(_band, 0x0a4)
--#define MT_IFS_EIFS			GENMASK(8, 0)
--#define MT_IFS_RIFS			GENMASK(14, 10)
--#define MT_IFS_SIFS			GENMASK(22, 16)
--#define MT_IFS_SLOT			GENMASK(30, 24)
--
--#define MT_TMAC_CTCR0(_band)			MT_WF_TMAC(_band, 0x0f4)
--#define MT_TMAC_CTCR0_INS_DDLMT_REFTIME		GENMASK(5, 0)
--#define MT_TMAC_CTCR0_INS_DDLMT_EN		BIT(17)
--#define MT_TMAC_CTCR0_INS_DDLMT_VHT_SMPDU_EN	BIT(18)
--
--#define MT_TMAC_TRCR0(_band)		MT_WF_TMAC(_band, 0x09c)
--#define MT_TMAC_TFCR0(_band)		MT_WF_TMAC(_band, 0x1e0)
--
--#define MT_WF_DMA_BASE(_band)		((_band) ? 0x820f7000 : 0x820e7000)
--#define MT_WF_DMA(_band, ofs)		(MT_WF_DMA_BASE(_band) + (ofs))
--
--#define MT_DMA_DCR0(_band)		MT_WF_DMA(_band, 0x000)
--#define MT_DMA_DCR0_MAX_RX_LEN		GENMASK(15, 3)
--#define MT_DMA_DCR0_RXD_G5_EN		BIT(23)
--
--/* WTBLOFF TOP: band 0(0x820e9000),band 1(0x820f9000) */
--#define MT_WTBLOFF_TOP_BASE(_band)	((_band) ? 0x820f9000 : 0x820e9000)
--#define MT_WTBLOFF_TOP(_band, ofs)	(MT_WTBLOFF_TOP_BASE(_band) + (ofs))
--
--#define MT_WTBLOFF_TOP_RSCR(_band)	MT_WTBLOFF_TOP(_band, 0x008)
--#define MT_WTBLOFF_TOP_RSCR_RCPI_MODE	GENMASK(31, 30)
--#define MT_WTBLOFF_TOP_RSCR_RCPI_PARAM	GENMASK(25, 24)
--
--/* LPON: band 0(0x24200), band 1(0xa4200) */
--#define MT_WF_LPON_BASE(_band)		((_band) ? 0x820fb000 : 0x820eb000)
--#define MT_WF_LPON(_band, ofs)		(MT_WF_LPON_BASE(_band) + (ofs))
--
--#define MT_LPON_UTTR0(_band)		MT_WF_LPON(_band, 0x080)
--#define MT_LPON_UTTR1(_band)		MT_WF_LPON(_band, 0x084)
--
--#define MT_LPON_TCR(_band, n)		MT_WF_LPON(_band, 0x0a8 + (n) * 4)
--#define MT_LPON_TCR_SW_MODE		GENMASK(1, 0)
--#define MT_LPON_TCR_SW_WRITE		BIT(0)
--
--/* ETBF: band 0(0x24000), band 1(0xa4000) */
--#define MT_WF_ETBF_BASE(_band)		((_band) ? 0x820fa000 : 0x820ea000)
--#define MT_WF_ETBF(_band, ofs)		(MT_WF_ETBF_BASE(_band) + (ofs))
--
--#define MT_ETBF_TX_APP_CNT(_band)	MT_WF_ETBF(_band, 0x150)
--#define MT_ETBF_TX_IBF_CNT		GENMASK(31, 16)
--#define MT_ETBF_TX_EBF_CNT		GENMASK(15, 0)
--
--#define MT_ETBF_RX_FB_CNT(_band)	MT_WF_ETBF(_band, 0x158)
--#define MT_ETBF_RX_FB_ALL		GENMASK(31, 24)
--#define MT_ETBF_RX_FB_HE		GENMASK(23, 16)
--#define MT_ETBF_RX_FB_VHT		GENMASK(15, 8)
--#define MT_ETBF_RX_FB_HT		GENMASK(7, 0)
--
--/* MIB: band 0(0x24800), band 1(0xa4800) */
--#define MT_WF_MIB_BASE(_band)		((_band) ? 0x820fd000 : 0x820ed000)
--#define MT_WF_MIB(_band, ofs)		(MT_WF_MIB_BASE(_band) + (ofs))
--
--#define MT_MIB_SCR1(_band)		MT_WF_MIB(_band, 0x004)
--#define MT_MIB_TXDUR_EN			BIT(8)
--#define MT_MIB_RXDUR_EN			BIT(9)
--
--#define MT_MIB_SDR3(_band)		MT_WF_MIB(_band, 0x698)
--#define MT_MIB_SDR3_FCS_ERR_MASK	GENMASK(31, 16)
--
--#define MT_MIB_SDR5(_band)		MT_WF_MIB(_band, 0x780)
--
--#define MT_MIB_SDR9(_band)		MT_WF_MIB(_band, 0x02c)
--#define MT_MIB_SDR9_BUSY_MASK		GENMASK(23, 0)
--
--#define MT_MIB_SDR12(_band)		MT_WF_MIB(_band, 0x558)
--#define MT_MIB_SDR14(_band)		MT_WF_MIB(_band, 0x564)
--#define MT_MIB_SDR15(_band)		MT_WF_MIB(_band, 0x568)
--
--#define MT_MIB_SDR16(_band)		MT_WF_MIB(_band, 0x048)
--#define MT_MIB_SDR16_BUSY_MASK		GENMASK(23, 0)
--
--#define MT_MIB_SDR22(_band)		MT_WF_MIB(_band, 0x770)
--#define MT_MIB_SDR23(_band)		MT_WF_MIB(_band, 0x774)
--#define MT_MIB_SDR31(_band)		MT_WF_MIB(_band, 0x55c)
--
--#define MT_MIB_SDR32(_band)		MT_WF_MIB(_band, 0x7a8)
--#define MT_MIB_SDR9_IBF_CNT_MASK	GENMASK(31, 16)
--#define MT_MIB_SDR9_EBF_CNT_MASK	GENMASK(15, 0)
--
--#define MT_MIB_SDR34(_band)		MT_WF_MIB(_band, 0x090)
--#define MT_MIB_MU_BF_TX_CNT		GENMASK(15, 0)
--
--#define MT_MIB_SDR36(_band)		MT_WF_MIB(_band, 0x054)
--#define MT_MIB_SDR36_TXTIME_MASK	GENMASK(23, 0)
--#define MT_MIB_SDR37(_band)		MT_WF_MIB(_band, 0x058)
--#define MT_MIB_SDR37_RXTIME_MASK	GENMASK(23, 0)
--
--#define MT_MIB_DR8(_band)		MT_WF_MIB(_band, 0x0c0)
--#define MT_MIB_DR9(_band)		MT_WF_MIB(_band, 0x0c4)
--#define MT_MIB_DR11(_band)		MT_WF_MIB(_band, 0x0cc)
--
--#define MT_MIB_MB_SDR0(_band, n)	MT_WF_MIB(_band, 0x100 + ((n) << 4))
--#define MT_MIB_RTS_RETRIES_COUNT_MASK	GENMASK(31, 16)
--
--#define MT_MIB_MB_BSDR0(_band)		MT_WF_MIB(_band, 0x688)
--#define MT_MIB_RTS_COUNT_MASK		GENMASK(15, 0)
--#define MT_MIB_MB_BSDR1(_band)		MT_WF_MIB(_band, 0x690)
--#define MT_MIB_RTS_FAIL_COUNT_MASK	GENMASK(15, 0)
--#define MT_MIB_MB_BSDR2(_band)		MT_WF_MIB(_band, 0x518)
--#define MT_MIB_BA_FAIL_COUNT_MASK	GENMASK(15, 0)
--#define MT_MIB_MB_BSDR3(_band)		MT_WF_MIB(_band, 0x520)
--#define MT_MIB_ACK_FAIL_COUNT_MASK	GENMASK(15, 0)
--
--#define MT_MIB_MB_SDR2(_band, n)	MT_WF_MIB(_band, 0x108 + ((n) << 4))
--#define MT_MIB_FRAME_RETRIES_COUNT_MASK	GENMASK(15, 0)
--
--#define MT_TX_AGG_CNT(_band, n)		MT_WF_MIB(_band, 0x7dc + ((n) << 2))
--#define MT_TX_AGG_CNT2(_band, n)	MT_WF_MIB(_band, 0x7ec + ((n) << 2))
--#define MT_MIB_ARNG(_band, n)		MT_WF_MIB(_band, 0x0b0 + ((n) << 2))
--#define MT_MIB_ARNCR_RANGE(val, n)	(((val) >> ((n) << 3)) & GENMASK(7, 0))
--
--#define MT_WTBLON_TOP_BASE		0x820d4000
--#define MT_WTBLON_TOP(ofs)		(MT_WTBLON_TOP_BASE + (ofs))
--#define MT_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x200)
--#define MT_WTBLON_TOP_WDUCR_GROUP	GENMASK(2, 0)
--
--#define MT_WTBL_UPDATE			MT_WTBLON_TOP(0x230)
--#define MT_WTBL_UPDATE_WLAN_IDX		GENMASK(9, 0)
--#define MT_WTBL_UPDATE_ADM_COUNT_CLEAR	BIT(12)
--#define MT_WTBL_UPDATE_BUSY		BIT(31)
--
--#define MT_WTBL_BASE			0x820d8000
--#define MT_WTBL_LMAC_ID			GENMASK(14, 8)
--#define MT_WTBL_LMAC_DW			GENMASK(7, 2)
--#define MT_WTBL_LMAC_OFFS(_id, _dw)	(MT_WTBL_BASE | \
--					FIELD_PREP(MT_WTBL_LMAC_ID, _id) | \
--					FIELD_PREP(MT_WTBL_LMAC_DW, _dw))
--
--/* AGG: band 0(0x20800), band 1(0xa0800) */
--#define MT_WF_AGG_BASE(_band)		((_band) ? 0x820f2000 : 0x820e2000)
--#define MT_WF_AGG(_band, ofs)		(MT_WF_AGG_BASE(_band) + (ofs))
--
--#define MT_AGG_AWSCR0(_band, _n)	MT_WF_AGG(_band, 0x05c + (_n) * 4)
--#define MT_AGG_PCR0(_band, _n)		MT_WF_AGG(_band, 0x06c + (_n) * 4)
--#define MT_AGG_PCR0_MM_PROT		BIT(0)
--#define MT_AGG_PCR0_GF_PROT		BIT(1)
--#define MT_AGG_PCR0_BW20_PROT		BIT(2)
--#define MT_AGG_PCR0_BW40_PROT		BIT(4)
--#define MT_AGG_PCR0_BW80_PROT		BIT(6)
--#define MT_AGG_PCR0_ERP_PROT		GENMASK(12, 8)
--#define MT_AGG_PCR0_VHT_PROT		BIT(13)
--#define MT_AGG_PCR0_PTA_WIN_DIS		BIT(15)
--
--#define MT_AGG_PCR1_RTS0_NUM_THRES	GENMASK(31, 23)
--#define MT_AGG_PCR1_RTS0_LEN_THRES	GENMASK(19, 0)
--
--#define MT_AGG_ACR0(_band)		MT_WF_AGG(_band, 0x084)
--#define MT_AGG_ACR_CFEND_RATE		GENMASK(13, 0)
--#define MT_AGG_ACR_BAR_RATE		GENMASK(29, 16)
--
--#define MT_AGG_MRCR(_band)		MT_WF_AGG(_band, 0x098)
--#define MT_AGG_MRCR_BAR_CNT_LIMIT	GENMASK(15, 12)
--#define MT_AGG_MRCR_LAST_RTS_CTS_RN	BIT(6)
--#define MT_AGG_MRCR_RTS_FAIL_LIMIT	GENMASK(11, 7)
--#define MT_AGG_MRCR_TXCMD_RTS_FAIL_LIMIT	GENMASK(28, 24)
--
--#define MT_AGG_ATCR1(_band)		MT_WF_AGG(_band, 0x0f0)
--#define MT_AGG_ATCR3(_band)		MT_WF_AGG(_band, 0x0f4)
--
--/* ARB: band 0(0x20c00), band 1(0xa0c00) */
--#define MT_WF_ARB_BASE(_band)		((_band) ? 0x820f3000 : 0x820e3000)
--#define MT_WF_ARB(_band, ofs)		(MT_WF_ARB_BASE(_band) + (ofs))
--
--#define MT_ARB_SCR(_band)		MT_WF_ARB(_band, 0x080)
--#define MT_ARB_SCR_TX_DISABLE		BIT(8)
--#define MT_ARB_SCR_RX_DISABLE		BIT(9)
--
--#define MT_ARB_DRNGR0(_band, _n)	MT_WF_ARB(_band, 0x194 + (_n) * 4)
--
--/* RMAC: band 0(0x21400), band 1(0xa1400) */
--#define MT_WF_RMAC_BASE(_band)		((_band) ? 0x820f5000 : 0x820e5000)
--#define MT_WF_RMAC(_band, ofs)		(MT_WF_RMAC_BASE(_band) + (ofs))
--
--#define MT_WF_RFCR(_band)		MT_WF_RMAC(_band, 0x000)
--#define MT_WF_RFCR_DROP_STBC_MULTI	BIT(0)
--#define MT_WF_RFCR_DROP_FCSFAIL		BIT(1)
--#define MT_WF_RFCR_DROP_VERSION		BIT(3)
--#define MT_WF_RFCR_DROP_PROBEREQ	BIT(4)
--#define MT_WF_RFCR_DROP_MCAST		BIT(5)
--#define MT_WF_RFCR_DROP_BCAST		BIT(6)
--#define MT_WF_RFCR_DROP_MCAST_FILTERED	BIT(7)
--#define MT_WF_RFCR_DROP_A3_MAC		BIT(8)
--#define MT_WF_RFCR_DROP_A3_BSSID	BIT(9)
--#define MT_WF_RFCR_DROP_A2_BSSID	BIT(10)
--#define MT_WF_RFCR_DROP_OTHER_BEACON	BIT(11)
--#define MT_WF_RFCR_DROP_FRAME_REPORT	BIT(12)
--#define MT_WF_RFCR_DROP_CTL_RSV		BIT(13)
--#define MT_WF_RFCR_DROP_CTS		BIT(14)
--#define MT_WF_RFCR_DROP_RTS		BIT(15)
--#define MT_WF_RFCR_DROP_DUPLICATE	BIT(16)
--#define MT_WF_RFCR_DROP_OTHER_BSS	BIT(17)
--#define MT_WF_RFCR_DROP_OTHER_UC	BIT(18)
--#define MT_WF_RFCR_DROP_OTHER_TIM	BIT(19)
--#define MT_WF_RFCR_DROP_NDPA		BIT(20)
--#define MT_WF_RFCR_DROP_UNWANTED_CTL	BIT(21)
--
--#define MT_WF_RFCR1(_band)		MT_WF_RMAC(_band, 0x004)
--#define MT_WF_RFCR1_DROP_ACK		BIT(4)
--#define MT_WF_RFCR1_DROP_BF_POLL	BIT(5)
--#define MT_WF_RFCR1_DROP_BA		BIT(6)
--#define MT_WF_RFCR1_DROP_CFEND		BIT(7)
--#define MT_WF_RFCR1_DROP_CFACK		BIT(8)
--
--#define MT_WF_RMAC_MIB_TIME0(_band)	MT_WF_RMAC(_band, 0x03c4)
--#define MT_WF_RMAC_MIB_RXTIME_CLR	BIT(31)
--#define MT_WF_RMAC_MIB_RXTIME_EN	BIT(30)
--
--#define MT_WF_RMAC_MIB_AIRTIME14(_band)	MT_WF_RMAC(_band, 0x03b8)
--#define MT_MIB_OBSSTIME_MASK		GENMASK(23, 0)
--#define MT_WF_RMAC_MIB_AIRTIME0(_band)	MT_WF_RMAC(_band, 0x0380)
--
--/* WFDMA0 */
--#define MT_WFDMA0_BASE			0xd4000
--#define MT_WFDMA0(ofs)			(MT_WFDMA0_BASE + (ofs))
--
--#define MT_WFDMA0_RST			MT_WFDMA0(0x100)
--#define MT_WFDMA0_RST_LOGIC_RST		BIT(4)
--#define MT_WFDMA0_RST_DMASHDL_ALL_RST	BIT(5)
--
--#define MT_WFDMA0_BUSY_ENA		MT_WFDMA0(0x13c)
--#define MT_WFDMA0_BUSY_ENA_TX_FIFO0	BIT(0)
--#define MT_WFDMA0_BUSY_ENA_TX_FIFO1	BIT(1)
--#define MT_WFDMA0_BUSY_ENA_RX_FIFO	BIT(2)
--
--#define MT_MCU_CMD			MT_WFDMA0(0x1f0)
--#define MT_MCU_CMD_WAKE_RX_PCIE		BIT(0)
--#define MT_MCU_CMD_STOP_DMA_FW_RELOAD	BIT(1)
--#define MT_MCU_CMD_STOP_DMA		BIT(2)
--#define MT_MCU_CMD_RESET_DONE		BIT(3)
--#define MT_MCU_CMD_RECOVERY_DONE	BIT(4)
--#define MT_MCU_CMD_NORMAL_STATE		BIT(5)
--#define MT_MCU_CMD_ERROR_MASK		GENMASK(5, 1)
--
--#define MT_MCU2HOST_SW_INT_ENA		MT_WFDMA0(0x1f4)
--
--#define MT_WFDMA0_HOST_INT_STA		MT_WFDMA0(0x200)
--#define HOST_RX_DONE_INT_STS0		BIT(0)	/* Rx mcu */
--#define HOST_RX_DONE_INT_STS2		BIT(2)	/* Rx data */
--#define HOST_RX_DONE_INT_STS4		BIT(22)	/* Rx mcu after fw downloaded */
--#define HOST_TX_DONE_INT_STS16		BIT(26)
--#define HOST_TX_DONE_INT_STS17		BIT(27) /* MCU tx done*/
--
- #define MT_WFDMA0_HOST_INT_ENA		MT_WFDMA0(0x204)
- #define HOST_RX_DONE_INT_ENA0		BIT(0)
- #define HOST_RX_DONE_INT_ENA1		BIT(1)
-@@ -354,56 +75,8 @@
- 					 MT_INT_TX_DONE_BAND0 |	\
- 					GENMASK(18, 4))
+ 	if (dev->fw_features & MT7921_FW_CAP_CNM) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 44b0122073f8..d4cf2ff18102 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -23,7 +23,7 @@ static u32 mt7921_mac_wtbl_lmac_addr(int idx, u8 offset)
+ static struct mt76_wcid *mt7921_rx_get_wcid(struct mt7921_dev *dev,
+ 					    u16 idx, bool unicast)
+ {
+-	struct mt7921_sta *sta;
++	struct mt792x_sta *sta;
+ 	struct mt76_wcid *wcid;
  
--#define MT_WFDMA0_GLO_CFG		MT_WFDMA0(0x208)
--#define MT_WFDMA0_GLO_CFG_TX_DMA_EN	BIT(0)
--#define MT_WFDMA0_GLO_CFG_TX_DMA_BUSY	BIT(1)
--#define MT_WFDMA0_GLO_CFG_RX_DMA_EN	BIT(2)
--#define MT_WFDMA0_GLO_CFG_RX_DMA_BUSY	BIT(3)
--#define MT_WFDMA0_GLO_CFG_TX_WB_DDONE	BIT(6)
--#define MT_WFDMA0_GLO_CFG_FW_DWLD_BYPASS_DMASHDL BIT(9)
--#define MT_WFDMA0_GLO_CFG_FIFO_LITTLE_ENDIAN	BIT(12)
--#define MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN BIT(15)
--#define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2	BIT(21)
--#define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO	BIT(27)
--#define MT_WFDMA0_GLO_CFG_OMIT_TX_INFO	BIT(28)
--#define MT_WFDMA0_GLO_CFG_CLK_GAT_DIS	BIT(30)
--
--#define MT_WFDMA0_RST_DTX_PTR		MT_WFDMA0(0x20c)
--#define MT_WFDMA0_GLO_CFG_EXT0		MT_WFDMA0(0x2b0)
--#define MT_WFDMA0_CSR_TX_DMASHDL_ENABLE	BIT(6)
--#define MT_WFDMA0_PRI_DLY_INT_CFG0	MT_WFDMA0(0x2f0)
--
- #define MT_RX_DATA_RING_BASE		MT_WFDMA0(0x520)
+ 	if (idx >= ARRAY_SIZE(dev->mt76.wcid))
+@@ -36,7 +36,7 @@ static struct mt76_wcid *mt7921_rx_get_wcid(struct mt7921_dev *dev,
+ 	if (!wcid->sta)
+ 		return NULL;
  
--#define MT_WFDMA0_TX_RING0_EXT_CTRL	MT_WFDMA0(0x600)
--#define MT_WFDMA0_TX_RING1_EXT_CTRL	MT_WFDMA0(0x604)
--#define MT_WFDMA0_TX_RING2_EXT_CTRL	MT_WFDMA0(0x608)
--#define MT_WFDMA0_TX_RING3_EXT_CTRL	MT_WFDMA0(0x60c)
--#define MT_WFDMA0_TX_RING4_EXT_CTRL	MT_WFDMA0(0x610)
--#define MT_WFDMA0_TX_RING5_EXT_CTRL	MT_WFDMA0(0x614)
--#define MT_WFDMA0_TX_RING6_EXT_CTRL	MT_WFDMA0(0x618)
--#define MT_WFDMA0_TX_RING16_EXT_CTRL	MT_WFDMA0(0x640)
--#define MT_WFDMA0_TX_RING17_EXT_CTRL	MT_WFDMA0(0x644)
--
--#define MT_WPDMA0_MAX_CNT_MASK		GENMASK(7, 0)
--#define MT_WPDMA0_BASE_PTR_MASK		GENMASK(31, 16)
--
--#define MT_WFDMA0_RX_RING0_EXT_CTRL	MT_WFDMA0(0x680)
--#define MT_WFDMA0_RX_RING1_EXT_CTRL	MT_WFDMA0(0x684)
--#define MT_WFDMA0_RX_RING2_EXT_CTRL	MT_WFDMA0(0x688)
--#define MT_WFDMA0_RX_RING3_EXT_CTRL	MT_WFDMA0(0x68c)
--#define MT_WFDMA0_RX_RING4_EXT_CTRL	MT_WFDMA0(0x690)
--#define MT_WFDMA0_RX_RING5_EXT_CTRL	MT_WFDMA0(0x694)
--
--#define MT_TX_RING_BASE			MT_WFDMA0(0x300)
--#define MT_RX_EVENT_RING_BASE		MT_WFDMA0(0x500)
--
--/* WFDMA CSR */
--#define MT_WFDMA_EXT_CSR_BASE          0xd7000
--#define MT_WFDMA_EXT_CSR(ofs)          (MT_WFDMA_EXT_CSR_BASE + (ofs))
--#define MT_WFDMA_EXT_CSR_HIF_MISC	MT_WFDMA_EXT_CSR(0x44)
--#define MT_WFDMA_EXT_CSR_HIF_MISC_BUSY	BIT(0)
--
- #define MT_INFRA_CFG_BASE		0xfe000
- #define MT_INFRA(ofs)			(MT_INFRA_CFG_BASE + (ofs))
+-	sta = container_of(wcid, struct mt7921_sta, wcid);
++	sta = container_of(wcid, struct mt792x_sta, wcid);
+ 	if (!sta->vif)
+ 		return NULL;
  
-@@ -413,121 +86,11 @@
- #define MT_HIF_REMAP_L1_BASE		GENMASK(31, 16)
- #define MT_HIF_REMAP_BASE_L1		0x40000
+@@ -61,7 +61,7 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
+ 		[IEEE80211_AC_VO] = 6
+ 	};
+ 	struct ieee80211_sta *sta;
+-	struct mt7921_sta *msta;
++	struct mt792x_sta *msta;
+ 	u32 tx_time[IEEE80211_NUM_ACS], rx_time[IEEE80211_NUM_ACS];
+ 	LIST_HEAD(sta_poll_list);
+ 	struct rate_info *rate;
+@@ -84,7 +84,7 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
+ 			break;
+ 		}
+ 		msta = list_first_entry(&sta_poll_list,
+-					struct mt7921_sta, wcid.poll_list);
++					struct mt792x_sta, wcid.poll_list);
+ 		list_del_init(&msta->wcid.poll_list);
+ 		spin_unlock_bh(&dev->mt76.sta_poll_lock);
  
--#define MT_SWDEF_BASE			0x41f200
--#define MT_SWDEF(ofs)			(MT_SWDEF_BASE + (ofs))
--#define MT_SWDEF_MODE			MT_SWDEF(0x3c)
--#define MT_SWDEF_NORMAL_MODE		0
--#define MT_SWDEF_ICAP_MODE		1
--#define MT_SWDEF_SPECTRUM_MODE		2
--
--#define MT_TOP_BASE			0x18060000
--#define MT_TOP(ofs)			(MT_TOP_BASE + (ofs))
--
--#define MT_TOP_LPCR_HOST_BAND0		MT_TOP(0x10)
--#define MT_TOP_LPCR_HOST_FW_OWN		BIT(0)
--#define MT_TOP_LPCR_HOST_DRV_OWN	BIT(1)
--
--#define MT_TOP_MISC			MT_TOP(0xf0)
--#define MT_TOP_MISC_FW_STATE		GENMASK(2, 0)
--
--#define MT_MCU_WPDMA0_BASE		0x54000000
--#define MT_MCU_WPDMA0(ofs)		(MT_MCU_WPDMA0_BASE + (ofs))
--
--#define MT_WFDMA_DUMMY_CR		MT_MCU_WPDMA0(0x120)
--#define MT_WFDMA_NEED_REINIT		BIT(1)
--
--#define MT_CBTOP_RGU(ofs)		(0x70002000 + (ofs))
--#define MT_CBTOP_RGU_WF_SUBSYS_RST	MT_CBTOP_RGU(0x600)
--#define MT_CBTOP_RGU_WF_SUBSYS_RST_WF_WHOLE_PATH BIT(0)
--
--#define MT_HW_BOUND			0x70010020
--#define MT_HW_CHIPID			0x70010200
--#define MT_HW_REV			0x70010204
--
--#define MT_PCIE_MAC_BASE		0x10000
--#define MT_PCIE_MAC(ofs)		(MT_PCIE_MAC_BASE + (ofs))
--#define MT_PCIE_MAC_INT_ENABLE		MT_PCIE_MAC(0x188)
--#define MT_PCIE_MAC_PM			MT_PCIE_MAC(0x194)
--#define MT_PCIE_MAC_PM_L0S_DIS		BIT(8)
--
--#define MT_DMA_SHDL(ofs)		(0x7c026000 + (ofs))
--#define MT_DMASHDL_SW_CONTROL		MT_DMA_SHDL(0x004)
--#define MT_DMASHDL_DMASHDL_BYPASS	BIT(28)
--#define MT_DMASHDL_OPTIONAL		MT_DMA_SHDL(0x008)
--#define MT_DMASHDL_PAGE			MT_DMA_SHDL(0x00c)
--#define MT_DMASHDL_GROUP_SEQ_ORDER	BIT(16)
--#define MT_DMASHDL_REFILL		MT_DMA_SHDL(0x010)
--#define MT_DMASHDL_REFILL_MASK		GENMASK(31, 16)
--#define MT_DMASHDL_PKT_MAX_SIZE		MT_DMA_SHDL(0x01c)
--#define MT_DMASHDL_PKT_MAX_SIZE_PLE	GENMASK(11, 0)
--#define MT_DMASHDL_PKT_MAX_SIZE_PSE	GENMASK(27, 16)
--
--#define MT_DMASHDL_GROUP_QUOTA(_n)	MT_DMA_SHDL(0x020 + ((_n) << 2))
--#define MT_DMASHDL_GROUP_QUOTA_MIN	GENMASK(11, 0)
--#define MT_DMASHDL_GROUP_QUOTA_MAX	GENMASK(27, 16)
--
--#define MT_DMASHDL_Q_MAP(_n)		MT_DMA_SHDL(0x060 + ((_n) << 2))
--#define MT_DMASHDL_Q_MAP_MASK		GENMASK(3, 0)
--#define MT_DMASHDL_Q_MAP_SHIFT(_n)	(4 * ((_n) % 8))
--
--#define MT_DMASHDL_SCHED_SET(_n)	MT_DMA_SHDL(0x070 + ((_n) << 2))
--
--#define MT_WFDMA_HOST_CONFIG		0x7c027030
--#define MT_WFDMA_HOST_CONFIG_USB_RXEVT_EP4_EN	BIT(6)
--
--#define MT_UMAC(ofs)			(0x74000000 + (ofs))
--#define MT_UDMA_TX_QSEL			MT_UMAC(0x008)
--#define MT_FW_DL_EN			BIT(3)
--
--#define MT_UDMA_WLCFG_1			MT_UMAC(0x00c)
--#define MT_WL_RX_AGG_PKT_LMT		GENMASK(7, 0)
--#define MT_WL_TX_TMOUT_LMT		GENMASK(27, 8)
--
--#define MT_UDMA_WLCFG_0			MT_UMAC(0x18)
--#define MT_WL_RX_AGG_TO			GENMASK(7, 0)
--#define MT_WL_RX_AGG_LMT		GENMASK(15, 8)
--#define MT_WL_TX_TMOUT_FUNC_EN		BIT(16)
--#define MT_WL_TX_DPH_CHK_EN		BIT(17)
--#define MT_WL_RX_MPSZ_PAD0		BIT(18)
--#define MT_WL_RX_FLUSH			BIT(19)
--#define MT_TICK_1US_EN			BIT(20)
--#define MT_WL_RX_AGG_EN			BIT(21)
--#define MT_WL_RX_EN			BIT(22)
--#define MT_WL_TX_EN			BIT(23)
--#define MT_WL_RX_BUSY			BIT(30)
--#define MT_WL_TX_BUSY			BIT(31)
--
--#define MT_UDMA_CONN_INFRA_STATUS	MT_UMAC(0xa20)
--#define MT_UDMA_CONN_WFSYS_INIT_DONE	BIT(22)
--#define MT_UDMA_CONN_INFRA_STATUS_SEL	MT_UMAC(0xa24)
--
--#define MT_SSUSB_EPCTL_CSR(ofs)		(0x74011800 + (ofs))
--#define MT_SSUSB_EPCTL_CSR_EP_RST_OPT	MT_SSUSB_EPCTL_CSR(0x090)
--
--#define MT_UWFDMA0(ofs)			(0x7c024000 + (ofs))
--#define MT_UWFDMA0_GLO_CFG		MT_UWFDMA0(0x208)
--#define MT_UWFDMA0_GLO_CFG_EXT0		MT_UWFDMA0(0x2b0)
--#define MT_UWFDMA0_TX_RING_EXT_CTRL(_n)	MT_UWFDMA0(0x600 + ((_n) << 2))
--
--#define MT_CONN_STATUS			0x7c053c10
--#define MT_WIFI_PATCH_DL_STATE		BIT(0)
--
--#define MT_CONN_ON_LPCTL		0x7c060010
--#define PCIE_LPCR_HOST_OWN_SYNC		BIT(2)
--#define PCIE_LPCR_HOST_CLR_OWN		BIT(1)
--#define PCIE_LPCR_HOST_SET_OWN		BIT(0)
--
- #define MT_WFSYS_SW_RST_B		0x18000140
- #define WFSYS_SW_RST_B			BIT(0)
- #define WFSYS_SW_INIT_DONE		BIT(4)
+@@ -248,7 +248,7 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
+ 	u32 rxd2 = le32_to_cpu(rxd[2]);
+ 	u32 rxd3 = le32_to_cpu(rxd[3]);
+ 	u32 rxd4 = le32_to_cpu(rxd[4]);
+-	struct mt7921_sta *msta = NULL;
++	struct mt792x_sta *msta = NULL;
+ 	u16 seq_ctrl = 0;
+ 	__le16 fc = 0;
+ 	u8 mode = 0;
+@@ -279,7 +279,7 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
+ 	status->wcid = mt7921_rx_get_wcid(dev, idx, unicast);
  
--#define MT_CONN_ON_MISC			0x7c0600f0
--#define MT_TOP_MISC2_FW_PWR_ON		BIT(0)
--#define MT_TOP_MISC2_FW_N9_RDY		GENMASK(1, 0)
--
--#define MT_WF_SW_DEF_CR(ofs)		(0x401a00 + (ofs))
--#define MT_WF_SW_DEF_CR_USB_MCU_EVENT	MT_WF_SW_DEF_CR(0x028)
--#define MT_WF_SW_SER_TRIGGER_SUSPEND	BIT(6)
--#define MT_WF_SW_SER_DONE_SUSPEND	BIT(7)
-+#define MT_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x200)
-+#define MT_WTBLON_TOP_WDUCR_GROUP	GENMASK(2, 0)
+ 	if (status->wcid) {
+-		msta = container_of(status->wcid, struct mt7921_sta, wcid);
++		msta = container_of(status->wcid, struct mt792x_sta, wcid);
+ 		spin_lock_bh(&dev->mt76.sta_poll_lock);
+ 		if (list_empty(&msta->wcid.poll_list))
+ 			list_add_tail(&msta->wcid.poll_list,
+@@ -513,7 +513,7 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
  
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
-new file mode 100644
-index 000000000000..aa6a677427a4
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
-@@ -0,0 +1,460 @@
-+/* SPDX-License-Identifier: ISC */
-+/* Copyright (C) 2023 MediaTek Inc. */
-+
-+#ifndef __MT792X_REGS_H
-+#define __MT792X_REGS_H
-+
-+/* MCU WFDMA1 */
-+#define MT_MCU_WFDMA1_BASE		0x3000
-+#define MT_MCU_WFDMA1(ofs)		(MT_MCU_WFDMA1_BASE + (ofs))
-+
-+#define MT_MCU_INT_EVENT		MT_MCU_WFDMA1(0x108)
-+#define MT_MCU_INT_EVENT_DMA_STOPPED	BIT(0)
-+#define MT_MCU_INT_EVENT_DMA_INIT	BIT(1)
-+#define MT_MCU_INT_EVENT_SER_TRIGGER	BIT(2)
-+#define MT_MCU_INT_EVENT_RESET_DONE	BIT(3)
-+
-+#define MT_PLE_BASE			0x820c0000
-+#define MT_PLE(ofs)			(MT_PLE_BASE + (ofs))
-+
-+#define MT_PLE_FL_Q0_CTRL		MT_PLE(0x3e0)
-+#define MT_PLE_FL_Q1_CTRL		MT_PLE(0x3e4)
-+#define MT_PLE_FL_Q2_CTRL		MT_PLE(0x3e8)
-+#define MT_PLE_FL_Q3_CTRL		MT_PLE(0x3ec)
-+
-+#define MT_PLE_AC_QEMPTY(_n)		MT_PLE(0x500 + 0x40 * (_n))
-+#define MT_PLE_AMSDU_PACK_MSDU_CNT(n)	MT_PLE(0x10e0 + ((n) << 2))
-+
-+/* TMAC: band 0(0x21000), band 1(0xa1000) */
-+#define MT_WF_TMAC_BASE(_band)		((_band) ? 0x820f4000 : 0x820e4000)
-+#define MT_WF_TMAC(_band, ofs)		(MT_WF_TMAC_BASE(_band) + (ofs))
-+
-+#define MT_TMAC_TCR0(_band)		MT_WF_TMAC(_band, 0)
-+#define MT_TMAC_TCR0_TBTT_STOP_CTRL	BIT(25)
-+
-+#define MT_TMAC_CDTR(_band)		MT_WF_TMAC(_band, 0x090)
-+#define MT_TMAC_ODTR(_band)		MT_WF_TMAC(_band, 0x094)
-+#define MT_TIMEOUT_VAL_PLCP		GENMASK(15, 0)
-+#define MT_TIMEOUT_VAL_CCA		GENMASK(31, 16)
-+
-+#define MT_TMAC_ICR0(_band)		MT_WF_TMAC(_band, 0x0a4)
-+#define MT_IFS_EIFS			GENMASK(8, 0)
-+#define MT_IFS_RIFS			GENMASK(14, 10)
-+#define MT_IFS_SIFS			GENMASK(22, 16)
-+#define MT_IFS_SLOT			GENMASK(30, 24)
-+
-+#define MT_TMAC_CTCR0(_band)			MT_WF_TMAC(_band, 0x0f4)
-+#define MT_TMAC_CTCR0_INS_DDLMT_REFTIME		GENMASK(5, 0)
-+#define MT_TMAC_CTCR0_INS_DDLMT_EN		BIT(17)
-+#define MT_TMAC_CTCR0_INS_DDLMT_VHT_SMPDU_EN	BIT(18)
-+
-+#define MT_TMAC_TRCR0(_band)		MT_WF_TMAC(_band, 0x09c)
-+#define MT_TMAC_TFCR0(_band)		MT_WF_TMAC(_band, 0x1e0)
-+
-+#define MT_WF_DMA_BASE(_band)		((_band) ? 0x820f7000 : 0x820e7000)
-+#define MT_WF_DMA(_band, ofs)		(MT_WF_DMA_BASE(_band) + (ofs))
-+
-+#define MT_DMA_DCR0(_band)		MT_WF_DMA(_band, 0x000)
-+#define MT_DMA_DCR0_MAX_RX_LEN		GENMASK(15, 3)
-+#define MT_DMA_DCR0_RXD_G5_EN		BIT(23)
-+
-+/* WTBLOFF TOP: band 0(0x820e9000),band 1(0x820f9000) */
-+#define MT_WTBLOFF_TOP_BASE(_band)	((_band) ? 0x820f9000 : 0x820e9000)
-+#define MT_WTBLOFF_TOP(_band, ofs)	(MT_WTBLOFF_TOP_BASE(_band) + (ofs))
-+
-+#define MT_WTBLOFF_TOP_RSCR(_band)	MT_WTBLOFF_TOP(_band, 0x008)
-+#define MT_WTBLOFF_TOP_RSCR_RCPI_MODE	GENMASK(31, 30)
-+#define MT_WTBLOFF_TOP_RSCR_RCPI_PARAM	GENMASK(25, 24)
-+
-+/* LPON: band 0(0x24200), band 1(0xa4200) */
-+#define MT_WF_LPON_BASE(_band)		((_band) ? 0x820fb000 : 0x820eb000)
-+#define MT_WF_LPON(_band, ofs)		(MT_WF_LPON_BASE(_band) + (ofs))
-+
-+#define MT_LPON_UTTR0(_band)		MT_WF_LPON(_band, 0x080)
-+#define MT_LPON_UTTR1(_band)		MT_WF_LPON(_band, 0x084)
-+
-+#define MT_LPON_TCR(_band, n)		MT_WF_LPON(_band, 0x0a8 + (n) * 4)
-+#define MT_LPON_TCR_SW_MODE		GENMASK(1, 0)
-+#define MT_LPON_TCR_SW_WRITE		BIT(0)
-+
-+/* ETBF: band 0(0x24000), band 1(0xa4000) */
-+#define MT_WF_ETBF_BASE(_band)		((_band) ? 0x820fa000 : 0x820ea000)
-+#define MT_WF_ETBF(_band, ofs)		(MT_WF_ETBF_BASE(_band) + (ofs))
-+
-+#define MT_ETBF_TX_APP_CNT(_band)	MT_WF_ETBF(_band, 0x150)
-+#define MT_ETBF_TX_IBF_CNT		GENMASK(31, 16)
-+#define MT_ETBF_TX_EBF_CNT		GENMASK(15, 0)
-+
-+#define MT_ETBF_RX_FB_CNT(_band)	MT_WF_ETBF(_band, 0x158)
-+#define MT_ETBF_RX_FB_ALL		GENMASK(31, 24)
-+#define MT_ETBF_RX_FB_HE		GENMASK(23, 16)
-+#define MT_ETBF_RX_FB_VHT		GENMASK(15, 8)
-+#define MT_ETBF_RX_FB_HT		GENMASK(7, 0)
-+
-+/* MIB: band 0(0x24800), band 1(0xa4800) */
-+#define MT_WF_MIB_BASE(_band)		((_band) ? 0x820fd000 : 0x820ed000)
-+#define MT_WF_MIB(_band, ofs)		(MT_WF_MIB_BASE(_band) + (ofs))
-+
-+#define MT_MIB_SCR1(_band)		MT_WF_MIB(_band, 0x004)
-+#define MT_MIB_TXDUR_EN			BIT(8)
-+#define MT_MIB_RXDUR_EN			BIT(9)
-+
-+#define MT_MIB_SDR3(_band)		MT_WF_MIB(_band, 0x698)
-+#define MT_MIB_SDR3_FCS_ERR_MASK	GENMASK(31, 16)
-+
-+#define MT_MIB_SDR5(_band)		MT_WF_MIB(_band, 0x780)
-+
-+#define MT_MIB_SDR9(_band)		MT_WF_MIB(_band, 0x02c)
-+#define MT_MIB_SDR9_BUSY_MASK		GENMASK(23, 0)
-+
-+#define MT_MIB_SDR12(_band)		MT_WF_MIB(_band, 0x558)
-+#define MT_MIB_SDR14(_band)		MT_WF_MIB(_band, 0x564)
-+#define MT_MIB_SDR15(_band)		MT_WF_MIB(_band, 0x568)
-+
-+#define MT_MIB_SDR16(_band)		MT_WF_MIB(_band, 0x048)
-+#define MT_MIB_SDR16_BUSY_MASK		GENMASK(23, 0)
-+
-+#define MT_MIB_SDR22(_band)		MT_WF_MIB(_band, 0x770)
-+#define MT_MIB_SDR23(_band)		MT_WF_MIB(_band, 0x774)
-+#define MT_MIB_SDR31(_band)		MT_WF_MIB(_band, 0x55c)
-+
-+#define MT_MIB_SDR32(_band)		MT_WF_MIB(_band, 0x7a8)
-+#define MT_MIB_SDR9_IBF_CNT_MASK	GENMASK(31, 16)
-+#define MT_MIB_SDR9_EBF_CNT_MASK	GENMASK(15, 0)
-+
-+#define MT_MIB_SDR34(_band)		MT_WF_MIB(_band, 0x090)
-+#define MT_MIB_MU_BF_TX_CNT		GENMASK(15, 0)
-+
-+#define MT_MIB_SDR36(_band)		MT_WF_MIB(_band, 0x054)
-+#define MT_MIB_SDR36_TXTIME_MASK	GENMASK(23, 0)
-+#define MT_MIB_SDR37(_band)		MT_WF_MIB(_band, 0x058)
-+#define MT_MIB_SDR37_RXTIME_MASK	GENMASK(23, 0)
-+
-+#define MT_MIB_DR8(_band)		MT_WF_MIB(_band, 0x0c0)
-+#define MT_MIB_DR9(_band)		MT_WF_MIB(_band, 0x0c4)
-+#define MT_MIB_DR11(_band)		MT_WF_MIB(_band, 0x0cc)
-+
-+#define MT_MIB_MB_SDR0(_band, n)	MT_WF_MIB(_band, 0x100 + ((n) << 4))
-+#define MT_MIB_RTS_RETRIES_COUNT_MASK	GENMASK(31, 16)
-+
-+#define MT_MIB_MB_BSDR0(_band)		MT_WF_MIB(_band, 0x688)
-+#define MT_MIB_RTS_COUNT_MASK		GENMASK(15, 0)
-+#define MT_MIB_MB_BSDR1(_band)		MT_WF_MIB(_band, 0x690)
-+#define MT_MIB_RTS_FAIL_COUNT_MASK	GENMASK(15, 0)
-+#define MT_MIB_MB_BSDR2(_band)		MT_WF_MIB(_band, 0x518)
-+#define MT_MIB_BA_FAIL_COUNT_MASK	GENMASK(15, 0)
-+#define MT_MIB_MB_BSDR3(_band)		MT_WF_MIB(_band, 0x520)
-+#define MT_MIB_ACK_FAIL_COUNT_MASK	GENMASK(15, 0)
-+
-+#define MT_MIB_MB_SDR2(_band, n)	MT_WF_MIB(_band, 0x108 + ((n) << 4))
-+#define MT_MIB_FRAME_RETRIES_COUNT_MASK	GENMASK(15, 0)
-+
-+#define MT_TX_AGG_CNT(_band, n)		MT_WF_MIB(_band, 0x7dc + ((n) << 2))
-+#define MT_TX_AGG_CNT2(_band, n)	MT_WF_MIB(_band, 0x7ec + ((n) << 2))
-+#define MT_MIB_ARNG(_band, n)		MT_WF_MIB(_band, 0x0b0 + ((n) << 2))
-+#define MT_MIB_ARNCR_RANGE(val, n)	(((val) >> ((n) << 3)) & GENMASK(7, 0))
-+
-+#define MT_WTBLON_TOP_BASE		0x820d4000
-+#define MT_WTBLON_TOP(ofs)		(MT_WTBLON_TOP_BASE + (ofs))
-+
-+#define MT_WTBL_UPDATE			MT_WTBLON_TOP(0x230)
-+#define MT_WTBL_UPDATE_WLAN_IDX		GENMASK(9, 0)
-+#define MT_WTBL_UPDATE_ADM_COUNT_CLEAR	BIT(12)
-+#define MT_WTBL_UPDATE_BUSY		BIT(31)
-+
-+#define MT_WTBL_ITCR			MT_WTBLON_TOP(0x3b0)
-+#define MT_WTBL_ITCR_WR			BIT(16)
-+#define MT_WTBL_ITCR_EXEC		BIT(31)
-+#define MT_WTBL_ITDR0			MT_WTBLON_TOP(0x3b8)
-+#define MT_WTBL_ITDR1			MT_WTBLON_TOP(0x3bc)
-+#define MT_WTBL_SPE_IDX_SEL		BIT(6)
-+
-+#define MT_WTBL_BASE			0x820d8000
-+#define MT_WTBL_LMAC_ID			GENMASK(14, 8)
-+#define MT_WTBL_LMAC_DW			GENMASK(7, 2)
-+#define MT_WTBL_LMAC_OFFS(_id, _dw)	(MT_WTBL_BASE | \
-+					 FIELD_PREP(MT_WTBL_LMAC_ID, _id) | \
-+					 FIELD_PREP(MT_WTBL_LMAC_DW, _dw))
-+
-+/* AGG: band 0(0x20800), band 1(0xa0800) */
-+#define MT_WF_AGG_BASE(_band)		((_band) ? 0x820f2000 : 0x820e2000)
-+#define MT_WF_AGG(_band, ofs)		(MT_WF_AGG_BASE(_band) + (ofs))
-+
-+#define MT_AGG_AWSCR0(_band, _n)	MT_WF_AGG(_band, 0x05c + (_n) * 4)
-+#define MT_AGG_PCR0(_band, _n)		MT_WF_AGG(_band, 0x06c + (_n) * 4)
-+#define MT_AGG_PCR0_MM_PROT		BIT(0)
-+#define MT_AGG_PCR0_GF_PROT		BIT(1)
-+#define MT_AGG_PCR0_BW20_PROT		BIT(2)
-+#define MT_AGG_PCR0_BW40_PROT		BIT(4)
-+#define MT_AGG_PCR0_BW80_PROT		BIT(6)
-+#define MT_AGG_PCR0_ERP_PROT		GENMASK(12, 8)
-+#define MT_AGG_PCR0_VHT_PROT		BIT(13)
-+#define MT_AGG_PCR0_PTA_WIN_DIS		BIT(15)
-+
-+#define MT_AGG_PCR1_RTS0_NUM_THRES	GENMASK(31, 23)
-+#define MT_AGG_PCR1_RTS0_LEN_THRES	GENMASK(19, 0)
-+
-+#define MT_AGG_ACR0(_band)		MT_WF_AGG(_band, 0x084)
-+#define MT_AGG_ACR_CFEND_RATE		GENMASK(13, 0)
-+#define MT_AGG_ACR_BAR_RATE		GENMASK(29, 16)
-+
-+#define MT_AGG_MRCR(_band)		MT_WF_AGG(_band, 0x098)
-+#define MT_AGG_MRCR_BAR_CNT_LIMIT	GENMASK(15, 12)
-+#define MT_AGG_MRCR_LAST_RTS_CTS_RN	BIT(6)
-+#define MT_AGG_MRCR_RTS_FAIL_LIMIT	GENMASK(11, 7)
-+#define MT_AGG_MRCR_TXCMD_RTS_FAIL_LIMIT	GENMASK(28, 24)
-+
-+#define MT_AGG_ATCR1(_band)		MT_WF_AGG(_band, 0x0f0)
-+#define MT_AGG_ATCR3(_band)		MT_WF_AGG(_band, 0x0f4)
-+
-+/* ARB: band 0(0x20c00), band 1(0xa0c00) */
-+#define MT_WF_ARB_BASE(_band)		((_band) ? 0x820f3000 : 0x820e3000)
-+#define MT_WF_ARB(_band, ofs)		(MT_WF_ARB_BASE(_band) + (ofs))
-+
-+#define MT_ARB_SCR(_band)		MT_WF_ARB(_band, 0x080)
-+#define MT_ARB_SCR_TX_DISABLE		BIT(8)
-+#define MT_ARB_SCR_RX_DISABLE		BIT(9)
-+
-+#define MT_ARB_DRNGR0(_band, _n)	MT_WF_ARB(_band, 0x194 + (_n) * 4)
-+
-+/* RMAC: band 0(0x21400), band 1(0xa1400) */
-+#define MT_WF_RMAC_BASE(_band)		((_band) ? 0x820f5000 : 0x820e5000)
-+#define MT_WF_RMAC(_band, ofs)		(MT_WF_RMAC_BASE(_band) + (ofs))
-+
-+#define MT_WF_RFCR(_band)		MT_WF_RMAC(_band, 0x000)
-+#define MT_WF_RFCR_DROP_STBC_MULTI	BIT(0)
-+#define MT_WF_RFCR_DROP_FCSFAIL		BIT(1)
-+#define MT_WF_RFCR_DROP_VERSION		BIT(3)
-+#define MT_WF_RFCR_DROP_PROBEREQ	BIT(4)
-+#define MT_WF_RFCR_DROP_MCAST		BIT(5)
-+#define MT_WF_RFCR_DROP_BCAST		BIT(6)
-+#define MT_WF_RFCR_DROP_MCAST_FILTERED	BIT(7)
-+#define MT_WF_RFCR_DROP_A3_MAC		BIT(8)
-+#define MT_WF_RFCR_DROP_A3_BSSID	BIT(9)
-+#define MT_WF_RFCR_DROP_A2_BSSID	BIT(10)
-+#define MT_WF_RFCR_DROP_OTHER_BEACON	BIT(11)
-+#define MT_WF_RFCR_DROP_FRAME_REPORT	BIT(12)
-+#define MT_WF_RFCR_DROP_CTL_RSV		BIT(13)
-+#define MT_WF_RFCR_DROP_CTS		BIT(14)
-+#define MT_WF_RFCR_DROP_RTS		BIT(15)
-+#define MT_WF_RFCR_DROP_DUPLICATE	BIT(16)
-+#define MT_WF_RFCR_DROP_OTHER_BSS	BIT(17)
-+#define MT_WF_RFCR_DROP_OTHER_UC	BIT(18)
-+#define MT_WF_RFCR_DROP_OTHER_TIM	BIT(19)
-+#define MT_WF_RFCR_DROP_NDPA		BIT(20)
-+#define MT_WF_RFCR_DROP_UNWANTED_CTL	BIT(21)
-+
-+#define MT_WF_RFCR1(_band)		MT_WF_RMAC(_band, 0x004)
-+#define MT_WF_RFCR1_DROP_ACK		BIT(4)
-+#define MT_WF_RFCR1_DROP_BF_POLL	BIT(5)
-+#define MT_WF_RFCR1_DROP_BA		BIT(6)
-+#define MT_WF_RFCR1_DROP_CFEND		BIT(7)
-+#define MT_WF_RFCR1_DROP_CFACK		BIT(8)
-+
-+#define MT_WF_RMAC_MIB_TIME0(_band)	MT_WF_RMAC(_band, 0x03c4)
-+#define MT_WF_RMAC_MIB_RXTIME_CLR	BIT(31)
-+#define MT_WF_RMAC_MIB_RXTIME_EN	BIT(30)
-+
-+#define MT_WF_RMAC_MIB_AIRTIME14(_band)	MT_WF_RMAC(_band, 0x03b8)
-+#define MT_MIB_OBSSTIME_MASK		GENMASK(23, 0)
-+#define MT_WF_RMAC_MIB_AIRTIME0(_band)	MT_WF_RMAC(_band, 0x0380)
-+
-+/* WFDMA0 */
-+#define MT_WFDMA0_BASE			0xd4000
-+#define MT_WFDMA0(ofs)			(MT_WFDMA0_BASE + (ofs))
-+
-+#define MT_WFDMA0_RST			MT_WFDMA0(0x100)
-+#define MT_WFDMA0_RST_LOGIC_RST		BIT(4)
-+#define MT_WFDMA0_RST_DMASHDL_ALL_RST	BIT(5)
-+
-+#define MT_WFDMA0_BUSY_ENA		MT_WFDMA0(0x13c)
-+#define MT_WFDMA0_BUSY_ENA_TX_FIFO0	BIT(0)
-+#define MT_WFDMA0_BUSY_ENA_TX_FIFO1	BIT(1)
-+#define MT_WFDMA0_BUSY_ENA_RX_FIFO	BIT(2)
-+
-+#define MT_MCU_CMD			MT_WFDMA0(0x1f0)
-+#define MT_MCU_CMD_WAKE_RX_PCIE		BIT(0)
-+#define MT_MCU_CMD_STOP_DMA_FW_RELOAD	BIT(1)
-+#define MT_MCU_CMD_STOP_DMA		BIT(2)
-+#define MT_MCU_CMD_RESET_DONE		BIT(3)
-+#define MT_MCU_CMD_RECOVERY_DONE	BIT(4)
-+#define MT_MCU_CMD_NORMAL_STATE		BIT(5)
-+#define MT_MCU_CMD_ERROR_MASK		GENMASK(5, 1)
-+
-+#define MT_MCU2HOST_SW_INT_ENA		MT_WFDMA0(0x1f4)
-+
-+#define MT_WFDMA0_HOST_INT_STA		MT_WFDMA0(0x200)
-+#define HOST_RX_DONE_INT_STS0		BIT(0)	/* Rx mcu */
-+#define HOST_RX_DONE_INT_STS2		BIT(2)	/* Rx data */
-+#define HOST_RX_DONE_INT_STS4		BIT(22)	/* Rx mcu after fw downloaded */
-+#define HOST_TX_DONE_INT_STS16		BIT(26)
-+#define HOST_TX_DONE_INT_STS17		BIT(27) /* MCU tx done*/
-+
-+#define MT_WFDMA0_GLO_CFG		MT_WFDMA0(0x208)
-+#define MT_WFDMA0_GLO_CFG_TX_DMA_EN	BIT(0)
-+#define MT_WFDMA0_GLO_CFG_TX_DMA_BUSY	BIT(1)
-+#define MT_WFDMA0_GLO_CFG_RX_DMA_EN	BIT(2)
-+#define MT_WFDMA0_GLO_CFG_RX_DMA_BUSY	BIT(3)
-+#define MT_WFDMA0_GLO_CFG_TX_WB_DDONE	BIT(6)
-+#define MT_WFDMA0_GLO_CFG_FW_DWLD_BYPASS_DMASHDL BIT(9)
-+#define MT_WFDMA0_GLO_CFG_FIFO_LITTLE_ENDIAN	BIT(12)
-+#define MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN BIT(15)
-+#define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2	BIT(21)
-+#define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO	BIT(27)
-+#define MT_WFDMA0_GLO_CFG_OMIT_TX_INFO	BIT(28)
-+#define MT_WFDMA0_GLO_CFG_CLK_GAT_DIS	BIT(30)
-+
-+#define MT_WFDMA0_RST_DTX_PTR		MT_WFDMA0(0x20c)
-+#define MT_WFDMA0_RST_DRX_PTR		MT_WFDMA0(0x280)
-+#define MT_WFDMA0_GLO_CFG_EXT0		MT_WFDMA0(0x2b0)
-+#define MT_WFDMA0_CSR_TX_DMASHDL_ENABLE	BIT(6)
-+#define MT_WFDMA0_PRI_DLY_INT_CFG0	MT_WFDMA0(0x2f0)
-+
-+#define MT_WFDMA0_TX_RING0_EXT_CTRL	MT_WFDMA0(0x600)
-+#define MT_WFDMA0_TX_RING1_EXT_CTRL	MT_WFDMA0(0x604)
-+#define MT_WFDMA0_TX_RING2_EXT_CTRL	MT_WFDMA0(0x608)
-+#define MT_WFDMA0_TX_RING3_EXT_CTRL	MT_WFDMA0(0x60c)
-+#define MT_WFDMA0_TX_RING4_EXT_CTRL	MT_WFDMA0(0x610)
-+#define MT_WFDMA0_TX_RING5_EXT_CTRL	MT_WFDMA0(0x614)
-+#define MT_WFDMA0_TX_RING6_EXT_CTRL	MT_WFDMA0(0x618)
-+#define MT_WFDMA0_TX_RING15_EXT_CTRL	MT_WFDMA0(0x63c)
-+#define MT_WFDMA0_TX_RING16_EXT_CTRL	MT_WFDMA0(0x640)
-+#define MT_WFDMA0_TX_RING17_EXT_CTRL	MT_WFDMA0(0x644)
-+
-+#define MT_WPDMA0_MAX_CNT_MASK		GENMASK(7, 0)
-+#define MT_WPDMA0_BASE_PTR_MASK		GENMASK(31, 16)
-+
-+#define MT_WFDMA0_RX_RING0_EXT_CTRL	MT_WFDMA0(0x680)
-+#define MT_WFDMA0_RX_RING1_EXT_CTRL	MT_WFDMA0(0x684)
-+#define MT_WFDMA0_RX_RING2_EXT_CTRL	MT_WFDMA0(0x688)
-+#define MT_WFDMA0_RX_RING3_EXT_CTRL	MT_WFDMA0(0x68c)
-+#define MT_WFDMA0_RX_RING4_EXT_CTRL	MT_WFDMA0(0x690)
-+#define MT_WFDMA0_RX_RING5_EXT_CTRL	MT_WFDMA0(0x694)
-+#define MT_WFDMA0_RX_RING6_EXT_CTRL	MT_WFDMA0(0x698)
-+#define MT_WFDMA0_RX_RING7_EXT_CTRL	MT_WFDMA0(0x69c)
-+
-+#define MT_TX_RING_BASE			MT_WFDMA0(0x300)
-+#define MT_RX_EVENT_RING_BASE		MT_WFDMA0(0x500)
-+
-+/* WFDMA CSR */
-+#define MT_WFDMA_EXT_CSR_BASE          0xd7000
-+#define MT_WFDMA_EXT_CSR(ofs)          (MT_WFDMA_EXT_CSR_BASE + (ofs))
-+#define MT_WFDMA_EXT_CSR_HIF_MISC	MT_WFDMA_EXT_CSR(0x44)
-+#define MT_WFDMA_EXT_CSR_HIF_MISC_BUSY	BIT(0)
-+
-+#define MT_SWDEF_BASE			0x41f200
-+#define MT_SWDEF(ofs)			(MT_SWDEF_BASE + (ofs))
-+#define MT_SWDEF_MODE			MT_SWDEF(0x3c)
-+#define MT_SWDEF_NORMAL_MODE		0
-+#define MT_SWDEF_ICAP_MODE		1
-+#define MT_SWDEF_SPECTRUM_MODE		2
-+
-+#define MT_TOP_BASE			0x18060000
-+#define MT_TOP(ofs)			(MT_TOP_BASE + (ofs))
-+
-+#define MT_TOP_LPCR_HOST_BAND0		MT_TOP(0x10)
-+#define MT_TOP_LPCR_HOST_FW_OWN		BIT(0)
-+#define MT_TOP_LPCR_HOST_DRV_OWN	BIT(1)
-+
-+#define MT_TOP_MISC			MT_TOP(0xf0)
-+#define MT_TOP_MISC_FW_STATE		GENMASK(2, 0)
-+
-+#define MT_MCU_WPDMA0_BASE		0x54000000
-+#define MT_MCU_WPDMA0(ofs)		(MT_MCU_WPDMA0_BASE + (ofs))
-+
-+#define MT_WFDMA_DUMMY_CR		MT_MCU_WPDMA0(0x120)
-+#define MT_WFDMA_NEED_REINIT		BIT(1)
-+
-+#define MT_CBTOP_RGU(ofs)		(0x70002000 + (ofs))
-+#define MT_CBTOP_RGU_WF_SUBSYS_RST	MT_CBTOP_RGU(0x600)
-+#define MT_CBTOP_RGU_WF_SUBSYS_RST_WF_WHOLE_PATH BIT(0)
-+
-+#define MT_HW_BOUND			0x70010020
-+#define MT_HW_CHIPID			0x70010200
-+#define MT_HW_REV			0x70010204
-+
-+#define MT_PCIE_MAC_BASE		0x10000
-+#define MT_PCIE_MAC(ofs)		(MT_PCIE_MAC_BASE + (ofs))
-+#define MT_PCIE_MAC_INT_ENABLE		MT_PCIE_MAC(0x188)
-+#define MT_PCIE_MAC_PM			MT_PCIE_MAC(0x194)
-+#define MT_PCIE_MAC_PM_L0S_DIS		BIT(8)
-+
-+#define MT_DMA_SHDL(ofs)		(0x7c026000 + (ofs))
-+#define MT_DMASHDL_SW_CONTROL		MT_DMA_SHDL(0x004)
-+#define MT_DMASHDL_DMASHDL_BYPASS	BIT(28)
-+#define MT_DMASHDL_OPTIONAL		MT_DMA_SHDL(0x008)
-+#define MT_DMASHDL_PAGE			MT_DMA_SHDL(0x00c)
-+#define MT_DMASHDL_GROUP_SEQ_ORDER	BIT(16)
-+#define MT_DMASHDL_REFILL		MT_DMA_SHDL(0x010)
-+#define MT_DMASHDL_REFILL_MASK		GENMASK(31, 16)
-+#define MT_DMASHDL_PKT_MAX_SIZE		MT_DMA_SHDL(0x01c)
-+#define MT_DMASHDL_PKT_MAX_SIZE_PLE	GENMASK(11, 0)
-+#define MT_DMASHDL_PKT_MAX_SIZE_PSE	GENMASK(27, 16)
-+
-+#define MT_DMASHDL_GROUP_QUOTA(_n)	MT_DMA_SHDL(0x020 + ((_n) << 2))
-+#define MT_DMASHDL_GROUP_QUOTA_MIN	GENMASK(11, 0)
-+#define MT_DMASHDL_GROUP_QUOTA_MAX	GENMASK(27, 16)
-+
-+#define MT_DMASHDL_Q_MAP(_n)		MT_DMA_SHDL(0x060 + ((_n) << 2))
-+#define MT_DMASHDL_Q_MAP_MASK		GENMASK(3, 0)
-+#define MT_DMASHDL_Q_MAP_SHIFT(_n)	(4 * ((_n) % 8))
-+
-+#define MT_DMASHDL_SCHED_SET(_n)	MT_DMA_SHDL(0x070 + ((_n) << 2))
-+
-+#define MT_WFDMA_HOST_CONFIG		0x7c027030
-+#define MT_WFDMA_HOST_CONFIG_USB_RXEVT_EP4_EN	BIT(6)
-+
-+#define MT_UMAC(ofs)			(0x74000000 + (ofs))
-+#define MT_UDMA_TX_QSEL			MT_UMAC(0x008)
-+#define MT_FW_DL_EN			BIT(3)
-+
-+#define MT_UDMA_WLCFG_1			MT_UMAC(0x00c)
-+#define MT_WL_RX_AGG_PKT_LMT		GENMASK(7, 0)
-+#define MT_WL_TX_TMOUT_LMT		GENMASK(27, 8)
-+
-+#define MT_UDMA_WLCFG_0			MT_UMAC(0x18)
-+#define MT_WL_RX_AGG_TO			GENMASK(7, 0)
-+#define MT_WL_RX_AGG_LMT		GENMASK(15, 8)
-+#define MT_WL_TX_TMOUT_FUNC_EN		BIT(16)
-+#define MT_WL_TX_DPH_CHK_EN		BIT(17)
-+#define MT_WL_RX_MPSZ_PAD0		BIT(18)
-+#define MT_WL_RX_FLUSH			BIT(19)
-+#define MT_TICK_1US_EN			BIT(20)
-+#define MT_WL_RX_AGG_EN			BIT(21)
-+#define MT_WL_RX_EN			BIT(22)
-+#define MT_WL_TX_EN			BIT(23)
-+#define MT_WL_RX_BUSY			BIT(30)
-+#define MT_WL_TX_BUSY			BIT(31)
-+
-+#define MT_UDMA_CONN_INFRA_STATUS	MT_UMAC(0xa20)
-+#define MT_UDMA_CONN_WFSYS_INIT_DONE	BIT(22)
-+#define MT_UDMA_CONN_INFRA_STATUS_SEL	MT_UMAC(0xa24)
-+
-+#define MT_SSUSB_EPCTL_CSR(ofs)		(0x74011800 + (ofs))
-+#define MT_SSUSB_EPCTL_CSR_EP_RST_OPT	MT_SSUSB_EPCTL_CSR(0x090)
-+
-+#define MT_UWFDMA0(ofs)			(0x7c024000 + (ofs))
-+#define MT_UWFDMA0_GLO_CFG		MT_UWFDMA0(0x208)
-+#define MT_UWFDMA0_GLO_CFG_EXT0		MT_UWFDMA0(0x2b0)
-+#define MT_UWFDMA0_GLO_CFG_EXT1		MT_UWFDMA0(0x2b4)
-+#define MT_UWFDMA0_TX_RING_EXT_CTRL(_n)	MT_UWFDMA0(0x600 + ((_n) << 2))
-+
-+#define MT_CONN_STATUS			0x7c053c10
-+#define MT_WIFI_PATCH_DL_STATE		BIT(0)
-+
-+#define MT_CONN_ON_LPCTL		0x7c060010
-+#define PCIE_LPCR_HOST_SET_OWN		BIT(0)
-+#define PCIE_LPCR_HOST_CLR_OWN		BIT(1)
-+#define PCIE_LPCR_HOST_OWN_SYNC		BIT(2)
-+
-+#define MT_CONN_ON_MISC			0x7c0600f0
-+#define MT_TOP_MISC2_FW_PWR_ON		BIT(0)
-+#define MT_TOP_MISC2_FW_N9_ON		BIT(1)
-+#define MT_TOP_MISC2_FW_N9_RDY		GENMASK(1, 0)
-+
-+#define MT_WF_SW_DEF_CR(ofs)		(0x401a00 + (ofs))
-+#define MT_WF_SW_DEF_CR_USB_MCU_EVENT	MT_WF_SW_DEF_CR(0x028)
-+#define MT_WF_SW_SER_TRIGGER_SUSPEND	BIT(6)
-+#define MT_WF_SW_SER_DONE_SUSPEND	BIT(7)
-+
-+#endif /* __MT792X_REGS_H */
+ void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data)
+ {
+-	struct mt7921_sta *msta = NULL;
++	struct mt792x_sta *msta = NULL;
+ 	struct mt76_wcid *wcid;
+ 	__le32 *txs_data = data;
+ 	u16 wcidx;
+@@ -537,7 +537,7 @@ void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data)
+ 	if (!wcid)
+ 		goto out;
+ 
+-	msta = container_of(wcid, struct mt7921_sta, wcid);
++	msta = container_of(wcid, struct mt792x_sta, wcid);
+ 
+ 	mt76_connac2_mac_add_txs_skb(&dev->mt76, wcid, pid, txs_data);
+ 	if (!wcid->sta)
+@@ -582,7 +582,7 @@ static void mt7921_mac_tx_free(struct mt7921_dev *dev, void *data, int len)
+ 		 * 1'b0: msdu_id with the same 'wcid pair' as above.
+ 		 */
+ 		if (info & MT_TX_FREE_PAIR) {
+-			struct mt7921_sta *msta;
++			struct mt792x_sta *msta;
+ 			u16 idx;
+ 
+ 			count++;
+@@ -592,7 +592,7 @@ static void mt7921_mac_tx_free(struct mt7921_dev *dev, void *data, int len)
+ 			if (!sta)
+ 				continue;
+ 
+-			msta = container_of(wcid, struct mt7921_sta, wcid);
++			msta = container_of(wcid, struct mt792x_sta, wcid);
+ 			spin_lock_bh(&mdev->sta_poll_lock);
+ 			if (list_empty(&msta->wcid.poll_list))
+ 				list_add_tail(&msta->wcid.poll_list,
+@@ -1140,7 +1140,7 @@ int mt7921_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 		wcid = &dev->mt76.global_wcid;
+ 
+ 	if (sta) {
+-		struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++		struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 
+ 		if (time_after(jiffies, msta->last_txs + HZ / 4)) {
+ 			info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index de8c3a02cf4b..bd449423e5b3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -342,7 +342,7 @@ static void mt7921_remove_interface(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif)
+ {
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+-	struct mt7921_sta *msta = &mvif->sta;
++	struct mt792x_sta *msta = &mvif->sta;
+ 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
+ 	struct mt7921_phy *phy = mt7921_hw_phy(hw);
+ 	int idx = msta->wcid.idx;
+@@ -508,7 +508,7 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ {
+ 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+-	struct mt7921_sta *msta = sta ? (struct mt7921_sta *)sta->drv_priv :
++	struct mt792x_sta *msta = sta ? (struct mt792x_sta *)sta->drv_priv :
+ 				  &mvif->sta;
+ 	struct mt76_wcid *wcid = &msta->wcid;
+ 	u8 *wcid_keyidx = &wcid->hw_key_idx;
+@@ -756,7 +756,7 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 		       struct ieee80211_sta *sta)
+ {
+ 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
+-	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+ 	int ret, idx;
+ 
+@@ -797,7 +797,7 @@ void mt7921_mac_sta_assoc(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 			  struct ieee80211_sta *sta)
+ {
+ 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
+-	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+ 
+ 	mt7921_mutex_acquire(dev);
+@@ -822,7 +822,7 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 			   struct ieee80211_sta *sta)
+ {
+ 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
+-	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 
+ 	mt76_connac_free_pending_tx_skbs(&dev->pm, &msta->wcid);
+ 	mt76_connac_pm_wake(&dev->mphy, &dev->pm);
+@@ -877,9 +877,9 @@ static void mt7921_tx(struct ieee80211_hw *hw,
+ 	int qid;
+ 
+ 	if (control->sta) {
+-		struct mt7921_sta *sta;
++		struct mt792x_sta *sta;
+ 
+-		sta = (struct mt7921_sta *)control->sta->drv_priv;
++		sta = (struct mt792x_sta *)control->sta->drv_priv;
+ 		wcid = &sta->wcid;
+ 	}
+ 
+@@ -924,7 +924,7 @@ mt7921_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
+ 	struct ieee80211_sta *sta = params->sta;
+ 	struct ieee80211_txq *txq = sta->txq[params->tid];
+-	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 	u16 tid = params->tid;
+ 	u16 ssn = params->ssn;
+ 	struct mt76_txq *mtxq;
+@@ -1120,7 +1120,7 @@ mt7921_get_et_sset_count(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ static void
+ mt7921_ethtool_worker(void *wi_data, struct ieee80211_sta *sta)
+ {
+-	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 	struct mt76_ethtool_worker_info *wi = wi_data;
+ 
+ 	if (msta->vif->mt76.idx != wi->idx)
+@@ -1387,7 +1387,7 @@ static void mt7921_sta_statistics(struct ieee80211_hw *hw,
+ 				  struct ieee80211_sta *sta,
+ 				  struct station_info *sinfo)
+ {
+-	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 	struct rate_info *txrate = &msta->wcid.rate;
+ 
+ 	if (!txrate->legacy && !txrate->flags)
+@@ -1500,7 +1500,7 @@ static void mt7921_sta_set_decap_offload(struct ieee80211_hw *hw,
+ 					 struct ieee80211_sta *sta,
+ 					 bool enabled)
+ {
+-	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
+ 
+ 	mt7921_mutex_acquire(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 4d8b4c802739..1d1e8ee5bd3d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -343,7 +343,7 @@ int mt7921_mcu_uni_tx_ba(struct mt7921_dev *dev,
+ 			 struct ieee80211_ampdu_params *params,
+ 			 bool enable)
+ {
+-	struct mt7921_sta *msta = (struct mt7921_sta *)params->sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)params->sta->drv_priv;
+ 
+ 	if (enable && !params->amsdu)
+ 		msta->wcid.amsdu = false;
+@@ -357,7 +357,7 @@ int mt7921_mcu_uni_rx_ba(struct mt7921_dev *dev,
+ 			 struct ieee80211_ampdu_params *params,
+ 			 bool enable)
+ {
+-	struct mt7921_sta *msta = (struct mt7921_sta *)params->sta->drv_priv;
++	struct mt792x_sta *msta = (struct mt792x_sta *)params->sta->drv_priv;
+ 
+ 	return mt76_connac_mcu_sta_ba(&dev->mt76, &msta->vif->mt76, params,
+ 				      MCU_UNI_CMD(STA_REC_UPDATE),
+@@ -933,9 +933,9 @@ int mt7921_mcu_sta_update(struct mt7921_dev *dev, struct ieee80211_sta *sta,
+ 		.offload_fw = true,
+ 		.rcpi = to_rcpi(rssi),
+ 	};
+-	struct mt7921_sta *msta;
++	struct mt792x_sta *msta;
+ 
+-	msta = sta ? (struct mt7921_sta *)sta->drv_priv : NULL;
++	msta = sta ? (struct mt792x_sta *)sta->drv_priv : NULL;
+ 	info.wcid = msta ? &msta->wcid : &mvif->sta.wcid;
+ 	info.newly = msta ? state != MT76_STA_INFO_STATE_ASSOC : true;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index 6ec5b19f3c25..4d409ba3fc21 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -128,7 +128,7 @@ struct mt7921_sdio_intr {
+ #define to_rcpi(rssi)			(2 * (rssi) + 220)
+ 
+ struct mt792x_vif;
+-struct mt7921_sta;
++struct mt792x_sta;
+ 
+ enum mt7921_txq_id {
+ 	MT7921_TXQ_BAND0,
+@@ -145,7 +145,7 @@ enum mt7921_rxq_id {
+ 
+ DECLARE_EWMA(avg_signal, 10, 8)
+ 
+-struct mt7921_sta {
++struct mt792x_sta {
+ 	struct mt76_wcid wcid; /* must be first */
+ 
+ 	struct mt792x_vif *vif;
+@@ -165,8 +165,8 @@ DECLARE_EWMA(rssi, 10, 8);
+ struct mt792x_vif {
+ 	struct mt76_vif mt76; /* must be first */
+ 
+-	struct mt7921_sta sta;
+-	struct mt7921_sta *wep_sta;
++	struct mt792x_sta sta;
++	struct mt792x_sta *wep_sta;
+ 
+ 	struct mt7921_phy *phy;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
+index 978c90a034cf..32bba86727a5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
+@@ -32,7 +32,7 @@ int mt7921e_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 		return id;
+ 
+ 	if (sta) {
+-		struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
++		struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 
+ 		if (time_after(jiffies, msta->last_txs + HZ / 4)) {
+ 			info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
 -- 
 2.18.0
 
