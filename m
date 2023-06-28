@@ -2,48 +2,48 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A807C001B0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DA66EB64DD
 	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jun 2023 07:52:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231131AbjF1Hwd (ORCPT
+        id S231150AbjF1Hwe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Jun 2023 03:52:33 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:38880 "EHLO
+        Wed, 28 Jun 2023 03:52:34 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:38864 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230093AbjF1Hw2 (ORCPT
+        with ESMTP id S229956AbjF1Hw1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2023 03:52:28 -0400
-X-UUID: 68f279d0158211ee9cb5633481061a41-20230628
+        Wed, 28 Jun 2023 03:52:27 -0400
+X-UUID: 6abd853e158211ee9cb5633481061a41-20230628
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=6PDqreba8OPai+PIacZji7W6uuUKmIkJ+VvFQSiME2A=;
-        b=G1cYTcOcUAARSE1Ff+rvkgQLjiMFpK31lhuH3iPsy7+fdubNKwLPhkRr9YlWCq5Cl8LUz2h11rKeCok4ikDH39cHs25jHy3Q84pqn2ZNt5XN3U4okU2/ZiDFARZyCb1Nvg6f/w3F/nGlTaDA8k2zoq9yn/wgkpBeHjG+yUeT2IY=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=uyeAQJ41FpCQyk0mJ3iq0Q12Uras7GS2UAAYoa1Bqs8=;
+        b=F0KMtTD18tgiOOfvkdmjAdJ5C9vOVITZMVrFHBMlgVgF15ZRIecXuHpv0LJDdpbIjjYZRBvXwc+TPbCrWn1+oE19Yc7fPUdZFWiI5IDO6u6JV90CsO/a4U53nyJkL1mFAWqFnRTq2dvUJOnYugndxBlRewc3epZEf4sKrajS+H8=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.27,REQID:840a0f70-0c37-46a3-b6cd-63dc0ebc18ed,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:95
-X-CID-INFO: VERSION:1.1.27,REQID:840a0f70-0c37-46a3-b6cd-63dc0ebc18ed,IP:0,URL
-        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
-        :quarantine,TS:95
-X-CID-META: VersionHash:01c9525,CLOUDID:4c694f0d-26a8-467f-b838-f99719a9c083,B
-        ulkID:230628150716YS40BVMD,BulkQuantity:0,Recheck:0,SF:28|17|19|48|38|29,T
+X-CID-O-INFO: VERSION:1.1.27,REQID:26f86d35-0d50-43b0-8673-0c43660e5c43,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:90
+X-CID-INFO: VERSION:1.1.27,REQID:26f86d35-0d50-43b0-8673-0c43660e5c43,IP:0,URL
+        :0,TC:0,Content:-5,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
+        N:quarantine,TS:90
+X-CID-META: VersionHash:01c9525,CLOUDID:8fd05eda-b4fa-43c8-9c3e-0d3fabd03ec0,B
+        ulkID:230628150719B13PDA4Q,BulkQuantity:0,Recheck:0,SF:29|28|17|19|48|38,T
         C:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
         ,OSI:0,OSA:0,AV:0,LES:1,SPR:NO
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_SDM,TF_CID_SPAM_ASC,TF_CID_SPAM_FAS,
-        TF_CID_SPAM_FSD
-X-UUID: 68f279d0158211ee9cb5633481061a41-20230628
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_ASC,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_SNR,
+        TF_CID_SPAM_SDM
+X-UUID: 6abd853e158211ee9cb5633481061a41-20230628
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
         (envelope-from <deren.wu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 504911790; Wed, 28 Jun 2023 15:07:14 +0800
+        with ESMTP id 219939915; Wed, 28 Jun 2023 15:07:17 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ MTKMBS14N2.mediatek.inc (172.21.101.76) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 28 Jun 2023 15:07:14 +0800
+ 15.2.1118.26; Wed, 28 Jun 2023 15:07:16 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 28 Jun 2023 15:07:14 +0800
+ 15.2.1118.26 via Frontend Transport; Wed, 28 Jun 2023 15:07:16 +0800
 From:   Deren Wu <deren.wu@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
 CC:     Sean Wang <sean.wang@mediatek.com>,
@@ -52,9 +52,9 @@ CC:     Sean Wang <sean.wang@mediatek.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Deren Wu <deren.wu@mediatek.com>
-Subject: [PATCH 04/16] wifi: mt76: mt7921: rename mt7921_sta in mt792x_sta
-Date:   Wed, 28 Jun 2023 15:05:50 +0800
-Message-ID: <cf4a3db00340bcc1ae447b1a0eb2d50ed341a1b1.1687919628.git.deren.wu@mediatek.com>
+Subject: [PATCH 16/16] wifi: mt76: mt792x: introduce mt792x_irq_map
+Date:   Wed, 28 Jun 2023 15:06:02 +0800
+Message-ID: <0143f930926da8bd29ac801284441666c5fe3197.1687919628.git.deren.wu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <cover.1687919628.git.deren.wu@mediatek.com>
 References: <cover.1687919628.git.deren.wu@mediatek.com>
@@ -67,312 +67,329 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-This is a preliminary patch to introduce WiFi7 chipset support
+mt792x_irq_map will be use to share the irq code shared between mt7921
+and mt7925
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Deren Wu <deren.wu@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/init.c  |  2 +-
- .../net/wireless/mediatek/mt76/mt7921/mac.c   | 22 +++++++++----------
- .../net/wireless/mediatek/mt76/mt7921/main.c  | 22 +++++++++----------
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   |  8 +++----
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  8 +++----
- .../wireless/mediatek/mt76/mt7921/pci_mac.c   |  2 +-
- 6 files changed, 32 insertions(+), 32 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7921/dma.c   |  9 ++--
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   | 53 ++++++++++++-------
+ .../wireless/mediatek/mt76/mt7921/pci_mac.c   |  8 +--
+ .../net/wireless/mediatek/mt76/mt7921/regs.h  | 17 ------
+ drivers/net/wireless/mediatek/mt76/mt792x.h   | 14 +++++
+ .../net/wireless/mediatek/mt76/mt792x_regs.h  | 19 +++++++
+ 6 files changed, 77 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index f2a6fd61863b..df32f4f1b636 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -140,7 +140,7 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
+index 9dcda35cdf73..1ac66526eb02 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/dma.c
+@@ -19,7 +19,8 @@ static int mt7921_poll_tx(struct napi_struct *napi, int budget)
  
- 	phy->slottime = 9;
+ 	mt76_connac_tx_cleanup(&dev->mt76);
+ 	if (napi_complete(napi))
+-		mt76_connac_irq_enable(&dev->mt76, MT_INT_TX_DONE_ALL);
++		mt76_connac_irq_enable(&dev->mt76,
++				       dev->irq_map->tx.all_complete_mask);
+ 	mt76_connac_pm_unref(&dev->mphy, &dev->pm);
  
--	hw->sta_data_size = sizeof(struct mt7921_sta);
-+	hw->sta_data_size = sizeof(struct mt792x_sta);
- 	hw->vif_data_size = sizeof(struct mt792x_vif);
+ 	return 0;
+@@ -72,8 +73,8 @@ static int mt7921_dma_enable(struct mt792x_dev *dev)
  
- 	if (dev->fw_features & MT7921_FW_CAP_CNM) {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 44b0122073f8..d4cf2ff18102 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -23,7 +23,7 @@ static u32 mt7921_mac_wtbl_lmac_addr(int idx, u8 offset)
- static struct mt76_wcid *mt7921_rx_get_wcid(struct mt7921_dev *dev,
- 					    u16 idx, bool unicast)
+ 	/* enable interrupts for TX/RX rings */
+ 	mt76_connac_irq_enable(&dev->mt76,
+-			       MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
+-			       MT_INT_MCU_CMD);
++			       dev->irq_map->tx.all_complete_mask |
++			       MT_INT_RX_DONE_ALL | MT_INT_MCU_CMD);
+ 	mt76_set(dev, MT_MCU2HOST_SW_INT_ENA, MT_MCU_CMD_WAKE_RX_PCIE);
+ 
+ 	return 0;
+@@ -139,7 +140,7 @@ int mt7921_wpdma_reinit_cond(struct mt792x_dev *dev)
+ 	/* check if the wpdma must be reinitialized */
+ 	if (mt792x_dma_need_reinit(dev)) {
+ 		/* disable interrutpts */
+-		mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
++		mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
+ 		mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0x0);
+ 
+ 		err = mt7921_wpdma_reset(dev, false);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 58f6f5a76498..606a7e41a240 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -31,19 +31,22 @@ MODULE_PARM_DESC(disable_aspm, "disable PCI ASPM support");
+ static void
+ mt7921_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
  {
--	struct mt7921_sta *sta;
-+	struct mt792x_sta *sta;
- 	struct mt76_wcid *wcid;
++	struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
++	const struct mt792x_irq_map *irq_map = dev->irq_map;
++
+ 	if (q == MT_RXQ_MAIN)
+-		mt76_connac_irq_enable(mdev, MT_INT_RX_DONE_DATA);
++		mt76_connac_irq_enable(mdev, irq_map->rx.data_complete_mask);
+ 	else if (q == MT_RXQ_MCU_WA)
+-		mt76_connac_irq_enable(mdev, MT_INT_RX_DONE_WM2);
++		mt76_connac_irq_enable(mdev, irq_map->rx.wm2_complete_mask);
+ 	else
+-		mt76_connac_irq_enable(mdev, MT_INT_RX_DONE_WM);
++		mt76_connac_irq_enable(mdev, irq_map->rx.wm_complete_mask);
+ }
  
- 	if (idx >= ARRAY_SIZE(dev->mt76.wcid))
-@@ -36,7 +36,7 @@ static struct mt76_wcid *mt7921_rx_get_wcid(struct mt7921_dev *dev,
- 	if (!wcid->sta)
- 		return NULL;
+ static irqreturn_t mt7921_irq_handler(int irq, void *dev_instance)
+ {
+ 	struct mt792x_dev *dev = dev_instance;
  
--	sta = container_of(wcid, struct mt7921_sta, wcid);
-+	sta = container_of(wcid, struct mt792x_sta, wcid);
- 	if (!sta->vif)
- 		return NULL;
+-	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
++	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
  
-@@ -61,7 +61,7 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
- 		[IEEE80211_AC_VO] = 6
- 	};
- 	struct ieee80211_sta *sta;
--	struct mt7921_sta *msta;
-+	struct mt792x_sta *msta;
- 	u32 tx_time[IEEE80211_NUM_ACS], rx_time[IEEE80211_NUM_ACS];
- 	LIST_HEAD(sta_poll_list);
- 	struct rate_info *rate;
-@@ -84,7 +84,7 @@ static void mt7921_mac_sta_poll(struct mt7921_dev *dev)
- 			break;
+ 	if (!test_bit(MT76_STATE_INITIALIZED, &dev->mphy.state))
+ 		return IRQ_NONE;
+@@ -56,9 +59,10 @@ static irqreturn_t mt7921_irq_handler(int irq, void *dev_instance)
+ static void mt7921_irq_tasklet(unsigned long data)
+ {
+ 	struct mt792x_dev *dev = (struct mt792x_dev *)data;
++	const struct mt792x_irq_map *irq_map = dev->irq_map;
+ 	u32 intr, mask = 0;
+ 
+-	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
++	mt76_wr(dev, irq_map->host_irq_enable, 0);
+ 
+ 	intr = mt76_rr(dev, MT_WFDMA0_HOST_INT_STA);
+ 	intr &= dev->mt76.mmio.irqmask;
+@@ -67,8 +71,8 @@ static void mt7921_irq_tasklet(unsigned long data)
+ 	trace_dev_irq(&dev->mt76, intr, dev->mt76.mmio.irqmask);
+ 
+ 	mask |= intr & MT_INT_RX_DONE_ALL;
+-	if (intr & MT_INT_TX_DONE_MCU)
+-		mask |= MT_INT_TX_DONE_MCU;
++	if (intr & irq_map->tx.mcu_complete_mask)
++		mask |= irq_map->tx.mcu_complete_mask;
+ 
+ 	if (intr & MT_INT_MCU_CMD) {
+ 		u32 intr_sw;
+@@ -77,23 +81,23 @@ static void mt7921_irq_tasklet(unsigned long data)
+ 		/* ack MCU2HOST_SW_INT_STA */
+ 		mt76_wr(dev, MT_MCU_CMD, intr_sw);
+ 		if (intr_sw & MT_MCU_CMD_WAKE_RX_PCIE) {
+-			mask |= MT_INT_RX_DONE_DATA;
+-			intr |= MT_INT_RX_DONE_DATA;
++			mask |= irq_map->rx.data_complete_mask;
++			intr |= irq_map->rx.data_complete_mask;
  		}
- 		msta = list_first_entry(&sta_poll_list,
--					struct mt7921_sta, wcid.poll_list);
-+					struct mt792x_sta, wcid.poll_list);
- 		list_del_init(&msta->wcid.poll_list);
- 		spin_unlock_bh(&dev->mt76.sta_poll_lock);
- 
-@@ -248,7 +248,7 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 	u32 rxd2 = le32_to_cpu(rxd[2]);
- 	u32 rxd3 = le32_to_cpu(rxd[3]);
- 	u32 rxd4 = le32_to_cpu(rxd[4]);
--	struct mt7921_sta *msta = NULL;
-+	struct mt792x_sta *msta = NULL;
- 	u16 seq_ctrl = 0;
- 	__le16 fc = 0;
- 	u8 mode = 0;
-@@ -279,7 +279,7 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 	status->wcid = mt7921_rx_get_wcid(dev, idx, unicast);
- 
- 	if (status->wcid) {
--		msta = container_of(status->wcid, struct mt7921_sta, wcid);
-+		msta = container_of(status->wcid, struct mt792x_sta, wcid);
- 		spin_lock_bh(&dev->mt76.sta_poll_lock);
- 		if (list_empty(&msta->wcid.poll_list))
- 			list_add_tail(&msta->wcid.poll_list,
-@@ -513,7 +513,7 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
- 
- void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data)
- {
--	struct mt7921_sta *msta = NULL;
-+	struct mt792x_sta *msta = NULL;
- 	struct mt76_wcid *wcid;
- 	__le32 *txs_data = data;
- 	u16 wcidx;
-@@ -537,7 +537,7 @@ void mt7921_mac_add_txs(struct mt7921_dev *dev, void *data)
- 	if (!wcid)
- 		goto out;
- 
--	msta = container_of(wcid, struct mt7921_sta, wcid);
-+	msta = container_of(wcid, struct mt792x_sta, wcid);
- 
- 	mt76_connac2_mac_add_txs_skb(&dev->mt76, wcid, pid, txs_data);
- 	if (!wcid->sta)
-@@ -582,7 +582,7 @@ static void mt7921_mac_tx_free(struct mt7921_dev *dev, void *data, int len)
- 		 * 1'b0: msdu_id with the same 'wcid pair' as above.
- 		 */
- 		if (info & MT_TX_FREE_PAIR) {
--			struct mt7921_sta *msta;
-+			struct mt792x_sta *msta;
- 			u16 idx;
- 
- 			count++;
-@@ -592,7 +592,7 @@ static void mt7921_mac_tx_free(struct mt7921_dev *dev, void *data, int len)
- 			if (!sta)
- 				continue;
- 
--			msta = container_of(wcid, struct mt7921_sta, wcid);
-+			msta = container_of(wcid, struct mt792x_sta, wcid);
- 			spin_lock_bh(&mdev->sta_poll_lock);
- 			if (list_empty(&msta->wcid.poll_list))
- 				list_add_tail(&msta->wcid.poll_list,
-@@ -1140,7 +1140,7 @@ int mt7921_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 		wcid = &dev->mt76.global_wcid;
- 
- 	if (sta) {
--		struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+		struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 
- 		if (time_after(jiffies, msta->last_txs + HZ / 4)) {
- 			info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index de8c3a02cf4b..bd449423e5b3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -342,7 +342,7 @@ static void mt7921_remove_interface(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif)
- {
- 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
--	struct mt7921_sta *msta = &mvif->sta;
-+	struct mt792x_sta *msta = &mvif->sta;
- 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
- 	struct mt7921_phy *phy = mt7921_hw_phy(hw);
- 	int idx = msta->wcid.idx;
-@@ -508,7 +508,7 @@ static int mt7921_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- {
- 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
- 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
--	struct mt7921_sta *msta = sta ? (struct mt7921_sta *)sta->drv_priv :
-+	struct mt792x_sta *msta = sta ? (struct mt792x_sta *)sta->drv_priv :
- 				  &mvif->sta;
- 	struct mt76_wcid *wcid = &msta->wcid;
- 	u8 *wcid_keyidx = &wcid->hw_key_idx;
-@@ -756,7 +756,7 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta)
- {
- 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
--	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
- 	int ret, idx;
- 
-@@ -797,7 +797,7 @@ void mt7921_mac_sta_assoc(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 			  struct ieee80211_sta *sta)
- {
- 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
--	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
- 
- 	mt7921_mutex_acquire(dev);
-@@ -822,7 +822,7 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta)
- {
- 	struct mt7921_dev *dev = container_of(mdev, struct mt7921_dev, mt76);
--	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 
- 	mt76_connac_free_pending_tx_skbs(&dev->pm, &msta->wcid);
- 	mt76_connac_pm_wake(&dev->mphy, &dev->pm);
-@@ -877,9 +877,9 @@ static void mt7921_tx(struct ieee80211_hw *hw,
- 	int qid;
- 
- 	if (control->sta) {
--		struct mt7921_sta *sta;
-+		struct mt792x_sta *sta;
- 
--		sta = (struct mt7921_sta *)control->sta->drv_priv;
-+		sta = (struct mt792x_sta *)control->sta->drv_priv;
- 		wcid = &sta->wcid;
  	}
  
-@@ -924,7 +924,7 @@ mt7921_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
- 	struct ieee80211_sta *sta = params->sta;
- 	struct ieee80211_txq *txq = sta->txq[params->tid];
--	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 	u16 tid = params->tid;
- 	u16 ssn = params->ssn;
- 	struct mt76_txq *mtxq;
-@@ -1120,7 +1120,7 @@ mt7921_get_et_sset_count(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- static void
- mt7921_ethtool_worker(void *wi_data, struct ieee80211_sta *sta)
- {
--	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 	struct mt76_ethtool_worker_info *wi = wi_data;
+-	mt76_set_irq_mask(&dev->mt76, MT_WFDMA0_HOST_INT_ENA, mask, 0);
++	mt76_set_irq_mask(&dev->mt76, irq_map->host_irq_enable, mask, 0);
  
- 	if (msta->vif->mt76.idx != wi->idx)
-@@ -1387,7 +1387,7 @@ static void mt7921_sta_statistics(struct ieee80211_hw *hw,
- 				  struct ieee80211_sta *sta,
- 				  struct station_info *sinfo)
- {
--	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 	struct rate_info *txrate = &msta->wcid.rate;
+-	if (intr & MT_INT_TX_DONE_ALL)
++	if (intr & irq_map->tx.all_complete_mask)
+ 		napi_schedule(&dev->mt76.tx_napi);
  
- 	if (!txrate->legacy && !txrate->flags)
-@@ -1500,7 +1500,7 @@ static void mt7921_sta_set_decap_offload(struct ieee80211_hw *hw,
- 					 struct ieee80211_sta *sta,
- 					 bool enabled)
- {
--	struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
- 	struct mt7921_dev *dev = mt7921_hw_dev(hw);
+-	if (intr & MT_INT_RX_DONE_WM)
++	if (intr & irq_map->rx.wm_complete_mask)
+ 		napi_schedule(&dev->mt76.napi[MT_RXQ_MCU]);
  
- 	mt7921_mutex_acquire(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 4d8b4c802739..1d1e8ee5bd3d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -343,7 +343,7 @@ int mt7921_mcu_uni_tx_ba(struct mt7921_dev *dev,
- 			 struct ieee80211_ampdu_params *params,
- 			 bool enable)
- {
--	struct mt7921_sta *msta = (struct mt7921_sta *)params->sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)params->sta->drv_priv;
+-	if (intr & MT_INT_RX_DONE_WM2)
++	if (intr & irq_map->rx.wm2_complete_mask)
+ 		napi_schedule(&dev->mt76.napi[MT_RXQ_MCU_WA]);
  
- 	if (enable && !params->amsdu)
- 		msta->wcid.amsdu = false;
-@@ -357,7 +357,7 @@ int mt7921_mcu_uni_rx_ba(struct mt7921_dev *dev,
- 			 struct ieee80211_ampdu_params *params,
- 			 bool enable)
- {
--	struct mt7921_sta *msta = (struct mt7921_sta *)params->sta->drv_priv;
-+	struct mt792x_sta *msta = (struct mt792x_sta *)params->sta->drv_priv;
+-	if (intr & MT_INT_RX_DONE_DATA)
++	if (intr & irq_map->rx.data_complete_mask)
+ 		napi_schedule(&dev->mt76.napi[MT_RXQ_MAIN]);
+ }
  
- 	return mt76_connac_mcu_sta_ba(&dev->mt76, &msta->vif->mt76, params,
- 				      MCU_UNI_CMD(STA_REC_UPDATE),
-@@ -933,9 +933,9 @@ int mt7921_mcu_sta_update(struct mt7921_dev *dev, struct ieee80211_sta *sta,
- 		.offload_fw = true,
- 		.rcpi = to_rcpi(rssi),
+@@ -254,6 +258,18 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 		.drv_own = mt7921e_mcu_drv_pmctrl,
+ 		.fw_own = mt7921e_mcu_fw_pmctrl,
  	};
--	struct mt7921_sta *msta;
-+	struct mt792x_sta *msta;
++	static const struct mt792x_irq_map irq_map = {
++		.host_irq_enable = MT_WFDMA0_HOST_INT_ENA,
++		.tx = {
++			.all_complete_mask = MT_INT_TX_DONE_ALL,
++			.mcu_complete_mask = MT_INT_TX_DONE_MCU,
++		},
++		.rx = {
++			.data_complete_mask = MT_INT_RX_DONE_DATA,
++			.wm_complete_mask = MT_INT_RX_DONE_WM,
++			.wm2_complete_mask = MT_INT_RX_DONE_WM2,
++		},
++	};
+ 	struct ieee80211_ops *ops;
+ 	struct mt76_bus_ops *bus_ops;
+ 	struct mt792x_dev *dev;
+@@ -306,6 +322,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 	dev = container_of(mdev, struct mt792x_dev, mt76);
+ 	dev->fw_features = features;
+ 	dev->hif_ops = &mt7921_pcie_ops;
++	dev->irq_map = &irq_map;
+ 	mt76_mmio_init(&dev->mt76, pcim_iomap_table(pdev)[0]);
+ 	tasklet_init(&mdev->irq_tasklet, mt7921_irq_tasklet, (unsigned long)dev);
  
--	msta = sta ? (struct mt7921_sta *)sta->drv_priv : NULL;
-+	msta = sta ? (struct mt792x_sta *)sta->drv_priv : NULL;
- 	info.wcid = msta ? &msta->wcid : &mvif->sta.wcid;
- 	info.newly = msta ? state != MT76_STA_INFO_STATE_ASSOC : true;
+@@ -341,7 +358,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 	if (ret)
+ 		goto err_free_dev;
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index 6ec5b19f3c25..4d409ba3fc21 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -128,7 +128,7 @@ struct mt7921_sdio_intr {
- #define to_rcpi(rssi)			(2 * (rssi) + 220)
+-	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
++	mt76_wr(dev, irq_map.host_irq_enable, 0);
  
- struct mt792x_vif;
--struct mt7921_sta;
-+struct mt792x_sta;
+ 	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
  
- enum mt7921_txq_id {
- 	MT7921_TXQ_BAND0,
-@@ -145,7 +145,7 @@ enum mt7921_rxq_id {
+@@ -424,7 +441,7 @@ static int mt7921_pci_suspend(struct device *device)
+ 		   MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN);
  
- DECLARE_EWMA(avg_signal, 10, 8)
+ 	/* disable interrupt */
+-	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
++	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
+ 	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0x0);
+ 	synchronize_irq(pdev->irq);
+ 	tasklet_kill(&mdev->irq_tasklet);
+@@ -472,8 +489,8 @@ static int mt7921_pci_resume(struct device *device)
+ 	/* enable interrupt */
+ 	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
+ 	mt76_connac_irq_enable(&dev->mt76,
+-			       MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
+-			       MT_INT_MCU_CMD);
++			       dev->irq_map->tx.all_complete_mask |
++			       MT_INT_RX_DONE_ALL | MT_INT_MCU_CMD);
+ 	mt76_set(dev, MT_MCU2HOST_SW_INT_ENA, MT_MCU_CMD_WAKE_RX_PCIE);
  
--struct mt7921_sta {
-+struct mt792x_sta {
- 	struct mt76_wcid wcid; /* must be first */
- 
- 	struct mt792x_vif *vif;
-@@ -165,8 +165,8 @@ DECLARE_EWMA(rssi, 10, 8);
- struct mt792x_vif {
- 	struct mt76_vif mt76; /* must be first */
- 
--	struct mt7921_sta sta;
--	struct mt7921_sta *wep_sta;
-+	struct mt792x_sta sta;
-+	struct mt792x_sta *wep_sta;
- 
- 	struct mt7921_phy *phy;
- 
+ 	/* put dma enabled */
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
-index 978c90a034cf..32bba86727a5 100644
+index 7323388327f4..1f508244d615 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
-@@ -32,7 +32,7 @@ int mt7921e_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 		return id;
+@@ -61,7 +61,7 @@ int mt7921e_mac_reset(struct mt792x_dev *dev)
  
- 	if (sta) {
--		struct mt7921_sta *msta = (struct mt7921_sta *)sta->drv_priv;
-+		struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+ 	mt76_connac_free_pending_tx_skbs(&dev->pm, NULL);
  
- 		if (time_after(jiffies, msta->last_txs + HZ / 4)) {
- 			info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
+-	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA, 0);
++	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
+ 	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0x0);
+ 
+ 	set_bit(MT76_RESET, &dev->mphy.state);
+@@ -92,9 +92,9 @@ int mt7921e_mac_reset(struct mt792x_dev *dev)
+ 	dev->fw_assert = false;
+ 	clear_bit(MT76_MCU_RESET, &dev->mphy.state);
+ 
+-	mt76_wr(dev, MT_WFDMA0_HOST_INT_ENA,
+-		MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
+-		MT_INT_MCU_CMD);
++	mt76_wr(dev, dev->irq_map->host_irq_enable,
++		dev->irq_map->tx.all_complete_mask |
++		MT_INT_RX_DONE_ALL | MT_INT_MCU_CMD);
+ 	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
+ 
+ 	err = mt7921e_driver_own(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+index 083d655f82e5..43427a3a48af 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/regs.h
+@@ -29,18 +29,6 @@
+ #define MT_MDP_TO_WM			1
+ 
+ #define MT_WFDMA0_HOST_INT_ENA		MT_WFDMA0(0x204)
+-#define HOST_RX_DONE_INT_ENA0		BIT(0)
+-#define HOST_RX_DONE_INT_ENA1		BIT(1)
+-#define HOST_RX_DONE_INT_ENA2		BIT(2)
+-#define HOST_RX_DONE_INT_ENA3		BIT(3)
+-#define HOST_TX_DONE_INT_ENA0		BIT(4)
+-#define HOST_TX_DONE_INT_ENA1		BIT(5)
+-#define HOST_TX_DONE_INT_ENA2		BIT(6)
+-#define HOST_TX_DONE_INT_ENA3		BIT(7)
+-#define HOST_TX_DONE_INT_ENA4		BIT(8)
+-#define HOST_TX_DONE_INT_ENA5		BIT(9)
+-#define HOST_TX_DONE_INT_ENA6		BIT(10)
+-#define HOST_TX_DONE_INT_ENA7		BIT(11)
+ #define HOST_TX_DONE_INT_ENA8		BIT(12)
+ #define HOST_TX_DONE_INT_ENA9		BIT(13)
+ #define HOST_TX_DONE_INT_ENA10		BIT(14)
+@@ -48,14 +36,10 @@
+ #define HOST_TX_DONE_INT_ENA12		BIT(16)
+ #define HOST_TX_DONE_INT_ENA13		BIT(17)
+ #define HOST_TX_DONE_INT_ENA14		BIT(18)
+-#define HOST_RX_COHERENT_EN		BIT(20)
+-#define HOST_TX_COHERENT_EN		BIT(21)
+ #define HOST_RX_DONE_INT_ENA4		BIT(22)
+ #define HOST_RX_DONE_INT_ENA5		BIT(23)
+ #define HOST_TX_DONE_INT_ENA16		BIT(26)
+ #define HOST_TX_DONE_INT_ENA17		BIT(27)
+-#define MCU2HOST_SW_INT_ENA		BIT(29)
+-#define HOST_TX_DONE_INT_ENA18		BIT(30)
+ 
+ /* WFDMA interrupt */
+ #define MT_INT_RX_DONE_DATA		HOST_RX_DONE_INT_ENA2
+@@ -67,7 +51,6 @@
+ #define MT_INT_TX_DONE_MCU_WM		HOST_TX_DONE_INT_ENA17
+ #define MT_INT_TX_DONE_FWDL		HOST_TX_DONE_INT_ENA16
+ #define MT_INT_TX_DONE_BAND0		HOST_TX_DONE_INT_ENA0
+-#define MT_INT_MCU_CMD			MCU2HOST_SW_INT_ENA
+ 
+ #define MT_INT_TX_DONE_MCU		(MT_INT_TX_DONE_MCU_WM |	\
+ 					 MT_INT_TX_DONE_FWDL)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index f13779d19983..6fd1f542da17 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -114,6 +114,19 @@ struct mt792x_phy {
+ 	bool roc_grant;
+ };
+ 
++struct mt792x_irq_map {
++	u32 host_irq_enable;
++	struct {
++		u32 all_complete_mask;
++		u32 mcu_complete_mask;
++	} tx;
++	struct {
++		u32 data_complete_mask;
++		u32 wm_complete_mask;
++		u32 wm2_complete_mask;
++	} rx;
++};
++
+ struct mt792x_hif_ops {
+ 	int (*init_reset)(struct mt792x_dev *dev);
+ 	int (*reset)(struct mt792x_dev *dev);
+@@ -145,6 +158,7 @@ struct mt792x_dev {
+ 	struct mt76_connac_pm pm;
+ 	struct mt76_connac_coredump coredump;
+ 	const struct mt792x_hif_ops *hif_ops;
++	const struct mt792x_irq_map *irq_map;
+ 
+ 	struct work_struct ipv6_ns_work;
+ 	/* IPv6 addresses for WoWLAN */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
+index 9c6308ef4cb3..a99af23e4b56 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
+@@ -301,6 +301,25 @@
+ #define MT_WFDMA0_GLO_CFG_OMIT_TX_INFO	BIT(28)
+ #define MT_WFDMA0_GLO_CFG_CLK_GAT_DIS	BIT(30)
+ 
++#define HOST_RX_DONE_INT_ENA0		BIT(0)
++#define HOST_RX_DONE_INT_ENA1		BIT(1)
++#define HOST_RX_DONE_INT_ENA2		BIT(2)
++#define HOST_RX_DONE_INT_ENA3		BIT(3)
++#define HOST_TX_DONE_INT_ENA0		BIT(4)
++#define HOST_TX_DONE_INT_ENA1		BIT(5)
++#define HOST_TX_DONE_INT_ENA2		BIT(6)
++#define HOST_TX_DONE_INT_ENA3		BIT(7)
++#define HOST_TX_DONE_INT_ENA4		BIT(8)
++#define HOST_TX_DONE_INT_ENA5		BIT(9)
++#define HOST_TX_DONE_INT_ENA6		BIT(10)
++#define HOST_TX_DONE_INT_ENA7		BIT(11)
++#define HOST_RX_COHERENT_EN		BIT(20)
++#define HOST_TX_COHERENT_EN		BIT(21)
++#define MCU2HOST_SW_INT_ENA		BIT(29)
++#define HOST_TX_DONE_INT_ENA18		BIT(30)
++
++#define MT_INT_MCU_CMD			MCU2HOST_SW_INT_ENA
++
+ #define MT_WFDMA0_RST_DTX_PTR		MT_WFDMA0(0x20c)
+ #define MT_WFDMA0_RST_DRX_PTR		MT_WFDMA0(0x280)
+ #define MT_WFDMA0_GLO_CFG_EXT0		MT_WFDMA0(0x2b0)
 -- 
 2.18.0
 
