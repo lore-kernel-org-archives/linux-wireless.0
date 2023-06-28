@@ -2,86 +2,114 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F85EB64DC
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jun 2023 08:24:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D47EEB64D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jun 2023 08:27:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232500AbjF1IY1 (ORCPT
+        id S234031AbjF1I1I convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Jun 2023 04:24:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233492AbjF1IUO (ORCPT
+        Wed, 28 Jun 2023 04:27:08 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([185.58.85.151]:23422 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234027AbjF1IZA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2023 04:20:14 -0400
-Received: from forward203a.mail.yandex.net (forward203a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d203])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACE173C07
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2023 01:11:48 -0700 (PDT)
-Received: from forward103a.mail.yandex.net (forward103a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d103])
-        by forward203a.mail.yandex.net (Yandex) with ESMTP id 2EC5047D1E
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jun 2023 10:24:01 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net [IPv6:2a02:6b8:c0f:170e:0:640:d60c:0])
-        by forward103a.mail.yandex.net (Yandex) with ESMTP id 3458E46D33;
-        Wed, 28 Jun 2023 10:23:57 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id uNGuVj7DSKo0-2xHa7ZGi;
-        Wed, 28 Jun 2023 10:23:56 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1687937036;
-        bh=LNigIxmaIJovn4+mpBAx/a7XSSUii5fvrGrWuxN0Z2k=;
-        h=Message-ID:Date:Cc:Subject:To:From;
-        b=bJ5Mb2k8TmBXIdm7SFEhxuoyy7qw9fkqnjEuWJ8T5SgtmzZvbfIkbulyqR3Lln3mt
-         AQQFAjtKLjAxuMDTndijm2snedpIIXKxC4E0decS/ab7zNlZod/XcWwq1DkOZaMIKZ
-         DSRlAI3egHKVRnDDL25dFClNXzSUbmiDPoiTKpF4=
-Authentication-Results: mail-nwsmtp-smtp-production-main-64.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-To:     Po-Hao Huang <phhuang@realtek.com>
-Cc:     linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH 1/4] [v6] wifi: rtw88: delete timer and free skb queue when unloading
-Date:   Wed, 28 Jun 2023 10:23:15 +0300
-Message-ID: <20230628072327.167196-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.41.0
+        Wed, 28 Jun 2023 04:25:00 -0400
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-128-vlZ0-3KkNdaZvqYiTvu37Q-1; Wed, 28 Jun 2023 09:24:56 +0100
+X-MC-Unique: vlZ0-3KkNdaZvqYiTvu37Q-1
+Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
+ (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Wed, 28 Jun
+ 2023 09:24:55 +0100
+Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
+ id 15.00.1497.048; Wed, 28 Jun 2023 09:24:55 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Dmitry Antipov' <dmantipov@yandex.ru>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Kalle Valo" <kvalo@kernel.org>,
+        Jonas Gorski <jonas.gorski@gmail.com>,
+        "lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH] [v2] wifi: b43: fix cordic arithmetic
+Thread-Topic: [PATCH] [v2] wifi: b43: fix cordic arithmetic
+Thread-Index: AQHZqQsGGmQjvdKBv0W33H1tLjOZ1K+f3QLw
+Date:   Wed, 28 Jun 2023 08:24:55 +0000
+Message-ID: <d0825edd2a3c4bbba72685340f547c9e@AcuMS.aculab.com>
+References: <ef4750f8-8de5-dbfc-2c0b-3400d30d83e5@lwfinger.net>
+ <20230627151411.92749-1-dmantipov@yandex.ru>
+In-Reply-To: <20230627151411.92749-1-dmantipov@yandex.ru>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix possible crash and memory leak on driver unload by deleting
-TX purge timer and freeing C2H queue in 'rtw_core_deinit()',
-shrink critical section in the latter by freeing COEX queue
-out of TX report lock scope.
+From: Dmitry Antipov
+> Sent: 27 June 2023 16:14
+> 
+> In 'lpphy_start_tx_tone()', 'CORDIC_FLOAT((sample.i * max) & 0xFF)'
+> is invalid because it is (<32-bit> & 0xff) shifted right by 15 bits
+> and so always evaluates to zero. Looking through brcmsmac's
+> 'wlc_lcnphy_start_tx_tone()', the result should be masked instead,
+> i. e. 'CORDIC_FLOAT(sample[i].max) & 0xFF'.
+> 
+> Fixes: 6f98e62a9f1b ("b43: update cordic code to match current specs")
+> 
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+> 
+> Cc: stable@vger.kernel.org
+> Suggested-by: Jonas Gorski <jonas.gorski@gmail.com>
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+> ---
+> v2: add Cc: stable and Fixes: (Larry Finger)
+> ---
+>  drivers/net/wireless/broadcom/b43/phy_lp.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/b43/phy_lp.c b/drivers/net/wireless/broadcom/b43/phy_lp.c
+> index 0e5c076e7544..e8ef04e509aa 100644
+> --- a/drivers/net/wireless/broadcom/b43/phy_lp.c
+> +++ b/drivers/net/wireless/broadcom/b43/phy_lp.c
+> @@ -1788,8 +1788,8 @@ static void lpphy_start_tx_tone(struct b43_wldev *dev, s32 freq, u16 max)
+>  	for (i = 0; i < samples; i++) {
+>  		sample = cordic_calc_iq(CORDIC_FIXED(theta));
+>  		theta += rotation;
+> -		buf[i] = CORDIC_FLOAT((sample.i * max) & 0xFF) << 8;
+> -		buf[i] |= CORDIC_FLOAT((sample.q * max) & 0xFF);
+> +		buf[i] = (u16)((CORDIC_FLOAT(sample.i * max) & 0xFF) << 8);
+> +		buf[i] |= (u16)(CORDIC_FLOAT(sample.q * max) & 0xFF);
 
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
-v6: adjust to match series
-v5: adjust to match recent changes
-v4: adjust to match series
-v3: shrink critical section in rtw_core_deinit() (Ping-Ke Shih)
-v2: fix title and commit message (Kalle Valo)
----
- drivers/net/wireless/realtek/rtw88/main.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+What are the (u16) casts for?
+This code is actually called exactly once with max == 100.
+The .i and .q are the sine and cosine << 16 (signed).
+The CORDIC_FLOAT() is basically >> 16 (not 15) so the result should
+be between -100 and +100.
+The & 0xFF is there to strip the sign.
+The sin+cos are then packed into a short[] then unpacked to be
+written to the hardware later.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index c853e2f2d448..c2ddb4d382af 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -2183,10 +2183,12 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
- 		release_firmware(wow_fw->firmware);
- 
- 	destroy_workqueue(rtwdev->tx_wq);
-+	timer_delete_sync(&rtwdev->tx_report.purge_timer);
- 	spin_lock_irqsave(&rtwdev->tx_report.q_lock, flags);
- 	skb_queue_purge(&rtwdev->tx_report.queue);
--	skb_queue_purge(&rtwdev->coex.queue);
- 	spin_unlock_irqrestore(&rtwdev->tx_report.q_lock, flags);
-+	skb_queue_purge(&rtwdev->coex.queue);
-+	skb_queue_purge(&rtwdev->c2h_queue);
- 
- 	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list,
- 				 build_list) {
--- 
-2.41.0
+>  	}
+> 
+>  	b43_lptab_write_bulk(dev, B43_LPTAB16(5, 0), samples, buf);
+
+Don't open the bag of worms that contains the above :-)
+
+	David
+
+> --
+> 2.41.0
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
