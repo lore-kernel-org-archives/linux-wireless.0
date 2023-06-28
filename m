@@ -2,138 +2,59 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DDA9EB64DD
-	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jun 2023 08:06:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F4DEB64DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 28 Jun 2023 08:11:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232985AbjF1IGY (ORCPT
+        id S232533AbjF1ILa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 28 Jun 2023 04:06:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35104 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232313AbjF1IBz (ORCPT
+        Wed, 28 Jun 2023 04:11:30 -0400
+Received: from forward500c.mail.yandex.net ([178.154.239.208]:60744 "EHLO
+        forward500c.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233316AbjF1IIz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Jun 2023 04:01:55 -0400
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17C8DA3;
-        Wed, 28 Jun 2023 01:00:26 -0700 (PDT)
-Received: by mail-lf1-x12a.google.com with SMTP id 2adb3069b0e04-4fb7589b187so4825469e87.1;
-        Wed, 28 Jun 2023 01:00:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687939224; x=1690531224;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gCiVnIiBTWxP9T/l4gc5KqB15PzobXDfsgWHGo4kW6w=;
-        b=Atk/FL/9Z6Wadg6fR1BZpsHoBVs6dAZnOoJjIoGnbqSpNasB218H73bm4pxhxs3VJx
-         umDvYrlu+7+G8C8UAfPJ0XS4+z1oEcsDGqLppe+qNkUYfPT5jOgL6HGEu+kO867kcmUJ
-         UCyf9Apq1cJtI1nV2bqz9cuYXog2xB/uMEUbmiXB2viAp1hs/GkFLkkRBdaW0+bzTzcz
-         zUqPyuhfXJsjyRkwsp0NFQM15rXajW4l8ZPaCszNYqmQnVcQlnHDbS14qFQGRdaxp+OH
-         XCCg1srlakVE1oL75m3yR0bYWQGBlYmngkaeMZNazjFf3iNORBJKNdO3zxZxxsArQBQC
-         d1tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687939224; x=1690531224;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=gCiVnIiBTWxP9T/l4gc5KqB15PzobXDfsgWHGo4kW6w=;
-        b=ktuESsELloTCOHTx2ryoHmJLm6qZ5rd4OUnAbTX4HXVwwOz2De1qDt1YLjcpLHqYu/
-         rA2/Vcgze4sZOI7wkwlmLVR5dtSXfbW/Cfg12kTR3eNtbsyrrLJt+VxIniZPkQLwVT0B
-         bYSXQ1IRainzlmNBQf+tHsx6G0FaqLB+o1B39ATMYtvZ1yF8AJwzmkgZC8ZXvF3n6idq
-         mKyMdHycxb3hzjJo6V0IyDRNqdqDISKcM4AYNVO+y4PMnXfOoVbU3c2cbkCbHNffXIRx
-         srwFbreXkaMgNwFzfr2e/NEatBT1s6MnO9MNOiorStTOLPpb1xRdq5QpfiK9BNlmIbTz
-         mgIQ==
-X-Gm-Message-State: AC+VfDwsa77V3RNcFkYRKJR/siziZa+nnL+VXG3RD63iamdGK2UnI8lN
-        nYie6YgtNUIq1CwLVAjO8Ek=
-X-Google-Smtp-Source: ACHHUZ5JfjpLByN+xk3+nw7l3otdzAnIQaT9fCpC3MJlEf/M7GLH4UUGnbVSdzEN0B0XtGlgO5VAxw==
-X-Received: by 2002:a05:6512:b0e:b0:4f8:75cf:fdd7 with SMTP id w14-20020a0565120b0e00b004f875cffdd7mr16303621lfu.22.1687939223949;
-        Wed, 28 Jun 2023 01:00:23 -0700 (PDT)
-Received: from localhost (freebox.vlq16.iliad.fr. [213.36.7.13])
-        by smtp.gmail.com with ESMTPSA id u8-20020a05600c210800b003f9b4330880sm13048436wml.29.2023.06.28.01.00.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Jun 2023 01:00:23 -0700 (PDT)
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date:   Wed, 28 Jun 2023 10:00:23 +0200
-Message-Id: <CTO4IM6NQZ4N.6DC89N410CDS@syracuse>
-Cc:     "opensource.kernel@vivo.com" <opensource.kernel@vivo.com>
-Subject: =?utf-8?q?Re:_[PATCH]_wifi=EF=BC=9Amac80211:_Replace_the_ternary_conditio?= =?utf-8?q?nal_operator_with_max()?=
-From:   "Nicolas Escande" <nico.escande@gmail.com>
-To:     "Ping-Ke Shih" <pkshih@realtek.com>,
-        "You Kangren" <youkangren@vivo.com>,
-        "Johannes Berg" <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        "Eric Dumazet" <edumazet@google.com>,
-        "Jakub Kicinski" <kuba@kernel.org>,
-        "Paolo Abeni" <pabeni@redhat.com>,
-        "open list:MAC80211" <linux-wireless@vger.kernel.org>,
-        "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>,
-        "open list" <linux-kernel@vger.kernel.org>
-X-Mailer: aerc 0.15.1
-References: <20230626104829.1896-1-youkangren@vivo.com>
- <9e4e3bf85ed945e7b0c8d5d389065670@realtek.com>
-In-Reply-To: <9e4e3bf85ed945e7b0c8d5d389065670@realtek.com>
+        Wed, 28 Jun 2023 04:08:55 -0400
+Received: from mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net [IPv6:2a02:6b8:c08:4212:0:640:eaad:0])
+        by forward500c.mail.yandex.net (Yandex) with ESMTP id 8BCF45ED15;
+        Wed, 28 Jun 2023 07:54:24 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id NsDSlu5DfOs0-zpDVufAI;
+        Wed, 28 Jun 2023 07:54:24 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1687928064;
+        bh=aOLoTVmiFCguShJ+6xSk7vCEfmg/+1Bak/BzwVsTFb4=;
+        h=From:In-Reply-To:Cc:Date:References:To:Subject:Message-ID;
+        b=w9obb34EiDOkZWU4JbCFTg0l345qzWF1IhV1xQXxo6sINDic8BcJ4FJzg/aSif/2R
+         DuhQ+q5b9qjVGpmju60z6C6IyNcD6UY3JYnCfQnT7UxW09lXxG+/GHYe2jO+mvQxDQ
+         SINg9STthfiuPJ4/fSl6n81cNYKV0tufka2cLw/A=
+Authentication-Results: mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+Message-ID: <3e7faf02-2724-9d27-364e-eedcd5fc5567@yandex.ru>
+Date:   Wed, 28 Jun 2023 07:54:22 +0300
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH] wifi: plfxlc: Fix possible data races in
+ rx_urb_complete()
+To:     Tuo Li <islituo@gmail.com>, srini.raju@purelifi.com,
+        kvalo@kernel.org
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        baijiaju1990@outlook.com, BassCheck <bass@buaa.edu.cn>
+References: <20230628022121.1010517-1-islituo@gmail.com>
+Content-Language: en-US
+From:   Dmitry Antipov <dmantipov@yandex.ru>
+In-Reply-To: <20230628022121.1010517-1-islituo@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed Jun 28, 2023 at 3:48 AM CEST, Ping-Ke Shih wrote:
->
->
-> > -----Original Message-----
-> > From: You Kangren <youkangren@vivo.com>
-> > Sent: Monday, June 26, 2023 6:48 PM
-> > To: Johannes Berg <johannes@sipsolutions.net>; David S. Miller <davem@d=
-avemloft.net>; Eric Dumazet
-> > <edumazet@google.com>; Jakub Kicinski <kuba@kernel.org>; Paolo Abeni <p=
-abeni@redhat.com>; open
-> > list:MAC80211 <linux-wireless@vger.kernel.org>; open list:NETWORKING [G=
-ENERAL] <netdev@vger.kernel.org>;
-> > open list <linux-kernel@vger.kernel.org>
-> > Cc: opensource.kernel@vivo.com; youkangren@vivo.com
-> > Subject: [PATCH] wifi=EF=BC=9Amac80211: Replace the ternary conditional=
- operator with max()
->
-> The semicolon of "wifi=EF=BC=9A" is different from others.
->
-> >=20
-> > Replace the ternary conditional operator with max() to make the code cl=
-ean
-> >=20
-> > Signed-off-by: You Kangren <youkangren@vivo.com>
-> > ---
-> >  net/mac80211/tdls.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >=20
-> > diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-> > index a4af3b7675ef..9f8b0842a616 100644
-> > --- a/net/mac80211/tdls.c
-> > +++ b/net/mac80211/tdls.c
-> > @@ -946,7 +946,7 @@ ieee80211_tdls_build_mgmt_packet_data(struct ieee80=
-211_sub_if_data *sdata,
-> >         int ret;
-> >         struct ieee80211_link_data *link;
-> >=20
-> > -       link_id =3D link_id >=3D 0 ? link_id : 0;
-> > +       link_id =3D max(link_id, 0);
->
-> Original logic means "if link_id < 0, then use default link (0)" instead =
-of
-> "always use link_id larger than or equal to 0". So, I think max(link_id, =
-0) could
-> cause misunderstanding.=20
+On 6/28/23 05:21, Tuo Li wrote:
 
-I feel the same way, max() implies we want the 'highest' link whereas for m=
-e the
-actual code really means 'prefer the non default' (zero) link.
+>   		if (tx->submitted_urbs++ < PURELIFI_URB_RETRY_MAX) {
+>   			dev_dbg(plfxlc_urb_dev(urb), "urb %p resubmit %d", urb,
+>   				tx->submitted_urbs++);
 
->
-> >         rcu_read_lock();
-> >         link =3D rcu_dereference(sdata->link[link_id]);
-> >         if (WARN_ON(!link))
-> > --
-> > 2.39.0
-> >=20
-> >=20
-> > ------Please consider the environment before printing this e-mail.
+BTW, doing 'tx->submitted_urbs++' inside a debugging statement is most likely
+a bad idea.
+
+Dmitry
 
