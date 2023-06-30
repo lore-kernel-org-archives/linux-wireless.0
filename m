@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A56D0EB64DA
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Jun 2023 10:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADEF7C0015E
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Jun 2023 10:35:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232609AbjF3KfE (ORCPT
+        id S232688AbjF3KfH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Jun 2023 06:35:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35288 "EHLO
+        Fri, 30 Jun 2023 06:35:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232586AbjF3Keo (ORCPT
+        with ESMTP id S232770AbjF3KfA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2023 06:34:44 -0400
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2055.outbound.protection.outlook.com [40.107.244.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDBA2359E;
-        Fri, 30 Jun 2023 03:34:42 -0700 (PDT)
+        Fri, 30 Jun 2023 06:35:00 -0400
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02on2085.outbound.protection.outlook.com [40.107.96.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 929F430C5;
+        Fri, 30 Jun 2023 03:34:58 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FtPMvlnu0h2B2fUiZjCmC9xwqk8wOFRmkpKU0k3lvEWuRx4rxHMSLg8r4o72wp4I2An6yeti8UwHsPWdRy58WheHLZGeSqvzmxQw1YvbMP8caLl6vtOc9m8PUO7vvYAnYMxeNB6p3zYPzQ5hxA+Wx4I89Yw10DzYDnKYLfOT0QApxQuNnD7Yx2KbwZttCJugj5F7yk8TfvtJjp7+X1XFvvAXYsHG2J/fxhDaRIIpb6Klr/HiOQW5o4GhUQ2c56CfhODaB4LOqe9+PTFE0R0vRgbAv26oC+z9GJZifd2qNBdpXQ3XQheHF4irgwb5XAGXX3n8lqqHnC0yapv5zTlA9w==
+ b=D1aOcYU61IMRnLhjYnoKjvBAVlsyu8Gdwp8ZF+Kz4pqyjd5wJ8iDQ1kg3Z9/BtqSAVF6BtJeIIoRp+qHSI82ozR/XCbJ18pDk63ZhExxaGMlFrzpi9GWBa67QcDIIJC97xqy364SG+tjOzwQtragm7s0c1rPatFSmyPuvhz9JYCMO1FzxAAM3QmQpDoQSyVI3r9Yi/je/KoCDudwZKP6OhJINNWUxn6NPHNHEjx623wrl+bdAjBHpnvaVyeujfE5feCcCpzqzj3O47jUMNNe95tMUnZDr9voJ8Wn1HDZDTEaZ5eH+D7KUYBJv4/XLFbO0T+1JzTvSpCGJCqeVZPd/Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/ucv2D8bHZwMRnkFoviWKHtr5t08ZHdG8lQ3sb1FmBI=;
- b=ilIf0V6owmMSIoxA2dJnuZYUKHLQ4mEUDL5/Jo7GwKcP1ZHO3u9HTxCfQ1Ziq7su4893BmxgJgeVtTjy80aZb85czOWvRh1pRYr/5dPD8J116QEV1LTnJrkvpgoAlVP07FUJzzWvld7vOGlsUmYJah7J3sESP/pBdD6gHBLpNvxrSS1U1zpxfsmgbDabDsGEa+sB4QoP9nqBpC23vEjnHuDkfxLhTSkzlVnzUFfbJ78m1mRz48XqMomaRJNK7mBZp25gAYF9uCoatHzaXJv6/nuqdS4eL2Y+lGIspjfLJc1GMixbOxhlO5czE2Tg3P23dGEUwNrBVOAxtqNWD01NEA==
+ bh=ftbgJPZVzskMrSl36Z6EJf2i1m7DILJM43QSSyOU4Ro=;
+ b=GK/o7xNgZWohYw7LkhbAcxgaR6U2sy3BDpVY5gY3d+9pSzA0rgUGidUchckRdHU1cZn1GObuxT5hxbIIVHFOJNJCVa+uGlsUhrSrx2v8HoBuLoGGldUqHFCiKl2kXF8UoAOcTz1cY1wVEI2obFfVTxj8pTxROneU4NtjMrV22A3SpJynSM1sMdB905s0Sdr5YpnpZ/m/YrdzJ08L2eD4GiX0pDsdfSl23OpqS0EckqqKiFkeQs4JBZPHKHM/R6v9tfPFOyvDA08l6WW2ZmzBKRw2xLuyR9Lnlcog8XTv/B/IFbX1N8IJVDYdQcGqxHpmVYO1MWqE4R4baWU+2GpS8A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/ucv2D8bHZwMRnkFoviWKHtr5t08ZHdG8lQ3sb1FmBI=;
- b=CC56dxcR8NsOpeQYIf5YDFekWRgbQJSelLaTgjum/wMKH9651caiTkqXEjIOuxcDj0ECfY/PQTv0bXaB7+Fk29Lp2PHISJTp2V8bkIivrSAcvKV8ZQGtAYzniRySa3zyyRLHFBwVZDpMK9XleOg2ZG0TEW2AkHjyfKr7kzCF69o=
-Received: from DS7PR03CA0006.namprd03.prod.outlook.com (2603:10b6:5:3b8::11)
- by DM4PR12MB6039.namprd12.prod.outlook.com (2603:10b6:8:aa::12) with
+ bh=ftbgJPZVzskMrSl36Z6EJf2i1m7DILJM43QSSyOU4Ro=;
+ b=Z1EJ1I2TwsT2UO/ZDV+lLELLY9c3FT563LB6yeUXvLRu8aSI0FO0YJUJx0O/iHv+S1zLRMHd6ryqijyQr8/2LBgMJkc3kPjZ6qBei9vcWmfay8gW01w26bdHKaJ9iOJL8F6hjH1u88a7u6EGoeUt7tmX2Mc+592pECBMBvr7IrM=
+Received: from BYAPR05CA0057.namprd05.prod.outlook.com (2603:10b6:a03:74::34)
+ by CY8PR12MB7754.namprd12.prod.outlook.com (2603:10b6:930:86::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.24; Fri, 30 Jun
- 2023 10:34:40 +0000
-Received: from DM6NAM11FT025.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:3b8:cafe::2c) by DS7PR03CA0006.outlook.office365.com
- (2603:10b6:5:3b8::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6544.22 via Frontend
- Transport; Fri, 30 Jun 2023 10:34:40 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.26; Fri, 30 Jun
+ 2023 10:34:56 +0000
+Received: from DM6NAM11FT014.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:a03:74:cafe::fb) by BYAPR05CA0057.outlook.office365.com
+ (2603:10b6:a03:74::34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.10 via Frontend
+ Transport; Fri, 30 Jun 2023 10:34:55 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,13 +48,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
- DM6NAM11FT025.mail.protection.outlook.com (10.13.172.197) with Microsoft SMTP
+ DM6NAM11FT014.mail.protection.outlook.com (10.13.173.132) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6500.49 via Frontend Transport; Fri, 30 Jun 2023 10:34:39 +0000
+ 15.20.6521.33 via Frontend Transport; Fri, 30 Jun 2023 10:34:55 +0000
 Received: from equan-buildpc.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Fri, 30 Jun
- 2023 05:34:32 -0500
+ 2023 05:34:47 -0500
 From:   Evan Quan <evan.quan@amd.com>
 To:     <rafael@kernel.org>, <lenb@kernel.org>,
         <Alexander.Deucher@amd.com>, <Christian.Koenig@amd.com>,
@@ -72,291 +72,403 @@ CC:     <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         Evan Quan <evan.quan@amd.com>,
         Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH V5 4/9] wifi: mac80211: Add support for ACPI WBRF
-Date:   Fri, 30 Jun 2023 18:32:35 +0800
-Message-ID: <20230630103240.1557100-5-evan.quan@amd.com>
+Subject: [PATCH V5 6/9] drm/amd/pm: setup the framework to support Wifi RFI mitigation feature
+Date:   Fri, 30 Jun 2023 18:32:37 +0800
+Message-ID: <20230630103240.1557100-7-evan.quan@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230630103240.1557100-1-evan.quan@amd.com>
 References: <20230630103240.1557100-1-evan.quan@amd.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-Originating-IP: [10.180.168.240]
 X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT025:EE_|DM4PR12MB6039:EE_
-X-MS-Office365-Filtering-Correlation-Id: b6499c45-de03-4627-2136-08db79559c0d
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT014:EE_|CY8PR12MB7754:EE_
+X-MS-Office365-Filtering-Correlation-Id: a2991753-dc1f-42dc-a317-08db7955a54d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: O5wrxH+SJ8IL68G6g26asHmsDACSsJ4fg4BSc2JS9/g1X//OKh48q3TIHaERW4DKRKTk0KlzOrtNqmNw1Hx8zdpp3Ge613AQcBbP0HTT+0wh6vcTxZ/7OeDPGJ/moQ6J+Lhb1v/bMdC1kfooJ8mDQ5mPWHK0bnAkcmm4lCC5aHHc/i8HGdXEr4OTeEl10QqC5AA0xk1yxttXh5vuUj1dCVDC9qq1cI/rBHm3RKpsJ5DFY1FpQfdM/6upTHTry1Eohx20DsvkhQOXFJ6p9YVcSR5o7Envc8j+gjSbsoXus4GDgX960jXhVzFKw9LygDzUMvN9dqZz8VXkj904DvZW6d2in9Ptq1ZDnMWzME3AayCxxevYY13Ulee7lmzouTngsmvQ+t3Tw/6QCScmlb8bCQMIqxBmKbyaBfyO4nL1mgYrYKZe/9a6OqGMON/j9apiSpGz25tub4NtYL1IO8frX8ip+3ekQE6a4mH2LnoMVNsmkZHXLYZ4z17RTT4NW+kbedoV+p2K7pw0E5M1ZXXfwl+XHzEWNGwHP85ToMszgj1UH79btiF/bWgMdBEtjc6DQL1Epl0CRb3l3TmXRHofnIp6hx2rcAjg7NU30kejYByWy8v/jcZ2uRWPoucb5pqDUCA+JX7JRjGGQOeFy23Izav1Hd8s8M3xHBTCDKB0/EABhgBTf4okjgbIz0XtqvzSkTeDLiWoCFfGy1aBi47hoA+3RkAyiQDv70X1mLwniLzqRvZIYg34YDXqa4PCLnVfshvmcHYuXrV+CnOnIUrwZnLyoK9rc5RJ+gCDAqc4LCn6RgTsGC92m0qRw3zYRv+E8kkTO+MYIClA18JOjWjSIQ==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(396003)(136003)(39860400002)(376002)(346002)(451199021)(46966006)(36840700001)(40470700004)(5660300002)(7416002)(316002)(70206006)(70586007)(8676002)(44832011)(8936002)(2906002)(41300700001)(40480700001)(40460700003)(82310400005)(356005)(81166007)(82740400003)(921005)(86362001)(36756003)(36860700001)(186003)(26005)(7696005)(478600001)(1076003)(16526019)(4326008)(110136005)(54906003)(47076005)(2616005)(83380400001)(336012)(426003)(2101003)(36900700001)(83996005);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: wNDrj+MTOb1VeD6rRUuUDrafsbeKjRE1wUKimacXHmOfVszJy/XnujGI7RivRqgxQTlXZtVd/g395Fxdwg+HnysW6/sgGLVA1IQE/fdXomOwmmJa+0CyTLQN8RKKDvFco6+7Wa1/Odx1k6HqDLYR7EK/F1PtctbA+DRAP7gbH/2FjfcaPYrvHjtWLYrsmtIEkI5WWPU1obvRG9YNUTqwCqKSgyuijD5kmIhAEknrzEVZPxMbj5Gy+8+a/8xT/T02yf/NCjuwVrTCx6Lg0dbvNfFJFjG99H+rXYwpC5hcZMcVL+aN0fbtp3AGvvm034LaV2vzct3X7l8DKROLuykuBuvPXCUu3lr0kQoreDKRcyD8r2MpDp6AmVJQus9kwHDb2CL/0te/MC8mS7Lz8zOnP5/fpqayZ3QiKckfGKx3ryTvbg94uectD3dnCfO8Ay0qAieGyBObjuHRBxdC4DO5KGQwrWtlcwkIoEJL5QdCIaN0Qh/Fl4tLf7EKKg9qeXMRAmGyEGg9/pywWNgTyXPN0rEI0dv+WsHadl7iuINcMh25L6vfmfPi1GpIwcV8ucFaFg6VM+AbMns/5J/K7qDDwR4eXrF2A/1u/3r75PWrorceBzPG86WFC4UHsgeRiTlETF+0jBlYbzCy5etWIBLekJkjS5C0JBx7jgqYM9bqjkGWiqrmzcE0b70u+Yrw0aHANJMbmIPEq4QxwcwG/o36H3oxW1cjQ3BrMSYR41wQbw4h3TEkEkvga6qlxled5rKiXnQIpbFAr5B/o9wIpZq0QwrtQuEi/Wl7D+6pPJCWPNgMky/313shEsUK4sRIPIp365ws2Vy6eJVI3b8J0BVNqv3VLSq2dQ9iziQ/16gQ+kqWYbu1YI5MdhCaJhD063am
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(396003)(376002)(346002)(136003)(39860400002)(451199021)(36840700001)(46966006)(40470700004)(8676002)(8936002)(70586007)(336012)(316002)(83380400001)(70206006)(7696005)(186003)(41300700001)(26005)(16526019)(1076003)(4326008)(2616005)(110136005)(54906003)(6666004)(40460700003)(82310400005)(2906002)(30864003)(5660300002)(7416002)(40480700001)(44832011)(478600001)(921005)(356005)(81166007)(82740400003)(86362001)(36756003)(47076005)(36860700001)(426003)(83996005)(36900700001)(2101003)(309714004);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2023 10:34:39.9563
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2023 10:34:55.4785
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: b6499c45-de03-4627-2136-08db79559c0d
+X-MS-Exchange-CrossTenant-Network-Message-Id: a2991753-dc1f-42dc-a317-08db7955a54d
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT025.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT014.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6039
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7754
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To support AMD's WBRF interference mitigation mechanism, Wifi adapters
-utilized in the system must register the frequencies in use(or unregister
-those frequencies no longer used) via the dedicated APCI calls. So that,
-other drivers responding to the frequencies can take proper actions to
-mitigate possible interference.
+With WBRF feature supported, as a driver responding to the frequencies,
+amdgpu driver is able to do shadow pstate switching to mitigate possible
+interference(between its (G-)DDR memory clocks and local radio module
+frequency bands used by Wifi 6/6e/7).
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-Co-developed-by: Evan Quan <evan.quan@amd.com>
 Signed-off-by: Evan Quan <evan.quan@amd.com>
+Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
 --
 v1->v2:
-  - place the new added member(`wbrf_supported`) in
-    ieee80211_local(Johannes)
-  - handle chandefs change scenario properly(Johannes)
-  - some minor fixes around code sharing and possible invalid input
-    checks(Johannes)
-v2->v3:
-  - drop unnecessary input checks and intermediate APIs(Mario)
-  - Separate some mac80211 common code(Mario, Johannes)
-v3->v4:
-  - some minor fixes around return values(Johannes)
+  - update the prompt for feature support(Lijo)
 ---
- include/linux/ieee80211.h  |   1 +
- net/mac80211/Makefile      |   2 +
- net/mac80211/chan.c        |   9 ++++
- net/mac80211/ieee80211_i.h |  19 +++++++
- net/mac80211/main.c        |   2 +
- net/mac80211/wbrf.c        | 103 +++++++++++++++++++++++++++++++++++++
- 6 files changed, 136 insertions(+)
- create mode 100644 net/mac80211/wbrf.c
+ drivers/gpu/drm/amd/amdgpu/amdgpu.h           |   1 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |  19 ++
+ drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     | 194 ++++++++++++++++++
+ drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h |  23 +++
+ drivers/gpu/drm/amd/pm/swsmu/smu_internal.h   |   3 +
+ 5 files changed, 240 insertions(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index c4cf296e7eaf..0703921547f5 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -4319,6 +4319,7 @@ static inline int ieee80211_get_tdls_action(struct sk_buff *skb, u32 hdr_size)
- /* convert frequencies */
- #define MHZ_TO_KHZ(freq) ((freq) * 1000)
- #define KHZ_TO_MHZ(freq) ((freq) / 1000)
-+#define KHZ_TO_HZ(freq)  ((freq) * 1000)
- #define PR_KHZ(f) KHZ_TO_MHZ(f), f % 1000
- #define KHZ_F "%d.%03d"
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+index 02b827785e39..785d9b43f0c4 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+@@ -241,6 +241,7 @@ extern int amdgpu_num_kcq;
+ #define AMDGPU_VCNFW_LOG_SIZE (32 * 1024)
+ extern int amdgpu_vcnfw_log;
+ extern int amdgpu_sg_display;
++extern int amdgpu_wbrf;
  
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index b8de44da1fb8..8f8ac567e7c8 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -65,4 +65,6 @@ rc80211_minstrel-$(CONFIG_MAC80211_DEBUGFS) += \
+ #define AMDGPU_VM_MAX_NUM_CTX			4096
+ #define AMDGPU_SG_THRESHOLD			(256*1024*1024)
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+index 393b6fb7a71d..6c08a0cf8381 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+@@ -191,6 +191,7 @@ int amdgpu_smartshift_bias;
+ int amdgpu_use_xgmi_p2p = 1;
+ int amdgpu_vcnfw_log;
+ int amdgpu_sg_display = -1; /* auto */
++int amdgpu_wbrf = -1;
  
- mac80211-$(CONFIG_MAC80211_RC_MINSTREL) += $(rc80211_minstrel-y)
+ static void amdgpu_drv_delayed_reset_work_handler(struct work_struct *work);
  
-+mac80211-$(CONFIG_WBRF) += wbrf.o
+@@ -948,6 +949,24 @@ MODULE_PARM_DESC(smu_pptable_id,
+ 	"specify pptable id to be used (-1 = auto(default) value, 0 = use pptable from vbios, > 0 = soft pptable id)");
+ module_param_named(smu_pptable_id, amdgpu_smu_pptable_id, int, 0444);
+ 
++#ifdef CONFIG_WBRF
++/**
++ * DOC: wbrf (int)
++ * Enable Wifi RFI interference mitigation feature.
++ * Due to electrical and mechanical constraints there may be likely interference of
++ * relatively high-powered harmonics of the (G-)DDR memory clocks with local radio
++ * module frequency bands used by Wifi 6/6e/7. To mitigate the possible RFI interference,
++ * with this feature enabled, PMFW will use either “shadowed P-State” or “P-State” based
++ * on active list of frequencies in-use (to be avoided) as part of initial setting or
++ * P-state transition. However, there may be potential performance impact with this
++ * feature enabled.
++ * (0 = disabled, 1 = enabled, -1 = auto (default setting, will be enabled if supported))
++ */
++MODULE_PARM_DESC(wbrf,
++	"Enable Wifi RFI interference mitigation (0 = disabled, 1 = enabled, -1 = auto(default)");
++module_param_named(wbrf, amdgpu_wbrf, int, 0444);
++#endif
 +
- ccflags-y += -DDEBUG
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 77c90ed8f5d7..9887471028dc 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -506,11 +506,16 @@ static void _ieee80211_change_chanctx(struct ieee80211_local *local,
- 
- 	WARN_ON(!cfg80211_chandef_compatible(&ctx->conf.def, chandef));
- 
-+	ieee80211_remove_wbrf(local, &ctx->conf.def);
-+
- 	ctx->conf.def = *chandef;
- 
- 	/* check if min chanctx also changed */
- 	changed = IEEE80211_CHANCTX_CHANGE_WIDTH |
- 		  _ieee80211_recalc_chanctx_min_def(local, ctx, rsvd_for);
-+
-+	ieee80211_add_wbrf(local, &ctx->conf.def);
-+
- 	drv_change_chanctx(local, ctx, changed);
- 
- 	if (!local->use_chanctx) {
-@@ -668,6 +673,8 @@ static int ieee80211_add_chanctx(struct ieee80211_local *local,
- 	lockdep_assert_held(&local->mtx);
- 	lockdep_assert_held(&local->chanctx_mtx);
- 
-+	ieee80211_add_wbrf(local, &ctx->conf.def);
-+
- 	if (!local->use_chanctx)
- 		local->hw.conf.radar_enabled = ctx->conf.radar_enabled;
- 
-@@ -748,6 +755,8 @@ static void ieee80211_del_chanctx(struct ieee80211_local *local,
- 	}
- 
- 	ieee80211_recalc_idle(local);
-+
-+	ieee80211_remove_wbrf(local, &ctx->conf.def);
+ /* These devices are not supported by amdgpu.
+  * They are supported by the mach64, r128, radeon drivers
+  */
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
+index 2ddf5198e5c4..83d428e890df 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
+@@ -1188,6 +1188,173 @@ static int smu_get_thermal_temperature_range(struct smu_context *smu)
+ 	return ret;
  }
  
- static void ieee80211_free_chanctx(struct ieee80211_local *local,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4159fb65038b..ffe00c55304e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1591,6 +1591,10 @@ struct ieee80211_local {
- 
- 	/* extended capabilities provided by mac80211 */
- 	u8 ext_capa[8];
++/**
++ * smu_wbrf_handle_exclusion_ranges - consume the wbrf exclusion ranges
++ *
++ * @smu: smu_context pointer
++ *
++ * Retrieve the wbrf exclusion ranges and send them to PMFW for proper handling.
++ * Returns 0 on success, error on failure.
++ */
++static int smu_wbrf_handle_exclusion_ranges(struct smu_context *smu)
++{
++	struct wbrf_ranges_out wbrf_exclusion = {0};
++	struct exclusion_range *wifi_bands = wbrf_exclusion.band_list;
++	struct amdgpu_device *adev = smu->adev;
++	uint64_t start, end;
++	int ret, i, j;
 +
-+#ifdef CONFIG_WBRF
-+	bool wbrf_supported;
-+#endif
++	ret = wbrf_retrieve_exclusions(adev->dev, &wbrf_exclusion);
++	if (ret) {
++		dev_err(adev->dev, "Failed to retrieve exclusion ranges!\n");
++		return ret;
++	}
++
++	/*
++	 * The exclusion ranges array we got might be filled with holes and duplicate
++	 * entries. For example:
++	 * {(2400, 2500), (0, 0), (6882, 6962), (2400, 2500), (0, 0), (6117, 6189), (0, 0)...}
++	 * We need to do some sortups to eliminate those holes and duplicate entries.
++	 * Expected output: {(2400, 2500), (6117, 6189), (6882, 6962), (0, 0)...}
++	 */
++	for (i = 0; i < MAX_NUM_OF_WBRF_RANGES; i++) {
++		start = wifi_bands[i].start;
++		end = wifi_bands[i].end;
++
++		/* get the last valid entry to fill the intermediate hole */
++		if (!start && !end) {
++			for (j = MAX_NUM_OF_WBRF_RANGES - 1; j > i; j--)
++				if (wifi_bands[j].start &&
++				    wifi_bands[j].end)
++					break;
++
++			if (j > i) {
++				wifi_bands[i].start = wifi_bands[j].start;
++				wifi_bands[i].end = wifi_bands[j].end;
++				wifi_bands[j].start = 0;
++				wifi_bands[j].end = 0;
++			}
++
++			continue;
++		}
++
++		/* eliminate duplicate entries */
++		for (j = i + 1; j < MAX_NUM_OF_WBRF_RANGES; j++) {
++			if ((wifi_bands[j].start == start) &&
++			     (wifi_bands[j].end == end)) {
++				wifi_bands[j].start = 0;
++				wifi_bands[j].end = 0;
++				continue;
++			}
++		}
++	}
++
++	/* Send the sorted wifi_bands to PMFW */
++	ret = smu_set_wbrf_exclusion_ranges(smu, wifi_bands);
++	/* Give it another chance */
++	if (unlikely(ret == -EBUSY)) {
++		mdelay(5);
++		ret = smu_set_wbrf_exclusion_ranges(smu, wifi_bands);
++	}
++
++	return ret;
++}
++
++/**
++ * smu_wbrf_event_handler - handle notify events
++ *
++ * @nb: notifier block
++ * @action: event type
++ * @data: event data
++ *
++ * Calls relevant amdgpu function in response to wbrf event
++ * notification from kernel.
++ */
++static int smu_wbrf_event_handler(struct notifier_block *nb,
++				  unsigned long action, void *_arg)
++{
++	struct smu_context *smu = container_of(nb, struct smu_context,
++					       wbrf_notifier);
++
++	switch (action) {
++	case WBRF_CHANGED:
++		smu_wbrf_handle_exclusion_ranges(smu);
++		break;
++	default:
++		return NOTIFY_DONE;
++	};
++
++	return NOTIFY_OK;
++}
++
++/**
++ * smu_wbrf_support_check - check wbrf support
++ *
++ * @smu: smu_context pointer
++ *
++ * Verifies the ACPI interface whether wbrf is supported.
++ */
++static void smu_wbrf_support_check(struct smu_context *smu)
++{
++	struct amdgpu_device *adev = smu->adev;
++
++	smu->wbrf_supported = smu_is_asic_wbrf_supported(smu) &&
++			      !!amdgpu_wbrf &&
++			      wbrf_supported_consumer(adev->dev);
++
++	if (smu->wbrf_supported)
++		dev_info(adev->dev, "RF interference mitigation is supported\n");
++}
++
++/**
++ * smu_wbrf_init - init driver wbrf support
++ *
++ * @smu: smu_context pointer
++ *
++ * Verifies the AMD ACPI interfaces and registers with the wbrf
++ * notifier chain if wbrf feature is supported.
++ * Returns 0 on success, error on failure.
++ */
++static int smu_wbrf_init(struct smu_context *smu)
++{
++	struct amdgpu_device *adev = smu->adev;
++	int ret;
++
++	if (!smu->wbrf_supported)
++		return 0;
++
++	smu->wbrf_notifier.notifier_call = smu_wbrf_event_handler;
++	ret = wbrf_register_notifier(&smu->wbrf_notifier);
++	if (ret)
++		return ret;
++
++	/*
++	 * Some wifiband exclusion ranges may be already there
++	 * before our driver loaded. To make sure our driver
++	 * is awared of those exclusion ranges.
++	 */
++	ret = smu_wbrf_handle_exclusion_ranges(smu);
++	if (ret)
++		dev_err(adev->dev, "Failed to handle wbrf exclusion ranges\n");
++
++	return ret;
++}
++
++/**
++ * smu_wbrf_fini - tear down driver wbrf support
++ *
++ * @smu: smu_context pointer
++ *
++ * Unregisters with the wbrf notifier chain.
++ */
++static void smu_wbrf_fini(struct smu_context *smu)
++{
++	if (!smu->wbrf_supported)
++		return;
++
++	wbrf_unregister_notifier(&smu->wbrf_notifier);
++}
++
+ static int smu_smc_hw_setup(struct smu_context *smu)
+ {
+ 	struct smu_feature *feature = &smu->smu_feature;
+@@ -1280,6 +1447,15 @@ static int smu_smc_hw_setup(struct smu_context *smu)
+ 	if (ret)
+ 		return ret;
+ 
++	/* Enable UclkShadow on wbrf supported */
++	if (smu->wbrf_supported) {
++		ret = smu_enable_uclk_shadow(smu, true);
++		if (ret) {
++			dev_err(adev->dev, "Failed to enable UclkShadow feature to support wbrf!\n");
++			return ret;
++		}
++	}
++
+ 	/*
+ 	 * With SCPM enabled, these actions(and relevant messages) are
+ 	 * not needed and permitted.
+@@ -1376,6 +1552,15 @@ static int smu_smc_hw_setup(struct smu_context *smu)
+ 	 */
+ 	ret = smu_set_min_dcef_deep_sleep(smu,
+ 					  smu->smu_table.boot_values.dcefclk / 100);
++	if (ret) {
++		dev_err(adev->dev, "Error setting min deepsleep dcefclk\n");
++		return ret;
++	}
++
++	/* Init wbrf support. Properly setup the notifier */
++	ret = smu_wbrf_init(smu);
++	if (ret)
++		dev_err(adev->dev, "Error during wbrf init call\n");
+ 
+ 	return ret;
+ }
+@@ -1431,6 +1616,13 @@ static int smu_hw_init(void *handle)
+ 		return ret;
+ 	}
+ 
++	/*
++	 * Check whether wbrf is supported. This needs to be done
++	 * before SMU setup starts since part of SMU configuration
++	 * relies on this.
++	 */
++	smu_wbrf_support_check(smu);
++
+ 	if (smu->is_apu) {
+ 		ret = smu_set_gfx_imu_enable(smu);
+ 		if (ret)
+@@ -1583,6 +1775,8 @@ static int smu_smc_hw_cleanup(struct smu_context *smu)
+ 	struct amdgpu_device *adev = smu->adev;
+ 	int ret = 0;
+ 
++	smu_wbrf_fini(smu);
++
+ 	cancel_work_sync(&smu->throttling_logging_work);
+ 	cancel_work_sync(&smu->interrupt_work);
+ 
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
+index 09469c750a96..5b2343cfc69b 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
+@@ -22,6 +22,8 @@
+ #ifndef __AMDGPU_SMU_H__
+ #define __AMDGPU_SMU_H__
+ 
++#include <linux/wbrf.h>
++
+ #include "amdgpu.h"
+ #include "kgd_pp_interface.h"
+ #include "dm_pp_interface.h"
+@@ -573,6 +575,10 @@ struct smu_context
+ 	u32 debug_param_reg;
+ 	u32 debug_msg_reg;
+ 	u32 debug_resp_reg;
++
++	/* data structures for wbrf feature support */
++	bool				wbrf_supported;
++	struct notifier_block		wbrf_notifier;
  };
  
- static inline struct ieee80211_sub_if_data *
-@@ -2615,4 +2619,19 @@ ieee80211_eht_cap_ie_to_sta_eht_cap(struct ieee80211_sub_if_data *sdata,
- 				    const struct ieee80211_eht_cap_elem *eht_cap_ie_elem,
- 				    u8 eht_cap_len,
- 				    struct link_sta_info *link_sta);
+ struct i2c_adapter;
+@@ -1354,6 +1360,23 @@ struct pptable_funcs {
+ 	 * @init_pptable_microcode: Prepare the pptable microcode to upload via PSP
+ 	 */
+ 	int (*init_pptable_microcode)(struct smu_context *smu);
 +
-+#ifdef CONFIG_WBRF
-+void ieee80211_check_wbrf_support(struct ieee80211_local *local);
-+void ieee80211_add_wbrf(struct ieee80211_local *local,
-+			struct cfg80211_chan_def *chandef);
-+void ieee80211_remove_wbrf(struct ieee80211_local *local,
-+			   struct cfg80211_chan_def *chandef);
-+#else
-+static inline void ieee80211_check_wbrf_support(struct ieee80211_local *local) { }
-+static inline void ieee80211_add_wbrf(struct ieee80211_local *local,
-+				      struct cfg80211_chan_def *chandef) { return 0; }
-+static inline void ieee80211_remove_wbrf(struct ieee80211_local *local,
-+					 struct cfg80211_chan_def *chandef) { }
-+#endif /* CONFIG_WBRF */
++	/**
++	 * @is_asic_wbrf_supported: check whether PMFW supports the wbrf feature
++	 */
++	bool (*is_asic_wbrf_supported)(struct smu_context *smu);
 +
- #endif /* IEEE80211_I_H */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 55cdfaef0f5d..0a55626b1546 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1395,6 +1395,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	debugfs_hw_add(local);
- 	rate_control_add_debugfs(local);
++	/**
++	 * @enable_uclk_shadow: Enable the uclk shadow feature on wbrf supported
++	 */
++	int (*enable_uclk_shadow)(struct smu_context *smu,
++				  bool enablement);
++
++	/**
++	 * @set_wbrf_exclusion_ranges: notify SMU the wifi bands occupied
++	 */
++	int (*set_wbrf_exclusion_ranges)(struct smu_context *smu,
++					 struct exclusion_range *exclusion_ranges);
+ };
  
-+	ieee80211_check_wbrf_support(local);
-+
- 	rtnl_lock();
- 	wiphy_lock(hw->wiphy);
+ typedef enum {
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h b/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h
+index ceb13c838067..67d7495ab49e 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h
+@@ -97,6 +97,9 @@
+ #define smu_get_default_config_table_settings(smu, config_table)	smu_ppt_funcs(get_default_config_table_settings, -EOPNOTSUPP, smu, config_table)
+ #define smu_set_config_table(smu, config_table)				smu_ppt_funcs(set_config_table, -EOPNOTSUPP, smu, config_table)
+ #define smu_init_pptable_microcode(smu)					smu_ppt_funcs(init_pptable_microcode, 0, smu)
++#define smu_is_asic_wbrf_supported(smu)					smu_ppt_funcs(is_asic_wbrf_supported, false, smu)
++#define smu_enable_uclk_shadow(smu, enablement)				smu_ppt_funcs(enable_uclk_shadow, 0, smu, enablement)
++#define smu_set_wbrf_exclusion_ranges(smu, exclusion_ranges)		smu_ppt_funcs(set_wbrf_exclusion_ranges, -EOPNOTSUPP, smu, exclusion_ranges)
  
-diff --git a/net/mac80211/wbrf.c b/net/mac80211/wbrf.c
-new file mode 100644
-index 000000000000..7ddb29d128b1
---- /dev/null
-+++ b/net/mac80211/wbrf.c
-@@ -0,0 +1,103 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Wifi Band Exclusion Interface for WWAN
-+ * Copyright (C) 2023 Advanced Micro Devices
-+ *
-+ */
-+
-+#include <linux/wbrf.h>
-+#include <net/cfg80211.h>
-+#include "ieee80211_i.h"
-+
-+void ieee80211_check_wbrf_support(struct ieee80211_local *local)
-+{
-+	struct wiphy *wiphy = local->hw.wiphy;
-+	struct device *dev;
-+
-+	if (!wiphy)
-+		return;
-+
-+	dev = wiphy->dev.parent;
-+	if (!dev)
-+		return;
-+
-+	local->wbrf_supported = wbrf_supported_producer(dev);
-+	dev_dbg(dev, "WBRF is %s supported\n",
-+		local->wbrf_supported ? "" : "not");
-+}
-+
-+static void get_chan_freq_boundary(u32 center_freq,
-+				   u32 bandwidth,
-+				   u64 *start,
-+				   u64 *end)
-+{
-+	bandwidth = MHZ_TO_KHZ(bandwidth);
-+	center_freq = MHZ_TO_KHZ(center_freq);
-+
-+	*start = center_freq - bandwidth / 2;
-+	*end = center_freq + bandwidth / 2;
-+
-+	/* Frequency in HZ is expected */
-+	*start = KHZ_TO_HZ(*start);
-+	*end = KHZ_TO_HZ(*end);
-+}
-+
-+static void wbrf_get_ranges_from_chandef(struct cfg80211_chan_def *chandef,
-+					 struct wbrf_ranges_in *ranges_in)
-+{
-+	u64 start_freq1, end_freq1;
-+	u64 start_freq2, end_freq2;
-+	int bandwidth;
-+
-+	bandwidth = nl80211_chan_width_to_mhz(chandef->width);
-+
-+	get_chan_freq_boundary(chandef->center_freq1,
-+			       bandwidth,
-+			       &start_freq1,
-+			       &end_freq1);
-+
-+	ranges_in->band_list[0].start = start_freq1;
-+	ranges_in->band_list[0].end = end_freq1;
-+
-+	if (chandef->width == NL80211_CHAN_WIDTH_80P80) {
-+		get_chan_freq_boundary(chandef->center_freq2,
-+				       bandwidth,
-+				       &start_freq2,
-+				       &end_freq2);
-+
-+		ranges_in->band_list[1].start = start_freq2;
-+		ranges_in->band_list[1].end = end_freq2;
-+	}
-+}
-+
-+void ieee80211_add_wbrf(struct ieee80211_local *local,
-+			struct cfg80211_chan_def *chandef)
-+{
-+	struct wbrf_ranges_in ranges_in = {0};
-+	struct device *dev;
-+
-+	if (!local->wbrf_supported)
-+		return;
-+
-+	dev = local->hw.wiphy->dev.parent;
-+
-+	wbrf_get_ranges_from_chandef(chandef, &ranges_in);
-+
-+	wbrf_add_exclusion(dev, &ranges_in);
-+}
-+
-+void ieee80211_remove_wbrf(struct ieee80211_local *local,
-+			   struct cfg80211_chan_def *chandef)
-+{
-+	struct wbrf_ranges_in ranges_in = {0};
-+	struct device *dev;
-+
-+	if (!local->wbrf_supported)
-+		return;
-+
-+	dev = local->hw.wiphy->dev.parent;
-+
-+	wbrf_get_ranges_from_chandef(chandef, &ranges_in);
-+
-+	wbrf_remove_exclusion(dev, &ranges_in);
-+}
+ #endif
+ #endif
 -- 
 2.34.1
 
