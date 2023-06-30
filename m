@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84982C001DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Jun 2023 10:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA26CC0015E
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Jun 2023 10:35:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232600AbjF3Keo (ORCPT
+        id S232195AbjF3KfC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Jun 2023 06:34:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35276 "EHLO
+        Fri, 30 Jun 2023 06:35:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232563AbjF3Keh (ORCPT
+        with ESMTP id S232694AbjF3Kex (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Jun 2023 06:34:37 -0400
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2057.outbound.protection.outlook.com [40.107.220.57])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D53E30DD;
-        Fri, 30 Jun 2023 03:34:36 -0700 (PDT)
+        Fri, 30 Jun 2023 06:34:53 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2052.outbound.protection.outlook.com [40.107.220.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC20B30C5;
+        Fri, 30 Jun 2023 03:34:50 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NWtMc0Zaw6/Pth9VSmhIJF3J0wD802OpLVQrVAfJZ6j1NLPm5k2Qo8EtlVXQHC2m3U0c081fIy2viLe+I9cu6yec10hT/aeXa9myLPRyszN3Td2Cxa6LQjd6E4N+DHsFr10S9rMFToEHqu9OT3E915a8QNRpIjvL3/uuEKxVb2vdk90CslTjsxtvjwCRg5zfNMe3NYoZ1icqdIH8dj4KGBv8pd4LPzD9cQrYNfd2Mpsru1P4LE7cMu88X1j3L2ANVOxM5CHYuEv4YZ8KVjISAZYKOHFcYzkMrDTPaMs4RCGA3DvMZA3SsUQv84BOywsvt/yoJJb0PUjZGX6+gXq6lA==
+ b=iO3/JBZ9EZOboZpvMCgoWEu3n9+OSqD6fdKwOarXZa8SHgOqdDgU+86Xbpjfg352jMEm9rzW4cPGqAAJZPFh6+BJTUxVcslPuchw9e2N3+HFMFL4SGBwHbxd97MLThvARQuXDDnuPaogL0Zhfg4qq1+2mKnMKbrwROMHt4g2R1PgHWW9rbLBWeLylLciJ5VwFIwlGSEsfqyj2G14G/YBjMXxKAUQnKNPoBj4jmbVci+RFRcwJqeQba6Ej4pTt9zBjO3dZRATWcVi5GL3n5IGAgjndcv/H5DV8o9i2StjSzWBNthSCr2GMoZI03qjYqEY83hMl4QRcPaJMIgMfg5uiw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=V2W7MeeYoJAjHpnZBPrbz+KWPIKBQOAP/ttwqdtMG0c=;
- b=cAycHEny0G5gxvP2lDPK7jeIKjQha6nSEg2dlVZiamO2sQTQ70Lj/IwSfvjp7mAddTqZCpT6dhXma3CLMu7y+sXuDMN5CdLnMz294H16AXmkL4FtspHTZ/ndOXWo8gwtAAFWDKpJLPJodNoIJ/nzFX8hsCrMvg366PfYB3Ms9Jk1xPdV9lBUhhvn4stKUDYoGDiVI3WE3j81x+CX5/B63TOXUoojQfoPj4gimddn87XjV8pT1KnH2xdllHIzg3e4utR8EaRb9ZfejdmcaT46ScjC4zfZSik7bZqyjj1nFSLllK7g/7gieYBgoUnVMWa/OfGu12C4OT0NJrknJR6Qpg==
+ bh=jiyRm8230ePWHdpc1Lroiu7N3Eh7mvvWEAN2GjgUtx0=;
+ b=TM/MptCyctFgPXga451t1KjBTaeuIO+UWO6Pnt0a/WdcvXzIHsnF9e6CHco+jcXcufkAgIisWKewE7iU6RWtDcYRkxBdvqtP1o5mZvA/FBtfhmIapHdXbrYdz40xXqSu4giOoxnzu4igIz83L7GZMx/KcyTzIQzdSScJ3XPgM2BVne0s/TcCrQFrdcb5S8e65LE9w0GClRt9VuoBhZ2xZkMas5oSbJr46g59KtRWtnY1UGOL2HEPpaVQ2EwYQfKyvjFyjzd9Q0XtYGu6CsU+rpLAnqVzirIBA1jGwbKP78aMROtHK3cH9Iipvy3seX6O219r5+TusnsrExctv2EvAQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=V2W7MeeYoJAjHpnZBPrbz+KWPIKBQOAP/ttwqdtMG0c=;
- b=rTCowzhnDQoiPYBFFq5s9WBfTp3gJWfxLdkdKy/hZnnUAbGCBGamVYnCktst80NRDCyTy3QNbyPDbJbX9NRhOmp8XFnEUUE1/RTqyjEmotJ5FDraMZ7zJNGw5E8gFQLYrs2k9gYlPZohvLcfnv2c4B98ybaAOE3BHEHBbwREMZw=
-Received: from BYAPR05CA0085.namprd05.prod.outlook.com (2603:10b6:a03:e0::26)
- by IA1PR12MB6140.namprd12.prod.outlook.com (2603:10b6:208:3e8::16) with
+ bh=jiyRm8230ePWHdpc1Lroiu7N3Eh7mvvWEAN2GjgUtx0=;
+ b=mCyMzTPxdfcc1HJZnZRIh1cMQP3adD0kXRbpOe1d5N3TF1zMktEgJKyQ45KXhmchZxHCCcslCuQ+FwEHU4CPXvPkYl8xpoRLgbS/ZFCjRQCFw89tGq+u+UXNb39PKe5mAigsVcmSuF+/YDJ4Ct6xB+cNoehtPac3JFftejoSrw8=
+Received: from DM5PR07CA0108.namprd07.prod.outlook.com (2603:10b6:4:ae::37) by
+ MN0PR12MB5907.namprd12.prod.outlook.com (2603:10b6:208:37b::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.26; Fri, 30 Jun
- 2023 10:34:33 +0000
-Received: from DM6NAM11FT050.eop-nam11.prod.protection.outlook.com
- (2603:10b6:a03:e0:cafe::ab) by BYAPR05CA0085.outlook.office365.com
- (2603:10b6:a03:e0::26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.10 via Frontend
- Transport; Fri, 30 Jun 2023 10:34:32 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.23; Fri, 30 Jun
+ 2023 10:34:47 +0000
+Received: from DM6NAM11FT006.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:4:ae:cafe::70) by DM5PR07CA0108.outlook.office365.com
+ (2603:10b6:4:ae::37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6544.22 via Frontend
+ Transport; Fri, 30 Jun 2023 10:34:47 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,13 +48,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
- DM6NAM11FT050.mail.protection.outlook.com (10.13.173.111) with Microsoft SMTP
+ DM6NAM11FT006.mail.protection.outlook.com (10.13.173.104) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6500.50 via Frontend Transport; Fri, 30 Jun 2023 10:34:32 +0000
+ 15.20.6500.48 via Frontend Transport; Fri, 30 Jun 2023 10:34:47 +0000
 Received: from equan-buildpc.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Fri, 30 Jun
- 2023 05:34:09 -0500
+ 2023 05:34:39 -0500
 From:   Evan Quan <evan.quan@amd.com>
 To:     <rafael@kernel.org>, <lenb@kernel.org>,
         <Alexander.Deucher@amd.com>, <Christian.Koenig@amd.com>,
@@ -70,10 +70,11 @@ To:     <rafael@kernel.org>, <lenb@kernel.org>,
 CC:     <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
         <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        Evan Quan <evan.quan@amd.com>
-Subject: [PATCH V5 3/9] cfg80211: expose nl80211_chan_width_to_mhz for wide sharing
-Date:   Fri, 30 Jun 2023 18:32:34 +0800
-Message-ID: <20230630103240.1557100-4-evan.quan@amd.com>
+        Evan Quan <evan.quan@amd.com>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH V5 5/9] drm/amd/pm: update driver_if and ppsmc headers for coming wbrf feature
+Date:   Fri, 30 Jun 2023 18:32:36 +0800
+Message-ID: <20230630103240.1557100-6-evan.quan@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230630103240.1557100-1-evan.quan@amd.com>
 References: <20230630103240.1557100-1-evan.quan@amd.com>
@@ -85,76 +86,129 @@ X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT050:EE_|IA1PR12MB6140:EE_
-X-MS-Office365-Filtering-Correlation-Id: f455329f-e084-4063-cc58-08db79559797
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT006:EE_|MN0PR12MB5907:EE_
+X-MS-Office365-Filtering-Correlation-Id: b62a1fb7-aead-4119-6cb8-08db7955a099
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: kIJxXKLc0HPVNAoT+yvortIcRzQkHoI047h52HmQX4N1GcrapD60p6ejfoy57QEBBXVaPZ424bsYWpgDZvUl0LrzSnELnUPQfR/GXm52nxQ9OHHeH0cGUqB3dgVFZ/jCzBjxxrbxOcX3ABq91/lRetW5zrOLGa72R+yV8YLW6k6q5Uf1i/W7Xjr9MSXDiscrZjZB+Z+U5E6FvFMHRl9r4dM4gNVPogOiP9gQHUejg+UK7lW9eLg0+kiEbv+I8s6I67DDGwLBdbQForl94G/fyFM9cigqKmrIDPMFGdEYpYi/iBqnRpvMQXCtb5bLLhho9VhFLALWhKPeKwylGGw97W/emW0UdEFXWpJ53mrVMwi+7D+HMrL8GrNt68WDzW8WXzZeKbwABQjOFlEA3jK3yo31pZXUDJEwlmCBvwckub8dsoxpXBF+bZp1VCPtXiauqgn7fmq709NEzqmcKF2mdclBuJNjO8pz6UpfIpe/PvzIwfcbH93VjTK5ODi6GdYwDj6M4Lv4sNUpkXuOgO62P0S/96mAYw7XEW1icwecqkTS7peRgrtbFer8sRx9bABPOnpIoYAgO7rLYom6DYb8ELvVINNA0xt/9y3xTNfnpIUO78g557OF0slvI76Yb3GxUnb34RkpX/RpB05oI3IklEY1jK0jepZGKaMQN2+91O2Cp0tfNTDNeq7AdwKrdrpGHxmL9S3wqvaXXSbMzDlAZU/Ld4IbTxRb8EB5lUu4A85VFeU/8QEGLOfpIdKgoFdcAPmtFoVYYFVRvnpAEgBXGRxhc4o/0Iym1LtWwiwo5xP8BsA3I78zysEQkPIIUljo/P50AVRmi7CzPFq9h/x/Wg==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(376002)(396003)(346002)(39860400002)(136003)(451199021)(36840700001)(46966006)(40470700004)(5660300002)(1076003)(7416002)(44832011)(70586007)(316002)(36756003)(4326008)(478600001)(70206006)(8936002)(8676002)(86362001)(2906002)(26005)(110136005)(54906003)(40460700003)(41300700001)(36860700001)(40480700001)(7696005)(6666004)(82310400005)(356005)(186003)(336012)(426003)(47076005)(16526019)(82740400003)(83380400001)(921005)(81166007)(2616005)(36900700001)(2101003)(83996005);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 90zQGhhiQI+KfnGhmFPPgCpbvjLEJVYR+cL1/vf/jjefkjpVhUthnv6s9F7aVGTUPNFOW8Xb/OZnqWXl+J8bEQTfvlNejMeZgLyknP1DdIe9oiTStWbSUJHjqtP+MO/EnsU1lKgXlCbL8KLtwUwnqXX2qD42543nw09THZnzX7L0aQFuazjYregtX3rr9ochF4Jy9e3+h8S3dFo72gQZwyS8YF0EEhUEEwT6a9AEp18G5HRB1J/14+V8BTVHt7Fmon9lTakJtZvvzNayoSwDYiQwBWRQOxBJ3wdgePof2lhn9jYpqfTmcOmPBB+Ub6gWsaY+jTDZxtH2T7ZSXRGaZzzQUylESEWSXjrcOhXiI6EKTPnTH8UPJSjyAYETgvYScw2Ok85lgkrbYaT+uEe+wKw8HPH91QGPBm/esIhchYBAhMMRb00HA0+8PFCieEjIJr16kzZIwW+yb/w/LE5RQ2hYKfwCHCouD6rotHSaX+y06q1nBvzEFBbafrutSwNfBiQOiuHYu7QCliefY9ynss+NxMchxRC6V1AzbStmXm+O33p+GriNlHILcEzMVCCjj5D1xB//V0BcRJ8+B22QvncRaehXcsNeKBAKnYvRIWpCJev18Yrj2kOu0AsA8ojxgzLlqpYwK2djLq+eQUACJgWcTc6wxbIKWYorRC4+VEnSDpi2pCoktA5e/2lhSi6L3UStSEZsI8NwceuubhDc11/KskMw5+alaeuHYwMKwRQSAq5kgcjjzyDyqEwyj5BNNnOkJIiB4DN/DGc8dPhupKuTkjczZdZTpylHUHYLFr2sGFAK+MdhHujzAEd0tRSSrTaolubWaLGaiZPw0c0g1A==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(396003)(136003)(376002)(346002)(39860400002)(451199021)(40470700004)(36840700001)(46966006)(15650500001)(186003)(16526019)(36860700001)(426003)(40480700001)(83380400001)(336012)(2616005)(47076005)(40460700003)(6666004)(2906002)(316002)(70206006)(70586007)(8676002)(8936002)(110136005)(41300700001)(54906003)(81166007)(356005)(921005)(478600001)(4326008)(82740400003)(86362001)(1076003)(44832011)(26005)(82310400005)(7696005)(36756003)(5660300002)(7416002)(2101003)(83996005)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2023 10:34:32.4764
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2023 10:34:47.5866
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f455329f-e084-4063-cc58-08db79559797
+X-MS-Exchange-CrossTenant-Network-Message-Id: b62a1fb7-aead-4119-6cb8-08db7955a099
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT050.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT006.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6140
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB5907
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The newly added WBRF feature needs this interface for channel
-width calculation.
+Add those data structures to support Wifi RFI mitigation feature.
 
 Signed-off-by: Evan Quan <evan.quan@amd.com>
+Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
- include/net/cfg80211.h | 8 ++++++++
- net/wireless/chan.c    | 3 ++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ .../pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_0.h | 14 +++++++++++++-
+ .../pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_7.h | 14 +++++++++++++-
+ .../amd/pm/swsmu/inc/pmfw_if/smu_v13_0_0_ppsmc.h   |  3 ++-
+ .../amd/pm/swsmu/inc/pmfw_if/smu_v13_0_7_ppsmc.h   |  3 ++-
+ 4 files changed, 30 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9e04f69712b1..c6dc337eafce 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -920,6 +920,14 @@ const struct cfg80211_chan_def *
- cfg80211_chandef_compatible(const struct cfg80211_chan_def *chandef1,
- 			    const struct cfg80211_chan_def *chandef2);
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_0.h b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_0.h
+index b686fb68a6e7..d64188fb5839 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_0.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_0.h
+@@ -388,6 +388,17 @@ typedef struct {
+   EccInfo_t  EccInfo[24];
+ } EccInfoTable_t;
  
-+/**
-+ * nl80211_chan_width_to_mhz - get the channel width in Mhz
-+ * @chan_width: the channel width from &enum nl80211_chan_width
-+ * Return: channel width in Mhz if the chan_width from &enum nl80211_chan_width
-+ * is valid. -1 otherwise.
-+ */
-+int nl80211_chan_width_to_mhz(enum nl80211_chan_width chan_width);
++typedef struct {
++  uint16_t     LowFreq;
++  uint16_t     HighFreq;
++} WifiOneBand_t;
 +
- /**
-  * cfg80211_chandef_valid - check if a channel definition is valid
-  * @chandef: the channel definition to check
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 0b7e81db383d..227db04eac42 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -141,7 +141,7 @@ static bool cfg80211_edmg_chandef_valid(const struct cfg80211_chan_def *chandef)
- 	return true;
- }
++typedef struct {
++  uint32_t         WifiBandEntryNum;
++  WifiOneBand_t    WifiBandEntry[11];
++  uint32_t         MmHubPadding[8];
++} WifiBandEntryTable_t;
++
+ //D3HOT sequences
+ typedef enum {
+   BACO_SEQUENCE,
+@@ -1592,7 +1603,8 @@ typedef struct {
+ #define TABLE_I2C_COMMANDS            9
+ #define TABLE_DRIVER_INFO             10
+ #define TABLE_ECCINFO                 11
+-#define TABLE_COUNT                   12
++#define TABLE_WIFIBAND                12
++#define TABLE_COUNT                   13
  
--static int nl80211_chan_width_to_mhz(enum nl80211_chan_width chan_width)
-+int nl80211_chan_width_to_mhz(enum nl80211_chan_width chan_width)
- {
- 	int mhz;
+ //IH Interupt ID
+ #define IH_INTERRUPT_ID_TO_DRIVER                   0xFE
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_7.h b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_7.h
+index 4c46a0392451..77483e8485e7 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_7.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu13_driver_if_v13_0_7.h
+@@ -392,6 +392,17 @@ typedef struct {
+   EccInfo_t  EccInfo[24];
+ } EccInfoTable_t;
  
-@@ -190,6 +190,7 @@ static int nl80211_chan_width_to_mhz(enum nl80211_chan_width chan_width)
- 	}
- 	return mhz;
- }
-+EXPORT_SYMBOL(nl80211_chan_width_to_mhz);
++typedef struct {
++  uint16_t     LowFreq;
++  uint16_t     HighFreq;
++} WifiOneBand_t;
++
++typedef struct {
++  uint32_t         WifiBandEntryNum;
++  WifiOneBand_t    WifiBandEntry[11];
++  uint32_t         MmHubPadding[8];
++} WifiBandEntryTable_t;
++
+ //D3HOT sequences
+ typedef enum {
+   BACO_SEQUENCE,
+@@ -1624,7 +1635,8 @@ typedef struct {
+ #define TABLE_I2C_COMMANDS            9
+ #define TABLE_DRIVER_INFO             10
+ #define TABLE_ECCINFO                 11
+-#define TABLE_COUNT                   12
++#define TABLE_WIFIBAND                12
++#define TABLE_COUNT                   13
  
- static int cfg80211_chandef_get_width(const struct cfg80211_chan_def *c)
- {
+ //IH Interupt ID
+ #define IH_INTERRUPT_ID_TO_DRIVER                   0xFE
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_0_ppsmc.h b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_0_ppsmc.h
+index 10cff75b44d5..c98cc32d11bd 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_0_ppsmc.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_0_ppsmc.h
+@@ -138,7 +138,8 @@
+ #define PPSMC_MSG_SetBadMemoryPagesRetiredFlagsPerChannel 0x4A
+ #define PPSMC_MSG_SetPriorityDeltaGain           0x4B
+ #define PPSMC_MSG_AllowIHHostInterrupt           0x4C
+-#define PPSMC_Message_Count                      0x4D
++#define PPSMC_MSG_EnableUCLKShadow               0x51
++#define PPSMC_Message_Count                      0x52
+ 
+ //Debug Dump Message
+ #define DEBUGSMC_MSG_TestMessage                    0x1
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_7_ppsmc.h b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_7_ppsmc.h
+index 6aaefca9b595..a6bf9cdd130e 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_7_ppsmc.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/inc/pmfw_if/smu_v13_0_7_ppsmc.h
+@@ -134,6 +134,7 @@
+ #define PPSMC_MSG_SetBadMemoryPagesRetiredFlagsPerChannel 0x4A
+ #define PPSMC_MSG_SetPriorityDeltaGain           0x4B
+ #define PPSMC_MSG_AllowIHHostInterrupt           0x4C
+-#define PPSMC_Message_Count                      0x4D
++#define PPSMC_MSG_EnableUCLKShadow               0x51
++#define PPSMC_Message_Count                      0x52
+ 
+ #endif
 -- 
 2.34.1
 
