@@ -2,79 +2,96 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 975B6C001B0
-	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jul 2023 06:48:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4A7DEB64DA
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Jul 2023 08:31:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230421AbjGDGsM (ORCPT
+        id S231553AbjGDIbl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 4 Jul 2023 02:48:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58940 "EHLO
+        Tue, 4 Jul 2023 04:31:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229603AbjGDGsC (ORCPT
+        with ESMTP id S231760AbjGDIbP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Jul 2023 02:48:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B52410CA;
-        Mon,  3 Jul 2023 23:47:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B81416116D;
-        Tue,  4 Jul 2023 06:47:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D424C433C8;
-        Tue,  4 Jul 2023 06:47:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1688453254;
-        bh=NKrgqMucYEDaZ3CZ4vWlOu9Bpv3mE+2DG7gfJNFcPwY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CiF0+pTUEjiABNYtUnUCtbcuLin2yOxkmmIszTzS6elUqzFrs2i1PkNechNBDjFov
-         KQk640h3FVDpDJZ4wIKqSd/vRyJnvTluls3jYVb1/rDGlC/KYjRJm04xemR0vaxuuG
-         qT4pbWxAM57tdXt6/gqrnGsVfN7GBGBdQh+ybd0A=
-Date:   Tue, 4 Jul 2023 07:47:31 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Enrico Mioso <mrkiko.rs@gmail.com>
-Cc:     Jan Engelhardt <jengelh@inai.de>, linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Kalle Valo <kvalo@kernel.org>,
-        Oleksij Rempel <linux@rempel-privat.de>,
-        Maciej =?utf-8?Q?=C5=BBenczykowski?= <maze@google.com>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Andrzej Pietrasiewicz <andrzejtp2010@gmail.com>,
-        Jacopo Mondi <jacopo@jmondi.org>,
-        =?utf-8?Q?=C5=81ukasz?= Stelmach <l.stelmach@samsung.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        linux-usb@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Ilja Van Sprundel <ivansprundel@ioactive.com>,
-        Joseph Tartaro <joseph.tartaro@ioactive.com>
-Subject: Re: [PATCH] USB: disable all RNDIS protocol drivers
-Message-ID: <2023070430-fragment-remember-2fdd@gregkh>
-References: <20221123124620.1387499-1-gregkh@linuxfoundation.org>
- <n9108s34-9rn0-3n8q-r3s5-51r9647331ns@vanv.qr>
- <ZKM5nbDnKnFZLOlY@rivendell>
+        Tue, 4 Jul 2023 04:31:15 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D19F1735;
+        Tue,  4 Jul 2023 01:30:51 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qGbQr-0002q1-59; Tue, 04 Jul 2023 10:30:45 +0200
+Message-ID: <00d9ec8a-5a44-01ec-a51f-ac898152e22c@leemhuis.info>
+Date:   Tue, 4 Jul 2023 10:30:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZKM5nbDnKnFZLOlY@rivendell>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: Fwd: After kernel 6.3.7 or 6.3.8 b43 driver fails
+Content-Language: en-US, de-DE
+To:     Sardonimous <sardonimous@hotmail.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Netdev <netdev@vger.kernel.org>
+Cc:     =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
+        kernel test robot <lkp@intel.com>,
+        Simon Horman <simon.horman@corigine.com>,
+        Kalle Valo <kvalo@kernel.org>
+References: <27829c69-515c-36a6-4beb-3210225f8936@gmail.com>
+ <b9428e48-f0f9-46f6-892c-4c8834c930c4@app.fastmail.com>
+ <RO2P215MB193850DDADD38492BEC8CC2FA720A@RO2P215MB1938.LAMP215.PROD.OUTLOOK.COM>
+ <a3bc5eb5-9639-8016-36ab-105abc8c0ca3@gmail.com>
+ <69b98eb4-2c4e-fe75-90b4-4b08505a595a@lwfinger.net>
+ <RO2P215MB193879B2D99DD0BAF59EFA92A721A@RO2P215MB1938.LAMP215.PROD.OUTLOOK.COM>
+ <e0a08449-554a-4a28-ac50-7051866eb95e@app.fastmail.com>
+ <da80b806-de3f-c7ea-0352-cd23e0f6dd65@lwfinger.net>
+ <RO2P215MB1938BD13105900F3525E0FE7A721A@RO2P215MB1938.LAMP215.PROD.OUTLOOK.COM>
+ <67faf4f4-f36c-3ff7-03b8-cd259e4a5548@lwfinger.net>
+ <RO2P215MB1938BA68BBB683EC696F4BFAA726A@RO2P215MB1938.LAMP215.PROD.OUTLOOK.COM>
+ <6afa0ebc-1d3f-8cba-79dc-8ddfe13c296a@lwfinger.net>
+ <RO2P215MB193898F3008E0F390CCEBC87A726A@RO2P215MB1938.LAMP215.PROD.OUTLOOK.COM>
+ <89429625-5b5a-d0d3-ae82-0b7204262980@lwfinger.net>
+ <RO2P215MB19383189863E11A1B242E02BA729A@RO2P215MB1938.LAMP215.PROD.OUTLOOK.COM>
+From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <RO2P215MB19383189863E11A1B242E02BA729A@RO2P215MB1938.LAMP215.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1688459451;31adccc9;
+X-HE-SMSGID: 1qGbQr-0002q1-59
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jul 03, 2023 at 11:11:57PM +0200, Enrico Mioso wrote:
-> Hi all!!
-> 
-> I think the rndis_host USB driver might emit a warning in the dmesg, but disabling the driver wouldn't be a good idea.
-> The TP-Link MR6400 V1 LTE modem and also some ZTE modems integrated in routers do use this protocol.
-> 
-> We may also distinguish between these cases and devices you might plug in - as they pose different risk levels.
+On 03.07.23 22:13, Sardonimous wrote:
+> On 7/3/23 12:35 PM, Larry Finger wrote:
+>> Sorry that it took so long to get back to you.
+>>
+>> For my ppc32, there is no regression. It took a while to learn the
+>> pio=1 and qos=0 are BOTH needed. That I do not understand, but with
+>> both set, the device works with kernel 6.4 and all earlier kernels
+>> that I tried. Fortunately, I did not need to do the entire bisection.
+>>
+>> I am working on eliminating the warning that appears with qos=0, but
+>> it does not inhibit operations.
+>>
+>> @Bagas Sanjaya: Please mark this "regression" as invalid.
+>>
+>> Larry
+>>
+> I appreciate the time you've spent on this. 
 
-Again, you have to fully trust the other side of an RNDIS connection,
-any hints on how to have the kernel determine that?
+Yeah, thx from my side, too.
 
-thanks,
+#regzbot invalid: wasn't a regression after all
+#regzbot ignore-activity
 
-greg k-h
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
+
+
