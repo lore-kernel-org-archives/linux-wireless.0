@@ -2,62 +2,121 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99659C001B0
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Jul 2023 07:37:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E107EB64DA
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Jul 2023 08:37:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232201AbjGEHhP (ORCPT
+        id S230521AbjGEIhc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Jul 2023 03:37:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52444 "EHLO
+        Wed, 5 Jul 2023 04:37:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232214AbjGEHhO (ORCPT
+        with ESMTP id S229850AbjGEIhb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Jul 2023 03:37:14 -0400
-Received: from mail.durme.pl (mail.durme.pl [217.182.69.186])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A9A910DD
-        for <linux-wireless@vger.kernel.org>; Wed,  5 Jul 2023 00:37:12 -0700 (PDT)
-Received: by mail.durme.pl (Postfix, from userid 1002)
-        id 9971F4B8CE; Wed,  5 Jul 2023 07:35:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=durme.pl; s=mail;
-        t=1688542623; bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
-        h=Date:From:To:Subject:From;
-        b=NHN8ybel9lVtUqB6ltt5okYFWlV9Nlhkx0pbIjKnqKqIw4famJU5Oi4Z6O0GUk5e2
-         LVWYxKulG9Q35kXd7BkpCumwi+ng12scV68sMJ/49RwPG61GndQ1fxsWdq+2y7g+4e
-         xanhOlLG0UCAs0uZNrhb+aKEadjUBjk1QvJiVKTan/Y57yF4v17T83twkb43FyF9ab
-         HvUq0Bu9oEFkeGogoWFOpSyxIfmQFlKrWNamS8b1bFKDcuq/Fdp31KQqRPyB2wcn4B
-         UAFbv7pqKfp/Ea1M2n/A9HIUtd8v+BqLwKPb1310IpLiJys2QIlsq4wySLHAt4WpR/
-         z67wdkKchkJvg==
-Received: by mail.durme.pl for <linux-wireless@vger.kernel.org>; Wed,  5 Jul 2023 07:35:24 GMT
-Message-ID: <20230705064501-0.1.2w.clvb.0.sa1n1j8jon@durme.pl>
-Date:   Wed,  5 Jul 2023 07:35:24 GMT
-From:   "Krystian Wieczorek" <krystian.wieczorek@durme.pl>
-To:     <linux-wireless@vger.kernel.org>
-Subject: W sprawie samochodu
-X-Mailer: mail.durme.pl
+        Wed, 5 Jul 2023 04:37:31 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 585E7133;
+        Wed,  5 Jul 2023 01:37:27 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qGy0j-0007za-T3; Wed, 05 Jul 2023 10:37:17 +0200
+Message-ID: <7fee3284-b9ba-58f4-8118-fe0b99ae6bf7@leemhuis.info>
+Date:   Wed, 5 Jul 2023 10:37:15 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: Linux-6.5 iwlwifi crash
+To:     Jeff Chua <jeff.chua.linux@gmail.com>,
+        lkml <linux-kernel@vger.kernel.org>
+Cc:     Gregory Greenman <gregory.greenman@intel.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Linux Networking <netdev@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Bagas Sanjaya <bagasdotme@gmail.com>
+References: <20230429020951.082353595@lindbergh.monkeyblade.net>
+ <CAAJw_ZueYAHQtM++4259TXcxQ_btcRQKiX93u85WEs2b2p19wA@mail.gmail.com>
+ <ZE0kndhsXNBIb1g7@debian.me> <b9ab37d2-42bf-cc31-a2c0-a9b604e95530@gmail.com>
+ <CAAJw_Zug6VCS5ZqTWaFSr9sd85k=tyPm9DEE+mV=AKoECZM+sQ@mail.gmail.com>
+Content-Language: en-US, de-DE
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <CAAJw_Zug6VCS5ZqTWaFSr9sd85k=tyPm9DEE+mV=AKoECZM+sQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1688546247;14f75381;
+X-HE-SMSGID: 1qGy0j-0007za-T3
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hi! Thanks for your report.
 
-chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
-, je=C5=9Bli chodzi o system monitoringu GPS.
+Side note: is there any relation to the thread[1] you posted this in?
+Doesn't look like it from here.
 
-Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
-e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
-a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
+Side note: discussing multiple unrelated issues in one thread increases
+the risk a lot that some or all of them are ignored:
+https://linux-regtracking.leemhuis.info/post/frequent-reasons-why-linux-kernel-bug-reports-are-ignored/
 
-Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
-dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
-szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
-mne znaczenie.
+[1] https://lore.kernel.org/all/ZE0kndhsXNBIb1g7@debian.me/
 
-Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
-b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
+On 05.07.23 09:24, Jeff Chua wrote:
+> Latest linux-6.4
 
+What do you mean by that? From later in the mail it sounds like you mean
+latest mainline -- is that correct?
 
-Pozdrawiam
-Krystian Wieczorek
+> after June 27 crash my whole linux notebook once
+> iwlwifi is loaded. Anyone seeing this?
+
+I haven't heard of any such problems, but that doesn't have to mean much.
+
+> Bisect? Or there's a patch for this?
+> 
+> # modprobe iwlwifi
+> ... Whole system frozen!
+> 
+> 
+> Here's my system before the crash ...
+> 
+> # dmesg
+> cfg80211: Loading compiled-in X.509 certificates for regulatory database
+> Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+> iwlwifi 0000:00:14.3: enabling device (0000 -> 0002)
+> iwlwifi 0000:00:14.3: api flags index 2 larger than supported by driver
+> thermal thermal_zone1: failed to read out thermal zone (-61)
+> iwlwifi 0000:00:14.3: Sorry - debug buffer is only 4096K while you
+> requested 65536K
+> 
+> # lspci
+> 00:14.3 Network controller: Intel Corporation Alder Lake-P PCH CNVi
+> WiFi (rev 01)
+> 
+> # linux git log
+> commit d528014517f2b0531862c02865b9d4c908019dc4 (HEAD -> master,
+> origin/master, origin/HEAD)
+> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> Date:   Tue Jul 4 15:05:12 2023 -0700
+> 
+> # lsmodModule                  Size  Used by
+> iwlmvm                397312  0
+> mac80211              626688  1 iwlmvm
+> iwlwifi               307200  1 iwlmvm
+> cfg80211              413696  3 iwlmvm,iwlwifi,mac80211
+> 
+> 
+> Bisect?
+
+If none of the others CCed comes up with an idea within the next few
+hours then yes please!
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
