@@ -2,47 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7851C0015E
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:15:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0216FEB64DD
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:15:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233265AbjGIPPn (ORCPT
+        id S233208AbjGIPPp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Jul 2023 11:15:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54634 "EHLO
+        Sun, 9 Jul 2023 11:15:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233361AbjGIPPD (ORCPT
+        with ESMTP id S233369AbjGIPPG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2023 11:15:03 -0400
+        Sun, 9 Jul 2023 11:15:06 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEBC71BE;
-        Sun,  9 Jul 2023 08:14:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B23F0E6A;
+        Sun,  9 Jul 2023 08:14:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8BBD360C13;
-        Sun,  9 Jul 2023 15:14:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EAE5C433C8;
-        Sun,  9 Jul 2023 15:14:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3922060C1F;
+        Sun,  9 Jul 2023 15:14:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DC77C433C8;
+        Sun,  9 Jul 2023 15:14:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688915657;
-        bh=/rno5ne+sKJjosGqkgyrU/dv8tH/5zQ/xDXZ8DfHoG4=;
+        s=k20201202; t=1688915676;
+        bh=0kj80J9d6OINQL1lPclz8bP8r02/ERHLWZ5CZhizzv8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zl9I92LLgMIJjG/NJgCaeLwq9ABxATqiJhAzd5smam6mJ+i/G1INegNbR0trqoy5M
-         KhYiZO75p6dGhDjMbMFAeMNzAmcBP+I8UJ7sRVnB3+rz82+iEgYSzQZxf5RussCGyV
-         P40RIbZLqS0e6nV0FCpDHUAM4vLg5kKahI/rzLgL+jXrzX9R2kiEuv+8/pr2Bfgfjk
-         v9lgWog1jg1D7S8E50XCC2Bbpasrt+0Ax80ZOc3puLi7LYUOApRT8RwEqBGsBU/AZ5
-         +7UFeZiB9Xb4z4qU9QOONKJEzsifjoMzL8XkWfw2rX74dHnIP23gckNzFA1LpvEkEY
-         f6dJzhBC90qyg==
+        b=M7nlG/xkimzEfUgNqnvUWXcFz0QAtx1G3dPJkz41YgPtcLaxB9sNUePVVIBanLzf4
+         T+raq/4WWYzH15Px9fqTojVhSWl4Hl7LojdahCApeZwOf5TyiNCo8h0I7Yiw7+Pcx+
+         BQJ2eV1xrgKAPVZUN5bo3rg32/LzW5fIoQmowBj/o227yiNMyZoHa4VWa9b2G8jaDv
+         9/6V+e8q1TWHr87b+Mx5Gwcjoe1uuSqnjGxf2W4Vemi8Kz/QpWk+zm22zZmPc1WoIf
+         NZQaoKAG0LSURPAHp3y+OWgY4l0m73kiuTxBI4Q2VrMY2oQJpY+rrO55QfW9WIYq1z
+         3OORmnm75JmFg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Balamurugan S <quic_bselvara@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Roee Goldfiner <roee.h.goldfiner@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.3 12/22] wifi: ath12k: Avoid NULL pointer access during management transmit cleanup
-Date:   Sun,  9 Jul 2023 11:13:46 -0400
-Message-Id: <20230709151356.513279-12-sashal@kernel.org>
+        miriam.rachel.korenblit@intel.com, avraham.stern@intel.com,
+        benjamin.berg@intel.com, jtornosm@redhat.com,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.3 19/22] wifi: iwlwifi: mvm: avoid baid size integer overflow
+Date:   Sun,  9 Jul 2023 11:13:53 -0400
+Message-Id: <20230709151356.513279-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230709151356.513279-1-sashal@kernel.org>
 References: <20230709151356.513279-1-sashal@kernel.org>
@@ -55,38 +58,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Balamurugan S <quic_bselvara@quicinc.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 054b5580a36e435692c203c19abdcb9f7734320e ]
+[ Upstream commit 1a528ab1da324d078ec60283c34c17848580df24 ]
 
-Currently 'ar' reference is not added in skb_cb.
-Though this is generally not used during transmit completion
-callbacks, on interface removal the remaining idr cleanup callback
-uses the ar pointer from skb_cb from management txmgmt_idr. Hence fill them
-during transmit call for proper usage to avoid NULL pointer dereference.
+Roee reported various hard-to-debug crashes with pings in
+EHT aggregation scenarios. Enabling KASAN showed that we
+access the BAID allocation out of bounds, and looking at
+the code a bit shows that since the reorder buffer entry
+(struct iwl_mvm_reorder_buf_entry) is 128 bytes if debug
+such as lockdep is enabled, then staring from an agg size
+512 we overflow the size calculation, and allocate a much
+smaller structure than we should, causing slab corruption
+once we initialize this.
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+Fix this by simply using u32 instead of u16.
 
-Signed-off-by: Balamurugan S <quic_bselvara@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230518071046.14337-1-quic_bselvara@quicinc.com
+Reported-by: Roee Goldfiner <roee.h.goldfiner@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Link: https://lore.kernel.org/r/20230620125813.f428c856030d.I2c2bb808e945adb71bc15f5b2bac2d8957ea90eb@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath12k/mac.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index bf7e5b6977b27..ff9f9c84129bc 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -4366,6 +4366,7 @@ static int ath12k_mac_mgmt_tx_wmi(struct ath12k *ar, struct ath12k_vif *arvif,
- 	int buf_id;
- 	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 9caae77995ca9..5bf990964795e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -2747,7 +2747,7 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	}
  
-+	ATH12K_SKB_CB(skb)->ar = ar;
- 	spin_lock_bh(&ar->txmgmt_idr_lock);
- 	buf_id = idr_alloc(&ar->txmgmt_idr, skb, 0,
- 			   ATH12K_TX_MGMT_NUM_PENDING_MAX, GFP_ATOMIC);
+ 	if (iwl_mvm_has_new_rx_api(mvm) && start) {
+-		u16 reorder_buf_size = buf_size * sizeof(baid_data->entries[0]);
++		u32 reorder_buf_size = buf_size * sizeof(baid_data->entries[0]);
+ 
+ 		/* sparse doesn't like the __align() so don't check */
+ #ifndef __CHECKER__
 -- 
 2.39.2
 
