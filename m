@@ -2,38 +2,38 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2498C001B0
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:28:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1FBDC001B0
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233646AbjGIP2f (ORCPT
+        id S233908AbjGIPbg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Jul 2023 11:28:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37568 "EHLO
+        Sun, 9 Jul 2023 11:31:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234002AbjGIP2B (ORCPT
+        with ESMTP id S232822AbjGIPbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2023 11:28:01 -0400
+        Sun, 9 Jul 2023 11:31:21 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D379E3C24;
-        Sun,  9 Jul 2023 08:25:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66352B7;
+        Sun,  9 Jul 2023 08:30:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F3B0260B83;
-        Sun,  9 Jul 2023 15:15:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A1E7C433AD;
-        Sun,  9 Jul 2023 15:15:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8C92A60C01;
+        Sun,  9 Jul 2023 15:16:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC47EC433C7;
+        Sun,  9 Jul 2023 15:16:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688915749;
-        bh=Agt2o5MhbYx1WXqAb8FIJLTnyrtArEek6c0NS3eWVDA=;
+        s=k20201202; t=1688915802;
+        bh=6v/IFeuYC6RkNIxMW8tpxe6/qo0FAIgF1YGp+FB5FzA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=K/KTWxQYuLrywj9IShmrRIdoW6fifQw6iIsTju7QlWRLohIg2YmkhxcQQ7UftXwlv
-         Du7MVC+9UsTSq6zLvYZxWT2QVsvsSyKvKbw0c0aweXoPcK1zUEFeTImt7Q8KhUQWRX
-         MoxOj1h6CUKE9gDPWIDX423OuePhneiNch3NyPO022wymJ9+5gYc1JfwllKrrZX8I7
-         J8hFOW2AIWHTNxpm8WCmTCawJ08Yv6FWKrM1zOg34e3QUrmcTAbQx0TJEhaFr4But7
-         k+lJHZ8Q4Z/GDP94m1DUzj8r5Brp14cn4cmMlCAozBDYPuV/X04xHxZXIJhQ0ERm7G
-         Y/xECISQ3Yq6Q==
+        b=Ty3UDUeibnE255/q/rGglqo8lSYo8zHcNRNLnzDuueKTddh9jzxEQDJG4gSiHrBlV
+         L8TiTrNZFtSo+dHGxDQlCCZSAacf1C+W+BVF96MLf3t04rwqLHeFMl7GaeqlbvkYNH
+         rJxewgdPxCxh7I/gQzT/U8izhu/do3LRtCOdapoi+ezNY+aWld/o8oMDOuTOYvUxFJ
+         uIoxaaujPz5tYG2rdurecKQ72nQOhS0sa89zomIPNVq+B9mnt1wt/40lDPAZP18KzI
+         XvrawusP/LmsG9xRBsQTp3Tj+aguH0/d7lnAGsacbREvLnTEmQSQygXb8uDnVpF1vn
+         Merpmi8An6Qag==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
@@ -43,16 +43,16 @@ Cc:     Johannes Berg <johannes.berg@intel.com>,
         miriam.rachel.korenblit@intel.com, avraham.stern@intel.com,
         benjamin.berg@intel.com, jtornosm@redhat.com,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 08/10] wifi: iwlwifi: mvm: avoid baid size integer overflow
-Date:   Sun,  9 Jul 2023 11:15:26 -0400
-Message-Id: <20230709151528.513775-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 4/5] wifi: iwlwifi: mvm: avoid baid size integer overflow
+Date:   Sun,  9 Jul 2023 11:16:29 -0400
+Message-Id: <20230709151632.514098-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230709151528.513775-1-sashal@kernel.org>
-References: <20230709151528.513775-1-sashal@kernel.org>
+In-Reply-To: <20230709151632.514098-1-sashal@kernel.org>
+References: <20230709151632.514098-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.120
+X-stable-base: Linux 4.19.288
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -85,10 +85,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 45dfee3ad8c60..2d1755598b475 100644
+index 373ace38edab7..83883ce7f55dc 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2544,7 +2544,7 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+@@ -2237,7 +2237,7 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
  	}
  
  	if (iwl_mvm_has_new_rx_api(mvm) && start) {
