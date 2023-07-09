@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60607C0015E
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:19:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4648AC0015E
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:19:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233703AbjGIPTB (ORCPT
+        id S233814AbjGIPT2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Jul 2023 11:19:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54296 "EHLO
+        Sun, 9 Jul 2023 11:19:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233774AbjGIPSW (ORCPT
+        with ESMTP id S233767AbjGIPTL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2023 11:18:22 -0400
+        Sun, 9 Jul 2023 11:19:11 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2797C26BF;
-        Sun,  9 Jul 2023 08:15:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C206B30DC;
+        Sun,  9 Jul 2023 08:16:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0799960C2B;
-        Sun,  9 Jul 2023 15:15:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A392EC433CC;
-        Sun,  9 Jul 2023 15:15:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 43A7460C39;
+        Sun,  9 Jul 2023 15:14:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C368EC433D9;
+        Sun,  9 Jul 2023 15:14:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688915758;
-        bh=sPSF83Pa+6iysooxDfu1G5Cy7aII/KTDm7x39lE4rhA=;
+        s=k20201202; t=1688915689;
+        bh=GBPgJfxiQ5r2sx8ga0FfDdUHZokRuoT4MKnvi1S4cGE=;
         h=From:To:Cc:Subject:Date:From;
-        b=iXypVHig1/+oCxtqkMeNhwNKdNEN9K2x7LMxJQred1LgGC3lRaiFsPyiULBSrYlWP
-         x/kyBTUjfWgi6MJ+pZRbkHc82455dtAiILTUYDgCu2lsCGjeFK0qVlI9b14YfeYvhf
-         fUzbksGLSkNOCFsQTE46MSgk1hgo/l8aXRIdGA21rC+TX1M0HW+zEbGgl9vPteKK/F
-         YPcRusGbN/VFeES2Vp29WPK7coxSNc81BNxEJ/coAwPpHgy+XdH6GiU2TLwLivg3MO
-         /YY1jiudOl4VJdunb7jp1P4bJmKSR9OXEWEnrA37kJIpVxtGSYfg7dz7yxtiKtVTES
-         G5ftsSvgkQwPQ==
+        b=U1hTMO1GoAwEnoUFUpHCKdiNHsWUlgifYvHZhYXNklHbh9VvbnquTS5BTF2yhpUb1
+         1N+6sNNL1/w10IgFBHF5lNQLpbiMsx5GGwNx/xvroTB2nePyDdDm8HvRPO7rai++x6
+         Gy20o+j7ASB0zEL24xADc/hWLOAYa/J35PUEu5cgj+FQtY5m5Jpk0pFK1Ug+M4IcwT
+         7JhuEhX8byAOIBBfVph17HP+5oobTHhea48iUSRDL/dmsZn4bRksd5gt9XDjd02SDW
+         gCB1C1h27y27ZkUI0Jf/mESlFQ9S9sfyxLjZA0Q8nBAlrm+6b2NqRda3CHjYTqGHjR
+         Z50zLHWa8LBzg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Maxime Bizon <mbizon@freebox.fr>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 1/7] wifi: ath11k: fix registration of 6Ghz-only phy without the full channel range
-Date:   Sun,  9 Jul 2023 11:15:49 -0400
-Message-Id: <20230709151555.513910-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 01/18] wifi: ath11k: fix registration of 6Ghz-only phy without the full channel range
+Date:   Sun,  9 Jul 2023 11:14:29 -0400
+Message-Id: <20230709151446.513549-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.186
+X-stable-base: Linux 6.1.38
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -103,10 +103,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 67faf62999ded..3170c54c97b74 100644
+index ef7617802491e..b19d44b3f5dfb 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6044,7 +6044,7 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+@@ -8715,7 +8715,7 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
  	}
  
  	if (supported_bands & WMI_HOST_WLAN_5G_CAP) {
