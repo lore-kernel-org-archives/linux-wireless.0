@@ -2,38 +2,38 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90998C001E0
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:14:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA453EB64DD
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:14:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233212AbjGIPOU (ORCPT
+        id S233222AbjGIPO1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Jul 2023 11:14:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54142 "EHLO
+        Sun, 9 Jul 2023 11:14:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233189AbjGIPOG (ORCPT
+        with ESMTP id S232151AbjGIPOO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2023 11:14:06 -0400
+        Sun, 9 Jul 2023 11:14:14 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79EC0E45;
-        Sun,  9 Jul 2023 08:13:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF71E48;
+        Sun,  9 Jul 2023 08:13:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5160460C0F;
-        Sun,  9 Jul 2023 15:13:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC4E8C43391;
-        Sun,  9 Jul 2023 15:13:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6AFE960C04;
+        Sun,  9 Jul 2023 15:13:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1AD7C433C9;
+        Sun,  9 Jul 2023 15:13:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688915617;
-        bh=LH2hwoUFKM2bcWoEr3Ue+OY/SGHBF6JkUd2BHQ0tcIo=;
+        s=k20201202; t=1688915622;
+        bh=6e21b8Qble0eAKgTcaa4a5gWpmGf3lLsAXg66FM61Ig=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ahWir//vbjRqGSMU/6bD+fL+CSG9eefXn/CpY0w1gxXIWc7WXcW5t2IEh0Qv4F+lj
-         Lc6XiNkqW5K4mgioeqN/oJ+aM68hd58fjt9r6T8U1goQD2Bf9HsoJ0gSG8OzxnTs+K
-         YCRJE7BCpuqiH1DzG/XjZfVYXJHmkDcRu9+aKn98w3P9+CK67hcB4D0qOGSc0zLLcZ
-         zI9XVUfhjZaI0bW1N7TJ/+g4hV+jVT2zzoJkpcxhe+JD5A+kDCj+B13lJTnOephKq3
-         MhhQDTcvv97RTg50IDWumFHMtQ3z6lXsOnfhm2jbmLNeBX277XqeH1Rn/PGyCYOjaK
-         JsWqOObMzX3fg==
+        b=Zbv6dMuZh74b9tBFo5baThkU9Vgsp6oxyW5NFWl0S+Mi5+4pgcRDwhRxOPNFPkqWu
+         ZQhU+UGqOwte+ARhQ1B0189QLf6alpFFTcGwdIvH1Ce5S1yC+gROVpWc6pZ8u7SdJf
+         iMR+gdnmQeADgUfDiw7GP33qIcebWcFKfEHy8odewejlpbsGu5QyCYNBI0iFIgzx8u
+         QspLRWNF97lvmyR17ssKn2Vs69RC6oy3QJ6ixjZ7qsNcZqfIyJkOSJHRGnJVQwKm1R
+         z0QXeqF4HTe7FUcpw1GpFM9wMtHXsKzKfNn8RxWG029RMYPD3EoApr1xYyz9o4bfju
+         1v/ZqFkABTK0w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
@@ -41,9 +41,9 @@ Cc:     Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.4 20/26] wifi: iwlwifi: mvm: Add NULL check before dereferencing the pointer
-Date:   Sun,  9 Jul 2023 11:12:49 -0400
-Message-Id: <20230709151255.512931-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.4 22/26] wifi: iwlwifi: Add support for new PCI Id
+Date:   Sun,  9 Jul 2023 11:12:51 -0400
+Message-Id: <20230709151255.512931-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230709151255.512931-1-sashal@kernel.org>
 References: <20230709151255.512931-1-sashal@kernel.org>
@@ -58,64 +58,39 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 
-[ Upstream commit 7dd50fd5478056929a012c6bf8b3c6f87c7e9e87 ]
+[ Upstream commit 35bd6f1d043d089fcb60450e1287cc65f0095787 ]
 
-While vif pointers are protected by the corresponding "*active"
-fields, static checkers can get confused sometimes. Add an explicit
-check.
+Add support for the PCI Id 51F1 without IMR support.
 
 Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Link: https://lore.kernel.org/r/20230614154951.78749ae91fb5.Id3c05d13eeee6638f0930f750e93fb928d5c9dee@changeid
+Link: https://lore.kernel.org/r/20230620125813.9800e652e789.Ic06a085832ac3f988c8ef07d856c8e281563295d@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/power.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index ac1dae52556f8..19839cc44eb3d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -647,30 +647,32 @@ static void iwl_mvm_power_set_pm(struct iwl_mvm *mvm,
- 		return;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 79115eb1c2852..e9fe6cea891aa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -495,6 +495,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x7AF0, PCI_ANY_ID, iwl_so_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x51F0, PCI_ANY_ID, iwl_so_long_latency_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x51F1, PCI_ANY_ID, iwl_so_long_latency_imr_trans_cfg)},
++	{IWL_PCI_DEVICE(0x51F1, PCI_ANY_ID, iwl_so_long_latency_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x54F0, PCI_ANY_ID, iwl_so_long_latency_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x7F70, PCI_ANY_ID, iwl_so_trans_cfg)},
  
- 	/* enable PM on bss if bss stand alone */
--	if (vifs->bss_active && !vifs->p2p_active && !vifs->ap_active) {
-+	if (bss_mvmvif && vifs->bss_active && !vifs->p2p_active &&
-+	    !vifs->ap_active) {
- 		bss_mvmvif->pm_enabled = true;
- 		return;
- 	}
- 
- 	/* enable PM on p2p if p2p stand alone */
--	if (vifs->p2p_active && !vifs->bss_active && !vifs->ap_active) {
-+	if (p2p_mvmvif && vifs->p2p_active && !vifs->bss_active &&
-+	    !vifs->ap_active) {
- 		p2p_mvmvif->pm_enabled = true;
- 		return;
- 	}
- 
--	if (vifs->bss_active && vifs->p2p_active)
-+	if (p2p_mvmvif && bss_mvmvif && vifs->bss_active && vifs->p2p_active)
- 		client_same_channel =
- 			iwl_mvm_have_links_same_channel(bss_mvmvif, p2p_mvmvif);
- 
--	if (vifs->bss_active && vifs->ap_active)
-+	if (bss_mvmvif && ap_mvmvif && vifs->bss_active && vifs->ap_active)
- 		ap_same_channel =
- 			iwl_mvm_have_links_same_channel(bss_mvmvif, ap_mvmvif);
- 
- 	/* clients are not stand alone: enable PM if DCM */
- 	if (!(client_same_channel || ap_same_channel)) {
--		if (vifs->bss_active)
-+		if (bss_mvmvif && vifs->bss_active)
- 			bss_mvmvif->pm_enabled = true;
--		if (vifs->p2p_active)
-+		if (p2p_mvmvif && vifs->p2p_active)
- 			p2p_mvmvif->pm_enabled = true;
- 		return;
- 	}
+@@ -544,6 +545,7 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 	IWL_DEV_INFO(0x51F0, 0x1551, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_160_name),
+ 	IWL_DEV_INFO(0x51F0, 0x1691, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690s_name),
+ 	IWL_DEV_INFO(0x51F0, 0x1692, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690i_name),
++	IWL_DEV_INFO(0x51F1, 0x1692, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690i_name),
+ 	IWL_DEV_INFO(0x54F0, 0x1691, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690s_name),
+ 	IWL_DEV_INFO(0x54F0, 0x1692, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690i_name),
+ 	IWL_DEV_INFO(0x7A70, 0x1691, iwlax411_2ax_cfg_so_gf4_a0, iwl_ax411_killer_1690s_name),
 -- 
 2.39.2
 
