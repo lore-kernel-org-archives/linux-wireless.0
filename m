@@ -2,52 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1DE4EB64DD
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35B06EB64DD
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:20:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233789AbjGIPUn (ORCPT
+        id S233849AbjGIPUw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Jul 2023 11:20:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59912 "EHLO
+        Sun, 9 Jul 2023 11:20:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233792AbjGIPUL (ORCPT
+        with ESMTP id S233721AbjGIPUO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2023 11:20:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59A9235A7;
-        Sun,  9 Jul 2023 08:17:03 -0700 (PDT)
+        Sun, 9 Jul 2023 11:20:14 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CF8F35B0;
+        Sun,  9 Jul 2023 08:17:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0811560BEC;
-        Sun,  9 Jul 2023 15:15:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDDA3C433C9;
-        Sun,  9 Jul 2023 15:15:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BC3660C53;
+        Sun,  9 Jul 2023 15:16:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDBB8C433CB;
+        Sun,  9 Jul 2023 15:16:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688915734;
+        s=k20201202; t=1688915808;
         bh=s/Cb8Zm+6Qly1ZMy/ulzm3Pf5rMTvuUA8VEfjYDv+pQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L4ey7B+vHJ3aAQg/mSX5DU2R9MUQuSM6sdU4jaTc/jcE247AyMF6Z1+LQNt0jAqaf
-         VMn3EehK+vEeq3yWsCDIH09NLFWXit7cDpx/HMbVfqqLOq8FkIguzyNLmRG7DrsGfR
-         5s5LnV5WF3ZQzriyNikgVOIFj8N5Tr9gJU6NSs80mu4wQov+OKNm/4FqFZkddA7K0N
-         chXHnkfp6AV1SXMMgD2kWFNy+qIp9QfSM6OVBVoXfR/fgslCIt375TnKaW2FrA4qgh
-         ZazOx1E5I+02ttaPZufv6gC5dCb2lL0ih2Cr5MMAN+yg/A7hiy2O2cjE3G8+HYNLkf
-         MwynK1nkFkpPw==
+        h=From:To:Cc:Subject:Date:From;
+        b=d88zhq0Gw/K1B/+0fTHq6QY/oCZS+eKAtFTjGP/MIh5KWi9YwOZHaAGW4lT48Ina0
+         GW41MP7lGdrdXEziDOk0sk16ZSUfBNbv4Fr75w06RfZQizRnndB+xyFUQN6l3NVCAZ
+         z4GvV57SNa20cqiBWEflr4LPTCSwxbdawKaRJaJYvoLypzDOkmYiQjCRZmYKl/yKvT
+         IFQ6Jc/mE6LuFsxABWWe//6SjKsCXZ6ErS9VZqDVHybX85MMfuYOOaBrj7GvBsSsVE
+         1c1MWLM9GD3rLus66vwgtyS4G//Bnr7BHNOT9MzM2wa+jrYG8+spGCNYmD95Q9XCzN
+         YWhrWJ819vh7Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ping-Ke Shih <pkshih@realtek.com>, Kalle Valo <kvalo@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 02/10] wifi: rtw89: 8851be: add 8851BE PCI entry and fill PCI capabilities
-Date:   Sun,  9 Jul 2023 11:15:20 -0400
-Message-Id: <20230709151528.513775-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 1/4] wifi: rtw89: 8851be: add 8851BE PCI entry and fill PCI capabilities
+Date:   Sun,  9 Jul 2023 11:16:41 -0400
+Message-Id: <20230709151645.514172-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230709151528.513775-1-sashal@kernel.org>
-References: <20230709151528.513775-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.120
+X-stable-base: Linux 4.14.320
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
