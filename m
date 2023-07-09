@@ -2,38 +2,38 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA45FEB64DD
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE30EB64DC
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 15:22:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233965AbjGIPVl (ORCPT
+        id S233961AbjGIPWG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Jul 2023 11:21:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59976 "EHLO
+        Sun, 9 Jul 2023 11:22:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233795AbjGIPV2 (ORCPT
+        with ESMTP id S233781AbjGIPVj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2023 11:21:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 269353C34;
-        Sun,  9 Jul 2023 08:17:32 -0700 (PDT)
+        Sun, 9 Jul 2023 11:21:39 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7108F448C;
+        Sun,  9 Jul 2023 08:17:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8BF7160C2C;
-        Sun,  9 Jul 2023 15:16:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB476C433CB;
-        Sun,  9 Jul 2023 15:16:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EF15360C23;
+        Sun,  9 Jul 2023 15:16:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25FA6C433C8;
+        Sun,  9 Jul 2023 15:16:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688915768;
+        s=k20201202; t=1688915798;
         bh=BmgDoqmmR/0aTtaSlsk8FtTiOkTJEmegsMp0yEKSxUg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LokfqmBjIsexv7C7cYfspJJlDrvrO0TihwIQHb+1uZPKZOMEYsHT66VHwviE8+5Ov
-         VT2RuJPJbmRdOFYExgVvHqw0i3FhsbcKy8BEhQgifAiYde7P3ZDoi+1FtigAm42FMe
-         Wj0bwTmVNsWwKIrTZbIzDBtBMtTmps5s02iesJL2ze8PI18dLhVwJF4KO3WyEn5cL2
-         hC+yWn7+vXYfiJ8D1F3dZUJP8UJl2oiDmuxKf6OlBjeGnjtzrj/4HvIG9QjgXiWboP
-         qZinz1caQyujz4cwnOgn9zvnUqi7hzCbrs4i4IcJegceM3kVv7EiiyUYez3BbTJ1DK
-         21jCy3YmI2r/w==
+        b=Ho3gRI3z9J6GKrt221Go42+ut1AIgMuBIiwZ8Yimz2KEpo3AKab1eTc5qOynk3q6t
+         6Vf3ooN9dpsLlPioDoLI00eK4MjbSdeHfDFNZ1eGJatKakN6GXFxqfAeiG/0ioie+A
+         Wl8uWoLSNHJWaw5wZTcudaX+BQn2o16OlmPCuDlOgB1YoM89ZzQasIXZv1TXGpQT5/
+         DuVAs1Pscy93DqjpOEnodEJRQWghL8AVMlzlMyAl1HyyvAVoDOCA/C91YzD3iRfUjk
+         5Ih+rES+vkp++Ea0XQzxSUq0I5axqOjujBxQAdPixxCKZZzISeAD6+XL+O+0n1N8FP
+         +SWnBIvOw3MFA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
@@ -43,16 +43,16 @@ Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 5/7] wifi: wext-core: Fix -Wstringop-overflow warning in ioctl_standard_iw_point()
-Date:   Sun,  9 Jul 2023 11:15:53 -0400
-Message-Id: <20230709151555.513910-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 3/5] wifi: wext-core: Fix -Wstringop-overflow warning in ioctl_standard_iw_point()
+Date:   Sun,  9 Jul 2023 11:16:28 -0400
+Message-Id: <20230709151632.514098-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230709151555.513910-1-sashal@kernel.org>
-References: <20230709151555.513910-1-sashal@kernel.org>
+In-Reply-To: <20230709151632.514098-1-sashal@kernel.org>
+References: <20230709151632.514098-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.186
+X-stable-base: Linux 4.19.288
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
