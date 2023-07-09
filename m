@@ -2,141 +2,88 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F17C1C001DE
-	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 16:32:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51EFCEB64DD
+	for <linux-wireless@archiver.kernel.org>; Sun,  9 Jul 2023 18:08:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230075AbjGIQ2H (ORCPT
+        id S231439AbjGISIF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 9 Jul 2023 12:28:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58800 "EHLO
+        Sun, 9 Jul 2023 14:08:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbjGIQ2G (ORCPT
+        with ESMTP id S229591AbjGISIE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 9 Jul 2023 12:28:06 -0400
-Received: from mail-oo1-xc35.google.com (mail-oo1-xc35.google.com [IPv6:2607:f8b0:4864:20::c35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E5B2A8;
-        Sun,  9 Jul 2023 09:28:05 -0700 (PDT)
-Received: by mail-oo1-xc35.google.com with SMTP id 006d021491bc7-5634db21a78so2678409eaf.0;
-        Sun, 09 Jul 2023 09:28:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1688920084; x=1691512084;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=Mnp7Gx1O4lBi6RB6np/kLFboJ0ahJMfnsN6pSM7+9k4=;
-        b=C3Z8Rw5eHLgZLt/1ByF8+nxD3uvgzIOCbeyD6rfZNLgsRMPLgEexhGgcnFPbQyoWGj
-         74ImKO3YsvkZWRNVmzLcacKTxJV6nV7KsBeEtOC1BKWbHH86F1mJOGgbAV459dfl/FJu
-         XCevRxYtHvMp4XASirzqqS2qF7pTeDqdiTaLpj106T/gzelDXnvnkLOjmjBb6o//AOZH
-         tlEA7j0fgMYsdlLibdsah5rlxd+qVHwDj4I+hYcOXU8l58HHRk2O5InJCRhk6VpW8t43
-         gEgCi1VhGtk0YgXXtzYSioCp237OKLhuxeKxNP67W21scEUsDzxjr99/QQNo9lTTK5np
-         bG0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688920084; x=1691512084;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Mnp7Gx1O4lBi6RB6np/kLFboJ0ahJMfnsN6pSM7+9k4=;
-        b=HRRbPPrdzS6qQaAf6kUq+cnDGWP6eFLRrpmHJ76RDFN5FnsVc+S089Bod6FJyzwiUL
-         9/uVjq5eOnjMbSt5+ADoJRF27Bi22mZHeQvRHS2LKi/RgKz9wX0bm+qdL8Pm3wNlzH4T
-         V8uFqKFzCOSTWv7EqniG/am9kV/GMWfzgnNpiXRcQPjc7ehtsPYk6t6/ZqU3h7CZFwGf
-         dP09D85g4WGZxF36Tsus6M6InNl1dvaRSOCLw/5nbz9VTLuJcna7AsuMV35VMWBcQxwc
-         czvtlFIQiqXIWvOQOhIDPdAh0AE0vBcnLZ7Cg0PNCC7MUeIS63AOh8ZAakBn1IyUUXgJ
-         ndsg==
-X-Gm-Message-State: ABy/qLbjXSmG9wljqTMauu5+4d1k6/RJDuMaLfwfvxeO9E2M9UNewmJ2
-        kwd+tSlXL7UIzxflILQQNhc=
-X-Google-Smtp-Source: APBJJlE60avBl+3E9vLwVQj9Z7ucwDB15X967F/kv0vGm7ovzn82ucw0rFV/AvNaXRSZZAkAskZtJQ==
-X-Received: by 2002:a05:6808:1a81:b0:3a3:6536:dd89 with SMTP id bm1-20020a0568081a8100b003a36536dd89mr9022353oib.49.1688920084438;
-        Sun, 09 Jul 2023 09:28:04 -0700 (PDT)
-Received: from [192.168.1.119] ([216.130.59.33])
-        by smtp.gmail.com with ESMTPSA id n5-20020aca2405000000b003a1f444307esm3367199oic.58.2023.07.09.09.28.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 09 Jul 2023 09:28:03 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-Message-ID: <b4063a55-be7c-8f3a-2529-e1211080d323@lwfinger.net>
-Date:   Sun, 9 Jul 2023 11:28:02 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
+        Sun, 9 Jul 2023 14:08:04 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61599BC;
+        Sun,  9 Jul 2023 11:07:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=QXMFC6gz8KNAOpyGfeaSWSTcXiuxDivyP/I51DPhIWo=;
+        t=1688926079; x=1690135679; b=ZhU2IhvoFdCPkjX1slEqgeXFUb8ezDWivC4ABTC93yuk7At
+        n4K9g+CND3bNTe+kTwqkXk7PkVzNNgRbuoN/MKbeYEDq0xxhCjg7vv7BzJb+V+8j73v3797o2MZVi
+        jx+O6WEd1wB9GwbPbmv1mD6gG7nbhqHQiWT/GJJ5DhKNWp6GTcjnQWyD2V8pvqbZ2OOy5sBdDz3vK
+        r7tvtXLk9V3XxN3C8mZv0oDnAA0ik8TGzm/OrfdLcyNCfciXcQGq9eAh3xPr3U5MMw0Gu6y1LwqQu
+        jOjCqbIHjjIJyHiUQ6jBZADtGS5zwRkW1uAeDp/bH/uhABOAaf0uP54anJS+57CQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qIYov-00Dn5B-1O;
+        Sun, 09 Jul 2023 20:07:41 +0200
+Message-ID: <446c25888d9316d0f15e6bcc6ecb100dda99324e.camel@sipsolutions.net>
 Subject: Re: [Regression][BISECTED] kernel boot hang after 19898ce9cf8a
  ("wifi: iwlwifi: split 22000.c into multiple files")
-To:     "Zhang, Rui" <rui.zhang@intel.com>,
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Linux regressions mailing list <regressions@lists.linux.dev>
+Cc:     "Zhang, Rui" <rui.zhang@intel.com>,
         "Greenman, Gregory" <gregory.greenman@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-Cc:     "bagasdotme@gmail.com" <bagasdotme@gmail.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "kvalo@kernel.org" <kvalo@kernel.org>,
-        "Baruch, Yaara" <yaara.baruch@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Torvalds, Linus" <torvalds@linux-foundation.org>,
+        "Baruch, Yaara" <yaara.baruch@intel.com>,
         "Ben Ami, Golan" <golan.ben.ami@intel.com>,
-        "edumazet@google.com" <edumazet@google.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "Sisodiya, Mukesh" <mukesh.sisodiya@intel.com>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "pabeni@redhat.com" <pabeni@redhat.com>
+        Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        netdev <netdev@vger.kernel.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Bagas Sanjaya <bagasdotme@gmail.com>
+Date:   Sun, 09 Jul 2023 20:07:40 +0200
+In-Reply-To: <CAHk-=wg23SdKRcn2W+BWWEfJ2Efp0sreJx9=iw0AsUPjW3qznw@mail.gmail.com>
 References: <b533071f38804247f06da9e52a04f15cce7a3836.camel@intel.com>
- <a4265090-d6b8-b185-a400-b09b27a347cc@leemhuis.info>
- <c65d0837-5e64-bec7-9e56-04aa91148d05@leemhuis.info>
- <4153ce0aac6dc760a3a9c7204c5c9141b60839a4.camel@intel.com>
-Content-Language: en-US
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <4153ce0aac6dc760a3a9c7204c5c9141b60839a4.camel@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+         <a4265090-d6b8-b185-a400-b09b27a347cc@leemhuis.info>
+         <CAHk-=wg23SdKRcn2W+BWWEfJ2Efp0sreJx9=iw0AsUPjW3qznw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 7/9/23 08:27, Zhang, Rui wrote:
-> On Sat, 2023-07-08 at 16:17 +0200, Thorsten Leemhuis wrote:
->> On 07.07.23 12:55, Linux regression tracking (Thorsten Leemhuis)
->> wrote:
->>> On 07.07.23 10:25, Zhang, Rui wrote:
->>>>
->>>> I run into a NULL pointer dereference and kernel boot hang after
->>>> switching to latest upstream kernel, and git bisect shows that
->>>> below
->>>> commit is the first offending commit, and I have confirmed that
->>>> commit
->>>> 19898ce9cf8a has the issue while 19898ce9cf8a~1 does not.
->>>
->>> FWIW, this is the fourth such report about this that I'm aware of.
->>>
->>> The first is this one (with two affected users afaics):
->>> https://bugzilla.kernel.org/show_bug.cgi?id=217622
->>>
->>> The second is this one:
->>> https://lore.kernel.org/all/CAAJw_Zug6VCS5ZqTWaFSr9sd85k%3DtyPm9DEE%2BmV%3DAKoECZM%2BsQ@mail.gmail.com/
->>>
->>> The third:
->>> https://lore.kernel.org/all/9274d9bd3d080a457649ff5addcc1726f08ef5b2.camel@xry111.site/
->>>
->>> And in the past few days two people from Fedora land talked to me
->>> on IRC
->>> with problems that in retrospective might be caused by this as
->>> well.
->>
->> I got confirmation: one of those cases is also caused by 19898ce9cf8a
->> But I write for a different reason:
->>
->> Larry (now CCed) looked at the culprit and spotted something that
->> looked
->> suspicious to him; he posted a patch and looks for testers:
->> https://lore.kernel.org/all/0068af47-e475-7e8d-e476-c374e90dff5f@lwfinger.net/
-> 
-> I applied this patch but the problem still exists.
-> 
-> thanks,
-> rui
+On Sun, 2023-07-09 at 09:31 -0700, Linus Torvalds wrote:
+> On Fri, 7 Jul 2023 at 03:55, Linux regression tracking (Thorsten
+> Leemhuis) <regressions@leemhuis.info> wrote:
+> >=20
+> > [CCing the regression list, netdev, the net maintainers, and Linus;
+> > Johannes and Kalle as well, but just for the record, they afaik are
+> > unavailable]
+>=20
+> So I will release rc1 with this issue, but remind me - if it hasn't
+> had any traction next week and the radio silence continues, I'll just
+> revert it all.
 
-Rui,
+Sorry. I got back home a few hours ago (for few days anyway) and I think
+I already know what the issue is. I'll send a fix to try in a few
+minutes, was just trying to collect all the reported-by etc.
 
-I am not surprised that the patch did not help. I guess you will need to stay 
-with kernel 6.3.X until the Intel developers return from their summer break.
+There's clearly a separate bug in the init failure path, but the reason
+it fails in the first place is a mismatch between different changes.
 
-Larry
+johannes
 
 
