@@ -2,45 +2,66 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D54EB64DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jul 2023 16:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 528B1EB64DC
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jul 2023 16:43:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232579AbjGKQck (ORCPT
+        id S232606AbjGKQmx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Jul 2023 12:32:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33164 "EHLO
+        Tue, 11 Jul 2023 12:42:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232429AbjGKQcc (ORCPT
+        with ESMTP id S232105AbjGKQmw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2023 12:32:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44EC2173A;
-        Tue, 11 Jul 2023 09:32:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D065F6155E;
-        Tue, 11 Jul 2023 16:32:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 058E9C433C9;
-        Tue, 11 Jul 2023 16:32:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689093146;
-        bh=/yz1VNIx8w5vnZQUrnW46zn2dCf4xJSJ/w4OLb6WBAk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Yg4EUjxEPD06/Bn6reOhE6TdmtCBNfXmQqLeCVeuc3B4GVfMn6aCEif09HCeYn0Uz
-         Uh06QjoXyuXz76Qh5WxlMsRGgkCEP7GU/xz19BFKHWMX9QP3c0f6H0pfTBv/CMzFNR
-         Gce9NhJ0EAOEBKlWz+3t/42M+JkZEBcqbImWn7g+k7QPFZpUzXnG2Z1YmAU3XT7xgc
-         etgVuONKYWYaRKo7d3AavNFlRtsW7kOs9f5RUjTcfpugo5ljkNFTIaY6eHMNaVhk9c
-         uHeshfY+jsKSE6st5tdcIBLc4raTCwWlwmHFJSEDn5De4UwjLIv6N+Hw3CwjBc6UeH
-         ZQDhJ2SfdHm6Q==
-Date:   Tue, 11 Jul 2023 09:32:24 -0700
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     David Ahern <dsahern@kernel.org>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Christoph Hellwig <hch@lst.de>,
+        Tue, 11 Jul 2023 12:42:52 -0400
+Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2345410C0
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2023 09:42:50 -0700 (PDT)
+Received: by mail-qk1-x72c.google.com with SMTP id af79cd13be357-765ae938b1bso554485485a.0
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2023 09:42:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1689093769; x=1691685769;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Uu6KIyFq5ICxck51tOZTlrhfx/dAZN9zejRdcXCeDIQ=;
+        b=hutFTkWd80/JWvtlN74IkzBT25OF7LVT1vr1QbOtoLia7gCMDN/IthFasmJc6qiQay
+         3tVmOsZw93jMQD1ismCSE3/TO08LFEoKmWO4bSv0VW+Fcc+nXAGs1l4AEEucg2NIWTfz
+         qtsg3PHnJJ+65RVJUeDP0+OnLtSMLDGe8uG31BIeuyVQUZmFXwqtQpoxmzPe0CWl2vF+
+         PVSnB774tyoY7PSisg55xASa4YKGevTLCboavkgbiFWYJv3oSZ8GGZIln/OlViAGZJQ0
+         1osG2kQZAkLmJs3+qeezOegAZ4lq6SI4eQiiwkKS9Ht/DJCtY3YykcRdmrRaLS2HudM/
+         80kA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689093769; x=1691685769;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Uu6KIyFq5ICxck51tOZTlrhfx/dAZN9zejRdcXCeDIQ=;
+        b=T5vPcICsm8ENZMWJegYaeUiEadHU/6NHlFqvuvTH4hBLoLTyLDjD8GerTx+vUp6jIn
+         c4vzMFbz8IwhfSll5TIxoqYfmqSnrNHnMT5zw0AOUi8gn57GeCJRuXh/9pTVefwXAq+y
+         i0dxN1JY1rIqv1k65lp6OcrTs6ASeeJbLNRygw16fnqZoMgsaqfSAPyxshQdidsAw6E1
+         6/uC9AKngstNlCwTu+hWEuvWbS7s0wXdEWlkZDd8WWpNbzjs30Z7xdsCmmtHlzqt9DuN
+         bboYhCBagOd56NZe2wCPamxqsXc7mIshq/EEeCbvs0N4IaRINmVQPAOkrZqNaCfIbA8c
+         1Xxg==
+X-Gm-Message-State: ABy/qLbTJpL/HCQ71XpYVxP+5KwidSSGLEjz4nXx3MxKMU5bfRKYU+AK
+        n9XVdSzNe5fHCLFvQsXAOJZCLQ==
+X-Google-Smtp-Source: APBJJlHrfEpx0F5ZCb1qXKIKZ/LjogbATKeqxd6U5nNdJ3jhzMUvs4D3C+kS3MbzveBt3oiLYSo3MA==
+X-Received: by 2002:a37:f70f:0:b0:767:5689:bc7a with SMTP id q15-20020a37f70f000000b007675689bc7amr15355662qkj.25.1689093769195;
+        Tue, 11 Jul 2023 09:42:49 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-68-25-194.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.68.25.194])
+        by smtp.gmail.com with ESMTPSA id k2-20020a05620a138200b00767d6427339sm1165653qki.69.2023.07.11.09.42.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Jul 2023 09:42:48 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.95)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1qJGRr-000IQx-QI;
+        Tue, 11 Jul 2023 13:42:47 -0300
+Date:   Tue, 11 Jul 2023 13:42:47 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
         Mina Almasry <almasrymina@google.com>,
         John Hubbard <jhubbard@nvidia.com>,
         Dan Williams <dan.j.williams@intel.com>,
+        David Ahern <dsahern@kernel.org>,
         Jesper Dangaard Brouer <jbrouer@redhat.com>,
         brouer@redhat.com, Alexander Duyck <alexander.duyck@gmail.com>,
         Yunsheng Lin <linyunsheng@huawei.com>, davem@davemloft.net,
@@ -72,42 +93,44 @@ Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Christoph Hellwig <hch@lst.de>,
         Jonathan Lemon <jonathan.lemon@gmail.com>
 Subject: Re: Memory providers multiplexing (Was: [PATCH net-next v4 4/5]
  page_pool: remove PP_FLAG_PAGE_FRAG flag)
-Message-ID: <20230711093224.1bf30ed5@kernel.org>
-In-Reply-To: <04187826-8dad-d17b-2469-2837bafd3cd5@kernel.org>
-References: <5e0ac5bb-2cfa-3b58-9503-1e161f3c9bd5@kernel.org>
-        <CAHS8izP2fPS56uXKMCnbKnPNn=xhTd0SZ1NRUgnAvyuSeSSjGA@mail.gmail.com>
-        <ZKNA9Pkg2vMJjHds@ziepe.ca>
-        <CAHS8izNB0qNaU8OTcwDYmeVPtCrEjTTOhwCHtVsLiyhXmPLsXQ@mail.gmail.com>
-        <ZKxDZfVAbVHgNgIM@ziepe.ca>
-        <CAHS8izO3h3yh=CLJgzhLwCVM4SLgf64nnmBtGrXs=vxuJQHnMQ@mail.gmail.com>
-        <ZKyZBbKEpmkFkpWV@ziepe.ca>
-        <20230711042708.GA18658@lst.de>
-        <20230710215906.49514550@kernel.org>
-        <20230711050445.GA19323@lst.de>
-        <ZK1FbjG+VP/zxfO1@ziepe.ca>
-        <20230711090047.37d7fe06@kernel.org>
-        <04187826-8dad-d17b-2469-2837bafd3cd5@kernel.org>
+Message-ID: <ZK2Gh2qGxlpZexCM@ziepe.ca>
+References: <ZKNA9Pkg2vMJjHds@ziepe.ca>
+ <CAHS8izNB0qNaU8OTcwDYmeVPtCrEjTTOhwCHtVsLiyhXmPLsXQ@mail.gmail.com>
+ <ZKxDZfVAbVHgNgIM@ziepe.ca>
+ <CAHS8izO3h3yh=CLJgzhLwCVM4SLgf64nnmBtGrXs=vxuJQHnMQ@mail.gmail.com>
+ <ZKyZBbKEpmkFkpWV@ziepe.ca>
+ <20230711042708.GA18658@lst.de>
+ <20230710215906.49514550@kernel.org>
+ <20230711050445.GA19323@lst.de>
+ <ZK1FbjG+VP/zxfO1@ziepe.ca>
+ <20230711090047.37d7fe06@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230711090047.37d7fe06@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 11 Jul 2023 10:20:58 -0600 David Ahern wrote:
-> On 7/11/23 10:00 AM, Jakub Kicinski wrote:
-> >> RDMA works with the AMD and Intel intree drivers using DMABUF without
-> >> requiring struct pages using the DRM hacky scatterlist approach.  
-> > I see, thanks. We need pages primarily for refcounting. Avoiding all
-> > the infamous problems with memory pins. Oh well.  
+On Tue, Jul 11, 2023 at 09:00:47AM -0700, Jakub Kicinski wrote:
+
+> > So is Infiniband, Jakub has a unique definition of "proprietary".
 > 
-> io_uring for example already manages the page pinning. An skb flag was
-> added for ZC Tx API to avoid refcounting in the core networking layer.
+> For IB AFAIU there's only one practically usable vendor, such an
+> impressive ecosystem!!
 
-Right, we can refcount in similar fashion. Still tracking explicitly
-when buffers are handed over to the NIC.
+IB has roce (RDMA Over Converged Ethernet, better thought of as IB
+over Ethernet) under it's standization umbrella and every major
+commodity NIC vendor (mellanox, broadcom, intel) now implements
+roce. We also have the roce support in the switch from all major
+switch vendors.
 
-> Any reason not to allow an alternative representation for skb frags than
-> struct page?
+IB as a link layer "failed" with most implementors leaving the
+ecosystem broadly because Ethernet link layer always wins in
+networking - this is more of an economic outcome than a
+standardization outcome in my mind.
 
-I don't think there's a hard technical reason. We can make it work.
+Due to roce, IB as a transport and software protocol has a solid
+multi-vendor ecosystem.
+
+Jason
