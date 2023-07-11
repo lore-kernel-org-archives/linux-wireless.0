@@ -2,72 +2,71 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4BD2C001DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jul 2023 17:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF7E2C001DE
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Jul 2023 17:25:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231965AbjGKRGx (ORCPT
+        id S230200AbjGKRZZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Jul 2023 13:06:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56362 "EHLO
+        Tue, 11 Jul 2023 13:25:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231858AbjGKRGn (ORCPT
+        with ESMTP id S232913AbjGKRYq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Jul 2023 13:06:43 -0400
-Received: from mail-ua1-x92e.google.com (mail-ua1-x92e.google.com [IPv6:2607:f8b0:4864:20::92e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41C02A1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2023 10:06:41 -0700 (PDT)
-Received: by mail-ua1-x92e.google.com with SMTP id a1e0cc1a2514c-79492b8f4bbso1984257241.2
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2023 10:06:41 -0700 (PDT)
+        Tue, 11 Jul 2023 13:24:46 -0400
+Received: from mail-vs1-xe2c.google.com (mail-vs1-xe2c.google.com [IPv6:2607:f8b0:4864:20::e2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C995173A
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2023 10:24:24 -0700 (PDT)
+Received: by mail-vs1-xe2c.google.com with SMTP id ada2fe7eead31-443571eda4dso1810749137.2
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Jul 2023 10:24:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1689095200; x=1691687200;
+        d=google.com; s=20221208; t=1689096263; x=1691688263;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=shCkNkuISpAjo0wvso+e9CaqC7Tu4suQbB4adf5Gg28=;
-        b=YbbA06X7m0lTKmRD/qrCSPe46OZZXtyoWwxn94R62ChwLlyI4NVTjYPGfo3UBlMajj
-         k6fH+Dkqu85y17natO+NnHXFOP3k1pkffPwP4MSk9drst1XGd/0ospwiBvP1V2Cjsp4w
-         kqT2TO4HE+d7uUCguJ2ovnNME5Ya6Nu2B2evKvl7BcEp1EWaRJzM466r1a7+Ac3BeOwj
-         E0omfNfD0agGLMLbLYeHEb+3aukvUGiEi+9dtdNeOxvp9oOSGBCChkpDj4aW9pT8bT/k
-         Sw2KCbmOc1yGOSVjG88PEgzwwiXTrz+H1cyxyuHyDsyfTWNm1JTQjWbMvuxQVExeMj+M
-         gipQ==
+        bh=vxEt0Z2eexi8Ljxbl6AxsjACGcp0PhbeI1Zbkig5Ea8=;
+        b=2MNo9qcQE70ijvOMfhfeCr5b57NMCaHmxyfLaple5c0ON72I6Fl6KkCpEF2ZUAP6Ja
+         V0z2dG+x+IsgZmudM/8wwO3HeFqajJZZHGPKbEt6SALfCu+Pjnxdii+e3bsqiFj2E3my
+         Y/ErVdBmKyVEkX5L9MQap9ZPz0HWB43sGOmSZ/vOEk0haEGCaJ4BXm0i68AOESbjIK//
+         yHeVhjhPwmEJgs7OzM7NHltcgWysktGwYwz4yjqmTJOBKT8q9CDeeMZvsmkc/oZsH0tp
+         3B2iJT8PUjxWK3Udzzlf3cKSa9yNqS4nY+xFqcPU5ISJors0n4DWQZ0X9dxbx9KCcKzN
+         SXWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689095200; x=1691687200;
+        d=1e100.net; s=20221208; t=1689096263; x=1691688263;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=shCkNkuISpAjo0wvso+e9CaqC7Tu4suQbB4adf5Gg28=;
-        b=PFKfn8fANcc8OKLLyQKAgLxqojoTJfClrsT9ihWh46d8RqF1bdsBLEW+B0y9Wj/w/m
-         F4tHEQiPogQl/9RMElOz4uJoMJDrRAXVi0cNlwD6dxSoAOAhzL80hCMr0tvtZXfITm5F
-         /Wu6UOCmEE/owf4zNF/NKoUO+6C/knH2GQzkk38DFAujV8+gQBAzbrw1wvFMoGiff4c2
-         OL77EjaZXUlXgQuzHW9E4QBktvT+rmgt9znMOuWXKVfktEk7NiEWA4/eLHDhogV9mYKR
-         EgYtWTkCMPbVMBLtVSaOEiuPQOsFnG1OoQieOyrO6rk8eFhT/dX7h1rmqIMNAsfQx7xg
-         UPGA==
-X-Gm-Message-State: ABy/qLaJ7OTonkxmxIF3ecbOKk7vzm3s9/UtYJXhqmVoDU+ka4pqEtti
-        oDMm1RIJvJIubd0vzu0nNSEygIckPIx9iG3RkovuKQ==
-X-Google-Smtp-Source: APBJJlHXFNHBs4KDviEzXlES6rfgeVe8nKhN83Gxg+u3ccdWyDygmItRYbBA45O5bC+ajfLgRYLuiJDC4r1zWGlkDaw=
-X-Received: by 2002:a67:e34b:0:b0:444:c49c:a95d with SMTP id
- s11-20020a67e34b000000b00444c49ca95dmr7222548vsm.7.1689095200160; Tue, 11 Jul
- 2023 10:06:40 -0700 (PDT)
+        bh=vxEt0Z2eexi8Ljxbl6AxsjACGcp0PhbeI1Zbkig5Ea8=;
+        b=gk1V9cKUt4rQthfF55DIX46ozt8NNt2qn205AEbKhKhczY+nGJtYNoLzx8B1pfl8Bg
+         woI+VeC4/oqRYMh0NxJBT1Squfo7CF+8w4OS7AZuUyCx26+TOjIEg4Uk9H+TGyRPuAAS
+         jyvkZQOW1+2mTm3um8vu3gHOOAG/S36pXgHyUWyNRm8f3YDVHP7qgvkDQCCL1wUpzyRm
+         vb1B4rkfoFc9HFY9TXyOWjQxMSo2I9E7TIZp/x7NOW7yVOST/1pITWGp+v6w8+2etHLq
+         mRvwJvhdpK4xmLy4A5ptcGEexmqpYkF8opiZiZkREVtmEjDnnczD/yMIa6BNig+aZHtP
+         n53w==
+X-Gm-Message-State: ABy/qLaccJt/IoYe9o4CfAm/NK+nVp7+iNAAJRWkIo/GHmzmG8k5gyWX
+        do59pw1vQa7ICHucpQhLYWQEhRFNJKCH3sjmqpYs4w==
+X-Google-Smtp-Source: APBJJlEbNbeKglx24tA12e4BmXAPi9rr0ZNOak9iV8KnYQWaC46zN/l1EJsSvydC+DrZ4BU4kBJ0Te5mDCNhUBfgEcw=
+X-Received: by 2002:a67:fd59:0:b0:440:cfc5:f91a with SMTP id
+ g25-20020a67fd59000000b00440cfc5f91amr8676055vsr.29.1689096263370; Tue, 11
+ Jul 2023 10:24:23 -0700 (PDT)
 MIME-Version: 1.0
-References: <5e0ac5bb-2cfa-3b58-9503-1e161f3c9bd5@kernel.org>
- <CAHS8izP2fPS56uXKMCnbKnPNn=xhTd0SZ1NRUgnAvyuSeSSjGA@mail.gmail.com>
+References: <20230619110705.106ec599@kernel.org> <CAHS8izOySGEcXmMg3Gbb5DS-D9-B165gNpwf5a+ObJ7WigLmHg@mail.gmail.com>
+ <5e0ac5bb-2cfa-3b58-9503-1e161f3c9bd5@kernel.org> <CAHS8izP2fPS56uXKMCnbKnPNn=xhTd0SZ1NRUgnAvyuSeSSjGA@mail.gmail.com>
  <ZKNA9Pkg2vMJjHds@ziepe.ca> <CAHS8izNB0qNaU8OTcwDYmeVPtCrEjTTOhwCHtVsLiyhXmPLsXQ@mail.gmail.com>
  <ZKxDZfVAbVHgNgIM@ziepe.ca> <CAHS8izO3h3yh=CLJgzhLwCVM4SLgf64nnmBtGrXs=vxuJQHnMQ@mail.gmail.com>
- <ZKyZBbKEpmkFkpWV@ziepe.ca> <20230711042708.GA18658@lst.de>
- <20230710215906.49514550@kernel.org> <20230711050445.GA19323@lst.de>
- <ZK1FbjG+VP/zxfO1@ziepe.ca> <20230711090047.37d7fe06@kernel.org>
- <04187826-8dad-d17b-2469-2837bafd3cd5@kernel.org> <20230711093224.1bf30ed5@kernel.org>
-In-Reply-To: <20230711093224.1bf30ed5@kernel.org>
+ <ZKyZBbKEpmkFkpWV@ziepe.ca> <CAHS8izOTiSO5PkM+x-CASjwew=U2j=JRNpbz_6NC6AsDTQ17Ug@mail.gmail.com>
+ <ZK1U/Vo0NvhNm9pq@ziepe.ca>
+In-Reply-To: <ZK1U/Vo0NvhNm9pq@ziepe.ca>
 From:   Mina Almasry <almasrymina@google.com>
-Date:   Tue, 11 Jul 2023 10:06:28 -0700
-Message-ID: <CAHS8izNHkLF0OowU=p=mSNZss700HKAzv1Oxqu2bvvfX_HxttA@mail.gmail.com>
+Date:   Tue, 11 Jul 2023 10:24:11 -0700
+Message-ID: <CAHS8izOnw8KEu_Sm7Vf3UfqD88XheTBDHkoTmBx7r=i9g0pJRw@mail.gmail.com>
 Subject: Re: Memory providers multiplexing (Was: [PATCH net-next v4 4/5]
  page_pool: remove PP_FLAG_PAGE_FRAG flag)
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     David Ahern <dsahern@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Christoph Hellwig <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
+To:     Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>, logang@deltatee.com
+Cc:     Christoph Hellwig <hch@lst.de>, John Hubbard <jhubbard@nvidia.com>,
         Dan Williams <dan.j.williams@intel.com>,
+        David Ahern <dsahern@kernel.org>,
+        Jakub Kicinski <kuba@kernel.org>,
         Jesper Dangaard Brouer <jbrouer@redhat.com>,
         brouer@redhat.com, Alexander Duyck <alexander.duyck@gmail.com>,
         Yunsheng Lin <linyunsheng@huawei.com>, davem@davemloft.net,
@@ -103,38 +102,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Jul 11, 2023 at 9:32=E2=80=AFAM Jakub Kicinski <kuba@kernel.org> wr=
-ote:
+On Tue, Jul 11, 2023 at 6:11=E2=80=AFAM Jason Gunthorpe <jgg@ziepe.ca> wrot=
+e:
 >
-> On Tue, 11 Jul 2023 10:20:58 -0600 David Ahern wrote:
-> > On 7/11/23 10:00 AM, Jakub Kicinski wrote:
-> > >> RDMA works with the AMD and Intel intree drivers using DMABUF withou=
-t
-> > >> requiring struct pages using the DRM hacky scatterlist approach.
-> > > I see, thanks. We need pages primarily for refcounting. Avoiding all
-> > > the infamous problems with memory pins. Oh well.
+> On Mon, Jul 10, 2023 at 05:45:05PM -0700, Mina Almasry wrote:
+>
+> > > At least from my position I want to see MEMORY_DEVICE_PCI_P2PDMA used
+> > > to represent P2P memory.
 > >
-> > io_uring for example already manages the page pinning. An skb flag was
-> > added for ZC Tx API to avoid refcounting in the core networking layer.
+> > Would using p2pdma API instead of dmabuf be an acceptable direction?
 >
-> Right, we can refcount in similar fashion. Still tracking explicitly
-> when buffers are handed over to the NIC.
+> "p2pdma API" is really just using MEMORY_DEVICE_PCI_P2PDMA and
+> teaching the pagepool how to work with ZONE_DEVICE pages.
 >
-> > Any reason not to allow an alternative representation for skb frags tha=
-n
-> > struct page?
->
-> I don't think there's a hard technical reason. We can make it work.
 
-I also think we can switch the representation for skb frags to
-something else. However - please do correct me if I'm wrong - I don't
-think that is sufficient for device memory TCP. My understanding is
-that we also need to modify any NIC drivers that want to use device
-memory TCP to understand a new memory type, and the page pool as well
-if that's involved. I think in particular modifying the memory type in
-all the NIC drivers that want to do device memory TCP is difficult. Do
-you think this is feasible?
+Yes, that's what I have in mind. Roughly something along the lines
+where the device memory provider (GPU or what not) does something like
+a pci_p2pdma_add_resource(), and the NIC client driver allocates the
+pages from the resource, and if is_pci_p2pdma_page() use
+pci_p2pdma_map_sg() instead of dma_map_sg() and whatnot.
 
---
+> I suspect this will clash badly with Matthew's work here:
+>
+> https://lore.kernel.org/all/20230111042214.907030-1-willy@infradead.org/
+>
+> As from a mm side we haven't ever considered that ZONE_DEVICE and
+> "netmem" can be composed together. The entire point of netmem like
+> stuff is that the allocator hands over the majority of struct page to
+> the allocatee, and ZONE_DEVICE can't work like that.
+>
+> However, assuming that can be solved in some agreeable way then it
+> would be OK to go down this path.
+>
+
+I think there is potential to solve this in an agreeable way. We may
+be able to get netmem ZONE_DEVICE pages using the memdesc idea you
+proposed, or something like the xarray meta data you mention below. If
+not that, I think Jakub already said that he is considering coming up
+with a 'page pool like' API that drivers can use, with an
+implementation that is compatible with ZONE_DEVICE pages.
+
+> But, I feel like this is just overall too hard a direction from the mm
+> perspective.
+>
+> I don't know anything about page pool, but the main sticking point is
+> its reliance on struct page. If it can find another way to locate its
+> meta data (eg an xarray), at least for some cases, it would make
+> things alot easier.
+>
+
+
+
+--=20
 Thanks,
 Mina
