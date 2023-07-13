@@ -2,116 +2,148 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A35EB64DA
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jul 2023 02:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2A2DEB64DA
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Jul 2023 02:38:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233441AbjGMCMQ (ORCPT
+        id S233631AbjGMCh7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 12 Jul 2023 22:12:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41886 "EHLO
+        Wed, 12 Jul 2023 22:37:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbjGMCMP (ORCPT
+        with ESMTP id S233627AbjGMCh6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Jul 2023 22:12:15 -0400
-X-Greylist: delayed 1799 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 12 Jul 2023 19:12:12 PDT
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91FCC1FFD;
-        Wed, 12 Jul 2023 19:12:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=m3po4FiRsuRaodVf3w1lKGRDQNG5T/ke8/cTCsTCpi0=;
-        t=1689214333; x=1690423933; b=E22ul75fr+5+v6gvlvmdzVYkzTKgV8KpXxuShdglCbaZkFq
-        K3/tqvuBzXYsmX0aSEtMM+JMqYO2SKNtKGmHxLef2472a+FuJwnC7TRflR37GgdnuOyS38teXpjEY
-        2exj3/EPBputVLEqTmUTAcZM1PKxO2JE9zYnLwX76Ha7qAdoEW7o/T+UWfRSHSqPpESjc3Qq7L/Is
-        gQehyLr5LQe6ANkqt0UgYXkfsgidVbHvJGZ/vXBTlxcOmNuu++JmCNdlEXKJHHxdDL1gqOYqRCgkp
-        8YQS98wARzf3d6om4hRSpG9pesthdYT9VvDOj+rUJ+RRQZ3C+BmV30uoO5f3wu/Q==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qJkC3-0004Hv-1i;
-        Thu, 13 Jul 2023 02:28:27 +0200
-Message-ID: <2d26c0028590a80e7aa80487cbeffd5ca6e6a5ea.camel@sipsolutions.net>
-Subject: Re: [PATCH] USB: disable all RNDIS protocol drivers
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Oliver Neukum <oneukum@suse.com>,
-        Enrico Mioso <mrkiko.rs@gmail.com>,
-        Jan Engelhardt <jengelh@inai.de>, linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Kalle Valo <kvalo@kernel.org>,
-        Oleksij Rempel <linux@rempel-privat.de>,
-        Maciej =?UTF-8?Q?=C5=BBenczykowski?= <maze@google.com>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Andrzej Pietrasiewicz <andrzejtp2010@gmail.com>,
-        Jacopo Mondi <jacopo@jmondi.org>,
-        =?UTF-8?Q?=C5=81ukasz?= Stelmach <l.stelmach@samsung.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        linux-usb@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Ilja Van Sprundel <ivansprundel@ioactive.com>,
-        Joseph Tartaro <joseph.tartaro@ioactive.com>
-Date:   Thu, 13 Jul 2023 02:28:26 +0200
-In-Reply-To: <2023071222-asleep-vacancy-4cfa@gregkh>
-References: <20221123124620.1387499-1-gregkh@linuxfoundation.org>
-         <n9108s34-9rn0-3n8q-r3s5-51r9647331ns@vanv.qr> <ZKM5nbDnKnFZLOlY@rivendell>
-         <2023070430-fragment-remember-2fdd@gregkh>
-         <e5a92f9c-2d56-00fc-5e01-56e7df8dc1c1@suse.com>
-         <6a4a8980912380085ea628049b5e19e38bcd8e1d.camel@sipsolutions.net>
-         <2023071222-asleep-vacancy-4cfa@gregkh>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        Wed, 12 Jul 2023 22:37:58 -0400
+Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B200211F;
+        Wed, 12 Jul 2023 19:37:45 -0700 (PDT)
+Received: by mail-oi1-x232.google.com with SMTP id 5614622812f47-3a1ebb79579so220176b6e.3;
+        Wed, 12 Jul 2023 19:37:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1689215864; x=1691807864;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vduQ3kkF6+9LmbpyzrWUTpYlu5cuK+oeQp8QiLQyx9c=;
+        b=NNs1KVqjl2RZ7Rh0yiNv62nzhr/EH0ThqGellMU9EUvBSasusY+TdzYq2rqxkI5L9Z
+         pfc5oHrSbMDGugxXVCFTGGbyK1JFIQADvs2hl5I5OwFffHTCY8eVm+jYGomjjnfP0EZP
+         SPVGY1Jz1lnrsprPEZTJZzByj96xA6fFP//LCq5IoKv3fXhE7QdDSyeKc9p6Y77f6O8n
+         Xeea9DtU+JKh6zlu72wSqn+ZNtnXnouhhZKAotLPY3pDvEQ4eCLj7m9AJ163PTuL/z0u
+         aOfFCDiO1P6Dm7wUf8nJZQNND56ScZlxY0TnPHNLzG8t1vCsscqZP9VP+l+4aApCR2Mu
+         DTtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689215864; x=1691807864;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vduQ3kkF6+9LmbpyzrWUTpYlu5cuK+oeQp8QiLQyx9c=;
+        b=E2ULzJ/MkYwBRC6S/mUxdbprBVyW0zJxdxDOx0D+05ivjc3v2O+TcW3JSk9/GFrVyN
+         SKdXfdY1JRGUlCxZLBuoQoUq74tPuHnYGzSQadWfOQbgCaJF+ZoJEdi/6sppYtTDQXSz
+         S1ALWfzyKERROAZaTsqfhLOEzsi8QXZ1Wb+t9rLO8X8qLXRCWesQ2qc+kVO18Iiz4D4J
+         UJAtrqJ25WTBfG5PpMRC0o7lql9SDD4f5KyyD9Jfnp2OKYo08n5JtNIadWivcI3wd+IA
+         MiGg9EajC2dguJy6E35TlRCr37iplq02U7EpbsstLoszQLZ9PTJUDdKxHvnyw48OXhUD
+         i3NQ==
+X-Gm-Message-State: ABy/qLa6AtaBrT31ETzZs4V9icit4mX+0gENADqFD4tF3xATWfCxfk7Q
+        2KxlWdk8ZL3ZNgnBGaWo1F1jK9Wb4lNFjtnQ
+X-Google-Smtp-Source: APBJJlFx8O9/XOGVBIPOcHRYVQ/yBszXHyLoyCBGcG8ZkvainhaeT7unU2YD37GoBnd7F3N9vgAWjQ==
+X-Received: by 2002:a05:6808:1490:b0:3a3:7adc:dec7 with SMTP id e16-20020a056808149000b003a37adcdec7mr419369oiw.38.1689215864298;
+        Wed, 12 Jul 2023 19:37:44 -0700 (PDT)
+Received: from localhost.localdomain ([221.231.171.18])
+        by smtp.gmail.com with ESMTPSA id 6-20020aa79106000000b00662c4ca18ebsm4228783pfh.128.2023.07.12.19.37.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jul 2023 19:37:43 -0700 (PDT)
+From:   pinkperfect <pinkperfect2021@gmail.com>
+To:     kuba@kernel.org, amitkarwar@gmail.com, kvalo@kernel.org,
+        ganapathi017@gmail.com, sharvari.harisangam@nxp.com,
+        huxinming820@gmail.com
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        pinkperfect <pinkperfect2021@gmail.com>
+Subject: [PATCH v3] wifi: mwifiex: Fix OOB and integer underflow when rx packets
+Date:   Thu, 13 Jul 2023 02:37:31 +0000
+Message-Id: <20230713023731.2518507-1-pinkperfect2021@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2023-07-12 at 18:39 +0200, Greg Kroah-Hartman wrote:
-> On Wed, Jul 12, 2023 at 03:00:55PM +0200, Johannes Berg wrote:
-> > On Wed, 2023-07-12 at 11:22 +0200, Oliver Neukum wrote:
-> > >=20
-> > > On 04.07.23 08:47, Greg Kroah-Hartman wrote:
-> > > > On Mon, Jul 03, 2023 at 11:11:57PM +0200, Enrico Mioso wrote:
-> > > > > Hi all!!
-> > > > >=20
-> > > > > I think the rndis_host USB driver might emit a warning in the dme=
-sg, but disabling the driver wouldn't be a good idea.
-> > > > > The TP-Link MR6400 V1 LTE modem and also some ZTE modems integrat=
-ed in routers do use this protocol.
-> > > > >=20
-> > > > > We may also distinguish between these cases and devices you might=
- plug in - as they pose different risk levels.
-> > > >=20
-> > > > Again, you have to fully trust the other side of an RNDIS connectio=
-n,
-> > > > any hints on how to have the kernel determine that?
-> >=20
-> > > it is a network protocol. So this statement is kind of odd.
-> > > Are you saying that there are RNDIS messages that cannot be verified
-> > > for some reason, that still cannot be disclosed?
-> >=20
-> > Agree, it's also just a USB device, so no special trickery with DMA,
-> > shared buffers, etc.
-> >=20
-> > I mean, yeah, the RNDIS code is really old and almost certainly has a
-> > severe lack of input validation, but that still doesn't mean it's
-> > fundamentally impossible.
->=20
-> You all are going to make me have to write some exploits aren't you...
+Make sure mwifiex_process_mgmt_packet and its callers
+mwifiex_process_sta_rx_packet and mwifiex_process_uap_rx_packet
+not out-of-bounds access the skb->data buffer.
 
-This is getting a bit childish. Nobody ever said that wasn't possible,
-in fact I did say exactly above that I'm sure since it's old and all it
-lacks input validation. So yeah, I full well believe that you can write
-exploits for it.
+Fixes: 2dbaf751b1de ("mwifiex: report received management frames to cfg80211")
 
-All we said is that your statement of "RNDIS is fundamentally unfixable"
-doesn't make a lot of sense. If this were the case, all USB drivers
-would have to "trust the other side" as well, right?
+Signed-off-by: pinkperfect <pinkperfect2021@gmail.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_rx.c   |  3 ++-
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 10 +++-------
+ drivers/net/wireless/marvell/mwifiex/util.c     |  5 +++++
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_rx.c b/drivers/net/wireless/marvell/mwifiex/sta_rx.c
+index 13659b02ba88..88aaec645291 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_rx.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_rx.c
+@@ -194,7 +194,8 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_private *priv,
+ 
+ 	rx_pkt_hdr = (void *)local_rx_pd + rx_pkt_offset;
+ 
+-	if ((rx_pkt_offset + rx_pkt_length) > (u16) skb->len) {
++	if ((rx_pkt_offset + rx_pkt_length) > (u16)skb->len ||
++	    skb->len - rx_pkt_offset < sizeof(*rx_pkt_hdr)) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "wrong rx packet: len=%d, rx_pkt_offset=%d, rx_pkt_length=%d\n",
+ 			    skb->len, rx_pkt_offset, rx_pkt_length);
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+index e495f7eaea03..f84ed22518c6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -367,20 +367,15 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
+ 	rx_pkt_type = le16_to_cpu(uap_rx_pd->rx_pkt_type);
+ 	rx_pkt_hdr = (void *)uap_rx_pd + le16_to_cpu(uap_rx_pd->rx_pkt_offset);
+ 
+-	ether_addr_copy(ta, rx_pkt_hdr->eth803_hdr.h_source);
+-
+ 	if ((le16_to_cpu(uap_rx_pd->rx_pkt_offset) +
+-	     le16_to_cpu(uap_rx_pd->rx_pkt_length)) > (u16) skb->len) {
++	     le16_to_cpu(uap_rx_pd->rx_pkt_length)) > (u16)skb->len ||
++	     skb->len - le16_to_cpu(uap_rx_pd->rx_pkt_offset) < sizeof(*rx_pkt_hdr)) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "wrong rx packet: len=%d, offset=%d, length=%d\n",
+ 			    skb->len, le16_to_cpu(uap_rx_pd->rx_pkt_offset),
+ 			    le16_to_cpu(uap_rx_pd->rx_pkt_length));
+ 		priv->stats.rx_dropped++;
+ 
+-		node = mwifiex_get_sta_entry(priv, ta);
+-		if (node)
+-			node->stats.tx_failed++;
+-
+ 		dev_kfree_skb_any(skb);
+ 		return 0;
+ 	}
+@@ -393,6 +388,7 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
+ 		return ret;
+ 	}
+ 
++	ether_addr_copy(ta, rx_pkt_hdr->eth803_hdr.h_source);
+ 
+ 	if (rx_pkt_type != PKT_TYPE_BAR && uap_rx_pd->priority < MAX_NUM_TID) {
+ 		spin_lock_bh(&priv->sta_list_spinlock);
+diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
+index 94c2d219835d..31e1a82883e4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/util.c
++++ b/drivers/net/wireless/marvell/mwifiex/util.c
+@@ -399,6 +399,11 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 
+ 	pkt_len = le16_to_cpu(rx_pd->rx_pkt_length);
+ 
++	if (pkt_len < sizeof(struct ieee80211_hdr) || skb->len < pkt_len) {
++		mwifiex_dbg(priv->adapter, ERROR, "invalid rx_pkt_length");
++		return -1;
++	}
++
+ 	ieee_hdr = (void *)skb->data;
+ 	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
+ 		if (mwifiex_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
+-- 
+2.25.1
+
