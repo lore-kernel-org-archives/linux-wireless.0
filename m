@@ -2,294 +2,131 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EB82C001DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jul 2023 02:38:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA10EB64DC
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Jul 2023 04:51:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232120AbjGNCie (ORCPT
+        id S234671AbjGNEvh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Jul 2023 22:38:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55298 "EHLO
+        Fri, 14 Jul 2023 00:51:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233189AbjGNCib (ORCPT
+        with ESMTP id S234629AbjGNEvf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Jul 2023 22:38:31 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CBEE2D72
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Jul 2023 19:38:26 -0700 (PDT)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36E146M7026248;
-        Fri, 14 Jul 2023 02:38:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=QiyuoIqh+QRoZ5aN0WxU+N2QCplPylpSYJ64Qc1keqE=;
- b=LTAx0hSAv+xtaTV0ABZHFRNf2GBdwzb9Qdf3Oxgjc4c4ufz9A7HGQpIvBlTnLI3BuBXz
- lhUrA68489cEjgymHDJYnw0cgGBPSU8uBNhuGzEPHcSBTqsadmIlKPYynSWGS+8CCRPX
- ex3BQSaqgO4iCpwP0LO/YcuJsK++02YGa83928DM4pb8kMEPrx1JDMgU8kNQVBPC5KXO
- l3uJkFdbQil9PbjsfQNJF9qYIWnHvgqz4bySesld5R8+kND0nrLFnrsj4+F6YT/xCbMx
- UEm5rnDRkh1C26i+KAHQYajcESW3+jzqLUuvgshEu36TaYdGqD0IXyCIuDQABLhsTE4B Zw== 
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rtptw0nte-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 14 Jul 2023 02:38:19 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 36E2cITK005496
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 14 Jul 2023 02:38:18 GMT
-Received: from cjhuang2-gv.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.30; Thu, 13 Jul 2023 19:38:16 -0700
-From:   Carl Huang <quic_cjhuang@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_cjhuang@quicinc.com>
-Subject: [PATCH 1/2] wifi: ath11k: supports 2 station interfaces
-Date:   Fri, 14 Jul 2023 10:38:00 +0800
-Message-ID: <20230714023801.2621802-2-quic_cjhuang@quicinc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230714023801.2621802-1-quic_cjhuang@quicinc.com>
-References: <20230714023801.2621802-1-quic_cjhuang@quicinc.com>
+        Fri, 14 Jul 2023 00:51:35 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9B782D63;
+        Thu, 13 Jul 2023 21:51:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=fBHNk/5teiKF0xP49UxyZpW8fISmJXjYny9DANXhPDk=; b=2COurhKX5QFYivf6i7Zr/aNn73
+        QFFQ79/cPF9S01KhV09HQkEqM5Bt35VjzWKVmNOKOT3MEeM6pkE3uEDw8ivqQBpq9erUaV3YkcIvf
+        4KKB3kjBHTP34sgqauv/08O/xu4iuu66FaTGHGzWq+YYuAeG1ih+6cqEkeUsYVeJQ23Ksa24W33I3
+        eIVIANOCr6Z4LCeia34z+kHDpbc3bsUYs8FLvJPlbpV5AWHUNH/9CxsPCBrqTMHsyr6o+iU71HABO
+        HhpCvEEbemhL+GihI88F8uZQPx0QmjmcwABlhqL2FW8SBPTYWqGXFgOvVYXoRjVyNu5+T2K6gZcvL
+        8CIe6Kgw==;
+Received: from [2601:1c2:980:9ec0::2764] (helo=bombadil.infradead.org)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qKAm8-0050ZV-2k;
+        Fri, 14 Jul 2023 04:51:28 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     netdev@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        linux-wireless@vger.kernel.org, linux-wpan@vger.kernel.org,
+        Jay Vosburgh <j.vosburgh@gmail.com>,
+        Andy Gospodarek <andy@greyhouse.net>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alexander Aring <alex.aring@gmail.com>,
+        Stefan Schmidt <stefan@datenfreihafen.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Jamal Hadi Salim <jhs@mojatatu.com>,
+        Cong Wang <xiyou.wangcong@gmail.com>,
+        Jiri Pirko <jiri@resnulli.us>,
+        Dave Taht <dave.taht@bufferbloat.net>,
+        Moshe Shemesh <moshe@mellanox.com>,
+        Jacob Keller <jacob.e.keller@intel.com>,
+        Nikolay Aleksandrov <razor@blackwall.org>,
+        Benjamin Berg <benjamin.berg@intel.com>,
+        Jiri Benc <jbenc@redhat.com>,
+        Leslie Monis <lesliemonis@gmail.com>,
+        "Mohit P. Tahiliani" <tahiliani@nitk.edu.in>,
+        Gautam Ramakrishnan <gautamramk@gmail.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Kalle Valo <kvalo@kernel.org>
+Subject: [PATCH v2 net 0/9] net: fix kernel-doc problems in include/net/
+Date:   Thu, 13 Jul 2023 21:51:18 -0700
+Message-ID: <20230714045127.18752-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: feUHgteZ3Ct9fdDJsqj_1K4GGvey-Rno
-X-Proofpoint-GUID: feUHgteZ3Ct9fdDJsqj_1K4GGvey-Rno
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-13_12,2023-07-13_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- adultscore=0 priorityscore=1501 suspectscore=0 phishscore=0 malwarescore=0
- spamscore=0 clxscore=1015 impostorscore=0 mlxscore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307140021
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add hardware parameter support_dual_stations to indicate
-whether 2 station interfaces are supported. For chips which
-support this feature, limit total number of AP interface and
-mesh point to 1. The max interfaces are 3 for such chips.
+Fix many (but not all) kernel-doc warnings in include/net/.
 
-The chips affected are:
- QCA6390 hw2.0
- WCN6855 hw2.0
- WCN6855 hw2.1
-Other chips are not affected.
+ [PATCH v2 net 1/9] net: bonding: remove kernel-doc comment marker
+ [PATCH v2 net 2/9] net: cfg802154: fix kernel-doc notation warnings
+ [PATCH v2 net 3/9] codel: fix kernel-doc notation warnings
+ [PATCH v2 net 4/9] devlink: fix kernel-doc notation warnings
+ [PATCH v2 net 5/9] inet: frags: remove kernel-doc comment marker
+ [PATCH v2 net 6/9] net: llc: fix kernel-doc notation warnings
+ [PATCH v2 net 7/9] net: NSH: fix kernel-doc notation warning
+ [PATCH v2 net 8/9] pie: fix kernel-doc notation warning
+ [PATCH v2 net 9/9] rsi: remove kernel-doc comment marker
 
-For affected chips, remove radar_detect_widths because now
-num_different_channels is set to 2. radar_detect_widths can
-be set only when num_different_channels is 1. See mac80211
-function wiphy_verify_combinations for details.
+v2: drop the wifi/80211 patches, waiting for their reviewers or
+    maintainers;
+    include/linux/inet_frag.h: keep the kernel-doc comment;
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
+ include/net/bonding.h            |    2 +-
+ include/net/cfg80211.h           |    1 -
+ include/net/cfg802154.h          |    3 ++-
+ include/net/codel.h              |    4 ++--
+ include/net/devlink.h            |   28 ++++++++++++++++------------
+ include/net/ieee80211_radiotap.h |    3 ++-
+ include/net/inet_frag.h          |    2 +-
+ include/net/llc_pdu.h            |    6 ++++--
+ include/net/mac80211.h           |    1 +
+ include/net/nsh.h                |    2 +-
+ include/net/pie.h                |    2 +-
+ include/net/rsi_91x.h            |    2 +-
+ 12 files changed, 32 insertions(+), 24 deletions(-)
 
-Signed-off-by: Carl Huang <quic_cjhuang@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/core.c | 14 ++++--
- drivers/net/wireless/ath/ath11k/hw.c   |  2 +-
- drivers/net/wireless/ath/ath11k/hw.h   |  1 +
- drivers/net/wireless/ath/ath11k/mac.c  | 62 +++++++++++++++++---------
- 4 files changed, 53 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index bebfd342e28b..739a8d13d57d 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -120,6 +120,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tcl_ring_retry = true,
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
-+		.support_dual_stations = false,
- 	},
- 	{
- 		.hw_rev = ATH11K_HW_IPQ6018_HW10,
-@@ -202,6 +203,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = false,
-+		.support_dual_stations = false,
- 	},
- 	{
- 		.name = "qca6390 hw2.0",
-@@ -251,7 +253,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = false,
- 		.cbcal_restart_fw = false,
- 		.fw_mem_mode = 0,
--		.num_vdevs = 16 + 1,
-+		.num_vdevs = 2 + 1,
- 		.num_peers = 512,
- 		.supports_suspend = true,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_ipq8074),
-@@ -286,6 +288,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = true,
-+		.support_dual_stations = true,
- 	},
- 	{
- 		.name = "qcn9074 hw1.0",
-@@ -367,6 +370,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = false,
-+		.support_dual_stations = false,
- 	},
- 	{
- 		.name = "wcn6855 hw2.0",
-@@ -416,7 +420,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = false,
- 		.cbcal_restart_fw = false,
- 		.fw_mem_mode = 0,
--		.num_vdevs = 16 + 1,
-+		.num_vdevs = 2 + 1,
- 		.num_peers = 512,
- 		.supports_suspend = true,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_wcn6855),
-@@ -451,6 +455,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = true,
-+		.support_dual_stations = true,
- 	},
- 	{
- 		.name = "wcn6855 hw2.1",
-@@ -498,7 +503,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.cold_boot_calib = false,
- 		.cbcal_restart_fw = false,
- 		.fw_mem_mode = 0,
--		.num_vdevs = 16 + 1,
-+		.num_vdevs = 2 + 1,
- 		.num_peers = 512,
- 		.supports_suspend = true,
- 		.hal_desc_sz = sizeof(struct hal_rx_desc_wcn6855),
-@@ -533,6 +538,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = true,
-+		.support_dual_stations = true,
- 	},
- 	{
- 		.name = "wcn6750 hw1.0",
-@@ -613,6 +619,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE_WCN6750,
- 		.smp2p_wow_exit = true,
- 		.support_fw_mac_sequence = true,
-+		.support_dual_stations = false,
- 	},
- 	{
- 		.hw_rev = ATH11K_HW_IPQ5018_HW10,
-@@ -693,6 +700,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = false,
-+		.support_dual_stations = false,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath11k/hw.c b/drivers/net/wireless/ath/ath11k/hw.c
-index d7b5ec6e6904..3b56ba1b8534 100644
---- a/drivers/net/wireless/ath/ath11k/hw.c
-+++ b/drivers/net/wireless/ath/ath11k/hw.c
-@@ -58,7 +58,7 @@ static void ath11k_hw_wcn6855_tx_mesh_enable(struct ath11k_base *ab,
- static void ath11k_init_wmi_config_qca6390(struct ath11k_base *ab,
- 					   struct target_resource_config *config)
- {
--	config->num_vdevs = 4;
-+	config->num_vdevs = ab->hw_params.num_vdevs;
- 	config->num_peers = 16;
- 	config->num_tids = 32;
- 
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
-index f5533630a7f9..40ed5608fe81 100644
---- a/drivers/net/wireless/ath/ath11k/hw.h
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -225,6 +225,7 @@ struct ath11k_hw_params {
- 	u32 tx_ring_size;
- 	bool smp2p_wow_exit;
- 	bool support_fw_mac_sequence;
-+	bool support_dual_stations;
- };
- 
- struct ath11k_hw_ops {
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 8c77ade49437..3a9494bc944c 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -9287,28 +9287,46 @@ static int ath11k_mac_setup_iface_combinations(struct ath11k *ar)
- 		return -ENOMEM;
- 	}
- 
--	limits[0].max = 1;
--	limits[0].types |= BIT(NL80211_IFTYPE_STATION);
--
--	limits[1].max = 16;
--	limits[1].types |= BIT(NL80211_IFTYPE_AP);
--
--	if (IS_ENABLED(CONFIG_MAC80211_MESH) &&
--	    ab->hw_params.interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
--		limits[1].types |= BIT(NL80211_IFTYPE_MESH_POINT);
--
--	combinations[0].limits = limits;
--	combinations[0].n_limits = n_limits;
--	combinations[0].max_interfaces = 16;
--	combinations[0].num_different_channels = 1;
--	combinations[0].beacon_int_infra_match = true;
--	combinations[0].beacon_int_min_gcd = 100;
--	combinations[0].radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
--						BIT(NL80211_CHAN_WIDTH_20) |
--						BIT(NL80211_CHAN_WIDTH_40) |
--						BIT(NL80211_CHAN_WIDTH_80) |
--						BIT(NL80211_CHAN_WIDTH_80P80) |
--						BIT(NL80211_CHAN_WIDTH_160);
-+	if (ab->hw_params.support_dual_stations) {
-+		limits[0].max = 2;
-+		limits[0].types |= BIT(NL80211_IFTYPE_STATION);
-+
-+		limits[1].max = 1;
-+		limits[1].types |= BIT(NL80211_IFTYPE_AP);
-+		if (IS_ENABLED(CONFIG_MAC80211_MESH) &&
-+		    ab->hw_params.interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
-+			limits[1].types |= BIT(NL80211_IFTYPE_MESH_POINT);
-+
-+		combinations[0].limits = limits;
-+		combinations[0].n_limits = 2;
-+		combinations[0].max_interfaces = ab->hw_params.num_vdevs;
-+		combinations[0].num_different_channels = 2;
-+		combinations[0].beacon_int_infra_match = true;
-+		combinations[0].beacon_int_min_gcd = 100;
-+	} else {
-+		limits[0].max = 1;
-+		limits[0].types |= BIT(NL80211_IFTYPE_STATION);
-+
-+		limits[1].max = 16;
-+		limits[1].types |= BIT(NL80211_IFTYPE_AP);
-+
-+		if (IS_ENABLED(CONFIG_MAC80211_MESH) &&
-+		    ab->hw_params.interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
-+			limits[1].types |= BIT(NL80211_IFTYPE_MESH_POINT);
-+
-+		combinations[0].limits = limits;
-+		combinations[0].n_limits = 2;
-+		combinations[0].max_interfaces = 16;
-+		combinations[0].num_different_channels = 1;
-+		combinations[0].beacon_int_infra_match = true;
-+		combinations[0].beacon_int_min_gcd = 100;
-+		combinations[0].radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+							BIT(NL80211_CHAN_WIDTH_20) |
-+							BIT(NL80211_CHAN_WIDTH_40) |
-+							BIT(NL80211_CHAN_WIDTH_80) |
-+							BIT(NL80211_CHAN_WIDTH_80P80) |
-+							BIT(NL80211_CHAN_WIDTH_160);
-+	}
- 
- 	ar->hw->wiphy->iface_combinations = combinations;
- 	ar->hw->wiphy->n_iface_combinations = 1;
--- 
-2.34.1
-
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-wpan@vger.kernel.org
+Cc: Jay Vosburgh <j.vosburgh@gmail.com>
+Cc: Andy Gospodarek <andy@greyhouse.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Alexander Aring <alex.aring@gmail.com>
+Cc: Stefan Schmidt <stefan@datenfreihafen.org>
+Cc: Miquel Raynal <miquel.raynal@bootlin.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>
+Cc: Jamal Hadi Salim <jhs@mojatatu.com>
+Cc: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: Jiri Pirko <jiri@resnulli.us>
+Cc: Dave Taht <dave.taht@bufferbloat.net>
+Cc: Moshe Shemesh <moshe@mellanox.com>
+Cc: Jacob Keller <jacob.e.keller@intel.com>
+Cc: Nikolay Aleksandrov <razor@blackwall.org>
+Cc: Benjamin Berg <benjamin.berg@intel.com>
+Cc: Jiri Benc <jbenc@redhat.com>
+Cc: Leslie Monis <lesliemonis@gmail.com>
+Cc: "Mohit P. Tahiliani" <tahiliani@nitk.edu.in>
+Cc: Gautam Ramakrishnan <gautamramk@gmail.com>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
+Cc: Kalle Valo <kvalo@kernel.org>
