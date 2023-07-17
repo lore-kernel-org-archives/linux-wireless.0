@@ -2,87 +2,92 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2137EB64DC
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jul 2023 14:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FDF2EB64DC
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Jul 2023 15:02:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230305AbjGQOfu (ORCPT
+        id S230138AbjGQPCh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Jul 2023 10:35:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57620 "EHLO
+        Mon, 17 Jul 2023 11:02:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbjGQOft (ORCPT
+        with ESMTP id S229780AbjGQPCg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Jul 2023 10:35:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC6371BE;
-        Mon, 17 Jul 2023 07:35:48 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        Mon, 17 Jul 2023 11:02:36 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15C91E7F
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Jul 2023 08:02:35 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4848C61070;
-        Mon, 17 Jul 2023 14:35:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CF66C433C7;
-        Mon, 17 Jul 2023 14:35:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1689604547;
-        bh=wkWyQH5Rw+uI//ie9kDz9PJG5ccJnGGiK/ksrVALN6o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hi7bxdt9naGox+8fFiNdaQJGdo30qUe2u1C+0LkKsRVePOP7YXW+bBNBJwhq/3mqm
-         O+LtoGZYjvSozZ0xkkV76ua2xCQxPJs8A18aO8BJ8C5UpsfvNhpvh9iG8Y6yd2ruKi
-         CucdNDZeyVcD6qoGNlYhxt/+2Pm1YHdHuKT+eFGE=
-Date:   Mon, 17 Jul 2023 16:35:45 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Wang Ming <machel@vivo.com>
-Cc:     Ajay Singh <ajay.kathat@microchip.com>,
-        Claudiu Beznea <claudiu.beznea@microchip.com>,
-        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, opensource.kernel@vivo.com
-Subject: Re: [PATCH net v1] net: wireless: Use kfree_sensitive instead of
- kfree
-Message-ID: <2023071715-marsupial-matron-c743@gregkh>
-References: <20230717093456.17474-1-machel@vivo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230717093456.17474-1-machel@vivo.com>
+        by smtp-out2.suse.de (Postfix) with ESMTPS id CAED31FDAC;
+        Mon, 17 Jul 2023 15:02:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1689606153; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type;
+        bh=eWzOtnXm2Hy4S1jCmff80w4hY3eg/amZQU7YSqRKHes=;
+        b=1ApxgJ0SuQiQO0cupArPashIuQ+Ml/XKTWkrRLUdbETBpNrZFgjtBAXcNMl7qVVKQ59t+Z
+        82ApgS+bkPtswSVA31ssNn/ebE+QkQz+x/Gq46Fo6sevdRtgVoX0qqnEEGOUj6r3/XcFF1
+        1N2I3JXhJxhIxpnf733/SPdZW/T/4Lk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1689606153;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type;
+        bh=eWzOtnXm2Hy4S1jCmff80w4hY3eg/amZQU7YSqRKHes=;
+        b=2KP0Z9jwQT4q/M1v9P0fBQq1xv163rR+V1lSMtH4pDqxNSG7xAmjZpwJp4/+nnHNOoCD5i
+        Aog4/521Oc6KyNBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B034713276;
+        Mon, 17 Jul 2023 15:02:33 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 10AeKglYtWTBAgAAMHmgww
+        (envelope-from <tiwai@suse.de>); Mon, 17 Jul 2023 15:02:33 +0000
+Date:   Mon, 17 Jul 2023 17:02:33 +0200
+Message-ID: <87zg3uvawm.wl-tiwai@suse.de>
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     linux-wireless@vger.kernel.org
+Subject: rtw89 driver and compressed firmware files
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/27.2 Mule/6.0
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Jul 17, 2023 at 05:34:43PM +0800, Wang Ming wrote:
-> key might contain private part of the key, so better use
-> kfree_sensitive to free it.
+Hi,
 
-"might"?  What determines if it does, or does not, contain the private
-part of the key?
+while debugging a reported rtw89 issue
+  https://bugzilla.suse.com/show_bug.cgi?id=1212808
+we noticed that rtw89 driver didn't load the firmware properly.
 
-Shouldn't this always be known?
+And, this turned out that it's because the driver uses
+request_partial_firmware_into_buf() function with the combination of
+compressed firmware files (that are standard on some distros like
+openSUSE).
+It's a known limitation of the request_partial_firmware_into_buf() API
+function itself; it won't load compressed files, because otherwise
+it'd have to read the full data.  That said, the use of
+request_partial_*() should be only for very limited use cases, and
+this doesn't look fitting well for rtw89.
+(And, as usual, the information is missing in the documentation :-<
+The API document should state it clearly; I'm going to submit a patch
+to add the information.)
 
-> Fixes: 7cec84fdfd88 ("staging: wilc1000: split add_key() to avoid line over 80 chars")
-> Signed-off-by: Wang Ming <machel@vivo.com>
-> ---
->  drivers/net/wireless/microchip/wilc1000/cfg80211.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-> index b545d93c6e37..45bcadeba2da 100644
-> --- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-> +++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-> @@ -518,7 +518,7 @@ static int wilc_wfi_cfg_allocate_wpa_igtk_entry(struct wilc_priv *priv, u8 idx)
->  static int wilc_wfi_cfg_copy_wpa_info(struct wilc_wfi_key *key_info,
->  				      struct key_params *params)
->  {
-> -	kfree(key_info->key);
-> +	kfree_sensitive(key_info->key);
+There was already a workaround for CONFIG_SECURIY_LOADPIN_ENFORCE for
+a similar problem, but such a fallback is required in general for all
+cases, as it seems.
 
-For most systems, this would have been wiped when kfree() was called due
-to allocation being zeroed out, right?
+I can cook a hackish patch for the fallback, but I wonder whether it
+still makes sense to keep the use of that API function.  rtw89 is the
+only driver except for bcm-vk (where the API was introduced just for
+this driver), after all... 
 
-But, if you want to be safe, and you know this was a private key, that's
-fine to do as well, but please figure out if this really is, or is not,
-a private key.
 
 thanks,
 
-greg k-h
+Takashi
