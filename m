@@ -2,87 +2,174 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5231EB64DA
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jul 2023 14:17:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F8C9EB64DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 18 Jul 2023 15:56:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232976AbjGRORG (ORCPT
+        id S233776AbjGRP4d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Jul 2023 10:17:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42664 "EHLO
+        Tue, 18 Jul 2023 11:56:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232446AbjGRORE (ORCPT
+        with ESMTP id S232069AbjGRP4c (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Jul 2023 10:17:04 -0400
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6E58188;
-        Tue, 18 Jul 2023 07:17:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-        s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-        Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-        Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-        bh=foGX3qPz8g1mE0AjGZ0RURTetuvRz0ZaIIFsjuTQ33o=; b=JBWA+Dva8h/kZCHzxx0beMUCVO
-        DBM9NutUs8keY3cK4qSE6pjYwC5UbxQ9p8BI2hjbn36sLUsJjXa4y569DibqyziXWk0dXdIQ/ymwt
-        OrHeqJt0QmXf5YAkADGAfUAJ3xrX0I1mXokQ96A+GrImP/aazfRTj/U6IF8GcT4CGHYo=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-        (envelope-from <andrew@lunn.ch>)
-        id 1qLlUl-001dCP-Ng; Tue, 18 Jul 2023 16:16:07 +0200
-Date:   Tue, 18 Jul 2023 16:16:07 +0200
-From:   Andrew Lunn <andrew@lunn.ch>
-To:     "Quan, Evan" <Evan.Quan@amd.com>
-Cc:     "rafael@kernel.org" <rafael@kernel.org>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Pan, Xinhui" <Xinhui.Pan@amd.com>,
-        "airlied@gmail.com" <airlied@gmail.com>,
-        "daniel@ffwll.ch" <daniel@ffwll.ch>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "edumazet@google.com" <edumazet@google.com>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "pabeni@redhat.com" <pabeni@redhat.com>,
-        "Limonciello, Mario" <Mario.Limonciello@amd.com>,
-        "mdaenzer@redhat.com" <mdaenzer@redhat.com>,
-        "maarten.lankhorst@linux.intel.com" 
-        <maarten.lankhorst@linux.intel.com>,
-        "tzimmermann@suse.de" <tzimmermann@suse.de>,
-        "hdegoede@redhat.com" <hdegoede@redhat.com>,
-        "jingyuwang_vip@163.com" <jingyuwang_vip@163.com>,
-        "Lazar, Lijo" <Lijo.Lazar@amd.com>,
-        "jim.cromie@gmail.com" <jim.cromie@gmail.com>,
-        "bellosilicio@gmail.com" <bellosilicio@gmail.com>,
-        "andrealmeid@igalia.com" <andrealmeid@igalia.com>,
-        "trix@redhat.com" <trix@redhat.com>,
-        "jsg@jsg.id.au" <jsg@jsg.id.au>, "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH V6 1/9] drivers core: Add support for Wifi band RF
- mitigations
-Message-ID: <642e3f4d-976b-4ee1-8f63-844b9568462e@lunn.ch>
-References: <20230710083641.2132264-1-evan.quan@amd.com>
- <20230710083641.2132264-2-evan.quan@amd.com>
- <5439dd61-7b5f-4fc9-8ccd-f7df43a791dd@lunn.ch>
- <DM6PR12MB2619CF4D4601864FF251A1FAE438A@DM6PR12MB2619.namprd12.prod.outlook.com>
+        Tue, 18 Jul 2023 11:56:32 -0400
+Received: from mail-oa1-x32.google.com (mail-oa1-x32.google.com [IPv6:2001:4860:4864:20::32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE4C81B9
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2023 08:56:31 -0700 (PDT)
+Received: by mail-oa1-x32.google.com with SMTP id 586e51a60fabf-1b056276889so3966693fac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2023 08:56:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1689695791; x=1692287791;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=6/4lcjP72yKqatsCriQavGtgbngapiHaC3Twd+juHL4=;
+        b=TU/AlBna6TePLU2bicSNaMveThckpsXz/H37XzxSzcz8E4+GLoNXTjS+D0zVtbFK5/
+         NETkkHE8pDgDCl7igiCYF1ubgoPX+Pvc6cVAeWlyIR1dxbRZszEzMsQWXmElkOYGw8kZ
+         1HBaCxgM7W8hJXC7FkZaV5pfzm+5yEbx8p7OVyWKLSaX3Hn7b1Je9c0N28BO6o4wHN4w
+         rn6A0ZC0N7nc3VFkK6r/FT08SgWZU0M+seNi4qHLiRJkVoqDNflAWVodywai2Lc0SM4Y
+         dCtTAgpB4Uwx/nkMLjWDpiconx4m3jYWrie3/0irTvoQ/6Ga4X+szzeYEMcpLJf7d45u
+         j9/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689695791; x=1692287791;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6/4lcjP72yKqatsCriQavGtgbngapiHaC3Twd+juHL4=;
+        b=E0ApnMuNQ8q7NjEbDi1NTXlXwqya3H4nseQW2TXQazbZWVIPNlDuAuTwmsCMU7yR59
+         t2AU27RYFOSym2R4Ll6+bDMxdn8ZXJENV2AdJtG0XdJrzzb/70JJdek9GrCi8Wr/6g4I
+         nppBbiB27DUNUtJGc2lVxZG2hegZVXX1WKiO0kEJ+SqF+bfqHgMLOOBEl1RXsV3OYcYS
+         GHP3D4NKGbwnYtUMp5SyuNcwu9tCd/rslitVCJFlczyFVYIhKaYKPU6duOfm4uxQf154
+         CsUMU38B8EUKQ8JXTF+dRDFy7ZpUiKdNqYk35jd4s6TqAY+QO8c5O1++na1FqIDhspaK
+         iX7g==
+X-Gm-Message-State: ABy/qLa5WLZpZsGszPoj1giJv6NQX7sT1JQB0EKqWba8WvwBLwQNqsrL
+        0FPr8GrZmmHx+L0ok2zntXc=
+X-Google-Smtp-Source: APBJJlFK5NKk7AzkE+XGz3HC3bpne2nSjT72gWuaMnrVrYnfpfEoV5w061A7gOlfOtww3kl5qq9JVQ==
+X-Received: by 2002:a05:6870:f68a:b0:1a6:987b:f09d with SMTP id el10-20020a056870f68a00b001a6987bf09dmr15074834oab.51.1689695791009;
+        Tue, 18 Jul 2023 08:56:31 -0700 (PDT)
+Received: from [192.168.1.119] ([216.130.59.33])
+        by smtp.gmail.com with ESMTPSA id e1-20020a0568301e4100b006b94aba1f0bsm962160otj.43.2023.07.18.08.56.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 18 Jul 2023 08:56:30 -0700 (PDT)
+Sender: Larry Finger <larry.finger@gmail.com>
+Message-ID: <834b9657-8c8c-839c-c04e-4b8e55dc728b@lwfinger.net>
+Date:   Tue, 18 Jul 2023 10:56:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DM6PR12MB2619CF4D4601864FF251A1FAE438A@DM6PR12MB2619.namprd12.prod.outlook.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: rtw89 driver and compressed firmware files
+To:     Takashi Iwai <tiwai@suse.de>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
+References: <87zg3uvawm.wl-tiwai@suse.de>
+ <f5e75b2b-14eb-7ffc-6716-70324d2d13c5@lwfinger.net>
+ <87351lpywg.wl-tiwai@suse.de>
+Content-Language: en-US
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <87351lpywg.wl-tiwai@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> The wbrf_supported_producer and wbrf_supported_consumer APIs seem
-> unnecessary for the generic implementation.
+On 7/18/23 00:33, Takashi Iwai wrote:
+> 
+> Thanks Larry, but I guess that it happens only for multi versions such
+> as rtw8852b that have rtw8852a_fw.bin and rtw8852a_fw-1.bin, while
+> yours is rtw8851b that has only one firmware version.
+> 
+> And, the driver might look as if still "working".  IIUC, it's only
+> that the new firmware version won't be used as long as the firmware
+> files are compressed.
+> 
+> You can see more details by passing firmware_class.dyndbg=+p boot
+> option.
+> 
+>> All of this was done using Tumbleweed. My next step will be to try
+>> Leap 15.5 and Leap 15.4. I will report those tests later.
+> 
+> Note that the problem of the firmware loader is likely irrelevant with
+> the actual issue in the bugzilla entry above; I only gave as a
+> reference.
+> 
+> It seems that the bug there was due to the error:
+> 
+>    rtw89_8852be 0000:02:00.0: [ERR]pci config read 719
+>    rtw89_8852be 0000:02:00.0: [ERR] pcie autok fail -22
+>    rtw89_8852be 0000:02:00.0: failed to setup chip information
+> 
+> Since reloading the module works, this might be related with the PCI
+> power state or something else.  But it's a different topic from this
+> thread, which is about the firmware loader problem.
 
-I'm happy with these, once the description is corrected. As i said in
-another comment, 'can' should be replaced with 'should'. The device
-itself knows if it can, only the core knows if it should, based on the
-policy of if actions need to be taken, and there are both providers
-and consumers registered with the core.
+Takashi,
 
-   Andrew
+When I switched my NIC to an RTW8852BE, which does have 2 versions of the 
+firmware, I still got a successful firmware load for Tumbleweed running the new 
+kernel 6.4.3-1, on Leap 15.5, and on Leap 15.4. The only problem was that file 
+rtw8852b_fw.bin.xz is loaded, and not the newer rtw8852b_fw-1.bin.xz, which is 
+preferable. This was try for the drivers in kernel 6.4.3, 6.5.0-rc2, and in the 
+GitHub repo.
+
+When I stripped the code in rtw89_early_fw_feature_recognize() to never try to 
+run request_partial_firmware_into_buf(), then the newest firmware is loaded. The 
+logs showed the following:
+
+[  834.438601] firmware_class: __free_fw_priv: fw-rtw89/rtw8852b_fw.bin 
+fw_priv=000000000849addc data=00000000fd3cabe2 size=1035232
+[  834.438658] firmware_class: fw_name_devm_release: 
+fw_name-rtw89/rtw8852b_fw.bin devm-000000002d8c3343 released
+[  846.992333] firmware_class: __allocate_fw_priv: fw-rtw89/rtw8852b_fw-1.bin 
+fw_priv=000000009e1a6364
+[  846.992352] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/updates/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin failed for no such 
+file or directory.
+[  846.992357] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/updates/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
+[  846.992361] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin failed for no such file or 
+directory.
+[  846.992366] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
+[  846.992371] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/updates/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.zst failed for no 
+such file or directory.
+[  846.992375] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/updates/rtw89/rtw8852b_fw-1.bin.zst failed for no such file or 
+directory.
+[  846.992378] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.zst failed for no such 
+file or directory.
+[  846.992391] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/rtw89/rtw8852b_fw-1.bin.zst failed for no such file or directory.
+[  846.992396] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/updates/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.xz failed for no 
+such file or directory.
+[  846.992399] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/updates/rtw89/rtw8852b_fw-1.bin.xz failed for no such file or 
+directory.
+[  846.992402] rtw89_8852be 0000:02:00.0: loading 
+/lib/firmware/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.xz failed for no such file 
+or directory.
+[  846.997453] rtw89_8852be 0000:02:00.0: Loading firmware from 
+/lib/firmware/rtw89/rtw8852b_fw-1.bin.xz
+[  846.997456] rtw89_8852be 0000:02:00.0: f/w decompressing rtw89/rtw8852b_fw-1.bin
+[  847.014261] firmware_class: fw_set_page_data: fw-rtw89/rtw8852b_fw-1.bin 
+fw_priv=000000009e1a6364 data=00000000fd3cabe2 size=1184992
+[  847.019276] rtw89_8852be 0000:02:00.0: Loaded FW: rtw89/rtw8852b_fw-1.bin, 
+sha256: 8539efc75f513f4585cf0cd6e79e6507da47fce87225f2d0de391a03aefe9ac8
+[  847.019280] rtw89_8852be 0000:02:00.0: loaded firmware rtw89/rtw8852b_fw-1.bin
+[  847.021436] rtw89_8852be 0000:02:00.0: Firmware version 0.29.29.1, cmd 
+version 0, type 5
+[  847.021442] rtw89_8852be 0000:02:00.0: Firmware version 0.29.29.1, cmd 
+version 0, type 3
+[  847.362658] rtw89_8852be 0000:02:00.0: chip rfe_type is 1
+[  847.397754] rtw89_8852be 0000:02:00.0 wls1: renamed from wlan0
+
+I want Ping-Ke to look at my patch. If he agrees, I will push it to GitHub, and 
+it will be picked up in the openSUSE repos for 15.4 and 15.5.
+
+Larry
+
+
