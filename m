@@ -2,82 +2,135 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CD5CEB64DA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5F48C001DC
 	for <linux-wireless@archiver.kernel.org>; Wed, 19 Jul 2023 06:48:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231149AbjGSGsU (ORCPT
+        id S230490AbjGSGsV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Jul 2023 02:48:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36160 "EHLO
+        Wed, 19 Jul 2023 02:48:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230055AbjGSGsT (ORCPT
+        with ESMTP id S230143AbjGSGsU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Jul 2023 02:48:19 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2A9B1BFD
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2023 23:48:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689749299; x=1721285299;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=eOYM3iN0mfoqzR+XbZE5GPSe5JYgB81uPM28Ed9uHo0=;
-  b=Fn8+HI1KlRAHu95hkddp7VvB0nL1ySCw3tceLzEjDorOyYo1wfTRkucY
-   XOMRps4GrfJYzwl3KLOAIQKWufm48rJ9QyF9jr+cCElj/wjLNb+3Rdvn7
-   Ql/ybg7P7vfv8u3tJcfYRXhpL9ZehrN5q8RXqqKGPq/PvO3iEmtemuL/4
-   FZDpu7ZRNgHuYXfJI8vsLTEZMgIqzEOISEBn9xDPLHZLL5Gf1eXz/d/z9
-   NwPmplAGrt3PGbTloOB8X4cHx17Owhdfxzv4H2SZ+Tlglpoy3RWuoxnGC
-   +u+c15rS1uPkLQHy+Rg8T3ldgMfJYfpdTl4FZUKS5EF7JAQu12va3VSlh
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10775"; a="369033242"
-X-IronPort-AV: E=Sophos;i="6.01,216,1684825200"; 
-   d="scan'208";a="369033242"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jul 2023 23:48:18 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10775"; a="814026998"
-X-IronPort-AV: E=Sophos;i="6.01,216,1684825200"; 
-   d="scan'208";a="814026998"
-Received: from jed01829.iil.intel.com ([10.12.217.181])
-  by FMSMGA003.fm.intel.com with ESMTP; 18 Jul 2023 23:48:17 -0700
-From:   Ilan Peer <ilan.peer@intel.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH] wifi: cfg80211: Fix return value in scan logic
-Date:   Wed, 19 Jul 2023 17:51:20 +0300
-Message-Id: <20230719145120.739521-1-ilan.peer@intel.com>
-X-Mailer: git-send-email 2.25.1
+        Wed, 19 Jul 2023 02:48:20 -0400
+Received: from EUR04-HE1-obe.outbound.protection.outlook.com (mail-he1eur04on2052.outbound.protection.outlook.com [40.107.7.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71B231BFC
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Jul 2023 23:48:16 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hnccj3vajCyKbAjE57m6J6qDO8Ajd7zEWhfk3Zu9ACBwQNSmiGKe6SoGgag8KtEbBOXJwJG3Yr7gxsoqZlRuhe1lE875jtbxoVhTMy+xYlgjj3kphLc0M+cJ655OZNAmSIkf+yFpFMcZE+jGLcaJAME3k4ZsJL/dOZgcOrbvCP83wucnxvOvSrmZ7QAjiB61W+hka35HLKYHX6a3IuHVxfG54XKelIpooibJLcIP09YF5fDnletenfkouT/cr2o7HMrFkHLfvwYFTegGYIi+aWIZdG2Czhun1Dke3EFWjzfp2EWi36cNbt31yBbuIB3ECcnHfQd5pfuvY5rCA0ceog==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=87hoOUKrERrXKFYfuVQhHK/v5Lv8Ybu4TlzcZwFSjgc=;
+ b=QrzDA0KIhgdirwbi0cXoa2p5BeDJnAgFcGwytkG2zPB9ZoCbepxNw3ZfkFJkBGpCRB9ufypbFFdDBDFciH8q5D3tkYRumU7CiObzplvXu1Lqpj5CaUYZn//iAzV+mJkSgXomzXsidHUxKd/UCPOCaql+AkssM+a2J3D9s8sM71jnHRTxjzPHvC69KpkBMurUWfefqAjh5SGiEX9r+EgG6Uqs4BOXEaBGRjrMyZEAc1VR8ana78uTYmaxykl/xCLejroK5LjlfK7QS0+vpd4g96gwX0jlL8dMeKkFiGES2IJsmLlo3A/bbvkKyE9qcaVde6iHDAD3uo5sVNXlbXF1yg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=softfail (sender ip
+ is 91.183.173.212) smtp.rcpttodomain=linuxfoundation.org
+ smtp.mailfrom=macqel.be; dmarc=fail (p=none sp=none pct=100) action=none
+ header.from=macq.eu; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=macq.eu; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=87hoOUKrERrXKFYfuVQhHK/v5Lv8Ybu4TlzcZwFSjgc=;
+ b=Mt7IifLeNMd80xqln6v1RDeFpa+96nqoFFdxOQrizKN7h4wTPNkDyNTmpdI5UcqToGYe80QVAu34hTqLkoLvDVcE6VoaOilsnukmuBLVC1bJxDbWtgkItYH8RFFM3NoJdR3bbw5C/fyJRte3yUJnpEFAy3txjjttoKvIlGSzKmFxT738YFF1mkbTZY2M7peQtE74JwATbUW/DiEp3nPXcquo1zhsb4f2oEGrJAY9n5OGD+KplmvmhMnVK01TECfum4PztnfPFdMfmqNm5+nfE2/lAFLgmNbbJXyIMsk8sS0jIwrdgUyzhyXDbktgppCJ87mKAUdTmUrQx2My8PFkPg==
+Received: from AM7PR03CA0029.eurprd03.prod.outlook.com (2603:10a6:20b:130::39)
+ by AS2PR05MB10056.eurprd05.prod.outlook.com (2603:10a6:20b:5fd::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6588.32; Wed, 19 Jul
+ 2023 06:48:12 +0000
+Received: from AM0EUR02FT025.eop-EUR02.prod.protection.outlook.com
+ (2603:10a6:20b:130:cafe::61) by AM7PR03CA0029.outlook.office365.com
+ (2603:10a6:20b:130::39) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.24 via Frontend
+ Transport; Wed, 19 Jul 2023 06:48:12 +0000
+X-MS-Exchange-Authentication-Results: spf=softfail (sender IP is
+ 91.183.173.212) smtp.mailfrom=macqel.be; dkim=none (message not signed)
+ header.d=none;dmarc=fail action=none header.from=macq.eu;
+Received-SPF: SoftFail (protection.outlook.com: domain of transitioning
+ macqel.be discourages use of 91.183.173.212 as permitted sender)
+Received: from frolo.macqel.be (91.183.173.212) by
+ AM0EUR02FT025.mail.protection.outlook.com (10.13.54.65) with Microsoft SMTP
+ Server id 15.20.6609.24 via Frontend Transport; Wed, 19 Jul 2023 06:48:12
+ +0000
+Received: by frolo.macqel.be (Postfix, from userid 1000)
+        id 51AADDF00B2; Wed, 19 Jul 2023 08:48:12 +0200 (CEST)
+Date:   Wed, 19 Jul 2023 08:48:12 +0200
+From:   Philippe De Muyter <phdm@macq.eu>
+To:     linuxlovemin@yonsei.ac.kr, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org
+Subject: linux-stable v4.9.337 brcmfmac compilation error
+Message-ID: <20230719064812.GA29927@frolo.corp.macq.eu>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+User-Agent: Mutt/1.5.16 (2007-06-09)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM0EUR02FT025:EE_|AS2PR05MB10056:EE_
+X-MS-Office365-Filtering-Correlation-Id: 279d3371-2e5c-4c36-2c92-08db88241f20
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 37juewoCdoYWDrmTGRvqWK0kTHDkyw0wHH775TGh0cR/HgcT29zsXsIw6bddAC9CIIzFE+CKYwT1c15mgTp8HM2trMYGqdYRuYMdXCcYiSuj0FVIPsVeE+9RvxJtoRWNxg2ysVjSBbIw4kP6hLXmm2kw2vlGaPg84znfxH7n7NueWCeFfKcOmJUYbEBK4E3lflpUFc5XCfot6llKIPZ0a9BOIcvkaDMH5dqLB23MNN+QisyACjBZM6y3SibYMoYwOlTcf5DoRwkDYZPL075K9h/JzQTd8UEtYA/If1IQxtxMjmRtujumRU/ySJ2FmCY7Af7YTGXfIuHm5/MeTGyXYyh3oBUe8etq0iXokOYcAx+3Zs2s8kfwgoGDuqRxVwz7X4Ev0GCpOWGBA07euqzZQXFYR3m/AtXTwtOoU+ktYen5FFBDn5XVjTdCWVGpRcaWVwBoyBQcmAI8atsr+hfj645lL2ar0bdFnbK9c5oUGETuY/QfxWYvKJzjYsENLiqcMHaHVQ2Y/qh86qSAt6Mj79T3p/UK0QZzS0Rhhv9UFN52Fl5zEFzQ6WV+0BPcoZdbclSS4aENK1afSioJLJLxBASH7IEBF/hJxpgJoVtDHlYqkKdKzvsyQt/+H42mGrQbx9YkPIHQtYW7/HNdOrr309hh1/h9RyOXlJD9wg5rKMQaSg2ZYMCJ9YxXZ3QKsaS0Uy1tY6Elc+LbkzyYTQp/bnmFzo8boOwdm3kvCvHZz5g4obshVBnBdG0lkPt7sFjd
+X-Forefront-Antispam-Report: CIP:91.183.173.212;CTRY:BE;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:frolo.macqel.be;PTR:212.173-183-91.adsl-static.isp.belgacom.be;CAT:NONE;SFS:(13230028)(4636009)(346002)(39840400004)(396003)(136003)(376002)(451199021)(82310400008)(46966006)(36840700001)(33656002)(40480700001)(6266002)(83380400001)(1076003)(186003)(336012)(26005)(478600001)(41300700001)(8676002)(2906002)(8936002)(70206006)(70586007)(36860700001)(316002)(42186006)(5660300002)(47076005)(81166007)(356005)(75936004)(14776008);DIR:OUT;SFP:1101;
+X-OriginatorOrg: macq.eu
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Jul 2023 06:48:12.4990
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 279d3371-2e5c-4c36-2c92-08db88241f20
+X-MS-Exchange-CrossTenant-Id: 5541087b-384c-4066-992a-42aa5fe171eb
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=5541087b-384c-4066-992a-42aa5fe171eb;Ip=[91.183.173.212];Helo=[frolo.macqel.be]
+X-MS-Exchange-CrossTenant-AuthSource: AM0EUR02FT025.eop-EUR02.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS2PR05MB10056
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-As cfg80211_parse_colocated_ap() is not expected to return a negative
-value return 0 and not a negative value if cfg80211_calc_short_ssid()
-fails.
+Hello,
 
-This bug was introduced in commit c8cb5b854b40f
-('nl80211/cfg80211: support 6 GHz scanning').
+compilation of the brcmfmac driver in linux-4.9.y (tag v4.9.337) fails with
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/wireless/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c: In function ‘brcmf_fw_map_chip_to_name’:
+ include/linux/stddef.h:7:14: error: return makes integer from pointer without a cast [-Werror=int-conversion]
+  #define NULL ((void *)0)
+               ^
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:577:10: note: in expansion of macro ‘NULL’
+    return NULL;
+           ^~~~
+ cc1: all warnings being treated as errors
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 8bf00caf5d29..0cf1ce7b6934 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -657,7 +657,7 @@ static int cfg80211_parse_colocated_ap(const struct cfg80211_bss_ies *ies,
- 
- 	ret = cfg80211_calc_short_ssid(ies, &ssid_elem, &s_ssid_tmp);
- 	if (ret)
--		return ret;
-+		return 0;
- 
- 	for_each_element_id(elem, WLAN_EID_REDUCED_NEIGHBOR_REPORT,
- 			    ies->data, ies->len) {
+This is caused by commit 1db036d13e10809943c2dce553e2fa7fc9c6cd80
+ wifi: brcmfmac: Fix potential shift-out-of-bounds in brcmf_fw_alloc_request()
+
+    [ Upstream commit 81d17f6f3331f03c8eafdacea68ab773426c1e3c ]
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 33a7378..6675de1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -572,6 +572,11 @@ int brcmf_fw_map_chip_to_name(u32 chip, u32 chiprev,
+        u32 i;
+        char end;
+
++       if (chiprev >= BITS_PER_TYPE(u32)) {
++               brcmf_err("Invalid chip revision %u\n", chiprev);
++               return NULL;
++       }
++
+        for (i = 0; i < table_size; i++) {
+                if (mapping_table[i].chipid == chip &&
+                    mapping_table[i].revmask & BIT(chiprev))
+
+The problem is that in the upstream commit, the patch is applied to
+brcmf_fw_alloc_request(), which returns a pointer, while in v4.9.337
+it is applied to brcmf_fw_map_chip_to_name() which returns 'int'.
+
+Should we simply revert that patch, or rather add the missing
+intermediate patches ?
+
+Best regards
+
+Philippe
+
 -- 
-2.25.1
-
+Philippe De Muyter +32 2 6101532 Macq SA rue de l'Aeronef 2 B-1140 Bruxelles
