@@ -2,102 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E060EB64DC
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jul 2023 11:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19188EB64DD
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jul 2023 13:25:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230060AbjGTLHh (ORCPT
+        id S231844AbjGTNZo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Jul 2023 07:07:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53000 "EHLO
+        Thu, 20 Jul 2023 09:25:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjGTLHf (ORCPT
+        with ESMTP id S231842AbjGTNZn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jul 2023 07:07:35 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32EAB268F;
-        Thu, 20 Jul 2023 04:07:34 -0700 (PDT)
-Received: from dggpemm500005.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4R68vq66JMztRZQ;
-        Thu, 20 Jul 2023 19:04:23 +0800 (CST)
-Received: from [10.69.30.204] (10.69.30.204) by dggpemm500005.china.huawei.com
- (7.185.36.74) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 20 Jul
- 2023 19:07:31 +0800
-Subject: Re: [PATCH net-next] page_pool: split types and declarations from
- page_pool.h
-To:     Alexander Lobakin <aleksander.lobakin@intel.com>
-CC:     <davem@davemloft.net>, <kuba@kernel.org>, <pabeni@redhat.com>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Eric Dumazet <edumazet@google.com>,
-        Wei Fang <wei.fang@nxp.com>,
-        Shenwei Wang <shenwei.wang@nxp.com>,
-        Clark Wang <xiaoning.wang@nxp.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Sunil Goutham <sgoutham@marvell.com>,
-        Geetha sowjanya <gakula@marvell.com>,
-        Subbaraya Sundeep <sbhatta@marvell.com>,
-        hariprasad <hkelam@marvell.com>,
-        Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Jesper Dangaard Brouer <hawk@kernel.org>,
-        John Fastabend <john.fastabend@gmail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
+        Thu, 20 Jul 2023 09:25:43 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05EE610F5;
+        Thu, 20 Jul 2023 06:25:43 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8947B61A8B;
+        Thu, 20 Jul 2023 13:25:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 176AFC433C8;
+        Thu, 20 Jul 2023 13:25:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1689859541;
+        bh=enaNhtEJLb4KtURfM6qBYfwCJGCa/Tdqz7P+nOYyZ/E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Go319qZyg13GGPs35l/yGV/4md06yQbR6TD4+X7whtGiAv6azHi2lAOtBNWctMsjG
+         iZSimSvMTK5h9fTZWWhtSqm5uYxzZz8NTt57MEpjDpBp9H7iY9psVBziCVvoNEaXn4
+         YlmQ1THYjEzcoMFkgx1TkMccjFQWXA6dkOKji9Y4=
+Date:   Thu, 20 Jul 2023 15:25:38 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Pavel Machek <pavel@ucw.cz>
+Cc:     =?utf-8?B?546L5piOLei9r+S7tuW6leWxguaKgOacr+mDqA==?= 
+        <machel@vivo.com>, Ajay Singh <ajay.kathat@microchip.com>,
+        Claudiu Beznea <claudiu.beznea@microchip.com>,
         Kalle Valo <kvalo@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        <linux-rdma@vger.kernel.org>, <bpf@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>
-References: <20230719121339.63331-1-linyunsheng@huawei.com>
- <0838ed9e-8b5c-cc93-0175-9d6cbf695dda@intel.com>
-From:   Yunsheng Lin <linyunsheng@huawei.com>
-Message-ID: <7e9c1276-9996-d9dd-c061-b1e66361c48b@huawei.com>
-Date:   Thu, 20 Jul 2023 19:07:31 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.2.0
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "opensource.kernel" <opensource.kernel@vivo.com>
+Subject: Re: [PATCH net v2] net: wireless: Use kfree_sensitive instead of
+ kfree
+Message-ID: <2023072020-epilepsy-duchess-0a80@gregkh>
+References: <20230719022041.663-1-machel@vivo.com>
+ <2023071950-nervous-grub-5ee3@gregkh>
+ <ZLj5HPT2y8cRhWnC@duo.ucw.cz>
 MIME-Version: 1.0
-In-Reply-To: <0838ed9e-8b5c-cc93-0175-9d6cbf695dda@intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.69.30.204]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemm500005.china.huawei.com (7.185.36.74)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZLj5HPT2y8cRhWnC@duo.ucw.cz>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2023/7/20 0:42, Alexander Lobakin wrote:
+On Thu, Jul 20, 2023 at 11:06:36AM +0200, Pavel Machek wrote:
+> Hi!
 > 
-> BTW, what do you think: is it better to have those two includes in the
-> root include/net/ folder or do something like
+> > > diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+> > > index b545d93c6e37..45bcadeba2da 100644
+> > > --- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+> > > +++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+> > > @@ -518,7 +518,7 @@ static int wilc_wfi_cfg_allocate_wpa_igtk_entry(struct wilc_priv *priv, u8 idx)
+> > >  static int wilc_wfi_cfg_copy_wpa_info(struct wilc_wfi_key *key_info,
+> > >  				      struct key_params *params)
+> > >  {
+> > > -	kfree(key_info->key);
+> > > +	kfree_sensitive(key_info->key);
+> > >  
+> > >  	key_info->key = kmemdup(params->key, params->key_len, GFP_KERNEL);
+> > >  	if (!key_info->key)
+> > > @@ -656,7 +656,7 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev, int link_id,
+> > >  	if (!pairwise && (key_index == 4 || key_index == 5)) {
+> > >  		key_index -= 4;
+> > >  		if (priv->wilc_igtk[key_index]) {
+> > > -			kfree(priv->wilc_igtk[key_index]->key);
+> > > +			kfree_sensitive(priv->wilc_igtk[key_index]->key);
+> > 
+> > Normally "kfree_sensitive()" is used at the end of a function for when
+> > kfree() of a local variable might not be called because the compiler
+> > thinks it is smarter than us and optimizes it away.
+> > 
+> > Putting it here, in the normal operation, really doesn't do anything,
+> > right?  There's always going to be odd data in the heap and normal
 > 
-> include/net/page_pool/
->   * types.h
->   * <some meaningful name>.h (let's say driver.h)
+> It does memzero.
 > 
-> like it's done e.g. for GPIO (see include/linux/gpio/)?
+> https://elixir.bootlin.com/linux/latest/source/mm/slab_common.c#L1411
 
-It make more sense to add a new dir for page pool if there are
-more new headers added. As we are still keeping the page_pool.h
-mirroring include/linux/gpio.h, adding a new dir for only one
-header file only add another level of dir without abvious benefit.
-We can add a new dir for it if we turn out to be needing more header
-file for page pool in the future, does it make sense?
-
-> 
-> Thanks,
-> Olek
-> 
-> .
-> 
+I know what it does, I'm saying "why is this required".
