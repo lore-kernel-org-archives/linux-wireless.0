@@ -2,81 +2,112 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 270A6EB64DC
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jul 2023 13:58:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E867EEB64DC
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Jul 2023 14:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229935AbjGTN6r (ORCPT
+        id S232338AbjGTOu1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Jul 2023 09:58:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38176 "EHLO
+        Thu, 20 Jul 2023 10:50:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229517AbjGTN6p (ORCPT
+        with ESMTP id S232348AbjGTOuX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Jul 2023 09:58:45 -0400
-X-Greylist: delayed 1201 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 20 Jul 2023 06:58:44 PDT
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 219561BFC;
-        Thu, 20 Jul 2023 06:58:44 -0700 (PDT)
-Received: from localhost (unknown [10.10.165.16])
-        by mail.ispras.ru (Postfix) with ESMTPSA id 445A2407675E;
-        Thu, 20 Jul 2023 13:22:35 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 445A2407675E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-        s=default; t=1689859355;
-        bh=yZMlngbh3YKbzLA0HIeJWnW6IMjTlDcM5F2W41AYGrI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IUB6OW3MSaCKf93RcbWVMQPkAVesm0BoP36zT9/9Rx5JcDN+3NQAC64L4Ay/67wiv
-         TothD/T/TeyAo1G586LQW7skGrfPNrwmnAUYkRegS/aVi2IPl0s86BgpbSu6aMsjqO
-         +0wKkltPmgpYXPWIO6dDHfawnu6e9NB4stmNdF2M=
-Date:   Thu, 20 Jul 2023 16:22:34 +0300
-From:   Fedor Pchelkin <pchelkin@ispras.ru>
-To:     syzbot <syzbot+160a7250e255d25725eb@syzkaller.appspotmail.com>
-Cc:     kvalo@kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com, toke@toke.dk,
-        Alexey Khoroshilov <khoroshilov@ispras.ru>,
-        lvc-project@linuxtesting.org
-Subject: Re: [syzbot] [afs?] general protection fault in skb_queue_tail (3)
-Message-ID: <5tu3vxj3bs4crdypi75bv5e5a4wazsuwze5kas3yao2ng65gtd@6a7gfrtsyc6o>
-References: <0000000000000de35905ead6dcc1@google.com>
- <000000000000ea91fa0600816cb8@google.com>
+        Thu, 20 Jul 2023 10:50:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BF1B2707
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2023 07:50:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 672AD61B1C
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jul 2023 14:50:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1FFCC433C8;
+        Thu, 20 Jul 2023 14:50:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689864618;
+        bh=TG6z5dRQwCt/sYCGe95SPZS568gTDayz1xvikEEkloE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=WI9ddpFayIhRbod+iKt2pUJmpght+8YzGJq4egJ7HvSZ7LNMu+/ttSzJ2ovE4fsuN
+         ChYqVQMR3FNyhCXMCiLxw1e7Y6iJM8JP1JBty5kbmCHMg3NHcodk/Uypbv4z1ok2vx
+         QfSKnuBlg7ULYL2Nsk8dcw0p6LZBqPzHjP2y1W1AJQue+md5xeI7P2H1uEes8aaaTB
+         rOrP91zsCyfldLJhhZfd0DdKBltR91tghtjNeg3Sj6mO8//5h+we/itsh2GZ13Gtlk
+         8i7icauBiLy97QCDTFiIvp5bh4zBqLZyhrBcEuFouZgDalCRf3J0/aw9TT3fK59b+Y
+         Iwzk13XoSh/LQ==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     <Ajay.Kathat@microchip.com>
+Cc:     <kuba@kernel.org>, <linux-wireless@vger.kernel.org>,
+        <Claudiu.Beznea@microchip.com>, <Sripad.Balwadgi@microchip.com>
+Subject: Re: [PATCH] wifi: wilc1000: change firmware path from 'atmel' to
+ 'microchip/wilc'
+References: <20230630012136.1330784-1-ajay.kathat@microchip.com>
+        <20230705140338.77896d11@kernel.org>
+        <5500a007-4e52-f8dc-2535-3baa7decfe52@microchip.com>
+        <20230705172754.61ca21ae@kernel.org> <87cz0o2nm4.fsf@kernel.org>
+        <4aef9340-7b03-43af-f211-c8e45f749e73@microchip.com>
+Date:   Thu, 20 Jul 2023 17:50:15 +0300
+In-Reply-To: <4aef9340-7b03-43af-f211-c8e45f749e73@microchip.com> (Ajay
+        Kathat's message of "Wed, 19 Jul 2023 16:20:57 +0000")
+Message-ID: <877cqu4oyg.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000000000000ea91fa0600816cb8@google.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 23/07/15 12:22AM, syzbot wrote:
-> syzbot suspects this issue was fixed by commit:
-> 
-> commit 061b0cb9327b80d7a0f63a33e7c3e2a91a71f142
-> Author: Fedor Pchelkin <pchelkin@ispras.ru>
-> Date:   Wed May 17 15:03:17 2023 +0000
-> 
->     wifi: ath9k: don't allow to overwrite ENDPOINT0 attributes
-> 
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12253b7ca80000
-> start commit:   98555239e4c3 Merge tag 'arc-6.1-fixes' of git://git.kernel..
-> git tree:       upstream
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=701f2aae1cb0470e
-> dashboard link: https://syzkaller.appspot.com/bug?extid=160a7250e255d25725eb
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1482f0b6880000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=119e4dce880000
-> 
-> If the result looks correct, please mark the issue as fixed by replying with:
-> 
-> #syz fix: wifi: ath9k: don't allow to overwrite ENDPOINT0 attributes
-> 
-> For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+<Ajay.Kathat@microchip.com> writes:
 
-Seems reasonable since the reproducer here manages to modify ENDPOINT0
-attrs and this leads to the invalid behaviour in different ways - the one
-is this bug and another is the one fixed by the commit which syzbot
-bisected. Those attempts to modify ENDPOINT0 are now prohibited with this
-commit. So I think the result is correct (apart from that this issue is
-not related to afs).
+> On 7/19/23 03:37, Kalle Valo wrote:
+>
+>> Jakub Kicinski <kuba@kernel.org> writes:
+>> 
+>>>> In order to address scenario#1, a fallback method that loads the FW from
+>>>> the older path(/atmel) can be added in the driver. I think that change
+>>>> will make it compatible for scenario#1.
+>>>> Please suggest, if there is a generic/recommended approach to handle
+>>>> backward compatibility for FW path change.
+>>>
+>>> I'm afraid you need to request from both new and old patch for some
+>>> time. Push the change to linux-firmware, but make driver be compatible
+>>> with both for maybe three full releases? Then the risk of someone still
+>>> having stale linux-firmware goes down quite a bit.
+>> 
+>> I would say at least minimum of two years, preferably more to make it
+>> possible to upgrade kernel on LTS distro releases.
+>> 
+>>> TBH renaming FW paths, much like renaming drivers is usually more risk
+>>> than reward.
+>> 
+>> I agree, it's just extra work without no actually benefit. Maybe an
+>> exception here is iwlwifi, that should be fixed as that clutters the top
+>> level firmware directory with dozens of files:
+>> 
+>
+> Definitely, this change will not have any functionality improvements. It
+> will just help to organize the wilc firmware directory structure.
+>
+> Currently, only wilc1000 firmwares are present in linux-firmware but the
+> work to support wilc3000 and wilc's next-gen device is in progress. The
+> existing wilc driver will be extended and the new firmware files needs
+> to be added to linux-firmware. After this change, the all firmware's can
+> organized under same root directory since adding a new device firmware's
+> under 'atmel' folder may not make sense.
 
-#syz fix: wifi: ath9k: don't allow to overwrite ENDPOINT0 attributes
+'atmel' is only a name, I wouldn't worry about that too much. For
+example we still have drivers/net/wireless/ath even though Atheros is
+long gone.
 
+> Alternatively, the new device firmware(e.g wilc3000) can be added to
+> '/microchip/wilc' without changing wilc1000 firmware path. Is this
+> approach okay.
+
+I haven't seen the actual patches but in principle having a new
+directory 'microchip/wilc/ in linux-firmare sounds like a good idea to
+me. But better to wait for comments from others for a while before
+submitting anything.
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
