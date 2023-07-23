@@ -2,87 +2,81 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B96CAC001B0
-	for <linux-wireless@archiver.kernel.org>; Sun, 23 Jul 2023 08:41:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C3F5C001DC
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Jul 2023 12:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229677AbjGWIlE (ORCPT
+        id S229931AbjGWMHg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 23 Jul 2023 04:41:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57580 "EHLO
+        Sun, 23 Jul 2023 08:07:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbjGWIlD (ORCPT
+        with ESMTP id S229379AbjGWMHf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Jul 2023 04:41:03 -0400
-X-Greylist: delayed 2191 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 23 Jul 2023 01:41:01 PDT
-Received: from zju.edu.cn (spam.zju.edu.cn [61.164.42.155])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C1EFE7D
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Jul 2023 01:41:00 -0700 (PDT)
-Received: from localhost.localdomain (unknown [39.174.92.167])
-        by mail-app3 (Coremail) with SMTP id cC_KCgBXX5_o3rxk7IN_Cw--.18863S4;
-        Sun, 23 Jul 2023 16:03:53 +0800 (CST)
-From:   Lin Ma <linma@zju.edu.cn>
-To:     nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com,
-        shayne.chen@mediatek.com, sean.wang@mediatek.com, kvalo@kernel.org,
-        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-        mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org,
-        linux-stm32@st-md-mailman.stormreply.com
-Cc:     Lin Ma <linma@zju.edu.cn>
-Subject: [PATCH v1] wifi: mt76: testmode: add nla_policy for MT76_TM_ATTR_TX_LENGTH
-Date:   Sun, 23 Jul 2023 16:03:50 +0800
-Message-Id: <20230723080350.3716135-1-linma@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cC_KCgBXX5_o3rxk7IN_Cw--.18863S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Gw15JF48ZFWfur4kWr1Dtrb_yoW8Jr4xpa
-        y2ga4xCayDCr4DJ3ykJF48WFn5Xa43ArWjgrnxX3s5Zr95ta1fKryft3Z2yryktF1UZ3yf
-        Z3W5K343GFyY937anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUU9j14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-        JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-        CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-        Y2ka0xkIwI1lc2xSY4AK67AK6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-        1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-        b7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0x
-        vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI
-        42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvf
-        C2KfnxnUUI43ZEXa7VUjj-e5UUUUU==
-X-CM-SenderInfo: qtrwiiyqvtljo62m3hxhgxhubq/
+        Sun, 23 Jul 2023 08:07:35 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F502E5B
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Jul 2023 05:07:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1690114055; x=1721650055;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=b6thoYWjp8mQVV1VYXnw2skiXLGMpwG4GHEhAzilOTA=;
+  b=YidQaSq6R18aXcPb3tZF8a1lCGwIDrhHKGdr4BiU8ffm2R2P1Gjfgb8m
+   XarqxfXqshnzZYp9iTB9CnBrNJ0CnVjMjEUmJ6fIqA/iWH4HN0o1U/Q0U
+   DoT4GlvfqMO/ni/gMExSZm0Yhveqe3C3hMoSLEEkO31lJLvpxiSV6wnXR
+   EnvS84QgQnVfzzKbhTb1d5p6PQJluVUffoGN/tjb+7GruF8RlUOBiHbQT
+   HWeK7JTSFD1UZVTIPS3GBE3Qon3/O/f8+u6CCVyDeNy+xc1x0cQ26Jps+
+   Y1RG79US/zekQe9VKm4lNovt3J1RIv7AjGfMNMPC/8zeejbwPtQ71NUut
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10779"; a="433509105"
+X-IronPort-AV: E=Sophos;i="6.01,226,1684825200"; 
+   d="scan'208";a="433509105"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2023 05:07:34 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10779"; a="795489488"
+X-IronPort-AV: E=Sophos;i="6.01,226,1684825200"; 
+   d="scan'208";a="795489488"
+Received: from jed01829.iil.intel.com ([10.12.217.181])
+  by fmsmga004.fm.intel.com with ESMTP; 23 Jul 2023 05:07:33 -0700
+From:   Ilan Peer <ilan.peer@intel.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2] wifi: cfg80211: Fix return value in scan logic
+Date:   Sun, 23 Jul 2023 23:10:43 +0300
+Message-Id: <20230723201043.3007430-1-ilan.peer@intel.com>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It seems that the nla_policy in mt76_tm_policy is missed for attribute
-MT76_TM_ATTR_TX_LENGTH. This patch adds the correct description to make
-sure the
+As cfg80211_parse_colocated_ap() is not expected to return a negative
+value return 0 and not a negative value if cfg80211_calc_short_ssid()
+fails.
 
-  u32 val = nla_get_u32(tb[MT76_TM_ATTR_TX_LENGTH]);
-
-in function mt76_testmode_cmd() is safe and will not result in
-out-of-attribute read.
-
-Fixes: f0efa8621550 ("mt76: add API for testmode support")
-Signed-off-by: Lin Ma <linma@zju.edu.cn>
+Fixes: c8cb5b854b40f ("nl80211/cfg80211: support 6 GHz scanning")
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=217675
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 ---
- drivers/net/wireless/mediatek/mt76/testmode.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/testmode.c b/drivers/net/wireless/mediatek/mt76/testmode.c
-index 0accc71a91c9..4644dace9bb3 100644
---- a/drivers/net/wireless/mediatek/mt76/testmode.c
-+++ b/drivers/net/wireless/mediatek/mt76/testmode.c
-@@ -8,6 +8,7 @@ const struct nla_policy mt76_tm_policy[NUM_MT76_TM_ATTRS] = {
- 	[MT76_TM_ATTR_RESET] = { .type = NLA_FLAG },
- 	[MT76_TM_ATTR_STATE] = { .type = NLA_U8 },
- 	[MT76_TM_ATTR_TX_COUNT] = { .type = NLA_U32 },
-+	[MT76_TM_ATTR_TX_LENGTH] = { .type = NLA_U32 },
- 	[MT76_TM_ATTR_TX_RATE_MODE] = { .type = NLA_U8 },
- 	[MT76_TM_ATTR_TX_RATE_NSS] = { .type = NLA_U8 },
- 	[MT76_TM_ATTR_TX_RATE_IDX] = { .type = NLA_U8 },
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 8bf00caf5d29..0cf1ce7b6934 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -657,7 +657,7 @@ static int cfg80211_parse_colocated_ap(const struct cfg80211_bss_ies *ies,
+ 
+ 	ret = cfg80211_calc_short_ssid(ies, &ssid_elem, &s_ssid_tmp);
+ 	if (ret)
+-		return ret;
++		return 0;
+ 
+ 	for_each_element_id(elem, WLAN_EID_REDUCED_NEIGHBOR_REPORT,
+ 			    ies->data, ies->len) {
 -- 
-2.17.1
+2.25.1
 
