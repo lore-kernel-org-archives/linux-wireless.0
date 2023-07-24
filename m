@@ -2,98 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E5EC001DE
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 09:23:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6906C001DE
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 09:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232240AbjGXJXi (ORCPT
+        id S231134AbjGXJoB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jul 2023 05:23:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39750 "EHLO
+        Mon, 24 Jul 2023 05:44:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230153AbjGXJXh (ORCPT
+        with ESMTP id S229538AbjGXJoA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2023 05:23:37 -0400
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 079D8FD;
-        Mon, 24 Jul 2023 02:23:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-        s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-        Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-        Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-        bh=nHwERRNohuUhZsb3fsbGJZNV/wqpb0sJjOXJGxj/gFU=; b=0eTCGmkFvYRanCjqIruUc+gFHD
-        eb0YjlozDEULA37j7v5qY4zn7oNzSJHyKS6Mu3lubDRF2RaMczkF4f0lJh//Gw6lfNr0hipZSgCGS
-        JIWlEQVkw7RyvqjD3Uxd4RuJG7sAceLde0p86r2jFr/kdLPlkftX1hnSBOxxVBlLMicc=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-        (envelope-from <andrew@lunn.ch>)
-        id 1qNrmC-0026m1-D4; Mon, 24 Jul 2023 11:22:48 +0200
-Date:   Mon, 24 Jul 2023 11:22:48 +0200
-From:   Andrew Lunn <andrew@lunn.ch>
-To:     Evan Quan <evan.quan@amd.com>
-Cc:     rafael@kernel.org, lenb@kernel.org, Alexander.Deucher@amd.com,
-        Christian.Koenig@amd.com, Xinhui.Pan@amd.com, airlied@gmail.com,
-        daniel@ffwll.ch, johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        Mario.Limonciello@amd.com, mdaenzer@redhat.com,
-        maarten.lankhorst@linux.intel.com, tzimmermann@suse.de,
-        hdegoede@redhat.com, jingyuwang_vip@163.com, Lijo.Lazar@amd.com,
-        jim.cromie@gmail.com, bellosilicio@gmail.com,
-        andrealmeid@igalia.com, trix@redhat.com, jsg@jsg.id.au,
-        arnd@arndb.de, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH V7 4/9] wifi: mac80211: Add support for ACPI WBRF
-Message-ID: <9b1f45f9-02a3-4c03-b9d5-cc3b9ab3a058@lunn.ch>
-References: <20230719090020.2716892-1-evan.quan@amd.com>
- <20230719090020.2716892-5-evan.quan@amd.com>
+        Mon, 24 Jul 2023 05:44:00 -0400
+X-Greylist: delayed 1159 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 24 Jul 2023 02:43:59 PDT
+Received: from fluorez-com.cfd (fluorez-com.cfd [107.174.244.118])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 899AD1A1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 02:43:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=re1; d=fluorez-com.cfd;
+ h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:
+ Content-Transfer-Encoding; i=info@fluorez-com.cfd;
+ bh=LqAKS0rQcqRhfS2AomqosmxOtHjI8TSd2DPxtKmN8Fo=;
+ b=jwiMW4IVmX9tJkfRtBfQwcglHXQOSQjcptfGP842OujsaMxlXy6LxXcloKlHbXS0N6NSlqTOSp1r
+   zXJmMNzIB5CF4Ga85MMclEbZ7ZRgCcpxWUPXxXB04J51Lne2H8bpgiduJl3sfKEf6PfmPkfFkXXH
+   yEjd/d6PWkmSIrGzKVWJno82TXw7MkqYYNCB5lcGq/Cp4zfI1yldi4wMxnqYVktRam9a9OsxJl6k
+   7wBUiWSTo09tqcijf1M3KcsEusE4qmCVr9X8+biTzrgCVc8iL2kfy4luYhEB6itoclIZXmDhKzci
+   z6d8Y7n1cT6XJ+PqxYnEW74VD5r35/1U0TOnog==
+Reply-To: info@coinloansupport.online
+From:   Coinloan Support Center <info@fluorez-com.cfd>
+To:     linux-wireless@vger.kernel.org
+Subject: Don't miss out on our low Interest coinloan opportunity
+Date:   24 Jul 2023 10:46:47 +0200
+Message-ID: <20230724104646.F4AAB73058DE0833@fluorez-com.cfd>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230719090020.2716892-5-evan.quan@amd.com>
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> @@ -1395,6 +1395,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  	debugfs_hw_add(local);
->  	rate_control_add_debugfs(local);
->  
-> +	ieee80211_check_wbrf_support(local);
-> +
->  	rtnl_lock();
->  	wiphy_lock(hw->wiphy);
->  
-
-> +void ieee80211_check_wbrf_support(struct ieee80211_local *local)
-> +{
-> +	struct wiphy *wiphy = local->hw.wiphy;
-> +	struct device *dev;
-> +
-> +	if (!wiphy)
-> +		return;
-> +
-> +	dev = wiphy->dev.parent;
-> +	if (!dev)
-> +		return;
-> +
-> +	local->wbrf_supported = wbrf_supported_producer(dev);
-> +	dev_dbg(dev, "WBRF is %s supported\n",
-> +		local->wbrf_supported ? "" : "not");
-> +}
-
-This seems wrong. wbrf_supported_producer() is about "Should this
-device report the frequencies it is using?" The answer to that depends
-on a combination of: Are there consumers registered with the core, and
-is the policy set so WBRF should take actions.
-
-The problem here is, you have no idea of the probe order. It could be
-this device probes before others, so wbrf_supported_producer() reports
-false, but a few second later would report true, once other devices
-have probed.
-
-It should be an inexpensive call into the core, so can be made every
-time the channel changes. All the core needs to do is check if the
-list of consumers is empty, and if not, check a Boolean policy value.
-
-     Andrew
+Are you looking for a loan to either increase your activity or to=20
+carry out a project.=20
+We offer Crypto Loans at 2-7% interest rate with or without a=20
+credit check.
+Please get back to us if you are interested in more details.
