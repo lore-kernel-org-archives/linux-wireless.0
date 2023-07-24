@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D797C001B0
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 10:45:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B013CC0015E
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 10:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232281AbjGXKpz (ORCPT
+        id S232287AbjGXKp4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jul 2023 06:45:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42368 "EHLO
+        Mon, 24 Jul 2023 06:45:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232242AbjGXKpx (ORCPT
+        with ESMTP id S232273AbjGXKpy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2023 06:45:53 -0400
+        Mon, 24 Jul 2023 06:45:54 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2717E6
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 03:45:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38F1BF3
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 03:45:54 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 665BF61073
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 19CE961073
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 10:45:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2661BC433C7
         for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 10:45:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 707E0C433C8
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 10:45:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690195551;
-        bh=ZJIbpRmHAQ/GRLtdtgPoqwrI+BJlmJv8VBjgsy5ceg8=;
+        s=k20201202; t=1690195553;
+        bh=Ls6YEzQskmhlc0qzoBpcpxIEt7CVw26sfbK4IGIm4OI=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=JMKwVYT7dc7YZjVrZwpd7cEqzN9bRAKLOO1Ir8BaywK47421JqmcDUiVf5XVNCsDj
-         tqNGz6pjsiHdUcXCgyj1jpfOx+YqHamUszMI2RtqjRMHrDXR56fytQ9dHMM3YACnrz
-         Tr30Euo/AiEI/kt3jBZIR9ozGKwQXReJJK9k+oEWHl5t3ejpRfOa6Fjegg4Cak36zL
-         H/fycXRff0zvAN3TXqV6+5aCDNUkmxUUCmwGkNf9AYWNDrEGc15CGzN2kd4jX4WXaK
-         fTpVPo6sJNsoq23zfgRFI+5e0tX8+o2FIPPsmzIpySb0BYGgDVJVzX4+2AbfMIwbDS
-         Ar4M3ahmB9Zxw==
+        b=iv7fy536FUgqdeUzTtECjFOIoX8m9XMJRW08vyEHcCPMSZIgznzyZPp5tYAwtsPXW
+         9x/B9IfBRxDHgcPVyRx3ZflkuxCk+3GAcVqlSHtrvz7sdR/X2OvyjhZ3enAlSHgqc6
+         Oxq8ETyvGeWnjnhNOLCZXKLI74GpI+vb5bgxXb3R/cSvVFeudFPEK4EI9H5emQw79Z
+         Dk/Sq10iq3Xe0CCCWjtyaWZK+PpjiCDpwYYt5TxiG9RIdTZfCH487/W/4m+lRaPcMH
+         mVx3puWiIZ+QQ5BSvFuqocwmTkTnICEA/L1t3/xxhfUHXG/DatxL6MKrq5BnHzpMg/
+         1cUDbdLAwWNDw==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 2/9] MAINTAINERS: wifi: atmel: mark as orphan
-Date:   Mon, 24 Jul 2023 13:45:40 +0300
-Message-Id: <20230724104547.3061709-3-kvalo@kernel.org>
+Subject: [PATCH 4/9] MAINTAINERS: wifi: mark ar5523 as orphan
+Date:   Mon, 24 Jul 2023 13:45:42 +0300
+Message-Id: <20230724104547.3061709-5-kvalo@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230724104547.3061709-1-kvalo@kernel.org>
 References: <20230724104547.3061709-1-kvalo@kernel.org>
@@ -48,7 +48,8 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Last activity from Simon is from 2005 so mark the driver is orphan.
+Last activity from Pontus for this driver is from 2013 so mark the driver
+orphan.
 
 Signed-off-by: Kalle Valo <kvalo@kernel.org>
 ---
@@ -56,20 +57,20 @@ Signed-off-by: Kalle Valo <kvalo@kernel.org>
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index b61f43595e8d..ea84170767d5 100644
+index b61a50895535..71a9ef392583 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -3260,9 +3260,8 @@ F:	Documentation/devicetree/bindings/input/atmel,maxtouch.yaml
- F:	drivers/input/touchscreen/atmel_mxt_ts.c
+@@ -21887,9 +21887,8 @@ S:	Maintained
+ F:	drivers/usb/misc/apple-mfi-fastcharge.c
  
- ATMEL WIRELESS DRIVER
--M:	Simon Kelley <simon@thekelleys.org.uk>
+ USB AR5523 WIRELESS DRIVER
+-M:	Pontus Fuchs <pontus.fuchs@gmail.com>
  L:	linux-wireless@vger.kernel.org
 -S:	Maintained
 +S:	Orphan
- W:	http://www.thekelleys.org.uk/atmel
- W:	http://atmelwlandriver.sourceforge.net/
- F:	drivers/net/wireless/atmel/atmel*
+ F:	drivers/net/wireless/ath/ar5523/
+ 
+ USB ATTACHED SCSI
 -- 
 2.39.2
 
