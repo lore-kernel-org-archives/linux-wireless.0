@@ -2,95 +2,76 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 673ACC001DE
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 12:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7D0C001DE
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 13:42:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230441AbjGXMnI (ORCPT
+        id S231664AbjGXNmf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jul 2023 08:43:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35144 "EHLO
+        Mon, 24 Jul 2023 09:42:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230077AbjGXMnH (ORCPT
+        with ESMTP id S230051AbjGXNmY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2023 08:43:07 -0400
-Received: from baptiste.telenet-ops.be (baptiste.telenet-ops.be [IPv6:2a02:1800:120:4::f00:13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E3BBE4E
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 05:43:04 -0700 (PDT)
-Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed40:e908:444e:5a23:b79e])
-        by baptiste.telenet-ops.be with bizsmtp
-        id R0j22A00H26vpYY010j2rR; Mon, 24 Jul 2023 14:43:02 +0200
-Received: from geert (helo=localhost)
-        by ramsan.of.borg with local-esmtp (Exim 4.95)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1qNuty-002O66-6f;
-        Mon, 24 Jul 2023 14:43:02 +0200
-Date:   Mon, 24 Jul 2023 14:43:02 +0200 (CEST)
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-To:     linux-kernel@vger.kernel.org
-cc:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-parisc@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: Re: Build regressions/improvements in v6.5-rc3
-In-Reply-To: <20230724122626.1701631-1-geert@linux-m68k.org>
-Message-ID: <88f83d73-781d-bdc-126-aa629cb368c@linux-m68k.org>
-References: <CAHk-=wi4Yau-3Bsv2rXYmtXMTLaj3=Wyf4cdM6d89czFvkVsRQ@mail.gmail.com> <20230724122626.1701631-1-geert@linux-m68k.org>
+        Mon, 24 Jul 2023 09:42:24 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1A4146A0;
+        Mon, 24 Jul 2023 06:40:24 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 800AF6119D;
+        Mon, 24 Jul 2023 13:40:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 302F9C433C8;
+        Mon, 24 Jul 2023 13:40:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690206023;
+        bh=7VK9jJWcA5IF2fw7CTNRyBS01jbdJZKP1SvMiFae2tY=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=ipXG9ZK6MEpe+Lx1Ffj8F10deqNdAGPgNvgJ2CSjgit5K5GpmGsHzREHTtZqsfG3Y
+         LF5nuFopIJwhx7lCsWUCreMIWWN4xE394f+mGMl+J5+ATt8nTpzwAoF4p/w8kjEN3B
+         CYwj/v9/WoAlTrhUnlZdwLL9EFXiVayYYiwBV9wsIrB430S4MHdapMwJFV8DweNdni
+         52uuwuAqDusHTILYWd13b51q0sFE0MOYI0cqAInUVyA6HbJ0WPmc8AZo/DYNoDLDi9
+         zYYWno1p/9P+qd0ipXEBI09CvOqPCh3HTgQGYLO+0asEFRmwg9PEzmZgUkalQFmg2T
+         v9X5PncS/8eiQ==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
+Subject: Re: MAINTAINERS: Update mwifiex maintainer list
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230721160603.1.Idf0e8025f59c62d73c08960638249b58cf215acc@changeid>
+References: <20230721160603.1.Idf0e8025f59c62d73c08960638249b58cf215acc@changeid>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Ganapathi Bhat <ganapathi017@gmail.com>,
+        Sharvari Harisangam <sharvari.harisangam@nxp.com>,
+        Xinming Hu <huxinming820@gmail.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169020602002.3064516.16937923273449843134.kvalo@kernel.org>
+Date:   Mon, 24 Jul 2023 13:40:21 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 24 Jul 2023, Geert Uytterhoeven wrote:
-> JFYI, when comparing v6.5-rc3[1] to v6.5-rc2[3], the summaries are:
->  - build errors: +5/-0
+Brian Norris <briannorris@chromium.org> wrote:
 
-   + /kisskb/src/include/linux/fortify-string.h: error: call to '__write_overflow_field' declared with attribute warning: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror=attribute-warning]:  => 583:25, 493:25
+> We haven't heard anything from these folks in years. I've been reviewing
+> many submissions and plan to keep doing so.
+> 
+> Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+> Cc: Ganapathi Bhat <ganapathi017@gmail.com>
+> Cc: Sharvari Harisangam <sharvari.harisangam@nxp.com>
+> Cc: Xinming Hu <huxinming820@gmail.com>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-mips-gcc13/mips-allmodconfig
+Patch applied to wireless.git, thanks.
 
-Full context:
+a2777be03236 MAINTAINERS: Update mwifiex maintainer list
 
-     In function 'fortify_memset_chk',
- 	inlined from 'memset_io' at /kisskb/src/arch/mips/include/asm/io.h:486:2,
- 	inlined from 'build_auth_frame' at /kisskb/src/drivers/net/wireless/legacy/ray_cs.c:2697:2:
-     /kisskb/src/include/linux/fortify-string.h:493:25: error: call to '__write_overflow_field' declared with attribute warning: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror=attribute-warning]
-       493 |                         __write_overflow_field(p_size_field, size);
- 	  |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     In function 'fortify_memcpy_chk',
- 	inlined from 'memcpy_toio' at /kisskb/src/arch/mips/include/asm/io.h:494:2,
- 	inlined from 'translate_frame' at /kisskb/src/drivers/net/wireless/legacy/ray_cs.c:955:3,
- 	inlined from 'ray_hw_xmit.constprop' at /kisskb/src/drivers/net/wireless/legacy/ray_cs.c:912:12:
-     /kisskb/src/include/linux/fortify-string.h:583:25: error: call to '__write_overflow_field' declared with attribute warning: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror=attribute-warning]
-       583 |                         __write_overflow_field(p_size_field, size);
- 	  |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20230721160603.1.Idf0e8025f59c62d73c08960638249b58cf215acc@changeid/
 
-Single-element flexible array abuse in drivers/net/wireless/legacy/rayctl.h:tx_msg.var
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
-   + error: modpost: ".L856" [drivers/mtd/nand/raw/nand.ko] undefined!:  => N/A
-
-parisc-gcc13/parisc-allmodconfig
-
-   + {standard input}: Error: Missing symbol name in directive:  => 1096
-   + {standard input}: Error: unrecognized symbol type "":  => 1096
-
-sh4-gcc12/sh-allmodconfig (ICE)
-
-   + {standard input}: Error: unknown opcode:  => 1091
-
-sh4-gcc13/sh-allmodconfig (ICE)
-
-> [1] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/6eaae198076080886b9e7d57f4ae06fa782f90ef/ (all 235 configs)
-> [3] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/fdf0eaf11452d72945af31804e2a1048ee1b574c/ (161 out of 235 configs)
-
-Gr{oetje,eeting}s,
-
- 						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
- 							    -- Linus Torvalds
