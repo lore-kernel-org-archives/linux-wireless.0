@@ -2,210 +2,193 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6AE7EB64DD
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 18:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B11C4C0015E
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 21:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbjGXSjm (ORCPT
+        id S230192AbjGXVTg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jul 2023 14:39:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50134 "EHLO
+        Mon, 24 Jul 2023 17:19:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229582AbjGXSjl (ORCPT
+        with ESMTP id S230504AbjGXVTc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2023 14:39:41 -0400
-Received: from mail-oa1-x29.google.com (mail-oa1-x29.google.com [IPv6:2001:4860:4864:20::29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8926EA6
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 11:39:39 -0700 (PDT)
-Received: by mail-oa1-x29.google.com with SMTP id 586e51a60fabf-1b059dd7c0cso3692109fac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 11:39:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690223979; x=1690828779;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=qHd1OKtKAPdnKEJPGdNA6g7tFSlkH0z/6Si2eMvqB2k=;
-        b=oVO5YgH/SA4UZ7rcGRmAHVaVxI8P91IfG2aI3sQfTkUn+GoUzsX26cNVx05BIpE4/z
-         loKZ4CF7uvzuNgA+SdBGGW6xIQuMuKnDban94S0tKlBQR+WJywgqASBMOqsvoNPeoMDr
-         vi7v9bM5HJEj4SeT1r+nV4MlsoXbQxSiYw1A4Q8mhjUYj3JILJ4u0K6ScRikFm3c4EMw
-         924aSG+t2fYcEh4ev6m7jb3K1qtbiMRQ/aD+JCgrBQ5HZm+xwkHhbKo6DIvn5FvHuHrh
-         C59c6t6YXr/JurYU8zLoVUjQvekBDwtuQG5RIWJ496/PfLca8KIDsbSLGwl+vCeibyB+
-         9dfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690223979; x=1690828779;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qHd1OKtKAPdnKEJPGdNA6g7tFSlkH0z/6Si2eMvqB2k=;
-        b=P+BkeaGGo1UIlwGYnBKIyeRWxgCDICywqNPA38li0RtZG2QMFHx4TfL5oO3xoHxz8c
-         xktsU+L6gayUuhKMJOmGYSJBiMZP5lUCAbS+/z6NGEB/OSB7khBE4ll1+ar2YCN+CnIh
-         KAmKGOQIq9+mRqjnA8wxD8Qox6zvhazGtp7wHUTwZpJmQ/6psohj9BdtJFGCMuCtG7rF
-         f7NfTlH+lZuL5YWbCAy4bJfzBSrQGCtyg0oSbNRUtJpFC3bPZf1gsvM06dvw7HzbSqk3
-         zhCPKOH+r5DHogHSS/oDyJzbmAWH5KuW6UFVf9U+xGspEWdOf/oK6lGy242gv3bOwDff
-         I+Jw==
-X-Gm-Message-State: ABy/qLbzLHpkLmLXEnj4Uc4NFCFzvtBbvAh0aZ/KzhEgukEKFiHQUGpw
-        0B2p/s5N+B+6BOHoag/CCQI=
-X-Google-Smtp-Source: APBJJlHFLcj5ZVfvXRkgj7Dh5J1tE65ck/Szabk9TwYwNDtu+PI+Vm2yFywEtF9MtrzEvd1hbfb5Lw==
-X-Received: by 2002:a05:6870:d609:b0:1bb:5353:336c with SMTP id a9-20020a056870d60900b001bb5353336cmr6270771oaq.48.1690223978693;
-        Mon, 24 Jul 2023 11:39:38 -0700 (PDT)
-Received: from localhost.localdomain ([216.130.59.33])
-        by smtp.gmail.com with ESMTPSA id e3-20020a056870944300b001b04434d934sm4618036oal.34.2023.07.24.11.39.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Jul 2023 11:39:38 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>, Takashi Iwai <tiwai@suse.de>
-Subject: [PATCH] wifi: rtw89: Fix loading of compressed firmware
-Date:   Mon, 24 Jul 2023 13:39:27 -0500
-Message-ID: <20230724183927.28553-1-Larry.Finger@lwfinger.net>
-X-Mailer: git-send-email 2.41.0
+        Mon, 24 Jul 2023 17:19:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 884AC10D8;
+        Mon, 24 Jul 2023 14:19:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 79DF961418;
+        Mon, 24 Jul 2023 21:19:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EB16C433C7;
+        Mon, 24 Jul 2023 21:19:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690233560;
+        bh=bSAUEcuXqTqXpKIg7Bv5PY9P3Dl95C0bkG2c+6yz6uE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=dByrJeAPcbCJsBQexUs5scUmplWaGVUp9/EPOQZt18/lsqhnGVSyumj52MG6ffBNk
+         92lD5tebXIk0He97C5SOBgaq2nat970RKtx34vyWtIE+qPj43qYDQ+y9Nc00HQohso
+         vaFkDBpyiAJ2+VVMYp7pigzNwRNZ4wlDgyxXt5Jt2mbShYH9/s5ruaztFr3E/psBpt
+         +wWP8O24EqyMsDSZRDnTxvzdZWSrCrz4Qu3Ps48xZDM4qsVZy2/9xqJTpoeQVaKkAZ
+         pzkrIfT0uHOmVjdR+Dl3gTiGq8nHjO9RvYSIa/9i57DGk5nUYqeXeQqKDrrQUbf9Dr
+         Ie7OWZSG/YGrw==
+Received: (nullmailer pid 806011 invoked by uid 1000);
+        Mon, 24 Jul 2023 21:19:18 -0000
+From:   Rob Herring <robh@kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>,
+        Loic Poulain <loic.poulain@linaro.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
+        <jerome.pouiller@silabs.com>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
+        wcn36xx@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH v2] net: wireless: Explicitly include correct DT includes
+Date:   Mon, 24 Jul 2023 15:19:13 -0600
+Message-Id: <20230724211914.805876-1-robh@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When using compressed firmware, the early firmware load feature will fail.
-In most cases, the only downside is that if a device has more than one
-firmware version available, only the last one listed will be loaded.
-In at least two cases, there is no firmware loaded, and the device fails
-initialization. See https://github.com/lwfinger/rtw89/issues/259 and
-https://bugzilla.opensuse.org/show_bug.cgi?id=1212808 for examples of
-the failure.
-  
-When firmware_class.dyndbg=+p" added to the kernel boot parameters, the
-following is found:
+The DT of_device.h and of_platform.h date back to the separate
+of_platform_bus_type before it as merged into the regular platform bus.
+As part of that merge prepping Arm DT support 13 years ago, they
+"temporarily" include each other. They also include platform_device.h
+and of.h. As a result, there's a pretty much random mix of those include
+files used throughout the tree. In order to detangle these headers and
+replace the implicit includes with struct declarations, users need to
+explicitly include the correct includes.
 
-finger@localhost:~/rtw89>sudo dmesg -t | grep rtw89
-firmware_class: __allocate_fw_priv: fw-rtw89/rtw8852b_fw-1.bin fw_priv=00000000638862fb
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/5.14.21-150500.53-default/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/5.14.21-150500.53-default/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: Direct firmware load for rtw89/rtw8852b_fw-1.bin failed with error -2
-firmware_class: __free_fw_priv: fw-rtw89/rtw8852b_fw-1.bin fw_priv=00000000638862fb data=00000000307c30c7 size=0
-firmware_class: __allocate_fw_priv: fw-rtw89/rtw8852b_fw.bin fw_priv=00000000638862fb
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/5.14.21-150500.53-default/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/5.14.21-150500.53-default/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: Direct firmware load for rtw89/rtw8852b_fw.bin failed with error -2
-firmware_class: __free_fw_priv: fw-rtw89/rtw8852b_fw.bin fw_priv=00000000638862fb data=00000000307c30c7 size=0
-rtw89_8852be 0000:02:00.0: failed to early request firmware: -2
-firmware_class: __allocate_fw_priv: fw-rtw89/rtw8852b_fw.bin fw_priv=00000000638862fb
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/5.14.21-150500.53-default/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/5.14.21-150500.53-default/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/rtw89/rtw8852b_fw.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/5.14.21-150500.53-default/rtw89/rtw8852b_fw.bin.xz failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/rtw89/rtw8852b_fw.bin.xz failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/5.14.21-150500.53-default/rtw89/rtw8852b_fw.bin.xz failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: Loading firmware from /lib/firmware/rtw89/rtw8852b_fw.bin.xz
-rtw89_8852be 0000:02:00.0: f/w decompressing rtw89/rtw8852b_fw.bin
-firmware_class: fw_set_page_data: fw-rtw89/rtw8852b_fw.bin fw_priv=00000000638862fb data=000000004ed6c2f7 size=1035232
-rtw89_8852be 0000:02:00.0: Firmware version 0.27.32.1, cmd version 0, type 1
-rtw89_8852be 0000:02:00.0: Firmware version 0.27.32.1, cmd version 0, type 3
-
-The key is that firmware version 0.27.32.1 is loaded.
-
-With this patch, the following is obtained:
-
-firmware_class: __free_fw_priv: fw-rtw89/rtw8852b_fw.bin fw_priv=000000000849addc data=00000000fd3cabe2 size=1035232
-firmware_class: fw_name_devm_release: fw_name-rtw89/rtw8852b_fw.bin devm-000000002d8c3343 released
-firmware_class: __allocate_fw_priv: fw-rtw89/rtw8852b_fw-1.bin fw_priv=000000009e1a6364
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/rtw89/rtw8852b_fw-1.bin failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.zst failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/rtw89/rtw8852b_fw-1.bin.zst failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.zst failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/rtw89/rtw8852b_fw-1.bin.zst failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.xz failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/updates/rtw89/rtw8852b_fw-1.bin.xz failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: loading /lib/firmware/6.4.3-1-default/rtw89/rtw8852b_fw-1.bin.xz failed for no such file or directory.
-rtw89_8852be 0000:02:00.0: Loading firmware from /lib/firmware/rtw89/rtw8852b_fw-1.bin.xz
-rtw89_8852be 0000:02:00.0: f/w decompressing rtw89/rtw8852b_fw-1.bin
-firmware_class: fw_set_page_data: fw-rtw89/rtw8852b_fw-1.bin fw_priv=000000009e1a6364 data=00000000fd3cabe2 size=1184992
-rtw89_8852be 0000:02:00.0: Loaded FW: rtw89/rtw8852b_fw-1.bin, sha256: 8539efc75f513f4585cf0cd6e79e6507da47fce87225f2d0de391a03aefe9ac8
-rtw89_8852be 0000:02:00.0: loaded firmware rtw89/rtw8852b_fw-1.bin
-rtw89_8852be 0000:02:00.0: Firmware version 0.29.29.1, cmd version 0, type 5
-rtw89_8852be 0000:02:00.0: Firmware version 0.29.29.1, cmd version 0, type 3
-
-Now, version 0.29.29.1 is loaded.
-
-Fixes: ffde7f3476a6 ("wifi: rtw89: add firmware format version to backward compatible with older drivers")
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Takashi Iwai <tiwai@suse.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw89/fw.c | 27 +++----------------------
- 1 file changed, 3 insertions(+), 24 deletions(-)
+v2:
+ - Split out can, dsa, wireless, phy/pcs to separate patches
+---
+ drivers/net/wireless/ath/ath10k/ahb.c            | 2 +-
+ drivers/net/wireless/ath/ath11k/qmi.c            | 1 -
+ drivers/net/wireless/ath/wcn36xx/main.c          | 3 +--
+ drivers/net/wireless/intersil/orinoco/airport.c  | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7915/soc.c  | 1 -
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c | 1 +
+ drivers/net/wireless/silabs/wfx/bus_sdio.c       | 2 +-
+ 8 files changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 9637f5e48d84..d44628a90046 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -312,31 +312,17 @@ rtw89_early_fw_feature_recognize(struct device *device,
- 				 struct rtw89_fw_info *early_fw,
- 				 int *used_fw_format)
- {
--	union rtw89_compat_fw_hdr buf = {};
- 	const struct firmware *firmware;
--	bool full_req = false;
- 	char fw_name[64];
- 	int fw_format;
- 	u32 ver_code;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 4a006fb4d424..76efea2f1138 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -5,7 +5,7 @@
+  */
+ #include <linux/module.h>
+ #include <linux/of.h>
+-#include <linux/of_device.h>
++#include <linux/platform_device.h>
+ #include <linux/clk.h>
+ #include <linux/reset.h>
+ #include "core.h"
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index d4eaf7d2ba84..98efa0f299ca 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -13,7 +13,6 @@
+ #include <linux/of_address.h>
+ #include <linux/ioport.h>
+ #include <linux/firmware.h>
+-#include <linux/of_device.h>
+ #include <linux/of_irq.h>
  
--	/* If SECURITY_LOADPIN_ENFORCE is enabled, reading partial files will
--	 * be denied (-EPERM). Then, we don't get right firmware things as
--	 * expected. So, in this case, we have to request full firmware here.
--	 */
--	if (IS_ENABLED(CONFIG_SECURITY_LOADPIN_ENFORCE))
--		full_req = true;
--
- 	for (fw_format = chip->fw_format_max; fw_format >= 0; fw_format--) {
- 		rtw89_fw_get_filename(fw_name, sizeof(fw_name),
- 				      chip->fw_basename, fw_format);
+ #define SLEEP_CLOCK_SELECT_INTERNAL_BIT	0x02
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 8dbd115a393c..2bd1163177f0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -19,9 +19,8 @@
+ #include <linux/module.h>
+ #include <linux/firmware.h>
+ #include <linux/platform_device.h>
++#include <linux/of.h>
+ #include <linux/of_address.h>
+-#include <linux/of_device.h>
+-#include <linux/of_irq.h>
+ #include <linux/rpmsg.h>
+ #include <linux/soc/qcom/smem_state.h>
+ #include <linux/soc/qcom/wcnss_ctrl.h>
+diff --git a/drivers/net/wireless/intersil/orinoco/airport.c b/drivers/net/wireless/intersil/orinoco/airport.c
+index a890bfa0d5cc..45ac00fdafa5 100644
+--- a/drivers/net/wireless/intersil/orinoco/airport.c
++++ b/drivers/net/wireless/intersil/orinoco/airport.c
+@@ -18,7 +18,7 @@
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+ #include <linux/delay.h>
+-#include <linux/of_device.h>
++#include <linux/mod_devicetable.h>
+ #include <asm/pmac_feature.h>
  
--		if (full_req)
--			ret = request_firmware(&firmware, fw_name, device);
--		else
--			ret = request_partial_firmware_into_buf(&firmware, fw_name,
--								device, &buf, sizeof(buf),
--								0);
-+		ret = request_firmware(&firmware, fw_name, device);
- 		if (!ret) {
- 			dev_info(device, "loaded firmware %s\n", fw_name);
- 			*used_fw_format = fw_format;
-@@ -349,10 +335,7 @@ rtw89_early_fw_feature_recognize(struct device *device,
- 		return NULL;
- 	}
+ #include "orinoco.h"
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index ac2049f49bb3..aec47de35f53 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -4,6 +4,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/hwmon.h>
+ #include <linux/hwmon-sysfs.h>
++#include <linux/of.h>
+ #include <linux/thermal.h>
+ #include "mt7915.h"
+ #include "mac.h"
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+index 32c137066e7f..701a27ffa4c2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
+@@ -6,7 +6,6 @@
+ #include <linux/platform_device.h>
+ #include <linux/pinctrl/consumer.h>
+ #include <linux/of.h>
+-#include <linux/of_device.h>
+ #include <linux/of_reserved_mem.h>
+ #include <linux/of_gpio.h>
+ #include <linux/iopoll.h>
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+index f1b48cdda58f..5c980534f611 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -4,6 +4,7 @@
+  */
  
--	if (full_req)
--		ver_code = rtw89_compat_fw_hdr_ver_code(firmware->data);
--	else
--		ver_code = rtw89_compat_fw_hdr_ver_code(&buf);
-+	ver_code = rtw89_compat_fw_hdr_ver_code(firmware->data);
- 
- 	if (!ver_code)
- 		goto out;
-@@ -360,11 +343,7 @@ rtw89_early_fw_feature_recognize(struct device *device,
- 	rtw89_fw_iterate_feature_cfg(early_fw, chip, ver_code);
- 
- out:
--	if (full_req)
--		return firmware;
--
--	release_firmware(firmware);
--	return NULL;
-+	return firmware;
- }
- 
- int rtw89_fw_recognize(struct rtw89_dev *rtwdev)
+ #include <linux/etherdevice.h>
++#include <linux/of.h>
+ #include <linux/thermal.h>
+ #include "mt7996.h"
+ #include "mac.h"
+diff --git a/drivers/net/wireless/silabs/wfx/bus_sdio.c b/drivers/net/wireless/silabs/wfx/bus_sdio.c
+index 51a0d58a9070..909d5f346a01 100644
+--- a/drivers/net/wireless/silabs/wfx/bus_sdio.c
++++ b/drivers/net/wireless/silabs/wfx/bus_sdio.c
+@@ -10,7 +10,7 @@
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/card.h>
+ #include <linux/interrupt.h>
+-#include <linux/of_device.h>
++#include <linux/of.h>
+ #include <linux/of_irq.h>
+ #include <linux/irq.h>
+ #include <linux/align.h>
 -- 
-2.41.0
+2.40.1
 
