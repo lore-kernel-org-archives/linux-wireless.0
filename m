@@ -2,46 +2,79 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6906C001DE
-	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 09:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94BDBC41513
+	for <linux-wireless@archiver.kernel.org>; Mon, 24 Jul 2023 10:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231134AbjGXJoB (ORCPT
+        id S232601AbjGXKQ1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 24 Jul 2023 05:44:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45310 "EHLO
+        Mon, 24 Jul 2023 06:16:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229538AbjGXJoA (ORCPT
+        with ESMTP id S230035AbjGXKQS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Jul 2023 05:44:00 -0400
-X-Greylist: delayed 1159 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 24 Jul 2023 02:43:59 PDT
-Received: from fluorez-com.cfd (fluorez-com.cfd [107.174.244.118])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 899AD1A1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 02:43:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=re1; d=fluorez-com.cfd;
- h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:
- Content-Transfer-Encoding; i=info@fluorez-com.cfd;
- bh=LqAKS0rQcqRhfS2AomqosmxOtHjI8TSd2DPxtKmN8Fo=;
- b=jwiMW4IVmX9tJkfRtBfQwcglHXQOSQjcptfGP842OujsaMxlXy6LxXcloKlHbXS0N6NSlqTOSp1r
-   zXJmMNzIB5CF4Ga85MMclEbZ7ZRgCcpxWUPXxXB04J51Lne2H8bpgiduJl3sfKEf6PfmPkfFkXXH
-   yEjd/d6PWkmSIrGzKVWJno82TXw7MkqYYNCB5lcGq/Cp4zfI1yldi4wMxnqYVktRam9a9OsxJl6k
-   7wBUiWSTo09tqcijf1M3KcsEusE4qmCVr9X8+biTzrgCVc8iL2kfy4luYhEB6itoclIZXmDhKzci
-   z6d8Y7n1cT6XJ+PqxYnEW74VD5r35/1U0TOnog==
-Reply-To: info@coinloansupport.online
-From:   Coinloan Support Center <info@fluorez-com.cfd>
+        Mon, 24 Jul 2023 06:16:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FE7C4C3D
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 03:08:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1FF5961004
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 10:08:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22075C433C7
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Jul 2023 10:08:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690193306;
+        bh=m9JYSC+5Rp/ldrharwh/9Y6b7HOGHkKkWSyv7YD8AjY=;
+        h=From:To:Subject:Date:From;
+        b=GyL21Nl0HRlz3ERkvJhKZSjyczfZx9vOJH0DNVMSCdOcTM9L9hUZhd8YUgkFwp/YZ
+         lG4M5tf4IOyrtq7NeoklwargmZKRyfdkI/W6wx0ClYw+vcSPv220ZyJ/rX4jYaKOao
+         uHRCbQo27NjQ+/ylznsrAdCNVv7CpT3azL6Amwl3Ulybp+sEEWAi/x5mlFqeVq2ciX
+         GE/K8n6+FEj/j2e+aAmmQhj1L2eYDeVACFSuuEojivB4OTHf5IQoG5VlRkjxWoG6BT
+         syubY3Cm4CgUdOpdTTUwrbbpKFXVgrZAGa8Kh3OIMk6q7xFyN3IGgZR+recJfbxsZD
+         K6sPZWJkI3Xxw==
+From:   Kalle Valo <kvalo@kernel.org>
 To:     linux-wireless@vger.kernel.org
-Subject: Don't miss out on our low Interest coinloan opportunity
-Date:   24 Jul 2023 10:46:47 +0200
-Message-ID: <20230724104646.F4AAB73058DE0833@fluorez-com.cfd>
+Subject: [PATCH] Revert "wifi: ath6k: silence false positive -Wno-dangling-pointer warning on GCC 12"
+Date:   Mon, 24 Jul 2023 13:08:23 +0300
+Message-Id: <20230724100823.2948804-1-kvalo@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Are you looking for a loan to either increase your activity or to=20
-carry out a project.=20
-We offer Crypto Loans at 2-7% interest rate with or without a=20
-credit check.
-Please get back to us if you are interested in more details.
+This reverts commit bd1d129daa3ede265a880e2c6a7f91eab0f4dc62.
+
+The dangling-pointer warnings were disabled kernel-wide by commit 49beadbd47c2
+("gcc-12: disable '-Wdangling-pointer' warning for now") for v5.19. So this
+hack in ath6kl is not needed anymore.
+
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+---
+ drivers/net/wireless/ath/ath6kl/Makefile | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
+index a75bfa9fd1cf..dc2b3b46781e 100644
+--- a/drivers/net/wireless/ath/ath6kl/Makefile
++++ b/drivers/net/wireless/ath/ath6kl/Makefile
+@@ -36,11 +36,6 @@ ath6kl_core-y += wmi.o
+ ath6kl_core-y += core.o
+ ath6kl_core-y += recovery.o
+ 
+-# FIXME: temporarily silence -Wdangling-pointer on non W=1+ builds
+-ifndef KBUILD_EXTRA_WARN
+-CFLAGS_htc_mbox.o += $(call cc-disable-warning, dangling-pointer)
+-endif
+-
+ ath6kl_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
+ ath6kl_core-$(CONFIG_ATH6KL_TRACING) += trace.o
+ 
+
+base-commit: ac528649f7c63bc233cc0d33cff11f767cc666e3
+-- 
+2.39.2
+
