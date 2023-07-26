@@ -2,111 +2,261 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D6DFC41513
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Jul 2023 13:56:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92393C001DC
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Jul 2023 14:12:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234275AbjGZN4l (ORCPT
+        id S233991AbjGZOMJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jul 2023 09:56:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58066 "EHLO
+        Wed, 26 Jul 2023 10:12:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233169AbjGZN4j (ORCPT
+        with ESMTP id S233570AbjGZOLs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2023 09:56:39 -0400
-Received: from JPN01-OS0-obe.outbound.protection.outlook.com (mail-os0jpn01olkn2039.outbound.protection.outlook.com [40.92.98.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9D042697;
-        Wed, 26 Jul 2023 06:55:47 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ofTNULpIWhGlvJ3bpKR3nc+KISkiGSC+9qYz1ZQiUwkmkYB9UH2Bz/vEBS0gOub6Q+oLmsvlt0JlytyCoH6U8+M/mrfrYdQKr+5UzIx3dfltUhRabBMgNe2HhU3vSha+WV8Lz4s/iiBNSvtRw9YPDMOybVjtbHk1WbNI0D6mTGl3ta5ag0YX+ee6kg3r0UJIqNx1npURWhkwJ87WK9zGOcQue+XnblyN6BNJSOBnTMsd1GInMp0YVA9KdBxsCRIt95xinQRKLnQ7+xoV+Cve0gfUTHlTmJoSs1HqasBydHBlVBVA/EsW8Os06Bu7p+Yu1UmDmkrqexztNSSQZ+Y09A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=6cQxaTz7g73oz6xbuuUqbQehs/F3w6onjtnuM/ot98Q=;
- b=Cdmlmmttniavquykn6gE0kQTEeXeBmTIwPyIqjsLVa9JGLrJHCrhUFbm5kM2xN3SLhK5wGIYEmShYgvyh6tN5h9DJYBswefsPwO+SMT2Ru6hpnKiPdqL/0m5dm0geRLzYyQJfKJwlmBbYePpXxOw3cWsDOxqBBdsvizRZItpgIN0TMTc5FO0+yec7uj1JMx9sDMlCH+6vefMvaPHYwvyKj6xCaY61WR++/v6tBD8ZnGcIlK5Xr2OsfmwIEPkEwxIrH+cNSmPPp4NN6EsTMAoYJEjrmcthpt3PclngfXHH3T6/fcOUxXhwa/SCWz+CWvozNKIBzqRj9b9EAspthCeSQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6cQxaTz7g73oz6xbuuUqbQehs/F3w6onjtnuM/ot98Q=;
- b=n4tY015RC0wf1+nw7BXM8pwfYC4hTnhk6xOlEKz1FAvmv1bHVaWvA9b53iAEJwMEe1pAEL2kyNfp0OTEcURhbXCRxPUpr1bIKywR9W/3jUMTir2w+BCiZng1zncnNU89Z89vhHh35Jc7DIBKahjjnftOYkTEkUHaI5S99mzhdQLXmt5F4TvlmModRHlmi1bnKEiTQSrUKOo7RDBolmUNCsrkrFyWl/99Ic4loiEDdbf8CLSzh0PfcA0BfyK9PqvbwXli/3V5zdqZcRkYDyNyMtubCKatEsvYblo35PlTQvRQDOZHLW250X1eitQ2yelu72kzRRBcKILp9H9GmNSnwg==
-Received: from TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM (2603:1096:404:8041::8)
- by TYCP286MB3724.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:3be::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.29; Wed, 26 Jul
- 2023 13:55:43 +0000
-Received: from TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
- ([fe80::f4c2:4b38:d074:f1e9]) by TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
- ([fe80::f4c2:4b38:d074:f1e9%5]) with mapi id 15.20.6631.026; Wed, 26 Jul 2023
- 13:55:43 +0000
-From:   Shiji Yang <yangshiji66@outlook.com>
-To:     daniel@makrotopia.org
-Cc:     angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-        john@phrozen.org, kvalo@kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org,
-        lorenzo@kernel.org, matthias.bgg@gmail.com, nbd@nbd.name,
-        ryder.lee@mediatek.com, sean.wang@mediatek.com,
-        shayne.chen@mediatek.com, Shiji Yang <yangshiji66@outlook.com>
-Subject: Re: [PATCH] wifi: mt76: support per-band MAC addresses from OF child nodes
-Date:   Wed, 26 Jul 2023 21:53:07 +0800
-Message-ID: <TYAP286MB03153BE5014AA32BE048B8B7BC00A@TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <ZK9mXE00xEHZV4fi@makrotopia.org>
-References: <ZK9mXE00xEHZV4fi@makrotopia.org>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-TMN:  [VZOMPsTcg2+hanBfxJnwfWTavMFmQcSt]
-X-ClientProxiedBy: TYCP286CA0028.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:263::15) To TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:404:8041::8)
-X-Microsoft-Original-Message-ID: <20230726135306.392-1-yangshiji66@outlook.com>
+        Wed, 26 Jul 2023 10:11:48 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51C9B46B1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Jul 2023 07:11:05 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36QCYY9D019843;
+        Wed, 26 Jul 2023 14:10:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=7/jNWXuc8GWD9NXfCV41vK+CR3OfSrJlggdVC3YKEhI=;
+ b=en5c6ycWp2UY+pRcVnllKkKjDaIPcMBQXgA3Ys0yZkYhrhFxquTmVSj4EBEsDIJKyw3Y
+ 6X9vxD3SSN1AV1WIt6EqkI9IK8tOjfOa1OXt1IfKcJFbNltf007ZrzRXK0WGTnL24Ta4
+ BWl0Q11inmCocS0afS1kcRVEGrE19v3LPWLx+3VTF7dtKXFy1M/tshyooST5XNH+pVnK
+ YRbF+zvE2wpTBu+IQ22c2ZpKDFXxEDyHEYLbGmZsZcBjdGJ55VJKVNPYKKBpOex3GKw8
+ /qO/miKCwO/NUwoI2NxIAE9Rddr7RbIsnSApdIB53pNyMQyhm+UMYMzzoqa7SUfk/Ph8 xg== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3s2mxrhvbd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 26 Jul 2023 14:10:56 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 36QEAtPT009941
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 26 Jul 2023 14:10:55 GMT
+Received: from rajkbhag-linux.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.30; Wed, 26 Jul 2023 07:10:52 -0700
+From:   Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Seevalamuthu Mariappan <quic_seevalam@quicinc.com>,
+        Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+Subject: [PATCH 1/3] wifi: ath11k: Split coldboot calibration hw_param
+Date:   Wed, 26 Jul 2023 19:40:30 +0530
+Message-ID: <20230726141032.3061-2-quic_rajkbhag@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230726141032.3061-1-quic_rajkbhag@quicinc.com>
+References: <20230726141032.3061-1-quic_rajkbhag@quicinc.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYAP286MB0315:EE_|TYCP286MB3724:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9721e24b-70dd-4803-5c86-08db8de000cb
-X-MS-Exchange-SLBlob-MailProps: q6Zzr5Fg03EX4MSurZUzZTQFeLZtFhLusQUcZIfjBDe90lTD8R50MthGcPaV5dqFU35tXsWqHVlwVTM0ANrwM6Iqbdmi45YmrInAP6yicjjdYLEVXC69sKhBuLA3yi3RQQ5i8D7VtbZmW6+VJp12oUFbRgK7sskzYyAsk7oQbqwkV+RJQ0BKnHRWEO96Xdtw+1Bep9XfE1zjfecdLfDqAfpbxvHPBk3UIOQwJg+y879QM8DeW/t//JAUeeh/cHpLm+NJbg852U83FqwVCYqhmzOG8Kcn98fjEvt5ye/mTDUoKgpJ60YyNAKKv9PLazNfsQ9ETvB6zqw1gYI4l5yauPSL9o1Kzp6goDVhc1lL36cQ2OW7uhhDmj5Dw1H5tfif9pAytlM9ewYjFGqIvyATox7TDrkDp7M8MFeH4arRkNKA7ab0bVBS7ZUb2xxIFRu4tavSo1rFcavEUGCZ5XBaK/QeK4matE59LJv/uInqEGM5Fu3z5tm4FKBeFp6SYJUyEDywDTWh41WWvgYxZxYe9fBNmB+HVpQXHzXy2Xyad4freQufpuwEZca95xtvPLFbpN8C2eKQJmBs5scyYuA6ncLdOgyUi6mC2RCAkwfyvIrRbJlnIMd2K9wqaBi4zY8eqC4uKx6AgliXoX+/i5TpUkOMnqEvEsHjf6mEpro9fa+0pQdpIWD/+FgXmzUz5N9k
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 3OqgMTSItSS7x5NUqolOgRYHAD1sSglvYUQsF+ge6yv/H55fh+Ly26h2/Fpp8mfRAYwa/L2JPCh2D3M5uTNfb8CJLE2SPIxr1Loc7ZvpJk8YasSTb3YezoBLOA34GU0DmMFec0AgLfmGca1H28v2bnmJro1OIhGHIQM37HWhktt1BvMTxqSUMbYF5k2rlWDNUpIosjC8zE8xOztyqp3TKprYcStMYyH+20DmQTd5Moe7LwJ0DlwijZpSyGKQ6hSXYtwrV+UrPzRRaPnA3Zra6UJzHaBwJrRt69DATsH5Pz9pKOZZzwmKQTaqt4JWfxoJZAzTeolwqgpiOfOkGhOY2rr66968kKhlEcDhUu6hB/KbVuWcn8NfjRY6rJvwJBr9ctP/lc3t9oNv2kOVjbqV/Y9+CLEXEjkE7X+y5qtFWZ6gt7SJZEnjnI2VCSF7YvdgBrNWhgABM803BmhnKBIIhIJcatM8ec4EEkP7cqGrQh+GA3trmfqvk5SBUgOBEnCEJvK9P+oINGy3uQY4N09k0OYkG1dZtuJFKRlwMUHufw5ZIwTTc0df+fVxxXKvj1Ue1DYlEiArb98UixrlMDLSStV5lYxq1sbtnHNH2m4UXYuw/3PgiwfwKnFLCpetoPMy
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?zL8ygI1k0WnqLDyuLj0WMwBGTjDJZuLTUVPT1IiR9lFql0sjac5FwNBBGBof?=
- =?us-ascii?Q?h8L47wALCtUaTmDc37eoR4uwVUYg7lB05UGzfHL3K6uD/SivHxqke+5Ey14s?=
- =?us-ascii?Q?jIk+LRO7HFr84FycByq7iJQbw9njqIgEo7fi+fAdZ9WPdq7l2UqZeeWQVj0q?=
- =?us-ascii?Q?fY/oJmf4PA//efF4otkp9ixa2RjL0BiOxz638TeErtxBOOWYvp6ZPWpie1FZ?=
- =?us-ascii?Q?uBcG1jue2YjuU2gZgfLfEYryzGGDOKGEAI9A+V1VbyOQy08tUCfvDzvhmN3R?=
- =?us-ascii?Q?+oAniqjTZ25jj1EbuDf3xIlpSwLwsAyWeToZePcocq5XQIe/FXv+l6c6XJ2R?=
- =?us-ascii?Q?XSCclU/mtva3G3YdTkHlH7rv9U6sbvLocSmW7Wl0V73oC5Uz3ZzfgGk6IvPt?=
- =?us-ascii?Q?SGlIMEWCZByKNVH9EuwKOw9n7DzRm6iT0JRIUfK1vECLkDRK1jxCIKM4/zDN?=
- =?us-ascii?Q?bbhAFJfY4CODk1WtBxFiIAp/tLPT23bXigcH1dqt8O1DRL986pFOP5SP+X8g?=
- =?us-ascii?Q?yUGvTGHJcUhDajm70XQqVj8erZAONe0AzkWsLX5mUPT4ecAn/4Dc6hgp/zPZ?=
- =?us-ascii?Q?ABX/g+r7HnpSW0sqtbA4k0s2PfhTHpYM77ctHgLGCaZB+5SPQU1b6oXxIy4U?=
- =?us-ascii?Q?d5rNQAfwZwwN1kxMo6jtYLBo7sZABz5MdLJNezCXUdVhnhsA9LRteoXRtjcn?=
- =?us-ascii?Q?+bshkd7f6n6sW0xisiIDiSNNRYcNhvzMtvNPID06LZGC7gE5ljQ8kuTncbJH?=
- =?us-ascii?Q?+v249ni9fM6RQY9jSPd+zNK+iMzRA3EmOVBQ6CFD57UC7iTzbxS7e0DkBDC/?=
- =?us-ascii?Q?O1abUkM6rztolAOKsoRj43dkVq5eA0yCyWlVA2xTO0ynlmeAeKQafkbpOMQk?=
- =?us-ascii?Q?1EhjxZ0K0ppI2DhUQaXmXQqnG+cpBhcng7UvqfAaQSu8TW2/llNg9bByPTYY?=
- =?us-ascii?Q?cfGnZ5LJjhBZuw4KKAV3/4iwhSNhYYP6KNm4TZo14qfHqsBT+3lYFt5a7ukj?=
- =?us-ascii?Q?aV7RWZ0VNGcQ56CBwbnkTJUL3m3alLdp8QT4OP6N1kgRFxqC79wrq/AtoSf6?=
- =?us-ascii?Q?9/hkfDVbVAbnoGXZq80KROn7ZA73YoBUuuqLDdThCh4EJf1hayWy+M5wL0ut?=
- =?us-ascii?Q?SELn0ML2FKFKpgM+tO733WG4X1JwluP0oEBmjt9tgnfrX4Eva32odlGWaKf4?=
- =?us-ascii?Q?CV49+/WW75vEpvCKSpJVjXvwvdlyBUYPnf/iqmWKaw/awy56RBpb3/pY4h8?=
- =?us-ascii?Q?=3D?=
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9721e24b-70dd-4803-5c86-08db8de000cb
-X-MS-Exchange-CrossTenant-AuthSource: TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jul 2023 13:55:43.2650
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB3724
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: wtgGsOfW_jYRDp33ZDbyU5GUOY2ItzBu
+X-Proofpoint-ORIG-GUID: wtgGsOfW_jYRDp33ZDbyU5GUOY2ItzBu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-26_06,2023-07-26_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
+ lowpriorityscore=0 malwarescore=0 impostorscore=0 suspectscore=0
+ clxscore=1015 mlxlogscore=999 mlxscore=0 bulkscore=0 priorityscore=1501
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2307260125
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Thanks.
-Works well on MT7615D and MT7915D.
+From: Seevalamuthu Mariappan <quic_seevalam@quicinc.com>
 
-Tested-by: Shiji Yang <yangshiji66@outlook.com>
+QCN9074 enables coldboot calibration only in Factory Test Mode (FTM).
+Hence, split cold_boot_calib to two hw_params for mission and FTM
+mode.
+
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Seevalamuthu Mariappan <quic_seevalam@quicinc.com>
+Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/ahb.c  |  3 +--
+ drivers/net/wireless/ath/ath11k/core.c | 36 ++++++++++++++++++++------
+ drivers/net/wireless/ath/ath11k/core.h |  1 +
+ drivers/net/wireless/ath/ath11k/hw.h   |  3 ++-
+ drivers/net/wireless/ath/ath11k/qmi.c  |  6 ++---
+ 5 files changed, 35 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 1cebba788..56aea2bc9 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -423,8 +423,7 @@ static int ath11k_ahb_fwreset_from_cold_boot(struct ath11k_base *ab)
+ {
+ 	int timeout;
+ 
+-	if (ath11k_cold_boot_cal == 0 || ab->qmi.cal_done ||
+-	    ab->hw_params.cold_boot_calib == 0 ||
++	if (!ath11k_core_coldboot_cal_support(ab) || ab->qmi.cal_done ||
+ 	    ab->hw_params.cbcal_restart_fw == 0)
+ 		return 0;
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index bebfd342e..d5bf2896d 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -86,7 +86,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_shadow_regs = false,
+ 		.idle_ps = false,
+ 		.supports_sta_ps = false,
+-		.cold_boot_calib = true,
++		.coldboot_cal_mm = true,
++		.coldboot_cal_ftm = true,
+ 		.cbcal_restart_fw = true,
+ 		.fw_mem_mode = 0,
+ 		.num_vdevs = 16 + 1,
+@@ -167,7 +168,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_shadow_regs = false,
+ 		.idle_ps = false,
+ 		.supports_sta_ps = false,
+-		.cold_boot_calib = true,
++		.coldboot_cal_mm = true,
++		.coldboot_cal_ftm = true,
+ 		.cbcal_restart_fw = true,
+ 		.fw_mem_mode = 0,
+ 		.num_vdevs = 16 + 1,
+@@ -248,7 +250,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_shadow_regs = true,
+ 		.idle_ps = true,
+ 		.supports_sta_ps = true,
+-		.cold_boot_calib = false,
++		.coldboot_cal_mm = false,
++		.coldboot_cal_ftm = false,
+ 		.cbcal_restart_fw = false,
+ 		.fw_mem_mode = 0,
+ 		.num_vdevs = 16 + 1,
+@@ -332,7 +335,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_shadow_regs = false,
+ 		.idle_ps = false,
+ 		.supports_sta_ps = false,
+-		.cold_boot_calib = false,
++		.coldboot_cal_mm = false,
++		.coldboot_cal_ftm = false,
+ 		.cbcal_restart_fw = false,
+ 		.fw_mem_mode = 2,
+ 		.num_vdevs = 8,
+@@ -413,7 +417,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_shadow_regs = true,
+ 		.idle_ps = true,
+ 		.supports_sta_ps = true,
+-		.cold_boot_calib = false,
++		.coldboot_cal_mm = false,
++		.coldboot_cal_ftm = false,
+ 		.cbcal_restart_fw = false,
+ 		.fw_mem_mode = 0,
+ 		.num_vdevs = 16 + 1,
+@@ -495,7 +500,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_shadow_regs = true,
+ 		.idle_ps = true,
+ 		.supports_sta_ps = true,
+-		.cold_boot_calib = false,
++		.coldboot_cal_mm = false,
++		.coldboot_cal_ftm = false,
+ 		.cbcal_restart_fw = false,
+ 		.fw_mem_mode = 0,
+ 		.num_vdevs = 16 + 1,
+@@ -578,7 +584,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_shadow_regs = true,
+ 		.idle_ps = true,
+ 		.supports_sta_ps = true,
+-		.cold_boot_calib = true,
++		.coldboot_cal_mm = true,
++		.coldboot_cal_ftm = true,
+ 		.cbcal_restart_fw = false,
+ 		.fw_mem_mode = 0,
+ 		.num_vdevs = 16 + 1,
+@@ -667,7 +674,8 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
+ 		.supports_suspend = false,
+ 		.hal_params = &ath11k_hw_hal_params_ipq8074,
+ 		.single_pdev_only = false,
+-		.cold_boot_calib = true,
++		.coldboot_cal_mm = true,
++		.coldboot_cal_ftm = true,
+ 		.cbcal_restart_fw = true,
+ 		.fix_l1ss = true,
+ 		.supports_dynamic_smps_6ghz = false,
+@@ -749,6 +757,18 @@ void ath11k_fw_stats_free(struct ath11k_fw_stats *stats)
+ 	ath11k_fw_stats_bcn_free(&stats->bcn);
+ }
+ 
++bool ath11k_core_coldboot_cal_support(struct ath11k_base *ab)
++{
++	if (!ath11k_cold_boot_cal)
++		return false;
++
++	if (ath11k_ftm_mode)
++		return ab->hw_params.coldboot_cal_ftm;
++
++	else
++		return ab->hw_params.coldboot_cal_mm;
++}
++
+ int ath11k_core_suspend(struct ath11k_base *ab)
+ {
+ 	int ret;
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 9d15b4390..b04447762 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -1186,6 +1186,7 @@ void ath11k_core_halt(struct ath11k *ar);
+ int ath11k_core_resume(struct ath11k_base *ab);
+ int ath11k_core_suspend(struct ath11k_base *ab);
+ void ath11k_core_pre_reconfigure_recovery(struct ath11k_base *ab);
++bool ath11k_core_coldboot_cal_support(struct ath11k_base *ab);
+ 
+ const struct firmware *ath11k_core_firmware_request(struct ath11k_base *ab,
+ 						    const char *filename);
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index f5533630a..d51a99669 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -187,7 +187,8 @@ struct ath11k_hw_params {
+ 	bool supports_shadow_regs;
+ 	bool idle_ps;
+ 	bool supports_sta_ps;
+-	bool cold_boot_calib;
++	bool coldboot_cal_mm;
++	bool coldboot_cal_ftm;
+ 	bool cbcal_restart_fw;
+ 	int fw_mem_mode;
+ 	u32 num_vdevs;
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index d4eaf7d2b..91a214caa 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -2079,7 +2079,7 @@ static int ath11k_qmi_assign_target_mem_chunk(struct ath11k_base *ab)
+ 				return -EINVAL;
+ 			}
+ 
+-			if (ath11k_cold_boot_cal && ab->hw_params.cold_boot_calib) {
++			if (ath11k_core_coldboot_cal_support(ab)) {
+ 				if (hremote_node) {
+ 					ab->qmi.target_mem[idx].paddr =
+ 							res.start + host_ddr_sz;
+@@ -3209,8 +3209,8 @@ static void ath11k_qmi_driver_event_work(struct work_struct *work)
+ 				break;
+ 			}
+ 
+-			if (ath11k_cold_boot_cal && ab->qmi.cal_done == 0 &&
+-			    ab->hw_params.cold_boot_calib) {
++			if (ab->qmi.cal_done == 0 &&
++			    ath11k_core_coldboot_cal_support(ab)) {
+ 				ath11k_qmi_process_coldboot_calibration(ab);
+ 			} else {
+ 				clear_bit(ATH11K_FLAG_CRASH_FLUSH,
+-- 
+2.17.1
+
