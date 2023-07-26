@@ -2,112 +2,68 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DA5AC001E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 26 Jul 2023 07:24:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE5BC001DE
+	for <linux-wireless@archiver.kernel.org>; Wed, 26 Jul 2023 09:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232577AbjGZHYW (ORCPT
+        id S233663AbjGZJQI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 26 Jul 2023 03:24:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54410 "EHLO
+        Wed, 26 Jul 2023 05:16:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232930AbjGZHX2 (ORCPT
+        with ESMTP id S232740AbjGZJPq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Jul 2023 03:23:28 -0400
-Received: from forward100b.mail.yandex.net (forward100b.mail.yandex.net [178.154.239.147])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FDEC4214
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Jul 2023 00:21:53 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-36.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-36.sas.yp-c.yandex.net [IPv6:2a02:6b8:c08:a497:0:640:fcbf:0])
-        by forward100b.mail.yandex.net (Yandex) with ESMTP id CA4BF60033;
-        Wed, 26 Jul 2023 10:21:51 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-36.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id kLF1MPmWs8c0-0KeLgVC8;
-        Wed, 26 Jul 2023 10:21:51 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1690356111;
-        bh=h4jj5nn8/ZGXlAamjLUL6DvfSMZQ3PAO/vydRmMRv90=;
-        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
-        b=qy8pINoDv2aOeK+vlN+0x42v4qhNLbJZIqrhveKDNLjL3gT6/aP7BXetuTsBxeX9p
-         HbkznPBs/8o0bLWtBEgDF9H7G9tyYZLbqQerbr3rmSUgYKKcAvbFki6aCig2KeQeWO
-         V2dDxqGooDb06akYgYAag83+hWgzMpxlNvwvl2J4=
-Authentication-Results: mail-nwsmtp-smtp-production-main-36.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Brian Norris <briannorris@chromium.org>,
-        linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
-        Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH 5/5] wifi: mwifiex: handle possible mwifiex_write_reg() errors
-Date:   Wed, 26 Jul 2023 10:20:56 +0300
-Message-ID: <20230726072114.51964-5-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230726072114.51964-1-dmantipov@yandex.ru>
-References: <20230726072114.51964-1-dmantipov@yandex.ru>
+        Wed, 26 Jul 2023 05:15:46 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 044A9F3;
+        Wed, 26 Jul 2023 02:11:55 -0700 (PDT)
+Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4R9p4G6B1gzLnrf;
+        Wed, 26 Jul 2023 17:09:18 +0800 (CST)
+Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
+ (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 26 Jul
+ 2023 17:11:53 +0800
+From:   Ruan Jinjie <ruanjinjie@huawei.com>
+To:     <jirislaby@kernel.org>, <mickflemm@gmail.com>, <mcgrof@kernel.org>,
+        <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <ruanjinjie@huawei.com>
+Subject: [PATCH -next] wifi: ath5k: Remove redundant dev_err()
+Date:   Wed, 26 Jul 2023 17:12:35 +0000
+Message-ID: <20230726171235.2475625-1-ruanjinjie@huawei.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.90.53.73]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500008.china.huawei.com (7.221.188.139)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Return -1 on possible 'mwifiex_write_reg()' errors in
-'mwifiex_init_sdio_ioport()', do not ignore the value
-returned by the latter in 'mwifiex_init_sdio()' and
-'mwifiex_sdio_up_dev()' as well.
+There is no need to call the dev_err() function directly to print a custom
+message when handling an error from platform_get_irq() function as it is
+going to display an appropriate error message in case of a failure.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sdio.c | 22 +++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath5k/ahb.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index a24bd40dd41a..0d60484cd5df 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1083,17 +1083,17 @@ static int mwifiex_init_sdio_ioport(struct mwifiex_adapter *adapter)
- 		    "info: SDIO FUNC1 IO port: %#x\n", adapter->ioport);
+diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+index 28a1e5eff204..08bd5d3b00f1 100644
+--- a/drivers/net/wireless/ath/ath5k/ahb.c
++++ b/drivers/net/wireless/ath/ath5k/ahb.c
+@@ -115,7 +115,6 @@ static int ath_ahb_probe(struct platform_device *pdev)
  
- 	/* Set Host interrupt reset to read to clear */
--	if (!mwifiex_read_reg(adapter, card->reg->host_int_rsr_reg, &reg))
--		mwifiex_write_reg(adapter, card->reg->host_int_rsr_reg,
--				  reg | card->reg->sdio_int_mask);
--	else
-+	if (mwifiex_read_reg(adapter, card->reg->host_int_rsr_reg, &reg))
-+		return -1;
-+	if (mwifiex_write_reg(adapter, card->reg->host_int_rsr_reg,
-+			      reg | card->reg->sdio_int_mask))
- 		return -1;
- 
- 	/* Dnld/Upld ready set to auto reset */
--	if (!mwifiex_read_reg(adapter, card->reg->card_misc_cfg_reg, &reg))
--		mwifiex_write_reg(adapter, card->reg->card_misc_cfg_reg,
--				  reg | AUTO_RE_ENABLE_INT);
--	else
-+	if (mwifiex_read_reg(adapter, card->reg->card_misc_cfg_reg, &reg))
-+		return -1;
-+	if (mwifiex_write_reg(adapter, card->reg->card_misc_cfg_reg,
-+			      reg | AUTO_RE_ENABLE_INT))
- 		return -1;
- 
- 	return 0;
-@@ -2525,7 +2525,8 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
- 	mwifiex_read_reg(adapter, card->reg->host_int_status_reg, &sdio_ireg);
- 
- 	/* Get SDIO ioport */
--	mwifiex_init_sdio_ioport(adapter);
-+	if (mwifiex_init_sdio_ioport(adapter))
-+		return -EIO;
- 
- 	/* Initialize SDIO variables in card */
- 	card->mp_rd_bitmap = 0;
-@@ -3141,7 +3142,8 @@ static void mwifiex_sdio_up_dev(struct mwifiex_adapter *adapter)
- 	 */
- 	mwifiex_read_reg(adapter, card->reg->host_int_status_reg, &sdio_ireg);
- 
--	mwifiex_init_sdio_ioport(adapter);
-+	if (mwifiex_init_sdio_ioport(adapter))
-+		dev_err(&card->func->dev, "error enabling SDIO port\n");
- }
- 
- static struct mwifiex_if_ops sdio_ops = {
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq < 0) {
+-		dev_err(&pdev->dev, "no IRQ resource found: %d\n", irq);
+ 		ret = irq;
+ 		goto err_iounmap;
+ 	}
 -- 
-2.41.0
+2.34.1
 
