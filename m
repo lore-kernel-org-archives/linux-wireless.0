@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF634C001E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jul 2023 07:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5D2C0015E
+	for <linux-wireless@archiver.kernel.org>; Fri, 28 Jul 2023 07:04:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233722AbjG1HEG (ORCPT
+        id S233728AbjG1HEH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 28 Jul 2023 03:04:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38938 "EHLO
+        Fri, 28 Jul 2023 03:04:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233719AbjG1HEF (ORCPT
+        with ESMTP id S233725AbjG1HEG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Jul 2023 03:04:05 -0400
+        Fri, 28 Jul 2023 03:04:06 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 15F5219AF
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Jul 2023 00:04:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3ECD71FFF
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Jul 2023 00:04:04 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 36S73ikgE031479, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 36S73ikeE031479, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 36S73ikgE031479
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 36S73ikeE031479
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
         Fri, 28 Jul 2023 15:03:44 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 28 Jul 2023 15:03:33 +0800
+ 15.1.2375.32; Fri, 28 Jul 2023 15:03:28 +0800
 Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 28 Jul
- 2023 15:03:32 +0800
+ 2023 15:03:27 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/10] wifi: rtw89: add C2H RA event V1 to support WiFi 7 chips
-Date:   Fri, 28 Jul 2023 15:02:50 +0800
-Message-ID: <20230728070252.66525-9-pkshih@realtek.com>
+Subject: [PATCH 04/10] wifi: rtw89: use struct to set RA H2C command
+Date:   Fri, 28 Jul 2023 15:02:46 +0800
+Message-ID: <20230728070252.66525-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230728070252.66525-1-pkshih@realtek.com>
 References: <20230728070252.66525-1-pkshih@realtek.com>
@@ -57,140 +57,324 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WiFi 7 chips have more rate mode (EHT), higher MCS and more bandwidth, so
-define and use reserved bits to carry these information in C2H events.
-Also, the SS/MCS encoded bits of VHT and HE are changed, so define V1 masks
-for them.
+RA (rate adaptive) H2C command is used to tell firmware which rates can
+be used for specified MAC ID. Basically, this commit doesn't change result.
+Only change to set two 32-bit instead of continual 8-byte rate masks one
+by one. Originally, we only set 5-byte masks, because existing WiFi 6
+2SS chips only need 5-byte masks. Setting two 32-bit masks will be more
+efficient and also can support coming WiFi 7 2SS chips containing more
+rates.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h |  2 ++
- drivers/net/wireless/realtek/rtw89/fw.h   | 14 +++++++--
- drivers/net/wireless/realtek/rtw89/phy.c  | 35 +++++++++++++++++++----
- 3 files changed, 42 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtw89/fw.c |  79 +++++-----
+ drivers/net/wireless/realtek/rtw89/fw.h | 187 +++++-------------------
+ 2 files changed, 73 insertions(+), 193 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 43e02a28e4cd4..24c1097467885 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -587,6 +587,8 @@ enum rtw89_hw_rate {
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 9637f5e48d842..c2dc5c98c73dc 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -1903,61 +1903,60 @@ int rtw89_fw_h2c_tp_offload(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
+ 	return ret;
+ }
  
- 	RTW89_HW_RATE_MASK_MOD = GENMASK(8, 7),
- 	RTW89_HW_RATE_MASK_VAL = GENMASK(6, 0),
-+	RTW89_HW_RATE_V1_MASK_MOD = GENMASK(10, 8),
-+	RTW89_HW_RATE_V1_MASK_VAL = GENMASK(7, 0),
- };
+-#define H2C_RA_LEN 16
+ int rtw89_fw_h2c_ra(struct rtw89_dev *rtwdev, struct rtw89_ra_info *ra, bool csi)
+ {
+ 	struct sk_buff *skb;
+-	u8 *cmd;
++	struct rtw89_h2c_ra *h2c;
++	u32 len = sizeof(*h2c);
+ 	int ret;
  
- /* 2G channels,
+-	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, H2C_RA_LEN);
++	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
+ 	if (!skb) {
+ 		rtw89_err(rtwdev, "failed to alloc skb for h2c join\n");
+ 		return -ENOMEM;
+ 	}
+-	skb_put(skb, H2C_RA_LEN);
+-	cmd = skb->data;
++	skb_put(skb, len);
++	h2c = (struct rtw89_h2c_ra *)skb->data;
+ 	rtw89_debug(rtwdev, RTW89_DBG_RA,
+ 		    "ra cmd msk: %llx ", ra->ra_mask);
+ 
+-	RTW89_SET_FWCMD_RA_MODE(cmd, ra->mode_ctrl);
+-	RTW89_SET_FWCMD_RA_BW_CAP(cmd, ra->bw_cap);
+-	RTW89_SET_FWCMD_RA_MACID(cmd, ra->macid);
+-	RTW89_SET_FWCMD_RA_DCM(cmd, ra->dcm_cap);
+-	RTW89_SET_FWCMD_RA_ER(cmd, ra->er_cap);
+-	RTW89_SET_FWCMD_RA_INIT_RATE_LV(cmd, ra->init_rate_lv);
+-	RTW89_SET_FWCMD_RA_UPD_ALL(cmd, ra->upd_all);
+-	RTW89_SET_FWCMD_RA_SGI(cmd, ra->en_sgi);
+-	RTW89_SET_FWCMD_RA_LDPC(cmd, ra->ldpc_cap);
+-	RTW89_SET_FWCMD_RA_STBC(cmd, ra->stbc_cap);
+-	RTW89_SET_FWCMD_RA_SS_NUM(cmd, ra->ss_num);
+-	RTW89_SET_FWCMD_RA_GILTF(cmd, ra->giltf);
+-	RTW89_SET_FWCMD_RA_UPD_BW_NSS_MASK(cmd, ra->upd_bw_nss_mask);
+-	RTW89_SET_FWCMD_RA_UPD_MASK(cmd, ra->upd_mask);
+-	RTW89_SET_FWCMD_RA_MASK_0(cmd, FIELD_GET(MASKBYTE0, ra->ra_mask));
+-	RTW89_SET_FWCMD_RA_MASK_1(cmd, FIELD_GET(MASKBYTE1, ra->ra_mask));
+-	RTW89_SET_FWCMD_RA_MASK_2(cmd, FIELD_GET(MASKBYTE2, ra->ra_mask));
+-	RTW89_SET_FWCMD_RA_MASK_3(cmd, FIELD_GET(MASKBYTE3, ra->ra_mask));
+-	RTW89_SET_FWCMD_RA_MASK_4(cmd, FIELD_GET(MASKBYTE4, ra->ra_mask));
+-	RTW89_SET_FWCMD_RA_FIX_GILTF_EN(cmd, ra->fix_giltf_en);
+-	RTW89_SET_FWCMD_RA_FIX_GILTF(cmd, ra->fix_giltf);
+-
+-	if (csi) {
+-		RTW89_SET_FWCMD_RA_BFEE_CSI_CTL(cmd, 1);
+-		RTW89_SET_FWCMD_RA_BAND_NUM(cmd, ra->band_num);
+-		RTW89_SET_FWCMD_RA_CR_TBL_SEL(cmd, ra->cr_tbl_sel);
+-		RTW89_SET_FWCMD_RA_FIXED_CSI_RATE_EN(cmd, ra->fixed_csi_rate_en);
+-		RTW89_SET_FWCMD_RA_RA_CSI_RATE_EN(cmd, ra->ra_csi_rate_en);
+-		RTW89_SET_FWCMD_RA_FIXED_CSI_MCS_SS_IDX(cmd, ra->csi_mcs_ss_idx);
+-		RTW89_SET_FWCMD_RA_FIXED_CSI_MODE(cmd, ra->csi_mode);
+-		RTW89_SET_FWCMD_RA_FIXED_CSI_GI_LTF(cmd, ra->csi_gi_ltf);
+-		RTW89_SET_FWCMD_RA_FIXED_CSI_BW(cmd, ra->csi_bw);
+-	}
+-
++	h2c->w0 = le32_encode_bits(ra->mode_ctrl, RTW89_H2C_RA_W0_MODE) |
++		  le32_encode_bits(ra->bw_cap, RTW89_H2C_RA_W0_BW_CAP) |
++		  le32_encode_bits(ra->macid, RTW89_H2C_RA_W0_MACID) |
++		  le32_encode_bits(ra->dcm_cap, RTW89_H2C_RA_W0_DCM) |
++		  le32_encode_bits(ra->er_cap, RTW89_H2C_RA_W0_ER) |
++		  le32_encode_bits(ra->init_rate_lv, RTW89_H2C_RA_W0_INIT_RATE_LV) |
++		  le32_encode_bits(ra->upd_all, RTW89_H2C_RA_W0_UPD_ALL) |
++		  le32_encode_bits(ra->en_sgi, RTW89_H2C_RA_W0_SGI) |
++		  le32_encode_bits(ra->ldpc_cap, RTW89_H2C_RA_W0_LDPC) |
++		  le32_encode_bits(ra->stbc_cap, RTW89_H2C_RA_W0_STBC) |
++		  le32_encode_bits(ra->ss_num, RTW89_H2C_RA_W0_SS_NUM) |
++		  le32_encode_bits(ra->giltf, RTW89_H2C_RA_W0_GILTF) |
++		  le32_encode_bits(ra->upd_bw_nss_mask, RTW89_H2C_RA_W0_UPD_BW_NSS_MASK) |
++		  le32_encode_bits(ra->upd_mask, RTW89_H2C_RA_W0_UPD_MASK);
++	h2c->w1 = le32_encode_bits(ra->ra_mask, RTW89_H2C_RA_W1_RAMASK_LO32);
++	h2c->w2 = le32_encode_bits(ra->ra_mask >> 32, RTW89_H2C_RA_W2_RAMASK_HI32);
++	h2c->w3 = le32_encode_bits(ra->fix_giltf_en, RTW89_H2C_RA_W3_FIX_GILTF_EN) |
++		  le32_encode_bits(ra->fix_giltf, RTW89_H2C_RA_W3_FIX_GILTF);
++
++	if (!csi)
++		goto done;
++
++	h2c->w2 |= le32_encode_bits(1, RTW89_H2C_RA_W2_BFEE_CSI_CTL);
++	h2c->w3 |= le32_encode_bits(ra->band_num, RTW89_H2C_RA_W3_BAND_NUM) |
++		   le32_encode_bits(ra->cr_tbl_sel, RTW89_H2C_RA_W3_CR_TBL_SEL) |
++		   le32_encode_bits(ra->fixed_csi_rate_en, RTW89_H2C_RA_W3_FIXED_CSI_RATE_EN) |
++		   le32_encode_bits(ra->ra_csi_rate_en, RTW89_H2C_RA_W3_RA_CSI_RATE_EN) |
++		   le32_encode_bits(ra->csi_mcs_ss_idx, RTW89_H2C_RA_W3_FIXED_CSI_MCS_SS_IDX) |
++		   le32_encode_bits(ra->csi_mode, RTW89_H2C_RA_W3_FIXED_CSI_MODE) |
++		   le32_encode_bits(ra->csi_gi_ltf, RTW89_H2C_RA_W3_FIXED_CSI_GI_LTF) |
++		   le32_encode_bits(ra->csi_bw, RTW89_H2C_RA_W3_FIXED_CSI_BW);
++
++done:
+ 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
+ 			      H2C_CAT_OUTSRC, H2C_CL_OUTSRC_RA,
+ 			      H2C_FUNC_OUTSRC_RA_MACIDCFG, 0, 0,
+-			      H2C_RA_LEN);
++			      len);
+ 
+ 	ret = rtw89_h2c_tx(rtwdev, skb, false);
+ 	if (ret) {
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index 586f9707a5ed7..49ecf070de712 100644
+index 45f927dc212ef..5e7f528c71e7c 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.h
 +++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -3168,16 +3168,24 @@ struct rtw89_c2h_ra_rpt {
+@@ -291,160 +291,41 @@ struct rtw89_pktofld_info {
+ 	bool cancel;
+ };
  
- #define RTW89_C2H_RA_RPT_W2_MACID GENMASK(15, 0)
- #define RTW89_C2H_RA_RPT_W2_RETRY_RATIO GENMASK(23, 16)
-+#define RTW89_C2H_RA_RPT_W2_MCSNSS_B7 BIT(31)
- #define RTW89_C2H_RA_RPT_W3_MCSNSS GENMASK(6, 0)
- #define RTW89_C2H_RA_RPT_W3_MD_SEL GENMASK(9, 8)
- #define RTW89_C2H_RA_RPT_W3_GILTF GENMASK(12, 10)
- #define RTW89_C2H_RA_RPT_W3_BW GENMASK(14, 13)
+-static inline void RTW89_SET_FWCMD_RA_IS_DIS(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(0));
+-}
 -
--/* VHT, HE, HT-old: [6:4]: NSS, [3:0]: MCS
-- * HT-new: [6:5]: NA, [4:0]: MCS
-+#define RTW89_C2H_RA_RPT_W3_MD_SEL_B2 BIT(15)
-+#define RTW89_C2H_RA_RPT_W3_BW_B2 BIT(16)
-+
-+/* For WiFi 6 chips:
-+ *   VHT, HE, HT-old: [6:4]: NSS, [3:0]: MCS
-+ *   HT-new: [6:5]: NA, [4:0]: MCS
-+ * For WiFi 7 chips (V1):
-+ *   HT, VHT, HE, EHT: [7:5]: NSS, [4:0]: MCS
-  */
- #define RTW89_RA_RATE_MASK_NSS GENMASK(6, 4)
- #define RTW89_RA_RATE_MASK_MCS GENMASK(3, 0)
-+#define RTW89_RA_RATE_MASK_NSS_V1 GENMASK(7, 5)
-+#define RTW89_RA_RATE_MASK_MCS_V1 GENMASK(4, 0)
- #define RTW89_RA_RATE_MASK_HT_MCS GENMASK(4, 0)
- #define RTW89_MK_HT_RATE(nss, mcs) (FIELD_PREP(GENMASK(4, 3), nss) | \
- 				    FIELD_PREP(GENMASK(2, 0), mcs))
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index 19a0c7ce0451c..1940f4457677c 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -2247,10 +2247,13 @@ static void rtw89_phy_c2h_ra_rpt_iter(void *data, struct ieee80211_sta *sta)
- 	const struct rtw89_c2h_ra_rpt *c2h =
- 		(const struct rtw89_c2h_ra_rpt *)ra_data->c2h->data;
- 	struct rtw89_ra_report *ra_report = &rtwsta->ra_report;
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
-+	bool format_v1 = chip->chip_gen == RTW89_CHIP_BE;
- 	u8 mode, rate, bw, giltf, mac_id;
- 	u16 legacy_bitrate;
- 	bool valid;
- 	u8 mcs = 0;
-+	u8 t;
+-static inline void RTW89_SET_FWCMD_RA_MODE(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, GENMASK(5, 1));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_BW_CAP(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, GENMASK(7, 6));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_MACID(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, GENMASK(15, 8));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_DCM(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(16));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_ER(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(17));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_INIT_RATE_LV(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, GENMASK(19, 18));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_UPD_ALL(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(20));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_SGI(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(21));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_LDPC(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(22));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_STBC(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(23));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_SS_NUM(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, GENMASK(26, 24));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_GILTF(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, GENMASK(29, 27));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_UPD_BW_NSS_MASK(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(30));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_UPD_MASK(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x00, val, BIT(31));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_MASK_0(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x01, val, GENMASK(7, 0));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_MASK_1(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x01, val, GENMASK(15, 8));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_MASK_2(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x01, val, GENMASK(23, 16));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_MASK_3(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x01, val, GENMASK(31, 24));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_MASK_4(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x02, val, GENMASK(7, 0));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_BFEE_CSI_CTL(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x02, val, BIT(31));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_BAND_NUM(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, GENMASK(7, 0));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_RA_CSI_RATE_EN(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, BIT(8));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_FIXED_CSI_RATE_EN(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, BIT(9));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_CR_TBL_SEL(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, BIT(10));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_FIX_GILTF_EN(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, BIT(11));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_FIX_GILTF(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, GENMASK(14, 12));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_FIXED_CSI_MCS_SS_IDX(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, GENMASK(23, 16));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_FIXED_CSI_MODE(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, GENMASK(25, 24));
+-}
+-
+-static inline void RTW89_SET_FWCMD_RA_FIXED_CSI_GI_LTF(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, GENMASK(28, 26));
+-}
++struct rtw89_h2c_ra {
++	__le32 w0;
++	__le32 w1;
++	__le32 w2;
++	__le32 w3;
++} __packed;
  
- 	mac_id = le32_get_bits(c2h->w2, RTW89_C2H_RA_RPT_W2_MACID);
- 	if (mac_id != rtwsta->mac_id)
-@@ -2261,6 +2264,15 @@ static void rtw89_phy_c2h_ra_rpt_iter(void *data, struct ieee80211_sta *sta)
- 	giltf = le32_get_bits(c2h->w3, RTW89_C2H_RA_RPT_W3_GILTF);
- 	mode = le32_get_bits(c2h->w3, RTW89_C2H_RA_RPT_W3_MD_SEL);
+-static inline void RTW89_SET_FWCMD_RA_FIXED_CSI_BW(void *cmd, u32 val)
+-{
+-	le32p_replace_bits((__le32 *)(cmd) + 0x03, val, GENMASK(31, 29));
+-}
++#define RTW89_H2C_RA_W0_IS_DIS BIT(0)
++#define RTW89_H2C_RA_W0_MODE GENMASK(5, 1)
++#define RTW89_H2C_RA_W0_BW_CAP GENMASK(7, 6)
++#define RTW89_H2C_RA_W0_MACID GENMASK(15, 8)
++#define RTW89_H2C_RA_W0_DCM BIT(16)
++#define RTW89_H2C_RA_W0_ER BIT(17)
++#define RTW89_H2C_RA_W0_INIT_RATE_LV GENMASK(19, 18)
++#define RTW89_H2C_RA_W0_UPD_ALL BIT(20)
++#define RTW89_H2C_RA_W0_SGI BIT(21)
++#define RTW89_H2C_RA_W0_LDPC BIT(22)
++#define RTW89_H2C_RA_W0_STBC BIT(23)
++#define RTW89_H2C_RA_W0_SS_NUM GENMASK(26, 24)
++#define RTW89_H2C_RA_W0_GILTF GENMASK(29, 27)
++#define RTW89_H2C_RA_W0_UPD_BW_NSS_MASK BIT(30)
++#define RTW89_H2C_RA_W0_UPD_MASK BIT(31)
++#define RTW89_H2C_RA_W1_RAMASK_LO32 GENMASK(31, 0)
++#define RTW89_H2C_RA_W2_RAMASK_HI32 GENMASK(30, 0)
++#define RTW89_H2C_RA_W2_BFEE_CSI_CTL BIT(31)
++#define RTW89_H2C_RA_W3_BAND_NUM GENMASK(7, 0)
++#define RTW89_H2C_RA_W3_RA_CSI_RATE_EN BIT(8)
++#define RTW89_H2C_RA_W3_FIXED_CSI_RATE_EN BIT(9)
++#define RTW89_H2C_RA_W3_CR_TBL_SEL BIT(10)
++#define RTW89_H2C_RA_W3_FIX_GILTF_EN BIT(11)
++#define RTW89_H2C_RA_W3_FIX_GILTF GENMASK(14, 12)
++#define RTW89_H2C_RA_W3_FIXED_CSI_MCS_SS_IDX GENMASK(23, 16)
++#define RTW89_H2C_RA_W3_FIXED_CSI_MODE GENMASK(25, 24)
++#define RTW89_H2C_RA_W3_FIXED_CSI_GI_LTF GENMASK(28, 26)
++#define RTW89_H2C_RA_W3_FIXED_CSI_BW GENMASK(31, 29)
  
-+	if (format_v1) {
-+		t = le32_get_bits(c2h->w2, RTW89_C2H_RA_RPT_W2_MCSNSS_B7);
-+		rate |= u8_encode_bits(t, BIT(7));
-+		t = le32_get_bits(c2h->w3, RTW89_C2H_RA_RPT_W3_BW_B2);
-+		bw |= u8_encode_bits(t, BIT(2));
-+		t = le32_get_bits(c2h->w3, RTW89_C2H_RA_RPT_W3_MD_SEL_B2);
-+		mode |= u8_encode_bits(t, BIT(2));
-+	}
-+
- 	if (mode == RTW89_RA_RPT_MODE_LEGACY) {
- 		valid = rtw89_ra_report_to_bitrate(rtwdev, rate, &legacy_bitrate);
- 		if (!valid)
-@@ -2287,16 +2299,24 @@ static void rtw89_phy_c2h_ra_rpt_iter(void *data, struct ieee80211_sta *sta)
- 		break;
- 	case RTW89_RA_RPT_MODE_VHT:
- 		ra_report->txrate.flags |= RATE_INFO_FLAGS_VHT_MCS;
--		ra_report->txrate.mcs = FIELD_GET(RTW89_RA_RATE_MASK_MCS, rate);
--		ra_report->txrate.nss = FIELD_GET(RTW89_RA_RATE_MASK_NSS, rate) + 1;
-+		ra_report->txrate.mcs = format_v1 ?
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_MCS_V1) :
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_MCS);
-+		ra_report->txrate.nss = format_v1 ?
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_NSS_V1) + 1 :
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_NSS) + 1;
- 		if (giltf)
- 			ra_report->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
- 		mcs = ra_report->txrate.mcs;
- 		break;
- 	case RTW89_RA_RPT_MODE_HE:
- 		ra_report->txrate.flags |= RATE_INFO_FLAGS_HE_MCS;
--		ra_report->txrate.mcs = FIELD_GET(RTW89_RA_RATE_MASK_MCS, rate);
--		ra_report->txrate.nss = FIELD_GET(RTW89_RA_RATE_MASK_NSS, rate) + 1;
-+		ra_report->txrate.mcs = format_v1 ?
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_MCS_V1) :
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_MCS);
-+		ra_report->txrate.nss  = format_v1 ?
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_NSS_V1) + 1 :
-+			u8_get_bits(rate, RTW89_RA_RATE_MASK_NSS) + 1;
- 		if (giltf == RTW89_GILTF_2XHE08 || giltf == RTW89_GILTF_1XHE08)
- 			ra_report->txrate.he_gi = NL80211_RATE_INFO_HE_GI_0_8;
- 		else if (giltf == RTW89_GILTF_2XHE16 || giltf == RTW89_GILTF_1XHE16)
-@@ -2309,8 +2329,11 @@ static void rtw89_phy_c2h_ra_rpt_iter(void *data, struct ieee80211_sta *sta)
- 
- 	ra_report->txrate.bw = rtw89_hw_to_rate_info_bw(bw);
- 	ra_report->bit_rate = cfg80211_calculate_bitrate(&ra_report->txrate);
--	ra_report->hw_rate = FIELD_PREP(RTW89_HW_RATE_MASK_MOD, mode) |
--			     FIELD_PREP(RTW89_HW_RATE_MASK_VAL, rate);
-+	ra_report->hw_rate = format_v1 ?
-+			     u16_encode_bits(mode, RTW89_HW_RATE_V1_MASK_MOD) |
-+			     u16_encode_bits(rate, RTW89_HW_RATE_V1_MASK_VAL) :
-+			     u16_encode_bits(mode, RTW89_HW_RATE_MASK_MOD) |
-+			     u16_encode_bits(rate, RTW89_HW_RATE_MASK_VAL);
- 	ra_report->might_fallback_legacy = mcs <= 2;
- 	sta->deflink.agg.max_rc_amsdu_len = get_max_amsdu_len(rtwdev, ra_report);
- 	rtwsta->max_agg_wait = sta->deflink.agg.max_rc_amsdu_len / 1500 - 1;
+ static inline void RTW89_SET_FWCMD_SEC_IDX(void *cmd, u32 val)
+ {
 -- 
 2.25.1
 
