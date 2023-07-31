@@ -2,75 +2,63 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B33E5C001E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 11:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11C66C0015E
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 11:52:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234398AbjHALrW (ORCPT
+        id S234417AbjHALwq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Aug 2023 07:47:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43374 "EHLO
+        Tue, 1 Aug 2023 07:52:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234401AbjHALrU (ORCPT
+        with ESMTP id S234416AbjHALwf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2023 07:47:20 -0400
-Received: from forward500c.mail.yandex.net (forward500c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d500])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0FCD10FD
-        for <linux-wireless@vger.kernel.org>; Tue,  1 Aug 2023 04:47:16 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net [IPv6:2a02:6b8:c08:4212:0:640:eaad:0])
-        by forward500c.mail.yandex.net (Yandex) with ESMTP id 011FF5EEEC;
-        Tue,  1 Aug 2023 14:47:14 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id BlP0P0tDSGk0-se9AEOHg;
-        Tue, 01 Aug 2023 14:47:13 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1690890433;
-        bh=qm5mnywxPcVe+s41otEBNp0/krEP7Rsg5HJ4piOitaY=;
-        h=Subject:From:In-Reply-To:Cc:Date:References:To:Message-ID;
-        b=wDI6r/0URoohG0NE6VP7Mmd/y/c+aY4reWZffddyqqmP+oJ/vX9EdvUllNK6rekHN
-         AAn6IUn7lxz9WbRwiSRpX24MNGdtb6bGrQ2PALQYaAsNf7cSz49VMxorzkBw49jl3z
-         OWSVw/jR7FbXdfGI4LXvImMaIH4JN3QbaEk97yE8=
-Authentication-Results: mail-nwsmtp-smtp-production-main-46.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-Message-ID: <0368ccdc-74f4-6ec1-1b7d-cfb5ebfd479d@yandex.ru>
-Date:   Tue, 1 Aug 2023 14:47:11 +0300
+        Tue, 1 Aug 2023 07:52:35 -0400
+Received: from mail.cothiafon.pl (mail.cothiafon.pl [217.61.106.23])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97F3CE4C
+        for <linux-wireless@vger.kernel.org>; Tue,  1 Aug 2023 04:52:32 -0700 (PDT)
+Received: by mail.cothiafon.pl (Postfix, from userid 1002)
+        id E909A83CBE; Mon, 31 Jul 2023 10:36:52 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=cothiafon.pl; s=mail;
+        t=1690792650; bh=dwoca0X6C9VXklO/zRgFQCPapTk5LFz4tKaENdvy6Po=;
+        h=Date:From:To:Subject:From;
+        b=b2EUiTKopwUwErEEGhYRHSRb9ZJhG9gZ33gl79BnGh8u7MsCn1uv6YbU5f9BRmLOr
+         fehdQWGZtmOqjHPgBa0ZaoruL2CG6R6jeEOXMxzN0UZMUcKcm5Ixa1iaffgE2861J/
+         6syF4lIJJ0FqIYJYVB5heRJKCBHA4FFbrPGbvG3Yw3CA7+31vqhLaLXP+/4HNtp/Fy
+         kU1DI9NvZAAB9CO1uwUHMoktXyeQakJno7IPShk1tVGULiWJGwH372T1edgiaocCXt
+         7qNiPwtsQK5mqewfBLqwwSVP0XpxetElDpVTHJNPBzlyC0++3Bs5n+gZ4BuNF84uL+
+         550EnGfCBvcqg==
+Received: by mail.cothiafon.pl for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2023 08:35:48 GMT
+Message-ID: <20230731095940-0.1.28.ony0.0.wb011ritdr@cothiafon.pl>
+Date:   Mon, 31 Jul 2023 08:35:48 GMT
+From:   =?UTF-8?Q? "Rados=C5=82aw_Grabowski" ?= 
+        <radoslaw.grabowski@cothiafon.pl>
+To:     <linux-wireless@vger.kernel.org>
+Subject: W sprawie samochodu
+X-Mailer: mail.cothiafon.pl
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Doug Brown <doug@schmorgal.com>, linux-wireless@vger.kernel.org,
-        lvc-project@linuxtesting.org
-References: <20230724084457.64995-1-dmantipov@yandex.ru>
- <87cz0h3d1q.fsf@kernel.org> <ae49815a-c125-5a22-6757-b526d9712103@yandex.ru>
- <87r0onxdra.fsf@kernel.org>
-Content-Language: en-US
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-Subject: Re: [PATCH 1/4] wifi: libertas: add missing calls to
- cancel_work_sync()
-In-Reply-To: <87r0onxdra.fsf@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/1/23 13:23, Kalle Valo wrote:
+Dzie=C5=84 dobry,
 
-> In that case please always add "Compile tested only" to the commit log.
-> It's important for us to know if a (non-trivial) patch is tested on a
-> real hardware or just with a compiler.
+chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
+, je=C5=9Bli chodzi o system monitoringu GPS.
 
-OK.
+Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
+e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
+a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
 
-> Another problem I see that you don't always reply to review comments and
-> that gives an impression that the comments are ignored. Please always
-> try to reply something to the review comments, even if just a simple
-> "ok" or "I don't agree because...".
+Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
+dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
+szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
+mne znaczenie.
 
-Looking through my e-mails for the previous month, I was unable to find an
-unanswered review. Could you please provide an example? I'll fix it ASAP.
+Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
+b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
 
-I don't want to speculate around the workflow of others and realize that someone
-(especially the maintainer) may be overloaded and too busy. OTOH it's not quite clear
-why the trivial things like https://marc.info/?l=linux-wireless&m=169030215701718&w=2
-stalls for almost a week. Should I consider this as "ignored" too?
 
-Dmitry
-
+Pozdrawiam
+Rados=C5=82aw Grabowski
