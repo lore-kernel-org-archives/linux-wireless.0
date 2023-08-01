@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89274C04FDF
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 02:12:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 619DBC04A94
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 02:12:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231518AbjHACMU (ORCPT
+        id S231200AbjHACMV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jul 2023 22:12:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53582 "EHLO
+        Mon, 31 Jul 2023 22:12:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229807AbjHACMS (ORCPT
+        with ESMTP id S231174AbjHACMT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2023 22:12:18 -0400
+        Mon, 31 Jul 2023 22:12:19 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 187DC1B2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2023 19:12:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ADFC61B1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2023 19:12:17 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3712BqA32016485, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3712BtQA2016561, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3712BqA32016485
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3712BtQA2016561
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 1 Aug 2023 10:11:52 +0800
+        Tue, 1 Aug 2023 10:11:55 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Tue, 1 Aug 2023 10:12:06 +0800
+ 15.1.2507.17; Tue, 1 Aug 2023 10:12:09 +0800
 Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 1 Aug 2023
- 10:12:05 +0800
+ 10:12:08 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <timlee@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/8] wifi: rtw89: introduce infrastructure of firmware elements
-Date:   Tue, 1 Aug 2023 10:11:25 +0800
-Message-ID: <20230801021127.15919-7-pkshih@realtek.com>
+Subject: [PATCH 8/8] wifi: rtw89: return failure if needed firmware elements are not recognized
+Date:   Tue, 1 Aug 2023 10:11:27 +0800
+Message-ID: <20230801021127.15919-9-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230801021127.15919-1-pkshih@realtek.com>
 References: <20230801021127.15919-1-pkshih@realtek.com>
@@ -53,243 +53,142 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In order to pack more data into firmware file, we introduce firmware
-elements and append BB_MCU firmware first. The first part of new firmware
-file is still unchanged firmware of WiFi CPU, so the new firmware format
-can be backward compatible to old format. The new elements part consists
-of ID and size basically, which can append more elements simply. To avoid
-unaligned access in certain platform and be easy to read, headers of all
-elements start at 16-byte aligned address.
+WiFi 7 chips doesn't have static const tables defined in driver. If tables
+aren't loaded properly from firmware file, driver can get NULL pointer
+access exception. One way is to add the checking statements when trying to
+access these tables, but I choose to check them right after loading
+firmware elements from firmware file, so I don't need to add error handlers
+everywhere.
 
- +===========================================+
- |             original firmware             |
- |                             +-------------+
- |                             |   padding   |
- +===========================================+
- | elm ID 1 | elm size |  other header data  |
- +----------+----------+                     |
- |                                           |
- +-------------------------------------------+
- | content (variable length)                 |
- |                             +-------------+
- |                             |   padding   |
- +===========================================+
- | elm ID 2 | elm size |  other header data  |
- +----------+----------+                     |
- |                                           |
- +-------------------------------------------+
- | content (variable length)                 |
- |                   +-----------------------+
- |                   | (no padding for the last one)
- +===================+
-
-More detail of element header is shown below. The additional fields
-'version' and 'element_priv[]' are meta data of elements, so that we can
-know element version easily, and element_priv[] provide specific fields
-for certain element, such as RF path index for RF parameter tables.
-
- +===========================================+
- |  elm ID  | elm size | version  |   rsvd0  |
- +----------+----------+----------+----------+
- |        rsvd1/2      |  element_priv[]     |
- +-------------------------------------------+
+Currently, the needed firmware elements of WiFi 6 chips are all zero, and
+coming WiFi 7 chip will need at least BB MCU, parameters of BB and RF.
+We will add them after 8922AE is verified.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c |  6 ++
- drivers/net/wireless/realtek/rtw89/fw.c   | 98 +++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/fw.h   | 31 +++++++
- 3 files changed, 135 insertions(+)
+ drivers/net/wireless/realtek/rtw89/core.h     |  1 +
+ drivers/net/wireless/realtek/rtw89/fw.c       | 11 +++++++++++
+ drivers/net/wireless/realtek/rtw89/fw.h       |  2 ++
+ drivers/net/wireless/realtek/rtw89/rtw8851b.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
+ 7 files changed, 18 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 48cfac6e41ffe..ed8119ef2da06 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -3779,6 +3779,12 @@ int rtw89_chip_info_setup(struct rtw89_dev *rtwdev)
- 		return ret;
- 	}
- 
-+	ret = rtw89_fw_recognize_elements(rtwdev);
-+	if (ret) {
-+		rtw89_err(rtwdev, "failed to recognize firmware elements\n");
-+		return ret;
-+	}
-+
- 	ret = rtw89_chip_efuse_info_setup(rtwdev);
- 	if (ret)
- 		return ret;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index b4aa1f9f041b1..468c14d035340 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -3181,6 +3181,7 @@ struct rtw89_chip_info {
+ 	const char *fw_basename;
+ 	u8 fw_format_max;
+ 	bool try_ce_fw;
++	u32 needed_fw_elms;
+ 	u32 fifo_size;
+ 	bool small_fifo_size;
+ 	u32 dle_scc_rsvd_size;
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 61b9af79f91dd..f613a50a747e4 100644
+index be629746b15b0..3935646c46678 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.c
 +++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -284,6 +284,26 @@ int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
+@@ -656,6 +656,8 @@ int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_fw_info *fw_info = &rtwdev->fw;
+ 	const struct firmware *firmware = fw_info->req.firmware;
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	u32 unrecognized_elements = chip->needed_fw_elms;
+ 	const struct rtw89_fw_element_handler *handler;
+ 	const struct rtw89_fw_element_hdr *hdr;
+ 	u32 elm_size;
+@@ -663,6 +665,8 @@ int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
+ 	u32 offset;
+ 	int ret;
+ 
++	BUILD_BUG_ON(sizeof(chip->needed_fw_elms) * 8 < RTW89_FW_ELEMENT_ID_NUM);
++
+ 	offset = rtw89_mfw_get_size(rtwdev);
+ 	offset = ALIGN(offset, RTW89_FW_ELEMENT_ALIGN);
+ 	if (offset == 0)
+@@ -693,11 +697,18 @@ int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
+ 			rtw89_info(rtwdev, "Firmware element %s version: %4ph\n",
+ 				   handler->name, hdr->ver);
+ 
++		unrecognized_elements &= ~BIT(elem_id);
+ next:
+ 		offset += sizeof(*hdr) + elm_size;
+ 		offset = ALIGN(offset, RTW89_FW_ELEMENT_ALIGN);
+ 	}
+ 
++	if (unrecognized_elements) {
++		rtw89_err(rtwdev, "Firmware elements 0x%08x are unrecognized\n",
++			  unrecognized_elements);
++		return -ENOENT;
++	}
++
  	return 0;
  }
  
-+static u32 rtw89_mfw_get_size(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_fw_info *fw_info = &rtwdev->fw;
-+	const struct firmware *firmware = fw_info->req.firmware;
-+	const struct rtw89_mfw_hdr *mfw_hdr =
-+		(const struct rtw89_mfw_hdr *)firmware->data;
-+	const struct rtw89_mfw_info *mfw_info;
-+	u32 size;
-+
-+	if (mfw_hdr->sig != RTW89_MFW_SIG) {
-+		rtw89_warn(rtwdev, "not mfw format\n");
-+		return 0;
-+	}
-+
-+	mfw_info = &mfw_hdr->info[mfw_hdr->fw_nr - 1];
-+	size = le32_to_cpu(mfw_info->shift) + le32_to_cpu(mfw_info->size);
-+
-+	return size;
-+}
-+
- static void rtw89_fw_update_ver_v0(struct rtw89_dev *rtwdev,
- 				   struct rtw89_fw_suit *fw_suit,
- 				   const struct rtw89_fw_hdr *hdr)
-@@ -366,6 +386,21 @@ int __rtw89_fw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
- 	return rtw89_fw_update_ver(rtwdev, type, fw_suit);
- }
- 
-+static
-+int __rtw89_fw_recognize_from_elm(struct rtw89_dev *rtwdev,
-+				  const struct rtw89_fw_element_hdr *elm,
-+				  const void *data)
-+{
-+	enum rtw89_fw_type type = (enum rtw89_fw_type)data;
-+	struct rtw89_fw_suit *fw_suit;
-+
-+	fw_suit = rtw89_fw_suit_get(rtwdev, type);
-+	fw_suit->data = elm->u.common.contents;
-+	fw_suit->size = le32_to_cpu(elm->size);
-+
-+	return rtw89_fw_update_ver(rtwdev, type, fw_suit);
-+}
-+
- #define __DEF_FW_FEAT_COND(__cond, __op) \
- static bool __fw_feat_cond_ ## __cond(u32 suit_ver_code, u32 comp_ver_code) \
- { \
-@@ -530,6 +565,69 @@ int rtw89_fw_recognize(struct rtw89_dev *rtwdev)
- 	return 0;
- }
- 
-+struct rtw89_fw_element_handler {
-+	int (*fn)(struct rtw89_dev *rtwdev,
-+		  const struct rtw89_fw_element_hdr *elm, const void *data);
-+	const void *data;
-+	const char *name;
-+};
-+
-+static const struct rtw89_fw_element_handler __fw_element_handlers[] = {
-+	[RTW89_FW_ELEMENT_ID_BBMCU0] = {__rtw89_fw_recognize_from_elm,
-+					(const void *)RTW89_FW_BBMCU0, NULL},
-+	[RTW89_FW_ELEMENT_ID_BBMCU1] = {__rtw89_fw_recognize_from_elm,
-+					(const void *)RTW89_FW_BBMCU1, NULL},
-+};
-+
-+int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_fw_info *fw_info = &rtwdev->fw;
-+	const struct firmware *firmware = fw_info->req.firmware;
-+	const struct rtw89_fw_element_handler *handler;
-+	const struct rtw89_fw_element_hdr *hdr;
-+	u32 elm_size;
-+	u32 elem_id;
-+	u32 offset;
-+	int ret;
-+
-+	offset = rtw89_mfw_get_size(rtwdev);
-+	offset = ALIGN(offset, RTW89_FW_ELEMENT_ALIGN);
-+	if (offset == 0)
-+		return -EINVAL;
-+
-+	while (offset + sizeof(*hdr) < firmware->size) {
-+		hdr = (const struct rtw89_fw_element_hdr *)(firmware->data + offset);
-+
-+		elm_size = le32_to_cpu(hdr->size);
-+		if (offset + elm_size >= firmware->size) {
-+			rtw89_warn(rtwdev, "firmware element size exceeds\n");
-+			break;
-+		}
-+
-+		elem_id = le32_to_cpu(hdr->id);
-+		if (elem_id >= ARRAY_SIZE(__fw_element_handlers))
-+			goto next;
-+
-+		handler = &__fw_element_handlers[elem_id];
-+		if (!handler->fn)
-+			goto next;
-+
-+		ret = handler->fn(rtwdev, hdr, handler->data);
-+		if (ret)
-+			return ret;
-+
-+		if (handler->name)
-+			rtw89_info(rtwdev, "Firmware element %s version: %4ph\n",
-+				   handler->name, hdr->ver);
-+
-+next:
-+		offset += sizeof(*hdr) + elm_size;
-+		offset = ALIGN(offset, RTW89_FW_ELEMENT_ALIGN);
-+	}
-+
-+	return 0;
-+}
-+
- void rtw89_h2c_pkt_set_hdr(struct rtw89_dev *rtwdev, struct sk_buff *skb,
- 			   u8 type, u8 cat, u8 class, u8 func,
- 			   bool rack, bool dack, u32 len)
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index eb3300cd9147f..34dc96d949734 100644
+index 9eb908122a4bc..94bdfc6059ba9 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.h
 +++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -3499,6 +3499,36 @@ struct rtw89_fw_logsuit_hdr {
- 	__le32 ids[];
- } __packed;
+@@ -3511,6 +3511,8 @@ enum rtw89_fw_element_id {
+ 	RTW89_FW_ELEMENT_ID_RADIO_C = 6,
+ 	RTW89_FW_ELEMENT_ID_RADIO_D = 7,
+ 	RTW89_FW_ELEMENT_ID_RF_NCTL = 8,
++
++	RTW89_FW_ELEMENT_ID_NUM,
+ };
  
-+#define RTW89_FW_ELEMENT_ALIGN 16
-+
-+enum rtw89_fw_element_id {
-+	RTW89_FW_ELEMENT_ID_BBMCU0 = 0,
-+	RTW89_FW_ELEMENT_ID_BBMCU1 = 1,
-+};
-+
-+struct rtw89_fw_element_hdr {
-+	__le32 id; /* enum rtw89_fw_element_id */
-+	__le32 size; /* exclude header size */
-+	u8 ver[4];
-+	__le32 rsvd0;
-+	__le32 rsvd1;
-+	__le32 rsvd2;
-+	union {
-+		struct {
-+			u8 priv[8];
-+			u8 contents[];
-+		} __packed common;
-+		struct {
-+			u8 idx;
-+			u8 rsvd[7];
-+			struct {
-+				__le32 addr;
-+				__le32 data;
-+			} __packed regs[];
-+		} __packed reg2;
-+	} __packed u;
-+} __packed;
-+
- struct fwcmd_hdr {
- 	__le32 hdr0;
- 	__le32 hdr1;
-@@ -3680,6 +3710,7 @@ struct rtw89_fw_h2c_rf_get_mccch {
- 
- int rtw89_fw_check_rdy(struct rtw89_dev *rtwdev);
- int rtw89_fw_recognize(struct rtw89_dev *rtwdev);
-+int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev);
- const struct firmware *
- rtw89_early_fw_feature_recognize(struct device *device,
- 				 const struct rtw89_chip_info *chip,
+ struct rtw89_fw_element_hdr {
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851b.c b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
+index c3ffcb645ebf7..190297087ede3 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851b.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
+@@ -2338,6 +2338,7 @@ const struct rtw89_chip_info rtw8851b_chip_info = {
+ 	.fw_basename		= RTW8851B_FW_BASENAME,
+ 	.fw_format_max		= RTW8851B_FW_FORMAT_MAX,
+ 	.try_ce_fw		= true,
++	.needed_fw_elms		= 0,
+ 	.fifo_size		= 196608,
+ 	.small_fifo_size	= true,
+ 	.dle_scc_rsvd_size	= 98304,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+index 6257414a3b4bd..e157e3435daf0 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
+@@ -2075,6 +2075,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
+ 	.fw_basename		= RTW8852A_FW_BASENAME,
+ 	.fw_format_max		= RTW8852A_FW_FORMAT_MAX,
+ 	.try_ce_fw		= false,
++	.needed_fw_elms		= 0,
+ 	.fifo_size		= 458752,
+ 	.small_fifo_size	= false,
+ 	.dle_scc_rsvd_size	= 0,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+index 718f993da62af..334b545915085 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
+@@ -2507,6 +2507,7 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
+ 	.fw_basename		= RTW8852B_FW_BASENAME,
+ 	.fw_format_max		= RTW8852B_FW_FORMAT_MAX,
+ 	.try_ce_fw		= true,
++	.needed_fw_elms		= 0,
+ 	.fifo_size		= 196608,
+ 	.small_fifo_size	= true,
+ 	.dle_scc_rsvd_size	= 98304,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+index 9c7c9812d4f45..208153b664935 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
+@@ -2806,6 +2806,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
+ 	.fw_basename		= RTW8852C_FW_BASENAME,
+ 	.fw_format_max		= RTW8852C_FW_FORMAT_MAX,
+ 	.try_ce_fw		= false,
++	.needed_fw_elms		= 0,
+ 	.fifo_size		= 458752,
+ 	.small_fifo_size	= false,
+ 	.dle_scc_rsvd_size	= 0,
 -- 
 2.25.1
 
