@@ -2,58 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC43AEB64DD
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 09:34:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0D61C0015E
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 10:26:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232427AbjHAJeF (ORCPT
+        id S231271AbjHAK0n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Aug 2023 05:34:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34614 "EHLO
+        Tue, 1 Aug 2023 06:26:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231627AbjHAJdr (ORCPT
+        with ESMTP id S233676AbjHAK0S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2023 05:33:47 -0400
+        Tue, 1 Aug 2023 06:26:18 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BA9F2107
-        for <linux-wireless@vger.kernel.org>; Tue,  1 Aug 2023 02:31:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D1115B96
+        for <linux-wireless@vger.kernel.org>; Tue,  1 Aug 2023 03:23:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ED52D61502
-        for <linux-wireless@vger.kernel.org>; Tue,  1 Aug 2023 09:31:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08AC7C433C7;
-        Tue,  1 Aug 2023 09:31:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6E79E61521
+        for <linux-wireless@vger.kernel.org>; Tue,  1 Aug 2023 10:23:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB814C433C8;
+        Tue,  1 Aug 2023 10:23:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690882297;
-        bh=CVqA5Vht4PuGwAE/9jtG/mG2kDAFYN6aNKTpoaaDIRI=;
+        s=k20201202; t=1690885404;
+        bh=c929dygUnOm1BSbok++ltvpLIUzEv2S+5RUbs/24cKE=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=QIEcNKYBVeRC2dpJ8xPnKX2OjtMQlMN77jlWqF5jID+27PETFayOGzNMm115182D8
-         GggIev406aUbHE+vfS0SmpBw5n4vQB5+l9kB5GO0GrhhD2Fxzdh5XX8BkEsyu9FSLo
-         sdIW+Z/1BNHyBP+cnqGZYCCpz6THPOELgNz/SIRS3N3F9LRugX8VWqwXe2n5lhtC89
-         MHg3qvRFmuU7KR0ctrBsTuuHOjRP3DWDGP3IWq/IN2oLrrrTH38ZMmzYGWGbJs+wvP
-         k8eoiE8+Q/7yv0rTBuD9Qo9qdzJzLk6cjv4g/25jQ/KHGf8GTA1Y4SgjQHsT+cszZ7
-         up5TolF18LzbA==
+        b=SZBNNn/j7jmUXjAWXZ5tNVLUas80puBbv1YOyXZTIIqdLY3gDQDyCZN5zcVg2GU5a
+         GZ0KnfJDBO68CukcGuQaPwVNrY5We4NDrCfpNiCCgL+ly5cZGybUa27+/cGWEJra/e
+         YOnJHOQ6HtgXvcPb9ohpoDA8iRqTnXtsVffKfAqdNhAQQruTxDnHa+sBonwTBS7OyA
+         CP+O7/MnTjcPH0bTHZM+9ns4L6fB5IcME9w6n0oyrXw+nWUPBpu8qQIdnkAtEVHzA0
+         +URNxwbRCIEZFZnpx/KqS6ldUoJdmlFgaXxu7MvZjuZzJGc/S4W1FRKFSYfOR6i3o1
+         ACwTWBUiBGMzg==
 From:   Kalle Valo <kvalo@kernel.org>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org,
-        Herton Ronaldo Krzesinski <herton@canonical.com>,
-        Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: MAINTAINERS: rtl8187 wireless driver
-References: <20230608095051.116702-4-dmantipov@yandex.ru>
-        <168664510862.24637.10587241603155144086.kvalo@kernel.org>
-        <e030e496-b667-b1de-492b-8b0cc04ffe14@yandex.ru>
-        <87h6rad3fp.fsf@kernel.org>
-        <bccf723a-9f57-73a7-37af-badc6c156daa@yandex.ru>
-        <87cz1vbulk.fsf@kernel.org>
-        <2e78d1f5-4dc5-9665-e3a1-ee00dcc41630@yandex.ru>
-        <fe6b1abc-d529-c20f-3fcb-43d891091080@lwfinger.net>
-Date:   Tue, 01 Aug 2023 12:31:34 +0300
-In-Reply-To: <fe6b1abc-d529-c20f-3fcb-43d891091080@lwfinger.net> (Larry
-        Finger's message of "Fri, 16 Jun 2023 11:06:59 -0500")
-Message-ID: <87v8dzxg5l.fsf_-_@kernel.org>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Doug Brown <doug@schmorgal.com>, linux-wireless@vger.kernel.org,
+        lvc-project@linuxtesting.org
+Subject: Re: [PATCH 1/4] wifi: libertas: add missing calls to
+ cancel_work_sync()
+References: <20230724084457.64995-1-dmantipov@yandex.ru>
+        <87cz0h3d1q.fsf@kernel.org>
+        <ae49815a-c125-5a22-6757-b526d9712103@yandex.ru>
+Date:   Tue, 01 Aug 2023 13:23:21 +0300
+In-Reply-To: <ae49815a-c125-5a22-6757-b526d9712103@yandex.ru> (Dmitry
+        Antipov's message of "Mon, 24 Jul 2023 11:57:12 +0300")
+Message-ID: <87r0onxdra.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -61,40 +54,23 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ Herton, Hin-Tak
+Dmitry Antipov <dmantipov@yandex.ru> writes:
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-
-> On 6/16/23 05:20, Dmitry Antipov wrote:
->> Note MAINTAINERS marks drivers/net/wireless/realtek/rtl818x/rtl8180 as
->> orphaned but drivers/net/wireless/realtek/rtl818x/rtl8187 as maintained.
+> On 7/24/23 11:54, Kalle Valo wrote:
 >
-> Driver rtl8187 is certainly maintained, not that it gets many bug
-> reports. Devices that support 802.11g are not used very often, but at
-> least once a year I use my device to get online to retrieve the
-> drivers for a fancier wifi card that does not have a driver in Linux
-> or Windows. Drivers for the USB-based 8187A and 8187B have been in
-> Linux since version 2.6.38 (December 2010), and also in Windows 7, if
-> not in older versions.
+>> How have you tested these patches?
+>> 
+>
+> No physical hardware so compile tested only.
 
-So this is what we have in MAINTAINERS right now:
+In that case please always add "Compile tested only" to the commit log.
+It's important for us to know if a (non-trivial) patch is tested on a
+real hardware or just with a compiler.
 
-RTL8187 WIRELESS DRIVER
-M:	Herton Ronaldo Krzesinski <herton@canonical.com>
-M:	Hin-Tak Leung <htl10@users.sourceforge.net>
-M:	Larry Finger <Larry.Finger@lwfinger.net>
-L:	linux-wireless@vger.kernel.org
-S:	Maintained
-W:	https://wireless.wiki.kernel.org/
-T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-F:	drivers/net/wireless/realtek/rtl818x/rtl8187/
-
-In the git history the last activity from Herton is from 2010 so I think
-we should remove him.
-
-Is Hin-Tak still active? The last activity is from 2020.
-
-Also the git tree is outdated so that should be removed.
+Another problem I see that you don't always reply to review comments and
+that gives an impression that the comments are ignored. Please always
+try to reply something to the review comments, even if just a simple
+"ok" or "I don't agree because...".
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
