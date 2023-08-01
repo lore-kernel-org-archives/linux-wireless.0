@@ -2,37 +2,37 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C23F8C00528
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 17:56:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3344C001DF
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 17:58:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230120AbjHAR4K (ORCPT
+        id S231876AbjHAR6S (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Aug 2023 13:56:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52054 "EHLO
+        Tue, 1 Aug 2023 13:58:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbjHAR4J (ORCPT
+        with ESMTP id S233143AbjHAR6I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Aug 2023 13:56:09 -0400
+        Tue, 1 Aug 2023 13:58:08 -0400
 Received: from frasgout12.his.huawei.com (unknown [14.137.139.154])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA8191BF6;
-        Tue,  1 Aug 2023 10:56:07 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.18.147.227])
-        by frasgout12.his.huawei.com (SkyGuard) with ESMTP id 4RFj9n5hVsz9xFrn;
-        Wed,  2 Aug 2023 01:42:37 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 388A9127;
+        Tue,  1 Aug 2023 10:58:07 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.18.147.229])
+        by frasgout12.his.huawei.com (SkyGuard) with ESMTP id 4RFjD61Rz8z9ttCx;
+        Wed,  2 Aug 2023 01:44:38 +0800 (CST)
 Received: from [10.81.206.119] (unknown [10.81.206.119])
-        by APP1 (Coremail) with SMTP id LxC2BwAn27oNR8lkleUeAA--.35429S2;
-        Tue, 01 Aug 2023 18:55:42 +0100 (CET)
-Message-ID: <e12fcf9b-d122-7c42-1516-27e03a99270a@huaweicloud.com>
-Date:   Tue, 1 Aug 2023 19:55:22 +0200
+        by APP1 (Coremail) with SMTP id LxC2BwDHerqKR8lk5+oeAA--.35282S2;
+        Tue, 01 Aug 2023 18:57:44 +0100 (CET)
+Message-ID: <327159d6-f520-bea1-c6b0-facda7c26699@huaweicloud.com>
+Date:   Tue, 1 Aug 2023 19:57:29 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 3/3] wifi: brcm80211: change channel_list to a flexible
- array
+Subject: Re: [PATCH v1 1/3] wifi: brcm80211: drop struct brcmf_p2p_scan_le
 Content-Language: en-US
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Arend van Spriel <aspriel@gmail.com>,
+From:   Petr Tesarik <petrtesarik@huaweicloud.com>
+To:     Arend van Spriel <aspriel@gmail.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@kernel.org>,
         Chi-hsien Lin <chi-hsien.lin@infineon.com>,
         Ian Lin <ian.lin@infineon.com>,
         Wright Feng <wright.feng@cypress.com>,
@@ -55,132 +55,135 @@ Cc:     Arend van Spriel <aspriel@gmail.com>,
         <brcm80211-dev-list.pdl@broadcom.com>,
         "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER" 
         <SHA-cyfmac-dev-list@infineon.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        Roberto Sassu <roberto.sassu@huaweicloud.com>, petr@tesarici.cz
+        open list <linux-kernel@vger.kernel.org>
+Cc:     Roberto Sassu <roberto.sassu@huaweicloud.com>, petr@tesarici.cz
 References: <cover.1690904067.git.petr.tesarik.ext@huawei.com>
- <c18a31a293fb5ba5d7a845c4b5052516ff724a9f.1690904067.git.petr.tesarik.ext@huawei.com>
- <87pm46wtno.fsf@kernel.org>
-From:   Petr Tesarik <petrtesarik@huaweicloud.com>
-In-Reply-To: <87pm46wtno.fsf@kernel.org>
+ <b94c048c8decefeca41ceac5f826da67a8d727a8.1690904067.git.petr.tesarik.ext@huawei.com>
+In-Reply-To: <b94c048c8decefeca41ceac5f826da67a8d727a8.1690904067.git.petr.tesarik.ext@huawei.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: LxC2BwAn27oNR8lkleUeAA--.35429S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxtw4ruF1fuFWrtF18uF1xKrg_yoW7Xw43pa
-        4fJFyUKr4kXr1jqF17JF43tFyrKa1qy3Z8KF4xKryavayUWr1fJF18Gay0kryDA39rt347
-        tryqqryqyF4rAaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID: LxC2BwDHerqKR8lk5+oeAA--.35282S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxXF13Xr1xZFWrCrWftF4DCFg_yoWrJF4kpF
+        yfXa4qgrnxXw429r4UXa1kArWIv3y2qw1ktFyYvw13KFn8Crn3JFWDKr109rWUC3yfA3yY
+        vF45tF4UZrW2ka7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
         rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-        1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-        6F4UM28EF7xvwVC2z280aVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
-        0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-        2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-        W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
-        0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
-        AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIY
-        rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
-        v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVW8
-        JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26F4UJVW0obIYCTnIWIevJa73UjIFyTuYvjfUoj
-        jgUUUUU
+        1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+        6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4j6r4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+        1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+        6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+        0_Gr1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxa
+        n2IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+        AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+        17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+        IF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6Fyj6rWU
+        JwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26F4UJVW0obIYCT
+        nIWIevJa73UjIFyTuYvjTR_KsUDUUUU
 X-CM-SenderInfo: hshw23xhvd2x3n6k3tpzhluzxrxghudrp/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/1/2023 7:37 PM, Kalle Valo wrote:
-> Petr Tesarik <petrtesarik@huaweicloud.com> writes:
+On 8/1/2023 5:36 PM, Petr Tesarik wrote:
+> From: Petr Tesarik <petr.tesarik.ext@huawei.com>
 > 
->> From: Petr Tesarik <petr.tesarik.ext@huawei.com>
->>
->> The channel list is in fact a flexible array, but it has a length of 1 to
->> make sure there is enough room for the special chanspec -1 when the struct
->> is allocated on stack to abort a scan.
->>
->> Move the single array member to newly declared struct brcmf_scan_abort_le
->> and struct brcmf_scan_abort_v2_le and make channel_list in struct
->> brcmf_scan_params_le and struct brcmf_scan_params_v2_le a flexible array.
->>
->> This fixes this annoying (though harmless) warning when the kernel is built
->> with CONFIG_FORTIFY_SOURCE=y:
->>
->> ------------[ cut here ]------------
->> memcpy: detected field-spanning write (size 76) of single field
->> "&params_le->channel_list[0]" at
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:1072 (size
->> 2)
->> WARNING: CPU: 2 PID: 991 at
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:1072
->> brcmf_scan_params_v2_to_v1+0xd4/0x118 [brcmfmac]
->> Modules linked in: qrtr(E) algif_hash(E) aes_neon_bs(E)
->> aes_neon_blk(E) algif_skcipher(E) af_alg(E) bnep(E) brcmfmac_wcc(E)
->> bcm2835_v4l2(CE) bcm2835_mmal_vchiq(CE) videobuf2_vmalloc(E)
->> videobuf2_memops(E) videobuf2_v4l2(E) videodev(E) hci_uart(E)
->> btsdio(E) videobuf2_common(E) btbcm(E) mc(E) snd_bcm2835(CE)
->> bluetooth(E) snd_pcm(E) brcmfmac(E) snd_timer(E) cpufreq_dt(E) snd(E)
->> soundcore(E) cfg80211(E) ecdh_generic(E) brcmutil(E)
->> raspberrypi_cpufreq(E) rfkill(E) vchiq(CE) bcm2711_thermal(E)
->> leds_gpio(E) fuse(E) efi_pstore(E) dmi_sysfs(E) ip_tables(E)
->> x_tables(E) rpcsec_gss_krb5(E) auth_rpcgss(E) nfsv4(E) dns_resolver(E)
->> nfs(E) lockd(E) grace(E) fscache(E) netfs(E) af_packet(E) mmc_block(E)
->> xhci_pci(E) xhci_pci_renesas(E) xhci_hcd(E) usbcore(E) usb_common(E)
->> clk_raspberrypi(E) gpio_raspberrypi_exp(E) bcm2835_dma(E)
->> crct10dif_ce(E) virt_dma(E) pcie_brcmstb(E) sdhci_iproc(E)
->> gpio_regulator(E) sdhci_pltfm(E) sdhci(E) mmc_core(E) fixed(E)
->> nvmem_rmem(E) sunrpc(E) sg(E) dm_multipath(E) dm_mod(E) efivarfs(E)
->> Unloaded tainted modules: aes_ce_cipher(E):1
->> CPU: 2 PID: 991 Comm: wpa_supplicant Tainted: G C E
->> 6.5.0-rc4-dynswiotlb+ #27 2ec0961165cc91fdbec101d9d43b3331ba4f0927
->> Hardware name: Unknown Unknown Product/Unknown Product, BIOS 2023.04 04/01/2023
->> pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
->> pc : brcmf_scan_params_v2_to_v1+0xd4/0x118 [brcmfmac]
->> lr : brcmf_scan_params_v2_to_v1+0xd4/0x118 [brcmfmac]
->> sp : ffff8000829ab590
->> x29: ffff8000829ab590 x28: 0000000000000000 x27: 0000000000000001
->> x26: ffff000105e7e0a4 x25: ffff00010a0bcb48 x24: ffff000101e03800
->> x23: ffff000105ec8920 x22: ffff000106332980 x21: ffff00010a0bc0c0
->> x20: ffff00010a0bcb90 x19: ffff00010a0bc108 x18: ffffffffffffffff
->> x17: 0000000000000000 x16: 0000000000000000 x15: 616f72622f737365
->> x14: 6c657269772f7465 x13: 616d666d6372622f x12: 31313230386d6372
->> x11: 00000000ffffdfff x10: ffff800081ad3328 x9 : ffff800080130694
->> x8 : 000000000002ffe8 x7 : c0000000ffffdfff x6 : 00000000000affa8
->> x5 : ffff0001fef75e00 x4 : 0000000000000000 x3 : 0000000000000027
->> x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff00010aa0e000
->> Call trace:
->>  brcmf_scan_params_v2_to_v1+0xd4/0x118 [brcmfmac
->> 38c4a81a3b85b4aff1650c67f95f20bc542d60c1]
->>  brcmf_run_escan+0x148/0x1a0 [brcmfmac 38c4a81a3b85b4aff1650c67f95f20bc542d60c1]
->>  brcmf_do_escan+0x74/0xe0 [brcmfmac 38c4a81a3b85b4aff1650c67f95f20bc542d60c1]
->>  brcmf_cfg80211_scan+0xcc/0x298 [brcmfmac 38c4a81a3b85b4aff1650c67f95f20bc542d60c1]
->>  rdev_scan+0x38/0x158 [cfg80211 8907673111c49ec56be88af3d38994cc1cf54cb8]
->>  cfg80211_scan+0x134/0x178 [cfg80211 8907673111c49ec56be88af3d38994cc1cf54cb8]
->>  nl80211_trigger_scan+0x3e8/0x768 [cfg80211 8907673111c49ec56be88af3d38994cc1cf54cb8]
->>  genl_family_rcv_msg_doit.isra.0+0xc0/0x130
->>  genl_rcv_msg+0x1e4/0x278
->>  netlink_rcv_skb+0x64/0x138
->>  genl_rcv+0x40/0x60
->>  netlink_unicast+0x1cc/0x2d8
->>  netlink_sendmsg+0x1d4/0x448
->>  sock_sendmsg+0x64/0xc0
->>  ____sys_sendmsg+0x260/0x2e0
->>  ___sys_sendmsg+0x88/0xf0
->>  __sys_sendmsg+0x70/0xd8
->>  __arm64_sys_sendmsg+0x2c/0x40
->>  invoke_syscall+0x78/0x100
->>  el0_svc_common.constprop.0+0x100/0x130
->>  do_el0_svc+0x40/0xa8
->>  el0_svc+0x34/0x138
->>  el0t_64_sync_handler+0x120/0x130
->>  el0t_64_sync+0x1a8/0x1b0
->> ---[ end trace 0000000000000000 ]---
->>
->> Signed-off-by: Petr Tesarik <petr.tesarik.ext@huawei.com>
-> 
-> Is this the same issue as Hans patch fixes?
-> 
-> https://patchwork.kernel.org/project/linux-wireless/patch/20230729140500.27892-1-hdegoede@redhat.com/
+> The 'S' scan method is not implemented. The type member is always written
+> as 'E' and never read. Consequently, struct brcmf_p2p_scan_le can be
+> replaced with struct brcmf_escan_params_le.
 
-Yes, I wasn't aware of this other patch (I'm not subscribed to
-linux-wireless). I see, Hans approach is less intrusive.
+Seeing that Hans has already fixed the actual issue with the flex array,
+this whole series is not needed.
+
+But maybe this simplification has some value on its own?
 
 Petr T
+
+> Signed-off-by: Petr Tesarik <petr.tesarik.ext@huawei.com>
+> ---
+>  .../broadcom/brcm80211/brcmfmac/p2p.c         | 38 ++++---------------
+>  1 file changed, 8 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> index d4492d02e4ea..915f95760470 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+> @@ -123,23 +123,6 @@ enum brcmf_p2p_disc_state {
+>  	WL_P2P_DISC_ST_SEARCH
+>  };
+>  
+> -/**
+> - * struct brcmf_p2p_scan_le - P2P specific scan request.
+> - *
+> - * @type: type of scan method requested (values: 'E' or 'S').
+> - * @reserved: reserved (ignored).
+> - * @eparams: parameters used for type 'E'.
+> - * @sparams: parameters used for type 'S'.
+> - */
+> -struct brcmf_p2p_scan_le {
+> -	u8 type;
+> -	u8 reserved[3];
+> -	union {
+> -		struct brcmf_escan_params_le eparams;
+> -		struct brcmf_scan_params_le sparams;
+> -	};
+> -};
+> -
+>  /**
+>   * struct brcmf_p2p_pub_act_frame - WiFi P2P Public Action Frame
+>   *
+> @@ -646,14 +629,14 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+>  {
+>  	struct brcmf_pub *drvr = p2p->cfg->pub;
+>  	s32 ret = 0;
+> -	s32 memsize = offsetof(struct brcmf_p2p_scan_le,
+> -			       eparams.params_le.channel_list);
+> +	s32 memsize = offsetof(struct brcmf_escan_params_le,
+> +			       params_le.channel_list);
+>  	s32 nprobes;
+>  	s32 active;
+>  	u32 i;
+>  	u8 *memblk;
+>  	struct brcmf_cfg80211_vif *vif;
+> -	struct brcmf_p2p_scan_le *p2p_params;
+> +	struct brcmf_escan_params_le *eparams;
+>  	struct brcmf_scan_params_le *sparams;
+>  
+>  	memsize += num_chans * sizeof(__le16);
+> @@ -667,8 +650,8 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+>  		ret = -EINVAL;
+>  		goto exit;
+>  	}
+> -	p2p_params = (struct brcmf_p2p_scan_le *)memblk;
+> -	sparams = &p2p_params->eparams.params_le;
+> +	eparams = (struct brcmf_escan_params_le *)memblk;
+> +	sparams = &eparams->params_le;
+>  
+>  	switch (search_state) {
+>  	case WL_P2P_DISC_ST_SEARCH:
+> @@ -698,11 +681,6 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+>  
+>  	brcmf_p2p_set_discover_state(vif->ifp, search_state, 0, 0);
+>  
+> -	/*
+> -	 * set p2p scan parameters.
+> -	 */
+> -	p2p_params->type = 'E';
+> -
+>  	/* determine the scan engine parameters */
+>  	sparams->bss_type = DOT11_BSSTYPE_ANY;
+>  	sparams->scan_type = BRCMF_SCANTYPE_ACTIVE;
+> @@ -747,9 +725,9 @@ static s32 brcmf_p2p_escan(struct brcmf_p2p_info *p2p, u32 num_chans,
+>  		sparams->channel_list[i] = cpu_to_le16(chanspecs[i]);
+>  
+>  	/* set the escan specific parameters */
+> -	p2p_params->eparams.version = cpu_to_le32(BRCMF_ESCAN_REQ_VERSION);
+> -	p2p_params->eparams.action =  cpu_to_le16(WL_ESCAN_ACTION_START);
+> -	p2p_params->eparams.sync_id = cpu_to_le16(0x1234);
+> +	eparams->version = cpu_to_le32(BRCMF_ESCAN_REQ_VERSION);
+> +	eparams->action =  cpu_to_le16(WL_ESCAN_ACTION_START);
+> +	eparams->sync_id = cpu_to_le16(0x1234);
+>  	/* perform p2p scan on primary device */
+>  	ret = brcmf_fil_bsscfg_data_set(vif->ifp, "p2p_scan", memblk, memsize);
+>  	if (!ret)
 
