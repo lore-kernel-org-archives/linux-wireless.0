@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8099C001DF
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 02:12:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D00C04E69
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Aug 2023 02:12:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231285AbjHACMS (ORCPT
+        id S231171AbjHACMT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 31 Jul 2023 22:12:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53562 "EHLO
+        Mon, 31 Jul 2023 22:12:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230378AbjHACMR (ORCPT
+        with ESMTP id S230356AbjHACMQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Jul 2023 22:12:17 -0400
+        Mon, 31 Jul 2023 22:12:16 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 03A671BDC
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 55FD91BD3
         for <linux-wireless@vger.kernel.org>; Mon, 31 Jul 2023 19:12:10 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3712BnVJ2016424, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3712BmjaE016283, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3712BnVJ2016424
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3712BmjaE016283
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
-        Tue, 1 Aug 2023 10:11:49 +0800
+        Tue, 1 Aug 2023 10:11:48 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Tue, 1 Aug 2023 10:12:03 +0800
+ 15.1.2507.17; Tue, 1 Aug 2023 10:12:01 +0800
 Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 1 Aug 2023
- 10:12:03 +0800
+ 10:12:00 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <timlee@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/8] wifi: rtw89: add firmware parser for v1 format
-Date:   Tue, 1 Aug 2023 10:11:23 +0800
-Message-ID: <20230801021127.15919-5-pkshih@realtek.com>
+Subject: [PATCH 2/8] wifi: rtw89: support firmware log with formatted text
+Date:   Tue, 1 Aug 2023 10:11:21 +0800
+Message-ID: <20230801021127.15919-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230801021127.15919-1-pkshih@realtek.com>
 References: <20230801021127.15919-1-pkshih@realtek.com>
@@ -53,222 +53,359 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-A firmware with v1 format contains many sections to download. Add parser to
-read section type, target address, length, checksum and so on, and then
-download the section to WiFi CPU with proper location.
+From: Chin-Yen Lee <timlee@realtek.com>
 
-The additional dynamic header length named dynamic_hdr_len is used to
-skip content of dynamic header containing compiler flags of firmware, which
-can help to determine variant firmware build, but currently rtw89 only
-use single one variant. So, just skip the content.
+Original firmware log which is sent via C2H message bloats
+code size of firmware and is also length-limited. So we put
+some common log into format file, and firmware could use a
+log ID and some variables in C2H message to map a formatted
+text via pre-designed rule.
 
-The layout of a WiFi CPU firmware with v1 format looks like:
-
-+---------------------------------------+
-|      Header (12 words)                |
-+---------------------------------------+
-|      Section header 1 (4 words)       |
-|      Section header 2 (4 words)       |
-|      Section header 3 (4 words)       |
-|      ...                              |
-+---------------------------------------+
-|      Dynamic header (variable length) |
-+---------------------------------------+
-|      Data used & pointed by section   |
-|      ...                              |
-+---------------------------------------+
-
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/fw.c | 106 +++++++++++++++++++++---
- drivers/net/wireless/realtek/rtw89/fw.h |  17 ++++
- 2 files changed, 111 insertions(+), 12 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c  |   2 +-
+ drivers/net/wireless/realtek/rtw89/core.h  |  14 +-
+ drivers/net/wireless/realtek/rtw89/debug.c |  14 +-
+ drivers/net/wireless/realtek/rtw89/fw.c    | 146 ++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtw89/fw.h    |  31 ++++-
+ drivers/net/wireless/realtek/rtw89/mac.c   |   3 +-
+ 6 files changed, 194 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 69b181fa29667..48cfac6e41ffe 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -3508,7 +3508,7 @@ int rtw89_core_start(struct rtw89_dev *rtwdev)
+ 	set_bit(RTW89_FLAG_RUNNING, rtwdev->flags);
+ 
+ 	rtw89_btc_ntfy_radio_state(rtwdev, BTC_RFCTRL_WL_ON);
+-	rtw89_fw_h2c_fw_log(rtwdev, rtwdev->fw.fw_log_enable);
++	rtw89_fw_h2c_fw_log(rtwdev, rtwdev->fw.log.enable);
+ 	rtw89_fw_h2c_init_ba_cam(rtwdev);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index a3acc0bb18926..c68082f239a29 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -3398,6 +3398,15 @@ struct rtw89_fw_req_info {
+ 	struct completion completion;
+ };
+ 
++struct rtw89_fw_log {
++	struct rtw89_fw_suit suit;
++	bool enable;
++	u32 last_fmt_id;
++	u32 fmt_count;
++	const __le32 *fmt_ids;
++	const char *(*fmts)[];
++};
++
+ struct rtw89_fw_info {
+ 	struct rtw89_fw_req_info req;
+ 	int fw_format;
+@@ -3407,8 +3416,7 @@ struct rtw89_fw_info {
+ 	u8 c2h_counter;
+ 	struct rtw89_fw_suit normal;
+ 	struct rtw89_fw_suit wowlan;
+-	struct rtw89_fw_suit logfmt;
+-	bool fw_log_enable;
++	struct rtw89_fw_log log;
+ 	u32 feature_map;
+ };
+ 
+@@ -4945,7 +4953,7 @@ static inline struct rtw89_fw_suit *rtw89_fw_suit_get(struct rtw89_dev *rtwdev,
+ 	if (type == RTW89_FW_WOWLAN)
+ 		return &fw_info->wowlan;
+ 	else if (type == RTW89_FW_LOGFMT)
+-		return &fw_info->logfmt;
++		return &fw_info->log.suit;
+ 	return &fw_info->normal;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
+index ce5a9ac081457..f09141704c584 100644
+--- a/drivers/net/wireless/realtek/rtw89/debug.c
++++ b/drivers/net/wireless/realtek/rtw89/debug.c
+@@ -3204,20 +3204,22 @@ static ssize_t rtw89_debug_priv_btc_manual_set(struct file *filp,
+ 	return count;
+ }
+ 
+-static ssize_t rtw89_debug_fw_log_btc_manual_set(struct file *filp,
+-						 const char __user *user_buf,
+-						 size_t count, loff_t *loff)
++static ssize_t rtw89_debug_fw_log_manual_set(struct file *filp,
++					     const char __user *user_buf,
++					     size_t count, loff_t *loff)
+ {
+ 	struct rtw89_debugfs_priv *debugfs_priv = filp->private_data;
+ 	struct rtw89_dev *rtwdev = debugfs_priv->rtwdev;
+-	struct rtw89_fw_info *fw_info = &rtwdev->fw;
++	struct rtw89_fw_log *log = &rtwdev->fw.log;
+ 	bool fw_log_manual;
+ 
+ 	if (kstrtobool_from_user(user_buf, count, &fw_log_manual))
+ 		goto out;
+ 
+ 	mutex_lock(&rtwdev->mutex);
+-	fw_info->fw_log_enable = fw_log_manual;
++	log->enable = fw_log_manual;
++	if (log->enable)
++		rtw89_fw_log_prepare(rtwdev);
+ 	rtw89_fw_h2c_fw_log(rtwdev, fw_log_manual);
+ 	mutex_unlock(&rtwdev->mutex);
+ out:
+@@ -3571,7 +3573,7 @@ static struct rtw89_debugfs_priv rtw89_debug_priv_btc_manual = {
+ };
+ 
+ static struct rtw89_debugfs_priv rtw89_debug_priv_fw_log_manual = {
+-	.cb_write = rtw89_debug_fw_log_btc_manual_set,
++	.cb_write = rtw89_debug_fw_log_manual_set,
+ };
+ 
+ static struct rtw89_debugfs_priv rtw89_debug_priv_phy_info = {
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 0090127800709..61b9af79f91dd 100644
+index 6260bebf305e5..a891d063678da 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.c
 +++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -86,8 +86,8 @@ int rtw89_fw_check_rdy(struct rtw89_dev *rtwdev)
- 	return 0;
- }
- 
--static int rtw89_fw_hdr_parser(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
--			       struct rtw89_fw_bin_info *info)
-+static int rtw89_fw_hdr_parser_v0(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
-+				  struct rtw89_fw_bin_info *info)
- {
- 	const struct rtw89_fw_hdr *fw_hdr = (const struct rtw89_fw_hdr *)fw;
- 	struct rtw89_fw_hdr_section_info *section_info;
-@@ -154,6 +154,94 @@ static int rtw89_fw_hdr_parser(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
- 	return 0;
- }
- 
-+static int rtw89_fw_hdr_parser_v1(struct rtw89_dev *rtwdev, const u8 *fw, u32 len,
-+				  struct rtw89_fw_bin_info *info)
+@@ -718,6 +718,150 @@ void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
+ 		 */
+ 		fw->req.firmware = NULL;
+ 	}
++
++	kfree(fw->log.fmts);
++}
++
++static u32 rtw89_fw_log_get_fmt_idx(struct rtw89_dev *rtwdev, u32 fmt_id)
 +{
-+	const struct rtw89_fw_hdr_v1 *fw_hdr = (const struct rtw89_fw_hdr_v1 *)fw;
-+	struct rtw89_fw_hdr_section_info *section_info;
-+	const struct rtw89_fw_dynhdr_hdr *fwdynhdr;
-+	const struct rtw89_fw_hdr_section_v1 *section;
-+	const u8 *fw_end = fw + len;
-+	const u8 *bin;
-+	u32 base_hdr_len;
-+	u32 mssc_len = 0;
++	struct rtw89_fw_log *fw_log = &rtwdev->fw.log;
 +	u32 i;
 +
-+	info->section_num = le32_get_bits(fw_hdr->w6, FW_HDR_V1_W6_SEC_NUM);
-+	base_hdr_len = struct_size(fw_hdr, sections, info->section_num);
-+	info->dynamic_hdr_en = le32_get_bits(fw_hdr->w7, FW_HDR_V1_W7_DYN_HDR);
++	if (fmt_id > fw_log->last_fmt_id)
++		return 0;
 +
-+	if (info->dynamic_hdr_en) {
-+		info->hdr_len = le32_get_bits(fw_hdr->w5, FW_HDR_V1_W5_HDR_SIZE);
-+		info->dynamic_hdr_len = info->hdr_len - base_hdr_len;
-+		fwdynhdr = (const struct rtw89_fw_dynhdr_hdr *)(fw + base_hdr_len);
-+		if (le32_to_cpu(fwdynhdr->hdr_len) != info->dynamic_hdr_len) {
-+			rtw89_err(rtwdev, "[ERR]invalid fw dynamic header len\n");
-+			return -EINVAL;
-+		}
-+	} else {
-+		info->hdr_len = base_hdr_len;
-+		info->dynamic_hdr_len = 0;
++	for (i = 0; i < fw_log->fmt_count; i++) {
++		if (le32_to_cpu(fw_log->fmt_ids[i]) == fmt_id)
++			return i;
 +	}
++	return 0;
++}
 +
-+	bin = fw + info->hdr_len;
++static int rtw89_fw_log_create_fmts_dict(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_fw_log *log = &rtwdev->fw.log;
++	const struct rtw89_fw_logsuit_hdr *suit_hdr;
++	struct rtw89_fw_suit *suit = &log->suit;
++	const void *fmts_ptr, *fmts_end_ptr;
++	u32 fmt_count;
++	int i;
 +
-+	/* jump to section header */
-+	section_info = info->section_info;
-+	for (i = 0; i < info->section_num; i++) {
-+		section = &fw_hdr->sections[i];
-+		section_info->type =
-+			le32_get_bits(section->w1, FWSECTION_HDR_V1_W1_SECTIONTYPE);
-+		if (section_info->type == FWDL_SECURITY_SECTION_TYPE) {
-+			section_info->mssc =
-+				le32_get_bits(section->w2, FWSECTION_HDR_V1_W2_MSSC);
-+			mssc_len += section_info->mssc * FWDL_SECURITY_SIGLEN;
-+		} else {
-+			section_info->mssc = 0;
-+		}
++	suit_hdr = (const struct rtw89_fw_logsuit_hdr *)suit->data;
++	fmt_count = le32_to_cpu(suit_hdr->count);
++	log->fmt_ids = suit_hdr->ids;
++	fmts_ptr = &suit_hdr->ids[fmt_count];
++	fmts_end_ptr = suit->data + suit->size;
++	log->fmts = kcalloc(fmt_count, sizeof(char *), GFP_KERNEL);
++	if (!log->fmts)
++		return -ENOMEM;
 +
-+		section_info->len =
-+			le32_get_bits(section->w1, FWSECTION_HDR_V1_W1_SEC_SIZE);
-+		if (le32_get_bits(section->w1, FWSECTION_HDR_V1_W1_CHECKSUM))
-+			section_info->len += FWDL_SECTION_CHKSUM_LEN;
-+		section_info->redl = le32_get_bits(section->w1, FWSECTION_HDR_V1_W1_REDL);
-+		section_info->dladdr =
-+			le32_get_bits(section->w0, FWSECTION_HDR_V1_W0_DL_ADDR);
-+		section_info->addr = bin;
-+		bin += section_info->len;
-+		section_info++;
-+	}
++	for (i = 0; i < fmt_count; i++) {
++		fmts_ptr = memchr_inv(fmts_ptr, 0, fmts_end_ptr - fmts_ptr);
++		if (!fmts_ptr)
++			break;
 +
-+	if (fw_end != bin + mssc_len) {
-+		rtw89_err(rtwdev, "[ERR]fw bin size\n");
-+		return -EINVAL;
++		(*log->fmts)[i] = fmts_ptr;
++		log->last_fmt_id = le32_to_cpu(log->fmt_ids[i]);
++		log->fmt_count++;
++		fmts_ptr += strlen(fmts_ptr);
 +	}
 +
 +	return 0;
 +}
 +
-+static int rtw89_fw_hdr_parser(struct rtw89_dev *rtwdev,
-+			       const struct rtw89_fw_suit *fw_suit,
-+			       struct rtw89_fw_bin_info *info)
++int rtw89_fw_log_prepare(struct rtw89_dev *rtwdev)
 +{
-+	const u8 *fw = fw_suit->data;
-+	u32 len = fw_suit->size;
++	struct rtw89_fw_log *log = &rtwdev->fw.log;
++	struct rtw89_fw_suit *suit = &log->suit;
 +
-+	if (!fw || !len) {
-+		rtw89_err(rtwdev, "fw type %d isn't recognized\n", fw_suit->type);
-+		return -ENOENT;
++	if (!suit || !suit->data) {
++		rtw89_debug(rtwdev, RTW89_DBG_FW, "no log format file\n");
++		return -EINVAL;
 +	}
++	if (log->fmts)
++		return 0;
 +
-+	switch (fw_suit->hdr_ver) {
-+	case 0:
-+		return rtw89_fw_hdr_parser_v0(rtwdev, fw, len, info);
-+	case 1:
-+		return rtw89_fw_hdr_parser_v1(rtwdev, fw, len, info);
-+	default:
-+		return -ENOENT;
-+	}
++	return rtw89_fw_log_create_fmts_dict(rtwdev);
 +}
 +
- static
- int rtw89_mfw_recognize(struct rtw89_dev *rtwdev, enum rtw89_fw_type type,
- 			struct rtw89_fw_suit *fw_suit, bool nowarn)
-@@ -642,8 +730,6 @@ int rtw89_fw_download(struct rtw89_dev *rtwdev, enum rtw89_fw_type type)
- 	struct rtw89_fw_info *fw_info = &rtwdev->fw;
- 	struct rtw89_fw_suit *fw_suit = rtw89_fw_suit_get(rtwdev, type);
- 	struct rtw89_fw_bin_info info;
--	const u8 *fw = fw_suit->data;
--	u32 len = fw_suit->size;
- 	u8 val;
- 	int ret;
++static void rtw89_fw_log_dump_data(struct rtw89_dev *rtwdev,
++				   const struct rtw89_fw_c2h_log_fmt *log_fmt,
++				   u32 fmt_idx, u8 para_int, bool raw_data)
++{
++	const char *(*fmts)[] = rtwdev->fw.log.fmts;
++	char str_buf[RTW89_C2H_FW_LOG_STR_BUF_SIZE];
++	u32 args[RTW89_C2H_FW_LOG_MAX_PARA_NUM] = {0};
++	int i;
++
++	if (log_fmt->argc > RTW89_C2H_FW_LOG_MAX_PARA_NUM) {
++		rtw89_warn(rtwdev, "C2H log: Arg count is unexpected %d\n",
++			   log_fmt->argc);
++		return;
++	}
++
++	if (para_int)
++		for (i = 0 ; i < log_fmt->argc; i++)
++			args[i] = le32_to_cpu(log_fmt->u.argv[i]);
++
++	if (raw_data) {
++		if (para_int)
++			snprintf(str_buf, RTW89_C2H_FW_LOG_STR_BUF_SIZE,
++				 "fw_enc(%d, %d, %d) %*ph", le32_to_cpu(log_fmt->fmt_id),
++				 para_int, log_fmt->argc, (int)sizeof(args), args);
++		else
++			snprintf(str_buf, RTW89_C2H_FW_LOG_STR_BUF_SIZE,
++				 "fw_enc(%d, %d, %d, %s)", le32_to_cpu(log_fmt->fmt_id),
++				 para_int, log_fmt->argc, log_fmt->u.raw);
++	} else {
++		snprintf(str_buf, RTW89_C2H_FW_LOG_STR_BUF_SIZE, (*fmts)[fmt_idx],
++			 args[0x0], args[0x1], args[0x2], args[0x3], args[0x4],
++			 args[0x5], args[0x6], args[0x7], args[0x8], args[0x9],
++			 args[0xa], args[0xb], args[0xc], args[0xd], args[0xe],
++			 args[0xf]);
++	}
++
++	rtw89_info(rtwdev, "C2H log: %s", str_buf);
++}
++
++void rtw89_fw_log_dump(struct rtw89_dev *rtwdev, u8 *buf, u32 len)
++{
++	const struct rtw89_fw_c2h_log_fmt *log_fmt;
++	u8 para_int;
++	u32 fmt_idx;
++
++	if (len < RTW89_C2H_HEADER_LEN) {
++		rtw89_err(rtwdev, "c2h log length is wrong!\n");
++		return;
++	}
++
++	buf += RTW89_C2H_HEADER_LEN;
++	len -= RTW89_C2H_HEADER_LEN;
++	log_fmt = (const struct rtw89_fw_c2h_log_fmt *)buf;
++
++	if (len < RTW89_C2H_FW_FORMATTED_LOG_MIN_LEN)
++		goto plain_log;
++
++	if (log_fmt->signature != cpu_to_le16(RTW89_C2H_FW_LOG_SIGNATURE))
++		goto plain_log;
++
++	if (!rtwdev->fw.log.fmts)
++		return;
++
++	para_int = u8_get_bits(log_fmt->feature, RTW89_C2H_FW_LOG_FEATURE_PARA_INT);
++	fmt_idx = rtw89_fw_log_get_fmt_idx(rtwdev, le32_to_cpu(log_fmt->fmt_id));
++
++	if (!para_int && log_fmt->argc != 0 && fmt_idx != 0)
++		rtw89_info(rtwdev, "C2H log: %s%s",
++			   (*rtwdev->fw.log.fmts)[fmt_idx], log_fmt->u.raw);
++	else if (fmt_idx != 0 && para_int)
++		rtw89_fw_log_dump_data(rtwdev, log_fmt, fmt_idx, para_int, false);
++	else
++		rtw89_fw_log_dump_data(rtwdev, log_fmt, fmt_idx, para_int, true);
++	return;
++
++plain_log:
++	rtw89_info(rtwdev, "C2H log: %*s", len, buf);
++
+ }
  
-@@ -652,12 +738,7 @@ int rtw89_fw_download(struct rtw89_dev *rtwdev, enum rtw89_fw_type type)
- 	if (ret)
- 		return ret;
- 
--	if (!fw || !len) {
--		rtw89_err(rtwdev, "fw type %d isn't recognized\n", type);
--		return -ENOENT;
--	}
--
--	ret = rtw89_fw_hdr_parser(rtwdev, fw, len, &info);
-+	ret = rtw89_fw_hdr_parser(rtwdev, fw_suit, &info);
- 	if (ret) {
- 		rtw89_err(rtwdev, "parse fw header fail\n");
- 		goto fwdl_err;
-@@ -671,13 +752,14 @@ int rtw89_fw_download(struct rtw89_dev *rtwdev, enum rtw89_fw_type type)
- 		goto fwdl_err;
+ #define H2C_CAM_LEN 60
+@@ -931,7 +1075,7 @@ int rtw89_fw_h2c_fw_log(struct rtw89_dev *rtwdev, bool enable)
  	}
  
--	ret = rtw89_fw_download_hdr(rtwdev, fw, info.hdr_len - info.dynamic_hdr_len);
-+	ret = rtw89_fw_download_hdr(rtwdev, fw_suit->data, info.hdr_len -
-+							   info.dynamic_hdr_len);
- 	if (ret) {
- 		ret = -EBUSY;
- 		goto fwdl_err;
- 	}
- 
--	ret = rtw89_fw_download_main(rtwdev, fw, &info);
-+	ret = rtw89_fw_download_main(rtwdev, fw_suit->data, &info);
- 	if (ret) {
- 		ret = -EBUSY;
- 		goto fwdl_err;
+ 	skb_put(skb, H2C_LOG_CFG_LEN);
+-	SET_LOG_CFG_LEVEL(skb->data, RTW89_FW_LOG_LEVEL_SER);
++	SET_LOG_CFG_LEVEL(skb->data, RTW89_FW_LOG_LEVEL_LOUD);
+ 	SET_LOG_CFG_PATH(skb->data, BIT(RTW89_FW_LOG_LEVEL_C2H));
+ 	SET_LOG_CFG_COMP(skb->data, comp);
+ 	SET_LOG_CFG_COMP_EXT(skb->data, 0);
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index ca1ab2b1beecb..eb3300cd9147f 100644
+index 45f927dc212ef..89ab27090b0c0 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.h
 +++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -583,6 +583,22 @@ struct rtw89_fw_hdr {
- #define FW_HDR_W7_DYN_HDR BIT(16)
- #define FW_HDR_W7_CMD_VERSERION GENMASK(31, 24)
+@@ -3232,9 +3232,6 @@ static inline struct rtw89_fw_c2h_attr *RTW89_SKB_C2H_CB(struct sk_buff *skb)
+ 	return (struct rtw89_fw_c2h_attr *)skb->cb;
+ }
  
-+struct rtw89_fw_hdr_section_v1 {
-+	__le32 w0;
-+	__le32 w1;
-+	__le32 w2;
-+	__le32 w3;
-+} __packed;
-+
-+#define FWSECTION_HDR_V1_W0_DL_ADDR GENMASK(31, 0)
-+#define FWSECTION_HDR_V1_W1_METADATA GENMASK(31, 24)
-+#define FWSECTION_HDR_V1_W1_SECTIONTYPE GENMASK(27, 24)
-+#define FWSECTION_HDR_V1_W1_SEC_SIZE GENMASK(23, 0)
-+#define FWSECTION_HDR_V1_W1_CHECKSUM BIT(28)
-+#define FWSECTION_HDR_V1_W1_REDL BIT(29)
-+#define FWSECTION_HDR_V1_W2_MSSC GENMASK(7, 0)
-+#define FWSECTION_HDR_V1_W2_BBMCU_IDX GENMASK(27, 24)
-+
- struct rtw89_fw_hdr_v1 {
+-#define RTW89_GET_C2H_LOG_SRT_PRT(c2h) (char *)((__le32 *)(c2h) + 2)
+-#define RTW89_GET_C2H_LOG_LEN(len) ((len) - RTW89_C2H_HEADER_LEN)
+-
+ struct rtw89_c2h_done_ack {
  	__le32 w0;
  	__le32 w1;
-@@ -596,6 +612,7 @@ struct rtw89_fw_hdr_v1 {
- 	__le32 w9;
- 	__le32 w10;
- 	__le32 w11;
-+	struct rtw89_fw_hdr_section_v1 sections[];
+@@ -3256,6 +3253,26 @@ struct rtw89_c2h_done_ack {
+ #define RTW89_GET_MAC_C2H_REV_ACK_H2C_SEQ(c2h) \
+ 	le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(23, 16))
+ 
++struct rtw89_fw_c2h_log_fmt {
++	__le16 signature;
++	u8 feature;
++	u8 syntax;
++	__le32 fmt_id;
++	u8 file_num;
++	__le16 line_num;
++	u8 argc;
++	union {
++		DECLARE_FLEX_ARRAY(u8, raw);
++		DECLARE_FLEX_ARRAY(__le32, argv);
++	} __packed u;
++} __packed;
++
++#define RTW89_C2H_FW_FORMATTED_LOG_MIN_LEN 11
++#define RTW89_C2H_FW_LOG_FEATURE_PARA_INT BIT(2)
++#define RTW89_C2H_FW_LOG_MAX_PARA_NUM 16
++#define RTW89_C2H_FW_LOG_SIGNATURE 0xA5A5
++#define RTW89_C2H_FW_LOG_STR_BUF_SIZE 512
++
+ struct rtw89_c2h_mac_bcnfltr_rpt {
+ 	__le32 w0;
+ 	__le32 w1;
+@@ -3426,6 +3443,12 @@ struct rtw89_mfw_hdr {
+ 	struct rtw89_mfw_info info[];
  } __packed;
  
- #define FW_HDR_V1_W1_MAJOR_VERSION GENMASK(7, 0)
++struct rtw89_fw_logsuit_hdr {
++	__le32 rsvd;
++	__le32 count;
++	__le32 ids[];
++} __packed;
++
+ struct fwcmd_hdr {
+ 	__le32 hdr0;
+ 	__le32 hdr1;
+@@ -3616,6 +3639,8 @@ int rtw89_fw_download(struct rtw89_dev *rtwdev, enum rtw89_fw_type type);
+ void rtw89_load_firmware_work(struct work_struct *work);
+ void rtw89_unload_firmware(struct rtw89_dev *rtwdev);
+ int rtw89_wait_firmware_completion(struct rtw89_dev *rtwdev);
++int rtw89_fw_log_prepare(struct rtw89_dev *rtwdev);
++void rtw89_fw_log_dump(struct rtw89_dev *rtwdev, u8 *buf, u32 len);
+ void rtw89_h2c_pkt_set_hdr(struct rtw89_dev *rtwdev, struct sk_buff *skb,
+ 			   u8 type, u8 cat, u8 class, u8 func,
+ 			   bool rack, bool dack, u32 len);
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index b114babec698c..1efa4da3cebc9 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -4437,8 +4437,7 @@ rtw89_mac_c2h_done_ack(struct rtw89_dev *rtwdev, struct sk_buff *skb_c2h, u32 le
+ static void
+ rtw89_mac_c2h_log(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
+ {
+-	rtw89_info(rtwdev, "%*s", RTW89_GET_C2H_LOG_LEN(len),
+-		   RTW89_GET_C2H_LOG_SRT_PRT(c2h->data));
++	rtw89_fw_log_dump(rtwdev, c2h->data, len);
+ }
+ 
+ static void
 -- 
 2.25.1
 
