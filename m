@@ -2,133 +2,115 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4698CC001DF
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Aug 2023 15:00:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 794C0C001DF
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Aug 2023 16:07:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234105AbjHBPAD (ORCPT
+        id S234487AbjHBQHk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Aug 2023 11:00:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52884 "EHLO
+        Wed, 2 Aug 2023 12:07:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233798AbjHBPAC (ORCPT
+        with ESMTP id S229962AbjHBQHj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2023 11:00:02 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EFA91FFA
-        for <linux-wireless@vger.kernel.org>; Wed,  2 Aug 2023 07:59:59 -0700 (PDT)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 372BuXpQ026850;
-        Wed, 2 Aug 2023 14:59:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=jQ03W97o7ZUVoXDBXwz5ZxV9OrSqbS25eM9YHJeOPlI=;
- b=eupAp8YiSuBcjU3CDRcNktYZAMuStupsM3ugBO78AyTJsYIs5AqQSuAUBv70PZFGPer2
- PbOJRKi6GuTAFwpPbLAQ7yjWhmsMsyI9cZjEH4KB+8oRc3D1ZyRlkDeJGwSmoiFVHXpT
- a8NCOrLXci8lJQHZFPxSSwEvRhZ1RE+GLgmq386llcAKJz5E3GgoBU/pY1v4KHK9MKTR
- VuK16t/4Vx9vr24eo9OlJ42ykN6GM16XEVsMuRxpyFk5gM4lHgwolc/O8mLPBezpTaB0
- XoO3LPyBZaJf/YZLJgnKcMfz98FSLLuqiicM1lwDfC8+XOo2ganuvtExMO6zDfWABJth Pg== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3s7fre1n73-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 02 Aug 2023 14:59:50 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 372ExnMJ017176
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 2 Aug 2023 14:59:49 GMT
-Received: from [10.111.177.49] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Wed, 2 Aug
- 2023 07:59:49 -0700
-Message-ID: <54733de9-db66-f1c4-9ad5-4d1f31529c05@quicinc.com>
-Date:   Wed, 2 Aug 2023 07:59:48 -0700
+        Wed, 2 Aug 2023 12:07:39 -0400
+Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [178.154.239.83])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37E521BF0
+        for <linux-wireless@vger.kernel.org>; Wed,  2 Aug 2023 09:07:34 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-84.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-84.vla.yp-c.yandex.net [IPv6:2a02:6b8:c0f:26a7:0:640:a2d5:0])
+        by forward100a.mail.yandex.net (Yandex) with ESMTP id 04CE741C58;
+        Wed,  2 Aug 2023 19:07:32 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-84.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id S7VxvrADR8c0-7NLc6HIU;
+        Wed, 02 Aug 2023 19:07:31 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1690992451;
+        bh=wOTQWZ2iJ90DyTBp79FmhzESEXg1Riz91Mf0+lWxZ+U=;
+        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+        b=KO9BJ47P+fjdQgwdot2/wlMTzuCpikDXM44ZxEhf80UUKHwHTyWKtaQSDuQFRSJLr
+         mrfeC0tP8vYl0PxYDT3m+Vyyk4Cg5Us3ep4kafiCWWhG2ti+C8C+phX1aKxKIVTYWS
+         FfN8s18GexYbvm0lEh0C5y3/fudcqIljMloOvh4Y=
+Authentication-Results: mail-nwsmtp-smtp-production-main-84.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From:   Dmitry Antipov <dmantipov@yandex.ru>
+To:     Brian Norris <briannorris@chromium.org>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        lvc-project@linuxtesting.org, Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH 4/5] [v3] wifi: mwifiex: handle possible mwifiex_write_reg() errors
+Date:   Wed,  2 Aug 2023 19:07:18 +0300
+Message-ID: <20230802160726.85545-4-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230802160726.85545-1-dmantipov@yandex.ru>
+References: <ZMlHCmjf2ZovExsP@google.com>
+ <20230802160726.85545-1-dmantipov@yandex.ru>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] wifi: ath12k: fix WARN_ON during
- ath12k_mac_update_vif_chan
-Content-Language: en-US
-To:     Manish Dharanenthiran <quic_mdharane@quicinc.com>,
-        <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20230802085852.19821-1-quic_mdharane@quicinc.com>
- <20230802085852.19821-2-quic_mdharane@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230802085852.19821-2-quic_mdharane@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 5W_neT19CCOpIaBw2RbYfA7opp0dDnwA
-X-Proofpoint-ORIG-GUID: 5W_neT19CCOpIaBw2RbYfA7opp0dDnwA
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-02_10,2023-08-01_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
- priorityscore=1501 impostorscore=0 phishscore=0 clxscore=1015
- mlxlogscore=928 bulkscore=0 lowpriorityscore=0 mlxscore=0 adultscore=0
- suspectscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2306200000 definitions=main-2308020132
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/2/2023 1:58 AM, Manish Dharanenthiran wrote:
-> Fix WARN_ON() from ath12k_mac_update_vif_chan() if vdev is not up.
-> Since change_chanctx can be called even before vdev_up.
-> 
-> Do vdev stop followed by a vdev start in case of vdev is down.
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0-02903-QCAHKSWPL_SILICONZ-1
+Return -1 on possible 'mwifiex_write_reg()' errors in
+'mwifiex_init_sdio_ioport()', do not ignore the value
+returned by the latter in 'mwifiex_init_sdio()' and
+'mwifiex_sdio_up_dev()' as well.
 
-Has this been tested on WCN7850? My understanding is that firmware may 
-expect vdev down and then vdev restart
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-> 
-> Signed-off-by: Manish Dharanenthiran <quic_mdharane@quicinc.com>
-> ---
->   drivers/net/wireless/ath/ath12k/mac.c | 27 +++++++++++++++++++++------
->   1 file changed, 21 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-> index 1bb9802ef569..0ab95e138d1d 100644
-> --- a/drivers/net/wireless/ath/ath12k/mac.c
-> +++ b/drivers/net/wireless/ath/ath12k/mac.c
-> @@ -5698,13 +5698,28 @@ ath12k_mac_update_vif_chan(struct ath12k *ar,
->   		if (WARN_ON(!arvif->is_started))
->   			continue;
->   
-> -		if (WARN_ON(!arvif->is_up))
-> -			continue;
-> +		/* Firmware expect vdev_restart only if vdev is up.
-> +		 * If vdev is down then it expect vdev_stop->vdev_start.
-> +		 */
-> +		if (arvif->is_up) {
-> +			ret = ath12k_mac_vdev_restart(arvif, &vifs[i].new_ctx->def);
-> +			if (ret) {
-> +				ath12k_warn(ab, "failed to restart vdev %d: %d\n",
-> +					    arvif->vdev_id, ret);
-> +				continue;
-> +			}
-> +		} else {
-> +			ret = ath12k_mac_vdev_stop(arvif);
-> +			if (ret) {
-> +				ath12k_warn(ab, "failed to stop vdev %d: %d\n",
-> +					    arvif->vdev_id, ret);
-> +				continue;
-> +			}
->   
-> -		ret = ath12k_mac_vdev_restart(arvif, &vifs[i].new_ctx->def);
-> -		if (ret) {
-> -			ath12k_warn(ab, "failed to restart vdev %d: %d\n",
-> -				    arvif->vdev_id, ret);
-> +			ret = ath12k_mac_vdev_start(arvif, &vifs[i].new_ctx->def);
-> +			if (ret)
-> +				ath12k_warn(ab, "failed to start vdev %d: %d\n",
-> +					    arvif->vdev_id, ret);
->   			continue;
->   		}
->   
+Acked-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+v3: add Acked-by: and reorder series
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 22 +++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index a24bd40dd41a..0d60484cd5df 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -1083,17 +1083,17 @@ static int mwifiex_init_sdio_ioport(struct mwifiex_adapter *adapter)
+ 		    "info: SDIO FUNC1 IO port: %#x\n", adapter->ioport);
+ 
+ 	/* Set Host interrupt reset to read to clear */
+-	if (!mwifiex_read_reg(adapter, card->reg->host_int_rsr_reg, &reg))
+-		mwifiex_write_reg(adapter, card->reg->host_int_rsr_reg,
+-				  reg | card->reg->sdio_int_mask);
+-	else
++	if (mwifiex_read_reg(adapter, card->reg->host_int_rsr_reg, &reg))
++		return -1;
++	if (mwifiex_write_reg(adapter, card->reg->host_int_rsr_reg,
++			      reg | card->reg->sdio_int_mask))
+ 		return -1;
+ 
+ 	/* Dnld/Upld ready set to auto reset */
+-	if (!mwifiex_read_reg(adapter, card->reg->card_misc_cfg_reg, &reg))
+-		mwifiex_write_reg(adapter, card->reg->card_misc_cfg_reg,
+-				  reg | AUTO_RE_ENABLE_INT);
+-	else
++	if (mwifiex_read_reg(adapter, card->reg->card_misc_cfg_reg, &reg))
++		return -1;
++	if (mwifiex_write_reg(adapter, card->reg->card_misc_cfg_reg,
++			      reg | AUTO_RE_ENABLE_INT))
+ 		return -1;
+ 
+ 	return 0;
+@@ -2525,7 +2525,8 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	mwifiex_read_reg(adapter, card->reg->host_int_status_reg, &sdio_ireg);
+ 
+ 	/* Get SDIO ioport */
+-	mwifiex_init_sdio_ioport(adapter);
++	if (mwifiex_init_sdio_ioport(adapter))
++		return -EIO;
+ 
+ 	/* Initialize SDIO variables in card */
+ 	card->mp_rd_bitmap = 0;
+@@ -3141,7 +3142,8 @@ static void mwifiex_sdio_up_dev(struct mwifiex_adapter *adapter)
+ 	 */
+ 	mwifiex_read_reg(adapter, card->reg->host_int_status_reg, &sdio_ireg);
+ 
+-	mwifiex_init_sdio_ioport(adapter);
++	if (mwifiex_init_sdio_ioport(adapter))
++		dev_err(&card->func->dev, "error enabling SDIO port\n");
+ }
+ 
+ static struct mwifiex_if_ops sdio_ops = {
+-- 
+2.41.0
 
