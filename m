@@ -2,49 +2,49 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A44BDC001E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Aug 2023 11:44:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6956C41513
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Aug 2023 11:45:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232050AbjHBLog (ORCPT
+        id S232818AbjHBLpt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Aug 2023 07:44:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60644 "EHLO
+        Wed, 2 Aug 2023 07:45:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230057AbjHBLof (ORCPT
+        with ESMTP id S234211AbjHBLps (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Aug 2023 07:44:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 394BB213D
-        for <linux-wireless@vger.kernel.org>; Wed,  2 Aug 2023 04:44:35 -0700 (PDT)
+        Wed, 2 Aug 2023 07:45:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B316226A1
+        for <linux-wireless@vger.kernel.org>; Wed,  2 Aug 2023 04:45:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C259961939
-        for <linux-wireless@vger.kernel.org>; Wed,  2 Aug 2023 11:44:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AA57C433C8;
-        Wed,  2 Aug 2023 11:44:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 523FC6193C
+        for <linux-wireless@vger.kernel.org>; Wed,  2 Aug 2023 11:45:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F19DFC433C7;
+        Wed,  2 Aug 2023 11:45:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690976674;
-        bh=gCzHrGsl2mzOFtgFir6MlbRDFwpswOAJQ2dRzzMSFkQ=;
+        s=k20201202; t=1690976745;
+        bh=zwoKG3lx3jesoWIM65Zml8EW8Hft2kRROiIGMP7TCKs=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=VXp9XxDowNRdyq0bcXm5SET3I5X50WQl4W3PZExnvUrRb9sVY6s32N8Hc8TC3CB2I
-         q/A+jkwLwfUtvF8UaSBHheaeKXvjd2VRTMW/DOJz6OYOxRlbjyFUDomL5m7fUMwLlz
-         bz4iBpUGEneSGrABXTs3ICUZFp3T/Jt2AY2dJTFlJ1uYx3xI/EVqsXC40ggNzIvwwR
-         0Cs3tBcjLa5Z7mpeNXhTuJf2yho/Cpt0E4Vn5BNz2ocCoo4UAdyeoro8j+k11NRDM+
-         333r9X/BS6ZzdaSiKt4xZcqO27MdGj/od6bhDrGi4TjFBkPF/pz8WUQFJGt8jpCxyd
-         9U0Rd3pDch+oQ==
+        b=YR9WmRRwYB3w+kXXEB0NwMed/Q9l1QF6KxLe8+Jc3GC31rsCeu35OGfprLGtoQg8O
+         9k7hsNstZgCi5AdFiAPd0Nd5ptrHI/zadBnV/0MxNHZSRmjOxDyfHX8LYgBkcD429n
+         OMskULJz0rFqqP4Lhyp7HSutYKQo5ii3PaQKy+er1bQqNaCHrrPo2+s42IUSk3Jba/
+         lJoh0UzC8N5HfDF/ChVsT9xN8JkOVmw3yM9zCmclvcmRApBVIVVgFzxYoCA7eEtkA4
+         UriD/OpjUudKHWGnUWk3QO03APkwJ9K+BD3WtXHCZCYMkYNmz2+YojfTu1Vbk2jlK4
+         pFL4BeqtKCePQ==
 From:   Kalle Valo <kvalo@kernel.org>
 To:     Wen Gong <quic_wgong@quicinc.com>
 Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 4/5] wifi: ath11k: update regulatory rules when
- interface added
+Subject: Re: [PATCH v4 1/5] wifi: ath11k: add support to select 6 GHz
+ Regulatory type
 References: <20230607094810.26707-1-quic_wgong@quicinc.com>
-        <20230607094810.26707-5-quic_wgong@quicinc.com>
-Date:   Wed, 02 Aug 2023 14:44:31 +0300
-In-Reply-To: <20230607094810.26707-5-quic_wgong@quicinc.com> (Wen Gong's
-        message of "Wed, 7 Jun 2023 05:48:09 -0400")
-Message-ID: <87zg39vfc0.fsf@kernel.org>
+        <20230607094810.26707-2-quic_wgong@quicinc.com>
+Date:   Wed, 02 Aug 2023 14:45:43 +0300
+In-Reply-To: <20230607094810.26707-2-quic_wgong@quicinc.com> (Wen Gong's
+        message of "Wed, 7 Jun 2023 05:48:06 -0400")
+Message-ID: <87v8dxvfa0.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -54,12 +54,9 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Wen Gong <quic_wgong@quicinc.com> writes:
 
-> When wlan boot up, WMI_REG_CHAN_LIST_CC_EXT_EVENTID is sent from
-> firmware at an early stage, the interface mode is not decided at
-> this point, then ath11k select reg rules of AP mode as default.
->
-> After interface is created, it is exactly decided AP/station mode,
-> then ath11k need to update reg rules to the exact one.
+> There are 3 types of regulatory rules for AP mode and 6 type for
+> station mode. Add wmi_vdev_type and ieee80211_ap_reg_power to
+> select the exact reg rules.
 >
 > Tested-on: WCN6855 hw2.0 PCI
 > WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
@@ -68,19 +65,28 @@ Wen Gong <quic_wgong@quicinc.com> writes:
 
 [...]
 
-> --- a/drivers/net/wireless/ath/ath11k/hw.c
-> +++ b/drivers/net/wireless/ath/ath11k/hw.c
-> @@ -897,6 +897,12 @@ static u32 ath11k_hw_wcn6750_get_tcl_ring_selector(struct sk_buff *skb)
->  	return skb_get_hash(skb);
+> --- a/drivers/net/wireless/ath/ath11k/reg.c
+> +++ b/drivers/net/wireless/ath/ath11k/reg.c
+> @@ -607,25 +607,64 @@ ath11k_reg_update_weather_radar_band(struct ath11k_base *ab,
+>  	*rule_idx = i;
 >  }
 >  
-> +bool ath11k_hw_supports_6g_cc_ext(struct ath11k *ar)
+> +enum wmi_reg_6ghz_ap_type
+> +ath11k_ieee80211_ap_pwr_type_convert(enum ieee80211_ap_reg_power power_type)
 > +{
-> +	return (test_bit(WMI_TLV_SERVICE_REG_CC_EXT_EVENT_SUPPORT,
-> +			 ar->ab->wmi_ab.svc_map)) && ar->supports_6ghz;
-> +}
+> +	switch (power_type) {
+> +	case IEEE80211_REG_LPI_AP:
+> +		return WMI_REG_INDOOR_AP;
+> +	case IEEE80211_REG_SP_AP:
+> +		return WMI_REG_STANDARD_POWER_AP;
+> +	case IEEE80211_REG_VLP_AP:
+> +		return WMI_REG_VERY_LOW_POWER_AP;
+> +	default:
+> +		return WMI_REG_MAX_AP_TYPE;
+> +	}
 
-This is more like a firmware feature, maybe move to mac.c?
+Rename to something like ath11k_reg_ap_pwr_convert()? And this can be a
+static function, I don't see it used outside of reg.c.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
