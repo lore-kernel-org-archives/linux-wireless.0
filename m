@@ -2,33 +2,34 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1728CC001E0
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 07:38:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0CCAC04A94
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 07:38:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232519AbjHCHiV (ORCPT
+        id S232987AbjHCHiX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Aug 2023 03:38:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47082 "EHLO
+        Thu, 3 Aug 2023 03:38:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231707AbjHCHgp (ORCPT
+        with ESMTP id S233430AbjHCHgg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2023 03:36:45 -0400
+        Thu, 3 Aug 2023 03:36:36 -0400
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 33720187;
-        Thu,  3 Aug 2023 00:35:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id AA24630D5;
+        Thu,  3 Aug 2023 00:34:48 -0700 (PDT)
 Received: from localhost.localdomain (unknown [180.167.10.98])
-        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id 4F2666091588E;
-        Thu,  3 Aug 2023 15:35:33 +0800 (CST)
+        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id C6FC16090B390;
+        Thu,  3 Aug 2023 15:34:45 +0800 (CST)
 X-MD-Sfrom: yunchuan@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From:   Wu Yunchuan <yunchuan@nfschina.com>
 To:     kvalo@kernel.org
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc:     yuancan@huawei.com, simon.horman@corigine.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         kernel-janitors@vger.kernel.org,
         Wu Yunchuan <yunchuan@nfschina.com>
-Subject: [PATCH net-next v2 5/9] wifi: rsi: rsi_91x_main: Remove unnecessary (void*) conversions
-Date:   Thu,  3 Aug 2023 15:35:29 +0800
-Message-Id: <20230803073529.3666653-1-yunchuan@nfschina.com>
+Subject: [PATCH net-next v2 1/9] wifi: rsi: rsi_91x_coex: Remove unnecessary (void*) conversions
+Date:   Thu,  3 Aug 2023 15:34:40 +0800
+Message-Id: <20230803073440.3666204-1-yunchuan@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -36,34 +37,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-No need cast (void*) to (struct rsi_common *).
+No need cast (void*) to (struct rsi_coex_ctrl_block *) or
+(struct rsi_common *).
 
 Signed-off-by: Wu Yunchuan <yunchuan@nfschina.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_coex.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index f9f004446b07..2112d8d277a9 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -270,14 +270,14 @@ static void rsi_tx_scheduler_thread(struct rsi_common *common)
- #ifdef CONFIG_RSI_COEX
- enum rsi_host_intf rsi_get_host_intf(void *priv)
+diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
+index 45ac9371f262..372eaaa2b9ef 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_coex.c
++++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
+@@ -52,8 +52,7 @@ static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
+ 
+ static void rsi_coex_scheduler_thread(struct rsi_common *common)
+ {
+-	struct rsi_coex_ctrl_block *coex_cb =
+-		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	struct rsi_coex_ctrl_block *coex_cb = common->coex_cb;
+ 	u32 timeout = EVENT_WAIT_FOREVER;
+ 
+ 	do {
+@@ -100,9 +99,8 @@ static inline int rsi_map_coex_q(u8 hal_queue)
+ 
+ int rsi_coex_send_pkt(void *priv, struct sk_buff *skb, u8 hal_queue)
  {
 -	struct rsi_common *common = (struct rsi_common *)priv;
+-	struct rsi_coex_ctrl_block *coex_cb =
+-		(struct rsi_coex_ctrl_block *)common->coex_cb;
 +	struct rsi_common *common = priv;
++	struct rsi_coex_ctrl_block *coex_cb = common->coex_cb;
+ 	struct skb_info *tx_params = NULL;
+ 	enum rsi_coex_queues coex_q;
+ 	int status;
+@@ -168,8 +166,7 @@ int rsi_coex_attach(struct rsi_common *common)
  
- 	return common->priv->rsi_host_intf;
- }
- 
- void rsi_set_bt_context(void *priv, void *bt_context)
+ void rsi_coex_detach(struct rsi_common *common)
  {
--	struct rsi_common *common = (struct rsi_common *)priv;
-+	struct rsi_common *common = priv;
+-	struct rsi_coex_ctrl_block *coex_cb =
+-		(struct rsi_coex_ctrl_block *)common->coex_cb;
++	struct rsi_coex_ctrl_block *coex_cb = common->coex_cb;
+ 	int cnt;
  
- 	common->bt_adapter = bt_context;
- }
+ 	rsi_kill_thread(&coex_cb->coex_tx_thread);
 -- 
 2.30.2
 
