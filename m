@@ -2,94 +2,78 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9BB5C001DB
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 18:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0DCEB64DD
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 18:10:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235406AbjHCSFU (ORCPT
+        id S230212AbjHCSKj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Aug 2023 14:05:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36360 "EHLO
+        Thu, 3 Aug 2023 14:10:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231254AbjHCSEy (ORCPT
+        with ESMTP id S230344AbjHCSKc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2023 14:04:54 -0400
+        Thu, 3 Aug 2023 14:10:32 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 822FA4EC1
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 11:03:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 728403A87
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 11:10:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C7FF661E4A
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 18:03:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A72CC433C7;
-        Thu,  3 Aug 2023 18:03:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D965461E63
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 18:10:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 41177C433C8;
+        Thu,  3 Aug 2023 18:10:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691085790;
-        bh=VrjKRx+oWp5ae5K/8G0kK9vqZU2UuHSN2r5BpFukw+s=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CRdu56irx6tj4e1Mt6Yl3O+Efl7BEJqpB7L+M4U/gXlJxGkCS18Y7jIV+cL57E4we
-         SujUzYcOtZsYUL051sAyHV5s9dTn6t/wjfHaQ9YfoXrZvfabmyR0Bfe7gCNyCQC/Rx
-         InzhpZrGGLa6tiX3A6SSzeNwhmi4IKRRUFGBqslG87I43WDJebBPPSPZTHj0wZlxi8
-         IwC9MwsyhBtUn1FTgPmFLJ3U7vJPoNwwCQ2TkUH41yennKINTm3ty1sgnqFTlUigPt
-         xt46UwxRtxAe0KkE/VZjdcEZkglwscJ62qNyw1ZAsLJltAVOTOyPB1j6RFx4kQvnuC
-         ZZkoDrWKZYu2w==
-Date:   Thu, 3 Aug 2023 20:03:06 +0200
-From:   Simon Horman <horms@kernel.org>
-To:     Yue Haibing <yuehaibing@huawei.com>
-Cc:     johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] wifi: iw_handler.h: Remove unused declaration
- dev_get_wireless_info()
-Message-ID: <ZMvr2lNVTPLqs8Nq@kernel.org>
-References: <20230803134248.42652-1-yuehaibing@huawei.com>
+        s=k20201202; t=1691086228;
+        bh=JQ7oC/6/r2+aJtlBU9MJELICSmE7bgUSZdhahmPBdqI=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=RV43oF2lW/2NJ3cQXHiQ1qTcOej2LxtDs+5gS7bHrgmBf3pBR+AGHCQsXClrNn9lN
+         AEQ/zjx6c0OVxm8BuV33JTse8buxWoOnTcuXHSWmPTkFbOyt9swMo4PsRYEXzB1cFL
+         vSc8a0EM/Rd4QDWU991+cI6Sq6HFX7MD2eXsQ/AX8VLIuZ03BYkPQmOSuliCQ1qQJ0
+         GSGBT5nwVQwtxWZLidobi2ZQKKVqXJFFwnyp7O1vMS0uRKjvZ3AiSXREOgA9zAk5vw
+         FfaBR4+4njA+G2GaWsqcgQA5yKK7sq8jkqEdP+OXVgCHQ5gyiKVNt0CNJ781uCFuTu
+         Az57vMrAxmrHg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 0F87EC43168;
+        Thu,  3 Aug 2023 18:10:28 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230803134248.42652-1-yuehaibing@huawei.com>
+Content-Transfer-Encoding: 8bit
+Subject: Re: pull-request: wireless-2023-08-03
+From:   patchwork-bot+netdevbpf@kernel.org
+Message-Id: <169108622806.23543.11800053914524862324.git-patchwork-notify@kernel.org>
+Date:   Thu, 03 Aug 2023 18:10:28 +0000
+References: <20230803140058.57476C433C9@smtp.kernel.org>
+In-Reply-To: <20230803140058.57476C433C9@smtp.kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Aug 03, 2023 at 09:42:48PM +0800, Yue Haibing wrote:
-> Commit 556829657397 ("[NL80211]: add netlink interface to cfg80211")
-> declared but never implemented this, remove it.
+Hello:
+
+This pull request was applied to netdev/net.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
+
+On Thu,  3 Aug 2023 14:00:58 +0000 (UTC) you wrote:
+> Hi,
 > 
-> Signed-off-by: Yue Haibing <yuehaibing@huawei.com>
-> ---
->  include/net/iw_handler.h | 3 ---
->  1 file changed, 3 deletions(-)
+> here's a pull request to net tree, more info below. Please let me know if there
+> are any problems.
 > 
-> diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-> index d2ea5863eedc..99f46f521aa7 100644
-> --- a/include/net/iw_handler.h
-> +++ b/include/net/iw_handler.h
-> @@ -432,9 +432,6 @@ struct iw_public_data {
->  
->  /* First : function strictly used inside the kernel */
->  
-
-Hi Yue Haibing,
-
-I think you can remove the comment above and blank line below it too.
-
-> -/* Handle /proc/net/wireless, called in net/code/dev.c */
-> -int dev_get_wireless_info(char *buffer, char **start, off_t offset, int length);
-> -
->  /* Second : functions that may be called by driver modules */
-
-And work this into the comment above the to be deleted 'First :' comment.
-Something like this:
-
-/*
- * Functions part of the Wireless Extensions (defined in net/core/wireless.c).
- * These may be called by driver modules.
- */ 
-
->  
->  /* Send a single event to user space */
-> -- 
-> 2.34.1
+> Kalle
 > 
-> 
+> [...]
+
+Here is the summary with links:
+  - pull-request: wireless-2023-08-03
+    https://git.kernel.org/netdev/net/c/0d48a84b31f5
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
