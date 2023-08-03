@@ -2,84 +2,68 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B047C41513
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 12:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D008C001DF
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 12:03:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235709AbjHCMBP (ORCPT
+        id S233769AbjHCMDC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Aug 2023 08:01:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53028 "EHLO
+        Thu, 3 Aug 2023 08:03:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235702AbjHCMBN (ORCPT
+        with ESMTP id S229840AbjHCMDB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2023 08:01:13 -0400
+        Thu, 3 Aug 2023 08:03:01 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64BD8273E;
-        Thu,  3 Aug 2023 05:01:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9B54134
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 05:03:00 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ECF1C61BDF;
-        Thu,  3 Aug 2023 12:01:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4EDAC433C8;
-        Thu,  3 Aug 2023 12:01:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 34A856157A
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 12:03:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD121C433C7;
+        Thu,  3 Aug 2023 12:02:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691064071;
-        bh=VdVcZMd++gEDJ3fMlMp1laSbmWflsqIZsBMFRJzcdrA=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=PtPJeh1WMsC5tgpZ6HA3D3pHneTw+XpYfBmoUK6R0HOXaXqcynDoSXhcRMqhlZ1EY
-         VKdKD5o8tRWakwwrVgPto1UVbFxYiCJtMY7rD3bFTMAIhP7GWqEkjIbTVo3lLeQc72
-         EzGR3j9Tj/2shuxqU2mF7wzW48CvvBupLphgSp7tQcTVPQGZbDfE1zei0luf3RaWAx
-         oB0hG2yiPwvWnBYhYyydLzqaV5k4UAlIj4eRp79iaU+Ay5xmSSMTfABsh0ZMsFa2+l
-         eqrgT17t112YUGivd+/4lQmftGbg3dOosmlGvQJfvcp9rSBIfKNCgYjnUULG51CqrQ
-         oxfhu7jGNSRgw==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] wifi: ipw2x00: refactor to use kstrtoul
+        s=k20201202; t=1691064179;
+        bh=I8UCYUZFyi+ibsXyJOB/KatTvPq/qE0LZRv7VjhfnOs=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=mUdNgzcE8MA+dPM0atYUsZvkjop8TR32QyEll8xM9P5tgzkU+QXyvl1ADEzWY7Alq
+         CZc9GlZmDYMcQPmhwC2Sf5sMpQ0RlZE9RkPOVgmDieTL+9Y5JgI1GJdfQSh9X4J9i+
+         7IwLnmNVcY6BVCs3QioYidKWUE7hLqUy3+8tFEnvsacCYwznnwfjOo+pey6GHd8TFf
+         3kXRDHjhHe1xgnqzXXpZrghzjMN7OQgbbj72v4PiRhJUR3/uW+xNF+pocbEVl70vas
+         y/WK4h6kVKdomor+MOMMiErgP2Nj7HBcxGDhcs1ucrzDTL5BHVCOQ/ppg7h8A7Y+I/
+         GOioQNpDI79uw==
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230802-wifi-ipw2x00-refactor-v2-1-d33f765e9cd5@google.com>
-References: <20230802-wifi-ipw2x00-refactor-v2-1-d33f765e9cd5@google.com>
-To:     Justin Stitt <justinstitt@google.com>
-Cc:     Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org,
-        Justin Stitt <justinstitt@google.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169106406791.1024854.15683351104405009219.kvalo@kernel.org>
-Date:   Thu,  3 Aug 2023 12:01:09 +0000 (UTC)
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wifi: rtw89: regd: update regulatory map to R64-R42
+References: <20230803105430.6985-1-pkshih@realtek.com>
+Date:   Thu, 03 Aug 2023 15:02:56 +0300
+In-Reply-To: <20230803105430.6985-1-pkshih@realtek.com> (Ping-Ke Shih's
+        message of "Thu, 3 Aug 2023 18:54:30 +0800")
+Message-ID: <87il9wtjtb.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Justin Stitt <justinstitt@google.com> wrote:
+Ping-Ke Shih <pkshih@realtek.com> writes:
 
-> The current implementation seems to reinvent what `kstrtoul` already does
-> in terms of functionality and error handling. Remove uses of `simple_strtoul()`
-> in favor of `kstrtoul()`.
-> 
-> There is the following note at `lib/vsprintf.c:simple_strtoull()` which
-> further backs this change:
-> | * This function has caveats. Please use kstrtoull (or kstrtoul) instead.
-> 
-> And here, simple_str* are explicitly deprecated [3].
-> 
-> This patch also removes an instance of the deprecated `strncpy` which helps [2].
-> 
-> Link: https://lore.kernel.org/all/202308011602.3CC1C0244C@keescook/ [1]
-> Link: https://github.com/KSPP/linux/issues/90 [2]
-> Link: https://docs.kernel.org/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull [3]
-> Cc: linux-hardening@vger.kernel.org
-> Suggested-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Justin Stitt <justinstitt@google.com>
+> From: Zong-Zhe Yang <kevin_yang@realtek.com>
+>
+> Update notes:
 
-I assume this is just compile tested? In that case it's always good to add
-"Compile tested only." to the commit log. But I can add that this time.
+No need to have that sentence.
+
+> sync Realtek Regulatory R42 and Realtek Channel Plan R64
+
+R42 and R64 tells nothing to the community. A some kind of summary would
+be nice.
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230802-wifi-ipw2x00-refactor-v2-1-d33f765e9cd5@google.com/
+https://patchwork.kernel.org/project/linux-wireless/list/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
