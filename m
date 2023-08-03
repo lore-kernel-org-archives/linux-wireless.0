@@ -2,68 +2,78 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D008C001DF
-	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 12:03:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B5D2C001DF
+	for <linux-wireless@archiver.kernel.org>; Thu,  3 Aug 2023 12:07:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233769AbjHCMDC (ORCPT
+        id S235854AbjHCMHo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Aug 2023 08:03:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54194 "EHLO
+        Thu, 3 Aug 2023 08:07:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229840AbjHCMDB (ORCPT
+        with ESMTP id S235862AbjHCMH2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2023 08:03:01 -0400
+        Thu, 3 Aug 2023 08:07:28 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9B54134
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 05:03:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 192124218
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 05:07:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 34A856157A
-        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 12:03:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD121C433C7;
-        Thu,  3 Aug 2023 12:02:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CF48361D70
+        for <linux-wireless@vger.kernel.org>; Thu,  3 Aug 2023 12:07:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 741A7C433C8;
+        Thu,  3 Aug 2023 12:07:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691064179;
-        bh=I8UCYUZFyi+ibsXyJOB/KatTvPq/qE0LZRv7VjhfnOs=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=mUdNgzcE8MA+dPM0atYUsZvkjop8TR32QyEll8xM9P5tgzkU+QXyvl1ADEzWY7Alq
-         CZc9GlZmDYMcQPmhwC2Sf5sMpQ0RlZE9RkPOVgmDieTL+9Y5JgI1GJdfQSh9X4J9i+
-         7IwLnmNVcY6BVCs3QioYidKWUE7hLqUy3+8tFEnvsacCYwznnwfjOo+pey6GHd8TFf
-         3kXRDHjhHe1xgnqzXXpZrghzjMN7OQgbbj72v4PiRhJUR3/uW+xNF+pocbEVl70vas
-         y/WK4h6kVKdomor+MOMMiErgP2Nj7HBcxGDhcs1ucrzDTL5BHVCOQ/ppg7h8A7Y+I/
-         GOioQNpDI79uw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wifi: rtw89: regd: update regulatory map to R64-R42
-References: <20230803105430.6985-1-pkshih@realtek.com>
-Date:   Thu, 03 Aug 2023 15:02:56 +0300
-In-Reply-To: <20230803105430.6985-1-pkshih@realtek.com> (Ping-Ke Shih's
-        message of "Thu, 3 Aug 2023 18:54:30 +0800")
-Message-ID: <87il9wtjtb.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        s=k20201202; t=1691064434;
+        bh=FcIAQJvi0f9nEdlH2bPIyuovN6cCDxSxeq8EJZOtn4c=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=ex5qXPsXeanTJ8vTG1/9sIF08mg3dsnT+Jbzx8Psc5AXhwY9kj28ysYjdNXc5qJkL
+         rCyNbYPj7ZtzfYFi03+pomh/A3slMuRfsAqFbUm4IhiZc7bNofFMpKwLRHq/fWWOYc
+         UGJRrBRvsnr8EzAX/V8q0wiEb9WTJtE8SdHoCGkUhp3Glf6hFq9z2iTN/AMV9tO729
+         ug8z6a21lCV9/64kVlYA3mScnQqQgHwfjOlmKcM1M60KutzoIs9KsXyGmtSK53UxIq
+         1u8gdlsUyE59a70Ig+8hTuachmJvxJ7hdg4aK9dHxzFtlvL9YgTF+qyJEbWhTTc0fK
+         KLP2pyp0l7vLg==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [1/8] wifi: rtw89: recognize log format from firmware file
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230801021127.15919-2-pkshih@realtek.com>
+References: <20230801021127.15919-2-pkshih@realtek.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <timlee@realtek.com>, <linux-wireless@vger.kernel.org>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169106443111.1024854.4401575962601802805.kvalo@kernel.org>
+Date:   Thu,  3 Aug 2023 12:07:13 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> writes:
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Zong-Zhe Yang <kevin_yang@realtek.com>
->
-> Update notes:
+> From: Chin-Yen Lee <timlee@realtek.com>
+> 
+> Firmware log format is an element of multi-firmware file
+> and used for firmware to provide log with formatted text.
+> Driver needs to recognize it in advance if it exists.
+> 
+> Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-No need to have that sentence.
+8 patches applied to wireless-next.git, thanks.
 
-> sync Realtek Regulatory R42 and Realtek Channel Plan R64
-
-R42 and R64 tells nothing to the community. A some kind of summary would
-be nice.
+0520841960de wifi: rtw89: recognize log format from firmware file
+cad2bd8a136c wifi: rtw89: support firmware log with formatted text
+1b073b350d24 wifi: rtw89: introduce v1 format of firmware header
+12b1a12548eb wifi: rtw89: add firmware parser for v1 format
+7d112665982b wifi: rtw89: add firmware suit for BB MCU 0/1
+a337d4331fd6 wifi: rtw89: introduce infrastructure of firmware elements
+894747206893 wifi: rtw89: add to parse firmware elements of BB and RF tables
+dd59c6a32b71 wifi: rtw89: return failure if needed firmware elements are not recognized
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230801021127.15919-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
