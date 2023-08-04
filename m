@@ -2,97 +2,179 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A83DDC04A94
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 10:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57E32C00528
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 11:04:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230459AbjHDKmG (ORCPT
+        id S229648AbjHDLEO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Aug 2023 06:42:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45538 "EHLO
+        Fri, 4 Aug 2023 07:04:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229725AbjHDKmE (ORCPT
+        with ESMTP id S229564AbjHDLEM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Aug 2023 06:42:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C39C46B2;
-        Fri,  4 Aug 2023 03:42:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E42061F8B;
-        Fri,  4 Aug 2023 10:42:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82D32C433C8;
-        Fri,  4 Aug 2023 10:42:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1691145723;
-        bh=59hgmRJD8zAuTk3rh1tJHpF7TPUjRvw1kVL7rArnwGQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ib/jpO1V7eA3W0EcATFyIw5XWVOQES+fu5HayAcWEThHr4QaMwvffcSMQWS9Xknl0
-         kRMIRlN/gV4bS1CR9W6ZGVYksBb0tffEcSpQ6Mef0oDHQQ9z/W645gG9802NA2wqax
-         Vke1W5cmN410suItALn8vbFgiBqW6QTsnauQhsgc=
-Date:   Fri, 4 Aug 2023 12:42:00 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Ashwin Dayanand Kamat <kashwindayan@vmware.com>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Wen Gong <wgong@codeaurora.org>,
-        Jouni Malinen <jouni@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>, davem@davemloft.net,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, akaher@vmware.com, vsirnapalli@vmware.com,
-        tkundu@vmware.com, namit@vmware.com
-Subject: Re: [PATCH v4.19.y] ath10k: Fix TKIP Michael MIC verification for
- PCIe
-Message-ID: <2023080431-cobweb-fidgeting-e4de@gregkh>
-References: <1690971733-22270-1-git-send-email-kashwindayan@vmware.com>
- <2023080408-squad-pony-2638@gregkh>
+        Fri, 4 Aug 2023 07:04:12 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 150489B
+        for <linux-wireless@vger.kernel.org>; Fri,  4 Aug 2023 04:04:11 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-686f8614ce5so1843828b3a.3
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Aug 2023 04:04:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1691147050; x=1691751850;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zIUxYtufbcwUHtDQd0gMASnXyoHtRYUVaoyQboEuXJM=;
+        b=ACEzEbCFV1rXTKzx05LxOkBf70Q7zXIpfCgLN2krNbIV9bgi3VY998D2GiDhqf/Y6V
+         yrX13DsnWUX6jQqsZPUlfQc11z1JKuiabx/zvlyz74FR+HyQMofxs3tvp7UP1RL+4WSv
+         iAVrdR/o88jBZ1JBoolgvw9MBp5LRrjW3fBzENQhJeI4QA+/Jog8d75Fft1sc3TvWHvO
+         I0dEvBjunR1kJ3kZzSi+a2o7TxJ005adZIE3SD7zILWz3fWCh0yW0C31T1X/kqyk7a3k
+         lGMV5IKf7k+y0nHWi45Ct5w1NkUEXhBkk+VAYigqbz/HI+nW2jWc7WOUYzZs7OSMuWUW
+         6ozg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691147050; x=1691751850;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=zIUxYtufbcwUHtDQd0gMASnXyoHtRYUVaoyQboEuXJM=;
+        b=IuMy/YZFp6qTBWCHulXapHWomASAJvX5IcrRZycF2fOqJPFOHg/zOSe5Zju7/sB4Cl
+         iEM/PL6/FWUMoiJYATQ+Flh8HJNRsTVCZxCPF7hxb9c4KDUY8HsnQRRcbsys1TwmZiT3
+         d3PKcjWAH3SLOnqZP5V1zJD1uQvzaYDpWewLY9vn7Efsb140mDxd/Bgt6XRVJPaEpsov
+         51SxCzPmBKxZsOWKsZdUoIgJ8PeJVbC3fVgdej2OkkLV6FhzLG7hwjrfCcSI+yul4euS
+         XL0w/CDG7cQ83yOngOyKbDkiL5GPB5Kj7NC5sQe0N/hDR4ZiJpKgmVoKjj+ZYubG15j9
+         PpxA==
+X-Gm-Message-State: AOJu0YxhQ78U0oeS+TRsR0dJ3d+HlGO3MrW4sb9H5/t4cIa7bZB8oW0K
+        bxFBeYokuxeGCcxrlxpizq9dVLUKusABR8K5M2vcmN38
+X-Google-Smtp-Source: AGHT+IFmkGPoYbXUJJ53W0gyNLUf0CBliGd0ElJU0RLnn8lG6lr3dPkpMf1G3LBYqNJIHJYyHizJcWpI9dbbKxGYYs8=
+X-Received: by 2002:a17:90b:e0e:b0:269:1e3f:a54d with SMTP id
+ ge14-20020a17090b0e0e00b002691e3fa54dmr1335436pjb.10.1691147050388; Fri, 04
+ Aug 2023 04:04:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2023080408-squad-pony-2638@gregkh>
+References: <CAA93jw6NJ2cmLmMauz0xAgC2MGbBq6n0ZiZzAdkK0u4b+O2yXg@mail.gmail.com>
+In-Reply-To: <CAA93jw6NJ2cmLmMauz0xAgC2MGbBq6n0ZiZzAdkK0u4b+O2yXg@mail.gmail.com>
+From:   Dave Taht <dave.taht@gmail.com>
+Date:   Fri, 4 Aug 2023 04:03:58 -0700
+Message-ID: <CAA93jw6d_uq_MNa16F6hna0evo1jq-BLFvZQq9WJSfxy52_BGA@mail.gmail.com>
+Subject: Re: a nuking the mac80211 changing codel parameters patch
+To:     Make-Wifi-fast <make-wifi-fast@lists.bufferbloat.net>,
+        OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Aug 04, 2023 at 12:28:18PM +0200, Greg Kroah-Hartman wrote:
-> On Wed, Aug 02, 2023 at 03:52:13PM +0530, Ashwin Dayanand Kamat wrote:
-> > From: Wen Gong <wgong@codeaurora.org>
-> > 
-> > commit 0dc267b13f3a7e8424a898815dd357211b737330 upstream.
-> > 
-> > TKIP Michael MIC was not verified properly for PCIe cases since the
-> > validation steps in ieee80211_rx_h_michael_mic_verify() in mac80211 did
-> > not get fully executed due to unexpected flag values in
-> > ieee80211_rx_status.
-> > 
-> > Fix this by setting the flags property to meet mac80211 expectations for
-> > performing Michael MIC validation there. This fixes CVE-2020-26141. It
-> > does the same as ath10k_htt_rx_proc_rx_ind_hl() for SDIO which passed
-> > MIC verification case. This applies only to QCA6174/QCA9377 PCIe.
-> > 
-> > Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00110-QCARMSWP-1
-> > 
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Wen Gong <wgong@codeaurora.org>
-> > Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
-> > Link: https://lore.kernel.org/r/20210511200110.c3f1d42c6746.I795593fcaae941c471425b8c7d5f7bb185d29142@changeid
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > Signed-off-by: Ashwin Dayanand Kamat <kashwindayan@vmware.com>
-> > ---
-> >  drivers/net/wireless/ath/ath10k/htt_rx.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> > 
-> 
-> Now queued up, thanks.
+I cannot help but wonder what the results have been on people applying
+this patch over the past 6 months?
 
-Nope, breaks the build, how did you test this:
+On Tue, Dec 20, 2022 at 12:24=E2=80=AFPM Dave Taht <dave.taht@gmail.com> wr=
+ote:
+>
+> This is the single, most buggy, piece of code in "my" portion of wifi
+> today. It is so wrong, yet thus far I cannot get it out of linux or
+> find an acceptable substitute. It makes it hard to sleep at night
+> knowing this code has been so wrong... and now in millions , maybe
+> even 10s of millions, of devices by now.... Since I've been ranting
+> about the wrongness of this for years, I keep hoping that we can
+> excise it, especially for wifi6 devices and even more especially on
+> 6ghz spectrum... but just about everything, somehow, would benefit
+> hugely if we could somehow do more of the right thing here.
+>
+> I'd tried, last time I got this bee in my bonnet, tried to nuke this call=
+ here:
+>
+> https://forum.openwrt.org/t/reducing-multiplexing-latencies-still-further=
+-in-wifi/133605/
+>
+> As it is, I really encourage folk, especially with mt79 and to some
+> extent mt76 ac or ath10k, to try out the attached patch, measure tcp
+> rtts, and throughput, etc. A slightly less aggressive patch might suit
+> wifi-n....
+>
+> Maybe there's a reason for keeping this code in linux wifi that I do
+> not understand. But here are my pithy comments as to why this part of
+> mac80211 is so wrong...
+>
+>  static void sta_update_codel_params(struct sta_info *sta, u32 thr)
+>  {
+> -       if (thr && thr < STA_SLOW_THRESHOLD * sta->local->num_sta) {
+>
+> 1) sta->local->num_sta is the number of associated, rather than
+> active, stations. "Active" stations in the last 50ms or so, might have
+> been a better thing to use, but as most people have far more than that
+> associated, we end up with really lousy codel parameters, all the
+> time. Mistake numero uno!
+>
+> 2) The STA_SLOW_THRESHOLD was completely arbitrary in 2016.
+>
+> -               sta->cparams.target =3D MS2TIME(50);
+>
+> This, by itself, was probably not too bad. 30ms might have been
+> better, at the time, when we were battling powersave etc, but 20ms was
+> enough,
+> really, to cover most scenarios, even where we had low rate 2Ghz
+> multicast to cope with. Even then, codel has a hard time finding any
+> sane drop
+> rate at all, with a target this high.
+>
+> -               sta->cparams.interval =3D MS2TIME(300);
+>
+> But this was horrible, a total mistake, that is leading to codel being
+> completely ineffective in almost any scenario on clients or APS.
+> 100ms, even 80ms, here, would be vastly better than this insanity. I'm
+> seeing 5+seconds of delay accumulated in a bunch of otherwise happily
+> fq-ing APs....
+>
+> 100ms of  observed jitter during a flow is enough. Certainly (in 2016)
+> there were interactions with powersave that I did not understand, and
+> still don't, but
+> if you are transmitting in the first place, powersave shouldn't be a
+> problemmmm.....
+>
+> -               sta->cparams.ecn =3D false;
+>
+> At the time we were pretty nervous about ecn, I'm kind of sanguine
+> about it now, and reliably indicating ecn seems better than turning it
+> off for
+> any reason.
+>
+> -       } else {
+> -               sta->cparams.target =3D MS2TIME(20);
+> -               sta->cparams.interval =3D MS2TIME(100);
+> -               sta->cparams.ecn =3D true;
+> -       }
+>
+> And if we aint gonna fiddle with these, we don't need these either.
+>
+> In production, on p2p wireless, I've had 8ms and 80ms for target and
+> interval for years now, and it works great. It is obviously too low,
+> for those that
+> prize bandwidth over latency (I personally would prefer TXOPs shrink
+> intelligently as well as bandwidth, as you add stations, some of which
+> happens naturally by fq-codels scheduling mechanisms, others don't, I
+> even run with 2ms txops by default on everything myself)
+>
+> +       return;
+>
+> Ideally we could kill this entire call off entirely.
+>
+>  }
+>
+> A pre-thx for anyone actually trying the attached patch and reporting
+> back on any results.
+>
+> https://forum.openwrt.org/t/reducing-multiplexing-latencies-still-further=
+-in-wifi/133605/
+>
+>
+> --
+> This song goes out to all the folk that thought Stadia would work:
+> https://www.linkedin.com/posts/dtaht_the-mushroom-song-activity-698136666=
+5607352320-FXtz
+> Dave T=C3=A4ht CEO, TekLibre, LLC
 
-  CC [M]  drivers/net/wireless/ath/ath10k/htt_rx.o
-drivers/net/wireless/ath/ath10k/htt_rx.c: In function ‘ath10k_htt_rx_h_mpdu’:
-drivers/net/wireless/ath/ath10k/htt_rx.c:1649:21: error: ‘frag’ undeclared (first use in this function)
- 1649 |                 if (frag && !fill_crypt_header &&
-      |                     ^~~~
 
-> 
-> greg k-h
+
+--=20
+Podcast: https://www.youtube.com/watch?v=3DbxmoBr4cBKg
+Dave T=C3=A4ht CSO, LibreQos
