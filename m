@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 878B9C04FDF
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 03:54:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDBD8C001DB
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 03:54:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232875AbjHDDyr (ORCPT
+        id S233055AbjHDDyu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Aug 2023 23:54:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53230 "EHLO
+        Thu, 3 Aug 2023 23:54:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232844AbjHDDym (ORCPT
+        with ESMTP id S232905AbjHDDyq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2023 23:54:42 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1830F2D69;
-        Thu,  3 Aug 2023 20:54:42 -0700 (PDT)
+        Thu, 3 Aug 2023 23:54:46 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1D9E3C3B;
+        Thu,  3 Aug 2023 20:54:44 -0700 (PDT)
 Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RHBdp61jnzrS6X;
-        Fri,  4 Aug 2023 11:53:34 +0800 (CST)
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RHBb820qSzNmlS;
+        Fri,  4 Aug 2023 11:51:16 +0800 (CST)
 Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
  (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 4 Aug
- 2023 11:54:38 +0800
+ 2023 11:54:41 +0800
 From:   Ruan Jinjie <ruanjinjie@huawei.com>
 To:     <sgoutham@marvell.com>, <davem@davemloft.net>,
         <edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
@@ -39,9 +39,9 @@ To:     <sgoutham@marvell.com>, <davem@davemloft.net>,
         <linux-wireless@vger.kernel.org>,
         <brcm80211-dev-list.pdl@broadcom.com>,
         <SHA-cyfmac-dev-list@infineon.com>
-Subject: [PATCH -next 2/6] ethernet/intel: Remove unnecessary ternary operators
-Date:   Fri, 4 Aug 2023 11:53:42 +0800
-Message-ID: <20230804035346.2879318-3-ruanjinjie@huawei.com>
+Subject: [PATCH -next 4/6] net: ethernet: renesas: rswitch: Remove an unnecessary ternary operator
+Date:   Fri, 4 Aug 2023 11:53:44 +0800
+Message-ID: <20230804035346.2879318-5-ruanjinjie@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230804035346.2879318-1-ruanjinjie@huawei.com>
 References: <20230804035346.2879318-1-ruanjinjie@huawei.com>
@@ -56,41 +56,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ther are a little ternary operators, the true or false judgement
+There is a ternary operator, the true or false judgement
 of which is unnecessary in C language semantics.
 
 Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
 ---
- drivers/net/ethernet/intel/igb/e1000_phy.c | 2 +-
- drivers/net/ethernet/intel/igc/igc_phy.c   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/ethernet/renesas/rcar_gen4_ptp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/intel/igb/e1000_phy.c b/drivers/net/ethernet/intel/igb/e1000_phy.c
-index a018000f7db9..c123c9dd6a49 100644
---- a/drivers/net/ethernet/intel/igb/e1000_phy.c
-+++ b/drivers/net/ethernet/intel/igb/e1000_phy.c
-@@ -1652,7 +1652,7 @@ s32 igb_phy_has_link(struct e1000_hw *hw, u32 iterations,
- 			udelay(usec_interval);
- 	}
+diff --git a/drivers/net/ethernet/renesas/rcar_gen4_ptp.c b/drivers/net/ethernet/renesas/rcar_gen4_ptp.c
+index c007e33c47e1..37f7359678e5 100644
+--- a/drivers/net/ethernet/renesas/rcar_gen4_ptp.c
++++ b/drivers/net/ethernet/renesas/rcar_gen4_ptp.c
+@@ -29,7 +29,7 @@ static const struct rcar_gen4_ptp_reg_offset s4_offs = {
+ static int rcar_gen4_ptp_adjfine(struct ptp_clock_info *ptp, long scaled_ppm)
+ {
+ 	struct rcar_gen4_ptp_private *ptp_priv = ptp_to_priv(ptp);
+-	bool neg_adj = scaled_ppm < 0 ? true : false;
++	bool neg_adj = scaled_ppm < 0;
+ 	s64 addend = ptp_priv->default_addend;
+ 	s64 diff;
  
--	*success = (i < iterations) ? true : false;
-+	*success = i < iterations;
- 
- 	return ret_val;
- }
-diff --git a/drivers/net/ethernet/intel/igc/igc_phy.c b/drivers/net/ethernet/intel/igc/igc_phy.c
-index 53b77c969c85..a553e9d719e7 100644
---- a/drivers/net/ethernet/intel/igc/igc_phy.c
-+++ b/drivers/net/ethernet/intel/igc/igc_phy.c
-@@ -93,7 +93,7 @@ s32 igc_phy_has_link(struct igc_hw *hw, u32 iterations,
- 			udelay(usec_interval);
- 	}
- 
--	*success = (i < iterations) ? true : false;
-+	*success = i < iterations;
- 
- 	return ret_val;
- }
 -- 
 2.34.1
 
