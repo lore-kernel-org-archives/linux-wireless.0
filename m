@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 340DDC04FDF
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 03:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F010C05051
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 03:54:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233210AbjHDDyv (ORCPT
+        id S233057AbjHDDys (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Aug 2023 23:54:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53324 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233173AbjHDDys (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 3 Aug 2023 23:54:48 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ACE7422B;
-        Thu,  3 Aug 2023 20:54:46 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RHBb94gk1zNmj2;
-        Fri,  4 Aug 2023 11:51:17 +0800 (CST)
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53242 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232845AbjHDDyo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Aug 2023 23:54:44 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C93530C0;
+        Thu,  3 Aug 2023 20:54:43 -0700 (PDT)
+Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RHBdr2xFszrS75;
+        Fri,  4 Aug 2023 11:53:36 +0800 (CST)
 Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
  (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 4 Aug
- 2023 11:54:43 +0800
+ 2023 11:54:40 +0800
 From:   Ruan Jinjie <ruanjinjie@huawei.com>
 To:     <sgoutham@marvell.com>, <davem@davemloft.net>,
         <edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
@@ -39,9 +39,9 @@ To:     <sgoutham@marvell.com>, <davem@davemloft.net>,
         <linux-wireless@vger.kernel.org>,
         <brcm80211-dev-list.pdl@broadcom.com>,
         <SHA-cyfmac-dev-list@infineon.com>
-Subject: [PATCH -next 5/6] net: fjes: Remove an unnecessary ternary operator
-Date:   Fri, 4 Aug 2023 11:53:45 +0800
-Message-ID: <20230804035346.2879318-6-ruanjinjie@huawei.com>
+Subject: [PATCH -next 3/6] net/mlx4: Remove an unnecessary ternary operator
+Date:   Fri, 4 Aug 2023 11:53:43 +0800
+Message-ID: <20230804035346.2879318-4-ruanjinjie@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230804035346.2879318-1-ruanjinjie@huawei.com>
 References: <20230804035346.2879318-1-ruanjinjie@huawei.com>
@@ -56,27 +56,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is a ternary operator, the true or false judgement of which
-is unnecessary in C language semantics.
+There is a ternary operator, the true or false judgement
+of which is unnecessary in C language semantics.
 
 Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
 ---
- drivers/net/fjes/fjes_main.c | 2 +-
+ drivers/net/ethernet/mellanox/mlx4/port.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/fjes/fjes_main.c b/drivers/net/fjes/fjes_main.c
-index 2513be6d4e11..a0d915d1dbed 100644
---- a/drivers/net/fjes/fjes_main.c
-+++ b/drivers/net/fjes/fjes_main.c
-@@ -612,7 +612,7 @@ fjes_xmit_frame(struct sk_buff *skb, struct net_device *netdev)
- 	eth = (struct ethhdr *)skb->data;
- 	my_epid = hw->my_epid;
+diff --git a/drivers/net/ethernet/mellanox/mlx4/port.c b/drivers/net/ethernet/mellanox/mlx4/port.c
+index 256a06b3c096..1c289488d050 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/port.c
++++ b/drivers/net/ethernet/mellanox/mlx4/port.c
+@@ -176,7 +176,7 @@ static bool mlx4_need_mf_bond(struct mlx4_dev *dev)
+ 	mlx4_foreach_port(i, dev, MLX4_PORT_TYPE_ETH)
+ 		++num_eth_ports;
  
--	vlan = (vlan_get_tag(skb, &vlan_id) == 0) ? true : false;
-+	vlan = vlan_get_tag(skb, &vlan_id) == 0;
+-	return (num_eth_ports ==  2) ? true : false;
++	return num_eth_ports ==  2;
+ }
  
- 	data = skb->data;
- 	len = skb->len;
+ int __mlx4_register_mac(struct mlx4_dev *dev, u8 port, u64 mac)
 -- 
 2.34.1
 
