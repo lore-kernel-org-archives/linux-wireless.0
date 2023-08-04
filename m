@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F010C05051
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 03:54:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37D08C04A94
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Aug 2023 03:54:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233057AbjHDDys (ORCPT
+        id S233308AbjHDDyz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Aug 2023 23:54:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53242 "EHLO
+        Thu, 3 Aug 2023 23:54:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232845AbjHDDyo (ORCPT
+        with ESMTP id S233187AbjHDDyt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Aug 2023 23:54:44 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C93530C0;
-        Thu,  3 Aug 2023 20:54:43 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RHBdr2xFszrS75;
-        Fri,  4 Aug 2023 11:53:36 +0800 (CST)
+        Thu, 3 Aug 2023 23:54:49 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A4EB3C31;
+        Thu,  3 Aug 2023 20:54:47 -0700 (PDT)
+Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RHBdx2X1qz1KCCw;
+        Fri,  4 Aug 2023 11:53:41 +0800 (CST)
 Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
  (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 4 Aug
- 2023 11:54:40 +0800
+ 2023 11:54:44 +0800
 From:   Ruan Jinjie <ruanjinjie@huawei.com>
 To:     <sgoutham@marvell.com>, <davem@davemloft.net>,
         <edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
@@ -39,9 +39,9 @@ To:     <sgoutham@marvell.com>, <davem@davemloft.net>,
         <linux-wireless@vger.kernel.org>,
         <brcm80211-dev-list.pdl@broadcom.com>,
         <SHA-cyfmac-dev-list@infineon.com>
-Subject: [PATCH -next 3/6] net/mlx4: Remove an unnecessary ternary operator
-Date:   Fri, 4 Aug 2023 11:53:43 +0800
-Message-ID: <20230804035346.2879318-4-ruanjinjie@huawei.com>
+Subject: [PATCH -next 6/6] brcm80211: Remove an unnecessary ternary operator
+Date:   Fri, 4 Aug 2023 11:53:46 +0800
+Message-ID: <20230804035346.2879318-7-ruanjinjie@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230804035346.2879318-1-ruanjinjie@huawei.com>
 References: <20230804035346.2879318-1-ruanjinjie@huawei.com>
@@ -56,27 +56,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is a ternary operator, the true or false judgement
-of which is unnecessary in C language semantics.
+There is a ternary operator, the true or false judgement of which
+is unnecessary in C language semantics.
 
 Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
 ---
- drivers/net/ethernet/mellanox/mlx4/port.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/port.c b/drivers/net/ethernet/mellanox/mlx4/port.c
-index 256a06b3c096..1c289488d050 100644
---- a/drivers/net/ethernet/mellanox/mlx4/port.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/port.c
-@@ -176,7 +176,7 @@ static bool mlx4_need_mf_bond(struct mlx4_dev *dev)
- 	mlx4_foreach_port(i, dev, MLX4_PORT_TYPE_ETH)
- 		++num_eth_ports;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+index 8580a2754789..8328b22829c5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+@@ -27351,8 +27351,7 @@ static int wlc_phy_cal_rxiq_nphy_rev3(struct brcms_phy *pi,
  
--	return (num_eth_ports ==  2) ? true : false;
-+	return num_eth_ports ==  2;
- }
+ 	for (rx_core = 0; rx_core < pi->pubpi.phy_corenum; rx_core++) {
  
- int __mlx4_register_mac(struct mlx4_dev *dev, u8 port, u64 mac)
+-		skip_rxiqcal =
+-			((rxcore_state & (1 << rx_core)) == 0) ? true : false;
++		skip_rxiqcal = (rxcore_state & (1 << rx_core)) == 0;
+ 
+ 		wlc_phy_rxcal_physetup_nphy(pi, rx_core);
+ 
 -- 
 2.34.1
 
