@@ -2,105 +2,112 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63AE1C001B0
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 19:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58010C001B0
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 20:09:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232268AbjHHTqf (ORCPT
+        id S231370AbjHHUJY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:46:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52936 "EHLO
+        Tue, 8 Aug 2023 16:09:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236612AbjHHTqK (ORCPT
+        with ESMTP id S232080AbjHHUI6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 15:46:10 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD59159EC
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 09:49:13 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3787SNHL013044;
-        Tue, 8 Aug 2023 10:26:32 GMT
+        Tue, 8 Aug 2023 16:08:58 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B20DAEBA7
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 11:41:27 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 378HsJXk004748;
+        Tue, 8 Aug 2023 18:41:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
  mime-version : subject : to : cc : references : from : in-reply-to :
  content-type : content-transfer-encoding; s=qcppdkim1;
- bh=CTlCVNrnLOZbC2Bp8ihc1hVt9SYK5pZEPHJRtPEyOro=;
- b=IpS6X5JgJlqcTUGL42PYvhfSnruJ1W7ZEV5fRwAVB7jiJEz8d6BPn5yzJYpmjkJSufLa
- ORwZB0vYa4IRT96KeWEiMJ+dBAMt2xj+Nw8aG7UXBizSnMEyHwkTVdhZo9OYdvjDHIDD
- Mzji+3BETosf5FzyhgkhoqwhXQ2pi7nbe5A4e1HbjDJtFXRvcnWGms0ypFHJtzSsxAYx
- U7bO8Vf3YeeGZ+9Rq7MwoAZrBU1/DugYW6QxtrQ1/NF231/ZsJBOF3pp4Vsn1Do1Bgjw
- bpzbpynatULaDD2sasERn7CyHoQ0KqtYBloIsBdfvYM96ylNz3aIIoZZhvbV5Wj4N0J6 aQ== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sawbgargy-1
+ bh=CYWKzFLj8tPIOt1AQ64shes+ojHmHSR8wJf/9q4ibbI=;
+ b=XrN7hesrCIt1u18mjYTOtkD4q2BfZcsty7pcLP/1oAr0vPpUWA35TZNJ2dJ0wgbXC02p
+ 4FMO4qXKzHR5MPZhLv6JuzAOIRHS0//18v6bYyNNAMbqjtZ60dhoNqc9BqfSAL6IKm0O
+ aoqlpqqBCq9dAB6N+wOt7iu6RdYTIscEoX+xYHWJX/t4tkcRKkeVTxSnOQWbRBm5aAvH
+ hwchd8+hKFWU8n661XqpD7yv/yZ+P8SJV5bCKugHtCo70cXbH6RUhFvg3GX6nCBIaj3W
+ 8Uq/FerECYzsv3ePUFgss3RXq8wqkppRqHjKO+Vu0ECHTLAIfl8dBx7+gG9WsARq7xAa mg== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sbpqs0nv9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 08 Aug 2023 10:26:31 +0000
+        Tue, 08 Aug 2023 18:41:18 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 378AQUsT015122
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 378IfIVW021423
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 8 Aug 2023 10:26:30 GMT
-Received: from [10.231.195.204] (10.80.80.8) by nalasex01a.na.qualcomm.com
+        Tue, 8 Aug 2023 18:41:18 GMT
+Received: from [10.111.180.219] (10.49.16.6) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Tue, 8 Aug
- 2023 03:26:29 -0700
-Message-ID: <40034bde-5512-8df5-a19d-48487102c003@quicinc.com>
-Date:   Tue, 8 Aug 2023 18:26:27 +0800
+ 2023 11:41:17 -0700
+Message-ID: <0daa237a-43bc-e5d0-3069-dea9b4263521@quicinc.com>
+Date:   Tue, 8 Aug 2023 11:41:16 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH 1/2] wifi: ath12k: fix WARN_ON during
- ath12k_mac_update_vif_chan
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/2] wifi: cfg80211: Add short_beacon_tail/head/period
 Content-Language: en-US
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        Manish Dharanenthiran <quic_mdharane@quicinc.com>,
-        <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20230802085852.19821-1-quic_mdharane@quicinc.com>
- <20230802085852.19821-2-quic_mdharane@quicinc.com>
- <54733de9-db66-f1c4-9ad5-4d1f31529c05@quicinc.com>
-From:   Wen Gong <quic_wgong@quicinc.com>
-In-Reply-To: <54733de9-db66-f1c4-9ad5-4d1f31529c05@quicinc.com>
+To:     Bassem Dawood <bassem@morsemicro.com>, <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>
+CC:     Kieran Frewen <kieran.frewen@morsemicro.com>,
+        kernel test robot <lkp@intel.com>,
+        Gilad Itzkovitch <gilad.itzkovitch@morsemicro.com>
+References: <20230417012151.2512303-1-gilad.itzkovitch@virscient.com>
+ <20230808102732.37270-1-bassem@morsemicro.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20230808102732.37270-1-bassem@morsemicro.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: T0JCaUQKC_FfLJX8RmFWqNHn8dYWPRCk
-X-Proofpoint-GUID: T0JCaUQKC_FfLJX8RmFWqNHn8dYWPRCk
+X-Proofpoint-GUID: HoJaINOKBpyDUKJRq4weoicSdOcDIaOl
+X-Proofpoint-ORIG-GUID: HoJaINOKBpyDUKJRq4weoicSdOcDIaOl
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-08_09,2023-08-03_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxlogscore=725
- impostorscore=0 bulkscore=0 suspectscore=0 lowpriorityscore=0 phishscore=0
- mlxscore=0 priorityscore=1501 malwarescore=0 adultscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
- definitions=main-2308080093
+ definitions=2023-08-08_15,2023-08-08_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ lowpriorityscore=0 suspectscore=0 adultscore=0 impostorscore=0
+ priorityscore=1501 mlxscore=0 bulkscore=0 mlxlogscore=946 malwarescore=0
+ clxscore=1011 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308080165
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/2/2023 10:59 PM, Jeff Johnson wrote:
-> On 8/2/2023 1:58 AM, Manish Dharanenthiran wrote:
->> Fix WARN_ON() from ath12k_mac_update_vif_chan() if vdev is not up.
->> Since change_chanctx can be called even before vdev_up.
->>
->> Do vdev stop followed by a vdev start in case of vdev is down.
->>
->> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0-02903-QCAHKSWPL_SILICONZ-1
->
-> Has this been tested on WCN7850? My understanding is that firmware may 
-> expect vdev down and then vdev restart
->
-For WCN7850, firmware do not expect vdev down for station vdev type here.
+On 8/8/2023 3:27 AM, Bassem Dawood wrote:
+[snip]
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 88eb85c63029..03df70b0238e 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -2794,6 +2794,12 @@ enum nl80211_commands {
+>    *	indicates that the sub-channel is punctured. Higher 16 bits are
+>    *	reserved.
+>    *
+> + * @NL80211_ATTR_SHORT_BEACON_PERIOD: (u16) period for S1G long beacon
+> + * @NL80211_ATTR_SHORT_BEACON_HEAD: portion of the S1G short beacon before
+> + *  the TIM element
+> + * @NL80211_ATTR_SHORT_BEACON_TAIL: portion of the S1G short beacon after
+> + *  the TIM element
+> + *
+>    * @NL80211_ATTR_MAX_HW_TIMESTAMP_PEERS: Maximum number of peers that HW
+>    *	timestamping can be enabled for concurrently (u16), a wiphy attribute.
+>    *	A value of 0xffff indicates setting for all peers (i.e. not specifying
+> @@ -3346,6 +3352,10 @@ enum nl80211_attrs {
+>   
+>   	NL80211_ATTR_PUNCT_BITMAP,
+>   
+> +	NL80211_ATTR_SHORT_BEACON_PERIOD,
+> +	NL80211_ATTR_SHORT_BEACON_HEAD,
+> +	NL80211_ATTR_SHORT_BEACON_TAIL,
+> +
 
-And this patch only take effect when arvif->is_up is not set,
+This is a UAPI so all additions must go at the end to avoid renumbering 
+the values of existing enumerations
 
-it is hard to happen that for MCC station mode.
+>   	NL80211_ATTR_MAX_HW_TIMESTAMP_PEERS,
+>   	NL80211_ATTR_HW_TIMESTAMP_ENABLED,
 
-Because this function is entered for channel switch for MCC station mode,
 
-it means station is connected to the AP, then arvif->is_up is set, then 
-this patch not take effect.
-
-[...]
-
->
