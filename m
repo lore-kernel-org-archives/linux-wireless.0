@@ -2,124 +2,77 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D4B0C001DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:13:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5D7C001E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:18:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236232AbjHHVNg (ORCPT
+        id S235966AbjHHVSA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 17:13:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36400 "EHLO
+        Tue, 8 Aug 2023 17:18:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235296AbjHHVN3 (ORCPT
+        with ESMTP id S235879AbjHHVRq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 17:13:29 -0400
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D91473FC;
-        Tue,  8 Aug 2023 12:43:05 -0700 (PDT)
-Received: by mail-wm1-x32a.google.com with SMTP id 5b1f17b1804b1-3fe1d462762so51337415e9.0;
-        Tue, 08 Aug 2023 12:43:05 -0700 (PDT)
+        Tue, 8 Aug 2023 17:17:46 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7B18527E
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 13:13:58 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-686f1240a22so5878914b3a.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2023 13:13:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1691523783; x=1692128583;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:from:date:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cOolvKmjNbA3psrGMAp+3ipqqGdZ/BVnezDxpZWH8ms=;
-        b=HC9tZ1QtSi5ORdON+XMHnl2vCZ6cJogJ8xaGHcBU0vDyWWpj9nX+I8TxYJ0iBuqeAs
-         0KjHFKewwDIkng9wdW7Z9W0q7murFn3rqAHU9n40ahS3m5Hga3FlZsa7aN2hSziKE/E+
-         ielv5q6faWE7fRi0aovuTUAEGAIKaByelW2Lq6b4BxJEIhJpqlNBiW4+ng7uJnh5dLLe
-         njufyxgs9w+y/4MCEWbhprLvcQz71kzfXI7og601cU7QmPGzzgW/XaT6K8JJ5TF7nvu+
-         epUjRvgm6+00D2argBvHWJrLPUrdlfJay1W8CMfmaMkrSwzqWksI7/X5rXM+iccb2ost
-         gSRQ==
+        d=chromium.org; s=google; t=1691525638; x=1692130438;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gSDFPRHM/WG5qXppgSueGIee7lwvREuORa1Ou3dpkk4=;
+        b=jwa+AZyU3TOifP5EErh6brnOqttqoqd5dfljAV4dAqIUVjYJxHVIA0dxniwgtUbkeO
+         emqnJM5sivlQHv4tavBEd0pBrZfN72994m1iO7WudU4ATOdcLqNndyHQ9aSvypOwAkVU
+         9yh1IGm1h40zNDuigvES5CEXCYulil6FFd2Vs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691523783; x=1692128583;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cOolvKmjNbA3psrGMAp+3ipqqGdZ/BVnezDxpZWH8ms=;
-        b=KxsJ2B0lWadLiGFNzEqiRk16J77/MUCspbg9wiVtCFom6b2EO0bra8eLodvNySQfv8
-         8IwXh1RY07oLX0uUvYlFRlk/A85UUqhs4Rn/HGOxnzPOEiLIo7ug/AumgRH8tjzVGUTk
-         yfn0Xb1mRZr9J/1PlqF9CbaJfpQhIoj1HdkdQ9kaSjZJ3mm1WfhT9UXpu0rouE5F/ixC
-         kcM/N1+ByQ5jQTDdLe+mJIsmgpiyjvQA2Bpmnu0moXaaR8vb+JjhGW3QLOMiBjETZ1ML
-         t+Z3tpWEdQVyJJGq5XXLRXJnm23ABbEHVRV783TZATkQbUgxHRw0SvF2Qz18xZ1ZQv8L
-         9aSA==
-X-Gm-Message-State: AOJu0Yyuvx428Y3PthND87Le/PED1kFypy3b76GHWZ+bkzlbN0BIdjqm
-        9KV8qThJrPWbs3XQOXRRuEpsd/3OtMK6nlIkVB8=
-X-Google-Smtp-Source: AGHT+IH63RiCGVaJ+XGcErXY3rfQFL9fz6CdslQk4F3i+XRxMUcLBRkelsoaCKiCvoxb6Qp1HbLTJw==
-X-Received: by 2002:a05:600c:2215:b0:3fc:5a3:367c with SMTP id z21-20020a05600c221500b003fc05a3367cmr621098wml.32.1691523783245;
-        Tue, 08 Aug 2023 12:43:03 -0700 (PDT)
-Received: from mmaatuq-HP-Laptop-15-dy2xxx ([2001:8f8:1163:15aa:8c5a:b813:cec2:4273])
-        by smtp.gmail.com with ESMTPSA id v20-20020a7bcb54000000b003fbfef555d2sm19090487wmj.23.2023.08.08.12.43.00
+        d=1e100.net; s=20221208; t=1691525638; x=1692130438;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gSDFPRHM/WG5qXppgSueGIee7lwvREuORa1Ou3dpkk4=;
+        b=YAy+N6BHo0kiiePI1eL3OJU9GDd8w/kiyU22Hog3WICpZ/ymGkqEixvKGcMa1EKtPb
+         jHq4UX+m9QNlL/f2cYOi+Eras0JUMZBC9EMLKMnKGp82NwusIMRldviwFqxu07QyctcU
+         +uTBMdcxpPdlCSBba7CkIKzgHJdHBC+CS1pZ4X71Y3U6NwUW0RbxfR5CZiZhwZbztS3q
+         TiDNWd7OK2E9tHI3nBieTE8vN6MZBR9kwQ97OsDFcjyco28y+NZk+++889ZXjAp7S93J
+         WOxvRTaZMCj1kSo5alhfKFE1kNrw82z1gN2WFlDwwVI3mUFNGDrFcKnqaNBfGZ0p4cHO
+         3vWQ==
+X-Gm-Message-State: AOJu0YwptPB8iQtbzDuZtSUgSxrgMEKRxo4hDkO6UrB4jzCrmtsIUaoF
+        awjmaGTX8TzoMt8rwkEcZo7FzA==
+X-Google-Smtp-Source: AGHT+IET6nT6clgIC+ZXYU0yC5p20xzPQybJ51TtsbD0KHGY8hC6hspDgab3faVrBZdjglw8H/TDpw==
+X-Received: by 2002:a05:6a20:1055:b0:137:a3c9:aaa2 with SMTP id gt21-20020a056a20105500b00137a3c9aaa2mr537198pzc.30.1691525638464;
+        Tue, 08 Aug 2023 13:13:58 -0700 (PDT)
+Received: from google.com ([2620:15c:9d:2:800e:831a:c5f6:2dd0])
+        by smtp.gmail.com with ESMTPSA id fe11-20020a056a002f0b00b00682a99b01basm8507447pfb.0.2023.08.08.13.13.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Aug 2023 12:43:02 -0700 (PDT)
-Date:   Tue, 8 Aug 2023 23:42:58 +0400
-From:   Mahmoud Matook <mahmoudmatook.mm@gmail.com>
-To:     Jiri Slaby <jirislaby@kernel.org>
-Cc:     mickflemm@gmail.com, mcgrof@kernel.org, kvalo@kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        mahmoudmatook.mm@gmail.com
-Subject: Re: [PATCH] ath5k: fix WARNING opportunity for swap.
-Message-ID: <20230808194258.ocxnmqwzqlr6jpe4@mmaatuq-HP-Laptop-15-dy2xxx>
-Mail-Followup-To: Jiri Slaby <jirislaby@kernel.org>, mickflemm@gmail.com,
-        mcgrof@kernel.org, kvalo@kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org
-References: <20230807201057.340371-1-mahmoudmatook.mm@gmail.com>
- <92a26f67-1b24-ea35-2f39-7c0b75027617@kernel.org>
+        Tue, 08 Aug 2023 13:13:57 -0700 (PDT)
+Date:   Tue, 8 Aug 2023 13:13:56 -0700
+From:   Brian Norris <briannorris@chromium.org>
+To:     Ruan Jinjie <ruanjinjie@huawei.com>
+Cc:     kvalo@kernel.org, christophe.jaillet@wanadoo.fr,
+        simon.horman@corigine.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -next RESEND] wifi: mwifiex: use is_zero_ether_addr()
+ instead of ether_addr_equal()
+Message-ID: <ZNKiBE3GIi/wQXLB@google.com>
+References: <20230808081023.2303423-1-ruanjinjie@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <92a26f67-1b24-ea35-2f39-7c0b75027617@kernel.org>
+In-Reply-To: <20230808081023.2303423-1-ruanjinjie@huawei.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 08/08, Jiri Slaby wrote:
-
-> On 07. 08. 23, 22:10, Mahmoud Maatuq wrote:
-> > coccinielle reported the following:
-> > ./drivers/net/wireless/ath/ath5k/phy.c:1573:25-26: WARNING opportunity for swap()
+On Tue, Aug 08, 2023 at 04:10:23PM +0800, Ruan Jinjie wrote:
+> Use is_zero_ether_addr() instead of ether_addr_equal()
+> to check if the ethernet address is all zeros.
 > 
-> 
-> OK, once again:
-> https://lore.kernel.org/all/0c3acbd4-6ab2-5cc5-6293-54e30093cce2@kernel.org/
+> Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
 
+Usually you should provide some explanation for a RESEND of a
+seemingly-identical patch. Seemingly you just updated the address list?
 
-I had a look at the commit history, to see why the original developer 
-didn't use sort() function, and name the array variable sort but found
-nothing. 
-I have some doubts that he might did that intentionally, so not to call
-sort() function for such small array and avoid the cost of context
-switching.
+Anyway, looks fine:
 
-
-> > Signed-off-by: Mahmoud Maatuq <mahmoudmatook.mm@gmail.com>
-> > ---
-> >   drivers/net/wireless/ath/ath5k/phy.c | 5 +----
-> >   1 file changed, 1 insertion(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> > index 5797ef9c73d7..f87eb684f223 100644
-> > --- a/drivers/net/wireless/ath/ath5k/phy.c
-> > +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> > @@ -1562,16 +1562,13 @@ static s16
-> >   ath5k_hw_get_median_noise_floor(struct ath5k_hw *ah)
-> >   {
-> >   	s16 sort[ATH5K_NF_CAL_HIST_MAX];
-> > -	s16 tmp;
-> >   	int i, j;
-> >   	memcpy(sort, ah->ah_nfcal_hist.nfval, sizeof(sort));
-> >   	for (i = 0; i < ATH5K_NF_CAL_HIST_MAX - 1; i++) {
-> >   		for (j = 1; j < ATH5K_NF_CAL_HIST_MAX - i; j++) {
-> >   			if (sort[j] > sort[j - 1]) {
-> > -				tmp = sort[j];
-> > -				sort[j] = sort[j - 1];
-> > -				sort[j - 1] = tmp;
-> > +				swap(sort[j], sort[j - 1]);
-> >   			}
-> >   		}
-> >   	}
-> 
-> -- 
-> js
-> suse labs
+Acked-by: Brian Norris <briannorris@chromium.org>
