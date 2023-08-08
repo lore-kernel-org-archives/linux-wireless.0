@@ -2,186 +2,96 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21DD3C001DE
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 16:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6275C001B0
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 16:10:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229761AbjHHQA6 (ORCPT
+        id S232041AbjHHQKE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:00:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58116 "EHLO
+        Tue, 8 Aug 2023 12:10:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231210AbjHHP7Q (ORCPT
+        with ESMTP id S231671AbjHHQIZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 11:59:16 -0400
-Received: from forward201a.mail.yandex.net (forward201a.mail.yandex.net [178.154.239.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1AA1619B
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 08:44:27 -0700 (PDT)
-Received: from forward103a.mail.yandex.net (forward103a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d103])
-        by forward201a.mail.yandex.net (Yandex) with ESMTP id C080C6260D
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 18:26:53 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-52.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-52.vla.yp-c.yandex.net [IPv6:2a02:6b8:c18:3c99:0:640:7c39:0])
-        by forward103a.mail.yandex.net (Yandex) with ESMTP id 5B5C346CCB;
-        Tue,  8 Aug 2023 18:26:49 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-52.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id jQaGdD4DR0U0-1itXzdJu;
-        Tue, 08 Aug 2023 18:26:49 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1691508409;
-        bh=vKyyIskcvzvxtICJ9oZ6sSURx4x8riR5qbMK/afw8go=;
-        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
-        b=DOrdk8HaRar6806WDYWR1gKpce5lUVpkkzg81JIa/2vWZ8ML2zzwnsdvtQxY0VVI7
-         KFA1yJu9MzBb/FeO8Ox3KQqG/EU6uZGH7tzEKAEhtUiYCqz3uGtPm3lcdDmjhOsfdg
-         9e/IRBJT//gxfyKwBB+ZjydoujV+UIqtw993uayE=
-Authentication-Results: mail-nwsmtp-smtp-production-main-52.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        lvc-project@linuxtesting.org, Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH 2/2] wifi: ath10k: consistently use kstrtoX_from_user() functions
-Date:   Tue,  8 Aug 2023 18:25:36 +0300
-Message-ID: <20230808152542.91117-2-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230808152542.91117-1-dmantipov@yandex.ru>
-References: <20230808152542.91117-1-dmantipov@yandex.ru>
+        Tue, 8 Aug 2023 12:08:25 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9362376AD
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 08:46:16 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3784v3cw029152;
+        Tue, 8 Aug 2023 05:07:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=fba6K9Q3uuGERCgjltObNFtYzuy2qZ5f5kNSyET8KQE=;
+ b=AMdNHwG/cZLD4UAw34bKJECgwn3kI4IObx0do9JJGSL96RoKjXKrwfArYTNwMhQdXRH+
+ MEHUVOvC82QcScWMFZIn7Ew/lUuqzg+64cPR8pYqwS+b+vQagZRSy4HiCoKh5WXLTYSK
+ x0M53K260YUNShQwsRBjDO+9SISQ76bXE6M6qSMNmN+GheTboyfsJx3JxJ1tTXVGWeAq
+ KnAX7mgCBFn/A8Y42M6eOXLFVYTsS4W7FyoygqMpKa+h0ZZnvYVrJhohOnIn1O3e0gmV
+ rhyPY/An4x09eVxK6X7UdzZUsBh85XratlshO4DRKnI3bHoflh0IZUuuMmb2i8pGPVbR 0A== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sb7bb8sa4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 08 Aug 2023 05:07:55 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37857rxh016905
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 8 Aug 2023 05:07:53 GMT
+Received: from [10.252.212.151] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Mon, 7 Aug
+ 2023 22:07:51 -0700
+Message-ID: <4720b820-523a-477a-436c-72fceb4a6a12@quicinc.com>
+Date:   Tue, 8 Aug 2023 10:37:47 +0530
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH] wifi: ath11k: fix boot failure with one MSI vector
+Content-Language: en-US
+To:     Jeff Johnson <quic_jjohnson@quicinc.com>,
+        Baochen Qiang <quic_bqiang@quicinc.com>,
+        Kalle Valo <kvalo@kernel.org>
+CC:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+References: <20230601033840.2997-1-quic_bqiang@quicinc.com>
+ <87fs70hlel.fsf@kernel.org>
+ <545cc8e8-481d-85b2-5692-43580936b48d@quicinc.com>
+ <897b61ea-36d2-1ab4-9c60-9bdfd2d9cad7@quicinc.com>
+ <fa70ca5e-001b-3c6b-dbc2-2853f8fc2f72@quicinc.com>
+ <fcb783b4-95e9-24d8-a656-b273a79598a0@quicinc.com>
+From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+In-Reply-To: <fcb783b4-95e9-24d8-a656-b273a79598a0@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: bXXus_wXxlZN_3oboTdn0x7QLxye6xom
+X-Proofpoint-ORIG-GUID: bXXus_wXxlZN_3oboTdn0x7QLxye6xom
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-08-08_03,2023-08-03_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 mlxscore=0 adultscore=0 bulkscore=0 malwarescore=0
+ impostorscore=0 spamscore=0 phishscore=0 mlxlogscore=766 suspectscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308080045
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use 'kstrtoul_from_user()', 'kstrtouint_from_user()', and
-'kstrtobool_from_user()' where appropriate and thus avoid
-some code duplication.
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
- drivers/net/wireless/ath/ath10k/debug.c    | 41 ++++++----------------
- drivers/net/wireless/ath/ath10k/spectral.c | 26 +++++---------
- 2 files changed, 19 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index f9518e1c9903..07a92f5296b6 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1964,20 +1964,13 @@ static ssize_t ath10k_write_btcoex(struct file *file,
- 				   size_t count, loff_t *ppos)
- {
- 	struct ath10k *ar = file->private_data;
--	char buf[32];
--	size_t buf_size;
- 	int ret;
- 	bool val;
- 	u32 pdev_param;
- 
--	buf_size = min(count, (sizeof(buf) - 1));
--	if (copy_from_user(buf, ubuf, buf_size))
--		return -EFAULT;
--
--	buf[buf_size] = '\0';
--
--	if (kstrtobool(buf, &val) != 0)
--		return -EINVAL;
-+	ret = kstrtobool_from_user(ubuf, count, &val);
-+	if (ret)
-+		return ret;
- 
- 	if (!ar->coex_support)
- 		return -EOPNOTSUPP;
-@@ -2103,19 +2096,12 @@ static ssize_t ath10k_write_peer_stats(struct file *file,
- 				       size_t count, loff_t *ppos)
- {
- 	struct ath10k *ar = file->private_data;
--	char buf[32];
--	size_t buf_size;
- 	int ret;
- 	bool val;
- 
--	buf_size = min(count, (sizeof(buf) - 1));
--	if (copy_from_user(buf, ubuf, buf_size))
--		return -EFAULT;
--
--	buf[buf_size] = '\0';
--
--	if (kstrtobool(buf, &val) != 0)
--		return -EINVAL;
-+	ret = kstrtobool_from_user(ubuf, count, &val);
-+	if (ret)
-+		return ret;
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -2239,21 +2225,16 @@ static ssize_t ath10k_sta_tid_stats_mask_write(struct file *file,
- 					       size_t count, loff_t *ppos)
- {
- 	struct ath10k *ar = file->private_data;
--	char buf[32];
--	ssize_t len;
- 	u32 mask;
-+	int ret;
- 
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--
--	buf[len] = '\0';
--	if (kstrtoint(buf, 0, &mask))
--		return -EINVAL;
-+	ret = kstrtouint_from_user(user_buf, count, 0, &mask);
-+	if (ret)
-+		return ret;
- 
- 	ar->sta_tid_stats_mask = mask;
- 
--	return len;
-+	return count;
- }
- 
- static const struct file_operations fops_sta_tid_stats_mask = {
-diff --git a/drivers/net/wireless/ath/ath10k/spectral.c b/drivers/net/wireless/ath/ath10k/spectral.c
-index 68254a967ccb..2240994390ed 100644
---- a/drivers/net/wireless/ath/ath10k/spectral.c
-+++ b/drivers/net/wireless/ath/ath10k/spectral.c
-@@ -384,16 +384,11 @@ static ssize_t write_file_spectral_count(struct file *file,
- {
- 	struct ath10k *ar = file->private_data;
- 	unsigned long val;
--	char buf[32];
--	ssize_t len;
--
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
-+	ssize_t ret;
- 
--	buf[len] = '\0';
--	if (kstrtoul(buf, 0, &val))
--		return -EINVAL;
-+	ret = kstrtoul_from_user(user_buf, count, 0, &val);
-+	if (ret)
-+		return ret;
- 
- 	if (val > 255)
- 		return -EINVAL;
-@@ -440,16 +435,11 @@ static ssize_t write_file_spectral_bins(struct file *file,
- {
- 	struct ath10k *ar = file->private_data;
- 	unsigned long val;
--	char buf[32];
--	ssize_t len;
--
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
-+	ssize_t ret;
- 
--	buf[len] = '\0';
--	if (kstrtoul(buf, 0, &val))
--		return -EINVAL;
-+	ret = kstrtoul_from_user(user_buf, count, 0, &val);
-+	if (ret)
-+		return ret;
- 
- 	if (val < 64 || val > SPECTRAL_ATH10K_MAX_NUM_BINS)
- 		return -EINVAL;
--- 
-2.41.0
+On 8/7/2023 8:59 PM, Jeff Johnson wrote:
+> On 8/7/2023 3:16 AM, Manikanta Pubbisetty wrote:
+>> No impact on WCN6750.
+>>
+>> Tested-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+> 
+> Can you provide a Tested-on: flag that Kalle can add to the commit text?
+> 
 
+Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-01160-QCAMSLSWPLZ-1
+
+Thanks,
+Manikanta
