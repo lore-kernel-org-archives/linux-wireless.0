@@ -2,96 +2,106 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6275C001B0
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 16:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76021C04A6A
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 16:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232041AbjHHQKE (ORCPT
+        id S231950AbjHHQN4 convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:10:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40032 "EHLO
+        Tue, 8 Aug 2023 12:13:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231671AbjHHQIZ (ORCPT
+        with ESMTP id S232123AbjHHQM6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 12:08:25 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9362376AD
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 08:46:16 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3784v3cw029152;
-        Tue, 8 Aug 2023 05:07:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=fba6K9Q3uuGERCgjltObNFtYzuy2qZ5f5kNSyET8KQE=;
- b=AMdNHwG/cZLD4UAw34bKJECgwn3kI4IObx0do9JJGSL96RoKjXKrwfArYTNwMhQdXRH+
- MEHUVOvC82QcScWMFZIn7Ew/lUuqzg+64cPR8pYqwS+b+vQagZRSy4HiCoKh5WXLTYSK
- x0M53K260YUNShQwsRBjDO+9SISQ76bXE6M6qSMNmN+GheTboyfsJx3JxJ1tTXVGWeAq
- KnAX7mgCBFn/A8Y42M6eOXLFVYTsS4W7FyoygqMpKa+h0ZZnvYVrJhohOnIn1O3e0gmV
- rhyPY/An4x09eVxK6X7UdzZUsBh85XratlshO4DRKnI3bHoflh0IZUuuMmb2i8pGPVbR 0A== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sb7bb8sa4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 08 Aug 2023 05:07:55 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37857rxh016905
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 8 Aug 2023 05:07:53 GMT
-Received: from [10.252.212.151] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Mon, 7 Aug
- 2023 22:07:51 -0700
-Message-ID: <4720b820-523a-477a-436c-72fceb4a6a12@quicinc.com>
-Date:   Tue, 8 Aug 2023 10:37:47 +0530
+        Tue, 8 Aug 2023 12:12:58 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 51A9F7ED8;
+        Tue,  8 Aug 2023 08:47:07 -0700 (PDT)
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3788UJm14028255, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3788UJm14028255
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=FAIL);
+        Tue, 8 Aug 2023 16:30:19 +0800
+Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Tue, 8 Aug 2023 16:30:36 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Tue, 8 Aug 2023 16:30:35 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
+ RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
+ 15.01.2375.007; Tue, 8 Aug 2023 16:30:35 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     Dan Carpenter <dan.carpenter@linaro.org>,
+        Timlee <timlee@realtek.com>
+CC:     Kalle Valo <kvalo@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw89: fix a width vs precision bug
+Thread-Topic: [PATCH] wifi: rtw89: fix a width vs precision bug
+Thread-Index: AQHZybpDmVTowi+UH0ybzDOrOQuAoK/gEY2w
+Date:   Tue, 8 Aug 2023 08:30:35 +0000
+Message-ID: <63f8219b49604fc9805319c391ee44bf@realtek.com>
+References: <0700c7b9-bfd3-4aa6-82bf-5bf3c74644e1@moroto.mountain>
+In-Reply-To: <0700c7b9-bfd3-4aa6-82bf-5bf3c74644e1@moroto.mountain>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.188]
+x-kse-serverinfo: RTEXMBS03.realtek.com.tw, 9
+x-kse-antispam-interceptor-info: fallback
+x-kse-antivirus-interceptor-info: fallback
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [PATCH] wifi: ath11k: fix boot failure with one MSI vector
-Content-Language: en-US
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        Baochen Qiang <quic_bqiang@quicinc.com>,
-        Kalle Valo <kvalo@kernel.org>
-CC:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-References: <20230601033840.2997-1-quic_bqiang@quicinc.com>
- <87fs70hlel.fsf@kernel.org>
- <545cc8e8-481d-85b2-5692-43580936b48d@quicinc.com>
- <897b61ea-36d2-1ab4-9c60-9bdfd2d9cad7@quicinc.com>
- <fa70ca5e-001b-3c6b-dbc2-2853f8fc2f72@quicinc.com>
- <fcb783b4-95e9-24d8-a656-b273a79598a0@quicinc.com>
-From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
-In-Reply-To: <fcb783b4-95e9-24d8-a656-b273a79598a0@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: bXXus_wXxlZN_3oboTdn0x7QLxye6xom
-X-Proofpoint-ORIG-GUID: bXXus_wXxlZN_3oboTdn0x7QLxye6xom
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-08_03,2023-08-03_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- priorityscore=1501 mlxscore=0 adultscore=0 bulkscore=0 malwarescore=0
- impostorscore=0 spamscore=0 phishscore=0 mlxlogscore=766 suspectscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308080045
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 8/7/2023 8:59 PM, Jeff Johnson wrote:
-> On 8/7/2023 3:16 AM, Manikanta Pubbisetty wrote:
->> No impact on WCN6750.
->>
->> Tested-by: Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+> -----Original Message-----
+> From: Dan Carpenter <dan.carpenter@linaro.org>
+> Sent: Tuesday, August 8, 2023 1:36 PM
+> To: Timlee <timlee@realtek.com>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>; Kalle Valo <kvalo@kernel.org>; linux-wireless@vger.kernel.org;
+> kernel-janitors@vger.kernel.org
+> Subject: [PATCH] wifi: rtw89: fix a width vs precision bug
 > 
-> Can you provide a Tested-on: flag that Kalle can add to the commit text?
+> The "buf" is skb->data that comes from the firmware.  We want to print
+> "len" number of bytes.  But there is a missing period so the "len"
+> variable is used for formatting (width) instead of limiting the output
+> (precision).
 > 
+> Fixes: cad2bd8a136c ("wifi: rtw89: support firmware log with formatted text")
+> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
 
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-01160-QCAMSLSWPLZ-1
+Thanks for the fix. 
 
-Thanks,
-Manikanta
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+
+> ---
+>  drivers/net/wireless/realtek/rtw89/fw.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+> index 2811a94b5f69..bcd9050f989f 100644
+> --- a/drivers/net/wireless/realtek/rtw89/fw.c
+> +++ b/drivers/net/wireless/realtek/rtw89/fw.c
+> @@ -1165,7 +1165,7 @@ void rtw89_fw_log_dump(struct rtw89_dev *rtwdev, u8 *buf, u32 len)
+>         return;
+> 
+>  plain_log:
+> -       rtw89_info(rtwdev, "C2H log: %*s", len, buf);
+> +       rtw89_info(rtwdev, "C2H log: %.*s", len, buf);
+> 
+>  }
+> 
+> --
+> 2.39.2
+> 
+> 
+> ------Please consider the environment before printing this e-mail.
