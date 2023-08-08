@@ -2,82 +2,114 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E092CC001DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45DFEC001DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:13:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234196AbjHHVAC (ORCPT
+        id S236113AbjHHVNZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 17:00:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
+        Tue, 8 Aug 2023 17:13:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234194AbjHHU7p (ORCPT
+        with ESMTP id S236192AbjHHVNO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 16:59:45 -0400
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84C1B5998
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 13:56:09 -0700 (PDT)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C81232C0066
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 20:56:07 +0000 (UTC)
-Received: from ben-dt5.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 0432113C2B0;
-        Tue,  8 Aug 2023 13:56:06 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 0432113C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1691528167;
-        bh=WQS3XMgx9IQH4AZ7uLk86SAFI6Hjk/XmUGBubdR1uI4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ExUre5cznMYLvuMkQGL97bKUVWXjA/mtSNvGnmvdx9eP9pyECClg1md8TtASVn+1n
-         klIzj14Ir31MS1S4is0vxYfxicwcPXd3pno3SGpeGak8c12C4TVfmHtyGabUXhhRTh
-         ZPuJmKyqZslj1WqjY33eGiAojuqY4JX0MaVJv6TQ=
-From:   greearb@candelatech.com
-To:     linux-wireless@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] wifi: iwlwifi:  Ensure ack flag is properly cleared.
-Date:   Tue,  8 Aug 2023 13:56:05 -0700
-Message-Id: <20230808205605.4105670-1-greearb@candelatech.com>
-X-Mailer: git-send-email 2.40.0
+        Tue, 8 Aug 2023 17:13:14 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07331A5E3
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 13:11:30 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1bbc87ded50so40202555ad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2023 13:11:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1691525489; x=1692130289;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=AUKpE+oNE0/h0QGs7zyymgJyrDlWJCUBg0EB3+1xZK0=;
+        b=Q6iqfmiOrpTlN0MVMyg/J93jDJK62XjmqC1jPntTS3deq+9DqQOJK5OfwbRI9m++ld
+         sS1kkZJQb0KZMvsfY8ytGzqDPd2xMeo6jYkIfoa2AsWUK1vafRQG83USTHTgtTkCk9j+
+         o3+sxX4S6R2+w/yWmkZUPHKuM4d0Z9faggDJ4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691525489; x=1692130289;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AUKpE+oNE0/h0QGs7zyymgJyrDlWJCUBg0EB3+1xZK0=;
+        b=NWYmzzJrNjUk3HT8kssDWesWwBkHkWM1D3w8icEK7AQ9gaa4FSm5S+Af0r+hBLGkCa
+         hHgd6NO+rdKPMdUhv1pgBLZXIy+1lSVGuwWMX+Mxx1QYQws0UPtOPnitOft7WzUq6QWZ
+         i7lyM9U+zQ7QyZuvzhE4/No/H9AvUJuCAmRMgYgM7TUbGcxQv/HRSbM/SKgQQIidZdJP
+         9f0Pf5eOcuX2UOK9I0DZ9EQQUNexsvYOfJy9tp/Zdy/F34M6sFfFkFL5L6zVAbTcM+So
+         vAl6y6yRwpdjCPfQ3map1xXQ1VYg3XYpqmQn2zK3BR24yFcnfFa3Bn6Of826svXEOmoM
+         ATkw==
+X-Gm-Message-State: AOJu0Yyb27+pnNdDLZaMmDSl1JevUD6JFi1aYxxEho8DQoqTbn4Isceb
+        DDoE9V9rSrHDQr2VUsElVhvGkQ==
+X-Google-Smtp-Source: AGHT+IFze8kIjj2VOwIZt1iaTBcw0BoCZzkRwjmFv+hEQfOOvj//qiCIl17bad80r4aT2/Lx5j/o9A==
+X-Received: by 2002:a17:902:f7cd:b0:1bc:2c58:ad97 with SMTP id h13-20020a170902f7cd00b001bc2c58ad97mr685047plw.22.1691525489554;
+        Tue, 08 Aug 2023 13:11:29 -0700 (PDT)
+Received: from google.com ([2620:15c:9d:2:800e:831a:c5f6:2dd0])
+        by smtp.gmail.com with ESMTPSA id d4-20020a170903230400b001b531e8a000sm9435065plh.157.2023.08.08.13.11.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Aug 2023 13:11:29 -0700 (PDT)
+Date:   Tue, 8 Aug 2023 13:11:27 -0700
+From:   Brian Norris <briannorris@chromium.org>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        lvc-project@linuxtesting.org
+Subject: Re: [PATCH] wifi: mwifiex: avoid possible NULL skb pointer
+ dereference
+Message-ID: <ZNKhb2lgSmfEqqsW@google.com>
+References: <20230808084431.43548-1-dmantipov@yandex.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-MDID: 1691528168-phBUsIozTUVV
-X-MDID-O: us5;at1;1691528168;phBUsIozTUVV;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230808084431.43548-1-dmantipov@yandex.ru>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+On Tue, Aug 08, 2023 at 11:44:27AM +0300, Dmitry Antipov wrote:
+> In 'mwifiex_handle_uap_rx_forward()', always check the value
+> returned by 'skb_copy()' to avoid potential NULL pointer
+> dereference in 'mwifiex_uap_queue_bridged_pkt()', and drop
+> original skb in case of copying failure.
+> 
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+> 
+> Fixes: 838e4f449297 ("mwifiex: improve uAP RX handling")
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+> index 04ff051f5d18..454d1c11d39b 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+> @@ -252,7 +252,15 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
+>  
+>  	if (is_multicast_ether_addr(ra)) {
+>  		skb_uap = skb_copy(skb, GFP_ATOMIC);
+> -		mwifiex_uap_queue_bridged_pkt(priv, skb_uap);
+> +		if (likely(skb_uap)) {
+> +			mwifiex_uap_queue_bridged_pkt(priv, skb_uap);
+> +		} else {
+> +			mwifiex_dbg(adapter, ERROR,
+> +				    "failed to copy skb for uAP\n");
+> +			priv->stats.tx_dropped++;
 
-Debugging indicates that nothing else is clearing the info->flags,
-so some frames were flagged as ACKed when they should not be.
-Explicitly clear the ack flag to ensure this does not happen.
+This feels like it should be 'rx_dropped', since we're dropping it
+before we done any real "RX" (let alone getting to any forward/outbound
+operation). I doubt it makes a big difference overall, but it seems like
+the right thing to do.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 +++
- 1 file changed, 3 insertions(+)
+Otherwise, this looks good; feel free to carry this to a next revision
+if you're just changing tx_dropped to rx_dropped:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 0abc31a6951d..67f208cc19c8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1863,6 +1863,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 		iwl_trans_free_tx_cmd(mvm->trans, info->driver_data[1]);
- 
- 		memset(&info->status, 0, sizeof(info->status));
-+		info->flags &= ~(IEEE80211_TX_STAT_ACK | IEEE80211_TX_STAT_TX_FILTERED);
- 
- 		/* inform mac80211 about what happened with the frame */
- 		switch (status & TX_STATUS_MSK) {
-@@ -2241,6 +2242,8 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
- 		 */
- 		if (!is_flush)
- 			info->flags |= IEEE80211_TX_STAT_ACK;
-+		else
-+			info->flags &= ~IEEE80211_TX_STAT_ACK;
- 	}
- 
- 	/*
--- 
-2.40.0
+Acked-by: Brian Norris <briannorris@chromium.org>
 
+> +			dev_kfree_skb_any(skb);
+> +			return -1;
+> +		}
+>  	} else {
+>  		if (mwifiex_get_sta_entry(priv, ra)) {
+>  			/* Requeue Intra-BSS packet */
+> -- 
+> 2.41.0
+> 
