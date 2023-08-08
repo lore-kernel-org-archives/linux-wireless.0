@@ -2,82 +2,76 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D2BC001DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 18:10:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D7BC001DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 18:26:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235384AbjHHSKs (ORCPT
+        id S235499AbjHHS0y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 14:10:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35386 "EHLO
+        Tue, 8 Aug 2023 14:26:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235347AbjHHSKW (ORCPT
+        with ESMTP id S235832AbjHHS0e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 14:10:22 -0400
-Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78001160AE9;
-        Tue,  8 Aug 2023 10:13:12 -0700 (PDT)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1691503677; bh=JCNxuh7snRK2UxJGDtGrIxZbmzWs6fAjEgbNbIIekR8=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=wizfIvOD0Xel224akMYsYN2NAFu/z8AWfHMpuPb6xqrHKSjejQhOalNbVLjtbrCvP
-         c/aGldFz6MmxcsAfpne4d1lPZMY5f4Q/fjdw8DbX+hZDhU6PMxEAVGjU+8EELiNb8G
-         I22pBkwsDBQra2XKcWihEUdCelKCVxrhBya0JIT8K2CM0+E5qkPWTo10SgRv+kQCxl
-         MDGnO7O3lTfIiw+QV4cPlUNCkLrwxLBLw6mEuH1EYp3yJostPLnyrgB0V9IoJIC4Lv
-         WlBoU3ytvhzutDC9N8uf9oLhudBBgN9xbctm9hlvPHkcylTGWurHQbxeXMHo1Ixzn/
-         fHNcREXn8JrUg==
-To:     Fedor Pchelkin <pchelkin@ispras.ru>, Kalle Vallo <kvalo@kernel.org>
-Cc:     Fedor Pchelkin <pchelkin@ispras.ru>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Senthil Balasubramanian <senthilkumar@atheros.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-        Sujith <Sujith.Manoharan@atheros.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Alexey Khoroshilov <khoroshilov@ispras.ru>,
-        lvc-project@linuxtesting.org,
-        syzbot+f2cb6e0ffdb961921e4d@syzkaller.appspotmail.com,
-        Hillf Danton <hdanton@sina.com>
-Subject: Re: [PATCH v3 2/2] wifi: ath9k: protect WMI command response buffer
- replacement with a lock
-In-Reply-To: <20230425192607.18015-2-pchelkin@ispras.ru>
-References: <20230425192607.18015-1-pchelkin@ispras.ru>
- <20230425192607.18015-2-pchelkin@ispras.ru>
-Date:   Tue, 08 Aug 2023 16:07:57 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87bkfhbpaa.fsf@toke.dk>
+        Tue, 8 Aug 2023 14:26:34 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ACF92334D
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 10:41:14 -0700 (PDT)
+Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4RKm3D62M7z1L8qZ;
+        Tue,  8 Aug 2023 16:06:00 +0800 (CST)
+Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
+ (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Tue, 8 Aug
+ 2023 16:07:10 +0800
+From:   Ruan Jinjie <ruanjinjie@huawei.com>
+To:     <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <kvalo@kernel.org>
+CC:     <ruanjinjie@huawei.com>
+Subject: [PATCH -next] wifi: mwifiex: use is_zero_ether_addr() instead of ether_addr_equal()
+Date:   Tue, 8 Aug 2023 16:06:41 +0800
+Message-ID: <20230808080641.2303097-1-ruanjinjie@huawei.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.90.53.73]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500008.china.huawei.com (7.221.188.139)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fedor Pchelkin <pchelkin@ispras.ru> writes:
+Use is_zero_ether_addr() instead of ether_addr_equal()
+to check if the ethernet address is all zeros.
 
-> If ath9k_wmi_cmd() has exited with a timeout, it is possible that during
-> next ath9k_wmi_cmd() call the wmi_rsp callback for previous wmi command
-> writes to new wmi->cmd_rsp_buf and makes a completion. This results in an
-> invalid ath9k_wmi_cmd() return value.
->
-> Move the replacement of WMI command response buffer and length under
-> wmi_lock. Note that last_seq_id value is updated there, too.
->
-> Thus, the buffer cannot be written to by a belated wmi_rsp callback
-> because that path is properly rejected by the last_seq_id check.
->
-> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
->
-> Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Given that the previous patch resets the last_seq_id to 0 on timeout
-under the lock, I don't think this patch is strictly necessary anymore.
-However, it doesn't hurt either, and I actually think moving the update
-of the rsp buf into ath9k_wmi_cmd_issue() aids readability, so:
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 644b1e134b01..fb3105a76337 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -828,7 +828,6 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 	u8 ssid_filter;
+ 	struct mwifiex_ie_types_htcap *ht_cap;
+ 	struct mwifiex_ie_types_bss_mode *bss_mode;
+-	const u8 zero_mac[6] = {0, 0, 0, 0, 0, 0};
+ 
+ 	/* The tlv_buf_len is calculated for each scan command.  The TLVs added
+ 	   in this routine will be preserved since the routine that sends the
+@@ -966,7 +965,7 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 				  sizeof(struct mwifiex_ie_types_scan_chan_gap);
+ 		}
+ 
+-		if (!ether_addr_equal(user_scan_in->random_mac, zero_mac)) {
++		if (!is_zero_ether_addr(user_scan_in->random_mac)) {
+ 			random_mac_tlv = (void *)tlv_pos;
+ 			random_mac_tlv->header.type =
+ 					 cpu_to_le16(TLV_TYPE_RANDOM_MAC);
+-- 
+2.34.1
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
