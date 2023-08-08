@@ -2,77 +2,86 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5D7C001E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C58C001DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:58:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235966AbjHHVSA (ORCPT
+        id S231235AbjHHV60 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 17:18:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37232 "EHLO
+        Tue, 8 Aug 2023 17:58:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235879AbjHHVRq (ORCPT
+        with ESMTP id S231680AbjHHV6L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 17:17:46 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7B18527E
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 13:13:58 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-686f1240a22so5878914b3a.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2023 13:13:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1691525638; x=1692130438;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gSDFPRHM/WG5qXppgSueGIee7lwvREuORa1Ou3dpkk4=;
-        b=jwa+AZyU3TOifP5EErh6brnOqttqoqd5dfljAV4dAqIUVjYJxHVIA0dxniwgtUbkeO
-         emqnJM5sivlQHv4tavBEd0pBrZfN72994m1iO7WudU4ATOdcLqNndyHQ9aSvypOwAkVU
-         9yh1IGm1h40zNDuigvES5CEXCYulil6FFd2Vs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691525638; x=1692130438;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gSDFPRHM/WG5qXppgSueGIee7lwvREuORa1Ou3dpkk4=;
-        b=YAy+N6BHo0kiiePI1eL3OJU9GDd8w/kiyU22Hog3WICpZ/ymGkqEixvKGcMa1EKtPb
-         jHq4UX+m9QNlL/f2cYOi+Eras0JUMZBC9EMLKMnKGp82NwusIMRldviwFqxu07QyctcU
-         +uTBMdcxpPdlCSBba7CkIKzgHJdHBC+CS1pZ4X71Y3U6NwUW0RbxfR5CZiZhwZbztS3q
-         TiDNWd7OK2E9tHI3nBieTE8vN6MZBR9kwQ97OsDFcjyco28y+NZk+++889ZXjAp7S93J
-         WOxvRTaZMCj1kSo5alhfKFE1kNrw82z1gN2WFlDwwVI3mUFNGDrFcKnqaNBfGZ0p4cHO
-         3vWQ==
-X-Gm-Message-State: AOJu0YwptPB8iQtbzDuZtSUgSxrgMEKRxo4hDkO6UrB4jzCrmtsIUaoF
-        awjmaGTX8TzoMt8rwkEcZo7FzA==
-X-Google-Smtp-Source: AGHT+IET6nT6clgIC+ZXYU0yC5p20xzPQybJ51TtsbD0KHGY8hC6hspDgab3faVrBZdjglw8H/TDpw==
-X-Received: by 2002:a05:6a20:1055:b0:137:a3c9:aaa2 with SMTP id gt21-20020a056a20105500b00137a3c9aaa2mr537198pzc.30.1691525638464;
-        Tue, 08 Aug 2023 13:13:58 -0700 (PDT)
-Received: from google.com ([2620:15c:9d:2:800e:831a:c5f6:2dd0])
-        by smtp.gmail.com with ESMTPSA id fe11-20020a056a002f0b00b00682a99b01basm8507447pfb.0.2023.08.08.13.13.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Aug 2023 13:13:57 -0700 (PDT)
-Date:   Tue, 8 Aug 2023 13:13:56 -0700
-From:   Brian Norris <briannorris@chromium.org>
-To:     Ruan Jinjie <ruanjinjie@huawei.com>
-Cc:     kvalo@kernel.org, christophe.jaillet@wanadoo.fr,
-        simon.horman@corigine.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH -next RESEND] wifi: mwifiex: use is_zero_ether_addr()
- instead of ether_addr_equal()
-Message-ID: <ZNKiBE3GIi/wQXLB@google.com>
-References: <20230808081023.2303423-1-ruanjinjie@huawei.com>
+        Tue, 8 Aug 2023 17:58:11 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAEE63BCE9;
+        Tue,  8 Aug 2023 09:40:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=wmjALgSpJxBpxWaC9pnbXCbGaVcndbuceuZjWcVcT9A=;
+        t=1691512841; x=1692722441; b=MkCKvNWmNejCpXqk0PVtAvWmjsxR1nGYvMxMO50KBsJce9f
+        6Vm+M6YDo6xK5i6I0IG1dL70l4l6LISWPY2fbeiSMC4RMnRULo/fD1Vhq3JibjZpfu0cZeEfqve2F
+        hqmtVSWR4X9L6UyGNNrSC+llkua+nzZLmBv6tm/70pIZTi2DsMXETy7KiDxiUTkhMJTTfBafZcGBt
+        Q0CHMyXBz8kdiBQMOIno17klm76vh8l4Bjm9Yyra7XEvNkCtekW/9sW2yQ89z4XHN1fY771MRHDL0
+        kzFaOzI2Hsne3zE+WeqYCIu/0cQe8EsriSoiPcY78cY8E+jqV8DEyJz4YVxr+bfQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qTIGs-00CS1A-2W;
+        Tue, 08 Aug 2023 10:40:55 +0200
+Message-ID: <bed853f70773496902b5676e568922edbf487dfb.camel@sipsolutions.net>
+Subject: Re: [PATCH] net: wireless: ralink: rt2x00: "foo* bar" should be
+ "foo *bar"
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     hanyu001@208suo.com, stf_xl@wp.pl, helmut.schaa@googlemail.com,
+        kvalo@kernel.org
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Tue, 08 Aug 2023 10:40:53 +0200
+In-Reply-To: <36e36d94e81da4342283aac471fb5a7bd3eb9f65.camel@sipsolutions.net>
+References: <tencent_316424AFC531C5F050C0203FDBA08E84F907@qq.com>
+         <18520fa625b8a901314c65bb8e557091@208suo.com>
+         <36e36d94e81da4342283aac471fb5a7bd3eb9f65.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230808081023.2303423-1-ruanjinjie@huawei.com>
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Aug 08, 2023 at 04:10:23PM +0800, Ruan Jinjie wrote:
-> Use is_zero_ether_addr() instead of ether_addr_equal()
-> to check if the ethernet address is all zeros.
-> 
-> Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
+On Tue, 2023-08-08 at 10:34 +0200, Johannes Berg wrote:
+> On Fri, 2023-07-21 at 14:34 +0800, hanyu001@208suo.com wrote:
+> > Fix checkpatch warnings:
+> >=20
+> > ./drivers/net/wireless/ralink/rt2x00/rt2x00.h:386: ERROR: "foo* bar"=
+=20
+> > should be "foo *bar"
+> > ./drivers/net/wireless/ralink/rt2x00/rt2x00.h:513: ERROR: "foo* bar"=
+=20
+> > should be "foo *bar"
+> >=20
+> > Signed-off-by: Yu Han <hanyu001@208suo.com>
+>=20
+> This patch is broken. I'll just point you to what I wrote before:
+>=20
+> https://lore.kernel.org/all/058dd31ef48495f8641f5b66839aaea039af0f08.came=
+l@sipsolutions.net/
+>=20
+> What _are_ you trying to achieve?!
+>=20
+> Currently all you're achieving is annoying everyone with broken (and
+> pointless submissions).
+>=20
 
-Usually you should provide some explanation for a RESEND of a
-seemingly-identical patch. Seemingly you just updated the address list?
+And the email address doesn't even work, only about two weeks after you
+sent this patch?
 
-Anyway, looks fine:
+  hanyu001@208suo.com
+    host mx1.qiye.aliyun.com [47.246.146.58]
+    SMTP error from remote mail server after RCPT TO:<hanyu001@208suo.com>:
+    554 RCPT (hanyu001@208suo.com) dosn't exist
 
-Acked-by: Brian Norris <briannorris@chromium.org>
+johannes
