@@ -2,44 +2,46 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 864EAC04FDF
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 19:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80363C04A94
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 19:18:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233087AbjHHTRd (ORCPT
+        id S234054AbjHHTSj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:17:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60680 "EHLO
+        Tue, 8 Aug 2023 15:18:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235729AbjHHTQc (ORCPT
+        with ESMTP id S234001AbjHHTRe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 15:16:32 -0400
+        Tue, 8 Aug 2023 15:17:34 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A31081558C
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 09:40:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15C1A15B82;
+        Tue,  8 Aug 2023 09:40:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=HOQqmtjUTJcPk9ODed9QIifisQolbwqSpXLq5B1tyYo=;
-        t=1691512811; x=1692722411; b=F2ib9xng4G4bs4ZXgRLN3F1YCXYvDMyjd4R2ID7VRQnUGWM
-        s6liZ1iE3veShVYzUHWmRFpgBwxsGbxCup/e0H3/N/yCTubyS1/7ig5qGIUx4aqw5JhPAz/p/5MC9
-        dJmQ8LnBgYzHcPa+s9AcP63nzECTQu2ZF5nx7tpZ8wzx6ZEIKfcZOgBSW9G/p6dLTeMI621AbwAFW
-        KNzSgtokDSzCyfBP5bb0/RL0dIrmty4Gbq1Yd4n32F2gE4wvn61ZAr+ieN4QYM2S9b+MSFOEVsnzE
-        SPWjLDmu4fqeHSlWiEk1t7cFweTV4Lmc/NZOuWFkxXeXBswEFDd5aUm8+lr6uQoA==;
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=JSalPYVPpeoReg4Iq8lqHGY2AJen49d+C6G8RlQwG5A=;
+        t=1691512854; x=1692722454; b=VOxZ3420PwK/Byd8F2qASEK1fuw+x9mHdjY9fOKH7nP56Sa
+        SaBPOHPWVugVZL2xHwOfNRtLa/3DS2ky7Hl27vj7k+FokR2I1y1Z4WHxLcCEB8+Q3z61OmDT5N6/x
+        O8RqsHOBa/Tn3L9T7fqdhB7ZSLGc0yZFcH0jdSArcKN7/16KGTwAfmGpbQBSQ3TxFg0FgTb1V7Kee
+        Bn3ag5vWtpUlhqy53z+R4ngcsnwezXafdRGdM7E/0tlGP2gZThPmrYhFNZryScVgrSe5vXNxB8nle
+        AYG5R2ArbK6EQ+v0wnu9jSS/tMGNfj6mFPa07L8F5T/S4hTrLJw2m2eluyDBlvTw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1qTKez-00CasF-2Y;
-        Tue, 08 Aug 2023 13:13:58 +0200
-Message-ID: <2307e1741e9d32e8f1ffc4e83c73b63a4e32512b.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: Add support for sending BSSMaxIdle in association
- request
+        id 1qTIAH-00CRWn-0B;
+        Tue, 08 Aug 2023 10:34:05 +0200
+Message-ID: <36e36d94e81da4342283aac471fb5a7bd3eb9f65.camel@sipsolutions.net>
+Subject: Re: [PATCH] net: wireless: ralink: rt2x00: "foo* bar" should be
+ "foo *bar"
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Chaitanya Tata <chaitanya.mgit@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date:   Tue, 08 Aug 2023 13:13:56 +0200
-In-Reply-To: <20230719194039.16179-1-Chaitanya.Tata@nordicsemi.no>
-References: <20230719194039.16179-1-Chaitanya.Tata@nordicsemi.no>
+To:     hanyu001@208suo.com, stf_xl@wp.pl, helmut.schaa@googlemail.com,
+        kvalo@kernel.org
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Tue, 08 Aug 2023 10:34:03 +0200
+In-Reply-To: <18520fa625b8a901314c65bb8e557091@208suo.com>
+References: <tencent_316424AFC531C5F050C0203FDBA08E84F907@qq.com>
+         <18520fa625b8a901314c65bb8e557091@208suo.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
@@ -49,15 +51,25 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2023-07-20 at 01:10 +0530, Chaitanya Tata wrote:
-> When WNM is enabled, a station can send its preferred BSS maximum idle
-> period in the association request, add a new netlink attribute to get
-> this value from the supplicant and add BSS maximum idle IE in the
-> association request.
+On Fri, 2023-07-21 at 14:34 +0800, hanyu001@208suo.com wrote:
+> Fix checkpatch warnings:
 >=20
+> ./drivers/net/wireless/ralink/rt2x00/rt2x00.h:386: ERROR: "foo* bar"=20
+> should be "foo *bar"
+> ./drivers/net/wireless/ralink/rt2x00/rt2x00.h:513: ERROR: "foo* bar"=20
+> should be "foo *bar"
+>=20
+> Signed-off-by: Yu Han <hanyu001@208suo.com>
 
-I don't see anything here that even requires all this code, rather than
-wpa_s just including the element itself in the association request extra
-IEs?
+This patch is broken. I'll just point you to what I wrote before:
+
+https://lore.kernel.org/all/058dd31ef48495f8641f5b66839aaea039af0f08.camel@=
+sipsolutions.net/
+
+What _are_ you trying to achieve?!
+
+Currently all you're achieving is annoying everyone with broken (and
+pointless submissions).
 
 johannes
+
