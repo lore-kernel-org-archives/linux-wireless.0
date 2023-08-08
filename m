@@ -2,81 +2,82 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF462C001B0
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 17:47:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1D2BC001DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 18:10:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234988AbjHHRr7 (ORCPT
+        id S235384AbjHHSKs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 13:47:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58500 "EHLO
+        Tue, 8 Aug 2023 14:10:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235062AbjHHRrJ (ORCPT
+        with ESMTP id S235347AbjHHSKW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 13:47:09 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B60BADDD3
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 09:21:05 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 378CwZEW018471;
-        Tue, 8 Aug 2023 16:20:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=d89bbXVXslsrlI8bopjeiW4jZOARJejG2v/w8nCWue4=;
- b=dbbX2rIoP+nbFbWdtkQG+DP8euUn5seaS4lnnMOojF0iWSIKlaVb1/kYoCvVkwxEtAJW
- JLgTo4GDwgSgZRdB+Sa5bifP34vaiYkA9bJBh8GRk6MI27vkCc/BqdRZ0Ed3D/6HQVS4
- 6X2SsEwpz3c9MqEhQ3sPDkwyn/BBdpuHg+Hb2cPzUYgGORs0C1WX6VXwl2q3Zo7bD8N2
- nPGiACGkQuOQI/Wjq2Ist7YLPfyNeycyUa+oitaC9qydf5PFZIgc49usuXI7/zJUNxYe
- rkHrI0QnrWeIjfrDfX5DdFp7330Yy0ZIKLoQPD0P2/ilziPkUoxwkWXaY4HakbHYVA+q Yg== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sb9pqsv04-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 08 Aug 2023 16:20:31 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 378GKUQi027816
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 8 Aug 2023 16:20:30 GMT
-Received: from [10.111.180.219] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Tue, 8 Aug
- 2023 09:20:30 -0700
-Message-ID: <14529658-8d2d-5649-36b0-33ee24be1514@quicinc.com>
-Date:   Tue, 8 Aug 2023 09:20:29 -0700
+        Tue, 8 Aug 2023 14:10:22 -0400
+Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78001160AE9;
+        Tue,  8 Aug 2023 10:13:12 -0700 (PDT)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1691503677; bh=JCNxuh7snRK2UxJGDtGrIxZbmzWs6fAjEgbNbIIekR8=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=wizfIvOD0Xel224akMYsYN2NAFu/z8AWfHMpuPb6xqrHKSjejQhOalNbVLjtbrCvP
+         c/aGldFz6MmxcsAfpne4d1lPZMY5f4Q/fjdw8DbX+hZDhU6PMxEAVGjU+8EELiNb8G
+         I22pBkwsDBQra2XKcWihEUdCelKCVxrhBya0JIT8K2CM0+E5qkPWTo10SgRv+kQCxl
+         MDGnO7O3lTfIiw+QV4cPlUNCkLrwxLBLw6mEuH1EYp3yJostPLnyrgB0V9IoJIC4Lv
+         WlBoU3ytvhzutDC9N8uf9oLhudBBgN9xbctm9hlvPHkcylTGWurHQbxeXMHo1Ixzn/
+         fHNcREXn8JrUg==
+To:     Fedor Pchelkin <pchelkin@ispras.ru>, Kalle Vallo <kvalo@kernel.org>
+Cc:     Fedor Pchelkin <pchelkin@ispras.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Senthil Balasubramanian <senthilkumar@atheros.com>,
+        "John W. Linville" <linville@tuxdriver.com>,
+        Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+        Sujith <Sujith.Manoharan@atheros.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        lvc-project@linuxtesting.org,
+        syzbot+f2cb6e0ffdb961921e4d@syzkaller.appspotmail.com,
+        Hillf Danton <hdanton@sina.com>
+Subject: Re: [PATCH v3 2/2] wifi: ath9k: protect WMI command response buffer
+ replacement with a lock
+In-Reply-To: <20230425192607.18015-2-pchelkin@ispras.ru>
+References: <20230425192607.18015-1-pchelkin@ispras.ru>
+ <20230425192607.18015-2-pchelkin@ispras.ru>
+Date:   Tue, 08 Aug 2023 16:07:57 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87bkfhbpaa.fsf@toke.dk>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] wifi: ath10k: do not ignore value returned by
- ath10k_wmi_peer_set_param()
-Content-Language: en-US
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-CC:     Kalle Valo <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>,
-        <lvc-project@linuxtesting.org>
-References: <20230808152542.91117-1-dmantipov@yandex.ru>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230808152542.91117-1-dmantipov@yandex.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: EhW3R2d5TMsbKYtkHIFHFOdUy29MhaXM
-X-Proofpoint-ORIG-GUID: EhW3R2d5TMsbKYtkHIFHFOdUy29MhaXM
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-08_14,2023-08-08_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
- malwarescore=0 mlxscore=0 lowpriorityscore=0 suspectscore=0
- mlxlogscore=349 priorityscore=1501 spamscore=0 bulkscore=0 impostorscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308080147
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ath10k patches should also cc: ath10k@lists.infradead.org
+Fedor Pchelkin <pchelkin@ispras.ru> writes:
 
-Please take advantage of the get_maintainer.pl script to make sure you 
-copy all appropriate lists since you seem to be touching a large number 
-of drivers and subsystems.
+> If ath9k_wmi_cmd() has exited with a timeout, it is possible that during
+> next ath9k_wmi_cmd() call the wmi_rsp callback for previous wmi command
+> writes to new wmi->cmd_rsp_buf and makes a completion. This results in an
+> invalid ath9k_wmi_cmd() return value.
+>
+> Move the replacement of WMI command response buffer and length under
+> wmi_lock. Note that last_seq_id value is updated there, too.
+>
+> Thus, the buffer cannot be written to by a belated wmi_rsp callback
+> because that path is properly rejected by the last_seq_id check.
+>
+> Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+>
+> Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
+> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
 
+Given that the previous patch resets the last_seq_id to 0 on timeout
+under the lock, I don't think this patch is strictly necessary anymore.
+However, it doesn't hurt either, and I actually think moving the update
+of the rsp buf into ath9k_wmi_cmd_issue() aids readability, so:
+
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
