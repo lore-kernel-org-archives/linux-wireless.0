@@ -2,86 +2,100 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB3DAC001DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 20:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5981DC41513
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 20:48:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229650AbjHHUd5 (ORCPT
+        id S234180AbjHHUse (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 16:33:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52230 "EHLO
+        Tue, 8 Aug 2023 16:48:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232467AbjHHUdg (ORCPT
+        with ESMTP id S234131AbjHHUsR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 16:33:36 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95CCE1B320
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 12:58:13 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1bc6535027aso25435845ad.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2023 12:58:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1691524693; x=1692129493;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xswoMLpcFoDTReNDe+HwH8oM5DQUMUC8+U79Zzosbf8=;
-        b=GhvaRN9JoattUmbHokJ5Uz196iXQ5Xzg13QWi4JBIc/H77Q83JpHVCItq+jH1aE2fL
-         euCUUhvVD+L2FSfr3XT7fAT0Ni/cUqjNW513Y6K0ESIxc5+y/ljMLbmPGJjjvMQUbhak
-         pWkhZIM760TwI4LkFh5n7EVZSRDNVTCEXsW0g=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691524693; x=1692129493;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xswoMLpcFoDTReNDe+HwH8oM5DQUMUC8+U79Zzosbf8=;
-        b=JHeDsdN4NR1B65bpEi4hJzsFH1vuIkcRmayU2HowNlOm8Vguu/vZrOQdWUG3kRMN2O
-         zUteL4wMEiqwk1tmR8/9VB7tUK2IFLfNmQ4zujyDjZHFYeVRUuTxKerBpozgeaPxRnKG
-         OoeQx4Yt/Nid0I+JyNltoJUs8nzftvEodwSQ4uRykuVdlfbAOVbgDY9iID3k1UdKHdVa
-         Va90h5ri9YS/8KJ55QWay7WJDqkE3GA8idzKR6kj6HjsS6PYymJt+pGm8reegjO3pWU3
-         yafJmWUxy034OWR0P9x2YjwuU9/dGyJ+wk3YzyyxFrl/ftdZQ6DdTJZtDNgHtQ9cWevV
-         x1fA==
-X-Gm-Message-State: AOJu0YyEelYjL+LzgqF6YW3ed6ZSkFyzFTL8d9OWhxxe/0brU54OY5Bd
-        kyUuNuscw+9qPkjNmwIWmRaMw6rBkCf/71R7ebg=
-X-Google-Smtp-Source: AGHT+IHDzUXYIxBNPaaCARpuoUI/sn1yXaKimrtNyLgSjd9xIPluKRLxuPJt94Y7Kfe1p+kx1/bT7A==
-X-Received: by 2002:a17:902:e545:b0:1bc:73bf:303b with SMTP id n5-20020a170902e54500b001bc73bf303bmr784178plf.33.1691524693060;
-        Tue, 08 Aug 2023 12:58:13 -0700 (PDT)
-Received: from google.com ([2620:15c:9d:2:800e:831a:c5f6:2dd0])
-        by smtp.gmail.com with ESMTPSA id n12-20020a170902d2cc00b001bb97e51ab4sm7255191plc.98.2023.08.08.12.58.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Aug 2023 12:58:12 -0700 (PDT)
-Date:   Tue, 8 Aug 2023 12:58:10 -0700
-From:   Brian Norris <briannorris@chromium.org>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        lvc-project@linuxtesting.org
-Subject: Re: [PATCH 5/5] [v3] wifi: mwifiex: drop BUG_ON from TX paths
-Message-ID: <ZNKeUpjZT13uWkgj@google.com>
-References: <ZMlHCmjf2ZovExsP@google.com>
- <20230802160726.85545-1-dmantipov@yandex.ru>
- <20230802160726.85545-5-dmantipov@yandex.ru>
+        Tue, 8 Aug 2023 16:48:17 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC75E157AF
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 09:40:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=8YfCtcbe4WPmkqSYcWXFF4mhHo97h/r2CF3qRV1YvRU=;
+        t=1691512828; x=1692722428; b=YvtWi+TJjW+x9rkOogJe1YVR6/Jup94JukC42D5s/ZMz71I
+        1WhSKZDbVfYWE5yV4HiA6jRk6HVDCfHkySMy/jOp+ZxQ8M7DZVFAjkLR9Y4bgi4oe5nW0v8DFq2SC
+        xjsKEUtW7bsEzrMszAZ+SaepN9VGzr3G89+JEXixeYDDfZgjkAKy0mpfE7Jw+93BhlOguV90U4fHo
+        KpcJV815o/mr+BOL4DnWCl9heErEmrC7EaBROYt2y1juPbLAv6FJliDCoa/M/ZyWGM8CTtSTijkKE
+        NTHDDdiGS/yxJLTvQ5QEeEKrtlyV7g6S1mxPVqvU/q9GQOwYnzCf7mPHottHLXLQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qTKNL-00CZrr-22;
+        Tue, 08 Aug 2023 12:55:43 +0200
+Message-ID: <6ccf4549011f0efa67523d1c171b23694122ec6c.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: ath12k: Fix buffer overflow when scanning with
+ extraie
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Wen Gong <quic_wgong@quicinc.com>, ath12k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Tue, 08 Aug 2023 12:55:42 +0200
+In-Reply-To: <20230807030806.9345-1-quic_wgong@quicinc.com>
+References: <20230807030806.9345-1-quic_wgong@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230802160726.85545-5-dmantipov@yandex.ru>
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Aug 02, 2023 at 07:07:19PM +0300, Dmitry Antipov wrote:
-> In 'mwifiex_process_sta_txpd()' and 'mwifiex_process_uap_txpd()',
-> replace 'BUG_ON()' with runtime check, and move all these checks
-> to 'mwifiex_process_tx()'. This way, both callees may be converted
-> to 'void', and the caller may be simplified as well.
-> 
-> Suggested-by: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-> ---
-> v3: drop some overengineered bits, fix a few nits reported by
-> checkpatch.pl, and reorder series by making this patch the last
-> one, thus hopefully simplify the landing
+Hi,
 
-Thanks, I think this version is pretty clear, concise, and an overall
-improvement.
+Since I'm covering for Kalle right now ...
 
-For the whole series (though you rightly carried my Acked-by on the
-others already):
+On Sun, 2023-08-06 at 23:08 -0400, Wen Gong wrote:
+> If cfg80211 is providing extraie's for a scanning process then ath12k wil=
+l
+> copy that over to the firmware. The extraie.len is a 32 bit value in stru=
+ct
+> element_info and describes the amount of bytes for the vendor information
+> elements.
+>=20
+> The WMI_TLV packet is having a special WMI_TAG_ARRAY_BYTE section. This
+> section can have a (payload) length up to 65535 bytes because the
+> WMI_TLV_LEN can store up to 16 bits. The code was missing such a check an=
+d
+> could have created a scan request which cannot be parsed correctly by the
+> firmware.
+>=20
+> But the bigger problem was the allocation of the buffer. It has to align
+> the TLV sections by 4 bytes. But the code was using an u8 to store the
+> newly calculated length of this section (with alignment). And the new
+> calculated length was then used to allocate the skbuff. But the actual co=
+de
+> to copy in the data is using the extraie.len and not the calculated
+> "aligned" length.
+>=20
+> The length of extraie with IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS enabled
+> was 264 bytes during tests with a wifi card. But it only allocated 8
+> bytes (264 bytes % 256) for it. As consequence, the code to memcpy the
+> extraie into the skb was then just overwriting data after skb->end. Thing=
+s
+> like shinfo were therefore corrupted. This could usually be seen by a cra=
+sh
+> in skb_zcopy_clear which tried to call a ubuf_info callback (using a bogu=
+s
+> address).
 
-Acked-by: Brian Norris <briannorris@chromium.org>
+I feel these are two separate issues. Having a large enough TLV that the
+firmware cannot parse it is highly unlikely to happen, and not really an
+issue here.
+
+Please split this into two patches, and fix *just* the buffer overflow
+in a patch titled "Fix buffer overflow". I believe simply changing the
+variable type is sufficient for this, as the code is otherwise
+equivalent. That's a patch I'd take to wireless at this stage (rc5), but
+probably not the entire bigger change.
+
+johannes
+
