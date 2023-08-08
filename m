@@ -2,100 +2,82 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5981DC41513
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 20:48:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E092CC001DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:00:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234180AbjHHUse (ORCPT
+        id S234196AbjHHVAC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 16:48:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44546 "EHLO
+        Tue, 8 Aug 2023 17:00:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234131AbjHHUsR (ORCPT
+        with ESMTP id S234194AbjHHU7p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 16:48:17 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC75E157AF
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 09:40:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=8YfCtcbe4WPmkqSYcWXFF4mhHo97h/r2CF3qRV1YvRU=;
-        t=1691512828; x=1692722428; b=YvtWi+TJjW+x9rkOogJe1YVR6/Jup94JukC42D5s/ZMz71I
-        1WhSKZDbVfYWE5yV4HiA6jRk6HVDCfHkySMy/jOp+ZxQ8M7DZVFAjkLR9Y4bgi4oe5nW0v8DFq2SC
-        xjsKEUtW7bsEzrMszAZ+SaepN9VGzr3G89+JEXixeYDDfZgjkAKy0mpfE7Jw+93BhlOguV90U4fHo
-        KpcJV815o/mr+BOL4DnWCl9heErEmrC7EaBROYt2y1juPbLAv6FJliDCoa/M/ZyWGM8CTtSTijkKE
-        NTHDDdiGS/yxJLTvQ5QEeEKrtlyV7g6S1mxPVqvU/q9GQOwYnzCf7mPHottHLXLQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qTKNL-00CZrr-22;
-        Tue, 08 Aug 2023 12:55:43 +0200
-Message-ID: <6ccf4549011f0efa67523d1c171b23694122ec6c.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: ath12k: Fix buffer overflow when scanning with
- extraie
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Wen Gong <quic_wgong@quicinc.com>, ath12k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 08 Aug 2023 12:55:42 +0200
-In-Reply-To: <20230807030806.9345-1-quic_wgong@quicinc.com>
-References: <20230807030806.9345-1-quic_wgong@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        Tue, 8 Aug 2023 16:59:45 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84C1B5998
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 13:56:09 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C81232C0066
+        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 20:56:07 +0000 (UTC)
+Received: from ben-dt5.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 0432113C2B0;
+        Tue,  8 Aug 2023 13:56:06 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 0432113C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1691528167;
+        bh=WQS3XMgx9IQH4AZ7uLk86SAFI6Hjk/XmUGBubdR1uI4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ExUre5cznMYLvuMkQGL97bKUVWXjA/mtSNvGnmvdx9eP9pyECClg1md8TtASVn+1n
+         klIzj14Ir31MS1S4is0vxYfxicwcPXd3pno3SGpeGak8c12C4TVfmHtyGabUXhhRTh
+         ZPuJmKyqZslj1WqjY33eGiAojuqY4JX0MaVJv6TQ=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] wifi: iwlwifi:  Ensure ack flag is properly cleared.
+Date:   Tue,  8 Aug 2023 13:56:05 -0700
+Message-Id: <20230808205605.4105670-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.40.0
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+X-MDID: 1691528168-phBUsIozTUVV
+X-MDID-O: us5;at1;1691528168;phBUsIozTUVV;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Ben Greear <greearb@candelatech.com>
 
-Since I'm covering for Kalle right now ...
+Debugging indicates that nothing else is clearing the info->flags,
+so some frames were flagged as ACKed when they should not be.
+Explicitly clear the ack flag to ensure this does not happen.
 
-On Sun, 2023-08-06 at 23:08 -0400, Wen Gong wrote:
-> If cfg80211 is providing extraie's for a scanning process then ath12k wil=
-l
-> copy that over to the firmware. The extraie.len is a 32 bit value in stru=
-ct
-> element_info and describes the amount of bytes for the vendor information
-> elements.
->=20
-> The WMI_TLV packet is having a special WMI_TAG_ARRAY_BYTE section. This
-> section can have a (payload) length up to 65535 bytes because the
-> WMI_TLV_LEN can store up to 16 bits. The code was missing such a check an=
-d
-> could have created a scan request which cannot be parsed correctly by the
-> firmware.
->=20
-> But the bigger problem was the allocation of the buffer. It has to align
-> the TLV sections by 4 bytes. But the code was using an u8 to store the
-> newly calculated length of this section (with alignment). And the new
-> calculated length was then used to allocate the skbuff. But the actual co=
-de
-> to copy in the data is using the extraie.len and not the calculated
-> "aligned" length.
->=20
-> The length of extraie with IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS enabled
-> was 264 bytes during tests with a wifi card. But it only allocated 8
-> bytes (264 bytes % 256) for it. As consequence, the code to memcpy the
-> extraie into the skb was then just overwriting data after skb->end. Thing=
-s
-> like shinfo were therefore corrupted. This could usually be seen by a cra=
-sh
-> in skb_zcopy_clear which tried to call a ubuf_info callback (using a bogu=
-s
-> address).
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-I feel these are two separate issues. Having a large enough TLV that the
-firmware cannot parse it is highly unlikely to happen, and not really an
-issue here.
-
-Please split this into two patches, and fix *just* the buffer overflow
-in a patch titled "Fix buffer overflow". I believe simply changing the
-variable type is sufficient for this, as the code is otherwise
-equivalent. That's a patch I'd take to wireless at this stage (rc5), but
-probably not the entire bigger change.
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 0abc31a6951d..67f208cc19c8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1863,6 +1863,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 		iwl_trans_free_tx_cmd(mvm->trans, info->driver_data[1]);
+ 
+ 		memset(&info->status, 0, sizeof(info->status));
++		info->flags &= ~(IEEE80211_TX_STAT_ACK | IEEE80211_TX_STAT_TX_FILTERED);
+ 
+ 		/* inform mac80211 about what happened with the frame */
+ 		switch (status & TX_STATUS_MSK) {
+@@ -2241,6 +2242,8 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
+ 		 */
+ 		if (!is_flush)
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
++		else
++			info->flags &= ~IEEE80211_TX_STAT_ACK;
+ 	}
+ 
+ 	/*
+-- 
+2.40.0
 
