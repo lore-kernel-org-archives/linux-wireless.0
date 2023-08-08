@@ -2,114 +2,124 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45DFEC001DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:13:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D4B0C001DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Aug 2023 21:13:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236113AbjHHVNZ (ORCPT
+        id S236232AbjHHVNg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Aug 2023 17:13:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39246 "EHLO
+        Tue, 8 Aug 2023 17:13:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236192AbjHHVNO (ORCPT
+        with ESMTP id S235296AbjHHVN3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Aug 2023 17:13:14 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07331A5E3
-        for <linux-wireless@vger.kernel.org>; Tue,  8 Aug 2023 13:11:30 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1bbc87ded50so40202555ad.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Aug 2023 13:11:30 -0700 (PDT)
+        Tue, 8 Aug 2023 17:13:29 -0400
+Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D91473FC;
+        Tue,  8 Aug 2023 12:43:05 -0700 (PDT)
+Received: by mail-wm1-x32a.google.com with SMTP id 5b1f17b1804b1-3fe1d462762so51337415e9.0;
+        Tue, 08 Aug 2023 12:43:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1691525489; x=1692130289;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=AUKpE+oNE0/h0QGs7zyymgJyrDlWJCUBg0EB3+1xZK0=;
-        b=Q6iqfmiOrpTlN0MVMyg/J93jDJK62XjmqC1jPntTS3deq+9DqQOJK5OfwbRI9m++ld
-         sS1kkZJQb0KZMvsfY8ytGzqDPd2xMeo6jYkIfoa2AsWUK1vafRQG83USTHTgtTkCk9j+
-         o3+sxX4S6R2+w/yWmkZUPHKuM4d0Z9faggDJ4=
+        d=gmail.com; s=20221208; t=1691523783; x=1692128583;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cOolvKmjNbA3psrGMAp+3ipqqGdZ/BVnezDxpZWH8ms=;
+        b=HC9tZ1QtSi5ORdON+XMHnl2vCZ6cJogJ8xaGHcBU0vDyWWpj9nX+I8TxYJ0iBuqeAs
+         0KjHFKewwDIkng9wdW7Z9W0q7murFn3rqAHU9n40ahS3m5Hga3FlZsa7aN2hSziKE/E+
+         ielv5q6faWE7fRi0aovuTUAEGAIKaByelW2Lq6b4BxJEIhJpqlNBiW4+ng7uJnh5dLLe
+         njufyxgs9w+y/4MCEWbhprLvcQz71kzfXI7og601cU7QmPGzzgW/XaT6K8JJ5TF7nvu+
+         epUjRvgm6+00D2argBvHWJrLPUrdlfJay1W8CMfmaMkrSwzqWksI7/X5rXM+iccb2ost
+         gSRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691525489; x=1692130289;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AUKpE+oNE0/h0QGs7zyymgJyrDlWJCUBg0EB3+1xZK0=;
-        b=NWYmzzJrNjUk3HT8kssDWesWwBkHkWM1D3w8icEK7AQ9gaa4FSm5S+Af0r+hBLGkCa
-         hHgd6NO+rdKPMdUhv1pgBLZXIy+1lSVGuwWMX+Mxx1QYQws0UPtOPnitOft7WzUq6QWZ
-         i7lyM9U+zQ7QyZuvzhE4/No/H9AvUJuCAmRMgYgM7TUbGcxQv/HRSbM/SKgQQIidZdJP
-         9f0Pf5eOcuX2UOK9I0DZ9EQQUNexsvYOfJy9tp/Zdy/F34M6sFfFkFL5L6zVAbTcM+So
-         vAl6y6yRwpdjCPfQ3map1xXQ1VYg3XYpqmQn2zK3BR24yFcnfFa3Bn6Of826svXEOmoM
-         ATkw==
-X-Gm-Message-State: AOJu0Yyb27+pnNdDLZaMmDSl1JevUD6JFi1aYxxEho8DQoqTbn4Isceb
-        DDoE9V9rSrHDQr2VUsElVhvGkQ==
-X-Google-Smtp-Source: AGHT+IFze8kIjj2VOwIZt1iaTBcw0BoCZzkRwjmFv+hEQfOOvj//qiCIl17bad80r4aT2/Lx5j/o9A==
-X-Received: by 2002:a17:902:f7cd:b0:1bc:2c58:ad97 with SMTP id h13-20020a170902f7cd00b001bc2c58ad97mr685047plw.22.1691525489554;
-        Tue, 08 Aug 2023 13:11:29 -0700 (PDT)
-Received: from google.com ([2620:15c:9d:2:800e:831a:c5f6:2dd0])
-        by smtp.gmail.com with ESMTPSA id d4-20020a170903230400b001b531e8a000sm9435065plh.157.2023.08.08.13.11.28
+        d=1e100.net; s=20221208; t=1691523783; x=1692128583;
+        h=in-reply-to:content-disposition:mime-version:references
+         :mail-followup-to:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=cOolvKmjNbA3psrGMAp+3ipqqGdZ/BVnezDxpZWH8ms=;
+        b=KxsJ2B0lWadLiGFNzEqiRk16J77/MUCspbg9wiVtCFom6b2EO0bra8eLodvNySQfv8
+         8IwXh1RY07oLX0uUvYlFRlk/A85UUqhs4Rn/HGOxnzPOEiLIo7ug/AumgRH8tjzVGUTk
+         yfn0Xb1mRZr9J/1PlqF9CbaJfpQhIoj1HdkdQ9kaSjZJ3mm1WfhT9UXpu0rouE5F/ixC
+         kcM/N1+ByQ5jQTDdLe+mJIsmgpiyjvQA2Bpmnu0moXaaR8vb+JjhGW3QLOMiBjETZ1ML
+         t+Z3tpWEdQVyJJGq5XXLRXJnm23ABbEHVRV783TZATkQbUgxHRw0SvF2Qz18xZ1ZQv8L
+         9aSA==
+X-Gm-Message-State: AOJu0Yyuvx428Y3PthND87Le/PED1kFypy3b76GHWZ+bkzlbN0BIdjqm
+        9KV8qThJrPWbs3XQOXRRuEpsd/3OtMK6nlIkVB8=
+X-Google-Smtp-Source: AGHT+IH63RiCGVaJ+XGcErXY3rfQFL9fz6CdslQk4F3i+XRxMUcLBRkelsoaCKiCvoxb6Qp1HbLTJw==
+X-Received: by 2002:a05:600c:2215:b0:3fc:5a3:367c with SMTP id z21-20020a05600c221500b003fc05a3367cmr621098wml.32.1691523783245;
+        Tue, 08 Aug 2023 12:43:03 -0700 (PDT)
+Received: from mmaatuq-HP-Laptop-15-dy2xxx ([2001:8f8:1163:15aa:8c5a:b813:cec2:4273])
+        by smtp.gmail.com with ESMTPSA id v20-20020a7bcb54000000b003fbfef555d2sm19090487wmj.23.2023.08.08.12.43.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Aug 2023 13:11:29 -0700 (PDT)
-Date:   Tue, 8 Aug 2023 13:11:27 -0700
-From:   Brian Norris <briannorris@chromium.org>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
-        lvc-project@linuxtesting.org
-Subject: Re: [PATCH] wifi: mwifiex: avoid possible NULL skb pointer
- dereference
-Message-ID: <ZNKhb2lgSmfEqqsW@google.com>
-References: <20230808084431.43548-1-dmantipov@yandex.ru>
+        Tue, 08 Aug 2023 12:43:02 -0700 (PDT)
+Date:   Tue, 8 Aug 2023 23:42:58 +0400
+From:   Mahmoud Matook <mahmoudmatook.mm@gmail.com>
+To:     Jiri Slaby <jirislaby@kernel.org>
+Cc:     mickflemm@gmail.com, mcgrof@kernel.org, kvalo@kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        mahmoudmatook.mm@gmail.com
+Subject: Re: [PATCH] ath5k: fix WARNING opportunity for swap.
+Message-ID: <20230808194258.ocxnmqwzqlr6jpe4@mmaatuq-HP-Laptop-15-dy2xxx>
+Mail-Followup-To: Jiri Slaby <jirislaby@kernel.org>, mickflemm@gmail.com,
+        mcgrof@kernel.org, kvalo@kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org
+References: <20230807201057.340371-1-mahmoudmatook.mm@gmail.com>
+ <92a26f67-1b24-ea35-2f39-7c0b75027617@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230808084431.43548-1-dmantipov@yandex.ru>
+In-Reply-To: <92a26f67-1b24-ea35-2f39-7c0b75027617@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Aug 08, 2023 at 11:44:27AM +0300, Dmitry Antipov wrote:
-> In 'mwifiex_handle_uap_rx_forward()', always check the value
-> returned by 'skb_copy()' to avoid potential NULL pointer
-> dereference in 'mwifiex_uap_queue_bridged_pkt()', and drop
-> original skb in case of copying failure.
+On 08/08, Jiri Slaby wrote:
+
+> On 07. 08. 23, 22:10, Mahmoud Maatuq wrote:
+> > coccinielle reported the following:
+> > ./drivers/net/wireless/ath/ath5k/phy.c:1573:25-26: WARNING opportunity for swap()
 > 
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
 > 
-> Fixes: 838e4f449297 ("mwifiex: improve uAP RX handling")
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-> ---
->  drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 10 +++++++++-
->  1 file changed, 9 insertions(+), 1 deletion(-)
+> OK, once again:
+> https://lore.kernel.org/all/0c3acbd4-6ab2-5cc5-6293-54e30093cce2@kernel.org/
+
+
+I had a look at the commit history, to see why the original developer 
+didn't use sort() function, and name the array variable sort but found
+nothing. 
+I have some doubts that he might did that intentionally, so not to call
+sort() function for such small array and avoid the cost of context
+switching.
+
+
+> > Signed-off-by: Mahmoud Maatuq <mahmoudmatook.mm@gmail.com>
+> > ---
+> >   drivers/net/wireless/ath/ath5k/phy.c | 5 +----
+> >   1 file changed, 1 insertion(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> > index 5797ef9c73d7..f87eb684f223 100644
+> > --- a/drivers/net/wireless/ath/ath5k/phy.c
+> > +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> > @@ -1562,16 +1562,13 @@ static s16
+> >   ath5k_hw_get_median_noise_floor(struct ath5k_hw *ah)
+> >   {
+> >   	s16 sort[ATH5K_NF_CAL_HIST_MAX];
+> > -	s16 tmp;
+> >   	int i, j;
+> >   	memcpy(sort, ah->ah_nfcal_hist.nfval, sizeof(sort));
+> >   	for (i = 0; i < ATH5K_NF_CAL_HIST_MAX - 1; i++) {
+> >   		for (j = 1; j < ATH5K_NF_CAL_HIST_MAX - i; j++) {
+> >   			if (sort[j] > sort[j - 1]) {
+> > -				tmp = sort[j];
+> > -				sort[j] = sort[j - 1];
+> > -				sort[j - 1] = tmp;
+> > +				swap(sort[j], sort[j - 1]);
+> >   			}
+> >   		}
+> >   	}
 > 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> index 04ff051f5d18..454d1c11d39b 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> @@ -252,7 +252,15 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
->  
->  	if (is_multicast_ether_addr(ra)) {
->  		skb_uap = skb_copy(skb, GFP_ATOMIC);
-> -		mwifiex_uap_queue_bridged_pkt(priv, skb_uap);
-> +		if (likely(skb_uap)) {
-> +			mwifiex_uap_queue_bridged_pkt(priv, skb_uap);
-> +		} else {
-> +			mwifiex_dbg(adapter, ERROR,
-> +				    "failed to copy skb for uAP\n");
-> +			priv->stats.tx_dropped++;
-
-This feels like it should be 'rx_dropped', since we're dropping it
-before we done any real "RX" (let alone getting to any forward/outbound
-operation). I doubt it makes a big difference overall, but it seems like
-the right thing to do.
-
-Otherwise, this looks good; feel free to carry this to a next revision
-if you're just changing tx_dropped to rx_dropped:
-
-Acked-by: Brian Norris <briannorris@chromium.org>
-
-> +			dev_kfree_skb_any(skb);
-> +			return -1;
-> +		}
->  	} else {
->  		if (mwifiex_get_sta_entry(priv, ra)) {
->  			/* Requeue Intra-BSS packet */
 > -- 
-> 2.41.0
-> 
+> js
+> suse labs
