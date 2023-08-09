@@ -2,60 +2,113 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDACBEB64DD
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Aug 2023 08:29:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 965D7EB64DD
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Aug 2023 09:03:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231282AbjHII3M (ORCPT
+        id S231338AbjHIJDB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Aug 2023 04:29:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45374 "EHLO
+        Wed, 9 Aug 2023 05:03:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230227AbjHII3J (ORCPT
+        with ESMTP id S229596AbjHIJDA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Aug 2023 04:29:09 -0400
-X-Greylist: delayed 580 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 09 Aug 2023 01:29:09 PDT
-Received: from mail.profitpathwaygo.com (mail.profitpathwaygo.com [141.94.21.238])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08F35171E
-        for <linux-wireless@vger.kernel.org>; Wed,  9 Aug 2023 01:29:08 -0700 (PDT)
-Received: by mail.profitpathwaygo.com (Postfix, from userid 1002)
-        id 6AF304D9AB; Wed,  9 Aug 2023 08:16:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=profitpathwaygo.com;
-        s=mail; t=1691569030;
-        bh=qp3Ofokho6Ql+WtI8ZPVilyHYhskXL7fod7u9CWs8W4=;
-        h=Date:From:To:Subject:From;
-        b=R+AlNv0MQZGnAer/nwCCTW98M7eC25AeLz2BLFIvfE8Td+aB9JdOrZwe33KgWiZFZ
-         vK+lq84Oz29MpA+k72nnBqZEMyHfw+wmbQv5+0DGAx/nIHdw4PzfXqbF6gl79aOudD
-         mKvaWcsUXXuAEzWtd99jF5O4rv8ZCTHKocUJNQLDCNVGYRUNuhVFy03mizbwOwEuyt
-         bKTgSqVt/7jgJ7xrH/rGJ/nP1l11I3EzU6keFzTMSbYzunWsY5DY9xVPX6fGEmxHkV
-         tcUAAXrm3jZ0Y9LWqnTQ5fI9ux4O+ja139NRlB2VBHjt2Gu/F6PzyWOSfQ2DLJGD6v
-         +WPI9JGJ5kWAQ==
-Received: by mail.profitpathwaygo.com for <linux-wireless@vger.kernel.org>; Wed,  9 Aug 2023 08:16:11 GMT
-Message-ID: <20230809064500-0.1.10.4sgd.0.3due9ja5wm@profitpathwaygo.com>
-Date:   Wed,  9 Aug 2023 08:16:11 GMT
-From:   "Adam Charachuta" <adam.charachuta@profitpathwaygo.com>
-To:     <linux-wireless@vger.kernel.org>
-Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania_?=
-X-Mailer: mail.profitpathwaygo.com
+        Wed, 9 Aug 2023 05:03:00 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48D361FCD;
+        Wed,  9 Aug 2023 02:03:00 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37990QBt002136;
+        Wed, 9 Aug 2023 09:02:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=APN9R81y1vkzZ+bon6ieesrBDLEA2EFWpxUvuuoF+0E=;
+ b=MeL0oUWa+w34dUaK4XODCPFKM9LHZg178MZjPkEwqzLNTpmLnMZ5aYiHLePNMA73lnPw
+ EekK4UpHgPuXf+mhOd3v6WdE7vZSYNo2G4QLU1JA3JfhuYsZfVATWBXV/+loRlUchKRg
+ Lp0WDBrS+/f//8VkS+nZyILhCn5EvIrdcY4v7ZcgMt8uIwYB70pQCoRbzV0UtJIG935D
+ BaVpK88LOdsTsedhQbs+qmRKCAUB7u0UMVHLWsVlmVQYfsmQKc3dp2tvnoL9XaBwBNDb
+ uyU2OzVKpTuXbD1eEma4ayUSgkQPKXCyWi+NrA+zuAoTXje+1szuZH23codLk8zX/WVj 5A== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sc0050wv7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 09 Aug 2023 09:02:44 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37992h3V026256
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 9 Aug 2023 09:02:43 GMT
+Received: from [10.204.118.225] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.30; Wed, 9 Aug
+ 2023 02:02:40 -0700
+Message-ID: <42f78c02-1ddc-cf1c-694f-abf9059dfb60@quicinc.com>
+Date:   Wed, 9 Aug 2023 14:32:37 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH] Revert "Revert "wifi: ath11k: Enable threaded NAPI""
+Content-Language: en-US
+To:     Johan Hovold <johan+linaro@kernel.org>,
+        Kalle Valo <kvalo@kernel.org>
+CC:     Jeff Johnson <quic_jjohnson@quicinc.com>,
+        Bjorn Andersson <quic_bjorande@quicinc.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20230809073432.4193-1-johan+linaro@kernel.org>
+From:   Manikanta Pubbisetty <quic_mpubbise@quicinc.com>
+In-Reply-To: <20230809073432.4193-1-johan+linaro@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: uzOrskq2NaRDOacIBiyeeIdxixkzHzf-
+X-Proofpoint-GUID: uzOrskq2NaRDOacIBiyeeIdxixkzHzf-
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-08-09_07,2023-08-08_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 spamscore=0
+ malwarescore=0 priorityscore=1501 lowpriorityscore=0 suspectscore=0
+ bulkscore=0 mlxscore=0 adultscore=0 phishscore=0 clxscore=1011
+ mlxlogscore=780 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308090079
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On 8/9/2023 1:04 PM, Johan Hovold wrote:
+> This reverts commit d265ebe41c911314bd273c218a37088835959fa1.
+> 
+> Disabling threaded NAPI causes the Lenovo ThinkPad X13s to hang (e.g. no
+> more interrupts received) almost immediately during RX.
+> 
+> Apparently something broke since commit 13aa2fb692d3 ("wifi: ath11k:
+> Enable threaded NAPI") so that a simple revert is no longer possible.
+> 
 
-zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
-=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
-o dalszych rozm=C3=B3w.=20
+This is getting as weird as it would get :)
 
-Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
-=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
-=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
-strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
+> As commit d265ebe41c91 ("Revert "wifi: ath11k: Enable threaded NAPI"")
+> does not address the underlying issue reported with QCN9074, it seems we
+> need to reenable threaded NAPI before fixing both bugs properly.
+> 
 
-Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
+It seems that the revert has actually solved the issue reported with 
+QCN9074.
 
+https://bugzilla.kernel.org/show_bug.cgi?id=217536
 
-Pozdrawiam serdecznie
-Adam Charachuta
+We were trying to reproduce the problem on X86+QCN9074 (with threaded 
+NAPI) from quite some time, but there is no repro yet.
+
+Actually, enabling/disabling threaded NAPI is a simple affair; I'm 
+wondering to hear that interrupts are blocked due  to not having 
+threaded NAPI.
+
+What is the chip that Lenovo Thinkpad X13s is having?
+
+Thanks,
+Manikanta
