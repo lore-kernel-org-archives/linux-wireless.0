@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D48ACC04A94
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Aug 2023 02:56:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43505C04FE0
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Aug 2023 02:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232662AbjHNC4V (ORCPT
+        id S232660AbjHNC4U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 13 Aug 2023 22:56:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55448 "EHLO
+        Sun, 13 Aug 2023 22:56:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232650AbjHNC4G (ORCPT
+        with ESMTP id S232647AbjHNC4E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 Aug 2023 22:56:06 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F143E65;
-        Sun, 13 Aug 2023 19:56:05 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RPJph0893ztRmv;
-        Mon, 14 Aug 2023 10:52:27 +0800 (CST)
+        Sun, 13 Aug 2023 22:56:04 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F25DE65;
+        Sun, 13 Aug 2023 19:56:03 -0700 (PDT)
+Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4RPJqP4kYBz2Bd2f;
+        Mon, 14 Aug 2023 10:53:05 +0800 (CST)
 Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
  (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Mon, 14 Aug
- 2023 10:56:01 +0800
+ 2023 10:55:59 +0800
 From:   Ruan Jinjie <ruanjinjie@huawei.com>
 To:     <linus.walleij@linaro.org>, <alsi@bang-olufsen.dk>,
         <andrew@lunn.ch>, <f.fainelli@gmail.com>, <olteanv@gmail.com>,
@@ -37,9 +37,9 @@ To:     <linus.walleij@linaro.org>, <alsi@bang-olufsen.dk>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-wireless@vger.kernel.org>
 CC:     <ruanjinjie@huawei.com>
-Subject: [PATCH net-next v3 3/5] net: gemini: Remove redundant of_match_ptr()
-Date:   Mon, 14 Aug 2023 10:55:17 +0800
-Message-ID: <20230814025520.2708714-4-ruanjinjie@huawei.com>
+Subject: [PATCH net-next v3 2/5] net: dsa: rzn1-a5psw: Remove redundant of_match_ptr()
+Date:   Mon, 14 Aug 2023 10:55:16 +0800
+Message-ID: <20230814025520.2708714-3-ruanjinjie@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230814025520.2708714-2-ruanjinjie@huawei.com>
 References: <20230814025520.2708714-2-ruanjinjie@huawei.com>
@@ -58,33 +58,24 @@ The driver depends on CONFIG_OF, it is not necessary to use
 of_match_ptr() here.
 
 Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Vladimir Oltean <olteanv@gmail.com>
 ---
- drivers/net/ethernet/cortina/gemini.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/dsa/rzn1_a5psw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/cortina/gemini.c b/drivers/net/ethernet/cortina/gemini.c
-index 692cb2d04c1c..a8b9d1a3e4d5 100644
---- a/drivers/net/ethernet/cortina/gemini.c
-+++ b/drivers/net/ethernet/cortina/gemini.c
-@@ -2538,7 +2538,7 @@ MODULE_DEVICE_TABLE(of, gemini_ethernet_port_of_match);
- static struct platform_driver gemini_ethernet_port_driver = {
+diff --git a/drivers/net/dsa/rzn1_a5psw.c b/drivers/net/dsa/rzn1_a5psw.c
+index c37d2e537230..b31ae8845b58 100644
+--- a/drivers/net/dsa/rzn1_a5psw.c
++++ b/drivers/net/dsa/rzn1_a5psw.c
+@@ -1090,7 +1090,7 @@ MODULE_DEVICE_TABLE(of, a5psw_of_mtable);
+ static struct platform_driver a5psw_driver = {
  	.driver = {
- 		.name = "gemini-ethernet-port",
--		.of_match_table = of_match_ptr(gemini_ethernet_port_of_match),
-+		.of_match_table = gemini_ethernet_port_of_match,
+ 		.name	 = "rzn1_a5psw",
+-		.of_match_table = of_match_ptr(a5psw_of_mtable),
++		.of_match_table = a5psw_of_mtable,
  	},
- 	.probe = gemini_ethernet_port_probe,
- 	.remove = gemini_ethernet_port_remove,
-@@ -2604,7 +2604,7 @@ MODULE_DEVICE_TABLE(of, gemini_ethernet_of_match);
- static struct platform_driver gemini_ethernet_driver = {
- 	.driver = {
- 		.name = DRV_NAME,
--		.of_match_table = of_match_ptr(gemini_ethernet_of_match),
-+		.of_match_table = gemini_ethernet_of_match,
- 	},
- 	.probe = gemini_ethernet_probe,
- 	.remove = gemini_ethernet_remove,
+ 	.probe = a5psw_probe,
+ 	.remove = a5psw_remove,
 -- 
 2.34.1
 
