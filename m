@@ -2,94 +2,138 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71746C04FE2
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Aug 2023 02:56:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D8CC04FDF
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Aug 2023 06:07:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232656AbjHNC4U (ORCPT
+        id S233288AbjHNGG7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 13 Aug 2023 22:56:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55418 "EHLO
+        Mon, 14 Aug 2023 02:06:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232644AbjHNC4B (ORCPT
+        with ESMTP id S233732AbjHNGGH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 13 Aug 2023 22:56:01 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1998E65;
-        Sun, 13 Aug 2023 19:56:00 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RPJpg74lFzNn9T;
-        Mon, 14 Aug 2023 10:52:27 +0800 (CST)
-Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
- (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Mon, 14 Aug
- 2023 10:55:57 +0800
-From:   Ruan Jinjie <ruanjinjie@huawei.com>
-To:     <linus.walleij@linaro.org>, <alsi@bang-olufsen.dk>,
-        <andrew@lunn.ch>, <f.fainelli@gmail.com>, <olteanv@gmail.com>,
-        <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
-        <pabeni@redhat.com>, <clement.leger@bootlin.com>,
-        <ulli.kroll@googlemail.com>, <kvalo@kernel.org>,
-        <bhupesh.sharma@linaro.org>, <robh@kernel.org>, <elder@linaro.org>,
-        <wei.fang@nxp.com>, <nicolas.ferre@microchip.com>,
-        <simon.horman@corigine.com>, <romieu@fr.zoreil.com>,
-        <dmitry.torokhov@gmail.com>, <netdev@vger.kernel.org>,
-        <linux-renesas-soc@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>
-CC:     <ruanjinjie@huawei.com>
-Subject: [PATCH net-next v3 1/5] net: dsa: realtek: Remove redundant of_match_ptr()
-Date:   Mon, 14 Aug 2023 10:55:15 +0800
-Message-ID: <20230814025520.2708714-2-ruanjinjie@huawei.com>
-X-Mailer: git-send-email 2.34.1
+        Mon, 14 Aug 2023 02:06:07 -0400
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2FEF199B;
+        Sun, 13 Aug 2023 23:05:38 -0700 (PDT)
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37E5dnKn028174;
+        Sun, 13 Aug 2023 23:04:53 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=pfpt0220; bh=2e/DgbPH5Z735BTpVc79AFms8kX4Gp8CjDRy+gF54Og=;
+ b=E/8P5/+jNOFDXnIeAK6eLktq00L60xiKYdb2qKHYNE+xCpg5uzwBma5HNeeDm5+xDr/z
+ PtUPN2CVxipoL7xIRglPjHM0nr73ebcCfiBNHKO+ejsrYpyGT1z5owXlVZBvcqnjQTMi
+ xVpi7MTLbBxFyMgVXN2gotRa8b8ZGbhZzCnaie9FgVwAx0KVLDEe3Z0Hs/va3cj30eI3
+ bQep63FV2AJCT9K2ToAglpvTN/WgrwwX8gb7FG8I4boMHs0BV/6m7+XurB6k5AN7oOOW
+ iqus7BoMwgqKR+ia384IF8M69kir+dL0CX57DDgO8auPhc0KzwAXvTjo5NFnI/q/asdB kQ== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3se9kj4xs9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Sun, 13 Aug 2023 23:04:52 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Sun, 13 Aug
+ 2023 23:04:50 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Sun, 13 Aug 2023 23:04:50 -0700
+Received: from marvell-OptiPlex-7090.marvell.com (unknown [10.28.36.165])
+        by maili.marvell.com (Postfix) with ESMTP id A95D13F707E;
+        Sun, 13 Aug 2023 23:04:25 -0700 (PDT)
+From:   Ratheesh Kannoth <rkannoth@marvell.com>
+To:     <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
+        <pabeni@redhat.com>, <ast@kernel.org>, <daniel@iogearbox.net>,
+        <hawk@kernel.org>, <john.fastabend@gmail.com>,
+        <jiawenwu@trustnetic.com>, <mengyuanlou@net-swift.com>,
+        <yang.lee@linux.alibaba.com>, <error27@gmail.com>,
+        <linyunsheng@huawei.com>, <linux-hyperv@vger.kernel.org>,
+        <kys@microsoft.com>, <haiyangz@microsoft.com>,
+        <wei.liu@kernel.org>, <decui@microsoft.com>,
+        <longli@microsoft.com>, <shradhagupta@linux.microsoft.com>,
+        <linux-hwmon@vger.kernel.org>, <michael.chan@broadcom.com>,
+        <richardcochran@gmail.com>, <jdelvare@suse.com>,
+        <linux@roeck-us.net>, <yisen.zhuang@huawei.com>,
+        <salil.mehta@huawei.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <nbd@nbd.name>,
+        <john@phrozen.org>, <sean.wang@mediatek.com>,
+        <Mark-MC.Lee@mediatek.com>, <lorenzo@kernel.org>,
+        <matthias.bgg@gmail.com>,
+        <angelogioacchino.delregno@collabora.com>, <linux@armlinux.org.uk>,
+        <linux-rdma@vger.kernel.org>, <saeedm@nvidia.com>,
+        <leon@kernel.org>, <gerhard@engleder-embedded.com>,
+        <maciej.fijalkowski@intel.com>, <alexanderduyck@fb.com>,
+        <wei.fang@nxp.com>, <shenwei.wang@nxp.com>,
+        <xiaoning.wang@nxp.com>, <linux-imx@nxp.com>,
+        <lgirdwood@gmail.com>, <broonie@kernel.org>,
+        <jaswinder.singh@linaro.org>, <ilias.apalodimas@linaro.org>,
+        <UNGLinuxDriver@microchip.com>, <horatiu.vultur@microchip.com>,
+        <linux-omap@vger.kernel.org>, <grygorii.strashko@ti.com>,
+        <simon.horman@corigine.com>, <vladimir.oltean@nxp.com>,
+        <rkannoth@marvell.com>, <aleksander.lobakin@intel.com>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <alexandre.torgue@foss.st.com>, <joabreu@synopsys.com>,
+        <mcoquelin.stm32@gmail.com>, <p.zabel@pengutronix.de>,
+        <thomas.petazzoni@bootlin.com>, <mw@semihalf.com>,
+        <sgoutham@marvell.com>, <gakula@marvell.com>,
+        <sbhatta@marvell.com>, <hkelam@marvell.com>,
+        <xen-devel@lists.xenproject.org>, <jgross@suse.com>,
+        <sstabellini@kernel.org>, <oleksandr_tyshchenko@epam.com>,
+        <linux-wireless@vger.kernel.org>, <ryder.lee@mediatek.com>,
+        <shayne.chen@mediatek.com>, <kvalo@kernel.org>,
+        <andrii@kernel.org>, <martin.lau@linux.dev>, <song@kernel.org>,
+        <yonghong.song@linux.dev>, <kpsingh@kernel.org>, <sdf@google.com>,
+        <haoluo@google.com>, <jolsa@kernel.org>
+Subject: [PATCH v1 net] page_pool: Cap queue size to 32k.
+Date:   Mon, 14 Aug 2023 11:34:11 +0530
+Message-ID: <20230814060411.2401817-1-rkannoth@marvell.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.90.53.73]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500008.china.huawei.com (7.221.188.139)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: aFZU2RAx_UAE8R4K6KZZzbh7PQU3_GNE
+X-Proofpoint-ORIG-GUID: aFZU2RAx_UAE8R4K6KZZzbh7PQU3_GNE
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-08-13_24,2023-08-10_01,2023-05-22_02
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The driver depends on CONFIG_OF, it is not necessary to use
-of_match_ptr() here.
+Clamp to 32k instead of returning error.
 
-Signed-off-by: Ruan Jinjie <ruanjinjie@huawei.com>
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
-Reviewed-by: Vladimir Oltean <olteanv@gmail.com>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Please find discussion at
+https://lore.kernel.org/lkml/
+CY4PR1801MB1911E15D518A77535F6E51E2D308A@CY4PR1801MB1911.
+namprd18.prod.outlook.com/T/
+
+Fixes: ff7d6b27f894 ("page_pool: refurbish version of page_pool code")
+Signed-off-by: Ratheesh Kannoth <rkannoth@marvell.com>
+
 ---
- drivers/net/dsa/realtek/realtek-mdio.c | 2 +-
- drivers/net/dsa/realtek/realtek-smi.c  | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ChangeLog:
+v0 -> v1: Rebase && commit message changes
+---
+ net/core/page_pool.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/dsa/realtek/realtek-mdio.c b/drivers/net/dsa/realtek/realtek-mdio.c
-index 4310e7793e58..292e6d087e8b 100644
---- a/drivers/net/dsa/realtek/realtek-mdio.c
-+++ b/drivers/net/dsa/realtek/realtek-mdio.c
-@@ -276,7 +276,7 @@ MODULE_DEVICE_TABLE(of, realtek_mdio_of_match);
- static struct mdio_driver realtek_mdio_driver = {
- 	.mdiodrv.driver = {
- 		.name = "realtek-mdio",
--		.of_match_table = of_match_ptr(realtek_mdio_of_match),
-+		.of_match_table = realtek_mdio_of_match,
- 	},
- 	.probe  = realtek_mdio_probe,
- 	.remove = realtek_mdio_remove,
-diff --git a/drivers/net/dsa/realtek/realtek-smi.c b/drivers/net/dsa/realtek/realtek-smi.c
-index c2bd8bb6c9c2..ff13563059c5 100644
---- a/drivers/net/dsa/realtek/realtek-smi.c
-+++ b/drivers/net/dsa/realtek/realtek-smi.c
-@@ -556,7 +556,7 @@ MODULE_DEVICE_TABLE(of, realtek_smi_of_match);
- static struct platform_driver realtek_smi_driver = {
- 	.driver = {
- 		.name = "realtek-smi",
--		.of_match_table = of_match_ptr(realtek_smi_of_match),
-+		.of_match_table = realtek_smi_of_match,
- 	},
- 	.probe  = realtek_smi_probe,
- 	.remove = realtek_smi_remove,
+diff --git a/net/core/page_pool.c b/net/core/page_pool.c
+index a3e12a61d456..e9dc8d8966ad 100644
+--- a/net/core/page_pool.c
++++ b/net/core/page_pool.c
+@@ -171,9 +171,10 @@ static int page_pool_init(struct page_pool *pool,
+ 	if (pool->p.pool_size)
+ 		ring_qsize = pool->p.pool_size;
+ 
+-	/* Sanity limit mem that can be pinned down */
++	/* Cap queue size to 32k */
+ 	if (ring_qsize > 32768)
+-		return -E2BIG;
++		ring_qsize = 32768;
++
+ 
+ 	/* DMA direction is either DMA_FROM_DEVICE or DMA_BIDIRECTIONAL.
+ 	 * DMA_BIDIRECTIONAL is for allowing page used for DMA sending,
 -- 
-2.34.1
+2.25.1
 
