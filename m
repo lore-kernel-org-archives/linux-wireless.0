@@ -2,101 +2,141 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE72EC41513
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Aug 2023 09:35:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E4E5C001DB
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Aug 2023 09:37:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235456AbjHNJfY (ORCPT
+        id S233767AbjHNJhB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Aug 2023 05:35:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49028 "EHLO
+        Mon, 14 Aug 2023 05:37:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235775AbjHNJAG (ORCPT
+        with ESMTP id S235442AbjHNJgt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Aug 2023 05:00:06 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B33472117
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Aug 2023 01:59:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=i877FpT5qodl1tYCxsJp7SLUPoE/IQXdlXHatl2Wf8I=;
-        t=1692003553; x=1693213153; b=mZwExuPdxJU9FUoOcxy9gTOBSyUZMaBox4kAsyXkM3KHYiX
-        Y7UCoN9rZKMZ3Xt/k3B6+75P/6gK8A9Felt/pAK1HlztduhytbyW1On4IahgU/JkFQnI1QBNft4VV
-        UX2AejZlL9xScbj5bc1eMp3VwVpwEG6RmSd9SHQmVpAsAOompLTFxnpspCGVYonZhsImnb7J5kAT8
-        ctu0EItJSnnAN/RwotQtnrs0N0tuxcoN2DgZN3jvjUXrx/wUjd/B/DeUVmwbInAv06lu26xlpipYw
-        dp81sfKFYdhirA0SUhKetlxYKO/t5bPwqnAzXNQWT+oTEb5ALAmKePkJ9rMRu8zg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qVTPS-006ZAS-1b;
-        Mon, 14 Aug 2023 10:58:46 +0200
-Message-ID: <a998334c11f8cd2d2f3d4d6b6883f9c0f699cd2c.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: Add support for sending BSSMaxIdle in association
- request
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 14 Aug 2023 10:58:45 +0200
-In-Reply-To: <CABPxzYLp++vabPm9GZheg_UjofkJjm+kQZDRr9HXbX54bxptBQ@mail.gmail.com>
-References: <20230719194039.16179-1-Chaitanya.Tata@nordicsemi.no>
-         <2307e1741e9d32e8f1ffc4e83c73b63a4e32512b.camel@sipsolutions.net>
-         <CABPxzYJvAtgbrr_v6cMuKwFjzRjYOCDota+koYp-iogtJS75HQ@mail.gmail.com>
-         <CABPxzY+_2DEK-wfAr1V9z1iHZky-7vF24mQx2yFgtFUoTdWgmw@mail.gmail.com>
-         <e3d7cb8b891d1a54ffea60b5f8257208e03129d3.camel@sipsolutions.net>
-         <CABPxzYLp++vabPm9GZheg_UjofkJjm+kQZDRr9HXbX54bxptBQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        Mon, 14 Aug 2023 05:36:49 -0400
+Received: from gw.red-soft.ru (red-soft.ru [188.246.186.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 589481702;
+        Mon, 14 Aug 2023 02:36:32 -0700 (PDT)
+Received: from localhost.biz (unknown [10.81.81.211])
+        by gw.red-soft.ru (Postfix) with ESMTPA id 76E433E0CA5;
+        Mon, 14 Aug 2023 12:36:27 +0300 (MSK)
+From:   Artem Chernyshev <artem.chernyshev@red-soft.ru>
+To:     Jonas Gorski <jonas.gorski@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>
+Cc:     Artem Chernyshev <artem.chernyshev@red-soft.ru>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        SHA-cyfmac-dev-list@infineon.com, linux-kernel@vger.kernel.org,
+        lvc-project@linuxtesting.org
+Subject: [PATCH v2] brcm80211: brcmsmac: phy: Remove unreachable code
+Date:   Mon, 14 Aug 2023 12:36:21 +0300
+Message-Id: <20230814093621.289754-1-artem.chernyshev@red-soft.ru>
+X-Mailer: git-send-email 2.37.3
+In-Reply-To: <CAOiHx==NiPG2GdZNrJn5hPEdi70Spe9Kc9CHO5NjnATAjCgUsg@mail.gmail.com>
+References: 
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+X-KLMS-Rule-ID: 1
+X-KLMS-Message-Action: clean
+X-KLMS-AntiSpam-Lua-Profiles: 179219 [Aug 14 2023]
+X-KLMS-AntiSpam-Version: 5.9.59.0
+X-KLMS-AntiSpam-Envelope-From: artem.chernyshev@red-soft.ru
+X-KLMS-AntiSpam-Rate: 0
+X-KLMS-AntiSpam-Status: not_detected
+X-KLMS-AntiSpam-Method: none
+X-KLMS-AntiSpam-Auth: dkim=none
+X-KLMS-AntiSpam-Info: LuaCore: 526 526 7a6a9b19f6b9b3921b5701490f189af0e0cd5310, {Tracking_from_domain_doesnt_match_to}, 127.0.0.199:7.1.2;localhost.biz:7.1.1;red-soft.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1, FromAlignment: s
+X-MS-Exchange-Organization-SCL: -1
+X-KLMS-AntiSpam-Interceptor-Info: scan successful
+X-KLMS-AntiPhishing: Clean, bases: 2023/08/14 08:36:00
+X-KLMS-AntiVirus: Kaspersky Security for Linux Mail Server, version 8.0.3.30, bases: 2023/08/14 07:11:00 #21604839
+X-KLMS-AntiVirus-Status: Clean, skipped
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2023-08-14 at 01:56 +0530, Krishna Chaitanya wrote:
-> >=20
-> > > Just remembered why I had to implement this in kernel, the associate/=
-connect
-> > > data structure in wpa_s `wpa_driver_associate_params` doesn't have an=
-y
-> > > ies/extra_ies, it only gives wpa_ie and rest all are parameters for m=
-ac80211
-> > > to use. So, had just extended this as well, do you think we should ad=
-d
-> > > this ies/extra_ies
-> > > to the association like we do for scan? Or as MLME is in mac80211,
-> > > just use this patch as is?
-> >=20
-> > Not sure I follow all that reasoning - is that something internal to
-> > wpa_supplicant? Fundamentally with my cfg/mac hat on I'm not sure I car=
-e
-> > so much about wpa_s internal data structures?
-> >=20
-> > Things like extended capabilities are also added to the "extra IEs" by
-> > wpa_s, so surely this would work too?
->=20
-> I was only pointing out that AFAIK there is no mechanism to pass "ies" in
-> the associate command from userspace, except for WPA IE.
+wlc_phy_txpwr_srom_read_nphy() in wlc_phy_attach_nphy() can not 
+return false, so it's impossible to get true value in this
+if-statement. Also change those functions return types to void
+since no one using it.
 
-Oh you're talking about the associate command? You never mentioned that,
-and in fact most of your patch is concerned with mac80211 ...
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Would it kill the implementation you have to add "extra elements" rather
-than all these individual settings? Does this thing affect the local
-firmware implementation? I guess in a sense it must?
+Signed-off-by: Artem Chernyshev <artem.chernyshev@red-soft.ru>
+---
+V1->V2 Change return types to void
 
-I don't know ... and I have no way of ever finding out! So again this is
-one of those things where we're never going to see an upstream driver
-using it, right? I'm getting really close to just giving up on that.
-Since Jouni is happy to add vendor commands for settings left and right
-in wpa_supplicant, I pretty much think this stuff has failed. We're
-littering the nl80211 API with things that don't really get used
-upstream, or like here, do get used but in a way that's
-  (a) pretty useless since it doesn't do anything but add an element
-      wpa_s could have added itself, and
-  (b) looks like just a fig-leaf for this exact reason? Shouldn't
-      something be configured here to the NIC too? NIC should support
-      it, etc.? What's even the purpose of this in mac80211?
+ .../broadcom/brcm80211/brcmsmac/phy/phy_cmn.c         |  3 +--
+ .../broadcom/brcm80211/brcmsmac/phy/phy_int.h         |  2 +-
+ .../wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c  | 11 +++--------
+ 3 files changed, 5 insertions(+), 11 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
+index ccc621b8ed9f..07f83ff5a54a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -551,8 +551,7 @@ wlc_phy_attach(struct shared_phy *sh, struct bcma_device *d11core,
+ 		if (!pi->phycal_timer)
+ 			goto err;
+ 
+-		if (!wlc_phy_attach_nphy(pi))
+-			goto err;
++		wlc_phy_attach_nphy(pi);
+ 
+ 	} else if (ISLCNPHY(pi)) {
+ 		if (!wlc_phy_attach_lcnphy(pi))
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
+index 8668fa5558a2..70a9ec050717 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_int.h
+@@ -941,7 +941,7 @@ void wlc_phy_papd_decode_epsilon(u32 epsilon, s32 *eps_real, s32 *eps_imag);
+ void wlc_phy_cal_perical_mphase_reset(struct brcms_phy *pi);
+ void wlc_phy_cal_perical_mphase_restart(struct brcms_phy *pi);
+ 
+-bool wlc_phy_attach_nphy(struct brcms_phy *pi);
++void wlc_phy_attach_nphy(struct brcms_phy *pi);
+ bool wlc_phy_attach_lcnphy(struct brcms_phy *pi);
+ 
+ void wlc_phy_detach_lcnphy(struct brcms_phy *pi);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+index 8580a2754789..cd9b502a6a9f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+@@ -14546,7 +14546,7 @@ static void wlc_phy_txpwr_srom_read_ppr_nphy(struct brcms_phy *pi)
+ 	wlc_phy_txpwr_apply_nphy(pi);
+ }
+ 
+-static bool wlc_phy_txpwr_srom_read_nphy(struct brcms_phy *pi)
++static void wlc_phy_txpwr_srom_read_nphy(struct brcms_phy *pi)
+ {
+ 	struct ssb_sprom *sprom = &pi->d11core->bus->sprom;
+ 
+@@ -14595,11 +14595,9 @@ static bool wlc_phy_txpwr_srom_read_nphy(struct brcms_phy *pi)
+ 		pi->phycal_tempdelta = 0;
+ 
+ 	wlc_phy_txpwr_srom_read_ppr_nphy(pi);
+-
+-	return true;
+ }
+ 
+-bool wlc_phy_attach_nphy(struct brcms_phy *pi)
++void wlc_phy_attach_nphy(struct brcms_phy *pi)
+ {
+ 	uint i;
+ 
+@@ -14645,10 +14643,7 @@ bool wlc_phy_attach_nphy(struct brcms_phy *pi)
+ 	pi->pi_fptr.chanset = wlc_phy_chanspec_set_nphy;
+ 	pi->pi_fptr.txpwrrecalc = wlc_phy_txpower_recalc_target_nphy;
+ 
+-	if (!wlc_phy_txpwr_srom_read_nphy(pi))
+-		return false;
+-
+-	return true;
++	wlc_phy_txpwr_srom_read_nphy(pi);
+ }
+ 
+ static s32 get_rf_pwr_offset(struct brcms_phy *pi, s16 pga_gn, s16 pad_gn)
+-- 
+2.37.3
+
