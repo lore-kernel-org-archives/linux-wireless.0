@@ -2,73 +2,62 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68C27C0015E
-	for <linux-wireless@archiver.kernel.org>; Tue, 15 Aug 2023 12:07:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A55AC001DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 15 Aug 2023 13:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237025AbjHOMH1 (ORCPT
+        id S237394AbjHONZq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 15 Aug 2023 08:07:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53034 "EHLO
+        Tue, 15 Aug 2023 09:25:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237084AbjHOMHT (ORCPT
+        with ESMTP id S237493AbjHONZm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Aug 2023 08:07:19 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8538C10F9
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Aug 2023 05:07:18 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37FC6patE025489, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37FC6patE025489
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Aug 2023 20:06:51 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Tue, 15 Aug 2023 20:07:10 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.7; Tue, 15 Aug 2023 20:07:10 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d]) by
- RTEXMBS04.realtek.com.tw ([fe80::e138:e7f1:4709:ff4d%5]) with mapi id
- 15.01.2375.007; Tue, 15 Aug 2023 20:07:10 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     "kvalo@kernel.org" <kvalo@kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Kevin Yang" <kevin_yang@realtek.com>
-Subject: Re: [PATCH v2] wifi: rtw89: regd: update regulatory map to R64-R42
-Thread-Topic: [PATCH v2] wifi: rtw89: regd: update regulatory map to R64-R42
-Thread-Index: AQHZxmiwHogBN0SpWUOmufub0xB3m6/qzvMA
-Date:   Tue, 15 Aug 2023 12:07:10 +0000
-Message-ID: <67e282c68f08d237480f4141e6a26bff8fc6fd2c.camel@realtek.com>
-References: <20230804001322.4131-1-pkshih@realtek.com>
-In-Reply-To: <20230804001322.4131-1-pkshih@realtek.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.36.1-2 
-x-originating-ip: [172.16.16.65]
-x-kse-serverinfo: RTEXMBS04.realtek.com.tw, 9
-x-kse-antispam-interceptor-info: fallback
-x-kse-antivirus-interceptor-info: fallback
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <CE75788BC203594EA1D92E288DC99F3C@realtek.com>
-Content-Transfer-Encoding: base64
+        Tue, 15 Aug 2023 09:25:42 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 909D2113
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Aug 2023 06:25:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=XaawGspZjz3UoHeskUzCZtbz2YnONIYVnfJ7tc4lq7o=;
+        t=1692105941; x=1693315541; b=UZub9l+iWJaE2+JfuPJRSiA2abBqUMASHlLs/PEBsyuIOnF
+        wj0bvxpoAhM5Svv6B/SzwuY6GYhfIL4z8XOh8Q8JojFx+MpJ5GpeWoF+kYepplMAYpwsLFtT5so1m
+        Nzq0PTIp6MOoFP0MhhN4cJBxzgAp//H0mVh11xdx0xmmC4EXiIRRw2Dg9Do3jVEXymtqaQ7lC60EA
+        kg0xdt7Z3ns9qpd+BF8nejUzAiJ3k5mVXI0V4Zrx/i/SqESb+/3WXjtRSbMdA8SmKeX3j8hchnlQi
+        eOWbQr+E97v4oJLg3aRDQC4bYDOB0/m1mXihMx6rHEo2wzSQboRXbcJiHKw7dzlw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qVu3G-008r1w-2C;
+        Tue, 15 Aug 2023 15:25:38 +0200
+Message-ID: <a4edd8695f8a722c088c76496efc12069bd277ae.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH v2] wifi: cfg80211: fix cqm_config access race
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Max Schulze <max.schulze@online.de>, linux-wireless@vger.kernel.org
+Date:   Tue, 15 Aug 2023 15:25:37 +0200
+In-Reply-To: <c8b69649-ab22-a984-1767-527b73c88c7e@online.de>
+References: <ac96309a-8d8d-4435-36e6-6d152eb31876@online.de>
+         <20230815134247.4b4bd52ea708.I1a1bb102329fc88e4712eaf394cba3025ada0dc7@changeid>
+         <c8b69649-ab22-a984-1767-527b73c88c7e@online.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-X-KSE-AntiSpam-Interceptor-Info: fallback
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-T24gRnJpLCAyMDIzLTA4LTA0IGF0IDA4OjEzICswODAwLCBQaW5nLUtlIFNoaWggd3JvdGU6DQo+
-IEZyb206IFpvbmctWmhlIFlhbmcgPGtldmluX3lhbmdAcmVhbHRlay5jb20+DQo+IA0KPiBTeW5j
-IFJlYWx0ZWsgUmVndWxhdG9yeSBSNDIgYW5kIFJlYWx0ZWsgQ2hhbm5lbCBQbGFuIFI2NCwgd2hp
-Y2ggY29uZmlndXJlcw0KPiBSZWFsdGVrIDYgR0h6IHJlZ2QgZm9yIHNvbWUgY291bnRyaWVzIGFz
-IGJlbG93Lg0KPiAgKiBBUiwgTVgsIEhUIC0+IEZDQw0KPiAgKiBMQiwgWkEsIFRILCBCRiwgTEEs
-IE1OIC0+IEVUU0kNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFpvbmctWmhlIFlhbmcgPGtldmluX3lh
-bmdAcmVhbHRlay5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJl
-YWx0ZWsuY29tPg0KDQpTaW5jZSBuZXdlciBSZWFsdGVrIHJlZ3VsYXRvcnkvY2hhbm5lbCBwbGFu
-IChSNjQtUjQzKSBpcyByZWxlYXNlZCwNCkkgaGF2ZSBzZW50IHYzIHRvIHJlcGxhY2UgdGhpcy4g
-U28sIHBsZWFzZSBkcm9wIHRoaXMgcGF0Y2guIA0KDQpUaGFua3MNClBpbmctS2UNCg0K
+On Tue, 2023-08-15 at 15:24 +0200, Max Schulze wrote:
+> Thanks again. I have to back-port it to 6.1.45 manually and will do testi=
+ng.
+>=20
+
+Ah, you can't port this to 6.1 series, it depends on commit a3ee4dc84c4e
+("wifi: cfg80211: add a work abstraction with special semantics") which
+is only in 6.5-rc...
+
+Maybe you can cherry-pick that patch too.
+
+johannes
