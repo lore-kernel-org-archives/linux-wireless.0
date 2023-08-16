@@ -2,43 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36829C04FE0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 119A8C04A94
 	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:23:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242873AbjHPIWz (ORCPT
+        id S242870AbjHPIWx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Aug 2023 04:22:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55968 "EHLO
+        Wed, 16 Aug 2023 04:22:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242874AbjHPIW3 (ORCPT
+        with ESMTP id S242868AbjHPIW2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2023 04:22:29 -0400
+        Wed, 16 Aug 2023 04:22:28 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 390A82102
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:22:27 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 45B901FF9
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:22:26 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37G8M0xM4001217, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37G8LvVN2001128, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37G8M0xM4001217
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37G8LvVN2001128
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 16 Aug 2023 16:22:00 +0800
+        Wed, 16 Aug 2023 16:21:57 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Wed, 16 Aug 2023 16:22:20 +0800
+ 15.1.2375.32; Wed, 16 Aug 2023 16:22:17 +0800
 Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 16 Aug
- 2023 16:22:19 +0800
+ 2023 16:22:16 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/6] wifi: rtw89: refine rtw89_correct_cck_chan() by rtw89_hw_to_nl80211_band()
-Date:   Wed, 16 Aug 2023 16:21:29 +0800
-Message-ID: <20230816082133.57474-3-pkshih@realtek.com>
+Subject: [PATCH 0/6] wifi: rtw89: preparation of TDMA-based MCC (STA+P2P)
+Date:   Wed, 16 Aug 2023 16:21:27 +0800
+Message-ID: <20230816082133.57474-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230816082133.57474-1-pkshih@realtek.com>
-References: <20230816082133.57474-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -57,34 +55,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
-
-In rtw89_correct_cck_chan(), we turn to use rtw89_hw_to_nl80211_band().
-The difference between rtw89_hw_to_nl80211_band() and the original raw
-judgement is the case on 6 GHz. Since rtw89_correct_cck_chan() is common
-code independent on chip, if runtime chip doesn't support 6 GHz, it is
-probably safe. Otherwise, it might not.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index a338b0a97910..aedabd262251 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1659,8 +1659,7 @@ static void rtw89_correct_cck_chan(struct rtw89_dev *rtwdev,
- 	const struct rtw89_chan_rcd *rcd =
- 		rtw89_chan_rcd_get(rtwdev, RTW89_SUB_ENTITY_0);
- 	u16 chan = rcd->prev_primary_channel;
--	u8 band = rcd->prev_band_type == RTW89_BAND_2G ?
--		  NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
-+	u8 band = rtw89_hw_to_nl80211_band(rcd->prev_band_type);
+TDMA-based MCC (STA+P2P) is a kind of multiple interfaces concurrence.
+Basically, driver is to calculate timeslot pattern and firmware follows
+the pattern to switch channels. Since BT-coexistence is also a TDMA-based
+mechanism, also consider BT timeslot into pattern if BT devices present.
  
- 	if (status->band != NL80211_BAND_2GHZ &&
- 	    status->encoding == RX_ENC_LEGACY &&
+To easier to review these 20+ patches, I summary basic purpose of these
+patches below by group, and submit them by small patchset one by one.
+ 
+Group 1. get BT timeslot from coex mechanism
+Group 2. adjust some stuff related to driver channel context
+Group 3. P2P NoA infrastructure to add the IE to beacon when playing GO
+Group 4. adjust driver to support 2 channel context
+Group 5. calculate timeslot patterns and trigger firmware to switch
+         channels followed the patterns
+Group 6. disable some dynamic tracking mechanism of RF calibration when
+         MCC is running.
+Group 7. monitor states and adjust timeslot patterns. For example, if
+         BT device leaves, we can reassign the slot to WiFi.
+Group 8. Remain-on-channel and hardware scan are related to channel
+         context, so need some treatments to work with MCC properly.
+Group 9. Finally, we declare 8852C to support MCC
+
+This patchset includes groups 1-4 above, and depends on another patch
+"wifi: rtw89: Introduce Time Averaged SAR (TAS) feature"
+because both modify the same file, not functional dependency. 
+
+Zong-Zhe Yang (6):
+  wifi: rtw89: add function prototype for coex request duration
+  wifi: rtw89: refine rtw89_correct_cck_chan() by
+    rtw89_hw_to_nl80211_band()
+  wifi: rtw89: sar: let caller decide the center frequency to query
+  wifi: rtw89: call rtw89_chan_get() by vif chanctx if aware of vif
+  wifi: rtw89: provide functions to configure NoA for beacon update
+  wifi: rtw89: initialize multi-channel handling
+
+ drivers/net/wireless/realtek/rtw89/chan.c     | 124 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/chan.h     |   5 +
+ drivers/net/wireless/realtek/rtw89/coex.c     |   3 +-
+ drivers/net/wireless/realtek/rtw89/coex.h     |   9 ++
+ drivers/net/wireless/realtek/rtw89/core.c     | 114 +++++++++++-----
+ drivers/net/wireless/realtek/rtw89/core.h     |  78 +++++++++++
+ drivers/net/wireless/realtek/rtw89/debug.c    |  10 +-
+ drivers/net/wireless/realtek/rtw89/fw.c       |  16 ++-
+ drivers/net/wireless/realtek/rtw89/mac80211.c |   7 +-
+ drivers/net/wireless/realtek/rtw89/phy.c      |  29 ++--
+ drivers/net/wireless/realtek/rtw89/ps.c       |  75 ++++++++++-
+ drivers/net/wireless/realtek/rtw89/ps.h       |   4 +
+ drivers/net/wireless/realtek/rtw89/sar.c      |  24 ++--
+ drivers/net/wireless/realtek/rtw89/sar.h      |   6 +-
+ 14 files changed, 436 insertions(+), 68 deletions(-)
+
 -- 
 2.25.1
 
