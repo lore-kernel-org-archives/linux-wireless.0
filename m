@@ -2,97 +2,157 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA70DC04FE0
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 681AFC001B0
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242771AbjHPIMF (ORCPT
+        id S242858AbjHPIWw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Aug 2023 04:12:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34854 "EHLO
+        Wed, 16 Aug 2023 04:22:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242740AbjHPILe (ORCPT
+        with ESMTP id S242872AbjHPIW3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2023 04:11:34 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4945AB
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:11:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692173493; x=1723709493;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=EvU02tBiSCPkpojybDawq7l5S0gCw7hnQ91l9b2gOgU=;
-  b=RVSdu86hmCUwF9jrOGUQb09+ej9YPngz3ynJ1prsKXb9CyIvRy5WCNle
-   B298m5YPX9+YiGm0gyFSoIWHEHV422bO0jd6hogg34zH+ewxTl1fepMzi
-   5A6aFhnz9TG/Igz77wTT15AoJXp+BelqOqka2O8IcUw0xFkVjjN7CBpoi
-   Cewi0k6gIOqQSYHHdfrWywaKi334OMVagT+ql/r+bFEK0K0f/YwWEFt9Y
-   X3I7KWChrG99AtLPJxfTmI3zME+0RY8kCCXtxUOXzOeDe3rwgaEQonUzn
-   cSJFYIovg11frcgyOsaXNyNO7smsxWcpWLxhAqub78jo8tgYQGKpDrfaq
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="357447879"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="357447879"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:33 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="769098860"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="769098860"
-Received: from mamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.226.187])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:31 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/12] wifi: iwlwifi: mvm: support flush on AP interfaces
-Date:   Wed, 16 Aug 2023 11:10:53 +0300
-Message-Id: <20230816104355.f4b749b91ec2.Ia8381bd4f7d47592e74387c564739798a01c4049@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230816081054.245480-1-gregory.greenman@intel.com>
-References: <20230816081054.245480-1-gregory.greenman@intel.com>
+        Wed, 16 Aug 2023 04:22:29 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AA0FD1FD0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:22:27 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37G8Lx4T2001143, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37G8Lx4T2001143
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 16 Aug 2023 16:21:59 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Wed, 16 Aug 2023 16:22:18 +0800
+Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 16 Aug
+ 2023 16:22:18 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/6] wifi: rtw89: add function prototype for coex request duration
+Date:   Wed, 16 Aug 2023 16:21:28 +0800
+Message-ID: <20230816082133.57474-2-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230816082133.57474-1-pkshih@realtek.com>
+References: <20230816082133.57474-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Support TX flush on AP interfaces so that we will do a
-proper flush for frames on the queue before keys are
-removed.
+The request duration comes from coex mechanism, indicating the
+length of time that should be reserved for BT in each time division.
+It is required to handle update notification when channel concurrency
+processes. Since it will involve in both coex and wifi code flow, this
+commit ahead adds the prototype for required function interfaces to
+split the implementation of coex and wifi in the following.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+The follow-up are expected be add afterwards.
+1. coex mechanism call rtw89_core_ntfy_btc_event() once bt req len changes
+2. channel concurrency flow updates related stuffs when notified
+
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.h |  9 +++++++++
+ drivers/net/wireless/realtek/rtw89/core.c | 21 +++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/core.h | 12 ++++++++++++
+ 3 files changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index e7fe5b76def4..5918c1f2b10c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -5605,9 +5605,6 @@ void iwl_mvm_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		return;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.h b/drivers/net/wireless/realtek/rtw89/coex.h
+index f16421cb30ef..e76153709793 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.h
++++ b/drivers/net/wireless/realtek/rtw89/coex.h
+@@ -193,4 +193,13 @@ static inline u8 rtw89_btc_path_phymap(struct rtw89_dev *rtwdev,
+ 	return rtw89_btc_phymap(rtwdev, phy_idx, BIT(path));
+ }
  
--	if (vif->type != NL80211_IFTYPE_STATION)
--		return;
--
- 	/* Make sure we're done with the deferred traffic before flushing */
- 	flush_work(&mvm->add_stream_wk);
++/* return bt req len in TU */
++static inline u16 rtw89_coex_query_bt_req_len(struct rtw89_dev *rtwdev,
++					      enum rtw89_phy_idx phy_idx)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++
++	return btc->bt_req_len;
++}
++
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 71eb9cfd4896..a338b0a97910 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -3464,6 +3464,27 @@ void rtw89_complete_cond(struct rtw89_wait_info *wait, unsigned int cond,
+ 	complete(&wait->completion);
+ }
  
-@@ -5631,9 +5628,6 @@ void iwl_mvm_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			ap_sta_done = true;
- 		}
++void rtw89_core_ntfy_btc_event(struct rtw89_dev *rtwdev, enum rtw89_btc_hmsg event)
++{
++	u16 bt_req_len;
++
++	switch (event) {
++	case RTW89_BTC_HMSG_SET_BT_REQ_SLOT:
++		bt_req_len = rtw89_coex_query_bt_req_len(rtwdev, RTW89_PHY_0);
++		rtw89_debug(rtwdev, RTW89_DBG_BTC,
++			    "coex updates BT req len to %d TU\n", bt_req_len);
++		break;
++	default:
++		if (event < NUM_OF_RTW89_BTC_HMSG)
++			rtw89_debug(rtwdev, RTW89_DBG_BTC,
++				    "unhandled BTC HMSG event: %d\n", event);
++		else
++			rtw89_warn(rtwdev,
++				   "unrecognized BTC HMSG event: %d\n", event);
++		break;
++	}
++}
++
+ int rtw89_core_start(struct rtw89_dev *rtwdev)
+ {
+ 	int ret;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index b5a08f90f5bd..5b60bc72b4a5 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2656,6 +2656,17 @@ struct rtw89_btc {
+ 	bool lps;
+ };
  
--		/* make sure only TDLS peers or the AP are flushed */
--		WARN_ON_ONCE(sta != mvmvif->ap_sta && !sta->tdls);
--
- 		if (drop) {
- 			if (iwl_mvm_flush_sta(mvm, mvmsta, false))
- 				IWL_ERR(mvm, "flush request fail\n");
++enum rtw89_btc_hmsg {
++	RTW89_BTC_HMSG_TMR_EN = 0x0,
++	RTW89_BTC_HMSG_BT_REG_READBACK = 0x1,
++	RTW89_BTC_HMSG_SET_BT_REQ_SLOT = 0x2,
++	RTW89_BTC_HMSG_FW_EV = 0x3,
++	RTW89_BTC_HMSG_BT_LINK_CHG = 0x4,
++	RTW89_BTC_HMSG_SET_BT_REQ_STBC = 0x5,
++
++	NUM_OF_RTW89_BTC_HMSG,
++};
++
+ enum rtw89_ra_mode {
+ 	RTW89_RA_MODE_CCK = BIT(0),
+ 	RTW89_RA_MODE_OFDM = BIT(1),
+@@ -5325,5 +5336,6 @@ void rtw89_core_scan_complete(struct rtw89_dev *rtwdev,
+ 			      struct ieee80211_vif *vif, bool hw_scan);
+ void rtw89_reg_6ghz_power_recalc(struct rtw89_dev *rtwdev,
+ 				 struct rtw89_vif *rtwvif, bool active);
++void rtw89_core_ntfy_btc_event(struct rtw89_dev *rtwdev, enum rtw89_btc_hmsg event);
+ 
+ #endif
 -- 
-2.38.1
+2.25.1
 
