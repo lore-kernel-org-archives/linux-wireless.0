@@ -2,44 +2,55 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D2DC04FE0
-	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:12:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A5F9C04FE2
+	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:12:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242773AbjHPILj (ORCPT
+        id S242777AbjHPILk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Aug 2023 04:11:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56180 "EHLO
+        Wed, 16 Aug 2023 04:11:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242798AbjHPILQ (ORCPT
+        with ESMTP id S242804AbjHPILT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2023 04:11:16 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3373B13E
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:11:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=lNgneGpTaj/bLyLMWq3uOLNeRNdL445hGJRAiuKWeCE=; t=1692173475; x=1693383075; 
-        b=EC2PRZjvYrrYkNJ5yEwMR/m/lo/T28Kt3IHKVVjMAmagBBnrDr5s6s2lL1dsq9maV66jb3QVRk2
-        +hKKs+ESDifkQzJZD+N+6izEUnz61SvAJdVSPzAvS6EPaurIUPM4btb09O68MEpanYEtFA7K5SkEk
-        0jrI6pj4xuRxqP9B0QbtntDPjLQM78Kxv14fgi2AO/oBmB0hXqtMAuMa3pF4jFrGY8RuPj6C944XR
-        l44gtEAJTeM8U8AWielvZ9P7XoBFzkbcqSmIX4YBxIjQwnptm/G+TGlXJxi/6QLw21Df/9h/rdQpn
-        KaWnDGoElhPn+4DWzbsixBuoUrM463GwZzlA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qWBcW-00Abvh-0M;
-        Wed, 16 Aug 2023 10:11:12 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Aloka Dixit <quic_alokad@quicinc.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] wifi: mac80211: fix puncturing bitmap handling in CSA
-Date:   Wed, 16 Aug 2023 10:11:09 +0200
-Message-ID: <20230816101108.9a2a011e3670.I062e026efafb59b026ab72fc7f7fce54f43dd29b@changeid>
-X-Mailer: git-send-email 2.41.0
+        Wed, 16 Aug 2023 04:11:19 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9253EE
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:11:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692173477; x=1723709477;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=W3fh8oqXEPkasn2tRn8HPWfzUuwbU7GKbexraRXcjdQ=;
+  b=Jq6lpuySCQrCalYGzJ6Jd7XDNZJFb50URHNVUrqA79vwFN06wRs60+GZ
+   KDdPnNg9S1HM4VyQMk4UqZAZ4tGm+KAyfbyfNbqEXauO+DIql+iXH8jGh
+   513/rTn4wVA3FgIo8YBJMoiTgPaQFjGVnDzWbUZ1TpA2oxT56w5Oy/7uj
+   DmL7jq1JUMWU291FHuOU+pqE9JY3WLADFZRxc5rdgaFu6Li1jbMOdKvfk
+   ir8UlBIwlqmDTPbvP6F+adDxuWQwErnJTghReX71Yq+B3bQxkaJMr1b+3
+   +t+bzFp+4VCz2H+LkPP6dn7QyZmZDsSUDtznNxtkecLgOQMwt1SNR2KA6
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="357447808"
+X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
+   d="scan'208";a="357447808"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:17 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="769098768"
+X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
+   d="scan'208";a="769098768"
+Received: from mamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.226.187])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:16 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 04/12] wifi: iwlwifi: pcie: clean up gen1/gen2 TFD unmap
+Date:   Wed, 16 Aug 2023 11:10:46 +0300
+Message-Id: <20230816104355.baf23841ec5c.I40702e94b25db05e82f935f14548316f8c6429b9@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230816081054.245480-1-gregory.greenman@intel.com>
+References: <20230816081054.245480-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -48,51 +59,131 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Code inspection reveals that we switch the puncturing bitmap
-before the real channel switch, since that happens only in
-the second round of the worker after the channel context is
-switched by ieee80211_link_use_reserved_context().
+This is a bit messy right now, there are functions for both,
+but then gen1 function can actually deal with both gen1 and
+gen2, due to the confusion about use_tfh/gen2 cleaned up in
+the previous patch.
 
-While at it, switch the code to using the link access to the
-data instead of the default bss_conf, even if not all of it
-is multi-link capable yet.
+Fix the common paths to call the right functions and remove
+handling of gen2 from the gen1 function.
 
-Fixes: 2cc25e4b2a04 ("wifi: mac80211: configure puncturing bitmap")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/cfg.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  6 +++-
+ drivers/net/wireless/intel/iwlwifi/queue/tx.c | 33 ++++++-------------
+ drivers/net/wireless/intel/iwlwifi/queue/tx.h | 11 +------
+ 3 files changed, 16 insertions(+), 34 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e7ac24603892..1657ff09a83a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3648,12 +3648,6 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	lockdep_assert_held(&local->mtx);
- 	lockdep_assert_held(&local->chanctx_mtx);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 790e5b124740..9ab1b2590dd2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1203,7 +1203,11 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ 	group_id = cmd->hdr.group_id;
+ 	cmd_id = WIDE_ID(group_id, cmd->hdr.cmd);
  
--	if (sdata->vif.bss_conf.eht_puncturing != sdata->vif.bss_conf.csa_punct_bitmap) {
--		sdata->vif.bss_conf.eht_puncturing =
--					sdata->vif.bss_conf.csa_punct_bitmap;
--		changed |= BSS_CHANGED_EHT_PUNCTURING;
+-	iwl_txq_gen1_tfd_unmap(trans, meta, txq, index);
++	if (trans->trans_cfg->gen2)
++		iwl_txq_gen2_tfd_unmap(trans, meta,
++				       iwl_txq_get_tfd(trans, txq, index));
++	else
++		iwl_txq_gen1_tfd_unmap(trans, meta, txq, index);
+ 
+ 	/* Input error checking is done when commands are added to queue. */
+ 	if (meta->flags & CMD_WANT_SKB) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.c b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
+index 5bb3cc3367c9..5b1100e6e1d1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/queue/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.c
+@@ -1340,22 +1340,12 @@ int iwl_txq_gen2_init(struct iwl_trans *trans, int txq_id, int queue_size)
+ }
+ 
+ static inline dma_addr_t iwl_txq_gen1_tfd_tb_get_addr(struct iwl_trans *trans,
+-						      void *_tfd, u8 idx)
++						      struct iwl_tfd *tfd, u8 idx)
+ {
+-	struct iwl_tfd *tfd;
+-	struct iwl_tfd_tb *tb;
++	struct iwl_tfd_tb *tb = &tfd->tbs[idx];
+ 	dma_addr_t addr;
+ 	dma_addr_t hi_len;
+ 
+-	if (trans->trans_cfg->gen2) {
+-		struct iwl_tfh_tfd *tfh_tfd = _tfd;
+-		struct iwl_tfh_tb *tfh_tb = &tfh_tfd->tbs[idx];
+-
+-		return (dma_addr_t)(le64_to_cpu(tfh_tb->addr));
 -	}
 -
- 	/*
- 	 * using reservation isn't immediate as it may be deferred until later
- 	 * with multi-vif. once reservation is complete it will re-schedule the
-@@ -3683,6 +3677,12 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
- 	if (err)
- 		return err;
+-	tfd = _tfd;
+-	tb = &tfd->tbs[idx];
+ 	addr = get_unaligned_le32(&tb->lo);
  
-+	if (link_data->conf->eht_puncturing != link_data->conf->csa_punct_bitmap) {
-+		link_data->conf->eht_puncturing =
-+					link_data->conf->csa_punct_bitmap;
-+		changed |= BSS_CHANGED_EHT_PUNCTURING;
-+	}
-+
- 	ieee80211_link_info_change_notify(sdata, &sdata->deflink, changed);
+ 	if (sizeof(dma_addr_t) <= sizeof(u32))
+@@ -1376,7 +1366,7 @@ void iwl_txq_gen1_tfd_unmap(struct iwl_trans *trans,
+ 			    struct iwl_txq *txq, int index)
+ {
+ 	int i, num_tbs;
+-	void *tfd = iwl_txq_get_tfd(trans, txq, index);
++	struct iwl_tfd *tfd = iwl_txq_get_tfd(trans, txq, index);
  
- 	if (sdata->deflink.csa_block_tx) {
+ 	/* Sanity check on number of chunks */
+ 	num_tbs = iwl_txq_gen1_tfd_get_num_tbs(trans, tfd);
+@@ -1408,15 +1398,7 @@ void iwl_txq_gen1_tfd_unmap(struct iwl_trans *trans,
+ 
+ 	meta->tbs = 0;
+ 
+-	if (trans->trans_cfg->gen2) {
+-		struct iwl_tfh_tfd *tfd_fh = (void *)tfd;
+-
+-		tfd_fh->num_tbs = 0;
+-	} else {
+-		struct iwl_tfd *tfd_fh = (void *)tfd;
+-
+-		tfd_fh->num_tbs = 0;
+-	}
++	tfd->num_tbs = 0;
+ }
+ 
+ #define IWL_TX_CRC_SIZE 4
+@@ -1520,7 +1502,12 @@ void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_txq *txq)
+ 	/* We have only q->n_window txq->entries, but we use
+ 	 * TFD_QUEUE_SIZE_MAX tfds
+ 	 */
+-	iwl_txq_gen1_tfd_unmap(trans, &txq->entries[idx].meta, txq, rd_ptr);
++	if (trans->trans_cfg->gen2)
++		iwl_txq_gen2_tfd_unmap(trans, &txq->entries[idx].meta,
++				       iwl_txq_get_tfd(trans, txq, rd_ptr));
++	else
++		iwl_txq_gen1_tfd_unmap(trans, &txq->entries[idx].meta,
++				       txq, rd_ptr);
+ 
+ 	/* free SKB */
+ 	skb = txq->entries[idx].skb;
+diff --git a/drivers/net/wireless/intel/iwlwifi/queue/tx.h b/drivers/net/wireless/intel/iwlwifi/queue/tx.h
+index 1e4a24ab9bab..15b3edce56e0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/queue/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/queue/tx.h
+@@ -131,17 +131,8 @@ struct iwl_tso_hdr_page *get_page_hdr(struct iwl_trans *trans, size_t len,
+ 				      struct sk_buff *skb);
+ #endif
+ static inline u8 iwl_txq_gen1_tfd_get_num_tbs(struct iwl_trans *trans,
+-					      void *_tfd)
++					      struct iwl_tfd *tfd)
+ {
+-	struct iwl_tfd *tfd;
+-
+-	if (trans->trans_cfg->gen2) {
+-		struct iwl_tfh_tfd *tfh_tfd = _tfd;
+-
+-		return le16_to_cpu(tfh_tfd->num_tbs) & 0x1f;
+-	}
+-
+-	tfd = (struct iwl_tfd *)_tfd;
+ 	return tfd->num_tbs & 0x1f;
+ }
+ 
 -- 
-2.41.0
+2.38.1
 
