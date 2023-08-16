@@ -2,55 +2,44 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D53ECC04A94
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D2DC04FE0
 	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:12:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242768AbjHPILi (ORCPT
+        id S242773AbjHPILj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Aug 2023 04:11:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56230 "EHLO
+        Wed, 16 Aug 2023 04:11:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242800AbjHPILQ (ORCPT
+        with ESMTP id S242798AbjHPILQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 16 Aug 2023 04:11:16 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02D7CEE
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3373B13E
         for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:11:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692173476; x=1723709476;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=5MWBmaoXGc1nEKdDu02ENf1fei4u0BZViXJTMm3zpRw=;
-  b=HbOHCfJI5KyODxEX36Iq8g3Ko9j1XgvaktSe2VLDsueBEUF1mLXJoUb2
-   5TKYNZqQWqcvBl1QQOGcAJ0DZng1yZ8QDXbvUjT8fxmv/jyK6ZY/ujDnY
-   nXoukUnUsUZ5788WzlsssU7snu8/Tz3o7+f8AsaJ928Ru+SthgeBq8uln
-   900tK1hvSwma1B02bekQuxClVNI8NlXCQz/Um5dm6zZ3RvRiM+UVLMx3l
-   P+aAeYGTA4qoGp1knx/DPV7VjlP0uPnw7VDJ91iB+ZXofBFsIxBp5Sck7
-   xqCiAE/1S2GZMNz5V2kf+3JeNIccmaZgezk+n0Moza8GTWKVPRburdcoY
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="357447798"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="357447798"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:15 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="769098754"
-X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="769098754"
-Received: from mamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.226.187])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:13 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 03/12] wifi: iwlwifi: remove WARN from read_mem32()
-Date:   Wed, 16 Aug 2023 11:10:45 +0300
-Message-Id: <20230816104355.5f4e80eb63cc.Iffd88f63f95575f28e503da13b473724e3341aee@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230816081054.245480-1-gregory.greenman@intel.com>
-References: <20230816081054.245480-1-gregory.greenman@intel.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=lNgneGpTaj/bLyLMWq3uOLNeRNdL445hGJRAiuKWeCE=; t=1692173475; x=1693383075; 
+        b=EC2PRZjvYrrYkNJ5yEwMR/m/lo/T28Kt3IHKVVjMAmagBBnrDr5s6s2lL1dsq9maV66jb3QVRk2
+        +hKKs+ESDifkQzJZD+N+6izEUnz61SvAJdVSPzAvS6EPaurIUPM4btb09O68MEpanYEtFA7K5SkEk
+        0jrI6pj4xuRxqP9B0QbtntDPjLQM78Kxv14fgi2AO/oBmB0hXqtMAuMa3pF4jFrGY8RuPj6C944XR
+        l44gtEAJTeM8U8AWielvZ9P7XoBFzkbcqSmIX4YBxIjQwnptm/G+TGlXJxi/6QLw21Df/9h/rdQpn
+        KaWnDGoElhPn+4DWzbsixBuoUrM463GwZzlA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qWBcW-00Abvh-0M;
+        Wed, 16 Aug 2023 10:11:12 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Aloka Dixit <quic_alokad@quicinc.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] wifi: mac80211: fix puncturing bitmap handling in CSA
+Date:   Wed, 16 Aug 2023 10:11:09 +0200
+Message-ID: <20230816101108.9a2a011e3670.I062e026efafb59b026ab72fc7f7fce54f43dd29b@changeid>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -59,40 +48,51 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's no reason to warn here, it's not an internal consistency
-issue, we even use this to check if the device is dead, and if it
-read_mem() returns an error that's either because grab NIC access
-or memory allocation failed, both of which are already noisy.
+Code inspection reveals that we switch the puncturing bitmap
+before the real channel switch, since that happens only in
+the second round of the worker after the channel context is
+switched by ieee80211_link_use_reserved_context().
 
-Just remove the warning entirely.
+While at it, switch the code to using the link access to the
+data instead of the default bss_conf, even if not all of it
+is multi-link capable yet.
 
+Fixes: 2cc25e4b2a04 ("wifi: mac80211: configure puncturing bitmap")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index d02943d0ea62..8a6ddb5fb0c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2005-2014, 2018-2022 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2023 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -1490,7 +1490,7 @@ static inline u32 iwl_trans_read_mem32(struct iwl_trans *trans, u32 addr)
- {
- 	u32 value;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e7ac24603892..1657ff09a83a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3648,12 +3648,6 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	lockdep_assert_held(&local->mtx);
+ 	lockdep_assert_held(&local->chanctx_mtx);
  
--	if (WARN_ON(iwl_trans_read_mem(trans, addr, &value, 1)))
-+	if (iwl_trans_read_mem(trans, addr, &value, 1))
- 		return 0xa5a5a5a5;
+-	if (sdata->vif.bss_conf.eht_puncturing != sdata->vif.bss_conf.csa_punct_bitmap) {
+-		sdata->vif.bss_conf.eht_puncturing =
+-					sdata->vif.bss_conf.csa_punct_bitmap;
+-		changed |= BSS_CHANGED_EHT_PUNCTURING;
+-	}
+-
+ 	/*
+ 	 * using reservation isn't immediate as it may be deferred until later
+ 	 * with multi-vif. once reservation is complete it will re-schedule the
+@@ -3683,6 +3677,12 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	if (err)
+ 		return err;
  
- 	return value;
++	if (link_data->conf->eht_puncturing != link_data->conf->csa_punct_bitmap) {
++		link_data->conf->eht_puncturing =
++					link_data->conf->csa_punct_bitmap;
++		changed |= BSS_CHANGED_EHT_PUNCTURING;
++	}
++
+ 	ieee80211_link_info_change_notify(sdata, &sdata->deflink, changed);
+ 
+ 	if (sdata->deflink.csa_block_tx) {
 -- 
-2.38.1
+2.41.0
 
