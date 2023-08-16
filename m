@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 751C6C001DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B65BDC04FE1
 	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233326AbjHPIMF (ORCPT
+        id S242798AbjHPIMH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Aug 2023 04:12:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34836 "EHLO
+        Wed, 16 Aug 2023 04:12:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242815AbjHPILc (ORCPT
+        with ESMTP id S242765AbjHPILg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2023 04:11:32 -0400
+        Wed, 16 Aug 2023 04:11:36 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4749B94
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:11:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC3F5AB
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:11:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692173491; x=1723709491;
+  t=1692173495; x=1723709495;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=WEKK4UMyQHz6j6qD8HPXiGCZQtB7cUoKNCqHiarYSbg=;
-  b=EtU9zkXwu5T3zf2PGGms/zO/HSEBdk3PlNWOYVTiA8r86BBBILJ0ooGo
-   8B4EwOzHqUQEDGk0qk7wU01NFUgX6qmh1cByzaU6LwcVFutnHdhy1d5Zk
-   X6Tg1ZhCBbP5NPtXeKObwEIeKOsNn18/L2fxUyniOdNFhzBBGYnDxAaA8
-   WdNH1ZTHXOBZrK8L6EXJeH65hUhMulSgSrqsglulUxqPA4QgS+KhqMGQB
-   G4B4U6XQRK75Dr4+0SDwUaLoMUoVb6tbuU+EBJEF+Ih0EqRmUPnqphNk7
-   qcNlgpnccao3/y0IucU3SKeQRnUoGlesD5qRnm2imJTynl8Md9kJTqUpv
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="357447873"
+  bh=4oiDeWzlYXMPNyeUFldUFsgr5xfDMHCf3/3GDBlsUoU=;
+  b=bQEneyQZg8vrRBb3xzbR2uwJV+qkNHhjXrY/J3UUQTFkiGhuyfmCPDVi
+   WV4qJKXRwM5B9fLUMbOJ3aMU4FsPqZr2c5syjIXuHOakO266HRAyMlXxl
+   OjnRMhtvs36z/ON678Jz/BkpeU+QTtLYwe8BXS1NkRV9E10gESy8UTOKV
+   Q7KIEgrgQjrz4I9GpPiIcE8ug1ftxqoR9UH3uCXA11xiPL9hIAJfkKOHn
+   XY+rw1ryw7NZMkkPyzP3LIKQTWmWTxXPKn0iWEH0Cd92BaffTYLIuHtnU
+   RHU1WA6ArqZlT8p/7cPVq+n3p2iVMRMF4JiSeMzLmd9MXe+EqjSQgzTVd
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="357447886"
 X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="357447873"
+   d="scan'208";a="357447886"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:31 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:35 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="769098853"
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="769098873"
 X-IronPort-AV: E=Sophos;i="6.01,176,1684825200"; 
-   d="scan'208";a="769098853"
+   d="scan'208";a="769098873"
 Received: from mamir-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.226.187])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:29 -0700
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Aug 2023 01:11:34 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 10/12] wifi: iwlwifi: mvm: enable HE TX/RX <242 tone RU on new RFs
-Date:   Wed, 16 Aug 2023 11:10:52 +0300
-Message-Id: <20230816104355.ddb090c86c8c.Ic630aa579e3dc52069758d8698069480d555eefe@changeid>
+Subject: [PATCH 12/12] wifi: iwlwifi: remove memory check for LMAC error address
+Date:   Wed, 16 Aug 2023 11:10:54 +0300
+Message-Id: <20230816104355.08ab1497904d.I270d4c5bcc23c5ecd0b7db475501032c450852ad@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230816081054.245480-1-gregory.greenman@intel.com>
 References: <20230816081054.245480-1-gregory.greenman@intel.com>
@@ -57,31 +57,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 
-Two new RFs were added in the code, but we forgot to
-add them to the list here that enables HE TX/RX 1024
-QAM less than 242 tone RU.
+LMAC error table address was checked against UMAC
+error table minimum address defined. Because of that,
+the LMAC error table was not read, since both addresses
+belong to different ranges. As addresses are updated from
+FW alive message and should be correct, this check is not
+needed.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Still keep the check for address 0 to avoid NULL address read.
+
+Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dump.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 8c23f57f5c89..31176897b746 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -990,6 +990,8 @@ iwl_nvm_fixup_sband_iftd(struct iwl_trans *trans,
- 	case IWL_CFG_RF_TYPE_GF:
- 	case IWL_CFG_RF_TYPE_MR:
- 	case IWL_CFG_RF_TYPE_MS:
-+	case IWL_CFG_RF_TYPE_FM:
-+	case IWL_CFG_RF_TYPE_WH:
- 		iftype_data->he_cap.he_cap_elem.phy_cap_info[9] |=
- 			IEEE80211_HE_PHY_CAP9_TX_1024_QAM_LESS_THAN_242_TONE_RU;
- 		if (!is_ap)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dump.c b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
+index 5876f917e536..8f107ceec407 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dump.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
+@@ -182,8 +182,7 @@ static void iwl_fwrt_dump_lmac_error_log(struct iwl_fw_runtime *fwrt, u8 lmac_nu
+ 			base = fwrt->fw->inst_errlog_ptr;
+ 	}
+ 
+-	if ((fwrt->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ && !base) ||
+-	    (fwrt->trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_BZ && base < 0x400000)) {
++	if (!base) {
+ 		IWL_ERR(fwrt,
+ 			"Not valid error log pointer 0x%08X for %s uCode\n",
+ 			base,
 -- 
 2.38.1
 
