@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 671A9C04FE2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A1FC07E8B
 	for <linux-wireless@archiver.kernel.org>; Wed, 16 Aug 2023 08:23:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242885AbjHPIW5 (ORCPT
+        id S242877AbjHPIW4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Aug 2023 04:22:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55968 "EHLO
+        Wed, 16 Aug 2023 04:22:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242878AbjHPIWb (ORCPT
+        with ESMTP id S242880AbjHPIWc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Aug 2023 04:22:31 -0400
+        Wed, 16 Aug 2023 04:22:32 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 24B1E212E
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:22:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 59E402102
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Aug 2023 01:22:30 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37G8M1hoC001274, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37G8M49E0001415, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37G8M1hoC001274
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37G8M49E0001415
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 16 Aug 2023 16:22:01 +0800
+        Wed, 16 Aug 2023 16:22:04 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 16 Aug 2023 16:22:21 +0800
+ 15.1.2507.17; Wed, 16 Aug 2023 16:22:23 +0800
 Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 16 Aug
- 2023 16:22:20 +0800
+ 2023 16:22:23 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/6] wifi: rtw89: sar: let caller decide the center frequency to query
-Date:   Wed, 16 Aug 2023 16:21:30 +0800
-Message-ID: <20230816082133.57474-4-pkshih@realtek.com>
+Subject: [PATCH 5/6] wifi: rtw89: provide functions to configure NoA for beacon update
+Date:   Wed, 16 Aug 2023 16:21:32 +0800
+Message-ID: <20230816082133.57474-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230816082133.57474-1-pkshih@realtek.com>
 References: <20230816082133.57474-1-pkshih@realtek.com>
@@ -55,206 +55,193 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-If multiple channels, SAR will be hard to determine the center frequency
-to query. Therefore, we move this decision out of SAR.
+Callers call renew function when wanting to generate a new P2P NoA
+information element, and call append function to append NoA attribute
+one by one. Then, updating beacon work will fetch the P2P NoA information
+element configured by callers and add it to beacon.
+
+The use case of MCC (multi-channel concurrent) <GO + STA> for example:
+* start MCC - GO part
+	renew P2P NoA
+	append period NoA after calculation
+* download beacon for GO
+	fetch P2P NoA and add to beacon content
+* stop MCC - GO part
+	renew P2P NoA (reset)
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/debug.c | 10 +++++----
- drivers/net/wireless/realtek/rtw89/phy.c   |  8 ++++++--
- drivers/net/wireless/realtek/rtw89/sar.c   | 24 +++++++++++-----------
- drivers/net/wireless/realtek/rtw89/sar.h   |  6 +++---
- 4 files changed, 27 insertions(+), 21 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.h | 27 ++++++++++
+ drivers/net/wireless/realtek/rtw89/fw.c   | 10 ++++
+ drivers/net/wireless/realtek/rtw89/ps.c   | 61 +++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/ps.h   |  4 ++
+ 4 files changed, 102 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
-index f6f1e90c3934..48635458c36a 100644
---- a/drivers/net/wireless/realtek/rtw89/debug.c
-+++ b/drivers/net/wireless/realtek/rtw89/debug.c
-@@ -572,9 +572,9 @@ static int __print_txpwr_map(struct seq_file *m, struct rtw89_dev *rtwdev,
- 		seq_puts(m, #_regd "\n"); \
- 		break
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 257582fc39ea..431b0d3daa2a 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2896,6 +2896,32 @@ struct rtw89_roc {
  
--static void __print_regd(struct seq_file *m, struct rtw89_dev *rtwdev)
-+static void __print_regd(struct seq_file *m, struct rtw89_dev *rtwdev,
-+			 const struct rtw89_chan *chan)
- {
--	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
- 	u8 band = chan->band_type;
- 	u8 regd = rtw89_regd_get(rtwdev, band);
+ #define RTW89_P2P_MAX_NOA_NUM 2
  
-@@ -604,16 +604,18 @@ static int rtw89_debug_priv_txpwr_table_get(struct seq_file *m, void *v)
- {
- 	struct rtw89_debugfs_priv *debugfs_priv = m->private;
- 	struct rtw89_dev *rtwdev = debugfs_priv->rtwdev;
-+	const struct rtw89_chan *chan;
- 	int ret = 0;
- 
- 	mutex_lock(&rtwdev->mutex);
- 	rtw89_leave_ps_mode(rtwdev);
-+	chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
- 
- 	seq_puts(m, "[Regulatory] ");
--	__print_regd(m, rtwdev);
-+	__print_regd(m, rtwdev, chan);
- 
- 	seq_puts(m, "[SAR]\n");
--	rtw89_print_sar(m, rtwdev);
-+	rtw89_print_sar(m, rtwdev, chan->freq);
- 
- 	seq_puts(m, "[TAS]\n");
- 	rtw89_print_tas(m, rtwdev);
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
-index c40c4f8c1271..fcdc61597b9b 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy.c
-@@ -1647,6 +1647,8 @@ s8 rtw89_phy_read_txpwr_limit(struct rtw89_dev *rtwdev, u8 band,
- 	const struct rtw89_txpwr_rule_5ghz *rule_5ghz = &rfe_parms->rule_5ghz;
- 	const struct rtw89_txpwr_rule_6ghz *rule_6ghz = &rfe_parms->rule_6ghz;
- 	struct rtw89_regulatory_info *regulatory = &rtwdev->regulatory;
-+	enum nl80211_band nl_band = rtw89_hw_to_nl80211_band(band);
-+	u32 freq = ieee80211_channel_to_frequency(ch, nl_band);
- 	u8 ch_idx = rtw89_channel_to_idx(rtwdev, band, ch);
- 	u8 regd = rtw89_regd_get(rtwdev, band);
- 	u8 reg6 = regulatory->reg_6ghz_power;
-@@ -1682,7 +1684,7 @@ s8 rtw89_phy_read_txpwr_limit(struct rtw89_dev *rtwdev, u8 band,
- 	}
- 
- 	lmt = _phy_txpwr_rf_to_mac(rtwdev, lmt);
--	sar = rtw89_query_sar(rtwdev);
-+	sar = rtw89_query_sar(rtwdev, freq);
- 
- 	return min(lmt, sar);
- }
-@@ -1902,6 +1904,8 @@ static s8 rtw89_phy_read_txpwr_limit_ru(struct rtw89_dev *rtwdev, u8 band,
- 	const struct rtw89_txpwr_rule_5ghz *rule_5ghz = &rfe_parms->rule_5ghz;
- 	const struct rtw89_txpwr_rule_6ghz *rule_6ghz = &rfe_parms->rule_6ghz;
- 	struct rtw89_regulatory_info *regulatory = &rtwdev->regulatory;
-+	enum nl80211_band nl_band = rtw89_hw_to_nl80211_band(band);
-+	u32 freq = ieee80211_channel_to_frequency(ch, nl_band);
- 	u8 ch_idx = rtw89_channel_to_idx(rtwdev, band, ch);
- 	u8 regd = rtw89_regd_get(rtwdev, band);
- 	u8 reg6 = regulatory->reg_6ghz_power;
-@@ -1937,7 +1941,7 @@ static s8 rtw89_phy_read_txpwr_limit_ru(struct rtw89_dev *rtwdev, u8 band,
- 	}
- 
- 	lmt_ru = _phy_txpwr_rf_to_mac(rtwdev, lmt_ru);
--	sar = rtw89_query_sar(rtwdev);
-+	sar = rtw89_query_sar(rtwdev, freq);
- 
- 	return min(lmt_ru, sar);
- }
-diff --git a/drivers/net/wireless/realtek/rtw89/sar.c b/drivers/net/wireless/realtek/rtw89/sar.c
-index fafc7a0cfe97..881322f85d79 100644
---- a/drivers/net/wireless/realtek/rtw89/sar.c
-+++ b/drivers/net/wireless/realtek/rtw89/sar.c
-@@ -85,17 +85,15 @@ static const struct rtw89_sar_span rtw89_sar_overlapping_6ghz[] = {
- 	RTW89_DECL_SAR_6GHZ_SPAN(6885, SUBBAND_7_H, SUBBAND_8),
++struct rtw89_p2p_ie_head {
++	u8 eid;
++	u8 ie_len;
++	u8 oui[3];
++	u8 oui_type;
++} __packed;
++
++struct rtw89_noa_attr_head {
++	u8 attr_type;
++	__le16 attr_len;
++	u8 index;
++	u8 oppps_ctwindow;
++} __packed;
++
++struct rtw89_p2p_noa_ie {
++	struct rtw89_p2p_ie_head p2p_head;
++	struct rtw89_noa_attr_head noa_head;
++	struct ieee80211_p2p_noa_desc noa_desc[RTW89_P2P_MAX_NOA_NUM];
++} __packed;
++
++struct rtw89_p2p_noa_setter {
++	struct rtw89_p2p_noa_ie ie;
++	u8 noa_count;
++	u8 noa_index;
++};
++
+ struct rtw89_vif {
+ 	struct list_head list;
+ 	struct rtw89_dev *rtwdev;
+@@ -2938,6 +2964,7 @@ struct rtw89_vif {
+ 	struct cfg80211_scan_request *scan_req;
+ 	struct ieee80211_scan_ies *scan_ies;
+ 	struct list_head general_pkt_list;
++	struct rtw89_p2p_noa_setter p2p_noa;
  };
  
--static int rtw89_query_sar_config_common(struct rtw89_dev *rtwdev, s32 *cfg)
-+static int rtw89_query_sar_config_common(struct rtw89_dev *rtwdev,
-+					 u32 center_freq, s32 *cfg)
- {
- 	struct rtw89_sar_cfg_common *rtwsar = &rtwdev->sar.cfg_common;
--	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
--	enum rtw89_band band = chan->band_type;
--	u32 center_freq = chan->freq;
- 	const struct rtw89_sar_span *span = NULL;
- 	enum rtw89_sar_subband subband_l, subband_h;
- 	int idx;
+ enum rtw89_lv1_rcvy_step {
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 7dd7bc4be9c7..67cc3f852da8 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -9,6 +9,7 @@
+ #include "fw.h"
+ #include "mac.h"
+ #include "phy.h"
++#include "ps.h"
+ #include "reg.h"
+ #include "util.h"
  
--	if (band == RTW89_BAND_6G) {
-+	if (center_freq >= RTW89_SAR_6GHZ_SPAN_HEAD) {
- 		idx = RTW89_SAR_6GHZ_SPAN_IDX(center_freq);
- 		/* To decrease size of rtw89_sar_overlapping_6ghz[],
- 		 * RTW89_SAR_6GHZ_SPAN_IDX() truncates the leading NULLs
-@@ -115,8 +113,8 @@ static int rtw89_query_sar_config_common(struct rtw89_dev *rtwdev, s32 *cfg)
- 	}
- 
- 	rtw89_debug(rtwdev, RTW89_DBG_SAR,
--		    "for {band %u, center_freq %u}, SAR subband: {%u, %u}\n",
--		    band, center_freq, subband_l, subband_h);
-+		    "center_freq %u: SAR subband {%u, %u}\n",
-+		    center_freq, subband_l, subband_h);
- 
- 	if (!rtwsar->set[subband_l] && !rtwsar->set[subband_h])
- 		return -ENODATA;
-@@ -186,7 +184,7 @@ static s8 rtw89_txpwr_sar_to_tas(const struct rtw89_sar_handler *sar_hdl,
- 		return cfg << (RTW89_TAS_FACTOR - fct);
- }
- 
--s8 rtw89_query_sar(struct rtw89_dev *rtwdev)
-+s8 rtw89_query_sar(struct rtw89_dev *rtwdev, u32 center_freq)
- {
- 	const enum rtw89_sar_sources src = rtwdev->sar.src;
- 	/* its members are protected by rtw89_sar_set_src() */
-@@ -202,7 +200,7 @@ s8 rtw89_query_sar(struct rtw89_dev *rtwdev)
- 	if (src == RTW89_SAR_SOURCE_NONE)
- 		return RTW89_SAR_TXPWR_MAC_MAX;
- 
--	ret = sar_hdl->query_sar_config(rtwdev, &cfg);
-+	ret = sar_hdl->query_sar_config(rtwdev, center_freq, &cfg);
- 	if (ret)
- 		return RTW89_SAR_TXPWR_MAC_MAX;
- 
-@@ -224,7 +222,7 @@ s8 rtw89_query_sar(struct rtw89_dev *rtwdev)
- 	return rtw89_txpwr_sar_to_mac(rtwdev, fct, cfg);
- }
- 
--void rtw89_print_sar(struct seq_file *m, struct rtw89_dev *rtwdev)
-+void rtw89_print_sar(struct seq_file *m, struct rtw89_dev *rtwdev, u32 center_freq)
- {
- 	const enum rtw89_sar_sources src = rtwdev->sar.src;
- 	/* its members are protected by rtw89_sar_set_src() */
-@@ -243,7 +241,7 @@ void rtw89_print_sar(struct seq_file *m, struct rtw89_dev *rtwdev)
- 
- 	seq_printf(m, "source: %d (%s)\n", src, sar_hdl->descr_sar_source);
- 
--	ret = sar_hdl->query_sar_config(rtwdev, &cfg);
-+	ret = sar_hdl->query_sar_config(rtwdev, center_freq, &cfg);
- 	if (ret) {
- 		seq_printf(m, "config: return code: %d\n", ret);
- 		seq_printf(m, "assign: max setting: %d (unit: 1/%lu dBm)\n",
-@@ -359,6 +357,7 @@ static void rtw89_tas_state_update(struct rtw89_dev *rtwdev)
- 	s32 txpwr_avg = tas->total_txpwr / RTW89_TAS_MAX_WINDOW / PERCENT;
- 	s32 dpr_on_threshold, dpr_off_threshold, cfg;
- 	enum rtw89_tas_state state = tas->state;
-+	const struct rtw89_chan *chan;
+@@ -1923,6 +1924,8 @@ int rtw89_fw_h2c_update_beacon(struct rtw89_dev *rtwdev,
+ 	u16 tim_offset;
+ 	int bcn_total_len;
+ 	u16 beacon_rate;
++	void *noa_data;
++	u8 noa_len;
  	int ret;
  
- 	lockdep_assert_held(&rtwdev->mutex);
-@@ -366,7 +365,8 @@ static void rtw89_tas_state_update(struct rtw89_dev *rtwdev)
- 	if (src == RTW89_SAR_SOURCE_NONE)
- 		return;
+ 	if (vif->p2p)
+@@ -1939,6 +1942,13 @@ int rtw89_fw_h2c_update_beacon(struct rtw89_dev *rtwdev,
+ 		return -ENOMEM;
+ 	}
  
--	ret = sar_hdl->query_sar_config(rtwdev, &cfg);
-+	chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
-+	ret = sar_hdl->query_sar_config(rtwdev, chan->freq, &cfg);
- 	if (ret)
- 		return;
++	noa_len = rtw89_p2p_noa_fetch(rtwvif, &noa_data);
++	if (noa_len &&
++	    (noa_len <= skb_tailroom(skb_beacon) ||
++	     pskb_expand_head(skb_beacon, 0, noa_len, GFP_KERNEL) == 0)) {
++		skb_put_data(skb_beacon, noa_data, noa_len);
++	}
++
+ 	bcn_total_len = H2C_BCN_BASE_LEN + skb_beacon->len;
+ 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, bcn_total_len);
+ 	if (!skb) {
+diff --git a/drivers/net/wireless/realtek/rtw89/ps.c b/drivers/net/wireless/realtek/rtw89/ps.c
+index 84201ef19c17..b98ec178abe1 100644
+--- a/drivers/net/wireless/realtek/rtw89/ps.c
++++ b/drivers/net/wireless/realtek/rtw89/ps.c
+@@ -278,3 +278,64 @@ void rtw89_recalc_lps(struct rtw89_dev *rtwdev)
+ 		rtwdev->lps_enabled = false;
+ 	}
+ }
++
++void rtw89_p2p_noa_renew(struct rtw89_vif *rtwvif)
++{
++	struct rtw89_p2p_noa_setter *setter = &rtwvif->p2p_noa;
++	struct rtw89_p2p_noa_ie *ie = &setter->ie;
++	struct rtw89_p2p_ie_head *p2p_head = &ie->p2p_head;
++	struct rtw89_noa_attr_head *noa_head = &ie->noa_head;
++
++	if (setter->noa_count) {
++		setter->noa_index++;
++		setter->noa_count = 0;
++	}
++
++	memset(ie, 0, sizeof(*ie));
++
++	p2p_head->eid = WLAN_EID_VENDOR_SPECIFIC;
++	p2p_head->ie_len = 4 + sizeof(*noa_head);
++	p2p_head->oui[0] = (WLAN_OUI_WFA >> 16) & 0xff;
++	p2p_head->oui[1] = (WLAN_OUI_WFA >> 8) & 0xff;
++	p2p_head->oui[2] = (WLAN_OUI_WFA >> 0) & 0xff;
++	p2p_head->oui_type = WLAN_OUI_TYPE_WFA_P2P;
++
++	noa_head->attr_type = IEEE80211_P2P_ATTR_ABSENCE_NOTICE;
++	noa_head->attr_len = cpu_to_le16(2);
++	noa_head->index = setter->noa_index;
++	noa_head->oppps_ctwindow = 0;
++}
++
++void rtw89_p2p_noa_append(struct rtw89_vif *rtwvif,
++			  const struct ieee80211_p2p_noa_desc *desc)
++{
++	struct rtw89_p2p_noa_setter *setter = &rtwvif->p2p_noa;
++	struct rtw89_p2p_noa_ie *ie = &setter->ie;
++	struct rtw89_p2p_ie_head *p2p_head = &ie->p2p_head;
++	struct rtw89_noa_attr_head *noa_head = &ie->noa_head;
++
++	if (!desc->count || !desc->duration)
++		return;
++
++	if (setter->noa_count >= RTW89_P2P_MAX_NOA_NUM)
++		return;
++
++	p2p_head->ie_len += sizeof(*desc);
++	le16_add_cpu(&noa_head->attr_len, sizeof(*desc));
++
++	ie->noa_desc[setter->noa_count++] = *desc;
++}
++
++u8 rtw89_p2p_noa_fetch(struct rtw89_vif *rtwvif, void **data)
++{
++	struct rtw89_p2p_noa_setter *setter = &rtwvif->p2p_noa;
++	struct rtw89_p2p_noa_ie *ie = &setter->ie;
++	void *tail;
++
++	if (!setter->noa_count)
++		return 0;
++
++	*data = ie;
++	tail = ie->noa_desc + setter->noa_count;
++	return tail - *data;
++}
+diff --git a/drivers/net/wireless/realtek/rtw89/ps.h b/drivers/net/wireless/realtek/rtw89/ps.h
+index 4c18f49204b2..aff0fba71cb0 100644
+--- a/drivers/net/wireless/realtek/rtw89/ps.h
++++ b/drivers/net/wireless/realtek/rtw89/ps.h
+@@ -16,6 +16,10 @@ void rtw89_leave_ips(struct rtw89_dev *rtwdev);
+ void rtw89_set_coex_ctrl_lps(struct rtw89_dev *rtwdev, bool btc_ctrl);
+ void rtw89_process_p2p_ps(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif);
+ void rtw89_recalc_lps(struct rtw89_dev *rtwdev);
++void rtw89_p2p_noa_renew(struct rtw89_vif *rtwvif);
++void rtw89_p2p_noa_append(struct rtw89_vif *rtwvif,
++			  const struct ieee80211_p2p_noa_desc *desc);
++u8 rtw89_p2p_noa_fetch(struct rtw89_vif *rtwvif, void **data);
  
-diff --git a/drivers/net/wireless/realtek/rtw89/sar.h b/drivers/net/wireless/realtek/rtw89/sar.h
-index 40ce5990ceaf..bd7a657188d9 100644
---- a/drivers/net/wireless/realtek/rtw89/sar.h
-+++ b/drivers/net/wireless/realtek/rtw89/sar.h
-@@ -13,13 +13,13 @@
- struct rtw89_sar_handler {
- 	const char *descr_sar_source;
- 	u8 txpwr_factor_sar;
--	int (*query_sar_config)(struct rtw89_dev *rtwdev, s32 *cfg);
-+	int (*query_sar_config)(struct rtw89_dev *rtwdev, u32 center_freq, s32 *cfg);
- };
- 
- extern const struct cfg80211_sar_capa rtw89_sar_capa;
- 
--s8 rtw89_query_sar(struct rtw89_dev *rtwdev);
--void rtw89_print_sar(struct seq_file *m, struct rtw89_dev *rtwdev);
-+s8 rtw89_query_sar(struct rtw89_dev *rtwdev, u32 center_freq);
-+void rtw89_print_sar(struct seq_file *m, struct rtw89_dev *rtwdev, u32 center_freq);
- void rtw89_print_tas(struct seq_file *m, struct rtw89_dev *rtwdev);
- int rtw89_ops_set_sar_specs(struct ieee80211_hw *hw,
- 			    const struct cfg80211_sar_specs *sar);
+ static inline void rtw89_leave_ips_by_hwflags(struct rtw89_dev *rtwdev)
+ {
 -- 
 2.25.1
 
