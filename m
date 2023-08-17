@@ -2,93 +2,85 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B7A3C2FC3C
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 14:21:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9695C3DA58
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 15:53:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351806AbjHQOVZ (ORCPT
+        id S1353376AbjHQPx1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Aug 2023 10:21:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57720 "EHLO
+        Thu, 17 Aug 2023 11:53:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351807AbjHQOVE (ORCPT
+        with ESMTP id S1353352AbjHQPxI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2023 10:21:04 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D201E2D76
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 07:21:03 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37HDtuHM015246;
-        Thu, 17 Aug 2023 14:20:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=7HMbfla+JqqCMpc+15tgoMJPcNcMhQqN1xJKlXDGeGE=;
- b=lEgxfinms5umirBy0J8GBY7oR9U4sWMrDSXA5/narfBtxbRdKt/L+nlJFvFldAAM2j1O
- 3h+ffyZUTju1F5LLeui3ARmkb7CM/UdZzU5pddBRVEcAk5GICf7RtlTa4JE/c7j7g24S
- y2CP3xylWjFPniz7DdReShobn9YHfchRpYeZcfavnOW3/WmARlfqMks9l+iAAmEOKfgA
- gpprUPmko+eCpK9ROurO+XDugJqEJyEFPQv7HiTHKOI9EU4VZB+DSV9EtJnxrYdp0Vtb
- DD4UcCxsmuTW8zY6DhOfYEsjG0ADmBg1zc0ruJzcU06Rv5efrf8CqaJsw0O/0geu2nJe sw== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3shbc0sarg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 17 Aug 2023 14:20:59 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37HEKwnm000735
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 17 Aug 2023 14:20:58 GMT
-Received: from [10.48.241.213] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 17 Aug
- 2023 07:20:58 -0700
-Message-ID: <9c082dcd-e26c-4f5b-ae85-8be96763c0c8@quicinc.com>
-Date:   Thu, 17 Aug 2023 07:20:58 -0700
+        Thu, 17 Aug 2023 11:53:08 -0400
+Received: from nbd.name (nbd.name [46.4.11.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E39230D8
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 08:53:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+        s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=PgneEFBKzSE4xiC9OJT2Trsi866BPZ1ALzfqWOhuXnU=; b=eWId/yhw3y2yUNnM7Q/i16X2eb
+        3C+iy1UfNKuVAatbQR4jJwOR0jFTj51cwFx38AwVlCH1eAI472+JN66sSikUpjgGaCEBO4twgnxr6
+        hev6+bgv1dKKPOb7NXDw9I9Ixmtm8fRpkQTgMdfysjhAD8eJr1oUjAWwxkEAc8d7NPaE=;
+Received: from 134.101.185.184.dynamic-pppoe.dt.ipv4.wtnet.de ([134.101.185.184] helo=Maecks.fritz.box)
+        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+        (Exim 4.94.2)
+        (envelope-from <nbd@nbd.name>)
+        id 1qWfJ2-00AmKH-Jh
+        for linux-wireless@vger.kernel.org; Thu, 17 Aug 2023 17:53:04 +0200
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] wifi: mt76: mt7603: disable A-MSDU tx support on MT7628
+Date:   Thu, 17 Aug 2023 17:52:58 +0200
+Message-ID: <20230817155258.62636-5-nbd@nbd.name>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230817155258.62636-1-nbd@nbd.name>
+References: <20230817155258.62636-1-nbd@nbd.name>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] wifi: ath12k: fix radar detection in 160 MHz
-Content-Language: en-US
-To:     Manish Dharanenthiran <quic_mdharane@quicinc.com>,
-        <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20230802085852.19821-1-quic_mdharane@quicinc.com>
- <20230802085852.19821-3-quic_mdharane@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230802085852.19821-3-quic_mdharane@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 7f-ckXnG2cfx16VnNqnUJHp-smiuCdbC
-X-Proofpoint-GUID: 7f-ckXnG2cfx16VnNqnUJHp-smiuCdbC
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-17_07,2023-08-17_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
- mlxlogscore=999 clxscore=1015 priorityscore=1501 impostorscore=0
- adultscore=0 spamscore=0 lowpriorityscore=0 phishscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308170129
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/2/2023 1:58 AM, Manish Dharanenthiran wrote:
-> Radar detection fails in the secondary 80 MHz when the
-> the AP's primary 80 MHz is in non-DFS region in 160 MHz.
-> 
-> This is due to WMI channel flag WMI_CHAN_INFO_DFS_FREQ2 is not set
-> properly in case of the primary 80 MHz is in non-DFS region.
-> HALPHY detects the radar pulses in the secondary 80 MHz only when
-> WMI_CHAN_INFO_DFS_FREQ2 is set.
-> 
-> Fix this issue by setting WMI channel flag WMI_CHAN_INFO_DFS_FREQ2
-> based on the radar_enabled flag from the channel context.
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Manish Dharanenthiran <quic_mdharane@quicinc.com>
+It was reported that this can cause the PSE hang issues, even with a low
+number of fragments.
 
-Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Link: https://github.com/openwrt/mt76/issues/793#issuecomment-1676529138
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 3 ++-
+ drivers/net/wireless/mediatek/mt76/mt7603/init.c | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index c0ff36a98bed..481c55fe9a66 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -453,7 +453,8 @@ mt76_phy_init(struct mt76_phy *phy, struct ieee80211_hw *hw)
+ 	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
+ 	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
+ 
+-	if (!(dev->drv->drv_flags & MT_DRV_AMSDU_OFFLOAD)) {
++	if (!(dev->drv->drv_flags & MT_DRV_AMSDU_OFFLOAD) &&
++	    hw->max_tx_fragments > 1) {
+ 		ieee80211_hw_set(hw, TX_AMSDU);
+ 		ieee80211_hw_set(hw, TX_FRAG_LIST);
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+index dd3c96f96999..6c55c72f28a2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+@@ -524,6 +524,7 @@ int mt7603_register_device(struct mt7603_dev *dev)
+ 	hw->max_rates = 3;
+ 	hw->max_report_rates = 7;
+ 	hw->max_rate_tries = 11;
++	hw->max_tx_fragments = 1;
+ 
+ 	hw->radiotap_timestamp.units_pos =
+ 		IEEE80211_RADIOTAP_TIMESTAMP_UNIT_US;
+-- 
+2.41.0
 
