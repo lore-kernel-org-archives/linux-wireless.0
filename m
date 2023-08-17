@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 105BDC64ED3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA08C64ECC
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 21:16:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355224AbjHQVPs (ORCPT
+        id S1355221AbjHQVPs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 17 Aug 2023 17:15:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54498 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355219AbjHQVPj (ORCPT
+        with ESMTP id S1355198AbjHQVPf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2023 17:15:39 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D03423598
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:38 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id 98e67ed59e1d1-26814e27a9eso185998a91.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:38 -0700 (PDT)
+        Thu, 17 Aug 2023 17:15:35 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 491693591
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:33 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1bdb801c667so2210305ad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1692306938; x=1692911738;
+        d=chromium.org; s=google; t=1692306933; x=1692911733;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=L1xDe42Zb4O1g25la6ZbpuaxP3YQAxL+qM/43yhn7u4=;
-        b=aAnD+yQ6IXIXvqgfxPjHa3eQuh0LMSjOgvcikD2gU4WhmPjmZ5UKGdPLx9zVjdMWq/
-         htAwgtscCm+le+2XgzbGGyAu0u0v25DSSdxStSrMki6Vmy7v4V9iAZSwWRcg46VgRUC6
-         GBsKGsdXMR9I4jsHBGhPuW1cOm7H1PO49iZ0w=
+        bh=8UofhjPFvRG631Ccgv2qHcV06RmLtv8X8B/5+W9lIA8=;
+        b=TlEkdA0aHIpDhWACKGHLrkm5y9e4OB90g6PTzJ1l+cbGyrClX3h4fGqMnA+W3GTIHy
+         lP+KdB7wLx+G2GYF76W564NATtk5HWp+4Rx8DoU5rzUBnYjtV1BE+7EJ2YTSjwpgYMph
+         +5OXcqEe8DeO2ald44h2rUXsRTA4LQAQWdiso=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692306938; x=1692911738;
+        d=1e100.net; s=20221208; t=1692306933; x=1692911733;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=L1xDe42Zb4O1g25la6ZbpuaxP3YQAxL+qM/43yhn7u4=;
-        b=fXfQ52PAiaEPGvk5MXMBPRcHAC3BLcb+1++2RRVX4bOvdOB68VZRmpomwrFIv0wWxC
-         w3IxpuD9rjVCp3ztGOozksK1bSA9sgw4RYjYz2hjmRNgpB1ra7eNUoL3atQet1Sy5/jF
-         i8y4pAfQB4NOzwbtokCDfdl+v2mAkdcenonUH0NHezIa97f1vQC1xyd6OsVtZS5kDJPt
-         3ceyFg7gTRz+KWi4m7YW+1fBCed2BJSO3BrPkBIS6wHdqO1wtfJqwKw+3leyh9f1xFpF
-         mQtsqYqcI/j0MhOw02l9eULErttsms/eModzWwqr5tWIZCJg0mUfrXZkVa4aaYBCZeTI
-         1R2w==
-X-Gm-Message-State: AOJu0YwUDxyhjxTUA8rJe0yV/VopLd2HPzZoVPs/vaS8TrkCyLAwhuhP
-        xxtZ/7yN1karm6JA2dgbqobvNw==
-X-Google-Smtp-Source: AGHT+IFi8O0i9RK0CHXGKeQfJM6qFoojgbvsRcV1oh+MbrP9SdGULKDsRCDtwXu5ebU7gX5iSPej4A==
-X-Received: by 2002:a17:902:aa4a:b0:1b9:ea60:cd91 with SMTP id c10-20020a170902aa4a00b001b9ea60cd91mr614626plr.7.1692306938249;
-        Thu, 17 Aug 2023 14:15:38 -0700 (PDT)
+        bh=8UofhjPFvRG631Ccgv2qHcV06RmLtv8X8B/5+W9lIA8=;
+        b=JqC0wae+ZkiEKAM8usWtkdqvdZwmrqhaecRW/5YHuXG8ErKcNe40yLh+NH8raZHlUs
+         VOsgdF+jN2/xLLoecp2pZNZbpHIbF1GAg6t2K6Y5UuA10HPtGJyQkuCKzRzFeV3FGqta
+         UEqFuj0eu+SfEvAqbzywOr+e7lPatie/n4rFDbHfBAWqm7LON4YpoPZysn++3ZySQ0DM
+         LSSC0mJDL1RSYG+n5ae8zEUc+RBlT7zhA4wLlcP9j/LaQTMYnGnv2Q+CDm09VYjw4qIm
+         ZA8+fg7HjMhkKRXfHMlQq/pX1Sd53zaD23lh89vj4uHR2zOsHy2v5m+OIzxJqMzQaOL7
+         vwEg==
+X-Gm-Message-State: AOJu0YycuPXmianY9JB/f6Od3enEEjQ22CJ1WDaZ26KWCGkXIaJ/AHHy
+        HSQZ+6lfs7aiL6rJzINkcXUPjg==
+X-Google-Smtp-Source: AGHT+IFBZSHNzPvyZlBzEtJLJA9BTz4aD5fj9A34rHRZOf7eSuRvseMrGYRyhAolhTW3rZ+WlLEk7w==
+X-Received: by 2002:a17:902:bd45:b0:1bb:cf4e:ccd with SMTP id b5-20020a170902bd4500b001bbcf4e0ccdmr659710plx.28.1692306932698;
+        Thu, 17 Aug 2023 14:15:32 -0700 (PDT)
 Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id i4-20020a170902eb4400b001b531e8a000sm212760pli.157.2023.08.17.14.15.33
+        by smtp.gmail.com with ESMTPSA id x17-20020a170902ec9100b001bf35144a18sm110378plg.221.2023.08.17.14.15.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Aug 2023 14:15:35 -0700 (PDT)
+        Thu, 17 Aug 2023 14:15:32 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -60,26 +60,26 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
         llvm@lists.linux.dev, linux-hardening@vger.kernel.org
-Subject: [PATCH 6/7] wifi: cfg80211: Annotate struct cfg80211_scan_request with __counted_by
-Date:   Thu, 17 Aug 2023 14:15:28 -0700
-Message-Id: <20230817211531.4193219-6-keescook@chromium.org>
+Subject: [PATCH 1/7] wifi: cfg80211: Annotate struct cfg80211_acl_data with __counted_by
+Date:   Thu, 17 Aug 2023 14:15:23 -0700
+Message-Id: <20230817211531.4193219-1-keescook@chromium.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230817211114.never.208-kees@kernel.org>
 References: <20230817211114.never.208-kees@kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1547; i=keescook@chromium.org;
- h=from:subject; bh=B1om6kzjnM+KYttPuLCv8qgp2sSo5I5ukw0vuIq7IR4=;
- b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3x6e3yCDOyg/CnRvaTxYnwKpLSGmq9jMXbu
- Lj6hWgVrwmJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
- JuPqEACvZBjYWwE9vVsmWQaH0PScoxmrFrBmcCJVAXE9aU4a7P770PtzaGYD5I4idLwYuQstxsu
- hyy8i9VRnSI4ZhovMyvONu4Oa5vSGx30KKqu+EgYLel4gougy5ljNd62Ma1JJQwq/tl3Ib5VvtG
- b4/+4/CP1NIhwdhZGpdOCu9K6sbcBy/VllCKVkuohkOsR/LZWmQbOxapbM5l99ZKMlMtRi5Y4J6
- ZyNkLPFv5UCoX0UNCoOwjIf8TX7Re1URAq6OK74mYIj2KLLBcQQb6WtzVhqlhEy69NV6s9mG4zw
- aN7Um7gzgf/969aG7t0K+Bg7sMaFVyl4Q5j2/ibGo3dLnxRjo8NcXeI7nFByEoZzCr0D1pLlnvE
- WyiFXEPJpE888qd74gajJKkFm/VVR8Aa+rcay3qko/HJACbC7MlDGKVmfbYWDentPVIeYfLpBAK
- 0zKQV4vVA+8Ni+4/N/CcXyEOVIoIEXU9gl3aOVSKME20mJd2/uEV+jkDQvzz3l2O3q3vg0iebeW
- oMZpUFHphqMXnfO+ecIAtyviIuuQ90a8AIu5ZFBzcnRmj44QZlSnICV33GdmCz1azq7xOUMe2Lg
- Nbedjr4+NY+tfEx20wxse70y+NoN5qmNSjxe027lWYKy1MuBHxZMamCWXthTi8bDNtm15bGhHWG GVGAyzyr9T5ndYg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2104; i=keescook@chromium.org;
+ h=from:subject; bh=HsEe1uS2p7u7BP7jBH38t6GAsv3eC9u8U8u9k4LTzrU=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3xUjzj9KXDcTFQvsN8IUNrW4GzDUUcLTOTR
+ F6R3fE9BVaJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
+ JnzYD/0Z4jrC3Qoel0vy3g8ZrUKOYnJtNXSA5nwtWIj/WJ95o2nAw5Wff1y7uP0tXHAQ5QzlFeK
+ 20SmedYHn+kj1uvTJ9++OVMMtOrTDd6LcBKdByskoSipgJo+bpwPNcNsiMVC3vMU8SlQ1U3dPOZ
+ BRpQyecFwffX+Su5Ma7m86dMjcI6/nXrm5EIm0fZAyPYhyEG1zyT/J/eAgbL0YKVISQNO9ibybT
+ Eklf8pHUlVduSjjwLcmiZfLYsrv1PHzybiHx9wQO0XEoVXCO8Gxt4Q7ZD7mOcrkKjkG4hOtyDi5
+ wkLn3BSk6LLpTrX9MX4TkhPLtZPKl+tdHSvxrvcjN1GzrJRAcMrClNRfjaR6Ay2JfQ6Xn7UC4vp
+ DCygVQsJkaeGeQ1r7fFH6M0xfeORZqtRnmaBxSDI6q0RXDVdu5xv7BQ714R0gsNkcXh9vS8Wko1
+ 5I9TUIDwHmobFmBmY0mw0GxI8Ni9en3PAjKZ7OroncsXcBRzTcC+sryyIONTsRjY2gIfV+bqgjv
+ O8VqOlRAFVmMs0qXGLRaVWEo1Lcv2fmD0MqqjHoOFSpfO6/OYGLTKLSqfC26N8w2zi8U0KRcmLP
+ wgh+mcdIpLnFW1fg6WtwoCbOuvmLYIMlmN381VG18LaUKFGiYEwo7gdcx2Rh2edzb2NaZ6p7LSZ tvcl7/UTEgnKl2Q==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -92,7 +92,7 @@ their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
 (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
 functions).
 
-As found with Coccinelle[1], add __counted_by for struct cfg80211_scan_request.
+As found with Coccinelle[1], add __counted_by for struct cfg80211_acl_data.
 Additionally, since the element count member must be set before accessing
 the annotated flexible array member, move its initialization earlier.
 
@@ -108,21 +108,41 @@ Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
  include/net/cfg80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/nl80211.c | 3 +--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6efe216c01d2..a2afc94a5408 100644
+index d6fa7c8767ad..eb73b5af5d04 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -2544,7 +2544,7 @@ struct cfg80211_scan_request {
- 	struct cfg80211_scan_6ghz_params *scan_6ghz_params;
+@@ -1282,7 +1282,7 @@ struct cfg80211_acl_data {
+ 	int n_acl_entries;
  
- 	/* keep last */
--	struct ieee80211_channel *channels[];
-+	struct ieee80211_channel *channels[] __counted_by(n_channels);
+ 	/* Keep it last */
+-	struct mac_address mac_addrs[];
++	struct mac_address mac_addrs[] __counted_by(n_acl_entries);
  };
  
- static inline void get_random_mask_addr(u8 *buf, const u8 *addr, const u8 *mask)
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8bcf8e293308..80633e815311 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4889,13 +4889,12 @@ static struct cfg80211_acl_data *parse_acl_data(struct wiphy *wiphy,
+ 	acl = kzalloc(struct_size(acl, mac_addrs, n_entries), GFP_KERNEL);
+ 	if (!acl)
+ 		return ERR_PTR(-ENOMEM);
++	acl->n_acl_entries = n_entries;
+ 
+ 	nla_for_each_nested(attr, info->attrs[NL80211_ATTR_MAC_ADDRS], tmp) {
+ 		memcpy(acl->mac_addrs[i].addr, nla_data(attr), ETH_ALEN);
+ 		i++;
+ 	}
+-
+-	acl->n_acl_entries = n_entries;
+ 	acl->acl_policy = acl_policy;
+ 
+ 	return acl;
 -- 
 2.34.1
 
