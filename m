@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02947C64EC0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 585A6C64EDA
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 21:24:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234008AbjHQVXv (ORCPT
+        id S1355316AbjHQVXw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Aug 2023 17:23:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49428 "EHLO
+        Thu, 17 Aug 2023 17:23:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355347AbjHQVXd (ORCPT
+        with ESMTP id S1355310AbjHQVXX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2023 17:23:33 -0400
-Received: from omta36.uswest2.a.cloudfilter.net (omta36.uswest2.a.cloudfilter.net [35.89.44.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 841FDE4C
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:23:27 -0700 (PDT)
-Received: from eig-obgw-5004a.ext.cloudfilter.net ([10.0.29.221])
+        Thu, 17 Aug 2023 17:23:23 -0400
+Received: from omta38.uswest2.a.cloudfilter.net (omta38.uswest2.a.cloudfilter.net [35.89.44.37])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81E6610C7
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:23:15 -0700 (PDT)
+Received: from eig-obgw-6007a.ext.cloudfilter.net ([10.0.30.247])
         by cmsmtp with ESMTP
-        id WZeoqb7M7EoVsWkSkqAWJJ; Thu, 17 Aug 2023 21:23:27 +0000
+        id WjYtq2EAlQFHRWkSZqnkSF; Thu, 17 Aug 2023 21:23:15 +0000
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with ESMTPS
-        id WkSkqbxM5D5qiWkSkqX2XB; Thu, 17 Aug 2023 21:23:26 +0000
-X-Authority-Analysis: v=2.4 cv=dMe1JcVb c=1 sm=1 tr=0 ts=64de8fce
+        id WkSYqkCtSh9i0WkSYqKgON; Thu, 17 Aug 2023 21:23:14 +0000
+X-Authority-Analysis: v=2.4 cv=ZMPEJF3b c=1 sm=1 tr=0 ts=64de8fc2
  a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=WzbPXH4gqzPVN0x6HrNMNA==:17
  a=OWjo9vPv0XrRhIrVQ50Ab3nP57M=:19 a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19
  a=IkcTkHD0fZMA:10 a=UttIx32zK-AA:10 a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8
@@ -36,24 +36,24 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=uLjm7eVSbAemKtEXh7vE86rFzD3QqYn14hAQB8qstTY=; b=ZQuAjH5Ow5QgCHbUeJSKWprYRg
-        cTk2Ou/HefhVr9+5UvBl2nfIhgmzp+eiiOIOIEgLba8C9D4xz6vc+HWk0LC8qUPXIb66wIxPywFCi
-        NW2abjuA7PdGkHn2IbL3gJ3yJYUaT+xse5qv/xfXmLlf6yORq2ITy+NzOgDRGWaYMqFObtUuvCkIR
-        Sh4Q4be/P92KpLqOSDs9S4xjXHBJDi7YvJVBmF+HBLomk0B/vT8I5vUtfeI9dL85jMOWgLCHysH5d
-        0+qLuuXoTifJbEIKl1UGTj+DJo9rhqdAWZOH3RlwQa/87OrwquzezA7rKE/AzlE3Cp9g1vEO6iDR5
-        1Cc8kOYQ==;
-Received: from 187-162-21-192.static.axtel.net ([187.162.21.192]:35714 helo=[192.168.15.8])
+        bh=67XmJhrJZPK7WnW7Dqnj65qFJ7gTmNMnn76qKwY3QWk=; b=JzMrfIt16qqhA7uzLnsR8pH9F3
+        Gi/zexaVQyk7KbPV2LudUzW0nGp1Uizd8bKYT3TDsB/xnNHTT+3H+0/k6bbryzmf9eRoTmhu4+WBb
+        nl6aALgd8SdxJrQaFHOSVe8O0kZV1krmCHmWfTblcQWDnjKVLLg2jFYS3yIBUaWO40hfQRFYktMVM
+        VotA2oyE9NFHOY9CLRd2agm2dFtvbz3LYipjpipVTrYFdytOMCRwd0kXOCaAmgqVpyZ4AKQR9VE+a
+        z4fmEe/1eEkQHl8uoXAiz/hyB7rayNIPLOYZP9tuQevOP3Cw5Ith3FGR5pp4ceqPXFcf7lkErGHnp
+        r0eGPypA==;
+Received: from 187-162-21-192.static.axtel.net ([187.162.21.192]:37514 helo=[192.168.15.8])
         by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
         (Exim 4.96)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1qWkSj-001lIy-00;
-        Thu, 17 Aug 2023 16:23:25 -0500
-Message-ID: <6ac74722-1516-b1f1-5723-00e624beeb89@embeddedor.com>
-Date:   Thu, 17 Aug 2023 15:24:26 -0600
+        id 1qWkSX-001l52-1M;
+        Thu, 17 Aug 2023 16:23:13 -0500
+Message-ID: <2be0a7d9-c671-e014-0814-842d52d9f1e4@embeddedor.com>
+Date:   Thu, 17 Aug 2023 15:24:15 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.13.0
-Subject: Re: [PATCH 5/7] wifi: cfg80211: Annotate struct cfg80211_rnr_elems
+Subject: Re: [PATCH 4/7] wifi: cfg80211: Annotate struct cfg80211_pmsr_request
  with __counted_by
 Content-Language: en-US
 To:     Kees Cook <keescook@chromium.org>,
@@ -68,9 +68,9 @@ Cc:     "David S. Miller" <davem@davemloft.net>,
         Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
         llvm@lists.linux.dev, linux-hardening@vger.kernel.org
 References: <20230817211114.never.208-kees@kernel.org>
- <20230817211531.4193219-5-keescook@chromium.org>
+ <20230817211531.4193219-4-keescook@chromium.org>
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <20230817211531.4193219-5-keescook@chromium.org>
+In-Reply-To: <20230817211531.4193219-4-keescook@chromium.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
@@ -81,18 +81,18 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 187.162.21.192
 X-Source-L: No
-X-Exim-ID: 1qWkSj-001lIy-00
+X-Exim-ID: 1qWkSX-001l52-1M
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: 187-162-21-192.static.axtel.net ([192.168.15.8]) [187.162.21.192]:35714
+X-Source-Sender: 187-162-21-192.static.axtel.net ([192.168.15.8]) [187.162.21.192]:37514
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 111
+X-Email-Count: 97
 X-Org:  HG=hgshared;ORG=hostgator;
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfFQ679b+wZcG4blovrakBchy5eqTlJp86Vy4AJFJESLxGoGVBFMpRJGsGt43fEvFvLsiv7lvHmjS1Xw1FfYeRx+pErWtQdYQLwS0ZiTcSsHrfptPOCj6
- 2jh5g1SniTLlKxoLle6y6w8VixmLcyS/j4jfvQLYfc6kKNhCVSv6rEw+gxnuQmNmOCWpKCsAMoePy9kLWKtHErJ1erQnqGwrbYhY2aGav30uV53iJWz0HAR0
+X-CMAE-Envelope: MS4xfNPIlTdFrY+yQrZir2t+tlIQqMzatlI+4GDC1JCAsL7OKjmg1NRdsl8d0EOy/vittpLwu500oTjmDjpo7tSplfNV8jZ1FmYsYj4lL7++Zzrn6LBcfbO0
+ XOhK04NpfDuj3bFtIXGwORCzy1poDF2EtsfkOvZ7jRU2RWfCwsd2j1dp3+aWnD/IWsNxaX5pWWakb/Db/hsBh5vNGKuq5uOJsncf1+tMzKIWIfpxud6bpgTP
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -106,7 +106,7 @@ On 8/17/23 15:15, Kees Cook wrote:
 > (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
 > functions).
 > 
-> As found with Coccinelle[1], add __counted_by for struct cfg80211_rnr_elems.
+> As found with Coccinelle[1], add __counted_by for struct cfg80211_pmsr_request.
 > Additionally, since the element count member must be set before accessing
 > the annotated flexible array member, move its initialization earlier.
 > 
@@ -129,38 +129,40 @@ Gustavo
 
 > ---
 >   include/net/cfg80211.h | 2 +-
->   net/wireless/nl80211.c | 2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
+>   net/wireless/pmsr.c    | 3 +--
+>   2 files changed, 2 insertions(+), 3 deletions(-)
 > 
 > diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index e9ca4726a732..6efe216c01d2 100644
+> index 5c7d091b3925..e9ca4726a732 100644
 > --- a/include/net/cfg80211.h
 > +++ b/include/net/cfg80211.h
-> @@ -1204,7 +1204,7 @@ struct cfg80211_rnr_elems {
->   	struct {
->   		const u8 *data;
->   		size_t len;
-> -	} elem[];
-> +	} elem[] __counted_by(cnt);
+> @@ -3948,7 +3948,7 @@ struct cfg80211_pmsr_request {
+>   
+>   	struct list_head list;
+>   
+> -	struct cfg80211_pmsr_request_peer peers[];
+> +	struct cfg80211_pmsr_request_peer peers[] __counted_by(n_peers);
 >   };
 >   
 >   /**
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 9ba4266368db..0ffebf1a1eb6 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -5470,13 +5470,13 @@ nl80211_parse_rnr_elems(struct wiphy *wiphy, struct nlattr *attrs,
->   	elems = kzalloc(struct_size(elems, elem, num_elems), GFP_KERNEL);
->   	if (!elems)
->   		return ERR_PTR(-ENOMEM);
-> +	elems->cnt = num_elems;
+> diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
+> index 77000a264855..9611aa0bd051 100644
+> --- a/net/wireless/pmsr.c
+> +++ b/net/wireless/pmsr.c
+> @@ -291,6 +291,7 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
+>   	req = kzalloc(struct_size(req, peers, count), GFP_KERNEL);
+>   	if (!req)
+>   		return -ENOMEM;
+> +	req->n_peers = count;
 >   
->   	nla_for_each_nested(nl_elems, attrs, rem_elems) {
->   		elems->elem[i].data = nla_data(nl_elems);
->   		elems->elem[i].len = nla_len(nl_elems);
->   		i++;
+>   	if (info->attrs[NL80211_ATTR_TIMEOUT])
+>   		req->timeout = nla_get_u32(info->attrs[NL80211_ATTR_TIMEOUT]);
+> @@ -321,8 +322,6 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
+>   			goto out_err;
+>   		idx++;
 >   	}
-> -	elems->cnt = num_elems;
->   	return elems;
->   }
+> -
+> -	req->n_peers = count;
+>   	req->cookie = cfg80211_assign_cookie(rdev);
+>   	req->nl_portid = info->snd_portid;
 >   
