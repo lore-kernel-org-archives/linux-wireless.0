@@ -2,136 +2,149 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27568C3DA58
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 18:05:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0013C5479A
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 21:16:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354248AbjHQSFL (ORCPT
+        id S1355193AbjHQVPr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Aug 2023 14:05:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57516 "EHLO
+        Thu, 17 Aug 2023 17:15:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354221AbjHQSEq (ORCPT
+        with ESMTP id S1355206AbjHQVPh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2023 14:04:46 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A0D19A1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 11:04:45 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37HHTHCR018523;
-        Thu, 17 Aug 2023 18:04:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=Ui0Rcuv/xMSl6UEzkDQH7cjTRXzscC0FaNeZHjJvw6M=;
- b=AczAI5e50b/+E9MndujLlhT4kQBGymJEyeyTM0T0WFu240whPsqYrIudE76vljR0SWp6
- DjOvvOUyHdSvLjCyNTElcMTVCcYTzRu5tROFZQIgOZPiiK61TObxwAoGwP6RDpNXRv0l
- xt8ZnoYNQ3fsNnmQ18QebEZIPnWI+6Tyd2eJWKgXmv/gOBEkEf6ID8S0kZAaHke+wAux
- Mmp0BrW4S5+5FqdN3E9hbvsteKeBBEULDZ2AiGQ4cEJSFDUjmke/xF+54rnqd6sFxl5b
- zUmBXWiiuutxzc0Yj2ES4E9fmZ066IbtC2AbrU1/qTuPn5yTXEq5lqGp8JrWO/t/Tzpl Ew== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sh3xxapup-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 17 Aug 2023 18:04:40 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37HI4eh9017715
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 17 Aug 2023 18:04:40 GMT
-Received: from [10.227.89.240] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 17 Aug
- 2023 11:04:39 -0700
-Message-ID: <759fb125-7bfc-7d85-5c71-0a134030a9b9@quicinc.com>
-Date:   Thu, 17 Aug 2023 11:04:39 -0700
+        Thu, 17 Aug 2023 17:15:37 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 024AD35B6
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:35 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1bf092a16c9so2312145ad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1692306934; x=1692911734;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=A6pRzVAL1HfaFk+MrN35IOTXl1yUajrA5beAIZxFLLg=;
+        b=MyltMusNWYrHHduM59ZY3KVk2F109y3Pp1ImvclhC5uVVFlNLd85wpLi5oUy/yS5VG
+         ZFFcJApAMPM4nChjoYVKU7Y6Oh7sZaTnMWVh6YYIKI0/wWuJfWBrRxdnsHBmTTqccdY7
+         /Ns8/4aEaQBWWwnFK+vLM7Ur9D5iHCixdohfk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692306934; x=1692911734;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=A6pRzVAL1HfaFk+MrN35IOTXl1yUajrA5beAIZxFLLg=;
+        b=dMOybtLSxDXBayP4icHjF65ikiex/WbHs477RbE+yoUlxZdeel00tIZE6XcD2DmeDu
+         NmVEUflMvusZ5xG0z9WxNT0wN9tLMShn0ZGGitzObz62QTr1CckJIKRr9uyXFkfJpUAD
+         6OdFLMlnFp0ZhWgqr6koqseCGY01c3n6jz3ZLbZhhZH64dTOscojfLegaKw0ma27a3Qc
+         6LBmnCEKvGWYpGAW4/X/B+h47PalBaIHvVfMA8j7Lr4yheXaIb93dnWgMR+a608t6Qh0
+         HKKsIyC3wUTYsw1SqKWRXxaVVM0FL1MOQ9YXAtph4Ey+TKD4yzqTB42CVb9DMVf8M/rv
+         5z2A==
+X-Gm-Message-State: AOJu0YxifGo/AyIIEh+PnNv5BETw7MRkUFwEOQ0z7/9grD76xMNOX5nW
+        rzkOD07JlJHic81hyh4qG9ZZ7Q==
+X-Google-Smtp-Source: AGHT+IHVjuRk1web/N5CIE6G3DSroLocgLnvFFM3Lfkq6agT4XiyPHhqIHZks3sie+eRrw9Rg6gakw==
+X-Received: by 2002:a17:902:be03:b0:1bd:e85f:700e with SMTP id r3-20020a170902be0300b001bde85f700emr590833pls.69.1692306934435;
+        Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id jj20-20020a170903049400b001b9f7bc3e77sm208556plb.189.2023.08.17.14.15.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Aug 2023 14:15:32 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Kees Cook <keescook@chromium.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
+Subject: [PATCH 4/7] wifi: cfg80211: Annotate struct cfg80211_pmsr_request with __counted_by
+Date:   Thu, 17 Aug 2023 14:15:26 -0700
+Message-Id: <20230817211531.4193219-4-keescook@chromium.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230817211114.never.208-kees@kernel.org>
+References: <20230817211114.never.208-kees@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 0/5] Additional processing in beacon updates (v8)
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-References: <20230727174100.11721-1-quic_alokad@quicinc.com>
- <46340c48-285e-4e2a-b6e9-802f922f0c2c@quicinc.com>
-Content-Language: en-US
-From:   Aloka Dixit <quic_alokad@quicinc.com>
-In-Reply-To: <46340c48-285e-4e2a-b6e9-802f922f0c2c@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2180; i=keescook@chromium.org;
+ h=from:subject; bh=ytZuVuu89ZLCBsGHGYeK5Mrw8+wpGzwhqHz7UbWnFA8=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3x/0j3Sg2xlp/sAxt3CMimE1sDR90HXUPBB
+ lc5GQBuZSuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
+ JnDCEACQDuHi5umP6pnbV1/6oqKWEuBYmNo/ZvDgqxNNQUELDL5Ta/5wtzf7XiiCeoll8eOLUCi
+ P7ReHnkR5v3TpE40/l08pqvVD0Uhy7syN+4izs7Z/I2Tj6P9F7QPf1eIz9o+DGg+BoXpIz7+anZ
+ deuiv+CQBw/qR3n+4ZutHmcdrJ6VXv7JPMxjVlKnPlKZ14LELqAVNYpqRb7GVT9mtCWYSUCzI/o
+ q7pc8sXhIiGvqbhGEH1DHBwUsDaCJFyZU0deQ/4Wr6PjJmzm6VwT1/tCLXsJSOc/Bm0dZnJ50tF
+ CrXF9Lu0muoI54sFAZ2aObdmUdx9cRs7vLwLMPMpORFSToSzsYuxcmfoe139MigExg96t0sqMjr
+ 15BXehaTyC/b1xov42tJ+E86o2aphkoRQy/CJfb+41Ab6Kxd881kUk5U5AQDaEzwFxO70DgRF9i
+ AIBAQRxAKLNJiH/KfcqZ+dBL3eZFLiSraO9F/WymXLqEq+VLYAFI0NzWsbLSyYAxYakd3yyqocD
+ rama7ffqboYN4fv1HznzYuerAjJ40SUp7OYKWNCrjOenDPT+r7wkghCV4iXQMjc7EOpL3oHq35H
+ Lwq8T6EDWTvsH0OISgIGkXmXOFRctDiRJ1qka4z9zeAyOBEMvT3kscRRH+5HmFH3PAQoLms2mF6 tAQgs/hfx8leeZg==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: sn1BdX5Ww-3XdyiCbsURBJzNu9XnL6Vg
-X-Proofpoint-ORIG-GUID: sn1BdX5Ww-3XdyiCbsURBJzNu9XnL6Vg
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-17_12,2023-08-17_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 malwarescore=0
- bulkscore=0 mlxlogscore=999 clxscore=1015 priorityscore=1501
- impostorscore=0 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308170163
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/16/2023 11:38 AM, Jeff Johnson wrote:
-> On 7/27/2023 10:40 AM, Aloka Dixit wrote:
->> v8: Patches #1, #2 are new in this version which allow resetting
->> the interval to 0 once set to non-zero which was not possible earlier.
->> No functional changes to the remaining three patches from v7 here:
->> https://patchwork.kernel.org/project/linux-wireless/list/?series=693804&state=%2A&archive=both
->>
->> v7: Resolved conflicts with MLO code changes.
->>
->> FILS discovery and unsolicited broadcast probe response transmissions
->> are configured as part of NL80211_CMD_START_AP. The configurations
->> may get changed whenever there is a change in beacon, e. g. when
->> a channel switch operation completes the new templates will be sent
->> by the userspace which reflects the new channel bandwidth. Process the
->> attributes for these features in NL80211_CMD_SET_BEACON as well.
->>
->> - Replace the check for interval (for both features) with a new flag
->> 'update' which is set only when the userspace requests an update to
->> the configuration. This allows the interval to be set to 0 and
->> templates deleted which wasn't allowed earlier as the attributes got
->> processed only if the interval was non-zero.
->> - Modify the local variable in nl80211_set_beacon() and input parameter
->> to rdev_change_beacon() from type struct cfg80211_beacon_data to
->> type struct cfg80211_ap_settings to support the new processing.
->> - Modify ieee80211_change_beacon() to reflect the new input parameter 
->> type.
->> - Modify driver specific functions pointed by change_beacon to reflect
->> the new input parameter type.
->> - Add the missing implementation in nl80211 and mac80211 to process
->> FILS discovery and unsolicited broadcast probe response configurations.
->>
->>
->> Aloka Dixit (5):
->>    wifi: nl80211: fixes to FILS discovery updates
->>    wifi: mac80211: fixes in FILS discovery updates
->>    wifi: cfg80211: modify prototype for change_beacon
->>    wifi: nl80211: additions to NL80211_CMD_SET_BEACON
->>    wifi: mac80211: additions to change_beacon()
->>
->>   drivers/net/wireless/ath/ath6kl/cfg80211.c    |   4 +-
->>   drivers/net/wireless/ath/wil6210/cfg80211.c   |   3 +-
->>   .../broadcom/brcm80211/brcmfmac/cfg80211.c    |   4 +-
->>   .../net/wireless/marvell/mwifiex/cfg80211.c   |   3 +-
->>   .../wireless/microchip/wilc1000/cfg80211.c    |   4 +-
->>   .../net/wireless/quantenna/qtnfmac/cfg80211.c |   4 +-
->>   .../staging/rtl8723bs/os_dep/ioctl_cfg80211.c |   6 +-
->>   include/net/cfg80211.h                        |   6 +-
->>   include/uapi/linux/nl80211.h                  |  11 +-
->>   net/mac80211/cfg.c                            | 102 ++++++++++--------
->>   net/wireless/nl80211.c                        |  47 ++++++--
->>   net/wireless/rdev-ops.h                       |   2 +-
->>   net/wireless/trace.h                          |  54 +++++-----
->>   13 files changed, 159 insertions(+), 91 deletions(-)
->>
->>
->> base-commit: b2090d93d4b6f1c72a9793d5a171806b8468b7cb
-> for the series:
-> 
-> Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-> 
+Prepare for the coming implementation by GCC and Clang of the __counted_by
+attribute. Flexible array members annotated with __counted_by can have
+their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
+(for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
+functions).
 
-Thanks for the review!
+As found with Coccinelle[1], add __counted_by for struct cfg80211_pmsr_request.
+Additionally, since the element count member must be set before accessing
+the annotated flexible array member, move its initialization earlier.
+
+[1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ include/net/cfg80211.h | 2 +-
+ net/wireless/pmsr.c    | 3 +--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5c7d091b3925..e9ca4726a732 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3948,7 +3948,7 @@ struct cfg80211_pmsr_request {
+ 
+ 	struct list_head list;
+ 
+-	struct cfg80211_pmsr_request_peer peers[];
++	struct cfg80211_pmsr_request_peer peers[] __counted_by(n_peers);
+ };
+ 
+ /**
+diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
+index 77000a264855..9611aa0bd051 100644
+--- a/net/wireless/pmsr.c
++++ b/net/wireless/pmsr.c
+@@ -291,6 +291,7 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
+ 	req = kzalloc(struct_size(req, peers, count), GFP_KERNEL);
+ 	if (!req)
+ 		return -ENOMEM;
++	req->n_peers = count;
+ 
+ 	if (info->attrs[NL80211_ATTR_TIMEOUT])
+ 		req->timeout = nla_get_u32(info->attrs[NL80211_ATTR_TIMEOUT]);
+@@ -321,8 +322,6 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
+ 			goto out_err;
+ 		idx++;
+ 	}
+-
+-	req->n_peers = count;
+ 	req->cookie = cfg80211_assign_cookie(rdev);
+ 	req->nl_portid = info->snd_portid;
+ 
+-- 
+2.34.1
+
