@@ -2,50 +2,49 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C276C678DC
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B22C3C678DF
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 21:16:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355233AbjHQVPu (ORCPT
+        id S1355210AbjHQVPt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Aug 2023 17:15:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54388 "EHLO
+        Thu, 17 Aug 2023 17:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355203AbjHQVPg (ORCPT
+        with ESMTP id S1355209AbjHQVPh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2023 17:15:36 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F73D359C
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1bdca7cc28dso2191625ad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
+        Thu, 17 Aug 2023 17:15:37 -0400
+Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B2743594
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:36 -0700 (PDT)
+Received: by mail-pg1-x529.google.com with SMTP id 41be03b00d2f7-564b8e60ce9so215976a12.2
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1692306934; x=1692911734;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=84126Krvj5It4jg9Q1uPzC9d5K5UntVoSjqBC8dGf2s=;
-        b=BHz4qEOXdw40B8x8sOfWFvsckDK4ZpX1DduLsCtYUeDJHrXqjzAF9zFyUz0yA9PTh2
-         eC/nGE41cN98MhDYLXv7g4Hg0mURamg+YmSIGtq1u4M3cEsm6Mlpm/buNulzWU+ZJe/K
-         QrlwgfN8fE+5xgreRerXYyu0HuOHuVQC19cQI=
+        d=chromium.org; s=google; t=1692306935; x=1692911735;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=nMv3jMfXfZeQlh3kTaF/x4qTfcNW/XdUdIa35ziuNSc=;
+        b=J1b6KXoDvYCj93J82hNUfzOMePqIyx20asgvfw8HIrBYC9PQtriyzORw0vdYF4+R39
+         iWtouRrtKVwKoTVR779ILkxd2+wmXCHXfEl4mQdb3YyVkHP0qxhS5ImIk7OhWfMifhaT
+         lzD5DICKg8ck9C4XQbF81Lh+TIIdtD2/lzNFQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692306934; x=1692911734;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=84126Krvj5It4jg9Q1uPzC9d5K5UntVoSjqBC8dGf2s=;
-        b=edlgjPL0B0EQpoDYPXaaAiPEpan098Yf/A1Q7ABmZPuZjJJsTaQTj3UNz2wW8mB2DM
-         iqwzqPuwqsp+OaMIWrtrEAaOcPZj2Yy6VuVx+pzDe43SP1gNIrEBsweXK2GN6l/fktUX
-         O9R2xua6KZtcBxeHKymGHOAT/0fT+oLIronXE9QyDZoRnCp3VvlIfkx01soS2xcLTlOQ
-         itHdvxQH9nuEpCK3cv+ZWBZ2Trx6ArWhkKXK6WOJguhq0Xes61fmLME0f92lkCn/6cqy
-         0Uu466cnnloTgxXfmYPQ5FXsODZLaBL1ncCIEp+QpXlPoYOBoR7FDRhdxPNvCJvqJrbk
-         2Uwg==
-X-Gm-Message-State: AOJu0YziGRz2gjLEwFQTC2nA3D3WXdgQChGKraT3cnGEDSBWiOG8FLPT
-        Eae3KFlX2ShUAEiclv33d1/04w==
-X-Google-Smtp-Source: AGHT+IGejMpNDu5iUt5y4pkNg7hjNXDzs6GU7LUwzlDmA1AYeMtiV3uVhEVENEVbaoaSlRg1FcsTxA==
-X-Received: by 2002:a17:902:f54f:b0:1b8:6987:de84 with SMTP id h15-20020a170902f54f00b001b86987de84mr625512plf.48.1692306934091;
-        Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1692306935; x=1692911735;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=nMv3jMfXfZeQlh3kTaF/x4qTfcNW/XdUdIa35ziuNSc=;
+        b=SpzxmIOa23TXqZZkwRVP/95GES8SV+Ym9laRHMr07Hi0RSw1fxYvUuRPSPsSH2dfl7
+         a375nh0waD5DtGCmPnWdU9r8SaOKrid6wIAi1vSOOnhsteQbJlzgJjhd3BBnEPI1UkAA
+         RiP86kdPUNIAVdCuqjD+OlhIsMHKE7U4x14RuI+ijRq7IeD9KrCCtno4afa0tbD8Osyo
+         4z7+z1K1HsHM4PcZqONXj3b6KYmaTLa9IGGvKU/mLe34ZnEBzUClkuM95dEB23ynxQ7j
+         t/Dyq4jCRhJOCo0YiXM4JfyxuYZ3lNAms0+o/BLE0UFsW8ZhiyY8BJ+DI9KXPYRsT7rA
+         dUKw==
+X-Gm-Message-State: AOJu0YwevdTuTFBfHw/BE2tzBq0b1+Ms1tI9IISVe2tubGtsER40XZ4L
+        m/e8H3nUXvKqYtm7W4bYJOq5nw==
+X-Google-Smtp-Source: AGHT+IFSRStXoIpZytSRGeOX2ux67DF7cS1Gz0NEDNhY067TSw0TiIcAkAihtDsDuM9L/+3asABlTA==
+X-Received: by 2002:a05:6a20:3b11:b0:13d:ee19:7723 with SMTP id c17-20020a056a203b1100b0013dee197723mr939971pzh.35.1692306935477;
+        Thu, 17 Aug 2023 14:15:35 -0700 (PDT)
 Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id u12-20020a17090282cc00b001b8943b37a5sm223595plz.24.2023.08.17.14.15.31
+        by smtp.gmail.com with ESMTPSA id s26-20020a63925a000000b00564ca424f79sm134316pgn.48.2023.08.17.14.15.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Thu, 17 Aug 2023 14:15:32 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -55,94 +54,67 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Nathan Chancellor <nathan@kernel.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         llvm@lists.linux.dev, linux-hardening@vger.kernel.org
-Subject: [PATCH 3/7] wifi: cfg80211: Annotate struct cfg80211_mbssid_elems with __counted_by
-Date:   Thu, 17 Aug 2023 14:15:25 -0700
-Message-Id: <20230817211531.4193219-3-keescook@chromium.org>
+Subject: [PATCH 0/7] wifi: cfg80211: Annotate with __counted_by
+Date:   Thu, 17 Aug 2023 14:15:22 -0700
+Message-Id: <20230817211114.never.208-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230817211114.never.208-kees@kernel.org>
-References: <20230817211114.never.208-kees@kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2022; i=keescook@chromium.org;
- h=from:subject; bh=vaWHXmxPO1ptoIqyZPI0oaQtbTFkYHcNqPSrVLO+Cyo=;
- b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3x9Q72AWeO3iT9FoMZtrv2vw6MyWouRB7nh
- h1x+UnGyeSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
- JrUyEACKeu7bZ+6W17+6Csyy59kutbcaGWnWoZqfeNWCSYd8tAVhCczdJLuz9/B0R2QrXSpwu5n
- zpIIYGWYvFW7QaNN3Ygc4s35ySoSg3owW7TtTyaCr7IXyJoJ1XjqboBhARy1m1Xf2omjbw68BMf
- 7E2D+pVCSVklqLPDnXGQGvI+wuRpG+nlQMh+MkQ7gbU4cE+qrDf2VGKADgzzqFCCtNjsOsm02ho
- R3Fh6czL/VlwYTGdoI/cmyNjZVZkxHLTxOQvl+18zGC/2AbLsX7QRbFN0Qt5ky6gUa0PTo2fW3e
- Z2tQLZDcpZhxgLxNp9sF9eKAfzzQoT5V5oxZ4oXka86BlvZR6b+OgYyFq75wNqabtdhPK02OTmY
- trw7lr+vgki7yU+3+OErnwg0WAMENH7zVcC4WcnpIxwTxaVBM4oFEhytGPLPfNGyfXfUPT5JRen
- ygp8TcPbp1bgT6ITfxI+mP3vMVDrZy0w+385fFnq9xUyJYou6HIOzlr3PXaP0Ya82tLq4T4cKoF
- xOsW6OcFPLf2zsF2H/IvlbgWExJEV3XI0eIz7UXg1axO1xs3z76pyLB1ZwRuOxepVQ9hP2jHT69
- 3ihSRWYcbD7XS8UeaSsUR6HfR1YBJrG6hgR0zJDcMztj7DCNSiWrE2eolF9mGGG381h9598oL6j wLHKdDJFXPjvMAQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1217; i=keescook@chromium.org;
+ h=from:subject:message-id; bh=yiiQfq7zNw6Og6zmPL90LK8+bep21Nuhy1wjHFcUIPs=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3wfdi23SF0O9V7M5/FrNoppSrvOQfoI5J+R
+ XT6vWdk1XeJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8AAKCRCJcvTf3G3A
+ JgwiEACXzetgKkVCfCqLwZYnasCT/VOWXlnKrOcsE3M9CS7umMyA5Ao5jkbdGb3iPaj5+695NnQ
+ OsDcoof+1Vh27w8lVP186oygdRNYqLvIE1vs9ifMJZapnWrPbbFQ79HYl9OY+nS2JdqAE06A6Hj
+ vvRRz8R6kfCnowm3pj9LvnRTcSKuloY5AuvwcgF0vqpzi0MeodvVAjEVnE4zXx89V5zoBOoWCCT
+ y3JPlg3p7fHfyhyI0yfZL9EFDLc24rLEdVISCLc67qOBwAmHj1Bb21CfBN6BnQzsft/+bhpMucF
+ 9fVNFhEHAJd/1c6j46vYzMXLOssCSne+RwiBAJfGkfGANb5oF126fHTwS3wYoAQ8UBe8kYTJFSR
+ APxiQjqcFkRUoJ228iVw1TZzrjlS0rrsodImgT3VT9uluwbmZwflgxq5WQN+FXVNjleRZQ32WUz
+ 7iqzQMKmV4P5k74GLeYqSoVOcV1tDuWgcBcUkz6APY5VF+AeCqM7NoeGIICIWNMJJjcFPHOOCtT
+ qk6vSjoWuVXSt62Xl5iVi/cvJSxMOxTyTyRozgDS04DOb8p7C39gewH7M2A2XM9TdftpZhxuKR2
+ UEfI5fQ3pj7qjCSHnPhALVrH5ABbSMaQXVYPC9KxgbsZ5i7+2dFQXx8jh0wC2ZU5Dn/fwPlN0/X
+ pSqMQ6D R94ZOPOA==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Prepare for the coming implementation by GCC and Clang of the __counted_by
-attribute. Flexible array members annotated with __counted_by can have
-their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
-(for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
-functions).
+Hi,
 
-As found with Coccinelle[1], add __counted_by for struct cfg80211_mbssid_elems.
-Additionally, since the element count member must be set before accessing
-the annotated flexible array member, move its initialization earlier.
+This annotates several structures with the coming __counted_by attribute
+for bounds checking of flexible arrays at run-time. As a note toward
+applicability, had this mitigation been available already, the flaw
+fixed in commit 6311071a0562 ("wifi: nl80211: fix integer overflow in
+nl80211_parse_mbssid_elems()") would have already been unexploitable
+(i.e. writes through an out-of-bounds index would have been blocked).
 
-[1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
+Thanks!
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Eric Dumazet <edumazet@google.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- include/net/cfg80211.h | 2 +-
- net/wireless/nl80211.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+-Kees
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index eb73b5af5d04..5c7d091b3925 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1187,7 +1187,7 @@ struct cfg80211_mbssid_elems {
- 	struct {
- 		const u8 *data;
- 		size_t len;
--	} elem[];
-+	} elem[] __counted_by(cnt);
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 80633e815311..9ba4266368db 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5438,13 +5438,13 @@ nl80211_parse_mbssid_elems(struct wiphy *wiphy, struct nlattr *attrs)
- 	elems = kzalloc(struct_size(elems, elem, num_elems), GFP_KERNEL);
- 	if (!elems)
- 		return ERR_PTR(-ENOMEM);
-+	elems->cnt = num_elems;
- 
- 	nla_for_each_nested(nl_elems, attrs, rem_elems) {
- 		elems->elem[i].data = nla_data(nl_elems);
- 		elems->elem[i].len = nla_len(nl_elems);
- 		i++;
- 	}
--	elems->cnt = num_elems;
- 	return elems;
- }
- 
+Kees Cook (7):
+  wifi: cfg80211: Annotate struct cfg80211_acl_data with __counted_by
+  wifi: cfg80211: Annotate struct cfg80211_cqm_config with __counted_by
+  wifi: cfg80211: Annotate struct cfg80211_mbssid_elems with
+    __counted_by
+  wifi: cfg80211: Annotate struct cfg80211_pmsr_request with
+    __counted_by
+  wifi: cfg80211: Annotate struct cfg80211_rnr_elems with __counted_by
+  wifi: cfg80211: Annotate struct cfg80211_scan_request with
+    __counted_by
+  wifi: cfg80211: Annotate struct cfg80211_tid_config with __counted_by
+
+ include/net/cfg80211.h | 12 ++++++------
+ net/wireless/core.h    |  2 +-
+ net/wireless/nl80211.c |  7 +++----
+ net/wireless/pmsr.c    |  3 +--
+ 4 files changed, 11 insertions(+), 13 deletions(-)
+
 -- 
 2.34.1
 
