@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CF60C71130
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BC44C71131
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 21:16:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355237AbjHQVPu (ORCPT
+        id S1355242AbjHQVPv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Aug 2023 17:15:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54442 "EHLO
+        Thu, 17 Aug 2023 17:15:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355212AbjHQVPi (ORCPT
+        with ESMTP id S1355214AbjHQVPj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2023 17:15:38 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38C833591
+        Thu, 17 Aug 2023 17:15:39 -0400
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9A44359C
         for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:37 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1bb84194bf3so2065205ad.3
+Received: by mail-pg1-x52b.google.com with SMTP id 41be03b00d2f7-564cd28d48dso241381a12.0
         for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google; t=1692306937; x=1692911737;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=h3KUIjH3bqO3vz9j7zL88Gi7VGzR7tpzI/DAuF67YiY=;
-        b=kM2CV3yqnMQ3sAajAg0RjqmXfUnXkNE7pnTvtpPBHXQapPviKtWvfTryssx3R7OPUW
-         kZY5hfjw60H8b94f7uX45reuNipK3U1jz0CjPV4GFJRQ08PzWPrONHjb5qqiXNMRHSDK
-         ILrE9YOayY4VpZHZ/Rs8jIzUKjHArSNr289LY=
+        bh=phUiJ93OG5fT2HQgeI0x27DBfVFvmCA05DOo5t8M3F0=;
+        b=m13GfLSVElpoUlkc8XTfd2EAm/nFZIAFv5nYubhdAXg39AjnARc8PDqRRwhZ7nFuMl
+         THmkcqR9SondynXpKqbAIqxO5ImaGw85uLzxTZpc/SMsVg7BpStQ00iERACf6w/Uaz1H
+         +HeZJOIfHkfhzg2I/Y98/HcqNNILtGguIkQO8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20221208; t=1692306937; x=1692911737;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=h3KUIjH3bqO3vz9j7zL88Gi7VGzR7tpzI/DAuF67YiY=;
-        b=cQj4/IiRp6wfV65xj5m4zs7ly8fi1elXo37IB5vAhEzqNNiPwumUzleTUCEszzGnFd
-         VnU2DrcqngpXalQ3c8fQjLx6cEfAEfdwkGP9T9COoEUXuyCJrYk15udafQC06sZlF5UW
-         i5x5f2E+SKh10YbG1Wr4j+Lyy8aQCL6FVXrOfDRJZ/3mLcJ2RNktv7nHD7+NqgqH4ava
-         8iX4+GsWjTv+rgNfgCVdMO25NPRbRFJbe5Be+wKKcxpCKiQyxs7+W+A/Ser1hDq2bmQm
-         ZCsNwzClnO5Sxbo+NAtNcPf1fUC0SY4gEPgoC+5p1HrI+tZsdZJYfIBzsEYg3VUCsk5N
-         4nmA==
-X-Gm-Message-State: AOJu0Ywwv3C4OoyyAh4n4F9oM5mhHpY+2mNGcmSwbDSYM6/wCWGPLr4x
-        gq+Y2qtTD6WydmlgDLlM0rFHWA==
-X-Google-Smtp-Source: AGHT+IEmfNVsNy4iHnvmICXL9xQpKVCsS1m4JFbHTVsXD7ksfRQU/kKdfL0/USC58A0YU154Pq7AGg==
-X-Received: by 2002:a17:903:1250:b0:1b7:e646:4cc4 with SMTP id u16-20020a170903125000b001b7e6464cc4mr755667plh.28.1692306936691;
-        Thu, 17 Aug 2023 14:15:36 -0700 (PDT)
+        bh=phUiJ93OG5fT2HQgeI0x27DBfVFvmCA05DOo5t8M3F0=;
+        b=YsSc0eijLnJdWg9oW9v9jw3jupWJ03eA9G5jnr/xRjUtYcYR08YjP08994H1OQpRxl
+         vHfRT52ZiGQNY3smVJfRoY/38fn4fyXaQHMRmS9of26G8AM/FK3zGJ4NqxpISu8t4D5J
+         xKo8k8hvlat5Xfz5lZ+sS6gGlHJbUsd/9bWIuNZTmzNTWczRw6kPgI4yc68KCXLwNzfz
+         HZueQlcwY2BD2qn7yvA0OaDwkoVz4JIs8g0dw9zbZDoOn6VQP/EVzSh22twNHg5lY1p2
+         CMWcnz4lb1AaoEI8oKlvEu8vZrg3wu7igJT3y3JwNZjufw8UD+wSXxYtBYuVBkiKiyMq
+         PEpw==
+X-Gm-Message-State: AOJu0Yw5JvwuoFBRCcg/8Kad7xhdAuKnEg8VpgnFINX4A/RnLM6CP7Dk
+        x8lAqHBwN1/9OjH2Gq36AIWiVQ==
+X-Google-Smtp-Source: AGHT+IF7s+IU/lIpVVTRfA7A1qbIsiivth3Da3IhciHPIQm6pnVUAKXy1L3JsiXrPdjKSQOIbfeQaw==
+X-Received: by 2002:a05:6a20:4420:b0:131:f504:a631 with SMTP id ce32-20020a056a20442000b00131f504a631mr1181516pzb.51.1692306937174;
+        Thu, 17 Aug 2023 14:15:37 -0700 (PDT)
 Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id n9-20020a170902e54900b001bde65894d5sm219283plf.109.2023.08.17.14.15.33
+        by smtp.gmail.com with ESMTPSA id m18-20020aa78a12000000b00688701c3941sm197317pfa.111.2023.08.17.14.15.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Thu, 17 Aug 2023 14:15:35 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -60,26 +60,26 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
         llvm@lists.linux.dev, linux-hardening@vger.kernel.org
-Subject: [PATCH 5/7] wifi: cfg80211: Annotate struct cfg80211_rnr_elems with __counted_by
-Date:   Thu, 17 Aug 2023 14:15:27 -0700
-Message-Id: <20230817211531.4193219-5-keescook@chromium.org>
+Subject: [PATCH 7/7] wifi: cfg80211: Annotate struct cfg80211_tid_config with __counted_by
+Date:   Thu, 17 Aug 2023 14:15:29 -0700
+Message-Id: <20230817211531.4193219-7-keescook@chromium.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230817211114.never.208-kees@kernel.org>
 References: <20230817211114.never.208-kees@kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2013; i=keescook@chromium.org;
- h=from:subject; bh=opTdchMTFBio49JAacuYDHOX8V17n+9BFsDugyXAN9E=;
- b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3xP3ljHbFTrWITJj5hyUq0mFHJdP46PaHR+
- QMZ01hVNLqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
- Jhc3D/0fmSOg3r4qUmVXQBWBtynY0f5BSPE/uidL/PDaHslJN4zo0mvrc/HxB5KHuXE1PIu2rWY
- 0XvH+I5JZS8YV1NLW20Ngnr221VsBQ2U55gZ6ueSH51LejIR6Ugn51e+uPeBXY+Sq9lqmuvdONi
- ioVUed6O0963qupB6yUISWu4h0mift+ky7C6t2Tyrrqfan2O7JTKMmSniubu7UZ+ytA+ORDPp2G
- +ZJQ4ziYgEh5MAXRoSRovOxK5aRPI7JAN5K71Pnx9n6Lqvax4Qfx0fSyxQE2s8BP/ApwRtHyDR6
- w1TjreEP7u9BA3a74LI1Sq8w3ECR/r/hLlijUCBUYzPKze8d7r7Agm9zMcSc/DQ1KcFu/vx3q4q
- vUIGXe/zSwPZhYwleRXNCgq710EA9chMYY3RtWCLJss6VxrkzVPg120TpzIOcREY5wj6zkAgR+s
- OJF55sKozzPob6ghUtHwn/LsiqSPjcxzDaY5lPPCEDF6ftxDRFdttZ+rO8fw+95XH5eBml2uw1t
- Uq+0dKigcSbaEgOmW1FZ2rQgTH9UQrO6nqrYO5ky/qMpq6rNembFzV8ZlEbEyVZhe4cobhuzi9i
- 6OuWS+FRM+KGsHfEWs+jTTqgZtGklRO0Jk8AygwNl1w3I6/bBzm97DbzVNzOCWStiY9rxVpzc7e FypPiEKQyAFJxEg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1303; i=keescook@chromium.org;
+ h=from:subject; bh=MqZgW0ZDJW9VKg5I69oHRlFrW/5s/bnzmd4geiRSuSA=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3x/34xyuHIsFO373KwVl2QODEFDIBSLz76F
+ 4mS/Sq+pMaJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
+ JjEZEACO9GxRQKT9xf9tZlwDCcN6atAAOa0htPWNOoIsLNtvxWAYtKhtG8g1/ekxWwGhQF37YHo
+ lJovHZ60rO+krmpUaxkVL5JglO/98U8OFfCt+Zm/XtjpwhrYgCk1rH4rBxQ05BFwiu3jDUK1rPx
+ wrSqHb65i6piGqoNBN2P6KBm8E8+V25p2xE4fvwzJ/suiSSZoEWuK6HZYe6BIcIwQPAdT4JS1tW
+ r8OEsiBL0pGU7Fnho3C2Qy1AuT42bVUTaS1PBVVDy830zM3Y39TqW7pWAD/N7mMNL36SVXXb/VY
+ ujNzAglxUWExKIpLT5YouRtrrf7XBrJkOsZ9qEkj4JKqF9/iyQxhSopHsPuoOS8+cW8thVGuBDH
+ z3scez2jr1rzzA1hPNKfOsmFMmJVIsQvgMERacrkLUXcnjkDdo9jsTn1zASB7NMYY4r4UjPz9cT
+ m/vMQZpwV7/p9uZBhyBJrutEDl3b+ExnXiwukaJGKBRvhNznOEXbA9snzl3Vmjgijs4eELKywMM
+ gfc4VntArWeYXia3LhmT2zLetKC0mrOBm/hHBTy6htJ0tG8Qkf+mYREzDm61HGSTZlDo6mwUzFk
+ S88K7vNOHe5KjZ3/wUHPkbS28drKdo2jeZCveIDDJ0wNjY+Ih9FEGvjYYD8KY1lR5ZUMnQt6ovl gwCSNjN0bl2WPLQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -92,9 +92,7 @@ their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
 (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
 functions).
 
-As found with Coccinelle[1], add __counted_by for struct cfg80211_rnr_elems.
-Additionally, since the element count member must be set before accessing
-the annotated flexible array member, move its initialization earlier.
+As found with Coccinelle[1], add __counted_by for struct cfg80211_tid_config.
 
 [1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
 
@@ -108,41 +106,21 @@ Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
  include/net/cfg80211.h | 2 +-
- net/wireless/nl80211.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e9ca4726a732..6efe216c01d2 100644
+index a2afc94a5408..423fe9b85cb0 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -1204,7 +1204,7 @@ struct cfg80211_rnr_elems {
- 	struct {
- 		const u8 *data;
- 		size_t len;
--	} elem[];
-+	} elem[] __counted_by(cnt);
+@@ -811,7 +811,7 @@ struct cfg80211_tid_cfg {
+ struct cfg80211_tid_config {
+ 	const u8 *peer;
+ 	u32 n_tid_conf;
+-	struct cfg80211_tid_cfg tid_conf[];
++	struct cfg80211_tid_cfg tid_conf[] __counted_by(n_tid_conf);
  };
  
  /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9ba4266368db..0ffebf1a1eb6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5470,13 +5470,13 @@ nl80211_parse_rnr_elems(struct wiphy *wiphy, struct nlattr *attrs,
- 	elems = kzalloc(struct_size(elems, elem, num_elems), GFP_KERNEL);
- 	if (!elems)
- 		return ERR_PTR(-ENOMEM);
-+	elems->cnt = num_elems;
- 
- 	nla_for_each_nested(nl_elems, attrs, rem_elems) {
- 		elems->elem[i].data = nla_data(nl_elems);
- 		elems->elem[i].len = nla_len(nl_elems);
- 		i++;
- 	}
--	elems->cnt = num_elems;
- 	return elems;
- }
- 
 -- 
 2.34.1
 
