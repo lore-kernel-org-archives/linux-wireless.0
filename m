@@ -2,50 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA08C64ECC
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C276C678DC
 	for <linux-wireless@archiver.kernel.org>; Thu, 17 Aug 2023 21:16:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355221AbjHQVPs (ORCPT
+        id S1355233AbjHQVPu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 17 Aug 2023 17:15:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54344 "EHLO
+        Thu, 17 Aug 2023 17:15:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355198AbjHQVPf (ORCPT
+        with ESMTP id S1355203AbjHQVPg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Aug 2023 17:15:35 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 491693591
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:33 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1bdb801c667so2210305ad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:33 -0700 (PDT)
+        Thu, 17 Aug 2023 17:15:36 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F73D359C
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1bdca7cc28dso2191625ad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1692306933; x=1692911733;
+        d=chromium.org; s=google; t=1692306934; x=1692911734;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=8UofhjPFvRG631Ccgv2qHcV06RmLtv8X8B/5+W9lIA8=;
-        b=TlEkdA0aHIpDhWACKGHLrkm5y9e4OB90g6PTzJ1l+cbGyrClX3h4fGqMnA+W3GTIHy
-         lP+KdB7wLx+G2GYF76W564NATtk5HWp+4Rx8DoU5rzUBnYjtV1BE+7EJ2YTSjwpgYMph
-         +5OXcqEe8DeO2ald44h2rUXsRTA4LQAQWdiso=
+        bh=84126Krvj5It4jg9Q1uPzC9d5K5UntVoSjqBC8dGf2s=;
+        b=BHz4qEOXdw40B8x8sOfWFvsckDK4ZpX1DduLsCtYUeDJHrXqjzAF9zFyUz0yA9PTh2
+         eC/nGE41cN98MhDYLXv7g4Hg0mURamg+YmSIGtq1u4M3cEsm6Mlpm/buNulzWU+ZJe/K
+         QrlwgfN8fE+5xgreRerXYyu0HuOHuVQC19cQI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692306933; x=1692911733;
+        d=1e100.net; s=20221208; t=1692306934; x=1692911734;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=8UofhjPFvRG631Ccgv2qHcV06RmLtv8X8B/5+W9lIA8=;
-        b=JqC0wae+ZkiEKAM8usWtkdqvdZwmrqhaecRW/5YHuXG8ErKcNe40yLh+NH8raZHlUs
-         VOsgdF+jN2/xLLoecp2pZNZbpHIbF1GAg6t2K6Y5UuA10HPtGJyQkuCKzRzFeV3FGqta
-         UEqFuj0eu+SfEvAqbzywOr+e7lPatie/n4rFDbHfBAWqm7LON4YpoPZysn++3ZySQ0DM
-         LSSC0mJDL1RSYG+n5ae8zEUc+RBlT7zhA4wLlcP9j/LaQTMYnGnv2Q+CDm09VYjw4qIm
-         ZA8+fg7HjMhkKRXfHMlQq/pX1Sd53zaD23lh89vj4uHR2zOsHy2v5m+OIzxJqMzQaOL7
-         vwEg==
-X-Gm-Message-State: AOJu0YycuPXmianY9JB/f6Od3enEEjQ22CJ1WDaZ26KWCGkXIaJ/AHHy
-        HSQZ+6lfs7aiL6rJzINkcXUPjg==
-X-Google-Smtp-Source: AGHT+IFBZSHNzPvyZlBzEtJLJA9BTz4aD5fj9A34rHRZOf7eSuRvseMrGYRyhAolhTW3rZ+WlLEk7w==
-X-Received: by 2002:a17:902:bd45:b0:1bb:cf4e:ccd with SMTP id b5-20020a170902bd4500b001bbcf4e0ccdmr659710plx.28.1692306932698;
-        Thu, 17 Aug 2023 14:15:32 -0700 (PDT)
+        bh=84126Krvj5It4jg9Q1uPzC9d5K5UntVoSjqBC8dGf2s=;
+        b=edlgjPL0B0EQpoDYPXaaAiPEpan098Yf/A1Q7ABmZPuZjJJsTaQTj3UNz2wW8mB2DM
+         iqwzqPuwqsp+OaMIWrtrEAaOcPZj2Yy6VuVx+pzDe43SP1gNIrEBsweXK2GN6l/fktUX
+         O9R2xua6KZtcBxeHKymGHOAT/0fT+oLIronXE9QyDZoRnCp3VvlIfkx01soS2xcLTlOQ
+         itHdvxQH9nuEpCK3cv+ZWBZ2Trx6ArWhkKXK6WOJguhq0Xes61fmLME0f92lkCn/6cqy
+         0Uu466cnnloTgxXfmYPQ5FXsODZLaBL1ncCIEp+QpXlPoYOBoR7FDRhdxPNvCJvqJrbk
+         2Uwg==
+X-Gm-Message-State: AOJu0YziGRz2gjLEwFQTC2nA3D3WXdgQChGKraT3cnGEDSBWiOG8FLPT
+        Eae3KFlX2ShUAEiclv33d1/04w==
+X-Google-Smtp-Source: AGHT+IGejMpNDu5iUt5y4pkNg7hjNXDzs6GU7LUwzlDmA1AYeMtiV3uVhEVENEVbaoaSlRg1FcsTxA==
+X-Received: by 2002:a17:902:f54f:b0:1b8:6987:de84 with SMTP id h15-20020a170902f54f00b001b86987de84mr625512plf.48.1692306934091;
+        Thu, 17 Aug 2023 14:15:34 -0700 (PDT)
 Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id x17-20020a170902ec9100b001bf35144a18sm110378plg.221.2023.08.17.14.15.31
+        by smtp.gmail.com with ESMTPSA id u12-20020a17090282cc00b001b8943b37a5sm223595plz.24.2023.08.17.14.15.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Thu, 17 Aug 2023 14:15:32 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -60,26 +60,26 @@ Cc:     Kees Cook <keescook@chromium.org>,
         Nick Desaulniers <ndesaulniers@google.com>,
         Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
         llvm@lists.linux.dev, linux-hardening@vger.kernel.org
-Subject: [PATCH 1/7] wifi: cfg80211: Annotate struct cfg80211_acl_data with __counted_by
-Date:   Thu, 17 Aug 2023 14:15:23 -0700
-Message-Id: <20230817211531.4193219-1-keescook@chromium.org>
+Subject: [PATCH 3/7] wifi: cfg80211: Annotate struct cfg80211_mbssid_elems with __counted_by
+Date:   Thu, 17 Aug 2023 14:15:25 -0700
+Message-Id: <20230817211531.4193219-3-keescook@chromium.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230817211114.never.208-kees@kernel.org>
 References: <20230817211114.never.208-kees@kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2104; i=keescook@chromium.org;
- h=from:subject; bh=HsEe1uS2p7u7BP7jBH38t6GAsv3eC9u8U8u9k4LTzrU=;
- b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3xUjzj9KXDcTFQvsN8IUNrW4GzDUUcLTOTR
- F6R3fE9BVaJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
- JnzYD/0Z4jrC3Qoel0vy3g8ZrUKOYnJtNXSA5nwtWIj/WJ95o2nAw5Wff1y7uP0tXHAQ5QzlFeK
- 20SmedYHn+kj1uvTJ9++OVMMtOrTDd6LcBKdByskoSipgJo+bpwPNcNsiMVC3vMU8SlQ1U3dPOZ
- BRpQyecFwffX+Su5Ma7m86dMjcI6/nXrm5EIm0fZAyPYhyEG1zyT/J/eAgbL0YKVISQNO9ibybT
- Eklf8pHUlVduSjjwLcmiZfLYsrv1PHzybiHx9wQO0XEoVXCO8Gxt4Q7ZD7mOcrkKjkG4hOtyDi5
- wkLn3BSk6LLpTrX9MX4TkhPLtZPKl+tdHSvxrvcjN1GzrJRAcMrClNRfjaR6Ay2JfQ6Xn7UC4vp
- DCygVQsJkaeGeQ1r7fFH6M0xfeORZqtRnmaBxSDI6q0RXDVdu5xv7BQ714R0gsNkcXh9vS8Wko1
- 5I9TUIDwHmobFmBmY0mw0GxI8Ni9en3PAjKZ7OroncsXcBRzTcC+sryyIONTsRjY2gIfV+bqgjv
- O8VqOlRAFVmMs0qXGLRaVWEo1Lcv2fmD0MqqjHoOFSpfO6/OYGLTKLSqfC26N8w2zi8U0KRcmLP
- wgh+mcdIpLnFW1fg6WtwoCbOuvmLYIMlmN381VG18LaUKFGiYEwo7gdcx2Rh2edzb2NaZ6p7LSZ tvcl7/UTEgnKl2Q==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2022; i=keescook@chromium.org;
+ h=from:subject; bh=vaWHXmxPO1ptoIqyZPI0oaQtbTFkYHcNqPSrVLO+Cyo=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBk3o3x9Q72AWeO3iT9FoMZtrv2vw6MyWouRB7nh
+ h1x+UnGyeSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZN6N8QAKCRCJcvTf3G3A
+ JrUyEACKeu7bZ+6W17+6Csyy59kutbcaGWnWoZqfeNWCSYd8tAVhCczdJLuz9/B0R2QrXSpwu5n
+ zpIIYGWYvFW7QaNN3Ygc4s35ySoSg3owW7TtTyaCr7IXyJoJ1XjqboBhARy1m1Xf2omjbw68BMf
+ 7E2D+pVCSVklqLPDnXGQGvI+wuRpG+nlQMh+MkQ7gbU4cE+qrDf2VGKADgzzqFCCtNjsOsm02ho
+ R3Fh6czL/VlwYTGdoI/cmyNjZVZkxHLTxOQvl+18zGC/2AbLsX7QRbFN0Qt5ky6gUa0PTo2fW3e
+ Z2tQLZDcpZhxgLxNp9sF9eKAfzzQoT5V5oxZ4oXka86BlvZR6b+OgYyFq75wNqabtdhPK02OTmY
+ trw7lr+vgki7yU+3+OErnwg0WAMENH7zVcC4WcnpIxwTxaVBM4oFEhytGPLPfNGyfXfUPT5JRen
+ ygp8TcPbp1bgT6ITfxI+mP3vMVDrZy0w+385fFnq9xUyJYou6HIOzlr3PXaP0Ya82tLq4T4cKoF
+ xOsW6OcFPLf2zsF2H/IvlbgWExJEV3XI0eIz7UXg1axO1xs3z76pyLB1ZwRuOxepVQ9hP2jHT69
+ 3ihSRWYcbD7XS8UeaSsUR6HfR1YBJrG6hgR0zJDcMztj7DCNSiWrE2eolF9mGGG381h9598oL6j wLHKdDJFXPjvMAQ==
 X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -92,7 +92,7 @@ their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
 (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
 functions).
 
-As found with Coccinelle[1], add __counted_by for struct cfg80211_acl_data.
+As found with Coccinelle[1], add __counted_by for struct cfg80211_mbssid_elems.
 Additionally, since the element count member must be set before accessing
 the annotated flexible array member, move its initialization earlier.
 
@@ -108,41 +108,41 @@ Cc: netdev@vger.kernel.org
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
  include/net/cfg80211.h | 2 +-
- net/wireless/nl80211.c | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ net/wireless/nl80211.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d6fa7c8767ad..eb73b5af5d04 100644
+index eb73b5af5d04..5c7d091b3925 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -1282,7 +1282,7 @@ struct cfg80211_acl_data {
- 	int n_acl_entries;
- 
- 	/* Keep it last */
--	struct mac_address mac_addrs[];
-+	struct mac_address mac_addrs[] __counted_by(n_acl_entries);
+@@ -1187,7 +1187,7 @@ struct cfg80211_mbssid_elems {
+ 	struct {
+ 		const u8 *data;
+ 		size_t len;
+-	} elem[];
++	} elem[] __counted_by(cnt);
  };
  
  /**
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8bcf8e293308..80633e815311 100644
+index 80633e815311..9ba4266368db 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -4889,13 +4889,12 @@ static struct cfg80211_acl_data *parse_acl_data(struct wiphy *wiphy,
- 	acl = kzalloc(struct_size(acl, mac_addrs, n_entries), GFP_KERNEL);
- 	if (!acl)
+@@ -5438,13 +5438,13 @@ nl80211_parse_mbssid_elems(struct wiphy *wiphy, struct nlattr *attrs)
+ 	elems = kzalloc(struct_size(elems, elem, num_elems), GFP_KERNEL);
+ 	if (!elems)
  		return ERR_PTR(-ENOMEM);
-+	acl->n_acl_entries = n_entries;
++	elems->cnt = num_elems;
  
- 	nla_for_each_nested(attr, info->attrs[NL80211_ATTR_MAC_ADDRS], tmp) {
- 		memcpy(acl->mac_addrs[i].addr, nla_data(attr), ETH_ALEN);
+ 	nla_for_each_nested(nl_elems, attrs, rem_elems) {
+ 		elems->elem[i].data = nla_data(nl_elems);
+ 		elems->elem[i].len = nla_len(nl_elems);
  		i++;
  	}
--
--	acl->n_acl_entries = n_entries;
- 	acl->acl_policy = acl_policy;
+-	elems->cnt = num_elems;
+ 	return elems;
+ }
  
- 	return acl;
 -- 
 2.34.1
 
