@@ -2,86 +2,87 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1979C71149
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Aug 2023 14:13:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A363C71157
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Aug 2023 14:44:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377655AbjHROMc (ORCPT
+        id S1377802AbjHROn6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Aug 2023 10:12:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55612 "EHLO
+        Fri, 18 Aug 2023 10:43:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377652AbjHROM1 (ORCPT
+        with ESMTP id S1377982AbjHROnx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Aug 2023 10:12:27 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DD2B170E
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Aug 2023 07:12:26 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37IDR1bN015850;
-        Fri, 18 Aug 2023 14:12:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=86MEjZGSUlufzLwVXi+/7WIhyC6LLGMjS11NpDNOHGw=;
- b=DlOXbM4d0zCekQh/uiYEXIoTt32ZLyG1YfGcMBnucqdgVZo9mi0Hr2GLOVLpKRvbpf4+
- LoirmCmBOHy4TuJ2AGpF+Ba2FTtMclAhBVRd7DTiiAe3mmtKXCYbTwx/gwwwSzmAGRRK
- rePPHgnDRrqmaYqQnlNMtwXyljxS7JBLal28Th6rDDHY877NY7/vDfl4CDnhRR5KLjRe
- wW4DxoXm9p71r0TGJsOAQ8fMDbvJ9o3Zm/pvZ6SrUVZCEJcK56xR7oqg7Z4JI+GkmMZ9
- yV/84svOSCjhc3DgCPcyHPexqnWS/QIYqyte+yOwx1lIUsnFrB3qBw7et/m6N7oyrzpH aw== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sj3g9grfa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 18 Aug 2023 14:12:11 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37IECANM007012
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 18 Aug 2023 14:12:10 GMT
-Received: from [10.48.241.213] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Fri, 18 Aug
- 2023 07:12:09 -0700
-Message-ID: <ead376cd-7739-43a2-8e47-667d27a2742a@quicinc.com>
-Date:   Fri, 18 Aug 2023 07:12:09 -0700
+        Fri, 18 Aug 2023 10:43:53 -0400
+X-Greylist: delayed 15345 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 18 Aug 2023 07:43:31 PDT
+Received: from server.dsmega.com (server.dsmega.com [185.186.208.16])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BBEF421D
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Aug 2023 07:43:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=remzavod.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:Message-ID:Date:Subject:To:From:Reply-To:Sender:Cc:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=thoNrXbQv25mMK/3RviWbIqjmSGPAZCcCyNvsgRjrpM=; b=ryJjDzzOpaqBYCyATa2AVD4SHp
+        ge2WorungP6vhvGCSSsUq70NLjL7CkZKYCdEr3ePYdgPUKdn0S3/Pcxc4q9S1zoGPiyFkf5Eq3l86
+        G61gpSc7tYHu1s/aqCzYFUNGdBYeSxVMchIP2EnSSd7kdNJdX8OgDTnjRabt/OKGUbmgrPgKCK95C
+        JQTAaQk8n18TET6PO0sI7WdCa31PjtcFf1VXiCgdh5Q8h8qzHyIrnJk4ENG382nN0mT0TbEOR6omi
+        vU24dNcper1J8DE80csJoNtjY2EA0KdV5EeMC0bsybt1Jpht+fjPCWkZMW81W0TfoLJ3zT2TzgDYP
+        jWCjafTg==;
+Received: from [85.195.105.114] (port=53912 helo=gmail.com)
+        by server.dsmega.com with esmtpa (Exim 4.93)
+        (envelope-from <roberthelmut144@gmail.com>)
+        id 1qWwhk-0002f2-0i
+        for linux-wireless@vger.kernel.org; Fri, 18 Aug 2023 13:27:44 +0300
+Reply-To: robert.helmut@selectlaboratoriesltd.co.uk
+From:   Robert Helmut <roberthelmut144@gmail.com>
+To:     linux-wireless@vger.kernel.org
+Subject: Re: Supply
+Date:   18 Aug 2023 03:27:43 -0700
+Message-ID: <20230818032742.7CF921EF50F24D5A@gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath11k: Remove unused declarations
-Content-Language: en-US
-To:     Yue Haibing <yuehaibing@huawei.com>, <kvalo@kernel.org>,
-        <quic_srirrama@quicinc.com>, <quic_mpubbise@quicinc.com>
-CC:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-References: <20230811104413.33668-1-yuehaibing@huawei.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230811104413.33668-1-yuehaibing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Qv2meP24VQZ6M_lMLAygxm4bTrTUVUdy
-X-Proofpoint-ORIG-GUID: Qv2meP24VQZ6M_lMLAygxm4bTrTUVUdy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-18_17,2023-08-18_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1015
- priorityscore=1501 spamscore=0 mlxlogscore=675 bulkscore=0 suspectscore=0
- phishscore=0 lowpriorityscore=0 impostorscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308180129
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - server.dsmega.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - gmail.com
+X-Get-Message-Sender-Via: server.dsmega.com: authenticated_id: info@remzavod.com
+X-Authenticated-Sender: server.dsmega.com: info@remzavod.com
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/11/2023 3:44 AM, Yue Haibing wrote:
-> Commit 2c3960c2253d ("ath11k: setup ce tasklet for control path")
-> declared but never implemented ath11k_ce_map_service_to_pipe().
-> Commit e3396b8bddd2 ("ath11k: ce: support different CE configurations")
-> declared but never implemented ath11k_ce_attr_attach().
-> Commit d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-> declared but never implemented ath11k_qmi_event_work()/ath11k_qmi_msg_recv_work().
-> 
-> Signed-off-by: Yue Haibing <yuehaibing@huawei.com>
+Greetings,
 
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+I have a business plan that will benefit you from my company
+where i work as the head of research and dev. Contact me through
+my company provided email addresss and i will give you details of
+my intent for your consideration.
+
+Sincerely
+Robert Helmut
+Research & Dev Dept.
+Select Pharma Lab. Ltd .UK
+---------------------------------
+Email: robert.helmut@selectlaboratoriesltd.co.uk
+Select Pharma Lab. Ltd .UK
+First Floor, Quay 2, 139 Fountain bridge, Edinburgh, EH3 9QG,
+United Kingdom
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3DDISCLAIMER NOTICE=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+The content of this message is confidential. If you have received=20
+it by mistake, please inform us by an email reply and then delete=20
+the message. It is forbidden to copy, forward, or in any way=20
+reveal the contents of this message to anyone. The integrity and=20
+security of this email cannot be guaranteed over the Internet.=20
+Therefore, the sender will not be held liable for any damage=20
+caused by the message.
+
+=C2=A9 Copyright 2023 Select Pharma Lab. Ltd. All Right Reserved.
+
 
