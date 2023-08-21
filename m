@@ -2,67 +2,107 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E66DEE49A6
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Aug 2023 12:53:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D43ADEE49AE
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Aug 2023 13:03:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235097AbjHUMxo (ORCPT
+        id S235189AbjHUND6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Aug 2023 08:53:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59262 "EHLO
+        Mon, 21 Aug 2023 09:03:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234004AbjHUMxo (ORCPT
+        with ESMTP id S230472AbjHUND5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2023 08:53:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9839CD
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 05:53:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8911F63541
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 12:53:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F6ADC433C9;
-        Mon, 21 Aug 2023 12:53:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692622422;
-        bh=/KCUIxClIx4e8DVZGuBHK0dBzP46U1dOA/9DEWLxrgA=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=a0zW1BcvvdGHw4OOAJY0dXe/9Oeo9m/ZImZHrekxBNozKGE4VqC9gxuW6wdWyL6Ey
-         caMp82EKuOsmffaXjRug2+YgHLMcqg577LIgvMTTZ4GQJvhMOyePhk4druXc+NNpLm
-         Y8sa+chPG36KQBSqpXvx2nItWM2NIMWHpnZ1M/oi+MRz7iBulK+Xm/hBQmbL9B5gZW
-         iHvY5w/1ShOonjhcwcMNaIZa2zAfGfLpD/nd46guc335tb/gQPMGs8/8kWQc5mkDUh
-         +PS0uD6qCuSeNHkMAoUZOSQKiLPEa0tkb7yq8pNsww4lrPVE4mL0AD+IWApluzdBAg
-         EJPgIlBXAG6NQ==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Li Zetao <lizetao1@huawei.com>
-Cc:     <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH net-next] wlcore: sdio: Use module_sdio_driver macro to
- simplify the code
-References: <20230815075419.1067635-1-lizetao1@huawei.com>
-Date:   Mon, 21 Aug 2023 15:53:39 +0300
-In-Reply-To: <20230815075419.1067635-1-lizetao1@huawei.com> (Li Zetao's
-        message of "Tue, 15 Aug 2023 15:54:19 +0800")
-Message-ID: <87350ck14c.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 21 Aug 2023 09:03:57 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9AFBD1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 06:03:55 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37LCemQb008796;
+        Mon, 21 Aug 2023 13:03:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=uyXGncq/f4hBvQS8lwFth4qDyrZodq82lpuqhWakyiY=;
+ b=QaEAZxAfID71Z7vzmpEhvb9rQRMmg+weUg2Bxva24N0glQDmuLA4nVwmDfutPsm+v2bv
+ VDAaKaUTYfejq+vQAP8t+5zxSF8lD9OeOUIKQ6ydChxwhroBv7yfoH7pJl+4JyBrIOLk
+ EUwr6UEaA6ZgzM4nuHRqQlEhoB5UbwuULgfFBRWnnvTyyiYU8H3MGFoHzUovOzg2v2r9
+ hSRf0soGDMjDOryiSyJQMpqBHyXgEHunhD+Kf/LHNG+kYDUt5MrvwMV/BHiIK0l/w33P
+ XhmULHgGk+JNDWwQFuo0+mEtqg+qclQOxLL2y4lJSW2wi138jekK7KF3uVTnvf6yY9AB nA== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sjken40fd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 21 Aug 2023 13:03:49 +0000
+Received: from pps.filterd (NASANPPMTA05.qualcomm.com [127.0.0.1])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 37LCwY4I010711;
+        Mon, 21 Aug 2023 13:03:48 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 3sm5yq1bs4-1;
+        Mon, 21 Aug 2023 13:03:48 +0000
+Received: from NASANPPMTA05.qualcomm.com (NASANPPMTA05.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37LD3mgl018225;
+        Mon, 21 Aug 2023 13:03:48 GMT
+Received: from hprem-linux.qualcomm.com (hprem-linux.qualcomm.com [10.201.162.248])
+        by NASANPPMTA05.qualcomm.com (PPS) with ESMTP id 37LD3l33018213;
+        Mon, 21 Aug 2023 13:03:48 +0000
+Received: by hprem-linux.qualcomm.com (Postfix, from userid 4146166)
+        id D1C14B003AB; Mon, 21 Aug 2023 18:33:46 +0530 (IST)
+From:   Harshitha Prem <quic_hprem@quicinc.com>
+To:     ath12k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Harshitha Prem <quic_hprem@quicinc.com>
+Subject: [PATCH v2 2/2] wifi: ath12k: fix undefined behavior with __fls in dp
+Date:   Mon, 21 Aug 2023 18:33:43 +0530
+Message-Id: <20230821130343.29495-3-quic_hprem@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230821130343.29495-1-quic_hprem@quicinc.com>
+References: <20230821130343.29495-1-quic_hprem@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 0j6cMiPrREydGKQBtv6_vK4IgBqInMbC
+X-Proofpoint-GUID: 0j6cMiPrREydGKQBtv6_vK4IgBqInMbC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-21_01,2023-08-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ mlxlogscore=999 impostorscore=0 phishscore=0 bulkscore=0 malwarescore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 adultscore=0 mlxscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308210120
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Li Zetao <lizetao1@huawei.com> writes:
+When max virtual ap interfaces are configured in all the bands
+with ACS and hostapd restart is done every 60s,
+a crash is observed at random times because of handling the
+uninitialized peer fragments with fragment id of packet as 0.
 
-> Use the module_sdio_driver macro to simplify the code, which is the
-> same as declaring with module_init() and module_exit().
->
-> Signed-off-by: Li Zetao <lizetao1@huawei.com>
+"__fls" would have an undefined behavior if the argument is passed
+as "0". Hence, added changes to handle the same.
 
-wlcore patches go to wireless-next, not net-next.
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
 
-"wifi:" missing from subject but I can add that.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
+Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/dp_rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
+index 5923c7c9eaff..ea8dfea22be6 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+@@ -3238,7 +3238,7 @@ static int ath12k_dp_rx_frag_h_mpdu(struct ath12k *ar,
+ 		goto out_unlock;
+ 	}
+ 
+-	if (frag_no > __fls(rx_tid->rx_frag_bitmap))
++	if ((!rx_tid->rx_frag_bitmap || frag_no > __fls(rx_tid->rx_frag_bitmap)))
+ 		__skb_queue_tail(&rx_tid->rx_frags, msdu);
+ 	else
+ 		ath12k_dp_rx_h_sort_frags(ab, &rx_tid->rx_frags, msdu);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.17.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
