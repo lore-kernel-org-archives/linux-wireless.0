@@ -2,72 +2,71 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A431CEE4993
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Aug 2023 15:57:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2904FEE4993
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Aug 2023 15:58:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232774AbjHUP5v (ORCPT
+        id S232788AbjHUP61 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Aug 2023 11:57:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34692 "EHLO
+        Mon, 21 Aug 2023 11:58:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231802AbjHUP5v (ORCPT
+        with ESMTP id S232779AbjHUP60 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2023 11:57:51 -0400
+        Mon, 21 Aug 2023 11:58:26 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9939CA1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 08:57:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A9BF3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 08:58:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2FEA662195
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 15:57:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C80BC433C8;
-        Mon, 21 Aug 2023 15:57:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AA0C6166F
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 15:58:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D471CC433C8;
+        Mon, 21 Aug 2023 15:58:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692633468;
-        bh=lQ+eX2BqLsW8b6VEswM/5WYS/ZcnvMuWgJZfx/tdtAU=;
+        s=k20201202; t=1692633503;
+        bh=hZGA7coURT2zJlb9FTBYhe4HrnSqNuyUcEefgPH/t7s=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=I6SbLd4d2eFC6XrNQ4hT8zDrZMAJcUY092cPq30ZiIe3EJCn/iGbs64kgl+Acn++2
-         h7hqep6cQWpfJiBojFYjj+gdrlPKBW4/RzkZEKi7n3hTLB3A5oR15334qer8BDgV0U
-         GNaAgFvEyOXwiJsl/iWqT5hzNC3b5+J9wHkwJ+MobuE/pT0McqFNs7cJjspR7s5AiY
-         rp+vo9pe7j2lHEBDveHyHLpas+5fXYrkuFFYmsa8rJzXKHpyW2/i5YY4s/4fa/9yB0
-         nQXN2Vl5fAlBhcL92pI7nBuzlI7Iemh77V7DOjO+WAB8EPY0Gf0OvBiLsq0d5YPtEC
-         iQOcDFWr9cveA==
+        b=cQrxUEv4VqSpLt7F2OqMcrHn6leqEpbtR4j+Vs06emSwYbIf+yOChgyU2sR4VN+49
+         2eBB6exOvXxQFtE+O0qBPn/osQEW416lB5fg5TEXY6zq+n6G37NXGOq+zKDRB5vUGH
+         yLOqK1xDRsYSrOUraL0RRtTSjNSKJe0rNivGoavoI1SIj0auRB6FRxkAAUTRPNmIxA
+         et5XtxKFZDQaESaTb/qDtbET5o2sTJtkftcOtz0MJpB9gpqXqSUsn/38CHU/ERmi/f
+         KNtf00CZnL17aycXsxV/KT4q/2JLSbWJQ6sVGIDog9BvQO0vLxGucUGu+NC7JT0xGv
+         nVaRK0HEfbJ6Q==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: wifi: mwifiex: Fix missed return in oob checks failed path
+Subject: Re: [PATCH 1/2] wifi: mwifiex: cleanup adapter data
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230810083911.3725248-1-pinkperfect2021@gmail.com>
-References: <20230810083911.3725248-1-pinkperfect2021@gmail.com>
-To:     Polaris Pi <pinkperfect2021@gmail.com>
-Cc:     johannes@sipsolutions.net, briannorris@chromium.org,
-        kuba@kernel.org, matthewmwang@chromium.org,
-        linux-wireless@vger.kernel.org, pinkperfect2021@gmail.com
+In-Reply-To: <20230814142101.60308-1-dmantipov@yandex.ru>
+References: <20230814142101.60308-1-dmantipov@yandex.ru>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Brian Norris <briannorris@chromium.org>,
+        linux-wireless@vger.kernel.org,
+        Dmitry Antipov <dmantipov@yandex.ru>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169263346489.572263.14522357496032655077.kvalo@kernel.org>
-Date:   Mon, 21 Aug 2023 15:57:46 +0000 (UTC)
+Message-ID: <169263350110.572263.6168753009808843179.kvalo@kernel.org>
+Date:   Mon, 21 Aug 2023 15:58:22 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Polaris Pi <pinkperfect2021@gmail.com> wrote:
+Dmitry Antipov <dmantipov@yandex.ru> wrote:
 
-> Add missed return in mwifiex_uap_queue_bridged_pkt() and
-> mwifiex_process_rx_packet().
+> Remove unused and set but unused 'dfs_workqueue', 'dfs_work', and
+> 'scan_channels' members of 'struct mwifiex_adapter', adjust users.
 > 
-> Fixes: 119585281617 ("wifi: mwifiex: Fix OOB and integer underflow when rx packets")
-> Signed-off-by: Polaris Pi <pinkperfect2021@gmail.com>
-> Reported-by: Dmitry Antipov <dmantipov@yandex.ru>
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 > Acked-by: Brian Norris <briannorris@chromium.org>
 
-Patch applied to wireless-next.git, thanks.
+2 patches applied to wireless-next.git, thanks.
 
-2785851c627f wifi: mwifiex: Fix missed return in oob checks failed path
+0e6ccd25e0d0 wifi: mwifiex: cleanup adapter data
+ab55a976095e wifi: mwifiex: fix comment typos in SDIO module
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230810083911.3725248-1-pinkperfect2021@gmail.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230814142101.60308-1-dmantipov@yandex.ru/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
