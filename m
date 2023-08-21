@@ -2,80 +2,90 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1811EE4996
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Aug 2023 06:42:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C61F1EE4996
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Aug 2023 07:40:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232382AbjHUGmu (ORCPT
+        id S233759AbjHUHkg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Aug 2023 02:42:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44964 "EHLO
+        Mon, 21 Aug 2023 03:40:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231597AbjHUGmu (ORCPT
+        with ESMTP id S233765AbjHUHkf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Aug 2023 02:42:50 -0400
-Received: from smart3-pmg.ufmg.br (smart3-01-pmg.ufmg.br [150.164.64.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C72F5AB
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Aug 2023 23:42:48 -0700 (PDT)
-Received: from smart3-pmg.ufmg.br (localhost.localdomain [127.0.0.1])
-        by smart3-pmg.ufmg.br (Proxmox) with ESMTP id 26D865A98F3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Aug 2023 14:25:26 -0300 (-03)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ufmg.br; h=cc
-        :content-transfer-encoding:content-type:content-type:date:from
-        :from:message-id:mime-version:reply-to:reply-to:subject:subject
-        :to:to; s=mail; bh=aB6phz2CCV0fOdUx+FEpXbqcMS5qcYYIVmsV4Zzs0ug=; b=
-        ch9jNBAOPQfIZWFKk6r46fEWrNfKLm/Yo0AnI2pBH2cdlMztXn+sWxc5PLfE1F8p
-        bTmRslYsZjOReQLoSxEqtQjIvEaNdagH4t9S5xf1WzbSccr0Q7fYb6IoHNvGEjig
-        WJi8Q96ydjfAo3mkOx5pADTM7yR0K/XWkC+qLGoXvRQLW0on3WBjoX1bk/UF4/9f
-        R7EbBnwnsSSx2DU7TWi0xiWi83/QzzvY26qYrQ3bYfrOSfHKPwmQ1bTx+6yzEqWh
-        LNGbI+kSKcEeOS5cszFLGcs0G8nlUzMZSGQfsVidse2oeNLNRTgcFevXjnmBhpYC
-        qOIimjXH1tJ7exa3zwDIcg==
-Received: from bambu.grude.ufmg.br (bambu.grude.ufmg.br [150.164.64.35])
-        by smart3-pmg.ufmg.br (Proxmox) with ESMTP id 4B7C8589935
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Aug 2023 14:23:39 -0300 (-03)
-Received: from ufmg.br ([98.159.234.166])
-          by bambu.grude.ufmg.br (IBM Domino Release 10.0.1FP3)
-          with ESMTP id 2023082014150904-1085697 ;
-          Sun, 20 Aug 2023 14:15:09 -0300 
-Reply-To: "Kristine Wellenstein" <inform@calfd.org>
-From:   "Kristine Wellenstein" <luanacsg@ufmg.br>
-To:     linux-wireless@vger.kernel.org
-Subject: [RE]: RE:
-Date:   20 Aug 2023 13:15:08 -0400
-Message-ID: <20230820131507.972E8F2E3FA47886@ufmg.br>
-MIME-Version: 1.0
-X-MIMETrack: Itemize by SMTP Server on bambu/UFMG(Release 10.0.1FP3|August 09, 2019) at
- 20-08-2023 14:15:09,
-        Serialize by Router on bambu/UFMG(Release 10.0.1FP3|August 09, 2019) at 20-08-2023
- 14:23:39,
-        Serialize complete at 20-08-2023 14:23:39
-X-TNEFEvaluated: 1
+        Mon, 21 Aug 2023 03:40:35 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 620CECA
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 00:40:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=a2YnMR9sKL36w+fjRI775d8yUbY27E77h+cTuZKWsZs=;
+        t=1692603623; x=1693813223; b=KzLZEjvLcZr/r+0yhPeywYZPVubNykbkvzICKO7G6NnQDG5
+        xtHMs4W/+i0wkFwXsUQLe32Ud1/ejxwXaykuSxMYouKtBUdrl7timIiGklp/QkUzsvCPaCb+3NsTu
+        sA3RYIz/Fy4tEZ384VNf7Jq+VHJ0E2CZ/WlT4mHOTgcqdt1z9DQtO6TXW2y3xlwnLGTdmn+A6xms7
+        dEREmig/xdVd5ON8TEw3tSRjCNe37DiNvm8tpxT4HYmgPWwrpDbxLeVFyXk1na7RGCCOnTaB1CoqR
+        /lNgtmxBB/fddU0Y7dWLHwa5lnGq9wg4yLnZd+i7iHIIZZuoi+c5n45GNovDyZwA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qXzWJ-002qhK-1p;
+        Mon, 21 Aug 2023 09:40:15 +0200
+Message-ID: <5c072b0a45ad29dc03b989fbd9a9fd974ae0c23d.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: mac80211: fix cfg80211_bss always hold when assoc
+ response fail for MLO connection
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Wen Gong <quic_wgong@quicinc.com>, ath12k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Mon, 21 Aug 2023 09:40:14 +0200
+In-Reply-To: <20230821061355.18168-1-quic_wgong@quicinc.com>
+References: <20230821061355.18168-1-quic_wgong@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-        charset="utf-8"
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sehr geehrter Beg=C3=BCnstigter,
+On Mon, 2023-08-21 at 02:13 -0400, Wen Gong wrote:
+>=20
+> +++ b/net/mac80211/mlme.c
+> @@ -5429,17 +5429,22 @@ static void ieee80211_rx_mgmt_assoc_resp(struct i=
+eee80211_sub_if_data *sdata,
+>  	for (link_id =3D 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
+>  		struct ieee80211_link_data *link;
+> =20
+> -		link =3D sdata_dereference(sdata->link[link_id], sdata);
+> -		if (!link)
+> -			continue;
+> -
+>  		if (!assoc_data->link[link_id].bss)
+>  			continue;
+> =20
+>  		resp.links[link_id].bss =3D assoc_data->link[link_id].bss;
+> -		resp.links[link_id].addr =3D link->conf->addr;
+>  		resp.links[link_id].status =3D assoc_data->link[link_id].status;
+> =20
+> +		link =3D sdata_dereference(sdata->link[link_id], sdata);
+> +
+> +		if (!link) {
+> +			/* use the addr of assoc_data link which is set in ieee80211_mgd_asso=
+c() */
+> +			resp.links[link_id].addr =3D assoc_data->link[link_id].addr;
 
-Die EmilyWells Foundation ermutigt Menschen, sich ehrenamtlich f=C3=BCr soz=
-iale oder wohlt=C3=A4tige Zwecke zu engagieren und den weniger Gl=C3=BCckli=
-chen zu helfen. Lasst uns alle die wichtige Botschaft dieses gro=C3=9Fartig=
-en Tages verbreiten und uns f=C3=BCr das bedanken, was wir haben.
+As I mentioned before, this cannot be done - it introduces use-after-
+free since assoc_data is freed after the loop, and the
+cfg80211_rx_assoc_resp() is after that.
 
-Ich bin Kristine Wellenstein, die Gewinnerin des Mega Millions-Jackpots in =
-H=C3=B6he von 426 Millionen US-Dollar am 28. Januar. Ich gebe offiziell bek=
-annt, dass Sie als einer von f=C3=BCnf Empf=C3=A4ngern einer Spende in H=C3=
-=B6he von 2.300.000 ausgew=C3=A4hlt wurden. Dollar von der Emily Wells Foun=
-dation.
+> +			continue;
+> +		}
+> +
+> +		resp.links[link_id].addr =3D link->conf->addr;
+>=20
 
-Diese Spende ist im Gedenken an meinen verstorbenen Enkel, der gerade einen=
- Tag gelebt hat.
-F=C3=BCr weitere Informationen antworten Sie bitte auf diese E-Mail.
+Also, I don't see that we need to use two different assignments for the
+two cases.
 
-Beste gr=C3=BC=C3=9Fe:
-
-Kristine Wellenstein
-Gr=C3=BCnderin/Vorsitzende: EmilyWells. Stiftung, Schenkung
-
-
+johannes
