@@ -2,104 +2,148 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 292AAEE49AC
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Aug 2023 10:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E59EE49A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Aug 2023 06:14:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231322AbjHSKw3 (ORCPT
+        id S233342AbjHUGOz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Aug 2023 06:52:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47164 "EHLO
+        Mon, 21 Aug 2023 02:14:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230371AbjHSKwW (ORCPT
+        with ESMTP id S231613AbjHUGOz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Aug 2023 06:52:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C698F5246;
-        Sat, 19 Aug 2023 03:50:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5826E6222E;
-        Sat, 19 Aug 2023 10:50:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39AB7C433C8;
-        Sat, 19 Aug 2023 10:50:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1692442210;
-        bh=UOf0VrNbj7jijgQLUEJOQOBTWQ8bE2tlLoIK1cWZfF4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Kei/cEnCzd9vylrM81C/pPpoNImWO9ct/BfmNbABJtoIAiUdlMrA6QirCewN8nGsl
-         E+/EyT5QuE5r/CU3d6rHBMKoRtj1M4beqjlpX4igDLY31/WCHuJE9cep162hACy+zA
-         MkHvny2Q8i8kBUce3Avd2yXp9bzBiQ31Ho3RWg+I=
-Date:   Sat, 19 Aug 2023 12:50:07 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     "Limonciello, Mario" <mario.limonciello@amd.com>
-Cc:     Evan Quan <evan.quan@amd.com>, Andrew Lunn <andrew@lunn.ch>,
-        rafael@kernel.org, lenb@kernel.org, johannes@sipsolutions.net,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, alexander.deucher@amd.com,
-        rdunlap@infradead.org, quic_jjohnson@quicinc.com, horms@kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [V9 1/9] drivers core: Add support for Wifi band RF mitigations
-Message-ID: <2023081919-mockup-bootleg-bdb9@gregkh>
-References: <20230818032619.3341234-1-evan.quan@amd.com>
- <20230818032619.3341234-2-evan.quan@amd.com>
- <2023081806-rounding-distract-b695@gregkh>
- <2328cf53-849d-46a1-87e6-436e3a1f5fd8@amd.com>
+        Mon, 21 Aug 2023 02:14:55 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 427ECA2
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Aug 2023 23:14:53 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37L69Tos023141;
+        Mon, 21 Aug 2023 06:14:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=qcppdkim1;
+ bh=wS2gz4qWNMO1J13T8lzU2svIo7IAYpG2tQumZUhsKP8=;
+ b=glSw36buA3nVFDyDhiN+lSgaXxZP6rW8UoAb9bKerAReJiFZ7kF8wq1KGKd5HIggAPL4
+ Vf1p6th39RE3knAQvr+pPzcPcFbKjiF2U86POsi0N25owhNsMy3muRWmEBgwSr+l+2fl
+ BldNzeRgzlbPz/dOzkIFO6BXqzUZQl4oZvRn66BkDD9EzTmoS81MWjOxE9CRmC9d1268
+ umOru8x7tQLg+Q0YC0Nd0H8AgiPZZyHwN9+giIBmR5OG96+cn/irgvEheiph52a6Tv66
+ dvynxZKbqHpd/bnw8r/efQuB/+hjOxlYhwjXcrV6ga60qZOZI2bEklywidx/H2Lk2n++ /g== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sjnu12rfp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 21 Aug 2023 06:14:46 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37L6EjbA027897
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 21 Aug 2023 06:14:45 GMT
+Received: from wgong-HP3-Z230-SFF-Workstation.qca.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Sun, 20 Aug 2023 23:14:43 -0700
+From:   Wen Gong <quic_wgong@quicinc.com>
+To:     <johannes@sipsolutions.net>, <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <quic_wgong@quicinc.com>
+Subject: [PATCH] wifi: mac80211: fix cfg80211_bss always hold when assoc response fail for MLO connection
+Date:   Mon, 21 Aug 2023 02:13:55 -0400
+Message-ID: <20230821061355.18168-1-quic_wgong@quicinc.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2328cf53-849d-46a1-87e6-436e3a1f5fd8@amd.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: -hsVrYKt2akLK0hAkZFKy7k0D-37pUEd
+X-Proofpoint-GUID: -hsVrYKt2akLK0hAkZFKy7k0D-37pUEd
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-20_15,2023-08-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
+ impostorscore=0 clxscore=1015 mlxlogscore=999 suspectscore=0
+ malwarescore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0
+ priorityscore=1501 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2306200000 definitions=main-2308210056
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Aug 18, 2023 at 05:49:14PM -0500, Limonciello, Mario wrote:
-> 
-> 
-> On 8/18/2023 4:24 PM, Greg KH wrote:
-> > On Fri, Aug 18, 2023 at 11:26:11AM +0800, Evan Quan wrote:
-> > >   drivers/base/Makefile                         |   1 +
-> > >   drivers/base/wbrf.c                           | 280 ++++++++++++++++++
-> > 
-> > Why is a wifi-specific thing going into drivers/base/?
-> > 
-> > confused,
-> > 
-> > greg k-h
-> 
-> The original problem statement was at a high level 'there can be
-> interference between different devices operating at high frequencies'. The
-> original patches introduced some ACPI library code that enabled a mitigated
-> for this interference between mac80211 devices and amdgpu devices.
-> 
-> Andrew Lunn wanted to see something more generic, so the series has morphed
-> into base code for things to advertise frequencies in use and other things
-> to listen to frequencies in use and react.
-> 
-> The idea is supposed to be that if the platform knows that these mitigations
-> are needed then the producers send the frequencies in use, consumers react
-> to them.  The AMD implementation of getting this info from the platform
-> plugs into the base code (patch 2).
-> 
-> If users don't want this behavior they can turn it off on kernel command
-> line.
-> 
-> If the platform doesn't know mitigations are needed but user wants to turn
-> them on anyway they can turn it on kernel command line.
+When connect to MLO AP with more than one link, and the assoc response of
+AP is not success, then cfg80211_unhold_bss() is not called for all the
+links' cfg80211_bss except the primary link which means the link used by
+the latest successful association request. Thus the hold value of the
+cfg80211_bss is not reset to 0 after the assoc fail, and then the
+__cfg80211_unlink_bss() will not be called for the cfg80211_bss by
+__cfg80211_bss_expire().
 
-That's all fine, I don't object to that at all.  But bus/device-specific
-stuff should NOT be in drivers/base/ if at all possible (yes, we do have
-some exceptions with hypervisor.c and memory and cpu stuff) but for a
-frequency thing like this, why can't it live with the other
-wifi/frequency code in drivers/net/wireless/?
+Then the AP always looks exist even the AP is shutdown or reconfigured
+to another type, then it will lead error while connecting it again.
 
-In other words, what's the benefit to having me be the maintainer of
-this, someone who knows nothing about this subsystem, other than you
-passing off that work to me?  :)
+The detail info are as below.
 
-thanks,
+When connect with muti-links AP, cfg80211_hold_bss() is called by
+cfg80211_mlme_assoc() for each cfg80211_bss of all the links. When
+assoc response from AP is not success(such as status_code==1), the
+ieee80211_link_data of non-primary link(sdata->link[link_id]) is NULL
+because ieee80211_assoc_success()->ieee80211_vif_update_links() is
+not called for the links.
 
-greg k-h
+Then struct cfg80211_rx_assoc_resp resp in cfg80211_rx_assoc_resp() and
+struct cfg80211_connect_resp_params cr in __cfg80211_connect_result()
+will only have the data of the primary link, and finally function
+cfg80211_connect_result_release_bsses() only call cfg80211_unhold_bss()
+for the primary link. Then cfg80211_bss of the other links will never free
+because its hold is always > 0 now.
+
+Hence assign value for the bss and status from assoc_data since it is
+valid for this case. Also assign value of addr from assoc_data when the
+link is NULL because the addrs of assoc_data and link both represent the
+local link addr and they are same value for success connection.
+
+It is 100% ratio to reproduce the issue with this change.
+Add "mgmt->u.assoc_resp.status_code = 1" in ieee80211_rx_mgmt_assoc_resp().
+
+Fixes: 81151ce462e5 ("wifi: mac80211: support MLO authentication/association with one link")
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+---
+ net/mac80211/mlme.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f93eb38ae0b8..370b2cd0cc6d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5429,17 +5429,22 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
+ 		struct ieee80211_link_data *link;
+ 
+-		link = sdata_dereference(sdata->link[link_id], sdata);
+-		if (!link)
+-			continue;
+-
+ 		if (!assoc_data->link[link_id].bss)
+ 			continue;
+ 
+ 		resp.links[link_id].bss = assoc_data->link[link_id].bss;
+-		resp.links[link_id].addr = link->conf->addr;
+ 		resp.links[link_id].status = assoc_data->link[link_id].status;
+ 
++		link = sdata_dereference(sdata->link[link_id], sdata);
++
++		if (!link) {
++			/* use the addr of assoc_data link which is set in ieee80211_mgd_assoc() */
++			resp.links[link_id].addr = assoc_data->link[link_id].addr;
++			continue;
++		}
++
++		resp.links[link_id].addr = link->conf->addr;
++
+ 		/* get uapsd queues configuration - same for all links */
+ 		resp.uapsd_queues = 0;
+ 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
+
+base-commit: 3f257461ab0ab19806bae2bfde4c3cd88dbf050e
+-- 
+2.40.1
+
