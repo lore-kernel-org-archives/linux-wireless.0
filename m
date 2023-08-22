@@ -2,130 +2,126 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA5AEE4996
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 06:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C191EE4996
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 06:52:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233005AbjHVGbC (ORCPT
+        id S233046AbjHVGwr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 02:31:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45960 "EHLO
+        Tue, 22 Aug 2023 02:52:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231233AbjHVGbB (ORCPT
+        with ESMTP id S233120AbjHVGwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 02:31:01 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40C4DE9
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 23:30:59 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RVKDV0gzNzVkJs;
-        Tue, 22 Aug 2023 14:28:42 +0800 (CST)
-Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
- (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Tue, 22 Aug
- 2023 14:30:55 +0800
-From:   Jinjie Ruan <ruanjinjie@huawei.com>
-To:     <linux-wireless@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-CC:     <ruanjinjie@huawei.com>
-Subject: [PATCH net-next] wifi: mt76: Use PTR_ERR_OR_ZERO() to simplify code
-Date:   Tue, 22 Aug 2023 14:30:36 +0800
-Message-ID: <20230822063036.3990380-1-ruanjinjie@huawei.com>
-X-Mailer: git-send-email 2.34.1
+        Tue, 22 Aug 2023 02:52:19 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87A79CE3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Aug 2023 23:52:05 -0700 (PDT)
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37M6ksk2023423;
+        Tue, 22 Aug 2023 06:51:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : from : to : cc : references : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=isBPiWFb20PcYVG0Qhq2pDaldwVdKf3VhjUI2JB1nYo=;
+ b=iTy1mtO37wnS1448/q2iqB4bCZLHUX1m04IXtZZgMqoBdqxmRIVtRQKZ00H19bj1vzAP
+ s5A++L4DGXkFIWdF9Ml8qe/B/94Jukrj8nMI8fLw3q5rIdPxHVJRj2uSwkB3OeSZ850a
+ n5d7i4HbGPgMcUUxlJpIq+AgW4uqz2mPvudjZrz1UN0FK0XbPwl69IZg/4ZbBjUAuJC2
+ 4yI82iqcgdLV5bmc/n4we1fVNxFvuA90LJoXiw3tsFlg/6g122pWys6fJCBp0RmmpjVM
+ Mg/Qz0kr23UR4/Zp1ki8iwjbG9vrnUZzSuv5KGNxQzqXZDSiJMg3gHHwtE+mHbHJoOUO IQ== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3smfjs8skn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Aug 2023 06:51:59 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37M6pvOi027533
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Aug 2023 06:51:58 GMT
+Received: from [10.231.195.204] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 21 Aug
+ 2023 23:51:56 -0700
+Message-ID: <b6a0dc7e-0ac8-60d3-44aa-dad4f0f17acd@quicinc.com>
+Date:   Tue, 22 Aug 2023 14:51:54 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.90.53.73]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemi500008.china.huawei.com (7.221.188.139)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Subject: Re: [PATCH 0/2] wifi: ath11k: fix data out of sync for channel list
+ for reg update
+Content-Language: en-US
+From:   Wen Gong <quic_wgong@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>
+References: <20230329091235.19500-1-quic_wgong@quicinc.com>
+ <2579553c-2e7f-787c-ad6b-9d21f8a08b39@quicinc.com>
+ <14c745ff-c5c2-0c88-7280-70598b0f3eb0@quicinc.com>
+In-Reply-To: <14c745ff-c5c2-0c88-7280-70598b0f3eb0@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: BUFnMl3wT1uM2vvIoZvRu9hSh5CI3WsL
+X-Proofpoint-GUID: BUFnMl3wT1uM2vvIoZvRu9hSh5CI3WsL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-22_05,2023-08-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ lowpriorityscore=0 malwarescore=0 clxscore=1011 adultscore=0 spamscore=0
+ mlxscore=0 impostorscore=0 priorityscore=1501 bulkscore=0 suspectscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308220054
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Return PTR_ERR_OR_ZERO() instead of return 0 or PTR_ERR() to
-simplify code.
+Hi Kalle,
 
-Signed-off-by: Jinjie Ruan <ruanjinjie@huawei.com>
----
- drivers/net/wireless/mediatek/mt76/mt7615/init.c | 5 +----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 5 +----
- drivers/net/wireless/mediatek/mt76/mt7915/soc.c  | 5 +----
- drivers/net/wireless/mediatek/mt76/mt7921/init.c | 5 +----
- 4 files changed, 4 insertions(+), 16 deletions(-)
+May I change the subject to "wifi: ath11k: fix firmware crash and wrong 
+reg domain used in firmware and hardware" and sent new version again?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 18a50ccff106..f7722f67db57 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -58,10 +58,7 @@ int mt7615_thermal_init(struct mt7615_dev *dev)
- 			      wiphy_name(wiphy));
- 	hwmon = devm_hwmon_device_register_with_groups(&wiphy->dev, name, dev,
- 						       mt7615_hwmon_groups);
--	if (IS_ERR(hwmon))
--		return PTR_ERR(hwmon);
--
--	return 0;
-+	return PTR_ERR_OR_ZERO(hwmon);
- }
- EXPORT_SYMBOL_GPL(mt7615_thermal_init);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 35fdf4f98d80..c45f87b14b8c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -213,10 +213,7 @@ static int mt7915_thermal_init(struct mt7915_phy *phy)
- 
- 	hwmon = devm_hwmon_device_register_with_groups(&wiphy->dev, name, phy,
- 						       mt7915_hwmon_groups);
--	if (IS_ERR(hwmon))
--		return PTR_ERR(hwmon);
--
--	return 0;
-+	return PTR_ERR_OR_ZERO(hwmon);
- }
- 
- static void mt7915_led_set_config(struct led_classdev *led_cdev,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
-index 37348b208736..06e3d9db996c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/soc.c
-@@ -1219,10 +1219,7 @@ static int mt798x_wmac_init(struct mt7915_dev *dev)
- 		return PTR_ERR(dev->sku);
- 
- 	dev->rstc = devm_reset_control_get(pdev, "consys");
--	if (IS_ERR(dev->rstc))
--		return PTR_ERR(dev->rstc);
--
--	return 0;
-+	return PTR_ERR_OR_ZERO(dev->rstc);
- }
- 
- static int mt798x_wmac_probe(struct platform_device *pdev)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index ff63f37f67d9..534c7bee5ef1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -55,10 +55,7 @@ static int mt7921_thermal_init(struct mt792x_phy *phy)
- 
- 	hwmon = devm_hwmon_device_register_with_groups(&wiphy->dev, name, phy,
- 						       mt7921_hwmon_groups);
--	if (IS_ERR(hwmon))
--		return PTR_ERR(hwmon);
--
--	return 0;
-+	return PTR_ERR_OR_ZERO(hwmon);
- }
- 
- static void
--- 
-2.34.1
+Or will you merge this version?
 
+On 8/1/2023 1:32 PM, Wen Gong wrote:
+> Hi Kalle,
+>
+> Will you plan to merge it or will you give comments since it has 
+> deferred/pending here for 4 month ? 😁
+>
+> It is to fix firmware crash and reg domain used wrong in 
+> firmware/hardware.
+>
+> On 7/10/2023 11:03 AM, Wen Gong wrote:
+>> On 3/29/2023 5:12 PM, Wen Gong wrote:
+>>> Currently there are two threads to updating/fetch data of channel
+>>> list, and there are no synchronization for the data, it leads data out
+>>> of sync for channel list for reg update.
+>>>
+>>> So change the call flow to make sure the fetch data running after the
+>>> update data finished, then data of channel list become synchronization.
+>>>
+>>> Fixes: f45cb6b29cd3 ("wifi: ath11k: avoid deadlock during regulatory 
+>>> update in ath11k_regd_update()")
+>>>
+>>> Wen Gong (2):
+>>>    wifi: ath11k: move update channel list from update reg worker to reg
+>>>      notifier
+>>>    wifi: ath11k: move udpate channel list to worker for wait flag
+>>>
+>>>   drivers/net/wireless/ath/ath11k/core.c |   1 +
+>>>   drivers/net/wireless/ath/ath11k/core.h |   4 +
+>>>   drivers/net/wireless/ath/ath11k/mac.c  |  13 ++++
+>>>   drivers/net/wireless/ath/ath11k/reg.c  | 100 
+>>> ++++++++++++++++---------
+>>>   drivers/net/wireless/ath/ath11k/reg.h  |   1 +
+>>>   drivers/net/wireless/ath/ath11k/wmi.h  |   1 +
+>>>   6 files changed, 86 insertions(+), 34 deletions(-)
+>>>
+>>>
+>>> base-commit: 5aa9ff08c0b71be15a607341fa5344546e19ceb2
+>>
+>> Hi Kalle,
+>>
+>> Will you plan to merge it or will you give comments?
+>>
