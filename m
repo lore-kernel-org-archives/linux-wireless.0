@@ -2,80 +2,86 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 054C5EE4996
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 15:57:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32527EE4996
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 16:02:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237434AbjHVP5B (ORCPT
+        id S237436AbjHVQCl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 11:57:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51560 "EHLO
+        Tue, 22 Aug 2023 12:02:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237442AbjHVP5A (ORCPT
+        with ESMTP id S237510AbjHVQCj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 11:57:00 -0400
-Received: from forward103c.mail.yandex.net (forward103c.mail.yandex.net [178.154.239.214])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEBAFCDF
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2023 08:56:41 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:1d9d:0:640:49d1:0])
-        by forward103c.mail.yandex.net (Yandex) with ESMTP id 2CE2F60089;
-        Tue, 22 Aug 2023 18:56:08 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 4uL3vjKWqKo0-czQgZIdE;
-        Tue, 22 Aug 2023 18:56:07 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1692719767;
-        bh=QopfTMY6oIByo/1txuoicCgv2X2OIIw12H4G6BeLezs=;
-        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
-        b=gpnW/kTT5ZfRVYVCIcU/aTFAxfQ3GrvoGndLWnQ3TKXmzeHMa6pl2E1jCxjc7X+Do
-         uuGGXL46fi6atUuF4bCYu/w1u0rrhyplbD4PYDi4aIVTRnuUbGJXaeioPLVb3AZcdR
-         GDY/4MQYK2dP1zPmrke1cfG7YVu7hKKUl9d/z9gs=
-Authentication-Results: mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     Kalle Valo <kvalo@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
-        Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH 2/3] wifi: ath10k: simplify ath10k_peer_assoc_h_vht()
-Date:   Tue, 22 Aug 2023 18:54:25 +0300
-Message-ID: <20230822155532.95983-2-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230822155532.95983-1-dmantipov@yandex.ru>
-References: <20230822155532.95983-1-dmantipov@yandex.ru>
+        Tue, 22 Aug 2023 12:02:39 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE00512C;
+        Tue, 22 Aug 2023 09:02:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8D44063589;
+        Tue, 22 Aug 2023 16:02:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE5A5C433C8;
+        Tue, 22 Aug 2023 16:02:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692720156;
+        bh=B4dVX7JomV77pBcVqtD0PNTGXOQTdjWiq/Ji2vFROpM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kmxPkkTwYCQZnR4ofNmuKm7gv2uiQDKusaOVm4+AvZ6IaaGd8xX75E8iqHzAfVUw5
+         WllJU/8IG1KKWLe9HO7xE4RyAubCZPuh2861jQMReIEjT/jwsULtwHAzWnK2sflFHx
+         BWGx+sXx0R63DjB2YbS4DY4RkP7rvaI6Ct0+T+AmYQXo//IzyuvK3erHkxLrST2aBp
+         6wDaYVitItaDSb6yLzD86wcSYz89JYn/a96LwoLfqyzx8jGTsOeTKen2XN+Bavk8iy
+         f64BmIsFGJ3zcYPeD/A4gfz345Nz8ho1wOhRIte5vdAcWyH2GI188wKcS34cx44Rmu
+         O37NQ2ZTMJ/0w==
+Received: from johan by theta with local (Exim 4.96)
+        (envelope-from <johan@kernel.org>)
+        id 1qYTpw-00015s-0B;
+        Tue, 22 Aug 2023 18:02:32 +0200
+Date:   Tue, 22 Aug 2023 18:02:32 +0200
+From:   Johan Hovold <johan@kernel.org>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Kalle Valo <kvalo@kernel.org>, quic_jjohnson@quicinc.com,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 6.4 03/10] Revert "wifi: ath11k: Enable threaded
+ NAPI"
+Message-ID: <ZOTcGEfqsBkWugAa@hovoldconsulting.com>
+References: <20230822113101.3549915-1-sashal@kernel.org>
+ <20230822113101.3549915-3-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230822113101.3549915-3-sashal@kernel.org>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Commit 3db24065c2c8 ("ath10k: enable VHT160 and VHT80+80 modes")
-introduces 'get_160mhz_nss_from_maxrate()' which never returns 0,
-which means that 'ath10k_peer_assoc_h_vht()' may be simplified.
+On Tue, Aug 22, 2023 at 07:30:53AM -0400, Sasha Levin wrote:
+> From: Kalle Valo <quic_kvalo@quicinc.com>
+> 
+> [ Upstream commit d265ebe41c911314bd273c218a37088835959fa1 ]
+> 
+> This reverts commit 13aa2fb692d3717767303817f35b3e650109add3.
+> 
+> This commit broke QCN9074 initialisation:
+> 
+> [  358.960477] ath11k_pci 0000:04:00.0: ce desc not available for wmi command 36866
+> [  358.960481] ath11k_pci 0000:04:00.0: failed to send WMI_STA_POWERSAVE_PARAM_CMDID
+> [  358.960484] ath11k_pci 0000:04:00.0: could not set uapsd params -105
+> 
+> As there's no fix available let's just revert it to get QCN9074 working again.
+> 
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=217536
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+> Signed-off-by: Kalle Valo <kvalo@kernel.org>
+> Link: https://lore.kernel.org/r/20230720151444.2016637-1-kvalo@kernel.org
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+This commit break machines like the Lenovo ThinkPad X13s so please do
+not backport until this has been resolved:
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
- drivers/net/wireless/ath/ath10k/mac.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+	https://lore.kernel.org/lkml/20230809073432.4193-1-johan+linaro@kernel.org
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 03e7bc5b6c0b..148d0fab4418 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2631,12 +2631,8 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 		u32 max_rate;
- 
- 		max_rate = arg->peer_vht_rates.rx_max_rate;
--		rx_nss = get_160mhz_nss_from_maxrate(max_rate);
--
--		if (rx_nss == 0)
--			rx_nss = arg->peer_num_spatial_streams;
--		else
--			rx_nss = min(arg->peer_num_spatial_streams, rx_nss);
-+		rx_nss = min(arg->peer_num_spatial_streams,
-+			     get_160mhz_nss_from_maxrate(max_rate));
- 
- 		max_rate = hw->vht160_mcs_tx_highest;
- 		rx_nss = min(rx_nss, get_160mhz_nss_from_maxrate(max_rate));
--- 
-2.41.0
-
+Johan
