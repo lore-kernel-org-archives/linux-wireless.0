@@ -2,72 +2,69 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5405DEE49A3
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 07:09:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C7DDEE49AB
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 07:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233187AbjHVHJ2 (ORCPT
+        id S233542AbjHVHMf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 03:09:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38024 "EHLO
+        Tue, 22 Aug 2023 03:12:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231804AbjHVHJ2 (ORCPT
+        with ESMTP id S233366AbjHVHMA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 03:09:28 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AEB71AE
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2023 00:09:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=XtXE7Da9dgpKULyjJKYWpoJdAyic1sCvV2g0LPoERhw=;
-        t=1692688163; x=1693897763; b=VQH0lQDtuxFBI/p+KNKV0cxvYmTtiwoSx6bY5AvbhW/c96d
-        Y9pSSTvk0HqnBNDemBlbo166utf9bzAkMQKSmhZMsyX7hsUmGLBKvaavEL8LYk8Aw8HxFSrgezAdc
-        TMwzFc0VrOYXKRi9AXj0/1CNnYZuhdU5dnZ9rzOxHLI3y6X0QA24BnZs6e7Ug7PcbkoExKE4OZbi8
-        bTrWO1wmU6rL1XeUNNY4acIDbaJ9eLWIBuh4MRelQioEXnr9FxeseknUHRApb28GS2zZSYTY84cxC
-        d/rLorA+jQYaRjsxYFVB9/WKycypSaWrzakExlIW5uY0hvUqCAanMyx6qIudaSzg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qYLVw-004oCZ-18;
-        Tue, 22 Aug 2023 09:09:20 +0200
-Message-ID: <809d495a0f95790096bda9d7fd392998c4086152.camel@sipsolutions.net>
-Subject: Re: [PATCH] Revert "mac80211: add parse regulatory info in 6 GHz
- operation information"
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Wen Gong <quic_wgong@quicinc.com>, linux-wireless@vger.kernel.org
-Date:   Tue, 22 Aug 2023 09:09:19 +0200
-In-Reply-To: <ee8b37a1-0a5e-cc2f-8b88-a1263ee1b761@quicinc.com>
-References: <20230821105903.7482379cde47.Ib72645d02fadc24b520db118abd82e861c87316e@changeid>
-         <f28ee65621bd52ad59cae891e81431ef83eeaf2e.camel@sipsolutions.net>
-         <9ce54e8e-556b-976c-06d9-145b747705db@quicinc.com>
-         <714fd7374225db9e8d8225197931c5183f12e534.camel@sipsolutions.net>
-         <6adeb7be-9c7a-c122-71be-cc0143115fe6@quicinc.com>
-         <0f34540e71e7ba63a3d38e85aefec74350384a33.camel@sipsolutions.net>
-         <ee8b37a1-0a5e-cc2f-8b88-a1263ee1b761@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        Tue, 22 Aug 2023 03:12:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77D0FCED;
+        Tue, 22 Aug 2023 00:11:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6F66163B33;
+        Tue, 22 Aug 2023 07:11:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28C08C43140;
+        Tue, 22 Aug 2023 07:11:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1692688268;
+        bh=OSFmIc6DjVqzpF68MG32L32Nfk/PkwF+T/iEcUfE7zI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=yFhT1h6G7GQs4G8xdXWO83os1xmaegpIyyVgziAzY/RjT4jaPabj1XFXBMGL/iE0W
+         IHtR6aNZw4QOeK7FZqjtRLpC+fVw62vbtkU06cUtNIRZiBgB1yiGvLyyej+vglfWid
+         24ydufv4IeSFNst1ft204xjSah4Qbu3Wjk6I543w=
+Date:   Tue, 22 Aug 2023 08:39:00 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     "Limonciello, Mario" <mario.limonciello@amd.com>
+Cc:     Evan Quan <evan.quan@amd.com>, Andrew Lunn <andrew@lunn.ch>,
+        rafael@kernel.org, lenb@kernel.org, johannes@sipsolutions.net,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, alexander.deucher@amd.com,
+        rdunlap@infradead.org, quic_jjohnson@quicinc.com, horms@kernel.org,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [V9 1/9] drivers core: Add support for Wifi band RF mitigations
+Message-ID: <2023082247-synthesis-revenge-470d@gregkh>
+References: <20230818032619.3341234-1-evan.quan@amd.com>
+ <20230818032619.3341234-2-evan.quan@amd.com>
+ <2023081806-rounding-distract-b695@gregkh>
+ <2328cf53-849d-46a1-87e6-436e3a1f5fd8@amd.com>
+ <2023081919-mockup-bootleg-bdb9@gregkh>
+ <e5d153ed-df8a-4d6f-8222-18dfd97f6371@amd.com>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e5d153ed-df8a-4d6f-8222-18dfd97f6371@amd.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2023-08-22 at 14:17 +0800, Wen Gong wrote:
-> >=20
-> > Anyway it would seem better for a utility function to have clearer
-> > defined output, I think?
-> >=20
-> > johannes
->=20
-> Do you mean move the logic of set bss_conf->power_type to another new=20
-> function from
->=20
-> ieee80211_chandef_he_6ghz_oper()?
->=20
+On Mon, Aug 21, 2023 at 10:13:45PM -0500, Limonciello, Mario wrote:
+> So I wonder if the right answer is to put it in drivers/net/wireless
+> initially and if we come up with a need later for non wifi producers we can
+> discuss moving it at that time.
 
-No, not really. But we could have a pointer to the bss_conf or even the
-particular value, as an obvious output from the function.
+Please do so.
 
-johannes
+thanks,
+
+greg k-h
