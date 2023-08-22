@@ -2,54 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79BDCEE49A4
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 12:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D2F9EE4993
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 12:58:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235880AbjHVM4b (ORCPT
+        id S235898AbjHVM6y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 08:56:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59332 "EHLO
+        Tue, 22 Aug 2023 08:58:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235395AbjHVM4b (ORCPT
+        with ESMTP id S235871AbjHVM6y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 08:56:31 -0400
+        Tue, 22 Aug 2023 08:58:54 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3A2ECD5;
-        Tue, 22 Aug 2023 05:56:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC2C6CD4;
+        Tue, 22 Aug 2023 05:58:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 51C25653A7;
-        Tue, 22 Aug 2023 12:56:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CF48C433C8;
-        Tue, 22 Aug 2023 12:56:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4873765633;
+        Tue, 22 Aug 2023 12:58:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D32EDC433C7;
+        Tue, 22 Aug 2023 12:58:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692708988;
-        bh=2WNX9QQVAoAuPFyHg3TYLIP+sACknmV5BgHbBDJLXhg=;
+        s=k20201202; t=1692709131;
+        bh=ouJsox1dbFodWlwTb64apxEwUqHQswiCqUxFBwL0Plg=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=Kc9wbtP019ThJqTZl07TKJdIhRJV8MLPsBxb6Bpoaq511RbNdjQva/I5VkTXMePXq
-         xvFhDnBgHVwsbleZbHEy0Zy817mp44jSaT9epmtiPtNAx15KgjRkhjvm4kxHxLqpoa
-         tjuYkcSO08QKQcqSQm7TtkTaWtz/en9nCFU7MSChqqBrzdaMCABurvhXLLHDrBliPe
-         WSqZim9GcJwi/FxUl7jhuNm4cSGN37j2ScUwtYMtDD4avD/4LAqJf+a1GDBrK9fG7V
-         u/T8IHmkCUSd9709CN1Cn0XsigAmn4c2n76TC6tUWPGvPeaUe9QENW78p6z40y26Ue
-         wTaS/FD140PcQ==
+        b=TjQkRAk5xWRCLsWrlWRCgn/FFZnH2SGAAUBxVWjdJkfQ9zEu8ZFw28GolATRmVlPR
+         CxI40I+WDWoUpx8lyiJ1U8UdB9eFh4GwDa8SvH7kolJtzGeB3Q08hrMzCNt1SUU66N
+         KnXEZ+sVjoXyNYhqktyTCglgA59BDcFMrV2CRnapTrQCE+4/GG+VOnJ0xownMuu4mc
+         ltCMZ+DDtAukOBTowEyArTgJg3tTmt9pAPrY9vZT22xuzXut9mgkxe6+dT/H/W3Ft+
+         8P2LfPJGlkl3lNWRlAOl2RdX5ac73Y9JH1avw2+vQoBZOYNLabbPsrHQTyN9m/q+2m
+         OsoQhclu5QUGw==
 From:   Kalle Valo <kvalo@kernel.org>
-To:     Johan Hovold <johan@kernel.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        Bjorn Andersson <quic_bjorande@quicinc.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manikanta Pubbisetty <quic_mpubbise@quicinc.com>,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Revert "Revert "wifi: ath11k: Enable threaded NAPI""
-References: <20230809073432.4193-1-johan+linaro@kernel.org>
-        <ZONpkVU1ORHj-zFH@hovoldconsulting.com>
-Date:   Tue, 22 Aug 2023 15:56:24 +0300
-In-Reply-To: <ZONpkVU1ORHj-zFH@hovoldconsulting.com> (Johan Hovold's message
-        of "Mon, 21 Aug 2023 15:41:37 +0200")
-Message-ID: <87o7izi6br.fsf@kernel.org>
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
+        Andi Shyti <andi.shyti@kernel.org>
+Subject: Re: [PATCH net-next 1/2] wifi: ath11k: fix
+ Wvoid-pointer-to-enum-cast warning
+References: <20230810091224.70088-1-krzysztof.kozlowski@linaro.org>
+Date:   Tue, 22 Aug 2023 15:58:47 +0300
+In-Reply-To: <20230810091224.70088-1-krzysztof.kozlowski@linaro.org>
+        (Krzysztof Kozlowski's message of "Thu, 10 Aug 2023 11:12:23 +0200")
+Message-ID: <87jztni67s.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -57,39 +54,17 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johan Hovold <johan@kernel.org> writes:
+Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org> writes:
 
-> Hi Kalle,
+> 'hw_rev' is an enum, thus cast of pointer on 64-bit compile test with W=1
+> causes:
 >
-> On Wed, Aug 09, 2023 at 09:34:32AM +0200, Johan Hovold wrote:
+>   h11k/ahb.c:1124:11: error: cast to smaller integer type 'enum ath11k_hw_rev' from 'const void *' [-Werror,-Wvoid-pointer-to-enum-cast]
 >
->> Disabling threaded NAPI caused a severe regression in 6.5-rc5 by making
->> the X13s completely unusable (e.g. no keyboard input, I've seen an RCU
->> splat once).
->> 
->> I'm supposed to be on holiday this week, but thanks to the rain I gave
->> rc5 a try and ran into this.
->> 
->> I've added Bjorn, Mani and Konrad on CC who may be able to help with
->> debugging this further if needed while I'm out-of-office.
->
-> Back from my holiday now, and this regression is still there with
-> 6.5-rc7.
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-I was also away but back now.
-
-> Any chance we can get the offending commit reverted before 6.5 is
-> released? 
-
-The problem here is that would break QCN9074 again so there is no good
-solution. I suspect we have a fundamental issue in ath11k which we just
-haven't discovered yet. I would prefer to get to the bottom of this
-before reverting anything.
-
-> I'll take a closer look at this meanwhile.
-
-Thanks, much appreciated. Did you try enabling all kernel debug
-features, maybe they would give some hints?
+ath11k patches go to my ath.git tree, not net-next. But no need to
+resend because of this.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
