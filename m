@@ -2,71 +2,124 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D2F9EE4993
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 12:58:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D3AEE49AE
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 12:59:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235898AbjHVM6y (ORCPT
+        id S235924AbjHVM7W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 08:58:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41672 "EHLO
+        Tue, 22 Aug 2023 08:59:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235871AbjHVM6y (ORCPT
+        with ESMTP id S235923AbjHVM7V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 08:58:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC2C6CD4;
-        Tue, 22 Aug 2023 05:58:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4873765633;
-        Tue, 22 Aug 2023 12:58:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D32EDC433C7;
-        Tue, 22 Aug 2023 12:58:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692709131;
-        bh=ouJsox1dbFodWlwTb64apxEwUqHQswiCqUxFBwL0Plg=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=TjQkRAk5xWRCLsWrlWRCgn/FFZnH2SGAAUBxVWjdJkfQ9zEu8ZFw28GolATRmVlPR
-         CxI40I+WDWoUpx8lyiJ1U8UdB9eFh4GwDa8SvH7kolJtzGeB3Q08hrMzCNt1SUU66N
-         KnXEZ+sVjoXyNYhqktyTCglgA59BDcFMrV2CRnapTrQCE+4/GG+VOnJ0xownMuu4mc
-         ltCMZ+DDtAukOBTowEyArTgJg3tTmt9pAPrY9vZT22xuzXut9mgkxe6+dT/H/W3Ft+
-         8P2LfPJGlkl3lNWRlAOl2RdX5ac73Y9JH1avw2+vQoBZOYNLabbPsrHQTyN9m/q+2m
-         OsoQhclu5QUGw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
-        Andi Shyti <andi.shyti@kernel.org>
-Subject: Re: [PATCH net-next 1/2] wifi: ath11k: fix
- Wvoid-pointer-to-enum-cast warning
-References: <20230810091224.70088-1-krzysztof.kozlowski@linaro.org>
-Date:   Tue, 22 Aug 2023 15:58:47 +0300
-In-Reply-To: <20230810091224.70088-1-krzysztof.kozlowski@linaro.org>
-        (Krzysztof Kozlowski's message of "Thu, 10 Aug 2023 11:12:23 +0200")
-Message-ID: <87jztni67s.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        Tue, 22 Aug 2023 08:59:21 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6260ECD0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2023 05:59:19 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37MCwmpR7022521, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37MCwmpR7022521
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 22 Aug 2023 20:58:48 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Tue, 22 Aug 2023 20:59:10 +0800
+Received: from [127.0.1.1] (172.16.23.216) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 22 Aug
+ 2023 20:59:09 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <cj.hsieh@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/6] wifi: rtw89: introduce struct {mac,phy}_gen_def to define register address for WiFi 6 and 7 chips
+Date:   Tue, 22 Aug 2023 20:58:16 +0800
+Message-ID: <20230822125822.23817-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.16.23.216]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org> writes:
+The address space of WiFi 7 chips is changed from WiFi 6, and the layout
+looks like below.
 
-> 'hw_rev' is an enum, thus cast of pointer on 64-bit compile test with W=1
-> causes:
->
->   h11k/ahb.c:1124:11: error: cast to smaller integer type 'enum ath11k_hw_rev' from 'const void *' [-Werror,-Wvoid-pointer-to-enum-cast]
->
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+ +---------------------+ 0x0_0000 MAC base address   (WiFi 6: 0x0_0000 the same)
+ |                     |
+ |                     |
+ |  +-----------+  ----|-------+
+ |  |  BAND0    |      |       | offset = 0x0_4000   (WiFi 6: 0x0_2000)
+ |  +-----------+  <---|-------+
+ |  |  BAND1    |      |
+ |  +-----------+      |
+ |                     |
+ +---------------------+ 0x2_0000 PHY0 base address  (WiFi 6: 0x1_0000)
+ |                     |
+ |                     |
+ +---------------------+ 0x4_0000 PHY1 base address  (WiFi 6: not simple offset)
+ |                     |
+ |                     |
+ +---------------------+
 
-ath11k patches go to my ath.git tree, not net-next. But no need to
-resend because of this.
+Thus, introduce struct {mac,phy}_gen_def to define these addresses, and also
+registers addresses are changed after WiFi 7, so add fields to the struct to
+reuse codes. More functions will be added into the struct afterward, because
+register settings and flows are also changed.
+
+Currently, we add mac_be.c and phy_be.c for WiFi 7 chips, and the share code
+and WiFi 6 specified code still locate on existing mac.c and phy.c. In the
+future, we might move WiFi 6 part into mac_ax.c and phy_ax.c in one go
+if needed.
+
+Cheng-Chieh Hsieh (1):
+  wifi: rtw89: phy: modify register setting of ENV_MNTR, PHYSTS and DIG
+
+Ping-Ke Shih (5):
+  wifi: rtw89: mac: add mac_gen_def::band1_offset to map MAC band1
+    register address
+  wifi: rtw89: mac: generalize code to indirectly access WiFi internal
+    memory
+  wifi: rtw89: mac: define internal memory address for WiFi 7 chip
+  wifi: rtw89: mac: define register address of rx_filter to generalize
+    code
+  wifi: rtw89: phy: add phy_gen_def::cr_base to support WiFi 7 chips
+
+ drivers/net/wireless/realtek/rtw89/core.c     |   6 +-
+ drivers/net/wireless/realtek/rtw89/core.h     |   8 +
+ drivers/net/wireless/realtek/rtw89/debug.c    |  13 +-
+ drivers/net/wireless/realtek/rtw89/fw.c       |   6 +-
+ drivers/net/wireless/realtek/rtw89/mac.c      | 197 ++++++++-------
+ drivers/net/wireless/realtek/rtw89/mac.h      |  69 ++++-
+ drivers/net/wireless/realtek/rtw89/mac80211.c |   7 +-
+ drivers/net/wireless/realtek/rtw89/mac_be.c   |  38 +++
+ drivers/net/wireless/realtek/rtw89/phy.c      | 239 +++++++++++++-----
+ drivers/net/wireless/realtek/rtw89/phy.h      | 114 ++++++++-
+ drivers/net/wireless/realtek/rtw89/phy_be.c   |  77 ++++++
+ drivers/net/wireless/realtek/rtw89/reg.h      |  34 +++
+ drivers/net/wireless/realtek/rtw89/rtw8851b.c |  18 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  19 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |  18 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  24 +-
+ drivers/net/wireless/realtek/rtw89/ser.c      |  20 +-
+ drivers/net/wireless/realtek/rtw89/wow.c      |   3 +-
+ 18 files changed, 680 insertions(+), 230 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw89/mac_be.c
+ create mode 100644 drivers/net/wireless/realtek/rtw89/phy_be.c
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.25.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
