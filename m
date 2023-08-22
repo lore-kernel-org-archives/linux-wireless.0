@@ -2,69 +2,80 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C7DDEE49AB
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 07:12:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B03EE4993
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 07:33:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233542AbjHVHMf (ORCPT
+        id S233431AbjHVHde (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 03:12:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58146 "EHLO
+        Tue, 22 Aug 2023 03:33:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233366AbjHVHMA (ORCPT
+        with ESMTP id S233420AbjHVHdd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 03:12:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77D0FCED;
-        Tue, 22 Aug 2023 00:11:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6F66163B33;
-        Tue, 22 Aug 2023 07:11:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28C08C43140;
-        Tue, 22 Aug 2023 07:11:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1692688268;
-        bh=OSFmIc6DjVqzpF68MG32L32Nfk/PkwF+T/iEcUfE7zI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=yFhT1h6G7GQs4G8xdXWO83os1xmaegpIyyVgziAzY/RjT4jaPabj1XFXBMGL/iE0W
-         IHtR6aNZw4QOeK7FZqjtRLpC+fVw62vbtkU06cUtNIRZiBgB1yiGvLyyej+vglfWid
-         24ydufv4IeSFNst1ft204xjSah4Qbu3Wjk6I543w=
-Date:   Tue, 22 Aug 2023 08:39:00 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     "Limonciello, Mario" <mario.limonciello@amd.com>
-Cc:     Evan Quan <evan.quan@amd.com>, Andrew Lunn <andrew@lunn.ch>,
-        rafael@kernel.org, lenb@kernel.org, johannes@sipsolutions.net,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, alexander.deucher@amd.com,
-        rdunlap@infradead.org, quic_jjohnson@quicinc.com, horms@kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [V9 1/9] drivers core: Add support for Wifi band RF mitigations
-Message-ID: <2023082247-synthesis-revenge-470d@gregkh>
-References: <20230818032619.3341234-1-evan.quan@amd.com>
- <20230818032619.3341234-2-evan.quan@amd.com>
- <2023081806-rounding-distract-b695@gregkh>
- <2328cf53-849d-46a1-87e6-436e3a1f5fd8@amd.com>
- <2023081919-mockup-bootleg-bdb9@gregkh>
- <e5d153ed-df8a-4d6f-8222-18dfd97f6371@amd.com>
+        Tue, 22 Aug 2023 03:33:33 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06E42137
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2023 00:33:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692689612; x=1724225612;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=5qYS8lB8Zt3V425xe/+VgRxaybEQLM/DdDe99XmyPVQ=;
+  b=LH/EKDLb+cAcV48tC0PylKY1EW2ZM3bT5PyCpIF0yZ04Cwe90hlmL/pz
+   RcTLbTHWcLYkJO/NTrmq+uESDGWsX0OVLbc6SjqgV9aSirmS2sbZbTiam
+   7xnZASOqc8TDYGs8LCIG5Zuew58RmVtSbkF88QNjypaPFHRl3t3eWcfg4
+   Et4c82gWDgqNNczyPpYFCtp+qc0F83vQATr202yMsHLpiqYcY0xw9G8k1
+   db2+RMZNdHfwuc2oLv1mXqyFkhOh+54cTQt1TIsZ5tqG69/5SmCv1tD2T
+   2OCVpKJRTXtPD5B8MdjVQkaQsY+y55l2xBCLyNzesjI8L8Dd817yLo7bv
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10809"; a="363968711"
+X-IronPort-AV: E=Sophos;i="6.01,192,1684825200"; 
+   d="scan'208";a="363968711"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2023 00:33:31 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10809"; a="826229593"
+X-IronPort-AV: E=Sophos;i="6.01,192,1684825200"; 
+   d="scan'208";a="826229593"
+Received: from msharshe-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.209.35])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2023 00:33:29 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 0/5] wifi: iwlwifi: updates intended for v6.6 2023-08-22
+Date:   Tue, 22 Aug 2023 10:33:14 +0300
+Message-Id: <20230822073319.466640-1-gregory.greenman@intel.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e5d153ed-df8a-4d6f-8222-18dfd97f6371@amd.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Aug 21, 2023 at 10:13:45PM -0500, Limonciello, Mario wrote:
-> So I wonder if the right answer is to put it in drivers/net/wireless
-> initially and if we come up with a need later for non wifi producers we can
-> discuss moving it at that time.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Please do so.
+Hi,
 
-thanks,
+This patch set includes iwlwifi patches intended for v6.6.
 
-greg k-h
+A few iwlmei fixes and a related PCIe fix.
+
+Thanks,
+Gregory
+
+Avraham Stern (5):
+  wifi: iwlwifi: pcie: avoid a warning in case prepare card failed
+  wifi: iwlmei: don't send SAP messages if AMT is disabled
+  wifi: iwlmei: send HOST_GOES_DOWN message even if wiamt is disabled
+  wifi: iwlmei: send driver down SAP message only if wiamt is enabled
+  wifi: iwlmei: don't send nic info with invalid mac address
+
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 70 ++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 11 +--
+ 2 files changed, 37 insertions(+), 44 deletions(-)
+
+-- 
+2.38.1
+
