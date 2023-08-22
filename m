@@ -2,121 +2,108 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D33EE49AE
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 11:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A394EE49A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 11:37:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234963AbjHVLdt (ORCPT
+        id S235044AbjHVLhe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 07:33:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60116 "EHLO
+        Tue, 22 Aug 2023 07:37:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234965AbjHVLds (ORCPT
+        with ESMTP id S235039AbjHVLhd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 07:33:48 -0400
+        Tue, 22 Aug 2023 07:37:33 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B867CC6;
-        Tue, 22 Aug 2023 04:33:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47666CE5;
+        Tue, 22 Aug 2023 04:37:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 256BB652E5;
-        Tue, 22 Aug 2023 11:32:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7351C433A9;
-        Tue, 22 Aug 2023 11:32:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 971EA63A54;
+        Tue, 22 Aug 2023 11:36:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDE3BC433CB;
+        Tue, 22 Aug 2023 11:36:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692703955;
-        bh=+AKusttd6bUEorXUSKWazWFJEFpJ0E9Z13O4C9XdEO4=;
+        s=k20201202; t=1692704172;
+        bh=m1o0jXed7BnewlHKG+1vCqtrmwRS0IPm7ZfcZTswWms=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LAvlCCixDhC7NVdKNaN7tKZP1wWDNO/sHWdBnuuMUSnp0raqFqmm2QDbko5WCQnnw
-         slPbM74Q7aUyzWUzPLiQD4rCYn93c++ccnClm01+6oiTwKcaxSHtcw5m51YGGs6S0j
-         dIxIuudDQ0511p3BcwUqOODa/c0ULj0F4Ht0uOKtw8U2IfXTmogV1gnr5lDVvgafTk
-         iPJk6CQ7ETBCXwYx+W0XpDsxB0/A8Eo18Ydrm+ZNMKhexPmwAmzUP+2KHOZy13yNKb
-         bJydbQOY5ZP0827uW9oxJ/3kdfCOClYuQdVUigWQLFUWak5UMIisGCmRDQU0V4uE4j
-         7XKJHeGbxzb+Q==
+        b=IrdYlZZaWqM3fQQ0NJZafwAu1OL695GbZndRx3hQf5zRk7iEndCWn4NvUZNMeiyxB
+         pv7g/X3WcItoae5jC4aG1ydhvIm4MHngcMdkbYNei/4rydcfm01ef2uPpTWKBWI/b7
+         jtsV2C/WsPOBDvE/vRooAtVx3WfBIjTewkF6Q/ENDXipbzdcwiXHMoZGX5X6gGOiuS
+         kEbdKGW1PhUN4X6iEwDujtXmH0EA488QHaoreoVM4chme3YuAatq1rtn4I6XK6bl5K
+         O7n+oCm/S32gLduTZ2o9O9w9/mL5hwh91MWehm0EvbbUN647voxBgJIgXy+sPqVX2F
+         Ypjx9gBGtnWRg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        Kees Cook <keescook@chromium.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
-        aspriel@gmail.com, hante.meuleman@broadcom.com,
-        linus.walleij@linaro.org, marcan@marcan.st, gustavoars@kernel.org,
-        ryohei.kondo@cypress.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-Subject: [PATCH AUTOSEL 4.19 2/2] wifi: brcmfmac: Fix field-spanning write in brcmf_scan_params_v2_to_v1()
-Date:   Tue, 22 Aug 2023 07:32:28 -0400
-Message-Id: <20230822113228.3550367-2-sashal@kernel.org>
+Cc:     Wen Gong <quic_wgong@quicinc.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        quic_jjohnson@quicinc.com, ath12k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.4 06/11] wifi: ath12k: Fix buffer overflow when scanning with extraie
+Date:   Tue, 22 Aug 2023 07:35:48 -0400
+Message-Id: <20230822113553.3551206-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230822113228.3550367-1-sashal@kernel.org>
-References: <20230822113228.3550367-1-sashal@kernel.org>
+In-Reply-To: <20230822113553.3551206-1-sashal@kernel.org>
+References: <20230822113553.3551206-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.292
+X-stable-base: Linux 6.4.11
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Hans de Goede <hdegoede@redhat.com>
+From: Wen Gong <quic_wgong@quicinc.com>
 
-[ Upstream commit 16e455a465fca91907af0108f3d013150386df30 ]
+[ Upstream commit 06f2ab86a5b6ed55f013258de4be9319841853ea ]
 
-Using brcmfmac with 6.5-rc3 on a brcmfmac43241b4-sdio triggers
-a backtrace caused by the following field-spanning warning:
+If cfg80211 is providing extraie's for a scanning process then ath12k will
+copy that over to the firmware. The extraie.len is a 32 bit value in struct
+element_info and describes the amount of bytes for the vendor information
+elements.
 
-memcpy: detected field-spanning write (size 120) of single field
-  "&params_le->channel_list[0]" at
-  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:1072 (size 2)
+The problem is the allocation of the buffer. It has to align the TLV
+sections by 4 bytes. But the code was using an u8 to store the newly
+calculated length of this section (with alignment). And the new
+calculated length was then used to allocate the skbuff. But the actual
+code to copy in the data is using the extraie.len and not the calculated
+"aligned" length.
 
-The driver still works after this warning. The warning was introduced by the
-new field-spanning write checks which were enabled recently.
+The length of extraie with IEEE80211_HW_SINGLE_SCAN_ON_ALL_BANDS enabled
+was 264 bytes during tests with a wifi card. But it only allocated 8
+bytes (264 bytes % 256) for it. As consequence, the code to memcpy the
+extraie into the skb was then just overwriting data after skb->end. Things
+like shinfo were therefore corrupted. This could usually be seen by a crash
+in skb_zcopy_clear which tried to call a ubuf_info callback (using a bogus
+address).
 
-Fix this by replacing the channel_list[1] declaration at the end of
-the struct with a flexible array declaration.
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
 
-Most users of struct brcmf_scan_params_le calculate the size to alloc
-using the size of the non flex-array part of the struct + needed extra
-space, so they do not care about sizeof(struct brcmf_scan_params_le).
-
-brcmf_notify_escan_complete() however uses the struct on the stack,
-expecting there to be room for at least 1 entry in the channel-list
-to store the special -1 abort channel-id.
-
-To make this work use an anonymous union with a padding member
-added + the actual channel_list flexible array.
-
-Cc: Kees Cook <keescook@chromium.org>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://lore.kernel.org/r/20230729140500.27892-1-hdegoede@redhat.com
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Link: https://lore.kernel.org/r/20230809081241.32765-1-quic_wgong@quicinc.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h  | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/wmi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 9d2367133c7c6..de18cd1f838ca 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -390,7 +390,12 @@ struct brcmf_scan_params_le {
- 				 * fixed parameter portion is assumed, otherwise
- 				 * ssid in the fixed portion is ignored
- 				 */
--	__le16 channel_list[1];	/* list of chanspecs */
-+	union {
-+		__le16 padding;	/* Reserve space for at least 1 entry for abort
-+				 * which uses an on stack brcmf_scan_params_le
-+				 */
-+		DECLARE_FLEX_ARRAY(__le16, channel_list);	/* chanspecs */
-+	};
- };
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 7ae0bb78b2b53..1e65e35b5f3a6 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -2144,8 +2144,7 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 	struct wmi_tlv *tlv;
+ 	void *ptr;
+ 	int i, ret, len;
+-	u32 *tmp_ptr;
+-	u8 extraie_len_with_pad = 0;
++	u32 *tmp_ptr, extraie_len_with_pad = 0;
+ 	struct ath12k_wmi_hint_short_ssid_arg *s_ssid = NULL;
+ 	struct ath12k_wmi_hint_bssid_arg *hint_bssid = NULL;
  
- struct brcmf_scan_results {
 -- 
 2.40.1
 
