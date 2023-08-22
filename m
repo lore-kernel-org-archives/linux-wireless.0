@@ -2,244 +2,84 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E27CEE4996
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 11:54:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 380E0EE49A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Aug 2023 12:15:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235498AbjHVLyT (ORCPT
+        id S235605AbjHVMPx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Aug 2023 07:54:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44898 "EHLO
+        Tue, 22 Aug 2023 08:15:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235103AbjHVLyS (ORCPT
+        with ESMTP id S229796AbjHVMPw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Aug 2023 07:54:18 -0400
-Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC52CE9;
-        Tue, 22 Aug 2023 04:53:59 -0700 (PDT)
-Received: from local
-        by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
-         (Exim 4.96)
-        (envelope-from <daniel@makrotopia.org>)
-        id 1qYPg5-0006wL-27;
-        Tue, 22 Aug 2023 11:36:06 +0000
-Date:   Tue, 22 Aug 2023 12:35:47 +0100
-From:   Daniel Golle <daniel@makrotopia.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH net-next v3 1/2] dt-bindings: mt76: support setting
- per-band MAC address
-Message-ID: <ZOSdk6LyTlCayG4i@makrotopia.org>
-References: <d3130584b64309da28a04826100643ff6239f9ca.1690841657.git.daniel@makrotopia.org>
- <20230811190944.GA3730441-robh@kernel.org>
+        Tue, 22 Aug 2023 08:15:52 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 630DD1BE
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Aug 2023 05:15:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=NilICWeyqYWrREBgq7q7i2zZQeSD/nrekC6rhMzBxhc=;
+        t=1692706551; x=1693916151; b=sZNWGo1OpRTiEFKPCnJTEbW0R7vmUKC3U0ftH6qAOqV4ypP
+        b5P+rlV8b+6aeNEZNpd3OX3l5Wy2s87wSQWI7arfaJsL8sz6dtYAOr7BxITTIF3Vut6DJ3r7Yeoux
+        BG7DlwgTYDqpKy0iLYqM0Jt0JETxv0Z8w2TLm6onCBzif5zDrDo+AIXND0ovMWGXv9znssBBMu3C3
+        AKcvdm7pdGeGmqz5PGkvCpMEVWaDnKLyuXzhwr66Q85Z1cnX/nyxthkdhLcUEb+hDnvcf2xmzJMiE
+        85szIEFGIQwqPezQS9cWV+ejAS39xLMpmt2J2U6yp/AX+V79PcqveIea/am4T05w==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qYQIU-0056u8-2J;
+        Tue, 22 Aug 2023 14:15:46 +0200
+Message-ID: <339891ad481cfdcfa48a726da80202b3121a6000.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: mac80211_hwsim: do not ignore the value returned
+ by nla_put_u32()
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        lvc-project@linuxtesting.org
+Date:   Tue, 22 Aug 2023 14:15:45 +0200
+In-Reply-To: <20230814092128.14330-1-dmantipov@yandex.ru>
+References: <20230814092128.14330-1-dmantipov@yandex.ru>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230811190944.GA3730441-robh@kernel.org>
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Aug 11, 2023 at 01:09:44PM -0600, Rob Herring wrote:
-> On Mon, Jul 31, 2023 at 11:23:16PM +0100, Daniel Golle wrote:
-> > Introduce support for setting individual per-band MAC addresses using
-> > NVMEM cells by adding a 'bands' object with enumerated child nodes
-> > representing the 2.4 GHz, 5 GHz and 6 GHz bands.
-> > 
-> > In case it is defined, call of_get_mac_address for the per-band child
-> > node, otherwise try with of_get_mac_address on the main device node and
-> > fall back to a random address like it used to be.
-> > 
-> > While at it, add MAC address related properties also for the main node.
-> > 
-> > Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> > ---
-> > Changes since v2:
-> >  * drop items list with only a single item
-> > 
-> > Changes since v1:
-> >  * add dt-bindings
-> > 
-> >  .../bindings/net/wireless/mediatek,mt76.yaml  | 58 ++++++++++++++++++-
-> >  1 file changed, 57 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-> > index 252207adbc54c..7eafed53da1de 100644
-> > --- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-> > +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-> > @@ -37,6 +37,12 @@ properties:
-> >      description:
-> >        MT7986 should contain 3 regions consys, dcm, and sku, in this order.
-> >  
-> > +  '#address-cells':
-> > +    const: 1
-> > +
-> > +  '#size-cells':
-> > +    const: 0
-> > +
-> >    interrupts:
-> >      maxItems: 1
-> >  
-> > @@ -72,13 +78,23 @@ properties:
-> >  
-> >    ieee80211-freq-limit: true
-> >  
-> > +  address: true
-> 
-> What's this? Not a documented property.
+On Mon, 2023-08-14 at 12:21 +0300, Dmitry Antipov wrote:
+> In 'mac80211_hwsim_vendor_cmd_test()', do not ignore the value
+> returned by 'nla_put_u32'. This follows commit b970ac68e0c4
+> ("wifi: mac80211_hwsim: check the return value of nla_put_u32").
+>=20
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+>=20
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+> ---
+>  drivers/net/wireless/virtual/mac80211_hwsim.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/=
+wireless/virtual/mac80211_hwsim.c
+> index f446fd0e8cd0..2a3393a47bf2 100644
+> --- a/drivers/net/wireless/virtual/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+> @@ -597,9 +597,9 @@ static int mac80211_hwsim_vendor_cmd_test(struct wiph=
+y *wiphy,
+>  	/* skb_put() or nla_put() will fill up data within
+>  	 * NL80211_ATTR_VENDOR_DATA
+>  	 */
+> -	nla_put_u32(skb, QCA_WLAN_VENDOR_ATTR_TEST, val + 2);
+> +	err =3D nla_put_u32(skb, QCA_WLAN_VENDOR_ATTR_TEST, val + 2);
+> =20
+> -	return cfg80211_vendor_cmd_reply(skb);
+> +	return err ? err : cfg80211_vendor_cmd_reply(skb);
+>=20
 
-Maybe it should be documented then...?
-See
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/net/core/of_net.c#n140
+You can use ?: here, but more importantly, this introduces a memory
+leak.
 
-```
-int of_get_mac_address(struct device_node *np, u8 *addr)
-{
-	int ret;
-
-	if (!np)
-		return -ENODEV;
-
-	ret = of_get_mac_addr(np, "mac-address", addr);
-	if (!ret)
-		return 0;
-
-	ret = of_get_mac_addr(np, "local-mac-address", addr);
-	if (!ret)
-		return 0;
-
-	ret = of_get_mac_addr(np, "address", addr);
-	if (!ret)
-		return 0;
-
-	return of_get_mac_address_nvmem(np, addr);
-}
-EXPORT_SYMBOL(of_get_mac_address);
-```
-
-> 
-> 
-> > +
-> > +  local-mac-address: true
-> > +
-> > +  mac-address: true
-> 
-> You really need a ref to the schema defining these. But first we need to 
-> split them out from ethernet-controller.yaml. Which I think there were 
-> patches for, but it stalled out.
-> 
-
-I understand, so have a schema to include whenever of_net.c is used to
-assign a MAC address, and then use that for ethernet-controller.yaml and
-in places such as here.
-
-If you point me to the existing patches I can pick them up and address
-whatever needs to be addressed to get them merged.
-
-> Anyways, it's fine for now if you're not up for that.
-
-So just remove the (supposedly deprecated) "address: true" for now and
-then create an of_net MAC-address related schema and move things there
-after that?
-
-> 
-> > +
-> >    nvmem-cells:
-> > +    minItems: 1
-> >      items:
-> >        - description: NVMEM cell with EEPROM
-> > +      - description: NVMEM cell with the MAC address
-> >  
-> >    nvmem-cell-names:
-> > +    minItems: 1
-> >      items:
-> >        - const: eeprom
-> > +      - const: mac-address
-> >  
-> >    mediatek,eeprom-data:
-> >      $ref: /schemas/types.yaml#/definitions/uint32-array
-> > @@ -213,6 +229,29 @@ properties:
-> >                      description:
-> >                        Half-dBm power delta for different numbers of antennas
-> >  
-> > +patternProperties:
-> > +  '^band@[0-2]+$':
-> > +    type: object
-> > +    additionalProperties: false
-> > +    properties:
-> > +      reg:
-> > +        maxItems: 1
-> > +
-> > +      address: true
-> > +      local-mac-address: true
-> > +      mac-address: true
-> > +
-> > +      nvmem-cells:
-> > +        description: NVMEM cell with the MAC address
-> > +
-> > +      nvmem-cell-names:
-> > +        const: mac-address
-> > +
-> > +    required:
-> > +      - reg
-> > +
-> > +    unevaluatedProperties: false
-> > +
-> >  required:
-> >    - compatible
-> >    - reg
-> > @@ -225,10 +264,13 @@ examples:
-> >        #address-cells = <3>;
-> >        #size-cells = <2>;
-> >        wifi@0,0 {
-> > +        #address-cells = <1>;
-> > +        #size-cells = <0>;
-> >          compatible = "mediatek,mt76";
-> >          reg = <0x0000 0 0 0 0>;
-> >          ieee80211-freq-limit = <5000000 6000000>;
-> > -        mediatek,mtd-eeprom = <&factory 0x8000>;
-> > +        nvmem-cells = <&factory_eeprom>;
-> > +        nvmem-cell-names = "eeprom";
-> >          big-endian;
-> >  
-> >          led {
-> > @@ -257,6 +299,20 @@ examples:
-> >               };
-> >            };
-> >          };
-> > +
-> > +        band@0 {
-> > +          /* 2.4 GHz */
-> > +          reg = <0>;
-> > +          nvmem-cells = <&macaddr 0x4>;
-> > +          nvmem-cell-names = "mac-address";
-> > +        };
-> > +
-> > +        band@1 {
-> > +          /* 5 GHz */
-> > +          reg = <1>;
-> > +          nvmem-cells = <&macaddr 0xa>;
-> > +          nvmem-cell-names = "mac-address";
-> > +        };
-> >        };
-> >      };
-> >  
-> > -- 
-> > 2.41.0
+johannes
