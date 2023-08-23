@@ -2,111 +2,171 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D537C7113B
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Aug 2023 21:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A974C3DA6F
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Aug 2023 21:59:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237095AbjHWVNM (ORCPT
+        id S237931AbjHWV6q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Aug 2023 17:13:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39784 "EHLO
+        Wed, 23 Aug 2023 17:58:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237085AbjHWVNL (ORCPT
+        with ESMTP id S238577AbjHWV62 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2023 17:13:11 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6017410D8
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2023 14:13:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692825189; x=1724361189;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Fx6XHiDbKR09aJ2pIBVrkeck4ZiQZxqTBfit32JbjbU=;
-  b=M9JOharWPUf6AUpigg2Qhk+SvbAHQg4xiGJkC9Ei0F6UH4eRdvIweN8d
-   ID6feodx+0mEMqxLPSfAA7dGLOIwcNmv6iBaP47rHgE7lCgKOVCGK27rR
-   ipnpIebSbwaTBVRciN3h7+FBVQYJ5zdQ/2ZeuqShO5vORzNeW3OzRiX5s
-   9zlW0ETVkLeonaEn/aPntypwthguA/PomO+0OhlDX9CK7SIaHhB3/6Y3D
-   HHk5ruh0J0b6uq92LawyLuzerVhJXGxsMKaGiEOv5xTDzh/gDbCOaRyk1
-   jDTndlQOeGKPkBfSHqVLqmkszTM59j0eDQFd5GGFAWROVF5upJhzhpL9U
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10811"; a="378026738"
-X-IronPort-AV: E=Sophos;i="6.01,195,1684825200"; 
-   d="scan'208";a="378026738"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2023 14:13:08 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10811"; a="736804045"
-X-IronPort-AV: E=Sophos;i="6.01,195,1684825200"; 
-   d="scan'208";a="736804045"
-Received: from lkp-server02.sh.intel.com (HELO daf8bb0a381d) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 23 Aug 2023 14:13:06 -0700
-Received: from kbuild by daf8bb0a381d with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qYvA2-0001Vo-0T;
-        Wed, 23 Aug 2023 21:13:06 +0000
-Date:   Thu, 24 Aug 2023 05:12:26 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc:     oe-kbuild-all@lists.linux.dev, Wen Gong <quic_wgong@quicinc.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] Revert "mac80211: add parse regulatory info in 6 GHz
- operation information"
-Message-ID: <202308240547.O8ZxrrXI-lkp@intel.com>
-References: <20230821105903.7482379cde47.Ib72645d02fadc24b520db118abd82e861c87316e@changeid>
+        Wed, 23 Aug 2023 17:58:28 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F2C51702
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2023 14:58:02 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37NLH4hi030443;
+        Wed, 23 Aug 2023 21:57:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=cBxHICaXW8rA5YA600x5o/ULBpve8WYhuu34u3hZNws=;
+ b=eCBkh7myTzx/dPkNuvA66n1xQmBZkmtY0ltswh/YdBBWVcZLZoIfEPEHcZKDnWF/UOfD
+ /MycjyX01yP9mpslS1jjqwsxA8DI/Djb5viXpmWVZS45lBqATofQXPouj7RW7fV8c505
+ hV4aCVHCUirxa1a++KW+mgVL60BMOtgGp8QYWLmYuNDDBn3ccxS3QDLZM/7any00Fu8L
+ A2ZKCbSsY6GWcqYotuDdKBgymcuv5BDNRlZJHNQ7RfJ6ooOStIo0gudPbNm8isBpB/Zi
+ Ng4QuUKVbIcFZFEnanYTuEFwbimz1Zt2p3Jc0+ig8ER/+69sDrTM+ZQvHpKgzRyWgyPD tQ== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3snqg3gbjf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 23 Aug 2023 21:57:56 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37NLvuI0011746
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 23 Aug 2023 21:57:56 GMT
+Received: from msinada-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Wed, 23 Aug 2023 14:57:55 -0700
+From:   Muna Sinada <quic_msinada@quicinc.com>
+To:     <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Muna Sinada <quic_msinada@quicinc.com>
+Subject: [PATCH 2/2] wifi: ath11k: fix tid bitmap is 0 in peer rx mu stats
+Date:   Wed, 23 Aug 2023 14:57:48 -0700
+Message-ID: <1692827868-15667-2-git-send-email-quic_msinada@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1692827868-15667-1-git-send-email-quic_msinada@quicinc.com>
+References: <1692827868-15667-1-git-send-email-quic_msinada@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230821105903.7482379cde47.Ib72645d02fadc24b520db118abd82e861c87316e@changeid>
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 4qaQv46KN_YgrrTCFV8Kd2StAuOIDImn
+X-Proofpoint-GUID: 4qaQv46KN_YgrrTCFV8Kd2StAuOIDImn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-23_15,2023-08-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ lowpriorityscore=0 suspectscore=0 phishscore=0 mlxlogscore=836 spamscore=0
+ bulkscore=0 priorityscore=1501 impostorscore=0 adultscore=0 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2308230197
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes,
+Correct parsing of reading offset for rx tid 16 bit bitmap. Incorrect
+offset caused peer rx mu stats tid bitmap to always be zero. This
+correction is in the software context and does not affect the
+firmware interface.
 
-kernel test robot noticed the following build errors:
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.4.0.1-00356-QCAHKSWPL_SILICONZ-1
 
-[auto build test ERROR on linus/master]
-[also build test ERROR on v6.5-rc7 next-20230823]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/hal_rx.c | 10 +++++-----
+ drivers/net/wireless/ath/ath11k/hal_rx.h | 17 +++++++++--------
+ 2 files changed, 14 insertions(+), 13 deletions(-)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Johannes-Berg/Revert-mac80211-add-parse-regulatory-info-in-6-GHz-operation-information/20230821-170019
-base:   linus/master
-patch link:    https://lore.kernel.org/r/20230821105903.7482379cde47.Ib72645d02fadc24b520db118abd82e861c87316e%40changeid
-patch subject: [PATCH] Revert "mac80211: add parse regulatory info in 6 GHz operation information"
-config: x86_64-allyesconfig (https://download.01.org/0day-ci/archive/20230824/202308240547.O8ZxrrXI-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce: (https://download.01.org/0day-ci/archive/20230824/202308240547.O8ZxrrXI-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202308240547.O8ZxrrXI-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/net/wireless/realtek/rtw89/regd.c: In function 'rtw89_reg_6ghz_power_recalc':
->> drivers/net/wireless/realtek/rtw89/regd.c:514:39: error: 'struct ieee80211_bss_conf' has no member named 'power_type'; did you mean 'txpower_type'?
-     514 |                 switch (vif->bss_conf.power_type) {
-         |                                       ^~~~~~~~~~
-         |                                       txpower_type
-
-
-vim +514 drivers/net/wireless/realtek/rtw89/regd.c
-
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  505  
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  506  void rtw89_reg_6ghz_power_recalc(struct rtw89_dev *rtwdev,
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  507  				 struct rtw89_vif *rtwvif, bool active)
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  508  {
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  509  	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  510  
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  511  	lockdep_assert_held(&rtwdev->mutex);
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  512  
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02  513  	if (active) {
-f6baa1d3d5703f Zong-Zhe Yang 2023-06-02 @514  		switch (vif->bss_conf.power_type) {
-
+diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.c b/drivers/net/wireless/ath/ath11k/hal_rx.c
+index 1103d922320e..8c36a43af63e 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_rx.c
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.c
+@@ -814,7 +814,7 @@ ath11k_hal_rx_handle_ofdma_info(void *rx_tlv,
+ 
+ 	rx_user_status->ul_ofdma_user_v0_word0 = __le32_to_cpu(ppdu_end_user->info6);
+ 
+-	rx_user_status->ul_ofdma_user_v0_word1 = __le32_to_cpu(ppdu_end_user->info9);
++	rx_user_status->ul_ofdma_user_v0_word1 = __le32_to_cpu(ppdu_end_user->info10);
+ }
+ 
+ static inline void
+@@ -826,10 +826,10 @@ ath11k_hal_rx_populate_byte_count(void *rx_tlv, void *ppduinfo,
+ 
+ 	rx_user_status->mpdu_ok_byte_count =
+ 		FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO8_MPDU_OK_BYTE_COUNT,
+-			  __le32_to_cpu(ppdu_end_user->info7));
++			  __le32_to_cpu(ppdu_end_user->info8));
+ 	rx_user_status->mpdu_err_byte_count =
+ 		FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO9_MPDU_ERR_BYTE_COUNT,
+-			  __le32_to_cpu(ppdu_end_user->info8));
++			  __le32_to_cpu(ppdu_end_user->info9));
+ }
+ 
+ static inline void
+@@ -903,8 +903,8 @@ ath11k_hal_rx_parse_mon_status_tlv(struct ath11k_base *ab,
+ 			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO2_AST_INDEX,
+ 				  __le32_to_cpu(eu_stats->info2));
+ 		ppdu_info->tid =
+-			ffs(FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO6_TID_BITMAP,
+-				      __le32_to_cpu(eu_stats->info6))) - 1;
++			ffs(FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO7_TID_BITMAP,
++				      __le32_to_cpu(eu_stats->info7))) - 1;
+ 		ppdu_info->tcp_msdu_count =
+ 			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO4_TCP_MSDU_CNT,
+ 				  __le32_to_cpu(eu_stats->info4));
+diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.h b/drivers/net/wireless/ath/ath11k/hal_rx.h
+index 833440df7d5c..472a52cf5889 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_rx.h
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.h
+@@ -149,7 +149,7 @@ struct hal_rx_mon_ppdu_info {
+ 	u8 beamformed;
+ 	u8 rssi_comb;
+ 	u8 rssi_chain_pri20[HAL_RX_MAX_NSS];
+-	u8 tid;
++	u16 tid;
+ 	u16 ht_flags;
+ 	u16 vht_flags;
+ 	u16 he_flags;
+@@ -219,11 +219,11 @@ struct hal_rx_ppdu_start {
+ #define HAL_RX_PPDU_END_USER_STATS_INFO5_OTHER_MSDU_CNT		GENMASK(15, 0)
+ #define HAL_RX_PPDU_END_USER_STATS_INFO5_TCP_ACK_MSDU_CNT	GENMASK(31, 16)
+ 
+-#define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_BITMAP		GENMASK(15, 0)
+-#define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_EOSP_BITMAP	GENMASK(31, 16)
++#define HAL_RX_PPDU_END_USER_STATS_INFO7_TID_BITMAP		GENMASK(15, 0)
++#define HAL_RX_PPDU_END_USER_STATS_INFO7_TID_EOSP_BITMAP	GENMASK(31, 16)
+ 
+-#define HAL_RX_PPDU_END_USER_STATS_INFO7_MPDU_OK_BYTE_COUNT	GENMASK(24, 0)
+-#define HAL_RX_PPDU_END_USER_STATS_INFO8_MPDU_ERR_BYTE_COUNT	GENMASK(24, 0)
++#define HAL_RX_PPDU_END_USER_STATS_INFO8_MPDU_OK_BYTE_COUNT	GENMASK(24, 0)
++#define HAL_RX_PPDU_END_USER_STATS_INFO9_MPDU_ERR_BYTE_COUNT	GENMASK(24, 0)
+ 
+ struct hal_rx_ppdu_end_user_stats {
+ 	__le32 rsvd0[2];
+@@ -236,12 +236,13 @@ struct hal_rx_ppdu_end_user_stats {
+ 	__le32 info4;
+ 	__le32 info5;
+ 	__le32 info6;
+-	__le32 rsvd2[5];
+ 	__le32 info7;
+-	__le32 rsvd3;
++	__le32 rsvd2[4];
+ 	__le32 info8;
+-	__le32 rsvd3[2];
++	__le32 rsvd3;
+ 	__le32 info9;
++	__le32 rsvd4[2];
++	__le32 info10;
+ } __packed;
+ 
+ struct hal_rx_ppdu_end_user_stats_ext {
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.7.4
+
