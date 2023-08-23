@@ -2,73 +2,70 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7336EE4993
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Aug 2023 14:06:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E842EE4993
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Aug 2023 14:08:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236078AbjHWOGQ (ORCPT
+        id S235722AbjHWOIa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Aug 2023 10:06:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47868 "EHLO
+        Wed, 23 Aug 2023 10:08:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234430AbjHWOGP (ORCPT
+        with ESMTP id S234357AbjHWOI3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Aug 2023 10:06:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3B24CD0;
-        Wed, 23 Aug 2023 07:06:13 -0700 (PDT)
+        Wed, 23 Aug 2023 10:08:29 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CE87E46
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2023 07:08:28 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4D0116115B;
-        Wed, 23 Aug 2023 14:06:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C310C433C8;
-        Wed, 23 Aug 2023 14:06:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C0C7F62353
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Aug 2023 14:08:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF0A6C433C7;
+        Wed, 23 Aug 2023 14:08:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692799572;
-        bh=wn2siE3uN6pWAkKWnir+ZgoWOBFDb8FchTv2dj6tr9E=;
+        s=k20201202; t=1692799706;
+        bh=wlPZUJtwIjOU67ARs1NWL8noFWW1XT2B5EgDGcarzqg=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=p8vyoehhyovBAx/1WHouvuktyN+2LcZUAWeO0ZU5xbHKnii9KFY2i+Oyv2wl/vuNE
-         NgC/PbRjxiGE7Uxan/r04XtjJU8falzd5iRx+qOekQ8IhIiSLXbXvAJwc/+0NiUNVg
-         ZgQUA8Cu55c3GXuvLIHspRBFQ0G7R/e/NyXew2QNL6ahTgo89W+JQd6PMRH5sgex3Y
-         8zFcczIHxvocs+P+lBXxJj5umKG3F7cZu8nDvnfBg86Bu/MtjpJNiWLmNgI0+U7Xhb
-         IJKLmRh523+pvV/Fy92ExOJVtYm4hDB3ff0VVyLaYnSXPWqYbfc/XKKGvhaJMitsfB
-         TniXGBWI6FrwA==
+        b=jjEepA/o941RRSBqT8phh6gU6jDQpgZAqMhEWu4/QHn8KwUuLbN4MBaoWMl1IgtPA
+         B4mRtJkwdMsrUl/KJ7IcObhUdr7VjvGtY3BJ9M3BLRqefdpynpMELyKPt8KuhELr04
+         bFeLPt6yJQXPWphI5a9aE/xv0hwpbwDim7GBMF9joWRcpXHjwZ/WbumNdt0inn6qT4
+         qaERTdsTXepIHHxNz89gb/SwtNbJ7PDol+14OZHSGEtnTtiDbqLY7ZbJanjyx7gxU7
+         zCfFgZeCmH3cYflh/v20oOFTrZ2KecfwX6IM3yV3KqA5e2EKTFJQC6qPqVe/pWqDPT
+         1amfpJchUFcfw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/3] wifi: ath10k: Fix a few spelling errors
+Subject: Re: [PATCH -next] wifi: ath11k: simplify the code with
+ module_platform_driver
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230822-ath_spelling-v1-1-8e2698759564@quicinc.com>
-References: <20230822-ath_spelling-v1-1-8e2698759564@quicinc.com>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ath11k@lists.infradead.org>,
-        <ath12k@lists.infradead.org>
+In-Reply-To: <20230804091255.1347178-1-yangyingliang@huawei.com>
+References: <20230804091255.1347178-1-yangyingliang@huawei.com>
+To:     Yang Yingliang <yangyingliang@huawei.com>
+Cc:     <linux-wireless@vger.kernel.org>, <ath11k@lists.infradead.org>,
+        <quic_jjohnson@quicinc.com>, <yangyingliang@huawei.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169279956875.1241462.11254897741265211259.kvalo@kernel.org>
-Date:   Wed, 23 Aug 2023 14:06:10 +0000 (UTC)
+Message-ID: <169279970384.1241462.812415762244736136.kvalo@kernel.org>
+Date:   Wed, 23 Aug 2023 14:08:25 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
+Yang Yingliang <yangyingliang@huawei.com> wrote:
 
-> Fix a few issues flagged by 'codespell'.
+> The init/exit() of driver only calls platform_driver_register/unregister,
+> it can be simpilfied with module_platform_driver.
 > 
-> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-> Acked-by: Randy Dunlap <rdunlap@infradead.org>
+> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-3ced39049d4d wifi: ath10k: Fix a few spelling errors
-d68a283bfc39 wifi: ath11k: Fix a few spelling errors
-4f1dbb4904c3 wifi: ath12k: Fix a few spelling errors
+749a660b3903 wifi: ath11k: simplify the code with module_platform_driver
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230822-ath_spelling-v1-1-8e2698759564@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230804091255.1347178-1-yangyingliang@huawei.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
