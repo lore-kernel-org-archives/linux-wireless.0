@@ -2,51 +2,104 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9936BC88CB9
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Aug 2023 07:43:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DEB1C7113B
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Aug 2023 07:55:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238176AbjHXHnF (ORCPT
+        id S235528AbjHXHzX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Aug 2023 03:43:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53688 "EHLO
+        Thu, 24 Aug 2023 03:55:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240490AbjHXHms (ORCPT
+        with ESMTP id S235207AbjHXHzA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2023 03:42:48 -0400
-Received: from mail.loanfly.pl (mail.loanfly.pl [141.94.250.68])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCAE7171F
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Aug 2023 00:42:30 -0700 (PDT)
-Received: by mail.loanfly.pl (Postfix, from userid 1002)
-        id ABD18A4B21; Thu, 24 Aug 2023 07:41:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=loanfly.pl; s=mail;
-        t=1692862936; bh=Y0HnXqH+26AP5Uq6M8BQXaj1HIAPQY/WndV9tkpAHHU=;
-        h=Date:From:To:Subject:From;
-        b=AtMKOzLbGZ3AAKB8xoHViY3V1aGoBcpRs1S1scANV/kBrtJoFMlMO9qvhT/OAHeIq
-         8DVm8o25bsONsqGGRORKd07Ezslx9LV/BJVTHIenmTpVc816z1JtsSc4mVB0GWXVgk
-         B7OSQwojG0OgMnFCdhwmeggFdOi+8Hh3Z/3nqdG0XMWWX3CEChLKgajhqz8gNtMX8l
-         sCmPxoKecl/ZHPmR83PMCP6Q5ilGVNHzqJZC6/LG2j0aZqaJzDdN7hbbSvDLWLPj68
-         H0cgdTrDEOYVkk9EAmlYYOeU6YdAzSgo3mBWAq+hzC0aRCzjslavf+JWFQgiTjkVyD
-         d28MwoKfQ0AZg==
-Received: by mail.loanfly.pl for <linux-wireless@vger.kernel.org>; Thu, 24 Aug 2023 07:40:57 GMT
-Message-ID: <20230824064500-0.1.c3.1d6rm.0.44nmmr8gpn@loanfly.pl>
-Date:   Thu, 24 Aug 2023 07:40:57 GMT
-From:   "Damian Cichocki" <damian.cichocki@loanfly.pl>
-To:     <linux-wireless@vger.kernel.org>
-Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
-X-Mailer: mail.loanfly.pl
+        Thu, 24 Aug 2023 03:55:00 -0400
+Received: from forward100c.mail.yandex.net (forward100c.mail.yandex.net [178.154.239.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C963E10FF
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Aug 2023 00:54:54 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:1e2b:0:640:94b5:0])
+        by forward100c.mail.yandex.net (Yandex) with ESMTP id 24483600FD;
+        Thu, 24 Aug 2023 10:54:53 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id nsFdET9WwmI0-OPLZSoHf;
+        Thu, 24 Aug 2023 10:54:52 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail; t=1692863692;
+        bh=6NdYX2kixUoSH55JuKhY1SO/fR7GYU/C2rIRwedWVkU=;
+        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+        b=XZ++PEfEK0ZpaFblRX3KQPGyWtXtZDhJZo0YrZ+9tvYrEuOGFjJl8ccbHwoYAl+Nu
+         NjQGHH/xbRFuO4JtMWO6V2TsDKfgAxCQDAFRvTFLz0sIYuZiKUPHbPajmTZ7onZOwI
+         MR2CE/Qc+d815TFFN9XgmQ0eB7m4e4k7pnyn8iRs=
+Authentication-Results: mail-nwsmtp-smtp-production-main-59.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From:   Dmitry Antipov <dmantipov@yandex.ru>
+To:     Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc:     Kalle Valo <kvalo@kernel.org>, Tom Rix <trix@redhat.com>,
+        linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
+        ath11k@lists.infradead.org, Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH 4/5] wifi: ath11k: use kstrtoul_from_user() where appropriate
+Date:   Thu, 24 Aug 2023 10:50:47 +0300
+Message-ID: <20230824075121.121144-4-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230824075121.121144-1-dmantipov@yandex.ru>
+References: <20230824075121.121144-1-dmantipov@yandex.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Use 'kstrtoul_from_user()' in 'ath11k_write_file_spectral_count()'
+and 'ath11k_write_file_spectral_bins()'
 
-Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
-torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
-ich utrzymania?=20
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ drivers/net/wireless/ath/ath11k/spectral.c | 26 +++++++---------------
+ 1 file changed, 8 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/spectral.c b/drivers/net/wireless/ath/ath11k/spectral.c
+index 97eb2a457685..b5530e484507 100644
+--- a/drivers/net/wireless/ath/ath11k/spectral.c
++++ b/drivers/net/wireless/ath/ath11k/spectral.c
+@@ -382,16 +382,11 @@ static ssize_t ath11k_write_file_spectral_count(struct file *file,
+ {
+ 	struct ath11k *ar = file->private_data;
+ 	unsigned long val;
+-	char buf[32];
+-	ssize_t len;
+-
+-	len = min(count, sizeof(buf) - 1);
+-	if (copy_from_user(buf, user_buf, len))
+-		return -EFAULT;
++	ssize_t ret;
+ 
+-	buf[len] = '\0';
+-	if (kstrtoul(buf, 0, &val))
+-		return -EINVAL;
++	ret = kstrtoul_from_user(user_buf, count, 0, &val);
++	if (ret)
++		return ret;
+ 
+ 	if (val > ATH11K_SPECTRAL_SCAN_COUNT_MAX)
+ 		return -EINVAL;
+@@ -437,16 +432,11 @@ static ssize_t ath11k_write_file_spectral_bins(struct file *file,
+ {
+ 	struct ath11k *ar = file->private_data;
+ 	unsigned long val;
+-	char buf[32];
+-	ssize_t len;
+-
+-	len = min(count, sizeof(buf) - 1);
+-	if (copy_from_user(buf, user_buf, len))
+-		return -EFAULT;
++	ssize_t ret;
+ 
+-	buf[len] = '\0';
+-	if (kstrtoul(buf, 0, &val))
+-		return -EINVAL;
++	ret = kstrtoul_from_user(user_buf, count, 0, &val);
++	if (ret)
++		return ret;
+ 
+ 	if (val < ATH11K_SPECTRAL_MIN_BINS ||
+ 	    val > ar->ab->hw_params.spectral.max_fft_bins)
+-- 
+2.41.0
 
-Pozdrawiam,
-Damian Cichocki
