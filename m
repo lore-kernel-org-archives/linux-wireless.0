@@ -2,123 +2,88 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F3F7C7EE2C
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Aug 2023 03:17:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A0C8EE49A0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Aug 2023 06:25:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232913AbjHYDRN (ORCPT
+        id S233074AbjHYGZM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Aug 2023 23:17:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37846 "EHLO
+        Fri, 25 Aug 2023 02:25:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238850AbjHYDRB (ORCPT
+        with ESMTP id S234315AbjHYGZF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Aug 2023 23:17:01 -0400
-Received: from omta40.uswest2.a.cloudfilter.net (omta40.uswest2.a.cloudfilter.net [35.89.44.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C84E22107
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Aug 2023 20:16:27 -0700 (PDT)
-Received: from eig-obgw-5004a.ext.cloudfilter.net ([10.0.29.221])
-        by cmsmtp with ESMTP
-        id ZCYYq6s0nbK1VZNIkqviOi; Fri, 25 Aug 2023 03:15:58 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTPS
-        id ZNIjqcVOIEjYDZNIjqOZ7O; Fri, 25 Aug 2023 03:15:57 +0000
-X-Authority-Analysis: v=2.4 cv=IdGU5Ema c=1 sm=1 tr=0 ts=64e81ced
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=WzbPXH4gqzPVN0x6HrNMNA==:17
- a=OWjo9vPv0XrRhIrVQ50Ab3nP57M=:19 a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19
- a=CGo6wCm4IADRok0f:21 a=IkcTkHD0fZMA:10 a=UttIx32zK-AA:10 a=wYkD_t78qR0A:10
- a=VwQbUJbxAAAA:8 a=rBWVdRCEoVSWMRuK3c8A:9 a=QEXdDO2ut3YA:10
- a=AjGcO6oz07-iQ99wixmX:22 a=tNK2v2ls7fuFGmW9SST8:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=r7reQxyz3ksflfd/iSGFdMwfQPU24M66IYQoOYv0eUI=; b=Lds0zeFshaxWEbSK2uHaRLRFZA
-        bOe0acyvaHjorj9dPxHaEAeMneDC/yURVVMAXEMlAmA5sN+Y+NOOkeldLp2pvICtEn+KpM+80v2Iq
-        kmg5rDlDnKRRro4wcw/W4qSmxjSoJh676Q4EYX0HzxOmxzqWPbmJnwxw6kTHqoTBlXixRdkT5fcY2
-        kIouLvLDvo3mVWtLEvg+R0kB6DhP7g7HVkAZvojz4jpz7PpOCS4uR56ivR1JR5F8itPthdhIrMRS1
-        DsdTPiJnQC1bewiMf4Tyl8eMF4M6Huj26pHrfFckomMN0FUJnJC4CLBRXAqRcJlIiDqKnePHkGwv4
-        nq16RbPg==;
-Received: from 187-162-21-192.static.axtel.net ([187.162.21.192]:42040 helo=[192.168.15.8])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.96)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1qZNIi-003pg7-2g;
-        Thu, 24 Aug 2023 22:15:56 -0500
-Message-ID: <fd700d21-aed7-ded0-1841-732aca570ef0@embeddedor.com>
-Date:   Thu, 24 Aug 2023 21:16:58 -0600
+        Fri, 25 Aug 2023 02:25:05 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F09851BDB
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Aug 2023 23:24:58 -0700 (PDT)
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37P6OPSU0023129, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37P6OPSU0023129
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 25 Aug 2023 14:24:25 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Fri, 25 Aug 2023 14:24:48 +0800
+Received: from [127.0.1.1] (172.21.69.188) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 25 Aug
+ 2023 14:24:47 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <phhuang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wifi: rtw88: fix typo rtw8822cu_probe
+Date:   Fri, 25 Aug 2023 14:24:04 +0800
+Message-ID: <20230825062404.50813-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [RFC] wifi: mwifiex: Asking for some light on this, please :)
-Content-Language: en-US
-To:     Dan Williams <dcbw@redhat.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-References: <6e3fddfe-2d31-72fa-ac2b-3b7fa4e6fe08@embeddedor.com>
- <abc9d7abface4b9f651fc354ebaaf30ecf6e2783.camel@redhat.com>
- <3837e9ad-4d3b-40ae-a2f8-a051973ca3e5@embeddedor.com>
- <8e54e07eb0505302d601fd923e6cf0af0d60ff82.camel@redhat.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <8e54e07eb0505302d601fd923e6cf0af0d60ff82.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.21.192
-X-Source-L: No
-X-Exim-ID: 1qZNIi-003pg7-2g
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-21-192.static.axtel.net ([192.168.15.8]) [187.162.21.192]:42040
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 4
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfPeG7qkKL1sCr84GCidKA9O1GSFEObqFrPdsHfNMu4fOgPd7g6cuLZyfcaGegTioIOuOMoSKgkDjoPkflvowIb3eabBpdK7cYz95JokP6jURP5JAzSYM
- KP0U/zD6m5XfyS/HfIMTgbozMkHB8Fn12cRppdXAlhd3Vk9kcYENIt4+FuJJh9yBQnw30YwdMVsULV+xa9EXuExs9KEWiPQPlkKT5/NLO6jscVjKdqnDTYLu
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.188]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Po-Hao Huang <phhuang@realtek.com>
 
+The probe function of 8822cu is misplaced to 8822bu, so we fix it.
 
-> Make the mwifiex_dbg() into a warning though. This is an error
-> condition and shouldn't be hidden.
-> 
->>                   mwifiex_dbg(priv->adapter, INFO,
->>                               "%pM tid=%d seq_num=%d bitmap_len=%d\n",
->>                               tlv_rxba->mac, tlv_rxba->tid, tlv_seq_num,
->>
->> I wanted to used `sizeof(*tlv_rxba) + tlv_bitmap_len` here instead of
->> `sizeof(tlv_rxba->header) + tlv_len` to avoid any issues in case there
->> is any (buggy) discrepancy between `tlv_len` and `tlv_bitmap_len`.
->> This is when for some (weird) reason
->>          `tlv_len - (sizeof(*tlv_rxba) - sizeof(tlv_rxba->header)) != tlv_bitmap_len`
-> 
-> tlv_len absolutely should also be checked. But you don't need that
-> condition, just do the same thing right after tlv_len is retrieved from
-> the header:
-> 
-> if (sizeof(tlv_rxba->header) + tlv_len > tlv_buf_left) {
->      <warn>
->      return;
-> }
-> 
+Fixes: 07cef03b8d44 ("wifi: rtw88: Add rtw8822cu chipset support")
+Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8822cu.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks for all the feedback, Dan:
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822cu.c b/drivers/net/wireless/realtek/rtw88/rtw8822cu.c
+index af28ca09d41f..157d5102a4b1 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822cu.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822cu.c
+@@ -25,7 +25,7 @@ static const struct usb_device_id rtw_8822cu_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, rtw_8822cu_id_table);
+ 
+-static int rtw8822bu_probe(struct usb_interface *intf,
++static int rtw8822cu_probe(struct usb_interface *intf,
+ 			   const struct usb_device_id *id)
+ {
+ 	return rtw_usb_probe(intf, id);
+@@ -34,7 +34,7 @@ static int rtw8822bu_probe(struct usb_interface *intf,
+ static struct usb_driver rtw_8822cu_driver = {
+ 	.name = "rtw_8822cu",
+ 	.id_table = rtw_8822cu_id_table,
+-	.probe = rtw8822bu_probe,
++	.probe = rtw8822cu_probe,
+ 	.disconnect = rtw_usb_disconnect,
+ };
+ module_usb_driver(rtw_8822cu_driver);
+-- 
+2.25.1
 
-https://lore.kernel.org/linux-hardening/cover.1692931954.git.gustavoars@kernel.org/
-
---
-Gustavo
