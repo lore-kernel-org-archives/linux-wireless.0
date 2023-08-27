@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63A9EC83F14
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 549AEC83F16
 	for <linux-wireless@archiver.kernel.org>; Sun, 27 Aug 2023 11:06:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229682AbjH0LGA (ORCPT
+        id S229650AbjH0LF7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Aug 2023 07:06:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56264 "EHLO
+        Sun, 27 Aug 2023 07:05:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229787AbjH0LF5 (ORCPT
+        with ESMTP id S229770AbjH0LFx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Aug 2023 07:05:57 -0400
+        Sun, 27 Aug 2023 07:05:53 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32EC5186
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Aug 2023 04:05:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4BC013E
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Aug 2023 04:05:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693134355; x=1724670355;
+  t=1693134348; x=1724670348;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=vU5b38Ck1WimHSHzTYUARZfN97FpOsGIAEVzfJxjuBs=;
-  b=FQgBn9J7v8e4lPb4la/UG69WsAX+rPBOTQjLOw12hDHZvK5ak+rCvMHC
-   w4u4rIGYcJo/DWHgyrxREflzvneVlS0nzlaQ6YHty4zLKZXYGhyaJI+TQ
-   Lbg9A7WxsAfZ9NKCdWws1izxZ9zTgBq6o9SmVO4756tO92uwk4MNea+15
-   02R03ecWMsxH7lBnEfTih2gLilLEu+qAbBfo8hDJheB/1mVDI9C2EwK4n
-   BKtWFVPlihlujBLB3cUwJbEGFwtDgwWsEF6xb+qa9CN7G534LrNtBrosn
-   623ZhF3yj+JVO25gOu5ispfE3PPv1rxgiPuGF7TJubqHQHTOaFlpHq1PX
+  bh=Fp0l7uP2esL/DI84HWRM/ElcmFm3FFTtvU2wkuBb7Zk=;
+  b=nEvrdMfhOPX7P+FfzYwadGa18utoJyON2a/rqoji265m6WvbUGRFX45b
+   n9z4Q2qomyHqwtsni005f5sEJzQF1HyVGmNWUbpdh4Q1u4fxSRR+onO49
+   Y2rXR1dtcaY1KykgY3Az9Y9GsiNryJF8kt9tjkJIElpKuL+is9ghgNNCi
+   hPgQYVhCIwCiYIfPOxP4WflAUZwCVIZAtpqoSBUtckEDqMWKSruW0Dtd6
+   4KxkjrN9oXgv13KsReMsr/BTCaVeHaM9nieN0S+Cb6lvbliv4meeU0jry
+   KEPHH1RC+cmr30tyfEMCCc0fHAbgMVJeqwm6ytSzKfevfBxpqgRVOdDSV
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10814"; a="461301543"
+X-IronPort-AV: E=McAfee;i="6600,9927,10814"; a="461301533"
 X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="461301543"
+   d="scan'208";a="461301533"
 Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:05:55 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:05:48 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.01,202,1684825200"; 
-   d="scan'208";a="881632966"
+   d="scan'208";a="881632945"
 Received: from ishamsi-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.251.186.7])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:05:58 -0700
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:05:52 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 04/15] wifi: mac80211: add an element parsing unit test
-Date:   Sun, 27 Aug 2023 14:05:21 +0300
-Message-Id: <20230827135854.333bc75df13f.I0ddfeb6a88a4d89e7c7850e8ef45a4b19b5a061a@changeid>
+Subject: [PATCH 01/15] wifi: mac80211: add support for mld in ieee80211_chswitch_done
+Date:   Sun, 27 Aug 2023 14:05:18 +0300
+Message-Id: <20230827135854.9f3d846ec9ad.Ic2d14e2285aa1646216a56806cfd4a8d0054437c@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230827110532.348304-1-gregory.greenman@intel.com>
 References: <20230827110532.348304-1-gregory.greenman@intel.com>
@@ -56,215 +56,438 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Add a unit test for the parsing of a fragmented sta profile
-sub-element inside a fragmented multi-link element.
+This allows to finalize the CSA per link.
+In case the switch didn't work, tear down the MLD connection.
+Also pass the ieee80211_bss_conf to post_channel_switch to let the
+driver know which link completed the switch.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/Kconfig        |  11 ++++
- net/mac80211/Makefile       |   2 +
- net/mac80211/tests/Makefile |   3 ++
- net/mac80211/tests/elems.c  | 101 ++++++++++++++++++++++++++++++++++++
- net/mac80211/tests/module.c |  10 ++++
- net/mac80211/util.c         |   3 ++
- 6 files changed, 130 insertions(+)
- create mode 100644 net/mac80211/tests/Makefile
- create mode 100644 net/mac80211/tests/elems.c
- create mode 100644 net/mac80211/tests/module.c
+ .../net/wireless/intel/iwlegacy/4965-mac.c    |  2 +-
+ drivers/net/wireless/intel/iwlegacy/common.c  |  2 +-
+ .../net/wireless/intel/iwlwifi/dvm/mac80211.c |  6 ++--
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  2 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 10 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 +-
+ .../wireless/intel/iwlwifi/mvm/time-event.c   |  2 +-
+ drivers/net/wireless/ti/wlcore/event.c        |  2 +-
+ drivers/net/wireless/ti/wlcore/main.c         |  6 ++--
+ include/net/mac80211.h                        |  8 +++--
+ net/mac80211/cfg.c                            | 35 ++++++++++---------
+ net/mac80211/driver-ops.h                     |  6 ++--
+ net/mac80211/mlme.c                           | 29 ++++++++++-----
+ 13 files changed, 68 insertions(+), 45 deletions(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 51ec8256b7fa..037ab74f5ade 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -57,6 +57,17 @@ endif
- comment "Some wireless drivers require a rate control algorithm"
- 	depends on MAC80211 && MAC80211_HAS_RC=n
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+index 0a4aa3c678c1..69276266ce6f 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+@@ -6122,7 +6122,7 @@ il4965_mac_channel_switch(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (il->ops->set_channel_switch(il, ch_switch)) {
+ 		clear_bit(S_CHANNEL_SWITCH_PENDING, &il->status);
+ 		il->switch_channel = 0;
+-		ieee80211_chswitch_done(il->vif, false);
++		ieee80211_chswitch_done(il->vif, false, 0);
+ 	}
  
-+config MAC80211_KUNIT_TEST
-+	tristate "KUnit tests for mac80211" if !KUNIT_ALL_TESTS
-+	depends on KUNIT
-+	depends on MAC80211
-+	default KUNIT_ALL_TESTS
-+	depends on !KERNEL_6_2
-+	help
-+	  Enable this option to test mac80211 internals with kunit.
-+
-+	  If unsure, say N.
-+
- config MAC80211_MESH
- 	bool "Enable mac80211 mesh networking support"
- 	depends on MAC80211
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index b8de44da1fb8..c9eb52768133 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -65,4 +65,6 @@ rc80211_minstrel-$(CONFIG_MAC80211_DEBUGFS) += \
+ out:
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index 96002121bb8b..054fef680aba 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -4090,7 +4090,7 @@ il_chswitch_done(struct il_priv *il, bool is_success)
+ 		return;
  
- mac80211-$(CONFIG_MAC80211_RC_MINSTREL) += $(rc80211_minstrel-y)
+ 	if (test_and_clear_bit(S_CHANNEL_SWITCH_PENDING, &il->status))
+-		ieee80211_chswitch_done(il->vif, is_success);
++		ieee80211_chswitch_done(il->vif, is_success, 0);
+ }
+ EXPORT_SYMBOL(il_chswitch_done);
  
-+obj-y += tests/
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
+index b1939ff275b5..5f3d5b15f727 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
+@@ -2,7 +2,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+- * Copyright (C) 2018 - 2019, 2022 Intel Corporation
++ * Copyright(C) 2018 - 2019, 2022 - 2023 Intel Corporation
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portions of the ieee80211 subsystem header files.
+@@ -1001,7 +1001,7 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+ 	if (priv->lib->set_channel_switch(priv, ch_switch)) {
+ 		clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status);
+ 		priv->switch_channel = 0;
+-		ieee80211_chswitch_done(ctx->vif, false);
++		ieee80211_chswitch_done(ctx->vif, false, 0);
+ 	}
+ 
+ out:
+@@ -1024,7 +1024,7 @@ void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
+ 		return;
+ 
+ 	if (ctx->vif)
+-		ieee80211_chswitch_done(ctx->vif, is_success);
++		ieee80211_chswitch_done(ctx->vif, is_success, 0);
+ }
+ 
+ static void iwlagn_configure_filter(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 7369a45f7f2b..b28d998c65c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -1839,7 +1839,7 @@ void iwl_mvm_channel_switch_start_notif(struct iwl_mvm *mvm,
+ 
+ 		iwl_mvm_csa_client_absent(mvm, vif);
+ 		cancel_delayed_work(&mvmvif->csa_work);
+-		ieee80211_chswitch_done(vif, true);
++		ieee80211_chswitch_done(vif, true, 0);
+ 		break;
+ 	default:
+ 		/* should never happen */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5918c1f2b10c..921f72dcddac 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1370,7 +1370,8 @@ int iwl_mvm_set_tx_power(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ }
+ 
+ int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
+-				struct ieee80211_vif *vif)
++				struct ieee80211_vif *vif,
++				struct ieee80211_bss_conf *link_conf)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+@@ -1452,7 +1453,8 @@ void iwl_mvm_abort_channel_switch(struct ieee80211_hw *hw,
+ 	mvmvif->csa_failed = true;
+ 	mutex_unlock(&mvm->mutex);
+ 
+-	iwl_mvm_post_channel_switch(hw, vif);
++	/* If we're here, we can't support MLD */
++	iwl_mvm_post_channel_switch(hw, vif, &vif->bss_conf);
+ }
+ 
+ void iwl_mvm_channel_switch_disconnect_wk(struct work_struct *wk)
+@@ -1464,7 +1466,7 @@ void iwl_mvm_channel_switch_disconnect_wk(struct work_struct *wk)
+ 	vif = container_of((void *)mvmvif, struct ieee80211_vif, drv_priv);
+ 
+ 	/* Trigger disconnect (should clear the CSA state) */
+-	ieee80211_chswitch_done(vif, false);
++	ieee80211_chswitch_done(vif, false, 0);
+ }
+ 
+ static u8
+@@ -5535,7 +5537,7 @@ void iwl_mvm_channel_switch_rx_beacon(struct ieee80211_hw *hw,
+ 		if (mvmvif->csa_misbehave) {
+ 			/* Second time, give up on this AP*/
+ 			iwl_mvm_abort_channel_switch(hw, vif);
+-			ieee80211_chswitch_done(vif, false);
++			ieee80211_chswitch_done(vif, false, 0);
+ 			mvmvif->csa_misbehave = false;
+ 			return;
+ 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index b18c91c5dd5d..dda13f4351c3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -2427,7 +2427,8 @@ static inline u8 iwl_mvm_phy_band_from_nl80211(enum nl80211_band band)
+ /* Channel Switch */
+ void iwl_mvm_channel_switch_disconnect_wk(struct work_struct *wk);
+ int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
+-				struct ieee80211_vif *vif);
++				struct ieee80211_vif *vif,
++				struct ieee80211_bss_conf *link);
+ 
+ /* Channel Context */
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 5f0e7144a951..e1f6cea649c3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -223,7 +223,7 @@ iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
+ 		}
+ 		iwl_mvm_csa_client_absent(mvm, te_data->vif);
+ 		cancel_delayed_work(&mvmvif->csa_work);
+-		ieee80211_chswitch_done(te_data->vif, true);
++		ieee80211_chswitch_done(te_data->vif, true, 0);
+ 		break;
+ 	default:
+ 		/* should never happen */
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 46ab69eab26a..1e082d039b82 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -229,7 +229,7 @@ void wlcore_event_channel_switch(struct wl1271 *wl,
+ 		vif = wl12xx_wlvif_to_vif(wlvif);
+ 
+ 		if (wlvif->bss_type == BSS_TYPE_STA_BSS) {
+-			ieee80211_chswitch_done(vif, success);
++			ieee80211_chswitch_done(vif, success, 0);
+ 			cancel_delayed_work(&wlvif->channel_switch_work);
+ 		} else {
+ 			set_bit(WLVIF_FLAG_BEACON_DISABLED, &wlvif->flags);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index bf21611872a3..b7e68d2721c1 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2043,7 +2043,7 @@ static void wlcore_channel_switch_work(struct work_struct *work)
+ 		goto out;
+ 
+ 	vif = wl12xx_wlvif_to_vif(wlvif);
+-	ieee80211_chswitch_done(vif, false);
++	ieee80211_chswitch_done(vif, false, 0);
+ 
+ 	ret = pm_runtime_resume_and_get(wl->dev);
+ 	if (ret < 0)
+@@ -3030,7 +3030,7 @@ static int wlcore_unset_assoc(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 		struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
+ 
+ 		wl12xx_cmd_stop_channel_switch(wl, wlvif);
+-		ieee80211_chswitch_done(vif, false);
++		ieee80211_chswitch_done(vif, false, 0);
+ 		cancel_delayed_work(&wlvif->channel_switch_work);
+ 	}
+ 
+@@ -5451,7 +5451,7 @@ static void wl12xx_op_channel_switch(struct ieee80211_hw *hw,
+ 
+ 	if (unlikely(wl->state == WLCORE_STATE_OFF)) {
+ 		if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
+-			ieee80211_chswitch_done(vif, false);
++			ieee80211_chswitch_done(vif, false, 0);
+ 		goto out;
+ 	} else if (unlikely(wl->state != WLCORE_STATE_ON)) {
+ 		goto out;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7c707358d15c..67f54825110f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4544,7 +4544,8 @@ struct ieee80211_ops {
+ 				  struct ieee80211_channel_switch *ch_switch);
+ 
+ 	int (*post_channel_switch)(struct ieee80211_hw *hw,
+-				   struct ieee80211_vif *vif);
++				   struct ieee80211_vif *vif,
++				   struct ieee80211_bss_conf *link_conf);
+ 	void (*abort_channel_switch)(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif);
+ 	void (*channel_switch_rx_beacon)(struct ieee80211_hw *hw,
+@@ -6542,11 +6543,14 @@ void ieee80211_radar_detected(struct ieee80211_hw *hw);
+  * ieee80211_chswitch_done - Complete channel switch process
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  * @success: make the channel switch successful or not
++ * @link_id: the link_id on which the switch was done. Ignored if success is
++ *	false.
+  *
+  * Complete the channel switch post-process: set the new operational channel
+  * and wake up the suspended queues.
+  */
+-void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success);
++void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success,
++			     unsigned int link_id);
+ 
+ /**
+  * ieee80211_channel_switch_disconnect - disconnect due to channel switch error
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 45e7a5d9c7d9..ae5017edd09f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3638,8 +3638,9 @@ static int ieee80211_set_after_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
++static int __ieee80211_csa_finalize(struct ieee80211_link_data *link_data)
+ {
++	struct ieee80211_sub_if_data *sdata = link_data->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u64 changed = 0;
+ 	int err;
+@@ -3655,20 +3656,20 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 	 * completed successfully
+ 	 */
+ 
+-	if (sdata->deflink.reserved_chanctx) {
++	if (link_data->reserved_chanctx) {
+ 		/*
+ 		 * with multi-vif csa driver may call ieee80211_csa_finish()
+ 		 * many times while waiting for other interfaces to use their
+ 		 * reservations
+ 		 */
+-		if (sdata->deflink.reserved_ready)
++		if (link_data->reserved_ready)
+ 			return 0;
+ 
+ 		return ieee80211_link_use_reserved_context(&sdata->deflink);
+ 	}
+ 
+ 	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
+-					&sdata->deflink.csa_chandef))
++					&link_data->csa_chandef))
+ 		return -EINVAL;
+ 
+ 	sdata->vif.bss_conf.csa_active = false;
+@@ -3685,25 +3686,27 @@ static int __ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ieee80211_link_info_change_notify(sdata, &sdata->deflink, changed);
+ 
+-	if (sdata->deflink.csa_block_tx) {
++	if (link_data->csa_block_tx) {
+ 		ieee80211_wake_vif_queues(local, sdata,
+ 					  IEEE80211_QUEUE_STOP_REASON_CSA);
+-		sdata->deflink.csa_block_tx = false;
++		link_data->csa_block_tx = false;
+ 	}
+ 
+-	err = drv_post_channel_switch(sdata);
++	err = drv_post_channel_switch(link_data);
+ 	if (err)
+ 		return err;
+ 
+-	cfg80211_ch_switch_notify(sdata->dev, &sdata->deflink.csa_chandef, 0,
++	cfg80211_ch_switch_notify(sdata->dev, &link_data->csa_chandef, 0,
+ 				  sdata->vif.bss_conf.eht_puncturing);
+ 
+ 	return 0;
+ }
+ 
+-static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_csa_finalize(struct ieee80211_link_data *link_data)
+ {
+-	if (__ieee80211_csa_finalize(sdata)) {
++	struct ieee80211_sub_if_data *sdata = link_data->sdata;
 +
- ccflags-y += -DDEBUG
-diff --git a/net/mac80211/tests/Makefile b/net/mac80211/tests/Makefile
-new file mode 100644
-index 000000000000..4814584f8a14
---- /dev/null
-+++ b/net/mac80211/tests/Makefile
-@@ -0,0 +1,3 @@
-+mac80211-tests-y += module.o elems.o
++	if (__ieee80211_csa_finalize(link_data)) {
+ 		sdata_info(sdata, "failed to finalize CSA, disconnecting\n");
+ 		cfg80211_stop_iface(sdata->local->hw.wiphy, &sdata->wdev,
+ 				    GFP_KERNEL);
+@@ -3712,9 +3715,9 @@ static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_csa_finalize_work(struct work_struct *work)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data,
+-			     deflink.csa_finalize_work);
++	struct ieee80211_link_data *link =
++		container_of(work, struct ieee80211_link_data, csa_finalize_work);
++	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 
+ 	sdata_lock(sdata);
+@@ -3722,13 +3725,13 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	mutex_lock(&local->chanctx_mtx);
+ 
+ 	/* AP might have been stopped while waiting for the lock. */
+-	if (!sdata->vif.bss_conf.csa_active)
++	if (!link->conf->csa_active)
+ 		goto unlock;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
+ 		goto unlock;
+ 
+-	ieee80211_csa_finalize(sdata);
++	ieee80211_csa_finalize(link);
+ 
+ unlock:
+ 	mutex_unlock(&local->chanctx_mtx);
+@@ -3978,7 +3981,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		drv_channel_switch_beacon(sdata, &params->chandef);
+ 	} else {
+ 		/* if the beacon didn't change, we can finalize immediately */
+-		ieee80211_csa_finalize(sdata);
++		ieee80211_csa_finalize(&sdata->deflink);
+ 	}
+ 
+ out:
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index c4505593ba7a..a41dd60ae4b4 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1072,8 +1072,9 @@ drv_pre_channel_switch(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static inline int
+-drv_post_channel_switch(struct ieee80211_sub_if_data *sdata)
++drv_post_channel_switch(struct ieee80211_link_data *link)
+ {
++	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	int ret = 0;
+ 
+@@ -1082,7 +1083,8 @@ drv_post_channel_switch(struct ieee80211_sub_if_data *sdata)
+ 
+ 	trace_drv_post_channel_switch(local, sdata);
+ 	if (local->ops->post_channel_switch)
+-		ret = local->ops->post_channel_switch(&local->hw, &sdata->vif);
++		ret = local->ops->post_channel_switch(&local->hw, &sdata->vif,
++						      link->conf);
+ 	trace_drv_return_int(local, ret);
+ 	return ret;
+ }
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f93eb38ae0b8..ca6045f56b4b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1773,7 +1773,7 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_link_data *link)
+ 	 */
+ 	link->u.mgd.beacon_crc_valid = false;
+ 
+-	ret = drv_post_channel_switch(sdata);
++	ret = drv_post_channel_switch(link);
+ 	if (ret) {
+ 		sdata_info(sdata,
+ 			   "driver post channel switch failed, disconnecting\n");
+@@ -1785,25 +1785,36 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_link_data *link)
+ 	cfg80211_ch_switch_notify(sdata->dev, &link->reserved_chandef, 0, 0);
+ }
+ 
+-void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success)
++void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success,
++			     unsigned int link_id)
+ {
++	struct ieee80211_link_data *link;
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+-	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-
+-	if (WARN_ON(ieee80211_vif_is_mld(&sdata->vif)))
+-		success = false;
++	struct ieee80211_link_data_managed *ifmgd;
+ 
+ 	trace_api_chswitch_done(sdata, success);
 +
-+obj-$(CONFIG_MAC80211_KUNIT_TEST) += mac80211-tests.o
-diff --git a/net/mac80211/tests/elems.c b/net/mac80211/tests/elems.c
-new file mode 100644
-index 000000000000..997d0cd27b2d
---- /dev/null
-+++ b/net/mac80211/tests/elems.c
-@@ -0,0 +1,101 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * KUnit tests for element parsing
-+ *
-+ * Copyright (C) 2023 Intel Corporation
-+ */
-+#include <kunit/test.h>
-+#include "../ieee80211_i.h"
++	rcu_read_lock();
 +
-+MODULE_IMPORT_NS(EXPORTED_FOR_KUNIT_TESTING);
-+
-+static void mle_defrag(struct kunit *test)
-+{
-+	struct ieee80211_elems_parse_params parse_params = {
-+		.link_id = 12,
-+		.from_ap = true,
-+	};
-+	struct ieee802_11_elems *parsed;
-+	struct sk_buff *skb;
-+	u8 *len_mle, *len_prof;
-+	int i;
-+
-+	skb = alloc_skb(1024, GFP_KERNEL);
-+	KUNIT_ASSERT_NOT_NULL(test, skb);
-+
-+	if (skb_pad(skb, skb_tailroom(skb))) {
-+		KUNIT_FAIL(test, "failed to pad skb");
++	link = rcu_dereference(sdata->link[link_id]);
++	if (WARN_ON(!link)) {
++		rcu_read_unlock();
 +		return;
 +	}
 +
-+	/* build a multi-link element */
-+	skb_put_u8(skb, WLAN_EID_EXTENSION);
-+	len_mle = skb_put(skb, 1);
-+	skb_put_u8(skb, WLAN_EID_EXT_EHT_MULTI_LINK);
++	ifmgd = &link->u.mgd;
 +
-+	put_unaligned_le16(IEEE80211_ML_CONTROL_TYPE_BASIC,
-+			   skb_put(skb, 2));
-+	/* struct ieee80211_mle_basic_common_info */
-+	skb_put_u8(skb, 7); /* includes len field */
-+	skb_put_data(skb, "\x00\x00\x00\x00\x00\x00", ETH_ALEN); /* MLD addr */
+ 	if (!success) {
+ 		sdata_info(sdata,
+ 			   "driver channel switch failed, disconnecting\n");
+ 		wiphy_work_queue(sdata->local->hw.wiphy,
+-				 &ifmgd->csa_connection_drop_work);
++				 &sdata->u.mgd.csa_connection_drop_work);
+ 	} else {
+ 		wiphy_delayed_work_queue(sdata->local->hw.wiphy,
+-					 &sdata->deflink.u.mgd.chswitch_work,
+-					 0);
++					 &ifmgd->chswitch_work, 0);
+ 	}
 +
-+	/* with a STA profile inside */
-+	skb_put_u8(skb, IEEE80211_MLE_SUBELEM_PER_STA_PROFILE);
-+	len_prof = skb_put(skb, 1);
-+	put_unaligned_le16(IEEE80211_MLE_STA_CONTROL_COMPLETE_PROFILE |
-+			   parse_params.link_id,
-+			   skb_put(skb, 2));
-+	skb_put_u8(skb, 1); /* fake sta_info_len - includes itself */
-+	/* put a bunch of useless elements into it */
-+	for (i = 0; i < 20; i++) {
-+		skb_put_u8(skb, WLAN_EID_SSID);
-+		skb_put_u8(skb, 20);
-+		skb_put(skb, 20);
-+	}
-+
-+	/* fragment STA profile */
-+	ieee80211_fragment_element(skb, len_prof,
-+				   IEEE80211_MLE_SUBELEM_FRAGMENT);
-+	/* fragment MLE */
-+	ieee80211_fragment_element(skb, len_mle, WLAN_EID_FRAGMENT);
-+
-+	parse_params.start = skb->data;
-+	parse_params.len = skb->len;
-+	parsed = ieee802_11_parse_elems_full(&parse_params);
-+	/* should return ERR_PTR or valid, not NULL */
-+	KUNIT_EXPECT_NOT_NULL(test, parsed);
-+
-+	if (IS_ERR_OR_NULL(parsed))
-+		goto free_skb;
-+
-+	KUNIT_EXPECT_NOT_NULL(test, parsed->ml_basic_elem);
-+	KUNIT_EXPECT_EQ(test,
-+			parsed->ml_basic_len,
-+			2 /* control */ +
-+			7 /* common info */ +
-+			2 /* sta profile element header */ +
-+			3 /* sta profile header */ +
-+			20 * 22 /* sta profile data */ +
-+			2 /* sta profile fragment element */);
-+	KUNIT_EXPECT_NOT_NULL(test, parsed->prof);
-+	KUNIT_EXPECT_EQ(test,
-+			parsed->sta_prof_len,
-+			3 /* sta profile header */ +
-+			20 * 22 /* sta profile data */);
-+
-+	kfree(parsed);
-+free_skb:
-+	kfree_skb(skb);
-+}
-+
-+static struct kunit_case element_parsing_test_cases[] = {
-+	KUNIT_CASE(mle_defrag),
-+	{}
-+};
-+
-+static struct kunit_suite element_parsing = {
-+	.name = "mac80211-element-parsing",
-+	.test_cases = element_parsing_test_cases,
-+};
-+
-+kunit_test_suite(element_parsing);
-diff --git a/net/mac80211/tests/module.c b/net/mac80211/tests/module.c
-new file mode 100644
-index 000000000000..9d05f2943935
---- /dev/null
-+++ b/net/mac80211/tests/module.c
-@@ -0,0 +1,10 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * This is just module boilerplate for the mac80211 kunit module.
-+ *
-+ * Copyright (C) 2023 Intel Corporation
-+ */
-+#include <linux/module.h>
-+
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("tests for mac80211");
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8a6917cf63cf..d430093d14af 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -24,6 +24,7 @@
- #include <net/net_namespace.h>
- #include <net/cfg80211.h>
- #include <net/rtnetlink.h>
-+#include <kunit/visibility.h>
- 
- #include "ieee80211_i.h"
- #include "driver-ops.h"
-@@ -1654,6 +1655,7 @@ ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
- 
- 	return elems;
++	rcu_read_unlock();
  }
-+EXPORT_SYMBOL_IF_KUNIT(ieee802_11_parse_elems_full);
+ EXPORT_SYMBOL(ieee80211_chswitch_done);
  
- void ieee80211_regulatory_limit_wmm_params(struct ieee80211_sub_if_data *sdata,
- 					   struct ieee80211_tx_queue_params
-@@ -5146,3 +5148,4 @@ void ieee80211_fragment_element(struct sk_buff *skb, u8 *len_pos, u8 frag_id)
- 
- 	*len_pos = elem_len;
- }
-+EXPORT_SYMBOL_IF_KUNIT(ieee80211_fragment_element);
 -- 
 2.38.1
 
