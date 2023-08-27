@@ -2,50 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 141DDC83F18
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46271C83F1D
 	for <linux-wireless@archiver.kernel.org>; Sun, 27 Aug 2023 11:07:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229708AbjH0LGg (ORCPT
+        id S229730AbjH0LGi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 27 Aug 2023 07:06:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50708 "EHLO
+        Sun, 27 Aug 2023 07:06:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229723AbjH0LGO (ORCPT
+        with ESMTP id S229740AbjH0LGV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Aug 2023 07:06:14 -0400
+        Sun, 27 Aug 2023 07:06:21 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D52F7139
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Aug 2023 04:06:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0561D109
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Aug 2023 04:06:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693134372; x=1724670372;
+  t=1693134378; x=1724670378;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=wnp93dS+Mq8NPs2vjDT4631SGyxRUUC7eMxxB9BP7fU=;
-  b=eYNgQGRMmxdRygvHiu3DwfKTY1IY6HsOX0OtVwhKIiiCx68M1jMbPQY3
-   t1HzkYuL6god1qNTPiVPTl7eJLPR29JVbnNHfPUMNriHC9iuoyIojv1Fq
-   +mkdLhV1mR/cmDtH1scRpL1c7bBPqqxc7NeGlqbCx9YbFGrGXZkq6lC4q
-   jZftuvbTpjOCkH0p9zhW3Q0UxLD3YfpzAFuJ/J6iAbcMgIe8jFK2YNgCB
-   md7MwtQbIBh/bpLGeJ4VbsRtIl30xxgwYmgBmAwb0tm6eeSalJpyTmaxz
-   O1fXjEr2kYXeGeZzJc8vvXFyWbAHgCfa+dQB2rE0kRLmZmtcI939hLkl8
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10814"; a="461301577"
+  bh=b/91OmF4nJmJ5sCwuCQMnbmm1LGL0ki/pXnWdJFED9o=;
+  b=hGcx0ut0/6Sf9boFE2Dxf6wMOF6KZMW51/qxy3BmOps1Bs31pVLEoY5n
+   3InchKR8mliWwrVLmKXH8gGqADjqA8vu1gGlUys/8VfhSq3F6xhg3ajru
+   Jcm6G7tRPPq/7eaJpisiZ1Bdke0HpZOc+mQQ1+VGC1yhl++rdVQXlW8XF
+   Y7P1QV+M90hKzd29+DN0+dJ1/0Scq+R0zr5p6v7Yj1FeuMBbIZGREbvvX
+   JEJzKammsmeHLow1AbAcPzflQVwyryAaRJ32LQlJWk2WqmMszdf/HsZrr
+   rMkF7eE+QOPTj5f2asTCcZhElM1MohVZN3xCB1/4gEF104rRUJVhHL7/6
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10814"; a="461301597"
 X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="461301577"
+   d="scan'208";a="461301597"
 Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:06:12 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:06:18 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.01,202,1684825200"; 
-   d="scan'208";a="881633010"
+   d="scan'208";a="881633029"
 Received: from ishamsi-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.251.186.7])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:06:16 -0700
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 04:06:22 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 12/15] wifi: mac80211: Print local link address during authentication
-Date:   Sun, 27 Aug 2023 14:05:29 +0300
-Message-Id: <20230827135854.9c08605e2691.I0032e9d6e01325862189e4a20b02ddbe8f2f5e75@changeid>
+Subject: [PATCH 15/15] wifi: mac80211: fix channel switch link data
+Date:   Sun, 27 Aug 2023 14:05:32 +0300
+Message-Id: <20230827135854.0b6a211c8e75.I5724d32bb2dae440888efbc47334d8c115db9d50@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230827110532.348304-1-gregory.greenman@intel.com>
 References: <20230827110532.348304-1-gregory.greenman@intel.com>
@@ -55,57 +56,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-To ease debugging, mostly in cases that authentication fails.
+Use the correct link ID and per-link puncturing data instead
+of hardcoding link ID 0 and using deflink puncturing.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/mlme.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c  | 9 +++++----
+ net/mac80211/mlme.c | 3 ++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ca6045f56b4b..a93fbed69a70 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7085,6 +7085,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_mgd_auth_data *auth_data;
-+	struct ieee80211_link_data *link;
- 	u16 auth_alg;
- 	int err;
- 	bool cont_auth;
-@@ -7208,8 +7209,6 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 					    false);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ae5017edd09f..3d5d9468ee68 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3668,7 +3668,7 @@ static int __ieee80211_csa_finalize(struct ieee80211_link_data *link_data)
+ 		return ieee80211_link_use_reserved_context(&sdata->deflink);
  	}
  
--	sdata_info(sdata, "authenticate with %pM\n", auth_data->ap_addr);
--
- 	/* needed for transmitting the auth frame(s) properly */
- 	memcpy(sdata->vif.cfg.ap_addr, auth_data->ap_addr, ETH_ALEN);
+-	if (!cfg80211_chandef_identical(&sdata->vif.bss_conf.chandef,
++	if (!cfg80211_chandef_identical(&link_data->conf->chandef,
+ 					&link_data->csa_chandef))
+ 		return -EINVAL;
  
-@@ -7218,6 +7217,19 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+@@ -3684,7 +3684,7 @@ static int __ieee80211_csa_finalize(struct ieee80211_link_data *link_data)
+ 		changed |= BSS_CHANGED_EHT_PUNCTURING;
+ 	}
+ 
+-	ieee80211_link_info_change_notify(sdata, &sdata->deflink, changed);
++	ieee80211_link_info_change_notify(sdata, link_data, changed);
+ 
+ 	if (link_data->csa_block_tx) {
+ 		ieee80211_wake_vif_queues(local, sdata,
+@@ -3696,8 +3696,9 @@ static int __ieee80211_csa_finalize(struct ieee80211_link_data *link_data)
  	if (err)
- 		goto err_clear;
+ 		return err;
  
-+	if (req->link_id > 0)
-+		link = sdata_dereference(sdata->link[req->link_id], sdata);
-+	else
-+		link = sdata_dereference(sdata->link[0], sdata);
-+
-+	if (WARN_ON(!link)) {
-+		err = -ENOLINK;
-+		goto err_clear;
-+	}
-+
-+	sdata_info(sdata, "authenticate with %pM (local address=%pM)\n",
-+		   auth_data->ap_addr, link->conf->addr);
-+
- 	err = ieee80211_auth(sdata);
- 	if (err) {
- 		sta_info_destroy_addr(sdata, auth_data->ap_addr);
+-	cfg80211_ch_switch_notify(sdata->dev, &link_data->csa_chandef, 0,
+-				  sdata->vif.bss_conf.eht_puncturing);
++	cfg80211_ch_switch_notify(sdata->dev, &link_data->csa_chandef,
++				  link_data->link_id,
++				  link_data->conf->eht_puncturing);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8abd4301f278..e4d229814911 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1782,7 +1782,8 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_link_data *link)
+ 		return;
+ 	}
+ 
+-	cfg80211_ch_switch_notify(sdata->dev, &link->reserved_chandef, 0, 0);
++	cfg80211_ch_switch_notify(sdata->dev, &link->reserved_chandef,
++				  link->link_id, 0);
+ }
+ 
+ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success,
 -- 
 2.38.1
 
