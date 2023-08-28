@@ -2,175 +2,210 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BED3C83F11
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 15:19:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35D13C83F11
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 17:53:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229818AbjH1PSn (ORCPT
+        id S233017AbjH1RxG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 11:18:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50668 "EHLO
+        Mon, 28 Aug 2023 13:53:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232396AbjH1PSj (ORCPT
+        with ESMTP id S232938AbjH1Rwi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 11:18:39 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68F32E8
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 08:18:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=9IPrJVU2rUS55tRMmqR/w+e/4oSZ7HJRGOkowaLH0wE=; t=1693235916; x=1694445516; 
-        b=OS3gvq34G0nO9p7OZ45jzaP5dwMHSieV0KbASijtygFtRFUrZ1GqS9s8QsVZfceWCiCGEtEFXki
-        1hBuPaB7K8aCXSFyFfyMNDj3p286KE2rJh4FVtpHSzxtcJ69dgSImQWvsPOPDntQggwIV+/ANzBAH
-        aZYrInPVd0kNhnZ+n3y9btEVd7Qes4AvqjtPY7lN5AJRSZx33GwKc4rJvZvzSXm0BN6Gb2WRJTSgJ
-        llklpdqHcDA4QeRtB0XanXtUTGA+ErafU6YhdahMgVkp7+qxN6MsNjzmTzrWTLUR++PbYCkZdZQbv
-        j4CSjIhdsu/ipK/d9zjjqU8Q4amygvlWLtJw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qae0f-00GwEC-1X;
-        Mon, 28 Aug 2023 17:18:33 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH] wifi: mt76: use atomic iface iteration for pre-TBTT work
-Date:   Mon, 28 Aug 2023 17:18:31 +0200
-Message-ID: <20230828171830.580585e35fa7.I77619fb2d0ccdc1b25bf9c3a26014a3a21583909@changeid>
-X-Mailer: git-send-email 2.41.0
+        Mon, 28 Aug 2023 13:52:38 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21A1111A;
+        Mon, 28 Aug 2023 10:52:34 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37SHcSNW009484;
+        Mon, 28 Aug 2023 17:52:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : date :
+ subject : mime-version : content-type : content-transfer-encoding :
+ message-id : references : in-reply-to : to : cc; s=qcppdkim1;
+ bh=ijWOdjRS2kyIUODPcH27cRwxDTTNTamNDeVZz58Vcb4=;
+ b=JzEaOA0IU6JvjMHoS/AZf8Vd54ROUIfp05tFi5m7SeE2AD26bn50NJUSH+CJiRxgfErs
+ TmyvGTGJmLzuAeCyz4L3UnoC3tUb6i9WsbtrVWWHHga8p09mcrYZcES+0bwPkaPiDqY4
+ ai22lYm7zbRCc9y94KyONuR9hV4Rd952frqDslOtuTScHaouxxU8112yHs/9jvyLrFm9
+ /woaReRURjrUofvSj6/vIgLdHi4jShZbbuP9yJM/crpe2p2Vw1AmNpK8PcJskfjlUD5T
+ aai7/F3Bu/uNzhOSr554/b3WeyaJLIm5qcGUnidSH1V7cCseuIHwBsdqmrqHImyeUXmN fg== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ss052015m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 28 Aug 2023 17:52:16 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37SHqFMd032148
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 28 Aug 2023 17:52:15 GMT
+Received: from hu-jjohnson-lv.qualcomm.com (10.49.16.6) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Mon, 28 Aug 2023 10:52:13 -0700
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+Date:   Mon, 28 Aug 2023 10:52:04 -0700
+Subject: [PATCH 2/2] mac80211: Use flexible array in struct
+ ieee80211_tim_ie
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20230828-ieee80211_tim_ie-v1-2-6d7a4bab70ef@quicinc.com>
+References: <20230828-ieee80211_tim_ie-v1-0-6d7a4bab70ef@quicinc.com>
+In-Reply-To: <20230828-ieee80211_tim_ie-v1-0-6d7a4bab70ef@quicinc.com>
+To:     <kernel@quicinc.com>, Kalle Valo <kvalo@kernel.org>,
+        =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        "Christian Lamparter" <chunkeey@googlemail.com>,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        "Helmut Schaa" <helmut.schaa@googlemail.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <netdev@vger.kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.12.3
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: nX3qXLlSczm-C_15Z6G_5Po_uJ4bkAck
+X-Proofpoint-GUID: nX3qXLlSczm-C_15Z6G_5Po_uJ4bkAck
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-28_15,2023-08-28_04,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 bulkscore=0
+ spamscore=0 lowpriorityscore=0 mlxlogscore=940 mlxscore=0 impostorscore=0
+ priorityscore=1501 malwarescore=0 adultscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
+ definitions=main-2308280158
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Currently struct ieee80211_tim_ie defines:
+	u8 virtual_map[1];
 
-In addition to the previous series I posted, over time I'd
-also like to get rid of the iflist_mtx in mac80211. That
-isn't easy now since lots of places use iteration and would
-have to be audited, but even a cursory look suggests that
-mt76 might be more problematic than most since holding the
-wiphy lock for the latency-sensitive pre-TBTT work could be
-an issue.
+Per the guidance in [1] change this to be a flexible array.
 
-Convert the pre-TBTT work to use atomic iteration and then
-sending the device commands outside of it.
+As a result of this change, adjust all related struct size tests to
+account for the fact that the sizeof(struct ieee80211_tim_ie) no
+accounts for the minimum size of the virtual_map.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[1] https://docs.kernel.org/process/deprecated.html#zero-length-and-one-element-arrays
+
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c |  8 +++-----
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c   | 11 +++++++++--
- .../net/wireless/mediatek/mt76/mt76x02_usb_core.c   | 13 ++++++++++---
- 3 files changed, 22 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c          | 2 +-
+ drivers/net/wireless/ath/carl9170/rx.c         | 2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/ps.c      | 2 +-
+ drivers/net/wireless/st/cw1200/txrx.c          | 2 +-
+ include/linux/ieee80211.h                      | 4 ++--
+ net/mac80211/util.c                            | 2 +-
+ 7 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-index ad4dc8e17b58..d570b99bccb9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-@@ -136,7 +136,8 @@ EXPORT_SYMBOL_GPL(mt76x02_resync_beacon_timer);
- void
- mt76x02_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- {
--	struct mt76x02_dev *dev = (struct mt76x02_dev *)priv;
-+	struct beacon_bc_data *data = priv;
-+	struct mt76x02_dev *dev = data->dev;
- 	struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
- 	struct sk_buff *skb = NULL;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 0c0624a3b40d..2a263a1b7fbf 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -520,7 +520,7 @@ static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
+ 			break;
  
-@@ -147,7 +148,7 @@ mt76x02_update_beacon_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 	if (!skb)
+ 		if (id == WLAN_EID_TIM) {
+-			if (elen < sizeof(*tim))
++			if (elen <= sizeof(*tim))
+ 				break;
+ 			tim = (struct ieee80211_tim_ie *) pos;
+ 			if (tim->dtim_count != 0)
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index 908c4c8b7f82..5bdbde8c98a3 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -542,7 +542,7 @@ static void carl9170_ps_beacon(struct ar9170 *ar, void *data, unsigned int len)
+ 	if (!tim)
  		return;
  
--	mt76x02_mac_set_beacon(dev, skb);
-+	__skb_queue_tail(&data->q, skb);
- }
- EXPORT_SYMBOL_GPL(mt76x02_update_beacon_iter);
- 
-@@ -182,9 +183,6 @@ mt76x02_enqueue_buffered_bc(struct mt76x02_dev *dev,
- {
- 	int i, nframes;
- 
--	data->dev = dev;
--	__skb_queue_head_init(&data->q);
--
- 	do {
- 		nframes = skb_queue_len(&data->q);
- 		ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index e9c5e85ec07c..9b5e3fb7b0df 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -16,13 +16,17 @@ static void mt76x02_pre_tbtt_tasklet(struct tasklet_struct *t)
- 	struct mt76x02_dev *dev = from_tasklet(dev, t, mt76.pre_tbtt_tasklet);
- 	struct mt76_dev *mdev = &dev->mt76;
- 	struct mt76_queue *q = dev->mphy.q_tx[MT_TXQ_PSD];
--	struct beacon_bc_data data = {};
-+	struct beacon_bc_data data = {
-+		.dev = dev,
-+	};
- 	struct sk_buff *skb;
- 	int i;
- 
- 	if (mt76_hw(dev)->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+-	if (tim[1] < sizeof(*tim_ie))
++	if (tim[1] <= sizeof(*tim_ie))
  		return;
  
-+	__skb_queue_head_init(&data.q);
-+
- 	mt76x02_resync_beacon_timer(dev);
- 
- 	/* Prevent corrupt transmissions during update */
-@@ -31,7 +35,10 @@ static void mt76x02_pre_tbtt_tasklet(struct tasklet_struct *t)
- 
- 	ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
- 		IEEE80211_IFACE_ITER_RESUME_ALL,
--		mt76x02_update_beacon_iter, dev);
-+		mt76x02_update_beacon_iter, &data);
-+
-+	while ((skb = __skb_dequeue(&data.q)) != NULL)
-+		mt76x02_mac_set_beacon(dev, skb);
- 
- 	mt76_wr(dev, MT_BCN_BYPASS_MASK,
- 		0xff00 | ~(0xff00 >> dev->beacon_data_count));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-index 2c6c03809b20..85a78dea4085 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-@@ -182,7 +182,9 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
- {
- 	struct mt76x02_dev *dev =
- 		container_of(work, struct mt76x02_dev, pre_tbtt_work);
--	struct beacon_bc_data data = {};
-+	struct beacon_bc_data data = {
-+		.dev = dev,
-+	};
- 	struct sk_buff *skb;
- 	int nbeacons;
- 
-@@ -192,15 +194,20 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
- 	if (mt76_hw(dev)->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+ 	tim_len = tim[1];
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 9a9cfd0ce402..f594835da7ce 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -669,7 +669,7 @@ static void rt2x00lib_rxdone_check_ps(struct rt2x00_dev *rt2x00dev,
+ 	if (!tim)
  		return;
  
-+	__skb_queue_head_init(&data.q);
-+
- 	mt76x02_resync_beacon_timer(dev);
+-	if (tim[1] < sizeof(*tim_ie))
++	if (tim[1] <= sizeof(*tim_ie))
+ 		return;
  
- 	/* Prevent corrupt transmissions during update */
- 	mt76_set(dev, MT_BCN_BYPASS_MASK, 0xffff);
- 	dev->beacon_data_count = 0;
+ 	tim_len = tim[1];
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index 629c03271bde..ea4b055bc6d8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -506,7 +506,7 @@ void rtl_swlps_beacon(struct ieee80211_hw *hw, void *data, unsigned int len)
+ 	if (!tim)
+ 		return;
  
--	ieee80211_iterate_active_interfaces(mt76_hw(dev),
-+	ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
- 		IEEE80211_IFACE_ITER_RESUME_ALL,
--		mt76x02_update_beacon_iter, dev);
-+		mt76x02_update_beacon_iter, &data);
-+
-+	while ((skb = __skb_dequeue(&data.q)) != NULL)
-+		mt76x02_mac_set_beacon(dev, skb);
+-	if (tim[1] < sizeof(*tim_ie))
++	if (tim[1] <= sizeof(*tim_ie))
+ 		return;
  
- 	mt76_csa_check(&dev->mt76);
+ 	tim_len = tim[1];
+diff --git a/drivers/net/wireless/st/cw1200/txrx.c b/drivers/net/wireless/st/cw1200/txrx.c
+index e16e9ae90d20..c2a51cd79ab8 100644
+--- a/drivers/net/wireless/st/cw1200/txrx.c
++++ b/drivers/net/wireless/st/cw1200/txrx.c
+@@ -1166,7 +1166,7 @@ void cw1200_rx_cb(struct cw1200_common *priv,
+ 		size_t ies_len = skb->len - (ies - (u8 *)(skb->data));
  
+ 		tim_ie = cfg80211_find_ie(WLAN_EID_TIM, ies, ies_len);
+-		if (tim_ie && tim_ie[1] >= sizeof(struct ieee80211_tim_ie)) {
++		if (tim_ie && tim_ie[1] > sizeof(struct ieee80211_tim_ie)) {
+ 			struct ieee80211_tim_ie *tim =
+ 				(struct ieee80211_tim_ie *)&tim_ie[2];
+ 
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index bd2f6e19c357..4cdc2eb98f16 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -961,7 +961,7 @@ struct ieee80211_tim_ie {
+ 	u8 dtim_period;
+ 	u8 bitmap_ctrl;
+ 	/* variable size: 1 - 251 bytes */
+-	u8 virtual_map[1];
++	u8 virtual_map[];
+ } __packed;
+ 
+ /**
+@@ -4405,7 +4405,7 @@ static inline bool ieee80211_check_tim(const struct ieee80211_tim_ie *tim,
+ 	u8 mask;
+ 	u8 index, indexn1, indexn2;
+ 
+-	if (unlikely(!tim || tim_len < sizeof(*tim)))
++	if (unlikely(!tim || tim_len <= sizeof(*tim)))
+ 		return false;
+ 
+ 	aid &= 0x3fff;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 8a6917cf63cf..0c23223bb030 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1123,7 +1123,7 @@ _ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params,
+ 				elem_parse_failed = true;
+ 			break;
+ 		case WLAN_EID_TIM:
+-			if (elen >= sizeof(struct ieee80211_tim_ie)) {
++			if (elen > sizeof(struct ieee80211_tim_ie)) {
+ 				elems->tim = (void *)pos;
+ 				elems->tim_len = elen;
+ 			} else
+
 -- 
-2.41.0
+2.25.1
 
