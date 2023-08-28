@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 789F2C83F21
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 671FAC83F24
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:06:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232573AbjH1MGS (ORCPT
+        id S232585AbjH1MGV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 08:06:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40556 "EHLO
+        Mon, 28 Aug 2023 08:06:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232606AbjH1MFr (ORCPT
+        with ESMTP id S231897AbjH1MFs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 08:05:47 -0400
+        Mon, 28 Aug 2023 08:05:48 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C880F11A
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B39123
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=6ZYxl6NvMI7EV75IbHQPQ+r016Dayt85bhDosCRIyhk=;
-        t=1693224344; x=1694433944; b=nprL+wNnlmWWi1bRAaeovvPLjecO6mWmY1oCKBBWghpqlNk
-        wJfsvsXTmGI4ohhCST35wR8s9h4NzPhUTmNU+4lukztVAQWuiyYZ9+9sLMCIXKX0SjrGkNCeL0Vol
-        r2rLn0M8DNjRggjVBkj+IRNNyrIYCuNOaQNC6BI876bhGuzZTi7tpUIQxRi3dVQy7Xa1KB7FdYE2u
-        3J7pf+AGmpW5dRpmd45VnuVEAX3X0qPirWrZpQrPLjyk8eBn9clp7yYJ42NrsePe5C1zx6mD9Al9u
-        vL4WT1KlYbbBgN6DuTm3t+C4MjDdJ1OiM20ha5C48J9ZXo/68hq7gpyCNbGd08hA==;
+        Resent-Cc:Resent-Message-ID; bh=z5i6fB9ver++WsAhzBdzLlLi4vnBA76X8vVFlKDB4S4=;
+        t=1693224346; x=1694433946; b=RT+0G+gIfD0aMjqonR2XcNNTlBg/2xl+a/l6A6gSDSeslnI
+        XUOdWx/1Wyhoqsuj4ztaZZd6LuuSuS+DHxLlMhEjbXGBJx9py+pjX2xbWITk+8zjdIi9kjIdyiv5w
+        sy4sQfzlaQYPfE0HfmkXmnC+3NQTG0yT0slaKChUXcVu7axAGw9noQqxOzd9rw2dexkNxZubQCdmq
+        /EAnS1KYWz2fdMPcjHTpC07ti8fpWL51v53LLTIV4hk1acW08tI7t0DUa+7i5wdPoNgzd49nEUEHV
+        bs+rJW4hv5VBMJcxUyGCZaTzhY5UaBgfNTj1EKi2Xa3T/F2UAMiS5TFLRi+3VFLg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1qab02-00Gjgt-23;
-        Mon, 28 Aug 2023 14:05:42 +0200
+        id 1qab04-00Gjgt-0G;
+        Mon, 28 Aug 2023 14:05:44 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 29/40] wifi: mac80211: ethtool: hold wiphy mutex
-Date:   Mon, 28 Aug 2023 13:59:57 +0200
-Message-ID: <20230828135928.ab953bd13e75.I442c12f6f47701269777ab07de3561c4ccc38ee4@changeid>
+Subject: [PATCH 31/40] wifi: mac80211: extend wiphy lock in interface removal
+Date:   Mon, 28 Aug 2023 13:59:59 +0200
+Message-ID: <20230828135928.03669afb49e6.I65dfd43d490a20b079b03db2112bdfccaf731a17@changeid>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230828115927.116700-41-johannes@sipsolutions.net>
 References: <20230828115927.116700-41-johannes@sipsolutions.net>
@@ -48,50 +48,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We should hold the wiphy mutex here since we're going
-to call the driver and want to remove the sta_mtx.
+We want to extend the wiphy locking to the interface list,
+so move that into the section locked with the wiphy lock.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ethtool.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ net/mac80211/iface.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
-index a3830d925cc2..c53208321c8f 100644
---- a/net/mac80211/ethtool.c
-+++ b/net/mac80211/ethtool.c
-@@ -5,7 +5,7 @@
-  * Copied from cfg.c - originally
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2014	Intel Corporation (Author: Johannes Berg)
-- * Copyright (C) 2018, 2022 Intel Corporation
-+ * Copyright (C) 2018, 2022-2023 Intel Corporation
-  */
- #include <linux/types.h>
- #include <net/cfg80211.h>
-@@ -102,6 +102,7 @@ static void ieee80211_get_stats(struct net_device *dev,
- 	 * network device.
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c528a4bb7f4f..a465a18bf3bd 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -2274,6 +2274,8 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
  	 */
+ 	cfg80211_shutdown_all_interfaces(local->hw.wiphy);
  
 +	wiphy_lock(local->hw.wiphy);
- 	mutex_lock(&local->sta_mtx);
++
+ 	WARN(local->open_count, "%s: open count remains %d\n",
+ 	     wiphy_name(local->hw.wiphy), local->open_count);
  
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-@@ -200,10 +201,13 @@ static void ieee80211_get_stats(struct net_device *dev,
+@@ -2283,7 +2285,6 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
+ 	list_splice_init(&local->interfaces, &unreg_list);
+ 	mutex_unlock(&local->iflist_mtx);
  
- 	mutex_unlock(&local->sta_mtx);
+-	wiphy_lock(local->hw.wiphy);
+ 	list_for_each_entry_safe(sdata, tmp, &unreg_list, list) {
+ 		bool netdev = sdata->dev;
  
--	if (WARN_ON(i != STA_STATS_LEN))
-+	if (WARN_ON(i != STA_STATS_LEN)) {
-+		wiphy_unlock(local->hw.wiphy);
- 		return;
-+	}
- 
- 	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
-+	wiphy_unlock(local->hw.wiphy);
- }
- 
- static void ieee80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
 -- 
 2.41.0
 
