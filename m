@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16162C83F17
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC5CC83F16
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:06:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230109AbjH1MGN (ORCPT
+        id S230236AbjH1MGL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 08:06:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50380 "EHLO
+        Mon, 28 Aug 2023 08:06:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232577AbjH1MFl (ORCPT
+        with ESMTP id S232330AbjH1MFk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 08:05:41 -0400
+        Mon, 28 Aug 2023 08:05:40 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD82013D
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 531AA11A
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=mYtM32ObzMz/XKHnCCgMOKNqjyjJDvR49u/dHleXFeU=;
-        t=1693224338; x=1694433938; b=kZUF5GWhhxRq2ygXB8cEDGWjsqpCVYEnrnB45wdlNDO9J4S
-        30xN0+h29uSOkxYaQ9Z1rwnX0cMRNw/7P+wKjkS/ie850U0lR/PlI3sTOVcoDkQC/Qm/9CviwwPpx
-        QoF2UEJl/lyU0KJz+5zHcgasQTosJKspVJ//CfXvNp9tB1xY4x3CBEYXtrHBhuB9Frs5HghsEu9NS
-        ZjOYrgY5O7VFPJhm4IjmOhN73bPps0BMZ+eVNNBKezI17Kf9TYT9ikuoW9V88GlB+dLv8Cxz6VymT
-        sxJ2OzoX9ksIL7KbuRO816Y66gr5NLizZzhPqbrMDqktYLkb4Ke3uxW+LqSuM0Ig==;
+        Resent-Cc:Resent-Message-ID; bh=U1iIcMHOI6HEBEPssnNmzer44DIcsEFg3QVcDgHImgI=;
+        t=1693224337; x=1694433937; b=iOcf9OTopH4fQXW66Vii5jk9bnAN/AiQwRHEOqIIAx41ozB
+        K+YOJMm9VvGtrY2qayViKB6dfONDtLlZ9GxgChgCyOdhX6FkJK9m8scpXjmNd4/AheejGsBC7YSJB
+        xZhXNCxVNmLv2o7QAbFe6IWRB+YIlMsgKwviIbxAeLy4ZCNONVWKgWnPI3uVEx1BSUceMbezC0NLp
+        JlBlZrAbgMjbQu+szwjPsZlqsNwtvVYRi1lDyoEbWsUXoR1FQVtXWtmwkRvu7C2FVhyoa0zsfQi6U
+        SU8flGalJH59Tzy4+gdCVJhJK494aRjNMGwMrfww1FaQdRzNdw4BveK/Je4NxfBw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1qaazw-00Gjgt-15;
-        Mon, 28 Aug 2023 14:05:36 +0200
+        id 1qaazu-00Gjgt-0h;
+        Mon, 28 Aug 2023 14:05:34 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/40] wifi: mac80211: move tspec work to wiphy work
-Date:   Mon, 28 Aug 2023 13:59:48 +0200
-Message-ID: <20230828135928.1786affceefa.I80a963e0788188502cfdd6cd8cf7307eae9ae14b@changeid>
+Subject: [PATCH 18/40] wifi: mac80211: move TDLS work to wiphy work
+Date:   Mon, 28 Aug 2023 13:59:46 +0200
+Message-ID: <20230828135928.26378674923c.I55d6927488433c3dfaddf0a5ea23492a4b373e8d@changeid>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230828115927.116700-41-johannes@sipsolutions.net>
 References: <20230828115927.116700-41-johannes@sipsolutions.net>
@@ -49,96 +49,99 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-One more work that will now execute with the wiphy
-locked, for future cleanups.
+Again, to have the wiphy locked for it.
 
 Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/mlme.c        | 21 +++++++++++++--------
- 2 files changed, 14 insertions(+), 9 deletions(-)
+ net/mac80211/ieee80211_i.h |  4 ++--
+ net/mac80211/mlme.c        |  7 ++++---
+ net/mac80211/tdls.c        | 11 ++++++-----
+ 3 files changed, 12 insertions(+), 10 deletions(-)
 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c5a414b1fd0a..34f528f7c13e 100644
+index 47040a3a103b..1dc49bbd35bf 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -550,7 +550,7 @@ struct ieee80211_if_managed {
- 	 * on the BE queue, but there's a lot of VO traffic, we might
- 	 * get stuck in a downgraded situation and flush takes forever.
- 	 */
--	struct delayed_work tx_tspec_wk;
-+	struct wiphy_delayed_work tx_tspec_wk;
+@@ -536,7 +536,7 @@ struct ieee80211_if_managed {
  
- 	/* Information elements from the last transmitted (Re)Association
- 	 * Request frame.
+ 	/* TDLS support */
+ 	u8 tdls_peer[ETH_ALEN] __aligned(2);
+-	struct delayed_work tdls_peer_del_work;
++	struct wiphy_delayed_work tdls_peer_del_work;
+ 	struct sk_buff *orig_teardown_skb; /* The original teardown skb */
+ 	struct sk_buff *teardown_skb; /* A copy to send through the AP */
+ 	spinlock_t teardown_lock; /* To lock changing teardown_skb */
+@@ -2597,7 +2597,7 @@ int ieee80211_tdls_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 			const u8 *extra_ies, size_t extra_ies_len);
+ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
+ 			const u8 *peer, enum nl80211_tdls_operation oper);
+-void ieee80211_tdls_peer_del_work(struct work_struct *wk);
++void ieee80211_tdls_peer_del_work(struct wiphy *wiphy, struct wiphy_work *wk);
+ int ieee80211_tdls_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 				  const u8 *addr, u8 oper_class,
+ 				  struct cfg80211_chan_def *chandef);
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f5544d94efcb..a35769dac162 100644
+index f36279e8792e..f5544d94efcb 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -2489,8 +2489,10 @@ __ieee80211_sta_handle_tspec_ac_params(struct ieee80211_sub_if_data *sdata)
- 					 ac);
- 			tx_tspec->action = TX_TSPEC_ACTION_NONE;
- 			ret = true;
--			schedule_delayed_work(&ifmgd->tx_tspec_wk,
--				tx_tspec->time_slice_start + HZ - now + 1);
-+			wiphy_delayed_work_queue(local->hw.wiphy,
-+						 &ifmgd->tx_tspec_wk,
-+						 tx_tspec->time_slice_start +
-+						 HZ - now + 1);
- 			break;
- 		case TX_TSPEC_ACTION_NONE:
- 			/* nothing now */
-@@ -2508,7 +2510,8 @@ void ieee80211_sta_handle_tspec_ac_params(struct ieee80211_sub_if_data *sdata)
- 						  BSS_CHANGED_QOS);
- }
+@@ -6830,8 +6830,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 			ieee80211_beacon_connection_loss_work);
+ 	wiphy_work_init(&ifmgd->csa_connection_drop_work,
+ 			ieee80211_csa_connection_drop_work);
+-	INIT_DELAYED_WORK(&ifmgd->tdls_peer_del_work,
+-			  ieee80211_tdls_peer_del_work);
++	wiphy_delayed_work_init(&ifmgd->tdls_peer_del_work,
++				ieee80211_tdls_peer_del_work);
+ 	wiphy_delayed_work_init(&ifmgd->ml_reconf_work,
+ 				ieee80211_ml_reconf_work);
+ 	timer_setup(&ifmgd->timer, ieee80211_sta_timer, 0);
+@@ -7860,7 +7860,8 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 			  &ifmgd->beacon_connection_loss_work);
+ 	wiphy_work_cancel(sdata->local->hw.wiphy,
+ 			  &ifmgd->csa_connection_drop_work);
+-	cancel_delayed_work_sync(&ifmgd->tdls_peer_del_work);
++	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
++				  &ifmgd->tdls_peer_del_work);
+ 	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
+ 				  &ifmgd->ml_reconf_work);
  
--static void ieee80211_sta_handle_tspec_ac_params_wk(struct work_struct *work)
-+static void ieee80211_sta_handle_tspec_ac_params_wk(struct wiphy *wiphy,
-+						    struct wiphy_work *work)
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index a4af3b7675ef..fafbcef49ec0 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -21,7 +21,7 @@
+ /* give usermode some time for retries in setting up the TDLS session */
+ #define TDLS_PEER_SETUP_TIMEOUT	(15 * HZ)
+ 
+-void ieee80211_tdls_peer_del_work(struct work_struct *wk)
++void ieee80211_tdls_peer_del_work(struct wiphy *wiphy, struct wiphy_work *wk)
  {
  	struct ieee80211_sub_if_data *sdata;
- 
-@@ -3060,7 +3063,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	/* existing TX TSPEC sessions no longer exist */
- 	memset(ifmgd->tx_tspec, 0, sizeof(ifmgd->tx_tspec));
--	cancel_delayed_work_sync(&ifmgd->tx_tspec_wk);
-+	wiphy_delayed_work_cancel(local->hw.wiphy, &ifmgd->tx_tspec_wk);
- 
- 	sdata->vif.bss_conf.pwr_reduction = 0;
- 	sdata->vif.bss_conf.tx_pwr_env_num = 0;
-@@ -3128,7 +3131,8 @@ static void ieee80211_sta_tx_wmm_ac_notify(struct ieee80211_sub_if_data *sdata,
- 
- 		if (tx_tspec->downgraded) {
- 			tx_tspec->action = TX_TSPEC_ACTION_STOP_DOWNGRADE;
--			schedule_delayed_work(&ifmgd->tx_tspec_wk, 0);
-+			wiphy_delayed_work_queue(sdata->local->hw.wiphy,
-+						 &ifmgd->tx_tspec_wk, 0);
- 		}
+ 	struct ieee80211_local *local;
+@@ -1224,9 +1224,9 @@ ieee80211_tdls_mgmt_setup(struct wiphy *wiphy, struct net_device *dev,
+ 		return ret;
  	}
  
-@@ -3140,7 +3144,8 @@ static void ieee80211_sta_tx_wmm_ac_notify(struct ieee80211_sub_if_data *sdata,
- 	if (tx_tspec->consumed_tx_time >= tx_tspec->admitted_time) {
- 		tx_tspec->downgraded = true;
- 		tx_tspec->action = TX_TSPEC_ACTION_DOWNGRADE;
--		schedule_delayed_work(&ifmgd->tx_tspec_wk, 0);
-+		wiphy_delayed_work_queue(sdata->local->hw.wiphy,
-+					 &ifmgd->tx_tspec_wk, 0);
+-	ieee80211_queue_delayed_work(&sdata->local->hw,
+-				     &sdata->u.mgd.tdls_peer_del_work,
+-				     TDLS_PEER_SETUP_TIMEOUT);
++	wiphy_delayed_work_queue(sdata->local->hw.wiphy,
++				 &sdata->u.mgd.tdls_peer_del_work,
++				 TDLS_PEER_SETUP_TIMEOUT);
+ 	return 0;
+ 
+ out_unlock:
+@@ -1526,7 +1526,8 @@ int ieee80211_tdls_oper(struct wiphy *wiphy, struct net_device *dev,
  	}
- }
  
-@@ -6837,8 +6842,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	timer_setup(&ifmgd->timer, ieee80211_sta_timer, 0);
- 	timer_setup(&ifmgd->bcn_mon_timer, ieee80211_sta_bcn_mon_timer, 0);
- 	timer_setup(&ifmgd->conn_mon_timer, ieee80211_sta_conn_mon_timer, 0);
--	INIT_DELAYED_WORK(&ifmgd->tx_tspec_wk,
--			  ieee80211_sta_handle_tspec_ac_params_wk);
-+	wiphy_delayed_work_init(&ifmgd->tx_tspec_wk,
-+				ieee80211_sta_handle_tspec_ac_params_wk);
+ 	if (ret == 0 && ether_addr_equal(sdata->u.mgd.tdls_peer, peer)) {
+-		cancel_delayed_work(&sdata->u.mgd.tdls_peer_del_work);
++		wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
++					  &sdata->u.mgd.tdls_peer_del_work);
+ 		eth_zero_addr(sdata->u.mgd.tdls_peer);
+ 	}
  
- 	ifmgd->flags = 0;
- 	ifmgd->powersave = sdata->wdev.ps;
 -- 
 2.41.0
 
