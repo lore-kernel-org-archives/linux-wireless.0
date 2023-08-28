@@ -2,136 +2,230 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC4A1C71153
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:00:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 394C0C83F12
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:06:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231231AbjH1L7o (ORCPT
+        id S229535AbjH1MFj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 07:59:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33732 "EHLO
+        Mon, 28 Aug 2023 08:05:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230105AbjH1L7Y (ORCPT
+        with ESMTP id S232303AbjH1MFg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 07:59:24 -0400
+        Mon, 28 Aug 2023 08:05:36 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D360123
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 04:59:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01DC0120
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=CObzizmcglVQdfBnNY8vBjqeXLdkWIlhZ5Wa1BU3sSc=;
-        t=1693223961; x=1694433561; b=izO34LPj+QUfegBbArUB6GVPp8srdCTk7cca6al2lmKBcP+
-        AXZFnuGbnsXEI+IQVsKRfH9lm/HQ2JG7ZBSk5ANfz7hKlZR+5HneBQBUGdh5nxbKxT2lSoqBPAHTn
-        Zcqj+xLyJsqkcSxpebKyjBvMPxn9/H5EXrfVQIr0h6HoRB42mwuCLB30jK2QNGKCk/eJz1tJzVigx
-        GS0idIqFUX3YAw6BZNWVh7VB+zaYGLMSysfM73agIMxOi5d/gbv12cnwoLmvfGSTNYuMwr8rTGTYr
-        Boc2T02BbPqen7iMIDpRyCQ9u1qBFA+q72dzrQaYqCu79mBzeRb6O7xRF2MfiW5w==;
+        Resent-Cc:Resent-Message-ID; bh=1a3R36xlJ3XANjnW21yoXtLY2Lw9KZZg1OGu+wdZVDg=;
+        t=1693224334; x=1694433934; b=yP/AfgTBdwAvYjNQdq5sGwIEnmqS+4ouV24xDPrpUhQgMQ/
+        MIMrLqbBcEclEHqAne2uaJHAkmH1JC27bPDOzffp4yozOU0k5YulOJUY6IFT+JiScms/e7SVXe5Cs
+        nOr9qHT3QpXzUxVDBTnfB7CMAM2jggCuxixdjqXS9WImHrpE4VevlqdFxJ+C9G2C/hGY4puEsEs2I
+        7nSnmAifOGmRThVoSMLqycqr9QgJz2p2yFhwiLHkHIi2At86E84UDKsgVJ4P6Cp+hJ+oNRgjVO0du
+        r9FY6YaAwn3DS1158axGFxL8DyyP8bboXwiA9n0cfZ6Gjd27aq9EiEpx0yAqWKFQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1qaatq-00GjIn-2P;
-        Mon, 28 Aug 2023 13:59:18 +0200
+        id 1qaazr-00Gjgt-1m;
+        Mon, 28 Aug 2023 14:05:31 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH 3/4] wifi: mac80211: Fix SMPS handling in the context of MLO
-Date:   Mon, 28 Aug 2023 13:59:01 +0200
-Message-ID: <20230828135858.535ef6217d7d.Ie4f765a90ff7d9f7481546340e15849a26be9ac6@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/40] wifi: mac80211: move dynamic PS to wiphy work
+Date:   Mon, 28 Aug 2023 13:59:44 +0200
+Message-ID: <20230828135927.8cad8af687ae.I91fa4ec3674713209ae2ebd021bf735acd2d4a19@changeid>
 X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230828135858.c5182ba79e0f.I5efd1399be8e6dedc1e48982b7f20c531ff37616@changeid>
-References: <20230828135858.c5182ba79e0f.I5efd1399be8e6dedc1e48982b7f20c531ff37616@changeid>
+In-Reply-To: <20230828115927.116700-41-johannes@sipsolutions.net>
+References: <20230828115927.116700-41-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-When the connection is a MLO connection, a SMPS request should be
-sent on a specific link, as SMPS is BSS specific, and the DA and BSSID
-used for the action frame transmission should be the AP MLD address, as
-the underlying driver is expected to perform the address translation
-(based on the link ID).
+Along with everything else, move the dynamic PS work
+to be a wiphy work, to simplify locking later.
 
-Fix the SMPS request handling to use the AP MLD address and provide the
-link ID for the request processing during Tx.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c         | 7 +++++--
- net/mac80211/ht.c          | 4 ++--
- net/mac80211/ieee80211_i.h | 2 +-
- 3 files changed, 8 insertions(+), 5 deletions(-)
+ net/mac80211/ieee80211_i.h | 10 ++++++----
+ net/mac80211/iface.c       |  2 +-
+ net/mac80211/main.c        |  8 ++++----
+ net/mac80211/mlme.c        | 13 ++++++++-----
+ net/mac80211/offchannel.c  |  2 +-
+ net/mac80211/pm.c          |  4 ++--
+ net/mac80211/tx.c          |  4 ++--
+ 7 files changed, 24 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 29a6da5ee77f..a2d0820e5e3c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3178,6 +3178,9 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION))
- 		return -EINVAL;
- 
-+	if (!(sdata->vif.active_links & BIT(link->link_id)))
-+		return 0;
-+
- 	old_req = link->u.mgd.req_smps;
- 	link->u.mgd.req_smps = smps_mode;
- 
-@@ -3194,7 +3197,7 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 	    link->conf->chandef.width == NL80211_CHAN_WIDTH_20_NOHT)
- 		return 0;
- 
--	ap = link->u.mgd.bssid;
-+	ap = sdata->vif.cfg.ap_addr;
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
-@@ -3216,7 +3219,7 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 
- 	/* send SM PS frame to AP */
- 	err = ieee80211_send_smps_action(sdata, smps_mode,
--					 ap, ap);
-+					 ap, ap, link->link_id);
- 	if (err)
- 		link->u.mgd.req_smps = old_req;
- 	else if (smps_mode != IEEE80211_SMPS_OFF && tdls_peer_found)
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 33729870ad8a..802b0e738696 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -538,7 +538,7 @@ ieee80211_smps_mode_to_smps_mode(enum ieee80211_smps_mode smps)
- 
- int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
- 			       enum ieee80211_smps_mode smps, const u8 *da,
--			       const u8 *bssid)
-+			       const u8 *bssid, int link_id)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
-@@ -579,7 +579,7 @@ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
- 
- 	/* we'll do more on status of this frame */
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
--	ieee80211_tx_skb(sdata, skb);
-+	ieee80211_tx_skb_tid(sdata, skb, 7, link_id);
- 
- 	return 0;
- }
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 7b74cf96ee0a..1df2101d8eeb 100644
+index 3db1accb0903..96cecc3d71f0 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -2098,7 +2098,7 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
- 			  u16 initiator, u16 reason_code);
- int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
- 			       enum ieee80211_smps_mode smps, const u8 *da,
--			       const u8 *bssid);
-+			       const u8 *bssid, int link_id);
- bool ieee80211_smps_is_restrictive(enum ieee80211_smps_mode smps_mode_old,
- 				   enum ieee80211_smps_mode smps_mode_new);
+@@ -1560,8 +1560,8 @@ struct ieee80211_local {
+ 	 * interface (and monitors) in PS, this then points there.
+ 	 */
+ 	struct ieee80211_sub_if_data *ps_sdata;
+-	struct work_struct dynamic_ps_enable_work;
+-	struct work_struct dynamic_ps_disable_work;
++	struct wiphy_work dynamic_ps_enable_work;
++	struct wiphy_work dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+ 	struct notifier_block ifa_notifier;
+ 	struct notifier_block ifa6_notifier;
+@@ -2348,8 +2348,10 @@ static inline int ieee80211_ac_from_tid(int tid)
+ 	return ieee802_1d_to_ac[tid & 7];
+ }
  
+-void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
+-void ieee80211_dynamic_ps_disable_work(struct work_struct *work);
++void ieee80211_dynamic_ps_enable_work(struct wiphy *wiphy,
++				      struct wiphy_work *work);
++void ieee80211_dynamic_ps_disable_work(struct wiphy *wiphy,
++				       struct wiphy_work *work);
+ void ieee80211_dynamic_ps_timer(struct timer_list *t);
+ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 			     struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index fa4514642d74..6dc6cdc1cd37 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -516,7 +516,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 	}
+ 
+ 	del_timer_sync(&local->dynamic_ps_timer);
+-	cancel_work_sync(&local->dynamic_ps_enable_work);
++	wiphy_work_cancel(local->hw.wiphy, &local->dynamic_ps_enable_work);
+ 
+ 	sdata_lock(sdata);
+ 	WARN(ieee80211_vif_is_mld(&sdata->vif),
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index e686b0cc2cd8..7c165e78115c 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -837,10 +837,10 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	INIT_WORK(&local->reconfig_filter, ieee80211_reconfig_filter);
+ 	local->smps_mode = IEEE80211_SMPS_OFF;
+ 
+-	INIT_WORK(&local->dynamic_ps_enable_work,
+-		  ieee80211_dynamic_ps_enable_work);
+-	INIT_WORK(&local->dynamic_ps_disable_work,
+-		  ieee80211_dynamic_ps_disable_work);
++	wiphy_work_init(&local->dynamic_ps_enable_work,
++			ieee80211_dynamic_ps_enable_work);
++	wiphy_work_init(&local->dynamic_ps_disable_work,
++			ieee80211_dynamic_ps_disable_work);
+ 	timer_setup(&local->dynamic_ps_timer, ieee80211_dynamic_ps_timer, 0);
+ 
+ 	INIT_WORK(&local->sched_scan_stopped_work,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ab0be5c30860..f36279e8792e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2211,7 +2211,8 @@ static void ieee80211_change_ps(struct ieee80211_local *local)
+ 		conf->flags &= ~IEEE80211_CONF_PS;
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 		del_timer_sync(&local->dynamic_ps_timer);
+-		cancel_work_sync(&local->dynamic_ps_enable_work);
++		wiphy_work_cancel(local->hw.wiphy,
++				  &local->dynamic_ps_enable_work);
+ 	}
+ }
+ 
+@@ -2308,7 +2309,8 @@ void ieee80211_recalc_ps_vif(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
++void ieee80211_dynamic_ps_disable_work(struct wiphy *wiphy,
++				       struct wiphy_work *work)
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local,
+@@ -2325,7 +2327,8 @@ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
+ 					false);
+ }
+ 
+-void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
++void ieee80211_dynamic_ps_enable_work(struct wiphy *wiphy,
++				      struct wiphy_work *work)
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local,
+@@ -2398,7 +2401,7 @@ void ieee80211_dynamic_ps_timer(struct timer_list *t)
+ {
+ 	struct ieee80211_local *local = from_timer(local, t, dynamic_ps_timer);
+ 
+-	ieee80211_queue_work(&local->hw, &local->dynamic_ps_enable_work);
++	wiphy_work_queue(local->hw.wiphy, &local->dynamic_ps_enable_work);
+ }
+ 
+ void ieee80211_dfs_cac_timer_work(struct wiphy *wiphy, struct wiphy_work *work)
+@@ -3002,7 +3005,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	sdata->deflink.ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
+ 
+ 	del_timer_sync(&local->dynamic_ps_timer);
+-	cancel_work_sync(&local->dynamic_ps_enable_work);
++	wiphy_work_cancel(local->hw.wiphy, &local->dynamic_ps_enable_work);
+ 
+ 	/* Disable ARP filtering */
+ 	if (sdata->vif.cfg.arp_addr_cnt)
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 5bedd9cef414..df68d9838f87 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -34,7 +34,7 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+ 	del_timer_sync(&ifmgd->bcn_mon_timer);
+ 	del_timer_sync(&ifmgd->conn_mon_timer);
+ 
+-	cancel_work_sync(&local->dynamic_ps_enable_work);
++	wiphy_work_cancel(local->hw.wiphy, &local->dynamic_ps_enable_work);
+ 
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		offchannel_ps_enabled = true;
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 0ccb5701c7f3..10eb72b9b994 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0
+ /*
+  * Portions
+- * Copyright (C) 2020-2021 Intel Corporation
++ * Copyright (C) 2020-2021, 2023 Intel Corporation
+  */
+ #include <net/mac80211.h>
+ #include <net/rtnetlink.h>
+@@ -76,7 +76,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	 * Note that this particular timer doesn't need to be
+ 	 * restarted at resume.
+ 	 */
+-	cancel_work_sync(&local->dynamic_ps_enable_work);
++	wiphy_work_cancel(local->hw.wiphy, &local->dynamic_ps_enable_work);
+ 	del_timer_sync(&local->dynamic_ps_timer);
+ 
+ 	local->wowlan = wowlan;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ae33f727c6a8..5cff936c6211 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -266,8 +266,8 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+ 						IEEE80211_QUEUE_STOP_REASON_PS,
+ 						false);
+ 		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+-		ieee80211_queue_work(&local->hw,
+-				     &local->dynamic_ps_disable_work);
++		wiphy_work_queue(local->hw.wiphy,
++				 &local->dynamic_ps_disable_work);
+ 	}
+ 
+ 	/* Don't restart the timer if we're not disassociated */
 -- 
 2.41.0
 
