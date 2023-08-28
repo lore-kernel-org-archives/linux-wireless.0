@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51DE2C83F12
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E4A9C83F1F
 	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:06:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232615AbjH1MFs (ORCPT
+        id S232617AbjH1MFt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 08:05:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50296 "EHLO
+        Mon, 28 Aug 2023 08:05:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232539AbjH1MFg (ORCPT
+        with ESMTP id S232249AbjH1MFZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 08:05:36 -0400
+        Mon, 28 Aug 2023 08:05:25 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 158CF11A
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC244123
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=4NL8Cgnjuok2ypJqhFXpMdHT9aC3f1hkFbgFS6HtksQ=;
-        t=1693224333; x=1694433933; b=MXRVuUe/LHzNJSlqOX+wyx73UUxsVYzzFJHZnCBJqK/VVEX
-        LRSopxrROZJ9qUIAHuoTG08kXUHGE6UQv5a+pR61vBczAyJ3yNIlp4c7JZ2HlVfQPH4MwvO3KDMw3
-        Js8wDslgaG9GlJllD9UOFs1GE7yaamikA1XeOx0S/b+17BXhCCrB1fSYXixJghkphSuqpqrlhapok
-        5DNuWw3qHeJbEB1Q/W39gGJ/INPK7AZiXF++2wiwzlohUgmj+Su/7IucKDoqcemVFPbZWnJYMJDLi
-        KL5i6olYHiZQTisCv5Oiw5iOIR8TyEwNs/9lNi9Moo5ZdW+p4pUvzHgJOV4PsKqA==;
+        Resent-Cc:Resent-Message-ID; bh=eQEVGXj3CRF6jXQOf2g1stP/S3rKhdYuAnPiNWLu82c=;
+        t=1693224323; x=1694433923; b=DRVP+s42eDPCGxdOYHFMAP83pO2+ddGnB/Hn1lyBfUHSu1/
+        f5pHeZuxLzwlCTLkh3kjW7ZW2XlwQ6bt/LO4ijfQUKZR0Aky45bcSUznf9oZukw4gu8mTniQYbS+s
+        u3J2GNP79IUl/BX54yXBsuPPEAhnlp/oTFmWgw5zzu5Df/FTXZtYa8h6ek7BL9yZ7tPh502cDMJDX
+        a878a2bOBDYBEgZXkxiFsrg9p6z3HY1pUA8e0/APqo3Vlal6jAlCB+a+ltiSNsisvfD4Ob12e0fMh
+        PoCg94ZXouaxm4LmPRYyMQzjL7SC/+HHRmOQehJfg2gXYX+/TqeKjSN7R3jhjRvg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1qaazq-00Gjgt-0s;
-        Mon, 28 Aug 2023 14:05:30 +0200
+        id 1qaazh-00Gjgt-17;
+        Mon, 28 Aug 2023 14:05:21 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 15/40] wifi: mac80211: move link activation work to wiphy work
-Date:   Mon, 28 Aug 2023 13:59:43 +0200
-Message-ID: <20230828135927.262566b9c25c.Ib3fbaeebd9565f1fca897d23d0654d51a7a75369@changeid>
+Subject: [PATCH 06/40] wifi: mac80211: flush wiphy work where appropriate
+Date:   Mon, 28 Aug 2023 13:59:34 +0200
+Message-ID: <20230828135927.4320ac0c3b18.I6367381100057ec84e8e7ebc6dfc4ac0b68282a4@changeid>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230828115927.116700-41-johannes@sipsolutions.net>
 References: <20230828115927.116700-41-johannes@sipsolutions.net>
@@ -48,77 +48,41 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We want to have the wiphy locked for these as well,
-so move it to be a wiphy work.
+Before converting more works to wiphy work, add
+flushing in mac80211 where we also flush the
+mac80211 workqueue. Not needed in suspend since
+cfg80211 will have taken care of it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/iface.c       | 10 ++++++----
- net/mac80211/link.c        |  2 +-
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ net/mac80211/main.c | 1 +
+ net/mac80211/util.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6d789087b453..3db1accb0903 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1112,7 +1112,7 @@ struct ieee80211_sub_if_data {
- 	struct ieee80211_link_data __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 24315d7b3126..aeb21cfe789a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -343,6 +343,7 @@ static void ieee80211_restart_work(struct work_struct *work)
+ 	rtnl_lock();
+ 	/* we might do interface manipulations, so need both */
+ 	wiphy_lock(local->hw.wiphy);
++	wiphy_work_flush(local->hw.wiphy, NULL);
  
- 	/* for ieee80211_set_active_links_async() */
--	struct work_struct activate_links_work;
-+	struct wiphy_work activate_links_work;
- 	u16 desired_active_links;
+ 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
+ 	     "%s called with hardware scan in progress\n", __func__);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 8a6917cf63cf..6d8b73796dc5 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2319,6 +2319,7 @@ void ieee80211_stop_device(struct ieee80211_local *local)
+ 	cancel_work_sync(&local->reconfig_filter);
  
- #ifdef CONFIG_MAC80211_DEBUGFS
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index c0539e78a34e..fa4514642d74 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -749,9 +749,9 @@ static int ieee80211_stop(struct net_device *dev)
- 		ieee80211_stop_mbssid(sdata);
- 	}
- 
--	cancel_work_sync(&sdata->activate_links_work);
--
- 	wiphy_lock(sdata->local->hw.wiphy);
-+	wiphy_work_cancel(sdata->local->hw.wiphy, &sdata->activate_links_work);
-+
- 	ieee80211_do_stop(sdata, true);
- 	wiphy_unlock(sdata->local->hw.wiphy);
- 
-@@ -1691,7 +1691,8 @@ static void ieee80211_iface_work(struct wiphy *wiphy, struct wiphy_work *work)
- 	}
+ 	flush_workqueue(local->workqueue);
++	wiphy_work_flush(local->hw.wiphy, NULL);
+ 	drv_stop(local);
  }
  
--static void ieee80211_activate_links_work(struct work_struct *work)
-+static void ieee80211_activate_links_work(struct wiphy *wiphy,
-+					  struct wiphy_work *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
- 		container_of(work, struct ieee80211_sub_if_data,
-@@ -1736,7 +1737,8 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	skb_queue_head_init(&sdata->skb_queue);
- 	skb_queue_head_init(&sdata->status_queue);
- 	wiphy_work_init(&sdata->work, ieee80211_iface_work);
--	INIT_WORK(&sdata->activate_links_work, ieee80211_activate_links_work);
-+	wiphy_work_init(&sdata->activate_links_work,
-+			ieee80211_activate_links_work);
- 
- 	switch (type) {
- 	case NL80211_IFTYPE_P2P_GO:
-diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index 748d222e8d3d..bcff8a909405 100644
---- a/net/mac80211/link.c
-+++ b/net/mac80211/link.c
-@@ -512,6 +512,6 @@ void ieee80211_set_active_links_async(struct ieee80211_vif *vif,
- 		return;
- 
- 	sdata->desired_active_links = active_links;
--	schedule_work(&sdata->activate_links_work);
-+	wiphy_work_queue(sdata->local->hw.wiphy, &sdata->activate_links_work);
- }
- EXPORT_SYMBOL_GPL(ieee80211_set_active_links_async);
 -- 
 2.41.0
 
