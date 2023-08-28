@@ -2,42 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36FA5C83F1F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE1B8C83F20
 	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:06:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232566AbjH1MGR (ORCPT
+        id S232583AbjH1MGT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 08:06:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40516 "EHLO
+        Mon, 28 Aug 2023 08:06:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232600AbjH1MFp (ORCPT
+        with ESMTP id S232349AbjH1MFr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 08:05:45 -0400
+        Mon, 28 Aug 2023 08:05:47 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEF6B11A
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 893CF120
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 05:05:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=rz6SCg6cXxMCDgr1u3i7EAf/eYCNI80vu6z808viA2I=;
-        t=1693224343; x=1694433943; b=n7q3L6hSwD2D25ClEqoYZ4fcnuqftz30hMEbiIzmJDo5X/H
-        lBsn6hcZzU68sV1SJewC1emRatQvB0G+sG9SvHt6+87hIYarNrt+nn3KnS6Th/6m8kCnvB4W9Ytpu
-        1aqGZg2GmTHQUlzB+Biyv0amfNTohp5y8nEgpz8nkLrmcMpK5B2swI+JBfMiLudbzl1zPVTS3nMsE
-        kZS92znEbIAtnm6uGoYQR8whdA/IHYaSQxmMrhuZkdjWdbHk5sn5twY2g1uAUEAHNgNWcHEdRuX85
-        758TXTEI7gG5H726hxvkQrnrz3GpwIL0cDG+NC/ttS9pC97pVF8AEKyGHXeIyDWg==;
+        Resent-Cc:Resent-Message-ID; bh=yBiVEMTd0DL39nD81c53OpjxjEYedL+UWVaGbDW+gu4=;
+        t=1693224345; x=1694433945; b=asDoh7iTfzCLHV4NcLLnmC04gqYWV/m+ra2Rv2M5bsTThzx
+        0PHdEBJ9LmzVQKTeb1CFTkPfru5eGjMKjXjy/uVieNuriEYTgs1Gr0LzHJdtNX9OWDvdjFuS4ErM8
+        w0Wimj/0dm6VYUc8hOJ0elw8n068wl/qzz4k77Be10McwEf9SkNREIBBa2CvkyYEsx7QMhCO6QfrS
+        DbRiVUOmHc6lNCJ8g0/f2C8E6GsBRU1P9vc6XkeFH8QUrDPKwAPCH71iGueVDBI9Bhw024T7rukJT
+        5qjSKsL9RDD8rAptXOAp4XWd9G+4mxuXD6TKUxbhA3S+8+l8UEmKPs/sCZCwx4gQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.96)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1qab00-00Gjgt-28;
-        Mon, 28 Aug 2023 14:05:40 +0200
+        id 1qab03-00Gjgt-15;
+        Mon, 28 Aug 2023 14:05:43 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 26/40] wifi: cfg80211: sme: hold wiphy lock for wdev iteration
-Date:   Mon, 28 Aug 2023 13:59:54 +0200
-Message-ID: <20230828135928.1189e740f153.I098fcd58f32968aee65b4876c2cfef7fcedaf160@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 30/40] wifi: mac80211: hold wiphy_lock around concurrency checks
+Date:   Mon, 28 Aug 2023 13:59:58 +0200
+Message-ID: <20230828135928.04daa44cf409.Iba518adcdb81c898d009114ae50a30e83e7f478a@changeid>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20230828115927.116700-41-johannes@sipsolutions.net>
 References: <20230828115927.116700-41-johannes@sipsolutions.net>
@@ -49,36 +48,35 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since we will want to remove the wdev lock in the future,
-lock the wiphy here to iterate and for checking the status
-of the connections.
+We want to replace the locking in mac80211 by just the wiphy
+mutex, so hold the lock here around concurrency checks for
+the future where the chanctx_mtx used inside goes away.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/sme.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/iface.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 53ba46f85ceb..c271f30b58fa 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -703,6 +703,7 @@ static bool cfg80211_is_all_idle(void)
- 	 * as chan dfs state, etc.
- 	 */
- 	for_each_rdev(rdev) {
-+		wiphy_lock(&rdev->wiphy);
- 		list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
- 			wdev_lock(wdev);
- 			if (wdev->conn || wdev->connected ||
-@@ -710,6 +711,7 @@ static bool cfg80211_is_all_idle(void)
- 				is_all_idle = false;
- 			wdev_unlock(wdev);
- 		}
-+		wiphy_unlock(&rdev->wiphy);
- 	}
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index e09fec1507a6..c528a4bb7f4f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -430,12 +430,13 @@ static int ieee80211_open(struct net_device *dev)
+ 	if (!is_valid_ether_addr(dev->dev_addr))
+ 		return -EADDRNOTAVAIL;
  
- 	return is_all_idle;
++	wiphy_lock(sdata->local->hw.wiphy);
+ 	err = ieee80211_check_concurrent_iface(sdata, sdata->vif.type);
+ 	if (err)
+-		return err;
++		goto out;
+ 
+-	wiphy_lock(sdata->local->hw.wiphy);
+ 	err = ieee80211_do_open(&sdata->wdev, true);
++out:
+ 	wiphy_unlock(sdata->local->hw.wiphy);
+ 
+ 	return err;
 -- 
 2.41.0
 
