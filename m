@@ -2,106 +2,183 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D71CC83F16
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 10:38:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B420CC83F12
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Aug 2023 12:00:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231621AbjH1Kht (ORCPT
+        id S231417AbjH1L7p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 06:37:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45328 "EHLO
+        Mon, 28 Aug 2023 07:59:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231641AbjH1KhV (ORCPT
+        with ESMTP id S230026AbjH1L7X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 06:37:21 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7669BAB
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 03:37:19 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37S8eD5X020144;
-        Mon, 28 Aug 2023 10:37:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=3YviArF8KzsiOoLsdvbrpEFgVXuSIBYlTeOVplZXqcA=;
- b=MXxZ+IAi0MosuNOu8ioYwMZQ8G3ZtkFvVAJ5EDBmEzRpJU0/CZvo4aU80+SKsu+6KeEv
- PjcqwVc1jAYFacDEKS1a6AIYe5jtzN4yER2QFzXmDnY7UT/VtCKtwonnOIaLWXHlTG6r
- 0QGCjh97VHU0zpEczeTSGk6e8Il4e9nKk0aCXZWUKgSPzlKJA1LW2DAUY8w4+toFPmWJ
- tjDXFUbLW4j42vXQFPWgLhMdtmXG1CLPVxqRpwjqkm/Y7UvnWf9J4TedMnD7Wyrq8jvd
- YFSp8DdDPevjOX5YDVzyjzCKtn8sE9qFTf32jc+gEx0Rn+gS66IoAgQIdEZnssWNepZ1 YA== 
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sq9m8ucap-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 28 Aug 2023 10:37:14 +0000
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-        by NASANPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37SAbEG9019001
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 28 Aug 2023 10:37:14 GMT
-Received: from [10.231.195.204] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 28 Aug
- 2023 03:37:12 -0700
-Message-ID: <07d48f1e-88ee-85d5-b920-ec75ffb4ef8d@quicinc.com>
-Date:   Mon, 28 Aug 2023 18:37:10 +0800
+        Mon, 28 Aug 2023 07:59:23 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6669E120
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 04:59:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=K3l1SoOeVInloWHUy2kLpcuc6jHWPWI+J78cuxI4C3c=;
+        t=1693223960; x=1694433560; b=lbCgmddF2CYvzmBffeXR1aClChy++g+WKtAHSrXH2eK+Nm5
+        Dwa8so1H4/ocoOsmFd+eZbH3rqgjLiLCtNOJJw7Hv9k41IrEzuXzB//xdqkT+tN4IiOywkSlRUb8t
+        DKZxUfeLn1odKwmE26ZpD6ibEbJeY98MOtWTGBZl7nFCc39rYvtc8duVuEDZ8SOYnbHAhgbjpGeyi
+        L4yPG0RVPReVVXZxldj4L8+T2joyR3K1Enh5+QX5v11Bdu/Zko8Z/h8URXl6wJlxwDLgqOHphJ/4p
+        bfSB1n2rr+lJsvrbIeHn6sBcU9VCVkJLeSDP38AVohPghblAG110Vqh/q0vsPo9A==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qaatq-00GjIn-03;
+        Mon, 28 Aug 2023 13:59:18 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Benjamin Berg <benjamin.berg@intel.com>,
+        Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH 2/4] wifi: mac80211: rework ack_frame_id handling a bit
+Date:   Mon, 28 Aug 2023 13:59:00 +0200
+Message-ID: <20230828135858.45c543acee45.If29e38f610e6c6ea667f77b6db7c4f0230d317f0@changeid>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230828135858.c5182ba79e0f.I5efd1399be8e6dedc1e48982b7f20c531ff37616@changeid>
+References: <20230828135858.c5182ba79e0f.I5efd1399be8e6dedc1e48982b7f20c531ff37616@changeid>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH 12/15] wifi: mac80211: Print local link address during
- authentication
-Content-Language: en-US
-To:     <gregory.greenman@intel.com>, <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>, Ilan Peer <ilan.peer@intel.com>
-References: <20230827110532.348304-1-gregory.greenman@intel.com>
- <20230827135854.9c08605e2691.I0032e9d6e01325862189e4a20b02ddbe8f2f5e75@changeid>
-From:   Wen Gong <quic_wgong@quicinc.com>
-In-Reply-To: <20230827135854.9c08605e2691.I0032e9d6e01325862189e4a20b02ddbe8f2f5e75@changeid>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: sahtvI0HRzFd5yp44XuyYoW8myGxyjqy
-X-Proofpoint-GUID: sahtvI0HRzFd5yp44XuyYoW8myGxyjqy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-28_07,2023-08-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- bulkscore=0 clxscore=1011 mlxscore=0 adultscore=0 priorityscore=1501
- impostorscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=774
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2308280095
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/27/2023 7:05 PM, gregory.greenman@intel.com wrote:
-[...]
-> @@ -7218,6 +7217,19 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
->   	if (err)
->   		goto err_clear;
->   
-> +	if (req->link_id > 0)
-> +		link = sdata_dereference(sdata->link[req->link_id], sdata);
-> +	else
-> +		link = sdata_dereference(sdata->link[0], sdata);
-> +
+From: Johannes Berg <johannes.berg@intel.com>
 
-req->link_id >= 0 means MLD.
-For non-MLD, req->link_id < 0, is it better to use sdata->deflink for non-MLD?
-Is sdata->link[0] always pointer to sdata->deflink for non-MLD?
+Take one more free bit to indicate it's IDR vs. internal
+usage, to be able to carve out some bits here for other
+internal usage, other than IDR handling with a full ACK
+SKB, that is.
 
-It has a comment for deflink of struct ieee80211_sta, but no comment for deflink
-  of struct ieee80211_sub_if_data.
+Reviewed-by: Benjamin Berg <benjamin.berg@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h     |  9 ++++++---
+ net/mac80211/cfg.c         |  3 ++-
+ net/mac80211/ieee80211_i.h |  5 +++++
+ net/mac80211/status.c      |  4 ++--
+ net/mac80211/tx.c          | 14 ++++++++++----
+ 5 files changed, 25 insertions(+), 10 deletions(-)
 
-> +	if (WARN_ON(!link)) {
-> +		err = -ENOLINK;
-> +		goto err_clear;
-> +	}
-> +
-> +	sdata_info(sdata, "authenticate with %pM (local address=%pM)\n",
-> +		   auth_data->ap_addr, link->conf->addr);
-> +
->   	err = ieee80211_auth(sdata);
->   	if (err) {
->   		sta_info_destroy_addr(sdata, auth_data->ap_addr);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7c707358d15c..7f3b6f00f8a2 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1115,7 +1115,9 @@ ieee80211_rate_get_vht_nss(const struct ieee80211_tx_rate *rate)
+  *	not valid if the interface is an MLD since we won't know which
+  *	link the frame will be transmitted on
+  * @hw_queue: HW queue to put the frame on, skb_get_queue_mapping() gives the AC
+- * @ack_frame_id: internal frame ID for TX status, used internally
++ * @status_data: internal data for TX status handling, assigned privately,
++ *	see also &enum ieee80211_status_data for the internal documentation
++ * @status_data_idr: indicates status data is IDR allocated ID for ack frame
+  * @tx_time_est: TX time estimate in units of 4us, used internally
+  * @control: union part for control data
+  * @control.rates: TX rates array to try
+@@ -1155,10 +1157,11 @@ struct ieee80211_tx_info {
+ 	/* common information */
+ 	u32 flags;
+ 	u32 band:3,
+-	    ack_frame_id:13,
++	    status_data_idr:1,
++	    status_data:13,
+ 	    hw_queue:4,
+ 	    tx_time_est:10;
+-	/* 2 free bits */
++	/* 1 free bit */
+ 
+ 	union {
+ 		struct {
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 45e7a5d9c7d9..29a6da5ee77f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -4034,7 +4034,8 @@ int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
+ 		return -ENOMEM;
+ 	}
+ 
+-	IEEE80211_SKB_CB(skb)->ack_frame_id = id;
++	IEEE80211_SKB_CB(skb)->status_data_idr = 1;
++	IEEE80211_SKB_CB(skb)->status_data = id;
+ 
+ 	*cookie = ieee80211_mgmt_tx_cookie(local);
+ 	IEEE80211_SKB_CB(ack_skb)->ack.cookie = *cookie;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 06bd406846d2..7b74cf96ee0a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -85,6 +85,11 @@ extern const u8 ieee80211_ac_to_qos_mask[IEEE80211_NUM_ACS];
+ 
+ #define IEEE80211_MAX_NAN_INSTANCE_ID 255
+ 
++enum ieee80211_status_data {
++	IEEE80211_STATUS_TYPE_MASK	= 0x00f,
++	IEEE80211_STATUS_TYPE_INVALID	= 0,
++	IEEE80211_STATUS_SUBDATA_MASK	= 0xff0,
++};
+ 
+ /*
+  * Keep a station's queues on the active list for deficit accounting purposes
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 44d83da60aee..f24aceb59db0 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -633,7 +633,7 @@ static void ieee80211_report_ack_skb(struct ieee80211_local *local,
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&local->ack_status_lock, flags);
+-	skb = idr_remove(&local->ack_status_frames, info->ack_frame_id);
++	skb = idr_remove(&local->ack_status_frames, info->status_data);
+ 	spin_unlock_irqrestore(&local->ack_status_lock, flags);
+ 
+ 	if (!skb)
+@@ -759,7 +759,7 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+ 		}
+ 
+ 		rcu_read_unlock();
+-	} else if (info->ack_frame_id) {
++	} else if (info->status_data_idr) {
+ 		ieee80211_report_ack_skb(local, skb, acked, dropped,
+ 					 ack_hwtstamp);
+ 	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3a5b41c2ee3d..ae33f727c6a8 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2942,7 +2942,10 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	memset(info, 0, sizeof(*info));
+ 
+ 	info->flags = info_flags;
+-	info->ack_frame_id = info_id;
++	if (info_id) {
++		info->status_data = info_id;
++		info->status_data_idr = 1;
++	}
+ 	info->band = band;
+ 
+ 	if (likely(!cookie)) {
+@@ -4639,9 +4642,12 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (unlikely(skb->sk &&
+-		     skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS))
+-		info->ack_frame_id = ieee80211_store_ack_skb(local, skb,
+-							     &info->flags, NULL);
++		     skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)) {
++		info->status_data = ieee80211_store_ack_skb(local, skb,
++							    &info->flags, NULL);
++		if (info->status_data)
++			info->status_data_idr = 1;
++	}
+ 
+ 	dev_sw_netstats_tx_add(dev, skbs, len);
+ 	sta->deflink.tx_stats.packets[queue] += skbs;
+-- 
+2.41.0
+
