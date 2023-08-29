@@ -2,41 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD0F9C83F15
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6AFDC71153
 	for <linux-wireless@archiver.kernel.org>; Tue, 29 Aug 2023 02:21:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235252AbjH2CUz (ORCPT
+        id S233502AbjH2CU6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 22:20:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56786 "EHLO
+        Mon, 28 Aug 2023 22:20:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233502AbjH2CUb (ORCPT
+        with ESMTP id S233880AbjH2CUb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 28 Aug 2023 22:20:31 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 164CA124
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 19:20:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 79E971A2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 19:20:28 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37T2JntyE018876, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37T2JntyE018876
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37T2JvdoE019028, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37T2JvdoE019028
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 29 Aug 2023 10:19:49 +0800
+        Tue, 29 Aug 2023 10:19:57 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Tue, 29 Aug 2023 10:20:13 +0800
+ 15.1.2375.32; Tue, 29 Aug 2023 10:20:22 +0800
 Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 29 Aug
- 2023 10:20:13 +0800
+ 2023 10:20:20 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/6] wifi: rtw89: prepare timeslot and trigger firmware for MCC
-Date:   Tue, 29 Aug 2023 10:19:12 +0800
-Message-ID: <20230829021918.14599-1-pkshih@realtek.com>
+Subject: [PATCH 5/6] wifi: rtw89: fix typo of rtw89_fw_h2c_mcc_macid_bitmap()
+Date:   Tue, 29 Aug 2023 10:19:17 +0800
+Message-ID: <20230829021918.14599-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230829021918.14599-1-pkshih@realtek.com>
+References: <20230829021918.14599-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -47,61 +49,52 @@ X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is second patchset to prepare more materials for MCC. It includes
-group 5 patch below that is to calculate timeslot assignment (or named
-pattern) for various combinations, such as use cases with/without BT
-devices connected.
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Since the detail calculation of timeslot is complicated, we split them
-into several patches. Each of them calculates timeslot from
-'coarse-grained' to 'fine-grained'. Then, use H2C command to notify
-firmware to start MCC work that follows these timeslot patterns to
-switch channels with protocols of 802.11 PS and NoA.
+Fix a typo where `bitamp` should be `bitmap`. Don't change functionality
+at all.
 
-<<< Below commit message is kept as first patchset for reference >>>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/fw.c | 2 +-
+ drivers/net/wireless/realtek/rtw89/fw.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-TDMA-based MCC (STA+P2P) is a kind of multiple interfaces concurrence.
-Basically, driver is to calculate timeslot pattern and firmware follows
-the pattern to switch channels. Since BT-coexistence is also a TDMA-based
-mechanism, also consider BT timeslot into pattern if BT devices present.
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index df1dc2f43c86..763872d3b7c7 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -4520,7 +4520,7 @@ int rtw89_fw_h2c_mcc_req_tsf(struct rtw89_dev *rtwdev,
+ }
  
-To easier to review these 20+ patches, I summary basic purpose of these
-patches below by group, and submit them by small patchset one by one.
- 
-Group 1. [DONE] get BT timeslot from coex mechanism
-Group 2. [DONE] adjust some stuff related to driver channel context
-Group 3. [DONE] P2P NoA infrastructure to add the IE to beacon when playing GO
-Group 4. [DONE] adjust driver to support 2 channel context
-Group 5. [CURRENT] calculate timeslot patterns and trigger firmware to switch
-                   channels followed the patterns
-Group 6. disable some dynamic tracking mechanism of RF calibration when
-         MCC is running.
-Group 7. monitor states and adjust timeslot patterns. For example, if
-         BT device leaves, we can reassign the slot to WiFi.
-Group 8. Remain-on-channel and hardware scan are related to channel
-         context, so need some treatments to work with MCC properly.
-Group 9. Finally, we declare 8852C to support MCC
-
-Zong-Zhe Yang (6):
-  wifi: rtw89: mcc: initialize start flow
-  wifi: rtw89: mcc: fill fundamental configurations
-  wifi: rtw89: mcc: consider and determine BT duration
-  wifi: rtw89: mcc: decide pattern and calculate parameters
-  wifi: rtw89: fix typo of rtw89_fw_h2c_mcc_macid_bitmap()
-  wifi: rtw89: mcc: trigger FW to start/stop MCC
-
- drivers/net/wireless/realtek/rtw89/chan.c | 1150 +++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/chan.h |   20 +
- drivers/net/wireless/realtek/rtw89/core.c |    4 +
- drivers/net/wireless/realtek/rtw89/core.h |   87 ++
- drivers/net/wireless/realtek/rtw89/fw.c   |    2 +-
- drivers/net/wireless/realtek/rtw89/fw.h   |    2 +-
- 6 files changed, 1263 insertions(+), 2 deletions(-)
-
+ #define H2C_MCC_MACID_BITMAP_DSC_LEN 4
+-int rtw89_fw_h2c_mcc_macid_bitamp(struct rtw89_dev *rtwdev, u8 group, u8 macid,
++int rtw89_fw_h2c_mcc_macid_bitmap(struct rtw89_dev *rtwdev, u8 group, u8 macid,
+ 				  u8 *bitmap)
+ {
+ 	struct rtw89_wait_info *wait = &rtwdev->mcc.wait;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 775f4e8fbda4..156d09dfca45 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -3755,7 +3755,7 @@ int rtw89_fw_h2c_reset_mcc_group(struct rtw89_dev *rtwdev, u8 group);
+ int rtw89_fw_h2c_mcc_req_tsf(struct rtw89_dev *rtwdev,
+ 			     const struct rtw89_fw_mcc_tsf_req *req,
+ 			     struct rtw89_mac_mcc_tsf_rpt *rpt);
+-int rtw89_fw_h2c_mcc_macid_bitamp(struct rtw89_dev *rtwdev, u8 group, u8 macid,
++int rtw89_fw_h2c_mcc_macid_bitmap(struct rtw89_dev *rtwdev, u8 group, u8 macid,
+ 				  u8 *bitmap);
+ int rtw89_fw_h2c_mcc_sync(struct rtw89_dev *rtwdev, u8 group, u8 source,
+ 			  u8 target, u8 offset);
 -- 
 2.25.1
 
