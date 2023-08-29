@@ -2,40 +2,40 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C21EC83F17
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 429F5C83F1B
 	for <linux-wireless@archiver.kernel.org>; Tue, 29 Aug 2023 02:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235286AbjH2CU7 (ORCPT
+        id S235366AbjH2CVB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Aug 2023 22:20:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33258 "EHLO
+        Mon, 28 Aug 2023 22:21:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235163AbjH2CUb (ORCPT
+        with ESMTP id S235224AbjH2CUg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Aug 2023 22:20:31 -0400
+        Mon, 28 Aug 2023 22:20:36 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4A57E199
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 19:20:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C6580124
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Aug 2023 19:20:32 -0700 (PDT)
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37T2JqtO6018978, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37T2JwdvE019032, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37T2JqtO6018978
+        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37T2JwdvE019032
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 29 Aug 2023 10:19:52 +0800
+        Tue, 29 Aug 2023 10:19:58 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Tue, 29 Aug 2023 10:20:17 +0800
+ 15.1.2507.17; Tue, 29 Aug 2023 10:20:22 +0800
 Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Tue, 29 Aug
- 2023 10:20:16 +0800
+ 2023 10:20:22 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/6] wifi: rtw89: mcc: fill fundamental configurations
-Date:   Tue, 29 Aug 2023 10:19:14 +0800
-Message-ID: <20230829021918.14599-3-pkshih@realtek.com>
+Subject: [PATCH 6/6] wifi: rtw89: mcc: trigger FW to start/stop MCC
+Date:   Tue, 29 Aug 2023 10:19:18 +0800
+Message-ID: <20230829021918.14599-7-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230829021918.14599-1-pkshih@realtek.com>
 References: <20230829021918.14599-1-pkshih@realtek.com>
@@ -55,291 +55,215 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-We determine the fundamental settings shown below.
-
- |<                MCC interval                 >|
- |<    duration ref     >|<    duration aux     >|
- |           |                       |           |
-             |<    beacon offset    >|
-	     |                       |
-             V                       V
-         (tbtt ref)              (tbtt aux)
-
-(where `ref` (reference) and `aux` (auxiliary) mean the two MCC roles)
-
-Based on MCC mode (GO+STA or GC+STA), we fill configurations of
-MCC interval and beacon offset. And, we make sure each MCC role
-have a basically required duration in the MCC interval.
-
-The beacon offset mentioned above is a parameter for further MCC
-pattern calculation. If MCC is in GC+STA mode, we will calculate
-the real beacon offset through TSFs shown in beacons of both MCC
-roles. Otherwise, we will use a default beacon offset, and make
-GO sync STA's TSF timer with this offset.
-
-MCC pattern calculation will break down each MCC role's duration
-in more detail. We will implement it in the following.
+According to Wi-Fi/BT roles' settings, we fill corresponding H2Cs (host
+to chip packets). Then, following MCC (multi-channel concurrency) pattern,
+we send these H2Cs as planned. Eventually, the trigger H2Cs will be sent
+to tell FW to really start/stop MCC.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/chan.c | 165 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/chan.h |  11 ++
- drivers/net/wireless/realtek/rtw89/core.h |   9 ++
- 3 files changed, 185 insertions(+)
+ drivers/net/wireless/realtek/rtw89/chan.c | 173 ++++++++++++++++++++++
+ 1 file changed, 173 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
-index 617d7473ba7c..c2fb91678bd6 100644
+index c609a252ef12..2ae5b461ddb7 100644
 --- a/drivers/net/wireless/realtek/rtw89/chan.c
 +++ b/drivers/net/wireless/realtek/rtw89/chan.c
-@@ -321,6 +321,39 @@ static u32 rtw89_mcc_get_tbtt_ofst(struct rtw89_dev *rtwdev,
- 	return (tsf - sync_tsf) % bcn_intvl_us;
+@@ -1217,6 +1217,159 @@ static int rtw89_mcc_fill_config(struct rtw89_dev *rtwdev)
+ 	return rtw89_mcc_fill_start_tsf(rtwdev);
  }
  
-+static u16 rtw89_mcc_get_bcn_ofst(struct rtw89_dev *rtwdev)
++static int __mcc_fw_add_role(struct rtw89_dev *rtwdev, struct rtw89_mcc_role *role)
 +{
 +	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
-+	struct rtw89_mcc_role *ref = &mcc->role_ref;
-+	struct rtw89_mcc_role *aux = &mcc->role_aux;
-+	struct rtw89_mac_mcc_tsf_rpt rpt = {};
-+	struct rtw89_fw_mcc_tsf_req req = {};
-+	u32 bcn_intvl_ref_us = ieee80211_tu_to_usec(ref->beacon_interval);
-+	u32 tbtt_ofst_ref, tbtt_ofst_aux;
-+	u64 tsf_ref, tsf_aux;
++	struct rtw89_mcc_config *config = &mcc->config;
++	struct rtw89_mcc_pattern *pattern = &config->pattern;
++	struct rtw89_mcc_courtesy *courtesy = &pattern->courtesy;
++	struct rtw89_mcc_policy *policy = &role->policy;
++	struct rtw89_fw_mcc_add_req req = {};
++	const struct rtw89_chan *chan;
++	int ret;
++
++	chan = rtw89_chan_get(rtwdev, role->rtwvif->sub_entity_idx);
++	req.central_ch_seg0 = chan->channel;
++	req.primary_ch = chan->primary_channel;
++	req.bandwidth = chan->band_width;
++	req.ch_band_type = chan->band_type;
++
++	req.macid = role->rtwvif->mac_id;
++	req.group = mcc->group;
++	req.c2h_rpt = policy->c2h_rpt;
++	req.tx_null_early = policy->tx_null_early;
++	req.dis_tx_null = policy->dis_tx_null;
++	req.in_curr_ch = policy->in_curr_ch;
++	req.sw_retry_count = policy->sw_retry_count;
++	req.dis_sw_retry = policy->dis_sw_retry;
++	req.duration = role->duration;
++	req.btc_in_2g = false;
++
++	if (courtesy->enable && courtesy->macid_src == req.macid) {
++		req.courtesy_target = courtesy->macid_tgt;
++		req.courtesy_num = courtesy->slot_num;
++		req.courtesy_en = true;
++	}
++
++	ret = rtw89_fw_h2c_add_mcc(rtwdev, &req);
++	if (ret) {
++		rtw89_debug(rtwdev, RTW89_DBG_CHAN,
++			    "MCC h2c failed to add wifi role: %d\n", ret);
++		return ret;
++	}
++
++	ret = rtw89_fw_h2c_mcc_macid_bitmap(rtwdev, mcc->group,
++					    role->rtwvif->mac_id,
++					    role->macid_bitmap);
++	if (ret) {
++		rtw89_debug(rtwdev, RTW89_DBG_CHAN,
++			    "MCC h2c failed to set macid bitmap: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __mcc_fw_add_bt_role(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
++	struct rtw89_mcc_bt_role *bt_role = &mcc->bt_role;
++	struct rtw89_fw_mcc_add_req req = {};
 +	int ret;
 +
 +	req.group = mcc->group;
-+	req.macid_x = ref->rtwvif->mac_id;
-+	req.macid_y = aux->rtwvif->mac_id;
-+	ret = rtw89_fw_h2c_mcc_req_tsf(rtwdev, &req, &rpt);
++	req.duration = bt_role->duration;
++	req.btc_in_2g = true;
++
++	ret = rtw89_fw_h2c_add_mcc(rtwdev, &req);
 +	if (ret) {
 +		rtw89_debug(rtwdev, RTW89_DBG_CHAN,
-+			    "MCC h2c failed to request tsf: %d\n", ret);
-+		return RTW89_MCC_DFLT_BCN_OFST_TIME;
++			    "MCC h2c failed to add bt role: %d\n", ret);
++		return ret;
 +	}
 +
-+	tsf_ref = (u64)rpt.tsf_x_high << 32 | rpt.tsf_x_low;
-+	tsf_aux = (u64)rpt.tsf_y_high << 32 | rpt.tsf_y_low;
-+	tbtt_ofst_ref = rtw89_mcc_get_tbtt_ofst(rtwdev, ref, tsf_ref);
-+	tbtt_ofst_aux = rtw89_mcc_get_tbtt_ofst(rtwdev, aux, tsf_aux);
-+
-+	while (tbtt_ofst_ref < tbtt_ofst_aux)
-+		tbtt_ofst_ref += bcn_intvl_ref_us;
-+
-+	return (tbtt_ofst_ref - tbtt_ofst_aux) / 1024;
++	return 0;
 +}
 +
- static
- void rtw89_mcc_role_fw_macid_bitmap_set_bit(struct rtw89_mcc_role *mcc_role,
- 					    unsigned int bit)
-@@ -608,6 +641,110 @@ static void rtw89_mcc_set_default_pattern(struct rtw89_dev *rtwdev)
- 	rtw89_mcc_assign_pattern(rtwdev, &tmp);
- }
- 
-+static void rtw89_mcc_set_duration_go_sta(struct rtw89_dev *rtwdev,
-+					  struct rtw89_mcc_role *role_go,
-+					  struct rtw89_mcc_role *role_sta)
-+{
-+	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
-+	struct rtw89_mcc_config *config = &mcc->config;
-+	u16 mcc_intvl = config->mcc_interval;
-+	u16 dur_go, dur_sta;
-+
-+	dur_go = clamp_t(u16, role_go->duration, RTW89_MCC_MIN_GO_DURATION,
-+			 mcc_intvl - RTW89_MCC_MIN_STA_DURATION);
-+	if (role_go->limit.enable)
-+		dur_go = min(dur_go, role_go->limit.max_dur);
-+	dur_sta = mcc_intvl - dur_go;
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_CHAN,
-+		    "MCC set dur: (go, sta) {%d, %d} -> {%d, %d}\n",
-+		    role_go->duration, role_sta->duration, dur_go, dur_sta);
-+
-+	role_go->duration = dur_go;
-+	role_sta->duration = dur_sta;
-+}
-+
-+static void rtw89_mcc_set_duration_gc_sta(struct rtw89_dev *rtwdev)
++static int __mcc_fw_start(struct rtw89_dev *rtwdev)
 +{
 +	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
 +	struct rtw89_mcc_role *ref = &mcc->role_ref;
 +	struct rtw89_mcc_role *aux = &mcc->role_aux;
 +	struct rtw89_mcc_config *config = &mcc->config;
-+	u16 mcc_intvl = config->mcc_interval;
-+	u16 dur_ref, dur_aux;
-+
-+	if (ref->duration < RTW89_MCC_MIN_STA_DURATION) {
-+		dur_ref = RTW89_MCC_MIN_STA_DURATION;
-+		dur_aux = mcc_intvl - dur_ref;
-+	} else if (aux->duration < RTW89_MCC_MIN_STA_DURATION) {
-+		dur_aux = RTW89_MCC_MIN_STA_DURATION;
-+		dur_ref = mcc_intvl - dur_aux;
-+	} else {
-+		dur_ref = ref->duration;
-+		dur_aux = mcc_intvl - dur_ref;
-+	}
-+
-+	if (ref->limit.enable) {
-+		dur_ref = min(dur_ref, ref->limit.max_dur);
-+		dur_aux = mcc_intvl - dur_ref;
-+	} else if (aux->limit.enable) {
-+		dur_aux = min(dur_aux, aux->limit.max_dur);
-+		dur_ref = mcc_intvl - dur_aux;
-+	}
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_CHAN,
-+		    "MCC set dur: (ref, aux) {%d ~ %d} -> {%d ~ %d}\n",
-+		    ref->duration, aux->duration, dur_ref, dur_aux);
-+
-+	ref->duration = dur_ref;
-+	aux->duration = dur_aux;
-+}
-+
-+static void rtw89_mcc_sync_tbtt(struct rtw89_dev *rtwdev,
-+				struct rtw89_mcc_role *tgt,
-+				struct rtw89_mcc_role *src,
-+				bool ref_is_src)
-+{
-+	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
-+	struct rtw89_mcc_config *config = &mcc->config;
-+	u16 beacon_offset_us = ieee80211_tu_to_usec(config->beacon_offset);
-+	u32 bcn_intvl_src_us = ieee80211_tu_to_usec(src->beacon_interval);
-+	u32 cur_tbtt_ofst_src;
-+	u32 tsf_ofst_tgt;
-+	u64 tbtt_tgt;
-+	u64 tsf_src;
++	struct rtw89_mcc_pattern *pattern = &config->pattern;
++	struct rtw89_mcc_sync *sync = &config->sync;
++	struct rtw89_fw_mcc_start_req req = {};
 +	int ret;
 +
-+	ret = rtw89_mac_port_get_tsf(rtwdev, src->rtwvif, &tsf_src);
-+	if (ret) {
-+		rtw89_warn(rtwdev, "MCC failed to get port tsf: %d\n", ret);
-+		return;
-+	}
++	req.group = mcc->group;
 +
-+	cur_tbtt_ofst_src = rtw89_mcc_get_tbtt_ofst(rtwdev, src, tsf_src);
++	switch (pattern->plan) {
++	case RTW89_MCC_PLAN_TAIL_BT:
++		ret = __mcc_fw_add_role(rtwdev, ref);
++		if (ret)
++			return ret;
++		ret = __mcc_fw_add_role(rtwdev, aux);
++		if (ret)
++			return ret;
++		ret = __mcc_fw_add_bt_role(rtwdev);
++		if (ret)
++			return ret;
 +
-+	if (ref_is_src)
-+		tbtt_tgt = tsf_src - cur_tbtt_ofst_src + beacon_offset_us;
-+	else
-+		tbtt_tgt = tsf_src - cur_tbtt_ofst_src +
-+			   (bcn_intvl_src_us - beacon_offset_us);
-+
-+	tsf_ofst_tgt = bcn_intvl_src_us - tbtt_tgt % bcn_intvl_src_us;
-+
-+	config->sync.macid_tgt = tgt->rtwvif->mac_id;
-+	config->sync.macid_src = src->rtwvif->mac_id;
-+	config->sync.offset = tsf_ofst_tgt / 1024;
-+	config->sync.enable = true;
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_CHAN,
-+		    "MCC sync tbtt: tgt %d, src %d, offset %d\n",
-+		    config->sync.macid_tgt, config->sync.macid_src,
-+		    config->sync.offset);
-+
-+	rtw89_mac_port_tsf_sync(rtwdev, tgt->rtwvif, src->rtwvif,
-+				config->sync.offset);
-+}
-+
- static int rtw89_mcc_fill_start_tsf(struct rtw89_dev *rtwdev)
- {
- 	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
-@@ -645,9 +782,35 @@ static int rtw89_mcc_fill_start_tsf(struct rtw89_dev *rtwdev)
- static int rtw89_mcc_fill_config(struct rtw89_dev *rtwdev)
- {
- 	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
-+	struct rtw89_mcc_role *ref = &mcc->role_ref;
-+	struct rtw89_mcc_role *aux = &mcc->role_aux;
- 	struct rtw89_mcc_config *config = &mcc->config;
- 
- 	memset(config, 0, sizeof(*config));
-+
-+	switch (mcc->mode) {
-+	case RTW89_MCC_MODE_GO_STA:
-+		config->beacon_offset = RTW89_MCC_DFLT_BCN_OFST_TIME;
-+		if (ref->is_go) {
-+			rtw89_mcc_sync_tbtt(rtwdev, ref, aux, false);
-+			config->mcc_interval = ref->beacon_interval;
-+			rtw89_mcc_set_duration_go_sta(rtwdev, ref, aux);
-+		} else {
-+			rtw89_mcc_sync_tbtt(rtwdev, aux, ref, true);
-+			config->mcc_interval = aux->beacon_interval;
-+			rtw89_mcc_set_duration_go_sta(rtwdev, aux, ref);
-+		}
++		req.btc_in_group = true;
 +		break;
-+	case RTW89_MCC_MODE_GC_STA:
-+		config->beacon_offset = rtw89_mcc_get_bcn_ofst(rtwdev);
-+		config->mcc_interval = ref->beacon_interval;
-+		rtw89_mcc_set_duration_gc_sta(rtwdev);
++	case RTW89_MCC_PLAN_MID_BT:
++		ret = __mcc_fw_add_role(rtwdev, ref);
++		if (ret)
++			return ret;
++		ret = __mcc_fw_add_bt_role(rtwdev);
++		if (ret)
++			return ret;
++		ret = __mcc_fw_add_role(rtwdev, aux);
++		if (ret)
++			return ret;
++
++		req.btc_in_group = true;
++		break;
++	case RTW89_MCC_PLAN_NO_BT:
++		ret = __mcc_fw_add_role(rtwdev, ref);
++		if (ret)
++			return ret;
++		ret = __mcc_fw_add_role(rtwdev, aux);
++		if (ret)
++			return ret;
++
++		req.btc_in_group = false;
 +		break;
 +	default:
-+		rtw89_warn(rtwdev, "MCC unknown mode: %d\n", mcc->mode);
++		rtw89_warn(rtwdev, "MCC unknown plan: %d\n", pattern->plan);
 +		return -EFAULT;
 +	}
 +
- 	rtw89_mcc_set_default_pattern(rtwdev);
- 	return rtw89_mcc_fill_start_tsf(rtwdev);
- }
-@@ -677,6 +840,8 @@ static int rtw89_mcc_start(struct rtw89_dev *rtwdev)
- 
- 	rtw89_debug(rtwdev, RTW89_DBG_CHAN, "MCC sel mode: %d\n", mcc->mode);
- 
-+	mcc->group = RTW89_MCC_DFLT_GROUP;
++	if (sync->enable) {
++		ret = rtw89_fw_h2c_mcc_sync(rtwdev, req.group, sync->macid_src,
++					    sync->macid_tgt, sync->offset);
++		if (ret) {
++			rtw89_debug(rtwdev, RTW89_DBG_CHAN,
++				    "MCC h2c failed to trigger sync: %d\n", ret);
++			return ret;
++		}
++	}
 +
- 	ret = rtw89_mcc_fill_config(rtwdev);
++	req.macid = ref->rtwvif->mac_id;
++	req.tsf_high = config->start_tsf >> 32;
++	req.tsf_low = config->start_tsf;
++
++	ret = rtw89_fw_h2c_start_mcc(rtwdev, &req);
++	if (ret) {
++		rtw89_debug(rtwdev, RTW89_DBG_CHAN,
++			    "MCC h2c failed to trigger start: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int rtw89_mcc_start(struct rtw89_dev *rtwdev)
+ {
+ 	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
+@@ -1248,13 +1401,33 @@ static int rtw89_mcc_start(struct rtw89_dev *rtwdev)
  	if (ret)
  		return ret;
-diff --git a/drivers/net/wireless/realtek/rtw89/chan.h b/drivers/net/wireless/realtek/rtw89/chan.h
-index eac5e0460e10..9bdf3d1637bb 100644
---- a/drivers/net/wireless/realtek/rtw89/chan.h
-+++ b/drivers/net/wireless/realtek/rtw89/chan.h
-@@ -13,7 +13,18 @@
- /* various MCC setting time in TU */
- #define RTW89_MCC_LONG_TRIGGER_TIME 300
- #define RTW89_MCC_SHORT_TRIGGER_TIME 100
-+#define RTW89_MCC_EARLY_TX_BCN_TIME 10
-+#define RTW89_MCC_EARLY_RX_BCN_TIME 5
-+#define RTW89_MCC_MIN_RX_BCN_TIME 10
-+#define RTW89_MCC_DFLT_BCN_OFST_TIME 40
  
-+#define RTW89_MCC_MIN_GO_DURATION \
-+	(RTW89_MCC_EARLY_TX_BCN_TIME + RTW89_MCC_MIN_RX_BCN_TIME)
++	ret = __mcc_fw_start(rtwdev);
++	if (ret)
++		return ret;
 +
-+#define RTW89_MCC_MIN_STA_DURATION \
-+	(RTW89_MCC_EARLY_RX_BCN_TIME + RTW89_MCC_MIN_RX_BCN_TIME)
+ 	rtw89_chanctx_notify(rtwdev, RTW89_CHANCTX_STATE_MCC_START);
+ 	return 0;
+ }
+ 
+ static void rtw89_mcc_stop(struct rtw89_dev *rtwdev)
+ {
++	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
++	struct rtw89_mcc_role *ref = &mcc->role_ref;
++	int ret;
 +
-+#define RTW89_MCC_DFLT_GROUP 0
- #define RTW89_MCC_DFLT_TX_NULL_EARLY 3
- #define RTW89_MCC_DFLT_COURTESY_SLOT 3
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index c14fd08cac98..4775fb490034 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -4415,8 +4415,16 @@ struct rtw89_mcc_pattern {
- 	struct rtw89_mcc_courtesy courtesy;
- };
- 
-+struct rtw89_mcc_sync {
-+	bool enable;
-+	u16 offset; /* TU */
-+	u8 macid_src;
-+	u8 macid_tgt;
-+};
+ 	rtw89_debug(rtwdev, RTW89_DBG_CHAN, "MCC stop\n");
 +
- struct rtw89_mcc_config {
- 	struct rtw89_mcc_pattern pattern;
-+	struct rtw89_mcc_sync sync;
- 	u64 start_tsf;
- 	u16 mcc_interval; /* TU */
- 	u16 beacon_offset; /* TU */
-@@ -4430,6 +4438,7 @@ enum rtw89_mcc_mode {
- struct rtw89_mcc_info {
- 	struct rtw89_wait_info wait;
++	ret = rtw89_fw_h2c_stop_mcc(rtwdev, mcc->group,
++				    ref->rtwvif->mac_id, true);
++	if (ret)
++		rtw89_debug(rtwdev, RTW89_DBG_CHAN,
++			    "MCC h2c failed to trigger stop: %d\n", ret);
++
++	ret = rtw89_fw_h2c_del_mcc_group(rtwdev, mcc->group, true);
++	if (ret)
++		rtw89_debug(rtwdev, RTW89_DBG_CHAN,
++			    "MCC h2c failed to delete group: %d\n", ret);
++
+ 	rtw89_chanctx_notify(rtwdev, RTW89_CHANCTX_STATE_MCC_STOP);
+ }
  
-+	u8 group;
- 	enum rtw89_mcc_mode mode;
- 	struct rtw89_mcc_role role_ref; /* reference role */
- 	struct rtw89_mcc_role role_aux; /* auxiliary role */
 -- 
 2.25.1
 
