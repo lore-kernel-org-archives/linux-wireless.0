@@ -2,129 +2,131 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F121C83F1F
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A2E7C83F17
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237602AbjH3SeS (ORCPT
+        id S231849AbjH3SeX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:34:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46066 "EHLO
+        Wed, 30 Aug 2023 14:34:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242745AbjH3JaF (ORCPT
+        with ESMTP id S242440AbjH3Ibx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 05:30:05 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 85408CCB
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 02:30:00 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37U9TKgqC014800, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37U9TKgqC014800
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 30 Aug 2023 17:29:20 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 30 Aug 2023 17:29:45 +0800
-Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 30 Aug
- 2023 17:29:44 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <damon.chen@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] wifi: rtw89: 8852c: Update bandedge parameters for better performance
-Date:   Wed, 30 Aug 2023 17:28:48 +0800
-Message-ID: <20230830092849.153251-2-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230830092849.153251-1-pkshih@realtek.com>
-References: <20230830092849.153251-1-pkshih@realtek.com>
+        Wed, 30 Aug 2023 04:31:53 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E5041A4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:31:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693384310; x=1724920310;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=WXxmXNx/asHs7LcHT4t3OsYLl9LuBy4j4Dfc+GpA7GQ=;
+  b=OgcNlxlnpnXw8d4Hu0XbWUcN1KcZcH5SHa6wEGXh4PM9gKn0oaLVDWu5
+   EY0V4FOvVRqGjF/CquvCgNmXXdQXhakBv6yd/66s1XG5pqnRy2e+5VKgb
+   nCBk2hB/jYEutVERrUXHqkjG0gXiQUKQebdmxmbsaNmSsR44SLWnBj/pB
+   0VtIPhPJh3rVsCXT6WMstGCYQk3P3O6NlikRAZTxRZ6VPyWD5lREeYXco
+   DK6qNai5Xw9c9RAFYbNOjsz8izEv6BT+3rSr6EgdvCvXwk5qjssbRwYJz
+   bOFK4iFuXlruws2YeQJV1tSta/gLV3pKWzdWV9Iv8+CMG/jMqOKX5JRW4
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461959046"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="461959046"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152406"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="829152406"
+Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:47 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 11/16] wifi: iwlwifi: fw: reconstruct the API/CAPA enum number
+Date:   Wed, 30 Aug 2023 11:30:59 +0300
+Message-Id: <20230830112059.44bdf6a5fa9e.I9f1ea129f89e53043d48676aed0a3b8f6c31ac08@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
+References: <20230830083104.546619-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.25]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kuan-Chung Chen <damon.chen@realtek.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-TSSI configures bandedge to TX proper waveform, these new bandedge
-parameters improve the accuracy of transmit power compensation.
-This helps to avoid throughput degradation.
+The last member of the enum is meant to count the items,
+but sparse cannot increment the previous member due to
+its bitwise type. Declaring the last entry with a value
+doesn't work either (cannot mix bitwise/non-bitwise) and
+declaring it with a bitwise value doesn't work due to
+the way it gets used. This led to the current construct.
 
-Signed-off-by: Kuan-Chung Chen <damon.chen@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+However, that construct the kernel-doc script doesn't
+understand this construct due to the use of #ifdef/#else.
+
+Find another solution that makes both tools happy, we
+do now do declare it as the bitwise value but then just
+redefine it so that doesn't get used, all still under
+__CHECKER__ conditional.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/realtek/rtw89/reg.h            | 4 ++++
- drivers/net/wireless/realtek/rtw89/rtw8852c.c       | 5 +++++
- drivers/net/wireless/realtek/rtw89/rtw8852c_table.c | 9 ++++++---
- 3 files changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/file.h | 27 +++++++++++++-------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index c0aac4d3678a..f9b15a1cc790 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -4619,6 +4619,8 @@
- #define R_TXGAIN_SCALE 0x58F0
- #define B_TXGAIN_SCALE_EN BIT(19)
- #define B_TXGAIN_SCALE_OFT GENMASK(31, 24)
-+#define R_P0_DAC_COMP_POST_DPD_EN 0x58F8
-+#define B_P0_DAC_COMP_POST_DPD_EN BIT(31)
- #define R_P0_TSSI_BASE 0x5C00
- #define R_S0_DACKI 0x5E00
- #define B_S0_DACKI_AR GENMASK(31, 28)
-@@ -4675,6 +4677,8 @@
- #define B_P1_TSSI_MV_MIX GENMASK(19, 11)
- #define B_P1_TSSI_MV_AVG GENMASK(13, 11)
- #define B_P1_TSSI_MV_CLR BIT(14)
-+#define R_P1_DAC_COMP_POST_DPD_EN 0x78F8
-+#define B_P1_DAC_COMP_POST_DPD_EN BIT(31)
- #define R_TSSI_THOF 0x7C00
- #define R_S1_DACKI 0x7E00
- #define B_S1_DACKI_AR GENMASK(31, 28)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 1e16cc0a05dc..00f1236e2193 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -1975,6 +1975,11 @@ static void rtw8852c_set_tx_shape(struct rtw89_dev *rtwdev,
- 	rtw89_phy_tssi_ctrl_set_bandedge_cfg(rtwdev,
- 					     (enum rtw89_mac_idx)phy_idx,
- 					     tx_shape_ofdm);
-+
-+	rtw89_phy_write32_set(rtwdev, R_P0_DAC_COMP_POST_DPD_EN,
-+			      B_P0_DAC_COMP_POST_DPD_EN);
-+	rtw89_phy_write32_set(rtwdev, R_P1_DAC_COMP_POST_DPD_EN,
-+			      B_P1_DAC_COMP_POST_DPD_EN);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index b36e9613a52c..41841524f983 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -281,12 +281,16 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_SCAN_EXT_CHAN_VER	= (__force iwl_ucode_tlv_api_t)58,
+ 	IWL_UCODE_TLV_API_BAND_IN_RX_DATA	= (__force iwl_ucode_tlv_api_t)59,
  
- static void rtw8852c_set_txpwr(struct rtw89_dev *rtwdev,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_table.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_table.c
-index 4b272fdf1fd7..2ffd979750e3 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_table.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_table.c
-@@ -56452,9 +56452,12 @@ const struct rtw89_txpwr_track_cfg rtw89_8852c_trk_cfg = {
- 
- const struct rtw89_phy_tssi_dbw_table rtw89_8852c_tssi_dbw_table = {
- 	.data[RTW89_TSSI_BANDEDGE_FLAT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
--	.data[RTW89_TSSI_BANDEDGE_LOW] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
--	.data[RTW89_TSSI_BANDEDGE_MID] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
--	.data[RTW89_TSSI_BANDEDGE_HIGH] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-+	.data[RTW89_TSSI_BANDEDGE_LOW] = {0x1d, 0x1d, 0x1d, 0x2f, 0xf, 0xf, 0x2f, 0x38,
-+					  0x28, 0x18, 0x8, 0x8, 0x18, 0x28, 0x38},
-+	.data[RTW89_TSSI_BANDEDGE_MID] = {0x24, 0x24, 0x24, 0x3b, 0x13, 0x13, 0x3b, 0x46,
-+					  0x32, 0x1e, 0xa, 0xa, 0x1e, 0x32, 0x46},
-+	.data[RTW89_TSSI_BANDEDGE_HIGH] = {0x2a, 0x2a, 0x2a, 0x46, 0x17, 0x17, 0x46, 0x53,
-+					   0x3b, 0x24, 0xc, 0xc, 0x24, 0x3b, 0x53},
+-
+-#ifdef __CHECKER__
+-	/* sparse says it cannot increment the previous enum member */
+-#define NUM_IWL_UCODE_TLV_API 128
+-#else
+ 	NUM_IWL_UCODE_TLV_API
++/*
++ * This construction make both sparse (which cannot increment the previous
++ * member due to its bitwise type) and kernel-doc (which doesn't understand
++ * the ifdef/else properly) work.
++ */
++#ifdef __CHECKER__
++#define __CHECKER_NUM_IWL_UCODE_TLV_API	128
++		= (__force iwl_ucode_tlv_api_t)__CHECKER_NUM_IWL_UCODE_TLV_API,
++#define NUM_IWL_UCODE_TLV_API __CHECKER_NUM_IWL_UCODE_TLV_API
+ #endif
  };
  
- const struct rtw89_rfe_parms rtw89_8852c_dflt_parms = {
+@@ -469,11 +473,16 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_STA_EXP_MFP_SUPPORT		= (__force iwl_ucode_tlv_capa_t)114,
+ 	IWL_UCODE_TLV_CAPA_SNIFF_VALIDATE_SUPPORT	= (__force iwl_ucode_tlv_capa_t)116,
+ 
+-#ifdef __CHECKER__
+-	/* sparse says it cannot increment the previous enum member */
+-#define NUM_IWL_UCODE_TLV_CAPA 128
+-#else
+ 	NUM_IWL_UCODE_TLV_CAPA
++/*
++ * This construction make both sparse (which cannot increment the previous
++ * member due to its bitwise type) and kernel-doc (which doesn't understand
++ * the ifdef/else properly) work.
++ */
++#ifdef __CHECKER__
++#define __CHECKER_NUM_IWL_UCODE_TLV_CAPA	128
++		= (__force iwl_ucode_tlv_capa_t)__CHECKER_NUM_IWL_UCODE_TLV_CAPA,
++#define NUM_IWL_UCODE_TLV_CAPA __CHECKER_NUM_IWL_UCODE_TLV_CAPA
+ #endif
+ };
+ 
 -- 
-2.25.1
+2.38.1
 
