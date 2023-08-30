@@ -2,118 +2,194 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A87ACC83F1A
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC428C6FA8F
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:33:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237121AbjH3Sdx (ORCPT
+        id S235128AbjH3Sd6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:33:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35994 "EHLO
+        Wed, 30 Aug 2023 14:33:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242367AbjH3IQR (ORCPT
+        with ESMTP id S242438AbjH3Ibr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 04:16:17 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E50E7113
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:16:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=7ZGIkWYtLAfN7ngsmiHjLJnMDejwN1pq/NeKM7qFqKk=;
-        t=1693383374; x=1694592974; b=WvIn0RLoaqXUQTYMJHWxteTQpMmhag4WrRMWcimAs82Qcbf
-        Q25ghYRHwgFzdebYMg6STJepyh0EAsmpdSmiQscjAB2j2V1wHPF9owqlHRxGZCpotVe0NbOfsQ1am
-        hJkAu6iltS4Jy8TSWGHHfdC9KbQ1wvVsBHjLboEfWG9UxlAdI5ryofa4rnpVKy/F8n7mAjJfbMxNr
-        Wy75uhP+0lh8KbEPXhL9/yUvCYCimFsATsN8ensQ0LfjmjJH4NUKblJzI7y365JkZZE4cftA3P3o9
-        lc+audRLOq3E28g55/YVJYeWclvJ+i9oWr1ZVYzqnUgqvJPmCC/ZSmt8ym0wdvkA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qbGN2-002q93-2Z;
-        Wed, 30 Aug 2023 10:16:13 +0200
-Message-ID: <c59ef59389630656fc5d2b6ac65cc1fab590b893.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: mac80211: fix BA session teardown race
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Koen Vandeputte <koen.vandeputte@citymesh.com>
+        Wed, 30 Aug 2023 04:31:47 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57F771A6
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:31:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693384304; x=1724920304;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=RtgfQCRJY+o2ZJPziVu3rsTrR9FC438nK8y6P5p+2J8=;
+  b=VaAXNqqEO80LHBIpQv7jqlqxug1uOvlKtAjvBghHhqn4iAgy/bMODbZR
+   h5AFrPGQDE968S+F0GkMMqP1P3H/pl8I6yXfDOvK4iUJY3i12GcmF6lZS
+   yIbj8KliW1nEL+HzoceT8BwvCfY/t5auaNGWzL3UrUXOjTOGogCgI5lFt
+   eJ970xvSaJL3QN1V/ceTqxZ9S5mFB6cMUYtmGeY4tbFUNufgzJZKmr6aU
+   hsEIt4AmhNLZT+nWIOAmUtSP9yIgXo22qM+5c4KCkQc6H2ADM7WRa4dgK
+   LcXZxpr0qH5dTUSS5m2pwXMvn5br2Gm1wbh8NhY0WuMtyhNl86696i7SS
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461958992"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="461958992"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:44 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152332"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="829152332"
+Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:41 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Alexander Wetzel <alexander@wetzel-home.de>
-Date:   Wed, 30 Aug 2023 10:16:11 +0200
-In-Reply-To: <CAPh3n808FmLxYzvp2=iNX5RAfdGKe57O2yGSXS9zKhSz_bPhhw@mail.gmail.com>
-References: <20230829201610.cc648236f434.I205a557b06a27f58afe3880f4db43d554210c88d@changeid>
-         <CAPh3n808FmLxYzvp2=iNX5RAfdGKe57O2yGSXS9zKhSz_bPhhw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 09/16] wifi: iwlwifi: pcie: fix kernel-doc issues
+Date:   Wed, 30 Aug 2023 11:30:57 +0300
+Message-Id: <20230830112059.a11b39f9a07e.Ia7b189f003db8f6ccaf0a547e71c80e00b85fb5a@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
+References: <20230830083104.546619-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2023-08-30 at 09:06 +0200, Koen Vandeputte wrote:
-> Hi Johannes,
->=20
-> I'm running OpenWRT on an AP device and noticed following splat when a
-> fair amount of clients was connected to it (roughly 20)
-> Do you think this one is affiliated with this patch?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Did you pull this patch in? It's not applied _anywhere_ yet, unless you
-did?
+Fix various missing kernel-doc annotations etc.
 
-Or are you asking if this could be _fixed_ by this patch?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ .../wireless/intel/iwlwifi/pcie/internal.h    | 51 +++++++++++++------
+ 1 file changed, 36 insertions(+), 15 deletions(-)
 
-> [   45.032441] WARNING: CPU: 2 PID: 1654 at
-> backports-6.1.24/net/mac80211/driver-ops.h:611
-> __ieee80211_flush_queues+0x168/0x16c [mac80211]
-> [   45.036137] wlan1.sta4: Failed check-sdata-in-driver check, flags: 0x1
-[...]
->    45.141905] CPU: 2 PID: 1654 Comm: hostapd Not tainted 5.15.127 #0
-> [   45.147557] Hardware name: Generic DT based system
-> [   45.153753] [<c030d480>] (unwind_backtrace) from [<c0309848>] (show_st=
-ack+0x10/0x14)
-> [   45.158523] [<c0309848>] (show_stack) from [<c05dd924>] (dump_stack_lv=
-l+0x40/0x4c)
-> [   45.166414] [<c05dd924>] (dump_stack_lvl) from [<c0322540>] (__warn+0x=
-8c/0x100)
-> [   45.173792] [<c0322540>] (__warn) from [<c032261c>] (warn_slowpath_fmt=
-+0x68/0x78)
-> [   45.180996] [<c032261c>] (warn_slowpath_fmt) from [<bf25b63c>] (__ieee=
-80211_flush_queues+0x168/0x16c [mac80211])
-> [   45.188780] [<bf25b63c>] (__ieee80211_flush_queues [mac80211]) from [<=
-bf228ec8>] (sta_set_sinfo+0xd44/0xe64 [mac80211])
-> [   45.198951] [<bf228ec8>] (sta_set_sinfo [mac80211]) from [<bf229230>] =
-(sta_info_destroy_addr_bss+0x44/0x5c [mac80211])
-> [   45.209456] [<bf229230>] (sta_info_destroy_addr_bss [mac80211]) from [=
-<bf1a5000>] (nl80211_del_station+0xe0/0x2b4 [cfg80211])
-> [   45.220271] [<bf1a5000>] (nl80211_del_station [cfg80211]) from [<c080a=
-818>] (genl_rcv_msg+0x154/0x340)
-> [   45.231538] [<c080a818>] (genl_rcv_msg) from [<c08098e8>] (netlink_rcv=
-_skb+0xb8/0x11c)
-> [   45.240718] [<c08098e8>] (netlink_rcv_skb) from [<c0809f24>] (genl_rcv=
-+0x28/0x34)
-> [   45.248619] [<c0809f24>] (genl_rcv) from [<c0808fb0>] (netlink_unicast=
-+0x174/0x26c)
-> [   45.256170] [<c0808fb0>] (netlink_unicast) from [<c0809284>] (netlink_=
-sendmsg+0x1dc/0x440)
-> [   45.263641] [<c0809284>] (netlink_sendmsg) from [<c0782878>] (____sys_=
-sendmsg+0x1d0/0x224)
-> [   45.271974] [<c0782878>] (____sys_sendmsg) from [<c0784308>] (___sys_s=
-endmsg+0xa4/0xdc)
-> [   45.280220] [<c0784308>] (___sys_sendmsg) from [<c0784470>] (sys_sendm=
-sg+0x44/0x74)
-> [   45.288110] [<c0784470>] (sys_sendmsg) from [<c0300040>] (ret_fast_sys=
-call+0x0/0x48)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 0f6493dab8cb..e4b0c4543424 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -58,10 +58,7 @@ struct iwl_rx_mem_buffer {
+ 	bool invalid;
+ };
+ 
+-/**
+- * struct isr_statistics - interrupt statistics
+- *
+- */
++/* interrupt statistics */
+ struct isr_statistics {
+ 	u32 hw;
+ 	u32 sw;
+@@ -127,6 +124,8 @@ struct iwl_rx_completion_desc_bz {
+  * @used_bd_dma: physical address of buffer of used receive buffer descriptors (rbd)
+  * @read: Shared index to newest available Rx buffer
+  * @write: Shared index to oldest written Rx packet
++ * @write_actual: actual write pointer written to device, since we update in
++ *	blocks of 8 only
+  * @free_count: Number of pre-allocated buffers in rx_free
+  * @used_count: Number of RBDs handled to allocator to use for allocation
+  * @write_actual:
+@@ -135,10 +134,12 @@ struct iwl_rx_completion_desc_bz {
+  * @need_update: flag to indicate we need to update read/write index
+  * @rb_stts: driver's pointer to receive buffer status
+  * @rb_stts_dma: bus address of receive buffer status
+- * @lock:
++ * @lock: per-queue lock
+  * @queue: actual rx queue. Not used for multi-rx queue.
+  * @next_rb_is_fragment: indicates that the previous RB that we handled set
+  *	the fragmented flag, so the next one is still another fragment
++ * @napi: NAPI struct for this queue
++ * @queue_size: size of this queue
+  *
+  * NOTE:  rx_free and rx_used are used as a FIFO for iwl_rx_mem_buffers
+  */
+@@ -188,7 +189,8 @@ struct iwl_rb_allocator {
+ 
+ /**
+  * iwl_get_closed_rb_stts - get closed rb stts from different structs
+- * @rxq - the rxq to get the rb stts from
++ * @trans: transport pointer (for configuration)
++ * @rxq: the rxq to get the rb stts from
+  */
+ static inline __le16 iwl_get_closed_rb_stts(struct iwl_trans *trans,
+ 					    struct iwl_rxq *rxq)
+@@ -243,6 +245,7 @@ enum iwl_image_response_code {
+ 	IWL_IMAGE_RESP_FAIL		= 2,
+ };
+ 
++#ifdef CONFIG_IWLWIFI_DEBUGFS
+ /**
+  * struct cont_rec: continuous recording data structure
+  * @prev_wr_ptr: the last address that was read in monitor_data
+@@ -253,7 +256,6 @@ enum iwl_image_response_code {
+  *	in &iwl_fw_mon_dbgfs_state enum
+  * @mutex: locked while reading from monitor_data debugfs file
+  */
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+ struct cont_rec {
+ 	u32 prev_wr_ptr;
+ 	u32 prev_wrap_cnt;
+@@ -298,10 +300,6 @@ enum iwl_pcie_imr_status {
+  * @prph_info_dma_addr: dma addr of prph info
+  * @prph_scratch_dma_addr: dma addr of prph scratch
+  * @ctxt_info_dma_addr: dma addr of context information
+- * @init_dram: DRAM data of firmware image (including paging).
+- *	Context information addresses will be taken from here.
+- *	This is driver's local copy for keeping track of size and
+- *	count for allocating and freeing the memory.
+  * @iml: image loader image virtual address
+  * @iml_dma_addr: image loader image DMA address
+  * @trans: pointer to the generic transport area
+@@ -321,10 +319,9 @@ enum iwl_pcie_imr_status {
+  * @rx_buf_bytes: RX buffer (RB) size in bytes
+  * @reg_lock: protect hw register access
+  * @mutex: to protect stop_device / start_fw / start_hw
+- * @cmd_in_flight: true when we have a host command in flight
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+  * @fw_mon_data: fw continuous recording data
+-#endif
++ * @cmd_hold_nic_awake: indicates NIC is held awake for APMG workaround
++ *	during commands in flight
+  * @msix_entries: array of MSI-X entries
+  * @msix_enabled: true if managed to enable MSI-X
+  * @shared_vec_mask: the type of causes the shared vector handles
+@@ -344,8 +341,32 @@ enum iwl_pcie_imr_status {
+  * @alloc_page: allocated page to still use parts of
+  * @alloc_page_used: how much of the allocated page was already used (bytes)
+  * @imr_status: imr dma state machine
+- * @wait_queue_head_t: imr wait queue for dma completion
++ * @imr_waitq: imr wait queue for dma completion
+  * @rf_name: name/version of the CRF, if any
++ * @use_ict: whether or not ICT (interrupt table) is used
++ * @ict_index: current ICT read index
++ * @ict_tbl: ICT table pointer
++ * @ict_tbl_dma: ICT table DMA address
++ * @inta_mask: interrupt (INT-A) mask
++ * @irq_lock: lock to synchronize IRQ handling
++ * @txq_memory: TXQ allocation array
++ * @sx_waitq: waitqueue for Sx transitions
++ * @sx_complete: completion for Sx transitions
++ * @pcie_dbg_dumped_once: indicates PCIe regs were dumped already
++ * @opmode_down: indicates opmode went away
++ * @num_rx_bufs: number of RX buffers to allocate/use
++ * @no_reclaim_cmds: special commands not using reclaim flow
++ *	(firmware workaround)
++ * @n_no_reclaim_cmds: number of special commands not using reclaim flow
++ * @affinity_mask: IRQ affinity mask for each RX queue
++ * @debug_rfkill: RF-kill debugging state, -1 for unset, 0/1 for radio
++ *	enable/disable
++ * @fw_reset_handshake: indicates FW reset handshake is needed
++ * @fw_reset_state: state of FW reset handshake
++ * @fw_reset_waitq: waitqueue for FW reset handshake
++ * @is_down: indicates the NIC is down
++ * @isr_stats: interrupt statistics
++ * @napi_dev: (fake) netdev for NAPI registration
+  */
+ struct iwl_trans_pcie {
+ 	struct iwl_rxq *rxq;
+-- 
+2.38.1
 
-That stack doesn't look quite right - __ieee80211_flush_queues() isn't
-called from - or what looks like inlined into - sta_set_sinfo()?
-
-So I think I don't believe the part about __ieee80211_flush_queues(), it
-makes more sense for sta_set_sinfo() to call drv_sta_statistics() which
-would also make more sense with the line number (611) which is at least
-in my version close to the line there. Not sure what wifi code you're
-using, so can't check the exact line, I guess.
-
-But either way, I wouldn't think it could be fixed or broken by this
-patch.
-
-johannes
