@@ -2,229 +2,140 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A28CC83F1A
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 570DBC83F23
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236910AbjH3SeC (ORCPT
+        id S229937AbjH3SeF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:34:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37862 "EHLO
+        Wed, 30 Aug 2023 14:34:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243167AbjH3KN6 (ORCPT
+        with ESMTP id S242445AbjH3IcG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 06:13:58 -0400
-Received: from mail-pj1-f80.google.com (mail-pj1-f80.google.com [209.85.216.80])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A786CCB
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 03:13:53 -0700 (PDT)
-Received: by mail-pj1-f80.google.com with SMTP id 98e67ed59e1d1-26d43d10ce5so6224773a91.3
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 03:13:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693390433; x=1693995233;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=m3Qza2QmkIc+BI/YstCDtC90QrYZHsfYuMQhNOBLYRU=;
-        b=aOGnop2zXrCCQ0do2PhwQGfX9R9buSV9bT3idqPLKUi1ORr1lqfe4WZNxiWtSQtgT3
-         6Elx7hF5xSLTKypTHOtLjkoxnSJApqA+kiRodqSxMI75PM80oxUW07yZ61Y22jjl1d+4
-         2HMoBPOUk0Syn7+MyOWf8zBqWdxRhf4NYqV7ahhPO8m3Z0+494SvskAIeBwSUegJ7+tF
-         roio5X3DpXZHw2kc3CoRJJJXcBPvQiExCEsrDlW4yplZObChDCf3jH04FElSVSDbGtEt
-         B4zfPg/fNZfSTvADT9w8GSkshth2Ny4gESJqSCO7oV1xYi18Re6jTKM31C1AWzksbPjr
-         ueAw==
-X-Gm-Message-State: AOJu0Ywri2p/6Xfqrzq9VDS44hmVl3ogiG43+hBk6iMf2/hT/4nzN6+R
-        FOGSGsmSzJKi2CZEFZLG56klJtkkpAAM3xppRGjqOYC6HiK/
-X-Google-Smtp-Source: AGHT+IHM/Vw54IX+vEGvHjDUVX4CtvKF+9RewV7RT1f05sLZyWr+8W3r3PrOYJC4LcroLQs0aun5XqZC4lvnwJD6GeNlKQVNfwLu
+        Wed, 30 Aug 2023 04:32:06 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE0D1B1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:32:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693384323; x=1724920323;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=xlIni+sNE1xLxDhktWmbcYCwkrcCNwGzWHWcKRiBT/0=;
+  b=VG4bdl/Sz0TybGIj7bZr8stWbQgJaKWp916Vv3mJ5Rum1g9r6KBEZDN+
+   dK9Wa23pvt3lJzDbss4T+37Eak+s9DF1imgsMWy9f/4QmsmjGVmGMsnWx
+   QVczh4qJThp/Ht6AwoqLAapn5bAH80WAO5o0nK8RfWB26/xY66qEnLhAc
+   IoaGcKSPgmAvRbDIOgV0VChT0OrregDHBpFfJzcn+b7W7DfjtL7vxO3kQ
+   nW0bj83sP8jDSH793IWVX660MmNv5Ki+0L/1Y0U109WHU8zGPcI/GLL9d
+   rQpdPUeAaNz8007jZGQoVj0orxy0bEkVldnGbHx3ZnfG02saPu6jbq3gp
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461959107"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="461959107"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:32:03 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152584"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="829152584"
+Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:32:01 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 16/16] wifi: iwlwifi: increase number of RX buffers for EHT devices
+Date:   Wed, 30 Aug 2023 11:31:04 +0300
+Message-Id: <20230830112059.824e522927f1.Ie5b4a2d3953072b9d76054ae67e2e45900d6bba4@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
+References: <20230830083104.546619-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-X-Received: by 2002:a17:90a:fe8b:b0:26b:4c47:eeae with SMTP id
- co11-20020a17090afe8b00b0026b4c47eeaemr439553pjb.5.1693390432891; Wed, 30 Aug
- 2023 03:13:52 -0700 (PDT)
-Date:   Wed, 30 Aug 2023 03:13:52 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000037f8720604212f9c@google.com>
-Subject: [syzbot] [net?] [wireless?] INFO: rcu detected stall in
- request_firmware_work_func (2)
-From:   syzbot <syzbot+1425ba65f01a5682a1a2@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, edumazet@google.com,
-        johannes@sipsolutions.net, kuba@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, pabeni@redhat.com,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+From: Johannes Berg <johannes.berg@intel.com>
 
-syzbot found the following issue on:
+EHT devices can support 512 MPDUs in an A-MPDU, each of
+which might be an A-MSDU and thus further contain multiple
+MSDUs, which need their own buffer each. Increase the number
+of buffers to avoid running out in high-throughput scenarios.
 
-HEAD commit:    382d4cd18475 lib/clz_ctz.c: Fix __clzdi2() and __ctzdi2() ..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=14b7dfcfa80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=1e4a882f77ed77bd
-dashboard link: https://syzkaller.appspot.com/bug?extid=1425ba65f01a5682a1a2
-compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14bd9bcfa80000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=148070dba80000
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/8f77bf610e28/disk-382d4cd1.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/63cde1098a7f/vmlinux-382d4cd1.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/aa910d4c94be/bzImage-382d4cd1.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+1425ba65f01a5682a1a2@syzkaller.appspotmail.com
-
-rcu: INFO: rcu_preempt self-detected stall on CPU
-rcu: 	1-...!: (1 GPs behind) idle=6dac/0/0x3 softirq=8535/8539 fqs=0
-rcu: 	(t=10500 jiffies g=5401 q=100 ncpus=2)
-rcu: rcu_preempt kthread starved for 10500 jiffies! g5401 f0x0 RCU_GP_WAIT_FQS(5) ->state=0x0 ->cpu=0
-rcu: 	Unless rcu_preempt kthread gets sufficient CPU time, OOM is now expected behavior.
-rcu: RCU grace-period kthread stack dump:
-task:rcu_preempt     state:R  running task     stack:29008 pid:16    ppid:2      flags:0x00004000
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:5381 [inline]
- __schedule+0xee1/0x59f0 kernel/sched/core.c:6710
- schedule+0xe7/0x1b0 kernel/sched/core.c:6786
- schedule_timeout+0x157/0x2c0 kernel/time/timer.c:2167
- rcu_gp_fqs_loop+0x1ec/0xa50 kernel/rcu/tree.c:1609
- rcu_gp_kthread+0x249/0x380 kernel/rcu/tree.c:1808
- kthread+0x33a/0x430 kernel/kthread.c:389
- ret_from_fork+0x2c/0x70 arch/x86/kernel/process.c:145
- ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
- </TASK>
-rcu: Stack dump where RCU GP kthread last ran:
-Sending NMI from CPU 1 to CPUs 0:
-NMI backtrace for cpu 0
-CPU: 0 PID: 7 Comm: kworker/0:0 Not tainted 6.5.0-rc7-syzkaller-00164-g382d4cd18475 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/26/2023
-Workqueue: events request_firmware_work_func
-RIP: 0010:write_comp_data+0x7/0x90 kernel/kcov.c:230
-Code: 81 e2 00 01 ff 00 75 10 65 48 8b 04 25 80 b9 03 00 48 8b 80 f8 15 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 65 8b 05 c1 b6 7d 7e <49> 89 f1 89 c6 49 89 d2 81 e6 00 01 00 00 49 89 f8 65 48 8b 14 25
-RSP: 0018:ffffc90000007bb8 EFLAGS: 00000246
-RAX: 0000000000000102 RBX: ffffc9000e151ea0 RCX: ffffffff88587d2c
-RDX: 0000000000000000 RSI: 0019999999999998 RDI: 0000000000000007
-RBP: ffff88807d071b00 R08: 0000000000000005 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000000 R12: 00000015798ee228
-R13: 0000000000000000 R14: 0000000225c17d04 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 000055555640eca8 CR3: 0000000027cca000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <NMI>
- </NMI>
- <IRQ>
- pie_calculate_probability+0x1fc/0x850 net/sched/sch_pie.c:340
- fq_pie_timer+0x1da/0x4f0 net/sched/sch_fq_pie.c:387
- call_timer_fn+0x1a0/0x580 kernel/time/timer.c:1700
- expire_timers kernel/time/timer.c:1751 [inline]
- __run_timers+0x764/0xb10 kernel/time/timer.c:2022
- run_timer_softirq+0x58/0xd0 kernel/time/timer.c:2035
- __do_softirq+0x218/0x965 kernel/softirq.c:553
- invoke_softirq kernel/softirq.c:427 [inline]
- __irq_exit_rcu kernel/softirq.c:632 [inline]
- irq_exit_rcu+0xb7/0x120 kernel/softirq.c:644
- sysvec_apic_timer_interrupt+0x93/0xc0 arch/x86/kernel/apic/apic.c:1109
- </IRQ>
- <TASK>
- asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:645
-RIP: 0010:console_flush_all+0x9b6/0xf50 kernel/printk/printk.c:2939
-Code: 90 1b 23 00 9c 5b 81 e3 00 02 00 00 31 ff 48 89 de e8 8e 66 1c 00 48 85 db 0f 85 94 03 00 00 e8 f0 6a 1c 00 fb 48 8b 44 24 08 <48> 8b 14 24 0f b6 00 83 e2 07 38 d0 7f 08 84 c0 0f 85 9d 04 00 00
-RSP: 0018:ffffc900000c7920 EFLAGS: 00000293
-RAX: fffff52000018f4f RBX: 0000000000000000 RCX: 0000000000000000
-RDX: ffff88801664bb80 RSI: ffffffff81699db0 RDI: 0000000000000007
-RBP: ffffffff8d4cb1a0 R08: 0000000000000007 R09: 0000000000000000
-R10: 0000000000000000 R11: 205d375420202020 R12: 0000000000000001
-R13: ffffffff8d4cb1f8 R14: dffffc0000000000 R15: 0000000000000001
- console_unlock+0xc6/0x1f0 kernel/printk/printk.c:3007
- vprintk_emit+0x1c5/0x640 kernel/printk/printk.c:2307
- vprintk+0x89/0xa0 kernel/printk/printk_safe.c:50
- _printk+0xc8/0x100 kernel/printk/printk.c:2328
- regdb_fw_cb+0x155/0x270 net/wireless/reg.c:1008
- request_firmware_work_func+0x13a/0x240 drivers/base/firmware_loader/main.c:1162
- process_one_work+0xaa2/0x16f0 kernel/workqueue.c:2600
- worker_thread+0x687/0x1110 kernel/workqueue.c:2751
- kthread+0x33a/0x430 kernel/kthread.c:389
- ret_from_fork+0x2c/0x70 arch/x86/kernel/process.c:145
- ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
- </TASK>
-INFO: NMI handler (nmi_cpu_backtrace_handler) took too long to run: 2.097 msecs
-CPU: 1 PID: 0 Comm: swapper/1 Not tainted 6.5.0-rc7-syzkaller-00164-g382d4cd18475 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/26/2023
-RIP: 0010:check_kcov_mode kernel/kcov.c:173 [inline]
-RIP: 0010:write_comp_data+0x32/0x90 kernel/kcov.c:236
-Code: 89 f1 89 c6 49 89 d2 81 e6 00 01 00 00 49 89 f8 65 48 8b 14 25 80 b9 03 00 a9 00 01 ff 00 74 0e 85 f6 74 59 8b 82 04 16 00 00 <85> c0 74 4f 8b 82 e0 15 00 00 83 f8 03 75 44 48 8b 82 e8 15 00 00
-RSP: 0018:ffffc900001e0bb8 EFLAGS: 00000206
-RAX: 0000000000000000 RBX: 0000000000abcc77 RCX: ffffffff88587ddd
-RDX: ffff888017261dc0 RSI: 0000000000000100 RDI: 0000000000000005
-RBP: 00000010c6f7a0b5 R08: 0000000000000005 R09: 00000000000f4240
-R10: 00000000000f4240 R11: 0000000000000000 R12: 00000000000f4240
-R13: 0000000000000002 R14: 0000000000112e0b R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000020000080 CR3: 0000000020b50000 CR4: 00000000003506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <IRQ>
- pie_calculate_probability+0x2ad/0x850 net/sched/sch_pie.c:345
- fq_pie_timer+0x1da/0x4f0 net/sched/sch_fq_pie.c:387
- call_timer_fn+0x1a0/0x580 kernel/time/timer.c:1700
- expire_timers kernel/time/timer.c:1751 [inline]
- __run_timers+0x764/0xb10 kernel/time/timer.c:2022
- run_timer_softirq+0x58/0xd0 kernel/time/timer.c:2035
- __do_softirq+0x218/0x965 kernel/softirq.c:553
- invoke_softirq kernel/softirq.c:427 [inline]
- __irq_exit_rcu kernel/softirq.c:632 [inline]
- irq_exit_rcu+0xb7/0x120 kernel/softirq.c:644
- sysvec_apic_timer_interrupt+0x93/0xc0 arch/x86/kernel/apic/apic.c:1109
- </IRQ>
- <TASK>
- asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:645
-RIP: 0010:native_irq_disable arch/x86/include/asm/irqflags.h:37 [inline]
-RIP: 0010:arch_local_irq_disable arch/x86/include/asm/irqflags.h:72 [inline]
-RIP: 0010:acpi_safe_halt+0x1b/0x20 drivers/acpi/processor_idle.c:113
-Code: ed c3 66 66 2e 0f 1f 84 00 00 00 00 00 66 90 65 48 8b 04 25 80 b9 03 00 48 8b 00 a8 08 75 0c 66 90 0f 00 2d 97 a6 a0 00 fb f4 <fa> c3 0f 1f 00 0f b6 47 08 3c 01 74 0b 3c 02 74 05 8b 7f 04 eb 9f
-RSP: 0018:ffffc90000177d60 EFLAGS: 00000246
-RAX: 0000000000004000 RBX: 0000000000000001 RCX: ffffffff8a328aae
-RDX: 0000000000000001 RSI: ffff888145e5c000 RDI: ffff888145e5c064
-RBP: ffff888145e5c064 R08: 0000000000000001 R09: ffffed1017326d9d
-R10: ffff8880b9936ceb R11: 0000000000000000 R12: ffff888013727000
-R13: ffffffff8d4509c0 R14: 0000000000000001 R15: 0000000000000000
- acpi_idle_enter+0xc5/0x160 drivers/acpi/processor_idle.c:707
- cpuidle_enter_state+0x82/0x500 drivers/cpuidle/cpuidle.c:267
- cpuidle_enter+0x4e/0xa0 drivers/cpuidle/cpuidle.c:388
- cpuidle_idle_call kernel/sched/idle.c:215 [inline]
- do_idle+0x315/0x3f0 kernel/sched/idle.c:282
- cpu_startup_entry+0x18/0x20 kernel/sched/idle.c:379
- start_secondary+0x200/0x290 arch/x86/kernel/smpboot.c:326
- secondary_startup_64_no_verify+0x167/0x16b
- </TASK>
-
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 10 ++++------
+ drivers/net/wireless/intel/iwlwifi/cfg/sc.c |  8 +++-----
+ 2 files changed, 7 insertions(+), 11 deletions(-)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+index b9893b22e41d..3d223014cfe6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+@@ -134,12 +134,10 @@ static const struct iwl_base_params iwl_bz_base_params = {
+ 	.ht_params = &iwl_gl_a_ht_params
+ 
+ /*
+- * If the device doesn't support HE, no need to have that many buffers.
+- * These sizes were picked according to 8 MSDUs inside 256 A-MSDUs in an
++ * This size was picked according to 8 MSDUs inside 512 A-MSDUs in an
+  * A-MPDU, with additional overhead to account for processing time.
+  */
+-#define IWL_NUM_RBDS_NON_HE		512
+-#define IWL_NUM_RBDS_BZ_HE		4096
++#define IWL_NUM_RBDS_BZ_EHT		(512 * 16)
+ 
+ const struct iwl_cfg_trans_params iwl_bz_trans_cfg = {
+ 	.device_family = IWL_DEVICE_FAMILY_BZ,
+@@ -161,7 +159,7 @@ const struct iwl_cfg iwl_cfg_bz = {
+ 	.uhb_supported = true,
+ 	IWL_DEVICE_BZ,
+ 	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_BZ_HE,
++	.num_rbds = IWL_NUM_RBDS_BZ_EHT,
+ };
+ 
+ const struct iwl_cfg iwl_cfg_gl = {
+@@ -169,7 +167,7 @@ const struct iwl_cfg iwl_cfg_gl = {
+ 	.uhb_supported = true,
+ 	IWL_DEVICE_BZ,
+ 	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_BZ_HE,
++	.num_rbds = IWL_NUM_RBDS_BZ_EHT,
+ };
+ 
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+index ad283fd22e2a..d6243025993e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+@@ -127,12 +127,10 @@ static const struct iwl_base_params iwl_sc_base_params = {
+ 	.ht_params = &iwl_22000_ht_params
+ 
+ /*
+- * If the device doesn't support HE, no need to have that many buffers.
+- * These sizes were picked according to 8 MSDUs inside 256 A-MSDUs in an
++ * This size was picked according to 8 MSDUs inside 512 A-MSDUs in an
+  * A-MPDU, with additional overhead to account for processing time.
+  */
+-#define IWL_NUM_RBDS_NON_HE		512
+-#define IWL_NUM_RBDS_SC_HE		4096
++#define IWL_NUM_RBDS_SC_EHT		(512 * 16)
+ 
+ const struct iwl_cfg_trans_params iwl_sc_trans_cfg = {
+ 	.device_family = IWL_DEVICE_FAMILY_SC,
+@@ -154,7 +152,7 @@ const struct iwl_cfg iwl_cfg_sc = {
+ 	.uhb_supported = true,
+ 	IWL_DEVICE_SC,
+ 	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
+-	.num_rbds = IWL_NUM_RBDS_SC_HE,
++	.num_rbds = IWL_NUM_RBDS_SC_EHT,
+ };
+ 
+ MODULE_FIRMWARE(IWL_SC_A_FM_B_FW_MODULE_FIRMWARE(IWL_SC_UCODE_API_MAX));
+-- 
+2.38.1
 
-If the bug is already fixed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite bug's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the bug is a duplicate of another bug, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
