@@ -2,140 +2,116 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 570DBC83F23
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E44AC83F01
 	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229937AbjH3SeF (ORCPT
+        id S237310AbjH3SeE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:34:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34036 "EHLO
+        Wed, 30 Aug 2023 14:34:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242445AbjH3IcG (ORCPT
+        with ESMTP id S242257AbjH3Hlk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 04:32:06 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE0D1B1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:32:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693384323; x=1724920323;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=xlIni+sNE1xLxDhktWmbcYCwkrcCNwGzWHWcKRiBT/0=;
-  b=VG4bdl/Sz0TybGIj7bZr8stWbQgJaKWp916Vv3mJ5Rum1g9r6KBEZDN+
-   dK9Wa23pvt3lJzDbss4T+37Eak+s9DF1imgsMWy9f/4QmsmjGVmGMsnWx
-   QVczh4qJThp/Ht6AwoqLAapn5bAH80WAO5o0nK8RfWB26/xY66qEnLhAc
-   IoaGcKSPgmAvRbDIOgV0VChT0OrregDHBpFfJzcn+b7W7DfjtL7vxO3kQ
-   nW0bj83sP8jDSH793IWVX660MmNv5Ki+0L/1Y0U109WHU8zGPcI/GLL9d
-   rQpdPUeAaNz8007jZGQoVj0orxy0bEkVldnGbHx3ZnfG02saPu6jbq3gp
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461959107"
-X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
-   d="scan'208";a="461959107"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:32:03 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152584"
-X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
-   d="scan'208";a="829152584"
-Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:32:01 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 16/16] wifi: iwlwifi: increase number of RX buffers for EHT devices
-Date:   Wed, 30 Aug 2023 11:31:04 +0300
-Message-Id: <20230830112059.824e522927f1.Ie5b4a2d3953072b9d76054ae67e2e45900d6bba4@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
-References: <20230830083104.546619-1-gregory.greenman@intel.com>
+        Wed, 30 Aug 2023 03:41:40 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 371A6CD8
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 00:41:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=Wjxbsf3a/dlWEaU6hBd96eOkhzJ1ChDslhr8mQExZKY=;
+        t=1693381296; x=1694590896; b=Ummz8TTKizS3kf+l0A2et8x/XSE2Upmrb72IjFeEyyR3iXL
+        fEi+oZf8sjWEqa8xWrY5CTjpis9FDWhrywYsZbsdbnn/eIhfeNTIM2hty/n9TiUIwrKe7rYPKezxF
+        zXW7YlxwQqYZ6gZ85GOh6yk4+Zo3N2UloWVrUWSGzsD/Bl4T3kUG6RFbkH8EvqJY4oWOr2lyQcvIN
+        HxssvWmhlr/FwOOi3i9XhfYjKNHWQmGUV8uLzVwONy4vnnadJqj4IZfCU1oNBsKvargCLIuYrLTZr
+        g01uBbZOtX02C9Epudcl8dYPrxJvOb/s7V/Rtja9tcDqDw0wJygQUL3o/GeTTZPg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qbFpV-002o1g-0R;
+        Wed, 30 Aug 2023 09:41:33 +0200
+Message-ID: <321872041974a787db71bbbf660adeb40c494d71.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 4/9] wifi: cfg80211: add NL command to set 6 GHz
+ power mode
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Aditya Kumar Singh <quic_adisi@quicinc.com>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Wed, 30 Aug 2023 09:41:32 +0200
+In-Reply-To: <d3740fa2-a59e-d6e2-394c-9b289564b832@quicinc.com>
+References: <20230315132904.31779-1-quic_adisi@quicinc.com>
+         <20230315132904.31779-5-quic_adisi@quicinc.com>
+         <59e2364e9085f725c03d05e3f720f8fae7b336ce.camel@sipsolutions.net>
+         <d3740fa2-a59e-d6e2-394c-9b289564b832@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2023-08-30 at 10:35 +0530, Aditya Kumar Singh wrote:
+> On 8/29/23 23:21, Johannes Berg wrote:
+> > On Wed, 2023-03-15 at 18:58 +0530, Aditya Kumar Singh wrote:
+> > >=20
+> > > +	{
+> > > +		.cmd =3D NL80211_CMD_SET_6GHZ_POWER_MODE,
+> > > +		.validate =3D GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+> > > +		.doit =3D nl80211_set_6ghz_power_mode,
+> > > +		.flags =3D GENL_UNS_ADMIN_PERM,
+> > > +		.internal_flags =3D IFLAGS(NL80211_FLAG_NEED_NETDEV |
+> > > +					 NL80211_FLAG_MLO_VALID_LINK_ID),
+> > > +	},
+> >=20
+> > Why is this even a new command, rather than a parameter to start AP or
+> > similar?
+> >=20
+> A new command was introduced because to give user space a knob to change=
+=20
+> power mode as and when required. Let's suppose AFC response has not yet=
+=20
+> arrived, AP could be started in Low Power mode. Now once AFC rules are=
+=20
+> applied (not going in detail here how that will happen) and user space
+> knows about it, it can send command to switch to Standard Power Mode righ=
+t?
 
-EHT devices can support 512 MPDUs in an A-MPDU, each of
-which might be an A-MSDU and thus further contain multiple
-MSDUs, which need their own buffer each. Increase the number
-of buffers to avoid running out in high-throughput scenarios.
+At least for AP that could also be a beacon update, like most other
+operational parameters. You have to update the beacon _anyway_ since you
+indicate in the beacon what you're doing.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 10 ++++------
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c |  8 +++-----
- 2 files changed, 7 insertions(+), 11 deletions(-)
+So that by itself doesn't really introduce the requirement to have a
+separate command.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-index b9893b22e41d..3d223014cfe6 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-@@ -134,12 +134,10 @@ static const struct iwl_base_params iwl_bz_base_params = {
- 	.ht_params = &iwl_gl_a_ht_params
- 
- /*
-- * If the device doesn't support HE, no need to have that many buffers.
-- * These sizes were picked according to 8 MSDUs inside 256 A-MSDUs in an
-+ * This size was picked according to 8 MSDUs inside 512 A-MSDUs in an
-  * A-MPDU, with additional overhead to account for processing time.
-  */
--#define IWL_NUM_RBDS_NON_HE		512
--#define IWL_NUM_RBDS_BZ_HE		4096
-+#define IWL_NUM_RBDS_BZ_EHT		(512 * 16)
- 
- const struct iwl_cfg_trans_params iwl_bz_trans_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_BZ,
-@@ -161,7 +159,7 @@ const struct iwl_cfg iwl_cfg_bz = {
- 	.uhb_supported = true,
- 	IWL_DEVICE_BZ,
- 	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
--	.num_rbds = IWL_NUM_RBDS_BZ_HE,
-+	.num_rbds = IWL_NUM_RBDS_BZ_EHT,
- };
- 
- const struct iwl_cfg iwl_cfg_gl = {
-@@ -169,7 +167,7 @@ const struct iwl_cfg iwl_cfg_gl = {
- 	.uhb_supported = true,
- 	IWL_DEVICE_BZ,
- 	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
--	.num_rbds = IWL_NUM_RBDS_BZ_HE,
-+	.num_rbds = IWL_NUM_RBDS_BZ_EHT,
- };
- 
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-index ad283fd22e2a..d6243025993e 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-@@ -127,12 +127,10 @@ static const struct iwl_base_params iwl_sc_base_params = {
- 	.ht_params = &iwl_22000_ht_params
- 
- /*
-- * If the device doesn't support HE, no need to have that many buffers.
-- * These sizes were picked according to 8 MSDUs inside 256 A-MSDUs in an
-+ * This size was picked according to 8 MSDUs inside 512 A-MSDUs in an
-  * A-MPDU, with additional overhead to account for processing time.
-  */
--#define IWL_NUM_RBDS_NON_HE		512
--#define IWL_NUM_RBDS_SC_HE		4096
-+#define IWL_NUM_RBDS_SC_EHT		(512 * 16)
- 
- const struct iwl_cfg_trans_params iwl_sc_trans_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_SC,
-@@ -154,7 +152,7 @@ const struct iwl_cfg iwl_cfg_sc = {
- 	.uhb_supported = true,
- 	IWL_DEVICE_SC,
- 	.features = IWL_TX_CSUM_NETIF_FLAGS_BZ | NETIF_F_RXCSUM,
--	.num_rbds = IWL_NUM_RBDS_SC_HE,
-+	.num_rbds = IWL_NUM_RBDS_SC_EHT,
- };
- 
- MODULE_FIRMWARE(IWL_SC_A_FM_B_FW_MODULE_FIRMWARE(IWL_SC_UCODE_API_MAX));
--- 
-2.38.1
+> > Why do we even set it in client mode from userspace?
 
+And you didn't comment on this - what userspace do you expect to use it
+in client mode? I can see hostapd in AP mode, I guess, but in client
+mode I don't see how this could be used? Anyway you're tied to what the
+AP is doing, no?
+
+> > >   static struct genl_family nl80211_fam __ro_after_init =3D {
+> > > @@ -17409,7 +17473,7 @@ static struct genl_family nl80211_fam __ro_af=
+ter_init =3D {
+> > >   	.n_ops =3D ARRAY_SIZE(nl80211_ops),
+> > >   	.small_ops =3D nl80211_small_ops,
+> > >   	.n_small_ops =3D ARRAY_SIZE(nl80211_small_ops),
+> > > -	.resv_start_op =3D NL80211_CMD_REMOVE_LINK_STA + 1,
+> > > +	.resv_start_op =3D NL80211_CMD_SET_6GHZ_POWER_MODE + 1,
+> > >=20
+> >=20
+> > Obviously, this should not be done.
+> If this hunk is not there, the command was not going through. Upon=20
+> digging further found out that the number of commands declared in the=20
+> array and the count provided here has some relation. And that too with=
+=20
+> the last element added. Since a new element was added, modified it=20
+> accordingly.
+
+No no, that wasn't a discussion. I'm telling you, this is wrong, and I
+will not apply a patch that does this. If you needed it, you did
+something wrong in userspace.
+
+johannes
