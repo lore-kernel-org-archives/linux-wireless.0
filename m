@@ -2,94 +2,140 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D99C6FA8F
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 22:17:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F721C83F14
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 22:31:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245678AbjH3WRO (ORCPT
+        id S235639AbjH3Wbs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 18:17:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44116 "EHLO
+        Wed, 30 Aug 2023 18:31:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239693AbjH3WRL (ORCPT
+        with ESMTP id S239250AbjH3Wbr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 18:17:11 -0400
-X-Greylist: delayed 3495 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 30 Aug 2023 15:16:45 PDT
-Received: from bues.ch (bues.ch [80.190.117.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E7E911F;
-        Wed, 30 Aug 2023 15:16:45 -0700 (PDT)
-Received: by bues.ch with esmtpsa (Exim 4.96)
-        (envelope-from <m@bues.ch>)
-        id 1qbRx8-000JBj-2f;
-        Wed, 30 Aug 2023 22:38:13 +0200
-Date:   Wed, 30 Aug 2023 22:37:41 +0200
-From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To:     Larry Finger <Larry.Finger@lwfinger.net>,
-        Rand Deeb <deeb.rand@confident.ru>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org, voskresenski.stanislav@confident.ru
-Subject: Re: [PATCH] ssb-main: Fix division by zero in ssb_calc_clock_rate()
-Message-ID: <20230830223741.7a4684d5@barney>
-In-Reply-To: <4c6d01bf-1a0f-27de-54e1-4afdcf4bc8d5@lwfinger.net>
-References: <20230830082759.23336-1-deeb.rand@confident.ru>
- <4c6d01bf-1a0f-27de-54e1-4afdcf4bc8d5@lwfinger.net>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-pc-linux-gnu)
+        Wed, 30 Aug 2023 18:31:47 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05C2B10D4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 15:31:13 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-68a3f1d8be2so144207b3a.3
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 15:31:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1693434671; x=1694039471; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=wLDN7invAXGpseGpdDIIZ1SIKjfNtH5ZhUlLs7bFFN0=;
+        b=G+D+893AUA3w7U7FwsSee1/qSn5MIl3e5oCnBQwN+SvV4FlCbIY6NZJRTkrGOyq+Kq
+         huqtpO3Q/73VrRzkX2bC4W355wngK8EPdj0yjWmC4b9PAWUS3s5NCqQnamY80LkkwiCL
+         wdhsSEdRxT0/xzIcgM48yv2sb1o83+tOGXztk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693434671; x=1694039471;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wLDN7invAXGpseGpdDIIZ1SIKjfNtH5ZhUlLs7bFFN0=;
+        b=VRhzUESMqXW3Hfg7IvKeFr63zdnXyfkyzT65YB/Uqa+IPF37Gt7je9um8YZecEIFq9
+         /Vbt5k2pv2KVjbo/ajWsUtqogmywrsGhC57UfM1Jm+o2OdiZUmIP38RdGWTmcQVtn4W2
+         iLs3zI2jh+KR7WZEy2M8hv27hyOvbuHxPqrobtU5qPkBbh2ujZY0xP9QEeV2fxEDeBgw
+         2ARyGO9s38C5i8Xg+AIrLqtaA0/FYGK3IQV2bsQuUxfkhYp+dHerKYlZzKxJmkE5hCFd
+         oIImkzdfnsfE8Sz3ZYQH5A4Xo6ydg15hIfY7XHJDN6uRPPGqx0gsNU5XOcBh2uHP4u+i
+         d6Gw==
+X-Gm-Message-State: AOJu0YzPSJgn39g1hxv4XyjGugIkAftcbXF7LSYrPrTgf+PIRMBMsS4D
+        IYCXtZyHrl0JvXAsJmp2Horzeg==
+X-Google-Smtp-Source: AGHT+IHrlwyuuGG2TNqsxkvlcHDbOA6H/Roidvdt8I8o1ntXeNMScdFrJueXW8h5EV6g+ONFbgkLTQ==
+X-Received: by 2002:a05:6a00:189b:b0:68c:638b:e2c6 with SMTP id x27-20020a056a00189b00b0068c638be2c6mr4193982pfh.9.1693434671611;
+        Wed, 30 Aug 2023 15:31:11 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id p22-20020a62ab16000000b006870721fcc5sm73775pff.175.2023.08.30.15.31.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Aug 2023 15:31:11 -0700 (PDT)
+Date:   Wed, 30 Aug 2023 15:31:10 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc:     Christian Lamparter <chunkeey@gmail.com>, kernel@quicinc.com,
+        Kalle Valo <kvalo@kernel.org>,
+        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] mac80211: Use flexible array in struct
+ ieee80211_tim_ie
+Message-ID: <202308301529.AC90A9EF98@keescook>
+References: <20230829-ieee80211_tim_ie-v2-0-fdaf19fb1c0e@quicinc.com>
+ <20230829-ieee80211_tim_ie-v2-2-fdaf19fb1c0e@quicinc.com>
+ <1774098a-5062-4f12-a760-f16036d095e3@gmail.com>
+ <9da7f41e-6d4a-452a-8042-0b09cad71bb8@quicinc.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/ab++gLz=cpsDQxgilphpite";
- protocol="application/pgp-signature"; micalg=pgp-sha512
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9da7f41e-6d4a-452a-8042-0b09cad71bb8@quicinc.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/ab++gLz=cpsDQxgilphpite
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Wed, Aug 30, 2023 at 01:22:37PM -0700, Jeff Johnson wrote:
+> On 8/30/2023 12:51 PM, Christian Lamparter wrote:
+> > Hi,
+> > 
+> > On 8/29/23 15:29, Jeff Johnson wrote:
+> > > Currently struct ieee80211_tim_ie defines:
+> > >     u8 virtual_map[1];
+> > > 
+> > > Per the guidance in [1] change this to be a flexible array.
+> > > 
+> > > As a result of this change, adjust all related struct size tests to
+> > > account for the fact that the sizeof(struct ieee80211_tim_ie) now
+> > > accounts for the minimum size of the virtual_map.
+> > > 
+> > > [1] https://docs.kernel.org/process/deprecated.html#zero-length-and-one-element-arrays
+> > > 
+> > > Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> > > ---
+> > > diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> > > index bd2f6e19c357..4cdc2eb98f16 100644
+> > > --- a/include/linux/ieee80211.h
+> > > +++ b/include/linux/ieee80211.h
+> > > @@ -961,7 +961,7 @@ struct ieee80211_tim_ie {
+> > >       u8 dtim_period;
+> > >       u8 bitmap_ctrl;
+> > >       /* variable size: 1 - 251 bytes */
+> > > -    u8 virtual_map[1];
+> > > +    u8 virtual_map[];
+> > >   } __packed;
+> > 
+> > 
+> > Uhh, the 802.11 (my 2012 Version has this in) spec in
+> > 8.4.2.7 TIM Element demands this to be 1 - 251 bytes.
+> > And this is why there's a comment above... With your
+> > change this could be confusing. Would it be possible
+> > to fix that somehow? Like in a anonymous union/group
+> > with a flexible array and a u8?
+> 
+> Adding Kees to the discussion for any advice. Yes, the virtual_map must
+> contain at least one octet but may contain more than one. And to complicate
+> matters, the information that tells us how many octets are actually present
+> is found outside the struct; the TLV header that precedes the struct will
+> contain the length of the struct, and hence the length of the bitmap is that
+> size - 2 (the size of the dtim_period and bitmap_ctrl fields).
 
-On Wed, 30 Aug 2023 14:50:42 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Bummer about the count variable being elsewhere, but we'll deal with
+that later. :)
 
-> I agree that clkfactor_f6_resolv() could return 0, but we have not
-> been overrun with reports of divide by zero errors, which suggests
-> that the branch is never taken. This patch will make your tool happy
-> and is much simpler:
->=20
-> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-> index ab080cf26c9f..b9934b9c2d70 100644
-> --- a/drivers/ssb/main.c
-> +++ b/drivers/ssb/main.c
-> @@ -837,7 +837,7 @@ static u32 clkfactor_f6_resolve(u32 v)
->          case SSB_CHIPCO_CLK_F6_7:
->                  return 7;
->          }
-> -       return 0;
-> +       return 1;
->   }
+For the array declaration, though, yes, we can do a "minimum size 1" like
+this:
 
-Yes, I agree that this is the much simpler and also more sensible
-solution to this theoretical problem.
+	union {
+		u8 required_byte;
+		DECLARE_FLEX_ARRAY(u8, virtual_map);
+	};
 
---=20
-Michael B=C3=BCsch
-https://bues.ch/
-
---Sig_/ab++gLz=cpsDQxgilphpite
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmTvqJUACgkQ9TK+HZCN
-iw5B/w//c1XdA0n/Bi6a1M0ycUPnd/PHcZyveH9Mh/ILjmHJNQMhYP+GHPo995TM
-zqwSA2r3z6K++DHCR1wTojX615ReD4bi77Um60a29VCa/JZGELJwewut5J+RhFAF
-rAUWf7KGX6AFEGoN9CE1CH3ZwiItvWJ1R48JpLLXR7iERrdBpjGCq7agjfxWqIqR
-iL4sqeujLa3uB78Wku/pJsVAY2b6613n35S7LfRS7B3hnFDb0uAzKSk7Bb+KANS/
-TUK2+3fiZ3Ya80dpIYo+UM2s4QNnzcsOVQibPe9Zsixtsj6UPJ5PrcdUJU2i0ziy
-TFNdMxRHrcew99z/jd7Mm04tLFNTBnda/0yBuSKav02802+zeSxyKFNYgC5o1zSz
-Q1BN6Z57ADwbvuQndsL3QywNXyhy7HPL7dCkB8XKDgmmNi24y99leLTpsHU1PpI9
-xC/OZk3bxuWJB72dhavAGOoWScFnK1XBFMpE+WFmpK2HU2oF1MKKH5Q2CXrmkTIJ
-AF4xWloUzgXqH4BYyZQHKl6YiM8But026536sIHl9zVc4zjF79W13ec41wWQgFmE
-7LewbUZJFx+8xa56MByZWazWKSPiTr7IvGXnA24FCN8XugLsMWw4eklCDmPK+SNh
-TXtz0qxrxCvIoIYV0zqzlYCI01847mtR7fnHa5dALKhgE16//ds=
-=bQTe
------END PGP SIGNATURE-----
-
---Sig_/ab++gLz=cpsDQxgilphpite--
+-- 
+Kees Cook
