@@ -2,256 +2,193 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95256C83F18
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F969C83F01
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237433AbjH3SeL (ORCPT
+        id S237559AbjH3SeO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:34:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46078 "EHLO
+        Wed, 30 Aug 2023 14:34:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242747AbjH3JaF (ORCPT
+        with ESMTP id S244599AbjH3NZr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 05:30:05 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 08648CCF
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 02:30:01 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 37U9TLHw8014808, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 37U9TLHw8014808
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 30 Aug 2023 17:29:21 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Wed, 30 Aug 2023 17:29:46 +0800
-Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 30 Aug
- 2023 17:29:46 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <damon.chen@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] wifi: rtw89: 8852c: Fix TSSI causes transmit power inaccuracy
-Date:   Wed, 30 Aug 2023 17:28:49 +0800
-Message-ID: <20230830092849.153251-3-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230830092849.153251-1-pkshih@realtek.com>
-References: <20230830092849.153251-1-pkshih@realtek.com>
+        Wed, 30 Aug 2023 09:25:47 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1CA71A4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 06:25:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693401943; x=1724937943;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=w2Spk4G4K+MZ5gue5FwC1HJ8N4hEszBUGSGNdbU9NQ0=;
+  b=AnkuCsMfEdhtIkV2d3swnjyHezm4h5nAABYYS9yO5l01lSX3KlH+Rvj2
+   CaTPLlwnkhFW2QpqviiygibQoQYH/O6LSc3H9/vyIyO0M7C620WXlwaF/
+   U9hKwYX2ZTda9XH4YxSXIPVoEelFvk4JuDd6VvPuXKOQWfXon5AvL0XJ7
+   4vtmhxPt6khsCraiiFKzga4fsAad06LsWx/i1bwtGlTrAg3Yk+qaDDEHq
+   IyAVBqjMJPVQhfxfLZqufCQSoWsE2T+J20c5SEkCRXvEETyxTznR5bTky
+   91+t/ZmSPmwX4YPFGO+WOS8lPqg2PKnobqbczzw79ob7vLTvUSMle5LgU
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10818"; a="355956028"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="355956028"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 06:25:43 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10818"; a="985742145"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="985742145"
+Received: from lkp-server02.sh.intel.com (HELO daf8bb0a381d) ([10.239.97.151])
+  by fmsmga006.fm.intel.com with ESMTP; 30 Aug 2023 06:25:41 -0700
+Received: from kbuild by daf8bb0a381d with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qbLCW-0009rZ-39;
+        Wed, 30 Aug 2023 13:25:40 +0000
+Date:   Wed, 30 Aug 2023 21:25:05 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>, kvalo@kernel.org
+Cc:     oe-kbuild-all@lists.linux.dev, kevin_yang@realtek.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/6] wifi: rtw89: mcc: initialize start flow
+Message-ID: <202308302155.2snig4j9-lkp@intel.com>
+References: <20230829021918.14599-2-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.25]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230829021918.14599-2-pkshih@realtek.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kuan-Chung Chen <damon.chen@realtek.com>
+Hi Ping-Ke,
 
-Modify TSSI ADC FIFO Clock follow RX ADC Clock can avoid
-transmit power inaccuracy.
+kernel test robot noticed the following build errors:
 
-Signed-off-by: Kuan-Chung Chen <damon.chen@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/reg.h      |  4 ++
- .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 23 +++++++++-
- .../realtek/rtw89/rtw8852c_rfk_table.c        | 42 +++++++++----------
- 3 files changed, 46 insertions(+), 23 deletions(-)
+[auto build test ERROR on wireless-next/main]
+[also build test ERROR on linus/master next-20230830]
+[cannot apply to wireless/main v6.5]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index f9b15a1cc790..7d25b76d90f5 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -4539,6 +4539,8 @@
- #define B_P0_TSSI_ALIM2 GENMASK(29, 0)
- #define R_P0_TSSI_ALIM4 0x5640
- #define R_TSSI_PA_K8 0x5644
-+#define R_P0_TSSI_ADC_CLK 0x566c
-+#define B_P0_TSSI_ADC_CLK GENMASK(17, 16)
- #define R_UPD_CLK 0x5670
- #define B_DAC_VAL BIT(31)
- #define B_ACK_VAL GENMASK(30, 29)
-@@ -4651,6 +4653,8 @@
- #define B_P1_TSSI_ALIM31 GENMASK(9, 0)
- #define R_P1_TSSI_ALIM2 0x763c
- #define B_P1_TSSI_ALIM2 GENMASK(29, 0)
-+#define R_P1_TSSI_ADC_CLK 0x766c
-+#define B_P1_TSSI_ADC_CLK GENMASK(17, 16)
- #define R_P1_TSSIC 0x7814
- #define B_P1_TSSIC_BYPASS BIT(11)
- #define R_P1_TMETER 0x7810
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-index de7714f871d5..7636368c8659 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c
-@@ -2893,18 +2893,37 @@ static void _tssi_set_sys(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 			  enum rtw89_rf_path path)
- {
- 	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev, RTW89_SUB_ENTITY_0);
-+	enum rtw89_bandwidth bw = chan->band_width;
- 	enum rtw89_band band = chan->band_type;
-+	u32 clk = 0x0;
- 
- 	rtw89_rfk_parser(rtwdev, &rtw8852c_tssi_sys_defs_tbl);
- 
--	if (path == RF_PATH_A)
-+	switch (bw) {
-+	case RTW89_CHANNEL_WIDTH_80:
-+		clk = 0x1;
-+		break;
-+	case RTW89_CHANNEL_WIDTH_80_80:
-+	case RTW89_CHANNEL_WIDTH_160:
-+		clk = 0x2;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (path == RF_PATH_A) {
-+		rtw89_phy_write32_mask(rtwdev, R_P0_TSSI_ADC_CLK,
-+				       B_P0_TSSI_ADC_CLK, clk);
- 		rtw89_rfk_parser_by_cond(rtwdev, band == RTW89_BAND_2G,
- 					 &rtw8852c_tssi_sys_defs_2g_a_tbl,
- 					 &rtw8852c_tssi_sys_defs_5g_a_tbl);
--	else
-+	} else {
-+		rtw89_phy_write32_mask(rtwdev, R_P1_TSSI_ADC_CLK,
-+				       B_P1_TSSI_ADC_CLK, clk);
- 		rtw89_rfk_parser_by_cond(rtwdev, band == RTW89_BAND_2G,
- 					 &rtw8852c_tssi_sys_defs_2g_b_tbl,
- 					 &rtw8852c_tssi_sys_defs_5g_b_tbl);
-+	}
- }
- 
- static void _tssi_ini_txpwr_ctrl_bb(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk_table.c b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk_table.c
-index d727d528b365..e5b0c2a686f0 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk_table.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c_rfk_table.c
-@@ -165,11 +165,11 @@ static const struct rtw89_reg5_def rtw8852c_tssi_sys_defs[] = {
- 	RTW89_DECL_RFK_WM(0x12bc, 0x000ffff0, 0xb5b5),
- 	RTW89_DECL_RFK_WM(0x32bc, 0x000ffff0, 0xb5b5),
- 	RTW89_DECL_RFK_WM(0x0300, 0xff000000, 0x16),
--	RTW89_DECL_RFK_WM(0x0304, 0x0000ffff, 0x1f19),
--	RTW89_DECL_RFK_WM(0x0308, 0xff000000, 0x1c),
-+	RTW89_DECL_RFK_WM(0x0304, 0x0000ffff, 0x1313),
-+	RTW89_DECL_RFK_WM(0x0308, 0xff000000, 0x13),
- 	RTW89_DECL_RFK_WM(0x0314, 0xffff0000, 0x2041),
--	RTW89_DECL_RFK_WM(0x0318, 0xffffffff, 0x20012041),
--	RTW89_DECL_RFK_WM(0x0324, 0xffff0000, 0x2001),
-+	RTW89_DECL_RFK_WM(0x0318, 0xffffffff, 0x00410041),
-+	RTW89_DECL_RFK_WM(0x0324, 0xffff0000, 0x0041),
- 	RTW89_DECL_RFK_WM(0x0020, 0x00006000, 0x3),
- 	RTW89_DECL_RFK_WM(0x0024, 0x00006000, 0x3),
- 	RTW89_DECL_RFK_WM(0x0704, 0xffff0000, 0x601e),
-@@ -222,7 +222,7 @@ static const struct rtw89_reg5_def rtw8852c_tssi_txpwr_ctrl_bb_defs_a[] = {
- 	RTW89_DECL_RFK_WM(0x5810, 0xffffffff, 0x59010000),
- 	RTW89_DECL_RFK_WM(0x5814, 0x01ffffff, 0x026d000),
- 	RTW89_DECL_RFK_WM(0x5814, 0xf8000000, 0x00),
--	RTW89_DECL_RFK_WM(0x5818, 0xffffffff, 0x002c1800),
-+	RTW89_DECL_RFK_WM(0x5818, 0xffffffff, 0x002c18e8),
- 	RTW89_DECL_RFK_WM(0x581c, 0x3fffffff, 0x3dc80280),
- 	RTW89_DECL_RFK_WM(0x5820, 0xffffffff, 0x00000080),
- 	RTW89_DECL_RFK_WM(0x58e8, 0x0000003f, 0x03),
-@@ -251,7 +251,7 @@ static const struct rtw89_reg5_def rtw8852c_tssi_txpwr_ctrl_bb_defs_a[] = {
- 	RTW89_DECL_RFK_WM(0x58d4, 0x07fc0000, 0x100),
- 	RTW89_DECL_RFK_WM(0x58d8, 0xffffffff, 0x8008016c),
- 	RTW89_DECL_RFK_WM(0x58dc, 0x0001ffff, 0x0807f),
--	RTW89_DECL_RFK_WM(0x58dc, 0xfff00000, 0x800),
-+	RTW89_DECL_RFK_WM(0x58dc, 0xfff00000, 0xc00),
- 	RTW89_DECL_RFK_WM(0x58f0, 0x0003ffff, 0x001ff),
- 	RTW89_DECL_RFK_WM(0x58f4, 0x000fffff, 0x000),
- 	RTW89_DECL_RFK_WM(0x58f8, 0x000fffff, 0x000),
-@@ -260,14 +260,14 @@ static const struct rtw89_reg5_def rtw8852c_tssi_txpwr_ctrl_bb_defs_a[] = {
- RTW89_DECLARE_RFK_TBL(rtw8852c_tssi_txpwr_ctrl_bb_defs_a);
- 
- static const struct rtw89_reg5_def rtw8852c_tssi_txpwr_ctrl_bb_defs_b[] = {
--	RTW89_DECL_RFK_WM(0x566c, 0x00001000, 0x0),
-+	RTW89_DECL_RFK_WM(0x766c, 0x00001000, 0x0),
- 	RTW89_DECL_RFK_WM(0x7800, 0xffffffff, 0x003f807f),
- 	RTW89_DECL_RFK_WM(0x780c, 0x0000007f, 0x40),
- 	RTW89_DECL_RFK_WM(0x780c, 0x0fffff00, 0x00040),
- 	RTW89_DECL_RFK_WM(0x7810, 0xffffffff, 0x59010000),
- 	RTW89_DECL_RFK_WM(0x7814, 0x01ffffff, 0x026d000),
- 	RTW89_DECL_RFK_WM(0x7814, 0xf8000000, 0x00),
--	RTW89_DECL_RFK_WM(0x7818, 0xffffffff, 0x002c1800),
-+	RTW89_DECL_RFK_WM(0x7818, 0xffffffff, 0x002c18e8),
- 	RTW89_DECL_RFK_WM(0x781c, 0x3fffffff, 0x3dc80280),
- 	RTW89_DECL_RFK_WM(0x7820, 0xffffffff, 0x00000080),
- 	RTW89_DECL_RFK_WM(0x78e8, 0x0000003f, 0x03),
-@@ -296,7 +296,7 @@ static const struct rtw89_reg5_def rtw8852c_tssi_txpwr_ctrl_bb_defs_b[] = {
- 	RTW89_DECL_RFK_WM(0x78d4, 0x07fc0000, 0x100),
- 	RTW89_DECL_RFK_WM(0x78d8, 0xffffffff, 0x8008016c),
- 	RTW89_DECL_RFK_WM(0x78dc, 0x0001ffff, 0x0807f),
--	RTW89_DECL_RFK_WM(0x78dc, 0xfff00000, 0x800),
-+	RTW89_DECL_RFK_WM(0x78dc, 0xfff00000, 0xc00),
- 	RTW89_DECL_RFK_WM(0x78f0, 0x0003ffff, 0x001ff),
- 	RTW89_DECL_RFK_WM(0x78f4, 0x000fffff, 0x000),
- 	RTW89_DECL_RFK_WM(0x78f8, 0x000fffff, 0x000),
-@@ -511,9 +511,9 @@ static const struct rtw89_reg5_def rtw8852c_tssi_set_aligk_default_defs_5g_a[] =
- 	RTW89_DECL_RFK_WM(0x563c, 0x3fffffff, 0x00000000),
- 	RTW89_DECL_RFK_WM(0x5640, 0x000003ff, 0x000),
- 	RTW89_DECL_RFK_WM(0x5640, 0x000ffc00, 0x000),
--	RTW89_DECL_RFK_WM(0x5640, 0x3ff00000, 0x000),
--	RTW89_DECL_RFK_WM(0x5644, 0x000003ff, 0x000),
--	RTW89_DECL_RFK_WM(0x5644, 0x000ffc00, 0x000),
-+	RTW89_DECL_RFK_WM(0x5640, 0x3ff00000, 0x3e9),
-+	RTW89_DECL_RFK_WM(0x5644, 0x000003ff, 0x039),
-+	RTW89_DECL_RFK_WM(0x5644, 0x000ffc00, 0x07d),
- };
- 
- RTW89_DECLARE_RFK_TBL(rtw8852c_tssi_set_aligk_default_defs_5g_a);
-@@ -531,9 +531,9 @@ static const struct rtw89_reg5_def rtw8852c_tssi_set_aligk_default_defs_5g_b[] =
- 	RTW89_DECL_RFK_WM(0x763c, 0x3fffffff, 0x00000000),
- 	RTW89_DECL_RFK_WM(0x7640, 0x000003ff, 0x000),
- 	RTW89_DECL_RFK_WM(0x7640, 0x000ffc00, 0x000),
--	RTW89_DECL_RFK_WM(0x7640, 0x3ff00000, 0x000),
--	RTW89_DECL_RFK_WM(0x7644, 0x000003ff, 0x000),
--	RTW89_DECL_RFK_WM(0x7644, 0x000ffc00, 0x000),
-+	RTW89_DECL_RFK_WM(0x7640, 0x3ff00000, 0x3e9),
-+	RTW89_DECL_RFK_WM(0x7644, 0x000003ff, 0x039),
-+	RTW89_DECL_RFK_WM(0x7644, 0x000ffc00, 0x07d),
- };
- 
- RTW89_DECLARE_RFK_TBL(rtw8852c_tssi_set_aligk_default_defs_5g_b);
-@@ -551,9 +551,9 @@ static const struct rtw89_reg5_def rtw8852c_tssi_set_aligk_default_defs_6g_a[] =
- 	RTW89_DECL_RFK_WM(0x563c, 0x3fffffff, 0x00000000),
- 	RTW89_DECL_RFK_WM(0x5640, 0x000003ff, 0x000),
- 	RTW89_DECL_RFK_WM(0x5640, 0x000ffc00, 0x000),
--	RTW89_DECL_RFK_WM(0x5640, 0x3ff00000, 0x000),
--	RTW89_DECL_RFK_WM(0x5644, 0x000003ff, 0x000),
--	RTW89_DECL_RFK_WM(0x5644, 0x000ffc00, 0x000),
-+	RTW89_DECL_RFK_WM(0x5640, 0x3ff00000, 0x3e9),
-+	RTW89_DECL_RFK_WM(0x5644, 0x000003ff, 0x039),
-+	RTW89_DECL_RFK_WM(0x5644, 0x000ffc00, 0x080),
- };
- 
- RTW89_DECLARE_RFK_TBL(rtw8852c_tssi_set_aligk_default_defs_6g_a);
-@@ -571,9 +571,9 @@ static const struct rtw89_reg5_def rtw8852c_tssi_set_aligk_default_defs_6g_b[] =
- 	RTW89_DECL_RFK_WM(0x763c, 0x3fffffff, 0x00000000),
- 	RTW89_DECL_RFK_WM(0x7640, 0x000003ff, 0x000),
- 	RTW89_DECL_RFK_WM(0x7640, 0x000ffc00, 0x000),
--	RTW89_DECL_RFK_WM(0x7640, 0x3ff00000, 0x000),
--	RTW89_DECL_RFK_WM(0x7644, 0x000003ff, 0x000),
--	RTW89_DECL_RFK_WM(0x7644, 0x000ffc00, 0x000),
-+	RTW89_DECL_RFK_WM(0x7640, 0x3ff00000, 0x3e9),
-+	RTW89_DECL_RFK_WM(0x7644, 0x000003ff, 0x039),
-+	RTW89_DECL_RFK_WM(0x7644, 0x000ffc00, 0x080),
- };
- 
- RTW89_DECLARE_RFK_TBL(rtw8852c_tssi_set_aligk_default_defs_6g_b);
+url:    https://github.com/intel-lab-lkp/linux/commits/Ping-Ke-Shih/wifi-rtw89-mcc-initialize-start-flow/20230829-102255
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+patch link:    https://lore.kernel.org/r/20230829021918.14599-2-pkshih%40realtek.com
+patch subject: [PATCH 1/6] wifi: rtw89: mcc: initialize start flow
+config: parisc-allmodconfig (https://download.01.org/0day-ci/archive/20230830/202308302155.2snig4j9-lkp@intel.com/config)
+compiler: hppa-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20230830/202308302155.2snig4j9-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202308302155.2snig4j9-lkp@intel.com/
+
+All errors (new ones prefixed by >>, old ones prefixed by <<):
+
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_rr.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_wrr.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_lc.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_wlc.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_fo.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_ovf.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_lblc.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_lblcr.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_dh.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_sh.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_sed.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_nq.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_twos.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_ftp.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/netfilter/ipvs/ip_vs_pe_sip.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/netfilter/nf_defrag_ipv4.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/netfilter/nf_reject_ipv4.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/netfilter/iptable_nat.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/netfilter/iptable_raw.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/ip_tunnel.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/ipip.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/ip_gre.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/udp_tunnel.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/ip_vti.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/ah4.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/esp4.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/xfrm4_tunnel.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/tunnel4.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/inet_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/tcp_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/udp_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv4/raw_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/xfrm/xfrm_algo.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/xfrm/xfrm_user.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/unix/unix_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/netfilter/ip6table_raw.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/netfilter/ip6table_nat.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/netfilter/nf_defrag_ipv6.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/netfilter/nf_reject_ipv6.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/ah6.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/esp6.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/xfrm6_tunnel.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/tunnel6.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/mip6.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/sit.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ipv6/ip6_udp_tunnel.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_ar9331.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_brcm.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_dsa.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_gswip.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_hellcreek.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_ksz.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_lan9303.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_mtk.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_none.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_ocelot.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_ocelot_8021q.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_qca.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_rtl4_a.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_rtl8_4.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_rzn1_a5psw.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_sja1105.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_trailer.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/dsa/tag_xrs700x.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/8021q/8021q.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/xdp/xsk_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/mptcp/mptcp_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/mptcp/mptcp_crypto_test.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/mptcp/mptcp_token_test.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/packet/af_packet.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/packet/af_packet_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/key/af_key.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/bridge/netfilter/nf_conntrack_bridge.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/bridge/netfilter/ebtables.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/bridge/netfilter/ebtable_broute.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/bridge/netfilter/ebtable_filter.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/bridge/netfilter/ebtable_nat.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/bridge/bridge.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/sunrpc/sunrpc.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/sunrpc/auth_gss/auth_rpcgss.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/sunrpc/auth_gss/rpcsec_gss_krb5.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/kcm/kcm.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/atm/atm.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/atm/lec.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/atm/mpoa.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/sctp/sctp_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/tipc/diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/smc/smc_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/caif/caif.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/caif/chnl_net.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/caif/caif_socket.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/caif/caif_usb.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/6lowpan/6lowpan.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ieee802154/6lowpan/ieee802154_6lowpan.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/ieee802154/ieee802154_socket.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/nfc/nci/nci.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/nfc/nci/nci_spi.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/nfc/nfc_digital.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/vmw_vsock/vsock_diag.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in net/hsr/hsr.o
+>> ERROR: modpost: "__umoddi3" [drivers/net/wireless/realtek/rtw89/rtw89_core.ko] undefined!
+ERROR: modpost: ".L858" [drivers/mtd/nand/raw/nand.ko] undefined!
+
 -- 
-2.25.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
