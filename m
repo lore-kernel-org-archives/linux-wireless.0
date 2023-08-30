@@ -2,121 +2,123 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B66FC83F1A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91673C83F1C
 	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233438AbjH3Se0 (ORCPT
+        id S232997AbjH3Se2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:34:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52956 "EHLO
+        Wed, 30 Aug 2023 14:34:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242317AbjH3IAj (ORCPT
+        with ESMTP id S242431AbjH3Ib2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 04:00:39 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCB7ACD8
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:00:36 -0700 (PDT)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37U7x93o002118;
-        Wed, 30 Aug 2023 08:00:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=8RZdUtZmXv/klRTPQ3Ec+nUJbjlbfxEwgoCRLy7pPiQ=;
- b=pNlBHh1aqW7m1CIth8zxoAQCW1LIPML4/D/DWBiUo36xm0ZuMiqqzlqzvcTcWkhX20Ru
- TEdOorAzI/YtO7W4AVkHYEWU0ErI7csHO85daL83TJ8LLJDKRM7aVwQquGP+6akppcIo
- FN92UiqbiVuFm0qqZnTX5FM8G819fQciI2d1UqtpbtJjpcwI8vZVy2RgAAuE6AzP97zi
- n/zKiuGwv3m7V2J+gQ0MU1P44CQ6IpweUs6GaGIjTaaCs6d2yLj2xX+4NOPcz7NGXEO+
- FrXVm8l9YDkfO62LSJTPLeHht88FCJsN32WZtqLy4SxCee1m1uVzXOaWc7YnGGSFMJmA Sw== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ss0523x61-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Aug 2023 08:00:32 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37U80Clu015295
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Aug 2023 08:00:12 GMT
-Received: from [10.201.207.136] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 30 Aug
- 2023 01:00:11 -0700
-Message-ID: <8dfb323b-1bb2-c586-c29f-2af9c598ceb7@quicinc.com>
-Date:   Wed, 30 Aug 2023 13:30:08 +0530
+        Wed, 30 Aug 2023 04:31:28 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B29A1A4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:31:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693384285; x=1724920285;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=jJ9PtvbQAlR80Gua0c2WoVmnIhEQZ61659ukoiNhL4s=;
+  b=C1hPerp31MZjW+5p8m7wmXTq7DYxnWhWUZpU2CCocBZgb4N4u6Vn5ITc
+   Vq7TnpwGvU9pzhu84WIAvbKnCEKjPWACAERQybpX4YPsNAm2G96UlQVmt
+   dOxK50NSKrgznuPcvMgHQ2UFhLIUwZ1zsCN2EGKk34abWV/Haud61u502
+   WF547sX2ycmTlrIUDC35UfFy3Xp3DOZZcTdtML2ymREoUi8Q0rFr4vmUa
+   HQBMxn4q/NbvlpE4+eqZ8988fP1J3rbLhlajdZeBxNfzfrpwLZB3PeU3e
+   e0cOlSnOFZiTonTgd+P5zOyC7YNMJVjYrIeG3rypcimJ58DpIlCmc8CMb
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461958847"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="461958847"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:25 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152008"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="829152008"
+Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:23 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 02/16] wifi: iwlwifi: mvm: increase session protection after CSA
+Date:   Wed, 30 Aug 2023 11:30:50 +0300
+Message-Id: <20230830112059.a74176bac37c.I029a2ebcd1b5012327c728ffa1d33fac19cfdf4b@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
+References: <20230830083104.546619-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.2
-Subject: Re: [PATCH v3 0/9] wifi: cfg80211/mac80211: extend 6 GHz support for
- all power modes
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20230315132904.31779-1-quic_adisi@quicinc.com>
- <319ecb67faac8a2e50408f2bfa28f2431a6e6b9a.camel@sipsolutions.net>
- <afd7a85c-e1ce-6a6e-a29e-74ccc0d8bd08@quicinc.com>
- <6390d2b539b7da5fe2e0d891de26917654a6aa1a.camel@sipsolutions.net>
-From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
-In-Reply-To: <6390d2b539b7da5fe2e0d891de26917654a6aa1a.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: DV98Ln4geHqRqlc9uqHfCjM07yZkfJ9a
-X-Proofpoint-GUID: DV98Ln4geHqRqlc9uqHfCjM07yZkfJ9a
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-29_16,2023-08-29_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 bulkscore=0
- spamscore=0 lowpriorityscore=0 mlxlogscore=999 mlxscore=0 impostorscore=0
- priorityscore=1501 malwarescore=0 adultscore=0 phishscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
- definitions=main-2308300074
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/30/23 13:14, Johannes Berg wrote:
-> On Wed, 2023-08-30 at 10:43 +0530, Aditya Kumar Singh wrote:
->>>
->>> Why do you even need to set *from userspace* the power mode for a
->>> client? That ... doesn't make that much sense?
-> 
-> Oh so you addressed that here, sorry.
-> 
->> Because there are two possibilities? Default client and also connect to
->> Low Power Indoor AP as well as sub-ordinate client. So to let the kernel
->> know which mode originally the client is in, the command was introduced.
->>
->> I do understand the concern here about possible misuse for the command
->> from the user space, I would re-visit this area and try to cover the
->> loop holes if any. But don't you think it should be the case? Basically
->> same like how we tell via user space the SSID, keys/suite info. freq
->> list and all for a client, in a similar way tell the power mode.
-> 
-> I just don't understand how userspace would possibly know what to do.
-> You can't really expect the _user_ to select this. So how does
-> wpa_supplicant know what to do? How does it know better than the driver?
-> Where does it get the information from?
-> 
-The power mode selection for client purely depends on how much tx power 
-the user wants for the client. In short, subordinate mode type client 
-can operate on more tx-power when compared to Default mode type client.
-For example, let's assume they are going to connect to LPI AP. PSD for 
-Default client should be -1 dBm/MHz or less and for sub-ordinate client 
-should be 5 dBM/MHz or less​ (US regulatory). Technically, the power 
-mode of client affects the PSD which has indirect relation with the 
-Tx-power.
+From: Johannes Berg <johannes.berg@intel.com>
 
-So if user wants more PSD, in supplicant, it can be configured with 
-Subordinate or else default type.
+In the spec, CSA is defined roughly as follows:
+ - TBTT x:     beacon with CSA, count=n   (old channel)
+ - TBTT x+1:   beacon with CSA, count=n-1 (old channel)
+ - TBTT x+n-1: beacon with CSA, count=1   (old channel)
+ "A Channel Switch Count field set to 1 indicates that the switch
+  occurs immediately before the next TBTT.
+ - TBTT x+n:   beacon without CSA         (new channel)
 
-Reg your other question:
- > Anyway you're tied to what the AP is doing, no?
-Yeah since for AP the command was introduced, leveraged the same for 
-client to. But now since we have option to leverage from update beacon 
-infra, something similar for client need to explore.
+When we detect it, we currently schedule the CSA event to
+be at 10 TUs before TBTT x+n-1, for a beacon interval, to
+give us quiet time.
 
-> johannes
+When this event *starts*, we currently notify mac80211
+that the channel switch happened, which causes us to add
+a session protection event to listen for the first beacon
+(and enable TX etc. when that arrives).
+
+We don't even ask for a notification when this event ends
+so the code that handles that is effectively dead code.
+
+The session protection duration is 3 beacon intervals,
+scheduled at 10 TU before TBTT x+n-1. It will thus end
+just before TBTT x+n+2.
+
+Unfortunately, if the AP doesn't transmit or we miss just
+the first two beacons on the new channel, then this will
+cause us to disconnect. Or even just one, if the AP isn't
+quite aligned with the TBTT after the switch.
+
+However, listening to the _end_ of the time event isn't
+what we want either, because we want all the new PHY and
+other config that needs to come from mac80211 to start
+early, so we have a head-start for the new channel, since
+we're not going to use the old one anyway for this time.
+
+So since we don't really have anything better to do at
+this time, and this is relatively rare, just make the
+session protection use 5x the beacon interval instead of
+just 3x, so it's more likely we catch a beacon even if
+the AP neglected to send it, or we just miss it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 4b3d84213466..6bb3b1f51913 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4953,7 +4953,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
+ 
+ 		if (!fw_has_capa(&mvm->fw->ucode_capa,
+ 				 IWL_UCODE_TLV_CAPA_CHANNEL_SWITCH_CMD)) {
+-			u32 duration = 3 * vif->bss_conf.beacon_int;
++			u32 duration = 5 * vif->bss_conf.beacon_int;
+ 
+ 			/* Protect the session to make sure we hear the first
+ 			 * beacon on the new channel.
+-- 
+2.38.1
 
