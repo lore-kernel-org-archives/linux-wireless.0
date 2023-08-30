@@ -2,149 +2,90 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5F7C83F18
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:33:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC67C83F1E
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:33:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232837AbjH3Sdc (ORCPT
+        id S233179AbjH3Sde (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:33:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53210 "EHLO
+        Wed, 30 Aug 2023 14:33:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242292AbjH3Hum (ORCPT
+        with ESMTP id S242435AbjH3Ibg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 03:50:42 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF6FA12D
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 00:50:39 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37U2jDVk008018;
-        Wed, 30 Aug 2023 07:50:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=1J9ojBZMcPoE1xLt1zImKjk1VN60kbCz8e42ziebQ7Y=;
- b=FeemL1Ra+KFlVit+Km5selQQj7nkoOS8lsVsF7WqcfbvIZ7iAAT305ETx9ui6zsbIJne
- TvmY8JS93r+bqMyLex80Vrk+wBNo1UQiQ1mvRQ/JJudy24So8w0N/6kWq9rf8SjQ+efQ
- dQis0AzwMyx85XVUpg87+FnQ2btzl93Za1q9RymluNHbuwGf+xiBQUqiembi5tmr90jq
- yYAS08ONbCNo5RyBAhstIMmxzCSdeF4NfnCNd5+8SOohs/buMcAZVBxmlNnBnnQt3e6h
- XJ5tVLUqpuoMNp8L69qVR3okYYVkebLrwdxKpj5HXbpNntDnXvshxjjq/mgOHvmNgval zA== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ss7meuj8j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Aug 2023 07:50:36 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37U7oZPE025902
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 30 Aug 2023 07:50:35 GMT
-Received: from [10.201.207.136] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 30 Aug
- 2023 00:50:34 -0700
-Message-ID: <608c1629-f003-ec7d-3331-0968ed675aee@quicinc.com>
-Date:   Wed, 30 Aug 2023 13:20:31 +0530
+        Wed, 30 Aug 2023 04:31:36 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1B841A6
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:31:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693384294; x=1724920294;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=l+6ZD56FOk2eKaqtxKlE8HpvhGkTXLOER3pcib5rtRQ=;
+  b=gETZAusfsmvjUDRCOmO7u2WNLYaYrlnAwyynBpXpdI3IbUowfsW5Eov0
+   Byd4eZChAWlruPqQPbALaensJZGQ1stHkv6uyyLy50JORqLrP9yjyA6sn
+   g0/pqvAtPMORg4EId/LxD6UiTsAgSMZuuT8TiObSiS32EIOZeTgXAuP1d
+   VNSIltTMPiy5mWnWQ73MzyPfzUlXZnsTYqysAxt7Y68VCIe0k8+SdTGCq
+   E58kd5h1WdaXiBdB/xwmchi5EeLpqK3loiNiOBorm3gRDoKj9+tp3/sjk
+   Re5btH9S6ZucoGLG6dpbxkCpyGtW3tJld3Tn5YibZlFjf91Huvv2Qw/lD
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461958922"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="461958922"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:34 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152088"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="829152088"
+Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:32 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 06/16] wifi: iwlwifi: don't use an uninitialized variable
+Date:   Wed, 30 Aug 2023 11:30:54 +0300
+Message-Id: <20230830112059.431b01bd8779.I31fc4ab35f551b85a10f974a6b18fc30191e9c35@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
+References: <20230830083104.546619-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.2
-Subject: Re: [PATCH v3 4/9] wifi: cfg80211: add NL command to set 6 GHz power
- mode
-Content-Language: en-US
-To:     Johannes Berg <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20230315132904.31779-1-quic_adisi@quicinc.com>
- <20230315132904.31779-5-quic_adisi@quicinc.com>
- <59e2364e9085f725c03d05e3f720f8fae7b336ce.camel@sipsolutions.net>
- <d3740fa2-a59e-d6e2-394c-9b289564b832@quicinc.com>
- <321872041974a787db71bbbf660adeb40c494d71.camel@sipsolutions.net>
-From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
-In-Reply-To: <321872041974a787db71bbbf660adeb40c494d71.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: NOK5uTsZ5HOe6FLPZalyWgrTnK7k-AU2
-X-Proofpoint-GUID: NOK5uTsZ5HOe6FLPZalyWgrTnK7k-AU2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-29_16,2023-08-29_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- bulkscore=0 adultscore=0 suspectscore=0 lowpriorityscore=0 malwarescore=0
- mlxlogscore=999 phishscore=0 priorityscore=1501 clxscore=1015 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
- definitions=main-2308300072
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/30/23 13:11, Johannes Berg wrote:
-> On Wed, 2023-08-30 at 10:35 +0530, Aditya Kumar Singh wrote:
->> On 8/29/23 23:21, Johannes Berg wrote:
->>> On Wed, 2023-03-15 at 18:58 +0530, Aditya Kumar Singh wrote:
->>>>
->>>> +	{
->>>> +		.cmd = NL80211_CMD_SET_6GHZ_POWER_MODE,
->>>> +		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
->>>> +		.doit = nl80211_set_6ghz_power_mode,
->>>> +		.flags = GENL_UNS_ADMIN_PERM,
->>>> +		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV |
->>>> +					 NL80211_FLAG_MLO_VALID_LINK_ID),
->>>> +	},
->>>
->>> Why is this even a new command, rather than a parameter to start AP or
->>> similar?
->>>
->> A new command was introduced because to give user space a knob to change
->> power mode as and when required. Let's suppose AFC response has not yet
->> arrived, AP could be started in Low Power mode. Now once AFC rules are
->> applied (not going in detail here how that will happen) and user space
->> knows about it, it can send command to switch to Standard Power Mode right?
-> 
-> At least for AP that could also be a beacon update, like most other
-> operational parameters. You have to update the beacon _anyway_ since you
-> indicate in the beacon what you're doing.
-Yeah this option can be explored too. Thanks for the suggestion.
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-> 
-> So that by itself doesn't really introduce the requirement to have a
-> separate command.
-Yes I see your point. Let me re-work on this aspect as well.
+Don't use variable err uninitialized.
+The reason for removing the check instead of initializing it
+in the beginning of the function is because that way
+static checkers will be able to catch issues if we do something
+wrong in the future.
 
-> 
->>> Why do we even set it in client mode from userspace?
-> 
-> And you didn't comment on this - what userspace do you expect to use it
-> in client mode? I can see hostapd in AP mode, I guess, but in client
-> mode I don't see how this could be used? Anyway you're tied to what the
-> AP is doing, no?
-Yes, as you saw already replied to the similar question in the cover 
-letter. Will reply to the last question here in that thread it self (to 
-keep client related discussion in same place).
+Fixes: bf976c814c86 ("wifi: iwlwifi: mvm: implement link change ops")
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-
-> 
->>>>    static struct genl_family nl80211_fam __ro_after_init = {
->>>> @@ -17409,7 +17473,7 @@ static struct genl_family nl80211_fam __ro_after_init = {
->>>>    	.n_ops = ARRAY_SIZE(nl80211_ops),
->>>>    	.small_ops = nl80211_small_ops,
->>>>    	.n_small_ops = ARRAY_SIZE(nl80211_small_ops),
->>>> -	.resv_start_op = NL80211_CMD_REMOVE_LINK_STA + 1,
->>>> +	.resv_start_op = NL80211_CMD_SET_6GHZ_POWER_MODE + 1,
->>>>
->>>
->>> Obviously, this should not be done.
->> If this hunk is not there, the command was not going through. Upon
->> digging further found out that the number of commands declared in the
->> array and the count provided here has some relation. And that too with
->> the last element added. Since a new element was added, modified it
->> accordingly.
-> 
-> No no, that wasn't a discussion. I'm telling you, this is wrong, and I
-> will not apply a patch that does this. If you needed it, you did
-> something wrong in userspace.
-Oh okay. Fine, let me check again.
-
-> 
-> johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+index 8b6c641772ee..9615bfff7f7d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+@@ -1084,9 +1084,6 @@ iwl_mvm_mld_change_vif_links(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (err)
+-		goto out_err;
+-
+ 	err = 0;
+ 	if (new_links == 0) {
+ 		mvmvif->link[0] = &mvmvif->deflink;
+-- 
+2.38.1
 
