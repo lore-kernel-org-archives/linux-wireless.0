@@ -2,131 +2,73 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A2E7C83F17
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D35FC83F18
 	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231849AbjH3SeX (ORCPT
+        id S235163AbjH3SeV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:34:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54960 "EHLO
+        Wed, 30 Aug 2023 14:34:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242440AbjH3Ibx (ORCPT
+        with ESMTP id S242216AbjH3H3l (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 04:31:53 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E5041A4
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:31:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693384310; x=1724920310;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=WXxmXNx/asHs7LcHT4t3OsYLl9LuBy4j4Dfc+GpA7GQ=;
-  b=OgcNlxlnpnXw8d4Hu0XbWUcN1KcZcH5SHa6wEGXh4PM9gKn0oaLVDWu5
-   EY0V4FOvVRqGjF/CquvCgNmXXdQXhakBv6yd/66s1XG5pqnRy2e+5VKgb
-   nCBk2hB/jYEutVERrUXHqkjG0gXiQUKQebdmxmbsaNmSsR44SLWnBj/pB
-   0VtIPhPJh3rVsCXT6WMstGCYQk3P3O6NlikRAZTxRZ6VPyWD5lREeYXco
-   DK6qNai5Xw9c9RAFYbNOjsz8izEv6BT+3rSr6EgdvCvXwk5qjssbRwYJz
-   bOFK4iFuXlruws2YeQJV1tSta/gLV3pKWzdWV9Iv8+CMG/jMqOKX5JRW4
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461959046"
-X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
-   d="scan'208";a="461959046"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:49 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152406"
-X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
-   d="scan'208";a="829152406"
-Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:47 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/16] wifi: iwlwifi: fw: reconstruct the API/CAPA enum number
-Date:   Wed, 30 Aug 2023 11:30:59 +0300
-Message-Id: <20230830112059.44bdf6a5fa9e.I9f1ea129f89e53043d48676aed0a3b8f6c31ac08@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
-References: <20230830083104.546619-1-gregory.greenman@intel.com>
+        Wed, 30 Aug 2023 03:29:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2149CC9
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 00:29:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7B81860B3F
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 07:29:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0A78C433C7;
+        Wed, 30 Aug 2023 07:29:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693380576;
+        bh=ZeJ1BwB7KYij36PHxFK2U1Xz4mZAx/yEcPnFn0t3l/o=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=IP/Xf+Jti9LTA6m8LlnmX2OjaWLNUBdSXugPabPX7MFuLnR/Xeoex0fKZ6WHIUm0V
+         bHD6rS7V495MnUIn5lHmvHLvp/vDkzfn6ybJBp1eyzKXQQ4kCdKty8mh1l1eJ9zR/m
+         FY3CtOs8p8wlPNY5WRlq1DkwjkZBqV4F5muT8XB3YgQu4UdvmKIzz1E90B6rF/OsD2
+         71VbZEWIY1/UqCWjiVea+I+L2uMNKKFFWdpt99xtSJP/w9kY81NHpsbH7i5q/ip3qv
+         +EwHlHAyr7UvBBCb7EHxWLlDfsh1CN16kQhFAU2zEsTcCTqCmoqsr/Y1zFykkk9DH5
+         rurdfDXOKIlJg==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Wen Gong <quic_wgong@quicinc.com>
+Cc:     <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        ath11k@lists.infradead.org
+Subject: Re: [PATCH] wifi: ath11k: add chip id board name while searching
+ board-2.bin for WCN6855
+References: <20230830060226.18664-1-quic_wgong@quicinc.com>
+Date:   Wed, 30 Aug 2023 10:29:33 +0300
+In-Reply-To: <20230830060226.18664-1-quic_wgong@quicinc.com> (Wen Gong's
+        message of "Wed, 30 Aug 2023 02:02:26 -0400")
+Message-ID: <87cyz5f0o2.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Wen Gong <quic_wgong@quicinc.com> writes:
 
-The last member of the enum is meant to count the items,
-but sparse cannot increment the previous member due to
-its bitwise type. Declaring the last entry with a value
-doesn't work either (cannot mix bitwise/non-bitwise) and
-declaring it with a bitwise value doesn't work due to
-the way it gets used. This led to the current construct.
+> Sometimes board-2.bin does not have the board data which matched the
+> parameters such as bus type, vendor, device, subsystem-vendor,
+> subsystem-device, qmi-chip-id and qmi-board-id, then wlan will load fail.
+>
+> Hence add another type which only matches the bus type and qmi-chip-id,
+> then the ratio of missing board data reduced.
+>
+> Tested-on: WCN6855 hw2.0 PCI
+> WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+>
+> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
 
-However, that construct the kernel-doc script doesn't
-understand this construct due to the use of #ifdef/#else.
+Wrong list, adding also ath11k list.
 
-Find another solution that makes both tools happy, we
-do now do declare it as the bitwise value but then just
-redefine it so that doesn't get used, all still under
-__CHECKER__ conditional.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/file.h | 27 +++++++++++++-------
- 1 file changed, 18 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index b36e9613a52c..41841524f983 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -281,12 +281,16 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_SCAN_EXT_CHAN_VER	= (__force iwl_ucode_tlv_api_t)58,
- 	IWL_UCODE_TLV_API_BAND_IN_RX_DATA	= (__force iwl_ucode_tlv_api_t)59,
- 
--
--#ifdef __CHECKER__
--	/* sparse says it cannot increment the previous enum member */
--#define NUM_IWL_UCODE_TLV_API 128
--#else
- 	NUM_IWL_UCODE_TLV_API
-+/*
-+ * This construction make both sparse (which cannot increment the previous
-+ * member due to its bitwise type) and kernel-doc (which doesn't understand
-+ * the ifdef/else properly) work.
-+ */
-+#ifdef __CHECKER__
-+#define __CHECKER_NUM_IWL_UCODE_TLV_API	128
-+		= (__force iwl_ucode_tlv_api_t)__CHECKER_NUM_IWL_UCODE_TLV_API,
-+#define NUM_IWL_UCODE_TLV_API __CHECKER_NUM_IWL_UCODE_TLV_API
- #endif
- };
- 
-@@ -469,11 +473,16 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_STA_EXP_MFP_SUPPORT		= (__force iwl_ucode_tlv_capa_t)114,
- 	IWL_UCODE_TLV_CAPA_SNIFF_VALIDATE_SUPPORT	= (__force iwl_ucode_tlv_capa_t)116,
- 
--#ifdef __CHECKER__
--	/* sparse says it cannot increment the previous enum member */
--#define NUM_IWL_UCODE_TLV_CAPA 128
--#else
- 	NUM_IWL_UCODE_TLV_CAPA
-+/*
-+ * This construction make both sparse (which cannot increment the previous
-+ * member due to its bitwise type) and kernel-doc (which doesn't understand
-+ * the ifdef/else properly) work.
-+ */
-+#ifdef __CHECKER__
-+#define __CHECKER_NUM_IWL_UCODE_TLV_CAPA	128
-+		= (__force iwl_ucode_tlv_capa_t)__CHECKER_NUM_IWL_UCODE_TLV_CAPA,
-+#define NUM_IWL_UCODE_TLV_CAPA __CHECKER_NUM_IWL_UCODE_TLV_CAPA
- #endif
- };
- 
 -- 
-2.38.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
