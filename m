@@ -2,79 +2,121 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A696BC83F19
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0BD7C6FA8F
 	for <linux-wireless@archiver.kernel.org>; Wed, 30 Aug 2023 18:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237389AbjH3SeK (ORCPT
+        id S237499AbjH3SeN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:34:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51266 "EHLO
+        Wed, 30 Aug 2023 14:34:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242263AbjH3Hod (ORCPT
+        with ESMTP id S242443AbjH3IcD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Aug 2023 03:44:33 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7292FCD8
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 00:44:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=iIU473aemSOOSvWHNnwFvm4J2x7SJiBJnFURVTAZcAg=;
-        t=1693381470; x=1694591070; b=egrT3CksO7DkRTp7Asg5OmtmFWgw36kRXqTSDia9M9rtotC
-        DemikK+VfqOtbepNA5TarOHjvYgR9fUt9+sDADX1lfRDpWJX9sZ99N8nvh+zJrWOqkJd4Kym42k7r
-        PAh68CEZVZcrUM38Us2CqRL+q2jpmgYgIpq+3lfseBnIy0MZXEDANnieHbxuSWO/JEXsT5rT30oPD
-        svmgE2IUX3y+HFc5hGEZnVqKAOMPN+G1ADdGxAlvpn1oontLvoOz03RFyVNa/XrOqKbyZM2puxIy0
-        y/f1vVjAmolvRJMZoTdRb1NFlXc0JCzvd6zdTmRF7+QqDdmIsdjm0hGhEYajTptQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qbFsK-002oEb-0H;
-        Wed, 30 Aug 2023 09:44:28 +0200
-Message-ID: <6390d2b539b7da5fe2e0d891de26917654a6aa1a.camel@sipsolutions.net>
-Subject: Re: [PATCH v3 0/9] wifi: cfg80211/mac80211: extend 6 GHz support
- for all power modes
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Aditya Kumar Singh <quic_adisi@quicinc.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 30 Aug 2023 09:44:27 +0200
-In-Reply-To: <afd7a85c-e1ce-6a6e-a29e-74ccc0d8bd08@quicinc.com>
-References: <20230315132904.31779-1-quic_adisi@quicinc.com>
-         <319ecb67faac8a2e50408f2bfa28f2431a6e6b9a.camel@sipsolutions.net>
-         <afd7a85c-e1ce-6a6e-a29e-74ccc0d8bd08@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        Wed, 30 Aug 2023 04:32:03 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CBB61A6
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 01:32:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693384321; x=1724920321;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=eZqjTlERv+/Uj0XSbLXivqm3d3bf0v09QB/YqheD9to=;
+  b=QhRkj/ZTq7cnFxw+ZRcHD9zBpfu2+TOd28MOHQV1swFWvqWKp/uagB58
+   I13dHX04govQV1as7rsFiB4xXi0nRNa0Ge7v1VKhTu6xLfEjpC73xObjL
+   NhnwwecMX7P0R719YC6rck4dXiNLmLeapCErQEX8SF10BoAryoPWeyI1n
+   aXyYZKBacor/Tve9GpOZptKAUHUAk47ewQcLPlwXYDgY7VjNgjGmNQykp
+   D9quxradVS3EXYIvoMq2YZ6KSlsPQ90Dmx+zz4VlgKx5sVdBZOgNtW9cA
+   5LKXpghpCV1uL9ecpQeSvQAidBbSl/G1TbBRzAvPNz/sEiXMFN6I+v7rC
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="461959091"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="461959091"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:32:00 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10817"; a="829152539"
+X-IronPort-AV: E=Sophos;i="6.02,213,1688454000"; 
+   d="scan'208";a="829152539"
+Received: from oweil1-mobl3.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.210.69])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2023 01:31:55 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 14/16] wifi: iwlwifi: mvm: reduce maximum RX A-MPDU size
+Date:   Wed, 30 Aug 2023 11:31:02 +0300
+Message-Id: <20230830112059.6e80366716ad.I19022084ac978b9960b12b205c052a83ab141203@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230830083104.546619-1-gregory.greenman@intel.com>
+References: <20230830083104.546619-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2023-08-30 at 10:43 +0530, Aditya Kumar Singh wrote:
-> >=20
-> > Why do you even need to set *from userspace* the power mode for a
-> > client? That ... doesn't make that much sense?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Oh so you addressed that here, sorry.
+Since 1024 isn't being tested right now, allow only 512
+for now.
 
-> Because there are two possibilities? Default client and also connect to=
-=20
-> Low Power Indoor AP as well as sub-ordinate client. So to let the kernel=
-=20
-> know which mode originally the client is in, the command was introduced.
->=20
-> I do understand the concern here about possible misuse for the command=
-=20
-> from the user space, I would re-visit this area and try to cover the=20
-> loop holes if any. But don't you think it should be the case? Basically=
-=20
-> same like how we tell via user space the SSID, keys/suite info. freq=20
-> list and all for a client, in a similar way tell the power mode.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/txq.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c    | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-I just don't understand how userspace would possibly know what to do.
-You can't really expect the _user_ to select this. So how does
-wpa_supplicant know what to do? How does it know better than the driver?
-Where does it get the information from?
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
+index e018946310d1..9c69d3674384 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/txq.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2005-2014, 2019-2021 Intel Corporation
++ * Copyright (C) 2005-2014, 2019-2021, 2023 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -76,7 +76,7 @@ enum iwl_tx_queue_cfg_actions {
+ 	TX_QUEUE_CFG_TFD_SHORT_FORMAT		= BIT(1),
+ };
+ 
+-#define IWL_DEFAULT_QUEUE_SIZE_EHT (1024 * 4)
++#define IWL_DEFAULT_QUEUE_SIZE_EHT (512 * 4)
+ #define IWL_DEFAULT_QUEUE_SIZE_HE 1024
+ #define IWL_DEFAULT_QUEUE_SIZE 256
+ #define IWL_MGMT_QUEUE_SIZE 16
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 5336a4afde4d..d4983abd9f97 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1136,7 +1136,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		return NULL;
+ 
+ 	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
+-		max_agg = IEEE80211_MAX_AMPDU_BUF_EHT;
++		max_agg = 512;
+ 	else
+ 		max_agg = IEEE80211_MAX_AMPDU_BUF_HE;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 3b9a343d4f67..51ca99bd5117 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -827,7 +827,7 @@ static int iwl_mvm_get_queue_size(struct ieee80211_sta *sta)
+ 		if (!link)
+ 			continue;
+ 
+-		/* support for 1k ba size */
++		/* support for 512 ba size */
+ 		if (link->eht_cap.has_eht &&
+ 		    max_size < IWL_DEFAULT_QUEUE_SIZE_EHT)
+ 			max_size = IWL_DEFAULT_QUEUE_SIZE_EHT;
+-- 
+2.38.1
 
-johannes
