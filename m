@@ -2,55 +2,54 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 976B5C83F2F
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 18:23:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 652A1C83F38
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 18:23:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346997AbjHaSXZ (ORCPT
+        id S243873AbjHaSXg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Aug 2023 14:23:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45868 "EHLO
+        Thu, 31 Aug 2023 14:23:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243859AbjHaSXX (ORCPT
+        with ESMTP id S1347010AbjHaSXd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2023 14:23:23 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC272E63;
-        Thu, 31 Aug 2023 11:23:20 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37VDusal019670;
+        Thu, 31 Aug 2023 14:23:33 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89283E76;
+        Thu, 31 Aug 2023 11:23:29 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37VGqv1Z015308;
         Thu, 31 Aug 2023 18:23:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : subject :
- date : message-id : mime-version : content-type :
- content-transfer-encoding : to : cc; s=qcppdkim1;
- bh=6jtt+DhViAJuO+cKOsP8zuY5qDC3CpI+xO5LQW5CWys=;
- b=nx4pZMxLlzHi0j0UXAs455t35DQVQoSnpUfl76Z0gEDQBQm/l4SAc7Ziz6Zo3F6Z2ULD
- 7hMd0t8f0ythUHN+B3CznjH58cANWvr+1JTrNHRp4dOLSoNrwQlJZZxUvNpW+S0qS+Kx
- fVXhFHjB2aTJZxAESvEGi+hH0ilYKsDlFRYGMBvPgvFr8VwnMYbifUrPjhqtfkL7bED1
- FOfe4yrz4OEnZOdKhZjwDAuLR/pWgjYxqmhBNLMnu2Hk77qNWhwQlM2sOgrdfVpdAhac
- FsNPSW7aJDiIFO++sxgy+W8CiXSIxS0I9fDcXuZuGNSRi4kWWfM8yCxls9x7V16nakUv IA== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3stku29xrh-1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : date :
+ subject : mime-version : content-type : content-transfer-encoding :
+ message-id : references : in-reply-to : to : cc; s=qcppdkim1;
+ bh=IJf8Pu/6BU2lt6uAstwMsRX3afks4d+RjDyGbuNxntM=;
+ b=fBYT15YZO6AMbOnu1/qLdxKB2X2MFnkjzIThppqv/8IJq7O9/JaeD5T8V6Fajlms/Woo
+ 5tSg2dt9GyCm8VoyBOguey6cNLUm1YKE1yyXvXDFooePOH0T9MQjnLqLMj2XtowNz0fY
+ 3wTW2w00REwuJszpG/uDxt6Sp2hX+aWqHsbQLkjDb+27YIT4Ea2x2bnMrFy4KWe1U92j
+ Dj1RQgX5OHCgs8FQcFjU0+V0d5nyY0BdMDRk+O5WBxBKDcpfxbJadrRE73OO9tmKft2a
+ ODIps2c8RBOedzbIilKoSa5c/rcl6rVyzWp6uXCBUYERz4lTTpFAmsSc6z0DkpzEblgr 8g== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3stxru071s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Thu, 31 Aug 2023 18:23:04 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37VIN24S010469
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37VIN3BS000964
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 31 Aug 2023 18:23:02 GMT
+        Thu, 31 Aug 2023 18:23:03 GMT
 Received: from hu-jjohnson-lv.qualcomm.com (10.49.16.6) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1118.36; Thu, 31 Aug 2023 11:23:00 -0700
 From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-Subject: [PATCH v3 0/2] wifi: Fix struct ieee80211_tim_ie::virtual_map
-Date:   Thu, 31 Aug 2023 11:22:56 -0700
-Message-ID: <20230831-ieee80211_tim_ie-v3-0-e10ff584ab5d@quicinc.com>
+Date:   Thu, 31 Aug 2023 11:22:58 -0700
+Subject: [PATCH v3 2/2] mac80211: Use flexible array in struct
+ ieee80211_tim_ie
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAIDa8GQC/32OzQ6CMBAGX4X0bE1/EIon38MYUtqt7EHQFhsN4
- d0txIMk6nE2mfl2JAE8QiD7bCQeIgbsuwRykxHT6u4MFG1iIpiQTIkdRQBQTHBeD3ipESiTFc8
- l004WliTt6sHhY0keT4lbDEPvn8tC5PP1TyxyyqhQpgTJpRWVPdzuaLAzW9Nf5vpbVT/UwpY6b
- 3RTMnArdf4kis/16ktCpISz2vHKNdwwWCemaXoBA78z8TABAAA=
+Message-ID: <20230831-ieee80211_tim_ie-v3-2-e10ff584ab5d@quicinc.com>
+References: <20230831-ieee80211_tim_ie-v3-0-e10ff584ab5d@quicinc.com>
+In-Reply-To: <20230831-ieee80211_tim_ie-v3-0-e10ff584ab5d@quicinc.com>
 To:     <kernel@quicinc.com>, Kalle Valo <kvalo@kernel.org>,
         =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
         "Christian Lamparter" <chunkeey@googlemail.com>,
@@ -71,51 +70,72 @@ X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ahr65fjEb7W4kcJd_KvteSgdgJHISFft
-X-Proofpoint-ORIG-GUID: ahr65fjEb7W4kcJd_KvteSgdgJHISFft
+X-Proofpoint-GUID: LiCqdd0xbcioSUS6eezCocJY3MUEpGaz
+X-Proofpoint-ORIG-GUID: LiCqdd0xbcioSUS6eezCocJY3MUEpGaz
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
  definitions=2023-08-31_16,2023-08-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
- lowpriorityscore=0 mlxscore=0 malwarescore=0 spamscore=0 phishscore=0
- bulkscore=0 priorityscore=1501 adultscore=0 suspectscore=0 mlxlogscore=649
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
- definitions=main-2308310164
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
+ clxscore=1015 malwarescore=0 adultscore=0 priorityscore=1501
+ impostorscore=0 suspectscore=0 mlxlogscore=538 mlxscore=0 bulkscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2308310164
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To align with [1] change struct ieee80211_tim_ie::virtual_map to be a
-flexible array.
+Currently struct ieee80211_tim_ie defines:
+	u8 virtual_map[1];
 
-As a precursor, add a size check in a place where one is currently
-missing.
+Per the guidance in [1] change this to be a flexible array.
+
+Per the discussion in [2] wrap the virtual_map in a union with a u8
+item in order to preserve the existing expectation that the
+virtual_map must contain at least one octet (at least when used in a
+non-S1G PPDU). This means that no driver changes are required.
 
 [1] https://docs.kernel.org/process/deprecated.html#zero-length-and-one-element-arrays
+[2] https://lore.kernel.org/linux-wireless/202308301529.AC90A9EF98@keescook/
 
+Suggested-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
-Changes in v3:
-- [PATCH 2/2] mac80211: Use flexible array in struct ieee80211_tim_ie
--     Complete rewrite based upon v2 discussion. As a result no driver changes are required
-- Link to v2: https://lore.kernel.org/r/20230829-ieee80211_tim_ie-v2-0-fdaf19fb1c0e@quicinc.com
+ include/linux/ieee80211.h | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-Changes in v2:
-- Cover Letter
--     removed internal note
-- [PATCH 2/2] mac80211: Use flexible array in struct ieee80211_tim_ie
--     Fixed typo: s/no/now/
-- Link to v1: https://lore.kernel.org/r/20230828-ieee80211_tim_ie-v1-0-6d7a4bab70ef@quicinc.com
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index bd2f6e19c357..340d7e0f6bf7 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -951,17 +951,24 @@ struct ieee80211_wide_bw_chansw_ie {
+  * @dtim_count: DTIM Count
+  * @dtim_period: DTIM Period
+  * @bitmap_ctrl: Bitmap Control
++ * @required_octet: "Syntatic sugar" to force the struct size to the
++ *                  minimum valid size when carried in a non-S1G PPDU
+  * @virtual_map: Partial Virtual Bitmap
+  *
+  * This structure represents the payload of the "TIM element" as
+- * described in IEEE Std 802.11-2020 section 9.4.2.5.
++ * described in IEEE Std 802.11-2020 section 9.4.2.5. Note that this
++ * definition is only applicable when the element is carried in a
++ * non-S1G PPDU. When the TIM is carried in an S1G PPDU, the Bitmap
++ * Control and Partial Virtual Bitmap may not be present.
+  */
+ struct ieee80211_tim_ie {
+ 	u8 dtim_count;
+ 	u8 dtim_period;
+ 	u8 bitmap_ctrl;
+-	/* variable size: 1 - 251 bytes */
+-	u8 virtual_map[1];
++	union {
++		u8 required_octet;
++		DECLARE_FLEX_ARRAY(u8, virtual_map);
++	};
+ } __packed;
+ 
+ /**
 
----
-Jeff Johnson (2):
-      wifi: cw1200: Avoid processing an invalid TIM IE
-      mac80211: Use flexible array in struct ieee80211_tim_ie
-
- drivers/net/wireless/st/cw1200/txrx.c |  2 +-
- include/linux/ieee80211.h             | 13 ++++++++++---
- 2 files changed, 11 insertions(+), 4 deletions(-)
----
-base-commit: b32add2d20ea6e62f30a3c0a7c2fb306ec5ceb3d
-change-id: 20230825-ieee80211_tim_ie-0391430af36d
+-- 
+2.42.0
 
