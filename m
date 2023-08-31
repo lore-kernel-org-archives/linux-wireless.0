@@ -2,108 +2,112 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A57EC83F2F
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 17:59:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D90BC83F38
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 18:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346215AbjHaR7M (ORCPT
+        id S1346986AbjHaSXY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Aug 2023 13:59:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37238 "EHLO
+        Thu, 31 Aug 2023 14:23:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346986AbjHaR7J (ORCPT
+        with ESMTP id S241457AbjHaSXX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2023 13:59:09 -0400
-Received: from mail-oo1-xc33.google.com (mail-oo1-xc33.google.com [IPv6:2607:f8b0:4864:20::c33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2C4FCF3;
-        Thu, 31 Aug 2023 10:59:02 -0700 (PDT)
-Received: by mail-oo1-xc33.google.com with SMTP id 006d021491bc7-570e63f5224so1212126eaf.0;
-        Thu, 31 Aug 2023 10:59:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693504742; x=1694109542; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=Zoo4asRBCh5Mcl054IXKgumuqNZfUTCOkxRnpebmvaQ=;
-        b=j8CeqmD94QefSmPt6geo0tfWG5pTNVVA8VcN5+j+sSXVqrTUCE+S5qK1ETBtwmGRR3
-         p92kwrl08slPXIdzsRxyFKoHJ9KiylWUi8912qCNlyErXBh9lil2XQHUzn8sLFYlT128
-         PpyvGYDMZQeJsrTNT4/mciSKkCLyMKTey7wdX43MlLHRFmJ2NiMUkAaLvQFFFCrPdxKv
-         WmFR5W6leswsfinmQALKalMSTHgfmBcQeMaNBaKjpxmY35A2pWuvwPUugqJIqB+k15mf
-         WV5w61HRJuK6X50E8S1woZ6rnsfEbAvCzkLhfF8RsKqh6U/8nRvaepKnsRpkGin2rKZO
-         zKGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693504742; x=1694109542;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Zoo4asRBCh5Mcl054IXKgumuqNZfUTCOkxRnpebmvaQ=;
-        b=AeXd5zcR3Sf3ga6r4Y5Rue/iVNxrihxjGhPoq2dUinpmQWdO6+m84X/RayMiMfduIC
-         6Lp3iRTLSDNeQe+l4zNtq/kwr/gozx+uftUWALdgHJnUesqzqLyh1fLo66Y/VAlXbaNA
-         LCqGOgA2sIaaos83COayB8YHaRwcyoBUoU3k1RXbxo9UBbiuV24OIMazUCxiBT45wV1x
-         r6mi1D5JrzKK37x7cwZMGgl+DFxfhuIjSIttmGPEIMZYA5Gj/h4T7xrMequUt44wzyb3
-         m5eZLH8OsSTmRCshbnieuhY2pNVdPngoZlnPTPtwoliUhQq08FEYH1zeydfOw2KxvpAG
-         R6Lw==
-X-Gm-Message-State: AOJu0Ywo01gUEKqQRX6U1lA5/Q28ckn1zoIpZt+NT3yO5ZThJAVxXqDH
-        M3pJ41XK2IEiBzEWXMUQHAx1SzUgZr8=
-X-Google-Smtp-Source: AGHT+IHVstGOLsQMD7P/4SDuK0yHgQX0Z12bPW/XuSLTkXGMqE2IvKKfNp2wkwyobxf7IYEYtaoKNw==
-X-Received: by 2002:a05:6870:204e:b0:1bf:8978:1eb8 with SMTP id l14-20020a056870204e00b001bf89781eb8mr331258oad.17.1693504742083;
-        Thu, 31 Aug 2023 10:59:02 -0700 (PDT)
-Received: from [192.168.1.119] ([216.130.59.33])
-        by smtp.gmail.com with ESMTPSA id f12-20020a9d5e8c000000b006b87f593877sm946510otl.37.2023.08.31.10.59.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 31 Aug 2023 10:59:01 -0700 (PDT)
-Sender: Larry Finger <larry.finger@gmail.com>
-Message-ID: <60b97eea-c8ac-9f9b-6c7b-903124e9ae51@lwfinger.net>
-Date:   Thu, 31 Aug 2023 12:59:00 -0500
+        Thu, 31 Aug 2023 14:23:23 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A846FE5F;
+        Thu, 31 Aug 2023 11:23:20 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37VHCbrp007546;
+        Thu, 31 Aug 2023 18:23:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : date :
+ subject : mime-version : content-type : content-transfer-encoding :
+ message-id : references : in-reply-to : to : cc; s=qcppdkim1;
+ bh=4F5EK7h1w70wxi3mCft2Ys/PoXBat3dePVsqH4SdaHQ=;
+ b=WyYljRgYhdzN4Pyx7Py0k++3JGG/aX6IDP/0zP1ehXrArn2PbA5tXK3/6LFM+76+7CpZ
+ VyXU7VwMNTKCuy1H6PnzREUkxtI5CELSCFGPBst2tGSu+JZnpK9LZ4IVJdJeHT8fFfWC
+ 9edng6jNZMNUMt1w4bhvfW98SF2SMVQKvBq3w9O9FH6G0npVnRT6XW62JTmlC1qqd4FZ
+ eHIFBcrZkkK0JFgXfMfkbAYTSKbU0zTk008AGK2IPhGLwDmiDuwjmPaQ0Ri61cWv8D05
+ UJE9GvxEOmrct40KF4JgPwHFtDM9f1dQoCdaIHxJZPMmxzgBWUdxBDKMP2hImS5ZpBBI NA== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3st6ctbgvm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 31 Aug 2023 18:23:04 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 37VIN23u000955
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 31 Aug 2023 18:23:03 GMT
+Received: from hu-jjohnson-lv.qualcomm.com (10.49.16.6) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Thu, 31 Aug 2023 11:23:00 -0700
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+Date:   Thu, 31 Aug 2023 11:22:57 -0700
+Subject: [PATCH v3 1/2] wifi: cw1200: Avoid processing an invalid TIM IE
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH] ssb-main: Fix division by zero in ssb_calc_clock_rate()
-To:     =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
-        =?UTF-8?B?0KDQsNC90LQg0JTQtdC10LE=?= <deeb.rand@confident.ru>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lvc-project@linuxtesting.org,
-        =?UTF-8?B?0JLQvtGB0LrRgNC10YHQtdC90YHQutC40Lkg0KHRgtCw0L3QuNGB0LvQsNCyINCY?=
-         =?UTF-8?B?0LPQvtGA0LXQstC40Yc=?= 
-        <voskresenski.stanislav@confident.ru>
-References: <20230830082759.23336-1-deeb.rand@confident.ru>
- <4c6d01bf-1a0f-27de-54e1-4afdcf4bc8d5@lwfinger.net>
- <531722477.1139813.1693465653233.JavaMail.zimbra@confident.ru>
- <20230831180506.30466e8a@barney>
-Content-Language: en-US
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <20230831180506.30466e8a@barney>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20230831-ieee80211_tim_ie-v3-1-e10ff584ab5d@quicinc.com>
+References: <20230831-ieee80211_tim_ie-v3-0-e10ff584ab5d@quicinc.com>
+In-Reply-To: <20230831-ieee80211_tim_ie-v3-0-e10ff584ab5d@quicinc.com>
+To:     <kernel@quicinc.com>, Kalle Valo <kvalo@kernel.org>,
+        =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        "Christian Lamparter" <chunkeey@googlemail.com>,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        "Helmut Schaa" <helmut.schaa@googlemail.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Kees Cook <keescook@chromium.org>
+CC:     <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <netdev@vger.kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.12.3
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: gQBI8kMoQe96S3-NgdsYFtdKUkkDoeNw
+X-Proofpoint-ORIG-GUID: gQBI8kMoQe96S3-NgdsYFtdKUkkDoeNw
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-08-31_16,2023-08-31_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ clxscore=1015 malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=689
+ suspectscore=0 spamscore=0 lowpriorityscore=0 mlxscore=0 bulkscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2308310164
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/31/23 11:05, Michael Büsch wrote:
-> On Thu, 31 Aug 2023 10:07:33 +0300 (MSK)
-> Ранд Дееб <deeb.rand@confident.ru> wrote:
-> 
->> 1- Yes, I agree that your solution is simpler, and I thought about
->> it, but I thought that the one who set the value zero put it for some
->> reason, so I did not want to change it.
-> 
-> 
-> Yes, I understand your reasoning and I had the same thought initially.
-> But I looked into the code and I am pretty sure that there is no reason
-> for the default case returning 0.
-> In fact, I think returning a 1 as default makes much more sense as the
-> default value for a factor.
-> 
-> Changing this from 0 to 1 will get my ack.
+While converting struct ieee80211_tim_ie::virtual_map to be a flexible
+array it was observed that the TIM IE processing in cw1200_rx_cb()
+could potentially process a malformed IE in a manner that could result
+in a buffer over-read. Add logic to verify that the TIM IE length is
+large enough to hold a valid TIM payload before processing it.
 
-As far as I can tell, that return 0 is there only to silence the compiler as the 
-switch statement has no default. As I said earlier, there have been no reports 
-of divide by zero entries in this ancient driver, thus the value returned is not 
-relevant. As a static tool sees the possibility of a returned zero leading to a 
-potential divide by zero, making it a one it the only thing that makes sense.
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ drivers/net/wireless/st/cw1200/txrx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I have no idea why this part of the patch has led to so much discussion!
+diff --git a/drivers/net/wireless/st/cw1200/txrx.c b/drivers/net/wireless/st/cw1200/txrx.c
+index 6894b919ff94..e16e9ae90d20 100644
+--- a/drivers/net/wireless/st/cw1200/txrx.c
++++ b/drivers/net/wireless/st/cw1200/txrx.c
+@@ -1166,7 +1166,7 @@ void cw1200_rx_cb(struct cw1200_common *priv,
+ 		size_t ies_len = skb->len - (ies - (u8 *)(skb->data));
+ 
+ 		tim_ie = cfg80211_find_ie(WLAN_EID_TIM, ies, ies_len);
+-		if (tim_ie) {
++		if (tim_ie && tim_ie[1] >= sizeof(struct ieee80211_tim_ie)) {
+ 			struct ieee80211_tim_ie *tim =
+ 				(struct ieee80211_tim_ie *)&tim_ie[2];
+ 
 
-Larry
-
+-- 
+2.42.0
 
