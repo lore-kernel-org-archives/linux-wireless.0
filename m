@@ -2,123 +2,163 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20D1AC83F10
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 06:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A86AC83F29
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 07:07:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346102AbjHaGlv (ORCPT
+        id S243432AbjHaHHo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Aug 2023 02:41:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53876 "EHLO
+        Thu, 31 Aug 2023 03:07:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242754AbjHaGlu (ORCPT
+        with ESMTP id S229807AbjHaHHn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2023 02:41:50 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80F95E0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Aug 2023 23:41:46 -0700 (PDT)
-X-UUID: ecafd05847c611eeb20a276fd37b9834-20230831
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=WFT99+z2/vpIbfLokQbVWLJxcppLvQbX9e6U3+V5HfE=;
-        b=ZXsnlrqADyD0e0kxjuLINcr2VbTArygs2Dc8wtG15yN55h2gdUPdpCQ5sbOnoURITm8a6gh7XbawX9teyZ+6haeWb19f77kKSL/sRtOmAUjWQor8Ze7E1GRB9dK0hSmy4v9Eqja7ij0nm8ph7cUwMcfPkt7pZjweObX/KsEsI6k=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.31,REQID:8c1ced05-39b3-44f8-822b-545c448b08c6,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:0ad78a4,CLOUDID:d5e3f31f-33fd-4aaa-bb43-d3fd68d9d5ae,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
-        DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: ecafd05847c611eeb20a276fd37b9834-20230831
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-        (envelope-from <shayne.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 484238242; Thu, 31 Aug 2023 14:23:39 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 31 Aug 2023 14:23:38 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 31 Aug 2023 14:23:38 +0800
-From:   Shayne Chen <shayne.chen@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>
-CC:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Peter Chiu <chui-hao.chiu@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 8/9] wifi: mt76: mt7915: update mpdu density capability
-Date:   Thu, 31 Aug 2023 14:22:20 +0800
-Message-ID: <20230831062221.20027-8-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20230831062221.20027-1-shayne.chen@mediatek.com>
-References: <20230831062221.20027-1-shayne.chen@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+        Thu, 31 Aug 2023 03:07:43 -0400
+Received: from mail.confident.ru (mail.confident.ru [85.114.29.218])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B56521A3;
+        Thu, 31 Aug 2023 00:07:35 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by mail.confident.ru (Postfix) with ESMTP id 2D0D23FC0923;
+        Thu, 31 Aug 2023 10:07:34 +0300 (MSK)
+X-Virus-Scanned: amavisd-new at mail.confident.ru
+DKIM-Filter: OpenDKIM Filter v2.10.3 mail.confident.ru 96C7B3FC09A2
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=confident.ru;
+        s=54152002-4729-11E9-BD92-62EA33CD6873; t=1693465653;
+        bh=/rJyR8b26n4mvChUQUtfkBMvBmQrW1t8y4UP7Sz0/NQ=;
+        h=Date:From:To:Message-ID;
+        b=Mh5exTFXuDd5Z1KJdp2cgPKy+2FLC34anzpdic1xOTeIaobeeRYY/q2gwQZ7Bk0o1
+         LCePzaWCDQyoaHFXqd4ovGNYukL5PRPtTh72YffvEAL1ghJEvmkQxllT6NlyHSFJMI
+         DJRPMMPWqVsxG+8kdYKJ8rTIRcWjGbQ7EalWN21CyISwM1reiHjyhzgvvL/5remblm
+         /LlHFLXNjjGbg8ydwNCyCtVzduMU8n/LPwMChKNLWPUIEp0no0BwvsK4XdL9nCvS4H
+         +gJodaQ2kBU/Kx0V5IEoHTlnEeCdZUQZTbuh3hkSxyVCbQhTMbMZBOvsSa3ImixW7V
+         1KzrTpOtguQMg==
+Date:   Thu, 31 Aug 2023 10:07:33 +0300 (MSK)
+From:   =?utf-8?B?0KDQsNC90LQg0JTQtdC10LE=?= <deeb.rand@confident.ru>
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     lvc-project@linuxtesting.org,
+        =?utf-8?B?0JLQvtGB0LrRgNC10YHQtdC90YHQutC40Lkg0KHRgtCw0L3QuNGB0LvQsNCyINCY0LPQvtGA0LXQstC40Yc=?= 
+        <voskresenski.stanislav@confident.ru>
+Message-ID: <531722477.1139813.1693465653233.JavaMail.zimbra@confident.ru>
+In-Reply-To: <4c6d01bf-1a0f-27de-54e1-4afdcf4bc8d5@lwfinger.net>
+References: <20230830082759.23336-1-deeb.rand@confident.ru> <4c6d01bf-1a0f-27de-54e1-4afdcf4bc8d5@lwfinger.net>
+Subject: Re: [PATCH] ssb-main: Fix division by zero in ssb_calc_clock_rate()
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Thread-Topic: ssb-main: Fix division by zero in ssb_calc_clock_rate()
+Thread-Index: 8V3LNCgbCW1nPh++F4l9+4bHupsy4Q==
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
+Dear Larry,=20
 
-Set mpdu density to 2 usec for non-mt7915 Wi-Fi 6 generation chipsets
-to align to the hardware capability which improves the throughput.
+1- Yes, I agree that your solution is simpler, and I thought about it, but=
+=20
+I thought that the one who set the value zero put it for some reason, so I=
+=20
+did not want to change it.
+2- It's first time to send using this mailer, but we tested it by sending=
+=20
+the patch to our personal emails (gmail, etc..) and it works perfectly! I=
+=20
+don't know why this encryption appears only when we get a response from=20
+you, but we're still investigating. We will fix it, and follow all the=20
+recommendations in the future.
 
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+Thanks for your cooperation.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 78552f10b377..08989e00facb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -392,8 +392,12 @@ mt7915_init_wiphy(struct mt7915_phy *phy)
- 		phy->mt76->sband_2g.sband.ht_cap.cap |=
- 			IEEE80211_HT_CAP_LDPC_CODING |
- 			IEEE80211_HT_CAP_MAX_AMSDU;
--		phy->mt76->sband_2g.sband.ht_cap.ampdu_density =
--			IEEE80211_HT_MPDU_DENSITY_4;
-+		if (is_mt7915(&dev->mt76))
-+			phy->mt76->sband_2g.sband.ht_cap.ampdu_density =
-+				IEEE80211_HT_MPDU_DENSITY_4;
-+		else
-+			phy->mt76->sband_2g.sband.ht_cap.ampdu_density =
-+				IEEE80211_HT_MPDU_DENSITY_2;
- 	}
- 
- 	if (phy->mt76->cap.has_5ghz) {
-@@ -403,10 +407,11 @@ mt7915_init_wiphy(struct mt7915_phy *phy)
- 		phy->mt76->sband_5g.sband.ht_cap.cap |=
- 			IEEE80211_HT_CAP_LDPC_CODING |
- 			IEEE80211_HT_CAP_MAX_AMSDU;
--		phy->mt76->sband_5g.sband.ht_cap.ampdu_density =
--			IEEE80211_HT_MPDU_DENSITY_4;
- 
- 		if (is_mt7915(&dev->mt76)) {
-+			phy->mt76->sband_5g.sband.ht_cap.ampdu_density =
-+				IEEE80211_HT_MPDU_DENSITY_4;
-+
- 			vht_cap->cap |=
- 				IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991 |
- 				IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
-@@ -416,6 +421,9 @@ mt7915_init_wiphy(struct mt7915_phy *phy)
- 					IEEE80211_VHT_CAP_SHORT_GI_160 |
- 					FIELD_PREP(IEEE80211_VHT_CAP_EXT_NSS_BW_MASK, 1);
- 		} else {
-+			phy->mt76->sband_5g.sband.ht_cap.ampdu_density =
-+				IEEE80211_HT_MPDU_DENSITY_2;
-+
- 			vht_cap->cap |=
- 				IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
- 				IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
--- 
-2.39.2
+Best regards,
+Rand
 
+----- Original Message -----
+From: "Larry Finger" <Larry.Finger@lwfinger.net>
+To: "Rand Deeb" <deeb.rand@confident.ru>, "Michael Buesch" <m@bues.ch>, lin=
+ux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: lvc-project@linuxtesting.org, "=D0=92=D0=BE=D1=81=D0=BA=D1=80=D0=B5=D1=
+=81=D0=B5=D0=BD=D1=81=D0=BA=D0=B8=D0=B9 =D0=A1=D1=82=D0=B0=D0=BD=D0=B8=D1=
+=81=D0=BB=D0=B0=D0=B2 =D0=98=D0=B3=D0=BE=D1=80=D0=B5=D0=B2=D0=B8=D1=87" <vo=
+skresenski.stanislav@confident.ru>
+Sent: Wednesday, August 30, 2023 10:50:42 PM
+Subject: Re: [PATCH] ssb-main: Fix division by zero in ssb_calc_clock_rate(=
+)
+
+On 8/30/23 03:27, Rand Deeb wrote:
+> In ssb_calc_clock_rate(), the value of m1 may be zero because it is
+> initialized using clkfactor_f6_resolv(). This function could return
+> zero, so there is a possibility of dividing by zero, we fixed it by
+> checking the values before dividing.
+>=20
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+>=20
+> Signed-off-by: Rand Deeb <deeb.rand@confident.ru>
+> ---
+>   drivers/ssb/main.c | 16 ++++++++++++----
+>   1 file changed, 12 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+> index 0a26984acb2c..e0776a16d04d 100644
+> --- a/drivers/ssb/main.c
+> +++ b/drivers/ssb/main.c
+> @@ -903,13 +903,21 @@ u32 ssb_calc_clock_rate(u32 plltype, u32 n, u32 m)
+>   =09=09case SSB_CHIPCO_CLK_MC_BYPASS:
+>   =09=09=09return clock;
+>   =09=09case SSB_CHIPCO_CLK_MC_M1:
+> -=09=09=09return (clock / m1);
+> +=09=09=09if=20
+> +=09=09=09=09return (clock / m1);
+> +=09=09=09break;
+>   =09=09case SSB_CHIPCO_CLK_MC_M1M2:
+> -=09=09=09return (clock / (m1 * m2));
+> +=09=09=09if ((m1 * m2) !=3D3D 0)
+> +=09=09=09=09return (clock / (m1 * m2));
+> +=09=09=09break;
+>   =09=09case SSB_CHIPCO_CLK_MC_M1M2M3:
+> -=09=09=09return (clock / (m1 * m2 * m3));
+> +=09=09=09if ((m1 * m2 * m3) !=3D3D 0)
+> +=09=09=09=09return (clock / (m1 * m2 * m3));
+> +=09=09=09break;
+>   =09=09case SSB_CHIPCO_CLK_MC_M1M3:
+> -=09=09=09return (clock / (m1 * m3));
+> +=09=09=09if ((m1 * m3) !=3D3D 0)
+> +=09=09=09=09return (clock / (m1 * m3));
+> +=09=09=09break;
+>   =09=09}
+>   =09=09return 0;
+>   =09case SSB_PLLTYPE_2:
+> --=3D20
+> 2.34.1
+
+Rand,
+
+I agree that clkfactor_f6_resolv() could return 0, but we have not been ove=
+rrun=20
+with reports of divide by zero errors, which suggests that the branch is ne=
+ver=20
+taken. This patch will make your tool happy and is much simpler:
+
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index ab080cf26c9f..b9934b9c2d70 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -837,7 +837,7 @@ static u32 clkfactor_f6_resolve(u32 v)
+         case SSB_CHIPCO_CLK_F6_7:
+                 return 7;
+         }
+-       return 0;
++       return 1;
+  }
+
+  /* Calculate the speed the backplane would run at a given set of clockcon=
+trol=20
+values */
+
+Your patch has some technical problems as well. The subject should be "ssb:=
+ Fix=20
+division ..." In addition, note that all your if statements have an extrane=
+ous=20
+"3D" as in "(m1 !=3D3D 0)". To me, that indicates that your mailer is not s=
+ending=20
+plain text.
+
+Larry
