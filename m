@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52D89C83F29
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 06:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAFDBC83F10
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 06:22:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346061AbjHaGWQ (ORCPT
+        id S1343572AbjHaGWY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Aug 2023 02:22:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43982 "EHLO
+        Thu, 31 Aug 2023 02:22:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345163AbjHaGWD (ORCPT
+        with ESMTP id S1344047AbjHaGWH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2023 02:22:03 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2072.outbound.protection.outlook.com [40.107.94.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17246CE6;
-        Wed, 30 Aug 2023 23:21:31 -0700 (PDT)
+        Thu, 31 Aug 2023 02:22:07 -0400
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2089.outbound.protection.outlook.com [40.107.92.89])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D6BD10C2;
+        Wed, 30 Aug 2023 23:21:41 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IU2w+qE194con9dOK8D0ttev5BpQP49rocTKHqI5f4ngsWhP8s9R4pqC9BVAE57+5n47OqIAb4PDk6beat/jM9VXhfCqqA5DrFTWTlp5DzK3d2gpimYBvsINjeWQf90ZkL71q87erFwQH2B5+/kV+eQCoYSikfDHIsb9zqxJ/Mu56ffpng8aj+DtKs73U57XaQgf3ODYOs7NXH30jrlgKtekukFes1Nq6QM+OBu88lqwXRcDIbjBGSL//8AGpY0TlGV+2ntdRt5AiOLkfPcmwfHYQvA45z4MotMWdcMLLRdP1GS6U7vv94NqZgGRoALmrF31MbVudmDQv5AbzWRaAA==
+ b=DUt1UQjOZDd9xviQE2iW6NdW/dNJoGDWVQL7telfMHusPqneim8y0rXkbuW9C8rGqASfotklmczcQkNWfmcrUPdMsNWtk39XoEA80hbewcW/gcQLs/+q0m4WNJ47W1fn/OoLfKuwMGn6YXSrTIxXAHdA3DewW++7+UOICvfj5p3DMID/uG6wu6vFxiXCogI5WEcVExcPDdTS0MiOAQKXcKQBZgr566BuzMKAtLfrIv/9XWksmXqaykLcahs9QSanSbx8CXJE2Q5pmtmgykhki8B+NzhTqH0YCe/F9m6e/tVFrZziBNsgI2577lzB+POKmu7PbXeaeiLYbgAjwhjSVw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Htd1mFxSVlkhYdvRivRi0EXb5chfu+1IcqJXQMj8ays=;
- b=j3DPkNKDWWBqM7kC67L59wVf5lqCFCvjn96UvwPAGwcUamGWkw5QeY2Pi045f/uVwIZc2Jf77KYiPq5VyooH7Az5rkXgUrUo6rO6EuywI7B52AWPxN5QEM4vgyG53/yMcC1T7tfRemN0zUQsRngwFFMqk46gUqY0TOYKWAJW6cc2nI44mYQzxQwCtypRT2JmHjIZB2j5UsX4xm5G4cgowO4g2BSO7HeICXZuFMat/gh4vHU8I0ARAuvFGkLJ5d2IMax4gnzhLgr5L21alRyGh7AQzGYATjcfBNEs4SXp/+oDPgToDfeZKYrOYm+FK/+s2bP93VYTDnBdfW9/QchK3w==
+ bh=WFFnW0xRkztAb7gMdcjvh1Wj5dspp6P6q9v2lV3MAV0=;
+ b=PHVvX7tU8r/wlUmk3kmTObijrxRTw8Zyx0NO2Oi60K1SL8Mj9E0Qb3U4fB7+6wlZKd7jYsvl01iHp8zXbxdU19o5G4SUlgfBCv1/NCZRieUffrCYADrM9KJJBklWssEc472ZyqmUh6BjWwKPDMWCDMtY5xWmukmsiNi/sAFXogNEINyMilnQsmukkcXmKZalrQLu2icdHoa8/6rWM84Me0Phkb1VojemfuUO+u7hSM1Q20juSFY9xtShuBeL4YoCo8NRJjHs3zLq9NU792SVqWD1rtiRbmf2XrbkvpXwvmuK83dEOczNUbDleaS6s730CyU8GshM87qfsE2NTIOqkQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Htd1mFxSVlkhYdvRivRi0EXb5chfu+1IcqJXQMj8ays=;
- b=L5hbIG5emU8HhpS1qWu5GpwYQWq+RJqvSjPJsbwjynk4ggJb1/QzvBkErJx8InwAtJuSkuOA5SQQ6eBQWgkv8Bm5BxLyBnBwp+8hmPHh/q+hSvXuHOZ20CObUHW93eGpDbc5xAtcM7f4aERG32dNi/vgnFs7q1XFD8ot84OkOlQ=
-Received: from MW2PR2101CA0017.namprd21.prod.outlook.com (2603:10b6:302:1::30)
- by PH0PR12MB7813.namprd12.prod.outlook.com (2603:10b6:510:286::16) with
+ bh=WFFnW0xRkztAb7gMdcjvh1Wj5dspp6P6q9v2lV3MAV0=;
+ b=MwmLwBo1gXgZUkoFOjVIgOUQ8OH0UXAGspEJNkZ5KCNJd9ceItRq5h6Ehpd1nCf9pMbEc67n64b3NYZACBI4hD1ggDaRRVyJibIfOaPb+3vpKFFgvyt5/wcXkGq0tdB/f3+9kWrHKJsC35Cvl1MoOmrV61Rt5KScvsa67dffPOM=
+Received: from MW4PR04CA0347.namprd04.prod.outlook.com (2603:10b6:303:8a::22)
+ by IA0PR12MB7553.namprd12.prod.outlook.com (2603:10b6:208:43f::18) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.34; Thu, 31 Aug
- 2023 06:21:28 +0000
-Received: from CO1PEPF000044F9.namprd21.prod.outlook.com
- (2603:10b6:302:1:cafe::77) by MW2PR2101CA0017.outlook.office365.com
- (2603:10b6:302:1::30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6768.12 via Frontend
- Transport; Thu, 31 Aug 2023 06:21:27 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.21; Thu, 31 Aug
+ 2023 06:21:38 +0000
+Received: from CO1PEPF000044FB.namprd21.prod.outlook.com
+ (2603:10b6:303:8a:cafe::8a) by MW4PR04CA0347.outlook.office365.com
+ (2603:10b6:303:8a::22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.21 via Frontend
+ Transport; Thu, 31 Aug 2023 06:21:38 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,13 +48,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1PEPF000044F9.mail.protection.outlook.com (10.167.241.199) with Microsoft
+ CO1PEPF000044FB.mail.protection.outlook.com (10.167.241.201) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6768.2 via Frontend Transport; Thu, 31 Aug 2023 06:21:27 +0000
+ 15.20.6768.2 via Frontend Transport; Thu, 31 Aug 2023 06:21:37 +0000
 Received: from equan-buildpc.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 31 Aug
- 2023 01:21:22 -0500
+ 2023 01:21:32 -0500
 From:   Evan Quan <evan.quan@amd.com>
 To:     <lenb@kernel.org>, <johannes@sipsolutions.net>,
         <davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
@@ -65,408 +65,220 @@ CC:     <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
         <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         Evan Quan <evan.quan@amd.com>
-Subject: [V11 5/8] drm/amd/pm: setup the framework to support Wifi RFI mitigation feature
-Date:   Thu, 31 Aug 2023 14:20:28 +0800
-Message-ID: <20230831062031.1014799-6-evan.quan@amd.com>
+Subject: [V11 7/8] drm/amd/pm: enable Wifi RFI mitigation feature support for SMU13.0.0
+Date:   Thu, 31 Aug 2023 14:20:30 +0800
+Message-ID: <20230831062031.1014799-8-evan.quan@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230831062031.1014799-1-evan.quan@amd.com>
 References: <20230831062031.1014799-1-evan.quan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-Originating-IP: [10.180.168.240]
 X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000044F9:EE_|PH0PR12MB7813:EE_
-X-MS-Office365-Filtering-Correlation-Id: c832d08e-2f68-4561-958e-08dba9ea827c
+X-MS-TrafficTypeDiagnostic: CO1PEPF000044FB:EE_|IA0PR12MB7553:EE_
+X-MS-Office365-Filtering-Correlation-Id: d9483b13-9996-4907-5f9c-08dba9ea887f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fuWmiCg1Nyk+ioy/iIJmeA2dNHTJtWBjRZZfhT1WNF7wkYd0vWqPIURWh7JglWu6nhXg7Df8W24mx4cgWXODmpOcj1ld0WCFkykXUukSXyjUz5fWmglUoDbUblneyDxGaAi+RcDO5Z9GUkWHgdLsuJfWPp+KSN88G8S36/oDBaKJ02yov4N3bPjI2V/u+SwZFhSbSUqJNleZdlmP6QeVNf/8bLMeRw7cx/gGRvwU7Mj9+ZvzpB3wWS8CYmdhGhW2wzi3+WCnCBVqsK9EXpGGxKGJJiN78sMEIyvWArfHMlqgDI1UDp+g0f2pfM7t5AcspggzcAN7BPDOXktgx6nVu64iGZ0js3ckD5n89KISLuCMl5A40UIm56FAf1wFbzt4TRLew/u3FR2Vh3o5F3pF1lg62CETrK4tNMV0ca4eoOL1i47+BMYmUCWU1Rc7b3Mq5NIuSZSMegAOCZ+k7oscu/OpcfIg/kZHOawwfOi4skd1WzaZA8eGH05SwzGljskIIanWMucmIZLlkl09+OWbIpRVQdmlmhhoCydBwpYFgKLGT9GgOV0SNBrUv/W2qWrZ3/RuNhyDdBNNaROzwPL1H2ZzMP1xZCmsrSUl70ljKG2MauxAWbuwkRumdRdC07HfuW08KCOJgWuM/2EKNvqLQCxl89e0PHN3qj6aMhnQbVLGEPWg051HURhAZ0EnDfk9CRO6qTNCrx27Kcat9bhfOk7+NNDwgxeJmUiRdoBTumvFv/GjnjDJw7RD+SF8vTg+T7LwrqS+xuh0vjQNRMU9NUunUWnZ7fGmY9Jea4at4vvF6i+U6SmgcdbmoAnfdljz
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(136003)(346002)(376002)(39860400002)(396003)(1800799009)(451199024)(186009)(82310400011)(40470700004)(46966006)(36840700001)(82740400003)(7696005)(110136005)(70206006)(86362001)(40480700001)(356005)(81166007)(36756003)(47076005)(921005)(36860700001)(2616005)(426003)(26005)(16526019)(336012)(83380400001)(1076003)(40460700003)(54906003)(8936002)(478600001)(44832011)(5660300002)(7416002)(2906002)(30864003)(8676002)(70586007)(41300700001)(6636002)(316002)(4326008)(36900700001)(309714004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: tCiT9dpbLdLdLH00mkhEknQ8KLDaA55RIILYKXP/9DwdLiPpJ34cmG87BGKrXfEzNADcy2vDzOymmtr82UOGfL/tbD1WKeXFpIFWUHYZ6NhBrE8sEOcXTTD0Wb/jl9oHTPSGjmV1gpcTVPnheEu0/cj/j8adipw8d06/e8mcdpMizntEVHujKKZYwOzeFqEAt8zlntsicS+IMbxv8X/8wMKZC9BcqxvxWpYgPuvqS1EsGT33M/sab7YvPh6klM016sH+xpKITvvOskQU9j2VLZZcDIqG5oTI+RiRQgzuqZnhhgnBhniEnmJWNYw090ts/Sd2vYTrNUuAhZqEgSFtx+mX3p72/cSHTCR58/rEbwgw5xB0xHZiQNQC+UCJAgQqYCo2pLV8UoaX60g3mi8SBLg1nRxmuq/elY/SHlfWt4zr7lsDxUFcx8JjyIJCiLfSRlpJ9ObU2NHB84gq5hzyEawbLHzvsQwhxC9bZnNMuFL6H2N6JX34exbGP1hFKhXVJtjQp1VOopsaqGJsypVnCVkH+SCZeTF6Iv8/Qobq2VplBOXATqrEuzcb6hWUb3EAAgU8MzU3/zsfHGw30eA3BwnjnTYf9ck224UlSkNC/1DjDjQ9tQZHdeSbrXE756q2yWJvKZ0eptFus/2tQYZ5v3FP4g/AJL6TAFE3tmS8i+c7hQ3kWVNLtFSdWK7eKDBysPzHKK1oQkbY4yGAM5VOW8n/GVhTBPc65HLzGMGeKuJZ2E78FcMSGYrnKEHriColjG5OsdxCcLy4XwhWrxPsDX+Ah/E22c/3gehpn/W1aRc=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(39860400002)(376002)(346002)(136003)(396003)(82310400011)(451199024)(1800799009)(186009)(40470700004)(46966006)(36840700001)(7696005)(478600001)(83380400001)(1076003)(2616005)(336012)(426003)(26005)(16526019)(2906002)(7416002)(44832011)(6636002)(316002)(54906003)(41300700001)(70206006)(70586007)(110136005)(5660300002)(4326008)(8676002)(8936002)(40460700003)(36756003)(40480700001)(47076005)(36860700001)(86362001)(81166007)(921005)(356005)(82740400003)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2023 06:21:27.8138
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2023 06:21:37.9141
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c832d08e-2f68-4561-958e-08dba9ea827c
+X-MS-Exchange-CrossTenant-Network-Message-Id: d9483b13-9996-4907-5f9c-08dba9ea887f
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1PEPF000044F9.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: CO1PEPF000044FB.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB7813
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB7553
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With WBRF feature supported, as a driver responding to the frequencies,
-amdgpu driver is able to do shadow pstate switching to mitigate possible
-interference(between its (G-)DDR memory clocks and local radio module
-frequency bands used by Wifi 6/6e/7).
+Fulfill the SMU13.0.0 support for Wifi RFI mitigation feature.
 
 Signed-off-by: Evan Quan <evan.quan@amd.com>
 Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
 --
-v1->v2:
-  - update the prompt for feature support(Lijo)
-v8->v9:
-  - update parameter document for smu_wbrf_event_handler(Simon)
-v9->v10:
 v10->v11:
- - correct the logics for wbrf range sorting(Lijo)
+  - downgrade the prompt level on message failure(Lijo)
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu.h           |   2 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |  17 ++
- drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     | 195 ++++++++++++++++++
- drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h |  23 +++
- drivers/gpu/drm/amd/pm/swsmu/smu_internal.h   |   3 +
- 5 files changed, 240 insertions(+)
+ drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h |  3 +
+ drivers/gpu/drm/amd/pm/swsmu/inc/smu_types.h  |  3 +-
+ drivers/gpu/drm/amd/pm/swsmu/inc/smu_v13_0.h  |  3 +
+ .../gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c    |  9 +++
+ .../drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c  | 60 +++++++++++++++++++
+ 5 files changed, 77 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-index 97cb56c791f3..47595b892c1f 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-@@ -246,6 +246,8 @@ extern int amdgpu_sg_display;
- 
- extern int amdgpu_user_partt_mode;
- 
-+extern int amdgpu_wbrf;
-+
- #define AMDGPU_VM_MAX_NUM_CTX			4096
- #define AMDGPU_SG_THRESHOLD			(256*1024*1024)
- #define AMDGPU_WAIT_IDLE_TIMEOUT_IN_MS	        3000
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-index 7691177d87aa..c7231ad89aa0 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
-@@ -195,6 +195,7 @@ int amdgpu_use_xgmi_p2p = 1;
- int amdgpu_vcnfw_log;
- int amdgpu_sg_display = -1; /* auto */
- int amdgpu_user_partt_mode = AMDGPU_AUTO_COMPUTE_PARTITION_MODE;
-+int amdgpu_wbrf = -1;
- 
- static void amdgpu_drv_delayed_reset_work_handler(struct work_struct *work);
- 
-@@ -978,6 +979,22 @@ module_param_named(user_partt_mode, amdgpu_user_partt_mode, uint, 0444);
- module_param(enforce_isolation, bool, 0444);
- MODULE_PARM_DESC(enforce_isolation, "enforce process isolation between graphics and compute . enforce_isolation = on");
- 
-+/**
-+ * DOC: wbrf (int)
-+ * Enable Wifi RFI interference mitigation feature.
-+ * Due to electrical and mechanical constraints there may be likely interference of
-+ * relatively high-powered harmonics of the (G-)DDR memory clocks with local radio
-+ * module frequency bands used by Wifi 6/6e/7. To mitigate the possible RFI interference,
-+ * with this feature enabled, PMFW will use either “shadowed P-State” or “P-State” based
-+ * on active list of frequencies in-use (to be avoided) as part of initial setting or
-+ * P-state transition. However, there may be potential performance impact with this
-+ * feature enabled.
-+ * (0 = disabled, 1 = enabled, -1 = auto (default setting, will be enabled if supported))
-+ */
-+MODULE_PARM_DESC(wbrf,
-+	"Enable Wifi RFI interference mitigation (0 = disabled, 1 = enabled, -1 = auto(default)");
-+module_param_named(wbrf, amdgpu_wbrf, int, 0444);
-+
- /* These devices are not supported by amdgpu.
-  * They are supported by the mach64, r128, radeon drivers
-  */
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index 222af2fae745..bac2a362a2fc 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -1228,6 +1228,174 @@ static int smu_get_thermal_temperature_range(struct smu_context *smu)
- 	return ret;
- }
- 
-+/**
-+ * smu_wbrf_handle_exclusion_ranges - consume the wbrf exclusion ranges
-+ *
-+ * @smu: smu_context pointer
-+ *
-+ * Retrieve the wbrf exclusion ranges and send them to PMFW for proper handling.
-+ * Returns 0 on success, error on failure.
-+ */
-+static int smu_wbrf_handle_exclusion_ranges(struct smu_context *smu)
-+{
-+	struct wbrf_ranges_in_out wbrf_exclusion = {0};
-+	struct exclusion_range *wifi_bands = wbrf_exclusion.band_list;
-+	struct amdgpu_device *adev = smu->adev;
-+	uint32_t num_of_wbrf_ranges = MAX_NUM_OF_WBRF_RANGES;
-+	uint64_t start, end;
-+	int ret, i, j;
-+
-+	ret = acpi_amd_wbrf_retrieve_exclusions(adev->dev, &wbrf_exclusion);
-+	if (ret) {
-+		dev_err(adev->dev, "Failed to retrieve exclusion ranges!\n");
-+		return ret;
-+	}
-+
-+	/*
-+	 * The exclusion ranges array we got might be filled with holes and duplicate
-+	 * entries. For example:
-+	 * {(2400, 2500), (0, 0), (6882, 6962), (2400, 2500), (0, 0), (6117, 6189), (0, 0)...}
-+	 * We need to do some sortups to eliminate those holes and duplicate entries.
-+	 * Expected output: {(2400, 2500), (6117, 6189), (6882, 6962), (0, 0)...}
-+	 */
-+	for (i = 0; i < num_of_wbrf_ranges; i++) {
-+		start = wifi_bands[i].start;
-+		end = wifi_bands[i].end;
-+
-+		/* get the last valid entry to fill the intermediate hole */
-+		if (!start && !end) {
-+			for (j = num_of_wbrf_ranges - 1; j > i; j--)
-+				if (wifi_bands[j].start &&
-+				    wifi_bands[j].end)
-+					break;
-+
-+			/* no valid entry left */
-+			if (j <= i)
-+				break;
-+
-+			start = wifi_bands[i].start = wifi_bands[j].start;
-+			end = wifi_bands[i].end = wifi_bands[j].end;
-+			wifi_bands[j].start = 0;
-+			wifi_bands[j].end = 0;
-+			num_of_wbrf_ranges = j;
-+		}
-+
-+		/* eliminate duplicate entries */
-+		for (j = i + 1; j < num_of_wbrf_ranges; j++) {
-+			if ((wifi_bands[j].start == start) &&
-+			     (wifi_bands[j].end == end)) {
-+				wifi_bands[j].start = 0;
-+				wifi_bands[j].end = 0;
-+			}
-+		}
-+	}
-+
-+	/* Send the sorted wifi_bands to PMFW */
-+	ret = smu_set_wbrf_exclusion_ranges(smu, wifi_bands);
-+	/* Give it another chance */
-+	if (unlikely(ret == -EBUSY)) {
-+		mdelay(5);
-+		ret = smu_set_wbrf_exclusion_ranges(smu, wifi_bands);
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * smu_wbrf_event_handler - handle notify events
-+ *
-+ * @nb: notifier block
-+ * @action: event type
-+ * @_arg: event data
-+ *
-+ * Calls relevant amdgpu function in response to wbrf event
-+ * notification from kernel.
-+ */
-+static int smu_wbrf_event_handler(struct notifier_block *nb,
-+				  unsigned long action, void *_arg)
-+{
-+	struct smu_context *smu = container_of(nb, struct smu_context,
-+					       wbrf_notifier);
-+
-+	switch (action) {
-+	case WBRF_CHANGED:
-+		smu_wbrf_handle_exclusion_ranges(smu);
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	};
-+
-+	return NOTIFY_OK;
-+}
-+
-+/**
-+ * smu_wbrf_support_check - check wbrf support
-+ *
-+ * @smu: smu_context pointer
-+ *
-+ * Verifies the ACPI interface whether wbrf is supported.
-+ */
-+static void smu_wbrf_support_check(struct smu_context *smu)
-+{
-+	struct amdgpu_device *adev = smu->adev;
-+
-+	smu->wbrf_supported = smu_is_asic_wbrf_supported(smu) &&
-+			      !!amdgpu_wbrf &&
-+			      acpi_amd_wbrf_supported_consumer(adev->dev);
-+
-+	if (smu->wbrf_supported)
-+		dev_info(adev->dev, "RF interference mitigation is supported\n");
-+}
-+
-+/**
-+ * smu_wbrf_init - init driver wbrf support
-+ *
-+ * @smu: smu_context pointer
-+ *
-+ * Verifies the AMD ACPI interfaces and registers with the wbrf
-+ * notifier chain if wbrf feature is supported.
-+ * Returns 0 on success, error on failure.
-+ */
-+static int smu_wbrf_init(struct smu_context *smu)
-+{
-+	struct amdgpu_device *adev = smu->adev;
-+	int ret;
-+
-+	if (!smu->wbrf_supported)
-+		return 0;
-+
-+	smu->wbrf_notifier.notifier_call = smu_wbrf_event_handler;
-+	ret = acpi_amd_wbrf_register_notifier(&smu->wbrf_notifier);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * Some wifiband exclusion ranges may be already there
-+	 * before our driver loaded. To make sure our driver
-+	 * is awared of those exclusion ranges.
-+	 */
-+	ret = smu_wbrf_handle_exclusion_ranges(smu);
-+	if (ret)
-+		dev_err(adev->dev, "Failed to handle wbrf exclusion ranges\n");
-+
-+	return ret;
-+}
-+
-+/**
-+ * smu_wbrf_fini - tear down driver wbrf support
-+ *
-+ * @smu: smu_context pointer
-+ *
-+ * Unregisters with the wbrf notifier chain.
-+ */
-+static void smu_wbrf_fini(struct smu_context *smu)
-+{
-+	if (!smu->wbrf_supported)
-+		return;
-+
-+	acpi_amd_wbrf_unregister_notifier(&smu->wbrf_notifier);
-+}
-+
- static int smu_smc_hw_setup(struct smu_context *smu)
- {
- 	struct smu_feature *feature = &smu->smu_feature;
-@@ -1320,6 +1488,15 @@ static int smu_smc_hw_setup(struct smu_context *smu)
- 	if (ret)
- 		return ret;
- 
-+	/* Enable UclkShadow on wbrf supported */
-+	if (smu->wbrf_supported) {
-+		ret = smu_enable_uclk_shadow(smu, true);
-+		if (ret) {
-+			dev_err(adev->dev, "Failed to enable UclkShadow feature to support wbrf!\n");
-+			return ret;
-+		}
-+	}
-+
- 	/*
- 	 * With SCPM enabled, these actions(and relevant messages) are
- 	 * not needed and permitted.
-@@ -1416,6 +1593,15 @@ static int smu_smc_hw_setup(struct smu_context *smu)
- 	 */
- 	ret = smu_set_min_dcef_deep_sleep(smu,
- 					  smu->smu_table.boot_values.dcefclk / 100);
-+	if (ret) {
-+		dev_err(adev->dev, "Error setting min deepsleep dcefclk\n");
-+		return ret;
-+	}
-+
-+	/* Init wbrf support. Properly setup the notifier */
-+	ret = smu_wbrf_init(smu);
-+	if (ret)
-+		dev_err(adev->dev, "Error during wbrf init call\n");
- 
- 	return ret;
- }
-@@ -1471,6 +1657,13 @@ static int smu_hw_init(void *handle)
- 		return ret;
- 	}
- 
-+	/*
-+	 * Check whether wbrf is supported. This needs to be done
-+	 * before SMU setup starts since part of SMU configuration
-+	 * relies on this.
-+	 */
-+	smu_wbrf_support_check(smu);
-+
- 	if (smu->is_apu) {
- 		ret = smu_set_gfx_imu_enable(smu);
- 		if (ret)
-@@ -1623,6 +1816,8 @@ static int smu_smc_hw_cleanup(struct smu_context *smu)
- 	struct amdgpu_device *adev = smu->adev;
- 	int ret = 0;
- 
-+	smu_wbrf_fini(smu);
-+
- 	cancel_work_sync(&smu->throttling_logging_work);
- 	cancel_work_sync(&smu->interrupt_work);
- 
 diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-index 6e2069dcb6b9..3eb1c72a76f1 100644
+index 60d595344c45..a081e6bb27c4 100644
 --- a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
 +++ b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-@@ -22,6 +22,8 @@
- #ifndef __AMDGPU_SMU_H__
- #define __AMDGPU_SMU_H__
- 
-+#include <linux/acpi_amd_wbrf.h>
-+
- #include "amdgpu.h"
- #include "kgd_pp_interface.h"
- #include "dm_pp_interface.h"
-@@ -575,6 +577,10 @@ struct smu_context
- 	u32 debug_resp_reg;
- 
- 	struct delayed_work		swctf_delayed_work;
-+
-+	/* data structures for wbrf feature support */
-+	bool				wbrf_supported;
-+	struct notifier_block		wbrf_notifier;
+@@ -325,6 +325,7 @@ enum smu_table_id
+ 	SMU_TABLE_PACE,
+ 	SMU_TABLE_ECCINFO,
+ 	SMU_TABLE_COMBO_PPTABLE,
++	SMU_TABLE_WIFIBAND,
+ 	SMU_TABLE_COUNT,
  };
  
- struct i2c_adapter;
-@@ -1356,6 +1362,23 @@ struct pptable_funcs {
- 	 * @init_pptable_microcode: Prepare the pptable microcode to upload via PSP
- 	 */
- 	int (*init_pptable_microcode)(struct smu_context *smu);
+@@ -1501,6 +1502,8 @@ enum smu_baco_seq {
+ 			 __dst_size);					   \
+ })
+ 
++#define HZ_IN_MHZ		1000000U
 +
-+	/**
-+	 * @is_asic_wbrf_supported: check whether PMFW supports the wbrf feature
-+	 */
-+	bool (*is_asic_wbrf_supported)(struct smu_context *smu);
+ #if !defined(SWSMU_CODE_LAYER_L2) && !defined(SWSMU_CODE_LAYER_L3) && !defined(SWSMU_CODE_LAYER_L4)
+ int smu_get_power_limit(void *handle,
+ 			uint32_t *limit,
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/smu_types.h b/drivers/gpu/drm/amd/pm/swsmu/inc/smu_types.h
+index 297b70b9388f..5bbb60289a79 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/inc/smu_types.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/inc/smu_types.h
+@@ -245,7 +245,8 @@
+ 	__SMU_DUMMY_MAP(AllowGpo),	\
+ 	__SMU_DUMMY_MAP(Mode2Reset),	\
+ 	__SMU_DUMMY_MAP(RequestI2cTransaction), \
+-	__SMU_DUMMY_MAP(GetMetricsTable),
++	__SMU_DUMMY_MAP(GetMetricsTable), \
++	__SMU_DUMMY_MAP(EnableUCLKShadow),
+ 
+ #undef __SMU_DUMMY_MAP
+ #define __SMU_DUMMY_MAP(type)	SMU_MSG_##type
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/smu_v13_0.h b/drivers/gpu/drm/amd/pm/swsmu/inc/smu_v13_0.h
+index 355c156d871a..dd70b56aa71e 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/inc/smu_v13_0.h
++++ b/drivers/gpu/drm/amd/pm/swsmu/inc/smu_v13_0.h
+@@ -299,5 +299,8 @@ int smu_v13_0_update_pcie_parameters(struct smu_context *smu,
+ 				     uint32_t pcie_gen_cap,
+ 				     uint32_t pcie_width_cap);
+ 
++int smu_v13_0_enable_uclk_shadow(struct smu_context *smu,
++				 bool enablement);
 +
-+	/**
-+	 * @enable_uclk_shadow: Enable the uclk shadow feature on wbrf supported
-+	 */
-+	int (*enable_uclk_shadow)(struct smu_context *smu,
-+				  bool enablement);
+ #endif
+ #endif
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c
+index 9b62b45ebb7f..6a5cb582aa92 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c
+@@ -2472,3 +2472,12 @@ int smu_v13_0_update_pcie_parameters(struct smu_context *smu,
+ 
+ 	return 0;
+ }
 +
-+	/**
-+	 * @set_wbrf_exclusion_ranges: notify SMU the wifi bands occupied
-+	 */
-+	int (*set_wbrf_exclusion_ranges)(struct smu_context *smu,
-+					 struct exclusion_range *exclusion_ranges);
++int smu_v13_0_enable_uclk_shadow(struct smu_context *smu,
++				 bool enablement)
++{
++	return smu_cmn_send_smc_msg_with_param(smu,
++					       SMU_MSG_EnableUCLKShadow,
++					       enablement,
++					       NULL);
++}
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c
+index fddcd834bcec..5a7a5804794a 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c
+@@ -154,6 +154,7 @@ static struct cmn2asic_msg_mapping smu_v13_0_0_message_map[SMU_MSG_MAX_COUNT] =
+ 	MSG_MAP(AllowGpo,			PPSMC_MSG_SetGpoAllow,           0),
+ 	MSG_MAP(AllowIHHostInterrupt,		PPSMC_MSG_AllowIHHostInterrupt,       0),
+ 	MSG_MAP(ReenableAcDcInterrupt,		PPSMC_MSG_ReenableAcDcInterrupt,       0),
++	MSG_MAP(EnableUCLKShadow,		PPSMC_MSG_EnableUCLKShadow,            0),
  };
  
- typedef enum {
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h b/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h
-index ceb13c838067..67d7495ab49e 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h
-+++ b/drivers/gpu/drm/amd/pm/swsmu/smu_internal.h
-@@ -97,6 +97,9 @@
- #define smu_get_default_config_table_settings(smu, config_table)	smu_ppt_funcs(get_default_config_table_settings, -EOPNOTSUPP, smu, config_table)
- #define smu_set_config_table(smu, config_table)				smu_ppt_funcs(set_config_table, -EOPNOTSUPP, smu, config_table)
- #define smu_init_pptable_microcode(smu)					smu_ppt_funcs(init_pptable_microcode, 0, smu)
-+#define smu_is_asic_wbrf_supported(smu)					smu_ppt_funcs(is_asic_wbrf_supported, false, smu)
-+#define smu_enable_uclk_shadow(smu, enablement)				smu_ppt_funcs(enable_uclk_shadow, 0, smu, enablement)
-+#define smu_set_wbrf_exclusion_ranges(smu, exclusion_ranges)		smu_ppt_funcs(set_wbrf_exclusion_ranges, -EOPNOTSUPP, smu, exclusion_ranges)
+ static struct cmn2asic_mapping smu_v13_0_0_clk_map[SMU_CLK_COUNT] = {
+@@ -237,6 +238,7 @@ static struct cmn2asic_mapping smu_v13_0_0_table_map[SMU_TABLE_COUNT] = {
+ 	TAB_MAP(I2C_COMMANDS),
+ 	TAB_MAP(ECCINFO),
+ 	TAB_MAP(OVERDRIVE),
++	TAB_MAP(WIFIBAND),
+ };
  
- #endif
- #endif
+ static struct cmn2asic_mapping smu_v13_0_0_pwr_src_map[SMU_POWER_SOURCE_COUNT] = {
+@@ -492,6 +494,9 @@ static int smu_v13_0_0_tables_init(struct smu_context *smu)
+ 			PAGE_SIZE, AMDGPU_GEM_DOMAIN_VRAM);
+ 	SMU_TABLE_INIT(tables, SMU_TABLE_ECCINFO, sizeof(EccInfoTable_t),
+ 			PAGE_SIZE, AMDGPU_GEM_DOMAIN_VRAM);
++	SMU_TABLE_INIT(tables, SMU_TABLE_WIFIBAND,
++		       sizeof(WifiBandEntryTable_t), PAGE_SIZE,
++		       AMDGPU_GEM_DOMAIN_VRAM);
+ 
+ 	smu_table->metrics_table = kzalloc(sizeof(SmuMetricsExternal_t), GFP_KERNEL);
+ 	if (!smu_table->metrics_table)
+@@ -2603,6 +2608,58 @@ static ssize_t smu_v13_0_0_get_ecc_info(struct smu_context *smu,
+ 	return ret;
+ }
+ 
++static bool smu_v13_0_0_wbrf_support_check(struct smu_context *smu)
++{
++	struct amdgpu_device *adev = smu->adev;
++
++	switch (adev->ip_versions[MP1_HWIP][0]) {
++	case IP_VERSION(13, 0, 0):
++		return smu->smc_fw_version >= 0x004e6300;
++	case IP_VERSION(13, 0, 10):
++		return smu->smc_fw_version >= 0x00503300;
++	default:
++		return false;
++	}
++}
++
++static int smu_v13_0_0_set_wbrf_exclusion_ranges(struct smu_context *smu,
++						 struct exclusion_range *exclusion_ranges)
++{
++	WifiBandEntryTable_t wifi_bands;
++	int valid_entries = 0;
++	int ret, i;
++
++	memset(&wifi_bands, 0, sizeof(wifi_bands));
++	for (i = 0; i < ARRAY_SIZE(wifi_bands.WifiBandEntry); i++) {
++		if (!exclusion_ranges[i].start &&
++		    !exclusion_ranges[i].end)
++			break;
++
++		/* PMFW expects the inputs to be in Mhz unit */
++		wifi_bands.WifiBandEntry[valid_entries].LowFreq =
++			DIV_ROUND_DOWN_ULL(exclusion_ranges[i].start, HZ_IN_MHZ);
++		wifi_bands.WifiBandEntry[valid_entries++].HighFreq =
++			DIV_ROUND_UP_ULL(exclusion_ranges[i].end, HZ_IN_MHZ);
++	}
++	wifi_bands.WifiBandEntryNum = valid_entries;
++
++	/*
++	 * Per confirm with PMFW team, WifiBandEntryNum = 0
++	 * is a valid setting. So, there should be no direct
++	 * return on that.
++	 */
++
++	ret = smu_cmn_update_table(smu,
++				   SMU_TABLE_WIFIBAND,
++				   0,
++				   (void *)(&wifi_bands),
++				   true);
++	if (ret)
++		dev_warn(smu->adev->dev, "Failed to set wifiband!");
++
++	return ret;
++}
++
+ static const struct pptable_funcs smu_v13_0_0_ppt_funcs = {
+ 	.get_allowed_feature_mask = smu_v13_0_0_get_allowed_feature_mask,
+ 	.set_default_dpm_table = smu_v13_0_0_set_default_dpm_table,
+@@ -2682,6 +2739,9 @@ static const struct pptable_funcs smu_v13_0_0_ppt_funcs = {
+ 	.send_hbm_bad_channel_flag = smu_v13_0_0_send_bad_mem_channel_flag,
+ 	.gpo_control = smu_v13_0_gpo_control,
+ 	.get_ecc_info = smu_v13_0_0_get_ecc_info,
++	.is_asic_wbrf_supported = smu_v13_0_0_wbrf_support_check,
++	.enable_uclk_shadow = smu_v13_0_enable_uclk_shadow,
++	.set_wbrf_exclusion_ranges = smu_v13_0_0_set_wbrf_exclusion_ranges,
+ };
+ 
+ void smu_v13_0_0_set_ppt_funcs(struct smu_context *smu)
 -- 
 2.34.1
 
