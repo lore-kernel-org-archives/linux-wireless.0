@@ -2,27 +2,27 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E1F1C83F10
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 14:14:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 153E4C83F01
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Aug 2023 14:14:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233711AbjHaOOR (ORCPT
+        id S1345310AbjHaOO3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Aug 2023 10:14:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49622 "EHLO
+        Thu, 31 Aug 2023 10:14:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346435AbjHaOOP (ORCPT
+        with ESMTP id S1346400AbjHaOO2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Aug 2023 10:14:15 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC80C10C2
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2023 07:13:59 -0700 (PDT)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Rc32y5KCGzNn4G;
-        Thu, 31 Aug 2023 22:10:18 +0800 (CST)
+        Thu, 31 Aug 2023 10:14:28 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9081210E5
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2023 07:14:02 -0700 (PDT)
+Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4Rc35J0JTxz1L9Rm;
+        Thu, 31 Aug 2023 22:12:20 +0800 (CST)
 Received: from huawei.com (10.90.53.73) by kwepemi500008.china.huawei.com
  (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Thu, 31 Aug
- 2023 22:13:55 +0800
+ 2023 22:13:59 +0800
 From:   Jinjie Ruan <ruanjinjie@huawei.com>
 To:     <gregory.greenman@intel.com>, <kvalo@kernel.org>,
         <briannorris@chromium.org>, <nbd@nbd.name>, <lorenzo@kernel.org>,
@@ -36,12 +36,17 @@ To:     <gregory.greenman@intel.com>, <kvalo@kernel.org>,
         <rramesh@marvell.com>, <akarwar@marvell.com>,
         <nishants@marvell.com>, <linux-wireless@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>
+        <linux-mediatek@lists.infradead.org>,
+        Yogesh Ashok Powar <yogeshp@marvell.com>,
+        Frank Huang <frankh@marvell.com>,
+        Kiran Divekar <dkiran@marvell.com>
 CC:     <ruanjinjie@huawei.com>
-Subject: [PATCH net 0/3] wifi: Fix the NULL vs IS_ERR() bugs for debugfs_create_dir()
-Date:   Thu, 31 Aug 2023 22:13:44 +0800
-Message-ID: <20230831141347.3166988-1-ruanjinjie@huawei.com>
+Subject: [PATCH net 2/3] mwifiex: debugfs: Fix the NULL vs IS_ERR() bug for debugfs_create_dir()
+Date:   Thu, 31 Aug 2023 22:13:46 +0800
+Message-ID: <20230831141347.3166988-3-ruanjinjie@huawei.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230831141347.3166988-1-ruanjinjie@huawei.com>
+References: <20230831141347.3166988-1-ruanjinjie@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -56,18 +61,25 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 Since debugfs_create_dir() returns ERR_PTR and never return NULL, So use
 IS_ERR() to check it instead of checking NULL.
 
-Jinjie Ruan (3):
-  wifi: iwlwifi: mei: Fix the NULL vs IS_ERR() bug for
-    debugfs_create_dir()
-  mwifiex: debugfs: Fix the NULL vs IS_ERR() bug for
-    debugfs_create_dir()
-  wifi: mt76: Fix the NULL vs IS_ERR() bug for debugfs_create_dir()
-
- drivers/net/wireless/intel/iwlwifi/mei/main.c  | 2 +-
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+Signed-off-by: Jinjie Ruan <ruanjinjie@huawei.com>
+---
  drivers/net/wireless/marvell/mwifiex/debugfs.c | 2 +-
- drivers/net/wireless/mediatek/mt76/debugfs.c   | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index f9c9fec7c792..a1e074b6d539 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -970,7 +970,7 @@ mwifiex_dev_debugfs_init(struct mwifiex_private *priv)
+ 	priv->dfs_dev_dir = debugfs_create_dir(priv->netdev->name,
+ 					       mwifiex_dfs_dir);
+ 
+-	if (!priv->dfs_dev_dir)
++	if (IS_ERR(priv->dfs_dev_dir))
+ 		return;
+ 
+ 	MWIFIEX_DFS_ADD_FILE(info);
 -- 
 2.34.1
 
