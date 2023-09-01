@@ -2,340 +2,174 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 177F8CA0FEB
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Sep 2023 06:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 302FCCA0FE1
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Sep 2023 06:30:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348366AbjIAGQt (ORCPT
+        id S244827AbjIAGaj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Sep 2023 02:16:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55302 "EHLO
+        Fri, 1 Sep 2023 02:30:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348364AbjIAGQZ (ORCPT
+        with ESMTP id S235920AbjIAGaj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 Sep 2023 02:16:25 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 317F010D1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2023 23:16:21 -0700 (PDT)
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.77 with qID 3816FhQF2005168, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.81/5.90) with ESMTPS id 3816FhQF2005168
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 1 Sep 2023 14:15:43 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Fri, 1 Sep 2023 14:16:09 +0800
-Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 1 Sep 2023
- 14:16:09 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/8] wifi: rtw89: fw: implement supported functions of download firmware for WiFi 7 chips
-Date:   Fri, 1 Sep 2023 14:15:02 +0800
-Message-ID: <20230901061507.34312-4-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230901061507.34312-1-pkshih@realtek.com>
-References: <20230901061507.34312-1-pkshih@realtek.com>
+        Fri, 1 Sep 2023 02:30:39 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 915A29E
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Aug 2023 23:30:27 -0700 (PDT)
+X-UUID: 07c19a0a489111eea33bb35ae8d461a2-20230901
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=/JDuOzdm4yt0yrGR5m5f4yuBnG9oVHE5JwbxqRmTo/c=;
+        b=JGHsSn+IgF6oJawyYiPlpKFt4Vg5aOCLAKcxIfAOxa0wMepZigMT+cl8hK35JHED5xKgjB8W9SZWhAwXdpKw8Xhpo85hqcZhNw4wEaMDhjOwLZLBxHYMrsquTBMSKa/q6YleWtGag2DSL3abP41cH0Tzm8Ggo8DQrCVInsk6bso=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.31,REQID:8da49337-190d-48dd-94e0-587e7a00e903,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:0ad78a4,CLOUDID:147b86c2-1e57-4345-9d31-31ad9818b39f,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
+        DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 07c19a0a489111eea33bb35ae8d461a2-20230901
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+        (envelope-from <yi-chia.hsieh@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1457498818; Fri, 01 Sep 2023 14:30:23 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Fri, 1 Sep 2023 14:30:20 +0800
+Received: from mussdccf250.mussds.eus.mediatek.inc (10.73.250.250) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Fri, 1 Sep 2023 14:30:10 +0800
+From:   Yi-Chia Hsieh <yi-chia.hsieh@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Johannes Berg <johannes.berg@intel.com>
+CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Money Wang <money.wang@mediatek.com>,
+        Peter Chiu <chui-hao.chiu@mediatek.com>,
+        Benjamin Lin <benjamin-jw.lin@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Yi-Chia Hsieh <yi-chia.hsieh@mediatek.com>
+Subject: [PATCH v2 1/4] wifi: mt76: mt7996: get tx_retries and tx_failed from txfree
+Date:   Thu, 31 Aug 2023 23:30:02 -0700
+Message-ID: <7554d0a64ff480f1a185f381a59799158fe8bf23.1693549298.git.yi-chia.hsieh@mediatek.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.25]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-To work with generalized flow of download firmware, implement WiFi 7
-specific functions to support it. These functions include disable/enable
-WiFi CPU, status of path ready, and status of firmware.
+Retrieve tx retries/failed counts from 'txfree done' events and report
+them via mt7996_sta_statistics().
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yi-Chia Hsieh <yi-chia.hsieh@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac_be.c | 126 ++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/reg.h    | 107 +++++++++++++++++
- 2 files changed, 233 insertions(+)
+v2: split series
+---
+ .../wireless/mediatek/mt76/mt76_connac3_mac.h |  4 ++--
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   | 21 ++++++++++++++-----
+ .../net/wireless/mediatek/mt76/mt7996/main.c  |  6 ++++++
+ 3 files changed, 24 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac_be.c b/drivers/net/wireless/realtek/rtw89/mac_be.c
-index 9a63fb35e867..9fa26c31677f 100644
---- a/drivers/net/wireless/realtek/rtw89/mac_be.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac_be.c
-@@ -2,6 +2,8 @@
- /* Copyright(c) 2019-2020  Realtek Corporation
-  */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h
+index 68ca0844cbbf..e0354f1ffcc3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h
+@@ -269,11 +269,11 @@ enum tx_mgnt_type {
+ #define MT_TXFREE0_MSDU_CNT		GENMASK(25, 16)
+ #define MT_TXFREE0_RX_BYTE		GENMASK(15, 0)
  
-+#include "debug.h"
-+#include "fw.h"
- #include "mac.h"
- #include "reg.h"
+-#define MT_TXFREE1_VER			GENMASK(18, 16)
++#define MT_TXFREE1_VER			GENMASK(19, 16)
  
-@@ -28,11 +30,135 @@ static const u32 rtw89_mac_mem_base_addrs_be[RTW89_MAC_MEM_NUM] = {
- 	[RTW89_MAC_MEM_WD_PAGE]		= WD_PAGE_BASE_ADDR_BE,
- };
+ #define MT_TXFREE_INFO_PAIR		BIT(31)
+ #define MT_TXFREE_INFO_HEADER		BIT(30)
+-#define MT_TXFREE_INFO_WLAN_ID		GENMASK(23, 12)
++#define MT_TXFREE_INFO_MLD_ID		GENMASK(23, 12)
+ #define MT_TXFREE_INFO_MSDU_ID		GENMASK(14, 0)
+ #define MT_TXFREE_INFO_COUNT		GENMASK(27, 24)
+ #define MT_TXFREE_INFO_STAT		GENMASK(29, 28)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index ac8759febe48..0bdb5533847b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -1070,6 +1070,7 @@ mt7996_mac_tx_free(struct mt7996_dev *dev, void *data, int len)
+ 	struct mt76_phy *phy3 = mdev->phys[MT_BAND2];
+ 	struct mt76_txwi_cache *txwi;
+ 	struct ieee80211_sta *sta = NULL;
++	struct mt76_wcid *wcid;
+ 	LIST_HEAD(free_list);
+ 	struct sk_buff *skb, *tmp;
+ 	void *end = data + len;
+@@ -1088,7 +1089,7 @@ mt7996_mac_tx_free(struct mt7996_dev *dev, void *data, int len)
+ 		mt76_queue_tx_cleanup(dev, phy3->q_tx[MT_TXQ_BE], false);
+ 	}
  
-+static void rtw89_mac_disable_cpu_be(struct rtw89_dev *rtwdev)
-+{
-+	clear_bit(RTW89_FLAG_FW_RDY, rtwdev->flags);
-+
-+	rtw89_write32_clr(rtwdev, R_BE_PLATFORM_ENABLE, B_BE_WCPU_EN);
-+	rtw89_write32_set(rtwdev, R_BE_PLATFORM_ENABLE, B_BE_HOLD_AFTER_RESET);
-+	rtw89_write32_set(rtwdev, R_BE_PLATFORM_ENABLE, B_BE_WCPU_EN);
-+
-+	rtw89_write32_clr(rtwdev, R_BE_WCPU_FW_CTRL, B_BE_RUN_ENV_MASK);
-+	rtw89_write32_set(rtwdev, R_BE_DCPU_PLATFORM_ENABLE, B_BE_DCPU_PLATFORM_EN);
-+
-+	rtw89_write32(rtwdev, R_BE_UDM0, 0);
-+	rtw89_write32(rtwdev, R_BE_HALT_C2H, 0);
-+	rtw89_write32(rtwdev, R_BE_UDM2, 0);
-+}
-+
-+static void set_cpu_en(struct rtw89_dev *rtwdev)
-+{
-+	u32 set = B_BE_WLANCPU_FWDL_EN;
-+
-+	rtw89_write32_set(rtwdev, R_BE_WCPU_FW_CTRL, set);
-+}
-+
-+static int wcpu_on(struct rtw89_dev *rtwdev, u8 boot_reason, bool dlfw)
-+{
-+	u32 val32;
-+	int ret;
-+
-+	rtw89_write32_set(rtwdev, R_BE_UDM0, B_BE_UDM0_DBG_MODE_CTRL);
-+
-+	val32 = rtw89_read32(rtwdev, R_BE_HALT_C2H);
-+	if (val32) {
-+		rtw89_warn(rtwdev, "[SER] AON L2 Debug register not empty before Boot.\n");
-+		rtw89_warn(rtwdev, "[SER] %s: R_BE_HALT_C2H = 0x%x\n", __func__, val32);
-+	}
-+	val32 = rtw89_read32(rtwdev, R_BE_UDM1);
-+	if (val32) {
-+		rtw89_warn(rtwdev, "[SER] AON L2 Debug register not empty before Boot.\n");
-+		rtw89_warn(rtwdev, "[SER] %s: R_BE_UDM1 = 0x%x\n", __func__, val32);
-+	}
-+	val32 = rtw89_read32(rtwdev, R_BE_UDM2);
-+	if (val32) {
-+		rtw89_warn(rtwdev, "[SER] AON L2 Debug register not empty before Boot.\n");
-+		rtw89_warn(rtwdev, "[SER] %s: R_BE_UDM2 = 0x%x\n", __func__, val32);
-+	}
-+
-+	rtw89_write32(rtwdev, R_BE_UDM1, 0);
-+	rtw89_write32(rtwdev, R_BE_UDM2, 0);
-+	rtw89_write32(rtwdev, R_BE_HALT_H2C, 0);
-+	rtw89_write32(rtwdev, R_BE_HALT_C2H, 0);
-+	rtw89_write32(rtwdev, R_BE_HALT_H2C_CTRL, 0);
-+	rtw89_write32(rtwdev, R_BE_HALT_C2H_CTRL, 0);
-+
-+	rtw89_write32_set(rtwdev, R_BE_SYS_CLK_CTRL, B_BE_CPU_CLK_EN);
-+	rtw89_write32_clr(rtwdev, R_BE_SYS_CFG5,
-+			  B_BE_WDT_WAKE_PCIE_EN | B_BE_WDT_WAKE_USB_EN);
-+	rtw89_write32_clr(rtwdev, R_BE_WCPU_FW_CTRL,
-+			  B_BE_WDT_PLT_RST_EN | B_BE_WCPU_ROM_CUT_GET);
-+
-+	rtw89_write16_mask(rtwdev, R_BE_BOOT_REASON, B_BE_BOOT_REASON_MASK, boot_reason);
-+	rtw89_write32_clr(rtwdev, R_BE_PLATFORM_ENABLE, B_BE_WCPU_EN);
-+	rtw89_write32_clr(rtwdev, R_BE_PLATFORM_ENABLE, B_BE_HOLD_AFTER_RESET);
-+	rtw89_write32_set(rtwdev, R_BE_PLATFORM_ENABLE, B_BE_WCPU_EN);
-+
-+	if (!dlfw) {
-+		ret = rtw89_fw_check_rdy(rtwdev);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rtw89_mac_fwdl_enable_wcpu_be(struct rtw89_dev *rtwdev,
-+					 u8 boot_reason, bool dlfw)
-+{
-+	set_cpu_en(rtwdev);
-+
-+	return wcpu_on(rtwdev, boot_reason, dlfw);
-+}
-+
-+static const u8 fwdl_status_map[] = {
-+	[0] = RTW89_FWDL_INITIAL_STATE,
-+	[1] = RTW89_FWDL_FWDL_ONGOING,
-+	[4] = RTW89_FWDL_CHECKSUM_FAIL,
-+	[5] = RTW89_FWDL_SECURITY_FAIL,
-+	[6] = RTW89_FWDL_SECURITY_FAIL,
-+	[7] = RTW89_FWDL_CV_NOT_MATCH,
-+	[8] = RTW89_FWDL_RSVD0,
-+	[2] = RTW89_FWDL_WCPU_FWDL_RDY,
-+	[3] = RTW89_FWDL_WCPU_FW_INIT_RDY,
-+	[9] = RTW89_FWDL_RSVD0,
-+};
-+
-+static u8 fwdl_get_status_be(struct rtw89_dev *rtwdev)
-+{
-+	u32 val32;
-+	u8 st;
-+
-+	val32 = rtw89_read32(rtwdev, R_BE_WCPU_FW_CTRL);
-+
-+	st = u32_get_bits(val32, B_BE_WCPU_FWDL_STATUS_MASK);
-+	if (st < ARRAY_SIZE(fwdl_status_map))
-+		return fwdl_status_map[st];
-+
-+	return st;
-+}
-+
-+static int rtw89_fwdl_check_path_ready_be(struct rtw89_dev *rtwdev,
-+					  bool h2c_or_fwdl)
-+{
-+	u32 check = h2c_or_fwdl ? B_BE_H2C_PATH_RDY : B_BE_DLFW_PATH_RDY;
-+	u32 val;
-+
-+	return read_poll_timeout_atomic(rtw89_read32, val, val & check,
-+					1, 1000000, false,
-+					rtwdev, R_BE_WCPU_FW_CTRL);
-+}
-+
- const struct rtw89_mac_gen_def rtw89_mac_gen_be = {
- 	.band1_offset = RTW89_MAC_BE_BAND_REG_OFFSET,
- 	.filter_model_addr = R_BE_FILTER_MODEL_ADDR,
- 	.indir_access_addr = R_BE_INDIR_ACCESS_ENTRY,
- 	.mem_base_addrs = rtw89_mac_mem_base_addrs_be,
- 	.rx_fltr = R_BE_RX_FLTR_OPT,
-+
-+	.disable_cpu = rtw89_mac_disable_cpu_be,
-+	.fwdl_enable_wcpu = rtw89_mac_fwdl_enable_wcpu_be,
-+	.fwdl_get_status = fwdl_get_status_be,
-+	.fwdl_check_path_ready = rtw89_fwdl_check_path_ready_be,
- };
- EXPORT_SYMBOL(rtw89_mac_gen_be);
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index c0aac4d3678a..7798866d20c6 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3625,8 +3625,115 @@
- #define B_AX_GNT_BT_TX_SW_VAL BIT(1)
- #define B_AX_GNT_BT_TX_SW_CTRL BIT(0)
+-	if (WARN_ON_ONCE(le32_get_bits(tx_free[1], MT_TXFREE1_VER) < 4))
++	if (WARN_ON_ONCE(le32_get_bits(tx_free[1], MT_TXFREE1_VER) < 5))
+ 		return;
  
-+#define R_BE_SYS_CLK_CTRL 0x0008
-+#define B_BE_CPU_CLK_EN BIT(14)
-+#define B_BE_SYMR_BE_CLK_EN BIT(13)
-+#define B_BE_MAC_CLK_EN BIT(11)
-+#define B_BE_EXT_32K_EN BIT(8)
-+#define B_BE_WL_CLK_TEST BIT(7)
-+#define B_BE_LOADER_CLK_EN BIT(5)
-+#define B_BE_ANA_CLK_DIVISION_2 BIT(1)
-+#define B_BE_CNTD16V_EN BIT(0)
-+
-+#define R_BE_PLATFORM_ENABLE 0x0088
-+#define B_BE_HOLD_AFTER_RESET BIT(11)
-+#define B_BE_SYM_WLPLT_MEM_MUX_EN BIT(10)
-+#define B_BE_WCPU_WARM_EN BIT(9)
-+#define B_BE_SPIC_EN BIT(8)
-+#define B_BE_UART_EN BIT(7)
-+#define B_BE_IDDMA_EN BIT(6)
-+#define B_BE_IPSEC_EN BIT(5)
-+#define B_BE_HIOE_EN BIT(4)
-+#define B_BE_APB_WRAP_EN BIT(2)
-+#define B_BE_WCPU_EN BIT(1)
-+#define B_BE_PLATFORM_EN BIT(0)
-+
-+#define R_BE_HALT_H2C_CTRL 0x0160
-+#define B_BE_HALT_H2C_TRIGGER BIT(0)
-+
-+#define R_BE_HALT_C2H_CTRL 0x0164
-+#define B_BE_HALT_C2H_TRIGGER BIT(0)
-+
-+#define R_BE_HALT_H2C 0x0168
-+#define B_BE_HALT_H2C_MASK GENMASK(31, 0)
-+
-+#define R_BE_HALT_C2H 0x016C
-+#define B_BE_HALT_C2H_ERROR_SENARIO_MASK GENMASK(31, 28)
-+#define B_BE_ERROR_CODE_MASK GENMASK(15, 0)
-+
-+#define R_BE_SYS_CFG5 0x0170
-+#define B_BE_WDT_DATACPU_WAKE_PCIE_EN BIT(12)
-+#define B_BE_WDT_DATACPU_WAKE_USB_EN BIT(11)
-+#define B_BE_WDT_WAKE_PCIE_EN BIT(10)
-+#define B_BE_WDT_WAKE_USB_EN BIT(9)
-+#define B_BE_SYM_DIS_HC_ACCESS_MAC BIT(8)
-+#define B_BE_LPS_STATUS BIT(3)
-+#define B_BE_HCI_TXDMA_BUSY BIT(2)
-+
-+#define R_BE_WCPU_FW_CTRL 0x01E0
-+#define B_BE_RUN_ENV_MASK GENMASK(31, 30)
-+#define B_BE_WCPU_FWDL_STATUS_MASK GENMASK(29, 26)
-+#define B_BE_WDT_PLT_RST_EN BIT(17)
-+#define B_BE_FW_SEC_AUTH_DONE BIT(14)
-+#define B_BE_FW_CPU_UTIL_STS_EN BIT(13)
-+#define B_BE_BBMCU1_FWDL_EN BIT(12)
-+#define B_BE_BBMCU0_FWDL_EN BIT(11)
-+#define B_BE_DATACPU_FWDL_EN BIT(10)
-+#define B_BE_WLANCPU_FWDL_EN BIT(9)
-+#define B_BE_WCPU_ROM_CUT_GET BIT(8)
-+#define B_BE_WCPU_ROM_CUT_VAL_MASK GENMASK(7, 4)
-+#define B_BE_FW_BOOT_MODE_MASK GENMASK(3, 2)
-+#define B_BE_H2C_PATH_RDY BIT(1)
-+#define B_BE_DLFW_PATH_RDY BIT(0)
-+
-+#define R_BE_BOOT_REASON 0x01E6
-+#define B_BE_BOOT_REASON_MASK GENMASK(2, 0)
-+
-+#define R_BE_LDM 0x01E8
-+#define B_BE_EN_32K BIT(31)
-+#define B_BE_LDM_MASK GENMASK(30, 0)
-+
-+#define R_BE_UDM0 0x01F0
-+#define B_BE_UDM0_SEND2RA_CNT_MASK GENMASK(31, 28)
-+#define B_BE_UDM0_TX_RPT_CNT_MASK GENMASK(27, 24)
-+#define B_BE_UDM0_FS_CODE_MASK GENMASK(23, 8)
-+#define B_BE_NULL_POINTER_INDC BIT(7)
-+#define B_BE_ROM_ASSERT_INDC BIT(6)
-+#define B_BE_RAM_ASSERT_INDC BIT(5)
-+#define B_BE_FW_IMAGE_TYPE BIT(4)
-+#define B_BE_UDM0_TRAP_LOOP_CTRL BIT(2)
-+#define B_BE_UDM0_SEND_HALTC2H_CTRL BIT(1)
-+#define B_BE_UDM0_DBG_MODE_CTRL BIT(0)
-+
-+#define R_BE_UDM1 0x01F4
-+#define B_BE_UDM1_ERROR_ADDR_MASK GENMASK(31, 16)
-+#define B_BE_UDM1_HALMAC_C2H_ENQ_CNT_MASK GENMASK(15, 12)
-+#define B_BE_UDM1_HALMAC_H2C_DEQ_CNT_MASK GENMASK(11, 8)
-+#define B_BE_UDM1_WCPU_C2H_ENQ_CNT_MASK GENMASK(7, 4)
-+#define B_BE_UDM1_WCPU_H2C_DEQ_CNT_MASK GENMASK(3, 0)
-+
-+#define R_BE_UDM2 0x01F8
-+#define B_BE_UDM2_EPC_RA_MASK GENMASK(31, 0)
-+
-+#define R_BE_DCPU_PLATFORM_ENABLE 0x0888
-+#define B_BE_DCPU_SYM_DPLT_MEM_MUX_EN BIT(10)
-+#define B_BE_DCPU_WARM_EN BIT(9)
-+#define B_BE_DCPU_UART_EN BIT(7)
-+#define B_BE_DCPU_IDDMA_EN BIT(6)
-+#define B_BE_DCPU_APB_WRAP_EN BIT(2)
-+#define B_BE_DCPU_EN BIT(1)
-+#define B_BE_DCPU_PLATFORM_EN BIT(0)
-+
- #define R_BE_FILTER_MODEL_ADDR 0x0C04
+ 	total = le32_get_bits(tx_free[0], MT_TXFREE0_MSDU_CNT);
+@@ -1104,10 +1105,9 @@ mt7996_mac_tx_free(struct mt7996_dev *dev, void *data, int len)
+ 		info = le32_to_cpu(*cur_info);
+ 		if (info & MT_TXFREE_INFO_PAIR) {
+ 			struct mt7996_sta *msta;
+-			struct mt76_wcid *wcid;
+ 			u16 idx;
  
-+#define R_BE_PLE_DBG_FUN_INTF_CTL 0x9110
-+#define B_BE_PLE_DFI_ACTIVE BIT(31)
-+#define B_BE_PLE_DFI_TRGSEL_MASK GENMASK(19, 16)
-+#define B_BE_PLE_DFI_ADDR_MASK GENMASK(15, 0)
+-			idx = FIELD_GET(MT_TXFREE_INFO_WLAN_ID, info);
++			idx = FIELD_GET(MT_TXFREE_INFO_MLD_ID, info);
+ 			wcid = rcu_dereference(dev->mt76.wcid[idx]);
+ 			sta = wcid_to_sta(wcid);
+ 			if (!sta)
+@@ -1120,10 +1120,21 @@ mt7996_mac_tx_free(struct mt7996_dev *dev, void *data, int len)
+ 					      &mdev->sta_poll_list);
+ 			spin_unlock_bh(&mdev->sta_poll_lock);
+ 			continue;
+-		}
++		} else if (info & MT_TXFREE_INFO_HEADER) {
++			u32 tx_retries = 0, tx_failed = 0;
 +
-+#define R_BE_PLE_DBG_FUN_INTF_DATA 0x9114
-+#define B_BE_PLE_DFI_DATA_MASK GENMASK(31, 0)
++			if (!wcid)
++				continue;
 +
- #define R_BE_RX_FLTR_OPT 0x11420
- #define R_BE_RX_FLTR_OPT_C1 0x15420
- #define B_BE_UID_FILTER_MASK GENMASK(31, 24)
++			tx_retries =
++				FIELD_GET(MT_TXFREE_INFO_COUNT, info) - 1;
++			tx_failed = tx_retries +
++				!!FIELD_GET(MT_TXFREE_INFO_STAT, info);
+ 
+-		if (info & MT_TXFREE_INFO_HEADER)
++			wcid->stats.tx_retries += tx_retries;
++			wcid->stats.tx_failed += tx_failed;
+ 			continue;
++		}
+ 
+ 		for (i = 0; i < 2; i++) {
+ 			msdu = (info >> (15 * i)) & MT_TXFREE_INFO_MSDU_ID;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index c3a479dc3f53..07c13fcc187a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -992,6 +992,12 @@ static void mt7996_sta_statistics(struct ieee80211_hw *hw,
+ 	sinfo->txrate.flags = txrate->flags;
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
+ 
++	sinfo->tx_failed = msta->wcid.stats.tx_failed;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
++
++	sinfo->tx_retries = msta->wcid.stats.tx_retries;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
++
+ 	sinfo->ack_signal = (s8)msta->ack_signal;
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL);
+ 
 -- 
-2.25.1
+2.39.0
 
