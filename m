@@ -2,103 +2,67 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1D4DC83F2C
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Sep 2023 15:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FBBC83F33
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Sep 2023 17:13:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241887AbjIDPW2 (ORCPT
+        id S243118AbjIDRNa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Sep 2023 11:22:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57824 "EHLO
+        Mon, 4 Sep 2023 13:13:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234615AbjIDPW2 (ORCPT
+        with ESMTP id S229781AbjIDRNa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2023 11:22:28 -0400
+        Mon, 4 Sep 2023 13:13:30 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE153E6A
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Sep 2023 08:22:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B60BCCDE;
+        Mon,  4 Sep 2023 10:13:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 874B161864
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Sep 2023 15:22:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE7FCC433C8;
-        Mon,  4 Sep 2023 15:22:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 53A4960DD6;
+        Mon,  4 Sep 2023 17:13:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB172C433C7;
+        Mon,  4 Sep 2023 17:13:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693840931;
-        bh=etRCoMCTX5NlGcqqpz9AuU1aUpXkazd4SsTN45gaFHI=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=tFmppNXHY1YaKMH0QkPzWyQEaRKdTwxdnoqVHmWMttKtNv6V47lrQbEnulkx/fhEg
-         NMX2HXPU51V81cj6wLIjJYiUvwZzHwIL6jzI6NFEgyX78amKTbcKW+S/50x/B4ArUp
-         mJFhjUGrrpmFk9X6IIuoaqQR/e2weW59QHDd7W1NhBxuONsOFfMggjdLSMyg9966/Q
-         cJWOAX5WmTfM4wpmDbbrUrvx6zSZ/qgTszEAuvsj9sDrnqkkaJl92b69qXiBqNeO6J
-         utxbHXedw0pwP2Gun9pfLfUpeyZF7ekrxjUfeO8uSHYqbDV4a21Y4/83rDMXmNZuNM
-         IPYugQ6p7+j6g==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     gregory.greenman@intel.com
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 04/15] wifi: mac80211: add an element parsing unit test
-References: <20230827110532.348304-1-gregory.greenman@intel.com>
-        <20230827135854.333bc75df13f.I0ddfeb6a88a4d89e7c7850e8ef45a4b19b5a061a@changeid>
-Date:   Mon, 04 Sep 2023 18:23:31 +0300
-In-Reply-To: <20230827135854.333bc75df13f.I0ddfeb6a88a4d89e7c7850e8ef45a4b19b5a061a@changeid>
-        (gregory greenman's message of "Sun, 27 Aug 2023 14:05:21 +0300")
-Message-ID: <877cp6q7ws.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        s=k20201202; t=1693847606;
+        bh=8iH9LoHmLarNP75RBpd9cFBNvWQSGisdSjlHPK3soYU=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=EcCrAHKawqN4z3oSg7dYm33FcSjy+Y/e2O4NXIBPsK/rBoK/mGvgWe1vh3myG+lae
+         cxjbGI/kzvBEhA/q/R2+8MzlPE/I9pS8OmN616SCmWHXrcnEMqH3AGyjzzjUBq06TB
+         KdGWNf2aKagj0moofMVoUDcUxw+zWKYMqy/RMEOwW60ETCtVhi4XTaFe/zpITBpmq9
+         K/1vM0dso4uKpLEHsWH6yhea5P78Ao+SDR/YTmToHswtejyfNwKeRibljN71S1QBRz
+         UlVseUyubPAPqHDTXuYbHcxUQmcF+Z06a8s5Z61tsYURbeFudypVOybxqFStqA6S2s
+         ibqzh/VY1gIfQ==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] MAINTAINERS: wifi: ath12k: add wiki link
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230829-ath12kwiki-v1-1-df37127527a1@quicinc.com>
+References: <20230829-ath12kwiki-v1-1-df37127527a1@quicinc.com>
+To:     Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc:     <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169384760347.3420994.13001979153285884423.kvalo@kernel.org>
+Date:   Mon,  4 Sep 2023 17:13:25 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-gregory.greenman@intel.com writes:
+Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Add a unit test for the parsing of a fragmented sta profile
-> sub-element inside a fragmented multi-link element.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-> ---
->  net/mac80211/Kconfig        |  11 ++++
->  net/mac80211/Makefile       |   2 +
->  net/mac80211/tests/Makefile |   3 ++
->  net/mac80211/tests/elems.c  | 101 ++++++++++++++++++++++++++++++++++++
->  net/mac80211/tests/module.c |  10 ++++
->  net/mac80211/util.c         |   3 ++
->  6 files changed, 130 insertions(+)
->  create mode 100644 net/mac80211/tests/Makefile
->  create mode 100644 net/mac80211/tests/elems.c
->  create mode 100644 net/mac80211/tests/module.c
->
-> diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-> index 51ec8256b7fa..037ab74f5ade 100644
-> --- a/net/mac80211/Kconfig
-> +++ b/net/mac80211/Kconfig
-> @@ -57,6 +57,17 @@ endif
->  comment "Some wireless drivers require a rate control algorithm"
->  	depends on MAC80211 && MAC80211_HAS_RC=n
->  
-> +config MAC80211_KUNIT_TEST
-> +	tristate "KUnit tests for mac80211" if !KUNIT_ALL_TESTS
-> +	depends on KUNIT
-> +	depends on MAC80211
-> +	default KUNIT_ALL_TESTS
-> +	depends on !KERNEL_6_2
-> +	help
-> +	  Enable this option to test mac80211 internals with kunit.
-> +
-> +	  If unsure, say N.
+> The ath12k wireless driver now has a wiki, so advertise it.
+> 
+> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 
-Just wanted to say that this is great. Hopefully we will have more tests
-in the future.
+Patch applied to wireless.git, thanks.
 
-But what's KERNEL_6_2? I tried to grep for that in wireless-next but
-didn't find anything.
+af5ff4b78995 MAINTAINERS: wifi: ath12k: add wiki link
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230829-ath12kwiki-v1-1-df37127527a1@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
