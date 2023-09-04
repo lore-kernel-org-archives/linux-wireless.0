@@ -2,76 +2,144 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D173DC83F3F
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Sep 2023 17:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB474C83F3F
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 Sep 2023 17:16:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239565AbjIDRNH (ORCPT
+        id S1345979AbjIDRQh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Sep 2023 13:13:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37376 "EHLO
+        Mon, 4 Sep 2023 13:16:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229781AbjIDRNH (ORCPT
+        with ESMTP id S233853AbjIDRQh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2023 13:13:07 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E07BECDB
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Sep 2023 10:13:03 -0700 (PDT)
+        Mon, 4 Sep 2023 13:16:37 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE60BCDB;
+        Mon,  4 Sep 2023 10:16:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 3F24BCE0F24
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Sep 2023 17:13:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C322DC433C7;
-        Mon,  4 Sep 2023 17:12:59 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 42EC8CE0D97;
+        Mon,  4 Sep 2023 17:16:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A17A7C433C7;
+        Mon,  4 Sep 2023 17:16:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693847580;
-        bh=UPNy4HAWRdr0nTChq8qXQikxaloyReFdF/RbT53gAE0=;
+        s=k20201202; t=1693847790;
+        bh=z4DqNpdUXkSKlQCerbH71YbBffTnlz8ppckUvbWEgAQ=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=mASLX3l3c2n/kb9Wagv9JCBc9Saq32jwy9bi6EKizz0yq8fC5h6UEu+x9tz8fFeqQ
-         PVbkyvVD6TqTtmKqErZd2jQK+Nlzy1ojU/it1a0o5j0j5BSUzxbO0qqxQBujMQ6naf
-         y7c8wBCS8BVCsj1d0Zt3qpbEPuMz5ZSw6soUI1Bwl30H7lOvuqfzHLg9aMqirq8KfF
-         RwMzI3X0c7kCCFgeB8XV+aCgelMUXQ/F7T6zi3j0VG4N8xgPd4PSwbeu9LJEnptBp0
-         +yTFqQ/YBnHXi108U2HO+5m2L7+Ql8loOOYakGjuBFfFDIP4USVRRqq1te7GwijI1X
-         alKooXWJp2c7w==
+        b=md5B188Jx02TkRvw+Bm3W0gIyIOB9yoLiHlUfYrh2D49+oWLDh0LuF+zWS2FE3PCi
+         MtnHlqvA2nWmJuAEMD9O+PUPe1BcqOp62MEmDm0Z6F3q6WRSt6vcJOXqcupdFvz2IH
+         qo6riPdThjGHj38cBjFRaJDu4gRAnYHq/v5rg0OhBc7PLMDw/fGB+FB81WW+GJq8OP
+         Gj1h9vqa0gVZ0+BFGYtAsp8TlljaLh+y/Uy1xKDhyuGbJ5csPlZg2+xvxMK9gbzVYl
+         HuWjua9bBdeqoAs0xFhmoAESHvYmT26al8kvEWI8Y00Ql6+CiB+QOtGVQlDOD3jMsF
+         4s+6BFW0zCc0w==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/5] MAINTAINERS: wifi: remove generic wiki links from
- drivers
+Subject: Re: [PATCH v2 1/3] wifi: mwifiex: Fix tlv_buf_left calculation
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230828123603.87621-1-kvalo@kernel.org>
-References: <20230828123603.87621-1-kvalo@kernel.org>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     linux-wireless@vger.kernel.org
+In-Reply-To: <06668edd68e7a26bbfeebd1201ae077a2a7a8bce.1692931954.git.gustavoars@kernel.org>
+References: <06668edd68e7a26bbfeebd1201ae077a2a7a8bce.1692931954.git.gustavoars@kernel.org>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Xinming Hu <huxm@marvell.com>, Dan Williams <dcbw@redhat.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169384757755.3420994.6057021301110200088.kvalo@kernel.org>
-Date:   Mon,  4 Sep 2023 17:12:59 +0000 (UTC)
+Message-ID: <169384778670.3420994.16227760665746324390.kvalo@kernel.org>
+Date:   Mon,  4 Sep 2023 17:16:28 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@kernel.org> wrote:
+"Gustavo A. R. Silva" <gustavoars@kernel.org> wrote:
 
-> The top level entry for wireless drivers already contains to the wiki so no
-> need to duplicate that in driver entries:
+> In a TLV encoding scheme, the Length part represents the length after
+> the header containing the values for type and length. In this case,
+> `tlv_len` should be:
 > 
-> NETWORKING DRIVERS (WIRELESS)
-> [...]
-> W:	https://wireless.wiki.kernel.org/
+> tlv_len == (sizeof(*tlv_rxba) - 1) - sizeof(tlv_rxba->header) + tlv_bitmap_len
 > 
-> Signed-off-by: Kalle Valo <kvalo@kernel.org>
+> Notice that the `- 1` accounts for the one-element array `bitmap`, which
+> 1-byte size is already included in `sizeof(*tlv_rxba)`.
+> 
+> So, if the above is correct, there is a double-counting of some members
+> in `struct mwifiex_ie_types_rxba_sync`, when `tlv_buf_left` and `tmp`
+> are calculated:
+> 
+> 968                 tlv_buf_left -= (sizeof(*tlv_rxba) + tlv_len);
+> 969                 tmp = (u8 *)tlv_rxba + tlv_len + sizeof(*tlv_rxba);
+> 
+> in specific, members:
+> 
+> drivers/net/wireless/marvell/mwifiex/fw.h:777
+>  777         u8 mac[ETH_ALEN];
+>  778         u8 tid;
+>  779         u8 reserved;
+>  780         __le16 seq_num;
+>  781         __le16 bitmap_len;
+> 
+> This is clearly wrong, and affects the subsequent decoding of data in
+> `event_buf` through `tlv_rxba`:
+> 
+> 970                 tlv_rxba = (struct mwifiex_ie_types_rxba_sync *)tmp;
+> 
+> Fix this by using `sizeof(tlv_rxba->header)` instead of `sizeof(*tlv_rxba)`
+> in the calculation of `tlv_buf_left` and `tmp`.
+> 
+> This results in the following binary differences before/after changes:
+> 
+> | drivers/net/wireless/marvell/mwifiex/11n_rxreorder.o
+> | @@ -4698,11 +4698,11 @@
+> |  drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c:968
+> |                 tlv_buf_left -= (sizeof(tlv_rxba->header) + tlv_len);
+> | -    1da7:      lea    -0x11(%rbx),%edx
+> | +    1da7:      lea    -0x4(%rbx),%edx
+> |      1daa:      movzwl %bp,%eax
+> |  drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c:969
+> |                 tmp = (u8 *)tlv_rxba  + sizeof(tlv_rxba->header) + tlv_len;
+> | -    1dad:      lea    0x11(%r15,%rbp,1),%r15
+> | +    1dad:      lea    0x4(%r15,%rbp,1),%r15
+> 
+> The above reflects the desired change: avoid counting 13 too many bytes;
+> which is the total size of the double-counted members in
+> `struct mwifiex_ie_types_rxba_sync`:
+> 
+> $ pahole -C mwifiex_ie_types_rxba_sync drivers/net/wireless/marvell/mwifiex/11n_rxreorder.o
+> struct mwifiex_ie_types_rxba_sync {
+> 	struct mwifiex_ie_types_header header;           /*     0     4 */
+> 
+>      |-----------------------------------------------------------------------
+>      |  u8                         mac[6];               /*     4     6 */  |
+>      |	u8                         tid;                  /*    10     1 */  |
+>      |  u8                         reserved;             /*    11     1 */  |
+>      | 	__le16                     seq_num;              /*    12     2 */  |
+>      | 	__le16                     bitmap_len;           /*    14     2 */  |
+>      |  u8                         bitmap[1];            /*    16     1 */  |
+>      |----------------------------------------------------------------------|
+> 								  | 13 bytes|
+> 								  -----------
+> 
+> 	/* size: 17, cachelines: 1, members: 7 */
+> 	/* last cacheline: 17 bytes */
+> } __attribute__((__packed__));
+> 
+> Fixes: 99ffe72cdae4 ("mwifiex: process rxba_sync event")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> Reviewed-by: Kees Cook <keescook@chromium.org>
 
-5 patches applied to wireless.git, thanks.
+3 patches applied to wireless.git, thanks.
 
-84727c5727fe MAINTAINERS: wifi: remove generic wiki links from drivers
-0b9480da79e0 MAINTAINERS: wifi: rtlwifi: remove git tree
-42c5f0e20ec9 MAINTAINERS: wifi: rtl8xxxu: remove git tree
-b8c713c13482 MAINTAINERS: wifi: wl12xx: remove git tree
-d253fb3705b3 MAINTAINERS: wifi: hostap: remove maintainer and web page
+eec679e4ac5f wifi: mwifiex: Fix tlv_buf_left calculation
+c7847241de28 wifi: mwifiex: Replace one-element array with flexible-array member in struct mwifiex_ie_types_rxba_sync
+d5a93b7d2877 wifi: mwifiex: Sanity check tlv_len and tlv_bitmap_len
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230828123603.87621-1-kvalo@kernel.org/
+https://patchwork.kernel.org/project/linux-wireless/patch/06668edd68e7a26bbfeebd1201ae077a2a7a8bce.1692931954.git.gustavoars@kernel.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
