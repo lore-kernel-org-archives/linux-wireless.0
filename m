@@ -2,106 +2,143 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E27BFCA0FE2
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:02:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D913BCA0FFD
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:02:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235565AbjIEQCU (ORCPT
+        id S234317AbjIEQCX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:02:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53112 "EHLO
+        Tue, 5 Sep 2023 12:02:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354673AbjIEN07 (ORCPT
+        with ESMTP id S1354153AbjIEJ5o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2023 09:26:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80F9D12A
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 06:26:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E65B2608D5
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 13:26:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60620C433C8;
-        Tue,  5 Sep 2023 13:26:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693920415;
-        bh=nYwFMATp/Xv5PYiiX2QDNP7K3dchpHCAjLpN24WxQGc=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=GQmgTiu6wrrRFXqICJpsFftcxLlb5MXLKyijTpg11pIibfO+inyFyHGGdbFoqmsZy
-         FGeABNYmGRK729Ncbh2/0Sgp0GIKlttf7aQTxqb6bTxNNmloNixWNrXRgf/bI01g7F
-         Emskw0Z52zdq4T60squ6dHKml7pj8fIYaza0dKrGXPGpZHdpOuzEXv1EDoz7dM1hmn
-         1NAQs/2Hz7ufzjOu9EdVa78Dz7qtjPccQU5i63GWkDEzUOeaVM/ch6hPVfAOl6RQxt
-         gGMdMbQQKptFo2lnAYfG8ZwbsrYQqvLI2SXBmV2zXaRVY0PxheB6JhBnIHAugMKLSL
-         v+80OWF9sjseA==
-Content-Type: text/plain; charset="utf-8"
+        Tue, 5 Sep 2023 05:57:44 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 718C71B6
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 02:57:39 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id 2adb3069b0e04-501bd6f7d11so901111e87.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Sep 2023 02:57:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1693907857; x=1694512657; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=AKHR62ul+UyAMBBLZNZLoFrH8efwjpri67YRyIEqGb8=;
+        b=ZM7D1UmPDfVFkSSO4UqZcDHdPUJVxtVWoKpFrg9rxoI0cQFhOlP0vjw7q3kBalQ/EZ
+         F6UCW83dzlPQN4XyfMOlpe4nFgqLsDbKfzhjP1CGGY+MyrIqXsLq9FMjBqsU4DDbRZnr
+         a9bmE4vOoB2APZkjtjBxV0+H35cYjQ9ZomvklF7I10LV6vRUA9OgYP2JDckETwzLeJep
+         rVSGqiVLgMxatcZ4zWEuBe5OI7Vhe+6Qv3attJa6sxREpOAfdh59Y5JRV3TnDn0f8XIQ
+         aY6Av2gK635lnE8nw43ojaYeQM7D3SEqhfH75kRNZuBkLy9IQoJPGg9+SAirYzM7EScr
+         mRbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693907857; x=1694512657;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AKHR62ul+UyAMBBLZNZLoFrH8efwjpri67YRyIEqGb8=;
+        b=LzRMVwTquVEJzfeBe1ycoJUGooEDdWMjzAJwelJqCYS5j6+utK6ci6w697y0eLCX5a
+         veb12fdP2uW2M9THVecmlmhABe1yxd4BMfDM2tL4TpPXMxhPS8Qy3ph9OJ1YkMqft1S2
+         8Mv1grqUsTGdnE+B5or2Q9UgRSRwVPVZFLqlQ6VmeeveErLW53X2py9iMV3ds/sNCgOn
+         TrIatNg3WF1xRuNmBpWAKlOrRKUVEJft1xkIlYmQ/fpSgzF/Jt0Tsy6WZ0DVzYq+KnAQ
+         8IM7gMhtnMt9+DT6palMssxbrVwBS5yq1PE7yj/mdDBK++sC4NXefbo1/+eFZD2fdN8y
+         kk3A==
+X-Gm-Message-State: AOJu0YzlXUpMqZc0qSogyjPXm5tsXa0Aydukhf132MS+z9Ha9puVABVl
+        X3MqAT2IBf6ggA1+SwsJoyRHJg==
+X-Google-Smtp-Source: AGHT+IF/Krv9XoaHXmgTX6hA95PT3mrsyeECELy7hFWygISVfjLi7nO3m0A/foR0u3zSojYLTMDlFA==
+X-Received: by 2002:a19:8c09:0:b0:500:9d6c:913e with SMTP id o9-20020a198c09000000b005009d6c913emr7472258lfd.52.1693907857446;
+        Tue, 05 Sep 2023 02:57:37 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id o3-20020a5d4083000000b0031435731dfasm16913703wrp.35.2023.09.05.02.57.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Sep 2023 02:57:37 -0700 (PDT)
+Date:   Tue, 5 Sep 2023 12:57:34 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     Ratheesh Kannoth <rkannoth@marvell.com>
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, ast@kernel.org, daniel@iogearbox.net,
+        hawk@kernel.org, john.fastabend@gmail.com, jiawenwu@trustnetic.com,
+        mengyuanlou@net-swift.com, yang.lee@linux.alibaba.com,
+        error27@gmail.com, linyunsheng@huawei.com,
+        linux-hyperv@vger.kernel.org, kys@microsoft.com,
+        haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+        longli@microsoft.com, shradhagupta@linux.microsoft.com,
+        linux-hwmon@vger.kernel.org, michael.chan@broadcom.com,
+        richardcochran@gmail.com, jdelvare@suse.com, linux@roeck-us.net,
+        yisen.zhuang@huawei.com, salil.mehta@huawei.com,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, nbd@nbd.name, john@phrozen.org,
+        sean.wang@mediatek.com, Mark-MC.Lee@mediatek.com,
+        lorenzo@kernel.org, matthias.bgg@gmail.com,
+        angelogioacchino.delregno@collabora.com, linux@armlinux.org.uk,
+        linux-rdma@vger.kernel.org, saeedm@nvidia.com, leon@kernel.org,
+        gerhard@engleder-embedded.com, maciej.fijalkowski@intel.com,
+        alexanderduyck@fb.com, wei.fang@nxp.com, shenwei.wang@nxp.com,
+        xiaoning.wang@nxp.com, linux-imx@nxp.com, lgirdwood@gmail.com,
+        broonie@kernel.org, jaswinder.singh@linaro.org,
+        ilias.apalodimas@linaro.org, UNGLinuxDriver@microchip.com,
+        horatiu.vultur@microchip.com, linux-omap@vger.kernel.org,
+        grygorii.strashko@ti.com, simon.horman@corigine.com,
+        vladimir.oltean@nxp.com, aleksander.lobakin@intel.com,
+        linux-stm32@st-md-mailman.stormreply.com,
+        alexandre.torgue@foss.st.com, joabreu@synopsys.com,
+        mcoquelin.stm32@gmail.com, p.zabel@pengutronix.de,
+        thomas.petazzoni@bootlin.com, mw@semihalf.com,
+        sgoutham@marvell.com, gakula@marvell.com, sbhatta@marvell.com,
+        hkelam@marvell.com, xen-devel@lists.xenproject.org,
+        jgross@suse.com, sstabellini@kernel.org,
+        oleksandr_tyshchenko@epam.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, shayne.chen@mediatek.com, kvalo@kernel.org,
+        andrii@kernel.org, martin.lau@linux.dev, song@kernel.org,
+        yonghong.song@linux.dev, kpsingh@kernel.org, sdf@google.com,
+        haoluo@google.com, jolsa@kernel.org
+Subject: Re: [PATCH v1 net] page_pool: Cap queue size to 32k.
+Message-ID: <75bcd331-9a62-486f-a15f-6aebf4d1838b@kadam.mountain>
+References: <20230814060411.2401817-1-rkannoth@marvell.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2 1/2] wifi: ath12k: Ignore fragments from uninitialized
- peer
- in  dp
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230821130343.29495-2-quic_hprem@quicinc.com>
-References: <20230821130343.29495-2-quic_hprem@quicinc.com>
-To:     Harshitha Prem <quic_hprem@quicinc.com>
-Cc:     ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Harshitha Prem <quic_hprem@quicinc.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169392041226.3610046.3872550352211944428.kvalo@kernel.org>
-Date:   Tue,  5 Sep 2023 13:26:54 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230814060411.2401817-1-rkannoth@marvell.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Harshitha Prem <quic_hprem@quicinc.com> wrote:
+On Mon, Aug 14, 2023 at 11:34:11AM +0530, Ratheesh Kannoth wrote:
+> Clamp to 32k instead of returning error.
 
-> When max virtual ap interfaces are configured in all the bands with
-> ACS and hostapd restart is done every 60s, a crash is observed at
-> random times.
-> 
-> In the above scenario, a fragmented packet is received for self peer,
-> for which rx_tid and rx_frags are not initialized in datapath.
-> While handling this fragment, crash is observed as the rx_frag list
-> is uninitialized and when we walk in ath12k_dp_rx_h_sort_frags,
-> skb null leads to exception.
-> 
-> To address this, before processing received fragments we check
-> dp_setup_done flag is set to ensure that peer has completed its
-> dp peer setup for fragment queue, else ignore processing the
-> fragments.
-> 
-> Call trace:
->     PC points to "ath12k_dp_process_rx_err+0x4e8/0xfcc [ath12k]"
->     LR points to "ath12k_dp_process_rx_err+0x480/0xfcc [ath12k]".
->     The Backtrace obtained is as follows:
->     ath12k_dp_process_rx_err+0x4e8/0xfcc [ath12k]
->     ath12k_dp_service_srng+0x78/0x260 [ath12k]
->     ath12k_pci_write32+0x990/0xb0c [ath12k]
->     __napi_poll+0x30/0xa4
->     net_rx_action+0x118/0x270
->     __do_softirq+0x10c/0x244
->     irq_exit+0x64/0xb4
->     __handle_domain_irq+0x88/0xac
->     gic_handle_irq+0x74/0xbc
->     el1_irq+0xf0/0x1c0
->     arch_cpu_idle+0x10/0x18
->     do_idle+0x104/0x248
->     cpu_startup_entry+0x20/0x64
->     rest_init+0xd0/0xdc
->     arch_call_rest_init+0xc/0x14
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+What is the motivation here?  What is the real world impact for the
+users?
 
-2 patches applied to ath-next branch of ath.git, thanks.
+> 
+> Please find discussion at
+> https://lore.kernel.org/lkml/
+> CY4PR1801MB1911E15D518A77535F6E51E2D308A@CY4PR1801MB1911.
+> namprd18.prod.outlook.com/T/
 
-bbc86757ca62 wifi: ath12k: Ignore fragments from uninitialized peer in  dp
-d48f55e773dc wifi: ath12k: fix undefined behavior with __fls in dp
+Please don't break the URL up like this.  I think normally we would just
+write up a normal commit message and use the Link: tag.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230821130343.29495-2-quic_hprem@quicinc.com/
+Fixes: ff7d6b27f894 ("page_pool: refurbish version of page_pool code")
+Link: https://lore.kernel.org/lkml/CY4PR1801MB1911E15D518A77535F6E51E2D308A@CY4PR1801MB1911.namprd18.prod.outlook.com/
+Signed-off-by:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> @@ -171,9 +171,10 @@ static int page_pool_init(struct page_pool *pool,
+>  	if (pool->p.pool_size)
+>  		ring_qsize = pool->p.pool_size;
+>  
+> -	/* Sanity limit mem that can be pinned down */
+> +	/* Cap queue size to 32k */
+>  	if (ring_qsize > 32768)
+> -		return -E2BIG;
+> +		ring_qsize = 32768;
+> +
+>  
+>  	/* DMA direction is either DMA_FROM_DEVICE or DMA_BIDIRECTIONAL.
+
+Don't introduce a blank line here.  Checkpatch will complain if you
+have to blank lines in a row.  It won't complain about the patch but it
+will complain if you apply the patch and then re-run checkpatch -f on
+the file.  (I didn't test this but it's wrong either way. :P).
+
+regards,
+dan carpenter
 
