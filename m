@@ -2,212 +2,98 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59BFDCA0FE2
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D2D0CA0FE2
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:01:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235093AbjIEQBr (ORCPT
+        id S235106AbjIEQBw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:01:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58766 "EHLO
+        Tue, 5 Sep 2023 12:01:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354677AbjIENae (ORCPT
+        with ESMTP id S1343751AbjIECtc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2023 09:30:34 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D624BC
-        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 06:30:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693920631; x=1725456631;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=BuJNLD7HZyMp+eJCPhXLFf7eLbcQSwMgrLiNnJT51xo=;
-  b=epG/OpZpbFp5JMLdqIhq9fVMv/x2rDYuVVos4/rnz+yRFBTMqiAsr6SF
-   tPFeXSPpAJYjPLuboWyaDeV+667htfAv4Nldx2Lohvv6LP1Ku/VOztfvV
-   e4eWDklVlwxlBvmkcbeHyGOwSPmwSUl6Yi7vhFi9gYv460nTeB85Ekcdq
-   PwCPgutFCW8JVpDOF24PVuCl2i84dGDVtNsyObdvJjRcXdrz2nr3zvyBr
-   l8Fsw6QolWcW8nacXhLLi+kyoLDnblnHi9n/JQ1TGzeCoUz4YBKZHNL1C
-   DnpnjUZEH+n5t/R2daKUhYgsA3A/BZxPcbRmVop0+a8zTW4sHt8LnuDpj
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="443189291"
-X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
-   d="scan'208";a="443189291"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2023 06:30:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="864690331"
-X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
-   d="scan'208";a="864690331"
-Received: from gilz-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.251.181.138])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2023 06:30:06 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
-        Sultan Alsawaf <sultan@kerneltoast.com>
-Subject: [PATCH v2] iwlwifi: mvm: handle PS changes in vif_cfg_changed
-Date:   Tue,  5 Sep 2023 16:29:57 +0300
-Message-Id: <20230905162939.5ef0c8230de6.Ieed265014988c50ec68fbff6d33821e4215f987f@changeid>
-X-Mailer: git-send-email 2.38.1
+        Mon, 4 Sep 2023 22:49:32 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58DBACC6
+        for <linux-wireless@vger.kernel.org>; Mon,  4 Sep 2023 19:49:29 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3852cthN015634;
+        Tue, 5 Sep 2023 02:49:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=qcppdkim1;
+ bh=BlYZhb3/x6RRjj8vpg+hnY/lia7kF8GXhwQmu7xaw3A=;
+ b=hQKtBOD2GWmf7hNnIJY1+pi0f7tkvmpLIL/EVrjstAxKP9JNDMHeIOJTJwd4Tq44/E/6
+ qystDK1Mo4imvaCXuDrxpaYHNy2GnCymLQ1AFT93sogIl67q0/Qn+HmgoYKouY4Ex550
+ Ho+0BRmIrZHYO5nrXK9WcK1d5b6aABxQu5YiKgjjyRVmcheOzAssLO2VSWF9ytoCb/r4
+ elBh7c1LcuBPD/VkwVn5ozjIwPclJP+hXsIuO2zp5eSV6H4CcYyoZWktCjbjVi5X113O
+ 27XsiQvkjG4hWnarPqOSgfBkSH4hKJfJOzApKrQhA3JQ7gvEiRvr1FALhgNlca2XvDMN gg== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sweb51afp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 05 Sep 2023 02:49:24 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3852nNL3030599
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 5 Sep 2023 02:49:23 GMT
+Received: from lingbok-HP-EliteBook-8460p.qca.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Mon, 4 Sep 2023 19:49:22 -0700
+From:   Lingbo Kong <quic_lingbok@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <quic_lingbok@quicinc.com>
+Subject: [PATCH 0/4] wifi: ath12k: implement some functionalities through reading ACPI Table
+Date:   Tue, 5 Sep 2023 10:49:00 +0800
+Message-ID: <20230905024904.3882-1-quic_lingbok@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 7snSh6PO_4vGF8XIv4olqO5rSwQI9XP7
+X-Proofpoint-GUID: 7snSh6PO_4vGF8XIv4olqO5rSwQI9XP7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-05_01,2023-08-31_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
+ lowpriorityscore=0 mlxscore=0 priorityscore=1501 clxscore=1011
+ mlxlogscore=631 bulkscore=0 phishscore=0 malwarescore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309050022
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+Through reading ACPI table, implement Time-Average-SAR(TAS), BIOS SAR,
+configuration of CCA threshold and band edge channel power functionalities.
 
-Handling of BSS_CHANGED_PS was missing in vif_cfg_changed
-callback. Fix it.
+Lingbo Kong (4):
+  wifi: ath12k: add TAS capability for WCN7850
+  wifi: ath12k: add BIOS SAR capability for WCN7850
+  wifi: ath12k: adjust configuration of CCA threshold value
+  wifi: ath12k: add band edge channel power for WCN7850
 
-Fixes: 22c588343529 ("wifi: iwlwifi: mvm: replace bss_info_changed() with vif_cfg/link_info_changed()")
-Reported-by: Sultan Alsawaf <sultan@kerneltoast.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- .../wireless/intel/iwlwifi/mvm/mld-mac80211.c | 121 +++++++++---------
- 1 file changed, 63 insertions(+), 58 deletions(-)
+ drivers/net/wireless/ath/ath12k/Makefile |   3 +-
+ drivers/net/wireless/ath/ath12k/acpi.c   | 365 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/acpi.h   |  55 ++++
+ drivers/net/wireless/ath/ath12k/core.c   |   6 +
+ drivers/net/wireless/ath/ath12k/core.h   |  13 +
+ drivers/net/wireless/ath/ath12k/hw.c     |  10 +
+ drivers/net/wireless/ath/ath12k/hw.h     |   4 +-
+ drivers/net/wireless/ath/ath12k/pci.c    |   6 +
+ drivers/net/wireless/ath/ath12k/wmi.c    | 258 ++++++++++++++++
+ drivers/net/wireless/ath/ath12k/wmi.h    |  47 ++-
+ 10 files changed, 764 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath12k/acpi.c
+ create mode 100644 drivers/net/wireless/ath/ath12k/acpi.h
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-index 9615bfff7f7d..778a311b500b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-@@ -731,73 +731,78 @@ static void iwl_mvm_mld_vif_cfg_changed_station(struct iwl_mvm *mvm,
- 
- 	mvmvif->associated = vif->cfg.assoc;
- 
--	if (!(changes & BSS_CHANGED_ASSOC))
--		return;
--
--	if (vif->cfg.assoc) {
--		/* clear statistics to get clean beacon counter */
--		iwl_mvm_request_statistics(mvm, true);
--		iwl_mvm_sf_update(mvm, vif, false);
--		iwl_mvm_power_vif_assoc(mvm, vif);
--
--		for_each_mvm_vif_valid_link(mvmvif, i) {
--			memset(&mvmvif->link[i]->beacon_stats, 0,
--			       sizeof(mvmvif->link[i]->beacon_stats));
-+	if (changes & BSS_CHANGED_ASSOC) {
-+		if (vif->cfg.assoc) {
-+			/* clear statistics to get clean beacon counter */
-+			iwl_mvm_request_statistics(mvm, true);
-+			iwl_mvm_sf_update(mvm, vif, false);
-+			iwl_mvm_power_vif_assoc(mvm, vif);
-+
-+			for_each_mvm_vif_valid_link(mvmvif, i) {
-+				memset(&mvmvif->link[i]->beacon_stats, 0,
-+				       sizeof(mvmvif->link[i]->beacon_stats));
-+
-+				if (vif->p2p) {
-+					iwl_mvm_update_smps(mvm, vif,
-+							    IWL_MVM_SMPS_REQ_PROT,
-+							    IEEE80211_SMPS_DYNAMIC, i);
-+				}
-+
-+				rcu_read_lock();
-+				link_conf = rcu_dereference(vif->link_conf[i]);
-+				if (link_conf && !link_conf->dtim_period)
-+					protect = true;
-+				rcu_read_unlock();
-+			}
- 
--			if (vif->p2p) {
--				iwl_mvm_update_smps(mvm, vif,
--						    IWL_MVM_SMPS_REQ_PROT,
--						    IEEE80211_SMPS_DYNAMIC, i);
-+			if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
-+			    protect) {
-+				/* If we're not restarting and still haven't
-+				 * heard a beacon (dtim period unknown) then
-+				 * make sure we still have enough minimum time
-+				 * remaining in the time event, since the auth
-+				 * might actually have taken quite a while
-+				 * (especially for SAE) and so the remaining
-+				 * time could be small without us having heard
-+				 * a beacon yet.
-+				 */
-+				iwl_mvm_protect_assoc(mvm, vif, 0);
- 			}
- 
--			rcu_read_lock();
--			link_conf = rcu_dereference(vif->link_conf[i]);
--			if (link_conf && !link_conf->dtim_period)
--				protect = true;
--			rcu_read_unlock();
--		}
-+			iwl_mvm_sf_update(mvm, vif, false);
-+
-+			/* FIXME: need to decide about misbehaving AP handling */
-+			iwl_mvm_power_vif_assoc(mvm, vif);
-+		} else if (iwl_mvm_mld_vif_have_valid_ap_sta(mvmvif)) {
-+			iwl_mvm_mei_host_disassociated(mvm);
- 
--		if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
--		    protect) {
--			/* If we're not restarting and still haven't
--			 * heard a beacon (dtim period unknown) then
--			 * make sure we still have enough minimum time
--			 * remaining in the time event, since the auth
--			 * might actually have taken quite a while
--			 * (especially for SAE) and so the remaining
--			 * time could be small without us having heard
--			 * a beacon yet.
-+			/* If update fails - SF might be running in associated
-+			 * mode while disassociated - which is forbidden.
- 			 */
--			iwl_mvm_protect_assoc(mvm, vif, 0);
-+			ret = iwl_mvm_sf_update(mvm, vif, false);
-+			WARN_ONCE(ret &&
-+				  !test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
-+					    &mvm->status),
-+				  "Failed to update SF upon disassociation\n");
-+
-+			/* If we get an assert during the connection (after the
-+			 * station has been added, but before the vif is set
-+			 * to associated), mac80211 will re-add the station and
-+			 * then configure the vif. Since the vif is not
-+			 * associated, we would remove the station here and
-+			 * this would fail the recovery.
-+			 */
-+			iwl_mvm_mld_vif_delete_all_stas(mvm, vif);
- 		}
- 
--		iwl_mvm_sf_update(mvm, vif, false);
--
--		/* FIXME: need to decide about misbehaving AP handling */
--		iwl_mvm_power_vif_assoc(mvm, vif);
--	} else if (iwl_mvm_mld_vif_have_valid_ap_sta(mvmvif)) {
--		iwl_mvm_mei_host_disassociated(mvm);
--
--		/* If update fails - SF might be running in associated
--		 * mode while disassociated - which is forbidden.
--		 */
--		ret = iwl_mvm_sf_update(mvm, vif, false);
--		WARN_ONCE(ret &&
--			  !test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
--				    &mvm->status),
--			  "Failed to update SF upon disassociation\n");
--
--		/* If we get an assert during the connection (after the
--		 * station has been added, but before the vif is set
--		 * to associated), mac80211 will re-add the station and
--		 * then configure the vif. Since the vif is not
--		 * associated, we would remove the station here and
--		 * this would fail the recovery.
--		 */
--		iwl_mvm_mld_vif_delete_all_stas(mvm, vif);
-+		iwl_mvm_bss_info_changed_station_assoc(mvm, vif, changes);
- 	}
- 
--	iwl_mvm_bss_info_changed_station_assoc(mvm, vif, changes);
-+	if (changes & BSS_CHANGED_PS) {
-+		ret = iwl_mvm_power_update_mac(mvm);
-+		if (ret)
-+			IWL_ERR(mvm, "failed to update power mode\n");
-+	}
- }
- 
- static void
+
+base-commit: 4d4739971f44150b3dcb75f188a1a3cbc22889a3
 -- 
-2.38.1
+2.34.1
 
