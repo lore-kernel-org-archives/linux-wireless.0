@@ -2,78 +2,132 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 592C1CA0FF8
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:06:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 888E7CA0FFA
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:46:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229543AbjIEQBi (ORCPT
+        id S237105AbjIEQqP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:01:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59906 "EHLO
+        Tue, 5 Sep 2023 12:46:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244934AbjIEBhv (ORCPT
+        with ESMTP id S1353985AbjIEQ3R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2023 21:37:51 -0400
-Received: from hust.edu.cn (mail.hust.edu.cn [202.114.0.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12117CC8;
-        Mon,  4 Sep 2023 18:37:47 -0700 (PDT)
-Received: from [IPV6:2001:250:4000:5122:7a94:e7cc:c027:4d89] ([172.16.0.254])
-        (user=dzm91@hust.edu.cn mech=PLAIN bits=0)
-        by mx1.hust.edu.cn  with ESMTP id 3851awA0021528-3851awA1021528
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
-        Tue, 5 Sep 2023 09:37:00 +0800
-Message-ID: <3cec1ac9-5cbf-648c-69ca-12e757bb7617@hust.edu.cn>
-Date:   Tue, 5 Sep 2023 09:36:58 +0800
+        Tue, 5 Sep 2023 12:29:17 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADCE72695
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 09:20:26 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 385DNQwt015259;
+        Tue, 5 Sep 2023 16:18:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=dWtSZECRAQNDXD2BYo7D6dQk+9YJCH2S95YE/NRwCyE=;
+ b=ERoLp7rKi5Pw9h0xXTS2jP7BAW5SmaMb+UhjzVkGcIoNM3o6TmqJg/penKanwk4Uj2s4
+ STmG28Z6Ttjm1h8Lq9GKp+PPf69X3gclIlzFdoR6NUHOEUblywWjhNFiQhZfM2oT7qQl
+ +VH3Ak51K48O8Ez+IQNKEWMuEl8GOIQlh1FCTEuSBBRg8oho5WA+1mt+AOlJ1cnt2WuQ
+ aT6VwVxztKd4AtpRCQHtj8RQ/I4+lH6/D8UdMBsfvHQK8WBF6lA3GoJfnmWfRiNn3pVY
+ TWWJIVek15OspSpPvLAoxfX814rE+YwKqf5F2VibwehAYQBKOelNWmXbN7PjLLjKbS8a 0A== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3swtynhrba-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 05 Sep 2023 16:18:46 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 385GIkIc028067
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 5 Sep 2023 16:18:46 GMT
+Received: from [10.111.180.119] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Tue, 5 Sep
+ 2023 09:18:45 -0700
+Message-ID: <80f6ccde-d873-4191-962d-585dc59e1f3d@quicinc.com>
+Date:   Tue, 5 Sep 2023 09:18:44 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH] ath9k: unify error handling code in ath9k_hif_usb_resume
-To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Kalle Valo <kvalo@kernel.org>
-Cc:     hust-os-kernel-patches@googlegroups.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230903123230.2116129-1-dzm91@hust.edu.cn>
- <87v8cqs165.fsf@toke.dk>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: cfg80211: validate AP phy operation before starting
+ it
 Content-Language: en-US
-From:   Dongliang Mu <dzm91@hust.edu.cn>
-In-Reply-To: <87v8cqs165.fsf@toke.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-FEAS-AUTH-USER: dzm91@hust.edu.cn
+To:     Aditya Kumar Singh <quic_adisi@quicinc.com>,
+        <linux-wireless@vger.kernel.org>
+CC:     <johannes@sipsolutions.net>
+References: <20230905064857.1503-1-quic_adisi@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20230905064857.1503-1-quic_adisi@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: cB83n6MedB3Xgw3iZFHYTPoIVpEP-Ps5
+X-Proofpoint-ORIG-GUID: cB83n6MedB3Xgw3iZFHYTPoIVpEP-Ps5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-05_10,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ priorityscore=1501 impostorscore=0 malwarescore=0 mlxscore=0 adultscore=0
+ mlxlogscore=999 phishscore=0 suspectscore=0 clxscore=1015
+ lowpriorityscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2308100000 definitions=main-2309050142
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On 9/4/2023 11:48 PM, Aditya Kumar Singh wrote:
+> Many regulatories can have HE/EHT Operation as not permitted. In such
+> cases, AP should not be allowed to start if it is using a channel
+> having the no operation flag set. However, currently there is no such
+> check in place.
+> 
+> Fix this issue by validating such IEs sent during start AP against the
+> channel flags.
+> 
+> Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
 
-On 9/4/23 18:06, Toke Høiland-Jørgensen wrote:
-> Dongliang Mu <dzm91@hust.edu.cn> writes:
->
->> In ath9k_hif_usb_resume, the error handling code calls
->> ath9k_hif_usb_dealloc_urbs twice in different paths.
->>
->> To unify the error handling code, we replace one error handling path
->> with a goto statement.
->>
->> Note that this patch does not incur any functionability change.
->>
->> Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
-> Hmm, if you're cleaning up that function, how about changing that else
-> to an early error return? I.e. change the if at the top to:
->
-> 	if (!(hif_dev->flags & HIF_USB_READY)) {
-> 		ret = -EIO;
-> 		goto fail_resume;
-> 	}
->
-> and drop one level of indentation from what is currently in the top
-> branch of the if statement.
+Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 
-Yeah, this is more elegant. I've sent a patch v2.
+> ---
+>   net/wireless/nl80211.c | 19 +++++++++++++++++++
+>   1 file changed, 19 insertions(+)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index de47838aca4f..0c989a839e56 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -5909,6 +5909,21 @@ static void nl80211_send_ap_started(struct wireless_dev *wdev,
+>   	nlmsg_free(msg);
+>   }
+>   
+> +static int nl80211_validate_ap_phy_operation(struct cfg80211_ap_settings *params)
+> +{
+> +	struct ieee80211_channel *channel = params->chandef.chan;
+> +
+> +	if ((params->he_cap ||  params->he_oper) &&
+> +	    (channel->flags & IEEE80211_CHAN_NO_HE))
+> +		return -EOPNOTSUPP;
+> +
+> +	if ((params->eht_cap || params->eht_oper) &&
+> +	    (channel->flags & IEEE80211_CHAN_NO_EHT))
+> +		return -EOPNOTSUPP;
+> +
+> +	return 0;
+> +}
+> +
+>   static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>   {
+>   	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> @@ -6178,6 +6193,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>   	if (err)
+>   		goto out_unlock;
+>   
+> +	err = nl80211_validate_ap_phy_operation(params);
+> +	if (err)
+> +		goto out_unlock;
+> +
+>   	if (info->attrs[NL80211_ATTR_AP_SETTINGS_FLAGS])
+>   		params->flags = nla_get_u32(
+>   			info->attrs[NL80211_ATTR_AP_SETTINGS_FLAGS]);
+> 
+> base-commit: dae4464939025d38940a6bc6b80734adad0ff944
 
-Dongliang Mu
-
->
-> Also, while you're at it, please reorder the variable declarations at
-> the top of the function to be reverse x-mas tree order (moving the 'int
-> ret' declaration to the bottom).
->
-> -Toke
