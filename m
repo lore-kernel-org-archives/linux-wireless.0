@@ -2,114 +2,106 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFBC0CA0FE2
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E27BFCA0FE2
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:02:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235505AbjIEQCS (ORCPT
+        id S235565AbjIEQCU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:02:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58830 "EHLO
+        Tue, 5 Sep 2023 12:02:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244933AbjIEBhN (ORCPT
+        with ESMTP id S1354673AbjIEN07 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2023 21:37:13 -0400
-Received: from hust.edu.cn (unknown [202.114.0.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2210ACC6;
-        Mon,  4 Sep 2023 18:37:08 -0700 (PDT)
-Received: from localhost.localdomain ([172.16.0.254])
-        (user=dzm91@hust.edu.cn mech=LOGIN bits=0)
-        by mx1.hust.edu.cn  with ESMTP id 3851Zw19019535-3851Zw1A019535
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO);
-        Tue, 5 Sep 2023 09:36:08 +0800
-From:   Dongliang Mu <dzm91@hust.edu.cn>
-To:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Kalle Valo <kvalo@kernel.org>
-Cc:     hust-os-kernel-patches@googlegroups.com,
-        Dongliang Mu <dzm91@hust.edu.cn>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] ath9k: clean up function ath9k_hif_usb_resume
-Date:   Tue,  5 Sep 2023 09:35:56 +0800
-Message-Id: <20230905013556.2595854-1-dzm91@hust.edu.cn>
-X-Mailer: git-send-email 2.25.1
+        Tue, 5 Sep 2023 09:26:59 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80F9D12A
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 06:26:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E65B2608D5
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 13:26:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60620C433C8;
+        Tue,  5 Sep 2023 13:26:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693920415;
+        bh=nYwFMATp/Xv5PYiiX2QDNP7K3dchpHCAjLpN24WxQGc=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=GQmgTiu6wrrRFXqICJpsFftcxLlb5MXLKyijTpg11pIibfO+inyFyHGGdbFoqmsZy
+         FGeABNYmGRK729Ncbh2/0Sgp0GIKlttf7aQTxqb6bTxNNmloNixWNrXRgf/bI01g7F
+         Emskw0Z52zdq4T60squ6dHKml7pj8fIYaza0dKrGXPGpZHdpOuzEXv1EDoz7dM1hmn
+         1NAQs/2Hz7ufzjOu9EdVa78Dz7qtjPccQU5i63GWkDEzUOeaVM/ch6hPVfAOl6RQxt
+         gGMdMbQQKptFo2lnAYfG8ZwbsrYQqvLI2SXBmV2zXaRVY0PxheB6JhBnIHAugMKLSL
+         v+80OWF9sjseA==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-FEAS-AUTH-USER: dzm91@hust.edu.cn
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 1/2] wifi: ath12k: Ignore fragments from uninitialized
+ peer
+ in  dp
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230821130343.29495-2-quic_hprem@quicinc.com>
+References: <20230821130343.29495-2-quic_hprem@quicinc.com>
+To:     Harshitha Prem <quic_hprem@quicinc.com>
+Cc:     ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Harshitha Prem <quic_hprem@quicinc.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169392041226.3610046.3872550352211944428.kvalo@kernel.org>
+Date:   Tue,  5 Sep 2023 13:26:54 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In ath9k_hif_usb_resume, the error handling code calls
-ath9k_hif_usb_dealloc_urbs twice in different paths.
+Harshitha Prem <quic_hprem@quicinc.com> wrote:
 
-To unify the error handling code, we move the else branch before
-the if branch and drop one level of indentation of the if branch.
+> When max virtual ap interfaces are configured in all the bands with
+> ACS and hostapd restart is done every 60s, a crash is observed at
+> random times.
+> 
+> In the above scenario, a fragmented packet is received for self peer,
+> for which rx_tid and rx_frags are not initialized in datapath.
+> While handling this fragment, crash is observed as the rx_frag list
+> is uninitialized and when we walk in ath12k_dp_rx_h_sort_frags,
+> skb null leads to exception.
+> 
+> To address this, before processing received fragments we check
+> dp_setup_done flag is set to ensure that peer has completed its
+> dp peer setup for fragment queue, else ignore processing the
+> fragments.
+> 
+> Call trace:
+>     PC points to "ath12k_dp_process_rx_err+0x4e8/0xfcc [ath12k]"
+>     LR points to "ath12k_dp_process_rx_err+0x480/0xfcc [ath12k]".
+>     The Backtrace obtained is as follows:
+>     ath12k_dp_process_rx_err+0x4e8/0xfcc [ath12k]
+>     ath12k_dp_service_srng+0x78/0x260 [ath12k]
+>     ath12k_pci_write32+0x990/0xb0c [ath12k]
+>     __napi_poll+0x30/0xa4
+>     net_rx_action+0x118/0x270
+>     __do_softirq+0x10c/0x244
+>     irq_exit+0x64/0xb4
+>     __handle_domain_irq+0x88/0xac
+>     gic_handle_irq+0x74/0xbc
+>     el1_irq+0xf0/0x1c0
+>     arch_cpu_idle+0x10/0x18
+>     do_idle+0x104/0x248
+>     cpu_startup_entry+0x20/0x64
+>     rest_init+0xd0/0xdc
+>     arch_call_rest_init+0xc/0x14
+> 
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+> 
+> Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-In addition, move the ret variable at the end of variable declarations
-to be reverse x-mas tree order.
+2 patches applied to ath-next branch of ath.git, thanks.
 
-Note that this patch does not incur any functionability change.
+bbc86757ca62 wifi: ath12k: Ignore fragments from uninitialized peer in  dp
+d48f55e773dc wifi: ath12k: fix undefined behavior with __fls in dp
 
-Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c | 34 ++++++++++++------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
-
-v1->v2: move the else branch on top of if branch;
-        move ret variable at the end of variable declarations;
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index e5414435b141..90cfe39aa433 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1481,31 +1481,31 @@ static int ath9k_hif_usb_resume(struct usb_interface *interface)
- {
- 	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
- 	struct htc_target *htc_handle = hif_dev->htc_handle;
--	int ret;
- 	const struct firmware *fw;
-+	int ret;
- 
- 	ret = ath9k_hif_usb_alloc_urbs(hif_dev);
- 	if (ret)
- 		return ret;
- 
--	if (hif_dev->flags & HIF_USB_READY) {
--		/* request cached firmware during suspend/resume cycle */
--		ret = request_firmware(&fw, hif_dev->fw_name,
--				       &hif_dev->udev->dev);
--		if (ret)
--			goto fail_resume;
--
--		hif_dev->fw_data = fw->data;
--		hif_dev->fw_size = fw->size;
--		ret = ath9k_hif_usb_download_fw(hif_dev);
--		release_firmware(fw);
--		if (ret)
--			goto fail_resume;
--	} else {
--		ath9k_hif_usb_dealloc_urbs(hif_dev);
--		return -EIO;
-+	if (!(hif_dev->flags & HIF_USB_READY)) {
-+		ret = -EIO;
-+		goto fail_resume;
- 	}
- 
-+	/* request cached firmware during suspend/resume cycle */
-+	ret = request_firmware(&fw, hif_dev->fw_name,
-+			       &hif_dev->udev->dev);
-+	if (ret)
-+		goto fail_resume;
-+
-+	hif_dev->fw_data = fw->data;
-+	hif_dev->fw_size = fw->size;
-+	ret = ath9k_hif_usb_download_fw(hif_dev);
-+	release_firmware(fw);
-+	if (ret)
-+		goto fail_resume;
-+
- 	mdelay(100);
- 
- 	ret = ath9k_htc_resume(htc_handle);
 -- 
-2.25.1
+https://patchwork.kernel.org/project/linux-wireless/patch/20230821130343.29495-2-quic_hprem@quicinc.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
