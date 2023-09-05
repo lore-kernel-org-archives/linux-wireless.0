@@ -2,100 +2,209 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89B72C83F2C
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 Sep 2023 23:24:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B078CCA0FFB
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:01:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241525AbjIDXYQ (ORCPT
+        id S233899AbjIEQB0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 Sep 2023 19:24:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46412 "EHLO
+        Tue, 5 Sep 2023 12:01:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241824AbjIDXYP (ORCPT
+        with ESMTP id S1354660AbjIENTt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 Sep 2023 19:24:15 -0400
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C929DB4;
-        Mon,  4 Sep 2023 16:24:11 -0700 (PDT)
-Received: by mail-lj1-x229.google.com with SMTP id 38308e7fff4ca-2bccda76fb1so31226941fa.2;
-        Mon, 04 Sep 2023 16:24:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693869850; x=1694474650; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=89D7o49G0wQ/V5O0EAZttNXedphXx9AjufFjeiwpyRE=;
-        b=TDbKyjMfIIYy3JHwDPJp00B4mtNd08NcRKe/4ZogvK94u5zdVJKcOcFvOEQGorAlap
-         6sVcaBMfP0fzwazhNvq893FQKW87sU3tW5x6x9I6F8di1g2qAi1XSWF6MLPplfm0DuHL
-         YCFoRyZufp1euOHeFGY/poKZWzpv2njzRLTHJ9ELQHKMFeK3+pPwfnECwwJ8X86z/G8I
-         6hkY1H+8FGQco4TTV0kztpBcP+YliwWP7srmUVX0Gb4/3qiCY/pdONsrjcAwWGlIcDSU
-         Am02uepkoPuyMQmM0osmdr5izc0AO5Pz0kSTWKQMbQ69VqrnvvF+nNrFgAT/vCGuAGEf
-         7UcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693869850; x=1694474650;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=89D7o49G0wQ/V5O0EAZttNXedphXx9AjufFjeiwpyRE=;
-        b=L7sj4OMc4PZWSRo0jtGlEpyq50/Sh0sRIc0U8/JZo/Bpo51gkrKsAlKits+8UDeBn0
-         E4BeVuG940G9mIMW8uUhtg7rnl4gpZz50ZUPwEWbRSfz9ep/nWveLLzVvQh+l/tN1Pyw
-         I2pKhL29iQq+xP6oFU60E4zg7k9sOpESPmIH86AlB5lmyrwmrM6OB4ANxKkOexUce5ev
-         Qv5zdUdjVHdZFpZ2eH0IvAT2jLmW75JIe3owt3wXajASi7VOz0EsbNxZgYrhVU54v9kh
-         6A0fxhrHj0Cnw4WtR1qAuAcT0irgzfjyHpgdvIJGTLL8RUuz34+H/8YCzyqR+B5vDdzs
-         zi4A==
-X-Gm-Message-State: AOJu0YxBItSrGi1mGB6MSxXv8XLsYT+8DIUx7o7YXaJUXBa6Wy3BWucD
-        7X5btKJnYG7ipRCRI4DzNTI=
-X-Google-Smtp-Source: AGHT+IEgH8SxwAw88XY34uc0352kFy2PHj4W/6vYs4wixrnKxM+40/ezYlU1pVx9TzD7Y4B81q6Hmg==
-X-Received: by 2002:a2e:7015:0:b0:2b9:e24d:21f6 with SMTP id l21-20020a2e7015000000b002b9e24d21f6mr8852412ljc.20.1693869849844;
-        Mon, 04 Sep 2023 16:24:09 -0700 (PDT)
-Received: from rand-ubuntu-development.dl.local (mail.confident.ru. [85.114.29.218])
-        by smtp.gmail.com with ESMTPSA id q25-20020a2e9699000000b002b6f1afd00esm2372543lji.107.2023.09.04.16.24.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Sep 2023 16:24:09 -0700 (PDT)
-From:   Rand Deeb <rand.sec96@gmail.com>
-To:     Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     deeb.rand@confident.ru, lvc-project@linuxtesting.org,
-        voskresenski.stanislav@confident.ru,
-        Rand Deeb <rand.sec96@gmail.com>
-Subject: [PATCH v2] ssb: Fix division by zero issue in ssb_calc_clock_rate
-Date:   Tue,  5 Sep 2023 02:23:46 +0300
-Message-Id: <20230904232346.34991-1-rand.sec96@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        Tue, 5 Sep 2023 09:19:49 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC71FA8
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 06:19:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693919985; x=1725455985;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=VMUXpQPKL2TxN68rSXCjFUBcMxzyQ1tnvDrQyJeEqpk=;
+  b=EV2CysqR/hEeeJU0wrWkPXZ5PRvLHHe5oU3ZxWhOexVkCRJZzHlH5aVz
+   zMolaXjn0o+twsvpk1oixqGK8gxEIOXjBI8DxN90rzPvpaQ4kyxtjsQGH
+   fN/vxt//AqkMhoUJTgzgfNY6+j6ZdsWXZoJOsQslS7PykO/wryzPWp5hD
+   bz14DaqYfSO3cBX2iKxv5l6cAXk0ES4EGUE0uO7XcYHuaYnFiRxrIo+GR
+   NtQwXCkqJuq8NMK5wTrZ11hqo0BRa2x4o8m6QipkmTPIMQw+d5dj0moFN
+   vuGMU6mDz6nnlV0jgpwkNUnne17/V13fc8XJlfH+YCyGG7bCWV0FRNRu0
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="376712584"
+X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
+   d="scan'208";a="376712584"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2023 06:19:45 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="1071971153"
+X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
+   d="scan'208";a="1071971153"
+Received: from gilz-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.251.181.138])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2023 06:19:43 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH] iwlwifi: mvm: handle PS changes in vif_cfg_changed
+Date:   Tue,  5 Sep 2023 16:19:34 +0300
+Message-Id: <20230905161925.b698ca008d8a.Ieed265014988c50ec68fbff6d33821e4215f987f@changeid>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In ssb_calc_clock_rate(), there is a potential issue where the value of
-m1 could be zero due to initialization using clkfactor_f6_resolv(). This
-situation raised concerns about the possibility of a division by zero
-error.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-We fixed it by following the suggestions provided by Larry Finger
-<Larry.Finger@lwfinger.net> and Michael Büsch <m@bues.ch>. The fix
-involves returning a value of 1 instead of 0 in clkfactor_f6_resolv().
-This modification ensures the proper functioning of the code and
-eliminates the risk of division by zero errors.
+Handling of BSS_CHANGED_PS was missing in vif_cfg_changed
+callback. Fix it.
 
-Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/ssb/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../wireless/intel/iwlwifi/mvm/mld-mac80211.c | 121 +++++++++---------
+ 1 file changed, 63 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index 0a26984acb2c..9e54bc7eec66 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -835,7 +835,7 @@ static u32 clkfactor_f6_resolve(u32 v)
- 	case SSB_CHIPCO_CLK_F6_7:
- 		return 7;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+index 9615bfff7f7d..778a311b500b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+@@ -731,73 +731,78 @@ static void iwl_mvm_mld_vif_cfg_changed_station(struct iwl_mvm *mvm,
+ 
+ 	mvmvif->associated = vif->cfg.assoc;
+ 
+-	if (!(changes & BSS_CHANGED_ASSOC))
+-		return;
+-
+-	if (vif->cfg.assoc) {
+-		/* clear statistics to get clean beacon counter */
+-		iwl_mvm_request_statistics(mvm, true);
+-		iwl_mvm_sf_update(mvm, vif, false);
+-		iwl_mvm_power_vif_assoc(mvm, vif);
+-
+-		for_each_mvm_vif_valid_link(mvmvif, i) {
+-			memset(&mvmvif->link[i]->beacon_stats, 0,
+-			       sizeof(mvmvif->link[i]->beacon_stats));
++	if (changes & BSS_CHANGED_ASSOC) {
++		if (vif->cfg.assoc) {
++			/* clear statistics to get clean beacon counter */
++			iwl_mvm_request_statistics(mvm, true);
++			iwl_mvm_sf_update(mvm, vif, false);
++			iwl_mvm_power_vif_assoc(mvm, vif);
++
++			for_each_mvm_vif_valid_link(mvmvif, i) {
++				memset(&mvmvif->link[i]->beacon_stats, 0,
++				       sizeof(mvmvif->link[i]->beacon_stats));
++
++				if (vif->p2p) {
++					iwl_mvm_update_smps(mvm, vif,
++							    IWL_MVM_SMPS_REQ_PROT,
++							    IEEE80211_SMPS_DYNAMIC, i);
++				}
++
++				rcu_read_lock();
++				link_conf = rcu_dereference(vif->link_conf[i]);
++				if (link_conf && !link_conf->dtim_period)
++					protect = true;
++				rcu_read_unlock();
++			}
+ 
+-			if (vif->p2p) {
+-				iwl_mvm_update_smps(mvm, vif,
+-						    IWL_MVM_SMPS_REQ_PROT,
+-						    IEEE80211_SMPS_DYNAMIC, i);
++			if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
++			    protect) {
++				/* If we're not restarting and still haven't
++				 * heard a beacon (dtim period unknown) then
++				 * make sure we still have enough minimum time
++				 * remaining in the time event, since the auth
++				 * might actually have taken quite a while
++				 * (especially for SAE) and so the remaining
++				 * time could be small without us having heard
++				 * a beacon yet.
++				 */
++				iwl_mvm_protect_assoc(mvm, vif, 0);
+ 			}
+ 
+-			rcu_read_lock();
+-			link_conf = rcu_dereference(vif->link_conf[i]);
+-			if (link_conf && !link_conf->dtim_period)
+-				protect = true;
+-			rcu_read_unlock();
+-		}
++			iwl_mvm_sf_update(mvm, vif, false);
++
++			/* FIXME: need to decide about misbehaving AP handling */
++			iwl_mvm_power_vif_assoc(mvm, vif);
++		} else if (iwl_mvm_mld_vif_have_valid_ap_sta(mvmvif)) {
++			iwl_mvm_mei_host_disassociated(mvm);
+ 
+-		if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
+-		    protect) {
+-			/* If we're not restarting and still haven't
+-			 * heard a beacon (dtim period unknown) then
+-			 * make sure we still have enough minimum time
+-			 * remaining in the time event, since the auth
+-			 * might actually have taken quite a while
+-			 * (especially for SAE) and so the remaining
+-			 * time could be small without us having heard
+-			 * a beacon yet.
++			/* If update fails - SF might be running in associated
++			 * mode while disassociated - which is forbidden.
+ 			 */
+-			iwl_mvm_protect_assoc(mvm, vif, 0);
++			ret = iwl_mvm_sf_update(mvm, vif, false);
++			WARN_ONCE(ret &&
++				  !test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
++					    &mvm->status),
++				  "Failed to update SF upon disassociation\n");
++
++			/* If we get an assert during the connection (after the
++			 * station has been added, but before the vif is set
++			 * to associated), mac80211 will re-add the station and
++			 * then configure the vif. Since the vif is not
++			 * associated, we would remove the station here and
++			 * this would fail the recovery.
++			 */
++			iwl_mvm_mld_vif_delete_all_stas(mvm, vif);
+ 		}
+ 
+-		iwl_mvm_sf_update(mvm, vif, false);
+-
+-		/* FIXME: need to decide about misbehaving AP handling */
+-		iwl_mvm_power_vif_assoc(mvm, vif);
+-	} else if (iwl_mvm_mld_vif_have_valid_ap_sta(mvmvif)) {
+-		iwl_mvm_mei_host_disassociated(mvm);
+-
+-		/* If update fails - SF might be running in associated
+-		 * mode while disassociated - which is forbidden.
+-		 */
+-		ret = iwl_mvm_sf_update(mvm, vif, false);
+-		WARN_ONCE(ret &&
+-			  !test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
+-				    &mvm->status),
+-			  "Failed to update SF upon disassociation\n");
+-
+-		/* If we get an assert during the connection (after the
+-		 * station has been added, but before the vif is set
+-		 * to associated), mac80211 will re-add the station and
+-		 * then configure the vif. Since the vif is not
+-		 * associated, we would remove the station here and
+-		 * this would fail the recovery.
+-		 */
+-		iwl_mvm_mld_vif_delete_all_stas(mvm, vif);
++		iwl_mvm_bss_info_changed_station_assoc(mvm, vif, changes);
  	}
--	return 0;
-+	return 1;
+ 
+-	iwl_mvm_bss_info_changed_station_assoc(mvm, vif, changes);
++	if (changes & BSS_CHANGED_PS) {
++		ret = iwl_mvm_power_update_mac(mvm);
++		if (ret)
++			IWL_ERR(mvm, "failed to update power mode\n");
++	}
  }
  
- /* Calculate the speed the backplane would run at a given set of clockcontrol values */
+ static void
 -- 
-2.34.1
+2.38.1
 
