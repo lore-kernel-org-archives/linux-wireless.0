@@ -2,85 +2,62 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72474CA0FF8
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:04:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C8EC83F2C
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:04:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235380AbjIEQCM (ORCPT
+        id S230055AbjIEQCJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:02:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
+        Tue, 5 Sep 2023 12:02:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353481AbjIEGVd (ORCPT
+        with ESMTP id S1354465AbjIELye (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2023 02:21:33 -0400
-Received: from bues.ch (bues.ch [IPv6:2a01:138:9005::1:4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ADE8191;
-        Mon,  4 Sep 2023 23:21:23 -0700 (PDT)
-Received: by bues.ch with esmtpsa (Exim 4.96)
-        (envelope-from <m@bues.ch>)
-        id 1qdPQv-001L3y-1u;
-        Tue, 05 Sep 2023 08:21:04 +0200
-Date:   Tue, 5 Sep 2023 08:20:19 +0200
-From:   Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To:     Rand Deeb <rand.sec96@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        deeb.rand@confident.ru, lvc-project@linuxtesting.org,
-        voskresenski.stanislav@confident.ru
-Subject: Re: [PATCH v2] ssb: Fix division by zero issue in
- ssb_calc_clock_rate
-Message-ID: <20230905082019.3e111dc2@barney>
-In-Reply-To: <20230904232346.34991-1-rand.sec96@gmail.com>
-References: <20230904232346.34991-1-rand.sec96@gmail.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-pc-linux-gnu)
+        Tue, 5 Sep 2023 07:54:34 -0400
+Received: from mail.toke.dk (mail.toke.dk [IPv6:2a0c:4d80:42:2001::664])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 659881AD;
+        Tue,  5 Sep 2023 04:54:29 -0700 (PDT)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+        t=1693914866; bh=Pu2KNtGCQ86ffRJyUfxaDeikppAYD/s1xk4Qr01so6I=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=ZYUThqiZhV4p7gMinoJpme0FNkMm3UhLBM73juawldAPB85UFn1A5CDfRp7Jnsll6
+         8amEQ0DyeYyzqRALHR6wGZK2e5l32pWuf9RQkYuB1t8wTRq3APJRQx80spZxd3tq0Z
+         EzMmZNoMdXQbQhyKxJxJMn8S2mXM3c28sKsvUDuMfoWBNYA2uYVTRI1iW2O8/EN1+K
+         BHulHezcNlJzSVMwxoJ7/BqkzY4na8EqmSIwZcjyD0DT6XHwhBaOlUTR3GUwnS4scB
+         fx73aK0zz+XrDpXaYyRFlLp/TYhwgK4ucWv9/O4wrPCHIIgknC9Xw2I0ok5/EmFR41
+         u1J+nDa68QEvw==
+To:     Dongliang Mu <dzm91@hust.edu.cn>, Kalle Valo <kvalo@kernel.org>
+Cc:     hust-os-kernel-patches@googlegroups.com,
+        Dongliang Mu <dzm91@hust.edu.cn>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] ath9k: clean up function ath9k_hif_usb_resume
+In-Reply-To: <20230905013556.2595854-1-dzm91@hust.edu.cn>
+References: <20230905013556.2595854-1-dzm91@hust.edu.cn>
+Date:   Tue, 05 Sep 2023 13:54:26 +0200
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <87r0ncq1hp.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/1jNiMFQddYjpJbUFMGo9Qgn";
- protocol="application/pgp-signature"; micalg=pgp-sha512
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---Sig_/1jNiMFQddYjpJbUFMGo9Qgn
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Dongliang Mu <dzm91@hust.edu.cn> writes:
 
-On Tue,  5 Sep 2023 02:23:46 +0300
-Rand Deeb <rand.sec96@gmail.com> wrote:
-> --- a/drivers/ssb/main.c
-> +++ b/drivers/ssb/main.c
-> @@ -835,7 +835,7 @@ static u32 clkfactor_f6_resolve(u32 v)
->  	case SSB_CHIPCO_CLK_F6_7:
->  		return 7;
->  	}
-> -	return 0;
-> +	return 1;
->  }
+> In ath9k_hif_usb_resume, the error handling code calls
+> ath9k_hif_usb_dealloc_urbs twice in different paths.
+>
+> To unify the error handling code, we move the else branch before
+> the if branch and drop one level of indentation of the if branch.
+>
+> In addition, move the ret variable at the end of variable declarations
+> to be reverse x-mas tree order.
+>
+> Note that this patch does not incur any functionability change.
+>
+> Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
 
-Acked-by: Michael B=C3=BCsch <m@bues.ch>
+So it seems this didn't make it to the lists; could you please try
+re-sending?
 
-
---=20
-Michael B=C3=BCsch
-https://bues.ch/
-
---Sig_/1jNiMFQddYjpJbUFMGo9Qgn
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmT2yKMACgkQ9TK+HZCN
-iw7OjRAAkPVJcvb2YsUwfSDQ/Nuc2KYIE9+DpWP+/MllD+bsM1K5wa1gRaohtiVY
-ztmHKQlba2XvcxGUkPlW8B4FTfiBlho6dAy/0Qu8zlyr1/7Tc81RYAavLDSLxhmj
-omF+DHBXPCyeVRfskOLLSOKtUXQ0rWINmKpEBDBQP2cG64M2ximpP927xkgalBwp
-zx3P3ndfTXb2+oNQqEquAEl6NfGGXEWBN2enNLYs3NOddCsDSj6oXpmEfEIouCQ7
-QB4vKKzKS7z8MoM0wFXBpvdrfW8WK7cqu1g4JGwlnHLXfZhXuNVbgmS+ncsLQXO3
-gkFii/Fa32/9Bm+Hrt1bkMtN2Pt2nBg+S0zOe7ddKdSC3AYCJi3aJCfUz+3PV/2t
-DEHAeRsUjnIgOyBR0Ff83ACdVci2bp3LNi1tLeQs5gnLSeLpgA1YuFNrMksob0CF
-N5/jxiNYUgsW5ejAaQcpKaG5czZgscPiglDLaXYX6gKY6TL2QsNkaZZ77m9pV9r2
-81JNL2UaXEsJW8ztYqgql1P/F1+BVRAULo5cxl8lI9f4Mdxee0RqlE3dW3+2APzn
-IMS3V72eDh147bit5r9QPtrYybhJXTcdD9yEvn2VPigPhEPPYt7RDhTpQnHqugNK
-NwG7aWGNuh3JxqD2cFiBUqCHE6hq/k20vsRhlrLxzs3y9uVzQKg=
-=B5Ak
------END PGP SIGNATURE-----
-
---Sig_/1jNiMFQddYjpJbUFMGo9Qgn--
+-Toke
