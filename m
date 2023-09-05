@@ -2,124 +2,212 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6992C83F2C
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59BFDCA0FE2
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Sep 2023 16:01:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235062AbjIEQBo (ORCPT
+        id S235093AbjIEQBr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:01:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50684 "EHLO
+        Tue, 5 Sep 2023 12:01:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353588AbjIEGtW (ORCPT
+        with ESMTP id S1354677AbjIENae (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Sep 2023 02:49:22 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B8321B4
-        for <linux-wireless@vger.kernel.org>; Mon,  4 Sep 2023 23:49:19 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3855uKbl030567;
-        Tue, 5 Sep 2023 06:49:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=fS9ZJ3WL/YRDUoJpohAuHboVSPppS5sFzM54T5A7wdo=;
- b=MskrhDvD3wb3U1U8PL1lhLRWpmF6uVeS88M2yLqYIdYa68GxcKPAltJXGAw4QVbGxXl+
- aL+Vh3oj9gnP0UIffrpZTKA/F/W3xqKkBOcGEI1wqgIAuIXq/SXTEeydJx2a5I1BMSCK
- N+Uco5HYmhfJFsbneR8ERLLo+syFbiXPTruHAIulAEuuKOjkWm4T09PZlCV7QZs97p/o
- yL30gTjzW8uBrBVQ83jyuqyXx/Yk05Gt79uPKlsYuhAABBgvqNjxVvYzZqx74F79pOkh
- h8g7hgA8qBBARDpBz2MPSXqR7bYfaBSQxw6ZXwsPegBoX7mm2pKtqgiIf/ywa5ZIgC6F hQ== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3suvcrcx1c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 05 Sep 2023 06:49:16 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3856nFP5001728
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 5 Sep 2023 06:49:15 GMT
-Received: from adisi-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.36; Mon, 4 Sep 2023 23:49:13 -0700
-From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <johannes@sipsolutions.net>,
-        Aditya Kumar Singh <quic_adisi@quicinc.com>
-Subject: [PATCH] wifi: cfg80211: validate AP phy operation before starting it
-Date:   Tue, 5 Sep 2023 12:18:57 +0530
-Message-ID: <20230905064857.1503-1-quic_adisi@quicinc.com>
-X-Mailer: git-send-email 2.17.1
+        Tue, 5 Sep 2023 09:30:34 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D624BC
+        for <linux-wireless@vger.kernel.org>; Tue,  5 Sep 2023 06:30:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693920631; x=1725456631;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=BuJNLD7HZyMp+eJCPhXLFf7eLbcQSwMgrLiNnJT51xo=;
+  b=epG/OpZpbFp5JMLdqIhq9fVMv/x2rDYuVVos4/rnz+yRFBTMqiAsr6SF
+   tPFeXSPpAJYjPLuboWyaDeV+667htfAv4Nldx2Lohvv6LP1Ku/VOztfvV
+   e4eWDklVlwxlBvmkcbeHyGOwSPmwSUl6Yi7vhFi9gYv460nTeB85Ekcdq
+   PwCPgutFCW8JVpDOF24PVuCl2i84dGDVtNsyObdvJjRcXdrz2nr3zvyBr
+   l8Fsw6QolWcW8nacXhLLi+kyoLDnblnHi9n/JQ1TGzeCoUz4YBKZHNL1C
+   DnpnjUZEH+n5t/R2daKUhYgsA3A/BZxPcbRmVop0+a8zTW4sHt8LnuDpj
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="443189291"
+X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
+   d="scan'208";a="443189291"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2023 06:30:09 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="864690331"
+X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
+   d="scan'208";a="864690331"
+Received: from gilz-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.251.181.138])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2023 06:30:06 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Sultan Alsawaf <sultan@kerneltoast.com>
+Subject: [PATCH v2] iwlwifi: mvm: handle PS changes in vif_cfg_changed
+Date:   Tue,  5 Sep 2023 16:29:57 +0300
+Message-Id: <20230905162939.5ef0c8230de6.Ieed265014988c50ec68fbff6d33821e4215f987f@changeid>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: WTEQJ1YrvNgAP7nplT4rrDXR7OIq6P4Q
-X-Proofpoint-ORIG-GUID: WTEQJ1YrvNgAP7nplT4rrDXR7OIq6P4Q
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-05_05,2023-08-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
- priorityscore=1501 mlxlogscore=999 impostorscore=0 suspectscore=0
- lowpriorityscore=0 mlxscore=0 spamscore=0 clxscore=1015 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309050060
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Many regulatories can have HE/EHT Operation as not permitted. In such
-cases, AP should not be allowed to start if it is using a channel
-having the no operation flag set. However, currently there is no such
-check in place.
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Fix this issue by validating such IEs sent during start AP against the
-channel flags.
+Handling of BSS_CHANGED_PS was missing in vif_cfg_changed
+callback. Fix it.
 
-Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+Fixes: 22c588343529 ("wifi: iwlwifi: mvm: replace bss_info_changed() with vif_cfg/link_info_changed()")
+Reported-by: Sultan Alsawaf <sultan@kerneltoast.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/wireless/nl80211.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ .../wireless/intel/iwlwifi/mvm/mld-mac80211.c | 121 +++++++++---------
+ 1 file changed, 63 insertions(+), 58 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index de47838aca4f..0c989a839e56 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5909,6 +5909,21 @@ static void nl80211_send_ap_started(struct wireless_dev *wdev,
- 	nlmsg_free(msg);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+index 9615bfff7f7d..778a311b500b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+@@ -731,73 +731,78 @@ static void iwl_mvm_mld_vif_cfg_changed_station(struct iwl_mvm *mvm,
+ 
+ 	mvmvif->associated = vif->cfg.assoc;
+ 
+-	if (!(changes & BSS_CHANGED_ASSOC))
+-		return;
+-
+-	if (vif->cfg.assoc) {
+-		/* clear statistics to get clean beacon counter */
+-		iwl_mvm_request_statistics(mvm, true);
+-		iwl_mvm_sf_update(mvm, vif, false);
+-		iwl_mvm_power_vif_assoc(mvm, vif);
+-
+-		for_each_mvm_vif_valid_link(mvmvif, i) {
+-			memset(&mvmvif->link[i]->beacon_stats, 0,
+-			       sizeof(mvmvif->link[i]->beacon_stats));
++	if (changes & BSS_CHANGED_ASSOC) {
++		if (vif->cfg.assoc) {
++			/* clear statistics to get clean beacon counter */
++			iwl_mvm_request_statistics(mvm, true);
++			iwl_mvm_sf_update(mvm, vif, false);
++			iwl_mvm_power_vif_assoc(mvm, vif);
++
++			for_each_mvm_vif_valid_link(mvmvif, i) {
++				memset(&mvmvif->link[i]->beacon_stats, 0,
++				       sizeof(mvmvif->link[i]->beacon_stats));
++
++				if (vif->p2p) {
++					iwl_mvm_update_smps(mvm, vif,
++							    IWL_MVM_SMPS_REQ_PROT,
++							    IEEE80211_SMPS_DYNAMIC, i);
++				}
++
++				rcu_read_lock();
++				link_conf = rcu_dereference(vif->link_conf[i]);
++				if (link_conf && !link_conf->dtim_period)
++					protect = true;
++				rcu_read_unlock();
++			}
+ 
+-			if (vif->p2p) {
+-				iwl_mvm_update_smps(mvm, vif,
+-						    IWL_MVM_SMPS_REQ_PROT,
+-						    IEEE80211_SMPS_DYNAMIC, i);
++			if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
++			    protect) {
++				/* If we're not restarting and still haven't
++				 * heard a beacon (dtim period unknown) then
++				 * make sure we still have enough minimum time
++				 * remaining in the time event, since the auth
++				 * might actually have taken quite a while
++				 * (especially for SAE) and so the remaining
++				 * time could be small without us having heard
++				 * a beacon yet.
++				 */
++				iwl_mvm_protect_assoc(mvm, vif, 0);
+ 			}
+ 
+-			rcu_read_lock();
+-			link_conf = rcu_dereference(vif->link_conf[i]);
+-			if (link_conf && !link_conf->dtim_period)
+-				protect = true;
+-			rcu_read_unlock();
+-		}
++			iwl_mvm_sf_update(mvm, vif, false);
++
++			/* FIXME: need to decide about misbehaving AP handling */
++			iwl_mvm_power_vif_assoc(mvm, vif);
++		} else if (iwl_mvm_mld_vif_have_valid_ap_sta(mvmvif)) {
++			iwl_mvm_mei_host_disassociated(mvm);
+ 
+-		if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
+-		    protect) {
+-			/* If we're not restarting and still haven't
+-			 * heard a beacon (dtim period unknown) then
+-			 * make sure we still have enough minimum time
+-			 * remaining in the time event, since the auth
+-			 * might actually have taken quite a while
+-			 * (especially for SAE) and so the remaining
+-			 * time could be small without us having heard
+-			 * a beacon yet.
++			/* If update fails - SF might be running in associated
++			 * mode while disassociated - which is forbidden.
+ 			 */
+-			iwl_mvm_protect_assoc(mvm, vif, 0);
++			ret = iwl_mvm_sf_update(mvm, vif, false);
++			WARN_ONCE(ret &&
++				  !test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
++					    &mvm->status),
++				  "Failed to update SF upon disassociation\n");
++
++			/* If we get an assert during the connection (after the
++			 * station has been added, but before the vif is set
++			 * to associated), mac80211 will re-add the station and
++			 * then configure the vif. Since the vif is not
++			 * associated, we would remove the station here and
++			 * this would fail the recovery.
++			 */
++			iwl_mvm_mld_vif_delete_all_stas(mvm, vif);
+ 		}
+ 
+-		iwl_mvm_sf_update(mvm, vif, false);
+-
+-		/* FIXME: need to decide about misbehaving AP handling */
+-		iwl_mvm_power_vif_assoc(mvm, vif);
+-	} else if (iwl_mvm_mld_vif_have_valid_ap_sta(mvmvif)) {
+-		iwl_mvm_mei_host_disassociated(mvm);
+-
+-		/* If update fails - SF might be running in associated
+-		 * mode while disassociated - which is forbidden.
+-		 */
+-		ret = iwl_mvm_sf_update(mvm, vif, false);
+-		WARN_ONCE(ret &&
+-			  !test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED,
+-				    &mvm->status),
+-			  "Failed to update SF upon disassociation\n");
+-
+-		/* If we get an assert during the connection (after the
+-		 * station has been added, but before the vif is set
+-		 * to associated), mac80211 will re-add the station and
+-		 * then configure the vif. Since the vif is not
+-		 * associated, we would remove the station here and
+-		 * this would fail the recovery.
+-		 */
+-		iwl_mvm_mld_vif_delete_all_stas(mvm, vif);
++		iwl_mvm_bss_info_changed_station_assoc(mvm, vif, changes);
+ 	}
+ 
+-	iwl_mvm_bss_info_changed_station_assoc(mvm, vif, changes);
++	if (changes & BSS_CHANGED_PS) {
++		ret = iwl_mvm_power_update_mac(mvm);
++		if (ret)
++			IWL_ERR(mvm, "failed to update power mode\n");
++	}
  }
  
-+static int nl80211_validate_ap_phy_operation(struct cfg80211_ap_settings *params)
-+{
-+	struct ieee80211_channel *channel = params->chandef.chan;
-+
-+	if ((params->he_cap ||  params->he_oper) &&
-+	    (channel->flags & IEEE80211_CHAN_NO_HE))
-+		return -EOPNOTSUPP;
-+
-+	if ((params->eht_cap || params->eht_oper) &&
-+	    (channel->flags & IEEE80211_CHAN_NO_EHT))
-+		return -EOPNOTSUPP;
-+
-+	return 0;
-+}
-+
- static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -6178,6 +6193,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		goto out_unlock;
- 
-+	err = nl80211_validate_ap_phy_operation(params);
-+	if (err)
-+		goto out_unlock;
-+
- 	if (info->attrs[NL80211_ATTR_AP_SETTINGS_FLAGS])
- 		params->flags = nla_get_u32(
- 			info->attrs[NL80211_ATTR_AP_SETTINGS_FLAGS]);
-
-base-commit: dae4464939025d38940a6bc6b80734adad0ff944
+ static void
 -- 
-2.17.1
+2.38.1
 
