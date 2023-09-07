@@ -2,125 +2,85 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 970DFEC873B
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 15:39:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D64BEC873C
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 15:39:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231357AbjIGPjV (ORCPT
+        id S232691AbjIGPjX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Sep 2023 11:39:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35552 "EHLO
+        Thu, 7 Sep 2023 11:39:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245191AbjIGP1Q (ORCPT
+        with ESMTP id S243918AbjIGPZe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2023 11:27:16 -0400
-Received: from mail-yw1-f207.google.com (mail-yw1-f207.google.com [209.85.128.207])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F6201BF1
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 08:26:48 -0700 (PDT)
-Received: by mail-yw1-f207.google.com with SMTP id 00721157ae682-58e4d2b7d16so12850707b3.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Sep 2023 08:26:48 -0700 (PDT)
+        Thu, 7 Sep 2023 11:25:34 -0400
+Received: from mail-qv1-xf31.google.com (mail-qv1-xf31.google.com [IPv6:2607:f8b0:4864:20::f31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB0611BEF
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 08:25:15 -0700 (PDT)
+Received: by mail-qv1-xf31.google.com with SMTP id 6a1803df08f44-64c1d487e72so6805126d6.0
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Sep 2023 08:25:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1694100312; x=1694705112; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aycCTyJOheIDKo1ZgbnwW6zsxD+FQHxnfjQ1uwRRryI=;
+        b=V4MvRtaAR2DyJfa3MYY14uOOv9cCujVC8hdQBPwZtG9vZzVuhk+tLy2lOhAYJP7gx7
+         roUOCtbZzHU4uoMfTcpIk/6AvoLR4842IJLtUO8nVLlQ+rZUUh9o86Vv6p4hQcXgMXzO
+         XZbvhm4GgwR/93b5dAfaYOB6JT/12ioS3i5AY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1694100342; x=1694705142;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=zW5qhnjQmXuAaFU5fKwA/lEli7GsBu/PGJfxRXG3SHY=;
-        b=T2DwjBBmsDgCdOehbD/2C3xY9IVC4wf6T0vrUMpitHOEMO20zefIVcRwzbCeWBnUaN
-         z7OkC2ASDm3VlRMTRgVhqmHRIpJG6a5EBFZVW8+I1MJwkyWSATOVj/j9L5It/2eAF/Oj
-         kti9D19uUS3SCtAiYvpS5iPuj2rwDOnbZ+oQ/qTHhYGNz6y/AlPVWK2JXB4+RKPZ1q2Y
-         awmNTNVP3ufdPyiBmp5Q1IU07kkLkrWPCQ7KaghUJ7DKv9b+MGDN3gIdRwuOuoSITd/l
-         Jrxlx8Nui7Ix9QzL+Z4KFNx1uf0e9ndJElIGn6oJJZWnqJ4N91R3iwOTyc0DZ3xEQ9X+
-         viWg==
-X-Gm-Message-State: AOJu0YwIR5GbbY1cGBhxNllhggnw7WKlVvLy6I5rQmX+teY0FRUIy9WQ
-        g2rG6cGW47ox3ystIlq87mmsIKLkYOhtThIla1L+1H0dSQQi
-X-Google-Smtp-Source: AGHT+IG5wTTGmmZiHOULSKMs/aQJzNoUO7ZR1DHaaynqV/kIsxBQ60kNClLJ4OvCsCznerNQ8nbBG5G2Y/WjgpejAQ1X+NCllgum
+        d=1e100.net; s=20221208; t=1694100312; x=1694705112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=aycCTyJOheIDKo1ZgbnwW6zsxD+FQHxnfjQ1uwRRryI=;
+        b=WnE3ZeRN7WDQI+tHSVDalteG5+TSGJC8FeZ768F+MZzM2+66OZMaKyiII1bCGdvBY8
+         q7xe0dja855N0rNMw7+uFHfoJpJInvdxlm5R9TtYQdMCQqoRbEPVZpQLT0Fu4Icp/o9q
+         IVfbqLyqcCiwkc+ZIuNOPO0RVXPKugm1xlzQQnRWWKBJ3Mna5abJsUMzSlZnhbOgxLWK
+         xxdTAn483bNGldVJvO3M8za5vQJyAsVDMxzTJdGvuthjBzq8ZTt6lraOPpVCvzesfJuc
+         vjtww7rOXL8lBD+Wcb3lnd8tVoUt+mNBQOseNUkfwTnRU90g99DSv3VeP4lm4wqXInUq
+         6ukA==
+X-Gm-Message-State: AOJu0YwfZuZVoeBDsezpbZvq7rj4Xl0DHSr/6VF9WRDj9yb9pmuzg5Yc
+        w352uWcLhb9OpogJeb7BTHDarxCaXFl/5shZwHra3D7kLzknzbC2
+X-Google-Smtp-Source: AGHT+IFj2FlIKXoMOrdA8m6h1SxwqJEdWc5x6fTQOPsL29IpibzHq4rNR/U1JI7AAj1ZLriuWigLzvMPJRO0C0GjGD0=
+X-Received: by 2002:a92:cc82:0:b0:34d:f026:7aa1 with SMTP id
+ x2-20020a92cc82000000b0034df0267aa1mr18419028ilo.26.1694078781179; Thu, 07
+ Sep 2023 02:26:21 -0700 (PDT)
 MIME-Version: 1.0
-X-Received: by 2002:a63:7d03:0:b0:569:356c:f365 with SMTP id
- y3-20020a637d03000000b00569356cf365mr3738671pgc.12.1694075041155; Thu, 07 Sep
- 2023 01:24:01 -0700 (PDT)
-Date:   Thu, 07 Sep 2023 01:24:01 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000000d1dbf0604c09577@google.com>
-Subject: [syzbot] [wireless?] [net?] memory leak in restore_regulatory_settings
-From:   syzbot <syzbot+68849d5e4a6e74f32c06@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, edumazet@google.com,
-        johannes@sipsolutions.net, kuba@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, pabeni@redhat.com,
-        syzkaller-bugs@googlegroups.com
+References: <20230906102940.1120269-1-treapking@chromium.org> <CABRiz0r8qHgx-4b7QdCj6iz9FDsyChznEHOn5eByVoUYuLa-PQ@mail.gmail.com>
+In-Reply-To: <CABRiz0r8qHgx-4b7QdCj6iz9FDsyChznEHOn5eByVoUYuLa-PQ@mail.gmail.com>
+From:   Pin-yen Lin <treapking@chromium.org>
+Date:   Thu, 7 Sep 2023 17:26:10 +0800
+Message-ID: <CAEXTbpdqhxWVMSHz-8+=50_qd1UViKvD5YZY08=RFMBu5E6b2A@mail.gmail.com>
+Subject: Re: [PATCH] wifi: mwifiex: Fix oob check condition in mwifiex_process_rx_packet
+To:     Matthew Wang <matthewmwang@chromium.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        Polaris Pi <pinkperfect2021@gmail.com>,
+        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Hi Matthew,
 
-syzbot found the following issue on:
+On Thu, Sep 7, 2023 at 5:10=E2=80=AFPM Matthew Wang <matthewmwang@chromium.=
+org> wrote:
+>
+> > -       if ((!memcmp(&rx_pkt_hdr->rfc1042_hdr, bridge_tunnel_header,
+> > -                    sizeof(bridge_tunnel_header))) ||
+> > -           (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
+> > -                    sizeof(rfc1042_header)) &&
+> > -            ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) !=3D ETH_P_AARP &=
+&
+> > -            ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) !=3D ETH_P_IPX)) =
+{
+> > +       if (sizeof(rx_pkt_hdr) + rx_pkt_off <=3D skb->len &&
+>
+> sizeof(*rx_pkt_hdr)?
 
-HEAD commit:    92901222f83d Merge tag 'f2fs-for-6-6-rc1' of git://git.ker..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=17c340b8680000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3544ee7492950dd3
-dashboard link: https://syzkaller.appspot.com/bug?extid=68849d5e4a6e74f32c06
-compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13fe378fa80000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11bf6f7ba80000
+Thanks for catching this. I'll upload a v2 for this.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/7b5db23b3ecc/disk-92901222.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/135d82cfd540/vmlinux-92901222.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/6e1b0da81493/bzImage-92901222.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+68849d5e4a6e74f32c06@syzkaller.appspotmail.com
-
-write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
-BUG: memory leak
-unreferenced object 0xffff88810f8a4e80 (size 64):
-  comm "kworker/0:1", pid 9, jiffies 4294945857 (age 8.050s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    ff ff ff ff 00 00 00 00 00 00 00 00 30 30 00 00  ............00..
-  backtrace:
-    [<ffffffff815739f5>] kmalloc_trace+0x25/0x90 mm/slab_common.c:1114
-    [<ffffffff84739940>] kmalloc include/linux/slab.h:599 [inline]
-    [<ffffffff84739940>] kzalloc include/linux/slab.h:720 [inline]
-    [<ffffffff84739940>] regulatory_hint_core net/wireless/reg.c:3218 [inline]
-    [<ffffffff84739940>] restore_regulatory_settings+0x820/0xa80 net/wireless/reg.c:3552
-    [<ffffffff84739d71>] crda_timeout_work+0x21/0x30 net/wireless/reg.c:540
-    [<ffffffff812c8f1d>] process_one_work+0x23d/0x530 kernel/workqueue.c:2630
-    [<ffffffff812c9ac7>] process_scheduled_works kernel/workqueue.c:2703 [inline]
-    [<ffffffff812c9ac7>] worker_thread+0x327/0x590 kernel/workqueue.c:2784
-    [<ffffffff812d6f9b>] kthread+0x12b/0x170 kernel/kthread.c:388
-    [<ffffffff81149875>] ret_from_fork+0x45/0x50 arch/x86/kernel/process.c:147
-    [<ffffffff81002be1>] ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
-
-write to /proc/sys/kernel/hung_task_check_interval_secs failed: No such file or directory
-write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
-write to /proc/sys/kernel/hung_task_check_interval_secs failed: No such file or directory
-write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the bug is already fixed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite bug's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the bug is a duplicate of another bug, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+Best,
+Pin-yen
