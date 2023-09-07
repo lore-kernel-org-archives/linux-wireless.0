@@ -2,118 +2,274 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0608AEC873D
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 16:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDA0CEC873E
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 16:40:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238725AbjIGQjQ (ORCPT
+        id S242606AbjIGQkv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Sep 2023 12:39:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60200 "EHLO
+        Thu, 7 Sep 2023 12:40:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245189AbjIGQio (ORCPT
+        with ESMTP id S239587AbjIGQkk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2023 12:38:44 -0400
-Received: from mail-yw1-x1134.google.com (mail-yw1-x1134.google.com [IPv6:2607:f8b0:4864:20::1134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B1A0273B
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 09:35:57 -0700 (PDT)
-Received: by mail-yw1-x1134.google.com with SMTP id 00721157ae682-58d31f142eeso12018947b3.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Sep 2023 09:35:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1694104497; x=1694709297; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=LiuEHdSEKcVIe8Q8MnZz4Af/RP8k3NN9qPaUUgT1FzQ=;
-        b=iCWkVzNnPMtuv81xNiTlVSK0z/+p69PEoTppxKlPaOol6M33DqzzTkFBbQTTNXYAwx
-         cWaVNtgsWv/TlVbP/ubFlDNtE+AyglRcDGh9koSXK02JZhNrzdVpofdYcUfKSXeSp4KA
-         a1+yLlVZ2Bws2Z68MO5cRtO0L2zCcgicukm+w=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1694104497; x=1694709297;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=LiuEHdSEKcVIe8Q8MnZz4Af/RP8k3NN9qPaUUgT1FzQ=;
-        b=F52/jmqFKqMclwt9G8zRflkPEzMftIQ0IQl4vHbGcCrAqP7eMIaRckVTDpn1hFYGLj
-         nS5zKwxF3u26SKzBD3pmZ1yaEYJxoJVvWQG2ARJWdmay25gYxNvLAvO5BV3lbVjzDxay
-         GR0JjGzZUBFxnDMy1v5VtwTw6rHfUI5r/fwmuqJDBX5atUpNP3agYCjabeY3XAcL02qM
-         VvLH1gbtQzZ55X++yGf6DCOHD0Go7upOFZ12KhpP5tKSgo7CgjkqeomqXRk6ZZQems+c
-         h19ONg3lVDgzEgNJJG7YKh49TxSCVu+UyukrN4DzVb1k80/cOyBqdlZ4fQt/YxFdsGVL
-         oQPg==
-X-Gm-Message-State: AOJu0YwidV6Q5CTH7hvhAFYuxQSyAGzOaPQ+lYiCDaIA6jkc8DM96Iib
-        mn/PMgeMLK7dg48iVoagJg400eCKaCNffT2kxY0=
-X-Google-Smtp-Source: AGHT+IHbs3Su3hYcWJJVY3rw9f834g5Cdz/KMqEGCuMX4I9fejMg3ArwvMnXcKj04HNUtpeRrqa5QQ==
-X-Received: by 2002:a92:c74b:0:b0:345:79eb:e001 with SMTP id y11-20020a92c74b000000b0034579ebe001mr19990613ilp.19.1694079571749;
-        Thu, 07 Sep 2023 02:39:31 -0700 (PDT)
-Received: from treapking.tpe.corp.google.com ([2401:fa00:1:10:fa85:7903:e9e8:a27b])
-        by smtp.gmail.com with ESMTPSA id 1-20020a17090a034100b0026d54b2abe9sm1193103pjf.37.2023.09.07.02.39.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Sep 2023 02:39:31 -0700 (PDT)
-From:   Pin-yen Lin <treapking@chromium.org>
-To:     linux-wireless@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        Matthew Wang <matthewmwang@chromium.org>,
-        Kalle Valo <kvalo@kernel.org>,
-        Pin-yen Lin <treapking@chromium.org>,
-        Polaris Pi <pinkperfect2021@gmail.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2] wifi: mwifiex: Fix oob check condition in mwifiex_process_rx_packet
-Date:   Thu,  7 Sep 2023 17:39:10 +0800
-Message-ID: <20230907093927.400634-1-treapking@chromium.org>
-X-Mailer: git-send-email 2.42.0.283.g2d96d420d3-goog
+        Thu, 7 Sep 2023 12:40:40 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE6FB4493
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 09:38:59 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3879HjU1030248;
+        Thu, 7 Sep 2023 10:17:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=Th1TXZi32vg0pwyeB/9RuRASd9CiEuwIvSC5+oEQ4fE=;
+ b=pIfED7O5Mj3UV/zlJHYf8zJGFBpmS/j+KfjAb1gMe4tBpMF1AGLOm3GZ2E6MpQR6qb1G
+ RlcyanY4M0gfMRjLA2nq/eS/skkaXT+rWEAKk3AaGgF/NpyT/aMRaG85Q3i9OCz8acR9
+ MHAf2F48rZta56u8HWtU3ZoM8VCqOrYM3PB4eYKMmAxim1b9YbeupfmiwqyJfLWOiXlm
+ 9qSs52J7fS/FxvCuMU76Ji04kHxEx15SSzhs+lgm0sR/YPnrBg6dSUwK2JfhhPTHwP2O
+ 1a7wxzfch8Hb/yW3e0yaijH1WkTdF8Vrm9UK17JVWeKjIHkSeQyDh9HmbCPXFzoEOoxz 4g== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sxpt034eq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 07 Sep 2023 10:17:53 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 387AHqQQ025218
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 7 Sep 2023 10:17:52 GMT
+Received: from lingbok-HP-EliteBook-8460p.qca.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.36; Thu, 7 Sep 2023 03:17:51 -0700
+From:   Lingbo Kong <quic_lingbok@quicinc.com>
+To:     <ath12k@lists.infradead.org>, <quic_jjohnson@quicinc.com>
+CC:     <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 3/4] wifi: ath12k: adjust configuration of CCA threshold value
+Date:   Thu, 7 Sep 2023 18:17:09 +0800
+Message-ID: <20230907101710.11659-4-quic_lingbok@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230907101710.11659-1-quic_lingbok@quicinc.com>
+References: <20230907101710.11659-1-quic_lingbok@quicinc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: CxyGInFWEgE8wBoVEOJnOsPfaV6NAKAm
+X-Proofpoint-GUID: CxyGInFWEgE8wBoVEOJnOsPfaV6NAKAm
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-07_03,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 spamscore=0
+ mlxscore=0 phishscore=0 impostorscore=0 suspectscore=0 mlxlogscore=999
+ adultscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309070091
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Only skip the code path trying to access the rfc1042 headers when the
-buffer is too small, so the driver can still process packets without
-rfc1042 headers.
+ath12k need to adjust CCA threshold values to meet the regulatory
+requirement. ath12k can retrieve CCA threshold configuration by invoking
+ACPI _DSM method.
 
-Fixes: 119585281617 ("wifi: mwifiex: Fix OOB and integer underflow when rx packets")
-Signed-off-by: Pin-yen Lin <treapking@chromium.org>
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
 
+Signed-off-by: Lingbo Kong <quic_lingbok@quicinc.com>
 ---
+v3:
+1.remove unnecessary cpu_to_le32()
+2.adjust the order of the macros
+3.apply jeff's advice
 
-Changes in v2:
-- Fix sizeof call (sizeof(rx_pkt_hdr) --> sizeof(*rx_pkt_hdr))
+v2:
+no change
 
- drivers/net/wireless/marvell/mwifiex/sta_rx.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath12k/acpi.c | 30 +++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/acpi.h |  8 ++++++
+ drivers/net/wireless/ath/ath12k/core.h |  1 +
+ drivers/net/wireless/ath/ath12k/wmi.c  | 40 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/wmi.h  |  7 +++--
+ 5 files changed, 84 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_rx.c b/drivers/net/wireless/marvell/mwifiex/sta_rx.c
-index 65420ad67416..ebb65f3c086c 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_rx.c
-@@ -86,7 +86,8 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
- 	rx_pkt_len = le16_to_cpu(local_rx_pd->rx_pkt_length);
- 	rx_pkt_hdr = (void *)local_rx_pd + rx_pkt_off;
- 
--	if (sizeof(*rx_pkt_hdr) + rx_pkt_off > skb->len) {
-+	if (sizeof(rx_pkt_hdr->eth803_hdr) + sizeof(rfc1042_header) +
-+	    rx_pkt_off > skb->len) {
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "wrong rx packet offset: len=%d, rx_pkt_off=%d\n",
- 			    skb->len, rx_pkt_off);
-@@ -95,12 +96,13 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
- 		return -1;
+diff --git a/drivers/net/wireless/ath/ath12k/acpi.c b/drivers/net/wireless/ath/ath12k/acpi.c
+index ae1ce7b99d2d..a9931e17bd17 100644
+--- a/drivers/net/wireless/ath/ath12k/acpi.c
++++ b/drivers/net/wireless/ath/ath12k/acpi.c
+@@ -72,6 +72,16 @@ static int ath12k_acpi_dsm_get_data(struct ath12k_base *ab, int func)
+ 			memcpy(&ab->acdata->geo_offset_data, obj->buffer.pointer,
+ 			       obj->buffer.length);
+ 			break;
++		case ATH12K_ACPI_DSM_FUNC_INDEX_CCA:
++			if (obj->buffer.length != ATH12K_ACPI_DSM_CCA_DATA_SIZE) {
++				ath12k_err(ab, "Invalid CCA data size %d\n",
++					   obj->buffer.length);
++				ret = -EINVAL;
++				goto out;
++			}
++			memcpy(&ab->acdata->cca_data, obj->buffer.pointer,
++			       obj->buffer.length);
++			break;
+ 		}
+ 	} else {
+ 		ath12k_err(ab,
+@@ -281,6 +291,26 @@ int ath12k_get_acpi_all_data(struct ath12k_base *ab)
+ 			goto err_free_acdata;
  	}
  
--	if ((!memcmp(&rx_pkt_hdr->rfc1042_hdr, bridge_tunnel_header,
--		     sizeof(bridge_tunnel_header))) ||
--	    (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
--		     sizeof(rfc1042_header)) &&
--	     ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_AARP &&
--	     ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_IPX)) {
-+	if (sizeof(rx_pkt_hdr) + rx_pkt_off <= skb->len &&
-+	    ((!memcmp(&rx_pkt_hdr->rfc1042_hdr, bridge_tunnel_header,
-+		      sizeof(bridge_tunnel_header))) ||
-+	     (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
-+		      sizeof(rfc1042_header)) &&
-+	      ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_AARP &&
-+	      ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_IPX))) {
- 		/*
- 		 *  Replace the 803 header and rfc1042 header (llc/snap) with an
- 		 *    EthernetII header, keep the src/dst and snap_type
++	if (ATH12K_ACPI_FUNC_BIT_VALID(ab->acdata, ATH12K_ACPI_FUNC_BIT_CCA)) {
++		ret = ath12k_acpi_dsm_get_data(ab,
++					       ATH12K_ACPI_DSM_FUNC_INDEX_CCA);
++		if (ret) {
++			ath12k_err(ab, "failed to get cca threshold configuration %d\n", ret);
++			goto err_free_acdata;
++		}
++
++		if (ab->acdata->cca_data[0] == ATH12K_ACPI_CCA_THR_VERSION &&
++		    ab->acdata->cca_data[ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET] ==
++		    ATH12K_ACPI_CCA_THR_ENABLE_FLAG) {
++			ret = ath12k_wmi_pdev_set_cca_thr_table_param(ab,
++								      ab->acdata->cca_data);
++			if (ret) {
++				ath12k_err(ab, "set cca threshold failed %d\n", ret);
++				goto err_free_acdata;
++			}
++		}
++	}
++
+ 	status = acpi_install_notify_handler(ACPI_HANDLE(ab->dev),
+ 					     ACPI_DEVICE_NOTIFY,
+ 					     acpi_dsm_notify, ab);
+diff --git a/drivers/net/wireless/ath/ath12k/acpi.h b/drivers/net/wireless/ath/ath12k/acpi.h
+index 2f930f0718da..1f05a68e490b 100644
+--- a/drivers/net/wireless/ath/ath12k/acpi.h
++++ b/drivers/net/wireless/ath/ath12k/acpi.h
+@@ -11,11 +11,13 @@
+ #define ATH12K_ACPI_DSM_FUNC_INDEX_SUPPORT_FUNCS	0
+ #define ATH12K_ACPI_DSM_FUNC_INDEX_BIOS_SAR             4
+ #define ATH12K_ACPI_DSM_FUNC_INDEX_GEO_OFFSET           5
++#define ATH12K_ACPI_DSM_FUNC_INDEX_CCA			6
+ #define ATH12K_ACPI_DSM_FUNC_INDEX_TAS_CFG		8
+ #define ATH12K_ACPI_DSM_FUNC_INDEX_TAS_DATA		9
+ 
+ #define ATH12K_ACPI_FUNC_BIT_BIOS_SAR			BIT(3)
+ #define ATH12K_ACPI_FUNC_BIT_GEO_OFFSET			BIT(4)
++#define ATH12K_ACPI_FUNC_BIT_CCA			BIT(5)
+ #define ATH12K_ACPI_FUNC_BIT_TAS_CFG			BIT(7)
+ #define ATH12K_ACPI_FUNC_BIT_TAS_DATA			BIT(8)
+ 
+@@ -26,13 +28,17 @@
+ #define ATH12K_ACPI_TAS_DATA_ENABLE_FLAG	0x1
+ #define ATH12K_ACPI_POWER_LIMIT_VERSION		0x1
+ #define ATH12K_ACPI_POWER_LIMIT_ENABLE_FLAG	0x1
++#define ATH12K_ACPI_CCA_THR_VERSION		0x1
++#define ATH12K_ACPI_CCA_THR_ENABLE_FLAG		0x1
+ 
+ #define ATH12K_ACPI_GEO_OFFSET_DATA_OFFSET	1
+ #define ATH12K_ACPI_DBS_BACKOFF_DATA_OFFSET	2
++#define ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET	5
+ #define ATH12K_ACPI_BIOS_SAR_DBS_BACKOFF_LEN	10
+ #define ATH12K_ACPI_POWER_LIMIT_DATA_OFFSET	12
+ #define ATH12K_ACPI_BIOS_SAR_GEO_OFFSET_LEN	18
+ #define ATH12K_ACPI_BIOS_SAR_TABLE_LEN		22
++#define ATH12K_ACPI_CCA_THR_OFFSET_LEN		36
+ 
+ #define ATH12K_ACPI_DSM_TAS_DATA_SIZE			69
+ #define ATH12K_ACPI_DSM_TAS_CFG_SIZE			108
+@@ -41,6 +47,8 @@
+ 					      ATH12K_ACPI_BIOS_SAR_GEO_OFFSET_LEN)
+ #define ATH12K_ACPI_DSM_BIOS_SAR_DATA_SIZE (ATH12K_ACPI_POWER_LIMIT_DATA_OFFSET + \
+ 					    ATH12K_ACPI_BIOS_SAR_TABLE_LEN)
++#define ATH12K_ACPI_DSM_CCA_DATA_SIZE (ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET + \
++				       ATH12K_ACPI_CCA_THR_OFFSET_LEN)
+ 
+ int ath12k_get_acpi_all_data(struct ath12k_base *ab);
+ void acpi_dsm_notify(acpi_handle handle, u32 event, void *data);
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 6fe4f0ddee4a..d57e2013b0fe 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -780,6 +780,7 @@ struct ath12k_base {
+ 		u8 tas_sar_power_table[ATH12K_ACPI_DSM_TAS_DATA_SIZE];
+ 		u8 bios_sar_data[ATH12K_ACPI_DSM_BIOS_SAR_DATA_SIZE];
+ 		u8 geo_offset_data[ATH12K_ACPI_DSM_GEO_OFFSET_DATA_SIZE];
++		u8 cca_data[ATH12K_ACPI_DSM_CCA_DATA_SIZE];
+ 	} *acdata;
+ 
+ 	/* must be last */
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 9ad588897b09..727ce28abd7d 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -7090,3 +7090,43 @@ int ath12k_wmi_pdev_set_bios_geo_table_param(struct ath12k_base *ab,
+ 
+ 	return ret;
+ }
++
++int ath12k_wmi_pdev_set_cca_thr_table_param(struct ath12k_base *ab,
++					    u8 *pcca_table)
++{
++	struct ath12k_wmi_base *wmi_ab = &ab->wmi_ab;
++	struct wmi_pdev_set_bios_interface_cmd *cmd;
++	struct wmi_tlv *tlv;
++	struct sk_buff *skb;
++	int ret;
++	u8 *buf_ptr;
++	u32 len, cca_thr_len_aligned;
++	u8 *pcca_value = pcca_table + ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET;
++
++	cca_thr_len_aligned = roundup(ATH12K_ACPI_CCA_THR_OFFSET_LEN, sizeof(u32));
++	len = sizeof(*cmd) + TLV_HDR_SIZE + cca_thr_len_aligned;
++
++	skb = ath12k_wmi_alloc_skb(wmi_ab, len);
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_pdev_set_bios_interface_cmd *)skb->data;
++	cmd->tlv_header = ath12k_wmi_tlv_cmd_hdr(WMI_TAG_PDEV_SET_BIOS_INTERFACE_CMD_PARAMS,
++						 sizeof(*cmd));
++	cmd->pdev_id = cpu_to_le32(WMI_PDEV_ID_SOC);
++	cmd->param_type_id = cpu_to_le32(WMI_BIOS_PARAM_CCA_THRESHOLD_TYPE);
++	cmd->length = ATH12K_ACPI_CCA_THR_OFFSET_LEN;
++
++	buf_ptr = skb->data + sizeof(*cmd);
++	tlv = (struct wmi_tlv *)buf_ptr;
++	tlv->header = ath12k_wmi_tlv_hdr(WMI_TAG_ARRAY_BYTE, cca_thr_len_aligned);
++	buf_ptr += TLV_HDR_SIZE;
++	memcpy(buf_ptr, pcca_value, ATH12K_ACPI_CCA_THR_OFFSET_LEN);
++
++	ret = ath12k_wmi_cmd_send(&wmi_ab->wmi[0], skb, WMI_PDEV_SET_BIOS_INTERFACE_CMDID);
++	if (ret) {
++		ath12k_warn(ab, "failed to send WMI_PDEV_SET_BIOS_INTERFACE_CMDID %d\n", ret);
++		dev_kfree_skb(skb);
++	}
++	return ret;
++}
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index 8a774655fe9f..7607cd7ab699 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -4805,8 +4805,9 @@ struct wmi_pdev_set_bios_interface_cmd {
+ } __packed;
+ 
+ enum bios_param_type {
+-	WMI_BIOS_PARAM_TAS_CONFIG_TYPE	=	1,
+-	WMI_BIOS_PARAM_TAS_DATA_TYPE	=	2,
++	WMI_BIOS_PARAM_CCA_THRESHOLD_TYPE	=	0,
++	WMI_BIOS_PARAM_TAS_CONFIG_TYPE		=	1,
++	WMI_BIOS_PARAM_TAS_DATA_TYPE		=	2,
+ 	WMI_BIOS_PARAM_TYPE_MAX,
+ };
+ 
+@@ -4952,4 +4953,6 @@ int ath12k_wmi_pdev_set_bios_sar_table_param(struct ath12k_base *ab,
+ 					     u8 *psar_table);
+ int ath12k_wmi_pdev_set_bios_geo_table_param(struct ath12k_base *ab,
+ 					     u8 *pgeo_table);
++int ath12k_wmi_pdev_set_cca_thr_table_param(struct ath12k_base *ab,
++					    u8 *pcca_table);
+ #endif
 -- 
-2.42.0.283.g2d96d420d3-goog
+2.34.1
 
