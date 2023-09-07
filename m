@@ -2,78 +2,73 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 915E7EC8726
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 17:28:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC57EC8726
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 17:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243609AbjIGR2P (ORCPT
+        id S245362AbjIGRk3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Sep 2023 13:28:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41500 "EHLO
+        Thu, 7 Sep 2023 13:40:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239127AbjIGR2N (ORCPT
+        with ESMTP id S245307AbjIGRkG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2023 13:28:13 -0400
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 409B61FD5
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 10:27:45 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1qe9FQ-0000ZU-O2; Thu, 07 Sep 2023 09:16:16 +0200
-Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1qe9FP-004bJn-BK; Thu, 07 Sep 2023 09:16:15 +0200
-Received: from sha by dude02.red.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <sha@pengutronix.de>)
-        id 1qe9FO-008Wiy-D4; Thu, 07 Sep 2023 09:16:14 +0200
-From:   Sascha Hauer <s.hauer@pengutronix.de>
-To:     linux-wireless@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yanik Fuchs <Yanik.fuchs@mbv.ch>
-Subject: [PATCH] wifi: rtw88: rtw8723d: Fix MAC address offset in EEPROM
-Date:   Thu,  7 Sep 2023 09:16:14 +0200
-Message-Id: <20230907071614.2032404-1-s.hauer@pengutronix.de>
-X-Mailer: git-send-email 2.39.2
+        Thu, 7 Sep 2023 13:40:06 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44C40CE7
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 10:39:26 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43D85C433C7;
+        Thu,  7 Sep 2023 05:58:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694066311;
+        bh=2NblsHeIww0wlaVgsXnVSMug4mMIEm0LZM8MOjNyBHM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=fc3ZnpGHo2QiKlrKyuZ4cpyJs2PJSUxO+ykKu8sX9+AHCmjkFZl0JQvoKFqf5oZUO
+         I4tCzGY+LU3eRQibLnwo+EUhFzCd0sGNnqwJX+E8awIr5qNJO5m+fclYUwbHMU2qVI
+         e/MfOvSR1eHUsouPlOQb19EWQESN04P+1tbg3h1WB1EL6YPTR/I0YlE1yq8o+ZdDF5
+         YXbtlEwF1pc+o5iyIA24i4yRhqJSuzA58gnk1WOVUjDgtYIapxO6jORJQ+vN8U+PoF
+         xuYgZK6slaOlQUvIuOr0EdtKqTtiyYLD8YFpTbPw3Lip0+19AUIPoJXZq5EMHMu4FO
+         aSo9At3SCKzwg==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 1/8] wifi: rtw89: fw: move polling function of firmware
+ path ready to an individual function
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230901073956.54203-2-pkshih@realtek.com>
+References: <20230901073956.54203-2-pkshih@realtek.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <linux-wireless@vger.kernel.org>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169406630926.3946078.2995556575813207168.kvalo@kernel.org>
+Date:   Thu,  7 Sep 2023 05:58:31 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The MAC address is stored at offset 0x107 in the EEPROM, like correctly
-stated in the comment. Add a two bytes reserved field right before the
-MAC address to shift it from offset 0x105 to 0x107.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-With this the MAC address returned from my RTL8723du wifi stick can be
-correctly decoded as "Shenzhen Four Seas Global Link Network Technology
-Co., Ltd."
+> To download firmware, we need to check path is ready. There are two kinds
+> of path -- one is to download firmware header, and the other is to download
+> firmware body.
+> 
+> Since the polling method is different from WiFi 7 chips, make it to be
+> an individual function, and then we can reuse the download flow.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-Reported-by: Yanik Fuchs <Yanik.fuchs@mbv.ch>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/realtek/rtw88/rtw8723d.h | 1 +
- 1 file changed, 1 insertion(+)
+8 patches applied to wireless-next.git, thanks.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index 3642a2c7f80c9..2434e2480cbe2 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -46,6 +46,7 @@ struct rtw8723du_efuse {
- 	u8 vender_id[2];                /* 0x100 */
- 	u8 product_id[2];               /* 0x102 */
- 	u8 usb_option;                  /* 0x104 */
-+	u8 res5[2];			/* 0x105 */
- 	u8 mac_addr[ETH_ALEN];          /* 0x107 */
- };
- 
+80e706a85cb5 wifi: rtw89: fw: move polling function of firmware path ready to an individual function
+ae4dc23d139c wifi: rtw89: fw: generalize download firmware flow by mac_gen pointers
+68261ddbb2bc wifi: rtw89: fw: implement supported functions of download firmware for WiFi 7 chips
+fa31a8c58d6e wifi: rtw89: fw: add checking type for variant type of firmware
+a712eef681ed wifi: rtw89: fw: propagate an argument include_bb for BB MCU firmware
+c6ea2a8391a5 wifi: rtw89: 8922a: add chip_ops::bb_preinit to enable BB before downloading firmware
+38bae445a30b wifi: rtw89: fw: refine download flow to support variant firmware suits
+b227c990de9a wifi: rtw89: 8922a: set memory heap address for secure firmware
+
 -- 
-2.39.2
+https://patchwork.kernel.org/project/linux-wireless/patch/20230901073956.54203-2-pkshih@realtek.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
