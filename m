@@ -2,109 +2,125 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D917BEC873A
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 15:39:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 970DFEC873B
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Sep 2023 15:39:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231697AbjIGPjT (ORCPT
+        id S231357AbjIGPjV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Sep 2023 11:39:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34498 "EHLO
+        Thu, 7 Sep 2023 11:39:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233900AbjIGPWh (ORCPT
+        with ESMTP id S245191AbjIGP1Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Sep 2023 11:22:37 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 823BA199A
-        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 08:22:09 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 387DGftb004404;
-        Thu, 7 Sep 2023 14:52:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=uNekWqbroiT3eusW/jNl1HsuJO2UwOq39m0u9BjMw9o=;
- b=bveoZhUuDDXC/WFCDgL0VZPIEL1DGvHWRzZpIp0NMKQ6BxmKIr6wHk0qwZbjFkDQMyrq
- sAH0LD4+yE3x5Q+QAplswU4ZUSJnOMa07y2JNA2Cu8Pvj+gyZCNizAll6hC5uCJUoxbO
- yZzgnXYAYa5Cin9pK+JPuIp/VipQckTIMXZXQSIC9SqtWS4A813IHQimpdW0mWFvmZ63
- JMiEJkYOvBaLlVHkznBbtiseQH6Qg7lZBZUdFeQ2tK0z2REX9tCFv1RgVpRJSs/Oo4VM
- G8CHbMJIUT+1LgMTX0hDjgsL66e5JppwN4QuVGh7A9WNVO1pq+M5lURMDKJ+sHOZVtBp ng== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sy4s7sgp8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 07 Sep 2023 14:52:26 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 387EqQ7x028647
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 7 Sep 2023 14:52:26 GMT
-Received: from [10.111.180.119] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 7 Sep
- 2023 07:52:25 -0700
-Message-ID: <4c0c9068-0982-4b05-9c11-1aa5913a9c8c@quicinc.com>
-Date:   Thu, 7 Sep 2023 07:52:25 -0700
+        Thu, 7 Sep 2023 11:27:16 -0400
+Received: from mail-yw1-f207.google.com (mail-yw1-f207.google.com [209.85.128.207])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F6201BF1
+        for <linux-wireless@vger.kernel.org>; Thu,  7 Sep 2023 08:26:48 -0700 (PDT)
+Received: by mail-yw1-f207.google.com with SMTP id 00721157ae682-58e4d2b7d16so12850707b3.0
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Sep 2023 08:26:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1694100342; x=1694705142;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=zW5qhnjQmXuAaFU5fKwA/lEli7GsBu/PGJfxRXG3SHY=;
+        b=T2DwjBBmsDgCdOehbD/2C3xY9IVC4wf6T0vrUMpitHOEMO20zefIVcRwzbCeWBnUaN
+         z7OkC2ASDm3VlRMTRgVhqmHRIpJG6a5EBFZVW8+I1MJwkyWSATOVj/j9L5It/2eAF/Oj
+         kti9D19uUS3SCtAiYvpS5iPuj2rwDOnbZ+oQ/qTHhYGNz6y/AlPVWK2JXB4+RKPZ1q2Y
+         awmNTNVP3ufdPyiBmp5Q1IU07kkLkrWPCQ7KaghUJ7DKv9b+MGDN3gIdRwuOuoSITd/l
+         Jrxlx8Nui7Ix9QzL+Z4KFNx1uf0e9ndJElIGn6oJJZWnqJ4N91R3iwOTyc0DZ3xEQ9X+
+         viWg==
+X-Gm-Message-State: AOJu0YwIR5GbbY1cGBhxNllhggnw7WKlVvLy6I5rQmX+teY0FRUIy9WQ
+        g2rG6cGW47ox3ystIlq87mmsIKLkYOhtThIla1L+1H0dSQQi
+X-Google-Smtp-Source: AGHT+IG5wTTGmmZiHOULSKMs/aQJzNoUO7ZR1DHaaynqV/kIsxBQ60kNClLJ4OvCsCznerNQ8nbBG5G2Y/WjgpejAQ1X+NCllgum
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath11k: drop NULL pointer check in
- ath11k_dp_rx_mon_dest_process()
-Content-Language: en-US
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-CC:     Kalle Valo <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>,
-        <lvc-project@linuxtesting.org>, <ath11k@lists.infradead.org>
-References: <20230907083852.10775-1-dmantipov@yandex.ru>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230907083852.10775-1-dmantipov@yandex.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: F6BDw0kUruSFLFV7ZEWUTnqCYT_BTGsB
-X-Proofpoint-ORIG-GUID: F6BDw0kUruSFLFV7ZEWUTnqCYT_BTGsB
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-07_07,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- lowpriorityscore=0 bulkscore=0 priorityscore=1501 phishscore=0
- malwarescore=0 mlxscore=0 clxscore=1015 adultscore=0 spamscore=0
- mlxlogscore=605 suspectscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2308100000 definitions=main-2309070132
+X-Received: by 2002:a63:7d03:0:b0:569:356c:f365 with SMTP id
+ y3-20020a637d03000000b00569356cf365mr3738671pgc.12.1694075041155; Thu, 07 Sep
+ 2023 01:24:01 -0700 (PDT)
+Date:   Thu, 07 Sep 2023 01:24:01 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000000d1dbf0604c09577@google.com>
+Subject: [syzbot] [wireless?] [net?] memory leak in restore_regulatory_settings
+From:   syzbot <syzbot+68849d5e4a6e74f32c06@syzkaller.appspotmail.com>
+To:     davem@davemloft.net, edumazet@google.com,
+        johannes@sipsolutions.net, kuba@kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, pabeni@redhat.com,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/7/2023 1:38 AM, Dmitry Antipov wrote:
-> Since 'srng_list' is a fixed-size array of 'struct hal_srng'
-> in 'struct ath11_hal', any of its member can't be NULL and
-> so relevant check may be dropped.
-> 
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
-> 
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+Hello,
 
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+syzbot found the following issue on:
 
-> ---
->   drivers/net/wireless/ath/ath11k/dp_rx.c | 7 -------
->   1 file changed, 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-> index 146201d8dba2..4463e308968c 100644
-> --- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-> +++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-> @@ -5094,13 +5094,6 @@ static void ath11k_dp_rx_mon_dest_process(struct ath11k *ar, int mac_id,
->   
->   	mon_dst_srng = &ar->ab->hal.srng_list[ring_id];
->   
-> -	if (!mon_dst_srng) {
-> -		ath11k_warn(ar->ab,
-> -			    "HAL Monitor Destination Ring Init Failed -- %p",
-> -			    mon_dst_srng);
-> -		return;
-> -	}
-> -
->   	spin_lock_bh(&pmon->mon_lock);
->   
->   	ath11k_hal_srng_access_begin(ar->ab, mon_dst_srng);
+HEAD commit:    92901222f83d Merge tag 'f2fs-for-6-6-rc1' of git://git.ker..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=17c340b8680000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3544ee7492950dd3
+dashboard link: https://syzkaller.appspot.com/bug?extid=68849d5e4a6e74f32c06
+compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13fe378fa80000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11bf6f7ba80000
 
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/7b5db23b3ecc/disk-92901222.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/135d82cfd540/vmlinux-92901222.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/6e1b0da81493/bzImage-92901222.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+68849d5e4a6e74f32c06@syzkaller.appspotmail.com
+
+write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
+BUG: memory leak
+unreferenced object 0xffff88810f8a4e80 (size 64):
+  comm "kworker/0:1", pid 9, jiffies 4294945857 (age 8.050s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    ff ff ff ff 00 00 00 00 00 00 00 00 30 30 00 00  ............00..
+  backtrace:
+    [<ffffffff815739f5>] kmalloc_trace+0x25/0x90 mm/slab_common.c:1114
+    [<ffffffff84739940>] kmalloc include/linux/slab.h:599 [inline]
+    [<ffffffff84739940>] kzalloc include/linux/slab.h:720 [inline]
+    [<ffffffff84739940>] regulatory_hint_core net/wireless/reg.c:3218 [inline]
+    [<ffffffff84739940>] restore_regulatory_settings+0x820/0xa80 net/wireless/reg.c:3552
+    [<ffffffff84739d71>] crda_timeout_work+0x21/0x30 net/wireless/reg.c:540
+    [<ffffffff812c8f1d>] process_one_work+0x23d/0x530 kernel/workqueue.c:2630
+    [<ffffffff812c9ac7>] process_scheduled_works kernel/workqueue.c:2703 [inline]
+    [<ffffffff812c9ac7>] worker_thread+0x327/0x590 kernel/workqueue.c:2784
+    [<ffffffff812d6f9b>] kthread+0x12b/0x170 kernel/kthread.c:388
+    [<ffffffff81149875>] ret_from_fork+0x45/0x50 arch/x86/kernel/process.c:147
+    [<ffffffff81002be1>] ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
+
+write to /proc/sys/kernel/hung_task_check_interval_secs failed: No such file or directory
+write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
+write to /proc/sys/kernel/hung_task_check_interval_secs failed: No such file or directory
+write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the bug is already fixed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite bug's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the bug is a duplicate of another bug, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
