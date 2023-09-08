@@ -2,110 +2,170 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25CD3EEB562
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A91C8EEB560
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240544AbjIHSbd (ORCPT
+        id S1343881AbjIHSb7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:31:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51836 "EHLO
+        Fri, 8 Sep 2023 14:31:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344181AbjIHSbT (ORCPT
+        with ESMTP id S1344519AbjIHSbc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:31:19 -0400
+        Fri, 8 Sep 2023 14:31:32 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 728E326B1;
-        Fri,  8 Sep 2023 11:22:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD62CC433BB;
-        Fri,  8 Sep 2023 18:21:29 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E48FA269A;
+        Fri,  8 Sep 2023 11:20:24 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E290FC433D9;
+        Fri,  8 Sep 2023 18:20:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197290;
-        bh=mi/X05V6LB2ErwhFV+1p/weFdxO3TigylXFCsV8eFfY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=OZw8dtNyHq+beHs09dSAiny1sCkERoXnSqKgJtBwPBhE+Peau33l2VWgRt5EMfPus
-         hZPh4djgrlbBWsQznZ7nnPpg4GF5RRn2YYDqOqQnQlQMOwVYVdg/Kq5foFvr/SAYQ+
-         XAvyixaKt1/+CRqR5PJtCBii6PSjCVnxp0PFjMiG9unwJ0/CBpHMR74kfFbWkQkQ3F
-         t7N6uVtQftywDBo5M3nDpxAAUpdOAghNYqcdY/U5opx018sunyQAO2/HEOgn0Ev/EE
-         pADRK2J8mi3+GANzkNYQEixonxFwEOZua8rNKvdAmuJ2PAyuGuTjtMYJsf+3+hSer2
-         Ga43X2cIa5uIw==
+        s=k20201202; t=1694197224;
+        bh=CFovjuacUrazLTA0MuGaowco54bmvecAR8whJsbtrfA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=EJi1R/oBncXdC5NDi+J99u2V2448xkczMPZu2dCxSbkWu3UBkYWZs1RN+09jOFbt5
+         iHk9IME/XvJUIaMZ4jBQdRWfSpyS8daw3eNNIV21n0s3nH+QksgWVxpLKdNNSq6ahW
+         CGaM+dFHV9kq0yv343SHQHxtJQ+aZk/n1FSpu9Hfc+DsMJLrLx4dEpPdvW01Dz53rw
+         e4Hj2T67Arc2iC83DggMjX/6wPxio8QVDMCTtPmVUVvcHH6+OL66rNAMG/EtkUOg49
+         iO8BymXu5e9GZZ2bcp6k2FD81sucPMqE0GS8nX1fq1zc7R9QhD/NyRNewytFJixle5
+         BQfBptxCZFUUg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 1/8] wifi: ath9k: fix printk specifier
-Date:   Fri,  8 Sep 2023 14:21:20 -0400
-Message-Id: <20230908182127.3461199-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 06/14] wifi: wil6210: fix fortify warnings
+Date:   Fri,  8 Sep 2023 14:19:53 -0400
+Message-Id: <20230908182003.3460721-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230908182003.3460721-1-sashal@kernel.org>
+References: <20230908182003.3460721-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.14.325
+X-stable-base: Linux 5.10.194
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dongliang Mu <dzm91@hust.edu.cn>
+From: Dmitry Antipov <dmantipov@yandex.ru>
 
-[ Upstream commit 061115fbfb2ce5870c9a004d68dc63138c07c782 ]
+[ Upstream commit 1ad8237e971630c66a1a6194491e0837b64d00e0 ]
 
-Smatch reports:
+When compiling with gcc 13.1 and CONFIG_FORTIFY_SOURCE=y,
+I've noticed the following:
 
-ath_pci_probe() warn: argument 4 to %lx specifier is cast from pointer
-ath_ahb_probe() warn: argument 4 to %lx specifier is cast from pointer
+In function ‘fortify_memcpy_chk’,
+    inlined from ‘wil_rx_crypto_check_edma’ at drivers/net/wireless/ath/wil6210/txrx_edma.c:566:2:
+./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
+declared with attribute warning: detected read beyond size of field (2nd parameter);
+maybe use struct_group()? [-Wattribute-warning]
+  529 |                         __read_overflow2_field(q_size_field, size);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Fix it by modifying %lx to %p in the printk format string.
+where the compiler complains on:
 
-Note that with this change, the pointer address will be printed as a
-hashed value by default. This is appropriate because the kernel
-should not leak kernel pointers to user space in an informational
-message. If someone wants to see the real address for debugging
-purposes, this can be achieved with the no_hash_pointers kernel option.
+const u8 *pn;
+...
+pn = (u8 *)&st->ext.pn_15_0;
+...
+memcpy(cc->pn, pn, IEEE80211_GCMP_PN_LEN);
 
-Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
-Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+and:
+
+In function ‘fortify_memcpy_chk’,
+    inlined from ‘wil_rx_crypto_check’ at drivers/net/wireless/ath/wil6210/txrx.c:684:2:
+./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
+declared with attribute warning: detected read beyond size of field (2nd parameter);
+maybe use struct_group()? [-Wattribute-warning]
+  529 |                         __read_overflow2_field(q_size_field, size);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+where the compiler complains on:
+
+const u8 *pn = (u8 *)&d->mac.pn_15_0;
+...
+memcpy(cc->pn, pn, IEEE80211_GCMP_PN_LEN);
+
+In both cases, the fortification logic interprets 'memcpy()' as 6-byte
+overread of 2-byte field 'pn_15_0' of 'struct wil_rx_status_extension'
+and 'pn_15_0' of 'struct vring_rx_mac', respectively. To silence
+these warnings, last two fields of the aforementioned structures
+are grouped using 'struct_group_attr(pn, __packed' quirk.
+
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230723040403.296723-1-dzm91@hust.edu.cn
+Link: https://lore.kernel.org/r/20230621093711.80118-1-dmantipov@yandex.ru
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c | 4 ++--
- drivers/net/wireless/ath/ath9k/pci.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/txrx.c      | 2 +-
+ drivers/net/wireless/ath/wil6210/txrx.h      | 6 ++++--
+ drivers/net/wireless/ath/wil6210/txrx_edma.c | 2 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.h | 6 ++++--
+ 4 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 2bd982c3a479d..375628dc654e4 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -135,8 +135,8 @@ static int ath_ahb_probe(struct platform_device *pdev)
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index cc830c795b33c..5b2de4f3fa0bd 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -666,7 +666,7 @@ static int wil_rx_crypto_check(struct wil6210_priv *wil, struct sk_buff *skb)
+ 	struct wil_tid_crypto_rx *c = mc ? &s->group_crypto_rx :
+ 				      &s->tid_crypto_rx[tid];
+ 	struct wil_tid_crypto_rx_single *cc = &c->key_id[key_id];
+-	const u8 *pn = (u8 *)&d->mac.pn_15_0;
++	const u8 *pn = (u8 *)&d->mac.pn;
  
- 	ah = sc->sc_ah;
- 	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
--	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
--		   hw_name, (unsigned long)mem, irq);
-+	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
-+		   hw_name, mem, irq);
+ 	if (!cc->key_set) {
+ 		wil_err_ratelimited(wil,
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wireless/ath/wil6210/txrx.h
+index 1f4c8ec75be87..0f6f6b62bfc9a 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.h
++++ b/drivers/net/wireless/ath/wil6210/txrx.h
+@@ -343,8 +343,10 @@ struct vring_rx_mac {
+ 	u32 d0;
+ 	u32 d1;
+ 	u16 w4;
+-	u16 pn_15_0;
+-	u32 pn_47_16;
++	struct_group_attr(pn, __packed,
++		u16 pn_15_0;
++		u32 pn_47_16;
++	);
+ } __packed;
  
- 	return 0;
+ /* Rx descriptor - DMA part
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index 8ca2ce51c83ef..b23c05f16320b 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -548,7 +548,7 @@ static int wil_rx_crypto_check_edma(struct wil6210_priv *wil,
+ 	s = &wil->sta[cid];
+ 	c = mc ? &s->group_crypto_rx : &s->tid_crypto_rx[tid];
+ 	cc = &c->key_id[key_id];
+-	pn = (u8 *)&st->ext.pn_15_0;
++	pn = (u8 *)&st->ext.pn;
  
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 2236063112613..7ab050cad4a20 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -975,8 +975,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
+ 	if (!cc->key_set) {
+ 		wil_err_ratelimited(wil,
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.h b/drivers/net/wireless/ath/wil6210/txrx_edma.h
+index c736f7413a35f..ee90e225bb050 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.h
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.h
+@@ -330,8 +330,10 @@ struct wil_rx_status_extension {
+ 	u32 d0;
+ 	u32 d1;
+ 	__le16 seq_num; /* only lower 12 bits */
+-	u16 pn_15_0;
+-	u32 pn_47_16;
++	struct_group_attr(pn, __packed,
++		u16 pn_15_0;
++		u32 pn_47_16;
++	);
+ } __packed;
  
- 	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
--	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
--		   hw_name, (unsigned long)sc->mem, pdev->irq);
-+	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
-+		   hw_name, sc->mem, pdev->irq);
- 
- 	return 0;
- 
+ struct wil_rx_status_extended {
 -- 
 2.40.1
 
