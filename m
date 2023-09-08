@@ -2,49 +2,49 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA173EEB568
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 19:17:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72B1AEEB56C
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 19:17:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236169AbjIHTRV (ORCPT
+        id S238415AbjIHTRV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 8 Sep 2023 15:17:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42566 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233617AbjIHTRU (ORCPT
+        with ESMTP id S233760AbjIHTRU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 8 Sep 2023 15:17:20 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8ED3BC;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A92B6CF;
         Fri,  8 Sep 2023 12:17:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 418BFC43215;
-        Fri,  8 Sep 2023 18:21:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4287AC116AB;
+        Fri,  8 Sep 2023 18:21:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197294;
-        bh=imGbdW/kqhSp3BhftH7mXd/5L5VUrZohm40wn3y+3f0=;
+        s=k20201202; t=1694197276;
+        bh=rhMtYhrSG3Vu7gLx+tsMF5izfoUffY6YIzD8FEQId5c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cZD88jXQVUs7B/Kzif8lNUy4EB7fX2f5VLXdefBFC2jUjh4Nv7sAw78cU2VSe5TTB
-         bBg2/radO/Mwi9uPrJX+O8oluFvS256Tj1zpbZp6iilB4Y4A3/+PO5e27diwoakcLd
-         iOxX0CHBrISUYsHkh1v0e/SbZWAd49Dgu9+wabiIv8LS1GwRbDvy1fafstk+HZ1Rdl
-         NcXUapncsKfzZhm/+hk1CAFdeSJCmbi/bbEZk+ug3DY8kBv89B74FQs7kugM9TPx5i
-         g+RfW3eOgoGvVTQpeE1mFlnSp9jZ1TEW2C9RtFaNBdaP2CNAORAyhSjcqkrTWeqFic
-         6Gs35LuwDrhtA==
+        b=Ar+4kSx9N50MEwz/IAa/FddhbVX0x+cEMu3ONDTUhZyO0ZDHl+RNAqVDDAWJelBwB
+         orD4LuCwWfiZC9CCkB3QO/TZjT1e2EaF4Po5JmAEJokRzXmX+IolP4Z2CUP1koOuHh
+         byfyAMDx2Y3r9jHfdDAUSqnwRUHM3J4iTJucoWHAOTrWVTdNckAlWyahLhk8M0b3c5
+         nFY8u7GvZ1uWOYe0e3F4i0tH84f1eRjPfFCAA55A+cTPJaaKOdxhM/hIO1DpAR3bRS
+         +0ZnD/ybDxcc+Hd1dUxss986BunctnTvhuBxXYAHZAy4vy0wKQXswe/rMroba77atO
+         07o+PvQF0lfkw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
         Brian Norris <briannorris@chromium.org>,
         Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 2/8] wifi: mwifiex: fix fortify warning
-Date:   Fri,  8 Sep 2023 14:21:21 -0400
-Message-Id: <20230908182127.3461199-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 2/7] wifi: mwifiex: fix fortify warning
+Date:   Fri,  8 Sep 2023 14:21:04 -0400
+Message-Id: <20230908182109.3461101-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908182127.3461199-1-sashal@kernel.org>
-References: <20230908182127.3461199-1-sashal@kernel.org>
+In-Reply-To: <20230908182109.3461101-1-sashal@kernel.org>
+References: <20230908182109.3461101-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.14.325
+X-stable-base: Linux 4.19.294
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -93,7 +93,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
-index 80d20fb6f3480..a69b4983747f3 100644
+index b6b7bbe168ebc..12cfc95f02598 100644
 --- a/drivers/net/wireless/marvell/mwifiex/tdls.c
 +++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
 @@ -737,6 +737,7 @@ mwifiex_construct_tdls_action_frame(struct mwifiex_private *priv,
