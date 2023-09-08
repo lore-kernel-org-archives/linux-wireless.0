@@ -2,42 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E747EEB568
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:21:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A3CDEEB569
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:21:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233019AbjIHSV3 (ORCPT
+        id S245069AbjIHSVc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:21:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58626 "EHLO
+        Fri, 8 Sep 2023 14:21:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344219AbjIHSUR (ORCPT
+        with ESMTP id S1344216AbjIHSUR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 8 Sep 2023 14:20:17 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52B942D6B;
-        Fri,  8 Sep 2023 11:19:03 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EC89C43142;
-        Fri,  8 Sep 2023 18:18:15 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B36072D67;
+        Fri,  8 Sep 2023 11:19:02 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD235C433C9;
+        Fri,  8 Sep 2023 18:18:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197096;
-        bh=BKg8tz549hW1rO5aBQNjArvcAgrD3sBTUDBW455A92g=;
+        s=k20201202; t=1694197094;
+        bh=BxQ+VsKM/+neIIceOFEvW2MHIwKCkuIW+FyxeyPL20I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TP1D2ofQTZvFQ8zZARPSiwdYRma9qlWdnMP+UrpAtmarp1bKoeWCv7RR0V2dLNdrK
-         od3EOQq3XUSYa20NQw+OPb65q07eRJeouPvOxUCgbg5WhTnQw9IiPYxUUYEV3k1GxY
-         EgkpsMaWFO1ueifzrfVNx5I1uX5drYG0lKdMretcpjplsh8ENGcRTntZ0N4VFgJ6pf
-         yKlNXatnTYNlXiZ+J+6yORZrFNM84ezzr3pJwEjr1VZ94h/tml97eldo7PVquXGYGT
-         S2wMuCzMzEpWm/msRBAVLgzQ10tOfUaIKzVIqer2Tu41GZSelP3507WLWtk9d956ww
-         sVL50CVzmmW5w==
+        b=r9/wjfqrN6t3VhS3sa4ErqE3aB63evEDJrVL5jq6nxpcxLjKozPjWBrzxtFHqagtv
+         gzT5odi5A/nmxL80ns7DzfOnqPzbL9BF0pGHFEgxbp0zjuiDZ5ftGUQKZpL+Ud3Gqg
+         2UuGwpkeuQgvq/EKp0hgqYjJbpZtZY9LC26OeWDaF/BDebCRbvRkXdpOHozvSdYsJJ
+         RrEDylpCgIvSku6kJE2S0pd9PJF+Corp7H3uHR0OGXYeRalbUFgcsONfp7dEFmL8EB
+         4gyMufGEChUu9s15DeYzaAHk1CuT6+AD//7zYHQ1O6p1FpmnGR0ORO0Fn7kpdqAh0p
+         ZCtws4xWjWEEA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
+Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
+        Johannes Berg <johannes@sipsolutions.net>,
         =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 05/26] wifi: ath9k: fix printk specifier
-Date:   Fri,  8 Sep 2023 14:17:43 -0400
-Message-Id: <20230908181806.3460164-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 04/26] wifi: ath9k: fix fortify warnings
+Date:   Fri,  8 Sep 2023 14:17:42 -0400
+Message-Id: <20230908181806.3460164-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230908181806.3460164-1-sashal@kernel.org>
 References: <20230908181806.3460164-1-sashal@kernel.org>
@@ -51,63 +52,92 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dongliang Mu <dzm91@hust.edu.cn>
+From: Dmitry Antipov <dmantipov@yandex.ru>
 
-[ Upstream commit 061115fbfb2ce5870c9a004d68dc63138c07c782 ]
+[ Upstream commit 810e41cebb6c6e394f2068f839e1a3fc745a5dcc ]
 
-Smatch reports:
+When compiling with gcc 13.1 and CONFIG_FORTIFY_SOURCE=y,
+I've noticed the following:
 
-ath_pci_probe() warn: argument 4 to %lx specifier is cast from pointer
-ath_ahb_probe() warn: argument 4 to %lx specifier is cast from pointer
+In function ‘fortify_memcpy_chk’,
+    inlined from ‘ath_tx_complete_aggr’ at drivers/net/wireless/ath/ath9k/xmit.c:556:4,
+    inlined from ‘ath_tx_process_buffer’ at drivers/net/wireless/ath/ath9k/xmit.c:773:3:
+./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
+declared with attribute warning: detected read beyond size of field (2nd parameter);
+maybe use struct_group()? [-Wattribute-warning]
+  529 |                         __read_overflow2_field(q_size_field, size);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Fix it by modifying %lx to %p in the printk format string.
+In function ‘fortify_memcpy_chk’,
+    inlined from ‘ath_tx_count_frames’ at drivers/net/wireless/ath/ath9k/xmit.c:473:3,
+    inlined from ‘ath_tx_complete_aggr’ at drivers/net/wireless/ath/ath9k/xmit.c:572:2,
+    inlined from ‘ath_tx_process_buffer’ at drivers/net/wireless/ath/ath9k/xmit.c:773:3:
+./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
+declared with attribute warning: detected read beyond size of field (2nd parameter);
+maybe use struct_group()? [-Wattribute-warning]
+  529 |                         __read_overflow2_field(q_size_field, size);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note that with this change, the pointer address will be printed as a
-hashed value by default. This is appropriate because the kernel
-should not leak kernel pointers to user space in an informational
-message. If someone wants to see the real address for debugging
-purposes, this can be achieved with the no_hash_pointers kernel option.
+In both cases, the compiler complains on:
 
-Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
+memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
+
+which is the legal way to copy both 'ba_low' and following 'ba_high'
+members of 'struct ath_tx_status' at once (that is, issue one 8-byte
+'memcpy()' for two 4-byte fields). Since the fortification logic seems
+interprets this trick as an attempt to overread 4-byte 'ba_low', silence
+relevant warnings by using the convenient 'struct_group()' quirk.
+
+Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230723040403.296723-1-dzm91@hust.edu.cn
+Link: https://lore.kernel.org/r/20230620080855.396851-2-dmantipov@yandex.ru
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c | 4 ++--
- drivers/net/wireless/ath/ath9k/pci.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/mac.h  | 6 ++++--
+ drivers/net/wireless/ath/ath9k/xmit.c | 4 ++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 9cd12b20b18d8..9bfaadfa6c009 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -132,8 +132,8 @@ static int ath_ahb_probe(struct platform_device *pdev)
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index af44b33814ddc..f03d792732da7 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -115,8 +115,10 @@ struct ath_tx_status {
+ 	u8 qid;
+ 	u16 desc_id;
+ 	u8 tid;
+-	u32 ba_low;
+-	u32 ba_high;
++	struct_group(ba,
++		u32 ba_low;
++		u32 ba_high;
++	);
+ 	u32 evm0;
+ 	u32 evm1;
+ 	u32 evm2;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ba271a10d4ab1..eeabdd67fbccd 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -462,7 +462,7 @@ static void ath_tx_count_frames(struct ath_softc *sc, struct ath_buf *bf,
+ 	isaggr = bf_isaggr(bf);
+ 	if (isaggr) {
+ 		seq_st = ts->ts_seqnum;
+-		memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
++		memcpy(ba, &ts->ba, WME_BA_BMP_SIZE >> 3);
+ 	}
  
- 	ah = sc->sc_ah;
- 	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
--	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
--		   hw_name, (unsigned long)mem, irq);
-+	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
-+		   hw_name, mem, irq);
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index a074e23013c58..f0e3901e8182a 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -988,8 +988,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->sc_ah->msi_reg = 0;
- 
- 	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
--	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
--		   hw_name, (unsigned long)sc->mem, pdev->irq);
-+	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
-+		   hw_name, sc->mem, pdev->irq);
- 
- 	return 0;
- 
+ 	while (bf) {
+@@ -545,7 +545,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	if (isaggr && txok) {
+ 		if (ts->ts_flags & ATH9K_TX_BA) {
+ 			seq_st = ts->ts_seqnum;
+-			memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
++			memcpy(ba, &ts->ba, WME_BA_BMP_SIZE >> 3);
+ 		} else {
+ 			/*
+ 			 * AR5416 can become deaf/mute when BA
 -- 
 2.40.1
 
