@@ -2,43 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A3CDEEB569
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:21:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16074EEB562
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:21:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245069AbjIHSVc (ORCPT
+        id S240669AbjIHSVz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:21:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41822 "EHLO
+        Fri, 8 Sep 2023 14:21:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344216AbjIHSUR (ORCPT
+        with ESMTP id S239744AbjIHSUm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:20:17 -0400
+        Fri, 8 Sep 2023 14:20:42 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B36072D67;
-        Fri,  8 Sep 2023 11:19:02 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD235C433C9;
-        Fri,  8 Sep 2023 18:18:13 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 268D52110;
+        Fri,  8 Sep 2023 11:19:09 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C508CC116A1;
+        Fri,  8 Sep 2023 18:18:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197094;
-        bh=BxQ+VsKM/+neIIceOFEvW2MHIwKCkuIW+FyxeyPL20I=;
+        s=k20201202; t=1694197099;
+        bh=xIYj9x7VhSQtAwPzUkxA3IumAGJ7hoT0f59ISFAR3/U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=r9/wjfqrN6t3VhS3sa4ErqE3aB63evEDJrVL5jq6nxpcxLjKozPjWBrzxtFHqagtv
-         gzT5odi5A/nmxL80ns7DzfOnqPzbL9BF0pGHFEgxbp0zjuiDZ5ftGUQKZpL+Ud3Gqg
-         2UuGwpkeuQgvq/EKp0hgqYjJbpZtZY9LC26OeWDaF/BDebCRbvRkXdpOHozvSdYsJJ
-         RrEDylpCgIvSku6kJE2S0pd9PJF+Corp7H3uHR0OGXYeRalbUFgcsONfp7dEFmL8EB
-         4gyMufGEChUu9s15DeYzaAHk1CuT6+AD//7zYHQ1O6p1FpmnGR0ORO0Fn7kpdqAh0p
-         ZCtws4xWjWEEA==
+        b=YBtUD9Ib3x3fKyoMBAZsKz94cT0tk4UkOMw5lqRsXfwf5zlZZKHT0cHeZdVEwi1wd
+         CmoDhsxBJMoEnnbmLoy7IF8Q8PK9sUbLdnIs6915WZEQzFxlBnRpkM6rWaxn7vWcRj
+         JGl5tW8cros/5LpBjYyhFNM+ZaT09kl3E+8o9qx88sPNoy2HXeQbR5AeZMHh0utUen
+         f/DnNOw/MFnAf7yXLq0BYIb9cyZPuWjv9zYv4g9g41anAiCOdVPID7nfKcphLo6DU+
+         A0wKLOD4S7YDlqkqyknHYh2PpPdnNAdefmjevmUe8zYY30glDjwPKa8PMq4r5f/PKm
+         KM2KTYuqfc4BA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 04/26] wifi: ath9k: fix fortify warnings
-Date:   Fri,  8 Sep 2023 14:17:42 -0400
-Message-Id: <20230908181806.3460164-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 06/26] wifi: mwifiex: fix fortify warning
+Date:   Fri,  8 Sep 2023 14:17:44 -0400
+Message-Id: <20230908181806.3460164-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230908181806.3460164-1-sashal@kernel.org>
 References: <20230908181806.3460164-1-sashal@kernel.org>
@@ -54,90 +52,80 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Dmitry Antipov <dmantipov@yandex.ru>
 
-[ Upstream commit 810e41cebb6c6e394f2068f839e1a3fc745a5dcc ]
+[ Upstream commit dcce94b80a954a8968ff29fafcfb066d6197fa9a ]
 
 When compiling with gcc 13.1 and CONFIG_FORTIFY_SOURCE=y,
 I've noticed the following:
 
 In function ‘fortify_memcpy_chk’,
-    inlined from ‘ath_tx_complete_aggr’ at drivers/net/wireless/ath/ath9k/xmit.c:556:4,
-    inlined from ‘ath_tx_process_buffer’ at drivers/net/wireless/ath/ath9k/xmit.c:773:3:
+    inlined from ‘mwifiex_construct_tdls_action_frame’ at drivers/net/wireless/marvell/mwifiex/tdls.c:765:3,
+    inlined from ‘mwifiex_send_tdls_action_frame’ at drivers/net/wireless/marvell/mwifiex/tdls.c:856:6:
 ./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
 declared with attribute warning: detected read beyond size of field (2nd parameter);
 maybe use struct_group()? [-Wattribute-warning]
   529 |                         __read_overflow2_field(q_size_field, size);
       |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In function ‘fortify_memcpy_chk’,
-    inlined from ‘ath_tx_count_frames’ at drivers/net/wireless/ath/ath9k/xmit.c:473:3,
-    inlined from ‘ath_tx_complete_aggr’ at drivers/net/wireless/ath/ath9k/xmit.c:572:2,
-    inlined from ‘ath_tx_process_buffer’ at drivers/net/wireless/ath/ath9k/xmit.c:773:3:
-./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
-declared with attribute warning: detected read beyond size of field (2nd parameter);
-maybe use struct_group()? [-Wattribute-warning]
-  529 |                         __read_overflow2_field(q_size_field, size);
-      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The compiler actually complains on:
 
-In both cases, the compiler complains on:
+memmove(pos + ETH_ALEN, &mgmt->u.action.category,
+	sizeof(mgmt->u.action.u.tdls_discover_resp));
 
-memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
+and it happens because the fortification logic interprets this
+as an attempt to overread 1-byte 'u.action.category' member of
+'struct ieee80211_mgmt'. To silence this warning, it's enough
+to pass an address of 'u.action' itself instead of an address
+of its first member.
 
-which is the legal way to copy both 'ba_low' and following 'ba_high'
-members of 'struct ath_tx_status' at once (that is, issue one 8-byte
-'memcpy()' for two 4-byte fields). Since the fortification logic seems
-interprets this trick as an attempt to overread 4-byte 'ba_low', silence
-relevant warnings by using the convenient 'struct_group()' quirk.
+This also fixes an improper usage of 'sizeof()'. Since 'skb' is
+extended with 'sizeof(mgmt->u.action.u.tdls_discover_resp) + 1'
+bytes (where 1 is actually 'sizeof(mgmt->u.action.category)'),
+I assume that the same number of bytes should be copied.
 
-Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+Suggested-by: Brian Norris <briannorris@chromium.org>
 Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230620080855.396851-2-dmantipov@yandex.ru
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230629085115.180499-2-dmantipov@yandex.ru
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/mac.h  | 6 ++++--
- drivers/net/wireless/ath/ath9k/xmit.c | 4 ++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/tdls.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index af44b33814ddc..f03d792732da7 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -115,8 +115,10 @@ struct ath_tx_status {
- 	u8 qid;
- 	u16 desc_id;
- 	u8 tid;
--	u32 ba_low;
--	u32 ba_high;
-+	struct_group(ba,
-+		u32 ba_low;
-+		u32 ba_high;
-+	);
- 	u32 evm0;
- 	u32 evm1;
- 	u32 evm2;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index ba271a10d4ab1..eeabdd67fbccd 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -462,7 +462,7 @@ static void ath_tx_count_frames(struct ath_softc *sc, struct ath_buf *bf,
- 	isaggr = bf_isaggr(bf);
- 	if (isaggr) {
- 		seq_st = ts->ts_seqnum;
--		memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
-+		memcpy(ba, &ts->ba, WME_BA_BMP_SIZE >> 3);
- 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
+index 97bb87c3676bb..6c60621b6cccb 100644
+--- a/drivers/net/wireless/marvell/mwifiex/tdls.c
++++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
+@@ -735,6 +735,7 @@ mwifiex_construct_tdls_action_frame(struct mwifiex_private *priv,
+ 	int ret;
+ 	u16 capab;
+ 	struct ieee80211_ht_cap *ht_cap;
++	unsigned int extra;
+ 	u8 radio, *pos;
  
- 	while (bf) {
-@@ -545,7 +545,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	if (isaggr && txok) {
- 		if (ts->ts_flags & ATH9K_TX_BA) {
- 			seq_st = ts->ts_seqnum;
--			memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
-+			memcpy(ba, &ts->ba, WME_BA_BMP_SIZE >> 3);
- 		} else {
- 			/*
- 			 * AR5416 can become deaf/mute when BA
+ 	capab = priv->curr_bss_params.bss_descriptor.cap_info_bitmap;
+@@ -753,7 +754,10 @@ mwifiex_construct_tdls_action_frame(struct mwifiex_private *priv,
+ 
+ 	switch (action_code) {
+ 	case WLAN_PUB_ACTION_TDLS_DISCOVER_RES:
+-		skb_put(skb, sizeof(mgmt->u.action.u.tdls_discover_resp) + 1);
++		/* See the layout of 'struct ieee80211_mgmt'. */
++		extra = sizeof(mgmt->u.action.u.tdls_discover_resp) +
++			sizeof(mgmt->u.action.category);
++		skb_put(skb, extra);
+ 		mgmt->u.action.category = WLAN_CATEGORY_PUBLIC;
+ 		mgmt->u.action.u.tdls_discover_resp.action_code =
+ 					      WLAN_PUB_ACTION_TDLS_DISCOVER_RES;
+@@ -762,8 +766,7 @@ mwifiex_construct_tdls_action_frame(struct mwifiex_private *priv,
+ 		mgmt->u.action.u.tdls_discover_resp.capability =
+ 							     cpu_to_le16(capab);
+ 		/* move back for addr4 */
+-		memmove(pos + ETH_ALEN, &mgmt->u.action.category,
+-			sizeof(mgmt->u.action.u.tdls_discover_resp));
++		memmove(pos + ETH_ALEN, &mgmt->u.action, extra);
+ 		/* init address 4 */
+ 		eth_broadcast_addr(pos);
+ 
 -- 
 2.40.1
 
