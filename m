@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC461EEB560
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB3BEEB566
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:20:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344127AbjIHST7 (ORCPT
+        id S1344195AbjIHSUF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:19:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58608 "EHLO
+        Fri, 8 Sep 2023 14:20:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344133AbjIHSTL (ORCPT
+        with ESMTP id S1344134AbjIHSTL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 8 Sep 2023 14:19:11 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8EA3268E;
-        Fri,  8 Sep 2023 11:18:36 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46387C116D4;
-        Fri,  8 Sep 2023 18:15:09 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94E54268C;
+        Fri,  8 Sep 2023 11:18:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA25BC116CB;
+        Fri,  8 Sep 2023 18:14:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694196910;
-        bh=4HKDkTtC4tOIWsd2cApCbbBMtlwvL78yXaFUdzme9NY=;
+        s=k20201202; t=1694196901;
+        bh=etr5nO4R+vHEYa++IHNZ0E9/ZO5rmMXZRBBrn74Gy7c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UkSZjNTLjqzPwyE65J50JBK7sFAnyMsr0QvUM/iUT58eSS6pQkSjgIA8ka36xlWLa
-         MHCpqXex9uKmleMaxxtlXH3fWv8WkiczIcRj502pWIoQoWIRQbfssJr9x3IeM3CF+8
-         osw4Us5HggeHBgYnZfVpEG9cJqmLq28Fd05ujzTIJCFu/jxh8T2miB553yDtjhWgFm
-         lnJv2Z1QIVe4ymXj6KmqebMJQcF7u+n1R6pNe1QPShzUJjTA6D7+41rCK7pjDiAlbD
-         h+0eCX5IYzJFCSXMJVw22EHHhZJOhPrEFx3RODwJ+sQM8UIU26NzwOQPguGKF/lhL7
-         cA4LrYo0HGNng==
+        b=OIzYIXbJWO1azP/yzsPMUmk8JRTCEG8LqlaIRA7MJkgFgI+aGqoIARXofm7Bv1HZi
+         jopJklz37nNE/ffdi0vZKjd5zfMlFnwGzytY1Xb8L8Q0Luv1yPlomSelMV4iA3eFQV
+         j5rSDJ3Rs22KPWNTw3JYhASnMok9PBNp9i/MgSOZQlmHKfSCGc9Hqis+1kXdI00j5c
+         XgFVSZ4vJgAHZY9NTUJy7M1nDSHYu71nRDfTbcbpczV0W76cUdr6kDRJqgP7+gTp30
+         txm73ltxZKnNc5/PFuiDCKUSfsi5uIMwtRdlseboYVgEhULOemCFiXuuSBL9egM9VR
+         LNpVbNibpVwxQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+999fac712d84878a7379@syzkaller.appspotmail.com,
+        syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 36/45] wifi: mac80211: check for station first in client probe
-Date:   Fri,  8 Sep 2023 14:13:17 -0400
-Message-Id: <20230908181327.3459042-36-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.5 32/45] wifi: mac80211: check S1G action frame size
+Date:   Fri,  8 Sep 2023 14:13:13 -0400
+Message-Id: <20230908181327.3459042-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230908181327.3459042-1-sashal@kernel.org>
 References: <20230908181327.3459042-1-sashal@kernel.org>
@@ -53,55 +53,33 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 67dfa589aa8806c7959cbca2f4613b8d41c75a06 ]
+[ Upstream commit 19e4a47ee74718a22e963e8a647c8c3bfe8bb05c ]
 
-When probing a client, first check if we have it, and then
-check for the channel context, otherwise you can trigger
-the warning there easily by probing when the AP isn't even
-started yet. Since a client existing means the AP is also
-operating, we can then keep the warning.
+Before checking the action code, check that it even
+exists in the frame.
 
-Also simplify the moved code a bit.
-
-Reported-by: syzbot+999fac712d84878a7379@syzkaller.appspotmail.com
+Reported-by: syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/cfg.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ net/mac80211/rx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e7ac246038925..953f24166ffcf 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -4133,19 +4133,20 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 	mutex_lock(&local->mtx);
- 
- 	rcu_read_lock();
-+	sta = sta_info_get_bss(sdata, peer);
-+	if (!sta) {
-+		ret = -ENOLINK;
-+		goto unlock;
-+	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0af2599c17e8d..e751cda5eef69 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3734,6 +3734,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			break;
+ 		goto queue;
+ 	case WLAN_CATEGORY_S1G:
++		if (len < offsetofend(typeof(*mgmt),
++				      u.action.u.s1g.action_code))
++			break;
 +
-+	qos = sta->sta.wme;
-+
- 	chanctx_conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
- 	if (WARN_ON(!chanctx_conf)) {
- 		ret = -EINVAL;
- 		goto unlock;
- 	}
- 	band = chanctx_conf->def.chan->band;
--	sta = sta_info_get_bss(sdata, peer);
--	if (sta) {
--		qos = sta->sta.wme;
--	} else {
--		ret = -ENOLINK;
--		goto unlock;
--	}
- 
- 	if (qos) {
- 		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
+ 		switch (mgmt->u.action.u.s1g.action_code) {
+ 		case WLAN_S1G_TWT_SETUP:
+ 		case WLAN_S1G_TWT_TEARDOWN:
 -- 
 2.40.1
 
