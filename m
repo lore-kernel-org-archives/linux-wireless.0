@@ -2,49 +2,50 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E62FFEEB568
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6995FEEB562
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:23:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241036AbjIHSX2 (ORCPT
+        id S231827AbjIHSXc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:23:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41360 "EHLO
+        Fri, 8 Sep 2023 14:23:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239744AbjIHSWA (ORCPT
+        with ESMTP id S1344435AbjIHSWp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:22:00 -0400
+        Fri, 8 Sep 2023 14:22:45 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6130030F9;
-        Fri,  8 Sep 2023 11:19:31 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 690D6C433B7;
-        Fri,  8 Sep 2023 18:19:13 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 825103A82;
+        Fri,  8 Sep 2023 11:19:52 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15BC6C433B6;
+        Fri,  8 Sep 2023 18:19:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197154;
-        bh=kngE3rIFdb1jwHUxQcJ88gcu9u1Z+r0LHQRBGhW2Ex4=;
+        s=k20201202; t=1694197192;
+        bh=rZDQaoKKGAWzJqqNus001fL+/T4YtsVs/3RksbmNEuY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fOVB7I9PTXybIusqy9npRF/6M3R9L49cZsOwnRmueBwl+bK+Nn0eu/9loXSERqdt6
-         o906uM2ExEi3lAWHbyEVrDLUS55Ie35ppH8o0BjkU65elQdb9kDm+Be/B4bsqSha29
-         +sIKR062eUenpcQ7/ekqf1YwW2BBmIvVkqVrXQVcXyPCZWG3U2V+E26zFBOo4KiBN4
-         3n0bJusrR5u8JIxrGwHZScB6uUc9yDE2/JpwN4HKwnpHOYGw7QrykwA0Ep5S2giP1L
-         HFV71cbbvlZvoRVfkNxyJAMwbZpNsrdnHDlCueT84xTQkQ63tEsHjLR9xzIKtF7qQS
-         reprUYM8qhQpQ==
+        b=h8Am2oDp0M/TTejAuiTTJIgIdhJhxCgg3qMkcmoUb2yFMuGb9Uxfa3xgjOwog7SWL
+         1Y5PdDAsYH2OmFwddDEEYTU1tyfhpUAK2TJ6QkC7CNoTLxGq7/1B76ymVVqlpkGYVD
+         dd6Z5+xPUTjP0+ep8XP3gsglFpv1sjymuSr0YmGK3a2dk9m7jpzOo5VErmdJNSUimQ
+         4C+1ItZhufj0pxV1J/RRzWJ3PeqVtthHCepw7aDmaGUJbyon1ezfRp7cA32obqvDvp
+         /og31WVko+ASjC55WUSdZ53HuouJTGs039NW/Ys21ZTV4ts822gSkGk7JETGrtzUfx
+         Uz3cnmKCRaetQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com,
-        Jeff Johnson <quic_jjohnson@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 24/26] wifi: mac80211_hwsim: drop short frames
-Date:   Fri,  8 Sep 2023 14:18:02 -0400
-Message-Id: <20230908181806.3460164-24-sashal@kernel.org>
+        syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 11/15] wifi: mac80211: check S1G action frame size
+Date:   Fri,  8 Sep 2023 14:19:14 -0400
+Message-Id: <20230908181920.3460520-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908181806.3460164-1-sashal@kernel.org>
-References: <20230908181806.3460164-1-sashal@kernel.org>
+In-Reply-To: <20230908181920.3460520-1-sashal@kernel.org>
+References: <20230908181920.3460520-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.52
+X-stable-base: Linux 5.15.131
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -52,45 +53,33 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit fba360a047d5eeeb9d4b7c3a9b1c8308980ce9a6 ]
+[ Upstream commit 19e4a47ee74718a22e963e8a647c8c3bfe8bb05c ]
 
-While technically some control frames like ACK are shorter and
-end after Address 1, such frames shouldn't be forwarded through
-wmediumd or similar userspace, so require the full 3-address
-header to avoid accessing invalid memory if shorter frames are
-passed in.
+Before checking the action code, check that it even
+exists in the frame.
 
-Reported-by: syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com
-Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Reported-by: syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ net/mac80211/rx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index da5c355405f68..db70cef854bc4 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -4906,14 +4906,15 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
- 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
- 
-+	if (frame_data_len < sizeof(struct ieee80211_hdr_3addr) ||
-+	    frame_data_len > IEEE80211_MAX_DATA_LEN)
-+		goto err;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 175ead6b19cb4..26943c93f14c4 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3557,6 +3557,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			break;
+ 		goto queue;
+ 	case WLAN_CATEGORY_S1G:
++		if (len < offsetofend(typeof(*mgmt),
++				      u.action.u.s1g.action_code))
++			break;
 +
- 	/* Allocate new skb here */
- 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
- 	if (skb == NULL)
- 		goto err;
- 
--	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
--		goto err;
--
- 	/* Copy the data */
- 	skb_put_data(skb, frame_data, frame_data_len);
- 
+ 		switch (mgmt->u.action.u.s1g.action_code) {
+ 		case WLAN_S1G_TWT_SETUP:
+ 		case WLAN_S1G_TWT_TEARDOWN:
 -- 
 2.40.1
 
