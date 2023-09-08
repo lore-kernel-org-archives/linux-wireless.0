@@ -2,142 +2,95 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E0FEEB562
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E22A4EEB56A
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:31:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237352AbjIHSZz (ORCPT
+        id S234148AbjIHSbK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:25:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47370 "EHLO
+        Fri, 8 Sep 2023 14:31:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245755AbjIHSZZ (ORCPT
+        with ESMTP id S233933AbjIHSbG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:25:25 -0400
+        Fri, 8 Sep 2023 14:31:06 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D063D4EDC;
-        Fri,  8 Sep 2023 11:22:19 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4F9DC07616;
-        Fri,  8 Sep 2023 18:13:42 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E2A83C3D;
+        Fri,  8 Sep 2023 11:21:30 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11008C116A6;
+        Fri,  8 Sep 2023 18:21:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694196823;
-        bh=xNOShLDjYhJ5iLjNdQQHDLJKmtTOkgcSum/MINeg9Ho=;
+        s=k20201202; t=1694197265;
+        bh=k3moEPGR0BOFaRMofyY+Z9IPG8m7Wu+N491Qu/QXPIA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EhfNwyJ8284t98cKgnWw118YCiBLp7EHjP9U4qzbfchvFysKTQjSrGbm1XPJiOQjT
-         cVsr2IVzeizGFU7bfwv0flBXq7IXQFTGH94DLiVUr7j+8gEZcllgOsOv0MxkUhZ+AT
-         mjUFvYj06SDbGYVGZYkhi0QSCl8f1YUhQXwYTSmN0VMo4q+IOX7enEvkjF7rbO1cqw
-         KYfa/3NBWrpMh8Hr1m1j1UGIWv36pJmAi2b53PEz8lBplsH8m1z7btd+0vZ8911At3
-         HAPJ95UfxDwsNwPxgijct1JndpER5DFrVdWXRoLaoInGcR8U8Ar/PAoDmqj+5qR8H1
-         KWzbuT3QtnhHg==
+        b=VkBV9jwVr6WuQVQdZXsKAXBs8xPaVcdwgsNVtzncZJ7vxvGPXKjwmlPgCSNWix2DU
+         wSqPMM9LhHTAdDofHxQWFzI3m0vcaj8OM8vxI+Aig7OeJD3Yz196Z4nelMwE88zd7T
+         XElxp6+wDjhd8AloiUT80ePKxZr9w8+nUWnsGd6AJDSwH6FhoV4qQn0zhgT/UCpapm
+         X9nrvwd1Nwz+nI3LBg4bBmg9XlpO5jfAjr+H3BhbmstsHx4oANbRIEVSCCfUxQU5+A
+         j8DQV5Li4SThPSFGmu2u6qp0f3v2HmyyYswMSbGMDgsGXurwO34Wtcn9nYSsf0203L
+         fONQ7Q3cr1paQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com,
+        Jeff Johnson <quic_jjohnson@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 07/45] wifi: ath9k: fix fortify warnings
-Date:   Fri,  8 Sep 2023 14:12:48 -0400
-Message-Id: <20230908181327.3459042-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 08/10] wifi: mac80211_hwsim: drop short frames
+Date:   Fri,  8 Sep 2023 14:20:42 -0400
+Message-Id: <20230908182046.3460968-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908181327.3459042-1-sashal@kernel.org>
-References: <20230908181327.3459042-1-sashal@kernel.org>
+In-Reply-To: <20230908182046.3460968-1-sashal@kernel.org>
+References: <20230908182046.3460968-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.5.2
+X-stable-base: Linux 5.4.256
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dmitry Antipov <dmantipov@yandex.ru>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 810e41cebb6c6e394f2068f839e1a3fc745a5dcc ]
+[ Upstream commit fba360a047d5eeeb9d4b7c3a9b1c8308980ce9a6 ]
 
-When compiling with gcc 13.1 and CONFIG_FORTIFY_SOURCE=y,
-I've noticed the following:
+While technically some control frames like ACK are shorter and
+end after Address 1, such frames shouldn't be forwarded through
+wmediumd or similar userspace, so require the full 3-address
+header to avoid accessing invalid memory if shorter frames are
+passed in.
 
-In function ‘fortify_memcpy_chk’,
-    inlined from ‘ath_tx_complete_aggr’ at drivers/net/wireless/ath/ath9k/xmit.c:556:4,
-    inlined from ‘ath_tx_process_buffer’ at drivers/net/wireless/ath/ath9k/xmit.c:773:3:
-./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
-declared with attribute warning: detected read beyond size of field (2nd parameter);
-maybe use struct_group()? [-Wattribute-warning]
-  529 |                         __read_overflow2_field(q_size_field, size);
-      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In function ‘fortify_memcpy_chk’,
-    inlined from ‘ath_tx_count_frames’ at drivers/net/wireless/ath/ath9k/xmit.c:473:3,
-    inlined from ‘ath_tx_complete_aggr’ at drivers/net/wireless/ath/ath9k/xmit.c:572:2,
-    inlined from ‘ath_tx_process_buffer’ at drivers/net/wireless/ath/ath9k/xmit.c:773:3:
-./include/linux/fortify-string.h:529:25: warning: call to ‘__read_overflow2_field’
-declared with attribute warning: detected read beyond size of field (2nd parameter);
-maybe use struct_group()? [-Wattribute-warning]
-  529 |                         __read_overflow2_field(q_size_field, size);
-      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In both cases, the compiler complains on:
-
-memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
-
-which is the legal way to copy both 'ba_low' and following 'ba_high'
-members of 'struct ath_tx_status' at once (that is, issue one 8-byte
-'memcpy()' for two 4-byte fields). Since the fortification logic seems
-interprets this trick as an attempt to overread 4-byte 'ba_low', silence
-relevant warnings by using the convenient 'struct_group()' quirk.
-
-Suggested-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230620080855.396851-2-dmantipov@yandex.ru
+Reported-by: syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com
+Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/mac.h  | 6 ++++--
- drivers/net/wireless/ath/ath9k/xmit.c | 4 ++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index af44b33814ddc..f03d792732da7 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -115,8 +115,10 @@ struct ath_tx_status {
- 	u8 qid;
- 	u16 desc_id;
- 	u8 tid;
--	u32 ba_low;
--	u32 ba_high;
-+	struct_group(ba,
-+		u32 ba_low;
-+		u32 ba_high;
-+	);
- 	u32 evm0;
- 	u32 evm1;
- 	u32 evm2;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index f6f2ab7a63ffc..42058368e6373 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -468,7 +468,7 @@ static void ath_tx_count_frames(struct ath_softc *sc, struct ath_buf *bf,
- 	isaggr = bf_isaggr(bf);
- 	if (isaggr) {
- 		seq_st = ts->ts_seqnum;
--		memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
-+		memcpy(ba, &ts->ba, WME_BA_BMP_SIZE >> 3);
- 	}
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index f80b1d57d6c38..a21739b2f44e6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3367,14 +3367,15 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
+ 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
  
- 	while (bf) {
-@@ -551,7 +551,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	if (isaggr && txok) {
- 		if (ts->ts_flags & ATH9K_TX_BA) {
- 			seq_st = ts->ts_seqnum;
--			memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
-+			memcpy(ba, &ts->ba, WME_BA_BMP_SIZE >> 3);
- 		} else {
- 			/*
- 			 * AR5416 can become deaf/mute when BA
++	if (frame_data_len < sizeof(struct ieee80211_hdr_3addr) ||
++	    frame_data_len > IEEE80211_MAX_DATA_LEN)
++		goto err;
++
+ 	/* Allocate new skb here */
+ 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
+ 	if (skb == NULL)
+ 		goto err;
+ 
+-	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
+-		goto err;
+-
+ 	/* Copy the data */
+ 	skb_put_data(skb, frame_data, frame_data_len);
+ 
 -- 
 2.40.1
 
