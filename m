@@ -2,110 +2,84 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B5EEEEB560
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:25:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 148A5EEB562
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:25:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243832AbjIHSZZ (ORCPT
+        id S1344425AbjIHSZc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:25:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39938 "EHLO
+        Fri, 8 Sep 2023 14:25:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242317AbjIHSYs (ORCPT
+        with ESMTP id S242891AbjIHSZM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:24:48 -0400
+        Fri, 8 Sep 2023 14:25:12 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B53214C23;
-        Fri,  8 Sep 2023 11:21:48 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D176FC116AA;
-        Fri,  8 Sep 2023 18:21:11 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 844354C3F;
+        Fri,  8 Sep 2023 11:22:12 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F395C116B7;
+        Fri,  8 Sep 2023 18:21:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197272;
-        bh=+z5kRoqwbA4HHPdQ3FhMBZMph7m6bbl7JeZquZZown4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=qLcexUpOaHN03wjTy6tDZMrnk+8ut7T8PLjvxYGWMEsQgafWVaMRiIgovcJxRW3pt
-         eA93uuNquuaAGRLbrv+1RMdWXboZoBQ5DvaGe9KeECHgo4eQBib3yEwvuL2zt4ROvS
-         8KU0kUMqMhd/4FOLGHNo2f8v1Si7b9450USlFhPITkdthZja2XmIDgsLP6md532e76
-         yZUd+ei+d3jWJALtj6HPO6IKoWpDnvDsJdA1DfZ+TIFhVqRL3LGEY3jaheDXeGxapo
-         aQOe3zgI0aq2zMXZfzvpYO3e5SAVkToK84efpQz0SKw1gxQgJaqBwG4BWlCuCfGsVk
-         xBNWC1yBLu4HQ==
+        s=k20201202; t=1694197307;
+        bh=M1SEUboSPYiiB6UY60gtnV2aLHbrgmGINt3ZwQqz7ZQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=F23b9N5pv1BeU5L0ik6+jGfZ6m57KDPnFN8epT7kOi/mIUiohNrENHAcnhyPmcOrf
+         dCweQcncmMckUzEnWaPDNhS3exb+0yP+AL5CxV3C7NQir3gv4Lbab9zQJ72EfNCETr
+         wbptpzfe+7a8MdgBpctoL8ZZFWefqV7z8YItwOnTN3mJN9Gynk0VUXbfHxZGJ5ZsEw
+         ssyiw0HRu/z6RPEnwEeQ4gfmrzW6kvWqLl8Lgzl8gJiicbTXqYsHFmJGGe/4S9dOBY
+         +oJ7vt5vLxfFlprploOgm4uayV0/BINkyJCr/vOkExLfHaBmNjVpi86aj+llPXJd/3
+         PScrCV4AzCS4A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
-        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 1/7] wifi: ath9k: fix printk specifier
-Date:   Fri,  8 Sep 2023 14:21:03 -0400
-Message-Id: <20230908182109.3461101-1-sashal@kernel.org>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+09d1cd2f71e6dd3bfd2c@syzkaller.appspotmail.com,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 7/8] wifi: cfg80211: ocb: don't leave if not joined
+Date:   Fri,  8 Sep 2023 14:21:26 -0400
+Message-Id: <20230908182127.3461199-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230908182127.3461199-1-sashal@kernel.org>
+References: <20230908182127.3461199-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.294
+X-stable-base: Linux 4.14.325
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dongliang Mu <dzm91@hust.edu.cn>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 061115fbfb2ce5870c9a004d68dc63138c07c782 ]
+[ Upstream commit abc76cf552e13cfa88a204b362a86b0e08e95228 ]
 
-Smatch reports:
+If there's no OCB state, don't ask the driver/mac80211 to
+leave, since that's just confusing. Since set/clear the
+chandef state, that's a simple check.
 
-ath_pci_probe() warn: argument 4 to %lx specifier is cast from pointer
-ath_ahb_probe() warn: argument 4 to %lx specifier is cast from pointer
-
-Fix it by modifying %lx to %p in the printk format string.
-
-Note that with this change, the pointer address will be printed as a
-hashed value by default. This is appropriate because the kernel
-should not leak kernel pointers to user space in an informational
-message. If someone wants to see the real address for debugging
-purposes, this can be achieved with the no_hash_pointers kernel option.
-
-Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
-Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230723040403.296723-1-dzm91@hust.edu.cn
+Reported-by: syzbot+09d1cd2f71e6dd3bfd2c@syzkaller.appspotmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c | 4 ++--
- drivers/net/wireless/ath/ath9k/pci.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ net/wireless/ocb.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 63019c3de034d..26023e3b4b9df 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -136,8 +136,8 @@ static int ath_ahb_probe(struct platform_device *pdev)
+diff --git a/net/wireless/ocb.c b/net/wireless/ocb.c
+index e64dbf16330c4..73dd44e77a1a3 100644
+--- a/net/wireless/ocb.c
++++ b/net/wireless/ocb.c
+@@ -70,6 +70,9 @@ int __cfg80211_leave_ocb(struct cfg80211_registered_device *rdev,
+ 	if (!rdev->ops->leave_ocb)
+ 		return -EOPNOTSUPP;
  
- 	ah = sc->sc_ah;
- 	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
--	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
--		   hw_name, (unsigned long)mem, irq);
-+	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
-+		   hw_name, mem, irq);
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 92b2dd396436a..cb3318bd3cad2 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -993,8 +993,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->sc_ah->msi_reg = 0;
- 
- 	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
--	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
--		   hw_name, (unsigned long)sc->mem, pdev->irq);
-+	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
-+		   hw_name, sc->mem, pdev->irq);
- 
- 	return 0;
- 
++	if (!wdev->u.ocb.chandef.chan)
++		return -ENOTCONN;
++
+ 	err = rdev_leave_ocb(rdev, dev);
+ 	if (!err)
+ 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
 -- 
 2.40.1
 
