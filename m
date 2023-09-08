@@ -2,95 +2,89 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EA91EEB569
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:25:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69C3CEEB560
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:25:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344511AbjIHSZd (ORCPT
+        id S1343805AbjIHSZn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:25:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58386 "EHLO
+        Fri, 8 Sep 2023 14:25:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234559AbjIHSY5 (ORCPT
+        with ESMTP id S235767AbjIHSZY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:24:57 -0400
+        Fri, 8 Sep 2023 14:25:24 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A359269E;
-        Fri,  8 Sep 2023 11:21:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E713C116B8;
-        Fri,  8 Sep 2023 18:20:40 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85117271D;
+        Fri,  8 Sep 2023 11:22:19 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF7F8C116A4;
+        Fri,  8 Sep 2023 18:13:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197241;
-        bh=ZB1dMqYt7rB/jUqIlA85VIIJd6Me2gmY3dwVUZeJdiE=;
+        s=k20201202; t=1694196826;
+        bh=4u4AnPxK5/18OB5xMRnWw/LHyv+kk9Aq56inmwsRCnE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KJUXt4RKUmm0B5OpFjezqK7TlvUCxCDv2KPhMxfYoCeHrkjlfWfwa0eL1ITjEbVmw
-         M2BJuKio454AxIrJ+6Z2ZxAnwrHj4K0BIT5z4BEUy8YYQu5S/KVRPpTSKXljLxPQPI
-         FF47ig5F5thaZk9wcXc55pwmWfucXY5eW45fsfT44mBL8/FYPI6Z5MIeqFjrtwEYpc
-         QhETQE4DEtlrsF7KvDyM9A34sIOdBMswiZGYNxYim+ahPU3OGfq9YBpGpNYDQ34v73
-         DE4tIe12FlS8CH99kMxQhGmxE5OS51N+gaRqqV4+9qWXCWynytTurgLsEgVEQZile9
-         Fv41KIo9glJeA==
+        b=IrWUvyZsg/XAdJmsBI36uDdltdrdGHXv89Z/xBLtPJdZiku3Fla15oltD+aDbtxem
+         vGTrRJfJg82CuR5tJvXSuMum7pX4dKcUP2RC9su+Dy5eDmf1mZ6qPKORMdsrCQ+FcQ
+         M9NUUExAL/OiJU3an6XRPEheQ+Y/xpjTjJFJzImIzlj+adjCBWqVbC1m+dbd/W2u6S
+         0/Kcw2nkz4PCtoLaAUzAdmzk29u/wC2rcZdTABPvQGj0+fMWDu9n3V7trZAc3JeOm2
+         y6stCuAc8voSBAOcS1XgEnHLOU2Ao8nHGKtTTpJED2ECHZw9zsU/5SjSzkeAiioaYy
+         7/T6t1XihDKYQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com,
-        Jeff Johnson <quic_jjohnson@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 12/14] wifi: mac80211_hwsim: drop short frames
-Date:   Fri,  8 Sep 2023 14:19:59 -0400
-Message-Id: <20230908182003.3460721-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.5 09/45] wifi: rtw88: delete timer and free skb queue when unloading
+Date:   Fri,  8 Sep 2023 14:12:50 -0400
+Message-Id: <20230908181327.3459042-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908182003.3460721-1-sashal@kernel.org>
-References: <20230908182003.3460721-1-sashal@kernel.org>
+In-Reply-To: <20230908181327.3459042-1-sashal@kernel.org>
+References: <20230908181327.3459042-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.194
+X-stable-base: Linux 6.5.2
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Dmitry Antipov <dmantipov@yandex.ru>
 
-[ Upstream commit fba360a047d5eeeb9d4b7c3a9b1c8308980ce9a6 ]
+[ Upstream commit 634fcbcaa4062db39aeb5ac6ed1bc1feb8dd5216 ]
 
-While technically some control frames like ACK are shorter and
-end after Address 1, such frames shouldn't be forwarded through
-wmediumd or similar userspace, so require the full 3-address
-header to avoid accessing invalid memory if shorter frames are
-passed in.
+Fix possible crash and memory leak on driver unload by deleting
+TX purge timer and freeing C2H queue in 'rtw_core_deinit()',
+shrink critical section in the latter by freeing COEX queue
+out of TX report lock scope.
 
-Reported-by: syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com
-Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+Link: https://lore.kernel.org/r/20230628072327.167196-1-dmantipov@yandex.ru
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/main.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 255286b2324e2..0d41f172a1dc2 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3619,14 +3619,15 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
- 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index c853e2f2d448f..c2ddb4d382af5 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -2183,10 +2183,12 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
+ 		release_firmware(wow_fw->firmware);
  
-+	if (frame_data_len < sizeof(struct ieee80211_hdr_3addr) ||
-+	    frame_data_len > IEEE80211_MAX_DATA_LEN)
-+		goto err;
-+
- 	/* Allocate new skb here */
- 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
- 	if (skb == NULL)
- 		goto err;
+ 	destroy_workqueue(rtwdev->tx_wq);
++	timer_delete_sync(&rtwdev->tx_report.purge_timer);
+ 	spin_lock_irqsave(&rtwdev->tx_report.q_lock, flags);
+ 	skb_queue_purge(&rtwdev->tx_report.queue);
+-	skb_queue_purge(&rtwdev->coex.queue);
+ 	spin_unlock_irqrestore(&rtwdev->tx_report.q_lock, flags);
++	skb_queue_purge(&rtwdev->coex.queue);
++	skb_queue_purge(&rtwdev->c2h_queue);
  
--	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
--		goto err;
--
- 	/* Copy the data */
- 	skb_put_data(skb, frame_data, frame_data_len);
- 
+ 	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list,
+ 				 build_list) {
 -- 
 2.40.1
 
