@@ -2,49 +2,49 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A91C8EEB560
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:31:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2369CEEB568
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 19:07:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343881AbjIHSb7 (ORCPT
+        id S245404AbjIHTHU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:31:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57940 "EHLO
+        Fri, 8 Sep 2023 15:07:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344519AbjIHSbc (ORCPT
+        with ESMTP id S239683AbjIHTHU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:31:32 -0400
+        Fri, 8 Sep 2023 15:07:20 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E48FA269A;
-        Fri,  8 Sep 2023 11:20:24 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E290FC433D9;
-        Fri,  8 Sep 2023 18:20:23 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77849CF;
+        Fri,  8 Sep 2023 12:07:15 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DC28C116A1;
+        Fri,  8 Sep 2023 18:19:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197224;
-        bh=CFovjuacUrazLTA0MuGaowco54bmvecAR8whJsbtrfA=;
+        s=k20201202; t=1694197180;
+        bh=mjkmJ+HBaOwQ/RRFoGSTAPrwkORPZXzRMG8JxfRvp6A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EJi1R/oBncXdC5NDi+J99u2V2448xkczMPZu2dCxSbkWu3UBkYWZs1RN+09jOFbt5
-         iHk9IME/XvJUIaMZ4jBQdRWfSpyS8daw3eNNIV21n0s3nH+QksgWVxpLKdNNSq6ahW
-         CGaM+dFHV9kq0yv343SHQHxtJQ+aZk/n1FSpu9Hfc+DsMJLrLx4dEpPdvW01Dz53rw
-         e4Hj2T67Arc2iC83DggMjX/6wPxio8QVDMCTtPmVUVvcHH6+OL66rNAMG/EtkUOg49
-         iO8BymXu5e9GZZ2bcp6k2FD81sucPMqE0GS8nX1fq1zc7R9QhD/NyRNewytFJixle5
-         BQfBptxCZFUUg==
+        b=ZKy7PWWhf0BSneUNpuMF9BIuFm9yzdFuxocMmIO6DWyDFrRi+3sppNkCMzU5woRbN
+         rtfJN7pJCiNQBi14DxnFklmS/ebLZfnpcyrCcb1k0S848iHtvK8beJ1wafuKVKWdgy
+         vOLeHQu3CrI0dkNEAQLHn2QYRMGBm/Ikesl2xnuLWrAyvO84Sx0lAXVLAuNhoCLws8
+         1q+Zh+XbkhjSL6O52RrzFGpYFGLlyfpUyhE6nNd4zwTSGeuK23j4t8nGXQTZyTmkVH
+         dBOYvRMdlHi9+uhG6lcIOsbjldSHNMVWdVoiJOrzui+LcXD6Yu4KG0lnuDgNnCphv4
+         G2FMMmqT8zBhQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 06/14] wifi: wil6210: fix fortify warnings
-Date:   Fri,  8 Sep 2023 14:19:53 -0400
-Message-Id: <20230908182003.3460721-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 06/15] wifi: wil6210: fix fortify warnings
+Date:   Fri,  8 Sep 2023 14:19:09 -0400
+Message-Id: <20230908181920.3460520-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908182003.3460721-1-sashal@kernel.org>
-References: <20230908182003.3460721-1-sashal@kernel.org>
+In-Reply-To: <20230908181920.3460520-1-sashal@kernel.org>
+References: <20230908181920.3460520-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.194
+X-stable-base: Linux 5.15.131
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -137,7 +137,7 @@ index 1f4c8ec75be87..0f6f6b62bfc9a 100644
  
  /* Rx descriptor - DMA part
 diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-index 8ca2ce51c83ef..b23c05f16320b 100644
+index 201c8c35e0c9e..1ba1f21ebea26 100644
 --- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
 +++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
 @@ -548,7 +548,7 @@ static int wil_rx_crypto_check_edma(struct wil6210_priv *wil,
