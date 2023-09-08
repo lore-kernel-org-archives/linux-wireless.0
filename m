@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EAB1EEB568
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:22:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9757BEEB560
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344389AbjIHSWR (ORCPT
+        id S233218AbjIHSWT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:22:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57254 "EHLO
+        Fri, 8 Sep 2023 14:22:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244518AbjIHSVX (ORCPT
+        with ESMTP id S242867AbjIHSVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 8 Sep 2023 14:21:23 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A50230D4;
-        Fri,  8 Sep 2023 11:19:21 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6219EC43397;
-        Fri,  8 Sep 2023 18:19:02 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E43C2116;
+        Fri,  8 Sep 2023 11:19:22 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF950C433CD;
+        Fri,  8 Sep 2023 18:19:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197143;
-        bh=H+t5+9GD/ikDTM+ovHHOvZiQjjd5x0i/Y0udP52tLYI=;
+        s=k20201202; t=1694197151;
+        bh=u9dEwrOvXbjzBfCMU9FaZiUDZQVrozxBy7cifxEB0KQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E70w1a/TJo6YQ48799LpDiPlYqIG3ZnDvJocyLBmE9qBnfcLKhQdqJROvPka4KXNG
-         WLNVD0ekwNBlR7BD0Qid58oHXs3I5i9uuJ6SK5i0+ratDSkl+t/XZ5/L+MBnxrkabr
-         Mefq5/C0g3gJ3wtV+QI6j9DdS6n1otoojlrb6LdipQr58NZtzFpX9v8oMfFU6KNhrJ
-         DMn9fezpF/oyN5WLzNk30TKX3mVHv40cjwXpOh6VfxZUOrM1xFEnOuJUZgT/TkJN1e
-         cKtsMsqV0T/Ay2RVjv7xrPrgOGGPeZRy41y4G5gXdnB1ocVjaMW3Mhk5hD4NQ+q8OO
-         x9EaSvPtKWR9Q==
+        b=YNtplmLSmAG0+H4Uob6/GTu/Snkde286SocE8gnVae02Kub1+jMTpOPbB0YkgExAt
+         ZA4+OAS8OWYJ7REUgNhUbIkwCjRirq1n2sSPmsCu4ngyLUVS1+JxCX5NA29DQ7IIaB
+         81QPTt/neGTgAPLGHONSguESqp0Z+Obs2MHgraBXxQCKMSdvU8ney/jLdfu8/h8SMz
+         cCiGpLtskkqNcTLmwC/EMjuKos91pgDHXwKqEvea0kcHc5aPWcDq6M1jTcTAQ31OUr
+         SFrV0n9IOq/UeMjBpjawJixS3RV+WPdT2om7OBoQ6EPcWtVAHetM17xkRhMbGabKtf
+         dFDeFvfd7I46A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com,
+        syzbot+09d1cd2f71e6dd3bfd2c@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 19/26] wifi: mac80211: check S1G action frame size
-Date:   Fri,  8 Sep 2023 14:17:57 -0400
-Message-Id: <20230908181806.3460164-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 22/26] wifi: cfg80211: ocb: don't leave if not joined
+Date:   Fri,  8 Sep 2023 14:18:00 -0400
+Message-Id: <20230908181806.3460164-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230908181806.3460164-1-sashal@kernel.org>
 References: <20230908181806.3460164-1-sashal@kernel.org>
@@ -53,33 +53,33 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 19e4a47ee74718a22e963e8a647c8c3bfe8bb05c ]
+[ Upstream commit abc76cf552e13cfa88a204b362a86b0e08e95228 ]
 
-Before checking the action code, check that it even
-exists in the frame.
+If there's no OCB state, don't ask the driver/mac80211 to
+leave, since that's just confusing. Since set/clear the
+chandef state, that's a simple check.
 
-Reported-by: syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com
+Reported-by: syzbot+09d1cd2f71e6dd3bfd2c@syzkaller.appspotmail.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/wireless/ocb.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0f81492da0b46..3bebf28ea7464 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3623,6 +3623,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 			break;
- 		goto queue;
- 	case WLAN_CATEGORY_S1G:
-+		if (len < offsetofend(typeof(*mgmt),
-+				      u.action.u.s1g.action_code))
-+			break;
+diff --git a/net/wireless/ocb.c b/net/wireless/ocb.c
+index 27a1732264f95..29afaf3da54f3 100644
+--- a/net/wireless/ocb.c
++++ b/net/wireless/ocb.c
+@@ -68,6 +68,9 @@ int __cfg80211_leave_ocb(struct cfg80211_registered_device *rdev,
+ 	if (!rdev->ops->leave_ocb)
+ 		return -EOPNOTSUPP;
+ 
++	if (!wdev->u.ocb.chandef.chan)
++		return -ENOTCONN;
 +
- 		switch (mgmt->u.action.u.s1g.action_code) {
- 		case WLAN_S1G_TWT_SETUP:
- 		case WLAN_S1G_TWT_TEARDOWN:
+ 	err = rdev_leave_ocb(rdev, dev);
+ 	if (!err)
+ 		memset(&wdev->u.ocb.chandef, 0, sizeof(wdev->u.ocb.chandef));
 -- 
 2.40.1
 
