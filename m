@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE1FDEEB567
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:20:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FB1BEEB562
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:20:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233664AbjIHSU1 (ORCPT
+        id S1343922AbjIHSUa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:20:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41272 "EHLO
+        Fri, 8 Sep 2023 14:20:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235460AbjIHSTQ (ORCPT
+        with ESMTP id S1344147AbjIHSTR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:19:16 -0400
+        Fri, 8 Sep 2023 14:19:17 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E609D269D;
-        Fri,  8 Sep 2023 11:18:41 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61AEAC4163D;
-        Fri,  8 Sep 2023 18:14:58 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01E2C269E;
+        Fri,  8 Sep 2023 11:18:42 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 623B4C116A7;
+        Fri,  8 Sep 2023 18:17:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694196899;
-        bh=lTFHdvOXYprreICOKnPUdyyw0ENV4id4PnV79YcPrjk=;
+        s=k20201202; t=1694197030;
+        bh=PhiFWFxYGq5ff+/nhfvkh4YOX+zOD9ec24PHHnT9IT8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iCzwIgBWi4PJECEhEi/sABz5gd3ZIZ/H+dTaU3+usNVoDcrA6QMxCJb/8DXtyEtlu
-         MoBijezZzosAFFs1YSWALxKOOj+A/uvOB+2df1zZrr5gHCuLGbS1qoHuMkcTuChQQu
-         16zMtkdqP9so43yDanptqVXqXHwRDk86XDShWnGOzvSHzFAxUIb1NP8XFw1VxZ4W0C
-         3FVpS0u0y5sGqbovLzJD+3w9wXl/QS1gfU2Gwya87s9PlWdcZWNQ8Y4h9KxCQqkgQ0
-         /PjldvZuGJpzaixPl9X79cDe0CJ96MjZCgCWpcQXoQ74FmtuvKukzM3OMbqmblqP7A
-         zToAWoMMfEVIw==
+        b=edco8lI9wmACXX2tvrTl5k2vi2lO7UArWbrs6x/ao0K3YNAo7mlMcsaWEZYgkIisP
+         XdUiOk8mV7sTKUdvW3j+yV7b7gkod7fgQkhQSC0AGWwNIHdrSOWCDaNWmqFwzCBiWH
+         ShR5vyrqHYwWc62V6UafDjJnN3yyVXvFuxuaZssfsJ24KPavQzRXoqSPdv2vJY2ajo
+         UMyKxrOMiIykHRHal4lArhtegCe9k551SIv6fBaOPOCVdi2m5x6M4mcKg+JYe3aT5Q
+         avttDVQbMJugLgtYD2wpPJACzif55cjjE+it/deEUqsRsjVLHwtMgKcOejO84tyUTN
+         hHa3gr/KGTMww==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Avraham Stern <avraham.stern@intel.com>,
@@ -35,16 +35,16 @@ Cc:     Avraham Stern <avraham.stern@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         mukesh.sisodiya@intel.com, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 31/45] wifi: iwlwifi: pcie: avoid a warning in case prepare card failed
-Date:   Fri,  8 Sep 2023 14:13:12 -0400
-Message-Id: <20230908181327.3459042-31-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.4 28/41] wifi: iwlwifi: pcie: avoid a warning in case prepare card failed
+Date:   Fri,  8 Sep 2023 14:15:42 -0400
+Message-Id: <20230908181555.3459640-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908181327.3459042-1-sashal@kernel.org>
-References: <20230908181327.3459042-1-sashal@kernel.org>
+In-Reply-To: <20230908181555.3459640-1-sashal@kernel.org>
+References: <20230908181555.3459640-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.5.2
+X-stable-base: Linux 6.4.15
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 10 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 73c1fb3c0c5ec..bc83d2ba55c67 100644
+index e086664a4eaca..d4dac1adf2d6e 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1132,12 +1132,6 @@ static int get_crf_id(struct iwl_trans *iwl_trans)
+@@ -1411,12 +1411,6 @@ static int get_crf_id(struct iwl_trans *iwl_trans)
  	else
  		sd_reg_ver_addr = SD_REG_VER;
  
@@ -88,7 +88,7 @@ index 73c1fb3c0c5ec..bc83d2ba55c67 100644
  	/* Enable access to peripheral registers */
  	val = iwl_read_umac_prph_no_grab(iwl_trans, WFPM_CTRL_REG);
  	val |= ENABLE_WFPM;
-@@ -1157,9 +1151,6 @@ static int get_crf_id(struct iwl_trans *iwl_trans)
+@@ -1436,9 +1430,6 @@ static int get_crf_id(struct iwl_trans *iwl_trans)
  		 iwl_trans->hw_crf_id, iwl_trans->hw_cnv_id,
  		 iwl_trans->hw_wfpm_id);
  
@@ -98,7 +98,7 @@ index 73c1fb3c0c5ec..bc83d2ba55c67 100644
  	return ret;
  }
  
-@@ -1351,6 +1342,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1630,6 +1621,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  		if (ret)
  			goto out_free_trans;
  		if (iwl_trans_grab_nic_access(iwl_trans)) {
@@ -106,7 +106,7 @@ index 73c1fb3c0c5ec..bc83d2ba55c67 100644
  			/* all good */
  			iwl_trans_release_nic_access(iwl_trans);
  		} else {
-@@ -1360,7 +1352,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1639,7 +1631,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	}
  
  	iwl_trans->hw_rf_id = iwl_read32(iwl_trans, CSR_HW_RF_ID);
