@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B301EEB566
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:23:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65FC0EEB566
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:24:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241691AbjIHSXl (ORCPT
+        id S1344271AbjIHSYa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:23:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41712 "EHLO
+        Fri, 8 Sep 2023 14:24:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344285AbjIHSWE (ORCPT
+        with ESMTP id S1344834AbjIHSX0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:22:04 -0400
+        Fri, 8 Sep 2023 14:23:26 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60C7B358E;
-        Fri,  8 Sep 2023 11:19:36 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F20AC433CC;
-        Fri,  8 Sep 2023 18:19:27 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71AB446B0;
+        Fri,  8 Sep 2023 11:21:04 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D341EC4166B;
+        Fri,  8 Sep 2023 18:20:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197168;
-        bh=4X2xqzaCCJzfE4wfa8IeiTvPsks3L9LTT+sc7fg2aiM=;
+        s=k20201202; t=1694197251;
+        bh=+z5kRoqwbA4HHPdQ3FhMBZMph7m6bbl7JeZquZZown4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S4zVkIhI1XfUFKH3aPVYT+muPDYHBcjLnZOCfZ6IRJ1KkMmP0Z4t06z3xjIQdRnVS
-         P1nf8RalRtyLfv6n3N2VVQJF7F3ZyGbnYk9iMen29dDeHaT3dbci8wGXqtRCusfsj2
-         bAWhOEtQv5qrDq2AqN9cu7yioCo3q411x9/cijbI19iuiGJMsve7aev3d1d211g8QM
-         P+7xJ1ZVaCddke6ZUafrMgKJZ6S5ix8AbOMg+2hjqeUF8APLHHEIFKjtrXwvwenifn
-         afOWxu9Dsdy2c5ZpX9p4lhTvOO8TNq2KgQsFIrQSplcFTNEK82x0GoZ34ofwUxt0vH
-         PGkAuScyawOcw==
+        b=dyzjHTCePfzTzzc1FlH5080IjUE99sc3M/zNkGkYUsOZhP9MLto652IkK5bBBWp8w
+         MmB9W88YJOdkB6sRa97uCJhWiLMjb0KCbl5oZUHDpZZ0HjmLdxehdC3XEKfbKvwsys
+         AMoUDIbS8sJQPYaCJJi3WcOfMJVBB/EExBciZoa6Caxy5nC0TSHNjVB3d/U58sSVGs
+         KwCDPJp/MO64KYh5hYjcTzKutj/ufD8USHZ4FIsDY0VHh7lNy/k1KrPNJFER4tMSv+
+         0342iWsmas8+GKQphwqn2P69H9BKWuu+bOGdBHnwr/owQ42iUrGjviLcyk/RV8592p
+         QN3s0FXhRUHgQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
@@ -35,17 +35,17 @@ Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 04/15] wifi: ath9k: fix printk specifier
-Date:   Fri,  8 Sep 2023 14:19:07 -0400
-Message-Id: <20230908181920.3460520-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 02/10] wifi: ath9k: fix printk specifier
+Date:   Fri,  8 Sep 2023 14:20:36 -0400
+Message-Id: <20230908182046.3460968-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908181920.3460520-1-sashal@kernel.org>
-References: <20230908181920.3460520-1-sashal@kernel.org>
+In-Reply-To: <20230908182046.3460968-1-sashal@kernel.org>
+References: <20230908182046.3460968-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.131
+X-stable-base: Linux 5.4.256
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -79,7 +79,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index cdefb8e2daf14..05fb76a4e144e 100644
+index 63019c3de034d..26023e3b4b9df 100644
 --- a/drivers/net/wireless/ath/ath9k/ahb.c
 +++ b/drivers/net/wireless/ath/ath9k/ahb.c
 @@ -136,8 +136,8 @@ static int ath_ahb_probe(struct platform_device *pdev)
@@ -94,10 +94,10 @@ index cdefb8e2daf14..05fb76a4e144e 100644
  	return 0;
  
 diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index a074e23013c58..f0e3901e8182a 100644
+index 92b2dd396436a..cb3318bd3cad2 100644
 --- a/drivers/net/wireless/ath/ath9k/pci.c
 +++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -988,8 +988,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -993,8 +993,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  	sc->sc_ah->msi_reg = 0;
  
  	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
