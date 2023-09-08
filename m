@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7AEAEEB56A
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:23:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CB14EEB562
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:23:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231907AbjIHSXi (ORCPT
+        id S239865AbjIHSXk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:23:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58650 "EHLO
+        Fri, 8 Sep 2023 14:23:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344577AbjIHSXD (ORCPT
+        with ESMTP id S1344351AbjIHSWC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:23:03 -0400
+        Fri, 8 Sep 2023 14:22:02 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B97A1FE3;
-        Fri,  8 Sep 2023 11:20:10 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FAA1C433CB;
-        Fri,  8 Sep 2023 18:20:09 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 733A4358A;
+        Fri,  8 Sep 2023 11:19:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81BE9C43142;
+        Fri,  8 Sep 2023 18:19:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197210;
+        s=k20201202; t=1694197166;
         bh=Q+IjZG0Tp79KNBmY2MwgESORfBuGdtAgKIZeNd4EABE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HJ5iBklhm+XL+f5zzuZ2fZGNkgmryYUjmK2jnl0pFGu7D1Ne1dokJ6uPphuR2xusT
-         gji0HfNCJzIkz01IPZcZ7dh5S2Ye9tKG0gQISxZP+hcR4h2UmJyfx8RhHIZuBlA/qk
-         8LpxBXxRnI9mzhbVUWmD6bAk3+dtcqNpPnUtOnSP3DVQqGN3mGPou/IdECJF9Wt5/B
-         ws0LZ4wLjLlMdo5OKLyrfaLqAreiCTmKCr1D8p6+UAdOvrvn17CKAyWS8XModZa7LJ
-         5jMvz4S3lau2cNgS53Kftx186KTMA1Qpe8xeEyQvHzKCbnvnFQHvVJCLoSoRZTPK/Z
-         YQg3qgJG9L6Ug==
+        b=deaLQm1B/3zlhlAqHSjxPL7zRC/5c0HxRXcgvuo/OyBi0vWhWPY8gQO5k+cd585q1
+         cI/Fxmj47bGPSUACAPrFMH72QKz30ewOTVhiuMgE9dkzTKxRSQU2N6qKqFTEbCtqDs
+         3e3EohVxIijmQCRmDKQBeMLpU++lQx7t5EJr1ygUsaRpQtvOGg0CHA+JvUr+Yow5v9
+         1hIOSaERgYwqwvNA9MJvuv7h/ON77dsNgnjpDHTfAzYWWxATdmGGaOxArjcJnQFiQa
+         YEgiiP3hkCEGMM54GmK0JanwqSFP9u3+6L/jj0DT57viGND9+QcY5U3VZtzfp7N1Np
+         iGECS9/k/nIcg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
@@ -36,17 +36,17 @@ Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 03/14] wifi: ath9k: fix fortify warnings
-Date:   Fri,  8 Sep 2023 14:19:50 -0400
-Message-Id: <20230908182003.3460721-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 03/15] wifi: ath9k: fix fortify warnings
+Date:   Fri,  8 Sep 2023 14:19:06 -0400
+Message-Id: <20230908181920.3460520-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908182003.3460721-1-sashal@kernel.org>
-References: <20230908182003.3460721-1-sashal@kernel.org>
+In-Reply-To: <20230908181920.3460520-1-sashal@kernel.org>
+References: <20230908181920.3460520-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.194
+X-stable-base: Linux 5.15.131
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
