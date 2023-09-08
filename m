@@ -2,50 +2,49 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 148A5EEB562
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EA91EEB569
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:25:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344425AbjIHSZc (ORCPT
+        id S1344511AbjIHSZd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:25:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44898 "EHLO
+        Fri, 8 Sep 2023 14:25:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242891AbjIHSZM (ORCPT
+        with ESMTP id S234559AbjIHSY5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:25:12 -0400
+        Fri, 8 Sep 2023 14:24:57 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 844354C3F;
-        Fri,  8 Sep 2023 11:22:12 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F395C116B7;
-        Fri,  8 Sep 2023 18:21:46 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A359269E;
+        Fri,  8 Sep 2023 11:21:55 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E713C116B8;
+        Fri,  8 Sep 2023 18:20:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197307;
-        bh=M1SEUboSPYiiB6UY60gtnV2aLHbrgmGINt3ZwQqz7ZQ=;
+        s=k20201202; t=1694197241;
+        bh=ZB1dMqYt7rB/jUqIlA85VIIJd6Me2gmY3dwVUZeJdiE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F23b9N5pv1BeU5L0ik6+jGfZ6m57KDPnFN8epT7kOi/mIUiohNrENHAcnhyPmcOrf
-         dCweQcncmMckUzEnWaPDNhS3exb+0yP+AL5CxV3C7NQir3gv4Lbab9zQJ72EfNCETr
-         wbptpzfe+7a8MdgBpctoL8ZZFWefqV7z8YItwOnTN3mJN9Gynk0VUXbfHxZGJ5ZsEw
-         ssyiw0HRu/z6RPEnwEeQ4gfmrzW6kvWqLl8Lgzl8gJiicbTXqYsHFmJGGe/4S9dOBY
-         +oJ7vt5vLxfFlprploOgm4uayV0/BINkyJCr/vOkExLfHaBmNjVpi86aj+llPXJd/3
-         PScrCV4AzCS4A==
+        b=KJUXt4RKUmm0B5OpFjezqK7TlvUCxCDv2KPhMxfYoCeHrkjlfWfwa0eL1ITjEbVmw
+         M2BJuKio454AxIrJ+6Z2ZxAnwrHj4K0BIT5z4BEUy8YYQu5S/KVRPpTSKXljLxPQPI
+         FF47ig5F5thaZk9wcXc55pwmWfucXY5eW45fsfT44mBL8/FYPI6Z5MIeqFjrtwEYpc
+         QhETQE4DEtlrsF7KvDyM9A34sIOdBMswiZGYNxYim+ahPU3OGfq9YBpGpNYDQ34v73
+         DE4tIe12FlS8CH99kMxQhGmxE5OS51N+gaRqqV4+9qWXCWynytTurgLsEgVEQZile9
+         Fv41KIo9glJeA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+09d1cd2f71e6dd3bfd2c@syzkaller.appspotmail.com,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 7/8] wifi: cfg80211: ocb: don't leave if not joined
-Date:   Fri,  8 Sep 2023 14:21:26 -0400
-Message-Id: <20230908182127.3461199-7-sashal@kernel.org>
+        syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com,
+        Jeff Johnson <quic_jjohnson@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 12/14] wifi: mac80211_hwsim: drop short frames
+Date:   Fri,  8 Sep 2023 14:19:59 -0400
+Message-Id: <20230908182003.3460721-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908182127.3461199-1-sashal@kernel.org>
-References: <20230908182127.3461199-1-sashal@kernel.org>
+In-Reply-To: <20230908182003.3460721-1-sashal@kernel.org>
+References: <20230908182003.3460721-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.14.325
+X-stable-base: Linux 5.10.194
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -53,33 +52,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit abc76cf552e13cfa88a204b362a86b0e08e95228 ]
+[ Upstream commit fba360a047d5eeeb9d4b7c3a9b1c8308980ce9a6 ]
 
-If there's no OCB state, don't ask the driver/mac80211 to
-leave, since that's just confusing. Since set/clear the
-chandef state, that's a simple check.
+While technically some control frames like ACK are shorter and
+end after Address 1, such frames shouldn't be forwarded through
+wmediumd or similar userspace, so require the full 3-address
+header to avoid accessing invalid memory if shorter frames are
+passed in.
 
-Reported-by: syzbot+09d1cd2f71e6dd3bfd2c@syzkaller.appspotmail.com
+Reported-by: syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com
+Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/ocb.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/mac80211_hwsim.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/ocb.c b/net/wireless/ocb.c
-index e64dbf16330c4..73dd44e77a1a3 100644
---- a/net/wireless/ocb.c
-+++ b/net/wireless/ocb.c
-@@ -70,6 +70,9 @@ int __cfg80211_leave_ocb(struct cfg80211_registered_device *rdev,
- 	if (!rdev->ops->leave_ocb)
- 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 255286b2324e2..0d41f172a1dc2 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3619,14 +3619,15 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
+ 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
  
-+	if (!wdev->u.ocb.chandef.chan)
-+		return -ENOTCONN;
++	if (frame_data_len < sizeof(struct ieee80211_hdr_3addr) ||
++	    frame_data_len > IEEE80211_MAX_DATA_LEN)
++		goto err;
 +
- 	err = rdev_leave_ocb(rdev, dev);
- 	if (!err)
- 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
+ 	/* Allocate new skb here */
+ 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
+ 	if (skb == NULL)
+ 		goto err;
+ 
+-	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
+-		goto err;
+-
+ 	/* Copy the data */
+ 	skb_put_data(skb, frame_data, frame_data_len);
+ 
 -- 
 2.40.1
 
