@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11A89EEB567
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:21:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC481EEB562
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236113AbjIHSVH (ORCPT
+        id S235246AbjIHSVT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:21:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41686 "EHLO
+        Fri, 8 Sep 2023 14:21:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230449AbjIHSTw (ORCPT
+        with ESMTP id S1344093AbjIHST4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:19:52 -0400
+        Fri, 8 Sep 2023 14:19:56 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C82F02D4A;
-        Fri,  8 Sep 2023 11:18:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F6CBC433B6;
-        Fri,  8 Sep 2023 18:17:22 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FB072D56;
+        Fri,  8 Sep 2023 11:18:58 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 283AFC433BB;
+        Fri,  8 Sep 2023 18:17:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197044;
-        bh=E+pPLeDr5mS2hebiJNZayqDM920k5RvPk27o+zwDu+Q=;
+        s=k20201202; t=1694197050;
+        bh=TT8QA3sHXmMs7mhUHh3fHuPlrwyc1j5L7ZAZXwAf6VM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mfhTZ+aAtTe/8zTDsxkWVRhJWwBJSVoRv6wj39NdtWl0meWV1SV5jyI2KgP3ulB+1
-         qqhuB9OExTPuh7dFd+7dcbT+RZb5HpvrmmqWeA9ph61lhrI0FYiFTJiqvIqAvIsJob
-         gHN4tMJJp0Vv8BElZVdQPE0StSmQw0UpdacwvwllEKNerU28EeuWMcNJpF0KO4gJ7W
-         4ZEcr8Km2YB9gEuc7crW4AwG3eUrLpwSMmYlh1sdlDQU7AWbAooxpTcabTkpqR4yPb
-         TQl6TemFY1E6/LetjQvQaqd20x+QkjOwWB93pqcKKuEazt3dS9kpUkzlZPxU8vjjds
-         L3pZq822sFs3g==
+        b=aO/O1BYutDKTVWnFrXa5/BVc0Z9p9ev+T9r/Ms8MXzm/ZJMdfxscgyGKYS/g9dQeT
+         lNtfCpbI/x7ek3vJuxm6opcvNy5hptVvKzetLXcfX99AUxZss1aY7/5LYIgM/YySBS
+         +TtjsEKejwH81xxdgJF+2COaxFyVcGFjrlNRVcL/iO+w0+NRQIdq1RGgwNsuLTCcO2
+         JlQ8FlYtxmgVfLt4cDE0qjtJ20ktR3hb/heBexTsCm1y097AuSvmDyZV2IFv/zr9Iz
+         yNw8t/skSAXRJrZPmeJshB900ZIAu9kPwuiUfKJRqwfwuUfQtV5feftfHUTUPRibC5
+         Xb1qBj/UnByVw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com,
+Cc:     Wen Gong <quic_wgong@quicinc.com>,
         Jeff Johnson <quic_jjohnson@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        kvalo@kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.4 34/41] wifi: mac80211_hwsim: drop short frames
-Date:   Fri,  8 Sep 2023 14:15:48 -0400
-Message-Id: <20230908181555.3459640-34-sashal@kernel.org>
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.4 38/41] wifi: ath12k: add check max message length while scanning with extraie
+Date:   Fri,  8 Sep 2023 14:15:52 -0400
+Message-Id: <20230908181555.3459640-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230908181555.3459640-1-sashal@kernel.org>
 References: <20230908181555.3459640-1-sashal@kernel.org>
@@ -50,46 +50,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Wen Gong <quic_wgong@quicinc.com>
 
-[ Upstream commit fba360a047d5eeeb9d4b7c3a9b1c8308980ce9a6 ]
+[ Upstream commit 2f5124e86ae74b7ba24c9ae2644107b750cbf38f ]
 
-While technically some control frames like ACK are shorter and
-end after Address 1, such frames shouldn't be forwarded through
-wmediumd or similar userspace, so require the full 3-address
-header to avoid accessing invalid memory if shorter frames are
-passed in.
+Currently the extraie length is directly used to allocate skb buffer. When
+the length of skb is greater than the max message length which firmware
+supports, error will happen in firmware side.
 
-Reported-by: syzbot+b2645b5bf1512b81fa22@syzkaller.appspotmail.com
+Hence add check for the skb length and drop extraie when overflow and
+print a message.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
 Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20230809081657.13858-1-quic_wgong@quicinc.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath12k/wmi.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index ed5af63025979..6be374f4c9349 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -5617,14 +5617,15 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	frame_data_len = nla_len(info->attrs[HWSIM_ATTR_FRAME]);
- 	frame_data = (void *)nla_data(info->attrs[HWSIM_ATTR_FRAME]);
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index cef01148fc163..6ae09779a68cc 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -2163,12 +2163,6 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 	if (arg->num_bssid)
+ 		len += sizeof(*bssid) * arg->num_bssid;
  
-+	if (frame_data_len < sizeof(struct ieee80211_hdr_3addr) ||
-+	    frame_data_len > IEEE80211_MAX_DATA_LEN)
-+		goto err;
-+
- 	/* Allocate new skb here */
- 	skb = alloc_skb(frame_data_len, GFP_KERNEL);
- 	if (skb == NULL)
- 		goto err;
- 
--	if (frame_data_len > IEEE80211_MAX_DATA_LEN)
--		goto err;
+-	len += TLV_HDR_SIZE;
+-	if (arg->extraie.len)
+-		extraie_len_with_pad =
+-			roundup(arg->extraie.len, sizeof(u32));
+-	len += extraie_len_with_pad;
 -
- 	/* Copy the data */
- 	skb_put_data(skb, frame_data, frame_data_len);
+ 	if (arg->num_hint_bssid)
+ 		len += TLV_HDR_SIZE +
+ 		       arg->num_hint_bssid * sizeof(*hint_bssid);
+@@ -2177,6 +2171,18 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 		len += TLV_HDR_SIZE +
+ 		       arg->num_hint_s_ssid * sizeof(*s_ssid);
+ 
++	len += TLV_HDR_SIZE;
++	if (arg->extraie.len)
++		extraie_len_with_pad =
++			roundup(arg->extraie.len, sizeof(u32));
++	if (extraie_len_with_pad <= (wmi->wmi_ab->max_msg_len[ar->pdev_idx] - len)) {
++		len += extraie_len_with_pad;
++	} else {
++		ath12k_warn(ar->ab, "discard large size %d bytes extraie for scan start\n",
++			    arg->extraie.len);
++		extraie_len_with_pad = 0;
++	}
++
+ 	skb = ath12k_wmi_alloc_skb(wmi->wmi_ab, len);
+ 	if (!skb)
+ 		return -ENOMEM;
+@@ -2266,7 +2272,7 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
+ 	tlv->header = ath12k_wmi_tlv_hdr(WMI_TAG_ARRAY_BYTE, len);
+ 	ptr += TLV_HDR_SIZE;
+ 
+-	if (arg->extraie.len)
++	if (extraie_len_with_pad)
+ 		memcpy(ptr, arg->extraie.ptr,
+ 		       arg->extraie.len);
  
 -- 
 2.40.1
