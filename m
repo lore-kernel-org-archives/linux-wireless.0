@@ -2,43 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC143EEB566
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:20:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35EEAEEB560
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:20:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344031AbjIHSUv (ORCPT
+        id S236287AbjIHSVA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:20:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41360 "EHLO
+        Fri, 8 Sep 2023 14:21:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343999AbjIHST2 (ORCPT
+        with ESMTP id S240504AbjIHSTv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:19:28 -0400
+        Fri, 8 Sep 2023 14:19:51 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 691DD1FFF;
-        Fri,  8 Sep 2023 11:18:49 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34969C4AF5C;
-        Fri,  8 Sep 2023 18:17:11 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4CCB2D41;
+        Fri,  8 Sep 2023 11:18:54 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A223C4AF5E;
+        Fri,  8 Sep 2023 18:17:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694197032;
-        bh=K+87wGbBIG8R/JLnLUmopLiZrnwsNdzcud+lzXhjtJk=;
+        s=k20201202; t=1694197042;
+        bh=pnplm/+s8y0FwPjjHZzVh9XvGP9O9nXGhoDsgPwUWmI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OJbizOngow250WZ/jWpr21wpfEkmRWtUfhJFAMrtJuYjJFc4xvyuP+RSdOQizUm5V
-         y7oQzYuu4tfBoKuPMHXaJ/aMS0LhkEH/egCUQGgw8+DSH+geRJ70nQnQxZw8brd32M
-         oEBZ/wZin6V+bo2qRFiXyCDYtXaCn7g3RaDNiQlGw1Tkq8BzFI39uPpuewSK8xvdWJ
-         EXfbZlIBQ9nuKhtoV4Oga+kK2p8d3JYs4D++NwL4Y83toWek0VT5/gRIT6wZElUN6J
-         ZVGuNgzsYFt15PjFpFO5HHG+KjpeOqJEvBcMvMuZ1sidQAV0kDf5/uC1OH0Phd8Haa
-         4VifXhKalVyvA==
+        b=qZ1HqgOXgb6RRmBT1ruhQfLYGUO8c8tbAvF3co3Sj8KqC4MK+8YM7XiBBV+qiwHzB
+         kgt8qLM5Y/dWNSjU8SagEwl0odaByxLFkKTT5ToBaSehNhVsl5Xku6f3va4ezNvPw1
+         ghZmZ0ml6KkLscVdDf4+aVpKKdeNp/XKL/4TnwgyrYuc3UUDFAkkwp9LfnbYyz53Do
+         c85cgyTncedfiEphQwUeuP0fK5Nuh/GD8Kxn8pRxx4I8YRB4AoHiR5wV7lRjsJhMLh
+         wr+dfsbW2O6b9ArsaVV+KugaS4Gkw4uYbs63WFQoBxfae/CzuBDKVZQ8KjiOrb++GW
+         K9KKoADarI+cw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
-        syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com,
+        syzbot+999fac712d84878a7379@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
         davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
         pabeni@redhat.com, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.4 29/41] wifi: mac80211: check S1G action frame size
-Date:   Fri,  8 Sep 2023 14:15:43 -0400
-Message-Id: <20230908181555.3459640-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.4 33/41] wifi: mac80211: check for station first in client probe
+Date:   Fri,  8 Sep 2023 14:15:47 -0400
+Message-Id: <20230908181555.3459640-33-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230908181555.3459640-1-sashal@kernel.org>
 References: <20230908181555.3459640-1-sashal@kernel.org>
@@ -53,33 +53,55 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 19e4a47ee74718a22e963e8a647c8c3bfe8bb05c ]
+[ Upstream commit 67dfa589aa8806c7959cbca2f4613b8d41c75a06 ]
 
-Before checking the action code, check that it even
-exists in the frame.
+When probing a client, first check if we have it, and then
+check for the channel context, otherwise you can trigger
+the warning there easily by probing when the AP isn't even
+started yet. Since a client existing means the AP is also
+operating, we can then keep the warning.
 
-Reported-by: syzbot+be9c824e6f269d608288@syzkaller.appspotmail.com
+Also simplify the moved code a bit.
+
+Reported-by: syzbot+999fac712d84878a7379@syzkaller.appspotmail.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/cfg.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fc6e130364da1..8580caa470d6d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3713,6 +3713,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 			break;
- 		goto queue;
- 	case WLAN_CATEGORY_S1G:
-+		if (len < offsetofend(typeof(*mgmt),
-+				      u.action.u.s1g.action_code))
-+			break;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f2d08dbccfb7d..5360876e6541a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -4128,19 +4128,20 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ 	mutex_lock(&local->mtx);
+ 
+ 	rcu_read_lock();
++	sta = sta_info_get_bss(sdata, peer);
++	if (!sta) {
++		ret = -ENOLINK;
++		goto unlock;
++	}
 +
- 		switch (mgmt->u.action.u.s1g.action_code) {
- 		case WLAN_S1G_TWT_SETUP:
- 		case WLAN_S1G_TWT_TEARDOWN:
++	qos = sta->sta.wme;
++
+ 	chanctx_conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
+ 	if (WARN_ON(!chanctx_conf)) {
+ 		ret = -EINVAL;
+ 		goto unlock;
+ 	}
+ 	band = chanctx_conf->def.chan->band;
+-	sta = sta_info_get_bss(sdata, peer);
+-	if (sta) {
+-		qos = sta->sta.wme;
+-	} else {
+-		ret = -ENOLINK;
+-		goto unlock;
+-	}
+ 
+ 	if (qos) {
+ 		fc = cpu_to_le16(IEEE80211_FTYPE_DATA |
 -- 
 2.40.1
 
