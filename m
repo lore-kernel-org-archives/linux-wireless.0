@@ -2,42 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D28F3EEB56A
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D8AFEEB567
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:18:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343749AbjIHSRh (ORCPT
+        id S1343824AbjIHSSF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:17:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52268 "EHLO
+        Fri, 8 Sep 2023 14:18:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343731AbjIHSR0 (ORCPT
+        with ESMTP id S1343899AbjIHSR5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:17:26 -0400
+        Fri, 8 Sep 2023 14:17:57 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADA8F211D;
-        Fri,  8 Sep 2023 11:17:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5AB7C4160E;
-        Fri,  8 Sep 2023 18:14:15 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A76B82101;
+        Fri,  8 Sep 2023 11:17:26 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D1A8C116B9;
+        Fri,  8 Sep 2023 18:15:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694196857;
-        bh=C/oZWkbGa1eucFDmpYfjnG4KHf6jX8KutakSwJRZLDU=;
+        s=k20201202; t=1694196906;
+        bh=2X9oBDQXOi1jWu1cYSLv33GlMJqWE5MwYaLjhX1AWh8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ciVSDDfWE2BV+DVuIv4VCiy+CIbtAFAHZl1HNxVx774/N251D5wMeVnWZhF+Au8CN
-         x1c/aLdfNaauys2W0XYF8cioKWVnH/AzJ5LoI0ifIVjCUYy0EwEftcToc7jWy0UdTK
-         LmmO+TPEMbkNJcnYyZDTJfMKQtpPpD3HJE/99wDvuFDinDxdbjWNYQJsvwJdtIB2X0
-         6FI9sn1MgjigB0Hkzh4G2E4QAl+MSV7RbnRFLbgrI9lQx6YQh7K13Vi71erbVPwTE3
-         ETrgtjwITwIutR68Fb9tsomn5EjuHzJF8ylDgllX1x/zc1iQnBr7TMo2VuZpbVHhqQ
-         h3uodLzILPGxA==
+        b=I+JFmctjkMY2dMlqw+JfTWa+4rZO0FVS8GO2i97itQdkIK5/fPNrbiChpvU03uOAJ
+         uG3e4nlKYwa5t/1lwRcqpJiLo4X0zxwRizQ2mgcAh/BfdS3O62Q+yo8BwFZ4b+5yEV
+         uP1VOtya5GAJsuwOApl1YDN1VJ1yGNLwBbPsVoPi/Yylmu7PHroCthwC7iv5KU8dj8
+         Wo09o6Kq/kSbqV7L2R1JWlTUlhyXv0FauWGeW4pkNDr0F+5CUG6L/Ba8U+BVTVyfEI
+         7cg5E6A/dwnbfKHyld5mAtS9EZatGAI8JDuRz3Lz0ENOs4zBEZyRWsWrFZTZNRkenX
+         11H/5aM2cSrBA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <quic_wgong@quicinc.com>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        quic_jjohnson@quicinc.com, ath12k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 17/45] wifi: ath12k: avoid array overflow of hw mode for preferred_hw_mode
-Date:   Fri,  8 Sep 2023 14:12:58 -0400
-Message-Id: <20230908181327.3459042-17-sashal@kernel.org>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+2676771ed06a6df166ad@syzkaller.appspotmail.com,
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 34/45] wifi: cfg80211: reject auth/assoc to AP with our address
+Date:   Fri,  8 Sep 2023 14:13:15 -0400
+Message-Id: <20230908181327.3459042-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230908181327.3459042-1-sashal@kernel.org>
 References: <20230908181327.3459042-1-sashal@kernel.org>
@@ -50,59 +51,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <quic_wgong@quicinc.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 1e9b1363e2de1552ee4e3d74ac8bb43a194f1cb4 ]
+[ Upstream commit 5d4e04bf3a0f098bd9033de3a5291810fa14c7a6 ]
 
-Currently ath12k define WMI_HOST_HW_MODE_DBS_OR_SBS=5 as max hw mode
-for enum wmi_host_hw_mode_config_type, it is also same for the array
-ath12k_hw_mode_pri_map.
+If the AP uses our own address as its MLD address or BSSID, then
+clearly something's wrong. Reject such connections so we don't
+try and fail later.
 
-When tested with new version firmware/board data which support new
-hw mode eMLSR mode with hw mode value 8, it leads overflow usage for
-array ath12k_hw_mode_pri_map in function ath12k_wmi_hw_mode_caps(),
-and then lead preferred_hw_mode changed to 8, and finally function
-ath12k_pull_mac_phy_cap_svc_ready_ext() select the capability of hw
-mode 8, but the capability of eMLSR mode report from firmware does
-not support 2.4 GHz band for WCN7850, so finally 2.4 GHz band is
-disabled.
-
-Skip the hw mode which exceeds WMI_HOST_HW_MODE_MAX in function
-ath12k_wmi_hw_mode_caps() helps to avoid array overflow, then the 2.4
-GHz band will not be disabled.
-
-This is to keep compatibility with newer version firmware/board data
-files, this change is still needed after ath12k add eMLSR hw mode 8 in
-array ath12k_hw_mode_pri_map and enum wmi_host_hw_mode_config_type,
-because more hw mode maybe added in next firmware/board data version
-e.g hw mode 9, then it will also lead new array overflow without this
-change.
-
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
-
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230714072405.28705-1-quic_wgong@quicinc.com
+Reported-by: syzbot+2676771ed06a6df166ad@syzkaller.appspotmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath12k/wmi.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/wireless/mlme.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 4928e4e916603..4f378f06e946e 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -3704,6 +3704,10 @@ static int ath12k_wmi_hw_mode_caps(struct ath12k_base *soc,
- 	for (i = 0 ; i < svc_rdy_ext->n_hw_mode_caps; i++) {
- 		hw_mode_caps = &svc_rdy_ext->hw_mode_caps[i];
- 		mode = le32_to_cpu(hw_mode_caps->hw_mode_id);
-+
-+		if (mode >= WMI_HOST_HW_MODE_MAX)
-+			continue;
-+
- 		pref = soc->wmi_ab.preferred_hw_mode;
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index ac059cefbeb39..775cac4d61006 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -281,6 +281,11 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	    ether_addr_equal(req->bss->bssid, wdev->u.client.connected_addr))
+ 		return -EALREADY;
  
- 		if (ath12k_hw_mode_pri_map[mode] < ath12k_hw_mode_pri_map[pref]) {
++	if (ether_addr_equal(req->bss->bssid, dev->dev_addr) ||
++	    (req->link_id >= 0 &&
++	     ether_addr_equal(req->ap_mld_addr, dev->dev_addr)))
++		return -EINVAL;
++
+ 	return rdev_auth(rdev, dev, req);
+ }
+ 
+@@ -335,6 +340,9 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			if (req->links[i].bss == req->links[j].bss)
+ 				return -EINVAL;
+ 		}
++
++		if (ether_addr_equal(req->links[i].bss->bssid, dev->dev_addr))
++			return -EINVAL;
+ 	}
+ 
+ 	if (wdev->connected &&
+@@ -342,6 +350,11 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	     !ether_addr_equal(wdev->u.client.connected_addr, req->prev_bssid)))
+ 		return -EALREADY;
+ 
++	if ((req->bss && ether_addr_equal(req->bss->bssid, dev->dev_addr)) ||
++	    (req->link_id >= 0 &&
++	     ether_addr_equal(req->ap_mld_addr, dev->dev_addr)))
++		return -EINVAL;
++
+ 	cfg80211_oper_and_ht_capa(&req->ht_capa_mask,
+ 				  rdev->wiphy.ht_capa_mod_mask);
+ 	cfg80211_oper_and_vht_capa(&req->vht_capa_mask,
 -- 
 2.40.1
 
