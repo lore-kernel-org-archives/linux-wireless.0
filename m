@@ -2,120 +2,111 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34B51EEB566
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:18:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81010EEB566
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Sep 2023 18:19:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231223AbjIHSSr (ORCPT
+        id S236430AbjIHSTM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Sep 2023 14:18:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51390 "EHLO
+        Fri, 8 Sep 2023 14:19:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbjIHSSM (ORCPT
+        with ESMTP id S1344044AbjIHSSe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Sep 2023 14:18:12 -0400
+        Fri, 8 Sep 2023 14:18:34 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC91F2698;
-        Fri,  8 Sep 2023 11:17:48 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D9CFC4AF71;
-        Fri,  8 Sep 2023 18:15:18 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18A5A2111;
+        Fri,  8 Sep 2023 11:18:04 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B763C116CA;
+        Fri,  8 Sep 2023 18:16:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694196919;
-        bh=fgJvrhA5A3Tj86ogQKw8SdFO9Ll2VqiaH0pnRYkvACk=;
+        s=k20201202; t=1694196968;
+        bh=9/PnDo7PI+SMCeuDLvQ08bsQaRciDUxuttuBzW6Z/z8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hmaiftdRNhqNRTu9hPfiF7rqrDXvjppq2pcHnytsSjHLbrf8kxekSzzzTn8mguzkx
-         g/aTgwXcRIMFDjX5eKEmZo02vl2abwAgEGM9E+F+U8+rvyyQv97LxKAVZI6h2KFWlO
-         8EVHJ8Mi0lcrvlql2bTF7Ft3M5ITk32Pw/20GyuLMtlteVTegi+jUGkABdtrEfmhnN
-         Ynb9hw6jyHOe4rmYm8+oCttqxAjVgfkAUnVihVWOlmt/hoC3U2bZclw71s9r0WuYcc
-         gaxZfPAIxD3GZElboBdMy9Slk7ps2S/vHFV8anVN0dMHA60ywK17N+aJoh43Fwhjek
-         tcrQ/MUk1KxTw==
+        b=sk+Gp5OU/4e0PSAG3KXFH6xdfZzN93rs23C8mwPKmDZaUyXwYc0pnFp44e0Jw6lMe
+         FWAAuThuutOAoS2Epnq/8DSiuf3R+KAWYGOUIByXbrSEINi2gbTP8kMs86NRTk98aw
+         9YOd2F5mYfugHig/yosJdssbbfbz+cnLueBUNiVyVKem0aCXvHTT4E6pgrbbBTDuhf
+         PSu8qkuggWCvAyhrhkBYBOQaklazjg8nlpvaBucSCFvyuNX0MkGWzky9KDK1iR5Wbe
+         lGAFSA7mMxPs/a7tpJaT/v+rnr+3fvMRr4+VIR5VTbqUBL4CpTWSrbCQA08tmHT/jq
+         B9f7r/3oqY1ig==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <quic_wgong@quicinc.com>,
-        Jeff Johnson <quic_jjohnson@quicinc.com>,
+Cc:     Dongliang Mu <dzm91@hust.edu.cn>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
         Kalle Valo <quic_kvalo@quicinc.com>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 42/45] wifi: ath12k: add check max message length while scanning with extraie
-Date:   Fri,  8 Sep 2023 14:13:23 -0400
-Message-Id: <20230908181327.3459042-42-sashal@kernel.org>
+        linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.4 06/41] wifi: ath9k: fix printk specifier
+Date:   Fri,  8 Sep 2023 14:15:20 -0400
+Message-Id: <20230908181555.3459640-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230908181327.3459042-1-sashal@kernel.org>
-References: <20230908181327.3459042-1-sashal@kernel.org>
+In-Reply-To: <20230908181555.3459640-1-sashal@kernel.org>
+References: <20230908181555.3459640-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.5.2
+X-stable-base: Linux 6.4.15
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <quic_wgong@quicinc.com>
+From: Dongliang Mu <dzm91@hust.edu.cn>
 
-[ Upstream commit 2f5124e86ae74b7ba24c9ae2644107b750cbf38f ]
+[ Upstream commit 061115fbfb2ce5870c9a004d68dc63138c07c782 ]
 
-Currently the extraie length is directly used to allocate skb buffer. When
-the length of skb is greater than the max message length which firmware
-supports, error will happen in firmware side.
+Smatch reports:
 
-Hence add check for the skb length and drop extraie when overflow and
-print a message.
+ath_pci_probe() warn: argument 4 to %lx specifier is cast from pointer
+ath_ahb_probe() warn: argument 4 to %lx specifier is cast from pointer
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+Fix it by modifying %lx to %p in the printk format string.
 
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Note that with this change, the pointer address will be printed as a
+hashed value by default. This is appropriate because the kernel
+should not leak kernel pointers to user space in an informational
+message. If someone wants to see the real address for debugging
+purposes, this can be achieved with the no_hash_pointers kernel option.
+
+Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
+Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230809081657.13858-1-quic_wgong@quicinc.com
+Link: https://lore.kernel.org/r/20230723040403.296723-1-dzm91@hust.edu.cn
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath12k/wmi.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/ahb.c | 4 ++--
+ drivers/net/wireless/ath/ath9k/pci.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 4f378f06e946e..eebc5a65ce3b4 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -2162,12 +2162,6 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
- 	if (arg->num_bssid)
- 		len += sizeof(*bssid) * arg->num_bssid;
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 9cd12b20b18d8..9bfaadfa6c009 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -132,8 +132,8 @@ static int ath_ahb_probe(struct platform_device *pdev)
  
--	len += TLV_HDR_SIZE;
--	if (arg->extraie.len)
--		extraie_len_with_pad =
--			roundup(arg->extraie.len, sizeof(u32));
--	len += extraie_len_with_pad;
--
- 	if (arg->num_hint_bssid)
- 		len += TLV_HDR_SIZE +
- 		       arg->num_hint_bssid * sizeof(*hint_bssid);
-@@ -2176,6 +2170,18 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
- 		len += TLV_HDR_SIZE +
- 		       arg->num_hint_s_ssid * sizeof(*s_ssid);
+ 	ah = sc->sc_ah;
+ 	ath9k_hw_name(ah, hw_name, sizeof(hw_name));
+-	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
+-		   hw_name, (unsigned long)mem, irq);
++	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
++		   hw_name, mem, irq);
  
-+	len += TLV_HDR_SIZE;
-+	if (arg->extraie.len)
-+		extraie_len_with_pad =
-+			roundup(arg->extraie.len, sizeof(u32));
-+	if (extraie_len_with_pad <= (wmi->wmi_ab->max_msg_len[ar->pdev_idx] - len)) {
-+		len += extraie_len_with_pad;
-+	} else {
-+		ath12k_warn(ar->ab, "discard large size %d bytes extraie for scan start\n",
-+			    arg->extraie.len);
-+		extraie_len_with_pad = 0;
-+	}
-+
- 	skb = ath12k_wmi_alloc_skb(wmi->wmi_ab, len);
- 	if (!skb)
- 		return -ENOMEM;
-@@ -2265,7 +2271,7 @@ int ath12k_wmi_send_scan_start_cmd(struct ath12k *ar,
- 	tlv->header = ath12k_wmi_tlv_hdr(WMI_TAG_ARRAY_BYTE, len);
- 	ptr += TLV_HDR_SIZE;
+ 	return 0;
  
--	if (arg->extraie.len)
-+	if (extraie_len_with_pad)
- 		memcpy(ptr, arg->extraie.ptr,
- 		       arg->extraie.len);
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index a09f9d223f3de..0633589b85c23 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -988,8 +988,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc->sc_ah->msi_reg = 0;
+ 
+ 	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
+-	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
+-		   hw_name, (unsigned long)sc->mem, pdev->irq);
++	wiphy_info(hw->wiphy, "%s mem=0x%p, irq=%d\n",
++		   hw_name, sc->mem, pdev->irq);
+ 
+ 	return 0;
  
 -- 
 2.40.1
