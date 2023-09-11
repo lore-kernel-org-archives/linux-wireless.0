@@ -2,57 +2,78 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9512CCA0ECF
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 21:49:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD51CA0EC7
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 21:49:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352212AbjIKVsr (ORCPT
+        id S1352272AbjIKVsw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:48:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56286 "EHLO
+        Mon, 11 Sep 2023 17:48:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243497AbjIKRPS (ORCPT
+        with ESMTP id S237992AbjIKN3m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Sep 2023 13:15:18 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C27EA1A5;
-        Mon, 11 Sep 2023 10:15:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=BBKvXKjeaGA7kn1aOjVgRF8wd8T1PFljhKLxO10gIy8=; t=1694452513; x=1695662113; 
-        b=x5C8iKzBd3EsXWrFasHyndcCOeEqe/JOMRx8ucPQ0hWnVOWlroE8ylwtZrbOzHLIEz5FFdLbmrE
-        /eHOE/ryxK+laNV9G5f7Fl2IzG3qEQzd+4O7Ch4tvtB21G6y5OUigOMISRXNUjzyc7kB3QMx9G28f
-        8gvfa/Tr0xlPayeZciRRY3f9DvCv6psOCRu4a6eV2Z2QSRZMTRgEFHmbmmsAufdHZypcj7ZAEYwMp
-        F17Z8Aw/nLXvw9/pAA/BRH8TmXzsDo08A77HTLG5WvYSNOQpRw8Lbo97BKYYe/WrV30C2M243d1NJ
-        TmB7V5g6YygultQO9KciwF2rX8PqtSLYpg8Q==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qfkVC-00Ap5W-1V;
-        Mon, 11 Sep 2023 19:15:10 +0200
-Message-ID: <c32b6478afb2507ed9247f8b206f5d7c57f46ba4.camel@sipsolutions.net>
-Subject: heads-up: wireless/wireless-next merge conflict
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     linux-next@vger.kernel.org, linux-wireless@vger.kernel.org
-Date:   Mon, 11 Sep 2023 19:15:09 +0200
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        Mon, 11 Sep 2023 09:29:42 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BDE612A;
+        Mon, 11 Sep 2023 06:29:38 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qfgyt-0006dJ-My; Mon, 11 Sep 2023 15:29:35 +0200
+Message-ID: <c7e70f54-9696-4b39-aa17-576987ffce85@leemhuis.info>
+Date:   Mon, 11 Sep 2023 15:29:35 +0200
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+User-Agent: Mozilla Thunderbird
+Subject: Re: Fwd: 5c8a79e8e12b ("wifi: rtw88: correct PS calculation for
+ SUPPORTS_DYNAMIC_PS", 2023-05-27) increases CPU usage usage for irq
+Content-Language: en-US, de-DE
+To:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Brett Hassall <brett.hassall@gmail.com>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Wireless <linux-wireless@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>
+References: <5a7f2a6e-46a4-a5c8-fe6a-c2581496b5cd@gmail.com>
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <5a7f2a6e-46a4-a5c8-fe6a-c2581496b5cd@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1694438978;814be900;
+X-HE-SMSGID: 1qfgyt-0006dJ-My
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On 27.08.23 04:37, Bagas Sanjaya wrote:
+> 
+> I notice a regression report on Bugzilla [1]. Quoting from it:
+> 
+>> This commit improves power saving - it enables the kernel to
+>> achieve package C8. To achieve package C8, 3 Ubuntu VMD commits
+>> must be applied as well. [...]
 
-FYI, there's a merge conflict in wireless vs. wireless-next coming.
+To me that sounds like there is no upstream problem, hence this
+shouldn't be tracked as a regression. Please correct me if I'm wrong.
 
-I've pushed a resolution to wireless-next/merge-2023-09-11 for you to
-use if you like, it's non-trivial due to major locking rework in
-wireless-next.
+> #regzbot introduced: 26a125f550a3bf
+> https://bugzilla.kernel.org/show_bug.cgi?id=217828 #regzbot title:
+> correcting SUPPORTS_DYNAMIC_PS calculation for rtw88 increases CPU
+> utilization #regzbot link:
+> https://bugs.launchpad.net/ubuntu/+source/linux-hwe-6.2/+bug/2025040
+> 
+> Thanks.
+> 
+> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=217828
 
-johannes
+#regzbot resolved: invalid: seems to only be a problem with a patched kernel
+#regzbot ignore-activity
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
+
+
