@@ -2,68 +2,132 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF3D7CA0EC3
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 21:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C26DCA0EC9
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 21:49:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235924AbjIKVs5 (ORCPT
+        id S235903AbjIKVtD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:48:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56538 "EHLO
+        Mon, 11 Sep 2023 17:49:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242828AbjIKQXe (ORCPT
+        with ESMTP id S237346AbjIKMl3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Sep 2023 12:23:34 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.73])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6595ECCA
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2023 09:23:29 -0700 (PDT)
-Received: from [192.168.151.20] ([217.224.116.76]) by mrelayeu.kundenserver.de
- (mreue109 [212.227.15.183]) with ESMTPSA (Nemesis) id
- 1MWRZt-1q7v733c43-00XqTb; Mon, 11 Sep 2023 18:23:22 +0200
-Message-ID: <e1dd75d4-a7f5-6aa1-556e-1d288e46c55b@online.de>
-Date:   Mon, 11 Sep 2023 18:23:22 +0200
+        Mon, 11 Sep 2023 08:41:29 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CA28CEB;
+        Mon, 11 Sep 2023 05:41:25 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id 5b1f17b1804b1-401b5516104so46739385e9.2;
+        Mon, 11 Sep 2023 05:41:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1694436083; x=1695040883; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ac6H1Uz2Vd0TNGk9X+Ey+nGUJRUHGmDNDKA1cgLsa3Y=;
+        b=fgB8h4GxDhKJrsMU95fzNmTmYSiaWI2+JvK4PRWEoKpK9QwVwTo8gvlWj0MZzoixLh
+         cLa7iCKvajueMfCvpxlO/bkPBXXyXLEYiXblQUDKhbshjDCFr8FhqKGALvmXSCvBSMb/
+         yY2kpLVtmlGDFh5nC40C5KEs1mKNtLAbWwksHl3BZ/At71nwOnoh8Z1hFnF5WrYjzOpL
+         WPQsUep/roX1DroM0iazDTV3Thpml6N9f+0LIvtAuQQe8PlolwVaCi8ehquxVb0Axnj6
+         s98wasXaNBN+1fv6bywvaFk0eCrSNSSeIymOAIqoI3KvoByUsa90tfLboQ9JSnLqigTU
+         FT6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694436083; x=1695040883;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ac6H1Uz2Vd0TNGk9X+Ey+nGUJRUHGmDNDKA1cgLsa3Y=;
+        b=lGyLCqNDN0NUW59+eBGr8I3MoYSdNkyJGhD3OKSR8od5ENAx01NM00HyeXv8MgSHMj
+         DvNvcC6lGRZfK3vGL/KnoDnSzS5+H576IjvhKbb0BXXiFdJseTgebbl7vpidDjkITXal
+         gRkACzsMM99RHs+5VpQGNr8uLQ+CT3PwnoVyiPiyf1HGCcvSttzi/qI2sszADNCtWGpp
+         f/H5zk+hxWLQiYhDzpESzbqr8fgAkK6fA9gy0QFTMz8hcqBA0s31WlQ6RKNQueyj4bx7
+         AKVsukTRRdaRkM85Z5srB8TPs5iZ86YQFG4ace7UGM08w4VZfGQOd4/zK2L9TywXI41z
+         q8rQ==
+X-Gm-Message-State: AOJu0YygyJIXIu7vas4zpp9geiD/2zHNCRTvrvHTc573rQ8u7tc81mb8
+        8VWLJiJF1vPqanciM+fVyLkIMxV46ss=
+X-Google-Smtp-Source: AGHT+IHesgaYH5Wp7Jtmc0soZ1/OuIXyuMQEnobV7N+fv26TvJPsrXUuihJylYXx2+lv7LyISv3MSA==
+X-Received: by 2002:a05:600c:2482:b0:3fe:d6bf:f314 with SMTP id 2-20020a05600c248200b003fed6bff314mr8003301wms.39.1694436083361;
+        Mon, 11 Sep 2023 05:41:23 -0700 (PDT)
+Received: from [192.168.1.50] ([79.119.240.161])
+        by smtp.gmail.com with ESMTPSA id p13-20020a05600c204d00b00402d7105035sm13040202wmg.26.2023.09.11.05.41.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 11 Sep 2023 05:41:22 -0700 (PDT)
+Message-ID: <2984eff5-528e-4a27-bfa0-502210d84b79@gmail.com>
+Date:   Mon, 11 Sep 2023 15:41:21 +0300
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-From:   Max Schulze <max.schulze@online.de>
-Subject: Re: [RFC PATCH v4 6.1] wifi: cfg80211: fix cqm_config access race
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-References: <ac96309a-8d8d-4435-36e6-6d152eb31876@online.de>
- <20230816153803.b53dd297eacc.I1a1bb102329fc88e4712eaf394cba3025ada0dc7@changeid>
+User-Agent: Mozilla Thunderbird
+From:   Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: Re: [PATCH] wifi: rtl8xxxu: fix LED control code of RTL8192FU
+To:     Zenm Chen <zenmchen@gmail.com>, Jes.Sorensen@gmail.com
+Cc:     kvalo@kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, pkshih@realtek.com
+References: <20230910002038.56362-1-zenmchen@gmail.com>
 Content-Language: en-US
-In-Reply-To: <20230816153803.b53dd297eacc.I1a1bb102329fc88e4712eaf394cba3025ada0dc7@changeid>
+In-Reply-To: <20230910002038.56362-1-zenmchen@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:lEpyrNpzpO0YErxdKTxgaB7e0m8m+Bjqq21ndAd6xSzWcbK3jEH
- MLJz50aHyI4L50AFyR38xUTHQnUXOeZOHTu4CpUQRE7kn+5gDUu6DUWRHZZESZSY7d/pqdG
- e0MCGfnwpGOCfQaGxtAQJ8v9AP9ldfEo6em68LgMwMqZFDkaF2HT7zT27bMnPQ8ZGgxoNfr
- BVfuAFphtzQJOxXKYieRg==
-UI-OutboundReport: notjunk:1;M01:P0:OGPp+lkkUB4=;WzflhvCPTUp2i5r9AgC840858X3
- qHZrZ+bYDrPC2dYwHa/iQcuxN8GZraQBDEpmtscyvZ9aswiWOYDEpXJM7bUp3NK55mS50QBya
- skgh04Ee6H0nH2FnlDz3yUWYhSsSkwj145KyZUC6by8qdmoLSuzUFq+BnUIedY65CodOoXme5
- e0Vb7twMdibA+F/pF5PKVGBhcMAv6R/vm0xkSKAckhSfeFNAeqq2MW82p5SWEPyd/rnC+klyr
- OX8op4cXb6PBHKBpbytX2aZtGdkowZv2p5IF09gXbeVXETMrvlIF/364hkY4pGgZD5kpv3qQb
- NncZckqqccAt3y2+UiDiu33Yd/PxmiJs3+BGxwGcsBtKD7+EBNphmXue8dE9i5Ruiohith8ue
- m111e8qJYEa0KW/IujuyRaj65TJvWTsknsMXjuzWZSnLWNrWUzRLk6AJB3+crPkH8pTlzF3VA
- ch6l819HH4+8ZKpBk9vOtVJCRproyvdPEh0a6QKQ6n7A+ntOj1TcjTienkQwZRT1Xqv69pV9b
- Q7rnAM3sFErH7C7qK4MCjN9iHLzGbsM89FwR+vKnMtNwQZ9Nr5casCY/nt2U8VO9aGJ0IMtXr
- QQcaQ1jxsNyYHKQQ2UKbwqGpuFnM6qGEgc840qkL5Nzi3ZkrMhcEea79nDDA5gGXdAFDi1d9c
- JmT7XewYHQZdR3kwHfFvDb0mGQ0Dmjk6AhnMoCyAbetKWjtJEE82QAccJ+GecypELG63NjcF9
- uVmxwVZPWjzCWZrXIu5yaojVydSXOkGby5lY7ACCA2chTM+uitJzbHYWsMr2mhOR8eAe3bGwz
- YnDZl7b+wPjA4nENfjQMX5anVoQVuoyIxD4ZX2s+gOaqeb53M9Z5wVigkZ4OTEgBMmCrZXJkW
- nPLJvIjLOAGRK2VnumsprRW+Zamvy5+hg79w=
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This has been running for two weeks on multiple systems.
-It fixes the bug and does not show any other effects.
+On 10/09/2023 03:20, Zenm Chen wrote:
+> ASUS USB-N13 C1 is a wifi adapter based on a RTL8192FU chip and its LED
+> doesn't blink with the rtl8xxxu driver. This patch fix this via writing
+> the correct value to the register "REG_LEDCFG0".
+> 
+> This was tested with these two wifi adapters:
+> ASUS USB-N13 C1	(vid=0x0b05, pid=0x18f1, rfe_type=0x1)
+> MERCURY MW310UH	(vid=0x0bda, pid=0xf192, rfe_type=0x5)
+> 
+> Signed-off-by: Zenm Chen <zenmchen@gmail.com>
+> ---
+>  .../realtek/rtl8xxxu/rtl8xxxu_8192f.c         | 24 ++++++++-----------
+>  1 file changed, 10 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192f.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192f.c
+> index 28e93835e05a..ab6d4e4e228e 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192f.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192f.c
+> @@ -2014,26 +2014,22 @@ static int rtl8192fu_led_brightness_set(struct led_classdev *led_cdev,
+>  	struct rtl8xxxu_priv *priv = container_of(led_cdev,
+>  						  struct rtl8xxxu_priv,
+>  						  led_cdev);
+> -	u16 ledcfg;
+> +	u32 ledcfg;
+>  
+>  	/* Values obtained by observing the USB traffic from the Windows driver. */
+>  	rtl8xxxu_write32(priv, REG_SW_GPIO_SHARE_CTRL_0, 0x20080);
+>  	rtl8xxxu_write32(priv, REG_SW_GPIO_SHARE_CTRL_1, 0x1b0000);
+>  
+> -	ledcfg = rtl8xxxu_read16(priv, REG_LEDCFG0);
+> -
+> -	if (brightness == LED_OFF) {
+> -		/* Value obtained like above. */
+> -		ledcfg = BIT(1) | BIT(7);
+> -	} else if (brightness == LED_ON) {
+> -		/* Value obtained like above. */
+> -		ledcfg = BIT(1) | BIT(7) | BIT(11);
+> -	} else if (brightness == RTL8XXXU_HW_LED_CONTROL) {
+> -		/* Value obtained by brute force. */
+> -		ledcfg = BIT(8) | BIT(9);
+> -	}
+> +	/* Enable LED0 GPIO and turn LED0/LED1 off. */
+> +	ledcfg = (rtl8xxxu_read32(priv, REG_LEDCFG0) | BIT(21)) & ~0xffff;
+> +
+> +	/* Values obtained by brute force. */
+> +	if (brightness == LED_ON)
+> +		ledcfg |= BIT(3) | BIT(11);
 
-So, offering a
+Can you explain in the commit message why you changed the
+LED_ON and LED_OFF branches? It's not obvious to me and they
+don't have anything to do with the hardware-controlled blinking.
 
-Tested-by: Max Schulze <max.schulze@online.de>
+> +	else if (brightness == RTL8XXXU_HW_LED_CONTROL)
+> +		ledcfg |= BIT(0) | BIT(1) | BIT(8) | BIT(9);
+>  
+> -	rtl8xxxu_write16(priv, REG_LEDCFG0, ledcfg);
+> +	rtl8xxxu_write32(priv, REG_LEDCFG0, ledcfg);
+>  
+>  	return 0;
+>  }
 
-
-Thanks!
-
+My Comfast CF-826F still works fine with this patch.
