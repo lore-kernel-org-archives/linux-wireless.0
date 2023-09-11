@@ -2,232 +2,92 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FEDCA0EC3
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Sep 2023 02:24:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D249ECA0EC6
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Sep 2023 02:56:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229958AbjILCYq (ORCPT
+        id S240609AbjILC4b (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Sep 2023 22:24:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32812 "EHLO
+        Mon, 11 Sep 2023 22:56:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237685AbjILCYe (ORCPT
+        with ESMTP id S240554AbjILC4T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Sep 2023 22:24:34 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88B8A11BA4B
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2023 18:48:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694483303; x=1726019303;
-  h=date:from:to:cc:subject:message-id;
-  bh=ZydBq2MFq/6KDDncgYHx6McUm4s5Ilwmm4tLqc9w918=;
-  b=LxzEgNfz77O5NAy+/pVyT7f9UHcv3LHwzAjm9UzarqgOnU27ERjiARIc
-   gLDynNxbkS9QlOe37q6EkSCCk0Rhmnr1ybUd97Udg9zBWH6i9rnene1IE
-   CPvF+z8+xLKIe/R1H1ptIFxYAH0L8yJm4vvNax6YmhQaIPnb8Kzxc+w5O
-   NijPhjDjX5b4ubrdkfArD8iHmraWWVDcUyuWbc7QdiGeLxSkKv7/OEscE
-   CEBGkR47sZCYbYE/HNLZZRZt7as2nIwgUgFxJjQrkRDE4OIBrYa+Mmzie
-   KnXl8S9Iic55jWHRg5aL/n2P0bH9bC45lBL0cK256Hk6LmlvGL5xhbyXY
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="409209027"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="409209027"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 18:48:22 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="833717639"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="833717639"
-Received: from lkp-server01.sh.intel.com (HELO 59b3c6e06877) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 11 Sep 2023 18:48:07 -0700
-Received: from kbuild by 59b3c6e06877 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qfsVZ-000763-0q;
-        Tue, 12 Sep 2023 01:48:05 +0000
-Date:   Tue, 12 Sep 2023 09:47:37 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [wireless-next:main] BUILD SUCCESS
- 2cf254c1e24fa8f01f42f5a8c77617e56bf50b86
-Message-ID: <202309120935.NMaKRvKa-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        Mon, 11 Sep 2023 22:56:19 -0400
+Received: from mx0a-0031df01.pphosted.com (unknown [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58F63F90E4
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2023 16:23:22 -0700 (PDT)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38BJjQK1009182;
+        Mon, 11 Sep 2023 20:53:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=OdOliK3ijmeYVY1mgK5ERQFzsbaWLhI1jKj6P3LDLmA=;
+ b=YdfjZP2XS226mkmlStTLCaJt2MhqDNhomCGkX9gd8FEpQFjFNRdgXCKe6gmfyM/NriUS
+ gXdD8ytQeqaxaXQuOBu+F9OYIfnuJ/DfGb27mnU5ePq2mbeJ9qkL8b1aQmuM7VmFISGY
+ H2dWoFDSKyX+8Kn+jR2FuX6iGhCTS1aGegnxtdH0M8JWH7881s1xKrLqFo8h2rsDVJPk
+ 0cfjwEjzDlUH6aRhwXo9BSQnq10fkNnYKs+SLXTPSRWFnL3X0mhXM7NPch9fh0qvbte7
+ +hQmvuccbdgLRAarRBiqWv3gcB5z4jM2aS5ib5Xm3i4rFJK4XLr/rJYpv7AQBqmsolam VQ== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t29b0g5pq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 20:53:07 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38BKr6w3031548
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 11 Sep 2023 20:53:06 GMT
+Received: from [10.111.183.71] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 11 Sep
+ 2023 13:53:06 -0700
+Message-ID: <c71a6524-2d61-44fd-b918-a0215cfc983a@quicinc.com>
+Date:   Mon, 11 Sep 2023 13:53:05 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] wifi: ath12k: add msdu_end structure for WCN7850
+Content-Language: en-US
+To:     Kang Yang <quic_kangyang@quicinc.com>, <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>
+References: <20230911093054.74943-1-quic_kangyang@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20230911093054.74943-1-quic_kangyang@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 12WRylF4gYbsESMaI_3hdGOY2E1q8XAp
+X-Proofpoint-ORIG-GUID: 12WRylF4gYbsESMaI_3hdGOY2E1q8XAp
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-11_16,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
+ adultscore=0 impostorscore=0 priorityscore=1501 mlxscore=0 mlxlogscore=585
+ lowpriorityscore=0 bulkscore=0 spamscore=0 suspectscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
+ definitions=main-2309110192
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-branch HEAD: 2cf254c1e24fa8f01f42f5a8c77617e56bf50b86  wifi: iwlwifi: increase number of RX buffers for EHT devices
+On 9/11/2023 2:30 AM, Kang Yang wrote:
+> WCN7850 and QCN9274 currently use the same structure rx_msdu_end_qcn9274
+> for msdu_end. But content of msdu_end on WCN7850 is different from that of
+> QCN9274. Need to update it for WCN7850, otherwise will get the wrong
+> values when using it.
+> 
+> For example, TID is no longer in WCN7850's msdu_end. But
+> ath12k_dp_rx_process_err() and ath12k_dp_rx_process_wbm_err() still get
+> TID from msdu_end. So an uncertain value will be used in these two
+> functions on WCN7850.
+> 
+> Therefore, add new structure rx_msdu_end_wcn7850 for WCN7850.
+> 
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+> 
+> Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
 
-elapsed time: 798m
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 
-configs tested: 160
-configs skipped: 2
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r012-20230912   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20230912   gcc  
-arc                  randconfig-r002-20230912   gcc  
-arc                  randconfig-r006-20230912   gcc  
-arc                  randconfig-r016-20230912   gcc  
-arc                  randconfig-r031-20230912   gcc  
-arc                  randconfig-r034-20230912   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                   randconfig-001-20230912   clang
-arm                  randconfig-r025-20230912   clang
-arm                  randconfig-r036-20230912   gcc  
-arm64                            allmodconfig   gcc  
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r005-20230912   clang
-arm64                randconfig-r011-20230912   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r002-20230912   gcc  
-csky                 randconfig-r013-20230912   gcc  
-csky                 randconfig-r015-20230912   gcc  
-csky                 randconfig-r022-20230912   gcc  
-hexagon               randconfig-001-20230912   clang
-hexagon               randconfig-002-20230912   clang
-hexagon              randconfig-r024-20230912   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20230912   clang
-i386         buildonly-randconfig-002-20230912   clang
-i386         buildonly-randconfig-003-20230912   clang
-i386         buildonly-randconfig-004-20230912   clang
-i386         buildonly-randconfig-005-20230912   clang
-i386         buildonly-randconfig-006-20230912   clang
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-006-20230912   clang
-i386                  randconfig-011-20230912   gcc  
-i386                  randconfig-012-20230912   gcc  
-i386                  randconfig-013-20230912   gcc  
-i386                  randconfig-014-20230912   gcc  
-i386                  randconfig-015-20230912   gcc  
-i386                  randconfig-016-20230912   gcc  
-i386                 randconfig-r003-20230912   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20230911   gcc  
-loongarch             randconfig-001-20230912   gcc  
-loongarch            randconfig-r011-20230912   gcc  
-loongarch            randconfig-r033-20230912   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r026-20230912   gcc  
-m68k                 randconfig-r032-20230912   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r023-20230912   clang
-mips                 randconfig-r035-20230912   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r006-20230912   gcc  
-nios2                randconfig-r023-20230912   gcc  
-nios2                randconfig-r034-20230912   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc             randconfig-r015-20230912   gcc  
-openrisc             randconfig-r026-20230912   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r001-20230912   gcc  
-parisc               randconfig-r022-20230912   gcc  
-parisc               randconfig-r035-20230912   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   gcc  
-powerpc              randconfig-r005-20230912   clang
-powerpc              randconfig-r024-20230912   gcc  
-powerpc64            randconfig-r013-20230912   gcc  
-powerpc64            randconfig-r033-20230912   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20230912   clang
-riscv                randconfig-r031-20230912   clang
-riscv                randconfig-r036-20230912   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20230912   gcc  
-s390                 randconfig-r012-20230912   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                   randconfig-r001-20230912   gcc  
-sh                   randconfig-r004-20230912   gcc  
-sh                   randconfig-r021-20230912   gcc  
-sh                   randconfig-r032-20230912   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-006-20230912   clang
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20230912   gcc  
-x86_64                randconfig-002-20230912   gcc  
-x86_64                randconfig-003-20230912   gcc  
-x86_64                randconfig-004-20230912   gcc  
-x86_64                randconfig-005-20230912   gcc  
-x86_64                randconfig-016-20230912   clang
-x86_64               randconfig-r025-20230912   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa               randconfig-r003-20230912   gcc  
-xtensa               randconfig-r014-20230912   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
