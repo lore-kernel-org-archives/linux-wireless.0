@@ -2,40 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70762EE7FF4
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 08:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D78ADEE57DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 08:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229501AbjIKIWO (ORCPT
+        id S234930AbjIKIWO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 11 Sep 2023 04:22:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33978 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233870AbjIKIWN (ORCPT
+        with ESMTP id S233870AbjIKIWO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 Sep 2023 04:22:13 -0400
+        Mon, 11 Sep 2023 04:22:14 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A95D7DC
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2023 01:22:08 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 38B8LwWF21002935, This message is accepted by code: ctloc85258
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B49B1E7
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2023 01:22:09 -0700 (PDT)
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 38B8M2WF01002935, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 38B8LwWF21002935
+        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 38B8M2WF01002935
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Sep 2023 16:21:58 +0800
+        Mon, 11 Sep 2023 16:22:02 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Mon, 11 Sep 2023 16:21:59 +0800
+ 15.1.2507.17; Mon, 11 Sep 2023 16:22:01 +0800
 Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 11 Sep
- 2023 16:21:58 +0800
+ 2023 16:22:01 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/6] wifi: rtw89: add TX/RX descriptor v2 and mac port registers for WiFi 7 chips
-Date:   Mon, 11 Sep 2023 16:20:43 +0800
-Message-ID: <20230911082049.33541-1-pkshih@realtek.com>
+Subject: [PATCH 2/6] wifi: rtw89: add to fill TX descriptor for firmware command v2
+Date:   Mon, 11 Sep 2023 16:20:45 +0800
+Message-ID: <20230911082049.33541-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230911082049.33541-1-pkshih@realtek.com>
+References: <20230911082049.33541-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -50,55 +52,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-WiFi 7 chips use different TX/RX descriptors and mac port registers, but
-logic is similar or the same as before, so implment them and reuse the
-existing code.
+This kind of TX descriptor is used to download firmware or send firmware
+command. Because we want to reduce descriptor overhead and this only needs
+two fields 'size' and 'type', hardware designers choose short form of
+RX descriptor for it.
 
-Three descriptors types:
- - RX descriptor or RXWD (RX WiFi Descriptor) for short
-   That is meta data of received packet, such as MAC_ID, security CAM
-   index and etc.
- - TX descriptor or TXWD (TX WiFi Descriptor) for short
-   That is meta data of sending packet. Similar to RX descriptor, it
-   contains MAC_ID, security key ID and etc.
- - TX descriptor for firmware command
-   To send firmware command or download firmware is via a special path, and
-   use different descriptor from normal TX packets. Because it doesn't need
-   much meta data to assist, we choose short form RXWD to reduce overhead.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/core.c | 20 ++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/core.h |  3 +++
+ 2 files changed, 23 insertions(+)
 
-About TXWD body and info:
-   TXWD body is hard required, but TXWD info can be skipped to reduce
-   overhead. A bit defined in TXWD body to indicate if TXWD info presents.
-   For this driver, we always fill both.
-
-About RXWD short and long forms:
-   Similarly, RXWD can be short or long forms. For driver, it must handle
-   both though.
-
-This patchset doesn't change logic for existing chpis.
-
-Ping-Ke Shih (6):
-  wifi: rtw89: add to query RX descriptor format v2
-  wifi: rtw89: add to fill TX descriptor for firmware command v2
-  wifi: rtw89: add to fill TX descriptor v2
-  wifi: rtw89: add chip_info::txwd_info size to generalize TX WD submit
-  wifi: rtw89: consolidate registers of mac port to struct
-  wifi: rtw89: add mac_gen pointer to access mac port registers
-
- drivers/net/wireless/realtek/rtw89/core.c     | 215 ++++++++++++++
- drivers/net/wireless/realtek/rtw89/core.h     |  62 ++++
- drivers/net/wireless/realtek/rtw89/mac.c      |  94 ++++--
- drivers/net/wireless/realtek/rtw89/mac.h      |   1 +
- drivers/net/wireless/realtek/rtw89/mac_be.c   |  27 ++
- drivers/net/wireless/realtek/rtw89/pci.c      |   3 +-
- drivers/net/wireless/realtek/rtw89/reg.h      | 147 ++++++++++
- drivers/net/wireless/realtek/rtw89/rtw8851b.c |   1 +
- drivers/net/wireless/realtek/rtw89/rtw8852a.c |   1 +
- drivers/net/wireless/realtek/rtw89/rtw8852b.c |   1 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c |   1 +
- drivers/net/wireless/realtek/rtw89/txrx.h     | 271 ++++++++++++++++++
- 12 files changed, 791 insertions(+), 33 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 127e5b2f72be..7e2ba17c278e 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -1235,6 +1235,26 @@ void rtw89_core_fill_txdesc_fwcmd_v1(struct rtw89_dev *rtwdev,
+ }
+ EXPORT_SYMBOL(rtw89_core_fill_txdesc_fwcmd_v1);
+ 
++static __le32 rtw89_build_txwd_fwcmd0_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_RXD_RPKT_LEN_MASK, desc_info->pkt_size) |
++		    FIELD_PREP(BE_RXD_RPKT_TYPE_MASK, desc_info->fw_dl ?
++						      RTW89_CORE_RX_TYPE_FWDL :
++						      RTW89_CORE_RX_TYPE_H2C);
++
++	return cpu_to_le32(dword);
++}
++
++void rtw89_core_fill_txdesc_fwcmd_v2(struct rtw89_dev *rtwdev,
++				     struct rtw89_tx_desc_info *desc_info,
++				     void *txdesc)
++{
++	struct rtw89_rxdesc_short_v2 *txwd_v2 = (struct rtw89_rxdesc_short_v2 *)txdesc;
++
++	txwd_v2->dword0 = rtw89_build_txwd_fwcmd0_v2(desc_info);
++}
++EXPORT_SYMBOL(rtw89_core_fill_txdesc_fwcmd_v2);
++
+ static int rtw89_core_rx_process_mac_ppdu(struct rtw89_dev *rtwdev,
+ 					  struct sk_buff *skb,
+ 					  struct rtw89_rx_phy_ppdu *phy_ppdu)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index afdac66745e5..77a6a5856cc3 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -5466,6 +5466,9 @@ void rtw89_core_fill_txdesc_v1(struct rtw89_dev *rtwdev,
+ void rtw89_core_fill_txdesc_fwcmd_v1(struct rtw89_dev *rtwdev,
+ 				     struct rtw89_tx_desc_info *desc_info,
+ 				     void *txdesc);
++void rtw89_core_fill_txdesc_fwcmd_v2(struct rtw89_dev *rtwdev,
++				     struct rtw89_tx_desc_info *desc_info,
++				     void *txdesc);
+ void rtw89_core_rx(struct rtw89_dev *rtwdev,
+ 		   struct rtw89_rx_desc_info *desc_info,
+ 		   struct sk_buff *skb);
 -- 
 2.25.1
 
