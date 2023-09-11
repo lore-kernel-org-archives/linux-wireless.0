@@ -2,279 +2,164 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2FEEE14D8
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Sep 2023 08:28:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31F18C71153
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 00:42:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346493AbjIJI2q (ORCPT
+        id S231849AbjIKAnB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 Sep 2023 04:28:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40894 "EHLO
+        Sun, 10 Sep 2023 20:43:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244079AbjIJI2q (ORCPT
+        with ESMTP id S229560AbjIKAnA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 Sep 2023 04:28:46 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 839F519C
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Sep 2023 01:28:41 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38A8ITQM027005;
-        Sun, 10 Sep 2023 08:28:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=txpdLJiqMhYHs9yM1ZuLS4/HMwmVHb6Ou9Tj1sNg0LU=;
- b=LrJjrUDcbydNHstSGm5rLC0ya6mwDVLh8E2zoEUJZDtnAgdFK9u8K0yZ/o0rMlNBdqxj
- OHIUdKVs83uOQPAQPiHad5OiBh4KORBxsGSYnpZNOshKi/IKV4oE3SLTmxVtBAAOEr5p
- Vj/0jpZe2yr/VBmz83LHZye4aNbcomjw3xwsxC9AMyHUP4cz8limGhCDgVX5plr9gJHe
- yn159ULdFGOhq7nOFJcz9i5DD+6dCo9vIKWpJgqxPKE9hBWekab47RF66AEYYEcw4X6u
- 6p4kv0PkAWuvp/x5Qf8br5O3JXz0bNmYno7jRisr8Pn7UKYJPHixk0Sya7g6h/0x/wg2 dg== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t0edmhshd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 10 Sep 2023 08:28:37 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38A8SRsk027093
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 10 Sep 2023 08:28:27 GMT
-Received: from lingbok-HP-EliteBook-8460p.qca.qualcomm.com (10.80.80.8) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.36; Sun, 10 Sep 2023 01:28:26 -0700
-From:   Lingbo Kong <quic_lingbok@quicinc.com>
-To:     <ath12k@lists.infradead.org>, <quic_jjohnson@quicinc.com>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v4 3/4] wifi: ath12k: add adjust configuration of CCA threshold value for WCN7850
-Date:   Sun, 10 Sep 2023 16:28:01 +0800
-Message-ID: <20230910082802.9198-4-quic_lingbok@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230910082802.9198-1-quic_lingbok@quicinc.com>
-References: <20230910082802.9198-1-quic_lingbok@quicinc.com>
+        Sun, 10 Sep 2023 20:43:00 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E72C0194;
+        Sun, 10 Sep 2023 17:42:55 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-68fac16ee5fso671105b3a.1;
+        Sun, 10 Sep 2023 17:42:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1694392975; x=1694997775; darn=vger.kernel.org;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=y51wbrzEwejYx5+FDlSD7203yaJ7hGL9WN8KLP+gjDI=;
+        b=fV4KSGLojSZnRABTHf64LZvwSrtArvKzf1ZL72KZYT3eNeg7aHsLZRpnt1xQEx3mNn
+         LE323TO2yOv3fwEzKukLjcQ+p4+/YShBUTXdULVkq8wrSNiNYj2Kd4JQaVolB2cK30HH
+         tOD4QN01qUPJZ4kH+tDEZxbzRqm8FWB7xBgsoTtA53Rka5DjtRRtbVg+blJQiOaIHVWX
+         IJdY3ot3puJrXzKwdvzxc23+sUTefvLjy9b+z/sy+0+Iy+YgJyIV+pN/s8V3WKL7RK1x
+         8dLewEy/9S5dPNeybpv4LvYhr5vMZ7LcAqhhnPS82QwF4W5LM4JYGxlU7hd0W7wKPPed
+         Vy+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694392975; x=1694997775;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=y51wbrzEwejYx5+FDlSD7203yaJ7hGL9WN8KLP+gjDI=;
+        b=fAOdHQIJNjOC188iNYh8/yAA/cG4EXuQfd+S+/H6v08JIJ0MrUMWKaVh95avKqf1nN
+         PkiETe4r9hLftJdifs2jjxxKaxeAApdKURyj+eyMSG/d6vmbUTOMFohS4Q8mBxmyXeP2
+         oTd/QzH8/wUQaZab88Y7EN2IFNJydUDShy2IHqs9Kwr2bdSAtVvxQ0ngFg9N6+7pHjBF
+         qxFjBMdc9BuDwoqADRG+s7RtIqZBUtLjSOzK8Pvg0MCc9OYrWPE4n1zWqb/1vI5yoWdK
+         L7KEriu0wyIPzxptipqd9kjFvAHC3pHiPpu3PVJrTyubtL4CXA9FpL1gUMK0d02MuE89
+         /Cxg==
+X-Gm-Message-State: AOJu0YwLx3W41AaNshdmaymr0u6CnEcZK0ma+sWfilFZxs2B6PqPityk
+        GpBzsh6sNy5i7n2Zh3dOzJ23nn+jIJM=
+X-Google-Smtp-Source: AGHT+IHI2ZZ7QHtExuD/eqB1Ya6GPgmn7FLcxaygVbL1JZcEnVaUGonn6AGT6uiu9PeW05vkmgA2PA==
+X-Received: by 2002:a05:6a00:150e:b0:68a:4dc3:dbb9 with SMTP id q14-20020a056a00150e00b0068a4dc3dbb9mr7961082pfu.28.1694392975150;
+        Sun, 10 Sep 2023 17:42:55 -0700 (PDT)
+Received: from [192.168.0.106] ([103.124.138.83])
+        by smtp.gmail.com with ESMTPSA id e22-20020aa78256000000b0068c61848785sm4344634pfn.208.2023.09.10.17.42.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 10 Sep 2023 17:42:54 -0700 (PDT)
+Message-ID: <c64ce498-7c06-3726-47d5-0a74471f027b@gmail.com>
+Date:   Mon, 11 Sep 2023 07:42:48 +0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Or1jXrIoG7xmcpv-5LNZGjttFBh-cSIF
-X-Proofpoint-GUID: Or1jXrIoG7xmcpv-5LNZGjttFBh-cSIF
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-10_02,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 adultscore=0
- priorityscore=1501 mlxlogscore=999 malwarescore=0 spamscore=0
- impostorscore=0 lowpriorityscore=0 clxscore=1015 phishscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309100073
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Content-Language: en-US
+To:     Gregory Greenman <gregory.greenman@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ronan Pigott <ronan@rjp.ie>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux Wireless <linux-wireless@vger.kernel.org>
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: Fwd: iwlwifi: AX210 Timeout waiting for hardware access (CSR_GP_CNTRL
+ 0xffffffff)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently, ath12k does not have the ability to adjust CCA threshold values
-to meet the regulatory requirements. In order to support this, ath12k gets
-CCA threshold configuration in ath12k_acpi_dsm_get_data() function, then
-sets pdev_id and param_type_id and finally sends these data to firmware to
-implement the adjustment of the CCA threshold value.
+Hi,
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+I notice a regression report on Bugzilla [1]. Quoting from it:
 
-Signed-off-by: Lingbo Kong <quic_lingbok@quicinc.com>
----
-v4:
-1.revise commit log using imperative voice
+> In linux 6.5.2, loading firmware version 83 on AX210 device appears to fail (repeatedly) with a timeout. Reverting to linux 6.4.12 successfully loads firmware 78.
+> 
+> My nic:
+> $ lspci -kd::280
+> 08:00.0 Network controller: Intel Corporation Wi-Fi 6 AX210/AX211/AX411 160MHz (rev 1a)
+> 	Subsystem: Rivet Networks Wi-Fi 6 AX210/AX211/AX411 160MHz
+> 	Kernel driver in use: iwlwifi
+> 	Kernel modules: iwlwifi
+> 
+> The failing kernel:
+> $ pacman -Qp /var/cache/pacman/pkg/linux-6.5.2.arch1-1-x86_64.pkg.tar.zst 
+> linux 6.5.2.arch1-1
+> 
+> The error:
+> $ journalctl -b -1 _KERNEL_DEVICE=+pci:${$(lspci -Dd::280)[(w)1]} + _TRANSPORT=kernel > dmesg65.log
+> 
+> [..attached..]
+> 
+> The interesting bit:
+> Sep 09 20:30:28 kernel: iwlwifi 0000:08:00.0: WRT: Invalid buffer destination
+> Sep 09 20:30:29 kernel: ------------[ cut here ]------------
+> Sep 09 20:30:29 kernel: Timeout waiting for hardware access (CSR_GP_CNTRL 0xffffffff)
+> Sep 09 20:30:29 kernel: WARNING: CPU: 13 PID: 679 at drivers/net/wireless/intel/iwlwifi/pcie/trans.c:2190 __iwl_trans_pcie_gr>
+> Sep 09 20:30:29 kernel: Modules linked in: iwlmvm(+) snd_sof_pci_intel_tgl snd_sof_intel_hda_common soundwire_intel snd_sof_i>
+> Sep 09 20:30:29 kernel:  snd_hwdep intel_rapl_msr dell_smm_hwmon processor_thermal_rfim i2c_i801 realtek btmtk alienware_wmi >
+> Sep 09 20:30:29 kernel: CPU: 13 PID: 679 Comm: modprobe Not tainted 6.5.2-arch1-1 #1 d2912f929551bc8e9b95af790b8285a77c25fa29
+> Sep 09 20:30:29 kernel: Hardware name: Dell Inc. XPS 8950/0R6PCT, BIOS 1.2.1 03/25/2022
+> [...]
+> Sep 09 20:30:29 kernel: Call Trace:
+> Sep 09 20:30:29 kernel:  <TASK>
+> Sep 09 20:30:29 kernel:  ? __iwl_trans_pcie_grab_nic_access+0x14a/0x150 [iwlwifi 25a8da985d322177fdc2dbc451d4271c449a7a6f]
+> Sep 09 20:30:29 kernel:  ? __warn+0x81/0x130
+> Sep 09 20:30:29 kernel:  ? __iwl_trans_pcie_grab_nic_access+0x14a/0x150 [iwlwifi 25a8da985d322177fdc2dbc451d4271c449a7a6f]
+> Sep 09 20:30:29 kernel:  ? report_bug+0x171/0x1a0
+> Sep 09 20:30:29 kernel:  ? prb_read_valid+0x1b/0x30
+> Sep 09 20:30:29 kernel:  ? handle_bug+0x3c/0x80
+> Sep 09 20:30:29 kernel:  ? exc_invalid_op+0x17/0x70
+> Sep 09 20:30:29 kernel:  ? asm_exc_invalid_op+0x1a/0x20
+> Sep 09 20:30:29 kernel:  ? __iwl_trans_pcie_grab_nic_access+0x14a/0x150 [iwlwifi 25a8da985d322177fdc2dbc451d4271c449a7a6f]
+> Sep 09 20:30:29 kernel:  iwl_trans_pcie_grab_nic_access+0x1a/0x40 [iwlwifi 25a8da985d322177fdc2dbc451d4271c449a7a6f]
+> Sep 09 20:30:29 kernel:  iwl_read_prph+0x1d/0x60 [iwlwifi 25a8da985d322177fdc2dbc451d4271c449a7a6f]
+> Sep 09 20:30:29 kernel:  iwl_mvm_load_ucode_wait_alive+0x2d9/0x620 [iwlmvm 7d9113127caff2df016f1a19aad637aa20200412]
+> [...]
+> Sep 09 20:30:29 kernel: ---[ end trace 0000000000000000 ]---
+> Sep 09 20:30:29 kernel: iwlwifi 0000:08:00.0: iwlwifi transaction failed, dumping registers
+> [...]
+> 
+> See attachment for full log.
+> 
+> Boot after revert to 6.4.12 with working firmware:
+> $ journalctl --no-hostname -b _KERNEL_DEVICE=+pci:${$(lspci -Dd::280)[(w)1]} + _TRANSPORT=kernel > dmesg64.log
+> 
+> [..attached..]
+> 
+> The interesting bit:
+> Sep 09 20:48:23 kernel: iwlwifi 0000:08:00.0: loaded firmware version 78.3bfdc55f.0 ty-a0-gf-a0-78.ucode op_mode iwlmvm
+> 
+> 
+> $ pacman -Ql linux-firmware | grep ty.a0.gf.a0                            
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-59.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-66.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-72.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-73.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-74.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-77.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-78.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-79.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-81.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0-83.ucode.zst
+> linux-firmware /usr/lib/firmware/iwlwifi-ty-a0-gf-a0.pnvm.zst
+> 
 
-v3:
-1.remove unnecessary cpu_to_le32()
-2.adjust the order of the macros
-3.apply jeff's advice
+See Bugzilla for the full thread and attached journal logs.
 
-v2:
-no change
+On BZ, I have asked the reporter (Cc'ed) to test the mainline.
 
- drivers/net/wireless/ath/ath12k/acpi.c | 30 +++++++++++++++++++
- drivers/net/wireless/ath/ath12k/acpi.h |  8 ++++++
- drivers/net/wireless/ath/ath12k/core.h |  1 +
- drivers/net/wireless/ath/ath12k/wmi.c  | 40 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/wmi.h  |  7 +++--
- 5 files changed, 84 insertions(+), 2 deletions(-)
+Anyway, I'm adding this regression to regzbot:
 
-diff --git a/drivers/net/wireless/ath/ath12k/acpi.c b/drivers/net/wireless/ath/ath12k/acpi.c
-index ae1ce7b99d2d..a9931e17bd17 100644
---- a/drivers/net/wireless/ath/ath12k/acpi.c
-+++ b/drivers/net/wireless/ath/ath12k/acpi.c
-@@ -72,6 +72,16 @@ static int ath12k_acpi_dsm_get_data(struct ath12k_base *ab, int func)
- 			memcpy(&ab->acdata->geo_offset_data, obj->buffer.pointer,
- 			       obj->buffer.length);
- 			break;
-+		case ATH12K_ACPI_DSM_FUNC_INDEX_CCA:
-+			if (obj->buffer.length != ATH12K_ACPI_DSM_CCA_DATA_SIZE) {
-+				ath12k_err(ab, "Invalid CCA data size %d\n",
-+					   obj->buffer.length);
-+				ret = -EINVAL;
-+				goto out;
-+			}
-+			memcpy(&ab->acdata->cca_data, obj->buffer.pointer,
-+			       obj->buffer.length);
-+			break;
- 		}
- 	} else {
- 		ath12k_err(ab,
-@@ -281,6 +291,26 @@ int ath12k_get_acpi_all_data(struct ath12k_base *ab)
- 			goto err_free_acdata;
- 	}
- 
-+	if (ATH12K_ACPI_FUNC_BIT_VALID(ab->acdata, ATH12K_ACPI_FUNC_BIT_CCA)) {
-+		ret = ath12k_acpi_dsm_get_data(ab,
-+					       ATH12K_ACPI_DSM_FUNC_INDEX_CCA);
-+		if (ret) {
-+			ath12k_err(ab, "failed to get cca threshold configuration %d\n", ret);
-+			goto err_free_acdata;
-+		}
-+
-+		if (ab->acdata->cca_data[0] == ATH12K_ACPI_CCA_THR_VERSION &&
-+		    ab->acdata->cca_data[ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET] ==
-+		    ATH12K_ACPI_CCA_THR_ENABLE_FLAG) {
-+			ret = ath12k_wmi_pdev_set_cca_thr_table_param(ab,
-+								      ab->acdata->cca_data);
-+			if (ret) {
-+				ath12k_err(ab, "set cca threshold failed %d\n", ret);
-+				goto err_free_acdata;
-+			}
-+		}
-+	}
-+
- 	status = acpi_install_notify_handler(ACPI_HANDLE(ab->dev),
- 					     ACPI_DEVICE_NOTIFY,
- 					     acpi_dsm_notify, ab);
-diff --git a/drivers/net/wireless/ath/ath12k/acpi.h b/drivers/net/wireless/ath/ath12k/acpi.h
-index 2f930f0718da..1f05a68e490b 100644
---- a/drivers/net/wireless/ath/ath12k/acpi.h
-+++ b/drivers/net/wireless/ath/ath12k/acpi.h
-@@ -11,11 +11,13 @@
- #define ATH12K_ACPI_DSM_FUNC_INDEX_SUPPORT_FUNCS	0
- #define ATH12K_ACPI_DSM_FUNC_INDEX_BIOS_SAR             4
- #define ATH12K_ACPI_DSM_FUNC_INDEX_GEO_OFFSET           5
-+#define ATH12K_ACPI_DSM_FUNC_INDEX_CCA			6
- #define ATH12K_ACPI_DSM_FUNC_INDEX_TAS_CFG		8
- #define ATH12K_ACPI_DSM_FUNC_INDEX_TAS_DATA		9
- 
- #define ATH12K_ACPI_FUNC_BIT_BIOS_SAR			BIT(3)
- #define ATH12K_ACPI_FUNC_BIT_GEO_OFFSET			BIT(4)
-+#define ATH12K_ACPI_FUNC_BIT_CCA			BIT(5)
- #define ATH12K_ACPI_FUNC_BIT_TAS_CFG			BIT(7)
- #define ATH12K_ACPI_FUNC_BIT_TAS_DATA			BIT(8)
- 
-@@ -26,13 +28,17 @@
- #define ATH12K_ACPI_TAS_DATA_ENABLE_FLAG	0x1
- #define ATH12K_ACPI_POWER_LIMIT_VERSION		0x1
- #define ATH12K_ACPI_POWER_LIMIT_ENABLE_FLAG	0x1
-+#define ATH12K_ACPI_CCA_THR_VERSION		0x1
-+#define ATH12K_ACPI_CCA_THR_ENABLE_FLAG		0x1
- 
- #define ATH12K_ACPI_GEO_OFFSET_DATA_OFFSET	1
- #define ATH12K_ACPI_DBS_BACKOFF_DATA_OFFSET	2
-+#define ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET	5
- #define ATH12K_ACPI_BIOS_SAR_DBS_BACKOFF_LEN	10
- #define ATH12K_ACPI_POWER_LIMIT_DATA_OFFSET	12
- #define ATH12K_ACPI_BIOS_SAR_GEO_OFFSET_LEN	18
- #define ATH12K_ACPI_BIOS_SAR_TABLE_LEN		22
-+#define ATH12K_ACPI_CCA_THR_OFFSET_LEN		36
- 
- #define ATH12K_ACPI_DSM_TAS_DATA_SIZE			69
- #define ATH12K_ACPI_DSM_TAS_CFG_SIZE			108
-@@ -41,6 +47,8 @@
- 					      ATH12K_ACPI_BIOS_SAR_GEO_OFFSET_LEN)
- #define ATH12K_ACPI_DSM_BIOS_SAR_DATA_SIZE (ATH12K_ACPI_POWER_LIMIT_DATA_OFFSET + \
- 					    ATH12K_ACPI_BIOS_SAR_TABLE_LEN)
-+#define ATH12K_ACPI_DSM_CCA_DATA_SIZE (ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET + \
-+				       ATH12K_ACPI_CCA_THR_OFFSET_LEN)
- 
- int ath12k_get_acpi_all_data(struct ath12k_base *ab);
- void acpi_dsm_notify(acpi_handle handle, u32 event, void *data);
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 6fe4f0ddee4a..d57e2013b0fe 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -780,6 +780,7 @@ struct ath12k_base {
- 		u8 tas_sar_power_table[ATH12K_ACPI_DSM_TAS_DATA_SIZE];
- 		u8 bios_sar_data[ATH12K_ACPI_DSM_BIOS_SAR_DATA_SIZE];
- 		u8 geo_offset_data[ATH12K_ACPI_DSM_GEO_OFFSET_DATA_SIZE];
-+		u8 cca_data[ATH12K_ACPI_DSM_CCA_DATA_SIZE];
- 	} *acdata;
- 
- 	/* must be last */
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 9ad588897b09..727ce28abd7d 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -7090,3 +7090,43 @@ int ath12k_wmi_pdev_set_bios_geo_table_param(struct ath12k_base *ab,
- 
- 	return ret;
- }
-+
-+int ath12k_wmi_pdev_set_cca_thr_table_param(struct ath12k_base *ab,
-+					    u8 *pcca_table)
-+{
-+	struct ath12k_wmi_base *wmi_ab = &ab->wmi_ab;
-+	struct wmi_pdev_set_bios_interface_cmd *cmd;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+	int ret;
-+	u8 *buf_ptr;
-+	u32 len, cca_thr_len_aligned;
-+	u8 *pcca_value = pcca_table + ATH12K_ACPI_CCA_THR_OFFSET_DATA_OFFSET;
-+
-+	cca_thr_len_aligned = roundup(ATH12K_ACPI_CCA_THR_OFFSET_LEN, sizeof(u32));
-+	len = sizeof(*cmd) + TLV_HDR_SIZE + cca_thr_len_aligned;
-+
-+	skb = ath12k_wmi_alloc_skb(wmi_ab, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_pdev_set_bios_interface_cmd *)skb->data;
-+	cmd->tlv_header = ath12k_wmi_tlv_cmd_hdr(WMI_TAG_PDEV_SET_BIOS_INTERFACE_CMD_PARAMS,
-+						 sizeof(*cmd));
-+	cmd->pdev_id = cpu_to_le32(WMI_PDEV_ID_SOC);
-+	cmd->param_type_id = cpu_to_le32(WMI_BIOS_PARAM_CCA_THRESHOLD_TYPE);
-+	cmd->length = ATH12K_ACPI_CCA_THR_OFFSET_LEN;
-+
-+	buf_ptr = skb->data + sizeof(*cmd);
-+	tlv = (struct wmi_tlv *)buf_ptr;
-+	tlv->header = ath12k_wmi_tlv_hdr(WMI_TAG_ARRAY_BYTE, cca_thr_len_aligned);
-+	buf_ptr += TLV_HDR_SIZE;
-+	memcpy(buf_ptr, pcca_value, ATH12K_ACPI_CCA_THR_OFFSET_LEN);
-+
-+	ret = ath12k_wmi_cmd_send(&wmi_ab->wmi[0], skb, WMI_PDEV_SET_BIOS_INTERFACE_CMDID);
-+	if (ret) {
-+		ath12k_warn(ab, "failed to send WMI_PDEV_SET_BIOS_INTERFACE_CMDID %d\n", ret);
-+		dev_kfree_skb(skb);
-+	}
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index 8a774655fe9f..7607cd7ab699 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -4805,8 +4805,9 @@ struct wmi_pdev_set_bios_interface_cmd {
- } __packed;
- 
- enum bios_param_type {
--	WMI_BIOS_PARAM_TAS_CONFIG_TYPE	=	1,
--	WMI_BIOS_PARAM_TAS_DATA_TYPE	=	2,
-+	WMI_BIOS_PARAM_CCA_THRESHOLD_TYPE	=	0,
-+	WMI_BIOS_PARAM_TAS_CONFIG_TYPE		=	1,
-+	WMI_BIOS_PARAM_TAS_DATA_TYPE		=	2,
- 	WMI_BIOS_PARAM_TYPE_MAX,
- };
- 
-@@ -4952,4 +4953,6 @@ int ath12k_wmi_pdev_set_bios_sar_table_param(struct ath12k_base *ab,
- 					     u8 *psar_table);
- int ath12k_wmi_pdev_set_bios_geo_table_param(struct ath12k_base *ab,
- 					     u8 *pgeo_table);
-+int ath12k_wmi_pdev_set_cca_thr_table_param(struct ath12k_base *ab,
-+					    u8 *pcca_table);
- #endif
+#regzbot introduced: 399762de769c4e https://bugzilla.kernel.org/show_bug.cgi?id=217894
+#regzbot title: CSR_GP_CNTRL hardware access timeout due to firmware API bump
+
+Thanks.
+
+[1]: https://bugzilla.kernel.org/show_bug.cgi?id=217894
+
 -- 
-2.34.1
-
+An old man doll... just what I always wanted! - Clara
