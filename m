@@ -2,39 +2,39 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A8ECEE7FF4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2239EE57DF
 	for <linux-wireless@archiver.kernel.org>; Mon, 11 Sep 2023 08:22:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233257AbjIKIW6 (ORCPT
+        id S235038AbjIKIW7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 Sep 2023 04:22:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56104 "EHLO
+        Mon, 11 Sep 2023 04:22:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234971AbjIKIW4 (ORCPT
+        with ESMTP id S235022AbjIKIW4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 11 Sep 2023 04:22:56 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DF91DC
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CEF7116
         for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2023 01:22:50 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 38B8MhAxA1003652, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 38B8MgAxA1003652, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 38B8MhAxA1003652
+        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 38B8MgAxA1003652
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Sep 2023 16:22:43 +0800
+        Mon, 11 Sep 2023 16:22:42 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Mon, 11 Sep 2023 16:22:05 +0800
+ 15.1.2375.32; Mon, 11 Sep 2023 16:22:02 +0800
 Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 11 Sep
- 2023 16:22:05 +0800
+ 2023 16:22:02 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/6] wifi: rtw89: consolidate registers of mac port to struct
-Date:   Mon, 11 Sep 2023 16:20:48 +0800
-Message-ID: <20230911082049.33541-6-pkshih@realtek.com>
+Subject: [PATCH 3/6] wifi: rtw89: add to fill TX descriptor v2
+Date:   Mon, 11 Sep 2023 16:20:46 +0800
+Message-ID: <20230911082049.33541-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230911082049.33541-1-pkshih@realtek.com>
 References: <20230911082049.33541-1-pkshih@realtek.com>
@@ -56,143 +56,396 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-MAC port is a design to support virtual interface on single MAC hardware.
-For next generation chips, register addresses are changed but definitions
-are the same, so move registers together to be easier to reuse codes.
+The format v2 of TX descriptor contains 8-word body and 8-word info, and
+fields include packet size, MAC_ID, security key ID and etc.
+
+By design, it can possibly only fill body to reduce overhead, but this
+driver keeps thing simple, so always fill body and info currently.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h |  6 +++++
- drivers/net/wireless/realtek/rtw89/mac.c  | 32 ++++++++++++++---------
- 2 files changed, 26 insertions(+), 12 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c | 130 ++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/core.h |  25 ++++
+ drivers/net/wireless/realtek/rtw89/txrx.h | 175 ++++++++++++++++++++++
+ 3 files changed, 330 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 7e2ba17c278e..2d189e1f2650 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -1215,6 +1215,136 @@ void rtw89_core_fill_txdesc_v1(struct rtw89_dev *rtwdev,
+ }
+ EXPORT_SYMBOL(rtw89_core_fill_txdesc_v1);
+ 
++static __le32 rtw89_build_txwd_body0_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_BODY0_WP_OFFSET_V1, desc_info->wp_offset) |
++		    FIELD_PREP(BE_TXD_BODY0_WDINFO_EN, desc_info->en_wd_info) |
++		    FIELD_PREP(BE_TXD_BODY0_CH_DMA, desc_info->ch_dma) |
++		    FIELD_PREP(BE_TXD_BODY0_HDR_LLC_LEN, desc_info->hdr_llc_len) |
++		    FIELD_PREP(BE_TXD_BODY0_WD_PAGE, desc_info->wd_page);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_body1_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_BODY1_ADDR_INFO_NUM, desc_info->addr_info_nr) |
++		    FIELD_PREP(BE_TXD_BODY1_SEC_KEYID, desc_info->sec_keyid) |
++		    FIELD_PREP(BE_TXD_BODY1_SEC_TYPE, desc_info->sec_type);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_body2_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_BODY2_TID_IND, desc_info->tid_indicate) |
++		    FIELD_PREP(BE_TXD_BODY2_QSEL, desc_info->qsel) |
++		    FIELD_PREP(BE_TXD_BODY2_TXPKTSIZE, desc_info->pkt_size) |
++		    FIELD_PREP(BE_TXD_BODY2_AGG_EN, desc_info->agg_en) |
++		    FIELD_PREP(BE_TXD_BODY2_BK, desc_info->bk) |
++		    FIELD_PREP(BE_TXD_BODY2_MACID, desc_info->mac_id);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_body3_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_BODY3_WIFI_SEQ, desc_info->seq);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_body4_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_BODY4_SEC_IV_L0, desc_info->sec_seq[0]) |
++		    FIELD_PREP(BE_TXD_BODY4_SEC_IV_L1, desc_info->sec_seq[1]);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_body5_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_BODY5_SEC_IV_H2, desc_info->sec_seq[2]) |
++		    FIELD_PREP(BE_TXD_BODY5_SEC_IV_H3, desc_info->sec_seq[3]) |
++		    FIELD_PREP(BE_TXD_BODY5_SEC_IV_H4, desc_info->sec_seq[4]) |
++		    FIELD_PREP(BE_TXD_BODY5_SEC_IV_H5, desc_info->sec_seq[5]);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_body7_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_BODY7_USERATE_SEL, desc_info->use_rate) |
++		    FIELD_PREP(BE_TXD_BODY7_DATA_ER, desc_info->er_cap) |
++		    FIELD_PREP(BE_TXD_BODY7_DATA_BW_ER, 0) |
++		    FIELD_PREP(BE_TXD_BODY7_DATARATE, desc_info->data_rate);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_info0_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_INFO0_DISDATAFB, desc_info->dis_data_fb) |
++		    FIELD_PREP(BE_TXD_INFO0_MULTIPORT_ID, desc_info->port);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_info1_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_INFO1_MAX_AGG_NUM, desc_info->ampdu_num) |
++		    FIELD_PREP(BE_TXD_INFO1_A_CTRL_BSR, desc_info->a_ctrl_bsr) |
++		    FIELD_PREP(BE_TXD_INFO1_DATA_RTY_LOWEST_RATE,
++			       desc_info->data_retry_lowest_rate);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_info2_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_INFO2_AMPDU_DENSITY, desc_info->ampdu_density) |
++		    FIELD_PREP(BE_TXD_INFO2_FORCE_KEY_EN, desc_info->sec_en) |
++		    FIELD_PREP(BE_TXD_INFO2_SEC_CAM_IDX, desc_info->sec_cam_idx);
++
++	return cpu_to_le32(dword);
++}
++
++static __le32 rtw89_build_txwd_info4_v2(struct rtw89_tx_desc_info *desc_info)
++{
++	u32 dword = FIELD_PREP(BE_TXD_INFO4_RTS_EN, 1) |
++		    FIELD_PREP(BE_TXD_INFO4_HW_RTS_EN, 1);
++
++	return cpu_to_le32(dword);
++}
++
++void rtw89_core_fill_txdesc_v2(struct rtw89_dev *rtwdev,
++			       struct rtw89_tx_desc_info *desc_info,
++			       void *txdesc)
++{
++	struct rtw89_txwd_body_v2 *txwd_body = txdesc;
++	struct rtw89_txwd_info_v2 *txwd_info;
++
++	txwd_body->dword0 = rtw89_build_txwd_body0_v2(desc_info);
++	txwd_body->dword1 = rtw89_build_txwd_body1_v2(desc_info);
++	txwd_body->dword2 = rtw89_build_txwd_body2_v2(desc_info);
++	txwd_body->dword3 = rtw89_build_txwd_body3_v2(desc_info);
++	if (desc_info->sec_en) {
++		txwd_body->dword4 = rtw89_build_txwd_body4_v2(desc_info);
++		txwd_body->dword5 = rtw89_build_txwd_body5_v2(desc_info);
++	}
++	txwd_body->dword7 = rtw89_build_txwd_body7_v2(desc_info);
++
++	if (!desc_info->en_wd_info)
++		return;
++
++	txwd_info = (struct rtw89_txwd_info_v2 *)(txwd_body + 1);
++	txwd_info->dword0 = rtw89_build_txwd_info0_v2(desc_info);
++	txwd_info->dword1 = rtw89_build_txwd_info1_v2(desc_info);
++	txwd_info->dword2 = rtw89_build_txwd_info2_v2(desc_info);
++	txwd_info->dword4 = rtw89_build_txwd_info4_v2(desc_info);
++}
++EXPORT_SYMBOL(rtw89_core_fill_txdesc_v2);
++
+ static __le32 rtw89_build_txwd_fwcmd0_v1(struct rtw89_tx_desc_info *desc_info)
+ {
+ 	u32 dword = FIELD_PREP(AX_RXD_RPKT_LEN_MASK, desc_info->pkt_size) |
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 77d283db4f49..bbe7a90bc8e7 100644
+index 77a6a5856cc3..72327b67c4f3 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -926,6 +926,12 @@ struct rtw89_port_reg {
- 	u32 bcn_cnt_tmr;
- 	u32 tsftr_l;
- 	u32 tsftr_h;
-+	u32 md_tsft;
-+	u32 bss_color;
-+	u32 mbssid;
-+	u32 mbssid_drop;
-+	u32 tsf_sync;
-+	u32 hiq_win[RTW89_PORT_NUM];
- };
+@@ -948,6 +948,17 @@ struct rtw89_txwd_body_v1 {
+ 	__le32 dword7;
+ } __packed;
  
- struct rtw89_txwd_body {
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 1b57c356a7a5..cd386531830b 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -3736,7 +3736,15 @@ static const struct rtw89_port_reg rtw_port_base = {
- 	.tbtt_shift = R_AX_TBTT_SHIFT_P0,
- 	.bcn_cnt_tmr = R_AX_BCN_CNT_TMR_P0,
- 	.tsftr_l = R_AX_TSFTR_LOW_P0,
--	.tsftr_h = R_AX_TSFTR_HIGH_P0
-+	.tsftr_h = R_AX_TSFTR_HIGH_P0,
-+	.md_tsft = R_AX_MD_TSFT_STMP_CTL,
-+	.bss_color = R_AX_PTCL_BSS_COLOR_0,
-+	.mbssid = R_AX_MBSSID_CTRL,
-+	.mbssid_drop = R_AX_MBSSID_DROP_0,
-+	.tsf_sync = R_AX_PORT0_TSF_SYNC,
-+	.hiq_win = {R_AX_P0MB_HGQ_WINDOW_CFG_0, R_AX_PORT_HGQ_WINDOW_CFG,
-+		    R_AX_PORT_HGQ_WINDOW_CFG + 1, R_AX_PORT_HGQ_WINDOW_CFG + 2,
-+		    R_AX_PORT_HGQ_WINDOW_CFG + 3},
- };
++struct rtw89_txwd_body_v2 {
++	__le32 dword0;
++	__le32 dword1;
++	__le32 dword2;
++	__le32 dword3;
++	__le32 dword4;
++	__le32 dword5;
++	__le32 dword6;
++	__le32 dword7;
++} __packed;
++
+ struct rtw89_txwd_info {
+ 	__le32 dword0;
+ 	__le32 dword1;
+@@ -957,6 +968,17 @@ struct rtw89_txwd_info {
+ 	__le32 dword5;
+ } __packed;
  
- #define BCN_INTERVAL 100
-@@ -3868,16 +3876,12 @@ static void rtw89_mac_port_cfg_bcn_intv(struct rtw89_dev *rtwdev,
- static void rtw89_mac_port_cfg_hiq_win(struct rtw89_dev *rtwdev,
- 				       struct rtw89_vif *rtwvif)
- {
--	static const u32 hiq_win_addr[RTW89_PORT_NUM] = {
--		R_AX_P0MB_HGQ_WINDOW_CFG_0, R_AX_PORT_HGQ_WINDOW_CFG,
--		R_AX_PORT_HGQ_WINDOW_CFG + 1, R_AX_PORT_HGQ_WINDOW_CFG + 2,
--		R_AX_PORT_HGQ_WINDOW_CFG + 3,
--	};
- 	u8 win = rtwvif->net_type == RTW89_NET_TYPE_AP_MODE ? 16 : 0;
-+	const struct rtw89_port_reg *p = &rtw_port_base;
- 	u8 port = rtwvif->port;
- 	u32 reg;
++struct rtw89_txwd_info_v2 {
++	__le32 dword0;
++	__le32 dword1;
++	__le32 dword2;
++	__le32 dword3;
++	__le32 dword4;
++	__le32 dword5;
++	__le32 dword6;
++	__le32 dword7;
++} __packed;
++
+ struct rtw89_rx_desc_info {
+ 	u16 pkt_size;
+ 	u8 pkt_type;
+@@ -5463,6 +5485,9 @@ void rtw89_core_fill_txdesc(struct rtw89_dev *rtwdev,
+ void rtw89_core_fill_txdesc_v1(struct rtw89_dev *rtwdev,
+ 			       struct rtw89_tx_desc_info *desc_info,
+ 			       void *txdesc);
++void rtw89_core_fill_txdesc_v2(struct rtw89_dev *rtwdev,
++			       struct rtw89_tx_desc_info *desc_info,
++			       void *txdesc);
+ void rtw89_core_fill_txdesc_fwcmd_v1(struct rtw89_dev *rtwdev,
+ 				     struct rtw89_tx_desc_info *desc_info,
+ 				     void *txdesc);
+diff --git a/drivers/net/wireless/realtek/rtw89/txrx.h b/drivers/net/wireless/realtek/rtw89/txrx.h
+index f3204197bdaa..7142cce167de 100644
+--- a/drivers/net/wireless/realtek/rtw89/txrx.h
++++ b/drivers/net/wireless/realtek/rtw89/txrx.h
+@@ -137,6 +137,181 @@ static inline u8 rtw89_get_data_nss(struct rtw89_dev *rtwdev, u16 hw_rate)
  
--	reg = rtw89_mac_reg_by_idx(rtwdev, hiq_win_addr[port], rtwvif->mac_idx);
-+	reg = rtw89_mac_reg_by_idx(rtwdev, p->hiq_win[port], rtwvif->mac_idx);
- 	rtw89_write8(rtwdev, reg, win);
- }
+ /* TX WD INFO DWORD 5 */
  
-@@ -3888,7 +3892,7 @@ static void rtw89_mac_port_cfg_hiq_dtim(struct rtw89_dev *rtwdev,
- 	const struct rtw89_port_reg *p = &rtw_port_base;
- 	u32 addr;
- 
--	addr = rtw89_mac_reg_by_idx(rtwdev, R_AX_MD_TSFT_STMP_CTL, rtwvif->mac_idx);
-+	addr = rtw89_mac_reg_by_idx(rtwdev, p->md_tsft, rtwvif->mac_idx);
- 	rtw89_write8_set(rtwdev, addr, B_AX_UPD_HGQMD | B_AX_UPD_TIMIE);
- 
- 	rtw89_write16_port_mask(rtwdev, rtwvif, p->dtim_ctrl, B_AX_DTIM_NUM_MASK,
-@@ -3934,6 +3938,7 @@ static void rtw89_mac_port_cfg_tbtt_early(struct rtw89_dev *rtwdev,
- static void rtw89_mac_port_cfg_bss_color(struct rtw89_dev *rtwdev,
- 					 struct rtw89_vif *rtwvif)
- {
-+	const struct rtw89_port_reg *p = &rtw_port_base;
- 	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
- 	static const u32 masks[RTW89_PORT_NUM] = {
- 		B_AX_BSS_COLOB_AX_PORT_0_MASK, B_AX_BSS_COLOB_AX_PORT_1_MASK,
-@@ -3946,7 +3951,7 @@ static void rtw89_mac_port_cfg_bss_color(struct rtw89_dev *rtwdev,
- 	u8 bss_color;
- 
- 	bss_color = vif->bss_conf.he_bss_color.color;
--	reg_base = port >= 4 ? R_AX_PTCL_BSS_COLOR_1 : R_AX_PTCL_BSS_COLOR_0;
-+	reg_base = port >= 4 ? p->bss_color + 4 : p->bss_color;
- 	reg = rtw89_mac_reg_by_idx(rtwdev, reg_base, rtwvif->mac_idx);
- 	rtw89_write32_mask(rtwdev, reg, masks[port], bss_color);
- }
-@@ -3954,6 +3959,7 @@ static void rtw89_mac_port_cfg_bss_color(struct rtw89_dev *rtwdev,
- static void rtw89_mac_port_cfg_mbssid(struct rtw89_dev *rtwdev,
- 				      struct rtw89_vif *rtwvif)
- {
-+	const struct rtw89_port_reg *p = &rtw_port_base;
- 	u8 port = rtwvif->port;
- 	u32 reg;
- 
-@@ -3961,7 +3967,7 @@ static void rtw89_mac_port_cfg_mbssid(struct rtw89_dev *rtwdev,
- 		return;
- 
- 	if (port == 0) {
--		reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_MBSSID_CTRL, rtwvif->mac_idx);
-+		reg = rtw89_mac_reg_by_idx(rtwdev, p->mbssid, rtwvif->mac_idx);
- 		rtw89_write32_clr(rtwdev, reg, B_AX_P0MB_ALL_MASK);
- 	}
- }
-@@ -3969,11 +3975,12 @@ static void rtw89_mac_port_cfg_mbssid(struct rtw89_dev *rtwdev,
- static void rtw89_mac_port_cfg_hiq_drop(struct rtw89_dev *rtwdev,
- 					struct rtw89_vif *rtwvif)
- {
-+	const struct rtw89_port_reg *p = &rtw_port_base;
- 	u8 port = rtwvif->port;
- 	u32 reg;
- 	u32 val;
- 
--	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_MBSSID_DROP_0, rtwvif->mac_idx);
-+	reg = rtw89_mac_reg_by_idx(rtwdev, p->mbssid_drop, rtwvif->mac_idx);
- 	val = rtw89_read32(rtwdev, reg);
- 	val &= ~FIELD_PREP(B_AX_PORT_DROP_4_0_MASK, BIT(port));
- 	if (port == 0)
-@@ -4028,10 +4035,11 @@ void rtw89_mac_port_tsf_sync(struct rtw89_dev *rtwdev,
- 			     struct rtw89_vif *rtwvif_src,
- 			     u16 offset_tu)
- {
-+	const struct rtw89_port_reg *p = &rtw_port_base;
- 	u32 val, reg;
- 
- 	val = RTW89_PORT_OFFSET_TU_TO_32US(offset_tu);
--	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_PORT0_TSF_SYNC + rtwvif->port * 4,
-+	reg = rtw89_mac_reg_by_idx(rtwdev, p->tsf_sync + rtwvif->port * 4,
- 				   rtwvif->mac_idx);
- 
- 	rtw89_write32_mask(rtwdev, reg, B_AX_SYNC_PORT_SRC, rtwvif_src->port);
++/* TX WD BODY DWORD 0 */
++#define BE_TXD_BODY0_EN_HWSEQ_MODE GENMASK(1, 0)
++#define BE_TXD_BODY0_HW_SSN_SEL GENMASK(4, 2)
++#define BE_TXD_BODY0_HWAMSDU BIT(5)
++#define BE_TXD_BODY0_HW_SEC_IV BIT(6)
++#define BE_TXD_BODY0_WD_PAGE BIT(7)
++#define BE_TXD_BODY0_CHK_EN BIT(8)
++#define BE_TXD_BODY0_WP_INT BIT(9)
++#define BE_TXD_BODY0_STF_MODE BIT(10)
++#define BE_TXD_BODY0_HDR_LLC_LEN GENMASK(15, 11)
++#define BE_TXD_BODY0_CH_DMA GENMASK(19, 16)
++#define BE_TXD_BODY0_SMH_EN BIT(20)
++#define BE_TXD_BODY0_PKT_OFFSET BIT(21)
++#define BE_TXD_BODY0_WDINFO_EN BIT(22)
++#define BE_TXD_BODY0_MOREDATA BIT(23)
++#define BE_TXD_BODY0_WP_OFFSET_V1 GENMASK(27, 24)
++#define BE_TXD_BODY0_AZ_FTM_SEC_V1 BIT(28)
++#define BE_TXD_BODY0_WD_SOURCE GENMASK(30, 29)
++#define BE_TXD_BODY0_HCI_SEQNUM_MODE BIT(31)
++
++/* TX WD BODY DWORD 1 */
++#define BE_TXD_BODY1_DMA_TXAGG_NUM GENMASK(6, 0)
++#define BE_TXD_BODY1_REUSE_NUM GENMASK(11, 7)
++#define BE_TXD_BODY1_SEC_TYPE GENMASK(15, 12)
++#define BE_TXD_BODY1_SEC_KEYID GENMASK(17, 16)
++#define BE_TXD_BODY1_SW_SEC_IV BIT(18)
++#define BE_TXD_BODY1_REUSE_SIZE GENMASK(23, 20)
++#define BE_TXD_BODY1_REUSE_START_OFFSET GENMASK(25, 24)
++#define BE_TXD_BODY1_ADDR_INFO_NUM GENMASK(31, 26)
++
++/* TX WD BODY DWORD 2 */
++#define BE_TXD_BODY2_TXPKTSIZE GENMASK(13, 0)
++#define BE_TXD_BODY2_AGG_EN BIT(14)
++#define BE_TXD_BODY2_BK BIT(15)
++#define BE_TXD_BODY2_MACID_EXTEND BIT(16)
++#define BE_TXD_BODY2_QSEL GENMASK(22, 17)
++#define BE_TXD_BODY2_TID_IND BIT(23)
++#define BE_TXD_BODY2_MACID GENMASK(31, 24)
++
++/* TX WD BODY DWORD 3 */
++#define BE_TXD_BODY3_WIFI_SEQ GENMASK(11, 0)
++#define BE_TXD_BODY3_MLO_FLAG BIT(12)
++#define BE_TXD_BODY3_IS_MLD_SW_EN BIT(13)
++#define BE_TXD_BODY3_TRY_RATE BIT(14)
++#define BE_TXD_BODY3_RELINK_FLAG_V1 BIT(15)
++#define BE_TXD_BODY3_BAND0_SU_TC_V1 GENMASK(21, 16)
++#define BE_TXD_BODY3_TOTAL_TC GENMASK(27, 22)
++#define BE_TXD_BODY3_RU_RTY BIT(28)
++#define BE_TXD_BODY3_MU_PRI_RTY BIT(29)
++#define BE_TXD_BODY3_MU_2ND_RTY BIT(30)
++#define BE_TXD_BODY3_BAND1_SU_RTY_V1 BIT(31)
++
++/* TX WD BODY DWORD 4 */
++#define BE_TXD_BODY4_TXDESC_CHECKSUM GENMASK(15, 0)
++#define BE_TXD_BODY4_SEC_IV_L0 GENMASK(23, 16)
++#define BE_TXD_BODY4_SEC_IV_L1 GENMASK(31, 24)
++
++/* TX WD BODY DWORD 5 */
++#define BE_TXD_BODY5_SEC_IV_H2 GENMASK(7, 0)
++#define BE_TXD_BODY5_SEC_IV_H3 GENMASK(15, 8)
++#define BE_TXD_BODY5_SEC_IV_H4 GENMASK(23, 16)
++#define BE_TXD_BODY5_SEC_IV_H5 GENMASK(31, 24)
++
++/* TX WD BODY DWORD 6 */
++#define BE_TXD_BODY6_MU_TC GENMASK(4, 0)
++#define BE_TXD_BODY6_RU_TC GENMASK(9, 5)
++#define BE_TXD_BODY6_PS160 BIT(10)
++#define BE_TXD_BODY6_BMC BIT(11)
++#define BE_TXD_BODY6_NO_ACK BIT(12)
++#define BE_TXD_BODY6_UPD_WLAN_HDR BIT(13)
++#define BE_TXD_BODY6_A4_HDR BIT(14)
++#define BE_TXD_BODY6_EOSP_BIT BIT(15)
++#define BE_TXD_BODY6_S_IDX GENMASK(23, 16)
++#define BE_TXD_BODY6_RU_POS GENMASK(31, 24)
++
++/* TX WD BODY DWORD 7 */
++#define BE_TXD_BODY7_RTS_TC GENMASK(5, 0)
++#define BE_TXD_BODY7_MSDU_NUM GENMASK(9, 6)
++#define BE_TXD_BODY7_DATA_ER BIT(10)
++#define BE_TXD_BODY7_DATA_BW_ER BIT(11)
++#define BE_TXD_BODY7_DATA_DCM BIT(12)
++#define BE_TXD_BODY7_GI_LTF GENMASK(15, 13)
++#define BE_TXD_BODY7_DATARATE GENMASK(27, 16)
++#define BE_TXD_BODY7_DATA_BW GENMASK(30, 28)
++#define BE_TXD_BODY7_USERATE_SEL BIT(31)
++
++/* TX WD INFO DWORD 0 */
++#define BE_TXD_INFO0_MBSSID GENMASK(3, 0)
++#define BE_TXD_INFO0_MULTIPORT_ID GENMASK(6, 4)
++#define BE_TXD_INFO0_DISRTSFB BIT(9)
++#define BE_TXD_INFO0_DISDATAFB BIT(10)
++#define BE_TXD_INFO0_DATA_LDPC BIT(11)
++#define BE_TXD_INFO0_DATA_STBC BIT(12)
++#define BE_TXD_INFO0_DATA_TXCNT_LMT GENMASK(21, 16)
++#define BE_TXD_INFO0_DATA_TXCNT_LMT_SEL BIT(22)
++#define BE_TXD_INFO0_RESP_PHYSTS_CSI_EN_V1 BIT(23)
++#define BE_TXD_INFO0_RLS_TO_CPUIO BIT(30)
++#define BE_TXD_INFO0_ACK_CH_INFO BIT(31)
++
++/* TX WD INFO DWORD 1 */
++#define BE_TXD_INFO1_MAX_AGG_NUM GENMASK(7, 0)
++#define BE_TXD_INFO1_BCN_SRCH_SEQ GENMASK(9, 8)
++#define BE_TXD_INFO1_NAVUSEHDR BIT(10)
++#define BE_TXD_INFO1_A_CTRL_BQR BIT(12)
++#define BE_TXD_INFO1_A_CTRL_BSR BIT(14)
++#define BE_TXD_INFO1_A_CTRL_CAS BIT(15)
++#define BE_TXD_INFO1_DATA_RTY_LOWEST_RATE GENMASK(27, 16)
++#define BE_TXD_INFO1_SW_DEFINE GENMASK(31, 28)
++
++/* TX WD INFO DWORD 2 */
++#define BE_TXD_INFO2_SEC_CAM_IDX GENMASK(7, 0)
++#define BE_TXD_INFO2_FORCE_KEY_EN BIT(8)
++#define BE_TXD_INFO2_LIFETIME_SEL GENMASK(15, 13)
++#define BE_TXD_INFO2_FORCE_TXOP BIT(17)
++#define BE_TXD_INFO2_AMPDU_DENSITY GENMASK(20, 18)
++#define BE_TXD_INFO2_LSIG_TXOP_EN BIT(21)
++#define BE_TXD_INFO2_OBW_CTS2SELF_DUP_TYPE GENMASK(29, 26)
++#define BE_TXD_INFO2_SPE_RPT_V1 BIT(30)
++#define BE_TXD_INFO2_SIFS_TX_V1 BIT(31)
++
++/* TX WD INFO DWORD 3 */
++#define BE_TXD_INFO3_SPE_PKT GENMASK(3, 0)
++#define BE_TXD_INFO3_SPE_PKT_TYPE GENMASK(7, 4)
++#define BE_TXD_INFO3_CQI_SND BIT(8)
++#define BE_TXD_INFO3_RTT_EN BIT(9)
++#define BE_TXD_INFO3_HT_DATA_SND_V1 BIT(10)
++#define BE_TXD_INFO3_BT_NULL BIT(11)
++#define BE_TXD_INFO3_TRI_FRAME BIT(12)
++#define BE_TXD_INFO3_NULL_0 BIT(13)
++#define BE_TXD_INFO3_NULL_1 BIT(14)
++#define BE_TXD_INFO3_RAW BIT(15)
++#define BE_TXD_INFO3_GROUP_BIT_IE_OFFSET GENMASK(23, 16)
++#define BE_TXD_INFO3_SIGNALING_TA_PKT_EN BIT(25)
++#define BE_TXD_INFO3_BCNPKT_TSF_CTRL BIT(26)
++#define BE_TXD_INFO3_SIGNALING_TA_PKT_SC GENMASK(30, 27)
++#define BE_TXD_INFO3_FORCE_BSS_CLR BIT(31)
++
++/* TX WD INFO DWORD 4 */
++#define BE_TXD_INFO4_PUNCTURE_PATTERN GENMASK(15, 0)
++#define BE_TXD_INFO4_PUNC_MODE GENMASK(17, 16)
++#define BE_TXD_INFO4_SW_TX_OK_0 BIT(18)
++#define BE_TXD_INFO4_SW_TX_OK_1 BIT(19)
++#define BE_TXD_INFO4_SW_TX_PWR_DBM GENMASK(26, 23)
++#define BE_TXD_INFO4_RTS_EN BIT(27)
++#define BE_TXD_INFO4_CTS2SELF BIT(28)
++#define BE_TXD_INFO4_CCA_RTS GENMASK(30, 29)
++#define BE_TXD_INFO4_HW_RTS_EN BIT(31)
++
++/* TX WD INFO DWORD 5 */
++#define BE_TXD_INFO5_SR_RATE_V1 GENMASK(4, 0)
++#define BE_TXD_INFO5_SR_EN_V1 BIT(5)
++#define BE_TXD_INFO5_NDPA_DURATION GENMASK(31, 16)
++
++/* TX WD INFO DWORD 6 */
++#define BE_TXD_INFO6_UL_APEP_LEN GENMASK(11, 0)
++#define BE_TXD_INFO6_UL_GI_LTF GENMASK(14, 12)
++#define BE_TXD_INFO6_UL_DOPPLER BIT(15)
++#define BE_TXD_INFO6_UL_STBC BIT(16)
++#define BE_TXD_INFO6_UL_LENGTH_REF GENMASK(21, 18)
++#define BE_TXD_INFO6_UL_RF_GAIN_IDX GENMASK(31, 22)
++
++/* TX WD INFO DWORD 7 */
++#define BE_TXD_INFO7_UL_FIXED_GAIN_EN BIT(0)
++#define BE_TXD_INFO7_UL_PRI_EXP_RSSI_DBM GENMASK(7, 1)
++#define BE_TXD_INFO7_ELNA_IDX BIT(8)
++#define BE_TXD_INFO7_UL_APEP_UNIT GENMASK(10, 9)
++#define BE_TXD_INFO7_UL_TRI_PAD GENMASK(13, 11)
++#define BE_TXD_INFO7_UL_T_PE GENMASK(15, 14)
++#define BE_TXD_INFO7_UL_EHT_USR_PRES BIT(16)
++#define BE_TXD_INFO7_UL_HELTF_SYMBOL_NUM GENMASK(19, 17)
++#define BE_TXD_INFO7_ULBW GENMASK(21, 20)
++#define BE_TXD_INFO7_ULBW_EXT GENMASK(23, 22)
++#define BE_TXD_INFO7_USE_WD_UL GENMASK(25, 24)
++#define BE_TXD_INFO7_EXTEND_MODE_SEL GENMASK(31, 28)
++
+ /* RX WD dword0 */
+ #define AX_RXD_RPKT_LEN_MASK GENMASK(13, 0)
+ #define AX_RXD_SHIFT_MASK GENMASK(15, 14)
 -- 
 2.25.1
 
