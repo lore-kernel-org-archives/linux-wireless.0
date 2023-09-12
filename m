@@ -2,148 +2,89 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA38BCA0EC9
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 Sep 2023 05:20:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28898CA0EC9
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 Sep 2023 05:36:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230470AbjILFUF (ORCPT
+        id S231185AbjILFgd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Sep 2023 01:20:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49834 "EHLO
+        Tue, 12 Sep 2023 01:36:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230391AbjILFUE (ORCPT
+        with ESMTP id S231192AbjILFg3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Sep 2023 01:20:04 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37455AA
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Sep 2023 22:20:01 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38C3UD3S021595;
-        Tue, 12 Sep 2023 05:19:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=qcppdkim1;
- bh=QIaN1utO1VHlj/8tIeHcu7VKVtsuUkJRfV6lWLXw4M0=;
- b=XK6uPDgzOfnlIEooyUZooBUK5UK3VXUvYWZfjhHKyq7iM1R1z1pZFjLR1K35hMCeVviP
- 45g8jvqBP9KsYAX7PSLDR3eLmAvy7OVqE8CL18msASopuPdqdxXwtLJs/xWNASy18z6l
- YDvAMj9E7vPXR1mGY6xFG3BuEiKvacxHhGB5IUCay42qDdnAXTdgajNmLfyv07u5nkHp
- eTqxjAxiN2R1quRy4FQc97hUbf9ny2pfXtVi56D6Nwbg4RK4UyMvmx8TdQQSuk2Mmjw2
- cRBX3huGuEPoaW5hLDKmpdTDi5Swf/e6dFVNf9ZViISLHMMCfimtz5+qW4jCEY1rJDqW tQ== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t2f3yr8sb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Sep 2023 05:19:56 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38C5JWma011984
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Sep 2023 05:19:32 GMT
-Received: from adisi-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.36; Mon, 11 Sep 2023 22:19:29 -0700
-From:   Aditya Kumar Singh <quic_adisi@quicinc.com>
-To:     <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-        "Aditya Kumar Singh" <quic_adisi@quicinc.com>
-Subject: [PATCH v2 2/3] wifi: ath11k: fix CAC running state during virtual interface start
-Date:   Tue, 12 Sep 2023 10:48:56 +0530
-Message-ID: <20230912051857.2284-3-quic_adisi@quicinc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230912051857.2284-1-quic_adisi@quicinc.com>
-References: <20230912051857.2284-1-quic_adisi@quicinc.com>
+        Tue, 12 Sep 2023 01:36:29 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADE8DCCC;
+        Mon, 11 Sep 2023 22:36:25 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id 98e67ed59e1d1-271b0a8e7ecso3459648a91.3;
+        Mon, 11 Sep 2023 22:36:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1694496985; x=1695101785; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=EC6DC2N23DWPNLHVQFVPgCN6nVNHhth6n3io/xw9+nQ=;
+        b=QpELkG48TEJi3I6X0qHvEwirNtPASrXNenH7wMo4sL6YEcN2QaU9X38K2nQg+lpiSV
+         txH/ijXNSC6GtvjN/GsN4BFvNGDOf8wkt+PlpPDfX7kIXCo36cJMU0tVViyhji3y+tde
+         c4ptifbvpWq64pMs193NAEvvCoGhBdlJTnzYxHG/r0yvkxsvpeJpWXmSLm0+dzUR3vk5
+         IIV5+sssuEwKxHxccRrgtcMGs1uxCvKQVIe3K8lyPvPPHbl6Gm0TNDVHC0YoeKykTcNU
+         4IKWTgbVk6MpyhQYvXgpwu29cws1XKoB2sDODchh7i6zBHuR6fXx8PacWI43MTLbmoZY
+         2HNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694496985; x=1695101785;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=EC6DC2N23DWPNLHVQFVPgCN6nVNHhth6n3io/xw9+nQ=;
+        b=BXvWpdXuBQZ/E64dX30rOGDpNUbQZsC7kj2A2RMGPyhgGVfyZGHwjOJM2xeQ1yROH2
+         WIXRPUhfadjDDx2Wh0tckPR1C+hoqn2xYDVE6EeS9qMkWaEV+1zUDBsjqyLyQXNQ+TIw
+         FgWIMyeeMZCVK+eZavR0Byle/J1LDLzkoPwUDt4z8PjJCaeRu66FZ26QLHdjemm7oiXv
+         AXE5vAiCSzVoxtWIShlX7i48DWDo4uE/Z0S+D7M2KEfh8dIBmet8MrdiDGNIsqfI2R6w
+         nvoqEw6fALh8CZnz2Qj99BzKvhr61nKPeahXaoZ8ZSxtvtO26aH8pG3j/9MDc5kh9AJS
+         yUFg==
+X-Gm-Message-State: AOJu0YyLogrL4pAUaw+btvsvCabypGzImNEj70sDzTNrog16JphsqnTA
+        uLBTtDfAtzwEF9upsOGvNV4=
+X-Google-Smtp-Source: AGHT+IGp0ALSFvxxmTXrz/UXJkCYc8DWAIzfJv+bujBDncNqHaiLY9s6ZenJfixhlbBHUbybUgrWMQ==
+X-Received: by 2002:a17:90a:e7c8:b0:274:1b8c:da01 with SMTP id kb8-20020a17090ae7c800b002741b8cda01mr3362145pjb.33.1694496984759;
+        Mon, 11 Sep 2023 22:36:24 -0700 (PDT)
+Received: from localhost.localdomain (220-133-92-191.hinet-ip.hinet.net. [220.133.92.191])
+        by smtp.googlemail.com with ESMTPSA id m2-20020a17090a34c200b002680ef05c40sm1047609pjf.55.2023.09.11.22.36.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Sep 2023 22:36:24 -0700 (PDT)
+From:   Zenm Chen <zenmchen@gmail.com>
+To:     Jes.Sorensen@gmail.com
+Cc:     kvalo@kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, rtl8821cerfe2@gmail.com,
+        Zenm Chen <zenmchen@gmail.com>
+Subject: [PATCH] wifi: rtl8xxxu: Add a description about the device ID 0x7392:0xb722
+Date:   Tue, 12 Sep 2023 13:36:14 +0800
+Message-ID: <20230912053614.10644-1-zenmchen@gmail.com>
+X-Mailer: git-send-email 2.42.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: SPGDkbscH3K4YTRR5vfusdVbhqu_BUX1
-X-Proofpoint-ORIG-GUID: SPGDkbscH3K4YTRR5vfusdVbhqu_BUX1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-12_02,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 malwarescore=0
- priorityscore=1501 phishscore=0 bulkscore=0 adultscore=0 mlxlogscore=999
- impostorscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
- definitions=main-2309120044
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently channel definition's primary channel's DFS CAC time
-as well as primary channel's state i.e usable are used to set
-the CAC_RUNNING flag for the ath11k radio structure. However,
-this is wrong since certain channel definition are possbile
-where primary channel may not be a DFS channel but, secondary
-channel is a DFS channel. For example - channel 36 with 160 MHz
-bandwidth.
-In such cases, the flag will not be set which is wrong.
+According to the driver provided by EDIMAX, the device ID
+0x7392:0xb722 belongs to EDIMAX EW-7722UTn V3, so add a comment about this.
 
-Fix this issue by using cfg80211_chandef_dfs_usable() function
-from cfg80211 which return trues if at least one channel is in
-usable state.
-
-While at it, modify the CAC running debug log message to print
-the CAC time as well in milli-seconds.
-
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+Signed-off-by: Zenm Chen <zenmchen@gmail.com>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index c071bf5841af..6b5f032197ff 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -5,6 +5,7 @@
-  */
- 
- #include <net/mac80211.h>
-+#include <net/cfg80211.h>
- #include <linux/etherdevice.h>
- #include <linux/bitfield.h>
- #include <linux/inetdevice.h>
-@@ -7193,6 +7194,7 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
- 	struct wmi_vdev_start_req_arg arg = {};
- 	const struct cfg80211_chan_def *chandef = &ctx->def;
- 	int ret = 0;
-+	unsigned int dfs_cac_time;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -7272,20 +7274,21 @@ ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
- 	ath11k_dbg(ab, ATH11K_DBG_MAC,  "vdev %pM started, vdev_id %d\n",
- 		   arvif->vif->addr, arvif->vdev_id);
- 
--	/* Enable CAC Flag in the driver by checking the channel DFS cac time,
--	 * i.e dfs_cac_ms value which will be valid only for radar channels
--	 * and state as NL80211_DFS_USABLE which indicates CAC needs to be
-+	/* Enable CAC Flag in the driver by checking the all sub-channel's DFS
-+	 * state as NL80211_DFS_USABLE which indicates CAC needs to be
- 	 * done before channel usage. This flags is used to drop rx packets.
- 	 * during CAC.
- 	 */
- 	/* TODO Set the flag for other interface types as required */
--	if (arvif->vdev_type == WMI_VDEV_TYPE_AP &&
--	    chandef->chan->dfs_cac_ms &&
--	    chandef->chan->dfs_state == NL80211_DFS_USABLE) {
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP && ctx->radar_enabled &&
-+	    cfg80211_chandef_dfs_usable(ar->hw->wiphy, chandef)) {
- 		set_bit(ATH11K_CAC_RUNNING, &ar->dev_flags);
-+		dfs_cac_time = cfg80211_chandef_dfs_cac_time(ar->hw->wiphy,
-+							     chandef);
- 		ath11k_dbg(ab, ATH11K_DBG_MAC,
--			   "CAC Started in chan_freq %d for vdev %d\n",
--			   arg.channel.freq, arg.vdev_id);
-+			   "CAC (for %u ms) Started in center_freq %d center_freq1 %d for vdev %d\n",
-+			   dfs_cac_time, arg.channel.freq, chandef->center_freq1,
-+			   arg.vdev_id);
- 	}
- 
- 	ret = ath11k_mac_set_txbf_conf(arvif);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index d1bb605e8b54..43ee7592bc6e 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -7801,6 +7801,7 @@ static const struct usb_device_id dev_table[] = {
+ /* Asus USB-N13 rev C1 */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x0b05, 0x18f1, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192fu_fops},
++/* EDIMAX EW-7722UTn V3 */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0xb722, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192fu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x318b, 0xff, 0xff, 0xff),
 -- 
-2.17.1
+2.42.0
 
