@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD550EDEC47
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Sep 2023 11:57:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F08BEDEC47
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Sep 2023 11:58:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240594AbjIML5u (ORCPT
+        id S240601AbjIML6I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Sep 2023 07:57:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47536 "EHLO
+        Wed, 13 Sep 2023 07:58:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240608AbjIML5t (ORCPT
+        with ESMTP id S240593AbjIML6I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Sep 2023 07:57:49 -0400
+        Wed, 13 Sep 2023 07:58:08 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F21119BB
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Sep 2023 04:57:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2531996
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Sep 2023 04:58:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694606264; x=1726142264;
+  t=1694606284; x=1726142284;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=YGSVkrXrQ6rJ3WriB85eMQaNK4lA2pradVj6MEQVTqs=;
-  b=Tkr8HoetrVHuHX1r1uci7surYGtD57uo6902QmSOUZZ2CpAQstIGUFS8
-   jvxx9FWfHkSWY0ySSFaBUnk+P+ky/S0lUMtlLQiT2bOtIzV+3GhMYHme0
-   sR1i9Uo51CDDsrls0SQBJJiB5X5QnvO3SfkWeOtOrSRLirhX/jbnAMim1
-   mOQBJZIU0yLDPKyloWiQEO5gkjduABnRHY5JKu2IpmTPdycR29cHqpup4
-   GY5XzIqIqG1VC8uA4McjOSNGcueCb9d08UpDSj+NaZi9IXvrvdxQykT5M
-   Yhl/cVOltMsYW2k53efki9fTfnjgFdSYgN6DP8GaS57CX//7Un4gy0Vkv
+  bh=Lzq9PVHTONYhnw7+7V8tJjBPV9UOoghgpopZa8EKSbM=;
+  b=cEYaL3WuzsVmdbDfYHyOOJFPmn4WiiKVTZ1mkB4zpEdbKcKqfPS9Qewb
+   Z+a7+cTH3cqho70RlAIw+5qfgU2ZopOoPNrmtIGoHjVM1xfVJjX3xyVvU
+   mhzExf4fJXsvZVhNNlXlvztpO6ja0dtoUNFHqwySOrPu13wF7u4l2pYFt
+   mPNdtAuzlaGwlGLZFBV75Frk8/6r9ej7/fxKv2878WoN0B0UirPyXLZKA
+   r9ZZ7lQ0/QnUi4Coky7TsxWdf/l4VGdU4d4g2PHS0A/8ppZvPBIJyI5HB
+   8UEwHD/CtWPULtRTgC4OuQ0wEKLDIq27zESI9b6p1+HTXisFG7yv+Kb+A
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10831"; a="368903084"
+X-IronPort-AV: E=McAfee;i="6600,9927,10831"; a="368903068"
 X-IronPort-AV: E=Sophos;i="6.02,143,1688454000"; 
-   d="scan'208";a="368903084"
+   d="scan'208";a="368903068"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2023 04:57:34 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2023 04:57:32 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10831"; a="737470971"
+X-IronPort-AV: E=McAfee;i="6600,9927,10831"; a="737470961"
 X-IronPort-AV: E=Sophos;i="6.02,143,1688454000"; 
-   d="scan'208";a="737470971"
+   d="scan'208";a="737470961"
 Received: from ggreenma-mobl2.jer.intel.com ([10.13.17.40])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2023 04:57:32 -0700
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2023 04:57:27 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/15] wifi: iwlwifi: update context info structure definitions
-Date:   Wed, 13 Sep 2023 14:56:47 +0300
-Message-Id: <20230913145231.ef1553ab5178.I326ac8719566e04f799d294d8e863383cff87eaa@changeid>
+Subject: [PATCH 09/15] wifi: iwlwifi: Use FW rate for non-data frames
+Date:   Wed, 13 Sep 2023 14:56:45 +0300
+Message-Id: <20230913145231.6c7e59620ee0.I6eaed3ccdd6dd62b9e664facc484081fc5275843@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230913115651.190558-1-gregory.greenman@intel.com>
 References: <20230913115651.190558-1-gregory.greenman@intel.com>
@@ -57,38 +57,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-Some new fields were added to the context info structure,
-define them for future use.
+Currently we are setting the rate in the tx cmd for
+mgmt frames (e.g. during connection establishment).
+This was problematic when sending mgmt frames in eSR mode,
+as we don't know what link this frame will be sent on
+(This is decided by the FW), so we don't know what is the
+lowest rate.
+Fix this by not setting the rate in tx cmd and rely
+on FW to choose the right one.
+Set rate only for injected frames with fixed rate,
+or when no sta is given.
+Also set for important frames (EAPOL etc.) the High Priority flag.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 055b22e770dd ("iwlwifi: mvm: Set Tx rate and flags when there is not station")
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-index 8a377b41e26a..1379dc2d231b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
-@@ -187,11 +187,15 @@ struct iwl_prph_scratch_ctrl_cfg {
-  * struct iwl_prph_scratch - peripheral scratch mapping
-  * @ctrl_cfg: control and configuration of prph scratch
-  * @dram: firmware images addresses in DRAM
-+ * @fseq_override: FSEQ override parameters
-+ * @step_analog_params: STEP analog calibration values
-  * @reserved: reserved
-  */
- struct iwl_prph_scratch {
- 	struct iwl_prph_scratch_ctrl_cfg ctrl_cfg;
--	__le32 reserved[10];
-+	__le32 fseq_override;
-+	__le32 step_analog_params;
-+	__le32 reserved[8];
- 	struct iwl_context_info_dram dram;
- } __packed; /* PERIPH_SCRATCH_S */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 36d70d589aed..6e2e52936761 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -536,16 +536,20 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			flags |= IWL_TX_FLAGS_ENCRYPT_DIS;
  
+ 		/*
+-		 * For data packets rate info comes from the fw. Only
+-		 * set rate/antenna during connection establishment or in case
+-		 * no station is given.
++		 * For data and mgmt packets rate info comes from the fw. Only
++		 * set rate/antenna for injected frames with fixed rate, or
++		 * when no sta is given.
+ 		 */
+-		if (!sta || !ieee80211_is_data(hdr->frame_control) ||
+-		    mvmsta->sta_state < IEEE80211_STA_AUTHORIZED) {
++		if (unlikely(!sta ||
++			     info->control.flags & IEEE80211_TX_CTRL_RATE_INJECT)) {
+ 			flags |= IWL_TX_FLAGS_CMD_RATE;
+ 			rate_n_flags =
+ 				iwl_mvm_get_tx_rate_n_flags(mvm, info, sta,
+ 							    hdr->frame_control);
++		} else if (!ieee80211_is_data(hdr->frame_control) ||
++			   mvmsta->sta_state < IEEE80211_STA_AUTHORIZED) {
++			/* These are important frames */
++			flags |= IWL_TX_FLAGS_HIGH_PRI;
+ 		}
+ 
+ 		if (mvm->trans->trans_cfg->device_family >=
 -- 
 2.38.1
 
