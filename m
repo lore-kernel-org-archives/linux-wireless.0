@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C68D7EDEC6B
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Sep 2023 14:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 642B6EDEC71
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Sep 2023 14:44:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241472AbjIMOof (ORCPT
+        id S241497AbjIMOoh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Sep 2023 10:44:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59918 "EHLO
+        Wed, 13 Sep 2023 10:44:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241444AbjIMOoe (ORCPT
+        with ESMTP id S241454AbjIMOoe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 13 Sep 2023 10:44:34 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11E0891
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Sep 2023 07:44:29 -0700 (PDT)
-X-UUID: 0752f1ec524411ee8051498923ad61e6-20230913
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A98999B
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Sep 2023 07:44:30 -0700 (PDT)
+X-UUID: 072dceee524411eea33bb35ae8d461a2-20230913
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=MngREa3tzTztuZpub6LB7rywTQ1g699xg/PwMcMxFuM=;
-        b=B3/GmZ5a0Z8UUXLE15ZJlzGrNvcbtvfrs6t20VYqitAf26eleQjS9yNz3JurmWYsf5/6jpjcyLWZjz72eB8wwcmiakBSOxja6hls7rPabLD193FXJe3sxOXX1RhPWxy5ceV8XdDD3v7cqLXrOujzl5mjRNiaE/iWbBog9kFE6P4=;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=vHEByuk51dnpxNwwwDU41FxzBnDpRcDHW0NnBFYDvHc=;
+        b=rIfKHEZSr0E7jEz+20J6dNyccSAp5c0mnXY9tSV3onGBgt4NRf93WXZfidDpyn6LHJieuh8CKJo6Dq5hGkuEFldT4DOqSICCZhohvWwbmex6NfmTAScQFBBchmeaxY8hO/2kEjHFqSQKvJUPmlZi6wefuOlrKyRFMXQ8lA+FAoA=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.31,REQID:adee1f40-94e4-4331-a72b-775ed0564927,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:-25
-X-CID-META: VersionHash:0ad78a4,CLOUDID:1faafcc2-1e57-4345-9d31-31ad9818b39f,B
+X-CID-O-INFO: VERSION:1.1.31,REQID:61265f88-323c-4b0a-a15b-a78facded9b0,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:0ad78a4,CLOUDID:16f4cbbe-14cc-44ca-b657-2d2783296e72,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
+        RL:1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
         DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 0752f1ec524411ee8051498923ad61e6-20230913
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-UUID: 072dceee524411eea33bb35ae8d461a2-20230913
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
         (envelope-from <deren.wu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 140978318; Wed, 13 Sep 2023 22:44:22 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+        with ESMTP id 2130540337; Wed, 13 Sep 2023 22:44:22 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1118.26; Wed, 13 Sep 2023 22:44:21 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
@@ -50,129 +50,132 @@ CC:     Sean Wang <sean.wang@mediatek.com>,
         Shayne Chen <shayne.chen@mediatek.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Deren Wu <deren.wu@mediatek.com>
-Subject: [PATCH v2 04/17] wifi: mt76: mt7925: add regs.h
-Date:   Wed, 13 Sep 2023 22:43:32 +0800
-Message-ID: <97b2580bd751555a98f99b03522ace6a09241f33.1694595134.git.deren.wu@mediatek.com>
+        Deren Wu <deren.wu@mediatek.com>,
+        "Hao Zhang" <hao.zhang@mediatek.com>,
+        Leon Yen <leon.yen@mediatek.com>,
+        "Mingyen Hsieh" <mingyen.hsieh@mediatek.com>,
+        Nelson Yu <nelson.yu@mediatek.com>,
+        "Quan Zhou" <quan.zhou@mediatek.com>,
+        Rong Yan <rong.yan@mediatek.com>
+Subject: [PATCH v2 00/17] Add support for Mediatek Wi-Fi7 driver mt7925
+Date:   Wed, 13 Sep 2023 22:43:28 +0800
+Message-ID: <cover.1694595134.git.deren.wu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <cover.1694595134.git.deren.wu@mediatek.com>
-References: <cover.1694595134.git.deren.wu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--5.407600-8.000000
+X-TMASE-MatchedRID: tpf4JaSfocrGHadaRuAOvxv+r1s9z1a0Ct59Uh3p/NXo5/9VDsD0gA5x
+        vr++qx3rYE8U75Rh/1qJ1uwZVAc3Y4uLXAHXNQlQXy2tkK+taSRAq6/y5AEOOhP6Y8Vsp9y7njM
+        loJas2eeokhRcXx575036XrknL01IpXtZdNwHfyBc/msUC5wFQfaS52LUPfcSWSw/UjSfbBKijR
+        a5rWHxdpu69huUx6EElW/4DesQXwfyHo8NfWdGk57tR0mnRAg12qBSQHAh8phnerzbhugqsuL25
+        OtF/N4ANJnt9TW/xwZX/sAhRmSCr6o77AcuQhw7ngIgpj8eDcAZ1CdBJOsoY8RB0bsfrpPIXzYx
+        eQR1DvuajNrVmsKo4oovTOQcfOkE4ORErmbOWN8jUSx53AbF5PAEic5b778O
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--5.407600-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: 5622A462BE50EE960569BDB43610539A9D4F188B3032D0496AAE0AFCEDAE8EF52000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-(Patches split into one patch per file for easier review, but the final
-commit will be one big patch. See the cover letter for more info.)
+This series adds mt7925, a new mac80211 driver for MediaTek Wi-Fi 7
+(802.11be) device Filogic 360, which can support Station, AP, P2P, and
+monitor modes. Filogic 360 supports max 4096-QAM/160MHz radio operation at 6 GHz,
+5 GHz, or 2.4 GHz with 2x2 antennas. This chip supports PCIe and USB bus type.
 
+mt7925 supports Wi-Fi 6E and EHT rate with single link only at this moment,
+whereas Wi-Fi 7 and its specific features are working in progress. They will be
+introduced in further patches.
+
+The driver is build tested by Intel's kernel test robot with both GCC and Clang
+with several architecture. Sparse reports no warnings.
+
+There are multiple authors, they are listed in alphabetical order below.
+
+Co-developed-by: Hao Zhang <hao.zhang@mediatek.com>
+Signed-off-by: Hao Zhang <hao.zhang@mediatek.com>
+Co-developed-by: Leon Yen <leon.yen@mediatek.com>
+Signed-off-by: Leon Yen <leon.yen@mediatek.com>
 Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
+Signed-off-by: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
+Co-developed-by: Nelson Yu <nelson.yu@mediatek.com>
+Signed-off-by: Nelson Yu <nelson.yu@mediatek.com>
+Co-developed-by: Quan Zhou <quan.zhou@mediatek.com>
+Signed-off-by: Quan Zhou <quan.zhou@mediatek.com>
+Co-developed-by: Rong Yan <rong.yan@mediatek.com>
+Signed-off-by: Rong Yan <rong.yan@mediatek.com>
 Signed-off-by: Deren Wu <deren.wu@mediatek.com>
----
- .../net/wireless/mediatek/mt76/mt7925/regs.h  | 92 +++++++++++++++++++
- 1 file changed, 92 insertions(+)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/regs.h
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/regs.h b/drivers/net/wireless/mediatek/mt76/mt7925/regs.h
-new file mode 100644
-index 000000000000..985794a40c1a
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/regs.h
-@@ -0,0 +1,92 @@
-+/* SPDX-License-Identifier: ISC */
-+/* Copyright (C) 2023 MediaTek Inc. */
-+
-+#ifndef __MT7925_REGS_H
-+#define __MT7925_REGS_H
-+
-+#include "../mt792x_regs.h"
-+
-+#define MT_MDP_BASE			0x820cc800
-+#define MT_MDP(ofs)			(MT_MDP_BASE + (ofs))
-+
-+#define MT_MDP_DCR0			MT_MDP(0x000)
-+#define MT_MDP_DCR0_DAMSDU_EN		BIT(15)
-+#define MT_MDP_DCR0_RX_HDR_TRANS_EN	BIT(19)
-+
-+#define MT_MDP_DCR1			MT_MDP(0x004)
-+#define MT_MDP_DCR1_MAX_RX_LEN		GENMASK(15, 3)
-+
-+#define MT_MDP_BNRCFR0(_band)		MT_MDP(0x090 + ((_band) << 8))
-+#define MT_MDP_RCFR0_MCU_RX_MGMT	GENMASK(5, 4)
-+#define MT_MDP_RCFR0_MCU_RX_CTL_NON_BAR	GENMASK(7, 6)
-+#define MT_MDP_RCFR0_MCU_RX_CTL_BAR	GENMASK(9, 8)
-+
-+#define MT_MDP_BNRCFR1(_band)		MT_MDP(0x094 + ((_band) << 8))
-+#define MT_MDP_RCFR1_MCU_RX_BYPASS	GENMASK(23, 22)
-+#define MT_MDP_RCFR1_RX_DROPPED_UCAST	GENMASK(28, 27)
-+#define MT_MDP_RCFR1_RX_DROPPED_MCAST	GENMASK(30, 29)
-+#define MT_MDP_TO_HIF			0
-+#define MT_MDP_TO_WM			1
-+
-+#define MT_WFDMA0_HOST_INT_ENA		MT_WFDMA0(0x228)
-+#define MT_WFDMA0_HOST_INT_DIS		MT_WFDMA0(0x22c)
-+#define HOST_RX_DONE_INT_ENA4		BIT(12)
-+#define HOST_RX_DONE_INT_ENA5		BIT(13)
-+#define HOST_RX_DONE_INT_ENA6		BIT(14)
-+#define HOST_RX_DONE_INT_ENA7		BIT(15)
-+#define HOST_RX_DONE_INT_ENA8		BIT(16)
-+#define HOST_RX_DONE_INT_ENA9		BIT(17)
-+#define HOST_RX_DONE_INT_ENA10		BIT(18)
-+#define HOST_RX_DONE_INT_ENA11		BIT(19)
-+#define HOST_TX_DONE_INT_ENA15		BIT(25)
-+#define HOST_TX_DONE_INT_ENA16		BIT(26)
-+#define HOST_TX_DONE_INT_ENA17		BIT(27)
-+
-+/* WFDMA interrupt */
-+#define MT_INT_RX_DONE_DATA		HOST_RX_DONE_INT_ENA2
-+#define MT_INT_RX_DONE_WM		HOST_RX_DONE_INT_ENA0
-+#define MT_INT_RX_DONE_WM2		HOST_RX_DONE_INT_ENA1
-+#define MT_INT_RX_DONE_ALL		(MT_INT_RX_DONE_DATA | \
-+					 MT_INT_RX_DONE_WM | \
-+					 MT_INT_RX_DONE_WM2)
-+
-+#define MT_INT_TX_DONE_MCU_WM		(HOST_TX_DONE_INT_ENA15 | \
-+					 HOST_TX_DONE_INT_ENA17)
-+
-+#define MT_INT_TX_DONE_FWDL		HOST_TX_DONE_INT_ENA16
-+#define MT_INT_TX_DONE_BAND0		HOST_TX_DONE_INT_ENA0
-+
-+#define MT_INT_TX_DONE_MCU		(MT_INT_TX_DONE_MCU_WM |	\
-+					 MT_INT_TX_DONE_FWDL)
-+#define MT_INT_TX_DONE_ALL		(MT_INT_TX_DONE_MCU_WM |	\
-+					 MT_INT_TX_DONE_BAND0 |	\
-+					GENMASK(18, 4))
-+
-+#define MT_RX_DATA_RING_BASE		MT_WFDMA0(0x500)
-+
-+#define MT_INFRA_CFG_BASE		0xd1000
-+#define MT_INFRA(ofs)			(MT_INFRA_CFG_BASE + (ofs))
-+
-+#define MT_HIF_REMAP_L1			0x155024
-+#define MT_HIF_REMAP_L1_MASK		GENMASK(31, 16)
-+#define MT_HIF_REMAP_L1_OFFSET		GENMASK(15, 0)
-+#define MT_HIF_REMAP_L1_BASE		GENMASK(31, 16)
-+#define MT_HIF_REMAP_BASE_L1		0x130000
-+
-+#define MT_HIF_REMAP_L2			0x0120
-+#if IS_ENABLED(CONFIG_MT76_DEV)
-+#define MT_HIF_REMAP_BASE_L2		(0x7c500000 - (0x7c000000 - 0x18000000))
-+#else
-+#define MT_HIF_REMAP_BASE_L2		0x18500000
-+#endif
-+
-+#define MT_WFSYS_SW_RST_B		0x7c000140
-+
-+#define MT_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x370)
-+#define MT_WTBLON_TOP_WDUCR_GROUP	GENMASK(4, 0)
-+
-+#define MT_WTBL_UPDATE			MT_WTBLON_TOP(0x380)
-+#define MT_WTBL_UPDATE_WLAN_IDX		GENMASK(11, 0)
-+#define MT_WTBL_UPDATE_ADM_COUNT_CLEAR	BIT(14)
-+
-+#endif
+----------------[commit message cut here]----------------
+
+This patch set is based on preceding series "wifi: mt76: mt792x: add mt7925 support"
+https://patchwork.kernel.org/project/linux-wireless/cover/cover.1690863143.git.deren.wu@mediatek.com/
+
+v2:
+- add patchwork link for preceding series
+- rebase on top of staging tree and apply fixes for following new patches
+  * 586baa51d755 ("wifi: mt76: remove unused error path in mt76_connac_tx_complete_skb")
+  * 29b8fc6742a1 ("wifi: mt76: fix race condition related to checking tx queue fill status")
+  * e8c1841278a7 ("wifi: cfg80211: annotate iftype_data pointer with sparse")
+
+Deren Wu (17):
+  wifi: mt76: mt7925: add Kconfig
+  wifi: mt76: mt7925: add Makefile
+  wifi: mt76: mt7925: add mt7925.h
+  wifi: mt76: mt7925: add regs.h
+  wifi: mt76: mt7925: add mcu.c
+  wifi: mt76: mt7925: add mcu.h
+  wifi: mt76: mt7925: add mac.c
+  wifi: mt76: mt7925: add mac.h
+  wifi: mt76: mt7925: add main.c
+  wifi: mt76: mt7925: add init.c
+  wifi: mt76: mt7925: add pci_mcu.c
+  wifi: mt76: mt7925: add pci_mac.c
+  wifi: mt76: mt7925: add pci.c
+  wifi: mt76: mt7925: add usb.c
+  wifi: mt76: mt7925: add debugfs.c
+  wifi: mt76: add mt7925 to Makefile
+  wifi: mt76: add mt7925 to Kconfig
+
+ drivers/net/wireless/mediatek/mt76/Kconfig    |    1 +
+ drivers/net/wireless/mediatek/mt76/Makefile   |    1 +
+ .../net/wireless/mediatek/mt76/mt7925/Kconfig |   30 +
+ .../wireless/mediatek/mt76/mt7925/Makefile    |    9 +
+ .../wireless/mediatek/mt76/mt7925/debugfs.c   |  319 ++
+ .../net/wireless/mediatek/mt76/mt7925/init.c  |  235 ++
+ .../net/wireless/mediatek/mt76/mt7925/mac.c   | 1452 ++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mac.h   |   23 +
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 1471 ++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 3174 +++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.h   |  537 +++
+ .../wireless/mediatek/mt76/mt7925/mt7925.h    |  325 ++
+ .../net/wireless/mediatek/mt76/mt7925/pci.c   |  586 +++
+ .../wireless/mediatek/mt76/mt7925/pci_mac.c   |  151 +
+ .../wireless/mediatek/mt76/mt7925/pci_mcu.c   |   53 +
+ .../net/wireless/mediatek/mt76/mt7925/regs.h  |   92 +
+ .../net/wireless/mediatek/mt76/mt7925/usb.c   |  340 ++
+ 17 files changed, 8799 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/Makefile
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/init.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/main.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/pci_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+
 -- 
 2.18.0
 
