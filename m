@@ -2,133 +2,96 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 550B3EEB59A
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Sep 2023 06:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51487CA5511
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Sep 2023 08:55:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237746AbjIMGy5 (ORCPT
+        id S239109AbjIMIzM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Sep 2023 02:54:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49344 "EHLO
+        Wed, 13 Sep 2023 04:55:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231848AbjIMGy4 (ORCPT
+        with ESMTP id S230267AbjIMIzM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Sep 2023 02:54:56 -0400
-Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F3D71738
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Sep 2023 23:54:52 -0700 (PDT)
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com [209.85.128.71])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 0F4553F677
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Sep 2023 06:54:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1694588089;
-        bh=AuUP4uMpEXV7NNGmRh7ocQP9g6lCntCtTGB6qti7vSI=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
-        b=ELrw1MLbR0ZIPaNrv1qVLrThrk7+fOK39bCrtvBzPS3grhak9sLUjrlp63I5KQspO
-         NR8q979hvUuZCZbr9f+EUL98s7+zkS7aO4j1WOl1S8sAb21LUu6ZBuB6PVtDozD4xt
-         +FGTWrvMtd+gzMmBu8JEmTEMnMDrpPazho082glsgr7hKyQfeD0Op8ly8/wpp2baRG
-         p7bVqtrmxAVmLk8gu1W7sW1PQVvXhCyvC7m4jYQHx4Oqrlh5Wm9zkNA8lKl3Xyk874
-         RRs46S4OHiHMk59mzTOxqeP3AxB8rPcb75M+DO51HrpXKdGJygX7c6J2tepGOREQvN
-         r7/0Vxw9jXQNQ==
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-3fbdf341934so50353465e9.3
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Sep 2023 23:54:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694588088; x=1695192888;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=AuUP4uMpEXV7NNGmRh7ocQP9g6lCntCtTGB6qti7vSI=;
-        b=d0pVtqENmyU7zXfRM/kipiGBQFdpF+nvZE7J30BdEAdDrn40EgiFbiaTDS9Zf/AvXG
-         IjQ2pdeKsduupf7ltNTqUgWbewm2+b6vjrD7mMXiy/iPMYia0p/AdtWh9J+kmZimewHG
-         VGPNWowmPujxMsbGMvBOa2/PkzSB0Sk3xPbX/QeuzEjFSaPHArhqqtQRk6uwLif3td01
-         Wk+5IRe43Ll3oxcVvZRL364qNydlgIJneRpGSFZikwHq/lynPBkmDwInv/6dferMQqXB
-         riamTK8rLf8MB5cMG0tpqoszK8JfSfSFWsoDp6xOqHbNEN8otv8zvNsHGtvYYqFnJquM
-         EJXw==
-X-Gm-Message-State: AOJu0Ywig2iCefjmUhJaOJHJsoekRzcA8riYhXaQfqRqwswCGouCYtEo
-        2R1MVVM3gF+s9TDcDOJON5+ygO894buuP175FctWwfMt0iFLJdAlfCxNWCskPOU9byw9trhpZ2A
-        z4JA/6T7bWW63E9bokNColIS0z5Jlv55ml8Y8WTPYBLIY
-X-Received: by 2002:a7b:c44b:0:b0:3f7:f2d0:b904 with SMTP id l11-20020a7bc44b000000b003f7f2d0b904mr1142851wmi.8.1694588088525;
-        Tue, 12 Sep 2023 23:54:48 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IELX8SVPWke/bYJiSBu4DzxplQdTDhwPyJaq++ur+9HfRMtx7dEx/+eEpgz3KK0VkuN7saPKA==
-X-Received: by 2002:a7b:c44b:0:b0:3f7:f2d0:b904 with SMTP id l11-20020a7bc44b000000b003f7f2d0b904mr1142836wmi.8.1694588088217;
-        Tue, 12 Sep 2023 23:54:48 -0700 (PDT)
-Received: from localhost ([194.191.244.86])
-        by smtp.gmail.com with ESMTPSA id 22-20020a05600c231600b003fef6881350sm1097497wmo.25.2023.09.12.23.54.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Sep 2023 23:54:47 -0700 (PDT)
-From:   Juerg Haefliger <juerg.haefliger@canonical.com>
-To:     aspriel@gmail.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, kvalo@kernel.org,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com
-Cc:     linux-kernel@vger.kernel.org, linus.walleij@linaro.org,
-        marcan@marcan.st, keescook@chromium.org, gustavoars@kernel.org,
-        hdegoede@redhat.com, juerg.haefliger@canonical.com,
-        ryohei.kondo@cypress.com
-Subject: [PATCH] wifi: brcmfmac: Replace 1-element arrays with flexible arrays
-Date:   Wed, 13 Sep 2023 08:54:21 +0200
-Message-Id: <20230913065421.12615-1-juerg.haefliger@canonical.com>
-X-Mailer: git-send-email 2.39.2
+        Wed, 13 Sep 2023 04:55:12 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7CED196
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Sep 2023 01:55:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=jqnDKez6df2YW11yiROlt1j6XBsPX2hqwFtKpg//+FI=;
+        t=1694595307; x=1695804907; b=jbVnBr1DaZAikl1cE/Y/t1lgjV8t12juMm2CjGWiPZBRzZ8
+        4aHmSqgQsc2B7h249gDwyUMtvWNzOaza9cML75TNMJqlOeaHZ4/0FvgajcdjUFvPGB7luua3FEo6X
+        nQHK3TYsrIRk5ZCfRUa0zyB2Bl0SucTaUbDYDggk6PL/P+lLYRG9T5QljXC04vmS/FkSvKPfTR3or
+        cELiXYVKp9IjokmEzMJtjcQ94YVo64B9azPM62T7aHdh2ytJPhpASwcIhiHhnoPvv4XpCiyh2yuue
+        CxELsRWRTyN3yPMlV1UDy73n7I8TM4nUWytRTkeaNENk9KF7As1ZQ+8dYKO7q7nw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qgLeH-00EhXj-2E;
+        Wed, 13 Sep 2023 10:55:01 +0200
+Message-ID: <cd762f33b1c15566237c85f1e265ee8a00006f5c.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/3] wifi: mac80211: add support to allow driver to
+ generate local link address for station
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Wen Gong <quic_wgong@quicinc.com>, ath12k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Wed, 13 Sep 2023 10:55:00 +0200
+In-Reply-To: <20230906103458.24092-2-quic_wgong@quicinc.com>
+References: <20230906103458.24092-1-quic_wgong@quicinc.com>
+         <20230906103458.24092-2-quic_wgong@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since commit 2d47c6956ab3 ("ubsan: Tighten UBSAN_BOUNDS on GCC"),
-UBSAN_BOUNDS no longer pretends 1-element arrays are unbounded. Walking
-'element' and 'channel_list' will trigger warnings, so make them proper
-flexible arrays.
+On Wed, 2023-09-06 at 06:34 -0400, Wen Gong wrote:
+> Currently the local link address of all links is random generated by
+> eth_random_addr() in mac80211 while connecting to a MLO AP for station
+> mode. The MAC address of link is not passed from NL command. The 1st
+> link address is generated while authenticate with AP, the other links'
+> addresses are generated after assoc success with AP.
+>=20
+> It is not convenient for some driver, reason is, for station mode,
+> the interface with its mac address is already created in driver after
+> wlan load, it is used for hw scan and non-MLO connection.
+>=20
+> When connecting to MLO AP, driver reuse the interface as the 1st link of
+> MLO. If the mac address of the 1st link changed to a new value, then
+> driver need to change the mac address and do many synchronous operation
+> with firmware. Thus the operation become complex. After MLO disconnect,
+> driver need to restore the old mac address, it is also another complex
+> operation.
+>=20
+> The hw scan maybe happen through the MLO connection/disconnection. And
+> the hw scan uses the 1st link address while MLO connected and uses the
+> interface address while MLO is disconnected, this leads hw scan complex.
+>=20
+> Hence add this interface to allow driver to generate the address of each
+> link while MLO connection. Then driver could provide the same mac address
+> for the 1st link, thus hw scan/NON-MLO connection/1st link of MLO will us=
+e
+> the same mac address, then operation become easy.
 
-False positive warnings were:
+Maybe after all this explanation, all we need is a flag "reuse MLD
+address for assoc link"?
 
-  UBSAN: array-index-out-of-bounds in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:6984:20
-  index 1 is out of range for type '__le32 [1]'
 
-  UBSAN: array-index-out-of-bounds in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:1126:27
-  index 1 is out of range for type '__le16 [1]'
+> +		ret =3D drv_generate_link_addr(sdata->local, sdata,
+> +					     link_id, link->conf->addr);
+> +		if (ret)
+> +			eth_random_addr(link->conf->addr);
 
-for these lines of code:
+should probably refactor this into a separate function though.
 
-  6884  ch.chspec = (u16)le32_to_cpu(list->element[i]);
+I'm also not sure how the driver even knows that a link it's being asked
+to get the address for *is* the assoc link? Do you want to rely on that
+being the first address handed out?
 
-  1126  params_le->channel_list[i] = cpu_to_le16(chanspec);
-
-Signed-off-by: Juerg Haefliger <juerg.haefliger@canonical.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/fwil_types.h    | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index bece26741d3a..ed723a5b5d54 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -442,7 +442,12 @@ struct brcmf_scan_params_v2_le {
- 				 * fixed parameter portion is assumed, otherwise
- 				 * ssid in the fixed portion is ignored
- 				 */
--	__le16 channel_list[1];	/* list of chanspecs */
-+	union {
-+		__le16 padding;	/* Reserve space for at least 1 entry for abort
-+				 * which uses an on stack brcmf_scan_params_v2_le
-+				 */
-+		DECLARE_FLEX_ARRAY(__le16, channel_list);	/* chanspecs */
-+	};
- };
- 
- struct brcmf_scan_results {
-@@ -702,7 +707,7 @@ struct brcmf_sta_info_le {
- 
- struct brcmf_chanspec_list {
- 	__le32	count;		/* # of entries */
--	__le32	element[1];	/* variable length uint32 list */
-+	DECLARE_FLEX_ARRAY(__le32, element);	/* variable length uint32 list */
- };
- 
- /*
--- 
-2.39.2
+johannes
 
