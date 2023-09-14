@@ -2,43 +2,34 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93849CA0ECD
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Sep 2023 04:05:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BE4CA0EF6
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Sep 2023 04:05:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234610AbjINEFH (ORCPT
+        id S234666AbjINEFL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Sep 2023 00:05:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56394 "EHLO
+        Thu, 14 Sep 2023 00:05:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234596AbjINEFD (ORCPT
+        with ESMTP id S234661AbjINEFJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2023 00:05:03 -0400
+        Thu, 14 Sep 2023 00:05:09 -0400
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id EAEA31BEB;
-        Wed, 13 Sep 2023 21:04:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id D55AD1BE3;
+        Wed, 13 Sep 2023 21:05:04 -0700 (PDT)
 Received: from localhost.localdomain (unknown [180.167.10.98])
-        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id 2ED14606080E2;
-        Thu, 14 Sep 2023 12:04:17 +0800 (CST)
+        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id 91E4A606080E2;
+        Thu, 14 Sep 2023 12:05:01 +0800 (CST)
 X-MD-Sfrom: yunchuan@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From:   Wu Yunchuan <yunchuan@nfschina.com>
-To:     kvalo@kernel.org, quic_jjohnson@quicinc.com, jirislaby@kernel.org,
-        mickflemm@gmail.com, mcgrof@kernel.org, toke@toke.dk,
-        afaerber@suse.de, mani@kernel.org, chunkeey@googlemail.com,
-        loic.poulain@linaro.org, mcoquelin.stm32@gmail.com,
-        alexandre.torgue@foss.st.com
-Cc:     johannes.berg@intel.com, syoshida@redhat.com,
-        alexander@wetzel-home.de, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
-        ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-actions@lists.infradead.org, wcn36xx@lists.infradead.org,
-        linux-stm32@st-md-mailman.stormreply.com,
+To:     jirislaby@kernel.org, mickflemm@gmail.com, mcgrof@kernel.org,
+        kvalo@kernel.org
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         kernel-janitors@vger.kernel.org,
         Wu Yunchuan <yunchuan@nfschina.com>
-Subject: [PATCH wireless-next 0/9] Remove unnecessary (void*) conversions
-Date:   Thu, 14 Sep 2023 12:03:16 +0800
-Message-Id: <20230914040315.1169121-1-yunchuan@nfschina.com>
+Subject: [PATCH wireless-next 4/9] wifi: ath5k: remove unnecessary (void*) conversions
+Date:   Thu, 14 Sep 2023 12:04:59 +0800
+Message-Id: <20230914040459.1169785-1-yunchuan@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -46,53 +37,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove all unnecessary (void*) conversions under the directory drivers/net/wireless/ath.
+No need cast (void *) to (struct ath5k_hw *).
 
-Wu Yunchuan (9):
-  wifi: ar5523: Remove unnecessary (void*) conversions
-  carl9170: remove unnecessary (void*) conversions
-  wifi: wcn36xx: remove unnecessary (void*) conversions
-  wifi: ath5k: remove unnecessary (void*) conversions
-  ath6kl: remove unnecessary (void*) conversions
-  wifi: ath10k: Remove unnecessary (void*) conversions
-  wifi: ath12k: Remove unnecessary (void*) conversions
-  wifi: ath11k: remove unnecessary (void*) conversions
-  wifi: ath9k: Remove unnecessary (void*) conversions
+Signed-off-by: Wu Yunchuan <yunchuan@nfschina.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c | 4 ++--
+ drivers/net/wireless/ath/ath5k/pci.c  | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/ath/ar5523/ar5523.c      |  2 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c      |  6 ++--
- drivers/net/wireless/ath/ath11k/dp.c          |  2 +-
- drivers/net/wireless/ath/ath11k/dp_rx.c       | 13 +++----
- drivers/net/wireless/ath/ath11k/hal.c         |  8 ++---
- drivers/net/wireless/ath/ath11k/hal_rx.c      | 17 ++++-----
- drivers/net/wireless/ath/ath11k/hal_tx.c      |  2 +-
- drivers/net/wireless/ath/ath11k/mac.c         |  4 +--
- drivers/net/wireless/ath/ath11k/spectral.c    |  2 +-
- drivers/net/wireless/ath/ath11k/wmi.c         |  6 ++--
- drivers/net/wireless/ath/ath12k/dp_mon.c      |  6 ++--
- drivers/net/wireless/ath/ath12k/dp_rx.c       |  2 +-
- drivers/net/wireless/ath/ath12k/dp_tx.c       |  2 +-
- drivers/net/wireless/ath/ath5k/base.c         |  4 +--
- drivers/net/wireless/ath/ath5k/pci.c          |  4 +--
- drivers/net/wireless/ath/ath6kl/main.c        |  4 +--
- drivers/net/wireless/ath/ath6kl/txrx.c        |  2 +-
- .../wireless/ath/ath9k/ath9k_pci_owl_loader.c |  2 +-
- drivers/net/wireless/ath/ath9k/common-init.c  |  2 +-
- .../net/wireless/ath/ath9k/common-spectral.c  |  2 +-
- drivers/net/wireless/ath/ath9k/debug.c        |  2 +-
- drivers/net/wireless/ath/ath9k/hif_usb.c      | 10 +++---
- .../net/wireless/ath/ath9k/htc_drv_debug.c    |  2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 36 +++++++++----------
- drivers/net/wireless/ath/ath9k/htc_hst.c      |  2 +-
- drivers/net/wireless/ath/ath9k/init.c         | 12 +++----
- drivers/net/wireless/ath/ath9k/link.c         |  2 +-
- drivers/net/wireless/ath/ath9k/pci.c          |  6 ++--
- drivers/net/wireless/ath/carl9170/usb.c       | 10 +++---
- drivers/net/wireless/ath/wcn36xx/dxe.c        |  6 ++--
- drivers/net/wireless/ath/wcn36xx/smd.c        | 20 +++++------
- drivers/net/wireless/ath/wcn36xx/testmode.c   |  2 +-
- 32 files changed, 95 insertions(+), 107 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index c59c14483177..597d1f916dfd 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -230,13 +230,13 @@ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
+ }
+ static unsigned int ath5k_ioread32(void *hw_priv, u32 reg_offset)
+ {
+-	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
++	struct ath5k_hw *ah = hw_priv;
+ 	return ath5k_hw_reg_read(ah, reg_offset);
+ }
+ 
+ static void ath5k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
+ {
+-	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
++	struct ath5k_hw *ah = hw_priv;
+ 	ath5k_hw_reg_write(ah, val, reg_offset);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
+index 86b8cb975b1a..b51fce5ae260 100644
+--- a/drivers/net/wireless/ath/ath5k/pci.c
++++ b/drivers/net/wireless/ath/ath5k/pci.c
+@@ -54,7 +54,7 @@ MODULE_DEVICE_TABLE(pci, ath5k_pci_id_table);
+ /* return bus cachesize in 4B word units */
+ static void ath5k_pci_read_cachesize(struct ath_common *common, int *csz)
+ {
+-	struct ath5k_hw *ah = (struct ath5k_hw *) common->priv;
++	struct ath5k_hw *ah = common->priv;
+ 	u8 u8tmp;
+ 
+ 	pci_read_config_byte(ah->pdev, PCI_CACHE_LINE_SIZE, &u8tmp);
+@@ -76,7 +76,7 @@ static void ath5k_pci_read_cachesize(struct ath_common *common, int *csz)
+ static bool
+ ath5k_pci_eeprom_read(struct ath_common *common, u32 offset, u16 *data)
+ {
+-	struct ath5k_hw *ah = (struct ath5k_hw *) common->ah;
++	struct ath5k_hw *ah = common->ah;
+ 	u32 status, timeout;
+ 
+ 	/*
 -- 
 2.30.2
 
