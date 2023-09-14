@@ -2,37 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6998DCA0ECD
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Sep 2023 04:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93849CA0ECD
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Sep 2023 04:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234641AbjINEFD (ORCPT
+        id S234610AbjINEFH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Sep 2023 00:05:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56430 "EHLO
+        Thu, 14 Sep 2023 00:05:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234614AbjINEFB (ORCPT
+        with ESMTP id S234596AbjINEFD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Sep 2023 00:05:01 -0400
+        Thu, 14 Sep 2023 00:05:03 -0400
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 8FF2FE6C;
-        Wed, 13 Sep 2023 21:04:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id EAEA31BEB;
+        Wed, 13 Sep 2023 21:04:58 -0700 (PDT)
 Received: from localhost.localdomain (unknown [180.167.10.98])
-        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id AC94F605FCF3B;
-        Thu, 14 Sep 2023 12:04:53 +0800 (CST)
+        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id 2ED14606080E2;
+        Thu, 14 Sep 2023 12:04:17 +0800 (CST)
 X-MD-Sfrom: yunchuan@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From:   Wu Yunchuan <yunchuan@nfschina.com>
-To:     loic.poulain@linaro.org, kvalo@kernel.org,
-        mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com
-Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
+To:     kvalo@kernel.org, quic_jjohnson@quicinc.com, jirislaby@kernel.org,
+        mickflemm@gmail.com, mcgrof@kernel.org, toke@toke.dk,
+        afaerber@suse.de, mani@kernel.org, chunkeey@googlemail.com,
+        loic.poulain@linaro.org, mcoquelin.stm32@gmail.com,
+        alexandre.torgue@foss.st.com
+Cc:     johannes.berg@intel.com, syoshida@redhat.com,
+        alexander@wetzel-home.de, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
+        ath11k@lists.infradead.org, ath12k@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org,
+        linux-actions@lists.infradead.org, wcn36xx@lists.infradead.org,
+        linux-stm32@st-md-mailman.stormreply.com,
         kernel-janitors@vger.kernel.org,
         Wu Yunchuan <yunchuan@nfschina.com>
-Subject: [PATCH wireless-next 3/9] wifi: wcn36xx: remove unnecessary (void*) conversions
-Date:   Thu, 14 Sep 2023 12:04:50 +0800
-Message-Id: <20230914040450.1169703-1-yunchuan@nfschina.com>
+Subject: [PATCH wireless-next 0/9] Remove unnecessary (void*) conversions
+Date:   Thu, 14 Sep 2023 12:03:16 +0800
+Message-Id: <20230914040315.1169121-1-yunchuan@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -40,154 +46,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-No need cast (void *) to other types such as (struct wcn36xx *),
-(struct wcn36xx_hal_update_scan_params_resp *), etc.
+Remove all unnecessary (void*) conversions under the directory drivers/net/wireless/ath.
 
-Signed-off-by: Wu Yunchuan <yunchuan@nfschina.com>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c      |  6 +++---
- drivers/net/wireless/ath/wcn36xx/smd.c      | 20 ++++++++++----------
- drivers/net/wireless/ath/wcn36xx/testmode.c |  2 +-
- 3 files changed, 14 insertions(+), 14 deletions(-)
+Wu Yunchuan (9):
+  wifi: ar5523: Remove unnecessary (void*) conversions
+  carl9170: remove unnecessary (void*) conversions
+  wifi: wcn36xx: remove unnecessary (void*) conversions
+  wifi: ath5k: remove unnecessary (void*) conversions
+  ath6kl: remove unnecessary (void*) conversions
+  wifi: ath10k: Remove unnecessary (void*) conversions
+  wifi: ath12k: Remove unnecessary (void*) conversions
+  wifi: ath11k: remove unnecessary (void*) conversions
+  wifi: ath9k: Remove unnecessary (void*) conversions
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 9013f056eecb..d405a4c34059 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -180,7 +180,7 @@ static int wcn36xx_dxe_init_descs(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *wc
- 	if (!wcn_ch->cpu_addr)
- 		return -ENOMEM;
- 
--	cur_dxe = (struct wcn36xx_dxe_desc *)wcn_ch->cpu_addr;
-+	cur_dxe = wcn_ch->cpu_addr;
- 	cur_ctl = wcn_ch->head_blk_ctl;
- 
- 	for (i = 0; i < wcn_ch->desc_num; i++) {
-@@ -453,7 +453,7 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 
- static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- {
--	struct wcn36xx *wcn = (struct wcn36xx *)dev;
-+	struct wcn36xx *wcn = dev;
- 	int int_src, int_reason;
- 
- 	wcn36xx_dxe_read_register(wcn, WCN36XX_DXE_INT_SRC_RAW_REG, &int_src);
-@@ -541,7 +541,7 @@ static irqreturn_t wcn36xx_irq_tx_complete(int irq, void *dev)
- 
- static irqreturn_t wcn36xx_irq_rx_ready(int irq, void *dev)
- {
--	struct wcn36xx *wcn = (struct wcn36xx *)dev;
-+	struct wcn36xx *wcn = dev;
- 
- 	wcn36xx_dxe_rx_frame(wcn);
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 17e1919d1cd8..2cf86fc3f8fe 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -576,7 +576,7 @@ static int wcn36xx_smd_start_rsp(struct wcn36xx *wcn, void *buf, size_t len)
- 	if (len < sizeof(*rsp))
- 		return -EIO;
- 
--	rsp = (struct wcn36xx_hal_mac_start_rsp_msg *)buf;
-+	rsp = buf;
- 
- 	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->start_rsp_params.status)
- 		return -EIO;
-@@ -1025,7 +1025,7 @@ static int wcn36xx_smd_switch_channel_rsp(void *buf, size_t len)
- 	ret = wcn36xx_smd_rsp_status_check(buf, len);
- 	if (ret)
- 		return ret;
--	rsp = (struct wcn36xx_hal_switch_channel_rsp_msg *)buf;
-+	rsp = buf;
- 	wcn36xx_dbg(WCN36XX_DBG_HAL, "channel switched to: %d, status: %d\n",
- 		    rsp->channel_number, rsp->status);
- 	return ret;
-@@ -1072,7 +1072,7 @@ static int wcn36xx_smd_process_ptt_msg_rsp(void *buf, size_t len,
- 	if (ret)
- 		return ret;
- 
--	rsp = (struct wcn36xx_hal_process_ptt_msg_rsp_msg *)buf;
-+	rsp = buf;
- 
- 	wcn36xx_dbg(WCN36XX_DBG_HAL, "process ptt msg responded with length %d\n",
- 		    rsp->header.len);
-@@ -1131,7 +1131,7 @@ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
- {
- 	struct wcn36xx_hal_update_scan_params_resp *rsp;
- 
--	rsp = (struct wcn36xx_hal_update_scan_params_resp *)buf;
-+	rsp = buf;
- 
- 	/* Remove the PNO version bit */
- 	rsp->status &= (~(WCN36XX_FW_MSG_PNO_VERSION_MASK));
-@@ -1198,7 +1198,7 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
- 
--	rsp = (struct wcn36xx_hal_add_sta_self_rsp_msg *)buf;
-+	rsp = buf;
- 
- 	if (rsp->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
- 		wcn36xx_warn("hal add sta self failure: %d\n",
-@@ -1316,7 +1316,7 @@ static int wcn36xx_smd_join_rsp(void *buf, size_t len)
- 	if (wcn36xx_smd_rsp_status_check(buf, len))
- 		return -EIO;
- 
--	rsp = (struct wcn36xx_hal_join_rsp_msg *)buf;
-+	rsp = buf;
- 
- 	wcn36xx_dbg(WCN36XX_DBG_HAL,
- 		    "hal rsp join status %d tx_mgmt_power %d\n",
-@@ -1481,7 +1481,7 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
- 
--	rsp = (struct wcn36xx_hal_config_sta_rsp_msg *)buf;
-+	rsp = buf;
- 	params = &rsp->params;
- 
- 	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
-@@ -1849,7 +1849,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
- 
--	rsp = (struct wcn36xx_hal_config_bss_rsp_msg *)buf;
-+	rsp = buf;
- 	params = &rsp->bss_rsp_params;
- 
- 	if (params->status != WCN36XX_FW_MSG_RESULT_SUCCESS) {
-@@ -2476,7 +2476,7 @@ static int wcn36xx_smd_add_ba_session_rsp(void *buf, int len, u8 *session)
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
- 
--	rsp = (struct wcn36xx_hal_add_ba_session_rsp_msg *)buf;
-+	rsp = buf;
- 	if (rsp->status != WCN36XX_FW_MSG_RESULT_SUCCESS)
- 		return rsp->status;
- 
-@@ -2654,7 +2654,7 @@ static int wcn36xx_smd_trigger_ba_rsp(void *buf, int len, struct add_ba_info *ba
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
- 
--	rsp = (struct wcn36xx_hal_trigger_ba_rsp_msg *) buf;
-+	rsp = buf;
- 
- 	if (rsp->candidate_cnt < 1)
- 		return rsp->status ? rsp->status : -EINVAL;
-diff --git a/drivers/net/wireless/ath/wcn36xx/testmode.c b/drivers/net/wireless/ath/wcn36xx/testmode.c
-index 7ae14b4d2d0e..e5142c052985 100644
---- a/drivers/net/wireless/ath/wcn36xx/testmode.c
-+++ b/drivers/net/wireless/ath/wcn36xx/testmode.c
-@@ -53,7 +53,7 @@ static int wcn36xx_tm_cmd_ptt(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 
- 	buf = nla_data(tb[WCN36XX_TM_ATTR_DATA]);
- 	buf_len = nla_len(tb[WCN36XX_TM_ATTR_DATA]);
--	msg = (struct ftm_rsp_msg *)buf;
-+	msg = buf;
- 
- 	wcn36xx_dbg(WCN36XX_DBG_TESTMODE,
- 		    "testmode cmd wmi msg_id 0x%04X msg_len %d buf %pK buf_len %d\n",
+ drivers/net/wireless/ath/ar5523/ar5523.c      |  2 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c      |  6 ++--
+ drivers/net/wireless/ath/ath11k/dp.c          |  2 +-
+ drivers/net/wireless/ath/ath11k/dp_rx.c       | 13 +++----
+ drivers/net/wireless/ath/ath11k/hal.c         |  8 ++---
+ drivers/net/wireless/ath/ath11k/hal_rx.c      | 17 ++++-----
+ drivers/net/wireless/ath/ath11k/hal_tx.c      |  2 +-
+ drivers/net/wireless/ath/ath11k/mac.c         |  4 +--
+ drivers/net/wireless/ath/ath11k/spectral.c    |  2 +-
+ drivers/net/wireless/ath/ath11k/wmi.c         |  6 ++--
+ drivers/net/wireless/ath/ath12k/dp_mon.c      |  6 ++--
+ drivers/net/wireless/ath/ath12k/dp_rx.c       |  2 +-
+ drivers/net/wireless/ath/ath12k/dp_tx.c       |  2 +-
+ drivers/net/wireless/ath/ath5k/base.c         |  4 +--
+ drivers/net/wireless/ath/ath5k/pci.c          |  4 +--
+ drivers/net/wireless/ath/ath6kl/main.c        |  4 +--
+ drivers/net/wireless/ath/ath6kl/txrx.c        |  2 +-
+ .../wireless/ath/ath9k/ath9k_pci_owl_loader.c |  2 +-
+ drivers/net/wireless/ath/ath9k/common-init.c  |  2 +-
+ .../net/wireless/ath/ath9k/common-spectral.c  |  2 +-
+ drivers/net/wireless/ath/ath9k/debug.c        |  2 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.c      | 10 +++---
+ .../net/wireless/ath/ath9k/htc_drv_debug.c    |  2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 36 +++++++++----------
+ drivers/net/wireless/ath/ath9k/htc_hst.c      |  2 +-
+ drivers/net/wireless/ath/ath9k/init.c         | 12 +++----
+ drivers/net/wireless/ath/ath9k/link.c         |  2 +-
+ drivers/net/wireless/ath/ath9k/pci.c          |  6 ++--
+ drivers/net/wireless/ath/carl9170/usb.c       | 10 +++---
+ drivers/net/wireless/ath/wcn36xx/dxe.c        |  6 ++--
+ drivers/net/wireless/ath/wcn36xx/smd.c        | 20 +++++------
+ drivers/net/wireless/ath/wcn36xx/testmode.c   |  2 +-
+ 32 files changed, 95 insertions(+), 107 deletions(-)
+
 -- 
 2.30.2
 
