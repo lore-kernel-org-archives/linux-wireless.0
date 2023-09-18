@@ -2,123 +2,130 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2AD0CD37B0
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 08:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E2C9CD3421
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 08:05:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238663AbjIRIBl (ORCPT
+        id S240500AbjIRIE7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 04:01:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36770 "EHLO
+        Mon, 18 Sep 2023 04:04:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240830AbjIRIBj (ORCPT
+        with ESMTP id S240648AbjIRIEq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 04:01:39 -0400
-Received: from mail-ot1-x336.google.com (mail-ot1-x336.google.com [IPv6:2607:f8b0:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91B82B6
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 00:59:02 -0700 (PDT)
-Received: by mail-ot1-x336.google.com with SMTP id 46e09a7af769-6c07e122a78so2792706a34.2
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 00:59:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1695023941; x=1695628741; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BGqLnfLS16BMC5Edk6K47RqEUmOdv7ff2FeIy28NY94=;
-        b=gdxGuCzASApUNDtwTJwfvEpqvASR8NdH0OHsRgz2Yh836wR7nREN/GwdEvmUZJFL39
-         EDpXoYO0Z2hxo8+rsQPHcPPqfuoKhOz4qk6lfPVpTB0aklo3RkidBmpn9v5AM5NYQmjc
-         rL1xcxm5gXp+VXoChj69jUDXccOgGHh12+h2w=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695023941; x=1695628741;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BGqLnfLS16BMC5Edk6K47RqEUmOdv7ff2FeIy28NY94=;
-        b=JsBsUbfJEzyz1cdBhl+iy95RdfiePIRAeMYXgWALq8x+Q60WWvMD8yhmwwaBTD2bCx
-         sX93Y24hLQ06iDTin9J90kCxGQWsMhKERbMLVrpYbKEO4Fvbpw20xlq0CqI/h3qdC3N+
-         y5heC0EKwBcUtvydRYZjhlxCgasBdK4n26dh05W+TUT8Yzq/HIHj0mtrg8GaqLc2kq/N
-         etP8cNL5hv8pJTitMNMfm5k3fPeFoUSi3Q6+JyLnS+esOfMi9SZ99ybtr0RsCjEuMl6w
-         XPt0CVNPG7tXuvzBxQ0awDvelCHTM9Qe7s5ZkcozTwE/ap+sCHSw93tpoiH1qpLGSsFP
-         rF5A==
-X-Gm-Message-State: AOJu0Yy8O/F5QD4SZ4WsFXLgrhKlMaGqb8AX5eNkf0pnF/lGbB0lirV+
-        CepZrb0RN1HNt2Os2N377+CP6QFVdgCCIbIUt4JZJuKLvSS8F4N4
-X-Google-Smtp-Source: AGHT+IFQwkO1wOvSdW3thitMuylCuXAXRgN/DraI5tqYKk2lxwowV+q7D4RihOvOHn9tLlJa+cEHRbohaQVXnP48ZUI=
-X-Received: by 2002:a4a:d208:0:b0:571:aceb:26d2 with SMTP id
- c8-20020a4ad208000000b00571aceb26d2mr8459102oos.3.1695023448533; Mon, 18 Sep
- 2023 00:50:48 -0700 (PDT)
+        Mon, 18 Sep 2023 04:04:46 -0400
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12ED7CD0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 01:04:04 -0700 (PDT)
+X-UUID: eb6ff74055f911eea33bb35ae8d461a2-20230918
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=7GAv1C6fN6088LnDvegNQ7HSo3/GmY4uFgY5z5DRRAU=;
+        b=nfR5X3hWD9gidu9aAzvrAnci0vemVF3FGGRfZ58kL+7AjCEqtNBZVqhFfOdUEGzjJf+TdLfAZ7VBKCTxDjBD/1t3XRl+rAEqXKe4Gk3IZlWgvw43OOeNxnMfWR9gcSRnn/brfTAuXVLmoWJ0IgMd1772LTRkilCFCRaLgFSzo9w=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.31,REQID:e66b0c12-d704-4ee2-8d35-d4edb13b1b11,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:0ad78a4,CLOUDID:9876d2ef-9a6e-4c39-b73e-f2bc08ca3dc5,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:
+        NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: eb6ff74055f911eea33bb35ae8d461a2-20230918
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+        (envelope-from <deren.wu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 2135754274; Mon, 18 Sep 2023 16:03:58 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Mon, 18 Sep 2023 16:03:54 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Mon, 18 Sep 2023 16:03:54 +0800
+From:   Deren Wu <deren.wu@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <Soul.Huang@mediatek.com>,
+        <Leon.Yen@mediatek.com>, <Eric-SY.Chang@mediatek.com>,
+        <Deren.Wu@mediatek.com>, <km.lin@mediatek.com>,
+        <jenhao.yang@mediatek.com>, <robin.chiu@mediatek.com>,
+        <Eddie.Chen@mediatek.com>, <ch.yeh@mediatek.com>,
+        <ted.huang@mediatek.com>, <Stella.Chang@mediatek.com>,
+        <Tom.Chou@mediatek.com>, <jsiuda@google.com>, <arowa@google.org>,
+        <frankgor@google.com>, <kuabhs@google.com>, <druth@google.com>,
+        <abhishekpandit@google.com>, <shawnku@google.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        "Deren Wu" <deren.wu@mediatek.com>
+Subject: [PATCH v2 3/3] wifi: mt76: mt7921: fix the wrong rate selected in fw for the chanctx driver
+Date:   Mon, 18 Sep 2023 16:03:08 +0800
+Message-ID: <99f303541083c8db4bea982a8d9d45bdf0bd788c.1695021398.git.deren.wu@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <cover.1695021398.git.deren.wu@mediatek.com>
+References: <cover.1695021398.git.deren.wu@mediatek.com>
 MIME-Version: 1.0
-References: <20230908104308.1546501-1-treapking@chromium.org>
- <ZQIcDWKrmgoPkwlN@google.com> <CAEXTbpc=QC6wC-W2VZCaRCp6rSpyNSsq5M6cxNcqAQxciNj0vg@mail.gmail.com>
- <ZQOZZZgHP2EeDNix@google.com>
-In-Reply-To: <ZQOZZZgHP2EeDNix@google.com>
-From:   Matthew Wang <matthewmwang@chromium.org>
-Date:   Mon, 18 Sep 2023 09:50:37 +0200
-Message-ID: <CABRiz0ph56X48Y0VjS1yDEUW3=kihE4+WSHPuFVQv-CCdR=0cw@mail.gmail.com>
-Subject: Re: [PATCH v3] wifi: mwifiex: Fix oob check condition in mwifiex_process_rx_packet
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     Pin-yen Lin <treapking@chromium.org>,
-        linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
-        Polaris Pi <pinkperfect2021@gmail.com>,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--2.279000-8.000000
+X-TMASE-MatchedRID: VznsoVq3PH8mcsJib2IjaW3NvezwBrVmncKJki+ooR0OUs4CTUgKy49X
+        7Ioij9LvHTGmoBrw70XsiSCMfmP7WLhzq4QWtOF2EgwM8US/pTHzWEMQjooUzUk7tZaD19NMo8W
+        MkQWv6iXBcIE78YqRWvcUt5lc1lLgjMejjvPkBr5c6gPJraaKgvfafcfnHBiP6ijCn7Oz/1qVcO
+        awW8BibN2fVa0H6hco6zPm1u4Ijpig96/KzcCVuyiQxPVkhq7gv3i5ZQX+oq55lSmbrC6fdtr/T
+        o2FgNrjDLMIOOVTHz2nbLeYgH6K31Zca9RSYo/b
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--2.279000-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: C505C3B2D70669A22991E5380FAF201345DE0F62F075B4880C00BA5524BD7F402000:8
+X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-lgtm
+From: Sean Wang <sean.wang@mediatek.com>
 
-Reviewed-by: Matthew Wang <matthewmwang@chromium.org>
+The variable band should be determined by the ieee80211_chanctx_conf when
+the driver is a kind of chanctx one e.g mt7921 and mt7922 driver so we
+added the extension to mt76_connac2_mac_tx_rate_val and
+mt76_connac_get_he_phy_cap for the firmware can select the proper rate.
 
-On Fri, Sep 15, 2023 at 1:38=E2=80=AFAM Brian Norris <briannorris@chromium.=
-org> wrote:
->
-> On Thu, Sep 14, 2023 at 03:09:47PM +0800, Pin-yen Lin wrote:
-> > On Thu, Sep 14, 2023 at 4:31=E2=80=AFAM Brian Norris <briannorris@chrom=
-ium.org> wrote:
-> > > I'd appreciate another review/test from one of the others here
-> > > (Matthew?), even though I know y'all are already working together.
->
-> I'd still appreciate some comment here.
->
-> > > > -     if ((!memcmp(&rx_pkt_hdr->rfc1042_hdr, bridge_tunnel_header,
-> > > > -                  sizeof(bridge_tunnel_header))) ||
-> > > > -         (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
-> > > > -                  sizeof(rfc1042_header)) &&
-> > > > -          ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) !=3D ETH_P_AARP=
- &&
-> > > > -          ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) !=3D ETH_P_IPX)=
-) {
-> > > > +     if (sizeof(*rx_pkt_hdr) + rx_pkt_off <=3D skb->len &&
-> > >
-> > > Are you sure you want this length check to fall back to the non-802.3
-> > > codepath? Isn't it an error to look like an 802.3 frame but to be too
-> > > small? I'd think we want to drop such packets, not process them as-is=
-.
-> >
-> > I did that because I saw other drivers (e.g., [1], [2]) use similar
-> > approaches, and I assumed that the rest of the pipeline will
-> > eventually drop it if the packet cannot be recognized. But, yes, we
-> > can just drop the packet here if it doesn't look good.
-> >
-> > [1]: https://elixir.bootlin.com/linux/latest/source/drivers/net/wireles=
-s/intersil/hostap/hostap_80211_rx.c#L1035
-> > [2]: https://elixir.bootlin.com/linux/latest/source/drivers/net/wireles=
-s/intel/ipw2x00/libipw_rx.c#L735
->
-> Hmm, I suppose. I'm frankly not sure how exactly all upper layers handle
-> this, but at least in a non-raw mode, we'll drop them. (We might be
-> delivering awfully weird packets to tcpdump though, but this is already
-> a weird situation, if it's such a weird-looking packet.)
->
-> > > If I'm correct, then this check should move inside the 'if' branch of
-> > > this if/else.
-> >
-> > We can't simply move the check inside the if branch because the
-> > condition also checks rx_pkt_hdr->rfc1042_hdr.snap_type. Though, of
-> > course, it is doable by adding another `if` conditions.
->
-> Right.
->
-> I guess this is probably OK as-is:
->
-> Acked-by: Brian Norris <briannorris@chromium.org>
+Fixes: 41ac53c899bd ("wifi: mt76: mt7921: introduce chanctx support")
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Tested-by: David Ruth <druth@chromium.org>
+Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+---
+v2: rebase on the top of maintainer tree
+---
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 32512066e3aa..bcd6c20f37ad 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -841,7 +841,9 @@ void mt76_connac_mcu_sta_tlv(struct mt76_phy *mphy, struct sk_buff *skb,
+ 			     struct ieee80211_vif *vif,
+ 			     u8 rcpi, u8 sta_state)
+ {
+-	struct cfg80211_chan_def *chandef = &mphy->chandef;
++	struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
++	struct cfg80211_chan_def *chandef = mvif->ctx ?
++					    &mvif->ctx->def : &mphy->chandef;
+ 	enum nl80211_band band = chandef->chan->band;
+ 	struct mt76_dev *dev = mphy->dev;
+ 	struct sta_rec_ra_info *ra_info;
+@@ -1381,7 +1383,10 @@ EXPORT_SYMBOL_GPL(mt76_connac_get_phy_mode_ext);
+ const struct ieee80211_sta_he_cap *
+ mt76_connac_get_he_phy_cap(struct mt76_phy *phy, struct ieee80211_vif *vif)
+ {
+-	enum nl80211_band band = phy->chandef.chan->band;
++	struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
++	struct cfg80211_chan_def *chandef = mvif->ctx ?
++					    &mvif->ctx->def : &phy->chandef;
++	enum nl80211_band band = chandef->chan->band;
+ 	struct ieee80211_supported_band *sband;
+ 
+ 	sband = phy->hw->wiphy->bands[band];
+-- 
+2.18.0
+
