@@ -2,72 +2,157 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84979C46CA1
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 15:55:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E694CD13D9
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 16:32:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229771AbjIRPzL (ORCPT
+        id S230141AbjIRQce (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 11:55:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45524 "EHLO
+        Mon, 18 Sep 2023 12:32:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229736AbjIRPzK (ORCPT
+        with ESMTP id S230050AbjIRQcY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 11:55:10 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7E5A120;
-        Mon, 18 Sep 2023 08:51:45 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40FA2C43397;
-        Mon, 18 Sep 2023 13:19:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695043146;
-        bh=hBpZeohfKBVKg3GI59uHeoX3VFbPP5FzPHW0VLd/4Hc=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Y47Goxhbk1pdJsYaNffhzqnTfAlVKZMtIAU0VlNXP/RUSnyepT9/QKSxITCZe//+t
-         Hs4PTX2XbYI2SDt8KbDLZEJQUfnFPsTEZmq3rPWlq03/S0DKqIW0ejfaZyp/MdoBQG
-         dMHcAVQo3Chum3Y6I/mWq4Ru2aTwI46r5nSn1Vw+i/cmzWMg0rSf23hSyf7eddgw52
-         o+1ohB/mVNwMxi79yxROowdYw5Z8J8tnJRfuqpOEiEAJT1x042s7/394UPDQW02DbE
-         Dc+ICDjZ/aTZIztTWlahk3zCQt7K5qxLjuIdUW+SxjGRIDgh/v2TygSqkpl0HyBH9a
-         ut9RCv8xOB9Jw==
-Content-Type: text/plain; charset="utf-8"
+        Mon, 18 Sep 2023 12:32:24 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1236EF9;
+        Mon, 18 Sep 2023 09:17:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1695053862; x=1726589862;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=/jlflr+zDO/ybJEIj9ZeNbSBAg1LjrmA0JjnTT6qqL0=;
+  b=NPsXbfSc9IPT94hOIIrNw/67t2VR+JhPjuDVykOsCKaDlVXy2p+FMbTA
+   GTb86C7h+BuEfgDYFoHleY31PYmFwn/JH8Z1iIw50IMRKQR1XxT7Sglow
+   iO58ySRv3gMvX59UGQVNeZ+Lrwfv1wAJgTIAyuMJHMlJ+kDDHAXYTmBBR
+   NLJh7geSMk+NKR69+b8rXsbggqJvVRD9Q4Wt3JQ0PtG6rj1NjBzMomEcZ
+   xc3dogm5JFgKGATaztjOSUtj9IudJWsZFo5qGdP2p6+6QXGWpWWgYtBvc
+   eBeG7AIRRca48GUX44UpUlqM7o9nm231xa//lVetXTgoWmsg+n4N4/B/F
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="446113641"
+X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
+   d="scan'208";a="446113641"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:14:00 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="811343218"
+X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
+   d="scan'208";a="811343218"
+Received: from nprotaso-mobl1.ccr.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.49.156])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:13:54 -0700
+From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     ath10k@lists.infradead.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, intel-wired-lan@lists.osuosl.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-bluetooth@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 13/13] misc: rtsx: Use pci_disable/enable_link_state()
+Date:   Mon, 18 Sep 2023 16:11:03 +0300
+Message-Id: <20230918131103.24119-14-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
+References: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: wifi: rtw88: rtw8723d: Fix MAC address offset in EEPROM
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230907071614.2032404-1-s.hauer@pengutronix.de>
-References: <20230907071614.2032404-1-s.hauer@pengutronix.de>
-To:     Sascha Hauer <s.hauer@pengutronix.de>
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Yanik Fuchs <Yanik.fuchs@mbv.ch>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169504314310.617522.5940520888124788704.kvalo@kernel.org>
-Date:   Mon, 18 Sep 2023 13:19:05 +0000 (UTC)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sascha Hauer <s.hauer@pengutronix.de> wrote:
+rtsx driver adjusts ASPM state itself which leaves ASPM service
+driver in PCI core unaware of the link state changes the driver
+implemented.
 
-> The MAC address is stored at offset 0x107 in the EEPROM, like correctly
-> stated in the comment. Add a two bytes reserved field right before the
-> MAC address to shift it from offset 0x105 to 0x107.
-> 
-> With this the MAC address returned from my RTL8723du wifi stick can be
-> correctly decoded as "Shenzhen Four Seas Global Link Network Technology
-> Co., Ltd."
-> 
-> Fixes: 87caeef032fc ("wifi: rtw88: Add rtw8723du chipset support")
-> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-> Reported-by: Yanik Fuchs <Yanik.fuchs@mbv.ch>
-> Cc: stable@vger.kernel.org
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Call pci_disable_link_state() and pci_enable_link_state() instead of
+adjusting ASPMC field in LNKCTL directly in the driver and let PCI core
+handle the ASPM state management.
 
-Patch applied to wireless.git, thanks.
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/misc/cardreader/rts5228.c  | 6 ++----
+ drivers/misc/cardreader/rts5261.c  | 6 ++----
+ drivers/misc/cardreader/rtsx_pcr.c | 8 +++++---
+ 3 files changed, 9 insertions(+), 11 deletions(-)
 
-2e1b3ae3e1f2 wifi: rtw88: rtw8723d: Fix MAC address offset in EEPROM
-
+diff --git a/drivers/misc/cardreader/rts5228.c b/drivers/misc/cardreader/rts5228.c
+index f4ab09439da7..8d3216c64ad1 100644
+--- a/drivers/misc/cardreader/rts5228.c
++++ b/drivers/misc/cardreader/rts5228.c
+@@ -497,8 +497,7 @@ static void rts5228_enable_aspm(struct rtsx_pcr *pcr, bool enable)
+ 	val = FORCE_ASPM_CTL0 | FORCE_ASPM_CTL1;
+ 	val |= (pcr->aspm_en & 0x02);
+ 	rtsx_pci_write_register(pcr, ASPM_FORCE_CTL, mask, val);
+-	pcie_capability_clear_and_set_word(pcr->pci, PCI_EXP_LNKCTL,
+-					   PCI_EXP_LNKCTL_ASPMC, pcr->aspm_en);
++	pci_enable_link_state(pcr->pci, pcr->aspm_en);
+ 	pcr->aspm_enabled = enable;
+ }
+ 
+@@ -509,8 +508,7 @@ static void rts5228_disable_aspm(struct rtsx_pcr *pcr, bool enable)
+ 	if (pcr->aspm_enabled == enable)
+ 		return;
+ 
+-	pcie_capability_clear_and_set_word(pcr->pci, PCI_EXP_LNKCTL,
+-					   PCI_EXP_LNKCTL_ASPMC, 0);
++	pci_disable_link_state(pcr->pci, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+ 	mask = FORCE_ASPM_VAL_MASK | FORCE_ASPM_CTL0 | FORCE_ASPM_CTL1;
+ 	val = FORCE_ASPM_CTL0 | FORCE_ASPM_CTL1;
+ 	rtsx_pci_write_register(pcr, ASPM_FORCE_CTL, mask, val);
+diff --git a/drivers/misc/cardreader/rts5261.c b/drivers/misc/cardreader/rts5261.c
+index 94af6bf8a25a..f1ef15683a2f 100644
+--- a/drivers/misc/cardreader/rts5261.c
++++ b/drivers/misc/cardreader/rts5261.c
+@@ -578,8 +578,7 @@ static void rts5261_enable_aspm(struct rtsx_pcr *pcr, bool enable)
+ 
+ 	val |= (pcr->aspm_en & 0x02);
+ 	rtsx_pci_write_register(pcr, ASPM_FORCE_CTL, mask, val);
+-	pcie_capability_clear_and_set_word(pcr->pci, PCI_EXP_LNKCTL,
+-					   PCI_EXP_LNKCTL_ASPMC, pcr->aspm_en);
++	pci_enable_link_state(pcr->pci, pcr->aspm_en);
+ 	pcr->aspm_enabled = enable;
+ }
+ 
+@@ -591,8 +590,7 @@ static void rts5261_disable_aspm(struct rtsx_pcr *pcr, bool enable)
+ 	if (pcr->aspm_enabled == enable)
+ 		return;
+ 
+-	pcie_capability_clear_and_set_word(pcr->pci, PCI_EXP_LNKCTL,
+-					   PCI_EXP_LNKCTL_ASPMC, 0);
++	pci_disable_link_state(pcr->pci, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+ 	rtsx_pci_write_register(pcr, ASPM_FORCE_CTL, mask, val);
+ 	rtsx_pci_write_register(pcr, SD_CFG1, SD_ASYNC_FIFO_NOT_RST, 0);
+ 	udelay(10);
+diff --git a/drivers/misc/cardreader/rtsx_pcr.c b/drivers/misc/cardreader/rtsx_pcr.c
+index a3f4b52bb159..6efb792152f2 100644
+--- a/drivers/misc/cardreader/rtsx_pcr.c
++++ b/drivers/misc/cardreader/rtsx_pcr.c
+@@ -86,9 +86,11 @@ static void rtsx_comm_set_aspm(struct rtsx_pcr *pcr, bool enable)
+ 		return;
+ 
+ 	if (pcr->aspm_mode == ASPM_MODE_CFG) {
+-		pcie_capability_clear_and_set_word(pcr->pci, PCI_EXP_LNKCTL,
+-						PCI_EXP_LNKCTL_ASPMC,
+-						enable ? pcr->aspm_en : 0);
++		if (enable)
++			pci_enable_link_state(pcr->pci, pcr->aspm_en);
++		else
++			pci_disable_link_state(pcr->pci, PCIE_LINK_STATE_L0S |
++							 PCIE_LINK_STATE_L1);
+ 	} else if (pcr->aspm_mode == ASPM_MODE_REG) {
+ 		if (pcr->aspm_en & 0x02)
+ 			rtsx_pci_write_register(pcr, ASPM_FORCE_CTL, FORCE_ASPM_CTL0 |
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230907071614.2032404-1-s.hauer@pengutronix.de/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.30.2
 
