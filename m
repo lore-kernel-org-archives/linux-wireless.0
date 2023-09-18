@@ -2,67 +2,87 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65784C46CA1
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 17:02:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0A47CD13D2
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 17:02:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231302AbjIRRCl (ORCPT
+        id S231364AbjIRRCl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 18 Sep 2023 13:02:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58706 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230198AbjIRRCj (ORCPT
+        with ESMTP id S230355AbjIRRCi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 13:02:39 -0400
+        Mon, 18 Sep 2023 13:02:38 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DDA9A6
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 10:02:33 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 961E4C4163C;
-        Mon, 18 Sep 2023 14:29:47 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EBFE93;
+        Mon, 18 Sep 2023 10:02:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D542C43391;
+        Mon, 18 Sep 2023 13:20:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695047388;
-        bh=dA929+3iTIxGbjOe6CiFoyvygTA9LQumTRpzdD4INWI=;
+        s=k20201202; t=1695043234;
+        bh=ij64horHxqCr6tNsHUKw9q182XiZPq+6TuHedYlAa8A=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=O63EozK2NxHsb/Ej7v+Txl0xXfqrDs6i9s68fv9AvQoIu2njMi/Kkt5O2eJU2+1HA
-         glBqWc8Ied9rTHNOpH5DDyVq+XcCGdT5YntowA++ZqJjx5Tbv6iI8brvu4h4XxUzA6
-         SdELqb/sLK00tXI4m8iOrZ9pRM99g1qOJd2beqcsAkXZixY5ihqCkcnrWYSxb6vNBZ
-         gy1lJgynBdB+4d7s90Sd1jyiYp8IuQkNxDW4nTM94XcLYq8/DHG0hjz0EASB0bA0hC
-         25u0fEf+SfP/02VLK4kl3Qpg9fAdpEllbDpOX2Jkf9aOR8OR6P+xgYB/vEslFT7kqs
-         yYLk8p1PNhlVw==
+        b=bJ7yDdHKoHkvsLxRuIHaF8svocpAFG573VOvgpGy2veP6jiXsKZrk6j8En2Agh4Wb
+         3FcoC9RO7PUyVPvlKlgmbMho9gEGeW+2tZUaj7Wl5Uk7SKbyaFSDSxjDApZvDRY/O8
+         Ctg/DyPa54XDpujgjx1ff/ccB/x69Qn5RCM6R4+ij9qqbkUlPYPHD11xb+zMwQ+daL
+         YMpG9u2AtWV7Ks3X95Pr4MAnQOrH6gI96LOnzRC58RZBrhm+tlaGOd2ysygxd8qE88
+         BjFdEK9G9xNHZOoJ7jtu+6+6wc5CubsvBdYzsKNaWrFgEs+0g35TgJe+jPSFGfls4N
+         IM4UHjRe1trHQ==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/6] wifi: rtw89: add to query RX descriptor format v2
+Subject: Re: [PATCH v2] wifi: brcmfmac: Replace 1-element arrays with flexible
+ arrays
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230911082049.33541-2-pkshih@realtek.com>
-References: <20230911082049.33541-2-pkshih@realtek.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <linux-wireless@vger.kernel.org>
+In-Reply-To: <20230914070227.12028-1-juerg.haefliger@canonical.com>
+References: <20230914070227.12028-1-juerg.haefliger@canonical.com>
+To:     Juerg Haefliger <juerg.haefliger@canonical.com>
+Cc:     juerg.haefliger@canonical.com, SHA-cyfmac-dev-list@infineon.com,
+        aspriel@gmail.com, brcm80211-dev-list.pdl@broadcom.com,
+        franky.lin@broadcom.com, gustavoars@kernel.org,
+        hante.meuleman@broadcom.com, hdegoede@redhat.com,
+        keescook@chromium.org, linus.walleij@linaro.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        marcan@marcan.st, ryohei.kondo@cypress.com, stable@vger.kernel.org
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169504738572.740666.15331889491171451137.kvalo@kernel.org>
-Date:   Mon, 18 Sep 2023 14:29:47 +0000 (UTC)
+Message-ID: <169504322899.617522.3173548821985178100.kvalo@kernel.org>
+Date:   Mon, 18 Sep 2023 13:20:30 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+Juerg Haefliger <juerg.haefliger@canonical.com> wrote:
 
-> RX descriptor is used to provide meta data of received data. The WiFi 7
-> chips use different RX descriptor format, so add this parser along with
-> hardware design.
+> Since commit 2d47c6956ab3 ("ubsan: Tighten UBSAN_BOUNDS on GCC"),
+> UBSAN_BOUNDS no longer pretends 1-element arrays are unbounded. Walking
+> 'element' and 'channel_list' will trigger warnings, so make them proper
+> flexible arrays.
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> False positive warnings were:
+> 
+>   UBSAN: array-index-out-of-bounds in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:6984:20
+>   index 1 is out of range for type '__le32 [1]'
+> 
+>   UBSAN: array-index-out-of-bounds in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:1126:27
+>   index 1 is out of range for type '__le16 [1]'
+> 
+> for these lines of code:
+> 
+>   6884  ch.chspec = (u16)le32_to_cpu(list->element[i]);
+> 
+>   1126  params_le->channel_list[i] = cpu_to_le16(chanspec);
+> 
+> Cc: stable@vger.kernel.org # 6.5+
+> Signed-off-by: Juerg Haefliger <juerg.haefliger@canonical.com>
+> Reviewed-by: Kees Cook <keescook@chromium.org>
+> Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-6 patches applied to wireless-next.git, thanks.
+Patch applied to wireless.git, thanks.
 
-a1cb73f29539 wifi: rtw89: add to query RX descriptor format v2
-6f09ff0a0927 wifi: rtw89: add to fill TX descriptor for firmware command v2
-d542ee748ec3 wifi: rtw89: add to fill TX descriptor v2
-c8b9a49f7a3d wifi: rtw89: add chip_info::txwd_info size to generalize TX WD submit
-651298138e42 wifi: rtw89: consolidate registers of mac port to struct
-7c8a55dd265b wifi: rtw89: add mac_gen pointer to access mac port registers
+4fed494abcd4 wifi: brcmfmac: Replace 1-element arrays with flexible arrays
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230911082049.33541-2-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230914070227.12028-1-juerg.haefliger@canonical.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
