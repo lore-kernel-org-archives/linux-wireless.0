@@ -2,79 +2,71 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 840E5CD13D2
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 16:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AA5AC46CA1
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 17:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231239AbjIRQ5q (ORCPT
+        id S231245AbjIRRCi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 12:57:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49866 "EHLO
+        Mon, 18 Sep 2023 13:02:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231175AbjIRQ5i (ORCPT
+        with ESMTP id S229508AbjIRRCh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 12:57:38 -0400
+        Mon, 18 Sep 2023 13:02:37 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8155983
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 09:57:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88827C32784;
-        Mon, 18 Sep 2023 14:29:09 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E67491
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 10:02:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1102DC32786;
+        Mon, 18 Sep 2023 14:31:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695047350;
-        bh=PVDCYh7IbDu0+S30lfHpcZ3DfgARe/jsmNOOlcSlFbc=;
+        s=k20201202; t=1695047508;
+        bh=JB3bqQ+BxH47O2jLd20Yozgn+VaCyFGHxhd3pn1nTZw=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Gn3sLiuezcPNPRxIPvLkd3Ej8sxFaFAhtiVmbc7NFrIhnh6YAhPalecLlmUQ+lLo1
-         vYDmyWTdNK9f18Q7nQMiwyG565cjhbCcFz85GyQKNN+zX7gj0PwycSSCBtr5N1fxVm
-         Du611+g6Q5fNBhmyE6mnHfDoQ7ALJEAYn5uAxckugGqs1UoKLD8IzgAj2fLyZn/Xig
-         HAyMc9NgSzF+IMJOQDHVKUPqycE/wcEKHHA+TLNM0ka76ljIP+DLfhf9MPyjP3voNM
-         t+V8K8a67vlqImzCm8fDvsAAIL4x/Pg9Ut0ivdHptiEENlXKBaDR+DFOjQVdxsJunv
-         31uJ0TuNPm/Tg==
+        b=BJmM0vcqnDui8iEM6rSPz2hSyxSHmWu0IqFb5abQGlpOMTLtcsZkx1UYP+rJyEr6P
+         X9UwJhZGRSxAIclClIRoc76M9amHkFjcQhNV4uUnLXayZhrJuI8UJVpA1UvyTjzPSA
+         0wB9sh7CP6+ZfjUXd/4TV1VrJ8nvMf++XaZHa6Yj94qk7ucOKdjrzU+FeC3qcKlxgG
+         KE0Ge0EaP5KZAxuRX/AACyOZ+E2WpGE2yihU0lgo+FnW6bsao+jTaY61azlBOvEAYo
+         6KeOQZkGq3UGc+3m/NtC2D9jYBx/bKyij5RcDXX9bp1qn7SrMeuUqae+ouLLFwqIb7
+         flCI6jO5hdqsA==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/8] wifi: rtw89: 52c: rfk: refine MCC channel info
- notification
+Content-Transfer-Encoding: 8bit
+Subject: Re: [net-next] wifi: wlcore: Convert to platform remove callback
+ returning void
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230908031145.20931-2-pkshih@realtek.com>
-References: <20230908031145.20931-2-pkshih@realtek.com>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+In-Reply-To: <20230912171249.755901-1-u.kleine-koenig@pengutronix.de>
+References: <20230912171249.755901-1-u.kleine-koenig@pengutronix.de>
+To:     =?utf-8?q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+Cc:     linux-wireless@vger.kernel.org, kernel@pengutronix.de
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169504734750.740666.1826649889995290528.kvalo@kernel.org>
-Date:   Mon, 18 Sep 2023 14:29:09 +0000 (UTC)
+Message-ID: <169504750617.740666.8864088781140392316.kvalo@kernel.org>
+Date:   Mon, 18 Sep 2023 14:31:47 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+Uwe Kleine-König  <u.kleine-koenig@pengutronix.de> wrote:
 
-> From: Zong-Zhe Yang <kevin_yang@realtek.com>
+> The .remove() callback for a platform driver returns an int which makes
+> many driver authors wrongly assume it's possible to do error handling by
+> returning an error code.  However the value returned is (mostly) ignored
+> and this typically results in resource leaks. To improve here there is a
+> quest to make the remove callback return void. In the first step of this
+> quest all drivers are converted to .remove_new() which already returns
+> void.
 > 
-> RF calibration will notify FW to backup the calibration result after it
-> is done on a channel. For MCC (multi-channel concurrency) flow, when we
-> at RTW89_ENTITY_MODE_MCC_PREPARE mode, RF calibration should execute on
-> second channel of MCC, i.e. RTW89_SUB_ENTITY_1, and then, notify FW to
-> backup the result for the second one.
+> wlcore_remove() returned zero unconditionally. With that converted to
+> return void instead, the wl12xx and wl18xx driver can be converted to
+> .remove_new trivially.
 > 
-> Originally, the RF calibration flow only fit single channel case. We are
-> planning to support MCC on RTL8852C, so we refine its RF calibration flow
-> to fit MCC case.
-> 
-> Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 
-8 patches applied to wireless-next.git, thanks.
+Patch applied to wireless-next.git, thanks.
 
-74b45618f534 wifi: rtw89: 52c: rfk: refine MCC channel info notification
-c83ff9a3a2ca wifi: rtw89: rfk: disable driver tracking during MCC
-6e9d6f8254ee wifi: rtw89: 52c: rfk: disable DPK during MCC
-31e415e3d08a wifi: rtw89: mcc: update role bitmap when changed
-5f69aabab126 wifi: rtw89: mcc: track beacon offset and update when needed
-15fe9b731953 wifi: rtw89: mcc: deal with P2P PS change
-9ecb40ef5281 wifi: rtw89: mcc: deal with BT slot change
-97211e026313 wifi: rtw89: mcc: deal with beacon NoA if GO exists
+f00928012886 wifi: wlcore: Convert to platform remove callback returning void
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230908031145.20931-2-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230912171249.755901-1-u.kleine-koenig@pengutronix.de/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
