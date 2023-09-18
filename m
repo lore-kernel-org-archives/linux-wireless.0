@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E69E1CD13DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 09:32:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10E7BCD3420
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 09:32:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240923AbjIRJcQ (ORCPT
+        id S240928AbjIRJcR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 05:32:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33984 "EHLO
+        Mon, 18 Sep 2023 05:32:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239199AbjIRJbi (ORCPT
+        with ESMTP id S235797AbjIRJbg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 05:31:38 -0400
+        Mon, 18 Sep 2023 05:31:36 -0400
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5857311A
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 02:31:30 -0700 (PDT)
-X-UUID: 220d24d8560611ee8051498923ad61e6-20230918
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7418115
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 02:31:29 -0700 (PDT)
+X-UUID: 21acc3b8560611ee8051498923ad61e6-20230918
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=RPFKVw2WS6o8/mbKJj2N9/jDGUwGomR2ZOT5TMsQNYQ=;
-        b=i4nDxXFxdrwkh8Bfpdn7lxUkwWa3g7mWbo7GwkQeH/czQdSMDS+xrfumAvV0pB69uqkzW99E7vKKBQUhM+p03FcTkkVPIL6OgxnSPLPY30B7hWgUQuaJpWQkylABTjsn1hqU7OgwUw7TIbTDyZoP9w+z5VfKm5PGFcO5MJn+lRU=;
+        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=jbGjIxP5cg74e10qOUBqYimGtz6mxPuNvWSQ6d8ggJE=;
+        b=HXWQ5TZcq4DvwFHOmUXl63pNi36jD64viOdX8BZ3TtMATsK6t7U++EJhG2lUGQMKxYnCvPd+vs/t/+TSwcwtOgf1HWmwQFq0TxBWTWWNztSsxPP0CyJ7qgjP8eZ606VYIMQIUGvVkuFxUVl9VZvzkr3KfQJrz4a+vRK+AjE3Yug=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.31,REQID:4c5cc207-003a-4a7e-bf64-511f186a8c86,IP:0,U
+X-CID-O-INFO: VERSION:1.1.31,REQID:040479f7-28d0-48e4-b478-007cc6f8a26b,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
         release,TS:0
-X-CID-META: VersionHash:0ad78a4,CLOUDID:8e5f1114-4929-4845-9571-38c601e9c3c9,B
+X-CID-META: VersionHash:0ad78a4,CLOUDID:1d86d3ef-9a6e-4c39-b73e-f2bc08ca3dc5,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
+        RL:1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
         DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 220d24d8560611ee8051498923ad61e6-20230918
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-UUID: 21acc3b8560611ee8051498923ad61e6-20230918
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <deren.wu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 280481650; Mon, 18 Sep 2023 17:31:23 +0800
+        with ESMTP id 2134528291; Mon, 18 Sep 2023 17:31:22 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Mon, 18 Sep 2023 17:31:22 +0800
+ 15.2.1118.26; Mon, 18 Sep 2023 17:31:21 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Mon, 18 Sep 2023 17:31:22 +0800
+ 15.2.1118.26 via Frontend Transport; Mon, 18 Sep 2023 17:31:21 +0800
 From:   Deren Wu <deren.wu@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
 CC:     Sean Wang <sean.wang@mediatek.com>,
@@ -50,362 +50,138 @@ CC:     Sean Wang <sean.wang@mediatek.com>,
         Shayne Chen <shayne.chen@mediatek.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Deren Wu <deren.wu@mediatek.com>
-Subject: [PATCH v3 03/17] wifi: mt76: mt7925: add mt7925.h
-Date:   Mon, 18 Sep 2023 17:30:56 +0800
-Message-ID: <62c3092ad64e889d3adff381db5efb406a0e828f.1695024367.git.deren.wu@mediatek.com>
+        Deren Wu <deren.wu@mediatek.com>,
+        "Hao Zhang" <hao.zhang@mediatek.com>,
+        Leon Yen <leon.yen@mediatek.com>,
+        "Mingyen Hsieh" <mingyen.hsieh@mediatek.com>,
+        Nelson Yu <nelson.yu@mediatek.com>,
+        "Quan Zhou" <quan.zhou@mediatek.com>,
+        Rong Yan <rong.yan@mediatek.com>
+Subject: [PATCH v3 00/17] Add support for Mediatek Wi-Fi7 driver mt7925
+Date:   Mon, 18 Sep 2023 17:30:53 +0800
+Message-ID: <cover.1695024367.git.deren.wu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <cover.1695024367.git.deren.wu@mediatek.com>
-References: <cover.1695024367.git.deren.wu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--4.376700-8.000000
+X-TMASE-MatchedRID: dTXa9VSD0MTGHadaRuAOvxv+r1s9z1a0Ct59Uh3p/NXo5/9VDsD0gA5x
+        vr++qx3rYE8U75Rh/1qJ1uwZVAc3Y4uLXAHXNQlQXy2tkK+taSRAq6/y5AEOOhP6Y8Vsp9y7njM
+        loJas2eeokhRcXx5751rcv8nBrrT3utbsRFhsjTJ7k1ZHmKLF7c6YYW8CaluSVI7KaIl9NheMvW
+        2SwdoNIIU7ak+0A5gokmXrMwdSLSLEFB+Bmr71qkOZWaJBszmqo5KBmcJozDZo5YsPsbyLXeJ85
+        MO4rWjIrE1r27NixU3x1S0rgG1nwDI0UzRdrW2oH5YQyOg71ZZU3K6aV1ad7Zsoi2XrUn/Jn6Kd
+        MrRsL14qtq5d3cxkNRqXnrxrKCOXIwfdOp7tkaoCngd93xYG2suqhlDPIauxEX6L28aXSDOy5gT
+        aC6eODHi66TnsTBVE/u5iwcyGJUG76NaD3BHC6XYFwjVyCKW9F0aD5ljt43pMcHZD6gqu7wxMjf
+        ifIXfowkvVoA11Twp+3BndfXUhXQ==
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--4.376700-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: 5DE980944CCA5461CF14DAAB2E6B1298C11D4C1A329225C4247B616A466104C12000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-(Patches split into one patch per file for easier review, but the final
-commit will be one big patch. See the cover letter for more info.)
+This series adds mt7925, a new mac80211 driver for MediaTek Wi-Fi 7
+(802.11be) device Filogic 360, which can support Station, AP, P2P, and
+monitor modes. Filogic 360 supports max 4096-QAM/160MHz radio operation at 6 GHz,
+5 GHz, or 2.4 GHz with 2x2 antennas. This chip supports PCIe and USB bus type.
 
+mt7925 supports Wi-Fi 6E and EHT rate with single link only at this moment,
+whereas Wi-Fi 7 and its specific features are working in progress. They will be
+introduced in further patches.
+
+The driver is build tested by Intel's kernel test robot with both GCC and Clang
+with several architecture. Sparse reports no warnings.
+
+There are multiple authors, they are listed in alphabetical order below.
+
+Co-developed-by: Hao Zhang <hao.zhang@mediatek.com>
+Signed-off-by: Hao Zhang <hao.zhang@mediatek.com>
+Co-developed-by: Leon Yen <leon.yen@mediatek.com>
+Signed-off-by: Leon Yen <leon.yen@mediatek.com>
 Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Co-developed-by: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
+Signed-off-by: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
+Co-developed-by: Nelson Yu <nelson.yu@mediatek.com>
+Signed-off-by: Nelson Yu <nelson.yu@mediatek.com>
+Co-developed-by: Quan Zhou <quan.zhou@mediatek.com>
+Signed-off-by: Quan Zhou <quan.zhou@mediatek.com>
+Co-developed-by: Rong Yan <rong.yan@mediatek.com>
+Signed-off-by: Rong Yan <rong.yan@mediatek.com>
 Signed-off-by: Deren Wu <deren.wu@mediatek.com>
----
- .../wireless/mediatek/mt76/mt7925/mt7925.h    | 325 ++++++++++++++++++
- 1 file changed, 325 insertions(+)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-new file mode 100644
-index 000000000000..1133d95383ca
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-@@ -0,0 +1,325 @@
-+/* SPDX-License-Identifier: ISC */
-+/* Copyright (C) 2023 MediaTek Inc. */
-+
-+#ifndef __MT7925_H
-+#define __MT7925_H
-+
-+#include "../mt792x.h"
-+#include "regs.h"
-+
-+#define MT7925_BEACON_RATES_TBL		25
-+
-+#define MT7925_TX_RING_SIZE		2048
-+#define MT7925_TX_MCU_RING_SIZE		256
-+#define MT7925_TX_FWDL_RING_SIZE	128
-+
-+#define MT7925_RX_RING_SIZE		1536
-+#define MT7925_RX_MCU_RING_SIZE		512
-+
-+#define MT7925_EEPROM_SIZE		3584
-+#define MT7925_TOKEN_SIZE		8192
-+
-+#define MT7925_EEPROM_BLOCK_SIZE	16
-+
-+#define MT7925_SKU_RATE_NUM		161
-+#define MT7925_SKU_MAX_DELTA_IDX	MT7925_SKU_RATE_NUM
-+#define MT7925_SKU_TABLE_SIZE		(MT7925_SKU_RATE_NUM + 1)
-+
-+#define MT7925_SDIO_HDR_TX_BYTES	GENMASK(15, 0)
-+#define MT7925_SDIO_HDR_PKT_TYPE	GENMASK(17, 16)
-+
-+#define MCU_UNI_EVENT_ROC  0x27
-+
-+enum {
-+	UNI_ROC_ACQUIRE,
-+	UNI_ROC_ABORT,
-+	UNI_ROC_NUM
-+};
-+
-+enum mt7925_roc_req {
-+	MT7925_ROC_REQ_JOIN,
-+	MT7925_ROC_REQ_ROC,
-+	MT7925_ROC_REQ_NUM
-+};
-+
-+enum {
-+	UNI_EVENT_ROC_GRANT = 0,
-+	UNI_EVENT_ROC_TAG_NUM
-+};
-+
-+struct mt7925_roc_grant_tlv {
-+	__le16 tag;
-+	__le16 len;
-+	u8 bss_idx;
-+	u8 tokenid;
-+	u8 status;
-+	u8 primarychannel;
-+	u8 rfsco;
-+	u8 rfband;
-+	u8 channelwidth;
-+	u8 centerfreqseg1;
-+	u8 centerfreqseg2;
-+	u8 reqtype;
-+	u8 dbdcband;
-+	u8 rsv[1];
-+	__le32 max_interval;
-+} __packed;
-+
-+struct mt7925_beacon_loss_tlv {
-+	__le16 tag;
-+	__le16 len;
-+	u8 reason;
-+	u8 nr_btolink;
-+	u8 pad[2];
-+} __packed;
-+
-+struct mt7925_uni_beacon_loss_event {
-+	struct {
-+		u8 bss_idx;
-+		u8 pad[3];
-+	} __packed hdr;
-+	struct mt7925_beacon_loss_tlv beacon_loss;
-+} __packed;
-+
-+#define to_rssi(field, rxv)		((FIELD_GET(field, rxv) - 220) / 2)
-+#define to_rcpi(rssi)			(2 * (rssi) + 220)
-+
-+enum mt7925_txq_id {
-+	MT7925_TXQ_BAND0,
-+	MT7925_TXQ_BAND1,
-+	MT7925_TXQ_MCU_WM = 15,
-+	MT7925_TXQ_FWDL,
-+};
-+
-+enum mt7925_rxq_id {
-+	MT7925_RXQ_BAND0 = 2,
-+	MT7925_RXQ_BAND1,
-+	MT7925_RXQ_MCU_WM = 0,
-+	MT7925_RXQ_MCU_WM2, /* for tx done */
-+};
-+
-+enum {
-+	MODE_OPEN = 0,
-+	MODE_SHARED = 1,
-+	MODE_WPA = 3,
-+	MODE_WPA_PSK = 4,
-+	MODE_WPA_NONE = 5,
-+	MODE_WPA2 = 6,
-+	MODE_WPA2_PSK = 7,
-+	MODE_WPA3_SAE = 11,
-+};
-+
-+enum {
-+	MT7925_CLC_POWER,
-+	MT7925_CLC_CHAN,
-+	MT7925_CLC_MAX_NUM,
-+};
-+
-+struct mt7925_clc_rule {
-+	u8 alpha2[2];
-+	u8 type[2];
-+	u8 seg_idx;
-+	u8 rsv[3];
-+} __packed;
-+
-+struct mt7925_clc_segment {
-+	u8 idx;
-+	u8 rsv1[3];
-+	u32 offset;
-+	u32 len;
-+	u8 rsv2[4];
-+} __packed;
-+
-+struct mt7925_clc {
-+	__le32 len;
-+	u8 idx;
-+	u8 ver;
-+	u8 nr_country;
-+	u8 type;
-+	u8 nr_seg;
-+	u8 rsv[7];
-+	u8 data[];
-+} __packed;
-+
-+enum mt7925_eeprom_field {
-+	MT_EE_CHIP_ID =		0x000,
-+	MT_EE_VERSION =		0x002,
-+	MT_EE_MAC_ADDR =	0x004,
-+	__MT_EE_MAX =		0x9ff
-+};
-+
-+enum {
-+	TXPWR_USER,
-+	TXPWR_EEPROM,
-+	TXPWR_MAC,
-+	TXPWR_MAX_NUM,
-+};
-+
-+struct mt7925_txpwr {
-+	s8 cck[4][2];
-+	s8 ofdm[8][2];
-+	s8 ht20[8][2];
-+	s8 ht40[9][2];
-+	s8 vht20[12][2];
-+	s8 vht40[12][2];
-+	s8 vht80[12][2];
-+	s8 vht160[12][2];
-+	s8 he26[12][2];
-+	s8 he52[12][2];
-+	s8 he106[12][2];
-+	s8 he242[12][2];
-+	s8 he484[12][2];
-+	s8 he996[12][2];
-+	s8 he996x2[12][2];
-+	s8 eht26[16][2];
-+	s8 eht52[16][2];
-+	s8 eht106[16][2];
-+	s8 eht242[16][2];
-+	s8 eht484[16][2];
-+	s8 eht996[16][2];
-+	s8 eht996x2[16][2];
-+	s8 eht996x4[16][2];
-+	s8 eht26_52[16][2];
-+	s8 eht26_106[16][2];
-+	s8 eht484_242[16][2];
-+	s8 eht996_484[16][2];
-+	s8 eht996_484_242[16][2];
-+	s8 eht996x2_484[16][2];
-+	s8 eht996x3[16][2];
-+	s8 eht996x3_484[16][2];
-+};
-+
-+extern const struct ieee80211_ops mt7925_ops;
-+
-+int __mt7925_start(struct mt792x_phy *phy);
-+int mt7925_register_device(struct mt792x_dev *dev);
-+void mt7925_unregister_device(struct mt792x_dev *dev);
-+int mt7925_run_firmware(struct mt792x_dev *dev);
-+int mt7925_mcu_set_bss_pm(struct mt792x_dev *dev, struct ieee80211_vif *vif,
-+			  bool enable);
-+int mt7925_mcu_sta_update(struct mt792x_dev *dev, struct ieee80211_sta *sta,
-+			  struct ieee80211_vif *vif, bool enable,
-+			  enum mt76_sta_info_state state);
-+int mt7925_mcu_set_chan_info(struct mt792x_phy *phy, u16 tag);
-+int mt7925_mcu_set_tx(struct mt792x_dev *dev, struct ieee80211_vif *vif);
-+int mt7925_mcu_set_eeprom(struct mt792x_dev *dev);
-+int mt7925_mcu_get_rx_rate(struct mt792x_phy *phy, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta, struct rate_info *rate);
-+int mt7925_mcu_fw_log_2_host(struct mt792x_dev *dev, u8 ctrl);
-+void mt7925_mcu_rx_event(struct mt792x_dev *dev, struct sk_buff *skb);
-+int mt7925_mcu_chip_config(struct mt792x_dev *dev, const char *cmd);
-+int mt7925_mcu_set_rxfilter(struct mt792x_dev *dev, u32 fif,
-+			    u8 bit_op, u32 bit_map);
-+static inline void
-+mt7925_skb_add_usb_sdio_hdr(struct mt792x_dev *dev, struct sk_buff *skb,
-+			    int type)
-+{
-+	u32 hdr, len;
-+
-+	len = mt76_is_usb(&dev->mt76) ? skb->len : skb->len + sizeof(hdr);
-+	hdr = FIELD_PREP(MT7925_SDIO_HDR_TX_BYTES, len) |
-+	      FIELD_PREP(MT7925_SDIO_HDR_PKT_TYPE, type);
-+
-+	put_unaligned_le32(hdr, skb_push(skb, sizeof(hdr)));
-+}
-+
-+void mt7925_stop(struct ieee80211_hw *hw);
-+int mt7925_mac_init(struct mt792x_dev *dev);
-+int mt7925_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-+		       struct ieee80211_sta *sta);
-+bool mt7925_mac_wtbl_update(struct mt792x_dev *dev, int idx, u32 mask);
-+void mt7925_mac_sta_assoc(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-+			  struct ieee80211_sta *sta);
-+void mt7925_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta);
-+void mt7925_mac_reset_work(struct work_struct *work);
-+int mt7925e_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
-+			   enum mt76_txq_id qid, struct mt76_wcid *wcid,
-+			   struct ieee80211_sta *sta,
-+			   struct mt76_tx_info *tx_info);
-+
-+void mt7925_tx_token_put(struct mt792x_dev *dev);
-+bool mt7925_rx_check(struct mt76_dev *mdev, void *data, int len);
-+void mt7925_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
-+			 struct sk_buff *skb, u32 *info);
-+void mt7925_stats_work(struct work_struct *work);
-+void mt7925_set_stream_he_eht_caps(struct mt792x_phy *phy);
-+int mt7925_init_debugfs(struct mt792x_dev *dev);
-+
-+int mt7925_mcu_set_beacon_filter(struct mt792x_dev *dev,
-+				 struct ieee80211_vif *vif,
-+				 bool enable);
-+int mt7925_mcu_uni_tx_ba(struct mt792x_dev *dev,
-+			 struct ieee80211_ampdu_params *params,
-+			 bool enable);
-+int mt7925_mcu_uni_rx_ba(struct mt792x_dev *dev,
-+			 struct ieee80211_ampdu_params *params,
-+			 bool enable);
-+void mt7925_scan_work(struct work_struct *work);
-+void mt7925_roc_work(struct work_struct *work);
-+int mt7925_mcu_uni_bss_ps(struct mt792x_dev *dev, struct ieee80211_vif *vif);
-+void mt7925_coredump_work(struct work_struct *work);
-+int mt7925_get_txpwr_info(struct mt792x_dev *dev, u8 band_idx,
-+			  struct mt7925_txpwr *txpwr);
-+void mt7925_mac_set_fixed_rate_table(struct mt792x_dev *dev,
-+				     u8 tbl_idx, u16 rate_idx);
-+void mt7925_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
-+			   struct sk_buff *skb, struct mt76_wcid *wcid,
-+			   struct ieee80211_key_conf *key, int pid,
-+			   enum mt76_txq_id qid, u32 changed);
-+void mt7925_txwi_free(struct mt792x_dev *dev, struct mt76_txwi_cache *t,
-+		      struct ieee80211_sta *sta, bool clear_status,
-+		      struct list_head *free_list);
-+int mt7925_mcu_parse_response(struct mt76_dev *mdev, int cmd,
-+			      struct sk_buff *skb, int seq);
-+
-+int mt7925e_mac_reset(struct mt792x_dev *dev);
-+int mt7925e_mcu_init(struct mt792x_dev *dev);
-+void mt7925_mac_add_txs(struct mt792x_dev *dev, void *data);
-+void mt7925_set_runtime_pm(struct mt792x_dev *dev);
-+void mt7925_mcu_set_suspend_iter(void *priv, u8 *mac,
-+				 struct ieee80211_vif *vif);
-+void mt7925_connac_mcu_set_suspend_iter(void *priv, u8 *mac,
-+					struct ieee80211_vif *vif);
-+void mt7925_set_ipv6_ns_work(struct work_struct *work);
-+
-+int mt7925_mcu_set_sniffer(struct mt792x_dev *dev, struct ieee80211_vif *vif,
-+			   bool enable);
-+int mt7925_mcu_config_sniffer(struct mt792x_vif *vif,
-+			      struct ieee80211_chanctx_conf *ctx);
-+
-+int mt7925_usb_sdio_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
-+				   enum mt76_txq_id qid, struct mt76_wcid *wcid,
-+				   struct ieee80211_sta *sta,
-+				   struct mt76_tx_info *tx_info);
-+void mt7925_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
-+				     struct mt76_queue_entry *e);
-+bool mt7925_usb_sdio_tx_status_data(struct mt76_dev *mdev, u8 *update);
-+
-+int mt7925_mcu_uni_add_beacon_offload(struct mt792x_dev *dev,
-+				      struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif,
-+				      bool enable);
-+int mt7925_set_tx_sar_pwr(struct ieee80211_hw *hw,
-+			  const struct cfg80211_sar_specs *sar);
-+
-+int mt7925_mcu_regval(struct mt792x_dev *dev, u32 regidx, u32 *val, bool set);
-+int mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
-+		       enum environment_cap env_cap);
-+int mt7925_mcu_set_roc(struct mt792x_phy *phy, struct mt792x_vif *vif,
-+		       struct ieee80211_channel *chan, int duration,
-+		       enum mt7925_roc_req type, u8 token_id);
-+int mt7925_mcu_abort_roc(struct mt792x_phy *phy, struct mt792x_vif *vif,
-+			 u8 token_id);
-+int mt7925_mcu_fill_message(struct mt76_dev *mdev, struct sk_buff *skb,
-+			    int cmd, int *wait_seq);
-+int mt7925_mcu_add_key(struct mt76_dev *dev, struct ieee80211_vif *vif,
-+		       struct mt76_connac_sta_key_conf *sta_key_conf,
-+		       struct ieee80211_key_conf *key, int mcu_cmd,
-+		       struct mt76_wcid *wcid, enum set_key_cmd cmd);
-+int mt7925_mcu_set_rts_thresh(struct mt792x_phy *phy, u32 val);
-+int mt7925_mcu_wtbl_update_hdr_trans(struct mt792x_dev *dev,
-+				     struct ieee80211_vif *vif,
-+				     struct ieee80211_sta *sta);
-+
-+#endif
+----------------[commit message cut here]----------------
+
+v2:
+- add patchwork link for preceding series
+- rebase on top of staging tree and apply fixes for following new patches
+  * 586baa51d755 ("wifi: mt76: remove unused error path in mt76_connac_tx_complete_skb")
+  * 29b8fc6742a1 ("wifi: mt76: fix race condition related to checking tx queue fill status")
+  * e8c1841278a7 ("wifi: cfg80211: annotate iftype_data pointer with sparse")
+
+v3:
+- rebase on the top of maintainer tree
+- align struct ieee80211_chanctx_conf migration to struct mt76_vif
+- fix chip_reset fail
+- this series is based on "wifi: mt76: move struct ieee80211_chanctx_conf up to struct mt76_vif"
+https://patchwork.kernel.org/project/linux-wireless/patch/f1e86c1f90ebe75ce2ae0cb1ba34f8db2996792c.1695021398.git.deren.wu@mediatek.com/
+
+Deren Wu (17):
+  wifi: mt76: mt7925: add Kconfig
+  wifi: mt76: mt7925: add Makefile
+  wifi: mt76: mt7925: add mt7925.h
+  wifi: mt76: mt7925: add regs.h
+  wifi: mt76: mt7925: add mcu.c
+  wifi: mt76: mt7925: add mcu.h
+  wifi: mt76: mt7925: add mac.c
+  wifi: mt76: mt7925: add mac.h
+  wifi: mt76: mt7925: add main.c
+  wifi: mt76: mt7925: add init.c
+  wifi: mt76: mt7925: add pci_mcu.c
+  wifi: mt76: mt7925: add pci_mac.c
+  wifi: mt76: mt7925: add pci.c
+  wifi: mt76: mt7925: add usb.c
+  wifi: mt76: mt7925: add debugfs.c
+  wifi: mt76: add mt7925 to Makefile
+  wifi: mt76: add mt7925 to Kconfig
+
+ drivers/net/wireless/mediatek/mt76/Kconfig    |    1 +
+ drivers/net/wireless/mediatek/mt76/Makefile   |    1 +
+ .../net/wireless/mediatek/mt76/mt7925/Kconfig |   30 +
+ .../wireless/mediatek/mt76/mt7925/Makefile    |    9 +
+ .../wireless/mediatek/mt76/mt7925/debugfs.c   |  319 ++
+ .../net/wireless/mediatek/mt76/mt7925/init.c  |  235 ++
+ .../net/wireless/mediatek/mt76/mt7925/mac.c   | 1452 ++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mac.h   |   23 +
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 1471 ++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 3174 +++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.h   |  537 +++
+ .../wireless/mediatek/mt76/mt7925/mt7925.h    |  325 ++
+ .../net/wireless/mediatek/mt76/mt7925/pci.c   |  586 +++
+ .../wireless/mediatek/mt76/mt7925/pci_mac.c   |  148 +
+ .../wireless/mediatek/mt76/mt7925/pci_mcu.c   |   53 +
+ .../net/wireless/mediatek/mt76/mt7925/regs.h  |   92 +
+ .../net/wireless/mediatek/mt76/mt7925/usb.c   |  340 ++
+ 17 files changed, 8796 insertions(+)
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/Kconfig
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/Makefile
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/init.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mac.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/main.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/pci_mcu.c
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/regs.h
+ create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+
 -- 
 2.18.0
 
