@@ -2,99 +2,124 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10DE6CD13D9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BB5ACD3420
 	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 11:12:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239751AbjIRLLq (ORCPT
+        id S241243AbjIRLLt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 07:11:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36954 "EHLO
+        Mon, 18 Sep 2023 07:11:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241525AbjIRLLe (ORCPT
+        with ESMTP id S241512AbjIRLLd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 07:11:34 -0400
+        Mon, 18 Sep 2023 07:11:33 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA22399
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 04:11:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3DAAE6
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 04:11:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695035488; x=1726571488;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=J1bBLce+jGNc+E6bmMNdLb8a/41nDF9Tww7XllDfufM=;
-  b=XEHahJo0/b6/8LZ5eFko+lOZ5rxhrdNtbN7HrBGJRuYFwaC444rTUI+H
-   A34HR4OofZW8IYN+g3vY+PHnEWcQCFi/PjezsEAY38VT21JfTRBK0l/6D
-   LVA/pugjmZyMcFlm2Xqyni47bKikIZ1IQXHrFtBYDrMGuOolLqv5DL3Mu
-   msNBSS+eFK81dSbk+m2pm/eJUtcY/cDDOc1NQpJqPedDvDvtG9I9Bm/UG
-   irFeT3gNOejSzkkV/umVQ6oz7yvJNI78JePPWsf74BdL3FVQglRu2KxLu
-   SBketZeM2ig4GM/euwcs9T15EPgFzsfl3Ym7tfMXaJ6VZhuRsHo02NYwK
+  t=1695035487; x=1726571487;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Z7ZkAsYv6A3V4CbXA0U2r76lZE2XwcMiq0/pRHTY7wA=;
+  b=YB0RPAdwr9kiF7PKOs+4kKSUHQHT1adsML4ZHAEqfypKjcuRrVK0TXXN
+   0qHEFBzjoCYVn6xUrVH4uTaXZqZuva5FX84oWFz7gHTTa0CC618a/p0WS
+   Eal4be5/O5QRvyy/Jtm8dR7TrXPWwZ4X4vYhXbJzKXDnDZb5CBhxy3of2
+   UlAFEYK+TkHk73dcfqsmYmyv2+RQu5X1W+mhV1CLh2GA4qTbTtfh5OBGm
+   pqkt2xX9/siEhGd1pwuJq+PIq+3QnsGK0+9VaxdOq+9WZaxoYMhAwL0m+
+   bxOxDdFNcOfmABXJ4jiBx2s+KQeDF99esp1B8BpNGPQreZA7z6XYZjiw+
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="378535700"
+X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="378535675"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="378535700"
+   d="scan'208";a="378535675"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:25 -0700
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:17 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="861025235"
+X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="861025177"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="861025235"
+   d="scan'208";a="861025177"
 Received: from guyarad-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.14])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:20 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:15 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 02/18] wifi: mac80211: update the rx_chains after set_antenna()
-Date:   Mon, 18 Sep 2023 14:10:47 +0300
-Message-Id: <20230918140607.d7373054dc25.I904223c868c77cf2ba132a3088fe6506fcbb443b@changeid>
+Subject: [PATCH 00/18] cfg80211/mac80211 patches from our internal tree 2023-09-18 
+Date:   Mon, 18 Sep 2023 14:10:45 +0300
+Message-Id: <20230918111103.435195-1-gregory.greenman@intel.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230918111103.435195-1-gregory.greenman@intel.com>
-References: <20230918111103.435195-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-rx_chains was set only upon registration and it we rely on it for the
-active chains upon SMPS configuration after association.
+Hi,
 
-When we use the set_antenna() API to limit the rx_chains from 2 to 1,
-this caused issues with iwlwifi since we still had 2 active_chains
-requested.
+A bunch of patches from our internal tree with mac80211 and
+cfg80211 changes. It's the usual developement, cleanups and
+bugfixes.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- net/mac80211/cfg.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+The changes are:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e751d4eba8f5..6b3ccb55aae5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -4044,11 +4044,17 @@ ieee80211_update_mgmt_frame_registrations(struct wiphy *wiphy,
- static int ieee80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	int ret;
- 
- 	if (local->started)
- 		return -EOPNOTSUPP;
- 
--	return drv_set_antenna(local, tx_ant, rx_ant);
-+	ret = drv_set_antenna(local, tx_ant, rx_ant);
-+	if (ret)
-+		return ret;
-+
-+	local->rx_chains = hweight8(rx_ant);
-+	return 0;
- }
- 
- static int ieee80211_get_antenna(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant)
+* add implementation for set_antenna API
+* CSA fixes
+* initial support for TID to link mapping
+* MLO improvements
+* fixes and cleanups
+
+Thanks,
+Gregory
+
+Ayala Beker (3):
+  wifi: mac80211: don't connect to an AP while it's in a CSA process
+  wifi: mac80211: add support for parsing TID to Link mapping element
+  wifi: mac80211: support handling of advertised TID-to-link mapping
+
+Benjamin Berg (3):
+  wifi: cfg80211: report per-link errors during association
+  wifi: mac80211: report per-link error during association
+  wifi: mac80211: reject MLO channel configuration if not supported
+
+Emmanuel Grumbach (1):
+  wifi: mac80211: update the rx_chains after set_antenna()
+
+Ilan Peer (3):
+  wifi: cfg80211: Fix 6GHz scan configuration
+  wifi: mac80211: Notify the low level driver on change in MLO valid links
+  wifi: mac80211_hwsim: Handle BSS_CHANGED_VALID_LINKS
+
+Johannes Berg (8):
+  wifi: mac80211: use bandwidth indication element for CSA
+  wifi: mac80211: relax RCU check in for_each_vif_active_link()
+  wifi: mac80211: allow for_each_sta_active_link() under RCU
+  wifi: cfg80211: reg: describe return values in kernel-doc
+  wifi: mac80211: describe return values in kernel-doc
+  wifi: mac80211_hwsim: move kernel-doc description
+  wifi: mac80211: work around Cisco AP 9115 VHT MPDU length
+  wifi: mac80211: support antenna control in injection
+
+ drivers/net/wireless/virtual/mac80211_hwsim.c |  26 +-
+ include/linux/ieee80211.h                     |  76 +++++
+ include/net/cfg80211.h                        |   3 +
+ include/net/mac80211.h                        |  12 +-
+ net/mac80211/cfg.c                            |  11 +-
+ net/mac80211/ibss.c                           |   2 +-
+ net/mac80211/ieee80211_i.h                    |  22 +-
+ net/mac80211/main.c                           |   3 +-
+ net/mac80211/mesh_plink.c                     |   2 +-
+ net/mac80211/mlme.c                           | 284 +++++++++++++++++-
+ net/mac80211/spectmgmt.c                      |  13 +-
+ net/mac80211/tx.c                             |  16 +
+ net/mac80211/util.c                           |  52 +++-
+ net/mac80211/vht.c                            |  16 +-
+ net/wireless/nl80211.c                        |  50 ++-
+ net/wireless/reg.c                            |  16 +-
+ net/wireless/scan.c                           |   4 +
+ 17 files changed, 555 insertions(+), 53 deletions(-)
+
 -- 
 2.38.1
 
