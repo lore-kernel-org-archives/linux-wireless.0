@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2A8CCD13DE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E8BCD13D2
 	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 11:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233421AbjIRLMZ (ORCPT
+        id S241374AbjIRLMW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 07:12:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32822 "EHLO
+        Mon, 18 Sep 2023 07:12:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241404AbjIRLLz (ORCPT
+        with ESMTP id S241208AbjIRLLr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 07:11:55 -0400
+        Mon, 18 Sep 2023 07:11:47 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 827FEE6
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 04:11:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24514E6
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 04:11:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695035507; x=1726571507;
+  t=1695035502; x=1726571502;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=/AP0+xMpx34vxGXFnWLHmoaSPXkLi4eOiXOXfe9sFkU=;
-  b=OBtpSysaLmwzYRr1fQ2il67RE9SDXI+jzr7qgSaoQXRmlZoqcul+Vc22
-   bqh/2gD+KGpFQ8zjH744f2+DSCswWC5CobkXxZPknoCTpJjAC1H9HBNH6
-   fOJt6p/LwkvX+qT04NvtVPqQk938HsIpuhjE/cuQL2y/EDNzoK+3w1jhe
-   TN/jJkpGfSargEWqzg6jetTbB3oEt8OIY6jD0qnJsIRIUovgUpJej1D5X
-   UzpmcWMSFX269dnSHvUIFsRTV+X6Yf1NzdnkRZbCE934EpitK8F0eH85c
-   CG4mSpFkfss46b6Bci+FfxBBjJN+VjGjNMzUz4pjO7cUNnnJ0DZBQW/de
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="378535777"
+  bh=+2fFo+Wm7cvoNXzzXtvKDYK4pH4ry27TxBKzRlPCFrE=;
+  b=VsqtcoIMUiTcQbol0IALoH6wx5U/Rb5BaTB3VC/BM4bUbbb1Kh+fLCCD
+   yb7+S0lnpO8BgIE6U2J9PMg2siVHGN+pt7AM1vhq9/eGEjHWeSrmyuUrH
+   FoiVkSb4e13xf/wW7BY7i9mulUY3q8ba+4wjXm2/nhAnnB4Hb+ZUjeAwR
+   2N7xyOu4kjb8oleUjvQWeN+84mlNwgQmY9izQmNksNIYZsIjmY6xmaEpG
+   FdriVRHSLX50xKH7UJbZNa6JIBbjolSVkcqquTjn2BCPsbl3EKbRFeKH5
+   ErVUJ3x+KIoVrqCh9eOTMuwkB4Oxx4HbYmF8cCO4RjYy18TZ9Q0QwfZTU
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="378535756"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="378535777"
+   d="scan'208";a="378535756"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:40 -0700
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:34 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="861025328"
+X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="861025291"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="861025328"
+   d="scan'208";a="861025291"
 Received: from guyarad-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.14])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:36 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:11:32 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 08/18] wifi: mac80211_hwsim: move kernel-doc description
-Date:   Mon, 18 Sep 2023 14:10:53 +0300
-Message-Id: <20230918140607.857157392f9f.I5e0cc993acf281d6d90f124c6cce9a2f47000c7d@changeid>
+Subject: [PATCH 06/18] wifi: cfg80211: reg: describe return values in kernel-doc
+Date:   Mon, 18 Sep 2023 14:10:51 +0300
+Message-Id: <20230918140607.ce0d9c919bc6.I6dbae4f6dfe8f5352bc44565cc5131e73dd1873f@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230918111103.435195-1-gregory.greenman@intel.com>
 References: <20230918111103.435195-1-gregory.greenman@intel.com>
@@ -59,51 +59,76 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Move the description after the parameter section, to make the
-kernel-doc script in verbose mode happy about it.
+Describe the function return values in kernel-doc.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ net/wireless/reg.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index 36f2d2388ddd..17ecd5fe7258 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -72,15 +72,6 @@ MODULE_PARM_DESC(mlo, "Support MLO");
- /**
-  * enum hwsim_regtest - the type of regulatory tests we offer
-  *
-- * These are the different values you can use for the regtest
-- * module parameter. This is useful to help test world roaming
-- * and the driver regulatory_hint() call and combinations of these.
-- * If you want to do specific alpha2 regulatory domain tests simply
-- * use the userspace regulatory request as that will be respected as
-- * well without the need of this module parameter. This is designed
-- * only for testing the driver regulatory request, world roaming
-- * and all possible combinations.
-- *
-  * @HWSIM_REGTEST_DISABLED: No regulatory tests are performed,
-  * 	this is the default value.
-  * @HWSIM_REGTEST_DRIVER_REG_FOLLOW: Used for testing the driver regulatory
-@@ -125,6 +116,15 @@ MODULE_PARM_DESC(mlo, "Support MLO");
-  * 	    domain request
-  * 	6 and on - should follow the intersection of the 3rd, 4rth and 5th radio
-  * 	           regulatory requests.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index eb2fa97457b4..2ef4f6cc7a32 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1283,7 +1283,9 @@ static bool is_valid_rd(const struct ieee80211_regdomain *rd)
+  * 60 GHz band.
+  * This resolution can be lowered and should be considered as we add
+  * regulatory rule support for other "bands".
+- **/
 + *
-+ * These are the different values you can use for the regtest
-+ * module parameter. This is useful to help test world roaming
-+ * and the driver regulatory_hint() call and combinations of these.
-+ * If you want to do specific alpha2 regulatory domain tests simply
-+ * use the userspace regulatory request as that will be respected as
-+ * well without the need of this module parameter. This is designed
-+ * only for testing the driver regulatory request, world roaming
-+ * and all possible combinations.
++ * Returns: whether or not the frequency is in the range
++ */
+ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+ 			      u32 freq_khz)
+ {
+@@ -1492,6 +1494,8 @@ static void add_rule(struct ieee80211_reg_rule *rule,
+  * Returns a pointer to the regulatory domain structure which will hold the
+  * resulting intersection of rules between rd1 and rd2. We will
+  * kzalloc() this structure for you.
++ *
++ * Returns: the intersected regdomain
   */
- enum hwsim_regtest {
- 	HWSIM_REGTEST_DISABLED = 0,
+ static struct ieee80211_regdomain *
+ regdom_intersect(const struct ieee80211_regdomain *rd1,
+@@ -2673,6 +2677,9 @@ static void reg_set_request_processed(void)
+  *
+  * The wireless subsystem can use this function to process
+  * a regulatory request issued by the regulatory core.
++ *
++ * Returns: %REG_REQ_OK or %REG_REQ_IGNORE, indicating if the
++ *	hint was processed or ignored
+  */
+ static enum reg_request_treatment
+ reg_process_hint_core(struct regulatory_request *core_request)
+@@ -2729,6 +2736,9 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+  *
+  * The wireless subsystem can use this function to process
+  * a regulatory request initiated by userspace.
++ *
++ * Returns: %REG_REQ_OK or %REG_REQ_IGNORE, indicating if the
++ *	hint was processed or ignored
+  */
+ static enum reg_request_treatment
+ reg_process_hint_user(struct regulatory_request *user_request)
+@@ -2784,7 +2794,7 @@ __reg_process_hint_driver(struct regulatory_request *driver_request)
+  * The wireless subsystem can use this function to process
+  * a regulatory request issued by an 802.11 driver.
+  *
+- * Returns one of the different reg request treatment values.
++ * Returns: one of the different reg request treatment values.
+  */
+ static enum reg_request_treatment
+ reg_process_hint_driver(struct wiphy *wiphy,
+@@ -2888,7 +2898,7 @@ __reg_process_hint_country_ie(struct wiphy *wiphy,
+  * The wireless subsystem can use this function to process
+  * a regulatory request issued by a country Information Element.
+  *
+- * Returns one of the different reg request treatment values.
++ * Returns: one of the different reg request treatment values.
+  */
+ static enum reg_request_treatment
+ reg_process_hint_country_ie(struct wiphy *wiphy,
 -- 
 2.38.1
 
