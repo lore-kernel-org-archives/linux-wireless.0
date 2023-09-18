@@ -2,44 +2,44 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 596CBCD13D2
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 15:47:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D102CD13D2
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 15:48:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229826AbjIRPrn (ORCPT
+        id S229758AbjIRPse (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 11:47:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47588 "EHLO
+        Mon, 18 Sep 2023 11:48:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229846AbjIRPrl (ORCPT
+        with ESMTP id S229751AbjIRPsc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 11:47:41 -0400
+        Mon, 18 Sep 2023 11:48:32 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8581419A7;
-        Mon, 18 Sep 2023 08:44:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93351CFC;
+        Mon, 18 Sep 2023 08:46:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695051886; x=1726587886;
+  t=1695051983; x=1726587983;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ymkN+p4ogpYhyDF99HjDp+8yFzsuK5k5J5zb7K9eDd0=;
-  b=WyHkEmtrm5ATwt3VZF3xouUzV+1P0o1Dqg2HoOZ+BKYydtWtnXwtcaOP
-   Xvpc94Gi/UaJdDQWqq+wUVoqq9d2JlN5k69AcrbEOJlT9rILhbVY3eaH9
-   /OhdDztnpucygMldh3EdBIYDX6kDyeoUDhF5Lr6URItuwzzMVqHPnkN6Q
-   iBpXnvYJ55wdFfTniVQ/jwz1JvgOmhJVG5dDe2q/tEnAGDRHimNpGYaeC
-   ruj5nZ55AfqTXfyetcpA3HD1yNJ5kDYm4Jt4blwHa2gt1S02jFE10+pPZ
-   O9dRIWtX3p15gHgqKBk7IicaMXHM1uhTucg88Ix/woQVRpigZaoDz+6lN
+  bh=s0vQPYCvTArOJ8UKcbPeJ71cltUHLof64ZzmndGbOp4=;
+  b=g2uLs8OADS77SXqB3EuVJrEreMnzHFPTafxvzmdEL/C30iUp3zH7jq1d
+   ABZ3Kgh5gdJWDrpY5cUPNAW0MC6MwehHgL8SJnJWsyivkRwisemiLfzRD
+   JkRNPbicHlrpKkMhHoxPsPyTChaGYZWWo9+635t/DgCn0pxxUem/ScJGT
+   4SLlJpWs3qxKi0/KMeTdVUlZ787kIuyPnPSg8tREZhknRBZJx+ocIwy8D
+   LwpMktM8zntgHLuDzWer72KmurJ5RX9+isF15HXWJoMsVjFIyeFEABBjp
+   SRMTXuInJSNLU6fsVFUgEno8xmvLj+zQAa0qNs2pEZq25iAy6AzZxGniE
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="446113130"
+X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="446113610"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="446113130"
+   d="scan'208";a="446113610"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:12:08 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:13:45 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="811341856"
+X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="811343017"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="811341856"
+   d="scan'208";a="811343017"
 Received: from nprotaso-mobl1.ccr.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.49.156])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:12:02 -0700
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:13:39 -0700
 From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -49,17 +49,19 @@ To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
         "Rafael J . Wysocki" <rafael@kernel.org>,
         Heiner Kallweit <hkallweit1@gmail.com>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>,
+        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
 Cc:     ath10k@lists.infradead.org, ath11k@lists.infradead.org,
-        ath12k@lists.infradead.org, intel-wired-lan@lists.osuosl.org,
+        intel-wired-lan@lists.osuosl.org,
         linux-arm-kernel@lists.infradead.org,
         linux-bluetooth@vger.kernel.org,
         linux-mediatek@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        netdev@vger.kernel.org,
         =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v2 04/13] PCI/ASPM: Move L0S/L1/sub states mask calculation into a helper
-Date:   Mon, 18 Sep 2023 16:10:54 +0300
-Message-Id: <20230918131103.24119-5-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 11/13] wifi: ath12k: Use pci_disable/enable_link_state()
+Date:   Mon, 18 Sep 2023 16:11:01 +0300
+Message-Id: <20230918131103.24119-12-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
 References: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
@@ -70,68 +72,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ASPM service driver does the same L0S / L1S / sub states allowed
-calculation in __pci_disable_link_state() and
-pci_set_default_link_state().
+ath12k driver adjusts ASPM state itself which leaves ASPM service
+driver in PCI core unaware of the link state changes the driver
+implemented.
 
-Create a helper to calculate the mask for the allowed states.
+Call pci_disable_link_state() and pci_enable_link_state() instead of
+adjusting ASPMC field in LNKCTL directly in the driver and let PCI core
+handle the ASPM state management.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/pcie/aspm.c | 33 +++++++++++++++++++++------------
- 1 file changed, 21 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath12k/pci.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index ec6d7a092ac1..91dc95aca90f 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -1034,6 +1034,26 @@ static struct pcie_link_state *pcie_aspm_get_link(struct pci_dev *pdev)
- 	return bridge->link_state;
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index fae5dfd6e9d7..9401f62476be 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -794,19 +794,15 @@ static void ath12k_pci_aspm_disable(struct ath12k_pci *ab_pci)
+ 		   u16_get_bits(ab_pci->link_ctl, PCI_EXP_LNKCTL_ASPM_L1));
+ 
+ 	/* disable L0s and L1 */
+-	pcie_capability_clear_word(ab_pci->pdev, PCI_EXP_LNKCTL,
+-				   PCI_EXP_LNKCTL_ASPMC);
+-
++	pci_disable_link_state(ab_pci->pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+ 	set_bit(ATH12K_PCI_ASPM_RESTORE, &ab_pci->flags);
  }
  
-+static u8 pci_link_state_mask(int state)
-+{
-+	u8 result = 0;
-+
-+	if (state & PCIE_LINK_STATE_L0S)
-+		result |= ASPM_STATE_L0S;
-+	if (state & PCIE_LINK_STATE_L1)
-+		result |= ASPM_STATE_L1;
-+	if (state & PCIE_LINK_STATE_L1_1)
-+		result |= ASPM_STATE_L1_1;
-+	if (state & PCIE_LINK_STATE_L1_2)
-+		result |= ASPM_STATE_L1_2;
-+	if (state & PCIE_LINK_STATE_L1_1_PCIPM)
-+		result |= ASPM_STATE_L1_1_PCIPM;
-+	if (state & PCIE_LINK_STATE_L1_2_PCIPM)
-+		result |= ASPM_STATE_L1_2_PCIPM;
-+
-+	return result;
-+}
-+
- static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ static void ath12k_pci_aspm_restore(struct ath12k_pci *ab_pci)
  {
- 	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
-@@ -1063,18 +1083,7 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
- 	if (sem)
- 		down_read(&pci_bus_sem);
- 	mutex_lock(&aspm_lock);
--	if (state & PCIE_LINK_STATE_L0S)
--		link->aspm_disable |= ASPM_STATE_L0S;
--	if (state & PCIE_LINK_STATE_L1)
--		link->aspm_disable |= ASPM_STATE_L1;
--	if (state & PCIE_LINK_STATE_L1_1)
--		link->aspm_disable |= ASPM_STATE_L1_1;
--	if (state & PCIE_LINK_STATE_L1_2)
--		link->aspm_disable |= ASPM_STATE_L1_2;
--	if (state & PCIE_LINK_STATE_L1_1_PCIPM)
--		link->aspm_disable |= ASPM_STATE_L1_1_PCIPM;
--	if (state & PCIE_LINK_STATE_L1_2_PCIPM)
--		link->aspm_disable |= ASPM_STATE_L1_2_PCIPM;
-+	link->aspm_disable |= pci_link_state_mask(state);
- 	pcie_config_aspm_link(link, policy_to_aspm_state(link));
+ 	if (test_and_clear_bit(ATH12K_PCI_ASPM_RESTORE, &ab_pci->flags))
+-		pcie_capability_clear_and_set_word(ab_pci->pdev, PCI_EXP_LNKCTL,
+-						   PCI_EXP_LNKCTL_ASPMC,
+-						   ab_pci->link_ctl &
+-						   PCI_EXP_LNKCTL_ASPMC);
++		pci_enable_link_state(ab_pci->pdev, ab_pci->link_ctl &
++				      (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1));
+ }
  
- 	if (state & PCIE_LINK_STATE_CLKPM)
+ static void ath12k_pci_kill_tasklets(struct ath12k_base *ab)
 -- 
 2.30.2
 
