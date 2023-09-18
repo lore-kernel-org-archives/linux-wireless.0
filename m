@@ -2,77 +2,67 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0AF8CD13D8
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 17:02:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65784C46CA1
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 17:02:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231304AbjIRRCk (ORCPT
+        id S231302AbjIRRCl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 13:02:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58694 "EHLO
+        Mon, 18 Sep 2023 13:02:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbjIRRCh (ORCPT
+        with ESMTP id S230198AbjIRRCj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 13:02:37 -0400
+        Mon, 18 Sep 2023 13:02:39 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E4DB8E;
-        Mon, 18 Sep 2023 10:02:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18049C32783;
-        Mon, 18 Sep 2023 14:28:19 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DDA9A6
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 10:02:33 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 961E4C4163C;
+        Mon, 18 Sep 2023 14:29:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695047303;
-        bh=cVt3BSeAbCgVpGd6WsEDtgkVPihUYdejvLe8R1O+i1g=;
+        s=k20201202; t=1695047388;
+        bh=dA929+3iTIxGbjOe6CiFoyvygTA9LQumTRpzdD4INWI=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=oujQRKR3JJRDQPQnBYyL9Mg1kpOvs+cB33amTS3eFRjjqd1ZG90xTJeuoCIljLWSh
-         77WZKkUjudUGRZIgu3zj8S3mVt8EOKLZYDjtT05yhKmY7IfiIxZLbLhCC8AruV3ojg
-         UMhQ8RsJVZBstLuk0jUp5BH0orKiLeSIezkoh/b26DFLv6yZlsFbPy+66G54AQ3sO5
-         6wfuro4Idxl2oYwUqrRAifR5IZOQdnnjV/JhDh9fm1EKl4Ox8JjFOAuH26AFjEs5pY
-         zOds9b6vC4jPfASTBfTap1B9zqOOL9Fn2sbFEgLN7ARf0r6uZ12mYb7JLJwRvgSpyT
-         dZudbPpR/4joA==
+        b=O63EozK2NxHsb/Ej7v+Txl0xXfqrDs6i9s68fv9AvQoIu2njMi/Kkt5O2eJU2+1HA
+         glBqWc8Ied9rTHNOpH5DDyVq+XcCGdT5YntowA++ZqJjx5Tbv6iI8brvu4h4XxUzA6
+         SdELqb/sLK00tXI4m8iOrZ9pRM99g1qOJd2beqcsAkXZixY5ihqCkcnrWYSxb6vNBZ
+         gy1lJgynBdB+4d7s90Sd1jyiYp8IuQkNxDW4nTM94XcLYq8/DHG0hjz0EASB0bA0hC
+         25u0fEf+SfP/02VLK4kl3Qpg9fAdpEllbDpOX2Jkf9aOR8OR6P+xgYB/vEslFT7kqs
+         yYLk8p1PNhlVw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3 1/2] wifi: cw1200: Avoid processing an invalid TIM IE
+Subject: Re: [PATCH 1/6] wifi: rtw89: add to query RX descriptor format v2
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230831-ieee80211_tim_ie-v3-1-e10ff584ab5d@quicinc.com>
-References: <20230831-ieee80211_tim_ie-v3-1-e10ff584ab5d@quicinc.com>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     <kernel@quicinc.com>,
-        =?utf-8?q?Toke_H?= =?utf-8?q?=C3=B8iland-J=C3=B8rgensen?= 
-        <toke@toke.dk>, "Christian Lamparter" <chunkeey@googlemail.com>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        "Helmut Schaa" <helmut.schaa@googlemail.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Kees Cook <keescook@chromium.org>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <netdev@vger.kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20230911082049.33541-2-pkshih@realtek.com>
+References: <20230911082049.33541-2-pkshih@realtek.com>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169504729816.740666.17271538419199878496.kvalo@kernel.org>
-Date:   Mon, 18 Sep 2023 14:28:19 +0000 (UTC)
+Message-ID: <169504738572.740666.15331889491171451137.kvalo@kernel.org>
+Date:   Mon, 18 Sep 2023 14:29:47 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> While converting struct ieee80211_tim_ie::virtual_map to be a flexible
-> array it was observed that the TIM IE processing in cw1200_rx_cb()
-> could potentially process a malformed IE in a manner that could result
-> in a buffer over-read. Add logic to verify that the TIM IE length is
-> large enough to hold a valid TIM payload before processing it.
+> RX descriptor is used to provide meta data of received data. The WiFi 7
+> chips use different RX descriptor format, so add this parser along with
+> hardware design.
 > 
-> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Patch applied to wireless-next.git, thanks.
+6 patches applied to wireless-next.git, thanks.
 
-b7bcea9c27b3 wifi: cw1200: Avoid processing an invalid TIM IE
+a1cb73f29539 wifi: rtw89: add to query RX descriptor format v2
+6f09ff0a0927 wifi: rtw89: add to fill TX descriptor for firmware command v2
+d542ee748ec3 wifi: rtw89: add to fill TX descriptor v2
+c8b9a49f7a3d wifi: rtw89: add chip_info::txwd_info size to generalize TX WD submit
+651298138e42 wifi: rtw89: consolidate registers of mac port to struct
+7c8a55dd265b wifi: rtw89: add mac_gen pointer to access mac port registers
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230831-ieee80211_tim_ie-v3-1-e10ff584ab5d@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230911082049.33541-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
