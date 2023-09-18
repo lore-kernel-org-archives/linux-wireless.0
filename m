@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAAD8C46CA1
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 11:13:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 191EACD13D2
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Sep 2023 11:13:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237146AbjIRLNV (ORCPT
+        id S241360AbjIRLNX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Sep 2023 07:13:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42030 "EHLO
+        Mon, 18 Sep 2023 07:13:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241433AbjIRLMf (ORCPT
+        with ESMTP id S241489AbjIRLM6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Sep 2023 07:12:35 -0400
+        Mon, 18 Sep 2023 07:12:58 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E47C910D
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 04:12:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A64421AA
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Sep 2023 04:12:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695035535; x=1726571535;
+  t=1695035540; x=1726571540;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=nk9yaiE40tY3rG0eHhncncPn4QSdtadwzRmF+nkFgJg=;
-  b=gy3k/UBNYSmSpHTISkJz5kYfrg5hAMbQnDIR4dcr/faLH2AzvIHsvxTP
-   MJITdAxDEfMOPIh23qjjxmKk5bwDsKiDZ4saN/TTmWHIzH2qVW+Exgg+s
-   ME8hSrXY+86nZxqnWm8DHNwj/auNJ0UUGxzlrDVwDiA9Mj0+qxJa1ExfK
-   vVZYcF8c22r6VCT80iawLpATqLswgpW7N+oZd8RkWbGGLOiLGsyx5Q65q
-   NS0gXgLLbUuVeEdW1nun9/dI4WRjMohZhid0iG13jpuirzZzHQ4vWrIGw
-   t4WNs3mcCUYcvaMAbr17xdYT+LEzbpilf6uNKUnYnLh9vcNlpsI4uVgGD
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="378535969"
+  bh=OUtYvwpO0H+XRS3io6+wo0RTBNqGGonEZV9bgPCtep0=;
+  b=LuEQuyiQ8DHuDP3isyN1X9wTAAm/CVWOMBq/11ah55Sh/IYEV4XC16h9
+   sefDbyEPrt9Ln+iBUOLve7jTxcB4msOBb/cb7D0yALZvP20RXCpiBCckp
+   bVqGgWzbEQqPZH3xdD6VmgcbMHrgVHq2PCbHXEtHasJza3YI4ZqDjVo2R
+   KykCTqTD/ZRSDVjW8/7S1fsXdHsLqxT3tnapPOLDMsXT2TQ9u9lsz19CV
+   VhX0ft88kilht7f3Jh0LoWLx4zYRWWBDb1+u2bdL4sfH9+RB3bNNQ6FkW
+   StjkaVUe5rIDp7kpG/dyYImxIt4d5vuEfJPz9I+Iy5s0v+m/AFw5kUCBO
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="378536006"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="378535969"
+   d="scan'208";a="378536006"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:12:15 -0700
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:12:20 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="861025559"
+X-IronPort-AV: E=McAfee;i="6600,9927,10836"; a="861025606"
 X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="861025559"
+   d="scan'208";a="861025606"
 Received: from guyarad-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.215.14])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:12:14 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 04:12:18 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Benjamin Berg <benjamin.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 16/18] wifi: cfg80211: report per-link errors during association
-Date:   Mon, 18 Sep 2023 14:11:01 +0300
-Message-Id: <20230918140607.164cd0ae846c.I40799998f02bf987acee1501a2522dc98bb6eb5a@changeid>
+Subject: [PATCH 18/18] wifi: mac80211: reject MLO channel configuration if not supported
+Date:   Mon, 18 Sep 2023 14:11:03 +0300
+Message-Id: <20230918140607.3096546632e5.Iaa2d466ee6280994537e1ae7ab9256a27934806f@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230918111103.435195-1-gregory.greenman@intel.com>
 References: <20230918111103.435195-1-gregory.greenman@intel.com>
@@ -59,153 +59,85 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-When one of the links (other than the assoc_link) is misconfigured
-and cannot work the association will fail. However, userspace was not
-able to tell that the operation only failed because of a problem with
-one of the links. Fix this, by allowing the driver to set a per-link
-error code and reporting the (first) offending link by setting the
-bad_attr accordingly.
-
-This only allows us to report the first error, but that is sufficient
-for userspace to e.g. remove the offending link and retry.
+Reject configuring a channel for MLO if either EHT is not supported or
+the BSS does not have the correct ML element. This avoids trying to do
+a multi-link association with a misconfigured AP.
 
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- include/net/cfg80211.h |  3 +++
- net/wireless/nl80211.c | 50 +++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 47 insertions(+), 6 deletions(-)
+ net/mac80211/mlme.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9af714431b22..0115fd9bf33a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2964,12 +2964,15 @@ struct cfg80211_auth_request {
-  * @elems_len: length of the elements
-  * @disabled: If set this link should be included during association etc. but it
-  *	should not be used until enabled by the AP MLD.
-+ * @error: per-link error code, must be <= 0. If there is an error, then the
-+ *	operation as a whole must fail.
-  */
- struct cfg80211_assoc_link {
- 	struct cfg80211_bss *bss;
- 	const u8 *elems;
- 	size_t elems_len;
- 	bool disabled;
-+	int error;
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e64bf2a58b36..74eaf74f153a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10942,8 +10942,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 
- 		if (cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
- 					   req.ie, req.ie_len)) {
--			GENL_SET_ERR_MSG(info,
--					 "non-inheritance makes no sense");
-+			NL_SET_ERR_MSG_ATTR(info->extack,
-+					    info->attrs[NL80211_ATTR_IE],
-+					    "non-inheritance makes no sense");
- 			return -EINVAL;
- 		}
- 	}
-@@ -11068,6 +11069,7 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 
- 			if (!attrs[NL80211_ATTR_MLO_LINK_ID]) {
- 				err = -EINVAL;
-+				NL_SET_BAD_ATTR(info->extack, link);
- 				goto free;
- 			}
- 
-@@ -11075,6 +11077,7 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 			/* cannot use the same link ID again */
- 			if (req.links[link_id].bss) {
- 				err = -EINVAL;
-+				NL_SET_BAD_ATTR(info->extack, link);
- 				goto free;
- 			}
- 			req.links[link_id].bss =
-@@ -11082,6 +11085,8 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 			if (IS_ERR(req.links[link_id].bss)) {
- 				err = PTR_ERR(req.links[link_id].bss);
- 				req.links[link_id].bss = NULL;
-+				NL_SET_ERR_MSG_ATTR(info->extack,
-+						    link, "Error fetching BSS for link");
- 				goto free;
- 			}
- 
-@@ -11094,8 +11099,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 				if (cfg80211_find_elem(WLAN_EID_FRAGMENT,
- 						       req.links[link_id].elems,
- 						       req.links[link_id].elems_len)) {
--					GENL_SET_ERR_MSG(info,
--							 "cannot deal with fragmentation");
-+					NL_SET_ERR_MSG_ATTR(info->extack,
-+							    attrs[NL80211_ATTR_IE],
-+							    "cannot deal with fragmentation");
- 					err = -EINVAL;
- 					goto free;
- 				}
-@@ -11103,8 +11109,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 				if (cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
- 							   req.links[link_id].elems,
- 							   req.links[link_id].elems_len)) {
--					GENL_SET_ERR_MSG(info,
--							 "cannot deal with non-inheritance");
-+					NL_SET_ERR_MSG_ATTR(info->extack,
-+							    attrs[NL80211_ATTR_IE],
-+							    "cannot deal with non-inheritance");
- 					err = -EINVAL;
- 					goto free;
- 				}
-@@ -11147,6 +11154,9 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 
- 	err = nl80211_crypto_settings(rdev, info, &req.crypto, 1);
- 	if (!err) {
-+		struct nlattr *link;
-+		int rem = 0;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 10a762816146..331221226dcd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4778,6 +4778,7 @@ ieee80211_verify_sta_eht_mcs_support(struct ieee80211_sub_if_data *sdata,
+ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 				  struct ieee80211_link_data *link,
+ 				  struct cfg80211_bss *cbss,
++				  bool mlo,
+ 				  ieee80211_conn_flags_t *conn_flags)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+@@ -4791,6 +4792,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_chan_def chandef;
+ 	bool is_6ghz = cbss->channel->band == NL80211_BAND_6GHZ;
+ 	bool is_5ghz = cbss->channel->band == NL80211_BAND_5GHZ;
++	bool supports_mlo = false;
+ 	struct ieee80211_bss *bss = (void *)cbss->priv;
+ 	struct ieee80211_elems_parse_params parse_params = {
+ 		.link_id = -1,
+@@ -4944,6 +4946,8 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 		    ieee80211_mle_type_ok(eht_ml_elem->data + 1,
+ 					  IEEE80211_ML_CONTROL_TYPE_BASIC,
+ 					  eht_ml_elem->datalen - 1)) {
++			supports_mlo = true;
 +
- 		err = cfg80211_mlme_assoc(rdev, dev, &req);
- 
- 		if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-@@ -11155,6 +11165,34 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 			memcpy(dev->ieee80211_ptr->disconnect_bssid,
- 			       ap_addr, ETH_ALEN);
- 		}
-+
-+		/* Report error from first problematic link */
-+		if (info->attrs[NL80211_ATTR_MLO_LINKS]) {
-+			nla_for_each_nested(link,
-+					    info->attrs[NL80211_ATTR_MLO_LINKS],
-+					    rem) {
-+				struct nlattr *link_id_attr =
-+					nla_find_nested(link, NL80211_ATTR_MLO_LINK_ID);
-+
-+				if (!link_id_attr)
-+					continue;
-+
-+				link_id = nla_get_u8(link_id_attr);
-+
-+				if (link_id == req.link_id)
-+					continue;
-+
-+				if (!req.links[link_id].error ||
-+				    WARN_ON(req.links[link_id].error > 0))
-+					continue;
-+
-+				WARN_ON(err >= 0);
-+
-+				NL_SET_BAD_ATTR(info->extack, link);
-+				err = req.links[link_id].error;
-+				break;
-+			}
-+		}
+ 			sdata->vif.cfg.eml_cap =
+ 				ieee80211_mle_get_eml_cap(eht_ml_elem->data + 1);
+ 			sdata->vif.cfg.eml_med_sync_delay =
+@@ -4999,6 +5003,11 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 		return -EINVAL;
  	}
  
- free:
++	if (mlo && !supports_mlo) {
++		sdata_info(sdata, "Rejecting MLO as it is not supported by AP\n");
++		return -EINVAL;
++	}
++
+ 	if (!link)
+ 		return 0;
+ 
+@@ -5147,7 +5156,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 		link->conf->dtim_period = link->u.mgd.dtim_period ?: 1;
+ 
+ 		if (link_id != assoc_data->assoc_link_id) {
+-			err = ieee80211_prep_channel(sdata, link, cbss,
++			err = ieee80211_prep_channel(sdata, link, cbss, true,
+ 						     &link->u.mgd.conn_flags);
+ 			if (err) {
+ 				link_info(link, "prep_channel failed\n");
+@@ -7182,7 +7191,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (new_sta || override) {
+-		err = ieee80211_prep_channel(sdata, link, cbss,
++		err = ieee80211_prep_channel(sdata, link, cbss, mlo,
+ 					     &link->u.mgd.conn_flags);
+ 		if (err) {
+ 			if (new_sta)
+@@ -7887,7 +7896,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		if (i == assoc_data->assoc_link_id)
+ 			continue;
+ 		/* only calculate the flags, hence link == NULL */
+-		err = ieee80211_prep_channel(sdata, NULL, assoc_data->link[i].bss,
++		err = ieee80211_prep_channel(sdata, NULL,
++					     assoc_data->link[i].bss, true,
+ 					     &assoc_data->link[i].conn_flags);
+ 		if (err) {
+ 			req->links[i].error = err;
 -- 
 2.38.1
 
