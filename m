@@ -2,43 +2,33 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D00CD3437
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Sep 2023 04:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DFA5CD3439
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Sep 2023 04:49:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231462AbjISEt3 (ORCPT
+        id S231476AbjISEta (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Sep 2023 00:49:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38054 "EHLO
+        Tue, 19 Sep 2023 00:49:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231451AbjISEt2 (ORCPT
+        with ESMTP id S231453AbjISEt2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 19 Sep 2023 00:49:28 -0400
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-        by lindbergh.monkeyblade.net (Postfix) with SMTP id 7EFC110F;
-        Mon, 18 Sep 2023 21:49:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 3ECBC115;
+        Mon, 18 Sep 2023 21:49:21 -0700 (PDT)
 Received: from localhost.localdomain (unknown [180.167.10.98])
-        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id 8907F602F96E1;
-        Tue, 19 Sep 2023 12:48:57 +0800 (CST)
+        by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPA id 866E3602B36DD;
+        Tue, 19 Sep 2023 12:49:17 +0800 (CST)
 X-MD-Sfrom: yunchuan@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From:   Wu Yunchuan <yunchuan@nfschina.com>
-To:     kvalo@kernel.org, quic_jjohnson@quicinc.com, jirislaby@kernel.org,
-        mickflemm@gmail.com, mcgrof@kernel.org, toke@toke.dk,
-        afaerber@suse.de, mani@kernel.org, chunkeey@googlemail.com,
-        loic.poulain@linaro.org, mcoquelin.stm32@gmail.com,
-        alexandre.torgue@foss.st.com
-Cc:     johannes.berg@intel.com, syoshida@redhat.com,
-        alexander@wetzel-home.de, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
-        ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-actions@lists.infradead.org, wcn36xx@lists.infradead.org,
-        linux-stm32@st-md-mailman.stormreply.com,
+To:     chunkeey@googlemail.com, kvalo@kernel.org
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         kernel-janitors@vger.kernel.org,
         Wu Yunchuan <yunchuan@nfschina.com>
-Subject: [PATCH v2 wireless-next 0/9] Remove unnecessary (void*) conversions
-Date:   Tue, 19 Sep 2023 12:48:33 +0800
-Message-Id: <20230919044832.522947-1-yunchuan@nfschina.com>
+Subject: [PATCH v2 wireless-next 2/9] carl9170: remove unnecessary (void*) conversions
+Date:   Tue, 19 Sep 2023 12:49:16 +0800
+Message-Id: <20230919044916.523308-1-yunchuan@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -46,59 +36,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove all unnecessary (void*) conversions under the directory drivers/net/wireless/ath.
+No need cast (void *) to (struct ar9170 *), (u8 *) or (void*).
 
-Changes in v2:
- - fix file path error in v1 patch 
- - change the prototype to remove the local variable(Jeff Johnson's suggestion.)[1]
+Signed-off-by: Wu Yunchuan <yunchuan@nfschina.com>
+---
+ drivers/net/wireless/ath/carl9170/usb.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-[1] https://lore.kernel.org/all/5bb164e7-c147-64d1-031d-0ba20cfffa77@nfschina.com/
-
-Wu Yunchuan (9):
-  wifi: ar5523: Remove unnecessary (void*) conversions
-  carl9170: remove unnecessary (void*) conversions
-  wifi: wcn36xx: remove unnecessary (void*) conversions
-  wifi: ath5k: remove unnecessary (void*) conversions
-  ath6kl: remove unnecessary (void*) conversions
-  wifi: ath10k: Remove unnecessary (void*) conversions
-  wifi: ath12k: Remove unnecessary (void*) conversions
-  wifi: ath11k: remove unnecessary (void*) conversions
-  wifi: ath9k: Remove unnecessary (void*) conversions
-
- drivers/net/wireless/ath/ar5523/ar5523.c      |  2 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c      | 16 ++++-----
- drivers/net/wireless/ath/ath11k/dp.c          |  2 +-
- drivers/net/wireless/ath/ath11k/dp_rx.c       | 13 +++----
- drivers/net/wireless/ath/ath11k/hal.c         |  8 ++---
- drivers/net/wireless/ath/ath11k/hal_rx.c      | 17 ++++-----
- drivers/net/wireless/ath/ath11k/hal_tx.c      |  2 +-
- drivers/net/wireless/ath/ath11k/mac.c         |  4 +--
- drivers/net/wireless/ath/ath11k/spectral.c    |  2 +-
- drivers/net/wireless/ath/ath11k/wmi.c         |  6 ++--
- drivers/net/wireless/ath/ath12k/dp_mon.c      |  9 ++---
- drivers/net/wireless/ath/ath12k/dp_rx.c       |  2 +-
- drivers/net/wireless/ath/ath12k/dp_tx.c       |  5 ++-
- drivers/net/wireless/ath/ath5k/base.c         |  4 +--
- drivers/net/wireless/ath/ath5k/pci.c          |  4 +--
- drivers/net/wireless/ath/ath6kl/main.c        |  4 +--
- drivers/net/wireless/ath/ath6kl/txrx.c        |  2 +-
- .../wireless/ath/ath9k/ath9k_pci_owl_loader.c |  2 +-
- drivers/net/wireless/ath/ath9k/common-init.c  |  2 +-
- .../net/wireless/ath/ath9k/common-spectral.c  |  2 +-
- drivers/net/wireless/ath/ath9k/debug.c        |  2 +-
- drivers/net/wireless/ath/ath9k/hif_usb.c      | 10 +++---
- .../net/wireless/ath/ath9k/htc_drv_debug.c    |  2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 36 +++++++++----------
- drivers/net/wireless/ath/ath9k/htc_hst.c      |  2 +-
- drivers/net/wireless/ath/ath9k/init.c         | 12 +++----
- drivers/net/wireless/ath/ath9k/link.c         |  2 +-
- drivers/net/wireless/ath/ath9k/pci.c          |  6 ++--
- drivers/net/wireless/ath/carl9170/usb.c       | 10 +++---
- drivers/net/wireless/ath/wcn36xx/dxe.c        |  6 ++--
- drivers/net/wireless/ath/wcn36xx/smd.c        | 20 +++++------
- drivers/net/wireless/ath/wcn36xx/testmode.c   |  2 +-
- 32 files changed, 101 insertions(+), 117 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index e4eb666c6eea..c4edf8355941 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -178,7 +178,7 @@ static void carl9170_usb_tx_data_complete(struct urb *urb)
+ 	switch (urb->status) {
+ 	/* everything is fine */
+ 	case 0:
+-		carl9170_tx_callback(ar, (void *)urb->context);
++		carl9170_tx_callback(ar, urb->context);
+ 		break;
+ 
+ 	/* disconnect */
+@@ -369,7 +369,7 @@ void carl9170_usb_handle_tx_err(struct ar9170 *ar)
+ 	struct urb *urb;
+ 
+ 	while ((urb = usb_get_from_anchor(&ar->tx_err))) {
+-		struct sk_buff *skb = (void *)urb->context;
++		struct sk_buff *skb = urb->context;
+ 
+ 		carl9170_tx_drop(ar, skb);
+ 		carl9170_tx_callback(ar, skb);
+@@ -397,7 +397,7 @@ static void carl9170_usb_tasklet(struct tasklet_struct *t)
+ 
+ static void carl9170_usb_rx_complete(struct urb *urb)
+ {
+-	struct ar9170 *ar = (struct ar9170 *)urb->context;
++	struct ar9170 *ar = urb->context;
+ 	int err;
+ 
+ 	if (WARN_ON_ONCE(!ar))
+@@ -559,7 +559,7 @@ static int carl9170_usb_flush(struct ar9170 *ar)
+ 	int ret, err = 0;
+ 
+ 	while ((urb = usb_get_from_anchor(&ar->tx_wait))) {
+-		struct sk_buff *skb = (void *)urb->context;
++		struct sk_buff *skb = urb->context;
+ 		carl9170_tx_drop(ar, skb);
+ 		carl9170_tx_callback(ar, skb);
+ 		usb_free_urb(urb);
+@@ -668,7 +668,7 @@ int carl9170_exec_cmd(struct ar9170 *ar, const enum carl9170_cmd_oids cmd,
+ 		memcpy(ar->cmd.data, payload, plen);
+ 
+ 	spin_lock_bh(&ar->cmd_lock);
+-	ar->readbuf = (u8 *)out;
++	ar->readbuf = out;
+ 	ar->readlen = outlen;
+ 	spin_unlock_bh(&ar->cmd_lock);
+ 
 -- 
 2.30.2
 
