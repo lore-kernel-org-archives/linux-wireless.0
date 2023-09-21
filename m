@@ -2,145 +2,153 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA268E7D0A3
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 17:51:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E87F8E7D0A4
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 18:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230238AbjIURvr (ORCPT
+        id S229840AbjIUSLY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 13:51:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38002 "EHLO
+        Thu, 21 Sep 2023 14:11:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229936AbjIURv1 (ORCPT
+        with ESMTP id S229477AbjIUSK5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 13:51:27 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64E3E6A4F;
-        Thu, 21 Sep 2023 10:09:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=+GqK9nIH4JMvkwqjWovkNfDPm8gLz4+0kcQHvxgQK7c=;
-        t=1695316173; x=1696525773; b=hfLzyQE+WLIlacNFWoSUHIDtrcbN7yLr/2lefzwXQS+b9/D
-        vT6FHChv0AaYBFMryeKkr49rZFPJcG1O0qGyCql0ue/gMeJj0PJH+sM4s4PRQPDqeTUoqh1UasO6g
-        EmhU3IgX/YfTrg6tJGPOlPS99UxOV9BQXi7/CUlEa/LRg5/laO6IwWfC/pdu4hLz6kFfhkaMJBdAN
-        2CDzoRlC3Z1ttsPOXOa0POfXIw12k1CNdOwMgRyPK30ju06siYlpLujGc4lOy3BwYbt+ihuUHWdV0
-        PoBY84MOxD+5bzRmJa5P6lRUzScr2hSAnOHsPcpfrSARAc0FGwbp1ggC52V1lmdg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qjFPn-00D3lb-1V;
-        Thu, 21 Sep 2023 10:52:03 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-kernel@vger.kernel.org
-Cc:     linux-trace-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 3/4] net: drop_monitor: use drop_reason_lookup()
-Date:   Thu, 21 Sep 2023 10:51:33 +0200
-Message-ID: <20230921105129.c6e7e803398d.Idc122c3395bea9652f34ccaa678e918bfd4fae75@changeid>
+        Thu, 21 Sep 2023 14:10:57 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CDB77EA2C
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:37 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50175C3279E;
+        Thu, 21 Sep 2023 10:43:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695293032;
+        bh=gmjVO4FL9gCwcCHrtMsFLoevWHLxvLUnEpLKtPNe+N8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ghuPj6C7CPWggcrruNXNss0ayqffz+kO+EEqXQMqicNDY7RLDtkYRMM2ZCnrzz0Cr
+         32cT/Unj8KQTZ0v3hsn7wLHqfVxGmpmM+Jyy13FctISwnlPZYhl0FhnmEMfKr0yYVA
+         CTWKmAqxZFLRlBhOB3VhitSpYDzTRIc90/U9HHAm962bU4Ct35N5gr9PMTANBvkuwY
+         ItdxG2NTGHyRFP5NVFtTGlWwn7WMuJ772zpsFtHS3dJ7wS0519B5VHGaVPAWlY/LHd
+         53vXzObPEXtazSeI41BYu+7sxd0flGVPDs3M7iNg7dpqNozye02KJ9+uQg8KwfDwNW
+         htNxhQxuDZB+Q==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, evelyn.tsai@mediatek.com,
+        shayne.chen@mediatek.com, Bo.Jiao@mediatek.com,
+        sujuan.chen@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH 2/9] wifi: mt76: move mt76_mmio_wed_offload_{enable,disable} in common code
+Date:   Thu, 21 Sep 2023 12:43:31 +0200
+Message-ID: <895f948a654aeaaedf11a0e0c12935a55f816c40.1695292502.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20230921085129.261556-5-johannes@sipsolutions.net>
-References: <20230921085129.261556-5-johannes@sipsolutions.net>
+In-Reply-To: <cover.1695292502.git.lorenzo@kernel.org>
+References: <cover.1695292502.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+mt76_mmio_wed_offload_enable and mt76_mmio_wed_offload_disable routines
+will be reused by mt7996 driver for wed support.
 
-Now that we have drop_reason_lookup(), we can just use it for
-drop_monitor as well, rather than exporting the list itself.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- include/net/dropreason.h |  4 ----
- net/core/drop_monitor.c  | 18 +++---------------
- net/core/skbuff.c        |  6 +++---
- 3 files changed, 6 insertions(+), 22 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mmio.c     | 22 ++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 ++
+ .../net/wireless/mediatek/mt76/mt7915/mmio.c  | 29 ++-----------------
+ 3 files changed, 26 insertions(+), 27 deletions(-)
 
-diff --git a/include/net/dropreason.h b/include/net/dropreason.h
-index c157070b5303..0e2195ccf2cd 100644
---- a/include/net/dropreason.h
-+++ b/include/net/dropreason.h
-@@ -38,10 +38,6 @@ struct drop_reason_list {
- 	size_t n_reasons;
- };
- 
--/* Note: due to dynamic registrations, access must be under RCU */
--extern const struct drop_reason_list __rcu *
--drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS_NUM];
--
- #ifdef CONFIG_TRACEPOINTS
- const char *drop_reason_lookup(unsigned long long value);
- void drop_reason_show(struct seq_file *m);
-diff --git a/net/core/drop_monitor.c b/net/core/drop_monitor.c
-index aff31cd944c2..d110a16cde46 100644
---- a/net/core/drop_monitor.c
-+++ b/net/core/drop_monitor.c
-@@ -610,9 +610,8 @@ static int net_dm_packet_report_fill(struct sk_buff *msg, struct sk_buff *skb,
- 				     size_t payload_len)
- {
- 	struct net_dm_skb_cb *cb = NET_DM_SKB_CB(skb);
--	const struct drop_reason_list *list = NULL;
--	unsigned int subsys, subsys_reason;
- 	char buf[NET_DM_MAX_SYMBOL_LEN];
-+	const char *reason_str;
- 	struct nlattr *attr;
- 	void *hdr;
- 	int rc;
-@@ -630,19 +629,8 @@ static int net_dm_packet_report_fill(struct sk_buff *msg, struct sk_buff *skb,
- 		goto nla_put_failure;
- 
- 	rcu_read_lock();
--	subsys = u32_get_bits(cb->reason, SKB_DROP_REASON_SUBSYS_MASK);
--	if (subsys < SKB_DROP_REASON_SUBSYS_NUM)
--		list = rcu_dereference(drop_reasons_by_subsys[subsys]);
--	subsys_reason = cb->reason & ~SKB_DROP_REASON_SUBSYS_MASK;
--	if (!list ||
--	    subsys_reason >= list->n_reasons ||
--	    !list->reasons[subsys_reason] ||
--	    strlen(list->reasons[subsys_reason]) > NET_DM_MAX_REASON_LEN) {
--		list = rcu_dereference(drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS_CORE]);
--		subsys_reason = SKB_DROP_REASON_NOT_SPECIFIED;
--	}
--	if (nla_put_string(msg, NET_DM_ATTR_REASON,
--			   list->reasons[subsys_reason])) {
-+	reason_str = drop_reason_lookup(cb->reason);
-+	if (nla_put_string(msg, NET_DM_ATTR_REASON, reason_str)) {
- 		rcu_read_unlock();
- 		goto nla_put_failure;
- 	}
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index 415329b76921..9efde769949d 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -126,13 +126,11 @@ static const struct drop_reason_list drop_reasons_core = {
- 	.n_reasons = ARRAY_SIZE(drop_reasons),
- };
- 
--const struct drop_reason_list __rcu *
-+static const struct drop_reason_list __rcu *
- drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS_NUM] = {
- 	[SKB_DROP_REASON_SUBSYS_CORE] = RCU_INITIALIZER(&drop_reasons_core),
- };
--EXPORT_SYMBOL(drop_reasons_by_subsys);
- 
--#ifdef CONFIG_TRACEPOINTS
- const char *drop_reason_lookup(unsigned long long value)
- {
- 	unsigned long long subsys_id = value >> SKB_DROP_REASON_SUBSYS_SHIFT;
-@@ -149,7 +147,9 @@ const char *drop_reason_lookup(unsigned long long value)
- 		return NULL;
- 	return subsys->reasons[reason];
+diff --git a/drivers/net/wireless/mediatek/mt76/mmio.c b/drivers/net/wireless/mediatek/mt76/mmio.c
+index 350650a0fce2..c34624978a14 100644
+--- a/drivers/net/wireless/mediatek/mt76/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mmio.c
+@@ -157,6 +157,28 @@ u32 mt76_mmio_wed_init_rx_buf(struct mtk_wed_device *wed, int size)
+ 	return -ENOMEM;
  }
-+EXPORT_SYMBOL(drop_reason_lookup);
+ EXPORT_SYMBOL_GPL(mt76_mmio_wed_init_rx_buf);
++
++int mt76_mmio_wed_offload_enable(struct mtk_wed_device *wed)
++{
++	struct mt76_dev *dev = container_of(wed, struct mt76_dev, mmio.wed);
++
++	spin_lock_bh(&dev->token_lock);
++	dev->token_size = wed->wlan.token_start;
++	spin_unlock_bh(&dev->token_lock);
++
++	return !wait_event_timeout(dev->tx_wait, !dev->wed_token_count, HZ);
++}
++EXPORT_SYMBOL_GPL(mt76_mmio_wed_offload_enable);
++
++void mt76_mmio_wed_offload_disable(struct mtk_wed_device *wed)
++{
++	struct mt76_dev *dev = container_of(wed, struct mt76_dev, mmio.wed);
++
++	spin_lock_bh(&dev->token_lock);
++	dev->token_size = dev->drv->token_size;
++	spin_unlock_bh(&dev->token_lock);
++}
++EXPORT_SYMBOL_GPL(mt76_mmio_wed_offload_disable);
+ #endif /*CONFIG_NET_MEDIATEK_SOC_WED */
  
-+#ifdef CONFIG_TRACEPOINTS
- void drop_reason_show(struct seq_file *m)
+ void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 7e43a800d378..82e33a1b36ab 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1060,6 +1060,8 @@ static inline u16 mt76_rev(struct mt76_dev *dev)
+ #ifdef CONFIG_NET_MEDIATEK_SOC_WED
+ u32 mt76_mmio_wed_init_rx_buf(struct mtk_wed_device *wed, int size);
+ void mt76_mmio_wed_release_rx_buf(struct mtk_wed_device *wed);
++int mt76_mmio_wed_offload_enable(struct mtk_wed_device *wed);
++void mt76_mmio_wed_offload_disable(struct mtk_wed_device *wed);
+ #endif /*CONFIG_NET_MEDIATEK_SOC_WED */
+ 
+ #define mt76xx_chip(dev) mt76_chip(&((dev)->mt76))
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+index 1621a8150798..85cb3fed9505 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+@@ -542,31 +542,6 @@ static u32 mt7915_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
+ }
+ 
+ #ifdef CONFIG_NET_MEDIATEK_SOC_WED
+-static int mt7915_mmio_wed_offload_enable(struct mtk_wed_device *wed)
+-{
+-	struct mt7915_dev *dev;
+-
+-	dev = container_of(wed, struct mt7915_dev, mt76.mmio.wed);
+-
+-	spin_lock_bh(&dev->mt76.token_lock);
+-	dev->mt76.token_size = wed->wlan.token_start;
+-	spin_unlock_bh(&dev->mt76.token_lock);
+-
+-	return !wait_event_timeout(dev->mt76.tx_wait,
+-				   !dev->mt76.wed_token_count, HZ);
+-}
+-
+-static void mt7915_mmio_wed_offload_disable(struct mtk_wed_device *wed)
+-{
+-	struct mt7915_dev *dev;
+-
+-	dev = container_of(wed, struct mt7915_dev, mt76.mmio.wed);
+-
+-	spin_lock_bh(&dev->mt76.token_lock);
+-	dev->mt76.token_size = MT7915_TOKEN_SIZE;
+-	spin_unlock_bh(&dev->mt76.token_lock);
+-}
+-
+ static void mt7915_mmio_wed_update_rx_stats(struct mtk_wed_device *wed,
+ 					    struct mtk_wed_wo_rx_stats *stats)
  {
- 	u32 subsys_id;
+@@ -704,8 +679,8 @@ int mt7915_mmio_wed_init(struct mt7915_dev *dev, void *pdev_ptr,
+ 	}
+ 
+ 	wed->wlan.init_buf = mt7915_wed_init_buf;
+-	wed->wlan.offload_enable = mt7915_mmio_wed_offload_enable;
+-	wed->wlan.offload_disable = mt7915_mmio_wed_offload_disable;
++	wed->wlan.offload_enable = mt76_mmio_wed_offload_enable;
++	wed->wlan.offload_disable = mt76_mmio_wed_offload_disable;
+ 	wed->wlan.init_rx_buf = mt76_mmio_wed_init_rx_buf;
+ 	wed->wlan.release_rx_buf = mt76_mmio_wed_release_rx_buf;
+ 	wed->wlan.update_wo_rx_stats = mt7915_mmio_wed_update_rx_stats;
 -- 
 2.41.0
 
