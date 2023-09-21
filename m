@@ -2,64 +2,99 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 436DBE7D0A7
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:29:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C55E7D0A2
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230323AbjIUT3v (ORCPT
+        id S229884AbjIUTha (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:29:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43402 "EHLO
+        Thu, 21 Sep 2023 15:37:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230107AbjIUT30 (ORCPT
+        with ESMTP id S229700AbjIUThL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:29:26 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67113A9EB
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:07:28 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79344C433CB;
-        Thu, 21 Sep 2023 06:29:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695277756;
-        bh=3plL4AVi0KjPMIVHUCes3Gt1Mq6OZUkOOGmfjZhrHko=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=XFaoQZiz716ZymLV1KTPBKwxFr674MSZP8PNyq1PK4jMO+ZaaWU4W8dme3x+zKRhF
-         0ym1FoL6NupCCN60ZwCiFnvTsbstytH640TNqhZskSDxuaJh6iyhywiCUJuE5QNN0/
-         is+sxP1Mm64NsKEq3dtnKO6n97hiTfE+oWXLsbiPzCNHjIN5XSohC5eoetWkVpJ51N
-         b0ng1Og/JaFOibpfmlLHm/A1M1dWNsy160JSW+/ASp4Heh3K+hYoQcWtD9J+m/8STm
-         1HgOq7o+RSRnQtigOB7W8jlkahFvkdV6VP6ckAIeUULXf74qBy3BHZKUHH84jto3kF
-         UHj9rD0q7xRUQ==
-Content-Type: text/plain; charset="utf-8"
+        Thu, 21 Sep 2023 15:37:11 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 539817B96B
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:50:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1695318643; x=1726854643;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=tVoQrmfnhoSK2Yw1Szds+cnZ/mg7294DZlsD59Knyps=;
+  b=H9rovLqBwsWggD3g0gt0pBOWThGJTFAK6j9CiqCOw5REaRwd3e2Kg8EX
+   rGQuV04DgLX45NK17MBxycvu6iiTyyjMpAX7X18rbxTQkx0ez3Yw8e/Ux
+   5CJVF17+xk26OVoE36p0dHauO+ZDnA6oDzzki3sQueNHtXXLBhMp8I+ej
+   ne09qEP/LbyMSCsqzQozGg5i3TpE85gfc+lxXWL1UnbMXwK20MrwuP6I1
+   nzcI13DHPaovtZRueV9SXrJTDTp009k75lZuzh2hoHhPzrZt74U9gHS0O
+   2X3+Zx0d1PijJ42cGAUsUzj/nrY16KmfBVnUorLrshhLqPRuL7rLmH4wz
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="384305491"
+X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
+   d="scan'208";a="384305491"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:10 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="740545685"
+X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
+   d="scan'208";a="740545685"
+Received: from rchuwer-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.229.163])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:09 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 12/12] wifi: iwlwifi: add mapping of a periphery register crf for WH RF
+Date:   Thu, 21 Sep 2023 11:58:10 +0300
+Message-Id: <20230921110727.ccfc4868111f.I94dd75fc82443facf571f2fe8e23c50e9053a35a@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230921085810.693048-1-gregory.greenman@intel.com>
+References: <20230921085810.693048-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: wifi: mwifiex: cleanup struct mwifiex_sdio_mpa_rx
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230821115254.167552-1-dmantipov@yandex.ru>
-References: <20230821115254.167552-1-dmantipov@yandex.ru>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Brian Norris <briannorris@chromium.org>,
-        linux-wireless@vger.kernel.org,
-        Dmitry Antipov <dmantipov@yandex.ru>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169527775333.1469888.1103496771734115139.kvalo@kernel.org>
-Date:   Thu, 21 Sep 2023 06:29:15 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dmitry Antipov <dmantipov@yandex.ru> wrote:
+From: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
 
-> Drop filled with NULL pointers but otherwise unused 'skb_arr'
-> array of 'struct mwifiex_sdio_mpa_rx', adjust related code.
-> 
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-> Acked-by: Brian Norris <briannorris@chromium.org>
+Add the support for prph register RF details and map it
+to get the RF ID of NIC.
 
-Patch applied to wireless-next.git, thanks.
+Signed-off-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 +++
+ 2 files changed, 4 insertions(+)
 
-3ffd23d121de wifi: mwifiex: cleanup struct mwifiex_sdio_mpa_rx
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 6dd381ff0f9e..6fad5b65a836 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -452,6 +452,7 @@ enum {
+ #define REG_CRF_ID_TYPE_FM			0x910
+ #define REG_CRF_ID_TYPE_FMI			0x930
+ #define REG_CRF_ID_TYPE_FMR			0x900
++#define REG_CRF_ID_TYPE_WHP			0xA10
+ 
+ #define HPM_DEBUG			0xA03440
+ #define PERSISTENCE_BIT			BIT(12)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index bc83d2ba55c6..e8687683ff29 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1196,6 +1196,9 @@ static int map_crf_id(struct iwl_trans *iwl_trans)
+ 	case REG_CRF_ID_TYPE_FMR:
+ 		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_FM << 12);
+ 		break;
++	case REG_CRF_ID_TYPE_WHP:
++		iwl_trans->hw_rf_id = (IWL_CFG_RF_TYPE_WH << 12);
++		break;
+ 	default:
+ 		ret = -EIO;
+ 		IWL_ERR(iwl_trans,
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230821115254.167552-1-dmantipov@yandex.ru/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.38.1
 
