@@ -2,86 +2,72 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20817E7D0A2
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 20:39:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C36E7D0A2
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 20:46:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231309AbjIUUjf (ORCPT
+        id S232334AbjIUUqW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:39:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39304 "EHLO
+        Thu, 21 Sep 2023 16:46:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232018AbjIUUjX (ORCPT
+        with ESMTP id S232122AbjIUUqO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 16:39:23 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 417422AC44
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 13:13:24 -0700 (PDT)
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LJw5hr015371;
-        Thu, 21 Sep 2023 20:13:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=qTesSgBg1QboKpF2OtIcNTCPmAo6oIuv2rCjCrxNasM=;
- b=lvidFn/bcM3lAECRbRApMfARbI0lkEVhqSx0R4/TI8uOuu6qnKCyL4qS/Oy1/99CGklp
- v46TKi/DlzhhC1nbOydf8xh0h2GSLGbQ4rhOwlCQWUmkw/Ojaeck+QvAu+/+hbtQdnhc
- 3Mf9uDofyCxjXlZaprEhMfaHjMNk6B3fOuRmA0Sm/8vVyVh63J3wUTWokjgeWrq1ezTK
- LlfLiaJsf8JyYIFPp7Ss86bOh3/riyMV+uXiQF2596reMmQWzloMcM2KSpIqZFD4bVqn
- H+6KWjUJPyyR7lWf1yMYOBAaZw811EtGlOp+Bdqr2Z4DYfBFLKOLEF5VOVUKWTJ7R9ME xw== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t8u0s073r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 20:13:19 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LKDJi9031918
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 20:13:19 GMT
-Received: from [10.48.245.144] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 21 Sep
- 2023 13:13:18 -0700
-Message-ID: <f1b3c73e-b07f-4713-b88a-e8496c46271f@quicinc.com>
-Date:   Thu, 21 Sep 2023 13:13:18 -0700
+        Thu, 21 Sep 2023 16:46:14 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C08780FA2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:36:55 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42C98C116A9;
+        Thu, 21 Sep 2023 08:02:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695283376;
+        bh=IOdNZNubT9aIKkrAuzJC/mLMct1EI8QHVI/pL/hli6Q=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=Yrfq946hPwnkGTVSaqo00WtrSsQR6WYrjwOYpxTcuW55WmhTsfyf2usR/CG1c2g8z
+         g5u55R+5BWMI33pC1C3rRf4lIb/h+RWUSotdn+Ac9L20pMNEEujkXFLHaA/3IldEMS
+         AXet4R2lDMMejOt6LrAK6LU1jyT7QbryeFri3UsnOObWMUwl0YCgAPMrNLqaZFuy6q
+         To1gNw0nn5VXYqCXVemoLwIiUDZoxKbHCeQOEbnzhN60IVRz/45zhqSaTlBsZc525Y
+         fn+1YfBXtHSRFIYIoAtSkfRKhX/eMWBxSLI5EnevQHBFYPeKNf7R5olAr5BhAvAvw7
+         3p8fdfccf40PA==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 10/13] wifi: ath11k: add
- WMI_TLV_SERVICE_EXT_TPC_REG_SUPPORT service bit
-Content-Language: en-US
-To:     Wen Gong <quic_wgong@quicinc.com>, <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <kvalo@kernel.org>
-References: <20230920082349.29111-1-quic_wgong@quicinc.com>
- <20230920082349.29111-11-quic_wgong@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230920082349.29111-11-quic_wgong@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: QVb5BuMvbY2U2GNo190yXxLs-P54979c
-X-Proofpoint-ORIG-GUID: QVb5BuMvbY2U2GNo190yXxLs-P54979c
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-21_17,2023-09-21_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- lowpriorityscore=0 malwarescore=0 bulkscore=0 phishscore=0 suspectscore=0
- adultscore=0 mlxlogscore=663 spamscore=0 priorityscore=1501 clxscore=1015
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309210174
+Subject: Re: [PATCH] wifi: ath12k: fix DMA unmap warning on NULL DMA address
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230830021131.5610-1-quic_bqiang@quicinc.com>
+References: <20230830021131.5610-1-quic_bqiang@quicinc.com>
+To:     Baochen Qiang <quic_bqiang@quicinc.com>
+Cc:     <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169528337320.1539628.12793449694122971146.kvalo@kernel.org>
+Date:   Thu, 21 Sep 2023 08:02:55 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/20/2023 1:23 AM, Wen Gong wrote:
-> Firmware advertises support for SERVICE_EXT_TPC_REG via a WMI service bit.
-> Add the definition of this service bit so that a subsequent patch can
-> check whether or not firmware supports this service.
+Baochen Qiang <quic_bqiang@quicinc.com> wrote:
+
+> In ath12k_dp_tx(), if we reach fail_dma_unmap due to some errors,
+> current code does DMA unmap unconditionally on skb_cb->paddr_ext_desc.
+> However, skb_cb->paddr_ext_desc may be NULL and thus we get below
+> warning:
 > 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+> kernel: [ 8887.076212] WARNING: CPU: 3 PID: 0 at drivers/iommu/dma-iommu.c:1077 iommu_dma_unmap_page+0x79/0x90
 > 
-> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-if only all reviews were this easy
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> Fix it by checking skb_cb->paddr_ext_desc before unmap it.
+> 
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+> 
+> Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+> Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+> Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+9ae8c496d211 wifi: ath12k: fix DMA unmap warning on NULL DMA address
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20230830021131.5610-1-quic_bqiang@quicinc.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
