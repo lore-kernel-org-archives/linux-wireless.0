@@ -2,95 +2,178 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C00E7D0B6
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:11:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E75D8E7D0AB
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:16:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231591AbjIUVLD (ORCPT
+        id S232672AbjIUVQI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 17:11:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33808 "EHLO
+        Thu, 21 Sep 2023 17:16:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232967AbjIUVKK (ORCPT
+        with ESMTP id S233238AbjIUVP3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 17:10:10 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 316A832EAE
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 13:38:50 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LKO0jk030532;
-        Thu, 21 Sep 2023 20:38:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=z2VIJcORkGlcuCfmFQrCGRVHfX/7S4x0N3z2O/ndP0I=;
- b=EmfcH/WZGHi5hwAKZfzuw+1oOq1PiSKhJkM/g5RLUy4/hx/lrC9Dq3vb9pfIZfNKYp3B
- lSBKSacjLvX963v0yZSTS/TnKJqx35VI2QVijE5F2qe55jSiWGSBdfiGlKmH9QpU1kJy
- fxDkng3L1+9EbuceGKoA/szrPFmuXm0MEw6Ir84YGOaCwHJEoED8a6Luc3/sx8eZNsTu
- lWb3FqU9deb58REYo3QsD2Tn9/RywTKZwLK9VQrOe1Zd0k2vE1X2Nwj5LvxUw7ED5dZ1
- 8IW61kOK9fNJMYkvB8EVTfPMjR7QN9mmuh5iToYuGn6YxikV/hAnFZglkbUPt+rKt60J xQ== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t8u9h87cu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 20:38:43 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LKcg2x019026
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 20:38:42 GMT
-Received: from [10.48.245.144] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 21 Sep
- 2023 13:38:42 -0700
-Message-ID: <dd770693-b090-434c-921d-f1c171a0c28e@quicinc.com>
-Date:   Thu, 21 Sep 2023 13:38:42 -0700
+        Thu, 21 Sep 2023 17:15:29 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D76DAE3A4;
+        Thu, 21 Sep 2023 10:08:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=KcbEGqZWRjDRIS84NcPwJ70wJrRePDMy7FnnB2l/XTc=;
+        t=1695316084; x=1696525684; b=IQW96roGNxzONuN9PjcFsaqTedRIWrD2bO14nXq8M2es3l8
+        bnZzAgnlNO6iaNG8dZUfCxVtzGQIk7LmP08aymBYLKrVBRpBMA070wDeZbXvgFBJtc1e8tMHt8hE+
+        HKYHvfTAa1XJVyjEPdBJT4NVHQBbX1kiKr8XZxsNK7qVjLpfa5rJn2wsMYeuoqj24HR603rRzp0vx
+        WeVqVWhCvy2IAjHVj0dFk4AEnkppQMzs3yUq0/1LQMyGb16wbeJ7NDcibUv1pgYG0IUANitDQPVCU
+        kgDCgNuXOBRi7p5RKLqVnYBNBe/V6nNAB9yQWy0R4gQT+O6ZIiv44a76jalixKbA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qjFPm-00D3lb-0E;
+        Thu, 21 Sep 2023 10:52:02 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-kernel@vger.kernel.org
+Cc:     linux-trace-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC PATCH 2/4] net: dropreason: use new __print_sym() in tracing
+Date:   Thu, 21 Sep 2023 10:51:32 +0200
+Message-ID: <20230921105129.2f2774a87760.I075de1ac698b47710b94c631afdfb328f07be961@changeid>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230921085129.261556-5-johannes@sipsolutions.net>
+References: <20230921085129.261556-5-johannes@sipsolutions.net>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 13/13] wifi: ath11k: send TPC power to firmware for 6
- GHz station
-Content-Language: en-US
-To:     Wen Gong <quic_wgong@quicinc.com>, <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <kvalo@kernel.org>
-References: <20230920082349.29111-1-quic_wgong@quicinc.com>
- <20230920082349.29111-14-quic_wgong@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230920082349.29111-14-quic_wgong@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 83R6LyjDsvzfZ4lb-XPm0IaIIbCeqIVd
-X-Proofpoint-ORIG-GUID: 83R6LyjDsvzfZ4lb-XPm0IaIIbCeqIVd
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-21_18,2023-09-21_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- impostorscore=0 bulkscore=0 spamscore=0 priorityscore=1501 phishscore=0
- suspectscore=0 malwarescore=0 clxscore=1015 mlxlogscore=950 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309210177
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/20/2023 1:23 AM, Wen Gong wrote:
-> When station is connected to a 6 GHz AP, it has 2 way to configure
-> the power limit to firmware. The first way is to send 2 wmi command
-> WMI_PDEV_PARAM_TXPOWER_LIMIT2G/WMI_PDEV_PARAM_TXPOWER_LIMIT5G to
-> firmware, the second way is to send WMI_VDEV_SET_TPC_POWER_CMDID to
-> firmware which include more parameters for power control.
-> 
-> The first way is disabled in previous patch
-> "ath11k: discard BSS_CHANGED_TXPOWER when EXT_TPC_REG_SUPPORT for 6 GHz".
-> 
-> Prepare the parameter for wmi command WMI_VDEV_SET_TPC_POWER_CMDID and
-> send the firmware after vdev start response success from firmware, it
-> is for the second way of power control.
-> 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
-> 
-> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-As previously mentioned I'd squash this with patch 11
+The __print_symbolic() could only ever print the core
+drop reasons, since that's the way the infrastructure
+works. Now that we have __print_sym() with all the
+advantages mentioned in that commit, convert to that
+and get all the drop reasons from all subsystems. As
+we already have a list of them, that's really easy.
+
+This is a little bit of .text (~100 bytes in my build)
+and saves a lot of .data (~17k).
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/dropreason.h   |  5 +++++
+ include/trace/events/skb.h | 16 +++-----------
+ net/core/skbuff.c          | 43 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 51 insertions(+), 13 deletions(-)
+
+diff --git a/include/net/dropreason.h b/include/net/dropreason.h
+index 56cb7be92244..c157070b5303 100644
+--- a/include/net/dropreason.h
++++ b/include/net/dropreason.h
+@@ -42,6 +42,11 @@ struct drop_reason_list {
+ extern const struct drop_reason_list __rcu *
+ drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS_NUM];
+ 
++#ifdef CONFIG_TRACEPOINTS
++const char *drop_reason_lookup(unsigned long long value);
++void drop_reason_show(struct seq_file *m);
++#endif
++
+ void drop_reasons_register_subsys(enum skb_drop_reason_subsys subsys,
+ 				  const struct drop_reason_list *list);
+ void drop_reasons_unregister_subsys(enum skb_drop_reason_subsys subsys);
+diff --git a/include/trace/events/skb.h b/include/trace/events/skb.h
+index 07e0715628ec..8a1a63f9e796 100644
+--- a/include/trace/events/skb.h
++++ b/include/trace/events/skb.h
+@@ -8,15 +8,9 @@
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+ #include <linux/tracepoint.h>
++#include <net/dropreason.h>
+ 
+-#undef FN
+-#define FN(reason)	TRACE_DEFINE_ENUM(SKB_DROP_REASON_##reason);
+-DEFINE_DROP_REASON(FN, FN)
+-
+-#undef FN
+-#undef FNe
+-#define FN(reason)	{ SKB_DROP_REASON_##reason, #reason },
+-#define FNe(reason)	{ SKB_DROP_REASON_##reason, #reason }
++TRACE_DEFINE_SYM_FNS(drop_reason, drop_reason_lookup, drop_reason_show);
+ 
+ /*
+  * Tracepoint for free an sk_buff:
+@@ -44,13 +38,9 @@ TRACE_EVENT(kfree_skb,
+ 
+ 	TP_printk("skbaddr=%p protocol=%u location=%pS reason: %s",
+ 		  __entry->skbaddr, __entry->protocol, __entry->location,
+-		  __print_symbolic(__entry->reason,
+-				   DEFINE_DROP_REASON(FN, FNe)))
++		  __print_sym(__entry->reason, drop_reason ))
+ );
+ 
+-#undef FN
+-#undef FNe
+-
+ TRACE_EVENT(consume_skb,
+ 
+ 	TP_PROTO(struct sk_buff *skb, void *location),
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index 4eaf7ed0d1f4..415329b76921 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -132,6 +132,49 @@ drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS_NUM] = {
+ };
+ EXPORT_SYMBOL(drop_reasons_by_subsys);
+ 
++#ifdef CONFIG_TRACEPOINTS
++const char *drop_reason_lookup(unsigned long long value)
++{
++	unsigned long long subsys_id = value >> SKB_DROP_REASON_SUBSYS_SHIFT;
++	u32 reason = value & ~SKB_DROP_REASON_SUBSYS_MASK;
++	const struct drop_reason_list *subsys;
++
++	if (subsys_id >= SKB_DROP_REASON_SUBSYS_NUM)
++		return NULL;
++
++	subsys = rcu_dereference(drop_reasons_by_subsys[subsys_id]);
++	if (!subsys)
++		return NULL;
++	if (reason >= subsys->n_reasons)
++		return NULL;
++	return subsys->reasons[reason];
++}
++
++void drop_reason_show(struct seq_file *m)
++{
++	u32 subsys_id;
++
++	rcu_read_lock();
++	for (subsys_id = 0; subsys_id < SKB_DROP_REASON_SUBSYS_NUM; subsys_id++) {
++		const struct drop_reason_list *subsys;
++		u32 i;
++
++		subsys = rcu_dereference(drop_reasons_by_subsys[subsys_id]);
++		if (!subsys)
++			continue;
++
++		for (i = 0; i < subsys->n_reasons; i++) {
++			if (!subsys->reasons[i])
++				continue;
++			seq_printf(m, ", { %u, \"%s\" }",
++				   (subsys_id << SKB_DROP_REASON_SUBSYS_SHIFT) | i,
++				   subsys->reasons[i]);
++		}
++	}
++	rcu_read_unlock();
++}
++#endif
++
+ /**
+  * drop_reasons_register_subsys - register another drop reason subsystem
+  * @subsys: the subsystem to register, must not be the core
+-- 
+2.41.0
 
