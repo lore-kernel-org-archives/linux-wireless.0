@@ -2,98 +2,71 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6393FE7D0A6
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 18:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8F59E7D0A8
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 18:15:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229693AbjIUSPc (ORCPT
+        id S230169AbjIUSPf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 14:15:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41594 "EHLO
+        Thu, 21 Sep 2023 14:15:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230172AbjIUSPK (ORCPT
+        with ESMTP id S230062AbjIUSPK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 21 Sep 2023 14:15:10 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C3087B47F;
-        Thu, 21 Sep 2023 10:37:13 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79CE9C433BB;
-        Thu, 21 Sep 2023 07:19:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1695280798;
-        bh=qjFbYo5tJqw3sNctQO007tji3a55xgbw4igevqYkDao=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rpVULoBZ3MGrvhXQQ7B685n9CQgbFp3mhxjiWvBfGdqG8ZaLxO+6F/+PEjeI+4uc+
-         r9l9pr1hId5qrpT7zz72u3DxjEwzXFvOBjvz/9ZGA75g/kDT5oZIHiOEsv6Zw2vtTS
-         oIHeI+YHXxyAH/dj3ja2bPp2frXGlGfqPJVfCoJE=
-Date:   Thu, 21 Sep 2023 09:19:58 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Oleksandr Natalenko <oleksandr@natalenko.name>
-Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Sasha Levin <sashal@kernel.org>, stable@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] wifi: mt76: mt7915: remove VHT160 capability on
- MT7915
-Message-ID: <2023092145-luxury-fender-d5b9@gregkh>
-References: <20230726091704.25795-1-nbd@nbd.name>
- <12289744.O9o76ZdvQC@natalenko.name>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3103583F43;
+        Thu, 21 Sep 2023 10:37:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8419C116AE;
+        Thu, 21 Sep 2023 08:08:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695283729;
+        bh=nJaYB8uCoRYXDXO2rEMYKSZU2AEtKUxZKZjNBbP5yx0=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=q7U3o4KOKAt6ddMSu4iMCNpdJ0lygN6aVaZkka9VdPOMVGPBdrl62qR1kwBKNhfDJ
+         rB9wXuFzUj0pBLmQzotRCXgD5wuDo7nqMxV9t4ex7J7BLKUVp2E2AxC3S7vMsa/3fU
+         +aDkez0WG6bHzw+WEl/8GLIMqY4HW4l6+81YgSDgbnuFXhHySdvf3UATYPqf4OCStT
+         J/rRvQEWibsp6/+zk9tBe2cCCg0CRiAN9h2lrStdBz3H7fGjuzFMu7fVJyie3MxG4R
+         tBz/5MAT6Bs6rLxi9q2+OC7oTPAh3N7+CkZs7M8fTKi9G6L+Gf3NRuvnxFlmnCsq9e
+         iCZdtvr/8coFQ==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <12289744.O9o76ZdvQC@natalenko.name>
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 wireless-next 1/9] wifi: ar5523: Remove unnecessary
+ (void*)
+ conversions
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230919044906.523189-1-yunchuan@nfschina.com>
+References: <20230919044906.523189-1-yunchuan@nfschina.com>
+To:     Wu Yunchuan <yunchuan@nfschina.com>
+Cc:     syoshida@redhat.com, johannes.berg@intel.com,
+        alexander@wetzel-home.de, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Wu Yunchuan <yunchuan@nfschina.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169528372582.1539628.14233908546139336293.kvalo@kernel.org>
+Date:   Thu, 21 Sep 2023 08:08:47 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Sep 21, 2023 at 07:02:41AM +0200, Oleksandr Natalenko wrote:
-> Hello Felix.
-> 
-> On středa 26. července 2023 11:17:02 CEST Felix Fietkau wrote:
-> > The IEEE80211_VHT_CAP_EXT_NSS_BW value already indicates support for half-NSS
-> > 160 MHz support, so it is wrong to also advertise full 160 MHz support.
-> > 
-> > Fixes: c2f73eacee3b ("wifi: mt76: mt7915: add back 160MHz channel width support for MT7915")
-> > Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> > ---
-> >  drivers/net/wireless/mediatek/mt76/mt7915/init.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-> > index ee976657bfc3..78552f10b377 100644
-> > --- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-> > +++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-> > @@ -414,7 +414,6 @@ mt7915_init_wiphy(struct mt7915_phy *phy)
-> >  			if (!dev->dbdc_support)
-> >  				vht_cap->cap |=
-> >  					IEEE80211_VHT_CAP_SHORT_GI_160 |
-> > -					IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ |
-> >  					FIELD_PREP(IEEE80211_VHT_CAP_EXT_NSS_BW_MASK, 1);
-> >  		} else {
-> >  			vht_cap->cap |=
-> > 
-> 
-> For some reason this got backported into the stable kernel:
-> 
-> ```
-> $ git log --oneline v6.5.2..v6.5.4 -- drivers/net/wireless/mediatek/mt76/mt7915/
-> c43017fbebcc3 wifi: mt76: mt7915: fix power-limits while chan_switch
-> edb1afe042c74 wifi: mt76: mt7915: fix tlv length of mt7915_mcu_get_chan_mib_info
-> 9ec0dec0baea3 wifi: mt76: mt7915: remove VHT160 capability on MT7915
-> 0e61f73e6ebc0 wifi: mt76: mt7915: fix capabilities in non-AP mode
-> 6bce28ce28390 wifi: mt76: mt7915: fix command timeout in AP stop period
-> 7af917d4864c6 wifi: mt76: mt7915: rework tx bytes counting when WED is active
-> feae00c6468ce wifi: mt76: mt7915: rework tx packets counting when WED is active
-> 70bbcc4ad6544 wifi: mt76: mt7915: fix background radar event being blocked
-> ```
-> 
-> and this broke my mt7915-based AP.
-> 
-> However, if I remove `[VT160]` capability from the hostapd config, things go back to normal. It does seem that 160 MHz still works even.
-> 
-> Is this expected?
+Wu Yunchuan <yunchuan@nfschina.com> wrote:
 
-Is your device also broken in 6.6-rc2?
+> No need cast (void*) to (struct ar5523_cmd_hdr *).
+> 
+> Signed-off-by: Wu Yunchuan <yunchuan@nfschina.com>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-thanks,
+6 patches applied to ath-next branch of ath.git, thanks.
 
-greg k-h
+37c113e94fa0 wifi: ar5523: Remove unnecessary (void*) conversions
+9705103f8e8e wifi: wcn36xx: remove unnecessary (void*) conversions
+4bd0f7d0f311 wifi: ath5k: remove unnecessary (void*) conversions
+779163fa1a37 wifi: ath6kl: remove unnecessary (void*) conversions
+16e972d5767a wifi: ath10k: Remove unnecessary (void*) conversions
+e5e8b38f0c05 wifi: ath12k: Remove unnecessary (void*) conversions
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20230919044906.523189-1-yunchuan@nfschina.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
