@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B007E7D0A6
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:50:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60673E7D0A2
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:50:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230013AbjIUTua (ORCPT
+        id S230447AbjIUTuq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:50:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35538 "EHLO
+        Thu, 21 Sep 2023 15:50:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231439AbjIUTuS (ORCPT
+        with ESMTP id S230469AbjIUTug (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:50:18 -0400
+        Thu, 21 Sep 2023 15:50:36 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D681379631
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:50:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E85B7697BA
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:50:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695318630; x=1726854630;
+  t=1695318642; x=1726854642;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9BklHQwi8dkkg1YSTnZO6soNolaofhwELZWOV9WtMCc=;
-  b=GHA1kbPSu3EYSrhZCxRkMnnwUM7PgWQHWri+ZQFovoyITl4ECNrQSQe2
-   CvML7pqXTsXs4ecfYuyAFKd2amayESuSA17Gmm7X2g+77puSA0UBDfg0y
-   7KfD+XUCmzIY3mRhwKpABpivlc85lPn3kydA9Fvv0gLvYfEKY0vbfE+54
-   auAKmfWb3jKCchzVSn7aJizqvHqkVTC5M6M6VnR6852snRo72s+/bt/Mt
-   MJbYnSNOAZpZp5pUfCICpqMc0iF/E/34v0Vz4gJpmMUlwiVHZsHDKOsDo
-   pLHH77CO1zLl0w0Jy5Qm8pj599CB2Hhnm+j4pol0n2npFNq0ezB+rKvpw
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="384305335"
+  bh=byABH+hsUoi5S/yMfj0RVxmAy470GYhDMUlm2zglCGo=;
+  b=mSkCKAQwPx5c9FdLMS2VQCXXJqOQ98iRsU65P6DIX0uMf/Zetv7XCqO1
+   wrsNP6M7OUX6ygBXpdxBIGDF8zbpaLMxdBcBhSJ1/mS6E2YG4ThPYSeKD
+   Dyc+EGy6JRQOj4/YV0/SQfcb2Z88AvgQ3T63Jc13LHpJrlU0LiF0uEyNR
+   Wxek2eR/mwppd0OZFxKP/gKCRCTdlHt4B1859gbHTprE3NdzYKewE11ne
+   f0sLtZrLWbhjgplEn3qHXqaCW0cah6fbf/dC86hhAM4vzD19XhVxNxK55
+   gwnGVY505qqyS5FkPpKnFR7DD4RhVJ2h7I2J3a1RYWgJZ0YWxAONkuZiu
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="384305474"
 X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
-   d="scan'208";a="384305335"
+   d="scan'208";a="384305474"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:58:55 -0700
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:08 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="740545547"
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="740545656"
 X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
-   d="scan'208";a="740545547"
+   d="scan'208";a="740545656"
 Received: from rchuwer-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.229.163])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:58:53 -0700
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:06 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 05/12] wifi: iwlwifi: pcie: (re-)assign BAR0 on driver bind
-Date:   Thu, 21 Sep 2023 11:58:03 +0300
-Message-Id: <20230921110726.5f5f782a4e97.I4b7bf5c52ba44a8c7f9878009021689bbfa9c5ef@changeid>
+Subject: [PATCH 11/12] wifi: iwlwifi: mvm: check for iwl_mvm_mld_update_sta() errors
+Date:   Thu, 21 Sep 2023 11:58:09 +0300
+Message-Id: <20230921110727.a9496c232d48.I74adaa8f3c6fd3252348e79f18605246936ef27d@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230921085810.693048-1-gregory.greenman@intel.com>
 References: <20230921085810.693048-1-gregory.greenman@intel.com>
@@ -59,60 +59,28 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's a race with runtime PM getting enabled by userspace:
- - we rescan the PCI bus
- - this creates the new PCI device including its sysfs
-   representation
- - udev sees the new device, and the (OS-specific?) scripting
-   enables runtime PM by writing to power/control; this can
-   happen _before_ the next step - this will runtime-suspend
-   the device which saves the config space, including the BAR0
-   that wasn't assigned yet
- - the bus rescan assigns resources to the devices and writes
-   them to the config space of the device
-   (but not the runtime-pm saved copy)
- - the driver binds and this disallows runtime PM, so the device
-   is resumed, restoring the (incomplete!) config space
- - the driver cannot work due to BAR0 not being configured
-
-Fixing the actual race is hard and deep in the PCI layer,
-though probably should be done for upstream as well; perhaps
-runtime PM should only be allowed after resource assignment,
-or some other TBD way.
-
-Work around this in the driver for now by simply (re-)assigning
-BAR0 when the driver initializes, if it's unset.
+The return value of this function is assigned, but then unused.
+Check for errors here.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 849ea1851508..5020ae4493c6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3610,10 +3610,19 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	int ret, addr_size;
- 	const struct iwl_trans_ops *ops = &trans_ops_pcie_gen2;
- 	void __iomem * const *table;
-+	u32 bar0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
+index 4e9d19eb31f1..1464aad039e1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
+@@ -697,6 +697,8 @@ int iwl_mvm_mld_add_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  
- 	if (!cfg_trans->gen2)
- 		ops = &trans_ops_pcie;
+ 	/* at this stage sta link pointers are already allocated */
+ 	ret = iwl_mvm_mld_update_sta(mvm, vif, sta);
++	if (ret)
++		goto err;
  
-+	/* reassign our BAR 0 if invalid due to possible runtime PM races */
-+	pci_read_config_dword(pdev, PCI_BASE_ADDRESS_0, &bar0);
-+	if (bar0 == PCI_BASE_ADDRESS_MEM_TYPE_64) {
-+		ret = pci_assign_resource(pdev, 0);
-+		if (ret)
-+			return ERR_PTR(ret);
-+	}
-+
- 	ret = pcim_enable_device(pdev);
- 	if (ret)
- 		return ERR_PTR(ret);
+ 	for_each_sta_active_link(vif, sta, link_sta, link_id) {
+ 		struct ieee80211_bss_conf *link_conf =
 -- 
 2.38.1
 
