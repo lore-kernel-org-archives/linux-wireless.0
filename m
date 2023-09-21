@@ -2,96 +2,70 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B33E7D0A2
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:28:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA8D8E7D0A8
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:29:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230395AbjIUT2X (ORCPT
+        id S230123AbjIUT31 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:28:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43666 "EHLO
+        Thu, 21 Sep 2023 15:29:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230325AbjIUT1s (ORCPT
+        with ESMTP id S230394AbjIUT3J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:27:48 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 363E75B88
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:09:30 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LF7K1m001558;
-        Thu, 21 Sep 2023 17:09:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=LNygmIKmXn3TloZGMOTcy11agEPItZJYdzbjy1HGvWk=;
- b=SliNADxf7u5WBn+rq01ZtCA+qs2wlN0DEJJ28EcgQx8VXnh4Kb2Huo5xbh7NJ/ctQFSX
- BsKVmeDIllju3Dzh8olDIbrCpZLZGrVyUZtVeHkN/9XLxA5NlO7x/FnQ4Wo9keoOIrx3
- pF6cgEBmu/f5bOthkhqLQnj5e7LW2BNesu1WEOjKFY5ANydhXkBq3GlqVHyLCOzlbFqo
- rKESAlss6RNw8kxpU06XF9w87hsLN57arPDV+WLDXqsYZPa1yLRk1jUS3keJT3RsVwmx
- 8XkIvE6CkfQZ2qYCroq1YMfQt+UpbBeN1+UghIXzuVRJy/rhyhH+sYzYBM127gTPLHuv Uw== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t8892252b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 17:09:21 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LH9KKK010028
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 17:09:20 GMT
-Received: from [10.48.245.144] (10.49.16.6) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 21 Sep
- 2023 10:09:20 -0700
-Message-ID: <edd759d5-855e-4438-b649-db7915bab3e0@quicinc.com>
-Date:   Thu, 21 Sep 2023 10:09:19 -0700
+        Thu, 21 Sep 2023 15:29:09 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E6EBA9EF
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:07:28 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 080BEC43391;
+        Thu, 21 Sep 2023 06:30:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695277821;
+        bh=dKmYQDeeA+4tWlPl/hXjWoF4/bbTVRwllO7onRmJL+0=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=eLzh8Ig4u72Uj2sGFguKUGAtHu4czACt/T77ipE49xeulYAOZPm08CiOeJqqgYU07
+         k/OoczkUaVyS/hdwVPjD+7c6r+kauadhqLQZeVdyPoL7jGTKD9vBDHF9l3500IzDvT
+         +wi54E72bHId0TJRH07mY/p2n/t1BAJcfk0VomMbTG0dMMIhjYYtE3Cl5UilW4le9J
+         cIz34FohzW77hacdkZu2YO4xZ1Y7jZsnrORmYLXV5onzVjesm6anyWXbGUtoVtNbko
+         Lu8aIezMtKcDtzUddL6kNOeL9LZ1z73xvNHsLKY6NZJ9xuio7b6Ys0clE0Av9Gkl/1
+         a/Zq5kywfpZFg==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath11k: mac: fix struct ieee80211_sband_iftype_data
- handling
-Content-Language: en-US
-To:     Kalle Valo <kvalo@kernel.org>, <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20230921075440.1539515-1-kvalo@kernel.org>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230921075440.1539515-1-kvalo@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: jcGFp4CQEDmuo_hanOfCvgozzez4Wq8H
-X-Proofpoint-ORIG-GUID: jcGFp4CQEDmuo_hanOfCvgozzez4Wq8H
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-21_14,2023-09-21_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
- mlxlogscore=947 adultscore=0 bulkscore=0 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 mlxscore=0 phishscore=0 spamscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
- definitions=main-2309210148
+Subject: Re: [PATCH v4] wifi: wilc1000: add back-off algorithm to balance tx
+ queue
+ packets
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230915175946.4361-1-prasurjya.rohansaikia@microchip.com>
+References: <20230915175946.4361-1-prasurjya.rohansaikia@microchip.com>
+To:     <Prasurjya.Rohansaikia@microchip.com>
+Cc:     <linux-wireless@vger.kernel.org>, <Ajay.Kathat@microchip.com>,
+        <claudiu.beznea@microchip.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169527781889.1469888.3059237937183223820.kvalo@kernel.org>
+Date:   Thu, 21 Sep 2023 06:30:20 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/21/2023 12:54 AM, Kalle Valo wrote:
-> From: Kalle Valo <quic_kvalo@quicinc.com>
-> 
-> Commit e8c1841278a7 ("wifi: cfg80211: annotate iftype_data pointer with
-> sparse") added sparse checks for struct ieee80211_sband_iftype_data handling
-> which immediately found an issue in ath11k:
-> 
-> drivers/net/wireless/ath/ath11k/mac.c:7952:22: warning: incorrect type in argument 1 (different address spaces)
-> drivers/net/wireless/ath/ath11k/mac.c:7952:22:    expected struct ieee80211_sta_he_cap const *he_cap
-> drivers/net/wireless/ath/ath11k/mac.c:7952:22:    got struct ieee80211_sta_he_cap const [noderef] __iftype_data *
-> 
-> The problem here is that we are accessing sband->iftype_data directly even
-> though we should use for_each_sband_iftype_data(). Now we iterate over each
-> item in the array and use the correct vif type which this vif is using.
-> 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
-> 
-> Reported-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+<Prasurjya.Rohansaikia@microchip.com> wrote:
 
-Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> From: Prasurjya Rohan Saikia <prasurjya.rohansaikia@microchip.com>
+> 
+> Add an algorithm to backoff the Tx Task when low memory scenario is
+> triggered at firmware. During high data transfer from host, the firmware
+> runs out of VMM memory, which is used to hold the frames from the host.
+> So, adding the flow control delays the transmit from host side when
+> there is not enough space to accommodate frames in firmware side.
+> 
+> Signed-off-by: Prasurjya Rohan Saikia <prasurjya.rohansaikia@microchip.com>
+> Acked-by: Ajay Singh <ajay.kathat@microchip.com>
+
+Patch applied to wireless-next.git, thanks.
+
+a08bb28f6eb6 wifi: wilc1000: add back-off algorithm to balance tx queue packets
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20230915175946.4361-1-prasurjya.rohansaikia@microchip.com/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
