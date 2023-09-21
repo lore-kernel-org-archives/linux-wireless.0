@@ -2,147 +2,112 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FCFDE7D0AB
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 22:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CD0FE7D0AB
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 22:30:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233335AbjIUW0O (ORCPT
+        id S230483AbjIUWaa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:26:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59918 "EHLO
+        Thu, 21 Sep 2023 18:30:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233059AbjIUWZg (ORCPT
+        with ESMTP id S232329AbjIUWaY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 18:25:36 -0400
-X-Greylist: delayed 3334 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 21 Sep 2023 10:59:07 PDT
-Received: from vulcan.natalenko.name (vulcan.natalenko.name [104.207.131.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90313A59C5;
-        Thu, 21 Sep 2023 10:59:06 -0700 (PDT)
-Received: from spock.localnet (unknown [94.142.239.106])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by vulcan.natalenko.name (Postfix) with ESMTPSA id 206D3150AC2D;
-        Thu, 21 Sep 2023 07:02:54 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=natalenko.name;
-        s=dkim-20170712; t=1695272574;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CBBr2jfDzLMCIhDU0Px248rD/FOXEfErM7/x99M3aDM=;
-        b=GLaqSqG4vq2RFzSGUNB2nPqN50JbIQHga5A+ZnDQ/pAvQdCnf1TdR4oZPjneXPUjbkJssh
-        NewB0E7ctuCiZaYC0f+Mvif8TAXhgY7vzca3GrvyUJrzFGCXj0rSgdp1M/dhyYwQerXSyJ
-        dqRjguWNaJQwTrl8VyJBhSwjfIudnJs=
-From:   Oleksandr Natalenko <oleksandr@natalenko.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] wifi: mt76: mt7915: remove VHT160 capability on MT7915
-Date:   Thu, 21 Sep 2023 07:02:41 +0200
-Message-ID: <12289744.O9o76ZdvQC@natalenko.name>
-In-Reply-To: <20230726091704.25795-1-nbd@nbd.name>
-References: <20230726091704.25795-1-nbd@nbd.name>
+        Thu, 21 Sep 2023 18:30:24 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3F4465A5;
+        Thu, 21 Sep 2023 10:09:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=nqDTsSYtIrtsgJfRZxQSmVfUy4UI0fM8vU1yAMBIetU=;
+        t=1695316163; x=1696525763; b=EXKAgTuPVVfy8ylWiMVnePM2S25FQbqLGHAhT1vpoj7XbtN
+        noPgP9Jg0aEsCyUWzDGafbS9LhYXtZGmWlZIHEcZ5/9Hl2KjA4Jez+eevbJN0LyTUwZyaJ2h/dFv5
+        nUADlD6Z2jmONDwwQ8LGjyibG8/cSVRhcY925jJ0P8uCjkIcSt7GeuD/wen370bqujHA+uGuKFFkj
+        lmki8Q/Vl8R7xDOJxOwFmgGXlbDxpvhyFLAJauCE6D1i/0sf9THBR/UJz4b/qdU1ZHYh6F6Czc2gE
+        OmP0MD0ktlF4pyiL4bhjTWW8EiPtkJVX4+5BsSpAvxGYWkvxkjH0637rQA7vGoxg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qjFPo-00D3lb-0V;
+        Thu, 21 Sep 2023 10:52:04 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-kernel@vger.kernel.org
+Cc:     linux-trace-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC PATCH 4/4] tracing/timer: use __print_sym()
+Date:   Thu, 21 Sep 2023 10:51:34 +0200
+Message-ID: <20230921105129.e76b17c18447.I5e112e423a69704fa05db74a05a6ebaad45d4f6e@changeid>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230921085129.261556-5-johannes@sipsolutions.net>
+References: <20230921085129.261556-5-johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart5713149.DvuYhMxLoT";
- micalg="pgp-sha256"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---nextPart5713149.DvuYhMxLoT
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="UTF-8"; protected-headers="v1"
-From: Oleksandr Natalenko <oleksandr@natalenko.name>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 21 Sep 2023 07:02:41 +0200
-Message-ID: <12289744.O9o76ZdvQC@natalenko.name>
-In-Reply-To: <20230726091704.25795-1-nbd@nbd.name>
-References: <20230726091704.25795-1-nbd@nbd.name>
-MIME-Version: 1.0
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hello Felix.
+Use the new __print_sym() in the timer tracing, just to show
+how to convert something. This adds ~80 bytes of .text for a
+saving of ~1.5K of data in my builds.
 
-On st=C5=99eda 26. =C4=8Dervence 2023 11:17:02 CEST Felix Fietkau wrote:
-> The IEEE80211_VHT_CAP_EXT_NSS_BW value already indicates support for half=
-=2DNSS
-> 160 MHz support, so it is wrong to also advertise full 160 MHz support.
->=20
-> Fixes: c2f73eacee3b ("wifi: mt76: mt7915: add back 160MHz channel width s=
-upport for MT7915")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt7915/init.c | 1 -
->  1 file changed, 1 deletion(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/n=
-et/wireless/mediatek/mt76/mt7915/init.c
-> index ee976657bfc3..78552f10b377 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-> @@ -414,7 +414,6 @@ mt7915_init_wiphy(struct mt7915_phy *phy)
->  			if (!dev->dbdc_support)
->  				vht_cap->cap |=3D
->  					IEEE80211_VHT_CAP_SHORT_GI_160 |
-> -					IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ |
->  					FIELD_PREP(IEEE80211_VHT_CAP_EXT_NSS_BW_MASK, 1);
->  		} else {
->  			vht_cap->cap |=3D
->=20
+Note the format changes from
 
-=46or some reason this got backported into the stable kernel:
+print fmt: "success=%d dependency=%s", REC->success, __print_symbolic(REC->dependency, { 0, "NONE" }, { (1 << 0), "POSIX_TIMER" }, { (1 << 1), "PERF_EVENTS" }, { (1 << 2), "SCHED" }, { (1 << 3), "CLOCK_UNSTABLE" }, { (1 << 4), "RCU" }, { (1 << 5), "RCU_EXP" })
 
-```
-$ git log --oneline v6.5.2..v6.5.4 -- drivers/net/wireless/mediatek/mt76/mt=
-7915/
-c43017fbebcc3 wifi: mt76: mt7915: fix power-limits while chan_switch
-edb1afe042c74 wifi: mt76: mt7915: fix tlv length of mt7915_mcu_get_chan_mib=
-_info
-9ec0dec0baea3 wifi: mt76: mt7915: remove VHT160 capability on MT7915
-0e61f73e6ebc0 wifi: mt76: mt7915: fix capabilities in non-AP mode
-6bce28ce28390 wifi: mt76: mt7915: fix command timeout in AP stop period
-7af917d4864c6 wifi: mt76: mt7915: rework tx bytes counting when WED is acti=
-ve
-feae00c6468ce wifi: mt76: mt7915: rework tx packets counting when WED is ac=
-tive
-70bbcc4ad6544 wifi: mt76: mt7915: fix background radar event being blocked
-```
+to
 
-and this broke my mt7915-based AP.
+print fmt: "success=%d dependency=%s", REC->success, __print_symbolic(REC->dependency, { 0, "NONE" }, { 1, "POSIX_TIMER" }, { 2, "PERF_EVENTS" }, { 4, "SCHED" }, { 8, "CLOCK_UNSTABLE" }, { 16, "RCU" }, { 32, "RCU_EXP" })
 
-However, if I remove `[VT160]` capability from the hostapd config, things g=
-o back to normal. It does seem that 160 MHz still works even.
+Since the values are now just printed in the show function as
+pure decimal values.
 
-Is this expected?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/trace/events/timer.h | 22 +++++++---------------
+ 1 file changed, 7 insertions(+), 15 deletions(-)
 
-Please check.
-
-Thanks.
-
-=2D-=20
-Oleksandr Natalenko (post-factum)
---nextPart5713149.DvuYhMxLoT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEZUOOw5ESFLHZZtOKil/iNcg8M0sFAmULznEACgkQil/iNcg8
-M0vrVxAAr2A2S5y3K3KZCf6eC4XHPkTxvLb/VNZfY4NVE+mHkgFZU9lFxYIw5D6y
-XxfukONRVtusbi5M2gHCGPQEpNCAeSr2P9P/v8KRaYOoT54lrOvQquyliuoujuYC
-jeO2XtIJUWxIpz5+BoXYrroD7z5k9sHIXf/xDuAmHa2IGy/bpU6yYb1V+dwEvzbi
-43QoscmGzjAbZvrZiufetU3hUq4/oyZycwdUDK0/9cbEliQ8NkM6JiTFBQylgnmP
-NI2iy0SZlHVcf/AWgps6TZwx3Frb12OvNAmnGWga2axpkXRm5pPkFEjxOreLteps
-uSFcV12ZmTEsaHsAQOd+demq75/H3f9tJPMy1gz06oixO/3k9tUpdxVNiFgOuyg9
-iKGUWTb5ETjufpJe6dpnnuhpHU2i+npAgs0tf8gVux/DZncvYbaYxb6iEIefwfXk
-yUENnOzfud2aEFM/WJ8W9B8X+qGzsJD17YKV0VYKi0M6BQRdGFKP82EWAoTizTPj
-0oSswygE9pf9ApswpOm0kq+3/iywejIchCNNjNFxvlrIMZCTtUSBeoUdNGitzcjE
-7qOtBUpB5TikczCJt5ut4R9i51xCRrRi681XGx89zepc42DwpSj5qkORYOkGtWap
-e8C01yUtMwdenAIJBYikBhNLtilZYg6epSuf7HhpGcn7fQDXwTM=
-=VAkp
------END PGP SIGNATURE-----
-
---nextPart5713149.DvuYhMxLoT--
-
-
+diff --git a/include/trace/events/timer.h b/include/trace/events/timer.h
+index b4bc2828fa09..cb8294da29d0 100644
+--- a/include/trace/events/timer.h
++++ b/include/trace/events/timer.h
+@@ -382,26 +382,18 @@ TRACE_EVENT(itimer_expire,
+ #undef tick_dep_mask_name
+ #undef tick_dep_name_end
+ 
+-/* The MASK will convert to their bits and they need to be processed too */
+-#define tick_dep_name(sdep) TRACE_DEFINE_ENUM(TICK_DEP_BIT_##sdep); \
+-	TRACE_DEFINE_ENUM(TICK_DEP_MASK_##sdep);
+-#define tick_dep_name_end(sdep)  TRACE_DEFINE_ENUM(TICK_DEP_BIT_##sdep); \
+-	TRACE_DEFINE_ENUM(TICK_DEP_MASK_##sdep);
+-/* NONE only has a mask defined for it */
+-#define tick_dep_mask_name(sdep) TRACE_DEFINE_ENUM(TICK_DEP_MASK_##sdep);
+-
+-TICK_DEP_NAMES
+-
+-#undef tick_dep_name
+-#undef tick_dep_mask_name
+-#undef tick_dep_name_end
+-
+ #define tick_dep_name(sdep) { TICK_DEP_MASK_##sdep, #sdep },
+ #define tick_dep_mask_name(sdep) { TICK_DEP_MASK_##sdep, #sdep },
+ #define tick_dep_name_end(sdep) { TICK_DEP_MASK_##sdep, #sdep }
+ 
++TRACE_DEFINE_SYM_LIST(tick_dep_names, TICK_DEP_NAMES);
++
++#undef tick_dep_name
++#undef tick_dep_mask_name
++#undef tick_dep_name_end
++
+ #define show_tick_dep_name(val)				\
+-	__print_symbolic(val, TICK_DEP_NAMES)
++	__print_sym(val, tick_dep_names)
+ 
+ TRACE_EVENT(tick_stop,
+ 
+-- 
+2.41.0
 
