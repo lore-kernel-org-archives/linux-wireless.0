@@ -2,71 +2,75 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8F59E7D0A8
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 18:15:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45296E7D0A2
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 18:55:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230169AbjIUSPf (ORCPT
+        id S230295AbjIUSzU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 14:15:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41650 "EHLO
+        Thu, 21 Sep 2023 14:55:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230062AbjIUSPK (ORCPT
+        with ESMTP id S230376AbjIUSzH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 14:15:10 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3103583F43;
-        Thu, 21 Sep 2023 10:37:14 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8419C116AE;
-        Thu, 21 Sep 2023 08:08:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695283729;
-        bh=nJaYB8uCoRYXDXO2rEMYKSZU2AEtKUxZKZjNBbP5yx0=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=q7U3o4KOKAt6ddMSu4iMCNpdJ0lygN6aVaZkka9VdPOMVGPBdrl62qR1kwBKNhfDJ
-         rB9wXuFzUj0pBLmQzotRCXgD5wuDo7nqMxV9t4ex7J7BLKUVp2E2AxC3S7vMsa/3fU
-         +aDkez0WG6bHzw+WEl/8GLIMqY4HW4l6+81YgSDgbnuFXhHySdvf3UATYPqf4OCStT
-         J/rRvQEWibsp6/+zk9tBe2cCCg0CRiAN9h2lrStdBz3H7fGjuzFMu7fVJyie3MxG4R
-         tBz/5MAT6Bs6rLxi9q2+OC7oTPAh3N7+CkZs7M8fTKi9G6L+Gf3NRuvnxFlmnCsq9e
-         iCZdtvr/8coFQ==
-Content-Type: text/plain; charset="utf-8"
+        Thu, 21 Sep 2023 14:55:07 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADF6E8F4A1;
+        Thu, 21 Sep 2023 10:54:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=UVYX/UF6Q5jgLixkNlvjPTeG0dTbgZSBzEK9p6QYHb8=;
+        t=1695318887; x=1696528487; b=b5fIn2YYXhA9TNYJpVt/fc1K3tO5pYZXI7hVxA2wh8ysj4G
+        5kZgdnKu+VmDVkqZgeuX8ZhoJ2a4ClXNUoiZfePuejFPROQVTPeZClfgxpipYeB/fRpqikEDxioql
+        doTXh5YYioNE1xp4Uh7cfRrTr9YWJBCVlBIHDVh37yDGYRyZQmo9vpsFRAUgEPtQxNgX004Vq1cpL
+        gbtjTwrXuHHbt+Npphk0bCSQKJPUPRmORVamSE5t5V1+Gl479p3DCJ79qDKhjaG/vipQNHzLcWX1f
+        ARFicvPDwPYTPLrYcxd1I1wywUgO2OxPD8suboS+3avWWFhJRWN3KUG9bQ9ycULA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qjNsw-00DbOk-36;
+        Thu, 21 Sep 2023 19:54:43 +0200
+Message-ID: <7225922434776cb1a37642e9c828b821da536270.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH 3/4] net: drop_monitor: use drop_reason_lookup()
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-kernel@vger.kernel.org
+Cc:     linux-trace-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date:   Thu, 21 Sep 2023 19:54:41 +0200
+In-Reply-To: <20230921105129.c6e7e803398d.Idc122c3395bea9652f34ccaa678e918bfd4fae75@changeid>
+References: <20230921085129.261556-5-johannes@sipsolutions.net>
+         <20230921105129.c6e7e803398d.Idc122c3395bea9652f34ccaa678e918bfd4fae75@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2 wireless-next 1/9] wifi: ar5523: Remove unnecessary
- (void*)
- conversions
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230919044906.523189-1-yunchuan@nfschina.com>
-References: <20230919044906.523189-1-yunchuan@nfschina.com>
-To:     Wu Yunchuan <yunchuan@nfschina.com>
-Cc:     syoshida@redhat.com, johannes.berg@intel.com,
-        alexander@wetzel-home.de, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Wu Yunchuan <yunchuan@nfschina.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169528372582.1539628.14233908546139336293.kvalo@kernel.org>
-Date:   Thu, 21 Sep 2023 08:08:47 +0000 (UTC)
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wu Yunchuan <yunchuan@nfschina.com> wrote:
+On Thu, 2023-09-21 at 10:51 +0200, Johannes Berg wrote:
+>=20
+> -	if (!list ||
+> -	    subsys_reason >=3D list->n_reasons ||
+> -	    !list->reasons[subsys_reason] ||
+> -	    strlen(list->reasons[subsys_reason]) > NET_DM_MAX_REASON_LEN) {
+> -		list =3D rcu_dereference(drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS=
+_CORE]);
+> -		subsys_reason =3D SKB_DROP_REASON_NOT_SPECIFIED;
+> -	}
 
-> No need cast (void*) to (struct ar5523_cmd_hdr *).
-> 
-> Signed-off-by: Wu Yunchuan <yunchuan@nfschina.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Oops, I lost this translation of erroneous ones to the core
+SKB_DROP_REASON_NOT_SPECIFIED.
 
-6 patches applied to ath-next branch of ath.git, thanks.
+Maybe we should just not have the attribute in that case? But that could
+be a different change too.
 
-37c113e94fa0 wifi: ar5523: Remove unnecessary (void*) conversions
-9705103f8e8e wifi: wcn36xx: remove unnecessary (void*) conversions
-4bd0f7d0f311 wifi: ath5k: remove unnecessary (void*) conversions
-779163fa1a37 wifi: ath6kl: remove unnecessary (void*) conversions
-16e972d5767a wifi: ath10k: Remove unnecessary (void*) conversions
-e5e8b38f0c05 wifi: ath12k: Remove unnecessary (void*) conversions
+> -	if (nla_put_string(msg, NET_DM_ATTR_REASON,
+> -			   list->reasons[subsys_reason])) {
+> +	reason_str =3D drop_reason_lookup(cb->reason);
+> +	if (nla_put_string(msg, NET_DM_ATTR_REASON, reason_str)) {
+>  		rcu_read_unlock();
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230919044906.523189-1-yunchuan@nfschina.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+johannes
