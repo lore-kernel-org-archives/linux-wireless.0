@@ -2,84 +2,81 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D56E7D0A2
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03149E7D0AB
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:05:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232457AbjIUVEW (ORCPT
+        id S229972AbjIUVFn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 17:04:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50312 "EHLO
+        Thu, 21 Sep 2023 17:05:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229745AbjIUVDo (ORCPT
+        with ESMTP id S232597AbjIUVEk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 17:03:44 -0400
+        Thu, 21 Sep 2023 17:04:40 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B82EC83F58
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:17 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00DA5C116B2;
-        Thu, 21 Sep 2023 08:12:20 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C14527B957;
+        Thu, 21 Sep 2023 10:37:15 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 288E2C116AF;
+        Thu, 21 Sep 2023 08:09:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695283941;
-        bh=T9axprIpl0XduYk3n2EqzXInDwp6YLqpLyjrX8stzrw=;
+        s=k20201202; t=1695283781;
+        bh=CRChqGGo4RR2euNwhsDyCD/AoeyKktzzjOKjh37j308=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=maVjgWzQpzPgDxayY1N1p0/7EJ+tKT+bbOcaL1VNcdxV83qItOQNXXz68oraB3o4j
-         Z3GPQXWxLIJHh56KAPiyIG59Clc+WE351I2w6klhy44GMIqMzUkaPhxp4cAWA3jJEy
-         dMUWHmouIRsxcATDpaA/sikt23/4TQEhTlzBQ9gDWeTgQDJezUpX7kVm+RpvmskGTc
-         WMDj3B6Y0BS/XSdisIP8m7s8K+XFcQLzqPW/ba0tHH2qlHxnts/KWvj6sLUnTHQJH3
-         MibcbD23NpF9e3WnOTtzyyk7e4roXRprIIpHSfFAbzevlw7KZ/H8EBCnj1/IReCjZm
-         a5TrvxpxLS5Qg==
+        b=U6NPZ+8WyNsZOrY2Ac+ioT6/gPDw2ATD5O9tV01TxCmDZ6+hXu1KPDEIz3a3Gtwqx
+         tKsvCJSSNEHimX8QPbVZQJ4UTZG4trO9kwulY4CGG1iwMP3qdSH0L3z5X/N9NfDFTs
+         2lCfQEvwcgBc8JcV3rpcBvh779jTDhW9ZYVktRfLINCxVbeWSUqjqeqr1H7Y3KaCi9
+         5FHGysRq9RRBkxkT+7NXxvkZBnHbVe7pX4kVgVqaQ4ADoRTodYgJTD/8oPWCJZVggu
+         hFQIs+fghTAVHf54bge5tZrM34SrNJyWsXFComQWwYojGcRYn9khtN5vaM4m88eMX0
+         /wYF0Fl26L6Og==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2] wifi: ath11k: fix boot failure with one MSI vector
+Subject: Re: [PATCH] wifi: wcn36xx: Annotate struct wcn36xx_hal_ind_msg with
+ __counted_by
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230907015606.16297-1-quic_bqiang@quicinc.com>
-References: <20230907015606.16297-1-quic_bqiang@quicinc.com>
-To:     Baochen Qiang <quic_bqiang@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+In-Reply-To: <20230915200622.never.820-kees@kernel.org>
+References: <20230915200622.never.820-kees@kernel.org>
+To:     Kees Cook <keescook@chromium.org>
+Cc:     Loic Poulain <loic.poulain@linaro.org>,
+        Kees Cook <keescook@chromium.org>, wcn36xx@lists.infradead.org,
+        linux-wireless@vger.kernel.org,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169528393922.1539628.7842522127045869453.kvalo@kernel.org>
-Date:   Thu, 21 Sep 2023 08:12:20 +0000 (UTC)
+Message-ID: <169528377712.1539628.6973937251769266180.kvalo@kernel.org>
+Date:   Thu, 21 Sep 2023 08:09:38 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Baochen Qiang <quic_bqiang@quicinc.com> wrote:
+Kees Cook <keescook@chromium.org> wrote:
 
-> Commit 5b32b6dd96633 ("ath11k: Remove core PCI references from
-> PCI common code") breaks with one MSI vector because it moves
-> affinity setting after IRQ request, see below log:
+> Prepare for the coming implementation by GCC and Clang of the __counted_by
+> attribute. Flexible array members annotated with __counted_by can have
+> their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
+> (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
+> functions).
 > 
-> [ 1417.278835] ath11k_pci 0000:02:00.0: failed to receive control response completion, polling..
-> [ 1418.302829] ath11k_pci 0000:02:00.0: Service connect timeout
-> [ 1418.302833] ath11k_pci 0000:02:00.0: failed to connect to HTT: -110
-> [ 1418.303669] ath11k_pci 0000:02:00.0: failed to start core: -110
+> As found with Coccinelle[1], add __counted_by for struct wcn36xx_hal_ind_msg.
 > 
-> The detail is, if do affinity request after IRQ activated,
-> which is done in request_irq(), kernel caches that request and
-> returns success directly. Later when a subsequent MHI interrupt is
-> fired, kernel will do the real affinity setting work, as a result,
-> changs the MSI vector. However at that time host has configured
-> old vector to hardware, so host never receives CE or DP interrupts.
+> [1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
 > 
-> Fix it by setting affinity before registering MHI controller
-> where host is, for the first time, doing IRQ request.
-> 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3
-> Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
-> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.1.0.1-01160-QCAMSLSWPLZ-1
-> 
-> Fixes: 5b32b6dd9663 ("ath11k: Remove core PCI references from PCI common code")
-> Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
-> Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> Cc: Loic Poulain <loic.poulain@linaro.org>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: wcn36xx@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-39564b475ac5 wifi: ath11k: fix boot failure with one MSI vector
+f8cbbb224b11 wifi: wcn36xx: Annotate struct wcn36xx_hal_ind_msg with __counted_by
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230907015606.16297-1-quic_bqiang@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230915200622.never.820-kees@kernel.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
