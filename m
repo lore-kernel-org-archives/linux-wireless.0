@@ -2,439 +2,458 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1AAAE7D0A6
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73D47E7D0A6
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:41:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230227AbjIUTi1 (ORCPT
+        id S229780AbjIUTmC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:38:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54686 "EHLO
+        Thu, 21 Sep 2023 15:42:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230416AbjIUTiM (ORCPT
+        with ESMTP id S230502AbjIUTly (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:38:12 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA315ED56E
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 12:10:48 -0700 (PDT)
+        Thu, 21 Sep 2023 15:41:54 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0710A79632
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:50:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695323449; x=1726859449;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-id:content-transfer-encoding:mime-version;
-  bh=jcofzAqEJOy3r0kB4VB/Dk7VZcQOPoLr54aTwya4AKw=;
-  b=VL5IgycfPyhe8tDV93mOJl1ZUsjucdFxsiyg0uNAnk/u5KIZ2VNT76UB
-   gpuUz9/r+3SrJ/iU5kchwjPdnoxNvGx6rEF7bGXXIcE7p8nKO5KCGU9UK
-   4tyxIYAfbDij8qeUM/nekT2pLxAIyKMeSF6zap3TZXA8+quUwE7t6Qzb+
-   qJscJb5Ol5oKQMm9xWxZ9ym1dp6D2t+r28CZwuYtagqV5G2cs+O81Kv+5
-   IfuK92srOvexPi6qWqAeYLhcphCajOCMdRGFaQmTeaoP5bIavrqFOZakl
-   bUt2GZa41CjK+3n5JeQdlfgEDe6tzHTUruxkvJfkMwx0H+9JjX05TEewx
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10840"; a="365699070"
-X-IronPort-AV: E=Sophos;i="6.03,166,1694761200"; 
-   d="scan'208";a="365699070"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 12:10:48 -0700
+  t=1695318631; x=1726854631;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=lVjSVMzokfy4Z0H2/AgPQ1pwV1s1E6fngimxvFhqzWs=;
+  b=DJbyDIRbpUjEvvkmmI6Ky9IwMKbL+NgLzDPAgdNxjSEZA1JHx9O0bJ69
+   rzcPVyiW48SUkF0sEgqqWicCLAaAazhD41bOlKbPDRJkQr+IkcNTcE9OH
+   k1erUKqN4KixMFvBE7CgxmxBvAyf13ZP7UBGTjRAXFYDUGpeg95Sn26vR
+   XpZcqpIIl7MdMwIfTrPvEJIiCqapnhHmAPTfgtR9OwdllFk6B/IkeYe24
+   jdBHYvEv+KAQn69HP5bXIP5uIUE1gb4W510Fsf40Rwt6wPQhDeRYtcD1k
+   FFO6S30JYlD23/jziqK7XMIAUGftbLbEmWMrmWm81GUePX+3+wSYNkZ0z
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="384305355"
+X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
+   d="scan'208";a="384305355"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:58:57 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10840"; a="723881014"
-X-IronPort-AV: E=Sophos;i="6.03,166,1694761200"; 
-   d="scan'208";a="723881014"
-Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
-  by orsmga006.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 21 Sep 2023 12:10:48 -0700
-Received: from orsmsx612.amr.corp.intel.com (10.22.229.25) by
- ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.32; Thu, 21 Sep 2023 12:10:47 -0700
-Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
- ORSMSX612.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.32; Thu, 21 Sep 2023 12:10:47 -0700
-Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
- orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.32 via Frontend Transport; Thu, 21 Sep 2023 12:10:47 -0700
-Received: from NAM04-DM6-obe.outbound.protection.outlook.com (104.47.73.40) by
- edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.32; Thu, 21 Sep 2023 12:10:47 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=AtdOnml/vbjFbgB+zWl++e1w5RQuUXVuUJ5NhkilQPQ8KYox5noo+RL/h+1B/Y+Bk3+t4Kb9XeeN+IYS16RukS0nDeE9NfRYduXjp4Vq9+yKMqRKRJpow5ve12bUX2nEc1IEIUGDm01/pZSD4mnnztBRQHJZH/psOhjw1M8Zgfgd8c9IDeiol5ld7pilPXCalknfZExkc3hglqsicUAePtjo4LdPn6I2LfBwgnO1Q97hqd98lB7WqLFu6UQsb0lD4t2/FoDV5ePy4nvmeVri9dXm1HHgOmMKBYFB7Ky99oDtuQ9mbTCie04M338N6ZidKoIbvQ+Dwqzx6IHgXxnTPg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jcofzAqEJOy3r0kB4VB/Dk7VZcQOPoLr54aTwya4AKw=;
- b=U2iRv3hprVtdUO54LLmL0H2m8tSi4UMdRJSBdPYHeMRFV2J+LYixwz8O7eV/g5299lMTtsbvad1GS/eY+KLWOUR53os3fg7kVXWqzq/gbRHLIf94BpMW6lo+BpXFdXlpF0fFrGJrxWY1PVbwDhmY4lJy0cycc0lHi/5e3zJcy75j4R6rqHET8sN4N7jowFBm7EVg65YwxMUNtfOPjep7hVTNl9piOV1+LgCaIJ2uYZukmO7fAxFmwJSDbb3+jdoh5rbkYRqBM/OfHXZO9+u9dTBTmUrbj/RWwM9rQ/AnwH+pGlx13ADoNKsO120ZQ8HmiSjJL69Q4zA5SKe5Xyq0qA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from MN0PR11MB5987.namprd11.prod.outlook.com (2603:10b6:208:372::8)
- by PH8PR11MB6658.namprd11.prod.outlook.com (2603:10b6:510:1c1::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.28; Thu, 21 Sep
- 2023 19:10:44 +0000
-Received: from MN0PR11MB5987.namprd11.prod.outlook.com
- ([fe80::fe36:eb09:813b:5e01]) by MN0PR11MB5987.namprd11.prod.outlook.com
- ([fe80::fe36:eb09:813b:5e01%4]) with mapi id 15.20.6792.026; Thu, 21 Sep 2023
- 19:10:44 +0000
-From:   "Greenman, Gregory" <gregory.greenman@intel.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "anarcat@debian.org" <anarcat@debian.org>
-Subject: Re: Microcode SW error since Linux 6.5
-Thread-Topic: Microcode SW error since Linux 6.5
-Thread-Index: AQHZ7LCU6xPqhW7gDU22eTXtJkWaybAlpUGA
-Date:   Thu, 21 Sep 2023 19:10:44 +0000
-Message-ID: <9cbeb658159c40516c058c468585ba640f377790.camel@intel.com>
-References: <87ttrncuc8.fsf@angela.anarc.at>
-In-Reply-To: <87ttrncuc8.fsf@angela.anarc.at>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.42.4 (3.42.4-2.fc35) 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MN0PR11MB5987:EE_|PH8PR11MB6658:EE_
-x-ms-office365-filtering-correlation-id: 99c94dd3-b32d-4207-82c5-08dbbad674c8
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: FWLMahOhXUWIjtnvjy6bVtuppsH9NlgD71mCswjfYT0dhj0XQ+hs+hMar6ojMxXVn7S0BbBbxenK0uNYZQycA0L1Yhku16fknfa/5JMoFhO0KKcMacU3SuwcwrnepVHvKVUGL2vbgIjt+YTQNJ+UjTWQtJ31y36Phmkc5oiBMoVB9LL5T3SBpGc/CXcmoSk9Kskf5tLkPRptEXqVUYb/IhfgNQWJxYefpygJMaS//wN4Dv0j2qUJbW2hHkN6Q8dxIDF53fvZMEc2yMEarRhSFUPBUANOQnFegKxcwrwLqGHX2C3sSkqBeg4UBDMS5wgumAp9bKlbRtkReNJVeO79/OuiMXT0aE7EaCs0R6Bb9kt8NzGrqwlhKX9ky09NB8FmKhIUubFhWw343mCGsXWUH7MpLBba5nVIiMj9/EEHwXwkr2LPBA8rX0NJQQolXEZFnpeYNNthfMdoFySxRvUJl3q5v0Q7przhHqAuZlVRAUnxqVUBG/QNbc5s7tWX/7JN8fF0MtGg/BRMRBVoXTpX+4+MQ7HYcHwFs7w1njOjSoKQfAEYy7X1pZB9o1HcyBYiF3zNGper0RbvmIYB5f+Tb8zL/BPfS2fjaEl2N0u89hg=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN0PR11MB5987.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(39860400002)(376002)(366004)(136003)(346002)(186009)(451199024)(1800799009)(478600001)(45080400002)(6486002)(6506007)(83380400001)(122000001)(82960400001)(36756003)(38070700005)(38100700002)(2906002)(30864003)(2616005)(26005)(71200400001)(6512007)(8676002)(66556008)(8936002)(5660300002)(41300700001)(110136005)(966005)(91956017)(76116006)(86362001)(66446008)(66946007)(316002)(64756008)(66476007);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?OWV4cmcrMGl0eFVpNzNQWllmbEQ2RlVvSnZxWnlYbVR2Z2wySW5GMGZCdHlp?=
- =?utf-8?B?TTQwS21yd0JoOUdWcjgxY0F4bnZPbHNITE5xUkM3d1ZwWnRkMmNOT2lLcHBo?=
- =?utf-8?B?OFFBTGRmWStIcjBvSHpYYXlwdUFNN0RzWXUzNmFKWTZrK2pubTlaVEs4Slh1?=
- =?utf-8?B?NG9leDREZDFXVWtGa0JKOEgxSWN2YUtrNnNrdHdaTThsVDgwUmFoVjF1anpO?=
- =?utf-8?B?WGpuTWxZWkdjbUd5WnBiUjBzYi82VG4xYWt4cGNOdUVvRGhZdk5jakNHTG9s?=
- =?utf-8?B?MnBKRXU0clA4K1Q1VE1UU0hRTThsbTJMa2VaK3pzMmFrOVpSbWtxZTQvYVZi?=
- =?utf-8?B?dnNWUy9raU5uYXhCekdQN2xYc3FwdVVOaHNDdmpSQ0VJWk9HeUFJMDVITEFw?=
- =?utf-8?B?aXFXVXVDYStiRWN1dWZ6SDZPTnBUZTk4RE1LL0k1L2pLOUh6eDVKR2RxbWhQ?=
- =?utf-8?B?a2JZYlNIQnpReWVsYlZZRmZ5TitOMkpDaXBXK2pSQXJQaGIrem5SWThYbDF4?=
- =?utf-8?B?NWN3NFdlcW5ubVR2U1RPTWR0UFFmSE5XWElOTkNoNCtXbjhTcHU1Y0Q4dU1Q?=
- =?utf-8?B?Zk9nUUR4c1NiODFUbEpydjhlVmYweG9Wd0FOaXFlNXV4N2MxV0pqcUNlQkJY?=
- =?utf-8?B?WW1MMnorUG1YYTIyUVNJYU5BOXBLQ0xFdlBNaENFMzB4UVNQM3RMRVcveUhU?=
- =?utf-8?B?M1V6czd0UitoQzJaREJBVEtuZkFkYTh4UlJuUDN1Mkl6VW9CMmVyY2phOVFJ?=
- =?utf-8?B?R0ZldjJwTDd3UThhRWNwTTZUVWxJRUN6Wjh6MkJZb0JvVUlidUdWMXhpcXRv?=
- =?utf-8?B?cVdYVkVFYzc0Wm55ckVZaVZlZ2RuTW9oL09JUWVEQzR2MFN0VTBlQjJFWkRU?=
- =?utf-8?B?QTRMelhJWVN4VVpKNS9hWmNDUlRZbHJzdHJwUzJYdHdEeXBqRWd6Qlc5LzBO?=
- =?utf-8?B?ZVNQRmxxSFd5MlY4ZmZFdERoLzJhSk5IYnlQZnplckVPeVRmdGlBcUFROUZG?=
- =?utf-8?B?VEJaU1VocFF2dFV4TTc5REE4MjZ2R2xIMDlSMDRFakRrQlpjL0NTOXFWYVZS?=
- =?utf-8?B?RVAyWVp2OUNRSVhlZUdONzg3TlRWUmMyaTJLcVlPZmI4ZjM2d2JETmc2YURh?=
- =?utf-8?B?dTM5L0FnMlhsTmVSZ2JGUk5vWHpzeUhsbEt2NGcyNTdER3NITFZPbjIrdEpV?=
- =?utf-8?B?S0k4RjZ2SXZ3RTJlNkQ0OEF4aUgvN3VjSjRkRTU1WVdrWXRmMVd6U05rejA2?=
- =?utf-8?B?eGFNbnFyZHl4elFpcXZVNTdjVnk2SmFqVUE3RVNSVncvK083VEQzTWFzQ0Zw?=
- =?utf-8?B?WjEyZUVuNVorL05OQ0xtY3VIek5PZ0xWNkVOVzNLS3cxU3F6WnBjY2hkUHpq?=
- =?utf-8?B?MGQ5WjRqVTdSSGhsa3VkcWIxTWE2V0U1ekV1R25Fd2RmVnB3RDNBUy9Id2NQ?=
- =?utf-8?B?MlNsN0J4YzJXN3BZMXh3VTFzaExHNG0vSXdwalc0VnlnalN5NmFFdTBNclU1?=
- =?utf-8?B?U2tzdmczN01CQUlJQXJTU2plMDhmbmJNTDhSc0UzbkJheU0vUDFaZE9UaEhz?=
- =?utf-8?B?UkdGbVlXbkU5bEtOZ2RCRjBPU1g1NVRjdG5JNml4MHdkMVhQZXpGM1ZVZ3Nx?=
- =?utf-8?B?QmVqSDB1eWRQMC9wRXAvcXRLSVhtb0VzZGxDZlZKNFZWWVVFM0JYKytzZkt0?=
- =?utf-8?B?M28xSTlINW9lZkpEYnFXdU9zeGJZd2NkNHlZTEFWUklWekQ1V0svcGpud3JB?=
- =?utf-8?B?NkZKUEFkam03b2E3NW5aQytnUkpUS2s5ZVRIMlY0RzRSZkNxNlpRUnNsVEla?=
- =?utf-8?B?UzhRVnZHOERtTlgwNnZmdkFMZC9QbXdUcTYzSUd4VnoycHQwUFdaWXA0UUxL?=
- =?utf-8?B?cjdCUmtoWFFJYkFMYjBxc0g0U25wRHBkcWVSVlpkZFVDSGNCdDdRQTVqdmh0?=
- =?utf-8?B?TmdsNnUzMUo1Y0RpbzBQTnNtVFhSaUZmbGdiVzFUMWp1dXV5ZWFyK01JZkt5?=
- =?utf-8?B?VWJMZzA4TVFML09KUlJVSE1mejg4K01pa3dxTXdEUFlIS2kvVWd6ZVVRTU5n?=
- =?utf-8?B?ZEJkZHhON2xuRUxtSkZIMXhJQzlibllwYzJsOHc0ZGR6Y0ZtK21qamxBS0J2?=
- =?utf-8?B?ODl3UERXb3p3TTRLNThZOFV3NEhWZjFsZWwwL0twVFZOK2ZJTkRhYU1hcnVh?=
- =?utf-8?B?b2c9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <28114E4C2850C6478F62FCE1648295D8@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="740545563"
+X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
+   d="scan'208";a="740545563"
+Received: from rchuwer-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.229.163])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:58:55 -0700
+From:   gregory.greenman@intel.com
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Yedidya Benshimol <yedidya.ben.shimol@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 06/12] wifi: iwlwifi: mvm: add support for new wowlan_info_notif
+Date:   Thu, 21 Sep 2023 11:58:04 +0300
+Message-Id: <20230921110726.4ebcd244f436.Ib507573d50fa0ac666d09ab71f5241ccbcd7cd00@changeid>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230921085810.693048-1-gregory.greenman@intel.com>
+References: <20230921085810.693048-1-gregory.greenman@intel.com>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MN0PR11MB5987.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 99c94dd3-b32d-4207-82c5-08dbbad674c8
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Sep 2023 19:10:44.7730
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Ef5LyK+EkuHhRO2NbIARHWQHMLdMpXB1qC+ou+H7nSDy6Z5dBxCw1wKNLfywiIuAQnWyVhy8g9F4wMJTJzZDqhNo1I5/z4TvU3NFjoYq1aI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR11MB6658
-X-OriginatorOrg: intel.com
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGksDQoNCk9uIFRodSwgMjAyMy0wOS0yMSBhdCAxMzoyNCAtMDQwMCwgQW50b2luZSBCZWF1cHLD
-qSB3cm90ZToNCj4gSGksDQo+IA0KPiBJJ3ZlIGZvdW5kIHdoYXQgSSBmZWVsIG1pZ2h0IGJlIGEg
-cmVncmVzc2lvbiBiZXR3ZWVuIExpbnV4IDYuMSBhbmQNCj4gNi41LiBGb3Igb3RoZXIgcmVhc29u
-cywgSSB1cGdyYWRlZCB0aGUga2VybmVsIG9uIG15IERlYmlhbiAxMg0KPiAoImJvb2t3b3JtIiwg
-c3RhbGUpIGxhcHRvcCBmcm9tIHRoZSBkaXN0cmlidXRpb24gNi4xLjUyIHRvIHRoZSB1bnN0YWJs
-ZQ0KPiAoInNpZCIpIHZlcnNpb24sIDYuNS4zLg0KPiANCj4gQWZ0ZXIgdGhlIHVwZ3JhZGUsIEkg
-c3RhcnRlZCB0byBub3RpY2Ugc3R1dHRlcmluZyBpbiBteSBhdWRpbyBwbGF5ZXIsIEkNCj4gdHJh
-Y2tlZCBpdCBkb3duIGFuZCBtYW5hZ2VkIHRvIGNvcnJlbGF0ZSBpdCB3aXRoIHNvbWUga2VybmVs
-IGVycm9ycw0KPiByZWxhdGVkIHRvIHRoZSBpd2x3aWZpIGRyaXZlci4NCj4gDQo+IFdoYXQncyBp
-bnRlcmVzdGluZyBpcyB0aGF0IHRoaXMgaGFwcGVucyByZWdhcmRsZXNzIG9mIHdoZXRoZXIgb3Ig
-bm90IHRoZQ0KPiBOSUMgaXMgY29ubmVjdGVkIHRvIGEgbmV0d29yay4gSW4gYXQgbGVhc3Qgb25l
-IG9mIHRoZSB0cmFjZXMsIHRoZQ0KPiBjb21wdXRlciB3YXMgY29ubmVjdGVkIG92ZXIgYSB3aXJl
-IGFuZCB3aXJlbGVzcyB3YXMgbm90IGFzc29jaWF0ZWQgaW4NCj4gTmV0d29yayBNYW5hZ2VyLg0K
-PiANCj4gSGVyZSdzIGFuIGV4YW1wbGUgb2YgdGhlIHByb2JsZW06DQo+IA0KPiBzZXAgMjEgMDk6
-MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IE1pY3JvY29kZSBTVyBl
-cnJvciBkZXRlY3RlZC4gUmVzdGFydGluZyAweDAuDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEg
-a2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogU3RhcnQgSVdMIEVycm9yIExvZyBEdW1wOg0K
-PiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IFRy
-YW5zcG9ydCBzdGF0dXM6IDB4MDAwMDAwNEIsIHZhbGlkOiA2DQo+IHNlcCAyMSAwOTozMzoxNCBh
-bmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogTG9hZGVkIGZpcm13YXJlIHZlcnNp
-b246IDczLjM1YzBhMmM2LjAgdHktYTAtZ2YtYTAtNzMudWNvZGUNCj4gc2VwIDIxIDA5OjMzOjE0
-IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMDAwMDcxIHwgTk1JX0lO
-VEVSUlVQVF9VTUFDX0ZBVEFMwqDCoMKgIA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDAyRjAgfCB0cm1faHdfc3RhdHVzMA0KPiBz
-ZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAw
-MDAwMDAgfCB0cm1faHdfc3RhdHVzMQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDog
-aXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDA0REI2NzYgfCBicmFuY2hsaW5rMg0KPiBzZXAgMjEg
-MDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDA0REFGQ0Eg
-fCBpbnRlcnJ1cHRsaW5rMQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lm
-aSAwMDAwOmE2OjAwLjA6IDB4MDA0REFGQ0EgfCBpbnRlcnJ1cHRsaW5rMg0KPiBzZXAgMjEgMDk6
-MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMTZCOEEgfCBk
-YXRhMQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAw
-LjA6IDB4MDAwMDAwMTAgfCBkYXRhMg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDog
-aXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDAwMDAgfCBkYXRhMw0KPiBzZXAgMjEgMDk6MzM6
-MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAzQ0YyQkEgfCBiZWFj
-b24gdGltZQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2
-OjAwLjA6IDB4MDFBRjFFQUQgfCB0c2YgbG93DQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2Vy
-bmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAwMDAwMCB8IHRzZiBoaQ0KPiBzZXAgMjEg
-MDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDAwMDAg
-fCB0aW1lIGdwMQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAw
-OmE2OjAwLjA6IDB4MDFCMDY3MzkgfCB0aW1lIGdwMg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxh
-IGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDAwMDEgfCB1Q29kZSByZXZpc2lv
-biB0eXBlDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6
-MDAuMDogMHgwMDAwMDA0OSB8IHVDb2RlIHZlcnNpb24gbWFqb3INCj4gc2VwIDIxIDA5OjMzOjE0
-IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDM1QzBBMkM2IHwgdUNvZGUg
-dmVyc2lvbiBtaW5vcg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAw
-MDAwOmE2OjAwLjA6IDB4MDAwMDA0MjAgfCBodyB2ZXJzaW9uDQo+IHNlcCAyMSAwOTozMzoxNCBh
-bmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMEM4MDAwMiB8IGJvYXJkIHZl
-cnNpb24NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjow
-MC4wOiAweDgwQkJGRjAwIHwgaGNtZA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDog
-aXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMjAwMDAgfCBpc3IwDQo+IHNlcCAyMSAwOTozMzox
-NCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAwMDAwMCB8IGlzcjEN
-Cj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAw
-eDQ4RjA0MDAyIHwgaXNyMg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lm
-aSAwMDAwOmE2OjAwLjA6IDB4MDBDMzAwMEMgfCBpc3IzDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdl
-bGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAwMDAwMCB8IGlzcjQNCj4gc2Vw
-IDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMjIw
-MTAzIHwgbGFzdCBjbWQgSWQNCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdp
-ZmkgMDAwMDphNjowMC4wOiAweDAwMDE2QjhBIHwgd2FpdF9ldmVudA0KPiBzZXAgMjEgMDk6MzM6
-MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDAwMDAgfCBsMnBf
-Y29udHJvbA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2
-OjAwLjA6IDB4MDAwMDAwMDAgfCBsMnBfZHVyYXRpb24NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2Vs
-YSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMDAwMDAwIHwgbDJwX21odmFsaWQN
-Cj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAw
-eDAwMDAwMDAwIHwgbDJwX2FkZHJfbWF0Y2gNCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJu
-ZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMDAwMDE4IHwgbG1wbV9wbWdfc2VsDQo+IHNl
-cCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAw
-MDAwMCB8IHRpbWVzdGFtcA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lm
-aSAwMDAwOmE2OjAwLjA6IDB4MDAwMDI4NEMgfCBmbG93X2hhbmRsZXINCj4gc2VwIDIxIDA5OjMz
-OjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiBTdGFydCBJV0wgRXJyb3Ig
-TG9nIER1bXA6DQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6
-YTY6MDAuMDogVHJhbnNwb3J0IHN0YXR1czogMHgwMDAwMDA0QiwgdmFsaWQ6IDcNCj4gc2VwIDIx
-IDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDIwMTAzNjAw
-IHwgQURWQU5DRURfU1lTQVNTRVJUDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBp
-d2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAwMDAwMCB8IHVtYWMgYnJhbmNobGluazENCj4gc2Vw
-IDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDgwNDVG
-MTc0IHwgdW1hYyBicmFuY2hsaW5rMg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDog
-aXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4ODA0N0ExM0MgfCB1bWFjIGludGVycnVwdGxpbmsxDQo+
-IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgw
-MDAwMDAwMCB8IHVtYWMgaW50ZXJydXB0bGluazINCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBr
-ZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMDAwMEZGIHwgdW1hYyBkYXRhMQ0KPiBz
-ZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4REVB
-REJFRUYgfCB1bWFjIGRhdGEyDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3
-aWZpIDAwMDA6YTY6MDAuMDogMHhERUFEQkVFRiB8IHVtYWMgZGF0YTMNCj4gc2VwIDIxIDA5OjMz
-OjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMDAwMDQ5IHwgdW1h
-YyBtYWpvcg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2
-OjAwLjA6IDB4MzVDMEEyQzYgfCB1bWFjIG1pbm9yDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEg
-a2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMUIwNjczMyB8IGZyYW1lIHBvaW50ZXIN
-Cj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAw
-eEMwODg2QzBDIHwgc3RhY2sgcG9pbnRlcg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAyQjAxMEQgfCBsYXN0IGhvc3QgY21kDQo+IHNl
-cCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAw
-MDAwMCB8IGlzciBzdGF0dXMgcmVnDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBp
-d2x3aWZpIDAwMDA6YTY6MDAuMDogSU1ML1JPTSBkdW1wOg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5n
-ZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDBCMDMgfCBJTUwvUk9NIGVy
-cm9yL3N0YXRlDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6
-YTY6MDAuMDogMHgwMDAwODUxMCB8IElNTC9ST00gZGF0YTENCj4gc2VwIDIxIDA5OjMzOjE0IGFu
-Z2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMDAwMDgwIHwgSU1ML1JPTSBX
-RlBNX0FVVEhfS0VZXzANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkg
-MDAwMDphNjowMC4wOiBGc2VxIFJlZ2lzdGVyczoNCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBr
-ZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDYwMDAwMTAwIHwgRlNFUV9FUlJPUl9DT0RF
-DQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDog
-MHgwMDQ0MDAwNyB8IEZTRVFfVE9QX0lOSVRfVkVSU0lPTg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5n
-ZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwODAwMDkgfCBGU0VRX0NOVklP
-X0lOSVRfVkVSU0lPTg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAw
-MDAwOmE2OjAwLjA6IDB4MDAwMEE2NTIgfCBGU0VRX09UUF9WRVJTSU9ODQo+IHNlcCAyMSAwOToz
-MzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAwMDAwMiB8IEZT
-RVFfVE9QX0NPTlRFTlRfVkVSU0lPTg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDog
-aXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4NDU1MjQxNEUgfCBGU0VRX0FMSVZFX1RPS0VODQo+IHNl
-cCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDQw
-MDQxMCB8IEZTRVFfQ05WSV9JRA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXds
-d2lmaSAwMDAwOmE2OjAwLjA6IDB4MDA0MDA0MTAgfCBGU0VRX0NOVlJfSUQNCj4gc2VwIDIxIDA5
-OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwNDAwNDEwIHwg
-Q05WSV9BVVhfTUlTQ19DSElQDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3
-aWZpIDAwMDA6YTY6MDAuMDogMHgwMDQwMDQxMCB8IENOVlJfQVVYX01JU0NfQ0hJUA0KPiBzZXAg
-MjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDkw
-NjEgfCBDTlZSX1NDVV9TRF9SRUdTX1NEX1JFR19ESUdfRENEQ19WVFJJTQ0KPiBzZXAgMjEgMDk6
-MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDAwMDAwNjEgfCBD
-TlZSX1NDVV9TRF9SRUdTX1NEX1JFR19BQ1RJVkVfVkRJR19NSVJST1INCj4gc2VwIDIxIDA5OjMz
-OjE0IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiAweDAwMDgwMDA5IHwgRlNF
-UV9QUkVWX0NOVklPX0lOSVRfVkVSU0lPTg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IDB4MDA0NDAwMDUgfCBGU0VRX1dJRklfRlNFUV9WRVJT
-SU9ODQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAu
-MDogMHgwMDQ0MDAwNyB8IEZTRVFfQlRfRlNFUV9WRVJTSU9ODQo+IHNlcCAyMSAwOTozMzoxNCBh
-bmdlbGEga2VybmVsOiBpd2x3aWZpIDAwMDA6YTY6MDAuMDogMHgwMDAwMDBEQyB8IEZTRVFfQ0xB
-U1NfVFBfVkVSU0lPTg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAw
-MDAwOmE2OjAwLjA6IFdSVDogQ29sbGVjdGluZyBkYXRhOiBpbmkgdHJpZ2dlciA0IGZpcmVkIChk
-ZWxheT0wbXMpLg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogaWVlZTgwMjExIHBo
-eTA6IEhhcmR3YXJlIHJlc3RhcnQgd2FzIHJlcXVlc3RlZA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5n
-ZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IEZXIGVycm9yIGluIFNZTkMgQ01EIFND
-QU5fUkVRX1VNQUMNCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IENQVTogNyBQSUQ6
-IDE1NjMgQ29tbTogd3BhX3N1cHBsaWNhbnQgVGFpbnRlZDogR8KgwqDCoMKgwqDCoMKgIFfCoMKg
-wqDCoMKgwqDCoMKgwqAgNi41LjAtMS1hbWQ2NCAjMcKgIERlYmlhbiA2LjUuMy0xDQo+IHNlcCAy
-MSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBIYXJkd2FyZSBuYW1lOiBGcmFtZXdvcmsgTGFwdG9w
-ICgxMnRoIEdlbiBJbnRlbCBDb3JlKS9GUkFOTUFDUDA0LCBCSU9TIDAzLjA2IDExLzEwLzIwMjIN
-Cj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IENhbGwgVHJhY2U6DQo+IHNlcCAyMSAw
-OTozMzoxNCBhbmdlbGEga2VybmVsOsKgIDxUQVNLPg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxh
-IGtlcm5lbDrCoCBkdW1wX3N0YWNrX2x2bCsweDQ3LzB4NjANCj4gc2VwIDIxIDA5OjMzOjE0IGFu
-Z2VsYSBrZXJuZWw6wqAgaXdsX3RyYW5zX3R4cV9zZW5kX2hjbWQrMHgzM2QvMHg0NTAgW2l3bHdp
-ZmldDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgID8gX19wZnhfYXV0b3JlbW92
-ZV93YWtlX2Z1bmN0aW9uKzB4MTAvMHgxMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDrCoCBpd2xfdHJhbnNfc2VuZF9jbWQrMHg2Ni8weDEwMCBbaXdsd2lmaV0NCj4gc2VwIDIxIDA5
-OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgaXdsX212bV9zZW5kX2NtZCsweDE2LzB4NDAgW2l3bG12
-bV0NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgaXdsX212bV9yZWdfc2Nhbl9z
-dGFydCsweDNmMC8weDYxMCBbaXdsbXZtXQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDrCoCBpd2xfbXZtX21hY19od19zY2FuKzB4NGUvMHg3MCBbaXdsbXZtXQ0KPiBzZXAgMjEgMDk6
-MzM6MTQgYW5nZWxhIGtlcm5lbDrCoCBkcnZfaHdfc2NhbisweDk4LzB4MTUwIFttYWM4MDIxMV0N
-Cj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgX19pZWVlODAyMTFfc3RhcnRfc2Nh
-bisweDI1NS8weDZmMCBbbWFjODAyMTFdDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVs
-OsKgIGllZWU4MDIxMV9yZXF1ZXN0X3NjYW4rMHgyZi8weDUwIFttYWM4MDIxMV0NCj4gc2VwIDIx
-IDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgcmRldl9zY2FuKzB4MjUvMHhkMCBbY2ZnODAyMTFd
-DQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgIG5sODAyMTFfdHJpZ2dlcl9zY2Fu
-KzB4NDA5LzB4N2UwIFtjZmc4MDIxMV0NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6
-wqAgZ2VubF9mYW1pbHlfcmN2X21zZ19kb2l0LmlzcmEuMCsweGUzLzB4MTQwDQo+IHNlcCAyMSAw
-OTozMzoxNCBhbmdlbGEga2VybmVsOsKgIGdlbmxfcmN2X21zZysweDFiMS8weDJjMA0KPiBzZXAg
-MjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDrCoCA/IF9fcGZ4X25sODAyMTFfcHJlX2RvaXQrMHgx
-MC8weDEwIFtjZmc4MDIxMV0NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgPyBf
-X3BmeF9ubDgwMjExX3RyaWdnZXJfc2NhbisweDEwLzB4MTAgW2NmZzgwMjExXQ0KPiBzZXAgMjEg
-MDk6MzM6MTQgYW5nZWxhIGtlcm5lbDrCoCA/IF9fcGZ4X25sODAyMTFfcG9zdF9kb2l0KzB4MTAv
-MHgxMCBbY2ZnODAyMTFdDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgID8gX19w
-ZnhfZ2VubF9yY3ZfbXNnKzB4MTAvMHgxMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDrCoCBuZXRsaW5rX3Jjdl9za2IrMHg1OC8weDExMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxh
-IGtlcm5lbDrCoCBnZW5sX3JjdisweDI4LzB4NDANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBr
-ZXJuZWw6wqAgbmV0bGlua191bmljYXN0KzB4MTllLzB4MjkwDQo+IHNlcCAyMSAwOTozMzoxNCBh
-bmdlbGEga2VybmVsOsKgIG5ldGxpbmtfc2VuZG1zZysweDI1NC8weDRkMA0KPiBzZXAgMjEgMDk6
-MzM6MTQgYW5nZWxhIGtlcm5lbDrCoCBzb2NrX3NlbmRtc2crMHg5My8weGEwDQo+IHNlcCAyMSAw
-OTozMzoxNCBhbmdlbGEga2VybmVsOsKgIF9fX19zeXNfc2VuZG1zZysweDI3OC8weDMwMA0KPiBz
-ZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDrCoCA/IGNvcHlfbXNnaGRyX2Zyb21fdXNlcisw
-eDdkLzB4YzANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgX19fc3lzX3NlbmRt
-c2crMHg5YS8weGUwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgIF9fc3lzX3Nl
-bmRtc2crMHg3YS8weGQwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgIGRvX3N5
-c2NhbGxfNjQrMHg1ZC8weGMwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgID8g
-ZG9fc3lzY2FsbF82NCsweDZjLzB4YzANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6
-wqAgPyBkb19zeXNjYWxsXzY0KzB4NmMvMHhjMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtl
-cm5lbDrCoCA/IGZwcmVnc19hc3NlcnRfc3RhdGVfY29uc2lzdGVudCsweDI2LzB4NTANCj4gc2Vw
-IDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgPyBleGl0X3RvX3VzZXJfbW9kZV9wcmVwYXJl
-KzB4NDAvMHgxZDANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgPyBzeXNjYWxs
-X2V4aXRfdG9fdXNlcl9tb2RlKzB4MmIvMHg0MA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtl
-cm5lbDrCoCA/IGRvX3N5c2NhbGxfNjQrMHg2Yy8weGMwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdl
-bGEga2VybmVsOsKgID8gZG9fc3lzY2FsbF82NCsweDZjLzB4YzANCj4gc2VwIDIxIDA5OjMzOjE0
-IGFuZ2VsYSBrZXJuZWw6wqAgPyBkb19zeXNjYWxsXzY0KzB4NmMvMHhjMA0KPiBzZXAgMjEgMDk6
-MzM6MTQgYW5nZWxhIGtlcm5lbDrCoCA/IGRvX3N5c2NhbGxfNjQrMHg2Yy8weGMwDQo+IHNlcCAy
-MSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFt
-ZSsweDZlLzB4ZDgNCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IFJJUDogMDAzMzow
-eDdmZGJmYmYyOTkxMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogQ29kZTogMDAg
-ZjcgZDggNjQgODkgMDIgNDggYzcgYzAgZmYgZmYgZmYgZmYgZWIgYjcgNjYgMmUgMGYgMWYgODQg
-MDAgMDAgMDAgMDAgMDAgOTAgODAgM2QgZDEgZmMgMGMgMDAgMDAgNzQgMTcgYjggMmUgMDAgMDAg
-MDA+DQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBSU1A6IDAwMmI6MDAwMDdmZmVk
-YzI2MWU3OCBFRkxBR1M6IDAwMDAwMjAyIE9SSUdfUkFYOiAwMDAwMDAwMDAwMDAwMDJlDQo+IHNl
-cCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBSQVg6IGZmZmZmZmZmZmZmZmZmZGEgUkJYOiAw
-MDAwNTU2OGIxOGNmOTAwIFJDWDogMDAwMDdmZGJmYmYyOTkxMA0KPiBzZXAgMjEgMDk6MzM6MTQg
-YW5nZWxhIGtlcm5lbDogUkRYOiAwMDAwMDAwMDAwMDAwMDAwIFJTSTogMDAwMDdmZmVkYzI2MWVi
-MCBSREk6IDAwMDAwMDAwMDAwMDAwMDYNCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6
-IFJCUDogMDAwMDU1NjhiMTk0OTM2MCBSMDg6IDAwMDAwMDAwMDAwMDAwMDQgUjA5OiAwMDAwMDAw
-MDAwMDAwMDAwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBSMTA6IDAwMDA3ZmZl
-ZGMyNjFmOTQgUjExOiAwMDAwMDAwMDAwMDAwMjAyIFIxMjogMDAwMDU1NjhiMThjZmJlMA0KPiBz
-ZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogUjEzOiAwMDAwN2ZmZWRjMjYxZWIwIFIxNDog
-MDAwMDAwMDAwMDAwMDAwMCBSMTU6IDAwMDA3ZmZlZGMyNjFmOTQNCj4gc2VwIDIxIDA5OjMzOjE0
-IGFuZ2VsYSBrZXJuZWw6wqAgPC9UQVNLPg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IFNjYW4gZmFpbGVkISByZXQgLTUNCj4gc2VwIDIxIDA5
-OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0t
-LQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogV0FSTklORzogQ1BVOiAxNSBQSUQ6
-IDEzMzM2MSBhdCBuZXQvbWFjODAyMTEvc2Nhbi5jOjQyMyBfX2llZWU4MDIxMV9zY2FuX2NvbXBs
-ZXRlZCsweDMwOC8weDMyMCBbbWFjODAyMTFdDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2Vy
-bmVsOiBNb2R1bGVzIGxpbmtlZCBpbjogY2RjX21iaW0gY2RjX3dkbSB4ZnJtX3VzZXIgeGZybV9h
-bGdvIG52bWVfZmFicmljcyBjdHIgY2NtIHJmY29tbSBjbWFjIGFsZ2lmX2hhc2ggYWxnaWZfc2tj
-aXBoZXIgYWZfYWxnIHRscz4NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgbmZf
-cmVqZWN0X2lwdjQgaW50ZWxfdW5jb3JlX2ZyZXF1ZW5jeV9jb21tb24gc25kX2hkYV9jb2RlY19p
-ZHQgc25kX3NvY19hY3BpIG5mX3JlamVjdF9pcHY2IHg4Nl9wa2dfdGVtcF90aGVybWFsIHNuZF9o
-ZGFfY29kZT4NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgY29uZmlnZnMgaXBf
-dGFibGVzIHhfdGFibGVzIGF1dG9mczQgZXh0NCBjcmMxNiBtYmNhY2hlIGpiZDIgYnRyZnMgYmxh
-a2UyYl9nZW5lcmljIGRtX2NyeXB0IGRtX21vZCBlZml2YXJmcyByYWlkMTAgcmFpZDQ1NiBhcz4N
-Cj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IENQVTogMTUgUElEOiAxMzMzNjEgQ29t
-bToga3dvcmtlci91MzI6MjIgVGFpbnRlZDogR8KgwqDCoMKgwqDCoMKgIFfCoMKgwqDCoMKgwqDC
-oMKgwqAgNi41LjAtMS1hbWQ2NCAjMcKgIERlYmlhbiA2LjUuMy0xDQo+IHNlcCAyMSAwOTozMzox
-NCBhbmdlbGEga2VybmVsOiBIYXJkd2FyZSBuYW1lOiBGcmFtZXdvcmsgTGFwdG9wICgxMnRoIEdl
-biBJbnRlbCBDb3JlKS9GUkFOTUFDUDA0LCBCSU9TIDAzLjA2IDExLzEwLzIwMjINCj4gc2VwIDIx
-IDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IFdvcmtxdWV1ZTogcGh5MCBpZWVlODAyMTFfc2Nhbl93
-b3JrIFttYWM4MDIxMV0NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IFJJUDogMDAx
-MDpfX2llZWU4MDIxMV9zY2FuX2NvbXBsZXRlZCsweDMwOC8weDMyMCBbbWFjODAyMTFdDQo+IHNl
-cCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBDb2RlOiAwYSAwMCA0OCA4NSBjMCA3NCAwYyA0
-OCA4YiA3OCAwOCA0OCA4OSBlZSBlOCA2ZiA0OSAwNCAwMCA2NSBmZiAwZCAxMCA0OSAyYSAzZSAw
-ZiA4NSBiMSBmZSBmZiBmZiAwZiAxZiA0NCAwMCAwMCBlOSBhNyBmZT4NCj4gc2VwIDIxIDA5OjMz
-OjE0IGFuZ2VsYSBrZXJuZWw6IFJTUDogMDAxODpmZmZmYjQyNjQwYWI3ZGM4IEVGTEFHUzogMDAw
-MTAyNDYNCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IFJBWDogMDAwMDAwMDAwMDAw
-MDAwMCBSQlg6IDAwMDAwMDAwMDAwMDAwMDAgUkNYOiAwMDAwMDAwMDAwMDAwMDAwDQo+IHNlcCAy
-MSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAw
-MDAwMDAwMDAwMDAxIFJESTogZmZmZjkzOTk0ODFlODkwMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5n
-ZWxhIGtlcm5lbDogUkJQOiBmZmZmOTM5OTQ4MWU4OTAwIFIwODogMDAwMDAwMDAwMDAwMDAwMCBS
-MDk6IDAwMDAwMDAwMDAwMDAwMDANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IFIx
-MDogMDAwMDAwMDAwMDAwMDAwMSBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgUjEyOiBmZmZmOTM5OTQ4
-MWU5YjAwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBSMTM6IDAwMDAwMDAwMDAw
-MDAwMDAgUjE0OiBmZmZmOTM5OTYzNGZmMzM1IFIxNTogMDAwMDAwMDAwMDAwMDAwMQ0KPiBzZXAg
-MjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogRlM6wqAgMDAwMDAwMDAwMDAwMDAwMCgwMDAwKSBH
-UzpmZmZmOTNhMGVmOWMwMDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANCj4gc2VwIDIx
-IDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IENTOsKgIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1Iw
-OiAwMDAwMDAwMDgwMDUwMDMzDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOiBDUjI6
-IDAwMDA1NjE0ZTEyMTU1ODggQ1IzOiAwMDAwMDAwOGE4MDIwMDAwIENSNDogMDAwMDAwMDAwMGY1
-MGVlMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDogUEtSVTogNTU1NTU1NTQNCj4g
-c2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6IENhbGwgVHJhY2U6DQo+IHNlcCAyMSAwOToz
-MzoxNCBhbmdlbGEga2VybmVsOsKgIDxUQVNLPg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtl
-cm5lbDrCoCA/IF9faWVlZTgwMjExX3NjYW5fY29tcGxldGVkKzB4MzA4LzB4MzIwIFttYWM4MDIx
-MV0NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgPyBfX3dhcm4rMHg4MS8weDEz
-MA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5lbDrCoCA/IF9faWVlZTgwMjExX3NjYW5f
-Y29tcGxldGVkKzB4MzA4LzB4MzIwIFttYWM4MDIxMV0NCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2Vs
-YSBrZXJuZWw6wqAgPyByZXBvcnRfYnVnKzB4MTkxLzB4MWMwDQo+IHNlcCAyMSAwOTozMzoxNCBh
-bmdlbGEga2VybmVsOsKgID8gaGFuZGxlX2J1ZysweDNjLzB4ODANCj4gc2VwIDIxIDA5OjMzOjE0
-IGFuZ2VsYSBrZXJuZWw6wqAgPyBleGNfaW52YWxpZF9vcCsweDE3LzB4NzANCj4gc2VwIDIxIDA5
-OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgPyBhc21fZXhjX2ludmFsaWRfb3ArMHgxYS8weDIwDQo+
-IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgID8gX19pZWVlODAyMTFfc2Nhbl9jb21w
-bGV0ZWQrMHgzMDgvMHgzMjAgW21hYzgwMjExXQ0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtl
-cm5lbDrCoCBpZWVlODAyMTFfc2Nhbl93b3JrKzB4MTI3LzB4NWQwIFttYWM4MDIxMV0NCj4gc2Vw
-IDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgPyBfX3NjaGVkdWxlKzB4M2U3LzB4YjgwDQo+
-IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgIHByb2Nlc3Nfb25lX3dvcmsrMHgxZGUv
-MHgzZjANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAgd29ya2VyX3RocmVhZCsw
-eDUxLzB4MzkwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgID8gX19wZnhfd29y
-a2VyX3RocmVhZCsweDEwLzB4MTANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6wqAg
-a3RocmVhZCsweGY0LzB4MTMwDQo+IHNlcCAyMSAwOTozMzoxNCBhbmdlbGEga2VybmVsOsKgID8g
-X19wZnhfa3RocmVhZCsweDEwLzB4MTANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJuZWw6
-wqAgcmV0X2Zyb21fZm9yaysweDMxLzB4NTANCj4gc2VwIDIxIDA5OjMzOjE0IGFuZ2VsYSBrZXJu
-ZWw6wqAgPyBfX3BmeF9rdGhyZWFkKzB4MTAvMHgxMA0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxh
-IGtlcm5lbDrCoCByZXRfZnJvbV9mb3JrX2FzbSsweDFiLzB4MzANCj4gc2VwIDIxIDA5OjMzOjE0
-IGFuZ2VsYSBrZXJuZWw6wqAgPC9UQVNLPg0KPiBzZXAgMjEgMDk6MzM6MTQgYW5nZWxhIGtlcm5l
-bDogLS0tWyBlbmQgdHJhY2UgMDAwMDAwMDAwMDAwMDAwMCBdLS0tDQo+IHNlcCAyMSAwOTozMzox
-NCBhbmdlbGEgd3BhX3N1cHBsaWNhbnRbMTU2M106IHdsYW4wOiBDVFJMLUVWRU5ULVNDQU4tRkFJ
-TEVEIHJldD0tNQ0KPiBzZXAgMjEgMDk6MzM6MTUgYW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAw
-OmE2OjAwLjA6IFdGUE1fVU1BQ19QRF9OT1RJRklDQVRJT046IDB4MWYNCj4gc2VwIDIxIDA5OjMz
-OjE1IGFuZ2VsYSBrZXJuZWw6IGl3bHdpZmkgMDAwMDphNjowMC4wOiBXRlBNX0xNQUMyX1BEX05P
-VElGSUNBVElPTjogMHgxZg0KPiBzZXAgMjEgMDk6MzM6MTUgYW5nZWxhIGtlcm5lbDogaXdsd2lm
-aSAwMDAwOmE2OjAwLjA6IFdGUE1fQVVUSF9LRVlfMDogMHg4MA0KPiBzZXAgMjEgMDk6MzM6MTUg
-YW5nZWxhIGtlcm5lbDogaXdsd2lmaSAwMDAwOmE2OjAwLjA6IENOVklfU0NVX1NFUV9EQVRBX0RX
-OTogMHgwDQo+IHNlcCAyMSAwOTozMzoxNSBhbmdlbGEgd3BhX3N1cHBsaWNhbnRbMTU2M106IHds
-YW4wOiBDVFJMLUVWRU5ULVJFR0RPTS1DSEFOR0UgaW5pdD1EUklWRVIgdHlwZT1XT1JMRA0KPiAN
-Cj4gDQo+IFRoYW5rcyBmb3IgYW55IGlkZWFzIQ0KPiANCg0KVGhpcyBmaXJtd2FyZSBhc3NlcnQg
-aXMgcmVsYXRlZCB0byB0aGUgcGVyaW9kaWMgc2NhbiB3aWZpIHBlcmZvcm1zIG9jY2FzaW9uYWxs
-eS4NCkJ1dCwgdGhpcyBmaXJtd2FyZSBpcyByYXRoZXIgb2xkLCBpdCB3YXMgcmVsYXNlZCBpbiBK
-dW5lIDIwMjIgYW5kIGEgbG90IG9mIGZpeGVzIGFuZCBvdGhlciBjaGFuZ2VzIHdlcmUNCmludHJv
-ZHVjZWQgc2luY2UgdGhlbi4gVGhlIGRlZmF1bHQgZHJpdmVyIGZyb20ga2VybmVsIDYuNSBzaG91
-bGQgbG9hZCBvbmUgb2YgdGhlIGxhdGVzdCBmaXJtd2FyZXMsDQphdmFpbGJsZSBhdCBbMV0uDQoN
-ClsxXSBodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2Zpcm13
-YXJlL2xpbnV4LWZpcm13YXJlLmdpdA0K
+From: Yedidya Benshimol <yedidya.ben.shimol@intel.com>
+
+This new version of wolan_info_notif supports the handling
+of bigtk during d3, this patch holds parsing of the new
+notif version, adding new keys and updating ipn of
+existing keys during the resume flow.
+
+Signed-off-by: Yedidya Benshimol <yedidya.ben.shimol@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/api/d3.h    |  46 ++++-
+ .../wireless/intel/iwlwifi/fw/api/offload.h   |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 165 +++++++++++++++---
+ 3 files changed, 184 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+index 72d461c47323..ea99d41040d2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+@@ -397,6 +397,8 @@ struct iwl_wowlan_config_cmd {
+ #define WOWLAN_GTK_KEYS_NUM     2
+ #define WOWLAN_IGTK_KEYS_NUM	2
+ #define WOWLAN_IGTK_MIN_INDEX	4
++#define WOWLAN_BIGTK_KEYS_NUM	2
++#define WOWLAN_BIGTK_MIN_INDEX	6
+ 
+ /*
+  * WOWLAN_TSC_RSC_PARAMS
+@@ -621,9 +623,10 @@ struct iwl_wowlan_gtk_status_v3 {
+  * @ipn: the IGTK packet number (replay counter)
+  * @key_len: IGTK length, if set to 0, the key is not available
+  * @key_flags: information about the key:
+- *	bits[0]:    key index assigned by the AP (0: index 4, 1: index 5)
+- *	bits[1:5]:  IGTK index of the key in the internal DB
+- *	bit[6]:     Set iff this is the currently used IGTK
++ *	bits[0]: key index assigned by the AP (0: index 4, 1: index 5)
++ *	(0: index 6, 1: index 7 with bigtk)
++ *	bits[1:5]: IGTK index of the key in the internal DB
++ *	bit[6]: Set iff this is the currently used IGTK
+  */
+ struct iwl_wowlan_igtk_status {
+ 	u8 key[WOWLAN_KEY_MAX_SIZE];
+@@ -807,10 +810,44 @@ struct iwl_wowlan_info_notif_v1 {
+ 	u8 reserved2[2];
+ } __packed; /* WOWLAN_INFO_NTFY_API_S_VER_1 */
+ 
++/**
++ * struct iwl_wowlan_info_notif_v2 - WoWLAN information notification
++ * @gtk: GTK data
++ * @igtk: IGTK data
++ * @replay_ctr: GTK rekey replay counter
++ * @pattern_number: number of the matched patterns
++ * @reserved1: reserved
++ * @qos_seq_ctr: QoS sequence counters to use next
++ * @wakeup_reasons: wakeup reasons, see &enum iwl_wowlan_wakeup_reason
++ * @num_of_gtk_rekeys: number of GTK rekeys
++ * @transmitted_ndps: number of transmitted neighbor discovery packets
++ * @received_beacons: number of received beacons
++ * @tid_tear_down: bit mask of tids whose BA sessions were closed
++ *	in suspend state
++ * @station_id: station id
++ * @reserved2: reserved
++ */
++struct iwl_wowlan_info_notif_v2 {
++	struct iwl_wowlan_gtk_status_v3 gtk[WOWLAN_GTK_KEYS_NUM];
++	struct iwl_wowlan_igtk_status igtk[WOWLAN_IGTK_KEYS_NUM];
++	__le64 replay_ctr;
++	__le16 pattern_number;
++	__le16 reserved1;
++	__le16 qos_seq_ctr[8];
++	__le32 wakeup_reasons;
++	__le32 num_of_gtk_rekeys;
++	__le32 transmitted_ndps;
++	__le32 received_beacons;
++	u8 tid_tear_down;
++	u8 station_id;
++	u8 reserved2[2];
++} __packed; /* WOWLAN_INFO_NTFY_API_S_VER_2 */
++
+ /**
+  * struct iwl_wowlan_info_notif - WoWLAN information notification
+  * @gtk: GTK data
+  * @igtk: IGTK data
++ * @bigtk: BIGTK data
+  * @replay_ctr: GTK rekey replay counter
+  * @pattern_number: number of the matched patterns
+  * @reserved1: reserved
+@@ -827,6 +864,7 @@ struct iwl_wowlan_info_notif_v1 {
+ struct iwl_wowlan_info_notif {
+ 	struct iwl_wowlan_gtk_status_v3 gtk[WOWLAN_GTK_KEYS_NUM];
+ 	struct iwl_wowlan_igtk_status igtk[WOWLAN_IGTK_KEYS_NUM];
++	struct iwl_wowlan_igtk_status bigtk[WOWLAN_BIGTK_KEYS_NUM];
+ 	__le64 replay_ctr;
+ 	__le16 pattern_number;
+ 	__le16 reserved1;
+@@ -838,7 +876,7 @@ struct iwl_wowlan_info_notif {
+ 	u8 tid_tear_down;
+ 	u8 station_id;
+ 	u8 reserved2[2];
+-} __packed; /* WOWLAN_INFO_NTFY_API_S_VER_2 */
++} __packed; /* WOWLAN_INFO_NTFY_API_S_VER_3 */
+ 
+ /**
+  * struct iwl_wowlan_wake_pkt_notif - WoWLAN wake packet notification
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/offload.h b/drivers/net/wireless/intel/iwlwifi/fw/api/offload.h
+index 898bf351f6e4..2d2b9c8c36ea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/offload.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/offload.h
+@@ -3,7 +3,7 @@
+  * Copyright (C) 2012-2014 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+- * Copyright (C) 2021-2022 Intel Corporation
++ * Copyright (C) 2021-2023 Intel Corporation
+  */
+ #ifndef __iwl_fw_api_offload_h__
+ #define __iwl_fw_api_offload_h__
+@@ -18,7 +18,9 @@ enum iwl_prot_offload_subcmd_ids {
+ 	WOWLAN_WAKE_PKT_NOTIFICATION = 0xFC,
+ 
+ 	/**
+-	 * @WOWLAN_INFO_NOTIFICATION: Notification in &struct iwl_wowlan_info_notif
++	 * @WOWLAN_INFO_NOTIFICATION: Notification in
++	 * &struct iwl_wowlan_info_notif_v1, &struct iwl_wowlan_info_notif_v2,
++	 * or iwl_wowlan_info_notif
+ 	 */
+ 	WOWLAN_INFO_NOTIFICATION = 0xFD,
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index f6488b4bbe68..ffb1fdd7ee32 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1438,6 +1438,7 @@ struct iwl_wowlan_status_data {
+ 	} ptk;
+ 
+ 	struct iwl_multicast_key_data igtk;
++	struct iwl_multicast_key_data bigtk[WOWLAN_BIGTK_KEYS_NUM];
+ 
+ 	u8 *wake_packet;
+ };
+@@ -1781,8 +1782,8 @@ static void iwl_mvm_set_key_rx_seq(struct ieee80211_key_conf *key,
+ struct iwl_mvm_d3_gtk_iter_data {
+ 	struct iwl_mvm *mvm;
+ 	struct iwl_wowlan_status_data *status;
+-	u32 gtk_cipher, igtk_cipher;
+-	bool unhandled_cipher, igtk_support;
++	u32 gtk_cipher, igtk_cipher, bigtk_cipher;
++	bool unhandled_cipher, igtk_support, bigtk_support;
+ 	int num_keys;
+ };
+ 
+@@ -1817,6 +1818,9 @@ static void iwl_mvm_d3_find_last_keys(struct ieee80211_hw *hw,
+ 		if (data->igtk_support &&
+ 		    (key->keyidx == 4 || key->keyidx == 5)) {
+ 			data->igtk_cipher = key->cipher;
++		} else if (data->bigtk_support &&
++			   (key->keyidx == 6 || key->keyidx == 7)) {
++			data->bigtk_cipher = key->cipher;
+ 		} else {
+ 			data->unhandled_cipher = true;
+ 			return;
+@@ -1848,6 +1852,24 @@ iwl_mvm_d3_set_igtk_bigtk_ipn(const struct iwl_multicast_key_data *key,
+ 	}
+ }
+ 
++static void
++iwl_mvm_d3_update_igtk_bigtk(struct iwl_wowlan_status_data *status,
++			     struct ieee80211_key_conf *key,
++			     struct iwl_multicast_key_data *key_data)
++{
++	if (status->num_of_gtk_rekeys && key_data->len) {
++		/* remove rekeyed key */
++		ieee80211_remove_key(key);
++	} else {
++		struct ieee80211_key_seq seq;
++
++		iwl_mvm_d3_set_igtk_bigtk_ipn(key_data,
++					      &seq,
++					      key->cipher);
++		ieee80211_set_key_rx_seq(key, 0, &seq);
++	}
++}
++
+ static void iwl_mvm_d3_update_keys(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif,
+ 				   struct ieee80211_sta *sta,
+@@ -1900,17 +1922,14 @@ static void iwl_mvm_d3_update_keys(struct ieee80211_hw *hw,
+ 	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		if (key->keyidx == 4 || key->keyidx == 5) {
+-			/* remove rekeyed key */
+-			if (status->num_of_gtk_rekeys) {
+-				ieee80211_remove_key(key);
+-			} else {
+-				struct ieee80211_key_seq seq;
++			iwl_mvm_d3_update_igtk_bigtk(status, key,
++						     &status->igtk);
++		}
++		if (key->keyidx == 6 || key->keyidx == 7) {
++			u8 idx = key->keyidx == status->bigtk[1].id;
+ 
+-				iwl_mvm_d3_set_igtk_bigtk_ipn(&status->igtk,
+-							      &seq,
+-							      key->cipher);
+-				ieee80211_set_key_rx_seq(key, 0, &seq);
+-			}
++			iwl_mvm_d3_update_igtk_bigtk(status, key,
++						     &status->bigtk[idx]);
+ 		}
+ 	}
+ }
+@@ -2042,6 +2061,8 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
+ 		.mvm = mvm,
+ 		.status = status,
+ 	};
++	int i;
++
+ 	u32 disconnection_reasons =
+ 		IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_MISSED_BEACON |
+ 		IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_DEAUTH;
+@@ -2058,6 +2079,11 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
+ 				    0))
+ 		gtkdata.igtk_support = true;
+ 
++	if (iwl_fw_lookup_notif_ver(mvm->fw, PROT_OFFLOAD_GROUP,
++				    WOWLAN_INFO_NOTIFICATION,
++				    0) >= 3)
++		gtkdata.bigtk_support = true;
++
+ 	/* find last GTK that we used initially, if any */
+ 	ieee80211_iter_keys(mvm->hw, vif,
+ 			    iwl_mvm_d3_find_last_keys, &gtkdata);
+@@ -2088,6 +2114,13 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
+ 						     &status->igtk))
+ 			return false;
+ 
++		for (i = 0; i < ARRAY_SIZE(status->bigtk); i++) {
++			if (!iwl_mvm_d3_igtk_bigtk_rekey_add(status, vif,
++							     gtkdata.bigtk_cipher,
++							     &status->bigtk[i]))
++				return false;
++		}
++
+ 		ieee80211_gtk_rekey_notify(vif, vif->bss_conf.bssid,
+ 					   (void *)&replay_ctr, GFP_KERNEL);
+ 	}
+@@ -2172,6 +2205,37 @@ static void iwl_mvm_convert_igtk(struct iwl_wowlan_status_data *status,
+ 	memcpy(status->igtk.ipn, data->ipn, sizeof(data->ipn));
+ }
+ 
++static void iwl_mvm_convert_bigtk(struct iwl_wowlan_status_data *status,
++				  const struct iwl_wowlan_igtk_status *data)
++{
++	int data_idx, status_idx = 0;
++
++	BUILD_BUG_ON(ARRAY_SIZE(status->bigtk) < WOWLAN_BIGTK_KEYS_NUM);
++
++	for (data_idx = 0; data_idx < WOWLAN_BIGTK_KEYS_NUM; data_idx++) {
++		if (!data[data_idx].key_len)
++			continue;
++
++		status->bigtk[status_idx].len = data[data_idx].key_len;
++		status->bigtk[status_idx].flags = data[data_idx].key_flags;
++		status->bigtk[status_idx].id =
++			u32_get_bits(data[data_idx].key_flags,
++				     IWL_WOWLAN_IGTK_BIGTK_IDX_MASK)
++			+ WOWLAN_BIGTK_MIN_INDEX;
++
++		BUILD_BUG_ON(sizeof(status->bigtk[status_idx].key) <
++			     sizeof(data[data_idx].key));
++		BUILD_BUG_ON(sizeof(status->bigtk[status_idx].ipn) <
++			     sizeof(data[data_idx].ipn));
++
++		memcpy(status->bigtk[status_idx].key, data[data_idx].key,
++		       sizeof(data[data_idx].key));
++		memcpy(status->bigtk[status_idx].ipn, data[data_idx].ipn,
++		       sizeof(data[data_idx].ipn));
++		status_idx++;
++	}
++}
++
+ static void iwl_mvm_parse_wowlan_info_notif(struct iwl_mvm *mvm,
+ 					    struct iwl_wowlan_info_notif *data,
+ 					    struct iwl_wowlan_status_data *status,
+@@ -2194,7 +2258,42 @@ static void iwl_mvm_parse_wowlan_info_notif(struct iwl_mvm *mvm,
+ 	iwl_mvm_convert_key_counters_v5(status, &data->gtk[0].sc);
+ 	iwl_mvm_convert_gtk_v3(status, data->gtk);
+ 	iwl_mvm_convert_igtk(status, &data->igtk[0]);
++	iwl_mvm_convert_bigtk(status, data->bigtk);
++	status->replay_ctr = le64_to_cpu(data->replay_ctr);
++	status->pattern_number = le16_to_cpu(data->pattern_number);
++	for (i = 0; i < IWL_MAX_TID_COUNT; i++)
++		status->qos_seq_ctr[i] =
++			le16_to_cpu(data->qos_seq_ctr[i]);
++	status->wakeup_reasons = le32_to_cpu(data->wakeup_reasons);
++	status->num_of_gtk_rekeys =
++		le32_to_cpu(data->num_of_gtk_rekeys);
++	status->received_beacons = le32_to_cpu(data->received_beacons);
++	status->tid_tear_down = data->tid_tear_down;
++}
++
++static void
++iwl_mvm_parse_wowlan_info_notif_v2(struct iwl_mvm *mvm,
++				   struct iwl_wowlan_info_notif_v2 *data,
++				   struct iwl_wowlan_status_data *status,
++				   u32 len)
++{
++	u32 i;
++
++	if (!data) {
++		IWL_ERR(mvm, "iwl_wowlan_info_notif data is NULL\n");
++		status = NULL;
++		return;
++	}
++
++	if (len < sizeof(*data)) {
++		IWL_ERR(mvm, "Invalid WoWLAN info notification!\n");
++		status = NULL;
++		return;
++	}
+ 
++	iwl_mvm_convert_key_counters_v5(status, &data->gtk[0].sc);
++	iwl_mvm_convert_gtk_v3(status, data->gtk);
++	iwl_mvm_convert_igtk(status, &data->igtk[0]);
+ 	status->replay_ctr = le64_to_cpu(data->replay_ctr);
+ 	status->pattern_number = le16_to_cpu(data->pattern_number);
+ 	for (i = 0; i < IWL_MAX_TID_COUNT; i++)
+@@ -2866,7 +2965,7 @@ static bool iwl_mvm_wait_d3_notif(struct iwl_notif_wait_data *notif_wait,
+ 	struct iwl_mvm *mvm =
+ 		container_of(notif_wait, struct iwl_mvm, notif_wait);
+ 	struct iwl_d3_data *d3_data = data;
+-	u32 len;
++	u32 len = iwl_rx_packet_payload_len(pkt);
+ 	int ret;
+ 	int wowlan_info_ver = iwl_fw_lookup_notif_ver(mvm->fw,
+ 						      PROT_OFFLOAD_GROUP,
+@@ -2876,7 +2975,6 @@ static bool iwl_mvm_wait_d3_notif(struct iwl_notif_wait_data *notif_wait,
+ 
+ 	switch (WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd)) {
+ 	case WIDE_ID(PROT_OFFLOAD_GROUP, WOWLAN_INFO_NOTIFICATION): {
+-		struct iwl_wowlan_info_notif *notif;
+ 
+ 		if (d3_data->notif_received & IWL_D3_NOTIF_WOWLAN_INFO) {
+ 			/* We might get two notifications due to dual bss */
+@@ -2886,26 +2984,39 @@ static bool iwl_mvm_wait_d3_notif(struct iwl_notif_wait_data *notif_wait,
+ 		}
+ 
+ 		if (wowlan_info_ver < 2) {
+-			struct iwl_wowlan_info_notif_v1 *notif_v1 = (void *)pkt->data;
++			struct iwl_wowlan_info_notif_v1 *notif_v1 =
++				(void *)pkt->data;
++			struct iwl_wowlan_info_notif_v2 *notif_v2;
+ 
+-			notif = kmemdup(notif_v1, sizeof(*notif), GFP_ATOMIC);
+-			if (!notif)
++			notif_v2 = kmemdup(notif_v1, sizeof(*notif_v2), GFP_ATOMIC);
++
++			if (!notif_v2)
+ 				return false;
+ 
+-			notif->tid_tear_down = notif_v1->tid_tear_down;
+-			notif->station_id = notif_v1->station_id;
+-			memset_after(notif, 0, station_id);
++			notif_v2->tid_tear_down = notif_v1->tid_tear_down;
++			notif_v2->station_id = notif_v1->station_id;
++			memset_after(notif_v2, 0, station_id);
++			iwl_mvm_parse_wowlan_info_notif_v2(mvm, notif_v2,
++							   d3_data->status,
++							   len);
++			kfree(notif_v2);
++
++		} else if (wowlan_info_ver == 2) {
++			struct iwl_wowlan_info_notif_v2 *notif_v2 =
++				(void *)pkt->data;
++
++			iwl_mvm_parse_wowlan_info_notif_v2(mvm, notif_v2,
++							   d3_data->status,
++							   len);
+ 		} else {
+-			notif = (void *)pkt->data;
++			struct iwl_wowlan_info_notif *notif =
++				(void *)pkt->data;
++
++			iwl_mvm_parse_wowlan_info_notif(mvm, notif,
++							d3_data->status, len);
+ 		}
+ 
+ 		d3_data->notif_received |= IWL_D3_NOTIF_WOWLAN_INFO;
+-		len = iwl_rx_packet_payload_len(pkt);
+-		iwl_mvm_parse_wowlan_info_notif(mvm, notif, d3_data->status,
+-						len);
+-
+-		if (wowlan_info_ver < 2)
+-			kfree(notif);
+ 
+ 		if (d3_data->status &&
+ 		    d3_data->status->wakeup_reasons & IWL_WOWLAN_WAKEUP_REASON_HAS_WAKEUP_PKT)
+-- 
+2.38.1
+
