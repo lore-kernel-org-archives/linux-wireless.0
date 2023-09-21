@@ -2,81 +2,120 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03149E7D0AB
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:05:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC6CE7D0B0
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:05:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229972AbjIUVFn (ORCPT
+        id S230237AbjIUVFq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 17:05:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48620 "EHLO
+        Thu, 21 Sep 2023 17:05:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232597AbjIUVEk (ORCPT
+        with ESMTP id S232897AbjIUVFI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 17:04:40 -0400
+        Thu, 21 Sep 2023 17:05:08 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C14527B957;
-        Thu, 21 Sep 2023 10:37:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 288E2C116AF;
-        Thu, 21 Sep 2023 08:09:38 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D93D47EA29
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:37 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4F19C36AE6;
+        Thu, 21 Sep 2023 10:43:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695283781;
-        bh=CRChqGGo4RR2euNwhsDyCD/AoeyKktzzjOKjh37j308=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=U6NPZ+8WyNsZOrY2Ac+ioT6/gPDw2ATD5O9tV01TxCmDZ6+hXu1KPDEIz3a3Gtwqx
-         tKsvCJSSNEHimX8QPbVZQJ4UTZG4trO9kwulY4CGG1iwMP3qdSH0L3z5X/N9NfDFTs
-         2lCfQEvwcgBc8JcV3rpcBvh779jTDhW9ZYVktRfLINCxVbeWSUqjqeqr1H7Y3KaCi9
-         5FHGysRq9RRBkxkT+7NXxvkZBnHbVe7pX4kVgVqaQ4ADoRTodYgJTD/8oPWCJZVggu
-         hFQIs+fghTAVHf54bge5tZrM34SrNJyWsXFComQWwYojGcRYn9khtN5vaM4m88eMX0
-         /wYF0Fl26L6Og==
-Content-Type: text/plain; charset="utf-8"
+        s=k20201202; t=1695293040;
+        bh=1K/xpj89LnsSxSnZRLe9XnU/8MgULN5QpqENtjkZBsk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=OEkujMmgiC0A+uad+mha2O9eGGryG5/hjeM3Xy5afVELxgwF716aE7wL0nNJOBLSf
+         FE1cl5SkI7I52ISHYB8P7UhXuVY25tlprAm9OGlKN6fhEtat20h5J8sF+WYF71Cc0G
+         pNsaq8T9uj9P0nZ/8ZCwkbEuR8MEa8A0l4WwTqdBc5us34rQ/TnDY7a6sOqJQqYRUs
+         UE1lJRt6PTFekJ0y3O09+pDMrTC7J8U6EkOdBdOqAb4AGG2zsZX2A21/oeLaRjh3zc
+         qr8Wje4DDh7qfv5GtPc5vL0epYHn0oGBitRkB+jN/UFsP8OTxyX0L/ebe+w5XO/Rk8
+         aVE6UyB+bdpKw==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, evelyn.tsai@mediatek.com,
+        shayne.chen@mediatek.com, Bo.Jiao@mediatek.com,
+        sujuan.chen@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH 4/9] wifi: mt76: introduce mt76_queue_is_wed_tx_free utility routine
+Date:   Thu, 21 Sep 2023 12:43:33 +0200
+Message-ID: <833b5d797b2da35fd42e59b0a8b193cf379d5d43.1695292502.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <cover.1695292502.git.lorenzo@kernel.org>
+References: <cover.1695292502.git.lorenzo@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: wcn36xx: Annotate struct wcn36xx_hal_ind_msg with
- __counted_by
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230915200622.never.820-kees@kernel.org>
-References: <20230915200622.never.820-kees@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Loic Poulain <loic.poulain@linaro.org>,
-        Kees Cook <keescook@chromium.org>, wcn36xx@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Nathan Chancellor <nathan@kernel.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tom Rix <trix@redhat.com>, linux-kernel@vger.kernel.org,
-        llvm@lists.linux.dev, linux-hardening@vger.kernel.org
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169528377712.1539628.6973937251769266180.kvalo@kernel.org>
-Date:   Thu, 21 Sep 2023 08:09:38 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kees Cook <keescook@chromium.org> wrote:
+This is a preliminary patch to introduce WED support for mt7996
 
-> Prepare for the coming implementation by GCC and Clang of the __counted_by
-> attribute. Flexible array members annotated with __counted_by can have
-> their accesses bounds-checked at run-time checking via CONFIG_UBSAN_BOUNDS
-> (for array indexing) and CONFIG_FORTIFY_SOURCE (for strcpy/memcpy-family
-> functions).
-> 
-> As found with Coccinelle[1], add __counted_by for struct wcn36xx_hal_ind_msg.
-> 
-> [1] https://github.com/kees/kernel-tools/blob/trunk/coccinelle/examples/counted_by.cocci
-> 
-> Cc: Loic Poulain <loic.poulain@linaro.org>
-> Cc: Kalle Valo <kvalo@kernel.org>
-> Cc: wcn36xx@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/dma.c        | 6 +++---
+ drivers/net/wireless/mediatek/mt76/mt76.h       | 6 ++++++
+ drivers/net/wireless/mediatek/mt76/mt7915/dma.c | 2 +-
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-f8cbbb224b11 wifi: wcn36xx: Annotate struct wcn36xx_hal_ind_msg with __counted_by
-
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 643e18ebb5ee..f62b6af4316b 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -724,7 +724,7 @@ mt76_dma_alloc_queue(struct mt76_dev *dev, struct mt76_queue *q,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (q->flags != MT_WED_Q_TXFREE)
++	if (!mt76_queue_is_wed_tx_free(q))
+ 		mt76_dma_queue_reset(dev, q);
+ 
+ 	return 0;
+@@ -773,7 +773,7 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
+ 
+ 	/* reset WED rx queues */
+ 	mt76_dma_wed_setup(dev, q, true);
+-	if (q->flags != MT_WED_Q_TXFREE) {
++	if (!mt76_queue_is_wed_tx_free(q)) {
+ 		mt76_dma_sync_idx(dev, q);
+ 		mt76_dma_rx_fill(dev, q, false);
+ 	}
+@@ -816,7 +816,7 @@ mt76_dma_rx_process(struct mt76_dev *dev, struct mt76_queue *q, int budget)
+ 	bool more;
+ 
+ 	if (IS_ENABLED(CONFIG_NET_MEDIATEK_SOC_WED) &&
+-	    q->flags == MT_WED_Q_TXFREE) {
++	    mt76_queue_is_wed_tx_free(q)) {
+ 		dma_idx = Q_READ(dev, q, dma_idx);
+ 		check_ddone = true;
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index e8e9d9bc3730..4ce3a0def8fb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1555,6 +1555,12 @@ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 			      struct mt76_power_limits *dest,
+ 			      s8 target_power);
+ 
++static inline bool mt76_queue_is_wed_tx_free(struct mt76_queue *q)
++{
++	return (q->flags & MT_QFLAG_WED) &&
++	       FIELD_GET(MT_QFLAG_WED_TYPE, q->flags) == MT76_WED_Q_TXFREE;
++}
++
+ static inline bool mt76_queue_is_wed_rx(struct mt76_queue *q)
+ {
+ 	return (q->flags & MT_QFLAG_WED) &&
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+index 59a44d79aaed..96b2c3802ac1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/dma.c
+@@ -643,7 +643,7 @@ int mt7915_dma_reset(struct mt7915_dev *dev, bool force)
+ 		mt76_queue_reset(dev, dev->mt76.q_mcu[i]);
+ 
+ 	mt76_for_each_q_rx(&dev->mt76, i) {
+-		if (dev->mt76.q_rx[i].flags == MT_WED_Q_TXFREE)
++		if (mt76_queue_is_wed_tx_free(&dev->mt76.q_rx[i]))
+ 			continue;
+ 
+ 		mt76_queue_reset(dev, &dev->mt76.q_rx[i]);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230915200622.never.820-kees@kernel.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.41.0
 
