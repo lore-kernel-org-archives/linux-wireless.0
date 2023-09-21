@@ -2,66 +2,75 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CE13E7D0A4
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B27E7D0A8
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:02:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231145AbjIUTBg (ORCPT
+        id S230044AbjIUTCV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:01:36 -0400
+        Thu, 21 Sep 2023 15:02:21 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230071AbjIUTBL (ORCPT
+        with ESMTP id S230018AbjIUTCI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:01:11 -0400
+        Thu, 21 Sep 2023 15:02:08 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E9AC80F85
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:36:52 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5A2DC32791;
-        Thu, 21 Sep 2023 10:23:58 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30C1E80FBE;
+        Thu, 21 Sep 2023 10:36:58 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7765CC116B3;
+        Thu, 21 Sep 2023 08:04:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695291839;
-        bh=yEMCuP75RzU26/gJYkkF862Cbk6QqqQc4KgA55rLPV8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=iR/1+ySnpN42QF9VbVkqFkj0hhrMu5F5iOFfdQRBkzLdj8ECUPNybKkdGlZ7H5Pd0
-         LHBc0EOXBDMHNMUCne2QH0HkzX1f2UV/iwSb7f5ySkRRxGDVrDTT3gM4QXNPB+hJmx
-         bqZ0+nhHh+Zlsh0AGkDFQwhfadPE4OSlsbmJq/M1gAZTONHXvLz2gvY3LPs1d4254L
-         HuJ7W0uA6TdWRtuPgMgTPwXk8KJN7EVD7O+GYFZKhVThR5qXwu+59pqwEtJm5jZtPe
-         W6SuTiluEhLf9apJECwMucPC/sRoTzOrJlCI/+l/xc1xDWm+dX27I+zT1pPCBSgsSd
-         tE9MbxAGwmA2A==
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
-        deren.wu@mediatek.com, sean.wang@mediatek.com
-Subject: [PATCH 0/2] wifi: mt76: mt792xu: some more code de-duplication
-Date:   Thu, 21 Sep 2023 12:23:46 +0200
-Message-ID: <cover.1695291565.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.41.0
+        s=k20201202; t=1695283446;
+        bh=ikVEGvz/AoDXxl7OJz8v3M6JEuj84GWYAzbM3pSuSfs=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=Q0AAb/hTsyZsWcttt+LH9287e9g6+ilMDd07ifknyZdtsttuFD/C7e8WN86RofEdm
+         UVMgUWeJlRHX1OVx0DTpFzJzn/OV51Ppg+FiMaRtZ55XYp0MY90NMR/KifyziH12cN
+         fY+4NSCJBY8omAlRFugv8mJ87l5UCi4RvZbpHJeyOcekfqgcDsGWuLI0hHWm4hpO3u
+         ixqDd/UTnuHp1aDa0bDudiQM+yPoqEahXZhOI1AvRrVtWpm1NSqqQ90jomTQdCDwVS
+         b1x+bH8jl7UBlk3Wxfu0SY+aur5ipB2vp+GmJgZGgehROHGImkqJ7iBSKcv+IT4mjc
+         81QyDj+54D/BA==
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v2] ath9k: clean up function ath9k_hif_usb_resume
+From:   Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20230905013556.2595854-1-dzm91@hust.edu.cn>
+References: <20230905013556.2595854-1-dzm91@hust.edu.cn>
+To:     Dongliang Mu <dzm91@hust.edu.cn>
+Cc:     =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        hust-os-kernel-patches@googlegroups.com,
+        Dongliang Mu <dzm91@hust.edu.cn>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <169528344376.1539628.7025381317587339647.kvalo@kernel.org>
+Date:   Thu, 21 Sep 2023 08:04:05 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove some more usb duplicated code shared between mt7921 and mt7925
+Dongliang Mu <dzm91@hust.edu.cn> wrote:
 
-Lorenzo Bianconi (2):
-  wifi: mt76: mt792x: move mt7921_skb_add_usb_sdio_hdr in mt792x module
-  wifi: mt76: mt792x: move some common usb code in mt792x module
+> In ath9k_hif_usb_resume, the error handling code calls
+> ath9k_hif_usb_dealloc_urbs twice in different paths.
+> 
+> To unify the error handling code, we move the else branch before
+> the if branch and drop one level of indentation of the if branch.
+> 
+> In addition, move the ret variable at the end of variable declarations
+> to be reverse x-mas tree order.
+> 
+> Note that this patch does not incur any functionability change.
+> 
+> Signed-off-by: Dongliang Mu <dzm91@hust.edu.cn>
+> Reviewed-by: Dan Carpenter <dan.carpenter@linaro.org>
+> Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
- .../net/wireless/mediatek/mt76/mt7921/mac.c   |  2 +-
- .../net/wireless/mediatek/mt76/mt7921/main.c  | 21 +-----------------
- .../wireless/mediatek/mt76/mt7921/mt7921.h    | 17 --------------
- .../wireless/mediatek/mt76/mt7921/sdio_mcu.c  |  2 +-
- .../net/wireless/mediatek/mt76/mt7921/usb.c   | 12 ++--------
- .../net/wireless/mediatek/mt76/mt7925/mac.c   |  2 +-
- .../net/wireless/mediatek/mt76/mt7925/main.c  | 20 +----------------
- .../wireless/mediatek/mt76/mt7925/mt7925.h    | 16 --------------
- .../net/wireless/mediatek/mt76/mt7925/usb.c   | 12 ++--------
- drivers/net/wireless/mediatek/mt76/mt792x.h   | 18 +++++++++++++++
- .../net/wireless/mediatek/mt76/mt792x_core.c  | 22 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt792x_usb.c   |  9 ++++++++
- 12 files changed, 58 insertions(+), 95 deletions(-)
+Patch applied to ath-next branch of ath.git, thanks.
+
+dc73b2059354 wifi: ath9k: clean up function ath9k_hif_usb_resume
 
 -- 
-2.41.0
+https://patchwork.kernel.org/project/linux-wireless/patch/20230905013556.2595854-1-dzm91@hust.edu.cn/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
