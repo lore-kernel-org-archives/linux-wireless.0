@@ -2,104 +2,156 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 449F8E7D0B0
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 22:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5205E7D0A1
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 23:01:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231344AbjIUWac (ORCPT
+        id S231989AbjIUXBh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:30:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37284 "EHLO
+        Thu, 21 Sep 2023 19:01:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232417AbjIUWaZ (ORCPT
+        with ESMTP id S229532AbjIUXBR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 18:30:25 -0400
-Received: from forward502c.mail.yandex.net (forward502c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d502])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6BA8768C
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:10:12 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-29.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-29.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:5586:0:640:b3c3:0])
-        by forward502c.mail.yandex.net (Yandex) with ESMTP id 54C0F5EA55;
-        Thu, 21 Sep 2023 11:58:15 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-29.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id DwFAq3SDca60-J1zDWlCY;
-        Thu, 21 Sep 2023 11:58:14 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-        t=1695286694; bh=+gEHwucdbnIDVVgdvxrJqZn2q9NFPe8RrwLL1a4fBj8=;
-        h=In-Reply-To:Subject:To:From:Cc:Date:References:Message-ID;
-        b=vZfZdhQGZkrpkERhC4uDM9m2y/E0buz0Xf85rcphGlGWQEUXiUY99BXtEmOBIfIvc
-         7i+SxUVyexu+YPd65a/IYFFXBMraPCOt964dcZ+thugLK/fYNoIq0WND++OUDLsWBN
-         Vq4X/82o/oNvzDA/gZQ0jBWvEgXVtxB8WHz2huSc=
-Authentication-Results: mail-nwsmtp-smtp-production-main-29.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-Message-ID: <75483209-4ac1-305f-83fb-9e9affc104fe@yandex.ru>
-Date:   Thu, 21 Sep 2023 11:58:13 +0300
+        Thu, 21 Sep 2023 19:01:17 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4B62E089
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 13:39:48 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LKMFsG016370;
+        Thu, 21 Sep 2023 20:39:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=bCU/h1Q623nXoDo+D6ye+r+j7q1KuIajFUJw0U1YRrg=;
+ b=S/3ZMTIE7hI37rS0UZDVxs8SQWQ0nUYCWf7Z919a77Ra+HtXElSW8Widyj7DAzuK9gji
+ cmt4P2Q0aaqVBbmNS4QlgIMN1I3kPJOyJh2MI6cIttyTI7v/pTWoet7V+yOqFDux3nZh
+ XRG/75a2MdVRTJ/yJYZ1iJF8aEFfpbzHd7JQAInvX3NVEBZ2+KTFPD7LnOZ2jZuiaM0k
+ g//ZQn9oHTXjaiOsO32Buz3AScWmMs7LVBOBEZNCZfUM+RsWxQuWNoWlCW5sfvUuXdA4
+ rLHP02oCCcsxY9kcfg6Key4TiFXABeJe3CXKrV7D37pa8Mgo8wra+Ld7R4mzpnLYWdTf BQ== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t8txpg8qy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 20:39:43 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LKdg09020488
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 20:39:42 GMT
+Received: from [10.48.245.144] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 21 Sep
+ 2023 13:39:42 -0700
+Message-ID: <734f2969-4846-4e9b-97f3-00f9891e6922@quicinc.com>
+Date:   Thu, 21 Sep 2023 13:39:42 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
-        ath10k@lists.infradead.org
-References: <997f4b09-7087-4788-aa2a-ef835ce6ebb3@quicinc.com>
- <20230824055117.42309-1-dmantipov@yandex.ru> <874jjpashn.fsf@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 11/13] wifi: ath11k: discard BSS_CHANGED_TXPOWER when
+ EXT_TPC_REG_SUPPORT for 6 GHz
 Content-Language: en-US
-From:   Dmitry Antipov <dmantipov@yandex.ru>
-Autocrypt: addr=dmantipov@yandex.ru; keydata=
- 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
- tx98MCutXbJWn55RtnVKbpIiMfBrcB8=
-Subject: Re: [PATCH 1/6] [v3] wifi: ath10k: cleanup CE ring initialization
-In-Reply-To: <874jjpashn.fsf@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Wen Gong <quic_wgong@quicinc.com>, <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <kvalo@kernel.org>
+References: <20230920082349.29111-1-quic_wgong@quicinc.com>
+ <20230920082349.29111-12-quic_wgong@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20230920082349.29111-12-quic_wgong@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 0nFg6BsyKewkGEz8c9gpH5bg7OLAu-Xk
+X-Proofpoint-GUID: 0nFg6BsyKewkGEz8c9gpH5bg7OLAu-Xk
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-21_17,2023-09-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
+ phishscore=0 impostorscore=0 malwarescore=0 adultscore=0 bulkscore=0
+ clxscore=1015 suspectscore=0 lowpriorityscore=0 priorityscore=1501
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2309210178
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/20/23 16:23, Kalle Valo wrote:
+On 9/20/2023 1:23 AM, Wen Gong wrote:
+> When station is connected to a 6 GHz AP, it has 2 way to configure
 
-> I have on purpose avoided to use void functions in ath10k/ath11k/ath12k.
-> The problem is that if some of the functions return void and some of the
-> functions return int it's much harder to review the code. 
+s/way/ways/
 
-I realize that you're constantly overloaded with reviewing a lot of patches...
+> the power limit to firmware. The first way is to send 2 wmi command
 
-> If most/all of the functions return the same error value type as int  > it makes a lot easier to read the code.
+s/wmi command/WMI commands/
 
-...but still not sure that this is reasonable for any non-trivial piece
-of the source code.
+> WMI_PDEV_PARAM_TXPOWER_LIMIT2G/WMI_PDEV_PARAM_TXPOWER_LIMIT5G to
+> firmware, the second way is to send WMI_VDEV_SET_TPC_POWER_CMDID to
+> firmware which include more parameters for power control.
 
-OTOH if both you and Jeff are agreed on preserving existing ath1x style,
-I will definitely take this decision into account and try to redesign
-this series in attempt to fit the current design as much as possible.
+Why would LIMIT2G/LIMIT5G be used for 6 GHz AP?
 
-Dmitry
+> 
+> When firmware support SERVICE_EXT_TPC_REG, it means firmware support
+> the second way for WMI_VDEV_SET_TPC_POWER_CMDID, then ath11k discard
+> BSS_CHANGED_TXPOWER flag from mac80211 which is used to the first way
+> for 6 GHz band in this patch and select the second way in the subsequent
+> patch.
+
+So if i bisect at this patch and if firmware supports 
+SERVICE_EXT_TPC_REG, then there will not be any power limits sent to 
+firmware?
+
+Ideally all patches in a series should be able to be bisected without 
+introducing regressive behavior.
+
+Does it make sense to squash patches 11 and 13 so that there is no 
+regression? Patch 12 would then come before the squashed patch.
+
+> 
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+> 
+> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+> ---
+>   drivers/net/wireless/ath/ath11k/mac.c | 22 +++++++++++++++++++---
+>   1 file changed, 19 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+> index f05d66913abd..a8ae281d2635 100644
+> --- a/drivers/net/wireless/ath/ath11k/mac.c
+> +++ b/drivers/net/wireless/ath/ath11k/mac.c
+> @@ -3396,6 +3396,18 @@ static int ath11k_mac_config_obss_pd(struct ath11k *ar,
+>   	return 0;
+>   }
+>   
+> +static bool ath11k_mac_supports_station_tpc(struct ath11k *ar,
+> +					    struct ath11k_vif *arvif,
+> +					    const struct cfg80211_chan_def *chandef)
+> +{
+> +	return ath11k_mac_supports_6ghz_cc_ext(ar) &&
+> +		test_bit(WMI_TLV_SERVICE_EXT_TPC_REG_SUPPORT, ar->ab->wmi_ab.svc_map) &&
+> +		arvif->vdev_type == WMI_VDEV_TYPE_STA &&
+> +		arvif->vdev_subtype == WMI_VDEV_SUBTYPE_NONE &&
+> +		chandef->chan &&
+> +		chandef->chan->band == NL80211_BAND_6GHZ;
+> +}
+> +
+>   static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+>   					   struct ieee80211_vif *vif,
+>   					   struct ieee80211_bss_conf *info,
+> @@ -3595,9 +3607,13 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+>   	if (changed & BSS_CHANGED_TXPOWER) {
+>   		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "vdev_id %i txpower %d\n",
+>   			   arvif->vdev_id, info->txpower);
+> -
+> -		arvif->txpower = info->txpower;
+> -		ath11k_mac_txpower_recalc(ar);
+> +		if (ath11k_mac_supports_station_tpc(ar, arvif, &info->chandef)) {
+> +			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
+> +				   "discard tx power, change to set TPC power\n");
+> +		} else {
+> +			arvif->txpower = info->txpower;
+> +			ath11k_mac_txpower_recalc(ar);
+> +		}
+>   	}
+>   
+>   	if (changed & BSS_CHANGED_PS &&
 
