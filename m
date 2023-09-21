@@ -2,41 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1531AE7D0AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:10:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85CDAE7D0B2
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 21:10:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231267AbjIUVLA (ORCPT
+        id S231504AbjIUVLB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 17:11:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50312 "EHLO
+        Thu, 21 Sep 2023 17:11:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232947AbjIUVFN (ORCPT
+        with ESMTP id S230410AbjIUU7h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 17:05:13 -0400
+        Thu, 21 Sep 2023 16:59:37 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9B017EA3B
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:38 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A1C5C36AF1;
-        Thu, 21 Sep 2023 10:44:07 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8B784F01
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:39 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC16FC36AF0;
+        Thu, 21 Sep 2023 10:44:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695293047;
-        bh=IPe5TSQAv2UTclbOLSu6Yjl5/f+ADH5J1nd/VG0Qoco=;
+        s=k20201202; t=1695293055;
+        bh=G3gltqhihnma9XLcjHfxtduXPoh5CUvLQuM3489vSHw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HIWE7Dl2M/tiP0mXI7MYPKuxD5eDoaHESu03PQoqbwLfCXgSXsn6zNUpKvCG0PNRU
-         rQPH86vs2oC9hNjjI5AJqK7A0R0RUPmYmnhgz5R+BEBOBzRKhA6pGWvOI8vaoSpqsV
-         uK3aX2RKkfoyjNjxz4DaB4n/RKcKDW0wUb3FsMTPoFlv2Gf49kB+c5caN/t+5BhJAa
-         Y6yO8LMg5txm+km/W+jmjggUCLZjsvcAfTWUuqe18KDILvllBanEubAEGkW1UYZg9o
-         7CaUFHrhsX79Xmv+bkkfmskREGAE+TuKjrLQJIqVQmCdjR8Z9MUKsKpx+2d1oS4MtW
-         yvONxdSqZzJfQ==
+        b=MQ2ycQaFtgGAdDrF20v1nzk8A59rgJ0XnVBuFF/1pBzAxwG0HJp9w81t1l5DjwcC0
+         kzFKWVi7/H7nQEjC4WaC+SH7OgwoD1VuecAy6vDZ3GFSAehhDiG1Pt1Y3dDVRh7bOb
+         sriX1oZezAz+wp8E66hwAvc+H0bFFcOQUoOeqN9vE/iP8uMx3fhgztQGt20tUtws4/
+         hNGKae0eDy0uDQ4hyfGQhL44VBJAZqDKVbnrboHncV7pSFpsjbajtimUgFmJd2fwCV
+         XvfYB770y5h/FLRk04dAZSfyXrl5b/cFnZVW3zqiLsZGfU+IkL/e7nxboNUU0PvDkY
+         rRIgIO73N7cTQ==
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com, evelyn.tsai@mediatek.com,
         shayne.chen@mediatek.com, Bo.Jiao@mediatek.com,
         sujuan.chen@mediatek.com, linux-mediatek@lists.infradead.org
-Subject: [PATCH 6/9] wifi: mt76: increase MT_QFLAG_WED_TYPE size
-Date:   Thu, 21 Sep 2023 12:43:35 +0200
-Message-ID: <75d8f3f75ef86fdf37feeb4ce1c6d5c6d2f2a741.1695292502.git.lorenzo@kernel.org>
+Subject: [PATCH 8/9] wifi: mt76: dma: introduce __mt76_dma_queue_reset utility routine
+Date:   Thu, 21 Sep 2023 12:43:37 +0200
+Message-ID: <cffa9f25f1041a6a99b55fd703fd457064c8a823.1695292502.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <cover.1695292502.git.lorenzo@kernel.org>
 References: <cover.1695292502.git.lorenzo@kernel.org>
@@ -50,24 +50,45 @@ This is a preliminary patch to introduce WED support for mt7996
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 61b8d082cd0c..b49a0ed5d23f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -29,8 +29,8 @@
- #define MT76_TOKEN_FREE_THR	64
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index d615d5b1ad42..15923e1540d4 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -195,7 +195,8 @@ mt76_dma_sync_idx(struct mt76_dev *dev, struct mt76_queue *q)
+ }
  
- #define MT_QFLAG_WED_RING	GENMASK(1, 0)
--#define MT_QFLAG_WED_TYPE	GENMASK(3, 2)
--#define MT_QFLAG_WED		BIT(4)
-+#define MT_QFLAG_WED_TYPE	GENMASK(4, 2)
-+#define MT_QFLAG_WED		BIT(5)
+ static void
+-mt76_dma_queue_reset(struct mt76_dev *dev, struct mt76_queue *q)
++__mt76_dma_queue_reset(struct mt76_dev *dev, struct mt76_queue *q,
++		       bool reset_idx)
+ {
+ 	int i;
  
- #define __MT_WED_Q(_type, _n)	(MT_QFLAG_WED | \
- 				 FIELD_PREP(MT_QFLAG_WED_TYPE, _type) | \
+@@ -206,11 +207,19 @@ mt76_dma_queue_reset(struct mt76_dev *dev, struct mt76_queue *q)
+ 	for (i = 0; i < q->ndesc; i++)
+ 		q->desc[i].ctrl = cpu_to_le32(MT_DMA_CTL_DMA_DONE);
+ 
+-	Q_WRITE(q, cpu_idx, 0);
+-	Q_WRITE(q, dma_idx, 0);
++	if (reset_idx) {
++		Q_WRITE(q, cpu_idx, 0);
++		Q_WRITE(q, dma_idx, 0);
++	}
+ 	mt76_dma_sync_idx(dev, q);
+ }
+ 
++static void
++mt76_dma_queue_reset(struct mt76_dev *dev, struct mt76_queue *q)
++{
++	__mt76_dma_queue_reset(dev, q, true);
++}
++
+ static int
+ mt76_dma_add_rx_buf(struct mt76_dev *dev, struct mt76_queue *q,
+ 		    struct mt76_queue_buf *buf, void *data)
 -- 
 2.41.0
 
