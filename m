@@ -2,70 +2,64 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA8D8E7D0A8
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:29:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3A9EE7D0A9
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:29:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230123AbjIUT31 (ORCPT
+        id S230399AbjIUT32 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:29:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48784 "EHLO
+        Thu, 21 Sep 2023 15:29:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230394AbjIUT3J (ORCPT
+        with ESMTP id S230011AbjIUT3K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:29:09 -0400
+        Thu, 21 Sep 2023 15:29:10 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E6EBA9EF
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ED0EA9F1
         for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:07:28 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 080BEC43391;
-        Thu, 21 Sep 2023 06:30:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25436C433CD;
+        Thu, 21 Sep 2023 06:29:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695277821;
-        bh=dKmYQDeeA+4tWlPl/hXjWoF4/bbTVRwllO7onRmJL+0=;
+        s=k20201202; t=1695277790;
+        bh=CM+HxMSjwxkR6zP0LHozqPQxAeEJMm9yiBkQwSqQAow=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=eLzh8Ig4u72Uj2sGFguKUGAtHu4czACt/T77ipE49xeulYAOZPm08CiOeJqqgYU07
-         k/OoczkUaVyS/hdwVPjD+7c6r+kauadhqLQZeVdyPoL7jGTKD9vBDHF9l3500IzDvT
-         +wi54E72bHId0TJRH07mY/p2n/t1BAJcfk0VomMbTG0dMMIhjYYtE3Cl5UilW4le9J
-         cIz34FohzW77hacdkZu2YO4xZ1Y7jZsnrORmYLXV5onzVjesm6anyWXbGUtoVtNbko
-         Lu8aIezMtKcDtzUddL6kNOeL9LZ1z73xvNHsLKY6NZJ9xuio7b6Ys0clE0Av9Gkl/1
-         a/Zq5kywfpZFg==
+        b=CDHMbdT3ndRgyhm/Xka5l9JL3w3sUCxJWq9FAJFd0eqMI3OGuFja0Icbtl4RXyJe7
+         +P5nHa3PQyIYFAL26PojIaYlOMpbU1JrSxPKt08MxFqo8IokhT4rk1cTYa6bt26ndZ
+         Ib/r6cyjIndlU3JmhSVXq+2UJf33f+IsFTEzO/p9Ed/j5GeF0qShw6BJSBU+dWJ8Lw
+         JJPRrmLIoZtg5UxS8CO1DLauNG1G4Pmkd0qkeoksWu0xbhfZZY7PVKgVILrWq5qlpI
+         nebFMDpTo+F0SJkfEoOY7kF3X+Wl9H5ytiqIdb16ZBsJlkCk0NQfzvsydOzF7UFam5
+         gLA1IpoXMjQpw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v4] wifi: wilc1000: add back-off algorithm to balance tx
- queue
- packets
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] wifi: mwifiex: use MODULE_FIRMWARE to add firmware files
+ metadata
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230915175946.4361-1-prasurjya.rohansaikia@microchip.com>
-References: <20230915175946.4361-1-prasurjya.rohansaikia@microchip.com>
-To:     <Prasurjya.Rohansaikia@microchip.com>
-Cc:     <linux-wireless@vger.kernel.org>, <Ajay.Kathat@microchip.com>,
-        <claudiu.beznea@microchip.com>
+In-Reply-To: <20230914211938.28395-1-victor.gonzalo@anddroptable.net>
+References: <20230914211938.28395-1-victor.gonzalo@anddroptable.net>
+To:     =?utf-8?q?V=C3=ADctor_Gonzalo?= <victor.gonzalo@anddroptable.net>
+Cc:     linux-wireless@vger.kernel.org,
+        =?utf-8?q?V=C3=ADctor_Gonzalo?= <victor.gonzalo@anddroptable.net>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169527781889.1469888.3059237937183223820.kvalo@kernel.org>
-Date:   Thu, 21 Sep 2023 06:30:20 +0000 (UTC)
+Message-ID: <169527778800.1469888.8957763957282176888.kvalo@kernel.org>
+Date:   Thu, 21 Sep 2023 06:29:49 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-<Prasurjya.Rohansaikia@microchip.com> wrote:
+Víctor Gonzalo <victor.gonzalo@anddroptable.net> wrote:
 
-> From: Prasurjya Rohan Saikia <prasurjya.rohansaikia@microchip.com>
+> The mwifiex_pcie driver is missing the MODULE_FIRMWARE macro to
+> add the firmware files needed to the module metadata.
 > 
-> Add an algorithm to backoff the Tx Task when low memory scenario is
-> triggered at firmware. During high data transfer from host, the firmware
-> runs out of VMM memory, which is used to hold the frames from the host.
-> So, adding the flow control delays the transmit from host side when
-> there is not enough space to accommodate frames in firmware side.
-> 
-> Signed-off-by: Prasurjya Rohan Saikia <prasurjya.rohansaikia@microchip.com>
-> Acked-by: Ajay Singh <ajay.kathat@microchip.com>
+> Signed-off-by: Víctor Gonzalo <victor.gonzalo@anddroptable.net>
+> Acked-by: Brian Norris <briannorris@chromium.org>
 
 Patch applied to wireless-next.git, thanks.
 
-a08bb28f6eb6 wifi: wilc1000: add back-off algorithm to balance tx queue packets
+260323c3a3e3 wifi: mwifiex: use MODULE_FIRMWARE to add firmware files metadata
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230915175946.4361-1-prasurjya.rohansaikia@microchip.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230914211938.28395-1-victor.gonzalo@anddroptable.net/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
