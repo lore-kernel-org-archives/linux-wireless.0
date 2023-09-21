@@ -2,69 +2,133 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E731AE7D0AB
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 22:11:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72478E7D0B0
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 22:15:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233033AbjIUWLh (ORCPT
+        id S232195AbjIUWQC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:11:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53342 "EHLO
+        Thu, 21 Sep 2023 18:16:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233005AbjIUWLN (ORCPT
+        with ESMTP id S231817AbjIUWP0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 18:11:13 -0400
+        Thu, 21 Sep 2023 18:15:26 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E78883F64
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:18 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35AB7C116B6;
-        Thu, 21 Sep 2023 08:13:25 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF1357EA2A
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:37 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1843DC3279F;
+        Thu, 21 Sep 2023 10:43:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695284006;
-        bh=w9s/3KqBpjc+F0htGHCCTEf8hPrclIy6Ux/UJYVbORQ=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Ei62OwSI5BJtGMKOvLHwcgpMcK03iM0jFtMjxnhziKeQ6VyBRnnPr7mlFLqaa8aK4
-         0rmGiTaP5je9/33SGtvX1mqGzCoASfdKaZ5VznUz+YAnXNB1LcRc0ePrVdsTilJYqk
-         VYoTonLcgmMIIDbVtVN6XiUOjP489vTCNCK4SDrqm0enm4PgZT2acobznd6LnSVl2X
-         SBouwkYil8zhOdewkLFtgTGXtxZmzcIbxFDMKJqdMSDDJQtILbnFIGTZcRmZNN8zDp
-         AeYvgU2S7qX9ZI1Ledk+BNcDabxA4izd7LHgge275L9RHhSJkwv+Z7Lx6XzKHXn1WW
-         4SyzIwcp2FCRg==
-Content-Type: text/plain; charset="utf-8"
+        s=k20201202; t=1695293036;
+        bh=JmPRwGD8tXRsnlGbou9Rh78/vsK7nzRrY8wYaA8z1qg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=KwutYm2orkJo8R5BbNM2OY0xhq6wxrn98m10MKv7lyRbBGyTO38s7sLJ29bIUkNpN
+         fMIi9jnrUpfr0KopuniSf+rGImmiURVbQVYPGvoI31MYfg33Cw7rDfT/V5uP0xKr3Q
+         /FSiWvJlrJFnXm+XVGfYr/LyQnRyvaH4zQ5WMRhPcV8Ygdu40UPtJyVqs8OCS43mmb
+         h3rg0dTDZ/roYAV+fN1KHSH+PH8Kg9kKKMwDojaEm0uYoLcFTbHDJosAM/Q2LzJ57D
+         UuvBhZ18XMjQ0lM6tx9RBCHnZTF12b6rn/qQf91EZSbLFMEq+wLfTDSsDj3d8z3/5Z
+         ulMxDFtw5Kq3g==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, evelyn.tsai@mediatek.com,
+        shayne.chen@mediatek.com, Bo.Jiao@mediatek.com,
+        sujuan.chen@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH 3/9] wifi: mt76: move mt76_net_setup_tc in common code
+Date:   Thu, 21 Sep 2023 12:43:32 +0200
+Message-ID: <ce4092754b42ced1a2417fa7590bf5656b090abb.1695292502.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <cover.1695292502.git.lorenzo@kernel.org>
+References: <cover.1695292502.git.lorenzo@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: ath11k: drop NULL pointer check in
- ath11k_update_per_peer_tx_stats()
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230906093704.14001-1-dmantipov@yandex.ru>
-References: <20230906093704.14001-1-dmantipov@yandex.ru>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
-        ath11k@lists.infradead.org, Dmitry Antipov <dmantipov@yandex.ru>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169528400337.1539628.7739014266024869825.kvalo@kernel.org>
-Date:   Thu, 21 Sep 2023 08:13:25 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dmitry Antipov <dmantipov@yandex.ru> wrote:
+This is a preliminary patch to introduce WED support for mt7996
 
-> Since 'user_stats' is a fixed-size array of 'struct htt_ppdu_user_stats'
-> in 'struct htt_ppdu_stats', any of its member can't be NULL and so
-> relevant check may be dropped.
-> 
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
-> 
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-> Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 16 ++++++++++++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h        |  6 ++++++
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c | 16 +---------------
+ 3 files changed, 23 insertions(+), 15 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-ac13a7842ab4 wifi: ath11k: drop NULL pointer check in ath11k_update_per_peer_tx_stats()
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index cb76053973aa..15c4ca664b3a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -1842,3 +1842,19 @@ enum mt76_dfs_state mt76_phy_dfs_state(struct mt76_phy *phy)
+ 	return MT_DFS_STATE_ACTIVE;
+ }
+ EXPORT_SYMBOL_GPL(mt76_phy_dfs_state);
++
++#ifdef CONFIG_NET_MEDIATEK_SOC_WED
++int mt76_net_setup_tc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		      struct net_device *netdev, enum tc_setup_type type,
++		      void *type_data)
++{
++	struct mt76_phy *phy = hw->priv;
++	struct mtk_wed_device *wed = &phy->dev->mmio.wed;
++
++	if (!mtk_wed_device_active(wed))
++		return -EOPNOTSUPP;
++
++	return mtk_wed_device_setup_tc(wed, netdev, type, type_data);
++}
++EXPORT_SYMBOL_GPL(mt76_net_setup_tc);
++#endif /* CONFIG_NET_MEDIATEK_SOC_WED */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 82e33a1b36ab..e8e9d9bc3730 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1047,6 +1047,12 @@ bool ____mt76_poll_msec(struct mt76_dev *dev, u32 offset, u32 mask, u32 val,
+ void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs);
+ void mt76_pci_disable_aspm(struct pci_dev *pdev);
+ 
++#ifdef CONFIG_NET_MEDIATEK_SOC_WED
++int mt76_net_setup_tc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++		      struct net_device *netdev, enum tc_setup_type type,
++		      void *type_data);
++#endif /*CONFIG_NET_MEDIATEK_SOC_WED */
++
+ static inline u16 mt76_chip(struct mt76_dev *dev)
+ {
+ 	return dev->rev >> 16;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index a3fd54cc1911..ba34c8e19aab 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -1653,20 +1653,6 @@ mt7915_net_fill_forward_path(struct ieee80211_hw *hw,
+ 
+ 	return 0;
+ }
+-
+-static int
+-mt7915_net_setup_tc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-		    struct net_device *netdev, enum tc_setup_type type,
+-		    void *type_data)
+-{
+-	struct mt7915_dev *dev = mt7915_hw_dev(hw);
+-	struct mtk_wed_device *wed = &dev->mt76.mmio.wed;
+-
+-	if (!mtk_wed_device_active(wed))
+-		return -EOPNOTSUPP;
+-
+-	return mtk_wed_device_setup_tc(wed, netdev, type, type_data);
+-}
+ #endif
+ 
+ const struct ieee80211_ops mt7915_ops = {
+@@ -1721,6 +1707,6 @@ const struct ieee80211_ops mt7915_ops = {
+ 	.set_radar_background = mt7915_set_radar_background,
+ #ifdef CONFIG_NET_MEDIATEK_SOC_WED
+ 	.net_fill_forward_path = mt7915_net_fill_forward_path,
+-	.net_setup_tc = mt7915_net_setup_tc,
++	.net_setup_tc = mt76_net_setup_tc,
+ #endif
+ };
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230906093704.14001-1-dmantipov@yandex.ru/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.41.0
 
