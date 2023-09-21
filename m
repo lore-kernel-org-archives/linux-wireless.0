@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29348E7D0A2
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:04:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A05ABE7D0A8
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231279AbjIUTEg (ORCPT
+        id S230238AbjIUTFQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:04:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42436 "EHLO
+        Thu, 21 Sep 2023 15:05:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230415AbjIUTEF (ORCPT
+        with ESMTP id S231246AbjIUTE3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:04:05 -0400
+        Thu, 21 Sep 2023 15:04:29 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7241B900C
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:50:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 884005A56B
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:50:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695318633; x=1726854633;
+  t=1695318623; x=1726854623;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=3wYAlaqvKcESlmdTGDDKXMthjEYbZ/B/YJKPDqLykZA=;
-  b=AwiKz1IVtlgFuFkNiSgSjv34uT5Z3cN+byYRd4X+Tm5+eHeAmgEIyfyn
-   SlyqmMXIjJfkDyl8AlitwPM3hoLGjtujA843khEpmdAVROH+E/Ja89Koy
-   y+fc8M41EmXRLosq5d7yaSAXGJ77uuDVB2+AqNMDEWlJkqMtBiMIzd3O7
-   XP7DgjVil0BHJrW4A3GzWTCDTdBrIFc9kFYoyCb9BudrVUwUlKPHSeRWP
-   vRBxtK0rtdll7/rlvUtz26ehyEFt6TDGB8zU7XnUpFqB3l4bZKIGnWBiX
-   IaXq0jp2oVqARJNabze3KVu/ay2tr+/CKanoflJjnE2++RelaQcEJrFH0
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="384305384"
+  bh=qlzk2SgvGxnJaXvH29WJ8Ri5QPsI0Iproy6HF8JbI9g=;
+  b=DhOzpMztmmKtQmy5JydU2lRoMGQWFz1T4KZ7sW1Jg93MK1kWk9apsrPA
+   zz51n4txsVAFG7w7opqYU22TJ+VGVjTWjQBMTCC6UpUMhy4lGzeMWb1Vo
+   2aIe6C6XFes7VoTWkSe+FM4x7vWIeDVF+gq/YhGki8a05MzwEfB6Koy6O
+   B18vkq3VKhrp5XDtnQejXWnXPxWJ06+PEGvt8rldpHCnZFMnLZcZk9qqi
+   dmBRiZvQIfexpJScHRHqzRRkP9Djcw8Gy/fCG80IXgzvqwZfF5g8MkgCC
+   FVKBbslf0uLq7McFgM/KHWd0iauSqPxHeN1LCbRdOsWVXyfTUgG4kDXXZ
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="384305307"
 X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
-   d="scan'208";a="384305384"
+   d="scan'208";a="384305307"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:01 -0700
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:58:47 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="740545590"
+X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="740545507"
 X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
-   d="scan'208";a="740545590"
+   d="scan'208";a="740545507"
 Received: from rchuwer-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.229.163])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:00 -0700
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:58:45 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 08/12] wifi: iwlwifi: mvm: make pldr_sync AX210 specific
-Date:   Thu, 21 Sep 2023 11:58:06 +0300
-Message-Id: <20230921110726.928901700ad8.I648efdc4400d9e537359915a9a8f363d5d255ead@changeid>
+Subject: [PATCH 02/12] wifi: iwlwifi: mvm: iterate active links for STA queues
+Date:   Thu, 21 Sep 2023 11:58:00 +0300
+Message-Id: <20230921110726.7ee1f1a55e1c.I410c512d1fad7d1cf9b2d2a3451a312821dc816d@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230921085810.693048-1-gregory.greenman@intel.com>
 References: <20230921085810.693048-1-gregory.greenman@intel.com>
@@ -59,38 +59,43 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The register here is device specific, so we need to gate
-the reading/checking to apply only on AX210 family.
+During HW restart in eSR, links allocated in a station and links
+active in the interface may differ. Use for_each_sta_active_link
+to capture this.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 6e5c0f81e041..5c719636c9bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -593,11 +593,13 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 51ca99bd5117..61d564735d57 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -865,11 +865,11 @@ int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm,
  
- 	mvm->rfkill_safe_init_done = false;
+ 	if (sta) {
+ 		struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++		struct ieee80211_link_sta *link_sta;
+ 		unsigned int link_id;
  
--	sb_cfg = iwl_read_umac_prph(mvm->trans, SB_MODIFY_CFG_FLAG);
--	/* if needed, we'll reset this on our way out later */
--	mvm->pldr_sync = !(sb_cfg & SB_CFG_RESIDES_IN_OTP_MASK);
--	if (mvm->pldr_sync && iwl_mei_pldr_req())
--		return -EBUSY;
-+	if (mvm->trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_AX210) {
-+		sb_cfg = iwl_read_umac_prph(mvm->trans, SB_MODIFY_CFG_FLAG);
-+		/* if needed, we'll reset this on our way out later */
-+		mvm->pldr_sync = !(sb_cfg & SB_CFG_RESIDES_IN_OTP_MASK);
-+		if (mvm->pldr_sync && iwl_mei_pldr_req())
-+			return -EBUSY;
-+	}
+-		for (link_id = 0;
+-		     link_id < ARRAY_SIZE(mvmsta->link);
+-		     link_id++) {
++		rcu_read_lock();
++		for_each_sta_active_link(mvmsta->vif, sta, link_sta, link_id) {
+ 			struct iwl_mvm_link_sta *link =
+ 				rcu_dereference_protected(mvmsta->link[link_id],
+ 							  lockdep_is_held(&mvm->mutex));
+@@ -879,6 +879,7 @@ int iwl_mvm_tvqm_enable_txq(struct iwl_mvm *mvm,
  
- 	iwl_init_notification_wait(&mvm->notif_wait,
- 				   &init_wait,
+ 			sta_mask |= BIT(link->sta_id);
+ 		}
++		rcu_read_unlock();
+ 	} else {
+ 		sta_mask |= BIT(sta_id);
+ 	}
 -- 
 2.38.1
 
