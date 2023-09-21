@@ -2,101 +2,88 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4802EE7D0A2
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 20:11:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E332BE7D0A7
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 20:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230304AbjIUULf (ORCPT
+        id S231278AbjIUUYT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:11:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45846 "EHLO
+        Thu, 21 Sep 2023 16:24:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230315AbjIUULX (ORCPT
+        with ESMTP id S230387AbjIUUYB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 16:11:23 -0400
-Received: from nbd.name (nbd.name [46.4.11.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED687B94D
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 12:53:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-        s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-        To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=H4oZQOsqSRYHINWYGOgZgDL1uvm2SVUKaVUh+Us9cMU=; b=d3Evum5Fjr6rK2gO+byn1WhNLt
-        GhItIUEOcniUyYs2hq3zzaMpOVtNRMAffq2u/zuvTBq5klCPjiRxmSqPd3xuJ5HYrlBbW0X5naAO9
-        /ytGoiRBoCZ/mJogZuXpbUH5QW5XET+d1IpHoY/y98PllU8NM9lyX00ujWUJi5yDWvk8=;
-Received: from p54ae986d.dip0.t-ipconnect.de ([84.174.152.109] helo=localhost.localdomain)
-        by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-        (Exim 4.94.2)
-        (envelope-from <nbd@nbd.name>)
-        id 1qjEbm-005Auc-DH
-        for linux-wireless@vger.kernel.org; Thu, 21 Sep 2023 10:00:22 +0200
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH] wifi: mt76: mt7915 add tc offloading support
-Date:   Thu, 21 Sep 2023 10:00:21 +0200
-Message-ID: <20230921080021.18016-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.41.0
+        Thu, 21 Sep 2023 16:24:01 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16FE62A108
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 12:52:04 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LIWLNN006500;
+        Thu, 21 Sep 2023 19:51:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=pVmbu6PzUwx6aeObZb5mxob5K7CgHjrEnsX1MTfilVk=;
+ b=BkRs+xJE4GE+uW4SF/gi+ZN3ngOez6pTTglvfImHeIghaIafgktLmK98hxY7o2aBQxNP
+ ozhLSUQUkGRS6LBdFnBZVvCxVlGurlhuqfj9MhxMP5fzcoSEFzBFe29Y214REqCu715Q
+ 1X3UnPQ/RV4Amy+3BmORuG8/aFgaWCn4xkPo5rxTvN3AIOBQ8VsU/rsnJR1lgXtqLOLz
+ KmS+OB/OWnTiI/PR6M1X1AqTVKyo2uW+w+sBoQvfZbdrwxr/FEEqWjrmKH62dfEIkcLO
+ FBF1bOFr99WyBscbb9TyFGcjmuV991DmIXDO4X6thkP9mxURWM4H3S7CQuLhxfVqtk2X iw== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t8u6rr536-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 19:51:48 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LJplli006195
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 19:51:47 GMT
+Received: from [10.48.245.144] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 21 Sep
+ 2023 12:51:47 -0700
+Message-ID: <89ee7eff-08d2-4e12-b4d7-3712c16cc933@quicinc.com>
+Date:   Thu, 21 Sep 2023 12:51:46 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 02/13] wifi: ath11k: store cur_regulatory_info for each
+ radio
+Content-Language: en-US
+To:     Wen Gong <quic_wgong@quicinc.com>, <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <kvalo@kernel.org>
+References: <20230920082349.29111-1-quic_wgong@quicinc.com>
+ <20230920082349.29111-3-quic_wgong@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20230920082349.29111-3-quic_wgong@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: S6uLL7r2v3qMYQRvhuLRzp9cLpJA92CP
+X-Proofpoint-ORIG-GUID: S6uLL7r2v3qMYQRvhuLRzp9cLpJA92CP
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-21_17,2023-09-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ lowpriorityscore=0 adultscore=0 mlxlogscore=649 impostorscore=0
+ malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0 phishscore=0
+ suspectscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2309180000 definitions=main-2309210170
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is used for offloading flows from WLAN to Ethernet, or from WLAN to WLAN
+On 9/20/2023 1:23 AM, Wen Gong wrote:
+> The regulatory info of WMI_REG_CHAN_LIST_CC_EXT_EVENTID is not saved
+> in ath11k now, the info should be saved in ath11k. Save the info for
+> each radio and support switch regulatory rules dynamically
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c |  3 +++
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 15 +++++++++++++++
- 2 files changed, 18 insertions(+)
+Kalle, can you add hard stop when you apply to pending?
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index f4d77eba7191..81478289f17e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -344,6 +344,9 @@ mt7915_init_wiphy(struct mt7915_phy *phy)
- 	hw->max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF_HE;
- 	hw->netdev_features = NETIF_F_RXCSUM;
- 
-+	if (mtk_wed_device_active(&mdev->mmio.wed))
-+		hw->netdev_features |= NETIF_F_HW_TC;
-+
- 	hw->radiotap_timestamp.units_pos =
- 		IEEE80211_RADIOTAP_TIMESTAMP_UNIT_US;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index d527ab28d4ef..a3fd54cc1911 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -1653,6 +1653,20 @@ mt7915_net_fill_forward_path(struct ieee80211_hw *hw,
- 
- 	return 0;
- }
-+
-+static int
-+mt7915_net_setup_tc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		    struct net_device *netdev, enum tc_setup_type type,
-+		    void *type_data)
-+{
-+	struct mt7915_dev *dev = mt7915_hw_dev(hw);
-+	struct mtk_wed_device *wed = &dev->mt76.mmio.wed;
-+
-+	if (!mtk_wed_device_active(wed))
-+		return -EOPNOTSUPP;
-+
-+	return mtk_wed_device_setup_tc(wed, netdev, type, type_data);
-+}
- #endif
- 
- const struct ieee80211_ops mt7915_ops = {
-@@ -1707,5 +1721,6 @@ const struct ieee80211_ops mt7915_ops = {
- 	.set_radar_background = mt7915_set_radar_background,
- #ifdef CONFIG_NET_MEDIATEK_SOC_WED
- 	.net_fill_forward_path = mt7915_net_fill_forward_path,
-+	.net_setup_tc = mt7915_net_setup_tc,
- #endif
- };
--- 
-2.41.0
+> 
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+> 
+> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 
