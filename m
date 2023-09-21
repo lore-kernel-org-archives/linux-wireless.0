@@ -2,85 +2,85 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60673E7D0A2
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 19:50:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37122E7D0A2
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 20:04:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230447AbjIUTuq (ORCPT
+        id S231569AbjIUUEK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:50:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60932 "EHLO
+        Thu, 21 Sep 2023 16:04:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230469AbjIUTug (ORCPT
+        with ESMTP id S231449AbjIUUEA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 15:50:36 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E85B7697BA
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:50:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695318642; x=1726854642;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=byABH+hsUoi5S/yMfj0RVxmAy470GYhDMUlm2zglCGo=;
-  b=mSkCKAQwPx5c9FdLMS2VQCXXJqOQ98iRsU65P6DIX0uMf/Zetv7XCqO1
-   wrsNP6M7OUX6ygBXpdxBIGDF8zbpaLMxdBcBhSJ1/mS6E2YG4ThPYSeKD
-   Dyc+EGy6JRQOj4/YV0/SQfcb2Z88AvgQ3T63Jc13LHpJrlU0LiF0uEyNR
-   Wxek2eR/mwppd0OZFxKP/gKCRCTdlHt4B1859gbHTprE3NdzYKewE11ne
-   f0sLtZrLWbhjgplEn3qHXqaCW0cah6fbf/dC86hhAM4vzD19XhVxNxK55
-   gwnGVY505qqyS5FkPpKnFR7DD4RhVJ2h7I2J3a1RYWgJZ0YWxAONkuZiu
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="384305474"
-X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
-   d="scan'208";a="384305474"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:08 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10839"; a="740545656"
-X-IronPort-AV: E=Sophos;i="6.03,165,1694761200"; 
-   d="scan'208";a="740545656"
-Received: from rchuwer-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.lan) ([10.214.229.163])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Sep 2023 01:59:06 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/12] wifi: iwlwifi: mvm: check for iwl_mvm_mld_update_sta() errors
-Date:   Thu, 21 Sep 2023 11:58:09 +0300
-Message-Id: <20230921110727.a9496c232d48.I74adaa8f3c6fd3252348e79f18605246936ef27d@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230921085810.693048-1-gregory.greenman@intel.com>
-References: <20230921085810.693048-1-gregory.greenman@intel.com>
+        Thu, 21 Sep 2023 16:04:00 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFB0079E29
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 12:59:32 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LJeqmA006221;
+        Thu, 21 Sep 2023 19:59:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=VvNLRrgGoAincL0S4MZbEFLGQ8oePs+K3SW+5a9KeAs=;
+ b=oavXKiCl9nQEgjEqA15FuNGqyjfc74uBorTiWJxAPoiwtWk4TpOOR8iR7fOIU91/qaL0
+ bl0/6v/FsPE7U7vIsbdwety+T7v+JctBnKE9muc5cXQhbKpU/EOApmEDcNEySnU/HsqT
+ nAJvyGfDP4mE/kqQ3eg3ukD9f13KVK9z5+A4W6eDFehcDbFjmVg/retAogpuYQivpQRg
+ pGJn/HOlLAssSZHQ633sFM70r/JGcEgkz1gKeYLpxCbrng0K59D+yr5uein2gZWmNVtN
+ /zX7jFzNExnPf61IpJLFyxRGX5q3GT8Tu1xew4Fivayj/sjbkHlU0omqt0w6Y+7sfCZ/ bg== 
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t8u6ag5wh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 19:59:27 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LJxQIb005843
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Sep 2023 19:59:26 GMT
+Received: from [10.48.245.144] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 21 Sep
+ 2023 12:59:25 -0700
+Message-ID: <b1b11958-1c73-4257-8f05-71f1c5beb568@quicinc.com>
+Date:   Thu, 21 Sep 2023 12:59:25 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 05/13] wifi: ath11k: update regulatory rules when
+ connect to AP on 6 GHz band for station
+Content-Language: en-US
+To:     Wen Gong <quic_wgong@quicinc.com>, <ath11k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <kvalo@kernel.org>
+References: <20230920082349.29111-1-quic_wgong@quicinc.com>
+ <20230920082349.29111-6-quic_wgong@quicinc.com>
+From:   Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20230920082349.29111-6-quic_wgong@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.49.16.6]
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: eZyN3BcgRYVOMXAvsfbBy5kFG1csc0hV
+X-Proofpoint-ORIG-GUID: eZyN3BcgRYVOMXAvsfbBy5kFG1csc0hV
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-21_17,2023-09-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
+ mlxlogscore=999 priorityscore=1501 lowpriorityscore=0 spamscore=0
+ suspectscore=0 clxscore=1015 malwarescore=0 mlxscore=0 adultscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2309210171
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The return value of this function is assigned, but then unused.
-Check for errors here.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index 4e9d19eb31f1..1464aad039e1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -697,6 +697,8 @@ int iwl_mvm_mld_add_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	/* at this stage sta link pointers are already allocated */
- 	ret = iwl_mvm_mld_update_sta(mvm, vif, sta);
-+	if (ret)
-+		goto err;
- 
- 	for_each_sta_active_link(vif, sta, link_sta, link_id) {
- 		struct ieee80211_bss_conf *link_conf =
--- 
-2.38.1
+On 9/20/2023 1:23 AM, Wen Gong wrote:
+> When station connect to AP on 6 GHz band, it needs switch the regulatory
+> rules according to the regulatory info sub field in HE operation element.
+> Switch to the power type which AP used for station interface.
+> 
+> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+> 
+> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 
