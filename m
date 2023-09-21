@@ -2,88 +2,93 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D948E7D0AB
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 20:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10524E7D0AC
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Sep 2023 20:37:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230137AbjIUUfy (ORCPT
+        id S232053AbjIUUhn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:35:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57536 "EHLO
+        Thu, 21 Sep 2023 16:37:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232073AbjIUUei (ORCPT
+        with ESMTP id S232078AbjIUUh3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Sep 2023 16:34:38 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC17235A4
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 13:09:40 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LIGO4N026981;
-        Thu, 21 Sep 2023 20:09:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=O7x1ku8yq3Q7XcRndWPZcracLq1QL/uzpcoWge2dw1I=;
- b=ohp3Zexlj5xJ8vNC/Cw6bqryxIbgo+35DH7etxm6Pr/TdLw/aQHnA1ujsCBoDdq2Ntyi
- n7y4HugF2QnVLARn1BTG53k6Gzxk16/v2fy4FIP+70PtDzCNi4V1zg41VeR2fJGYDM9s
- GbkoylKBQP4h/4RP6DZ8stX195uHRNgNMS67LqK4Chqm7F68QPw7ULqyuL138cHEd3b6
- +qWQArkkJLV/yeLXownyhV76eqon6GjTdOzGRtUF7SgNnqagLVbf92UTbF+H8o9fhjfz
- /dttv9DBrRWBgiFQ9HtA9RpuDnQ5dE0v9Ha8ugJ204TlvuZtVHGy2hhIQQxNEm5GO7AW AQ== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3t8txpg7d0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 20:09:35 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38LK9YQh030220
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 21 Sep 2023 20:09:34 GMT
-Received: from [10.48.245.144] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 21 Sep
- 2023 13:09:33 -0700
-Message-ID: <6a179226-371c-4ee2-97d0-8b590ccec14d@quicinc.com>
-Date:   Thu, 21 Sep 2023 13:09:33 -0700
+        Thu, 21 Sep 2023 16:37:29 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69A1C7EA1F
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Sep 2023 10:37:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76470C3279B;
+        Thu, 21 Sep 2023 10:43:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695293024;
+        bh=CafFfhS++g5ES5lGvZKA5DFr08N/n5bxoMaqXT+Ze0A=;
+        h=From:To:Cc:Subject:Date:From;
+        b=QG8EUP1NJZ8AGMWliG2Piz983BGGzHDm4dPrrbrDR/fcxSWyE9hLkyT7qLrTiZy9x
+         v/WaPgbnnr2a+XBHZatdusD+tVzxid1n98hGRqt6k9lXRVCu3aYvXETHarpPX5pf0x
+         diEY7agkkmsVKXPolMT7bY9aDlYMg35rpCsm9htJQwVOmdBxkPwXXJ6wxtxj69++2t
+         7jNgVSB9XTrby+svUpdrrlstFUnl+TCeQ0SbZWderZAz9gA0+A3jrGT4mjTP7lY0pr
+         yVnboGYYZaRUEEe96Iwlm1ApF4KiAJkP4e4dPXChf7p94+8d6AklZa99Aa/U8om59D
+         MtAhGCPKtWKCg==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, evelyn.tsai@mediatek.com,
+        shayne.chen@mediatek.com, Bo.Jiao@mediatek.com,
+        sujuan.chen@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH 0/9] wifi: mt7996: add wed support
+Date:   Thu, 21 Sep 2023 12:43:29 +0200
+Message-ID: <cover.1695292502.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 09/13] wifi: ath11k: fill parameters for vdev set tpc
- power WMI command
-Content-Language: en-US
-To:     Wen Gong <quic_wgong@quicinc.com>, <ath11k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <kvalo@kernel.org>
-References: <20230920082349.29111-1-quic_wgong@quicinc.com>
- <20230920082349.29111-10-quic_wgong@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20230920082349.29111-10-quic_wgong@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 5phwTgr04i7rrl6cvq9y8pEDPOT5xHQT
-X-Proofpoint-GUID: 5phwTgr04i7rrl6cvq9y8pEDPOT5xHQT
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-21_17,2023-09-21_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
- phishscore=0 impostorscore=0 malwarescore=0 adultscore=0 bulkscore=0
- clxscore=1015 suspectscore=0 lowpriorityscore=0 priorityscore=1501
- mlxlogscore=737 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2309210173
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 9/20/2023 1:23 AM, Wen Gong wrote:
-> Prepare the parameters which is needed for WMI command WMI_VDEV_SET_TPC_POWER_CMDID.
+Similar to MT7915, introduce Wireless Ethernet Dispatcher (WED)
+support for MT7996 driver to offload transmitted/received traffic.
 
-Kalle, can you s/is/are/ when you pull into pending?
+Bo Jiao (1):
+  wifi: mt76: mt7996: add wed rx support
 
-> 
-> Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
-> 
-> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Lorenzo Bianconi (7):
+  wifi: mt76: mmio: move mt76_mmio_wed_{init,release}_rx_buf in common
+    code
+  wifi: mt76: move mt76_mmio_wed_offload_{enable,disable} in common code
+  wifi: mt76: move mt76_net_setup_tc in common code
+  wifi: mt76: introduce mt76_queue_is_wed_tx_free utility routine
+  wifi: mt76: introduce wed pointer in mt76_queue
+  wifi: mt76: increase MT_QFLAG_WED_TYPE size
+  wifi: mt76: dma: introduce __mt76_dma_queue_reset utility routine
 
-(but I have a non-blocking comments I'll post separately)
+Sujuan Chen (1):
+  wifi: mt76: mt7996: add wed tx support
+
+ drivers/net/wireless/mediatek/mt76/dma.c      | 219 ++++++++++-----
+ drivers/net/wireless/mediatek/mt76/dma.h      |  12 +
+ drivers/net/wireless/mediatek/mt76/mac80211.c |  19 +-
+ drivers/net/wireless/mediatek/mt76/mmio.c     |  97 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     | 102 ++++++-
+ .../net/wireless/mediatek/mt76/mt7603/dma.c   |   9 +-
+ .../net/wireless/mediatek/mt76/mt7615/dma.c   |   6 +-
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |   3 +-
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  |   5 +-
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c |   5 +-
+ .../net/wireless/mediatek/mt76/mt7915/dma.c   |  18 +-
+ .../net/wireless/mediatek/mt76/mt7915/main.c  |  16 +-
+ .../net/wireless/mediatek/mt76/mt7915/mmio.c  | 107 +-------
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   |   2 +-
+ .../net/wireless/mediatek/mt76/mt7925/pci.c   |   2 +-
+ .../net/wireless/mediatek/mt76/mt7996/dma.c   | 258 ++++++++++++++++--
+ .../net/wireless/mediatek/mt76/mt7996/init.c  | 156 ++++++++++-
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   |  72 ++++-
+ .../net/wireless/mediatek/mt76/mt7996/main.c  |  42 +++
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   |  13 +-
+ .../net/wireless/mediatek/mt76/mt7996/mmio.c  | 208 ++++++++++++--
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |  67 ++++-
+ .../net/wireless/mediatek/mt76/mt7996/pci.c   |  72 +++--
+ .../net/wireless/mediatek/mt76/mt7996/regs.h  |  65 ++++-
+ 24 files changed, 1276 insertions(+), 299 deletions(-)
+
+-- 
+2.41.0
 
