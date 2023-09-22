@@ -2,67 +2,69 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC194CD4F2B
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Sep 2023 07:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A141DCD4F27
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Sep 2023 07:45:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231254AbjIVH2k (ORCPT
+        id S231827AbjIVHpJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Sep 2023 03:28:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33154 "EHLO
+        Fri, 22 Sep 2023 03:45:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231370AbjIVH2j (ORCPT
+        with ESMTP id S231843AbjIVHoz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Sep 2023 03:28:39 -0400
+        Fri, 22 Sep 2023 03:44:55 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67FEE19E
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Sep 2023 00:28:33 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 562F8C433C7;
-        Fri, 22 Sep 2023 07:28:32 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1573410C4
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Sep 2023 00:43:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AA8EC433C8;
+        Fri, 22 Sep 2023 07:43:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695367713;
-        bh=d1mI+0ZL2+cM7MjGZNsCyN17hETr1Hjl/AuwczI38vw=;
+        s=k20201202; t=1695368616;
+        bh=+f8zGftn3d5DLHUAhA2ti+9ph0p0emRcrgqvWCGeRXI=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=mSwKLSZnid2CdtbW8QBRLcqbwUf4BlboVFlRO1W+Gth7dhzamP0U7cRRWiTVSnAAP
-         77Vv3ZT0/7BAtLpdxrWcxsJz1kHlngpbuVxK4YVkLdZyJpXk7S2xlxTyEBfMbMrhmW
-         1AIQLKwip+8StiW4P1EgAXdpRPUM3mfR5iU7M3e/PRYJ3L/xgr2EWx0WlJHgpJAkwA
-         1Oho73eItdheKdBghHE1miiFgV2iCeBvlrFN4IWCarpsR6L+DuPVqVPTEsjQhpSSQC
-         co1VpVhmHU2PqoncTj4WMVGdJb97lktjXUR63c2TRkQYtceqUqvVDlG4zOzWh1Y2YW
-         5VqhA0Gw9X1hQ==
+        b=cKGT3bSFLbTSM57i5Bj8/qDbxudN63hnfH9R6JdikO/gitRpgX4S12XE/+d/RSEHe
+         BXgn/nZjko1KK3F2KzaJeElb50CTDG0V8fEHIceRgRNHfX6mZjEGhH45nBeQS8c/s2
+         PdnTBBaS35EObq1nbOgFySsYwIvkpqe1k4j944mn/sJdAm61EZRK0WZTq3lccrcKEI
+         jApqJ5fEVPQlyTkrrf2Hrz7eYkJkU2fwN+lW5O8VX9Sb6NPCqmjVMxPkrk3iZWlYHl
+         z+7odRKfR7a9H/DxGgiA2iMRvAT/6vvgO4Ujrw0+WlsCS0ZCsb7C5MHaEDD82R2Lcp
+         M4WLmPomZ55Sg==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH wireless] wifi: mt76: mt76x02: fix MT76x0 external LNA
- gain
- handling
+Subject: Re: [PATCH 1/2] wifi: mwifiex: simplify PCIE write operations
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20230919194747.31647-1-nbd@nbd.name>
-References: <20230919194747.31647-1-nbd@nbd.name>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless@vger.kernel.org,
-        Shiji Yang <yangshiji66@outlook.com>
+In-Reply-To: <20230919132804.73340-1-dmantipov@yandex.ru>
+References: <20230919132804.73340-1-dmantipov@yandex.ru>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Brian Norris <briannorris@chromium.org>,
+        linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
+        Dmitry Antipov <dmantipov@yandex.ru>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169536771011.1992536.10976022273047975727.kvalo@kernel.org>
-Date:   Fri, 22 Sep 2023 07:28:32 +0000 (UTC)
+Message-ID: <169536861298.2011393.6026492051683606786.kvalo@kernel.org>
+Date:   Fri, 22 Sep 2023 07:43:34 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> wrote:
+Dmitry Antipov <dmantipov@yandex.ru> wrote:
 
-> On MT76x0, LNA gain should be applied for both external and internal LNA.
-> On MT76x2, LNA gain should be treated as 0 for external LNA.
-> Move the LNA type based logic to mt76x2 in order to fix mt76x0.
+> Since 'mwifiex_write_reg()' just issues void 'iowrite32()',
+> convert the former to 'void' and simplify all related users
+> (with the only exception of 'read_poll_timeout()' which
+> explicitly requires a non-void function argument).
 > 
-> Fixes: 2daa67588f34 ("mt76x0: unify lna_gain parsing")
-> Reported-by: Shiji Yang <yangshiji66@outlook.com>
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+> 
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+> Acked-by: Brian Norris <briannorris@chromium.org>
 
-Patch applied to wireless.git, thanks.
+2 patches applied to wireless-next.git, thanks.
 
-684e45e120b8 wifi: mt76: mt76x02: fix MT76x0 external LNA gain handling
+c2e01a3a7b9a wifi: mwifiex: simplify PCIE write operations
+804edf4d18e2 wifi: mwifiex: followup PCIE and related cleanups
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20230919194747.31647-1-nbd@nbd.name/
+https://patchwork.kernel.org/project/linux-wireless/patch/20230919132804.73340-1-dmantipov@yandex.ru/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
