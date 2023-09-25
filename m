@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B0DCE7A8C
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Sep 2023 08:11:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3E8CE7A95
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Sep 2023 08:11:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232620AbjIYILH (ORCPT
+        id S232642AbjIYILJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Sep 2023 04:11:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38958 "EHLO
+        Mon, 25 Sep 2023 04:11:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232614AbjIYILG (ORCPT
+        with ESMTP id S232628AbjIYILI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Sep 2023 04:11:06 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A51FA2
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2023 01:11:00 -0700 (PDT)
-X-UUID: 0c6020845b7b11eea33bb35ae8d461a2-20230925
+        Mon, 25 Sep 2023 04:11:08 -0400
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 007E3A2
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Sep 2023 01:11:01 -0700 (PDT)
+X-UUID: 0df6dba45b7b11ee8051498923ad61e6-20230925
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=R3Bb1nrCF1oV2g5dOdB8Ph18kjGirLPr99ocUJVK3jc=;
-        b=AjlUCFoBaYe0qBHheMsleGdvlwOYHcpcfX1ig6AfbeWtR1txEOEACr7z+vTsa7s0QLeNLTt6vN/kLXk78wh2X0yeq3RZIPAeot3mmWCfg2zJJjs9HbLGBGRtoOlrrcvhsWdVH2S/Mm85psYPk/mWRtsrlO1Scc40EuFd4LLjLyQ=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=0JuqUPwvneTE8WbrG5NSOBsPogFLMaH/M01dP+LSCEk=;
+        b=MR+skQWwSAzVkeOHAKeXnfF8gMTH9blKhq5HfEdrWhq1gHkRavaatDpLYPtSHB97PLaxbP+YCd/CiopECf25XrOitwoW/ZLENsJ6ak18w2fm6TtIeHQUXcU+VH0cFOJhrEhMbT6n0Q8q8lepI922tjHDvH52XFpDtLUyJJTkbnY=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.32,REQID:2df31e63-fd30-47d3-a915-561ed0197d9a,IP:0,U
-        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:-5
-X-CID-META: VersionHash:5f78ec9,CLOUDID:e7475714-4929-4845-9571-38c601e9c3c9,B
+X-CID-O-INFO: VERSION:1.1.32,REQID:b2370650-fbb0-4301-b5de-0a3fbccc9a0d,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:5f78ec9,CLOUDID:8d7719f0-9a6e-4c39-b73e-f2bc08ca3dc5,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
         RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
         DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 0c6020845b7b11eea33bb35ae8d461a2-20230925
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+X-UUID: 0df6dba45b7b11ee8051498923ad61e6-20230925
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
         (envelope-from <deren.wu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 258683809; Mon, 25 Sep 2023 16:10:54 +0800
+        with ESMTP id 864745613; Mon, 25 Sep 2023 16:10:56 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
  MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Mon, 25 Sep 2023 16:10:52 +0800
+ 15.2.1118.26; Mon, 25 Sep 2023 16:10:54 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Mon, 25 Sep 2023 16:10:52 +0800
+ 15.2.1118.26 via Frontend Transport; Mon, 25 Sep 2023 16:10:54 +0800
 From:   Deren Wu <deren.wu@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
 CC:     Sean Wang <sean.wang@mediatek.com>,
@@ -58,62 +58,53 @@ CC:     Sean Wang <sean.wang@mediatek.com>,
         Ryder Lee <ryder.lee@mediatek.com>,
         Shayne Chen <shayne.chen@mediatek.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-mediatek <linux-mediatek@lists.infradead.org>,
-        Deren Wu <deren.wu@mediatek.com>
-Subject: [PATCH 0/6] support per-device regulatory settings
-Date:   Mon, 25 Sep 2023 16:10:32 +0800
-Message-ID: <cover.1695627867.git.deren.wu@mediatek.com>
+        linux-mediatek <linux-mediatek@lists.infradead.org>
+Subject: [PATCH 2/6] wifi: mt76: mt7921: enable set txpower for UNII-4
+Date:   Mon, 25 Sep 2023 16:10:34 +0800
+Message-ID: <1d96ae8bdd5248f1dc8cce83b545304871a958b3.1695627867.git.deren.wu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <cover.1695627867.git.deren.wu@mediatek.com>
+References: <cover.1695627867.git.deren.wu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--6.009000-8.000000
-X-TMASE-MatchedRID: fVi3P7wwuziT7j3lOi4TQ7bQFsbjObJeCt59Uh3p/NWyjjoaU0ns0J1I
-        RllGCL0aKI5Q2HQKDwWgMg/vVFp1mGqJrgOBmG6qQpxiLlDD9FVMkOX0UoduuQCGaccd4ae9DYJ
-        QbNnE3Z3jCeE5v4lH5IAy6p60ZV62fJ5/bZ6npdjKayT/BQTiGozzTLFRnsvHlhAaNCcqjMgsGG
-        Ct/FhJQrc4q1dzctJNG5BUnwnZfeA=
+X-TM-AS-Result: No-10--0.364800-8.000000
+X-TMASE-MatchedRID: 943eAS8JJckmiAtJc/lr9wPZZctd3P4BojQrbrPpzzofx9eHA8s3saPF
+        jJEFr+olAmPpbGBYlhvkwjHXXC/4I8prJP8FBOIaqEIT8PGyW77CcfklEbo7Q5fKwneGlwV3oXp
+        yFyzUSAKUr8e4xVrosg3kGPM1DYLrOi6cGE1VfyvBcXVqgPn7C5YA9VVXC73soVx+33HsKxN0BN
+        B20+SxH7f8mJY57oZddJaBDYald1lvF9+X2GEIHA==
 X-TM-AS-User-Approved-Sender: No
 X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--6.009000-8.000000
+X-TMASE-Result: 10--0.364800-8.000000
 X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: 41D8B72AC835A29244D3F47E4EC5040FEDDCF452D07E210D104A326BF9B670462000:8
+X-TM-SNTS-SMTP: 17D800AFCDDE9BD340E907E83C8BEF9BA5D8F8EF926B5CF3E669F4F0341FC2A72000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Some platform vendors need to apply their own regualtory settings and the
-vendor-specific data would be written in dts or acpi. This patch set adds
-the functionalities to handle this per-device 5.9/6GHz channel
-configurations.
+From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-Deren Wu (1):
-  wifi: mt76: mt7921: move connac nic capability handling to mt7921
+support power config for channel 165/173/177
 
-Ming Yen Hsieh (4):
-  wifi: mt76: mt7921: enable set txpower for UNII-4
-  wifi: mt76: mt7921: add 6GHz power type support for clc
-  wifi: mt76: mt7921: get regulatory information from the clc event
-  wifi: mt76: mt7921: update the channel usage when the regd domain
-    changed
+Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-rong.yan (1):
-  wifi: mt76: mt7921: support 5.9/6GHz channel config in acpi
-
- drivers/net/wireless/mediatek/mt76/eeprom.c   |   7 +-
- drivers/net/wireless/mediatek/mt76/mt76.h     |   5 +
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 122 +-------------
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |   2 +-
- .../net/wireless/mediatek/mt76/mt7921/init.c  |  51 ++++++
- .../net/wireless/mediatek/mt76/mt7921/main.c  |  34 ++++
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 157 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7921/mcu.h   |  13 ++
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |   1 +
- drivers/net/wireless/mediatek/mt76/mt792x.h   |  19 +++
- .../wireless/mediatek/mt76/mt792x_acpi_sar.c  |  53 ++++++
- .../wireless/mediatek/mt76/mt792x_acpi_sar.h  |   2 +
- 12 files changed, 336 insertions(+), 130 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 83cf2e2b2868..ae6bf3c968df 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -2042,7 +2042,7 @@ mt76_connac_mcu_rate_txpower_band(struct mt76_phy *phy,
+ 		112, 114, 116, 118, 120, 122, 124,
+ 		126, 128, 132, 134, 136, 138, 140,
+ 		142, 144, 149, 151, 153, 155, 157,
+-		159, 161, 165
++		159, 161, 165, 169, 173, 177
+ 	};
+ 	static const u8 chan_list_6ghz[] = {
+ 		  1,   3,   5,   7,   9,  11,  13,
 -- 
 2.18.0
 
