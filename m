@@ -2,51 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23EFBE732DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Sep 2023 14:36:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93676E732DE
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Sep 2023 14:36:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231262AbjI1OgW (ORCPT
+        id S231415AbjI1Og1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Sep 2023 10:36:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49866 "EHLO
+        Thu, 28 Sep 2023 10:36:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231376AbjI1OgU (ORCPT
+        with ESMTP id S231578AbjI1OgZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Sep 2023 10:36:20 -0400
+        Thu, 28 Sep 2023 10:36:25 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 195CF1B5
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Sep 2023 07:36:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6268A1AB
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Sep 2023 07:36:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695911778; x=1727447778;
+  t=1695911783; x=1727447783;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=r/Wm2fcf7fkqOtMbcDefTZF7auoktizwsoIsZ1gy1fc=;
-  b=NTB6B1Lm1iYnlFvql+xSSrxbThRY8YH5yKC//3LLtOy/eFv9ut+bIh/F
-   5wHcZKbP6x9yMpvTqpXj35h/Iucyfjx/B3sk3nkU5uodJS0dBczHLApKn
-   zFiHrzCSE98KSboEKY6Y9EHuG+2yHlER6h+qskgLSXNWwsfFmwiWUaYu1
-   tSiBXfzcfIlsrvoujDdhz5wJ87niL7qREvFgyxgEk40ZOg45oZ4VMUI79
-   LlymqgX50F4hegqjy0NWAQGN+v5R0Ewkky0wmCrlVRwyez7zgmdmyEfBG
-   onXp7GgGuE9t1P0TlV7LzTLpaYN1n2fPOzoXHho7XF2sStpmpo6zemYco
+  bh=a0ZX75M2y+8hZSFFirb9c/6IgXBkoLjRWKSfX5uk1JA=;
+  b=SCyfLRispxQpVRv8D/hjrSmIGKuqOJheIaObNzt97T5MHkyDyVOvMY8i
+   D0++p1G1Knv7OMWKd5wNUpRxc+Xv8HAdwGwpG4g8XR6Hkp00eyxXIo6n/
+   l61dgd/zZxTwEsVbJN0vGlr1tJzJkGvLB+aWj6HsZ/uFa7HM8hz6aSzkD
+   wNNEhKFASpUqJWRAsJZ5fh6+P/fCOpfF2twmUK70Bj/FxCdkP17hM7fMP
+   D6yZCWQO+OdhNcquNsJ7qXvbGomG+vCtNHpHnO8iq9OQRayzPfeyoRkEW
+   shothRAZEwLqe+UVWjK7dGF2TfOlpP9c1k0a74ym3kWztNZDU0VLB05a6
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="688461"
+X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="688485"
 X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
-   d="scan'208";a="688461"
+   d="scan'208";a="688485"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:17 -0700
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:22 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="996590458"
+X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="996590494"
 X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
-   d="scan'208";a="996590458"
+   d="scan'208";a="996590494"
 Received: from smoriles-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.92.89])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:15 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:20 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
+Cc:     linux-wireless@vger.kernel.org,
+        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 10/18] wifi: mac80211: Fix setting vif links
-Date:   Thu, 28 Sep 2023 17:35:31 +0300
-Message-Id: <20230928172905.0357b6306587.I7dbfec347949b629fea680d246a650d6207ff217@changeid>
+Subject: [PATCH 12/18] wifi: mac80211: Check if we had first beacon with relevant links
+Date:   Thu, 28 Sep 2023 17:35:33 +0300
+Message-Id: <20230928172905.3fe476aa83e5.Ic1505cf3d60f74580d31efa7e52046947c490b85@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230928143539.1037500-1-gregory.greenman@intel.com>
 References: <20230928143539.1037500-1-gregory.greenman@intel.com>
@@ -56,33 +57,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-When setting the interface links, ignore the change iff both the
-valid links and the dormant links did not change. This is needed
-to support cases where the valid links didn't change but the dormant
-links did.
+If there is a disassoc before the fisrt beacon we need to protect a
+session for the deauth frame. Currently we are checking if we had a
+beacon in the default link, which is wrong in a MLO connection and
+link id != 0.
+Fix this by checking all the active links, if non had a beacon then
+protect a session.
+If at least one link had a beacon there is no need for session
+protection.
 
-Fixes: 6d543b34dbcf ("wifi: mac80211: Support disabled links during association")
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- net/mac80211/link.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/mlme.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index 76c61a132569..bf7bd880d062 100644
---- a/net/mac80211/link.c
-+++ b/net/mac80211/link.c
-@@ -195,7 +195,7 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e92598dcf3ed..e3db27ec6793 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2935,9 +2935,20 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 		 * deauthentication frame by calling mgd_prepare_tx, if the
+ 		 * driver requested so.
+ 		 */
+-		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP) &&
+-		    !sdata->deflink.u.mgd.have_beacon) {
+-			drv_mgd_prepare_tx(sdata->local, sdata, &info);
++		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP)) {
++			for (link_id = 0; link_id < ARRAY_SIZE(sdata->link);
++			     link_id++) {
++				struct ieee80211_link_data *link;
++
++				link = sdata_dereference(sdata->link[link_id],
++							 sdata);
++				if (!link)
++					continue;
++				if (link->u.mgd.have_beacon)
++					break;
++			}
++			if (link_id == IEEE80211_MLD_MAX_NUM_LINKS)
++				drv_mgd_prepare_tx(sdata->local, sdata, &info);
+ 		}
  
- 	memset(to_free, 0, sizeof(links));
- 
--	if (old_links == new_links)
-+	if (old_links == new_links && dormant_links == sdata->vif.dormant_links)
- 		return 0;
- 
- 	/* if there were no old links, need to clear the pointers to deflink */
+ 		ieee80211_send_deauth_disassoc(sdata, sdata->vif.cfg.ap_addr,
 -- 
 2.38.1
 
