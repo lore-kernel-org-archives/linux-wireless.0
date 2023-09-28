@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78526E732DE
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Sep 2023 14:36:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2BE1E732DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Sep 2023 14:36:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231390AbjI1Ogb (ORCPT
+        id S231489AbjI1Ogc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Sep 2023 10:36:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43552 "EHLO
+        Thu, 28 Sep 2023 10:36:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231438AbjI1Og1 (ORCPT
+        with ESMTP id S231691AbjI1Ogb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Sep 2023 10:36:27 -0400
+        Thu, 28 Sep 2023 10:36:31 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B6191AB
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Sep 2023 07:36:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18A17CC1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Sep 2023 07:36:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695911785; x=1727447785;
+  t=1695911789; x=1727447789;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=/MlXhS4Cf/tKFho6koTj23yXR4IOzcjC5xLpBJPbqCU=;
-  b=FLD4aF2qRUT4rVx8QAxB34ig9Avtmwbh6/6Yztie8rGVyfME+nNPqigL
-   wsciehTuARxFYT+rO3yg/D9eSmbrCTEwzdff0sjAXj9zhWq06khoyPo5v
-   Pkpy3qbbZs0ThORlXznt+ttLf96V+RqfhaXf6+QYRJsyCebsbrwC8iNRV
-   Wdxjl4UhYPwMZt/QV03LzsJjXJVkWRnUUf+5FmxzUR056HuLox778SuFE
-   7wvD0mk+4eILuRVYpsMFferUy8IowC0R97zKuokqNOOrdwGZVO9j+ARe2
-   /ni6OELbdXFl6MzepYNDeYac5nOtiRWZaoKFV4Hgml2T9r0w5UZRTcpDe
+  bh=jSk3eOIjdWrZ/vH5KLjnPp2uVqLfFKxMw6oRBzvY328=;
+  b=PXCmdrozJ26JOba2Wj9uBMQ4oLMcQryf4vv4I/50zewJX+MaBZ5xfZni
+   6nwMT/+tzN4r5ECvoduWwM+LPQcAZwWg/kcOJXPFWlTfb/UzQM6hgHOcb
+   ul6X2WjtP8OmGtTCDDdIjOH00f67uEYI2qk9mh9nnJp/8EeJUoxEk7Nhh
+   NlcHqg4zm32OSFyrYdfa4BOF1hwM5EiAewqjS8WktyLrYXr4GHib+R2CY
+   sFK5fn5LLLslJNuJHUu+hYinVQoO/AqVQr8zRZgnYzra7iML6ny7h5LA7
+   BQzHzye5FlYCx0bnc5mKE0lYbQP1+sBu2RtBIxTXLWERzRnwYbmH9+m0L
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="688494"
+X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="688507"
 X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
-   d="scan'208";a="688494"
+   d="scan'208";a="688507"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:24 -0700
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:29 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="996590511"
+X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="996590541"
 X-IronPort-AV: E=Sophos;i="6.03,184,1694761200"; 
-   d="scan'208";a="996590511"
+   d="scan'208";a="996590541"
 Received: from smoriles-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.92.89])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:22 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Sep 2023 07:36:27 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 13/18] wifi: mac80211: add link id to mgd_prepare_tx()
-Date:   Thu, 28 Sep 2023 17:35:34 +0300
-Message-Id: <20230928172905.c7fc59a6780b.Ic88a5037d31e184a2dce0b031ece1a0a93a3a9da@changeid>
+Subject: [PATCH 15/18] wifi: mac80211: fix a expired vs. cancel race in roc
+Date:   Thu, 28 Sep 2023 17:35:36 +0300
+Message-Id: <20230928172905.4e4469be20ac.Iab0525f5cc4698acf23eab98b8b1eec02099cde0@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230928143539.1037500-1-gregory.greenman@intel.com>
 References: <20230928143539.1037500-1-gregory.greenman@intel.com>
@@ -57,108 +57,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-As we are moving to MLO and links terms, also the airtime protection
-will be done for a link rather than for a vif. Thus, some
-drivers will need to know for which link to protect airtime.
-Add link id as a parameter to the mgd_prepare_tx() callback.
+When the remain on channel is removed at the time it should
+have expired, we have a race: the driver could be handling
+the flow of the expiration while mac80211 is cancelling
+that very same remain on channel request.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+This wouldn't be problem in itself, but since mac80211
+can send the next request to the driver in the cancellation
+flow, we can get to the following situation:
+
+           CPU0                             CPU1
+expiration of roc in driver
+ieee80211_remain_on_channel_expired()
+                                         Cancellation of the roc
+schedules a worker (hw_roc_done)
+                                         Add next roc
+hw_roc_done_wk runs and ends
+the second roc prematurely.
+
+Since, by design, there is only one single request sent to the
+driver at a time, we can safely assume that after the cancel()
+request returns from the driver, we should not handle any worker
+that handles the expiration of the request.
+
+Cancel the hw_roc_done worker after the cancellation to make
+sure we start the next one with a clean slate.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- include/net/mac80211.h    | 3 +++
- net/mac80211/driver-ops.h | 1 +
- net/mac80211/mlme.c       | 9 ++++++++-
- 3 files changed, 12 insertions(+), 1 deletion(-)
+ net/mac80211/offchannel.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7dae9aac089c..db3e3bd62a61 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3641,11 +3641,14 @@ enum ieee80211_reconfig_type {
-  * @success: whether the frame exchange was successful, only
-  *	used with the mgd_complete_tx() method, and then only
-  *	valid for auth and (re)assoc.
-+ * @link_id: the link id on which the frame will be TX'ed.
-+ *	Only used with the mgd_prepare_tx() method.
-  */
- struct ieee80211_prep_tx_info {
- 	u16 duration;
- 	u16 subtype;
- 	u8 success:1;
-+	int link_id;
- };
- 
- /**
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index e07e65da15ee..3c8eb6afd6fd 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -928,6 +928,7 @@ static inline void drv_mgd_prepare_tx(struct ieee80211_local *local,
- 		return;
- 	WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION);
- 
-+	info->link_id = info->link_id < 0 ? 0 : info->link_id;
- 	trace_drv_mgd_prepare_tx(local, sdata, info->duration,
- 				 info->subtype, info->success);
- 	if (local->ops->mgd_prepare_tx)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e3db27ec6793..d19940864774 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1583,6 +1583,7 @@ static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 
- 	ifmgd->assoc_req_ies_len = pos - ie_start;
- 
-+	info.link_id = assoc_data->assoc_link_id;
- 	drv_mgd_prepare_tx(local, sdata, &info);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-@@ -2947,8 +2948,10 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 				if (link->u.mgd.have_beacon)
- 					break;
- 			}
--			if (link_id == IEEE80211_MLD_MAX_NUM_LINKS)
-+			if (link_id == IEEE80211_MLD_MAX_NUM_LINKS) {
-+				info.link_id = ffs(sdata->vif.active_links) - 1;
- 				drv_mgd_prepare_tx(sdata->local, sdata, &info);
-+			}
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 071582dbe6a5..6c4080202573 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -717,6 +717,23 @@ static int ieee80211_cancel_roc(struct ieee80211_local *local,
+ 			return ret;
  		}
  
- 		ieee80211_send_deauth_disassoc(sdata, sdata->vif.cfg.ap_addr,
-@@ -3576,6 +3579,7 @@ static void ieee80211_auth_challenge(struct ieee80211_sub_if_data *sdata,
- 	u32 tx_flags = 0;
- 	struct ieee80211_prep_tx_info info = {
- 		.subtype = IEEE80211_STYPE_AUTH,
-+		.link_id = auth_data->link_id,
- 	};
- 
- 	pos = mgmt->u.auth.variable;
-@@ -6566,6 +6570,7 @@ static int ieee80211_auth(struct ieee80211_sub_if_data *sdata)
- 	if (auth_data->algorithm == WLAN_AUTH_SAE)
- 		info.duration = jiffies_to_msecs(IEEE80211_AUTH_TIMEOUT_SAE);
- 
-+	info.link_id = auth_data->link_id;
- 	drv_mgd_prepare_tx(local, sdata, &info);
- 
- 	sdata_info(sdata, "send auth to %pM (try %d/%d)\n",
-@@ -7986,6 +7991,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 			   req->bssid, req->reason_code,
- 			   ieee80211_get_reason_code_string(req->reason_code));
- 
-+		info.link_id = ifmgd->auth_data->link_id;
- 		drv_mgd_prepare_tx(sdata->local, sdata, &info);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
-@@ -8006,6 +8012,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 			   req->bssid, req->reason_code,
- 			   ieee80211_get_reason_code_string(req->reason_code));
- 
-+		info.link_id = ifmgd->assoc_data->assoc_link_id;
- 		drv_mgd_prepare_tx(sdata->local, sdata, &info);
- 		ieee80211_send_deauth_disassoc(sdata, req->bssid, req->bssid,
- 					       IEEE80211_STYPE_DEAUTH,
++		/*
++		 * We could be racing against the notification from the driver:
++		 *  + driver is handling the notification on CPU0
++		 *  + user space is cancelling the remain on channel and
++		 *    schedules the hw_roc_done worker.
++		 *
++		 *  Now hw_roc_done might start to run after the next roc will
++		 *  start and mac80211 will think that this second roc has
++		 *  ended prematurely.
++		 *  Cancel the work to make sure that all the pending workers
++		 *  have completed execution.
++		 *  Note that this assumes that by the time the driver returns
++		 *  from drv_cancel_remain_on_channel, it has completed all
++		 *  the processing of related notifications.
++		 */
++		wiphy_work_cancel(local->hw.wiphy, &local->hw_roc_done);
++
+ 		/* TODO:
+ 		 * if multiple items were combined here then we really shouldn't
+ 		 * cancel them all - we should wait for as much time as needed
 -- 
 2.38.1
 
