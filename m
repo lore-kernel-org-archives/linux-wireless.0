@@ -2,62 +2,87 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C559E728CA
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Sep 2023 17:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9C0E728CF
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Sep 2023 17:46:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233968AbjI2R1J (ORCPT
+        id S233353AbjI2Rqz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Sep 2023 13:27:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41790 "EHLO
+        Fri, 29 Sep 2023 13:46:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233855AbjI2R0Z (ORCPT
+        with ESMTP id S233179AbjI2Rqz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Sep 2023 13:26:25 -0400
-X-Greylist: delayed 331 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 29 Sep 2023 10:26:11 PDT
-Received: from server.cesssrl.com (server.cesssrl.com [185.174.102.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0ECC173E
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2023 10:26:11 -0700 (PDT)
-Received: from vps2693868.trouble-free.net (unknown [216.219.84.124])
-        by server.cesssrl.com (Postfix) with ESMTPSA id 4C74FC267C
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2023 17:20:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cesssrl.com;
-        s=default; t=1696008039;
-        bh=iJTqGnnG6buyHZVR5r2JJTvVf4nhZ1f8J9awWmPB2pY=; h=From:To:Subject;
-        b=H2H/R5qKEALFHrxwbTrmEHUT0KZDSHgdJfbw28RnMGmY8wkJZLI76FLRm1O5qqja9
-         LTXRzpnM384JDp4itkw+InXAWc+mDh//EKKRfZt/B59b4b389T95KwG1RRYeTB1Gvj
-         zDtFxZ6Pfvicd7CBOHu1H5sOlRV3UHNoK3j8cMA7fbFQjvYEV+Uxy9sEJSjhtbdHA9
-         cLiIjtD20E/flZ+536y1dCLgGF/u3WHCcoStcylcsj8E9XZlsnSI6kt31FP1xqAXb1
-         5xPjq7uIWbDKR13bOH60eoMOSF9meKzRhOGK2E/pdDqYoEuO+n9VEwbD1uZUlwPhRm
-         4JLSVNaromq0Q==
-Authentication-Results: server.cesssrl.com;
-        spf=pass (sender IP is 216.219.84.124) smtp.mailfrom=inquiry@cesssrl.com smtp.helo=vps2693868.trouble-free.net
-Received-SPF: pass (server.cesssrl.com: connection is authenticated)
-Reply-To: "Eng. Don Walker" <don.walker@gfzenergyengineeringcorp.link>
-From:   "Eng. Don Walker" <inquiry@cesssrl.com>
-To:     linux-wireless@vger.kernel.org
-Subject: Inquiry M01nftjmj:Ref
-Date:   29 Sep 2023 10:20:38 -0700
-Message-ID: <20230929102036.4E6783AB4510F18E@cesssrl.com>
+        Fri, 29 Sep 2023 13:46:55 -0400
+X-Greylist: delayed 490 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 29 Sep 2023 10:46:51 PDT
+Received: from smtp-bc0d.mail.infomaniak.ch (smtp-bc0d.mail.infomaniak.ch [IPv6:2001:1600:3:17::bc0d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C99E51AC
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2023 10:46:51 -0700 (PDT)
+Received: from smtp-2-0001.mail.infomaniak.ch (unknown [10.5.36.108])
+        by smtp-2-3000.mail.infomaniak.ch (Postfix) with ESMTPS id 4RxyHz69fRzMqF4h
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2023 17:38:39 +0000 (UTC)
+Received: from unknown by smtp-2-0001.mail.infomaniak.ch (Postfix) with ESMTPA id 4RxyHz3dgyzMppKM
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2023 19:38:39 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ik.me; s=20200325;
+        t=1696009119; bh=APNJRGEIuPUzEgOA6UgSotjXQE6zefsp4oWdAfpcvg8=;
+        h=Date:To:From:Subject:From;
+        b=WVi073GJIuqoVu91G9VYywLeOC5XjLj7c2bEbE0ZY3j2QO7bcc7u/GGxKcPyCGry8
+         z5tsBD28HLL/NoFfrsQHiI33STuVvpOHeyc5uHRtGWHQ9obxzjABvSl3LB/J8qO24q
+         pqiSJJWYA6l46ptJIUYkX3FL3XGiQjBBGO58epaA=
+Message-ID: <1642436c-9046-1abe-c65b-880df9096038@ik.me>
+Date:   Fri, 29 Sep 2023 19:38:39 +0200
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-PPP-Message-ID: <169600803973.584965.12416577659363065554@server.cesssrl.com>
-X-PPP-Vhost: cesssrl.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+To:     Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Language: en-US
+From:   Fourhundred Thecat <400thecat@ik.me>
+Subject: ath11k_pci: failed to connect to HTT: -110
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Infomaniak-Routing: alpha
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Good day,
-I will be in your Country from the 15th to the 30th November 2023=20
-with 7 other people and we need your services during our stay. 
+Hello,
 
-Kindly confirm availability and prices. 
-=20
-What credit card types do you accept for deposit?
-=20
-Don.
+I have Qualcomm QCNFA765.
+I am using custom-compiled kernel 6.1.55. I have ath11k_pci in the 
+kernel, and all firmware files are loaded successfully. Yet, when 
+booting, I see on the console:
 
+ath11k_pci: Service connect timeout
+ath11k_pci: failed to connect to HTT: -110
+ath11k_pci: failed to start core: -110
 
-Message Ref: 01-bfqkbeh
-Message Time Stamp: 9/29/2023 10:20:36 a.m.
+and the network device wlan0 does not exist.
+
+But lspci -v shows the network card, and module it is using.
+
+and dmesg | grep ath11k
+
+ath11k_pci: BAR 0: assigned [mem 0x90600000-0x907fffff 64bit]
+ath11k_pci: enabling device (0000 -> 0002)
+ath11k_pci: MSI vectors: 1
+ath11k_pci: wcn6855 hw2.1
+ath11k_pci: chip_id 0x12 chip_family 0xb board_id 0xff soc_id 0x400c1211
+ath11k_pci: fw_version 0x11090c35 fw_build_timestamp 2022-04-18 20:23 
+fw_build_id WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.9
+ath11k_pci: leaving PCI ASPM disabled to avoid MHI M2 problems
+ath11k_pci: failed to receive control response completion, polling..
+ath11k_pci: Service connect timeout
+ath11k_pci: failed to connect to HTT: -110
+ath11k_pci: failed to start core: -110
+ath11k_pci: ignore reset dev flags 0x4000
+ath11k_pci: ignore reset dev flags 0x4000
+ath11k_pci: failed to wait wlan mode request (mode 4): -110
+ath11k_pci: qmi failed to send wlan mode off: -110
+
+since I am using custom kernel, it is possible i am missing some kernel 
+option. Here is my kernel config
+
+https://ctxt.io/2/AABQk4VZEg
+
+can somebody please tell me what is the problem ?
+
+thank you,
