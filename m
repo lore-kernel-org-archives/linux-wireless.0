@@ -2,47 +2,47 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B608E7734E
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Sep 2023 02:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC85E77352
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Sep 2023 02:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233902AbjI3CZi (ORCPT
+        id S233913AbjI3CZj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Sep 2023 22:25:38 -0400
+        Fri, 29 Sep 2023 22:25:39 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229645AbjI3CZg (ORCPT
+        with ESMTP id S231175AbjI3CZg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 29 Sep 2023 22:25:36 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0A921B2
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2023 19:25:27 -0700 (PDT)
-X-UUID: 9a8600705f3811eea33bb35ae8d461a2-20230930
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01A831B6
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Sep 2023 19:25:31 -0700 (PDT)
+X-UUID: 9b11d2da5f3811ee8051498923ad61e6-20230930
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=aJTpnXuNUyYxFQxaLTywEBmMeu5lkW5KD0n38e8Uv0I=;
-        b=av8yGH2pnsSHfJz+fqFVPgQJR8IUMydFkG9jZOi5lcvgjJllBFEaSmUIiKj1GemvUOhKo/wnjH2YtSg0sFsdU5aYMg7+46otlDkB/rarBSS34l2fERNhURkjN1FrhWA3rKoJXjIKKFQsJWVHtIK2kcrmtwCAA1w6mPDN0mH4fdk=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=NzSqdi5Tb3UZ0TX2Ha5X2sq+Y2e788eONic1GxwcJ9E=;
+        b=lU2+L87yDViftI6ddBDQUVRxfKQGytBM5EEErryte3n4WZ5AKwxB9vVjI0Ld5En1YJfxfwsyr52QINzALx21wN0d+7NERuy2YOdfz653d/yh3OtFfROGWlKpn/TupTCFdD/5grnKqrop5ELstp4KA7jUTNl0SouOB8g7Qkf9aRQ=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.32,REQID:2786c5b1-ed97-462f-b03d-deb5f511b801,IP:0,U
+X-CID-O-INFO: VERSION:1.1.32,REQID:26fb4d6d-118c-42ff-a8e7-cb674d74033a,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
         release,TS:0
-X-CID-META: VersionHash:5f78ec9,CLOUDID:0de548f0-9a6e-4c39-b73e-f2bc08ca3dc5,B
+X-CID-META: VersionHash:5f78ec9,CLOUDID:56b48614-4929-4845-9571-38c601e9c3c9,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
         RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
         DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 9a8600705f3811eea33bb35ae8d461a2-20230930
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+X-UUID: 9b11d2da5f3811ee8051498923ad61e6-20230930
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
         (envelope-from <deren.wu@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 162622822; Sat, 30 Sep 2023 10:25:21 +0800
+        with ESMTP id 85390615; Sat, 30 Sep 2023 10:25:21 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Sat, 30 Sep 2023 10:25:19 +0800
+ 15.2.1118.26; Sat, 30 Sep 2023 10:25:20 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Sat, 30 Sep 2023 10:25:19 +0800
+ 15.2.1118.26 via Frontend Transport; Sat, 30 Sep 2023 10:25:20 +0800
 From:   Deren Wu <deren.wu@mediatek.com>
 To:     Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
 CC:     Sean Wang <sean.wang@mediatek.com>,
@@ -60,319 +60,195 @@ CC:     Sean Wang <sean.wang@mediatek.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         linux-mediatek <linux-mediatek@lists.infradead.org>,
         Deren Wu <deren.wu@mediatek.com>
-Subject: [PATCH v2 1/6] wifi: mt76: mt7921: move connac nic capability handling to mt7921
-Date:   Sat, 30 Sep 2023 10:25:05 +0800
-Message-ID: <5d35532f0b8435f89d824cccedb2a62b75b8d149.1696039301.git.deren.wu@mediatek.com>
+Subject: [PATCH v2 4/6] wifi: mt76: mt7921: get regulatory information from the clc event
+Date:   Sat, 30 Sep 2023 10:25:08 +0800
+Message-ID: <c300e449853e8635fd8de1d3d53245ed21e40ae7.1696039301.git.deren.wu@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <cover.1696039301.git.deren.wu@mediatek.com>
 References: <cover.1696039301.git.deren.wu@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--9.409000-8.000000
+X-TMASE-MatchedRID: chvA8lDZYvB3jyG1lXn0RKwxbZnudyr7P9lbOpiWOGatj24Xqh0yXFnN
+        uOyuafqaxMIfhQQLLkE+zJdigxeeCAtrOhDKumbSfFMOK/HqfAZMkOX0UoduuQCGaccd4ae9cNi
+        oSkggDzn0p6fAAwu4MqRIz4oXrpFwQkfxbJAyTm7J5W6OZe5hhU1+P1DCPaJ9MT+isX6MhSknui
+        +WQ9elLaz6Q4QzIn0zOhQHRNrk2f8E7MuQrZP2o7RtO1RC1Ep0nrdrM99CmmBu4FknyqyshCYM7
+        vl6iI1V1jdwn2H9AvJtkfvwyItc5T7Geun57v0ckDpLRKO9xhR9LQinZ4QefPcjNeVeWlqY+gtH
+        j7OwNO0gCYMnfcK3PKwrStCy/NXBDelie4gRZ3dOFj//J6vGPWf3GVF2Neym/o4l/fFCcW0=
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--9.409000-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: CC5ABD3E994C62FE7C0F8134AF8CED127F5CE767279BBC2E58E6DA54F08C00FF2000:8
 X-MTK:  N
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-mt76_connac_mcu_get_nic_capability() is used by mt7921 only. It
-would be better to put the code in chip folder. And we can provide
-more chip capability information in mt792x_phy without making
-mt76_phy much bigger.
+From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-The three functions would be moved to mt7921 folder and renamed.
-mt76_connac_mcu_parse_tx_resource()
-mt76_connac_mcu_parse_phy_cap()
-mt76_connac_mcu_get_nic_capability()
+The clc event can report the radio configuration for the corresponding
+country and the driver would take it as regulatory information of a
+certain platform device.
 
+This patch would change the clc commnad from no-waiting to waiting for
+event. For backward compatible, we also add a new nic capability tag
+to indicate the firmware did support this new clc event from now on.
+
+Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+Co-developed-by: Deren Wu <deren.wu@mediatek.com>
 Signed-off-by: Deren Wu <deren.wu@mediatek.com>
 ---
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 120 -----------------
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |   1 -
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 122 +++++++++++++++++-
- 3 files changed, 121 insertions(+), 122 deletions(-)
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  1 +
+ .../net/wireless/mediatek/mt76/mt7921/mcu.c   | 26 ++++++++++++++++---
+ .../net/wireless/mediatek/mt76/mt7921/mcu.h   | 13 ++++++++++
+ .../wireless/mediatek/mt76/mt7921/mt7921.h    |  1 +
+ drivers/net/wireless/mediatek/mt76/mt792x.h   |  4 +++
+ 5 files changed, 41 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index bcd6c20f37ad..83cf2e2b2868 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -1941,126 +1941,6 @@ void mt76_connac_mcu_coredump_event(struct mt76_dev *dev, struct sk_buff *skb,
- }
- EXPORT_SYMBOL_GPL(mt76_connac_mcu_coredump_event);
- 
--static void mt76_connac_mcu_parse_tx_resource(struct mt76_dev *dev,
--					      struct sk_buff *skb)
--{
--	struct mt76_sdio *sdio = &dev->sdio;
--	struct mt76_connac_tx_resource {
--		__le32 version;
--		__le32 pse_data_quota;
--		__le32 pse_mcu_quota;
--		__le32 ple_data_quota;
--		__le32 ple_mcu_quota;
--		__le16 pse_page_size;
--		__le16 ple_page_size;
--		u8 pp_padding;
--		u8 pad[3];
--	} __packed * tx_res;
--
--	tx_res = (struct mt76_connac_tx_resource *)skb->data;
--	sdio->sched.pse_data_quota = le32_to_cpu(tx_res->pse_data_quota);
--	sdio->sched.pse_mcu_quota = le32_to_cpu(tx_res->pse_mcu_quota);
--	sdio->sched.ple_data_quota = le32_to_cpu(tx_res->ple_data_quota);
--	sdio->sched.pse_page_size = le16_to_cpu(tx_res->pse_page_size);
--	sdio->sched.deficit = tx_res->pp_padding;
--}
--
--static void mt76_connac_mcu_parse_phy_cap(struct mt76_dev *dev,
--					  struct sk_buff *skb)
--{
--	struct mt76_connac_phy_cap {
--		u8 ht;
--		u8 vht;
--		u8 _5g;
--		u8 max_bw;
--		u8 nss;
--		u8 dbdc;
--		u8 tx_ldpc;
--		u8 rx_ldpc;
--		u8 tx_stbc;
--		u8 rx_stbc;
--		u8 hw_path;
--		u8 he;
--	} __packed * cap;
--
--	enum {
--		WF0_24G,
--		WF0_5G
--	};
--
--	cap = (struct mt76_connac_phy_cap *)skb->data;
--
--	dev->phy.antenna_mask = BIT(cap->nss) - 1;
--	dev->phy.chainmask = dev->phy.antenna_mask;
--	dev->phy.cap.has_2ghz = cap->hw_path & BIT(WF0_24G);
--	dev->phy.cap.has_5ghz = cap->hw_path & BIT(WF0_5G);
--}
--
--int mt76_connac_mcu_get_nic_capability(struct mt76_phy *phy)
--{
--	struct mt76_connac_cap_hdr {
--		__le16 n_element;
--		u8 rsv[2];
--	} __packed * hdr;
--	struct sk_buff *skb;
--	int ret, i;
--
--	ret = mt76_mcu_send_and_get_msg(phy->dev, MCU_CE_CMD(GET_NIC_CAPAB),
--					NULL, 0, true, &skb);
--	if (ret)
--		return ret;
--
--	hdr = (struct mt76_connac_cap_hdr *)skb->data;
--	if (skb->len < sizeof(*hdr)) {
--		ret = -EINVAL;
--		goto out;
--	}
--
--	skb_pull(skb, sizeof(*hdr));
--
--	for (i = 0; i < le16_to_cpu(hdr->n_element); i++) {
--		struct tlv_hdr {
--			__le32 type;
--			__le32 len;
--		} __packed * tlv = (struct tlv_hdr *)skb->data;
--		int len;
--
--		if (skb->len < sizeof(*tlv))
--			break;
--
--		skb_pull(skb, sizeof(*tlv));
--
--		len = le32_to_cpu(tlv->len);
--		if (skb->len < len)
--			break;
--
--		switch (le32_to_cpu(tlv->type)) {
--		case MT_NIC_CAP_6G:
--			phy->cap.has_6ghz = skb->data[0];
--			break;
--		case MT_NIC_CAP_MAC_ADDR:
--			memcpy(phy->macaddr, (void *)skb->data, ETH_ALEN);
--			break;
--		case MT_NIC_CAP_PHY:
--			mt76_connac_mcu_parse_phy_cap(phy->dev, skb);
--			break;
--		case MT_NIC_CAP_TX_RESOURCE:
--			if (mt76_is_sdio(phy->dev))
--				mt76_connac_mcu_parse_tx_resource(phy->dev,
--								  skb);
--			break;
--		default:
--			break;
--		}
--		skb_pull(skb, len);
--	}
--out:
--	dev_kfree_skb(skb);
--
--	return ret;
--}
--EXPORT_SYMBOL_GPL(mt76_connac_mcu_get_nic_capability);
--
- static void
- mt76_connac_mcu_build_sku(struct mt76_dev *dev, s8 *sku,
- 			  struct mt76_power_limits *limits,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 9bc97a35fc1d..b73dbe1dbf3a 100644
+index b73dbe1dbf3a..35f008492a6b 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -1881,7 +1881,6 @@ int mt76_connac_mcu_init_download(struct mt76_dev *dev, u32 addr, u32 len,
- int mt76_connac_mcu_start_patch(struct mt76_dev *dev);
- int mt76_connac_mcu_patch_sem_ctrl(struct mt76_dev *dev, bool get);
- int mt76_connac_mcu_start_firmware(struct mt76_dev *dev, u32 addr, u32 option);
--int mt76_connac_mcu_get_nic_capability(struct mt76_phy *phy);
+@@ -1340,6 +1340,7 @@ enum {
+ 	MT_NIC_CAP_ANTSWP = 0x16,
+ 	MT_NIC_CAP_WFDMA_REALLOC,
+ 	MT_NIC_CAP_6G,
++	MT_NIC_CAP_CHIP_CAP = 0x20,
+ };
  
- int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 			    struct ieee80211_scan_request *scan_req);
+ #define UNI_WOW_DETECT_TYPE_MAGIC		BIT(0)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 90c93970acab..8d9ebe34816a 100644
+index 8c76ef92e14f..4f66e27aa43a 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -448,6 +448,126 @@ static int mt7921_load_clc(struct mt792x_dev *dev, const char *fw_name)
- 	return ret;
- }
- 
-+static void mt7921_mcu_parse_tx_resource(struct mt76_dev *dev,
-+					 struct sk_buff *skb)
-+{
-+	struct mt76_sdio *sdio = &dev->sdio;
-+	struct mt7921_tx_resource {
-+		__le32 version;
-+		__le32 pse_data_quota;
-+		__le32 pse_mcu_quota;
-+		__le32 ple_data_quota;
-+		__le32 ple_mcu_quota;
-+		__le16 pse_page_size;
-+		__le16 ple_page_size;
-+		u8 pp_padding;
-+		u8 pad[3];
-+	} __packed * tx_res;
-+
-+	tx_res = (struct mt7921_tx_resource *)skb->data;
-+	sdio->sched.pse_data_quota = le32_to_cpu(tx_res->pse_data_quota);
-+	sdio->sched.pse_mcu_quota = le32_to_cpu(tx_res->pse_mcu_quota);
-+	sdio->sched.ple_data_quota = le32_to_cpu(tx_res->ple_data_quota);
-+	sdio->sched.pse_page_size = le16_to_cpu(tx_res->pse_page_size);
-+	sdio->sched.deficit = tx_res->pp_padding;
-+}
-+
-+static void mt7921_mcu_parse_phy_cap(struct mt76_dev *dev,
-+				     struct sk_buff *skb)
-+{
-+	struct mt7921_phy_cap {
-+		u8 ht;
-+		u8 vht;
-+		u8 _5g;
-+		u8 max_bw;
-+		u8 nss;
-+		u8 dbdc;
-+		u8 tx_ldpc;
-+		u8 rx_ldpc;
-+		u8 tx_stbc;
-+		u8 rx_stbc;
-+		u8 hw_path;
-+		u8 he;
-+	} __packed * cap;
-+
-+	enum {
-+		WF0_24G,
-+		WF0_5G
-+	};
-+
-+	cap = (struct mt7921_phy_cap *)skb->data;
-+
-+	dev->phy.antenna_mask = BIT(cap->nss) - 1;
-+	dev->phy.chainmask = dev->phy.antenna_mask;
-+	dev->phy.cap.has_2ghz = cap->hw_path & BIT(WF0_24G);
-+	dev->phy.cap.has_5ghz = cap->hw_path & BIT(WF0_5G);
-+}
-+
-+static int mt7921_mcu_get_nic_capability(struct mt792x_phy *mphy)
-+{
-+	struct mt76_connac_cap_hdr {
-+		__le16 n_element;
-+		u8 rsv[2];
-+	} __packed * hdr;
-+	struct sk_buff *skb;
-+	struct mt76_phy *phy = mphy->mt76;
-+	int ret, i;
-+
-+	ret = mt76_mcu_send_and_get_msg(phy->dev, MCU_CE_CMD(GET_NIC_CAPAB),
-+					NULL, 0, true, &skb);
-+	if (ret)
-+		return ret;
-+
-+	hdr = (struct mt76_connac_cap_hdr *)skb->data;
-+	if (skb->len < sizeof(*hdr)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	skb_pull(skb, sizeof(*hdr));
-+
-+	for (i = 0; i < le16_to_cpu(hdr->n_element); i++) {
-+		struct tlv_hdr {
-+			__le32 type;
-+			__le32 len;
-+		} __packed * tlv = (struct tlv_hdr *)skb->data;
-+		int len;
-+
-+		if (skb->len < sizeof(*tlv))
+@@ -557,6 +557,9 @@ static int mt7921_mcu_get_nic_capability(struct mt792x_phy *mphy)
+ 				mt7921_mcu_parse_tx_resource(phy->dev,
+ 							     skb);
+ 			break;
++		case MT_NIC_CAP_CHIP_CAP:
++			memcpy(&mphy->chip_cap, (void *)skb->data, sizeof(u64));
 +			break;
-+
-+		skb_pull(skb, sizeof(*tlv));
-+
-+		len = le32_to_cpu(tlv->len);
-+		if (skb->len < len)
-+			break;
-+
-+		switch (le32_to_cpu(tlv->type)) {
-+		case MT_NIC_CAP_6G:
-+			phy->cap.has_6ghz = skb->data[0];
-+			break;
-+		case MT_NIC_CAP_MAC_ADDR:
-+			memcpy(phy->macaddr, (void *)skb->data, ETH_ALEN);
-+			break;
-+		case MT_NIC_CAP_PHY:
-+			mt7921_mcu_parse_phy_cap(phy->dev, skb);
-+			break;
-+		case MT_NIC_CAP_TX_RESOURCE:
-+			if (mt76_is_sdio(phy->dev))
-+				mt7921_mcu_parse_tx_resource(phy->dev,
-+							     skb);
-+			break;
-+		default:
-+			break;
-+		}
-+		skb_pull(skb, len);
-+	}
-+out:
-+	dev_kfree_skb(skb);
-+
-+	return ret;
-+}
-+
- int mt7921_mcu_fw_log_2_host(struct mt792x_dev *dev, u8 ctrl)
+ 		default:
+ 			break;
+ 		}
+@@ -1243,7 +1246,8 @@ int __mt7921_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 			 struct mt7921_clc *clc,
+ 			 u8 idx)
  {
+-	struct sk_buff *skb;
++#define CLC_CAP_EVT_EN BIT(0)
++	struct sk_buff *skb, *ret_skb = NULL;
  	struct {
-@@ -469,7 +589,7 @@ int mt7921_run_firmware(struct mt792x_dev *dev)
- 	if (err)
- 		return err;
+ 		u8 ver;
+ 		u8 pad0;
+@@ -1251,7 +1255,7 @@ int __mt7921_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		u8 idx;
+ 		u8 env;
+ 		u8 acpi_conf;
+-		u8 pad1;
++		u8 cap;
+ 		u8 alpha2[2];
+ 		u8 type[2];
+ 		u8 env_6g;
+@@ -1268,6 +1272,9 @@ int __mt7921_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 	if (!clc)
+ 		return 0;
  
--	err = mt76_connac_mcu_get_nic_capability(&dev->mphy);
-+	err = mt7921_mcu_get_nic_capability(&dev->phy);
- 	if (err)
- 		return err;
++	if (dev->phy.chip_cap & MT792x_CHIP_CAP_CLC_EVT_EN)
++		req.cap |= CLC_CAP_EVT_EN;
++
+ 	pos = clc->data;
+ 	for (i = 0; i < clc->nr_country; i++) {
+ 		struct mt7921_clc_rule *rule = (struct mt7921_clc_rule *)pos;
+@@ -1289,10 +1296,21 @@ int __mt7921_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 			return -ENOMEM;
+ 		skb_put_data(skb, rule->data, len);
  
+-		ret = mt76_mcu_skb_send_msg(&dev->mt76, skb,
+-					    MCU_CE_CMD(SET_CLC), false);
++		ret = mt76_mcu_skb_send_and_get_msg(&dev->mt76, skb,
++						    MCU_CE_CMD(SET_CLC),
++						    !!(req.cap & CLC_CAP_EVT_EN),
++						    &ret_skb);
+ 		if (ret < 0)
+ 			return ret;
++
++		if (ret_skb) {
++			struct mt7921_clc_info_tlv *info;
++
++			info = (struct mt7921_clc_info_tlv *)(ret_skb->data + 4);
++			dev->phy.clc_chan_conf = info->chan_conf;
++			dev_kfree_skb(ret_skb);
++		}
++
+ 		valid_cnt++;
+ 	}
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
+index 9b0aa3b70f0e..f9a259ee6b82 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.h
+@@ -99,4 +99,17 @@ struct mt7921_rftest_evt {
+ 	__le32 param0;
+ 	__le32 param1;
+ } __packed;
++
++struct mt7921_clc_info_tlv {
++	__le16 tag;
++	__le16 len;
++
++	u8 chan_conf; /* BIT(0) : Enable UNII-4
++		       * BIT(1) : Enable UNII-5
++		       * BIT(2) : Enable UNII-6
++		       * BIT(3) : Enable UNII-7
++		       * BIT(4) : Enable UNII-8
++		       */
++	u8 rsv[63];
++} __packed;
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index 87dd06855f68..ba3f9d9aacad 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -27,6 +27,7 @@
+ #define MT7921_SDIO_HDR_PKT_TYPE	GENMASK(17, 16)
+ 
+ #define MCU_UNI_EVENT_ROC  0x27
++#define MCU_UNI_EVENT_CLC  0x80
+ 
+ enum {
+ 	UNI_ROC_ACQUIRE,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index 8b1dbddf4582..34380d1eb9f4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -25,6 +25,8 @@
+ #define MT792x_FW_TAG_FEATURE	4
+ #define MT792x_FW_CAP_CNM	BIT(7)
+ 
++#define MT792x_CHIP_CAP_CLC_EVT_EN BIT(0)
++
+ /* NOTE: used to map mt76_rates. idx may change if firmware expands table */
+ #define MT792x_BASIC_RATES_TBL	11
+ 
+@@ -122,6 +124,7 @@ struct mt792x_phy {
+ 	struct mt76_mib_stats mib;
+ 
+ 	u8 sta_work_count;
++	u8 clc_chan_conf;
+ 	enum mt792x_reg_power_type power_type;
+ 
+ 	struct sk_buff_head scan_event_list;
+@@ -130,6 +133,7 @@ struct mt792x_phy {
+ 	void *acpisar;
+ #endif
+ 	void *clc[MT792x_CLC_MAX_NUM];
++	u64 chip_cap;
+ 
+ 	struct work_struct roc_work;
+ 	struct timer_list roc_timer;
 -- 
 2.18.0
 
