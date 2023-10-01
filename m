@@ -2,34 +2,34 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E42F9E78480
-	for <linux-wireless@archiver.kernel.org>; Sun,  1 Oct 2023 19:16:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 282F0E7848A
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Oct 2023 19:16:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235336AbjJATQk (ORCPT
+        id S235345AbjJATQm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 1 Oct 2023 15:16:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38594 "EHLO
+        Sun, 1 Oct 2023 15:16:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235327AbjJATQj (ORCPT
+        with ESMTP id S235330AbjJATQj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sun, 1 Oct 2023 15:16:39 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ABA7DA;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A9F4BA;
         Sun,  1 Oct 2023 12:16:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=aO8m3SGFbn9Y/+UxRKdfzdIADxyJ81ckpw/F3qJK1f4=; b=Wmka/CRYuKOgGHEJQoeoxW4c4a
-        LZeb8VHu0CxMIas7lJmOeB1gKO79nANkLkjThfNpb5avbUX9szXkhvup4UHwgUVxnAg/afX4Xh+fX
-        UNR4fpOpR0pRqbT5PNp/06HBG1nkUFvJLBmRinMYXcMchGWT1cHUiWMxO5OlWxf0QUr3QqNKcsn0K
-        6KywVBv1TBvvbUlCcaxrl6tWuG7TCl/Di72/hELQ+d29R4QlZ7nh4B1FbQh5DcjVy3ktMGxJO2XIM
-        FOb9YfVOo+lP/HiJzLLxYzcSxF77lWbRYLwJ+23zo+ZwKMec0vIkPeBPMw7UT3F7X4/kCYJFt4j4D
-        lgGogkRQ==;
+        MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=caXieyxXvaEGBZ678iESMUrCFKC5EObSPEzSu2GkMAc=; b=ALFdPVrxOyW//ncprhk0e2c4Y3
+        hNJM0uR1JsTg/cJxBNgdffZZkQvU3eIg6QbzLE8/eaqPSTfmtGpe4Et2eKNRxNY+hccjO7+PjNIXI
+        2qCUwNz8rgToTYjiInVoJv0yEOHq3dJ3j4ltBuDdRiK6Vs+01Iryyv9R/NFT3HUYaN8yI+Dd5T5B6
+        FUgOvvIz2+4BeBwUHHyWIyQ4DRH11T+ycv+QrGA9nuXqLh9+/QX4nKGAcjJ9J9AxT4HoUUByqwdHw
+        pVTLO+6h6lDZ9NM2eUV2cnuePtylBGtEB8mgPhlj13Z/rcan3eeeYZQw8eM0U4JzBZ5lhqeBb9OOF
+        21Rdf26Q==;
 Received: from [50.53.46.231] (helo=bombadil.infradead.org)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qn1vf-00BYlp-0C;
-        Sun, 01 Oct 2023 19:16:35 +0000
+        id 1qn1ve-00BYlp-1B;
+        Sun, 01 Oct 2023 19:16:34 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
@@ -39,19 +39,17 @@ Cc:     Randy Dunlap <rdunlap@infradead.org>,
         Eric Dumazet <edumazet@google.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org
-Subject: [PATCH 3/3] wifi: nl80211: fix doc typos
-Date:   Sun,  1 Oct 2023 12:16:33 -0700
-Message-ID: <20231001191633.19090-3-rdunlap@infradead.org>
+Subject: [PATCH 1/3] wifi: cfg80211: fix header kernel-doc typos
+Date:   Sun,  1 Oct 2023 12:16:31 -0700
+Message-ID: <20231001191633.19090-1-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231001191633.19090-1-rdunlap@infradead.org>
-References: <20231001191633.19090-1-rdunlap@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Correct some typos.
+Correct spelling of several words.
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: Johannes Berg <johannes@sipsolutions.net>
@@ -63,27 +61,93 @@ Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: Paolo Abeni <pabeni@redhat.com>
 Cc: netdev@vger.kernel.org
 ---
- include/uapi/linux/nl80211.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff -- a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -167,7 +167,7 @@
-  * following events occur.
-  * a) Expiration of hardware timer whose expiration time is set to maximum
-  * coalescing delay of matching coalesce rule.
-- * b) Coalescing buffer in hardware reaches it's limit.
-+ * b) Coalescing buffer in hardware reaches its limit.
-  * c) Packet doesn't match any of the configured coalesce rules.
+diff -- a/include/net/cfg80211.h b/include/net/cfg80211.h
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2443,7 +2443,7 @@ struct mesh_config {
+  * @user_mpm: userspace handles all MPM functions
+  * @dtim_period: DTIM period to use
+  * @beacon_interval: beacon interval to use
+- * @mcast_rate: multicat rate for Mesh Node [6Mbps is the default for 802.11a]
++ * @mcast_rate: multicast rate for Mesh Node [6Mbps is the default for 802.11a]
+  * @basic_rates: basic rates to use when creating the mesh
+  * @beacon_rate: bitrate to be used for beacons
+  * @userspace_handles_dfs: whether user space controls DFS operation, i.e.
+@@ -2713,7 +2713,7 @@ struct cfg80211_bss_select_adjust {
+  * @match_sets: sets of parameters to be matched for a scan result
+  *	entry to be considered valid and to be passed to the host
+  *	(others are filtered out).
+- *	If ommited, all results are passed.
++ *	If omitted, all results are passed.
+  * @n_match_sets: number of match sets
+  * @report_results: indicates that results were reported for this request
+  * @wiphy: the wiphy this was for
+@@ -2747,7 +2747,7 @@ struct cfg80211_bss_select_adjust {
+  *	to the specified band while deciding whether a better BSS is reported
+  *	using @relative_rssi. If delta is a negative number, the BSSs that
+  *	belong to the specified band will be penalized by delta dB in relative
+- *	comparisions.
++ *	comparisons.
+  */
+ struct cfg80211_sched_scan_request {
+ 	u64 reqid;
+@@ -3587,7 +3587,7 @@ struct cfg80211_update_ft_ies_params {
+  * This structure provides information needed to transmit a mgmt frame
   *
-  * User needs to configure following parameters for creating a coalesce
-@@ -326,7 +326,7 @@
+  * @chan: channel to use
+- * @offchan: indicates wether off channel operation is required
++ * @offchan: indicates whether off channel operation is required
+  * @wait: duration for ROC
+  * @buf: buffer to transmit
+  * @len: buffer length
+@@ -3705,7 +3705,7 @@ struct cfg80211_nan_func_filter {
+  * @publish_bcast: if true, the solicited publish should be broadcasted
+  * @subscribe_active: if true, the subscribe is active
+  * @followup_id: the instance ID for follow up
+- * @followup_reqid: the requestor instance ID for follow up
++ * @followup_reqid: the requester instance ID for follow up
+  * @followup_dest: MAC address of the recipient of the follow up
+  * @ttl: time to live counter in DW.
+  * @serv_spec_info: Service Specific Info
+@@ -6714,7 +6714,7 @@ static inline const u8 *cfg80211_find_ie
+  * @ies: data consisting of IEs
+  * @len: length of data
+  *
+- * Return: %NULL if the etended element could not be found or if
++ * Return: %NULL if the extended element could not be found or if
+  * the element is invalid (claims to be longer than the given
+  * data) or if the byte array doesn't match; otherwise return the
+  * requested element struct.
+@@ -6861,7 +6861,7 @@ int regulatory_hint(struct wiphy *wiphy,
  /**
-  * DOC: Multi-Link Operation
+  * regulatory_set_wiphy_regd - set regdom info for self managed drivers
+  * @wiphy: the wireless device we want to process the regulatory domain on
+- * @rd: the regulatory domain informatoin to use for this wiphy
++ * @rd: the regulatory domain information to use for this wiphy
   *
-- * In Multi-Link Operation, a connection between to MLDs utilizes multiple
-+ * In Multi-Link Operation, a connection between two MLDs utilizes multiple
-  * links. To use this in nl80211, various commands and responses now need
-  * to or will include the new %NL80211_ATTR_MLO_LINKS attribute.
-  * Additionally, various commands that need to operate on a specific link
+  * Set the regulatory domain information for self-managed wiphys, only they
+  * may use this function. See %REGULATORY_WIPHY_SELF_MANAGED for more
+@@ -6952,7 +6952,7 @@ bool regulatory_pre_cac_allowed(struct w
+  * Regulatory self-managed driver can use it to proactively
+  *
+  * @alpha2: the ISO/IEC 3166 alpha2 wmm rule to be queried.
+- * @freq: the freqency(in MHz) to be queried.
++ * @freq: the frequency (in MHz) to be queried.
+  * @rule: pointer to store the wmm rule from the regulatory db.
+  *
+  * Self-managed wireless drivers can use this function to  query
+@@ -9129,9 +9129,9 @@ bool cfg80211_iftype_allowed(struct wiph
+ 
+ /**
+  * cfg80211_assoc_comeback - notification of association that was
+- * temporarly rejected with a comeback
++ * temporarily rejected with a comeback
+  * @netdev: network device
+- * @ap_addr: AP (MLD) address that rejected the assocation
++ * @ap_addr: AP (MLD) address that rejected the association
+  * @timeout: timeout interval value TUs.
+  *
+  * this function may sleep. the caller must hold the corresponding wdev's mutex.
