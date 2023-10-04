@@ -2,92 +2,94 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA41FE7C4ED
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 18:45:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9730FE7C4F1
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 19:36:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244578AbjJDSp7 (ORCPT
+        id S243847AbjJDTgh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Oct 2023 14:45:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35860 "EHLO
+        Wed, 4 Oct 2023 15:36:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244576AbjJDSp6 (ORCPT
+        with ESMTP id S233525AbjJDTgY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2023 14:45:58 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F4D1EA
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 11:45:52 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 394GjCMU003230;
-        Wed, 4 Oct 2023 18:45:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=GurH8bKL+CTciNVyLikBgLu6gh2boLCkwEgQL80rfZE=;
- b=GnlFnFdvHb72YSp/zezQMclQUopvXy/BHRFK33qmv1ESdPm+cB/juOAvaj/rV/rxaVPv
- 8iVtTHzgc4bqrfTV97v4+lLSferIB+Ls/Hw2PQPQKs2RLebhx1b6r1F9fimlMFO6gp7F
- +2xvw6i1kblhL9Aobuwc+EA3bC9p+qNeiiRNQWKIhbFligZkfkhEZ+r9GhKHs6Sga+xb
- Q4Ami6TxFuRPx7QVhbVRnR8hFbIpw8lqX6mU4OovJydVDuvdzPa7eQPi6Iszf22O5wXY
- S4g+xFvp/xxdMOoVo46rRL9cQoRYBQYG8u6SDYgprTCTNRqYltEodUUWNJXDjQQI0JiU kA== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3th2gq1tux-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 04 Oct 2023 18:45:49 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 394IjmOW001987
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 4 Oct 2023 18:45:48 GMT
-Received: from [10.111.179.185] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 4 Oct
- 2023 11:45:47 -0700
-Message-ID: <75d04fcf-b800-4c8f-849f-ddc655462a97@quicinc.com>
-Date:   Wed, 4 Oct 2023 11:45:47 -0700
+        Wed, 4 Oct 2023 15:36:24 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7D3FA9
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 12:36:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=LnhOXVDLLomVsMwt+u5YAe+yWz54aDiRcmXmw7Loxbc=;
+        t=1696448180; x=1697657780; b=F+MLhq6aw1ETOL8X7XOmsei8ISrp5m3aiRnuFvUelZL7fj7
+        c74CYdlIMtcqsfT9VLc1CTn4f6Tk7GmT3vknNDnMbg79VbyUg6GrYEjFRcWVHVfIeozAODla+oVDv
+        8pWZjcGtlLf3cY+zhz6m9kjoUd8ISfKOrjpqOYsVDWSZBY7clBOEZi48tkPe+H8/3jXtPSQWG01un
+        bWfE9VHQG2HPqCYBfjDdtCTudUFtqtZ2iO48lEILmQUByz26e8TcodurrKEqOr45HvYwF1ad51mxV
+        0mKaf4zG4nzVrBOgovHtZ+iZ8kSWv/k/E78XVJr4EZ/LDEIqWn1ZACAXoppHvltg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.97-RC0)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qo7fO-00000004UZk-0oHA;
+        Wed, 04 Oct 2023 21:36:18 +0200
+Message-ID: <5b1aeb36dbc7316e5de0b0cfdf429b754c5cfd82.camel@sipsolutions.net>
+Subject: Re: [PATCH] mac80211:  ethtool:  check link sta if deflink sta not
+ found.
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date:   Wed, 04 Oct 2023 21:36:17 +0200
+In-Reply-To: <20231003215839.981227-1-greearb@candelatech.com>
+References: <20231003215839.981227-1-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath12k: add parsing of phy bitmap for reg rules
-Content-Language: en-US
-To:     Aditya Kumar Singh <quic_adisi@quicinc.com>,
-        <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20231004092818.25130-1-quic_adisi@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20231004092818.25130-1-quic_adisi@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: vhZvmiKeP97rWZD97mPeAQGjr1dNXJiu
-X-Proofpoint-ORIG-GUID: vhZvmiKeP97rWZD97mPeAQGjr1dNXJiu
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-04_10,2023-10-02_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
- lowpriorityscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 impostorscore=0
- malwarescore=0 suspectscore=0 clxscore=1015 bulkscore=0 adultscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310040137
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/4/2023 2:28 AM, Aditya Kumar Singh wrote:
-> Certain regulatory domains could put restrictions on phy mode operation.
-> For example, in a few countries HE/EHT Operation is not allowed. For such
-> countries, firmware indicates this via phy bitmap in each reg rule.
-> 
-> Currently, there is no logic to parse this info and then pass it on to the
-> cfg80211/regulatory.
-> 
-> Add parsing of this phy bitmap from the regulatory channel change event and
-> then accordingly map it to cfg80211/regulatory flags and pass it on to it.
-> 
-> While at it, correct typo in debug print: s/dsf/dfs.
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+On Tue, 2023-10-03 at 14:58 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>=20
+> While testing with wifi-7 radio put into AX mode, link-0 is created.
+> sdata->deflink.u.mgd.bssid was 00 in this case, so sta was not
+> found.
+>=20
+> Use link-0 for sta if it is available to do a better job of reporting
+> ethtool stats.
+>=20
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  net/mac80211/ethtool.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+>=20
+> diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
+> index 6bd7fba8a867..1b58304fc68a 100644
+> --- a/net/mac80211/ethtool.c
+> +++ b/net/mac80211/ethtool.c
+> @@ -96,6 +96,7 @@ static void ieee80211_get_stats2(struct net_device *dev=
+,
+>  	struct ieee80211_local *local =3D sdata->local;
+>  	struct station_info sinfo;
+>  	struct survey_info survey;
+> +	struct ieee80211_link_data *link;
+>  	int i, q;
+>  	int z;
+>  #define STA_STATS_SURVEY_LEN 7
+> @@ -128,6 +129,12 @@ static void ieee80211_get_stats2(struct net_device *=
+dev,
+>  	if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION) {
+>  		sta =3D sta_info_get_bss(sdata, sdata->deflink.u.mgd.bssid);
 
+Just don't even try this, link[0] is always valid.
+
+> +		if (!sta) {
+> +			link =3D sdata_dereference(sdata->link[0], sdata);
+
+but link[0] is a bad idea anyway ... what if the AP only assigned link 1
+and 2? Or you connected only there?
+
+I'm not even sure this is really worth fixing, do you really want a
+random link's statistics?
+
+johannes
