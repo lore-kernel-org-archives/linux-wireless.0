@@ -2,53 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BB52E7B5E3
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:37:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E35E7B5E0
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242030AbjJDJhK (ORCPT
+        id S242044AbjJDJhK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 4 Oct 2023 05:37:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51486 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242045AbjJDJhH (ORCPT
+        with ESMTP id S242027AbjJDJhF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2023 05:37:07 -0400
+        Wed, 4 Oct 2023 05:37:05 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD0C2D8
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 02:37:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D7C1E4
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 02:37:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696412222; x=1727948222;
+  t=1696412220; x=1727948220;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=tAo6CobBd43932f/xOwAUGu49+5+y7vEWGN8AJdabfA=;
-  b=amEiNkQjnWiKxJjk2m3S9hQHc1vWBmSWrUcl/hANhuJTerzVtBzXZlb2
-   jJ2c3a0AwQkXisBsfBRkEluEiBKetnu6whgDl+yPPNXKmusAYeFyvxoRL
-   J9aSgVnMzI0Cw1TlU11vZoDZV4D4MKFI+hp1cXSI0cMoNSKc3TTXT7SNT
-   WOUOCS3cUWbkQqoZAUWxqtTy9cYFox7MAX1K3VbHgVk1Bx7hibuce5PuA
-   jAKA5V7N5/uW7W4Tzqhzc3fnbBcF7SLCoCoFJcJt7fNaHkNq2O0SsBmMd
-   pqY2UVm+jPpLnjdPHqUR5niG7L9MqErNqY0COu8cI5UXFE4dejAnWpwPI
+  bh=gQVXyYH+x9vQSPhrOO3sJGdLauBaOJKeUSblX3iGoHI=;
+  b=f1l7TMpg+x0Z8Da6JPk+Qt5bjDnx2Hfs+gTM0cCcNNRaJvhyHfLLg/4V
+   bhIlj2qhMsVQULr1mBXeUqwvPLO3OWEedZ+8MWazpiDOksLSt9p4rJysS
+   scWhAWgQh717JFv1iCqwAmNjTJWhp91oGEOaigvX1JnBQQVbysm+K97hF
+   5pb8klfT1H0PcB2QDBQtrG9TWNGu0t/JPGCtYUzOKHB9LGAj17p9dVkY2
+   Z/yV6NYJ8Ov3fLzEKEh736mw/rb7sXxFYea9bUP1MKVXCb9gLhQcjTLZP
+   NWTsQUQ9NxvhP4jjVkvvyn3gKCLJCAxZmQ0Hvfe+jC0YW6ye4v696o2L3
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="449611753"
+X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="449611706"
 X-IronPort-AV: E=Sophos;i="6.03,199,1694761200"; 
-   d="scan'208";a="449611753"
+   d="scan'208";a="449611706"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:54 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:50 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="1082415159"
+X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="1082415151"
 X-IronPort-AV: E=Sophos;i="6.03,199,1694761200"; 
-   d="scan'208";a="1082415159"
+   d="scan'208";a="1082415151"
 Received: from oferweis-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.222.21])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:53 -0700
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:48 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
         Miri Korenblit <miriam.rachel.korenblit@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 04/15] wifi: iwlwifi: mvm: rework debugfs handling
-Date:   Wed,  4 Oct 2023 12:36:23 +0300
-Message-Id: <20231004123422.818810e242e6.I805a28f9fbef5c52a3a575d04e7a6a909ecf9078@changeid>
+Subject: [PATCH 02/15] wifi: iwlwifi: add support for new ini region types
+Date:   Wed,  4 Oct 2023 12:36:21 +0300
+Message-Id: <20231004123422.0a10320f4259.I680ef6e16267d95329ee239f05d0999f5a1719ac@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20231004093634.131303-1-gregory.greenman@intel.com>
 References: <20231004093634.131303-1-gregory.greenman@intel.com>
@@ -58,191 +57,231 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-mac80211 added a new callback to add a vif debugfs.
-Implement it instead of adding the debugfs directly,
-which will make it properly preserved over switching
-the vif from non-MLD/MLD and back.
-
-This requires some rework so that we still have the
-symlink but trust mac80211 to add/remove the debugfs.
+YoYo introduces 2 new region types: prph mac and phy blocks.
+The data in this regions consists of a list of
+(base address, size) pairs.
+This way we can set a block of consecutive registers by the
+base address and the size, instead of a list of registers.
+Add support for parsing and dumping these new region types
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../wireless/intel/iwlwifi/mvm/debugfs-vif.c  | 32 +++++++++----------
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  7 ++--
- .../wireless/intel/iwlwifi/mvm/mld-mac80211.c |  5 +--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  9 +++---
- 4 files changed, 27 insertions(+), 26 deletions(-)
+ .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   | 34 ++++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 72 ++++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  2 +
+ 3 files changed, 106 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-index cb4ecad6103f..3a42fb38b32f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-@@ -699,19 +699,11 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(rx_phyinfo, 10);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(quota_min, 32);
- MVM_DEBUGFS_READ_FILE_OPS(os_device_timediff);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+index 39bee9c00e07..fb421500f261 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2018-2022 Intel Corporation
++ * Copyright (C) 2018-2023 Intel Corporation
+  */
+ #ifndef __iwl_fw_dbg_tlv_h__
+ #define __iwl_fw_dbg_tlv_h__
+@@ -42,6 +42,30 @@ struct iwl_fw_ini_header {
+ 	/* followed by the data */
+ } __packed; /* FW_TLV_DEBUG_HEADER_S_VER_1 */
  
--
--void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+void iwl_mvm_vif_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	struct dentry *dbgfs_dir = vif->debugfs_dir;
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	char buf[100];
--
--	/*
--	 * Check if debugfs directory already exist before creating it.
--	 * This may happen when, for example, resetting hw or suspend-resume
--	 */
--	if (!dbgfs_dir || mvmvif->dbgfs_dir)
--		return;
++/**
++ * struct iwl_fw_ini_addr_size - Base address and size that defines
++ * a chunk of memory
++ *
++ * @addr: the base address (fixed size - 4 bytes)
++ * @size: the size to read
++ */
++struct iwl_fw_ini_addr_size {
++	__le32 addr;
++	__le32 size;
++} __packed; /* FW_TLV_DEBUG_ADDR_SIZE_VER_1 */
++
++/**
++ * struct iwl_fw_ini_region_dev_addr_range - Configuration to read
++ * device address range
++ *
++ * @offset: offset to add to the base address of each chunk
++ * The addrs[] array will be treated as an array of &iwl_fw_ini_addr_size -
++ * an array of (addr, size) pairs.
++ */
++struct iwl_fw_ini_region_dev_addr_range {
++	__le32 offset;
++} __packed; /* FW_TLV_DEBUG_DEVICE_ADDR_RANGE_API_S_VER_1 */
++
+ /**
+  * struct iwl_fw_ini_region_dev_addr - Configuration to read device addresses
+  *
+@@ -135,6 +159,9 @@ struct iwl_fw_ini_region_internal_buffer {
+  *	&IWL_FW_INI_REGION_PAGING, &IWL_FW_INI_REGION_CSR,
+  *	&IWL_FW_INI_REGION_DRAM_IMR and &IWL_FW_INI_REGION_PCI_IOSF_CONFIG
+  *	&IWL_FW_INI_REGION_DBGI_SRAM, &FW_TLV_DEBUG_REGION_TYPE_DBGI_SRAM,
++ * @dev_addr_range: device address range configuration. Used by
++ *	&IWL_FW_INI_REGION_PERIPHERY_MAC_RANGE and
++ *	&IWL_FW_INI_REGION_PERIPHERY_PHY_RANGE
+  * @fifos: fifos configuration. Used by &IWL_FW_INI_REGION_TXF and
+  *	&IWL_FW_INI_REGION_RXF
+  * @err_table: error table configuration. Used by
+@@ -157,6 +184,7 @@ struct iwl_fw_ini_region_tlv {
+ 	u8 name[IWL_FW_INI_MAX_NAME];
+ 	union {
+ 		struct iwl_fw_ini_region_dev_addr dev_addr;
++		struct iwl_fw_ini_region_dev_addr_range dev_addr_range;
+ 		struct iwl_fw_ini_region_fifos fifos;
+ 		struct iwl_fw_ini_region_err_table err_table;
+ 		struct iwl_fw_ini_region_internal_buffer internal_buffer;
+@@ -362,6 +390,8 @@ enum iwl_fw_ini_buffer_location {
+  * @IWL_FW_INI_REGION_PCI_IOSF_CONFIG: PCI/IOSF config
+  * @IWL_FW_INI_REGION_SPECIAL_DEVICE_MEMORY: special device memory
+  * @IWL_FW_INI_REGION_DBGI_SRAM: periphery registers of DBGI SRAM
++ * @IWL_FW_INI_REGION_PERIPHERY_MAC_RANGE: a range of periphery registers of MAC
++ * @IWL_FW_INI_REGION_PERIPHERY_PHY_RANGE: a range of periphery registers of PHY
+  * @IWL_FW_INI_REGION_NUM: number of region types
+  */
+ enum iwl_fw_ini_region_type {
+@@ -384,6 +414,8 @@ enum iwl_fw_ini_region_type {
+ 	IWL_FW_INI_REGION_PCI_IOSF_CONFIG,
+ 	IWL_FW_INI_REGION_SPECIAL_DEVICE_MEMORY,
+ 	IWL_FW_INI_REGION_DBGI_SRAM,
++	IWL_FW_INI_REGION_PERIPHERY_MAC_RANGE,
++	IWL_FW_INI_REGION_PERIPHERY_PHY_RANGE,
+ 	IWL_FW_INI_REGION_NUM
+ }; /* FW_TLV_DEBUG_REGION_TYPE_API_E */
  
- 	mvmvif->dbgfs_dir = debugfs_create_dir("iwlmvm", dbgfs_dir);
- 	if (IS_ERR_OR_NULL(mvmvif->dbgfs_dir)) {
-@@ -737,6 +729,17 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	if (vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
- 	    mvmvif == mvm->bf_allowed_vif)
- 		MVM_DEBUGFS_ADD_FILE_VIF(bf_params, mvmvif->dbgfs_dir, 0600);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 6c03ffdcd3f4..a20be3642848 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1055,6 +1055,20 @@ iwl_dump_ini_prph_mac_iter(struct iwl_fw_runtime *fwrt,
+ 						 reg->dev_addr.size);
+ }
+ 
++static int
++iwl_dump_ini_prph_mac_block_iter(struct iwl_fw_runtime *fwrt,
++				 struct iwl_dump_ini_region_data *reg_data,
++				 void *range_ptr, u32 range_len, int idx)
++{
++	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
++	struct iwl_fw_ini_addr_size *pairs = (void *)reg->addrs;
++	u32 addr = le32_to_cpu(reg->dev_addr_range.offset) +
++		   le32_to_cpu(pairs[idx].addr);
++
++	return iwl_dump_ini_prph_mac_iter_common(fwrt, range_ptr, addr,
++						 pairs[idx].size);
 +}
 +
-+void iwl_mvm_vif_dbgfs_add_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ static int iwl_dump_ini_prph_phy_iter_common(struct iwl_fw_runtime *fwrt,
+ 					     void *range_ptr, u32 addr,
+ 					     __le32 size, __le32 offset)
+@@ -1115,6 +1129,20 @@ iwl_dump_ini_prph_phy_iter(struct iwl_fw_runtime *fwrt,
+ 						 reg->dev_addr.offset);
+ }
+ 
++static int
++iwl_dump_ini_prph_phy_block_iter(struct iwl_fw_runtime *fwrt,
++				 struct iwl_dump_ini_region_data *reg_data,
++				 void *range_ptr, u32 range_len, int idx)
 +{
-+	struct dentry *dbgfs_dir = vif->debugfs_dir;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	char buf[100];
++	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
++	struct iwl_fw_ini_addr_size *pairs = (void *)reg->addrs;
++	u32 addr = le32_to_cpu(pairs[idx].addr);
 +
-+	/* this will happen in monitor mode */
-+	if (!dbgfs_dir)
-+		return;
- 
- 	/*
- 	 * Create symlink for convenience pointing to interface specific
-@@ -745,21 +748,16 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	 * find
- 	 * netdev:wlan0 -> ../../../ieee80211/phy0/netdev:wlan0/iwlmvm/
- 	 */
--	snprintf(buf, 100, "../../../%pd3/%pd",
--		 dbgfs_dir,
--		 mvmvif->dbgfs_dir);
-+	snprintf(buf, 100, "../../../%pd3/iwlmvm", dbgfs_dir);
- 
- 	mvmvif->dbgfs_slink = debugfs_create_symlink(dbgfs_dir->d_name.name,
- 						     mvm->debugfs_dir, buf);
++	return iwl_dump_ini_prph_phy_iter_common(fwrt, range_ptr, addr,
++						 pairs[idx].size,
++						 reg->dev_addr_range.offset);
++}
++
+ static int iwl_dump_ini_csr_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_dump_ini_region_data *reg_data,
+ 				 void *range_ptr, u32 range_len, int idx)
+@@ -1799,6 +1827,16 @@ static u32 iwl_dump_ini_mem_ranges(struct iwl_fw_runtime *fwrt,
+ 	return iwl_tlv_array_len(reg_data->reg_tlv, reg, addrs);
  }
  
--void iwl_mvm_vif_dbgfs_clean(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+void iwl_mvm_vif_dbgfs_rm_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
++static u32
++iwl_dump_ini_mem_block_ranges(struct iwl_fw_runtime *fwrt,
++			      struct iwl_dump_ini_region_data *reg_data)
++{
++	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
++	size_t size = sizeof(struct iwl_fw_ini_addr_size);
++
++	return iwl_tlv_array_len_with_size(reg_data->reg_tlv, reg, size);
++}
++
+ static u32 iwl_dump_ini_paging_ranges(struct iwl_fw_runtime *fwrt,
+ 				      struct iwl_dump_ini_region_data *reg_data)
  {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 
- 	debugfs_remove(mvmvif->dbgfs_slink);
- 	mvmvif->dbgfs_slink = NULL;
--
--	debugfs_remove_recursive(mvmvif->dbgfs_dir);
--	mvmvif->dbgfs_dir = NULL;
+@@ -1884,6 +1922,25 @@ static u32 iwl_dump_ini_mem_get_size(struct iwl_fw_runtime *fwrt,
+ 		(size + sizeof(struct iwl_fw_ini_error_dump_range));
  }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index d342a53a8c46..56965d6e6499 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1580,7 +1580,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 	 */
- 	if (vif->type == NL80211_IFTYPE_AP ||
- 	    vif->type == NL80211_IFTYPE_ADHOC) {
--		iwl_mvm_vif_dbgfs_register(mvm, vif);
-+		iwl_mvm_vif_dbgfs_add_link(mvm, vif);
- 		ret = 0;
- 		goto out;
- 	}
-@@ -1644,7 +1644,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 			iwl_mvm_chandef_get_primary_80(&vif->bss_conf.chandef);
- 	}
  
--	iwl_mvm_vif_dbgfs_register(mvm, vif);
-+	iwl_mvm_vif_dbgfs_add_link(mvm, vif);
++static u32
++iwl_dump_ini_mem_block_get_size(struct iwl_fw_runtime *fwrt,
++				struct iwl_dump_ini_region_data *reg_data)
++{
++	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
++	struct iwl_fw_ini_addr_size *pairs = (void *)reg->addrs;
++	u32 ranges = iwl_dump_ini_mem_block_ranges(fwrt, reg_data);
++	u32 size = sizeof(struct iwl_fw_ini_error_dump);
++	int range;
++
++	if (!ranges)
++		return 0;
++
++	for (range = 0; range < ranges; range++)
++		size += le32_to_cpu(pairs[range].size);
++
++	return size + ranges * sizeof(struct iwl_fw_ini_error_dump_range);
++}
++
+ static u32
+ iwl_dump_ini_paging_get_size(struct iwl_fw_runtime *fwrt,
+ 			     struct iwl_dump_ini_region_data *reg_data)
+@@ -2431,6 +2488,18 @@ static const struct iwl_dump_ini_mem_ops iwl_dump_ini_region_ops[] = {
+ 		.fill_mem_hdr = iwl_dump_ini_mem_fill_header,
+ 		.fill_range = iwl_dump_ini_prph_phy_iter,
+ 	},
++	[IWL_FW_INI_REGION_PERIPHERY_MAC_RANGE] = {
++		.get_num_of_ranges = iwl_dump_ini_mem_block_ranges,
++		.get_size = iwl_dump_ini_mem_block_get_size,
++		.fill_mem_hdr = iwl_dump_ini_mem_fill_header,
++		.fill_range = iwl_dump_ini_prph_mac_block_iter,
++	},
++	[IWL_FW_INI_REGION_PERIPHERY_PHY_RANGE] = {
++		.get_num_of_ranges = iwl_dump_ini_mem_block_ranges,
++		.get_size = iwl_dump_ini_mem_block_get_size,
++		.fill_mem_hdr = iwl_dump_ini_mem_fill_header,
++		.fill_range = iwl_dump_ini_prph_phy_block_iter,
++	},
+ 	[IWL_FW_INI_REGION_PERIPHERY_AUX] = {},
+ 	[IWL_FW_INI_REGION_PAGING] = {
+ 		.fill_mem_hdr = iwl_dump_ini_mem_fill_header,
+@@ -2510,7 +2579,8 @@ static u32 iwl_dump_ini_trigger(struct iwl_fw_runtime *fwrt,
+ 		if (reg_type >= ARRAY_SIZE(iwl_dump_ini_region_ops))
+ 			continue;
  
- 	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
- 	    vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
-@@ -1732,7 +1732,7 @@ static bool iwl_mvm_mac_remove_interface_common(struct ieee80211_hw *hw,
- 	if (vif->bss_conf.ftm_responder)
- 		memset(&mvm->ftm_resp_stats, 0, sizeof(mvm->ftm_resp_stats));
+-		if (reg_type == IWL_FW_INI_REGION_PERIPHERY_PHY &&
++		if ((reg_type == IWL_FW_INI_REGION_PERIPHERY_PHY ||
++		     reg_type == IWL_FW_INI_REGION_PERIPHERY_PHY_RANGE) &&
+ 		    tp_id != IWL_FW_INI_TIME_POINT_FW_ASSERT) {
+ 			IWL_WARN(fwrt,
+ 				 "WRT: trying to collect phy prph at time point: %d, skipping\n",
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 7e0894ea1005..03f6e520145f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -975,4 +975,6 @@ static inline size_t _iwl_tlv_array_len(const struct iwl_ucode_tlv *tlv,
+ 	_iwl_tlv_array_len((_tlv_ptr), sizeof(*(_struct_ptr)),		\
+ 			   sizeof(_struct_ptr->_memb[0]))
  
--	iwl_mvm_vif_dbgfs_clean(mvm, vif);
-+	iwl_mvm_vif_dbgfs_rm_link(mvm, vif);
- 
- 	/*
- 	 * For AP/GO interface, the tear down of the resources allocated to the
-@@ -6324,6 +6324,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- 
- 	.can_aggregate_in_amsdu = iwl_mvm_mac_can_aggregate,
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-+	.vif_add_debugfs = iwl_mvm_vif_add_debugfs,
- 	.link_sta_add_debugfs = iwl_mvm_link_sta_add_debugfs,
- #endif
- 	.set_hw_timestamp = iwl_mvm_set_hw_timestamp,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-index 726a3276f715..2a55ba01fc78 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-@@ -107,7 +107,7 @@ static int iwl_mvm_mld_mac_add_interface(struct ieee80211_hw *hw,
- 		ieee80211_hw_set(mvm->hw, RX_INCLUDES_FCS);
- 	}
- 
--	iwl_mvm_vif_dbgfs_register(mvm, vif);
-+	iwl_mvm_vif_dbgfs_add_link(mvm, vif);
- 
- 	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
- 	    vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
-@@ -168,7 +168,7 @@ static void iwl_mvm_mld_mac_remove_interface(struct ieee80211_hw *hw,
- 	if (vif->bss_conf.ftm_responder)
- 		memset(&mvm->ftm_resp_stats, 0, sizeof(mvm->ftm_resp_stats));
- 
--	iwl_mvm_vif_dbgfs_clean(mvm, vif);
-+	iwl_mvm_vif_dbgfs_rm_link(mvm, vif);
- 
- 	/* For AP/GO interface, the tear down of the resources allocated to the
- 	 * interface is be handled as part of the stop_ap flow.
-@@ -1204,6 +1204,7 @@ const struct ieee80211_ops iwl_mvm_mld_hw_ops = {
- 	.abort_pmsr = iwl_mvm_abort_pmsr,
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-+	.vif_add_debugfs = iwl_mvm_vif_add_debugfs,
- 	.link_sta_add_debugfs = iwl_mvm_link_sta_add_debugfs,
- #endif
- 	.set_hw_timestamp = iwl_mvm_set_hw_timestamp,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 74cb2f863472..5ec79bea5af1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -2048,18 +2048,19 @@ void iwl_mvm_rx_umac_scan_iter_complete_notif(struct iwl_mvm *mvm,
- /* MVM debugfs */
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- void iwl_mvm_dbgfs_register(struct iwl_mvm *mvm);
--void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
--void iwl_mvm_vif_dbgfs_clean(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+void iwl_mvm_vif_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+void iwl_mvm_vif_dbgfs_add_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+void iwl_mvm_vif_dbgfs_rm_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- #else
- static inline void iwl_mvm_dbgfs_register(struct iwl_mvm *mvm)
- {
- }
- static inline void
--iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+iwl_mvm_vif_dbgfs_add_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- }
- static inline void
--iwl_mvm_vif_dbgfs_clean(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+iwl_mvm_vif_dbgfs_rm_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- }
- #endif /* CONFIG_IWLWIFI_DEBUGFS */
++#define iwl_tlv_array_len_with_size(_tlv_ptr, _struct_ptr, _size)	\
++	_iwl_tlv_array_len((_tlv_ptr), sizeof(*(_struct_ptr)), _size)
+ #endif  /* __iwl_fw_file_h__ */
 -- 
 2.38.1
 
