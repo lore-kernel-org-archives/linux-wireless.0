@@ -2,106 +2,127 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2883CE8FDDB
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:12:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 130E5E776F5
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:18:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241885AbjJDJMs (ORCPT
+        id S233005AbjJDJSY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Oct 2023 05:12:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43158 "EHLO
+        Wed, 4 Oct 2023 05:18:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232913AbjJDJMr (ORCPT
+        with ESMTP id S241873AbjJDIv2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2023 05:12:47 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79B39A6
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 02:12:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696410764; x=1727946764;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=f8CC7SDz967K5KY+0M3Gkk5o9lmtnPDemAdlwYxrQmo=;
-  b=Q3f3twb88htKVO+wbREBScqrWYb7Nk/Nuk+Jf+PIZ+S33r6c/jbPr51G
-   Ml6QdyIruFX0jbpMCiz9My8MgmHEiQuElUwGQUHwZhhtdLHKaSSkG1d+4
-   bK0+/xUYPl8RFWVy/4DponGnDUCxKEzPIVfk8XZzWVjgvLOlLXNrD3gdV
-   sRr4DPoRkgrvbgV2yn682Yubpef3otye75Y1pp0aNPRyZF1eiHzqix4IQ
-   IY0+fkOoQqapM9RtzmHGF9GjosLgFwdsaK78gJ2nCIFOrqr9aXgpuXT9h
-   53GCCqMZfvsdrnW4i2Q/BAy25NCBy9mT13Hv3ECIwcWhTjN//TfJupvo7
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="380387041"
-X-IronPort-AV: E=Sophos;i="6.03,199,1694761200"; 
-   d="scan'208";a="380387041"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:12:43 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="727930994"
-X-IronPort-AV: E=Sophos;i="6.03,199,1694761200"; 
-   d="scan'208";a="727930994"
-Received: from oferweis-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.222.21])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:12:41 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH v2 12/18] wifi: mac80211: Check if we had first beacon with relevant links
-Date:   Wed,  4 Oct 2023 12:12:02 +0300
-Message-Id: <20231004120820.d290f0ab77b0.Ic1505cf3d60f74580d31efa7e52046947c490b85@changeid>
-X-Mailer: git-send-email 2.38.1
+        Wed, 4 Oct 2023 04:51:28 -0400
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5BE0B0
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 01:51:24 -0700 (PDT)
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3948pFTW13164838, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 3948pFTW13164838
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 4 Oct 2023 16:51:15 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.17; Wed, 4 Oct 2023 16:51:15 +0800
+Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 4 Oct 2023
+ 16:51:14 +0800
+From:   Ping-Ke Shih <pkshih@realtek.com>
+To:     <kvalo@kernel.org>
+CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/5] wifi: rtw88: regd: update regulatory map to R64-R42
+Date:   Wed, 4 Oct 2023 16:50:50 +0800
+Message-ID: <20231004085051.205683-5-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20231004085051.205683-1-pkshih@realtek.com>
+References: <20231004085051.205683-1-pkshih@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [172.21.69.25]
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-If there is a disassoc before the fisrt beacon we need to protect a
-session for the deauth frame. Currently we are checking if we had a
-beacon in the default link, which is wrong in a MLO connection and
-link id != 0.
-Fix this by checking all the active links, if none had a beacon then
-protect a session.
-If at least one link had a beacon there is no need for session
-protection.
+Sync Realtek Regulatory R42 and Realtek Channel Plan R64.
+Start to configure with Realtek regd CHILE, CN, UK, QATAR, UKRAINE.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-v2: fixed a typo in commit message
----
- net/mac80211/mlme.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/regd.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ad4d8b191b39..8c8f2b633f85 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2936,9 +2936,20 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		 * deauthentication frame by calling mgd_prepare_tx, if the
- 		 * driver requested so.
- 		 */
--		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP) &&
--		    !sdata->deflink.u.mgd.have_beacon) {
--			drv_mgd_prepare_tx(sdata->local, sdata, &info);
-+		if (ieee80211_hw_check(&local->hw, DEAUTH_NEED_MGD_TX_PREP)) {
-+			for (link_id = 0; link_id < ARRAY_SIZE(sdata->link);
-+			     link_id++) {
-+				struct ieee80211_link_data *link;
-+
-+				link = sdata_dereference(sdata->link[link_id],
-+							 sdata);
-+				if (!link)
-+					continue;
-+				if (link->u.mgd.have_beacon)
-+					break;
-+			}
-+			if (link_id == IEEE80211_MLD_MAX_NUM_LINKS)
-+				drv_mgd_prepare_tx(sdata->local, sdata, &info);
- 		}
- 
- 		ieee80211_send_deauth_disassoc(sdata, sdata->vif.cfg.ap_addr,
+diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
+index 680d8f32fce6..124fc7ae6a14 100644
+--- a/drivers/net/wireless/realtek/rtw88/regd.c
++++ b/drivers/net/wireless/realtek/rtw88/regd.c
+@@ -70,16 +70,16 @@ static const struct rtw_regulatory rtw_reg_map[] = {
+ 	COUNTRY_REGD_ENT("BY", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("BZ", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("CA", RTW_REGD_IC, RTW_REGD_IC),
+-	COUNTRY_REGD_ENT("CC", RTW_REGD_ETSI, RTW_REGD_ETSI),
++	COUNTRY_REGD_ENT("CC", RTW_REGD_ACMA, RTW_REGD_ACMA),
+ 	COUNTRY_REGD_ENT("CD", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("CF", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("CG", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("CH", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("CI", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("CK", RTW_REGD_ETSI, RTW_REGD_ETSI),
+-	COUNTRY_REGD_ENT("CL", RTW_REGD_FCC, RTW_REGD_FCC),
++	COUNTRY_REGD_ENT("CL", RTW_REGD_CHILE, RTW_REGD_CHILE),
+ 	COUNTRY_REGD_ENT("CM", RTW_REGD_ETSI, RTW_REGD_ETSI),
+-	COUNTRY_REGD_ENT("CN", RTW_REGD_ETSI, RTW_REGD_ETSI),
++	COUNTRY_REGD_ENT("CN", RTW_REGD_CN, RTW_REGD_CN),
+ 	COUNTRY_REGD_ENT("CO", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("CR", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("CV", RTW_REGD_ETSI, RTW_REGD_ETSI),
+@@ -106,7 +106,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
+ 	COUNTRY_REGD_ENT("FO", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("FR", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("GA", RTW_REGD_ETSI, RTW_REGD_ETSI),
+-	COUNTRY_REGD_ENT("GB", RTW_REGD_ETSI, RTW_REGD_ETSI),
++	COUNTRY_REGD_ENT("GB", RTW_REGD_UK, RTW_REGD_UK),
+ 	COUNTRY_REGD_ENT("GD", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("GE", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("GF", RTW_REGD_ETSI, RTW_REGD_ETSI),
+@@ -214,7 +214,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
+ 	COUNTRY_REGD_ENT("PT", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("PW", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("PY", RTW_REGD_FCC, RTW_REGD_FCC),
+-	COUNTRY_REGD_ENT("QA", RTW_REGD_ETSI, RTW_REGD_ETSI),
++	COUNTRY_REGD_ENT("QA", RTW_REGD_QATAR, RTW_REGD_QATAR),
+ 	COUNTRY_REGD_ENT("RE", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("RO", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("RS", RTW_REGD_ETSI, RTW_REGD_ETSI),
+@@ -234,7 +234,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
+ 	COUNTRY_REGD_ENT("SN", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("SO", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("SR", RTW_REGD_FCC, RTW_REGD_FCC),
+-	COUNTRY_REGD_ENT("ST", RTW_REGD_FCC, RTW_REGD_FCC),
++	COUNTRY_REGD_ENT("ST", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("SV", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("SX", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("SZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
+@@ -253,7 +253,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
+ 	COUNTRY_REGD_ENT("TV", RTW_REGD_ETSI, RTW_REGD_WW),
+ 	COUNTRY_REGD_ENT("TW", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("TZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
+-	COUNTRY_REGD_ENT("UA", RTW_REGD_ETSI, RTW_REGD_ETSI),
++	COUNTRY_REGD_ENT("UA", RTW_REGD_UKRAINE, RTW_REGD_UKRAINE),
+ 	COUNTRY_REGD_ENT("UG", RTW_REGD_ETSI, RTW_REGD_ETSI),
+ 	COUNTRY_REGD_ENT("US", RTW_REGD_FCC, RTW_REGD_FCC),
+ 	COUNTRY_REGD_ENT("UY", RTW_REGD_FCC, RTW_REGD_FCC),
 -- 
-2.38.1
+2.25.1
 
