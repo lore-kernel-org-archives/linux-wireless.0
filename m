@@ -2,63 +2,124 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35161E8FDD1
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 07:56:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69665E8FDDA
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 08:36:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241599AbjJDH4M (ORCPT
+        id S241702AbjJDIgD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Oct 2023 03:56:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41548 "EHLO
+        Wed, 4 Oct 2023 04:36:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241600AbjJDH4L (ORCPT
+        with ESMTP id S241698AbjJDIgC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2023 03:56:11 -0400
-Received: from mail.bizcodes.pl (mail.bizcodes.pl [151.80.57.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F8B2AF
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 00:56:08 -0700 (PDT)
-Received: by mail.bizcodes.pl (Postfix, from userid 1002)
-        id BB7A1A39FF; Wed,  4 Oct 2023 07:55:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bizcodes.pl; s=mail;
-        t=1696406166; bh=5QPMt7jNntM5ZbstM20BWsHIeLbmRE8lVU4Iu89IleQ=;
-        h=Date:From:To:Subject:From;
-        b=Fxxo1i1OJS4k15vVY5c4pmHKsKH9baswSYBYO5a54fRsoX5k3H1mSkI/GekBFbhhl
-         nAprRt2dkVzdwB83uAQiaqzyAQA8n6Bzk9h9qQ6FkqiWUFLaaWGebd6ULXuo9w2IWX
-         fMktEScVrH1L8VKMhK5brsyadM70yvEV/8k7x4E8YqlhQDOdGUfjJ84L9wTFxiX8xR
-         IDItKk//sH4gd2oN1V5ISq2ByVQbl+y0BhSUBDkknf7MKbGrX+99IJ6NEmYOIEsIdh
-         LBKBVtAaMSxcAR2IlnGqEsbrPXKlCoakx5ZLnAJmvEsPQuHH/5fTcR4G0mpQz8zirH
-         uinxW6U+gWYyw==
-Received: by mail.bizcodes.pl for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 07:55:19 GMT
-Message-ID: <20231004064500-0.1.c3.1gqt3.0.rm4jngqjej@bizcodes.pl>
-Date:   Wed,  4 Oct 2023 07:55:19 GMT
-From:   "Marcin Chruszcz" <marcin.chruszcz@bizcodes.pl>
-To:     <linux-wireless@vger.kernel.org>
-Subject: Prezentacja
-X-Mailer: mail.bizcodes.pl
+        Wed, 4 Oct 2023 04:36:02 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3BE3A6
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 01:35:58 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qnxMJ-0001a7-Gb; Wed, 04 Oct 2023 10:35:55 +0200
+Message-ID: <0c07b6bf-a9cc-4dc0-b71c-a2257e501e5f@leemhuis.info>
+Date:   Wed, 4 Oct 2023 10:35:54 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: Microcode SW error since Linux 6.5
+Content-Language: en-US, de-DE
+To:     "Greenman, Gregory" <gregory.greenman@intel.com>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+        "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Peer, Ilan" <ilan.peer@intel.com>,
+        "anarcat@debian.org" <anarcat@debian.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+References: <87ttrncuc8.fsf@angela.anarc.at>
+ <60e2c052f3cedc5c80964e4be90c50cdaa899a87.camel@sipsolutions.net>
+ <87jzsf9dme.fsf@angela.anarc.at>
+ <0190dde1170bd1ee810e99b9799678f4f5b8f30e.camel@sipsolutions.net>
+ <8734z29jx7.fsf@angela.anarc.at>
+ <7bd483fd0d004aed37931561a7faa2e176ca3fac.camel@sipsolutions.net>
+ <5d0904a4-bc0d-42dd-aae8-6b50e5c567ba@leemhuis.info>
+ <42e000913e3af714c77fb7a55dd898733e271be0.camel@intel.com>
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <42e000913e3af714c77fb7a55dd898733e271be0.camel@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1696408558;a7eacfaa;
+X-HE-SMSGID: 1qnxMJ-0001a7-Gb
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dzie=C5=84 dobry!
+[CCing the net maintainers due to the related merge request not yet
+processed]
 
-Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
-=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
-zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
+On 04.10.23 09:51, Greenman, Gregory wrote:
+> On Tue, 2023-10-03 at 13:52 +0200, Linux regression tracking (Thorsten Leemhuis) wrote:
+>> On 25.09.23 21:03, Johannes Berg wrote:
+>>> On Mon, 2023-09-25 at 14:39 -0400, Antoine Beaupré wrote:
+>>> [...]
+>>>>> Yes, you can ... but I mean, we still do want to consider this a bug, I
+>>>>> think, since we explicitly built the thing to load the older firmware.
+>>>>> It just gets _far_ less testing.
+>>>> Got it, happy to play guinea pig a little further if that's useful.
+>>> Well you might want to go for the extra stability instead :-) I'm kind
+>>> of thinking along the lines of "if you can download the next wifi
+>>> firmware with the current one, that's probably good enough". :)
+>>
+>> Well, that's not how Linus wants things to be, as due to this "no
+>> regression" rule things should continue to work if people update the
+>> kernel without updating linux-firmware (as also explained in
+>> Documentation/driver-api/firmware/firmware-usage-guidelines.rst).
+>>
+>> That's what I though when I saw that message initially, but I thought:
+>> well, not worth a comment, the reporter apparently doesn't mind that
+>> much. But since then I saw more and more reports that looked related to
+>> my untrained eyes (and thus might not be related at all!).
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=217894
+>> https://bugzilla.kernel.org/show_bug.cgi?id=217894#c6 (same ticket)
+>> https://bugzilla.kernel.org/show_bug.cgi?id=217963
+>> https://lore.kernel.org/all/f6448719-14e2-4962-ac3d-1be3c19156ed@dolce-energy.com/
+>>
+>> Gregory, Johannes, is there something wrong here with 6.5.y? If yes: is
+>> anything already been done to improve the state of things?
 
-Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
-=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
-dostaw.
+> The patch in [1] should solve the issue. The problem was that wrong version
+> of Firmware API was used for some older versions.
+> 
+> [1] https://patchwork.kernel.org/project/linux-wireless/patch/20230926165546.086e635fbbe6.Ia660f35ca0b1079f2c2ea92fd8d14d8101a89d03@changeid/
 
-Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
-nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
- co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
+Ahh, great, many thx for the reply. Two things then:
 
-Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
-=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
-zania w Pa=C5=84stwa firmie.
+(1) I wanted to ask why this patch is not in mainline or -net yet, but
+then noticed the fix is among the patches of a one week old pull request
+that afaics was not handled yet:
+https://lore.kernel.org/all/20230927095835.25803-2-johannes@sipsolutions.net/
+
+Guess that one fell through the cracks due to the Netconf 2023 workshop?
+Maybe this msg gets things rolling again.
 
 
-Pozdrawiam
-Marcin Chruszcz
+(2) Would have been great if that fix would have had a stable tag to
+ensure a quick backport to 6.5. :-/ Made me wonder if this is an
+accident, but doesn't look like it:
+
+$ git log --oneline --grep 'CC:.*stable@vger.kernel.org' mainline/master
+ -- drivers/net/wireless/intel/iwlwifi/ | wc -l
+11
+
+Is there a reason why iwlwifi patches nearly never contain stable tags?
+Reminder: a "Fixes:" tag alone does not guarantee that the fix is
+backported.
+
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
