@@ -2,127 +2,128 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 130E5E776F5
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2AFDE7B5E1
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:25:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233005AbjJDJSY (ORCPT
+        id S241796AbjJDJZ6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Oct 2023 05:18:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41150 "EHLO
+        Wed, 4 Oct 2023 05:25:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241873AbjJDIv2 (ORCPT
+        with ESMTP id S241786AbjJDJZ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Oct 2023 04:51:28 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5BE0B0
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 01:51:24 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3948pFTW13164838, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 3948pFTW13164838
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 4 Oct 2023 16:51:15 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 4 Oct 2023 16:51:15 +0800
-Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 4 Oct 2023
- 16:51:14 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/5] wifi: rtw88: regd: update regulatory map to R64-R42
-Date:   Wed, 4 Oct 2023 16:50:50 +0800
-Message-ID: <20231004085051.205683-5-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231004085051.205683-1-pkshih@realtek.com>
-References: <20231004085051.205683-1-pkshih@realtek.com>
+        Wed, 4 Oct 2023 05:25:57 -0400
+Received: from forward102b.mail.yandex.net (forward102b.mail.yandex.net [178.154.239.149])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A889B4
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 02:25:50 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:a712:0:640:d986:0])
+        by forward102b.mail.yandex.net (Yandex) with ESMTP id 4F4EA60048;
+        Wed,  4 Oct 2023 12:25:17 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id GPToqNUDbSw0-vFloPHod;
+        Wed, 04 Oct 2023 12:25:16 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+        t=1696411516; bh=y8vnpVFH0nfmZzRBaLfb3Y5VHCCT8BS9rmi7kT8eIY4=;
+        h=Message-ID:Date:Cc:Subject:To:From;
+        b=Dj78jkPFKnC4le+w/dY+5Jbf3OhkM8P5s2wDAz/XaNUG2BuTTZjX4nj+VUNTUTBR6
+         QtrPqK6sJO42fopUat1MGQFKuPU1rHnEE4OP+mKICtVhskmE4SXDu3oMj2Hb1T7hCM
+         ly34YTDq/4N65aqErdkRqcO0a477F8eByTbGtmb4=
+Authentication-Results: mail-nwsmtp-smtp-production-main-18.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From:   Dmitry Antipov <dmantipov@yandex.ru>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] wifi: rtlwifi: use unsigned long for bt_coexist_8723 timestamp
+Date:   Wed,  4 Oct 2023 12:24:15 +0300
+Message-ID: <20231004092418.73337-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.25]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+Since 'bt_inq_page_start_time' of 'struct bt_coexist_8723' is
+in jiffies, prefer 'unsigned long' over 'u32' to avoid possible
+truncation in 'rtl8723e_dm_bt_inq_page_monitor()' and adjust
+related code. Found with clang's -Wshorten-64-to-32, compile
+tested only.
 
-Sync Realtek Regulatory R42 and Realtek Channel Plan R64.
-Start to configure with Realtek regd CHILE, CN, UK, QATAR, UKRAINE.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
- drivers/net/wireless/realtek/rtw88/regd.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c | 16 +++++++---------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h      |  2 +-
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
-index 680d8f32fce6..124fc7ae6a14 100644
---- a/drivers/net/wireless/realtek/rtw88/regd.c
-+++ b/drivers/net/wireless/realtek/rtw88/regd.c
-@@ -70,16 +70,16 @@ static const struct rtw_regulatory rtw_reg_map[] = {
- 	COUNTRY_REGD_ENT("BY", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("BZ", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("CA", RTW_REGD_IC, RTW_REGD_IC),
--	COUNTRY_REGD_ENT("CC", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CC", RTW_REGD_ACMA, RTW_REGD_ACMA),
- 	COUNTRY_REGD_ENT("CD", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("CF", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("CG", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("CH", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("CI", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("CK", RTW_REGD_ETSI, RTW_REGD_ETSI),
--	COUNTRY_REGD_ENT("CL", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("CL", RTW_REGD_CHILE, RTW_REGD_CHILE),
- 	COUNTRY_REGD_ENT("CM", RTW_REGD_ETSI, RTW_REGD_ETSI),
--	COUNTRY_REGD_ENT("CN", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("CN", RTW_REGD_CN, RTW_REGD_CN),
- 	COUNTRY_REGD_ENT("CO", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("CR", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("CV", RTW_REGD_ETSI, RTW_REGD_ETSI),
-@@ -106,7 +106,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
- 	COUNTRY_REGD_ENT("FO", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("FR", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("GA", RTW_REGD_ETSI, RTW_REGD_ETSI),
--	COUNTRY_REGD_ENT("GB", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("GB", RTW_REGD_UK, RTW_REGD_UK),
- 	COUNTRY_REGD_ENT("GD", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("GE", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("GF", RTW_REGD_ETSI, RTW_REGD_ETSI),
-@@ -214,7 +214,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
- 	COUNTRY_REGD_ENT("PT", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("PW", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("PY", RTW_REGD_FCC, RTW_REGD_FCC),
--	COUNTRY_REGD_ENT("QA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("QA", RTW_REGD_QATAR, RTW_REGD_QATAR),
- 	COUNTRY_REGD_ENT("RE", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("RO", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("RS", RTW_REGD_ETSI, RTW_REGD_ETSI),
-@@ -234,7 +234,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
- 	COUNTRY_REGD_ENT("SN", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("SO", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("SR", RTW_REGD_FCC, RTW_REGD_FCC),
--	COUNTRY_REGD_ENT("ST", RTW_REGD_FCC, RTW_REGD_FCC),
-+	COUNTRY_REGD_ENT("ST", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("SV", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("SX", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("SZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
-@@ -253,7 +253,7 @@ static const struct rtw_regulatory rtw_reg_map[] = {
- 	COUNTRY_REGD_ENT("TV", RTW_REGD_ETSI, RTW_REGD_WW),
- 	COUNTRY_REGD_ENT("TW", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("TZ", RTW_REGD_ETSI, RTW_REGD_ETSI),
--	COUNTRY_REGD_ENT("UA", RTW_REGD_ETSI, RTW_REGD_ETSI),
-+	COUNTRY_REGD_ENT("UA", RTW_REGD_UKRAINE, RTW_REGD_UKRAINE),
- 	COUNTRY_REGD_ENT("UG", RTW_REGD_ETSI, RTW_REGD_ETSI),
- 	COUNTRY_REGD_ENT("US", RTW_REGD_FCC, RTW_REGD_FCC),
- 	COUNTRY_REGD_ENT("UY", RTW_REGD_FCC, RTW_REGD_FCC),
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+index 53af0d209b11..b34dffc6a30c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+@@ -1122,7 +1122,7 @@ static void rtl8723e_dm_bt_2_ant_hid_sco_esco(struct ieee80211_hw *hw)
+ 	/* Always ignore WlanAct if bHid|bSCOBusy|bSCOeSCO */
+ 
+ 	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		"[BTCoex], BT btInqPageStartTime = 0x%x, btTxRxCntLvl = %d\n",
++		"[BTCoex], BT btInqPageStartTime = 0x%lx, btTxRxCntLvl = %d\n",
+ 		hal_coex_8723.bt_inq_page_start_time, bt_tx_rx_cnt_lvl);
+ 	if ((hal_coex_8723.bt_inq_page_start_time) ||
+ 	    (BT_TXRX_CNT_LEVEL_3 == bt_tx_rx_cnt_lvl)) {
+@@ -1335,7 +1335,7 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ 		btdm8723.dec_bt_pwr = true;
+ 
+ 	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		"[BTCoex], BT btInqPageStartTime = 0x%x, btTxRxCntLvl = %d\n",
++		"[BTCoex], BT btInqPageStartTime = 0x%lx, btTxRxCntLvl = %d\n",
+ 		hal_coex_8723.bt_inq_page_start_time, bt_tx_rx_cnt_lvl);
+ 
+ 	if ((hal_coex_8723.bt_inq_page_start_time) ||
+@@ -1358,9 +1358,8 @@ static void rtl8723e_dm_bt_2_ant_ftp_a2dp(struct ieee80211_hw *hw)
+ static void rtl8723e_dm_bt_inq_page_monitor(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 cur_time;
++	unsigned long cur_time = jiffies;
+ 
+-	cur_time = jiffies;
+ 	if (hal_coex_8723.c2h_bt_inquiry_page) {
+ 		/* bt inquiry or page is started. */
+ 		if (hal_coex_8723.bt_inq_page_start_time == 0) {
+@@ -1368,18 +1367,17 @@ static void rtl8723e_dm_bt_inq_page_monitor(struct ieee80211_hw *hw)
+ 			BT_COEX_STATE_BT_INQ_PAGE;
+ 			hal_coex_8723.bt_inq_page_start_time = cur_time;
+ 			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-				"[BTCoex], BT Inquiry/page is started at time : 0x%x\n",
++				"[BTCoex], BT Inquiry/page is started at time : 0x%lx\n",
+ 				hal_coex_8723.bt_inq_page_start_time);
+ 		}
+ 	}
+ 	rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+-		"[BTCoex], BT Inquiry/page started time : 0x%x, cur_time : 0x%x\n",
++		"[BTCoex], BT Inquiry/page started time : 0x%lx, cur_time : 0x%lx\n",
+ 		hal_coex_8723.bt_inq_page_start_time, cur_time);
+ 
+ 	if (hal_coex_8723.bt_inq_page_start_time) {
+-		if ((((long)cur_time -
+-			(long)hal_coex_8723.bt_inq_page_start_time) / HZ)
+-			>= 10) {
++		if (jiffies_to_msecs(cur_time -
++				     hal_coex_8723.bt_inq_page_start_time) >= 10000) {
+ 			rtl_dbg(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+ 				"[BTCoex], BT Inquiry/page >= 10sec!!!\n");
+ 			hal_coex_8723.bt_inq_page_start_time = 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 0f99e3446796..47b4685b6d24 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -1597,7 +1597,7 @@ struct bt_coexist_8723 {
+ 	u8 c2h_bt_info;
+ 	bool c2h_bt_info_req_sent;
+ 	bool c2h_bt_inquiry_page;
+-	u32 bt_inq_page_start_time;
++	unsigned long bt_inq_page_start_time;
+ 	u8 bt_retry_cnt;
+ 	u8 c2h_bt_info_original;
+ 	u8 bt_inquiry_page_cnt;
 -- 
-2.25.1
+2.41.0
 
