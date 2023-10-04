@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52948E7B5E1
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F7F2E7B5E2
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Oct 2023 09:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242050AbjJDJhI (ORCPT
+        id S242025AbjJDJhJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Oct 2023 05:37:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51388 "EHLO
+        Wed, 4 Oct 2023 05:37:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242012AbjJDJhF (ORCPT
+        with ESMTP id S232963AbjJDJhF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 4 Oct 2023 05:37:05 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42CFEBB
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 02:37:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87707A7
+        for <linux-wireless@vger.kernel.org>; Wed,  4 Oct 2023 02:37:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696412220; x=1727948220;
+  t=1696412221; x=1727948221;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=XOJfRA7fD/qH1Lpl/dpTVEk3Z/yesN2kDKnrtMg0Cpg=;
-  b=AjVQKFxpGsQR/Tg6LqxWWFBDS2MHUxGzvloY6whsCOoP90bHwSw2+ywz
-   N3VBdqm71InSFRCUGEoYM9Bzh8mJGr8eTL16wR9t/Jr0n1noxgCtiCJ3Q
-   3WgYL+JmU90KPOZlll+Zo41WTHdc+p7JFkHGWVh9nEyunoMvyiDmbMtTE
-   xAzUxE7ks68ZBjm02NV6qQlbY78sq5/qjWuyjZAtf7ETA9gRu2UjUgjm/
-   B4kzh2cq7XadmzGJM7xXCz3RbXAO/OetU0dV8JB59fC95eb6XEYc8p4Q7
-   WFxyysnGgmISdf8fmwLVU86p/yluQgMm04f4UFhpaOlNGgAAMaIVetycf
+  bh=fR+YKwoHfLIRDI3H/5+RZ3cQPiNyeCWqZgd3W3V4VaM=;
+  b=SNwdv25Fl3sWlJD/usu/RxaymF0aX4EhOcfm1bkQpvDlPu7Wa1BPMi1l
+   UXTBn0qPaxnvF+70KzQY1Rj1l/jbbaWDEZW2G4gATavbVd4leFMUtvIz8
+   R1ZWi9vVGZXjwQjKJhFAwU5LgmZZvJYpE+BpogrDyHUg0FtS4STB04QO8
+   9RklyFlKXlN9ljMicVHJFLgnRuJrVI3s8TkHH2xQay3af4abtYi4IE0vH
+   az6Sy0jG3ema7YuHL05OokfBydyV+nzZfOh9YQshenKylQG9c6S5qdkrN
+   qITEcl6OElC5QttGBQpRL0CbfAjpFiZxqYH3RLvFhkB38klmvKMztIpNI
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="449611685"
+X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="449611727"
 X-IronPort-AV: E=Sophos;i="6.03,199,1694761200"; 
-   d="scan'208";a="449611685"
+   d="scan'208";a="449611727"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:48 -0700
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:52 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="1082415148"
+X-IronPort-AV: E=McAfee;i="6600,9927,10852"; a="1082415155"
 X-IronPort-AV: E=Sophos;i="6.03,199,1694761200"; 
-   d="scan'208";a="1082415148"
+   d="scan'208";a="1082415155"
 Received: from oferweis-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.222.21])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:46 -0700
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2023 02:36:51 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Rotem Saado <rotem.saado@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 01/15] wifi: iwlwifi: Extract common prph mac/phy regions data dump logic
-Date:   Wed,  4 Oct 2023 12:36:20 +0300
-Message-Id: <20231004123422.16f06414c65c.Ie911bc83a1e2f8fddb27b4c5bd24f933f8b674b6@changeid>
+Subject: [PATCH 03/15] wifi: iwlwifi: yoyo: swap cdb and jacket bits values
+Date:   Wed,  4 Oct 2023 12:36:22 +0300
+Message-Id: <20231004123422.356d8dacda2f.I349ab888b43a11baa2453a1d6978a6a703e422f0@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20231004093634.131303-1-gregory.greenman@intel.com>
 References: <20231004093634.131303-1-gregory.greenman@intel.com>
@@ -57,128 +57,33 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Rotem Saado <rotem.saado@intel.com>
 
-YoYo (debug data collection mechanism) is introducing 2 new types
-of regions: prph mac/phy ranges.
-These types will have a common logic of reading the data from the
-device as the mac/phy prph has. Put it in a separate function so it can
-be reused.
+The bits are wrong, the jacket bit should be 5 and cdb bit 4.
+Fix it.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Fixes: 1f171f4f1437 ("iwlwifi: Add support for getting rf id with blank otp")
+Signed-off-by: Rotem Saado <rotem.saado@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 52 ++++++++++++++-------
- 1 file changed, 35 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index e236c1d95e8e..6c03ffdcd3f4 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1021,22 +1021,18 @@ struct iwl_dump_ini_region_data {
- 	struct iwl_fwrt_dump_data *dump_data;
- };
- 
--static int
--iwl_dump_ini_prph_mac_iter(struct iwl_fw_runtime *fwrt,
--			   struct iwl_dump_ini_region_data *reg_data,
--			   void *range_ptr, u32 range_len, int idx)
-+static int iwl_dump_ini_prph_mac_iter_common(struct iwl_fw_runtime *fwrt,
-+					     void *range_ptr, u32 addr,
-+					     __le32 size)
- {
--	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
- 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
- 	__le32 *val = range->data;
- 	u32 prph_val;
--	u32 addr = le32_to_cpu(reg->addrs[idx]) +
--		   le32_to_cpu(reg->dev_addr.offset);
- 	int i;
- 
- 	range->internal_base_addr = cpu_to_le32(addr);
--	range->range_data_size = reg->dev_addr.size;
--	for (i = 0; i < le32_to_cpu(reg->dev_addr.size); i += 4) {
-+	range->range_data_size = size;
-+	for (i = 0; i < le32_to_cpu(size); i += 4) {
- 		prph_val = iwl_read_prph(fwrt->trans, addr + i);
- 		if (iwl_trans_is_hw_error_value(prph_val))
- 			return -EBUSY;
-@@ -1047,38 +1043,47 @@ iwl_dump_ini_prph_mac_iter(struct iwl_fw_runtime *fwrt,
- }
- 
- static int
--iwl_dump_ini_prph_phy_iter(struct iwl_fw_runtime *fwrt,
-+iwl_dump_ini_prph_mac_iter(struct iwl_fw_runtime *fwrt,
- 			   struct iwl_dump_ini_region_data *reg_data,
- 			   void *range_ptr, u32 range_len, int idx)
- {
- 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
-+	u32 addr = le32_to_cpu(reg->addrs[idx]) +
-+		   le32_to_cpu(reg->dev_addr.offset);
-+
-+	return iwl_dump_ini_prph_mac_iter_common(fwrt, range_ptr, addr,
-+						 reg->dev_addr.size);
-+}
-+
-+static int iwl_dump_ini_prph_phy_iter_common(struct iwl_fw_runtime *fwrt,
-+					     void *range_ptr, u32 addr,
-+					     __le32 size, __le32 offset)
-+{
- 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
- 	__le32 *val = range->data;
- 	u32 indirect_wr_addr = WMAL_INDRCT_RD_CMD1;
- 	u32 indirect_rd_addr = WMAL_MRSPF_1;
- 	u32 prph_val;
--	u32 addr = le32_to_cpu(reg->addrs[idx]);
- 	u32 dphy_state;
- 	u32 dphy_addr;
- 	int i;
- 
- 	range->internal_base_addr = cpu_to_le32(addr);
--	range->range_data_size = reg->dev_addr.size;
-+	range->range_data_size = size;
- 
- 	if (fwrt->trans->trans_cfg->device_family < IWL_DEVICE_FAMILY_AX210)
- 		indirect_wr_addr = WMAL_INDRCT_CMD1;
- 
--	indirect_wr_addr += le32_to_cpu(reg->dev_addr.offset);
--	indirect_rd_addr += le32_to_cpu(reg->dev_addr.offset);
-+	indirect_wr_addr += le32_to_cpu(offset);
-+	indirect_rd_addr += le32_to_cpu(offset);
- 
- 	if (!iwl_trans_grab_nic_access(fwrt->trans))
- 		return -EBUSY;
- 
--	dphy_addr = (reg->dev_addr.offset) ? WFPM_LMAC2_PS_CTL_RW :
--					     WFPM_LMAC1_PS_CTL_RW;
-+	dphy_addr = (offset) ? WFPM_LMAC2_PS_CTL_RW : WFPM_LMAC1_PS_CTL_RW;
- 	dphy_state = iwl_read_umac_prph_no_grab(fwrt->trans, dphy_addr);
- 
--	for (i = 0; i < le32_to_cpu(reg->dev_addr.size); i += 4) {
-+	for (i = 0; i < le32_to_cpu(size); i += 4) {
- 		if (dphy_state == HBUS_TIMEOUT ||
- 		    (dphy_state & WFPM_PS_CTL_RW_PHYRF_PD_FSM_CURSTATE_MSK) !=
- 		    WFPM_PHYRF_STATE_ON) {
-@@ -1097,6 +1102,19 @@ iwl_dump_ini_prph_phy_iter(struct iwl_fw_runtime *fwrt,
- 	return sizeof(*range) + le32_to_cpu(range->range_data_size);
- }
- 
-+static int
-+iwl_dump_ini_prph_phy_iter(struct iwl_fw_runtime *fwrt,
-+			   struct iwl_dump_ini_region_data *reg_data,
-+			   void *range_ptr, u32 range_len, int idx)
-+{
-+	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
-+	u32 addr = le32_to_cpu(reg->addrs[idx]);
-+
-+	return iwl_dump_ini_prph_phy_iter_common(fwrt, range_ptr, addr,
-+						 reg->dev_addr.size,
-+						 reg->dev_addr.offset);
-+}
-+
- static int iwl_dump_ini_csr_iter(struct iwl_fw_runtime *fwrt,
- 				 struct iwl_dump_ini_region_data *reg_data,
- 				 void *range_ptr, u32 range_len, int idx)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 06d467068ff4..7bd4ce149e04 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -348,8 +348,8 @@
+ #define RFIC_REG_RD			0xAD0470
+ #define WFPM_CTRL_REG			0xA03030
+ #define WFPM_OTP_CFG1_ADDR		0x00a03098
+-#define WFPM_OTP_CFG1_IS_JACKET_BIT	BIT(4)
+-#define WFPM_OTP_CFG1_IS_CDB_BIT	BIT(5)
++#define WFPM_OTP_CFG1_IS_JACKET_BIT	BIT(5)
++#define WFPM_OTP_CFG1_IS_CDB_BIT	BIT(4)
+ #define WFPM_OTP_BZ_BNJ_JACKET_BIT	5
+ #define WFPM_OTP_BZ_BNJ_CDB_BIT		4
+ #define WFPM_OTP_CFG1_IS_JACKET(_val)   (((_val) & 0x00000020) >> WFPM_OTP_BZ_BNJ_JACKET_BIT)
 -- 
 2.38.1
 
