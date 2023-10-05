@@ -2,188 +2,97 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED7FE92FC9
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Oct 2023 22:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EBDEE92FCF
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Oct 2023 23:39:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230137AbjJEWUU (ORCPT
+        id S229519AbjJEXjy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Oct 2023 18:20:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56590 "EHLO
+        Thu, 5 Oct 2023 19:39:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbjJEWUT (ORCPT
+        with ESMTP id S229503AbjJEXjC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2023 18:20:19 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E2F09E
-        for <linux-wireless@vger.kernel.org>; Thu,  5 Oct 2023 15:20:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696544418; x=1728080418;
-  h=date:from:to:cc:subject:message-id;
-  bh=hImo8OCdDJJrUgdoX4rYseFBZfcRqhiqiZSaTRLjpbY=;
-  b=Hl1eP5oOGtoj6xk8VTWKhlTGrg4BKKuoD57cGuJtfv0ZkFmWU0iOTEqb
-   R39lhIx/xqwxms8SvdR7WfJLJr+tSprSdCBm94cY7wjqflvprlIZ4TkVb
-   iJUO0YjGo255ExjaWCV8h5g9Y0oqdzsFkdlB64tVBvnqamrH1+mr8OLtz
-   q/6PszmnThlDZYex7PAMjVMwV3Q5E7QFWJZ8NMJRHygkwT0MS+FLKbHK7
-   Z83lRYd3EN/jwDYLFRqLRr0Yfg1hM++7CA8CYEQgVxYEFjSFWUtIWAtSH
-   QSgw4oSNYpFyK+qTKRfpuCUqD3TdDLHtRkk2ohMcVjjV9lEgiYU5SzCzc
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="373984216"
-X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
-   d="scan'208";a="373984216"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2023 15:20:17 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="751966407"
-X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
-   d="scan'208";a="751966407"
-Received: from lkp-server02.sh.intel.com (HELO c3b01524d57c) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 05 Oct 2023 15:20:16 -0700
-Received: from kbuild by c3b01524d57c with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qoWhZ-000LxC-2Y;
-        Thu, 05 Oct 2023 22:20:13 +0000
-Date:   Fri, 06 Oct 2023 06:19:26 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@kernel.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        Thu, 5 Oct 2023 19:39:02 -0400
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F98AE7
+        for <linux-wireless@vger.kernel.org>; Thu,  5 Oct 2023 16:39:01 -0700 (PDT)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+        by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 3E1902C006C;
+        Thu,  5 Oct 2023 23:38:59 +0000 (UTC)
+Received: from [192.168.100.159] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 91B6713C2B0;
+        Thu,  5 Oct 2023 16:38:58 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 91B6713C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1696549138;
+        bh=VEMoDBukjCDX99Abs1IDmwidxRDC+f6alGTuu90HfJI=;
+        h=Date:Subject:From:To:References:In-Reply-To:From;
+        b=Ton1bZP5n09ngrJPb9m8QkhTkZyHnKHviEdjKIfIU/KmAv5W2jLNh9auMrMHsFdx9
+         VAqu4Lj4shlsVsi2Hjc3FwGDMXn5rn17cf7kNIdeE4U8n804mpKod5vUosMyzQGRoY
+         7k8wmPbseT56MtHP04HfapbaC1/n47MVouc72oWk=
+Message-ID: <b6cb54b5-4c37-8c88-beb3-5fc14bb1aaee@candelatech.com>
+Date:   Thu, 5 Oct 2023 16:38:58 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH] mac80211: Allow STA to connect in AX mode to MLD AP.
+Content-Language: en-US
+From:   Ben Greear <greearb@candelatech.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless@vger.kernel.org
-Subject: [wireless-next:main] BUILD SUCCESS
- 9418edf8ff01e7a4904aac1aca4864ecdea37593
-Message-ID: <202310060623.IWwitqO6-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+References: <20231003164326.857433-1-greearb@candelatech.com>
+ <4ae5a8dbe80e0eb0b96e9165892746fc3b3e9197.camel@sipsolutions.net>
+ <22462d21-86c0-a2f0-265f-044bfb14719a@candelatech.com>
+Organization: Candela Technologies
+In-Reply-To: <22462d21-86c0-a2f0-265f-044bfb14719a@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-MDID: 1696549140-4_9Y3U0dyZIu
+X-MDID-O: us5;at1;1696549140;4_9Y3U0dyZIu;<greearb@candelatech.com>;b42792dba290a1257c3f0aaf1c60b0ff
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-branch HEAD: 9418edf8ff01e7a4904aac1aca4864ecdea37593  wifi: rtlwifi: remove unreachable code in rtl92d_dm_check_edca_turbo()
+On 10/4/23 13:36, Ben Greear wrote:
+> On 10/4/23 12:38, Johannes Berg wrote:
+>> On Tue, 2023-10-03 at 09:43 -0700, greearb@candelatech.com wrote:
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> Check if user has configured STA to be AX mode, and if so,
+>>> skip the check for MLD elements (as they would not be needed
+>>> in AX mode).
+>>
+>> Eh, no, I think this is wrong.
+>>
+>>>
+>>>           if (ieee80211_vif_is_mld(&sdata->vif)) {
+>>
+>> If you get past this if, you've (locally) committed to doing EHT
+>> already, not just HE (née 11ax), so should have an EHT connection?
+>>
+>> Though the change is hard to read - but why are you telling the
+>> supplicant to connect with MLO if you wanted to not use EHT?
+> 
+> It is mostly white-space changes, but the diff is ugly.
+> 
+> I caused the DISABLE_EHT flag to be set in mac80211, and that generally
+> seems to work in my kernel, but something is still trying to do MLO I guess.
+> 
+> I did not specifically tell supplicant to do MLO, and in fact I told
+> it to disable_be, but maybe that is not fully implemented.  My supplicant
+> is a few months old vs upstream at this point.
 
-elapsed time: 906m
+I created a patch to supplicant where it will disable MLO if disable_eht
+is true, and that seems to have properly associated a non-MLO station
+in AX mode.
 
-configs tested: 115
-configs skipped: 2
+So I agree that my patch to the kernel is not needed.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks for the patch review and comments.
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              alldefconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20231005   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                         axm55xx_defconfig   gcc  
-arm                                 defconfig   gcc  
-arm                   randconfig-001-20231005   gcc  
-arm                           u8500_defconfig   gcc  
-arm64                            allmodconfig   gcc  
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20231005   gcc  
-i386         buildonly-randconfig-002-20231005   gcc  
-i386         buildonly-randconfig-003-20231005   gcc  
-i386         buildonly-randconfig-004-20231005   gcc  
-i386         buildonly-randconfig-005-20231005   gcc  
-i386         buildonly-randconfig-006-20231005   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-001-20231005   gcc  
-i386                  randconfig-002-20231005   gcc  
-i386                  randconfig-003-20231005   gcc  
-i386                  randconfig-004-20231005   gcc  
-i386                  randconfig-005-20231005   gcc  
-i386                  randconfig-006-20231005   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20231005   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                ecovec24-romimage_defconfig   gcc  
-sh                          r7780mp_defconfig   gcc  
-sh                           se7206_defconfig   gcc  
-sh                  sh7785lcr_32bit_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20231005   gcc  
-x86_64                randconfig-002-20231005   gcc  
-x86_64                randconfig-003-20231005   gcc  
-x86_64                randconfig-004-20231005   gcc  
-x86_64                randconfig-005-20231005   gcc  
-x86_64                randconfig-006-20231005   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                           alldefconfig   gcc  
+Thanks,
+Ben
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
