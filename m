@@ -2,70 +2,59 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3D48E92709
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Oct 2023 15:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D867E9271B
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Oct 2023 16:15:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230291AbjJEPLC (ORCPT
+        id S240490AbjJEQOF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Oct 2023 11:11:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36002 "EHLO
+        Thu, 5 Oct 2023 12:14:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231890AbjJEPKI (ORCPT
+        with ESMTP id S240894AbjJEQNL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2023 11:10:08 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD95E9029
-        for <linux-wireless@vger.kernel.org>; Thu,  5 Oct 2023 07:42:31 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BE5EC433AB;
-        Thu,  5 Oct 2023 06:24:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696487063;
-        bh=yzON0/8AzdJNaPS9HT17ZwhuFj1fWIAt4MvZ47s8buw=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=sItvzO2qI36HAyZ/ml0DUgZDqxB5P3WoYpvmYVF+TQnoVwtaSniu/fBPEf9YcLgIj
-         MlWtQN8y8m+uYlZHGrUS9W9CyqM9AeK7w08w0Gp00LFo1VlP+ySoBPQ0Kv4r29mcgH
-         VkLZTHPOupRFiTRGT/dCBJSSSJ7uAoKbeJV6Q1kcEQjpQqzGcifyIBtUuw6r1MNAf6
-         C7BuxsZb/0QQ8ERyuAthmu/jNrGJm9TlyfVVI2AdIiUL0e2rXzi59y6B/dwja0TREY
-         srC6MwJKnXLoEDu6nSQy8xD8f0Bj8mhVmI7RyS2007V1shs8BTs9ZBki8EfWr9motz
-         9kZGFmbTWN5ag==
-Content-Type: text/plain; charset="utf-8"
+        Thu, 5 Oct 2023 12:13:11 -0400
+Received: from forward201b.mail.yandex.net (forward201b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d201])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D7127B19
+        for <linux-wireless@vger.kernel.org>; Thu,  5 Oct 2023 06:38:17 -0700 (PDT)
+Received: from forward100b.mail.yandex.net (forward100b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d100])
+        by forward201b.mail.yandex.net (Yandex) with ESMTP id 77DEE4FC75
+        for <linux-wireless@vger.kernel.org>; Thu,  5 Oct 2023 16:38:10 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-57.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-57.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:4684:0:640:929e:0])
+        by forward100b.mail.yandex.net (Yandex) with ESMTP id B53906004D;
+        Thu,  5 Oct 2023 16:37:39 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-57.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id cbYrC6jDbCg0-kuOQbEHo;
+        Thu, 05 Oct 2023 16:37:39 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+        t=1696513059; bh=N5VRIPfmv7DozMrS9MGtyXcWM5uVP+7SNgHdNTmB/NQ=;
+        h=Subject:From:Cc:To:Date:Message-ID;
+        b=mY7HsPn0zUIAUk4w0717/o57kfGNrgVAiorGOrMeigOP6hizEgbxXOn6YV0IPDh2P
+         jftfPFo3AjNCWUAatJS6wKOMjicbFQOPTMCs5mGhNPfFXMbWTCzEHt9sbYY7BkcdyY
+         xTjO+EW/gNvL02AOWMSOkyjr2I9akjOwFKBVN9OQ=
+Authentication-Results: mail-nwsmtp-smtp-production-main-57.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+Message-ID: <6f78e624-62ee-3ae5-1db4-a0411566def8@yandex.ru>
+Date:   Thu, 5 Oct 2023 16:37:38 +0300
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: ath12k: fix debug messages
-From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20231003150132.187875-1-kvalo@kernel.org>
-References: <20231003150132.187875-1-kvalo@kernel.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Content-Language: en-US
 To:     Kalle Valo <kvalo@kernel.org>
-Cc:     ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169648706024.444191.15030535746469071290.kvalo@kernel.org>
-Date:   Thu,  5 Oct 2023 06:24:22 +0000 (UTC)
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>
+From:   Dmitry Antipov <dmantipov@yandex.ru>
+Subject: On brcm80211 maintenance and support
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@kernel.org> wrote:
+Kalle,
 
-> In ath12k the debug messages were broken, no matter setting what value to the
-> debug_mask module parameter would not get the debug messages printed. The issue
-> is that __ath12k_dbg() uses dev_dbg() to print the debug messages which requires either enabling
-> CONFIG_DYNAMIC_DEBUG or DEBUG symbol in the driver.
-> 
-> ath12k is supposed to use debug_mask module to control whether debug messages
-> are printed or not. Using both CONFIG_DYNAMIC_DEBUG and debug_mask parameter
-> does not make any sense so switch to using dev_printk(), just like ath11k does.
-> Now it's enough just to debug_mask module parameter to get the debug messages.
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+what's an actual status of brcm80211 driver? It seems
+that the relevant MAINTAINERS entries are no longer
+useful, and [1] states that Broadcom is just "disappeared".
 
-Patch applied to ath-next branch of ath.git, thanks.
+Dmitry
 
-453a62a3ee65 wifi: ath12k: fix debug messages
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20231003150132.187875-1-kvalo@kernel.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+[1] https://lore.kernel.org/linux-wireless/9a544a1b9385a150f779ac35a780dbb50200a962.camel@sipsolutions.net
