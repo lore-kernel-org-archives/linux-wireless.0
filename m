@@ -2,171 +2,104 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7CF5E93719
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Oct 2023 13:56:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50D8DE92701
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Oct 2023 14:05:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229959AbjJENz4 (ORCPT
+        id S231803AbjJEOF4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Oct 2023 09:55:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38924 "EHLO
+        Thu, 5 Oct 2023 10:05:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243817AbjJENtY (ORCPT
+        with ESMTP id S231905AbjJEOEO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Oct 2023 09:49:24 -0400
-Received: from mail-ot1-x350.google.com (mail-ot1-x350.google.com [IPv6:2607:f8b0:4864:20::350])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0018D903B
-        for <linux-wireless@vger.kernel.org>; Thu,  5 Oct 2023 01:49:45 -0700 (PDT)
-Received: by mail-ot1-x350.google.com with SMTP id 46e09a7af769-6c626bfcd3fso836494a34.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Oct 2023 01:49:45 -0700 (PDT)
+        Thu, 5 Oct 2023 10:04:14 -0400
+Received: from mail-oi1-x22b.google.com (mail-oi1-x22b.google.com [IPv6:2607:f8b0:4864:20::22b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 815982484D;
+        Thu,  5 Oct 2023 04:11:44 -0700 (PDT)
+Received: by mail-oi1-x22b.google.com with SMTP id 5614622812f47-3af609c3e74so565243b6e.2;
+        Thu, 05 Oct 2023 04:11:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1696504303; x=1697109103; darn=vger.kernel.org;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FZLz384BnmtZTkRlTbx4zMnrnVvcuSLVD0ixPYcWO2Q=;
+        b=F+COXs2L1P0XOqvdTqBWQ2sEtLS5ecKjqy2FDOWky7SkMbITnExlsDNbMm6cMmbGeD
+         wz33yILgOstsdAIh/4riIYAZ0WezuSKFWjPBeoZ/inFz8yR3MOCSBca7uC9OYJpt/nKw
+         /dCmvezTbge7VJJiT4RxClNI03ysPXYge60agicrppwIMmx6SZ+il7q5wUg5IT4ApqGV
+         xX6AxbN7h8yHXN+Ltjr6X3yIY3oQAVFIfOrSEN84FT4K5VwIf+ZJUDPdwFtAWVofYW4+
+         /zS+uYCyw+EfU4nBUseganlEoWKVkPij20yY4Nn1KXSUUQlZ91hq7ArOQMpGqCyJ2nVO
+         p0zw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696495784; x=1697100584;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=O5CT72nr6fyLIM2HBIZewHuJMtsZSdhGCa8W/NlrzdE=;
-        b=Hr9LmOjIzfUJ9HeDxh31GJJs41zR/004u9w2/+Aie8K8kgVphqr7C2/z1M9A2XCPdT
-         OtS0mwf8o5gr0HBmflq4OGM6nwiaYXtdF8zws2eI6PCgjjvb5xCmAlqfWdbj4r6hzobb
-         dERHKaJy3cJCa+VLAjig/wprSnWxkveP3hJtROhBI54FzWYd7kERJkvoo7r0sq0qG09K
-         RND7ZzPUuXLnrYWlTA/x2pz4EJDJwsJNN8hki/PuREb/6ERrZtVP0cmCFF1K35OGwhwP
-         tFp1Bm4nyXzFvWF936+uQkgSKTiUHcANhAnJmefUXx3TF7GNoVW3+znR+byeOBLRD1T0
-         toRQ==
-X-Gm-Message-State: AOJu0YxUdysyKcNHLxUImgvTO5WZJlHoosM1tZNYjsryXTuwePYuw5E/
-        NFkgMmXbxdSJ16+AmKoJSq6KGakOqPTd+tn3PXiVuBxL6q+F
-X-Google-Smtp-Source: AGHT+IHo2mnMCI10UV5TXKADf/v1RkgnT7tekZCDwNptOcZZfYxVDZ7TggD0WGNuei7CQm9SVjBSkU+Mt7tLm3HnsTxz0UA+JsN/
+        d=1e100.net; s=20230601; t=1696504303; x=1697109103;
+        h=content-transfer-encoding:subject:from:cc:to:content-language
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=FZLz384BnmtZTkRlTbx4zMnrnVvcuSLVD0ixPYcWO2Q=;
+        b=izJ7eNHMhk9a/8OfdmmjjnZZYeFvBVXLNVv3ZZGo315WgAwZwaKtPDLBLYoPY1vbUR
+         uRdoroffDIvozhaX2ZvWtCdhcs9pJIxj7Caw6vXESXhg9pIE4kogBffFpHMoJyNszLNy
+         nK4K9RdVvxrYoHTDSUc8x3WJAIuaJRETk6j4Vw/gx91AtK+owAB9fph+YvbpUyFVR/Dn
+         TMEL0nV41ummQFC9oOqec88nfs7RCEUKuJHlLiDZJglOCxjgCQ+RIi2eKWV0Zi0fsg6t
+         UVZXmw/YfTNjnADmFuyOtNWjb/5GZhtFykuMG3HAilHZUIiBp5s4jlxle1SReQrlC2Wh
+         5+JQ==
+X-Gm-Message-State: AOJu0YxyNRhFYsE+fgaQGAtqQ54KP5kIFzflcn5/fe8CZ4AzDERZSvun
+        fi7rIEH9MqaUtZw6i+VYGneANsbOr+A=
+X-Google-Smtp-Source: AGHT+IHUEXw1wL4QkSvnckVLi0TTTFo19lB0LVDgyCRKEWOJzXsDiIkSz5Vp+7Yrny8xruGz8dXBrg==
+X-Received: by 2002:a05:6358:4297:b0:13a:2fed:337c with SMTP id s23-20020a056358429700b0013a2fed337cmr4966489rwc.24.1696504303486;
+        Thu, 05 Oct 2023 04:11:43 -0700 (PDT)
+Received: from [192.168.0.106] ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id p3-20020a17090a74c300b0026b50d9aee6sm1282934pjl.25.2023.10.05.04.11.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 05 Oct 2023 04:11:42 -0700 (PDT)
+Message-ID: <9fa3c04b-bd98-4fde-9bfd-27d83132e766@gmail.com>
+Date:   Thu, 5 Oct 2023 18:11:35 +0700
 MIME-Version: 1.0
-X-Received: by 2002:a05:6870:1a89:b0:1d6:e8f0:4c47 with SMTP id
- ef9-20020a0568701a8900b001d6e8f04c47mr1782979oab.9.1696495782543; Thu, 05 Oct
- 2023 01:49:42 -0700 (PDT)
-Date:   Thu, 05 Oct 2023 01:49:42 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000007b47270606f43464@google.com>
-Subject: [syzbot] [net?] [wireless?] memory leak in regulatory_init_db
-From:   syzbot <syzbot+39ec16ff6cc18b1d066d@syzkaller.appspotmail.com>
-To:     davem@davemloft.net, edumazet@google.com,
-        johannes@sipsolutions.net, kuba@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, pabeni@redhat.com,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux Wireless <linux-wireless@vger.kernel.org>
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Gregory Greenman <gregory.greenman@intel.com>,
+        Pawel <pawel.veselov@gmail.com>
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: Fwd: 6.5.5 hardware access timeout / HW error / GPF in iwlwifi
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Hi,
 
-syzbot found the following issue on:
+I notice a regression report on Bugzilla [1]. Quoting from it:
 
-HEAD commit:    3b517966c561 Merge tag 'dma-mapping-6.6-2023-09-30' of git..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=130dac2a680000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=aa96152f5a3192e3
-dashboard link: https://syzkaller.appspot.com/bug?extid=39ec16ff6cc18b1d066d
-compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1695bd3e680000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=16ae8c4e680000
+> Hardware: Intel(R) Wi-Fi 6 AX201 160MHz, REV=0x370
+> Works just fine with 6.4.15 (and older)
+> Using FC37, updated to the latest available kernel 6.5.5, can't use WiFi or even boot.
+> Linux firmware package: linux-firmware-20230919-1 (latest available version for F37)
+> 
+> First boot:
+> Timeout waiting for hardware access (CSR_GP_CNTRL 0xffffffff)
+> at __iwl_trans_pcie_grab_nic_access+0x14a/0x150
+> followed by HW error, resetting before reading at
+> iwl_fwrt_dump_lmac_error_log+0x50c/0x600 
+> The interface didn't ever plumb.
+> 
+> Second boot: GPF. I don't have the traces, but I swear it originated from iwlwifi module from what I saw on the console.
+> 
+> I've attached the traces for both the failed boots, and the normal boot from 6.4.15 for reference.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/cb67ab976a91/disk-3b517966.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/21326eb3ef67/vmlinux-3b517966.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/0a95555fe120/bzImage-3b517966.xz
+See Bugzilla for the full thread and attached dmesg logs.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+39ec16ff6cc18b1d066d@syzkaller.appspotmail.com
+Anyway, I'm adding this regression to regzbot:
 
-executing program
-BUG: memory leak
-unreferenced object 0xffff888108f880c0 (size 64):
-  comm "swapper/0", pid 1, jiffies 4294938895 (age 68.260s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    ff ff ff ff 00 00 00 00 00 00 00 00 30 30 00 00  ............00..
-  backtrace:
-    [<ffffffff81574195>] kmalloc_trace+0x25/0x90 mm/slab_common.c:1114
-    [<ffffffff875a3f05>] kmalloc include/linux/slab.h:599 [inline]
-    [<ffffffff875a3f05>] kzalloc include/linux/slab.h:720 [inline]
-    [<ffffffff875a3f05>] regulatory_hint_core net/wireless/reg.c:3218 [inline]
-    [<ffffffff875a3f05>] regulatory_init_db+0xe5/0x1d0 net/wireless/reg.c:4290
-    [<ffffffff81001cb6>] do_one_initcall+0x76/0x430 init/main.c:1232
-    [<ffffffff874d86ea>] do_initcall_level init/main.c:1294 [inline]
-    [<ffffffff874d86ea>] do_initcalls init/main.c:1310 [inline]
-    [<ffffffff874d86ea>] do_basic_setup init/main.c:1329 [inline]
-    [<ffffffff874d86ea>] kernel_init_freeable+0x25a/0x460 init/main.c:1547
-    [<ffffffff84b3928b>] kernel_init+0x1b/0x290 init/main.c:1437
-    [<ffffffff81149f25>] ret_from_fork+0x45/0x50 arch/x86/kernel/process.c:147
-    [<ffffffff81002be1>] ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
+#regzbot introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?id=217963
 
-BUG: memory leak
-unreferenced object 0xffff88814490d800 (size 2048):
-  comm "syz-executor220", pid 5026, jiffies 4294943369 (age 23.530s)
-  hex dump (first 32 bytes):
-    d8 4c a8 0d 81 88 ff ff 22 01 00 00 00 00 ad de  .L......".......
-    00 00 00 00 ff ff ff ff ff ff 00 aa aa aa aa aa  ................
-  backtrace:
-    [<ffffffff81574195>] kmalloc_trace+0x25/0x90 mm/slab_common.c:1114
-    [<ffffffff84527e6f>] kmalloc include/linux/slab.h:599 [inline]
-    [<ffffffff84527e6f>] kzalloc include/linux/slab.h:720 [inline]
-    [<ffffffff84527e6f>] hci_conn_add+0x4f/0x5e0 net/bluetooth/hci_conn.c:957
-    [<ffffffff84528668>] hci_connect_acl+0x198/0x1b0 net/bluetooth/hci_conn.c:1632
-    [<ffffffff8452b4cb>] hci_connect_sco+0x4b/0x520 net/bluetooth/hci_conn.c:1685
-    [<ffffffff8459d6b3>] sco_connect net/bluetooth/sco.c:266 [inline]
-    [<ffffffff8459d6b3>] sco_sock_connect+0x1c3/0x520 net/bluetooth/sco.c:591
-    [<ffffffff83e96b01>] __sys_connect_file+0x91/0xb0 net/socket.c:2033
-    [<ffffffff83e96c06>] __sys_connect+0xe6/0x110 net/socket.c:2050
-    [<ffffffff83e96c4c>] __do_sys_connect net/socket.c:2060 [inline]
-    [<ffffffff83e96c4c>] __se_sys_connect net/socket.c:2057 [inline]
-    [<ffffffff83e96c4c>] __x64_sys_connect+0x1c/0x20 net/socket.c:2057
-    [<ffffffff84b33fc8>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
-    [<ffffffff84b33fc8>] do_syscall_64+0x38/0xb0 arch/x86/entry/common.c:80
-    [<ffffffff84c0008b>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+Thanks.
 
-BUG: memory leak
-unreferenced object 0xffff8881091dc400 (size 512):
-  comm "kworker/u5:2", pid 5022, jiffies 4294943869 (age 18.530s)
-  hex dump (first 32 bytes):
-    00 d8 90 44 81 88 ff ff c0 b9 e2 0c 81 88 ff ff  ...D............
-    fd 03 00 00 00 00 00 00 00 06 0c 00 00 00 00 00  ................
-  backtrace:
-    [<ffffffff81574195>] kmalloc_trace+0x25/0x90 mm/slab_common.c:1114
-    [<ffffffff845627dd>] kmalloc include/linux/slab.h:599 [inline]
-    [<ffffffff845627dd>] kzalloc include/linux/slab.h:720 [inline]
-    [<ffffffff845627dd>] l2cap_conn_add.part.0+0x3d/0x340 net/bluetooth/l2cap_core.c:7845
-    [<ffffffff845703b4>] l2cap_conn_add net/bluetooth/l2cap_core.c:71 [inline]
-    [<ffffffff845703b4>] l2cap_connect_cfm+0x264/0x740 net/bluetooth/l2cap_core.c:8242
-    [<ffffffff8452ba43>] hci_connect_cfm include/net/bluetooth/hci_core.h:1935 [inline]
-    [<ffffffff8452ba43>] hci_conn_failed+0xa3/0x120 net/bluetooth/hci_conn.c:1251
-    [<ffffffff84594cc6>] hci_abort_conn_sync+0x4d6/0x6d0 net/bluetooth/hci_sync.c:5435
-    [<ffffffff8452560d>] abort_conn_sync+0x7d/0xa0 net/bluetooth/hci_conn.c:2894
-    [<ffffffff8458b3ad>] hci_cmd_sync_work+0xcd/0x150 net/bluetooth/hci_sync.c:306
-    [<ffffffff812c8d9d>] process_one_work+0x23d/0x530 kernel/workqueue.c:2630
-    [<ffffffff812c99c7>] process_scheduled_works kernel/workqueue.c:2703 [inline]
-    [<ffffffff812c99c7>] worker_thread+0x327/0x590 kernel/workqueue.c:2784
-    [<ffffffff812d6d9b>] kthread+0x12b/0x170 kernel/kthread.c:388
-    [<ffffffff81149f25>] ret_from_fork+0x45/0x50 arch/x86/kernel/process.c:147
-    [<ffffffff81002be1>] ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
+[1]: https://bugzilla.kernel.org/show_bug.cgi?id=217963
 
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the bug is already fixed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite bug's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the bug is a duplicate of another bug, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+-- 
+An old man doll... just what I always wanted! - Clara
