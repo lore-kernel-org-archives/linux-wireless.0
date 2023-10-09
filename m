@@ -2,92 +2,78 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34996E95A8E
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Oct 2023 07:10:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1179E95A8E
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Oct 2023 08:18:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345376AbjJIHJ6 (ORCPT
+        id S234376AbjJIISd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Oct 2023 03:09:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43220 "EHLO
+        Mon, 9 Oct 2023 04:18:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345377AbjJIHJ5 (ORCPT
+        with ESMTP id S232666AbjJIISb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2023 03:09:57 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDCC094;
-        Mon,  9 Oct 2023 00:09:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6535C433B6;
-        Mon,  9 Oct 2023 07:09:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696835395;
-        bh=laGQUOyn4KCepo+cHn7ADCkvO41qlO/e9164aDPaDKw=;
-        h=From:To:Cc:Subject:Date:From;
-        b=V0sFDqi/xtkR1ONHTOaiRXroiVD5/XxgniHuHOQr2gl0Vq100F8qAUnOQipmWCjeV
-         qB1elols6WbCZVE2pC4wy0gXZ1eDomX6jjK7eNzIWgksE+Au53j0tSB1GfjT7JOLfa
-         VGhhhhCCa5tx/2PBM8H0HtPIqHTHQx2uJjHmpkM+kpqvn038N4JpAu8juBptghTbUI
-         FEr0URcEivyQuJkmVPesG6cec8FmKTViJn4gdS8x1c9/cAByNlPOVuhZb725d9++vC
-         23Ke8K0pIRnbeuP8UcLEDcHOqu3fiR0Qm+aVM/2KrMNzYUeEHSD9N5hl5PkYMsb9H+
-         6CRjKcIO8nZJw==
-From:   Kalle Valo <kvalo@kernel.org>
+        Mon, 9 Oct 2023 04:18:31 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C77638F
+        for <linux-wireless@vger.kernel.org>; Mon,  9 Oct 2023 01:18:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+        Resent-Message-ID:In-Reply-To:References;
+        bh=IjeNk0Y5JtGnrNEcA2qCKSSicZ1bcfGYnsYpvYCB90s=; t=1696839510; x=1698049110; 
+        b=dWnbkFKYZKZGr0vjVU7KPEQBFJGNW9Avlys4Jz51iNYFW4p8Wspdhd8CBWWxMYSPeHNpNDvDyHU
+        Mqvry8GBGyBFpqcSpiOXBx+O3gYaFBkBm1m+Bn6pDg/77aQySJEFceJyC0+Pcy3F/8aal0nIAu9Xu
+        9kI8CE+PEWryIUod93IM/J6aksg7Wi92v9yvAEjQwG3oTPmcdyHcIzfjNp5idIyU6lO+K5OflSTgH
+        3/FsoRtYh3IBqrclUcnzTEidoeWPvD4Z26OOJdkn3MSbcw+TgUdr9YM+QCjc654+D2T2f6W8AXsI+
+        PsTe3wLxMVP3j5UveueZV0OhPZyVSvd/TwmQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.97-RC0)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qplTA-0000000FAki-1PNR;
+        Mon, 09 Oct 2023 10:18:28 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org
-Subject: [RFH] wireless-next: fix new W=1 warnings
-Date:   Mon, 09 Oct 2023 10:09:53 +0300
-Message-ID: <87fs2k5l1a.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@kernel.org>
+Subject: [PATCH] wifi: cfg80211: use system_unbound_wq for wiphy work
+Date:   Mon,  9 Oct 2023 10:18:01 +0200
+Message-ID: <20231009101800.bb75408bf635.I6528d97e24b3da36cdf633b4738327d77c7276f2@changeid>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-During the weekend we updated wireless-next tree from v6.5 to v6.6-rc4+.
-It looks like a new warning was enabled for v6.6 as I see with GCC 13.2
-and W=1 several warnings (list below). In v6.5 wireless code was still
-W=1 warning free with GCC.
+Since wiphy work items can run pretty much arbitrary
+code in the stack/driver, it can take longer to run
+all of this, so we shouldn't be using system_wq via
+schedule_work(). Also, we lock the wiphy (which is
+the reason this exists), so use system_unbound_wq.
 
-For wireless we get lots of questionable cleanup patches. But actually
-these kind of warnings are what we would prefer to be fixed instead of
-the random churn we always see. Hence I'm sending this Request For Help
-(RFH) in case the cleanup people would fix these. Is there a mailing
-list I should send this to?
+Reported-by: Kalle Valo <kvalo@kernel.org>
+Fixes: a3ee4dc84c4e ("wifi: cfg80211: add a work abstraction with special semantics")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The sooner these are fixed the better, it makes it difficult for us to
-see any new warnings from this noise.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 7df8ffcfa0c4..758c9a2a12c0 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1613,7 +1613,7 @@ void wiphy_work_queue(struct wiphy *wiphy, struct wiphy_work *work)
+ 		list_add_tail(&work->entry, &rdev->wiphy_work_list);
+ 	spin_unlock_irqrestore(&rdev->wiphy_work_lock, flags);
+ 
+-	schedule_work(&rdev->wiphy_work);
++	queue_work(system_unbound_wq, &rdev->wiphy_work);
+ }
+ EXPORT_SYMBOL_GPL(wiphy_work_queue);
+ 
+-- 
+2.41.0
 
-Kalle
-
-drivers/net/wireless/intel/ipw2x00/ipw2100.c:5905:63: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size 32 [-Wformat-truncation=]
-drivers/net/wireless/intel/ipw2x00/ipw2100.c:5905:9: note: 'snprintf' output between 4 and 140 bytes into a destination of size 32
-drivers/net/wireless/intel/ipw2x00/ipw2200.c:10392:63: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size 32 [-Wformat-truncation=]
-drivers/net/wireless/intel/ipw2x00/ipw2200.c:10392:9: note: 'snprintf' output between 4 and 98 bytes into a destination of size 32
-drivers/net/wireless/intel/iwlwifi/dvm/main.c:1467:19: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size 32 [-Wformat-truncation=]
-drivers/net/wireless/intel/iwlwifi/dvm/main.c:1465:9: note: 'snprintf' output between 1 and 64 bytes into a destination of size 32
-drivers/net/wireless/intel/iwlwifi/mvm/ops.c:1307:19: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size 32 [-Wformat-truncation=]
-drivers/net/wireless/intel/iwlwifi/mvm/ops.c:1305:9: note: 'snprintf' output between 1 and 64 bytes into a destination of size 32
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:262:52: warning: '%d' directive output may be truncated writing between 1 and 5 bytes into a region of size 4 [-Wformat-truncation=]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:262:46: note: directive argument in the range [0, 65535]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:262:46: note: directive argument in the range [0, 65535]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:262:9: note: 'snprintf' output between 9 and 17 bytes into a destination of size 9
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:265:55: warning: '%d' directive output may be truncated writing between 1 and 5 bytes into a region of size 4 [-Wformat-truncation=]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:265:48: note: directive argument in the range [0, 65535]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:265:48: note: directive argument in the range [0, 65535]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:265:9: note: 'snprintf' output between 10 and 18 bytes into a destination of size 10
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:342:50: warning: '/' directive output may be truncated writing 1 byte into a region of size between 0 and 4 [-Wformat-truncation=]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:342:42: note: directive argument in the range [0, 65535]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c:342:9: note: 'snprintf' output between 10 and 18 bytes into a destination of size 10
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:549:33: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size between 48 and 56 [-Wformat-truncation=]
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:547:9: note: 'snprintf' output 9 or more bytes (assuming 80) into a destination of size 64
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:729:33: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size between 48 and 56 [-Wformat-truncation=]
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:727:9: note: 'snprintf' output 9 or more bytes (assuming 80) into a destination of size 64
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:989:51: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size between 46 and 58 [-Wformat-truncation=]
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:987:33: note: 'snprintf' output between 7 and 82 bytes into a destination of size 64
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:984:53: warning: '%s' directive output may be truncated writing up to 63 bytes into a region of size between 40 and 50 [-Wformat-truncation=]
-drivers/net/wireless/intel/iwlwifi/iwl-drv.c:982:33: note: 'snprintf' output between 15 and 88 bytes into a destination of size 64
-drivers/net/wireless/ath/ath11k/debugfs.c:1597:51: warning: '%d' directive output may be truncated writing between 1 and 3 bytes into a region of size 2 [-Wformat-truncation=]
-drivers/net/wireless/ath/ath11k/debugfs.c:1597:48: note: directive argument in the range [0, 255]
-drivers/net/wireless/ath/ath11k/debugfs.c:1597:9: note: 'snprintf' output between 5 and 7 bytes into a destination of size 5
-drivers/net/wireless/ath/ath9k/hif_usb.c:1223:42: warning: '.0.fw' directive output may be truncated writing 5 bytes into a region of size between 4 and 11 [-Wformat-truncation=]
-drivers/net/wireless/ath/ath9k/hif_usb.c:1222:17: note: 'snprintf' output between 27 and 34 bytes into a destination of size 32
