@@ -2,94 +2,152 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7128CD6112
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Oct 2023 17:00:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 534C7CD610E
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Oct 2023 17:01:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377138AbjJIRAP (ORCPT
+        id S1377353AbjJIRB0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Oct 2023 13:00:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38692 "EHLO
+        Mon, 9 Oct 2023 13:01:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376950AbjJIRAO (ORCPT
+        with ESMTP id S1376840AbjJIRBZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Oct 2023 13:00:14 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1898CC
-        for <linux-wireless@vger.kernel.org>; Mon,  9 Oct 2023 10:00:10 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 399EjWGu025532;
-        Mon, 9 Oct 2023 17:00:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=UlDOppxQT3UIpZ3cnTZKUVvTyWX3ee38hDdLgDHBERk=;
- b=I86If8pikm9OC5xuE9XyRB0rqrRhhsWI0ApqpqWf/1FhRmtmz0FDzZZAEGmKDxyEk/dQ
- LSEvH7Gbrwg599ClUkXWgW1hXKQ/B1foPhsCjj6QNlGb14A4njeHULrcyChrOq5jEjw/
- UyhRotLX7ytcxfs57UEdllDaCg9tez7W3QX1rsaKFN0X4fe3Ca/W7qyie1zN8/vV6LWJ
- g6TvTZRH5fVE0TegG+vAwp4Qtm13DSs0p5wW16rbm7MAN+sVw4yrg7HV9tUmNErmUi94
- Ervt2z75deQV5+rJECC13nY+m25iChlvxy3EnLyYK/nQohLR2E1n0Oz6vTq6RslNQJro Qw== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tkh87b0eg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 09 Oct 2023 17:00:00 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 399Gxx8E011531
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 9 Oct 2023 16:59:59 GMT
-Received: from [10.111.180.41] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Mon, 9 Oct
- 2023 09:59:59 -0700
-Message-ID: <757d6d82-b4fd-4bce-98e5-bbf09724e37e@quicinc.com>
-Date:   Mon, 9 Oct 2023 09:59:58 -0700
+        Mon, 9 Oct 2023 13:01:25 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 087D49D
+        for <linux-wireless@vger.kernel.org>; Mon,  9 Oct 2023 10:01:24 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B7B1C433C8
+        for <linux-wireless@vger.kernel.org>; Mon,  9 Oct 2023 17:01:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696870883;
+        bh=ts8roYjwOsV4Tr/ONn5bpXTgWkLn16rXzzAYMhWAtPI=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=PJDk8pOGHHKSXPgSJ5l0c+x2bc/zYdB/F/DA2H0ss+PfXekBNTaNiS4ljCMvsVNxf
+         TjmUfAtDIKtWEn5b5aqT35jLwOjlnuoaLajESYka+UBTHb6wRWgFRT29kOm23ADaIU
+         VJriWUZkwfgmLFAPBHQgI4WR5eQVAzGzfTuQVn37594iy2zj51ccrfG+vZ7y48OESF
+         DHTtdrltr7IahLXCKIm3477oGDKqd0cxMh6c+z5P7VCsHv4GfD3awYQo/0F+NTrtwF
+         n4CtkhBmxmxbfxd9BoPeh6hFaiTXUwg5u52Wug8Ayjm7TCTngdl2Dy39Hf9ezNbv+f
+         gFvierSEPvnMw==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH RFC 2/2] wifi: mac80211: rename cfg80211_rx_assoc_resp() to cfg80211_rx_assoc_response()
+Date:   Mon,  9 Oct 2023 20:01:20 +0300
+Message-Id: <20231009170120.2522470-2-kvalo@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231009170120.2522470-1-kvalo@kernel.org>
+References: <20231009170120.2522470-1-kvalo@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/4] wifi: ath12k: add TAS capability for WCN7850
-Content-Language: en-US
-To:     Lingbo Kong <quic_lingbok@quicinc.com>,
-        <ath12k@lists.infradead.org>, <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20231009090149.247211-1-quic_lingbok@quicinc.com>
- <20231009090149.247211-2-quic_lingbok@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20231009090149.247211-2-quic_lingbok@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: YjLcXZUcm76j6AKWOcZbvClyVYFfy4kp
-X-Proofpoint-GUID: YjLcXZUcm76j6AKWOcZbvClyVYFfy4kp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-09_14,2023-10-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=1 clxscore=1015 suspectscore=0
- phishscore=0 impostorscore=0 mlxscore=1 bulkscore=0 lowpriorityscore=0
- priorityscore=1501 adultscore=0 spamscore=1 malwarescore=0 mlxlogscore=218
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
- definitions=main-2310090138
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/9/2023 2:01 AM, Lingbo Kong wrote:
+From: Kalle Valo <quic_kvalo@quicinc.com>
 
-...
+make htmldocs warns:
 
-> +void ath12k_acpi_remove_notify(struct ath12k_base *ab)
-> +{
-> +	acpi_remove_notify_handler(ACPI_HANDLE(ab->dev),
-> +				   ACPI_DEVICE_NOTIFY,
-> +				   acpi_dsm_notify);
-> +}
+Documentation/driver-api/80211/cfg80211:48: ./include/net/cfg80211.h:7290: WARNING: Duplicate C declaration, also defined at cfg80211:7251.
+Declaration is '.. c:function:: void cfg80211_rx_assoc_resp (struct net_device *dev, struct cfg80211_rx_assoc_resp *data)'.
 
-As flagged by the kernel test robot, there is no prototype defined for 
-this public function. In addition, I don't see any callers anywhere in 
-your patch series, so it seems either this should be removed, or a 
-correct call site should be identified and the function prototype should 
-be defined in the appropriate header file.
+This is because there's a function named cfg80211_rx_assoc_resp() and a struct
+named cfg80211_rx_assoc_resp, see previous patch for more info.
 
-/jeff
+To workaround this rename the function to cfg80211_rx_assoc_response(). The
+function name is a bit longer now but still IMHO not too long.
+
+Compile tested only.
+
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+---
+ Documentation/driver-api/80211/cfg80211.rst | 2 +-
+ include/net/cfg80211.h                      | 8 ++++----
+ net/mac80211/mlme.c                         | 2 +-
+ net/wireless/mlme.c                         | 6 +++---
+ 4 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/Documentation/driver-api/80211/cfg80211.rst b/Documentation/driver-api/80211/cfg80211.rst
+index 836f609c3f75..66900f3cd102 100644
+--- a/Documentation/driver-api/80211/cfg80211.rst
++++ b/Documentation/driver-api/80211/cfg80211.rst
+@@ -73,7 +73,7 @@ Actions and configuration
+ 	cfg80211_pmksa
+ 	cfg80211_rx_mlme_mgmt
+ 	cfg80211_auth_timeout
+-	cfg80211_rx_assoc_resp
++	cfg80211_rx_assoc_response
+ 	cfg80211_assoc_timeout
+ 	cfg80211_tx_mlme_mgmt
+ 	cfg80211_ibss_joined
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a9ef43b33748..0ca208884675 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -7271,7 +7271,7 @@ void cfg80211_auth_timeout(struct net_device *dev, const u8 *addr);
+ /**
+  * struct cfg80211_rx_assoc_resp - association response data
+  * @bss: the BSS that association was requested with, ownership of the pointer
+- *	moves to cfg80211 in the call to cfg80211_rx_assoc_resp()
++ *	moves to cfg80211 in the call to cfg80211_rx_assoc_response()
+  * @buf: (Re)Association Response frame (header + body)
+  * @len: length of the frame data
+  * @uapsd_queues: bitmap of queues configured for uapsd. Same format
+@@ -7299,7 +7299,7 @@ struct cfg80211_rx_assoc_resp {
+ };
+ 
+ /**
+- * cfg80211_rx_assoc_resp - notification of processed association response
++ * cfg80211_rx_assoc_response - notification of processed association response
+  * @dev: network device
+  * @data: association response data, &struct cfg80211_rx_assoc_resp
+  *
+@@ -7308,8 +7308,8 @@ struct cfg80211_rx_assoc_resp {
+  *
+  * This function may sleep. The caller must hold the corresponding wdev's mutex.
+  */
+-void cfg80211_rx_assoc_resp(struct net_device *dev,
+-			    struct cfg80211_rx_assoc_resp *data);
++void cfg80211_rx_assoc_response(struct net_device *dev,
++				struct cfg80211_rx_assoc_resp *data);
+ 
+ /**
+  * struct cfg80211_assoc_failure - association failure data
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8d2514a9a6c4..699864da5ae6 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5454,7 +5454,7 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 	resp.len = len;
+ 	resp.req_ies = ifmgd->assoc_req_ies;
+ 	resp.req_ies_len = ifmgd->assoc_req_ies_len;
+-	cfg80211_rx_assoc_resp(sdata->dev, &resp);
++	cfg80211_rx_assoc_response(sdata->dev, &resp);
+ notify_driver:
+ 	drv_mgd_complete_tx(sdata->local, sdata, &info);
+ 	kfree(elems);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 579fea2f3548..418f3d6a4a34 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -21,8 +21,8 @@
+ #include "rdev-ops.h"
+ 
+ 
+-void cfg80211_rx_assoc_resp(struct net_device *dev,
+-			    struct cfg80211_rx_assoc_resp *data)
++void cfg80211_rx_assoc_response(struct net_device *dev,
++				struct cfg80211_rx_assoc_resp *data)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct wiphy *wiphy = wdev->wiphy;
+@@ -94,7 +94,7 @@ void cfg80211_rx_assoc_resp(struct net_device *dev,
+ 	/* update current_bss etc., consumes the bss reference */
+ 	__cfg80211_connect_result(dev, &cr, cr.status == WLAN_STATUS_SUCCESS);
+ }
+-EXPORT_SYMBOL(cfg80211_rx_assoc_resp);
++EXPORT_SYMBOL(cfg80211_rx_assoc_response);
+ 
+ static void cfg80211_process_auth(struct wireless_dev *wdev,
+ 				  const u8 *buf, size_t len)
+-- 
+2.39.2
 
