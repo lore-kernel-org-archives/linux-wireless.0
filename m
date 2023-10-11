@@ -2,104 +2,78 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2BB9CD98F7
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 07:44:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC54BCD98F7
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 07:46:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229808AbjJKHoK (ORCPT
+        id S1345140AbjJKHqO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Oct 2023 03:44:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41578 "EHLO
+        Wed, 11 Oct 2023 03:46:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229743AbjJKHoJ (ORCPT
+        with ESMTP id S1345277AbjJKHqN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2023 03:44:09 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AE139E
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 00:44:08 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0557C433C7;
-        Wed, 11 Oct 2023 07:44:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697010247;
-        bh=789j1lY3ehj4vw1zEu7cFtV/uiImj5COh22qDE7vinM=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=PF/wwyHBsF2vEaN0yetiWmNAB8hKn4VqJNRP7upJU5Q4nFB6Yhd39T8Yp7Bz1tCpu
-         dYJ2P/1cAssRMvMx4D/KyDxBRK8t372d580aFUoLwXsR479gGXT/U5njD9ocLsdZBO
-         4BCSnY1mOiiMv3+tff9II48rSPaUxk8+tLUVO7IljU+peatpiuIS2ncHYbCXz/FF7x
-         +99T1WOYN0aAn5p+JshtFB6jpYa9hV6NUIVQE0lSmJzJ5lGs5CTkP2TPLhOv8oq/Zp
-         rk46oqHJkWbjklmgc9Sd6k4rSW/X33z1AT/YS/ZcHm8YQl2kNWjd0jQzE1+ohZU3h7
-         sU6PPpiIluh5g==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Arend Van Spriel <aspriel@gmail.com>
-Cc:     Julian Calaby <julian.calaby@gmail.com>,
-        Dmitry Antipov <dmantipov@yandex.ru>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Hector Martin <marcan@marcan.st>,
-        SHA-cyfmac-dev-list@infineon.com,
-        brcm80211-dev-list.pdl@broadcom.com
-Subject: Re: On brcm80211 maintenance and support
-References: <6f78e624-62ee-3ae5-1db4-a0411566def8@yandex.ru>
-        <CAGRGNgU7aySyUny9aG_+wXiKJ7j1weosa-rZDY4_WAXbq-3ABg@mail.gmail.com>
-        <87ttr454bh.fsf@kernel.org>
-        <cd9e71c8-2884-427a-a394-756f62ab09ba@gmail.com>
-Date:   Wed, 11 Oct 2023 10:46:36 +0300
-In-Reply-To: <cd9e71c8-2884-427a-a394-756f62ab09ba@gmail.com> (Arend Van
-        Spriel's message of "Mon, 9 Oct 2023 22:22:23 +0200")
-Message-ID: <87mswpfvoj.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        Wed, 11 Oct 2023 03:46:13 -0400
+Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.199])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EABBCDE
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 00:46:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=oKT7F
+        qr44z78BErwG1vOizQzA/RhFHh09oOs0OyNp08=; b=aXnQVSsaw93utufBkzr1M
+        Hyn0NnwefoZ3+8T9guNbobt5Kgddq1o08BJnN/I2EuqUqzR/uIc7QEsodz6I5rtU
+        eMyhhMiH0kpOg922+BHNb1DUEbiNeh08t/XPaxp8k1yDLG9mhLwtes1njY3x+WBw
+        lVLgSaSh1IPm6RVKO+A0JI=
+Received: from icess-ProLiant-DL380-Gen10.. (unknown [183.174.60.14])
+        by zwqz-smtp-mta-g5-4 (Coremail) with SMTP id _____wDnbyTwTiZlYUr8AA--.36070S4;
+        Wed, 11 Oct 2023 15:30:00 +0800 (CST)
+From:   Ma Ke <make_ruc2021@163.com>
+To:     kvalo@kernel.org, quic_jjohnson@quicinc.com
+Cc:     ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Ma Ke <make_ruc2021@163.com>
+Subject: [PATCH] wifi: ath12k: call ath12k_mac_fils_discovery() without condition
+Date:   Wed, 11 Oct 2023 15:29:50 +0800
+Message-Id: <20231011072950.4097927-1-make_ruc2021@163.com>
+X-Mailer: git-send-email 2.37.2
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: _____wDnbyTwTiZlYUr8AA--.36070S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Xr17tFykGFyUWrW5ur4UArb_yoW8JrW3pF
+        47uF1DtF18CFn3JayUtF4xJF4rJ3Z8JrWxKF17Ja4rXFZ0yF1fKFy5Kay2kry8JFnFyF1Y
+        9w48tr43uFn8uFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0p_MKZDUUUUU=
+X-Originating-IP: [183.174.60.14]
+X-CM-SenderInfo: 5pdnvshuxfjiisr6il2tof0z/xtbBFQIGC2B9od1edgAAsT
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arend Van Spriel <aspriel@gmail.com> writes:
+Mac80211 does not set flags BSS_CHANGED_FILS_DISCOVERY and
+BSS_CHANGED_UNSOL_BCAST_PROBE_RESP if there are no updates to
+FILS discovery and unsolicited broadcast probe response transmission
+configurations respectively. This results in the transmissions getting
+stopped during BSS change operations which do not include these
+attributes. Remove the checks for the flags and always send the existing
+configuration to firmware.
 
->>> I think it's pretty safe to say that this driver is nearly
->>> unmaintained by Broadcom, definitely unmaintained by Cypress /
->>> Infineon and Arend is unable to answer questions relating to anything
->>> beyond the code as-written.
->>>
->>> Kalle, should this driver get orphaned?
->> We definitely need to consider that but let's first wait for Arend
->> to
->> comment.
->
-> Using my personal email account to comment. Broadcom has pulled away
-> most resources from the brcm80211 drivers as there is no business
-> interest for it and it turned into a one-fifth man show as I was
-> granted to work one day a week on brcm80211. Nice theory but in
-> practice other work always takes priority.
+Signed-off-by: Ma Ke <make_ruc2021@163.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Sorry to hear that. I know big corporations well enough that it doesn't
-work like that in reality :/
-
-> So "nearly unmaintained" is no exaggeration. I probably can not meet
-> the expectations some people in the community have regarding driver
-> maintainers, but I can still review patch submissions although I
-> should keep a better eye on the list to do that. It would not be my
-> choice to abandon brcm80211, but if my contributions are considered
-> insufficient than I will accept that fact.
-
-I definitely would want you to continue maintaining brcm80211! I know
-how difficult it can be between a rock and a hard place so I value your
-contributions, and understand sometimes you are not able to react
-quickly (or at all).
-
-What about Franky and Hante? I wonder if we should remove them? Or
-convert them to reviewers?
-
-Also I'm thinking should we change the driver status to Odd Fixes:
-
-          Odd Fixes:   It has a maintainer but they don't have time to do
-                        much other than throw the odd patch in. See below..
-
-Of course there's no practical difference what the driver status is but
-I nowadays try to keep the maintainers file up-to-date.
-
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 88346e66bb75..94967f810093 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -2761,9 +2761,7 @@ static void ath12k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (changed & BSS_CHANGED_FILS_DISCOVERY ||
+-	    changed & BSS_CHANGED_UNSOL_BCAST_PROBE_RESP)
+-		ath12k_mac_fils_discovery(arvif, info);
++	ath12k_mac_fils_discovery(arvif, info);
+ 
+ 	if (changed & BSS_CHANGED_EHT_PUNCTURING)
+ 		arvif->punct_bitmap = info->eht_puncturing;
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.37.2
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
