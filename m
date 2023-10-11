@@ -2,94 +2,150 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 342F3CD6E58
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 10:18:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8052CD6E54
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 10:23:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346256AbjJKKS3 (ORCPT
+        id S231556AbjJKKX3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Oct 2023 06:18:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38164 "EHLO
+        Wed, 11 Oct 2023 06:23:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234764AbjJKKSL (ORCPT
+        with ESMTP id S231468AbjJKKX3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2023 06:18:11 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2F361BFA
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 03:07:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697018874; x=1728554874;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=bWANzQ9T/QGDKqgs06ShgCH2sHgnaVQIv/mfQCgfJpk=;
-  b=UkbHJpg+yLHVF32KtQwKrn4+PZ2MLVb9xHkXsOe8X0aEi+Uf7lDSgj2x
-   Dv8gkl61cDl1R2kQswT2F1z/p1nfAAwYLkNm9rjKMFo2mJ41mE7yEPJ4U
-   dsfACXJ9IM3dps9oOZVkrQ8ZhnLn0DCQPH/sE4goAD9JQuu3bZXml1+3n
-   rZYPTUcIKkDy3wTNsfVFNj9t6tGrJPTYFRrMoSZ04ju2JDJF1WLab3V/G
-   wH5kIXg8iIUh5fJ+oWtHUjvD/YB83cej6RYPrIoFXbpZCyKn/X/RslSpD
-   59li5qUBYUlN7U5bNd0sNok0jI3UZBcpq+wyPL3n+eePtpx/qaHyCGbT/
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="415670583"
-X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
-   d="scan'208";a="415670583"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 03:07:54 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="1001050266"
-X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
-   d="scan'208";a="1001050266"
-Received: from mzarix-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.125])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 03:07:53 -0700
-From:   gregory.greenman@intel.com
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-        Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 05/16] wifi: iwlwifi: mvm: Fix key flags for IGTK on AP interface
-Date:   Wed, 11 Oct 2023 13:07:20 +0300
-Message-Id: <20231011130030.f67005e2d4d2.I6832c6e87f3c79fff00689eb10a3a30810e1ee83@changeid>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20231011100731.361200-1-gregory.greenman@intel.com>
-References: <20231011100731.361200-1-gregory.greenman@intel.com>
+        Wed, 11 Oct 2023 06:23:29 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8450092;
+        Wed, 11 Oct 2023 03:23:27 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15A62C433C8;
+        Wed, 11 Oct 2023 10:23:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697019807;
+        bh=uzaVQqLOGJxWr+e1UKs6LqUdqccor/QwHqpTPeLLIjY=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=HR8fQApm8u948mV5ib/wShytLG4hsN8EqV9zfYTtJCYGcqDBF3rUzwHyc4F5UCe4E
+         4sFTQcJ+sE15ZKutBAKB7M1Hkh7Ux1FGD6sTB8eRBKiIsFcn/I7RpZ+uL2NWvJFtZY
+         ZqjZ30vP3ww5L5ngeju14Yg4i+a/84B40blyKwNNBwbUvm3hHnTTnMJWU8MHdoS8Hx
+         EmBFUTKtEeZfULzqwOgxPcYEasB+uHE+E0fUito+FzWQMehuNlcRKqqQRwBYvDEr6+
+         DBuCi6AYo4uYdovuZTMydGZ0DNug3AA4JGqtcrvI/ydsZWfUXFhmQZWcBdR+cp/mEx
+         MYLX3cKc8sJpA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Neal Gompa <neal@gompa.dev>
+Cc:     Hector Martin <marcan@marcan.st>,
+        Dmitry Antipov <dmantipov@yandex.ru>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "lvc-project@linuxtesting.org" <lvc-project@linuxtesting.org>,
+        Arend van Spriel <aspriel@gmail.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        SHA-cyfmac-dev-list@infineon.com,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Asahi Linux <asahi@lists.linux.dev>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Julian Calaby <julian.calaby@gmail.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Phil Elwell <phil@raspberrypi.org>
+Subject: Re: On brcm80211 maintenance and support
+References: <6f78e624-62ee-3ae5-1db4-a0411566def8@yandex.ru>
+        <CAGRGNgU7aySyUny9aG_+wXiKJ7j1weosa-rZDY4_WAXbq-3ABg@mail.gmail.com>
+        <87ttr454bh.fsf@kernel.org>
+        <3c5a3e7a-b332-4a77-51ba-bed3cad1e79f@marcan.st>
+        <e1ee4d76-f717-a67c-8099-7b91192ba1ca@yandex.ru>
+        <e470902a-35eb-9bb4-7a9e-167f985c98bb@marcan.st>
+        <CAEg-Je-mpcrEoM_nD3_8A=gZhdWpn3hxfGZNEfGRNupGwRdetw@mail.gmail.com>
+Date:   Wed, 11 Oct 2023 13:23:22 +0300
+In-Reply-To: <CAEg-Je-mpcrEoM_nD3_8A=gZhdWpn3hxfGZNEfGRNupGwRdetw@mail.gmail.com>
+        (Neal Gompa's message of "Tue, 10 Oct 2023 10:52:56 -0400")
+Message-ID: <87edi14fvp.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+Neal Gompa <neal@gompa.dev> writes:
 
-When an IGTK is installed for an AP interface, there is no station
-associated with it. However, the MFP flag must be set for the installed
-key as otherwise the FW wouldn't use it.
+> On Sat, Oct 7, 2023 at 8:51=E2=80=AFAM Hector Martin <marcan@marcan.st> w=
+rote:
+>
+>>
+>> On 07/10/2023 00.48, Dmitry Antipov wrote:
+>> > On 10/6/23 18:34, Hector Martin wrote:
+>> >
+>> >> For better or worse, if nobody else does, I'm willing to sign up to
+>> >> maintain the chips shipping on Apple ARM64 machines (i.e. BCM4378,
+>> >> BCM4387, BCM4388 - that last one I have bringup for downstream, just =
+got
+>> >> it done this week) and partially BCM4377 as a bonus (since I have acc=
+ess
+>> >> to an older Intel Mac with that one, and already did bringup for it,
+>> >> though my access is sporadic). I'm already playing part time maintain=
+er
+>> >> anyway (other folks have already sent us patches I'll have to upstrea=
+m),
+>> >> and we need this driver to keep working and continue to support new c=
+hips.
+>> >
+>> > Good news. Would you capable to consider some generic (not hooked to a=
+ny
+>> > particular hardware) things like [1] ?
+>> >
+>> > [1]
+>> > https://lore.kernel.org/linux-wireless/20230703162458.155942-1-dmantip=
+ov@yandex.ru/
+>> >
+>>
+>> Sure, I've done cleanup type stuff myself too.
+>>
+>
+> Can we please get this done so that the pile of Broadcom patches can
+> actually start landing again? It's been frustrating watching patch
+> submissions be ignored for over a year now. At least add Hector as a
+> co-maintainer and allow him to land stuff people have been using
+> outside to get Broadcom Wi-Fi to *work*.
+>
+> Having stuff sit on the pile and be *ignored* is frustrating for
+> contributors and users, and massively disincentivizes people from
+> working in upstream Linux.
 
-Fix the security key flag to set the MFP flag also when the AP is
-an AP interface and the key index matches that of an IGTK.
+Your email reminds me of this comic:
 
-Fixes: 5c75a208c244 ("wifi: iwlwifi: mvm: support new key API")
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+https://xkcd.com/2347/
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-index f49820647041..ea3e9e9c6e26 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-@@ -96,7 +96,12 @@ u32 iwl_mvm_get_sec_flags(struct iwl_mvm *mvm,
- 	if (!sta && vif->type == NL80211_IFTYPE_STATION)
- 		sta = mvmvif->ap_sta;
- 
--	if (!IS_ERR_OR_NULL(sta) && sta->mfp)
-+	/* Set the MFP flag also for an AP interface where the key is an IGTK
-+	 * key as in such a case the station would always be NULL
-+	 */
-+	if ((!IS_ERR_OR_NULL(sta) && sta->mfp) ||
-+	    (vif->type == NL80211_IFTYPE_AP &&
-+	     (keyconf->keyidx == 4 || keyconf->keyidx == 5)))
- 		flags |= IWL_SEC_KEY_FLAG_MFP;
- 
- 	return flags;
--- 
-2.38.1
+In the last few years we seem to be getting more of these "Work faster!"
+emails and honestly it's getting frustrating for us maintainers. If
+Linux wireless is important for you then help us! You can review
+patches, run tests on real hardware, write hwsim test cases[1], fix
+compiler warnings[2] etc. to help us maintainers and speed up
+development. There's so much to do and while you gain experience on the
+wireless development you can help even more.
 
+Also take it into account that it's not just simple to "take patches"
+and be done with it. There are high quality requirements, the code needs
+to have no compiler warnings and must not cause any regressions in
+existing setups. That's not easy at all, especially as our hardware
+testing is basically limited to few the most active drivers. And let
+alone there are very exotic hardware out there and it's impossible to
+test all of them.
+
+If you have patches you want to submit to linux-wireless: please read
+carefully our documentation (starting from the wiki link below) and then
+go to the main Linux documentation[3]. Once you have a good
+understanding how we prefer patches to be submitted, submit a patch. But
+I always recommend starting from something small, taking baby steps and
+learning from the feedback. This gives the best chances of patches being
+accepted.
+
+[1] https://lore.kernel.org/linux-wireless/ac1f3d9b81dbca244bdc8262e9d2ee44=
+220f78c1.camel@sipsolutions.net/
+
+[2] https://lore.kernel.org/linux-wireless/87fs2k5l1a.fsf@kernel.org/
+
+[3] https://docs.kernel.org/
+
+--=20
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
