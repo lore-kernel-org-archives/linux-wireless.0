@@ -2,78 +2,87 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC54BCD98F7
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 07:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAFCFCD8C9F
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 08:44:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345140AbjJKHqO (ORCPT
+        id S230461AbjJKIoL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Oct 2023 03:46:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50522 "EHLO
+        Wed, 11 Oct 2023 04:44:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345277AbjJKHqN (ORCPT
+        with ESMTP id S230386AbjJKIoK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2023 03:46:13 -0400
-Received: from m12.mail.163.com (m12.mail.163.com [220.181.12.199])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EABBCDE
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 00:46:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=oKT7F
-        qr44z78BErwG1vOizQzA/RhFHh09oOs0OyNp08=; b=aXnQVSsaw93utufBkzr1M
-        Hyn0NnwefoZ3+8T9guNbobt5Kgddq1o08BJnN/I2EuqUqzR/uIc7QEsodz6I5rtU
-        eMyhhMiH0kpOg922+BHNb1DUEbiNeh08t/XPaxp8k1yDLG9mhLwtes1njY3x+WBw
-        lVLgSaSh1IPm6RVKO+A0JI=
-Received: from icess-ProLiant-DL380-Gen10.. (unknown [183.174.60.14])
-        by zwqz-smtp-mta-g5-4 (Coremail) with SMTP id _____wDnbyTwTiZlYUr8AA--.36070S4;
-        Wed, 11 Oct 2023 15:30:00 +0800 (CST)
-From:   Ma Ke <make_ruc2021@163.com>
-To:     kvalo@kernel.org, quic_jjohnson@quicinc.com
-Cc:     ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Ma Ke <make_ruc2021@163.com>
-Subject: [PATCH] wifi: ath12k: call ath12k_mac_fils_discovery() without condition
-Date:   Wed, 11 Oct 2023 15:29:50 +0800
-Message-Id: <20231011072950.4097927-1-make_ruc2021@163.com>
-X-Mailer: git-send-email 2.37.2
+        Wed, 11 Oct 2023 04:44:10 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DFA99C;
+        Wed, 11 Oct 2023 01:44:05 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70EDDC433C7;
+        Wed, 11 Oct 2023 08:44:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697013845;
+        bh=dd+UyXR1Az0fXvBPCAsefm8xWqDo7U7mAoE7+i7ryUE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=dIvhcxJLLadwnP7CezapgQe2im9mEM3TP/AijgNT/ZsH9TFSKOcFzdqhAcy1jy8UI
+         iM5xhmQ3NyeKbQAbugNyzd7NWp7WC/V7j7dLKQKshgw9VQI/aWWxx+bCmUZF7A9C3u
+         /E3J1to57u2h9PetDUpbkFjbdoAGAuwfUHOhb/cqm0wWAHrw6wcJUu5uPrAJhHWYJl
+         PAA/4AtfQ3Kc27tZjvO8n7uXIj78NJhUA/6ARVjOajhYx5I+Sr9Kd9XYe8lxWhYsDf
+         pNUNi9gAFcWpCSoceUhogcF4HrR5hXvfPJFj9xlDHZR765EeQwURSGc7kTCkVjCrgi
+         MGsQibLj2IOMg==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     "Arnd Bergmann" <arnd@arndb.de>
+Cc:     "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        "Arnd Bergmann" <arnd@kernel.org>,
+        "Alexandre Belloni" <alexandre.belloni@bootlin.com>,
+        linux-kernel@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-wireless@vger.kernel.org,
+        "Claudiu Beznea" <claudiu.beznea@tuxon.dev>,
+        "Pavel Machek" <pavel@ucw.cz>, "Jakub Kicinski" <kuba@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-arm-kernel@lists.infradead.org,
+        "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] [RFC] wireless: move obsolete drivers to staging
+References: <20231010155444.858483-1-arnd@kernel.org>
+        <2023101051-unmasked-cleaver-79b3@gregkh> <87y1g94szz.fsf@kernel.org>
+        <d081871c-977c-43e9-afa3-a3c3e5880fea@app.fastmail.com>
+Date:   Wed, 11 Oct 2023 11:44:00 +0300
+In-Reply-To: <d081871c-977c-43e9-afa3-a3c3e5880fea@app.fastmail.com> (Arnd
+        Bergmann's message of "Wed, 11 Oct 2023 09:24:55 +0200")
+Message-ID: <87r0m14khb.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _____wDnbyTwTiZlYUr8AA--.36070S4
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Xr17tFykGFyUWrW5ur4UArb_yoW8JrW3pF
-        47uF1DtF18CFn3JayUtF4xJF4rJ3Z8JrWxKF17Ja4rXFZ0yF1fKFy5Kay2kry8JFnFyF1Y
-        9w48tr43uFn8uFJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0p_MKZDUUUUU=
-X-Originating-IP: [183.174.60.14]
-X-CM-SenderInfo: 5pdnvshuxfjiisr6il2tof0z/xtbBFQIGC2B9od1edgAAsT
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Mac80211 does not set flags BSS_CHANGED_FILS_DISCOVERY and
-BSS_CHANGED_UNSOL_BCAST_PROBE_RESP if there are no updates to
-FILS discovery and unsolicited broadcast probe response transmission
-configurations respectively. This results in the transmissions getting
-stopped during BSS change operations which do not include these
-attributes. Remove the checks for the flags and always send the existing
-configuration to firmware.
+"Arnd Bergmann" <arnd@arndb.de> writes:
 
-Signed-off-by: Ma Ke <make_ruc2021@163.com>
----
- drivers/net/wireless/ath/ath12k/mac.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> On Wed, Oct 11, 2023, at 07:40, Kalle Valo wrote:
+>> Greg Kroah-Hartman <gregkh@linuxfoundation.org> writes:
+>>
+>> We (the wireless folks) have been talking about dropping legacy drivers
+>> on and off for several years now. The problem is that we don't know
+>> which of them work and which not, for example IIRC someone reported
+>> recently that wl3501 still works.
+>>
+>> Personally I would be extremly happy to remove all the ancient drivers
+>> as that reduces the amount of code for us to maintain but is that the
+>> right thing to do for the users? I don't have an answer to that,
+>> comments very welcome.
+>
+> I had a look at what openwrt enables, to see if any of the drivers
+> in my RFC patch are actually enabled, if anything supports legacy
+> embedded devices with these it would be openwrt. The good news here
+> is that openwrt intentionally leaves WEXT disabled, and none of them
+> are still in use.
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 88346e66bb75..94967f810093 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -2761,9 +2761,7 @@ static void ath12k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	if (changed & BSS_CHANGED_FILS_DISCOVERY ||
--	    changed & BSS_CHANGED_UNSOL_BCAST_PROBE_RESP)
--		ath12k_mac_fils_discovery(arvif, info);
-+	ath12k_mac_fils_discovery(arvif, info);
- 
- 	if (changed & BSS_CHANGED_EHT_PUNCTURING)
- 		arvif->punct_bitmap = info->eht_puncturing;
+I don't think openwrt is a good metric in this case. These drivers are
+for 20+ years old hardware, most likely running on really old x86
+laptops. So the chances of them running openwrt on those laptops is low
+and I would expect them to run more traditional distros like debian or
+ubuntu. But of course this is just guessing.
+
 -- 
-2.37.2
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
