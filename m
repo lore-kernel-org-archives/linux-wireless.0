@@ -2,51 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E675DCD6E54
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 10:18:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 342F3CD6E58
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 10:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231468AbjJKKSI (ORCPT
+        id S1346256AbjJKKS3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Oct 2023 06:18:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35732 "EHLO
+        Wed, 11 Oct 2023 06:18:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231948AbjJKKSG (ORCPT
+        with ESMTP id S234764AbjJKKSL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2023 06:18:06 -0400
+        Wed, 11 Oct 2023 06:18:11 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 294A319BE
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 03:07:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2F361BFA
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 03:07:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697018866; x=1728554866;
+  t=1697018874; x=1728554874;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=rudZcrRqzLk7xoQG4/RUl5ApVruUy5Uq9djN1M6tkdo=;
-  b=LkDIQ7XaZDGHT2L0wKeLBM6SZ5zy9IvqCUJf2rMnDq7moG2bRUgt7bfc
-   SIMJR6T9YMeamoCLpfN+cOfsCS0UgULAD8BTjuowzVck+xNZTm7VUSGS+
-   TT146ocerOd9ReHRgjYugwMTj3Hr39oFqXsTAIYDLQzKwr09CdN0Fbkl/
-   JLU/egunA5QQMLE7B+Ov45soghhsGAWsgXemM2HNbd3If1jNpA4Rpra5s
-   Q4IeYMlmGJnmdNeMREiY7YZQsrZ8lEiGwLPAcyu1SYFty7kIQYhqfSr1P
-   OFnlR73ZnaTDJeW21RxbTovHMk4O7U1lI3x+3LCqFBdlIBs560EGslyxF
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="415670551"
+  bh=bWANzQ9T/QGDKqgs06ShgCH2sHgnaVQIv/mfQCgfJpk=;
+  b=UkbHJpg+yLHVF32KtQwKrn4+PZ2MLVb9xHkXsOe8X0aEi+Uf7lDSgj2x
+   Dv8gkl61cDl1R2kQswT2F1z/p1nfAAwYLkNm9rjKMFo2mJ41mE7yEPJ4U
+   dsfACXJ9IM3dps9oOZVkrQ8ZhnLn0DCQPH/sE4goAD9JQuu3bZXml1+3n
+   rZYPTUcIKkDy3wTNsfVFNj9t6tGrJPTYFRrMoSZ04ju2JDJF1WLab3V/G
+   wH5kIXg8iIUh5fJ+oWtHUjvD/YB83cej6RYPrIoFXbpZCyKn/X/RslSpD
+   59li5qUBYUlN7U5bNd0sNok0jI3UZBcpq+wyPL3n+eePtpx/qaHyCGbT/
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="415670583"
 X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
-   d="scan'208";a="415670551"
+   d="scan'208";a="415670583"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 03:07:45 -0700
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 03:07:54 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="1001050236"
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="1001050266"
 X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
-   d="scan'208";a="1001050236"
+   d="scan'208";a="1001050266"
 Received: from mzarix-mobl.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.249.94.125])
-  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 03:07:44 -0700
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 03:07:53 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
+Cc:     linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 01/16] wifi: iwlwifi: fw: increase fw_version string size
-Date:   Wed, 11 Oct 2023 13:07:16 +0300
-Message-Id: <20231011130030.d859c6fc4bb1.Idced2e8d63c492872edcde1a3ce2cdd6cc0f8eb7@changeid>
+Subject: [PATCH 05/16] wifi: iwlwifi: mvm: Fix key flags for IGTK on AP interface
+Date:   Wed, 11 Oct 2023 13:07:20 +0300
+Message-Id: <20231011130030.f67005e2d4d2.I6832c6e87f3c79fff00689eb10a3a30810e1ee83@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20231011100731.361200-1-gregory.greenman@intel.com>
 References: <20231011100731.361200-1-gregory.greenman@intel.com>
@@ -56,39 +56,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-In reality 64 bytes are enough to hold fw version string,
-but some compilers can complain (with W=1) that output may be
-truncated when building this string with snprintf.
-Increase the size to avoid this sort of warnings.
+When an IGTK is installed for an AP interface, there is no station
+associated with it. However, the MFP flag must be set for the installed
+key as otherwise the FW wouldn't use it.
 
+Fix the security key flag to set the MFP flag also when the AP is
+an AP interface and the key index matches that of an IGTK.
+
+Fixes: 5c75a208c244 ("wifi: iwlwifi: mvm: support new key API")
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/img.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-index 8d0d58d61892..96bda80632f3 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2005-2014, 2018-2021 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2023 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016 Intel Deutschland GmbH
-  */
-@@ -198,7 +198,7 @@ struct iwl_dump_exclude {
- struct iwl_fw {
- 	u32 ucode_ver;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
+index f49820647041..ea3e9e9c6e26 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
+@@ -96,7 +96,12 @@ u32 iwl_mvm_get_sec_flags(struct iwl_mvm *mvm,
+ 	if (!sta && vif->type == NL80211_IFTYPE_STATION)
+ 		sta = mvmvif->ap_sta;
  
--	char fw_version[64];
-+	char fw_version[128];
+-	if (!IS_ERR_OR_NULL(sta) && sta->mfp)
++	/* Set the MFP flag also for an AP interface where the key is an IGTK
++	 * key as in such a case the station would always be NULL
++	 */
++	if ((!IS_ERR_OR_NULL(sta) && sta->mfp) ||
++	    (vif->type == NL80211_IFTYPE_AP &&
++	     (keyconf->keyidx == 4 || keyconf->keyidx == 5)))
+ 		flags |= IWL_SEC_KEY_FLAG_MFP;
  
- 	/* ucode images */
- 	struct fw_img img[IWL_UCODE_TYPE_MAX];
+ 	return flags;
 -- 
 2.38.1
 
