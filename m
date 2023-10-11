@@ -2,110 +2,116 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0958CCD6E61
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 11:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED8BCD6E6E
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Oct 2023 13:59:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234760AbjJKLxo (ORCPT
+        id S234875AbjJKN7A (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:53:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43510 "EHLO
+        Wed, 11 Oct 2023 09:59:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232111AbjJKLxn (ORCPT
+        with ESMTP id S1346969AbjJKN6z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Oct 2023 07:53:43 -0400
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19F49A4
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 04:53:40 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 39BBrNUB13997542, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 39BBrNUB13997542
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Oct 2023 19:53:23 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Wed, 11 Oct 2023 19:53:23 +0800
-Received: from [127.0.1.1] (172.16.16.120) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 11 Oct
- 2023 19:53:23 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>, <johannes@sipsolutions.net>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 5/6] wifi: rtw89: show EHT rate in debugfs
-Date:   Wed, 11 Oct 2023 19:52:55 +0800
-Message-ID: <20231011115256.6121-6-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231011115256.6121-1-pkshih@realtek.com>
-References: <20231011115256.6121-1-pkshih@realtek.com>
+        Wed, 11 Oct 2023 09:58:55 -0400
+Received: from wout4-smtp.messagingengine.com (wout4-smtp.messagingengine.com [64.147.123.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECF55A4;
+        Wed, 11 Oct 2023 06:58:53 -0700 (PDT)
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailout.west.internal (Postfix) with ESMTP id 10527320097E;
+        Wed, 11 Oct 2023 09:58:49 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute5.internal (MEProxy); Wed, 11 Oct 2023 09:58:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:content-type:date:date:from:from:in-reply-to
+        :in-reply-to:message-id:mime-version:references:reply-to:sender
+        :subject:subject:to:to; s=fm2; t=1697032729; x=1697119129; bh=55
+        13x7CGlfvER0v0ogwIOJMgIvkS5URYby8pnUxjHR8=; b=alJF+gknS2t5bXhjAI
+        sHkdyHEbB2MitewZdRAIdFZasn477ImxMwNrXFioAbdM/U416qCeUfcxm9BpHs0R
+        M4bK/poCaK1m8vfq95p64ppRkVYwHdBThVzOoqlDaoatV6H0MTzq0Q/Z+YJBnBxu
+        YDv2opHprMua5t8BGYHezCnyj45pYOUa6JsT4cIPv5BEc2JMq7yRbui/M546V3pc
+        6bOos0XpBCVBtt36Ah2ROhXetL2mxZk5zmL2zExElh0GP9jiX+97YDngBwKnwa3D
+        ZkMh42iadXSCupDijSt9sGgSlyqJM6Y1j58N2r5CONLd6K6pJbsvugGxUBf6TeCr
+        WQ5w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:content-type:date:date
+        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm2; t=1697032729; x=1697119129; bh=5513x7CGlfvER
+        0v0ogwIOJMgIvkS5URYby8pnUxjHR8=; b=POeVMESARlnmKLJfn8KdtvyPlYTG6
+        rdbHlG0otsElBsUAP6PO/EUIOBpHrZ8kJjxMELYwVJn0l7mhV+ZxwMrZoD2TVOGG
+        W9BOLCQePG/hO54QeCtPGVNj8hmIrcoJq7MgKGUjQvO2Bw8p1cs9efMozPxMylmk
+        RyBox4WkV4QfKj69yjYchYSELECrYu2RxY/AKBoU2+NH1o6AI2BeLcDwI+L3xH5S
+        YM7ttmwmYMxKWU634w9OLqrgsAuB/kaqS6rej5kLeT7JDcMfd+0jUWkMLFG5Ejxb
+        FodyPV1/T2gJPZw8QEOMkhQ9dyy6ow6r/+s9EHLC6O4givhy8YlUNaDRA==
+X-ME-Sender: <xms:GaomZbV6q8RmxQ-S8K9LBD_37CNPSDmx7xYMsq3jygiS8iwY4mkR8A>
+    <xme:GaomZTn5EyqxG0KeWEWTmKosDZheRMiW-zCyd-5-IQ4DueQYUd9FEgq5X7bAmnSEf
+    wWsIYC4XyongdeR7VM>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvkedrheekgdeikecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdetrhhn
+    ugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrghtth
+    gvrhhnpeffheeugeetiefhgeethfejgfdtuefggeejleehjeeutefhfeeggefhkedtkeet
+    ffenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrh
+    hnugesrghrnhgusgdruggv
+X-ME-Proxy: <xmx:GaomZXarVgL099yr9bZj1XydrRvGNIQO4m8LHvsvLkCWI_ZwZN_cLQ>
+    <xmx:GaomZWVxnobGn3E7dcVdcMlXue6aDZ_YBtwrYxdLsgUICrxM5Bsa4g>
+    <xmx:GaomZVnKtgZSpIPxtAZb4PQGA2hRFkSzTmtWobTkurdjX2sX4Vqbqg>
+    <xmx:GaomZbfIN1j-4OmLC7i9t1_m52NFOc3VoWAWXckXvId4jDJxM-b7YQ>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 1AA24B60089; Wed, 11 Oct 2023 09:58:48 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.9.0-alpha0-1019-ged83ad8595-fm-20231002.001-ged83ad85
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.16.16.120]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Message-Id: <08cfd4d6-d12f-4e63-8f87-12cda83fa7b3@app.fastmail.com>
+In-Reply-To: <87v8bfezcz.fsf@kernel.org>
+References: <20231009141908.1767241-1-arnd@kernel.org>
+ <20231009141908.1767241-9-arnd@kernel.org> <87v8bfezcz.fsf@kernel.org>
+Date:   Wed, 11 Oct 2023 15:58:27 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Kalle Valo" <kvalo@kernel.org>, "Arnd Bergmann" <arnd@kernel.org>
+Cc:     "Jakub Kicinski" <kuba@kernel.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org,
+        "Johannes Berg" <johannes@sipsolutions.net>,
+        linux-wpan@vger.kernel.org,
+        "Michael Hennerich" <michael.hennerich@analog.com>,
+        "Paolo Abeni" <pabeni@redhat.com>,
+        "Eric Dumazet" <edumazet@google.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-kernel@vger.kernel.org, "Doug Brown" <doug@schmorgal.com>
+Subject: Re: [PATCH 09/10] wireless: hostap: remove unused ioctl function
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Since we have TX rate from RA report of C2H event and RX rate from RX
-descriptor, show them in debugfs like
+On Tue, Oct 10, 2023, at 09:00, Kalle Valo wrote:
+> Arnd Bergmann <arnd@kernel.org> writes:
+>
+>> From: Arnd Bergmann <arnd@arndb.de>
+>>
+>> The ioctl handler has no actual callers in the kernel and is useless.
+>> All the functionality should be reachable through the regualar interfaces.
+>>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> In the title we prefer "wifi:" over "wireless:" but that's nitpicking. I
+> assume this goes via a net tree so:
 
-  TX rate [1]: EHT 2SS MCS-7 GI:3.2 BW:80	(hw_rate=0x427)
-  RX rate [1]: EHT 2SS MCS-7 GI:3.2 BW:80	(hw_rate=0x427)
+Changed for v2
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/debug.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+> Acked-by: Kalle Valo <kvalo@kernel.org>
 
-diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
-index 6990d3679bc0..a3f795d240ea 100644
---- a/drivers/net/wireless/realtek/rtw89/debug.c
-+++ b/drivers/net/wireless/realtek/rtw89/debug.c
-@@ -3467,6 +3467,11 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
- 		[NL80211_RATE_INFO_HE_GI_1_6] = "1.6",
- 		[NL80211_RATE_INFO_HE_GI_3_2] = "3.2",
- 	};
-+	static const char * const eht_gi_str[] = {
-+		[NL80211_RATE_INFO_EHT_GI_0_8] = "0.8",
-+		[NL80211_RATE_INFO_EHT_GI_1_6] = "1.6",
-+		[NL80211_RATE_INFO_EHT_GI_3_2] = "3.2",
-+	};
- 	struct rtw89_sta *rtwsta = (struct rtw89_sta *)sta->drv_priv;
- 	struct rate_info *rate = &rtwsta->ra_report.txrate;
- 	struct ieee80211_rx_status *status = &rtwsta->rx_status;
-@@ -3492,6 +3497,10 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
- 		seq_printf(m, "HE %dSS MCS-%d GI:%s", rate->nss, rate->mcs,
- 			   rate->he_gi <= NL80211_RATE_INFO_HE_GI_3_2 ?
- 			   he_gi_str[rate->he_gi] : "N/A");
-+	else if (rate->flags & RATE_INFO_FLAGS_EHT_MCS)
-+		seq_printf(m, "EHT %dSS MCS-%d GI:%s", rate->nss, rate->mcs,
-+			   rate->eht_gi < ARRAY_SIZE(eht_gi_str) ?
-+			   eht_gi_str[rate->eht_gi] : "N/A");
- 	else
- 		seq_printf(m, "Legacy %d", rate->legacy);
- 	seq_printf(m, "%s", rtwsta->ra_report.might_fallback_legacy ? " FB_G" : "");
-@@ -3520,6 +3529,11 @@ static void rtw89_sta_info_get_iter(void *data, struct ieee80211_sta *sta)
- 			   status->he_gi <= NL80211_RATE_INFO_HE_GI_3_2 ?
- 			   he_gi_str[rate->he_gi] : "N/A");
- 		break;
-+	case RX_ENC_EHT:
-+		seq_printf(m, "EHT %dSS MCS-%d GI:%s", status->nss, status->rate_idx,
-+			   status->eht.gi < ARRAY_SIZE(eht_gi_str) ?
-+			   eht_gi_str[status->eht.gi] : "N/A");
-+		break;
- 	}
- 	seq_printf(m, " BW:%u", rtw89_rate_info_bw_to_mhz(status->bw));
- 	seq_printf(m, "\t(hw_rate=0x%x)\n", rtwsta->rx_hw_rate);
--- 
-2.25.1
+Thanks
 
+> Let me know if I should take this to wireless-next instead.
+
+I think it's better to keep the series together and merge it
+through net-next directly, since the last patch depends on all
+the ones before it.
+
+     Arnd
