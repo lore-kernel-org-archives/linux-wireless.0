@@ -2,39 +2,39 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E39CCDB482
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Oct 2023 01:49:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69094CDB465
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Oct 2023 01:49:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234032AbjJLBto (ORCPT
+        id S235260AbjJLBtp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Oct 2023 21:49:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56530 "EHLO
+        Wed, 11 Oct 2023 21:49:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233966AbjJLBtl (ORCPT
+        with ESMTP id S233989AbjJLBtl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 11 Oct 2023 21:49:41 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86EA298
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 18:49:38 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 39C1nUTA1585710, This message is accepted by code: ctloc85258
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11DB8BA
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Oct 2023 18:49:39 -0700 (PDT)
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 39C1nWTA1585710, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 39C1nUTA1585710
+        by rtits2.realtek.com.tw (8.15.2/2.92/5.92) with ESMTPS id 39C1nWTA1585710
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Oct 2023 09:49:30 +0800
+        Thu, 12 Oct 2023 09:49:32 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Thu, 12 Oct 2023 09:49:29 +0800
+ 15.1.2507.17; Thu, 12 Oct 2023 09:49:31 +0800
 Received: from [127.0.1.1] (172.21.69.25) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Thu, 12 Oct
- 2023 09:49:28 +0800
+ 2023 09:49:31 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/6] wifi: rtw89: mac: generalize register of MU-EDCA switch according to chip gen
-Date:   Thu, 12 Oct 2023 09:48:58 +0800
-Message-ID: <20231012014902.18523-3-pkshih@realtek.com>
+Subject: [PATCH 4/6] wifi: rtw89: mac: set bfee_ctrl() according to chip gen
+Date:   Thu, 12 Oct 2023 09:49:00 +0800
+Message-ID: <20231012014902.18523-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231012014902.18523-1-pkshih@realtek.com>
 References: <20231012014902.18523-1-pkshih@realtek.com>
@@ -54,101 +54,107 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-When connected with 802.11ax AP, MU-EDCA parameters are given, so enable
-this hardware function by registers according to chip generation.
+When associated peer has beamformer capability, enable hardware beamformee
+function, and then hardware can run sounding protocol itself. Oppositely,
+disable this function when disassociated. Define different registers for
+WiFi 6 and 7 generations respectively.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac.c    | 10 ++++++++--
- drivers/net/wireless/realtek/rtw89/mac.h    |  2 ++
+ drivers/net/wireless/realtek/rtw89/mac.c    | 11 ++++++++---
+ drivers/net/wireless/realtek/rtw89/mac.h    |  1 +
  drivers/net/wireless/realtek/rtw89/mac_be.c |  5 +++++
- drivers/net/wireless/realtek/rtw89/reg.h    |  7 +++++++
- 4 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw89/reg.h    | 16 ++++++++++++++++
+ 4 files changed, 30 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 4587bd596c32..d2621f31a78a 100644
+index d2621f31a78a..b47b3c9be2cb 100644
 --- a/drivers/net/wireless/realtek/rtw89/mac.c
 +++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -5593,8 +5593,9 @@ int rtw89_mac_get_tx_retry_limit(struct rtw89_dev *rtwdev,
- int rtw89_mac_set_hw_muedca_ctrl(struct rtw89_dev *rtwdev,
- 				 struct rtw89_vif *rtwvif, bool en)
+@@ -5210,12 +5210,12 @@ static void rtw89_mac_bfee_standby_timer(struct rtw89_dev *rtwdev, u8 mac_idx,
+ 
+ static void rtw89_mac_bfee_ctrl(struct rtw89_dev *rtwdev, u8 mac_idx, bool en)
  {
 +	const struct rtw89_mac_gen_def *mac = rtwdev->chip->mac_def;
- 	u8 mac_idx = rtwvif->mac_idx;
--	u16 set = B_AX_MUEDCA_EN_0 | B_AX_SET_MUEDCATIMER_TF_0;
-+	u16 set = mac->muedca_ctrl.mask;
  	u32 reg;
- 	u32 ret;
+-	u32 mask = B_AX_BFMEE_HT_NDPA_EN | B_AX_BFMEE_VHT_NDPA_EN |
+-		   B_AX_BFMEE_HE_NDPA_EN;
++	u32 mask = mac->bfee_ctrl.mask;
  
-@@ -5602,7 +5603,7 @@ int rtw89_mac_set_hw_muedca_ctrl(struct rtw89_dev *rtwdev,
- 	if (ret)
- 		return ret;
- 
--	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_MUEDCA_EN, mac_idx);
-+	reg = rtw89_mac_reg_by_idx(rtwdev, mac->muedca_ctrl.addr, mac_idx);
- 	if (en)
- 		rtw89_write16_set(rtwdev, reg, set);
- 	else
-@@ -5754,6 +5755,11 @@ const struct rtw89_mac_gen_def rtw89_mac_gen_ax = {
- 	.port_base = &rtw89_port_base_ax,
- 	.agg_len_ht = R_AX_AGG_LEN_HT_0,
- 
-+	.muedca_ctrl = {
-+		.addr = R_AX_MUEDCA_EN,
-+		.mask = B_AX_MUEDCA_EN_0 | B_AX_SET_MUEDCATIMER_TF_0,
+ 	rtw89_debug(rtwdev, RTW89_DBG_BF, "set bfee ndpa_en to %d\n", en);
+-	reg = rtw89_mac_reg_by_idx(rtwdev, R_AX_BFMEE_RESP_OPTION, mac_idx);
++	reg = rtw89_mac_reg_by_idx(rtwdev, mac->bfee_ctrl.addr, mac_idx);
+ 	if (en) {
+ 		set_bit(RTW89_FLAG_BFEE_EN, rtwdev->flags);
+ 		rtw89_write32_set(rtwdev, reg, mask);
+@@ -5759,6 +5759,11 @@ const struct rtw89_mac_gen_def rtw89_mac_gen_ax = {
+ 		.addr = R_AX_MUEDCA_EN,
+ 		.mask = B_AX_MUEDCA_EN_0 | B_AX_SET_MUEDCATIMER_TF_0,
+ 	},
++	.bfee_ctrl = {
++		.addr = R_AX_BFMEE_RESP_OPTION,
++		.mask = B_AX_BFMEE_HT_NDPA_EN | B_AX_BFMEE_VHT_NDPA_EN |
++			B_AX_BFMEE_HE_NDPA_EN,
 +	},
-+
+ 
  	.disable_cpu = rtw89_mac_disable_cpu_ax,
  	.fwdl_enable_wcpu = rtw89_mac_enable_cpu_ax,
- 	.fwdl_get_status = rtw89_fw_get_rdy_ax,
 diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-index b318027a977f..982b357ec6f1 100644
+index 982b357ec6f1..6c043259c5e0 100644
 --- a/drivers/net/wireless/realtek/rtw89/mac.h
 +++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -861,6 +861,8 @@ struct rtw89_mac_gen_def {
- 	const struct rtw89_port_reg *port_base;
+@@ -862,6 +862,7 @@ struct rtw89_mac_gen_def {
  	u32 agg_len_ht;
  
-+	struct rtw89_reg_def muedca_ctrl;
-+
+ 	struct rtw89_reg_def muedca_ctrl;
++	struct rtw89_reg_def bfee_ctrl;
+ 
  	void (*disable_cpu)(struct rtw89_dev *rtwdev);
  	int (*fwdl_enable_wcpu)(struct rtw89_dev *rtwdev, u8 boot_reason,
- 				bool dlfw, bool include_bb);
 diff --git a/drivers/net/wireless/realtek/rtw89/mac_be.c b/drivers/net/wireless/realtek/rtw89/mac_be.c
-index 6c277b6b25b8..514cf566eba1 100644
+index 514cf566eba1..7cf67020c6e6 100644
 --- a/drivers/net/wireless/realtek/rtw89/mac_be.c
 +++ b/drivers/net/wireless/realtek/rtw89/mac_be.c
-@@ -252,6 +252,11 @@ const struct rtw89_mac_gen_def rtw89_mac_gen_be = {
- 	.port_base = &rtw89_port_base_be,
- 	.agg_len_ht = R_BE_AGG_LEN_HT_0,
- 
-+	.muedca_ctrl = {
-+		.addr = R_BE_MUEDCA_EN,
-+		.mask = B_BE_MUEDCA_EN_0 | B_BE_SET_MUEDCATIMER_TF_0,
+@@ -256,6 +256,11 @@ const struct rtw89_mac_gen_def rtw89_mac_gen_be = {
+ 		.addr = R_BE_MUEDCA_EN,
+ 		.mask = B_BE_MUEDCA_EN_0 | B_BE_SET_MUEDCATIMER_TF_0,
+ 	},
++	.bfee_ctrl = {
++		.addr = R_BE_BFMEE_RESP_OPTION,
++		.mask = B_BE_BFMEE_HT_NDPA_EN | B_BE_BFMEE_VHT_NDPA_EN |
++			B_BE_BFMEE_HE_NDPA_EN | B_BE_BFMEE_EHT_NDPA_EN,
 +	},
-+
+ 
  	.disable_cpu = rtw89_mac_disable_cpu_be,
  	.fwdl_enable_wcpu = rtw89_mac_fwdl_enable_wcpu_be,
- 	.fwdl_get_status = fwdl_get_status_be,
 diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 8c148d6041d0..96d5959c299e 100644
+index d62b3f93b14e..aee54859f92b 100644
 --- a/drivers/net/wireless/realtek/rtw89/reg.h
 +++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3780,6 +3780,13 @@
- #define B_BE_P0_SYNC_PORT_SRC_SEL_MASK GENMASK(26, 24)
- #define B_BE_P0_TSFTR_SYNC_OFFSET_MASK GENMASK(18, 0)
+@@ -3937,6 +3937,22 @@
+ #define B_BE_UPD_HGQMD BIT(1)
+ #define B_BE_UPD_TIMIE BIT(0)
  
-+#define R_BE_MUEDCA_EN 0x10370
-+#define R_BE_MUEDCA_EN_C1 0x14370
-+#define B_BE_MUEDCA_WMM_SEL BIT(8)
-+#define B_BE_SET_MUEDCATIMER_TF_1 BIT(5)
-+#define B_BE_SET_MUEDCATIMER_TF_0 BIT(4)
-+#define B_BE_MUEDCA_EN_0 BIT(0)
++#define R_BE_BFMEE_RESP_OPTION 0x11180
++#define R_BE_BFMEE_RESP_OPTION_C1 0x15180
++#define B_BE_BFMEE_CSI_SEC_TYPE_SH 20
++#define B_BE_BFMEE_CSI_SEC_TYPE_MSK 0xf
++#define B_BE_BFMEE_BFRPT_SEG_SIZE_SH 16
++#define B_BE_BFMEE_BFRPT_SEG_SIZE_MSK 0x3
++#define B_BE_BFMEE_MIMO_EN_SEL BIT(8)
++#define B_BE_BFMEE_MU_BFEE_DIS BIT(7)
++#define B_BE_BFMEE_CHECK_RPTPOLL_MACID_DIS BIT(6)
++#define B_BE_BFMEE_NOCHK_BFPOLL_BMP BIT(5)
++#define B_BE_BFMEE_VHTBFRPT_CHK BIT(4)
++#define B_BE_BFMEE_EHT_NDPA_EN BIT(3)
++#define B_BE_BFMEE_HE_NDPA_EN BIT(2)
++#define B_BE_BFMEE_VHT_NDPA_EN BIT(1)
++#define B_BE_BFMEE_HT_NDPA_EN BIT(0)
 +
- #define R_BE_PORT_CFG_P0 0x10400
- #define R_BE_PORT_CFG_P0_C1 0x14400
- #define B_BE_BCN_ERLY_SORT_EN_P0 BIT(18)
+ #define R_BE_RX_FLTR_OPT 0x11420
+ #define R_BE_RX_FLTR_OPT_C1 0x15420
+ #define B_BE_UID_FILTER_MASK GENMASK(31, 24)
 -- 
 2.25.1
 
