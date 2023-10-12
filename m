@@ -2,55 +2,55 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4905C41513
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Oct 2023 10:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C43CDB482
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Oct 2023 10:08:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235659AbjJLKIp (ORCPT
+        id S1377623AbjJLKIs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Oct 2023 06:08:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50250 "EHLO
+        Thu, 12 Oct 2023 06:08:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343761AbjJLKIm (ORCPT
+        with ESMTP id S234179AbjJLKIn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Oct 2023 06:08:42 -0400
-Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D1FC0;
-        Thu, 12 Oct 2023 03:08:39 -0700 (PDT)
-Received: by mail-wr1-x42b.google.com with SMTP id ffacd0b85a97d-32799639a2aso735245f8f.3;
-        Thu, 12 Oct 2023 03:08:39 -0700 (PDT)
+        Thu, 12 Oct 2023 06:08:43 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69BE7C4;
+        Thu, 12 Oct 2023 03:08:42 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id 2adb3069b0e04-503f39d3236so1090854e87.0;
+        Thu, 12 Oct 2023 03:08:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697105318; x=1697710118; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1697105320; x=1697710120; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=zIsjeim7XUbQUze6bD56uxG9gvOx0giE5m3S+sNf+CI=;
-        b=BfKiZmA6TRT0AP4pLZJkyftO9FGwmQTmAomyLY8xRbbgK0oAYxXsOWnGKfM0VEJUNF
-         q9H+5uiXHa/IzhufKhLXe4pss8XrEc3aJwxRTWvshrltfrwVWgFv7wXCuAOtPOOOn4I2
-         yxAueSKDzkKd6L9IDQ/uPDMNN4UIsmRBxoHTSxbB5pfWKJAvMF83O3iXgdjevjGzzpCr
-         km0CygpFgVLLUQB0HmfziKMTEghFdnIKLNpdPnSDyEZCNlTwCIxxSxsHATDKX3XYzCls
-         E38gJY9oSE0qYdz/Fs+uHYEW3yuxwrXzPJJPm56JE49+NbUtJGglmCgFhocSOZG6jiLT
-         QhNw==
+        bh=SSAhxNCccBDPfEaHOYwSm94ZHYVqbuNn4mUPNvHQg0g=;
+        b=gTxX+HH9CD41EJ0vfZVq6sqXUh0V3cUca9TO/iJyBUV9oD14ZTfB47ESOAUohZm7hS
+         Ji/IbmgF8DIdAqhvD+PggOT9vuvuIg8kNjJXKQRkDvY0SMu0jvR4ZjYiGE0a1esM54Cu
+         24mFa8jNzsIH5TwmwM3QGtmA2vX3x2Q/THH/eleQ5uklZfuwq0agMFoDBnvYSkKE9Jty
+         XgBsn1Fgi2vistLqiQIWgxE8BA7SdgVL4NlQecfXhu0MxUXIS3RPND9N1QhVEjZWpsPZ
+         Sy81DB2ccz9wE/UJ/8RypUT768k4nSf5C6GwcFjCPDVo1/RJLoVNIxg20InJ8DydlcH9
+         sBWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697105318; x=1697710118;
+        d=1e100.net; s=20230601; t=1697105320; x=1697710120;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=zIsjeim7XUbQUze6bD56uxG9gvOx0giE5m3S+sNf+CI=;
-        b=ltLRwMPvPG5cwl+Q463Y5sE6oA03rVaQyRGSMjkpxPIVgKPg5si/M2gYPGCsHi3wQw
-         RJLr29XbCUEVxRnB6e0bm0QWDVZpydZDH0kcItA1/UsPV2fDcs86XSmPXxECaAxrm0ss
-         Y90FfI0JHIjKG3WV1c1pKfWwKwX/csZHJoQdAqdkJ6phpHLsAcd0uDXUEOauxMwVs35c
-         j1rPLrdKmjdQl0umQ9z7gfyE6ROmey/kvOWorRNdtlcq2j2c2Fw0e3FTUfnwuzr/wpe5
-         DDC3S9SbHjDpTqh+9ZXamsaRne+seOtBLR6Tyhfxx4kJEFbriiOoun8KtflDhGDaTTo+
-         PvFg==
-X-Gm-Message-State: AOJu0Yygg5DDt7qH5T53rDBjHcGScm3oq9Wr1g2dw4+iquhoXzqoRq/k
-        LD3iP/tuzo2Rx2VGfHL/PZA=
-X-Google-Smtp-Source: AGHT+IHpdKVnN91CglYdASUt5zwHQXrdDBnHHb+85IX/ZvGINItZUurXQ7kVAD8loaEYbKmTZ81veA==
-X-Received: by 2002:a05:6000:4e1:b0:31f:ea18:6f6b with SMTP id cr1-20020a05600004e100b0031fea186f6bmr20124897wrb.19.1697105317932;
-        Thu, 12 Oct 2023 03:08:37 -0700 (PDT)
+        bh=SSAhxNCccBDPfEaHOYwSm94ZHYVqbuNn4mUPNvHQg0g=;
+        b=nSh4CPaJnXb+EJ0QMZnJsE1iVTCQDa59hM7BWFJywuyCloS8sPtJKDgHw8qyrSTJJu
+         UOnDiEIZL1jP0v4H1TMEddZxp7Lj5f9vs3enbJHEjuJYoKg07pCP8L44f9iT+iMMp/LR
+         Fqwqpg03QcVkXDljMSzUBTs2KJUJ5U5TgrcVoKAIIEgMqGimDysFAXPHahN1LQQeTcgX
+         31fhSFz90TYtWo3He+OD2szOYqYqdp2+P8TW95Q3B7M7NsVhuR3AORoK/GiArgXCfJzZ
+         UyiPJEd1EzfffbPyyKs614/KIj/T8pmxC4NZQaTLiDI1bGPfjknuTB/1rht+a0U51MX1
+         9lHQ==
+X-Gm-Message-State: AOJu0YwF4BUBbg0xTrF3D3F1HxwFCup65xW/QLzfHShgiGe+pYKvnSe0
+        tExw0gq3Kzeg2hHPy0vWbbO7Z9aIomA=
+X-Google-Smtp-Source: AGHT+IFS5wYVsErszFbLHXbccvljCxec7tsdB2hdb2nVZS6k8/mqAnVjAi0sisagLq6W9E03Rccilg==
+X-Received: by 2002:a05:6512:210c:b0:503:36cb:5436 with SMTP id q12-20020a056512210c00b0050336cb5436mr18333699lfr.9.1697105320566;
+        Thu, 12 Oct 2023 03:08:40 -0700 (PDT)
 Received: from localhost.localdomain (93-34-89-13.ip49.fastwebnet.it. [93.34.89.13])
-        by smtp.googlemail.com with ESMTPSA id dj16-20020a0560000b1000b003198a9d758dsm922737wrb.78.2023.10.12.03.08.36
+        by smtp.googlemail.com with ESMTPSA id dj16-20020a0560000b1000b003198a9d758dsm922737wrb.78.2023.10.12.03.08.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Oct 2023 03:08:37 -0700 (PDT)
+        Thu, 12 Oct 2023 03:08:40 -0700 (PDT)
 From:   Christian Marangi <ansuelsmth@gmail.com>
 To:     Raju Rangoju <rajur@chelsio.com>,
         "David S. Miller" <davem@davemloft.net>,
@@ -70,9 +70,9 @@ To:     Raju Rangoju <rajur@chelsio.com>,
         linux-arm-kernel@lists.infradead.org,
         linux-wireless@vger.kernel.org
 Cc:     Christian Marangi <ansuelsmth@gmail.com>
-Subject: [net-next PATCH v2 2/4] net: stmmac: improve TX timer arm logic
-Date:   Thu, 12 Oct 2023 12:04:57 +0200
-Message-Id: <20231012100459.6158-3-ansuelsmth@gmail.com>
+Subject: [net-next PATCH v2 4/4] net: stmmac: increase TX coalesce timer to 5ms
+Date:   Thu, 12 Oct 2023 12:04:59 +0200
+Message-Id: <20231012100459.6158-5-ansuelsmth@gmail.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20231012100459.6158-1-ansuelsmth@gmail.com>
 References: <20231012100459.6158-1-ansuelsmth@gmail.com>
@@ -82,79 +82,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is currently a problem with the TX timer getting armed multiple
-unnecessary times causing big performance regression on some device that
-suffer from heavy handling of hrtimer rearm.
+Commit 8fce33317023 ("net: stmmac: Rework coalesce timer and fix
+multi-queue races") decreased the TX coalesce timer from 40ms to 1ms.
 
-The use of the TX timer is an old implementation that predates the napi
-implementation and the interrupt enable/disable handling.
+This caused some performance regression on some target (regression was
+reported at least on ipq806x) in the order of 600mbps dropping from
+gigabit handling to only 200mbps.
 
-Due to stmmac being a very old code, the TX timer was never evaluated
-again with this new implementation and was kept there causing
-performance regression. The performance regression started to appear
-with kernel version 4.19 with 8fce33317023 ("net: stmmac: Rework coalesce
-timer and fix multi-queue races") where the timer was reduced to 1ms
-causing it to be armed 40 times more than before.
+The problem was identified in the TX timer getting armed too much time.
+While this was fixed and improved in another commit, performance can be
+improved even further by increasing the timer delay a bit moving from
+1ms to 5ms.
 
-Decreasing the timer made the problem more present and caused the
-regression in the other of 600-700mbps on some device (regression where
-this was notice is ipq806x).
-
-The problem is in the fact that handling the hrtimer on some target is
-expensive and recent kernel made the timer armed much more times.
-A solution that was proposed was reverting the hrtimer change and use
-mod_timer but such solution would still hide the real problem in the
-current implementation.
-
-To fix the regression, apply some additional logic and skip arming the
-timer when not needed.
-
-Arm the timer ONLY if a napi is not already scheduled. Running the timer
-is redundant since the same function (stmmac_tx_clean) will run in the
-napi TX poll. Also try to cancel any timer if a napi is scheduled to
-prevent redundant run of TX call.
-
-With the following new logic the original performance are restored while
-keeping using the hrtimer.
+The value is a good balance between battery saving by prevending too
+much interrupt to be generated and permitting good performance for
+internet oriented devices.
 
 Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
 ---
- .../net/ethernet/stmicro/stmmac/stmmac_main.c  | 18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/ethernet/stmicro/stmmac/common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-index bb1dbf4c9f6c..5124ee87286c 100644
---- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-+++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
-@@ -2996,13 +2996,25 @@ static void stmmac_tx_timer_arm(struct stmmac_priv *priv, u32 queue)
- {
- 	struct stmmac_tx_queue *tx_q = &priv->dma_conf.tx_queue[queue];
- 	u32 tx_coal_timer = priv->tx_coal_timer[queue];
-+	struct stmmac_channel *ch;
-+	struct napi_struct *napi;
- 
- 	if (!tx_coal_timer)
- 		return;
- 
--	hrtimer_start(&tx_q->txtimer,
--		      STMMAC_COAL_TIMER(tx_coal_timer),
--		      HRTIMER_MODE_REL);
-+	ch = &priv->channel[tx_q->queue_index];
-+	napi = tx_q->xsk_pool ? &ch->rxtx_napi : &ch->tx_napi;
-+
-+	/* Arm timer only if napi is not already scheduled.
-+	 * Try to cancel any timer if napi is scheduled, timer will be armed
-+	 * again in the next scheduled napi.
-+	 */
-+	if (unlikely(!napi_is_scheduled(napi)))
-+		hrtimer_start(&tx_q->txtimer,
-+			      STMMAC_COAL_TIMER(tx_coal_timer),
-+			      HRTIMER_MODE_REL);
-+	else
-+		hrtimer_try_to_cancel(&tx_q->txtimer);
- }
- 
- /**
+diff --git a/drivers/net/ethernet/stmicro/stmmac/common.h b/drivers/net/ethernet/stmicro/stmmac/common.h
+index 1e996c29043d..e3f650e88f82 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/common.h
++++ b/drivers/net/ethernet/stmicro/stmmac/common.h
+@@ -293,7 +293,7 @@ struct stmmac_safety_stats {
+ #define MIN_DMA_RIWT		0x10
+ #define DEF_DMA_RIWT		0xa0
+ /* Tx coalesce parameters */
+-#define STMMAC_COAL_TX_TIMER	1000
++#define STMMAC_COAL_TX_TIMER	5000
+ #define STMMAC_MAX_COAL_TX_TICK	100000
+ #define STMMAC_TX_MAX_FRAMES	256
+ #define STMMAC_TX_FRAMES	25
 -- 
 2.40.1
 
