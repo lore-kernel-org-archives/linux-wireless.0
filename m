@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A37F6CDB474
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Oct 2023 09:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C600CDB474
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Oct 2023 09:17:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234843AbjJQJRb (ORCPT
+        id S234821AbjJQJRf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Oct 2023 05:17:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53382 "EHLO
+        Tue, 17 Oct 2023 05:17:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234828AbjJQJR2 (ORCPT
+        with ESMTP id S234828AbjJQJRd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2023 05:17:28 -0400
+        Tue, 17 Oct 2023 05:17:33 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9785F5
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2023 02:17:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EDECFB
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2023 02:17:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697534246; x=1729070246;
+  t=1697534251; x=1729070251;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=z5RuR884J9DuXiSLU2S7hlUVh1uq7UFvdyIWaBJxcaA=;
-  b=ig8jt1s5C3tpu9akw/qut/UFscUvXAPQrhIatDRTGIdURK4xaXqBtI/l
-   jTi2tYXHk/BocrX9eIVEdUwWBB9rvhyy+NnxS1Ymd2woQJeHsSSr9OKTq
-   LUqfFWBVG/bUYmKFHb3CE4eAOmc6hREqxluMryS2rFsg3Jvtp8r/oEx1w
-   KN1X7i/1eWXECEQYuF8swHl1Ru+O8PmS1Jes1o/M+MahipE6HYnstREM/
-   P664/+XglBjdg3ueuZCLgn1VtguVhoUXiEGARQpI+OAMe/YvtZAU4+xG8
-   2Papu+npf6vtppoIUG88X0rwaWlVkWvvTk4WUJXGyUeM27wH/O/aWJ/38
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="370808559"
+  bh=3qzVT5oIfZ44dbUYJSI1X7CaeoNzwsxLWjD/B7udzho=;
+  b=jMI31NeuWu7hzO2UXcVuVU6x9ALRQLkeHPDkwPbUUfD5uuTkl3fX5kQI
+   Uonkzbt8OPtCa+bjbPs7gRI7NvUDJ8bxzQzQjssxCmtQsOYxUlzTo170o
+   eNzfKjtobtKVwgdLaQdpmvnwZZUtjgej30+56KPenEBuR+3u/XpCTosXT
+   v9Aa7p5kZGEXpR6gPbPKQcbWEb2QuqRiufFTDQfbtb6WRNO0FKSAkBw4k
+   PzBqSRM9Jlr/RCk/dPOepczeLFHUh6aRkemaG8Egv3u4RlkuNL9DmFsEy
+   3pc1CecyNeE/Xe92cup+OdNIyA9db+VXg8gZaQHhbWqTrzj4/BZkt9Set
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="370808566"
 X-IronPort-AV: E=Sophos;i="6.03,231,1694761200"; 
-   d="scan'208";a="370808559"
+   d="scan'208";a="370808566"
 Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:26 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:31 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="759731952"
+X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="759731964"
 X-IronPort-AV: E=Sophos;i="6.03,231,1694761200"; 
-   d="scan'208";a="759731952"
+   d="scan'208";a="759731964"
 Received: from obarinsh-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.213.101])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:25 -0700
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:29 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Yedidya Benshimol <yedidya.ben.shimol@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 11/14] wifi: iwlwifi: disable multi rx queue for 9000
-Date:   Tue, 17 Oct 2023 12:16:46 +0300
-Message-Id: <20231017115047.2917eb8b7af9.Iddd7dcf335387ba46fcbbb6067ef4ff9cd3755a7@changeid>
+Subject: [PATCH 13/14] wifi: iwlwifi: mvm: update IGTK in mvmvif upon D3 resume
+Date:   Tue, 17 Oct 2023 12:16:48 +0300
+Message-Id: <20231017115047.8ceaf7e5ece7.Ief444f6a2703ed76648b4d414f12bb4130bab36e@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20231017091649.65090-1-gregory.greenman@intel.com>
 References: <20231017091649.65090-1-gregory.greenman@intel.com>
@@ -57,93 +57,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Yedidya Benshimol <yedidya.ben.shimol@intel.com>
 
-Multi rx queue allows to spread the load of the Rx streams on different
-CPUs. 9000 series required complex synchronization mechanisms from the
-driver side since the hardware / firmware is not able to provide
-information about duplicate packets and timeouts inside the reordering
-buffer.
+During the D3 resume flow, all new rekeys are passed from the FW.
+Because the FW supports only one IGTK at a time, every IGTK rekey
+update should be done by removing the last IGTK. The mvmvif holds a
+pointer to the last IGTK for that reason and thus should be updated
+when a new IGTK is passed upon resume.
 
-Users have complained that for newer devices, all those synchronization
-mechanisms have caused spurious packet drops. Those packet drops
-disappeared if we simplify the code, but unfortunately, we can't have
-RSS enabled on 9000 series without this complex code.
-
-Remove support for RSS on 9000 so that we can make the code much simpler
-for newer devices and fix the bugs for them.
-
-The down side of this patch is a that all the Rx path will be routed to
-a single CPU, but this has never been an issue, the modern CPUs are just
-fast enough to cope with all the traffic.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: 04f78e242fff ("wifi: iwlwifi: mvm: Add support for IGTK in D3 resume flow")
+Signed-off-by: Yedidya Benshimol <yedidya.ben.shimol@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h    |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     | 11 ++++++++++-
- 3 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 3d58a2b9518c..cab4d7351088 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -279,7 +279,7 @@ static inline void iwl_free_rxb(struct iwl_rx_cmd_buffer *r)
- #define IWL_MGMT_TID		15
- #define IWL_FRAME_LIMIT	64
- #define IWL_MAX_RX_HW_QUEUES	16
--#define IWL_9000_MAX_RX_HW_QUEUES	6
-+#define IWL_9000_MAX_RX_HW_QUEUES	1
- 
- /**
-  * enum iwl_wowlan_status - WoWLAN image/device status
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index c1c9cdf49a41..28da98e75e52 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -376,7 +376,9 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		ieee80211_hw_set(hw, HAS_RATE_CONTROL);
- 	}
- 
--	if (iwl_mvm_has_new_rx_api(mvm))
-+	/* We want to use the mac80211's reorder buffer for 9000 */
-+	if (iwl_mvm_has_new_rx_api(mvm) &&
-+	    mvm->trans->trans_cfg->device_family > IWL_DEVICE_FAMILY_9000)
- 		ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
- 
- 	if (fw_has_capa(&mvm->fw->ucode_capa,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 041afc97a911..17c3d00d4d27 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -957,6 +957,9 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	baid = (reorder & IWL_RX_MPDU_REORDER_BAID_MASK) >>
- 		IWL_RX_MPDU_REORDER_BAID_SHIFT;
- 
-+	if (mvm->trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_9000)
-+		return false;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index ffb1fdd7ee32..46ee280231ea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -2031,6 +2031,16 @@ iwl_mvm_d3_igtk_bigtk_rekey_add(struct iwl_wowlan_status_data *status,
+ 	if (IS_ERR(key_config))
+ 		return false;
+ 	ieee80211_set_key_rx_seq(key_config, 0, &seq);
 +
- 	/*
- 	 * This also covers the case of receiving a Block Ack Request
- 	 * outside a BA session; we'll pass it to mac80211 and that
-@@ -2617,9 +2620,15 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 
- 	if (!iwl_mvm_reorder(mvm, napi, queue, sta, skb, desc) &&
- 	    likely(!iwl_mvm_time_sync_frame(mvm, skb, hdr->addr2)) &&
--	    likely(!iwl_mvm_mei_filter_scan(mvm, skb)))
-+	    likely(!iwl_mvm_mei_filter_scan(mvm, skb))) {
-+		if (mvm->trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_9000 &&
-+		    (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU) &&
-+		    !(desc->amsdu_info & IWL_RX_MPDU_AMSDU_LAST_SUBFRAME))
-+			rx_status->flag |= RX_FLAG_AMSDU_MORE;
++	if (key_config->keyidx == 4 || key_config->keyidx == 5) {
++		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++		int link_id = vif->active_links ? __ffs(vif->active_links) : 0;
++		struct iwl_mvm_vif_link_info *mvm_link =
++			mvmvif->link[link_id];
 +
- 		iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta,
- 						link_sta);
++		mvm_link->igtk = key_config;
 +	}
- out:
- 	rcu_read_unlock();
++
+ 	return true;
  }
+ 
 -- 
 2.38.1
 
