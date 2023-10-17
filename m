@@ -2,52 +2,52 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46024CDB474
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Oct 2023 09:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFBF6CDB474
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Oct 2023 09:17:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234818AbjJQJRN (ORCPT
+        id S234830AbjJQJRR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Oct 2023 05:17:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60372 "EHLO
+        Tue, 17 Oct 2023 05:17:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234758AbjJQJRL (ORCPT
+        with ESMTP id S234758AbjJQJRP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Oct 2023 05:17:11 -0400
+        Tue, 17 Oct 2023 05:17:15 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E9278E
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2023 02:17:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D04F6ED
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Oct 2023 02:17:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697534229; x=1729070229;
+  t=1697534233; x=1729070233;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=zcgaChS2RJW0S41BN0yayNv3HBAdsyCdKoOWRSO2ARA=;
-  b=Z7ZZIfWrsxtOpzkjMzCmkaI7tDi17YawgwZWTeIeus4kKLU0jd7b2i0Z
-   ClfnJq6tL9/orXYfWdl55Dz4atTzSarNYSmpdMQuFck0xGiKRYfNRjVJE
-   GgqpMd46Vi+qpzJsIfG6wYesVfFzzxUWOgbwGgbvSWcfolvrnzjEW0FVk
-   u2X63IBKOHcVVr2RlFYyryY1Q7Izj9GRQcohfJEnyi/6QcFXcvhd8OmAE
-   n5uJyh83dT5qxerzUPNH0396HfdWqk4o4fXx+66KBS+xrJNdWXByt9JEu
-   B44egpYWuz1St8LQ/eAHj6StSraPLSpTX0NiBBgAdjxXpFAgAJD+kR4kx
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="370808521"
+  bh=Y1iRDnZogfjzDKpvHj3fNHNwkZ8GL7w5F7tsSwjdm5U=;
+  b=kQi40u0ItbsCf94apqny3N9yQD83ZXjKx5G0UwclMsnSvxf2G9AB4UP4
+   3+nHsg7CLrJkSlq4/2erltSGT/LgtNXhQewAVMxxx7UEPy8UEux5z3GWD
+   GMb4rclqCQhF8Mu/L4lFt4imJUuNvJXnoIIj66zqMmTEsuGqxQLc2yvlQ
+   iMUVOQQgRJkOLu5mjvxFBvamDj+bazRmt3z7aV2I/UAhCZDuqPjq2IqBa
+   r786NMpf9itI8rXqHwofSDVhLOWMyMpkZ6tj2hxlGn73i+g9e1bOhK6nI
+   hNUztlXZF1DIk0VZR818WALtnAJzLf59gmuYIYn76YZPT+6XYfakm3iwz
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="370808529"
 X-IronPort-AV: E=Sophos;i="6.03,231,1694761200"; 
-   d="scan'208";a="370808521"
+   d="scan'208";a="370808529"
 Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:08 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:13 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="759731825"
+X-IronPort-AV: E=McAfee;i="6600,9927,10865"; a="759731888"
 X-IronPort-AV: E=Sophos;i="6.03,231,1694761200"; 
-   d="scan'208";a="759731825"
+   d="scan'208";a="759731888"
 Received: from obarinsh-mobl1.ger.corp.intel.com (HELO ggreenma-mobl2.intel.com) ([10.214.213.101])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:07 -0700
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Oct 2023 02:17:11 -0700
 From:   gregory.greenman@intel.com
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
-        Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 03/14] wifi: iwlwifi: support link id in SESSION_PROTECTION_NOTIF
-Date:   Tue, 17 Oct 2023 12:16:38 +0300
-Message-Id: <20231017115047.4c59b149086e.I74fe93a6337f4ec9d1bd6f791d315411ac5b40da@changeid>
+Subject: [PATCH 05/14] wifi: iwlwifi: mvm: remove set_tim callback for MLD ops
+Date:   Tue, 17 Oct 2023 12:16:40 +0300
+Message-Id: <20231017115047.1a1ded96ffc2.Ie49d3004acdd6299fb84346c76b2b2b2f195196b@changeid>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20231017091649.65090-1-gregory.greenman@intel.com>
 References: <20231017091649.65090-1-gregory.greenman@intel.com>
@@ -57,96 +57,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-FW is introducing an API change in which link ID will be used
-for session protection notif. Add support for it.
+In new firmware, we don't need this any more and it won't
+be called any more by mac80211, since powersave handling
+is all done by firmware. Remove it from the MLD ops.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 ---
- .../intel/iwlwifi/fw/api/time-event.h         | 10 ++++---
- .../wireless/intel/iwlwifi/mvm/time-event.c   | 27 +++++++++++++++++--
- 2 files changed, 32 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c | 2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h          | 2 --
+ 3 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h b/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h
-index 701b2929c3a4..2e15be71c957 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/time-event.h
-@@ -461,7 +461,8 @@ struct iwl_mvm_session_prot_cmd {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 38ee1629ec4b..c1c9cdf49a41 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -5273,8 +5273,8 @@ int iwl_mvm_tx_last_beacon(struct ieee80211_hw *hw)
+ 	return mvm->ibss_manager;
+ }
  
- /**
-  * struct iwl_mvm_session_prot_notif - session protection started / ended
-- * @mac_id: the mac id for which the session protection started / ended
-+ * @mac_link_id: the mac id (or link id, for notif ver > 2) for which the
-+ *	session protection started / ended
-  * @status: 1 means success, 0 means failure
-  * @start: 1 means the session protection started, 0 means it ended
-  * @conf_id: see &enum iwl_mvm_session_prot_conf_id
-@@ -470,10 +471,13 @@ struct iwl_mvm_session_prot_cmd {
-  * and end even the firmware could not schedule it.
-  */
- struct iwl_mvm_session_prot_notif {
--	__le32 mac_id;
-+	__le32 mac_link_id;
- 	__le32 status;
- 	__le32 start;
- 	__le32 conf_id;
--} __packed; /* SESSION_PROTECTION_NOTIFICATION_API_S_VER_2 */
-+} __packed;
-+/* SESSION_PROTECTION_NOTIFICATION_API_S_VER_2 and
-+ * SESSION_PROTECTION_NOTIFICATION_API_S_VER_3
-+ */
- 
- #endif /* __iwl_fw_api_time_event_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-index ecbebef80791..218fdf1ed530 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
-@@ -898,18 +898,41 @@ void iwl_mvm_rx_session_protect_notif(struct iwl_mvm *mvm,
+-int iwl_mvm_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
+-		    bool set)
++static int iwl_mvm_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
++			   bool set)
  {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_mvm_session_prot_notif *notif = (void *)pkt->data;
-+	unsigned int ver =
-+		iwl_fw_lookup_cmd_ver(mvm->fw,
-+				      WIDE_ID(MAC_CONF_GROUP,
-+					      SESSION_PROTECTION_CMD), 2);
-+	int id = le32_to_cpu(notif->mac_link_id);
- 	struct ieee80211_vif *vif;
- 	struct iwl_mvm_vif *mvmvif;
-+	unsigned int notif_link_id;
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+index 8402482a74a0..407b34a224c1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+@@ -1266,8 +1266,6 @@ const struct ieee80211_ops iwl_mvm_mld_hw_ops = {
  
- 	rcu_read_lock();
--	vif = iwl_mvm_rcu_dereference_vif_id(mvm, le32_to_cpu(notif->mac_id),
--					     true);
-+
-+	if (ver <= 2) {
-+		vif = iwl_mvm_rcu_dereference_vif_id(mvm, id, true);
-+	} else {
-+		struct ieee80211_bss_conf *link_conf =
-+			iwl_mvm_rcu_fw_link_id_to_link_conf(mvm, id, true);
-+
-+		if (!link_conf)
-+			goto out_unlock;
-+
-+		notif_link_id = link_conf->link_id;
-+		vif = link_conf->vif;
-+	}
+ 	.tx_last_beacon = iwl_mvm_tx_last_beacon,
  
- 	if (!vif)
- 		goto out_unlock;
- 
- 	mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 
-+	if (WARN(ver > 2 && mvmvif->time_event_data.link_id >= 0 &&
-+		 mvmvif->time_event_data.link_id != notif_link_id,
-+		 "SESION_PROTECTION_NOTIF was received for link %u, while the current time event is on link %u\n",
-+		 notif_link_id, mvmvif->time_event_data.link_id))
-+		goto out_unlock;
-+
- 	/* The vif is not a P2P_DEVICE, maintain its time_event_data */
- 	if (vif->type != NL80211_IFTYPE_P2P_DEVICE) {
- 		struct iwl_mvm_time_event_data *te_data =
+-	.set_tim = iwl_mvm_set_tim,
+-
+ 	.channel_switch = iwl_mvm_channel_switch,
+ 	.pre_channel_switch = iwl_mvm_pre_channel_switch,
+ 	.post_channel_switch = iwl_mvm_post_channel_switch,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 0bd2a8bcaee5..385bbeca4796 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -2688,8 +2688,6 @@ void iwl_mvm_remove_chanctx(struct ieee80211_hw *hw,
+ void iwl_mvm_change_chanctx(struct ieee80211_hw *hw,
+ 			    struct ieee80211_chanctx_conf *ctx, u32 changed);
+ int iwl_mvm_tx_last_beacon(struct ieee80211_hw *hw);
+-int iwl_mvm_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
+-		    bool set);
+ void iwl_mvm_channel_switch(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_channel_switch *chsw);
+ int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
 -- 
 2.38.1
 
