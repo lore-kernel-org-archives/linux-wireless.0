@@ -2,69 +2,86 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C89DCDB482
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Oct 2023 08:31:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D7F5CDB483
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Oct 2023 08:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344676AbjJRIbH (ORCPT
+        id S1344687AbjJRIb6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Oct 2023 04:31:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55436 "EHLO
+        Wed, 18 Oct 2023 04:31:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344678AbjJRIbF (ORCPT
+        with ESMTP id S1344688AbjJRIb5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Oct 2023 04:31:05 -0400
+        Wed, 18 Oct 2023 04:31:57 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23CD4109;
-        Wed, 18 Oct 2023 01:31:03 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 542E1C433C8;
-        Wed, 18 Oct 2023 08:31:01 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3087101;
+        Wed, 18 Oct 2023 01:31:55 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A83B7C433C9;
+        Wed, 18 Oct 2023 08:31:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697617862;
-        bh=DmaIORX38lsk+s8u9A1sNW59yUVMPJkqJEYyV4bNIhY=;
+        s=k20201202; t=1697617915;
+        bh=7LzgGeipT9Qy5v1sgxiku72SEYU7sxO5+0HO8M6l8bQ=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=HBIxPtGUhN/JlZd7seAMtycPXYiSRFWhQXCYyKYdLKpJxh+LujAL0rBktmZ8OJNjK
-         Uf/vRvEIg1V8qOiEFI/Nq3+fyTcORNb77V/qxVNfc2E8eLdMnPeszKtlqEwkTc0oKM
-         C05h5vWMEnLnr0y7WGymgR+VpIIDuZLmjlzcdgA6nzA8aoR97fjzxVDFKnt5HyoeS8
-         FryJn4jKuvHbtc5hdtj9EvmxTuxGpNwL12pvLeRewiw6iXQLPXmZCQE/J7J1fNmAZ7
-         5d0nTXsUNhUhNBZXcpIVLYPDOMuxrAMw0Qg+IKdImFurJWrPZ8a6lEiRGmpcBlGdYf
-         +/QogbGs6uNcA==
+        b=qKt5ZdvwyBDhTdY/Carhf2QcB/N5BdLhJRXjIQrVpairy5npomajJthuzXG/OqMh2
+         C1kfrrdgDAjJymrPiYciajAwXdHNovsfJ7E7dPk/SjXOiqANBCqssOV7JHUMt/Hr+m
+         8uorOQF5OsYMl+g3YQLYWCeO3bRmfncZXtU9GJNc0sB8jwdvOSmJMibKZil+8bvLlM
+         J8AX267eQ1RvwrJej9JPWj0POYBwQO6qzBRfEwzQc/99jITsmW1cqXrwCnQpeXMGUB
+         cDz+et2TLAtyAJkhUoLSAkjeTcOku+n6c/FUc4TyLFzYrq23NR8vHMSxkIiGAX4bxP
+         MdCNpOie3W88g==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/2] wifi: ath11k: Remove ath11k_base::bd_api
+Subject: Re: [PATCH] ath5k: replace deprecated strncpy with strscpy
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20231013-ath11k_bd_api-v1-1-3fefe4629706@quicinc.com>
-References: <20231013-ath11k_bd_api-v1-1-3fefe4629706@quicinc.com>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ath12k@lists.infradead.org>,
-        Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20231013-strncpy-drivers-net-wireless-ath-ath5k-led-c-v1-1-3acb0b5a21f2@google.com>
+References: <20231013-strncpy-drivers-net-wireless-ath-ath5k-led-c-v1-1-3acb0b5a21f2@google.com>
+To:     Justin Stitt <justinstitt@google.com>
+Cc:     Jiri Slaby <jirislaby@kernel.org>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org,
+        Justin Stitt <justinstitt@google.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169761785908.48072.2555690903765273261.kvalo@kernel.org>
-Date:   Wed, 18 Oct 2023 08:31:01 +0000 (UTC)
+Message-ID: <169761791192.48072.4820317724523709074.kvalo@kernel.org>
+Date:   Wed, 18 Oct 2023 08:31:53 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
+Justin Stitt <justinstitt@google.com> wrote:
 
-> Currently struct ath11k_base defines the member bd_api. However, this
-> member is only accessed within ath11k_core_fetch_bdf(). Since the
-> scope is local just to that one function, remove it from ath11k_base
-> and instead just use a local stack variable.
+> strncpy() is deprecated for use on NUL-terminated destination strings
+> [1] and as such we should prefer more robust and less ambiguous string
+> interfaces.
 > 
-> No functional changes, compile tested only.
+> We expect led->name to be NUL-terminated based on the presence of a
+> manual NUL-byte assignment.
 > 
-> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> This NUL-byte assignment was added in Commit daf9669bea30aa22 ("ath5k:
+> ensure led name is null terminated"). If strscpy() had existed and had
+> been used back when this code was written then potential bugs and the
+> need to manually NUL-terminate could have been avoided. Since we now
+> have the technology, let's use it :)
+> 
+> Considering the above, a suitable replacement is `strscpy` [2] due to
+> the fact that it guarantees NUL-termination on the destination buffer
+> without unnecessarily NUL-padding. If NUL-padding is required let's opt
+> for strscpy_pad().
+> 
+> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+> Link: https://github.com/KSPP/linux/issues/90
+> Cc: linux-hardening@vger.kernel.org
+> Signed-off-by: Justin Stitt <justinstitt@google.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-2 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-b4f70ac0fa88 wifi: ath11k: Remove ath11k_base::bd_api
-2180f7ac0abe wifi: ath12k: Remove ath12k_base::bd_api
+24709752bfe8 wifi: ath5k: replace deprecated strncpy with strscpy
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20231013-ath11k_bd_api-v1-1-3fefe4629706@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20231013-strncpy-drivers-net-wireless-ath-ath5k-led-c-v1-1-3acb0b5a21f2@google.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
