@@ -2,68 +2,77 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33B6BCDB465
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Oct 2023 07:28:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E1ECDB465
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Oct 2023 07:29:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232891AbjJSH21 (ORCPT
+        id S232942AbjJSH3W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Oct 2023 03:28:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53228 "EHLO
+        Thu, 19 Oct 2023 03:29:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232326AbjJSH20 (ORCPT
+        with ESMTP id S232326AbjJSH3V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2023 03:28:26 -0400
+        Thu, 19 Oct 2023 03:29:21 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACC6C9F
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2023 00:28:24 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 906CCC433C7;
-        Thu, 19 Oct 2023 07:28:23 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B74119F
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2023 00:29:19 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68735C433C8;
+        Thu, 19 Oct 2023 07:29:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697700504;
-        bh=wLug83WzbZFUzJwrfWYApiabQSQSYJjvixDTtNb76Kk=;
+        s=k20201202; t=1697700559;
+        bh=qAoAaESRcjikE5bppwq+sScr2PifU5y8kl8IbYKo1k4=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=K7+zqygtwVXdr5mju/uqJRzS6CHMq0Fh/9y9IoQT9mqfDcZZMflDu9fGSznpbZ+YC
-         2FaQzBdadzuCLiBaQznya4VYCWuS+ZZcPug4C0GTxFiTGWZFFMsl2pbvsgBgRVnv6Y
-         bpBQvaNdp82s7wQwqfkQcY+nJ4cYj9A8BkOVHFOXvQNNyffL8zNHQTSqXaaEahYgWf
-         QUbt/4uGgIgVLZ7l2wtXSjDy3swFBZDU+Yk9lUGbeq0U5h4B9d4lG8IAXgaR76GVw1
-         a1/PoXPojnf6UWkaHOCl3G9R1bEMuh7ihEgN7unE20hf0tOQiPCoX4MIWjSV0jVo6t
-         BiYfm+W9SoDYQ==
+        b=ekgTsV0hGHWvfYz5r6kXRzKr1jSGVVNPBqG+Ee44QTVEMwstvYZptLACk0OGuUWp6
+         DvAh0GVlGilfmI094BP3QPwRYrUNW/vwABkOos1LBXaecK7CP1jGYkEIiBMEOCqVTz
+         HT5F1959oogEk7Hie+NRedlczxWVl4uJpopFoDfAz7g+2NX4uAZJpzKk6kCq7i/q7U
+         +/9trEne7GYWJK0QanBHF6VzvxRPFaAQ8XXUjk7YEkptEVjaW8S+8AjwFxEmKkOBki
+         07yQtlFZiH3KfCBk4tljdiB01w/o+uA+iwCzqkQvLLgRgaWBfyJCyV8A+5v9T+HtqM
+         cgU1emhObPdhg==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/2] wifi: rtw88: debug: add to check if debug mask is
- enabled
+Subject: Re: [PATCH 1/5] wifi: rtw89: phy: change naming related BT
+ coexistence
+ functions
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20231016053554.744180-2-pkshih@realtek.com>
-References: <20231016053554.744180-2-pkshih@realtek.com>
+In-Reply-To: <20231016065115.751662-2-pkshih@realtek.com>
+References: <20231016065115.751662-2-pkshih@realtek.com>
 To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     <timlee@realtek.com>, <linux-wireless@vger.kernel.org>
+Cc:     <cj.hsieh@realtek.com>, <hsuan8331@realtek.com>,
+        <linux-wireless@vger.kernel.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169770050162.117236.15126110048637490351.kvalo@kernel.org>
-Date:   Thu, 19 Oct 2023 07:28:23 +0000 (UTC)
+Message-ID: <169770055655.117236.17763530923752037470.kvalo@kernel.org>
+Date:   Thu, 19 Oct 2023 07:29:18 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Chin-Yen Lee <timlee@realtek.com>
+> From: Chung-Hsuan Hung <hsuan8331@realtek.com>
 > 
-> The coming dump function for FW malfunction will add a function to
-> dump registers to reflect status. However, if we are not debugging
-> the mechanism, we don't print anything, so avoid reading registers by
-> checking debug mask to reduce IO.
+> Change naming to disambiguate the functions because their names are common
+> and not clear about the purpose. Not change logic at all.
 > 
-> Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+> These functions are to control baseband AGC while BT coexists with WiFi.
+> Among these functions, ctrl_btg_bt_rx is used to control AGC related
+> settings, which is affected by BT RX, while BT shares the same path
+> with wifi; ctrl_nbtg_bt_tx is used to control AGC settings under
+> non-shared path condition, which is affected by BT TX.
+> 
+> Signed-off-by: Chung-Hsuan Hung <hsuan8331@realtek.com>
 > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-2 patches applied to wireless-next.git, thanks.
+5 patches applied to wireless-next.git, thanks.
 
-1926a27299db wifi: rtw88: debug: add to check if debug mask is enabled
-20907fc06997 wifi: rtw88: dump firmware debug information in abnormal state
+2901bbd26668 wifi: rtw89: phy: change naming related BT coexistence functions
+4ba17aa476e2 wifi: rtw89: phy: generalize valid bit of BSS color
+5d2f3c3aaaa6 wifi: rtw89: modify the register setting and the flow of CFO tracking
+aecc60e7d3ab wifi: rtw89: correct the DCFO tracking flow to improve CFO compensation
+388df37938da wifi: rtw89: move software DCFO compensation setting to proper position
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20231016053554.744180-2-pkshih@realtek.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20231016065115.751662-2-pkshih@realtek.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
