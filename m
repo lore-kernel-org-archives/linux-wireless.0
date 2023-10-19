@@ -2,84 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A02CDB465
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Oct 2023 15:22:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45808C41513
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Oct 2023 15:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346175AbjJSPWX (ORCPT
+        id S1346239AbjJSPc6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Oct 2023 11:22:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49758 "EHLO
+        Thu, 19 Oct 2023 11:32:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345950AbjJSPWW (ORCPT
+        with ESMTP id S1345747AbjJSPc6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2023 11:22:22 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2F9121
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Oct 2023 08:22:20 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39JERbDc005020;
-        Thu, 19 Oct 2023 15:22:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=0v2LvWG1tVNrZ6aUGcIw7ZwbbjE/fboEMBfgC/plseQ=;
- b=lgiPLyIx8LcIdxy4/Z56HVuKnBQEITyMdd2tYBjq3F0t9VafBnbGvP7HIuKiRux2UFBg
- R+WCa1eWGtDkyBl0yx9ie4vP1SSel7mHTjuUacGL8nlRwvSS/C5UOPRXp9HzggHsX9PK
- qQq62mInG22h0JveXZTlm/OpPGppyRa1fNhw1JJiw1/E/OwpgZ56PA1R2pppUFQc9xJK
- Kdn+hLyASnArIieYfjjvpWksy+dGQImAb3vIUhk/pkJYoBjLO/j1faUlsxpzcaiv4xFc
- y0JwUC6+ZFz7Y2s9IVLY6FtWZfK+6ERv+IzAEl6Dh32yUe5UxsCOE/uP3ZBa/MBAXak7 ww== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tu67jr441-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 19 Oct 2023 15:22:10 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39JFM9pN010981
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 19 Oct 2023 15:22:10 GMT
-Received: from [10.48.241.70] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Thu, 19 Oct
- 2023 08:22:09 -0700
-Message-ID: <626763fa-4691-4e81-9afb-77f60b017d74@quicinc.com>
-Date:   Thu, 19 Oct 2023 08:22:09 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/3] wifi: ath11k: add firmware-2.bin support
-Content-Language: en-US
+        Thu, 19 Oct 2023 11:32:58 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD24312F;
+        Thu, 19 Oct 2023 08:32:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6655CC433C8;
+        Thu, 19 Oct 2023 15:32:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697729576;
+        bh=JmxVPCdruKLMQZ5RUKgTCknlS6N8U4MPq35+pkolZUQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=POBMJg19qSQ8erDJJsBUAf4QYH8J8D1C98PNUaEeDBax10sfUqooXE+3ZKs22bFFx
+         Tg9fXsoNI6LSy/j0et+lzIy5ceQrs4BsPjQwjk6tD+nHsf2hGul/MyaheRNwH/wszt
+         xHYnJlyz6oQmakAfMzDckwV0XWI316CcWj3YbngQAeHnep2LSdzgNys2eLGFEu5KNM
+         HddIU7Bp2dEJECPMzwA191ONt1VSdxObTlvZ+T1OKmQWSXiA7A6TOvMFzR4bwLKq8l
+         or2NE7fzpEJnHxWyFEMg+AOLSbqyFlZjJejvqN1n0klNmtRYMy+tSULs0BB/IKbE4I
+         Zwz+s+1Czk0Aw==
+Received: from johan by xi.lan with local (Exim 4.96)
+        (envelope-from <johan+linaro@kernel.org>)
+        id 1qtV1A-0006tC-0o;
+        Thu, 19 Oct 2023 17:33:00 +0200
+From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Kalle Valo <kvalo@kernel.org>
-CC:     <mhi@lists.linux.dev>, <ath11k@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>
-References: <20230727100430.3603551-1-kvalo@kernel.org>
- <20230727100430.3603551-4-kvalo@kernel.org>
- <563e8d01-beba-bff2-54e0-7629c462add0@quicinc.com>
- <87leby2152.fsf@kernel.org>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <87leby2152.fsf@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.49.16.6]
-X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ZNFuLNRZZ-m0d71pHTZpO9m-B6aQhZDL
-X-Proofpoint-ORIG-GUID: ZNFuLNRZZ-m0d71pHTZpO9m-B6aQhZDL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-19_14,2023-10-19_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- suspectscore=0 mlxlogscore=552 impostorscore=0 mlxscore=0 malwarescore=0
- phishscore=0 spamscore=0 priorityscore=1501 bulkscore=0 adultscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310190129
+Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
+        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Johan Hovold <johan+linaro@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH v2 2/2] wifi: ath11k: fix dfs radar event locking
+Date:   Thu, 19 Oct 2023 17:31:15 +0200
+Message-ID: <20231019153115.26401-3-johan+linaro@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20231019153115.26401-1-johan+linaro@kernel.org>
+References: <20231019153115.26401-1-johan+linaro@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 10/19/2023 6:27 AM, Kalle Valo wrote:
-> Here's the updated commit in pending branch:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=96e0d3887f65eaac7745ff9da7c89f0c59bb347d
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+The ath11k active pdevs are protected by RCU but the DFS radar event
+handling code calling ath11k_mac_get_ar_by_pdev_id() was not marked as a
+read-side critical section.
 
+Mark the code in question as an RCU read-side critical section to avoid
+any potential use-after-free issues.
+
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Cc: stable@vger.kernel.org      # 5.6
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index da1582b8dc30..f0eac6cb84fd 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -8337,6 +8337,8 @@ ath11k_wmi_pdev_dfs_radar_detected_event(struct ath11k_base *ab, struct sk_buff
+ 		   ev->detector_id, ev->segment_id, ev->timestamp, ev->is_chirp,
+ 		   ev->freq_offset, ev->sidx);
+ 
++	rcu_read_lock();
++
+ 	ar = ath11k_mac_get_ar_by_pdev_id(ab, ev->pdev_id);
+ 
+ 	if (!ar) {
+@@ -8354,6 +8356,8 @@ ath11k_wmi_pdev_dfs_radar_detected_event(struct ath11k_base *ab, struct sk_buff
+ 		ieee80211_radar_detected(ar->hw);
+ 
+ exit:
++	rcu_read_unlock();
++
+ 	kfree(tb);
+ }
+ 
+-- 
+2.41.0
 
