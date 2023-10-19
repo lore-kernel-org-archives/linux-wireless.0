@@ -2,91 +2,71 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45808C41513
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8EAACDB483
 	for <linux-wireless@archiver.kernel.org>; Thu, 19 Oct 2023 15:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346239AbjJSPc6 (ORCPT
+        id S1346289AbjJSPc7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Oct 2023 11:32:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49054 "EHLO
+        Thu, 19 Oct 2023 11:32:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345747AbjJSPc6 (ORCPT
+        with ESMTP id S1345537AbjJSPc6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 19 Oct 2023 11:32:58 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD24312F;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8DEF130;
         Thu, 19 Oct 2023 08:32:56 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6655CC433C8;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71960C433CA;
         Thu, 19 Oct 2023 15:32:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1697729576;
-        bh=JmxVPCdruKLMQZ5RUKgTCknlS6N8U4MPq35+pkolZUQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=POBMJg19qSQ8erDJJsBUAf4QYH8J8D1C98PNUaEeDBax10sfUqooXE+3ZKs22bFFx
-         Tg9fXsoNI6LSy/j0et+lzIy5ceQrs4BsPjQwjk6tD+nHsf2hGul/MyaheRNwH/wszt
-         xHYnJlyz6oQmakAfMzDckwV0XWI316CcWj3YbngQAeHnep2LSdzgNys2eLGFEu5KNM
-         HddIU7Bp2dEJECPMzwA191ONt1VSdxObTlvZ+T1OKmQWSXiA7A6TOvMFzR4bwLKq8l
-         or2NE7fzpEJnHxWyFEMg+AOLSbqyFlZjJejvqN1n0klNmtRYMy+tSULs0BB/IKbE4I
-         Zwz+s+1Czk0Aw==
+        bh=6AUvT9lmCnlzH7BLowOH+X3uuIrFpt3l7ALwRPy7k48=;
+        h=From:To:Cc:Subject:Date:From;
+        b=eSSR0/rRNY8AZ6icxglMEVkboZR646ZlZMHxFOfc7LUuqbxuZXnuQ2m/uouOp/RBR
+         QxGBBEa91unkbPNTEApm4rpxBDC7RrTRXkaGniCCFWxnpIts0wAYFTRR08iBMCxOqd
+         xT3j7+RHWKQP+L+0olZsY+oHPd8tzkg0DJRMxOGssDivldEvqrRn30jYvqLIlXAkuT
+         Fv2lJ26ZCT4xV9apTy4FZQtJfdKEaDDBmA1BVJUW22H5ntf04SW5LVr9ETR5az90DS
+         cgGE+P8/B6z3MdOZlOZQKu4YhHnS6SNsivEx/fpL73ADd4LFIa6fOsNtNGBb4M1RgQ
+         R3AwqSLXf332w==
 Received: from johan by xi.lan with local (Exim 4.96)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1qtV1A-0006tC-0o;
+        id 1qtV19-0006t8-1D;
         Thu, 19 Oct 2023 17:33:00 +0200
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Kalle Valo <kvalo@kernel.org>
 Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
         ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         linux-kernel@vger.kernel.org,
-        Johan Hovold <johan+linaro@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v2 2/2] wifi: ath11k: fix dfs radar event locking
-Date:   Thu, 19 Oct 2023 17:31:15 +0200
-Message-ID: <20231019153115.26401-3-johan+linaro@kernel.org>
+        Johan Hovold <johan+linaro@kernel.org>
+Subject: [PATCH v2 0/2] wifi: ath11k: fix event locking
+Date:   Thu, 19 Oct 2023 17:31:13 +0200
+Message-ID: <20231019153115.26401-1-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20231019153115.26401-1-johan+linaro@kernel.org>
-References: <20231019153115.26401-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The ath11k active pdevs are protected by RCU but the DFS radar event
-handling code calling ath11k_mac_get_ar_by_pdev_id() was not marked as a
-read-side critical section.
+RCU lockdep reported suspicious RCU usage when accessing the temperature
+sensor. Inspection revealed that the DFS radar event code was also
+missing the required RCU read-side critical section marking.
 
-Mark the code in question as an RCU read-side critical section to avoid
-any potential use-after-free issues.
+Johan
 
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Cc: stable@vger.kernel.org      # 5.6
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
----
- drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index da1582b8dc30..f0eac6cb84fd 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -8337,6 +8337,8 @@ ath11k_wmi_pdev_dfs_radar_detected_event(struct ath11k_base *ab, struct sk_buff
- 		   ev->detector_id, ev->segment_id, ev->timestamp, ev->is_chirp,
- 		   ev->freq_offset, ev->sidx);
- 
-+	rcu_read_lock();
-+
- 	ar = ath11k_mac_get_ar_by_pdev_id(ab, ev->pdev_id);
- 
- 	if (!ar) {
-@@ -8354,6 +8356,8 @@ ath11k_wmi_pdev_dfs_radar_detected_event(struct ath11k_base *ab, struct sk_buff
- 		ieee80211_radar_detected(ar->hw);
- 
- exit:
-+	rcu_read_unlock();
-+
- 	kfree(tb);
- }
- 
+Changes in v2
+ - add the missing rcu_read_unlock() to an
+   ath11k_wmi_pdev_temperature_event() error path as noticed by Jeff
+
+
+Johan Hovold (2):
+  wifi: ath11k: fix temperature event locking
+  wifi: ath11k: fix dfs radar event locking
+
+ drivers/net/wireless/ath/ath11k/wmi.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
 -- 
 2.41.0
 
