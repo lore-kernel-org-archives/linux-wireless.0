@@ -2,235 +2,109 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23130CDB47E
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Oct 2023 10:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F2D4CDB47E
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Oct 2023 10:31:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376966AbjJTKAQ (ORCPT
+        id S1376720AbjJTKbY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Oct 2023 06:00:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47870 "EHLO
+        Fri, 20 Oct 2023 06:31:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376916AbjJTJ7v (ORCPT
+        with ESMTP id S1376854AbjJTKbW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Oct 2023 05:59:51 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C033510DF
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Oct 2023 02:59:47 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-6b3c2607d9bso578375b3a.1
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Oct 2023 02:59:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1697795987; x=1698400787; darn=vger.kernel.org;
-        h=in-reply-to:subject:from:references:cc:to:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=uBYXNmVizX5H4ssevNHbrQraUcSEIihwkpsfI/XJnIk=;
-        b=W3rNyRfU+Vpp/J8Woxj5c5sdXW1X3Y0AXQEBKSRwdMoVwJR+/YO/VDiBqiBrAbJfEc
-         8ctM53tOTdbY7LvMZTioQvW+mz3O/7jZecyQ58oHSFk/DNZ6YFMyrOInSc+KPLA+DygA
-         akhPs14oBhtbZ6XgmmWVt85Lkoh1YYpxTJaIc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697795987; x=1698400787;
-        h=in-reply-to:subject:from:references:cc:to:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uBYXNmVizX5H4ssevNHbrQraUcSEIihwkpsfI/XJnIk=;
-        b=S4s5aenmriYKzEkfIGm2IGZ4XgrqrmFC6XcZVe7+llJf7KOf+pIYo9zgty/DMdptHI
-         y3NX126iWczOt5GmE3aHoyKZSJfOR5ynXwJZACM5RMWzR528A01Uk2nKFfPwU2jKaATC
-         EDvdKdhZzqT5/sWPF/HV86vHpUHToDomDmvWUoLLyt/YEtlaFK8yr7WvBT1/H6Aey0bj
-         ltcTXbI8eky8uYOJu6nJo6cbwY/Sqg+GRMmtID94XBLJakYBDYJSbiiBux0iinNCUZ6J
-         cv1/W2X3v/Y5U2P/YLm5eeRgXJRPt1xWTTZxiIgS3d7RZ3wCQsi8L099CdCi0n3PDSbY
-         5G8Q==
-X-Gm-Message-State: AOJu0YxO9nF33SYxOkTLYZ2ZD3cWkGMJ3o4ZhmtlqvMZrERxoofFw6ox
-        xWmd1JoSsvSOcqEwNbAIWEPDlQ==
-X-Google-Smtp-Source: AGHT+IG8mipRIpk2TKjZchRJ9uRHEZoElKS1h1PAFAYuuwSMNmhiNDMMyGzlhvb8t2JGmLxZywRQzQ==
-X-Received: by 2002:a05:6a21:7795:b0:171:c88a:890c with SMTP id bd21-20020a056a21779500b00171c88a890cmr1192289pzc.25.1697795987301;
-        Fri, 20 Oct 2023 02:59:47 -0700 (PDT)
-Received: from [192.168.178.137] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id 12-20020a170902c20c00b001ab2b4105ddsm1154059pll.60.2023.10.20.02.59.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 20 Oct 2023 02:59:46 -0700 (PDT)
-Message-ID: <89388810-089d-efdc-393d-fbb5f4092a9a@broadcom.com>
-Date:   Fri, 20 Oct 2023 11:59:41 +0200
+        Fri, 20 Oct 2023 06:31:22 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3952D69
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Oct 2023 03:31:20 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4398DC433C8;
+        Fri, 20 Oct 2023 10:31:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697797880;
+        bh=QG0eqApJv057ZhUcrZWheMwZD0XE0lTlkrDwaucJpqk=;
+        h=From:To:Cc:Subject:Date:From;
+        b=doOaSRLpZMJzggL6jVoa8LczUhdPDxKgghOhWEAAEQ6N9cIx+6JPLuagVPdgniFDf
+         Mv2ROcU+avVJQyrW+SFw2zv7hT7Y+XWH9iR6QHi1SE1flpQsiMcjDXuEaEVxTepaAY
+         v195HEop5kBSf6Y6JpZaOLZn2IDmMmoEtLwTkLQ8tKlwMQIjXaa6rMzDO9P3OHNBOm
+         p3v/MyaPS3N/B2IM0jLnEnUSCe47WBtAKQbC8E0gJx36AcfPkvGqMwB+Q5dMCFROsn
+         9Ap2HGu2T8x+zGMVfKjwqK5ApijAfdpy1RZesDg+LYDDKnIYciTmWh11nrXUu55+Bl
+         oh2UJC1WjV95A==
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        ryder.lee@mediatek.com, evelyn.tsai@mediatek.com,
+        shayne.chen@mediatek.com, Bo.Jiao@mediatek.com,
+        sujuan.chen@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH v3 00/13] wifi: mt7996: add wed support
+Date:   Fri, 20 Oct 2023 12:30:47 +0200
+Message-ID: <cover.1697797422.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-To:     Daniel Berlin <dberlin@dberlin.org>,
-        Arend van Spriel <aspriel@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        SHA-cyfmac-dev-list@infineon.com, linux-kernel@vger.kernel.org
-References: <cover.1697650207.git.dberlin@dberlin.org>
- <791863a231dca48234a3468b299d0bc71a85b6b0.1697650207.git.dberlin@dberlin.org>
-From:   Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [PATCH 5/5] [brcmfmac] Add remaining support for 6G by supporting
- new scan structures.
-In-Reply-To: <791863a231dca48234a3468b299d0bc71a85b6b0.1697650207.git.dberlin@dberlin.org>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000bd75e9060822eed7"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---000000000000bd75e9060822eed7
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Similar to MT7915, introduce Wireless Ethernet Dispatcher (WED)
+support for MT7996 driver to offload transmitted/received traffic.
 
-On 10/19/2023 3:42 AM, Daniel Berlin wrote:
-> Add support for netinfo v3 and other PNO v3 structures, which contains
-> a chanspec rather than just a channel.
-> Gate support for netinfo_v3 and other structures on the proper feature
-> caps in the firmware.
-> 
-> Unfortunately, the v3 structures are different enough that we have to
-> use different handling for them in places (even the same named fields
-> are in different places).
+Changes since v2:
+- fix compilation errors if wed is not enabled
+- add RRO garbage collector patch to the series
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Daniel Berlin <dberlin@dberlin.org>
-> ---
->   .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 239 ++++++++++++++----
->   .../broadcom/brcm80211/brcmfmac/feature.c     |  10 +
->   .../broadcom/brcm80211/brcmfmac/feature.h     |   6 +-
->   .../broadcom/brcm80211/brcmfmac/fwil_types.h  |  62 +++++
->   .../broadcom/brcm80211/brcmfmac/pno.c         | 105 +++++++-
->   .../broadcom/brcm80211/brcmfmac/pno.h         |   9 +
->   6 files changed, 371 insertions(+), 60 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index bc8355d7f9b5..3656790ec4c9 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -32,6 +32,7 @@
->   #include "vendor.h"
->   #include "bus.h"
->   #include "common.h"
-> +#include "feature.h"
+Changes since v1:
+- add wed reset support
+- unmap rro buffer on module unload
+- check ind reason to check if the rx buffer must be discarded
 
-Suspect this was already include, but no harm being explicit about it.
+Bo Jiao (1):
+  wifi: mt76: mt7996: add wed rx support
 
->   
->   #define BRCMF_SCAN_IE_LEN_MAX		2048
->   
+Lorenzo Bianconi (11):
+  wifi: mt76: mmio: move mt76_mmio_wed_{init,release}_rx_buf in common
+    code
+  wifi: mt76: move mt76_mmio_wed_offload_{enable,disable} in common code
+  wifi: mt76: move mt76_net_setup_tc in common code
+  wifi: mt76: introduce mt76_queue_is_wed_tx_free utility routine
+  wifi: mt76: introduce wed pointer in mt76_queue
+  wifi: mt76: increase MT_QFLAG_WED_TYPE size
+  wifi: mt76: dma: introduce __mt76_dma_queue_reset utility routine
+  wifi: mt76: mt7996: use u16 for val field in mt7996_mcu_set_rro
+    signature
+  mt76: move wed reset common code in mt76 module
+  mt76: mt7996: add wed reset support
+  wifi: mt76: mt7996: add wed rro delete session garbage collector
 
-[...]
+Sujuan Chen (1):
+  wifi: mt76: mt7996: add wed tx support
 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-> index 81f2d77cb004..b35c27a64db1 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-> @@ -1051,6 +1051,46 @@ struct brcmf_pno_param_le {
->   	__le32 slow_freq;
->   };
->   
-> +/**
-> + * struct brcmf_pno_param_le - PNO scan configuration parameters
+ drivers/net/wireless/mediatek/mt76/dma.c      | 246 +++++++++++-----
+ drivers/net/wireless/mediatek/mt76/dma.h      |  52 ++++
+ drivers/net/wireless/mediatek/mt76/mac80211.c |  19 +-
+ drivers/net/wireless/mediatek/mt76/mmio.c     | 105 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  96 +++++-
+ .../net/wireless/mediatek/mt76/mt7603/dma.c   |   9 +-
+ .../net/wireless/mediatek/mt76/mt7615/dma.c   |   6 +-
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |   3 +-
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  |   5 +-
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |   1 +
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c |   5 +-
+ .../net/wireless/mediatek/mt76/mt7915/dma.c   |  46 +--
+ .../net/wireless/mediatek/mt76/mt7915/main.c  |  16 +-
+ .../net/wireless/mediatek/mt76/mt7915/mmio.c  | 116 +-------
+ .../net/wireless/mediatek/mt76/mt7921/pci.c   |   2 +-
+ .../net/wireless/mediatek/mt76/mt7925/pci.c   |   2 +-
+ .../net/wireless/mediatek/mt76/mt7996/dma.c   | 276 ++++++++++++++++--
+ .../net/wireless/mediatek/mt76/mt7996/init.c  | 256 +++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   | 122 +++++++-
+ .../net/wireless/mediatek/mt76/mt7996/main.c  |  42 +++
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 115 +++++++-
+ .../net/wireless/mediatek/mt76/mt7996/mcu.h   |  37 +++
+ .../net/wireless/mediatek/mt76/mt7996/mmio.c  | 245 ++++++++++++++--
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |  79 ++++-
+ .../net/wireless/mediatek/mt76/mt7996/pci.c   |  61 ++--
+ .../net/wireless/mediatek/mt76/mt7996/regs.h  |  78 ++++-
+ 26 files changed, 1695 insertions(+), 345 deletions(-)
 
-v3?
+-- 
+2.41.0
 
-> + *
-> + * @version: PNO parameters version.
-> + * @length: Length of PNO structure
-> + * @scan_freq: scan frequency.
-> + * @lost_network_timeout: #sec. to declare discovered network as lost.
-> + * @flags: Bit field to control features of PFN such as sort criteria auto
-> + *	enable switch and background scan.
-> + * @rssi_margin: Margin to avoid jitter for choosing a PFN based on RSSI sort
-> + *	criteria.
-> + * @bestn: number of best networks in each scan.
-> + * @mscan: number of scans recorded.
-> + * @repeat: minimum number of scan intervals before scan frequency changes
-> + *	in adaptive scan.
-> + * @exp: exponent of 2 for maximum scan interval.
-> + * @slow_freq: slow scan period.
-> + * @min_bound: min bound for scan time randomization
-> + * @max_bound: max bound for scan time randomization
-> + * @pfn_lp_scan_disable: unused
-> + * @pfn_lp_scan_cnt: allow interleaving lp scan with hp scan
-> + */
-> +struct brcmf_pno_param_v3_le {
-
-[...]
-
---000000000000bd75e9060822eed7
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-2Gzj3QNJRLsZu1TLyOyBBIr/BE7UiY3RabgRzknBGAPmzhS+fmyM8OtM5BYBsFBrSUFtZZO2p/tf
-Nbc24J2zf2peoZ8MK+7WQqummYlOnz+FyDkA9EybeNMcS5C+xi/PAgMBAAGjggHdMIIB2TAOBgNV
-HQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRwOi8vc2VjdXJl
-Lmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcnQwQQYI
-KwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24y
-Y2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3
-dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRCMEAwPqA8oDqG
-OGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3Js
-MCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYDVR0lBAwwCgYIKwYB
-BQUHAwQwHwYDVR0jBBgwFoAUljPR5lgXWzR1ioFWZNW+SN6hj88wHQYDVR0OBBYEFIikAXd8CEtv
-ZbDflDRnf3tuStPuMA0GCSqGSIb3DQEBCwUAA4IBAQCdS5XCYx6k2GGZui9DlFsFm75khkqAU7rT
-zBX04sJU1+B1wtgmWTVIzW7ugdtDZ4gzaV0S9xRhpDErjJaltxPbCylb1DEsLj+AIvBR34caW6ZG
-sQk444t0HPb29HnWYj+OllIGMbdJWr0/P95ZrKk2bP24ub3ZP/8SyzrohfIba9WZKMq6g2nTLZE3
-BtkeSGJx/8dy0h8YmRn+adOrxKXHxhSL8BNn8wsmIZyYWe6fRcBtO3Ks2DOLyHCdkoFlN8x9VUQF
-N2ulEgqCbRKkx+qNirW86eF138lr1gRxzclu/38ko//MmkAYR/+hP3WnBll7zbpIt0jc9wyFkSqH
-p8a1MYICbTCCAmkCAQEwazBbMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1z
-YTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMgUGVyc29uYWxTaWduIDIgQ0EgMjAyMAIMTv1t
-bpIzNUky46LXMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCCC9Ry9VKU0Etv0ccKF
-bLf1ViXxcYetSfZZuaJqDfrUKDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
-BTEPFw0yMzEwMjAwOTU5NDdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
-AwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzAL
-BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAZnHkww4l9qn/n2RA7/0Frq9+vFMkWuKQJvA1
-w8ZxnS5W86XgKx6ac0ztil3r5vbTR8TE14Clrv9UluJgmOvknjQnRe5TrmvbrguwRWNHihjhUODA
-fTpoxqzGZFwVnd2PnNXpBKgPbu+3pYQ2AWF2yXdmkWm8tVHG8zGkU+ftUxr7Q66kerg4Sv/qeSlq
-hxLv1bN/nUkuX1ad4Bn8cy42h9t/WQCqQYBYjqZYT8tY7FjjpC14h9KMqiuhe0h5+2WRvkfiRSmF
-nHcZMRmTnOrrOqIXdejDg3TW/TqTXgC9V3KMx7wEa1yeE+0WEaBd4YqwuIgaMUCmNLocGSaIXxNR
-VA==
---000000000000bd75e9060822eed7--
